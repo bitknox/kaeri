@@ -2989,7 +2989,6 @@
     <string name="read_search_nothing_line">Spróbuj innych słów lub tytułu w innym języku.</string>
     <string name="read_search_nothing_filters_line">Mniej filtrów może dać więcej wyników.</string>
     <string name="read_search_clear_filters">Wyczyść filtry</string>
-    <string name="read_sort_popular">Popularne</string>
     <string name="read_sort_trending">Na topie</string>
     <string name="read_sort_score">Ocena</string>
     <string name="read_sort_newest">Najnowsze</string>

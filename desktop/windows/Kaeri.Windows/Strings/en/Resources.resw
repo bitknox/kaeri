@@ -9346,10 +9346,6 @@
     <value>Clear filters</value>
     <comment>The button under it.</comment>
   </data>
-  <data name="ReadSortPopular" xml:space="preserve">
-    <value>Popular</value>
-    <comment>A sort of reading's Search, AniList's.</comment>
-  </data>
   <data name="ReadSortTrending" xml:space="preserve">
     <value>Trending</value>
     <comment>A sort of reading's Search, AniList's.</comment>

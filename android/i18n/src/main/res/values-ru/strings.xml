@@ -2989,7 +2989,6 @@
     <string name="read_search_nothing_line">Попробуйте другие слова или название на другом языке.</string>
     <string name="read_search_nothing_filters_line">С меньшим числом фильтров может найтись больше.</string>
     <string name="read_search_clear_filters">Сбросить фильтры</string>
-    <string name="read_sort_popular">Популярное</string>
     <string name="read_sort_trending">В тренде</string>
     <string name="read_sort_score">Оценка</string>
     <string name="read_sort_newest">Новинки</string>

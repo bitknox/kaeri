@@ -6722,9 +6722,6 @@ public static partial class T
     public static string ReadSearchClearFilters => Get("ReadSearchClearFilters");
 
     /// <summary>A sort of reading's Search, AniList's.</summary>
-    public static string ReadSortPopular => Get("ReadSortPopular");
-
-    /// <summary>A sort of reading's Search, AniList's.</summary>
     public static string ReadSortTrending => Get("ReadSortTrending");
 
     /// <summary>A sort of reading's Search, AniList's.</summary>
@@ -13953,7 +13950,6 @@ public static partial class T
         ["ReadSearchNothingLine"] = "Try other words, or a title in another language.",
         ["ReadSearchNothingFiltersLine"] = "Fewer filters may find more.",
         ["ReadSearchClearFilters"] = "Clear filters",
-        ["ReadSortPopular"] = "Popular",
         ["ReadSortTrending"] = "Trending",
         ["ReadSortScore"] = "Score",
         ["ReadSortNewest"] = "Newest",

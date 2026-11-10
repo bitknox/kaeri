@@ -2883,7 +2883,6 @@
     <string name="read_search_nothing_line">Essayez d\'autres mots, ou un titre dans une autre langue.</string>
     <string name="read_search_nothing_filters_line">Moins de filtres donneront peut-être plus de résultats.</string>
     <string name="read_search_clear_filters">Effacer les filtres</string>
-    <string name="read_sort_popular">Populaires</string>
     <string name="read_sort_trending">Tendances</string>
     <string name="read_sort_score">Note</string>
     <string name="read_sort_newest">Plus récents</string>

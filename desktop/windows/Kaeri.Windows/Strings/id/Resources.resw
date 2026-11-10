@@ -6725,9 +6725,6 @@
   <data name="ReadSearchClearFilters" xml:space="preserve">
     <value>Hapus filter</value>
   </data>
-  <data name="ReadSortPopular" xml:space="preserve">
-    <value>Populer</value>
-  </data>
   <data name="ReadSortTrending" xml:space="preserve">
     <value>Sedang tren</value>
   </data>

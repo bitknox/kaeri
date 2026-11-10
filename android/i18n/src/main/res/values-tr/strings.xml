@@ -2777,7 +2777,6 @@
     <string name="read_search_nothing_line">Başka sözcükler ya da başka dilde bir başlık deneyin.</string>
     <string name="read_search_nothing_filters_line">Daha az filtre daha çok sonuç verebilir.</string>
     <string name="read_search_clear_filters">Filtreleri temizle</string>
-    <string name="read_sort_popular">Popüler</string>
     <string name="read_sort_trending">Trend</string>
     <string name="read_sort_score">Puan</string>
     <string name="read_sort_newest">En yeni</string>

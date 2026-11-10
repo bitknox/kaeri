@@ -6725,9 +6725,6 @@
   <data name="ReadSearchClearFilters" xml:space="preserve">
     <value>条件をクリア</value>
   </data>
-  <data name="ReadSortPopular" xml:space="preserve">
-    <value>人気順</value>
-  </data>
   <data name="ReadSortTrending" xml:space="preserve">
     <value>急上昇</value>
   </data>

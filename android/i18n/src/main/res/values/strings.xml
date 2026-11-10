@@ -5281,8 +5281,6 @@
     <!-- The button under it. -->
     <string name="read_search_clear_filters">Clear filters</string>
     <!-- A sort of reading's Search, AniList's. -->
-    <string name="read_sort_popular">Popular</string>
-    <!-- A sort of reading's Search, AniList's. -->
     <string name="read_sort_trending">Trending</string>
     <!-- A sort of reading's Search, AniList's. -->
     <string name="read_sort_score">Score</string>

@@ -66,7 +66,7 @@ fn sort_name(key: &str) -> String {
         "SCORE_DESC" => t::read_sort_score(),
         "START_DATE_DESC" => t::read_sort_newest(),
         "TITLE_ROMAJI" => t::library_sort_title(),
-        _ => t::read_sort_popular(),
+        _ => t::sort_popularity(),
     }
 }
 
@@ -1997,8 +1997,8 @@ fn fill_start_row(hub: &Hub, slot: &StartRow, row: &ReadHomeRow) {
     slot.side.set_visible(side.is_some());
     slot.view_all
         .replace(row.view_all.clone().map(|q| (q, row.view_all_title.as_ref().map(say::msg))));
-    slot.all.set_visible(row.view_all.is_some() && row.kind != ReadRowKind::Because);
-    slot.all.update_property(&[gtk::accessible::Property::Label(&t::read_linux_view_all_row(
+    slot.all.set_visible(row.view_all.is_some());
+    slot.all.update_property(&[gtk::accessible::Property::Label(&t::read_linux_see_all_row(
         &title,
     ))]);
     if row.pending {

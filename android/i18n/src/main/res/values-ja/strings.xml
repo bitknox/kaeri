@@ -2671,7 +2671,6 @@
     <string name="read_search_nothing_line">別の言葉や、ほかの言語のタイトルをお試しください。</string>
     <string name="read_search_nothing_filters_line">条件を減らすと見つかるかもしれません。</string>
     <string name="read_search_clear_filters">条件をクリア</string>
-    <string name="read_sort_popular">人気順</string>
     <string name="read_sort_trending">急上昇</string>
     <string name="read_sort_score">スコア順</string>
     <string name="read_sort_newest">新着順</string>

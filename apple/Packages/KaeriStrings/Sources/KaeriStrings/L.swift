@@ -9283,9 +9283,6 @@ public enum L {
     public static var readSearchClearFilters: String { string("read-search-clear-filters", fallback: "Clear filters") }
 
     /// A sort of reading's Search, AniList's.
-    public static var readSortPopular: String { string("read-sort-popular", fallback: "Popular") }
-
-    /// A sort of reading's Search, AniList's.
     public static var readSortTrending: String { string("read-sort-trending", fallback: "Trending") }
 
     /// A sort of reading's Search, AniList's.

@@ -534,7 +534,7 @@ internal fun sortWords(context: android.content.Context, key: String?): String =
     "SCORE_DESC" -> Strings.readSortScore(context) // i18n-skip
     "START_DATE_DESC" -> Strings.readSortNewest(context) // i18n-skip
     "TITLE_ROMAJI" -> Strings.librarySortTitle(context) // i18n-skip
-    else -> Strings.readSortPopular(context)
+    else -> Strings.sortPopularity(context)
 }
 
 /**

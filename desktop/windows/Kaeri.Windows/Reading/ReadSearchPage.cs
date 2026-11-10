@@ -1087,7 +1087,7 @@ public sealed partial class ReadSearchPage : Page
         "SCORE_DESC" => T.ReadSortScore,
         "START_DATE_DESC" => T.ReadSortNewest,
         "TITLE_ROMAJI" => T.LibrarySortTitle,
-        _ => T.ReadSortPopular,
+        _ => T.SortPopularity,
     };
 
     /// <summary>

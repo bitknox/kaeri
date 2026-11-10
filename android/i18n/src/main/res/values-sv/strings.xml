@@ -2777,7 +2777,6 @@
     <string name="read_search_nothing_line">Prova andra ord, eller en titel på ett annat språk.</string>
     <string name="read_search_nothing_filters_line">Färre filter kan ge fler träffar.</string>
     <string name="read_search_clear_filters">Rensa filter</string>
-    <string name="read_sort_popular">Populära</string>
     <string name="read_sort_trending">Trendande</string>
     <string name="read_sort_score">Betyg</string>
     <string name="read_sort_newest">Nyaste</string>

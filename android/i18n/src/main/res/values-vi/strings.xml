@@ -2671,7 +2671,6 @@
     <string name="read_search_nothing_line">Hãy thử từ khác, hoặc một tên bằng ngôn ngữ khác.</string>
     <string name="read_search_nothing_filters_line">Ít bộ lọc hơn có thể tìm thấy nhiều hơn.</string>
     <string name="read_search_clear_filters">Xóa bộ lọc</string>
-    <string name="read_sort_popular">Phổ biến</string>
     <string name="read_sort_trending">Thịnh hành</string>
     <string name="read_sort_score">Điểm</string>
     <string name="read_sort_newest">Mới nhất</string>

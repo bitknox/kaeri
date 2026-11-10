@@ -2777,7 +2777,6 @@
     <string name="read_search_nothing_line">Versuche andere Wörter oder einen Titel in einer anderen Sprache.</string>
     <string name="read_search_nothing_filters_line">Weniger Filter finden vielleicht mehr.</string>
     <string name="read_search_clear_filters">Filter löschen</string>
-    <string name="read_sort_popular">Beliebt</string>
     <string name="read_sort_trending">Im Trend</string>
     <string name="read_sort_score">Bewertung</string>
     <string name="read_sort_newest">Neueste</string>

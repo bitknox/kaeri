@@ -9590,9 +9590,6 @@ read-search-nothing-filters-line = Färre filter kan ge fler träffar.
 read-search-clear-filters = Rensa filter
 
 # A sort of reading's Search, AniList's.
-read-sort-popular = Populära
-
-# A sort of reading's Search, AniList's.
 read-sort-trending = Trendande
 
 # A sort of reading's Search, AniList's.

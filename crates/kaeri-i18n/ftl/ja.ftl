@@ -9477,9 +9477,6 @@ read-search-nothing-filters-line = 条件を減らすと見つかるかもしれ
 read-search-clear-filters = 条件をクリア
 
 # A sort of reading's Search, AniList's.
-read-sort-popular = 人気順
-
-# A sort of reading's Search, AniList's.
 read-sort-trending = 急上昇
 
 # A sort of reading's Search, AniList's.

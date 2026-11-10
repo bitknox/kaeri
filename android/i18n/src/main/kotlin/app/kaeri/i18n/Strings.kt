@@ -9947,10 +9947,6 @@ object Strings {
         context.getString(R.string.read_search_clear_filters)
 
     /** A sort of reading's Search, AniList's. */
-    fun readSortPopular(context: Context): String =
-        context.getString(R.string.read_sort_popular)
-
-    /** A sort of reading's Search, AniList's. */
     fun readSortTrending(context: Context): String =
         context.getString(R.string.read_sort_trending)
 

@@ -7526,9 +7526,6 @@
   <data name="ReadSearchClearFilters" xml:space="preserve">
     <value>Wyczyść filtry</value>
   </data>
-  <data name="ReadSortPopular" xml:space="preserve">
-    <value>Popularne</value>
-  </data>
   <data name="ReadSortTrending" xml:space="preserve">
     <value>Na topie</value>
   </data>

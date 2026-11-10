@@ -830,7 +830,7 @@ enum ReadFilterWords {
         case "SCORE_DESC": L.readSortScore // i18n-skip
         case "START_DATE_DESC": L.readSortNewest // i18n-skip
         case "TITLE_ROMAJI": L.librarySortTitle // i18n-skip
-        default: L.readSortPopular
+        default: L.sortPopularity
         }
     }
 }
