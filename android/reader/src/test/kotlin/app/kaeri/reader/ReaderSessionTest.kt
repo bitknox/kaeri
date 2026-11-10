@@ -81,6 +81,32 @@ class ReaderSessionTest {
     }
 
     @Test
+    fun a_second_layout_of_the_open_chapter_keeps_its_place_and_its_pictures() {
+        // The page it opens at lays out first; the rest stream in and lay the chapter out again.
+        opened(start = 0u)
+        session.jumped(session.state.value.jump!!.id)
+        val first = PageFile("/cache/0.jpg", app.kaeri.engine.model.PageEncoding.Original("image/jpeg"), 800u, 1200u, null, false, 1u)
+        val second = first.copy(path = "/cache/1.jpg")
+        session.apply(ReaderEvent.PageReady(SESSION, CHAPTER, 0u, null, first))
+        session.apply(ReaderEvent.PageReady(SESSION, CHAPTER, 1u, null, second))
+        session.shown(1, TurnHow.TURN)
+        session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, ReaderFixtures.leaves(8)))
+        val state = session.state.value
+        assertEquals(8, state.pages)
+        assertEquals(1, state.jump?.leaf)
+        // Drawn from before until the page lands for this layout, which a strip still asks for.
+        val part = ReaderFixtures.part(1u)
+        assertEquals(second, state.file(part))
+        assertNull(state.landed(part))
+        val fresh = second.copy(path = "/cache/1b.jpg")
+        session.apply(ReaderEvent.PageReady(SESSION, CHAPTER, 1u, null, fresh))
+        assertEquals(fresh, session.state.value.file(part))
+        // A new chapter starts with nothing held.
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view(start = 0u)))
+        assertNull(session.state.value.file(part))
+    }
+
+    @Test
     fun a_mode_changed_in_the_reader_turns_the_view_with_it() {
         opened()
         fun row(key: ReaderSettingKey, word: String) =

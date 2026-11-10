@@ -19,6 +19,7 @@ import app.kaeri.engine.model.NovelPos
 import app.kaeri.engine.model.OpenAt
 import app.kaeri.engine.model.PageFile
 import app.kaeri.engine.model.PageHalf
+import app.kaeri.engine.model.PageKind
 import app.kaeri.engine.model.ReadDirection
 import app.kaeri.engine.model.ReadPlace
 import app.kaeri.engine.model.ReaderCommand
@@ -72,6 +73,12 @@ data class ReaderState(
     val layout: Int = 0,
     /** Files that landed after the leaves came: [file] puts them in their parts. */
     val files: Map<PageKey, PageFile> = emptyMap(),
+    /**
+     * The files a page had before the chapter was laid out again (a page that landed in another
+     * shape): drawn until the engine sends the page for the new layout, so the page on screen
+     * never drops to its plate.
+     */
+    val held: Map<PageKey, PageFile> = emptyMap(),
     val failures: Map<UInt, ReadingFailure> = emptyMap(),
     val end: EndPageView? = null,
     val notice: ShownNotice? = null,
@@ -108,7 +115,10 @@ data class ReaderState(
     val pages: Int get() = leaves.filter { !it.endPage }.maxOfOrNull { leaf -> leaf.parts.maxOfOrNull { it.page.toInt() + 1 } ?: 0 } ?: 0
 
     /** The file for [part]: the one the leaf came with, or the one that landed since. */
-    fun file(part: LeafPart): PageFile? = files[PageKey(part.page, part.half)] ?: part.file
+    fun file(part: LeafPart): PageFile? = PageKey(part.page, part.half).let { key -> files[key] ?: part.file ?: held[key] }
+
+    /** The file made for [part] in this layout, without the one [held] from the layout before. */
+    fun landed(part: LeafPart): PageFile? = files[PageKey(part.page, part.half)] ?: part.file
 
     /** The leaf that shows [page], or null when no leaf does. */
     fun leafOf(page: UInt): Int? = leaves.indexOfFirst { leaf -> leaf.parts.any { it.page == page } }.takeIf { it >= 0 }
@@ -411,7 +421,14 @@ class ReaderSession(private val send: (Command) -> Unit) {
                 if (!ours(event.session) || event.chapter != now.chapter) return
                 askedPages.clear()
                 // The start place on the first layout; after that the page shown stays shown.
-                val placed = now.copy(leaves = event.leaves, layout = now.layout + 1, files = emptyMap())
+                // Laid out again: a page keeps the picture it had until its new one lands. Strip cuts
+                // are new pictures each layout, and a strip asks for its own.
+                val held = if (now.leaves.isEmpty()) emptyMap() else {
+                    val pictures = event.leaves.flatMap { it.parts }.filter { it.kind != PageKind.STRIP_CUT }
+                        .map { PageKey(it.page, it.half) }.toSet()
+                    (now.held + now.files).filterKeys { it in pictures }
+                }
+                val placed = now.copy(leaves = event.leaves, layout = now.layout + 1, files = emptyMap(), held = held)
                 val start = startAt?.also { startAt = null }
                 // Flowed into from above: the scroll is already where the chapter starts.
                 if (start != null && now.previous != null) return run { _state.value = placed }
