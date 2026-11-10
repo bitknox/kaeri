@@ -1596,6 +1596,51 @@
     <string name="eink_keep_ready_on">On · the next chapters of series you\'re reading</string>
     <!-- The line under Keep next chapters ready on the e-reader's Downloads while it is off. -->
     <string name="eink_keep_ready_off">Off</string>
+    <!-- The underlined link beside the title of the e-reader's Library that opens the View sheet: how the covers are shown, which medium, the order and what is downloaded. -->
+    <string name="eink_library_view">View</string>
+    <!-- A side of the medium control on the e-reader's Library and in its View sheet: every series. -->
+    <string name="eink_library_medium_all">All</string>
+    <!-- A side of the medium control on the e-reader's Library: manga, manhwa and webtoons. -->
+    <string name="eink_library_medium_manga">Manga</string>
+    <!-- A side of the medium control on the e-reader's Library: light novels. -->
+    <string name="eink_library_medium_novels">Novels</string>
+    <!-- On a 6 or 7 inch e-reader's Library: the button naming the list shown and how many series it holds, such as "Reading · 23". It opens the lists to choose another. -->
+    <string name="eink_library_list_button">%1$s · %2$,d</string>
+    <!-- Title of the sheet on a 6 or 7 inch e-reader's Library that chooses which list to show. -->
+    <string name="eink_library_lists_title">Lists</string>
+    <!-- A row label in the e-reader Library's View sheet: covers in a grid or rows in a list. -->
+    <string name="eink_library_show">Show</string>
+    <!-- A side of Show in the View sheet: the covers in a grid. -->
+    <string name="eink_library_show_covers">Covers</string>
+    <!-- A side of Show in the View sheet: rows with a small cover. -->
+    <string name="eink_library_show_list">List</string>
+    <!-- A row label in the View sheet: whether manga, novels or both show. -->
+    <string name="eink_library_medium">Medium</string>
+    <!-- A row label in the View sheet: the order of the series. -->
+    <string name="eink_library_sort">Sort</string>
+    <!-- A side of Sort in the View sheet: the series read most recently first. -->
+    <string name="eink_library_sort_recent">Recent</string>
+    <!-- A side of Sort in the View sheet: by title, alphabetically. -->
+    <string name="eink_library_sort_title">A to Z</string>
+    <!-- A side of Sort in the View sheet: series with a new chapter first. -->
+    <string name="eink_library_sort_new">New</string>
+    <!-- A row label in the View sheet: every series, or only those with chapters downloaded. -->
+    <string name="eink_library_downloaded">Downloaded</string>
+    <!-- A side of Downloaded in the View sheet: every series on the list. -->
+    <string name="eink_library_downloaded_all">All</string>
+    <!-- A side of Downloaded in the View sheet: only series with chapters on this device. -->
+    <string name="eink_library_downloaded_here">On this device</string>
+    <!-- The note at the foot of the View sheet. The count is how many covers fit a page on this screen. -->
+    <plurals name="eink_library_view_note">
+        <item quantity="one">Recent sorts by when you last read. Covers show 1 to a page on this screen.</item>
+        <item quantity="other">Recent sorts by when you last read. Covers show %1$,d to a page on this screen.</item>
+    </plurals>
+    <!-- The note at the foot of the View sheet before the covers have been laid out. -->
+    <string name="eink_library_view_note_short">Recent sorts by when you last read.</string>
+    <!-- On the e-reader's Library when the list has series but none match the choices in View. -->
+    <string name="eink_library_none_match">No series on %1$s match this view</string>
+    <!-- The line under it. -->
+    <string name="eink_library_none_match_line">Change Medium or Downloaded under View to see the rest.</string>
     <!-- Switch under Volume keys turn pages in the phone reader's settings: volume up turns forward instead of volume down. -->
     <string name="reader_row_volume_swap">Swap the volume keys</string>
     <!-- Heading of the e-ink reader's settings sheet over the rows for the e-ink screen itself. -->

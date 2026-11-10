@@ -919,6 +919,120 @@ eink-keep-ready-on = On · the next chapters of series you're reading
 # @max 60
 eink-keep-ready-off = Off
 
+# The underlined link beside the title of the e-reader's Library that opens the View sheet: how
+# the covers are shown, which medium, the order and what is downloaded.
+# @only android
+# @max 12
+eink-library-view = View
+
+# A side of the medium control on the e-reader's Library and in its View sheet: every series.
+# @only android
+# @max 12
+eink-library-medium-all = All
+
+# A side of the medium control on the e-reader's Library: manga, manhwa and webtoons.
+# @only android
+# @max 12
+eink-library-medium-manga = Manga
+
+# A side of the medium control on the e-reader's Library: light novels.
+# @only android
+# @max 12
+eink-library-medium-novels = Novels
+
+# On a 6 or 7 inch e-reader's Library: the button naming the list shown and how many series it
+# holds, such as "Reading · 23". It opens the lists to choose another.
+# @only android
+# @arg list: text
+# @arg count: int
+# @max 30
+eink-library-list-button = { $list } · { $count }
+
+# Title of the sheet on a 6 or 7 inch e-reader's Library that chooses which list to show.
+# @only android
+# @max 30
+eink-library-lists-title = Lists
+
+# A row label in the e-reader Library's View sheet: covers in a grid or rows in a list.
+# @only android
+# @max 16
+eink-library-show = Show
+
+# A side of Show in the View sheet: the covers in a grid.
+# @only android
+# @max 14
+eink-library-show-covers = Covers
+
+# A side of Show in the View sheet: rows with a small cover.
+# @only android
+# @max 14
+eink-library-show-list = List
+
+# A row label in the View sheet: whether manga, novels or both show.
+# @only android
+# @max 16
+eink-library-medium = Medium
+
+# A row label in the View sheet: the order of the series.
+# @only android
+# @max 16
+eink-library-sort = Sort
+
+# A side of Sort in the View sheet: the series read most recently first.
+# @only android
+# @max 14
+eink-library-sort-recent = Recent
+
+# A side of Sort in the View sheet: by title, alphabetically.
+# @only android
+# @max 14
+eink-library-sort-title = A to Z
+
+# A side of Sort in the View sheet: series with a new chapter first.
+# @only android
+# @max 14
+eink-library-sort-new = New
+
+# A row label in the View sheet: every series, or only those with chapters downloaded.
+# @only android
+# @max 16
+eink-library-downloaded = Downloaded
+
+# A side of Downloaded in the View sheet: every series on the list.
+# @only android
+# @max 14
+eink-library-downloaded-all = All
+
+# A side of Downloaded in the View sheet: only series with chapters on this device.
+# @only android
+# @max 20
+eink-library-downloaded-here = On this { -device }
+
+# The note at the foot of the View sheet. The count is how many covers fit a page on this screen.
+# @only android
+# @arg count: int
+# @max 120
+eink-library-view-note = { $count ->
+    [one] Recent sorts by when you last read. Covers show 1 to a page on this screen.
+   *[other] Recent sorts by when you last read. Covers show { $count } to a page on this screen.
+ }
+
+# The note at the foot of the View sheet before the covers have been laid out.
+# @only android
+# @max 60
+eink-library-view-note-short = Recent sorts by when you last read.
+
+# On the e-reader's Library when the list has series but none match the choices in View.
+# @only android
+# @arg list: text
+# @max 60
+eink-library-none-match = No series on { $list } match this view
+
+# The line under it.
+# @only android
+# @max 80
+eink-library-none-match-line = Change Medium or Downloaded under View to see the rest.
+
 # Switch under Volume keys turn pages in the phone reader's settings: volume up turns forward
 # instead of volume down.
 # @only android
