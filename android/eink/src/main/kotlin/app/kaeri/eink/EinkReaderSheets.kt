@@ -8,6 +8,9 @@ package app.kaeri.eink
 
 import android.content.Context
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusable
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -35,6 +38,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -471,6 +475,9 @@ fun EinkContents(
             val pages = remember(lines, perPage) { pagesOf(lines, perPage) }
             val here = lines.indexOfFirst { it is ContentsLine.Chapter && it.row.id == current }.coerceAtLeast(0)
             var page by remember(pages.size) { mutableIntStateOf((here / perPage).coerceIn(0, pages.size - 1)) }
+            // TalkBack and the keyboard start on the chapter being read, once, as the page opens.
+            val focus = remember { FocusRequester() }
+            var focused by remember { mutableStateOf(false) }
             LaunchedEffect(page) { onPage() }
             // The page buttons and volume keys turn the list's pages while it shows.
             SideEffect { keys.turn = { by -> page = (page + by).coerceIn(0, pages.size - 1) } }
@@ -485,7 +492,18 @@ fun EinkContents(
                             )
                             is ContentsLine.Chapter -> {
                                 val reading = line.row.id == current
-                                EinkRow(onClick = { onOpen(line.row.id) }, selected = reading, height = EinkSizes.ChapterRow) {
+                                if (reading && !focused) {
+                                    LaunchedEffect(Unit) {
+                                        runCatching { focus.requestFocus() }
+                                        focused = true
+                                    }
+                                }
+                                EinkRow(
+                                    onClick = { onOpen(line.row.id) },
+                                    modifier = if (reading) Modifier.focusRequester(focus).focusable() else Modifier,
+                                    selected = reading,
+                                    height = EinkSizes.ChapterRow,
+                                ) {
                                     Text(
                                         chapterWords(context, line.row),
                                         style = if (reading) EinkType.Label.copy(fontWeight = FontWeight.Bold) else EinkType.Label,

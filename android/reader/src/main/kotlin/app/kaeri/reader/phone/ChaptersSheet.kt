@@ -6,6 +6,8 @@ package app.kaeri.reader.phone
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +22,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
@@ -36,8 +39,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -45,6 +51,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import app.kaeri.design.centredOffset
 import app.kaeri.design.robotoFlex
 import app.kaeri.engine.model.ChapterRow
 import app.kaeri.i18n.Strings
@@ -173,50 +180,84 @@ private fun ChapterList(session: ReaderSession, state: ReaderState) {
         if (waited) Text(Strings.readerChaptersLoading(context), color = Chrome.faint, fontSize = 15.sp)
         return
     }
-    LazyColumn(Modifier.fillMaxSize()) {
+    fun folded(index: Int, group: app.kaeri.engine.model.VolumeGroup) =
+        group.allRead && index !in open && group.chapters.none { it.id == current }
+    // The list opens with the open chapter's row as near the middle as its ends allow, set before
+    // its first frame so nothing scrolls. A list that fits stays at its top.
+    val here = remember(state.volumes) {
+        var item = 0
         state.volumes.forEachIndexed { index, group ->
-            val folded = group.allRead && index !in open && group.chapters.none { it.id == current }
-            item(key = "v$index") {
-                val name = group.volume
-                val words = when {
-                    name == null -> Strings.readerVolumeNone(context)
-                    folded -> Strings.readerVolumeRead(context, name)
-                    else -> Strings.readerVolumeLine(context, name)
-                }
-                Text(
-                    words,
-                    color = Chrome.faint,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(enabled = group.allRead) { open = if (index in open) open - index else open + index }
-                        .padding(top = 12.dp, bottom = 6.dp),
-                )
-            }
-            if (!folded) {
-                items(group.chapters.size, key = { "c$index-$it" }) { at ->
-                    val chapter = group.chapters[at]
-                    val here = chapter.id == current
-                    Row(
-                        Modifier
+            item += 1
+            val at = group.chapters.indexOfFirst { it.id == current }
+            if (at >= 0) return@remember item + at
+            if (!folded(index, group)) item += group.chapters.size
+        }
+        -1
+    }
+    val focus = remember { FocusRequester() }
+    var focused by remember { mutableStateOf(false) }
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val density = LocalDensity.current
+        val list = rememberLazyListState(
+            initialFirstVisibleItemIndex = here.coerceAtLeast(0),
+            initialFirstVisibleItemScrollOffset = if (here < 0) 0 else with(density) { centredOffset(maxHeight.roundToPx(), ROW_HEIGHT.roundToPx()) },
+        )
+        LazyColumn(Modifier.fillMaxSize(), state = list) {
+            state.volumes.forEachIndexed { index, group ->
+                val folded = folded(index, group)
+                item(key = "v$index") {
+                    val name = group.volume
+                    val words = when {
+                        name == null -> Strings.readerVolumeNone(context)
+                        folded -> Strings.readerVolumeRead(context, name)
+                        else -> Strings.readerVolumeLine(context, name)
+                    }
+                    Text(
+                        words,
+                        color = Chrome.faint,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(min = 46.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(if (here) Chrome.selected else Color.Transparent)
-                            .clickable { session.openChapter(chapter.id) }
-                            .padding(horizontal = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            chapterWords(context, chapter),
-                            color = if (here || chapter.state !is app.kaeri.engine.model.ChapterReadState.Read) Chrome.text else Chrome.faint,
-                            fontSize = 15.sp,
-                            maxLines = 1,
-                        )
+                            .clickable(enabled = group.allRead) { open = if (index in open) open - index else open + index }
+                            .padding(top = 12.dp, bottom = 6.dp),
+                    )
+                }
+                if (!folded) {
+                    items(group.chapters.size, key = { "c$index-$it" }) { at ->
+                        val chapter = group.chapters[at]
+                        val here = chapter.id == current
+                        if (here && !focused) {
+                            LaunchedEffect(Unit) {
+                                runCatching { focus.requestFocus() }
+                                focused = true
+                            }
+                        }
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = ROW_HEIGHT)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (here) Chrome.selected else Color.Transparent)
+                                // TalkBack and the keyboard start on the open chapter.
+                                .then(if (here) Modifier.focusRequester(focus).focusable() else Modifier)
+                                .clickable { session.openChapter(chapter.id) }
+                                .padding(horizontal = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                chapterWords(context, chapter),
+                                color = if (here || chapter.state !is app.kaeri.engine.model.ChapterReadState.Read) Chrome.text else Chrome.faint,
+                                fontSize = 15.sp,
+                                maxLines = 1,
+                            )
+                        }
                     }
                 }
             }
         }
     }
 }
+
+/** A chapter row's least height, which the list centres the open chapter's row by. */
+private val ROW_HEIGHT = 46.dp

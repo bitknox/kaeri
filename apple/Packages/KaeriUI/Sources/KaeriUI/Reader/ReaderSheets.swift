@@ -492,6 +492,9 @@ struct ReaderChaptersSheet: View {
     @State private var tab = ReaderModel.chapterListShot ? 1 : 0
     /// The loading line waits 600 ms, as every state does.
     @State private var loadingShown = false
+    /// The open chapter's row, which VoiceOver and the keyboard start on when the list opens.
+    @AccessibilityFocusState private var spoken: String?
+    @FocusState private var keyed: String?
 
     private var hasPages: Bool { model.medium == .manga }
     /// Pages a jump in the grid covers.
@@ -606,7 +609,35 @@ struct ReaderChaptersSheet: View {
         .onAppear { if file == nil { model.needPage(part.page) } }
     }
 
+    /// The chapter open in the reader, which the list opens centred on.
+    private var here: String? {
+        guard let id = model.view?.chapter.id,
+              model.chapters.contains(where: { $0.chapters.contains { $0.id == id } }) else { return nil }
+        return id
+    }
+
+    /// The list opens with the open chapter's row as near the middle as its ends allow, placed
+    /// before it is drawn: no scroll shows. A list that fits has nowhere to go and stays put.
+    private func place(_ proxy: ScrollViewProxy) {
+        guard let here else { return }
+        WindowCrossfade.still { proxy.scrollTo(here, anchor: .center) }
+        Task {
+            // VoiceOver and the keyboard land on the row once the sheet has settled.
+            try? await Task.sleep(for: .milliseconds(100))
+            spoken = here
+            keyed = here
+        }
+    }
+
     private var chapters: some View {
+        ScrollViewReader { proxy in
+            chapterList.onAppear { place(proxy) }
+                // Chapters listed after the sheet opened are placed as they come in.
+                .onChange(of: model.chaptersLoaded) { _, loaded in if loaded { place(proxy) } }
+        }
+    }
+
+    private var chapterList: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0) {
                 if !model.chaptersLoaded, loadingShown {
@@ -619,7 +650,7 @@ struct ReaderChaptersSheet: View {
                         Text(name).font(.ui(13, weight: .semibold)).foregroundStyle(theme.haze).textCase(nil)
                             .padding(.horizontal, 16).padding(.top, 14).padding(.bottom, 6)
                     }
-                    ForEach(0..<volume.chapters.count, id: \.self) { row in chapterRow(volume.chapters[row]) }
+                    ForEach(volume.chapters, id: \.id) { row in chapterRow(row) }
                 }
             }
         }
@@ -649,6 +680,9 @@ struct ReaderChaptersSheet: View {
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(here ? .isSelected : [])
+        .accessibilityFocused($spoken, equals: row.id)
+        .focused($keyed, equals: row.id)
+        .id(row.id)
     }
 
     private func rowRead(_ row: ChapterRow) -> Bool {
