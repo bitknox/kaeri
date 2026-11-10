@@ -21,16 +21,51 @@ enum ReadSearchScope {
         case .watch: false
         }
     }
+
+    /// Search's scope switched, as its control does. The screen keeps the scope it shows until
+    /// the other has its start to show, so the crossfade never passes through an empty screen:
+    /// reading's start is Home's rows, asked for here when none are kept, and drawn on its
+    /// placeholders if they take longer than 600 ms.
+    @MainActor
+    static func choose(_ reading: Bool, store: AppStore, navigator: Navigator) {
+        guard reading, store.reading.home == nil, store.reading.search.query.atStart else {
+            swap(to: reading, navigator: navigator)
+            return
+        }
+        navigator.searchReadingChosen = reading
+        store.reading.loadHome()
+        Task { @MainActor in
+            let deadline = ContinuousClock.now + .milliseconds(600)
+            while store.reading.home == nil, ContinuousClock.now < deadline {
+                try? await Task.sleep(for: .milliseconds(16))
+            }
+            guard navigator.searchReadingChosen == reading else { return }
+            swap(to: reading, navigator: navigator)
+        }
+    }
+
+    /// The scope shown and chosen made one, in one transaction and the scope first, so the
+    /// control never reads the old scope in between.
+    @MainActor
+    private static func swap(to reading: Bool, navigator: Navigator) {
+        withAnimation(.standard) {
+            navigator.searchReading = reading
+            navigator.searchReadingChosen = nil
+        }
+    }
 }
 
 /// Shows or Reading in Search.
 struct SearchScopePicker: View {
+    @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
 
     var body: some View {
+        // Read here, not in the binding, so the control follows the scope as it changes.
+        let selected = navigator.searchReadingChosen ?? navigator.searchReading
         Picker(L.libraryScopeLabel, selection: Binding(
-            get: { navigator.searchReading },
-            set: { reading in withAnimation(.standard) { navigator.searchReading = reading } }
+            get: { selected },
+            set: { reading in ReadSearchScope.choose(reading, store: store, navigator: navigator) }
         )) {
             Text(L.libraryScopeShows).tag(false)
             Text(L.libraryScopeReading).tag(true)
@@ -728,7 +763,7 @@ private struct OtherScopeRow: View {
                     .foregroundStyle(.silk)
                 Spacer(minLength: 8)
                 Button {
-                    withAnimation(.standard) { navigator.searchReading = false }
+                    ReadSearchScope.choose(false, store: store, navigator: navigator)
                 } label: {
                     HStack(spacing: 4) {
                         Text(L.searchShowThem)

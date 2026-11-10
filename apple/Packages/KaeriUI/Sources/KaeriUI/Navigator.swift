@@ -38,6 +38,9 @@ public final class Navigator {
     public var libraryReading = false
     /// Whether Search looks for reading rather than shows, with both media on.
     public var searchReading = false
+    /// The scope just chosen in Search's control while the screen keeps the one it shows until
+    /// the chosen one has its start (`ReadSearchScope.choose`); nil once they agree.
+    public var searchReadingChosen: Bool?
     /// A genre to browse in reading's Search, from Home's genre shelf.
     public var readingGenre: String?
     /// The section a discovery row's View all opened reading's Search from, on the Mac and a wide
