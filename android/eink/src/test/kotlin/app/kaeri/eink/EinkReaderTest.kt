@@ -81,7 +81,7 @@ class EinkReaderTest {
     fun the_guide_shows_until_the_first_touch_which_still_turns() {
         open()
         compose.onNodeWithText("Tap, or swipe right").assertIsDisplayed()
-        assertEquals(ReaderCommand.Shown(EinkFixtures.SESSION, EinkFixtures.CHAPTER, 0u, TurnHow.TURN), shown().first())
+        assertEquals(ReaderCommand.Shown(EinkFixtures.SESSION, EinkFixtures.CHAPTER, 0u, TurnHow.PLACED), shown().first())
         // Right to left: forward is the left 40%.
         compose.onRoot().performTouchInput { click(androidx.compose.ui.geometry.Offset(width * 0.2f, height * 0.5f)) }
         compose.waitForIdle()
