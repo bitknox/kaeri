@@ -186,8 +186,14 @@ pub struct KitsuTracker {
 }
 
 impl Renews for KitsuTracker {
-    async fn renew(&self, refresh_token: &str, now: i64) -> Result<TokenPair, String> {
-        refresh(&self.http, &self.site, refresh_token, now).await.map_err(|e| e.to_string())
+    async fn renew(
+        &self,
+        refresh_token: &str,
+        now: i64,
+    ) -> Result<TokenPair, kaeri_core::Error> {
+        refresh(&self.http, &self.site, refresh_token, now)
+            .await
+            .map_err(|e| kaeri_core::Error::Auth(e.to_string()))
     }
 }
 

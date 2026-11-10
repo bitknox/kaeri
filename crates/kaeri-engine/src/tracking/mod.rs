@@ -67,6 +67,9 @@ pub struct Sync {
     /// The Simkl tracker as its concrete type, for the same reason: a sign-in through its
     /// OAuth 2.0 lasts a week, and the pair renewed mid-call has to be written back.
     pub simkl: Option<Arc<kaeri_track::SimklTracker>>,
+    /// The Trakt tracker as its concrete type, for the same reason: its access token runs out,
+    /// and the pair renewed mid-call has to be written back.
+    pub trakt: Option<Arc<kaeri_track::TraktTracker>>,
     pub tokens: TokenStore,
     pub store: Store,
     pub config: Config,
@@ -134,6 +137,7 @@ impl Sync {
         let mut mal = None;
         let mut kitsu = None;
         let mut simkl = None;
+        let mut trakt = None;
         let mut mangaupdates = None;
         let reads: Arc<dyn kaeri_track::read::ReadMapping> =
             Arc::new(StoreReadMapping { store: store.clone() });
@@ -232,12 +236,18 @@ impl Sync {
         if config.trackers.is_enabled("trakt")
             && let Some(client_id) = config.trackers.trakt.client_id.clone()
         {
-            trackers.push(Arc::new(kaeri_track::TraktTracker::new(
-                client_id,
-                http.plain().clone(),
-                Arc::new(StoreMapping { store: store.clone() }),
-                tokens.get_pair("trakt").ok(),
-            )));
+            let tracker = Arc::new(
+                kaeri_track::TraktTracker::new(
+                    client_id,
+                    http.plain().clone(),
+                    Arc::new(StoreMapping { store: store.clone() }),
+                    tokens.get_pair("trakt").ok(),
+                )
+                .with_client_secret(config.trackers.trakt.client_secret.clone())
+                .with_token_store(tokens.clone()),
+            );
+            trackers.push(tracker.clone());
+            trakt = Some(tracker);
         }
 
         Self {
@@ -250,6 +260,7 @@ impl Sync {
             mangaupdates_api: kaeri_track::mangaupdates::API.to_owned(),
             lookups: Arc::new(kaeri_track::lookup::Lookups::new(http.plain().clone())),
             simkl,
+            trakt,
             tokens,
             store: store.clone(),
             config: config.clone(),
@@ -930,6 +941,19 @@ async fn persist_renewed_tokens(sync: &Sync) {
         ) {
             Ok(_) => tracing::info!("stored the renewed simkl token"),
             Err(e) => tracing::warn!(error = %e, "could not store the renewed simkl token"),
+        }
+    }
+    if let Some(trakt) = sync.trakt.as_ref()
+        && let Some(pair) = trakt.take_renewed().await
+    {
+        match sync.tokens.set_pair(
+            "trakt",
+            &pair.access,
+            pair.refresh.as_deref(),
+            pair.expires_at,
+        ) {
+            Ok(_) => tracing::info!("stored the renewed trakt token"),
+            Err(e) => tracing::warn!(error = %e, "could not store the renewed trakt token"),
         }
     }
 }
