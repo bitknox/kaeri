@@ -329,7 +329,7 @@ private struct ReadSearchBody: View {
 }
 
 /// Loads AniList's next page as the end of its results comes into view.
-private struct ReadSearchMore: View {
+struct ReadSearchMore: View {
     @Environment(AppStore.self) private var store
 
     var body: some View {
@@ -339,7 +339,12 @@ private struct ReadSearchMore: View {
                 if search.loading { ProgressView().controlSize(.small) }
             }
             .frame(maxWidth: .infinity, minHeight: 32)
-            .onAppear { store.reading.searchMore() }
+            // Coming into sight asks, not appearing: in a plain stack it appears only once. Anew
+            // for each page, so a page that still leaves it in sight asks for the next.
+            .id(search.page)
+            .onScrollVisibilityChange(threshold: 0.01) { visible in
+                if visible { store.reading.searchMore() }
+            }
         }
     }
 }
@@ -1044,6 +1049,7 @@ private struct ReadSortMenu: View {
         .fixedSize()
         .pointerHover()
         .accessibilityLabel(L.shellLibraryOrderLabel)
+        .accessibilityValue(ReadFilterWords.sort(current))
     }
 }
 

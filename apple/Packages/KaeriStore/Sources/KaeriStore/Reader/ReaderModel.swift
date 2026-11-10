@@ -108,8 +108,9 @@ public final class ReaderModel {
     public private(set) var readTrackers: [String] = []
     /// The reader closed: the page between chapters' server lines are forgotten.
     @ObservationIgnored var onClosed: (() -> Void)?
-    /// A place the paged reader is told to show (Back to page, Start over, another device's).
-    public private(set) var goTo: (leaf: Int, tick: Int)?
+    /// A place the paged reader is told to show (Back to page, Start over, another device's), and
+    /// how it got there: the page kept across a change of mode is no jump to offer a way back from.
+    public private(set) var goTo: (leaf: Int, tick: Int, how: TurnHow)?
     /// A novel place the web view is told to show.
     public private(set) var novelGoTo: (pos: NovelPos, tick: Int)?
     /// The sheet the screen shows: settings at This series, or the chapters.
@@ -253,6 +254,8 @@ public final class ReaderModel {
     @ObservationIgnored private var ticks = 0
     @ObservationIgnored private var lastStrip: ContinuousClock.Instant?
     @ObservationIgnored private var pendingStrip: Task<Void, Never>?
+    /// Whether the last strip report had the chapter's foot in sight.
+    @ObservationIgnored private var lastFoot = false
     @ObservationIgnored private var rereadAfterClose: Request?
 
     public init() {
@@ -373,9 +376,12 @@ public final class ReaderModel {
         let send = { [weak self] in
             guard let self else { return }
             lastStrip = .now
+            lastFoot = footVisible
             self.send?(.reader(.stripAt(session: session, chapter: chapter, at: at, footVisible: footVisible)))
         }
-        if let lastStrip, now - lastStrip < .milliseconds(500) {
+        // The foot coming into sight goes at once: it starts the read rule, and the strip may
+        // flow into the next chapter before a held report would go.
+        if let lastStrip, now - lastStrip < .milliseconds(500), footVisible == lastFoot {
             pendingStrip = Task { [weak self] in
                 try? await Task.sleep(for: .milliseconds(500) - (now - lastStrip))
                 guard !Task.isCancelled, self != nil else { return }
@@ -608,6 +614,10 @@ public final class ReaderModel {
             phase = .open
             if !leaves.isEmpty { current = min(max(current, startLeaf(leaves)), leaves.count - 1) }
             if let goTo = pendingGoTo, goTo < leaves.count { show(goTo) }
+            if let page = keepPage, let index = leaves.firstIndex(where: { $0.parts.contains { $0.page >= page } }) {
+                keepPage = nil
+                show(index, how: .scroll)
+            }
             settleHeld()
         case .pageReady(let session, let chapter, let page, let half, let file):
             guard session == self.session else { return }
@@ -661,6 +671,20 @@ public final class ReaderModel {
             // Settings' Reading pane asks for each medium's defaults: an open book keeps its own.
             if let open = self.view, view.medium != open.medium { return }
             settings = view
+            // A mode or direction changed in the reader lays the chapter out again without
+            // opening it anew: the view follows, so the tap zones and the slider turn with it.
+            if let open = self.view, view.work == open.work {
+                let followed = Self.following(open, view)
+                // The page on screen stays on screen in the other mode.
+                if followed.mode != open.mode, let page = pageOnScreen(open.mode) {
+                    if followed.mode == .strip {
+                        stripRestore = StripPos(image: page, offset: 0)
+                    } else {
+                        keepPage = page
+                    }
+                }
+                self.view = followed
+            }
         case .goTo(let session, let place):
             guard session == self.session else { return }
             goTo(place)
@@ -676,6 +700,41 @@ public final class ReaderModel {
     }
 
     private var pendingGoTo: Int?
+    /// The page a switch from the strip to pages keeps, until the pages are laid out.
+    @ObservationIgnored private var keepPage: UInt32?
+
+    /// The page on screen in `mode`: the first of the spread, or the strip's image at the top.
+    private func pageOnScreen(_ mode: ReaderMode) -> UInt32? {
+        switch mode {
+        case .paged:
+            guard leaves.indices.contains(current) else { return nil }
+            return leaves[current].parts.map(\.page).min()
+        default:
+            return inTrail == nil ? UInt32(max(position.index, 0)) : nil
+        }
+    }
+
+    /// The open book's view with the mode and direction `settings` give, as the engine lays the
+    /// chapter out again with them. A novel's pages are its own.
+    nonisolated static func following(_ view: ReaderView, _ settings: ReaderSettingsView) -> ReaderView {
+        guard view.medium != .novel, settings.medium == view.medium else { return view }
+        func word(_ key: ReaderSettingKey) -> String? {
+            if case .choice(let name)? = settings.rows.first(where: { $0.key == key })?.value { return name }
+            return nil
+        }
+        var view = view
+        switch word(.direction) {
+        case "ltr": view.direction = .leftToRight
+        case "rtl": view.direction = .rightToLeft
+        default: break
+        }
+        switch word(.mode) {
+        case "strip": view.mode = .strip
+        case "paged": view.mode = .paged
+        default: break
+        }
+        return view
+    }
 
     private func startLeaf(_ leaves: [Leaf]) -> Int {
         guard let page = view?.start.page else { return 0 }
@@ -689,7 +748,7 @@ public final class ReaderModel {
         }
         if let image = place.strip {
             stripRestore = image
-            self.goTo = (Int(image.image), bump())
+            self.goTo = (Int(image.image), bump(), .jump)
             return
         }
         guard let page = place.page else { return }
@@ -700,10 +759,10 @@ public final class ReaderModel {
         }
     }
 
-    private func show(_ leaf: Int) {
+    private func show(_ leaf: Int, how: TurnHow = .jump) {
         pendingGoTo = nil
         current = leaf
-        goTo = (leaf, bump())
+        goTo = (leaf, bump(), how)
     }
 
     private func show(_ incoming: ReaderNotice) {
@@ -781,6 +840,7 @@ public final class ReaderModel {
         chromeShown = false
         opened = false
         pendingGoTo = nil
+        keepPage = nil
         lastStrip = nil
         trail = StripTrail()
         inTrail = nil

@@ -19,6 +19,8 @@ struct PagedReader: View {
     @State private var fading: Int?
     @State private var fade: Double = 1
     @State private var settling = false
+    @State private var zoom = PageZoom()
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var rtl: Bool { model.view?.direction == .rightToLeft }
     /// Which way a drag goes to move forward: right in right-to-left, left otherwise.
@@ -31,6 +33,7 @@ struct PagedReader: View {
             // and the page a tap turn leaves is the same view held under the one that fades in.
             ForEach(mounted, id: \.self) { index in
                 leaf(index)
+                    .zoomed(zoom, on: index == current)
                     .offset(x: offset(of: index))
                     .opacity(index == current && fading != nil ? fade : 1)
                     .zIndex(index == current ? 1 : 0)
@@ -41,12 +44,29 @@ struct PagedReader: View {
         .clipped()
         .contentShape(.rect)
         .gesture(swipe)
+        #if os(iOS)
+        // A double tap zooms, so a single tap waits for it not to be one.
+        .simultaneousGesture(
+            SpatialTapGesture(count: 2).onEnded { zoom.doubleTap(at: $0.location, in: size, motion: !reduceMotion && !paper) }
+                .exclusively(before: SpatialTapGesture().onEnded { tap($0.location.x / max(size.width, 1)) }))
+        .simultaneousGesture(
+            MagnifyGesture()
+                .onChanged { zoom.pinch($0.magnification, at: $0.startLocation, in: size) }
+                .onEnded { _ in zoom.pinchEnded(in: size, motion: !reduceMotion && !paper) })
+        #else
         .simultaneousGesture(SpatialTapGesture().onEnded { tap($0.location.x / max(size.width, 1)) })
+        #endif
         .onAppear { model.position = (current, max(model.leaves.count, 1)) }
-        .onChange(of: model.current) { _, _ in model.position = (current, max(model.leaves.count, 1)) }
-        .onChange(of: model.leaves.count) { _, _ in model.position = (current, max(model.leaves.count, 1)) }
+        .onChange(of: model.current) { _, _ in
+            model.position = (current, max(model.leaves.count, 1))
+            zoom.reset()
+        }
+        .onChange(of: model.leaves.count) { _, _ in
+            model.position = (current, max(model.leaves.count, 1))
+            zoom.reset()
+        }
         .onChange(of: model.goTo?.tick) { _, _ in
-            if let to = model.goTo?.leaf { model.shown(to, how: .jump) }
+            if let to = model.goTo { model.shown(to.leaf, how: to.how) }
         }
         .onChange(of: model.jump?.tick) { _, _ in
             if let to = model.jump?.index, model.leaves.indices.contains(to) { model.shown(to, how: .jump) }
@@ -79,7 +99,9 @@ struct PagedReader: View {
                 ReaderEndPage(model: model, theme: theme, size: size)
             } else {
                 LeafView(
-                    model: model, leaf: item, size: size, theme: theme, tone: tone, scale: scale,
+                    model: model, leaf: item, size: size, theme: theme, tone: tone,
+                    // A zoomed page is decoded again at its zoom once the fingers are up, so it stays sharp.
+                    scale: scale * (index == current ? zoom.detail : 1),
                     fitWidth: model.choice(.fit) == "width")
                     .background(Color.clear)
             }
@@ -92,6 +114,8 @@ struct PagedReader: View {
 
     private func tap(_ x: Double) {
         let layout = model.choice(.tapLayout) ?? "edges"
+        // While zoomed the zones are off: a tap anywhere only brings the chrome or puts it away.
+        if zoom.zoomed { onTap(0.5); return }
         if model.chromeShown || layout == "off" { onTap(x); return }
         // Edges: the outer thirds turn. Halves: the outer 40 percent turn, and the middle band
         // still brings the chrome up.
@@ -133,6 +157,11 @@ struct PagedReader: View {
         DragGesture(minimumDistance: 14)
             .onChanged { value in
                 guard !settling else { return }
+                // A zoomed page pans and never turns; a pinch's fingers do neither.
+                if zoom.zoomed || zoom.pinching {
+                    zoom.drag(value.translation, in: size)
+                    return
+                }
                 var x = value.translation.width
                 let forward = x * sign > 0
                 let target = current + (forward ? 1 : -1)
@@ -142,6 +171,11 @@ struct PagedReader: View {
             }
             .onEnded { value in
                 guard !settling else { return }
+                if zoom.zoomed || zoom.pinching {
+                    zoom.dragEnded()
+                    withAnimation(paper ? nil : .standard) { drag = 0 }
+                    return
+                }
                 let x = value.translation.width
                 let flick = abs(value.velocity.width) > 450 && value.velocity.width * x > 0
                 let commit = abs(x) > size.width * 0.25 || flick

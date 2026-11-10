@@ -434,6 +434,9 @@ struct Sidebar: View {
             var instant = Transaction()
             instant.disablesAnimations = true
             withTransaction(instant) { selection = section }
+            // The section already chosen, under a series' page: its own first screen again, as a
+            // tab chosen twice goes back to its top.
+            if selected, navigator.seriesOnMac != nil { navigator.closeSeries() }
         } label: {
             HStack(spacing: 10) {
                 Image(systemName: section.symbol)

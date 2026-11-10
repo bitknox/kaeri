@@ -323,6 +323,9 @@ struct ReadTileCard: View {
                         }
                     }
                     .padding(.top, 6)
+                    // The line under the title says the place in words; the bar's own name would
+                    // lead the tile's ("Progress, the title").
+                    .accessibilityHidden(true)
                 }
                 Text(tile.title)
                     .font(.showTitle(size: layout.posterTitle.size, relativeTo: .body))

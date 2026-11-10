@@ -85,10 +85,12 @@ enum ReadSeriesWords {
         if !row.line.isEmpty { return row.line.map(\.text).joined(separator: " · ") } // i18n-skip
         var parts: [String] = []
         if let state = ReadWords.state(row) { parts.append(state) }
-        if row.download == .done { parts.append(L.chapterStateDownloaded) }
-        if let at = row.state == .read ? (row.readAt ?? row.published) : row.published {
+        // When it was read, or when a new chapter came out: the date always follows the state it
+        // belongs to, so it never reads as when the download was made.
+        if let at = row.state == .read ? (row.readAt ?? row.published) : (row.newChapter ? row.published : nil) {
             parts.append(ReadWords.ago(at))
         }
+        if row.download == .done { parts.append(L.chapterStateDownloaded) }
         if let label = row.versionLabel, !label.isEmpty, label != preferred || row.versions > 1 { parts.append(label) }
         if row.versions > 1 { parts.append(L.chapterUpdatesVersions(n: Int(row.versions))) }
         return parts.joined(separator: " · ") // i18n-skip
@@ -475,31 +477,16 @@ private struct SeriesActions: View {
         }
     }
 
+    /// One line while it fits, else the main action on its own line and the menus under it. A
+    /// layout rather than a choice of views, so each menu is made once: a ViewThatFits made every
+    /// menu again for each size it was asked about, and in the iPad's three columns that never
+    /// ended.
     private var row: some View {
-        Group {
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 10) {
-                    main
-                    statusMenu
-                    downloadMenu
-                    SeriesMoreMenu(series: series, choosing: $choosing, circle: secondaryHeight)
-                }
-                // Narrower, before anything wraps: the main action without its book.
-                HStack(spacing: 8) {
-                    mainButton(icon: false)
-                    statusMenu
-                    downloadMenu
-                    SeriesMoreMenu(series: series, choosing: $choosing, circle: secondaryHeight)
-                }
-                VStack(alignment: .leading, spacing: 10) {
-                    main
-                    HStack(spacing: 10) {
-                        statusMenu
-                        downloadMenu
-                        SeriesMoreMenu(series: series, choosing: $choosing, circle: secondaryHeight)
-                    }
-                }
-            }
+        SeriesActionRow(spacing: 10) {
+            main
+            statusMenu
+            downloadMenu
+            SeriesMoreMenu(series: series, choosing: $choosing, circle: secondaryHeight)
         }
     }
 
@@ -574,6 +561,8 @@ private struct SeriesActions: View {
         } label: {
             menuLabel(series.list.map(ReadWords.list) ?? L.seriesAddToList)
         }
+        // Named by its words alone: UIKit reads a menu's label whole, the chevron as "Go Down".
+        .accessibilityLabel(series.list.map(ReadWords.list) ?? L.seriesAddToList)
         .menuStyle(.button)
         .buttonStyle(SecondaryCapsuleStyle(height: secondaryHeight, fontSize: secondaryFont))
         .menuIndicator(.hidden)
@@ -618,6 +607,7 @@ private struct SeriesActions: View {
         } label: {
             menuLabel(L.seriesDownload)
         }
+        .accessibilityLabel(L.seriesDownload)
         .menuStyle(.button)
         .buttonStyle(SecondaryCapsuleStyle(height: secondaryHeight, fontSize: secondaryFont))
         .menuIndicator(.hidden)
@@ -631,6 +621,44 @@ private struct SeriesActions: View {
             Image(systemName: "chevron.down").font(.ui(secondaryFont - 3, weight: .semibold)).accessibilityHidden(true)
         }
         .frame(maxWidth: stretch ? .infinity : nil)
+    }
+}
+
+/// The main action and its menus on one line, or the main action over the rest when the line
+/// is too narrow. Each keeps its own width.
+private struct SeriesActionRow: Layout {
+    var spacing: CGFloat
+
+    private func lines(_ subviews: Subviews, width: CGFloat?) -> [[Int]] {
+        let all = Array(subviews.indices)
+        guard let width, all.count > 1 else { return [all] }
+        let sizes = subviews.map { $0.sizeThatFits(.unspecified).width }
+        let one = sizes.reduce(0, +) + spacing * CGFloat(sizes.count - 1)
+        return one <= width ? [all] : [[all[0]], Array(all.dropFirst())]
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        var width: CGFloat = 0, height: CGFloat = 0
+        for (n, line) in lines(subviews, width: proposal.width).enumerated() {
+            let sizes = line.map { subviews[$0].sizeThatFits(.unspecified) }
+            width = max(width, sizes.map(\.width).reduce(0, +) + spacing * CGFloat(max(sizes.count - 1, 0)))
+            height += (n > 0 ? spacing : 0) + (sizes.map(\.height).max() ?? 0)
+        }
+        return CGSize(width: width, height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var y = bounds.minY
+        for line in lines(subviews, width: bounds.width) {
+            let sizes = line.map { subviews[$0].sizeThatFits(.unspecified) }
+            let tall = sizes.map(\.height).max() ?? 0
+            var x = bounds.minX
+            for (index, size) in zip(line, sizes) {
+                subviews[index].place(at: CGPoint(x: x, y: y + (tall - size.height) / 2), proposal: ProposedViewSize(size))
+                x += size.width + spacing
+            }
+            y += tall + spacing
+        }
     }
 }
 
@@ -818,6 +846,8 @@ private struct SeriesChapters: View {
                     .font(.plat(mac: 13, touch: 15, weight: .semibold))
                     .foregroundStyle(.silk)
                 }
+                .accessibilityLabel(L.seriesOrder)
+                .accessibilityValue(newestFirst ? L.seriesNewestFirst : L.seriesOldestFirst)
                 .menuStyle(.button)
                 .buttonStyle(.plain)
                 .menuIndicator(.hidden)
@@ -919,6 +949,8 @@ private struct SeriesChapters: View {
         }
         .buttonStyle(.plain)
         .pointerHover()
+        // Read as "Volume 9, chapters 77 to 84": the dot between them is only for the eye.
+        .accessibilityLabel(words.rest.isEmpty ? words.name : "\(words.name), \(words.rest)") // i18n-skip
         .accessibilityValue(shown ? L.seriesExpanded : L.seriesCollapsed)
         if shown {
             let rows = newestFirst ? group.chapters.reversed() : group.chapters
