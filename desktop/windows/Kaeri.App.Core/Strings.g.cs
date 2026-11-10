@@ -615,6 +615,9 @@ public static partial class T
     /// <summary>Why one page did not load. The status is the server's HTTP status code, such as 404.</summary>
     public static string ReadingFailedPage(long status) => Fill(Get("ReadingFailedPage"), ("status", status.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>In the reader, in a novel's text, in the box where a picture from the source did not load. Try again sits under it.</summary>
+    public static string ReadingPictureFailed => Get("ReadingPictureFailed");
+
     /// <summary>Why something could not load: a sign-in is needed. What is a server's or a tracker's name.</summary>
     public static string ReadingFailedSignIn(string what) => Fill(Get("ReadingFailedSignIn"), ("what", what));
 
@@ -11869,6 +11872,7 @@ public static partial class T
         ["ReadingFailedBlocked"] = "{source} refused the request. {reason}",
         ["ReadingFailedParse"] = "Kaeri couldn't read what {source} sent. Its plugin may need an update.",
         ["ReadingFailedPage"] = "This page didn't load (error {status}). Try again.",
+        ["ReadingPictureFailed"] = "Couldn't load picture",
         ["ReadingFailedSignIn"] = "Sign in to {what} again to keep reading.",
         ["ReadingFailedFileMissing"] = "{path} isn't there anymore. If it's on a drive, connect it and try again.",
         ["ReadingFailedUnreadable"] = "{path} couldn't be read as {format}. The file may be damaged.",

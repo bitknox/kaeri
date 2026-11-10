@@ -765,3 +765,99 @@ async fn a_chapter_opened_while_the_one_before_is_still_opening_opens() {
     });
     assert_eq!(opened, Some(second));
 }
+
+/// A plugin's novel with the example books plugin's first Saltglass chapter: its picture on
+/// `pages.example`, which answers, and a second on `slow.example`, which never does.
+struct Illustrated {
+    manifest: BookSourceManifest,
+}
+
+impl Illustrated {
+    fn new() -> Arc<Self> {
+        Arc::new(Self {
+            manifest: BookSourceManifest {
+                id: "illustrated".into(),
+                name: "Illustrated".into(),
+                version: "1".into(),
+                kind: BookSourceKind::Plugin,
+                media: vec![Medium::Novel],
+                languages: vec!["en".into()],
+                allowed_hosts: vec!["pages.example".into(), "slow.example".into()],
+                capabilities: Vec::new(),
+            },
+        })
+    }
+}
+
+#[async_trait]
+impl kaeri_core::traits::BookSource for Illustrated {
+    fn manifest(&self) -> &BookSourceManifest {
+        &self.manifest
+    }
+
+    async fn search(&self, _: &str, _: &BookHints) -> Result<Vec<SeriesHit>, ProviderError> {
+        Ok(Vec::new())
+    }
+
+    async fn series(&self, id: &str, _: &BookHints) -> Result<SeriesDetail, ProviderError> {
+        Ok(SeriesDetail::new(id, "Saltglass Letters"))
+    }
+
+    async fn chapters(
+        &self,
+        _: &str,
+        _: &BookHints,
+    ) -> Result<Vec<SourceChapter>, ProviderError> {
+        Ok(vec![SourceChapter::new("saltglass-1", "1")])
+    }
+
+    async fn content(&self, _: &str, _: &str) -> Result<ChapterContent, ProviderError> {
+        Ok(ChapterContent::Text(
+            "<h2>The First Bottle</h2><p>The bottle was cold, and the letter inside was dry.</p>\
+             <p>It began, as they all did, with the tide.</p>\
+             <p><img src=\"https://pages.example/saltglass/bottle.jpg\" \
+             alt=\"A green bottle on wet sand\"/></p>\
+             <p><img src=\"https://slow.example/saltglass/gull.jpg\" alt=\"A gull\"/></p>"
+                .into(),
+        ))
+    }
+
+    async fn fetch_page(
+        &self,
+        page: &kaeri_core::books::PageRef,
+    ) -> Result<Vec<u8>, kaeri_core::traits::PageError> {
+        if page.url.starts_with("https://slow.example/") {
+            return std::future::pending().await;
+        }
+        Ok(crate::read_sources::pictures::ONE_PIXEL_PNG.to_vec())
+    }
+}
+
+#[tokio::test(start_paused = true)]
+async fn a_text_chapter_opens_with_its_pictures_and_a_dead_host_holds_it_back_seconds_at_most()
+{
+    use crate::read_sources::pictures::OPENING_WAIT;
+    let mut h = harness_of(Store::open_in_memory().unwrap(), "novel", |_| Vec::new());
+    h.services.book_sources.registry.put(Illustrated::new());
+    h.services
+        .store
+        .set_book_match("illustrated", "series-1", WORK, 90, true, false, 1)
+        .unwrap();
+    let began = tokio::time::Instant::now();
+    let (_, novel) = h.open_novel(OpenAt::Start).await;
+    let waited = began.elapsed();
+    assert!(waited >= OPENING_WAIT && waited < OPENING_WAIT * 2, "{waited:?}");
+
+    let doc = text(&h.get(&novel.entry));
+    assert!(doc.contains("src=\"images/1\" alt=\"A green bottle on wet sand\""), "{doc}");
+    assert!(doc.contains("src=\"images/2\" alt=\"A gull\""), "{doc}");
+    assert!(!doc.contains(".example/"), "no web address reaches the page: {doc}");
+    // The paginator keeps a box for the one still coming.
+    assert!(doc.contains("&quot;waiting&quot;:[&quot;images/2&quot;]"), "{doc}");
+
+    let at = |path: &str| novel.entry.replace(crate::reading::novel::TEXT_CHAPTER, path);
+    let bottle = h.get(&at("images/1"));
+    assert_eq!((bottle.status, bottle.mime.as_str()), (200, "image/png"));
+    assert_eq!(h.get(&at("images/2?n=1")).status, 503, "still coming");
+    assert_eq!(h.get(&at("images/2?state&n=1")).status, 404, "and not failed");
+}

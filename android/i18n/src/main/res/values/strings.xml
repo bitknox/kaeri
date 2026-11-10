@@ -429,6 +429,8 @@
     <string name="reading_failed_parse">Kaeri couldn\'t read what %1$s sent. Its plugin may need an update.</string>
     <!-- Why one page did not load. The status is the server's HTTP status code, such as 404. -->
     <string name="reading_failed_page">This page didn\'t load (error %1$d). Try again.</string>
+    <!-- In the reader, in a novel's text, in the box where a picture from the source did not load. Try again sits under it. -->
+    <string name="reading_picture_failed">Couldn\'t load picture</string>
     <!-- Why something could not load: a sign-in is needed. What is a server's or a tracker's name. -->
     <string name="reading_failed_sign_in">Sign in to %1$s again to keep reading.</string>
     <!-- Why a book could not open: its file or folder is gone, perhaps on a drive that is not connected. The path is the file's. -->

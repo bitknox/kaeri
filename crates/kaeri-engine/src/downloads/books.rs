@@ -913,7 +913,9 @@ impl BookDownloads {
                 }
                 done
             }
-            ChapterContent::Text(body) => {
+            ChapterContent::Text(mut body) => {
+                // Its pictures go inside the book, so it reads with no network.
+                let pictures = lent.sources.pictures_in(&source, &mut body).await;
                 let file =
                     File::create(&part).map_err(|e| Stop::Failed(io_failure(&e, &part)))?;
                 let label = job.chapter.as_str().to_owned();
@@ -929,6 +931,10 @@ impl BookDownloads {
                     None,
                 )
                 .map_err(|e| Stop::Failed(book_failure(&e, &part, &source)))?;
+                for picture in &pictures {
+                    epub.add_resource(&picture.path, picture.media_type, &picture.bytes)
+                        .map_err(|e| Stop::Failed(book_failure(&e, &part, &source)))?;
+                }
                 epub.add_chapter(&label, &body)
                     .map_err(|e| Stop::Failed(book_failure(&e, &part, &source)))?;
                 let mut out = epub

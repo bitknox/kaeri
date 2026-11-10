@@ -10,9 +10,11 @@
 
 mod css;
 mod hyphen;
+mod images;
 mod sanitize;
 
 pub use hyphen::{BUILT_IN as HYPHENATES, SHY};
+pub use images::{MOST_WEB_IMAGES, web_images, with_local_images};
 pub use sanitize::{Clean, Document, Failed, document, stylesheet, svg, text_chapter};
 
 /// The paginator as written, with a placeholder where [`script`] puts the stylesheet.

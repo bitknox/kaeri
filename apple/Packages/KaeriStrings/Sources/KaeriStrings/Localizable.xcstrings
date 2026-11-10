@@ -235871,6 +235871,18 @@
         }
       }
     },
+    "reading-picture-failed" : {
+      "comment" : "In the reader, in a novel's text, in the box where a picture from the source did not load. Try again sits under it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load picture"
+          }
+        }
+      }
+    },
     "reading-removed-failed" : {
       "comment" : "The tracker could not take the series off. The reason follows. Argument 1: tracker (Text).",
       "extractionState" : "manual",

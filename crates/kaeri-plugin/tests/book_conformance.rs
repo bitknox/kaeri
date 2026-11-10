@@ -312,6 +312,32 @@ async fn a_book_plugin_is_an_ordinary_book_source() {
 }
 
 #[tokio::test]
+async fn a_text_chapters_picture_stays_on_a_declared_host_and_goes_the_page_path() {
+    use kaeri_core::{
+        books::{ChapterContent, PageRef},
+        error::ProviderError,
+        traits::BookSource,
+    };
+    let Some(path) = example() else { return };
+    let source = WasmBookSource::new(host().load_book(&path).await.expect("load"));
+
+    let content = source.content(SALTGLASS, "saltglass-1").await.expect("content");
+    let ChapterContent::Text(text) = content else { panic!("expected text") };
+    let url = "https://pages.example/saltglass/bottle.jpg";
+    assert!(text.contains(&format!("<img src=\"{url}\"")), "{text}");
+    assert!(kaeri_plugin::sandbox::is_allowed(url, &source.manifest().allowed_hosts));
+
+    // The engine fetches it as it fetches a page: through the plugin's lent client, which this
+    // host does not lend, so it fails as transport and is never refused as off its hosts.
+    let picture = source.fetch_page(&PageRef::new(url)).await.unwrap_err();
+    assert!(!matches!(picture, ProviderError::Blocked(_)), "{picture:?}");
+    // The same picture on a host it did not declare is refused before anything is sent.
+    let elsewhere = PageRef::new("https://elsewhere.example/saltglass/bottle.jpg");
+    let denied = source.fetch_page(&elsewhere).await.unwrap_err();
+    assert!(matches!(denied, ProviderError::Blocked(_)), "{denied:?}");
+}
+
+#[tokio::test]
 async fn a_plugin_built_for_book_plugin_is_never_asked_for_pages() {
     let Some(path) = example() else { return };
     let plugin = host().load_book(&path).await.expect("load");

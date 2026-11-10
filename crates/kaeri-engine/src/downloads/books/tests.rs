@@ -70,6 +70,14 @@ impl BookSource for Shelf {
         if chapter.starts_with("text-") {
             return Ok(ChapterContent::Text("<p>The ferry left at dusk.</p>".into()));
         }
+        if chapter.starts_with("pictured-") {
+            return Ok(ChapterContent::Text(
+                "<p>The ferry left at dusk.</p>\
+                 <img src=\"https://pages.example/pictures/pier.png\" alt=\"The pier\"/>\
+                 <img src=\"https://elsewhere.example/pictures/gull.png\"/>"
+                    .into(),
+            ));
+        }
         if chapter.starts_with("made-") {
             return Ok(ChapterContent::Images(
                 (1..=3)
@@ -100,6 +108,9 @@ impl BookSource for Shelf {
         }
         if self.broken.lock().unwrap().contains(&page_ref.url) {
             return Err(PageError::Status(404));
+        }
+        if page_ref.url.contains("/pictures/") {
+            return Ok(crate::read_sources::pictures::ONE_PIXEL_PNG.to_vec());
         }
         Ok(page())
     }
@@ -156,6 +167,10 @@ impl Kit {
 }
 
 fn kit(chapters: &[&str]) -> Kit {
+    kit_of(chapters, &[])
+}
+
+fn kit_of(chapters: &[&str], hosts: &[&str]) -> Kit {
     let dir = tempfile::tempdir().unwrap();
     let store = Store::open_in_memory().unwrap();
     let paths = Paths {
@@ -172,7 +187,7 @@ fn kit(chapters: &[&str]) -> Kit {
         kind: BookSourceKind::Native,
         media: vec![Medium::Manga],
         languages: vec!["en".into()],
-        allowed_hosts: Vec::new(),
+        allowed_hosts: hosts.iter().map(|h| (*h).to_owned()).collect(),
         capabilities: Vec::new(),
     };
     let listed = chapters.iter().map(|id| SourceChapter::new(*id, *id)).collect();
@@ -338,6 +353,34 @@ async fn a_text_chapter_downloads_as_a_single_chapter_epub() {
     let shelf = kit.store().shelf(WORK).unwrap();
     assert_eq!((shelf.len(), shelf[0].format.as_str()), (1, "epub"));
     assert!(std::fs::metadata(&shelf[0].path).unwrap().len() > 0);
+}
+
+#[tokio::test]
+async fn a_text_chapters_pictures_on_the_plugins_hosts_go_inside_its_epub() {
+    let kit = kit_of(&[], &["pages.example"]);
+    kit.shelf.listed.lock().unwrap().push(SourceChapter::new("pictured-1", "1"));
+    kit.queue
+        .download(&kit.lent, WorkId::new(WORK), DownloadPick::Chapters { ids: ids(&["1"]) })
+        .await;
+    kit.settle().await;
+    let shelf = kit.store().shelf(WORK).unwrap();
+    assert_eq!((shelf.len(), shelf[0].format.as_str()), (1, "epub"));
+    let asked = kit.shelf.asked.lock().unwrap().clone();
+    assert_eq!(asked, ["https://pages.example/pictures/pier.png"], "no other host is asked");
+
+    let limits = kaeri_books::Limits::default();
+    let book = kaeri_books::open(std::path::Path::new(&shelf[0].path), &limits);
+    let Ok(kaeri_books::Book::Epub(mut epub)) = book else { panic!("an epub") };
+    let chapter = epub.spine().next().map(|(_, item)| item.path.clone()).unwrap();
+    let picture = chapter
+        .rsplit_once('/')
+        .map_or("images/1.png".to_owned(), |(dir, _)| format!("{dir}/images/1.png"));
+    assert_eq!(
+        epub.resource(&picture).unwrap().data,
+        crate::read_sources::pictures::ONE_PIXEL_PNG
+    );
+    let text = String::from_utf8(epub.resource(&chapter).unwrap().data).unwrap();
+    assert!(text.contains("src=\"images/1.png\""), "{text}");
 }
 
 #[tokio::test]

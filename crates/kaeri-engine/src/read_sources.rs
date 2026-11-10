@@ -53,6 +53,7 @@ use kaeri_track::TokenStore;
 use crate::{book_plugins::BookPlugins, outbox::Outbox};
 
 pub(crate) mod added;
+pub(crate) mod pictures;
 pub use added::RECHECK;
 
 /// The id the folders answer to in the registry.
