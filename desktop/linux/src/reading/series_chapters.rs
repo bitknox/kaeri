@@ -368,6 +368,12 @@ mod tests {
             read_at: None,
             line: Vec::new(),
             gone_from_source: false,
+            parts: 1,
+            missing_parts: Vec::new(),
+            part_groups: Vec::new(),
+            other_group: false,
+            group_language: None,
+            other_source: None,
         }
     }
 
