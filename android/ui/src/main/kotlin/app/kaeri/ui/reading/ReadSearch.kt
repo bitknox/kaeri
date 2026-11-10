@@ -26,6 +26,7 @@ import app.kaeri.ui.SearchFieldPlace
 import app.kaeri.ui.SearchNothing
 import app.kaeri.ui.SearchTop
 import app.kaeri.ui.StartGenres
+import app.kaeri.ui.SurpriseButton
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -80,6 +81,7 @@ import app.kaeri.engine.model.ReadFilters
 import app.kaeri.engine.model.ReadRowKind
 import app.kaeri.engine.model.ReadSearchQuery
 import app.kaeri.engine.model.ReadingAbout
+import app.kaeri.engine.model.SurprisePool
 import app.kaeri.i18n.R
 import app.kaeri.i18n.Strings
 import app.kaeri.store.ReadSearchState
@@ -193,6 +195,9 @@ internal fun ReadSearchScreen(startText: String? = null) {
                                 IconButton(onClick = { text.clearText() }, modifier = Modifier.semantics { contentDescription = clearLabel }) {
                                     Icon(Icons.Clear, contentDescription = null)
                                 }
+                            } else if (browsing) {
+                                // Surprise me, from reading's filters, in the shows' place.
+                                SurpriseButton(SurprisePool.Reading(query))
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),

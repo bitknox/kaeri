@@ -590,7 +590,8 @@ pub fn context_menu(widget: &impl IsA<gtk::Widget>, menu: &gio::Menu) {
 }
 
 /// Surprise me, or Another: a flat header bar button with its word. It asks the engine for a pick
-/// from `pool` and opens it (or swaps the page on screen for it when `swap`), showing a spinner in
+/// from `pool` and opens it (or swaps the page on screen for it when `swap`; a book from reading's
+/// filters opens as a series, with no Another), showing a spinner in
 /// place of the glyph once the pick takes more than 600 ms. Pressed again while it waits, it does
 /// nothing. An empty pool or no connection is said by the engine's own notice.
 pub fn surprise_button(
@@ -649,7 +650,13 @@ pub fn surprise_button(
             id.remove();
         }
         icon.set_visible_child_name("dice");
-        if let SurpriseOutcome::Picked { id, more } = outcome {
+        if let SurpriseOutcome::Picked { id, .. } = outcome
+            && matches!(pool, kaeri_model::browsing::SurprisePool::Reading { .. })
+        {
+            ctx.pick.replace(None);
+            let _ = button
+                .activate_action("win.open-series", Some(&format!("a:{id}").to_variant()));
+        } else if let SurpriseOutcome::Picked { id, more } = outcome {
             ctx.pick.replace(Some(crate::window::Pick {
                 id: *id,
                 pool: pool.clone(),

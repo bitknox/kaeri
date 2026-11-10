@@ -272,6 +272,9 @@ pub enum SurprisePool {
     Filters { query: SearchQuery },
     /// The Planning list on this device. Asks nothing, and works offline.
     Planning,
+    /// Reading's Search browse: every book reading's filters match, which AniList is asked for,
+    /// as the start's rows are. The pick opens as a series, by its `a:` work id.
+    Reading { query: crate::reading::ReadSearchQuery },
 }
 
 /// What a Surprise me or Another asked for came to.

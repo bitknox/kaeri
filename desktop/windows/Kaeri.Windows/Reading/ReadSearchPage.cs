@@ -65,6 +65,7 @@ public sealed partial class ReadSearchPage : Page
         TextWrapping = TextWrapping.NoWrap,
         TextTrimming = TextTrimming.CharacterEllipsis,
     };
+    readonly SurpriseButton surprise;
     readonly TextBlock demoLine = new() { Text = T.SearchDemoOnlyBooks, Style = Ui.Res<Style>("HazeBodyStyle"), TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
 
     // The filter row and its menus, made again as each opens so they say what the query has now.
@@ -184,7 +185,18 @@ public sealed partial class ReadSearchPage : Page
         // the scope moves none of them.
         var head = new StackPanel();
         AutomationProperties.SetHeadingLevel(title, AutomationHeadingLevel.Level1);
-        head.Children.Add(title);
+        // Surprise me beside the title, as on the shows' Search: a random book from the filters.
+        surprise = new SurpriseButton(() => new SurprisePool.Reading(Query with { Text = "" }), T.SurpriseHintFilters)
+        {
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        var top = new Grid { ColumnSpacing = 12 };
+        top.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        top.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        top.Children.Add(title);
+        Grid.SetColumn(surprise, 1);
+        top.Children.Add(surprise);
+        head.Children.Add(top);
         head.Children.Add(new OfflineLine(reading: true));
         head.Children.Add(new ScopeSwitch { Place = "search", Reading = true, Margin = new Thickness(0, 4, 0, 0) });
         head.Children.Add(demoLine);
@@ -353,6 +365,7 @@ public sealed partial class ReadSearchPage : Page
         base.OnNavigatedTo(e);
         ctx.Hear(this, batch =>
         {
+            surprise.Heard(batch);
             if (batch.Any(x => x is Event.Demo))
                 Demo();
         });

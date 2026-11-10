@@ -131,7 +131,7 @@ private fun slowPick(pool: SurprisePool?): Boolean {
 
 /**
  * Surprise me as an icon button, with its name as the description and the long-press tooltip.
- * It picks from [pool]: the filters in Search, the Planning list in the Library.
+ * It picks from [pool]: the filters in Search, shows' or reading's, the Planning list in the Library.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -188,7 +188,10 @@ internal fun SurpriseHost() {
     val removed by rememberUpdatedState(app.kaeri.design.rememberAnimationsRemoved())
     LaunchedEffect(store) {
         store.surprise.picks.collect { pick ->
-            if (pick.inPlace) {
+            if (pick.pool is SurprisePool.Reading) {
+                // A book opens as a series, as its tile in reading's Search does.
+                navigator.openSeries("a:${pick.id}", "surprise")
+            } else if (pick.inPlace) {
                 // With Remove animations on the host swaps at once, so a still of the old page fades out over the new.
                 val fade = navigator.fade
                 if (removed && fade != null) {

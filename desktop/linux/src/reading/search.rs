@@ -21,6 +21,7 @@ use adw::prelude::*;
 use gtk::{gio, glib};
 use kaeri_i18n::t;
 use kaeri_model::{
+    browsing::SurprisePool,
     event::Event,
     reading::{
         ReadFilterChoice, ReadFilters, ReadHomeRow, ReadRowFormat, ReadRowKind,
@@ -968,6 +969,16 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
         }
     });
     let filters = Filters::new();
+    // Surprise me: a random book from the filters in effect, in the shows' place.
+    let surprise =
+        widgets::surprise_button(ctx, &t::surprise_me(), &t::surprise_hint_filters(), false, {
+            let filters = Rc::downgrade(&filters);
+            move || {
+                let filters = filters.upgrade()?;
+                Some(SurprisePool::Reading { query: filters.query("") })
+            }
+        });
+    header.pack_end(&surprise);
     // Shows or Reading leads the content bar, where Library has it.
     filters.row.prepend(&scope(ctx, Dest::Search, true));
 
