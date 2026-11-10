@@ -46,6 +46,30 @@ struct ReaderHeldEndTests {
         return model
     }
 
+    /// A source's chapter laid out again once its pages have landed keeps the strip's place:
+    /// the same image and how far down it, not the point the old heights put it at.
+    @Test func aSecondLayoutKeepsTheStripsPlace() {
+        let model = ReaderModel()
+        model.send = { _ in }
+        model.apply(.opened(view("13", next: "14", mode: .strip)))
+        model.apply(.leaves(session: session, chapter: ChapterId("13"), leaves: leaves(3)))
+        #expect(model.stripRelaid == 0, "the first layout puts the start place, not a kept one")
+        let here = StripPos(image: 2, offset: 0.4)
+        model.stripAt(here, footVisible: false)
+        model.apply(.leaves(session: session, chapter: ChapterId("13"), leaves: leaves(3)))
+        #expect(model.stripRestore == here)
+        #expect(model.stripRelaid == 1)
+        #expect(model.phase == .open)
+    }
+
+    /// Pages turn by leaf, so a second layout leaves them where they are.
+    @Test func aSecondLayoutDoesNotMovePages() {
+        let model = onEndPage()
+        model.apply(.leaves(session: session, chapter: ChapterId("13"), leaves: leaves(3)))
+        #expect(model.stripRelaid == 0)
+        #expect(model.stripRestore == nil)
+    }
+
     /// Back from a chapter's first page: the chapter before opens at its last page, not at its
     /// end page or its start.
     @Test func goingBackOpensTheChapterBeforeAtItsLastPage() {

@@ -165,6 +165,10 @@ struct StripReader: View {
             restoring = true
             restore()
         }
+        .onChange(of: model.stripRelaid) { _, _ in
+            restoring = true
+            restore()
+        }
         .onChange(of: model.jump?.tick) { _, _ in
             guard let index = model.jump?.index else { return }
             go(to: index)

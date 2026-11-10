@@ -97,6 +97,11 @@ public final class ReaderModel {
     public private(set) var ring: Int?
     /// Where a strip is asked to scroll to once its images are in.
     public private(set) var stripRestore: StripPos?
+    /// Where the strip is, as it last said: kept through a second layout of the chapter.
+    @ObservationIgnored private var stripHere: StripPos?
+    /// Counts the open chapter's layouts after its first, so the strip puts the place back even
+    /// when it has not moved since the last restore.
+    public private(set) var stripRelaid = 0
     /// The chapters of the work, once the engine has listed them.
     public private(set) var chapters: [VolumeGroup] = []
     public private(set) var chaptersLoaded = false
@@ -380,6 +385,7 @@ public final class ReaderModel {
     /// A strip settled: the image and how far down it, at most every 500 ms.
     public func stripAt(_ at: StripPos, footVisible: Bool) {
         guard session != 0, let chapter = view?.chapter.id else { return }
+        stripHere = at
         pendingStrip?.cancel()
         let now = ContinuousClock.now
         let send = { [weak self] in
@@ -638,10 +644,19 @@ public final class ReaderModel {
             current = 0
             if let settings = opened.settings { self.settings = settings }
             send?(.reader(.loadSettings(medium: opened.medium, work: opened.work)))
+            stripHere = nil
             if opened.mode == .strip { stripRestore = opened.start.strip }
-        case .leaves(let session, _, let leaves):
+        case .leaves(let session, let chapter, let leaves):
             guard session == self.session else { return }
+            // A source's chapter is laid out again once all its pages have landed, when their
+            // shapes differ from the guess: a strip keeps the place it is at, under the same
+            // image, rather than move with the heights above it.
+            let relaid = !self.leaves.isEmpty && chapter == view?.chapter.id && view?.mode == .strip && novel == nil
             self.leaves = leaves
+            if relaid, let here = stripHere {
+                stripRestore = here
+                stripRelaid += 1
+            }
             phase = .open
             if !leaves.isEmpty { current = min(max(current, startLeaf(leaves)), leaves.count - 1) }
             if let goTo = pendingGoTo, goTo < leaves.count { show(goTo) }
