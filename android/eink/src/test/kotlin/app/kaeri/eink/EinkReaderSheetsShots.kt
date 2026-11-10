@@ -70,6 +70,7 @@ class EinkReaderSheetsShots {
         row(Key.REFRESH_IMAGE, ReaderValue.Toggle(true), scope = SettingScope.DEVICE),
         row(Key.VOLUME_KEYS_TURN, ReaderValue.Toggle(true), scope = SettingScope.DEVICE),
         row(Key.SPREADS, ReaderValue.Toggle(false)),
+        row(Key.FOOT_VALUE, ReaderValue.Choice("pages_left"), choices("pages_left", "none"), SettingScope.DEVICE),
         row(Key.REFRESH_LIST, ReaderValue.Amount(6.0), scope = SettingScope.DEVICE),
         row(Key.GALLERY_SPEED, ReaderValue.Choice("standard"), choices("standard", "fast", "best"), SettingScope.DEVICE),
         row(Key.CONTRAST, ReaderValue.Amount(1.0), scope = SettingScope.DEVICE),

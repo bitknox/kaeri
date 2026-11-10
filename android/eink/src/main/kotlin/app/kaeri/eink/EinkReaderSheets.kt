@@ -241,6 +241,14 @@ private fun EinkSettingLine(context: Context, session: ReaderSession, row: Reade
     fun set(to: ReaderValue) = session.setSetting(row.key, row.scope, to)
     SheetLine(title) {
         when {
+            // The foot shows pages left or nothing: On and Off, as on the phone.
+            row.key == Key.FOOT_VALUE && value is ReaderValue.Choice -> EinkSegmented(
+                choices = listOf(true, false),
+                chosen = value.name == "pages_left",
+                label = { if (it) Strings.readerValueOn(context) else Strings.readerValueOff(context) },
+                onChoose = { set(ReaderValue.Choice(if (it) "pages_left" else "none")) },
+                modifier = Modifier.weight(1f),
+            )
             value is ReaderValue.Toggle -> EinkSegmented(
                 choices = listOf(true, false),
                 chosen = value.on,
