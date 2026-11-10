@@ -801,6 +801,10 @@ object Strings {
     fun readingFailedPage(context: Context, status: Int): String =
         context.getString(R.string.reading_failed_page, status)
 
+    /** In the reader, in a novel's text, in the box where a picture from the source did not load. Try again sits under it. */
+    fun readingPictureFailed(context: Context): String =
+        context.getString(R.string.reading_picture_failed)
+
     /** Why something could not load: a sign-in is needed. What is a server's or a tracker's name. */
     fun readingFailedSignIn(context: Context, what: String): String =
         context.getString(R.string.reading_failed_sign_in, what)

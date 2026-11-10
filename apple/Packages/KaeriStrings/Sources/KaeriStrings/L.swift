@@ -793,6 +793,9 @@ public enum L {
         Self.format("reading-failed-page", fallback: "This page didn't load (error %1$@). Try again.", String(status))
     }
 
+    /// In the reader, in a novel's text, in the box where a picture from the source did not load. Try again sits under it.
+    public static var readingPictureFailed: String { string("reading-picture-failed", fallback: "Couldn't load picture") }
+
     /// Why something could not load: a sign-in is needed. What is a server's or a tracker's name.
     public static func readingFailedSignIn(what: String) -> String {
         Self.format("reading-failed-sign-in", fallback: "Sign in to %1$@ again to keep reading.", what)

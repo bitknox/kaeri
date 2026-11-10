@@ -123,6 +123,21 @@ html.kaeri.k-scrolled body { max-width: var(--k-column); margin: 0 auto !importa
 html.kaeri.k-scrolled img,
 html.kaeri.k-scrolled svg { max-width: 100%; height: auto; }
 
+/* A text chapter's picture that is still coming, or did not come: a box of a fixed size, so the
+   picture filling it later moves nothing on the page. */
+html.kaeri img[data-k-picture] {
+  display: block !important;
+  box-sizing: border-box !important;
+  width: min(100%, 22em) !important;
+  height: auto !important;
+  aspect-ratio: 4 / 3 !important;
+  margin: 1em auto !important;
+  object-fit: contain !important;
+  border-radius: 8px;
+  background: rgba(128, 128, 128, 0.12);
+}
+html.kaeri img[data-k-picture="in"] { background: none; }
+
 html.kaeri figure,
 html.kaeri h1, html.kaeri h2, html.kaeri h3, html.kaeri h4 { break-inside: avoid; }
 html.kaeri h1, html.kaeri h2, html.kaeri h3, html.kaeri h4 { break-after: avoid; }

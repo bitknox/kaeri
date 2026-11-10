@@ -995,6 +995,11 @@ pub fn reading_failed_page(status: i64) -> String {
     text("reading-failed-page", &[("status", Arg::Plain(status))])
 }
 
+/// In the reader, in a novel's text, in the box where a picture from the source did not load. Try again sits under it.
+pub fn reading_picture_failed() -> String {
+    text("reading-picture-failed", &[])
+}
+
 /// Why something could not load: a sign-in is needed. What is a server's or a tracker's name.
 pub fn reading_failed_sign_in(what: &str) -> String {
     text("reading-failed-sign-in", &[("what", Arg::Text(what))])

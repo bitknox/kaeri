@@ -630,6 +630,9 @@ reading-failed-parse = [Ķàéŕî çöüļðñ'ţ ŕéàð ŵĥàţ { $source }
 # Why one page did not load. The status is the server's HTTP status code, such as 404.
 reading-failed-page = [Ţĥîš þàĝé ðîðñ'ţ ļöàð (éŕŕöŕ { $status }). Ţŕý àĝàîñ.~~~~~~~~~~~~~~]
 
+# In the reader, in a novel's text, in the box where a picture from the source did not load. Try again sits under it.
+reading-picture-failed = [Çöüļðñ'ţ ļöàð þîçţüŕé~~~~~~~]
+
 # Why something could not load: a sign-in is needed. What is a server's or a tracker's name.
 reading-failed-sign-in = [Šîĝñ îñ ţö { $what } àĝàîñ ţö ķééþ ŕéàðîñĝ.~~~~~~~~~~~~]
 

@@ -863,6 +863,10 @@
     <value>[Ţĥîš þàĝé ðîðñ'ţ ļöàð (éŕŕöŕ {status}). Ţŕý àĝàîñ.~~~~~~~~~~~~~~]</value>
     <comment>Why one page did not load. The status is the server's HTTP status code, such as 404.</comment>
   </data>
+  <data name="ReadingPictureFailed" xml:space="preserve">
+    <value>[Çöüļðñ'ţ ļöàð þîçţüŕé~~~~~~~]</value>
+    <comment>In the reader, in a novel's text, in the box where a picture from the source did not load. Try again sits under it.</comment>
+  </data>
   <data name="ReadingFailedSignIn" xml:space="preserve">
     <value>[Šîĝñ îñ ţö {what} àĝàîñ ţö ķééþ ŕéàðîñĝ.~~~~~~~~~~~~]</value>
     <comment>Why something could not load: a sign-in is needed. What is a server's or a tracker's name.</comment>

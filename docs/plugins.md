@@ -133,8 +133,10 @@ interface source {                        // what a book source exports
   the chapter at the kept copy, so the reader, downloads and e-reader copies show it offline. A
   picture on a host the manifest leaves out is never fetched and is dropped, as is a `http`
   address. At most 64 pictures a chapter are kept, each under the same size and pixel limits as a
-  page. No type in the contract changed for this, so a plugin built before it still loads; one
-  that drops its `<img>` tags can keep them now.
+  page. The reader waits a few seconds at most for them: one that comes later fills the space
+  kept for it, and one that fails can be tried again with a tap. No type in the contract changed
+  for this, so a plugin built before it still loads; one that drops its `<img>` tags can keep
+  them now.
 - The plugin names each page's URL and the headers it needs, and the host fetches it through the
   plugin's own `allowed-hosts`, so list the page image hosts there too. A download fetches the
   pages again later the same way, and an address that answers 403 or 410 makes the host ask

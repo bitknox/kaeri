@@ -1311,6 +1311,8 @@ pub enum ReadingMsg {
     ReadingFailedParse { source: String },
     /// Why one page did not load. The status is the server's HTTP status code, such as 404.
     ReadingFailedPage { status: i64 },
+    /// In the reader, in a novel's text, in the box where a picture from the source did not load. Try again sits under it.
+    ReadingPictureFailed,
     /// Why something could not load: a sign-in is needed. What is a server's or a tracker's name.
     ReadingFailedSignIn { what: String },
     /// Why a book could not open: its file or folder is gone, perhaps on a drive that is not connected. The path is the file's.
@@ -1657,6 +1659,7 @@ impl ReadingMsg {
             Self::ReadingFailedBlocked { .. } => "reading-failed-blocked",
             Self::ReadingFailedParse { .. } => "reading-failed-parse",
             Self::ReadingFailedPage { .. } => "reading-failed-page",
+            Self::ReadingPictureFailed => "reading-picture-failed",
             Self::ReadingFailedSignIn { .. } => "reading-failed-sign-in",
             Self::ReadingFailedFileMissing { .. } => "reading-failed-file-missing",
             Self::ReadingFailedUnreadable { .. } => "reading-failed-unreadable",
@@ -1846,6 +1849,7 @@ impl ReadingMsg {
             Self::ReadingFailedBlocked { source, reason } => vec![("source", Value::Text(source.clone())), ("reason", Value::Text(reason.clone()))],
             Self::ReadingFailedParse { source } => vec![("source", Value::Text(source.clone()))],
             Self::ReadingFailedPage { status } => vec![("status", Value::Plain(*status))],
+            Self::ReadingPictureFailed => Vec::new(),
             Self::ReadingFailedSignIn { what } => vec![("what", Value::Text(what.clone()))],
             Self::ReadingFailedFileMissing { path } => vec![("path", Value::Text(path.clone()))],
             Self::ReadingFailedUnreadable { path, format } => vec![("path", Value::Text(path.clone())), ("format", Value::Text(format.clone()))],

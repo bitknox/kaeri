@@ -495,6 +495,7 @@
   function relayout(changes) {
     var anchor = state.anchor || here();
     if (changes) S = merge(S, typeof changes === 'string' ? JSON.parse(changes) : changes);
+    redrawFailed();
     apply();
     var t = resolve(anchor);
     show(pageOfTarget(t));
@@ -533,6 +534,8 @@
   }
 
   document.addEventListener('click', function (e) {
+    var pic = e.target && e.target.closest ? e.target.closest('img[data-k-picture="failed"]') : null;
+    if (pic) { e.preventDefault(); e.stopPropagation(); retryPicture(pic); return; }
     var a = e.target && e.target.closest ? e.target.closest('a') : null;
     var href = a ? hrefOf(a) : null;
     if (a && href) {
@@ -614,6 +617,93 @@
   });
   window.addEventListener('hashchange', function () { if (state.ready) post(start('jump')); });
 
+  // ---- Pictures -----------------------------------------------------------------------
+  //
+  // A source's text chapter can open before all its pictures came. setup.pictures has the
+  // ones not in yet: {waiting: [path], failed, again}, the last two the failed state's words.
+  // Each keeps a box of a fixed size (data-k-picture, see reader.css), so nothing moves when it
+  // fills. Its address answers 503 while it is coming; `?state` loads once it failed, and
+  // `?retry` fetches it again. A failed one shows the failed state in its box; a tap retries.
+
+  var BLANK = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 3"/>');
+  var pictures = [];
+
+  function esc(t) {
+    return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; });
+  }
+
+  function failedArt() {
+    var p = S.pictures || {}, fg = esc((S.look && S.look.fg) || '#1E2033');
+    var font = ' font-family="system-ui, -apple-system, Segoe UI, sans-serif" text-anchor="middle" fill="' + fg + '"';
+    var again = String(p.again || ''), w = Math.min(360, Math.max(132, again.length * 10 + 48));
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">' +
+      '<g fill="none" stroke="' + fg + '" stroke-width="3" stroke-linejoin="round" opacity="0.5">' +
+      '<rect x="174" y="66" width="52" height="40" rx="6"/><path d="M178 100l14-15 10 10 8-8 12 13"/></g>' +
+      '<text x="200" y="152" font-size="20" font-weight="600"' + font + '>' + esc(p.failed || '') + '</text>' +
+      '<rect x="' + (200 - w / 2) + '" y="176" width="' + w + '" height="42" rx="21" fill="none" stroke="' + fg + '" stroke-width="1.5" opacity="0.6"/>' +
+      '<text x="200" y="203" font-size="17"' + font + '>' + esc(again) + '</text></svg>';
+    return 'data:image/svg+xml,' + encodeURIComponent(svg);
+  }
+
+  function showPicture(entry, how, src) {
+    entry.imgs.forEach(function (img) { img.setAttribute('data-k-picture', how); img.src = src; });
+  }
+
+  // Asks after one picture: in, failed, or still coming (asked again a little later).
+  function poll(entry) {
+    var n = ++entry.tries;
+    var picture = new Image();
+    picture.onload = function () { showPicture(entry, 'in', picture.src); };
+    picture.onerror = function () {
+      var failed = new Image();
+      failed.onload = function () { showPicture(entry, 'failed', failedArt()); };
+      failed.onerror = function () { entry.timer = setTimeout(function () { poll(entry); }, Math.min(4000, 500 * n)); };
+      failed.src = entry.url + '?state&n=' + n;
+    };
+    picture.src = entry.url + '?n=' + n;
+  }
+
+  // A failed picture's box is drawn in the look's colours: drawn again when the look changes.
+  function redrawFailed() {
+    pictures.forEach(function (e) {
+      if (e.imgs[0] && e.imgs[0].getAttribute('data-k-picture') === 'failed') showPicture(e, 'failed', failedArt());
+    });
+  }
+
+  function retryPicture(img) {
+    var entry = null;
+    pictures.forEach(function (e) { if (e.imgs.indexOf(img) >= 0) entry = e; });
+    if (!entry) return;
+    clearTimeout(entry.timer);
+    showPicture(entry, 'waiting', BLANK);
+    var ask = new Image(), n = ++entry.tries;
+    ask.onload = ask.onerror = function () { entry.timer = setTimeout(function () { poll(entry); }, 500); };
+    ask.src = entry.url + '?retry&n=' + n;
+  }
+
+  function waitPictures() {
+    var p = S.pictures;
+    if (!p || !p.waiting || !p.waiting.length || !document.body) return;
+    var byUrl = {};
+    p.waiting.forEach(function (path) {
+      var url = new URL(path, location.href).href;
+      byUrl[url] = { url: url, imgs: [], tries: 0, timer: 0 };
+    });
+    var imgs = document.body.querySelectorAll('img');
+    for (var i = 0; i < imgs.length; i++) {
+      var src = imgs[i].getAttribute('src');
+      var entry = src ? byUrl[new URL(src, location.href).href] : null;
+      if (entry) entry.imgs.push(imgs[i]);
+    }
+    Object.keys(byUrl).forEach(function (url) {
+      var entry = byUrl[url];
+      if (!entry.imgs.length) return;
+      pictures.push(entry);
+      showPicture(entry, 'waiting', BLANK);
+      poll(entry);
+    });
+  }
+
   // ---- Start --------------------------------------------------------------------------
 
   function start(how) {
@@ -638,6 +728,7 @@
 
   function begin() {
     S = setup();
+    waitPictures();
     var failed = document.body ? document.body.getAttribute('data-kaeri-failed') : null;
     if (failed) post({ type: 'failed', spine: S.spine, why: failed });
     apply();

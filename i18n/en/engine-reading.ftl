@@ -127,6 +127,11 @@ reading-failed-parse = { -app-name } couldn't read what { $source } sent. Its { 
 # @arg status: plain
 reading-failed-page = This page didn't load (error { $status }). Try again.
 
+# In the reader, in a novel's text, in the box where a picture from the source did not load.
+# Try again sits under it.
+# @max 40
+reading-picture-failed = Couldn't load picture
+
 # Why something could not load: a sign-in is needed. What is a server's or a tracker's name.
 # @arg what: text
 reading-failed-sign-in = Sign in to { $what } again to keep reading.

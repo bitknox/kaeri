@@ -409,8 +409,10 @@ impl Session {
                 }
                 Ok(opened) => match opened.content {
                     ChapterContent::Text(mut xhtml) => {
-                        // Its pictures come first, so its pages are laid out with them.
-                        let pictures = sources.pictures_in(&opened.source_id, &mut xhtml).await;
+                        // Its pictures come first, so its pages are laid out with them, for a
+                        // few seconds at most: what comes later fills a box kept for it.
+                        let pictures =
+                            sources.reader_pictures(&opened.source_id, &mut xhtml).await;
                         let title = opened.chapter.title.clone().unwrap_or(label);
                         let identity = format!("{}/{}", opened.source_id, opened.chapter.id);
                         let lang = opened.chapter.language.clone();

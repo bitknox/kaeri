@@ -44,11 +44,13 @@ use kaeri_model::{
 use kaeri_pages::{Look, Panel, Renderer, Target, resize::Fit};
 
 use super::settings::Layers;
-use crate::read_sources::pictures::TextPicture;
+use crate::read_sources::pictures::{Shown, TextPictures};
 
 /// A stylesheet or picture kept for an open book: its type and its bytes.
 type Kept = (&'static str, Arc<[u8]>);
 
+/// A picture of nothing, the answer to the paginator's questions about a picture.
+const NOTHING: &[u8] = b"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1\" height=\"1\"/>";
 /// The path a source's text chapter is served at.
 pub const TEXT_CHAPTER: &str = "chapter.xhtml";
 /// The page's foot on a desktop: room for the reader's floating bottom group (about 90 px
@@ -127,9 +129,10 @@ impl NovelBooks {
     /// which the host lets fail; a book's file that is missing or refused is a 404 or 403.
     pub fn resource(&self, url: &str) -> Option<BookResource> {
         let (session, path) = parse_url(url)?;
+        let query = url.split('#').next().and_then(|u| u.split_once('?')).map(|(_, q)| q);
         let book = self.books.read().ok()?.get(&session).cloned();
         Some(match (book, path) {
-            (Some(book), Some(path)) => book.resource(&path),
+            (Some(book), Some(path)) => book.resource_asked(&path, query),
             _ => respond(404, "text/plain", BookBody::Bytes { data: Vec::new() }),
         })
     }
@@ -236,8 +239,8 @@ pub(crate) struct Opening {
 
 enum Content {
     Epub(Mutex<Box<Epub>>),
-    /// A source's text chapter and the pictures kept for it, by path.
-    Text(Arc<Document>, HashMap<String, TextPicture>),
+    /// A source's text chapter and its pictures, some perhaps still coming.
+    Text(Arc<Document>, Option<Arc<TextPictures>>),
 }
 
 /// One open book, as the web view sees it.
@@ -292,12 +295,28 @@ impl ServedBook {
         let style = self.style.read().map(|s| s.clone()).unwrap_or_default();
         let index = spine.unwrap_or(0);
         let last = spine.is_some_and(|i| i >= self.last_linear);
-        let head = format!("{{\"spine\":{index},\"last\":{last}");
+        let head = format!("{{\"spine\":{index},\"last\":{last}{}", self.pictures_setup());
         match style.trim().strip_prefix('{') {
             Some(rest) if rest.trim_start().starts_with('}') => format!("{head}}}"),
             Some(rest) => format!("{head},{rest}"),
             None => format!("{head}}}"),
         }
+    }
+
+    /// For a text chapter with pictures not in yet: their paths, for the paginator to keep a
+    /// box of a fixed size for each, and the words of a picture that did not come.
+    fn pictures_setup(&self) -> String {
+        let Content::Text(_, Some(pictures)) = &self.content else { return String::new() };
+        let waiting = pictures.not_in();
+        if waiting.is_empty() {
+            return String::new();
+        }
+        let json = serde_json::json!({
+            "waiting": waiting,
+            "failed": kaeri_i18n::t::reading_picture_failed(),
+            "again": kaeri_i18n::t::reader_try_again(),
+        });
+        format!(",\"pictures\":{json}")
     }
 
     fn clean<'a>(&'a self, path: &'a str) -> Clean<'a> {
@@ -330,17 +349,14 @@ impl ServedBook {
         doc
     }
 
-    pub fn resource(&self, path: &str) -> BookResource {
+    /// The answer for `path`, asked with `query` (the part of the URL after `?`).
+    pub fn resource_asked(&self, path: &str, query: Option<&str>) -> BookResource {
         let epub = match &self.content {
             Content::Text(doc, _) if path == TEXT_CHAPTER => {
                 return self.served_document(path, doc);
             }
-            Content::Text(_, pictures) => {
-                return match pictures.get(path) {
-                    Some(picture) => self.image(path, picture.media_type, &picture.bytes),
-                    None => missing(),
-                };
-            }
+            Content::Text(_, Some(pictures)) => return self.picture(pictures, path, query),
+            Content::Text(_, None) => return missing(),
             Content::Epub(epub) => epub,
         };
         let cached = self.docs.lock().ok().and_then(|d| d.get(path).cloned());
@@ -393,6 +409,34 @@ impl ServedBook {
                 }
             }
             _ => refused(),
+        }
+    }
+
+    /// A text chapter's picture. The paginator asks `?state` of one not in yet, which answers
+    /// whether it failed, and `?retry` of a failed one, which fetches it again; both answer with
+    /// a picture of nothing, so a probe's load or error is the answer.
+    fn picture(
+        &self,
+        pictures: &Arc<TextPictures>,
+        path: &str,
+        query: Option<&str>,
+    ) -> BookResource {
+        let asks = |word: &str| {
+            query.is_some_and(|q| q.split('&').any(|p| p.split('=').next() == Some(word)))
+        };
+        let Some(shown) = pictures.shown(path) else { return missing() };
+        let yes = || respond(200, "image/svg+xml", BookBody::Bytes { data: NOTHING.to_vec() });
+        if asks("retry") {
+            pictures.retry(path);
+            return yes();
+        }
+        if asks("state") {
+            return if shown == Shown::Failed { yes() } else { missing() };
+        }
+        match shown {
+            Shown::Ready(fetched) => self.image(path, fetched.media_type, &fetched.bytes),
+            Shown::Waiting => respond(503, "text/plain", BookBody::Bytes { data: Vec::new() }),
+            Shown::Failed => missing(),
         }
     }
 
@@ -660,13 +704,13 @@ fn flatten_toc(
     }
 }
 
-/// A source's text chapter, ready for the web view, with the pictures kept for it.
+/// A source's text chapter, ready for the web view, with its pictures.
 pub(crate) fn open_text(
     xhtml: &str,
     title: &str,
     lang: Option<String>,
     identity: String,
-    pictures: Vec<TextPicture>,
+    pictures: Option<Arc<TextPictures>>,
     opening: Opening,
 ) -> NovelBook {
     let clean = Clean {
@@ -679,10 +723,7 @@ pub(crate) fn open_text(
     let flow = doc.flow.unwrap_or(novel::Flow::Horizontal);
     let served = Arc::new(ServedBook {
         session: opening.session,
-        content: Content::Text(
-            Arc::new(doc),
-            pictures.into_iter().map(|p| (p.path.clone(), p)).collect(),
-        ),
+        content: Content::Text(Arc::new(doc), pictures),
         lang,
         soft_hyphens: opening.soft_hyphens,
         limits: opening.limits.clone(),
@@ -949,7 +990,7 @@ mod tests {
             "Chapter 1",
             Some("en".into()),
             "w:1".into(),
-            Vec::new(),
+            None,
             opening,
         );
         book.served.set_style("{\"size\":18}".into());
@@ -992,8 +1033,9 @@ mod tests {
         assert_eq!(books.resource(&url).unwrap().status, 404);
     }
 
-    #[test]
-    fn a_text_chapters_kept_pictures_are_served_from_the_book() {
+    #[tokio::test]
+    async fn a_text_chapters_pictures_are_served_as_they_stand() {
+        use crate::read_sources::pictures::{Fetched, ONE_PIXEL_PNG};
         let dir = tempfile::tempdir().unwrap();
         let books = NovelBooks::with_scheme(Scheme::Kaeri);
         let opening = Opening {
@@ -1003,32 +1045,51 @@ mod tests {
             eink: None,
             limits: Limits::default(),
         };
-        let picture = TextPicture {
-            path: "images/1.png".into(),
-            media_type: "image/png",
-            bytes: crate::read_sources::pictures::ONE_PIXEL_PNG.to_vec(),
-        };
+        let bottle = Fetched { media_type: "image/png", bytes: ONE_PIXEL_PNG.to_vec() };
+        let pictures = TextPictures::standing(vec![
+            Shown::Ready(Arc::new(bottle)),
+            Shown::Waiting,
+            Shown::Failed,
+        ]);
         let book = open_text(
-            "<p>The bottle was cold.</p><img src=\"images/1.png\" alt=\"A bottle\"/>\
+            "<p>The bottle was cold.</p><img src=\"images/1\" alt=\"A bottle\"/>\
+             <img src=\"images/2\"/><img src=\"images/3\"/>\
              <img src=\"https://img.books.example/gone.png\"/>",
             "Chapter 1",
             Some("en".into()),
             "w:1".into(),
-            vec![picture],
+            Some(pictures.clone()),
             opening,
         );
         books.put(book.served.clone());
         let r = books.resource(&books.url(9, TEXT_CHAPTER)).unwrap();
         let BookBody::Bytes { data } = &r.body else { panic!("bytes") };
         let text = String::from_utf8(data.clone()).unwrap();
-        assert!(text.contains("src=\"images/1.png\""), "{text}");
+        assert!(text.contains("src=\"images/1\""), "{text}");
         assert!(!text.contains("img.books.example"), "a web address never loads: {text}");
+        // The paginator keeps a box for each picture not in yet, and has the failed state's words.
+        assert!(
+            text.contains("&quot;waiting&quot;:[&quot;images/2&quot;,&quot;images/3&quot;]"),
+            "{text}"
+        );
+        assert!(text.contains("Try again"), "{text}");
 
-        let r = books.resource(&books.url(9, "images/1.png")).unwrap();
+        let url = |p: &str| books.url(9, p);
+        let r = books.resource(&url("images/1")).unwrap();
         assert_eq!((r.status, r.mime.as_str()), (200, "image/png"));
         let BookBody::File { path } = &r.body else { panic!("a file") };
-        assert_eq!(std::fs::read(path).unwrap(), crate::read_sources::pictures::ONE_PIXEL_PNG);
-        assert_eq!(books.resource(&books.url(9, "images/2.png")).unwrap().status, 404);
+        assert_eq!(std::fs::read(path).unwrap(), ONE_PIXEL_PNG);
+        let status = |u: String| books.resource(&u).unwrap().status;
+        assert_eq!(status(url("images/2")), 503, "still coming");
+        assert_eq!(status(url("images/2") + "?state&n=1"), 404, "not failed");
+        assert_eq!(status(url("images/3")), 404);
+        assert_eq!(status(url("images/3") + "?state&n=1"), 200, "failed");
+        assert_eq!(status(url("images/4")), 404);
+
+        // A retry of the failed one sets it coming again.
+        assert_eq!(status(url("images/3") + "?retry&n=2"), 200);
+        assert_eq!(pictures.shown("images/3"), Some(Shown::Waiting));
+        assert_eq!(status(url("images/3") + "?state&n=3"), 404);
     }
 
     #[test]

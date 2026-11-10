@@ -630,6 +630,9 @@ reading-failed-parse = Kaeri couldn't read what { $source } sent. Its plugin may
 # Why one page did not load. The status is the server's HTTP status code, such as 404.
 reading-failed-page = This page didn't load (error { $status }). Try again.
 
+# In the reader, in a novel's text, in the box where a picture from the source did not load. Try again sits under it.
+reading-picture-failed = Couldn't load picture
+
 # Why something could not load: a sign-in is needed. What is a server's or a tracker's name.
 reading-failed-sign-in = Sign in to { $what } again to keep reading.
 
