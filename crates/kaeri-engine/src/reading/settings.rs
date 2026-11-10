@@ -193,6 +193,23 @@ pub struct SourceWord {
     pub webtoon: bool,
 }
 
+impl SourceWord {
+    /// What the series' source and the catalogue say of how `work` reads, as last kept.
+    pub(crate) fn of(
+        services: &crate::services::Services,
+        work: &kaeri_core::books::WorkId,
+    ) -> Self {
+        let kind = services.store.book_work_kind(work.as_str()).ok().flatten();
+        // A demo work says it itself: opened before its page was ever loaded, its source was
+        // never asked.
+        let demo = kaeri_core::reading_demo::WORKS.iter().find(|w| w.work_id() == *work);
+        Self {
+            hint: services.book_sources.hint_of(work).or_else(|| demo?.reading),
+            webtoon: kind.as_ref().is_some_and(kaeri_store::shelf::BookWorkKind::webtoon),
+        }
+    }
+}
+
 /// Everything the layers say, read once for a sheet or a session.
 #[derive(Debug, Clone)]
 pub struct Layers {

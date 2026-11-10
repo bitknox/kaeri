@@ -3827,12 +3827,97 @@ mod tests {
             engine.shutdown().await;
         }
 
+        /// The feed's last word, from what the engine said.
+        #[cfg(feature = "opds-feed")]
+        fn feed_of(seen: &[Event]) -> kaeri_model::reading::FeedView {
+            seen.iter()
+                .rev()
+                .find_map(|e| match e {
+                    Event::Reading(ReadingEvent::Feed(view)) => Some(view.clone()),
+                    _ => None,
+                })
+                .expect("the feed")
+        }
+
+        /// What the feed answers a reader that asks without its password, or `None` when nothing
+        /// takes the connection.
+        #[cfg(feature = "opds-feed")]
+        async fn ask_feed(port: u16) -> Option<String> {
+            use tokio::io::{AsyncReadExt, AsyncWriteExt};
+            let mut stream = tokio::net::TcpStream::connect(("127.0.0.1", port)).await.ok()?;
+            stream
+                .write_all(
+                    b"GET /opds HTTP/1.1\r\nHost: feed.example\r\nConnection: close\r\n\r\n",
+                )
+                .await
+                .ok()?;
+            let mut reply = Vec::new();
+            stream.read_to_end(&mut reply).await.ok()?;
+            let reply = String::from_utf8_lossy(&reply);
+            reply.lines().next().map(str::to_owned).filter(|l| !l.is_empty())
+        }
+
+        /// The feed's switch acts at once, both ways: on listens, off stops serving and ends the
+        /// connections it had, and the file says the same for the next launch.
+        #[cfg(feature = "opds-feed")]
+        #[tokio::test]
+        async fn the_feed_switch_starts_and_stops_the_feed_at_once() {
+            use tokio::io::{AsyncReadExt, AsyncWriteExt};
+            let dir = tempfile::tempdir().unwrap();
+            let host = Arc::new(QuietHost::in_dir(&dir.path().join("tokens")));
+            let (engine, mut events) =
+                engine_with(dir.path(), host, |o| o.reading = true).await;
+            events.launch().await;
+            let on = |e: &Event| matches!(e, Event::Reading(ReadingEvent::Feed(v)) if v.on);
+            let off = |e: &Event| matches!(e, Event::Reading(ReadingEvent::Feed(v)) if !v.on);
+
+            engine.send(Command::Reading(ReadingCommand::SetFeed {
+                on: true,
+                password: Some(kaeri_model::stores::Secret("made-up-password".into())),
+            }));
+            let view = feed_of(&seen_until(&mut events, on).await);
+            assert!(view.password_set, "{view:?}");
+            assert_eq!(view.addresses, [format!("http://127.0.0.1:{}/opds", view.port)]);
+            let port = view.port;
+            let answer = ask_feed(port).await;
+            assert_eq!(answer.as_deref(), Some("HTTP/1.1 401 Unauthorized"));
+
+            // A reader in the middle of asking when the switch goes off.
+            let mut open = tokio::net::TcpStream::connect(("127.0.0.1", port)).await.unwrap();
+            open.write_all(b"GET /opds HTTP/1.1\r\n").await.unwrap();
+            tokio::time::sleep(Duration::from_millis(100)).await;
+
+            engine
+                .send(Command::Reading(ReadingCommand::SetFeed { on: false, password: None }));
+            let view = feed_of(&seen_until(&mut events, off).await);
+            assert!(view.addresses.is_empty(), "{view:?}");
+            assert_eq!(ask_feed(port).await, None, "nothing listens once it is off");
+            let mut rest = Vec::new();
+            let read =
+                tokio::time::timeout(Duration::from_secs(3), open.read_to_end(&mut rest)).await;
+            assert!(
+                matches!(read, Ok(Ok(0) | Err(_))) && rest.is_empty(),
+                "the open connection is closed without an answer: {read:?}"
+            );
+            let file = std::fs::read_to_string(dir.path().join("config.toml")).unwrap();
+            let config: Config = toml::from_str(&file).unwrap();
+            assert!(!config.reading.feed.on && config.reading.feed.password_set);
+
+            // And on again, still at once.
+            engine.send(Command::Reading(ReadingCommand::SetFeed { on: true, password: None }));
+            let view = feed_of(&seen_until(&mut events, on).await);
+            assert!(!view.addresses.is_empty(), "{view:?}");
+            engine.shutdown().await;
+        }
+
         /// A source with real page images, whose second page of every chapter waits for the
         /// test while `held`.
         struct Pages {
             manifest: BookSourceManifest,
             held: AtomicBool,
             fetched: std::sync::atomic::AtomicUsize,
+            /// The language its chapters say they are in.
+            language: Option<String>,
         }
 
         impl Pages {
@@ -3873,6 +3958,7 @@ mod tests {
                     .map(|n| {
                         let mut chapter = SourceChapter::new(n.to_string(), n.to_string());
                         chapter.published = Some(kaeri_store::now() - 3_600);
+                        chapter.language.clone_from(&self.language);
                         chapter
                     })
                     .collect())
@@ -3918,6 +4004,7 @@ mod tests {
                 },
                 held: AtomicBool::new(held),
                 fetched: Default::default(),
+                language: None,
             })
         }
 
@@ -3931,6 +4018,68 @@ mod tests {
                 }
             }
             found
+        }
+
+        /// A manga the reader reads right to left, as its source says, goes to the e-reader
+        /// paged the same way, and in the language its source gives its chapters.
+        #[tokio::test]
+        async fn a_send_pages_and_speaks_as_the_reader_reads() {
+            let dir = tempfile::tempdir().unwrap();
+            let host = Arc::new(QuietHost::in_dir(&dir.path().join("tokens")));
+            let source = Arc::new(Pages {
+                language: Some("ja".into()),
+                ..Arc::into_inner(pages_source(false)).unwrap()
+            });
+            let (engine, mut events) = engine_with(dir.path(), host, |o| {
+                let now = kaeri_store::now();
+                o.reading = true;
+                o.store.set_book_match("shelf", "s-1", WORK, 100, true, false, 1).unwrap();
+                o.store
+                    .seed_book_work(WORK, "manga", None, None, "The Lantern Ferry", 1)
+                    .unwrap();
+                o.store.put_book_series_hint("shelf", "s-1", Some("rtl"), now).unwrap();
+                o.book_source = Some(source);
+            })
+            .await;
+            events.launch().await;
+            engine.send(network(false, false));
+            engine.send(Command::Reading(ReadingCommand::Prepare {
+                work: WorkId::new(WORK),
+                pick: DownloadPick::Chapters { ids: vec![ChapterId::new("1")] },
+                target: "kindle".into(),
+                format: kaeri_model::reading::ExportFormat::FixedEpub,
+            }));
+            let seen = seen_until(&mut events, |e| {
+                matches!(
+                    e,
+                    Event::Reading(
+                        ReadingEvent::ExportReady { .. }
+                            | ReadingEvent::ExportFailed { .. }
+                            | ReadingEvent::Failed { .. }
+                    )
+                )
+            })
+            .await;
+            let files = seen
+                .iter()
+                .find_map(|e| match e {
+                    Event::Reading(ReadingEvent::ExportReady { files, .. }) => {
+                        Some(files.clone())
+                    }
+                    _ => None,
+                })
+                .unwrap_or_else(|| panic!("the send failed: {seen:?}"));
+            let book = kaeri_books::open(
+                std::path::Path::new(&files[0].path),
+                &kaeri_books::Limits::default(),
+            )
+            .unwrap();
+            let kaeri_books::Book::Epub(epub) = book else { panic!("not an EPUB") };
+            assert_eq!(epub.package().direction, Some(kaeri_books::epub::Direction::Rtl));
+            assert_eq!(epub.metadata().languages, ["ja"]);
+            // Told apart from the other sends in the e-reader's library, as its file name is.
+            assert_eq!(epub.metadata().titles, ["The Lantern Ferry 1"]);
+            engine.shutdown().await;
         }
 
         #[tokio::test]

@@ -852,6 +852,15 @@ impl BookDownloads {
         }
         let part = part_of(&stem);
         let source = job.source_id.clone();
+        // The chapter's language goes into its file, so reading it offline and sending it on
+        // set it as that language, as reading it from the source does.
+        let language = opened
+            .chapter
+            .language
+            .as_deref()
+            .map(str::trim)
+            .filter(|l| !l.is_empty())
+            .map(str::to_owned);
         match std::mem::replace(&mut opened.content, ChapterContent::Text(String::new())) {
             ChapterContent::Images(pages) => {
                 let total = u32::try_from(pages.len()).unwrap_or(u32::MAX);
@@ -895,8 +904,13 @@ impl BookDownloads {
                 }
                 let file =
                     File::create(&part).map_err(|e| Stop::Failed(io_failure(&e, &part)))?;
-                let mut cbz = kaeri_books::write::CbzWriter::new(BufWriter::new(file), None)
-                    .map_err(|e| Stop::Failed(book_failure(&e, &part, &source)))?;
+                let info = language.clone().map(|language| kaeri_books::ComicInfo {
+                    language: Some(language),
+                    ..kaeri_books::ComicInfo::default()
+                });
+                let mut cbz =
+                    kaeri_books::write::CbzWriter::new(BufWriter::new(file), info.as_ref())
+                        .map_err(|e| Stop::Failed(book_failure(&e, &part, &source)))?;
                 for index in 0..total {
                     let bytes =
                         kept.read(index).map_err(|e| Stop::Failed(io_failure(&e, &dir)))?;
@@ -921,7 +935,7 @@ impl BookDownloads {
                 let label = job.chapter.as_str().to_owned();
                 let meta = kaeri_books::write::BookMeta {
                     title: label.clone(),
-                    language: "und".to_owned(),
+                    language: language.unwrap_or_else(|| "und".to_owned()),
                     ..Default::default()
                 };
                 let mut epub = kaeri_books::write::EpubWriter::new(

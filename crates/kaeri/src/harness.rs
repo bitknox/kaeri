@@ -139,6 +139,9 @@ pub struct Options {
     pub pacing: Option<kaeri_meta::Pacing>,
     /// Launch without saying the network, where the terminal says Wi-Fi as it starts.
     pub network_unsaid: bool,
+    /// Start with reading on and ask what Kaeri is for, as the terminal does. Off, the engine
+    /// is as before reading, and no question is asked over the screen a test drives.
+    pub reading: bool,
 }
 
 impl Default for Options {
@@ -159,6 +162,7 @@ impl Default for Options {
             slow: Vec::new(),
             pacing: None,
             network_unsaid: false,
+            reading: false,
         }
     }
 }
@@ -314,6 +318,7 @@ impl Harness {
             windows: Some(windows.clone()),
         });
         start.free_space = Some(1_000_000_000_000);
+        start.reading = options.reading;
         if let Some(seed) = options.before_start {
             seed(&store);
         }
@@ -321,6 +326,9 @@ impl Harness {
             Engine::start(start, host.clone()).await.expect("the engine starts");
         if !options.network_unsaid {
             engine.send(crate::tui::run::network_at_launch());
+        }
+        if options.reading {
+            engine.send(crate::tui::run::medium_at_launch());
         }
         // What launch says, applied as the loop applies it before its first frame: the stores,
         // the chain and the trackers on their rows.

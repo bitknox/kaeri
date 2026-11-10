@@ -608,15 +608,23 @@ fn bind(ip: IpAddr, wanted: Option<u16>) -> Option<TcpListener> {
     None
 }
 
+/// Takes readers' connections on one address. Each connection is a task of this one's own, so
+/// stopping the listener ends the requests and downloads under way with it: switched off, the
+/// feed serves nothing more, not even the rest of a file.
 async fn serve(listener: TcpListener, store: Store, feed: Feed, room: Arc<Semaphore>) {
+    let mut connections = tokio::task::JoinSet::new();
     loop {
-        let Ok((stream, peer)) = listener.accept().await else { continue };
+        let accepted = tokio::select! {
+            accepted = listener.accept() => accepted,
+            Some(_) = connections.join_next(), if !connections.is_empty() => continue,
+        };
+        let Ok((stream, peer)) = accepted else { continue };
         if !peer_allowed(peer.ip()) {
             continue;
         }
         let Ok(permit) = room.clone().try_acquire_owned() else { continue };
         let (store, feed) = (store.clone(), feed.clone());
-        tokio::spawn(async move {
+        connections.spawn(async move {
             let _permit = permit;
             let password = feed.password();
             let _ = tokio::time::timeout(

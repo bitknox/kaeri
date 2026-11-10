@@ -384,6 +384,42 @@ async fn a_text_chapters_pictures_on_the_plugins_hosts_go_inside_its_epub() {
 }
 
 #[tokio::test]
+async fn a_downloaded_chapter_keeps_the_language_its_source_gives() {
+    let kit = kit(&[]);
+    for (id, label) in [("text-1", "1"), ("2", "2")] {
+        let mut chapter = SourceChapter::new(id, label);
+        chapter.language = Some("ja".into());
+        kit.shelf.listed.lock().unwrap().push(chapter);
+    }
+    kit.queue
+        .download(
+            &kit.lent,
+            WorkId::new(WORK),
+            DownloadPick::Chapters { ids: ids(&["1", "2"]) },
+        )
+        .await;
+    kit.settle().await;
+    let shelf = kit.store().shelf(WORK).unwrap();
+    assert_eq!(shelf.len(), 2);
+    let limits = kaeri_books::Limits::default();
+    for file in &shelf {
+        match kaeri_books::open(std::path::Path::new(&file.path), &limits).unwrap() {
+            // The text is set as Japanese offline too, as it is read from the source.
+            kaeri_books::Book::Epub(mut epub) => {
+                assert_eq!(epub.metadata().languages, ["ja"]);
+                let page = epub.spine().map(|(_, item)| item.path.clone()).next().unwrap();
+                let text = String::from_utf8(epub.resource(&page).unwrap().data).unwrap();
+                assert!(text.contains("xml:lang=\"ja\""), "{text}");
+            }
+            kaeri_books::Book::Comic(comic) => {
+                assert_eq!(comic.info().and_then(|i| i.language.as_deref()), Some("ja"));
+            }
+            _ => panic!("a chapter downloads as an EPUB or a CBZ"),
+        }
+    }
+}
+
+#[tokio::test]
 async fn nothing_is_fetched_on_cellular_and_rows_wait_for_wifi_until_it_returns() {
     let kit = kit(&["1", "2"]);
     let cellular = Setup { hold: true, wifi: true, ..Setup::default() };

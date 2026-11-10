@@ -167,6 +167,8 @@ pub(crate) fn command(
         }
         ReadingCommand::SetSendTarget { target } => {
             use kaeri_core::settings::SettingValue;
+            // In effect before it is written, as a setting is: `write` keeps only the file.
+            engine.config.effective_mut().reading.send_target = Some(target.clone());
             if let Err(e) = engine.config.write(
                 &services.paths,
                 &["reading"],
@@ -174,6 +176,8 @@ pub(crate) fn command(
                 SettingValue::Str(target),
             ) {
                 tracing::warn!(error = %e, "the send target was not kept");
+                let kept = engine.config.saved().reading.send_target.clone();
+                engine.config.effective_mut().reading.send_target = kept;
             }
             let _ = tx.send(Event::Reading(ReadingEvent::ExportTargets(targets_of(engine))));
         }
@@ -292,12 +296,7 @@ fn prepare_files(
         .flatten()
         .and_then(|kind| kind.title_in(crate::data::title_form(services.meta.titles())))
         .unwrap_or_else(|| work.as_str().to_owned());
-    let right_to_left = store
-        .series_settings(work.as_str())
-        .unwrap_or_default()
-        .into_iter()
-        .find(|s| s.setting == "direction")
-        .map(|s| s.value == "rtl");
+    let direction = page_direction(engine, services, &work);
     let id = job.as_ref().map_or(JobId::new(0), |j| j.id);
     let exports = services.book_sources.exports.clone();
     let cancel = exports.begin(id);
@@ -317,7 +316,7 @@ fn prepare_files(
         profile,
         format,
         out,
-        right_to_left,
+        direction,
     };
     tokio::spawn(async move {
         let _job = job;
@@ -340,6 +339,31 @@ fn prepare_files(
             }
         }
     });
+}
+
+/// Which way the series' pages turn on the e-reader: as the reader turns them, from the same
+/// layers (the person's choice for the series, its source's word, the reader's kept guess, the
+/// medium's default). A series read as a strip or scrolled turns its pages forward.
+fn page_direction(
+    engine: &EngineState,
+    services: &Services,
+    work: &WorkId,
+) -> prepare::PageDirection {
+    use kaeri_model::reader::ReaderSettingKey as Key;
+
+    use crate::reading::settings::{Layers, Screen, SourceWord};
+    let layers = Layers::read(
+        services.book_sources.store(),
+        &engine.config.effective().reading,
+        kaeri_core::media::Medium::Manga,
+        Some(work.as_str()),
+        Screen::default(),
+    )
+    .with_source(SourceWord::of(services, work));
+    let flows = matches!(layers.word(Key::Mode).as_str(), "strip" | "vertical");
+    let right_to_left = !flows && layers.word(Key::Direction) == "rtl";
+    let said = flows || layers.series_has(Key::Direction) || layers.sourced(Key::Direction);
+    prepare::PageDirection { said: said.then_some(right_to_left), otherwise: right_to_left }
 }
 
 /// Progress of one send, told at most every 150 ms except for its end.
@@ -411,7 +435,7 @@ struct OneSend {
     profile: profiles::Profile,
     format: ExportFormat,
     out: PathBuf,
-    right_to_left: Option<bool>,
+    direction: prepare::PageDirection,
 }
 
 impl OneSend {
@@ -445,7 +469,7 @@ impl OneSend {
             format: self.format,
             out: self.out.clone(),
             limit: None,
-            right_to_left: self.right_to_left,
+            direction: self.direction,
         };
         let (told, cancel) = (self.told.clone(), self.cancel.clone());
         let blocking = tokio::task::spawn_blocking(move || {
@@ -675,15 +699,27 @@ fn set_feed_share(
 ) {
     use kaeri_core::settings::SettingValue;
     use kaeri_model::reading::FeedShelf;
+    fn share(feed: &mut kaeri_core::config::FeedConfig, shelf: FeedShelf) -> &mut Option<bool> {
+        match shelf {
+            FeedShelf::Downloads => &mut feed.share_downloads,
+            FeedShelf::MangaFolders => &mut feed.share_manga,
+            FeedShelf::NovelFolders => &mut feed.share_novels,
+        }
+    }
     let key = match shelf {
         FeedShelf::Downloads => "share_downloads",
         FeedShelf::MangaFolders => "share_manga",
         FeedShelf::NovelFolders => "share_novels",
     };
+    // In effect before it is written, as a setting is: the feed reads what is in effect.
+    *share(&mut engine.config.effective_mut().reading.feed, shelf) = Some(on);
     if let Err(e) =
         engine.config.write(&services.paths, &["reading", "feed"], key, SettingValue::Bool(on))
     {
         tracing::warn!(error = %e, "the feed shelf was not kept");
+        let mut saved = engine.config.saved().reading.feed.clone();
+        *share(&mut engine.config.effective_mut().reading.feed, shelf) =
+            *share(&mut saved, shelf);
     }
     apply_feed(engine, services, tx);
 }
@@ -714,8 +750,12 @@ fn set_feed(
 ) {
     use kaeri_core::settings::SettingValue;
     let paths = &services.paths;
+    // Each value is put in effect before it is written, as a setting is: `write` keeps the
+    // file and puts back only a value it refused, and the feed follows what is in effect. So
+    // off stops serving at once, and on starts at once.
     if let Some(password) = password {
         let set = keep_password(services, &password);
+        engine.config.effective_mut().reading.feed.password_set = set;
         if let Err(e) = engine.config.write(
             paths,
             &["reading", "feed"],
@@ -725,10 +765,16 @@ fn set_feed(
             tracing::warn!(error = %e, "the feed password flag was not kept");
         }
     }
+    engine.config.effective_mut().reading.feed.on = on;
     if let Err(e) =
         engine.config.write(paths, &["reading", "feed"], "on", SettingValue::Bool(on))
     {
         tracing::warn!(error = %e, "the feed switch was not kept");
+    }
+    // Off stays off for this launch even when the file refused it: the library is not served
+    // a moment longer than the person wants.
+    if !on {
+        engine.config.effective_mut().reading.feed.on = false;
     }
     apply_feed(engine, services, tx);
 }
