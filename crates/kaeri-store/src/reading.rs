@@ -353,6 +353,16 @@ pub(crate) fn apply_read_op(
                     read_note(tx, notes, work, chapter, &device, &op.device, now_secs)?;
                 }
             }
+            // A list choice synced after this read, taking the series off the lists among
+            // them, stands over it.
+            let chosen_later: bool = tx.query_row(
+                "SELECT EXISTS(SELECT 1 FROM sync_reg WHERE kind = ?1 AND key = ?2 AND stamp > ?3)",
+                params![kinds::READ_STATUS, work, op.stamp as i64],
+                |r| r.get(0),
+            )?;
+            if inserted > 0 && !chosen_later {
+                start_reading(tx, work, *at)?;
+            }
             Some(work.clone())
         }
         OpBody::Unread { work, chapter, removes } => {
@@ -659,10 +669,12 @@ fn write_status(
     score: Option<Option<f64>>,
     at: i64,
 ) -> rusqlite::Result<()> {
+    // A status written here is the person's or a tracker's, never one a read put there.
     tx.execute(
         "INSERT INTO read_status (work, status, score, updated_at) VALUES (?1, ?2, ?3, ?4)
          ON CONFLICT(work) DO UPDATE SET
             status = CASE WHEN ?5 THEN excluded.status ELSE status END,
+            auto = CASE WHEN ?5 THEN 0 ELSE auto END,
             score = CASE WHEN ?6 THEN excluded.score ELSE score END,
             updated_at = excluded.updated_at",
         params![work, status.flatten(), score.flatten(), at, status.is_some(), score.is_some()],
@@ -670,6 +682,21 @@ fn write_status(
     tx.execute(
         "DELETE FROM read_status WHERE work = ?1 AND status IS NULL AND score IS NULL",
         [work],
+    )?;
+    Ok(())
+}
+
+/// A read puts a series with no status on Reading, as Continue shows it. The status is marked
+/// as the read's, so a tracker's own status replaces it and it is never sent over one. It stays
+/// on the device: each device reaches it from the reads it holds.
+fn start_reading(tx: &Transaction<'_>, work: &str, at: i64) -> rusqlite::Result<()> {
+    tx.execute(
+        "INSERT INTO read_status (work, status, score, updated_at, auto)
+         VALUES (?1, 'reading', NULL, ?2, 1)
+         ON CONFLICT(work) DO UPDATE SET status = 'reading', auto = 1,
+            updated_at = excluded.updated_at
+          WHERE read_status.status IS NULL",
+        params![work, at],
     )?;
     Ok(())
 }
@@ -807,6 +834,7 @@ impl Store {
             // A read brings a work hidden from Continue back.
             tx.execute("UPDATE read_work SET hidden = 0 WHERE work = ?1", [&event.work])?;
             refresh_work(tx, &event.work)?;
+            start_reading(tx, &event.work, event.at)?;
             Ok(())
         })
     }
@@ -1155,6 +1183,42 @@ impl Store {
             )
             .optional()?
             .unwrap_or_default())
+        })
+    }
+
+    /// Whether a work's status is the Reading a read put there, not one the person or a tracker
+    /// chose.
+    pub fn read_status_is_auto(&self, work: &str) -> Result<bool> {
+        self.with_personal(|c| {
+            Ok(c.query_row(
+                "SELECT auto FROM read_status WHERE work = ?1 AND status IS NOT NULL",
+                [work],
+                |r| r.get::<_, i64>(0),
+            )
+            .optional()?
+            .is_some_and(|auto| auto != 0))
+        })
+    }
+
+    /// A tracker's status for a work whose status a read put there: it takes that status's
+    /// place, as if chosen. Nothing, and `false`, once the person or a tracker has chosen one.
+    /// It keeps the date it had, so a later pull does not take it for a change made here.
+    pub fn settle_auto_read_status(&self, work: &str, status: &str) -> Result<bool> {
+        self.with_personal_tx(|tx| {
+            let auto: Option<i64> = tx
+                .query_row(
+                    "SELECT updated_at FROM read_status
+                      WHERE work = ?1 AND status IS NOT NULL AND auto = 1",
+                    [work],
+                    |r| r.get(0),
+                )
+                .optional()?;
+            let Some(at) = auto else { return Ok(false) };
+            write_status(tx, work, Some(Some(status)), None, at)?;
+            if syncs(work) {
+                self.emit_reg(tx, kinds::READ_STATUS, work, Some(status))?;
+            }
+            Ok(true)
         })
     }
 
@@ -1622,7 +1686,10 @@ pub(crate) fn backfill(tx: &Transaction<'_>, device: &str) -> Result<()> {
             regs.push(row?);
         }
         let mut stmt = tx.prepare(
-            "SELECT work, status, score, updated_at FROM read_status WHERE work LIKE 'a:%'",
+            // A Reading a read put there stays on the device; the other devices reach it from
+            // the reads.
+            "SELECT work, CASE WHEN auto = 0 THEN status END, score, updated_at FROM read_status
+              WHERE work LIKE 'a:%'",
         )?;
         for row in stmt.query_map([], |r| {
             Ok((
@@ -1781,6 +1848,97 @@ mod tests {
             read(&store, work, "12", 20, true, 400);
             assert!(store.chapter_is_read(work, "12").unwrap(), "{work}");
         }
+    }
+
+    #[test]
+    fn the_first_read_puts_a_series_with_no_status_on_reading() {
+        let store = store();
+        let work = "a:900121";
+        assert!(store.read_status_works("reading").unwrap().is_empty());
+        read(&store, work, "1", 3, false, 100);
+        assert_eq!(store.read_status(work).unwrap().0.as_deref(), Some("reading"));
+        assert!(store.read_status_is_auto(work).unwrap());
+        assert_eq!(store.read_status_works("reading").unwrap(), [work]);
+        // A score of the person's own keeps the Reading the read put there.
+        store.set_read_score(work, Some(7.0), 110).unwrap();
+        assert!(store.read_status_is_auto(work).unwrap());
+        // Choosing a status by hand makes it the person's.
+        store.set_read_status(work, Some("reading"), 120).unwrap();
+        assert!(!store.read_status_is_auto(work).unwrap());
+    }
+
+    #[test]
+    fn a_read_leaves_a_status_already_chosen_alone() {
+        let store = store();
+        for (work, status) in [("a:900122", "completed"), ("a:900123", "paused")] {
+            store.set_read_status(work, Some(status), 50).unwrap();
+            read(&store, work, "4", 20, true, 100);
+            assert_eq!(store.read_status(work).unwrap().0.as_deref(), Some(status));
+            assert!(!store.read_status_is_auto(work).unwrap());
+        }
+        // A score with no status is no status: the read adds Reading and keeps the score.
+        let scored = "a:900124";
+        store.set_read_score(scored, Some(6.0), 50).unwrap();
+        read(&store, scored, "1", 2, false, 100);
+        assert_eq!(store.read_status(scored).unwrap(), (Some("reading".into()), Some(6.0)));
+    }
+
+    #[test]
+    fn a_trackers_status_takes_the_place_of_one_a_read_put_there() {
+        let store = store();
+        let work = "a:900125";
+        read(&store, work, "1", 3, false, 100);
+        assert!(store.settle_auto_read_status(work, "completed").unwrap());
+        assert_eq!(store.read_status_at(work).unwrap(), Some(100), "dated as before");
+        assert_eq!(store.read_status(work).unwrap().0.as_deref(), Some("completed"));
+        assert!(!store.read_status_is_auto(work).unwrap());
+        // Once chosen, a tracker's status no longer replaces it here.
+        assert!(!store.settle_auto_read_status(work, "paused").unwrap());
+        assert_eq!(store.read_status(work).unwrap().0.as_deref(), Some("completed"));
+    }
+
+    #[test]
+    fn series_read_before_the_release_go_on_reading_once() {
+        let tmp = tempfile::tempdir().unwrap();
+        let path = tmp.path().join("kaeri.db");
+        {
+            let conn = rusqlite::Connection::open(&path).unwrap();
+            crate::schema::migrate_until(&conn, Some("0033_read_status_auto")).unwrap();
+            let work = |work: &str, chapter: Option<&str>, at: i64| {
+                conn.execute(
+                    "INSERT INTO read_work (work, last_chapter, updated_at) VALUES (?1, ?2, ?3)",
+                    params![work, chapter, at],
+                )
+                .unwrap();
+            };
+            work("a:900131", Some("3"), 300);
+            work("a:900132", Some("9"), 400);
+            work("a:900133", Some("2"), 500);
+            work("a:900134", None, 600);
+            let status = |work: &str, status: Option<&str>, score: Option<f64>| {
+                conn.execute(
+                    "INSERT INTO read_status (work, status, score, updated_at)
+                     VALUES (?1, ?2, ?3, 10)",
+                    params![work, status, score],
+                )
+                .unwrap();
+            };
+            status("a:900132", Some("completed"), None);
+            status("a:900133", None, Some(8.0));
+        }
+        let store = Store::open(&path).unwrap();
+        assert_eq!(store.read_status("a:900131").unwrap().0.as_deref(), Some("reading"));
+        assert!(store.read_status_is_auto("a:900131").unwrap());
+        assert_eq!(store.read_status_at("a:900131").unwrap(), Some(300));
+        assert_eq!(store.read_status("a:900132").unwrap().0.as_deref(), Some("completed"));
+        assert!(!store.read_status_is_auto("a:900132").unwrap());
+        assert_eq!(store.read_status("a:900133").unwrap(), (Some("reading".into()), Some(8.0)));
+        // Only adopted progress, no chapter read here: not on a list.
+        assert_eq!(store.read_status("a:900134").unwrap().0, None);
+        // Opening again runs nothing twice.
+        drop(store);
+        let store = Store::open(&path).unwrap();
+        assert_eq!(store.read_status_works("reading").unwrap().len(), 2);
     }
 
     #[test]
