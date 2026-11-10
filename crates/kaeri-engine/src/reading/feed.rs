@@ -93,6 +93,64 @@ pub struct FeedCredit {
     pub print: u64,
 }
 
+/// A chapter's parts as its source has them: where each starts among every page, from 0. A
+/// download keeps these, so the chapter read from it is told its parts as one read from the
+/// source is.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub(crate) struct SourceParts {
+    pub parts: Vec<SourcePart>,
+    pub total: u32,
+    pub missing: Vec<u32>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub(crate) struct SourcePart {
+    pub number: u32,
+    /// Its first page, from 0, through every page the source has.
+    pub start: u32,
+    pub group: Option<String>,
+    pub other_group: bool,
+}
+
+impl SourceParts {
+    /// An opened chapter's parts; `None` for a chapter listed whole.
+    pub(crate) fn of(opened: &Opened) -> Option<Self> {
+        if opened.parts.len() < 2 && opened.missing.is_empty() {
+            return None;
+        }
+        let parts = opened
+            .spans()
+            .into_iter()
+            .zip(&opened.parts)
+            .map(|((start, _), part)| {
+                let group = part.chapter.version_label.clone();
+                let other_group = group.is_some() && group != opened.group;
+                SourcePart { number: part.number, start, group, other_group }
+            })
+            .collect();
+        Some(Self { parts, total: opened.total, missing: opened.missing.clone() })
+    }
+
+    /// As the reader is told of them: each part's first page counted without the credit pages
+    /// at `skipped` (from 0, through every page the source has).
+    pub(crate) fn counted(&self, skipped: &[u32]) -> FeedParts {
+        let parts = self
+            .parts
+            .iter()
+            .map(|part| {
+                let before = skipped.iter().filter(|p| **p < part.start).count() as u32;
+                ChapterPart {
+                    number: part.number,
+                    first_page: part.start - before + 1,
+                    group: part.group.clone(),
+                    other_group: part.other_group,
+                }
+            })
+            .collect();
+        FeedParts { parts, total: self.total, missing: self.missing.clone() }
+    }
+}
+
 /// A chapter in parts as the reader is told of it, credit pages left out.
 #[derive(Debug, Clone, PartialEq)]
 pub struct FeedParts {
@@ -269,7 +327,7 @@ pub(crate) async fn start(
     }
     credits.sort_by_key(|c| c.page);
     let skipped: Vec<u32> = credits.iter().map(|c| c.page).collect();
-    let parts = parts_of(&opened, &skipped);
+    let parts = SourceParts::of(&opened).map(|p| p.counted(&skipped));
     let count = order.len();
     let first = first(u32::try_from(count).unwrap_or(u32::MAX)).min(count - 1);
     if !matches!(pages[first], FeedPage::Landed(_)) {
@@ -402,31 +460,6 @@ fn ends(spans: &[(u32, u32)]) -> Vec<Vec<u32>> {
             [edge(start..start + len.min(2)), edge(close..start + len)]
         })
         .collect()
-}
-
-/// A chapter in parts as the reader is told of it: each part's first page counted without the
-/// credit pages at `skipped` (from 0, through every page the source has).
-fn parts_of(opened: &Opened, skipped: &[u32]) -> Option<FeedParts> {
-    if opened.parts.len() < 2 && opened.missing.is_empty() {
-        return None;
-    }
-    let parts = opened
-        .spans()
-        .into_iter()
-        .zip(&opened.parts)
-        .map(|((start, _), part)| {
-            let group = part.chapter.version_label.clone();
-            let other_group = group.is_some() && group != opened.group;
-            let before = skipped.iter().filter(|p| **p < start).count() as u32;
-            ChapterPart {
-                number: part.number,
-                first_page: start - before + 1,
-                group,
-                other_group,
-            }
-        })
-        .collect();
-    Some(FeedParts { parts, total: opened.total, missing: opened.missing.clone() })
 }
 
 /// One page fetched: its index in the feed, what came, the chapter as the fetch left it (its
