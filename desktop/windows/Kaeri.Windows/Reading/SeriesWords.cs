@@ -56,11 +56,12 @@ static class SeriesWords
         SeriesAction.Continue go when !Numbered(go.Label) => T.ActionContinueNamedPage(go.Label, go.Page),
         SeriesAction.Continue go => T.ActionContinueChapter(go.Label, go.Page),
         SeriesAction.ContinuePart { Percent: { } percent } part when !Numbered(part.Label) => T.ActionContinueNamed(part.Label, percent),
-        SeriesAction.ContinuePart { Percent: { } percent } part => T.ActionContinuePart(part.Label, percent),
+        // A bare number is a chapter, as its row and the reader call it.
+        SeriesAction.ContinuePart { Percent: { } percent } part => T.ActionContinueChapterPercent(part.Label, percent),
         SeriesAction.ContinuePart part when !Numbered(part.Label) => T.ActionContinueNamedPlain(part.Label),
-        SeriesAction.ContinuePart part => T.ActionContinuePartPlain(part.Label),
+        SeriesAction.ContinuePart part => T.ActionContinueChapterPlain(part.Label),
         SeriesAction.ReadPart part when !Numbered(part.Label) => T.ActionReadNamed(part.Label),
-        SeriesAction.ReadPart part => T.ActionReadPart(part.Label),
+        SeriesAction.ReadPart part => T.ActionReadChapter(part.Label),
         SeriesAction.ReadAgain => T.ActionReadAgain,
         _ => null,
     };
@@ -83,9 +84,11 @@ static class SeriesWords
         _ => T.NamesPair(list.Take(list.Count - 1).Skip(1).Aggregate(list[0], T.NamesList), list[^1]),
     };
 
-    /// <summary>"87 of 88 chapters · volume 9", "Volume 5 of 5".</summary>
+    /// <summary>"87 of 88 chapters · volume 9", "Volume 5 of 5", or "Not started" while nothing is read.</summary>
     public static string Progress(TrackerReadRow row, SeriesView series)
     {
+        if (row.Chapters == 0 && (row.Volumes ?? 0) == 0)
+            return T.SeriesTrackerNotStarted;
         if (series.Medium == Medium.Novel && row.Volumes is { } volumes)
             return T.SeriesTrackerVolumes(volumes, series.VolumesTotal ?? volumes);
         var chapters = series.ChaptersTotal is { } total ? T.SeriesTrackerChaptersOf(row.Chapters, total) : T.SeriesTrackerChapters(row.Chapters);
