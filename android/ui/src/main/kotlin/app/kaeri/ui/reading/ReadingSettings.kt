@@ -202,6 +202,23 @@ private fun CountsAsReadRow(place: Place) {
     )
 }
 
+/** Skip credit pages, on unless turned off: a reader default for manga, which comics and strips share. */
+@Composable
+private fun SkipCreditsRow(place: Place) {
+    val store = LocalAppStore.current
+    val context = LocalContext.current
+    val defaults by store.reading.readerDefaults.collectAsStateWithLifecycle()
+    val view = defaults[Medium.MANGA]
+    val on = (view?.rows?.firstOrNull { it.key == ReaderSettingKey.SKIP_CREDIT_PAGES }?.value as? ReaderValue.Toggle)?.on ?: true
+    SwitchRow(
+        place,
+        Strings.settingsSkipCredits(context),
+        checked = on,
+        note = Strings.settingsSkipCreditsNote(context),
+        enabled = view != null,
+    ) { store.reading.setReaderDefault(Medium.MANGA, ReaderSettingKey.SKIP_CREDIT_PAGES, ReaderValue.Toggle(it)) }
+}
+
 // The pane
 
 /**
@@ -221,6 +238,7 @@ internal fun ReadingPane() {
                 { place -> ReadingSettingMenu(place, SettingKey.WEBTOON_MODE, stringResource(R.string.settings_reader_webtoons)) },
                 { place -> NovelDefaultRow(place) },
                 { place -> CountsAsReadRow(place) },
+                { place -> SkipCreditsRow(place) },
             ),
         )
         ScreenGroup()

@@ -185,6 +185,45 @@ series-tracker-ask = Which series is this? Choose
 # Value of the group row: the chosen group is used for this series.
 series-preferred-group = Your preferred group here
 
+# Label of the series page's row for the group whose version of each chapter the series lists,
+# inside the source in use. Its value is the group's name.
+series-group = Group
+
+# After the group's name on the Group row: it is in use because it has the most chapters.
+# @max 20
+series-group-most = most chapters
+
+# After the group's name on the Group row: the person picked it.
+# @max 20
+series-group-picked = your pick
+
+# Spoken hint of the Group row's Change button.
+series-group-hint = Picks the group
+
+# Under the group picker's title: the source the groups are in.
+# @arg source: text
+group-picker-in = In { $source }
+
+# The group picker's first choice: the group with the most chapters, whichever that is.
+group-picker-most = Most chapters
+
+# Under Most chapters: the group that means today.
+# @arg group: text
+group-picker-most-now = Now { $group }
+
+# A group in the picker: how many of the series' chapters it has released. Its language follows,
+# after a middle dot.
+# @arg have: int
+# @arg total: int
+# @max 28
+group-picker-count = { $have } of { $total ->
+    [one] { $total } chapter
+   *[other] { $total } chapters
+ }
+
+# Under the group picker's choices.
+group-picker-fallback = Chapters a group doesn't have come from another group, and their rows say which.
+
 # A tracker's progress in chapters, with the total.
 # @arg n: int
 # @arg total: int
@@ -1332,6 +1371,12 @@ settings-counts-read-moving-on-note = Turning past the last page, or opening the
 
 # Value of Counts as read: only the person's own marks; the reader marks nothing.
 settings-counts-read-marked = When you mark it
+
+# Reader default for manga: pages a group repeats at the start or end of its chapters are left out.
+settings-skip-credits = Skip credit pages
+
+# Line under Skip credit pages.
+settings-skip-credits-note = Pages a group repeats at the start or end of its chapters
 
 # Line under Counts as read when it is When you mark it.
 settings-counts-read-marked-note = { -continue-reading-cap } and your { -tracker-pl } follow your marks

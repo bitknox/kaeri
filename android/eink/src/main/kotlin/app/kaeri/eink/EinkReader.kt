@@ -99,6 +99,18 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.sp
 import app.kaeri.reader.HeldLine
 import app.kaeri.reader.TextThenLink
+import app.kaeri.reader.CreditNotice
+import app.kaeri.reader.CreditShot
+import app.kaeri.reader.partTicks
+import app.kaeri.reader.openCredits
+import app.kaeri.reader.creditNotice
+import app.kaeri.reader.endSkipped
+import app.kaeri.reader.onUnkeptCredit
+import app.kaeri.reader.paged
+import app.kaeri.reader.shownCredit
+import app.kaeri.reader.shownPage
+import app.kaeri.reader.shownPages
+import app.kaeri.reader.startSkipped
 import app.kaeri.reader.rememberServerLine
 import app.kaeri.reader.serverLineWords
 import app.kaeri.store.ServerLine
@@ -175,6 +187,27 @@ fun EinkReader(
         if (chrome) toggleChrome()
     }
 
+    // A Fixtures shot's step, once the credit pages it staged have come.
+    val creditShot = CreditShot.step
+    val staged = state.openCredits.isNotEmpty() || state.parts != null
+    LaunchedEffect(creditShot, staged) {
+        if (creditShot == null || !staged) return@LaunchedEffect
+        delay(600)
+        // Without the fixture's resume notice, as a chapter opened fresh.
+        session.state.value.notice?.let { session.dismissNotice(it.id) }
+        when (creditShot) {
+            "line" -> pager.go(0, TurnHow.JUMP)
+            "chrome", "parts" -> if (!chrome) toggleChrome()
+            "shown", "shownchrome", "kept" -> {
+                session.showStartCredits()?.let { pager.show(it, TurnHow.TURN, session::showCredit, null) }
+                delay(400)
+                if (creditShot == "kept") session.keepCredit()
+                if (creditShot != "shown" && creditShot != "kept" && !chrome) toggleChrome()
+            }
+            "end" -> pager.go(session.state.value.leaves.lastIndex, TurnHow.JUMP)
+        }
+    }
+
     val contentsKeys = remember { ContentsKeys() }
     fun act(action: ReaderAction) {
         when (action) {
@@ -231,16 +264,53 @@ fun EinkReader(
                     paint(EinkPaint.ImagePage(colour))
                 },
                 motion = false,
-                endPage = { EinkEndPage(state, actions, onContinue = { next -> session.openChapter(next.id) }, onFirstPage = { pager.go(0, TurnHow.JUMP) }) },
+                endPage = {
+                    EinkEndPage(
+                        state,
+                        actions,
+                        onContinue = { next -> session.openChapter(next.id) },
+                        onFirstPage = { pager.go(0, TurnHow.JUMP) },
+                        onShowCredits = { session.showEndCredits()?.let { pager.show(it, TurnHow.TURN, session::showCredit, state.shownCredit) } },
+                    )
+                },
                 // A page button, a volume key or a forward tap on the end page goes on, as on the phone.
                 onPastEnd = session::crossOn,
                 waiting = { page, long -> if (long) EinkPageWaiting(page) },
                 failed = { page, failure, retry -> EinkPageFailed(page, failure, retry, skip = { pager.forward(TurnHow.TURN) }) },
                 fit = (state.settings?.rows?.firstOrNull { it.key == ReaderSettingKey.FIT }?.value as? ReaderValue.Choice)?.name,
+                onCredit = session::showCredit,
+                creditGround = EinkColours.Paper,
             )
         }
+        // A credit page shown or put away over the same leaf is a new image: one full refresh.
+        val credit = state.shownCredit
+        var creditWas by remember { mutableStateOf<UInt?>(null) }
+        LaunchedEffect(state.onCredit) {
+            val was = creditWas
+            creditWas = state.onCredit
+            if (state.onCredit == was) return@LaunchedEffect
+            val colour = credit?.file?.colour ?: (state.leaves.getOrNull(pager.leaf)?.parts?.any { state.file(it)?.colour == true } == true)
+            paint(EinkPaint.ImagePage(colour))
+        }
         val leaf = state.leaves.getOrNull(pager.leaf)
-        if (leaf != null && !leaf.endPage && !chrome) EinkFolio(leaf, state)
+        if (leaf != null && !leaf.endPage && !chrome && !state.onUnkeptCredit) EinkFolio(leaf, state)
+        // Page 1's box names the credit pages skipped; it stays on page 1 and leaves with the turn.
+        val skipped = state.startSkipped
+        var turnedAway by remember(view?.chapter?.id) { mutableStateOf(false) }
+        if (pager.leaf != 0 && state.leaves.isNotEmpty()) turnedAway = true
+        if (state.paged && pager.leaf == 0 && credit == null && skipped.isNotEmpty() && (!turnedAway || CreditShot.step == "line") && !chrome && layer == EinkLayer.None && state.notice == null && view?.demoCredit == null) {
+            EinkCreditLine(skipped.size, onShow = {
+                session.showStartCredits()?.let { pager.show(it, TurnHow.TURN, session::showCredit, state.shownCredit) }
+            }, modifier = Modifier.align(Alignment.TopCenter))
+        }
+        // The box says a page was kept, with Undo, until the next turn; no timer, since a timed
+        // change costs a refresh. The kept page reaches the engine when the chapter closes.
+        val keeping = state.keeping
+        val keptAt = remember(keeping) { pager.leaf to state.onCredit }
+        val creditNotice = state.creditNotice?.takeIf { it != CreditNotice.KEPT || keptAt == (pager.leaf to state.onCredit) }
+        if (creditNotice != null && !chrome && layer == EinkLayer.None) {
+            EinkCreditNotice(creditNotice, session, Modifier.align(Alignment.TopCenter))
+        }
         if (zones && state.leaves.isNotEmpty()) EinkZonesGuide(direction)
         if (chrome && view != null && layer != EinkLayer.Contents) {
             EinkTopBar(
@@ -251,10 +321,12 @@ fun EinkReader(
                 modifier = Modifier.align(Alignment.TopCenter),
                 subtitle = view.demoCredit?.let { demo -> demo.licence?.let { Strings.readerDemoCredit(LocalContext.current, demo.series, demo.author, it) } ?: demo.credit },
             )
-            val page = (leaf?.parts?.firstOrNull()?.page?.toInt() ?: 0) + 1
+            val page = state.shownPage(leaf?.parts?.firstOrNull()?.page?.toInt() ?: 0) + 1
             EinkBottomBar(
                 page = page,
-                pages = state.pages,
+                pages = state.shownPages,
+                onCredit = state.onUnkeptCredit,
+                parts = state.partTicks.map { state.shownPage(it.page) to it.missing },
                 rtl = direction.rightToLeft,
                 backTo = state.backTo,
                 hasNext = view.next != null,
@@ -365,10 +437,10 @@ fun BoxScope.EinkFolio(leaf: Leaf, state: ReaderState) {
         } ?: height
         val margin = with(density) { (height - bottom).toDp() }
         if (margin < 24.dp) return@BoxWithConstraints
-        val pages = leaf.parts.map { it.page.toInt() + 1 }.distinct().sorted()
+        val pages = leaf.parts.map { state.shownPage(it.page.toInt()) + 1 }.distinct().sorted()
         val words = when (pages.size) {
-            1 -> Strings.einkFolioOne(context, pages[0], state.pages)
-            else -> Strings.einkFolioTwo(context, pages.first(), pages.last(), state.pages)
+            1 -> Strings.einkFolioOne(context, pages[0], state.shownPages)
+            else -> Strings.einkFolioTwo(context, pages.first(), pages.last(), state.shownPages)
         }
         Box(
             Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(margin),
@@ -429,6 +501,10 @@ fun EinkBottomBar(
     onSettings: () -> Unit,
     onClean: () -> Unit,
     modifier: Modifier = Modifier,
+    /** A credit page shows, only brought back: it has no number, and the total stays. */
+    onCredit: Boolean = false,
+    /** Where each later part starts, as a page from 0, and whether no source has it. */
+    parts: List<Pair<Int, Boolean>> = emptyList(),
 ) {
     val context = LocalContext.current
     Column(
@@ -436,11 +512,15 @@ fun EinkBottomBar(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Row(verticalAlignment = Alignment.Bottom) {
-            Text(Strings.readerPageOf(context, page, pages.coerceAtLeast(1)), style = EinkType.Label)
+            Text(if (onCredit) Strings.readerCreditPageLabel(context) else Strings.readerPageOf(context, page, pages.coerceAtLeast(1)), style = EinkType.Label)
             Spacer(Modifier.width(12.dp))
-            Text(Strings.einkPagesLeft(context, (pages - page).coerceAtLeast(0)), style = EinkType.Secondary)
+            Text(Strings.einkPagesLeft(context, (pages - if (onCredit) 0 else page).coerceAtLeast(0)), style = EinkType.Secondary)
         }
-        EinkProgress(page.toFloat() / pages.coerceAtLeast(1), fromRight = rtl)
+        EinkProgress(
+            if (onCredit) 0f else page.toFloat() / pages.coerceAtLeast(1),
+            fromRight = rtl,
+            ticks = parts.map { (at, missing) -> at.toFloat() / pages.coerceAtLeast(1) to missing },
+        )
         if (backTo != null) {
             EinkOutlinedButton(Strings.readerBackToPage(context, backTo.toInt()), onBackTo, height = 46.dp)
         }
@@ -459,13 +539,29 @@ fun EinkBottomBar(
     }
 }
 
-/** A 6 dp ink bar with a 1 dp edge, filled from the right when reading right to left. */
+/**
+ * A 6 dp ink bar with a 1 dp edge, filled from the right when reading right to left. A tick marks
+ * where each later part of the chapter starts: ink through the bar, outlined where it is filled,
+ * and a hairline in grey for a part no source has.
+ */
 @Composable
-fun EinkProgress(fraction: Float, fromRight: Boolean, modifier: Modifier = Modifier) {
+fun EinkProgress(fraction: Float, fromRight: Boolean, modifier: Modifier = Modifier, ticks: List<Pair<Float, Boolean>> = emptyList()) {
     Box(
         modifier.fillMaxWidth().height(8.dp).border(EinkSizes.Hairline, EinkColours.Tertiary).drawBehind {
-            val w = size.width * fraction.coerceIn(0f, 1f)
+            val filled = fraction.coerceIn(0f, 1f)
+            val w = size.width * filled
             drawRect(EinkColours.Ink, topLeft = Offset(if (fromRight) size.width - w else 0f, 0f), size = androidx.compose.ui.geometry.Size(w, size.height))
+            val wide = 2.dp.toPx()
+            for ((at, missing) in ticks) {
+                val f = at.coerceIn(0f, 1f)
+                val x = (if (fromRight) 1f - f else f) * size.width
+                val colour = when {
+                    missing -> EinkColours.Tertiary
+                    f < filled -> EinkColours.Paper
+                    else -> EinkColours.Ink
+                }
+                drawRect(colour, topLeft = Offset(x - wide / 2, -2.dp.toPx()), size = androidx.compose.ui.geometry.Size(wide, size.height + 4.dp.toPx()))
+            }
         },
     )
 }
@@ -582,6 +678,8 @@ fun EinkEndPage(
     modifier: Modifier = Modifier,
     /** Back to page 1, from the end of the demo. */
     onFirstPage: () -> Unit = {},
+    /** Show the credit pages skipped at the chapter's end. */
+    onShowCredits: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val view = state.view ?: return
@@ -614,6 +712,14 @@ fun EinkEndPage(
         if (server.held) {
             Spacer(Modifier.height(2.dp))
             EinkServerLine(server, retry, after = if (next != null) second else FocusRequester.Default, Modifier.fillMaxWidth())
+        }
+        val skipped = state.endSkipped(view.chapter.id)
+        if (skipped.isNotEmpty()) {
+            Spacer(Modifier.height(4.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(Strings.readerCreditPagesSkipped(context, skipped.size), style = EinkType.Secondary)
+                EinkTextButton(Strings.readerCreditShow(context), onShowCredits, underline = true)
+            }
         }
         Spacer(Modifier.height(if (server.held) 14.dp else 28.dp))
         Box(Modifier.width(72.dp).height(3.dp).background(EinkColours.Ink))

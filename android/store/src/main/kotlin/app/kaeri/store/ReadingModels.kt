@@ -410,6 +410,12 @@ class ReadingModel(private val send: (Command) -> Unit) {
         refreshSeries(work)
     }
 
+    /**
+     * Whose version of each chapter the series lists, inside the source in use. Null goes back to
+     * the group with the most chapters. The engine answers with the series and its chapters.
+     */
+    fun chooseGroup(work: WorkId, group: String?) = reading(ReadingCommand.ChooseGroup(work, group))
+
     fun markRead(work: WorkId, chapters: List<ChapterId>, read: Boolean) {
         reading(ReadingCommand.MarkRead(work, chapters, read))
         refreshSeries(work)
@@ -570,8 +576,14 @@ class ReadingModel(private val send: (Command) -> Unit) {
                 val part = event.v1
                 _search.update { now -> if (part.query != now.query) now else now.sourcesIn(part) }
             }
-            is ReadingEvent.Series -> _series.update { it + (event.v1.work to event.v1) }
-            is ReadingEvent.Chapters -> _chapters.update { it + (event.work to ReadChapters(event.edition, event.volumes, event.failure)) }
+            is ReadingEvent.Series -> {
+                val view = seriesShot?.invoke(event.v1) ?: event.v1
+                _series.update { it + (view.work to view) }
+            }
+            is ReadingEvent.Chapters -> {
+                val list = ReadChapters(event.edition, event.volumes, event.failure)
+                _chapters.update { it + (event.work to (chaptersShot?.invoke(list) ?: list)) }
+            }
             is ReadingEvent.Versions -> _versions.update { it + (event.chapter to event.versions) }
             is ReadingEvent.Tracking -> _tracking.update { it + (event.work to event.rows) }
             is ReadingEvent.Downloads -> _downloads.value = event.v1
@@ -593,6 +605,20 @@ class ReadingModel(private val send: (Command) -> Unit) {
             else -> {}
         }
     }
+
+    /** A change a Fixtures shot makes to every series the engine sends: a source with several groups. */
+    internal var seriesShot: ((SeriesView) -> SeriesView)? = null
+        set(value) {
+            field = value
+            if (value != null) _series.update { all -> all.mapValues { value(it.value) } }
+        }
+
+    /** A change a Fixtures shot makes to every chapter list the engine sends: rows in parts and from other groups. */
+    internal var chaptersShot: ((ReadChapters) -> ReadChapters)? = null
+        set(value) {
+            field = value
+            if (value != null) _chapters.update { all -> all.mapValues { value(it.value) } }
+        }
 
     /** A change a Fixtures shot makes to every Home the engine sends: the new-chapter spotlight. */
     internal var stage: ((ReadingHomeView) -> ReadingHomeView)? = null

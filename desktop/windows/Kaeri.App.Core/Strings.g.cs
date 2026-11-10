@@ -6046,6 +6046,36 @@ public static partial class T
     /// <summary>Under the opening line once the wait has gone on for a long time, above Read from another source and Go back.</summary>
     public static string ReaderWaitLong => Get("ReaderWaitLong");
 
+    /// <summary>Beside the line that says how many credit pages were skipped, on the end page and in a long strip. Tapping it shows them.</summary>
+    public static string ReaderCreditShow => Get("ReaderCreditShow");
+
+    /// <summary>Spoken hint of the line that says how many credit pages were skipped.</summary>
+    public static string ReaderCreditShowHint => Get("ReaderCreditShowHint");
+
+    /// <summary>Notice over a credit page shown again, and the caption above it in a long strip.</summary>
+    public static string ReaderCreditShown => Get("ReaderCreditShown");
+
+    /// <summary>The notice's action on a shown credit page: show this page from now on.</summary>
+    public static string ReaderCreditNot => Get("ReaderCreditNot");
+
+    /// <summary>Notice after Not a credit page, with Undo.</summary>
+    public static string ReaderCreditKept => Get("ReaderCreditKept");
+
+    /// <summary>In the reader's line in place of a page number, while a credit page shows: "Chapter 87 · credit page".</summary>
+    public static string ReaderCreditPage => Get("ReaderCreditPage");
+
+    /// <summary>The same, when more than one credit page is shown: "credit page 1 of 2".</summary>
+    public static string ReaderCreditPageOf(long n, long total) => Fill(Get("ReaderCreditPageOf"), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Spoken name of a credit page shown again.</summary>
+    public static string ReaderCreditPageLabel => Get("ReaderCreditPageLabel");
+
+    /// <summary>The scrubber's preview on the first page of a chapter's later part.</summary>
+    public static string ReaderPartPreview(long page, long part) => Fill(Get("ReaderPartPreview"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("part", part.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Spoken value of the scrubber on the first page of a chapter's later part.</summary>
+    public static string ReaderPartStarts(long part, long page) => Fill(Get("ReaderPartStarts"), ("part", part.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
     /// <summary>Button in the first run that opens the reading demo.</summary>
     public static string OnboardingReadDemo => Get("OnboardingReadDemo");
 
@@ -6300,6 +6330,33 @@ public static partial class T
 
     /// <summary>Value of the group row: the chosen group is used for this series.</summary>
     public static string SeriesPreferredGroup => Get("SeriesPreferredGroup");
+
+    /// <summary>Label of the series page's row for the group whose version of each chapter the series lists, inside the source in use. Its value is the group's name.</summary>
+    public static string SeriesGroup => Get("SeriesGroup");
+
+    /// <summary>After the group's name on the Group row: it is in use because it has the most chapters.</summary>
+    public static string SeriesGroupMost => Get("SeriesGroupMost");
+
+    /// <summary>After the group's name on the Group row: the person picked it.</summary>
+    public static string SeriesGroupPicked => Get("SeriesGroupPicked");
+
+    /// <summary>Spoken hint of the Group row's Change button.</summary>
+    public static string SeriesGroupHint => Get("SeriesGroupHint");
+
+    /// <summary>Under the group picker's title: the source the groups are in.</summary>
+    public static string GroupPickerIn(string source) => Fill(Get("GroupPickerIn"), ("source", source));
+
+    /// <summary>The group picker's first choice: the group with the most chapters, whichever that is.</summary>
+    public static string GroupPickerMost => Get("GroupPickerMost");
+
+    /// <summary>Under Most chapters: the group that means today.</summary>
+    public static string GroupPickerMostNow(string group) => Fill(Get("GroupPickerMostNow"), ("group", group));
+
+    /// <summary>A group in the picker: how many of the series' chapters it has released. Its language follows, after a middle dot.</summary>
+    public static string GroupPickerCount(long have, long total) => Fill(GetPlural("GroupPickerCount", total), ("have", have.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under the group picker's choices.</summary>
+    public static string GroupPickerFallback => Get("GroupPickerFallback");
 
     /// <summary>A tracker's progress in chapters, with the total.</summary>
     public static string SeriesTrackerChaptersOf(long n, long total) => Fill(GetPlural("SeriesTrackerChaptersOf", total), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
@@ -7213,6 +7270,12 @@ public static partial class T
 
     /// <summary>Value of Counts as read: only the person's own marks; the reader marks nothing.</summary>
     public static string SettingsCountsReadMarked => Get("SettingsCountsReadMarked");
+
+    /// <summary>Reader default for manga: pages a group repeats at the start or end of its chapters are left out.</summary>
+    public static string SettingsSkipCredits => Get("SettingsSkipCredits");
+
+    /// <summary>Line under Skip credit pages.</summary>
+    public static string SettingsSkipCreditsNote => Get("SettingsSkipCreditsNote");
 
     /// <summary>Line under Counts as read when it is When you mark it.</summary>
     public static string SettingsCountsReadMarkedNote => Get("SettingsCountsReadMarkedNote");
@@ -13793,6 +13856,16 @@ public static partial class T
         ["ReaderWaitChapterPages"] = "Getting chapter {chapter} from {source}",
         ["ReaderWaitSeconds"] = "{line} · {seconds} s",
         ["ReaderWaitLong"] = "This is taking a while.",
+        ["ReaderCreditShow"] = "Show",
+        ["ReaderCreditShowHint"] = "Shows the page",
+        ["ReaderCreditShown"] = "Skipped as a credit page",
+        ["ReaderCreditNot"] = "Not a credit page",
+        ["ReaderCreditKept"] = "This page will show from now on",
+        ["ReaderCreditPage"] = "credit page",
+        ["ReaderCreditPageOf"] = "credit page {n} of {total}",
+        ["ReaderCreditPageLabel"] = "Credit page",
+        ["ReaderPartPreview"] = "Page {page} · part {part}",
+        ["ReaderPartStarts"] = "Part {part} starts at page {page}",
         ["OnboardingReadDemo"] = "Read the demo",
         ["OnboardingDemoBooksDetail"] = "One short comic and one short story, shared by their makers under Creative Commons.",
         ["OnboardingDemoBothDetail"] = "One short episode and one short comic, shared by their makers under Creative Commons.",
@@ -13886,6 +13959,16 @@ public static partial class T
         ["SeriesSourcesMore_other"] = "{n} more",
         ["SeriesTrackerAsk"] = "Which series is this? Choose",
         ["SeriesPreferredGroup"] = "Your preferred group here",
+        ["SeriesGroup"] = "Group",
+        ["SeriesGroupMost"] = "most chapters",
+        ["SeriesGroupPicked"] = "your pick",
+        ["SeriesGroupHint"] = "Picks the group",
+        ["GroupPickerIn"] = "In {source}",
+        ["GroupPickerMost"] = "Most chapters",
+        ["GroupPickerMostNow"] = "Now {group}",
+        ["GroupPickerCount_one"] = "{have} of {total} chapter",
+        ["GroupPickerCount_other"] = "{have} of {total} chapters",
+        ["GroupPickerFallback"] = "Chapters a group doesn't have come from another group, and their rows say which.",
         ["SeriesTrackerChaptersOf_one"] = "{n} of {total} chapter",
         ["SeriesTrackerChaptersOf_other"] = "{n} of {total} chapters",
         ["SeriesTrackerChapters_one"] = "1 chapter",
@@ -14210,6 +14293,8 @@ public static partial class T
         ["SettingsCountsReadMovingOn"] = "Moving on from it",
         ["SettingsCountsReadMovingOnNote"] = "Turning past the last page, or opening the next chapter",
         ["SettingsCountsReadMarked"] = "When you mark it",
+        ["SettingsSkipCredits"] = "Skip credit pages",
+        ["SettingsSkipCreditsNote"] = "Pages a group repeats at the start or end of its chapters",
         ["SettingsCountsReadMarkedNote"] = "Continue and your trackers follow your marks",
         ["SettingsFollowGroup"] = "Series settings that follow you",
         ["SettingsFollowMode"] = "Mode, direction and colour",

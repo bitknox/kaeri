@@ -8382,6 +8382,46 @@
     <value>[Ţĥîš îš ţàķîñĝ à ŵĥîļé.~~~~~~~]</value>
     <comment>Under the opening line once the wait has gone on for a long time, above Read from another source and Go back.</comment>
   </data>
+  <data name="ReaderCreditShow" xml:space="preserve">
+    <value>[Šĥöŵ~~]</value>
+    <comment>Beside the line that says how many credit pages were skipped, on the end page and in a long strip. Tapping it shows them.</comment>
+  </data>
+  <data name="ReaderCreditShowHint" xml:space="preserve">
+    <value>[Šĥöŵš ţĥé þàĝé~~~~~]</value>
+    <comment>Spoken hint of the line that says how many credit pages were skipped.</comment>
+  </data>
+  <data name="ReaderCreditShown" xml:space="preserve">
+    <value>[Šķîþþéð àš à çŕéðîţ þàĝé~~~~~~~~]</value>
+    <comment>Notice over a credit page shown again, and the caption above it in a long strip.</comment>
+  </data>
+  <data name="ReaderCreditNot" xml:space="preserve">
+    <value>[Ñöţ à çŕéðîţ þàĝé~~~~~~]</value>
+    <comment>The notice's action on a shown credit page: show this page from now on.</comment>
+  </data>
+  <data name="ReaderCreditKept" xml:space="preserve">
+    <value>[Ţĥîš þàĝé ŵîļļ šĥöŵ ƒŕöɱ ñöŵ öñ~~~~~~~~~~]</value>
+    <comment>Notice after Not a credit page, with Undo.</comment>
+  </data>
+  <data name="ReaderCreditPage" xml:space="preserve">
+    <value>[çŕéðîţ þàĝé~~~~]</value>
+    <comment>In the reader's line in place of a page number, while a credit page shows: "Chapter 87 · credit page".</comment>
+  </data>
+  <data name="ReaderCreditPageOf" xml:space="preserve">
+    <value>[çŕéðîţ þàĝé {n} öƒ {total}~~~~~~~]</value>
+    <comment>The same, when more than one credit page is shown: "credit page 1 of 2".</comment>
+  </data>
+  <data name="ReaderCreditPageLabel" xml:space="preserve">
+    <value>[Çŕéðîţ þàĝé~~~~]</value>
+    <comment>Spoken name of a credit page shown again.</comment>
+  </data>
+  <data name="ReaderPartPreview" xml:space="preserve">
+    <value>[Þàĝé {page} · þàŕţ {part}~~~~~~]</value>
+    <comment>The scrubber's preview on the first page of a chapter's later part.</comment>
+  </data>
+  <data name="ReaderPartStarts" xml:space="preserve">
+    <value>[Þàŕţ {part} šţàŕţš àţ þàĝé {page}~~~~~~~~~]</value>
+    <comment>Spoken value of the scrubber on the first page of a chapter's later part.</comment>
+  </data>
   <data name="OnboardingReadDemo" xml:space="preserve">
     <value>[Ŕéàð ţĥé ðéɱö~~~~]</value>
     <comment>Button in the first run that opens the reading demo.</comment>
@@ -8753,6 +8793,46 @@
   <data name="SeriesPreferredGroup" xml:space="preserve">
     <value>[Ýöüŕ þŕéƒéŕŕéð ĝŕöüþ ĥéŕé~~~~~~~~]</value>
     <comment>Value of the group row: the chosen group is used for this series.</comment>
+  </data>
+  <data name="SeriesGroup" xml:space="preserve">
+    <value>[Ĝŕöüþ~~]</value>
+    <comment>Label of the series page's row for the group whose version of each chapter the series lists, inside the source in use. Its value is the group's name.</comment>
+  </data>
+  <data name="SeriesGroupMost" xml:space="preserve">
+    <value>[ɱöšţ çĥàþţéŕš~~~~]</value>
+    <comment>After the group's name on the Group row: it is in use because it has the most chapters.</comment>
+  </data>
+  <data name="SeriesGroupPicked" xml:space="preserve">
+    <value>[ýöüŕ þîçķ~~~]</value>
+    <comment>After the group's name on the Group row: the person picked it.</comment>
+  </data>
+  <data name="SeriesGroupHint" xml:space="preserve">
+    <value>[Þîçķš ţĥé ĝŕöüþ~~~~~]</value>
+    <comment>Spoken hint of the Group row's Change button.</comment>
+  </data>
+  <data name="GroupPickerIn" xml:space="preserve">
+    <value>[Îñ {source}~~]</value>
+    <comment>Under the group picker's title: the source the groups are in.</comment>
+  </data>
+  <data name="GroupPickerMost" xml:space="preserve">
+    <value>[Ṁöšţ çĥàþţéŕš~~~~]</value>
+    <comment>The group picker's first choice: the group with the most chapters, whichever that is.</comment>
+  </data>
+  <data name="GroupPickerMostNow" xml:space="preserve">
+    <value>[Ñöŵ {group}~~~]</value>
+    <comment>Under Most chapters: the group that means today.</comment>
+  </data>
+  <data name="GroupPickerCount_one" xml:space="preserve">
+    <value>[{have} öƒ {total} çĥàþţéŕ~~~~~~]</value>
+    <comment>A group in the picker: how many of the series' chapters it has released. Its language follows, after a middle dot.</comment>
+  </data>
+  <data name="GroupPickerCount_other" xml:space="preserve">
+    <value>[{have} öƒ {total} çĥàþţéŕš~~~~~~]</value>
+    <comment>A group in the picker: how many of the series' chapters it has released. Its language follows, after a middle dot.</comment>
+  </data>
+  <data name="GroupPickerFallback" xml:space="preserve">
+    <value>[Çĥàþţéŕš à ĝŕöüþ ðöéšñ'ţ ĥàṽé çöɱé ƒŕöɱ àñöţĥéŕ ĝŕöüþ, àñð ţĥéîŕ ŕöŵš šàý ŵĥîçĥ.~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Under the group picker's choices.</comment>
   </data>
   <data name="SeriesTrackerChaptersOf_one" xml:space="preserve">
     <value>[{n} öƒ {total} çĥàþţéŕ~~~~~~]</value>
@@ -10047,6 +10127,14 @@
   <data name="SettingsCountsReadMarked" xml:space="preserve">
     <value>[Ŵĥéñ ýöü ɱàŕķ îţ~~~~~]</value>
     <comment>Value of Counts as read: only the person's own marks; the reader marks nothing.</comment>
+  </data>
+  <data name="SettingsSkipCredits" xml:space="preserve">
+    <value>[Šķîþ çŕéðîţ þàĝéš~~~~~~]</value>
+    <comment>Reader default for manga: pages a group repeats at the start or end of its chapters are left out.</comment>
+  </data>
+  <data name="SettingsSkipCreditsNote" xml:space="preserve">
+    <value>[Þàĝéš à ĝŕöüþ ŕéþéàţš àţ ţĥé šţàŕţ öŕ éñð öƒ îţš çĥàþţéŕš~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under Skip credit pages.</comment>
   </data>
   <data name="SettingsCountsReadMarkedNote" xml:space="preserve">
     <value>[Çöñţîñüé àñð ýöüŕ ţŕàçķéŕš ƒöļļöŵ ýöüŕ ɱàŕķš~~~~~~~~~~~~~~]</value>

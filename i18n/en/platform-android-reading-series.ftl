@@ -16,3 +16,9 @@ read-downloads-empty-detail = Downloaded chapters open without a connection.
 # Downloads' empty line for a person who watches and reads, under "No downloads".
 # @only android
 read-downloads-empty-both = Downloaded episodes and chapters open without a connection.
+
+# The head of the group menu on a large screen, over its choices: the source the groups are in.
+# @only android
+# @arg source: text
+# @max 40
+group-menu-in = Group in { $source }

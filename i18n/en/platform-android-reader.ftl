@@ -1009,3 +1009,10 @@ eink-step-up = More
 # @only android
 # @max 20
 eink-contents-reading = Reading
+
+# The chapter line in the reader's controls while a credit page shows: the chapter, then "credit
+# page" or "credit page 1 of 2".
+# @only android
+# @arg chapter: text
+# @arg place: text
+reader-line-place = { $chapter } · { $place }

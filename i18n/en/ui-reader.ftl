@@ -243,3 +243,42 @@ reader-wait-seconds = { $line } · { $seconds } s
 
 # Under the opening line once the wait has gone on for a long time, above Read from another source and Go back.
 reader-wait-long = This is taking a while.
+
+## Credit pages and chapter parts
+
+# Beside the line that says how many credit pages were skipped, on the end page and in a long
+# strip. Tapping it shows them.
+reader-credit-show = Show
+
+# Spoken hint of the line that says how many credit pages were skipped.
+reader-credit-show-hint = Shows the page
+
+# Notice over a credit page shown again, and the caption above it in a long strip.
+reader-credit-shown = Skipped as a credit page
+
+# The notice's action on a shown credit page: show this page from now on.
+reader-credit-not = Not a credit page
+
+# Notice after Not a credit page, with Undo.
+reader-credit-kept = This page will show from now on
+
+# In the reader's line in place of a page number, while a credit page shows: "Chapter 87 · credit page".
+reader-credit-page = credit page
+
+# The same, when more than one credit page is shown: "credit page 1 of 2".
+# @arg n: plain
+# @arg total: plain
+reader-credit-page-of = credit page { $n } of { $total }
+
+# Spoken name of a credit page shown again.
+reader-credit-page-label = Credit page
+
+# The scrubber's preview on the first page of a chapter's later part.
+# @arg page: plain
+# @arg part: plain
+reader-part-preview = Page { $page } · part { $part }
+
+# Spoken value of the scrubber on the first page of a chapter's later part.
+# @arg part: plain
+# @arg page: plain
+reader-part-starts = Part { $part } starts at page { $page }

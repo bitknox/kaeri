@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.draw.drawBehind
@@ -46,6 +47,22 @@ import androidx.compose.ui.unit.IntOffset
 import app.kaeri.engine.model.ChapterVersion
 import app.kaeri.engine.model.ReaderWait
 import app.kaeri.reader.PageFileView
+import app.kaeri.reader.StripDividerHeight
+import app.kaeri.reader.endSkipped
+import app.kaeri.reader.onUnkeptCredit
+import app.kaeri.reader.paged
+import app.kaeri.reader.partStarting
+import app.kaeri.reader.partTicks
+import app.kaeri.reader.shownCredit
+import app.kaeri.reader.shownPage
+import app.kaeri.reader.shownPages
+import app.kaeri.reader.startSkipped
+import app.kaeri.reader.CreditShot
+import app.kaeri.reader.openCredits
+import app.kaeri.engine.core.ChapterId
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import kotlin.math.abs
 import kotlin.math.roundToInt
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -263,6 +280,38 @@ fun PhoneReader(
     val accessibility = remember { context.getSystemService(AccessibilityManager::class.java) }
     val exploring = accessibility?.isTouchExplorationEnabled == true
     val shown = chrome || exploring
+
+    // A Fixtures shot's step, once the credit pages or parts it staged have come.
+    val creditShot = CreditShot.step
+    val staged = state.openCredits.isNotEmpty() || state.parts != null
+    val stripList = rememberLazyListState()
+    LaunchedEffect(creditShot, staged) {
+        if (creditShot == null || !staged) return@LaunchedEffect
+        delay(600)
+        val now = session.state.value
+        val chapter = now.chapter ?: return@LaunchedEffect
+        // Without the fixture's resume notice, as a chapter opened fresh.
+        now.notice?.let { session.dismissNotice(it.id) }
+        when (creditShot) {
+            "line" -> if (now.paged) pager.go(0, TurnHow.JUMP) else stripList.scrollToItem(0)
+            "chrome", "parts" -> {
+                if (creditShot == "parts") now.partTicks.firstOrNull()?.let { pager.go(now.leafOf((it.page + 2).toUInt()) ?: 0, TurnHow.JUMP) } else pager.go(0, TurnHow.JUMP)
+                chrome = true
+            }
+            "shown", "shownchrome", "kept" -> {
+                if (now.paged) {
+                    session.showStartCredits()?.let { pager.show(it, TurnHow.TURN, session::showCredit, null) }
+                } else {
+                    session.reveal(now.startSkipped, chapter)
+                    stripList.scrollToItem(0)
+                }
+                delay(400)
+                if (creditShot == "kept") session.keepCredit()
+                if (creditShot != "shown") chrome = true
+            }
+            "end" -> pager.go(now.leaves.lastIndex, TurnHow.JUMP)
+        }
+    }
     // A demo work opens with the chrome and its credit held for 3 s; the credit returns with the
     // chrome on every tap.
     val demo = view?.demoCredit
@@ -503,10 +552,12 @@ fun PhoneReader(
                         onMissing = session::needPage,
                         onRetry = { session.retry(it.toUInt()) },
                         onJumped = session::jumped,
-                        footer = { PhoneEndPage(state, session, actions, images, onFirstPage = { session.startOver() }, cover = cover, pageGround = background) },
-                        divider = { next -> StripDivider(state, next) },
+                        footer = { PhoneEndPage(state, session, actions, images, onFirstPage = { session.startOver() }, cover = cover, pageGround = background, onShowCredits = { session.showEndCredits() }) },
+                        divider = { next -> StripDivider(state, next, onShowCredits = { session.showEndCredits(it) }) },
+                        credits = { chapter, pages -> StripCredits(state, session, images, chapter, pages, background) },
                         onFlow = { next -> session.flowInto(next.id) },
                         onShowing = { showingAbove = it },
+                        list = stripList,
                         gap = gap,
                     )
                 }
@@ -542,7 +593,15 @@ fun PhoneReader(
                     onMissing = session::needPage,
                     onRetry = { session.retry(it.toUInt()) },
                     onJumped = session::jumped,
-                    endPage = { PhoneEndPage(state, session, actions, images, onFirstPage = { pager.go(0, TurnHow.JUMP) }, cover = cover, pageGround = background) },
+                    endPage = {
+                        PhoneEndPage(
+                            state, session, actions, images,
+                            onFirstPage = { pager.go(0, TurnHow.JUMP) },
+                            cover = cover,
+                            pageGround = background,
+                            onShowCredits = { session.showEndCredits()?.let { pager.show(it, TurnHow.TURN, session::showCredit, state.shownCredit) } },
+                        )
+                    },
                     onPastEnd = session::crossOn,
                     motion = fades,
                     onReady = {
@@ -550,6 +609,8 @@ fun PhoneReader(
                         landed = here
                     },
                     fit = state.choice(ReaderSettingKey.FIT),
+                    onCredit = session::showCredit,
+                    creditGround = background,
                     )
                     if (leaving != null) {
                         Box(
@@ -583,6 +644,8 @@ fun PhoneReader(
                         title = view.title,
                         line = when {
                             novelOpen -> novelLine(context, state)
+                            // A credit page shows in place of a number until it is kept: "Chapter 87 · credit page".
+                            !strip && state.onUnkeptCredit -> Strings.readerLinePlace(context, chapterWords(context, view.chapter), creditPlaceWords(context, state).orEmpty())
                             else -> chapterWords(context, above ?: view.chapter)
                         },
                         scrubber = when {
@@ -618,6 +681,40 @@ fun PhoneReader(
                     val held = remember { mutableStateOf(demo) }
                     if (demo != null) held.value = demo
                     held.value?.let { CreditCapsule(it) }
+                }
+                // Page 1's line: the credit pages skipped before it, once each time the chapter
+                // opens and for 4 s once the page has settled, and again with the chrome. It leaves
+                // with the turn.
+                val skipped = state.startSkipped
+                var lineUp by remember(view.chapter.id) { mutableStateOf(false) }
+                var lineSaid by remember(view.chapter.id) { mutableStateOf(false) }
+                val onFirst = state.paged && pager.leaf == 0 && state.onCredit == null && state.leaves.isNotEmpty() && !openingHeld
+                LaunchedEffect(view.chapter.id, onFirst, skipped.isNotEmpty()) {
+                    if (!onFirst) {
+                        lineUp = false
+                        return@LaunchedEffect
+                    }
+                    if (lineSaid || skipped.isEmpty()) return@LaunchedEffect
+                    lineSaid = true
+                    lineUp = true
+                    // A Fixtures shot of the line holds it.
+                    if (CreditShot.step == "line") return@LaunchedEffect
+                    delay(CREDIT_LINE_MILLIS)
+                    lineUp = false
+                }
+                AnimatedVisibility(
+                    visible = onFirst && skipped.isNotEmpty() && (lineUp || shown) && sheet == Sheet.None && state.notice == null && demo == null,
+                    enter = if (fades) fadeIn(Motion.fadeIn()) else EnterTransition.None,
+                    exit = if (fades) fadeOut(Motion.fadeOut()) else ExitTransition.None,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                ) {
+                    val count = remember { mutableIntStateOf(1) }
+                    if (skipped.isNotEmpty()) count.intValue = skipped.size
+                    CreditLineChip(count.intValue) {
+                        lineUp = false
+                        chrome = false
+                        session.showStartCredits()?.let { pager.show(it, TurnHow.TURN, session::showCredit, state.shownCredit) }
+                    }
                 }
             }
 
@@ -673,6 +770,8 @@ fun PhoneReader(
             ) {
                 NoticePlate(note.orEmpty(), null, Modifier) {}
             }
+            // A credit page's own notice: at the foot, above the controls while they show.
+            if (view != null) CreditSnackbar(state, session, visible = sheet == Sheet.None, above = if (shown) scrub.groupHeight else 0, fades = fades, timed = CreditShot.step == null, exploring = exploring)
         }
 
         if (view != null) {
@@ -844,6 +943,11 @@ private fun Scrubber(state: ReaderState, rtl: Boolean, shownLeaf: Int, scrub: Sc
     val leaf = shownLeaf.coerceIn(0, (state.leaves.size - 1).coerceAtLeast(0))
     val page = (state.leaves.getOrNull(leaf)?.parts?.firstOrNull()?.page?.toInt() ?: 0).coerceIn(0, count - 1)
     val at = scrub.page ?: page
+    // A credit page only shown has no number, and the count stays; one kept counts at once.
+    val unnumbered = state.onUnkeptCredit && scrub.page == null
+    val ticks = state.partTicks
+    val haptics = LocalHapticFeedback.current
+    val near = with(LocalDensity.current) { 8.dp.toPx() }
     val colours = SliderDefaults.colors(
         thumbColor = Chrome.text,
         activeTrackColor = Chrome.text,
@@ -867,7 +971,7 @@ private fun Scrubber(state: ReaderState, rtl: Boolean, shownLeaf: Int, scrub: Sc
     val layout = if (rtl) LayoutDirection.Rtl else LayoutDirection.Ltr
     CompositionLocalProvider(LocalLayoutDirection provides layout) {
         Row(Modifier.fillMaxWidth().heightIn(min = 28.dp).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text((at + 1).toString(), color = Chrome.text, fontFamily = FontFamily.Monospace, fontSize = 13.sp, modifier = Modifier.widthIn(min = 32.dp))
+            Text(if (unnumbered) "" else (state.shownPage(at) + 1).toString(), color = Chrome.text, fontFamily = FontFamily.Monospace, fontSize = 13.sp, modifier = Modifier.widthIn(min = 32.dp))
             val slider = remember(count) {
                 SliderState(page.toFloat(), (count - 2).coerceAtLeast(0), 0f..last.toFloat())
             }
@@ -876,10 +980,13 @@ private fun Scrubber(state: ReaderState, rtl: Boolean, shownLeaf: Int, scrub: Sc
             Slider(
                 state = slider,
                 onValueChange = {
-                    slider.value = it
+                    // The thumb snaps lightly onto a part's tick within 8 dp of it, with a tick felt.
+                    val snap = ticks.firstOrNull { tick -> !tick.missing && tick.page < count && abs(tick.page - it) * trackWidth / last < near }
+                    if (snap != null && scrub.page != snap.page) haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                    slider.value = snap?.page?.toFloat() ?: it
                     // The place the drag started from keeps its ring.
                     if (scrub.page == null) scrub.mark = page
-                    scrub.page = it.roundToInt().coerceIn(0, count - 1)
+                    scrub.page = snap?.page ?: it.roundToInt().coerceIn(0, count - 1)
                     scrub.thumbX = xOf(scrub.page ?: 0)
                 },
                 onValueChangeFinished = {
@@ -898,6 +1005,24 @@ private fun Scrubber(state: ReaderState, rtl: Boolean, shownLeaf: Int, scrub: Sc
                         contentAlignment = Alignment.CenterStart,
                     ) {
                         SliderDefaults.Track(sliderState = sliderState, colors = colours, enabled = count > 1, drawStopIndicator = null)
+                        if (ticks.isNotEmpty()) {
+                            // Where each later part starts: 2 by 9 dp; a part no group has is fainter.
+                            val tick = Chrome.faint
+                            Canvas(Modifier.matchParentSize()) {
+                                for (t in ticks) {
+                                    val f = t.page.coerceIn(0, last).toFloat() / last
+                                    val x = if (layoutDirection == LayoutDirection.Rtl) size.width * (1f - f) else size.width * f
+                                    val w = 2.dp.toPx()
+                                    val h = 9.dp.toPx()
+                                    drawRoundRect(
+                                        tick.copy(alpha = if (t.missing) 0.4f else 1f),
+                                        topLeft = Offset(x - w / 2, size.height / 2 - h / 2),
+                                        size = Size(w, h),
+                                        cornerRadius = CornerRadius(w / 2),
+                                    )
+                                }
+                            }
+                        }
                         val mark = scrub.mark
                         if (mark != null) {
                             // The ring at the old place: 11 dp, a 2 dp silk ring on the group's colour.
@@ -913,10 +1038,11 @@ private fun Scrubber(state: ReaderState, rtl: Boolean, shownLeaf: Int, scrub: Sc
                 },
                 modifier = Modifier.weight(1f).semantics {
                     contentDescription = Strings.readerScrubberInChapter(context)
-                    stateDescription = Strings.readerPageOf(context, at + 1, count)
+                    stateDescription = state.partStarting(at)?.let { Strings.readerPartStarts(context, it.toInt(), state.shownPage(at) + 1) }
+                        ?: if (unnumbered) Strings.readerCreditPageLabel(context) else Strings.readerPageOf(context, state.shownPage(at) + 1, state.shownPages.coerceAtLeast(1))
                 },
             )
-            Text(count.toString(), color = Chrome.faint, fontFamily = FontFamily.Monospace, fontSize = 13.sp, modifier = Modifier.widthIn(min = 32.dp))
+            Text(state.shownPages.coerceAtLeast(1).toString(), color = Chrome.faint, fontFamily = FontFamily.Monospace, fontSize = 13.sp, modifier = Modifier.widthIn(min = 32.dp))
         }
     }
 }
@@ -977,7 +1103,8 @@ private fun BoxScope.ScrubPreview(session: ReaderSession, state: ReaderState, im
                     }
                 }
                 Text(
-                    Strings.readerPagePlate(context, page + 1),
+                    state.partStarting(page)?.let { Strings.readerPartPreview(context, state.shownPage(page) + 1, it.toInt()) }
+                        ?: Strings.readerPagePlate(context, state.shownPage(page) + 1),
                     color = Chrome.text,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -1207,8 +1334,11 @@ private fun tween300() = androidx.compose.animation.core.tween<Float>(300)
  * and how many images it has and where they come from.
  */
 @Composable
-internal fun StripDivider(state: ReaderState, next: ChapterRow) {
+internal fun StripDivider(state: ReaderState, next: ChapterRow, onShowCredits: (ChapterId) -> Unit = {}) {
     val context = LocalContext.current
+    // The chapter before the divider: the one kept above when it leads into the open one.
+    val before = if (next.id == state.view?.chapter?.id) state.previous?.chapter else state.chapter
+    val skipped = before?.let(state::endSkipped).orEmpty()
     val images = next.pages?.let { Strings.readerDividerImages(context, it.toInt()) }
     val source = state.end?.source?.takeIf { state.end.next?.id == next.id }
         ?: state.previous?.end?.source?.takeIf { state.previous.end.next?.id == next.id }
@@ -1217,7 +1347,7 @@ internal fun StripDivider(state: ReaderState, next: ChapterRow) {
         else -> images
     }
     Column(
-        Modifier.fillMaxSize().background(Chrome.ground).padding(horizontal = 24.dp),
+        Modifier.fillMaxWidth().heightIn(min = StripDividerHeight).background(Chrome.ground).padding(horizontal = 24.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.Center,
     ) {
         Text(Strings.readerEndNext(context), color = Chrome.faint, fontSize = 13.sp)
@@ -1232,6 +1362,8 @@ internal fun StripDivider(state: ReaderState, next: ChapterRow) {
             modifier = Modifier.padding(top = 2.dp),
         )
         if (facts != null) Text(facts, color = Chrome.faint, fontSize = 14.sp, modifier = Modifier.padding(top = 4.dp))
+        // Pages skipped at the end of the chapter before, with Show.
+        if (before != null && skipped.isNotEmpty()) SkippedLine(skipped.size, Modifier.padding(top = 8.dp)) { onShowCredits(before) }
     }
 }
 

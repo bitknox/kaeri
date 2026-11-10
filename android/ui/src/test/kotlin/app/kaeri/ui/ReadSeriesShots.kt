@@ -7,6 +7,7 @@ import app.kaeri.i18n.Strings
 import app.kaeri.store.AppStore
 import app.kaeri.store.ExportJob
 import app.kaeri.store.FixtureScene
+import app.kaeri.store.GroupsStage
 import app.kaeri.store.ReadFromStage
 import app.kaeri.ui.reading.SeriesShots
 import org.junit.Assert.assertTrue
@@ -60,6 +61,41 @@ class ReadSeriesShots : ReadingShotHarness() {
         },
         ready = loaded(MANGA),
     )
+
+    /** A source with three groups: the Group row, rows from other groups and in parts, and the picker. */
+    private fun groups(name: String, open: String?, eink: app.kaeri.eink.EinkLook? = null) = shoot(
+        name,
+        FixtureScene.READING_SERIES,
+        Destination.Read,
+        page = page(MANGA),
+        screen = open != null,
+        then = {
+            GroupsStage.stage(it)
+            if (open != null) SeriesShots.open = open
+        },
+        eink = eink,
+        ready = loaded(MANGA),
+    )
+
+    @Test
+    @Config(qualifiers = ReadingShotHarness.PHONE)
+    fun phone_read_series_groups() = groups("phone-read-series-groups", null)
+
+    @Test
+    @Config(qualifiers = ReadingShotHarness.PHONE)
+    fun phone_read_series_group_sheet() = groups("phone-read-series-group-sheet", "group")
+
+    @Test
+    @Config(qualifiers = ReadingShotHarness.TABLET)
+    fun tablet_read_series_group_menu() = groups("tablet-read-series-group-menu", "group")
+
+    @Test
+    @Config(qualifiers = ReadingShotHarness.EINK_PHONE)
+    fun eink_read_series_groups() = groups("eink-read-series-groups", null, app.kaeri.eink.EinkLook())
+
+    @Test
+    @Config(qualifiers = ReadingShotHarness.EINK_PHONE)
+    fun eink_read_series_group_page() = groups("eink-read-series-group-page", "group", app.kaeri.eink.EinkLook())
 
     @Test
     @Config(qualifiers = ReadingShotHarness.PHONE)

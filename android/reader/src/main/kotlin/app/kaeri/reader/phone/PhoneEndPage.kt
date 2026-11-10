@@ -96,6 +96,7 @@ import app.kaeri.reader.PageFileView
 import app.kaeri.reader.PageImages
 import app.kaeri.reader.ReaderSession
 import app.kaeri.reader.ReaderState
+import app.kaeri.reader.endSkipped
 import app.kaeri.reader.TextThenLink
 import app.kaeri.reader.rememberServerLine
 import app.kaeri.reader.serverLineWords
@@ -114,6 +115,8 @@ fun PhoneEndPage(
     cover: (@Composable (Modifier) -> Unit)? = null,
     /** The reader's page background: the demo's card follows it, light on a white or paper page. */
     pageGround: Color? = null,
+    /** Show on the line naming the pages skipped at the chapter's end. */
+    onShowCredits: () -> Unit = {},
 ) {
     val view = state.view ?: return
     val demo = view.demoCredit
@@ -229,6 +232,10 @@ fun PhoneEndPage(
                     Modifier.fillMaxWidth(),
                 )
             }
+            // Pages skipped at the end are named under what was updated, with Show; those at the
+            // start were named on page 1.
+            val skipped = state.endSkipped(view.chapter.id)
+            if (skipped.isNotEmpty()) SkippedLine(skipped.size, onShow = onShowCredits)
             if (next != null) {
                 Spacer(Modifier.height(if (server.held) 18.dp else 34.dp))
                 Text(Strings.readerEndNext(context), color = Chrome.faint, fontSize = 13.sp)

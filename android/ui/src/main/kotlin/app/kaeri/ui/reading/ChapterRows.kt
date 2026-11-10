@@ -46,6 +46,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -62,6 +63,10 @@ import app.kaeri.engine.model.ChapterRow
 import app.kaeri.engine.model.SeriesAction
 import app.kaeri.engine.model.SeriesView
 import app.kaeri.store.Wording
+import app.kaeri.store.AirTime
+import app.kaeri.engine.model.Msg
+import app.kaeri.engine.model.ReadingMsg
+import java.util.Locale
 import app.kaeri.engine.model.TrackerReadRow
 import app.kaeri.engine.model.VolumeGroup
 import app.kaeri.i18n.R
@@ -96,13 +101,36 @@ internal object SeriesWords {
         return if (volumes != null && volumes > 0u) Strings.seriesTrackerWithVolume(context, chapters, volumes.toInt()) else chapters
     }
 
-    /** "books.home.example · Kavita · 1 more": the source, its version, and how many others have it. */
+    /** "books.home.example · 1 more": the source and how many others have it. The group has a row of its own. */
     fun source(context: Context, edition: BookEditionRow, others: Int): String =
         listOfNotNull(
             edition.sourceName,
-            edition.versionLabel?.takeIf { it.isNotBlank() },
             if (others > 0) Strings.seriesSourcesMore(context, others) else null,
         ).joinToString(" · ") // i18n-skip
+
+    /** A language tag's first part, lower case: "es" of "es-419". */
+    fun primary(tag: String): String = tag.split('-', '_').first().lowercase()
+
+    /**
+     * A language by its tag, in the app's language: "es" and "es-419" read "Spanish" in English
+     * and "español" in Spanish. The engine's name is English, so the app names it here.
+     */
+    fun language(tag: String): String =
+        Locale.forLanguageTag(primary(tag)).getDisplayLanguage(AirTime.locale).takeIf { it.isNotBlank() && it != primary(tag) } ?: tag
+
+    /** One word of a chapter row's line, with a group's language named in the app's language. */
+    fun text(context: Context, msg: Msg, row: ChapterRow): String {
+        val reading = (msg as? Msg.Reading)?.v1
+        return when (reading) {
+            is ReadingMsg.ReadingRowFromGroupIn ->
+                Strings.readingRowFromGroupIn(context, reading.group, row.groupLanguage?.let(::language) ?: reading.language)
+            is ReadingMsg.ReadingRowPartFromGroupIn -> {
+                val tag = row.partGroups.firstOrNull { it.part.toLong() == reading.part.toLong() }?.language
+                Strings.readingRowPartFromGroupIn(context, reading.part.toInt(), reading.group, tag?.let(::language) ?: reading.language)
+            }
+            else -> msg.text(context)
+        }
+    }
 
     /** "Volume 9" and "chapters 77 to 84 · read", or "Not in a volume yet". */
     fun volume(context: Context, group: VolumeGroup, novel: Boolean): Pair<String, String> {
@@ -125,9 +153,28 @@ internal object SeriesWords {
     /** The chapter's own title, when it says more than its label. */
     fun title(row: ChapterRow, name: String): String? = row.title?.takeIf { it.isNotBlank() && it != name && it != row.label }
 
+    /** Words of a row's line that say its parts and where it comes from, not its state. */
+    private fun origin(msg: Msg): Boolean = when ((msg as? Msg.Reading)?.v1) {
+        is ReadingMsg.ReadingRowParts, is ReadingMsg.ReadingRowPartsOf, is ReadingMsg.ReadingRowPartMissing,
+        is ReadingMsg.ReadingRowPartFromGroup, is ReadingMsg.ReadingRowPartFromGroupIn,
+        is ReadingMsg.ReadingRowFromGroup, is ReadingMsg.ReadingRowFromGroupIn, is ReadingMsg.ReadingRowFromSource,
+        -> true
+        else -> false
+    }
+
+    /**
+     * The engine's line as its state words and its parts and origin words apart, for a new row
+     * that draws the first in silk and the rest in haze. Null without both.
+     */
+    fun lineParts(context: Context, row: ChapterRow): Pair<String, String>? {
+        val (from, state) = row.line.partition(::origin)
+        if (from.isEmpty() || state.isEmpty()) return null
+        return state.joinToString(" · ") { text(context, it, row) } to from.joinToString(" · ") { text(context, it, row) } // i18n-skip
+    }
+
     /** The second line in words: the engine's ("Read · 4 days ago · Downloaded"), else its state. */
     fun line(context: Context, row: ChapterRow): String {
-        if (row.line.isNotEmpty()) return row.line.joinToString(" · ") { it.text(context) } // i18n-skip
+        if (row.line.isNotEmpty()) return row.line.joinToString(" · ") { text(context, it, row) } // i18n-skip
         val read = when (val state = row.state) {
             is ChapterReadState.Read -> context.getString(R.string.chapter_state_read)
             is ChapterReadState.InProgress -> state.of?.let { Strings.chapterStatePageOf(context, state.page.toInt(), it.toInt()) }
@@ -252,8 +299,17 @@ internal fun ChapterRowItem(
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     if (fresh) WaterDot()
                     if (failed) Icon(Icons.Problem, contentDescription = null, tint = ObiSilk.Vermilion, modifier = Modifier.size(16.dp))
+                    // A new row's state is silk; its parts and the group it comes from stay haze.
+                    val split = if (fresh) SeriesWords.lineParts(context, row) else null
                     Text(
-                        line,
+                        if (split == null) {
+                            AnnotatedString(line)
+                        } else {
+                            buildAnnotatedString {
+                                append(split.first)
+                                withStyle(SpanStyle(color = colors.onSurfaceVariant)) { append(" · " + split.second) } // i18n-skip: a separator
+                            }
+                        },
                         style = MaterialTheme.typography.bodyMedium.tabular(),
                         color = if (fresh || failed) colors.onSurface else colors.onSurfaceVariant,
                     )
