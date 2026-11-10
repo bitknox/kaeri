@@ -85,32 +85,13 @@ impl Filters {
         let available = menu_button(&t::filter_linux_available());
         let format = menu_button(&t::filter_format());
         let status = menu_button(&t::filter_status());
-        let sort_label = gtk::Label::new(None);
-        let sort_line = gtk::Box::new(gtk::Orientation::Horizontal, 6);
-        sort_line.append(&gtk::Image::from_icon_name("view-sort-descending-symbolic"));
-        sort_line.append(&sort_label);
-        let sort = gtk::MenuButton::builder().child(&sort_line).always_show_arrow(true).build();
-        sort.add_css_class("flat");
-        sort.add_css_class("filter");
-
+        let (sort, sort_label) = sort_button();
         let capsules = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         for button in [&genres, &year, &season, &available, &format, &status] {
             capsules.append(button);
         }
-        let row = gtk::Box::new(gtk::Orientation::Horizontal, 6);
-        row.set_margin_start(12);
-        row.set_margin_end(12);
-        row.append(&faded_scroll(&capsules));
-        row.append(&sort);
-
-        let chips = adw::WrapBox::builder()
-            .child_spacing(6)
-            .line_spacing(6)
-            .halign(gtk::Align::Start)
-            .build();
-        chips.set_margin_start(18);
-        chips.set_margin_end(18);
-        chips.set_visible(false);
+        let row = filter_row(&capsules, &sort);
+        let chips = chips_box();
 
         let actions = gio::SimpleActionGroup::new();
         row.insert_action_group("filter", Some(&actions));
@@ -273,7 +254,7 @@ impl Filters {
                 let had_focus = filters.chips.focus_child().is_some();
                 filters.edit(|q| q.without(&key));
                 if had_focus {
-                    filters.focus_chip(at as usize);
+                    focus_chip(&filters.chips, at as usize, &filters.genres);
                 }
             }
         });
@@ -529,73 +510,120 @@ impl Filters {
         };
         self.sort_label.set_label(&named);
         self.sort.set_tooltip_text(Some(&t::sort_label(&named)));
-        if query.sort.is_some() {
-            self.sort.remove_css_class("flat");
-        } else {
-            self.sort.add_css_class("flat");
-        }
-    }
-
-    fn focus_chip(&self, at: usize) {
-        let mut chips = Vec::new();
-        let mut child = self.chips.first_child();
-        while let Some(c) = child {
-            child = c.next_sibling();
-            chips.push(c);
-        }
-        let target = chips.get(at).or_else(|| at.checked_sub(1).and_then(|i| chips.get(i)));
-        match target {
-            Some(chip) => {
-                chip.grab_focus();
-            }
-            None => {
-                self.genres.grab_focus();
-            }
-        }
+        mark_set(&self.sort, query.sort.is_some());
     }
 
     fn show_chips(&self, active: &[ActiveFilter]) {
         let query = self.query.borrow().clone();
-        while let Some(child) = self.chips.first_child() {
-            self.chips.remove(&child);
-        }
-        for (at, filter) in active.iter().enumerate() {
-            let line = gtk::Box::new(gtk::Orientation::Horizontal, 6);
-            let label = gtk::Label::new(Some(&chip_label(&query, filter)));
-            label.set_ellipsize(gtk::pango::EllipsizeMode::End);
-            label.set_max_width_chars(28);
-            line.append(&label);
-            line.append(&gtk::Image::from_icon_name("window-close-symbolic"));
-            let chip = gtk::Button::builder().child(&line).build();
-            chip.add_css_class("pill");
-            chip.add_css_class("filter-chip");
-            chip.set_halign(gtk::Align::Start);
-            chip.set_tooltip_text(Some(&t::filter_remove(&chip_label(&query, filter))));
-            chip.update_property(&[gtk::accessible::Property::Label(&t::filter_remove(
-                &chip_label(&query, filter),
-            ))]);
-            chip.set_action_target_value(Some(&(at as u32).to_variant()));
-            chip.set_action_name(Some("filter.remove"));
-            self.chips.append(&chip);
-        }
-        if active.len() > 1 {
-            let clear = gtk::Button::with_label(&t::filter_linux_clear_all());
-            clear.add_css_class("flat");
-            clear.set_halign(gtk::Align::Start);
-            clear.set_action_name(Some("filter.clear"));
-            self.chips.append(&clear);
-        }
-        self.chips.set_visible(!active.is_empty());
+        let labels: Vec<String> = active.iter().map(|f| chip_label(&query, f)).collect();
+        show_chips(&self.chips, &labels, "filter.remove", "filter.clear");
     }
 }
 
 /// A button's words, and whether it holds a choice: flat until it does.
 pub fn set_label(button: &gtk::MenuButton, label: &str, set: bool) {
     button.set_label(label);
+    mark_set(button, set);
+}
+
+/// A capsule of the row, flat until it holds a choice.
+pub fn mark_set(widget: &impl IsA<gtk::Widget>, set: bool) {
     if set {
-        button.remove_css_class("flat");
+        widget.remove_css_class("flat");
     } else {
-        button.add_css_class("flat");
+        widget.add_css_class("flat");
+    }
+}
+
+/// The sort at the row's end: its glyph, the order's name and the arrow. Returns the button and
+/// the label that names the order.
+pub fn sort_button() -> (gtk::MenuButton, gtk::Label) {
+    let label = gtk::Label::new(None);
+    let line = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+    line.append(&gtk::Image::from_icon_name("view-sort-descending-symbolic"));
+    line.append(&label);
+    let sort = gtk::MenuButton::builder().child(&line).always_show_arrow(true).build();
+    sort.add_css_class("flat");
+    sort.add_css_class("filter");
+    (sort, label)
+}
+
+/// The row under the field: `capsules` scrolling sideways, then the sort at its end.
+pub fn filter_row(capsules: &gtk::Box, sort: &gtk::MenuButton) -> gtk::Box {
+    let row = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+    row.set_margin_start(12);
+    row.set_margin_end(12);
+    row.append(&faded_scroll(capsules));
+    row.append(sort);
+    row
+}
+
+/// Where the set filters stand as chips, under the row.
+pub fn chips_box() -> adw::WrapBox {
+    let chips = adw::WrapBox::builder()
+        .child_spacing(6)
+        .line_spacing(6)
+        .halign(gtk::Align::Start)
+        .build();
+    chips.set_margin_start(18);
+    chips.set_margin_end(18);
+    chips.set_visible(false);
+    chips
+}
+
+/// One set filter as a chip: its words and a cross, taken off by `action` with its index `at`.
+pub fn chip(label: &str, action: &str, at: u32) -> gtk::Button {
+    let line = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+    let words = gtk::Label::new(Some(label));
+    words.set_ellipsize(gtk::pango::EllipsizeMode::End);
+    words.set_max_width_chars(28);
+    line.append(&words);
+    line.append(&gtk::Image::from_icon_name("window-close-symbolic"));
+    let chip = gtk::Button::builder().child(&line).build();
+    chip.add_css_class("pill");
+    chip.add_css_class("filter-chip");
+    chip.set_halign(gtk::Align::Start);
+    chip.set_tooltip_text(Some(&t::filter_remove(label)));
+    chip.update_property(&[gtk::accessible::Property::Label(&t::filter_remove(label))]);
+    chip.set_action_target_value(Some(&at.to_variant()));
+    chip.set_action_name(Some(action));
+    chip
+}
+
+/// The chips for `labels`, then Clear all when more than one is set.
+pub fn show_chips(chips: &adw::WrapBox, labels: &[String], remove: &str, clear: &str) {
+    while let Some(child) = chips.first_child() {
+        chips.remove(&child);
+    }
+    for (at, label) in labels.iter().enumerate() {
+        chips.append(&chip(label, remove, at as u32));
+    }
+    if labels.len() > 1 {
+        let all = gtk::Button::with_label(&t::filter_linux_clear_all());
+        all.add_css_class("flat");
+        all.set_halign(gtk::Align::Start);
+        all.set_action_name(Some(clear));
+        chips.append(&all);
+    }
+    chips.set_visible(!labels.is_empty());
+}
+
+/// A chip removed from the keyboard hands focus on: to the chip that takes its place, else the
+/// one before, else `first`.
+pub fn focus_chip(chips: &adw::WrapBox, at: usize, first: &impl IsA<gtk::Widget>) {
+    let mut all = Vec::new();
+    let mut child = chips.first_child();
+    while let Some(c) = child {
+        child = c.next_sibling();
+        all.push(c);
+    }
+    match all.get(at).or_else(|| at.checked_sub(1).and_then(|i| all.get(i))) {
+        Some(chip) => {
+            chip.grab_focus();
+        }
+        None => {
+            first.as_ref().grab_focus();
+        }
     }
 }
 

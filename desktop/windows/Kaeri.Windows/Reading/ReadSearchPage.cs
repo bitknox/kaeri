@@ -3,27 +3,35 @@ using Microsoft.UI.Xaml.Automation.Peers;
 using Kaeri.App;
 using Kaeri.Engine.Ffi;
 using Kaeri.Engine.Model;
+using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Documents;
+using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 
 namespace Kaeri.Windows.Pages;
 
+using Pick = Kaeri.Engine.Model.Pick;
+
 /// <summary>
-/// Reading's Search. With nothing typed it browses: the filters' line over a cover grid, and a
-/// sort menu, with more coming as the end nears. Typed words show AniList's covers in the grid
-/// (a result a source has says so on its third line), then From your sources: one sideways row
-/// of covers per source, each with its own placeholders, failure and Try again, and one line for
-/// the sources that found nothing; More from AniList loads the next page under it. The filters
-/// are format, origin, status, genres and Started, then, after a rule, Your sources only, which
-/// leaves AniList out. With both media on, a line under AniList's grid counts the matches in
-/// Shows and switches to them. Only the parts wait for their answers, each on its own 600 ms;
-/// what changes in place crossfades, and the line over the grid keeps its room so the grid
-/// never moves.
+/// Reading's Search, drawn as the shows' Search is and from the same parts: the title, the scope
+/// and the row of filters in the shows' places and order (Genre, Format, Status, then Origin in
+/// Season's place, Started in Year's and Your sources only in Available's once words are typed,
+/// then the sort and Clear filters, with Filters and its panel at the end), and each set filter as
+/// a chip that takes it off. With nothing typed, set or sorted it starts with Home's discovery
+/// rows as rails, each with See all, which searches that row's query here and keeps its line. A
+/// filter or a sort with nothing typed browses AniList in the shows' grid under its caption line,
+/// more coming as the end nears. Typed words show AniList's covers in the grid (a result a source
+/// has says so on its third line), then From your sources: one sideways row of covers per source,
+/// each with its own placeholders, failure and Try again, and one line for the sources that found
+/// nothing; More from AniList loads the next page under it. With both media on, a line under
+/// AniList's grid counts the matches in Shows and switches to them. The start, the browse and the
+/// words crossfade into each other; the title, the scope and the row stay where they are.
 /// </summary>
 public sealed partial class ReadSearchPage : Page
 {
@@ -31,10 +39,13 @@ public sealed partial class ReadSearchPage : Page
     internal static ReadSearchQuery? Opening { get; set; }
 
     /// <summary>
-    /// The line a row's View all gives its results, "Manga started in the last 12 months", held
-    /// while the search asks what the row asked.
+    /// The line a row's View all or See all gives its results, "Manga started in the last 12
+    /// months", held while the search asks what the row asked.
     /// </summary>
     internal static (ReadSearchQuery Query, Msg Line)? Titled { get; set; }
+
+    /// <summary>Ctrl+Shift+F from another page: the panel opens as Search comes up.</summary>
+    internal static bool FiltersOnArrival;
 
     static ReadFilters? filters;
     static ReadFilters Filters => filters ??= KaeriFfiMethods.ReadFilters();
@@ -42,67 +53,85 @@ public sealed partial class ReadSearchPage : Page
     /// <summary>The other filters while Your sources only is on: they hold, but AniList is not asked.</summary>
     const double Dimmed = 0.38;
 
+    enum Mode { Start, Browse, Words }
+
     readonly Ctx ctx = Ctx.Current;
-    readonly TextBlock title = new() { Text = T.NavSearch, Style = Ui.Res<Style>("PageTitleStyle") };
-    readonly DropDownButton format = Menu(), origin = Menu(), status = Menu(), genres = Menu(), started = Menu();
-    readonly DropDownButton sort = new() { MinHeight = 32 };
-    readonly Kaeri.Windows.Player.WrapRow filterRow = new() { Gap = 8 };
-    readonly Border rule = new() { Width = 1, Height = 19, Margin = new Thickness(4, 0, 4, 0), VerticalAlignment = VerticalAlignment.Center, Visibility = Visibility.Collapsed };
-    readonly ToggleButton sourcesOnly = new() { MinHeight = 32, CornerRadius = new CornerRadius(4), Visibility = Visibility.Collapsed };
-    readonly FontIcon sourcesOnlyCheck = new() { Glyph = "", FontSize = 12, Visibility = Visibility.Collapsed };
+    // One line, cut short, so long words never push the filters and results down.
+    readonly TextBlock title = new()
+    {
+        Text = T.NavSearch,
+        Style = Ui.Res<Style>("PageTitleStyle"),
+        MaxLines = 1,
+        TextWrapping = TextWrapping.NoWrap,
+        TextTrimming = TextTrimming.CharacterEllipsis,
+    };
+    readonly TextBlock demoLine = new() { Text = T.SearchDemoOnlyBooks, Style = Ui.Res<Style>("HazeBodyStyle"), TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
+
+    // The filter row and its menus, made again as each opens so they say what the query has now.
+    readonly StackPanel genreList, formatList, originList;
+    readonly MenuFlyout statusMenu = DropMenu(), startedMenu = DropMenu(), availableMenu = DropMenu(), sortMenu = DropMenu();
+    readonly DropDownButton genres, format, status, origin, started, available, sort;
+    readonly HyperlinkButton clear;
+    readonly ToggleButton filtersButton;
+    readonly InfoBadge filtersBadge;
+    readonly Border panelHost = new() { Visibility = Visibility.Collapsed };
+    readonly ReadFiltersPanel panel;
+    bool panelOpen;
+    // Each filter set, as a chip that takes it off.
+    readonly Kaeri.Windows.Player.WrapRow chipRow = new() { Gap = 8, Visibility = Visibility.Collapsed };
+    string[] chips = [];
+
     readonly ScrollViewer scroll = new() { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, IsTabStop = false };
+    // What the start, the browse and the words crossfade in.
+    readonly StackPanel column = new() { Padding = new Thickness(0, 4, 0, 24), Spacing = 12 };
+
+    // The start: Home's discovery rows as rails, with placeholders while Home loads.
+    readonly StateHost startState = new() { Visibility = Visibility.Collapsed };
+    readonly StackPanel startRows = new() { Spacing = 12 };
+    readonly Dictionary<string, ReadStartRow> rowViews = [];
+    DateTimeOffset startAsked = DateTimeOffset.Now;
+
     readonly StateHost state = new();
     // The results and the nothing anywhere message, one in place of the other.
     readonly StackPanel results = new(), body = new();
     readonly Border nothingHost = new() { Visibility = Visibility.Collapsed };
-    // The line over AniList's grid: the filters while browsing, the count with words.
+    // The caption line over AniList's grid: the filters while browsing, the count with words.
     readonly FadeLine line = new(() => new TextBlock
     {
-        FontSize = 14,
-        LineHeight = 19,
-        Foreground = LiveBrush.Of("HazeBrush"),
+        Style = Ui.Res<Style>("HazeCaptionStyle"),
         TextTrimming = TextTrimming.CharacterEllipsis,
         TextWrapping = TextWrapping.NoWrap,
     })
     { Margin = new Thickness(0, 0, 0, 12) };
-    ReadGrid grid = Named(new ReadGrid());
+    ReadGrid grid = Named(new ReadGrid(search: true));
     // AniList's later pages with words: under More from AniList.
-    readonly ReadGrid later = Named(new ReadGrid { Margin = new Thickness(0, 22, 0, 0), Visibility = Visibility.Collapsed });
+    readonly ReadGrid later = Named(new ReadGrid(search: true) { Margin = new Thickness(0, SearchParts.LineGap, 0, 0), Visibility = Visibility.Collapsed });
     readonly CoverSlot anilistSlot;
     // AniList's part: the line, the grid in its slot, then the Shows line under it.
     readonly StackPanel anilist = new();
     readonly StackPanel sources = new() { Visibility = Visibility.Collapsed };
-    readonly TextBlock sourcesHead = new() { Text = T.ReadSearchFromSources, FontSize = 20, LineHeight = 26, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold };
+    readonly TextBlock sourcesHead = new() { Text = T.ReadSearchFromSources, Style = Ui.Res<Style>("SectionTitleStyle") };
     readonly StackPanel sourceRows = new() { XYFocusKeyboardNavigation = XYFocusKeyboardNavigationMode.Enabled };
     readonly Dictionary<string, SourceRowView> sourceViews = [];
-    readonly FadeLine nothingWords = new(() => new TextBlock { FontSize = 14, LineHeight = 19, TextWrapping = TextWrapping.Wrap, Foreground = LiveBrush.Of("HazeBrush") });
+    readonly FadeLine nothingWords = new(() => new TextBlock { Style = Ui.Res<Style>("HazeBodyStyle"), TextWrapping = TextWrapping.Wrap });
     readonly Border nothingLine = new() { Margin = new Thickness(0, 22, 0, 0), Padding = new Thickness(0, 12, 0, 0), BorderThickness = new Thickness(0, 1, 0, 0), Visibility = Visibility.Collapsed };
     readonly StackPanel moreRow = new() { Orientation = Orientation.Horizontal, Spacing = 12, Margin = new Thickness(0, 22, 0, 0), Visibility = Visibility.Collapsed };
     readonly Button moreAnilist = new() { Content = T.ReadSearchMoreAnilist, MinHeight = 32 };
     readonly ProgressRing moreRing = new() { Width = 16, Height = 16, MinWidth = 16, MinHeight = 16, IsActive = false, Visibility = Visibility.Collapsed, VerticalAlignment = VerticalAlignment.Center };
-    readonly TextBlock shownWords = new() { FontSize = 14, LineHeight = 19, VerticalAlignment = VerticalAlignment.Center };
-    readonly ProgressRing more = new() { IsActive = true, Width = 20, Height = 20, Margin = new Thickness(0, 16, 0, 0), HorizontalAlignment = HorizontalAlignment.Left, Visibility = Visibility.Collapsed };
+    readonly TextBlock shownWords = new() { Style = Ui.Res<Style>("HazeBodyStyle"), VerticalAlignment = VerticalAlignment.Center };
+    // More to come while browsing: a row of plates in the cells' size under the grid, as the shows' Search has.
+    readonly StackPanel morePlates = new() { Margin = new Thickness(0, SearchParts.LineGap, 0, 0), Visibility = Visibility.Collapsed };
     readonly Grid other = new() { MinHeight = 52, Margin = new Thickness(0, 22, 0, 0), BorderThickness = new Thickness(0, 1, 0, 0), Visibility = Visibility.Collapsed };
     readonly TextBlock otherWords = new() { Style = Ui.Res<Style>("HazeBodyStyle"), VerticalAlignment = VerticalAlignment.Center };
-    readonly TextBlock demoLine = new() { Text = T.SearchDemoOnlyBooks, Style = Ui.Res<Style>("HazeBodyStyle"), Margin = new Thickness(0, 16, 0, 0), TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
     readonly DispatcherTimer settle = new() { Interval = TimeSpan.FromMilliseconds(400) };
     AutoSuggestBox? box;
     string typed = "", anilistNote = "", announced = "", nothingKey = "";
     bool anilistShown = true, hearing;
-    bool? browsed;
+    Mode? drawn;
     // When the words were last asked: a part's placeholders come 600 ms after it.
     DateTimeOffset ranAt = DateTimeOffset.Now;
 
-    /// <summary>A filter's menu as the bar draws it: 32 high, the words in weight 500, no fill until the pointer is over it.</summary>
-    static DropDownButton Menu() => new()
-    {
-        MinHeight = 32,
-        MinWidth = 96,
-        FontWeight = Microsoft.UI.Text.FontWeights.Medium,
-        Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent),
-        BorderBrush = new SolidColorBrush(Microsoft.UI.Colors.Transparent),
-        Foreground = LiveBrush.Of("HazeBrush"),
-    };
+    static MenuFlyout DropMenu() => new() { Placement = FlyoutPlacementMode.BottomEdgeAlignedLeft };
 
     /// <summary>AniList's grid as screen readers meet it: "Series from AniList", each cover's place in it.</summary>
     static ReadGrid Named(ReadGrid grid)
@@ -115,42 +144,81 @@ public sealed partial class ReadSearchPage : Page
     {
         Background = LiveBrush.Of("GroundBrush");
         NavigationCacheMode = NavigationCacheMode.Enabled;
-        var root = new Grid { Padding = new Thickness(36, 20, 0, 0), RowSpacing = 12 };
-        root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-        root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-        root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
 
-        var head = new StackPanel { Margin = new Thickness(0, 0, 36, 0) };
+        // The filter row, as the shows' Search has it.
+        (var genreFlyout, genreList) = SearchParts.Boxes(200, scrolls: true);
+        genres = SearchParts.Menu(T.FilterGenre, genreFlyout);
+        genreFlyout.Opening += (_, _) => BuildGenres();
+        (var formatFlyout, formatList) = SearchParts.Boxes(180);
+        format = SearchParts.Menu(T.FilterFormat, formatFlyout);
+        formatFlyout.Opening += (_, _) => BuildFormats();
+        status = SearchParts.Menu(T.FilterStatus, statusMenu);
+        statusMenu.Opening += (_, _) => BuildStatuses();
+        (var originFlyout, originList) = SearchParts.Boxes(180);
+        origin = SearchParts.Menu(T.FilterOrigin, originFlyout);
+        originFlyout.Opening += (_, _) => BuildOrigins();
+        started = SearchParts.Menu(T.ReadSearchStarted, startedMenu, minWidth: 88);
+        startedMenu.Opening += (_, _) => BuildStarted();
+        available = SearchParts.Menu(T.SearchAvailableName, availableMenu);
+        available.Visibility = Visibility.Collapsed;
+        availableMenu.Opening += (_, _) => BuildAvailable();
+        sort = SearchParts.Menu(T.SearchSortName, sortMenu, minWidth: 88);
+        sortMenu.Opening += (_, _) => BuildSorts();
+        clear = SearchParts.Clear(ClearFilters);
+        (filtersButton, filtersBadge) = SearchParts.FiltersToggle();
+        filtersButton.Click += (_, _) => ShowPanel(!panelOpen);
+        panel = new ReadFiltersPanel(Filters, () => Query, Run, () => ShowPanel(false));
+        panelHost.Child = panel;
+        ElementCompositionPreview.SetIsTranslationEnabled(panelHost, true);
+
+        var root = new Grid();
+        root.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        // Every filter, in a panel at the right edge that Filters and Ctrl+Shift+F open and Esc closes.
+        root.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        var page = new Grid { Padding = new Thickness(36, 20, 36, 0), RowSpacing = 12 };
+        page.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        page.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        page.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+
+        // The title, the offline line and the scope where the shows' Search has them, so switching
+        // the scope moves none of them.
+        var head = new StackPanel();
         AutomationProperties.SetHeadingLevel(title, AutomationHeadingLevel.Level1);
         head.Children.Add(title);
         head.Children.Add(new OfflineLine(reading: true));
-        root.Children.Add(head);
+        head.Children.Add(new ScopeSwitch { Place = "search", Reading = true, Margin = new Thickness(0, 4, 0, 0) });
+        head.Children.Add(demoLine);
+        page.Children.Add(head);
 
-        // The scope on its own line, as the board draws it, then the filters, then Your sources
-        // only after a rule; the sort at the end while browsing. What does not fit moves to the
-        // next line, filters one by one when even a line of their own is too narrow, so none is
-        // cut off, and setting a filter never moves the scope.
-        var controls = new StackPanel { Spacing = 16, Margin = new Thickness(0, 0, 36, 0) };
-        controls.Children.Add(new ScopeSwitch { Place = "search", Reading = true, HorizontalAlignment = HorizontalAlignment.Left });
-        var bar = new FilterBar { Rule = rule };
-        controls.Children.Add(bar);
-        foreach (var button in new[] { format, origin, status, genres, started })
-            filterRow.Children.Add(button);
-        rule.Background = LiveBrush.Of("RuleBrush");
-        AutomationProperties.SetAccessibilityView(rule, AccessibilityView.Raw);
-        SourcesOnlyLook();
-        bar.Children.Add(filterRow);
-        bar.Children.Add(rule);
-        bar.Children.Add(sourcesOnly);
-        bar.Children.Add(sort);
-        Grid.SetRow(controls, 1);
-        root.Children.Add(controls);
-        Menus();
+        // The filters scroll sideways where they don't fit; Filters stays at the end, outside the
+        // scroll, so the button that closes the panel is never scrolled away.
+        var bar = new Grid { ColumnSpacing = 8 };
+        bar.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        bar.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+        foreach (var part in new FrameworkElement[] { genres, format, status, origin, started, available, sort, clear })
+            row.Children.Add(part);
+        bar.Children.Add(new ScrollViewer
+        {
+            Content = row,
+            HorizontalScrollMode = ScrollMode.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden,
+            VerticalScrollMode = ScrollMode.Disabled,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
+        });
+        Grid.SetColumn(filtersButton, 1);
+        bar.Children.Add(filtersButton);
+        Grid.SetRow(bar, 1);
+        page.Children.Add(bar);
+
+        // The start: Home's rows, with plates for two rails while Home loads.
+        startState.Placeholders = StartPlates;
+        startState.Children.Add(startRows);
 
         // AniList's part: the line, the grid, and the Shows line under them.
-        line.MinHeight = 19;
+        line.MinHeight = 16;
         anilist.Children.Add(line);
-        anilistSlot = new CoverSlot(ReadPlates.Grid(), grid);
+        anilistSlot = new CoverSlot(ReadingParts.ListText ? ReadPlates.Grid() : (FrameworkElement)States.Covers(), grid);
         anilist.Children.Add(anilistSlot);
         other.BorderBrush = LiveBrush.Of("FaintRuleBrush");
         other.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -163,7 +231,7 @@ public sealed partial class ReadSearchPage : Page
             {
                 Orientation = Orientation.Horizontal,
                 Spacing = 4,
-                Children = { new TextBlock { Text = T.SearchShowThem, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold }, new FontIcon { Glyph = "", FontSize = 10 } },
+                Children = { new TextBlock { Text = T.SearchShowThem, FontWeight = FontWeights.SemiBold }, new FontIcon { Glyph = "", FontSize = 10 } },
             },
         };
         otherLink.Click += (_, _) => ctx.Window.SetScope("search", false);
@@ -182,7 +250,6 @@ public sealed partial class ReadSearchPage : Page
 
         // More from AniList: while words are typed, more comes when asked, not on the scroll. The
         // button keeps the focus and stays; a small ring beside it while the page comes.
-        shownWords.Foreground = LiveBrush.Of("HazeBrush");
         AutomationProperties.SetAccessibilityView(moreRing, AccessibilityView.Raw);
         moreAnilist.Click += (_, _) =>
         {
@@ -195,22 +262,49 @@ public sealed partial class ReadSearchPage : Page
         moreRow.Children.Add(moreRing);
         moreRow.Children.Add(shownWords);
 
+        morePlates.Children.Add(new ScrollViewer
+        {
+            Content = States.Covers(8, rail: true),
+            HorizontalScrollMode = ScrollMode.Disabled,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden,
+            VerticalScrollMode = ScrollMode.Disabled,
+            IsTabStop = false,
+        });
+        AutomationProperties.SetName(morePlates, T.SearchLoadingMore);
+
         body.Children.Add(anilist);
         body.Children.Add(sources);
         body.Children.Add(moreRow);
         body.Children.Add(later);
-        body.Children.Add(more);
+        body.Children.Add(morePlates);
         results.Children.Add(body);
         results.Children.Add(nothingHost);
         state.Children.Add(results);
-        var column = new StackPanel { Padding = new Thickness(0, 4, 36, 48), MaxWidth = ReadingParts.Column + 36, HorizontalAlignment = HorizontalAlignment.Left };
+        column.Children.Add(chipRow);
+        column.Children.Add(startState);
         column.Children.Add(state);
-        column.Children.Add(demoLine);
-        scroll.Content = column;
+        // The column sits in a grid of its own, so a crossfade's picture lies over it alone.
+        scroll.Content = new Grid { Children = { column } };
+        SmoothWheel.SetOn(scroll, true);
         scroll.ViewChanged += (_, _) => Near();
         Grid.SetRow(scroll, 2);
-        root.Children.Add(scroll);
+        page.Children.Add(scroll);
+        root.Children.Add(page);
+        Grid.SetColumn(panelHost, 1);
+        root.Children.Add(panelHost);
         Content = root;
+
+        // Esc closes the open panel; with it shut, Esc is left to whoever had it.
+        var escape = new KeyboardAccelerator { Key = global::Windows.System.VirtualKey.Escape };
+        escape.Invoked += (_, args) =>
+        {
+            if (!panelOpen)
+                return;
+            args.Handled = true;
+            ShowPanel(false);
+        };
+        KeyboardAccelerators.Add(escape);
+        KeyboardAcceleratorPlacementMode = KeyboardAcceleratorPlacementMode.Hidden;
 
         settle.Tick += (_, _) =>
         {
@@ -249,6 +343,11 @@ public sealed partial class ReadSearchPage : Page
 
     bool Browsing => Query.Text.Trim().Length == 0;
 
+    /// <summary>Nothing typed, set or sorted: the start, with Home's rows.</summary>
+    static bool IsStart(ReadSearchQuery q) => q.Text.Trim().Length == 0 && !AnyFilter(q) && q.Sort is null;
+
+    Mode Now => !Browsing ? Mode.Words : IsStart(Query) ? Mode.Start : Mode.Browse;
+
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
@@ -272,15 +371,20 @@ public sealed partial class ReadSearchPage : Page
             Fresh();
             Run(search.Query with { Text = typed });
         }
-        else if (search.Tiles.Count == 0 && !search.Loading && search.Sources is null)
+        else if (!IsStart(search.Query) && search.Tiles.Count == 0 && !search.Loading && search.Sources is null)
         {
             typed = search.Query.Text;
             Run(search.Query);
         }
         else
             typed = search.Query.Text;
-        Menus();
+        startAsked = DateTimeOffset.Now;
         Show();
+        if (FiltersOnArrival)
+        {
+            FiltersOnArrival = false;
+            ShowPanel(true);
+        }
     }
 
     /// <summary>
@@ -289,7 +393,7 @@ public sealed partial class ReadSearchPage : Page
     /// </summary>
     void Fresh()
     {
-        browsed = null;
+        drawn = null;
         nothingKey = "";
         anilistNote = "";
         nothingHost.Child = null;
@@ -350,7 +454,6 @@ public sealed partial class ReadSearchPage : Page
     {
         ctx.Known.Reading.RunSearch(query);
         ranAt = DateTimeOffset.Now;
-        Menus();
         Show();
     }
 
@@ -358,37 +461,130 @@ public sealed partial class ReadSearchPage : Page
     {
         if (part is ReadingPart.Search or ReadingPart.Failure)
             Show();
+        else if (part is ReadingPart.Home && drawn == Mode.Start)
+            ShowStart();
     }
 
     /// <summary>
-    /// Draws the search as it stands. Between browsing and words the results crossfade, as the
-    /// grid's line and the sources' part change together.
+    /// Draws the search as it stands, the title and the filter row with it. Between the start, the
+    /// browse and the words the content crossfades; the title, the scope and the row stay put.
     /// </summary>
     void Show()
     {
         Other();
         Demo();
-        var browsing = Browsing;
-        if (browsed is { } before && before != browsing)
+        var mode = Now;
+        title.Text = mode switch
         {
-            browsed = browsing;
-            Crossfade.Swap(results, Draw);
+            Mode.Start => T.NavSearch,
+            Mode.Browse => T.SearchBrowse,
+            _ => T.SearchResultsFor(Query.Text.Trim()),
+        };
+        ShowFilters();
+        if (drawn is { } before && before != mode)
+        {
+            drawn = mode;
+            Crossfade.Swap(column, () =>
+            {
+                // Out of the start, the results come empty, never with what an earlier search left.
+                if (before == Mode.Start)
+                    Fresh();
+                Draw();
+            });
             return;
         }
-        browsed = browsing;
         Draw();
     }
 
     void Draw()
     {
+        var mode = Now;
+        drawn = mode;
+        var start = mode == Mode.Start;
+        startState.Visibility = start ? Visibility.Visible : Visibility.Collapsed;
+        state.Visibility = start ? Visibility.Collapsed : Visibility.Visible;
         var search = ctx.Known.Reading.Search;
-        if (Browsing)
+        if (start)
+            ShowStart();
+        else if (mode == Mode.Browse)
             ShowBrowse(search);
         else
             ShowWords(search);
     }
 
-    /// <summary>Nothing typed: AniList's covers by the filters, more as the end nears.</summary>
+    // The start
+
+    /// <summary>
+    /// Home's discovery rows as the shows' rails: each heading in the section style with See all at
+    /// its end, the covers in the shows' cells. Placeholders while Home loads, and the shows'
+    /// failure with Try again when it could not.
+    /// </summary>
+    void ShowStart()
+    {
+        var reading = ctx.Known.Reading;
+        if (reading.Home is null && !reading.HomeLoading && !reading.Failures.ContainsKey(ReadingAbout.Home))
+            reading.LoadHome();
+        ReadHomeRow[] rows = [.. (reading.Home?.Rows ?? []).Where(r => (r.Tiles?.Length ?? 0) > 0 || r.Pending)];
+        StartRows(rows);
+        if (rows.Length > 0)
+            startState.Done();
+        else if (reading.Failures.TryGetValue(ReadingAbout.Home, out var failure))
+            startState.Failed(failure.Words(), () => reading.LoadHome(refresh: true));
+        else if (reading.Home is null || reading.HomeLoading)
+            startState.Wait();
+        else
+            startState.Done();
+    }
+
+    /// <summary>The rows in Home's order; a row that stays keeps its view and changes in place.</summary>
+    void StartRows(ReadHomeRow[] rows)
+    {
+        var ids = rows.Select(r => r.Id).ToList();
+        if (!ids.SequenceEqual(startRows.Children.OfType<ReadStartRow>().Select(v => v.Id)))
+        {
+            startRows.Children.Clear();
+            foreach (var row in rows)
+            {
+                if (!rowViews.TryGetValue(row.Id, out var view))
+                    rowViews[row.Id] = view = new ReadStartRow(ctx, row, SeeAll);
+                startRows.Children.Add(view);
+            }
+            foreach (var gone in rowViews.Keys.Except(ids).ToList())
+                rowViews.Remove(gone);
+        }
+        foreach (var row in rows)
+            rowViews[row.Id].Update(row, startAsked);
+    }
+
+    /// <summary>See all: the row's own query searched here, its line over the results.</summary>
+    void SeeAll(ReadHomeRow row)
+    {
+        if (row.ViewAll is not { } query)
+            return;
+        Titled = row.ViewAllTitle is { } words ? (query, words) : null;
+        typed = query.Text;
+        Run(query);
+    }
+
+    /// <summary>Plates for two rails, where Home's rows will be.</summary>
+    static UIElement StartPlates()
+    {
+        var plates = new StackPanel { Spacing = 12 };
+        for (var i = 0; i < 2; i++)
+        {
+            var heading = States.Plate(160, 14, 3);
+            heading.HorizontalAlignment = HorizontalAlignment.Left;
+            heading.Margin = new Thickness(0, 7, 0, 7);
+            plates.Children.Add(heading);
+            plates.Children.Add(States.Covers(8, rail: true));
+        }
+        AutomationProperties.SetAccessibilityView(plates, AccessibilityView.Raw);
+        return plates;
+    }
+
+    // The results
+
+    /// <summary>A filter or a sort with nothing typed: AniList's covers by the filters, more as the end nears.</summary>
     void ShowBrowse(ReadSearchState search)
     {
         Nothing(null);
@@ -398,10 +594,10 @@ public sealed partial class ReadSearchPage : Page
         moreRow.Visibility = Visibility.Collapsed;
         later.Visibility = Visibility.Collapsed;
         AnilistShown(true, animate: false);
-        more.Visibility = search.HasMore && search.Tiles.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        morePlates.Visibility = search.HasMore && search.Tiles.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         if (search.Failure is { } failure && search.Tiles.Count == 0)
         {
-            state.Empty(ReadingParts.PlainEmpty(T.ReadSearchFailed, failure.Words(), T.ActionTryAgain, () => Run(search.Query), error: true));
+            state.Empty(States.Unavailable(T.ReadSearchFailed, failure.Words(), T.ActionTryAgain, () => Run(search.Query), error: true));
             return;
         }
         if (search.Tiles.Count == 0 && (search.Loading || search.Page == 0 && search.HasMore))
@@ -415,10 +611,10 @@ public sealed partial class ReadSearchPage : Page
         if (search.Tiles.Count == 0)
         {
             var any = AnyFilter(search.Query);
-            state.Empty(ReadingParts.PlainEmpty(
+            state.Empty(States.Unavailable(
                 T.ReadSearchNothingBrowse,
                 any ? T.ReadSearchNothingFiltersLine : T.ReadSearchNothingLine,
-                any ? T.ReadSearchClearFilters : null,
+                any ? T.SearchClearFilters : null,
                 any ? ClearFilters : null));
             return;
         }
@@ -439,7 +635,7 @@ public sealed partial class ReadSearchPage : Page
         var q = search.Query;
         var words = q.Text.Trim();
         var found = search.Sources;
-        more.Visibility = Visibility.Collapsed;
+        morePlates.Visibility = Visibility.Collapsed;
         state.Done();
         var mine = search.TilesFor == words && search.Tiles.Count > 0;
         var failed = search.Failure is not null && !mine || found?.Anilist == ReadAnilistState.Failed;
@@ -519,7 +715,7 @@ public sealed partial class ReadSearchPage : Page
         var head = tiles.Take(first).ToList();
         if (anilistSlot.Showing && !grid.Holds(head, look))
         {
-            var fresh = Named(new ReadGrid());
+            var fresh = Named(new ReadGrid(search: true));
             fresh.Show(ctx, head, placed, caption, look: look);
             grid = fresh;
             anilistSlot.Replace(fresh);
@@ -576,42 +772,34 @@ public sealed partial class ReadSearchPage : Page
     StackPanel AnilistNothing(ReadSearchQuery q)
     {
         var note = new StackPanel { Spacing = 2, Margin = new Thickness(0, 0, 0, 4) };
-        note.Children.Add(new TextBlock { Text = T.ReadSearchAnilistNothing, FontSize = 14, LineHeight = 19, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap });
+        note.Children.Add(new TextBlock { Text = T.ReadSearchAnilistNothing, FontSize = 14, LineHeight = 19, FontWeight = FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap });
         note.Children.Add(new TextBlock { Text = AnyFilter(q) ? T.ReadSearchNothingFiltersLine : T.ReadSearchNothingLine, Style = Ui.Res<Style>("HazeCaptionStyle"), TextWrapping = TextWrapping.Wrap });
         AutomationProperties.SetLiveSetting(note, AutomationLiveSetting.Polite);
         return note;
     }
 
-    /// <summary>A message in the results' place: its heading, then its lines.</summary>
-    static StackPanel Message(string heading, params string?[] lines)
-    {
-        var block = new StackPanel { Margin = new Thickness(0, 6, 0, 0), HorizontalAlignment = HorizontalAlignment.Left, MaxWidth = 480 };
-        var words = new TextBlock { Text = heading, FontSize = 20, LineHeight = 26, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap };
-        AutomationProperties.SetHeadingLevel(words, AutomationHeadingLevel.Level2);
-        block.Children.Add(words);
-        foreach (var line in lines.Where(l => l is { Length: > 0 }))
-            block.Children.Add(new TextBlock { Text = line, Style = Ui.Res<Style>("HazeBodyStyle"), TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 6, 0, 0) });
-        return block;
-    }
-
-    /// <summary>Nothing from AniList and nothing from any source: the words, the line to try others, and the sources' line.</summary>
+    /// <summary>Nothing from AniList and nothing from any source: the shows' empty state with the words, the line to try others, and the sources' line.</summary>
     UIElement NothingAnywhere(ReadSearchQuery q, bool sourcesAsked)
     {
         var any = AnyFilter(q);
-        var block = Message(T.ReadSearchNothing(q.Text.Trim()), any ? T.ReadSearchNothingFiltersLine : T.ReadSearchNothingLine, sourcesAsked ? T.ReadSearchSourcesNothing : null);
-        if (any)
-        {
-            var clear = Ui.Label(T.ReadSearchClearFilters, (_, _) => ClearFilters());
-            clear.Margin = new Thickness(0, 16, 0, 0);
-            block.Children.Add(clear);
-        }
-        return block;
+        var lead = any ? T.ReadSearchNothingFiltersLine : T.ReadSearchNothingLine;
+        var words = sourcesAsked ? $"{lead} {T.ReadSearchSourcesNothing}" : lead;
+        return States.Unavailable(T.ReadSearchNothing(q.Text.Trim()), words, any ? T.SearchClearFilters : null, any ? ClearFilters : null);
     }
 
     /// <summary>Your sources only, and none found anything: "Nothing found in your sources" and the line to try other words.</summary>
-    UIElement SourcesOnlyNothing() => Message(T.ReadSearchSourcesOnlyNothing, T.ReadSearchNothingLine);
+    UIElement SourcesOnlyNothing() => States.Unavailable(T.ReadSearchSourcesOnlyNothing, T.ReadSearchNothingLine);
 
-    void ClearFilters() => Run(ReadingStore.EmptyQuery with { Text = Query.Text, SourcesOnly = Query.SourcesOnly });
+    /// <summary>Clear filters: every filter and the sort off, the words kept, as the shows' Clear filters does.</summary>
+    void ClearFilters()
+    {
+        Titled = null;
+        Run(ReadingStore.EmptyQuery with { Text = Query.Text });
+    }
+
+    /// <summary>Counts the sources' answers, so a section fading out stays when a later answer has rows.</summary>
+    int sourcesTurn;
+    bool headShown, sectionLeaving;
 
     /// <summary>
     /// From your sources: a row per source asked, answered or failed, in Your sources order, each
@@ -619,10 +807,6 @@ public sealed partial class ReadSearchPage : Page
     /// words keep the rows that show until their answers come. A row that leaves fades out, then
     /// its gap closes. The heading fades in with the first row.
     /// </summary>
-    /// <summary>Counts the sources' answers, so a section fading out stays when a later answer has rows.</summary>
-    int sourcesTurn;
-    bool headShown, sectionLeaving;
-
     void Sources(ReadSearchState search, ReadSourceSearch? found, ReadSourceGroup[] groups, bool first)
     {
         if (found is null && search.Loading && sourceViews.Count > 0)
@@ -641,18 +825,20 @@ public sealed partial class ReadSearchPage : Page
             sourceViews.Clear();
             return;
         }
+        // The shows' gap over a section: 34 under AniList's part, 4 at the top.
+        var gap = first ? 4 : 34;
         if (sources.Visibility == Visibility.Collapsed)
         {
             // A fade's held value outlasts a plain set, so the heading is hidden through Motion too.
             Motion.FadeTo(sourcesHead, 0, TimeSpan.Zero);
             headShown = false;
-            sourcesHead.Margin = new Thickness(0, first ? 4 : 34, 0, 0);
+            sourcesHead.Margin = new Thickness(0, gap, 0, 0);
             sources.Visibility = Visibility.Visible;
         }
-        else if (Math.Abs(sourcesHead.Margin.Top - (first ? 4 : 34)) > 0.5)
+        else if (Math.Abs(sourcesHead.Margin.Top - gap) > 0.5)
         {
             // AniList going or coming with Your sources only: the heading's gap eases with it.
-            Motion.Ease(sourcesHead, sourcesHead.Margin.Top, first ? 4 : 34, v => sourcesHead.Margin = new Thickness(0, v, 0, 0));
+            Motion.Ease(sourcesHead, sourcesHead.Margin.Top, gap, v => sourcesHead.Margin = new Thickness(0, v, 0, 0));
         }
         var slotted = groups.Where(ReadDiscovery.Slotted).ToList();
         var ids = slotted.Select(g => g.SourceId).ToHashSet();
@@ -841,9 +1027,9 @@ public sealed partial class ReadSearchPage : Page
     void Near()
     {
         var search = ctx.Known.Reading.Search;
-        if (!Browsing || !search.HasMore || search.Loading || search.Tiles.Count == 0)
+        if (Now != Mode.Browse || !search.HasMore || search.Loading || search.Tiles.Count == 0)
             return;
-        if (scroll.VerticalOffset + scroll.ViewportHeight < scroll.ExtentHeight - scroll.ViewportHeight)
+        if (scroll.VerticalOffset + scroll.ViewportHeight < scroll.ExtentHeight - morePlates.ActualHeight - scroll.ViewportHeight)
             return;
         ctx.Known.Reading.SearchMore();
     }
@@ -862,63 +1048,15 @@ public sealed partial class ReadSearchPage : Page
 
     void Demo() => demoLine.Visibility = ctx.Known.Demo.OnlyBooks ? Visibility.Visible : Visibility.Collapsed;
 
-    /// <summary>
-    /// Your sources only: an outline in the edge colour with haze words while off; on, a check and
-    /// the words in the secondary fill, never amber.
-    /// </summary>
-    void SourcesOnlyLook()
-    {
-        var words = new TextBlock { Text = T.ReadSearchSourcesOnly, VerticalAlignment = VerticalAlignment.Center };
-        sourcesOnly.Content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Children = { sourcesOnlyCheck, words } };
-        AutomationProperties.SetName(sourcesOnly, T.ReadSearchSourcesOnly);
-        var haze = LiveBrush.Of("HazeBrush");
-        var edge = LiveBrush.Of("EdgeBrush");
-        var fill = LiveBrush.Of("ControlFillColorSecondaryBrush");
-        var fillOver = LiveBrush.Of("ControlFillColorTertiaryBrush");
-        var text = LiveBrush.Of("TextFillColorPrimaryBrush");
-        var clear = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
-        // i18n-skip: lightweight styling keys of the toggle button
-        foreach (var (key, value) in new (string, object)[]
-        {
-            ("ToggleButtonBackground", clear), ("ToggleButtonBackgroundPointerOver", fillOver), ("ToggleButtonBackgroundPressed", fill),
-            ("ToggleButtonForeground", haze), ("ToggleButtonForegroundPointerOver", text), ("ToggleButtonForegroundPressed", text),
-            ("ToggleButtonBorderBrush", edge), ("ToggleButtonBorderBrushPointerOver", edge), ("ToggleButtonBorderBrushPressed", edge),
-            ("ToggleButtonBackgroundChecked", fill), ("ToggleButtonBackgroundCheckedPointerOver", fillOver), ("ToggleButtonBackgroundCheckedPressed", fill),
-            ("ToggleButtonForegroundChecked", text), ("ToggleButtonForegroundCheckedPointerOver", text), ("ToggleButtonForegroundCheckedPressed", text),
-            ("ToggleButtonBorderBrushChecked", clear), ("ToggleButtonBorderBrushCheckedPointerOver", clear), ("ToggleButtonBorderBrushCheckedPressed", clear),
-        })
-            sourcesOnly.Resources[key] = value;
-        sourcesOnly.BorderThickness = new Thickness(1);
-        sourcesOnly.FontWeight = Microsoft.UI.Text.FontWeights.Medium;
-        sourcesOnly.Click += (_, _) =>
-        {
-            var on = sourcesOnly.IsChecked == true;
-            Run(Query with { SourcesOnly = on });
-            if (on)
-                Tell(T.WindowsReadSearchAnilistHidden);
-        };
-    }
+    // The filters
 
-    // Filters
-
-    static bool AnyFilter(ReadSearchQuery q) =>
+    /// <summary>Whether a query sets any filter, the words, the sort and Your sources only aside.</summary>
+    internal static bool AnyFilter(ReadSearchQuery q) =>
         (q.Formats?.Length ?? 0) > 0 || (q.Origins?.Length ?? 0) > 0 || q.Status is not null
         || (q.Genres?.Length ?? 0) > 0 || (q.ExcludeGenres?.Length ?? 0) > 0 || ReadDiscovery.StartedSet(q);
 
     static string[] Labels(string[]? keys, ReadFilterChoice[] choices) =>
         [.. (keys ?? []).Select(k => choices.FirstOrDefault(c => c.Key == k)?.Label.Text() ?? k)];
-
-    /// <summary>The first chosen, or "Manga +2".</summary>
-    static string? Value(string[]? keys, ReadFilterChoice[] choices)
-    {
-        var words = Labels(keys, choices);
-        return words.Length switch
-        {
-            0 => null,
-            1 => words[0],
-            _ => T.ReadFilterMany(words[0], words.Length - 1),
-        };
-    }
 
     /// <summary>"Manga, Japan, Popular · 1,240 titles": what the browse shows, in the order it shows it.</summary>
     static string BrowseLine(ReadSearchQuery q, uint? total)
@@ -934,8 +1072,8 @@ public sealed partial class ReadSearchPage : Page
         var parts = Labels(ReadDiscovery.FoldedFormats(q.Formats), f.Formats).Concat(Labels(q.Origins, f.Origins)).ToList();
         if (q.Status is { } s)
             parts.AddRange(Labels([s], f.Statuses));
-        parts.AddRange(q.Genres ?? []);
-        parts.AddRange((q.ExcludeGenres ?? []).Select(T.ReadFilterNotGenre));
+        parts.AddRange((q.Genres ?? []).Select(Searches.GenreName));
+        parts.AddRange((q.ExcludeGenres ?? []).Select(g => T.SearchGenreLeftOut(Searches.GenreName(g))));
         if (ReadDiscovery.StartedSet(q))
             parts.AddRange(Labels([q.Started!], f.Started ?? []));
         parts.Add(SortWords(q.Sort ?? f.Sorts.FirstOrDefault()));
@@ -952,181 +1090,328 @@ public sealed partial class ReadSearchPage : Page
         _ => T.ReadSortPopular,
     };
 
-    /// <summary>Each filter's menu, built from the query in force: its name until set, then "Format: Manga" on the secondary fill.</summary>
-    void Menus()
+    /// <summary>
+    /// Each drop-down says its name, or in amber what it has, as the shows' row does; Your sources
+    /// only comes with the first word; then Clear filters, the chips, the badge and the panel.
+    /// </summary>
+    void ShowFilters()
     {
         var f = Filters;
         var q = Query;
-        // One Manga, which takes one-shots in.
-        format.Flyout = Choices(ReadDiscovery.FormatChoices(f.Formats), q.Formats ?? [], key =>
-            Run(Query with { Formats = ReadDiscovery.ToggleFormat(Query.Formats, key, ReadDiscovery.FormatChoices(f.Formats).Length != f.Formats.Length) }));
-        Say(format, T.ReadFilterFormat, Value(ReadDiscovery.FoldedFormats(q.Formats), f.Formats));
-        origin.Flyout = Choices(f.Origins, q.Origins ?? [], key => Toggle(q, key, formats: false));
-        Say(origin, T.ReadFilterOrigin, Value(q.Origins, f.Origins));
-
-        var statuses = new MenuFlyout { Placement = FlyoutPlacementMode.BottomEdgeAlignedLeft };
-        var any = new RadioMenuFlyoutItem { Text = T.ReadFilterAny, GroupName = "status", IsChecked = q.Status is null };
-        any.Click += (_, _) => Run(Query with { Status = null });
-        statuses.Items.Add(any);
-        foreach (var choice in f.Statuses)
-        {
-            var item = new RadioMenuFlyoutItem { Text = choice.Label.Text(), GroupName = "status", IsChecked = q.Status == choice.Key };
-            item.Click += (_, _) => Run(Query with { Status = choice.Key });
-            statuses.Items.Add(item);
-        }
-        status.Flyout = statuses;
-        Say(status, T.ReadFilterStatus, q.Status is { } s ? Value([s], f.Statuses) : null);
-
-        // A flat menu: the first genres, any set ones after them, then More genres for the rest.
-        // A click includes a genre or clears it; Left out holds every genre to leave out.
-        var genreMenu = new MenuFlyout { Placement = FlyoutPlacementMode.BottomEdgeAlignedLeft };
-        var chosen = (q.Genres ?? []).Concat(q.ExcludeGenres ?? []).ToHashSet();
-        var flat = f.Genres.Take(FlatGenres).Concat(f.Genres.Skip(FlatGenres).Where(chosen.Contains)).ToList();
-        foreach (var genre in flat)
-            genreMenu.Items.Add(GenreItem(q, genre));
-        var rest = f.Genres.Where(g => !flat.Contains(g)).ToList();
-        if (rest.Count > 0)
-        {
-            var more = new MenuFlyoutSubItem { Text = T.ReadFilterMoreGenres };
-            foreach (var genre in rest)
-                more.Items.Add(GenreItem(q, genre));
-            genreMenu.Items.Add(more);
-        }
-        if (f.Genres.Length > 0)
-        {
-            genreMenu.Items.Add(new MenuFlyoutSeparator());
-            var leave = new MenuFlyoutSubItem { Text = T.ReadFilterLeftOut };
-            foreach (var genre in f.Genres)
-            {
-                var leftOut = (q.ExcludeGenres ?? []).Contains(genre);
-                var item = new ToggleMenuFlyoutItem { Text = genre, IsChecked = leftOut };
-                item.Click += (_, _) => Genre(genre, include: false, exclude: !leftOut);
-                leave.Items.Add(item);
-            }
-            genreMenu.Items.Add(leave);
-        }
-        genres.Flyout = genreMenu;
-        var count = (q.Genres?.Length ?? 0) + (q.ExcludeGenres?.Length ?? 0);
-        Say(genres, T.ReadFilterGenres, count switch
-        {
-            0 => null,
-            1 => q.Genres is [var only] ? only : T.ReadFilterNotGenre(q.ExcludeGenres![0]),
-            _ => T.ReadFilterGenresCount(count),
-        });
-
-        // When the series started: any time, the last 12 months or the last 3 years.
-        var startedMenu = new MenuFlyout { Placement = FlyoutPlacementMode.BottomEdgeAlignedLeft };
-        var startedKey = ReadDiscovery.StartedSet(q) ? q.Started : null;
-        foreach (var choice in f.Started ?? [])
-        {
-            var anyTime = choice.Key == "any"; // i18n-skip: the engine's key
-            var item = new RadioMenuFlyoutItem { Text = choice.Label.Text(), GroupName = "started", IsChecked = anyTime ? startedKey is null : startedKey == choice.Key };
-            item.Click += (_, _) => Run(Query with { Started = anyTime ? null : choice.Key });
-            startedMenu.Items.Add(item);
-        }
-        started.Flyout = startedMenu;
-        Say(started, T.ReadSearchStarted, startedKey is null ? null : Value([startedKey], f.Started ?? []));
-
-        // Your sources only, with words typed: the rule and the toggle fade in with the first
-        // word, and the other filters dim while it is on, as AniList is not asked; Narrator hears why.
         var words = !Browsing;
-        foreach (var part in new FrameworkElement[] { rule, sourcesOnly })
+        string[] genreWords = [.. (q.Genres ?? []).Select(Searches.GenreName), .. (q.ExcludeGenres ?? []).Select(g => T.SearchGenreLeftOut(Searches.GenreName(g)))];
+        SearchParts.Say(genres, T.FilterGenre, SearchFilters.Say(T.FilterGenre, genreWords), genreWords.Length > 0);
+        var formatWords = Labels(ReadDiscovery.FoldedFormats(q.Formats), f.Formats);
+        SearchParts.Say(format, T.FilterFormat, SearchFilters.Say(T.FilterFormat, formatWords), formatWords.Length > 0);
+        var statusWord = q.Status is { } s ? Labels([s], f.Statuses)[0] : null;
+        SearchParts.Say(status, T.FilterStatus, statusWord ?? T.FilterStatus, statusWord is not null);
+        var originWords = Labels(q.Origins, f.Origins);
+        SearchParts.Say(origin, T.FilterOrigin, SearchFilters.Say(T.FilterOrigin, originWords), originWords.Length > 0);
+        var startedWord = ReadDiscovery.StartedSet(q) ? Labels([q.Started!], f.Started ?? [])[0] : null;
+        SearchParts.Say(started, T.ReadSearchStarted, startedWord ?? T.ReadSearchStarted, startedWord is not null);
+        SearchParts.Say(available, T.SearchAvailableName, q.SourcesOnly ? T.ReadSearchSourcesOnly : T.SearchAvailableName, q.SourcesOnly);
+        SearchParts.Say(sort, T.SearchSortName, q.Sort is { } o ? SortWords(o) : T.SearchSortName, q.Sort is not null);
+
+        // Your sources only asks the sources alone, so it comes with the first word and goes with the last.
+        if (words && available.Visibility == Visibility.Collapsed)
         {
-            if (words && part.Visibility == Visibility.Collapsed)
-            {
-                part.Opacity = 0;
-                part.Visibility = Visibility.Visible;
-                Motion.FadeTo(part, 1, Motion.FadeInTime);
-            }
-            else if (!words && part.Visibility == Visibility.Visible)
-                Motion.FadeOutThen(part, () =>
-                {
-                    if (!Browsing)
-                        return;
-                    part.Visibility = Visibility.Collapsed;
-                    part.Opacity = 1;
-                });
+            available.Opacity = 0;
+            available.Visibility = Visibility.Visible;
+            Motion.FadeTo(available, 1, Motion.FadeInTime);
         }
-        sourcesOnly.IsChecked = q.SourcesOnly;
-        sourcesOnlyCheck.Visibility = q.SourcesOnly ? Visibility.Visible : Visibility.Collapsed;
-        sourcesOnly.FontWeight = q.SourcesOnly ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Medium;
+        else if (!words && available.Visibility == Visibility.Visible)
+            Motion.FadeOutThen(available, () =>
+            {
+                if (!Browsing)
+                    return;
+                available.Visibility = Visibility.Collapsed;
+                available.Opacity = 1;
+            });
+
+        // While it is on, AniList is not asked: the filters and the sort for AniList dim, and Narrator hears why.
         var dimmed = words && q.SourcesOnly;
         var dim = dimmed ? Dimmed : 1;
-        if (Math.Abs(filterRow.Opacity - dim) > 0.01)
-            Motion.FadeTo(filterRow, dim, Motion.FadeInTime);
-        foreach (var button in new[] { format, origin, status, genres, started })
-            AutomationProperties.SetHelpText(button, dimmed ? T.WindowsReadSearchFiltersDimmed : "");
-
-        // The sort, while browsing: typed words come in the order that matches them best.
-        var sorts = new MenuFlyout { Placement = FlyoutPlacementMode.BottomEdgeAlignedRight };
-        var current = q.Sort ?? f.Sorts.FirstOrDefault();
-        foreach (var key in f.Sorts)
+        foreach (var button in new[] { genres, format, status, origin, started, sort })
         {
-            var item = new RadioMenuFlyoutItem { Text = SortWords(key), GroupName = "sort", IsChecked = key == current };
-            item.Click += (_, _) => Run(Query with { Sort = key });
-            sorts.Items.Add(item);
+            if (Math.Abs(button.Opacity - dim) > 0.01)
+                Motion.FadeTo(button, dim, Motion.FadeInTime);
+            AutomationProperties.SetHelpText(button, dimmed ? T.WindowsReadSearchFiltersDimmed : "");
         }
-        sort.Flyout = sorts;
-        sort.Content = SortWords(current);
-        AutomationProperties.SetName(sort, T.LibrarySortButton(SortWords(current)));
-        sort.Visibility = Browsing ? Visibility.Visible : Visibility.Collapsed;
+
+        if (AnyFilter(q) || q.Sort is not null || words && q.SourcesOnly)
+            Motion.Show(clear);
+        else
+            Motion.Hide(clear);
+        // Every reading filter is in the row, so the panel holds none of its own to count.
+        SearchParts.Badge(filtersButton, filtersBadge, 0);
+        ShowChips();
+        if (panelOpen)
+            panel.Show(q, words);
     }
 
-    static MenuFlyout Choices(ReadFilterChoice[] choices, string[] chosen, Action<string> toggle)
+    void BuildGenres()
     {
-        var menu = new MenuFlyout { Placement = FlyoutPlacementMode.BottomEdgeAlignedLeft };
+        var included = Query.Genres ?? [];
+        genreList.Children.Clear();
+        foreach (var genre in Filters.Genres)
+            genreList.Children.Add(SearchParts.Box(Searches.GenreName(genre), included.Contains(genre), on =>
+                Run(ReadFiltersPanel.Picking(Query, genre, on ? Pick.Include : Pick.Off))));
+    }
+
+    /// <summary>One Manga, which takes one-shots in.</summary>
+    void BuildFormats()
+    {
+        var f = Filters;
+        var choices = ReadDiscovery.FormatChoices(f.Formats);
+        var apart = choices.Length != f.Formats.Length;
+        var folded = ReadDiscovery.FoldedFormats(Query.Formats);
+        formatList.Children.Clear();
         foreach (var choice in choices)
         {
-            var item = new ToggleMenuFlyoutItem { Text = choice.Label.Text(), IsChecked = chosen.Contains(choice.Key) };
-            item.Click += (_, _) => toggle(choice.Key);
-            menu.Items.Add(item);
+            var key = choice.Key;
+            formatList.Children.Add(SearchParts.Box(choice.Label.Text(), folded.Contains(key), _ =>
+                Run(Query with { Formats = ReadDiscovery.ToggleFormat(Query.Formats, key, apart) })));
         }
-        return menu;
     }
 
-    void Toggle(ReadSearchQuery q, string key, bool formats)
+    void BuildOrigins()
     {
-        var list = (formats ? q.Formats : q.Origins) ?? [];
-        string[] next = list.Contains(key) ? [.. list.Where(k => k != key)] : [.. list, key];
-        Run(formats ? Query with { Formats = next } : Query with { Origins = next });
+        var chosen = Query.Origins ?? [];
+        originList.Children.Clear();
+        foreach (var choice in Filters.Origins)
+        {
+            var key = choice.Key;
+            originList.Children.Add(SearchParts.Box(choice.Label.Text(), chosen.Contains(key), on =>
+            {
+                var list = (Query.Origins ?? []).Where(k => k != key).ToList();
+                if (on)
+                    list.Add(key);
+                Run(Query with { Origins = [.. list] });
+            }));
+        }
     }
 
-    /// <summary>How many genres the Genres menu shows before More genres.</summary>
-    const int FlatGenres = 10;
-
-    /// <summary>One genre in the Genres menu: checked when included, "Not Horror" with a minus when left out, and a click includes it or clears it.</summary>
-    MenuFlyoutItem GenreItem(ReadSearchQuery q, string genre)
+    void BuildStatuses()
     {
-        var included = (q.Genres ?? []).Contains(genre);
-        var leftOut = (q.ExcludeGenres ?? []).Contains(genre);
-        var item = new ToggleMenuFlyoutItem { Text = leftOut ? T.ReadFilterNotGenre(genre) : genre, IsChecked = included };
-        if (leftOut)
-            item.Icon = new FontIcon { Glyph = "\uE738" };
-        AutomationProperties.SetHelpText(item, included ? T.ReadFilterIncluded : leftOut ? T.ReadFilterLeftOut : "");
-        item.Click += (_, _) => Genre(genre, include: !included && !leftOut, exclude: false);
-        return item;
+        var current = Query.Status;
+        statusMenu.Items.Clear();
+        statusMenu.Items.Add(SearchParts.Radio(T.ReadFilterAny, "status", current is null, () => Run(Query with { Status = null })));
+        foreach (var choice in Filters.Statuses)
+        {
+            var key = choice.Key;
+            statusMenu.Items.Add(SearchParts.Radio(choice.Label.Text(), "status", current == key, () => Run(Query with { Status = key })));
+        }
     }
 
-    void Genre(string genre, bool include, bool exclude)
+    /// <summary>When the series started: any time, the last 12 months or the last 3 years.</summary>
+    void BuildStarted()
     {
         var q = Query;
-        var with = (q.Genres ?? []).Where(g => g != genre).ToList();
-        var without = (q.ExcludeGenres ?? []).Where(g => g != genre).ToList();
-        if (include)
-            with.Add(genre);
-        if (exclude)
-            without.Add(genre);
-        Run(q with { Genres = [.. with], ExcludeGenres = [.. without] });
+        var startedKey = ReadDiscovery.StartedSet(q) ? q.Started : null;
+        startedMenu.Items.Clear();
+        foreach (var choice in Filters.Started ?? [])
+        {
+            var key = choice.Key;
+            var anyTime = key == "any"; // i18n-skip: the engine's key
+            startedMenu.Items.Add(SearchParts.Radio(choice.Label.Text(), "started", anyTime ? startedKey is null : startedKey == key, () =>
+                Run(Query with { Started = anyTime ? null : key })));
+        }
     }
 
-    /// <summary>A filter's button: its name in haze until set, then "Format: Manga" in the text colour on the secondary fill.</summary>
-    static void Say(DropDownButton button, string name, string? value)
+    /// <summary>All, or Your sources only, which leaves AniList out.</summary>
+    void BuildAvailable()
     {
-        var text = value is null ? name : T.ReadFilterShown(name, value);
-        if (button.Content as string != text)
-            button.Content = text;
-        AutomationProperties.SetName(button, value is null ? name : T.ReadNameFilter(name, value));
-        button.Foreground = LiveBrush.Of(value is null ? "HazeBrush" : "TextFillColorPrimaryBrush");
-        button.Background = value is null ? new SolidColorBrush(Microsoft.UI.Colors.Transparent) : LiveBrush.Of("ControlFillColorSecondaryBrush");
+        var on = Query.SourcesOnly;
+        availableMenu.Items.Clear();
+        availableMenu.Items.Add(SearchParts.Radio(T.SearchAvailableAll, "available", !on, () => SourcesOnly(false)));
+        availableMenu.Items.Add(SearchParts.Radio(T.ReadSearchSourcesOnly, "available", on, () => SourcesOnly(true)));
+    }
+
+    void SourcesOnly(bool on)
+    {
+        if (on == Query.SourcesOnly)
+            return;
+        Run(Query with { SourcesOnly = on });
+        if (on)
+            Tell(T.WindowsReadSearchAnilistHidden);
+    }
+
+    /// <summary>
+    /// The sort: with words, Relevance first, as AniList orders by the match when no sort is
+    /// chosen; with none, the engine's sorts, Popular standing for no choice.
+    /// </summary>
+    void BuildSorts()
+    {
+        var f = Filters;
+        var words = !Browsing;
+        var current = Query.Sort ?? (words ? null : f.Sorts.FirstOrDefault());
+        sortMenu.Items.Clear();
+        if (words)
+            sortMenu.Items.Add(SearchParts.Radio(T.SortRelevance, "sort", current is null, () => Run(Query with { Sort = null })));
+        foreach (var key in f.Sorts)
+            sortMenu.Items.Add(SearchParts.Radio(SortWords(key), "sort", key == current, () => Run(Query with { Sort = key })));
+    }
+
+    // The chips
+
+    /// <summary>
+    /// Each filter set as a chip, in the row's order, that takes it off. Made again only when
+    /// they change; a chip that held the focus hands it to the one now in its place.
+    /// </summary>
+    void ShowChips()
+    {
+        var next = Chips(Query, !Browsing);
+        var labels = next.Select(c => c.Label).ToArray();
+        if (labels.SequenceEqual(chips))
+            return;
+        var focused = XamlRoot is { } root ? FocusManager.GetFocusedElement(root) as UIElement : null;
+        var at = focused is null ? -1 : chipRow.Children.IndexOf(focused);
+        chips = labels;
+        chipRow.Children.Clear();
+        foreach (var (label, without) in next)
+            chipRow.Children.Add(SearchParts.Chip(label, () => Run(without(Query))));
+        chipRow.Visibility = next.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+        if (at < 0)
+            return;
+        if (chipRow.Children.Count > 0)
+            ((Control)chipRow.Children[Math.Min(at, chipRow.Children.Count - 1)]).Focus(FocusState.Keyboard);
+        else
+            filtersButton.Focus(FocusState.Keyboard);
+    }
+
+    static (string Label, Func<ReadSearchQuery, ReadSearchQuery> Without)[] Chips(ReadSearchQuery q, bool words)
+    {
+        var f = Filters;
+        var list = new List<(string, Func<ReadSearchQuery, ReadSearchQuery>)>();
+        foreach (var genre in q.Genres ?? [])
+            list.Add((Searches.GenreName(genre), x => ReadFiltersPanel.Picking(x, genre, Pick.Off)));
+        foreach (var genre in q.ExcludeGenres ?? [])
+            list.Add((T.SearchGenreLeftOut(Searches.GenreName(genre)), x => ReadFiltersPanel.Picking(x, genre, Pick.Off)));
+        var formatWords = Labels(ReadDiscovery.FoldedFormats(q.Formats), f.Formats);
+        if (formatWords.Length > 0)
+            list.Add((string.Join(", ", formatWords), x => x with { Formats = [] }));
+        if (q.Status is { } status)
+            list.Add((Labels([status], f.Statuses)[0], x => x with { Status = null }));
+        var originWords = Labels(q.Origins, f.Origins);
+        if (originWords.Length > 0)
+            list.Add((string.Join(", ", originWords), x => x with { Origins = [] }));
+        if (ReadDiscovery.StartedSet(q))
+            list.Add((Labels([q.Started!], f.Started ?? [])[0], x => x with { Started = null }));
+        if (words && q.SourcesOnly)
+            list.Add((T.ReadSearchSourcesOnly, x => x with { SourcesOnly = false }));
+        return [.. list];
+    }
+
+    // The panel
+
+    /// <summary>Ctrl+Shift+F on this page: the panel opens, or closes when it is open.</summary>
+    internal void ToggleFilters() => ShowPanel(!panelOpen, fromKeys: true);
+
+    /// <summary>
+    /// The panel slides in from the right edge on the standard spring and fades out as it goes,
+    /// as the shows' does, the results taking their new width at once. Opened from the keyboard,
+    /// it takes the focus; closed with the focus in it, the focus goes back to Filters.
+    /// </summary>
+    void ShowPanel(bool open, bool fromKeys = false)
+    {
+        panelOpen = open;
+        filtersButton.IsChecked = open;
+        var visual = ElementCompositionPreview.GetElementVisual(panelHost);
+        if (open)
+        {
+            panel.Show(Query, !Browsing);
+            Motion.ShowStandard(panelHost);
+            Motion.Spring(visual, "Translation", System.Numerics.Vector3.Zero, new System.Numerics.Vector3(48, 0, 0));
+            if (fromKeys)
+                DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, panel.FocusStart);
+            return;
+        }
+        var inside = XamlRoot is { } root && FocusManager.GetFocusedElement(root) is DependencyObject focused && Within(focused, panelHost);
+        Motion.Spring(visual, "Translation", new System.Numerics.Vector3(48, 0, 0));
+        Motion.HideStandard(panelHost);
+        if (inside)
+            filtersButton.Focus(FocusState.Keyboard);
+    }
+
+    static bool Within(DependencyObject element, DependencyObject ancestor)
+    {
+        for (var at = element; at is not null; at = VisualTreeHelper.GetParent(at))
+            if (at == ancestor)
+                return true;
+        return false;
+    }
+}
+
+/// <summary>
+/// One of Home's discovery rows on Search's start, as the shows' rails are: its heading in the
+/// section style, with the row's side words in haze after it and See all at its end, then its
+/// covers in the shows' cells in a strip that pages by whole covers. While the row is on its way
+/// it holds the shows' rail placeholders after 600 ms.
+/// </summary>
+sealed partial class ReadStartRow : StackPanel
+{
+    readonly Ctx ctx;
+    readonly TextBlock heading = new()
+    {
+        Style = Ui.Res<Style>("SectionTitleStyle"),
+        MaxLines = 1,
+        TextWrapping = TextWrapping.NoWrap,
+        TextTrimming = TextTrimming.CharacterEllipsis,
+        VerticalAlignment = VerticalAlignment.Center,
+    };
+    readonly Run words = new(), side = new();
+    readonly HyperlinkButton seeAll;
+    readonly CoverSlot slot;
+    ReadHomeRow row;
+    string drawn = "";
+
+    public ReadStartRow(Ctx ctx, ReadHomeRow row, Action<ReadHomeRow> seeAll)
+    {
+        this.ctx = ctx;
+        this.row = row;
+        // 12 under the heading, as under the shows' section headings.
+        Spacing = 12;
+        side.FontSize = 12;
+        side.FontWeight = FontWeights.Normal;
+        side.Foreground = LiveBrush.Of("HazeBrush");
+        heading.Inlines.Add(words);
+        heading.Inlines.Add(side);
+        AutomationProperties.SetHeadingLevel(heading, AutomationHeadingLevel.Level2);
+        this.seeAll = SearchParts.SeeAll(() => seeAll(this.row));
+        Children.Add(SearchParts.RailHead(heading, this.seeAll));
+        var name = ReadDiscovery.Heading(row.Title).ToString();
+        slot = new CoverSlot((FrameworkElement)States.Covers(12, rail: true), new CoverStrip(name, SearchParts.CoverWidth, SearchParts.CoverHeight)) { Label = name };
+        Children.Add(slot);
+    }
+
+    public string Id => row.Id;
+
+    /// <summary>Takes the row as the engine now has it; <paramref name="since"/> is when Search began waiting for Home.</summary>
+    public void Update(ReadHomeRow now, DateTimeOffset since)
+    {
+        row = now;
+        var name = ReadDiscovery.Heading(now.Title).ToString();
+        if (words.Text != name)
+            words.Text = name;
+        var aside = now.Side?.Text() is { Length: > 0 } a ? a : null;
+        // An em space keeps the side words apart from the heading.
+        var spaced = aside is null ? "" : " " + aside;
+        if (side.Text != spaced)
+            side.Text = spaced;
+        AutomationProperties.SetName(heading, aside is null ? name : T.ReadNameHeading(name, aside));
+        seeAll.Visibility = now.ViewAll is null ? Visibility.Collapsed : Visibility.Visible;
+        slot.Label = name;
+        var tiles = now.Tiles ?? [];
+        if (tiles.Length == 0)
+        {
+            if (now.Pending)
+                slot.Ask(since);
+            return;
+        }
+        var key = string.Join("\n", tiles.Select(t => $"{t.Work}\t{t.Title}\t{t.Cover}\t{ReadDiscovery.RowCaption(now.Kind, t)}"));
+        if (key == drawn)
+            return;
+        drawn = key;
+        slot.Covers([.. tiles.Select(t => (FrameworkElement)ReadingParts.SearchCard(ctx, t, caption: ReadDiscovery.RowCaption(now.Kind, t)))]);
     }
 }

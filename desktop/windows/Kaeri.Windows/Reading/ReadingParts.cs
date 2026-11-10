@@ -232,6 +232,65 @@ static class ReadingParts
     }
 
     /// <summary>
+    /// A series in Search, in the shows' Search cell: the cover 150 by 225 at the art's radius,
+    /// the title kept two lines high so every cell is one height, then the caption in haze.
+    /// <paramref name="placed"/> is a third line in silk, "In Home library"; with
+    /// <paramref name="placedRoom"/> a card without one keeps its room. The same menu and name as
+    /// <see cref="Card"/>.
+    /// </summary>
+    public static Button SearchCard(Ctx ctx, WorkTile tile, string? caption = null, string? placed = null, bool placedRoom = false, bool lists = true)
+    {
+        var width = SearchParts.CoverWidth;
+        var stack = new StackPanel { Width = width, Spacing = 2 };
+        var cover = Cover(ctx, tile.Cover, width, Art.Radius(width), title: tile.Title);
+        cover.Margin = new Thickness(0, 0, 0, 6);
+        stack.Children.Add(cover);
+        stack.Children.Add(new TextBlock
+        {
+            Text = tile.Title,
+            Style = Ui.Res<Style>("ShowTitleStyle"),
+            MaxLines = 2,
+            TextWrapping = TextWrapping.WrapWholeWords,
+            Height = States.CoverTitleHeight,
+        });
+        var said = caption ?? Line(tile);
+        var words = new TextBlock
+        {
+            Text = said,
+            Style = Ui.Res<Style>("HazeCaptionStyle"),
+            TextWrapping = tile.NotInSources ? TextWrapping.WrapWholeWords : TextWrapping.NoWrap,
+            MaxLines = tile.NotInSources ? 2 : 1,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+        };
+        if (tile.NewChapter)
+            words.Foreground = LiveBrush.Of("SilkBrush");
+        stack.Children.Add(words);
+        if (placed is not null || placedRoom)
+            stack.Children.Add(new TextBlock
+            {
+                Text = placed ?? "",
+                Style = Ui.Res<Style>("HazeCaptionStyle"),
+                Foreground = LiveBrush.Of("SilkBrush"),
+                FontWeight = FontWeights.SemiBold,
+                TextWrapping = TextWrapping.WrapWholeWords,
+                MaxLines = 2,
+                MinHeight = placedRoom ? 2 * ReadPlates.Lines(CaptionLine) : 0,
+            });
+        var button = new Button
+        {
+            Style = Ui.Res<Style>("HomeCardButtonStyle"),
+            Content = stack,
+            // The hover fill reaches past the art by the outset, which the style's margin takes back.
+            Width = width + 2 * HomeWording.HoverOutset,
+            Tag = tile.Work,
+        };
+        AutomationProperties.SetName(button, TileName(tile.Title, said, placed));
+        button.Click += (_, _) => ctx.Window.OpenSeries(tile.Work);
+        button.ContextFlyout = lists ? TileMenu(ctx, tile.Work) : DetailsMenu(ctx, tile.Work);
+        return button;
+    }
+
+    /// <summary>
     /// A result as a row for very large text: the cover beside the title, its line and where a
     /// source has it, all wrapping. The same menu and name as its card.
     /// </summary>
@@ -562,29 +621,34 @@ sealed partial class ReadShelf : StackPanel
 }
 
 /// <summary>
-/// A grid of covers that fills its width with as many cells of at least 128 as fit, 16 apart,
-/// as Library and Search draw them. Tab enters it once; the arrow keys move between covers.
+/// A grid of covers that fills its width with as many cells as fit, 16 apart: Library's cells
+/// are as wide as a row's covers, Search's are the shows' Search cells. Tab enters it once; the
+/// arrow keys move between covers.
 /// </summary>
 sealed partial class ReadGrid : ItemsRepeater
 {
-    public ReadGrid()
+    readonly bool search;
+
+    public ReadGrid(bool search = false)
     {
-        Layout = MakeLayout();
+        this.search = search;
+        Layout = MakeLayout(search);
         TabFocusNavigation = KeyboardNavigationMode.Once;
         XYFocusKeyboardNavigation = XYFocusKeyboardNavigationMode.Enabled;
     }
 
     /// <summary>
     /// The grid's layout: cells 132 wide that never stretch, so its covers match a row's, 16
-    /// apart and 24 between lines; with very large text, one result per line.
+    /// apart and 24 between lines; in Search the shows' grid, cells 150 wide, 16 apart and 26
+    /// between lines; with very large text, one result per line.
     /// </summary>
-    public static Layout MakeLayout() => ReadingParts.ListText
+    public static Layout MakeLayout(bool search = false) => ReadingParts.ListText
         ? new StackLayout { Spacing = 8 }
         : new UniformGridLayout
         {
-            MinItemWidth = ReadingParts.GridCell,
-            MinColumnSpacing = ReadingParts.GridGap,
-            MinRowSpacing = 24,
+            MinItemWidth = search ? SearchParts.CoverWidth : ReadingParts.GridCell,
+            MinColumnSpacing = search ? SearchParts.CoverGap : ReadingParts.GridGap,
+            MinRowSpacing = search ? SearchParts.LineGap : 24,
             ItemsStretch = UniformGridLayoutItemsStretch.None,
             ItemsJustification = UniformGridLayoutItemsJustification.Start,
         };
@@ -633,8 +697,8 @@ sealed partial class ReadGrid : ItemsRepeater
         shownLists = lists;
         var room = placed is not null && tiles.Any(t => placed(t.Work) is not null);
         if (list != Layout is StackLayout)
-            Layout = MakeLayout();
-        ItemTemplate = new TileFactory(ctx, placed, room, caption, lists, list, items);
+            Layout = MakeLayout(search);
+        ItemTemplate = new TileFactory(ctx, placed, room, caption, lists, list, search, items);
         items.Clear();
         foreach (var tile in tiles)
             items.Add(tile);
@@ -650,7 +714,7 @@ sealed partial class ReadGrid : ItemsRepeater
                 AutomationProperties.SetSizeOfSet(element, items.Count);
     }
 
-    sealed partial class TileFactory(Ctx ctx, Func<string, string?>? placed, bool room, Func<WorkTile, string?>? caption, bool lists, bool list, IList<WorkTile> items) : IElementFactory
+    sealed partial class TileFactory(Ctx ctx, Func<string, string?>? placed, bool room, Func<WorkTile, string?>? caption, bool lists, bool list, bool search, IList<WorkTile> items) : IElementFactory
     {
         public UIElement GetElement(ElementFactoryGetArgs args)
         {
@@ -658,6 +722,7 @@ sealed partial class ReadGrid : ItemsRepeater
                 return new Grid();
             FrameworkElement card = list
                 ? ReadingParts.RowCard(ctx, tile, placed?.Invoke(tile.Work), caption?.Invoke(tile), lists)
+                : search ? ReadingParts.SearchCard(ctx, tile, caption?.Invoke(tile), placed?.Invoke(tile.Work), room, lists)
                 : ReadingParts.Card(ctx, tile, ReadingParts.GridCell, placed: placed?.Invoke(tile.Work), placedRoom: room, caption: caption?.Invoke(tile), lists: lists);
             var at = items.IndexOf(tile);
             if (at >= 0)

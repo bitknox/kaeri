@@ -60,48 +60,7 @@ sealed partial class SearchFiltersPanel : Grid
     {
         this.current = current;
         this.change = change;
-        Background = Ui.Res<Brush>("GroundBrush");
-        BorderBrush = Ui.Res<Brush>("FaintRuleBrush");
-        BorderThickness = new Thickness(1, 0, 0, 0);
-        Width = PanelWidth;
-        RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-        RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-
-        // The panel's name, Reset and the close button, pinned above the scrolling filters.
-        var header = new Grid { ColumnSpacing = 8, Padding = new Thickness(16, 20, 12, 8) };
-        header.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        header.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        header.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        var title = Ui.Text(T.FiltersTitle, "SubtitleTextBlockStyle", wrap: false);
-        title.VerticalAlignment = VerticalAlignment.Center;
-        AutomationProperties.SetHeadingLevel(title, AutomationHeadingLevel.Level2);
-        header.Children.Add(title);
-        reset = new Button { Content = T.ActionReset, VerticalAlignment = VerticalAlignment.Center };
-        reset.Click += (_, _) => this.change(this.current().Cleared());
-        SetColumn(reset, 1);
-        header.Children.Add(reset);
-        closeButton = new Button
-        {
-            Content = new FontIcon { Glyph = "", FontSize = 12 },
-            Width = 32,
-            Height = 32,
-            Padding = new Thickness(0),
-            Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent),
-            BorderThickness = new Thickness(0),
-            VerticalAlignment = VerticalAlignment.Center,
-        };
-        AutomationProperties.SetName(closeButton, T.FiltersClose);
-        ToolTipService.SetToolTip(closeButton, T.TooltipWithKey(T.FiltersClose, "Esc"));
-        closeButton.Click += (_, _) => close();
-        SetColumn(closeButton, 2);
-        header.Children.Add(closeButton);
-        Children.Add(header);
-
-        var body = new StackPanel { Spacing = 24, Padding = new Thickness(16, 8, 16, 24) };
-        scroll = new ScrollViewer { Content = body, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollMode = ScrollMode.Disabled };
-        SmoothWheel.SetOn(scroll, true);
-        SetRow(scroll, 1);
-        Children.Add(scroll);
+        (var body, scroll, reset, closeButton) = Frame(this, () => this.change(this.current().Cleared()), close);
 
         // Genres: a click includes, a second leaves out, a third lets go; a right-click offers each.
         body.Children.Add(Section(T.FilterGenres, genres, Ui.Haze(T.FilterHintClick)));
@@ -197,8 +156,59 @@ sealed partial class SearchFiltersPanel : Grid
 
         body.Children.Add(Ui.Haze(T.FilterLiveNote));
 
-        // Esc inside the panel closes it, as on the Mac; the page's own Esc covers the rest.
-        KeyDown += (_, e) =>
+        Facets(ctx.Known.Facets);
+    }
+
+    /// <summary>
+    /// The panel's frame, which reading's filters panel shares: 340 wide on the ground with a
+    /// rule at its left; its name, Reset and the close button pinned above the scrolling filters;
+    /// Esc inside it closes it, as on the Mac. Gives the body the sections go in.
+    /// </summary>
+    internal static (StackPanel Body, ScrollViewer Scroll, Button Reset, Button Close) Frame(Grid panel, Action reset, Action close)
+    {
+        panel.Background = Ui.Res<Brush>("GroundBrush");
+        panel.BorderBrush = Ui.Res<Brush>("FaintRuleBrush");
+        panel.BorderThickness = new Thickness(1, 0, 0, 0);
+        panel.Width = PanelWidth;
+        panel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        panel.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+
+        var header = new Grid { ColumnSpacing = 8, Padding = new Thickness(16, 20, 12, 8) };
+        header.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        header.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        header.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        var title = Ui.Text(T.FiltersTitle, "SubtitleTextBlockStyle", wrap: false);
+        title.VerticalAlignment = VerticalAlignment.Center;
+        AutomationProperties.SetHeadingLevel(title, AutomationHeadingLevel.Level2);
+        header.Children.Add(title);
+        var resetButton = new Button { Content = T.ActionReset, VerticalAlignment = VerticalAlignment.Center };
+        resetButton.Click += (_, _) => reset();
+        SetColumn(resetButton, 1);
+        header.Children.Add(resetButton);
+        var closeButton = new Button
+        {
+            Content = new FontIcon { Glyph = "\uE711", FontSize = 12 },
+            Width = 32,
+            Height = 32,
+            Padding = new Thickness(0),
+            Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent),
+            BorderThickness = new Thickness(0),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        AutomationProperties.SetName(closeButton, T.FiltersClose);
+        ToolTipService.SetToolTip(closeButton, T.TooltipWithKey(T.FiltersClose, "Esc"));
+        closeButton.Click += (_, _) => close();
+        SetColumn(closeButton, 2);
+        header.Children.Add(closeButton);
+        panel.Children.Add(header);
+
+        var body = new StackPanel { Spacing = 24, Padding = new Thickness(16, 8, 16, 24) };
+        var scroll = new ScrollViewer { Content = body, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollMode = ScrollMode.Disabled };
+        SmoothWheel.SetOn(scroll, true);
+        SetRow(scroll, 1);
+        panel.Children.Add(scroll);
+
+        panel.KeyDown += (_, e) =>
         {
             if (e.Key == global::Windows.System.VirtualKey.Escape && !e.Handled)
             {
@@ -206,7 +216,7 @@ sealed partial class SearchFiltersPanel : Grid
                 close();
             }
         };
-        Facets(ctx.Known.Facets);
+        return (body, scroll, resetButton, closeButton);
     }
 
     /// <summary>The first control in the panel, for focus as it opens from the keyboard.</summary>
@@ -407,7 +417,7 @@ sealed partial class SearchFiltersPanel : Grid
     /// off, in, out. In takes the accent fill as a checked toggle does; out takes a vermilion tint
     /// and a minus. A right-click offers each choice.
     /// </summary>
-    ToggleButton PickChip(string name, Action<Pick> set)
+    internal static ToggleButton PickChip(string name, Action<Pick> set)
     {
         var mark = new FontIcon { FontSize = 10, Visibility = Visibility.Collapsed };
         var chip = Chip(new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Children = { mark, new TextBlock { Text = name } } });
@@ -426,7 +436,7 @@ sealed partial class SearchFiltersPanel : Grid
         return chip;
     }
 
-    static void ShowPick(ToggleButton chip, Pick pick)
+    internal static void ShowPick(ToggleButton chip, Pick pick)
     {
         chip.IsChecked = pick switch { Pick.Include => true, Pick.Exclude => null, _ => false };
         var mark = (FontIcon)chip.Tag;
@@ -448,7 +458,7 @@ sealed partial class SearchFiltersPanel : Grid
     }
 
     /// <summary>A choice that is on or off, as a chip.</summary>
-    static ToggleButton Toggle(WrapRow row, string name, Action toggle)
+    internal static ToggleButton Toggle(WrapRow row, string name, Action toggle)
     {
         var chip = Chip(new TextBlock { Text = name });
         AutomationProperties.SetName(chip, name);
@@ -544,10 +554,10 @@ sealed partial class SearchFiltersPanel : Grid
         return row;
     }
 
-    static ToggleSwitch Switch() => new() { OnContent = "", OffContent = "", MinWidth = 0 };
+    internal static ToggleSwitch Switch() => new() { OnContent = "", OffContent = "", MinWidth = 0 };
 
     /// <summary>A switch at the end of its row, its words at the start.</summary>
-    static Grid SwitchRow(string text, ToggleSwitch toggle)
+    internal static Grid SwitchRow(string text, ToggleSwitch toggle)
     {
         var row = new Grid { ColumnSpacing = 12 };
         row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -562,12 +572,12 @@ sealed partial class SearchFiltersPanel : Grid
         return row;
     }
 
-    static WrapRow Row() => new() { Gap = 6 };
+    internal static WrapRow Row() => new() { Gap = 6 };
 
-    static TextBlock Label(string text) => Ui.Haze(text);
+    internal static TextBlock Label(string text) => Ui.Haze(text);
 
     /// <summary>A section: its heading, then what it holds.</summary>
-    static StackPanel Section(string heading, params UIElement[] children)
+    internal static StackPanel Section(string heading, params UIElement[] children)
     {
         var section = new StackPanel { Spacing = 10 };
         var words = Ui.Text(heading, "BodyStrongTextBlockStyle");
