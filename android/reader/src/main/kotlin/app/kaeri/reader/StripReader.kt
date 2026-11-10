@@ -10,6 +10,14 @@ package app.kaeri.reader
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalDensity
+import app.kaeri.engine.core.ChapterId
+import app.kaeri.engine.model.CreditPage
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
@@ -20,7 +28,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -104,6 +112,11 @@ fun StripReader(
     gap: Dp = 0.dp,
     waiting: WaitingSlot = { page, long -> ImageWaiting(page, long) },
     failed: FailedSlot = { page, failure, retry -> PageFailed(page, failure, retry) },
+    /**
+     * Credit pages the engine took out of [chapter], drawn where they were: before the image they
+     * sat before, and after the last image once those at the end are shown.
+     */
+    credits: (@Composable (chapter: ChapterId, pages: List<CreditPage>) -> Unit)? = null,
 ) {
     val story = state.leaves.filter { !it.endPage }
     val end = state.leaves.lastOrNull()?.takeIf { it.endPage }
@@ -171,6 +184,26 @@ fun StripReader(
 
     BoxWithConstraints(modifier.fillMaxSize().pointerInput(Unit) { detectTapGestures { onTap() } }) {
         val screen = maxHeight
+        // Show on a divider or the end page puts the pages skipped at the end back above it: with
+        // the divider or the end at the top, the scroll moves up onto them.
+        val column = minOf(this.maxWidth, maxWidth)
+        val density = LocalDensity.current
+        val endShown = state.revealed.filter { key -> state.credits[key.chapter].orEmpty().any { it.page == key.page && it.atEnd } }.toSet()
+        var endBefore by remember { mutableStateOf(endShown) }
+        LaunchedEffect(endShown) {
+            val added = endShown - endBefore
+            endBefore = endShown
+            if (added.isEmpty() || credits == null) return@LaunchedEffect
+            val width = with(density) { column.toPx() }
+            val height = added.sumOf { key ->
+                val page = state.credits[key.chapter].orEmpty().first { it.page == key.page }
+                val w = (page.file.crop?.width ?: page.file.width).toFloat()
+                val h = (page.file.crop?.height ?: page.file.height).toFloat()
+                (if (w > 0f) width * h / w else width * 1.5f).toDouble() + with(density) { 44.dp.toPx() }
+            }.toFloat()
+            val top = list.layoutInfo.visibleItemsInfo.firstOrNull()?.key
+            if (top is String && (top.startsWith("divider ") || top == "end")) list.animateScrollBy(-height)
+        }
         LazyColumn(
             state = list,
             modifier = Modifier.fillMaxSize(),
@@ -180,14 +213,14 @@ fun StripReader(
         ) {
             val into = state.view?.chapter
             if (previous != null && into != null && divider != null) {
-                images(previous, above, images, {}, {}, maxWidth, waiting, failed)
+                images(previous, above, images, {}, {}, maxWidth, waiting, failed, state, credits)
                 item(key = dividerKey(into)) {
                     Box(Modifier.widthIn(max = maxWidth).fillMaxWidth().height(StripDividerHeight)) { divider(into) }
                 }
                 // Room under the divider while this chapter's images come, so the scroll stays put.
                 if (story.isEmpty()) item(key = ROOM) { Box(Modifier.fillMaxWidth().height(screen)) }
             }
-            images(state, story, images, onMissing, onRetry, maxWidth, waiting, failed)
+            images(state, story, images, onMissing, onRetry, maxWidth, waiting, failed, state, credits)
             when {
                 story.isEmpty() -> {}
                 next != null && divider != null -> {
@@ -218,24 +251,40 @@ private fun LazyListScope.images(
     maxWidth: Dp,
     waiting: WaitingSlot,
     failed: FailedSlot,
+    /** The open state, which holds the credit pages of this chapter and the one above. */
+    open: ReaderState,
+    credits: (@Composable (chapter: ChapterId, pages: List<CreditPage>) -> Unit)?,
 ) {
     val chapter = state.chapter
-    items(story, key = { leaf -> "$chapter ${leaf.index}" }) { leaf ->
+    // The credit pages by the image they sat before; those at the end after the last image, and
+    // only once shown, since the divider or the end page names them while skipped.
+    val groups = if (credits == null || chapter == null) emptyMap() else open.chapterCredits(chapter).groupBy { credit ->
+        val anchor = open.anchor(credit, chapter)
+        if (credit.atEnd) maxOf(anchor, story.size) else anchor
+    }
+    val lastIndex = story.lastIndex
+    itemsIndexed(story, key = { _, leaf -> "$chapter ${leaf.index}" }) { at, leaf ->
         val part = leaf.parts.firstOrNull()
         val ratio = state.ratioOf(part)
         // A row on screen with no file asks for its image; the session asks once a layout.
         val missing = part != null && state.landed(part) == null && state.failures[part.page] == null
         LaunchedEffect(part?.page, missing) { if (missing && part != null) onMissing(part) }
-        Box(Modifier.widthIn(max = maxWidth).fillMaxWidth().aspectRatio(ratio)) {
-            LeafView(
-                leaf = leaf,
-                state = state,
-                images = images,
-                onMissing = onMissing,
-                onRetry = onRetry,
-                waiting = waiting,
-                failed = failed,
-            )
+        val before = groups[at]
+        val after = if (at == lastIndex) groups.filterKeys { it >= story.size }.values.flatten().filter { open.isRevealed(it, chapter ?: "") } else emptyList()
+        Column(Modifier.widthIn(max = maxWidth).fillMaxWidth()) {
+            if (before != null && chapter != null) credits?.invoke(chapter, before)
+            Box(Modifier.fillMaxWidth().aspectRatio(ratio)) {
+                LeafView(
+                    leaf = leaf,
+                    state = state,
+                    images = images,
+                    onMissing = onMissing,
+                    onRetry = onRetry,
+                    waiting = waiting,
+                    failed = failed,
+                )
+            }
+            if (after.isNotEmpty() && chapter != null) credits?.invoke(chapter, after)
         }
     }
 }

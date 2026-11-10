@@ -3037,6 +3037,10 @@ object Strings {
     fun einkContentsReading(context: Context): String =
         context.getString(R.string.eink_contents_reading)
 
+    /** What TalkBack says the line of skipped credit pages does, after "Double-tap to": an imperative, as Android's click labels are. */
+    fun readerCreditShowAction(context: Context): String =
+        context.getString(R.string.reader_credit_show_action)
+
     /** Line under "You're offline" on reading's Home when it has never loaded, so nothing is kept to show. It has an Open Downloads button. */
     fun readHomeOfflineLine(context: Context): String =
         context.getString(R.string.read_home_offline_line)
@@ -3124,6 +3128,14 @@ object Strings {
     /** Downloads' empty line for a person who watches and reads, under "No downloads". */
     fun readDownloadsEmptyBoth(context: Context): String =
         context.getString(R.string.read_downloads_empty_both)
+
+    /** The head of the group menu on a large screen, over its choices: the source the groups are in. */
+    fun groupMenuIn(context: Context, source: String): String =
+        context.getString(R.string.group_menu_in, source)
+
+    /** What TalkBack says the Group row does, after "Double-tap to": an imperative, as Android's click labels are. */
+    fun seriesGroupAction(context: Context): String =
+        context.getString(R.string.series_group_action)
 
     /** Line under Notifications in the Settings list: chapter notifications are on. */
     fun settingsSummaryChaptersOn(context: Context): String =

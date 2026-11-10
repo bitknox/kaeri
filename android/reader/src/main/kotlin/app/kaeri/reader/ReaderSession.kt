@@ -9,6 +9,7 @@ import app.kaeri.engine.core.WorkId
 import app.kaeri.engine.model.ChapterRow
 import app.kaeri.engine.model.ChapterVersion
 import app.kaeri.engine.model.Command
+import app.kaeri.engine.model.CreditPage
 import app.kaeri.engine.model.Event
 import app.kaeri.engine.model.Leaf
 import app.kaeri.engine.model.LeafPart
@@ -118,6 +119,21 @@ data class ReaderState(
     val previous: ReaderState? = null,
     /** The other sources a failed chapter can be read from; null until the engine answers. */
     val sources: List<ChapterVersion>? = null,
+    /**
+     * The credit pages the engine left out, by chapter: the open one's, and those of the chapter a
+     * strip flowed on from, which stays above it.
+     */
+    val credits: Map<ChapterId, List<CreditPage>> = emptyMap(),
+    /** The open chapter's parts, when its source lists it in parts the reader runs through as one. */
+    val parts: ReaderParts? = null,
+    /** The credit pages brought back. They stay until their chapter closes. */
+    val revealed: Set<CreditKey> = emptySet(),
+    /** The credit page the paged reader shows over its leaf, by its page in the chapter. */
+    val onCredit: UInt? = null,
+    /** Not a credit page was used: the page is kept once its Undo has run out. */
+    val keeping: CreditKeep? = null,
+    /** A keep the engine has heard, until the chapter comes laid out with the page in it. */
+    val committed: CreditKeep? = null,
 ) {
     val session: ULong? get() = view?.session
     val chapter: ChapterId? get() = view?.chapter?.id
@@ -186,6 +202,10 @@ class ReaderSession(private val send: (Command) -> Unit) {
     /** Where the reader is: the chapter on screen and the page, strip spot or text place shown. */
     private var here: ReadPlace? = null
     private val askedPages = mutableSetOf<PageKey>()
+    /** The leaf last reported shown, so a new layout of the same place is not a turn. */
+    private var shownLeaf: Int? = null
+    /** A kept page's chapter is laid out again with it: the pages after it move up one. */
+    private var relayKeep: CreditKeep? = null
 
     /** Hear the store's reader events until what is returned is called. */
     fun bind(store: AppStore): () -> Unit = store.listenToReading(::apply)
@@ -202,7 +222,9 @@ class ReaderSession(private val send: (Command) -> Unit) {
         startAt = null
         shownPage = null
         here = null
+        shownLeaf = null
         askedPages.clear()
+        commitKeep()
         _state.value = ReaderState(
             opening = true,
             openingChapter = state.value.openingChapter?.takeIf { it.id == chapter },
@@ -226,6 +248,12 @@ class ReaderSession(private val send: (Command) -> Unit) {
         val chapter = now.chapter ?: return
         shownPage = now.leaves.getOrNull(leaf)?.parts?.firstOrNull()?.page ?: shownPage
         here = here?.takeIf { it.chapter == chapter }?.copy(page = shownPage, strip = null)
+        // Off the leaf a credit page shows over, the credit page goes. A page kept from it waits
+        // on: its Undo outlasts the turn, and the engine hears when it runs out or the chapter closes.
+        val moved = shownLeaf != null && shownLeaf != leaf
+        shownLeaf = leaf
+        val credit = now.shownCredit
+        if (moved && credit != null && now.creditLeaf(credit) != leaf) showCredit(null)
         reader(ReaderCommand.Shown(session, chapter, leaf.toUInt(), how))
         val notice = now.notice
         if (notice != null && notice.notice.lastsMs == 0u && how != TurnHow.JUMP && how != TurnHow.PLACED) dismissNotice(notice.id)
@@ -277,6 +305,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
     }
 
     fun openChapter(chapter: ChapterId) {
+        commitKeep()
         val now = state.value
         val session = now.session ?: return
         awaiting = now.view?.next?.takeIf { it.id == chapter } ?: now.volumes.flatMap { it.chapters }.firstOrNull { it.id == chapter }
@@ -385,6 +414,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
     fun place(): ReadPlace? = here
 
     fun close() {
+        commitKeep()
         val session = state.value.session ?: return
         reader(ReaderCommand.Close(session))
     }
@@ -399,6 +429,120 @@ class ReaderSession(private val send: (Command) -> Unit) {
     fun jumped(id: Long) {
         val now = state.value
         if (now.jump?.id == id) _state.value = now.copy(jump = null)
+    }
+
+    // Credit pages (what follows from them is in ReaderCredits.kt).
+
+    /**
+     * The paged reader shows the credit page [page] over its leaf, or the leaf alone with null. A
+     * page kept waits out its Undo across turns.
+     */
+    fun showCredit(page: UInt?) {
+        if (state.value.onCredit != page) _state.value = state.value.copy(onCredit = page)
+    }
+
+    /**
+     * Page 1's line was tapped: the credit pages it names come back. In pages the first of them
+     * is returned, for the reader to show by the same crossfade as a turn.
+     */
+    fun showStartCredits(): CreditStep.Credit? {
+        val now = state.value
+        val chapter = now.chapter ?: return null
+        val group = now.startSkipped
+        val first = group.firstOrNull() ?: return null
+        val revealed = now.copy(revealed = now.revealed + group.map { CreditKey(chapter, it.page) })
+        _state.value = revealed
+        return if (now.paged) CreditStep.Credit(first.page, revealed.creditLeaf(first)) else null
+    }
+
+    /**
+     * Show on the end page, or on a strip's divider: the pages skipped at the end of [chapter]
+     * come back. In pages, the first of them is returned to show.
+     */
+    fun showEndCredits(chapter: ChapterId? = null): CreditStep.Credit? {
+        val now = state.value
+        val id = chapter ?: now.chapter ?: return null
+        val group = now.endSkipped(id)
+        val first = group.firstOrNull() ?: return null
+        val revealed = now.copy(revealed = now.revealed + group.map { CreditKey(id, it.page) })
+        _state.value = revealed
+        return if (now.paged && id == now.chapter) CreditStep.Credit(first.page, revealed.creditLeaf(first)) else null
+    }
+
+    /** A strip's line brought the pages it names back in place. */
+    fun reveal(pages: List<CreditPage>, chapter: ChapterId) {
+        val now = state.value
+        _state.value = now.copy(revealed = now.revealed + pages.map { CreditKey(chapter, it.page) })
+    }
+
+    /** Not a credit page, for [credit] of [chapter]: the credit page on screen when none is named. */
+    fun keepCredit(credit: CreditPage? = null, chapter: ChapterId? = null) {
+        val now = state.value
+        val page = credit ?: now.shownCredit ?: return
+        val id = chapter ?: now.chapter ?: return
+        if (now.keeping != null) commitKeep()
+        val after = state.value
+        // The page counts from now; the engine hears once the Undo has run out.
+        _state.value = after.copy(keeping = CreditKeep(id, page, after.anchor(page, id)))
+    }
+
+    /** Undo, while the kept page waits: it is a credit page again, still shown. */
+    fun undoKeep() {
+        val now = state.value
+        if (now.keeping != null) _state.value = now.copy(keeping = null)
+    }
+
+    /**
+     * The kept page goes to the engine, which keeps it in the series from now on and lays the
+     * chapter out again with it.
+     */
+    fun commitKeep() {
+        val now = state.value
+        val keep = now.keeping ?: return
+        _state.value = now.copy(keeping = null, committed = keep)
+        val session = now.session ?: return
+        relayKeep = keep
+        reader(ReaderCommand.NotACreditPage(session, keep.credit.fingerprint))
+    }
+
+    /**
+     * The chapter came laid out again. When it is the layout with a kept page, the pages from that
+     * page on move up one, so what has landed keeps its place, and the screen stays on the page it
+     * showed: the kept page itself when it was on screen.
+     */
+    private fun relaidWithKept(placed: ReaderState, before: ReaderState): ReaderState {
+        val keep = relayKeep?.takeIf { it.chapter == placed.chapter } ?: return placed
+        relayKeep = null
+        val anchor = keep.anchor.toUInt()
+        fun moved(files: Map<PageKey, PageFile>) = files.mapKeys { (key, _) -> if (key.page >= anchor) key.copy(page = key.page + 1u) else key }
+        val held = moved(before.held + before.files) + (PageKey(anchor) to keep.credit.file)
+        val pictures = placed.leaves.flatMap { it.parts }.filter { it.kind != PageKind.STRIP_CUT }.map { PageKey(it.page, it.half) }.toSet()
+        val strip = !before.paged
+        val here = this.here
+        if (strip) {
+            val at = here?.strip
+            if (at != null && at.image > anchor) {
+                val image = at.image + 1u
+                this.here = here.copy(page = image, strip = at.copy(image = image))
+                return placed.copy(
+                    held = held.filterKeys { it in pictures },
+                    failures = emptyMap(),
+                    revealed = placed.revealed - CreditKey(keep.chapter, keep.credit.page),
+                    jump = ReaderJump(placed.leafOf(image) ?: 0, at.copy(image = image), ++ids),
+                )
+            }
+        } else {
+            shownPage = when {
+                before.onCredit == keep.credit.page -> anchor
+                else -> shownPage?.let { if (it >= anchor) it + 1u else it }
+            }
+        }
+        return placed.copy(
+            held = held.filterKeys { it in pictures },
+            failures = emptyMap(),
+            revealed = placed.revealed - CreditKey(keep.chapter, keep.credit.page),
+            onCredit = if (before.onCredit == keep.credit.page) null else placed.onCredit,
+        )
     }
 
     // What the engine says.
@@ -457,6 +601,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
                 val previous = flowFrom?.takeIf { flowTo == event.v1.chapter.id }
                 flowTo = null
                 flowFrom = null
+                shownLeaf = null
                 ReaderState(
                     view = event.v1,
                     settings = event.v1.settings ?: now.settings,
@@ -465,6 +610,10 @@ class ReaderSession(private val send: (Command) -> Unit) {
                     volumes = now.volumes,
                     layout = now.layout + 1,
                     previous = previous,
+                    // A chapter opened again skips its credit pages again; a strip that flowed on
+                    // keeps those of the chapter above.
+                    credits = if (previous != null) now.credits else emptyMap(),
+                    revealed = if (previous != null) now.revealed else emptySet(),
                     // A novel's text comes after this; the wait it shows counts from the ask.
                     openingSince = now.openingSince,
                 )
@@ -480,7 +629,21 @@ class ReaderSession(private val send: (Command) -> Unit) {
                         .map { PageKey(it.page, it.half) }.toSet()
                     (now.held + now.files).filterKeys { it in pictures }
                 }
-                val placed = now.copy(leaves = event.leaves, layout = now.layout + 1, files = emptyMap(), held = held)
+                // The credit pages and parts come again after every layout; until they do, those of
+                // the last layout stay, so a turn of the device does not drop them for a moment. A
+                // page just kept is no longer one of them.
+                val kept = relayKeep?.takeIf { it.chapter == event.chapter }?.credit?.fingerprint
+                val credits = now.credits[event.chapter]?.filter { it.fingerprint != kept }
+                val laid = now.copy(
+                    leaves = event.leaves,
+                    layout = now.layout + 1,
+                    files = emptyMap(),
+                    held = held,
+                    credits = if (credits == null) now.credits else now.credits + (event.chapter to credits),
+                    committed = null,
+                )
+                val placed = relaidWithKept(laid, now)
+                if (placed.jump != null && placed.jump != now.jump) return run { _state.value = placed }
                 val start = startAt?.also { startAt = null }
                 // Flowed into from above: the scroll is already where the chapter starts.
                 if (start != null && now.previous != null) return run { _state.value = placed }
@@ -535,9 +698,16 @@ class ReaderSession(private val send: (Command) -> Unit) {
             is ReaderEvent.Closed -> if (ours(event.session)) now.copy(closed = true) else return
             // The page between chapters does not show the server's answer yet.
             is ReaderEvent.ProgressSent -> return
-            // The skipped credit pages' line and the part ticks come with their boards.
-            is ReaderEvent.CreditPages -> return
-            is ReaderEvent.ChapterParts -> return
+            is ReaderEvent.CreditPages -> {
+                if (!ours(event.session)) return
+                // A page brought back that is no longer skipped is no longer on screen as a credit page.
+                val off = event.chapter == now.chapter && now.onCredit != null && event.pages.none { it.page == now.onCredit }
+                now.copy(credits = now.credits + (event.chapter to event.pages), onCredit = if (off) null else now.onCredit)
+            }
+            is ReaderEvent.ChapterParts -> {
+                if (!ours(event.session) || event.chapter != now.chapter) return
+                now.copy(parts = ReaderParts(event.parts, event.total, event.missing))
+            }
         }
     }
 

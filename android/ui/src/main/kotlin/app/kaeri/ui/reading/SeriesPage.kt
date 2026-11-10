@@ -63,13 +63,20 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.kaeri.design.Motion
 import app.kaeri.design.ObiSilk
 import app.kaeri.design.ShowTitle
+import app.kaeri.design.SwapFade
 import app.kaeri.engine.core.ChapterId
 import app.kaeri.engine.core.Medium
 import app.kaeri.engine.core.WorkId
@@ -104,7 +111,7 @@ import kotlinx.coroutines.delay
 
 /**
  * What the screenshots open on the series page once it has loaded: a sheet or menu by name
- * (chapter, read-from, tracking, read-again, send, where-stop, choose, status, remove, download),
+ * (chapter, read-from, group, tracking, read-again, send, where-stop, choose, status, remove, download),
  * set by the JVM shots and the Fixtures app's `series` extra.
  */
 object SeriesShots {
@@ -154,6 +161,8 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
     var statusOpen by remember { mutableStateOf(false) }
     var downloadOpen by remember { mutableStateOf(false) }
     var moreOpen by remember { mutableStateOf(false) }
+    // The group picker: a menu from Change on a tablet, a sheet on a phone, a page on e-ink.
+    var groupOpen by remember { mutableStateOf(false) }
     // The order last chosen, on any series: the engine sends chapters in reading order.
     var newestFirst by remember { mutableStateOf(ChapterOrder.newestFirst(context)) }
     // Volumes the person opened or closed; the others are open while not all read.
@@ -168,6 +177,7 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
         when (shot) {
             "chapter" -> (rows.firstOrNull { it.versions > 1u } ?: rows.lastOrNull())?.let { sheet = SeriesSheet.Chapter(it.id) }
             "read-from" -> sheet = SeriesSheet.ReadFrom
+            "group" -> groupOpen = true
             "tracking" -> sheet = SeriesSheet.Tracking
             "read-again" -> sheet = SeriesSheet.ReadAgain
             "send" -> sheet = SeriesSheet.Send(volumes.downloaded().map { it.id }.ifEmpty { rows.takeLast(3).map { it.id } })
@@ -302,7 +312,14 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
                         onSend = { sheet = SeriesSheet.Send(it) },
                     )
                     Spacer(Modifier.height(12.dp))
-                    SeriesPanel(series, onReadFrom = { sheet = SeriesSheet.ReadFrom }, onTracking = { sheet = SeriesSheet.Tracking })
+                    SeriesPanel(
+                        series,
+                        onReadFrom = { sheet = SeriesSheet.ReadFrom },
+                        onTracking = { sheet = SeriesSheet.Tracking },
+                        groupMenu = wide && LocalEinkLayout.current == null,
+                        groupOpen = groupOpen,
+                        onGroup = { groupOpen = it },
+                    )
                     if (series.askWhereStopped != null) {
                         WhereStopNote(series, onAsk = { sheet = SeriesSheet.WhereStop }, modifier = Modifier.padding(top = 16.dp))
                     }
@@ -357,6 +374,13 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
         }
     }
 
+    val edition = series?.edition
+    if (groupOpen && edition != null && edition.groups.size > 1) {
+        when {
+            LocalEinkLayout.current != null -> EinkGroupPage(work, series.titles.display, edition) { groupOpen = false }
+            !wide -> GroupSheet(work, edition) { groupOpen = false }
+        }
+    }
     when (val open = sheet) {
         null -> {}
         is SeriesSheet.Chapter -> {
@@ -546,7 +570,15 @@ private fun MenuButton(text: String, enabled: Boolean, onClick: () -> Unit) {
  * it, and, with Both, the same story as a show.
  */
 @Composable
-private fun SeriesPanel(series: SeriesView, onReadFrom: () -> Unit, onTracking: () -> Unit) {
+private fun SeriesPanel(
+    series: SeriesView,
+    onReadFrom: () -> Unit,
+    onTracking: () -> Unit,
+    /** The group picker is a menu from Change here, as on a tablet. */
+    groupMenu: Boolean = false,
+    groupOpen: Boolean = false,
+    onGroup: (Boolean) -> Unit = {},
+) {
     val context = LocalContext.current
     val store = LocalAppStore.current
     val navigator = LocalNavigator.current
@@ -565,6 +597,27 @@ private fun SeriesPanel(series: SeriesView, onReadFrom: () -> Unit, onTracking: 
                 Strings.seriesChange(context),
                 onReadFrom,
             )
+            // Whose version of each chapter, inside the source: only when it has a choice.
+            if (edition.groups.size > 1) {
+                PanelRule()
+                Box {
+                    PanelRow(
+                        Strings.seriesGroup(context),
+                        GroupWords.inUse(edition),
+                        Strings.seriesChange(context),
+                        onClick = { onGroup(true) },
+                        tail = GroupWords.why(context, edition),
+                        actionHint = Strings.seriesGroupAction(context),
+                    )
+                    if (groupMenu) {
+                        Box(Modifier.align(Alignment.TopEnd)) {
+                            Menu(expanded = groupOpen, onDismissRequest = { onGroup(false) }) {
+                                GroupMenuRows(series.work, edition) { onGroup(false) }
+                            }
+                        }
+                    }
+                }
+            }
         }
         val first = followed.firstOrNull()
         if (first != null) {
@@ -607,23 +660,46 @@ private fun PanelRule() {
     HorizontalDivider(color = ObiSilk.FaintRule)
 }
 
-/** A panel row: its label small in haze over its value, and an action in silk at the end. */
+/**
+ * A panel row: its label small in haze over its value, and an action in silk at the end,
+ * underlined on e-ink. [tail] follows the value in haze: "· most chapters".
+ */
 @Composable
-private fun PanelRow(label: String, value: String, action: String?, onClick: () -> Unit) {
+private fun PanelRow(label: String, value: String, action: String?, onClick: () -> Unit, tail: String? = null, actionHint: String? = null) {
+    val haze = MaterialTheme.colorScheme.onSurfaceVariant
+    val eink = LocalEinkLayout.current != null
     Row(
         Modifier
             .fillMaxWidth()
             .heightIn(min = 64.dp)
-            .clickable(onClick = onClick)
+            .clickable(onClickLabel = actionHint, onClick = onClick)
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(Modifier.weight(1f)) {
-            Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(value, style = MaterialTheme.typography.bodyLarge)
+        // TalkBack hears the label, the value and the tail, with a comma for the dot.
+        val spoken = listOf(label, value, tail).filter { !it.isNullOrBlank() }.joinToString(", ") // i18n-skip: a separator
+        Column(Modifier.weight(1f).clearAndSetSemantics { contentDescription = spoken }) {
+            Text(label, style = MaterialTheme.typography.bodySmall, color = haze)
+            val words = if (tail == null) {
+                AnnotatedString(value)
+            } else {
+                buildAnnotatedString {
+                    append(value)
+                    withStyle(SpanStyle(color = haze)) { append(" · $tail") } // i18n-skip: a separator
+                }
+            }
+            // A new value crossfades, as a group picked; e-ink swaps it at once.
+            val text = @Composable { shown: AnnotatedString -> Text(shown, style = MaterialTheme.typography.bodyLarge) }
+            if (eink) text(words) else SwapFade(words, animationSpec = Motion.fadeIn()) { text(it) }
         }
         if (action != null) {
-            Text(action, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(start = 12.dp))
+            Text(
+                action,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+                textDecoration = if (eink) TextDecoration.Underline else null,
+                modifier = Modifier.padding(start = 12.dp),
+            )
         }
     }
 }

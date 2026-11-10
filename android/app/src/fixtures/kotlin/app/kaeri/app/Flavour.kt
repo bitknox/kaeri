@@ -36,7 +36,13 @@
 //   medium    read, watch or both: what Kaeri is for, chosen as Settings would once the engine is up
 //             (the reading scenes); page=read/series/a%3A900301 opens a series' page over Read
 //   series    a sheet or menu the series' page opens once it has loaded: chapter, read-from,
-//             tracking, read-again, send, where-stop, choose, status or download
+//             group, tracking, read-again, send, where-stop, choose, status or download
+//   credits   start, end, both or parts: each layout of the chapter the reader opens comes with a
+//             credit page skipped at its start, its end or both, or in two parts (CreditsStage)
+//   creditshot what the reader shows once they have come: line, chrome, shown, shownchrome, kept,
+//             parts or end (CreditShot)
+//   groups    set: the series' source lists three groups, and its rows show a chapter in parts
+//             and chapters from other groups (GroupsStage)
 //   party     a watch party on the testing engine's fake server, for the chat board (PartyShot):
 //             chatline, chatbusy, chatreact, chatfield, chatoff, chatfail, chatmute, chathidden,
 //             chatshort, chatloop, lobby or bar; with media=<path> the player plays that file.
@@ -266,6 +272,8 @@ internal object Flavour {
         intent.getStringExtra("discovery")?.let { state ->
             if (!app.kaeri.store.ReadDiscoveryStage.stage(store, state)) Log.w(KaeriApp.TAG, "no discovery state named $state: ${app.kaeri.store.ReadDiscoveryStage.STATES.joinToString()}")
         }
+        // groups=set: the series' source lists three groups, and its rows show parts and other groups.
+        if (intent.getStringExtra("groups") == "set") app.kaeri.store.GroupsStage.stage(store)
         intent.getStringExtra("sync")?.let { state ->
             if (!app.kaeri.store.FixtureSync.stage(store, state)) Log.w(KaeriApp.TAG, "no sync state named $state: ${app.kaeri.store.FixtureSync.STATES.joinToString()}")
         }
@@ -384,6 +392,12 @@ internal object Flavour {
         StartReplay.from(context, store, player, intent)
         if (marked) return
         marked = true
+        intent.getStringExtra("credits")?.let { what ->
+            val scene = intent.getStringExtra("scene")?.let(FixtureScene::named)
+            val grey = scene == FixtureScene.EINK_GREY || intent.getStringExtra("eink") == "1"
+            if (!app.kaeri.store.CreditsStage.stage(context, store, what, grey)) Log.w(KaeriApp.TAG, "credits takes ${app.kaeri.store.CreditsStage.STATES.joinToString()}, not $what")
+        }
+        app.kaeri.reader.CreditShot.step = intent.getStringExtra("creditshot")
         openReaderScene(intent)
         if (intent.getStringExtra("shell") == "eink") {
             // The panel's question answered as a person would: e-ink, in greys.

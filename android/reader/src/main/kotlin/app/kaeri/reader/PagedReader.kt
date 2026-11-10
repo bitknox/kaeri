@@ -7,6 +7,11 @@
 
 package app.kaeri.reader
 
+import androidx.compose.runtime.key
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import app.kaeri.engine.model.ReadingFailure
+import kotlinx.coroutines.delay
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animate
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -32,6 +37,12 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
+import androidx.compose.runtime.produceState
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Color
+import app.kaeri.engine.model.CreditPage
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -119,14 +130,49 @@ class PagedReaderState(initial: Int = 0) {
     /** The last leaf is the end page, which a forward turn crosses from. */
     internal var endLast = false
 
+    /**
+     * Credit pages brought back lie between leaves: a turn steps through them first. True when
+     * this turn was one of those steps.
+     */
+    internal var step: (forward: Boolean, how: TurnHow) -> Boolean = { _, _ -> false }
+
+    /** The credit page drawn over the leaf being turned away from, while it fades out under the new one. */
+    internal var underCredit by mutableStateOf<CreditPage?>(null)
+
+    /** A credit step by swipe has already slid into place: the credit page shows without its fade. */
+    internal var creditSlid = false
+
+    /**
+     * Show [step]: the credit page over its leaf, turning to that leaf first when it is another,
+     * or the leaf alone. [onCredit] tells the session which credit page is on screen.
+     */
+    fun show(step: CreditStep, how: TurnHow, onCredit: (UInt?) -> Unit, shownCredit: CreditPage?) {
+        when (step) {
+            is CreditStep.Credit -> {
+                if (step.leaf != leaf) {
+                    underCredit = shownCredit
+                    go(step.leaf, how)
+                }
+                onCredit(step.page)
+            }
+            is CreditStep.Leaf -> {
+                onCredit(null)
+                if (step.leaf != leaf) {
+                    underCredit = shownCredit
+                    go(step.leaf, how)
+                }
+            }
+        }
+    }
+
     /** A forward turn on the end page: on to the next chapter. False when there is none. */
     internal var pastEnd: () -> Boolean = { false }
 
     /** The next leaf; on the end page, the next chapter, as its hint says. */
     fun forward(how: TurnHow = TurnHow.TURN): Boolean =
-        if (endLast && leaf >= count - 1) pastEnd() else go(leaf + 1, how)
+        step(true, how) || if (endLast && leaf >= count - 1) pastEnd() else go(leaf + 1, how)
 
-    fun back(how: TurnHow = TurnHow.TURN) = go(leaf - 1, how)
+    fun back(how: TurnHow = TurnHow.TURN) = step(false, how) || go(leaf - 1, how)
 }
 
 @Composable
@@ -161,6 +207,10 @@ fun PagedReader(
     failed: FailedSlot = { page, failure, retry -> PageFailed(page, failure, retry) },
     /** The Fit setting: "screen", or "width" or "height" to fill that side and pan along the other. */
     fit: String? = null,
+    /** The credit page on screen changed, by a turn through those brought back; null for none. */
+    onCredit: (UInt?) -> Unit = {},
+    /** What a credit page is drawn on, so the leaf under it does not show through. */
+    creditGround: Color = Color.Black,
 ) {
     val leaves = state.leaves
     pager.count = leaves.size
@@ -171,6 +221,14 @@ fun PagedReader(
     val scope = rememberCoroutineScope()
     val rtl = direction.rightToLeft
     val shown by rememberUpdatedState(onShown)
+    val latest by rememberUpdatedState(state)
+    val creditNow by rememberUpdatedState(onCredit)
+    pager.step = { forward, how ->
+        val now = latest
+        val step = now.creditStep(forward, pager.leaf)
+        if (step != null) pager.show(step, how, creditNow, now.shownCredit)
+        step != null
+    }
 
     // The engine's own moves: the start place, Back to page, a place another device reached.
     // A new chapter's leaves count afresh: the old leaf number names another page there, so it is
@@ -207,6 +265,7 @@ fun PagedReader(
         if (pager.under == null) return@LaunchedEffect
         if (!motion) {
             pager.under = null
+            pager.underCredit = null
             return@LaunchedEffect
         }
         val turn: suspend () -> Unit = {
@@ -217,7 +276,34 @@ fun PagedReader(
         }
         if (removed) atFullSpeed { turn() } else turn()
         pager.under = null
+        pager.underCredit = null
     }
+
+    // The credit page over the leaf comes and goes by the same crossfade as a turn, or at once
+    // with motion off, and at once when a turn of the leaf already fades it in.
+    val credit = state.shownCredit
+    var heldCredit by remember { mutableStateOf<CreditPage?>(null) }
+    var leavingCredit by remember { mutableStateOf<CreditPage?>(null) }
+    val creditFade = remember { Animatable(0f) }
+    LaunchedEffect(credit?.page, state.chapter) {
+        val before = heldCredit
+        val atOnce = !motion || pager.under != null || pager.creditSlid
+        pager.creditSlid = false
+        if (credit == null) {
+            if (before == null) return@LaunchedEffect
+            if (atOnce) creditFade.snapTo(0f) else creditFade.animateTo(0f, Motion.quick())
+            heldCredit = null
+            return@LaunchedEffect
+        }
+        heldCredit = credit
+        if (atOnce) return@LaunchedEffect creditFade.snapTo(1f)
+        // From one credit page to the next over the same leaf: the old one under the new one.
+        leavingCredit = before?.takeIf { it.page != credit.page }
+        creditFade.snapTo(if (leavingCredit != null) 0f else creditFade.value)
+        creditFade.animateTo(1f, Motion.quick())
+        leavingCredit = null
+    }
+
 
     var drag by remember { mutableFloatStateOf(0f) }
     var settling by remember { mutableStateOf<Job?>(null) }
@@ -252,6 +338,24 @@ fun PagedReader(
         fun settle(velocity: Float) {
             val target = neighbour(drag)
             val far = abs(drag) > width * 0.25f || abs(velocity) > flick && (velocity > 0) == (drag > 0)
+            // A swipe across credit pages brought back steps through them as a tap would.
+            val step = if (far) latest.creditStep((drag > 0) == rtl, pager.leaf) else null
+            if (step != null) {
+                if (!motion) {
+                    drag = 0f
+                    pager.show(step, TurnHow.SWIPE, creditNow, latest.shownCredit)
+                    return
+                }
+                val end = if (drag > 0) width else -width
+                settling = scope.launch {
+                    animate(drag, end, velocity, Motion.standard()) { v, _ -> drag = v }
+                    pager.creditSlid = true
+                    pager.show(step, TurnHow.SWIPE, creditNow, latest.shownCredit)
+                    pager.under = null
+                    drag = 0f
+                }
+                return
+            }
             // On from the end page: the next chapter opens while the page eases back.
             val crossing = target == null && far && (drag > 0) == rtl && pager.endLast && pager.leaf == leaves.lastIndex
             if (crossing) pager.pastEnd()
@@ -274,7 +378,8 @@ fun PagedReader(
             }
         }
 
-        val pageWords = leaves.getOrNull(pager.leaf)?.let { leaf -> describe(context, leaf, state.pages) }.orEmpty()
+        val pageWords = if (state.onUnkeptCredit) Strings.readerCreditPageLabel(context)
+            else leaves.getOrNull(pager.leaf)?.let { leaf -> describe(context, leaf, state) }.orEmpty()
         Box(
             Modifier
                 .fillMaxSize()
@@ -428,10 +533,36 @@ fun PagedReader(
                     }
                 }
             }
+            @Composable
+            fun Credit(page: CreditPage, alpha: Float, shift: Float = 0f) {
+                CreditPageView(
+                    page,
+                    images,
+                    creditGround,
+                    Modifier.fillMaxSize().graphicsLayer {
+                        this.alpha = alpha
+                        translationX = shift
+                    },
+                )
+            }
             if (leaves.isNotEmpty()) {
                 val under = pager.under
-                if (under != null && motion) Show(under)
-                if (drag != 0f && motion) neighbour(drag)?.let { Show(it, shift = if (drag > 0) drag - width else drag + width) }
+                if (under != null && motion) {
+                    Show(under)
+                    pager.underCredit?.let { Credit(it, 1f) }
+                }
+                if (drag != 0f && motion) {
+                    val shift = if (drag > 0) drag - width else drag + width
+                    // What the swipe brings in: a credit page brought back, or the leaf after it.
+                    when (val step = state.creditStep((drag > 0) == rtl, pager.leaf)) {
+                        is CreditStep.Credit -> state.chapterCredits(state.chapter ?: "").firstOrNull { it.page == step.page }?.let {
+                            if (step.leaf != pager.leaf) Show(step.leaf, shift = shift)
+                            Credit(it, 1f, shift)
+                        }
+                        is CreditStep.Leaf -> if (step.leaf != pager.leaf) Show(step.leaf, shift = shift)
+                        null -> neighbour(drag)?.let { Show(it, shift = shift) }
+                    }
+                }
                 // The frame between a turn and its fade's start draws the old leaf alone, not the new one
                 // whole for a frame before it fades in.
                 val alpha = when {
@@ -440,15 +571,79 @@ fun PagedReader(
                     else -> fade.value
                 }
                 val landing = state.jump?.leaf?.takeIf { fresh }?.coerceIn(0, leaves.lastIndex)
-                Show(landing ?: pager.leaf, alpha = if (landing != null) 1f else alpha, shift = if (motion) drag else 0f, current = true)
+                val shift = if (motion) drag else 0f
+                val leafAlpha = if (landing != null) 1f else alpha
+                // A credit step back to its own leaf slides the credit page away and leaves the leaf in place.
+                val stepsToSelf = drag != 0f && state.creditStep((drag > 0) == rtl, pager.leaf).let { it is CreditStep.Leaf && it.leaf == pager.leaf }
+                Show(landing ?: pager.leaf, alpha = leafAlpha, shift = if (stepsToSelf) 0f else shift, current = true)
+                if (landing == null) {
+                    leavingCredit?.let { Credit(it, leafAlpha, shift) }
+                    heldCredit?.let { Credit(it, leafAlpha * creditFade.value, shift) }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * A credit page brought back, drawn whole on [ground] and faded in once it has decoded. Until then
+ * the leaf under it shows for 600 ms, then the reader's waiting plate; a page that cannot be had
+ * gets the failed page with Try again. In a [strip] the plate is the strip's own.
+ */
+@Composable
+fun CreditPageView(credit: CreditPage, images: PageImages, ground: Color, modifier: Modifier = Modifier, strip: Boolean = false) {
+    val context = LocalContext.current
+    var tries by remember(credit.file) { mutableStateOf(0) }
+    val first = remember(credit.file) { images.cached(credit.file) }
+    val result by produceState(first?.let { PageDecodeResult.Decoded(it) } as PageDecodeResult?, credit.file, tries) {
+        if (value is PageDecodeResult.Decoded) return@produceState
+        value = null
+        value = withContext(Dispatchers.IO) { images.load(credit.file) }
+    }
+    val alpha = remember(credit.file) { Animatable(if (first != null) 1f else 0f) }
+    val decoded = result as? PageDecodeResult.Decoded
+    LaunchedEffect(decoded != null) {
+        if (decoded != null && alpha.value < 1f) atFullSpeed { alpha.animateTo(1f, Motion.fadeIn()) }
+    }
+    val page = credit.page.toInt()
+    Box(
+        modifier.semantics {
+            contentDescription = Strings.readerCreditPageLabel(context)
+            role = Role.Image
+        },
+    ) {
+        when (val now = result) {
+            is PageDecodeResult.Decoded -> PageCanvas(
+                now.page,
+                rotate = false,
+                modifier = Modifier.fillMaxSize().graphicsLayer { this.alpha = alpha.value }.background(ground),
+            )
+            null -> key(tries) {
+                var plate by remember { mutableStateOf(0) }
+                LaunchedEffect(Unit) {
+                    delay(PageWaits.PLATE_MS)
+                    plate = 1
+                    delay(PageWaits.WORDS_MS - PageWaits.PLATE_MS)
+                    plate = 2
+                }
+                if (plate > 0) {
+                    if (strip) ImageWaiting(page, plate > 1) else PageWaiting(page, plate > 1)
+                }
+            }
+            is PageDecodeResult.Missing -> Box(Modifier.fillMaxSize().background(ground)) {
+                PageFailed(page, ReadingFailure.NotFound) { tries++ }
+            }
+            is PageDecodeResult.Unreadable -> Box(Modifier.fillMaxSize().background(ground)) {
+                PageFailed(page, ReadingFailure.Other(now.reason)) { tries++ }
             }
         }
     }
 }
 
 /** What a screen reader says for a leaf: its page, or its two pages. */
-private fun describe(context: android.content.Context, leaf: Leaf, pages: Int): String {
-    val numbers = leaf.parts.map { it.page.toInt() + 1 }.distinct()
+private fun describe(context: android.content.Context, leaf: Leaf, state: ReaderState): String {
+    val pages = state.shownPages
+    val numbers = leaf.parts.map { state.shownPage(it.page.toInt()) + 1 }.distinct()
     return when (numbers.size) {
         0 -> ""
         1 -> Strings.readerPageOf(context, numbers[0], pages)

@@ -275,6 +275,9 @@ class AppStore(
         return { readers -= listener }
     }
 
+    /** An event a Fixtures shot says to the reader as though the engine had: credit pages, parts. */
+    internal fun stageReaderEvent(event: Event) = readers.forEach { it(event) }
+
     /** The engine's server for a novel's files: called on the web view's request thread. */
     fun bookResource(url: String): app.kaeri.engine.model.BookResource? = client?.engine?.bookResource(url)
 
