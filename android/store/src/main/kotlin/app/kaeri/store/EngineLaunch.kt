@@ -335,11 +335,17 @@ enum class FixtureScene {
     /** [READING_HOME] with the manga read further on Kim's iPad. */
     READER_MOVED,
 
+    /** [READING_HOME] with the manga a long series, chapter 60 of 120 open. */
+    READER_LONG,
+
     /** Reading on, set to Read, e-ink on and the screen in greys. */
     EINK_GREY,
 
     /** Reading on, set to Read, e-ink on and the colour question still to ask. */
     EINK_KALEIDO_UNSURE,
+
+    /** [EINK_GREY] with [READER_LONG]'s history and long manga. */
+    EINK_LONG,
 
     /** Reading off as in release builds, with Both kept: the medium is Watch. */
     READING_DARK,

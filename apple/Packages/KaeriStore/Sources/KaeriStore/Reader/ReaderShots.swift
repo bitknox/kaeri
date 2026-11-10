@@ -20,6 +20,8 @@ extension ReaderModel {
         guard let at = arguments.firstIndex(where: { $0 == "-KaeriScene" || $0 == "--scene" }), arguments.indices.contains(at + 1) else { return nil }
         switch arguments[at + 1].lowercased() {
         case "readermangartl", "readermoved": return "a:900301"
+        // The long series opens in the reader only when a reader shot asks; otherwise its page is shot.
+        case "readerlong": return arguments.contains(argument) ? "a:900301" : nil
         case "readernovel": return "a:900302"
         case "readerstrip": return "a:900303"
         // The reading demo's comic, for its reader and its end (prelaunch=demo-reader, demo-end).

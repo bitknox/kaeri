@@ -39,8 +39,10 @@ pub const STRIP_SERIES: scene_books::Series = scene_books::Series {
 
 /// The books the reading scenes read, made on the spot: the manga's chapters 12 to 15 of twenty
 /// pages, the strip's three chapters of eight tall images and the novel's chapters 2 to 4.
-pub fn seed_books(store: &Store, data_dir: &std::path::Path, now: i64) {
-    scene_books::comics(store, data_dir, &MANGA_SERIES, &[12, 13, 14, 15], 20, now);
+/// In the long scene the manga's chapters are 59 to 62.
+pub fn seed_books(store: &Store, data_dir: &std::path::Path, long: bool, now: i64) {
+    let manga: &[u32] = if long { &[59, 60, 61, 62] } else { &[12, 13, 14, 15] };
+    scene_books::comics(store, data_dir, &MANGA_SERIES, manga, 20, now);
     scene_books::strips(store, data_dir, &STRIP_SERIES, &[1, 2, 3], 8, now);
     scene_books::novels(store, data_dir, &NOVEL_SERIES, &[2, 3, 4], now);
     // The folder Your sources lists, holding the three series.
@@ -73,6 +75,9 @@ pub fn seed_books(store: &Store, data_dir: &std::path::Path, now: i64) {
     }
 }
 
+/// How many chapters the long scene's manga lists.
+const LONG_MANGA: i64 = 120;
+
 /// The id of the folder the reading scene's books sit in.
 const BOOKS_FOLDER: &str = "fixture-books-folder";
 
@@ -84,7 +89,8 @@ const READING_SEEDED: &str = "fixtures:reading:seeded";
 /// only. The Fixtures apps start each launch in an empty home, so a launch shows the scene as
 /// it is drawn; an engine started again on the same home, after a restart or on a kept home,
 /// goes on from where the person left it.
-pub fn seed_reading(store: &Store, downloads: bool, now: i64) {
+/// In the long scene the manga lists 120 chapters, 1 to 59 read and chapter 60 under way.
+pub fn seed_reading(store: &Store, downloads: bool, long: bool, now: i64) {
     use kaeri_store::reading::ReadEvent;
     const DAY: i64 = 24 * 3_600;
     if store.get_meta_i64(READING_SEEDED).ok().flatten().is_some() {
@@ -100,8 +106,9 @@ pub fn seed_reading(store: &Store, downloads: bool, now: i64) {
             tracing::warn!(error = %e, "a reading scene's read was not seeded");
         }
     };
-    let _ = store.adopt_read(READING_MANGA, "12", None, now - 3 * DAY);
-    read(READING_MANGA, "13", now - 2 * 3_600, &|e| {
+    let (done, open) = if long { ("59", "60") } else { ("12", "13") };
+    let _ = store.adopt_read(READING_MANGA, done, None, now - 3 * DAY);
+    read(READING_MANGA, open, now - 2 * 3_600, &|e| {
         e.page = Some(9);
         e.of_pages = Some(20);
         e.source_id = Some("fixture-books".into());
@@ -112,7 +119,7 @@ pub fn seed_reading(store: &Store, downloads: bool, now: i64) {
         e.page = Some(16);
         e.of_pages = Some(47);
     });
-    seed_reading_catalog(store, now);
+    seed_reading_catalog(store, if long { LONG_MANGA } else { 15 }, now);
     let _ = store.set_series_setting(READING_MANGA, "direction", Some("rtl"), true, now);
     let _ = store.set_bookmark(READING_MANGA, "7", true, now - DAY);
     let _ = store.set_series_setting(READING_STRIP, "mode", Some("strip"), true, now);
@@ -170,7 +177,7 @@ fn seed_book_downloads(store: &Store, now: i64) {
 /// What reading's catalogue kept for the reading scene: which folder series
 /// each work is, the chapters each listed last, how often they come out, and the reading lists.
 /// The books themselves come from the fake AniList.
-fn seed_reading_catalog(store: &Store, now: i64) {
+fn seed_reading_catalog(store: &Store, manga_chapters: i64, now: i64) {
     use kaeri_store::book_catalog::BookRhythm;
     const DAY: i64 = 24 * 3_600;
     let warn = |e: kaeri_store::StoreError| {
@@ -185,14 +192,15 @@ fn seed_reading_catalog(store: &Store, now: i64) {
             optional(seen_at.map(|at| at.to_string())),
         )
     };
-    // The manga comes out weekly; chapter 15 two hours ago, seen on the last check.
-    let manga: Vec<_> = (1..=15)
+    // The manga comes out weekly; its newest chapter two hours ago, seen on the last check.
+    let last = manga_chapters;
+    let manga: Vec<_> = (1..=last)
         .map(|n| {
-            let newest = n == 15;
+            let newest = n == last;
             let seen = newest.then_some(now - 3_600);
             chapter(
                 n,
-                now - 2 * 3_600 - (15 - n) * 7 * DAY,
+                now - 2 * 3_600 - (last - n) * 7 * DAY,
                 seen,
                 newest.then_some("The Far Shore"),
             )

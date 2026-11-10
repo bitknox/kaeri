@@ -246,6 +246,9 @@ pub enum FfiScene {
     /// [`Self::ReadingHome`] with the manga read further on Kim's iPad a minute ago: chapter 14
     /// at page 5, for "Moved to where you were on Kim's iPad".
     ReaderMoved,
+    /// [`Self::ReadingHome`] with the manga a long series: 120 chapters listed, 1 to 59 read and
+    /// chapter 60 at page 9 of 20, so the chapter lists open with their place in the middle.
+    ReaderLong,
     /// Reading on and set to Read with nothing added and the reading demo on: the demo is the
     /// only thing to read, as after a first run that added no source.
     ReadingDemo,
@@ -262,6 +265,8 @@ pub enum FfiScene {
     /// Reading on and set to Read, e-ink on and the screen unsure: "Is this a colour screen?"
     /// still to ask.
     EinkKaleidoUnsure,
+    /// [`Self::EinkGrey`] with the history and the long manga of [`Self::ReaderLong`].
+    EinkLong,
     /// Reading as release builds have it: off, whatever the start says, with Both kept from a
     /// Fixtures build. The medium is Watch and every reading command is refused.
     ReadingDark,
@@ -435,6 +440,8 @@ impl FfiScene {
             | Self::ReaderStrip
             | Self::ReaderNovel
             | Self::ReaderMoved
+            | Self::ReaderLong
+            | Self::EinkLong
             | Self::ReadingDemo
             | Self::ReadingSourceFailed
             | Self::ReadingAnilistFailed
@@ -443,6 +450,11 @@ impl FfiScene {
             Self::ReadingDark => Some(false),
             _ => None,
         }
+    }
+
+    /// Whether the manga is the long series, its place in the middle.
+    fn long(&self) -> bool {
+        matches!(self, Self::ReaderLong | Self::EinkLong)
     }
 
     fn sync(&self) -> Option<kaeri_engine::syncing::FixtureSync> {
@@ -928,10 +940,13 @@ fn scene_config(dirs: &FfiDirs, scene: &FfiScene, now: i64) -> Result<(), FfiErr
         | FfiScene::ReaderStrip
         | FfiScene::ReaderNovel
         | FfiScene::ReaderMoved
+        | FfiScene::ReaderLong
         | FfiScene::ReadingDark => "[reading]\nkaeri_is_for = \"both\"\n".to_owned(),
-        FfiScene::EinkGrey => "[reading]\nkaeri_is_for = \"read\"\n\n[reading.eink]\n\
+        FfiScene::EinkGrey | FfiScene::EinkLong => {
+            "[reading]\nkaeri_is_for = \"read\"\n\n[reading.eink]\n\
              mode = \"on\"\ncolour_panel = \"greys\"\n"
-            .to_owned(),
+                .to_owned()
+        }
         FfiScene::EinkKaleidoUnsure => {
             "[reading]\nkaeri_is_for = \"read\"\n\n[reading.eink]\nmode = \"on\"\n".to_owned()
         }
@@ -1050,7 +1065,9 @@ fn seed_scene(store: &Store, scene: &FfiScene, now: i64) {
         | FfiScene::ReaderMangaRtl
         | FfiScene::ReaderStrip
         | FfiScene::ReaderNovel
-        | FfiScene::ReaderMoved => seed_reading(store, scene, now),
+        | FfiScene::ReaderMoved
+        | FfiScene::ReaderLong
+        | FfiScene::EinkLong => seed_reading(store, scene, now),
         FfiScene::DemoPlayed => {
             seed::watched(store, kaeri_core::demo::DEMO_ANILIST_ID, 1, now - HOUR);
         }
@@ -1163,7 +1180,8 @@ fn seed_reading_join(store: &Store, now: i64) {
 }
 
 /// The books the reading scenes read, made on the spot: the manga's chapters 12 to 15 of twenty
-/// pages, the strip's three chapters of eight tall images and the novel's chapters 2 to 4.
+/// pages (59 to 62 in the long scenes), the strip's three chapters of eight tall images and the
+/// novel's chapters 2 to 4.
 fn seed_books(store: &Store, data_dir: &std::path::Path, scene: &FfiScene, now: i64) {
     if !matches!(
         scene,
@@ -1177,13 +1195,19 @@ fn seed_books(store: &Store, data_dir: &std::path::Path, scene: &FfiScene, now: 
             | FfiScene::ReaderMoved
             | FfiScene::EinkGrey
             | FfiScene::EinkKaleidoUnsure
+            | FfiScene::ReaderLong
+            | FfiScene::EinkLong
     ) {
         return;
     }
-    scene_books::comics(store, data_dir, &MANGA_SERIES, &[12, 13, 14, 15], 20, now);
+    let manga: &[u32] = if scene.long() { &[59, 60, 61, 62] } else { &[12, 13, 14, 15] };
+    scene_books::comics(store, data_dir, &MANGA_SERIES, manga, 20, now);
     scene_books::strips(store, data_dir, &STRIP_SERIES, &[1, 2, 3], 8, now);
     scene_books::novels(store, data_dir, &NOVEL_SERIES, &[2, 3, 4], now);
 }
+
+/// How many chapters the manga lists in [`FfiScene::ReaderLong`] and [`FfiScene::EinkLong`].
+const LONG_MANGA: i64 = 120;
 
 /// Set once a home has its reading scene, so a later start on the same home keeps what the
 /// person changed since: the reader's settings for a series and the places reached.
@@ -1209,8 +1233,9 @@ fn seed_reading(store: &Store, scene: &FfiScene, now: i64) {
             tracing::warn!(error = %e, "a reading scene's read was not seeded");
         }
     };
-    let _ = store.adopt_read(READING_MANGA, "12", None, now - 3 * DAY);
-    read(READING_MANGA, "13", now - 2 * 3_600, &|e| {
+    let (last_read, reading) = if scene.long() { ("59", "60") } else { ("12", "13") };
+    let _ = store.adopt_read(READING_MANGA, last_read, None, now - 3 * DAY);
+    read(READING_MANGA, reading, now - 2 * 3_600, &|e| {
         e.page = Some(9);
         e.of_pages = Some(20);
         e.source_id = Some("fixture-books".into());
@@ -1226,7 +1251,7 @@ fn seed_reading(store: &Store, scene: &FfiScene, now: i64) {
         e.page = Some(16);
         e.of_pages = Some(47);
     });
-    seed_reading_catalog(store, now);
+    seed_reading_catalog(store, if scene.long() { LONG_MANGA } else { 15 }, now);
     match scene {
         FfiScene::ReadingSeries | FfiScene::ReaderMangaRtl => {
             let _ =
@@ -1315,7 +1340,7 @@ fn seed_book_downloads(store: &Store, now: i64) {
 /// What reading's catalogue kept for [`FfiScene::ReadingHome`] and its kin: which folder series
 /// each work is, the chapters each listed last, how often they come out, and the reading lists.
 /// The books themselves come from the fake AniList.
-fn seed_reading_catalog(store: &Store, now: i64) {
+fn seed_reading_catalog(store: &Store, manga_chapters: i64, now: i64) {
     use kaeri_store::book_catalog::BookRhythm;
     const DAY: i64 = 24 * 3_600;
     let warn = |e: kaeri_store::StoreError| {
@@ -1330,14 +1355,15 @@ fn seed_reading_catalog(store: &Store, now: i64) {
             optional(seen_at.map(|at| at.to_string())),
         )
     };
-    // The manga comes out weekly; chapter 15 two hours ago, seen on the last check.
-    let manga: Vec<_> = (1..=15)
+    // The manga comes out weekly; the newest chapter two hours ago, seen on the last check.
+    let last = manga_chapters;
+    let manga: Vec<_> = (1..=last)
         .map(|n| {
-            let newest = n == 15;
+            let newest = n == last;
             let seen = newest.then_some(now - 3_600);
             chapter(
                 n,
-                now - 2 * 3_600 - (15 - n) * 7 * DAY,
+                now - 2 * 3_600 - (last - n) * 7 * DAY,
                 seen,
                 newest.then_some("The Far Shore"),
             )
