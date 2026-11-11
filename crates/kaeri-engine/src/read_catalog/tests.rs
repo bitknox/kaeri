@@ -732,6 +732,43 @@ async fn a_scoped_search_asks_only_the_sources_in_its_scope() {
     assert_eq!([asked(&near), asked(&picked), asked(&far), asked(&late)], [0, 1, 0, 0]);
 }
 
+/// A source picked under Search in is the only place asked: AniList gets no request either,
+/// with "Your sources only" off. With no source picked, AniList is asked as before.
+#[tokio::test]
+async fn a_scoped_search_leaves_anilist_out() {
+    let fake = FakeAniList::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(Some(&fake), dir.path());
+    let lantern = vec![hit("s-1", "The Lantern Ferry", Some(ReadingFormat::Manga))];
+    let picked = Shelf::put(&kit, "picked", "Picked shelf", Answer::Now(lantern));
+    let other = Shelf::put(&kit, "other", "Other shelf", Answer::Now(Vec::new()));
+    let scoped =
+        ReadSearchQuery { source_scope: Some(vec!["picked".into()]), ..query("lantern") };
+    let (tx, mut rx) = outbox();
+    search::search(&kit, ask(), scoped.clone(), 0, &tx);
+    let done = part_until(&mut rx, |p| p.done).await;
+    assert_eq!(done.anilist, ReadAnilistState::Skipped);
+    assert_eq!(done.groups.iter().find(|g| g.source_id == "picked").unwrap().tiles.len(), 1);
+    // A later page asks nobody either.
+    search::search(&kit, ask(), scoped, 1, &tx);
+    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    assert_eq!(books_asked(&fake), 0, "{:#?}", fake.requests_for(Operation::Books));
+    while let Ok(event) = rx.try_recv() {
+        if let Event::Reading(ReadingEvent::Search { tiles, .. }) = event {
+            assert!(tiles.is_empty(), "{tiles:?}");
+        }
+    }
+    let asked = |s: &Shelf| s.asked.load(Ordering::SeqCst);
+    assert_eq!([asked(&picked), asked(&other)], [1, 0]);
+
+    // No source picked: AniList and every source are asked.
+    search::search(&kit, ask(), query("lantern"), 0, &tx);
+    let done = part_until(&mut rx, |p| p.done && p.anilist != ReadAnilistState::Asking).await;
+    assert_eq!(done.anilist, ReadAnilistState::Answered);
+    assert!(books_asked(&fake) > 0);
+    assert_eq!([asked(&picked), asked(&other)], [2, 1]);
+}
+
 /// Browse with only "Your sources only" on: no words for the sources, and AniList is never
 /// asked. The answer is an empty page, on a later page too.
 #[tokio::test]

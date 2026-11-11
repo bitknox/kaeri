@@ -834,12 +834,17 @@ pub struct ReadSearchQuery {
     pub sources_only: bool,
     /// The ids of the only sources a search with words asks: the large e-ink panel's Search in.
     /// `None` asks every source that is on. A source outside it never gets the words, nor a
-    /// source that joins while the search shows. AniList is still [`Self::sources_only`]'s.
+    /// source that joins while the search shows, nor AniList: a scope is the only place asked.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub source_scope: Option<Vec<String>>,
 }
 
 impl ReadSearchQuery {
+    /// Whether the search asks AniList: neither "Your sources only" nor a scope is set.
+    pub fn asks_anilist(&self) -> bool {
+        !self.sources_only && self.source_scope.is_none()
+    }
+
     /// Whether a search with words may ask the source `id`: it is in [`Self::source_scope`],
     /// or there is none.
     pub fn asks_source(&self, id: &str) -> bool {
@@ -872,7 +877,7 @@ pub enum ReadAnilistState {
     Answered,
     /// AniList could not be reached; the sources were still asked.
     Failed,
-    /// "Your sources only" is on.
+    /// "Your sources only" is on, or the search is scoped to sources.
     Skipped,
 }
 

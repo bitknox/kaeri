@@ -124,4 +124,16 @@ class ReadSearchKeepsTest {
         assertEquals(listOf(tile(1), tile(2), tile(3)), model.viewAll.value.tiles)
         assertFalse(model.viewAll.value.stale)
     }
+
+    /** A source picked under Search in: AniList is not asked, so the groups end the wait. */
+    @Test
+    fun a_scoped_search_waits_on_its_sources_alone() {
+        answered()
+        val scoped = query("kite rider").copy(sourceScope = listOf("shelf"))
+        model.runSearch(scoped)
+        assertEquals(ReadAnilistState.SKIPPED, model.search.value.sources!!.anilist)
+        assertTrue(model.search.value.loading)
+        model.apply(sources(scoped, group("shelf", ReadSourceState.Hits, listOf(tile(8))), done = true))
+        assertFalse(model.search.value.loading)
+    }
 }

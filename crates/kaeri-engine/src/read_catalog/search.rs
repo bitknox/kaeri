@@ -129,13 +129,14 @@ fn medium_of(query: &ReadSearchQuery) -> Option<Medium> {
 }
 
 /// One page of a search. Pages count from 0. With words, the first page also asks the person's
-/// sources; "Your sources only" asks them alone and never AniList.
+/// sources; "Your sources only" asks them alone and never AniList, and a scope asks only its
+/// sources.
 pub fn search(kit: &Kit, ask: Ask, query: ReadSearchQuery, page: u32, tx: &Outbox) {
     let searched = searched(kit, &query);
     let words = !query.text.trim().is_empty();
     let with_sources = words && page == 0;
     let generation = with_sources.then(|| sources_search(kit, ask, &query, tx));
-    if query.sources_only {
+    if !query.asks_anilist() {
         // Without words, or past the first page, the sources have nothing to answer either:
         // an empty page says so.
         if !with_sources {
@@ -428,10 +429,10 @@ fn sources_search(kit: &Kit, ask: Ask, query: &ReadSearchQuery, tx: &Outbox) -> 
         *run = Run {
             generation,
             query: query.clone(),
-            anilist: Some(if query.sources_only {
-                ReadAnilistState::Skipped
-            } else {
+            anilist: Some(if query.asks_anilist() {
                 ReadAnilistState::Asking
+            } else {
+                ReadAnilistState::Skipped
             }),
             groups: asked
                 .iter()
