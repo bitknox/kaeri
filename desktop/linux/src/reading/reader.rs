@@ -3389,6 +3389,7 @@ mod layout_tests {
                 rotate: false,
                 half: None,
                 ratio: None,
+                strip: None,
             })
             .collect();
         Leaf { index: 0, parts, end_page: false }
