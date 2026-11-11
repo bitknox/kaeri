@@ -1,14 +1,17 @@
 // The tap zones on e-ink, drawn on the JVM from made-up records and the engine's own cells: the
 // guide for Sides right to left, Top and bottom left to right on a 7 inch screen, and the Tap zones
-// page reached through Settings and More, which fits without a scroll. Written to
-// android/.shots/roborazzi/eink-tap-zones-*.
+// page reached through Settings and More, which fits without a scroll. Show zones is one refresh.
+// Written to android/.shots/roborazzi/eink-tap-zones-*.
 
 package app.kaeri.eink
 
 import android.content.ComponentName
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.click
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
@@ -21,6 +24,7 @@ import app.kaeri.engine.model.ReaderSettingKey as Key
 import app.kaeri.engine.model.ReaderSettingRow
 import app.kaeri.engine.model.ReaderSettingsView
 import app.kaeri.engine.model.ReaderValue
+import app.kaeri.engine.model.Refresh
 import app.kaeri.engine.model.SettingScope
 import app.kaeri.engine.model.TapZoneSettings
 import app.kaeri.engine.model.ZoneLayout
@@ -30,6 +34,7 @@ import app.kaeri.reader.ReaderSession
 import app.kaeri.reader.configName
 import com.github.takahirom.roborazzi.captureScreenRoboImage
 import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -64,6 +69,8 @@ class EinkTapZonesShots {
 
     private fun choices(vararg names: String) = names.map { ReaderValue.Choice(it) }
 
+    private val fake = FakeRefresh()
+
     private fun zones(paged: ZoneLayout) = TapZoneSettings(
         paged = paged,
         scrolling = ZoneLayout.OFF,
@@ -97,7 +104,7 @@ class EinkTapZonesShots {
         session.apply(ReaderEvent.Opened(EinkFixtures.view(start = 0u, direction = direction)))
         session.apply(ReaderEvent.Leaves(EinkFixtures.SESSION, EinkFixtures.CHAPTER, EinkFixtures.leaves(3) { EinkFixtures.grey(dir.root, "$it.gray", 80, 80) }))
         session.apply(ReaderEvent.Settings(settings(zones)))
-        val painter = EinkPainter.defaults(app.kaeri.engine.model.EinkPanel.GREY, FakeRefresh())
+        val painter = EinkPainter.defaults(app.kaeri.engine.model.EinkPanel.GREY, fake)
         compose.setContent {
             EinkTheme {
                 val state = session.state.collectAsState().value
@@ -119,6 +126,18 @@ class EinkTapZonesShots {
     fun the_guide_for_top_and_bottom_left_to_right() {
         open(zones(ZoneLayout.TOP_BOTTOM), ReadDirection.LEFT_TO_RIGHT)
         shot("guide-top-bottom-ltr")
+    }
+
+    /** Through the bars, Settings and More to the Tap zones page. */
+    private fun tapZonesPage() {
+        compose.onRoot().performTouchInput { click(androidx.compose.ui.geometry.Offset(width * 0.55f, height * 0.5f)) }
+        compose.waitForIdle()
+        compose.onNodeWithText("Settings").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("More reader settings").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("Tap zones").performClick()
+        compose.waitForIdle()
     }
 
     /** Whether the whole of the node with [text] is on screen, with nothing below the fold. */
@@ -145,5 +164,17 @@ class EinkTapZonesShots {
         assertTrue(wholeOnScreen("Swipes turn pages"))
         assertTrue(wholeOnScreen("Show zones"))
         shot("page-sides-rtl")
+    }
+
+    @Test
+    fun show_zones_is_one_refresh() {
+        open(zones(ZoneLayout.SIDES))
+        tapZonesPage()
+        fake.clear()
+        compose.onNodeWithText("Show zones").performSemanticsAction(SemanticsActions.OnClick)
+        compose.waitForIdle()
+        compose.onNodeWithText("Tap, or swipe right").assertIsDisplayed()
+        // The page and bars go and the guide comes in the same refresh.
+        assertEquals(listOf(Refresh.REGION), fake.requests.map { it.refresh })
     }
 }

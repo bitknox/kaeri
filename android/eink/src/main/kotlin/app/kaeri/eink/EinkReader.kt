@@ -42,7 +42,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -136,6 +138,7 @@ import app.kaeri.reader.rememberServerLine
 import app.kaeri.reader.serverLineWords
 import app.kaeri.store.ServerLine
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /** What the e-ink reader leaves to the app around it; its settings and Contents are its own. */
 class EinkReaderActions(
@@ -180,18 +183,42 @@ fun EinkReader(
         }
     }
     var layer by remember { mutableStateOf(EinkLayer.None) }
-    val paint by rememberUpdatedState { what: EinkPaint -> painter.paint(host, what) }
+    // The touch or key that clears the guide pays for it in its own refresh, never in a second one:
+    // full when full refreshes on image pages are on, else what the touch paints, as the device
+    // decides. True from the clearing until that refresh goes out.
+    var clearing by remember { mutableStateOf(false) }
+    val paint by rememberUpdatedState { what: EinkPaint ->
+        val owed = clearing
+        clearing = false
+        painter.paint(host, if (owed && painter.policy.imageFull && what !is EinkPaint.ImagePage) EinkPaint.Clean else what)
+    }
+    val scope = rememberCoroutineScope()
 
     fun toggleChrome() {
         chrome = !chrome
         paint(if (chrome) EinkPaint.ChromeOpen else EinkPaint.ChromeClose)
     }
 
-    // Drawn in one refresh; the first touch clears it with a full refresh, and still does what it touched.
+    // Drawn in one refresh. The first touch clears it and still does what it touched, in that one
+    // touch's refresh.
     LaunchedEffect(guide.up) { if (guide.up) paint(EinkPaint.SheetChange) }
     fun guideCleared(map: TapMap) {
         guide.gone()
-        paint(EinkPaint.Clean)
+        val turns = pager.turns
+        clearing = true
+        scope.launch {
+            // What the touch does paints within the frame; a turn paints once its page is drawn.
+            withFrameNanos { }
+            if (!clearing) return@launch
+            if (pager.turns == turns) {
+                // Nothing to paint for the touch: the cleared guide is the refresh.
+                clearing = false
+                if (painter.policy.imageFull) painter.paint(host, EinkPaint.Clean)
+            } else {
+                delay(1_000)
+                clearing = false
+            }
+        }
         if (!screenReader) session.tapGuideSeen(map)
     }
 
@@ -423,8 +450,15 @@ fun EinkReader(
                 onBack = { show(EinkLayer.More) },
                 onDone = { show(EinkLayer.None) },
                 onShowZones = {
-                    show(EinkLayer.None)
-                    reading?.let { guide.show(tapMap(taps, it, null)) }
+                    val map = reading?.let { tapMap(taps, it, null) }
+                    if (map == null) {
+                        show(EinkLayer.None)
+                    } else {
+                        // The sheet and the bars go under the guide, in the guide's one refresh.
+                        layer = EinkLayer.None
+                        chrome = false
+                        guide.show(map)
+                    }
                 },
             )
             EinkLayer.Contents -> EinkContents(

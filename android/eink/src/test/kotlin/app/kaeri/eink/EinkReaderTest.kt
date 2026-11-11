@@ -26,7 +26,10 @@ import app.kaeri.engine.model.VolumeGroup
 import app.kaeri.reader.phone.ReaderLook
 import app.kaeri.engine.model.ReaderCommand
 import app.kaeri.engine.model.ReaderEvent
+import app.kaeri.engine.model.EinkPanel
+import app.kaeri.engine.model.EinkPolicy
 import app.kaeri.engine.model.Refresh
+import app.kaeri.engine.ffi.einkPolicyDefaults
 import app.kaeri.engine.model.TurnHow
 import app.kaeri.reader.PageImages
 import app.kaeri.reader.ReaderSession
@@ -65,11 +68,11 @@ class EinkReaderTest {
     private val session = ReaderSession { (it as? Command.Reader)?.let { reader -> sent += reader.v1 } }
     private val fake = FakeRefresh()
 
-    private fun open(onBack: () -> Unit = {}) {
+    private fun open(onBack: () -> Unit = {}, policy: EinkPolicy = einkPolicyDefaults(EinkPanel.GREY)) {
         session.open(EinkFixtures.WORK, EinkFixtures.surface.copy(eink = true))
         session.apply(ReaderEvent.Opened(EinkFixtures.view(start = 0u)))
         session.apply(ReaderEvent.Leaves(EinkFixtures.SESSION, EinkFixtures.CHAPTER, EinkFixtures.leaves(3) { EinkFixtures.grey(dir.root, "$it.gray", 80, 80) }))
-        val painter = EinkPainter.defaults(app.kaeri.engine.model.EinkPanel.GREY, fake)
+        val painter = EinkPainter(policy, fake)
         val actions = EinkReaderActions(onBack, {}, {})
         val images = PageImages()
         compose.setContent {
@@ -108,15 +111,35 @@ class EinkReaderTest {
         compose.waitUntil(5_000) { fake.requests.count { it.refresh == Refresh.FULL } >= 2 }
     }
 
+    /** Once the first page is drawn, with its refresh in, the log starts again. */
+    private fun drawn() {
+        compose.waitUntil(5_000) { fake.requests.any { it.refresh == Refresh.FULL || it.refresh == Refresh.PARTIAL } }
+        compose.waitForIdle()
+        fake.clear()
+    }
+
     @Test
     fun a_middle_tap_shows_the_bars() {
         open()
+        drawn()
         compose.onRoot().performTouchInput { click(androidx.compose.ui.geometry.Offset(width * 0.55f, height * 0.5f)) }
         compose.waitForIdle()
         compose.onNodeWithText("Page 1 of 3").assertIsDisplayed()
         compose.onNodeWithText("2 pages left in chapter").assertIsDisplayed()
         compose.onNodeWithText("Chapter 12 · The Long Stair").assertIsDisplayed()
-        assertEquals(Refresh.FAST, fake.requests.last().refresh)
+        // The touch that clears the guide is one refresh: full, since full refreshes on image pages are on.
+        assertEquals(listOf(Refresh.FULL), fake.requests.map { it.refresh })
+    }
+
+    @Test
+    fun without_full_refreshes_the_touch_that_clears_the_guide_is_its_own_refresh() {
+        open(policy = einkPolicyDefaults(EinkPanel.GREY).copy(imageFull = false))
+        drawn()
+        compose.onRoot().performTouchInput { click(androidx.compose.ui.geometry.Offset(width * 0.55f, height * 0.5f)) }
+        compose.waitForIdle()
+        compose.onNodeWithText("Page 1 of 3").assertIsDisplayed()
+        // The device decides: the bars' own fast refresh, and nothing for the guide.
+        assertEquals(listOf(Refresh.FAST), fake.requests.map { it.refresh })
     }
 
     @Test
