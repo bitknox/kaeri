@@ -46,11 +46,12 @@ object EinkFixtures {
         direction: ReadDirection = ReadDirection.RIGHT_TO_LEFT,
         mode: ReaderMode = ReaderMode.PAGED,
         next: ChapterRow? = chapter("local:lantern-stair/13", "13", "Lanterns Out", 26u),
+        medium: Medium = Medium.MANGA,
     ) = ReaderView(
         session = SESSION,
         work = WORK,
         title = "The Lantern Stair",
-        medium = Medium.MANGA,
+        medium = medium,
         chapter = chapter(),
         mode = mode,
         direction = direction,

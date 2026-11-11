@@ -343,6 +343,16 @@ private fun OpenReader(
                     images = images,
                     painter = painter,
                     actions = EinkReaderActions(onBack = close, onSeries = close, onDownloads = close, onAddSource = addSource),
+                    novel = { place, onControls ->
+                        NovelScreen(
+                            session = session,
+                            state = state,
+                            place = place,
+                            assets = remember { store.novelAssets() },
+                            resource = store::bookResource,
+                            onControls = onControls,
+                        )
+                    },
                 )
             }
         } else {
