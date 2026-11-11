@@ -267,20 +267,31 @@ pub(crate) fn kept_rows(
         .collect()
 }
 
-/// The edition's chapters as last kept, grouped by volume when the person shows volumes.
+/// The edition's chapters as last kept, grouped by volume when the person shows volumes, built
+/// as the source's answer is: each row with its download, the chapters downloaded here that the
+/// list no longer has, and those listed from other sources. With no list kept, the chapters on
+/// this device. This is what the page shows while the source is asked, and after it failed: a
+/// relaunch offline still lists the downloaded chapters, which open.
 pub(crate) fn kept_volumes(
     kit: &Kit,
     work: &WorkId,
 ) -> (Option<BookEditionRow>, Vec<VolumeGroup>) {
-    let Some((source, _, list)) = chapters::of_work(&kit.sources, &kit.store, work) else {
+    let Some((source, _)) = kit.sources.edition_of(work, None) else {
         return (None, Vec::new());
     };
-    let read = chapters::Read::of(&kit.store, work.as_str());
-    let rows: Vec<ChapterRow> =
-        kept_rows(kit, work, &source, &list, &read).into_iter().map(|(_, row)| row).collect();
-    let known = super::volumes::Known::of_work(&kit.store, work.as_str());
-    let groups = super::volumes::group(rows, &known, kit.sources.show_volumes());
     let edition = kit.sources.editions(work).into_iter().find(|e| e.source_id == source);
+    let now = kit.clock.now();
+    let groups = match kit.sources.kept_listing(work, now, i64::MAX) {
+        Some((_, groups)) => groups,
+        None => crate::reading::shelf::volumes(
+            &kit.store,
+            work.as_str(),
+            None,
+            medium_of(kit, work),
+            (now, &kit.clock.zone()),
+            kit.sources.show_volumes(),
+        ),
+    };
     (edition, groups)
 }
 
