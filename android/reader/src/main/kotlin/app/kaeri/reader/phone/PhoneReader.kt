@@ -11,8 +11,6 @@ import android.content.Context
 import android.content.ContextWrapper
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
-import androidx.compose.foundation.gestures.animateScrollBy
-import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
 import androidx.activity.compose.PredictiveBackHandler
@@ -34,6 +32,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableIntStateOf
@@ -178,6 +177,7 @@ import app.kaeri.reader.ReaderSession
 import app.kaeri.reader.ReaderState
 import app.kaeri.reader.ShownNotice
 import app.kaeri.reader.StripReader
+import app.kaeri.reader.StripStep
 import app.kaeri.reader.TapGuide
 import app.kaeri.reader.TapGuideLayer
 import app.kaeri.reader.ShowTapGuideWhenDue
@@ -249,7 +249,10 @@ fun PhoneReader(
     onSettingsShown: () -> Unit = {},
     /** Off while the reader leaves: touches go nowhere. */
     enabled: Boolean = true,
+    /** Where the strip is scrolled to. */
+    stripList: LazyListState = rememberLazyListState(),
 ) {
+    val stripStep = remember { StripStep() }
     val context = LocalContext.current
     val view = state.view
     val density = LocalDensity.current
@@ -306,7 +309,6 @@ fun PhoneReader(
     // A Fixtures shot's step, once the credit pages or parts it staged have come.
     val creditShot = CreditShot.step
     val staged = state.openCredits.isNotEmpty() || state.parts != null
-    val stripList = rememberLazyListState()
     LaunchedEffect(creditShot, staged) {
         if (creditShot == null || !staged) return@LaunchedEffect
         delay(600)
@@ -575,9 +577,10 @@ fun PhoneReader(
                     val gap = if (state.choice(ReaderSettingKey.STRIP_GAP) == "small") 8.dp else 0.dp
                     // Next and Previous scroll by the engine's step of the visible height, at once with
                     // Remove animations or in Paper mode; Off, the default, shows the controls.
+                    // A tap during a step adds to what is left of it.
                     fun scrollStep(down: Boolean) {
                         val by = stripList.layoutInfo.viewportSize.height * tapScrollStep().toFloat() * (if (down) 1f else -1f)
-                        scope.launch { if (fades && !removed) stripList.animateScrollBy(by, Motion.standard()) else stripList.scrollBy(by) }
+                        stripStep.go(scope, stripList, by, smooth = fades && !removed, Motion.standard())
                     }
                     val scrollDown = Strings.readerZoneScrollDown(context)
                     val scrollUp = Strings.readerZoneScrollUp(context)
@@ -611,6 +614,7 @@ fun PhoneReader(
                         onFlow = { next -> session.flowInto(next.id) },
                         onShowing = { showingAbove = it },
                         list = stripList,
+                        stepping = stripStep::catch,
                         gap = gap,
                     )
                 }

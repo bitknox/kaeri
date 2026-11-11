@@ -48,7 +48,14 @@ import app.kaeri.engine.model.ChapterRow
 import app.kaeri.engine.model.Leaf
 import app.kaeri.engine.model.LeafPart
 import app.kaeri.engine.model.StripPos
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.animate
+import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.runtime.withFrameNanos
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 
@@ -61,6 +68,48 @@ fun LazyListState.stripPos(first: Int = 0, count: Int = Int.MAX_VALUE): StripPos
     val top = info.visibleItemsInfo.firstOrNull { it.index >= first && it.index - first < count } ?: return null
     val offset = if (top.size > 0) (-top.offset).toFloat() / top.size else 0f
     return StripPos((top.index - first).toUInt(), offset.coerceIn(0f, 1f))
+}
+
+/**
+ * The strip's step for Next and Previous. A tap that lands while a step still moves the strip adds
+ * its step to what is left of that one, so two quick taps go two steps: the touch's landing has
+ * stopped the first by then, so what was left is kept from that moment.
+ */
+class StripStep {
+    private var job: Job? = null
+    private var left = 0f
+    private var caught = 0f
+
+    /** At a touch's landing: true when a step moves the strip, keeping what is left of it for the touch. */
+    fun catch(): Boolean {
+        val moving = job?.isActive == true
+        caught = if (moving) left else 0f
+        return moving
+    }
+
+    /** Scroll [list] by [by] pixels and what is left of a step, gliding by [spec] when [smooth]. */
+    fun go(scope: CoroutineScope, list: LazyListState, by: Float, smooth: Boolean, spec: AnimationSpec<Float>) {
+        val total = (if (job?.isActive == true) left else caught) + by
+        caught = 0f
+        job?.cancel()
+        left = total
+        job = scope.launch {
+            // The touch that stopped a step lets go of the list as it lifts: the step waits for that.
+            withFrameNanos { }
+            if (smooth) {
+                var done = 0f
+                list.scroll {
+                    animate(0f, total, animationSpec = spec) { value, _ ->
+                        done += scrollBy(value - done)
+                        left = total - done
+                    }
+                }
+            } else {
+                list.scrollBy(total)
+            }
+            left = 0f
+        }
+    }
 }
 
 /** Whether the foot of the item at [last] is on screen. */
@@ -112,6 +161,8 @@ fun StripReader(
     onFlow: (next: ChapterRow) -> Unit = {},
     onShowing: (previous: Boolean) -> Unit = {},
     list: LazyListState = rememberLazyListState(),
+    /** At a touch's landing: true when the strip moves by a tap's own step, which a tap carries on. */
+    stepping: () -> Boolean = { false },
     maxWidth: Dp = 620.dp,
     gap: Dp = 0.dp,
     waiting: WaitingSlot = { page, long -> ImageWaiting(page, long) },
@@ -187,12 +238,15 @@ fun StripReader(
     }
 
     val tapped by rememberUpdatedState(onTap)
+    val stepped by rememberUpdatedState(stepping)
     BoxWithConstraints(
         modifier.fillMaxSize().pointerInput(list) {
             awaitEachGesture {
-                // Read before the list sees the touch, which stops a moving strip.
+                // Read before the list sees the touch, which stops a moving strip. A strip moving by
+                // itself only stops; one moving by a tap's own step takes the next tap at once.
                 awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-                val moving = list.isScrollInProgress
+                val step = stepped()
+                val moving = list.isScrollInProgress && !step
                 val up = waitForUpOrCancellation() ?: return@awaitEachGesture
                 if (!moving) tapped(up.position.x / size.width, up.position.y / size.height)
             }
