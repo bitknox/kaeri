@@ -9378,6 +9378,18 @@ object Strings {
     fun readerEndSwipe(context: Context): String =
         context.getString(R.string.reader_end_swipe)
 
+    /** Button beside Continue on the page between chapters, shown only when the next chapter is an extra (such as 16.5 between 16 and 17). It opens the chapter named, passing over the extras before it. The chapter is its number, such as 17. */
+    fun readerEndSkipTo(context: Context, chapter: String): String =
+        context.getString(R.string.reader_end_skip_to, chapter)
+
+    /** What a screen reader adds after "Skip to chapter 17": the extra it passes over stays unread in the chapter list. The chapter is the extra's number, such as 16.5. */
+    fun readerEndSkipHint(context: Context, chapter: String): String =
+        context.getString(R.string.reader_end_skip_hint, chapter)
+
+    /** What a screen reader adds after "Skip to chapter 17" when it passes over more than one extra, or an extra with no number (such as an omake): those chapters stay unread in the chapter list. */
+    fun readerEndSkipHintExtras(context: Context): String =
+        context.getString(R.string.reader_end_skip_hint_extras)
+
     /** The next episode's length on the divider inside a strip. */
     fun readerDividerImages(context: Context, count: Int): String =
         context.resources.getQuantityString(R.plurals.reader_divider_images, count, count)

@@ -176,7 +176,7 @@ struct ReaderAmberStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.ui(height < 32 ? 12 : height < 44 ? 15 : 17, weight: .semibold))
+            .font(.ui(height < 32 ? 12 : height < 50 ? 15 : 17, weight: .semibold))
             .foregroundStyle(theme.onAmber)
             .frame(maxWidth: .infinity, minHeight: height)
             .background(theme.amber.opacity(configuration.isPressed ? 0.85 : 1), in: .capsule)

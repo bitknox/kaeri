@@ -6,6 +6,7 @@ package app.kaeri.reader
 
 import app.kaeri.engine.core.ChapterId
 import app.kaeri.engine.core.WorkId
+import app.kaeri.i18n.Strings
 import app.kaeri.engine.model.ChapterRow
 import app.kaeri.engine.model.ChapterVersion
 import app.kaeri.engine.model.Command
@@ -50,7 +51,27 @@ import kotlinx.coroutines.flow.asStateFlow
 data class PageKey(val page: UInt, val half: PageHalf? = null)
 
 /** What the end page names: the next chapter and the source it came from, or why there is none. */
-data class EndPageView(val next: ChapterRow?, val whyNone: NoNext?, val source: String? = null)
+data class EndPageView(
+    val next: ChapterRow?,
+    val whyNone: NoNext?,
+    val source: String? = null,
+    /** When [next] is an extra: the first whole chapter after it, for "Skip to chapter 17". */
+    val skipTo: ChapterRow? = null,
+    /** How many extras the skip passes over. */
+    val extras: UInt = 0u,
+) {
+    /**
+     * What TalkBack adds after the skip: the extra's number, or with a run of extras or one with no
+     * number, that the extras stay unread.
+     */
+    fun skipHint(context: android.content.Context): String? {
+        val next = next ?: return null
+        if (skipTo == null) return null
+        val number = next.number
+        return if (extras > 1u || number == null) Strings.readerEndSkipHintExtras(context)
+        else Strings.readerEndSkipHint(context, number)
+    }
+}
 
 /** The next chapter's first page, made while this one is read, for the end page. */
 data class NextPreview(val chapter: ChapterId, val file: PageFile)
@@ -757,7 +778,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
             }
             is ReaderEvent.NovelStyle -> if (ours(event.session)) now.copy(novelStyle = event) else return
             is ReaderEvent.ChapterRead -> if (event.work == now.view?.work) now.copy(read = now.read + event.chapter, readTrackers = now.readTrackers + (event.chapter to event.trackers)) else return
-            is ReaderEvent.EndPage -> if (ours(event.session)) now.copy(end = EndPageView(event.next, event.whyNone, event.nextSource)) else return
+            is ReaderEvent.EndPage -> if (ours(event.session)) now.copy(end = EndPageView(event.next, event.whyNone, event.nextSource, event.skipTo, event.extras)) else return
             is ReaderEvent.NextPreview -> if (ours(event.session)) now.copy(preview = NextPreview(event.chapter, event.file)) else return
             // Only while opening: a chapter opened from another one keeps its own page up meanwhile.
             is ReaderEvent.Opening -> if (now.opening) now.copy(openingChapter = event.chapter ?: now.openingChapter, openingWait = event.wait) else return

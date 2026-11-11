@@ -3,6 +3,7 @@
 
 @testable import KaeriStore
 import KaeriKit
+import KaeriStrings
 import Foundation
 import Testing
 
@@ -193,6 +194,39 @@ struct ReaderHeldEndTests {
         model.close()
         #expect(model.held == nil)
     }
+
+    /// The end page names the chapter past the extras, and the skip holds the end page while
+    /// that chapter opens, as Continue does.
+    @Test func theSkipPastExtrasOpensTheWholeChapterAfterThem() {
+        let model = onEndPage()
+        var sent: [Command] = []
+        model.send = { sent.append($0) }
+        model.apply(.endPage(
+            session: session, next: row("13.5"), whyNone: nil, nextSource: nil, skipTo: row("14"), extras: 1))
+        #expect(model.end?.next?.id == ChapterId("13.5"))
+        #expect(model.end?.skipTo?.id == ChapterId("14"))
+        model.openChapter(ChapterId("14"))
+        #expect(sent.contains { if case .reader(.openChapter(_, ChapterId("14"))) = $0 { true } else { false } })
+        #expect(model.held?.end?.skipTo?.id == ChapterId("14"))
+        #expect(model.held?.to == ChapterId("14"))
+    }
+
+    /// The skip's hint names one numbered extra; a run of extras, or one with no number, is
+    /// spoken of as the extras.
+    @Test func theSkipHintNamesOneNumberedExtraOnly() {
+        let model = onEndPage()
+        var extra = row("13.5")
+        extra.number = "13.5"
+        let end = { (next: ChapterRow, extras: UInt32) in
+            model.apply(.endPage(
+                session: self.session, next: next, whyNone: nil, nextSource: nil, skipTo: self.row("14"),
+                extras: extras))
+            return model.end?.skipHint
+        }
+        #expect(end(extra, 1) == L.readerEndSkipHint(chapter: "13.5"))
+        #expect(end(extra, 2) == L.readerEndSkipHintExtras)
+        #expect(end(row("x/-/omake"), 1) == L.readerEndSkipHintExtras)
+    }
 }
 
 /// The bottom bar on the end page: the slider's numbers and the line never count past the
@@ -242,4 +276,5 @@ struct ReaderEndPageNumberTests {
         }
         #expect(model.pageNumber(of: 80) == 51, "a leaf past the end is still the last page")
     }
+
 }

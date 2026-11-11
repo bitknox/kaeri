@@ -8466,6 +8466,19 @@ public enum L {
     /// Line on the page between chapters, near its buttons: one more swipe opens the next chapter.
     public static var readerEndSwipe: String { string("reader-end-swipe", fallback: "Swipe to keep reading") }
 
+    /// Button beside Continue on the page between chapters, shown only when the next chapter is an extra (such as 16.5 between 16 and 17). It opens the chapter named, passing over the extras before it. The chapter is its number, such as 17.
+    public static func readerEndSkipTo(chapter: String) -> String {
+        Self.format("reader-end-skip-to", fallback: "Skip to chapter %1$@", chapter)
+    }
+
+    /// What a screen reader adds after "Skip to chapter 17": the extra it passes over stays unread in the chapter list. The chapter is the extra's number, such as 16.5.
+    public static func readerEndSkipHint(chapter: String) -> String {
+        Self.format("reader-end-skip-hint", fallback: "Chapter %1$@ stays unread.", chapter)
+    }
+
+    /// What a screen reader adds after "Skip to chapter 17" when it passes over more than one extra, or an extra with no number (such as an omake): those chapters stay unread in the chapter list.
+    public static var readerEndSkipHintExtras: String { string("reader-end-skip-hint-extras", fallback: "The extras before it stay unread.") }
+
     /// The next episode's length on the divider inside a strip.
     public static func readerDividerImages(count: Int) -> String {
         Self.format("reader-divider-images", fallback: "%1$lld images", count)

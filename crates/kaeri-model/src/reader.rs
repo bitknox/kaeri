@@ -965,6 +965,8 @@ impl ReaderCommand {
     }
 }
 
+// The end page carries two chapter rows. Not boxed: the bindings carry records by value.
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
 pub enum ReaderEvent {
@@ -1033,6 +1035,16 @@ pub enum ReaderEvent {
         /// folder.
         #[cfg_attr(feature = "ffi", uniffi(default))]
         next_source: Option<String>,
+        /// When `next` is an extra (16.5 beside 16 and 17, or one with no number): the first
+        /// chapter after it that is not one, for "Skip to chapter 17" beside Continue. `None`
+        /// for a next chapter that is not an extra. Skipped extras stay unread.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        skip_to: Option<ChapterRow>,
+        /// How many extras the skip passes over, from `next` on: 0 with no skip. With more than
+        /// one, or an extra with no number, the hint says the extras stay unread rather than
+        /// naming the chapter.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        extras: u32,
     },
     /// The next chapter's first page, made while this chapter is read, for the end page and a
     /// strip's divider.

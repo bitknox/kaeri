@@ -14422,6 +14422,21 @@ pub fn reader_end_swipe() -> String {
     text("reader-end-swipe", &[])
 }
 
+/// Button beside Continue on the page between chapters, shown only when the next chapter is an extra (such as 16.5 between 16 and 17). It opens the chapter named, passing over the extras before it. The chapter is its number, such as 17.
+pub fn reader_end_skip_to(chapter: &str) -> String {
+    text("reader-end-skip-to", &[("chapter", Arg::Text(chapter))])
+}
+
+/// What a screen reader adds after "Skip to chapter 17": the extra it passes over stays unread in the chapter list. The chapter is the extra's number, such as 16.5.
+pub fn reader_end_skip_hint(chapter: &str) -> String {
+    text("reader-end-skip-hint", &[("chapter", Arg::Text(chapter))])
+}
+
+/// What a screen reader adds after "Skip to chapter 17" when it passes over more than one extra, or an extra with no number (such as an omake): those chapters stay unread in the chapter list.
+pub fn reader_end_skip_hint_extras() -> String {
+    text("reader-end-skip-hint-extras", &[])
+}
+
 /// The next episode's length on the divider inside a strip.
 pub fn reader_divider_images(count: i64) -> String {
     text("reader-divider-images", &[("count", Arg::Int(count))])

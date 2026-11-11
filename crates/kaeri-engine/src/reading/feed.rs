@@ -641,7 +641,7 @@ async fn within(
 /// Write a page's bytes into `dir` as `name`, with the type they are. The write runs to its
 /// end even when the fetch waiting on it stops, and a page written after the session closed
 /// goes with its folder.
-async fn write(dir: &Path, name: &str, bytes: Vec<u8>, gone: &Gone) -> FeedPage {
+pub(crate) async fn write(dir: &Path, name: &str, bytes: Vec<u8>, gone: &Gone) -> FeedPage {
     let Some(ext) = page_extension(&bytes) else {
         return FeedPage::Failed(ReadingFailure::Unsupported { extension: "page".into() });
     };

@@ -53,6 +53,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -874,8 +875,9 @@ fun EinkEndPage(
     }
     val server = rememberServerLine(view.work, view.chapter.id)
     val read = view.chapter.id in state.read
-    // Continue, Back to the series, then Try again on the line.
+    // Continue, the skip past extras, Back to the series, then Try again on the line.
     val first = remember { FocusRequester() }
+    val skipFocus = remember { FocusRequester() }
     val second = remember { FocusRequester() }
     val retry = remember { FocusRequester() }
     val end = state.end
@@ -923,13 +925,34 @@ fun EinkEndPage(
                 Spacer(Modifier.height(36.dp))
                 // Each as wide as its words on a large panel, as the board draws them.
                 val wide = if (large) Modifier else Modifier.fillMaxWidth()
-                EinkSolidButton(Strings.einkContinueTo(context, nextNumber), { onContinue(next) }, wide.focusRequester(first).focusProperties { this.next = second })
+                // When the next chapter is an extra, the skip goes between Continue and Back to the series.
+                val skip = end?.skipTo
+                EinkSolidButton(
+                    Strings.einkContinueTo(context, nextNumber),
+                    { onContinue(next) },
+                    wide.focusRequester(first).focusProperties { this.next = if (skip != null) skipFocus else second },
+                )
                 Spacer(Modifier.height(14.dp))
+                if (skip != null) {
+                    val hint = end?.skipHint(context).orEmpty()
+                    EinkOutlinedButton(
+                        Strings.readerEndSkipTo(context, chapterNumber(skip)),
+                        { onContinue(skip) },
+                        wide
+                            .semantics { stateDescription = hint }
+                            .focusRequester(skipFocus)
+                            .focusProperties {
+                                previous = first
+                                this.next = second
+                            },
+                    )
+                    Spacer(Modifier.height(14.dp))
+                }
                 EinkOutlinedButton(
                     Strings.readerEndSeries(context),
                     actions.onSeries,
                     wide.focusRequester(second).focusProperties {
-                        previous = first
+                        previous = if (skip != null) skipFocus else first
                         if (server.line?.canRetry == true) this.next = retry
                     },
                 )

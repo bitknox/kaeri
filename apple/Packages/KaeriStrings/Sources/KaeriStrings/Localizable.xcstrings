@@ -214741,6 +214741,42 @@
         }
       }
     },
+    "reader-end-skip-hint" : {
+      "comment" : "What a screen reader adds after \"Skip to chapter 17\": the extra it passes over stays unread in the chapter list. The chapter is the extra's number, such as 16.5. Argument 1: chapter (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapter %1$@ stays unread."
+          }
+        }
+      }
+    },
+    "reader-end-skip-hint-extras" : {
+      "comment" : "What a screen reader adds after \"Skip to chapter 17\" when it passes over more than one extra, or an extra with no number (such as an omake): those chapters stay unread in the chapter list.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The extras before it stay unread."
+          }
+        }
+      }
+    },
+    "reader-end-skip-to" : {
+      "comment" : "Button beside Continue on the page between chapters, shown only when the next chapter is an extra (such as 16.5 between 16 and 17). It opens the chapter named, passing over the extras before it. The chapter is its number, such as 17. Argument 1: chapter (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skip to chapter %1$@"
+          }
+        }
+      }
+    },
     "reader-end-swipe" : {
       "comment" : "Line on the page between chapters, near its buttons: one more swipe opens the next chapter.",
       "extractionState" : "manual",

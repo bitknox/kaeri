@@ -76,6 +76,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -134,21 +135,28 @@ fun PhoneEndPage(
     val server = rememberServerLine(view.work, view.chapter.id)
     val read = view.chapter.id in state.read
     val continueFocus = remember { FocusRequester() }
+    val skipFocus = remember { FocusRequester() }
     val backFocus = remember { FocusRequester() }
     val retryFocus = remember { FocusRequester() }
     val retrying = server.line?.canRetry == true
-    Box(modifier.fillMaxSize().background(Chrome.ground).windowInsetsPadding(WindowInsets.safeDrawing).semantics { isTraversalGroup = true }) {
+    BoxWithConstraints(modifier.fillMaxSize().background(Chrome.ground).windowInsetsPadding(WindowInsets.safeDrawing).semantics { isTraversalGroup = true }) {
+        // Under 360 dp the page keeps the first page whole above the buttons: a smaller tile,
+        // title and margins, and less space above the buttons.
+        val narrow = maxWidth < 360.dp
+        val sides = if (narrow) 24.dp else 28.dp
         // Swipe above the amber button, the amber button at 88 dp from the foot, the text button at 40;
         // each grows with larger text. They come first, so Continue is the first stop and Try again on
         // the line follows Back.
         val finished = next == null && end?.whyNone == NoNext.FINISHED
         val second = next != null || finished
+        // Past the extras: under Continue, in the quiet fill, when the next chapter is one.
+        val skip = end?.skipTo?.takeIf { next != null }
         var foot by remember { mutableIntStateOf(0) }
         Column(
             Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .padding(start = 28.dp, end = 28.dp, bottom = 40.dp)
+                .padding(start = sides, end = sides, bottom = 40.dp)
                 .onSizeChanged { foot = it.height },
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -173,6 +181,7 @@ fun PhoneEndPage(
                     .focusRequester(continueFocus)
                     .focusProperties {
                         when {
+                            skip != null -> this.next = skipFocus
                             second -> this.next = backFocus
                             retrying -> this.next = retryFocus
                         }
@@ -186,11 +195,37 @@ fun PhoneEndPage(
                 )
             }
             Spacer(Modifier.height(10.dp))
+            if (skip != null && next != null) {
+                val hint = end?.skipHint(context).orEmpty()
+                Button(
+                    onClick = { session.openChapter(skip.id) },
+                    shape = RoundedCornerShape(25.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Chrome.plate, contentColor = Chrome.text),
+                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 50.dp)
+                        .semantics { stateDescription = hint }
+                        .focusRequester(skipFocus)
+                        .focusProperties {
+                            previous = continueFocus
+                            this.next = backFocus
+                        },
+                ) {
+                    Text(
+                        Strings.readerEndSkipTo(context, chapterNumber(skip)),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+                Spacer(Modifier.height(10.dp))
+            }
             val secondModifier = Modifier
                 .heightIn(min = 38.dp)
                 .focusRequester(backFocus)
                 .focusProperties {
-                    previous = continueFocus
+                    previous = if (skip != null) skipFocus else continueFocus
                     if (retrying) this.next = retryFocus
                 }
             when {
@@ -207,9 +242,9 @@ fun PhoneEndPage(
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(bottom = with(LocalDensity.current) { foot.toDp() } + 64.dp)
+                .padding(bottom = with(LocalDensity.current) { foot.toDp() } + if (narrow) 24.dp else 64.dp)
                 .verticalScroll(rememberScrollState())
-                .padding(start = 28.dp, end = 28.dp, top = 100.dp),
+                .padding(start = sides, end = sides, top = if (narrow) 84.dp else 100.dp),
         ) {
             Text(Strings.readerEndOfChapterNumber(context, number), color = Chrome.faint, fontSize = 15.sp, lineHeight = 20.sp)
             // With a server line coming, the tracker line's place is kept too, so nothing under it moves.
@@ -237,15 +272,15 @@ fun PhoneEndPage(
             val skipped = state.endSkipped(view.chapter.id)
             if (skipped.isNotEmpty()) SkippedLine(skipped.size, onShow = onShowCredits)
             if (next != null) {
-                Spacer(Modifier.height(if (server.held) 18.dp else 34.dp))
+                Spacer(Modifier.height(if (server.held || narrow) 18.dp else 34.dp))
                 Text(Strings.readerEndNext(context), color = Chrome.faint, fontSize = 13.sp)
                 Spacer(Modifier.height(4.dp))
                 Text(
                     next.title ?: Strings.readerChapterLine(context, chapterNumber(next)),
                     color = Chrome.text,
-                    fontFamily = robotoFlex(FontWeight.Bold, 30.sp),
-                    fontSize = 30.sp,
-                    lineHeight = 38.sp,
+                    fontFamily = robotoFlex(FontWeight.Bold, if (narrow) 26.sp else 30.sp),
+                    fontSize = if (narrow) 26.sp else 30.sp,
+                    lineHeight = if (narrow) 32.sp else 38.sp,
                 )
                 Spacer(Modifier.height(4.dp))
                 val facts = endFacts(context, next, end?.source?.takeIf { end.next?.id == next.id })
@@ -257,7 +292,7 @@ fun PhoneEndPage(
                     PageFileView(
                         file = state.preview?.takeIf { it.chapter == next.id }?.file,
                         images = images,
-                        modifier = Modifier.width(170.dp).height(242.dp),
+                        modifier = if (narrow) Modifier.width(120.dp).height(170.dp) else Modifier.width(170.dp).height(242.dp),
                     ) {
                         // With no preview the plate names the chapter, as the page plate names its page.
                         Box(Modifier.fillMaxSize().background(Chrome.plate)) {

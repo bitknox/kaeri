@@ -8354,6 +8354,18 @@
     <value>[Šŵîþé ţö ķééþ ŕéàðîñĝ~~~~~~~]</value>
     <comment>Line on the page between chapters, near its buttons: one more swipe opens the next chapter.</comment>
   </data>
+  <data name="ReaderEndSkipTo" xml:space="preserve">
+    <value>[Šķîþ ţö çĥàþţéŕ {chapter}~~~~~~]</value>
+    <comment>Button beside Continue on the page between chapters, shown only when the next chapter is an extra (such as 16.5 between 16 and 17). It opens the chapter named, passing over the extras before it. The chapter is its number, such as 17.</comment>
+  </data>
+  <data name="ReaderEndSkipHint" xml:space="preserve">
+    <value>[Çĥàþţéŕ {chapter} šţàýš üñŕéàð.~~~~~~~~]</value>
+    <comment>What a screen reader adds after "Skip to chapter 17": the extra it passes over stays unread in the chapter list. The chapter is the extra's number, such as 16.5.</comment>
+  </data>
+  <data name="ReaderEndSkipHintExtras" xml:space="preserve">
+    <value>[Ţĥé éẋţŕàš ƀéƒöŕé îţ šţàý üñŕéàð.~~~~~~~~~~]</value>
+    <comment>What a screen reader adds after "Skip to chapter 17" when it passes over more than one extra, or an extra with no number (such as an omake): those chapters stay unread in the chapter list.</comment>
+  </data>
   <data name="ReaderDividerImages_one" xml:space="preserve">
     <value>[Öñé îɱàĝé~~~]</value>
     <comment>The next episode's length on the divider inside a strip.</comment>

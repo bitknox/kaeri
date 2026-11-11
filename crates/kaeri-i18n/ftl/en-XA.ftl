@@ -9025,6 +9025,15 @@ reader-divider-facts-source = [{ $facts } · ƒŕöɱ { $source }~~~~~]
 # Line on the page between chapters, near its buttons: one more swipe opens the next chapter.
 reader-end-swipe = [Šŵîþé ţö ķééþ ŕéàðîñĝ~~~~~~~]
 
+# Button beside Continue on the page between chapters, shown only when the next chapter is an extra (such as 16.5 between 16 and 17). It opens the chapter named, passing over the extras before it. The chapter is its number, such as 17.
+reader-end-skip-to = [Šķîþ ţö çĥàþţéŕ { $chapter }~~~~~~]
+
+# What a screen reader adds after "Skip to chapter 17": the extra it passes over stays unread in the chapter list. The chapter is the extra's number, such as 16.5.
+reader-end-skip-hint = [Çĥàþţéŕ { $chapter } šţàýš üñŕéàð.~~~~~~~~]
+
+# What a screen reader adds after "Skip to chapter 17" when it passes over more than one extra, or an extra with no number (such as an omake): those chapters stay unread in the chapter list.
+reader-end-skip-hint-extras = [Ţĥé éẋţŕàš ƀéƒöŕé îţ šţàý üñŕéàð.~~~~~~~~~~]
+
 # The next episode's length on the divider inside a strip.
 reader-divider-images =
     { $count ->

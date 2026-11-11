@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -173,6 +174,50 @@ class ReaderShots {
         }
         compose.waitForIdle()
         captureScreenRoboImage(file("end-page-waiting"))
+    }
+
+    /** Chapter 12.5, an extra, with chapter 13 after it: the end page offers the skip. */
+    private fun skipState(to: String = "13"): Pair<ReaderState, PageImages> {
+        val dir = kotlin.io.path.createTempDirectory("reader-shots").toFile()
+        val extra = ReaderFixtures.chapter("local:lantern-stair/12.5", "12.5", "Volume 1 extras", 6u)
+        val whole = ReaderFixtures.chapter("local:lantern-stair/$to", to, "Lanterns Out", 34u)
+        val first = ReaderFixtures.grey(dir, "p0", 352, 500)
+        val state = ReaderState(
+            view = ReaderFixtures.view(next = extra),
+            leaves = ReaderFixtures.leaves(3),
+            end = EndPageView(extra, null, "Lantern Archive", whole),
+            preview = NextPreview(extra.id, first),
+        )
+        return state to PageImages().also { it.load(first) }
+    }
+
+    @Test
+    fun the_end_page_offers_the_skip_past_extras_under_continue() {
+        val (state, images) = skipState()
+        compose.setContent { PhoneEndPage(state, session, actions, images) }
+        compose.waitForIdle()
+        captureScreenRoboImage(file("end-page-skip"))
+    }
+
+    @Test
+    fun the_skip_past_extras_in_the_light_look() {
+        val (state, images) = skipState()
+        compose.setContent {
+            CompositionLocalProvider(app.kaeri.reader.phone.LocalChrome provides app.kaeri.reader.phone.LightChrome) {
+                PhoneEndPage(state, session, actions, images)
+            }
+        }
+        compose.waitForIdle()
+        captureScreenRoboImage(file("end-page-skip-light"))
+    }
+
+    @Test
+    @Config(qualifiers = "w320dp-h712dp-port-420dpi")
+    fun the_skip_past_extras_at_320_dp_with_a_four_digit_chapter() {
+        val (state, images) = skipState(to = "1024")
+        compose.setContent { PhoneEndPage(state, session, actions, images) }
+        compose.waitForIdle()
+        captureScreenRoboImage(file("end-page-skip-narrow"))
     }
 
     @Test

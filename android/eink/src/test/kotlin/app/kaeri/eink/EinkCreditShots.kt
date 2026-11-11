@@ -120,4 +120,18 @@ class EinkCreditShots {
         compose.waitForIdle()
         shot("end-page")
     }
+
+    @Test
+    fun the_end_page_offers_the_skip_past_extras_between_continue_and_back() {
+        open(reader = false)
+        val extra = EinkFixtures.chapter("local:lantern-stair/12.5", "12.5", "Volume 1 extras", 6u)
+        compose.setContent {
+            EinkTheme {
+                val state = session.state.collectAsState().value
+                EinkEndPage(state.copy(end = EndPageView(extra, null, null, next)), EinkReaderActions({}, {}, {}), onContinue = {})
+            }
+        }
+        compose.waitForIdle()
+        shot("end-page-skip")
+    }
 }

@@ -8,6 +8,7 @@
 
 pub(crate) mod credits;
 pub(crate) mod eink;
+pub(crate) mod extras;
 pub(crate) mod feed;
 pub mod novel;
 pub(crate) mod pages;
