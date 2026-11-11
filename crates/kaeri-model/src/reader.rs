@@ -123,6 +123,12 @@ pub struct LeafPart {
     /// strip sizes each image with it, so nothing moves when the files land.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub ratio: Option<f32>,
+    /// For a strip cut on e-ink, where in the strip the cut starts: the image, by its page in
+    /// the chapter, and the offset inside it. A place the engine sends (the start, Go to, a
+    /// place another device reached) names images, so the front end finds the cut with this:
+    /// the last one starting at or above the place, as the engine does.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub strip: Option<StripPos>,
 }
 
 /// Which half of a split spread a part shows, as it lies on the page.

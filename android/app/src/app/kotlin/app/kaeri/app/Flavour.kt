@@ -43,4 +43,7 @@ internal object Flavour {
 
     /** The app flavour stages no TV scene. */
     suspend fun reachedTv(intent: Intent, store: AppStore): Boolean = true
+
+    /** A reader command on its way to the engine, as it is. */
+    fun readerSend(command: app.kaeri.engine.model.Command, send: (app.kaeri.engine.model.Command) -> Unit) = send(command)
 }

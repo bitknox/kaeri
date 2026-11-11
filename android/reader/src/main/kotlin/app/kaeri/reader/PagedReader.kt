@@ -246,9 +246,10 @@ fun PagedReader(
     }
     if (fresh && state.jump == null && leaves.isNotEmpty()) SideEffect { pager.chapter = chapter }
     // A leaf counts as shown once it is on screen, never while a jump is still to come. A new layout
-    // reports the leaf again without a turn.
+    // reports the leaf again without a turn, also when its jump lands on the leaf number already
+    // shown: the engine makes the pages around the leaf it hears of.
     var reported by remember { mutableIntStateOf(pager.turns) }
-    LaunchedEffect(pager.turns, state.layout) {
+    LaunchedEffect(pager.turns, state.layout, state.jump == null) {
         if (leaves.isEmpty() || state.jump != null) return@LaunchedEffect
         withFrameNanos { }
         val turned = pager.turns != reported && !pager.placed
@@ -519,6 +520,7 @@ fun PagedReader(
                             state = state,
                             images = images,
                             onMissing = onMissing,
+                            ask = current,
                             onRetry = onRetry,
                             instant = !motion,
                             onReady = {

@@ -70,6 +70,9 @@ data class NovelGoTo(val pos: NovelPos, val id: Long)
 /** The clock a chapter's opening wait counts on, in milliseconds. */
 fun openingClock(): Long = System.nanoTime() / 1_000_000
 
+/** A chapter asked for from the one on screen: its row, when the session knows it. */
+data class ChapterAsk(val chapter: ChapterId, val row: ChapterRow?)
+
 /** What the engine said of the open session. */
 data class ReaderState(
     /** Asked to open and not yet answered. */
@@ -114,6 +117,11 @@ data class ReaderState(
     val openingWait: ReaderWait? = null,
     /** When the chapter on screen was asked for, on [openingClock]; 0 when nothing was asked. */
     val openingSince: Long = 0L,
+    /**
+     * Another chapter asked for while this one is on screen, until it opens or fails: the screen
+     * says it is on its way, and no second chapter is asked meanwhile.
+     */
+    val asking: ChapterAsk? = null,
     val preview: NextPreview? = null,
     /** The chapter a strip flowed on from, drawn above this one in the same scroll. */
     val previous: ReaderState? = null,
@@ -153,8 +161,29 @@ data class ReaderState(
     /** The leaf that shows [page], or null when no leaf does. */
     fun leafOf(page: UInt): Int? = leaves.indexOfFirst { leaf -> leaf.parts.any { it.page == page } }.takeIf { it >= 0 }
 
-    /** The leaf a place shows: its page, its strip image, or the first. */
-    fun leafOf(place: ReadPlace): Int = place.page?.let(::leafOf) ?: place.strip?.image?.let(::leafOf) ?: 0
+    /**
+     * The leaf a place shows: its page, its strip image, or the first. A place names images; on
+     * e-ink a strip is cut into screens, each saying where it starts, and the place is in the
+     * last one starting at or above it, or for a page alone the first of that image.
+     */
+    fun leafOf(place: ReadPlace): Int {
+        val cuts = leaves.map { leaf -> leaf.parts.firstOrNull()?.strip }
+        if (cuts.none { it != null }) return place.page?.let(::leafOf) ?: place.strip?.image?.let(::leafOf) ?: 0
+        val at = place.strip
+        val found = when {
+            at != null -> cuts.indexOfLast { it != null && (it.image < at.image || it.image == at.image && it.offset <= at.offset) }
+            place.page != null -> cuts.indexOfFirst { it != null && it.image >= place.page!! }
+            else -> 0
+        }
+        return found.coerceAtLeast(0)
+    }
+
+    /** Where in the strip the e-ink cut on [leaf] starts, as a place in this chapter. */
+    fun placeOf(leaf: Int): ReadPlace? {
+        val at = leaves.getOrNull(leaf)?.parts?.firstOrNull()?.strip ?: return null
+        val view = view ?: return null
+        return ReadPlace(view.work, view.chapter.id, at.image, at, null)
+    }
 }
 
 /**
@@ -263,7 +292,11 @@ class ReaderSession(private val send: (Command) -> Unit) {
         val session = now.session ?: return
         val chapter = now.chapter ?: return
         shownPage = now.leaves.getOrNull(leaf)?.parts?.firstOrNull()?.page ?: shownPage
-        here = here?.takeIf { it.chapter == chapter }?.copy(page = shownPage, strip = null)
+        // An e-ink cut's page is the cut's own number: the place is the image it starts in. A whole
+        // image keeps the spot in it the reader opened at, for the cuts a strip is laid out in later.
+        here = now.placeOf(leaf) ?: here?.takeIf { it.chapter == chapter }?.let { at ->
+            at.copy(page = shownPage, strip = at.strip?.takeIf { it.image == shownPage })
+        }
         // Off the leaf a credit page shows over, the credit page goes. A page kept from it waits
         // on: its Undo outlasts the turn, and the engine hears when it runs out or the chapter closes.
         val moved = shownLeaf != null && shownLeaf != leaf
@@ -320,13 +353,22 @@ class ReaderSession(private val send: (Command) -> Unit) {
         reader(ReaderCommand.Retry(now.session ?: return, now.chapter ?: return, page))
     }
 
-    fun openChapter(chapter: ChapterId) {
+    /**
+     * Open [chapter] in place of the one on screen. False, asking nothing, with no session yet or
+     * while another chapter is on its way: taps that come while it opens do not queue more jumps.
+     */
+    fun openChapter(chapter: ChapterId): Boolean {
+        if (state.value.session == null || state.value.asking != null) return false
         commitKeep()
         val now = state.value
-        val session = now.session ?: return
-        awaiting = now.view?.next?.takeIf { it.id == chapter } ?: now.volumes.flatMap { it.chapters }.firstOrNull { it.id == chapter }
+        val session = now.session ?: return false
+        val view = now.view
+        awaiting = listOfNotNull(view?.next, view?.previous).firstOrNull { it.id == chapter }
+            ?: now.volumes.flatMap { it.chapters }.firstOrNull { it.id == chapter }
         awaitingOpen = true
+        _state.value = now.copy(asking = ChapterAsk(chapter, awaiting), openingSince = openingClock())
         reader(ReaderCommand.OpenChapter(session, chapter))
+        return true
     }
 
     /**
@@ -336,7 +378,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
     fun crossOn(): Boolean {
         val now = state.value
         val next = now.end?.next ?: now.view?.next ?: return false
-        if (awaitingOpen && awaiting?.id == next.id) return true
+        if (now.asking != null) return true
         openChapter(next.id)
         return true
     }
@@ -673,11 +715,22 @@ class ReaderSession(private val send: (Command) -> Unit) {
                     startAt = null
                     return run { _state.value = placed }
                 }
+                // Laid out again before any page was painted, as a long strip is once its images'
+                // sizes are known: the place it opened at still stands, not the old layout's leaf.
+                val shown = shownPage
+                val unpainted = if (start == null && shown == null) here?.takeIf { it.chapter == now.chapter } else null
+                // The leaf shown is found again by its place, never by its number: an e-ink cut by
+                // where it starts, as a new layout cuts anew; a whole image, as a strip whose pages
+                // were still coming is cut once they are all there, by the image and the spot in it.
+                val shownAt = shownLeaf?.let(now::placeOf)
+                    ?: here?.takeIf { shown != null && it.chapter == now.chapter && it.page == shown }
                 val leaf = when {
                     start != null -> placed.leafOf(start)
-                    else -> shownPage?.let(placed::leafOf)
+                    shownAt != null -> placed.leafOf(shownAt)
+                    shown != null -> placed.leafOf(shown)
+                    else -> unpainted?.let(placed::leafOf)
                 }
-                val jump = leaf?.let { ReaderJump(it, start?.strip, ++ids) }
+                val jump = leaf?.let { ReaderJump(it, (start ?: unpainted)?.strip, ++ids) }
                 if (start != null) {
                     startJump = jump?.id
                     if (jump == null) startAt = null

@@ -1842,6 +1842,7 @@ mod tests {
 
     mod back_to;
     mod cross_parts;
+    mod eink_strip;
     mod groups;
     mod hints;
     mod leaving;
