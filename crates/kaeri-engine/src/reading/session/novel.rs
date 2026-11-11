@@ -229,7 +229,7 @@ pub(super) fn fetch_ahead(
                 opened,
                 (chapter.clone(), learning),
                 dir,
-                |_| 0,
+                |_, _| 0,
                 now,
                 out.clone(),
                 gone.clone(),
@@ -708,9 +708,11 @@ impl Session {
                 Ok(opened) if matches!(opened.content, ChapterContent::Images(_)) => {
                     // A place kept in another split of the chapter: its page comes first, as
                     // the pages are counted once the credit pages are left out.
-                    let first = move |total| {
+                    let first = move |total, skipped: &[u32]| {
                         kept_of
-                            .and_then(|of| super::rescaled(first, strip, of, total))
+                            .and_then(|of| {
+                                super::kept_past_credits(first, strip, of, (total, skipped))
+                            })
                             .map_or(first, |(page, _)| page) as usize
                     };
                     let chapter = id.clone();
@@ -805,7 +807,8 @@ impl Session {
                 let chapter = &mut self.chapters[self.at];
                 chapter.path = feed.dir.clone();
                 chapter.format = "pages".into();
-                self.rescale_kept(feed.pages().len() as u32);
+                let skipped: Vec<u32> = feed.credits.iter().map(|c| c.page).collect();
+                self.rescale_kept(feed.count() as u32, &skipped);
                 self.feed = Some(feed);
                 let page = self.start.page.unwrap_or(0);
                 self.lay_out(cx, pages, page);

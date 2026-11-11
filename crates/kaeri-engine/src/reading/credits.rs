@@ -157,6 +157,26 @@ pub(crate) struct Learning {
 }
 
 impl Learning {
+    /// The credit pages among `chapter`'s kept edge fingerprints, as its next fetch of `count`
+    /// pages would leave them out, from what is known now. Nothing is fetched or kept.
+    pub(crate) fn find(&self, chapter: &str, count: u32) -> Vec<PagePrint> {
+        if !self.skip || count == 0 {
+            return Vec::new();
+        }
+        let all = self.store.page_prints(&self.work).unwrap_or_default();
+        let group = all
+            .iter()
+            .find(|p| p.chapter == chapter && p.group_label.is_some())
+            .and_then(|p| p.group_label.clone());
+        let mine: Vec<PagePrint> = all
+            .iter()
+            .filter(|p| p.chapter == chapter && p.page < count)
+            .map(|p| PagePrint { page: p.page, at_end: p.at_end, print: p.print })
+            .collect();
+        let kept = self.store.kept_credit_pages(&self.work).unwrap_or_default();
+        whole_or_not(credit_pages(&all, &kept, (chapter, group.as_deref()), &mine), count)
+    }
+
     /// Keep the edge fingerprints `mine` of `chapter`, read in `group`, in place of those kept
     /// for it before, and give the credit pages among them when the person leaves them out.
     pub(crate) fn keep_and_find(

@@ -406,6 +406,20 @@ fn a_kept_place_scales_to_the_chapters_length() {
     assert_eq!(rescaled(27, None, 28, 4), Some((3, None)), "never past the last page");
 }
 
+/// A place counted with every page moves past the credit pages left out before it, so it is the
+/// same page; one counted in another split is scaled.
+#[test]
+fn a_kept_place_moves_past_the_credit_pages_left_out() {
+    use crate::reading::session::{kept_past_credits, rescaled};
+    let at = |image, offset| Some(StripPos { image, offset });
+    assert_eq!(kept_past_credits(26, None, 36, (35, &[0])), Some((25, None)), "first page out");
+    assert_eq!(kept_past_credits(26, None, 36, (35, &[35])), Some((26, None)), "last page out");
+    assert_eq!(kept_past_credits(35, None, 36, (35, &[35])), Some((34, None)), "on the credit");
+    assert_eq!(kept_past_credits(4, at(4, 0.5), 6, (4, &[0, 5])), Some((3, at(3, 0.5))));
+    assert_eq!(kept_past_credits(26, None, 35, (35, &[0])), None, "counted without it already");
+    assert_eq!(kept_past_credits(4, None, 12, (3, &[0])), rescaled(4, None, 12, 3));
+}
+
 /// Mark read up to here counts every chapter under it as read on the series page, not only the
 /// ones read one by one.
 #[tokio::test(start_paused = true)]

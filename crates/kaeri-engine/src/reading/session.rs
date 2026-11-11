@@ -232,6 +232,8 @@ pub struct Session {
     last_write: Option<Instant>,
     /// The chapter and page of the place last written.
     written: Option<(ChapterId, Option<u32>)>,
+    /// The place last written counted past credit pages learnt while it was open, and that count.
+    written_past_credits: Option<(ReadPlace, u32)>,
     /// The novel open in the web view.
     novel: Option<novel::Open>,
     /// Where the next novel chapter opens.
@@ -410,7 +412,7 @@ impl Reader {
         self.listing = None;
         if let Some(mut s) = self.session.take() {
             s.read_timer += 1;
-            s.flush(cx);
+            s.flush_leaving(cx);
             // Progress held for the close goes now: the furthest chapter read this time.
             if let Some((chapter, at)) = s.unsent.take()
                 && !queue_trackers(cx, &s.work, &chapter, at).is_empty()
@@ -671,6 +673,7 @@ impl Reader {
             dirty: false,
             last_write: None,
             written: None,
+            written_past_credits: None,
             novel: None,
             restore,
             prepared: Arc::default(),
@@ -719,7 +722,7 @@ impl Reader {
     pub fn background(&mut self, cx: &Cx<'_>) {
         if let Some(s) = self.session.as_mut() {
             s.read_timer += 1;
-            s.flush(cx);
+            s.flush_leaving(cx);
         }
     }
 
@@ -998,11 +1001,16 @@ impl Session {
     }
 
     /// Move a kept place read in a split of the chapter `kept_of` pages long to the same point
-    /// of this one, `total` pages long. Once, as the chapter is first laid out.
-    fn rescale_kept(&mut self, total: u32) {
+    /// of this one, `total` pages long once the credit pages `skipped` are left out. Once, as the
+    /// chapter is first laid out.
+    fn rescale_kept(&mut self, total: u32, skipped: &[u32]) {
         if let Some(of) = self.kept_of.take()
-            && let Some((page, strip)) =
-                rescaled(self.start.page.unwrap_or(0), self.start.strip, of, total)
+            && let Some((page, strip)) = kept_past_credits(
+                self.start.page.unwrap_or(0),
+                self.start.strip,
+                of,
+                (total, skipped),
+            )
         {
             self.start.page = Some(page);
             self.start.strip = strip;
@@ -1121,7 +1129,8 @@ impl Session {
         self.pages_total = laid.pages;
         // A place kept in a split of the chapter with other pages, as another source's, goes to
         // the same point in this one.
-        self.rescale_kept(laid.pages);
+        let skipped: Vec<u32> = laid.credits.iter().map(|c| c.page).collect();
+        self.rescale_kept(laid.pages, &skipped);
         let eink = self.eink();
         // A guess is kept for the series on this device, and said once.
         let now = cx.now();
@@ -1629,9 +1638,56 @@ impl Session {
         let Some(here) = self.place.clone() else { return };
         self.last_write = Some(Instant::now());
         self.written = Some((here.chapter.clone(), here.page));
+        self.write_place(cx, &here, self.pages_total);
+    }
+
+    /// Write the place as the chapter is left. When credit pages of the chapter were learnt while
+    /// it was open, the place is written as the chapter counts its pages once they are left out,
+    /// so the Continue row and the next open agree.
+    fn flush_leaving(&mut self, cx: &Cx<'_>) {
+        let Some(past) = self.place_past_new_credits(cx) else {
+            self.flush(cx);
+            return;
+        };
+        if !self.dirty && self.written_past_credits.as_ref() == Some(&past) {
+            return;
+        }
+        self.dirty = false;
+        self.last_write = Some(Instant::now());
+        self.written = self.place.as_ref().map(|p| (p.chapter.clone(), p.page));
+        self.write_place(cx, &past.0, past.1);
+        self.written_past_credits = Some(past);
+    }
+
+    /// The place and the chapter's count once the credit pages learnt since it was laid out
+    /// leave it, as from the next chapter fetched ahead. The page read stays the same: a place
+    /// on a page now left out goes to the one before it. `None` when nothing was learnt.
+    fn place_past_new_credits(&self, cx: &Cx<'_>) -> Option<(ReadPlace, u32)> {
+        let here = self.place.clone().filter(|p| p.novel.is_none() && !self.read_fired)?;
+        let feed = self.feed.as_ref().filter(|f| f.chapter == here.chapter)?;
+        let page = here.page?;
+        let left: Vec<u32> = feed.credits.iter().map(|c| c.page).collect();
+        let total = u32::try_from(feed.count() + left.len()).ok()?;
+        let found = self.learning(cx).find(here.chapter.as_str(), total);
+        let new: Vec<u32> =
+            found.iter().map(|p| p.page).filter(|p| !left.contains(p)).collect();
+        if new.is_empty() {
+            return None;
+        }
+        // Pages by where they are in the source's chapter, as counted now and as they will be.
+        let order: Vec<u32> = (0..total).filter(|p| !left.contains(p)).collect();
+        let kept: Vec<u32> = order.iter().copied().filter(|p| !new.contains(p)).collect();
+        let moved = moved_to(&order, &kept, page)?;
+        let mut place = here;
+        place.page = Some(moved);
+        place.strip = place.strip.map(|s| StripPos { image: moved, ..s });
+        Some((place, u32::try_from(kept.len()).ok()?))
+    }
+
+    fn write_place(&self, cx: &Cx<'_>, here: &ReadPlace, of: u32) {
         let mut event = ReadEvent::new(self.work.as_str(), here.chapter.as_str(), cx.now());
         event.page = here.page;
-        event.of_pages = Some(self.pages_total).filter(|n| *n > 0);
+        event.of_pages = Some(of).filter(|n| *n > 0);
         event.strip_image = here.strip.map(|s| s.image);
         event.strip_offset = here.strip.map(|s| f64::from(s.offset));
         event.novel_pos = here.novel.as_ref().map(NovelPos::encode);
@@ -1649,7 +1705,7 @@ impl Session {
         page: u32,
         novel: Option<NovelPos>,
     ) {
-        self.flush(cx);
+        self.flush_leaving(cx);
         if self.novel.take().is_some() {
             cx.services.novels.remove(self.id);
         }
@@ -1758,6 +1814,33 @@ pub(super) fn rescaled(
     let image = (at.floor() as u32).min(total - 1);
     let offset = (at - f64::from(image)).clamp(0.0, 1.0) as f32;
     Some((image, strip.map(|_| StripPos { image, offset })))
+}
+
+/// As [`rescaled`], for a chapter that now leaves out the credit pages `skipped` (by where they
+/// are among every page the source has). A place counted with every page moves past the credit
+/// pages before it, so the page read stays the same; a place counted otherwise is scaled.
+pub(super) fn kept_past_credits(
+    page: u32,
+    strip: Option<StripPos>,
+    of: u32,
+    (total, skipped): (u32, &[u32]),
+) -> Option<(u32, Option<StripPos>)> {
+    if skipped.is_empty() || of as usize != total as usize + skipped.len() {
+        return rescaled(page, strip, of, total);
+    }
+    let every: Vec<u32> = (0..of).collect();
+    let kept: Vec<u32> = every.iter().copied().filter(|p| !skipped.contains(p)).collect();
+    let image = moved_to(&every, &kept, page)?;
+    Some((image, strip.filter(|s| s.image == page).map(|s| StripPos { image, ..s })))
+}
+
+/// Page `page` of a chapter whose pages are `before` (each by where it is among every page the
+/// source has), in the same chapter with the pages `after`: the same page, or on one left out,
+/// the one before it.
+fn moved_to(before: &[u32], after: &[u32], page: u32) -> Option<u32> {
+    let at = *before.get(page as usize)?;
+    let moved = after.iter().rposition(|p| *p <= at).unwrap_or(0);
+    u32::try_from(moved).ok()
 }
 
 fn resumed_msg(mode: ReaderMode, page: u32, strip: Option<StripPos>) -> Option<ReadingMsg> {

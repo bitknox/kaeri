@@ -452,6 +452,49 @@ async fn a_streamed_chapter_opens_without_its_credit_pages_at_both_ends() {
     assert_eq!(downloaded.len(), leaves.len(), "one count, streamed or downloaded");
 }
 
+/// Credit pages learnt while a chapter is open, from the next chapter fetched ahead, leave it
+/// when it opens again. Its place is kept as it counts then, so its row and the reader agree on
+/// the page and the count, and the reader opens on the page read.
+#[tokio::test(start_paused = true)]
+async fn a_place_read_before_credit_pages_were_learnt_counts_as_the_reader_does() {
+    let mut h = harness_with(Arc::new(Groups::both_ends()), false);
+    rows(&h).await;
+    h.open(OpenAt::Start).await;
+    let session = h.session();
+    h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("2") });
+    let leaves = leaves_of(&mut h, "2").await;
+    assert_eq!(leaves.len(), 6, "two chapters teach no credit pages: five pages");
+    // The fourth page: near the end, the next chapter is fetched ahead and its edges teach
+    // both credit pages.
+    h.shown(3, TurnHow::Turn).await;
+    let learnt = |h: &Harness| {
+        let prints = h.services.store.page_prints(WORK).unwrap();
+        prints.iter().any(|p| p.chapter == "3")
+    };
+    let start = tokio::time::Instant::now();
+    while !learnt(&h) && start.elapsed() < std::time::Duration::from_secs(20) {
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        h.drain();
+    }
+    assert!(learnt(&h), "chapter 3 was not fetched ahead");
+    h.send(ReaderCommand::Close { session });
+    let kept = h.kept("2").unwrap();
+    assert_eq!((kept.last_page, kept.of_pages), (Some(2), Some(3)), "page 4 of 5 is 3 of 3");
+    let row = rows(&h).await.into_iter().find(|r| r.id.as_str() == "2").unwrap();
+    assert_eq!(row.state, ChapterReadState::InProgress { page: 3, of: Some(3) });
+
+    h.drain();
+    let (view, leaves, notices) = h.open(OpenAt::Resume).await;
+    assert_eq!(view.chapter.id.as_str(), "2");
+    assert_eq!(leaves.len(), 4, "both credit pages left out");
+    assert_eq!(view.start.page, Some(2), "the page read, as the row says");
+    let resumed = notices.iter().any(|e| {
+        matches!(e, ReaderEvent::Notice(n)
+            if n.msg == Msg::Reading(ReadingMsg::ReaderResumed { page: 3 }))
+    });
+    assert!(resumed, "{notices:?}");
+}
+
 /// An edge page that does not come is waited on for a few seconds at most: the chapter lays out
 /// without it, its end keeping every page, and the other end's credit page still left out.
 #[tokio::test(start_paused = true)]
