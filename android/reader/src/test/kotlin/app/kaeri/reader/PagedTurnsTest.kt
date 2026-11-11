@@ -37,6 +37,7 @@ class PagedTurnsTest {
 
     private val session = ReaderSession {}
     private val pager = PagedReaderState()
+    private val images = PageImages()
     private val reports = mutableListOf<Triple<Int, TurnHow, Boolean>>()
     private var crossed = 0
     private val missing = mutableListOf<Int>()
@@ -50,7 +51,7 @@ class PagedTurnsTest {
             PagedReader(
                 state = state,
                 pager = pager,
-                images = PageImages(),
+                images = images,
                 direction = ReadDirection.RIGHT_TO_LEFT,
                 zones = TapZones.phone(ReadDirection.RIGHT_TO_LEFT),
                 onControls = {},
@@ -173,5 +174,15 @@ class PagedTurnsTest {
         compose.onRoot().performTouchInput { swipeUp() }
         compose.waitForIdle()
         assertEquals(from, pager.leaf)
+    }
+
+    @Test
+    fun the_pages_beside_the_one_shown_are_decoded_ahead() {
+        val dir = java.nio.file.Files.createTempDirectory("turns").toFile()
+        val files = List(8) { ReaderFixtures.grey(dir, "$it.gray", 40, 60) }
+        open(ReaderFixtures.leaves(8) { files[it.toInt()] })
+        compose.waitUntil(5_000) { images.cached(files[2]) != null && images.cached(files[4]) != null }
+        assertEquals(null, images.cached(files[6]))
+        dir.deleteRecursively()
     }
 }

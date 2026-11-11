@@ -266,6 +266,19 @@ fun PagedReader(
     val fade = remember { Animatable(1f) }
     val removed = rememberAnimationsRemoved()
     var drawn by remember { mutableIntStateOf(-1) }
+    // With motion off each picture is drawn once. The leaf last drawn whole stays on screen until
+    // the one after it (a turn, or the same place laid out anew when the device turns) is drawn
+    // whole, for at most the plate's wait: the panel never shows the empty ground between them.
+    var drawnLeaf by remember { mutableStateOf<Leaf?>(null) }
+    val heldFrame = remember { arrayOfNulls<HeldFrame>(1) }
+
+    // The pages beside the one shown are decoded ahead, so a turn draws its page in one frame.
+    val near = remember(leaves, pager.leaf, state.files, state.held) {
+        listOf(pager.leaf + 1, pager.leaf - 1).flatMap { leaves.getOrNull(it)?.parts.orEmpty() }.mapNotNull(state::file)
+    }
+    LaunchedEffect(near) {
+        if (near.isNotEmpty()) withContext(Dispatchers.IO) { near.forEach { if (images.cached(it) == null) images.load(it) } }
+    }
     LaunchedEffect(pager.turns) {
         if (pager.under == null) return@LaunchedEffect
         if (!motion) {
@@ -536,7 +549,17 @@ fun PagedReader(
                             onReady = {
                                 if (current) {
                                     drawn = index
-                                    onReady(index)
+                                    val was = drawnLeaf
+                                    drawnLeaf = leaf
+                                    if (motion || leaf == was) {
+                                        onReady(index)
+                                    } else {
+                                        // A held frame gives way in the next frame: the leaf is ready once it is on screen.
+                                        scope.launch {
+                                            withFrameNanos { }
+                                            onReady(index)
+                                        }
+                                    }
                                 }
                             },
                             waiting = waiting,
@@ -587,7 +610,32 @@ fun PagedReader(
                 val leafAlpha = if (landing != null) 1f else alpha
                 // A credit step back to its own leaf slides the credit page away and leaves the leaf in place.
                 val stepsToSelf = drag != 0f && state.creditStep((drag > 0) == rtl, pager.leaf).let { it is CreditStep.Leaf && it.leaf == pager.leaf }
-                Show(landing ?: pager.leaf, alpha = leafAlpha, shift = if (stepsToSelf) 0f else shift, current = true)
+                val showing = landing ?: pager.leaf
+                val hold = if (motion || landing != null) null else held(heldFrame, leaves.getOrNull(showing), drawnLeaf, state)
+                Show(showing, alpha = if (hold != null) 0f else leafAlpha, shift = if (stepsToSelf) 0f else shift, current = true)
+                if (hold != null) {
+                    // The old frame as it was drawn, over the new leaf that draws unseen under it.
+                    LeafView(
+                        leaf = hold.leaf,
+                        state = hold.state,
+                        images = images,
+                        onMissing = {},
+                        onRetry = {},
+                        modifier = Modifier.fillMaxSize().graphicsLayer {
+                            translationX = hold.pan.x
+                            translationY = hold.pan.y
+                            scaleX = hold.scale
+                            scaleY = hold.scale
+                        },
+                        instant = true,
+                        waiting = { _, _ -> },
+                        failed = { _, _, _ -> },
+                    )
+                } else if (!motion) {
+                    leaves.getOrNull(showing)?.takeIf { it == drawnLeaf }?.let { leaf ->
+                        heldFrame[0] = HeldFrame(leaf, state, pager.pan, pager.zoom * fitting(showing).scale)
+                    }
+                }
                 if (landing == null) {
                     leavingCredit?.let { Credit(it, leafAlpha, shift) }
                     heldCredit?.let { Credit(it, leafAlpha * creditFade.value, shift) }
@@ -595,6 +643,25 @@ fun PagedReader(
             }
         }
     }
+}
+
+/** A leaf drawn whole with motion off, as it was drawn: the state it was drawn from, its pan and scale. */
+internal class HeldFrame(val leaf: Leaf, val state: ReaderState, val pan: Offset, val scale: Float)
+
+/**
+ * The frame to keep on screen over [showing], which is not drawn whole yet: the last one drawn
+ * whole in this chapter, until [showing] is drawn or the plate's wait runs out. Null to draw
+ * [showing] as it is.
+ */
+@Composable
+private fun held(frame: Array<HeldFrame?>, showing: Leaf?, drawnLeaf: Leaf?, state: ReaderState): HeldFrame? {
+    var waitedOut by remember { mutableStateOf<Leaf?>(null) }
+    LaunchedEffect(showing) {
+        delay(PageWaits.PLATE_MS)
+        waitedOut = showing
+    }
+    if (showing == null || showing.endPage || showing == drawnLeaf || waitedOut == showing) return null
+    return frame[0]?.takeIf { it.state.chapter == state.chapter && it.leaf != showing }
 }
 
 /**
