@@ -971,11 +971,18 @@ pub(crate) fn failure_of(
 const UNKNOWN_SHAPE: (u32, u32) = (1000, 1400);
 
 /// The shape a feed's pages not landed yet are laid out in, from the shapes of those landed:
-/// the first single page's, as the pages of one chapter mostly share one. A spread is no guess:
-/// many chapters open on a wide colour page or a banner, and every page to come taken for a
-/// spread is split in halves on a one-page screen until all have landed.
+/// the middle one of the single pages by width to height, as the pages of one chapter mostly
+/// share one and the odd ones are wider. Many chapters open on a square colour page, a wide
+/// one or a banner. Every page to come laid out in a square shape shows shrunk until all have
+/// landed, and one taken for a spread is split in halves on a one-page screen, so a spread is
+/// no guess at all.
 fn guessed_shape(landed: impl IntoIterator<Item = (u32, u32)>) -> (u32, u32) {
-    landed.into_iter().find(|&(w, h)| !layout::is_spread(w, h)).unwrap_or(UNKNOWN_SHAPE)
+    let mut single: Vec<(u32, u32)> = landed
+        .into_iter()
+        .filter(|&(w, h)| w > 0 && h > 0 && !layout::is_spread(w, h))
+        .collect();
+    single.sort_by(|a, b| (a.0 as f32 / a.1 as f32).total_cmp(&(b.0 as f32 / b.1 as f32)));
+    single.get(single.len().saturating_sub(1) / 2).copied().unwrap_or(UNKNOWN_SHAPE)
 }
 
 /// Whether the pages are a vertical strip: most of them far taller than wide.
@@ -1638,6 +1645,19 @@ mod tests {
         // The wish comes first; 9 was asked for and is kept, 4 was only wished before.
         assert_eq!(wished(vec![5, 6, 7], &queue, &asked), VecDeque::from([5, 6, 7, 9]));
         assert_eq!(wished(vec![1], &VecDeque::new(), &HashSet::new()), VecDeque::from([1]));
+    }
+
+    #[test]
+    fn a_chapter_opening_on_a_square_page_guesses_the_shape_its_other_pages_share() {
+        // A source's chapter opens on a square colour page; the next page and the last ones
+        // are the chapter's own portrait pages.
+        assert_eq!(guessed_shape([(1300, 1300), (1131, 1608)]), (1131, 1608));
+        assert_eq!(
+            guessed_shape([(1300, 1300), (1131, 1608), (1131, 1608), (1131, 1608)]),
+            (1131, 1608)
+        );
+        // A strip's tall images stay the guess past a short last one.
+        assert_eq!(guessed_shape([(800, 4000), (800, 4000), (800, 900)]), (800, 4000));
     }
 
     #[test]
