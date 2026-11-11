@@ -1245,7 +1245,7 @@ impl Reader {
     fn show_plate(self: &Rc<Self>, what: Waiting) {
         let number = match what {
             Waiting::Chapter => self.opening_line.borrow().clone(),
-            Waiting::Page(page) => t::linux_reader_page_plate(i64::from(page + 1)),
+            Waiting::Page(page) => t::reader_page_plate(i64::from(page + 1)),
         };
         if what == Waiting::Chapter {
             self.count_wait();
@@ -2379,6 +2379,7 @@ impl Reader {
                 picture.set_size_request(size.0, size.1);
                 changed = true;
             }
+            strip_frame_window(picture, size.1, height.round() as i32);
         }
         changed |= self.size_strip_credits(column.round() as i32);
         if changed && let Some(keep) = keep {
@@ -3393,25 +3394,27 @@ fn strip_wanted(
     (seen, y - f64::from(spacing))
 }
 
-/// A strip image's place: the picture, and over it the page plate while its file is on its way,
-/// as a page waits in the paged reader: nothing for 600 ms, then the plate with the page's
-/// number, and a line once it has been asked for 4 s ([`strip_frame_asked`]). A jump far into
-/// a long chapter lands among plates, never on an empty window.
+/// A strip image's place: the picture, and over it the plate while its file is on its way, as a
+/// page waits in the paged reader: nothing for 600 ms, then the plate with the image's number,
+/// and a line under it once it has been asked for 4 s ([`strip_frame_asked`]). The words sit in
+/// the middle of the image's first window-height ([`strip_frame_window`]). A jump far into a
+/// long chapter lands among plates, never on an empty window.
 fn strip_frame(page: u32) -> (gtk::Overlay, gtk::Picture) {
     let picture = gtk::Picture::new();
     picture.set_content_fit(gtk::ContentFit::Fill);
     picture.set_can_shrink(true);
     picture.add_css_class("strip-leaf");
-    let number = gtk::Label::new(Some(&t::linux_reader_page_plate(i64::from(page + 1))));
+    let number = gtk::Label::new(Some(&t::reader_image_plate(i64::from(page + 1))));
     number.add_css_class("reader-plate-number");
     number.add_css_class("numeric");
-    let line = gtk::Label::new(Some(&t::reader_page_loading(i64::from(page + 1))));
+    let line = gtk::Label::new(Some(&t::reader_image_loading(i64::from(page + 1))));
     line.add_css_class("reader-plate-line");
     line.set_wrap(true);
     line.set_justify(gtk::Justification::Center);
     line.set_visible(false);
     let words = gtk::Box::new(gtk::Orientation::Vertical, 6);
     words.set_valign(gtk::Align::Center);
+    words.set_vexpand(true);
     words.set_margin_start(24);
     words.set_margin_end(24);
     words.append(&number);
@@ -3435,6 +3438,15 @@ fn strip_frame(page: u32) -> (gtk::Overlay, gtk::Picture) {
         }
     });
     (frame, picture)
+}
+
+/// Keep a strip plate's words in the middle of the image's first window-height: an image taller
+/// than the window gives the rest to the words' bottom margin, so they stay in view when the
+/// image is reached from above or by a jump.
+fn strip_frame_window(picture: &gtk::Picture, height: i32, window: i32) {
+    if let Some(words) = strip_plate(picture).and_then(|plate| plate.first_child()) {
+        words.set_margin_bottom((height - window).max(0));
+    }
 }
 
 /// The plate over a strip picture, made by [`strip_frame`].
@@ -3610,8 +3622,8 @@ mod plate_tests {
         }
     }
 
-    /// A strip image whose file is still coming shows its page plate from 600 ms, says it is
-    /// loading 4 s after it was asked for, and its file crossfades over the plate.
+    /// A strip image whose file is still coming shows its plate with its number from 600 ms,
+    /// adds a line under it 4 s after it was asked for, and its file crossfades over the plate.
     #[test]
     fn a_strip_image_on_its_way_holds_a_plate() {
         run(|| {
@@ -3627,16 +3639,48 @@ mod plate_tests {
             assert!(plate.is_visible(), "the plate shows from 600 ms");
             let mut said = Vec::new();
             words(&plate, &mut said);
-            assert_eq!(said, vec!["Page 12".to_owned()]);
+            assert_eq!(said, vec!["Image 12".to_owned()]);
             strip_frame_asked(&picture);
             pump(4200);
             let mut said = Vec::new();
             words(&plate, &mut said);
-            assert_eq!(said, vec!["Page 12".to_owned(), "Loading page 12".to_owned()]);
+            assert_eq!(said, vec!["Image 12".to_owned(), "Loading image 12".to_owned()]);
             fill_strip_frame(&picture, &texture());
             assert!(picture.paintable().is_some());
             pump(500);
             assert!(!plate.is_visible(), "the plate is gone once the image is in");
+            window.destroy();
+        });
+    }
+
+    /// The words sit in the middle of the plate when the image fits the window, and in the middle
+    /// of its first window-height when it is taller.
+    #[test]
+    fn a_strip_plate_centres_its_words_in_the_first_window() {
+        run(|| {
+            let (frame, picture) = strip_frame(4);
+            // At the image's own height, as in the strip's column.
+            frame.set_valign(gtk::Align::Start);
+            let window = gtk::Window::builder().default_width(400).default_height(400).build();
+            window.set_child(Some(&frame));
+            window.present();
+            pump(800);
+            let plate = picture.next_sibling().expect("a plate over the picture");
+            let words = plate.first_child().expect("the plate's words");
+            let middle = |frame: &gtk::Overlay| {
+                let at = words
+                    .compute_point(frame, &gtk::graphene::Point::new(0.0, 0.0))
+                    .expect("the words are in the frame");
+                f64::from(at.y()) + f64::from(words.height()) / 2.0
+            };
+            picture.set_size_request(200, 300);
+            strip_frame_window(&picture, 300, 400);
+            pump(100);
+            assert!((middle(&frame) - 150.0).abs() <= 2.0, "centred in a short image");
+            picture.set_size_request(200, 1600);
+            strip_frame_window(&picture, 1600, 400);
+            pump(100);
+            assert!((middle(&frame) - 200.0).abs() <= 2.0, "centred in the first window-height");
             window.destroy();
         });
     }
