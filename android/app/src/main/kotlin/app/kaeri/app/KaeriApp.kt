@@ -356,8 +356,10 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
         connectivity.registerDefaultNetworkCallback(object : ConnectivityManager.NetworkCallback() {
             override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) = say(capabilities)
 
-            // Another network may already be the default; only none at all is offline.
-            override fun onLost(network: Network) = say(connectivity.activeNetwork?.let(connectivity::getNetworkCapabilities))
+            // Another network may already be the default; only none at all is offline. As this
+            // comes, the system can still name the lost network as the active one.
+            override fun onLost(network: Network) =
+                say(connectivity.activeNetwork?.takeIf { it != network }?.let(connectivity::getNetworkCapabilities))
         })
     }
 
