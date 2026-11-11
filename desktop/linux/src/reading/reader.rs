@@ -111,6 +111,8 @@ struct State {
     read: Option<Vec<String>>,
     /// Where the next chapter came from, by name.
     next_source: Option<String>,
+    /// When the next chapter is an extra: the first whole chapter after it.
+    skip_to: Option<ChapterRow>,
     /// The next chapter's first page, for the end page.
     preview: Option<(ChapterId, gdk::Texture)>,
     /// The end page is up over a novel.
@@ -606,7 +608,15 @@ impl Reader {
                     }
                 }
             });
-            let end = end::EndPage::new(go_on, back);
+            let skip: Rc<dyn Fn()> = Rc::new({
+                let weak = weak.clone();
+                move || {
+                    if let Some(this) = weak.upgrade() {
+                        this.skip_extras();
+                    }
+                }
+            });
+            let end = end::EndPage::new(go_on, skip, back);
             end.credit_show.connect_clicked({
                 let weak = weak.clone();
                 move |_| {
@@ -1068,6 +1078,26 @@ impl Reader {
         self.fill_end();
     }
 
+    /// The end page with the next chapter an extra, 16.5, and chapter 17 after it to skip to.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_end_skip(self: &Rc<Self>) {
+        {
+            let mut state = self.state.borrow_mut();
+            if let Some(next) = state.next.as_mut() {
+                next.number = Some("16.5".into());
+                next.label = "Chapter 16.5".into();
+                next.title = Some("Volume 1 extras".into());
+                let mut skip = next.clone();
+                skip.id = ChapterId("shot-skip-17".into());
+                skip.number = Some("17".into());
+                skip.label = "Chapter 17".into();
+                skip.title = None;
+                state.skip_to = Some(skip);
+            }
+        }
+        self.fill_end();
+    }
+
     /// The page plate of page 23, still loading, with its line.
     #[cfg(feature = "fixtures")]
     pub fn shot_plate(self: &Rc<Self>) {
@@ -1303,7 +1333,7 @@ impl Reader {
                     self.failed_page(*page, true);
                 }
             }
-            ReaderEvent::EndPage { session, next, why_none, next_source, .. }
+            ReaderEvent::EndPage { session, next, why_none, next_source, skip_to }
                 if self.mine(*session) =>
             {
                 {
@@ -1311,6 +1341,7 @@ impl Reader {
                     state.next = next.clone();
                     state.why_none = *why_none;
                     state.next_source = next_source.clone();
+                    state.skip_to = skip_to.clone();
                 }
                 self.fill_end();
             }
@@ -1445,6 +1476,7 @@ impl Reader {
             state.previous = view.previous.clone();
             state.why_none = None;
             state.next_source = None;
+            state.skip_to = None;
             state.read = None;
             state.preview = None;
             state.novel_end = false;
@@ -1981,6 +2013,7 @@ impl Reader {
                 preview,
                 novel: state.medium == Some(Medium::Novel),
                 credits: credits::end_line(&state),
+                skip_to: state.skip_to.clone(),
             }
         };
         self.end.fill(&facts);
@@ -2033,6 +2066,19 @@ impl Reader {
             && session != 0
         {
             self.open_chapter(session, next.id);
+        }
+    }
+
+    /// Skip to chapter 17, from the end page: past the extras, which stay unread.
+    fn skip_extras(self: &Rc<Self>) {
+        let (session, skip) = {
+            let state = self.state.borrow();
+            (state.session, state.skip_to.clone())
+        };
+        if let Some(skip) = skip
+            && session != 0
+        {
+            self.open_chapter(session, skip.id);
         }
     }
 
