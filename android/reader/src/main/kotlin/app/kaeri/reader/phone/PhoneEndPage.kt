@@ -130,7 +130,7 @@ fun PhoneEndPage(
     }
     val context = LocalContext.current
     val end = state.end
-    val next = end?.next ?: view.next
+    val next = state.endNext
     val number = chapterNumber(view.chapter)
     val server = rememberServerLine(view.work, view.chapter.id)
     val read = view.chapter.id in state.read

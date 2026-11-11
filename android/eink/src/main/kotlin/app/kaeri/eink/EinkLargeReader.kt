@@ -51,6 +51,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.kaeri.engine.core.Medium
+import app.kaeri.engine.core.ChapterId
 import app.kaeri.engine.model.ChapterDownloadState
 import app.kaeri.engine.model.ChapterRow
 import app.kaeri.engine.model.ReaderMode
@@ -212,9 +213,9 @@ internal fun EinkLargeEnd(
     val context = LocalContext.current
     LaunchedEffect(state.view?.work) { if (state.volumes.isEmpty()) loadChapters() }
     val here = next.download is ChapterDownloadState.Done
-    val chapters = remember(state.volumes) { state.volumes.flatMap { it.chapters } }
-    val from = chapters.indexOfFirst { it.id == next.id }
-    val coming = if (from >= 0) chapters.drop(from) else listOf(next)
+    val coming = remember(state.volumes, state.view?.chapter?.id, next) {
+        comingUp(state.volumes.flatMap { it.chapters }, state.view?.chapter?.id, next)
+    }
     Box(modifier.fillMaxSize().background(EinkColours.Paper)) {
         Column(Modifier.fillMaxSize().padding(start = 64.dp, end = 64.dp, top = 96.dp, bottom = 96.dp)) {
             Row {
@@ -258,6 +259,20 @@ internal fun EinkLargeEnd(
             modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(bottom = 36.dp),
         )
     }
+}
+
+/**
+ * The chapters under Coming up: [next] and those after it in [chapters]. When the engine led
+ * past chapters right after [open] to a downloaded one, as it does offline, only the downloaded
+ * ones follow, since the others would not open.
+ */
+internal fun comingUp(chapters: List<ChapterRow>, open: ChapterId?, next: ChapterRow): List<ChapterRow> {
+    val from = chapters.indexOfFirst { it.id == next.id }
+    if (from < 0) return listOf(next)
+    val at = chapters.indexOfFirst { it.id == open }
+    val past = at >= 0 && from > at + 1 && next.download is ChapterDownloadState.Done
+    val rest = chapters.drop(from + 1).let { after -> if (past) after.filter { it.download is ChapterDownloadState.Done } else after }
+    return listOf(chapters[from].copy(download = next.download ?: chapters[from].download)) + rest
 }
 
 /** A chapter coming up: its number in a 64 dp column, its title, and whether it is here. */

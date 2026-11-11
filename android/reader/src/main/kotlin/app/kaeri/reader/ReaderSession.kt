@@ -170,6 +170,12 @@ data class ReaderState(
     val chapter: ChapterId? get() = view?.chapter?.id
 
     /**
+     * The chapter the end page leads into: the engine's answer once the end page is said, which
+     * offline is the next one on the device or none, and the one after this until then.
+     */
+    val endNext: ChapterRow? get() = end.let { if (it != null) it.next else view?.next }
+
+    /**
      * The chapter's pages, without the end page: as many as the leaves on one page a leaf, more
      * where a leaf holds a spread's two pages, fewer where a spread is split into halves.
      */
@@ -401,7 +407,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
      */
     fun crossOn(): Boolean {
         val now = state.value
-        val next = now.end?.next ?: now.view?.next ?: return false
+        val next = now.endNext ?: return false
         if (now.asking != null) return true
         openChapter(next.id)
         return true
@@ -495,12 +501,6 @@ class ReaderSession(private val send: (Command) -> Unit) {
      */
     fun place(): ReadPlace? = here
 
-    fun close() {
-        commitKeep()
-        val session = state.value.session ?: return
-        reader(ReaderCommand.Close(session))
-    }
-
     /**
      * The screen was made anew around this session, as for a change of font size: its pager
      * starts at the first leaf, so it jumps back to [at], the [place] shown before.
@@ -509,6 +509,12 @@ class ReaderSession(private val send: (Command) -> Unit) {
         val now = state.value
         if (at == null || at.chapter != now.chapter || now.leaves.isEmpty()) return
         _state.value = now.copy(jump = ReaderJump(now.leafOf(at), at.strip, ++ids))
+    }
+
+    fun close() {
+        commitKeep()
+        val session = state.value.session ?: return
+        reader(ReaderCommand.Close(session))
     }
 
     /** The notice went: its time ran out or the next turn took it. */

@@ -327,7 +327,19 @@ fun EinkReader(
             val failure = state.failure
             when {
                 // Try again opens the chapter anew: a failed open has no session left to retry in.
-                failure != null && state.leaves.isEmpty() && state.novel == null -> EinkChapterFailed(failure, state, session, onRetry = session::retryOpen, onBack = actions.onBack)
+                failure != null && state.leaves.isEmpty() && state.novel == null -> {
+                    // The chapter that would not open is named, as on the phone.
+                    val context = LocalContext.current
+                    val row = state.openingChapter ?: view?.chapter
+                    EinkChapterFailed(
+                        failure.text(context),
+                        state,
+                        session,
+                        onRetry = session::retryOpen,
+                        onBack = actions.onBack,
+                        title = Strings.readerFailedChapter(context, row?.let(::chapterNumber) ?: ""),
+                    )
+                }
                 novelOpen && view != null && novel != null -> EinkNovel(state, session, place, actions, chrome, { paint(it) }, ::toggleChrome, novel)
                 waiting -> {
                     EinkWaiting(state, waited = asking != null && askWaited)
@@ -776,8 +788,8 @@ fun BoxScope.EinkPageFailed(page: Int, failure: ReadingFailure, retry: () -> Uni
 
 /**
  * The chapter itself could not open. When another source has the chapter, Choose source is the
- * solid button and Try again the outlined one, and Back is the system's; otherwise Try again and
- * Back to the series. The sources are a plain list in place of the screen, closed by Back.
+ * solid button and Try again the outlined one; otherwise Try again is the solid one. Back to the
+ * series always follows. The sources are a plain list in place of the screen, closed by Back.
  */
 @Composable
 fun BoxScope.EinkChapterFailed(failure: ReadingFailure, state: ReaderState, session: ReaderSession, onRetry: () -> Unit, onBack: () -> Unit) {
@@ -844,8 +856,8 @@ fun BoxScope.EinkChapterFailed(
             EinkOutlinedButton(Strings.readerTryAgain(context), onRetry, Modifier.fillMaxWidth())
         } else {
             EinkSolidButton(Strings.readerTryAgain(context), onRetry, Modifier.fillMaxWidth())
-            EinkOutlinedButton(Strings.readerEndSeries(context), onBack, Modifier.fillMaxWidth())
         }
+        EinkOutlinedButton(Strings.readerEndSeries(context), onBack, Modifier.fillMaxWidth())
     }
 }
 
@@ -881,7 +893,7 @@ fun EinkEndPage(
     val second = remember { FocusRequester() }
     val retry = remember { FocusRequester() }
     val end = state.end
-    val next = end?.next ?: view.next
+    val next = state.endNext
     val number = chapterNumber(view.chapter)
     // On a large panel the page's column sits on the left, with the next chapter beside and under it.
     val large = einkLargePanel && next != null

@@ -1239,7 +1239,7 @@ private fun NovelEndPage(
 ) {
     val density = LocalDensity.current
     val far = with(density) { 80.dp.toPx() }
-    val next = (state.end?.next ?: state.view?.next)
+    val next = state.endNext
     Box(
         Modifier.fillMaxSize().pointerInput(zones) {
             // A tap in the forward zone goes on, in the back zone returns to the text; the page's
