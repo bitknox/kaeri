@@ -272,7 +272,8 @@ private fun ComingRow(row: ChapterRow, first: Boolean, onClick: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
-            .heightIn(min = 44.dp)
+            // 48 dp at the least, a whole touch target.
+            .heightIn(min = 48.dp)
             .then(if (first) Modifier else Modifier.hairlineOver())
             .einkClick(onClick = onClick)
             .padding(vertical = 11.dp),

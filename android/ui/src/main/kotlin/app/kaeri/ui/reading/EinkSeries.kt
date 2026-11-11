@@ -125,9 +125,9 @@ private val SeriesCover = 220.dp
 /** The chapter heading's height. */
 private val ChapterHead = 52.dp
 
-/** A one-line chapter row is its words' height and this, 44 dp at the least. */
+/** A one-line chapter row is its words' height and this, 48 dp at the least, a whole touch target. */
 private val ChapterRowPad = 22.dp
-private val ChapterRowLeast = 44.dp
+private val ChapterRowLeast = 48.dp
 
 /** The number column of a chapter row. */
 private val ChapterNumber = 64.dp
