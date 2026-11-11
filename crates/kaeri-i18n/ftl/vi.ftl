@@ -13315,9 +13315,6 @@ title-tags = Thẻ
 # Button that opens the full page of facts about a show.
 title-more-about = Xem thêm về tác phẩm này
 
-# Accessibility hint of the button that expands a synopsis.
-title-synopsis-hint = Hiển thị toàn bộ tóm tắt
-
 # Label under a season: which episodes are dubbed so far.
 title-dubbed-to = Lồng tiếng đến tập { $episode }
 

@@ -14864,9 +14864,9 @@
     <value>More about this show</value>
     <comment>Button that opens the full page of facts about a show.</comment>
   </data>
-  <data name="TitleSynopsisHint" xml:space="preserve">
-    <value>Shows the whole synopsis</value>
-    <comment>Accessibility hint of the button that expands a synopsis.</comment>
+  <data name="TitleSynopsisMore" xml:space="preserve">
+    <value>Show the whole synopsis</value>
+    <comment>Accessible name of the More at the end of a cut synopsis, which shows the rest of it. The page's menu of extra actions is called More too, so this one says what it does.</comment>
   </data>
   <data name="TitleDubbedTo" xml:space="preserve">
     <value>Dubbed to episode {episode}</value>

@@ -4148,7 +4148,6 @@
     <string name="title_studio">Studio</string>
     <string name="title_tags">Taggar</string>
     <string name="title_more_about">Mer om den här titeln</string>
-    <string name="title_synopsis_hint">Visar hela synopsen</string>
     <string name="title_dubbed_to">Dubbat till avsnitt %1$d</string>
     <string name="title_no_episodes">Inga avsnitt än</string>
     <string name="title_episodes_load_failed">Det gick inte att lista avsnitten.</string>

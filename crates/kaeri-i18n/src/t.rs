@@ -22212,9 +22212,9 @@ pub fn title_more_about() -> String {
     text("title-more-about", &[])
 }
 
-/// Accessibility hint of the button that expands a synopsis.
-pub fn title_synopsis_hint() -> String {
-    text("title-synopsis-hint", &[])
+/// Accessible name of the More at the end of a cut synopsis, which shows the rest of it. The page's menu of extra actions is called More too, so this one says what it does.
+pub fn title_synopsis_more() -> String {
+    text("title-synopsis-more", &[])
 }
 
 /// Label under a season: which episodes are dubbed so far.

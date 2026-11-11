@@ -11645,9 +11645,6 @@
   <data name="TitleMoreAbout" xml:space="preserve">
     <value>Więcej o tytule</value>
   </data>
-  <data name="TitleSynopsisHint" xml:space="preserve">
-    <value>Pokazuje cały opis</value>
-  </data>
   <data name="TitleDubbedTo" xml:space="preserve">
     <value>Z dubbingiem do odcinka {episode}</value>
   </data>

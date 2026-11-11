@@ -3997,7 +3997,6 @@
     <string name="title_studio">スタジオ</string>
     <string name="title_tags">タグ</string>
     <string name="title_more_about">詳細を見る</string>
-    <string name="title_synopsis_hint">あらすじ全文を表示します</string>
     <string name="title_dubbed_to">第%1$d話まで吹替版</string>
     <string name="title_no_episodes">まだエピソードがありません</string>
     <string name="title_episodes_load_failed">エピソードの一覧を取得できませんでした</string>

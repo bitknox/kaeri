@@ -3997,7 +3997,6 @@
     <string name="title_studio">Studio</string>
     <string name="title_tags">Tag</string>
     <string name="title_more_about">Info selengkapnya tentang tayangan ini</string>
-    <string name="title_synopsis_hint">Menampilkan seluruh sinopsis</string>
     <string name="title_dubbed_to">Berdubbing sampai episode %1$d</string>
     <string name="title_no_episodes">Belum ada episode</string>
     <string name="title_episodes_load_failed">Daftar episode tidak dapat dimuat.</string>

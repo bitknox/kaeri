@@ -10841,9 +10841,6 @@
   <data name="TitleMoreAbout" xml:space="preserve">
     <value>Mer om den här titeln</value>
   </data>
-  <data name="TitleSynopsisHint" xml:space="preserve">
-    <value>Visar hela synopsen</value>
-  </data>
   <data name="TitleDubbedTo" xml:space="preserve">
     <value>Dubbat till avsnitt {episode}</value>
   </data>

@@ -16,7 +16,6 @@ title-details = Detalhes
 title-studio = Estúdio
 title-tags = Tags
 title-more-about = Mais sobre esta série
-title-synopsis-hint = Mostra a sinopse completa
 title-dubbed-to = { -dubbed-cap } até o episódio { $episode }
 title-no-episodes = Nenhum episódio ainda
 title-episodes-load-failed = Não foi possível listar os episódios

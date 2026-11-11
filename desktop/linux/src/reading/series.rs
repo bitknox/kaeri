@@ -496,6 +496,8 @@ fn synopsis_more(synopsis: &str) -> gtk::Widget {
     body.set_ellipsize(gtk::pango::EllipsizeMode::End);
     column.append(&body);
     let more = gtk::Button::with_label(&t::action_more());
+    // The page's menu is More too: this one says what it does.
+    more.update_property(&[gtk::accessible::Property::Label(&t::title_synopsis_more())]);
     more.add_css_class("flat");
     more.set_halign(gtk::Align::Start);
     more.set_visible(false);

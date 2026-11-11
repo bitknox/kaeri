@@ -10698,8 +10698,8 @@ public static partial class T
     /// <summary>Button that opens the full page of facts about a show.</summary>
     public static string TitleMoreAbout => Get("TitleMoreAbout");
 
-    /// <summary>Accessibility hint of the button that expands a synopsis.</summary>
-    public static string TitleSynopsisHint => Get("TitleSynopsisHint");
+    /// <summary>Accessible name of the More at the end of a cut synopsis, which shows the rest of it. The page's menu of extra actions is called More too, so this one says what it does.</summary>
+    public static string TitleSynopsisMore => Get("TitleSynopsisMore");
 
     /// <summary>Label under a season: which episodes are dubbed so far.</summary>
     public static string TitleDubbedTo(long episode) => Fill(Get("TitleDubbedTo"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
@@ -15518,7 +15518,7 @@ public static partial class T
         ["TitleStudio"] = "Studio",
         ["TitleTags"] = "Tags",
         ["TitleMoreAbout"] = "More about this show",
-        ["TitleSynopsisHint"] = "Shows the whole synopsis",
+        ["TitleSynopsisMore"] = "Show the whole synopsis",
         ["TitleDubbedTo"] = "Dubbed to episode {episode}",
         ["TitleNoEpisodes"] = "No episodes yet",
         ["TitleEpisodesLoadFailed"] = "Couldn't list episodes",

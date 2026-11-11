@@ -13473,9 +13473,6 @@ title-tags = Taggar
 # Button that opens the full page of facts about a show.
 title-more-about = Mer om den här titeln
 
-# Accessibility hint of the button that expands a synopsis.
-title-synopsis-hint = Visar hela synopsen
-
 # Label under a season: which episodes are dubbed so far.
 title-dubbed-to = Dubbat till avsnitt { $episode }
 

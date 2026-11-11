@@ -10841,9 +10841,6 @@
   <data name="TitleMoreAbout" xml:space="preserve">
     <value>Bu dizi hakkında daha fazla</value>
   </data>
-  <data name="TitleSynopsisHint" xml:space="preserve">
-    <value>Özetin tamamını gösterir</value>
-  </data>
   <data name="TitleDubbedTo" xml:space="preserve">
     <value>Dublajlı, {episode}. bölüme kadar</value>
   </data>

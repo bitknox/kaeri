@@ -11645,9 +11645,6 @@
   <data name="TitleMoreAbout" xml:space="preserve">
     <value>Подробнее о тайтле</value>
   </data>
-  <data name="TitleSynopsisHint" xml:space="preserve">
-    <value>Показывает весь синопсис</value>
-  </data>
   <data name="TitleDubbedTo" xml:space="preserve">
     <value>С дубляжом до серии {episode}</value>
   </data>

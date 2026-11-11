@@ -13975,8 +13975,8 @@ title-tags = Tags
 # Button that opens the full page of facts about a show.
 title-more-about = More about this show
 
-# Accessibility hint of the button that expands a synopsis.
-title-synopsis-hint = Shows the whole synopsis
+# Accessible name of the More at the end of a cut synopsis, which shows the rest of it. The page's menu of extra actions is called More too, so this one says what it does.
+title-synopsis-more = Show the whole synopsis
 
 # Label under a season: which episodes are dubbed so far.
 title-dubbed-to = Dubbed to episode { $episode }

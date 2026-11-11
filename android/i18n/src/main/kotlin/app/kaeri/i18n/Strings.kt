@@ -15360,9 +15360,9 @@ object Strings {
     fun titleMoreAbout(context: Context): String =
         context.getString(R.string.title_more_about)
 
-    /** Accessibility hint of the button that expands a synopsis. */
-    fun titleSynopsisHint(context: Context): String =
-        context.getString(R.string.title_synopsis_hint)
+    /** Accessible name of the More at the end of a cut synopsis, which shows the rest of it. The page's menu of extra actions is called More too, so this one says what it does. */
+    fun titleSynopsisMore(context: Context): String =
+        context.getString(R.string.title_synopsis_more)
 
     /** Label under a season: which episodes are dubbed so far. */
     fun titleDubbedTo(context: Context, episode: Int): String =

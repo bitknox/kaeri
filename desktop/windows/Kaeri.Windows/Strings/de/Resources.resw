@@ -10841,9 +10841,6 @@
   <data name="TitleMoreAbout" xml:space="preserve">
     <value>Mehr zu dieser Serie</value>
   </data>
-  <data name="TitleSynopsisHint" xml:space="preserve">
-    <value>Zeigt die ganze Inhaltsangabe</value>
-  </data>
   <data name="TitleDubbedTo" xml:space="preserve">
     <value>Synchronisiert bis Folge {episode}</value>
   </data>

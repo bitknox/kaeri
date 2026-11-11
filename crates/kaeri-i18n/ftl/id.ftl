@@ -13315,9 +13315,6 @@ title-tags = Tag
 # Button that opens the full page of facts about a show.
 title-more-about = Info selengkapnya tentang tayangan ini
 
-# Accessibility hint of the button that expands a synopsis.
-title-synopsis-hint = Menampilkan seluruh sinopsis
-
 # Label under a season: which episodes are dubbed so far.
 title-dubbed-to = Berdubbing sampai episode { $episode }
 

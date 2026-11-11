@@ -4299,7 +4299,6 @@
     <string name="title_studio">Estudio</string>
     <string name="title_tags">Etiquetas</string>
     <string name="title_more_about">Más sobre este título</string>
-    <string name="title_synopsis_hint">Muestra la sinopsis completa</string>
     <string name="title_dubbed_to">Doblado hasta el episodio %1$d</string>
     <string name="title_no_episodes">Todavía no hay episodios</string>
     <string name="title_episodes_load_failed">No se pudieron cargar los episodios</string>

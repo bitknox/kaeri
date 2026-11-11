@@ -10439,9 +10439,6 @@
   <data name="TitleMoreAbout" xml:space="preserve">
     <value>詳細を見る</value>
   </data>
-  <data name="TitleSynopsisHint" xml:space="preserve">
-    <value>あらすじ全文を表示します</value>
-  </data>
   <data name="TitleDubbedTo" xml:space="preserve">
     <value>第{episode}話まで吹替版</value>
   </data>

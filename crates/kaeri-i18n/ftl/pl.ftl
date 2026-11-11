@@ -13789,9 +13789,6 @@ title-tags = Tagi
 # Button that opens the full page of facts about a show.
 title-more-about = Więcej o tytule
 
-# Accessibility hint of the button that expands a synopsis.
-title-synopsis-hint = Pokazuje cały opis
-
 # Label under a season: which episodes are dubbed so far.
 title-dubbed-to = Z dubbingiem do odcinka { $episode }
 
