@@ -562,7 +562,7 @@ fun BoxScope.EinkFolio(leaf: Leaf, state: ReaderState) {
     }
 }
 
-/** The top bar: back, the series and chapter, and Contents. Opaque, a 2 dp rule under it. */
+/** The top bar: back, the series and chapter, and Contents. Opaque, a 2 dp rule under it, and it holds its touches. */
 @Composable
 fun EinkTopBar(
     title: String,
@@ -577,7 +577,7 @@ fun EinkTopBar(
 ) {
     val context = LocalContext.current
     Row(
-        modifier.fillMaxWidth().background(EinkColours.Paper).bottomRule().statusBarsPadding().height(EinkSizes.TopBar).padding(horizontal = 8.dp),
+        modifier.fillMaxWidth().background(EinkColours.Paper).holdsTouches().bottomRule().statusBarsPadding().height(EinkSizes.TopBar).padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         EinkBackButton(onBack, 56.dp)
@@ -599,7 +599,10 @@ fun EinkTopBar(
     }
 }
 
-/** The bottom bar: where the page is, how much is left, the progress, and the reader's actions. */
+/**
+ * The bottom bar: where the page is, how much is left, the progress, and the reader's actions. It
+ * holds its touches: a tap on the progress or beside the page line never turns the page under it.
+ */
 @Composable
 fun EinkBottomBar(
     page: Int,
@@ -629,7 +632,7 @@ fun EinkBottomBar(
 ) {
     val context = LocalContext.current
     Column(
-        modifier.fillMaxWidth().background(EinkColours.Paper).topRule().navigationBarsPadding().heightIn(min = EinkSizes.BottomBar)
+        modifier.fillMaxWidth().background(EinkColours.Paper).holdsTouches().topRule().navigationBarsPadding().heightIn(min = EinkSizes.BottomBar)
             .then(if (large) Modifier.padding(start = 28.dp, end = 28.dp, top = 16.dp, bottom = 10.dp) else Modifier.padding(horizontal = 20.dp, vertical = 14.dp)),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {

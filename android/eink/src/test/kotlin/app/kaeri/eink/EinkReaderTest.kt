@@ -201,6 +201,23 @@ class EinkReaderTest {
     }
 
     @Test
+    fun taps_on_the_bars_never_turn_the_page_under_them() {
+        open(zones = false)
+        compose.onRoot().performTouchInput { click(androidx.compose.ui.geometry.Offset(width * 0.55f, height * 0.5f)) }
+        compose.waitForIdle()
+        val line = compose.onNodeWithText("Page 1 of 3").fetchSemanticsNode().boundsInRoot
+        val top = compose.onNodeWithText("Chapter 12 · The Long Stair").fetchSemanticsNode().boundsInRoot
+        // Right to left, the forward zone is the left 40%: the progress, the space beside the
+        // page line and the top bar beside the title all sit over it.
+        for (y in listOf(line.bottom + 24f, line.center.y, top.bottom + 4f)) {
+            compose.onRoot().performTouchInput { click(androidx.compose.ui.geometry.Offset(width * 0.3f, y)) }
+            compose.waitForIdle()
+        }
+        assertTrue(shown().none { it.leaf != 0u })
+        compose.onNodeWithText("Page 1 of 3").assertIsDisplayed()
+    }
+
+    @Test
     fun the_page_between_chapters_is_in_the_flow() {
         open()
         repeat(3) {
