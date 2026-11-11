@@ -424,6 +424,7 @@ public final class ReaderModel {
         if how == .jump, leaf != current, view?.mode != .strip { ring = current }
         // A strip's scroll report from before the jump would read as a turn after it.
         if how == .jump { pendingStrip?.cancel() }
+        if leaf != current { heldPage = nil }
         current = leaf
         if how == .turn || how == .swipe || how == .key { hideChrome() }
         if end != nil, !leaves[leaf].endPage { end = end }
@@ -717,6 +718,7 @@ public final class ReaderModel {
             backToPage = nil
             notice = nil
             current = 0
+            heldPage = nil
             if let settings = opened.settings { self.settings = settings }
             send?(.reader(.loadSettings(medium: opened.medium, work: opened.work)))
             stripHere = nil
@@ -736,7 +738,7 @@ public final class ReaderModel {
             // Pages laid out again, as when the screen turns between single pages and spreads:
             // the page on screen stays, in whichever leaf holds it now, and so does the ring's.
             let paged = again && view?.mode == .paged && keepPage == nil
-            let shownPage = paged ? firstPage(of: current) : nil
+            let shownPage = paged ? pageKept(in: current) : nil
             let ringPage = paged ? ring.flatMap(firstPage(of:)) : nil
             let atEnd = paged && self.leaves.indices.contains(current) && self.leaves[current].endPage
             self.leaves = leaves
@@ -747,6 +749,9 @@ public final class ReaderModel {
             phase = .open
             if let shownPage, let index = Self.leaf(holding: shownPage, in: leaves) {
                 current = index
+                // The page stays the one kept while its leaf is on screen, so a spread that
+                // holds it gives it back when the pages are single again.
+                heldPage = shownPage
                 ring = ringPage.flatMap { Self.leaf(holding: $0, in: leaves) }
             } else if atEnd, let end = leaves.lastIndex(where: \.endPage) {
                 current = end
@@ -855,6 +860,9 @@ public final class ReaderModel {
     private var pendingGoTo: Int?
     /// The page a switch from the strip to pages keeps, until the pages are laid out.
     @ObservationIgnored var keepPage: UInt32?
+    /// The page a layout kept, while the leaf that holds it stays on screen: a spread's second
+    /// page shown alone before the spread.
+    @ObservationIgnored private var heldPage: UInt32?
 
     /// The page on screen in `mode`: the first of the spread, or the strip's image at the top.
     private func pageOnScreen(_ mode: ReaderMode) -> UInt32? {
@@ -903,6 +911,15 @@ public final class ReaderModel {
         return Self.leaf(holding: page, in: leaves) ?? 0
     }
 
+    /// The page a new layout keeps of `leaf`: the one shown alone before a spread came to hold
+    /// it, while that spread is still on screen; otherwise the leaf's first.
+    private func pageKept(in leaf: Int) -> UInt32? {
+        if let held = heldPage, leaves.indices.contains(leaf), leaves[leaf].parts.contains(where: { $0.page == held }) {
+            return held
+        }
+        return firstPage(of: leaf)
+    }
+
     /// The first page a leaf shows: the lower of a spread's two.
     private func firstPage(of leaf: Int) -> UInt32? {
         leaves.indices.contains(leaf) ? leaves[leaf].parts.map(\.page).min() : nil
@@ -933,6 +950,7 @@ public final class ReaderModel {
 
     func show(_ leaf: Int, how: TurnHow = .placed) {
         pendingGoTo = nil
+        if leaf != current { heldPage = nil }
         current = leaf
         goTo = (leaf, bump(), how)
     }
@@ -1004,6 +1022,7 @@ public final class ReaderModel {
         opened = false
         pendingGoTo = nil
         keepPage = nil
+        heldPage = nil
         lastStrip = nil
         credits = [:]
         parts = nil

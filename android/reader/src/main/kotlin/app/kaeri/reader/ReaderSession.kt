@@ -246,7 +246,10 @@ class ReaderSession(private val send: (Command) -> Unit) {
         val now = state.value
         val session = now.session ?: return
         val chapter = now.chapter ?: return
-        shownPage = now.leaves.getOrNull(leaf)?.parts?.firstOrNull()?.page ?: shownPage
+        // A leaf that holds the page kept, as a new layout's spread holds a page shown alone
+        // before it, keeps that page: single pages again show it, not the spread's first.
+        val pages = now.leaves.getOrNull(leaf)?.parts?.map { it.page }.orEmpty()
+        shownPage = if (shownPage in pages) shownPage else pages.firstOrNull() ?: shownPage
         here = here?.takeIf { it.chapter == chapter }?.copy(page = shownPage, strip = null)
         // Off the leaf a credit page shows over, the credit page goes. A page kept from it waits
         // on: its Undo outlasts the turn, and the engine hears when it runs out or the chapter closes.

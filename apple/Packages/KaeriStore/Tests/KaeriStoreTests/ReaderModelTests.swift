@@ -172,6 +172,41 @@ struct ReaderModelTests {
         #expect(model.current == 20)
     }
 
+    /// The second page of a spread, shown alone before the spread, comes back alone after it,
+    /// however many times the screen turns.
+    @Test func aRoundTripThroughSpreadsKeepsTheSecondPageOfTheSpread() {
+        let (model, _) = model()
+        let work = WorkId("a:900301")
+        let chapter = ChapterRow(
+            id: ChapterId("c13"), label: "Chapter 13", state: .unread, number: nil, title: nil, volume: nil,
+            published: nil, pages: 20, newChapter: false, download: nil, versions: 1, bookmarked: false)
+        model.apply(.opened(ReaderView(
+            session: 1, work: work, title: "The Lantern Ferry", medium: .manga, chapter: chapter,
+            mode: .paged, direction: .rightToLeft,
+            start: ReadPlace(work: work, chapter: chapter.id, page: 0, strip: nil, novel: nil),
+            next: nil, previous: nil, settings: nil)))
+        model.apply(.leaves(session: 1, chapter: chapter.id, leaves: layout(chapter.id, spreads: false)))
+        // Page 11 alone, then the spread of 10 and 11, then 11 alone again, twice over.
+        model.shown(10, how: .turn)
+        for _ in 0..<2 {
+            model.apply(.leaves(session: 1, chapter: chapter.id, leaves: layout(chapter.id, spreads: true)))
+            #expect(model.leaves[model.current].parts.map(\.page) == [9, 10])
+            model.apply(.leaves(session: 1, chapter: chapter.id, leaves: layout(chapter.id, spreads: false)))
+            #expect(model.current == 10)
+        }
+        // A turn in spreads goes by the spread turned to: its first page.
+        model.apply(.leaves(session: 1, chapter: chapter.id, leaves: layout(chapter.id, spreads: true)))
+        model.shown(model.current + 1, how: .turn)
+        #expect(model.leaves[model.current].parts.map(\.page) == [11, 12])
+        model.apply(.leaves(session: 1, chapter: chapter.id, leaves: layout(chapter.id, spreads: false)))
+        #expect(model.current == 11)
+        // Back to the spread with 10 and 11 by a turn: its first page, not the one held before.
+        model.apply(.leaves(session: 1, chapter: chapter.id, leaves: layout(chapter.id, spreads: true)))
+        model.shown(model.current - 1, how: .turn)
+        model.apply(.leaves(session: 1, chapter: chapter.id, leaves: layout(chapter.id, spreads: false)))
+        #expect(model.current == 9)
+    }
+
     @Test func closingClearsTheRequest() {
         let (model, _) = model()
         model.open(work: "a:900301")
