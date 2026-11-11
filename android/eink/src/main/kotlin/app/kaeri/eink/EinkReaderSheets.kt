@@ -37,6 +37,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -172,7 +173,7 @@ fun BoxScope.EinkTapZonesSheet(session: ReaderSession, state: ReaderState, onBac
     val reading = state.tapReading() ?: return
     val scope = rows.firstOrNull { it.key == Key.TAP_PAGED }?.scope ?: SettingScope.DEVICE
     fun toggle(key: Key, on: Boolean) = session.setSetting(key, rows.firstOrNull { it.key == key }?.scope ?: SettingScope.DEVICE, ReaderValue.Toggle(on))
-    SheetFrame(Strings.readerRowTap(context), onDone, Modifier.align(Alignment.BottomCenter), onBack = onBack) {
+    SheetFrame(Strings.readerRowTap(context), onDone, Modifier.align(Alignment.BottomCenter), onBack = onBack, full = true) {
         Column(Modifier.fillMaxWidth().selectableGroup()) {
             state.zoneChoices(Key.TAP_PAGED).forEach { layout ->
                 val on = layout == zones.paged
@@ -268,13 +269,18 @@ private fun EinkSwitchLine(title: String, on: Boolean, onChange: (Boolean) -> Un
     }
 }
 
-/** The sheet's frame: opaque paper with a 2 dp rule over it, its title and Done, then the rows. */
+/**
+ * The sheet's frame: opaque paper with a 2 dp rule over it, its title and Done, then the rows. A
+ * [full] one is a page over the whole screen instead.
+ */
 @Composable
 private fun SheetFrame(
     title: String,
     onDone: () -> Unit,
     modifier: Modifier,
     onBack: (() -> Unit)? = null,
+    /** A page of its own over the whole screen, for a page with too many rows to scroll on e-ink. */
+    full: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val context = LocalContext.current
@@ -283,9 +289,9 @@ private fun SheetFrame(
         Column(
             modifier
                 .fillMaxWidth()
-                .heightIn(max = most)
+                .then(if (full) Modifier.fillMaxHeight() else Modifier.heightIn(max = most))
                 .background(EinkColours.Paper)
-                .topRule()
+                .then(if (full) Modifier.statusBarsPadding() else Modifier.topRule())
                 .holdsTouches()
                 .navigationBarsPadding()
                 .padding(horizontal = EinkSizes.SheetPadding, vertical = 12.dp),

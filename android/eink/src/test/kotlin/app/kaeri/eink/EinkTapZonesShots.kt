@@ -1,6 +1,7 @@
 // The tap zones on e-ink, drawn on the JVM from made-up records and the engine's own cells: the
 // guide for Sides right to left, Top and bottom left to right on a 7 inch screen, and the Tap zones
-// page reached through Settings and More. Written to android/.shots/roborazzi/eink-tap-zones-*.
+// page reached through Settings and More, which fits without a scroll. Written to
+// android/.shots/roborazzi/eink-tap-zones-*.
 
 package app.kaeri.eink
 
@@ -29,6 +30,7 @@ import app.kaeri.reader.ReaderSession
 import app.kaeri.reader.configName
 import com.github.takahirom.roborazzi.captureScreenRoboImage
 import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ExternalResource
@@ -119,6 +121,13 @@ class EinkTapZonesShots {
         shot("guide-top-bottom-ltr")
     }
 
+    /** Whether the whole of the node with [text] is on screen, with nothing below the fold. */
+    private fun wholeOnScreen(text: String): Boolean {
+        val node = compose.onNodeWithText(text).fetchSemanticsNode()
+        val root = compose.onRoot().fetchSemanticsNode().boundsInRoot
+        return node.size.height > 0 && node.boundsInRoot.height >= node.size.height - 1f && node.boundsInRoot.bottom <= root.bottom
+    }
+
     @Test
     fun the_tap_zones_page() {
         // The first touch clears the guide and, in the middle, still opens the bars.
@@ -132,6 +141,9 @@ class EinkTapZonesShots {
         compose.waitForIdle()
         compose.onNodeWithText("Tap zones").performClick()
         compose.waitForIdle()
+        // A full page: everything on it fits without a scroll, which on e-ink costs refreshes.
+        assertTrue(wholeOnScreen("Swipes turn pages"))
+        assertTrue(wholeOnScreen("Show zones"))
         shot("page-sides-rtl")
     }
 }
