@@ -193,7 +193,12 @@ internal object SeriesWords {
             ChapterDownloadState.Done -> context.getString(R.string.chapter_state_downloaded)
             ChapterDownloadState.Queued -> context.getString(R.string.chapter_state_queued)
             ChapterDownloadState.WaitsForWifi -> context.getString(R.string.chapter_state_wifi)
-            is ChapterDownloadState.Downloading -> Strings.chapterStateDownloading(context, state.done.toInt(), state.total.toInt())
+            // No page count yet, or a novel's chapter, which has none: nothing to count.
+            is ChapterDownloadState.Downloading -> if (state.total == 0u) {
+                context.getString(R.string.chapter_state_downloading_plain)
+            } else {
+                Strings.chapterStateDownloading(context, state.done.toInt(), state.total.toInt())
+            }
             is ChapterDownloadState.Failed -> Strings.chapterStateFailed(context, failureWords(context, state.failure))
             null -> null
         }

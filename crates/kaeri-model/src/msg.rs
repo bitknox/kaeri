@@ -1475,6 +1475,8 @@ pub enum ReadingMsg {
     ReadingRowWaitsWifi,
     /// A chapter row's state while it downloads.
     ReadingRowDownloading { done: i64, total: i64 },
+    /// A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count.
+    ReadingRowDownloadingPlain,
     /// A chapter row's state: the download failed. The reason follows as the next part.
     ReadingRowFailed,
     /// A chapter row's state: the page the person stopped on, of how many.
@@ -1777,6 +1779,7 @@ impl ReadingMsg {
             Self::ReadingRowQueued => "reading-row-queued",
             Self::ReadingRowWaitsWifi => "reading-row-waits-wifi",
             Self::ReadingRowDownloading { .. } => "reading-row-downloading",
+            Self::ReadingRowDownloadingPlain => "reading-row-downloading-plain",
             Self::ReadingRowFailed => "reading-row-failed",
             Self::ReadingRowPageOf { .. } => "reading-row-page-of",
             Self::ReadingRowPage { .. } => "reading-row-page",
@@ -1985,6 +1988,7 @@ impl ReadingMsg {
             Self::ReadingRowQueued => Vec::new(),
             Self::ReadingRowWaitsWifi => Vec::new(),
             Self::ReadingRowDownloading { done, total } => vec![("done", Value::Int(*done)), ("total", Value::Int(*total))],
+            Self::ReadingRowDownloadingPlain => Vec::new(),
             Self::ReadingRowFailed => Vec::new(),
             Self::ReadingRowPageOf { page, of } => vec![("page", Value::Plain(*page)), ("of", Value::Plain(*of))],
             Self::ReadingRowPage { page } => vec![("page", Value::Plain(*page))],

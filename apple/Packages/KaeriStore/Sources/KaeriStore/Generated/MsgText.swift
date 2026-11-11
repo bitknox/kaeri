@@ -432,6 +432,7 @@ extension ReadingMsg {
         case .readingRowQueued: L.readingRowQueued
         case .readingRowWaitsWifi: L.readingRowWaitsWifi
         case .readingRowDownloading(let done, let total): L.readingRowDownloading(done: Int(done), total: Int(total))
+        case .readingRowDownloadingPlain: L.readingRowDownloadingPlain
         case .readingRowFailed: L.readingRowFailed
         case .readingRowPageOf(let page, let of): L.readingRowPageOf(page: Int(page), of: Int(of))
         case .readingRowPage(let page): L.readingRowPage(page: Int(page))

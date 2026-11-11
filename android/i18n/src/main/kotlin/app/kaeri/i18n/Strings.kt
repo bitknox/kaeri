@@ -1129,6 +1129,10 @@ object Strings {
     fun readingRowDownloading(context: Context, done: Int, total: Int): String =
         context.getString(R.string.reading_row_downloading, done, total)
 
+    /** A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count. */
+    fun readingRowDownloadingPlain(context: Context): String =
+        context.getString(R.string.reading_row_downloading_plain)
+
     /** A chapter row's state: the download failed. The reason follows as the next part. */
     fun readingRowFailed(context: Context): String =
         context.getString(R.string.reading_row_failed)
@@ -9793,6 +9797,10 @@ object Strings {
     /** A chapter downloading. */
     fun chapterStateDownloading(context: Context, done: Int, total: Int): String =
         context.getString(R.string.chapter_state_downloading, done, total)
+
+    /** A chapter downloading before its page count is known, and throughout for a novel's chapter. */
+    fun chapterStateDownloadingPlain(context: Context): String =
+        context.getString(R.string.chapter_state_downloading_plain)
 
     /** A chapter that failed to download, with the reason. */
     fun chapterStateFailed(context: Context, reason: String): String =

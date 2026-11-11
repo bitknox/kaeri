@@ -32147,6 +32147,18 @@
         }
       }
     },
+    "chapter-state-downloading-plain" : {
+      "comment" : "A chapter downloading before its page count is known, and throughout for a novel's chapter.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloading"
+          }
+        }
+      }
+    },
     "chapter-state-failed" : {
       "comment" : "A chapter that failed to download, with the reason. Argument 1: reason (Text).",
       "extractionState" : "manual",
@@ -236941,6 +236953,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đang tải · %1$lld/%2$lld trang"
+          }
+        }
+      }
+    },
+    "reading-row-downloading-plain" : {
+      "comment" : "A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloading"
           }
         }
       }

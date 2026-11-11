@@ -955,6 +955,8 @@ pub enum DownloadPick {
     Chapters { ids: Vec<ChapterId> },
 }
 
+/// A chapter's download. While it downloads, `total` is 0 until the page count is known, and
+/// stays 0 for a novel's chapter, which has no pages to count: it says it downloads, uncounted.
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
 pub enum ChapterDownloadState {

@@ -430,6 +430,7 @@ public static class MsgText
         ReadingMsg.ReadingRowQueued => T.ReadingRowQueued,
         ReadingMsg.ReadingRowWaitsWifi => T.ReadingRowWaitsWifi,
         ReadingMsg.ReadingRowDownloading x => T.ReadingRowDownloading(x.Done, x.Total),
+        ReadingMsg.ReadingRowDownloadingPlain => T.ReadingRowDownloadingPlain,
         ReadingMsg.ReadingRowFailed => T.ReadingRowFailed,
         ReadingMsg.ReadingRowPageOf x => T.ReadingRowPageOf(x.Page, x.Of),
         ReadingMsg.ReadingRowPage x => T.ReadingRowPage(x.Page),

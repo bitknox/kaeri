@@ -541,6 +541,11 @@ reading-row-waits-wifi = Queued · waits for Wi-Fi
 # @max 44
 reading-row-downloading = Downloading · { $done } of { $total } pages
 
+# A chapter row's state while it downloads, before its page count is known, and throughout for
+# a novel's chapter, which has no pages to count.
+# @max 24
+reading-row-downloading-plain = Downloading
+
 # A chapter row's state: the download failed. The reason follows as the next part.
 # @max 24
 reading-row-failed = Couldn't download

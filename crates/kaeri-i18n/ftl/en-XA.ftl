@@ -888,6 +888,9 @@ reading-row-waits-wifi = [Ǫüéüéð · ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~~~~]
 # A chapter row's state while it downloads.
 reading-row-downloading = [Ðöŵñļöàðîñĝ · { $done } öƒ { $total } þàĝéš~~~~~~~~~]
 
+# A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count.
+reading-row-downloading-plain = [Ðöŵñļöàðîñĝ~~~~]
+
 # A chapter row's state: the download failed. The reason follows as the next part.
 reading-row-failed = [Çöüļðñ'ţ ðöŵñļöàð~~~~~~]
 
@@ -9599,6 +9602,9 @@ chapter-state-wifi = [Ǫüéüéð · ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~~~~]
 
 # A chapter downloading.
 chapter-state-downloading = [Ðöŵñļöàðîñĝ · { $done } öƒ { $total } þàĝéš~~~~~~~~~]
+
+# A chapter downloading before its page count is known, and throughout for a novel's chapter.
+chapter-state-downloading-plain = [Ðöŵñļöàðîñĝ~~~~]
 
 # A chapter that failed to download, with the reason.
 chapter-state-failed = [Çöüļðñ'ţ ðöŵñļöàð. { $reason }~~~~~~~]

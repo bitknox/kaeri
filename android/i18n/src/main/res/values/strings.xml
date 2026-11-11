@@ -598,6 +598,8 @@
     <string name="reading_row_waits_wifi">Queued · waits for Wi-Fi</string>
     <!-- A chapter row's state while it downloads. -->
     <string name="reading_row_downloading">Downloading · %1$,d of %2$,d pages</string>
+    <!-- A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count. -->
+    <string name="reading_row_downloading_plain">Downloading</string>
     <!-- A chapter row's state: the download failed. The reason follows as the next part. -->
     <string name="reading_row_failed">Couldn\'t download</string>
     <!-- A chapter row's state: the page the person stopped on, of how many. -->
@@ -5201,6 +5203,8 @@
     <string name="chapter_state_wifi">Queued · waits for Wi-Fi</string>
     <!-- A chapter downloading. -->
     <string name="chapter_state_downloading">Downloading · %1$,d of %2$,d pages</string>
+    <!-- A chapter downloading before its page count is known, and throughout for a novel's chapter. -->
+    <string name="chapter_state_downloading_plain">Downloading</string>
     <!-- A chapter that failed to download, with the reason. -->
     <string name="chapter_state_failed">Couldn\'t download. %1$s</string>
     <!-- A part-read chapter. -->

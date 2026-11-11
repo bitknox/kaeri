@@ -1203,6 +1203,10 @@
     <value>Downloading · {done} of {total} pages</value>
     <comment>A chapter row's state while it downloads.</comment>
   </data>
+  <data name="ReadingRowDownloadingPlain" xml:space="preserve">
+    <value>Downloading</value>
+    <comment>A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count.</comment>
+  </data>
   <data name="ReadingRowFailed" xml:space="preserve">
     <value>Couldn't download</value>
     <comment>A chapter row's state: the download failed. The reason follows as the next part.</comment>
@@ -9101,6 +9105,10 @@
   <data name="ChapterStateDownloading" xml:space="preserve">
     <value>Downloading · {done} of {total} pages</value>
     <comment>A chapter downloading.</comment>
+  </data>
+  <data name="ChapterStateDownloadingPlain" xml:space="preserve">
+    <value>Downloading</value>
+    <comment>A chapter downloading before its page count is known, and throughout for a novel's chapter.</comment>
   </data>
   <data name="ChapterStateFailed" xml:space="preserve">
     <value>Couldn't download. {reason}</value>

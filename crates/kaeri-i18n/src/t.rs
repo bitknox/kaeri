@@ -1405,6 +1405,11 @@ pub fn reading_row_downloading(done: i64, total: i64) -> String {
     text("reading-row-downloading", &[("done", Arg::Int(done)), ("total", Arg::Int(total))])
 }
 
+/// A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count.
+pub fn reading_row_downloading_plain() -> String {
+    text("reading-row-downloading-plain", &[])
+}
+
 /// A chapter row's state: the download failed. The reason follows as the next part.
 pub fn reading_row_failed() -> String {
     text("reading-row-failed", &[])
@@ -15285,6 +15290,11 @@ pub fn chapter_state_wifi() -> String {
 /// A chapter downloading.
 pub fn chapter_state_downloading(done: i64, total: i64) -> String {
     text("chapter-state-downloading", &[("done", Arg::Int(done)), ("total", Arg::Int(total))])
+}
+
+/// A chapter downloading before its page count is known, and throughout for a novel's chapter.
+pub fn chapter_state_downloading_plain() -> String {
+    text("chapter-state-downloading-plain", &[])
 }
 
 /// A chapter that failed to download, with the reason.

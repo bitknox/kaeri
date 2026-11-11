@@ -855,6 +855,9 @@ public static partial class T
     /// <summary>A chapter row's state while it downloads.</summary>
     public static string ReadingRowDownloading(long done, long total) => Fill(Get("ReadingRowDownloading"), ("done", done.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count.</summary>
+    public static string ReadingRowDownloadingPlain => Get("ReadingRowDownloadingPlain");
+
     /// <summary>A chapter row's state: the download failed. The reason follows as the next part.</summary>
     public static string ReadingRowFailed => Get("ReadingRowFailed");
 
@@ -6547,6 +6550,9 @@ public static partial class T
     /// <summary>A chapter downloading.</summary>
     public static string ChapterStateDownloading(long done, long total) => Fill(Get("ChapterStateDownloading"), ("done", done.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>A chapter downloading before its page count is known, and throughout for a novel's chapter.</summary>
+    public static string ChapterStateDownloadingPlain => Get("ChapterStateDownloadingPlain");
+
     /// <summary>A chapter that failed to download, with the reason.</summary>
     public static string ChapterStateFailed(string reason) => Fill(Get("ChapterStateFailed"), ("reason", reason));
 
@@ -12087,6 +12093,7 @@ public static partial class T
         ["ReadingRowQueued"] = "Queued",
         ["ReadingRowWaitsWifi"] = "Queued · waits for Wi-Fi",
         ["ReadingRowDownloading"] = "Downloading · {done} of {total} pages",
+        ["ReadingRowDownloadingPlain"] = "Downloading",
         ["ReadingRowFailed"] = "Couldn't download",
         ["ReadingRowPageOf"] = "Page {page} of {of}",
         ["ReadingRowPage"] = "Page {page}",
@@ -14069,6 +14076,7 @@ public static partial class T
         ["ChapterStateQueued"] = "Queued",
         ["ChapterStateWifi"] = "Queued · waits for Wi-Fi",
         ["ChapterStateDownloading"] = "Downloading · {done} of {total} pages",
+        ["ChapterStateDownloadingPlain"] = "Downloading",
         ["ChapterStateFailed"] = "Couldn't download. {reason}",
         ["ChapterStatePageOf"] = "Page {page} of {of}",
         ["ChapterStatePage"] = "Page {page}",

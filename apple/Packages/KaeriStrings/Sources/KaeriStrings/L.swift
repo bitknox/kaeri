@@ -1125,6 +1125,9 @@ public enum L {
         Self.format("reading-row-downloading", fallback: "Downloading · %1$lld of %2$lld pages", done, total)
     }
 
+    /// A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count.
+    public static var readingRowDownloadingPlain: String { string("reading-row-downloading-plain", fallback: "Downloading") }
+
     /// A chapter row's state: the download failed. The reason follows as the next part.
     public static var readingRowFailed: String { string("reading-row-failed", fallback: "Couldn't download") }
 
@@ -9122,6 +9125,9 @@ public enum L {
     public static func chapterStateDownloading(done: Int, total: Int) -> String {
         Self.format("chapter-state-downloading", fallback: "Downloading · %1$lld of %2$lld pages", done, total)
     }
+
+    /// A chapter downloading before its page count is known, and throughout for a novel's chapter.
+    public static var chapterStateDownloadingPlain: String { string("chapter-state-downloading-plain", fallback: "Downloading") }
 
     /// A chapter that failed to download, with the reason.
     public static func chapterStateFailed(reason: String) -> String {

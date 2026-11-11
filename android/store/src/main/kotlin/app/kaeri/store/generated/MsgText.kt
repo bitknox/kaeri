@@ -433,6 +433,7 @@ fun ReadingMsg.text(context: Context): String =
         is ReadingMsg.ReadingRowQueued -> Strings.readingRowQueued(context)
         is ReadingMsg.ReadingRowWaitsWifi -> Strings.readingRowWaitsWifi(context)
         is ReadingMsg.ReadingRowDownloading -> Strings.readingRowDownloading(context, this.done.toInt(), this.total.toInt())
+        is ReadingMsg.ReadingRowDownloadingPlain -> Strings.readingRowDownloadingPlain(context)
         is ReadingMsg.ReadingRowFailed -> Strings.readingRowFailed(context)
         is ReadingMsg.ReadingRowPageOf -> Strings.readingRowPageOf(context, this.page.toInt(), this.of.toInt())
         is ReadingMsg.ReadingRowPage -> Strings.readingRowPage(context, this.page.toInt())
