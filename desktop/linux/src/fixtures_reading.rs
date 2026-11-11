@@ -39,10 +39,15 @@ pub const STRIP_SERIES: scene_books::Series = scene_books::Series {
 
 /// The books the reading scenes read, made on the spot: the manga's chapters 12 to 15 of twenty
 /// pages, the strip's three chapters of eight tall images and the novel's chapters 2 to 4.
-/// In the long scene the manga's chapters are 59 to 62.
+/// In the long scene the manga's chapters are 1 to 120, the ones around chapter 60 of twenty
+/// pages and the rest of one, so every chapter list is long.
 pub fn seed_books(store: &Store, data_dir: &std::path::Path, long: bool, now: i64) {
     let manga: &[u32] = if long { &[59, 60, 61, 62] } else { &[12, 13, 14, 15] };
     scene_books::comics(store, data_dir, &MANGA_SERIES, manga, 20, now);
+    if long {
+        let rest: Vec<u32> = (1..=LONG_MANGA as u32).filter(|n| !manga.contains(n)).collect();
+        scene_books::comics(store, data_dir, &MANGA_SERIES, &rest, 1, now);
+    }
     scene_books::strips(store, data_dir, &STRIP_SERIES, &[1, 2, 3], 8, now);
     scene_books::novels(store, data_dir, &NOVEL_SERIES, &[2, 3, 4], now);
     // The folder Your sources lists, holding the three series.

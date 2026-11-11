@@ -1180,8 +1180,9 @@ fn seed_reading_join(store: &Store, now: i64) {
 }
 
 /// The books the reading scenes read, made on the spot: the manga's chapters 12 to 15 of twenty
-/// pages (59 to 62 in the long scenes), the strip's three chapters of eight tall images and the
-/// novel's chapters 2 to 4.
+/// pages, the strip's three chapters of eight tall images and the novel's chapters 2 to 4. In
+/// the long scenes the manga's chapters are 1 to 120, the ones around chapter 60 of twenty pages
+/// and the rest of one, so every chapter list is long.
 fn seed_books(store: &Store, data_dir: &std::path::Path, scene: &FfiScene, now: i64) {
     if !matches!(
         scene,
@@ -1202,6 +1203,10 @@ fn seed_books(store: &Store, data_dir: &std::path::Path, scene: &FfiScene, now: 
     }
     let manga: &[u32] = if scene.long() { &[59, 60, 61, 62] } else { &[12, 13, 14, 15] };
     scene_books::comics(store, data_dir, &MANGA_SERIES, manga, 20, now);
+    if scene.long() {
+        let rest: Vec<u32> = (1..=LONG_MANGA as u32).filter(|n| !manga.contains(n)).collect();
+        scene_books::comics(store, data_dir, &MANGA_SERIES, &rest, 1, now);
+    }
     scene_books::strips(store, data_dir, &STRIP_SERIES, &[1, 2, 3], 8, now);
     scene_books::novels(store, data_dir, &NOVEL_SERIES, &[2, 3, 4], now);
 }
