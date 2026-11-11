@@ -106,8 +106,11 @@ enum PageImages {
         switch file.encoding {
         case .original:
             guard let source = CGImageSourceCreateWithURL(URL(filePath: file.path) as CFURL, nil) else { return nil }
-            let limit = max(longestSide, 256)
+            // `longestSide` is for the part shown; a crop shows less of the file, so the whole
+            // file decodes larger by as much.
             let longest = CGFloat(max(file.width, file.height))
+            let shown = file.crop.map { CGFloat(max($0.width, $0.height)) } ?? longest
+            let limit = max(longestSide, 256) * longest / max(shown, 1)
             if longest > limit * 1.5 {
                 image = CGImageSourceCreateThumbnailAtIndex(source, 0, [
                     kCGImageSourceCreateThumbnailFromImageAlways: true,

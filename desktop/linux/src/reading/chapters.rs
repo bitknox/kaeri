@@ -796,6 +796,18 @@ fn thumbnail(file: &PageFile, width: u32) -> Option<(u32, u32, Vec<u8>)> {
             }
         }
     };
+    // With crop borders on, the original comes with the part to show.
+    let image = match file.crop {
+        Some(c)
+            if c.width > 0
+                && c.height > 0
+                && c.x + c.width <= image.width()
+                && c.y + c.height <= image.height() =>
+        {
+            image.crop_imm(c.x, c.y, c.width, c.height)
+        }
+        _ => image,
+    };
     let small = image.thumbnail(width, width.saturating_mul(4)).into_rgba8();
     let (w, h) = small.dimensions();
     Some((w, h, small.into_raw()))
@@ -804,7 +816,7 @@ fn thumbnail(file: &PageFile, width: u32) -> Option<(u32, u32, Vec<u8>)> {
 #[cfg(test)]
 mod tests {
     use kaeri_model::reader::{
-        Leaf, LeafPart, PageEncoding, PageFile, PageKind, PixelFormat, UnitRect,
+        Leaf, LeafPart, PageEncoding, PageFile, PageKind, PixelFormat, PixelRect, UnitRect,
     };
 
     use super::{entry, page_entries, thumbnail};
@@ -818,6 +830,7 @@ mod tests {
             rotate: false,
             half: None,
             ratio: None,
+            strip: None,
         };
         Leaf { index, parts: pages.iter().map(|&page| part(page)).collect(), end_page }
     }
@@ -871,6 +884,31 @@ mod tests {
         assert_eq!((tw, th), (168, 252));
         assert_eq!(rgba.len(), (168 * 252 * 4) as usize);
         assert_eq!(&rgba[..4], &[200, 200, 200, 255]);
+    }
+
+    #[test]
+    fn an_original_shows_only_its_crop() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("page.png");
+        // White borders 40 pixels wide round a dark page.
+        let page = image::RgbImage::from_fn(400, 600, |x, y| {
+            let inside = (40..360).contains(&x) && (40..560).contains(&y);
+            if inside { image::Rgb([30, 30, 30]) } else { image::Rgb([255, 255, 255]) }
+        });
+        page.save(&path).unwrap();
+        let file = PageFile {
+            path: path.display().to_string(),
+            encoding: PageEncoding::Original { mime: "image/png".into() },
+            width: 400,
+            height: 600,
+            crop: Some(PixelRect { x: 40, y: 40, width: 320, height: 520 }),
+            colour: false,
+            bytes: 0,
+        };
+        let (tw, th, rgba) = thumbnail(&file, 160).unwrap();
+        assert_eq!((tw, th), (160, 260));
+        // The corner is the page, not its border.
+        assert_eq!(&rgba[..3], &[30, 30, 30]);
     }
 
     #[test]
@@ -931,6 +969,7 @@ mod centring {
             title: None,
             chapters: (1..=count).map(chapter).collect(),
             all_read: false,
+            flat: false,
         }]);
         let content = chapters.popover.child().expect("the popover has its content");
         chapters.popover.set_child(gtk::Widget::NONE);

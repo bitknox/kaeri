@@ -56,7 +56,8 @@ struct PageImage: View {
         // and each holding its own image would hold the whole run. The cache keeps the recent
         // ones, up to its limit, for coming back.
         .onDisappear { image = nil }
-        .task(id: "\(file.path)|\(Int(longest))") {
+        // The crop is in the id: crop borders on and off send the same original with another crop.
+        .task(id: "\(file.path)|\(file.crop.map { "\($0.x),\($0.y),\($0.width),\($0.height)" } ?? "")|\(Int(longest))") {
             guard let loaded = await PageImages.load(file, longestSide: longest), !Task.isCancelled else { return }
             if image === loaded { return }
             // A page that arrives late fades in over its plate; Reduce Motion keeps the fade,

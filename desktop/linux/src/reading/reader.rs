@@ -1374,7 +1374,7 @@ impl Reader {
                 self.fill_end();
             }
             ReaderEvent::NextPreview { session, chapter, file } if self.mine(*session) => {
-                if let Some(texture) = load_texture(file) {
+                if let Some(texture) = load_texture_cropped(file) {
                     self.state.borrow_mut().preview = Some((chapter.clone(), texture));
                     self.fill_end();
                 }
@@ -1627,12 +1627,22 @@ impl Reader {
         // The credit pages and parts that follow a layout are the engine's word on it.
         let on_credit = self.relaid();
         let relay = self.relay_kept();
+        // Pages whose file or crop changed, as after crop borders changed: redrawn in place.
+        let mut redrawn = Vec::new();
         {
             let mut state = self.state.borrow_mut();
             for leaf in &leaves {
                 for part in &leaf.parts {
                     if let Some(file) = &part.file {
-                        state.files.insert(part.page, file.clone());
+                        let old = state.files.insert(part.page, file.clone());
+                        if let Some(old) = old
+                            && (old.path != file.path || old.crop != file.crop)
+                        {
+                            if old.path != file.path {
+                                state.textures.remove(&part.page);
+                            }
+                            redrawn.push(part.page);
+                        }
                     }
                 }
             }
@@ -1679,6 +1689,9 @@ impl Reader {
             }
             self.state.borrow_mut().leaves = leaves;
             if same {
+                for page in redrawn {
+                    self.fill_strip_page(page, true);
+                }
                 self.size_strip();
             } else {
                 self.drop_strip_credits();
@@ -1835,21 +1848,26 @@ impl Reader {
 
     fn page_ready(self: &Rc<Self>, page: u32, file: PageFile) {
         self.chapters.page_ready(page, &file);
-        {
+        let redrawn = {
             // Another file under a page's number, as after a kept credit page: drawn afresh.
             let mut state = self.state.borrow_mut();
-            if state.files.get(&page).is_some_and(|old| old.path != file.path) {
+            let old = state
+                .files
+                .get(&page)
+                .map(|old| (old.path != file.path, old.crop != file.crop));
+            if old.is_some_and(|(path, _)| path) {
                 state.textures.remove(&page);
             }
             state.files.insert(page, file);
-        }
+            old.is_some_and(|(path, crop)| path || crop)
+        };
         {
             let mut state = self.state.borrow_mut();
             state.failures.remove(&page);
             state.failed.remove(&page);
         }
         if self.flows() {
-            self.fill_strip_page(page);
+            self.fill_strip_page(page, redrawn);
         } else if self.is_current_page(page) {
             let index = self.state.borrow().index;
             self.show_leaf(index, TurnHow::Placed);
@@ -2254,7 +2272,11 @@ impl Reader {
                 .first()
                 .and_then(|p| {
                     p.ratio.or_else(|| {
-                        p.file.as_ref().map(|f| f.width as f32 / f.height.max(1) as f32)
+                        p.file.as_ref().map(|f| {
+                            let (w, h) =
+                                f.crop.map_or((f.width, f.height), |c| (c.width, c.height));
+                            w as f32 / h.max(1) as f32
+                        })
                     })
                 })
                 .unwrap_or(0.7)
@@ -2368,7 +2390,9 @@ impl Reader {
         }
     }
 
-    fn fill_strip_page(&self, page: u32) {
+    /// Draws a strip page once its file is here. `redrawn` when the page had another file or
+    /// crop before, as after crop borders changed: the picture swaps in place, without a fade.
+    fn fill_strip_page(&self, page: u32, redrawn: bool) {
         let at = self
             .state
             .borrow()
@@ -2379,7 +2403,15 @@ impl Reader {
         if let Some(at) = at
             && let Some(texture) = self.texture_for(page)
         {
-            let ratio = texture.width() as f32 / texture.height().max(1) as f32;
+            // With crop borders on, the engine sends the original with the part to show.
+            let crop = self.state.borrow().files.get(&page).and_then(|f| f.crop);
+            let (paintable, ratio) = match crop.filter(|c| c.width > 0 && c.height > 0) {
+                Some(c) => (cropped(&texture, c), c.width as f32 / c.height as f32),
+                None => (
+                    texture.clone().upcast::<gdk::Paintable>(),
+                    texture.width() as f32 / texture.height().max(1) as f32,
+                ),
+            };
             let (picture, resized) = {
                 let mut state = self.state.borrow_mut();
                 match state.strip_frames.get_mut(at) {
@@ -2391,11 +2423,13 @@ impl Reader {
                     None => (None, false),
                 }
             };
-            if let Some(picture) = picture
-                && picture.paintable().is_none()
-            {
-                picture.set_paintable(Some(&texture));
-                motion::fade_in(&picture);
+            if let Some(picture) = picture {
+                if picture.paintable().is_none() {
+                    picture.set_paintable(Some(&paintable));
+                    motion::fade_in(&picture);
+                } else if redrawn {
+                    picture.set_paintable(Some(&paintable));
+                }
             }
             if resized {
                 self.size_strip();
@@ -2525,7 +2559,7 @@ impl Reader {
         let page = self.page_of(index);
         let Some(page) = page else { return };
         if self.state.borrow().files.contains_key(&page) {
-            self.fill_strip_page(page);
+            self.fill_strip_page(page, false);
             return;
         }
         self.want(index);
@@ -3234,6 +3268,43 @@ impl Reader {
         }
         true
     }
+}
+
+/// The part of `texture` that `crop` names, in the texture's pixels, as a picture that size.
+fn cropped(texture: &gdk::Texture, crop: kaeri_model::reader::PixelRect) -> gdk::Paintable {
+    let (x, y, w, h) = (crop.x as f32, crop.y as f32, crop.width as f32, crop.height as f32);
+    let snapshot = gtk::Snapshot::new();
+    snapshot.push_clip(&gtk::graphene::Rect::new(0.0, 0.0, w, h));
+    snapshot.translate(&gtk::graphene::Point::new(-x, -y));
+    texture.snapshot(&snapshot, f64::from(texture.width()), f64::from(texture.height()));
+    snapshot.pop();
+    snapshot
+        .to_paintable(Some(&gtk::graphene::Size::new(w, h)))
+        .unwrap_or_else(|| texture.clone().upcast())
+}
+
+/// As [`load_texture`], cut to the file's crop when it has one: for a picture that is not
+/// composed as a leaf is.
+fn load_texture_cropped(file: &PageFile) -> Option<gdk::Texture> {
+    let Some(c) = file.crop.filter(|c| c.width > 0 && c.height > 0) else {
+        return load_texture(file);
+    };
+    let image =
+        image::ImageReader::open(&file.path).ok()?.with_guessed_format().ok()?.decode().ok()?;
+    if c.x + c.width > image.width() || c.y + c.height > image.height() {
+        return load_texture(file);
+    }
+    let rgba = image.crop_imm(c.x, c.y, c.width, c.height).into_rgba8();
+    Some(
+        gdk::MemoryTexture::new(
+            c.width as i32,
+            c.height as i32,
+            gdk::MemoryFormat::R8g8b8a8,
+            &glib::Bytes::from_owned(rgba.into_raw()),
+            c.width as usize * 4,
+        )
+        .upcast(),
+    )
 }
 
 fn load_texture(file: &PageFile) -> Option<gdk::Texture> {
