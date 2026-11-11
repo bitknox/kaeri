@@ -1,5 +1,6 @@
 package app.kaeri.ui
 
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithText
 import app.kaeri.eink.EinkLook
 import app.kaeri.engine.model.Event
@@ -39,12 +40,14 @@ class EinkLargeHomeShots : ReadingShotHarness() {
     )
 
     /**
-     * On its side the large Home is widened, with Continue reaching a fifth series; New chapters,
-     * with no room left for a row, gives way rather than show a clipped heading.
+     * On its side the large Home is widened, with Continue reaching a fifth series and New
+     * chapters beside the hero, keeping its link.
      */
     private fun landHome(name: String) = fullHome(name) {
         compose.onNodeWithText(CONTINUE_TITLES.last()).assertExists()
-        compose.onNodeWithText("All new chapters").assertDoesNotExist() // i18n-skip
+        compose.onNodeWithText("All new chapters").assertExists() // i18n-skip
+        val newRow = NEW_TITLES.map { hasText(it, substring = true) }.reduce { a, b -> a or b }
+        check(compose.onAllNodes(newRow).fetchSemanticsNodes().isNotEmpty()) { "No New chapters row beside the hero" } // i18n-skip
     }
 
     private fun browse(name: String) = shoot(
@@ -98,7 +101,7 @@ class EinkLargeHomeShots : ReadingShotHarness() {
     @Test @Config(qualifiers = EREADER_10, fontScale = AIR_SCALE) fun air_downloads() = downloads("b-air-085-downloads")
     @Test @Config(qualifiers = EREADER_10, fontScale = AIR_SCALE) fun air_more() = more("b-air-085-more")
 
-    // On its side: the large Home widened, Continue on five columns from the fuller shelf.
+    // On its side: the large Home widened, New chapters beside the hero, Continue on five columns.
     @Test @Config(qualifiers = AIR_LAND, fontScale = AIR_SCALE) fun air_land_home() = landHome("air-land-085-home")
 
     // 10.3 inch at 1.0

@@ -230,6 +230,13 @@ internal fun largePanel(): Boolean = LocalConfiguration.current.screenWidthDp >=
 /** The least room New chapters takes on a 10 inch Home: its heading and one 64 dp row, with their gaps. */
 private val NewChaptersLeast = 140.dp
 
+/** New chapters beside the hero on a 10 inch panel held on its side: one list column. */
+private val NewChaptersBeside = 480.dp
+
+/** Whether the panel is held on its side, wider than it is tall. */
+@Composable
+private fun landscapePanel(): Boolean = LocalConfiguration.current.let { it.screenWidthDp > it.screenHeightDp }
+
 /** Continue's columns on a 10 inch panel held on its side, filling the wider page. */
 private const val LANDSCAPE_CONTINUE_COLUMNS = 5
 
@@ -271,12 +278,29 @@ private fun LargeHome(
     actions: AppActions,
 ) {
     val context = LocalContext.current
+    val hero = tile != null && spot != null
+    // On its side the panel has room beside the hero: New chapters goes there, as many rows as
+    // the hero's height holds, so the page below keeps Continue and Browse.
+    val beside = hero && came.isNotEmpty() && landscapePanel()
     Column(Modifier.fillMaxSize()) {
-        if (tile != null && spot != null) LargeHero(tile, spot, actions)
+        if (tile != null && spot != null) {
+            if (beside) {
+                Row(Modifier.fillMaxWidth()) {
+                    Box(Modifier.weight(1f)) { LargeHero(tile, spot, actions) }
+                    LargeNewChapters(
+                        came,
+                        Modifier.padding(start = ListGap, top = 14.dp).width(NewChaptersBeside).height(LargeHeroCover * 1.5f),
+                        beside = true,
+                    )
+                }
+            } else {
+                LargeHero(tile, spot, actions)
+            }
+        }
         if (continuing.isNotEmpty()) LargeContinue(continuing)
         // New chapters takes the room left, and gives way when that can't hold its heading and a
-        // row, as on the panel held on its side, rather than show a clipped heading.
-        if (came.isNotEmpty()) {
+        // row rather than show a clipped heading.
+        if (came.isNotEmpty() && !beside) {
             BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
                 if (maxHeight >= NewChaptersLeast) LargeNewChapters(came, Modifier.fillMaxSize())
             }
@@ -358,8 +382,7 @@ private fun LargeContinue(tiles: List<WorkTile>) {
     }
     BoxWithConstraints(Modifier.fillMaxWidth().padding(top = 4.dp)) {
         // The grid rule's columns upright: as many of at least 200 dp as the width holds.
-        val configuration = LocalConfiguration.current
-        val columns = if (configuration.screenWidthDp > configuration.screenHeightDp) {
+        val columns = if (landscapePanel()) {
             LANDSCAPE_CONTINUE_COLUMNS
         } else {
             paperGrid(maxWidth, 1000.dp, 0.dp, 0.dp).columns
@@ -387,13 +410,17 @@ private fun LargeContinue(tiles: List<WorkTile>) {
     }
 }
 
-/** New chapters on a 10 inch Home: rows down the first column, then the second, as many as the room holds. */
+/**
+ * New chapters on a 10 inch Home: rows down the first column, then the second, as many as the room
+ * holds; [beside] the hero on a panel held on its side, one column as tall as the hero.
+ */
 @Composable
-private fun LargeNewChapters(came: List<CameOut>, modifier: Modifier) {
+private fun LargeNewChapters(came: List<CameOut>, modifier: Modifier, beside: Boolean = false) {
     val context = LocalContext.current
     val navigator = LocalNavigator.current
-    Column(modifier.fillMaxWidth()) {
-        Spacer(Modifier.height(18.dp))
+    Column(if (beside) modifier else modifier.fillMaxWidth()) {
+        // Beside the hero its heading sits level with the hero's top.
+        if (!beside) Spacer(Modifier.height(18.dp))
         PaperHeading(Strings.einkHomeNewChapters(context), Strings.einkHomeAllNewChapters(context), flush = true) { navigator.go(Destination.Updates) }
         PagedColumns(came, page = 0, onPage = {}, modifier = Modifier.weight(1f).padding(top = 4.dp, bottom = 12.dp), paged = false) { (day, entry), first ->
             val tile = entry.tile
