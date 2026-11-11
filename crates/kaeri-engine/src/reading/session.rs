@@ -1030,7 +1030,12 @@ impl Session {
         self.start.strip = self.start.strip.filter(|s| s.image == page);
         // Another chapter's pages that had not all landed are fetched again when it opens, and
         // so is one with credit pages or parts, which its folder alone does not tell.
-        if let Some(left) = self.feed.take_if(|f| f.chapter != chapter.id)
+        let left = self.feed.take_if(|f| f.chapter != chapter.id);
+        // The chapter left stops fetching, so its pages never hold up the one opening.
+        if let Some(left) = &left {
+            left.leave();
+        }
+        if let Some(left) = left
             && (!left.complete() || !left.credits.is_empty() || left.parts.is_some())
             && let Some(c) = self.chapters.iter_mut().find(|c| c.id == left.chapter)
         {
