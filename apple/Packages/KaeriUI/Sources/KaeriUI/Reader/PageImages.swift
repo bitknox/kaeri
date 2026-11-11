@@ -41,9 +41,11 @@ enum PageImages {
         }
     }
 
-    /// The page as an image, cropped when the file says so; nil when the file cannot be read.
+    /// The file, its crop and the size it is decoded for: one file can show whole and cropped,
+    /// or as two halves.
     private static func key(_ file: PageFile, _ longestSide: CGFloat) -> NSString {
-        "\(file.path)|\(Int(longestSide))" as NSString
+        let crop = file.crop.map { "\($0.x),\($0.y),\($0.width),\($0.height)" } ?? ""
+        return "\(file.path)|\(crop)|\(Int(longestSide))" as NSString
     }
 
     /// The decoded page when it is already in the cache, so a view can draw it on its first frame.
