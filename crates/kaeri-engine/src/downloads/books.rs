@@ -959,7 +959,9 @@ impl BookDownloads {
                 }
                 done
             }
-            ChapterContent::Text(mut body) => {
+            ChapterContent::Text(body) => {
+                // Its title said once, as the reader shows it from the source.
+                let mut body = crate::reading::novel::heading_once(&body, &opened.chapter);
                 // Its pictures go inside the book, so it reads with no network.
                 let pictures = lent.sources.pictures_in(&source, &mut body).await;
                 let file =

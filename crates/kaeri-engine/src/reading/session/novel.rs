@@ -560,7 +560,13 @@ impl Session {
                         // few seconds at most: what comes later fills a box kept for it.
                         let pictures =
                             sources.reader_pictures(&opened.source_id, &mut xhtml).await;
-                        let title = opened.chapter.title.clone().unwrap_or(label);
+                        let xhtml = served::heading_once(&xhtml, &opened.chapter);
+                        let title = opened
+                            .chapter
+                            .title
+                            .as_deref()
+                            .map(|t| served::cleaned_title(&opened.chapter, t))
+                            .unwrap_or(label);
                         let identity = format!("{}/{}", opened.source_id, opened.chapter.id);
                         let lang = opened.chapter.language.clone();
                         Prepared::Novel(Box::new(served::open_text(
