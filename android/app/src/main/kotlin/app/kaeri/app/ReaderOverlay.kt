@@ -155,7 +155,9 @@ private fun ReaderOverlay(
     }
     LaunchedEffect(request) {
         val next = request
-        val paper = ReaderLook.paper(context)
+        // Paper mode turning pages at once, and an e-ink screen, where nothing moves: the reader
+        // is there at once, and gone at once.
+        val paper = ReaderLook.paper(context) || next?.eink == true
         if (next != null && next == already) {
             already = null
             shown = next
@@ -190,7 +192,7 @@ private fun ReaderOverlay(
                 }
             }
         } else if (shown != null) {
-            val paper = ReaderLook.paper(context)
+            val paper = ReaderLook.paper(context) || shown?.eink == true
             if (zoomFrom != null && !paper && !removed) {
                 corner.snapTo(0f)
                 zoom(null)
@@ -264,7 +266,7 @@ private fun OpenReader(
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current
-    val session = remember { ReaderSession { store.send(it) } }
+    val session = remember { ReaderSession { command -> Flavour.readerSend(command) { store.send(it) } } }
     val images = remember { PageImages() }
     val quiet = remember { QuietPhone(context) }
     val state by session.state.collectAsState()
@@ -310,10 +312,11 @@ private fun OpenReader(
             .readerSurface(density, eink = request.eink, dark = true) { surface ->
                 if (!opened[0]) {
                     opened[0] = true
+                    val title = store.reading.series.value[request.work]?.titles?.display
                     if (back != null) {
-                        session.open(request.work, surface, back.chapter, OpenAt.Place(back))
+                        session.open(request.work, surface, back.chapter, OpenAt.Place(back), title)
                     } else {
-                        session.open(request.work, surface, request.chapter)
+                        session.open(request.work, surface, request.chapter, title = title)
                     }
                 } else {
                     session.surface(surface)
@@ -342,7 +345,13 @@ private fun OpenReader(
                     state = state,
                     images = images,
                     painter = painter,
-                    actions = EinkReaderActions(onBack = close, onSeries = close, onDownloads = close, onAddSource = addSource),
+                    actions = EinkReaderActions(
+                        onBack = close,
+                        onSeries = close,
+                        onDownloads = close,
+                        onAddSource = addSource,
+                        onDownload = { chapter -> store.reading.download(state.view?.work ?: request.work, app.kaeri.engine.model.DownloadPick.Chapters(listOf(chapter.id))) },
+                    ),
                     novel = { place, onControls ->
                         NovelScreen(
                             session = session,

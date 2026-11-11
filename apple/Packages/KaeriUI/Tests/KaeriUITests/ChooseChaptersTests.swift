@@ -1,5 +1,5 @@
 // Download's Choose chapters starts with the next ten unread chapters not downloaded yet, from
-// the reader's place on, rather than every unread chapter.
+// the reader's place on, rather than every unread chapter, and opens centred on that place.
 
 import KaeriKit
 @testable import KaeriStore
@@ -39,6 +39,17 @@ struct ChooseChaptersTests {
     @Test func withNothingUnreadAfterThePlaceItTakesTheFirstUnreadOnes() {
         let behind = shelf((1...30).map { n -> (Int, ChapterReadState) in (n, n <= 3 || (12...14).contains(n) ? .unread : .read) })
         #expect(SeriesChoosing.start(behind) == ids([1, 2, 3, 12, 13, 14]))
+    }
+
+    @Test func itOpensCentredOnTheReadersPlace() {
+        #expect(SeriesChoosing.place(chapters) == "c6")
+        let read = shelf((1...30).map { n -> (Int, ChapterReadState) in (n, n <= 24 ? .read : .unread) })
+        #expect(SeriesChoosing.place(read) == "c25")
+        // Nothing read yet, or everything read: no place, and the list opens where it is.
+        let fresh = shelf((1...30).map { n -> (Int, ChapterReadState) in (n, .unread) })
+        #expect(SeriesChoosing.place(fresh) == nil)
+        let done = shelf((1...30).map { n -> (Int, ChapterReadState) in (n, .read) })
+        #expect(SeriesChoosing.place(done) == nil)
     }
 
     @Test func selectAllStillTakesEveryUnreadChapter() {

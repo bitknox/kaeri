@@ -211046,79 +211046,395 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lld Seiten"
+            "value" : "%#@pages@"
+          },
+          "substitutions" : {
+            "pages" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 Seite"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld Seiten"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lld pages"
+            "value" : "%#@pages@"
+          },
+          "substitutions" : {
+            "pages" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 page"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld pages"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "es-419" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lld páginas"
+            "value" : "%#@pages@"
+          },
+          "substitutions" : {
+            "pages" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld páginas"
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 página"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld páginas"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lld pages"
+            "value" : "%#@pages@"
+          },
+          "substitutions" : {
+            "pages" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld de pages"
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 page"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld pages"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lld halaman"
+            "value" : "%#@pages@"
+          },
+          "substitutions" : {
+            "pages" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld halaman"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lld pagine"
+            "value" : "%#@pages@"
+          },
+          "substitutions" : {
+            "pages" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld pagine"
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 pagina"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld pagine"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lldページ"
+            "value" : "%#@pages@"
+          },
+          "substitutions" : {
+            "pages" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lldページ"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Stron: %1$lld"
+            "value" : "%#@pages@"
+          },
+          "substitutions" : {
+            "pages" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "few" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld strony"
+                    }
+                  },
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld stron"
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 strona"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld strony"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lld páginas"
+            "value" : "%#@pages@"
+          },
+          "substitutions" : {
+            "pages" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld de páginas"
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 página"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld páginas"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lld стр."
+            "value" : "%#@pages@"
+          },
+          "substitutions" : {
+            "pages" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "few" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld страницы"
+                    }
+                  },
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld страниц"
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld страница"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld страницы"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lld sidor"
+            "value" : "%#@pages@"
+          },
+          "substitutions" : {
+            "pages" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 sida"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld sidor"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lld sayfa"
+            "value" : "%#@pages@"
+          },
+          "substitutions" : {
+            "pages" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 sayfa"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld sayfa"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lld trang"
+            "value" : "%#@pages@"
+          },
+          "substitutions" : {
+            "pages" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld trang"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -214749,6 +215065,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đã tính là đã đọc"
+          }
+        }
+      }
+    },
+    "reader-end-skip-hint" : {
+      "comment" : "What a screen reader adds after \"Skip to chapter 17\": the extra it passes over stays unread in the chapter list. The chapter is the extra's number, such as 16.5. Argument 1: chapter (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapter %1$@ stays unread."
+          }
+        }
+      }
+    },
+    "reader-end-skip-hint-extras" : {
+      "comment" : "What a screen reader adds after \"Skip to chapter 17\" when it passes over more than one extra, or an extra with no number (such as an omake): those chapters stay unread in the chapter list.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The extras before it stay unread."
+          }
+        }
+      }
+    },
+    "reader-end-skip-to" : {
+      "comment" : "Button beside Continue on the page between chapters, shown only when the next chapter is an extra (such as 16.5 between 16 and 17). It opens the chapter named, passing over the extras before it. The chapter is its number, such as 17. Argument 1: chapter (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skip to chapter %1$@"
           }
         }
       }

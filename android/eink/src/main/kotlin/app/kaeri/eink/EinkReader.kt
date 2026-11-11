@@ -1,15 +1,14 @@
 // The e-ink reader, on the :reader surface: pages turn at once by the 40/30/30 zones, the page
 // buttons and swipes; the bars are opaque with a 2 dp rule and no dim; the folio sits in the
-// page's own margin; the page between chapters is in the flow; nothing animates; and each paint
-// goes through the engine's refresh policy to the vendor's full refresh.
+// page's own margin; the page between chapters is in the flow; nothing animates; each paint goes
+// through the engine's refresh policy, which asks the vendor for a full refresh only when the
+// person turned one on; and Screen mode sets the panel's own update mode where it can.
 
 package app.kaeri.eink
 
 import androidx.compose.foundation.background
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.clickable
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -54,6 +53,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -123,6 +123,8 @@ import app.kaeri.reader.startSkipped
 import app.kaeri.reader.rememberServerLine
 import app.kaeri.reader.serverLineWords
 import app.kaeri.store.ServerLine
+import app.kaeri.reader.openingClock
+import androidx.compose.runtime.CompositionLocalProvider
 import kotlinx.coroutines.delay
 
 /** What the e-ink reader leaves to the app around it; its settings and Contents are its own. */
@@ -132,6 +134,8 @@ class EinkReaderActions(
     val onDownloads: () -> Unit,
     /** Add a source, from the end of the demo. */
     val onAddSource: () -> Unit = onBack,
+    /** Download the open chapter to this device, from the top bar on a large panel. */
+    val onDownload: ((ChapterRow) -> Unit)? = null,
 )
 
 /**
@@ -160,6 +164,16 @@ fun EinkReader(
     var zones by remember { mutableStateOf(showZones) }
     var layer by remember { mutableStateOf(EinkLayer.None) }
     val paint by rememberUpdatedState { what: EinkPaint -> painter.paint(host, what) }
+
+    // Screen mode: the panel's own update mode for the reader's redraws while it is open, given
+    // back to the device's setting on the way out. Only where the family's mode calls resolved.
+    val screenMode = state.settings?.rows?.firstOrNull { it.key == ReaderSettingKey.SCREEN_MODE }
+        ?.let { (it.value as? ReaderValue.Choice)?.name } ?: "device" // i18n-skip
+    DisposableEffect(host, painter.controller, screenMode) {
+        val controller = painter.controller
+        controller.setMode(host, screenMode)
+        onDispose { controller.setMode(host, "device") } // i18n-skip
+    }
 
     fun toggleChrome() {
         chrome = !chrome
@@ -229,6 +243,26 @@ fun EinkReader(
         }
     }
 
+    // Another chapter asked for: the control pressed for it stays pressed, and past the quiet time
+    // the page gives way to the one line saying which chapter is loading. Contents, kept up with its
+    // row pressed meanwhile, goes then or once the chapter is open.
+    val asking = state.asking
+    var askWaited by remember(asking) { mutableStateOf(asking != null && waitedOut(state.openingSince)) }
+    LaunchedEffect(asking) {
+        if (asking == null) return@LaunchedEffect
+        delay(quietLeft(state.openingSince))
+        askWaited = true
+        if (layer == EinkLayer.Contents) show(EinkLayer.None)
+    }
+    var onChapter by remember { mutableStateOf(view?.chapter?.id) }
+    LaunchedEffect(view?.chapter?.id) {
+        if (view?.chapter?.id == onChapter) return@LaunchedEffect
+        onChapter = view?.chapter?.id
+        if (layer == EinkLayer.Contents) show(EinkLayer.None)
+    }
+    // The waiting line in place of the page: nothing of the page is drawn over it.
+    val waiting = state.leaves.isEmpty() || (asking != null && askWaited)
+
     val contentsKeys = remember { ContentsKeys() }
     fun act(action: ReaderAction) {
         when (action) {
@@ -273,156 +307,182 @@ fun EinkReader(
         }
     }
 
-    Box(
-        modifier
-            .fillMaxSize()
-            .background(EinkColours.Paper)
-            .readerKeys(keyRules, ::act)
-            // The first touch anywhere clears the guide, and still turns or opens what it touched.
-            .pointerInput(zones) {
-                if (!zones) return@pointerInput
-                awaitEachGesture {
-                    awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-                    zones = false
-                }
-            },
-    ) {
-        val failure = state.failure
-        when {
-            failure != null && state.leaves.isEmpty() && state.novel == null -> EinkChapterFailed(failure, state, session, onRetry = { session.retry(null) }, onBack = actions.onBack)
-            novelOpen && view != null && novel != null -> EinkNovel(state, session, place, actions, chrome, { paint(it) }, ::toggleChrome, novel)
-            state.leaves.isEmpty() -> EinkWaiting(state)
-            else -> PagedReader(
-                state = state,
-                pager = pager,
-                images = images,
-                direction = direction,
-                zones = TapZones.eink(direction),
-                onControls = ::toggleChrome,
-                onShown = { leaf, how, _ ->
-                    session.shown(leaf, how)
-                    if (state.leaves.getOrNull(leaf)?.endPage == true) paint(EinkPaint.EndPage)
-                },
-                onMissing = session::needPage,
-                onRetry = { session.retry(it.toUInt()) },
-                onJumped = session::jumped,
-                onReady = { leaf ->
-                    val colour = state.leaves.getOrNull(leaf)?.parts?.any { state.file(it)?.colour == true } == true
-                    paint(EinkPaint.ImagePage(colour))
-                },
-                motion = false,
-                endPage = {
-                    EinkEndPage(
-                        state,
-                        actions,
-                        onContinue = { next -> session.openChapter(next.id) },
-                        onFirstPage = { pager.go(0, TurnHow.JUMP) },
-                        onShowCredits = { session.showEndCredits()?.let { pager.show(it, TurnHow.TURN, session::showCredit, state.shownCredit) } },
-                    )
-                },
-                // A page button, a volume key or a forward tap on the end page goes on, as on the phone.
-                onPastEnd = session::crossOn,
-                waiting = { page, long -> if (long) EinkPageWaiting(page) },
-                failed = { page, failure, retry -> EinkPageFailed(page, failure, retry, skip = { pager.forward(TurnHow.TURN) }) },
-                fit = (state.settings?.rows?.firstOrNull { it.key == ReaderSettingKey.FIT }?.value as? ReaderValue.Choice)?.name,
-                onCredit = session::showCredit,
-                creditGround = EinkColours.Paper,
-            )
-        }
-        // A credit page shown or put away over the same leaf is a new image: one full refresh.
-        val credit = state.shownCredit
-        var creditWas by remember { mutableStateOf<UInt?>(null) }
-        LaunchedEffect(state.onCredit) {
-            val was = creditWas
-            creditWas = state.onCredit
-            if (state.onCredit == was) return@LaunchedEffect
-            val colour = credit?.file?.colour ?: (state.leaves.getOrNull(pager.leaf)?.parts?.any { state.file(it)?.colour == true } == true)
-            paint(EinkPaint.ImagePage(colour))
-        }
-        val leaf = state.leaves.getOrNull(pager.leaf)
-        if (leaf != null && !leaf.endPage && !chrome && !state.onUnkeptCredit) EinkFolio(leaf, state)
-        // Page 1's box names the credit pages skipped; it stays on page 1 and leaves with the turn.
-        val skipped = state.startSkipped
-        var turnedAway by remember(view?.chapter?.id) { mutableStateOf(false) }
-        if (pager.leaf != 0 && state.leaves.isNotEmpty()) turnedAway = true
-        if (state.paged && pager.leaf == 0 && credit == null && skipped.isNotEmpty() && (!turnedAway || CreditShot.step == "line") && !chrome && layer == EinkLayer.None && state.notice == null && view?.demoCredit == null) {
-            EinkCreditLine(skipped.size, onShow = {
-                session.showStartCredits()?.let { pager.show(it, TurnHow.TURN, session::showCredit, state.shownCredit) }
-            }, modifier = Modifier.align(Alignment.TopCenter))
-        }
-        // The box says a page was kept, with Undo, until the next turn, and stays gone after it; no
-        // timer, since a timed change costs a refresh. The kept page reaches the engine when the
-        // chapter closes, another opens, another page is kept, or the app goes to the background.
-        val keeping = state.keeping
-        val here = pager.leaf to state.onCredit
-        val keptAt = remember(keeping) { here }
-        var keptGone by remember(keeping) { mutableStateOf(false) }
-        LaunchedEffect(here, keptAt) { if (here != keptAt) keptGone = true }
-        val creditNotice = state.creditNotice?.takeIf { it != CreditNotice.KEPT || (!keptGone && keptAt == here) }
-        if (creditNotice != null && !chrome && layer == EinkLayer.None) {
-            EinkCreditNotice(creditNotice, session, Modifier.align(Alignment.TopCenter))
-        }
-        if (zones && state.leaves.isNotEmpty()) EinkZonesGuide(direction)
-        if (chrome && view != null && layer != EinkLayer.Contents) {
-            EinkTopBar(
-                title = view.title,
-                chapter = view.chapter,
-                onBack = actions.onBack,
-                onContents = { show(EinkLayer.Contents) },
-                modifier = Modifier.align(Alignment.TopCenter),
-                subtitle = view.demoCredit?.let { demo -> demo.licence?.let { Strings.readerDemoCredit(LocalContext.current, demo.series, demo.author, it) } ?: demo.credit },
-            )
-            val page = if (novelOpen) place.page + 1 else state.shownPage(leaf?.parts?.firstOrNull()?.page?.toInt() ?: 0) + 1
-            EinkBottomBar(
-                page = page,
-                pages = if (novelOpen) place.pages.coerceAtLeast(1) else state.shownPages,
-                onCredit = !novelOpen && state.onUnkeptCredit,
-                parts = if (novelOpen) emptyList() else state.partTicks.map { state.shownPage(it.page) to it.missing },
-                rtl = direction.rightToLeft,
-                backTo = state.backTo,
-                hasNext = view.next != null,
-                hasPrevious = view.previous != null,
-                canClean = painter.controller.available,
-                onBackTo = { session.backTo() },
-                onNext = { view.next?.let { session.openChapter(it.id) } },
-                onPrevious = { view.previous?.let { session.openChapter(it.id) } },
-                onSettings = { show(EinkLayer.Settings) },
-                onClean = { paint(EinkPaint.Clean) },
-                modifier = Modifier.align(Alignment.BottomCenter),
-            )
-        }
-        val notice = state.notice
-        if (notice != null && !chrome) {
-            EinkNotice(notice, onAction = { action ->
-                when (action) {
-                    NoticeAction.START_OVER -> session.startOver()
-                    NoticeAction.GO_BACK -> session.goBack()
-                    NoticeAction.CHANGE_MODE -> {
-                        chrome = true
-                        show(EinkLayer.Settings)
+    // Presses and waiting lines go through the same policy as every other paint.
+    val tell = remember(painter, host) { { what: EinkPaint -> painter.paint(host, what); Unit } }
+    CompositionLocalProvider(LocalEinkBusy provides (asking != null), LocalEinkPaint provides tell) {
+        Box(
+            modifier
+                .fillMaxSize()
+                .background(EinkColours.Paper)
+                .readerKeys(keyRules, ::act)
+                // The first touch anywhere clears the guide, and still turns or opens what it touched.
+                .pointerInput(zones) {
+                    if (!zones) return@pointerInput
+                    awaitEachGesture {
+                        awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                        zones = false
                     }
-                }
-                session.dismissNotice(notice.id)
-            }, modifier = Modifier.align(Alignment.BottomCenter))
-        }
-        when (layer) {
-            EinkLayer.Settings -> EinkSettingsSheet(session, state, onMore = { show(EinkLayer.More) }, onDone = { show(EinkLayer.None) })
-            EinkLayer.More -> EinkMoreSheet(session, state, onBack = { show(EinkLayer.Settings) }, onDone = { show(EinkLayer.None) })
-            EinkLayer.Contents -> EinkContents(
-                session = session,
-                state = state,
-                onBack = { show(EinkLayer.None) },
-                onOpen = { chapter ->
-                    if (chapter != view?.chapter?.id) session.openChapter(chapter)
-                    show(EinkLayer.None)
                 },
-                onPage = { paint(EinkPaint.ListPage(false)) },
-                keys = contentsKeys,
-            )
-            EinkLayer.None -> Unit
+        ) {
+            val failure = state.failure
+            when {
+                // Try again opens the chapter anew: a failed open has no session left to retry in.
+                failure != null && state.leaves.isEmpty() && state.novel == null -> EinkChapterFailed(failure, state, session, onRetry = session::retryOpen, onBack = actions.onBack)
+                novelOpen && view != null && novel != null -> EinkNovel(state, session, place, actions, chrome, { paint(it) }, ::toggleChrome, novel)
+                waiting -> {
+                    EinkWaiting(state, waited = asking != null && askWaited)
+                    // A first open still going after its slow mark: the series, what it waits on and
+                    // the ways on, over the line.
+                    if (state.leaves.isEmpty()) EinkSlowOpen(state, session, actions.onSeries)
+                }
+                else -> PagedReader(
+                    state = state,
+                    pager = pager,
+                    images = images,
+                    direction = direction,
+                    zones = TapZones.eink(direction),
+                    onControls = ::toggleChrome,
+                    onShown = { leaf, how, _ ->
+                        session.shown(leaf, how)
+                        if (state.leaves.getOrNull(leaf)?.endPage == true) paint(EinkPaint.EndPage)
+                    },
+                    onMissing = session::needPage,
+                    onRetry = { session.retry(it.toUInt()) },
+                    onJumped = session::jumped,
+                    onReady = { leaf ->
+                        val colour = state.leaves.getOrNull(leaf)?.parts?.any { state.file(it)?.colour == true } == true
+                        paint(EinkPaint.ImagePage(colour))
+                    },
+                    motion = false,
+                    endPage = {
+                        EinkEndPage(
+                            state,
+                            actions,
+                            onContinue = { next -> session.openChapter(next.id) },
+                            onFirstPage = { pager.go(0, TurnHow.JUMP) },
+                            onShowCredits = { session.showEndCredits()?.let { pager.show(it, TurnHow.TURN, session::showCredit, state.shownCredit) } },
+                        images = images,
+                        onContents = { show(EinkLayer.Contents) },
+                        loadChapters = session::loadChapters,
+                        )
+                    },
+                    // A page button, a volume key or a forward tap on the end page goes on, as on the phone.
+                    onPastEnd = session::crossOn,
+                    // Past the quiet time, the one line, painted once; the plate's later words change nothing.
+                    waiting = { page, _ -> EinkPageWaiting(page) },
+                    failed = { page, failure, retry -> EinkPageFailed(page, failure, retry, skip = { pager.forward(TurnHow.TURN) }) },
+                    fit = (state.settings?.rows?.firstOrNull { it.key == ReaderSettingKey.FIT }?.value as? ReaderValue.Choice)?.name,
+                    onCredit = session::showCredit,
+                    creditGround = EinkColours.Paper,
+                )
+            }
+            // A credit page shown or put away over the same leaf is a new image: one full refresh.
+            val credit = state.shownCredit
+            var creditWas by remember { mutableStateOf<UInt?>(null) }
+            LaunchedEffect(state.onCredit) {
+                val was = creditWas
+                creditWas = state.onCredit
+                if (state.onCredit == was) return@LaunchedEffect
+                val colour = credit?.file?.colour ?: (state.leaves.getOrNull(pager.leaf)?.parts?.any { state.file(it)?.colour == true } == true)
+                paint(EinkPaint.ImagePage(colour))
+            }
+            val leaf = state.leaves.getOrNull(pager.leaf)
+            if (leaf != null && !leaf.endPage && !chrome && !state.onUnkeptCredit && !waiting) EinkFolio(leaf, state)
+            // Page 1's box names the credit pages skipped; it stays on page 1 and leaves with the turn.
+            val skipped = state.startSkipped
+            var turnedAway by remember(view?.chapter?.id) { mutableStateOf(false) }
+            if (pager.leaf != 0 && state.leaves.isNotEmpty()) turnedAway = true
+            if (!waiting && state.paged && pager.leaf == 0 && credit == null && skipped.isNotEmpty() && (!turnedAway || CreditShot.step == "line") && !chrome && layer == EinkLayer.None && state.notice == null && view?.demoCredit == null) {
+                EinkCreditLine(skipped.size, onShow = {
+                    session.showStartCredits()?.let { pager.show(it, TurnHow.TURN, session::showCredit, state.shownCredit) }
+                }, modifier = Modifier.align(Alignment.TopCenter))
+            }
+            // The box says a page was kept, with Undo, until the next turn, and stays gone after it; no
+            // timer, since a timed change costs a refresh. The kept page reaches the engine when the
+            // chapter closes, another opens, another page is kept, or the app goes to the background.
+            val keeping = state.keeping
+            val here = pager.leaf to state.onCredit
+            val keptAt = remember(keeping) { here }
+            var keptGone by remember(keeping) { mutableStateOf(false) }
+            LaunchedEffect(here, keptAt) { if (here != keptAt) keptGone = true }
+            val creditNotice = state.creditNotice?.takeIf { it != CreditNotice.KEPT || (!keptGone && keptAt == here) }
+            if (creditNotice != null && !chrome && layer == EinkLayer.None && !waiting) {
+                EinkCreditNotice(creditNotice, session, Modifier.align(Alignment.TopCenter))
+            }
+            if (zones && !waiting) EinkZonesGuide(direction)
+            if (chrome && view != null && layer != EinkLayer.Contents) {
+            val large = einkLargePanel
+            val onDownload = actions.onDownload?.takeIf { large && view.demoCredit == null }
+                EinkTopBar(
+                    title = view.title,
+                    chapter = view.chapter,
+                    onBack = actions.onBack,
+                    onContents = { show(EinkLayer.Contents) },
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    subtitle = view.demoCredit?.let { demo -> demo.licence?.let { Strings.readerDemoCredit(LocalContext.current, demo.series, demo.author, it) } ?: demo.credit },
+                download = if (onDownload != null) ({ EinkTopDownload(view.chapter) { onDownload(view.chapter) } }) else null,
+                )
+                val page = if (novelOpen) place.page + 1 else state.shownPage(leaf?.parts?.firstOrNull()?.page?.toInt() ?: 0) + 1
+                EinkBottomBar(
+                    page = page,
+                    pages = if (novelOpen) place.pages.coerceAtLeast(1) else state.shownPages,
+                    onCredit = !novelOpen && state.onUnkeptCredit,
+                    parts = if (novelOpen) emptyList() else state.partTicks.map { state.shownPage(it.page) to it.missing },
+                    rtl = direction.rightToLeft,
+                    backTo = state.backTo,
+                    hasNext = view.next != null,
+                    hasPrevious = view.previous != null,
+                    canClean = painter.controller.available,
+                    onBackTo = { session.backTo() },
+                    onNext = { view.next?.let { session.openChapter(it.id) } },
+                    onPrevious = { view.previous?.let { session.openChapter(it.id) } },
+                    onSettings = { show(EinkLayer.Settings) },
+                    onClean = { paint(EinkPaint.Clean) },
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                large = large,
+                nextHere = view.next?.takeIf { large && it.download is ChapterDownloadState.Done }?.let { Strings.einkNextOnDevice(LocalContext.current, chapterNumber(it)) },
+                series = if (large) ({ EinkSeriesBar(session, state) }) else null,
+                )
+            }
+            val notice = state.notice
+            if (notice != null && !chrome) {
+                EinkNotice(notice, onAction = { action ->
+                    when (action) {
+                        NoticeAction.START_OVER -> session.startOver()
+                        NoticeAction.GO_BACK -> session.goBack()
+                        NoticeAction.CHANGE_MODE -> {
+                            chrome = true
+                            show(EinkLayer.Settings)
+                        }
+                    }
+                    session.dismissNotice(notice.id)
+                }, modifier = Modifier.align(Alignment.BottomCenter))
+            }
+            when (layer) {
+                EinkLayer.Settings -> EinkSettingsSheet(session, state, onMore = { show(EinkLayer.More) }, onDone = { show(EinkLayer.None) })
+                EinkLayer.More -> EinkMoreSheet(session, state, onBack = { show(EinkLayer.Settings) }, onDone = { show(EinkLayer.None) })
+                EinkLayer.Contents -> EinkContents(
+                    session = session,
+                    state = state,
+                    onBack = { show(EinkLayer.None) },
+                    // The row stays pressed over the list while its chapter opens, as the board draws it.
+                    onOpen = { chapter ->
+                        if (chapter == view?.chapter?.id || !session.openChapter(chapter)) show(EinkLayer.None)
+                    },
+                    onPage = { paint(EinkPaint.ListPage(false)) },
+                    keys = contentsKeys,
+                )
+                EinkLayer.None -> Unit
+            }
         }
     }
 }
+
+/** Whether the quiet time has passed since [since], on [openingClock]; nothing asked counts from now. */
+private fun waitedOut(since: Long): Boolean = since > 0 && openingClock() - since >= PAPER_QUIET_MS
+
+/** What is left of the quiet time since [since]. */
+private fun quietLeft(since: Long): Long = if (since <= 0) PAPER_QUIET_MS else (PAPER_QUIET_MS - (openingClock() - since)).coerceIn(0, PAPER_QUIET_MS)
 
 /** The chapter's number as the strings name it: its canonical number, or the source's label. */
 fun chapterNumber(row: ChapterRow): String = row.number ?: row.label
@@ -512,16 +572,15 @@ fun EinkTopBar(
     modifier: Modifier = Modifier,
     /** In place of the chapter line: a demo work's credit while it is held. */
     subtitle: String? = null,
+    /** Download, before Contents, on a large panel. */
+    download: (@Composable () -> Unit)? = null,
 ) {
     val context = LocalContext.current
     Row(
         modifier.fillMaxWidth().background(EinkColours.Paper).bottomRule().statusBarsPadding().height(EinkSizes.TopBar).padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            Modifier.size(56.dp).semantics { contentDescription = Strings.einkBack(context) }.einkClick(onClick = onBack),
-            contentAlignment = Alignment.Center,
-        ) { Text("‹", style = EinkType.PageTitle) }
+        EinkBackButton(onBack, 56.dp)
         Column(Modifier.weight(1f).padding(horizontal = 8.dp)) {
             Text(title, style = EinkType.ReaderTitle, maxLines = 1)
             val number = chapterNumber(chapter)
@@ -531,7 +590,12 @@ fun EinkTopBar(
                 maxLines = 1,
             )
         }
-        EinkTextButton(Strings.einkContents(context), onContents)
+        if (download != null) {
+            download()
+            EinkTextButton(Strings.einkContents(context), onContents, underline = true)
+        } else {
+            EinkTextButton(Strings.einkContents(context), onContents)
+        }
     }
 }
 
@@ -556,22 +620,40 @@ fun EinkBottomBar(
     onCredit: Boolean = false,
     /** Where each later part starts, as a page from 0, and whether no source has it. */
     parts: List<Pair<Int, Boolean>> = emptyList(),
+    /** A large panel: what is left sits at the far end, and the series' settings get a row. */
+    large: Boolean = false,
+    /** On a large panel, after what is left: that the next chapter is on this device. */
+    nextHere: String? = null,
+    /** On a large panel, the series' own settings under the progress. */
+    series: (@Composable () -> Unit)? = null,
 ) {
     val context = LocalContext.current
     Column(
-        modifier.fillMaxWidth().background(EinkColours.Paper).topRule().navigationBarsPadding().heightIn(min = EinkSizes.BottomBar).padding(horizontal = 20.dp, vertical = 14.dp),
+        modifier.fillMaxWidth().background(EinkColours.Paper).topRule().navigationBarsPadding().heightIn(min = EinkSizes.BottomBar)
+            .then(if (large) Modifier.padding(start = 28.dp, end = 28.dp, top = 16.dp, bottom = 10.dp) else Modifier.padding(horizontal = 20.dp, vertical = 14.dp)),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        val left = Strings.einkPagesLeft(context, (pages - if (onCredit) 0 else page).coerceAtLeast(0))
         Row(verticalAlignment = Alignment.Bottom) {
             Text(if (onCredit) Strings.readerCreditPageLabel(context) else Strings.readerPageOf(context, page, pages.coerceAtLeast(1)), style = EinkType.Label)
-            Spacer(Modifier.width(12.dp))
-            Text(Strings.einkPagesLeft(context, (pages - if (onCredit) 0 else page).coerceAtLeast(0)), style = EinkType.Secondary)
+            if (large) {
+                Spacer(Modifier.weight(1f).widthIn(min = 16.dp))
+                Text(listOfNotNull(left, nextHere).joinToString(" · "), style = EinkType.Secondary, maxLines = 1) // i18n-skip
+            } else {
+                Spacer(Modifier.width(12.dp))
+                Text(left, style = EinkType.Secondary)
+            }
         }
+        if (large) Spacer(Modifier.height(4.dp))
         EinkProgress(
             if (onCredit) 0f else page.toFloat() / pages.coerceAtLeast(1),
             fromRight = rtl,
             ticks = parts.map { (at, missing) -> at.toFloat() / pages.coerceAtLeast(1) to missing },
         )
+        series?.let {
+            Spacer(Modifier.height(8.dp))
+            it()
+        }
         if (backTo != null) {
             EinkOutlinedButton(Strings.readerBackToPage(context, backTo.toInt()), onBackTo, height = 46.dp)
         }
@@ -623,19 +705,35 @@ fun EinkProgress(fraction: Float, fromRight: Boolean, modifier: Modifier = Modif
 }
 
 /**
- * Nothing for 600 ms, then one static line, painted once: what the open waits on then, as the
- * engine named it ("Getting chapter 13 from …"), else "Loading chapter 13". A later stage does not
- * repaint it, and there is no counter: each repaint flashes the panel.
+ * Nothing for 600 ms from the ask, then one static line, painted once: what the open waits on
+ * then, as the engine named it ("Getting chapter 13 from …"), else "Loading chapter 13", for the
+ * chapter asked for from another one too. A later stage does not repaint it, and there is no
+ * counter: each repaint flashes the panel. [waited] says the quiet time already ran, as it has
+ * for a chapter asked for from another one, whose page held the press until then.
  */
 @Composable
-fun BoxScope.EinkWaiting(state: ReaderState) {
+fun BoxScope.EinkWaiting(state: ReaderState, waited: Boolean = false) {
     val context = LocalContext.current
-    var line by remember { mutableStateOf<String?>(null) }
     val now by rememberUpdatedState(state)
+    val paint by rememberUpdatedState(LocalEinkPaint.current)
+    fun words(): String {
+        val asked = now.asking
+        val chapter = when {
+            asked != null -> asked.row?.let(::chapterNumber)
+            else -> (now.openingChapter ?: now.view?.chapter)?.let(::chapterNumber)
+        }
+        return when {
+            asked == null && now.openingWait != null -> openingStage(context, now.openingWait, chapter)
+            else -> null
+        } ?: chapter?.let { Strings.einkLoadingChapter(context, it) } ?: Strings.stateLoading(context)
+    }
+    var line by remember { mutableStateOf(if (waited || waitedOut(state.openingSince)) words() else null) }
     LaunchedEffect(Unit) {
-        delay(600)
-        val chapter = (now.openingChapter ?: now.view?.chapter)?.let(::chapterNumber)
-        line = if (now.openingWait != null) openingStage(context, now.openingWait, chapter) else chapter?.let { Strings.einkLoadingChapter(context, it) }
+        if (line == null) {
+            delay(quietLeft(now.openingSince))
+            line = words()
+        }
+        paint(EinkPaint.Waiting)
     }
     val shown = line ?: return
     Text(
@@ -646,9 +744,11 @@ fun BoxScope.EinkWaiting(state: ReaderState) {
     )
 }
 
-/** A page still on its way after four seconds: the one static line. */
+/** A page still on its way past the quiet time: the one static line, painted once. */
 @Composable
 fun BoxScope.EinkPageWaiting(page: Int) {
+    val paint by rememberUpdatedState(LocalEinkPaint.current)
+    LaunchedEffect(Unit) { paint(EinkPaint.Waiting) }
     Text(
         Strings.readerPageLoading(LocalContext.current, page + 1),
         style = EinkType.Waiting,
@@ -709,13 +809,15 @@ fun BoxScope.EinkChapterFailed(
             Spacer(Modifier.height(14.dp))
             sources.forEach { version ->
                 Box(Modifier.fillMaxWidth().height(EinkSizes.Rule).background(EinkColours.Ink))
+                val press = rememberEinkPress()
                 Text(
                     version.edition.sourceName,
                     style = EinkType.RowTitle,
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = 64.dp)
-                        .clickable(role = Role.Button) {
+                        .einkInverted(press.inverted)
+                        .einkPress(press) {
                             choosing = false
                             session.chooseSource(version)
                         }
@@ -758,6 +860,12 @@ fun EinkEndPage(
     onFirstPage: () -> Unit = {},
     /** Show the credit pages skipped at the chapter's end. */
     onShowCredits: () -> Unit = {},
+    /** The next chapter's first page, beside the end page on a large panel. */
+    images: PageImages? = null,
+    /** Contents, from the chapters coming up on a large panel. */
+    onContents: (() -> Unit)? = null,
+    /** Asks for the series' chapters, for those coming up on a large panel. */
+    loadChapters: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val view = state.view ?: return
@@ -767,84 +875,119 @@ fun EinkEndPage(
     }
     val server = rememberServerLine(view.work, view.chapter.id)
     val read = view.chapter.id in state.read
-    // Continue, Back to the series, then Try again on the line.
+    // Continue, the skip past extras, Back to the series, then Try again on the line.
     val first = remember { FocusRequester() }
+    val skipFocus = remember { FocusRequester() }
     val second = remember { FocusRequester() }
     val retry = remember { FocusRequester() }
     val end = state.end
     val next = end?.next ?: view.next
     val number = chapterNumber(view.chapter)
-    Column(modifier.fillMaxSize().background(EinkColours.Paper).padding(horizontal = 44.dp, vertical = 92.dp).semantics { isTraversalGroup = true }) {
-        Text(Strings.einkEndOfChapter(context, number), style = EinkType.Secondary.copy(fontSize = EinkType.Secondary.fontSize * (16f / 15f)))
-        Spacer(Modifier.height(8.dp))
-        Text(view.chapter.title ?: view.title, style = EinkType.PageTitle)
-        if (read || server.held) {
+    // On a large panel the page's column sits on the left, with the next chapter beside and under it.
+    val large = einkLargePanel && next != null
+    val column = @Composable { place: Modifier ->
+        Column(place.semantics { isTraversalGroup = true }) {
+            Text(Strings.einkEndOfChapter(context, number), style = EinkType.Secondary.copy(fontSize = EinkType.Secondary.fontSize * (16f / 15f)))
             Spacer(Modifier.height(8.dp))
-            // With a server line coming the counted line's place is kept, so nothing under it moves.
-            Text(
-                endReadLine(context, state, view.chapter.id),
-                style = EinkType.Secondary,
-                modifier = if (read) Modifier else Modifier.alpha(0f).clearAndSetSemantics {},
-            )
-        }
-        if (server.held) {
-            Spacer(Modifier.height(2.dp))
-            EinkServerLine(server, retry, after = if (next != null) second else FocusRequester.Default, Modifier.fillMaxWidth())
-        }
-        val skipped = state.endSkipped(view.chapter.id)
-        if (skipped.isNotEmpty()) {
-            Spacer(Modifier.height(4.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(Strings.readerCreditPagesSkipped(context, skipped.size), style = EinkType.Secondary)
-                EinkTextButton(Strings.readerCreditShow(context), onShowCredits, underline = true)
+            Text(view.chapter.title ?: view.title, style = EinkType.PageTitle)
+            if (read || server.held) {
+                Spacer(Modifier.height(8.dp))
+                // With a server line coming the counted line's place is kept, so nothing under it moves.
+                Text(
+                    endReadLine(context, state, view.chapter.id),
+                    style = EinkType.Secondary,
+                    modifier = if (read) Modifier else Modifier.alpha(0f).clearAndSetSemantics {},
+                )
             }
-        }
-        Spacer(Modifier.height(if (server.held) 14.dp else 28.dp))
-        Box(Modifier.width(72.dp).height(3.dp).background(EinkColours.Ink))
-        Spacer(Modifier.height(28.dp))
-        if (next != null) {
-            val nextNumber = chapterNumber(next)
-            Text(Strings.einkEndNext(context), style = EinkType.Secondary)
-            Spacer(Modifier.height(6.dp))
-            Text(Strings.einkChapter(context, nextNumber), style = EinkType.SeriesTitle)
-            next.title?.let { Text(it, style = EinkType.RowTitle.copy(fontSize = EinkType.RowTitle.fontSize * (22f / 18f))) }
-            Spacer(Modifier.height(8.dp))
-            Text(nextFacts(context, next, view.mode, view.direction), style = EinkType.Secondary)
-            Spacer(Modifier.height(36.dp))
-            EinkSolidButton(Strings.einkContinueTo(context, nextNumber), { onContinue(next) }, Modifier.fillMaxWidth().focusRequester(first).focusProperties { this.next = second })
-            Spacer(Modifier.height(14.dp))
-            EinkOutlinedButton(
-                Strings.readerEndSeries(context),
-                actions.onSeries,
-                Modifier.fillMaxWidth().focusRequester(second).focusProperties {
-                    previous = first
-                    if (server.line?.canRetry == true) this.next = retry
-                },
-            )
-            Spacer(Modifier.weight(1f))
-            Text(Strings.einkTurnToContinue(context), style = EinkType.Tertiary, modifier = Modifier.align(Alignment.CenterHorizontally))
-        } else {
-            val why = end?.whyNone ?: NoNext.CAUGHT_UP
-            val nextNumber = view.chapter.number?.toDoubleOrNull()?.let { (it.toInt() + 1).toString() }
-            val (title, line) = when (why) {
-                NoNext.NO_SOURCE_HAS_IT -> (nextNumber?.let { Strings.einkNextMissing(context, it) } ?: Strings.einkCaughtUp(context)) to Strings.einkChecksAgain(context)
-                NoNext.NOT_OUT_YET -> Strings.einkNextNotOut(context) to Strings.einkChecksAgain(context)
-                NoNext.CAUGHT_UP -> Strings.einkCaughtUp(context) to Strings.einkChecksAgain(context)
-                NoNext.FINISHED -> Strings.einkFinished(context) to Strings.einkFinishedLine(context)
-                NoNext.OFFLINE -> Strings.einkNextOffline(context) to Strings.einkNextOfflineLine(context)
+            if (server.held) {
+                Spacer(Modifier.height(2.dp))
+                EinkServerLine(server, retry, after = if (next != null) second else FocusRequester.Default, Modifier.fillMaxWidth())
             }
-            Text(title, style = EinkType.PageTitle.copy(fontSize = EinkType.RowTitle.fontSize * (22f / 18f)))
-            Spacer(Modifier.height(10.dp))
-            Text(line, style = EinkType.Body.copy(color = EinkColours.Secondary))
-            Spacer(Modifier.height(36.dp))
-            if (why == NoNext.OFFLINE) {
-                EinkSolidButton(Strings.einkOpenDownloads(context), actions.onDownloads, Modifier.fillMaxWidth())
+            val skipped = state.endSkipped(view.chapter.id)
+            if (skipped.isNotEmpty()) {
+                Spacer(Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(Strings.readerCreditPagesSkipped(context, skipped.size), style = EinkType.Secondary)
+                    EinkTextButton(Strings.readerCreditShow(context), onShowCredits, underline = true)
+                }
+            }
+            Spacer(Modifier.height(if (server.held) 14.dp else 28.dp))
+            Box(Modifier.width(72.dp).height(3.dp).background(EinkColours.Ink))
+            Spacer(Modifier.height(28.dp))
+            if (next != null) {
+                val nextNumber = chapterNumber(next)
+                Text(Strings.einkEndNext(context), style = EinkType.Secondary)
+                Spacer(Modifier.height(6.dp))
+                Text(Strings.einkChapter(context, nextNumber), style = EinkType.SeriesTitle)
+                next.title?.let { Text(it, style = EinkType.RowTitle.copy(fontSize = EinkType.RowTitle.fontSize * (22f / 18f))) }
+                Spacer(Modifier.height(8.dp))
+                Text(nextFacts(context, next, view.mode, view.direction), style = EinkType.Secondary)
+                Spacer(Modifier.height(36.dp))
+                // Each as wide as its words on a large panel, as the board draws them.
+                val wide = if (large) Modifier else Modifier.fillMaxWidth()
+                // When the next chapter is an extra, the skip goes between Continue and Back to the series.
+                val skip = end?.skipTo
+                EinkSolidButton(
+                    Strings.einkContinueTo(context, nextNumber),
+                    { onContinue(next) },
+                    wide.focusRequester(first).focusProperties { this.next = if (skip != null) skipFocus else second },
+                )
                 Spacer(Modifier.height(14.dp))
-                EinkOutlinedButton(Strings.readerEndSeries(context), actions.onSeries, Modifier.fillMaxWidth())
+                if (skip != null) {
+                    val hint = end?.skipHint(context).orEmpty()
+                    EinkOutlinedButton(
+                        Strings.readerEndSkipTo(context, chapterNumber(skip)),
+                        { onContinue(skip) },
+                        wide
+                            .semantics { stateDescription = hint }
+                            .focusRequester(skipFocus)
+                            .focusProperties {
+                                previous = first
+                                this.next = second
+                            },
+                    )
+                    Spacer(Modifier.height(14.dp))
+                }
+                EinkOutlinedButton(
+                    Strings.readerEndSeries(context),
+                    actions.onSeries,
+                    wide.focusRequester(second).focusProperties {
+                        previous = if (skip != null) skipFocus else first
+                        if (server.line?.canRetry == true) this.next = retry
+                    },
+                )
+                if (!large) {
+                    Spacer(Modifier.weight(1f))
+                    Text(Strings.einkTurnToContinue(context), style = EinkType.Tertiary, modifier = Modifier.align(Alignment.CenterHorizontally))
+                }
             } else {
-                EinkSolidButton(Strings.readerEndSeries(context), actions.onSeries, Modifier.fillMaxWidth())
+                val why = end?.whyNone ?: NoNext.CAUGHT_UP
+                val nextNumber = view.chapter.number?.toDoubleOrNull()?.let { (it.toInt() + 1).toString() }
+                val (title, line) = when (why) {
+                    NoNext.NO_SOURCE_HAS_IT -> (nextNumber?.let { Strings.einkNextMissing(context, it) } ?: Strings.einkCaughtUp(context)) to Strings.einkChecksAgain(context)
+                    NoNext.NOT_OUT_YET -> Strings.einkNextNotOut(context) to Strings.einkChecksAgain(context)
+                    NoNext.CAUGHT_UP -> Strings.einkCaughtUp(context) to Strings.einkChecksAgain(context)
+                    NoNext.FINISHED -> Strings.einkFinished(context) to Strings.einkFinishedLine(context)
+                    NoNext.OFFLINE -> Strings.einkNextOffline(context) to Strings.einkNextOfflineLine(context)
+                }
+                Text(title, style = EinkType.PageTitle.copy(fontSize = EinkType.RowTitle.fontSize * (22f / 18f)))
+                Spacer(Modifier.height(10.dp))
+                Text(line, style = EinkType.Body.copy(color = EinkColours.Secondary))
+                Spacer(Modifier.height(36.dp))
+                if (why == NoNext.OFFLINE) {
+                    EinkSolidButton(Strings.einkOpenDownloads(context), actions.onDownloads, Modifier.fillMaxWidth())
+                    Spacer(Modifier.height(14.dp))
+                    EinkOutlinedButton(Strings.readerEndSeries(context), actions.onSeries, Modifier.fillMaxWidth())
+                } else {
+                    EinkSolidButton(Strings.readerEndSeries(context), actions.onSeries, Modifier.fillMaxWidth())
+                }
             }
         }
+    }
+    if (large && next != null) {
+        EinkLargeEnd(state, next, images, onOpen = onContinue, onContents = onContents, loadChapters = loadChapters, modifier = modifier, column = column)
+    } else {
+        column(modifier.fillMaxSize().background(EinkColours.Paper).padding(horizontal = 44.dp, vertical = 92.dp))
     }
 }
 
@@ -876,12 +1019,15 @@ private fun EinkServerLine(server: HeldLine, retry: FocusRequester, after: Focus
             TextThenLink(
                 text = { onLayout -> Text(serverLineWords(context, line), style = style, onTextLayout = onLayout) },
                 link = {
-                    if (line.canRetry) Text(
-                        Strings.readerTryAgain(context),
-                        style = style.copy(color = EinkColours.Ink, textDecoration = TextDecoration.Underline),
-                        softWrap = false,
-                        modifier = Modifier.focusRequester(retry).focusProperties { previous = after }.einkClick(onClick = server::retry),
-                    )
+                    if (line.canRetry) {
+                        val press = rememberEinkPress()
+                        Text(
+                            Strings.readerTryAgain(context),
+                            style = style.copy(color = EinkColours.Ink, textDecoration = TextDecoration.Underline),
+                            softWrap = false,
+                            modifier = Modifier.focusRequester(retry).focusProperties { previous = after }.einkInverted(press.inverted).einkPress(press, onClick = server::retry),
+                        )
+                    }
                 },
                 gap = 5.dp,
                 modifier = Modifier.weight(1f, fill = false),

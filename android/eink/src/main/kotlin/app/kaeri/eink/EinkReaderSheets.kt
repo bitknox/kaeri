@@ -8,6 +8,10 @@ package app.kaeri.eink
 
 import android.content.Context
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusable
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.focusTarget
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -35,6 +39,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -78,7 +83,7 @@ private val mangaFirst = listOf(Key.FIT, Key.CROP_BORDERS, Key.REFRESH_IMAGE, Ke
 private val novelFirst = listOf(Key.TEXT_SIZE, Key.FONT, Key.LINE_SPACING, Key.MARGINS, Key.LOOK, Key.REFRESH_TEXT)
 
 /** The rows for the e-ink screen itself, under their own heading on More. */
-private val screenKeys = listOf(Key.REFRESH_IMAGE, Key.REFRESH_TEXT, Key.REFRESH_LIST, Key.GALLERY_SPEED, Key.RAINBOW_FILTER, Key.SATURATION, Key.CONTRAST)
+private val screenKeys = listOf(Key.REFRESH_IMAGE, Key.REFRESH_TEXT, Key.REFRESH_LIST, Key.SCREEN_MODE, Key.RAINBOW_FILTER, Key.SATURATION, Key.CONTRAST)
 
 /**
  * The settings sheet over the lower part of the page: Reader settings and Done, This series with
@@ -153,10 +158,7 @@ private fun SheetFrame(
         ) {
             Row(Modifier.fillMaxWidth().height(EinkSizes.SheetRow), verticalAlignment = Alignment.CenterVertically) {
                 if (onBack != null) {
-                    Box(
-                        Modifier.size(52.dp).semantics { contentDescription = Strings.einkBack(context) }.einkClick(onClick = onBack),
-                        contentAlignment = Alignment.Center,
-                    ) { Text("‹", style = EinkType.PageTitle) }
+                    EinkBackButton(onBack, 52.dp)
                 }
                 Text(title, style = EinkType.ReaderTitle, modifier = Modifier.weight(1f).semantics { heading() })
                 EinkTextButton(Strings.actionDone(context), onDone)
@@ -270,7 +272,10 @@ private fun EinkSettingLine(context: Context, session: ReaderSession, row: Reade
             }
             value is ReaderValue.Amount -> {
                 val steps = amountSteps(row.key)
-                val words = if (steps.pages) {
+                val words = if (steps.pages && value.value.roundToInt() == 0) {
+                    // No full refresh: the device decides.
+                    Strings.readerValueOff(context)
+                } else if (steps.pages) {
                     Strings.einkRefreshEvery(context, value.value.roundToInt())
                 } else {
                     Strings.einkPercent(context, (value.value * 100).roundToInt())
@@ -299,17 +304,18 @@ private fun EinkSettingLine(context: Context, session: ReaderSession, row: Reade
                 if (labelled.size <= 4) {
                     EinkSegmented(labelled.map { it.first }, value, { choice -> labelled.first { it.first == choice }.second }, { set(it) }, Modifier.weight(1f))
                 } else {
-                    // Too many for one control: the chosen one between arrows that go round them.
+                    // Too many for one control: the chosen one between arrows, which stop at the
+                    // first and the last choice.
                     val at = labelled.indexOfFirst { it.first == value }.coerceAtLeast(0)
                     EinkStepper(
                         words = labelled[at].second,
                         title = title,
-                        down = Strings.readerActionPrevious(context),
-                        up = Strings.readerActionNext(context),
-                        canDown = true,
-                        canUp = true,
-                        onDown = { set(labelled[(at - 1 + labelled.size) % labelled.size].first) },
-                        onUp = { set(labelled[(at + 1) % labelled.size].first) },
+                        down = Strings.einkStepPrevious(context),
+                        up = Strings.einkStepNext(context),
+                        canDown = at > 0,
+                        canUp = at < labelled.lastIndex,
+                        onDown = { if (at > 0) set(labelled[at - 1].first) },
+                        onUp = { if (at < labelled.lastIndex) set(labelled[at + 1].first) },
                         modifier = Modifier.weight(1f),
                         glyphs = "‹" to "›",
                     )
@@ -346,28 +352,31 @@ private fun EinkStepper(
     glyphs: Pair<String, String> = "−" to "+",
 ) {
     Row(modifier.semantics { stateDescription = words }, verticalAlignment = Alignment.CenterVertically) {
-        StepButton(glyphs.first, down, canDown, onDown)
+        StepButton(glyphs.first, down, canDown, words, onDown)
         Text(
             words,
             style = EinkType.Label.copy(fontWeight = FontWeight.Bold, fontFeatureSettings = "tnum"),
             textAlign = TextAlign.Center,
             modifier = Modifier.weight(1f).semantics { contentDescription = "$title, $words" }, // i18n-skip
         )
-        StepButton(glyphs.second, up, canUp, onUp)
+        StepButton(glyphs.second, up, canUp, words, onUp)
     }
 }
 
 @Composable
-private fun StepButton(glyph: String, description: String, enabled: Boolean, onClick: () -> Unit) {
+private fun StepButton(glyph: String, description: String, enabled: Boolean, value: String, onClick: () -> Unit) {
     val ink = if (enabled) EinkColours.Ink else EinkColours.PlaceholderEdge
     val shape = RoundedCornerShape(EinkSizes.SegmentRadius)
+    // Held until the engine's answer shows the new value.
+    val press = rememberEinkPress(result = value)
     Box(
         Modifier
             .size(EinkSizes.SegmentHeight + 8.dp, EinkSizes.SegmentHeight)
             .clip(shape)
+            .einkInverted(press.inverted)
             .border(EinkSizes.Rule, ink, shape)
             .semantics { contentDescription = description }
-            .einkClick(enabled = enabled, onClick = onClick),
+            .einkPress(press, enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Text(glyph, style = EinkType.Button.copy(color = ink))
@@ -378,7 +387,8 @@ private class Steps(val step: Double, val least: Double, val most: Double, val p
 
 private fun amountSteps(key: Key): Steps = when (key) {
     Key.TEXT_SIZE -> Steps(0.1, 0.7, 2.0)
-    Key.REFRESH_TEXT, Key.REFRESH_LIST -> Steps(1.0, 1.0, 20.0, pages = true)
+    // Off, then every page to every 20th.
+    Key.REFRESH_TEXT, Key.REFRESH_LIST -> Steps(1.0, 0.0, 20.0, pages = true)
     Key.SATURATION, Key.CONTRAST -> Steps(0.1, 0.5, 1.5)
     else -> Steps(0.1, 0.5, 2.0)
 }
@@ -392,17 +402,21 @@ fun einkRowTitle(context: Context, key: Key): String? = when (key) {
     Key.REFRESH_IMAGE -> Strings.einkRowRefreshImage(context)
     Key.REFRESH_TEXT -> Strings.einkRowRefreshText(context)
     Key.REFRESH_LIST -> Strings.einkRowRefreshList(context)
-    Key.GALLERY_SPEED -> Strings.einkRowScreenSpeed(context)
+    Key.SCREEN_MODE -> Strings.einkRowScreenMode(context)
     Key.RAINBOW_FILTER -> Strings.einkRowRainbow(context)
     Key.SATURATION -> Strings.einkRowSaturation(context)
     Key.CONTRAST -> Strings.einkRowContrast(context)
     else -> rowTitle(context, key)
 }
 
-/** The choice's name on e-ink: the reader's own, or one of Screen speed's. */
+/** The choice's name on e-ink: the reader's own, or one of Screen mode's. */
 fun einkChoiceLabel(context: Context, key: Key, value: ReaderValue): String? {
-    if (key != Key.GALLERY_SPEED) return choiceLabel(context, key, value)
+    if (key != Key.SCREEN_MODE) return choiceLabel(context, key, value)
     return when ((value as? ReaderValue.Choice)?.name) {
+        "device" -> Strings.einkModeDevice(context)
+        "hd" -> Strings.einkModeHd(context)
+        "regal" -> Strings.einkModeRegal(context)
+        "balanced" -> Strings.einkModeBalanced(context)
         "standard" -> Strings.einkSpeedStandard(context)
         "fast" -> Strings.einkSpeedFast(context)
         "best" -> Strings.einkSpeedBest(context)
@@ -439,10 +453,7 @@ fun EinkContents(
             Modifier.fillMaxWidth().background(EinkColours.Paper).bottomRule().statusBarsPadding().height(EinkSizes.TopBar).padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box(
-                Modifier.size(56.dp).semantics { contentDescription = Strings.einkBack(context) }.einkClick(onClick = onBack),
-                contentAlignment = Alignment.Center,
-            ) { Text("‹", style = EinkType.PageTitle) }
+            EinkBackButton(onBack, 56.dp)
             Column(Modifier.weight(1f).padding(horizontal = 8.dp)) {
                 Text(Strings.einkContents(context), style = EinkType.ReaderTitle, maxLines = 1, modifier = Modifier.semantics { heading() })
                 Text(view.title, style = EinkType.Secondary, maxLines = 1)
@@ -473,11 +484,20 @@ fun EinkContents(
             val pages = remember(lines, perPage) { pagesOf(lines, perPage) }
             val here = lines.indexOfFirst { it is ContentsLine.Chapter && it.row.id == current }.coerceAtLeast(0)
             var page by remember(pages.size) { mutableIntStateOf((here / perPage).coerceIn(0, pages.size - 1)) }
-            LaunchedEffect(page) { onPage() }
+            // TalkBack and the keyboard start on the chapter being read, once, as the page opens.
+            val focus = remember { FocusRequester() }
+            var focused by remember { mutableStateOf(false) }
+            // A turned page drops the row that had the focus, and the reader's keys follow the
+            // focus, so the page itself keeps it.
+            val pageFocus = remember { FocusRequester() }
+            LaunchedEffect(page) {
+                onPage()
+                if (focused) runCatching { pageFocus.requestFocus() }
+            }
             // The page buttons and volume keys turn the list's pages while it shows.
             SideEffect { keys.turn = { by -> page = (page + by).coerceIn(0, pages.size - 1) } }
             Column(Modifier.fillMaxSize()) {
-                Column(Modifier.weight(1f)) {
+                Column(Modifier.weight(1f).focusRequester(pageFocus).focusTarget()) {
                     pages[page].forEach { line ->
                         when (line) {
                             is ContentsLine.Heading -> Text(
@@ -487,7 +507,18 @@ fun EinkContents(
                             )
                             is ContentsLine.Chapter -> {
                                 val reading = line.row.id == current
-                                EinkRow(onClick = { onOpen(line.row.id) }, selected = reading, height = EinkSizes.ChapterRow) {
+                                if (reading && !focused) {
+                                    LaunchedEffect(Unit) {
+                                        runCatching { focus.requestFocus() }
+                                        focused = true
+                                    }
+                                }
+                                EinkRow(
+                                    onClick = { onOpen(line.row.id) },
+                                    modifier = if (reading) Modifier.focusRequester(focus).focusable() else Modifier,
+                                    selected = reading,
+                                    height = EinkSizes.ChapterRow,
+                                ) {
                                     Text(
                                         chapterWords(context, line.row),
                                         style = if (reading) EinkType.Label.copy(fontWeight = FontWeight.Bold) else EinkType.Label,

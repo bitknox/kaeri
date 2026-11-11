@@ -10,7 +10,7 @@ import KaeriStrings
 import UniformTypeIdentifiers
 
 extension ReaderModel {
-    /// `-KaeriReader chrome|settings|chapters|chapterlist|ask|end|scrub|plate|opening|error`, and with
+    /// `-KaeriReader chrome|settings|chapters|chapterlist|ask|end|endskip|scrub|plate|opening|error`, and with
     /// `-KaeriCredits` `creditline|creditchrome|creditshown|creditshownchrome|creditkept|parts|partscrub|partmissingscrub`,
     /// after a reader scene.
     public static let argument = "-KaeriReader"
@@ -20,6 +20,8 @@ extension ReaderModel {
         guard let at = arguments.firstIndex(where: { $0 == "-KaeriScene" || $0 == "--scene" }), arguments.indices.contains(at + 1) else { return nil }
         switch arguments[at + 1].lowercased() {
         case "readermangartl", "readermoved": return "a:900301"
+        // The long series opens in the reader only when a reader shot asks; otherwise its page is shot.
+        case "readerlong": return arguments.contains(argument) ? "a:900301" : nil
         case "readernovel": return "a:900302"
         case "readerstrip": return "a:900303"
         // The reading demo's comic, for its reader and its end (prelaunch=demo-reader, demo-end).
@@ -130,12 +132,16 @@ extension ReaderModel {
             // The end page is reached by reading on, by which time the resume notice has gone.
             // A strip has no end page: it scrolls on past its last image to the marker into the
             // next chapter.
-            case "end":
+            case "end", "endskip":
                 notice = nil
                 requestJump(max(leaves.count - 1, 0))
                 if view?.mode == .strip {
                     try? await Task.sleep(for: .milliseconds(700))
                     requestTurn(forward: true)
+                }
+                if arguments[at + 1] == "endskip" {
+                    try? await Task.sleep(for: .milliseconds(700))
+                    stageSkipExtra()
                 }
             case "scrub": chromeShown = true; shotScrub = max(leaves.count / 4, 1)
             case "pill": chromeShown = true; backToPage = 9

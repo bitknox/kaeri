@@ -8,6 +8,8 @@ package app.kaeri.ui.reading
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.CubicBezierEasing
@@ -21,6 +23,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,6 +33,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.border
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -94,6 +100,10 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.kaeri.design.rememberAnimationsRemoved
+import app.kaeri.eink.EinkColours
+import app.kaeri.eink.EinkSizes
+import app.kaeri.eink.EinkSolidButton
+import app.kaeri.eink.EinkTheme
 import app.kaeri.engine.model.CameIn
 import app.kaeri.i18n.R
 import app.kaeri.store.Adding
@@ -307,6 +317,7 @@ internal fun CameInField(
     keyboard: KeyboardOptions = KeyboardOptions.Default,
     actions: KeyboardActions = KeyboardActions.Default,
 ) {
+    if (largePaper) return PaperField(value, onValueChange, label, modifier, chip, shownAs, supporting, password, keyboard, actions)
     val colors = MaterialTheme.colorScheme
     OutlinedTextField(
         value = value,
@@ -333,6 +344,58 @@ internal fun CameInField(
         ),
         modifier = modifier.fillMaxWidth(),
     )
+}
+
+/**
+ * A field on a large e-ink panel: its name over it in bold #333, then the words in a 54 dp box
+ * edged in 2 dp ink at corners 10, and the chip's words at its end. No floating label, no colour.
+ */
+@Composable
+private fun PaperField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    modifier: Modifier,
+    chip: String?,
+    shownAs: String?,
+    supporting: String?,
+    password: Boolean,
+    keyboard: KeyboardOptions,
+    actions: KeyboardActions,
+) {
+    val ink = app.kaeri.eink.EinkColours.Ink
+    Column(modifier.fillMaxWidth()) {
+        Text(label, style = app.kaeri.eink.EinkType.Secondary.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold), modifier = Modifier.padding(bottom = 6.dp))
+        androidx.compose.foundation.text.BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            singleLine = true,
+            textStyle = app.kaeri.eink.EinkType.Body.copy(fontSize = 17.sp, color = ink),
+            cursorBrush = androidx.compose.ui.graphics.SolidColor(ink),
+            visualTransformation = when {
+                password -> PasswordVisualTransformation()
+                shownAs != null -> ShownAs(shownAs)
+                else -> VisualTransformation.None
+            },
+            keyboardOptions = keyboard,
+            keyboardActions = actions,
+            modifier = Modifier.fillMaxWidth().semantics { contentDescription = label },
+            decorationBox = { field ->
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 54.dp)
+                        .border(BorderStroke(EinkSizes.Rule, ink), RoundedCornerShape(EinkSizes.SegmentRadius))
+                        .padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(Modifier.weight(1f)) { field() }
+                    chip?.let { Text(it, style = app.kaeri.eink.EinkType.Secondary, modifier = Modifier.padding(start = 12.dp)) }
+                }
+            },
+        )
+        supporting?.let { Text(it, style = app.kaeri.eink.EinkType.Secondary, modifier = Modifier.padding(top = 6.dp)) }
+    }
 }
 
 // The list container and its rows
@@ -508,16 +571,44 @@ internal fun CameInDialog(open: Boolean, form: @Composable () -> CameInForm) {
         properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
     ) {
         val wide = wideWindow()
-        val enter = if (reduced) fadeIn(tween(200)) else fadeIn(tween(CameInMotion.OPEN_MILLIS, easing = CameInMotion.EmphasizedDecelerate)) +
+        // On paper: no motion, and a frame of its own, a 2 dp ink edge round solid paper, as
+        // a shadow does not draw on the panel.
+        val paper = LocalEinkLayout.current
+        if (paper != null) {
+            // On paper, at every size: no dim over the page behind and no window animation; the
+            // ink edge alone sets the dialog apart, and a grey page would cost a full refresh.
+            val window = (androidx.compose.ui.platform.LocalView.current.parent as? androidx.compose.ui.window.DialogWindowProvider)?.window
+            androidx.compose.runtime.SideEffect {
+                window?.setDimAmount(0f)
+                window?.setWindowAnimations(0)
+            }
+        }
+        val enter = if (paper != null) EnterTransition.None else if (reduced) fadeIn(tween(200)) else fadeIn(tween(CameInMotion.OPEN_MILLIS, easing = CameInMotion.EmphasizedDecelerate)) +
             slideInVertically(tween(CameInMotion.OPEN_MILLIS, easing = CameInMotion.EmphasizedDecelerate)) { it / 10 }
-        val exit = if (reduced) fadeOut(tween(200)) else fadeOut(tween(CameInMotion.CLOSE_MILLIS, easing = CameInMotion.EmphasizedAccelerate)) +
+        val exit = if (paper != null) ExitTransition.None else if (reduced) fadeOut(tween(200)) else fadeOut(tween(CameInMotion.CLOSE_MILLIS, easing = CameInMotion.EmphasizedAccelerate)) +
             slideOutVertically(tween(CameInMotion.CLOSE_MILLIS, easing = CameInMotion.EmphasizedAccelerate)) { it / 10 }
-        if (wide) {
+        if (wide && paper != null && largePaper) {
+            // A 10.3 inch panel: 720 wide, under the status bar, with its title and Cancel at the
+            // top and Cancel and the solid action at the foot, as the large panel board draws it.
+            Box(Modifier.fillMaxSize().statusBarsPadding().imePadding().padding(top = 56.dp, bottom = 24.dp), contentAlignment = Alignment.TopCenter) {
+                AnimatedVisibility(visible, enter = enter, exit = exit) {
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = EinkColours.Paper,
+                        contentColor = EinkColours.Ink,
+                        border = BorderStroke(EinkSizes.Rule, EinkColours.Ink),
+                        modifier = Modifier.width(720.dp),
+                    ) { LargePaperContent(drawn, paper) }
+                }
+            }
+        } else if (wide) {
             Box(Modifier.fillMaxSize().imePadding(), contentAlignment = Alignment.Center) {
                 AnimatedVisibility(visible, enter = enter, exit = exit) {
                     Surface(
-                        shape = RoundedCornerShape(28.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        shape = RoundedCornerShape(if (paper != null) EinkSizes.SegmentRadius else 28.dp),
+                        color = if (paper != null) EinkColours.Paper else MaterialTheme.colorScheme.surfaceContainerHigh,
+                        contentColor = if (paper != null) EinkColours.Ink else MaterialTheme.colorScheme.onSurface,
+                        border = if (paper != null) BorderStroke(EinkSizes.Rule, EinkColours.Ink) else null,
                         modifier = Modifier.widthIn(max = 560.dp).fillMaxWidth().heightIn(max = 720.dp).padding(vertical = 24.dp),
                     ) { DialogContent(drawn, wide = true) }
                 }
@@ -525,6 +616,49 @@ internal fun CameInDialog(open: Boolean, form: @Composable () -> CameInForm) {
         } else {
             AnimatedVisibility(visible, enter = enter, exit = exit) {
                 Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxSize()) { DialogContent(drawn, wide = false) }
+            }
+        }
+    }
+}
+
+/** Whether a form draws on a large e-ink panel, 10.3 inch and up. */
+internal val largePaper: Boolean
+    @Composable @androidx.compose.runtime.ReadOnlyComposable
+    get() = LocalEinkLayout.current != null && androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp >= 900
+
+/** A form on a large panel: the title and Cancel, the body 28 in from the edge, then Cancel and the solid action. */
+@Composable
+private fun LargePaperContent(form: CameInForm, look: app.kaeri.eink.EinkLook) {
+    val cancel = stringResource(R.string.action_cancel)
+    EinkTheme(look) {
+        Column {
+            Row(
+                Modifier.fillMaxWidth().height(66.dp).padding(start = 28.dp, end = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    form.title,
+                    style = app.kaeri.eink.EinkType.ReaderTitle.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f).semantics { heading() },
+                )
+                app.kaeri.eink.EinkTextButton(cancel, form.close)
+            }
+            Column(
+                Modifier
+                    .weight(1f, fill = false)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 28.dp),
+            ) { form.body(this, false) }
+            Row(
+                Modifier.fillMaxWidth().padding(start = 28.dp, end = 28.dp, top = 18.dp, bottom = 24.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                app.kaeri.eink.EinkTextButton(cancel, form.close)
+                form.primary?.let { action -> EinkSolidButton(action.label, action.onClick, enabled = action.enabled && !action.working) }
             }
         }
     }
@@ -549,7 +683,15 @@ private fun DialogContent(form: CameInForm, wide: Boolean) {
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f).semantics { heading() },
             )
-            form.primary?.let { action ->
+            val paper = LocalEinkLayout.current
+            if (paper != null) {
+                // On paper the action is the screen's one solid button, as every e-ink primary is.
+                form.primary?.let { action ->
+                    EinkTheme(paper) {
+                        EinkSolidButton(action.label, action.onClick, enabled = action.enabled && !action.working)
+                    }
+                }
+            } else form.primary?.let { action ->
                 // Amber once there is a result to act on, faded in over 0.2 s; silk at 38% until then.
                 val tint by animateColorAsState(
                     if (action.enabled) colors.primary else colors.onSurface.copy(alpha = 0.38f),

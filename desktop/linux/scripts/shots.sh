@@ -55,6 +55,8 @@ runs=(
   # The same at a phone's width: SIZES=readingnarrow.
   "readingnarrow 360x780 ${SHOTS:-reading}"
   "readingdl 1280x800 ${SHOTS:-read-downloads}"
+  # The reader's chapters on a long series, chapter 60 of 120: SIZES=readinglong.
+  "readinglong 1280x800 ${SHOTS:-read-chapters-long}"
   # A first launch with the demo as the only source: a run of its own, as its shots need it.
   "demo 1280x800 ${SHOTS:-demo-home,demo-search,demo-title,demo-starting,demo-removed}"
   # Reading's prelaunch states on the reading scene, and the demo as the only book source:
@@ -72,6 +74,7 @@ for run in "${runs[@]}"; do
     demo) extra=(--demo) ;;
     reading | readingnarrow) extra=(--scene reading) ;;
     readingdl) extra=(--scene reading-downloads) ;;
+    readinglong) extra=(--scene reading-long) ;;
     prelaunch) extra=(--scene reading) ;;
     pldemo) extra=(--demo --scene reading) ;;
   esac

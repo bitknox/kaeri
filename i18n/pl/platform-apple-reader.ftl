@@ -94,7 +94,12 @@ reader-volume = Tom { $volume }
 reader-chapter-in-progress = Strona { $page } z { $total }
 reader-chapter-read = Przeczytany
 reader-chapter-new = nowy
-reader-chapter-pages = Stron: { $pages }
+reader-chapter-pages = { $pages ->
+    [one] 1 strona
+    [few] { $pages } strony
+    [many] { $pages } stron
+   *[other] { $pages } strony
+ }
 reader-offline-line = Offline. Pobrane rozdziały nadal się otwierają.
 reader-menu-go = Idź
 reader-menu-next-page = Następna strona

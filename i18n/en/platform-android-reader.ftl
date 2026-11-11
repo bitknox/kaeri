@@ -88,6 +88,21 @@ eink-chapter = Chapter { $chapter }
 # @max 16
 eink-contents = Contents
 
+# Button in the e-ink reader's top bar on a large panel that downloads the open chapter.
+# @only android
+# @max 16
+eink-download = Download
+
+# In the e-ink reader's top bar on a large panel once the open chapter is downloading.
+# @only android
+# @max 16
+eink-download-running = Downloading
+
+# In the e-ink reader's top bar on a large panel when the open chapter is on the device.
+# @only android
+# @max 20
+eink-download-done = On this { -device }
+
 # Button that goes back out of the reader.
 # @only android
 # @max 16
@@ -162,6 +177,69 @@ eink-reads-strip = long strip
 # @only android
 # @max 20
 eink-on-device = on this { -device }
+
+# After the pages left in the e-ink reader's bottom bar on a large panel, when the next chapter is
+# downloaded: "16 pages left in chapter · chapter 13 is on this device".
+# @only android
+# @arg chapter: text
+# @max 40
+eink-next-on-device = chapter { $chapter } is on this { -device }
+
+# Choice in the e-ink reader's bottom bar on a large panel: one page at a time.
+# @only android
+# @max 14
+eink-layout-one = One page
+
+# Choice in the e-ink reader's bottom bar on a large panel: two pages side by side.
+# @only android
+# @max 14
+eink-layout-two = Two pages
+
+# Choice in the e-ink reader's bottom bar on a large panel: the page's white borders stay.
+# @only android
+# @max 12
+eink-crop-off = Crop off
+
+# Choice in the e-ink reader's bottom bar on a large panel: the page's white borders are cut.
+# @only android
+# @max 12
+eink-crop-on = Crop on
+
+# Caption under the next chapter's first page, beside the end of a chapter on a large panel.
+# @only android
+# @arg chapter: text
+# @max 32
+eink-end-preview = Chapter { $chapter }, page 1
+
+# Heading over the next chapters, under the end of a chapter on a large panel.
+# @only android
+# @max 24
+eink-coming-up = Coming up
+
+# Kicker over a chapter that is slow to open: the series and its volume.
+# @only android
+# @arg title: text
+# @arg volume: text
+eink-slow-kicker = { $title } · volume { $volume }
+
+# A chapter still opening after 10 seconds, when other sources of the series can be asked.
+# @only android
+# @arg source: text
+eink-slow-line = { $source } hasn't answered in 10 seconds. You can keep waiting, try again, or read this series from another of your { -source-pl }.
+
+# A chapter still opening after 10 seconds, when no other source of the series has it.
+# @only android
+# @arg source: text
+eink-slow-line-alone = { $source } hasn't answered in 10 seconds. You can keep waiting or try again.
+
+# A chapter still opening after 10 seconds, before the engine has named the source it asked.
+# @only android
+eink-slow-line-unnamed = No answer in 10 seconds. You can keep waiting or try again.
+
+# Button on a chapter that is slow to open: lists the series' other sources.
+# @only android
+# @max 20
+eink-slow-another = Another { -source }
 
 # The main button on the page between chapters.
 # @only android
@@ -919,6 +997,185 @@ eink-keep-ready-on = On · the next chapters of series you're reading
 # @max 60
 eink-keep-ready-off = Off
 
+# The underlined link beside the title of the e-reader's Library that opens the View sheet: how
+# the covers are shown, which medium, the order and what is downloaded.
+# @only android
+# @max 12
+eink-library-view = View
+
+# A side of the medium control on the e-reader's Library and in its View sheet: every series.
+# @only android
+# @max 12
+eink-library-medium-all = All
+
+# A side of the medium control on the e-reader's Library: manga, manhwa and webtoons.
+# @only android
+# @max 12
+eink-library-medium-manga = Manga
+
+# A side of the medium control on the e-reader's Library: light novels.
+# @only android
+# @max 12
+eink-library-medium-novels = Novels
+
+# On a 6 or 7 inch e-reader's Library: the button naming the list shown and how many series it
+# holds, such as "Reading · 23". It opens the lists to choose another.
+# @only android
+# @arg list: text
+# @arg count: int
+# @max 30
+eink-library-list-button = { $list } · { $count }
+
+# Title of the sheet on a 6 or 7 inch e-reader's Library that chooses which list to show.
+# @only android
+# @max 30
+eink-library-lists-title = Lists
+
+# A row label in the e-reader Library's View sheet: covers in a grid or rows in a list.
+# @only android
+# @max 16
+eink-library-show = Show
+
+# A side of Show in the View sheet: the covers in a grid.
+# @only android
+# @max 14
+eink-library-show-covers = Covers
+
+# A side of Show in the View sheet: rows with a small cover.
+# @only android
+# @max 14
+eink-library-show-list = List
+
+# A row label in the View sheet: whether manga, novels or both show.
+# @only android
+# @max 16
+eink-library-medium = Medium
+
+# A row label in the View sheet: the order of the series.
+# @only android
+# @max 16
+eink-library-sort = Sort
+
+# A side of Sort in the View sheet: the series read most recently first.
+# @only android
+# @max 14
+eink-library-sort-recent = Recent
+
+# A side of Sort in the View sheet: by title, alphabetically.
+# @only android
+# @max 14
+eink-library-sort-title = A to Z
+
+# A side of Sort in the View sheet: series with a new chapter first.
+# @only android
+# @max 14
+eink-library-sort-new = New
+
+# A row label in the View sheet: every series, or only those with chapters downloaded.
+# @only android
+# @max 16
+eink-library-downloaded = Downloaded
+
+# A side of Downloaded in the View sheet: every series on the list.
+# @only android
+# @max 14
+eink-library-downloaded-all = All
+
+# A side of Downloaded in the View sheet: only series with chapters on this device.
+# @only android
+# @max 20
+eink-library-downloaded-here = On this { -device }
+
+# The note at the foot of the View sheet. The count is how many covers fit a page on this screen.
+# @only android
+# @arg count: int
+# @max 120
+eink-library-view-note = { $count ->
+    [one] Recent sorts by when you last read. Covers show 1 to a page on this screen.
+   *[other] Recent sorts by when you last read. Covers show { $count } to a page on this screen.
+ }
+
+# The note at the foot of the View sheet before the covers have been laid out.
+# @only android
+# @max 60
+eink-library-view-note-short = Recent sorts by when you last read.
+
+# On the e-reader's Library when the list has series but none match the choices in View.
+# @only android
+# @arg list: text
+# @max 60
+eink-library-none-match = No series on { $list } match this view
+
+# The line under it.
+# @only android
+# @max 80
+eink-library-none-match-line = Change Medium or Downloaded under View to see the rest.
+
+# Text button at the end of Keep next chapters ready on a 10 inch e-reader's Downloads. It opens the downloads settings.
+# @only android
+# @max 16
+eink-keep-ready-change = Change
+
+# Text button beside the series in progress on a 10 inch e-reader's Home, next to Continue. It opens the series' page.
+# @only android
+# @max 20
+eink-home-series-page = Series page
+
+# The link at the end of the New chapters heading on a 10 inch e-reader's Home. It opens Updates.
+# @only android
+# @max 24
+eink-home-all-new-chapters = All new chapters
+
+# The link at the end of the Browse heading on a 10 inch e-reader's Home, over the discovery rows as chips. It opens the list of every row.
+# @only android
+# @max 16
+eink-home-all-rows = All rows
+
+# Beside the Genres heading at the foot of Browse on a 10 inch e-reader: where the genres come from.
+# @only android
+# @max 24
+eink-browse-genres-from = From AniList
+
+# Heading on a 10 inch e-reader's Downloads over the chapters downloading or waiting, with how many there are.
+# @only android
+# @arg count: int
+# @max 30
+eink-downloads-downloading-count = Downloading · { $count }
+
+# Text button at the end of the Downloading heading on a 10 inch e-reader's Downloads. It stops every chapter still to come.
+# @only android
+# @max 16
+eink-downloads-stop-all = Stop all
+
+# Heading on a 10 inch e-reader's Downloads over the series with chapters kept here, with how many series.
+# @only android
+# @arg count: int
+# @max 40
+eink-downloads-here-count = { $count ->
+    [one] On this { -device } · { $count } series
+   *[other] On this { -device } · { $count } series
+}
+
+# Heading over the first column of rows on a 10 inch e-reader's More: sources, trackers, sync and reader settings.
+# @only android
+# @max 30
+eink-more-your-reading = Your reading
+
+# Heading over the second column of rows on a 10 inch e-reader's More: settings and About.
+# @only android
+# @max 30
+eink-more-this-device = This { -device }
+
+# Heading on a 10 inch e-reader's More over the newest notices and errors, each with its time.
+# @only android
+# @max 30
+eink-more-messages = Recent messages
+
+# Under Recent messages on a 10 inch e-reader's More while there are none since the app started.
+# @only android
+# @max 80
+eink-more-messages-none = Notices and errors since { -app-name } started show here.
+
 # Switch under Volume keys turn pages in the phone reader's settings: volume up turns forward
 # instead of volume down.
 # @only android
@@ -930,17 +1187,19 @@ reader-row-volume-swap = Swap the volume keys
 # @max 30
 eink-sheet-screen = This screen
 
-# Row in the e-ink reader's settings: a full refresh on every page with a picture.
+# Row in the e-ink reader's settings: a full refresh on every page with a picture. Off by default,
+# so the device's own settings decide how the screen clears.
 # @only android
 # @max 40
 eink-row-refresh-image = Full refresh on picture pages
 
-# Row in the e-ink reader's settings: how often text pages get a full refresh.
+# Row in the e-ink reader's settings: how often text pages get a full refresh, or Off, the default.
 # @only android
 # @max 36
 eink-row-refresh-text = Full refresh on text pages
 
-# Row in the e-ink reader's settings: how often lists get a full refresh as they page.
+# Row in the e-ink reader's settings: how often lists get a full refresh as they page, or Off, the
+# default.
 # @only android
 # @max 36
 eink-row-refresh-list = Full refresh on lists
@@ -954,22 +1213,46 @@ eink-refresh-every = { $count ->
    *[other] Every { $count } pages
  }
 
-# Row in the e-ink reader's settings on a colour screen with speed modes: which mode pages use.
+# Row in the e-ink reader's settings: which of the screen's own update modes pages are drawn in,
+# shown only where the app can set them. Its choices are the device's setting and the modes below,
+# or Standard, Fast and Best quality on a colour screen with speed modes.
 # @only android
 # @max 30
-eink-row-screen-speed = Screen speed
+eink-row-screen-mode = Screen mode
 
-# Choice of Screen speed: the screen's usual mode.
+# Choice of Screen mode, and its default: the app leaves the update mode to the device's own
+# settings for this app.
+# @only android
+# @max 28
+eink-mode-device = The { -device }'s setting
+
+# Choice of Screen mode: the screen's sharpest grey mode. HD is the name e-readers give this mode.
+# @only android
+# @max 16
+eink-mode-hd = HD
+
+# Choice of Screen mode: the screen's mode with the least ghosting on text pages. Regal is the name
+# e-readers give this mode; keep it as the device shows it.
+# @only android
+# @max 16
+eink-mode-regal = Regal
+
+# Choice of Screen mode: quicker updates in fewer greys, with a little ghosting.
+# @only android
+# @max 16
+eink-mode-balanced = Balanced
+
+# Choice of Screen mode on a colour screen with speed modes: the screen's usual mode.
 # @only android
 # @max 16
 eink-speed-standard = Standard
 
-# Choice of Screen speed: quicker updates with more ghosting.
+# Choice of Screen mode: quicker updates with more ghosting.
 # @only android
 # @max 16
 eink-speed-fast = Fast
 
-# Choice of Screen speed: the slowest and cleanest updates.
+# Choice of Screen mode on a colour screen with speed modes: the slowest and cleanest updates.
 # @only android
 # @max 16
 eink-speed-best = Best quality
@@ -1004,6 +1287,18 @@ eink-step-down = Less
 # @only android
 # @max 30
 eink-step-up = More
+
+# Button before a list setting's value in the e-ink reader's settings, such as Screen mode: picks
+# the choice before. Read out by screen readers.
+# @only android
+# @max 30
+eink-step-previous = Previous choice
+
+# Button after a list setting's value in the e-ink reader's settings, such as Screen mode: picks
+# the choice after. Read out by screen readers.
+# @only android
+# @max 30
+eink-step-next = Next choice
 
 # Marks the chapter open in the reader on the e-ink contents page.
 # @only android

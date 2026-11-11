@@ -450,6 +450,8 @@ scale.reader-scrub slider {
 .reader-end-facts { font-size: 1em; color: var(--haze); }
 .reader-end-none { font-size: 1.57em; font-weight: 600; }
 .reader-end-body { font-size: 1.07em; color: var(--haze); }
+/* The board's 18 px sides, so Continue, the skip past extras and Back fit one row. */
+.reader-end button.pill { padding: 6px 18px; }
 /* The end page, a strip's marker and its credit rows sit on the dark ground in every look, so a
    light look's chrome tokens stop at their words and buttons; the preview keeps the look's page
    colour. */

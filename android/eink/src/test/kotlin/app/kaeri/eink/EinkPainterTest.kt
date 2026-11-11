@@ -1,5 +1,5 @@
 // The painter takes the engine's own policy (einkPaint, through JNA on this Mac's engine) and asks
-// the fake for each refresh, so the counts are the e-ink board's.
+// the fake for each refresh: none out of the box but Clean screen, and the counts a person sets.
 
 package app.kaeri.eink
 
@@ -26,10 +26,27 @@ import org.robolectric.annotation.Config
 class EinkPainterTest {
     private val view = View(RuntimeEnvironment.getApplication())
 
+    /** Every full refresh turned on, as a person may in the Refresh rows. */
+    private fun optedIn(panel: EinkPanel) =
+        einkPolicyDefaults(panel).copy(imageFull = true, textEvery = 6u, textEveryDark = 4u, listEvery = 3u)
+
+    @Test
+    fun out_of_the_box_only_clean_screen_asks_for_a_full_refresh() {
+        val fake = FakeRefresh()
+        val painter = EinkPainter.defaults(EinkPanel.KALEIDO3, fake)
+        val paints = List(30) { painter.paint(view, EinkPaint.TextPage) } +
+            List(10) { painter.paint(view, EinkPaint.ImagePage(colour = true)) } +
+            List(10) { painter.paint(view, EinkPaint.ListPage(covers = true)) } +
+            listOf(painter.paint(view, EinkPaint.ChromeClose), painter.paint(view, EinkPaint.EndPage))
+        assertTrue(Refresh.FULL !in paints)
+        assertEquals(Refresh.FULL, painter.paint(view, EinkPaint.Clean))
+        assertEquals(1, fake.requests.count { it.refresh == Refresh.FULL })
+    }
+
     @Test
     fun the_engine_policy_reaches_the_fake() {
         val fake = FakeRefresh()
-        val painter = EinkPainter.defaults(EinkPanel.GREY, fake)
+        val painter = EinkPainter(optedIn(EinkPanel.GREY), fake)
         val text = List(12) { painter.paint(view, EinkPaint.TextPage) }
         assertEquals(listOf(6, 12), text.withIndex().filter { it.value == Refresh.FULL }.map { it.index + 1 })
         assertEquals(12, fake.requests.size)
@@ -43,9 +60,9 @@ class EinkPainterTest {
     }
 
     @Test
-    fun kaleido_lists_go_full_every_third_and_dark_text_every_fourth() {
-        assertEquals(3u.toUByte(), einkPolicyDefaults(EinkPanel.KALEIDO3).listEvery)
-        val painter = EinkPainter.defaults(EinkPanel.KALEIDO3, FakeRefresh())
+    fun lists_go_full_every_third_and_dark_text_every_fourth_when_asked() {
+        assertEquals(0u.toUByte(), einkPolicyDefaults(EinkPanel.KALEIDO3).listEvery)
+        val painter = EinkPainter(optedIn(EinkPanel.KALEIDO3), FakeRefresh())
         val lists = List(3) { painter.paint(null, EinkPaint.ListPage(covers = true)) }
         assertEquals(listOf(Refresh.PARTIAL, Refresh.PARTIAL, Refresh.FULL), lists)
         painter.policy = painter.policy.copy(dark = true)
@@ -91,7 +108,7 @@ class EinkPainterTest {
         // Before the engine sends the settings, the panel's defaults; with no profile, no vendor.
         val early = EinkPainter.forProfile(profile.copy(policy = null)) { fake }
         assertEquals(einkPolicyDefaults(EinkPanel.GREY), early.policy)
-        assertEquals(Refresh.FULL, early.paint(view, EinkPaint.ImagePage(colour = false)))
+        assertEquals(Refresh.PARTIAL, early.paint(view, EinkPaint.ImagePage(colour = false)))
         assertSame(NoRefresh, EinkPainter.forProfile(null) { fake }.controller)
     }
 }

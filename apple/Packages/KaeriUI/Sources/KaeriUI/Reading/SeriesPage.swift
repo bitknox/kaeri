@@ -159,6 +159,9 @@ struct SeriesPage: View {
     @State private var newestFirst = true
     /// The heading has scrolled under the bar: the bar takes the title, as the title page does.
     @State private var headingGone = false
+    /// The reader's place, which VoiceOver and the keyboard start on as Choose chapters opens.
+    @AccessibilityFocusState private var spokenRow: String?
+    @FocusState private var keyedRow: String?
 
     private var wide: Bool {
         #if os(iOS)
@@ -194,7 +197,8 @@ struct SeriesPage: View {
                             .padding(.top, wide ? 32 : 24)
                     } else {
                         SeriesChapters(series: series, chapters: store.reading.chapters[work],
-                                       choosing: $choosing, newestFirst: $newestFirst)
+                                       choosing: $choosing, newestFirst: $newestFirst,
+                                       spoken: $spokenRow, keyed: $keyedRow)
                             .padding(.top, wide ? 32 : 24)
                     }
                     if let demo = series.demo, let other = series.demoOther,
@@ -233,6 +237,17 @@ struct SeriesPage: View {
             guard !Task.isCancelled else { return }
             navigator.launchScroll = nil
             proxy.scrollTo("series-group", anchor: UnitPoint(x: 0, y: 0.2))
+        }
+        // Choose chapters opens with the reader's place as near the middle as the list allows,
+        // under the window's crossfade (SeriesChoosing.enter), so no scroll shows.
+        .onChange(of: choosing == nil) { _, ended in
+            guard !ended, let place = SeriesChoosing.place(store.reading.chapters[work]) else { return }
+            WindowCrossfade.still { proxy.scrollTo(place, anchor: .center) }
+            Task {
+                try? await Task.sleep(for: .milliseconds(400))
+                spokenRow = place
+                keyedRow = place
+            }
         }
         }
         .scrollIndicators(.automatic)
@@ -284,7 +299,7 @@ struct SeriesPage: View {
             for _ in 0..<30 where store.reading.chapters[work] == nil {
                 try? await Task.sleep(for: .milliseconds(100))
             }
-            choosing = SeriesChoosing.start(store.reading.chapters[work])
+            SeriesChoosing.enter($choosing, store.reading.chapters[work])
             // Taken once the bar is up, so the snapshot waits for it.
             try? await Task.sleep(for: .milliseconds(500))
             navigator.launchSheet = nil
@@ -351,12 +366,34 @@ enum SeriesChoosing {
     /// the bar still takes every unread one.
     static func start(_ chapters: ReadChapters?) -> Set<String> {
         let rows = chapters?.volumes.flatMap(\.chapters) ?? []
-        let reading = rows.lastIndex { if case .inProgress = $0.state { true } else { false } }
-        let at = reading ?? rows.lastIndex { $0.state == .read }.map { $0 + 1 } ?? 0
+        let at = at(rows) ?? 0
         let wanted = { (row: ChapterRow) in row.state != .read && row.download == nil }
         let after = rows[min(at, rows.count)...].filter(wanted)
         let next = after.isEmpty ? rows.filter(wanted) : after
         return Set(next.prefix(ahead).map(\.id))
+    }
+
+    /// The reader's place in `rows`: the last chapter in progress, or the one after the last read
+    /// one. Nil when nothing was read.
+    private static func at(_ rows: [ChapterRow]) -> Int? {
+        let reading = rows.lastIndex { if case .inProgress = $0.state { true } else { false } }
+        return reading ?? rows.lastIndex { $0.state == .read }.map { $0 + 1 }
+    }
+
+    /// The chapter at the reader's place, which Choose chapters opens centred on. Nil when
+    /// nothing was read or every chapter was: the list then opens where it is.
+    static func place(_ chapters: ReadChapters?) -> String? {
+        let rows = chapters?.volumes.flatMap(\.chapters) ?? []
+        guard let at = at(rows), at < rows.count else { return nil }
+        return rows[at].id
+    }
+
+    /// Starts choosing with `start`'s chapters. With a place to centre on, the window crossfades
+    /// to the list already there; with none, the bar comes up on its own.
+    @MainActor static func enter(_ choosing: Binding<Set<String>?>, _ chapters: ReadChapters?) {
+        let chosen = start(chapters)
+        guard place(chapters) != nil else { choosing.wrappedValue = chosen; return }
+        WindowCrossfade.run { WindowCrossfade.still { choosing.wrappedValue = chosen } }
     }
 
     /// All unread, in the bar.
@@ -680,7 +717,7 @@ private struct SeriesActions: View {
             }
             Divider()
             Button(L.downloadChoose) {
-                choosing = SeriesChoosing.start(store.reading.chapters[series.work])
+                SeriesChoosing.enter($choosing, store.reading.chapters[series.work])
             }
             if !downloaded.isEmpty {
                 Divider()
@@ -930,6 +967,8 @@ private struct SeriesChapters: View {
     let chapters: ReadChapters?
     @Binding var choosing: Set<String>?
     @Binding var newestFirst: Bool
+    var spoken: AccessibilityFocusState<String?>.Binding
+    var keyed: FocusState<String?>.Binding
     @State private var open: Set<String> = []
     @State private var closed: Set<String> = []
 
@@ -1108,6 +1147,9 @@ private struct SeriesChapters: View {
             ForEach(rows, id: \.id) { row in
                 rule
                 ChapterRowView(series: series, row: row, preferred: chapters?.edition?.versionLabel, choosing: $choosing)
+                    .id(row.id)
+                    .accessibilityFocused(spoken, equals: row.id)
+                    .focused(keyed, equals: row.id)
             }
         }
     }

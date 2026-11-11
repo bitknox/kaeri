@@ -2357,6 +2357,18 @@ object Strings {
     fun einkContents(context: Context): String =
         context.getString(R.string.eink_contents)
 
+    /** Button in the e-ink reader's top bar on a large panel that downloads the open chapter. */
+    fun einkDownload(context: Context): String =
+        context.getString(R.string.eink_download)
+
+    /** In the e-ink reader's top bar on a large panel once the open chapter is downloading. */
+    fun einkDownloadRunning(context: Context): String =
+        context.getString(R.string.eink_download_running)
+
+    /** In the e-ink reader's top bar on a large panel when the open chapter is on the device. */
+    fun einkDownloadDone(context: Context): String =
+        context.getString(R.string.eink_download_done)
+
     /** Button that goes back out of the reader. */
     fun einkBack(context: Context): String =
         context.getString(R.string.eink_back)
@@ -2408,6 +2420,54 @@ object Strings {
     /** The next chapter is downloaded, on the page between chapters. */
     fun einkOnDevice(context: Context): String =
         context.getString(R.string.eink_on_device)
+
+    /** After the pages left in the e-ink reader's bottom bar on a large panel, when the next chapter is downloaded: "16 pages left in chapter · chapter 13 is on this device". */
+    fun einkNextOnDevice(context: Context, chapter: String): String =
+        context.getString(R.string.eink_next_on_device, chapter)
+
+    /** Choice in the e-ink reader's bottom bar on a large panel: one page at a time. */
+    fun einkLayoutOne(context: Context): String =
+        context.getString(R.string.eink_layout_one)
+
+    /** Choice in the e-ink reader's bottom bar on a large panel: two pages side by side. */
+    fun einkLayoutTwo(context: Context): String =
+        context.getString(R.string.eink_layout_two)
+
+    /** Choice in the e-ink reader's bottom bar on a large panel: the page's white borders stay. */
+    fun einkCropOff(context: Context): String =
+        context.getString(R.string.eink_crop_off)
+
+    /** Choice in the e-ink reader's bottom bar on a large panel: the page's white borders are cut. */
+    fun einkCropOn(context: Context): String =
+        context.getString(R.string.eink_crop_on)
+
+    /** Caption under the next chapter's first page, beside the end of a chapter on a large panel. */
+    fun einkEndPreview(context: Context, chapter: String): String =
+        context.getString(R.string.eink_end_preview, chapter)
+
+    /** Heading over the next chapters, under the end of a chapter on a large panel. */
+    fun einkComingUp(context: Context): String =
+        context.getString(R.string.eink_coming_up)
+
+    /** Kicker over a chapter that is slow to open: the series and its volume. */
+    fun einkSlowKicker(context: Context, title: String, volume: String): String =
+        context.getString(R.string.eink_slow_kicker, title, volume)
+
+    /** A chapter still opening after 10 seconds, when other sources of the series can be asked. */
+    fun einkSlowLine(context: Context, source: String): String =
+        context.getString(R.string.eink_slow_line, source)
+
+    /** A chapter still opening after 10 seconds, when no other source of the series has it. */
+    fun einkSlowLineAlone(context: Context, source: String): String =
+        context.getString(R.string.eink_slow_line_alone, source)
+
+    /** A chapter still opening after 10 seconds, before the engine has named the source it asked. */
+    fun einkSlowLineUnnamed(context: Context): String =
+        context.getString(R.string.eink_slow_line_unnamed)
+
+    /** Button on a chapter that is slow to open: lists the series' other sources. */
+    fun einkSlowAnother(context: Context): String =
+        context.getString(R.string.eink_slow_another)
 
     /** The main button on the page between chapters. */
     fun einkContinueTo(context: Context, chapter: String): String =
@@ -2989,6 +3049,138 @@ object Strings {
     fun einkKeepReadyOff(context: Context): String =
         context.getString(R.string.eink_keep_ready_off)
 
+    /** The underlined link beside the title of the e-reader's Library that opens the View sheet: how the covers are shown, which medium, the order and what is downloaded. */
+    fun einkLibraryView(context: Context): String =
+        context.getString(R.string.eink_library_view)
+
+    /** A side of the medium control on the e-reader's Library and in its View sheet: every series. */
+    fun einkLibraryMediumAll(context: Context): String =
+        context.getString(R.string.eink_library_medium_all)
+
+    /** A side of the medium control on the e-reader's Library: manga, manhwa and webtoons. */
+    fun einkLibraryMediumManga(context: Context): String =
+        context.getString(R.string.eink_library_medium_manga)
+
+    /** A side of the medium control on the e-reader's Library: light novels. */
+    fun einkLibraryMediumNovels(context: Context): String =
+        context.getString(R.string.eink_library_medium_novels)
+
+    /** On a 6 or 7 inch e-reader's Library: the button naming the list shown and how many series it holds, such as "Reading · 23". It opens the lists to choose another. */
+    fun einkLibraryListButton(context: Context, list: String, count: Int): String =
+        context.getString(R.string.eink_library_list_button, list, count)
+
+    /** Title of the sheet on a 6 or 7 inch e-reader's Library that chooses which list to show. */
+    fun einkLibraryListsTitle(context: Context): String =
+        context.getString(R.string.eink_library_lists_title)
+
+    /** A row label in the e-reader Library's View sheet: covers in a grid or rows in a list. */
+    fun einkLibraryShow(context: Context): String =
+        context.getString(R.string.eink_library_show)
+
+    /** A side of Show in the View sheet: the covers in a grid. */
+    fun einkLibraryShowCovers(context: Context): String =
+        context.getString(R.string.eink_library_show_covers)
+
+    /** A side of Show in the View sheet: rows with a small cover. */
+    fun einkLibraryShowList(context: Context): String =
+        context.getString(R.string.eink_library_show_list)
+
+    /** A row label in the View sheet: whether manga, novels or both show. */
+    fun einkLibraryMedium(context: Context): String =
+        context.getString(R.string.eink_library_medium)
+
+    /** A row label in the View sheet: the order of the series. */
+    fun einkLibrarySort(context: Context): String =
+        context.getString(R.string.eink_library_sort)
+
+    /** A side of Sort in the View sheet: the series read most recently first. */
+    fun einkLibrarySortRecent(context: Context): String =
+        context.getString(R.string.eink_library_sort_recent)
+
+    /** A side of Sort in the View sheet: by title, alphabetically. */
+    fun einkLibrarySortTitle(context: Context): String =
+        context.getString(R.string.eink_library_sort_title)
+
+    /** A side of Sort in the View sheet: series with a new chapter first. */
+    fun einkLibrarySortNew(context: Context): String =
+        context.getString(R.string.eink_library_sort_new)
+
+    /** A row label in the View sheet: every series, or only those with chapters downloaded. */
+    fun einkLibraryDownloaded(context: Context): String =
+        context.getString(R.string.eink_library_downloaded)
+
+    /** A side of Downloaded in the View sheet: every series on the list. */
+    fun einkLibraryDownloadedAll(context: Context): String =
+        context.getString(R.string.eink_library_downloaded_all)
+
+    /** A side of Downloaded in the View sheet: only series with chapters on this device. */
+    fun einkLibraryDownloadedHere(context: Context): String =
+        context.getString(R.string.eink_library_downloaded_here)
+
+    /** The note at the foot of the View sheet. The count is how many covers fit a page on this screen. */
+    fun einkLibraryViewNote(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.eink_library_view_note, count, count)
+
+    /** The note at the foot of the View sheet before the covers have been laid out. */
+    fun einkLibraryViewNoteShort(context: Context): String =
+        context.getString(R.string.eink_library_view_note_short)
+
+    /** On the e-reader's Library when the list has series but none match the choices in View. */
+    fun einkLibraryNoneMatch(context: Context, list: String): String =
+        context.getString(R.string.eink_library_none_match, list)
+
+    /** The line under it. */
+    fun einkLibraryNoneMatchLine(context: Context): String =
+        context.getString(R.string.eink_library_none_match_line)
+
+    /** Text button at the end of Keep next chapters ready on a 10 inch e-reader's Downloads. It opens the downloads settings. */
+    fun einkKeepReadyChange(context: Context): String =
+        context.getString(R.string.eink_keep_ready_change)
+
+    /** Text button beside the series in progress on a 10 inch e-reader's Home, next to Continue. It opens the series' page. */
+    fun einkHomeSeriesPage(context: Context): String =
+        context.getString(R.string.eink_home_series_page)
+
+    /** The link at the end of the New chapters heading on a 10 inch e-reader's Home. It opens Updates. */
+    fun einkHomeAllNewChapters(context: Context): String =
+        context.getString(R.string.eink_home_all_new_chapters)
+
+    /** The link at the end of the Browse heading on a 10 inch e-reader's Home, over the discovery rows as chips. It opens the list of every row. */
+    fun einkHomeAllRows(context: Context): String =
+        context.getString(R.string.eink_home_all_rows)
+
+    /** Beside the Genres heading at the foot of Browse on a 10 inch e-reader: where the genres come from. */
+    fun einkBrowseGenresFrom(context: Context): String =
+        context.getString(R.string.eink_browse_genres_from)
+
+    /** Heading on a 10 inch e-reader's Downloads over the chapters downloading or waiting, with how many there are. */
+    fun einkDownloadsDownloadingCount(context: Context, count: Int): String =
+        context.getString(R.string.eink_downloads_downloading_count, count)
+
+    /** Text button at the end of the Downloading heading on a 10 inch e-reader's Downloads. It stops every chapter still to come. */
+    fun einkDownloadsStopAll(context: Context): String =
+        context.getString(R.string.eink_downloads_stop_all)
+
+    /** Heading on a 10 inch e-reader's Downloads over the series with chapters kept here, with how many series. */
+    fun einkDownloadsHereCount(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.eink_downloads_here_count, count, count)
+
+    /** Heading over the first column of rows on a 10 inch e-reader's More: sources, trackers, sync and reader settings. */
+    fun einkMoreYourReading(context: Context): String =
+        context.getString(R.string.eink_more_your_reading)
+
+    /** Heading over the second column of rows on a 10 inch e-reader's More: settings and About. */
+    fun einkMoreThisDevice(context: Context): String =
+        context.getString(R.string.eink_more_this_device)
+
+    /** Heading on a 10 inch e-reader's More over the newest notices and errors, each with its time. */
+    fun einkMoreMessages(context: Context): String =
+        context.getString(R.string.eink_more_messages)
+
+    /** Under Recent messages on a 10 inch e-reader's More while there are none since the app started. */
+    fun einkMoreMessagesNone(context: Context): String =
+        context.getString(R.string.eink_more_messages_none)
+
     /** Switch under Volume keys turn pages in the phone reader's settings: volume up turns forward instead of volume down. */
     fun readerRowVolumeSwap(context: Context): String =
         context.getString(R.string.reader_row_volume_swap)
@@ -2997,15 +3189,15 @@ object Strings {
     fun einkSheetScreen(context: Context): String =
         context.getString(R.string.eink_sheet_screen)
 
-    /** Row in the e-ink reader's settings: a full refresh on every page with a picture. */
+    /** Row in the e-ink reader's settings: a full refresh on every page with a picture. Off by default, so the device's own settings decide how the screen clears. */
     fun einkRowRefreshImage(context: Context): String =
         context.getString(R.string.eink_row_refresh_image)
 
-    /** Row in the e-ink reader's settings: how often text pages get a full refresh. */
+    /** Row in the e-ink reader's settings: how often text pages get a full refresh, or Off, the default. */
     fun einkRowRefreshText(context: Context): String =
         context.getString(R.string.eink_row_refresh_text)
 
-    /** Row in the e-ink reader's settings: how often lists get a full refresh as they page. */
+    /** Row in the e-ink reader's settings: how often lists get a full refresh as they page, or Off, the default. */
     fun einkRowRefreshList(context: Context): String =
         context.getString(R.string.eink_row_refresh_list)
 
@@ -3013,19 +3205,35 @@ object Strings {
     fun einkRefreshEvery(context: Context, count: Int): String =
         context.resources.getQuantityString(R.plurals.eink_refresh_every, count, count)
 
-    /** Row in the e-ink reader's settings on a colour screen with speed modes: which mode pages use. */
-    fun einkRowScreenSpeed(context: Context): String =
-        context.getString(R.string.eink_row_screen_speed)
+    /** Row in the e-ink reader's settings: which of the screen's own update modes pages are drawn in, shown only where the app can set them. Its choices are the device's setting and the modes below, or Standard, Fast and Best quality on a colour screen with speed modes. */
+    fun einkRowScreenMode(context: Context): String =
+        context.getString(R.string.eink_row_screen_mode)
 
-    /** Choice of Screen speed: the screen's usual mode. */
+    /** Choice of Screen mode, and its default: the app leaves the update mode to the device's own settings for this app. */
+    fun einkModeDevice(context: Context): String =
+        context.getString(R.string.eink_mode_device)
+
+    /** Choice of Screen mode: the screen's sharpest grey mode. HD is the name e-readers give this mode. */
+    fun einkModeHd(context: Context): String =
+        context.getString(R.string.eink_mode_hd)
+
+    /** Choice of Screen mode: the screen's mode with the least ghosting on text pages. Regal is the name e-readers give this mode; keep it as the device shows it. */
+    fun einkModeRegal(context: Context): String =
+        context.getString(R.string.eink_mode_regal)
+
+    /** Choice of Screen mode: quicker updates in fewer greys, with a little ghosting. */
+    fun einkModeBalanced(context: Context): String =
+        context.getString(R.string.eink_mode_balanced)
+
+    /** Choice of Screen mode on a colour screen with speed modes: the screen's usual mode. */
     fun einkSpeedStandard(context: Context): String =
         context.getString(R.string.eink_speed_standard)
 
-    /** Choice of Screen speed: quicker updates with more ghosting. */
+    /** Choice of Screen mode: quicker updates with more ghosting. */
     fun einkSpeedFast(context: Context): String =
         context.getString(R.string.eink_speed_fast)
 
-    /** Choice of Screen speed: the slowest and cleanest updates. */
+    /** Choice of Screen mode on a colour screen with speed modes: the slowest and cleanest updates. */
     fun einkSpeedBest(context: Context): String =
         context.getString(R.string.eink_speed_best)
 
@@ -3052,6 +3260,14 @@ object Strings {
     /** Button that makes a setting in the e-ink reader's settings bigger. */
     fun einkStepUp(context: Context): String =
         context.getString(R.string.eink_step_up)
+
+    /** Button before a list setting's value in the e-ink reader's settings, such as Screen mode: picks the choice before. Read out by screen readers. */
+    fun einkStepPrevious(context: Context): String =
+        context.getString(R.string.eink_step_previous)
+
+    /** Button after a list setting's value in the e-ink reader's settings, such as Screen mode: picks the choice after. Read out by screen readers. */
+    fun einkStepNext(context: Context): String =
+        context.getString(R.string.eink_step_next)
 
     /** Marks the chapter open in the reader on the e-ink contents page. */
     fun einkContentsReading(context: Context): String =
@@ -3100,6 +3316,46 @@ object Strings {
     /** Screen readers: a reading cover, its title, the line under it and where the person has it. */
     fun readTileSpokenIn(context: Context, title: String, line: String, where: String): String =
         context.getString(R.string.read_tile_spoken_in, title, line, where)
+
+    /** E-ink Search on a large panel, before anything is typed: the heading over the chips that pick which of the person's own sources to search. */
+    fun readSearchIn(context: Context): String =
+        context.getString(R.string.read_search_in)
+
+    /** E-ink Search start: the first chip under Search in, every source the person added. */
+    fun readSearchInAll(context: Context): String =
+        context.getString(R.string.read_search_in_all)
+
+    /** E-ink Search start: the plain note at the end of the Genres heading, where the genres come from. */
+    fun readSearchGenresFrom(context: Context): String =
+        context.getString(R.string.read_search_genres_from)
+
+    /** E-ink Search start: the heading over the format chips. */
+    fun readSearchFormats(context: Context): String =
+        context.getString(R.string.read_search_formats)
+
+    /** E-ink Search start: the line at its foot. A genre or format chip opens Search with that filter and no words. */
+    fun readSearchStartNote(context: Context): String =
+        context.getString(R.string.read_search_start_note)
+
+    /** E-ink Search start with Your sources only ticked: the line at its foot, where AniList is not asked. */
+    fun readSearchStartNoteOwn(context: Context): String =
+        context.getString(R.string.read_search_start_note_own)
+
+    /** E-ink Search results on a large panel: the heading over the results already in the person's library. */
+    fun readSearchGroupLibrary(context: Context): String =
+        context.getString(R.string.read_search_group_library)
+
+    /** E-ink Search results: the heading over AniList's results. */
+    fun readSearchGroupAnilist(context: Context): String =
+        context.getString(R.string.read_search_group_anilist)
+
+    /** E-ink Search results: the heading over one source's results. The source is its name. */
+    fun readSearchGroupSource(context: Context, source: String): String =
+        context.getString(R.string.read_search_group_source, source)
+
+    /** E-ink Search results: the count at the end of a group's heading. */
+    fun readSearchGroupCount(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.read_search_group_count, n, n)
 
     /** Name of the notification channel for new chapters, shown in the system's settings. */
     fun channelChaptersName(context: Context): String =
@@ -3156,6 +3412,26 @@ object Strings {
     /** What TalkBack says the Group row does, after "Double-tap to": an imperative, as Android's click labels are. */
     fun seriesGroupAction(context: Context): String =
         context.getString(R.string.series_group_action)
+
+    /** E-ink series page on a large panel: the text button beside the chapter order that starts choosing chapters. */
+    fun seriesSelect(context: Context): String =
+        context.getString(R.string.series_select)
+
+    /** E-ink series page on a large panel: the label over the person's own score, shown as "8 / 10". */
+    fun seriesFactScore(context: Context): String =
+        context.getString(R.string.series_fact_score)
+
+    /** E-ink series page on a large panel: the label over the series' status, "Releasing". */
+    fun seriesFactStatus(context: Context): String =
+        context.getString(R.string.series_fact_status)
+
+    /** E-ink series page on a large panel: the label over how often chapters come out, "Usually Fridays". */
+    fun seriesFactReleases(context: Context): String =
+        context.getString(R.string.series_fact_releases)
+
+    /** E-ink series page on a large panel: the state at the end of an unread chapter row that is downloaded here. */
+    fun seriesRowOnDevice(context: Context): String =
+        context.getString(R.string.series_row_on_device)
 
     /** Line under Notifications in the Settings list: chapter notifications are on. */
     fun settingsSummaryChaptersOn(context: Context): String =
@@ -9122,6 +9398,18 @@ object Strings {
     fun readerEndSwipe(context: Context): String =
         context.getString(R.string.reader_end_swipe)
 
+    /** Button beside Continue on the page between chapters, shown only when the next chapter is an extra (such as 16.5 between 16 and 17). It opens the chapter named, passing over the extras before it. The chapter is its number, such as 17. */
+    fun readerEndSkipTo(context: Context, chapter: String): String =
+        context.getString(R.string.reader_end_skip_to, chapter)
+
+    /** What a screen reader adds after "Skip to chapter 17": the extra it passes over stays unread in the chapter list. The chapter is the extra's number, such as 16.5. */
+    fun readerEndSkipHint(context: Context, chapter: String): String =
+        context.getString(R.string.reader_end_skip_hint, chapter)
+
+    /** What a screen reader adds after "Skip to chapter 17" when it passes over more than one extra, or an extra with no number (such as an omake): those chapters stay unread in the chapter list. */
+    fun readerEndSkipHintExtras(context: Context): String =
+        context.getString(R.string.reader_end_skip_hint_extras)
+
     /** The next episode's length on the divider inside a strip. */
     fun readerDividerImages(context: Context, count: Int): String =
         context.resources.getQuantityString(R.plurals.reader_divider_images, count, count)
@@ -14374,6 +14662,10 @@ object Strings {
     /** Heading over the { -plugin-pl } a { -plugin-store } offers, in the join dialog. */
     fun storesOffersPlugins(context: Context, count: Int): String =
         context.resources.getQuantityString(R.plurals.stores_offers_plugins, count, count)
+
+    /** Heading over the store's plugins in the join dialog on a large e-ink panel. The count sits beside it. */
+    fun storesPreviewPlugins(context: Context): String =
+        context.getString(R.string.stores_preview_plugins)
 
     /** Button of a notice that opens the plugin stores page. */
     fun noticeOpenStores(context: Context): String =

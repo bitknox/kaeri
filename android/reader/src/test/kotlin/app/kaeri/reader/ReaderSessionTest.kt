@@ -35,6 +35,7 @@ import app.kaeri.reader.ReaderFixtures.CHAPTER
 import app.kaeri.reader.ReaderFixtures.SESSION
 import app.kaeri.reader.ReaderFixtures.WORK
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -109,6 +110,118 @@ class ReaderSessionTest {
         session.shown(2, TurnHow.TURN)
         session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, single))
         assertEquals(4, session.state.value.jump?.leaf)
+    }
+
+    @Test
+    fun a_new_layout_before_the_start_was_shown_still_opens_at_the_start() {
+        // The phone turned while the reader opened: a second layout comes before the jump to
+        // the start place was shown.
+        opened(start = 4u)
+        assertEquals(4, session.state.value.jump?.leaf)
+        val two = ReaderFixtures.leaves(6).filter { !it.endPage }.chunked(2).mapIndexed { i, pair ->
+            app.kaeri.engine.model.Leaf(i.toUInt(), pair.flatMap { it.parts }, false)
+        }
+        session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, two))
+        val jump = session.state.value.jump!!
+        assertEquals(2, jump.leaf)
+        // Once that jump was shown, a layout keeps the page shown, not the start.
+        session.jumped(jump.id)
+        session.shown(0, TurnHow.TURN)
+        session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, ReaderFixtures.leaves(6)))
+        assertEquals(0, session.state.value.jump?.leaf)
+    }
+
+    @Test
+    fun a_layout_that_comes_before_any_page_is_painted_keeps_the_place_it_opened_at() {
+        // A long strip opens at image 4 on whole images, then is cut into two leaves an image
+        // once the sizes are known, before image 4 was painted: image 4 starts at leaf 8 now.
+        opened(start = 4u)
+        val first = session.state.value.jump!!
+        session.jumped(first.id)
+        val cuts = ReaderFixtures.leaves(6).filter { !it.endPage }.flatMap { listOf(it, it) }.mapIndexed { i, leaf ->
+            app.kaeri.engine.model.Leaf(i.toUInt(), leaf.parts, false)
+        }
+        session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, cuts))
+        val jump = session.state.value.jump!!
+        assertEquals(8, jump.leaf)
+        assertTrue(jump.id != first.id)
+    }
+
+    /** Open a long strip on e-ink at [place], cut four screens an image. */
+    private fun openedCut(place: StripPos) {
+        session.open(WORK, ReaderFixtures.surface)
+        val start = ReadPlace(WORK, CHAPTER, place.image, place, null)
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view(mode = ReaderMode.STRIP).copy(start = start)))
+        session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, ReaderFixtures.cuts(images = 4, each = 4)))
+    }
+
+    @Test
+    fun an_e_ink_strip_opens_on_the_cut_its_place_is_in() {
+        // Half way down image 2: the third cut of that image, not cut 2.
+        openedCut(StripPos(2u, 0.5f))
+        assertEquals(10, session.state.value.jump?.leaf)
+        // Between two cuts, the one above.
+        openedCut(StripPos(2u, 0.6f))
+        assertEquals(10, session.state.value.jump?.leaf)
+    }
+
+    @Test
+    fun resuming_an_e_ink_strip_three_times_keeps_the_place() {
+        var place = StripPos(2u, 0.5f)
+        repeat(3) { round ->
+            openedCut(place)
+            val jump = session.state.value.jump!!
+            session.jumped(jump.id)
+            sent.clear()
+            session.shown(jump.leaf, TurnHow.PLACED)
+            // The engine keeps where the cut shown starts, and the next open starts there.
+            val shown = sent.filterIsInstance<ReaderCommand.Shown>().single()
+            place = session.state.value.leaves[shown.leaf.toInt()].parts.single().strip!!
+            assertEquals("round ${round + 1}", StripPos(2u, 0.5f), place)
+        }
+    }
+
+    @Test
+    fun a_strip_whose_pages_were_coming_is_cut_at_the_place_it_showed() {
+        // Resumed half way down image 2 while the source's pages still stream: the engine lays
+        // the chapter out as whole images first, and the leaf of image 2 is reported shown before
+        // its picture came. Once every page is there, the strip is cut: image 2's half way mark
+        // starts cut 10, not cut 2.
+        session.open(WORK, ReaderFixtures.surface)
+        val start = ReadPlace(WORK, CHAPTER, 2u, StripPos(2u, 0.5f), null)
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view(mode = ReaderMode.STRIP).copy(start = start)))
+        session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, ReaderFixtures.leaves(4)))
+        val whole = session.state.value.jump!!
+        assertEquals(2, whole.leaf)
+        session.jumped(whole.id)
+        session.shown(2, TurnHow.PLACED)
+        session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, ReaderFixtures.cuts(images = 4, each = 4)))
+        assertEquals(10, session.state.value.jump?.leaf)
+    }
+
+    @Test
+    fun a_whole_image_turned_to_before_the_cuts_come_is_found_by_its_image() {
+        // Turned to image 3 on the whole images: no spot in it is known, so its first cut.
+        session.open(WORK, ReaderFixtures.surface)
+        val start = ReadPlace(WORK, CHAPTER, 2u, StripPos(2u, 0.5f), null)
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view(mode = ReaderMode.STRIP).copy(start = start)))
+        session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, ReaderFixtures.leaves(4)))
+        session.jumped(session.state.value.jump!!.id)
+        session.shown(2, TurnHow.PLACED)
+        session.shown(3, TurnHow.TURN)
+        session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, ReaderFixtures.cuts(images = 4, each = 4)))
+        assertEquals(12, session.state.value.jump?.leaf)
+    }
+
+    @Test
+    fun a_new_e_ink_layout_keeps_the_cut_shown_by_where_it_starts() {
+        openedCut(StripPos(0u, 0f))
+        session.jumped(session.state.value.jump!!.id)
+        session.shown(10, TurnHow.TURN)
+        // A turn of the device cuts the strip anew, two screens an image: image 2's half way
+        // mark starts cut 5.
+        session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, ReaderFixtures.cuts(images = 4, each = 2)))
+        assertEquals(5, session.state.value.jump?.leaf)
     }
 
     @Test
@@ -196,6 +309,32 @@ class ReaderSessionTest {
         val wide = ReaderFixtures.surface.copy(widthPx = 1920u, heightPx = 1080u, twoPages = true)
         session.surface(wide)
         assertEquals(ReaderCommand.Surface(SESSION, wide), sent.single())
+    }
+
+    @Test
+    fun a_surface_that_changed_while_opening_goes_out_once_the_session_opened() {
+        // A phone held sideways turns while the reader opens: the engine opened for the old shape.
+        session.open(WORK, ReaderFixtures.surface)
+        val wide = ReaderFixtures.surface.copy(widthPx = 2400u, heightPx = 1080u, twoPages = true)
+        session.surface(wide)
+        sent.clear()
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view()))
+        assertEquals(ReaderCommand.Surface(SESSION, wide), sent.single())
+        // The engine has it now: the same size again sends nothing, nor does the next chapter's open.
+        sent.clear()
+        session.surface(wide)
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view()))
+        assertTrue(sent.isEmpty())
+    }
+
+    @Test
+    fun a_surface_back_to_the_opened_one_sends_nothing_once_the_session_opened() {
+        session.open(WORK, ReaderFixtures.surface)
+        session.surface(ReaderFixtures.surface.copy(widthPx = 2400u, heightPx = 1080u, twoPages = true))
+        session.surface(ReaderFixtures.surface)
+        sent.clear()
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view()))
+        assertTrue(sent.isEmpty())
     }
 
     @Test
@@ -288,6 +427,18 @@ class ReaderSessionTest {
     }
 
     @Test
+    fun the_end_page_names_the_chapter_past_the_extras_and_the_skip_opens_it() {
+        opened()
+        val extra = ReaderFixtures.chapter("local:lantern-stair/12.5", "12.5", title = "Volume 1 extras")
+        val whole = ReaderFixtures.chapter("local:lantern-stair/13", "13")
+        session.apply(ReaderEvent.EndPage(SESSION, extra, null, null, whole, 1u))
+        assertEquals(EndPageView(extra, null, null, whole, 1u), session.state.value.end)
+        sent.clear()
+        session.openChapter(whole.id)
+        assertEquals(listOf<ReaderCommand>(ReaderCommand.OpenChapter(SESSION, whole.id)), sent)
+    }
+
+    @Test
     fun a_strip_place_goes_out_with_the_foot() {
         opened()
         sent.clear()
@@ -337,6 +488,23 @@ class ReaderSessionTest {
         val view = ReaderFixtures.view().copy(chapter = ReaderFixtures.chapter("local:lantern-stair/13", "13"))
         session.apply(ReaderEvent.Opened(view))
         assertNull(session.state.value.previous)
+    }
+
+    @Test
+    fun a_chapter_asked_for_is_on_its_way_until_it_opens_and_taps_meanwhile_ask_nothing() {
+        opened()
+        sent.clear()
+        val next = "local:lantern-stair/13"
+        assertTrue(session.openChapter(next))
+        assertEquals(next, session.state.value.asking?.chapter)
+        assertTrue(session.state.value.openingSince > 0)
+        // A second tap, a forward turn on the end page or another chapter: nothing more is asked.
+        assertFalse(session.openChapter(next))
+        assertTrue(session.crossOn())
+        assertFalse(session.openChapter("local:lantern-stair/14"))
+        assertEquals(listOf<ReaderCommand>(ReaderCommand.OpenChapter(SESSION, next)), sent)
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view().copy(chapter = ReaderFixtures.chapter(next, "13"))))
+        assertNull(session.state.value.asking)
     }
 
     @Test

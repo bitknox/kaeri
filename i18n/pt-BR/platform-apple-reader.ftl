@@ -94,7 +94,11 @@ reader-volume = Volume { $volume }
 reader-chapter-in-progress = Página { $page } de { $total }
 reader-chapter-read = Lido
 reader-chapter-new = novo
-reader-chapter-pages = { $pages } páginas
+reader-chapter-pages = { $pages ->
+    [one] 1 página
+    [many] { $pages } de páginas
+   *[other] { $pages } páginas
+ }
 reader-offline-line = Offline. Os capítulos baixados ainda abrem.
 reader-menu-go = Ir
 reader-menu-next-page = Página seguinte

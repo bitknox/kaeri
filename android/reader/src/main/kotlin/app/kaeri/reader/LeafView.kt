@@ -70,6 +70,9 @@ import kotlin.math.roundToInt
 object PageWaits {
     const val PLATE_MS = 600L
     const val WORDS_MS = 4_000L
+
+    /** A page on screen with no file sent for it is asked for after this. */
+    const val ASK_MS = 2_000L
 }
 
 /** What a waiting page shows: the page, and whether it has waited long enough to say so. */
@@ -92,6 +95,8 @@ fun LeafView(
     onRetry: (page: Int) -> Unit,
     modifier: Modifier = Modifier,
     instant: Boolean = false,
+    /** The leaf is the one on screen: a page of it that no file came for is asked for. */
+    ask: Boolean = false,
     onReady: () -> Unit = {},
     waiting: WaitingSlot = { page, long -> PageWaiting(page, long) },
     failed: FailedSlot = { page, failure, retry -> PageFailed(page, failure, retry) },
@@ -121,6 +126,7 @@ fun LeafView(
                     instant = instant,
                     spine = spineOf(leaf, index),
                     onMissing = onMissing,
+                    ask = ask,
                     onReady = { ready[index] = true },
                     waiting = waiting,
                     failed = { page, failure, retry ->
@@ -150,6 +156,7 @@ private fun BoxScope.PartView(
     instant: Boolean,
     spine: Float,
     onMissing: (LeafPart) -> Unit,
+    ask: Boolean,
     onReady: () -> Unit,
     waiting: WaitingSlot,
     failed: FailedSlot,
@@ -161,6 +168,12 @@ private fun BoxScope.PartView(
     if (failure != null && file == null) {
         failed(page, failure) { onRetry(page) }
         return
+    }
+    // On screen and nothing sent for it: whatever the engine missed, the page is asked for, so it
+    // never waits on its plate for good.
+    if (file == null && ask) LaunchedEffect(part.page, part.half, state.layout) {
+        delay(PageWaits.ASK_MS)
+        onMissing(part)
     }
     val wasCached = remember(file?.path) { file?.let(images::cached) != null }
     val result by produceState(file?.let(images::cached)?.let { PageDecodeResult.Decoded(it) } as PageDecodeResult?, file) {

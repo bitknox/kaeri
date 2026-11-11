@@ -1632,7 +1632,19 @@ impl BookSources {
     /// Search every source and give the works found as tiles. A series no match has been made
     /// for gets a work of its own on this device, so it can be opened.
     pub async fn search(&self, text: &str, medium: Option<Medium>, now: i64) -> Vec<WorkTile> {
-        let found = self.registry.search(text, &BookHints::default(), medium, now).await;
+        self.search_in(text, medium, None, now).await
+    }
+
+    /// [`Self::search`] asking only the sources in `scope`; `None` asks every source.
+    pub async fn search_in(
+        &self,
+        text: &str,
+        medium: Option<Medium>,
+        scope: Option<&[String]>,
+        now: i64,
+    ) -> Vec<WorkTile> {
+        let hints = BookHints::default();
+        let found = self.registry.search_in(text, &hints, medium, scope, now).await;
         let local = self.store.local_book_series().unwrap_or_default();
         let mut seen = HashSet::new();
         let mut tiles = Vec::new();
