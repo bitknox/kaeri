@@ -103,17 +103,17 @@ internal val einkLarge: Boolean
     get() = LocalEinkLayout.current != null && LocalConfiguration.current.screenWidthDp >= EINK_LARGE_DP
 
 /** Between list columns, with a 1 dp rule in its middle. */
-internal val ListColumnGap = 40.dp
+internal val PaperListGap = 40.dp
 
 /**
  * A list column is about this wide at its narrowest: two columns upright on the 10.3 inch panel
  * and three on its side, as the board lays its lists.
  */
-private val ListColumnLeast = 380.dp
+private val PaperListLeast = 380.dp
 
-/** How many list columns a width holds: as many of at least [ListColumnLeast] as fit, one at least. */
-internal fun listColumns(width: Dp): Int =
-    ((width + ListColumnGap) / (ListColumnLeast + ListColumnGap)).toInt().coerceAtLeast(1)
+/** How many list columns a width holds: as many of at least [PaperListLeast] as fit, one at least. */
+internal fun paperListColumns(width: Dp): Int =
+    ((width + PaperListGap) / (PaperListLeast + PaperListGap)).toInt().coerceAtLeast(1)
 
 /** The board's cover on the large series page. */
 private val SeriesCover = 220.dp
@@ -140,7 +140,7 @@ internal fun Modifier.topHairline(on: Boolean = true): Modifier = if (!on) this 
 /** The 1 dp rule centred in the gap between two list columns. */
 @Composable
 internal fun ColumnRule(modifier: Modifier = Modifier) {
-    Box(modifier.width(ListColumnGap).fillMaxHeight(), contentAlignment = Alignment.Center) {
+    Box(modifier.width(PaperListGap).fillMaxHeight(), contentAlignment = Alignment.Center) {
         Box(Modifier.width(EinkSizes.Hairline).fillMaxHeight().background(EinkColours.Tertiary))
     }
 }
@@ -526,7 +526,7 @@ private fun ChapterPages(
 ) {
     val rowHeight = chapterRowHeight()
     BoxWithConstraints(modifier.fillMaxWidth()) {
-        val columns = listColumns(maxWidth)
+        val columns = paperListColumns(maxWidth)
         // The pager has its row and 8 dp above it, and 12 dp under it above the navigation.
         val perColumn = ((maxHeight - EinkSizes.PagerRow - 8.dp - PagerFoot) / rowHeight).toInt().coerceAtLeast(1)
         val pages = rows.chunked(perColumn * columns)

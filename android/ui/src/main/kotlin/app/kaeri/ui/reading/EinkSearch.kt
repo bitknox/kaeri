@@ -577,7 +577,7 @@ private fun wideLines(
 
 /** How many list columns the page holds, from the panel's width less its gutters. */
 @Composable
-private fun wideColumns(): Int = listColumns(LocalConfiguration.current.screenWidthDp.dp - Side * 2)
+private fun wideColumns(): Int = paperListColumns(LocalConfiguration.current.screenWidthDp.dp - Side * 2)
 
 /**
  * The large panel's results. Your library's part is the series in your lists whose title has the
