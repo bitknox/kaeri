@@ -423,9 +423,10 @@ class ReaderSession(private val send: (Command) -> Unit) {
         val now = state.value
         // Another chapter asked for and slow to come: asked for again, its wait counted afresh.
         val asking = now.asking
-        if (asking != null && now.session != null) {
+        val session = now.session
+        if (asking != null && session != null) {
             _state.value = now.copy(openingSince = openingClock())
-            return reader(ReaderCommand.OpenChapter(now.session, asking.chapter))
+            return reader(ReaderCommand.OpenChapter(session, asking.chapter))
         }
         if (now.session != null && now.view != null) return retry(null)
         val work = work ?: return
