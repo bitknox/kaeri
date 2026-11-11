@@ -349,3 +349,26 @@ async fn downloads_follow_a_part_into_its_chapter() {
     assert_eq!(again.state, kaeri_store::book_downloads::BookDownloadState::Queued);
     assert_eq!(again.pages_total, None, "fetched again with its new part");
 }
+
+/// Extras one source numbers 7.5 and 7.6 and another 7.1 and 7.2 are the same extras under other
+/// numbers: the source in use lists its own, and the other's never fill in beside them. Where
+/// the source in use has none for a chapter, or numbers them the same way, the other's fill in.
+#[tokio::test(start_paused = true)]
+async fn extras_numbered_differently_elsewhere_never_fill_in_beside_the_ones_here() {
+    let a = Listing::new("alpha", &["5", "5.5", "6", "7", "7.5", "7.6", "8", "10", "10.5"]);
+    let b = Listing::new(
+        "beta",
+        &["5", "5.1", "6", "7", "7.1", "7.2", "8", "9", "9.5", "10", "10.5", "10.6"],
+    );
+    let h = harness_with(&[&a, &b]);
+    rows(&h, "beta").await;
+    let listed = rows(&h, "alpha").await;
+    let ids: Vec<&str> = listed.iter().map(|r| r.id.as_str()).collect();
+    assert_eq!(
+        ids,
+        vec!["5", "5.5", "6", "7", "7.5", "7.6", "8", "9", "9.5", "10", "10.5", "10.6"]
+    );
+    let filled: Vec<&str> =
+        listed.iter().filter(|r| r.other_source.is_some()).map(|r| r.id.as_str()).collect();
+    assert_eq!(filled, vec!["9", "9.5", "10.6"]);
+}

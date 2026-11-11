@@ -2431,6 +2431,7 @@ impl BookSources {
     ) {
         let mut listed: HashSet<String> =
             rows.iter().map(|c| c.id.as_str().to_owned()).collect();
+        let mut extras = crate::read_catalog::arrange::Extras::of(rows.iter().map(|c| &c.id));
         let refs = self.store.book_refs_for_work(work.as_str()).unwrap_or_default();
         for (other, series) in refs.into_iter().filter(|(s, _)| s != source) {
             let Some((list, _)) =
@@ -2451,8 +2452,18 @@ impl BookSources {
                 numbering,
             );
             let name = self.source_name(&other);
-            let missing: Vec<_> =
-                arranged.rows.iter().filter(|r| !listed.contains(r.id.as_str())).collect();
+            // Extras listed here stand for that source's extras of the same chapter, which it
+            // may number otherwise (7.1 and 7.2 there, 7.5 and 7.6 here).
+            let theirs =
+                crate::read_catalog::arrange::Extras::of(arranged.rows.iter().map(|r| &r.id));
+            let missing: Vec<_> = arranged
+                .rows
+                .iter()
+                .filter(|r| {
+                    !listed.contains(r.id.as_str())
+                        && !extras.numbered_otherwise(&theirs, &r.id)
+                })
+                .collect();
             for row in missing {
                 // The kept list's ids are the ones its source lists; arranged again they match.
                 let parts: Vec<&SourceChapter> =
@@ -2472,6 +2483,7 @@ impl BookSources {
                 chapter_row.group_language = None;
                 chapter_row.other_source = Some(name.clone());
                 listed.insert(row.id.as_str().to_owned());
+                extras.add(&row.id);
                 let at = place_of(rows, &chapter_row);
                 rows.insert(at, chapter_row);
             }
