@@ -1,5 +1,7 @@
 package app.kaeri.ui
 
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isSelected
 import app.kaeri.eink.EinkLook
 import app.kaeri.engine.model.Event
 import app.kaeri.engine.model.InvitePreview
@@ -17,10 +19,14 @@ import org.robolectric.annotation.Config
  * Settings also on the 7 inch and 6 inch panels, which keep their one or two panes.
  */
 class EinkSettingsJoinShots : ReadingShotHarness() {
-    private fun settings(name: String, pane: SettingsPane) = shoot(
+    private fun settings(name: String, pane: SettingsPane, after: (() -> Unit)? = null) = shoot(
         name, FixtureScene.READING_HOME, Destination.Home, medium = KaeriIsFor.READ, page = settingsRoute(pane), eink = EinkLook(),
+        after = after,
         ready = { true },
     )
+
+    /** The 10 inch Settings keeps the bar under it, with More marked. */
+    private val moreMarked: () -> Unit = { compose.onNode(hasText("More") and isSelected()).assertExists() } // i18n-skip
 
     /** The sixteen made-up plugins of the board, each with the hosts it may contact and its version. */
     private val plugins = listOf(
@@ -48,12 +54,12 @@ class EinkSettingsJoinShots : ReadingShotHarness() {
     )
 
     // 10.3 inch at the panel's 0.85
-    @Test @Config(qualifiers = EREADER_10, fontScale = AIR_SCALE) fun air_settings_general() = settings("air-085-settings-general", SettingsPane.General)
+    @Test @Config(qualifiers = EREADER_10, fontScale = AIR_SCALE) fun air_settings_general() = settings("air-085-settings-general", SettingsPane.General, moreMarked)
     @Test @Config(qualifiers = EREADER_10, fontScale = AIR_SCALE) fun air_settings_reading() = settings("air-085-settings-reading", SettingsPane.Reading)
     @Test @Config(qualifiers = EREADER_10, fontScale = AIR_SCALE) fun air_join() = join("air-085-join-store")
 
     // 10.3 inch at 1.0
-    @Test @Config(qualifiers = EREADER_10) fun air_settings_general_1() = settings("air-100-settings-general", SettingsPane.General)
+    @Test @Config(qualifiers = EREADER_10) fun air_settings_general_1() = settings("air-100-settings-general", SettingsPane.General, moreMarked)
     @Test @Config(qualifiers = EREADER_10) fun air_settings_reading_1() = settings("air-100-settings-reading", SettingsPane.Reading)
     @Test @Config(qualifiers = EREADER_10) fun air_join_1() = join("air-100-join-store")
 

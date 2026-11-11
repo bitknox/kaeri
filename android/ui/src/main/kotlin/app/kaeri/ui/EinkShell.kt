@@ -108,6 +108,13 @@ internal fun einkBarDestinations(answer: KaeriIsFor, reader: Boolean): List<Dest
         barDestinations(answer)
     }
 
+/**
+ * The tab Settings keeps marked on a 10 inch e-reader ([large]), where the bar stays under it as
+ * the large panel board draws it: More, which opens Settings. Elsewhere Settings takes the window.
+ */
+internal fun einkSettingsTab(answer: KaeriIsFor, reader: Boolean, large: Boolean): Destination? =
+    Destination.More.takeIf { large && it in einkBarDestinations(answer, reader) }
+
 /** The e-ink tab that stands for [destination]: Updates sits under Home on an e-reader. */
 internal fun einkBarOwner(destination: Destination, answer: KaeriIsFor, reader: Boolean): Destination {
     val tabs = einkBarDestinations(answer, reader)
