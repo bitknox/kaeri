@@ -44,6 +44,8 @@ pub const NAMES: [&str; 44] = [
     "read-turn-a",
     "read-turn-b",
     "read-strip",
+    "read-strip-plate",
+    "read-strip-plate-slow",
     "read-strip-slide-a",
     "read-strip-slide-b",
     "read-strip-end",
@@ -276,6 +278,13 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
         }
         "read-strip" => {
             read(shell, STRIP, "2");
+            4.0
+        }
+        // Strip images still loading: each plate with its number, and from 4 s the line under it.
+        "read-strip-plate" | "read-strip-plate-slow" => {
+            read(shell, STRIP, "2");
+            let line = shot == "read-strip-plate-slow";
+            later(shell, 2500, move |reader| reader.shot_strip_plate(line));
             4.0
         }
         // After the last chapter there is, the strip ends on the end page.

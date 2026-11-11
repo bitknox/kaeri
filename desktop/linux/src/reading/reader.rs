@@ -1133,6 +1133,25 @@ impl Reader {
         self.fill_end();
     }
 
+    /// Every strip image as if its file were still coming: its plate with its number, and with
+    /// `line` the line under it as from 4 s.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_strip_plate(&self, line: bool) {
+        for (picture, _) in &self.state.borrow().strip_frames {
+            picture.set_paintable(gdk::Paintable::NONE);
+            let Some(plate) = strip_plate(picture) else { continue };
+            plate.set_opacity(1.0);
+            plate.set_visible(true);
+            if let Some(words) = plate.first_child() {
+                words.set_opacity(1.0);
+                if let Some(said) = words.last_child() {
+                    said.set_opacity(1.0);
+                    said.set_visible(line);
+                }
+            }
+        }
+    }
+
     /// The page plate of page 23, still loading, with its line.
     #[cfg(feature = "fixtures")]
     pub fn shot_plate(self: &Rc<Self>) {
