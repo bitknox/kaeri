@@ -78,7 +78,7 @@ private val mangaFirst = listOf(Key.FIT, Key.CROP_BORDERS, Key.REFRESH_IMAGE, Ke
 private val novelFirst = listOf(Key.TEXT_SIZE, Key.FONT, Key.LINE_SPACING, Key.MARGINS, Key.LOOK, Key.REFRESH_TEXT)
 
 /** The rows for the e-ink screen itself, under their own heading on More. */
-private val screenKeys = listOf(Key.REFRESH_IMAGE, Key.REFRESH_TEXT, Key.REFRESH_LIST, Key.GALLERY_SPEED, Key.RAINBOW_FILTER, Key.SATURATION, Key.CONTRAST)
+private val screenKeys = listOf(Key.REFRESH_IMAGE, Key.REFRESH_TEXT, Key.REFRESH_LIST, Key.SCREEN_MODE, Key.RAINBOW_FILTER, Key.SATURATION, Key.CONTRAST)
 
 /**
  * The settings sheet over the lower part of the page: Reader settings and Done, This series with
@@ -270,7 +270,10 @@ private fun EinkSettingLine(context: Context, session: ReaderSession, row: Reade
             }
             value is ReaderValue.Amount -> {
                 val steps = amountSteps(row.key)
-                val words = if (steps.pages) {
+                val words = if (steps.pages && value.value.roundToInt() == 0) {
+                    // No full refresh: the device decides.
+                    Strings.readerValueOff(context)
+                } else if (steps.pages) {
                     Strings.einkRefreshEvery(context, value.value.roundToInt())
                 } else {
                     Strings.einkPercent(context, (value.value * 100).roundToInt())
@@ -378,7 +381,8 @@ private class Steps(val step: Double, val least: Double, val most: Double, val p
 
 private fun amountSteps(key: Key): Steps = when (key) {
     Key.TEXT_SIZE -> Steps(0.1, 0.7, 2.0)
-    Key.REFRESH_TEXT, Key.REFRESH_LIST -> Steps(1.0, 1.0, 20.0, pages = true)
+    // Off, then every page to every 20th.
+    Key.REFRESH_TEXT, Key.REFRESH_LIST -> Steps(1.0, 0.0, 20.0, pages = true)
     Key.SATURATION, Key.CONTRAST -> Steps(0.1, 0.5, 1.5)
     else -> Steps(0.1, 0.5, 2.0)
 }
@@ -392,17 +396,21 @@ fun einkRowTitle(context: Context, key: Key): String? = when (key) {
     Key.REFRESH_IMAGE -> Strings.einkRowRefreshImage(context)
     Key.REFRESH_TEXT -> Strings.einkRowRefreshText(context)
     Key.REFRESH_LIST -> Strings.einkRowRefreshList(context)
-    Key.GALLERY_SPEED -> Strings.einkRowScreenSpeed(context)
+    Key.SCREEN_MODE -> Strings.einkRowScreenMode(context)
     Key.RAINBOW_FILTER -> Strings.einkRowRainbow(context)
     Key.SATURATION -> Strings.einkRowSaturation(context)
     Key.CONTRAST -> Strings.einkRowContrast(context)
     else -> rowTitle(context, key)
 }
 
-/** The choice's name on e-ink: the reader's own, or one of Screen speed's. */
+/** The choice's name on e-ink: the reader's own, or one of Screen mode's. */
 fun einkChoiceLabel(context: Context, key: Key, value: ReaderValue): String? {
-    if (key != Key.GALLERY_SPEED) return choiceLabel(context, key, value)
+    if (key != Key.SCREEN_MODE) return choiceLabel(context, key, value)
     return when ((value as? ReaderValue.Choice)?.name) {
+        "device" -> Strings.einkModeDevice(context)
+        "hd" -> Strings.einkModeHd(context)
+        "regal" -> Strings.einkModeRegal(context)
+        "balanced" -> Strings.einkModeBalanced(context)
         "standard" -> Strings.einkSpeedStandard(context)
         "fast" -> Strings.einkSpeedFast(context)
         "best" -> Strings.einkSpeedBest(context)

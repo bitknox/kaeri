@@ -67,12 +67,12 @@ class EinkReaderSheetsShots {
         row(Key.DIRECTION, ReaderValue.Choice("rtl"), choices("rtl", "ltr"), SettingScope.SERIES),
         row(Key.FIT, ReaderValue.Choice("screen"), choices("screen", "width", "height")),
         row(Key.CROP_BORDERS, ReaderValue.Toggle(true)),
-        row(Key.REFRESH_IMAGE, ReaderValue.Toggle(true), scope = SettingScope.DEVICE),
+        row(Key.REFRESH_IMAGE, ReaderValue.Toggle(false), scope = SettingScope.DEVICE),
         row(Key.VOLUME_KEYS_TURN, ReaderValue.Toggle(true), scope = SettingScope.DEVICE),
         row(Key.SPREADS, ReaderValue.Toggle(false)),
         row(Key.FOOT_VALUE, ReaderValue.Choice("pages_left"), choices("pages_left", "none"), SettingScope.DEVICE),
-        row(Key.REFRESH_LIST, ReaderValue.Amount(6.0), scope = SettingScope.DEVICE),
-        row(Key.GALLERY_SPEED, ReaderValue.Choice("standard"), choices("standard", "fast", "best"), SettingScope.DEVICE),
+        row(Key.REFRESH_LIST, ReaderValue.Amount(0.0), scope = SettingScope.DEVICE),
+        row(Key.SCREEN_MODE, ReaderValue.Choice("device"), choices("device", "hd", "regal", "balanced", "fast"), SettingScope.DEVICE),
         row(Key.CONTRAST, ReaderValue.Amount(1.0), scope = SettingScope.DEVICE),
     )
 

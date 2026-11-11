@@ -439,6 +439,7 @@ mod tests {
             ppi: 300,
             family: VendorFamily::Onyx,
             refresh_hook: true,
+            panel_modes: true,
             page_buttons: true,
             colour_sure: true,
             novels: NovelSupport::Full,

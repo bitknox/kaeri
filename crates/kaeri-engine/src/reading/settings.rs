@@ -4,7 +4,9 @@
 //! what its source and the catalogue say of how it reads (the mode and direction of a comic),
 //! then the reader's guess, then the medium's value in `config.toml` (`[reading.manga]`,
 //! `[reading.novel]`; the choices among them sync as shared keys), then the default. The e-ink
-//! refresh settings are the device's, in `[reading.eink]`, whatever the medium.
+//! refresh settings and Screen mode are the device's, in `[reading.eink]`, whatever the medium.
+//! Each full refresh is off until the person turns it on, and Screen mode starts at the device's
+//! own setting.
 
 use std::collections::BTreeMap;
 
@@ -12,7 +14,7 @@ use kaeri_core::{
     books::ReadingHint, config::ReadingConfig, media::Medium, settings::SettingValue,
 };
 use kaeri_model::{
-    eink::{EinkMatch, EinkPanel, EinkProfile},
+    eink::{EinkMatch, EinkPanel, EinkProfile, GALLERY_SPEEDS, PANEL_MODES},
     reader::{ReaderSettingKey as Key, ReaderSettingRow, ReaderValue, SettingScope},
 };
 use kaeri_store::{Store, reading::SeriesSetting};
@@ -24,6 +26,8 @@ pub struct Screen {
     pub eink: Option<EinkPanel>,
     /// The family's refresh hook resolved: the Refresh rows show.
     pub refresh_hook: bool,
+    /// The family's own update modes can be set: Screen mode shows them.
+    pub panel_modes: bool,
     /// A phone or a tablet.
     pub handheld: bool,
     /// A phone, not a tablet.
@@ -36,6 +40,7 @@ impl Screen {
         Self {
             eink: profile.map(|p| p.panel),
             refresh_hook: profile.is_some_and(|p| p.refresh_hook),
+            panel_modes: profile.is_some_and(|p| p.panel_modes),
             handheld,
             phone,
         }
@@ -54,8 +59,8 @@ fn choices(names: &[&str]) -> Vec<ReaderValue> {
     names.iter().map(|n| choice(n)).collect()
 }
 
-/// The choices a setting offers; empty for amounts and toggles.
-pub fn choices_for(key: Key, medium: Medium) -> Vec<ReaderValue> {
+/// The choices a setting offers on `screen`; empty for amounts and toggles.
+pub fn choices_for(key: Key, medium: Medium, screen: Screen) -> Vec<ReaderValue> {
     match key {
         Key::Mode if medium == Medium::Novel => choices(&["paged", "scrolled"]),
         Key::Mode => choices(&["paged", "vertical", "strip"]),
@@ -68,7 +73,8 @@ pub fn choices_for(key: Key, medium: Medium) -> Vec<ReaderValue> {
         Key::PageLayout => choices(&["auto", "single", "double"]),
         Key::Spreads => choices(&["split", "rotate", "whole"]),
         Key::TapLayout => choices(&["edges", "sides", "off"]),
-        Key::GallerySpeed => choices(&["standard", "fast", "best"]),
+        Key::ScreenMode if screen.eink == Some(EinkPanel::Gallery3) => choices(GALLERY_SPEEDS),
+        Key::ScreenMode => choices(PANEL_MODES),
         Key::FootValue => choices(&["pages_left", "none"]),
         Key::StripGap => choices(&["none", "small"]),
         _ => Vec::new(),
@@ -98,12 +104,11 @@ pub fn default_for(key: Key, medium: Medium, screen: Screen) -> ReaderValue {
         Key::TapLayout => choice("edges"),
         Key::VolumeKeysTurn => on(screen.eink.is_some()),
         Key::StripWidth => amount(0.6),
-        Key::RefreshImage => on(true),
-        Key::RefreshText => amount(6.0),
-        Key::RefreshList => {
-            amount(if screen.eink == Some(EinkPanel::Kaleido3) { 3.0 } else { 5.0 })
-        }
-        Key::GallerySpeed => choice("standard"),
+        // The device decides: no full refresh until the person asks for one.
+        Key::RefreshImage => on(false),
+        Key::RefreshText | Key::RefreshList => amount(0.0),
+        Key::ScreenMode if screen.eink == Some(EinkPanel::Gallery3) => choice("standard"),
+        Key::ScreenMode => choice("device"),
         Key::RainbowFilter | Key::PaperMode | Key::GreyscalePages | Key::QuietPhone => {
             on(false)
         }
@@ -126,7 +131,7 @@ pub fn shown(key: Key, medium: Medium, screen: Screen) -> bool {
     }
     match key {
         Key::RefreshImage | Key::RefreshText | Key::RefreshList => screen.refresh_hook,
-        Key::GallerySpeed => screen.eink == Some(EinkPanel::Gallery3),
+        Key::ScreenMode => screen.eink == Some(EinkPanel::Gallery3) || screen.panel_modes,
         Key::RainbowFilter => screen.eink == Some(EinkPanel::Kaleido3),
         Key::Saturation | Key::Contrast => screen.colour_eink(),
         Key::PaperMode
@@ -148,7 +153,7 @@ pub fn shown(key: Key, medium: Medium, screen: Screen) -> bool {
 /// The config table a setting's medium value is kept in.
 pub fn table(key: Key, medium: Medium) -> [&'static str; 2] {
     match key {
-        Key::RefreshImage | Key::RefreshText | Key::RefreshList | Key::GallerySpeed => {
+        Key::RefreshImage | Key::RefreshText | Key::RefreshList | Key::ScreenMode => {
             ["reading", "eink"]
         }
         _ if medium == Medium::Novel => ["reading", "novel"],
@@ -306,7 +311,7 @@ impl Layers {
             scope,
             detected,
             overridden,
-            choices: choices_for(key, self.medium),
+            choices: choices_for(key, self.medium, self.screen),
         }
     }
 
@@ -588,15 +593,37 @@ mod tests {
         let kaleido = Screen {
             eink: Some(EinkPanel::Kaleido3),
             refresh_hook: true,
+            panel_modes: false,
             handheld: true,
             phone: true,
         };
         let rows = keys(Medium::Manga, kaleido);
         assert!(rows.contains(&Key::RainbowFilter) && rows.contains(&Key::RefreshText));
-        assert!(!rows.contains(&Key::PaperMode) && !rows.contains(&Key::GallerySpeed));
+        assert!(!rows.contains(&Key::PaperMode) && !rows.contains(&Key::ScreenMode));
         let layers = Layers::read(&store, &config, Medium::Manga, None, kaleido);
-        assert_eq!(layers.amount(Key::RefreshList), 3.0);
+        // Every full refresh starts off: the device decides.
+        assert_eq!(layers.amount(Key::RefreshList), 0.0);
+        assert_eq!(layers.amount(Key::RefreshText), 0.0);
+        assert!(!layers.on(Key::RefreshImage));
         assert_eq!(layers.word(Key::Look), "paper");
+        // Where the mode calls resolved, Screen mode starts at the device's own setting.
+        let modes = Screen { panel_modes: true, ..kaleido };
+        let layers = Layers::read(&store, &config, Medium::Manga, None, modes);
+        let row = layers.row(Key::ScreenMode);
+        assert_eq!(layers.word(Key::ScreenMode), "device");
+        let names: Vec<String> = row
+            .choices
+            .iter()
+            .map(|c| match c {
+                ReaderValue::Choice { name } => name.clone(),
+                other => other.encode(),
+            })
+            .collect();
+        assert_eq!(names, PANEL_MODES);
+        let gallery = Screen { eink: Some(EinkPanel::Gallery3), ..kaleido };
+        assert!(keys(Medium::Manga, gallery).contains(&Key::ScreenMode));
+        let layers = Layers::read(&store, &config, Medium::Manga, None, gallery);
+        assert_eq!(layers.word(Key::ScreenMode), "standard");
         let grey = Screen { eink: Some(EinkPanel::Grey), ..kaleido };
         assert!(!keys(Medium::Manga, grey).contains(&Key::Colour));
     }

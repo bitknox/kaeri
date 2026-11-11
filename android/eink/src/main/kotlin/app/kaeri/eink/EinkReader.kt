@@ -1,7 +1,8 @@
 // The e-ink reader, on the :reader surface: pages turn at once by the 40/30/30 zones, the page
 // buttons and swipes; the bars are opaque with a 2 dp rule and no dim; the folio sits in the
-// page's own margin; the page between chapters is in the flow; nothing animates; and each paint
-// goes through the engine's refresh policy to the vendor's full refresh.
+// page's own margin; the page between chapters is in the flow; nothing animates; each paint goes
+// through the engine's refresh policy, which asks the vendor for a full refresh only when the
+// person turned one on; and Screen mode sets the panel's own update mode where it can.
 
 package app.kaeri.eink
 
@@ -151,6 +152,16 @@ fun EinkReader(
     var zones by remember { mutableStateOf(showZones) }
     var layer by remember { mutableStateOf(EinkLayer.None) }
     val paint by rememberUpdatedState { what: EinkPaint -> painter.paint(host, what) }
+
+    // Screen mode: the panel's own update mode for the reader's redraws while it is open, given
+    // back to the device's setting on the way out. Only where the family's mode calls resolved.
+    val screenMode = state.settings?.rows?.firstOrNull { it.key == ReaderSettingKey.SCREEN_MODE }
+        ?.let { (it.value as? ReaderValue.Choice)?.name } ?: "device" // i18n-skip
+    DisposableEffect(host, painter.controller, screenMode) {
+        val controller = painter.controller
+        controller.setMode(host, screenMode)
+        onDispose { controller.setMode(host, "device") } // i18n-skip
+    }
 
     fun toggleChrome() {
         chrome = !chrome
