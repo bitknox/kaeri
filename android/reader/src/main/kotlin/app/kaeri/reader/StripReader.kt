@@ -11,7 +11,10 @@ package app.kaeri.reader
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.ui.input.pointer.AwaitPointerEventScope
 import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerInputChange
+import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -91,9 +94,12 @@ class StripStep {
         return moving
     }
 
-    /** Scroll [list] by [by] pixels and what is left of a step, gliding by [spec] when [smooth]. */
-    fun go(scope: CoroutineScope, list: LazyListState, by: Float, smooth: Boolean, spec: AnimationSpec<Float>) {
-        val total = (if (job?.isActive == true) left else caught) + by
+    /**
+     * Scroll [list] by [by] pixels and what is left of a step, gliding by [spec] when [smooth]. A
+     * [touch] carries on the step its landing stopped; a screen reader's action has no landing.
+     */
+    fun go(scope: CoroutineScope, list: LazyListState, by: Float, smooth: Boolean, spec: AnimationSpec<Float>, touch: Boolean) {
+        val total = (if (job?.isActive == true) left else if (touch) caught else 0f) + by
         caught = 0f
         job?.cancel()
         left = total
@@ -113,6 +119,15 @@ class StripStep {
             }
             left = 0f
         }
+    }
+}
+
+/** The lift of [down]'s touch if it stays within [slop] of where it landed, whatever else takes its events; null once it moves. */
+private suspend fun AwaitPointerEventScope.awaitLift(down: PointerInputChange, slop: Float): PointerInputChange? {
+    while (true) {
+        val change = awaitPointerEvent(PointerEventPass.Initial).changes.firstOrNull { it.id == down.id } ?: return null
+        if ((change.position - down.position).getDistance() > slop) return null
+        if (change.changedToUpIgnoreConsumed()) return change
     }
 }
 
@@ -252,10 +267,12 @@ fun StripReader(
             awaitEachGesture {
                 // Read before the list sees the touch, which stops a moving strip. A strip moving by
                 // itself only stops; one moving by a tap's own step takes the next tap at once.
-                awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
                 val step = stepped()
                 val moving = list.isScrollInProgress && !step
-                val up = waitForUpOrCancellation() ?: return@awaitEachGesture
+                // The list takes a touch on a moving strip as a drag, and keeps its lift: a tap
+                // during a step is the touch's own lift, as long as it stayed put.
+                val up = (if (step) awaitLift(down, viewConfiguration.touchSlop) else waitForUpOrCancellation()) ?: return@awaitEachGesture
                 if (!moving) tapped(up.position.x / size.width, up.position.y / size.height)
             }
         }.semantics { if (words.isNotEmpty()) contentDescription = words },

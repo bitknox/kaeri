@@ -578,9 +578,9 @@ fun PhoneReader(
                     // Next and Previous scroll by the engine's step of the visible height, at once with
                     // Remove animations or in Paper mode; Off, the default, shows the controls.
                     // A tap during a step adds to what is left of it.
-                    fun scrollStep(down: Boolean) {
+                    fun scrollStep(down: Boolean, touch: Boolean = false) {
                         val by = stripList.layoutInfo.viewportSize.height * tapScrollStep().toFloat() * (if (down) 1f else -1f)
-                        stripStep.go(scope, stripList, by, smooth = fades && !removed, Motion.standard())
+                        stripStep.go(scope, stripList, by, smooth = fades && !removed, Motion.standard(), touch)
                     }
                     val scrollDown = Strings.readerZoneScrollDown(context)
                     val scrollUp = Strings.readerZoneScrollUp(context)
@@ -591,8 +591,8 @@ fun PhoneReader(
                         onAt = { at, foot -> session.stripAt(at, foot) },
                         onTap = { x, y ->
                             when (reading?.let { zones.actionAt(it, x, y) } ?: TapAction.CONTROLS) {
-                                TapAction.NEXT -> scrollStep(true)
-                                TapAction.PREVIOUS -> scrollStep(false)
+                                TapAction.NEXT -> scrollStep(true, touch = true)
+                                TapAction.PREVIOUS -> scrollStep(false, touch = true)
                                 TapAction.CONTROLS -> chrome = !chrome
                             }
                         },

@@ -16,6 +16,7 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performTouchInput
 import app.kaeri.design.ObiSilk
+import app.kaeri.engine.model.Leaf
 import app.kaeri.engine.model.ReadDirection
 import app.kaeri.engine.model.ReaderMode
 import app.kaeri.engine.model.TapReading
@@ -47,9 +48,10 @@ class StripTapTest {
         // Top and bottom: Next is the bottom of the screen. The guide was seen, so none shows.
         val plain = TapZonesScenes.zones(scrolling = ZoneLayout.TOP_BOTTOM)
         val seen = tapMap(plain, TapReading(ReaderMode.STRIP, ReadDirection.RIGHT_TO_LEFT, false, false), null).guide
-        // Two tall pages, so one image is on screen through both steps.
-        val state = TapZonesScenes.state(dir, mode = ReaderMode.STRIP, zones = plain.copy(guideSeenScrolling = seen))
-            .copy(leaves = ReaderFixtures.leaves(2) { ReaderFixtures.grey(dir, "s$it", 64, 1000) })
+        // Two tall pages, so one image is on screen through both steps. They have a shape and no
+        // file, so no decode is left running on another thread when the test ends.
+        val tall = List(2) { Leaf(it.toUInt(), listOf(ReaderFixtures.part(it.toUInt()).copy(ratio = 64f / 1000f)), false) } + Leaf(2u, emptyList(), true)
+        val state = TapZonesScenes.state(dir, mode = ReaderMode.STRIP, zones = plain.copy(guideSeenScrolling = seen)).copy(leaves = tall)
         val list = LazyListState()
         compose.setContent {
             Box(Modifier.fillMaxSize().background(ObiSilk.Ground)) {
