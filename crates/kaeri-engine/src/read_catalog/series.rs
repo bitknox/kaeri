@@ -11,9 +11,8 @@ use kaeri_meta::{KeptBook, anilist::books::Book};
 use kaeri_model::{
     Msg, ReadingMsg,
     reading::{
-        BookEditionRow, ChapterReadState, ChapterRow, ChapterVersion, CrossMediumRow,
-        LibrarySegmentRead, ReadingEvent, ReadingFailure, SentChapters, SeriesView,
-        VolumeGroup, WorkTitles,
+        BookEditionRow, ChapterRow, ChapterVersion, CrossMediumRow, LibrarySegmentRead,
+        ReadingEvent, ReadingFailure, SentChapters, SeriesView, VolumeGroup, WorkTitles,
     },
 };
 
@@ -100,8 +99,8 @@ pub(crate) async fn chapters(
             work.as_str(),
             list.as_ref().map(|(_, _, l)| l.as_slice()),
             medium_of(kit, work),
-            now,
-            &kit.clock.zone(),
+            (now, &kit.clock.zone()),
+            kit.sources.show_volumes(),
         );
         if volumes.is_empty()
             && let Some(check) = editions::check(kit, ask, work, tx)
@@ -237,7 +236,13 @@ pub(crate) fn kept_rows(
     let entries: Vec<_> = list.iter().map(chapters::Kept::source_chapter).collect();
     let chosen = chapters::chosen_group(&kit.store, work.as_str(), source);
     let language = kit.sources.language();
-    let arranged = super::arrange::arrange(&entries, chosen.as_deref(), language.as_deref());
+    let numbering = chapters::numbering(&kit.store, work.as_str(), None);
+    let arranged = super::arrange::arrange_in(
+        &entries,
+        chosen.as_deref(),
+        language.as_deref(),
+        &numbering,
+    );
     arranged
         .rows
         .iter()
@@ -261,7 +266,7 @@ pub(crate) fn kept_rows(
         .collect()
 }
 
-/// The edition's chapters as last kept, grouped by volume.
+/// The edition's chapters as last kept, grouped by volume when the person shows volumes.
 pub(crate) fn kept_volumes(
     kit: &Kit,
     work: &WorkId,
@@ -270,25 +275,10 @@ pub(crate) fn kept_volumes(
         return (None, Vec::new());
     };
     let read = chapters::Read::of(&kit.store, work.as_str());
-    let mut groups: Vec<VolumeGroup> = Vec::new();
-    let mut group_of: HashMap<Option<String>, usize> = HashMap::new();
-    for (first, row) in kept_rows(kit, work, &source, &list, &read) {
-        let chapter = &list[first];
-        let at = *group_of.entry(chapter.volume.clone()).or_insert_with(|| {
-            groups.push(VolumeGroup {
-                volume: chapter.volume.clone(),
-                title: None,
-                chapters: Vec::new(),
-                all_read: false,
-            });
-            groups.len() - 1
-        });
-        groups[at].chapters.push(row);
-    }
-    for group in &mut groups {
-        group.all_read =
-            group.chapters.iter().all(|c| matches!(c.state, ChapterReadState::Read));
-    }
+    let rows: Vec<ChapterRow> =
+        kept_rows(kit, work, &source, &list, &read).into_iter().map(|(_, row)| row).collect();
+    let known = super::volumes::Known::of_work(&kit.store, work.as_str());
+    let groups = super::volumes::group(rows, &known, kit.sources.show_volumes());
     let edition = kit.sources.editions(work).into_iter().find(|e| e.source_id == source);
     (edition, groups)
 }
@@ -330,10 +320,13 @@ fn mark_new(kit: &Kit, work: &WorkId, volumes: &mut [VolumeGroup]) {
     if !read.any() {
         return;
     }
+    // A chapter one of whose parts was out before is not new for a part that joined it.
+    let older: HashSet<&str> =
+        list.iter().filter(|c| c.seen_at.is_none()).map(|c| c.id.as_str()).collect();
     let new: HashSet<&str> = read
         .unread(&list)
         .into_iter()
-        .filter(|c| c.seen_at.is_some())
+        .filter(|c| c.seen_at.is_some() && !older.contains(c.id.as_str()))
         .map(|c| c.id.as_str())
         .collect();
     for row in volumes.iter_mut().flat_map(|v| v.chapters.iter_mut()) {

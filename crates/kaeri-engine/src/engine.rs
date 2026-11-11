@@ -421,6 +421,7 @@ impl Engine {
         // The terminal sets the process's language and passes none.
         let tag = language.clone().unwrap_or_else(|| kaeri_i18n::language().to_owned());
         services.book_sources.set_language(&tag);
+        services.book_sources.set_show_volumes(state.config.effective().reading.show_volumes);
         #[cfg(feature = "cast")]
         {
             casts.set_language(language);

@@ -96,23 +96,23 @@ pub fn name_downloads(
     }
 }
 
-/// A work's files as the chapter list shows them, grouped by volume, with the person's reading
-/// marked: what a series with no source reads from.
+/// A work's files as the chapter list shows them, grouped by volume when `show` (the Show
+/// volumes setting) and the volumes allow it, with the person's reading marked: what a series
+/// with no source reads from.
 pub fn volumes(
     store: &Store,
     work: &str,
     list: Option<&[crate::read_catalog::chapters::Kept]>,
     medium: kaeri_core::media::Medium,
-    now: i64,
-    zone: &jiff::tz::TimeZone,
+    (now, zone): (i64, &jiff::tz::TimeZone),
+    show: bool,
 ) -> Vec<VolumeGroup> {
     let mut chapters = chapters(store, work);
     if let Some(list) = list {
         name_downloads(&mut chapters, list);
     }
-    let marks = store.read_marks(work).unwrap_or_default();
-    let places = store.read_chapters(work).unwrap_or_default();
-    let mut groups: Vec<VolumeGroup> = Vec::new();
+    let (marks, places) = crate::read_catalog::chapters::read_state(store, work);
+    let mut rows = Vec::with_capacity(chapters.len());
     for chapter in &chapters {
         let mut row = chapter.row(&marks);
         if let Some(place) = places.iter().find(|p| p.chapter == chapter.id.as_str()) {
@@ -124,20 +124,10 @@ pub fn volumes(
                 };
             }
         }
-        match groups.iter_mut().find(|g| g.volume == chapter.volume) {
-            Some(group) => group.chapters.push(row),
-            None => groups.push(VolumeGroup {
-                volume: chapter.volume.clone(),
-                title: None,
-                chapters: vec![row],
-                all_read: false,
-            }),
-        }
+        rows.push(row);
     }
-    for group in &mut groups {
-        group.all_read =
-            group.chapters.iter().all(|c| matches!(c.state, ChapterReadState::Read));
-    }
+    let known = crate::read_catalog::volumes::Known::of_work(store, work);
+    let mut groups = crate::read_catalog::volumes::group(rows, &known, show);
     crate::read_catalog::rows::fill(
         &mut groups,
         crate::read_catalog::rows::Kept::Device,

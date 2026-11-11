@@ -588,7 +588,7 @@ impl Reader {
             }));
             return;
         };
-        let marks = store.read_marks(work.as_str()).unwrap_or_default();
+        let marks = crate::read_catalog::chapters::read_marks(store, work.as_str());
         let row = chapters[index].row(&marks);
         // A chapter not on this device is asked of its source, which the line names.
         let wait = (chapters[index].format == novel::SOURCE)
@@ -760,11 +760,10 @@ fn downloading(cx: &Cx<'_>, work: &WorkId, chapter: &ChapterId) -> bool {
             State::Queued => !setup.hold,
             _ => false,
         },
-        Ok(None) if setup.keep_ready && !setup.hold => cx
-            .services
-            .store
-            .read_marks(work.as_str())
-            .is_ok_and(|marks| !marks.is_read(chapter.as_str())),
+        Ok(None) if setup.keep_ready && !setup.hold => {
+            !crate::read_catalog::chapters::read_marks(&cx.services.store, work.as_str())
+                .is_read(chapter.as_str())
+        }
         _ => false,
     }
 }
@@ -794,8 +793,10 @@ fn start_of(
         return None;
     }
     let store = &cx.services.store;
-    let kept = store.read_chapters(work.as_str()).unwrap_or_default();
-    let marks = store.read_marks(work.as_str()).unwrap_or_default();
+    // Parts read under their own numbers count for their whole chapter.
+    let folds = crate::read_catalog::chapters::Folds::of_work(store, work.as_str());
+    let marks = folds.marks(store.read_marks(work.as_str()).unwrap_or_default());
+    let kept = folds.places(store.read_chapters(work.as_str()).unwrap_or_default(), &marks);
     let index_of = |id: &ChapterId| chapters.iter().position(|c| &c.id == id);
     // The kept place of an unfinished chapter: its page, and in a long strip how far into that
     // page's image. A strip read partway down its first image is a place too.
@@ -832,6 +833,7 @@ fn start_of(
                         .ok()
                         .flatten()
                         .and_then(|w| w.last_chapter)
+                        .map(|c| folds.whole_of(&c).unwrap_or(c))
                         .and_then(|c| index_of(&ChapterId::new(c)));
                     match last {
                         // Finished: the next chapter, from its start.
@@ -857,7 +859,8 @@ fn start_of(
 impl Session {
     /// What `Opened` says of the open chapter.
     fn view(&self, cx: &Cx<'_>) -> ReaderView {
-        let marks = cx.services.store.read_marks(self.work.as_str()).unwrap_or_default();
+        let marks =
+            crate::read_catalog::chapters::read_marks(&cx.services.store, self.work.as_str());
         ReaderView {
             session: self.id,
             work: self.work.clone(),
@@ -1246,9 +1249,8 @@ impl Session {
                 // it starts at its first image, never at a place kept from before.
                 let flowing = self.mode == ReaderMode::Strip && index == self.at + 1;
                 let store = &cx.services.store;
-                let page = store
-                    .read_chapters(self.work.as_str())
-                    .unwrap_or_default()
+                let page = crate::read_catalog::chapters::read_state(store, self.work.as_str())
+                    .1
                     .into_iter()
                     .find(|k| k.chapter == chapter.as_str() && !k.read && !flowing)
                     .and_then(|k| k.last_page)
@@ -1454,7 +1456,8 @@ impl Session {
         if std::mem::replace(&mut self.end_page_said, true) {
             return;
         }
-        let marks = cx.services.store.read_marks(self.work.as_str()).unwrap_or_default();
+        let marks =
+            crate::read_catalog::chapters::read_marks(&cx.services.store, self.work.as_str());
         let following = self.chapters.get(self.at + 1);
         let next = following.map(|c| c.row(&marks));
         let next_source = following
@@ -1832,6 +1835,7 @@ mod tests {
     use crate::{host::QuietHost, outbox::Envelope};
 
     mod back_to;
+    mod cross_parts;
     mod groups;
     mod hints;
     mod leaving;

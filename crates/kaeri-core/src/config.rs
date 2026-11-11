@@ -600,6 +600,9 @@ pub struct ReadingConfig {
     pub counts_as_read: CountsAsRead,
     /// Delete a downloaded chapter once it is read.
     pub delete_after_reading: bool,
+    /// Group chapter lists by volume. Off by default: sources tag volumes too unevenly for
+    /// the groups to help unless the person asks for them.
+    pub show_volumes: bool,
     /// Which Home the app opens at while it is for both: `watch` or `read`.
     pub open_at: String,
     pub manga: BTreeMap<String, toml::Value>,
@@ -632,6 +635,7 @@ impl Default for ReadingConfig {
             when_trackers_disagree: WhenTrackersDisagree::default(),
             counts_as_read: CountsAsRead::default(),
             delete_after_reading: false,
+            show_volumes: false,
             open_at: "watch".into(),
             manga: BTreeMap::new(),
             novel: BTreeMap::new(),
