@@ -390,10 +390,10 @@ internal object Flavour {
         }
         val scene = intent.getStringExtra("scene")?.let(FixtureScene::named) ?: return
         val (work, eink) = when (scene) {
-            FixtureScene.READER_MANGA_RTL, FixtureScene.READER_MOVED -> "a:900301" to false
+            FixtureScene.READER_MANGA_RTL, FixtureScene.READER_MOVED, FixtureScene.READER_LONG -> "a:900301" to false
             FixtureScene.READER_STRIP -> "a:900303" to false
             FixtureScene.READER_NOVEL -> "a:900302" to false
-            FixtureScene.EINK_GREY, FixtureScene.EINK_KALEIDO_UNSURE -> "a:900301" to true
+            FixtureScene.EINK_GREY, FixtureScene.EINK_KALEIDO_UNSURE, FixtureScene.EINK_LONG -> "a:900301" to true
             else -> return
         }
         // Left to the app's own screens when the launch asked for one.
@@ -410,7 +410,7 @@ internal object Flavour {
         marked = true
         intent.getStringExtra("credits")?.let { what ->
             val scene = intent.getStringExtra("scene")?.let(FixtureScene::named)
-            val grey = scene == FixtureScene.EINK_GREY || intent.getStringExtra("eink") == "1"
+            val grey = scene == FixtureScene.EINK_GREY || scene == FixtureScene.EINK_LONG || intent.getStringExtra("eink") == "1"
             if (!app.kaeri.store.CreditsStage.stage(context, store, what, grey)) Log.w(KaeriApp.TAG, "credits takes ${app.kaeri.store.CreditsStage.STATES.joinToString()}, not $what")
         }
         app.kaeri.reader.CreditShot.step = intent.getStringExtra("creditshot")

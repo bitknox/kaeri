@@ -94,7 +94,11 @@ reader-volume = Tome { $volume }
 reader-chapter-in-progress = Page { $page } sur { $total }
 reader-chapter-read = Lu
 reader-chapter-new = nouveau
-reader-chapter-pages = { $pages } pages
+reader-chapter-pages = { $pages ->
+    [one] 1 page
+    [many] { $pages } de pages
+   *[other] { $pages } pages
+ }
 reader-offline-line = Hors ligne. Les chapitres téléchargés restent lisibles.
 reader-menu-go = Aller
 reader-menu-next-page = Page suivante

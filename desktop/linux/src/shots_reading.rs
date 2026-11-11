@@ -307,9 +307,10 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
             read(shell, STRIP, "2");
             4.0
         }
-        // Chapters over a manga page: the page grid, then the chapters by volume.
-        "read-chapters" | "read-chapters-list" => {
-            read(shell, MANGA, "13");
+        // Chapters over a manga page: the page grid, then the chapters by volume. The long one
+        // is the reading-long scene's chapter 60 of 120.
+        "read-chapters" | "read-chapters-list" | "read-chapters-long" => {
+            read(shell, MANGA, if shot == "read-chapters-long" { "60" } else { "13" });
             let reader = Rc::clone(&shell.reader);
             let tab = if shot == "read-chapters" { "pages" } else { "chapters" };
             gtk::glib::timeout_add_local_once(

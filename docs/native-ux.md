@@ -378,6 +378,19 @@ What is typed and every filter are one `SearchQuery`. The engine owns the rules:
 - A genre or tag typed in the field is offered as a filter. Choosing it adds the filter and clears the words it was found by.
 - The Trending rail scrolls sideways with no scrollbar, as Home's shelves do.
 
+## Reading
+
+### Chapter lists open on the current chapter
+
+Decided 10 November 2026. A chapter list that opens on its own opens with the current chapter in the middle. That covers the reader's chapter list in every form (the Mac and Linux popover, the iPhone and Android sheets, iPad, tablet and e-ink) and Choose chapters, the download picker on the series page. The series page itself still opens at its header.
+
+- In the reader, the current chapter is the one open. Outside it, it is the chapter in progress, or else the one after the last chapter read: the same place Choose chapters starts its picks from. With nothing read, or everything read, the list opens at its top.
+- The row sits as near the middle as the list allows. Near either end it stops at that end, and a list short enough to fit does not move.
+- Nothing scrolls into place. The list is positioned before its first frame is drawn, or under a crossfade of the window, never by a fade through an empty screen.
+- On e-ink, Contents opens on the page that holds the current chapter, with no scrolling.
+- VoiceOver, TalkBack and the keyboard on Mac, Windows and Linux start on the current chapter's row.
+- Mark read up to is an action on a chapter's row, and a volume on the series page opens in place, so neither opens a list of its own.
+
 ## States
 
 Every screen has loading, content, empty, offline and failed states. All of them follow the TUI's rule: nothing for the first 600 ms, then the state shows where it applies.

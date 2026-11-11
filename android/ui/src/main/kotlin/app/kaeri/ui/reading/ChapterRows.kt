@@ -415,11 +415,27 @@ internal const val CHOOSE_START_COUNT = 10
  */
 internal fun List<VolumeGroup>.chooseStart(): Set<String> {
     val rows = chapterRows()
-    val reading = rows.indexOfLast { it.state is ChapterReadState.InProgress }
-    val from = if (reading >= 0) reading else rows.indexOfLast { it.state is ChapterReadState.Read } + 1
+    val from = rows.placeIndex() ?: 0
     val wanted = { row: ChapterRow -> row.state !is ChapterReadState.Read && row.download == null }
     val next = rows.drop(from).filter(wanted).ifEmpty { rows.filter(wanted) }
     return next.take(CHOOSE_START_COUNT).map { it.id }.toSet()
+}
+
+/** The reader's place in the rows: the last chapter in progress, or the one after the last read one. Null when nothing was read. */
+private fun List<ChapterRow>.placeIndex(): Int? {
+    val reading = indexOfLast { it.state is ChapterReadState.InProgress }
+    if (reading >= 0) return reading
+    val read = indexOfLast { it.state is ChapterReadState.Read }
+    return if (read >= 0) read + 1 else null
+}
+
+/**
+ * The chapter at the reader's place, which Choose chapters opens centred on. Null when nothing was
+ * read or every chapter was: the list then opens where it is.
+ */
+internal fun List<VolumeGroup>.readerPlace(): String? {
+    val rows = chapterRows()
+    return rows.placeIndex()?.let(rows::getOrNull)?.id
 }
 
 /** All unread, from the bar. */

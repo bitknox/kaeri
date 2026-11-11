@@ -87,8 +87,10 @@ extension EngineLaunch {
         case "readerstrip": return .readerStrip
         case "readernovel": return .readerNovel
         case "readermoved": return .readerMoved
+        case "readerlong": return .readerLong
         case "einkgrey": return .einkGrey
         case "einkkaleidounsure": return .einkKaleidoUnsure
+        case "einklong": return .einkLong
         case "readingdark": return .readingDark
         default: return nil
         }

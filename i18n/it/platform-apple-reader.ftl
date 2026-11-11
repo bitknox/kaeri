@@ -94,7 +94,11 @@ reader-volume = Volume { $volume }
 reader-chapter-in-progress = Pagina { $page } di { $total }
 reader-chapter-read = Letto
 reader-chapter-new = nuovo
-reader-chapter-pages = { $pages } pagine
+reader-chapter-pages = { $pages ->
+    [one] 1 pagina
+    [many] { $pages } pagine
+   *[other] { $pages } pagine
+ }
 reader-offline-line = Sei offline. I capitoli scaricati si aprono comunque.
 reader-menu-go = Vai
 reader-menu-next-page = Pagina successiva

@@ -18,7 +18,7 @@
 # together=<state>, Watch together in a state TogetherScene (KaeriUI/TogetherShots.swift) lists, on
 # the together scene for its recent rooms (together:together=lobby-filling),
 # reader=<chrome|settings|chapters|ask|end|endskip|scrub|pill|plate|opening|error> on a reader scene (reader-manga-rtl, reader-strip, reader-novel,
-# reader-moved), the reader open with its chrome or a sheet up,
+# reader-moved, reader-long: the manga at chapter 60 of 120), the reader open with its chrome or a sheet up,
 # medium=<read|watch|both> on a reading scene, what Kaeri is for chosen at launch as Settings would,
 # work=<id> a series' page by its work id (work=a:900301), reading=1 the Library and Search on their reading side (with filters=set, reading's Fantasy, Manga, Japan and Releasing),
 # sheet=sources-<mid|failed|only|nothing|sourcehits|anilistfailed> on reading's Search with words (search+reading=1+query=lantern) stages its sources' part with made-up sources, sheet=read-filters there opens the iPhone Filters sheet, sheet=viewall on reading's Home opens its first row's View all,
@@ -108,7 +108,7 @@ for shot in "${shots[@]}"; do
 done
 shots=("${expanded[@]}")
 for shot in "${shots[@]}"; do
-  case "${shot%%:*}" in watching | sourceless | unsure | linkopened | fresh | playing | suggested | oneleft | continuefull | notfound | slow | failed | offline | licensed | servers | library | sourcesbusy | available | demoonly | demoplayed | demoandstore | demoremoved | subtitlestyled | crashoff | crashsaved | crashheld | storeowner | storeinvited | together | browsing | reader-manga-rtl | reader-strip | reader-novel | reader-moved | reading-dark | reading-first-run | reading-update-sheet | reading-join-ask | reading-home | reading-demo | reading-series | reading-downloads | eink-grey | eink-kaleido-unsure) ;; player-*) ;; *) usage ;; esac
+  case "${shot%%:*}" in watching | sourceless | unsure | linkopened | fresh | playing | suggested | oneleft | continuefull | notfound | slow | failed | offline | licensed | servers | library | sourcesbusy | available | demoonly | demoplayed | demoandstore | demoremoved | subtitlestyled | crashoff | crashsaved | crashheld | storeowner | storeinvited | together | browsing | reader-manga-rtl | reader-strip | reader-novel | reader-moved | reader-long | reading-dark | reading-first-run | reading-update-sheet | reading-join-ask | reading-home | reading-demo | reading-series | reading-downloads | eink-grey | eink-kaleido-unsure) ;; player-*) ;; *) usage ;; esac
   if [[ "$shot" == player-start-* ]]; then continue; fi
   if [[ "$shot" == player-* && ! " ${players[*]} " == *" $shot "* ]]; then usage; fi
 done
