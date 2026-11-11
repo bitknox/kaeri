@@ -160,7 +160,9 @@ internal fun EinkHomeScreen(actions: AppActions) {
     // Large text keeps the Browse list to what fits no longer: it scrolls rather than clip.
     val large = LocalDensity.current.fontScale > 1.3f
     val title = if (kaeriIsFor() == KaeriIsFor.READ) Strings.homeTitle(context) else Strings.navRead(context)
-    PaperPage(back = null, title = title) {
+    // Offline, the line under the title says what time the Home shown is from, as the colour Home's.
+    val since = home?.offlineSince?.takeIf { home?.offline == true }
+    PaperPage(back = null, title = title, line = since?.let { Strings.homeOffline(context, clockWords(it)) }) {
         val view = home
         val failure = failures[ReadingAbout.HOME]
         when {
@@ -300,12 +302,15 @@ private fun LargeHome(
         if (continuing.isNotEmpty()) LargeContinue(continuing)
         // New chapters takes the room left, and gives way when that can't hold its heading and a
         // row rather than show a clipped heading.
+        // Without New chapters Browse follows Continue, so no empty room opens between them.
         if (came.isNotEmpty() && !beside) {
             BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
                 if (maxHeight >= NewChaptersLeast) LargeNewChapters(came, Modifier.fillMaxSize())
             }
-        } else {
+        } else if (beside) {
             Spacer(Modifier.weight(1f))
+        } else {
+            Spacer(Modifier.height(18.dp))
         }
         when {
             rows.isNotEmpty() -> LargeBrowseChips(rows)
