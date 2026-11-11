@@ -796,14 +796,17 @@ impl Worker {
                 Vec::new(),
             )
         };
+        // A start past the last page is the last leaf, as the session clamps it.
         let start_leaf = if chapter.strip.is_some() {
-            cuts.iter().position(|c| c.image >= job.start_page).unwrap_or(0)
+            cuts.iter()
+                .position(|c| c.image >= job.start_page)
+                .unwrap_or(cuts.len().saturating_sub(1))
         } else {
             chapter
                 .leaves
                 .iter()
                 .position(|l| l.iter().any(|p| p.page >= job.start_page))
-                .unwrap_or(0)
+                .unwrap_or(chapter.leaves.len().saturating_sub(1))
         };
         chapter.queue = [start_leaf, start_leaf + 1].into_iter().map(|l| l as u32).collect();
         chapter.feed = job.feed.clone().map(|feed| Fed {

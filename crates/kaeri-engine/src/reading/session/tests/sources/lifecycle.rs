@@ -404,6 +404,31 @@ async fn a_jump_asks_for_the_page_jumped_to_first() {
     assert!(next.iter().take(3).any(|p| *p == 30), "asked after the jump: {next:?}");
 }
 
+/// A place past the chapter's last page, as one kept from a longer copy of it, opens at the
+/// last page, and the view says that page rather than the one asked for.
+#[tokio::test]
+async fn an_open_past_the_last_page_opens_at_the_last_page() {
+    let source = Arc::new(Many::new(1, 5));
+    let mut h = many(source.clone());
+    h.send(ReaderCommand::Open {
+        work: WorkId::new(MANY),
+        chapter: Some(ChapterId::new("1")),
+        at: OpenAt::Page { page: 99 },
+        surface: surface(),
+    });
+    let opened = h.until(|e| match e {
+        ReaderEvent::Opened(view) => Some(view.as_ref().clone()),
+        _ => None,
+    });
+    let view = timeout(Duration::from_secs(20), opened).await.expect("opened");
+    assert_eq!(view.start.page, Some(4));
+    let first = h.until(|e| match e {
+        ReaderEvent::PageReady { page, .. } => Some(*page),
+        _ => None,
+    });
+    assert_eq!(timeout(Duration::from_secs(20), first).await.expect("a page"), 4);
+}
+
 /// A page that does not come holds only itself: the pages after it are asked for and land.
 #[tokio::test]
 async fn a_page_that_hangs_holds_only_itself() {
