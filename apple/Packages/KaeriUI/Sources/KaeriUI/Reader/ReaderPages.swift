@@ -76,18 +76,24 @@ struct PageImage: View {
     }
 }
 
-/// The Raised plate that holds a page's place with its number. Nothing shows for 600 ms, and a
-/// line says it is loading from 4 s. A chapter that is opening shows it at once: it is the
-/// place the first page comes into.
+/// The Raised plate that holds a page's place with its number, "Page 23", or "Image 23" for a
+/// strip image. Nothing shows for 600 ms, and from 4 s a line under the number says it is
+/// loading. A chapter that is opening shows it at once: it is the place the first page comes
+/// into. A strip image taller than the window centres its words in its first window-height, so
+/// they stay in view when the image is reached from above or by a jump.
 struct PagePlate: View {
     let page: Int
     let theme: ReaderTheme
+    let image: Bool
+    let window: CGFloat?
     @State private var shown: Bool
     @State private var line = false
 
-    init(page: Int, theme: ReaderTheme, atOnce: Bool = false) {
+    init(page: Int, theme: ReaderTheme, atOnce: Bool = false, image: Bool = false, window: CGFloat? = nil) {
         self.page = page
         self.theme = theme
+        self.image = image
+        self.window = window
         _shown = State(initialValue: atOnce)
     }
 
@@ -96,12 +102,16 @@ struct PagePlate: View {
             if shown {
                 Rectangle().fill(theme.raised)
                 VStack(spacing: 6) {
-                    Text(verbatim: "\(page)").font(.ui(15)).monospacedDigit().foregroundStyle(theme.haze)
+                    Text(image ? L.readerImagePlate(image: page) : L.readerPagePlate(page: page))
+                        .font(.ui(15)).monospacedDigit().foregroundStyle(theme.haze)
                     if line {
-                        Text(L.readerPageLoading(page: page)).font(.ui(13)).foregroundStyle(theme.haze)
+                        Text(image ? L.readerImageLoading(image: page) : L.readerPageLoading(page: page))
+                            .font(.ui(13)).foregroundStyle(theme.haze)
                             .transition(.opacity)
                     }
                 }
+                .frame(maxWidth: .infinity, maxHeight: window.map { max($0, 1) } ?? .infinity)
+                .frame(maxHeight: .infinity, alignment: .top)
                 .transition(.opacity)
             }
         }
