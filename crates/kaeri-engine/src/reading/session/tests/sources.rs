@@ -525,3 +525,57 @@ async fn a_strip_writes_its_place_when_the_image_changes() {
 }
 
 mod lifecycle;
+
+/// Offline, the end page leads into the next chapter on this device, past the ones only the
+/// source has, says it is downloaded, and opening it moves on as Continue does.
+#[tokio::test(start_paused = true)]
+async fn offline_the_end_page_leads_into_the_next_download() {
+    let source = Arc::new(PageSource::new(&["1", "2", "3", "4", "5"]));
+    let mut h = reading(source.clone());
+    let store = h.services.store.clone();
+    let now = h.services.clock.now();
+    h.services.book_sources.chapters(&WorkId::new(READ), None, now).await.unwrap();
+    let folders: Vec<_> = (0..2).map(|_| tempfile::tempdir().unwrap()).collect();
+    for (chapter, folder) in ["2", "4"].into_iter().zip(&folders) {
+        for n in 1..=3 {
+            let page = image::GrayImage::from_pixel(320, 480, image::Luma([60 + n]));
+            page.save(folder.path().join(format!("{n:03}.png"))).unwrap();
+        }
+        let ask = kaeri_store::book_downloads::BookDownloadAsk {
+            work: READ,
+            chapter,
+            source_id: SOURCE,
+            version_label: None,
+            keep_ready: true,
+        };
+        store.queue_book_download(&ask, 1).unwrap();
+        let id = store.book_download(READ, chapter).unwrap().unwrap().id;
+        store.book_download_done(id, folder.path().to_str().unwrap(), Some(3), 1, 1).unwrap();
+    }
+    h.services.offline.store(true, Ordering::Relaxed);
+
+    h.open_read(Some("2")).await;
+    h.leaves_of("2").await;
+    h.shown(2, TurnHow::Turn).await;
+    let next = h
+        .until(|e| match e {
+            ReaderEvent::EndPage { next, .. } => Some(next.clone()),
+            _ => None,
+        })
+        .await
+        .expect("a next chapter");
+    assert_eq!(next.id.as_str(), "4", "chapter 3 is only at the source");
+    assert_eq!(next.download, Some(kaeri_model::reading::ChapterDownloadState::Done));
+
+    let session = h.session();
+    h.send(ReaderCommand::OpenChapter { session, chapter: next.id });
+    let read = h
+        .until(|e| match e {
+            ReaderEvent::ChapterRead { chapter, .. } => Some(chapter.clone()),
+            _ => None,
+        })
+        .await;
+    assert_eq!(read.as_str(), "2", "moving on to the download marks the one read");
+    h.leaves_of("4").await;
+    assert_eq!(source.opened_of("ch-3") + source.opened_of("ch-4"), 0);
+}
