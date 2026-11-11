@@ -494,7 +494,9 @@ impl kaeri_core::traits::BookSource for TextSource {
         _: &str,
         _: &BookHints,
     ) -> Result<Vec<SourceChapter>, ProviderError> {
-        Ok(vec![SourceChapter::new("c1", "1"), SourceChapter::new("c2", "2")])
+        let mut first = SourceChapter::new("c1", "1");
+        first.title = Some("The Pier — 1".into());
+        Ok(vec![first, SourceChapter::new("c2", "2")])
     }
 
     async fn content(&self, _: &str, chapter: &str) -> Result<ChapterContent, ProviderError> {
@@ -505,8 +507,10 @@ impl kaeri_core::traits::BookSource for TextSource {
             let line = std::hint::black_box("&gt;&gt;\u{2014}\u{2014}");
             let _ = &line[..10];
         }
+        // The title twice, as a plugin's heading and then the page's own, with the number again.
+        let n = chapter.trim_start_matches('c');
         Ok(ChapterContent::Text(format!(
-            "<p>Chapter {chapter} begins at the pier.</p><script>steal()</script><img src=\"https://tracker.example/p.png\"/>"
+            "<div><h2>Chapter {n}: The Pier — {n}</h2> <h4>Chapter {n}: The Pier — {n}</h4><p>Chapter {chapter} begins at the pier.</p><script>steal()</script><img src=\"https://tracker.example/p.png\"/></div>"
         )))
     }
 
@@ -536,6 +540,11 @@ async fn a_sources_text_chapter_is_served_like_a_book() {
     assert!(!doc.contains("<script") && !doc.contains("tracker.example"), "{doc}");
     // Kaeri's stylesheet comes with the paginator, as a book's documents get it: none is linked.
     assert!(!doc.contains("<link"), "{doc}");
+    // Its title once, as the chapter list says it: the page's own heading stays, hidden, so the
+    // places in it stay where they were.
+    assert!(doc.contains("<h2>The Pier</h2>"), "{doc}");
+    assert!(doc.contains("<h4 hidden=\"hidden\">Chapter 1: The Pier — 1</h4>"), "{doc}");
+    assert!(doc.contains("<title>The Pier</title>"), "{doc}");
 
     // Its place is kept like a book's.
     h.at(pos(0, &[0], 4), 0, 1, TurnHow::Turn);

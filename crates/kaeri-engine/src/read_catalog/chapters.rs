@@ -88,13 +88,18 @@ impl Kept {
 /// at its end ("The Far Shore - 15", any dash) goes when it only repeats that chapter's number or the
 /// row's. The row's number is the source's, which every place Kaeri names the chapter uses, so a
 /// title whose own number differs from it (a source that counts its extras as chapters) does not
-/// put a second number beside it.
+/// put a second number beside it. The row's number in brackets at the end, "The Far Shore (15)",
+/// goes too.
+///
+/// The novel reader gives a text chapter's opening heading this too (`kaeri_books::novel::
+/// heading_once`), so the chapter list, the series page and the page itself say the same.
 pub fn own_title<'a>(
     title: Option<&'a str>,
     label: &str,
     number: Option<&str>,
 ) -> Option<&'a str> {
     let title = title?.trim();
+    let title = number.map_or(title, |n| without_bracketed(title, n));
     let same = |other: &str| title.eq_ignore_ascii_case(other.trim());
     if title.is_empty() || same(label) || number.is_some_and(same) {
         return None;
@@ -173,6 +178,27 @@ fn same_number(text: &str) -> Option<u64> {
 /// The whole chapter of a part's number: "196" of "196.1".
 fn whole_part(number: &str) -> Option<&str> {
     number.split_once('.').map(|(whole, _)| whole)
+}
+
+/// `title` without `number` in brackets at its end: "The Far Shore (15)" in chapter 15 is "The
+/// Far Shore". Anything else comes back as it is; a number after a dash is [`own_title`]'s.
+fn without_bracketed<'a>(title: &'a str, number: &str) -> &'a str {
+    let number = number.trim();
+    if number.is_empty() {
+        return title;
+    }
+    let Some(inner) = title.strip_suffix(')').or_else(|| title.strip_suffix(']')) else {
+        return title;
+    };
+    let Some(before) = inner.trim_end().strip_suffix(number) else { return title };
+    if before.ends_with(|c: char| c.is_ascii_digit() || c == '.') {
+        return title;
+    }
+    let rest = before.trim_end();
+    match rest.strip_suffix('(').or_else(|| rest.strip_suffix('[')).map(str::trim_end) {
+        Some(rest) if rest.chars().any(char::is_alphanumeric) => rest,
+        _ => title,
+    }
 }
 
 /// A source's list as kept, oldest chapter first, and when it was asked.
@@ -913,6 +939,22 @@ mod tests {
         assert_eq!(titled("15", "15").own_title(), None);
         assert_eq!(titled("15", "The Far Shore").own_title(), Some("The Far Shore"));
         assert_eq!(titled("15", "The 15th Lantern").own_title(), Some("The 15th Lantern"));
+        // The number said again at the end goes; another number stays.
+        assert_eq!(titled("15", "The Far Shore — 15").own_title(), Some("The Far Shore"));
+        assert_eq!(titled("15", "The Far Shore - 15").own_title(), Some("The Far Shore"));
+        assert_eq!(titled("15", "The Far Shore (15)").own_title(), Some("The Far Shore"));
+        assert_eq!(
+            titled("15", "Chapter 15: The Far Shore — 15").own_title(),
+            Some("The Far Shore")
+        );
+        assert_eq!(titled("15", "Chapter 15 — 15").own_title(), None);
+        assert_eq!(
+            titled("15", "The Far Shore — 115").own_title(),
+            Some("The Far Shore — 115")
+        );
+        assert_eq!(titled("15", "The Far Shore — 2").own_title(), Some("The Far Shore — 2"));
+        assert_eq!(titled("15", "Vol. 1-15").own_title(), Some("Vol. 1-15"));
+        assert_eq!(titled("15", "— 15").own_title(), None);
     }
 
     #[test]

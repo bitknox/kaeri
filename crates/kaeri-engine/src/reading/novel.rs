@@ -32,6 +32,7 @@ use kaeri_books::{
     Book, Epub, Limits,
     novel::{self, Clean, Document},
 };
+use kaeri_core::books::SourceChapter;
 use kaeri_model::{
     eink::NovelSupport,
     playback::HttpHeader,
@@ -339,7 +340,13 @@ impl ServedBook {
         if let Some(doc) = self.docs.lock().ok().and_then(|d| d.get(path).cloned()) {
             return doc;
         }
-        let doc = Arc::new(novel::document(bytes, &self.clean(path)));
+        let mut doc = novel::document(bytes, &self.clean(path));
+        // A chapter kept from a source is a book of its own, its title said twice at times, as
+        // the source gave it (`heading_once`, which a chapter read from the source has too).
+        if doc.failed.is_none() {
+            doc.text = novel::heading_once(&doc.text, &|_| None);
+        }
+        let doc = Arc::new(doc);
         if let Ok(mut docs) = self.docs.lock() {
             if docs.len() >= KEPT_DOCUMENTS {
                 docs.clear();
@@ -702,6 +709,30 @@ fn flatten_toc(
             flatten_toc(&e.children, spine, depth + 1, out);
         }
     }
+}
+
+/// A source's text chapter with its title said once at its start: a source's page often opens
+/// with the title twice, and with the chapter's number again at its end. The heading kept says
+/// the chapter's title as its list does ([`cleaned_title`]). The reader and the download that
+/// keeps the chapter give it the same.
+pub(crate) fn heading_once(xhtml: &str, chapter: &SourceChapter) -> String {
+    novel::heading_once(xhtml, &|heading| {
+        let cleaned = cleaned_title(chapter, heading);
+        (cleaned != heading.trim()).then_some(cleaned)
+    })
+}
+
+/// `title` as a chapter's list says it: without its number again at its end. A title that only
+/// names the chapter stays as it is: a heading saying "Chapter 15" says it well.
+pub(crate) fn cleaned_title(chapter: &SourceChapter, title: &str) -> String {
+    let number = chapter.number.as_ref().map(ToString::to_string);
+    crate::read_catalog::chapters::own_title(
+        Some(title),
+        &chapter.number_raw,
+        number.as_deref(),
+    )
+    .unwrap_or(title.trim())
+    .to_owned()
 }
 
 /// A source's text chapter, ready for the web view, with its pictures.

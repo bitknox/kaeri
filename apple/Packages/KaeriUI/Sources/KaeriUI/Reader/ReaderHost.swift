@@ -34,6 +34,10 @@ private struct ReaderHost: ViewModifier {
         // reader crossfades in over it and out again.
         content
             .toolbarVisibility(model.request != nil ? .hidden : .automatic, for: .windowToolbar)
+            // In full screen the toolbar's strip stays at the top, drawn over the page in the
+            // window's own colours even with nothing in it. While a book is open it comes with the
+            // menu bar only, when the pointer goes to the top of the screen.
+            .windowToolbarFullScreenVisibility(model.request != nil ? .onHover : .automatic)
             .overlay {
                 if model.request != nil {
                     ReaderScreen(model: model) {}

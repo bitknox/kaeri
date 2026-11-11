@@ -316,8 +316,8 @@ struct ReaderEndPage: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dynamicTypeSize) private var type
 
-    /// One more swipe opens the next chapter: in the paged reader, not a strip's foot or a novel.
-    private var swipes: Bool { held != nil || (model.novel == nil && model.view?.mode != .strip) }
+    /// One more swipe opens the next chapter: in the paged reader and a novel, not a strip's foot.
+    private var swipes: Bool { held != nil || model.novel != nil || model.view?.mode != .strip }
 
     // What the page shows: the held chapter's, or the open one's.
     private var view: ReaderView? { held?.view ?? model.view }
