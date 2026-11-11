@@ -82,6 +82,7 @@ import app.kaeri.engine.model.WorkTile
 import app.kaeri.i18n.Strings
 import app.kaeri.store.ReadSearchState
 import app.kaeri.store.text
+import app.kaeri.store.skipsAnilist
 import app.kaeri.ui.Icons
 import app.kaeri.ui.LocalAppStore
 import app.kaeri.ui.LocalNavigator
@@ -188,14 +189,15 @@ internal fun EinkSearchPage(
     var page by rememberSaveable { mutableIntStateOf(0) }
     var filters by remember { mutableStateOf(false) }
     var opened by remember(search.query) { mutableStateOf(emptySet<String>()) }
-    // A large panel's Search in: one source's results, or every source's (null).
+    // A large panel's Search in: one source, or every source (null). The words go to that source
+    // alone: it is the query's scope, so the engine asks no other.
     var only by rememberSaveable { mutableStateOf<String?>(null) }
     LaunchedEffect(text) {
         snapshotFlow { text.text.toString() }.drop(1).debounce(TYPING_REST_EINK).collect { typed ->
             val now = store.reading.search.value.query
             if (typed.trim() != now.text) {
                 // Words cleared with nothing else set: back to the start, as the colour Search goes.
-                val asked = now.copy(text = typed.trim())
+                val asked = now.copy(text = typed.trim(), sourceScope = only?.let { listOf(it) })
                 if (asked.isStart() && !asked.sourcesOnly) store.reading.searchStart() else store.reading.runSearch(asked)
             }
         }
@@ -543,7 +545,8 @@ private fun wideLines(
             columns,
         )
     }
-    if (!query.sourcesOnly) {
+    // A source picked under Search in leaves AniList out, as Your sources only does.
+    if (!query.skipsAnilist) {
         val failed = (search.failure != null && search.tiles.isEmpty()) || sources?.anilist == ReadAnilistState.FAILED
         val count = (search.total?.toInt() ?: search.tiles.size).takeIf { search.tiles.isNotEmpty() }
         add(Wide.Head(Strings.readSearchGroupAnilist(context), count?.let { Strings.readSearchGroupCount(context, it) }))
