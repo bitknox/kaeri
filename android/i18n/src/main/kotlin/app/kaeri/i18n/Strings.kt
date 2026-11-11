@@ -3081,6 +3081,42 @@ object Strings {
     fun readTileSpokenIn(context: Context, title: String, line: String, where: String): String =
         context.getString(R.string.read_tile_spoken_in, title, line, where)
 
+    /** E-ink Search on a large panel, before anything is typed: the heading over the chips that pick which of the person's own sources to search. */
+    fun readSearchIn(context: Context): String =
+        context.getString(R.string.read_search_in)
+
+    /** E-ink Search start: the first chip under Search in, every source the person added. */
+    fun readSearchInAll(context: Context): String =
+        context.getString(R.string.read_search_in_all)
+
+    /** E-ink Search start: the plain note at the end of the Genres heading, where the genres come from. */
+    fun readSearchGenresFrom(context: Context): String =
+        context.getString(R.string.read_search_genres_from)
+
+    /** E-ink Search start: the heading over the format chips. */
+    fun readSearchFormats(context: Context): String =
+        context.getString(R.string.read_search_formats)
+
+    /** E-ink Search start: the line at its foot. A genre or format chip opens Search with that filter and no words. */
+    fun readSearchStartNote(context: Context): String =
+        context.getString(R.string.read_search_start_note)
+
+    /** E-ink Search results on a large panel: the heading over the results already in the person's library. */
+    fun readSearchGroupLibrary(context: Context): String =
+        context.getString(R.string.read_search_group_library)
+
+    /** E-ink Search results: the heading over AniList's results. */
+    fun readSearchGroupAnilist(context: Context): String =
+        context.getString(R.string.read_search_group_anilist)
+
+    /** E-ink Search results: the heading over one source's results. The source is its name. */
+    fun readSearchGroupSource(context: Context, source: String): String =
+        context.getString(R.string.read_search_group_source, source)
+
+    /** E-ink Search results: the count at the end of a group's heading. */
+    fun readSearchGroupCount(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.read_search_group_count, n, n)
+
     /** Name of the notification channel for new chapters, shown in the system's settings. */
     fun channelChaptersName(context: Context): String =
         context.getString(R.string.channel_chapters_name)
@@ -3136,6 +3172,26 @@ object Strings {
     /** What TalkBack says the Group row does, after "Double-tap to": an imperative, as Android's click labels are. */
     fun seriesGroupAction(context: Context): String =
         context.getString(R.string.series_group_action)
+
+    /** E-ink series page on a large panel: the text button beside the chapter order that starts choosing chapters. */
+    fun seriesSelect(context: Context): String =
+        context.getString(R.string.series_select)
+
+    /** E-ink series page on a large panel: the label over the person's own score, shown as "8 / 10". */
+    fun seriesFactScore(context: Context): String =
+        context.getString(R.string.series_fact_score)
+
+    /** E-ink series page on a large panel: the label over the series' status, "Releasing". */
+    fun seriesFactStatus(context: Context): String =
+        context.getString(R.string.series_fact_status)
+
+    /** E-ink series page on a large panel: the label over how often chapters come out, "Usually Fridays". */
+    fun seriesFactReleases(context: Context): String =
+        context.getString(R.string.series_fact_releases)
+
+    /** E-ink series page on a large panel: the state at the end of an unread chapter row that is downloaded here. */
+    fun seriesRowOnDevice(context: Context): String =
+        context.getString(R.string.series_row_on_device)
 
     /** Line under Notifications in the Settings list: chapter notifications are on. */
     fun settingsSummaryChaptersOn(context: Context): String =

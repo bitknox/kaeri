@@ -286,6 +286,42 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
                 // What the tile tapped already showed, at once and where the header puts it.
                 Box(Modifier.padding(padding)) { KnownSeriesHeader(tile) }
             } ?: SeriesLoading(Modifier.padding(padding))
+            // A large e-ink panel: the board's page, chapters in columns a page at a time (EinkSeries.kt).
+            einkLarge -> EinkSeriesLarge(
+                series = series,
+                chapters = chapters,
+                late = lateChapters,
+                newestFirst = newestFirst,
+                onOrder = {
+                    newestFirst = it
+                    ChapterOrder.keep(context, it)
+                },
+                chosen = chosen,
+                onChosen = { chosen = it },
+                onCover = { actions.openReader(work, series.action.chapter, series.cover, null) },
+                onMain = { action ->
+                    if (action is SeriesAction.ReadAgain) sheet = SeriesSheet.ReadAgain else actions.openReader(work, action.chapter, series.cover, null)
+                },
+                onReadFrom = { sheet = SeriesSheet.ReadFrom },
+                onGroup = { groupOpen = true },
+                onStatus = { statusOpen = true },
+                onDownload = { downloadOpen = true },
+                onChoose = { chosen = volumes.chooseStart() },
+                onOpen = { row -> actions.openReader(work, row.id, series.cover, null) },
+                onLong = { row -> sheet = SeriesSheet.Chapter(row.id) },
+                onRetry = { store.reading.loadChapters(work, chapters?.edition?.sourceId) },
+                statusMenu = { StatusMenu(series, statusOpen) { statusOpen = false } },
+                downloadMenu = {
+                    DownloadMenu(series, volumes, downloadOpen, onDismiss = { downloadOpen = false }, onChoose = { chosen = volumes.chooseStart() }, onSend = { sheet = SeriesSheet.Send(it) })
+                },
+                notes = {
+                    if (series.askWhereStopped != null) {
+                        WhereStopNote(series, onAsk = { sheet = SeriesSheet.WhereStop }, modifier = Modifier.padding(top = 16.dp))
+                    }
+                    if (sheet !is SeriesSheet.Send) SendStatusRows(work, actions, Modifier.padding(top = 16.dp))
+                },
+                modifier = Modifier.padding(padding),
+            )
             else -> {
                 val top: @Composable () -> Unit = {
                     SeriesHeader(series, wide, coverKey, onCover = {

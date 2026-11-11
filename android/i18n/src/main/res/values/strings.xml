@@ -1658,6 +1658,27 @@
     <string name="read_tile_spoken">%1$s. %2$s.</string>
     <!-- Screen readers: a reading cover, its title, the line under it and where the person has it. -->
     <string name="read_tile_spoken_in">%1$s. %2$s. %3$s.</string>
+    <!-- E-ink Search on a large panel, before anything is typed: the heading over the chips that pick which of the person's own sources to search. -->
+    <string name="read_search_in">Search in</string>
+    <!-- E-ink Search start: the first chip under Search in, every source the person added. -->
+    <string name="read_search_in_all">All your sources</string>
+    <!-- E-ink Search start: the plain note at the end of the Genres heading, where the genres come from. -->
+    <string name="read_search_genres_from">From AniList</string>
+    <!-- E-ink Search start: the heading over the format chips. -->
+    <string name="read_search_formats">Formats</string>
+    <!-- E-ink Search start: the line at its foot. A genre or format chip opens Search with that filter and no words. -->
+    <string name="read_search_start_note">Searches your library, AniList and each source you added. A genre or format lists AniList\'s series with it.</string>
+    <!-- E-ink Search results on a large panel: the heading over the results already in the person's library. -->
+    <string name="read_search_group_library">In your library</string>
+    <!-- E-ink Search results: the heading over AniList's results. -->
+    <string name="read_search_group_anilist">From AniList</string>
+    <!-- E-ink Search results: the heading over one source's results. The source is its name. -->
+    <string name="read_search_group_source">From %1$s</string>
+    <!-- E-ink Search results: the count at the end of a group's heading. -->
+    <plurals name="read_search_group_count">
+        <item quantity="one">%1$,d result</item>
+        <item quantity="other">%1$,d results</item>
+    </plurals>
     <!-- Name of the notification channel for new chapters, shown in the system's settings. -->
     <string name="channel_chapters_name">New chapters</string>
     <!-- What the new chapters channel is for, shown in the system's settings. -->
@@ -1695,6 +1716,16 @@
     <string name="group_menu_in">Group in %1$s</string>
     <!-- What TalkBack says the Group row does, after "Double-tap to": an imperative, as Android's click labels are. -->
     <string name="series_group_action">Pick a group</string>
+    <!-- E-ink series page on a large panel: the text button beside the chapter order that starts choosing chapters. -->
+    <string name="series_select">Select</string>
+    <!-- E-ink series page on a large panel: the label over the person's own score, shown as "8 / 10". -->
+    <string name="series_fact_score">Your score</string>
+    <!-- E-ink series page on a large panel: the label over the series' status, "Releasing". -->
+    <string name="series_fact_status">Status</string>
+    <!-- E-ink series page on a large panel: the label over how often chapters come out, "Usually Fridays". -->
+    <string name="series_fact_releases">New chapters</string>
+    <!-- E-ink series page on a large panel: the state at the end of an unread chapter row that is downloaded here. -->
+    <string name="series_row_on_device">On this device</string>
     <!-- Line under Notifications in the Settings list: chapter notifications are on. -->
     <string name="settings_summary_chapters_on">New chapters on</string>
     <!-- Line under Notifications in the Settings list: chapter notifications are off. -->
