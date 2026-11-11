@@ -42,6 +42,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -94,7 +95,10 @@ fun ChaptersSheet(
                 Segments(listOf(Strings.readerGridTitle(context), Strings.readerChapters(context)), tab) { tab = it }
             }
             Spacer(Modifier.height(12.dp))
-            Box(Modifier.heightIn(min = 240.dp, max = 460.dp).fillMaxWidth()) {
+            // A fixed height, so the sheet stays still when the chapters come in after it opened,
+            // and fits a phone held sideways.
+            val listHeight = (LocalConfiguration.current.screenHeightDp * 0.45f).dp.coerceAtMost(460.dp)
+            Box(Modifier.height(listHeight).fillMaxWidth()) {
                 if (tab == 0) {
                     PageGrid(state, images, currentLeaf, rtl, onGo, session::needPage)
                 } else {
