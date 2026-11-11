@@ -111,6 +111,8 @@ data class ReaderState(
     val closed: Boolean = false,
     /** While opening: the chapter, once the engine knows it, and what it waits on. */
     val openingChapter: ChapterRow? = null,
+    /** The series' title as the screen that asked knew it, for the waiting page before [view] comes. */
+    val openingTitle: String? = null,
     val openingWait: ReaderWait? = null,
     /** When the chapter on screen was asked for, on [openingClock]; 0 when nothing was asked. */
     val openingSince: Long = 0L,
@@ -212,7 +214,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
 
     // What the screen sends.
 
-    fun open(work: WorkId, surface: ReaderSurface, chapter: ChapterId? = null, at: OpenAt = OpenAt.Resume) {
+    fun open(work: WorkId, surface: ReaderSurface, chapter: ChapterId? = null, at: OpenAt = OpenAt.Resume, title: String? = null) {
         this.work = work
         this.asked = chapter to at
         this.surface = surface
@@ -228,6 +230,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
         _state.value = ReaderState(
             opening = true,
             openingChapter = state.value.openingChapter?.takeIf { it.id == chapter },
+            openingTitle = title,
             openingSince = openingClock(),
         )
         reader(ReaderCommand.Open(work, chapter, at, surface))
@@ -574,6 +577,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
                 _state.value = ReaderState(
                     failure = failed.failure,
                     openingChapter = chapter,
+                    openingTitle = now.openingTitle,
                     read = now.read,
                     readTrackers = now.readTrackers,
                     volumes = now.volumes,

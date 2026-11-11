@@ -310,10 +310,11 @@ private fun OpenReader(
             .readerSurface(density, eink = request.eink, dark = true) { surface ->
                 if (!opened[0]) {
                     opened[0] = true
+                    val title = store.reading.series.value[request.work]?.titles?.display
                     if (back != null) {
-                        session.open(request.work, surface, back.chapter, OpenAt.Place(back))
+                        session.open(request.work, surface, back.chapter, OpenAt.Place(back), title)
                     } else {
-                        session.open(request.work, surface, request.chapter)
+                        session.open(request.work, surface, request.chapter, title = title)
                     }
                 } else {
                     session.surface(surface)

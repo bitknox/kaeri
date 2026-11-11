@@ -361,7 +361,7 @@ internal fun BoxScope.EinkSlowOpen(state: ReaderState, session: ReaderSession, o
         is ReaderWait.ChapterPages -> wait.source
         else -> null
     }
-    val title = state.view?.title
+    val title = state.view?.title ?: state.openingTitle
     val volume = (state.openingChapter ?: state.view?.chapter)?.volume
     val kicker = when {
         title != null && volume != null -> Strings.einkSlowKicker(context, title, volume)
