@@ -656,7 +656,7 @@ fun CreditPageView(credit: CreditPage, images: PageImages, ground: Color, modifi
 }
 
 /** What a screen reader says for a leaf: its page, or its two pages. */
-private fun describe(context: android.content.Context, leaf: Leaf, state: ReaderState): String {
+internal fun describe(context: android.content.Context, leaf: Leaf, state: ReaderState): String {
     val pages = state.shownPages
     val numbers = leaf.parts.map { state.shownPage(it.page.toInt()) + 1 }.distinct()
     return when (numbers.size) {

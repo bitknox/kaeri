@@ -38,7 +38,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
@@ -237,6 +241,10 @@ fun StripReader(
         }.distinctUntilChanged().collect { showing(it) }
     }
 
+    // A screen reader rests on the strip as on a paged page, by its page: the moves are its actions.
+    val context = LocalContext.current
+    val shown by remember(list, first, story.size) { derivedStateOf { list.stripPos(first, story.size)?.image?.toInt() ?: 0 } }
+    val words = story.getOrNull(shown)?.let { describe(context, it, state) }.orEmpty()
     val tapped by rememberUpdatedState(onTap)
     val stepped by rememberUpdatedState(stepping)
     BoxWithConstraints(
@@ -250,7 +258,7 @@ fun StripReader(
                 val up = waitForUpOrCancellation() ?: return@awaitEachGesture
                 if (!moving) tapped(up.position.x / size.width, up.position.y / size.height)
             }
-        },
+        }.semantics { if (words.isNotEmpty()) contentDescription = words },
     ) {
         val screen = maxHeight
         // Show on a divider or the end page puts the pages skipped at the end back above it: with

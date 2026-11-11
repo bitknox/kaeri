@@ -34,6 +34,7 @@ import app.kaeri.reader.rememberScreenReader
 import app.kaeri.reader.tapReading
 import app.kaeri.reader.tapZones
 import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import app.kaeri.reader.NovelMessage
@@ -196,8 +197,12 @@ fun NovelScreen(
     val next = if (scrolled) Strings.readerZoneScrollDown(context) else Strings.readerZoneNext(context)
     val previous = if (scrolled) Strings.readerZoneScrollUp(context) else Strings.readerZonePrevious(context)
     val showControls = Strings.readerActionControls(context)
+    // Words a screen reader can rest on, so the moves come up as its actions: the page, or the chapter
+    // while the paginator counts and when the text scrolls.
+    val where = if (!scrolled && place.pages > 0) Strings.readerPageOf(context, place.page + 1, place.pages) else state.view?.let { chapterWords(context, it.chapter) }.orEmpty()
     Box(
         modifier.fillMaxSize().semantics {
+            if (where.isNotEmpty()) contentDescription = where
             customActions = listOf(
                 CustomAccessibilityAction(next) { turn(true, TurnHow.KEY); true },
                 CustomAccessibilityAction(previous) { turn(false, TurnHow.KEY); true },
