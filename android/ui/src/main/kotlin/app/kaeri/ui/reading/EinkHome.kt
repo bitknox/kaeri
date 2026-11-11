@@ -13,13 +13,18 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -40,8 +45,10 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Placeable
+import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -53,14 +60,19 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.kaeri.eink.EinkColours
+import app.kaeri.eink.EinkLook
 import app.kaeri.eink.EinkOutlinedButton
+import app.kaeri.eink.EinkPager
 import app.kaeri.eink.EinkSizes
 import app.kaeri.eink.EinkSolidButton
 import app.kaeri.eink.EinkTextButton
+import app.kaeri.eink.EinkTheme
 import app.kaeri.eink.EinkType
 import app.kaeri.eink.PaperWaiting
+import app.kaeri.eink.bottomRule
 import app.kaeri.eink.chapterNumber
 import app.kaeri.eink.einkClick
 import app.kaeri.eink.hairline
@@ -168,6 +180,12 @@ internal fun EinkHomeScreen(actions: AppActions) {
                 val came = cameOut(view.week)
                 val rows = view.rows.filter { it.tiles.isNotEmpty() }
                 val own = continuing.isNotEmpty() || came.isNotEmpty() || (tile != null && !demo.onlyBooks)
+                // A 10 inch panel upright has its own Home, as the large panel board draws it; the
+                // first run, the demo and large text keep the smaller panels' Home.
+                if (reader && own && !large && !demo.onlyBooks && largePanel(upright = true)) {
+                    LargeHome(tile?.takeIf { spot != null }, spot, continuing, came, rows, view.rows.any { it.pending }, actions)
+                    return@PaperPage
+                }
                 // Home is one screen; what can't fit (large text, a small panel) scrolls rather
                 // than clip. The first run's Browse list instead keeps the rows that fit.
                 val scroll = large || own
@@ -196,6 +214,388 @@ internal fun EinkHomeScreen(actions: AppActions) {
                     Column(Modifier.fillMaxSize()) { body(Modifier.weight(1f, fill = false)) }
                 }
             }
+        }
+    }
+}
+
+// Home on a 10 inch panel
+
+/** A panel this many dp across and wider is the 10.3 inch board's, as [Side] measures it. */
+private const val WIDE_PANEL_DP = 900
+
+/**
+ * A 10 inch panel: 900 dp across and wider, where lists take two columns and more. [upright] also
+ * asks for it held upright, for Home, which the board draws only so.
+ */
+@Composable
+internal fun largePanel(upright: Boolean = false): Boolean {
+    val configuration = LocalConfiguration.current
+    return configuration.screenWidthDp >= WIDE_PANEL_DP && (!upright || configuration.screenHeightDp >= configuration.screenWidthDp)
+}
+
+/** Between list columns on a large panel; each is at least [ListColumnLeast] wide. */
+private val ListGap = 40.dp
+private val ListColumnLeast = 420.dp
+
+/** How many list columns a width holds: as many of at least 420 dp as fit, one at least. */
+private fun listColumns(width: Dp): Int = ((width + ListGap) / (ListColumnLeast + ListGap)).toInt().coerceAtLeast(1)
+
+/** The hero's cover on a 10 inch Home: the grid's 184 × 276. */
+private val LargeHeroCover = 184.dp
+
+/** A Continue cover on a 10 inch Home, 140 × 210 in the grid's columns. */
+private val LargeContinueCover = 140.dp
+
+/** The hero's synopsis: the body size in grey, at the board's line height of 1.45. */
+private val HeroSynopsis = EinkType.Body.copy(color = EinkColours.Secondary, lineHeight = EinkType.Body.fontSize * 1.45f)
+
+/** A series' title in the 10 inch lists: 18 sp in the titles' face. */
+private val LargeRowTitle = EinkType.RowTitle
+
+/** A row's own words in the 10 inch lists, such as a setting's name: the label at 18 sp. */
+private val LargeRowLabel = EinkType.Label.copy(fontSize = 18.sp)
+
+/**
+ * Home on a 10 inch panel, one screen and never paged: the series in progress at the grid's cover
+ * size with its synopsis and the one solid button, Continue on the grid's columns, New chapters in
+ * two columns filling the room that is left, and the Browse rows as chips closing the page.
+ */
+@Composable
+private fun LargeHome(
+    tile: WorkTile?,
+    spot: ReadSpotlight?,
+    continuing: List<WorkTile>,
+    came: List<CameOut>,
+    rows: List<app.kaeri.engine.model.ReadHomeRow>,
+    pending: Boolean,
+    actions: AppActions,
+) {
+    val context = LocalContext.current
+    Column(Modifier.fillMaxSize()) {
+        if (tile != null && spot != null) LargeHero(tile, spot, actions)
+        if (continuing.isNotEmpty()) LargeContinue(continuing)
+        if (came.isNotEmpty()) LargeNewChapters(came, Modifier.weight(1f)) else Spacer(Modifier.weight(1f))
+        when {
+            rows.isNotEmpty() -> LargeBrowseChips(rows)
+            pending -> PaperWaiting { Text(Strings.stateLoading(context), style = EinkType.Secondary, modifier = Modifier.padding(bottom = 24.dp)) }
+        }
+    }
+}
+
+/**
+ * The series in progress on a 10 inch Home: the cover at the grid's size beside what it is, where
+ * the person is and its synopsis, then its facts over Continue and the Series page link.
+ */
+@Composable
+private fun LargeHero(tile: WorkTile, spot: ReadSpotlight, actions: AppActions) {
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    val words = actionWords(context, spot.action)
+    val chapter = spot.action?.chapter
+    val series = { navigator.openSeries(tile.work, "eink-home") }
+    // Three lines of synopsis at the panel's 0.85, two from 1.0, so the words keep to the cover's height.
+    val synopsisLines = if (LocalDensity.current.fontScale > 0.9f) 2 else 3
+    Row(Modifier.padding(top = 14.dp)) {
+        PaperCover(tile.cover, tile.title, LargeHeroCover, Modifier.einkClick(onClick = series))
+        Column(
+            Modifier.weight(1f).padding(start = 32.dp).heightIn(min = LargeHeroCover * 1.5f),
+            verticalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Column(Modifier.semantics(mergeDescendants = true) {}) {
+                Text(spot.label.text(context), style = EinkType.Secondary)
+                Text(tile.title, style = EinkType.SeriesTitle, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp, bottom = 6.dp))
+                spot.line?.let { Text(it.text(context), style = EinkType.Label, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                spot.synopsis?.takeIf { it.isNotBlank() }?.let { synopsis ->
+                    Text(
+                        synopsis.replace(Regex("\\s*\\n+\\s*"), " "),
+                        style = HeroSynopsis,
+                        maxLines = synopsisLines,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(top = 10.dp),
+                    )
+                }
+            }
+            Column {
+                // What the series is, where the board names the next chapter: the engine sends no
+                // next chapter's length or place for Home.
+                val facts = spot.facts.joinToString(" · ") { it.text(context) } // i18n-skip
+                if (facts.isNotEmpty()) Text(facts, style = EinkType.Secondary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 12.dp, bottom = 12.dp))
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (words != null) {
+                        EinkSolidButton(words, {
+                            if (chapter != null) actions.openReader(tile.work, chapter, tile.cover, readerCoverKey("spotlight", tile.work)) else series()
+                        })
+                        EinkTextButton(Strings.einkHomeSeriesPage(context), series, underline = true)
+                    } else {
+                        EinkOutlinedButton(Strings.homeDetails(context), series)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Continue on a 10 inch Home: a 140 dp cover in each of the grid's columns, with its title and place. */
+@Composable
+private fun LargeContinue(tiles: List<WorkTile>) {
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    Spacer(Modifier.height(18.dp))
+    PaperHeading(Strings.homeReadContinue(context), Strings.einkHomeAll(context)) {
+        ReadPlaces.showList(LibrarySegmentRead.READING)
+        navigator.go(Destination.Library)
+    }
+    BoxWithConstraints(Modifier.fillMaxWidth().padding(top = 4.dp)) {
+        // The grid rule's columns: as many of at least 200 dp as the width holds.
+        val columns = paperGrid(maxWidth, 1000.dp, 0.dp, 0.dp).columns
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+            val shown = tiles.take(columns)
+            for (tile in shown) {
+                Column(
+                    Modifier
+                        .weight(1f)
+                        .einkClick { navigator.openSeries(tile.work, "eink-continue") }
+                        .semantics(mergeDescendants = true) {},
+                ) {
+                    PaperCover(tile.cover, tile.title, LargeContinueCover, Modifier)
+                    Column(Modifier.width(LargeContinueCover)) {
+                        Text(tile.title, style = EinkType.Label, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 8.dp))
+                        val line = tile.line(context)
+                        if (line.isNotEmpty()) Text(line, style = EinkType.Secondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                }
+            }
+            repeat(columns - shown.size) { Spacer(Modifier.weight(1f)) }
+        }
+    }
+}
+
+/** New chapters on a 10 inch Home: rows down the first column, then the second, as many as the room holds. */
+@Composable
+private fun LargeNewChapters(came: List<CameOut>, modifier: Modifier) {
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    Column(modifier.fillMaxWidth()) {
+        Spacer(Modifier.height(18.dp))
+        PaperHeading(Strings.einkHomeNewChapters(context), Strings.einkHomeAllNewChapters(context), flush = true) { navigator.go(Destination.Updates) }
+        PagedColumns(came, page = 0, onPage = {}, modifier = Modifier.weight(1f).padding(top = 4.dp, bottom = 12.dp), paged = false) { (day, entry), first ->
+            val tile = entry.tile
+            val line = cameWords(context, day, entry)
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 64.dp)
+                    .einkClick { navigator.openSeries(tile.work, "eink-week") }
+                    .then(if (first) Modifier else Modifier.topHairline())
+                    .padding(vertical = 9.dp)
+                    .semantics(mergeDescendants = true) { contentDescription = "${tile.title}. $line" }, // i18n-skip
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(tile.title, style = LargeRowTitle, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 2.dp)) {
+                        Box(Modifier.size(EinkSizes.NewDot).clip(CircleShape).background(EinkColours.Ink))
+                        Text(line, style = EinkType.Secondary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 7.dp))
+                    }
+                }
+                Icon(Icons.Chevron, contentDescription = null, tint = EinkColours.Ink, modifier = Modifier.padding(start = 12.dp).size(22.dp))
+            }
+        }
+    }
+}
+
+/** Browse closing a 10 inch Home: each row as a chip opening its grid, and All rows opening the list. */
+@Composable
+private fun LargeBrowseChips(rows: List<app.kaeri.engine.model.ReadHomeRow>) {
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    Column(Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
+        PaperHeading(Strings.readHomeBrowse(context), Strings.einkHomeAllRows(context), flush = true) { navigator.openReadPage(READ_PAGE_BROWSE) }
+        PaperChips(Modifier.padding(top = 4.dp)) {
+            for (row in rows) PaperChip(row.title.text(context)) { navigator.openReadPage(READ_PAGE_ROW + row.id) }
+        }
+    }
+}
+
+// Browse on a 10 inch panel
+
+/** A Browse tile's covers: its row's first four at 90 × 135. */
+private val BrowseTileCover = 90.dp
+private const val BROWSE_TILE_COVERS = 4
+
+/**
+ * Browse on a 10 inch panel: each row as a tile with its first four covers, two to a line on the
+ * list columns, paged when they don't fit, then AniList's genres as chips at the foot, each opening
+ * Search browsing that genre.
+ */
+@Composable
+internal fun LargeBrowse(rows: List<app.kaeri.engine.model.ReadHomeRow>, page: Int, onPage: (Int) -> Unit) {
+    val store = LocalAppStore.current
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    val genres = store.reading.filters.genres
+    Column(Modifier.fillMaxSize().padding(top = 10.dp)) {
+        PagedColumns(rows, page, onPage, Modifier.weight(1f).padding(bottom = 12.dp), across = true) { row, _ ->
+            BrowseTile(row) { navigator.openReadPage(READ_PAGE_ROW + row.id) }
+        }
+        if (genres.isNotEmpty()) {
+            Column(Modifier.fillMaxWidth().padding(bottom = 22.dp)) {
+                Row(Modifier.fillMaxWidth().height(HeadingHeight), verticalAlignment = Alignment.CenterVertically) {
+                    Text(Strings.readFilterGenres(context), style = EinkType.RowTitle, modifier = Modifier.weight(1f).semantics { heading() })
+                    Text(Strings.einkBrowseGenresFrom(context), style = EinkType.Secondary)
+                }
+                PaperChips(Modifier.padding(top = 4.dp)) {
+                    for (genre in genres) {
+                        PaperChip(genre) {
+                            // The Search tab itself, browsing the genre with no words, as a row's Search link opens it.
+                            ReadPlaces.search(store.reading, app.kaeri.store.ReadingModel.EMPTY_QUERY.copy(genres = listOf(genre)))
+                            navigator.goToStart(Destination.Search)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** A row as a Browse tile under a grey hairline: its title and a chevron, its first covers, and what it holds. */
+@Composable
+private fun BrowseTile(row: app.kaeri.engine.model.ReadHomeRow, onClick: () -> Unit) {
+    val context = LocalContext.current
+    val title = row.title.text(context)
+    val line = browseRowLine(context, row)
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .einkClick(onClick = onClick)
+            .topHairline()
+            .padding(top = 12.dp, bottom = 16.dp)
+            .semantics(mergeDescendants = true) { contentDescription = "$title. $line" }, // i18n-skip
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(title, style = EinkType.RowTitle, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+            Icon(Icons.Chevron, contentDescription = null, tint = EinkColours.Ink, modifier = Modifier.padding(start = 12.dp).size(22.dp))
+        }
+        // The covers spread across the column, the first at its start and the fourth at its end.
+        Row(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+            val covers = row.tiles.take(BROWSE_TILE_COVERS)
+            for (tile in covers) PaperCover(tile.cover, tile.title, BrowseTileCover, Modifier)
+            repeat(BROWSE_TILE_COVERS - covers.size) { Spacer(Modifier.width(BrowseTileCover)) }
+        }
+        if (line.isNotEmpty()) Text(line, style = EinkType.Secondary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 10.dp))
+    }
+}
+
+/** Chips on paper, wrapping onto as many lines as they take, 10 dp apart. */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+internal fun PaperChips(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    androidx.compose.foundation.layout.FlowRow(
+        modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) { content() }
+}
+
+/** A chip on paper: 48 dp, a 2 dp ink border with radius 10, the words at 15 sp. */
+@Composable
+internal fun PaperChip(text: String, onClick: () -> Unit) {
+    val shape = RoundedCornerShape(EinkSizes.SegmentRadius)
+    Box(
+        Modifier
+            .heightIn(min = EinkSizes.SegmentHeight)
+            .clip(shape)
+            .border(EinkSizes.Rule, EinkColours.Ink, shape)
+            .einkClick(onClick = onClick)
+            .padding(horizontal = 18.dp, vertical = 6.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(text, style = EinkType.Secondary.copy(color = EinkColours.Ink))
+    }
+}
+
+/** Where a laid out item of [PagedColumns] goes: its index, its column, how far down, and whether it heads its column. */
+private data class Placed(val index: Int, val column: Int, val y: Int, val first: Boolean)
+
+/**
+ * Items in list columns of at least 420 dp side by side, 40 dp apart, a page at a time with the
+ * pager under them. Rows run down the first column, then the next, as a printed index reads; with
+ * [across], items fill each line across first, as tiles do. Each item is measured as it is, so
+ * large text gets more pages rather than clipped rows. With [paged] off, only what fits the
+ * first page shows and there is no pager. [rules] draws a 1 dp grey rule between the columns.
+ * [item] is told whether it heads its column, which draws no rule above it.
+ */
+@Composable
+internal fun <T> PagedColumns(
+    items: List<T>,
+    page: Int,
+    onPage: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    across: Boolean = false,
+    paged: Boolean = true,
+    rules: Boolean = false,
+    item: @Composable (T, Boolean) -> Unit,
+) {
+    SubcomposeLayout(modifier.fillMaxSize()) { constraints ->
+        val width = constraints.maxWidth
+        val gap = ListGap.roundToPx()
+        val columns = listColumns(width.toDp())
+        val columnWidth = (width - gap * (columns - 1)) / columns
+        val loose = Constraints(maxWidth = columnWidth)
+        val heights = items.mapIndexed { index, it -> subcompose("measure-$index") { item(it, false) }.sumOf { m -> m.measure(loose).height } }
+        fun pack(room: Int): List<List<Placed>> {
+            val pages = mutableListOf(mutableListOf<Placed>())
+            var y = 0
+            if (across) {
+                items.indices.chunked(columns).forEach { line ->
+                    val height = line.maxOf { heights[it] }
+                    if (y > 0 && y + height > room) {
+                        pages += mutableListOf<Placed>()
+                        y = 0
+                    }
+                    line.forEachIndexed { column, index -> pages.last() += Placed(index, column, y, y == 0) }
+                    y += height
+                }
+            } else {
+                var column = 0
+                items.indices.forEach { index ->
+                    if (y > 0 && y + heights[index] > room) {
+                        y = 0
+                        column++
+                        if (column == columns) {
+                            pages += mutableListOf<Placed>()
+                            column = 0
+                        }
+                    }
+                    pages.last() += Placed(index, column, y, y == 0)
+                    y += heights[index]
+                }
+            }
+            return pages
+        }
+        val height = constraints.maxHeight
+        var pages = pack(height)
+        if (paged && pages.size > 1) pages = pack((height - EinkSizes.PagerRow.roundToPx() - 8.dp.roundToPx()).coerceAtLeast(0))
+        val shown = if (paged) page.coerceIn(0, pages.size - 1) else 0
+        // Unpaged, an item whose bottom would pass the room is left off rather than clipped.
+        val cells = pages[shown].filter { paged || it.y + heights[it.index] <= height }
+        val placed = cells.map { cell -> cell to subcompose("item-${cell.index}-${cell.first}") { item(items[cell.index], cell.first) }.map { it.measure(loose) } }
+        val ruleHeight = cells.maxOfOrNull { it.y + heights[it.index] } ?: 0
+        val ruled = if (rules && ruleHeight > 0) {
+            (1 until columns).map { c ->
+                c to subcompose("rule-$c") { Box(Modifier.background(EinkColours.Tertiary)) }.map { it.measure(Constraints.fixed(EinkSizes.Hairline.roundToPx().coerceAtLeast(1), ruleHeight)) }
+            }
+        } else emptyList()
+        val pager = if (paged && pages.size > 1) {
+            subcompose("pager") { EinkPager(shown, pages.size, onPage) }.map { it.measure(Constraints.fixedWidth(width)) }
+        } else emptyList()
+        layout(width, height) {
+            placed.forEach { (cell, parts) ->
+                var y = cell.y
+                parts.forEach { it.place(cell.column * (columnWidth + gap), y); y += it.height }
+            }
+            ruled.forEach { (c, parts) -> parts.forEach { it.place(c * (columnWidth + gap) - gap / 2, 0) } }
+            pager.forEach { it.place(0, height - it.height) }
         }
     }
 }
@@ -272,14 +672,17 @@ private fun PaperDemoLine() {
     }
 }
 
-/** A heading on paper with an underlined link at its end. */
+/** A heading on paper with an underlined link at its end, its words on the margin when [flush]. */
 @Composable
-private fun PaperHeading(title: String, link: String?, onLink: () -> Unit) {
+private fun PaperHeading(title: String, link: String?, flush: Boolean = false, onLink: () -> Unit) {
     Row(Modifier.fillMaxWidth().padding(top = 10.dp).height(HeadingHeight), verticalAlignment = Alignment.CenterVertically) {
         Text(title, style = EinkType.RowTitle, modifier = Modifier.weight(1f).semantics { heading() })
-        if (link != null) EinkTextButton(link, onLink, Modifier.overhang(), underline = true)
+        if (link != null) EinkTextButton(link, onLink, Modifier.overhang().then(if (flush) FlushEnd else Modifier), underline = true)
     }
 }
+
+/** Moves a text button's words onto the end margin, as the 10 inch board sets them; its touch room runs into the margin. */
+private val FlushEnd = Modifier.offset(x = 12.dp)
 
 /** The heading line's height, as on the board; its link keeps its full touch height above and below. */
 private val HeadingHeight = 32.dp
@@ -349,6 +752,13 @@ private fun cameOut(week: List<ReadWeekDay>): List<CameOut> =
     week.flatMap { day -> day.entries.filter { !it.usually && it.outAt != null }.map { CameOut(day, it) } }
         .sortedByDescending { it.entry.outAt }
 
+/** A new chapter's line: the chapter, then its day, "Chapter 15 · The Far Shore · today". */
+private fun cameWords(context: Context, day: ReadWeekDay, entry: ReadWeekEntry): String {
+    val dayWords = if (day.today) Strings.readingAgoToday(context)
+    else Instant.ofEpochSecond(day.day).atZone(app.kaeri.store.AppClock.zone).dayOfWeek.getDisplayName(TextStyle.FULL, app.kaeri.store.AirTime.locale)
+    return listOfNotNull((entry.chapter ?: entry.tile.next)?.text(context), dayWords).joinToString(" · ") // i18n-skip
+}
+
 /**
  * New chapters on an e-reader, with All opening Updates; This week on a phone, with Updates. Each
  * row: the title, then the dot with the chapter and its day, and a chevron.
@@ -364,9 +774,7 @@ private fun PaperChapters(came: List<CameOut>, reader: Boolean) {
     }
     came.forEachIndexed { index, (day, entry) ->
         val tile = entry.tile
-        val dayWords = if (day.today) Strings.readingAgoToday(context)
-        else Instant.ofEpochSecond(day.day).atZone(app.kaeri.store.AppClock.zone).dayOfWeek.getDisplayName(TextStyle.FULL, app.kaeri.store.AirTime.locale)
-        val line = listOfNotNull((entry.chapter ?: tile.next)?.text(context), dayWords).joinToString(" · ") // i18n-skip
+        val line = cameWords(context, day, entry)
         Row(
             Modifier
                 .then(if (index > 0) Modifier.layoutId(SHEDDABLE) else Modifier)
@@ -504,6 +912,10 @@ internal fun EinkDownloadsPage() {
     val settings by store.settings.view.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { store.reading.loadDownloads() }
     var page by rememberSaveable { mutableIntStateOf(0) }
+    if (largePanel()) {
+        LargeDownloads(view, page) { page = it }
+        return
+    }
     PaperPage(back = null, title = Strings.downloadsTitle(context)) {
         val v = view
         val used = Wording.bytes(context, v?.meter?.used?.toLong() ?: 0L)
@@ -607,6 +1019,193 @@ private fun PaperDownLine(line: DownLine, rows: List<BookDownloadRow>) {
     }
 }
 
+/** A tab's own page on paper with words at the end of its title line, as the 10 inch board puts Downloads' summary. */
+@Composable
+private fun PaperTabPage(title: String, side: String?, content: @Composable () -> Unit) {
+    EinkTheme(LocalEinkLayout.current ?: EinkLook()) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .background(EinkColours.Paper)
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .padding(horizontal = Side),
+        ) {
+            Row(Modifier.fillMaxWidth().padding(top = 22.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(title, style = EinkType.PageTitle, modifier = Modifier.weight(1f).semantics { heading() })
+                if (side != null) Text(side, style = EinkType.Secondary, modifier = Modifier.padding(start = 16.dp))
+            }
+            content()
+        }
+    }
+}
+
+/** How many chapters still to come the 10 inch Downloads lists before saying how many more are queued. */
+private const val QUEUE_SHOWN = 4
+
+/**
+ * Downloads on a 10 inch panel: the summary in the title line, Keep next chapters ready between
+ * two rules, each chapter still to come with its progress in words, then the series on this
+ * device in two columns of rows with their covers, paged.
+ */
+@Composable
+private fun LargeDownloads(view: app.kaeri.engine.model.BookDownloadsView?, page: Int, onPage: (Int) -> Unit) {
+    val store = LocalAppStore.current
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    val used = Wording.bytes(context, view?.meter?.used?.toLong() ?: 0L)
+    val free = view?.meter?.free?.toLong()?.takeIf { it > 0 }
+    val summary = if (free != null) Strings.einkDownloadsSpace(context, used, Wording.bytes(context, free)) else Strings.einkDownloadsSpaceUsed(context, used)
+    PaperTabPage(Strings.downloadsTitle(context), summary) {
+        LargeKeepReady()
+        if (view == null) {
+            PaperWaiting { Text(Strings.stateLoading(context), style = EinkType.Body, modifier = Modifier.padding(top = 16.dp)) }
+            return@PaperTabPage
+        }
+        // Downloading first, then failures, then what waits, so what needs a look stays in view.
+        val queue = view.rows.filter { it.state !is ChapterDownloadState.Done }.sortedBy {
+            when (it.state) {
+                is ChapterDownloadState.Downloading -> 0
+                is ChapterDownloadState.Failed -> 1
+                else -> 2
+            }
+        }
+        val here = view.series.filter { it.chapters > 0u }
+        if (queue.isNotEmpty()) {
+            val going = queue.filter { it.state !is ChapterDownloadState.Failed }
+            LargeHeading(Strings.einkDownloadsDownloadingCount(context, queue.size), if (going.isNotEmpty()) Strings.einkDownloadsStopAll(context) else null) {
+                going.groupBy { it.work }.forEach { (work, rows) -> store.reading.cancelDownloads(work, rows.map { it.chapter.id }) }
+            }
+            queue.take(QUEUE_SHOWN).forEachIndexed { index, row -> QueueRow(row, first = index == 0) }
+            val more = queue.size - QUEUE_SHOWN
+            if (more > 0) {
+                Text(
+                    Msg.Reading(ReadingMsg.ReadingDlMoreQueued(more.toLong())).text(context),
+                    style = EinkType.Secondary,
+                    modifier = Modifier.fillMaxWidth().topHairline().padding(vertical = 12.dp),
+                )
+            }
+        }
+        if (here.isNotEmpty()) {
+            LargeHeading(Strings.einkDownloadsHereCount(context, here.size), null) {}
+            PagedColumns(here, page, onPage, Modifier.padding(top = 4.dp, bottom = 12.dp), rules = true) { series, first -> HereRow(series, first) }
+        } else if (queue.isEmpty()) {
+            Column(Modifier.padding(vertical = 16.dp)) {
+                Text(Strings.downloadsEmptyTitle(context), style = EinkType.Body)
+                Text(Strings.readDownloadsEmptyDetail(context), style = EinkType.Secondary)
+            }
+        }
+    }
+}
+
+/** A chapter by its label: a bare number reads as Chapter 15, a label with words of its own stays as it is. */
+private fun chapterWords(context: android.content.Context, label: String): String =
+    if (label.firstOrNull()?.isDigit() == true) Strings.einkChapter(context, label) else label
+
+/** A heading in the 10 inch lists, 22 dp under what is above, with an underlined link at its end. */
+@Composable
+private fun LargeHeading(title: String, link: String?, onLink: () -> Unit) {
+    Spacer(Modifier.height(12.dp))
+    PaperHeading(title, link, flush = true, onLink = onLink)
+}
+
+/** Keep next chapters ready between two 2 dp rules, saying how it is set, with Change opening the downloads settings. */
+@Composable
+private fun LargeKeepReady() {
+    val store = LocalAppStore.current
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    val settings by store.settings.view.collectAsStateWithLifecycle()
+    val on = store.settings.isOn(SettingKey.KEEP_CHAPTERS_READY, settings)
+    val change = { navigator.openSettings(SettingsPane.Downloads) }
+    Row(
+        Modifier
+            .padding(top = 12.dp)
+            .fillMaxWidth()
+            .heightIn(min = 76.dp)
+            .topRule()
+            .bottomRule()
+            .einkClick(onClick = change)
+            .padding(vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f).semantics(mergeDescendants = true) {}) {
+            Text(Strings.settingsKeepChaptersReady(context), style = LargeRowLabel)
+            Text(if (on) Strings.einkKeepReadyOn(context) else Strings.einkKeepReadyOff(context), style = EinkType.Secondary, modifier = Modifier.padding(top = 2.dp))
+        }
+        EinkTextButton(Strings.einkKeepReadyChange(context), change, FlushEnd, underline = true)
+    }
+}
+
+/** A chapter still to come: the series and chapter, and at the end where it stands in words; Retry on a failure. */
+@Composable
+private fun QueueRow(row: BookDownloadRow, first: Boolean) {
+    val store = LocalAppStore.current
+    val context = LocalContext.current
+    val state = row.state
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 56.dp)
+            .then(if (first) Modifier else Modifier.topHairline())
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        val words = when (state) {
+            is ChapterDownloadState.Downloading -> Msg.Reading(ReadingMsg.ReadingDlPages(state.done.toLong(), state.total.toLong())).text(context)
+            is ChapterDownloadState.Failed -> Strings.chapterStateFailed(context, failureWords(context, state.failure))
+            ChapterDownloadState.WaitsForWifi -> stringResource(R.string.chapter_state_wifi)
+            else -> stringResource(R.string.chapter_state_queued)
+        }
+        Text(
+            listOf(row.title, chapterWords(context, row.chapter.label)).joinToString(" · "), // i18n-skip
+            style = LargeRowTitle,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            words,
+            style = EinkType.Secondary.copy(
+                color = EinkColours.Ink,
+                fontWeight = if (state is ChapterDownloadState.Downloading) androidx.compose.ui.text.font.FontWeight.Bold else EinkType.Secondary.fontWeight,
+                fontFeatureSettings = "tnum", // i18n-skip
+            ),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(start = 16.dp),
+        )
+        if (state is ChapterDownloadState.Failed) {
+            EinkTextButton(stringResource(R.string.chapter_retry), { store.reading.download(row.work, DownloadPick.Chapters(listOf(row.chapter.id))) }, FlushEnd)
+        }
+    }
+}
+
+/** A series on this device: its 60 dp cover, the title, what is here and its size, and a chevron. */
+@Composable
+private fun HereRow(series: BookDownloadSeries, first: Boolean) {
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    val words = if (series.queued > 0u || series.failed.isNotEmpty()) Strings.readDownloadsTotal(context, series.chapters.toInt(), Wording.bytes(context, series.bytes.toLong()))
+    else series.line.joinToString(" · ") { it.text(context) } // i18n-skip
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 110.dp)
+            .einkClick { navigator.openSeries(series.work, "eink-downloads") }
+            .then(if (first) Modifier else Modifier.topHairline())
+            .padding(vertical = 10.dp)
+            .semantics(mergeDescendants = true) { contentDescription = "${series.title}. $words" }, // i18n-skip
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        PaperCover(series.cover, series.title, 60.dp, Modifier)
+        Column(Modifier.weight(1f).padding(start = 16.dp)) {
+            Text(series.title, style = LargeRowTitle, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (words.isNotEmpty()) Text(words, style = EinkType.Secondary, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp))
+        }
+        Icon(Icons.Chevron, contentDescription = null, tint = EinkColours.Ink, modifier = Modifier.padding(start = 12.dp).size(22.dp))
+    }
+}
+
 /**
  * A series' Downloading line without the totals On this device already says: the engine's line
  * begins with the chapters here, their size and how many are read.
@@ -652,9 +1251,94 @@ internal fun EinkMorePage() {
         Triple(Strings.settingsTitle(context), Strings.einkMoreSettingsLine(context), null),
         Triple(Strings.aboutTitle(context), Strings.aboutVersion(context, version), SettingsPane.About),
     )
+    if (largePanel()) {
+        LargeMore(rows.take(4), rows.drop(4))
+        return
+    }
     PaperPage(back = null, title = Strings.einkTabMore(context)) {
         Column(Modifier.padding(top = 8.dp)) {
             for ((title, line, pane) in rows) BrowseLink(title, line, colourHome = false) { navigator.openSettings(pane) }
         }
+    }
+}
+
+/**
+ * More on a 10 inch panel: the rows in two columns, Your reading and This device, then under a
+ * 2 dp rule the newest messages since the app started with their times, as many as fit.
+ */
+@Composable
+private fun LargeMore(reading: List<Triple<String, String, SettingsPane?>>, device: List<Triple<String, String, SettingsPane?>>) {
+    val store = LocalAppStore.current
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    val log by store.notices.log.collectAsStateWithLifecycle()
+    PaperPage(back = null, title = Strings.einkTabMore(context)) {
+        Row(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(ListGap)) {
+            for ((name, rows) in listOf(Strings.einkMoreYourReading(context) to reading, Strings.einkMoreThisDevice(context) to device)) {
+                Column(Modifier.weight(1f)) {
+                    Text(name, style = EinkType.Secondary.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold), modifier = Modifier.padding(bottom = 6.dp).semantics { heading() })
+                    rows.forEachIndexed { index, (title, line, pane) -> MoreRow(title, line, first = index == 0) { navigator.openSettings(pane) } }
+                }
+            }
+        }
+        Box(Modifier.padding(top = 26.dp).fillMaxWidth().height(EinkSizes.Rule).background(EinkColours.Ink))
+        Spacer(Modifier.height(6.dp))
+        PaperHeading(Strings.einkMoreMessages(context), null) {}
+        if (log.isEmpty()) {
+            Text(Strings.einkMoreMessagesNone(context), style = EinkType.Secondary, modifier = Modifier.padding(top = 12.dp))
+        } else {
+            FitLines(Modifier.padding(top = 4.dp)) {
+                log.forEachIndexed { index, item ->
+                    val words = item.text(context)
+                    val time = messageTime(context, item.at)
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 56.dp)
+                            .then(if (index == 0) Modifier else Modifier.topHairline())
+                            .padding(vertical = 8.dp)
+                            .semantics(mergeDescendants = true) { contentDescription = "$time. $words" }, // i18n-skip
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(time, style = EinkType.Folio, maxLines = 1, modifier = Modifier.width(130.dp).padding(end = 12.dp))
+                        Text(words, style = EinkType.Body, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** A row of the 10 inch More: what it opens, its line, and a chevron, 80 dp at the least. */
+@Composable
+private fun MoreRow(title: String, line: String, first: Boolean, onClick: () -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 80.dp)
+            .einkClick(onClick = onClick)
+            .then(if (first) Modifier else Modifier.topHairline())
+            .padding(vertical = 10.dp)
+            .semantics(mergeDescendants = true) { contentDescription = "$title. $line" }, // i18n-skip
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(title, style = LargeRowLabel, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (line.isNotEmpty()) Text(line, style = EinkType.Secondary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp))
+        }
+        Icon(Icons.Chevron, contentDescription = null, tint = EinkColours.Ink, modifier = Modifier.padding(start = 12.dp).size(22.dp))
+    }
+}
+
+/** When a message came, as the board writes it: the time today, Yesterday, else the day and month. */
+private fun messageTime(context: Context, millis: Long): String {
+    val zone = app.kaeri.store.AppClock.zone
+    val at = Instant.ofEpochMilli(millis)
+    val day = at.atZone(zone).toLocalDate()
+    val today = app.kaeri.store.AppClock.now().atZone(zone).toLocalDate()
+    return when (day) {
+        today -> clockWords(at.epochSecond)
+        today.minusDays(1) -> Strings.chapterUpdatesYesterday(context)
+        else -> java.time.format.DateTimeFormatter.ofPattern(app.kaeri.store.AirTime.bestPattern("dMMMM", "d MMMM"), app.kaeri.store.AirTime.locale).format(day) // i18n-skip
     }
 }

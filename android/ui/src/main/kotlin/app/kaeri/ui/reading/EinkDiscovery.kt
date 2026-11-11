@@ -207,7 +207,7 @@ internal fun BrowseLine(row: ReadHomeRow, colourHome: Boolean = false, onClick: 
 }
 
 /** "Iron Kite Brigade, Saltwind Diary and 18 more", or the one or two there are. */
-private fun browseRowLine(context: android.content.Context, row: ReadHomeRow): String {
+internal fun browseRowLine(context: android.content.Context, row: ReadHomeRow): String {
     val tiles = row.tiles
     return when (tiles.size) {
         0 -> ""
@@ -361,6 +361,9 @@ internal fun EinkBrowsePage() {
             if (view == null || view.rows.any { it.pending }) {
                 PaperWaiting { Text(Strings.stateLoading(context), style = EinkType.Body, modifier = Modifier.padding(top = 16.dp)) }
             }
+        } else if (largePanel()) {
+            // A 10 inch panel: each row as a tile with its first covers, AniList's genres at the foot.
+            LargeBrowse(rows, page) { page = it }
         } else {
             PagedItems(rows, page, { page = it }) { row ->
                 BrowseLine(row) { navigator.openReadPage(READ_PAGE_ROW + row.id) }
