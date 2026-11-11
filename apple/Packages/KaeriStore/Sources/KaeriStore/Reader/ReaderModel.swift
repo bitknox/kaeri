@@ -25,6 +25,8 @@ public struct ReaderEnd: Equatable, Sendable {
     /// The source the next chapter comes from, by name: "from books.home.example". None for a
     /// file in a folder.
     public var nextSource: String?
+    /// When `next` is an extra: the first whole chapter after it, for "Skip to chapter 17".
+    public var skipTo: ChapterRow? = nil
 }
 
 /// The notice over the page, with the action it offers: the engine's, or one of the app's own.
@@ -394,7 +396,17 @@ public final class ReaderModel {
 
     /// For shots: the next chapter comes from `source`, as a server's chapter does.
     public func stageNextSource(_ source: String) {
-        end = ReaderEnd(next: end?.next ?? view?.next, why: end?.why, nextSource: source)
+        end = ReaderEnd(next: end?.next ?? view?.next, why: end?.why, nextSource: source, skipTo: end?.skipTo)
+    }
+
+    /// For shots: the next chapter is an extra, 16.5, with chapter 17 after it to skip to.
+    public func stageSkipExtra() {
+        guard var next = end?.next ?? view?.next else { return }
+        next.number = "16.5"
+        next.label = "Chapter 16.5"
+        next.title = "Volume 1 extras"
+        let skip = ChapterRow(id: ChapterId("shot-skip-17"), label: "Chapter 17", state: .unread, number: "17")
+        end = ReaderEnd(next: next, why: end?.why, nextSource: end?.nextSource, skipTo: skip)
     }
     #endif
 
@@ -791,9 +803,9 @@ public final class ReaderModel {
                 read = true
                 readTrackers = trackers
             }
-        case .endPage(let session, let next, let why, let source, _):
+        case .endPage(let session, let next, let why, let source, let skipTo):
             guard session == self.session else { return }
-            end = ReaderEnd(next: next, why: why, nextSource: source ?? end?.nextSource)
+            end = ReaderEnd(next: next, why: why, nextSource: source ?? end?.nextSource, skipTo: skipTo)
         case .progressSent:
             // The page between chapters' server line: AppStore hands it to ServerProgressModel.
             break

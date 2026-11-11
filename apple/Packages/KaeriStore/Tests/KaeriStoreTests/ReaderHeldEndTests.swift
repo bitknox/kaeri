@@ -193,6 +193,21 @@ struct ReaderHeldEndTests {
         model.close()
         #expect(model.held == nil)
     }
+
+    /// The end page names the chapter past the extras, and the skip holds the end page while
+    /// that chapter opens, as Continue does.
+    @Test func theSkipPastExtrasOpensTheWholeChapterAfterThem() {
+        let model = onEndPage()
+        var sent: [Command] = []
+        model.send = { sent.append($0) }
+        model.apply(.endPage(session: session, next: row("13.5"), whyNone: nil, nextSource: nil, skipTo: row("14")))
+        #expect(model.end?.next?.id == ChapterId("13.5"))
+        #expect(model.end?.skipTo?.id == ChapterId("14"))
+        model.openChapter(ChapterId("14"))
+        #expect(sent.contains { if case .reader(.openChapter(_, ChapterId("14"))) = $0 { true } else { false } })
+        #expect(model.held?.end?.skipTo?.id == ChapterId("14"))
+        #expect(model.held?.to == ChapterId("14"))
+    }
 }
 
 /// The bottom bar on the end page: the slider's numbers and the line never count past the
@@ -242,4 +257,5 @@ struct ReaderEndPageNumberTests {
         }
         #expect(model.pageNumber(of: 80) == 51, "a leaf past the end is still the last page")
     }
+
 }

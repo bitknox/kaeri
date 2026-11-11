@@ -333,15 +333,33 @@ struct ReaderEndPage: View {
 
     /// Continue, or while the held page waits on a slow first page, a small spinner in its place.
     private func continueLabel(_ id: ChapterId) -> some View {
+        pressLabel(L.readerContinue, to: id, tint: theme.onAmber)
+    }
+
+    /// A button's words, or the spinner while the chapter it opens is slow to show.
+    private func pressLabel(_ text: String, to id: ChapterId, tint: Color) -> some View {
         let waiting = held?.slow == true && held?.to == id
-        return Text(L.readerContinue)
+        return Text(text)
+            .multilineTextAlignment(.center)
             .opacity(waiting ? 0 : 1)
             .overlay {
                 if waiting {
-                    ProgressView().controlSize(.small).tint(theme.onAmber).transition(.opacity)
+                    ProgressView().controlSize(.small).tint(tint).transition(.opacity)
                 }
             }
             .animation(.fadeIn, value: waiting)
+    }
+
+    /// Past the extras: "Skip to chapter 17" when the next chapter is one. The extras stay unread.
+    @ViewBuilder
+    private func skipButton(_ next: ChapterRow, height: CGFloat, wide: Bool) -> some View {
+        if let skip = end?.skipTo {
+            Button { model.openChapter(skip.id) } label: {
+                pressLabel(L.readerEndSkipTo(chapter: skip.number ?? skip.label), to: skip.id, tint: theme.silk)
+            }
+            .buttonStyle(ReaderPillStyle(theme: theme, height: height, wide: wide))
+            .accessibilityHint(L.readerEndSkipHint(chapter: next.number ?? next.label))
+        }
     }
 
     var body: some View {
@@ -413,7 +431,8 @@ struct ReaderEndPage: View {
                             .padding(.top, 28)
                     }
                 }
-                .frame(width: phone ? size.width - 56 : 440, alignment: .leading)
+                // The iPad's column is wider, so Continue, the skip and Back fit one 44 pt row.
+                .frame(width: phone ? size.width - 56 : (Device.isMac ? 440 : 500), alignment: .leading)
                 .padding(.top, phone ? 100 : (Device.isMac ? 120 : 150))
                 .padding(.bottom, pinned ? 230 : 40)
                 .frame(maxWidth: .infinity, alignment: phone ? .leading : .center)
@@ -434,7 +453,8 @@ struct ReaderEndPage: View {
         .background(theme.page)
     }
 
-    /// The phone's buttons: the swipe line, Continue in amber and Back to the series under it.
+    /// The phone's buttons: the swipe line, Continue in amber, the skip past extras under it in
+    /// the quiet fill when there is one, and Back to the series.
     @ViewBuilder
     private func buttons(_ next: ChapterRow?) -> some View {
         VStack(spacing: 0) {
@@ -447,6 +467,10 @@ struct ReaderEndPage: View {
                 }
                 Button { model.openChapter(next.id) } label: { continueLabel(next.id) }
                     .buttonStyle(ReaderAmberStyle(theme: theme))
+                if end?.skipTo != nil {
+                    skipButton(next, height: 50, wide: true)
+                        .padding(.top, 10)
+                }
                 Button(L.readerBackToSeries) { closeReader() }
                     .font(.ui(15, weight: .semibold))
                     .foregroundStyle(theme.silk)
@@ -531,14 +555,20 @@ struct ReaderEndPage: View {
                             continueLabel(next.id).padding(.horizontal, 18)
                         }
                         .buttonStyle(ReaderAmberStyle(theme: theme, height: Device.isMac ? 28 : 44))
+                        skipButton(next, height: Device.isMac ? 28 : 44, wide: false)
                     }
                     Button(L.readerBackToSeries) { closeReader() }
                         .buttonStyle(ReaderPillStyle(theme: theme, height: Device.isMac ? 28 : 44))
                 }
+                let stack = VStack(alignment: .leading, spacing: 10) { row }.padding(.top, 22)
                 if type.isAccessibilitySize {
-                    VStack(alignment: .leading, spacing: 10) { row }.padding(.top, 22)
+                    stack
                 } else {
-                    HStack(spacing: 10) { row }.fixedSize().padding(.top, 22)
+                    // One row, Continue first; a row too wide for the column stacks instead.
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: 10) { row }.fixedSize().padding(.top, 22)
+                        stack
+                    }
                 }
                 if next != nil, swipes, !Device.isMac {
                     Text(L.readerEndSwipe).font(.ui(13)).foregroundStyle(theme.haze)
