@@ -192,7 +192,7 @@ fun PhoneEndPage(
             }
             Spacer(Modifier.height(10.dp))
             if (skip != null && next != null) {
-                val hint = Strings.readerEndSkipHint(context, chapterNumber(next))
+                val hint = end?.skipHint(context).orEmpty()
                 Button(
                     onClick = { session.openChapter(skip.id) },
                     shape = RoundedCornerShape(25.dp),

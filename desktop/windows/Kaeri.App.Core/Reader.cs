@@ -11,9 +11,19 @@ public readonly record struct ReaderPageKey(string Chapter, uint Page, PageHalf?
 
 /// <summary>
 /// What the end page says when there is nothing to continue to. <c>SkipTo</c>: when the next
-/// chapter is an extra, the first whole chapter after it, for "Skip to chapter 17".
+/// chapter is an extra, the first whole chapter after it, for "Skip to chapter 17";
+/// <c>Extras</c>: how many extras the skip passes over.
 /// </summary>
-public sealed record ReaderEnd(ChapterRow? Next, NoNext? Why, string? NextSource, ChapterRow? SkipTo = null);
+public sealed record ReaderEnd(ChapterRow? Next, NoNext? Why, string? NextSource, ChapterRow? SkipTo = null, uint Extras = 0)
+{
+    /// <summary>
+    /// What a screen reader adds after the skip: the extra's number, or with a run of extras or
+    /// one with no number, that the extras stay unread.
+    /// </summary>
+    public string? SkipHint => SkipTo is null || Next is null ? null
+        : Extras > 1 || Next.Number is null ? T.ReaderEndSkipHintExtras
+        : T.ReaderEndSkipHint(Next.Number);
+}
 
 /// <summary>The notice over the page, with the action it offers.</summary>
 public sealed record ReaderNoticeLine(int Id, string Text, ReaderAction? Action);
@@ -562,7 +572,7 @@ public sealed class ReaderSession
             case ReaderEvent.EndPage end:
                 if (end.Session != session)
                     return;
-                End = new ReaderEnd(end.Next, end.WhyNone, end.NextSource, end.SkipTo);
+                End = new ReaderEnd(end.Next, end.WhyNone, end.NextSource, end.SkipTo, end.Extras);
                 Changed?.Invoke(ReaderChange.End);
                 break;
             case ReaderEvent.NextPreview preview:

@@ -14427,6 +14427,11 @@ pub fn reader_end_skip_hint(chapter: &str) -> String {
     text("reader-end-skip-hint", &[("chapter", Arg::Text(chapter))])
 }
 
+/// What a screen reader adds after "Skip to chapter 17" when it passes over more than one extra, or an extra with no number (such as an omake): those chapters stay unread in the chapter list.
+pub fn reader_end_skip_hint_extras() -> String {
+    text("reader-end-skip-hint-extras", &[])
+}
+
 /// The next episode's length on the divider inside a strip.
 pub fn reader_divider_images(count: i64) -> String {
     text("reader-divider-images", &[("count", Arg::Int(count))])

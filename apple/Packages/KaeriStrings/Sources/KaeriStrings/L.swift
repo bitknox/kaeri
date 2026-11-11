@@ -8468,6 +8468,9 @@ public enum L {
         Self.format("reader-end-skip-hint", fallback: "Chapter %1$@ stays unread.", chapter)
     }
 
+    /// What a screen reader adds after "Skip to chapter 17" when it passes over more than one extra, or an extra with no number (such as an omake): those chapters stay unread in the chapter list.
+    public static var readerEndSkipHintExtras: String { string("reader-end-skip-hint-extras", fallback: "The extras before it stay unread.") }
+
     /// The next episode's length on the divider inside a strip.
     public static func readerDividerImages(count: Int) -> String {
         Self.format("reader-divider-images", fallback: "%1$lld images", count)

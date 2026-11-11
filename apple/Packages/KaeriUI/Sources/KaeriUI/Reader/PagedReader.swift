@@ -358,7 +358,7 @@ struct ReaderEndPage: View {
                 pressLabel(L.readerEndSkipTo(chapter: skip.number ?? skip.label), to: skip.id, tint: theme.silk)
             }
             .buttonStyle(ReaderPillStyle(theme: theme, height: height, wide: wide))
-            .accessibilityHint(L.readerEndSkipHint(chapter: next.number ?? next.label))
+            .accessibilityHint(end?.skipHint ?? "")
         }
     }
 

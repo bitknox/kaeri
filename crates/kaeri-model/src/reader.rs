@@ -1032,6 +1032,11 @@ pub enum ReaderEvent {
         /// for a next chapter that is not an extra. Skipped extras stay unread.
         #[cfg_attr(feature = "ffi", uniffi(default))]
         skip_to: Option<ChapterRow>,
+        /// How many extras the skip passes over, from `next` on: 0 with no skip. With more than
+        /// one, or an extra with no number, the hint says the extras stay unread rather than
+        /// naming the chapter.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        extras: u32,
     },
     /// The next chapter's first page, made while this chapter is read, for the end page and a
     /// strip's divider.

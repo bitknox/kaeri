@@ -33,6 +33,8 @@ pub struct EndFacts {
     pub credits: Option<String>,
     /// When `next` is an extra: the first whole chapter after it, for "Skip to chapter 17".
     pub skip_to: Option<ChapterRow>,
+    /// How many extras the skip passes over.
+    pub extras: u32,
 }
 
 pub struct EndPage {
@@ -263,11 +265,13 @@ impl EndPage {
                     self.skip.set_label(&t::reader_end_skip_to(
                         skip.number.as_deref().unwrap_or(&skip.label),
                     ));
-                    // What stays behind: "Chapter 16.5 stays unread."
-                    let extra = next.number.as_deref().unwrap_or(&next.label);
-                    self.skip.update_property(&[gtk::accessible::Property::Description(
-                        &t::reader_end_skip_hint(extra),
-                    )]);
+                    // What stays behind: "Chapter 16.5 stays unread.", or for a run of extras or
+                    // one with no number, "The extras before it stay unread."
+                    let hint = match next.number.as_deref() {
+                        Some(extra) if facts.extras <= 1 => t::reader_end_skip_hint(extra),
+                        _ => t::reader_end_skip_hint_extras(),
+                    };
+                    self.skip.update_property(&[gtk::accessible::Property::Description(&hint)]);
                 }
                 self.back.remove_css_class("suggested-action");
             }

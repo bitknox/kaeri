@@ -6,8 +6,14 @@ use kaeri_model::reading::ChapterRow;
 
 /// Chapters 16, 16.5, 17 and 18 of three pages in a folder.
 fn with_an_extra(books: &Path) -> Vec<ShelfFile> {
-    [16_000, 16_500, 17_000, 18_000]
-        .into_iter()
+    numbered(books, &[16_000, 16_500, 17_000, 18_000])
+}
+
+/// Chapters of three pages in a folder, numbered in thousandths.
+fn numbered(books: &Path, millis: &[i64]) -> Vec<ShelfFile> {
+    millis
+        .iter()
+        .copied()
         .map(|milli| {
             let number = if milli % 1000 == 0 {
                 (milli / 1000).to_string()
@@ -33,9 +39,17 @@ fn with_an_extra(books: &Path) -> Vec<ShelfFile> {
 
 /// The end page as it is said, once the last page shows.
 async fn end_page(h: &mut Harness) -> (Option<ChapterRow>, Option<ChapterRow>) {
+    let (next, skip_to, _) = end_page_extras(h).await;
+    (next, skip_to)
+}
+
+/// As [`end_page`], with how many extras the skip passes over.
+async fn end_page_extras(h: &mut Harness) -> (Option<ChapterRow>, Option<ChapterRow>, u32) {
     h.shown(2, TurnHow::Turn).await;
     h.until(|e| match e {
-        ReaderEvent::EndPage { next, skip_to, .. } => Some((next.clone(), skip_to.clone())),
+        ReaderEvent::EndPage { next, skip_to, extras, .. } => {
+            Some((next.clone(), skip_to.clone(), *extras))
+        }
         _ => None,
     })
     .await
@@ -89,4 +103,20 @@ async fn an_extra_followed_only_by_extras_offers_no_skip() {
     h.open(OpenAt::Start).await;
     let (next, skip_to) = end_page(&mut h).await;
     assert_eq!((id(next), id(skip_to)), (Some("16.5".into()), None));
+}
+
+/// The end page says how many extras the skip passes over, so the hint can speak of a run.
+#[tokio::test(start_paused = true)]
+async fn the_end_page_counts_the_extras_the_skip_passes() {
+    let mut h = harness_of(Store::open_in_memory().unwrap(), "manga", |books| {
+        numbered(books, &[16_000, 16_500, 16_600, 17_000])
+    });
+    h.open(OpenAt::Start).await;
+    let (next, skip_to, extras) = end_page_extras(&mut h).await;
+    assert_eq!((id(next), id(skip_to), extras), (Some("16.5".into()), Some("17".into()), 2));
+
+    let mut h = harness_of(Store::open_in_memory().unwrap(), "manga", with_an_extra);
+    h.open(OpenAt::Start).await;
+    let (_, _, extras) = end_page_extras(&mut h).await;
+    assert_eq!(extras, 1);
 }

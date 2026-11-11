@@ -1482,13 +1482,16 @@ impl Session {
             .and_then(|c| c.source.as_deref())
             .map(|id| cx.services.book_sources.source_name(id));
         let why_none = next.is_none().then(|| self.why_no_next(cx));
-        let skip_to = self.skip_index().map(|i| self.chapters[i].row(&marks));
+        let skip = self.skip_index();
+        let skip_to = skip.map(|i| self.chapters[i].row(&marks));
+        let extras = skip.map_or(0, |i| i - (self.at + 1)) as u32;
         cx.send(ReaderEvent::EndPage {
             session: self.id,
             next,
             why_none,
             next_source,
             skip_to,
+            extras,
         });
     }
 

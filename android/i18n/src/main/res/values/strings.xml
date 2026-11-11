@@ -4817,6 +4817,8 @@
     <string name="reader_end_skip_to">Skip to chapter %1$s</string>
     <!-- What a screen reader adds after "Skip to chapter 17": the extra it passes over stays unread in the chapter list. The chapter is the extra's number, such as 16.5. -->
     <string name="reader_end_skip_hint">Chapter %1$s stays unread.</string>
+    <!-- What a screen reader adds after "Skip to chapter 17" when it passes over more than one extra, or an extra with no number (such as an omake): those chapters stay unread in the chapter list. -->
+    <string name="reader_end_skip_hint_extras">The extras before it stay unread.</string>
     <!-- The next episode's length on the divider inside a strip. -->
     <plurals name="reader_divider_images">
         <item quantity="one">One image</item>

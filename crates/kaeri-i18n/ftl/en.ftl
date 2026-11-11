@@ -9028,6 +9028,9 @@ reader-end-skip-to = Skip to chapter { $chapter }
 # What a screen reader adds after "Skip to chapter 17": the extra it passes over stays unread in the chapter list. The chapter is the extra's number, such as 16.5.
 reader-end-skip-hint = Chapter { $chapter } stays unread.
 
+# What a screen reader adds after "Skip to chapter 17" when it passes over more than one extra, or an extra with no number (such as an omake): those chapters stay unread in the chapter list.
+reader-end-skip-hint-extras = The extras before it stay unread.
+
 # The next episode's length on the divider inside a strip.
 reader-divider-images =
     { $count ->

@@ -9110,6 +9110,10 @@ object Strings {
     fun readerEndSkipHint(context: Context, chapter: String): String =
         context.getString(R.string.reader_end_skip_hint, chapter)
 
+    /** What a screen reader adds after "Skip to chapter 17" when it passes over more than one extra, or an extra with no number (such as an omake): those chapters stay unread in the chapter list. */
+    fun readerEndSkipHintExtras(context: Context): String =
+        context.getString(R.string.reader_end_skip_hint_extras)
+
     /** The next episode's length on the divider inside a strip. */
     fun readerDividerImages(context: Context, count: Int): String =
         context.resources.getQuantityString(R.plurals.reader_divider_images, count, count)

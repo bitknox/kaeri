@@ -27,6 +27,16 @@ public struct ReaderEnd: Equatable, Sendable {
     public var nextSource: String?
     /// When `next` is an extra: the first whole chapter after it, for "Skip to chapter 17".
     public var skipTo: ChapterRow? = nil
+    /// How many extras the skip passes over.
+    public var extras: UInt32 = 0
+
+    /// What a screen reader adds after the skip: the extra's number, or with a run of extras or
+    /// one with no number, that the extras stay unread.
+    public var skipHint: String? {
+        guard skipTo != nil, let next else { return nil }
+        if extras > 1 || next.number == nil { return L.readerEndSkipHintExtras }
+        return L.readerEndSkipHint(chapter: next.number ?? next.label)
+    }
 }
 
 /// The notice over the page, with the action it offers: the engine's, or one of the app's own.
@@ -803,9 +813,12 @@ public final class ReaderModel {
                 read = true
                 readTrackers = trackers
             }
-        case .endPage(let session, let next, let why, let source, let skipTo):
+        case .endPage(let session, let next, let why, let source, let skipTo, let extras):
             guard session == self.session else { return }
-            end = ReaderEnd(next: next, why: why, nextSource: source ?? end?.nextSource, skipTo: skipTo)
+            end = ReaderEnd(
+                next: next, why: why, nextSource: source ?? end?.nextSource, skipTo: skipTo,
+                extras: extras
+            )
         case .progressSent:
             // The page between chapters' server line: AppStore hands it to ServerProgressModel.
             break

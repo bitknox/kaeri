@@ -215,7 +215,7 @@ sealed class EndPageView : Grid
             if (reader.End?.SkipTo is { } skip)
             {
                 var past = ReaderButtons.Pill(T.ReaderEndSkipTo(skip.Number ?? skip.Label), palette, (_, _) => reader.OpenChapter(skip.Id));
-                AutomationProperties.SetHelpText(past, T.ReaderEndSkipHint(next.Number ?? next.Label));
+                AutomationProperties.SetHelpText(past, reader.End?.SkipHint ?? "");
                 past.Margin = new Thickness(0, 12, 0, 0);
                 past.HorizontalAlignment = HorizontalAlignment.Stretch;
                 words.Children.Add(past);

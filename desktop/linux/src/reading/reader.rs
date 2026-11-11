@@ -113,6 +113,8 @@ struct State {
     next_source: Option<String>,
     /// When the next chapter is an extra: the first whole chapter after it.
     skip_to: Option<ChapterRow>,
+    /// How many extras the skip passes over.
+    extras: u32,
     /// The next chapter's first page, for the end page.
     preview: Option<(ChapterId, gdk::Texture)>,
     /// The end page is up over a novel.
@@ -1333,7 +1335,7 @@ impl Reader {
                     self.failed_page(*page, true);
                 }
             }
-            ReaderEvent::EndPage { session, next, why_none, next_source, skip_to }
+            ReaderEvent::EndPage { session, next, why_none, next_source, skip_to, extras }
                 if self.mine(*session) =>
             {
                 {
@@ -1342,6 +1344,7 @@ impl Reader {
                     state.why_none = *why_none;
                     state.next_source = next_source.clone();
                     state.skip_to = skip_to.clone();
+                    state.extras = *extras;
                 }
                 self.fill_end();
             }
@@ -1477,6 +1480,7 @@ impl Reader {
             state.why_none = None;
             state.next_source = None;
             state.skip_to = None;
+            state.extras = 0;
             state.read = None;
             state.preview = None;
             state.novel_end = false;
@@ -2014,6 +2018,7 @@ impl Reader {
                 novel: state.medium == Some(Medium::Novel),
                 credits: credits::end_line(&state),
                 skip_to: state.skip_to.clone(),
+                extras: state.extras,
             }
         };
         self.end.fill(&facts);

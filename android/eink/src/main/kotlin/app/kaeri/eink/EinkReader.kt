@@ -765,7 +765,7 @@ fun EinkEndPage(
             )
             Spacer(Modifier.height(14.dp))
             if (skip != null) {
-                val hint = Strings.readerEndSkipHint(context, nextNumber)
+                val hint = end?.skipHint(context).orEmpty()
                 EinkOutlinedButton(
                     Strings.readerEndSkipTo(context, chapterNumber(skip)),
                     { onContinue(skip) },
