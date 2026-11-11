@@ -148,9 +148,9 @@ crates/kaeri-store-core/src/inspect.rs fe24ced6a108517a22e02bca5f965d802472311c
 crates/kaeri-store-core/src/invite.rs 791a507c559a2516b223369e5dc1719024fa5e3f
 crates/kaeri-store-core/src/lib.rs abf2d19a8b0e521ca6a038f557fea522ce5c2cc4
 crates/kaeri-store-core/src/manifest.rs 81591f25f5ddfd0a5bfc859c3b48e11dee5f6290
-crates/kaeri-store-core/src/protocol.rs afd72ad9ca2ab58485bd55b31ef3e53d8b75c187
+crates/kaeri-store-core/src/protocol.rs 9e39c16c7570875153e824abd1081182de7ad72a
 crates/kaeri-store-core/src/schema.rs 31ac48bc9ccb700918eddb45972c46a38c6dc7f4
-crates/kaeri-store-core/src/store.rs 95c8d82753fe2fcbccac3054da861c2356bce98d
+crates/kaeri-store-core/src/store.rs d1ade3d1c9fa194004882fc5bc2f9e25d4d7daed
 crates/kaeri-store-wasm/Cargo.toml fba16e8bf467281a3bd4ca6d4d19fce8368061bd
 crates/kaeri-store-wasm/src/lib.rs 7439e20b81db766a229596bb3f113bac0ff62174
 rust-toolchain.toml 0f5d6beb3142ba7446dd56cca07b4184055a51f2
