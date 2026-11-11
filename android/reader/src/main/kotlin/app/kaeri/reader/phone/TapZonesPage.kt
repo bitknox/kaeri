@@ -36,9 +36,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -141,7 +140,7 @@ internal fun TapZonesPage(
 
 /**
  * One layout as a tile: its diagram 64 by 100 dp for the open book, the chosen one ringed in silk
- * with a check, and its name under it. A radio button whose state says the layout in words.
+ * with a check, and its name under it. A radio button that says the layout in words.
  */
 @Composable
 private fun ZoneTile(context: Context, layout: ZoneLayout, selected: Boolean, map: app.kaeri.engine.model.TapMap, modifier: Modifier, onClick: () -> Unit) {
@@ -152,10 +151,10 @@ private fun ZoneTile(context: Context, layout: ZoneLayout, selected: Boolean, ma
         modifier
             .clip(RoundedCornerShape(12.dp))
             .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
-            .semantics {
-                contentDescription = name
-                stateDescription = map.about
-            }
+            // The layout and where its zones are; the radio's own state, Selected or Not selected,
+            // is read after it, so nothing here may set a state description. The words replace the
+            // name and diagram below, as Android drops a description on a tile that merges them.
+            .clearAndSetSemantics { contentDescription = Strings.readerTapLayoutSpoken(context, name, map.about) }
             .padding(vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
