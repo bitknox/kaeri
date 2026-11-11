@@ -21,7 +21,6 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import app.kaeri.design.ObiSilk
@@ -135,10 +134,13 @@ class TapZonesShots {
 
     @Test
     fun the_tap_zones_page_with_zones_off() {
-        // Off has no zones to show: Show zones is drawn as off too.
+        // Off has no zones to show: Show zones is drawn as off too. The page opens the sheet all the
+        // way, so the button is on the screen, not below a half-open sheet.
         reader(TapZonesScenes.state(dir, zones = TapZonesScenes.zones(ZoneLayout.OFF)), SettingsPane.TapZones)
-        compose.onNodeWithText("Show zones").performScrollTo().assertIsNotEnabled()
-        compose.waitForIdle()
+        val show = compose.onNodeWithText("Show zones").assertIsNotEnabled().fetchSemanticsNode()
+        val bottom = show.positionOnScreen.y + show.size.height
+        val screen = compose.activity.resources.displayMetrics.heightPixels
+        assertTrue("Show zones ends at $bottom px, past the screen's $screen", show.size.height > 0 && bottom <= screen)
         shot("phone-page-off")
     }
 

@@ -127,7 +127,8 @@ fun ReaderSettingsSheet(
     val rows = settings?.rows.orEmpty().filter { it.key in phoneKeys }
     val novel = view.medium == Medium.NOVEL
     val strip = view.mode == ReaderMode.STRIP || view.mode == ReaderMode.VERTICAL
-    ReaderSheet(instant = instant, onDismiss = onDismiss) {
+    // The Tap zones page runs past a half-open sheet: it opens the sheet all the way.
+    ReaderSheet(instant = instant, onDismiss = onDismiss, expanded = pane == Pane.TapZones) {
         // Back from a page of the sheet goes to the page it came from, not out of the sheet.
         BackHandler(enabled = pane != Pane.Main) {
             pane = when (pane) {

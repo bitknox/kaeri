@@ -23,7 +23,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,18 +35,28 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.flow.first
 
 /**
  * A sheet over the reader in the chrome's colours, the page behind left undimmed. [instant] draws
  * it without its slide, for Paper mode; it then fills the box it is drawn in, which must be the
- * reader's own.
+ * reader's own. [expanded] opens Material's sheet all the way, for a page whose last line would sit
+ * below a half-open sheet; Paper's sheet is always whole.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun ReaderSheet(instant: Boolean, onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
+internal fun ReaderSheet(instant: Boolean, onDismiss: () -> Unit, expanded: Boolean = false, content: @Composable ColumnScope.() -> Unit) {
     if (!instant) {
+        val sheet = rememberModalBottomSheetState()
+        LaunchedEffect(expanded) {
+            if (!expanded) return@LaunchedEffect
+            // After the sheet's own slide in, or at once when it is already up.
+            snapshotFlow { sheet.currentValue }.first { it != SheetValue.Hidden }
+            if (sheet.currentValue != SheetValue.Expanded) sheet.expand()
+        }
         ModalBottomSheet(
             onDismissRequest = onDismiss,
+            sheetState = sheet,
             containerColor = Chrome.plate,
             contentColor = Chrome.text,
             // The page behind stays undimmed.
