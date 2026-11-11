@@ -668,6 +668,15 @@
       }
      },
      {
+      "key": "SHOW_VOLUMES",
+      "value": "off",
+      "change": {
+       "@type": "Steps",
+       "back": false,
+       "forward": true
+      }
+     },
+     {
       "key": "SERIES_CHOICES_FOLLOW",
       "value": "on",
       "change": {
@@ -46285,10 +46294,6 @@
    }
   },
   {
-   "@type": "JobDone",
-   "v1": "38"
-  },
-  {
    "@type": "LastAired",
    "v1": [
     {
@@ -46327,6 +46332,10 @@
      }
     }
    ]
+  },
+  {
+   "@type": "JobDone",
+   "v1": "38"
   }
  ]
 }
