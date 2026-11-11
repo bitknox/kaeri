@@ -535,7 +535,11 @@ private fun ChapterPages(
             Row(Modifier.fillMaxWidth().height(rowHeight * perColumn)) {
                 val onPage = pages[shown].chunked(perColumn)
                 for (column in 0 until columns) {
-                    if (column > 0) ColumnRule(Modifier.height(rowHeight * (onPage.getOrNull(0)?.size ?: 0)))
+                    // No rule beside an empty column: the gap stays, so the columns keep their width.
+                    if (column > 0) {
+                        if (onPage.getOrNull(column).isNullOrEmpty()) Spacer(Modifier.width(PaperListGap))
+                        else ColumnRule(Modifier.height(rowHeight * (onPage.getOrNull(0)?.size ?: 0)))
+                    }
                     Column(Modifier.weight(1f)) {
                         onPage.getOrNull(column).orEmpty().forEachIndexed { index, row ->
                             ChapterLine(series, row, index == 0, rowHeight, chosen, onChosen, onOpen, onLong)

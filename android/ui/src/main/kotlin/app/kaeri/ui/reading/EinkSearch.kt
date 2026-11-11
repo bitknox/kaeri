@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -644,8 +645,11 @@ private fun WideLine(line: Wide, columns: Int, rowHeight: Dp) {
         }
         is Wide.Cells -> Row(Modifier.fillMaxWidth().height(rowHeight)) {
             for (column in 0 until columns) {
-                if (column > 0) ColumnRule()
                 val cell = line.cells.getOrNull(column)
+                // No rule beside an empty cell: the gap stays, so the columns keep their width.
+                if (column > 0) {
+                    if (cell == null) Spacer(Modifier.width(PaperListGap)) else ColumnRule()
+                }
                 Box(Modifier.weight(1f).fillMaxHeight()) {
                     if (cell != null) WideResult(cell, ruled = !line.first)
                 }
