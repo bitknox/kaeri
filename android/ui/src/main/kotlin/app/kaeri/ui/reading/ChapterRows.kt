@@ -421,6 +421,23 @@ internal fun List<VolumeGroup>.chooseStart(): Set<String> {
     return next.take(CHOOSE_START_COUNT).map { it.id }.toSet()
 }
 
+/**
+ * The unread chapters of the series' own source from the reader's place on, which Next 5 and Next
+ * 10 unread count through. The place is the chapter in progress, or the one after the last read
+ * one, and the start when nothing was read.
+ */
+internal fun List<VolumeGroup>.unreadAhead(): List<ChapterRow> {
+    val rows = chapterRows().filter { it.otherSource == null }
+    return rows.drop(rows.placeIndex() ?: 0).filter { it.state !is ChapterReadState.Read }
+}
+
+/**
+ * What Next [n] unread fetches, as the engine picks it: the unread chapters ahead not on this
+ * device or on their way, a failed one asked for again. Empty when those ahead are all here.
+ */
+internal fun List<VolumeGroup>.nextToFetch(n: Int): List<ChapterRow> =
+    unreadAhead().filter { it.download == null || it.download is ChapterDownloadState.Failed }.take(n)
+
 /** The reader's place in the rows: the last chapter in progress, or the one after the last read one. Null when nothing was read. */
 private fun List<ChapterRow>.placeIndex(): Int? {
     val reading = indexOfLast { it.state is ChapterReadState.InProgress }
