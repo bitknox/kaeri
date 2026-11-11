@@ -2,7 +2,8 @@
 // phone a tap or key turn is a 0.2 s crossfade with the old page held under until the new one is
 // drawn, never through empty, and Remove animations keeps that fade;
 // a swipe follows the finger and turns past 25% of the width or a 450 dp/s flick with a spring that
-// does not bounce. With motion off (e-ink, Paper mode) every turn is at once. Pinch zooms, and
+// does not bounce. With motion off (e-ink, Paper mode) every turn is at once. A strip cut into
+// screens (e-ink) also moves on with an upward swipe and back with a downward one. Pinch zooms, and
 // while zoomed a drag pans and the tap zones are off.
 
 package app.kaeri.reader
@@ -10,6 +11,7 @@ package app.kaeri.reader
 import androidx.compose.runtime.key
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
+import app.kaeri.engine.model.PageKind
 import app.kaeri.engine.model.ReadingFailure
 import kotlinx.coroutines.delay
 import androidx.compose.animation.core.Animatable
@@ -213,6 +215,8 @@ fun PagedReader(
     creditGround: Color = Color.Black,
 ) {
     val leaves = state.leaves
+    // On e-ink a strip is cut into screens shown one at a time.
+    val cuts = leaves.firstOrNull { !it.endPage }?.parts?.firstOrNull()?.kind == PageKind.STRIP_CUT
     pager.count = leaves.size
     pager.endLast = leaves.lastOrNull()?.endPage == true
     val pastEnd by rememberUpdatedState(onPastEnd)
@@ -412,7 +416,7 @@ fun PagedReader(
                         }
                     }
                 }
-                .pointerInput(rtl, motion) {
+                .pointerInput(rtl, motion, cuts) {
                     awaitEachGesture {
                         val down = awaitFirstDown(requireUnconsumed = false)
                         // A new touch takes over a settling swipe from where it is. A page caught
@@ -423,6 +427,8 @@ fun PagedReader(
                         val tracker = VelocityTracker()
                         tracker.addPosition(down.uptimeMillis, down.position)
                         var dragging = false
+                        // A strip cut into screens moves on with an upward swipe, as a strip does.
+                        var upDown = false
                         var total = Offset.Zero
                         var moved = Offset.Zero
                         var event: androidx.compose.ui.input.pointer.PointerEvent
@@ -465,6 +471,8 @@ fun PagedReader(
                                     }
                                     total += delta
                                     if (!dragging && abs(total.x) > viewConfiguration.touchSlop && abs(total.x) > abs(total.y)) dragging = true
+                                    if (cuts && !dragging && !upDown && abs(total.y) > viewConfiguration.touchSlop && abs(total.y) > abs(total.x)) upDown = true
+                                    if (upDown) change.consume()
                                     if (dragging) {
                                         tracker.addPosition(change.uptimeMillis, change.position)
                                         // With motion off the page stays put until the finger lifts.
@@ -479,7 +487,9 @@ fun PagedReader(
                             pager.zoom = 1f
                             pager.pan = clampPan(pager.pan, f.scale, size.width.toFloat(), size.height.toFloat(), f.content)
                         }
-                        if (dragging) {
+                        if (upDown) {
+                            if (total.y < 0) pager.forward(TurnHow.SWIPE) else pager.back(TurnHow.SWIPE)
+                        } else if (dragging) {
                             settle(tracker.calculateVelocity().x)
                         } else if (caught && drag != 0f) {
                             // A tap on a page caught mid-swipe finishes the swipe the way it was going,

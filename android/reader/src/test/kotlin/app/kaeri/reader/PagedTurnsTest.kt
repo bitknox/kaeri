@@ -1,5 +1,6 @@
 // What the paged reader tells the screen about each leaf it shows: only a turn the person made
 // counts as turned, so the engine's start place and a new layout after a rotation keep the chrome.
+// A strip cut into screens also moves on with an upward swipe.
 
 package app.kaeri.reader
 
@@ -8,8 +9,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeDown
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
+import androidx.compose.ui.test.swipeUp
 import app.kaeri.engine.model.Leaf
 import app.kaeri.engine.model.ReadDirection
 import app.kaeri.engine.model.ReaderEvent
@@ -38,10 +41,10 @@ class PagedTurnsTest {
     private var crossed = 0
     private val missing = mutableListOf<Int>()
 
-    private fun open() {
+    private fun open(leaves: List<Leaf> = ReaderFixtures.leaves(8)) {
         session.open(WORK, ReaderFixtures.surface)
         session.apply(ReaderEvent.Opened(ReaderFixtures.view(start = 3u)))
-        session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, ReaderFixtures.leaves(8)))
+        session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, leaves))
         compose.setContent {
             val state = session.state.collectAsState().value
             PagedReader(
@@ -148,5 +151,27 @@ class PagedTurnsTest {
         compose.waitForIdle()
         assertEquals(8, pager.leaf)
         assertEquals(0, crossed)
+    }
+
+    @Test
+    fun a_strip_cut_into_screens_moves_on_with_an_upward_swipe() {
+        open(ReaderFixtures.cuts(4, 2))
+        val from = pager.leaf
+        compose.onRoot().performTouchInput { swipeUp() }
+        compose.waitForIdle()
+        assertEquals(from + 1, pager.leaf)
+        assertEquals(TurnHow.SWIPE, reports.last().second)
+        compose.onRoot().performTouchInput { swipeDown() }
+        compose.waitForIdle()
+        assertEquals(from, pager.leaf)
+    }
+
+    @Test
+    fun an_upward_swipe_on_pages_turns_nothing() {
+        open()
+        val from = pager.leaf
+        compose.onRoot().performTouchInput { swipeUp() }
+        compose.waitForIdle()
+        assertEquals(from, pager.leaf)
     }
 }
