@@ -139,7 +139,11 @@ fun PhoneEndPage(
     val backFocus = remember { FocusRequester() }
     val retryFocus = remember { FocusRequester() }
     val retrying = server.line?.canRetry == true
-    Box(modifier.fillMaxSize().background(Chrome.ground).windowInsetsPadding(WindowInsets.safeDrawing).semantics { isTraversalGroup = true }) {
+    BoxWithConstraints(modifier.fillMaxSize().background(Chrome.ground).windowInsetsPadding(WindowInsets.safeDrawing).semantics { isTraversalGroup = true }) {
+        // Under 360 dp the page keeps the first page whole above the buttons: a smaller tile,
+        // title and margins, and less space above the buttons.
+        val narrow = maxWidth < 360.dp
+        val sides = if (narrow) 24.dp else 28.dp
         // Swipe above the amber button, the amber button at 88 dp from the foot, the text button at 40;
         // each grows with larger text. They come first, so Continue is the first stop and Try again on
         // the line follows Back.
@@ -152,7 +156,7 @@ fun PhoneEndPage(
             Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .padding(start = 28.dp, end = 28.dp, bottom = 40.dp)
+                .padding(start = sides, end = sides, bottom = 40.dp)
                 .onSizeChanged { foot = it.height },
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -238,9 +242,9 @@ fun PhoneEndPage(
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(bottom = with(LocalDensity.current) { foot.toDp() } + 64.dp)
+                .padding(bottom = with(LocalDensity.current) { foot.toDp() } + if (narrow) 24.dp else 64.dp)
                 .verticalScroll(rememberScrollState())
-                .padding(start = 28.dp, end = 28.dp, top = 100.dp),
+                .padding(start = sides, end = sides, top = if (narrow) 84.dp else 100.dp),
         ) {
             Text(Strings.readerEndOfChapterNumber(context, number), color = Chrome.faint, fontSize = 15.sp, lineHeight = 20.sp)
             // With a server line coming, the tracker line's place is kept too, so nothing under it moves.
@@ -268,15 +272,15 @@ fun PhoneEndPage(
             val skipped = state.endSkipped(view.chapter.id)
             if (skipped.isNotEmpty()) SkippedLine(skipped.size, onShow = onShowCredits)
             if (next != null) {
-                Spacer(Modifier.height(if (server.held) 18.dp else 34.dp))
+                Spacer(Modifier.height(if (server.held || narrow) 18.dp else 34.dp))
                 Text(Strings.readerEndNext(context), color = Chrome.faint, fontSize = 13.sp)
                 Spacer(Modifier.height(4.dp))
                 Text(
                     next.title ?: Strings.readerChapterLine(context, chapterNumber(next)),
                     color = Chrome.text,
-                    fontFamily = robotoFlex(FontWeight.Bold, 30.sp),
-                    fontSize = 30.sp,
-                    lineHeight = 38.sp,
+                    fontFamily = robotoFlex(FontWeight.Bold, if (narrow) 26.sp else 30.sp),
+                    fontSize = if (narrow) 26.sp else 30.sp,
+                    lineHeight = if (narrow) 32.sp else 38.sp,
                 )
                 Spacer(Modifier.height(4.dp))
                 val facts = endFacts(context, next, end?.source?.takeIf { end.next?.id == next.id })
@@ -288,7 +292,7 @@ fun PhoneEndPage(
                     PageFileView(
                         file = state.preview?.takeIf { it.chapter == next.id }?.file,
                         images = images,
-                        modifier = Modifier.width(170.dp).height(242.dp),
+                        modifier = if (narrow) Modifier.width(120.dp).height(170.dp) else Modifier.width(170.dp).height(242.dp),
                     ) {
                         // With no preview the plate names the chapter, as the page plate names its page.
                         Box(Modifier.fillMaxSize().background(Chrome.plate)) {
