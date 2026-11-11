@@ -194,7 +194,7 @@ class EinkTapZonesShots {
     fun off_with_swipes_off_says_what_still_turns_pages() {
         open(zones(ZoneLayout.OFF, swipes = false))
         tapZonesPage()
-        assertTrue(notes().contains("Only the controls or keys turn pages"))
+        assertTrue(notes().contains("Only page buttons turn pages"))
         assertTrue("Swipes and page buttons only" !in notes())
         shot("page-off-no-swipes")
     }

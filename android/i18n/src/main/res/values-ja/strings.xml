@@ -636,7 +636,7 @@
     <string name="eink_tap_both_next_note">前へは下の中央</string>
     <string name="eink_tap_both_next_flipped_note">前へは上の中央</string>
     <string name="eink_tap_off_note">スワイプとページボタンのみ</string>
-    <string name="eink_tap_off_keys_note">ページはコントロールかキーでのみめくれます</string>
+    <string name="eink_tap_off_keys_note">ページはページボタンでのみめくれます</string>
     <string name="eink_folio_one">%1$d/%2$d</string>
     <string name="eink_folio_two">%1$d・%2$d/%3$d</string>
     <string name="eink_chapter_titled">第%1$s話 · %2$s</string>

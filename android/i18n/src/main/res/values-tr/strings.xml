@@ -669,7 +669,7 @@
     <string name="eink_tap_both_next_note">Önceki altta ortada</string>
     <string name="eink_tap_both_next_flipped_note">Önceki üstte ortada</string>
     <string name="eink_tap_off_note">Yalnızca kaydırma ve sayfa düğmeleri</string>
-    <string name="eink_tap_off_keys_note">Sayfayı yalnızca denetimler veya tuşlar çevirir</string>
+    <string name="eink_tap_off_keys_note">Sayfaları yalnızca sayfa düğmeleri çevirir</string>
     <string name="eink_folio_one">%1$d / %2$d</string>
     <string name="eink_folio_two">%1$d ve %2$d / %3$d</string>
     <string name="eink_chapter_titled">Bölüm %1$s · %2$s</string>

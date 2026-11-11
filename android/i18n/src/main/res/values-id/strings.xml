@@ -636,7 +636,7 @@
     <string name="eink_tap_both_next_note">Sebelumnya di tengah bawah</string>
     <string name="eink_tap_both_next_flipped_note">Sebelumnya di tengah atas</string>
     <string name="eink_tap_off_note">Hanya usap dan tombol halaman</string>
-    <string name="eink_tap_off_keys_note">Hanya kontrol atau tombol yang membalik halaman</string>
+    <string name="eink_tap_off_keys_note">Hanya tombol halaman yang membalik halaman</string>
     <string name="eink_folio_one">%1$d dari %2$d</string>
     <string name="eink_folio_two">%1$d dan %2$d dari %3$d</string>
     <string name="eink_chapter_titled">Bab %1$s · %2$s</string>

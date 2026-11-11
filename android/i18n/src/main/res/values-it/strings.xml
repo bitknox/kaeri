@@ -702,7 +702,7 @@
     <string name="eink_tap_both_next_note">Indietro in basso al centro</string>
     <string name="eink_tap_both_next_flipped_note">Indietro in alto al centro</string>
     <string name="eink_tap_off_note">Solo scorrimenti e tasti pagina</string>
-    <string name="eink_tap_off_keys_note">Solo i controlli o i tasti girano pagina</string>
+    <string name="eink_tap_off_keys_note">Solo i tasti pagina girano le pagine</string>
     <string name="eink_folio_one">%1$d di %2$d</string>
     <string name="eink_folio_two">%1$d e %2$d di %3$d</string>
     <string name="eink_chapter_titled">Capitolo %1$s · %2$s</string>

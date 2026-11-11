@@ -174,7 +174,7 @@ eink-tap-off-note = Swipes and page buttons only
 # nothing on the page turns it.
 # @only android
 # @max 50
-eink-tap-off-keys-note = Only the controls or keys turn pages
+eink-tap-off-keys-note = Only page buttons turn pages
 
 # The page number in the page's margin on an e-ink screen.
 # @only android

@@ -636,7 +636,7 @@
     <string name="eink_tap_both_next_note">Trang trước ở giữa phía dưới</string>
     <string name="eink_tap_both_next_flipped_note">Trang trước ở giữa phía trên</string>
     <string name="eink_tap_off_note">Chỉ vuốt và nút lật trang</string>
-    <string name="eink_tap_off_keys_note">Chỉ điều khiển hoặc phím mới lật trang</string>
+    <string name="eink_tap_off_keys_note">Chỉ nút lật trang mới lật trang</string>
     <string name="eink_folio_one">%1$d/%2$d</string>
     <string name="eink_folio_two">%1$d và %2$d/%3$d</string>
     <string name="eink_chapter_titled">Chương %1$s · %2$s</string>

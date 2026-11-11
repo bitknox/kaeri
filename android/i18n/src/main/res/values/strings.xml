@@ -1301,7 +1301,7 @@
     <!-- E-ink tap zones page: the line under the layout Off. -->
     <string name="eink_tap_off_note">Swipes and page buttons only</string>
     <!-- E-ink tap zones page: the line under the layout Off while Swipes turn pages is off too, so nothing on the page turns it. -->
-    <string name="eink_tap_off_keys_note">Only the controls or keys turn pages</string>
+    <string name="eink_tap_off_keys_note">Only page buttons turn pages</string>
     <!-- The page number in the page's margin on an e-ink screen. -->
     <string name="eink_folio_one">%1$d of %2$d</string>
     <!-- The page numbers in the margin when two pages show side by side. -->

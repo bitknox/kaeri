@@ -669,7 +669,7 @@
     <string name="eink_tap_both_next_note">Föregående i mitten längst ner</string>
     <string name="eink_tap_both_next_flipped_note">Föregående i mitten längst upp</string>
     <string name="eink_tap_off_note">Bara svep och sidknappar</string>
-    <string name="eink_tap_off_keys_note">Bara kontrollerna eller knapparna vänder sida</string>
+    <string name="eink_tap_off_keys_note">Bara sidknapparna vänder sida</string>
     <string name="eink_folio_one">%1$d av %2$d</string>
     <string name="eink_folio_two">%1$d och %2$d av %3$d</string>
     <string name="eink_chapter_titled">Kapitel %1$s · %2$s</string>

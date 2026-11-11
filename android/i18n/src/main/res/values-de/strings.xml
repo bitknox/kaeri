@@ -669,7 +669,7 @@
     <string name="eink_tap_both_next_note">Zurück unten in der Mitte</string>
     <string name="eink_tap_both_next_flipped_note">Zurück oben in der Mitte</string>
     <string name="eink_tap_off_note">Nur Wischen und Seitentasten</string>
-    <string name="eink_tap_off_keys_note">Nur Steuerung oder Tasten blättern um</string>
+    <string name="eink_tap_off_keys_note">Nur Seitentasten blättern um</string>
     <string name="eink_folio_one">%1$d von %2$d</string>
     <string name="eink_folio_two">%1$d und %2$d von %3$d</string>
     <string name="eink_chapter_titled">Kapitel %1$s · %2$s</string>

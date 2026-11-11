@@ -702,7 +702,7 @@
     <string name="eink_tap_both_next_note">Anterior embaixo, no meio</string>
     <string name="eink_tap_both_next_flipped_note">Anterior em cima, no meio</string>
     <string name="eink_tap_off_note">Só deslizar e botões de página</string>
-    <string name="eink_tap_off_keys_note">Só os controles ou as teclas viram a página</string>
+    <string name="eink_tap_off_keys_note">Só os botões de página viram páginas</string>
     <string name="eink_folio_one">%1$d de %2$d</string>
     <string name="eink_folio_two">%1$d e %2$d de %3$d</string>
     <string name="eink_chapter_titled">Capítulo %1$s · %2$s</string>

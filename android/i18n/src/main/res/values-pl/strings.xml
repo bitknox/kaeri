@@ -735,7 +735,7 @@
     <string name="eink_tap_both_next_note">Wstecz na dole pośrodku</string>
     <string name="eink_tap_both_next_flipped_note">Wstecz u góry pośrodku</string>
     <string name="eink_tap_off_note">Tylko przesunięcia i przyciski stron</string>
-    <string name="eink_tap_off_keys_note">Strony zmienia tylko sterowanie lub klawisze</string>
+    <string name="eink_tap_off_keys_note">Tylko przyciski stron przewracają strony</string>
     <string name="eink_folio_one">%1$d z %2$d</string>
     <string name="eink_folio_two">%1$d i %2$d z %3$d</string>
     <string name="eink_chapter_titled">Rozdział %1$s · %2$s</string>

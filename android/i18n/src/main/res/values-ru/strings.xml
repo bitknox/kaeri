@@ -735,7 +735,7 @@
     <string name="eink_tap_both_next_note">Назад внизу посередине</string>
     <string name="eink_tap_both_next_flipped_note">Назад вверху посередине</string>
     <string name="eink_tap_off_note">Только свайпы и кнопки страниц</string>
-    <string name="eink_tap_off_keys_note">Листают только управление или клавиши</string>
+    <string name="eink_tap_off_keys_note">Листать можно только кнопками страниц</string>
     <string name="eink_folio_one">%1$d из %2$d</string>
     <string name="eink_folio_two">%1$d и %2$d из %3$d</string>
     <string name="eink_chapter_titled">Глава %1$s · %2$s</string>
