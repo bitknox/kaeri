@@ -2153,6 +2153,7 @@ impl BookSources {
         }
         keep_dropped(&self.store, work, &read, &marks, &bookmarks, &mut rows);
         self.fill_from_others(work, source, (&read, &marks), &numbering, &mut rows);
+        tidy_filled(&mut rows);
         let known = crate::read_catalog::volumes::Known::of_work(&self.store, work.as_str());
         crate::read_catalog::volumes::group(rows, &known, self.show_volumes())
     }
@@ -2568,6 +2569,41 @@ fn place_of(rows: &[ChapterRow], row: &ChapterRow) -> usize {
         .unwrap_or(rows.len())
 }
 
+/// The rows filled in from other sources, made to read as the list in use: a numbered row is
+/// labelled by its number, not the other source's own words for it ("Ferry 21.5" reads
+/// "21.5"), and a one-shot the list in use has without a number is not listed a second time
+/// from another source. Only another source's row named a one-shot with no number or number 0
+/// goes; a numbered chapter that happens to carry the name stays.
+fn tidy_filled(rows: &mut Vec<ChapterRow>) {
+    let one_shot_here =
+        rows.iter().any(|r| r.other_source.is_none() && r.number.is_none() && one_shot(r));
+    if one_shot_here {
+        rows.retain(|r| {
+            r.other_source.is_none()
+                || !one_shot(r)
+                || r.number
+                    .as_deref()
+                    .is_some_and(|n| !n.parse::<f64>().is_ok_and(|n| n == 0.0))
+        });
+    }
+    for row in rows.iter_mut().filter(|r| r.other_source.is_some()) {
+        if let Some(number) = &row.number
+            && row.label.chars().any(char::is_alphabetic)
+        {
+            row.label = number.clone();
+        }
+    }
+}
+
+/// Whether a row's label or title names it a one-shot, written in any of the usual ways.
+fn one_shot(row: &ChapterRow) -> bool {
+    [Some(row.label.as_str()), row.title.as_deref()].into_iter().flatten().any(|text| {
+        let folded: String =
+            text.chars().filter(|c| c.is_alphanumeric()).flat_map(char::to_lowercase).collect();
+        folded == "oneshot"
+    })
+}
+
 /// A page fetched with the engine's own client, for a source that does not fetch its own.
 async fn plain_fetch(
     client: &reqwest::Client,
@@ -2590,4 +2626,78 @@ async fn plain_fetch(
         .await
         .map(|b| b.to_vec())
         .map_err(|_| PageError::Failed(ProviderError::Transport("the request failed".into())))
+}
+
+#[cfg(test)]
+mod filled_tests {
+    use kaeri_model::reading::ChapterReadState;
+
+    use super::*;
+
+    fn row(id: &str, label: &str, title: Option<&str>, from: Option<&str>) -> ChapterRow {
+        let number = ChapterId::new(id).key().and_then(|k| k.range()).map(|r| r.to_string());
+        ChapterRow {
+            id: ChapterId::new(id),
+            label: label.into(),
+            state: ChapterReadState::Unread,
+            number,
+            title: title.map(str::to_owned),
+            volume: None,
+            published: None,
+            pages: None,
+            new_chapter: false,
+            download: None,
+            versions: 1,
+            bookmarked: false,
+            version_label: None,
+            read_at: None,
+            line: Vec::new(),
+            gone_from_source: false,
+            parts: 1,
+            missing_parts: Vec::new(),
+            part_groups: Vec::new(),
+            other_group: false,
+            group_language: None,
+            other_source: from.map(str::to_owned),
+        }
+    }
+
+    fn labels(rows: &[ChapterRow]) -> Vec<(&str, &str)> {
+        rows.iter().map(|r| (r.id.as_str(), r.label.as_str())).collect()
+    }
+
+    /// A row from another source reads by its number, as the list's own rows do; its title
+    /// and the list's own words stay as they are.
+    #[test]
+    fn a_row_from_another_source_is_labelled_by_its_number() {
+        let mut rows = vec![
+            row("21", "21", None, None),
+            row("21.5", "Ferry 21.5", None, Some("Other shelf")),
+            row("22", "Ch. 22", Some("The Pier"), None),
+            row("x/-/extra", "Extra", None, Some("Other shelf")),
+        ];
+        tidy_filled(&mut rows);
+        assert_eq!(
+            labels(&rows),
+            [("21", "21"), ("21.5", "21.5"), ("22", "Ch. 22"), ("x/-/extra", "Extra")]
+        );
+    }
+
+    /// A one-shot listed here without a number is the other source's chapter 0 named a
+    /// one-shot: it shows once. A numbered chapter of that name stays, and without a one-shot
+    /// here, the other source's stays.
+    #[test]
+    fn a_one_shot_listed_here_is_not_listed_again_from_another_source() {
+        let filled = |rows: &mut Vec<ChapterRow>| {
+            rows.push(row("0", "0", Some("One shot"), Some("Other shelf")));
+            rows.push(row("1", "1", Some("A Quiet Harbour"), Some("Other shelf")));
+            rows.push(row("7", "7", Some("Oneshot"), Some("Other shelf")));
+            tidy_filled(rows);
+            rows.iter().map(|r| r.id.as_str().to_owned()).collect::<Vec<_>>()
+        };
+        let mut here = vec![row("x/-/oneshot", "Oneshot", None, None)];
+        assert_eq!(filled(&mut here), ["x/-/oneshot", "1", "7"]);
+        let mut none = vec![row("x/-/prologue", "Prologue", None, None)];
+        assert_eq!(filled(&mut none), ["x/-/prologue", "0", "1", "7"]);
+    }
 }
