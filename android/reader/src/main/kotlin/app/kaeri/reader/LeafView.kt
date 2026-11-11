@@ -168,7 +168,7 @@ private fun BoxScope.PartView(
 ) {
     val page = part.page.toInt()
     val failure = state.failures[part.page]
-    val file = state.file(part)
+    val file = state.file(part).takeUnless { PlateShot.hold }
     if (failure != null && file == null) {
         failed(page, failure) { onRetry(page) }
         return
@@ -207,6 +207,11 @@ private fun BoxScope.PartView(
         is PageDecodeResult.Unreadable -> failed(page, ReadingFailure.Other(now.reason)) { onRetry(page) }
         null -> Waited(page, waiting)
     }
+}
+
+/** Set by the fixtures build for the plate's shots: every page waits on its plate. */
+object PlateShot {
+    var hold by mutableStateOf(false)
 }
 
 /** Where a part's page sits in its box: the two pages of a spread against the spine between them. */
