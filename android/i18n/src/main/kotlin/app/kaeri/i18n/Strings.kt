@@ -2329,25 +2329,61 @@ object Strings {
     fun einkTapAutoNote(context: Context): String =
         context.getString(R.string.eink_tap_auto_note)
 
-    /** E-ink tap zones page: the line under the layout Sides. */
-    fun einkTapSidesNote(context: Context): String =
-        context.getString(R.string.eink_tap_sides_note)
+    /** E-ink tap zones page: the line under the layout Sides, as drawn for the open book at the standard size, where Next is wider than the other two zones and on the left. */
+    fun einkTapSidesWideLeftNote(context: Context): String =
+        context.getString(R.string.eink_tap_sides_wide_left_note)
 
-    /** E-ink tap zones page: the line under the layout L shape. */
-    fun einkTapLShapeNote(context: Context): String =
-        context.getString(R.string.eink_tap_l_shape_note)
+    /** E-ink tap zones page: the line under the layout Sides, as drawn for the open book at the standard size, where Next is wider than the other two zones and on the right. */
+    fun einkTapSidesWideRightNote(context: Context): String =
+        context.getString(R.string.eink_tap_sides_wide_right_note)
+
+    /** E-ink tap zones page: the line under the layout Sides, as drawn for the open book at the small size, with Next on the left. */
+    fun einkTapSidesLeftNote(context: Context): String =
+        context.getString(R.string.eink_tap_sides_left_note)
+
+    /** E-ink tap zones page: the line under the layout Sides, as drawn for the open book at the small size, with Next on the right. */
+    fun einkTapSidesRightNote(context: Context): String =
+        context.getString(R.string.eink_tap_sides_right_note)
+
+    /** E-ink tap zones page: the line under the layout L shape, as drawn for the open book, with Next along the bottom edge and up the right side. */
+    fun einkTapLShapeBottomRightNote(context: Context): String =
+        context.getString(R.string.eink_tap_l_shape_bottom_right_note)
+
+    /** E-ink tap zones page: the line under the layout L shape, as drawn for the open book, with Next along the bottom edge and up the left side. */
+    fun einkTapLShapeBottomLeftNote(context: Context): String =
+        context.getString(R.string.eink_tap_l_shape_bottom_left_note)
+
+    /** E-ink tap zones page: the line under the layout L shape, as drawn for the open book with Flip top and bottom on: Next along the top edge and down the right side. */
+    fun einkTapLShapeTopRightNote(context: Context): String =
+        context.getString(R.string.eink_tap_l_shape_top_right_note)
+
+    /** E-ink tap zones page: the line under the layout L shape, as drawn for the open book with Flip top and bottom on: Next along the top edge and down the left side. */
+    fun einkTapLShapeTopLeftNote(context: Context): String =
+        context.getString(R.string.eink_tap_l_shape_top_left_note)
 
     /** E-ink tap zones page: the line under the layout Wide next. */
     fun einkTapWideNextNote(context: Context): String =
         context.getString(R.string.eink_tap_wide_next_note)
 
+    /** E-ink tap zones page: the line under the layout Wide next with Flip top and bottom on, so the controls band is at the bottom. */
+    fun einkTapWideNextFlippedNote(context: Context): String =
+        context.getString(R.string.eink_tap_wide_next_flipped_note)
+
     /** E-ink tap zones page: the line under the layout Top and bottom. */
     fun einkTapTopBottomNote(context: Context): String =
         context.getString(R.string.eink_tap_top_bottom_note)
 
+    /** E-ink tap zones page: the line under the layout Top and bottom with Flip top and bottom on. */
+    fun einkTapTopBottomFlippedNote(context: Context): String =
+        context.getString(R.string.eink_tap_top_bottom_flipped_note)
+
     /** E-ink tap zones page: the line under the layout Next on both sides. */
     fun einkTapBothNextNote(context: Context): String =
         context.getString(R.string.eink_tap_both_next_note)
+
+    /** E-ink tap zones page: the line under the layout Next on both sides with Flip top and bottom on. */
+    fun einkTapBothNextFlippedNote(context: Context): String =
+        context.getString(R.string.eink_tap_both_next_flipped_note)
 
     /** E-ink tap zones page: the line under the layout Off. */
     fun einkTapOffNote(context: Context): String =
@@ -3068,6 +3104,10 @@ object Strings {
     /** What TalkBack says the line of skipped credit pages does, after "Double-tap to": an imperative, as Android's click labels are. */
     fun readerCreditShowAction(context: Context): String =
         context.getString(R.string.reader_credit_show_action)
+
+    /** What TalkBack says for one layout among the tap zone choices: the layout's name, then where its zones are for the open book ("Sides, Next page on the right side, previous page on the left side, controls in the middle"). The choice's own state, Selected or Not selected, follows it. */
+    fun readerTapLayoutSpoken(context: Context, layout: String, about: String): String =
+        context.getString(R.string.reader_tap_layout_spoken, layout, about)
 
     /** Line under "You're offline" on reading's Home when it has never loaded, so nothing is kept to show. It has an Open Downloads button. */
     fun readHomeOfflineLine(context: Context): String =

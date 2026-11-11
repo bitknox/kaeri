@@ -1270,20 +1270,38 @@
     <string name="eink_zone_guide_note">Page buttons also turn pages. The first touch clears this. Change the zones in Reader settings.</string>
     <!-- E-ink tap zones page: the line under the layout Auto. -->
     <string name="eink_tap_auto_note">Sides, or L shape for vertical pages</string>
-    <!-- E-ink tap zones page: the line under the layout Sides. -->
-    <string name="eink_tap_sides_note">Next page wider, on the reading side</string>
-    <!-- E-ink tap zones page: the line under the layout L shape. -->
-    <string name="eink_tap_l_shape_note">Next low and on the reading side</string>
+    <!-- E-ink tap zones page: the line under the layout Sides, as drawn for the open book at the standard size, where Next is wider than the other two zones and on the left. -->
+    <string name="eink_tap_sides_wide_left_note">Next on the left, the widest zone</string>
+    <!-- E-ink tap zones page: the line under the layout Sides, as drawn for the open book at the standard size, where Next is wider than the other two zones and on the right. -->
+    <string name="eink_tap_sides_wide_right_note">Next on the right, the widest zone</string>
+    <!-- E-ink tap zones page: the line under the layout Sides, as drawn for the open book at the small size, with Next on the left. -->
+    <string name="eink_tap_sides_left_note">Next on the left</string>
+    <!-- E-ink tap zones page: the line under the layout Sides, as drawn for the open book at the small size, with Next on the right. -->
+    <string name="eink_tap_sides_right_note">Next on the right</string>
+    <!-- E-ink tap zones page: the line under the layout L shape, as drawn for the open book, with Next along the bottom edge and up the right side. -->
+    <string name="eink_tap_l_shape_bottom_right_note">Next along the bottom and on the right</string>
+    <!-- E-ink tap zones page: the line under the layout L shape, as drawn for the open book, with Next along the bottom edge and up the left side. -->
+    <string name="eink_tap_l_shape_bottom_left_note">Next along the bottom and on the left</string>
+    <!-- E-ink tap zones page: the line under the layout L shape, as drawn for the open book with Flip top and bottom on: Next along the top edge and down the right side. -->
+    <string name="eink_tap_l_shape_top_right_note">Next along the top and on the right</string>
+    <!-- E-ink tap zones page: the line under the layout L shape, as drawn for the open book with Flip top and bottom on: Next along the top edge and down the left side. -->
+    <string name="eink_tap_l_shape_top_left_note">Next along the top and on the left</string>
     <!-- E-ink tap zones page: the line under the layout Wide next. -->
     <string name="eink_tap_wide_next_note">Controls on top, next takes most</string>
+    <!-- E-ink tap zones page: the line under the layout Wide next with Flip top and bottom on, so the controls band is at the bottom. -->
+    <string name="eink_tap_wide_next_flipped_note">Controls below, next takes most</string>
     <!-- E-ink tap zones page: the line under the layout Top and bottom. -->
     <string name="eink_tap_top_bottom_note">Previous on top, next at the bottom</string>
+    <!-- E-ink tap zones page: the line under the layout Top and bottom with Flip top and bottom on. -->
+    <string name="eink_tap_top_bottom_flipped_note">Next on top, previous at the bottom</string>
     <!-- E-ink tap zones page: the line under the layout Next on both sides. -->
     <string name="eink_tap_both_next_note">Previous in the bottom middle</string>
+    <!-- E-ink tap zones page: the line under the layout Next on both sides with Flip top and bottom on. -->
+    <string name="eink_tap_both_next_flipped_note">Previous in the top middle</string>
     <!-- E-ink tap zones page: the line under the layout Off. -->
     <string name="eink_tap_off_note">Swipes and page buttons only</string>
     <!-- E-ink tap zones page: the line under the layout Off while Swipes turn pages is off too, so nothing on the page turns it. -->
-    <string name="eink_tap_off_keys_note">Only the controls or page keys turn pages</string>
+    <string name="eink_tap_off_keys_note">Only the controls or keys turn pages</string>
     <!-- The page number in the page's margin on an e-ink screen. -->
     <string name="eink_folio_one">%1$d of %2$d</string>
     <!-- The page numbers in the margin when two pages show side by side. -->
@@ -1649,6 +1667,8 @@
     <string name="eink_contents_reading">Reading</string>
     <!-- What TalkBack says the line of skipped credit pages does, after "Double-tap to": an imperative, as Android's click labels are. -->
     <string name="reader_credit_show_action">Show the page</string>
+    <!-- What TalkBack says for one layout among the tap zone choices: the layout's name, then where its zones are for the open book ("Sides, Next page on the right side, previous page on the left side, controls in the middle"). The choice's own state, Selected or Not selected, follows it. -->
+    <string name="reader_tap_layout_spoken">%1$s, %2$s</string>
     <!-- Line under "You're offline" on reading's Home when it has never loaded, so nothing is kept to show. It has an Open Downloads button. -->
     <string name="read_home_offline_line">Reading\'s Home needs a connection the first time it opens. Downloaded chapters still open.</string>
     <!-- Screen readers: a source group in Search while its source is still being asked. The source is its name. -->

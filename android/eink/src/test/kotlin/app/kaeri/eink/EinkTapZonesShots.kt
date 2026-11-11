@@ -1,17 +1,24 @@
 // The tap zones on e-ink, drawn on the JVM from made-up records and the engine's own cells: the
 // guide for Sides right to left, Top and bottom left to right on a 7 inch screen, and the Tap zones
 // page reached through Settings and More, which fits without a scroll. Show zones is one refresh,
-// and Off with swipes off says what still turns pages. Written to android/.shots/roborazzi/eink-tap-zones-*.
+// and Off with swipes off says what still turns pages. Each row's line follows the size and the
+// flips, and TalkBack hears a row's layout with its Selected state. Written to
+// android/.shots/roborazzi/eink-tap-zones-*.
 
 package app.kaeri.eink
 
 import android.content.ComponentName
+import android.view.View
+import android.view.ViewGroup
+import android.view.accessibility.AccessibilityNodeInfo
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.click
-import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
@@ -30,9 +37,13 @@ import app.kaeri.engine.model.SettingScope
 import app.kaeri.engine.model.TapZoneSettings
 import app.kaeri.engine.model.ZoneLayout
 import app.kaeri.engine.model.ZoneSize
+import app.kaeri.engine.model.tapMap
 import app.kaeri.reader.PageImages
 import app.kaeri.reader.ReaderSession
 import app.kaeri.reader.configName
+import app.kaeri.reader.tapReading
+import app.kaeri.reader.tapZones
+import app.kaeri.reader.zoneChoices
 import com.github.takahirom.roborazzi.captureScreenRoboImage
 import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
 import org.junit.Assert.assertEquals
@@ -72,12 +83,12 @@ class EinkTapZonesShots {
 
     private val fake = FakeRefresh()
 
-    private fun zones(paged: ZoneLayout, swipes: Boolean = true) = TapZoneSettings(
+    private fun zones(paged: ZoneLayout, swipes: Boolean = true, size: ZoneSize = ZoneSize.STANDARD, flipSides: Boolean = false, flipEnds: Boolean = false) = TapZoneSettings(
         paged = paged,
         scrolling = ZoneLayout.OFF,
-        size = ZoneSize.STANDARD,
-        flipSides = false,
-        flipEnds = false,
+        size = size,
+        flipSides = flipSides,
+        flipEnds = flipEnds,
         eink = true,
         swipesTurn = swipes,
         guideSeenPaged = "",
@@ -91,9 +102,9 @@ class EinkTapZonesShots {
             ReaderSettingRow(Key.MODE, ReaderValue.Choice("paged"), SettingScope.SERIES, false, false, choices("paged", "strip")),
             ReaderSettingRow(Key.DIRECTION, ReaderValue.Choice("rtl"), SettingScope.SERIES, false, false, choices("rtl", "ltr")),
             ReaderSettingRow(Key.TAP_PAGED, ReaderValue.Choice(zones.paged.configName), SettingScope.DEVICE, false, false, choices("auto", "sides", "l_shape", "wide_next", "top_bottom", "both_next", "off")),
-            ReaderSettingRow(Key.TAP_SIZE, ReaderValue.Choice("standard"), SettingScope.DEVICE, false, false, choices("standard", "small")),
-            ReaderSettingRow(Key.TAP_FLIP_SIDES, ReaderValue.Toggle(false), SettingScope.DEVICE, false, false, emptyList()),
-            ReaderSettingRow(Key.TAP_FLIP_ENDS, ReaderValue.Toggle(false), SettingScope.DEVICE, false, false, emptyList()),
+            ReaderSettingRow(Key.TAP_SIZE, ReaderValue.Choice(if (zones.size == ZoneSize.SMALL) "small" else "standard"), SettingScope.DEVICE, false, false, choices("standard", "small")),
+            ReaderSettingRow(Key.TAP_FLIP_SIDES, ReaderValue.Toggle(zones.flipSides), SettingScope.DEVICE, false, false, emptyList()),
+            ReaderSettingRow(Key.TAP_FLIP_ENDS, ReaderValue.Toggle(zones.flipEnds), SettingScope.DEVICE, false, false, emptyList()),
             ReaderSettingRow(Key.SWIPE_TURNS, ReaderValue.Toggle(zones.swipesTurn), SettingScope.DEVICE, false, false, emptyList()),
             ReaderSettingRow(Key.VOLUME_KEYS_TURN, ReaderValue.Toggle(true), SettingScope.DEVICE, false, false, emptyList()),
         ),
@@ -183,8 +194,66 @@ class EinkTapZonesShots {
     fun off_with_swipes_off_says_what_still_turns_pages() {
         open(zones(ZoneLayout.OFF, swipes = false))
         tapZonesPage()
-        compose.onNodeWithText("Only the controls or page keys turn pages").assertIsDisplayed()
-        assertTrue(compose.onAllNodesWithText("Swipes and page buttons only").fetchSemanticsNodes().isEmpty())
+        assertTrue(notes().contains("Only the controls or keys turn pages"))
+        assertTrue("Swipes and page buttons only" !in notes())
         shot("page-off-no-swipes")
+    }
+
+    /**
+     * The note under each layout on the open page, worked out as the page does. A row speaks its
+     * layout and zones in place of its texts, so the notes are not in the semantics tree.
+     */
+    private fun notes(): List<String> = compose.runOnIdle {
+        val state = session.state.value
+        val zones = state.tapZones(eink = true)
+        val reading = state.tapReading()!!
+        state.zoneChoices(Key.TAP_PAGED).map { einkTapNote(compose.activity, it, tapMap(zones, reading, it), zones.swipesTurn) }
+    }
+
+    /** What Android hands TalkBack for the node whose words start with [start]. */
+    private fun info(start: String): AccessibilityNodeInfo {
+        val matcher = SemanticsMatcher("words that start with $start") { node ->
+            node.config.getOrNull(SemanticsProperties.ContentDescription).orEmpty().any { it.startsWith(start) }
+        }
+        val id = compose.onNode(matcher).fetchSemanticsNode().id
+        val content = compose.activity.findViewById<ViewGroup>(android.R.id.content)
+        val view = generateSequence<View>(content) { (it as? ViewGroup)?.takeIf { group -> group.childCount > 0 }?.getChildAt(0) }
+            .first { it.javaClass.name.endsWith("AndroidComposeView") }
+        return compose.runOnIdle { view.accessibilityNodeProvider.createAccessibilityNodeInfo(id)!! }
+    }
+
+    @Test
+    fun a_layout_row_says_its_layout_and_keeps_its_selected_state() {
+        open(zones(ZoneLayout.SIDES))
+        tapZonesPage()
+        val sides = info("Sides, ")
+        assertTrue(sides.contentDescription.toString(), sides.contentDescription.toString().startsWith("Sides, Next page on the left"))
+        assertEquals("Selected", sides.stateDescription?.toString())
+        assertEquals("Not selected", info("Top and bottom, ").stateDescription?.toString())
+    }
+
+    @Test
+    fun the_notes_follow_flip_top_and_bottom() {
+        // Right to left, so Next is on the left; the rows are flipped.
+        open(zones(ZoneLayout.SIDES, flipEnds = true))
+        tapZonesPage()
+        listOf(
+            "Next on the left, the widest zone",
+            "Next along the top and on the left",
+            "Controls below, next takes most",
+            "Next on top, previous at the bottom",
+            "Previous in the top middle",
+        ).forEach { assertTrue("$it is not in ${notes()}", it in notes()) }
+    }
+
+    @Test
+    fun the_notes_follow_the_small_size_and_flip_left_and_right() {
+        // Right to left flipped back: Next is on the right, and at the small size no zone is wider.
+        open(zones(ZoneLayout.SIDES, size = ZoneSize.SMALL, flipSides = true))
+        tapZonesPage()
+        val notes = notes()
+        listOf("Next on the right", "Next along the bottom and on the right", "Previous on top, next at the bottom")
+            .forEach { assertTrue("$it is not in $notes", it in notes) }
+        assertTrue(notes.joinToString(), notes.none { it.contains("the widest zone") })
     }
 }

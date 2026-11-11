@@ -18,6 +18,8 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.sp
+import app.kaeri.engine.model.TapAction
+import app.kaeri.engine.model.TapMap
 import app.kaeri.engine.model.ZoneLayout
 import app.kaeri.engine.model.ZoneSize
 import app.kaeri.engine.model.tapMap
@@ -63,6 +65,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -186,7 +189,10 @@ fun BoxScope.EinkTapZonesSheet(session: ReaderSession, state: ReaderState, onBac
                         .selectable(selected = on, interactionSource = remember { MutableInteractionSource() }, indication = null, role = Role.RadioButton) {
                             session.setSetting(Key.TAP_PAGED, scope, ReaderValue.Choice(layout.configName))
                         }
-                        .semantics(mergeDescendants = true) { stateDescription = map.about }
+                        // The layout and where its zones are; the radio's own state is read after it.
+                        // The words replace the texts in the row, as Android drops a description on
+                        // a row that merges them.
+                        .clearAndSetSemantics { contentDescription = Strings.readerTapLayoutSpoken(context, layoutName(context, layout), map.about) }
                         .hairline(EinkColours.Ink)
                         .padding(horizontal = 12.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -197,7 +203,7 @@ fun BoxScope.EinkTapZonesSheet(session: ReaderSession, state: ReaderState, onBac
                     }
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(layoutName(context, layout), style = EinkType.Label.copy(fontSize = 16.sp, fontWeight = if (on) FontWeight.Bold else FontWeight.SemiBold))
-                        Text(einkTapNote(context, layout, zones.swipesTurn), style = EinkType.Secondary)
+                        Text(einkTapNote(context, layout, map, zones.swipesTurn), style = EinkType.Secondary)
                     }
                     EinkRadio(on)
                 }
@@ -225,17 +231,40 @@ fun BoxScope.EinkTapZonesSheet(session: ReaderSession, state: ReaderState, onBac
 }
 
 /**
- * What a layout does on e-ink, in the line under its name. Off with swipes off too leaves nothing on
- * the page that turns it, which is allowed, and the line says so.
+ * What a layout does on e-ink, in the line under its name, read from [map]'s cells as drawn for the
+ * open book, so the line stays true at either size and with either flip. Off with swipes off too
+ * leaves nothing on the page that turns it, which is allowed, and the line says so.
  */
-private fun einkTapNote(context: Context, layout: ZoneLayout, swipes: Boolean): String = when (layout) {
-    ZoneLayout.AUTO -> Strings.einkTapAutoNote(context)
-    ZoneLayout.SIDES -> Strings.einkTapSidesNote(context)
-    ZoneLayout.L_SHAPE -> Strings.einkTapLShapeNote(context)
-    ZoneLayout.WIDE_NEXT -> Strings.einkTapWideNextNote(context)
-    ZoneLayout.TOP_BOTTOM -> Strings.einkTapTopBottomNote(context)
-    ZoneLayout.BOTH_NEXT -> Strings.einkTapBothNextNote(context)
-    ZoneLayout.OFF -> if (swipes) Strings.einkTapOffNote(context) else Strings.einkTapOffKeysNote(context)
+internal fun einkTapNote(context: Context, layout: ZoneLayout, map: TapMap, swipes: Boolean): String {
+    fun at(row: Int, column: Int) = map.cells.firstOrNull { it.row.toInt() == row && it.column.toInt() == column }?.action
+    return when (layout) {
+        ZoneLayout.AUTO -> Strings.einkTapAutoNote(context)
+        ZoneLayout.SIDES -> {
+            val left = at(1, 0) == TapAction.NEXT
+            val next = map.cells.firstOrNull { it.action == TapAction.NEXT }?.width ?: 0.0
+            val controls = map.cells.firstOrNull { it.action == TapAction.CONTROLS }?.width ?: 0.0
+            when {
+                next > controls + 0.01 && left -> Strings.einkTapSidesWideLeftNote(context)
+                next > controls + 0.01 -> Strings.einkTapSidesWideRightNote(context)
+                left -> Strings.einkTapSidesLeftNote(context)
+                else -> Strings.einkTapSidesRightNote(context)
+            }
+        }
+        ZoneLayout.L_SHAPE -> {
+            val low = at(2, 1) == TapAction.NEXT
+            val right = at(1, 2) == TapAction.NEXT
+            when {
+                low && right -> Strings.einkTapLShapeBottomRightNote(context)
+                low -> Strings.einkTapLShapeBottomLeftNote(context)
+                right -> Strings.einkTapLShapeTopRightNote(context)
+                else -> Strings.einkTapLShapeTopLeftNote(context)
+            }
+        }
+        ZoneLayout.WIDE_NEXT -> if (at(0, 1) == TapAction.CONTROLS) Strings.einkTapWideNextNote(context) else Strings.einkTapWideNextFlippedNote(context)
+        ZoneLayout.TOP_BOTTOM -> if (at(2, 1) == TapAction.NEXT) Strings.einkTapTopBottomNote(context) else Strings.einkTapTopBottomFlippedNote(context)
+        ZoneLayout.BOTH_NEXT -> if (at(2, 1) == TapAction.PREVIOUS) Strings.einkTapBothNextNote(context) else Strings.einkTapBothNextFlippedNote(context)
+        ZoneLayout.OFF -> if (swipes) Strings.einkTapOffNote(context) else Strings.einkTapOffKeysNote(context)
+    }
 }
 
 /** A radio: a 24 dp ring in ink, filled at the centre when chosen. */
