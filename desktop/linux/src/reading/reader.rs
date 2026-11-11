@@ -3699,7 +3699,10 @@ mod plate_tests {
             picture.set_size_request(200, 1600);
             strip_frame_window(&picture, 1600, 400);
             pump(100);
-            assert!((middle(&frame) - 200.0).abs() <= 2.0, "centred in the first window-height");
+            assert!(
+                (middle(&frame) - 200.0).abs() <= 2.0,
+                "centred in the first window-height"
+            );
             window.destroy();
         });
     }

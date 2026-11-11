@@ -14,7 +14,7 @@ use kaeri_model::{
 use crate::{pages::Dest, reading::reader::Reader, window::Shell};
 
 /// Every reading shot, in the order a run takes them.
-pub const NAMES: [&str; 44] = [
+pub const NAMES: [&str; 46] = [
     "read",
     "read-updates",
     "read-library",
