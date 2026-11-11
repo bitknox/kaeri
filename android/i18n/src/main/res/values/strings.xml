@@ -6626,6 +6626,8 @@
     <string name="settings_adult">Show adult titles</string>
     <!-- Line under it. The tracker is a name. -->
     <string name="settings_adult_detail">Titles %1$s marks adult, in Search and Seasonal</string>
+    <!-- Line under it when the app is for reading alone. -->
+    <string name="settings_adult_detail_read">Titles %1$s marks adult, in Search and Browse</string>
     <!-- Row: quality. -->
     <string name="settings_quality">Quality</string>
     <!-- Row: play the next episode on its own. -->
@@ -8181,6 +8183,7 @@
     <string name="device_kind_phone">phone</string>
     <string name="device_kind_tablet">tablet</string>
     <string name="device_kind_tv">TV</string>
+    <string name="device_kind_other">device</string>
     <!-- TV welcome, text button. -->
     <string name="first_setup_phone">Set up from your phone</string>
     <!-- Error naming a device that is not known by name. -->

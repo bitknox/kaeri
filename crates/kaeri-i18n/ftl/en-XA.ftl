@@ -11500,6 +11500,9 @@ settings-adult = [Šĥöŵ àðüļţ ţîţļéš~~~~~~]
 # Line under it. The tracker is a name.
 settings-adult-detail = [Ţîţļéš { $tracker } ɱàŕķš àðüļţ, îñ Šéàŕçĥ àñð Šéàšöñàļ~~~~~~~~~~~~~~]
 
+# Line under it when the app is for reading alone.
+settings-adult-detail-read = [Ţîţļéš { $tracker } ɱàŕķš àðüļţ, îñ Šéàŕçĥ àñð Ɓŕöŵšé~~~~~~~~~~~~~~]
+
 # Row: quality.
 settings-quality = [Ǫüàļîţý~~~]
 
@@ -13817,6 +13820,8 @@ device-kind-phone = [þĥöñé~~]
 device-kind-tablet = [ţàƀļéţ~~]
 
 device-kind-tv = [ŢṼ~]
+
+device-kind-other = [ðéṽîçé~~]
 
 # TV welcome, text button.
 first-setup-phone = [Šéţ üþ ƒŕöɱ ýöüŕ þĥöñé~~~~~~~]

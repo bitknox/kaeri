@@ -11600,6 +11600,10 @@
     <value>[Ţîţļéš {tracker} ɱàŕķš àðüļţ, îñ Šéàŕçĥ àñð Šéàšöñàļ~~~~~~~~~~~~~~]</value>
     <comment>Line under it. The tracker is a name.</comment>
   </data>
+  <data name="SettingsAdultDetailRead" xml:space="preserve">
+    <value>[Ţîţļéš {tracker} ɱàŕķš àðüļţ, îñ Šéàŕçĥ àñð Ɓŕöŵšé~~~~~~~~~~~~~~]</value>
+    <comment>Line under it when the app is for reading alone.</comment>
+  </data>
   <data name="SettingsQuality" xml:space="preserve">
     <value>[Ǫüàļîţý~~~]</value>
     <comment>Row: quality.</comment>
@@ -14659,6 +14663,9 @@
   </data>
   <data name="DeviceKindTv" xml:space="preserve">
     <value>[ŢṼ~]</value>
+  </data>
+  <data name="DeviceKindOther" xml:space="preserve">
+    <value>[ðéṽîçé~~]</value>
   </data>
   <data name="FirstSetupPhone" xml:space="preserve">
     <value>[Šéţ üþ ƒŕöɱ ýöüŕ þĥöñé~~~~~~~]</value>

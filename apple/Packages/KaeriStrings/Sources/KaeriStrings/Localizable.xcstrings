@@ -49445,6 +49445,18 @@
         }
       }
     },
+    "device-kind-other" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "device"
+          }
+        }
+      }
+    },
     "device-kind-phone" : {
       "comment" : "",
       "extractionState" : "manual",
@@ -271023,6 +271035,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Các tựa mà %1$@ đánh dấu dành cho người lớn, trong Tìm kiếm và Theo mùa"
+          }
+        }
+      }
+    },
+    "settings-adult-detail-read" : {
+      "comment" : "Line under it when the app is for reading alone. Argument 1: tracker (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Titles %1$@ marks adult, in Search and Browse"
           }
         }
       }
