@@ -68,8 +68,11 @@ fn source_line(edition: &BookEditionRow, others: usize) -> String {
     parts.join(" \u{b7} ")
 }
 
-/// "87 of 88 chapters · volume 9", "Volume 5 of 5 read".
+/// "87 of 88 chapters · volume 9", "Volume 5 of 5 read", or "Not started" while nothing is read.
 fn progress(row: &TrackerReadRow, view: &SeriesView) -> String {
+    if row.chapters == 0 && row.volumes.unwrap_or(0) == 0 {
+        return t::series_tracker_not_started();
+    }
     if view.medium == kaeri_core::media::Medium::Novel
         && let Some(volumes) = row.volumes
     {

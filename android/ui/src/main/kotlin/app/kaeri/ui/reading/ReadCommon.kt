@@ -499,8 +499,9 @@ internal fun actionWords(context: Context, action: SeriesAction?): String? = whe
             named != null -> Strings.actionContinueNamedPlain(context, named)
             !numbered(action.label) && percent != null -> Strings.actionContinueNamed(context, action.label, percent)
             !numbered(action.label) -> Strings.actionContinueNamedPlain(context, action.label)
-            percent != null -> Strings.actionContinuePart(context, action.label, percent)
-            else -> Strings.actionContinuePartPlain(context, action.label)
+            // A bare number is a chapter, as its row and the reader call it.
+            percent != null -> Strings.actionContinueChapterPercent(context, action.label, percent)
+            else -> Strings.actionContinueChapterPlain(context, action.label)
         }
     }
     is SeriesAction.ReadPart -> {
@@ -511,7 +512,7 @@ internal fun actionWords(context: Context, action: SeriesAction?): String? = whe
             unit?.first == NamedUnit.PART -> Strings.actionReadPart(context, unit.second)
             named != null -> Strings.actionReadNamed(context, named)
             !numbered(action.label) -> Strings.actionReadNamed(context, action.label)
-            else -> Strings.actionReadPart(context, action.label)
+            else -> Strings.actionReadChapter(context, action.label)
         }
     }
     SeriesAction.ReadAgain -> Strings.actionReadAgain(context)

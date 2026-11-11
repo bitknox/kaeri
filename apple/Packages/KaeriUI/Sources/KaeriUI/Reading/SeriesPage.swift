@@ -25,16 +25,17 @@ enum ReadSeriesWords {
         case .read(_, let label): L.actionReadNamed(label: label)
         case .continue(_, let label, let page) where numbered(label): L.actionContinueChapter(n: label, page: Int(page))
         case .continue(_, let label, let page): L.actionContinueNamedPage(label: label, page: Int(page))
-        // A part goes by the source's own name for it where it has one, as its row does.
+        // A light novel's part goes by the source's own name for it where it has one; one the
+        // source only numbers is a chapter, as its row, the reader and the end card call it.
         case .continuePart(_, _, let percent?, let named?): L.actionContinueNamed(label: midSentence(named), percent: Int(percent))
         case .continuePart(_, let label, let percent?, nil) where !numbered(label): L.actionContinueNamed(label: label, percent: Int(percent))
-        case .continuePart(_, let label, let percent?, nil): L.actionContinuePart(n: label, percent: Int(percent))
+        case .continuePart(_, let label, let percent?, nil): L.actionContinueChapterPercent(n: label, percent: Int(percent))
         case .continuePart(_, _, nil, let named?): L.actionContinueNamedPlain(label: midSentence(named))
         case .continuePart(_, let label, nil, nil) where !numbered(label): L.actionContinueNamedPlain(label: label)
-        case .continuePart(_, let label, nil, nil): L.actionContinuePartPlain(n: label)
+        case .continuePart(_, let label, nil, nil): L.actionContinueChapterPlain(n: label)
         case .readPart(_, _, let named?): L.actionReadNamed(label: midSentence(named))
         case .readPart(_, let label, nil) where !numbered(label): L.actionReadNamed(label: label)
-        case .readPart(_, let label, nil): L.actionReadPart(n: label)
+        case .readPart(_, let label, nil): L.actionReadChapter(n: label)
         case .readAgain: L.actionReadAgain
         case .noSource, .none: nil
         }
@@ -73,8 +74,10 @@ enum ReadSeriesWords {
         rows.map { AccountsModel.name($0.tracker) }.formatted(.list(type: .and).locale(AirTime.locale))
     }
 
-    /// "87 of 88 chapters · volume 9", "Volume 5 of 5 read".
+    /// "87 of 88 chapters · volume 9", "Volume 5 of 5 read", or "Not started" before the first
+    /// chapter, which "0 chapters" would read as the series having none.
     static func progress(_ row: TrackerReadRow, series: SeriesView) -> String {
+        if row.chapters == 0, (row.volumes ?? 0) == 0 { return L.seriesTrackerNotStarted }
         if series.medium == .novel, let volumes = row.volumes {
             return L.seriesTrackerVolumes(volume: Int(volumes), total: Int(series.volumesTotal ?? volumes))
         }
@@ -483,14 +486,19 @@ private struct SeriesTitleBlock: View {
                         .accessibilityLabel(Text(all.joined(separator: ", "))) // i18n-skip
                 }
                 if let synopsis = series.synopsis, !synopsis.isEmpty {
-                    Text(synopsis.replacing(/\s*\n+\s*/, with: " "))
-                        .font(.plat(mac: 13, touch: 15))
-                        .fixedLineHeight(Device.isMac ? 20 : 22, relativeTo: .subheadline)
-                        .foregroundStyle(.haze)
-                        .lineLimit(4)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: 460, alignment: .leading)
-                        .padding(.top, 14)
+                    // Four lines with More at the end of the last, as a show's page has it.
+                    InlineMoreText(
+                        text: synopsis.replacing(/\s*\n+\s*/, with: " "),
+                        lines: 4,
+                        font: .plat(mac: 13, touch: 15),
+                        lineHeight: Device.isMac ? 20 : 22,
+                        lineStyle: .subheadline,
+                        lineHeightEverywhere: true
+                    )
+                    .id(series.work)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: 460, alignment: .leading)
+                    .padding(.top, 14)
                 }
             }
         }
@@ -566,7 +574,7 @@ private struct SeriesActions: View {
     private func mainButton(icon: Bool) -> some View {
         if stillAsking {
             Button {} label: {
-                Text(L.actionReadPart(n: "1")).lineLimit(1).frame(maxWidth: stretch ? .infinity : nil)
+                Text(L.actionReadChapter(n: "1")).lineLimit(1).frame(maxWidth: stretch ? .infinity : nil)
             }
             .buttonStyle(PrimaryCapsuleStyle(height: height, fontSize: font, offIsRaised: true))
             .disabled(true)
@@ -927,10 +935,15 @@ private struct SeriesChapters: View {
 
     private var novel: Bool { series.medium == .novel }
 
+    /// "Volumes" only over a novel's volumes; a list with none is its chapters.
+    private var byVolume: Bool {
+        novel && (chapters?.volumes ?? []).contains { $0.volume != nil }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .firstTextBaseline) {
-                Text(novel ? L.seriesVolumes : L.seriesChapters)
+                Text(byVolume ? L.seriesVolumes : L.seriesChapters)
                     .font(.ui(Device.isMac ? 17 : 20, weight: Device.isMac ? .semibold : .bold))
                     .foregroundStyle(.silk)
                     .accessibilityAddTraits(.isHeader)

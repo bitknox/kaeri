@@ -8915,6 +8915,9 @@ public enum L {
         Self.format("series-tracker-chapters", fallback: "%1$lld chapters", n)
     }
 
+    /// A tracker's progress when the person has read none of the series yet, in place of "0 chapters".
+    public static var seriesTrackerNotStarted: String { string("series-tracker-not-started", fallback: "Not started") }
+
     /// A tracker's progress in chapters, then the volume.
     public static func seriesTrackerWithVolume(chapters: String, volume: Int) -> String {
         Self.format("series-tracker-with-volume", fallback: "%1$@ · volume %2$@", chapters, String(volume))

@@ -82,6 +82,13 @@ impl Kept {
 
 /// A chapter's title, unless it only names the chapter again: the label itself, the number, or
 /// the number beside one word, as "Chapter 15" or "Ch. 15" in a book's own details.
+///
+/// A title that starts by naming a chapter ("Chapter 15: The Far Shore", "Ch. 15 - The Far
+/// Shore") keeps only its words, as the row names the chapter already; and a number after a dash
+/// at its end ("The Far Shore - 15", any dash) goes when it only repeats that chapter's number or the
+/// row's. The row's number is the source's, which every place Kaeri names the chapter uses, so a
+/// title whose own number differs from it (a source that counts its extras as chapters) does not
+/// put a second number beside it.
 pub fn own_title<'a>(
     title: Option<&'a str>,
     label: &str,
@@ -99,7 +106,73 @@ pub fn own_title<'a>(
             return None;
         }
     }
-    Some(title)
+    let (named, rest) = match chapter_named(title) {
+        Some((named, rest)) => (Some(named), rest),
+        None => (None, title),
+    };
+    let repeats = |n: &str| {
+        let n = same_number(n);
+        n.is_some()
+            && (named.and_then(same_number) == n
+                || named.and_then(whole_part).and_then(same_number) == n
+                || number.and_then(same_number) == n
+                || same_number(label) == n)
+    };
+    let rest = match number_after_dash(rest) {
+        Some((words, n)) if repeats(n) => words,
+        // Only the number again, "Chapter 15 - 15": nothing of its own.
+        None if named.is_some() && repeats(rest) => "",
+        _ => rest,
+    };
+    (!rest.is_empty()).then_some(rest)
+}
+
+/// The words that name a chapter at the start of a title, longest first.
+const CHAPTER_WORDS: [&str; 5] = ["chapter", "chap.", "chap", "ch.", "ch"];
+
+/// A title that starts by naming a chapter, "Chapter 15: The Far Shore": the number, and the
+/// words after it with the separator gone ("" when there are none).
+fn chapter_named(title: &str) -> Option<(&str, &str)> {
+    let lower = title.to_ascii_lowercase();
+    let word = CHAPTER_WORDS.iter().find(|w| lower.starts_with(**w))?;
+    let after = title[word.len()..].trim_start_matches([' ', '.']);
+    let end = after.find(|c: char| !(c.is_ascii_digit() || c == '.')).unwrap_or(after.len());
+    let number = after[..end].trim_end_matches('.');
+    if !number.starts_with(|c: char| c.is_ascii_digit()) {
+        return None;
+    }
+    let rest = &after[number.len()..];
+    // The number ends the name: "Chapter 15th Night" is not chapter 15.
+    if rest.starts_with(char::is_alphanumeric) {
+        return None;
+    }
+    let rest = rest.trim_start_matches(|c: char| {
+        c.is_whitespace() || matches!(c, ':' | '-' | '\u{2013}' | '\u{2014}' | '.' | ',' | '|')
+    });
+    Some((number, rest.trim_end()))
+}
+
+/// Words ending in a dash and a number, "The Far Shore - 15": the words and the number.
+fn number_after_dash(title: &str) -> Option<(&str, &str)> {
+    let at = title.rfind(['-', '\u{2013}', '\u{2014}'])?;
+    let dash = title[at..].chars().next()?.len_utf8();
+    let (words, n) = (&title[..at], title[at + dash..].trim());
+    // A dash inside a word ("Re-15") is not a separator; one at the start is.
+    if !(words.is_empty() || words.ends_with(char::is_whitespace)) || n.is_empty() {
+        return None;
+    }
+    n.chars().all(|c| c.is_ascii_digit() || c == '.').then(|| (words.trim_end(), n))
+}
+
+/// A chapter number as a value to compare, so "05" and "5" are one number.
+fn same_number(text: &str) -> Option<u64> {
+    let value: f64 = text.trim().parse().ok()?;
+    (value.is_finite() && value >= 0.0).then(|| (value * 1000.0).round() as u64)
+}
+
+/// The whole chapter of a part's number: "196" of "196.1".
+fn whole_part(number: &str) -> Option<&str> {
+    number.split_once('.').map(|(whole, _)| whole)
 }
 
 /// A source's list as kept, oldest chapter first, and when it was asked.
@@ -839,11 +912,46 @@ mod tests {
         assert_eq!(titled("15", "Ch. 15").own_title(), None);
         assert_eq!(titled("15", "15").own_title(), None);
         assert_eq!(titled("15", "The Far Shore").own_title(), Some("The Far Shore"));
-        assert_eq!(
-            titled("15", "Chapter 15: The Far Shore").own_title(),
-            Some("Chapter 15: The Far Shore")
-        );
         assert_eq!(titled("15", "The 15th Lantern").own_title(), Some("The 15th Lantern"));
+    }
+
+    #[test]
+    fn a_title_keeps_its_words_without_the_chapter_it_names_again() {
+        let own = |number: &str, title: &str| {
+            own_title(Some(title), number, Some(number)).map(str::to_owned)
+        };
+        let far = Some("The Far Shore".to_owned());
+        assert_eq!(own("15", "Chapter 15: The Far Shore"), far);
+        assert_eq!(own("15", "Ch. 15 - The Far Shore"), far);
+        assert_eq!(own("15", "ch.15 \u{2013} The Far Shore"), far);
+        assert_eq!(own("15", "Chapter 15 The Far Shore"), far);
+        assert_eq!(own("15", "The Far Shore \u{2014} 15"), far);
+        assert_eq!(own("15", "Chapter 15: The Far Shore \u{2014} 15"), far);
+        // A source that counts its extras among its chapters runs ahead of the titles' own
+        // numbers: the row's number is the source's, and the title keeps only its words.
+        assert_eq!(own("19", "Chapter 15: The Far Shore \u{2014} 15"), far);
+        assert_eq!(
+            own("16", "Chapter 12.1: Lanterns \u{2014} 12"),
+            Some("Lanterns".to_owned())
+        );
+        assert_eq!(
+            own("17", "Chapter 12.2: A Ferryman Alone"),
+            Some("A Ferryman Alone".to_owned())
+        );
+        assert_eq!(own("15", "Chapter 15"), None);
+        assert_eq!(own("15", "Ch. 15."), None);
+        assert_eq!(own("15", "Chapter 15 \u{2014} 15"), None);
+        // Numbers that belong to the title stay.
+        for kept in [
+            "Chapter 15th Night",
+            "Chapterhouse 3",
+            "Changes in 15",
+            "The Far Shore \u{2014} 2",
+            "Countdown - 3",
+            "Re-15 and After",
+        ] {
+            assert_eq!(own("15", kept).as_deref(), Some(kept));
+        }
     }
 
     #[test]

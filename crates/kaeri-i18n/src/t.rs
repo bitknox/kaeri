@@ -14997,6 +14997,11 @@ pub fn series_tracker_chapters(n: i64) -> String {
     text("series-tracker-chapters", &[("n", Arg::Int(n))])
 }
 
+/// A tracker's progress when the person has read none of the series yet, in place of "0 chapters".
+pub fn series_tracker_not_started() -> String {
+    text("series-tracker-not-started", &[])
+}
+
 /// A tracker's progress in chapters, then the volume.
 pub fn series_tracker_with_volume(chapters: &str, volume: i64) -> String {
     text("series-tracker-with-volume", &[("chapters", Arg::Text(chapters)), ("volume", Arg::Plain(volume))])

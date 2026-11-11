@@ -266,15 +266,7 @@ public sealed partial class SeriesPage : Page
         if (series.Facts.Joined() is { Length: > 0 } facts)
             words.Children.Add(SeriesWords.SmallCaps(facts));
         if (series.Synopsis is { Length: > 0 } synopsis)
-        {
-            // Six lines, and all of it on a click; a screen reader reads it whole either way.
-            var text = Ui.Text(synopsis, "BodyTextBlockStyle");
-            text.MaxLines = 6;
-            text.TextTrimming = TextTrimming.WordEllipsis;
-            text.Margin = new Thickness(0, 4, 0, 0);
-            text.Tapped += (_, _) => text.MaxLines = text.MaxLines == 0 ? 6 : 0;
-            words.Children.Add(text);
-        }
+            words.Children.Add(Synopsis(synopsis));
         words.Children.Add(Actions(series));
         // The send rows are kept across redraws: they leave the old words for the new.
         // Parent can read null while they still sit in the old words, so the old words are kept.
@@ -283,6 +275,40 @@ public sealed partial class SeriesPage : Page
         drawnWords = words;
         head.Children.Add(words);
         Ui.RestoreFocus(head, focus);
+    }
+
+    /// <summary>
+    /// The synopsis in four lines, then More under it where the text is cut, as on a show's page.
+    /// More opens the rest in place, the height easing to the new one on the standard token so the
+    /// actions under it move with it, and focus goes to the text. A screen reader reads it whole
+    /// either way.
+    /// </summary>
+    static StackPanel Synopsis(string synopsis)
+    {
+        const int lines = 4;
+        var place = new StackPanel { Margin = new Thickness(0, 4, 0, 0) };
+        var text = Ui.Text(synopsis, "BodyTextBlockStyle");
+        text.MaxLines = lines;
+        text.TextTrimming = TextTrimming.WordEllipsis;
+        text.IsTextSelectionEnabled = true;
+        var more = new HyperlinkButton { Content = T.ActionMore, Style = Ui.Res<Style>("SilkLinkLeadingStyle"), Visibility = Visibility.Collapsed };
+        text.IsTextTrimmedChanged += (sender, _) =>
+        {
+            if (sender.MaxLines != 0)
+                more.Visibility = sender.IsTextTrimmed ? Visibility.Visible : Visibility.Collapsed;
+        };
+        more.Click += (_, _) =>
+        {
+            var from = place.ActualHeight;
+            text.MaxLines = 0;
+            more.Visibility = Visibility.Collapsed;
+            place.Measure(new global::Windows.Foundation.Size(place.ActualWidth > 0 ? place.ActualWidth : double.PositiveInfinity, double.PositiveInfinity));
+            Motion.Height(place, from, place.DesiredSize.Height);
+            text.Focus(FocusState.Keyboard);
+        };
+        place.Children.Add(text);
+        place.Children.Add(more);
+        return place;
     }
 
     /// <summary>The amber action naming the chapter and page, then Status, Download and More.</summary>
