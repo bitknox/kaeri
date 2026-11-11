@@ -3053,6 +3053,54 @@ object Strings {
     fun einkLibraryNoneMatchLine(context: Context): String =
         context.getString(R.string.eink_library_none_match_line)
 
+    /** Text button at the end of Keep next chapters ready on a 10 inch e-reader's Downloads. It opens the downloads settings. */
+    fun einkKeepReadyChange(context: Context): String =
+        context.getString(R.string.eink_keep_ready_change)
+
+    /** Text button beside the series in progress on a 10 inch e-reader's Home, next to Continue. It opens the series' page. */
+    fun einkHomeSeriesPage(context: Context): String =
+        context.getString(R.string.eink_home_series_page)
+
+    /** The link at the end of the New chapters heading on a 10 inch e-reader's Home. It opens Updates. */
+    fun einkHomeAllNewChapters(context: Context): String =
+        context.getString(R.string.eink_home_all_new_chapters)
+
+    /** The link at the end of the Browse heading on a 10 inch e-reader's Home, over the discovery rows as chips. It opens the list of every row. */
+    fun einkHomeAllRows(context: Context): String =
+        context.getString(R.string.eink_home_all_rows)
+
+    /** Beside the Genres heading at the foot of Browse on a 10 inch e-reader: where the genres come from. */
+    fun einkBrowseGenresFrom(context: Context): String =
+        context.getString(R.string.eink_browse_genres_from)
+
+    /** Heading on a 10 inch e-reader's Downloads over the chapters downloading or waiting, with how many there are. */
+    fun einkDownloadsDownloadingCount(context: Context, count: Int): String =
+        context.getString(R.string.eink_downloads_downloading_count, count)
+
+    /** Text button at the end of the Downloading heading on a 10 inch e-reader's Downloads. It stops every chapter still to come. */
+    fun einkDownloadsStopAll(context: Context): String =
+        context.getString(R.string.eink_downloads_stop_all)
+
+    /** Heading on a 10 inch e-reader's Downloads over the series with chapters kept here, with how many series. */
+    fun einkDownloadsHereCount(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.eink_downloads_here_count, count, count)
+
+    /** Heading over the first column of rows on a 10 inch e-reader's More: sources, trackers, sync and reader settings. */
+    fun einkMoreYourReading(context: Context): String =
+        context.getString(R.string.eink_more_your_reading)
+
+    /** Heading over the second column of rows on a 10 inch e-reader's More: settings and About. */
+    fun einkMoreThisDevice(context: Context): String =
+        context.getString(R.string.eink_more_this_device)
+
+    /** Heading on a 10 inch e-reader's More over the newest notices and errors, each with its time. */
+    fun einkMoreMessages(context: Context): String =
+        context.getString(R.string.eink_more_messages)
+
+    /** Under Recent messages on a 10 inch e-reader's More while there are none since the app started. */
+    fun einkMoreMessagesNone(context: Context): String =
+        context.getString(R.string.eink_more_messages_none)
+
     /** Switch under Volume keys turn pages in the phone reader's settings: volume up turns forward instead of volume down. */
     fun readerRowVolumeSwap(context: Context): String =
         context.getString(R.string.reader_row_volume_swap)

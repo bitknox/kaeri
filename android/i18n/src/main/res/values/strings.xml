@@ -1641,6 +1641,33 @@
     <string name="eink_library_none_match">No series on %1$s match this view</string>
     <!-- The line under it. -->
     <string name="eink_library_none_match_line">Change Medium or Downloaded under View to see the rest.</string>
+    <!-- Text button at the end of Keep next chapters ready on a 10 inch e-reader's Downloads. It opens the downloads settings. -->
+    <string name="eink_keep_ready_change">Change</string>
+    <!-- Text button beside the series in progress on a 10 inch e-reader's Home, next to Continue. It opens the series' page. -->
+    <string name="eink_home_series_page">Series page</string>
+    <!-- The link at the end of the New chapters heading on a 10 inch e-reader's Home. It opens Updates. -->
+    <string name="eink_home_all_new_chapters">All new chapters</string>
+    <!-- The link at the end of the Browse heading on a 10 inch e-reader's Home, over the discovery rows as chips. It opens the list of every row. -->
+    <string name="eink_home_all_rows">All rows</string>
+    <!-- Beside the Genres heading at the foot of Browse on a 10 inch e-reader: where the genres come from. -->
+    <string name="eink_browse_genres_from">From AniList</string>
+    <!-- Heading on a 10 inch e-reader's Downloads over the chapters downloading or waiting, with how many there are. -->
+    <string name="eink_downloads_downloading_count">Downloading · %1$,d</string>
+    <!-- Text button at the end of the Downloading heading on a 10 inch e-reader's Downloads. It stops every chapter still to come. -->
+    <string name="eink_downloads_stop_all">Stop all</string>
+    <!-- Heading on a 10 inch e-reader's Downloads over the series with chapters kept here, with how many series. -->
+    <plurals name="eink_downloads_here_count">
+        <item quantity="one">On this device · %1$,d series</item>
+        <item quantity="other">On this device · %1$,d series</item>
+    </plurals>
+    <!-- Heading over the first column of rows on a 10 inch e-reader's More: sources, trackers, sync and reader settings. -->
+    <string name="eink_more_your_reading">Your reading</string>
+    <!-- Heading over the second column of rows on a 10 inch e-reader's More: settings and About. -->
+    <string name="eink_more_this_device">This device</string>
+    <!-- Heading on a 10 inch e-reader's More over the newest notices and errors, each with its time. -->
+    <string name="eink_more_messages">Recent messages</string>
+    <!-- Under Recent messages on a 10 inch e-reader's More while there are none since the app started. -->
+    <string name="eink_more_messages_none">Notices and errors since Kaeri started show here.</string>
     <!-- Switch under Volume keys turn pages in the phone reader's settings: volume up turns forward instead of volume down. -->
     <string name="reader_row_volume_swap">Swap the volume keys</string>
     <!-- Heading of the e-ink reader's settings sheet over the rows for the e-ink screen itself. -->

@@ -1033,6 +1033,71 @@ eink-library-none-match = No series on { $list } match this view
 # @max 80
 eink-library-none-match-line = Change Medium or Downloaded under View to see the rest.
 
+# Text button at the end of Keep next chapters ready on a 10 inch e-reader's Downloads. It opens the downloads settings.
+# @only android
+# @max 16
+eink-keep-ready-change = Change
+
+# Text button beside the series in progress on a 10 inch e-reader's Home, next to Continue. It opens the series' page.
+# @only android
+# @max 20
+eink-home-series-page = Series page
+
+# The link at the end of the New chapters heading on a 10 inch e-reader's Home. It opens Updates.
+# @only android
+# @max 24
+eink-home-all-new-chapters = All new chapters
+
+# The link at the end of the Browse heading on a 10 inch e-reader's Home, over the discovery rows as chips. It opens the list of every row.
+# @only android
+# @max 16
+eink-home-all-rows = All rows
+
+# Beside the Genres heading at the foot of Browse on a 10 inch e-reader: where the genres come from.
+# @only android
+# @max 24
+eink-browse-genres-from = From AniList
+
+# Heading on a 10 inch e-reader's Downloads over the chapters downloading or waiting, with how many there are.
+# @only android
+# @arg count: int
+# @max 30
+eink-downloads-downloading-count = Downloading · { $count }
+
+# Text button at the end of the Downloading heading on a 10 inch e-reader's Downloads. It stops every chapter still to come.
+# @only android
+# @max 16
+eink-downloads-stop-all = Stop all
+
+# Heading on a 10 inch e-reader's Downloads over the series with chapters kept here, with how many series.
+# @only android
+# @arg count: int
+# @max 40
+eink-downloads-here-count = { $count ->
+    [one] On this { -device } · { $count } series
+   *[other] On this { -device } · { $count } series
+}
+
+# Heading over the first column of rows on a 10 inch e-reader's More: sources, trackers, sync and reader settings.
+# @only android
+# @max 30
+eink-more-your-reading = Your reading
+
+# Heading over the second column of rows on a 10 inch e-reader's More: settings and About.
+# @only android
+# @max 30
+eink-more-this-device = This { -device }
+
+# Heading on a 10 inch e-reader's More over the newest notices and errors, each with its time.
+# @only android
+# @max 30
+eink-more-messages = Recent messages
+
+# Under Recent messages on a 10 inch e-reader's More while there are none since the app started.
+# @only android
+# @max 80
+eink-more-messages-none = Notices and errors since { -app-name } started show here.
+
 # Switch under Volume keys turn pages in the phone reader's settings: volume up turns forward
 # instead of volume down.
 # @only android
