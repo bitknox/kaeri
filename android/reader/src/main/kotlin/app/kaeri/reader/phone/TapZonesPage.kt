@@ -129,8 +129,9 @@ internal fun TapZonesPage(
     Row(Modifier.fillMaxWidth().padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
         // The guide cannot be seen with a screen reader, and Off has no zones to show.
         if (!screenReader) {
-            TextButton(onClick = onShowZones, enabled = tapMap(zones, open, null).layout != ZoneLayout.OFF) {
-                Text(Strings.readerTapShow(context), fontSize = 15.sp, fontWeight = FontWeight.Medium, color = Chrome.text)
+            val shows = tapMap(zones, open, null).layout != ZoneLayout.OFF
+            TextButton(onClick = onShowZones, enabled = shows) {
+                Text(Strings.readerTapShow(context), fontSize = 15.sp, fontWeight = FontWeight.Medium, color = if (shows) Chrome.text else Chrome.faint)
             }
         }
         Spacer(Modifier.weight(1f))

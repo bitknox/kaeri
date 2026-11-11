@@ -1,8 +1,8 @@
 // The tap zones on the phone and the tablet, drawn on the JVM from made-up records and the engine's
 // own cells: the guide over a right-to-left page (Auto, so Sides), Top and bottom on a left-to-right
-// page, the scrolling guide over a strip, and the Tap zones page of the settings sheet. Written to
-// android/.shots/roborazzi/tap-zones-*. Also: a guide that comes back after a change takes the
-// controls away, so nothing covers its labels.
+// page, the scrolling guide over a strip, and the Tap zones page of the settings sheet, with zones
+// on and Off. Written to android/.shots/roborazzi/tap-zones-*. Also: a guide that comes back after
+// a change takes the controls away, so nothing covers its labels.
 
 package app.kaeri.reader
 
@@ -15,7 +15,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.click
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onRoot
@@ -128,6 +130,14 @@ class TapZonesShots {
     fun the_tap_zones_page() {
         reader(TapZonesScenes.state(dir), SettingsPane.TapZones)
         shot("phone-page-paged-rtl")
+    }
+
+    @Test
+    fun the_tap_zones_page_with_zones_off() {
+        // Off has no zones to show: Show zones is drawn as off too.
+        reader(TapZonesScenes.state(dir, zones = TapZonesScenes.zones(ZoneLayout.OFF)), SettingsPane.TapZones)
+        compose.onNodeWithText("Show zones").assertIsNotEnabled()
+        shot("phone-page-off")
     }
 
     @Test
