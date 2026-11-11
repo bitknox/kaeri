@@ -7334,6 +7334,9 @@ public static partial class T
     /// <summary>Line under Delete chapters after reading.</summary>
     public static string SettingsDeleteAfterReadingNote => Get("SettingsDeleteAfterReadingNote");
 
+    /// <summary>Line under Show volumes: the list is grouped only when most chapters have a volume.</summary>
+    public static string SettingsShowVolumesNote => Get("SettingsShowVolumesNote");
+
     /// <summary>Line under New chapters.</summary>
     public static string SettingsChapterNotificationsNote => Get("SettingsChapterNotificationsNote");
 
@@ -8443,6 +8446,9 @@ public static partial class T
 
     /// <summary>Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.</summary>
     public static string SettingsDeleteAfterReading => Get("SettingsDeleteAfterReading");
+
+    /// <summary>Row: group a series' chapters under volume headings. Off by default.</summary>
+    public static string SettingsShowVolumes => Get("SettingsShowVolumes");
 
     /// <summary>Row: whether a series' reader mode, direction and colour follow you to your other devices.</summary>
     public static string SettingsSeriesChoicesFollow => Get("SettingsSeriesChoicesFollow");
@@ -14326,6 +14332,7 @@ public static partial class T
         ["SettingsDisagreeNote"] = "Status and score follow the latest change",
         ["SettingsKeepChaptersReadyNote"] = "The next chapters of series on your Reading list",
         ["SettingsDeleteAfterReadingNote"] = "Bookmarked chapters are kept",
+        ["SettingsShowVolumesNote"] = "Grouped when most chapters have a volume",
         ["SettingsChapterNotificationsNote"] = "Series on your Reading list",
         ["SettingsDownloadsFinishedNote"] = "When the chapters downloading are all done",
         ["SettingsChapterNotificationsFooter"] = "Chapters have their own system channel, so you can silence them and keep the rest.",
@@ -14712,6 +14719,7 @@ public static partial class T
         ["SettingsChapterDownloadsCellular"] = "Chapter downloads on mobile data",
         ["SettingsKeepChaptersReady"] = "Keep next chapters ready",
         ["SettingsDeleteAfterReading"] = "Delete chapters after reading",
+        ["SettingsShowVolumes"] = "Show volumes",
         ["SettingsSeriesChoicesFollow"] = "Series settings follow you",
         ["SettingsNewChaptersDownload"] = "New chapters",
         ["SettingsModeFollows"] = "Mode and direction",

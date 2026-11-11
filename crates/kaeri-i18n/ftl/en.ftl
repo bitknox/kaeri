@@ -10447,6 +10447,9 @@ settings-keep-chapters-ready-note = The next chapters of series on your Reading 
 # Line under Delete chapters after reading.
 settings-delete-after-reading-note = Bookmarked chapters are kept
 
+# Line under Show volumes: the list is grouped only when most chapters have a volume.
+settings-show-volumes-note = Grouped when most chapters have a volume
+
 # Line under New chapters.
 settings-chapter-notifications-note = Series on your Reading list
 
@@ -11620,6 +11623,9 @@ settings-keep-chapters-ready = Keep next chapters ready
 
 # Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.
 settings-delete-after-reading = Delete chapters after reading
+
+# Row: group a series' chapters under volume headings. Off by default.
+settings-show-volumes = Show volumes
 
 # Row: whether a series' reader mode, direction and colour follow you to your other devices.
 settings-series-choices-follow = Series settings follow you

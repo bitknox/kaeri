@@ -10060,6 +10060,9 @@ public enum L {
     /// Line under Delete chapters after reading.
     public static var settingsDeleteAfterReadingNote: String { string("settings-delete-after-reading-note", fallback: "Bookmarked chapters are kept") }
 
+    /// Line under Show volumes: the list is grouped only when most chapters have a volume.
+    public static var settingsShowVolumesNote: String { string("settings-show-volumes-note", fallback: "Grouped when most chapters have a volume") }
+
     /// Line under New chapters.
     public static var settingsChapterNotificationsNote: String { string("settings-chapter-notifications-note", fallback: "Series on your Reading list") }
 
@@ -11335,6 +11338,9 @@ public enum L {
 
     /// Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.
     public static var settingsDeleteAfterReading: String { string("settings-delete-after-reading", fallback: "Delete chapters after reading") }
+
+    /// Row: group a series' chapters under volume headings. Off by default.
+    public static var settingsShowVolumes: String { string("settings-show-volumes", fallback: "Show volumes") }
 
     /// Row: whether a series' reader mode, direction and colour follow you to your other devices.
     public static var settingsSeriesChoicesFollow: String { string("settings-series-choices-follow", fallback: "Series settings follow you") }

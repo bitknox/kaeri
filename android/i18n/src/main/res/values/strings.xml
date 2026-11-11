@@ -5782,6 +5782,8 @@
     <string name="settings_keep_chapters_ready_note">The next chapters of series on your Reading list</string>
     <!-- Line under Delete chapters after reading. -->
     <string name="settings_delete_after_reading_note">Bookmarked chapters are kept</string>
+    <!-- Line under Show volumes: the list is grouped only when most chapters have a volume. -->
+    <string name="settings_show_volumes_note">Grouped when most chapters have a volume</string>
     <!-- Line under New chapters. -->
     <string name="settings_chapter_notifications_note">Series on your Reading list</string>
     <!-- Line under Downloads finished. -->
@@ -6570,6 +6572,8 @@
     <string name="settings_keep_chapters_ready">Keep next chapters ready</string>
     <!-- Row: delete a downloaded chapter once it is read. Bookmarked chapters stay. -->
     <string name="settings_delete_after_reading">Delete chapters after reading</string>
+    <!-- Row: group a series' chapters under volume headings. Off by default. -->
+    <string name="settings_show_volumes">Show volumes</string>
     <!-- Row: whether a series' reader mode, direction and colour follow you to your other devices. -->
     <string name="settings_series_choices_follow">Series settings follow you</string>
     <!-- Row in Downloads: which series' new chapters download by themselves. -->

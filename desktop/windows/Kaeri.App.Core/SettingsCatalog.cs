@@ -29,7 +29,7 @@ public static class SettingsCatalog
         SettingKey.PresenceRich,
         SettingKey.Torrents, SettingKey.Syncplay, SettingKey.UpdateCheck, SettingKey.UpdateBeta, SettingKey.SpoilerProtection,
         SettingKey.DownloadsOnCellular, SettingKey.TorrentsOnCellular, SettingKey.EpisodeNotifications,
-        SettingKey.ChapterDownloadsOnCellular, SettingKey.KeepChaptersReady, SettingKey.DeleteAfterReading, SettingKey.OpdsFeed,
+        SettingKey.ChapterDownloadsOnCellular, SettingKey.KeepChaptersReady, SettingKey.DeleteAfterReading, SettingKey.ShowVolumes, SettingKey.OpdsFeed,
         SettingKey.SeriesChoicesFollow, SettingKey.LookFollows, SettingKey.ChapterNotifications, SettingKey.DownloadsFinished,
         SettingKey.EpisodeDiscussions, SettingKey.CommentImages, SettingKey.CastTvs, SettingKey.TorrentsWhileCasting, SettingKey.AdultTitles,
     ];

@@ -372,7 +372,7 @@ public sealed partial class SeriesPage : Page
         menu.Items.Add(SeriesWords.Item(T.DownloadNext(5), () => ctx.Known.Reading.Download(work, new DownloadPick.NextUnread(5))));
         menu.Items.Add(SeriesWords.Item(T.DownloadNext(10), () => ctx.Known.Reading.Download(work, new DownloadPick.NextUnread(10))));
         menu.Items.Add(SeriesWords.Item(T.DownloadUnread, () => ctx.Known.Reading.Download(work, new DownloadPick.Unread()), enabled: unread));
-        var toFetch = volumes.Where(g => g.Chapters.Any(c => c.Download is null)).ToList();
+        var toFetch = SeriesWords.DownloadVolumes(volumes).Where(g => g.Chapters.Any(c => c.Download is null)).ToList();
         if (toFetch.Count > 0)
             menu.Items.Add(new MenuFlyoutSeparator());
         var novel = Series?.Medium == Medium.Novel;
@@ -508,7 +508,8 @@ public sealed partial class SeriesPage : Page
         chapters.Children.Clear();
 
         var volumes = read?.Volumes ?? [];
-        var byVolume = volumes.Any(v => v.Volume is { Length: > 0 }) && volumes.Length > 1;
+        // A flat list (Show volumes off, or too few chapters with a volume) is its rows alone.
+        var byVolume = volumes is not [{ Flat: true }] && volumes.Any(v => v.Volume is { Length: > 0 }) && volumes.Length > 1;
         var top = new Grid { Margin = new Thickness(0, 8, 0, 8) };
         top.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         top.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });

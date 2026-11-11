@@ -10447,6 +10447,9 @@ settings-keep-chapters-ready-note = [Ţĥé ñéẋţ çĥàþţéŕš öƒ šé
 # Line under Delete chapters after reading.
 settings-delete-after-reading-note = [Ɓööķɱàŕķéð çĥàþţéŕš àŕé ķéþţ~~~~~~~~~]
 
+# Line under Show volumes: the list is grouped only when most chapters have a volume.
+settings-show-volumes-note = [Ĝŕöüþéð ŵĥéñ ɱöšţ çĥàþţéŕš ĥàṽé à ṽöļüɱé~~~~~~~~~~~~]
+
 # Line under New chapters.
 settings-chapter-notifications-note = [Šéŕîéš öñ ýöüŕ Ŕéàðîñĝ ļîšţ~~~~~~~~~]
 
@@ -11620,6 +11623,9 @@ settings-keep-chapters-ready = [Ķééþ ñéẋţ çĥàþţéŕš ŕéàðý~~
 
 # Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.
 settings-delete-after-reading = [Ðéļéţé çĥàþţéŕš àƒţéŕ ŕéàðîñĝ~~~~~~~~~]
+
+# Row: group a series' chapters under volume headings. Off by default.
+settings-show-volumes = [Šĥöŵ ṽöļüɱéš~~~~]
 
 # Row: whether a series' reader mode, direction and colour follow you to your other devices.
 settings-series-choices-follow = [Šéŕîéš šéţţîñĝš ƒöļļöŵ ýöü~~~~~~~~]

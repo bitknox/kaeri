@@ -731,7 +731,7 @@ internal fun DownloadMenu(
     val unread = all.filter { it.state !is ChapterReadState.Read && it.download == null }
     val downloaded = volumes.downloaded()
     val any = all.filter { it.download != null }
-    val toFetch = volumes.filter { group -> group.chapters.any { it.state !is ChapterReadState.Read && it.download == null } }.take(3)
+    val toFetch = volumes.downloadVolumes().filter { group -> group.chapters.any { it.state !is ChapterReadState.Read && it.download == null } }.take(3)
     val snackbars = app.kaeri.ui.LocalSnackbars.current
     fun pick(what: DownloadPick) {
         // The next unread are the engine's pick too: all of them here already queues nothing, so say so.
