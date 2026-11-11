@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -92,12 +93,22 @@ fun EinkOutlinedButton(text: String, onClick: () -> Unit, modifier: Modifier = M
     }
 }
 
-/** A quiet action: words on paper, 52 dp tall. */
+/**
+ * A quiet action: words on paper, 52 dp tall and 48 dp wide at the least. A short word sits by
+ * [align] in that width: the middle, or the end for a link that ends on the page margin.
+ */
 @Composable
-fun EinkTextButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, underline: Boolean = false, oneLine: Boolean = false) {
+fun EinkTextButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    underline: Boolean = false,
+    oneLine: Boolean = false,
+    align: Alignment = Alignment.Center,
+) {
     Box(
-        modifier.heightIn(min = EinkSizes.TextButtonHeight).einkClick(onClick = onClick).padding(horizontal = 12.dp),
-        contentAlignment = Alignment.Center,
+        modifier.heightIn(min = EinkSizes.TextButtonHeight).widthIn(min = EinkSizes.TextButtonLeast).einkClick(onClick = onClick).padding(horizontal = 12.dp),
+        contentAlignment = align,
     ) {
         val style = EinkType.Label.copy(textDecoration = if (underline) TextDecoration.Underline else null)
         if (oneLine) {

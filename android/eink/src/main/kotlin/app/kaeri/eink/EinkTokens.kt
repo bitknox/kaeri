@@ -52,6 +52,7 @@ object EinkSizes {
     val ButtonRadius: Dp = 27.dp
     val ButtonSide: Dp = 26.dp
     val TextButtonHeight: Dp = 52.dp
+    val TextButtonLeast: Dp = 48.dp // a short word still has a 48 dp target
     val SegmentHeight: Dp = 48.dp
     val SegmentRadius: Dp = 10.dp
     val Row: Dp = 66.dp

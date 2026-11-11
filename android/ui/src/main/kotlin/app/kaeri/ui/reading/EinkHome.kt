@@ -289,7 +289,7 @@ private fun LargeHome(
                     Box(Modifier.weight(1f)) { LargeHero(tile, spot, actions) }
                     LargeNewChapters(
                         came,
-                        Modifier.padding(start = ListGap, top = 14.dp).width(NewChaptersBeside).height(LargeHeroCover * 1.5f),
+                        Modifier.padding(start = ListGap).width(NewChaptersBeside).height(LargeHeroCover * 1.5f),
                         beside = true,
                     )
                 }
@@ -368,15 +368,15 @@ private fun LargeHero(tile: WorkTile, spot: ReadSpotlight, actions: AppActions) 
 }
 
 /**
- * Continue on a 10 inch Home: a 140 dp cover centred in each of the grid's columns, with its title
- * and place; five columns when the panel is held on its side.
+ * Continue on a 10 inch Home: 140 dp covers on the grid's columns, from margin to margin, with
+ * their title and place; five columns when the panel is held on its side.
  */
 @Composable
 private fun LargeContinue(tiles: List<WorkTile>) {
     val context = LocalContext.current
     val navigator = LocalNavigator.current
     Spacer(Modifier.height(18.dp))
-    PaperHeading(Strings.homeReadContinue(context), Strings.einkHomeAll(context)) {
+    PaperHeading(Strings.homeReadContinue(context), Strings.einkHomeAll(context), flush = true) {
         ReadPlaces.showList(LibrarySegmentRead.READING)
         navigator.go(Destination.Library)
     }
@@ -387,25 +387,23 @@ private fun LargeContinue(tiles: List<WorkTile>) {
         } else {
             paperGrid(maxWidth, 1000.dp, 0.dp, 0.dp).columns
         }
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-            val shown = tiles.take(columns)
-            for (tile in shown) {
-                // Centred in its column, as the grid's covers are.
-                Box(Modifier.weight(1f), contentAlignment = Alignment.TopCenter) {
-                    Column(
-                        Modifier
-                            .width(LargeContinueCover)
-                            .einkClick { navigator.openSeries(tile.work, "eink-continue") }
-                            .semantics(mergeDescendants = true) {},
-                    ) {
-                        PaperCover(tile.cover, tile.title, LargeContinueCover, Modifier)
-                        Text(tile.title, style = EinkType.Label, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 8.dp))
-                        val line = tile.line(context)
-                        if (line.isNotEmpty()) Text(line, style = EinkType.Secondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    }
+        // The first cover on the start margin and the last on the end one, the gaps shared out
+        // between; with fewer series the tiles keep their places from the start.
+        val gap = (maxWidth - LargeContinueCover * columns) / (columns - 1).coerceAtLeast(1)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(gap)) {
+            for (tile in tiles.take(columns)) {
+                Column(
+                    Modifier
+                        .width(LargeContinueCover)
+                        .einkClick { navigator.openSeries(tile.work, "eink-continue") }
+                        .semantics(mergeDescendants = true) {},
+                ) {
+                    PaperCover(tile.cover, tile.title, LargeContinueCover, Modifier)
+                    Text(tile.title, style = EinkType.Label, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 8.dp))
+                    val line = tile.line(context)
+                    if (line.isNotEmpty()) Text(line, style = EinkType.Secondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
-            repeat(columns - shown.size) { Spacer(Modifier.weight(1f)) }
         }
     }
 }
@@ -419,9 +417,11 @@ private fun LargeNewChapters(came: List<CameOut>, modifier: Modifier, beside: Bo
     val context = LocalContext.current
     val navigator = LocalNavigator.current
     Column(if (beside) modifier else modifier.fillMaxWidth()) {
-        // Beside the hero its heading sits level with the hero's top.
+        // Beside the hero the heading shares the baseline of the hero's "Continue reading".
         if (!beside) Spacer(Modifier.height(18.dp))
-        PaperHeading(Strings.einkHomeNewChapters(context), Strings.einkHomeAllNewChapters(context), flush = true) { navigator.go(Destination.Updates) }
+        PaperHeading(Strings.einkHomeNewChapters(context), Strings.einkHomeAllNewChapters(context), flush = true, top = if (beside) 3.dp else 10.dp) {
+            navigator.go(Destination.Updates)
+        }
         PagedColumns(came, page = 0, onPage = {}, modifier = Modifier.weight(1f).padding(top = 4.dp, bottom = 12.dp), paged = false) { (day, entry), first ->
             val tile = entry.tile
             val line = cameWords(context, day, entry)
@@ -718,10 +718,11 @@ private fun PaperDemoLine() {
 
 /** A heading on paper with an underlined link at its end, its words on the margin when [flush]. */
 @Composable
-private fun PaperHeading(title: String, link: String?, flush: Boolean = false, onLink: () -> Unit) {
-    Row(Modifier.fillMaxWidth().padding(top = 10.dp).height(HeadingHeight), verticalAlignment = Alignment.CenterVertically) {
+private fun PaperHeading(title: String, link: String?, flush: Boolean = false, top: Dp = 10.dp, onLink: () -> Unit) {
+    Row(Modifier.fillMaxWidth().padding(top = top).height(HeadingHeight), verticalAlignment = Alignment.CenterVertically) {
         Text(title, style = EinkType.RowTitle, modifier = Modifier.weight(1f).semantics { heading() })
-        if (link != null) EinkTextButton(link, onLink, Modifier.overhang().then(if (flush) FlushEnd else Modifier), underline = true)
+        // The link's words keep to the end, so a short one grows its target to the left.
+        if (link != null) EinkTextButton(link, onLink, Modifier.overhang().then(if (flush) FlushEnd else Modifier), underline = true, align = Alignment.CenterEnd)
     }
 }
 
@@ -743,7 +744,7 @@ private fun Modifier.overhang(): Modifier = layout { measurable, constraints ->
 private fun PaperContinue(tiles: List<WorkTile>, reader: Boolean) {
     val context = LocalContext.current
     val navigator = LocalNavigator.current
-    PaperHeading(Strings.homeReadContinue(context), Strings.einkHomeAll(context)) {
+    PaperHeading(Strings.homeReadContinue(context), Strings.einkHomeAll(context), flush = true) {
         ReadPlaces.showList(LibrarySegmentRead.READING)
         navigator.go(Destination.Library)
     }

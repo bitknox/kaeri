@@ -1,7 +1,12 @@
 package app.kaeri.ui
 
-import androidx.compose.ui.test.hasText
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import app.kaeri.eink.EinkLook
 import app.kaeri.engine.model.Event
 import app.kaeri.engine.model.KaeriIsFor
@@ -12,6 +17,7 @@ import app.kaeri.engine.model.ReadWeekEntry
 import app.kaeri.engine.model.ReadingEvent
 import app.kaeri.store.AppStore
 import app.kaeri.store.FixtureScene
+import kotlin.math.abs
 import org.junit.Test
 import org.robolectric.annotation.Config
 
@@ -41,13 +47,30 @@ class EinkLargeHomeShots : ReadingShotHarness() {
 
     /**
      * On its side the large Home is widened, with Continue reaching a fifth series and New
-     * chapters beside the hero, keeping its link.
+     * chapters beside the hero: right of 800 dp and above Continue, its heading on the hero's
+     * "Continue reading" line, its link kept.
      */
     private fun landHome(name: String) = fullHome(name) {
         compose.onNodeWithText(CONTINUE_TITLES.last()).assertExists()
-        compose.onNodeWithText("All new chapters").assertExists() // i18n-skip
-        val newRow = NEW_TITLES.map { hasText(it, substring = true) }.reduce { a, b -> a or b }
-        check(compose.onAllNodes(newRow).fetchSemanticsNodes().isNotEmpty()) { "No New chapters row beside the hero" } // i18n-skip
+        val continueTop = compose.onNodeWithText("Continue").getBoundsInRoot().top // i18n-skip
+        val link = compose.onNodeWithText("All new chapters").getBoundsInRoot() // i18n-skip
+        check(link.left >= 800.dp && link.bottom <= continueTop) { "All new chapters is not beside the hero" } // i18n-skip
+        // The Quiet Forge, a made-up title the hero doesn't share; placed where the list is.
+        val rows = compose.onAllNodesWithText(NEW_TITLES.first(), substring = true).fetchSemanticsNodes().map { node ->
+            with(compose.density) { node.boundsInRoot.left.toDp() to node.boundsInRoot.bottom.toDp() }
+        }
+        check(rows.any { (left, bottom) -> left >= 800.dp && bottom <= continueTop }) { "New chapters is not beside the hero: $rows" } // i18n-skip
+        val heading = baseline("New chapters") // i18n-skip
+        val kicker = baseline("Continue reading") // i18n-skip
+        check(abs((heading - kicker).value) <= 1f) { "New chapters baseline at $heading, Continue reading at $kicker" } // i18n-skip
+    }
+
+    /** Where [text]'s first line sits on the page: its node's top and the first baseline. */
+    private fun baseline(text: String): Dp {
+        val node = compose.onNodeWithText(text, useUnmergedTree = true).fetchSemanticsNode()
+        val layouts = mutableListOf<TextLayoutResult>()
+        node.config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+        return with(compose.density) { (node.boundsInRoot.top + layouts.first().firstBaseline).toDp() }
     }
 
     private fun browse(name: String) = shoot(
