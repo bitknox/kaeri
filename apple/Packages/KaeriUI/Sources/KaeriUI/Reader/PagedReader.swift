@@ -549,24 +549,18 @@ struct ReaderEndPage: View {
                 .transition(.opacity)
             }
             if !phone {
-                let row = Group {
-                    if let next {
-                        Button { model.openChapter(next.id) } label: {
-                            continueLabel(next.id).padding(.horizontal, 18)
-                        }
-                        .buttonStyle(ReaderAmberStyle(theme: theme, height: Device.isMac ? 28 : 44))
-                        skipButton(next, height: Device.isMac ? 28 : 44, wide: false)
-                    }
-                    Button(L.readerBackToSeries) { closeReader() }
-                        .buttonStyle(ReaderPillStyle(theme: theme, height: Device.isMac ? 28 : 44))
+                let stack = VStack(alignment: .leading, spacing: 10) {
+                    wideButtons(next, stacked: true)
                 }
-                let stack = VStack(alignment: .leading, spacing: 10) { row }.padding(.top, 22)
+                .padding(.top, 22)
                 if type.isAccessibilitySize {
                     stack
                 } else {
                     // One row, Continue first; a row too wide for the column stacks instead.
                     ViewThatFits(in: .horizontal) {
-                        HStack(spacing: 10) { row }.fixedSize().padding(.top, 22)
+                        HStack(spacing: 10) { wideButtons(next, stacked: false) }
+                            .fixedSize()
+                            .padding(.top, 22)
                         stack
                     }
                 }
@@ -576,6 +570,22 @@ struct ReaderEndPage: View {
                 }
             }
         }
+    }
+
+    /// Continue, the skip and Back on a Mac or iPad: in one row, or stacked, where all three run
+    /// the column's width as Continue does.
+    @ViewBuilder
+    private func wideButtons(_ next: ChapterRow?, stacked: Bool) -> some View {
+        let height: CGFloat = Device.isMac ? 28 : 44
+        if let next {
+            Button { model.openChapter(next.id) } label: {
+                continueLabel(next.id).padding(.horizontal, 18)
+            }
+            .buttonStyle(ReaderAmberStyle(theme: theme, height: height))
+            skipButton(next, height: height, wide: stacked)
+        }
+        Button(L.readerBackToSeries) { closeReader() }
+            .buttonStyle(ReaderPillStyle(theme: theme, height: height, wide: stacked))
     }
 
     private func preview(_ next: ChapterRow, width: CGFloat) -> some View {
