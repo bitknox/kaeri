@@ -302,17 +302,18 @@ private fun EinkSettingLine(context: Context, session: ReaderSession, row: Reade
                 if (labelled.size <= 4) {
                     EinkSegmented(labelled.map { it.first }, value, { choice -> labelled.first { it.first == choice }.second }, { set(it) }, Modifier.weight(1f))
                 } else {
-                    // Too many for one control: the chosen one between arrows that go round them.
+                    // Too many for one control: the chosen one between arrows, which stop at the
+                    // first and the last choice.
                     val at = labelled.indexOfFirst { it.first == value }.coerceAtLeast(0)
                     EinkStepper(
                         words = labelled[at].second,
                         title = title,
-                        down = Strings.readerActionPrevious(context),
-                        up = Strings.readerActionNext(context),
-                        canDown = true,
-                        canUp = true,
-                        onDown = { set(labelled[(at - 1 + labelled.size) % labelled.size].first) },
-                        onUp = { set(labelled[(at + 1) % labelled.size].first) },
+                        down = Strings.einkStepPrevious(context),
+                        up = Strings.einkStepNext(context),
+                        canDown = at > 0,
+                        canUp = at < labelled.lastIndex,
+                        onDown = { if (at > 0) set(labelled[at - 1].first) },
+                        onUp = { if (at < labelled.lastIndex) set(labelled[at + 1].first) },
                         modifier = Modifier.weight(1f),
                         glyphs = "‹" to "›",
                     )

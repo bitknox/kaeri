@@ -3049,6 +3049,14 @@ object Strings {
     fun einkStepUp(context: Context): String =
         context.getString(R.string.eink_step_up)
 
+    /** Button before a list setting's value in the e-ink reader's settings, such as Screen mode: picks the choice before. Read out by screen readers. */
+    fun einkStepPrevious(context: Context): String =
+        context.getString(R.string.eink_step_previous)
+
+    /** Button after a list setting's value in the e-ink reader's settings, such as Screen mode: picks the choice after. Read out by screen readers. */
+    fun einkStepNext(context: Context): String =
+        context.getString(R.string.eink_step_next)
+
     /** Marks the chapter open in the reader on the e-ink contents page. */
     fun einkContentsReading(context: Context): String =
         context.getString(R.string.eink_contents_reading)

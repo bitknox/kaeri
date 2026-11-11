@@ -1639,6 +1639,10 @@
     <string name="eink_step_down">Less</string>
     <!-- Button that makes a setting in the e-ink reader's settings bigger. -->
     <string name="eink_step_up">More</string>
+    <!-- Button before a list setting's value in the e-ink reader's settings, such as Screen mode: picks the choice before. Read out by screen readers. -->
+    <string name="eink_step_previous">Previous choice</string>
+    <!-- Button after a list setting's value in the e-ink reader's settings, such as Screen mode: picks the choice after. Read out by screen readers. -->
+    <string name="eink_step_next">Next choice</string>
     <!-- Marks the chapter open in the reader on the e-ink contents page. -->
     <string name="eink_contents_reading">Reading</string>
     <!-- What TalkBack says the line of skipped credit pages does, after "Double-tap to": an imperative, as Android's click labels are. -->

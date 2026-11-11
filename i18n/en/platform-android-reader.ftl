@@ -1031,6 +1031,18 @@ eink-step-down = Less
 # @max 30
 eink-step-up = More
 
+# Button before a list setting's value in the e-ink reader's settings, such as Screen mode: picks
+# the choice before. Read out by screen readers.
+# @only android
+# @max 30
+eink-step-previous = Previous choice
+
+# Button after a list setting's value in the e-ink reader's settings, such as Screen mode: picks
+# the choice after. Read out by screen readers.
+# @only android
+# @max 30
+eink-step-next = Next choice
+
 # Marks the chapter open in the reader on the e-ink contents page.
 # @only android
 # @max 20
