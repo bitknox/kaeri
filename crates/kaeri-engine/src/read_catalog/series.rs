@@ -172,6 +172,35 @@ pub(crate) async fn chapters(
     send(tx, ReadingEvent::Series(Box::new(view(kit, ask, work, false))));
 }
 
+/// A page's chapter list sent again as kept, grouped as the person now shows volumes. A list
+/// not kept yet is on its way from the source, and comes grouped the new way by itself.
+pub(crate) fn regroup(kit: &Kit, ask: Ask, work: &WorkId, tx: &Outbox) {
+    let now = ask.now;
+    let (edition, volumes) = if kit.sources.edition_of(work, None).is_some() {
+        let Some((edition, mut volumes)) = kit.sources.kept_listing(work, now, i64::MAX) else {
+            return;
+        };
+        finish(kit, work, &mut volumes, now);
+        (edition, volumes)
+    } else {
+        // The files on this device are the list.
+        let list = chapters::of_work(&kit.sources, &kit.store, work);
+        let volumes = crate::reading::shelf::volumes(
+            &kit.store,
+            work.as_str(),
+            list.as_ref().map(|(_, _, l)| l.as_slice()),
+            medium_of(kit, work),
+            (now, &kit.clock.zone()),
+            kit.sources.show_volumes(),
+        );
+        (None, volumes)
+    };
+    if volumes.is_empty() {
+        return;
+    }
+    send(tx, ReadingEvent::Chapters { work: work.clone(), edition, volumes, failure: None });
+}
+
 /// One chapter-list ask on its way, by work and edition: let go when it is dropped.
 struct Turn {
     loads: super::ChapterLoads,

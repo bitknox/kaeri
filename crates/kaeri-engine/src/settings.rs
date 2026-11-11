@@ -89,6 +89,10 @@ pub fn set_setting(
     }
     if key == SettingKey::ShowVolumes {
         services.book_sources.set_show_volumes(engine.config.effective().reading.show_volumes);
+        // A series page already open groups its list again, as one opened next would.
+        let kit = crate::read_catalog::Kit::of(services);
+        let ask = crate::read_catalog::Ask::of(engine, services);
+        crate::read_catalog::changed::volumes_shown(&kit, ask, tx);
     }
     if key == SettingKey::WhenTrackersDisagree {
         services.sync.set_read_rule(engine.config.effective().reading.when_trackers_disagree);
