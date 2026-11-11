@@ -169,8 +169,6 @@ class NovelWebHost(
 
     private fun received(text: String) {
         val message = NovelMessage.parse(text) ?: return
-        // A new document's paginator starts with no taps of its own: tell it which.
-        if (message is NovelMessage.Page && message.how == null) taps?.let(::call)
         when (message) {
             // The next linear document on a turn past the end, the previous one before the start.
             is NovelMessage.End -> nextDocument(+1)?.let { turnInto(it) } ?: onMessage(message)
@@ -222,21 +220,6 @@ class NovelWebHost(
         turnedInto = TurnHow.JUMP
         index = spineIndex.coerceIn(0, (spine.size - 1).coerceAtLeast(0))
         view.loadUrl(url)
-    }
-
-    /** The input call last sent, said again to each document as it is ready. */
-    private var taps: String? = null
-
-    /**
-     * Let the page turn itself on a tap within [edge] of a side, forward on the right or, in a
-     * right-to-left book, the left, and report the new page once. Taps elsewhere still come as
-     * [NovelMessage.Tap], and [next], [prev] and [goTo] still turn it for keys and accessibility.
-     */
-    fun tapsTurn(edge: Float, rtl: Boolean) {
-        val js = "input({edge: $edge, forward: ${quote(if (rtl) "left" else "right")}, keys: false, hold: false})"
-        if (js == taps) return
-        taps = js
-        call(js)
     }
 
     fun next(how: TurnHow = TurnHow.TURN) = call("next(${quote(NovelMessage.word(how))})")

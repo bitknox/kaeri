@@ -1,13 +1,17 @@
 // The strip reader: the chapter's images one under the other, full width on a phone and 620 dp
-// wide on a large screen, with no side zones. A tap anywhere shows the controls and a scroll hides
-// them. Where the reader settles goes to the engine at most every 500 ms, with whether the foot of
+// wide on a large screen. A tap goes to the screen, which asks the engine's Scrolling tap zones
+// what it does (Off, the default, shows the controls); a touch while the strip still moves only
+// stops it, and a scroll hides the controls. There is no double tap here, so a tap acts at once. Where the reader settles goes to the engine at most every 500 ms, with whether the foot of
 // the last image is in view, which is what the read rule waits for. With a next chapter the strip
 // does not stop: a divider names it, and its images follow in the same scroll, with the chapter
 // left kept above them.
 
 package app.kaeri.reader
 
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -86,7 +90,7 @@ val StripDividerHeight = 168.dp
 /**
  * The strip over [state]'s leaves, each a single image. [onAt] gets each settled place, at most
  * every 500 ms; [onScrolled] runs when a scroll starts, for the screen to hide its controls;
- * [onTap] for any tap. [footer] follows the last image when there is no next chapter: the end
+ * [onTap] for a tap that did not stop the strip, at fractions of the strip's width and height. [footer] follows the last image when there is no next chapter: the end
  * page. With one, [divider] names it, and [onFlow] runs once the divider comes into view, for the
  * session to open that chapter under this one. [onShowing] says whether the chapter across the
  * middle of the screen is the one kept above.
@@ -96,7 +100,7 @@ fun StripReader(
     state: ReaderState,
     images: PageImages,
     onAt: (at: StripPos, footVisible: Boolean) -> Unit,
-    onTap: () -> Unit,
+    onTap: (x: Float, y: Float) -> Unit,
     onScrolled: () -> Unit,
     onMissing: (LeafPart) -> Unit,
     onRetry: (page: Int) -> Unit,
@@ -182,7 +186,18 @@ fun StripReader(
         }.distinctUntilChanged().collect { showing(it) }
     }
 
-    BoxWithConstraints(modifier.fillMaxSize().pointerInput(Unit) { detectTapGestures { onTap() } }) {
+    val tapped by rememberUpdatedState(onTap)
+    BoxWithConstraints(
+        modifier.fillMaxSize().pointerInput(list) {
+            awaitEachGesture {
+                // Read before the list sees the touch, which stops a moving strip.
+                awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                val moving = list.isScrollInProgress
+                val up = waitForUpOrCancellation() ?: return@awaitEachGesture
+                if (!moving) tapped(up.position.x / size.width, up.position.y / size.height)
+            }
+        },
+    ) {
         val screen = maxHeight
         // Show on a divider or the end page puts the pages skipped at the end back above it: with
         // the divider or the end at the top, the scroll moves up onto them.

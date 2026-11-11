@@ -40,6 +40,7 @@ import app.kaeri.engine.model.ReadingEvent
 import app.kaeri.engine.model.ReadingFailure
 import app.kaeri.engine.model.SettingScope
 import app.kaeri.engine.model.StripPos
+import app.kaeri.engine.model.TapMap
 import app.kaeri.engine.model.TurnHow
 import app.kaeri.store.AppStore
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -406,6 +407,21 @@ class ReaderSession(private val send: (Command) -> Unit) {
     }
 
     fun loadSettings(medium: Medium, work: WorkId?) = reader(ReaderCommand.LoadSettings(medium, work))
+
+    /**
+     * The tap zone guide for [map] was seen: kept on this device, so it shows again only once the
+     * zones or the direction change. Never sent while a screen reader runs.
+     */
+    fun tapGuideSeen(map: TapMap) {
+        val now = state.value
+        val settings = now.settings
+        val zones = settings?.tapZones
+        if (settings != null && zones != null) {
+            val seen = if (zones.scrollingKind(map)) zones.copy(guideSeenScrolling = map.guide) else zones.copy(guideSeenPaged = map.guide)
+            _state.value = now.copy(settings = settings.copy(tapZones = seen))
+        }
+        reader(ReaderCommand.TapGuideSeen(map.guide))
+    }
 
     /**
      * Where the reader is, to open there again when the activity is made anew: the chapter on

@@ -7,12 +7,8 @@ package app.kaeri.reader.phone
 import android.annotation.SuppressLint
 import android.view.GestureDetector
 import android.view.MotionEvent
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -23,7 +19,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
@@ -31,7 +26,16 @@ import app.kaeri.engine.model.BookResource
 import app.kaeri.engine.model.NovelAssets
 import app.kaeri.engine.model.ReadDirection
 import app.kaeri.engine.model.ReaderSettingKey
+import app.kaeri.engine.model.TapAction
 import app.kaeri.engine.model.TurnHow
+import app.kaeri.i18n.Strings
+import app.kaeri.reader.actionAt
+import app.kaeri.reader.rememberScreenReader
+import app.kaeri.reader.tapReading
+import app.kaeri.reader.tapZones
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
 import app.kaeri.reader.NovelMessage
 import app.kaeri.reader.NovelWebHost
 import app.kaeri.reader.ReaderSession
@@ -98,18 +102,24 @@ fun NovelScreen(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    // Which side turns forward: the right edge, or the left in a right-to-left book.
+    // Which way a swipe turns forward: leftward, or rightward in a right-to-left book.
     val rtl by rememberUpdatedState(state.view?.direction == ReadDirection.RIGHT_TO_LEFT)
     val scrolled by rememberUpdatedState(state.choice(ReaderSettingKey.MODE) == "scrolled")
+    // Taps go by the engine's zones for paged or scrolled pages; a screen reader has actions instead.
+    val exploring = rememberScreenReader()
+    val zones by rememberUpdatedState(state.tapZones())
+    val reading by rememberUpdatedState(state.tapReading(screenReader = exploring))
+    val controls by rememberUpdatedState(onControls)
     lateinit var turn: (forward: Boolean, how: TurnHow) -> Unit
     val host = remember(session) {
         NovelWebHost(context, assets, resource) { message ->
             when (message) {
-                // A tap on a side third turns the page, which the page does itself once it knows
-                // which side is forward; the middle third is the chrome's.
-                is NovelMessage.Tap -> when {
-                    message.x < 1f / 3f -> turn(rtl, TurnHow.TURN)
-                    message.x > 2f / 3f -> turn(!rtl, TurnHow.TURN)
+                // A tap off a link, in fractions of the view: the zone it falls in says what it does.
+                // Next and Previous scroll a scrolled chapter by a step.
+                is NovelMessage.Tap -> when (reading?.let { zones.actionAt(it, message.x, message.y) } ?: TapAction.CONTROLS) {
+                    TapAction.NEXT -> turn(true, TurnHow.TURN)
+                    TapAction.PREVIOUS -> turn(false, TurnHow.TURN)
+                    TapAction.CONTROLS -> controls()
                 }
                 is NovelMessage.Page -> {
                     place.ready = true
@@ -134,7 +144,6 @@ fun NovelScreen(
         }
     }
     turn = { forward, how -> if (forward) host.next(how) else host.prev(how) }
-    LaunchedEffect(host, rtl) { host.tapsTurn(1f / 3f, rtl) }
     // A sideways fling turns the page. The web view still has the touch, for selecting text.
     DisposableEffect(host) {
         val flings = GestureDetector(
@@ -183,15 +192,19 @@ fun NovelScreen(
     LaunchedEffect(state.novelStyle?.style) {
         state.novelStyle?.let { host.configure(it.style) }
     }
-    Box(modifier.fillMaxSize()) {
+    // With a screen reader every tap is the chrome's, so the page turns and the controls are actions.
+    val next = if (scrolled) Strings.readerZoneScrollDown(context) else Strings.readerZoneNext(context)
+    val previous = if (scrolled) Strings.readerZoneScrollUp(context) else Strings.readerZonePrevious(context)
+    val showControls = Strings.readerActionControls(context)
+    Box(
+        modifier.fillMaxSize().semantics {
+            customActions = listOf(
+                CustomAccessibilityAction(next) { turn(true, TurnHow.KEY); true },
+                CustomAccessibilityAction(previous) { turn(false, TurnHow.KEY); true },
+                CustomAccessibilityAction(showControls) { controls(); true },
+            )
+        },
+    ) {
         AndroidView(factory = { host.view }, modifier = Modifier.fillMaxSize())
-        // Taps in the middle third, top to bottom, open the chrome; the sides stay with the page.
-        Box(
-            Modifier
-                .align(Alignment.Center)
-                .fillMaxWidth(1f / 3f)
-                .fillMaxHeight()
-                .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onControls),
-        )
     }
 }

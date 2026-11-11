@@ -1,7 +1,7 @@
 // The e-ink reader's settings and contents, as the e-ink board draws them. The sheet is opaque over
 // the lower part of the page with a 2 dp rule, and the page above changes as a setting does; This
 // series holds the mode, the medium's group holds the rest of the first level, and More holds every
-// other row. Contents is the chapters as a paged list, opened on the page with the one being read.
+// other row, with Tap zones on a page of its own. Contents is the chapters as a paged list, opened on the page with the one being read.
 // Nothing animates: each change is one paint through the refresh policy.
 
 package app.kaeri.eink
@@ -10,6 +10,25 @@ import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.sp
+import app.kaeri.engine.model.ZoneLayout
+import app.kaeri.engine.model.ZoneSize
+import app.kaeri.engine.model.tapMap
+import app.kaeri.reader.TapZoneDiagram
+import app.kaeri.reader.configName
+import app.kaeri.reader.layoutName
+import app.kaeri.reader.rememberScreenReader
+import app.kaeri.reader.tapReading
+import app.kaeri.reader.tapZones
+import app.kaeri.reader.zoneChoices
+import app.kaeri.reader.phone.tapZonesValue
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -70,12 +89,15 @@ import kotlin.math.roundToInt
 
 private typealias Key = ReaderSettingKey
 
-/** What covers the e-ink page: nothing, the settings sheet, its More page, or Contents. */
-enum class EinkLayer { None, Settings, More, Contents }
+/** What covers the e-ink page: nothing, the settings sheet, its More or Tap zones page, or Contents. */
+enum class EinkLayer { None, Settings, More, TapZones, Contents }
 
 /** The keys the sheet's first level shows; every other row the engine sends is on More. */
 private val mangaFirst = listOf(Key.FIT, Key.CROP_BORDERS, Key.REFRESH_IMAGE, Key.VOLUME_KEYS_TURN)
 private val novelFirst = listOf(Key.TEXT_SIZE, Key.FONT, Key.LINE_SPACING, Key.MARGINS, Key.LOOK, Key.REFRESH_TEXT)
+
+/** The rows the Tap zones page holds, which More leaves out. */
+private val tapKeys = setOf(Key.TAP_LAYOUT, Key.TAP_PAGED, Key.TAP_SCROLL, Key.TAP_SIZE, Key.TAP_FLIP_SIDES, Key.TAP_FLIP_ENDS, Key.SWIPE_TURNS)
 
 /** The rows for the e-ink screen itself, under their own heading on More. */
 private val screenKeys = listOf(Key.REFRESH_IMAGE, Key.REFRESH_TEXT, Key.REFRESH_LIST, Key.GALLERY_SPEED, Key.RAINBOW_FILTER, Key.SATURATION, Key.CONTRAST)
@@ -110,21 +132,138 @@ fun BoxScope.EinkSettingsSheet(session: ReaderSession, state: ReaderState, onMor
     }
 }
 
-/** Every row the first level leaves out, grouped as the phone's More page groups them. */
+/** Every row the first level leaves out, grouped as the phone's More page groups them, with Tap zones first. */
 @Composable
-fun BoxScope.EinkMoreSheet(session: ReaderSession, state: ReaderState, onBack: () -> Unit, onDone: () -> Unit) {
+fun BoxScope.EinkMoreSheet(session: ReaderSession, state: ReaderState, onBack: () -> Unit, onDone: () -> Unit, onTapZones: () -> Unit) {
     val context = LocalContext.current
     val view = state.view ?: return
     val rows = state.settings?.rows.orEmpty()
     val novel = view.medium == Medium.NOVEL
     val first = if (novel) novelFirst else mangaFirst + Key.MODE + Key.DIRECTION
     SheetFrame(Strings.readerSheetMore(context), onDone, Modifier.align(Alignment.BottomCenter), onBack = onBack) {
-        val rest = rows.filter { it.key !in first && it.key !in screenKeys && einkRowTitle(context, it.key) != null }
+        if (rows.any { it.key == Key.TAP_PAGED }) {
+            val value = tapZonesValue(context, state, eink = true)
+            EinkRow(onClick = onTapZones, height = EinkSizes.SheetRow, modifier = Modifier.semantics { if (value != null) stateDescription = value }) {
+                Text(Strings.readerRowTap(context), style = EinkType.Label, modifier = Modifier.weight(1f))
+                if (value != null) Text(value, style = EinkType.Secondary, modifier = Modifier.padding(end = 10.dp))
+                Text("›", style = EinkType.Button)
+            }
+        }
+        val rest = rows.filter { it.key !in first && it.key !in screenKeys && it.key !in tapKeys && einkRowTitle(context, it.key) != null }
         rest.forEach { EinkSettingLine(context, session, it) }
         val screen = rows.filter { it.key in screenKeys && it.key !in first }
         if (screen.isNotEmpty()) {
             SheetHeading(Strings.einkSheetScreen(context))
             screen.forEach { EinkSettingLine(context, session, it) }
+        }
+    }
+}
+
+/**
+ * The Tap zones page: one radio row per layout with its diagram for the open book and what it does
+ * in a line, then Zone size, the two flips, Swipes turn pages and Show zones. One choice serves all
+ * reading on e-ink, strips too, since they turn a screen at a time.
+ */
+@Composable
+fun BoxScope.EinkTapZonesSheet(session: ReaderSession, state: ReaderState, onBack: () -> Unit, onDone: () -> Unit, onShowZones: () -> Unit) {
+    val context = LocalContext.current
+    val rows = state.settings?.rows.orEmpty()
+    val zones = state.tapZones(eink = true)
+    val reading = state.tapReading() ?: return
+    val scope = rows.firstOrNull { it.key == Key.TAP_PAGED }?.scope ?: SettingScope.DEVICE
+    fun toggle(key: Key, on: Boolean) = session.setSetting(key, rows.firstOrNull { it.key == key }?.scope ?: SettingScope.DEVICE, ReaderValue.Toggle(on))
+    SheetFrame(Strings.readerRowTap(context), onDone, Modifier.align(Alignment.BottomCenter), onBack = onBack) {
+        Column(Modifier.fillMaxWidth().selectableGroup()) {
+            state.zoneChoices(Key.TAP_PAGED).forEach { layout ->
+                val on = layout == zones.paged
+                val map = tapMap(zones, reading, layout)
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 54.dp)
+                        .background(if (on) EinkColours.Selected else EinkColours.Paper)
+                        .selectable(selected = on, interactionSource = remember { MutableInteractionSource() }, indication = null, role = Role.RadioButton) {
+                            session.setSetting(Key.TAP_PAGED, scope, ReaderValue.Choice(layout.configName))
+                        }
+                        .semantics(mergeDescendants = true) { stateDescription = map.about }
+                        .hairline(EinkColours.Ink)
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    Box(Modifier.size(30.dp, 42.dp).border(1.5.dp, EinkColours.Ink)) {
+                        TapZoneDiagram(map, Modifier.fillMaxSize(), eink = true)
+                    }
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(layoutName(context, layout), style = EinkType.Label.copy(fontSize = 16.sp, fontWeight = if (on) FontWeight.Bold else FontWeight.SemiBold))
+                        Text(einkTapNote(context, layout), style = EinkType.Secondary)
+                    }
+                    EinkRadio(on)
+                }
+            }
+        }
+        rows.firstOrNull { it.key == Key.TAP_SIZE }?.let { size ->
+            SheetLine(Strings.readerTapSize(context)) {
+                EinkSegmented(
+                    choices = listOf(ZoneSize.STANDARD, ZoneSize.SMALL),
+                    chosen = zones.size,
+                    label = { if (it == ZoneSize.SMALL) Strings.readerTapSmall(context) else Strings.readerTapStandard(context) },
+                    onChoose = { session.setSetting(Key.TAP_SIZE, size.scope, ReaderValue.Choice(if (it == ZoneSize.SMALL) "small" else "standard")) },
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+        if (rows.any { it.key == Key.TAP_FLIP_SIDES }) EinkSwitchLine(Strings.readerTapFlipSides(context), zones.flipSides) { toggle(Key.TAP_FLIP_SIDES, it) }
+        if (rows.any { it.key == Key.TAP_FLIP_ENDS }) EinkSwitchLine(Strings.readerTapFlipEnds(context), zones.flipEnds) { toggle(Key.TAP_FLIP_ENDS, it) }
+        if (rows.any { it.key == Key.SWIPE_TURNS }) EinkSwitchLine(Strings.einkSwipeTurns(context), zones.swipesTurn) { toggle(Key.SWIPE_TURNS, it) }
+        // The guide cannot be read aloud, and Off has no zones to show.
+        if (!rememberScreenReader() && zones.paged != ZoneLayout.OFF) {
+            EinkOutlinedButton(Strings.readerTapShow(context), onShowZones, Modifier.padding(top = 12.dp, bottom = 4.dp), height = 48.dp)
+        }
+    }
+}
+
+/** What a layout does on e-ink, in the line under its name. */
+private fun einkTapNote(context: Context, layout: ZoneLayout): String = when (layout) {
+    ZoneLayout.AUTO -> Strings.einkTapAutoNote(context)
+    ZoneLayout.SIDES -> Strings.einkTapSidesNote(context)
+    ZoneLayout.L_SHAPE -> Strings.einkTapLShapeNote(context)
+    ZoneLayout.WIDE_NEXT -> Strings.einkTapWideNextNote(context)
+    ZoneLayout.TOP_BOTTOM -> Strings.einkTapTopBottomNote(context)
+    ZoneLayout.BOTH_NEXT -> Strings.einkTapBothNextNote(context)
+    ZoneLayout.OFF -> Strings.einkTapOffNote(context)
+}
+
+/** A radio: a 24 dp ring in ink, filled at the centre when chosen. */
+@Composable
+private fun EinkRadio(on: Boolean) {
+    Box(Modifier.size(24.dp).border(EinkSizes.Rule, EinkColours.Ink, CircleShape), contentAlignment = Alignment.Center) {
+        if (on) Box(Modifier.size(12.dp).background(EinkColours.Ink, CircleShape))
+    }
+}
+
+/** A row with a switch: 52 by 30 dp, a 2 dp ink border, filled ink with a paper knob when on. */
+@Composable
+private fun EinkSwitchLine(title: String, on: Boolean, onChange: (Boolean) -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 48.dp)
+            .toggleable(value = on, interactionSource = remember { MutableInteractionSource() }, indication = null, role = Role.Switch, onValueChange = onChange)
+            .hairline(EinkColours.Ink)
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(title, style = EinkType.Label.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold), modifier = Modifier.weight(1f))
+        Box(
+            Modifier
+                .size(52.dp, 30.dp)
+                .background(if (on) EinkColours.Ink else EinkColours.Paper, CircleShape)
+                .border(EinkSizes.Rule, EinkColours.Ink, CircleShape)
+                .padding(5.dp),
+            contentAlignment = if (on) Alignment.CenterEnd else Alignment.CenterStart,
+        ) {
+            Box(Modifier.size(20.dp).background(if (on) EinkColours.Paper else EinkColours.Ink, CircleShape))
         }
     }
 }
