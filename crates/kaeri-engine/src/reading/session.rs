@@ -1507,8 +1507,9 @@ impl Session {
     /// Where the end page's skip goes: past the extras that follow the open chapter, to the
     /// next whole chapter.
     fn skip_index(&self) -> Option<usize> {
-        let ids: Vec<ChapterId> = self.chapters.iter().map(|c| c.id.clone()).collect();
-        super::extras::skip_to(&ids, self.at + 1)
+        let list: Vec<(ChapterId, Option<String>)> =
+            self.chapters.iter().map(|c| (c.id.clone(), c.title.clone())).collect();
+        crate::read_catalog::extras::skip_to(&list, self.at + 1)
     }
 
     /// Why the end page has no next chapter: the series ended with this one, which offers

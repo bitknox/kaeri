@@ -541,49 +541,6 @@ impl Numbering {
     }
 }
 
-/// The extras a list has after each whole chapter, by their numbers: 7.5 and 7.6 after 7. Sources
-/// number extras their own way (one has 7.1 and 7.2 where another has 7.5 and 7.6), so another
-/// source's extras of a chapter that has its own here are the same ones under other numbers,
-/// unless a number is shared.
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct Extras(HashMap<(Option<String>, u32), BTreeSet<i64>>);
-
-impl Extras {
-    pub fn of<'a>(ids: impl IntoIterator<Item = &'a ChapterId>) -> Self {
-        let mut extras = Self::default();
-        for id in ids {
-            extras.add(id);
-        }
-        extras
-    }
-
-    pub fn add(&mut self, id: &ChapterId) {
-        if let Some((after, number)) = extra_of(id) {
-            self.0.entry(after).or_default().insert(number);
-        }
-    }
-
-    /// Whether `id`, an extra of another source's list `there`, is one of the extras this list
-    /// numbers its own way: this list has extras after the same chapter and shares no number
-    /// with `there`'s.
-    pub fn numbered_otherwise(&self, there: &Self, id: &ChapterId) -> bool {
-        let Some((after, _)) = extra_of(id) else { return false };
-        let Some(here) = self.0.get(&after).filter(|h| !h.is_empty()) else { return false };
-        there.0.get(&after).is_none_or(|theirs| here.is_disjoint(theirs))
-    }
-}
-
-/// A chapter id that is a single number with a fraction: the whole chapter it follows (with
-/// its volume where numbers restart per volume) and its number in thousandths.
-fn extra_of(id: &ChapterId) -> Option<((Option<String>, u32), i64)> {
-    let key = id.key()?;
-    let range = key.range()?;
-    if range.end.is_some() || range.start.milli() % 1000 == 0 {
-        return None;
-    }
-    Some(((key.volume().map(str::to_owned), range.start.whole()), range.start.milli()))
-}
-
 fn whole_number(n: u32) -> ChapterNumber {
     ChapterNumber::whole_number(n)
 }
