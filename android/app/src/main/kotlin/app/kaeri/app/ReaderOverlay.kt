@@ -261,8 +261,10 @@ private fun OpenReader(
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current
-    val session = remember { ReaderSession { command -> Flavour.readerSend(command) { store.send(it) } } }
-    val images = remember { PageImages() }
+    // Made anew for a change of font size or language, the reader takes on the open session.
+    val retained = remember { ReaderLauncher.takeRetained(request) }
+    val session = remember { retained?.session ?: ReaderSession { command -> Flavour.readerSend(command) { store.send(it) } } }
+    val images = remember { retained?.images ?: PageImages() }
     val quiet = remember { QuietPhone(context) }
     val state by session.state.collectAsState()
     val settingsAsked by ReaderLauncher.settings.collectAsState()
@@ -271,7 +273,10 @@ private fun OpenReader(
     // Something to show in the page's place: the first page, the novel, or why there is none.
     val shows = state.leaves.isNotEmpty() || state.novel != null || state.failure != null || state.closed
     LaunchedEffect(shows) { if (shows) ready.value = true }
-    val opened = remember { booleanArrayOf(false) }
+    val opened = remember { booleanArrayOf(retained != null) }
+    // Its new pager starts at the first leaf: back to the place shown before.
+    val shownBefore = remember { retained?.session?.place() }
+    LaunchedEffect(Unit) { session.reshow(shownBefore) }
     // Made anew with its activity: the reader opens where it was, with no "Resumed" notice.
     val back = remember { ReaderLauncher.keptPlace(request) }
     // On a phone the reader turns with the phone as the player does, unless rotation is locked;
@@ -288,14 +293,22 @@ private fun OpenReader(
         }
     }
     DisposableEffect(session) {
-        val unbind = session.bind(store)
+        val release = retained?.release ?: session.bind(store).let { unbind ->
+            {
+                session.close()
+                unbind()
+                // The series page under the reader shows where reading got to.
+                store.reading.readerClosed(request.work)
+            }
+        }
         onDispose {
             // Kept only while the request stays open: the activity going, not the reader closing.
             ReaderLauncher.keep(request, session.place())
-            session.close()
-            unbind()
-            // The series page under the reader shows where reading got to.
-            store.reading.readerClosed(request.work)
+            if (activity?.isChangingConfigurations == true) {
+                ReaderLauncher.retain(request, session, images, release)
+            } else {
+                release()
+            }
         }
     }
     // Back closes the reader wherever its screens have no Back of their own, such as the e-ink

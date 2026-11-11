@@ -501,6 +501,16 @@ class ReaderSession(private val send: (Command) -> Unit) {
         reader(ReaderCommand.Close(session))
     }
 
+    /**
+     * The screen was made anew around this session, as for a change of font size: its pager
+     * starts at the first leaf, so it jumps back to [at], the [place] shown before.
+     */
+    fun reshow(at: ReadPlace?) {
+        val now = state.value
+        if (at == null || at.chapter != now.chapter || now.leaves.isEmpty()) return
+        _state.value = now.copy(jump = ReaderJump(now.leafOf(at), at.strip, ++ids))
+    }
+
     /** The notice went: its time ran out or the next turn took it. */
     fun dismissNotice(id: Long) {
         val now = state.value

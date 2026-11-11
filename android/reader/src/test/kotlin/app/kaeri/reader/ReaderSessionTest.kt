@@ -554,4 +554,19 @@ class ReaderSessionTest {
         assertEquals(false, session.crossOn())
         assertTrue(sent.isEmpty())
     }
+
+    /** A screen made anew around the session starts its pager at the first leaf: it jumps back. */
+    @Test
+    fun a_screen_made_anew_jumps_back_to_the_place_shown() {
+        opened(start = 0u)
+        session.jumped(session.state.value.jump!!.id)
+        session.shown(3, TurnHow.TURN)
+        val before = session.place()
+        session.shown(0, TurnHow.PLACED)
+        session.reshow(before)
+        assertEquals(3, session.state.value.jump?.leaf)
+
+        session.reshow(null)
+        assertEquals(3, session.state.value.jump?.leaf)
+    }
 }
