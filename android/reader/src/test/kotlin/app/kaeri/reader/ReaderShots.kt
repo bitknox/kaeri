@@ -249,7 +249,7 @@ class ReaderShots {
     }
 
     @Test
-    fun a_strip_image_waits_with_its_number_then_one_line() {
+    fun a_strip_image_waits_with_its_number_then_a_line_under_it() {
         compose.setContent {
             androidx.compose.foundation.layout.Column {
                 for (long in listOf(false, true)) {

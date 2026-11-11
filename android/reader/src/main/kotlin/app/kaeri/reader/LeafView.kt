@@ -14,8 +14,11 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -45,6 +48,7 @@ import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -262,28 +266,40 @@ fun PageCanvas(page: PageBitmap, rotate: Boolean, modifier: Modifier = Modifier,
     }
 }
 
-/** The phone's waiting plate: it fills the page's place with the page's number, and its words at four seconds. */
+/** The phone's waiting plate: it fills the page's place with "Page N", and from four seconds a line under it. */
 @Composable
 fun BoxScope.PageWaiting(page: Int, long: Boolean) {
     val context = LocalContext.current
     Box(Modifier.fillMaxSize().background(ObiSilk.Raised)) {
-        Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(Strings.readerPagePlate(context, page + 1), color = ObiSilk.Haze, fontSize = 15.sp)
-            if (long) {
-                Spacer(Modifier.height(8.dp))
-                Text(Strings.readerPageLoading(context, page + 1), color = ObiSilk.Haze, fontSize = 15.sp)
-            }
+        PlateWords(Strings.readerPagePlate(context, page + 1), Strings.readerPageLoading(context, page + 1).takeIf { long })
+    }
+}
+
+/**
+ * The phone's plate for a strip image: "Image N", and from four seconds a line under it. An image
+ * taller than the window centres its words in its first window-height, so they stay in view when the
+ * image is reached from above or by a jump.
+ */
+@Composable
+fun BoxScope.ImageWaiting(page: Int, long: Boolean) {
+    val context = LocalContext.current
+    val window = LocalConfiguration.current.screenHeightDp.dp
+    Box(Modifier.fillMaxSize().background(ObiSilk.Raised)) {
+        Box(Modifier.align(Alignment.TopCenter).fillMaxWidth().heightIn(max = window).fillMaxHeight()) {
+            PlateWords(Strings.readerImagePlate(context, page + 1), Strings.readerImageLoading(context, page + 1).takeIf { long })
         }
     }
 }
 
-/** The phone's plate for a strip image: its number, then from four seconds the one line that it is loading. */
+/** A plate's number, and the loading line added under it, never in its place. */
 @Composable
-fun BoxScope.ImageWaiting(page: Int, long: Boolean) {
-    val context = LocalContext.current
-    Box(Modifier.fillMaxSize().background(ObiSilk.Raised)) {
-        val words = if (long) Strings.readerImageLoading(context, page + 1) else Strings.readerImagePlate(context, page + 1)
-        Text(words, color = ObiSilk.Haze, fontSize = 15.sp, modifier = Modifier.align(Alignment.Center))
+private fun BoxScope.PlateWords(number: String, line: String?) {
+    Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(number, color = ObiSilk.Haze, fontSize = 15.sp)
+        if (line != null) {
+            Spacer(Modifier.height(6.dp))
+            Text(line, color = ObiSilk.Haze, fontSize = 13.sp)
+        }
     }
 }
 
