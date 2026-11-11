@@ -104,21 +104,24 @@ extension EngineLaunch {
     }
 
     /// The testing engine on the scene the arguments name, in the home override when there is
-    /// one and in a new temporary directory otherwise: a scene seeds the database it starts on,
-    /// so every launch starts from an empty one, and never from the terminal's. `temporary` is
-    /// that directory, for the caller to remove at quit.
+    /// one and in a new directory under `temporaryParent` otherwise: a scene seeds the database
+    /// it starts on, so every launch starts from an empty one, and never from the terminal's.
+    /// `temporary` is that directory, for the caller to remove at quit. A killed app never quits,
+    /// so each launch first removes the homes earlier launches left behind (`sweepFixturesHomes`).
     public static func fixtures(
         platform: FfiPlatform,
         arguments: [String] = ProcessInfo.processInfo.arguments,
-        environment: [String: String] = ProcessInfo.processInfo.environment
+        environment: [String: String] = ProcessInfo.processInfo.environment,
+        temporaryParent: URL = FileManager.default.temporaryDirectory
     ) -> (launch: EngineLaunch, temporary: URL?) {
         let scene = scene(arguments: arguments) ?? .watching
         applyHomeWorld(arguments: arguments)
         let root = EngineHome.overrideRoot(environment: environment, arguments: arguments)
-        let temporary = root == nil
-            ? FileManager.default.temporaryDirectory
-                .appending(path: "kaeri-fixtures-\(UUID().uuidString)", directoryHint: .isDirectory)
-            : nil
+        var temporary: URL?
+        if root == nil {
+            sweepFixturesHomes(in: temporaryParent)
+            temporary = makeFixturesHome(in: temporaryParent)
+        }
         let launch = EngineLaunch(
             engine: .fixtures(scene),
             home: .override(root: root ?? temporary!),
@@ -126,6 +129,59 @@ extension EngineLaunch {
             secrets: .host
         )
         return (launch, temporary)
+    }
+
+    /// The name every Fixtures home starts with, under the temporary directory.
+    static let fixturesHomePrefix = "kaeri-fixtures-"
+
+    /// The file in a Fixtures home that names the process using it, by its pid.
+    static let fixturesOwnerFile = ".owner"
+
+    /// How old a Fixtures home without an owner file has to be before a launch removes it. Every
+    /// home made since owner files came has one from the start, so only older homes lack it.
+    static let fixturesOwnerlessAge: TimeInterval = 60 * 60
+
+    /// A new Fixtures home under `parent`, made now with this process named as its owner.
+    static func makeFixturesHome(in parent: URL) -> URL {
+        let home = parent.appending(
+            path: "\(fixturesHomePrefix)\(UUID().uuidString)", directoryHint: .isDirectory
+        )
+        try? FileManager.default.createDirectory(at: home, withIntermediateDirectories: true)
+        let owner = Data("\(ProcessInfo.processInfo.processIdentifier)\n".utf8)
+        try? owner.write(to: home.appending(path: fixturesOwnerFile), options: .atomic)
+        return home
+    }
+
+    /// Remove the Fixtures homes under `parent` that no running process owns: those whose owner
+    /// file names a process that is gone, and those without one that are older than
+    /// `fixturesOwnerlessAge`. A home whose owner is alive stays, so Fixtures apps running side
+    /// by side keep theirs.
+    static func sweepFixturesHomes(in parent: URL, now: Date = Date()) {
+        let files = FileManager.default
+        guard let entries = try? files.contentsOfDirectory(
+            at: parent, includingPropertiesForKeys: [.contentModificationDateKey, .isDirectoryKey]
+        ) else { return }
+        for home in entries where home.lastPathComponent.hasPrefix(fixturesHomePrefix) {
+            let values = try? home.resourceValues(forKeys: [.contentModificationDateKey, .isDirectoryKey])
+            guard values?.isDirectory == true else { continue }
+            let owner = (try? String(contentsOf: home.appending(path: fixturesOwnerFile), encoding: .utf8))
+                .flatMap { pid_t($0.trimmingCharacters(in: .whitespacesAndNewlines)) }
+            let stale: Bool
+            if let owner {
+                stale = !processIsAlive(owner)
+            } else {
+                let modified = values?.contentModificationDate ?? .distantPast
+                stale = now.timeIntervalSince(modified) > fixturesOwnerlessAge
+            }
+            if stale { try? files.removeItem(at: home) }
+        }
+    }
+
+    /// Whether a process with this pid runs. One that exists but may not be signalled counts as
+    /// running, so a home is never removed on a doubt.
+    static func processIsAlive(_ pid: pid_t) -> Bool {
+        guard pid > 0 else { return false }
+        return kill(pid, 0) == 0 || errno == EPERM
     }
 }
 extension AppStore {
