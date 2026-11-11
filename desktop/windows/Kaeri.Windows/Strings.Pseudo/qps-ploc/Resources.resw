@@ -835,6 +835,22 @@
     <value>[Ṁöṽéð ţö çĥàþţéŕ {chapter}, þàĝé {page}, ŵĥéŕé àñöţĥéŕ ðéṽîçé šţöþþéð~~~~~~~~~~~~~~~~~~]</value>
     <comment>The same notice for a chapter known only by its number, such as 14 or 14.5.</comment>
   </data>
+  <data name="ReaderMovedImage" xml:space="preserve">
+    <value>[Ṁöṽéð ţö {chapter}, îɱàĝé {image}, ŵĥéŕé {device} šţöþþéð~~~~~~~~~~~~~]</value>
+    <comment>The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its whole label, such as The Long Night.</comment>
+  </data>
+  <data name="ReaderMovedNumberImage" xml:space="preserve">
+    <value>[Ṁöṽéð ţö çĥàþţéŕ {chapter}, îɱàĝé {image}, ŵĥéŕé {device} šţöþþéð~~~~~~~~~~~~~~~]</value>
+    <comment>The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.</comment>
+  </data>
+  <data name="ReaderMovedElsewhereImage" xml:space="preserve">
+    <value>[Ṁöṽéð ţö {chapter}, îɱàĝé {image}, ŵĥéŕé àñöţĥéŕ ðéṽîçé šţöþþéð~~~~~~~~~~~~~~~~]</value>
+    <comment>The notice in a strip when another device read further and its name is not known.</comment>
+  </data>
+  <data name="ReaderMovedNumberElsewhereImage" xml:space="preserve">
+    <value>[Ṁöṽéð ţö çĥàþţéŕ {chapter}, îɱàĝé {image}, ŵĥéŕé àñöţĥéŕ ðéṽîçé šţöþþéð~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.</comment>
+  </data>
   <data name="ReaderDetectedRightToLeft" xml:space="preserve">
     <value>[Ļööķš ļîķé ŕîĝĥţ ţö ļéƒţ~~~~~~~~]</value>
     <comment>A notice the first time a series opens with its reading direction guessed. It offers Change.</comment>

@@ -343,6 +343,10 @@ extension ReadingMsg {
         case .readerMovedNumber(let chapter, let page, let device): L.readerMovedNumber(chapter: chapter, page: Int(page), device: device)
         case .readerMovedElsewhere(let chapter, let page): L.readerMovedElsewhere(chapter: chapter, page: Int(page))
         case .readerMovedNumberElsewhere(let chapter, let page): L.readerMovedNumberElsewhere(chapter: chapter, page: Int(page))
+        case .readerMovedImage(let chapter, let image, let device): L.readerMovedImage(chapter: chapter, image: Int(image), device: device)
+        case .readerMovedNumberImage(let chapter, let image, let device): L.readerMovedNumberImage(chapter: chapter, image: Int(image), device: device)
+        case .readerMovedElsewhereImage(let chapter, let image): L.readerMovedElsewhereImage(chapter: chapter, image: Int(image))
+        case .readerMovedNumberElsewhereImage(let chapter, let image): L.readerMovedNumberElsewhereImage(chapter: chapter, image: Int(image))
         case .readerDetectedRightToLeft: L.readerDetectedRightToLeft
         case .readerDetectedLeftToRight: L.readerDetectedLeftToRight
         case .readerDetectedStrip: L.readerDetectedStrip

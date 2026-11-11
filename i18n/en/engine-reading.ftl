@@ -102,6 +102,29 @@ reader-moved-elsewhere = Moved to { $chapter }, page { $page }, where another { 
 # @arg page: plain
 reader-moved-number-elsewhere = Moved to chapter { $chapter }, page { $page }, where another { -device } stopped
 
+# The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its
+# whole label, such as The Long Night.
+# @arg chapter: text
+# @arg image: plain
+# @arg device: text
+reader-moved-image = Moved to { $chapter }, image { $image }, where { $device } stopped
+
+# The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+# @arg chapter: text
+# @arg image: plain
+# @arg device: text
+reader-moved-number-image = Moved to chapter { $chapter }, image { $image }, where { $device } stopped
+
+# The notice in a strip when another device read further and its name is not known.
+# @arg chapter: text
+# @arg image: plain
+reader-moved-elsewhere-image = Moved to { $chapter }, image { $image }, where another { -device } stopped
+
+# The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+# @arg chapter: text
+# @arg image: plain
+reader-moved-number-elsewhere-image = Moved to chapter { $chapter }, image { $image }, where another { -device } stopped
+
 # A notice the first time a series opens with its reading direction guessed. It offers Change.
 # @max 32
 reader-detected-right-to-left = Looks like right to left

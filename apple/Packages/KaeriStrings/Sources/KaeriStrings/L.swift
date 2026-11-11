@@ -768,6 +768,26 @@ public enum L {
         Self.format("reader-moved-number-elsewhere", fallback: "Moved to chapter %1$@, page %2$@, where another device stopped", chapter, String(page))
     }
 
+    /// The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its whole label, such as The Long Night.
+    public static func readerMovedImage(chapter: String, image: Int, device: String) -> String {
+        Self.format("reader-moved-image", fallback: "Moved to %1$@, image %2$@, where %3$@ stopped", chapter, String(image), device)
+    }
+
+    /// The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+    public static func readerMovedNumberImage(chapter: String, image: Int, device: String) -> String {
+        Self.format("reader-moved-number-image", fallback: "Moved to chapter %1$@, image %2$@, where %3$@ stopped", chapter, String(image), device)
+    }
+
+    /// The notice in a strip when another device read further and its name is not known.
+    public static func readerMovedElsewhereImage(chapter: String, image: Int) -> String {
+        Self.format("reader-moved-elsewhere-image", fallback: "Moved to %1$@, image %2$@, where another device stopped", chapter, String(image))
+    }
+
+    /// The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+    public static func readerMovedNumberElsewhereImage(chapter: String, image: Int) -> String {
+        Self.format("reader-moved-number-elsewhere-image", fallback: "Moved to chapter %1$@, image %2$@, where another device stopped", chapter, String(image))
+    }
+
     /// A notice the first time a series opens with its reading direction guessed. It offers Change.
     public static var readerDetectedRightToLeft: String { string("reader-detected-right-to-left", fallback: "Looks like right to left") }
 

@@ -588,6 +588,18 @@ public static partial class T
     /// <summary>The same notice for a chapter known only by its number, such as 14 or 14.5.</summary>
     public static string ReaderMovedNumberElsewhere(string chapter, long page) => Fill(Get("ReaderMovedNumberElsewhere"), ("chapter", chapter), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its whole label, such as The Long Night.</summary>
+    public static string ReaderMovedImage(string chapter, long image, string device) => Fill(Get("ReaderMovedImage"), ("chapter", chapter), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("device", device));
+
+    /// <summary>The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.</summary>
+    public static string ReaderMovedNumberImage(string chapter, long image, string device) => Fill(Get("ReaderMovedNumberImage"), ("chapter", chapter), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("device", device));
+
+    /// <summary>The notice in a strip when another device read further and its name is not known.</summary>
+    public static string ReaderMovedElsewhereImage(string chapter, long image) => Fill(Get("ReaderMovedElsewhereImage"), ("chapter", chapter), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.</summary>
+    public static string ReaderMovedNumberElsewhereImage(string chapter, long image) => Fill(Get("ReaderMovedNumberElsewhereImage"), ("chapter", chapter), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
     /// <summary>A notice the first time a series opens with its reading direction guessed. It offers Change.</summary>
     public static string ReaderDetectedRightToLeft => Get("ReaderDetectedRightToLeft");
 
@@ -11983,6 +11995,10 @@ public static partial class T
         ["ReaderMovedNumber"] = "Moved to chapter {chapter}, page {page}, where {device} stopped",
         ["ReaderMovedElsewhere"] = "Moved to {chapter}, page {page}, where another device stopped",
         ["ReaderMovedNumberElsewhere"] = "Moved to chapter {chapter}, page {page}, where another device stopped",
+        ["ReaderMovedImage"] = "Moved to {chapter}, image {image}, where {device} stopped",
+        ["ReaderMovedNumberImage"] = "Moved to chapter {chapter}, image {image}, where {device} stopped",
+        ["ReaderMovedElsewhereImage"] = "Moved to {chapter}, image {image}, where another device stopped",
+        ["ReaderMovedNumberElsewhereImage"] = "Moved to chapter {chapter}, image {image}, where another device stopped",
         ["ReaderDetectedRightToLeft"] = "Looks like right to left",
         ["ReaderDetectedLeftToRight"] = "Looks like left to right",
         ["ReaderDetectedStrip"] = "Looks like a long strip",

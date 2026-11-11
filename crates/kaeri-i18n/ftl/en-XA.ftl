@@ -609,6 +609,18 @@ reader-moved-elsewhere = [Ṁöṽéð ţö { $chapter }, þàĝé { $page }, ŵ
 # The same notice for a chapter known only by its number, such as 14 or 14.5.
 reader-moved-number-elsewhere = [Ṁöṽéð ţö çĥàþţéŕ { $chapter }, þàĝé { $page }, ŵĥéŕé àñöţĥéŕ ðéṽîçé šţöþþéð~~~~~~~~~~~~~~~~~~]
 
+# The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its whole label, such as The Long Night.
+reader-moved-image = [Ṁöṽéð ţö { $chapter }, îɱàĝé { $image }, ŵĥéŕé { $device } šţöþþéð~~~~~~~~~~~~~]
+
+# The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+reader-moved-number-image = [Ṁöṽéð ţö çĥàþţéŕ { $chapter }, îɱàĝé { $image }, ŵĥéŕé { $device } šţöþþéð~~~~~~~~~~~~~~~]
+
+# The notice in a strip when another device read further and its name is not known.
+reader-moved-elsewhere-image = [Ṁöṽéð ţö { $chapter }, îɱàĝé { $image }, ŵĥéŕé àñöţĥéŕ ðéṽîçé šţöþþéð~~~~~~~~~~~~~~~~]
+
+# The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+reader-moved-number-elsewhere-image = [Ṁöṽéð ţö çĥàþţéŕ { $chapter }, îɱàĝé { $image }, ŵĥéŕé àñöţĥéŕ ðéṽîçé šţöþþéð~~~~~~~~~~~~~~~~~~~]
+
 # A notice the first time a series opens with its reading direction guessed. It offers Change.
 reader-detected-right-to-left = [Ļööķš ļîķé ŕîĝĥţ ţö ļéƒţ~~~~~~~~]
 

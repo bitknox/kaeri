@@ -221665,6 +221665,30 @@
         }
       }
     },
+    "reader-moved-elsewhere-image" : {
+      "comment" : "The notice in a strip when another device read further and its name is not known. Argument 1: chapter (Text). Argument 2: image (Plain).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moved to %1$@, image %2$@, where another device stopped"
+          }
+        }
+      }
+    },
+    "reader-moved-image" : {
+      "comment" : "The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its whole label, such as The Long Night. Argument 1: chapter (Text). Argument 2: image (Plain). Argument 3: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moved to %1$@, image %2$@, where %3$@ stopped"
+          }
+        }
+      }
+    },
     "reader-moved-number" : {
       "comment" : "The same notice for a chapter known only by its number, such as 14 or 14.5. Argument 1: chapter (Text). Argument 2: page (Plain). Argument 3: device (Text).",
       "extractionState" : "manual",
@@ -221757,6 +221781,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Moved to chapter %1$@, page %2$@, where another device stopped"
+          }
+        }
+      }
+    },
+    "reader-moved-number-elsewhere-image" : {
+      "comment" : "The same notice in a strip for a chapter known only by its number, such as 14 or 14.5. Argument 1: chapter (Text). Argument 2: image (Plain).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moved to chapter %1$@, image %2$@, where another device stopped"
+          }
+        }
+      }
+    },
+    "reader-moved-number-image" : {
+      "comment" : "The same notice in a strip for a chapter known only by its number, such as 14 or 14.5. Argument 1: chapter (Text). Argument 2: image (Plain). Argument 3: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moved to chapter %1$@, image %2$@, where %3$@ stopped"
           }
         }
       }

@@ -1680,7 +1680,7 @@ impl Session {
         self.go_to(cx, pages, to.clone());
         let from_device = name.clone().unwrap_or_default();
         cx.send(ReaderEvent::Moved { session: self.id, to, from_device, back });
-        let msg = moved_msg(&label, i64::from(page) + 1, name);
+        let msg = moved_msg(self.mode, &label, i64::from(page) + 1, name);
         cx.send(notice(msg, Some(ReaderAction::GoBack), MOVED_MS, self.eink()));
     }
 }
@@ -1720,22 +1720,36 @@ fn resumed_msg(mode: ReaderMode, page: u32, strip: Option<StripPos>) -> Option<R
 
 /// The Moved notice for a chapter's label. A label that is only a number, with or without a
 /// chapter word (`14`, `14.5`, `Chapter 14`), reads "chapter 14"; any other label is shown whole.
-fn moved_msg(label: &str, page: i64, device: Option<String>) -> ReadingMsg {
+/// The Moved notice for a move to `page` of the chapter `label`: in images in a strip, as every
+/// other line there counts.
+fn moved_msg(mode: ReaderMode, label: &str, page: i64, device: Option<String>) -> ReadingMsg {
     let lower = label.trim().to_lowercase();
     let rest = ["chapter", "chap.", "chap", "ch.", "ch"]
         .iter()
         .find_map(|w| lower.strip_prefix(w))
         .map_or(lower.as_str(), |r| r.trim_start_matches([' ', '.', ':', '#']));
     let number = kaeri_core::books::ChapterNumber::parse(rest).map(|n| n.to_string());
-    match (number, device) {
-        (Some(chapter), Some(device)) => {
+    let strip = mode == ReaderMode::Strip;
+    let (image, label) = (page, label.to_owned());
+    match (number, device, strip) {
+        (Some(chapter), Some(device), false) => {
             ReadingMsg::ReaderMovedNumber { chapter, page, device }
         }
-        (Some(chapter), None) => ReadingMsg::ReaderMovedNumberElsewhere { chapter, page },
-        (None, Some(device)) => {
-            ReadingMsg::ReaderMoved { chapter: label.to_owned(), page, device }
+        (Some(chapter), Some(device), true) => {
+            ReadingMsg::ReaderMovedNumberImage { chapter, image, device }
         }
-        (None, None) => ReadingMsg::ReaderMovedElsewhere { chapter: label.to_owned(), page },
+        (Some(chapter), None, false) => {
+            ReadingMsg::ReaderMovedNumberElsewhere { chapter, page }
+        }
+        (Some(chapter), None, true) => {
+            ReadingMsg::ReaderMovedNumberElsewhereImage { chapter, image }
+        }
+        (None, Some(device), false) => ReadingMsg::ReaderMoved { chapter: label, page, device },
+        (None, Some(device), true) => {
+            ReadingMsg::ReaderMovedImage { chapter: label, image, device }
+        }
+        (None, None, false) => ReadingMsg::ReaderMovedElsewhere { chapter: label, page },
+        (None, None, true) => ReadingMsg::ReaderMovedElsewhereImage { chapter: label, image },
     }
 }
 
@@ -1801,7 +1815,7 @@ fn queue_trackers(cx: &Cx<'_>, work: &WorkId, chapter: &ChapterId, at: i64) -> V
 mod tests {
     #[test]
     fn moved_notice_names_the_chapter_once() {
-        let moved = |label: &str| moved_msg(label, 6, Some("Desk".into()));
+        let moved = |label: &str| moved_msg(ReaderMode::Paged, label, 6, Some("Desk".into()));
         let number = |n: &str| ReadingMsg::ReaderMovedNumber {
             chapter: n.into(),
             page: 6,

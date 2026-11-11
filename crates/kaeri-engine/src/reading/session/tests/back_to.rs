@@ -168,6 +168,28 @@ async fn another_devices_place_and_going_back_from_it_offer_nothing() {
     assert_eq!(offers(&h.drain()), []);
 }
 
+/// In a strip the Moved notice counts images, as every other line there does.
+#[tokio::test(start_paused = true)]
+async fn another_devices_place_in_a_strip_is_an_image() {
+    let mine = Store::open_in_memory().unwrap();
+    mine.sync_enable("phone").unwrap();
+    let desk = Store::open_in_memory().unwrap();
+    desk.set_sync_clock(|| 4_000_000_000_000);
+    desk.sync_enable("desk").unwrap();
+    mine.sync_device_add("desk", "Desk", "").unwrap();
+    let mut h = twelve_pages_in(mine.clone(), "strip");
+    h.open(OpenAt::Start).await;
+    let mut ahead = ReadEvent::new(WORK, "2", 2);
+    ahead.page = Some(5);
+    desk.record_read(&ahead, Vec::new()).unwrap();
+    let ops = desk.ops_after(&mine.version_vector().unwrap(), usize::MAX).unwrap();
+    mine.apply_ops(ops).unwrap();
+    h.synced();
+    h.until(|e| matches!(e, ReaderEvent::Opened(_)).then_some(())).await;
+    let said: Vec<&str> = notices(&h.drain()).iter().map(ReadingMsg::id).collect();
+    assert_eq!(said, ["reader-moved-number-image"]);
+}
+
 #[tokio::test(start_paused = true)]
 async fn a_strip_offers_after_a_jump_and_scrolling_to_another_image_takes_it_away() {
     let mut h = twelve_pages("strip");

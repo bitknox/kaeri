@@ -960,6 +960,26 @@ pub fn reader_moved_number_elsewhere(chapter: &str, page: i64) -> String {
     text("reader-moved-number-elsewhere", &[("chapter", Arg::Text(chapter)), ("page", Arg::Plain(page))])
 }
 
+/// The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its whole label, such as The Long Night.
+pub fn reader_moved_image(chapter: &str, image: i64, device: &str) -> String {
+    text("reader-moved-image", &[("chapter", Arg::Text(chapter)), ("image", Arg::Plain(image)), ("device", Arg::Text(device))])
+}
+
+/// The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+pub fn reader_moved_number_image(chapter: &str, image: i64, device: &str) -> String {
+    text("reader-moved-number-image", &[("chapter", Arg::Text(chapter)), ("image", Arg::Plain(image)), ("device", Arg::Text(device))])
+}
+
+/// The notice in a strip when another device read further and its name is not known.
+pub fn reader_moved_elsewhere_image(chapter: &str, image: i64) -> String {
+    text("reader-moved-elsewhere-image", &[("chapter", Arg::Text(chapter)), ("image", Arg::Plain(image))])
+}
+
+/// The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+pub fn reader_moved_number_elsewhere_image(chapter: &str, image: i64) -> String {
+    text("reader-moved-number-elsewhere-image", &[("chapter", Arg::Text(chapter)), ("image", Arg::Plain(image))])
+}
+
 /// A notice the first time a series opens with its reading direction guessed. It offers Change.
 pub fn reader_detected_right_to_left() -> String {
     text("reader-detected-right-to-left", &[])

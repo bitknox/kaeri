@@ -411,6 +411,14 @@
     <string name="reader_moved_elsewhere">Moved to %1$s, page %2$d, where another device stopped</string>
     <!-- The same notice for a chapter known only by its number, such as 14 or 14.5. -->
     <string name="reader_moved_number_elsewhere">Moved to chapter %1$s, page %2$d, where another device stopped</string>
+    <!-- The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its whole label, such as The Long Night. -->
+    <string name="reader_moved_image">Moved to %1$s, image %2$d, where %3$s stopped</string>
+    <!-- The same notice in a strip for a chapter known only by its number, such as 14 or 14.5. -->
+    <string name="reader_moved_number_image">Moved to chapter %1$s, image %2$d, where %3$s stopped</string>
+    <!-- The notice in a strip when another device read further and its name is not known. -->
+    <string name="reader_moved_elsewhere_image">Moved to %1$s, image %2$d, where another device stopped</string>
+    <!-- The same notice in a strip for a chapter known only by its number, such as 14 or 14.5. -->
+    <string name="reader_moved_number_elsewhere_image">Moved to chapter %1$s, image %2$d, where another device stopped</string>
     <!-- A notice the first time a series opens with its reading direction guessed. It offers Change. -->
     <string name="reader_detected_right_to_left">Looks like right to left</string>
     <!-- A notice the first time a series opens with its reading direction guessed. It offers Change. -->

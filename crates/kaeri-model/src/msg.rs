@@ -1297,6 +1297,14 @@ pub enum ReadingMsg {
     ReaderMovedElsewhere { chapter: String, page: i64 },
     /// The same notice for a chapter known only by its number, such as 14 or 14.5.
     ReaderMovedNumberElsewhere { chapter: String, page: i64 },
+    /// The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its whole label, such as The Long Night.
+    ReaderMovedImage { chapter: String, image: i64, device: String },
+    /// The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+    ReaderMovedNumberImage { chapter: String, image: i64, device: String },
+    /// The notice in a strip when another device read further and its name is not known.
+    ReaderMovedElsewhereImage { chapter: String, image: i64 },
+    /// The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+    ReaderMovedNumberElsewhereImage { chapter: String, image: i64 },
     /// A notice the first time a series opens with its reading direction guessed. It offers Change.
     ReaderDetectedRightToLeft,
     /// A notice the first time a series opens with its reading direction guessed. It offers Change.
@@ -1680,6 +1688,10 @@ impl ReadingMsg {
             Self::ReaderMovedNumber { .. } => "reader-moved-number",
             Self::ReaderMovedElsewhere { .. } => "reader-moved-elsewhere",
             Self::ReaderMovedNumberElsewhere { .. } => "reader-moved-number-elsewhere",
+            Self::ReaderMovedImage { .. } => "reader-moved-image",
+            Self::ReaderMovedNumberImage { .. } => "reader-moved-number-image",
+            Self::ReaderMovedElsewhereImage { .. } => "reader-moved-elsewhere-image",
+            Self::ReaderMovedNumberElsewhereImage { .. } => "reader-moved-number-elsewhere-image",
             Self::ReaderDetectedRightToLeft => "reader-detected-right-to-left",
             Self::ReaderDetectedLeftToRight => "reader-detected-left-to-right",
             Self::ReaderDetectedStrip => "reader-detected-strip",
@@ -1884,6 +1896,10 @@ impl ReadingMsg {
             Self::ReaderMovedNumber { chapter, page, device } => vec![("chapter", Value::Text(chapter.clone())), ("page", Value::Plain(*page)), ("device", Value::Text(device.clone()))],
             Self::ReaderMovedElsewhere { chapter, page } => vec![("chapter", Value::Text(chapter.clone())), ("page", Value::Plain(*page))],
             Self::ReaderMovedNumberElsewhere { chapter, page } => vec![("chapter", Value::Text(chapter.clone())), ("page", Value::Plain(*page))],
+            Self::ReaderMovedImage { chapter, image, device } => vec![("chapter", Value::Text(chapter.clone())), ("image", Value::Plain(*image)), ("device", Value::Text(device.clone()))],
+            Self::ReaderMovedNumberImage { chapter, image, device } => vec![("chapter", Value::Text(chapter.clone())), ("image", Value::Plain(*image)), ("device", Value::Text(device.clone()))],
+            Self::ReaderMovedElsewhereImage { chapter, image } => vec![("chapter", Value::Text(chapter.clone())), ("image", Value::Plain(*image))],
+            Self::ReaderMovedNumberElsewhereImage { chapter, image } => vec![("chapter", Value::Text(chapter.clone())), ("image", Value::Plain(*image))],
             Self::ReaderDetectedRightToLeft => Vec::new(),
             Self::ReaderDetectedLeftToRight => Vec::new(),
             Self::ReaderDetectedStrip => Vec::new(),

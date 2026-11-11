@@ -773,6 +773,22 @@ object Strings {
     fun readerMovedNumberElsewhere(context: Context, chapter: String, page: Int): String =
         context.getString(R.string.reader_moved_number_elsewhere, chapter, page)
 
+    /** The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its whole label, such as The Long Night. */
+    fun readerMovedImage(context: Context, chapter: String, image: Int, device: String): String =
+        context.getString(R.string.reader_moved_image, chapter, image, device)
+
+    /** The same notice in a strip for a chapter known only by its number, such as 14 or 14.5. */
+    fun readerMovedNumberImage(context: Context, chapter: String, image: Int, device: String): String =
+        context.getString(R.string.reader_moved_number_image, chapter, image, device)
+
+    /** The notice in a strip when another device read further and its name is not known. */
+    fun readerMovedElsewhereImage(context: Context, chapter: String, image: Int): String =
+        context.getString(R.string.reader_moved_elsewhere_image, chapter, image)
+
+    /** The same notice in a strip for a chapter known only by its number, such as 14 or 14.5. */
+    fun readerMovedNumberElsewhereImage(context: Context, chapter: String, image: Int): String =
+        context.getString(R.string.reader_moved_number_elsewhere_image, chapter, image)
+
     /** A notice the first time a series opens with its reading direction guessed. It offers Change. */
     fun readerDetectedRightToLeft(context: Context): String =
         context.getString(R.string.reader_detected_right_to_left)
