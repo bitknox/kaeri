@@ -68,7 +68,7 @@ public sealed partial class SettingsPage : Page
         [
             ("files", [K.DownloadDir, K.DownloadQuality, K.MergeSubtitles, K.DownloadHook]),
             ("ahead", [K.KeepNextEpisodes]),
-            ("reading", [K.NewChapters, K.DeleteAfterReading]),
+            ("reading", [K.NewChapters, K.DeleteAfterReading, K.ShowVolumes]),
         ]),
         new("notifications", "", [("new-episodes", [K.EpisodeNotifications]), ("new-chapters", [K.ChapterNotifications])]),
         new("sources", "",
@@ -163,6 +163,7 @@ public sealed partial class SettingsPage : Page
         K.ChapterDownloadsOnCellular => T.SettingsChapterDownloadsCellular,
         K.KeepChaptersReady => T.SettingsKeepChaptersReady,
         K.DeleteAfterReading => T.SettingsDeleteAfterReading,
+        K.ShowVolumes => T.SettingsShowVolumes,
         K.OpdsFeed => T.SettingsOpdsFeed,
         K.OpdsPassword => T.SettingsOpdsPassword,
         K.OpdsPort => T.SettingsOpdsPort,

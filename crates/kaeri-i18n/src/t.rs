@@ -16595,6 +16595,11 @@ pub fn settings_delete_after_reading_note() -> String {
     text("settings-delete-after-reading-note", &[])
 }
 
+/// Line under Show volumes: the list is grouped only when most chapters have a volume.
+pub fn settings_show_volumes_note() -> String {
+    text("settings-show-volumes-note", &[])
+}
+
 /// Line under New chapters.
 pub fn settings_chapter_notifications_note() -> String {
     text("settings-chapter-notifications-note", &[])
@@ -18443,6 +18448,11 @@ pub fn settings_keep_chapters_ready() -> String {
 /// Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.
 pub fn settings_delete_after_reading() -> String {
     text("settings-delete-after-reading", &[])
+}
+
+/// Row: group a series' chapters under volume headings. Off by default.
+pub fn settings_show_volumes() -> String {
+    text("settings-show-volumes", &[])
 }
 
 /// Row: whether a series' reader mode, direction and colour follow you to your other devices.

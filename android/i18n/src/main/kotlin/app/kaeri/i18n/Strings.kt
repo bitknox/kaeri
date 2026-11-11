@@ -10868,6 +10868,10 @@ object Strings {
     fun settingsDeleteAfterReadingNote(context: Context): String =
         context.getString(R.string.settings_delete_after_reading_note)
 
+    /** Line under Show volumes: the list is grouped only when most chapters have a volume. */
+    fun settingsShowVolumesNote(context: Context): String =
+        context.getString(R.string.settings_show_volumes_note)
+
     /** Line under New chapters. */
     fun settingsChapterNotificationsNote(context: Context): String =
         context.getString(R.string.settings_chapter_notifications_note)
@@ -12347,6 +12351,10 @@ object Strings {
     /** Row: delete a downloaded chapter once it is read. Bookmarked chapters stay. */
     fun settingsDeleteAfterReading(context: Context): String =
         context.getString(R.string.settings_delete_after_reading)
+
+    /** Row: group a series' chapters under volume headings. Off by default. */
+    fun settingsShowVolumes(context: Context): String =
+        context.getString(R.string.settings_show_volumes)
 
     /** Row: whether a series' reader mode, direction and colour follow you to your other devices. */
     fun settingsSeriesChoicesFollow(context: Context): String =

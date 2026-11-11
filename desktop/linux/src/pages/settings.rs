@@ -146,7 +146,7 @@ const PANES: [Pane; 13] = [
         icon: "accessories-dictionary-symbolic", // i18n-skip
         groups: &[
             // The pane is Reading already, so its downloads group says what it is about.
-            (Group::Ahead, &[K::KeepChaptersReady, K::DeleteAfterReading]),
+            (Group::Ahead, &[K::KeepChaptersReady, K::DeleteAfterReading, K::ShowVolumes]),
             (Group::Feed, &[K::OpdsFeed, K::OpdsPort, K::OpdsPassword]),
         ],
     },
@@ -814,6 +814,7 @@ impl Inner {
                 K::AskWasOpening => Some(t::settings_ask_was_opening_detail()),
                 K::ShareSkipTimes => Some(t::settings_share_skips_detail()),
                 K::CastTvs => Some(t::settings_note_cast_tvs_computer()),
+                K::ShowVolumes => Some(t::settings_show_volumes_note()),
                 K::TorrentsWhileCasting => {
                     Some(t::settings_note_torrents_while_casting_computer())
                 }

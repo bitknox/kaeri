@@ -266,6 +266,30 @@ fn status_menu(view: &SeriesView) -> gio::Menu {
     menu
 }
 
+/// The volumes Download offers. A flat list, drawn with no volume headings, still says each
+/// chapter's volume: its rows by volume, in reading order, and none for rows without one.
+fn download_volumes(volumes: &[VolumeGroup]) -> Vec<VolumeGroup> {
+    let [list] = volumes else { return volumes.to_vec() };
+    if !list.flat {
+        return volumes.to_vec();
+    }
+    let mut groups: Vec<VolumeGroup> = Vec::new();
+    for row in &list.chapters {
+        let Some(volume) = row.volume.as_ref().filter(|v| !v.is_empty()) else { continue };
+        match groups.iter_mut().find(|g| g.volume.as_ref() == Some(volume)) {
+            Some(group) => group.chapters.push(row.clone()),
+            None => groups.push(VolumeGroup {
+                volume: Some(volume.clone()),
+                title: None,
+                chapters: vec![row.clone()],
+                all_read: false,
+                flat: false,
+            }),
+        }
+    }
+    groups
+}
+
 /// The next 5 or 10 unread, every unread chapter, a volume, and deleting the downloads.
 fn download_menu(work: &WorkId, volumes: &[VolumeGroup]) -> gio::Menu {
     let pick = |name: &str| Some((work.0.clone(), name.to_owned()).to_variant());
@@ -282,7 +306,7 @@ fn download_menu(work: &WorkId, volumes: &[VolumeGroup]) -> gio::Menu {
     let menu = gio::Menu::new();
     menu.append_section(None, &first);
     let by_volume = gio::Menu::new();
-    for group in volumes {
+    for group in &download_volumes(volumes) {
         let Some(volume) = &group.volume else { continue };
         let missing = group.chapters.iter().filter(|c| c.download.is_none()).count();
         if missing == 0 {
@@ -841,5 +865,53 @@ mod tests {
             assert!(normal <= 326, "the head needs {normal} px at the normal text size");
             assert!(large <= 326, "the head needs {large} px at twice the size");
         });
+    }
+
+    /// A flat list offers the volumes its rows say, in reading order, leaving out rows with none.
+    #[test]
+    fn a_flat_list_downloads_by_the_volumes_its_rows_say() {
+        use kaeri_model::reading::{ChapterReadState, ChapterRow, VolumeGroup};
+        let row = |n: u32, volume: Option<&str>| ChapterRow {
+            id: ChapterId(n.to_string()),
+            label: format!("Chapter {n}"), // i18n-skip
+            state: ChapterReadState::Unread,
+            number: Some(n.to_string()),
+            title: None,
+            volume: volume.map(str::to_owned),
+            published: None,
+            pages: None,
+            new_chapter: false,
+            download: None,
+            versions: 1,
+            bookmarked: false,
+            version_label: None,
+            read_at: None,
+            line: Vec::new(),
+            gone_from_source: false,
+            parts: 1,
+            missing_parts: Vec::new(),
+            part_groups: Vec::new(),
+            other_group: false,
+            group_language: None,
+            other_source: None,
+        };
+        let flat = VolumeGroup {
+            volume: None,
+            title: None,
+            chapters: vec![
+                row(1, Some("1")),
+                row(2, Some("1")),
+                row(3, Some("2")),
+                row(4, None),
+            ],
+            all_read: false,
+            flat: true,
+        };
+        let groups = super::download_volumes(std::slice::from_ref(&flat));
+        let shape: Vec<_> =
+            groups.iter().map(|g| (g.volume.clone(), g.chapters.len(), g.flat)).collect();
+        assert_eq!(shape, [(Some("1".into()), 2, false), (Some("2".into()), 1, false)]);
+        let grouped = VolumeGroup { flat: false, volume: Some("1".into()), ..flat };
+        assert_eq!(super::download_volumes(std::slice::from_ref(&grouped)).len(), 1);
     }
 }

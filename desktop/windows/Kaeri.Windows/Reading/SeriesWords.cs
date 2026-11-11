@@ -166,6 +166,18 @@ static class SeriesWords
         return (name, string.Join(" · ", rest));
     }
 
+    /// <summary>The volumes Download offers. A flat list, drawn with no volume headings, still says
+    /// each chapter's volume: its rows by volume, in reading order, and none for rows without one.</summary>
+    public static IReadOnlyList<VolumeGroup> DownloadVolumes(IReadOnlyList<VolumeGroup> groups)
+    {
+        if (groups is not [{ Flat: true } list])
+            return groups;
+        return [.. list.Chapters
+            .Where(c => c.Volume is { Length: > 0 })
+            .GroupBy(c => c.Volume!)
+            .Select(rows => list with { Volume = rows.Key, Title = null, Chapters = [.. rows], AllRead = false, Flat = false })];
+    }
+
     static string Number(double n) => n.ToString("0.##", System.Globalization.CultureInfo.CurrentCulture);
 
     /// <summary>"3 days ago", from a Unix time, in reading's words.</summary>

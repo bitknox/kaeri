@@ -10212,6 +10212,10 @@
     <value>Bookmarked chapters are kept</value>
     <comment>Line under Delete chapters after reading.</comment>
   </data>
+  <data name="SettingsShowVolumesNote" xml:space="preserve">
+    <value>Grouped when most chapters have a volume</value>
+    <comment>Line under Show volumes: the list is grouped only when most chapters have a volume.</comment>
+  </data>
   <data name="SettingsChapterNotificationsNote" xml:space="preserve">
     <value>Series on your Reading list</value>
     <comment>Line under New chapters.</comment>
@@ -11755,6 +11759,10 @@
   <data name="SettingsDeleteAfterReading" xml:space="preserve">
     <value>Delete chapters after reading</value>
     <comment>Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.</comment>
+  </data>
+  <data name="SettingsShowVolumes" xml:space="preserve">
+    <value>Show volumes</value>
+    <comment>Row: group a series' chapters under volume headings. Off by default.</comment>
   </data>
   <data name="SettingsSeriesChoicesFollow" xml:space="preserve">
     <value>Series settings follow you</value>

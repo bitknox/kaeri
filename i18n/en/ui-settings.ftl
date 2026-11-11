@@ -232,6 +232,9 @@ settings-keep-chapters-ready = Keep next chapters ready
 # Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.
 settings-delete-after-reading = Delete chapters after reading
 
+# Row: group a series' chapters under volume headings. Off by default.
+settings-show-volumes = Show volumes
+
 # Row: whether a series' reader mode, direction and colour follow you to your other devices.
 settings-series-choices-follow = Series settings follow you
 

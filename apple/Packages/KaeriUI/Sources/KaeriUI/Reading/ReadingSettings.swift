@@ -213,7 +213,7 @@ struct ReadingPane: View {
 }
 
 /// Downloads' Reading group: over cellular on touch, which new chapters download, deleting
-/// after reading.
+/// after reading, and whether chapter lists show volumes.
 struct ReadingDownloadsGroup: View {
     @Environment(AppStore.self) private var store
 
@@ -229,6 +229,9 @@ struct ReadingDownloadsGroup: View {
             }
             SettingsRow(title: SettingKey.deleteAfterReading.title, note: L.settingsDeleteAfterReadingNote) {
                 SettingSwitch(key: .deleteAfterReading)
+            }
+            SettingsRow(title: SettingKey.showVolumes.title, note: L.settingsShowVolumesNote) {
+                SettingSwitch(key: .showVolumes)
             }
         }
     }
@@ -354,6 +357,7 @@ struct PhoneReadingDownloadsSection: View {
         PhoneSettingSwitch(key: .chapterDownloadsOnCellular)
         PhoneSettingPicker(key: .newChapters, note: NewChaptersNote.text(store))
         PhoneSettingSwitch(key: .deleteAfterReading, note: L.settingsDeleteAfterReadingNote)
+        PhoneSettingSwitch(key: .showVolumes, note: L.settingsShowVolumesNote)
     }
 }
 #endif

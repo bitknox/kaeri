@@ -784,7 +784,9 @@ private fun LazyListScope.seriesChapters(
         }
     }
     val ordered = if (newestFirst) groups.reversed() else groups
-    val single = failure != null || (ordered.size == 1 && ordered.first().volume == null)
+    // One run of chapters with no heading: the downloaded ones after a failure, a list with no
+    // volumes, or a flat one (Show volumes off, or too few chapters with a volume).
+    val single = failure != null || (ordered.size == 1 && (ordered.first().flat || ordered.first().volume == null))
     ordered.forEachIndexed { index, group ->
         val key = group.volume ?: "none-$index"
         val open = single || (folds[key] ?: !group.allRead)

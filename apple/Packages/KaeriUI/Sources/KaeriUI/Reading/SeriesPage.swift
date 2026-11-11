@@ -122,6 +122,22 @@ enum ReadSeriesWords {
         return (name, rest.joined(separator: " · ")) // i18n-skip
     }
 
+    /// The volumes Download offers. A flat list, drawn with no volume headings, still says each
+    /// chapter's volume: its rows by volume, in reading order, and none for rows without one.
+    static func downloadVolumes(_ groups: [VolumeGroup]) -> [VolumeGroup] {
+        guard groups.count == 1, let list = groups.first, list.flat else { return groups }
+        var volumes: [VolumeGroup] = []
+        for row in list.chapters {
+            guard let volume = row.volume, !volume.isEmpty else { continue }
+            if let at = volumes.firstIndex(where: { $0.volume == volume }) {
+                volumes[at].chapters.append(row)
+            } else {
+                volumes.append(VolumeGroup(volume: volume, chapters: [row]))
+            }
+        }
+        return volumes
+    }
+
     private static func number(_ value: Double) -> String {
         value.rounded() == value ? String(Int(value)) : String(value)
     }
@@ -636,12 +652,13 @@ private struct SeriesActions: View {
         let volumes = store.reading.chapters[series.work]?.volumes ?? []
         let unread = volumes.flatMap(\.chapters).filter { $0.state != .read && $0.download == nil }
         let downloaded = volumes.flatMap(\.chapters).filter { $0.download != nil }
+        let byVolume = ReadSeriesWords.downloadVolumes(volumes)
         return Menu {
             Button(L.downloadNext(n: 5)) { store.reading.download(series.work, .nextUnread(n: 5)) }
             Button(L.downloadNext(n: 10)) { store.reading.download(series.work, .nextUnread(n: 10)) }
             Button(L.downloadUnread) { store.reading.download(series.work, .unread) }
                 .disabled(unread.isEmpty)
-            let toFetch = volumes.filter { group in group.chapters.contains { $0.download == nil } }
+            let toFetch = byVolume.filter { group in group.chapters.contains { $0.download == nil } }
             if !toFetch.isEmpty { Divider() }
             ForEach(toFetch, id: \.volume) { group in
                 let count = group.chapters.filter { $0.download == nil }.count
@@ -1024,6 +1041,20 @@ private struct SeriesChapters: View {
 
     @ViewBuilder
     private func volume(_ group: VolumeGroup) -> some View {
+        if group.flat {
+            // Show volumes is off, or too few chapters have one: the rows alone, never folded.
+            let rows = newestFirst ? group.chapters.reversed() : group.chapters
+            ForEach(rows, id: \.id) { row in
+                rule
+                ChapterRowView(series: series, row: row, preferred: chapters?.edition?.versionLabel, choosing: $choosing)
+            }
+        } else {
+            grouped(group)
+        }
+    }
+
+    @ViewBuilder
+    private func grouped(_ group: VolumeGroup) -> some View {
         let words = ReadSeriesWords.volume(group, novel: novel)
         let shown = isOpen(group)
         rule

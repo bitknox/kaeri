@@ -420,5 +420,17 @@ internal fun List<VolumeGroup>.chooseStart(): Set<String> {
 internal fun List<VolumeGroup>.allUnread(): Set<String> =
     chapterRows().filter { it.state !is ChapterReadState.Read }.map { it.id }.toSet()
 
+/**
+ * The volumes Download offers. A flat list, drawn with no volume headings, still says each
+ * chapter's volume: its rows by volume, in reading order, and none for rows without one.
+ */
+internal fun List<VolumeGroup>.downloadVolumes(): List<VolumeGroup> {
+    val list = singleOrNull()?.takeIf { it.flat } ?: return this
+    return list.chapters
+        .filter { !it.volume.isNullOrEmpty() }
+        .groupBy { it.volume }
+        .map { (volume, rows) -> VolumeGroup(volume = volume, title = null, chapters = rows, allRead = false) }
+}
+
 /** The chapters downloaded here. */
 internal fun List<VolumeGroup>.downloaded(): List<ChapterRow> = chapterRows().filter { it.download is ChapterDownloadState.Done }

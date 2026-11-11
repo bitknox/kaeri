@@ -290919,6 +290919,30 @@
         }
       }
     },
+    "settings-show-volumes" : {
+      "comment" : "Row: group a series' chapters under volume headings. Off by default.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show volumes"
+          }
+        }
+      }
+    },
+    "settings-show-volumes-note" : {
+      "comment" : "Line under Show volumes: the list is grouped only when most chapters have a volume.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grouped when most chapters have a volume"
+          }
+        }
+      }
+    },
     "settings-signed-in" : {
       "comment" : "Under a tracker that is signed in, when its user name is unknown.",
       "extractionState" : "manual",
