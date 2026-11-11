@@ -9,8 +9,11 @@ namespace Kaeri.App;
 /// <summary>A page of a chapter as the engine names it. A split spread has a file for each half.</summary>
 public readonly record struct ReaderPageKey(string Chapter, uint Page, PageHalf? Half = null);
 
-/// <summary>What the end page says when there is nothing to continue to.</summary>
-public sealed record ReaderEnd(ChapterRow? Next, NoNext? Why, string? NextSource);
+/// <summary>
+/// What the end page says when there is nothing to continue to. <c>SkipTo</c>: when the next
+/// chapter is an extra, the first whole chapter after it, for "Skip to chapter 17".
+/// </summary>
+public sealed record ReaderEnd(ChapterRow? Next, NoNext? Why, string? NextSource, ChapterRow? SkipTo = null);
 
 /// <summary>The notice over the page, with the action it offers.</summary>
 public sealed record ReaderNoticeLine(int Id, string Text, ReaderAction? Action);
@@ -559,7 +562,7 @@ public sealed class ReaderSession
             case ReaderEvent.EndPage end:
                 if (end.Session != session)
                     return;
-                End = new ReaderEnd(end.Next, end.WhyNone, end.NextSource);
+                End = new ReaderEnd(end.Next, end.WhyNone, end.NextSource, end.SkipTo);
                 Changed?.Invoke(ReaderChange.End);
                 break;
             case ReaderEvent.NextPreview preview:

@@ -211,6 +211,15 @@ sealed class EndPageView : Grid
             ToolTipService.SetToolTip(go, T.TooltipWithKey(T.WindowsReaderContinue, "Space"));
             go.Margin = new Thickness(0, 32, 0, 0);
             words.Children.Add(go);
+            // Past the extras: Skip to chapter 17, between Continue and Back to the series.
+            if (reader.End?.SkipTo is { } skip)
+            {
+                var past = ReaderButtons.Pill(T.ReaderEndSkipTo(skip.Number ?? skip.Label), palette, (_, _) => reader.OpenChapter(skip.Id));
+                AutomationProperties.SetHelpText(past, T.ReaderEndSkipHint(next.Number ?? next.Label));
+                past.Margin = new Thickness(0, 12, 0, 0);
+                past.HorizontalAlignment = HorizontalAlignment.Stretch;
+                words.Children.Add(past);
+            }
             // On a touch screen, one more swipe goes on, as on a phone.
             if (owner.TouchInput && !owner.StripShown)
             {
