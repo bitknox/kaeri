@@ -394,7 +394,7 @@ impl Reader {
             if s.novel.is_some() {
                 s.restyle(cx);
             } else if settings::relays(key) {
-                let page = s.page().unwrap_or(0);
+                let page = s.page_now();
                 s.lay_out(cx, &pages, page);
             }
         }
@@ -693,7 +693,7 @@ impl Reader {
             // Every page of a source's chapter landed and they lay out otherwise than guessed:
             // laid out again at the same page, as a change of screen is.
             ReaderWake::Relay(n) if n == s.generation && s.novel.is_none() => {
-                let page = s.page().unwrap_or(0);
+                let page = s.page_now();
                 s.lay_out(cx, &pages, page);
             }
             ReaderWake::Relay(_) => {}
@@ -893,6 +893,12 @@ impl Session {
 
     fn page(&self) -> Option<u32> {
         self.place.as_ref().and_then(|p| p.page.or(p.strip.map(|s| s.image)))
+    }
+
+    /// The page a layout again keeps the reader at: the one shown, or until one is, the one the
+    /// chapter opens at. A turned screen or a retry before the first leaf showed keeps the start.
+    fn page_now(&self) -> u32 {
+        self.page().or(self.start.page).unwrap_or(0)
     }
 
     /// The page a leaf starts on, and for a strip cut on e-ink its place in the strip.
@@ -1226,13 +1232,13 @@ impl Session {
             }
             C::Surface { surface, .. } => {
                 self.surface = surface;
-                let page = self.page().unwrap_or(0);
+                let page = self.page_now();
                 self.lay_out(cx, pages, page);
             }
             C::NeedPage { page, .. } => pages.again(self.id, page, cx.tx),
             C::Retry { page: Some(page), .. } => pages.again(self.id, page, cx.tx),
             C::Retry { page: None, .. } => {
-                let page = self.page().unwrap_or(0);
+                let page = self.page_now();
                 self.lay_out(cx, pages, page);
             }
             C::OpenChapter { chapter, .. } => {
@@ -1283,7 +1289,7 @@ impl Session {
                         c.format = novel::SOURCE.into();
                         c.path = PathBuf::new();
                     }
-                    let page = self.page().unwrap_or(0);
+                    let page = self.page_now();
                     self.lay_out(cx, pages, page);
                 }
             }
@@ -2147,6 +2153,17 @@ mod tests {
                 _ => None,
             })
             .collect()
+    }
+
+    #[tokio::test]
+    async fn a_screen_turned_before_the_first_leaf_showed_keeps_the_start_page() {
+        let mut h = harness(Store::open_in_memory().unwrap());
+        h.open(OpenAt::Page { page: 2 }).await;
+        // The phone turns while the reader opens: the new shape comes before any leaf showed.
+        let session = h.session();
+        let surface = ReaderSurface { width_px: 900, height_px: 600, ..surface() };
+        h.send(ReaderCommand::Surface { session, surface });
+        assert_eq!(h.reader.session.as_ref().unwrap().start.page, Some(2));
     }
 
     /// The engine lends each piece of work a sender and holds none between them, so the page

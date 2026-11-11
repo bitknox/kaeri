@@ -674,15 +674,14 @@ impl Worker {
                 }
             }
         }
-        // A feed's pages not landed yet are laid out in the shape of the first that has: the
-        // pages of one chapter mostly share one. Their parts have no ratio until they land.
+        // A feed's pages not landed yet are laid out in a guessed shape. Their parts have no
+        // ratio until they land.
         let fed = job.feed.as_ref().is_some_and(|f| !f.complete());
-        let guess = originals
-            .iter()
-            .flatten()
-            .next()
-            .filter(|_| fed)
-            .map_or((1000, 1400), |o| (o.width, o.height));
+        let guess = if fed {
+            guessed_shape(originals.iter().flatten().map(|o| (o.width, o.height)))
+        } else {
+            UNKNOWN_SHAPE
+        };
         let shapes: Vec<(u32, u32)> = originals
             .iter()
             .map(|o| o.as_ref().map_or(guess, |o| (o.width, o.height)))
@@ -967,6 +966,17 @@ pub(crate) fn failure_of(
     }
 }
 
+/// The shape a page is laid out in when nothing tells it.
+const UNKNOWN_SHAPE: (u32, u32) = (1000, 1400);
+
+/// The shape a feed's pages not landed yet are laid out in, from the shapes of those landed:
+/// the first single page's, as the pages of one chapter mostly share one. A spread is no guess:
+/// many chapters open on a wide colour page or a banner, and every page to come taken for a
+/// spread is split in halves on a one-page screen until all have landed.
+fn guessed_shape(landed: impl IntoIterator<Item = (u32, u32)>) -> (u32, u32) {
+    landed.into_iter().find(|&(w, h)| !layout::is_spread(w, h)).unwrap_or(UNKNOWN_SHAPE)
+}
+
 /// Whether the pages are a vertical strip: most of them far taller than wide.
 pub fn is_strip(shapes: &[(u32, u32)]) -> bool {
     let tall = shapes.iter().filter(|(w, h)| *h as f32 > *w as f32 * 2.2).count();
@@ -1125,7 +1135,7 @@ impl Chapter {
             .iter()
             .zip(&fed.kinds)
             .map(|(o, &kind)| {
-                let (width, height) = o.as_ref().map_or((1000, 1400), |o| (o.width, o.height));
+                let (width, height) = o.as_ref().map_or(UNKNOWN_SHAPE, |o| (o.width, o.height));
                 PageShape { width, height, kind }
             })
             .collect();
@@ -1574,6 +1584,34 @@ mod tests {
         assert!(is_strip(&[(800, 4000), (800, 3800), (800, 1200)]));
         assert!(!is_strip(&[(1000, 1400), (1000, 1400), (2000, 1400)]));
         assert!(!is_strip(&[(800, 4000)]));
+    }
+
+    #[test]
+    fn a_chapter_opening_on_a_spread_lays_its_pages_to_come_out_whole() {
+        // A source's chapter opens on a two-page colour spread; the pages after it are single
+        // and have not landed when it is laid out.
+        let guess = guessed_shape([(2000, 1400), (1000, 1420)]);
+        assert_eq!(guess, (1000, 1420));
+        assert_eq!(guessed_shape([(2000, 1400)]), UNKNOWN_SHAPE);
+        // A strip's tall pages are still the guess.
+        assert_eq!(guessed_shape([(800, 4000)]), (800, 4000));
+        // On a one-page screen a page laid out in that shape is not split into halves.
+        let shapes = [(2000, 1400), guess, guess].map(|(width, height)| layout::PageShape {
+            width,
+            height,
+            kind: layout::PageKind::Story,
+        });
+        let leaves = layout::lay_out(
+            &shapes,
+            layout::LayoutOptions {
+                screen: layout::Screen::Single,
+                direction: layout::Direction::RightToLeft,
+                spread_on_single: layout::SpreadOnSingle::Split,
+                first_is_cover: false,
+            },
+        );
+        assert_eq!(leaves.len(), 4);
+        assert!(leaves[2..].iter().all(|l| l.parts[0].source.is_none()));
     }
 
     #[test]
