@@ -238,6 +238,8 @@ pub struct Session {
     restore: Option<NovelPos>,
     /// What a chapter opened off the actor gave.
     prepared: novel::Slot,
+    /// The source's chapter opening off the actor, until what it gave is laid out.
+    source_open: Option<novel::SourceOpen>,
     /// The open chapter's pages from a source, landing as they are fetched.
     feed: Option<Arc<crate::reading::feed::Feed>>,
     /// "Resumed at page N" waits for a novel's first page.
@@ -672,6 +674,7 @@ impl Reader {
             novel: None,
             restore,
             prepared: Arc::default(),
+            source_open: None,
             feed: None,
             novel_resumed: false,
             gone: crate::reading::feed::Gone::new(novel::streamed_dir(
@@ -1017,6 +1020,14 @@ impl Session {
         self.start.page = Some(page);
         // The place within a strip holds only while the chapter opens at its image.
         self.start.strip = self.start.strip.filter(|s| s.image == page);
+        // An open of another chapter, or of this one before it was downloaded, stops.
+        if self
+            .source_open
+            .as_ref()
+            .is_some_and(|o| o.chapter != chapter.id || chapter.format != novel::SOURCE)
+        {
+            self.source_open = None;
+        }
         // Another chapter's pages that had not all landed are fetched again when it opens, and
         // so is one with credit pages or parts, which its folder alone does not tell.
         if let Some(left) = self.feed.take_if(|f| f.chapter != chapter.id)

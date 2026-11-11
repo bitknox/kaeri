@@ -2,11 +2,12 @@
 //! paginator's reports, and sources' chapters.
 //!
 //! An EPUB is opened on a thread of its own (the archive's limits bound the work, so there is
-//! no timeout); a source's chapter is fetched on the runtime. Either way the result lands in
-//! the session's slot, tagged with the layout's generation, and a [`ReaderWake::Prepared`]
-//! brings it to the actor. A book of pictures goes on to the page worker as manga does; a text
-//! book is put in [`NovelBooks`](crate::reading::novel::NovelBooks) and the app is sent
-//! `NovelOpen`.
+//! no timeout), and what it gives lands in the session's slot, tagged with the layout's
+//! generation. A source's chapter is fetched on the runtime by a [`SourceOpen`], which keeps
+//! what it gives for whichever layout of the chapter is current when it arrives. Either way a
+//! [`ReaderWake::Prepared`] brings it to the actor. A book of pictures goes on to the page
+//! worker as manga does; a text book is put in
+//! [`NovelBooks`](crate::reading::novel::NovelBooks) and the app is sent `NovelOpen`.
 
 use std::{
     path::{Path, PathBuf},
@@ -44,6 +45,29 @@ use crate::{
 
 /// What a chapter opened off the actor gave, by the layout's generation.
 pub(super) type Slot = Arc<Mutex<Option<(u64, Prepared)>>>;
+
+/// A source's chapter opening off the actor. It belongs to the chapter rather than to the layout
+/// that started it: a layout of the same chapter while it opens takes what it gives, so the
+/// source is asked for each page once. Dropped, as when another chapter opens, it stops.
+#[derive(Debug)]
+pub(super) struct SourceOpen {
+    pub chapter: ChapterId,
+    came: Arc<Mutex<Option<Prepared>>>,
+    task: tokio::task::JoinHandle<()>,
+}
+
+impl SourceOpen {
+    /// What it gave, once it has.
+    fn take(&self) -> Option<Prepared> {
+        self.came.lock().ok()?.take()
+    }
+}
+
+impl Drop for SourceOpen {
+    fn drop(&mut self) {
+        self.task.abort();
+    }
+}
 
 #[derive(Debug)]
 pub(super) enum Prepared {
@@ -622,20 +646,35 @@ impl Session {
         let slot = self.prepared.clone();
         let opening = self.opening(cx);
         let done = wake(cx.tx, self.id, ReaderWake::Prepared(generation));
-        // Opens can finish out of order: one for an older layout never replaces a newer one.
-        let put = PutOnce(Some(move |p: Prepared| {
-            if let Ok(mut s) = slot.lock()
-                && s.as_ref().is_none_or(|(g, _)| *g < generation)
-            {
-                *s = Some((generation, p));
-            }
-            done();
-        }));
         if chapter.format != SOURCE {
+            // Opens can finish out of order: one for an older layout never replaces a newer one.
+            let put = PutOnce(Some(move |p: Prepared| {
+                if let Ok(mut s) = slot.lock()
+                    && s.as_ref().is_none_or(|(g, _)| *g < generation)
+                {
+                    *s = Some((generation, p));
+                }
+                done();
+            }));
             let path = chapter.path.clone();
             std::thread::spawn(move || put.put(open_file(&path, opening)));
             return;
         }
+        // Laid out again while it opens: what the open under way gives is laid out at the place
+        // asked for by then.
+        if self.source_open.as_ref().is_some_and(|o| o.chapter == chapter.id) {
+            return;
+        }
+        let came = Arc::new(Mutex::new(None));
+        let put = {
+            let came = came.clone();
+            PutOnce(Some(move |p: Prepared| {
+                if let Ok(mut c) = came.lock() {
+                    *c = Some(p);
+                }
+                done();
+            }))
+        };
         let sources = cx.services.book_sources.clone();
         let work = self.work.clone();
         let id = chapter.id.clone();
@@ -650,7 +689,7 @@ impl Session {
         let learning = self.learning(cx);
         // The chapter fetched ahead opens from its feed, the pages still coming behind it.
         let ahead = self.ahead.take_if(|a| a.chapter == chapter.id);
-        tokio::spawn(async move {
+        let task = tokio::spawn(async move {
             // Closed before its turn came: the source is not asked for nothing.
             if gone.is() {
                 put.forget();
@@ -730,10 +769,18 @@ impl Session {
             };
             put.put(prepared);
         });
+        self.source_open = Some(SourceOpen { chapter: chapter.id.clone(), came, task });
     }
 
     /// What was opened off the actor arrived.
     pub(super) fn prepared_now(&mut self, cx: &mut Cx<'_>, pages: &Pages, generation: u64) {
+        // A source's chapter: what its open gave, whichever of the chapter's layouts asked.
+        let came = self.source_open.as_ref().and_then(SourceOpen::take);
+        if let Some(prepared) = came {
+            self.source_open = None;
+            self.take_prepared(cx, pages, prepared);
+            return;
+        }
         if generation != self.generation {
             return;
         }
@@ -741,6 +788,10 @@ impl Session {
         let taken =
             self.prepared.lock().ok().and_then(|mut s| s.take_if(|(g, _)| *g == generation));
         let Some((_, prepared)) = taken else { return };
+        self.take_prepared(cx, pages, prepared);
+    }
+
+    fn take_prepared(&mut self, cx: &mut Cx<'_>, pages: &Pages, prepared: Prepared) {
         match prepared {
             Prepared::Failed(failure) => failed(cx, failure),
             Prepared::Pages(path) => {
