@@ -17,8 +17,21 @@ use kaeri_i18n::t;
 use kaeri_model::reader::{Leaf, PageEncoding, PageFile, PixelFormat};
 use kaeri_model::reading::{ChapterReadState, ChapterRow, VolumeGroup};
 
-/// How many layouts of one opening the list waits for its open chapter to be centred.
-const CENTRE_LAYOUTS: u8 = 8;
+/// How many times one opening moves the list towards its open chapter before it settles for where
+/// the row is.
+const CENTRE_MOVES: u8 = 8;
+
+/// One step of centring the open chapter.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum Centring {
+    /// The row is as near the middle as the list's ends allow, or there is nothing to centre.
+    Done,
+    /// The list moved towards it: the layout this asks for looks again.
+    Moved,
+    /// Not laid out yet: the window or popover is still being mapped, so GTK has not placed the
+    /// row. The next layout looks again.
+    Waiting,
+}
 
 /// A thumbnail's width in the grid, and what it is decoded to: twice that, for a 2x screen.
 const THUMB_WIDTH: i32 = 84;
@@ -313,20 +326,27 @@ impl Chapters {
 
     /// Centre the open chapter once the list is laid out and before the frame is painted: GDK
     /// lays a frame out again, up to four times, while a layout asks for another, so the frame
-    /// painted has the row in place.
+    /// painted has the row in place. A popover's surface maps a few layouts after the widget
+    /// does, and GTK places nothing until then, so those layouts only wait.
     fn centre_when_laid_out(self: &Rc<Self>) {
         let Some(clock) = self.list.frame_clock() else { return };
         let handler: Rc<RefCell<Option<glib::SignalHandlerId>>> = Rc::default();
-        let laid_out = Cell::new(0u8);
+        let moves = Cell::new(0u8);
         let this = Rc::downgrade(self);
         // After GTK's own handler, which allocates the popover and binds the rows.
         let id = clock.connect_local("layout", true, {
             let handler = handler.clone();
             let clock = clock.clone();
             move |_| {
-                laid_out.set(laid_out.get() + 1);
-                let done = this.upgrade().is_none_or(|this| this.centre_here());
-                if (done || laid_out.get() >= CENTRE_LAYOUTS)
+                let step = match this.upgrade() {
+                    // Closed before it was laid out: the next opening starts again.
+                    Some(this) if this.list.is_mapped() => this.centre_here(),
+                    _ => Centring::Done,
+                };
+                if step == Centring::Moved {
+                    moves.set(moves.get() + 1);
+                }
+                if (step == Centring::Done || moves.get() >= CENTRE_MOVES)
                     && let Some(id) = handler.take()
                 {
                     clock.disconnect(id);
@@ -338,11 +358,11 @@ impl Chapters {
         clock.request_phase(gdk::FrameClockPhase::LAYOUT);
     }
 
-    /// One step of centring the open chapter's row: true once it is as near the middle as the
-    /// list's ends allow, or there is nothing to centre. The row then takes the focus.
-    fn centre_here(&self) -> bool {
+    /// One step of centring the open chapter's row. Once it is as near the middle as the list's
+    /// ends allow, the row takes the focus.
+    fn centre_here(&self) -> Centring {
         if !self.centring.get() {
-            return true;
+            return Centring::Done;
         }
         let Some(here) = self.here_position() else {
             // Still loading: the chapters coming in look again. Not listed: the list stays at
@@ -350,34 +370,36 @@ impl Chapters {
             if self.volumes.borrow().is_some() {
                 self.centring.set(false);
             }
-            return true;
+            return Centring::Done;
         };
         let Some(row) = self.here_row.borrow().upgrade() else {
             // Not bound yet: bring it into the list and look again on the next layout.
             self.list.scroll_to(here, gtk::ListScrollFlags::NONE, None);
-            return false;
+            return Centring::Waiting;
         };
         let (Some(bounds), Some(adjustment)) =
             (row.compute_bounds(&self.list), self.list.vadjustment())
         else {
-            return false;
+            return Centring::Waiting;
         };
         let page = adjustment.page_size();
-        if page <= 0.0 {
-            return false;
+        // A row GTK has not placed yet has no size, and the scroll position does not say where
+        // it is.
+        if page <= 0.0 || !row.is_mapped() || bounds.height() <= 0.0 {
+            return Centring::Waiting;
         }
         let middle = f64::from(bounds.y() + bounds.height() / 2.0);
         let to = (adjustment.value() + middle - page / 2.0)
             .clamp(adjustment.lower(), (adjustment.upper() - page).max(adjustment.lower()));
         if (to - adjustment.value()).abs() >= 1.0 {
             adjustment.set_value(to);
-            return false;
+            return Centring::Moved;
         }
         self.centring.set(false);
         // Keyboard focus and the screen reader start on the open chapter; it is in view, so this
         // moves nothing.
         self.list.scroll_to(here, gtk::ListScrollFlags::FOCUS, None);
-        true
+        Centring::Done
     }
 
     /// Show `tab` for a shot.
