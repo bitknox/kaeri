@@ -89,6 +89,9 @@ class Navigator(private val nav: NavHostController, private val start: Destinati
     /** The destination on screen. */
     fun current(): Destination = nav.currentBackStackEntry?.destinationOf() ?: start
 
+    /** The tab whose own page lies right under the page on screen; null when another page does. */
+    fun under(): Destination? = nav.previousBackStackEntry?.destinationOf()
+
     /** Open [id]'s page in the current destination's back stack, flying from [from]. */
     fun openTitle(id: AnilistId, from: String) {
         source = "$from:$id"
@@ -138,6 +141,15 @@ class Navigator(private val nav: NavHostController, private val start: Destinati
             launchSingleTop = true
             restoreState = true
         }
+    }
+
+    /**
+     * Switch to [destination] at its start, as a link into it from another destination opens it:
+     * the pages left open on it last time are closed.
+     */
+    fun goToStart(destination: Destination) {
+        go(destination)
+        nav.popBackStack(destination.route, inclusive = false)
     }
 
     fun back() {

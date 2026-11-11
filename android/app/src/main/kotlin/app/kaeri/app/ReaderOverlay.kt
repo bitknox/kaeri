@@ -312,10 +312,11 @@ private fun OpenReader(
             .readerSurface(density, eink = request.eink, dark = true) { surface ->
                 if (!opened[0]) {
                     opened[0] = true
+                    val title = store.reading.series.value[request.work]?.titles?.display
                     if (back != null) {
-                        session.open(request.work, surface, back.chapter, OpenAt.Place(back))
+                        session.open(request.work, surface, back.chapter, OpenAt.Place(back), title)
                     } else {
-                        session.open(request.work, surface, request.chapter)
+                        session.open(request.work, surface, request.chapter, title = title)
                     }
                 } else {
                     session.surface(surface)
@@ -344,7 +345,13 @@ private fun OpenReader(
                     state = state,
                     images = images,
                     painter = painter,
-                    actions = EinkReaderActions(onBack = close, onSeries = close, onDownloads = close, onAddSource = addSource),
+                    actions = EinkReaderActions(
+                        onBack = close,
+                        onSeries = close,
+                        onDownloads = close,
+                        onAddSource = addSource,
+                        onDownload = { chapter -> store.reading.download(state.view?.work ?: request.work, app.kaeri.engine.model.DownloadPick.Chapters(listOf(chapter.id))) },
+                    ),
                     novel = { place, onControls ->
                         NovelScreen(
                             session = session,

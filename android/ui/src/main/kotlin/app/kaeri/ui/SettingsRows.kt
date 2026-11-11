@@ -99,6 +99,7 @@ fun SettingsGroup(
     modifier: Modifier = Modifier,
     rows: List<@Composable (Place) -> Unit>,
 ) {
+    if (einkSettings) return EinkSettingsGroup(title, footer, modifier, rows)
     Column(modifier) {
         title?.let { SettingsHeader(it) }
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -111,6 +112,7 @@ fun SettingsGroup(
 /** A group's header: "Language", in titleMedium on the ground. */
 @Composable
 fun SettingsHeader(title: String, modifier: Modifier = Modifier) {
+    if (einkSettings) return EinkSettingsHeader(title, modifier)
     Text(
         title,
         style = MaterialTheme.typography.titleMedium,
@@ -122,6 +124,7 @@ fun SettingsHeader(title: String, modifier: Modifier = Modifier) {
 /** A note under a group, in bodyMedium haze. */
 @Composable
 fun SettingsFootnote(text: String, modifier: Modifier = Modifier) {
+    if (einkSettings) return EinkSettingsFootnote(text, modifier)
     Text(
         text,
         style = MaterialTheme.typography.bodyMedium,
@@ -144,6 +147,7 @@ internal fun RowFrame(
     container: Color? = null,
     content: @Composable (selected: Boolean) -> Unit,
 ) {
+    if (einkSettings) return EinkRowFrame(place, onClick, modifier) { content(false) }
     val rowFocus = LocalRowFocus.current
     val selected = focus != null && rowFocus?.key == focus
     val colors = MaterialTheme.colorScheme
@@ -184,6 +188,7 @@ internal fun RowText(
     /** A line after the note in the row's own colour: why a switch that is on does nothing now. */
     extra: String? = null,
 ) {
+    if (einkSettings) return EinkRowWords(title, value, note, modifier, extra)
     val colors = MaterialTheme.colorScheme
     val secondary = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant
     Column(modifier) {
@@ -222,6 +227,7 @@ fun <T> MenuRow(
     valueFlag: Int? = null,
     onPick: (T) -> Unit,
 ) {
+    if (einkSettings) return EinkMenuRow(place, title, value, choices, current, note, enabled, menuWidth, onPick)
     var open by remember { mutableStateOf(false) }
     val usable = enabled && choices.isNotEmpty()
     Box(Modifier.alpha(if (enabled) 1f else 0.38f)) {
@@ -320,6 +326,7 @@ fun SwitchRow(
     extra: String? = null,
     onChange: (Boolean) -> Unit,
 ) {
+    if (einkSettings) return EinkSwitchRow(place, title, checked, note, enabled, extra, onChange)
     val onWord = stringResource(R.string.value_on)
     val offWord = stringResource(R.string.value_off)
     RowFrame(
@@ -351,6 +358,7 @@ fun LinkRow(
     selected: Boolean = false,
     onClick: () -> Unit,
 ) {
+    if (einkSettings) return EinkLinkRow(place, title, value, selected, onClick)
     val colors = MaterialTheme.colorScheme
     Box(
         Modifier
@@ -386,6 +394,8 @@ fun InfoRow(
     modifier: Modifier = Modifier,
     titleStyle: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.titleMedium,
 ) {
+    // On paper the row is words only: what leads it (an icon, an avatar, a cover) is left out.
+    if (einkSettings) return EinkInfoRow(place, title, value, note, onClick, trailing, modifier)
     RowFrame(place, onClick = onClick, focus = focus, modifier = modifier.heightIn(min = if (value != null) 72.dp else 56.dp)) { selected ->
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             leading?.invoke()

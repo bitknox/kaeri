@@ -237,7 +237,7 @@ internal fun ProvidersScreen() {
                             stringResource(R.string.settings_book_sources),
                             app.kaeri.ui.reading.bookSourcesSummary(LocalContext.current, books),
                             onClick = { navigator.open(app.kaeri.ui.reading.BOOK_SOURCES_ROUTE) },
-                            trailing = { Icon(Icons.Chevron, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+                            trailing = { RowMark(Icons.Chevron) },
                         )
                     }),
                 )

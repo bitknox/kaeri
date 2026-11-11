@@ -569,6 +569,11 @@ stores-offers-plugins = { $count ->
    *[other] { $count } { -plugin-pl }
  }
 
+# Heading over the store's plugins in the join dialog on a large e-ink panel. The count sits beside it.
+# @only android
+# @max 32
+stores-preview-plugins = { -plugin-cap-pl } in this { -store }
+
 # Button of a notice that opens the plugin stores page.
 notice-open-stores = Open { -plugin-store-pl }
 

@@ -111,6 +111,7 @@ import app.kaeri.ui.Shared
 import app.kaeri.ui.TextPlaceholder
 import app.kaeri.ui.itemMotion
 import app.kaeri.ui.kaeriIsFor
+import app.kaeri.ui.labelFor
 import app.kaeri.ui.sharedWork
 import app.kaeri.ui.wideWindow
 import kotlinx.coroutines.delay
@@ -208,6 +209,31 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
     val failure = failures[ReadingAbout.SERIES]
     val coverKey = readerCoverKey("series", work)
 
+    // The series' menu: Tracking, Read from and Read again.
+    val overflow: @Composable () -> Unit = {
+        if (series != null) {
+            Box {
+                IconButton(onClick = { moreOpen = true }) { Icon(Icons.More, contentDescription = Strings.actionMore(context)) }
+                Menu(expanded = moreOpen, onDismissRequest = { moreOpen = false }) {
+                    DropdownMenuItem(text = { Text(Strings.seriesTracking(context)) }, onClick = {
+                        moreOpen = false
+                        sheet = SeriesSheet.Tracking
+                    })
+                    DropdownMenuItem(text = { Text(Strings.seriesReadFromMenu(context)) }, onClick = {
+                        moreOpen = false
+                        sheet = SeriesSheet.ReadFrom
+                    })
+                    if (volumes.chapterRows().any { it.state !is ChapterReadState.Unread }) {
+                        DropdownMenuItem(text = { Text(Strings.seriesReadAgainMenu(context)) }, onClick = {
+                            moreOpen = false
+                            sheet = SeriesSheet.ReadAgain
+                        })
+                    }
+                }
+            }
+        }
+    }
+
     Scaffold(
         // The page grows out of the tile it was opened from and shrinks back into it, as a show's does.
         modifier = Modifier.fillMaxSize().sharedWork(Shared.Page, work, ground = MaterialTheme.colorScheme.surface),
@@ -228,35 +254,23 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
                 )
+            } else if (einkLarge) {
+                // A large e-ink panel: where Back goes in words at the page's margin, as every
+                // pushed paper page has it; the menu keeps Tracking, Read from and Read again.
+                val under = navigator.under()
+                val answer = kaeriIsFor()
+                EinkSeriesBack(
+                    back = under?.let { androidx.compose.ui.res.stringResource(it.labelFor(answer)) } ?: Strings.einkBack(context),
+                    onBack = navigator::back,
+                    menu = overflow,
+                )
             } else {
                 TopAppBar(
                     title = {},
                     navigationIcon = {
                         IconButton(onClick = navigator::back) { Icon(Icons.Back, contentDescription = Strings.actionBack(context)) }
                     },
-                    actions = {
-                        if (series != null) {
-                            Box {
-                                IconButton(onClick = { moreOpen = true }) { Icon(Icons.More, contentDescription = Strings.actionMore(context)) }
-                                Menu(expanded = moreOpen, onDismissRequest = { moreOpen = false }) {
-                                    DropdownMenuItem(text = { Text(Strings.seriesTracking(context)) }, onClick = {
-                                        moreOpen = false
-                                        sheet = SeriesSheet.Tracking
-                                    })
-                                    DropdownMenuItem(text = { Text(Strings.seriesReadFromMenu(context)) }, onClick = {
-                                        moreOpen = false
-                                        sheet = SeriesSheet.ReadFrom
-                                    })
-                                    if (volumes.chapterRows().any { it.state !is ChapterReadState.Unread }) {
-                                        DropdownMenuItem(text = { Text(Strings.seriesReadAgainMenu(context)) }, onClick = {
-                                            moreOpen = false
-                                            sheet = SeriesSheet.ReadAgain
-                                        })
-                                    }
-                                }
-                            }
-                        }
-                    },
+                    actions = { overflow() },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
                 )
             }
@@ -294,6 +308,42 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
                 // What the tile tapped already showed, at once and where the header puts it.
                 Box(Modifier.padding(padding)) { KnownSeriesHeader(tile) }
             } ?: SeriesLoading(Modifier.padding(padding))
+            // A large e-ink panel: the board's page, chapters in columns a page at a time (EinkSeries.kt).
+            einkLarge -> EinkSeriesLarge(
+                series = series,
+                chapters = chapters,
+                late = lateChapters,
+                newestFirst = newestFirst,
+                onOrder = {
+                    newestFirst = it
+                    ChapterOrder.keep(context, it)
+                },
+                chosen = chosen,
+                onChosen = { chosen = it },
+                onCover = { actions.openReader(work, series.action.chapter, series.cover, null) },
+                onMain = { action ->
+                    if (action is SeriesAction.ReadAgain) sheet = SeriesSheet.ReadAgain else actions.openReader(work, action.chapter, series.cover, null)
+                },
+                onReadFrom = { sheet = SeriesSheet.ReadFrom },
+                onGroup = { groupOpen = true },
+                onStatus = { statusOpen = true },
+                onDownload = { downloadOpen = true },
+                onChoose = { chosen = volumes.chooseStart() },
+                onOpen = { row -> actions.openReader(work, row.id, series.cover, null) },
+                onLong = { row -> sheet = SeriesSheet.Chapter(row.id) },
+                onRetry = { store.reading.loadChapters(work, chapters?.edition?.sourceId) },
+                statusMenu = { StatusMenu(series, statusOpen) { statusOpen = false } },
+                downloadMenu = {
+                    DownloadMenu(series, volumes, downloadOpen, onDismiss = { downloadOpen = false }, onChoose = { chosen = volumes.chooseStart() }, onSend = { sheet = SeriesSheet.Send(it) })
+                },
+                notes = {
+                    if (series.askWhereStopped != null) {
+                        WhereStopNote(series, onAsk = { sheet = SeriesSheet.WhereStop }, modifier = Modifier.padding(top = 16.dp))
+                    }
+                    if (sheet !is SeriesSheet.Send) SendStatusRows(work, actions, Modifier.padding(top = 16.dp))
+                },
+                modifier = Modifier.padding(padding),
+            )
             else -> {
                 val top: @Composable () -> Unit = {
                     SeriesHeader(series, wide, coverKey, onCover = {

@@ -1274,6 +1274,12 @@
     <string name="eink_chapter">Chapter %1$s</string>
     <!-- Button in the e-ink reader's top bar that lists the chapters. -->
     <string name="eink_contents">Contents</string>
+    <!-- Button in the e-ink reader's top bar on a large panel that downloads the open chapter. -->
+    <string name="eink_download">Download</string>
+    <!-- In the e-ink reader's top bar on a large panel once the open chapter is downloading. -->
+    <string name="eink_download_running">Downloading</string>
+    <!-- In the e-ink reader's top bar on a large panel when the open chapter is on the device. -->
+    <string name="eink_download_done">On this device</string>
     <!-- Button that goes back out of the reader. -->
     <string name="eink_back">Back</string>
     <!-- Under the page number in the e-ink reader's bottom bar. -->
@@ -1306,6 +1312,30 @@
     <string name="eink_reads_strip">long strip</string>
     <!-- The next chapter is downloaded, on the page between chapters. -->
     <string name="eink_on_device">on this device</string>
+    <!-- After the pages left in the e-ink reader's bottom bar on a large panel, when the next chapter is downloaded: "16 pages left in chapter · chapter 13 is on this device". -->
+    <string name="eink_next_on_device">chapter %1$s is on this device</string>
+    <!-- Choice in the e-ink reader's bottom bar on a large panel: one page at a time. -->
+    <string name="eink_layout_one">One page</string>
+    <!-- Choice in the e-ink reader's bottom bar on a large panel: two pages side by side. -->
+    <string name="eink_layout_two">Two pages</string>
+    <!-- Choice in the e-ink reader's bottom bar on a large panel: the page's white borders stay. -->
+    <string name="eink_crop_off">Crop off</string>
+    <!-- Choice in the e-ink reader's bottom bar on a large panel: the page's white borders are cut. -->
+    <string name="eink_crop_on">Crop on</string>
+    <!-- Caption under the next chapter's first page, beside the end of a chapter on a large panel. -->
+    <string name="eink_end_preview">Chapter %1$s, page 1</string>
+    <!-- Heading over the next chapters, under the end of a chapter on a large panel. -->
+    <string name="eink_coming_up">Coming up</string>
+    <!-- Kicker over a chapter that is slow to open: the series and its volume. -->
+    <string name="eink_slow_kicker">%1$s · volume %2$s</string>
+    <!-- A chapter still opening after 10 seconds, when other sources of the series can be asked. -->
+    <string name="eink_slow_line">%1$s hasn\'t answered in 10 seconds. You can keep waiting, try again, or read this series from another of your sources.</string>
+    <!-- A chapter still opening after 10 seconds, when no other source of the series has it. -->
+    <string name="eink_slow_line_alone">%1$s hasn\'t answered in 10 seconds. You can keep waiting or try again.</string>
+    <!-- A chapter still opening after 10 seconds, before the engine has named the source it asked. -->
+    <string name="eink_slow_line_unnamed">No answer in 10 seconds. You can keep waiting or try again.</string>
+    <!-- Button on a chapter that is slow to open: lists the series' other sources. -->
+    <string name="eink_slow_another">Another source</string>
     <!-- The main button on the page between chapters. -->
     <string name="eink_continue_to">Continue to chapter %1$s</string>
     <!-- Line at the foot of the page between chapters. -->
@@ -1596,6 +1626,78 @@
     <string name="eink_keep_ready_on">On · the next chapters of series you\'re reading</string>
     <!-- The line under Keep next chapters ready on the e-reader's Downloads while it is off. -->
     <string name="eink_keep_ready_off">Off</string>
+    <!-- The underlined link beside the title of the e-reader's Library that opens the View sheet: how the covers are shown, which medium, the order and what is downloaded. -->
+    <string name="eink_library_view">View</string>
+    <!-- A side of the medium control on the e-reader's Library and in its View sheet: every series. -->
+    <string name="eink_library_medium_all">All</string>
+    <!-- A side of the medium control on the e-reader's Library: manga, manhwa and webtoons. -->
+    <string name="eink_library_medium_manga">Manga</string>
+    <!-- A side of the medium control on the e-reader's Library: light novels. -->
+    <string name="eink_library_medium_novels">Novels</string>
+    <!-- On a 6 or 7 inch e-reader's Library: the button naming the list shown and how many series it holds, such as "Reading · 23". It opens the lists to choose another. -->
+    <string name="eink_library_list_button">%1$s · %2$,d</string>
+    <!-- Title of the sheet on a 6 or 7 inch e-reader's Library that chooses which list to show. -->
+    <string name="eink_library_lists_title">Lists</string>
+    <!-- A row label in the e-reader Library's View sheet: covers in a grid or rows in a list. -->
+    <string name="eink_library_show">Show</string>
+    <!-- A side of Show in the View sheet: the covers in a grid. -->
+    <string name="eink_library_show_covers">Covers</string>
+    <!-- A side of Show in the View sheet: rows with a small cover. -->
+    <string name="eink_library_show_list">List</string>
+    <!-- A row label in the View sheet: whether manga, novels or both show. -->
+    <string name="eink_library_medium">Medium</string>
+    <!-- A row label in the View sheet: the order of the series. -->
+    <string name="eink_library_sort">Sort</string>
+    <!-- A side of Sort in the View sheet: the series read most recently first. -->
+    <string name="eink_library_sort_recent">Recent</string>
+    <!-- A side of Sort in the View sheet: by title, alphabetically. -->
+    <string name="eink_library_sort_title">A to Z</string>
+    <!-- A side of Sort in the View sheet: series with a new chapter first. -->
+    <string name="eink_library_sort_new">New</string>
+    <!-- A row label in the View sheet: every series, or only those with chapters downloaded. -->
+    <string name="eink_library_downloaded">Downloaded</string>
+    <!-- A side of Downloaded in the View sheet: every series on the list. -->
+    <string name="eink_library_downloaded_all">All</string>
+    <!-- A side of Downloaded in the View sheet: only series with chapters on this device. -->
+    <string name="eink_library_downloaded_here">On this device</string>
+    <!-- The note at the foot of the View sheet. The count is how many covers fit a page on this screen. -->
+    <plurals name="eink_library_view_note">
+        <item quantity="one">Recent sorts by when you last read. Covers show 1 to a page on this screen.</item>
+        <item quantity="other">Recent sorts by when you last read. Covers show %1$,d to a page on this screen.</item>
+    </plurals>
+    <!-- The note at the foot of the View sheet before the covers have been laid out. -->
+    <string name="eink_library_view_note_short">Recent sorts by when you last read.</string>
+    <!-- On the e-reader's Library when the list has series but none match the choices in View. -->
+    <string name="eink_library_none_match">No series on %1$s match this view</string>
+    <!-- The line under it. -->
+    <string name="eink_library_none_match_line">Change Medium or Downloaded under View to see the rest.</string>
+    <!-- Text button at the end of Keep next chapters ready on a 10 inch e-reader's Downloads. It opens the downloads settings. -->
+    <string name="eink_keep_ready_change">Change</string>
+    <!-- Text button beside the series in progress on a 10 inch e-reader's Home, next to Continue. It opens the series' page. -->
+    <string name="eink_home_series_page">Series page</string>
+    <!-- The link at the end of the New chapters heading on a 10 inch e-reader's Home. It opens Updates. -->
+    <string name="eink_home_all_new_chapters">All new chapters</string>
+    <!-- The link at the end of the Browse heading on a 10 inch e-reader's Home, over the discovery rows as chips. It opens the list of every row. -->
+    <string name="eink_home_all_rows">All rows</string>
+    <!-- Beside the Genres heading at the foot of Browse on a 10 inch e-reader: where the genres come from. -->
+    <string name="eink_browse_genres_from">From AniList</string>
+    <!-- Heading on a 10 inch e-reader's Downloads over the chapters downloading or waiting, with how many there are. -->
+    <string name="eink_downloads_downloading_count">Downloading · %1$,d</string>
+    <!-- Text button at the end of the Downloading heading on a 10 inch e-reader's Downloads. It stops every chapter still to come. -->
+    <string name="eink_downloads_stop_all">Stop all</string>
+    <!-- Heading on a 10 inch e-reader's Downloads over the series with chapters kept here, with how many series. -->
+    <plurals name="eink_downloads_here_count">
+        <item quantity="one">On this device · %1$,d series</item>
+        <item quantity="other">On this device · %1$,d series</item>
+    </plurals>
+    <!-- Heading over the first column of rows on a 10 inch e-reader's More: sources, trackers, sync and reader settings. -->
+    <string name="eink_more_your_reading">Your reading</string>
+    <!-- Heading over the second column of rows on a 10 inch e-reader's More: settings and About. -->
+    <string name="eink_more_this_device">This device</string>
+    <!-- Heading on a 10 inch e-reader's More over the newest notices and errors, each with its time. -->
+    <string name="eink_more_messages">Recent messages</string>
+    <!-- Under Recent messages on a 10 inch e-reader's More while there are none since the app started. -->
+    <string name="eink_more_messages_none">Notices and errors since Kaeri started show here.</string>
     <!-- Switch under Volume keys turn pages in the phone reader's settings: volume up turns forward instead of volume down. -->
     <string name="reader_row_volume_swap">Swap the volume keys</string>
     <!-- Heading of the e-ink reader's settings sheet over the rows for the e-ink screen itself. -->
@@ -1670,6 +1772,29 @@
     <string name="read_tile_spoken">%1$s. %2$s.</string>
     <!-- Screen readers: a reading cover, its title, the line under it and where the person has it. -->
     <string name="read_tile_spoken_in">%1$s. %2$s. %3$s.</string>
+    <!-- E-ink Search on a large panel, before anything is typed: the heading over the chips that pick which of the person's own sources to search. -->
+    <string name="read_search_in">Search in</string>
+    <!-- E-ink Search start: the first chip under Search in, every source the person added. -->
+    <string name="read_search_in_all">All your sources</string>
+    <!-- E-ink Search start: the plain note at the end of the Genres heading, where the genres come from. -->
+    <string name="read_search_genres_from">From AniList</string>
+    <!-- E-ink Search start: the heading over the format chips. -->
+    <string name="read_search_formats">Formats</string>
+    <!-- E-ink Search start: the line at its foot. A genre or format chip opens Search with that filter and no words. -->
+    <string name="read_search_start_note">Searches your library, AniList and each source you added. A genre or format lists AniList\'s series with it.</string>
+    <!-- E-ink Search start with Your sources only ticked: the line at its foot, where AniList is not asked. -->
+    <string name="read_search_start_note_own">Searches your library and each source you added.</string>
+    <!-- E-ink Search results on a large panel: the heading over the results already in the person's library. -->
+    <string name="read_search_group_library">In your library</string>
+    <!-- E-ink Search results: the heading over AniList's results. -->
+    <string name="read_search_group_anilist">From AniList</string>
+    <!-- E-ink Search results: the heading over one source's results. The source is its name. -->
+    <string name="read_search_group_source">From %1$s</string>
+    <!-- E-ink Search results: the count at the end of a group's heading. -->
+    <plurals name="read_search_group_count">
+        <item quantity="one">%1$,d result</item>
+        <item quantity="other">%1$,d results</item>
+    </plurals>
     <!-- Name of the notification channel for new chapters, shown in the system's settings. -->
     <string name="channel_chapters_name">New chapters</string>
     <!-- What the new chapters channel is for, shown in the system's settings. -->
@@ -1707,6 +1832,16 @@
     <string name="group_menu_in">Group in %1$s</string>
     <!-- What TalkBack says the Group row does, after "Double-tap to": an imperative, as Android's click labels are. -->
     <string name="series_group_action">Pick a group</string>
+    <!-- E-ink series page on a large panel: the text button beside the chapter order that starts choosing chapters. -->
+    <string name="series_select">Select</string>
+    <!-- E-ink series page on a large panel: the label over the person's own score, shown as "8 / 10". -->
+    <string name="series_fact_score">Your score</string>
+    <!-- E-ink series page on a large panel: the label over the series' status, "Releasing". -->
+    <string name="series_fact_status">Status</string>
+    <!-- E-ink series page on a large panel: the label over how often chapters come out, "Usually Fridays". -->
+    <string name="series_fact_releases">New chapters</string>
+    <!-- E-ink series page on a large panel: the state at the end of an unread chapter row that is downloaded here. -->
+    <string name="series_row_on_device">On this device</string>
     <!-- Line under Notifications in the Settings list: chapter notifications are on. -->
     <string name="settings_summary_chapters_on">New chapters on</string>
     <!-- Line under Notifications in the Settings list: chapter notifications are off. -->
@@ -7650,6 +7785,8 @@
         <item quantity="one">One plugin</item>
         <item quantity="other">%1$,d plugins</item>
     </plurals>
+    <!-- Heading over the store's plugins in the join dialog on a large e-ink panel. The count sits beside it. -->
+    <string name="stores_preview_plugins">Plugins in this store</string>
     <!-- Button of a notice that opens the plugin stores page. -->
     <string name="notice_open_stores">Open plugin stores</string>
     <!-- Explainer on the empty plugin stores page. -->

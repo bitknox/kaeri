@@ -3,7 +3,7 @@
 // tap, the page between chapters in the flow, no full refresh until the person asks for one, Screen
 // mode set while the reader is open, and the reader's own settings and Contents, which Back closes
 // before it closes the reader. A chapter asked for keeps its control pressed, then names itself
-// loading, and is asked for once.
+// loading, and is asked for once; the series title shows over a first chapter that is slow to open.
 
 package app.kaeri.eink
 
@@ -35,6 +35,7 @@ import app.kaeri.engine.model.VolumeGroup
 import app.kaeri.reader.phone.ReaderLook
 import app.kaeri.engine.model.ReaderCommand
 import app.kaeri.engine.model.ReaderEvent
+import app.kaeri.engine.model.ReaderWait
 import app.kaeri.engine.model.Refresh
 import app.kaeri.engine.ffi.einkPolicyDefaults
 import app.kaeri.engine.model.EinkPanel
@@ -288,6 +289,25 @@ class EinkReaderTest {
         // With nothing over the page, Back closes the reader.
         back()
         assertEquals(1, closed)
+    }
+
+    @Test
+    fun slowFirstOpenNamesTheSeries() {
+        // A first open has no reader view yet: the title comes from the series the open came from.
+        session.open(EinkFixtures.WORK, EinkFixtures.surface.copy(eink = true), title = "The Lantern Stair") // i18n-skip
+        val first = EinkFixtures.chapter("local:lantern-stair/1", "1", "The First Landing", null).copy(volume = "1") // i18n-skip
+        session.apply(ReaderEvent.Opening(first, ReaderWait.ChapterPages("1", "alpha")))
+        compose.mainClock.autoAdvance = false
+        val painter = EinkPainter.defaults(app.kaeri.engine.model.EinkPanel.GREY, fake)
+        compose.setContent {
+            EinkTheme {
+                val state = session.state.collectAsState().value
+                EinkReader(session, state, PageImages(), painter, EinkReaderActions({}, {}, {}), showZones = false)
+            }
+        }
+        compose.mainClock.advanceTimeBy(11_000)
+        compose.waitForIdle()
+        compose.onNodeWithText("The Lantern Stair · volume 1").assertIsDisplayed() // i18n-skip
     }
 
     private fun opens(): List<ReaderCommand.OpenChapter> = sent.filterIsInstance<ReaderCommand.OpenChapter>()

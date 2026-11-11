@@ -227,7 +227,7 @@ object EinkPressIndication : IndicationNodeFactory {
  * turns paper with an ink border and ink words, which reads the same on a colour panel.
  */
 @Composable
-fun EinkSolidButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun EinkSolidButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
     val look = Eink.look
     val press = rememberEinkPress()
     val on = press.inverted
@@ -236,13 +236,14 @@ fun EinkSolidButton(text: String, onClick: () -> Unit, modifier: Modifier = Modi
         modifier
             .heightIn(min = EinkSizes.ButtonHeight)
             .clip(shape)
-            .background(if (on) EinkColours.Paper else look.primary)
-            .then(if (on) Modifier.border(BorderStroke(EinkSizes.Rule, EinkColours.Ink), shape) else Modifier)
-            .einkPress(press, onClick = onClick)
+            // Until it can be pressed: light grey with grey words, no fade on paper.
+            .background(if (!enabled) EinkColours.Selected else if (on) EinkColours.Paper else look.primary)
+            .then(if (on && enabled) Modifier.border(BorderStroke(EinkSizes.Rule, EinkColours.Ink), shape) else Modifier)
+            .einkPress(press, enabled = enabled, onClick = onClick)
             .padding(horizontal = EinkSizes.ButtonSide),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text, style = EinkType.Button.copy(color = if (on) EinkColours.Ink else look.onPrimary), textAlign = TextAlign.Center)
+        Text(text, style = EinkType.Button.copy(color = if (!enabled) EinkColours.Secondary else if (on) EinkColours.Ink else look.onPrimary), textAlign = TextAlign.Center)
     }
 }
 
