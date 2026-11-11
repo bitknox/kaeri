@@ -384,8 +384,10 @@ impl Chapters {
         };
         let page = adjustment.page_size();
         // A row GTK has not placed yet has no size, and the scroll position does not say where
-        // it is.
+        // it is. A scroll asked for before the list was laid out is dropped, so it is asked
+        // again until the row is in view.
         if page <= 0.0 || !row.is_mapped() || bounds.height() <= 0.0 {
+            self.list.scroll_to(here, gtk::ListScrollFlags::NONE, None);
             return Centring::Waiting;
         }
         let middle = f64::from(bounds.y() + bounds.height() / 2.0);
