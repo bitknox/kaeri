@@ -21,6 +21,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import app.kaeri.design.ObiSilk
@@ -136,7 +137,8 @@ class TapZonesShots {
     fun the_tap_zones_page_with_zones_off() {
         // Off has no zones to show: Show zones is drawn as off too.
         reader(TapZonesScenes.state(dir, zones = TapZonesScenes.zones(ZoneLayout.OFF)), SettingsPane.TapZones)
-        compose.onNodeWithText("Show zones").assertIsNotEnabled()
+        compose.onNodeWithText("Show zones").performScrollTo().assertIsNotEnabled()
+        compose.waitForIdle()
         shot("phone-page-off")
     }
 
