@@ -180,9 +180,9 @@ internal fun EinkHomeScreen(actions: AppActions) {
                 val came = cameOut(view.week)
                 val rows = view.rows.filter { it.tiles.isNotEmpty() }
                 val own = continuing.isNotEmpty() || came.isNotEmpty() || (tile != null && !demo.onlyBooks)
-                // A 10 inch panel upright has its own Home, as the large panel board draws it; the
-                // first run, the demo and large text keep the smaller panels' Home.
-                if (reader && own && !large && !demo.onlyBooks && largePanel(upright = true)) {
+                // A 10 inch panel has its own Home, as the large panel board draws it, widened when
+                // held on its side; the first run, the demo and large text keep the smaller panels' Home.
+                if (reader && own && !large && !demo.onlyBooks && largePanel()) {
                     LargeHome(tile?.takeIf { spot != null }, spot, continuing, came, rows, view.rows.any { it.pending }, actions)
                     return@PaperPage
                 }
@@ -223,15 +223,15 @@ internal fun EinkHomeScreen(actions: AppActions) {
 /** A panel this many dp across and wider is the 10.3 inch board's, as [Side] measures it. */
 private const val WIDE_PANEL_DP = 900
 
-/**
- * A 10 inch panel: 900 dp across and wider, where lists take two columns and more. [upright] also
- * asks for it held upright, for Home, which the board draws only so.
- */
+/** A 10 inch panel: 900 dp across and wider, where lists take two columns and more. */
 @Composable
-internal fun largePanel(upright: Boolean = false): Boolean {
-    val configuration = LocalConfiguration.current
-    return configuration.screenWidthDp >= WIDE_PANEL_DP && (!upright || configuration.screenHeightDp >= configuration.screenWidthDp)
-}
+internal fun largePanel(): Boolean = LocalConfiguration.current.screenWidthDp >= WIDE_PANEL_DP
+
+/** The least room New chapters takes on a 10 inch Home: its heading and one 64 dp row, with their gaps. */
+private val NewChaptersLeast = 140.dp
+
+/** Continue's columns on a 10 inch panel held on its side, filling the wider page. */
+private const val LANDSCAPE_CONTINUE_COLUMNS = 5
 
 /** Between list columns on a large panel; each is at least [ListColumnLeast] wide. */
 private val ListGap = 40.dp
@@ -274,7 +274,15 @@ private fun LargeHome(
     Column(Modifier.fillMaxSize()) {
         if (tile != null && spot != null) LargeHero(tile, spot, actions)
         if (continuing.isNotEmpty()) LargeContinue(continuing)
-        if (came.isNotEmpty()) LargeNewChapters(came, Modifier.weight(1f)) else Spacer(Modifier.weight(1f))
+        // New chapters takes the room left, and gives way when that can't hold its heading and a
+        // row, as on the panel held on its side, rather than show a clipped heading.
+        if (came.isNotEmpty()) {
+            BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+                if (maxHeight >= NewChaptersLeast) LargeNewChapters(came, Modifier.fillMaxSize())
+            }
+        } else {
+            Spacer(Modifier.weight(1f))
+        }
         when {
             rows.isNotEmpty() -> LargeBrowseChips(rows)
             pending -> PaperWaiting { Text(Strings.stateLoading(context), style = EinkType.Secondary, modifier = Modifier.padding(bottom = 24.dp)) }
@@ -335,7 +343,10 @@ private fun LargeHero(tile: WorkTile, spot: ReadSpotlight, actions: AppActions) 
     }
 }
 
-/** Continue on a 10 inch Home: a 140 dp cover centred in each of the grid's columns, with its title and place. */
+/**
+ * Continue on a 10 inch Home: a 140 dp cover centred in each of the grid's columns, with its title
+ * and place; five columns when the panel is held on its side.
+ */
 @Composable
 private fun LargeContinue(tiles: List<WorkTile>) {
     val context = LocalContext.current
@@ -346,8 +357,13 @@ private fun LargeContinue(tiles: List<WorkTile>) {
         navigator.go(Destination.Library)
     }
     BoxWithConstraints(Modifier.fillMaxWidth().padding(top = 4.dp)) {
-        // The grid rule's columns: as many of at least 200 dp as the width holds.
-        val columns = paperGrid(maxWidth, 1000.dp, 0.dp, 0.dp).columns
+        // The grid rule's columns upright: as many of at least 200 dp as the width holds.
+        val configuration = LocalConfiguration.current
+        val columns = if (configuration.screenWidthDp > configuration.screenHeightDp) {
+            LANDSCAPE_CONTINUE_COLUMNS
+        } else {
+            paperGrid(maxWidth, 1000.dp, 0.dp, 0.dp).columns
+        }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
             val shown = tiles.take(columns)
             for (tile in shown) {
