@@ -1298,6 +1298,14 @@ pub(crate) async fn handle_internal(
             let lent = crate::downloads::books::Lent::of(services, tx);
             services.book_sources.downloads.sweep(&lent, None);
         }
+        Internal::BookSourcesChanged if engine.reading.available => {
+            crate::read_catalog::changed::sources_changed(
+                &crate::read_catalog::Kit::of(services),
+                crate::read_catalog::Ask::of(engine, services),
+                tx,
+            );
+        }
+        Internal::BookSourcesChanged => {}
         Internal::SyncEffects => {
             let effects = services.syncing.take_effects();
             crate::sync::apply_effects(effects, engine, services, tx);

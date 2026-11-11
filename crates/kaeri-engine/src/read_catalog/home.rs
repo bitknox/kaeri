@@ -100,6 +100,7 @@ fn key_of(row: Planned) -> String {
 
 /// Load Home: at once from what was kept, then again as each part lands.
 pub fn load(kit: &Kit, ask: Ask, refresh: bool, tx: &Outbox) {
+    super::changed::home(kit);
     let generation = begin(&kit.sources.catalog.home, refresh);
     let home = Home { generation: generation.unwrap_or(0), ..Home::of(kit, ask) };
     home.send(tx);
@@ -589,12 +590,15 @@ impl Home {
     }
 
     /// A row's titles as kept, however old, with when they were asked; adult ones left out
-    /// unless they are on. Each says so when it was opened and no source had it since.
+    /// unless they are on. Each says so when it was opened and no source had it since: asked of
+    /// the sources as they stand, and with no series of a source that is on matched to it since,
+    /// as a folder's scan matches one.
     fn shelf(&self, row: Planned, name: Option<&str>) -> Option<(Vec<WorkTile>, i64)> {
         let shelf =
             Shelf::of(&self.store, &key_of(row)).filter(|s| s.name.as_deref() == name)?;
         let not_found =
             self.sources.catalog.not_found.lock().unwrap_or_else(|e| e.into_inner()).clone();
+        let mark = (!not_found.is_empty()).then(|| self.sources.sources_mark());
         let tiles = self
             .meta
             .kept_books(&shelf.ids())
@@ -602,8 +606,10 @@ impl Home {
             .filter(|k| self.shown(&k.book))
             .map(|k| {
                 let mut tile = tiles::plain(&self.meta, &k.book);
-                tile.not_in_sources =
-                    not_found.get(tile.work.as_str()).is_some_and(|at| *at >= shelf.at);
+                tile.not_in_sources = not_found
+                    .get(tile.work.as_str())
+                    .is_some_and(|(at, asked)| *at >= shelf.at && Some(*asked) == mark)
+                    && self.sources.edition_of(&tile.work, None).is_none();
                 // A New row's caption says when each series started: "Japan · since March".
                 if matches!(row, Planned::New(_)) {
                     tile.started = tiles::started(&k.book);

@@ -23,7 +23,9 @@ struct SeriesActionWordsTests {
     }
 
     @Test func aPartWithNoNumberGoesByItsTitle() {
-        #expect(words(.readPart(chapter: ChapterId("3"), label: "3", named: nil)) == "Read part 3")
+        // A part the source only numbers is a chapter, as its row and the reader call it.
+        #expect(words(.readPart(chapter: ChapterId("3"), label: "3", named: nil)) == "Read chapter 3")
+        #expect(words(.continuePart(chapter: ChapterId("3"), label: "3", percent: 34, named: nil)) == "Continue chapter 3 · 34%")
         #expect(words(.readPart(chapter: ChapterId("x-prologue"), label: "Prologue", named: nil)) == "Read Prologue")
         #expect(words(.continuePart(chapter: ChapterId("x-prologue"), label: "Prologue", percent: 34, named: nil)) == "Continue Prologue · 34%")
     }

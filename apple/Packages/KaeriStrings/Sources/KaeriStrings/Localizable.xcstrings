@@ -3993,6 +3993,40 @@
         }
       }
     },
+    "accounts-changes-held" : {
+      "comment" : "Line under a signed-in account when nothing else waits but some changes can't go out yet: the { -tracker } has no match for those titles. They go out by themselves once it has one. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "One change can't sync yet"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld changes can't sync yet"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "accounts-changes-waiting" : {
       "comment" : "Line under a signed-in account while changes wait to be sent. Argument 1: count (Int).",
       "extractionState" : "manual",
@@ -262811,6 +262845,18 @@
         }
       }
     },
+    "series-tracker-not-started" : {
+      "comment" : "A tracker's progress when the person has read none of the series yet, in place of \"0 chapters\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not started"
+          }
+        }
+      }
+    },
     "series-tracker-not-there" : {
       "comment" : "A tracker that has no such series.",
       "extractionState" : "manual",
@@ -290919,6 +290965,30 @@
         }
       }
     },
+    "settings-show-volumes" : {
+      "comment" : "Row: group a series' chapters under volume headings. Off by default.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show volumes"
+          }
+        }
+      }
+    },
+    "settings-show-volumes-note" : {
+      "comment" : "Line under Show volumes: the list is grouped only when most chapters have a volume.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grouped when most chapters have a volume"
+          }
+        }
+      }
+    },
     "settings-signed-in" : {
       "comment" : "Under a tracker that is signed in, when its user name is unknown.",
       "extractionState" : "manual",
@@ -303771,6 +303841,52 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ chưa đồng bộ"
+          }
+        }
+      }
+    },
+    "shell-sync-held" : {
+      "comment" : "Line in the sync status's popover: changes a { -tracker } can't take yet, because it has no match for those titles. They go out by themselves once it has one. Argument 1: count (Int). Argument 2: tracker (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "One change can't sync to %2$@ yet"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld changes can't sync to %2$@ yet"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "shell-sync-held-detail" : {
+      "comment" : "Under the lines above in the sync status's popover: why those changes wait, and that nothing needs doing.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No match for these titles yet. They sync once there is one."
           }
         }
       }

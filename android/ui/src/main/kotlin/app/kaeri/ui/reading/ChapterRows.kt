@@ -92,9 +92,10 @@ internal object SeriesWords {
     /** "AniList and MangaUpdates": the trackers that follow the series. */
     fun trackers(rows: List<TrackerReadRow>): String = Wording.list(rows.map { tracker(it.tracker) })
 
-    /** "87 of 88 chapters · volume 9", "Volume 5 of 5". */
+    /** "87 of 88 chapters · volume 9", "Volume 5 of 5", or "Not started" while nothing is read. */
     fun progress(context: Context, row: TrackerReadRow, series: SeriesView): String {
         val volumes = row.volumes
+        if (row.chapters == 0u && (volumes ?: 0u) == 0u) return Strings.seriesTrackerNotStarted(context)
         if (series.medium == Medium.NOVEL && volumes != null) {
             return Strings.seriesTrackerVolumes(context, volumes.toInt(), (series.volumesTotal ?: volumes).toInt())
         }
@@ -419,6 +420,18 @@ internal fun List<VolumeGroup>.chooseStart(): Set<String> {
 /** All unread, from the bar. */
 internal fun List<VolumeGroup>.allUnread(): Set<String> =
     chapterRows().filter { it.state !is ChapterReadState.Read }.map { it.id }.toSet()
+
+/**
+ * The volumes Download offers. A flat list, drawn with no volume headings, still says each
+ * chapter's volume: its rows by volume, in reading order, and none for rows without one.
+ */
+internal fun List<VolumeGroup>.downloadVolumes(): List<VolumeGroup> {
+    val list = singleOrNull()?.takeIf { it.flat } ?: return this
+    return list.chapters
+        .filter { !it.volume.isNullOrEmpty() }
+        .groupBy { it.volume }
+        .map { (volume, rows) -> VolumeGroup(volume = volume, title = null, chapters = rows, allRead = false) }
+}
 
 /** The chapters downloaded here. */
 internal fun List<VolumeGroup>.downloaded(): List<ChapterRow> = chapterRows().filter { it.download is ChapterDownloadState.Done }

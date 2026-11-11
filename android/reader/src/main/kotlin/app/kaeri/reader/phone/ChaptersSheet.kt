@@ -175,8 +175,9 @@ private fun ChapterList(session: ReaderSession, state: ReaderState) {
     }
     LazyColumn(Modifier.fillMaxSize()) {
         state.volumes.forEachIndexed { index, group ->
-            val folded = group.allRead && index !in open && group.chapters.none { it.id == current }
-            item(key = "v$index") {
+            // A flat list is the chapters alone: no heading, never folded.
+            val folded = !group.flat && group.allRead && index !in open && group.chapters.none { it.id == current }
+            if (!group.flat) item(key = "v$index") {
                 val name = group.volume
                 val words = when {
                     name == null -> Strings.readerVolumeNone(context)

@@ -1424,7 +1424,7 @@ internal fun CaughtUp(action: TitleAction, modifier: Modifier = Modifier) {
  * the text out again. The most recent few, on the main thread.
  */
 internal object SynopsisCuts {
-    private data class Key(val text: String, val width: Int, val style: androidx.compose.ui.text.TextStyle, val density: Float, val fontScale: Float, val more: String)
+    private data class Key(val text: String, val width: Int, val style: androidx.compose.ui.text.TextStyle, val density: Float, val fontScale: Float, val more: String, val lines: Int)
 
     /** A cut, or that the whole text fits. */
     private class Cut(val text: String?)
@@ -1433,23 +1433,23 @@ internal object SynopsisCuts {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Key, Cut>?) = size > 48
     }
 
-    fun get(text: String, width: Int, style: androidx.compose.ui.text.TextStyle, density: androidx.compose.ui.unit.Density, more: String = "", cut: () -> String?): String? = // i18n-skip
-        cuts.getOrPut(Key(text, width, style, density.density, density.fontScale, more)) { Cut(cut()) }.text
+    fun get(text: String, width: Int, style: androidx.compose.ui.text.TextStyle, density: androidx.compose.ui.unit.Density, more: String = "", lines: Int = 2, cut: () -> String?): String? = // i18n-skip
+        cuts.getOrPut(Key(text, width, style, density.density, density.fontScale, more, lines)) { Cut(cut()) }.text
 }
 
 /** What a cut synopsis ends with to be measured: the ellipsis and "More", set a little wider. */
 private fun synopsisEnding(more: String) = "\u2026 $more "
 
 /**
- * The longest start of [text] that leaves room on its two lines at [width] for "… More", with the
+ * The longest start of [text] that leaves room on its [lines] lines at [width] for "… More", with the
  * ellipsis; `null` when the whole text fits. The answer a search over every length would give: it
  * is estimated from one layout of the whole text, where the ending would start on its second line,
  * then confirmed against the next length, widening the step only when the estimate is off. A few
  * layouts in all, where the search took one for every halving of the text's length.
  */
-internal fun synopsisCut(text: String, width: Int, style: androidx.compose.ui.text.TextStyle, measurer: androidx.compose.ui.text.TextMeasurer, more: String = "More"): String? { // i18n-skip
+internal fun synopsisCut(text: String, width: Int, style: androidx.compose.ui.text.TextStyle, measurer: androidx.compose.ui.text.TextMeasurer, more: String = "More", lines: Int = 2): String? { // i18n-skip
     val synopsisEnding = synopsisEnding(more)
-    fun layout(candidate: String) = measurer.measure(candidate, style, maxLines = 2, constraints = Constraints(maxWidth = width))
+    fun layout(candidate: String) = measurer.measure(candidate, style, maxLines = lines, constraints = Constraints(maxWidth = width))
     fun fits(length: Int) = !layout(text.take(length).trimEnd() + synopsisEnding).hasVisualOverflow
     val whole = layout(text)
     if (!whole.hasVisualOverflow) return null

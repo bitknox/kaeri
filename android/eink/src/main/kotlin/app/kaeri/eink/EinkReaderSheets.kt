@@ -463,7 +463,9 @@ fun EinkContents(
         val lines = remember(volumes) {
             volumes.flatMap { group ->
                 val heading = group.volume?.let { Strings.readerVolumeLine(context, it) } ?: Strings.readerVolumeNone(context)
-                listOf<ContentsLine>(ContentsLine.Heading(heading)) + group.chapters.map { ContentsLine.Chapter(it) }
+                // A flat list is the chapters alone, with no heading.
+                val head = if (group.flat) emptyList() else listOf<ContentsLine>(ContentsLine.Heading(heading))
+                head + group.chapters.map { ContentsLine.Chapter(it) }
             }
         }
         BoxWithConstraints(Modifier.fillMaxWidth().weight(1f).navigationBarsPadding()) {

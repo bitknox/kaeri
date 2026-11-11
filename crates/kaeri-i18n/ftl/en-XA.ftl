@@ -3878,6 +3878,9 @@ accounts-row-queued =
 # Part of an account's overlay row: changes waiting to be sent, and some of them held back until the title is matched to the { -tracker }'s own id.
 accounts-row-queued-held = [{ $queued } ƣüéüéð, { $held } ŵàîţîñĝ ƒöŕ à ɱàţçĥ~~~~~~~~~~~]
 
+# Part of an account's overlay row: changes held back until the title is matched to the { -tracker }'s own id, with nothing else queued.
+accounts-row-held = [{ $count } ŵàîţîñĝ ƒöŕ à ɱàţçĥ~~~~~~~]
+
 # Action beside a sync difference in the overlay: Enter keeps the value on this device.
 accounts-conflict-keep-mine = [Ûšé ļöçàļ~~~]
 
@@ -9415,6 +9418,9 @@ series-tracker-chapters =
        *[other] [{ $n } çĥàþţéŕš~~~~]
     }
 
+# A tracker's progress when the person has read none of the series yet, in place of "0 chapters".
+series-tracker-not-started = [Ñöţ šţàŕţéð~~~~]
+
 # A tracker's progress in chapters, then the volume.
 series-tracker-with-volume = [{ $chapters } · ṽöļüɱé { $volume }~~~~~]
 
@@ -10443,6 +10449,9 @@ settings-keep-chapters-ready-note = [Ţĥé ñéẋţ çĥàþţéŕš öƒ šé
 
 # Line under Delete chapters after reading.
 settings-delete-after-reading-note = [Ɓööķɱàŕķéð çĥàþţéŕš àŕé ķéþţ~~~~~~~~~]
+
+# Line under Show volumes: the list is grouped only when most chapters have a volume.
+settings-show-volumes-note = [Ĝŕöüþéð ŵĥéñ ɱöšţ çĥàþţéŕš ĥàṽé à ṽöļüɱé~~~~~~~~~~~~]
 
 # Line under New chapters.
 settings-chapter-notifications-note = [Šéŕîéš öñ ýöüŕ Ŕéàðîñĝ ļîšţ~~~~~~~~~]
@@ -11618,6 +11627,9 @@ settings-keep-chapters-ready = [Ķééþ ñéẋţ çĥàþţéŕš ŕéàðý~~
 # Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.
 settings-delete-after-reading = [Ðéļéţé çĥàþţéŕš àƒţéŕ ŕéàðîñĝ~~~~~~~~~]
 
+# Row: group a series' chapters under volume headings. Off by default.
+settings-show-volumes = [Šĥöŵ ṽöļüɱéš~~~~]
+
 # Row: whether a series' reader mode, direction and colour follow you to your other devices.
 settings-series-choices-follow = [Šéŕîéš šéţţîñĝš ƒöļļöŵ ýöü~~~~~~~~]
 
@@ -11830,6 +11842,13 @@ accounts-changes-waiting =
     { $count ->
         [one] [Öñé çĥàñĝé ŵàîţîñĝ ţö šýñç~~~~~~~~]
        *[other] [{ $count } çĥàñĝéš ŵàîţîñĝ ţö šýñç~~~~~~~~~]
+    }
+
+# Line under a signed-in account when nothing else waits but some changes can't go out yet: the { -tracker } has no match for those titles. They go out by themselves once it has one.
+accounts-changes-held =
+    { $count ->
+        [one] [Öñé çĥàñĝé çàñ'ţ šýñç ýéţ~~~~~~~~]
+       *[other] [{ $count } çĥàñĝéš çàñ'ţ šýñç ýéţ~~~~~~~~]
     }
 
 # Choice for the download quality: larger files with more detail.

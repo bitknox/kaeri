@@ -12,8 +12,11 @@
 //! until one source answers.
 
 use std::{
-    collections::BTreeSet,
-    sync::{Arc, RwLock},
+    collections::{BTreeSet, HashMap},
+    sync::{
+        Arc, RwLock,
+        atomic::{AtomicU64, Ordering},
+    },
     time::Duration,
 };
 
@@ -42,6 +45,11 @@ pub struct BookRegistry {
     /// The sources switched off by id. Kept in the chain with their place, never asked.
     off: Arc<RwLock<BTreeSet<String>>>,
     health: HealthTracker,
+    /// When each source joined, as a count of joins: a source swapped for its update, or a
+    /// server put again with what it now holds, joins anew. What a source said before is not
+    /// what it says now.
+    joined: Arc<RwLock<HashMap<String, u64>>>,
+    joins: Arc<AtomicU64>,
 }
 
 impl std::fmt::Debug for BookRegistry {
@@ -91,6 +99,8 @@ impl BookRegistry {
     pub fn put(&self, source: Arc<dyn BookSource>) {
         let id = source.manifest().id.clone();
         self.health.register([id.clone()]);
+        let turn = self.joins.fetch_add(1, Ordering::Relaxed) + 1;
+        write(&self.joined).insert(id.clone(), turn);
         let mut sources = write(&self.sources);
         match sources.iter_mut().find(|s| s.manifest().id == id) {
             Some(slot) => *slot = source,
@@ -109,6 +119,13 @@ impl BookRegistry {
 
     pub fn health(&self) -> &HealthTracker {
         &self.health
+    }
+
+    /// Which join of the source with this id is in the chain, counted across every source: a
+    /// newer one for a source swapped for its update or put again. `None` when it is not in.
+    pub fn joined(&self, id: &str) -> Option<u64> {
+        self.get(id)?;
+        read(&self.joined).get(id).copied()
     }
 
     pub fn is_empty(&self) -> bool {
@@ -195,6 +212,8 @@ impl BookRegistry {
             order: Arc::new(RwLock::new(order)),
             off: self.off.clone(),
             health: self.health.clone(),
+            joined: self.joined.clone(),
+            joins: self.joins.clone(),
         }
     }
 
@@ -274,10 +293,26 @@ impl BookRegistry {
         medium: Option<Medium>,
         now: i64,
     ) -> Searched {
+        self.search_in(query, hints, medium, None, now).await
+    }
+
+    /// [`Self::search`] asking only the sources in `scope`, by id; `None` asks every source.
+    /// A source outside it is never asked.
+    pub async fn search_in(
+        &self,
+        query: &str,
+        hints: &BookHints,
+        medium: Option<Medium>,
+        scope: Option<&[String]>,
+        now: i64,
+    ) -> Searched {
+        let scoped = |s: &Arc<dyn BookSource>| {
+            scope.is_none_or(|scope| scope.iter().any(|id| *id == s.manifest().id))
+        };
         let asked: Vec<_> = self
             .candidates()
             .into_iter()
-            .filter(|s| Self::covers(s.as_ref(), medium))
+            .filter(|s| scoped(s) && Self::covers(s.as_ref(), medium))
             .collect();
         let answers = join_all(asked.into_iter().map(|source| async move {
             let id = source.manifest().id.clone();
@@ -606,6 +641,23 @@ mod tests {
             registry.put((*source).clone());
         }
         registry
+    }
+
+    #[test]
+    fn a_source_swapped_for_its_update_joins_anew_and_a_view_shares_the_count() {
+        let registry = BookRegistry::new();
+        assert_eq!(registry.joined("alpha"), None);
+        registry.put(Fake::new("alpha", BookSourceKind::Plugin, &[]));
+        registry.put(Fake::new("beta", BookSourceKind::Plugin, &[]));
+        let first = registry.joined("alpha").unwrap();
+        assert_ne!(registry.joined("beta"), Some(first));
+        // The same id again, as an update installed while the app runs.
+        registry.put(Fake::new("alpha", BookSourceKind::Plugin, &[]));
+        let second = registry.joined("alpha").unwrap();
+        assert!(second > first);
+        assert_eq!(registry.preferring("beta").joined("alpha"), Some(second));
+        registry.remove("alpha");
+        assert_eq!(registry.joined("alpha"), None);
     }
 
     #[tokio::test]

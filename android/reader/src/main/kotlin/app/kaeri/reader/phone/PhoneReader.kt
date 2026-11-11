@@ -526,7 +526,18 @@ fun PhoneReader(
                     // what it waits on and for how long, stays over the page until the first one shows.
                     var novelPlateGone by remember(view.chapter.id) { mutableStateOf(false) }
                     if (!novelPlateGone && place.failed == null) {
-                        Opening(state, done = place.ready, drawn = place.ready, fades = fades && leaving == null, onGone = { novelPlateGone = true }, session = session, instant = instant, onClose = actions.onClose)
+                        Opening(
+                            state,
+                            done = place.ready,
+                            drawn = place.ready,
+                            fades = fades && leaving == null,
+                            onGone = { novelPlateGone = true },
+                            session = session,
+                            instant = instant,
+                            onClose = actions.onClose,
+                            // The web view has the chapter and has not shown it, or the engine is still opening it.
+                            onRetry = { if (state.novel != null) place.retry() else session.retryOpen() },
+                        )
                     }
                     val failed = place.failed
                     when {
@@ -581,6 +592,7 @@ fun PhoneReader(
                             session = session,
                             instant = instant,
                             onClose = actions.onClose,
+                            onRetry = session::retryOpen,
                         )
                     }
                     if (state.leaves.isNotEmpty()) PagedReader(
@@ -1394,8 +1406,9 @@ internal const val OPENING_LONG_MS = 15_000
 
 /**
  * While a chapter opens: nothing for 600 ms, then the page plate in the page's place with what
- * the open waits on, from 3 s with how long, and from [OPENING_LONG_MS] another source and Go
- * back. Once the first page is [done] and drawn over it, the plate fades out.
+ * the open waits on, from 3 s with how long, and from [OPENING_LONG_MS] Try again, another
+ * source and Go back. Try again counts the wait from the start. Once the first page is [done] and
+ * drawn over it, the plate fades out.
  */
 @Composable
 private fun Opening(
@@ -1407,10 +1420,12 @@ private fun Opening(
     session: ReaderSession,
     instant: Boolean,
     onClose: () -> Unit,
+    onRetry: () -> Unit,
 ) {
     val context = LocalContext.current
+    var tries by remember { mutableIntStateOf(0) }
     // Counted from the ask, so a novel's plate after the chapter opens goes on from the first one.
-    val since = remember(state.openingSince) { state.openingSince.takeIf { it > 0 } ?: openingClock() }
+    val since = remember(state.openingSince, tries) { state.openingSince.takeIf { it > 0 && tries == 0 } ?: openingClock() }
     var waited by remember { mutableIntStateOf((openingClock() - since).toInt()) }
     LaunchedEffect(since) {
         while (true) {
@@ -1461,9 +1476,22 @@ private fun Opening(
             ) {
                 Text(Strings.readerWaitLong(context), color = Chrome.faint, fontSize = 15.sp, modifier = Modifier.padding(bottom = 12.dp))
                 val sources = state.sources.orEmpty()
+                val retry = {
+                    tries++
+                    onRetry()
+                }
+                // Another source leads when there is one, as on a failed open; otherwise Try again.
                 if (sources.isNotEmpty()) {
                     OutlinedButton(onClick = { choosing = true }, shape = RoundedCornerShape(25.dp), modifier = Modifier.fillMaxWidth().height(50.dp)) {
                         Text(Strings.readerFailedChoose(context), color = Chrome.text, fontSize = 16.sp)
+                    }
+                    Spacer(Modifier.height(4.dp))
+                    TextButton(onClick = retry, modifier = Modifier.heightIn(min = 38.dp)) {
+                        Text(Strings.readerTryAgain(context), color = Chrome.text, fontSize = 15.sp)
+                    }
+                } else {
+                    OutlinedButton(onClick = retry, shape = RoundedCornerShape(25.dp), modifier = Modifier.fillMaxWidth().height(50.dp)) {
+                        Text(Strings.readerTryAgain(context), color = Chrome.text, fontSize = 16.sp)
                     }
                     Spacer(Modifier.height(4.dp))
                 }

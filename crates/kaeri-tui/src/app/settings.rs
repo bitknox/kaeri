@@ -206,6 +206,7 @@ impl App {
             | S::ChapterDownloadsOnCellular
             | S::KeepChaptersReady
             | S::DeleteAfterReading
+            | S::ShowVolumes
             | S::OpdsFeed
             | S::OpdsPassword
             | S::OpdsPort
@@ -351,6 +352,7 @@ fn label_text(key: SettingKey) -> String {
         S::ChapterDownloadsOnCellular => t::settings_chapter_downloads_cellular(),
         S::KeepChaptersReady => t::settings_keep_chapters_ready(),
         S::DeleteAfterReading => t::settings_delete_after_reading(),
+        S::ShowVolumes => t::settings_show_volumes(),
         S::OpdsFeed => t::settings_opds_feed(),
         S::OpdsPassword => t::settings_opds_password(),
         S::OpdsPort => t::settings_opds_port(),

@@ -7,6 +7,12 @@
 package app.kaeri.ui.reading
 
 import androidx.activity.compose.BackHandler
+import app.kaeri.ui.synopsisCut
+import app.kaeri.ui.SynopsisCuts
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -203,6 +209,8 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
     val coverKey = readerCoverKey("series", work)
 
     Scaffold(
+        // The page grows out of the tile it was opened from and shrinks back into it, as a show's does.
+        modifier = Modifier.fillMaxSize().sharedWork(Shared.Page, work, ground = MaterialTheme.colorScheme.surface),
         containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
             val choosing = chosen
@@ -515,18 +523,64 @@ private fun SeriesHeader(series: SeriesView, wide: Boolean, coverKey: String, on
         }
         val synopsis = series.synopsis?.replace(Regex("\\s*\\n+\\s*"), " ")
         if (wide && !synopsis.isNullOrBlank()) {
-            var open by rememberSaveable { mutableStateOf(false) }
-            Text(
-                synopsis,
-                style = MaterialTheme.typography.bodyMedium,
-                color = colors.onSurfaceVariant,
-                maxLines = if (open) Int.MAX_VALUE else 4,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 16.dp).clickable { open = !open },
-            )
+            SeriesSynopsis(synopsis, series.work, Modifier.padding(top = 16.dp))
         }
     }
 }
+
+/**
+ * The synopsis in four lines, ending "… More" where there is more, as on a show's page; a tap, or
+ * the screen reader's action, opens it in place and it stays open. The height grows with the text
+ * on the standard spring, so what sits under it moves with it instead of jumping, and a screen
+ * reader reads the whole text either way.
+ */
+@Composable
+private fun SeriesSynopsis(text: String, work: WorkId, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    var expanded by rememberSaveable(work) { mutableStateOf(false) }
+    val colors = MaterialTheme.colorScheme
+    val style = MaterialTheme.typography.bodyMedium
+    val measurer = rememberTextMeasurer()
+    val more = Strings.actionMore(context)
+    val eink = LocalEinkLayout.current != null
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+        val width = constraints.maxWidth
+        val density = LocalDensity.current
+        val cut = remember(text, width, style, density, more) {
+            SynopsisCuts.get(text, width, style, density, more, SERIES_SYNOPSIS_LINES) {
+                synopsisCut(text, width, style, measurer, more, SERIES_SYNOPSIS_LINES)
+            }
+        }
+        val open = expanded || cut == null
+        Text(
+            buildAnnotatedString {
+                if (open) {
+                    append(text)
+                } else {
+                    append(cut)
+                    append(" ")
+                    withStyle(SpanStyle(color = colors.onSurface, fontWeight = FontWeight.Medium)) { append(more) }
+                }
+            },
+            style = style,
+            color = colors.onSurfaceVariant,
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(if (eink) Modifier else Modifier.animateContentSize(Motion.standard()))
+                .then(
+                    if (open) {
+                        Modifier
+                    } else {
+                        Modifier.clickable(onClickLabel = Strings.titleSynopsisHint(context), role = Role.Button) { expanded = true }
+                    },
+                )
+                .semantics { contentDescription = text },
+        )
+    }
+}
+
+/** How many lines the series synopsis shows before "More". */
+private const val SERIES_SYNOPSIS_LINES = 4
 
 /**
  * The one main action, amber, 56 high, with Status and Download outlined side by side under it.
@@ -820,7 +874,9 @@ private fun LazyListScope.seriesChapters(
         }
     }
     val ordered = if (newestFirst) groups.reversed() else groups
-    val single = failure != null || (ordered.size == 1 && ordered.first().volume == null)
+    // One run of chapters with no heading: the downloaded ones after a failure, a list with no
+    // volumes, or a flat one (Show volumes off, or too few chapters with a volume).
+    val single = failure != null || (ordered.size == 1 && (ordered.first().flat || ordered.first().volume == null))
     ordered.forEachIndexed { index, group ->
         val key = group.volume ?: "none-$index"
         val open = single || (folds[key] ?: !group.allRead)

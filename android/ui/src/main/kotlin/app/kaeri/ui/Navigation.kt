@@ -5,9 +5,15 @@ package app.kaeri.ui
 
 import android.view.View
 import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.Transition
+import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
@@ -20,6 +26,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.layout.ContentScale
@@ -230,8 +237,11 @@ private fun Modifier.sharedKeyed(shared: Shared, id: String, from: String?, grou
     val layout = LocalSharedTransitions.current
     val page = LocalPageAnimation.current
     val outside = LocalView.current !== LocalSharedTransitionsView.current
-    if (layout == null || page == null || outside) return if (ground.isSpecified) background(ground) else this
+    // On an e-ink panel nothing flies: the page is there at once, as its NavHost puts it.
+    val paper = app.kaeri.ui.reading.LocalEinkLayout.current != null
+    if (layout == null || page == null || outside || paper) return if (ground.isSpecified) background(ground) else this
     if (from != null && LocalNavigator.current.source != "$from:$id") return this
+    val bounds = flightBounds(page)
     return with(layout) {
         val state = rememberSharedContentState("${shared.prefix}-$id")
         when (shared) {
@@ -244,6 +254,7 @@ private fun Modifier.sharedKeyed(shared: Shared, id: String, from: String?, grou
                 page,
                 enter = fadeIn(Motion.fadeIn()),
                 exit = fadeOut(Motion.fadeOut()),
+                boundsTransform = bounds,
                 resizeMode = SharedTransitionScope.ResizeMode.scaleToBounds(ContentScale.FillWidth, Alignment.TopCenter),
                 zIndexInOverlay = GROUND_Z,
             )
@@ -253,6 +264,7 @@ private fun Modifier.sharedKeyed(shared: Shared, id: String, from: String?, grou
                     page,
                     enter = fadeIn(Motion.fadeIn()),
                     exit = fadeOut(Motion.fadeOut()),
+                    boundsTransform = bounds,
                     resizeMode = SharedTransitionScope.ResizeMode.scaleToBounds(ContentScale.FillWidth, Alignment.TopCenter),
                     zIndexInOverlay = if (from != null) SOURCE_Z else 0f,
                 )
@@ -261,14 +273,34 @@ private fun Modifier.sharedKeyed(shared: Shared, id: String, from: String?, grou
                 page,
                 enter = fadeIn(Motion.fadeIn()),
                 exit = fadeOut(Motion.fadeOut()),
+                boundsTransform = bounds,
                 resizeMode = SharedTransitionScope.ResizeMode.scaleToBounds(ContentScale.FillWidth, Alignment.Center),
             )
-            Shared.Art -> sharedElement(state, page, zIndexInOverlay = ART_Z)
+            Shared.Art -> sharedElement(state, page, boundsTransform = bounds, zIndexInOverlay = ART_Z)
             // The poster overlaps the banner, so it draws above the flying art.
-            Shared.Cover -> sharedElement(state, page, zIndexInOverlay = COVER_Z)
+            Shared.Cover -> sharedElement(state, page, boundsTransform = bounds, zIndexInOverlay = COVER_Z)
         }
     }
 }
+
+/**
+ * How the elements fly: on the shared elements' own spring, or, while a back swipe seeks the
+ * flight, on a straight line in time, so the page shrinks toward its cover as far as the finger
+ * has gone rather than most of the way in the first part of the swipe.
+ */
+@OptIn(ExperimentalSharedTransitionApi::class)
+private fun flightBounds(page: AnimatedVisibilityScope) = BoundsTransform { _, _ ->
+    if (page.transition.seeking()) SEEKED_FLIGHT else FLIGHT
+}
+
+/** Whether a back swipe is seeking this transition or the NavHost's it belongs to. */
+private fun Transition<*>.seeking(): Boolean = isSeeking || parentTransition?.seeking() == true
+
+/** The shared elements' own spring, Compose's default for them. */
+private val FLIGHT = spring(stiffness = 400f, visibilityThreshold = Rect.VisibilityThreshold)
+
+/** A seeked flight, as long as a seeked page's slide (AppRoot's back swipe). */
+private val SEEKED_FLIGHT = tween<Rect>(300, easing = LinearEasing)
 
 /**
  * The page's own [ground] behind what this holds, except while the page flies: then the flight's

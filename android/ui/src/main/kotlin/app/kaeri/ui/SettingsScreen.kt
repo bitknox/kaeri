@@ -472,7 +472,7 @@ data class AccountStatus(val text: String, val dot: androidx.compose.ui.graphics
 
 /** What the account rows say of a tracker. */
 internal object AccountWords {
-    /** "Synced 2 min ago", "2 changes waiting to sync", "Sign in again to keep syncing". */
+    /** "Synced 2 min ago", "2 changes waiting to sync", "3 changes can't sync yet", "Sign in again to keep syncing". */
     @Composable
     fun status(state: SyncState?, syncedAt: Map<String, Long>, working: Map<app.kaeri.engine.model.JobId, String>): AccountStatus {
         val colors = MaterialTheme.colorScheme
@@ -483,6 +483,8 @@ internal object AccountWords {
         state.pullError?.let { return AccountStatus(Strings.accountsSyncFailed(context, plainReason(context, it.reason)), colors.error) }
         if ("sync" in working.values) return AccountStatus(Strings.accountsSyncRunning(context), colors.onSurfaceVariant)
         if (state.outbox > 0u) return AccountStatus(context.resources.getQuantityString(R.plurals.accounts_changes_waiting, state.outbox.toInt(), state.outbox.toInt()), colors.onSurfaceVariant)
+        // Held for a match: not waiting, and said apart, so the row is not stuck on a count.
+        if (state.deferred > 0u) return AccountStatus(Strings.accountsChangesHeld(context, state.deferred.toInt()), colors.onSurfaceVariant)
         val at = syncedAt[state.tracker]
         if (at != null) {
             val seconds = (System.currentTimeMillis() - at) / 1000

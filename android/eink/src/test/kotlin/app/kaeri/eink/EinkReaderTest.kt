@@ -84,6 +84,34 @@ class EinkReaderTest {
     private fun shown(): List<ReaderCommand.Shown> = sent.filterIsInstance<ReaderCommand.Shown>()
 
     @Test
+    fun a_novel_chapter_that_never_shows_offers_try_again_and_back_within_the_wait() {
+        var back = 0
+        session.open(EinkFixtures.WORK, EinkFixtures.surface.copy(eink = true))
+        session.apply(ReaderEvent.Opened(EinkFixtures.view(start = 0u, medium = app.kaeri.engine.core.Medium.NOVEL)))
+        val painter = EinkPainter.defaults(app.kaeri.engine.model.EinkPanel.GREY, fake)
+        compose.mainClock.autoAdvance = false
+        compose.setContent {
+            EinkTheme {
+                val state = session.state.collectAsState().value
+                // A web view that never shows its first page.
+                EinkReader(session, state, PageImages(), painter, EinkReaderActions({ back++ }, {}, {}), novel = { _, _ -> })
+            }
+        }
+        compose.mainClock.advanceTimeBy(NOVEL_WAIT_LONG_MS - 1_000)
+        assertTrue(compose.onAllNodes(hasText("Try again")).fetchSemanticsNodes().isEmpty())
+        compose.mainClock.advanceTimeBy(2_000)
+        compose.onNodeWithText("This is taking a while.").assertIsDisplayed()
+        compose.onNodeWithText("Try again").performClick()
+        compose.mainClock.advanceTimeBy(100)
+        assertEquals(ReaderCommand.Retry(EinkFixtures.SESSION, EinkFixtures.CHAPTER, null), sent.filterIsInstance<ReaderCommand.Retry>().single())
+        // Try again counts the wait again from the start.
+        assertTrue(compose.onAllNodes(hasText("This is taking a while.")).fetchSemanticsNodes().isEmpty())
+        compose.mainClock.advanceTimeBy(NOVEL_WAIT_LONG_MS + 1_000)
+        compose.onNodeWithText("Back to the series").performClick()
+        assertEquals(1, back)
+    }
+
+    @Test
     fun the_guide_shows_until_the_first_touch_which_still_turns() {
         open()
         compose.onNodeWithText("Tap, or swipe right").assertIsDisplayed()

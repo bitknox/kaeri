@@ -448,6 +448,8 @@ struct TextSource {
     manifest: BookSourceManifest,
     reports: Option<tokio::sync::mpsc::UnboundedSender<(String, String, bool)>>,
     gate: Option<Arc<tokio::sync::Notify>>,
+    /// Its chapters' text panics on the way, as a broken source's might.
+    panics: std::sync::atomic::AtomicBool,
 }
 
 impl TextSource {
@@ -468,6 +470,7 @@ impl TextSource {
             },
             reports,
             gate,
+            panics: std::sync::atomic::AtomicBool::new(false),
         })
     }
 }
@@ -491,15 +494,23 @@ impl kaeri_core::traits::BookSource for TextSource {
         _: &str,
         _: &BookHints,
     ) -> Result<Vec<SourceChapter>, ProviderError> {
-        Ok(vec![SourceChapter::new("c1", "1"), SourceChapter::new("c2", "2")])
+        let mut first = SourceChapter::new("c1", "1");
+        first.title = Some("The Pier — 1".into());
+        Ok(vec![first, SourceChapter::new("c2", "2")])
     }
 
     async fn content(&self, _: &str, chapter: &str) -> Result<ChapterContent, ProviderError> {
         if let Some(gate) = self.gate.as_ref().filter(|_| chapter == "c1") {
             gate.notified().await;
         }
+        if self.panics.load(std::sync::atomic::Ordering::SeqCst) {
+            let line = std::hint::black_box("&gt;&gt;\u{2014}\u{2014}");
+            let _ = &line[..10];
+        }
+        // The title twice, as a plugin's heading and then the page's own, with the number again.
+        let n = chapter.trim_start_matches('c');
         Ok(ChapterContent::Text(format!(
-            "<p>Chapter {chapter} begins at the pier.</p><script>steal()</script><img src=\"https://tracker.example/p.png\"/>"
+            "<div><h2>Chapter {n}: The Pier — {n}</h2> <h4>Chapter {n}: The Pier — {n}</h4><p>Chapter {chapter} begins at the pier.</p><script>steal()</script><img src=\"https://tracker.example/p.png\"/></div>"
         )))
     }
 
@@ -529,11 +540,45 @@ async fn a_sources_text_chapter_is_served_like_a_book() {
     assert!(!doc.contains("<script") && !doc.contains("tracker.example"), "{doc}");
     // Kaeri's stylesheet comes with the paginator, as a book's documents get it: none is linked.
     assert!(!doc.contains("<link"), "{doc}");
+    // Its title once, as the chapter list says it: the page's own heading stays, hidden, so the
+    // places in it stay where they were.
+    assert!(doc.contains("<h2>The Pier</h2>"), "{doc}");
+    assert!(doc.contains("<h4 hidden=\"hidden\">Chapter 1: The Pier — 1</h4>"), "{doc}");
+    assert!(doc.contains("<title>The Pier</title>"), "{doc}");
 
     // Its place is kept like a book's.
     h.at(pos(0, &[0], 4), 0, 1, TurnHow::Turn);
     let chapter = view.chapter.id.as_str().to_owned();
     assert_eq!(h.kept(&chapter).and_then(|c| c.novel_pos).as_deref(), Some("0/0/4"));
+}
+
+/// A text chapter whose open panics on the way fails, as a chapter that cannot open does, and
+/// the reader is never left waiting on it.
+#[tokio::test]
+async fn a_text_chapter_that_panics_while_it_opens_fails_instead_of_waiting() {
+    let mut h = harness_of(Store::open_in_memory().unwrap(), "novel", |_| Vec::new());
+    h.failures = true;
+    let source = TextSource::new(None, None);
+    source.panics.store(true, std::sync::atomic::Ordering::SeqCst);
+    h.services.book_sources.registry.put(source);
+    h.services.store.set_book_match("texts", "series-1", WORK, 90, true, false, 1).unwrap();
+    h.send(ReaderCommand::Open {
+        work: WorkId::new(WORK),
+        chapter: None,
+        at: OpenAt::Start,
+        surface: surface(),
+    });
+    let end = tokio::time::Instant::now() + Duration::from_secs(10);
+    while h.failed.is_empty()
+        && let Ok(Some(envelope)) = tokio::time::timeout_at(end, h.inbox.recv()).await
+    {
+        h.carry(envelope);
+    }
+    assert_eq!(h.failed.len(), 1, "the open failed once: {:?}", h.failed);
+    assert!(
+        !h.drain().iter().any(|e| matches!(e, ReaderEvent::NovelOpen(_))),
+        "no chapter opened"
+    );
 }
 
 /// A source whose chapters are pictures, three pages each, fetched through the source. With

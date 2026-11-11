@@ -9618,6 +9618,10 @@ object Strings {
     fun seriesTrackerChapters(context: Context, n: Int): String =
         context.resources.getQuantityString(R.plurals.series_tracker_chapters, n, n)
 
+    /** A tracker's progress when the person has read none of the series yet, in place of "0 chapters". */
+    fun seriesTrackerNotStarted(context: Context): String =
+        context.getString(R.string.series_tracker_not_started)
+
     /** A tracker's progress in chapters, then the volume. */
     fun seriesTrackerWithVolume(context: Context, chapters: String, volume: Int): String =
         context.getString(R.string.series_tracker_with_volume, chapters, volume)
@@ -10923,6 +10927,10 @@ object Strings {
     /** Line under Delete chapters after reading. */
     fun settingsDeleteAfterReadingNote(context: Context): String =
         context.getString(R.string.settings_delete_after_reading_note)
+
+    /** Line under Show volumes: the list is grouped only when most chapters have a volume. */
+    fun settingsShowVolumesNote(context: Context): String =
+        context.getString(R.string.settings_show_volumes_note)
 
     /** Line under New chapters. */
     fun settingsChapterNotificationsNote(context: Context): String =
@@ -12404,6 +12412,10 @@ object Strings {
     fun settingsDeleteAfterReading(context: Context): String =
         context.getString(R.string.settings_delete_after_reading)
 
+    /** Row: group a series' chapters under volume headings. Off by default. */
+    fun settingsShowVolumes(context: Context): String =
+        context.getString(R.string.settings_show_volumes)
+
     /** Row: whether a series' reader mode, direction and colour follow you to your other devices. */
     fun settingsSeriesChoicesFollow(context: Context): String =
         context.getString(R.string.settings_series_choices_follow)
@@ -12683,6 +12695,10 @@ object Strings {
     /** Line under a signed-in account while changes wait to be sent. */
     fun accountsChangesWaiting(context: Context, count: Int): String =
         context.resources.getQuantityString(R.plurals.accounts_changes_waiting, count, count)
+
+    /** Line under a signed-in account when nothing else waits but some changes can't go out yet: the { -tracker } has no match for those titles. They go out by themselves once it has one. */
+    fun accountsChangesHeld(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.accounts_changes_held, count, count)
 
     /** Choice for the download quality: larger files with more detail. */
     fun settingsQualityHigher(context: Context): String =

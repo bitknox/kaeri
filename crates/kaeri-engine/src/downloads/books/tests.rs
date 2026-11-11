@@ -204,11 +204,14 @@ fn kit_of(chapters: &[&str], hosts: &[&str]) -> Kit {
     store.seed_book_work(WORK, "manga", None, None, "The Lantern Ferry", 1).unwrap();
     let (tx, events) = mpsc::unbounded_channel();
     let queue = sources.downloads.clone();
+    let http = kaeri_net::HttpClient::offline(&Default::default()).unwrap();
     let lent = Lent {
         sources,
         plugins: BookPlugins::default(),
         clock: Clock::default(),
         tx: Outbox::from(tx),
+        meta: kaeri_meta::Meta::new(kaeri_meta::AniList::new(http, 30), None, store.clone()),
+        offline: Arc::default(),
     };
     // As the engine sets it up once the front end says Wi-Fi.
     queue.configure(Setup::default());

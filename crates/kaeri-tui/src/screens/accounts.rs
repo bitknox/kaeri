@@ -289,7 +289,8 @@ pub(super) fn accounts_rows(app: &App) -> Vec<(String, String)> {
                 (None, false) => detail.push(t::accounts_row_not_connected()),
             }
             match (state.outbox, state.deferred) {
-                (0, _) => {}
+                (0, 0) => {}
+                (0, held) => detail.push(t::accounts_row_held(i64::from(held))),
                 (queued, 0) => detail.push(t::accounts_row_queued(i64::from(queued))),
                 (queued, held) => {
                     detail.push(t::accounts_row_queued_held(i64::from(queued), i64::from(held)))

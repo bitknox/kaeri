@@ -2242,6 +2242,9 @@ fn account_row(ctx: &Rc<Ctx>) -> gtk::ListBoxRow {
                     let waiting = state.outbox;
                     status.set_label(&if known.syncing() {
                         t::accounts_sync_running()
+                    } else if state.needs_reauth {
+                        // Its queue goes nowhere until then, so it is not counted as waiting.
+                        t::accounts_state_expired_short()
                     } else if waiting > 0 {
                         t::shell_changes_waiting(i64::from(waiting))
                     } else if state.user.is_some() {

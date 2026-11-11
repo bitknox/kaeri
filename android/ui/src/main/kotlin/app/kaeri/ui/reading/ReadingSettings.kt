@@ -297,7 +297,7 @@ internal fun readingSummary(): String? {
 
 // Downloads
 
-/** Downloads' reading rows: chapters over mobile data, which new chapters download, and deleting after reading. */
+/** Downloads' reading rows: chapters over mobile data, which new chapters download, deleting after reading, and showing volumes. */
 internal fun readingDownloadRows(): List<@Composable (Place) -> Unit> = listOf(
     { place -> SettingSwitch(place, SettingKey.CHAPTER_DOWNLOADS_ON_CELLULAR, stringResource(R.string.settings_chapter_downloads_cellular)) },
     { place ->
@@ -310,6 +310,7 @@ internal fun readingDownloadRows(): List<@Composable (Place) -> Unit> = listOf(
         )
     },
     { place -> SettingSwitch(place, SettingKey.DELETE_AFTER_READING, stringResource(R.string.settings_delete_after_reading), note = stringResource(R.string.settings_delete_after_reading_note)) },
+    { place -> SettingSwitch(place, SettingKey.SHOW_VOLUMES, stringResource(R.string.settings_show_volumes), note = stringResource(R.string.settings_show_volumes_note)) },
 )
 
 // Notifications

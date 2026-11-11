@@ -62,7 +62,8 @@ pub const KEEP_AHEAD: usize = 3;
 /// [`ReadingFailure::DiskFull`].
 pub const KEEP_FREE: u64 = 512 * 1_000_000;
 /// Progress is told at most this often; a chapter starting, finishing or failing is told at once.
-const PROGRESS_EVERY: Duration = Duration::from_secs(2);
+const PROGRESS_EVERY: Duration =
+    if cfg!(test) { Duration::ZERO } else { Duration::from_secs(2) };
 /// The rest between chapters.
 const PACE: Duration =
     if cfg!(test) { Duration::from_millis(2) } else { Duration::from_millis(400) };
@@ -74,6 +75,9 @@ pub struct Lent {
     pub plugins: BookPlugins,
     pub clock: Clock,
     pub tx: Outbox,
+    /// What a chapter list is finished with, as the series page has it.
+    pub meta: kaeri_meta::Meta,
+    pub offline: Arc<std::sync::atomic::AtomicBool>,
 }
 
 impl Lent {
@@ -83,7 +87,43 @@ impl Lent {
             plugins: services.book_plugins.clone(),
             clock: services.clock.clone(),
             tx: tx.clone(),
+            meta: services.meta.clone(),
+            offline: services.offline.clone(),
         }
+    }
+
+    pub(crate) fn of_kit(kit: &crate::read_catalog::Kit, tx: &Outbox) -> Self {
+        Self {
+            sources: kit.sources.clone(),
+            plugins: kit.plugins.clone(),
+            clock: kit.clock.clone(),
+            tx: tx.clone(),
+            meta: kit.meta.clone(),
+            offline: kit.offline.clone(),
+        }
+    }
+
+    fn kit(&self) -> crate::read_catalog::Kit {
+        crate::read_catalog::Kit {
+            meta: self.meta.clone(),
+            store: self.sources.store().clone(),
+            sources: self.sources.clone(),
+            plugins: self.plugins.clone(),
+            clock: self.clock.clone(),
+            offline: self.offline.clone(),
+        }
+    }
+
+    /// A work's chapters as the series page lists them, each row with its words.
+    fn chapters_event(
+        &self,
+        work: WorkId,
+        listed: (Option<kaeri_model::reading::BookEditionRow>, Vec<VolumeGroup>),
+    ) -> ReadingEvent {
+        let (edition, mut volumes) = listed;
+        let now = self.clock.now();
+        crate::read_catalog::series::finish(&self.kit(), &work, &mut volumes, now);
+        ReadingEvent::Chapters { work, edition, volumes, failure: None }
     }
 }
 
@@ -317,7 +357,7 @@ impl BookDownloads {
         for d in &rows {
             let read = marks
                 .entry(d.work.clone())
-                .or_insert_with(|| store.read_marks(&d.work).unwrap_or_default())
+                .or_insert_with(|| crate::read_catalog::chapters::read_marks(store, &d.work))
                 .is_read(&d.chapter);
             let bookmarked = store.bookmarks(&d.work).unwrap_or_default().contains(&d.chapter);
             let kind = store.book_work_kind(&d.work).ok().flatten();
@@ -361,14 +401,16 @@ impl BookDownloads {
         let _ = tx.send(Event::Reading(ReadingEvent::Downloads(self.view(store))));
     }
 
-    fn publish_progress(&self, store: &Store, tx: &Outbox) {
+    /// Tell how downloads stand unless that was told a moment ago. Says whether it told.
+    fn publish_progress(&self, store: &Store, tx: &Outbox) -> bool {
         let mut told = self.0.told.lock().unwrap_or_else(|e| e.into_inner());
         if told.is_some_and(|at| at.elapsed() < PROGRESS_EVERY) {
-            return;
+            return false;
         }
         *told = Some(Instant::now());
         drop(told);
         self.publish(store, tx);
+        true
     }
 
     // -----------------------------------------------------------------------------------------
@@ -518,7 +560,7 @@ impl BookDownloads {
     /// the settings say.
     pub fn delete_read(&self, lent: &Lent, work: &WorkId) -> usize {
         let store = lent.sources.store();
-        let marks = store.read_marks(work.as_str()).unwrap_or_default();
+        let marks = crate::read_catalog::chapters::read_marks(store, work.as_str());
         let bookmarks: HashSet<String> =
             store.bookmarks(work.as_str()).unwrap_or_default().into_iter().collect();
         let read: Vec<String> = store
@@ -602,7 +644,7 @@ impl BookDownloads {
         };
         let mut gone = 0;
         for work in works {
-            let marks = store.read_marks(&work).unwrap_or_default();
+            let marks = crate::read_catalog::chapters::read_marks(store, &work);
             let bookmarks: HashSet<String> =
                 store.bookmarks(&work).unwrap_or_default().into_iter().collect();
             for row in store.book_downloads(Some(&work)).unwrap_or_default() {
@@ -654,6 +696,17 @@ impl BookDownloads {
         }
     }
 
+    /// Tell the series page how a work's chapters stand while its downloads run, from the list
+    /// as kept: a run never asks the source again only to say how far it got. Sent from the run
+    /// itself, so one told later never lands before one told earlier.
+    fn relist_kept(&self, lent: &Lent, work: &str) {
+        let work = WorkId::new(work);
+        let Some(listed) = lent.sources.kept_listing(&work, lent.clock.now(), i64::MAX) else {
+            return;
+        };
+        let _ = lent.tx.send(Event::Reading(lent.chapters_event(work, listed)));
+    }
+
     /// Tell the screen which of a work's chapters stand how, as the list itself says it.
     fn relist(&self, lent: &Lent, work: WorkId) {
         let lent = lent.clone();
@@ -666,9 +719,7 @@ impl BookDownloads {
                 None => lent.sources.chapters(&work, None, now).await,
             };
             let event = match listed {
-                Ok((edition, volumes)) => {
-                    ReadingEvent::Chapters { work, edition, volumes, failure: None }
-                }
+                Ok(listed) => lent.chapters_event(work, listed),
                 Err(failure) => ReadingEvent::Chapters {
                     work,
                     edition: None,
@@ -764,7 +815,22 @@ impl BookDownloads {
             tracing::warn!(error = %e, "a download was not started");
         }
         self.publish(store, &lent.tx);
-        match self.fetch(lent, store, &row).await {
+        self.relist_kept(lent, &row.work);
+        let outcome = self.ended(lent, store, &row, now).await;
+        // The series page hears each chapter land, not the whole run at its end.
+        self.relist_kept(lent, &row.work);
+        outcome
+    }
+
+    /// Fetch the chapter and keep how that ended, as [`Self::one`] says it.
+    async fn ended(
+        &self,
+        lent: &Lent,
+        store: &Store,
+        row: &BookDownload,
+        now: i64,
+    ) -> (bool, bool) {
+        match self.fetch(lent, store, row).await {
             Ok(done) => {
                 let path = done.path.to_string_lossy().into_owned();
                 let kept =
@@ -782,18 +848,18 @@ impl BookDownloads {
                 (true, kept)
             }
             Err(Stop::Cancelled) => {
-                let _ = std::fs::remove_file(part_of(&self.file_stem(&row)));
+                let _ = std::fs::remove_file(part_of(&self.file_stem(row)));
                 self.publish(store, &lent.tx);
                 (true, false)
             }
             Err(Stop::Held) => {
-                let _ = std::fs::remove_file(part_of(&self.file_stem(&row)));
+                let _ = std::fs::remove_file(part_of(&self.file_stem(row)));
                 let _ = store.book_download_requeue(row.id, now);
                 self.publish(store, &lent.tx);
                 (true, false)
             }
             Err(Stop::Failed(failure)) => {
-                let _ = std::fs::remove_file(part_of(&self.file_stem(&row)));
+                let _ = std::fs::remove_file(part_of(&self.file_stem(row)));
                 let full = failure == ReadingFailure::DiskFull;
                 if let Err(e) = store.book_download_failed(row.id, &encode(&failure), now) {
                     tracing::warn!(error = %e, "a failed download was not kept");
@@ -826,7 +892,10 @@ impl BookDownloads {
         let wanted = || Self::wanted(store, row);
         let progress = |done: u32, total: u32| {
             let _ = store.book_download_progress(row.id, done, Some(total), lent.clock.now());
-            self.publish_progress(store, &lent.tx);
+            // The series page counts the pages with Downloads, as often as Downloads does.
+            if self.publish_progress(store, &lent.tx) {
+                self.relist_kept(lent, &row.work);
+            }
         };
         let job = Fetching {
             work: WorkId::new(row.work.clone()),
@@ -959,7 +1028,9 @@ impl BookDownloads {
                 }
                 done
             }
-            ChapterContent::Text(mut body) => {
+            ChapterContent::Text(body) => {
+                // Its title said once, as the reader shows it from the source.
+                let mut body = crate::reading::novel::heading_once(&body, &opened.chapter);
                 // Its pictures go inside the book, so it reads with no network.
                 let pictures = lent.sources.pictures_in(&source, &mut body).await;
                 let file =

@@ -6,6 +6,7 @@
 //! queue. Every AniList request a screen needs goes as one, with its parts under aliases.
 
 pub(crate) mod arrange;
+pub(crate) mod changed;
 pub(crate) mod chapters;
 pub(crate) mod discovery;
 pub(crate) mod editions;
@@ -18,6 +19,7 @@ pub(crate) mod series;
 mod tests;
 pub(crate) mod tiles;
 pub(crate) mod updates;
+pub(crate) mod volumes;
 
 use std::sync::{Arc, Mutex, atomic::AtomicBool};
 
@@ -47,9 +49,10 @@ pub struct Memory {
     /// The words and filters last searched, and their generation: AniList's answers for older
     /// ones are dropped.
     pub(crate) searched: Arc<Mutex<search::Searched>>,
-    /// The series opened that no source had, with when that was found: a Home tile says so for
-    /// the rest of its row's 30 minutes.
-    pub(crate) not_found: Arc<Mutex<std::collections::HashMap<String, i64>>>,
+    /// The series opened that no source had, with when that was found and the
+    /// [`crate::read_sources::BookSources::sources_mark`] of the sources asked: a Home tile says
+    /// so for the rest of its row's 30 minutes, while those sources stand.
+    pub(crate) not_found: Arc<Mutex<std::collections::HashMap<String, (i64, u64)>>>,
     /// The works whose sources are being searched for them by name, each ending when the
     /// search does: a page waits for it before it says no source has the series.
     pub(crate) checks: Arc<Mutex<std::collections::HashMap<String, editions::Check>>>,
@@ -59,11 +62,15 @@ pub struct Memory {
     /// The chapter lists on their way to a page, by work and edition asked for: a second ask
     /// meanwhile hears the first one's answer rather than asking the source again.
     pub(crate) chapter_loads: ChapterLoads,
+    /// What is on screen, to bring up to date when the sources change: see [`changed`].
+    pub(crate) shown: Arc<Mutex<changed::Shown>>,
 }
 
-/// Each edition's last chapter-list ask that left no list kept, by source and series, with when.
-pub(crate) type Listings =
-    Arc<Mutex<std::collections::HashMap<(String, String), (i64, chapters::Asked)>>>;
+/// Each edition's last chapter-list ask that left no list kept, by source and series, with when
+/// and the [`crate::read_sources::BookSources::source_mark`] of the source asked.
+pub(crate) type Listings = Arc<
+    Mutex<std::collections::HashMap<(String, String), (i64, chapters::Asked, Option<u64>)>>,
+>;
 
 /// The chapter lists on their way to a page, by work and the edition asked for.
 pub(crate) type ChapterLoads = Arc<Mutex<std::collections::HashSet<(String, Option<String>)>>>;

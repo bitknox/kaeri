@@ -112,6 +112,8 @@ public enum MotionDemo: String, CaseIterable, Sendable {
     /// The series page's Group row: another group picked, as the picker's row does, the value
     /// crossfading. With `-KaeriGroups`.
     case groupPick
+    /// The cut synopsis on screen opened, as its More does: a show's page or a series' page.
+    case synopsisMore
 
     /// Reduce Motion, as the views read it: the strip grows its credit row at once with it on.
     @MainActor private static var reduceMotion: Bool {
@@ -391,6 +393,8 @@ public enum MotionDemo: String, CaseIterable, Sendable {
                   let other = view.edition?.groups.first(where: { !$0.inUse })
             else { return }
             store.reading.chooseGroup(view.work, group: other.label)
+        case .synopsisMore:
+            navigator.synopsisMoreAsked += 1
         }
     }
 }

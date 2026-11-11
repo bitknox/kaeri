@@ -232,6 +232,9 @@ settings-keep-chapters-ready = Keep next chapters ready
 # Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.
 settings-delete-after-reading = Delete chapters after reading
 
+# Row: group a series' chapters under volume headings. Off by default.
+settings-show-volumes = Show volumes
+
 # Row: whether a series' reader mode, direction and colour follow you to your other devices.
 settings-series-choices-follow = Series settings follow you
 
@@ -464,6 +467,14 @@ widget-resume-dubbed-label = Resume episode { $episode }, { -dubbed }, of { $tit
 accounts-changes-waiting = { $count ->
     [one] One change waiting to sync
    *[other] { $count } changes waiting to sync
+ }
+
+# Line under a signed-in account when nothing else waits but some changes can't go out yet:
+# the { -tracker } has no match for those titles. They go out by themselves once it has one.
+# @arg count: int
+accounts-changes-held = { $count ->
+    [one] One change can't sync yet
+   *[other] { $count } changes can't sync yet
  }
 
 # Choice for the download quality: larger files with more detail.

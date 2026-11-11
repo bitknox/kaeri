@@ -317,6 +317,21 @@ impl Store {
         })
     }
 
+    /// Fetch a finished chapter again, as when its source has added a part to it since. Its
+    /// file stays named on the row until the new one replaces it, and the shelf no longer lists
+    /// it meanwhile, so the chapter reads from its source.
+    pub fn book_download_refetch(&self, work: &str, chapter: &str, now: i64) -> Result<()> {
+        self.with_conn(|c| {
+            c.execute(
+                "UPDATE book_download SET state = 'queued', pages_done = 0, pages_total = NULL,
+                        updated_at = ?3
+                  WHERE work = ?1 AND chapter = ?2 AND state = 'done'",
+                params![work, chapter, now],
+            )?;
+            Ok(())
+        })
+    }
+
     /// Fetches the last run left half done go back in the queue. Returns how many.
     pub fn book_downloads_recover(&self, now: i64) -> Result<usize> {
         self.with_conn(|c| {
