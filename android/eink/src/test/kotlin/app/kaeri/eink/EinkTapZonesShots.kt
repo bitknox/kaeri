@@ -1,7 +1,7 @@
 // The tap zones on e-ink, drawn on the JVM from made-up records and the engine's own cells: the
 // guide for Sides right to left, Top and bottom left to right on a 7 inch screen, and the Tap zones
-// page reached through Settings and More, which fits without a scroll. Show zones is one refresh.
-// Written to android/.shots/roborazzi/eink-tap-zones-*.
+// page reached through Settings and More, which fits without a scroll. Show zones is one refresh,
+// and Off with swipes off says what still turns pages. Written to android/.shots/roborazzi/eink-tap-zones-*.
 
 package app.kaeri.eink
 
@@ -11,6 +11,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.click
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
@@ -71,14 +72,14 @@ class EinkTapZonesShots {
 
     private val fake = FakeRefresh()
 
-    private fun zones(paged: ZoneLayout) = TapZoneSettings(
+    private fun zones(paged: ZoneLayout, swipes: Boolean = true) = TapZoneSettings(
         paged = paged,
         scrolling = ZoneLayout.OFF,
         size = ZoneSize.STANDARD,
         flipSides = false,
         flipEnds = false,
         eink = true,
-        swipesTurn = true,
+        swipesTurn = swipes,
         guideSeenPaged = "",
         guideSeenScrolling = "",
     )
@@ -93,7 +94,7 @@ class EinkTapZonesShots {
             ReaderSettingRow(Key.TAP_SIZE, ReaderValue.Choice("standard"), SettingScope.DEVICE, false, false, choices("standard", "small")),
             ReaderSettingRow(Key.TAP_FLIP_SIDES, ReaderValue.Toggle(false), SettingScope.DEVICE, false, false, emptyList()),
             ReaderSettingRow(Key.TAP_FLIP_ENDS, ReaderValue.Toggle(false), SettingScope.DEVICE, false, false, emptyList()),
-            ReaderSettingRow(Key.SWIPE_TURNS, ReaderValue.Toggle(true), SettingScope.DEVICE, false, false, emptyList()),
+            ReaderSettingRow(Key.SWIPE_TURNS, ReaderValue.Toggle(zones.swipesTurn), SettingScope.DEVICE, false, false, emptyList()),
             ReaderSettingRow(Key.VOLUME_KEYS_TURN, ReaderValue.Toggle(true), SettingScope.DEVICE, false, false, emptyList()),
         ),
         zones,
@@ -176,5 +177,14 @@ class EinkTapZonesShots {
         compose.onNodeWithText("Tap, or swipe right").assertIsDisplayed()
         // The page and bars go and the guide comes in the same refresh.
         assertEquals(listOf(Refresh.REGION), fake.requests.map { it.refresh })
+    }
+
+    @Test
+    fun off_with_swipes_off_says_what_still_turns_pages() {
+        open(zones(ZoneLayout.OFF, swipes = false))
+        tapZonesPage()
+        compose.onNodeWithText("Only the controls or page keys turn pages").assertIsDisplayed()
+        assertTrue(compose.onAllNodesWithText("Swipes and page buttons only").fetchSemanticsNodes().isEmpty())
+        shot("page-off-no-swipes")
     }
 }

@@ -2353,6 +2353,10 @@ object Strings {
     fun einkTapOffNote(context: Context): String =
         context.getString(R.string.eink_tap_off_note)
 
+    /** E-ink tap zones page: the line under the layout Off while Swipes turn pages is off too, so nothing on the page turns it. */
+    fun einkTapOffKeysNote(context: Context): String =
+        context.getString(R.string.eink_tap_off_keys_note)
+
     /** The page number in the page's margin on an e-ink screen. */
     fun einkFolioOne(context: Context, page: Int, pages: Int): String =
         context.getString(R.string.eink_folio_one, page, pages)

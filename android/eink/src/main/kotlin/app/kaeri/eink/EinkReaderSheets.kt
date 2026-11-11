@@ -197,7 +197,7 @@ fun BoxScope.EinkTapZonesSheet(session: ReaderSession, state: ReaderState, onBac
                     }
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(layoutName(context, layout), style = EinkType.Label.copy(fontSize = 16.sp, fontWeight = if (on) FontWeight.Bold else FontWeight.SemiBold))
-                        Text(einkTapNote(context, layout), style = EinkType.Secondary)
+                        Text(einkTapNote(context, layout, zones.swipesTurn), style = EinkType.Secondary)
                     }
                     EinkRadio(on)
                 }
@@ -224,15 +224,18 @@ fun BoxScope.EinkTapZonesSheet(session: ReaderSession, state: ReaderState, onBac
     }
 }
 
-/** What a layout does on e-ink, in the line under its name. */
-private fun einkTapNote(context: Context, layout: ZoneLayout): String = when (layout) {
+/**
+ * What a layout does on e-ink, in the line under its name. Off with swipes off too leaves nothing on
+ * the page that turns it, which is allowed, and the line says so.
+ */
+private fun einkTapNote(context: Context, layout: ZoneLayout, swipes: Boolean): String = when (layout) {
     ZoneLayout.AUTO -> Strings.einkTapAutoNote(context)
     ZoneLayout.SIDES -> Strings.einkTapSidesNote(context)
     ZoneLayout.L_SHAPE -> Strings.einkTapLShapeNote(context)
     ZoneLayout.WIDE_NEXT -> Strings.einkTapWideNextNote(context)
     ZoneLayout.TOP_BOTTOM -> Strings.einkTapTopBottomNote(context)
     ZoneLayout.BOTH_NEXT -> Strings.einkTapBothNextNote(context)
-    ZoneLayout.OFF -> Strings.einkTapOffNote(context)
+    ZoneLayout.OFF -> if (swipes) Strings.einkTapOffNote(context) else Strings.einkTapOffKeysNote(context)
 }
 
 /** A radio: a 24 dp ring in ink, filled at the centre when chosen. */

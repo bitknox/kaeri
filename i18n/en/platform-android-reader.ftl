@@ -101,6 +101,12 @@ eink-tap-both-next-note = Previous in the bottom middle
 # @max 50
 eink-tap-off-note = Swipes and page buttons only
 
+# E-ink tap zones page: the line under the layout Off while Swipes turn pages is off too, so
+# nothing on the page turns it.
+# @only android
+# @max 50
+eink-tap-off-keys-note = Only the controls or page keys turn pages
+
 # The page number in the page's margin on an e-ink screen.
 # @only android
 # @arg page: plain
