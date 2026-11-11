@@ -977,7 +977,8 @@ internal class OpenFocus(val id: ChapterId) {
 
 /**
  * The chapters' list. Choose chapters opens it with the reader's place, item [choosingAt], as near
- * the middle as the list's ends allow, placed before choosing's first frame so nothing scrolls.
+ * the middle as the list's ends allow, placed before choosing's first frame so nothing scrolls, and
+ * leaving it puts the list back where it was.
  */
 @Composable
 private fun ChapterColumn(modifier: Modifier, choosingAt: Int, content: LazyListScope.() -> Unit) {
@@ -986,9 +987,18 @@ private fun ChapterColumn(modifier: Modifier, choosingAt: Int, content: LazyList
         val density = LocalDensity.current
         val viewport = with(density) { (maxHeight - LIST_BOTTOM).roundToPx() }
         val row = with(density) { CHAPTER_ROW.roundToPx() }
-        // Run as choosing starts, in the frame that lays the list out for it.
+        // Where the page was before choosing moved it: leaving Choose chapters goes back there.
+        val before = remember { intArrayOf(-1, 0) }
+        // Run as choosing starts and ends, in the frame that lays the list out for it.
         DisposableEffect(choosingAt >= 0) {
-            if (choosingAt >= 0) listed.requestScrollToItem(choosingAt, centredOffset(viewport, row))
+            if (choosingAt >= 0) {
+                before[0] = listed.firstVisibleItemIndex
+                before[1] = listed.firstVisibleItemScrollOffset
+                listed.requestScrollToItem(choosingAt, centredOffset(viewport, row))
+            } else if (before[0] >= 0) {
+                listed.requestScrollToItem(before[0], before[1])
+                before[0] = -1
+            }
             onDispose {}
         }
         LazyColumn(
