@@ -613,7 +613,8 @@ private const val SERIES_SYNOPSIS_LINES = 4
 /**
  * The one main action, amber, 56 high, with Status and Download outlined side by side under it.
  * With no source, or a source that failed, Read from another source takes its place as a
- * secondary button, since reading from here is not possible.
+ * secondary button, since reading from here is not possible; a failed source keeps the main
+ * action when its chapter is downloaded, which still opens.
  */
 @Composable
 private fun SeriesActions(
@@ -631,7 +632,7 @@ private fun SeriesActions(
 ) {
     val context = LocalContext.current
     val words = SeriesWords.action(context, series.action)
-    val failed = chapters?.failure != null
+    val failed = chapters?.let { it.failure != null && !series.action.opensDownloaded(it.volumes) } == true
     // No source is known to have it yet, but the engine is still asking: the chapters have not
     // come. The main button holds its place, quiet, rather than say there is nothing to read.
     val asking = series.action is SeriesAction.NoSource && chapters == null
@@ -915,6 +916,18 @@ private fun LazyListScope.seriesChapters(
             items(rows, key = { "chapter-${it.id}" }) { row -> Box(itemMotion()) { ChapterItem(series, row, chosen, onChosen, onOpen, onLong, opening) } }
         }
     }
+}
+
+/** Whether the action opens a chapter that is downloaded, so it opens with the source failed. */
+private fun SeriesAction.opensDownloaded(volumes: List<VolumeGroup>): Boolean {
+    val chapter = when (this) {
+        is SeriesAction.Read -> chapter
+        is SeriesAction.Continue -> chapter
+        is SeriesAction.ContinuePart -> chapter
+        is SeriesAction.ReadPart -> chapter
+        else -> return false
+    }
+    return volumes.downloaded().any { it.id == chapter }
 }
 
 /** With the source failed, what is downloaded still opens: only those chapters, under no volume. */
