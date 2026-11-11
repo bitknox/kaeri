@@ -151,15 +151,10 @@ fun PhoneEndPage(
         val second = next != null || finished
         // Past the extras: under Continue, in the quiet fill, when the next chapter is one.
         val skip = end?.skipTo?.takeIf { next != null }
-        var foot by remember { mutableIntStateOf(0) }
-        Column(
-            Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .padding(start = sides, end = sides, bottom = 40.dp)
-                .onSizeChanged { foot = it.height },
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
+        // A tablet's page is the phone's column, centred, 500 wide, with the buttons under it, as
+        // on the iPad; a phone's buttons stay at the foot.
+        val wide = maxWidth >= 600.dp
+        val buttons: @Composable () -> Unit = {
             if (next != null) {
                 Text(
                     Strings.readerEndSwipe(context),
@@ -238,14 +233,7 @@ fun PhoneEndPage(
                 else -> Spacer(Modifier.height(38.dp))
             }
         }
-        // Larger text scrolls the page above the buttons.
-        Column(
-            Modifier
-                .fillMaxSize()
-                .padding(bottom = with(LocalDensity.current) { foot.toDp() } + if (narrow) 24.dp else 64.dp)
-                .verticalScroll(rememberScrollState())
-                .padding(start = sides, end = sides, top = if (narrow) 84.dp else 100.dp),
-        ) {
+        val body: @Composable () -> Unit = {
             Text(Strings.readerEndOfChapterNumber(context, number), color = Chrome.faint, fontSize = 15.sp, lineHeight = 20.sp)
             // With a server line coming, the tracker line's place is kept too, so nothing under it moves.
             if (read || server.held) {
@@ -292,7 +280,11 @@ fun PhoneEndPage(
                     PageFileView(
                         file = state.preview?.takeIf { it.chapter == next.id }?.file,
                         images = images,
-                        modifier = if (narrow) Modifier.width(120.dp).height(170.dp) else Modifier.width(170.dp).height(242.dp),
+                        modifier = when {
+                            narrow -> Modifier.width(120.dp).height(170.dp)
+                            wide -> Modifier.width(180.dp).height(256.dp)
+                            else -> Modifier.width(170.dp).height(242.dp)
+                        },
                     ) {
                         // With no preview the plate names the chapter, as the page plate names its page.
                         Box(Modifier.fillMaxSize().background(Chrome.plate)) {
@@ -321,6 +313,35 @@ fun PhoneEndPage(
                 Text(line, color = Chrome.faint, fontSize = 15.sp, lineHeight = 21.sp)
             }
         }
+        if (wide) {
+            Column(
+                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = 150.dp, bottom = 40.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Column(Modifier.width(500.dp)) { body() }
+                Spacer(Modifier.height(28.dp))
+                // Continue is still the first stop.
+                Column(Modifier.width(500.dp).semantics { traversalIndex = -1f }, horizontalAlignment = Alignment.CenterHorizontally) { buttons() }
+            }
+            return@BoxWithConstraints
+        }
+        var foot by remember { mutableIntStateOf(0) }
+        Column(
+            Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .padding(start = sides, end = sides, bottom = 40.dp)
+                .onSizeChanged { foot = it.height },
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) { buttons() }
+        // Larger text scrolls the page above the buttons.
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(bottom = with(LocalDensity.current) { foot.toDp() } + if (narrow) 24.dp else 64.dp)
+                .verticalScroll(rememberScrollState())
+                .padding(start = sides, end = sides, top = if (narrow) 84.dp else 100.dp),
+        ) { body() }
     }
 }
 
