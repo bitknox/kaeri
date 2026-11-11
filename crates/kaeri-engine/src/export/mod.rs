@@ -258,8 +258,13 @@ pub fn chosen(store: &Store, work: &str, pick: &DownloadPick) -> Vec<prepare::Ch
         .iter()
         .map(|d| chapter_row(d, marks.is_read(&d.chapter), false))
         .collect::<Vec<_>>();
-    let rows =
-        flatten(vec![VolumeGroup { volume: None, title: None, chapters, all_read: false }]);
+    let rows = flatten(vec![VolumeGroup {
+        volume: None,
+        title: None,
+        chapters,
+        all_read: false,
+        flat: true,
+    }]);
     BookDownloads::picked(pick, &rows)
         .into_iter()
         .filter_map(|want| {

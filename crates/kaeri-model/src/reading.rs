@@ -281,6 +281,11 @@ pub struct VolumeGroup {
     /// Every chapter in it is read: folded into one line.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub all_read: bool,
+    /// The whole list as one, in reading order, drawn with no heading: Show volumes is off,
+    /// or too few of the chapters have a volume to group them by. The only group when set.
+    /// Each chapter still says its volume.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub flat: bool,
 }
 
 /// One chapter in a list.

@@ -357,7 +357,7 @@ impl BookDownloads {
         for d in &rows {
             let read = marks
                 .entry(d.work.clone())
-                .or_insert_with(|| store.read_marks(&d.work).unwrap_or_default())
+                .or_insert_with(|| crate::read_catalog::chapters::read_marks(store, &d.work))
                 .is_read(&d.chapter);
             let bookmarked = store.bookmarks(&d.work).unwrap_or_default().contains(&d.chapter);
             let kind = store.book_work_kind(&d.work).ok().flatten();
@@ -560,7 +560,7 @@ impl BookDownloads {
     /// the settings say.
     pub fn delete_read(&self, lent: &Lent, work: &WorkId) -> usize {
         let store = lent.sources.store();
-        let marks = store.read_marks(work.as_str()).unwrap_or_default();
+        let marks = crate::read_catalog::chapters::read_marks(store, work.as_str());
         let bookmarks: HashSet<String> =
             store.bookmarks(work.as_str()).unwrap_or_default().into_iter().collect();
         let read: Vec<String> = store
@@ -644,7 +644,7 @@ impl BookDownloads {
         };
         let mut gone = 0;
         for work in works {
-            let marks = store.read_marks(&work).unwrap_or_default();
+            let marks = crate::read_catalog::chapters::read_marks(store, &work);
             let bookmarks: HashSet<String> =
                 store.bookmarks(&work).unwrap_or_default().into_iter().collect();
             for row in store.book_downloads(Some(&work)).unwrap_or_default() {

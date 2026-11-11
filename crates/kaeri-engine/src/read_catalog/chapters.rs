@@ -6,7 +6,11 @@
 use std::collections::{HashMap, HashSet};
 
 use kaeri_core::books::{ChapterId, ChapterRange, SourceChapter};
-use kaeri_store::{Store, book_catalog::BookRhythm, reading::ReadWork};
+use kaeri_store::{
+    Store,
+    book_catalog::BookRhythm,
+    reading::{ReadChapter, ReadWork},
+};
 use serde::{Deserialize, Serialize};
 
 /// One chapter as a source listed it.
@@ -116,6 +120,41 @@ fn left_key(source: &str, series: &str) -> String {
     format!("book_chapters_left:{source}/{series}")
 }
 
+/// The work a source's series is matched to.
+fn work_of(store: &Store, source: &str, series: &str) -> Option<String> {
+    store.book_match_state(source, series).ok().flatten().map(|(work, _)| work)
+}
+
+/// Every kept list of a work, with its source and series, oldest chapter first.
+pub fn lists_of(store: &Store, work: &str) -> Vec<(String, String, Vec<Kept>)> {
+    store
+        .book_refs_for_work(work)
+        .unwrap_or_default()
+        .into_iter()
+        .filter_map(|(source, series)| {
+            let (list, _) = kept(store, &source, &series)?;
+            Some((source, series, list))
+        })
+        .collect()
+}
+
+/// What a work's kept lists say of its numbering, but for the list of `leave_out`.
+pub fn numbering(
+    store: &Store,
+    work: &str,
+    leave_out: Option<(&str, &str)>,
+) -> super::arrange::Numbering {
+    let mut numbering = super::arrange::Numbering::default();
+    for (source, series, list) in lists_of(store, work) {
+        if leave_out == Some((source.as_str(), series.as_str())) {
+            continue;
+        }
+        let entries: Vec<SourceChapter> = list.iter().map(Kept::source_chapter).collect();
+        numbering.add(&entries);
+    }
+    numbering
+}
+
 /// Keep a source's answer, and give the chapters it lists that no answer listed before. The
 /// first answer for a series gives none: everything in it was out before.
 ///
@@ -124,6 +163,14 @@ fn left_key(source: &str, series: &str) -> String {
 /// list kept empty before counts as none. A short answer (a later page of the source's list
 /// that failed) is kept as the list, and the chapters it left out are remembered: back in a
 /// later answer, they are known, not new.
+///
+/// Each entry keeps the date it was first seen by the source's own id for it, so a part that
+/// joins a chapter ("7.2" beside a "7.1" listed before) leaves the chapter known: it is not
+/// new again. Entries are arranged with what the work's other lists say ([`numbering`]), and
+/// those lists are arranged again with this one, so every list of a work keys a chapter alike.
+/// A downloaded chapter that has gained a part since is fetched again, and one whose entry now
+/// reads as part of a whole chapter has that chapter queued in its place (see
+/// [`follow_downloads`]).
 pub fn keep(
     store: &Store,
     source: &str,
@@ -135,8 +182,11 @@ pub fn keep(
         return Vec::new();
     }
     let before = kept(store, source, series).map(|(list, _)| list).filter(|l| !l.is_empty());
-    // By id, so a long list is looked through once rather than once a chapter.
-    let before: Option<HashMap<&str, &Kept>> =
+    // By the source's own id and by chapter, so a long list is looked through once rather than
+    // once a chapter.
+    let by_ref: Option<HashMap<&str, &Kept>> =
+        before.as_ref().map(|list| list.iter().map(|k| (k.source_ref.as_str(), k)).collect());
+    let by_id: Option<HashMap<&str, &Kept>> =
         before.as_ref().map(|list| list.iter().map(|k| (k.id.as_str(), k)).collect());
     let key = left_key(source, series);
     let left: HashMap<String, Option<i64>> = store
@@ -145,49 +195,73 @@ pub fn keep(
         .flatten()
         .and_then(|text| serde_json::from_str(&text).ok())
         .unwrap_or_default();
+    let work = work_of(store, source, series);
+    let others = work
+        .as_deref()
+        .map(|w| numbering(store, w, Some((source, series))))
+        .unwrap_or_default();
     // Parts are kept under their whole chapter, so what is new is a chapter, not a part.
-    let arranged = super::arrange::arrange(chapters, None, None);
-    let mut fresh: Vec<Kept> = Vec::new();
-    let mut fresh_ids = HashSet::new();
-    let list: Vec<Kept> = chapters
-        .iter()
-        .enumerate()
-        .map(|(i, c)| {
-            let id = arranged.ids[i].as_str().to_owned();
-            // When an earlier answer first listed it, if one did.
-            let earlier = before.as_ref().map(|b| match b.get(id.as_str()) {
+    let arranged = super::arrange::arrange_in(chapters, None, None, &others);
+    // Each entry with when an earlier answer first listed it, if one did.
+    let mut list: Vec<Kept> = Vec::with_capacity(chapters.len());
+    let mut earliers: Vec<Option<Option<Option<i64>>>> = Vec::with_capacity(chapters.len());
+    for (i, c) in chapters.iter().enumerate() {
+        let id = arranged.ids[i].as_str().to_owned();
+        let earlier = by_ref.as_ref().map(|b| match b.get(c.id.as_str()) {
+            Some(k) => Some(k.seen_at),
+            None => match by_id.as_ref().and_then(|b| b.get(id.as_str())) {
                 Some(k) => Some(k.seen_at),
                 None => left.get(&id).copied(),
-            });
-            let seen_at = match earlier {
-                None => None,
-                Some(Some(seen_at)) => seen_at,
-                Some(None) => Some(now),
-            };
-            let kept = Kept {
-                id,
-                source_ref: c.id.clone(),
-                label: c.number_raw.clone(),
-                number: c.number.map(|n| n.to_string()),
-                volume: c.volume.clone(),
-                title: c.title.clone(),
-                version_label: c.version_label.clone(),
-                language: c.language.clone(),
-                published: c.published,
-                pages: c.page_count,
-                seen_at,
-                part: arranged.parts[i],
-            };
-            // Two versions of a new chapter are one chapter come out.
-            if matches!(earlier, Some(None)) && fresh_ids.insert(kept.id.clone()) {
-                fresh.push(kept.clone());
-            }
-            kept
-        })
+            },
+        });
+        let seen_at = match earlier {
+            None => None,
+            Some(Some(seen_at)) => seen_at,
+            Some(None) => Some(now),
+        };
+        list.push(Kept {
+            id,
+            source_ref: c.id.clone(),
+            label: c.number_raw.clone(),
+            number: c.number.map(|n| n.to_string()),
+            volume: c.volume.clone(),
+            title: c.title.clone(),
+            version_label: c.version_label.clone(),
+            language: c.language.clone(),
+            published: c.published,
+            pages: c.page_count,
+            seen_at,
+            part: arranged.parts[i],
+        });
+        earliers.push(earlier);
+    }
+    // A chapter one of whose entries was listed before is not new, whatever joined it.
+    let known: HashSet<&str> = list
+        .iter()
+        .zip(&earliers)
+        .filter(|(_, e)| !matches!(e, Some(None)))
+        .map(|(k, _)| k.id.as_str())
         .collect();
+    let mut fresh: Vec<Kept> = Vec::new();
+    let mut fresh_ids = HashSet::new();
+    for (kept, earlier) in list.iter().zip(&earliers) {
+        // Two versions of a new chapter are one chapter come out.
+        if matches!(earlier, Some(None))
+            && !known.contains(kept.id.as_str())
+            && fresh_ids.insert(kept.id.clone())
+        {
+            fresh.push(kept.clone());
+        }
+    }
     let json = serde_json::to_string(&list).unwrap_or_else(|_| "[]".into());
     if let Err(e) = store.put_book_chapters(source, series, &json, now) {
         tracing::warn!(error = %e, "a chapter list was not kept");
+    }
+    if let Some(work) = work.as_deref() {
+        if let Some(before) = before.as_deref() {
+            follow_downloads(store, work, source, before, &list, now);
+        }
+        rearrange_others(store, work, (source, series));
     }
     // What this answer left out of what was listed before, or left out already.
     let listed: HashSet<&str> = list.iter().map(|k| k.id.as_str()).collect();
@@ -196,7 +270,7 @@ pub fn keep(
         .filter(|(id, _)| !listed.contains(id.as_str()))
         .map(|(id, seen)| (id.clone(), *seen))
         .collect();
-    for (id, k) in before.iter().flatten() {
+    for (id, k) in by_id.iter().flatten() {
         if !listed.contains(id) {
             still_left.insert((*id).to_owned(), k.seen_at);
         }
@@ -215,6 +289,281 @@ pub fn keep(
     fresh
 }
 
+/// Arrange the work's other kept lists again with `this` one's numbers, and keep those whose
+/// chapters now read otherwise: a lone "7.1" kept before another source named a whole 7 is
+/// part of 7 from here. Their dates stay as they were.
+fn rearrange_others(store: &Store, work: &str, this: (&str, &str)) {
+    let lists = lists_of(store, work);
+    if lists.len() < 2 {
+        return;
+    }
+    for (source, series, list) in &lists {
+        if (source.as_str(), series.as_str()) == this {
+            continue;
+        }
+        let others = numbering(store, work, Some((source, series)));
+        let entries: Vec<SourceChapter> = list.iter().map(Kept::source_chapter).collect();
+        let arranged = super::arrange::arrange_in(&entries, None, None, &others);
+        let moved = list
+            .iter()
+            .enumerate()
+            .any(|(i, k)| k.id != arranged.ids[i].as_str() || k.part != arranged.parts[i]);
+        if !moved {
+            continue;
+        }
+        let list: Vec<Kept> = list
+            .iter()
+            .enumerate()
+            .map(|(i, k)| Kept {
+                id: arranged.ids[i].as_str().to_owned(),
+                part: arranged.parts[i],
+                ..k.clone()
+            })
+            .collect();
+        let Ok(Some((_, at))) = store.book_chapters(source, series) else { continue };
+        let json = serde_json::to_string(&list).unwrap_or_else(|_| "[]".into());
+        if let Err(e) = store.put_book_chapters(source, series, &json, at) {
+            tracing::warn!(error = %e, "a chapter list arranged again was not kept");
+        }
+    }
+}
+
+/// Downloads that a new answer changed. A finished download of a chapter whose release has
+/// gained a part since holds only the parts it had, so it is fetched again whole. One whose
+/// entry now reads as part of a whole chapter ("7.1" joined by "7.2") stays where it is, and
+/// the whole chapter is queued as that download was; the old one lists under the whole
+/// chapter's read marks (see [`Folds`]) and goes with them.
+fn follow_downloads(
+    store: &Store,
+    work: &str,
+    source: &str,
+    before: &[Kept],
+    now: &[Kept],
+    at: i64,
+) {
+    use kaeri_store::book_downloads::{BookDownloadAsk, BookDownloadState};
+    let downloads: HashMap<String, kaeri_store::book_downloads::BookDownload> = store
+        .book_downloads(Some(work))
+        .unwrap_or_default()
+        .into_iter()
+        .filter(|d| d.state == BookDownloadState::Done && d.source_id == source)
+        .map(|d| (d.chapter.clone(), d))
+        .collect();
+    if downloads.is_empty() {
+        return;
+    }
+    // Each chapter's entries in one group, by the source's own ids.
+    let release = |list: &[Kept], id: &str, group: Option<&str>| -> HashSet<String> {
+        list.iter()
+            .filter(|k| k.id == id && k.version_label.as_deref() == group)
+            .map(|k| k.source_ref.clone())
+            .collect()
+    };
+    let was: HashMap<&str, &str> =
+        before.iter().map(|k| (k.source_ref.as_str(), k.id.as_str())).collect();
+    for (chapter, d) in &downloads {
+        let group = d.version_label.as_deref();
+        let then = release(before, chapter, group);
+        let gained = release(now, chapter, group);
+        if !then.is_empty() && gained.len() > then.len() && gained.is_superset(&then) {
+            if let Err(e) = store.book_download_refetch(work, chapter, at) {
+                tracing::warn!(error = %e, "a download that gained a part was not queued again");
+            }
+            continue;
+        }
+        // The entry this download was of now belongs to another chapter.
+        let moved = now.iter().find(|k| {
+            then.contains(&k.source_ref)
+                && was.get(k.source_ref.as_str()) != Some(&k.id.as_str())
+        });
+        if let Some(moved) = moved
+            && !downloads.contains_key(&moved.id)
+        {
+            let ask = BookDownloadAsk {
+                work,
+                chapter: &moved.id,
+                source_id: source,
+                version_label: group,
+                keep_ready: d.keep_ready,
+            };
+            if let Err(e) = store.queue_book_download(&ask, at) {
+                tracing::warn!(error = %e, "a chapter that took in a download was not queued");
+            }
+        }
+    }
+}
+
+/// One release of a chapter in parts: each part's own key, with its pages when listed.
+type Release = Vec<(String, Option<u32>)>;
+
+/// Read marks kept on a chapter's parts under their own numbers, folded into the chapter at
+/// read time. A lone "7.1" read before "7.2" came out keeps its marks on "7.1"; once the two
+/// read as chapter 7, those marks count for 7 rather than being lost, and nothing kept is
+/// rewritten:
+/// - a whole chapter counts as read when every part of one release of it is read, and each part
+///   counts as read when the whole chapter is;
+/// - a whole chapter with only its first parts read is in progress, at the start of the first
+///   part not read (at its own kept page when it has one), counted in pages where the list
+///   gives them.
+#[derive(Debug, Clone, Default)]
+pub struct Folds {
+    /// Each part's own key ("7.1"), with its whole chapter's id.
+    up: HashMap<String, String>,
+    /// Each whole chapter's releases in parts: their parts' own keys in order, with pages.
+    releases: HashMap<String, Vec<Release>>,
+}
+
+impl Folds {
+    /// From every kept list of a work.
+    pub fn of_work(store: &Store, work: &str) -> Self {
+        let lists: Vec<Vec<Kept>> = lists_of(store, work).into_iter().map(|l| l.2).collect();
+        Self::of(lists.iter().map(Vec::as_slice))
+    }
+
+    pub fn of<'a>(lists: impl IntoIterator<Item = &'a [Kept]>) -> Self {
+        let mut folds = Self::default();
+        for list in lists {
+            // Each release, by chapter and group, in part order.
+            type Parts = Vec<(u32, String, Option<u32>)>;
+            let mut releases: HashMap<(&str, Option<&str>), Parts> = HashMap::new();
+            for k in list {
+                let Some(part) = k.part else { continue };
+                // Only a numbered chapter's parts carry a number of their own.
+                if k.id.contains('/') {
+                    continue;
+                }
+                let Some(own) = k.number.as_deref().and_then(ChapterRange::parse) else {
+                    continue;
+                };
+                let own = kaeri_core::books::ChapterKey::numbered(own).as_str().to_owned();
+                if own != k.id {
+                    folds.up.insert(own.clone(), k.id.clone());
+                }
+                releases
+                    .entry((k.id.as_str(), k.version_label.as_deref()))
+                    .or_default()
+                    .push((part, own, k.pages));
+            }
+            for ((id, _), mut parts) in releases {
+                parts.sort_by_key(|(n, _, _)| *n);
+                let parts: Vec<(String, Option<u32>)> =
+                    parts.into_iter().map(|(_, key, pages)| (key, pages)).collect();
+                let held = folds.releases.entry(id.to_owned()).or_default();
+                if !held.contains(&parts) {
+                    held.push(parts);
+                }
+            }
+        }
+        folds
+    }
+
+    /// Whether a key is a part's own, kept under its whole chapter's.
+    pub fn is_part(&self, key: &str) -> bool {
+        self.up.contains_key(key)
+    }
+
+    /// The whole chapter a part's own key is kept under.
+    pub fn whole_of(&self, key: &str) -> Option<String> {
+        self.up.get(key).cloned()
+    }
+
+    /// The chapters to count as read beside those `is_read` says: whole chapters whose parts
+    /// are all read, and the parts of whole chapters read.
+    pub fn read(&self, is_read: impl Fn(&str) -> bool) -> Vec<String> {
+        let mut more = Vec::new();
+        for (whole, releases) in &self.releases {
+            if is_read(whole) {
+                for (part, _) in releases.iter().flatten() {
+                    if part != whole && !is_read(part) {
+                        more.push(part.clone());
+                    }
+                }
+            } else if releases.iter().any(|r| r.iter().all(|(part, _)| is_read(part))) {
+                more.push(whole.clone());
+            }
+        }
+        more
+    }
+
+    /// The store's marks with the folds counted.
+    pub fn marks(
+        &self,
+        mut marks: kaeri_store::reading::ReadMarks,
+    ) -> kaeri_store::reading::ReadMarks {
+        for chapter in self.read(|c| marks.is_read(c)) {
+            marks.count_read(chapter);
+        }
+        marks
+    }
+
+    /// The kept places with each whole chapter read in part under its parts' own numbers
+    /// given a place of its own, unless it has one.
+    pub fn places(
+        &self,
+        mut places: Vec<ReadChapter>,
+        marks: &kaeri_store::reading::ReadMarks,
+    ) -> Vec<ReadChapter> {
+        for (whole, releases) in &self.releases {
+            if marks.is_read(whole) || places.iter().any(|p| p.chapter == *whole) {
+                continue;
+            }
+            let found = releases.iter().find_map(|parts| {
+                let at = parts.iter().position(|(part, _)| !marks.is_read(part))?;
+                let own = places.iter().find(|p| p.chapter == parts[at].0 && !p.read);
+                if at == 0 && own.is_none_or(|p| p.last_page.is_none()) {
+                    return None;
+                }
+                // A part's pages as its source lists them, else as the reader counted them.
+                let pages_of = |(part, pages): &(String, Option<u32>)| {
+                    pages.or_else(|| {
+                        places.iter().find(|p| p.chapter == *part).and_then(|p| p.of_pages)
+                    })
+                };
+                let before: Option<u32> = parts[..at].iter().map(pages_of).sum();
+                let page = before.unwrap_or(0) + own.and_then(|p| p.last_page).unwrap_or(0);
+                let of: Option<u32> = parts.iter().map(pages_of).sum();
+                let stamp = places
+                    .iter()
+                    .filter(|p| parts.iter().any(|(part, _)| *part == p.chapter))
+                    .map(|p| p.stamp)
+                    .max()
+                    .unwrap_or(0);
+                Some(ReadChapter {
+                    chapter: whole.clone(),
+                    read: false,
+                    read_at: None,
+                    last_page: Some(page),
+                    of_pages: of,
+                    strip_image: None,
+                    strip_offset: None,
+                    novel_pos: None,
+                    stamp,
+                    device: None,
+                })
+            });
+            places.extend(found);
+        }
+        places
+    }
+}
+
+/// A work's read marks and kept places, with the folds of [`Folds`] counted: what every list of
+/// chapters reads them from.
+pub fn read_state(
+    store: &Store,
+    work: &str,
+) -> (kaeri_store::reading::ReadMarks, Vec<ReadChapter>) {
+    let folds = Folds::of_work(store, work);
+    let marks = folds.marks(store.read_marks(work).unwrap_or_default());
+    let places = folds.places(store.read_chapters(work).unwrap_or_default(), &marks);
+    (marks, places)
+}
+
+/// A work's read marks with the folds of [`Folds`] counted.
+pub fn read_marks(store: &Store, work: &str) -> kaeri_store::reading::ReadMarks {
+    Folds::of_work(store, work).marks(store.read_marks(work).unwrap_or_default())
+}
+
 /// What the person has read of a work: the chapters marked, and the watermark.
 #[derive(Debug, Clone, Default)]
 pub struct Read {
@@ -228,18 +577,29 @@ pub struct Read {
 
 impl Read {
     pub fn of(store: &Store, work: &str) -> Self {
-        let chapters = store.read_chapters(work).unwrap_or_default();
+        let folds = Folds::of_work(store, work);
+        let marks = folds.marks(store.read_marks(work).unwrap_or_default());
+        let chapters = folds.places(store.read_chapters(work).unwrap_or_default(), &marks);
         let work_row = store.read_work(work).ok().flatten();
-        let marked: HashSet<String> =
+        let mut marked: HashSet<String> =
             chapters.iter().filter(|c| c.read).map(|c| c.chapter.clone()).collect();
+        let adopted = |c: &str| work_row.as_ref().is_some_and(|w| w.adopted(c));
+        let more = folds.read(|c| marked.contains(c) || adopted(c));
+        marked.extend(more);
         let last = work_row.as_ref().and_then(|w| w.last_chapter.clone());
+        // A part read under its own number points at its whole chapter's place.
+        let last = last.map(|l| folds.whole_of(&l).unwrap_or(l));
         let in_progress = chapters
             .iter()
-            .filter(|c| !c.read && (c.last_page.is_some() || c.novel_pos.is_some()))
+            .filter(|c| !c.read && !marked.contains(&c.chapter))
+            .filter(|c| c.last_page.is_some() || c.novel_pos.is_some())
+            .filter(|c| !folds.is_part(&c.chapter))
             .max_by_key(|c| (Some(&c.chapter) == last.as_ref(), c.stamp))
             .map(|c| (c.chapter.clone(), c.last_page, c.of_pages));
         let range = |id: &str| ChapterId::new(id).key().and_then(|k| k.range());
-        let mut furthest = marked.iter().filter_map(|id| range(id)).max();
+        // A part read alone says nothing of how far the chapter it belongs to was read.
+        let mut furthest =
+            marked.iter().filter(|id| !folds.is_part(id)).filter_map(|id| range(id)).max();
         if let Some(milli) = work_row.as_ref().and_then(|w| w.adopt_milli)
             && let Some(adopted) = ChapterRange::parse(&milli_label(milli))
         {
@@ -353,7 +713,10 @@ pub fn summary(
         .max_by(|a, b| a.1.cmp(&b.1).then_with(|| b.0.cmp(a.0)))
         .map(|(v, _)| v.clone());
     let entries: Vec<SourceChapter> = list.iter().map(Kept::source_chapter).collect();
-    let arranged = super::arrange::arrange(&entries, chosen, app_language);
+    let numbering = work_of(store, source, series)
+        .map(|work| numbering(store, &work, None))
+        .unwrap_or_default();
+    let arranged = super::arrange::arrange_in(&entries, chosen, app_language, &numbering);
     Summary {
         // One per chapter: its parts and its groups' releases count once.
         chapters: u32::try_from(arranged.rows.len()).unwrap_or(u32::MAX),

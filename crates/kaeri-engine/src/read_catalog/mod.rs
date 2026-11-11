@@ -19,6 +19,7 @@ pub(crate) mod series;
 mod tests;
 pub(crate) mod tiles;
 pub(crate) mod updates;
+pub(crate) mod volumes;
 
 use std::sync::{Arc, Mutex, atomic::AtomicBool};
 
