@@ -18,6 +18,11 @@ use super::{Reader, choice_label, setting_name};
 /// The popover's width, the board's 330 px.
 const WIDTH: i32 = 330;
 
+/// The sheet's width in a window `window` px wide: the board's, or what the window leaves of it.
+pub(super) fn sheet_width(window: i32) -> i32 {
+    super::chapters_fit((WIDTH, 0), (window, i32::MAX)).0
+}
+
 /// The reading mode picker's choices for manga and webtoons.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub(super) enum ModeChoice {
@@ -55,6 +60,7 @@ pub(super) fn current_mode(rows: &[ReaderSettingRow]) -> ModeChoice {
 #[derive(Clone, PartialEq, Debug, Default)]
 pub(super) struct Shape {
     medium: Option<Medium>,
+    width: i32,
     flows: bool,
     keys: Vec<Key>,
     mode: Option<ModeChoice>,
@@ -68,6 +74,7 @@ impl Reader {
         let rows = state.settings.as_ref().map(|v| v.rows.clone()).unwrap_or_default();
         Shape {
             medium: state.medium,
+            width: sheet_width(self.widget.width()),
             flows: state.mode.is_some_and(ReaderMode::flows),
             keys: rows.iter().map(|r| r.key).collect(),
             mode: (!rows.is_empty()).then(|| current_mode(&rows)),
@@ -112,7 +119,7 @@ impl Reader {
     fn sheet_rows(self: &Rc<Self>, nav: &adw::NavigationView) -> gtk::Box {
         let column = gtk::Box::new(gtk::Orientation::Vertical, 0);
         column.add_css_class("reader-sheet-column");
-        column.set_width_request(WIDTH);
+        column.set_width_request(sheet_width(self.widget.width()));
         let (view, medium, flows) = {
             let state = self.state.borrow();
             (state.settings.clone(), state.medium, state.mode.is_some_and(ReaderMode::flows))
@@ -247,7 +254,7 @@ impl Reader {
 
         let list = gtk::Box::new(gtk::Orientation::Vertical, 0);
         list.add_css_class("reader-sheet-column");
-        list.set_width_request(WIDTH);
+        list.set_width_request(sheet_width(self.widget.width()));
         let back = gtk::Button::from_icon_name("go-previous-symbolic");
         back.add_css_class("flat");
         back.set_tooltip_text(Some(&t::action_back()));

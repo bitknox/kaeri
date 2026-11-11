@@ -634,15 +634,17 @@ pub fn surprise_button(
     pool: impl Fn() -> Option<kaeri_model::browsing::SurprisePool> + 'static,
 ) -> gtk::Button {
     use kaeri_model::{browsing::SurpriseOutcome, command::Command, event::Event};
-    let icon = gtk::Stack::new();
-    icon.add_named(&gtk::Image::from_icon_name("kaeri-dice-symbolic"), Some("dice"));
-    let spinner = adw::Spinner::new();
-    icon.add_named(&spinner, Some("wait"));
-    let face = gtk::Box::new(gtk::Orientation::Horizontal, 6);
-    face.append(&icon);
-    face.append(&gtk::Label::new(Some(label)));
+    let (face, icon, words) = surprise_face(label);
     let button = gtk::Button::builder().child(&face).tooltip_text(hint).build();
     button.add_css_class("flat");
+    ctx.on_size({
+        let words = words.downgrade();
+        move |size| {
+            if let Some(words) = words.upgrade() {
+                lay_surprise(&words, size);
+            }
+        }
+    });
     button.update_property(&[
         gtk::accessible::Property::Label(label),
         gtk::accessible::Property::Description(hint),
@@ -703,6 +705,24 @@ pub fn surprise_button(
     button
 }
 
+/// Surprise me's face: the dice, or a spinner while it picks, and its name.
+fn surprise_face(label: &str) -> (gtk::Box, gtk::Stack, gtk::Label) {
+    let icon = gtk::Stack::new();
+    icon.add_named(&gtk::Image::from_icon_name("kaeri-dice-symbolic"), Some("dice"));
+    icon.add_named(&adw::Spinner::new(), Some("wait"));
+    let face = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+    face.append(&icon);
+    let words = gtk::Label::new(Some(label));
+    face.append(&words);
+    (face, icon, words)
+}
+
+/// A narrow window's header has room for the dice alone; the name stays in the tooltip and for
+/// screen readers.
+fn lay_surprise(words: &gtk::Label, size: crate::window::Size) {
+    words.set_visible(size != crate::window::Size::Narrow);
+}
+
 /// A ring of how far something has come, 16 px: a silk arc on the rule, with a stop square
 /// inside when it can be stopped.
 pub fn ring(fraction: f64) -> gtk::DrawingArea {
@@ -734,6 +754,43 @@ pub fn ring(fraction: f64) -> gtk::DrawingArea {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{
+        gtk_test::{pump, run},
+        window::Size,
+    };
+
+    /// Search's header in a 360 px window: the sidebar button, the title, the field's toggle,
+    /// Surprise me and the close button fit the 350 px the content has.
+    #[test]
+    fn the_search_header_fits_a_narrow_window() {
+        run(|| {
+            let header = adw::HeaderBar::new();
+            header.set_decoration_layout(Some(":close"));
+            header.pack_start(&gtk::Button::from_icon_name("sidebar-show-symbolic"));
+            header.set_title_widget(Some(&adw::WindowTitle::new("Search", "")));
+            header.pack_end(
+                &gtk::ToggleButton::builder().icon_name("edit-find-symbolic").build(),
+            );
+            let (face, _, words) = surprise_face("Surprise me");
+            header.pack_end(&gtk::Button::builder().child(&face).css_classes(["flat"]).build());
+            let window = adw::Window::builder().default_width(1280).default_height(800).build();
+            let view = adw::ToolbarView::new();
+            view.add_top_bar(&header);
+            window.set_content(Some(&view));
+            window.present();
+            let min_width = || header.measure(gtk::Orientation::Horizontal, -1).0;
+
+            lay_surprise(&words, Size::Wide);
+            pump(50);
+            let wide = min_width();
+            lay_surprise(&words, Size::Narrow);
+            pump(50);
+            let narrow = min_width();
+            assert!(narrow < wide, "the name still takes room: {narrow} px against {wide}");
+            assert!(narrow <= 330, "the header needs {narrow} px");
+            window.close();
+        });
+    }
 
     #[test]
     fn cover_colours_read_from_anilists_hex() {

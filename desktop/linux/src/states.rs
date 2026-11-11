@@ -416,7 +416,9 @@ fn placeholders(shape: Shape) -> gtk::Widget {
             let grid = gtk::FlowBox::builder()
                 .selection_mode(gtk::SelectionMode::None)
                 .homogeneous(true)
-                .min_children_per_line(2)
+                // One a line when a narrow window has no room for two, as the grids they
+                // stand in for.
+                .min_children_per_line(1)
                 .max_children_per_line(12)
                 .column_spacing(16)
                 .row_spacing(16)
@@ -520,6 +522,18 @@ fn first_clause(why: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::gtk_test::run;
+
+    /// A 360 px window leaves the content 350: a grid's placeholders wrap to one a line there
+    /// rather than holding the window wider.
+    #[test]
+    fn grid_placeholders_fit_a_narrow_window() {
+        run(|| {
+            let grid = placeholders(Shape::Grid);
+            let min = grid.measure(gtk::Orientation::Horizontal, -1).0;
+            assert!(min <= 300, "the placeholders need {min} px");
+        });
+    }
 
     #[test]
     fn a_failed_state_says_the_first_clause_when_it_is_plain_words() {

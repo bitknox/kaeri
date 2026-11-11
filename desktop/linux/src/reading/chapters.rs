@@ -62,8 +62,23 @@ pub struct Here {
 /// Where the popover sends what is picked.
 type Asker = Rc<dyn Fn(Ask)>;
 
+/// The popover's size on the reader board.
+const WIDTH: i32 = 520;
+const HEIGHT: i32 = 480;
+
+/// A popover's `board` size in a `window`: at most the window less 16 px on each side across, and
+/// less room for the group under it down, never under 200 by 200.
+pub fn fit_size(board: (i32, i32), window: (i32, i32)) -> (i32, i32) {
+    if window.0 <= 0 || window.1 <= 0 {
+        return board;
+    }
+    (board.0.min(window.0 - 32).max(200), board.1.min(window.1 - 220).max(200))
+}
+
 pub struct Chapters {
     pub popover: gtk::Popover,
+    /// What the popover holds, at the board's size or less in a small window.
+    column: gtk::Box,
     title: gtk::Label,
     tabs: adw::ToggleGroup,
     stack: gtk::Stack,
@@ -89,6 +104,19 @@ pub struct Chapters {
 }
 
 impl Chapters {
+    /// The popover at the board's 520 by 480, or what a smaller window leaves of it.
+    pub fn fit(&self, window: (i32, i32)) {
+        let size = fit_size((WIDTH, HEIGHT), window);
+        if self.column.size_request() != size {
+            self.column.set_size_request(size.0, size.1);
+            // Five thumbnails a row on the board; fewer where the column is narrower, each
+            // with its padding.
+            let columns = ((size.0 - 36) / (THUMB_WIDTH + 12)).clamp(2, 5) as u32;
+            self.grid.set_min_columns(columns);
+            self.grid.set_max_columns(columns);
+        }
+    }
+
     pub fn new() -> Rc<Self> {
         let title = gtk::Label::new(None);
         title.add_css_class("reader-chapters-title");
@@ -139,7 +167,7 @@ impl Chapters {
         stack.add_named(&chapters, Some("chapters"));
         let column = gtk::Box::new(gtk::Orientation::Vertical, 14);
         column.add_css_class("reader-chapters");
-        column.set_size_request(520, 480);
+        column.set_size_request(WIDTH, HEIGHT);
         column.append(&top);
         column.append(&stack);
         let popover = gtk::Popover::new();
@@ -147,6 +175,7 @@ impl Chapters {
 
         let this = Rc::new(Self {
             popover,
+            column,
             title,
             tabs,
             stack,
@@ -807,7 +836,18 @@ mod tests {
         Leaf, LeafPart, PageEncoding, PageFile, PageKind, PixelFormat, UnitRect,
     };
 
-    use super::{entry, page_entries, thumbnail};
+    use super::{entry, fit_size, page_entries, thumbnail};
+
+    /// The board's 520 by 480 where the window has room, less in a narrow or short one.
+    #[test]
+    fn the_popover_fits_the_window() {
+        assert_eq!(fit_size((520, 480), (1280, 800)), (520, 480));
+        assert_eq!(fit_size((520, 480), (360, 780)), (328, 480));
+        assert_eq!(fit_size((520, 480), (360, 500)), (328, 280));
+        assert_eq!(fit_size((520, 480), (100, 100)), (200, 200));
+        // Not laid out yet: the board's size.
+        assert_eq!(fit_size((520, 480), (0, 0)), (520, 480));
+    }
 
     fn leaf(index: u32, pages: &[u32], end_page: bool) -> Leaf {
         let part = |page| LeafPart {
@@ -818,6 +858,7 @@ mod tests {
             rotate: false,
             half: None,
             ratio: None,
+            strip: None,
         };
         Leaf { index, parts: pages.iter().map(|&page| part(page)).collect(), end_page }
     }
@@ -931,6 +972,7 @@ mod centring {
             title: None,
             chapters: (1..=count).map(chapter).collect(),
             all_read: false,
+            flat: false,
         }]);
         let content = chapters.popover.child().expect("the popover has its content");
         chapters.popover.set_child(gtk::Widget::NONE);

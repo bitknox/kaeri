@@ -34,7 +34,7 @@ use kaeri_model::{
 };
 
 use super::{
-    chapters::{Ask, Chapters, Here},
+    chapters::{Ask, Chapters, Here, fit_size as chapters_fit},
     listen,
     novel::{NovelSays, NovelView},
 };
@@ -814,6 +814,12 @@ impl Reader {
             let this = Rc::downgrade(&this);
             popover.connect_show(move |popover| {
                 let Some(this) = this.upgrade() else { return };
+                // The window may have changed size since the sheet was filled.
+                if popover == &this.sheet
+                    && *this.sheet_shape_now.borrow() != this.sheet_shape()
+                {
+                    this.fill_sheet(true);
+                }
                 this.aim(popover, &button);
                 // The group may still be coming in with the chrome, its place not laid out yet:
                 // aim again once it is, so the sheet ends just over it.
@@ -900,7 +906,21 @@ impl Reader {
             return;
         };
         let y = group.y().round() as i32 - 8;
-        let aim = gdk::Rectangle::new(0, y, button.width().max(1), 1);
+        // Over the button, but slid along so all of it stays in the window: popovers are kept on
+        // the screen, not in the window, and a narrow window would cut a centred one off.
+        let (x, width) = match button.compute_bounds(&self.widget) {
+            Some(at) => {
+                let (_, natural, _, _) = popover.measure(gtk::Orientation::Horizontal, -1);
+                let middle = popover_middle(
+                    f64::from(at.x()) + f64::from(at.width()) / 2.0,
+                    f64::from(natural),
+                    f64::from(self.widget.width()),
+                );
+                ((middle - f64::from(at.x())).round() as i32, 1)
+            }
+            None => (0, button.width().max(1)),
+        };
+        let aim = gdk::Rectangle::new(x, y, width, 1);
         if popover.pointing_to() != (true, aim) {
             popover.set_pointing_to(Some(&aim));
         }
@@ -1819,8 +1839,8 @@ impl Reader {
         let (session, chapter, pages) = {
             let state = self.state.borrow();
             let Some(chapter) = state.chapter.as_ref().map(|c| c.id.clone()) else { return };
-            let pages: Vec<u32> = (index.saturating_sub(1)
-                ..(index + 3).min(state.leaves.len()))
+            let pages: Vec<u32> = wanted_leaves(index, state.leaves.len())
+                .into_iter()
                 .filter_map(|i| state.leaves.get(i))
                 .flat_map(|l| l.parts.iter().map(|p| p.page))
                 .filter(|p| !state.files.contains_key(p) && !state.asked.contains(p))
@@ -2259,11 +2279,9 @@ impl Reader {
                 })
                 .unwrap_or(0.7)
                 .max(0.05);
-            let picture = gtk::Picture::new();
-            picture.set_content_fit(gtk::ContentFit::Fill);
-            picture.set_can_shrink(true);
-            picture.add_css_class("strip-leaf");
-            self.strip.append(&picture);
+            let page = leaf.parts.first().map_or(0, |p| p.page);
+            let (frame, picture) = strip_frame(page);
+            self.strip.append(&frame);
             frames.push((picture, ratio));
         }
         self.state.borrow_mut().strip_frames = frames;
@@ -2391,11 +2409,8 @@ impl Reader {
                     None => (None, false),
                 }
             };
-            if let Some(picture) = picture
-                && picture.paintable().is_none()
-            {
-                picture.set_paintable(Some(&texture));
-                motion::fade_in(&picture);
+            if let Some(picture) = picture {
+                fill_strip_frame(&picture, &texture);
             }
             if resized {
                 self.size_strip();
@@ -2431,16 +2446,7 @@ impl Reader {
         if heights.is_empty() {
             return;
         }
-        let mut wanted = Vec::new();
-        let mut y = 0.0;
-        for (i, h) in heights.iter().enumerate() {
-            let h = f64::from(*h);
-            if y + h >= top - reach && y <= bottom + reach {
-                wanted.push(i);
-            }
-            y += h + f64::from(spacing);
-        }
-        let foot_top = y - f64::from(spacing);
+        let (wanted, foot_top) = strip_wanted(&heights, spacing, top, bottom, reach);
         for i in wanted {
             self.want_strip(i);
         }
@@ -2529,6 +2535,15 @@ impl Reader {
             return;
         }
         self.want(index);
+        let at = {
+            let state = self.state.borrow();
+            let at = state.leaves.iter().take(index).filter(|l| !l.end_page).count();
+            let image = state.leaves.get(index).is_some_and(|l| !l.end_page);
+            state.strip_frames.get(at).filter(|_| image).map(|(picture, _)| picture.clone())
+        };
+        if let Some(picture) = at {
+            strip_frame_asked(&picture);
+        }
     }
 
     /// Space and Page Down in a strip: nine tenths of the window on, on the quick token, from
@@ -2769,9 +2784,10 @@ impl Reader {
     /// moving calls this as it moves. It stays while the settings are open, the pointer is over
     /// the group or a shot pinned it.
     fn reveal_chrome(self: &Rc<Self>) {
-        self.place_notice(true);
         self.head_fade.set(&self.head, true);
+        // The group first: a hidden one measures nothing, and the notice would sit on it.
         self.group_fade.set(&self.group, true);
+        self.place_notice(true);
         self.credit_line_chrome(true);
         self.widget.set_cursor(None);
         if let Some(id) = self.hide_timer.borrow_mut().take() {
@@ -2812,14 +2828,9 @@ impl Reader {
     /// of the text, and over the group while the group shows, which uses the same margin.
     fn place_notice(&self, chrome: bool) {
         if self.state.borrow().medium == Some(Medium::Novel) {
-            let (_, group, _, _) = self.group.measure(gtk::Orientation::Vertical, -1);
             self.notice.set_valign(gtk::Align::End);
             self.notice.set_margin_top(0);
-            self.notice.set_margin_bottom(if chrome {
-                self.group.margin_bottom() + group + 12
-            } else {
-                44
-            });
+            self.notice.set_margin_bottom(notice_lift(&self.group, chrome));
         } else {
             self.notice.set_valign(gtk::Align::Start);
             self.notice.set_margin_top(60);
@@ -3146,6 +3157,12 @@ impl Reader {
                     this.apply_fit();
                     this.size_strip();
                     this.group.set_width_request(GROUP_WIDTH.min(size.0 - 32).max(240));
+                    this.chapters.fit(size);
+                    if this.sheet.is_visible()
+                        && *this.sheet_shape_now.borrow() != this.sheet_shape()
+                    {
+                        this.fill_sheet(true);
+                    }
                     let plate = ((f64::from(size.1) * 0.7).round() as i32).min(size.0.max(1));
                     this.failed_plate.set_size_request(plate, -1);
                 }
@@ -3337,6 +3354,159 @@ fn strip_leaves(leaves: &[Leaf]) -> Vec<Vec<u32>> {
         .collect()
 }
 
+/// The leaves to ask for around leaf `index` of `count`, in the order the engine fetches them:
+/// the one wanted first, then the two after it, then the one before. Asked in reading order, a
+/// jump far into a chapter on a slow source waited for the page before it.
+fn wanted_leaves(index: usize, count: usize) -> Vec<usize> {
+    let ahead = (index..(index + 3).min(count)).collect::<Vec<_>>();
+    let behind = index.checked_sub(1).filter(|i| *i < count);
+    ahead.into_iter().chain(behind).collect()
+}
+
+/// The strip images to ask for with the viewport from `top` to `bottom`, given each image's
+/// height and the gap between them, and where the foot starts. The images in view come first,
+/// then those up to `reach` below it, then those up to `reach` above it, nearest first: a jump
+/// far into a long strip fetches what it lands on before the images it passed.
+fn strip_wanted(
+    heights: &[i32],
+    spacing: i32,
+    top: f64,
+    bottom: f64,
+    reach: f64,
+) -> (Vec<usize>, f64) {
+    let (mut seen, mut ahead, mut behind) = (Vec::new(), Vec::new(), Vec::new());
+    let mut y = 0.0;
+    for (i, h) in heights.iter().enumerate() {
+        let h = f64::from(*h);
+        if y + h >= top && y <= bottom {
+            seen.push(i);
+        } else if y > bottom && y <= bottom + reach {
+            ahead.push(i);
+        } else if y + h < top && y + h >= top - reach {
+            behind.push(i);
+        }
+        y += h + f64::from(spacing);
+    }
+    behind.reverse();
+    seen.extend(ahead);
+    seen.extend(behind);
+    (seen, y - f64::from(spacing))
+}
+
+/// A strip image's place: the picture, and over it the page plate while its file is on its way,
+/// as a page waits in the paged reader: nothing for 600 ms, then the plate with the page's
+/// number, and a line once it has been asked for 4 s ([`strip_frame_asked`]). A jump far into
+/// a long chapter lands among plates, never on an empty window.
+fn strip_frame(page: u32) -> (gtk::Overlay, gtk::Picture) {
+    let picture = gtk::Picture::new();
+    picture.set_content_fit(gtk::ContentFit::Fill);
+    picture.set_can_shrink(true);
+    picture.add_css_class("strip-leaf");
+    let number = gtk::Label::new(Some(&t::linux_reader_page_plate(i64::from(page + 1))));
+    number.add_css_class("reader-plate-number");
+    number.add_css_class("numeric");
+    let line = gtk::Label::new(Some(&t::reader_page_loading(i64::from(page + 1))));
+    line.add_css_class("reader-plate-line");
+    line.set_wrap(true);
+    line.set_justify(gtk::Justification::Center);
+    line.set_visible(false);
+    let words = gtk::Box::new(gtk::Orientation::Vertical, 6);
+    words.set_valign(gtk::Align::Center);
+    words.set_margin_start(24);
+    words.set_margin_end(24);
+    words.append(&number);
+    words.append(&line);
+    let plate = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    plate.add_css_class("reader-plate");
+    plate.set_accessible_role(gtk::AccessibleRole::Presentation);
+    plate.set_can_target(false);
+    plate.append(&words);
+    plate.set_visible(false);
+    let frame = gtk::Overlay::new();
+    frame.set_child(Some(&picture));
+    frame.add_overlay(&plate);
+    let (weak_plate, weak_picture) = (plate.downgrade(), picture.downgrade());
+    glib::timeout_add_local_once(SILENT, move || {
+        if let (Some(plate), Some(picture)) = (weak_plate.upgrade(), weak_picture.upgrade())
+            && picture.paintable().is_none()
+        {
+            plate.set_visible(true);
+            motion::fade_in(&plate);
+        }
+    });
+    (frame, picture)
+}
+
+/// The plate over a strip picture, made by [`strip_frame`].
+fn strip_plate(picture: &gtk::Picture) -> Option<gtk::Widget> {
+    picture.next_sibling()
+}
+
+/// A strip picture's page was asked for: if its file has not come 4 s later, its plate says it
+/// is loading. Only the first ask counts.
+fn strip_frame_asked(picture: &gtk::Picture) {
+    let Some(plate) = strip_plate(picture) else { return };
+    if picture.paintable().is_some() || plate.has_css_class("strip-asked") {
+        return;
+    }
+    plate.add_css_class("strip-asked");
+    let line = plate.first_child().and_then(|words| words.last_child());
+    let (Some(line), picture) = (line.map(|l| l.downgrade()), picture.downgrade()) else {
+        return;
+    };
+    glib::timeout_add_local_once(SAY_LOADING, move || {
+        if let (Some(line), Some(picture)) = (line.upgrade(), picture.upgrade())
+            && picture.paintable().is_none()
+        {
+            line.set_visible(true);
+            motion::fade_in(&line);
+        }
+    });
+}
+
+/// The strip image's file landed: it takes the place, crossfading over its plate when the plate
+/// shows, fading in when nothing did yet.
+fn fill_strip_frame(picture: &gtk::Picture, texture: &gdk::Texture) {
+    if picture.paintable().is_some() {
+        return;
+    }
+    picture.set_paintable(Some(texture));
+    let plate = strip_plate(picture).filter(|plate| plate.is_visible());
+    match plate {
+        Some(plate) => {
+            motion::fade_out(&plate);
+        }
+        None => {
+            motion::fade_in(picture);
+        }
+    }
+}
+
+/// How far over the window's foot a novel's notice sits: clear of the group while the chrome
+/// shows, which needs the group shown to be measured, else in the text's bottom margin.
+fn notice_lift(group: &gtk::Box, chrome: bool) -> i32 {
+    if !chrome {
+        return 44;
+    }
+    // As wide as it is laid out, or will be: a narrow window wraps what is in it.
+    let width = if group.width() > 0 { group.width() } else { group.width_request() };
+    let (_, height, _, _) = group.measure(gtk::Orientation::Vertical, width.max(-1));
+    group.margin_bottom() + height + 12
+}
+
+/// Where a popover `width` wide centres to sit over `middle`, the middle of its button, while
+/// staying 8 px inside a window `window` wide; in the middle of a window it can't fit in.
+fn popover_middle(middle: f64, width: f64, window: f64) -> f64 {
+    let half = width / 2.0;
+    if window <= 0.0 {
+        return middle;
+    }
+    if width + 16.0 >= window {
+        return window / 2.0;
+    }
+    middle.clamp(8.0 + half, window - 8.0 - half)
+}
+
 /// Which image `top` falls in, and how far down it, from the images' heights and the gap.
 fn strip_place_of(heights: &[i32], spacing: i32, top: f64) -> (usize, f32) {
     let mut y = 0.0;
@@ -3400,5 +3570,154 @@ mod strip_tests {
         let (image, offset) = strip_place_of(&heights, 8, target);
         assert_eq!(image, 1);
         assert!((offset - 0.25).abs() < 1e-3);
+    }
+}
+
+#[cfg(test)]
+mod plate_tests {
+    use adw::prelude::*;
+    use gtk::{gdk, glib};
+
+    use super::{
+        fill_strip_frame, notice_lift, popover_middle, strip_frame, strip_frame_asked,
+    };
+    use crate::{
+        gtk_test::{pump, run},
+        motion::Fader,
+    };
+
+    fn texture() -> gdk::Texture {
+        gdk::MemoryTexture::new(
+            1,
+            1,
+            gdk::MemoryFormat::R8g8b8,
+            &glib::Bytes::from_owned(vec![0u8, 0, 0]),
+            3,
+        )
+        .upcast()
+    }
+
+    fn words(widget: &gtk::Widget, out: &mut Vec<String>) {
+        if let Some(label) = widget.downcast_ref::<gtk::Label>()
+            && label.is_visible()
+        {
+            out.push(label.label().to_string());
+        }
+        let mut child = widget.first_child();
+        while let Some(c) = child {
+            words(&c, out);
+            child = c.next_sibling();
+        }
+    }
+
+    /// A strip image whose file is still coming shows its page plate from 600 ms, says it is
+    /// loading 4 s after it was asked for, and its file crossfades over the plate.
+    #[test]
+    fn a_strip_image_on_its_way_holds_a_plate() {
+        run(|| {
+            let (frame, picture) = strip_frame(11);
+            picture.set_size_request(200, 280);
+            let window = gtk::Window::builder().default_width(400).default_height(400).build();
+            window.set_child(Some(&frame));
+            window.present();
+            let plate = picture.next_sibling().expect("a plate over the picture");
+            pump(200);
+            assert!(!plate.is_visible(), "nothing shows in the first 600 ms");
+            pump(600);
+            assert!(plate.is_visible(), "the plate shows from 600 ms");
+            let mut said = Vec::new();
+            words(&plate, &mut said);
+            assert_eq!(said, vec!["Page 12".to_owned()]);
+            strip_frame_asked(&picture);
+            pump(4200);
+            let mut said = Vec::new();
+            words(&plate, &mut said);
+            assert_eq!(said, vec!["Page 12".to_owned(), "Loading page 12".to_owned()]);
+            fill_strip_frame(&picture, &texture());
+            assert!(picture.paintable().is_some());
+            pump(500);
+            assert!(!plate.is_visible(), "the plate is gone once the image is in");
+            window.destroy();
+        });
+    }
+
+    /// A file that comes within 600 ms never shows a plate.
+    #[test]
+    fn a_quick_strip_image_shows_no_plate() {
+        run(|| {
+            let (frame, picture) = strip_frame(0);
+            let window = gtk::Window::builder().default_width(400).default_height(400).build();
+            window.set_child(Some(&frame));
+            window.present();
+            pump(100);
+            fill_strip_frame(&picture, &texture());
+            pump(800);
+            assert!(!picture.next_sibling().expect("a plate").is_visible());
+            window.destroy();
+        });
+    }
+
+    /// A novel's notice clears the group once the chrome shows, also when the group comes back
+    /// from hidden: it is shown before it is measured.
+    #[test]
+    fn the_notice_clears_a_group_that_was_hidden() {
+        run(|| {
+            let group = gtk::Box::new(gtk::Orientation::Vertical, 2);
+            for _ in 0..3 {
+                let row = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+                row.set_size_request(300, 36);
+                group.append(&row);
+            }
+            group.set_margin_bottom(16);
+            group.set_valign(gtk::Align::End);
+            let window = gtk::Window::builder().default_width(360).default_height(780).build();
+            window.set_child(Some(&group));
+            window.present();
+            let fade = Fader::always();
+            fade.hide_now(&group);
+            pump(50);
+            // Hidden, the group measures nothing: measured before it shows, the notice would
+            // sit on it, which is why the chrome shows the group first.
+            assert_eq!(notice_lift(&group, true), 16 + 12);
+            fade.set(&group, true);
+            let lift = notice_lift(&group, true);
+            assert!(lift >= 16 + 3 * 36 + 12, "the notice sits {lift} px up, on the group");
+            assert_eq!(notice_lift(&group, false), 44);
+            window.destroy();
+        });
+    }
+
+    #[test]
+    fn a_page_is_asked_for_before_its_neighbours() {
+        use super::wanted_leaves;
+        assert_eq!(wanted_leaves(99, 150), vec![99, 100, 101, 98]);
+        assert_eq!(wanted_leaves(0, 150), vec![0, 1, 2]);
+        assert_eq!(wanted_leaves(149, 150), vec![149, 148]);
+        assert_eq!(wanted_leaves(5, 0), Vec::<usize>::new());
+    }
+
+    #[test]
+    fn a_strip_asks_for_what_is_in_view_first() {
+        use super::strip_wanted;
+        // Ten images 100 tall with 10 between, the window over the sixth and seventh.
+        let heights = [100; 10];
+        let (wanted, foot) = strip_wanted(&heights, 10, 560.0, 760.0, 250.0);
+        assert_eq!(wanted, vec![5, 6, 7, 8, 9, 4, 3, 2]);
+        assert_eq!(foot, 1090.0);
+        // At the top nothing lies behind.
+        let (wanted, _) = strip_wanted(&heights, 10, 0.0, 150.0, 120.0);
+        assert_eq!(wanted, vec![0, 1, 2]);
+        assert_eq!(strip_wanted(&[], 10, 0.0, 100.0, 50.0).0, Vec::<usize>::new());
+    }
+
+    #[test]
+    fn a_popover_slides_to_stay_in_the_window() {
+        // Over its button where it fits.
+        assert_eq!(popover_middle(500.0, 340.0, 1280.0), 500.0);
+        // At the end of a narrow window it slides in, 8 px from the edge.
+        assert_eq!(popover_middle(300.0, 300.0, 360.0), 360.0 - 8.0 - 150.0);
+        assert_eq!(popover_middle(20.0, 300.0, 360.0), 8.0 + 150.0);
+        // Wider than the window: in its middle.
+        assert_eq!(popover_middle(300.0, 400.0, 360.0), 180.0);
     }
 }
