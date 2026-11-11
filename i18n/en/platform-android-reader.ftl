@@ -88,6 +88,21 @@ eink-chapter = Chapter { $chapter }
 # @max 16
 eink-contents = Contents
 
+# Button in the e-ink reader's top bar on a large panel that downloads the open chapter.
+# @only android
+# @max 16
+eink-download = Download
+
+# In the e-ink reader's top bar on a large panel once the open chapter is downloading.
+# @only android
+# @max 16
+eink-download-running = Downloading
+
+# In the e-ink reader's top bar on a large panel when the open chapter is on the device.
+# @only android
+# @max 20
+eink-download-done = On this { -device }
+
 # Button that goes back out of the reader.
 # @only android
 # @max 16
@@ -162,6 +177,69 @@ eink-reads-strip = long strip
 # @only android
 # @max 20
 eink-on-device = on this { -device }
+
+# After the pages left in the e-ink reader's bottom bar on a large panel, when the next chapter is
+# downloaded: "16 pages left in chapter · chapter 13 is on this device".
+# @only android
+# @arg chapter: text
+# @max 40
+eink-next-on-device = chapter { $chapter } is on this { -device }
+
+# Choice in the e-ink reader's bottom bar on a large panel: one page at a time.
+# @only android
+# @max 14
+eink-layout-one = One page
+
+# Choice in the e-ink reader's bottom bar on a large panel: two pages side by side.
+# @only android
+# @max 14
+eink-layout-two = Two pages
+
+# Choice in the e-ink reader's bottom bar on a large panel: the page's white borders stay.
+# @only android
+# @max 12
+eink-crop-off = Crop off
+
+# Choice in the e-ink reader's bottom bar on a large panel: the page's white borders are cut.
+# @only android
+# @max 12
+eink-crop-on = Crop on
+
+# Caption under the next chapter's first page, beside the end of a chapter on a large panel.
+# @only android
+# @arg chapter: text
+# @max 32
+eink-end-preview = Chapter { $chapter }, page 1
+
+# Heading over the next chapters, under the end of a chapter on a large panel.
+# @only android
+# @max 24
+eink-coming-up = Coming up
+
+# Kicker over a chapter that is slow to open: the series and its volume.
+# @only android
+# @arg title: text
+# @arg volume: text
+eink-slow-kicker = { $title } · volume { $volume }
+
+# A chapter still opening after 10 seconds, when other sources of the series can be asked.
+# @only android
+# @arg source: text
+eink-slow-line = { $source } hasn't answered in 10 seconds. You can keep waiting, try again, or read this series from another of your { -source-pl }.
+
+# A chapter still opening after 10 seconds, when no other source of the series has it.
+# @only android
+# @arg source: text
+eink-slow-line-alone = { $source } hasn't answered in 10 seconds. You can keep waiting or try again.
+
+# A chapter still opening after 10 seconds, before the engine has named the source it asked.
+# @only android
+eink-slow-line-unnamed = No answer in 10 seconds. You can keep waiting or try again.
+
+# Button on a chapter that is slow to open: lists the series' other sources.
+# @only android
+# @max 20
+eink-slow-another = Another { -source }
 
 # The main button on the page between chapters.
 # @only android

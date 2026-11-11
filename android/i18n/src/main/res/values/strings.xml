@@ -1274,6 +1274,12 @@
     <string name="eink_chapter">Chapter %1$s</string>
     <!-- Button in the e-ink reader's top bar that lists the chapters. -->
     <string name="eink_contents">Contents</string>
+    <!-- Button in the e-ink reader's top bar on a large panel that downloads the open chapter. -->
+    <string name="eink_download">Download</string>
+    <!-- In the e-ink reader's top bar on a large panel once the open chapter is downloading. -->
+    <string name="eink_download_running">Downloading</string>
+    <!-- In the e-ink reader's top bar on a large panel when the open chapter is on the device. -->
+    <string name="eink_download_done">On this device</string>
     <!-- Button that goes back out of the reader. -->
     <string name="eink_back">Back</string>
     <!-- Under the page number in the e-ink reader's bottom bar. -->
@@ -1306,6 +1312,30 @@
     <string name="eink_reads_strip">long strip</string>
     <!-- The next chapter is downloaded, on the page between chapters. -->
     <string name="eink_on_device">on this device</string>
+    <!-- After the pages left in the e-ink reader's bottom bar on a large panel, when the next chapter is downloaded: "16 pages left in chapter · chapter 13 is on this device". -->
+    <string name="eink_next_on_device">chapter %1$s is on this device</string>
+    <!-- Choice in the e-ink reader's bottom bar on a large panel: one page at a time. -->
+    <string name="eink_layout_one">One page</string>
+    <!-- Choice in the e-ink reader's bottom bar on a large panel: two pages side by side. -->
+    <string name="eink_layout_two">Two pages</string>
+    <!-- Choice in the e-ink reader's bottom bar on a large panel: the page's white borders stay. -->
+    <string name="eink_crop_off">Crop off</string>
+    <!-- Choice in the e-ink reader's bottom bar on a large panel: the page's white borders are cut. -->
+    <string name="eink_crop_on">Crop on</string>
+    <!-- Caption under the next chapter's first page, beside the end of a chapter on a large panel. -->
+    <string name="eink_end_preview">Chapter %1$s, page 1</string>
+    <!-- Heading over the next chapters, under the end of a chapter on a large panel. -->
+    <string name="eink_coming_up">Coming up</string>
+    <!-- Kicker over a chapter that is slow to open: the series and its volume. -->
+    <string name="eink_slow_kicker">%1$s · volume %2$s</string>
+    <!-- A chapter still opening after 10 seconds, when other sources of the series can be asked. -->
+    <string name="eink_slow_line">%1$s hasn\'t answered in 10 seconds. You can keep waiting, try again, or read this series from another of your sources.</string>
+    <!-- A chapter still opening after 10 seconds, when no other source of the series has it. -->
+    <string name="eink_slow_line_alone">%1$s hasn\'t answered in 10 seconds. You can keep waiting or try again.</string>
+    <!-- A chapter still opening after 10 seconds, before the engine has named the source it asked. -->
+    <string name="eink_slow_line_unnamed">No answer in 10 seconds. You can keep waiting or try again.</string>
+    <!-- Button on a chapter that is slow to open: lists the series' other sources. -->
+    <string name="eink_slow_another">Another source</string>
     <!-- The main button on the page between chapters. -->
     <string name="eink_continue_to">Continue to chapter %1$s</string>
     <!-- Line at the foot of the page between chapters. -->
@@ -7627,6 +7657,8 @@
         <item quantity="one">One plugin</item>
         <item quantity="other">%1$,d plugins</item>
     </plurals>
+    <!-- Heading over the store's plugins in the join dialog on a large e-ink panel. The count sits beside it. -->
+    <string name="stores_preview_plugins">Plugins in this store</string>
     <!-- Button of a notice that opens the plugin stores page. -->
     <string name="notice_open_stores">Open plugin stores</string>
     <!-- Explainer on the empty plugin stores page. -->

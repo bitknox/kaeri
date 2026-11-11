@@ -2337,6 +2337,18 @@ object Strings {
     fun einkContents(context: Context): String =
         context.getString(R.string.eink_contents)
 
+    /** Button in the e-ink reader's top bar on a large panel that downloads the open chapter. */
+    fun einkDownload(context: Context): String =
+        context.getString(R.string.eink_download)
+
+    /** In the e-ink reader's top bar on a large panel once the open chapter is downloading. */
+    fun einkDownloadRunning(context: Context): String =
+        context.getString(R.string.eink_download_running)
+
+    /** In the e-ink reader's top bar on a large panel when the open chapter is on the device. */
+    fun einkDownloadDone(context: Context): String =
+        context.getString(R.string.eink_download_done)
+
     /** Button that goes back out of the reader. */
     fun einkBack(context: Context): String =
         context.getString(R.string.eink_back)
@@ -2388,6 +2400,54 @@ object Strings {
     /** The next chapter is downloaded, on the page between chapters. */
     fun einkOnDevice(context: Context): String =
         context.getString(R.string.eink_on_device)
+
+    /** After the pages left in the e-ink reader's bottom bar on a large panel, when the next chapter is downloaded: "16 pages left in chapter · chapter 13 is on this device". */
+    fun einkNextOnDevice(context: Context, chapter: String): String =
+        context.getString(R.string.eink_next_on_device, chapter)
+
+    /** Choice in the e-ink reader's bottom bar on a large panel: one page at a time. */
+    fun einkLayoutOne(context: Context): String =
+        context.getString(R.string.eink_layout_one)
+
+    /** Choice in the e-ink reader's bottom bar on a large panel: two pages side by side. */
+    fun einkLayoutTwo(context: Context): String =
+        context.getString(R.string.eink_layout_two)
+
+    /** Choice in the e-ink reader's bottom bar on a large panel: the page's white borders stay. */
+    fun einkCropOff(context: Context): String =
+        context.getString(R.string.eink_crop_off)
+
+    /** Choice in the e-ink reader's bottom bar on a large panel: the page's white borders are cut. */
+    fun einkCropOn(context: Context): String =
+        context.getString(R.string.eink_crop_on)
+
+    /** Caption under the next chapter's first page, beside the end of a chapter on a large panel. */
+    fun einkEndPreview(context: Context, chapter: String): String =
+        context.getString(R.string.eink_end_preview, chapter)
+
+    /** Heading over the next chapters, under the end of a chapter on a large panel. */
+    fun einkComingUp(context: Context): String =
+        context.getString(R.string.eink_coming_up)
+
+    /** Kicker over a chapter that is slow to open: the series and its volume. */
+    fun einkSlowKicker(context: Context, title: String, volume: String): String =
+        context.getString(R.string.eink_slow_kicker, title, volume)
+
+    /** A chapter still opening after 10 seconds, when other sources of the series can be asked. */
+    fun einkSlowLine(context: Context, source: String): String =
+        context.getString(R.string.eink_slow_line, source)
+
+    /** A chapter still opening after 10 seconds, when no other source of the series has it. */
+    fun einkSlowLineAlone(context: Context, source: String): String =
+        context.getString(R.string.eink_slow_line_alone, source)
+
+    /** A chapter still opening after 10 seconds, before the engine has named the source it asked. */
+    fun einkSlowLineUnnamed(context: Context): String =
+        context.getString(R.string.eink_slow_line_unnamed)
+
+    /** Button on a chapter that is slow to open: lists the series' other sources. */
+    fun einkSlowAnother(context: Context): String =
+        context.getString(R.string.eink_slow_another)
 
     /** The main button on the page between chapters. */
     fun einkContinueTo(context: Context, chapter: String): String =
@@ -14334,6 +14394,10 @@ object Strings {
     /** Heading over the { -plugin-pl } a { -plugin-store } offers, in the join dialog. */
     fun storesOffersPlugins(context: Context, count: Int): String =
         context.resources.getQuantityString(R.plurals.stores_offers_plugins, count, count)
+
+    /** Heading over the store's plugins in the join dialog on a large e-ink panel. The count sits beside it. */
+    fun storesPreviewPlugins(context: Context): String =
+        context.getString(R.string.stores_preview_plugins)
 
     /** Button of a notice that opens the plugin stores page. */
     fun noticeOpenStores(context: Context): String =

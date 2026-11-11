@@ -8,6 +8,12 @@ package app.kaeri.ui
 import app.kaeri.store.plainReason
 import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.background
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -555,7 +561,16 @@ private fun JoinPreview(preview: StoresModel.Preview?, offline: Boolean) {
             val invited = preview.store
             InvitedStorePreview(invited)
             // What the store will call this device: its kind, never its own name, to change first.
-            if (!invited.anonymous) {
+            if (!invited.anonymous && app.kaeri.ui.reading.largePaper) {
+                app.kaeri.ui.reading.CameInField(
+                    deviceName,
+                    store.stores::nameDevice,
+                    stringResource(if (invited.namesJoiner) R.string.stores_join_your_name else R.string.stores_device_name),
+                    modifier = Modifier.padding(top = 18.dp),
+                    keyboard = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+                    supporting = stringResource(if (invited.namesJoiner) R.string.stores_join_your_name_detail else R.string.stores_device_name_detail),
+                )
+            } else if (!invited.anonymous) {
                 SheetField(
                     deviceName,
                     store.stores::nameDevice,
@@ -565,7 +580,15 @@ private fun JoinPreview(preview: StoresModel.Preview?, offline: Boolean) {
                     supporting = stringResource(if (invited.namesJoiner) R.string.stores_join_your_name_detail else R.string.stores_device_name_detail),
                 )
             }
-            SheetText(stringResource(R.string.stores_not_from_app), Modifier.padding(top = 16.dp))
+            if (app.kaeri.ui.reading.largePaper) {
+                Text(
+                    stringResource(R.string.stores_not_from_app),
+                    style = app.kaeri.eink.EinkType.Secondary.copy(lineHeight = app.kaeri.eink.EinkType.Secondary.fontSize * 1.4f),
+                    modifier = Modifier.padding(top = 16.dp),
+                )
+            } else {
+                SheetText(stringResource(R.string.stores_not_from_app), Modifier.padding(top = 16.dp))
+            }
         }
         null -> {}
     }
@@ -655,6 +678,7 @@ private fun JoinedPluginRow(plugin: StorePluginRow, dim: Boolean = false, traili
  */
 @Composable
 internal fun InvitedStorePreview(invited: app.kaeri.engine.model.InvitedStore) {
+    if (app.kaeri.ui.reading.largePaper) return PaperStorePreview(invited)
     val colors = MaterialTheme.colorScheme
     val tabular = MaterialTheme.typography.bodyMedium.tabular()
     HorizontalDivider(Modifier.padding(top = 16.dp), color = colors.outlineVariant)
@@ -686,6 +710,84 @@ internal fun InvitedStorePreview(invited: app.kaeri.engine.model.InvitedStore) {
                 Text(plugin.version, style = tabular, color = colors.onSurfaceVariant)
             }
         }
+    }
+}
+
+/**
+ * What the link leads to, on a large e-ink panel: under a 2 dp rule the store, who runs it and how
+ * many plugins it offers; its key in words; another rule; then the plugins in two columns, each
+ * with the hosts it may contact and its version. Words only: no shield, no tiles.
+ */
+@Composable
+private fun PaperStorePreview(invited: app.kaeri.engine.model.InvitedStore) {
+    val context = LocalContext.current
+    val ink = app.kaeri.eink.EinkColours.Ink
+    val secondary = app.kaeri.eink.EinkType.Secondary
+    Box(Modifier.padding(top = 18.dp).fillMaxWidth().height(app.kaeri.eink.EinkSizes.Rule).background(ink))
+    PaperLine(invited.name, invited.runByLine(context), first = true) {
+        if (invited.plugins.isNotEmpty()) Text(pluralStringResource(R.plurals.stores_offers_plugins, invited.plugins.size, invited.plugins.size), style = secondary)
+    }
+    PaperLine(
+        stringResource(if (invited.anonymous) R.string.stores_preview_key_link else R.string.stores_preview_key_invite),
+        invited.fingerprint,
+        lineStyle = secondary.copy(fontFamily = FontFamily.Monospace),
+    ) {
+        Text(stringResource(R.string.stores_key_verified), style = secondary.copy(fontWeight = FontWeight.Bold))
+    }
+    if (invited.open) {
+        PaperLine(stringResource(R.string.stores_anyone_with_link), if (invited.anonymous) stringResource(R.string.stores_anyone_note) else null)
+    }
+    Box(Modifier.fillMaxWidth().height(app.kaeri.eink.EinkSizes.Rule).background(ink))
+    if (invited.alreadyJoined) Text(stringResource(R.string.stores_already_joined_note), style = secondary, modifier = Modifier.padding(top = 12.dp))
+    if (invited.plugins.isEmpty()) return
+    Row(Modifier.fillMaxWidth().padding(top = 14.dp, bottom = 4.dp).semantics(mergeDescendants = true) { heading() }, verticalAlignment = Alignment.CenterVertically) {
+        Text(stringResource(R.string.stores_preview_plugins), style = app.kaeri.eink.EinkType.RowTitle.copy(fontWeight = FontWeight.Bold), modifier = Modifier.weight(1f))
+        Text(invited.plugins.size.toString(), style = secondary) // i18n-skip
+    }
+    // The first half down the left column, the rest down the right, as a list reads.
+    val half = (invited.plugins.size + 1) / 2
+    Row(horizontalArrangement = Arrangement.spacedBy(32.dp)) {
+        listOf(invited.plugins.take(half), invited.plugins.drop(half)).forEach { column ->
+            Column(Modifier.weight(1f)) {
+                column.forEachIndexed { index, plugin ->
+                    val line = listOfNotNull(plugin.contactsLine(context), plugin.standing(context)).joinToString(" · ") // i18n-skip
+                    PaperLine(plugin.name, line, first = index == 0, height = 60.dp, titleStyle = app.kaeri.eink.EinkType.Label) {
+                        Text(plugin.version, style = secondary)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** A line of the preview on paper: a title over a line in #333, what sits at its end, and a hairline over it after the first. */
+@Composable
+private fun PaperLine(
+    title: String,
+    line: String?,
+    first: Boolean = false,
+    height: androidx.compose.ui.unit.Dp = 72.dp,
+    titleStyle: androidx.compose.ui.text.TextStyle = app.kaeri.eink.EinkType.RowTitle,
+    lineStyle: androidx.compose.ui.text.TextStyle = app.kaeri.eink.EinkType.Secondary,
+    trailing: @Composable () -> Unit = {},
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = height)
+            .then(if (first) Modifier else Modifier.drawBehind {
+                val y = app.kaeri.eink.EinkSizes.Hairline.toPx() / 2
+                drawLine(app.kaeri.eink.EinkColours.Tertiary, androidx.compose.ui.geometry.Offset(0f, y), androidx.compose.ui.geometry.Offset(size.width, y), app.kaeri.eink.EinkSizes.Hairline.toPx())
+            })
+            .padding(vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(title, style = titleStyle, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            line?.let { Text(it, style = lineStyle, maxLines = 2, overflow = TextOverflow.Ellipsis) }
+        }
+        trailing()
     }
 }
 
