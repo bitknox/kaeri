@@ -3336,11 +3336,12 @@ mod tests {
 
         const WORK: &str = "a:900601";
 
-        /// A source whose second chapter waits for the test before its pages arrive.
+        /// A source whose pages with `holds` in their address wait for the test.
         struct Gated {
             manifest: BookSourceManifest,
             published: i64,
             held: AtomicBool,
+            holds: &'static str,
         }
 
         #[async_trait]
@@ -3392,7 +3393,7 @@ mod tests {
             }
 
             async fn fetch_page(&self, page: &PageRef) -> Result<Vec<u8>, PageError> {
-                while self.held.load(Ordering::SeqCst) && page.url.contains("/2/") {
+                while self.held.load(Ordering::SeqCst) && page.url.contains(self.holds) {
                     tokio::time::sleep(Duration::from_millis(10)).await;
                 }
                 let mut bytes = vec![0x89, b'P', b'N', b'G', 0x0d, 0x0a, 0x1a, 0x0a];
@@ -3583,6 +3584,8 @@ mod tests {
                 },
                 published: kaeri_store::now() - 3_600,
                 held: AtomicBool::new(true),
+                // The second chapter waits on its pages.
+                holds: "/2/",
             });
             let held = Arc::clone(&source);
             let (engine, mut events) = engine_with(dir.path(), host, |o| {
@@ -3654,6 +3657,125 @@ mod tests {
             engine.send(Command::Reading(ReadingCommand::DownloadNew));
             let view = downloads_until(&engine, &mut events, |v| done_ids(v).len() == 5).await;
             assert_eq!(view.meter.chapters, 5);
+            engine.shutdown().await;
+        }
+
+        /// The download state of each chapter a list event shows, by chapter.
+        fn listed(event: &Event) -> Option<Vec<(String, Option<ChapterDownloadState>)>> {
+            match event {
+                Event::Reading(ReadingEvent::Chapters { volumes, .. }) => Some(
+                    volumes
+                        .iter()
+                        .flat_map(|v| &v.chapters)
+                        .map(|c| (c.id.as_str().to_owned(), c.download.clone()))
+                        .collect(),
+                ),
+                _ => None,
+            }
+        }
+
+        fn chapters_done(rows: &[(String, Option<ChapterDownloadState>)]) -> usize {
+            rows.iter().filter(|(_, s)| *s == Some(ChapterDownloadState::Done)).count()
+        }
+
+        /// The series page follows a download of five chapters as it runs: each chapter as it
+        /// starts and lands, and the pages of the one downloading, not all five at the end.
+        #[tokio::test]
+        async fn a_download_tells_the_series_page_each_chapter_and_page_as_it_goes() {
+            let dir = tempfile::tempdir().unwrap();
+            let host = Arc::new(QuietHost::in_dir(&dir.path().join("tokens")));
+            let source = Arc::new(Gated {
+                manifest: BookSourceManifest {
+                    id: "shelf".into(),
+                    name: "Shelf".into(),
+                    version: "1".into(),
+                    kind: BookSourceKind::Native,
+                    media: vec![Medium::Manga],
+                    languages: vec!["en".into()],
+                    allowed_hosts: Vec::new(),
+                    capabilities: Vec::new(),
+                },
+                published: kaeri_store::now() - 3_600,
+                held: AtomicBool::new(true),
+                // The second chapter's second page waits for the test.
+                holds: "/2/2",
+            });
+            let held = Arc::clone(&source);
+            let (engine, mut events) = engine_with(dir.path(), host, |o| {
+                let now = kaeri_store::now();
+                o.reading = true;
+                o.store.set_book_match("shelf", "s-1", WORK, 100, true, false, 1).unwrap();
+                o.store
+                    .seed_book_work(WORK, "manga", None, None, "The Lantern Ferry", 1)
+                    .unwrap();
+                o.store.set_read_status(WORK, Some("reading"), now).unwrap();
+                o.book_source = Some(source);
+            })
+            .await;
+            events.launch().await;
+            engine.send(network(false, false));
+            let work = WorkId::new(WORK);
+            engine.send(Command::Reading(ReadingCommand::LoadChapters {
+                work: work.clone(),
+                edition: None,
+            }));
+            seen_until(&mut events, |e| listed(e).is_some()).await;
+
+            engine.send(Command::Reading(ReadingCommand::Download {
+                work: work.clone(),
+                pick: DownloadPick::Chapters {
+                    ids: (1..=5).map(|n| ChapterId::new(n.to_string())).collect(),
+                },
+            }));
+            // While the second chapter waits on its last page, the list already shows the
+            // first downloaded, the second one page in and the rest queued.
+            let seen = seen_until(&mut events, |e| {
+                listed(e).is_some_and(|rows| {
+                    rows.iter().any(|(id, s)| {
+                        id == "2"
+                            && *s
+                                == Some(ChapterDownloadState::Downloading { done: 1, total: 2 })
+                    })
+                })
+            })
+            .await;
+            let rows = seen.iter().rev().find_map(listed).unwrap();
+            let state = |id: &str| rows.iter().find(|(c, _)| c == id).unwrap().1.clone();
+            assert_eq!(state("1"), Some(ChapterDownloadState::Done));
+            for id in ["3", "4", "5"] {
+                assert_eq!(state(id), Some(ChapterDownloadState::Queued), "chapter {id}");
+            }
+            // Each row says how it stands, as the list the page loaded does.
+            let words = seen
+                .iter()
+                .rev()
+                .find_map(|e| match e {
+                    Event::Reading(ReadingEvent::Chapters { volumes, .. }) => Some(
+                        volumes
+                            .iter()
+                            .flat_map(|v| &v.chapters)
+                            .map(|c| c.line.len())
+                            .collect::<Vec<_>>(),
+                    ),
+                    _ => None,
+                })
+                .unwrap();
+            assert!(words.iter().all(|n| *n > 0), "a row without words in {words:?}");
+
+            // Let the rest through: the list counts up one chapter at a time.
+            held.held.store(false, Ordering::SeqCst);
+            let seen = seen_until(&mut events, |e| {
+                listed(e).is_some_and(|rows| chapters_done(&rows) == 5)
+            })
+            .await;
+            let counts: Vec<usize> =
+                seen.iter().filter_map(listed).map(|rows| chapters_done(&rows)).collect();
+            for n in 2..=4 {
+                assert!(
+                    counts.contains(&n),
+                    "{n} downloaded is told on its way, in {counts:?}"
+                );
+            }
             engine.shutdown().await;
         }
 
