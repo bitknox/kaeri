@@ -1080,21 +1080,34 @@ impl Reader {
         self.fill_end();
     }
 
-    /// The end page with the next chapter an extra, 16.5, and chapter 17 after it to skip to.
+    /// The end of chapter 16 with the next chapter an extra, 16.5, and chapter 17 after it to
+    /// skip to. The extra's first page is one of the open chapter's pages.
     #[cfg(feature = "fixtures")]
     pub fn shot_end_skip(self: &Rc<Self>) {
+        let first = self.texture_for(0);
         {
             let mut state = self.state.borrow_mut();
-            if let Some(next) = state.next.as_mut() {
+            if let Some(chapter) = state.chapter.as_mut() {
+                chapter.number = Some("16".into());
+                chapter.label = "Chapter 16".into(); // i18n-skip: a shot's chapter label
+            }
+            let staged = state.next.as_mut().map(|next| {
                 next.number = Some("16.5".into());
-                next.label = "Chapter 16.5".into();
-                next.title = Some("Volume 1 extras".into());
+                next.label = "Chapter 16.5".into(); // i18n-skip: a shot's chapter label
+                next.title = Some("Volume 1 extras".into()); // i18n-skip: a shot's chapter title
                 let mut skip = next.clone();
                 skip.id = ChapterId("shot-skip-17".into());
                 skip.number = Some("17".into());
-                skip.label = "Chapter 17".into();
+                skip.label = "Chapter 17".into(); // i18n-skip: a shot's chapter label
                 skip.title = None;
+                (next.id.clone(), skip)
+            });
+            if let Some((next, skip)) = staged {
                 state.skip_to = Some(skip);
+                state.extras = 1;
+                if let Some(first) = first {
+                    state.preview = Some((next, first));
+                }
             }
         }
         self.fill_end();

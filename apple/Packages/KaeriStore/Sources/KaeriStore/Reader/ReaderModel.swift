@@ -406,17 +406,33 @@ public final class ReaderModel {
 
     /// For shots: the next chapter comes from `source`, as a server's chapter does.
     public func stageNextSource(_ source: String) {
-        end = ReaderEnd(next: end?.next ?? view?.next, why: end?.why, nextSource: source, skipTo: end?.skipTo)
+        end = ReaderEnd(
+            next: end?.next ?? view?.next, why: end?.why, nextSource: source, skipTo: end?.skipTo,
+            extras: end?.extras ?? 0
+        )
     }
 
-    /// For shots: the next chapter is an extra, 16.5, with chapter 17 after it to skip to.
+    /// For shots: the end of chapter 16, whose next chapter is an extra, 16.5, with chapter 17
+    /// after it to skip to. The extra's first page is one of the open chapter's pages.
+    /// The labels and title are a shot's made-up chapter data, marked `i18n-skip`.
     public func stageSkipExtra() {
         guard var next = end?.next ?? view?.next else { return }
+        view?.chapter.number = "16"
+        view?.chapter.label = "Chapter 16" // i18n-skip
         next.number = "16.5"
-        next.label = "Chapter 16.5"
-        next.title = "Volume 1 extras"
-        let skip = ChapterRow(id: ChapterId("shot-skip-17"), label: "Chapter 17", state: .unread, number: "17")
-        end = ReaderEnd(next: next, why: end?.why, nextSource: end?.nextSource, skipTo: skip)
+        next.label = "Chapter 16.5" // i18n-skip
+        next.title = "Volume 1 extras" // i18n-skip
+        let skip = ChapterRow(
+            id: ChapterId("shot-skip-17"),
+            label: "Chapter 17", // i18n-skip
+            state: .unread,
+            number: "17"
+        )
+        if previews[next.id] == nil,
+           let first = pages.sorted(by: { $0.key.page < $1.key.page }).first?.value {
+            previews[next.id] = first
+        }
+        end = ReaderEnd(next: next, why: end?.why, nextSource: end?.nextSource, skipTo: skip, extras: 1)
     }
     #endif
 
