@@ -1192,7 +1192,7 @@ private fun QueueRow(row: BookDownloadRow, first: Boolean) {
             modifier = Modifier.padding(start = 16.dp),
         )
         if (state is ChapterDownloadState.Failed) {
-            EinkTextButton(stringResource(R.string.chapter_retry), { store.reading.download(row.work, DownloadPick.Chapters(listOf(row.chapter.id))) }, FlushEnd)
+            EinkTextButton(stringResource(R.string.chapter_retry), { store.reading.download(row.work, DownloadPick.Chapters(listOf(row.chapter.id))) }, FlushEnd, underline = true)
         }
     }
 }
