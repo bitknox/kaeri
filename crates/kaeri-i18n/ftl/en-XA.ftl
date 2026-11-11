@@ -2166,9 +2166,6 @@ linux-shortcuts-close-reader = [Çļöšé ţĥé ŕéàðéŕ~~~~~]
 # Two names joined, or a list's last name joined to the rest, in the end page's tracker line: "AniList and MangaUpdates".
 linux-reader-names-and = [{ $first } àñð { $last }~~~~]
 
-# On the plate that holds a page's place while it loads. The page is its number, such as 23.
-linux-reader-page-plate = [Þàĝé { $page }~~~]
-
 # Heading when a chapter could not open. The chapter is its number, such as 13.
 linux-reader-open-failed = [Çöüļðñ'ţ öþéñ çĥàþţéŕ { $chapter }~~~~~~~~]
 
@@ -8878,6 +8875,15 @@ player-subs-more = [Ṁöŕé îñ Šéţţîñĝš…~~~~~~]
 
 # Under a page that is still loading after four seconds.
 reader-page-loading = [Ļöàðîñĝ þàĝé { $page }~~~~~]
+
+# On the plate of a page that is still loading.
+reader-page-plate = [Þàĝé { $page }~~~]
+
+# On the plate of a strip image that is still loading.
+reader-image-plate = [Îɱàĝé { $image }~~~]
+
+# Under a strip image's number after four seconds.
+reader-image-loading = [Ļöàðîñĝ îɱàĝé { $image }~~~~~~]
 
 # Heading where a page could not be loaded.
 reader-page-failed = [Çöüļðñ'ţ ļöàð þàĝé { $page }~~~~~~~]

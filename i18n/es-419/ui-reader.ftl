@@ -1,4 +1,7 @@
 reader-page-loading = Cargando la página { $page }
+reader-page-plate = Página { $page }
+reader-image-plate = Imagen { $image }
+reader-image-loading = Cargando la imagen { $image }
 reader-page-failed = No se pudo cargar la página { $page }
 reader-try-again = Reintentar
 reader-close = Cerrar

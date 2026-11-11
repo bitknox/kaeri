@@ -5849,6 +5849,15 @@
   <data name="ReaderPageLoading" xml:space="preserve">
     <value>Memuat halaman {page}</value>
   </data>
+  <data name="ReaderPagePlate" xml:space="preserve">
+    <value>Halaman {page}</value>
+  </data>
+  <data name="ReaderImagePlate" xml:space="preserve">
+    <value>Gambar {image}</value>
+  </data>
+  <data name="ReaderImageLoading" xml:space="preserve">
+    <value>Memuat gambar {image}</value>
+  </data>
   <data name="ReaderPageFailed" xml:space="preserve">
     <value>Halaman {page} gagal dimuat</value>
   </data>

@@ -817,24 +817,6 @@ reader-volume-read = Volume { $volume } · read
 # @max 24
 reader-volume-none = Chapters
 
-# On the plate of a page that is still loading.
-# @only android
-# @arg page: plain
-# @max 20
-reader-page-plate = Page { $page }
-
-# On the plate of a strip image that is still loading.
-# @only android
-# @arg image: int
-# @max 20
-reader-image-plate = Image { $image }
-
-# On a strip image's plate in place of its number after four seconds.
-# @only android
-# @arg image: int
-# @max 30
-reader-image-loading = Loading image { $image }
-
 # Under Opening chapter when it takes more than three seconds.
 # @only android
 # @max 30

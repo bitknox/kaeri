@@ -355,12 +355,6 @@ linux-shortcuts-close-reader = Close the reader
 # @max 60
 linux-reader-names-and = { $first } and { $last }
 
-# On the plate that holds a page's place while it loads. The page is its number, such as 23.
-# @arg page: int
-# @only linux
-# @max 20
-linux-reader-page-plate = Page { $page }
-
 # Heading when a chapter could not open. The chapter is its number, such as 13.
 # @arg chapter: text
 # @only linux

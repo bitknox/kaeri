@@ -1,4 +1,7 @@
 reader-page-loading = Sayfa { $page } yükleniyor
+reader-page-plate = Sayfa { $page }
+reader-image-plate = Görsel { $image }
+reader-image-loading = Görsel { $image } yükleniyor
 reader-page-failed = Sayfa { $page } yüklenemedi
 reader-try-again = Tekrar dene
 reader-close = Kapat

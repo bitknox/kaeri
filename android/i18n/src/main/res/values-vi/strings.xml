@@ -752,9 +752,6 @@
     <string name="reader_volume_line">Tập %1$s</string>
     <string name="reader_volume_read">Tập %1$s · đã đọc</string>
     <string name="reader_volume_none">Các chương</string>
-    <string name="reader_page_plate">Trang %1$d</string>
-    <string name="reader_image_plate">Ảnh %1$,d</string>
-    <string name="reader_image_loading">Đang tải ảnh %1$,d</string>
     <string name="reader_opening_finding">Đang tìm nguồn</string>
     <string name="reader_failed_choose">Chọn nguồn</string>
     <string name="reader_settings_search">Tìm cài đặt</string>
@@ -2332,6 +2329,9 @@
     <string name="player_subs_bg_box">Khung</string>
     <string name="player_subs_more">Thêm trong Cài đặt…</string>
     <string name="reader_page_loading">Đang tải trang %1$d</string>
+    <string name="reader_page_plate">Trang %1$d</string>
+    <string name="reader_image_plate">Ảnh %1$d</string>
+    <string name="reader_image_loading">Đang tải ảnh %1$d</string>
     <string name="reader_page_failed">Không tải được trang %1$d</string>
     <string name="reader_try_again">Thử lại</string>
     <string name="reader_close">Đóng</string>

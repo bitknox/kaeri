@@ -8162,6 +8162,18 @@
     <value>[Ļöàðîñĝ þàĝé {page}~~~~~]</value>
     <comment>Under a page that is still loading after four seconds.</comment>
   </data>
+  <data name="ReaderPagePlate" xml:space="preserve">
+    <value>[Þàĝé {page}~~~]</value>
+    <comment>On the plate of a page that is still loading.</comment>
+  </data>
+  <data name="ReaderImagePlate" xml:space="preserve">
+    <value>[Îɱàĝé {image}~~~]</value>
+    <comment>On the plate of a strip image that is still loading.</comment>
+  </data>
+  <data name="ReaderImageLoading" xml:space="preserve">
+    <value>[Ļöàðîñĝ îɱàĝé {image}~~~~~~]</value>
+    <comment>Under a strip image's number after four seconds.</comment>
+  </data>
   <data name="ReaderPageFailed" xml:space="preserve">
     <value>[Çöüļðñ'ţ ļöàð þàĝé {page}~~~~~~~]</value>
     <comment>Heading where a page could not be loaded.</comment>

@@ -1,4 +1,7 @@
 reader-page-loading = Laddar sida { $page }
+reader-page-plate = Sida { $page }
+reader-image-plate = Bild { $image }
+reader-image-loading = Laddar bild { $image }
 reader-page-failed = Kunde inte ladda sida { $page }
 reader-try-again = Försök igen
 reader-close = Stäng

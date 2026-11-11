@@ -70,7 +70,6 @@ linux-shortcuts-text-size = Chữ lớn hơn, nhỏ hơn hoặc mặc định
 linux-shortcuts-reader-back = Về trang trước khi nhảy
 linux-shortcuts-close-reader = Đóng trình đọc
 linux-reader-names-and = { $first } và { $last }
-linux-reader-page-plate = Trang { $page }
 linux-reader-open-failed = Không mở được chương { $chapter }
 linux-reader-open-failed-plain = Không mở được chương này
 linux-send-next = { $n ->

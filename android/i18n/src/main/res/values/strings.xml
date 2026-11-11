@@ -1560,12 +1560,6 @@
     <string name="reader_volume_read">Volume %1$s · read</string>
     <!-- Heading for chapters outside any volume. -->
     <string name="reader_volume_none">Chapters</string>
-    <!-- On the plate of a page that is still loading. -->
-    <string name="reader_page_plate">Page %1$d</string>
-    <!-- On the plate of a strip image that is still loading. -->
-    <string name="reader_image_plate">Image %1$,d</string>
-    <!-- On a strip image's plate in place of its number after four seconds. -->
-    <string name="reader_image_loading">Loading image %1$,d</string>
     <!-- Under Opening chapter when it takes more than three seconds. -->
     <string name="reader_opening_finding">Finding a source</string>
     <!-- Button on a chapter that could not open. -->
@@ -4862,6 +4856,12 @@
     <string name="player_subs_more">More in Settings…</string>
     <!-- Under a page that is still loading after four seconds. -->
     <string name="reader_page_loading">Loading page %1$d</string>
+    <!-- On the plate of a page that is still loading. -->
+    <string name="reader_page_plate">Page %1$d</string>
+    <!-- On the plate of a strip image that is still loading. -->
+    <string name="reader_image_plate">Image %1$d</string>
+    <!-- Under a strip image's number after four seconds. -->
+    <string name="reader_image_loading">Loading image %1$d</string>
     <!-- Heading where a page could not be loaded. -->
     <string name="reader_page_failed">Couldn\'t load page %1$d</string>
     <!-- Button that loads a failed page again. -->

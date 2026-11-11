@@ -1,4 +1,7 @@
 reader-page-loading = Memuat halaman { $page }
+reader-page-plate = Halaman { $page }
+reader-image-plate = Gambar { $image }
+reader-image-loading = Memuat gambar { $image }
 reader-page-failed = Halaman { $page } gagal dimuat
 reader-try-again = Coba lagi
 reader-close = Tutup

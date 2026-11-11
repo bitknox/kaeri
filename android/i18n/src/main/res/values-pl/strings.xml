@@ -857,9 +857,6 @@
     <string name="reader_volume_line">Tom %1$s</string>
     <string name="reader_volume_read">Tom %1$s · przeczytany</string>
     <string name="reader_volume_none">Rozdziały</string>
-    <string name="reader_page_plate">Strona %1$d</string>
-    <string name="reader_image_plate">Obraz %1$,d</string>
-    <string name="reader_image_loading">Wczytywanie obrazu %1$,d</string>
     <string name="reader_opening_finding">Wyszukiwanie: źródło</string>
     <string name="reader_failed_choose">Wybierz źródło</string>
     <string name="reader_settings_search">Szukaj w ustawieniach</string>
@@ -2584,6 +2581,9 @@
     <string name="player_subs_bg_box">Tło</string>
     <string name="player_subs_more">Więcej w Ustawieniach…</string>
     <string name="reader_page_loading">Wczytywanie strony %1$d</string>
+    <string name="reader_page_plate">Strona %1$d</string>
+    <string name="reader_image_plate">Obraz %1$d</string>
+    <string name="reader_image_loading">Wczytywanie obrazu %1$d</string>
     <string name="reader_page_failed">Nie udało się wczytać strony %1$d</string>
     <string name="reader_try_again">Spróbuj ponownie</string>
     <string name="reader_close">Zamknij</string>
