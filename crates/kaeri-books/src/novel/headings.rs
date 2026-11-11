@@ -157,20 +157,46 @@ fn words_of(n: Node<'_, '_>) -> String {
     xml::trimmed_text(n).unwrap_or_default()
 }
 
-/// What a heading says, for comparing: its letters and digits in lower case, without a leading
-/// "Chapter 12" or "Ch. 12".
+/// What a heading says, for comparing: its words in lower case, without a leading "Chapter 12"
+/// or "Ch. 12", and with a chapter word dropped before any other number, so "Arc 2, Chapter 7"
+/// and "Arc 2: 7" say the same.
 fn key(words: &str) -> String {
-    let plain: String =
-        words.chars().filter(|c| c.is_alphanumeric()).flat_map(char::to_lowercase).collect();
-    for word in ["chapter", "ch"] {
-        if let Some(rest) = plain.strip_prefix(word) {
-            let after = rest.trim_start_matches(|c: char| c.is_ascii_digit());
-            if after.len() < rest.len() && !after.is_empty() {
-                return after.to_owned();
+    const CHAPTER: [&str; 3] = ["chapter", "chap", "ch"];
+    let number = |t: &str| !t.is_empty() && t.chars().all(|c| c.is_ascii_digit());
+    // A chapter word run into its number, as in "Chapter12", is the number.
+    let digits = |t: &str| {
+        CHAPTER
+            .iter()
+            .find_map(|w| t.strip_prefix(w).filter(|rest| number(rest)).map(str::to_owned))
+    };
+    let lower: String = words.chars().flat_map(char::to_lowercase).collect();
+    let tokens: Vec<&str> =
+        lower.split(|c: char| !c.is_alphanumeric()).filter(|t| !t.is_empty()).collect();
+    let mut out: Vec<String> = Vec::with_capacity(tokens.len());
+    let mut i = 0;
+    while i < tokens.len() {
+        let t = tokens[i];
+        let next_number = tokens.get(i + 1).is_some_and(|n| number(n));
+        if CHAPTER.contains(&t) && next_number {
+            // The chapter's own number goes too when it leads and words follow it.
+            if out.is_empty() && i + 2 < tokens.len() {
+                i += 2;
+            } else {
+                i += 1;
             }
+            continue;
         }
+        if let Some(n) = digits(t) {
+            if !(out.is_empty() && i + 1 < tokens.len()) {
+                out.push(n);
+            }
+            i += 1;
+            continue;
+        }
+        out.push(t.to_owned());
+        i += 1;
     }
-    plain
+    out.concat()
 }
 
 /// Where an element's start tag's name ends: an attribute goes in there.
@@ -197,6 +223,25 @@ mod tests {
             out,
             "<div><h2>Chapter 3: The Orchard Gate</h2> <h4 hidden=\"hidden\">Chapter 3: the orchard gate</h4><p><i>Notes</i></p><p>The gate stood open.</p></div>"
         );
+    }
+
+    #[test]
+    fn a_title_that_names_the_chapter_in_its_middle_is_a_repeat() {
+        // The list's wording and the source's own heading: one says "Chapter" before the
+        // number, the other does not.
+        let out = heading_once(
+            "<h2>Arc 2 \u{2013} 7: The Salt Road Turns</h2><h3>Arc 2 \u{2013} Chapter 7: The Salt Road Turns</h3><p>Text.</p>",
+            &none,
+        );
+        assert!(out.contains("<h3 hidden=\"hidden\">Arc 2"), "{out}");
+        let out = heading_once(
+            "<h2>Arc 2, Ch. 7 The Salt Road Turns</h2><p><b>Arc 2 7 The Salt Road Turns</b></p><p>Text.</p>",
+            &none,
+        );
+        assert!(out.contains("<p hidden=\"hidden\">"), "{out}");
+        // A word that only ends in "ch" before a number is a word.
+        let src = "<h2>Arc 2: Each 7 Roads</h2><h3>Arc 2: Ea 7 Roads</h3><p>Text.</p>";
+        assert_eq!(heading_once(src, &none), src);
     }
 
     #[test]
