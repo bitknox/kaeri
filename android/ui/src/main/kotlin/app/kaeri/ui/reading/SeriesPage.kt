@@ -209,6 +209,8 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
     val coverKey = readerCoverKey("series", work)
 
     Scaffold(
+        // The page grows out of the tile it was opened from and shrinks back into it, as a show's does.
+        modifier = Modifier.fillMaxSize().sharedWork(Shared.Page, work, ground = MaterialTheme.colorScheme.surface),
         containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
             val choosing = chosen
