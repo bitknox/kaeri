@@ -279,7 +279,7 @@ fn wrap(title: &str, body: &str, lang: Option<&str>) -> String {
 }
 
 /// The inside of a `<body>` in a fragment that carries a whole document.
-fn body_of(fragment: &str) -> Option<&str> {
+pub(super) fn body_of(fragment: &str) -> Option<&str> {
     let lower = fragment.to_ascii_lowercase();
     let open = lower.find("<body")?;
     let start = open + lower[open..].find('>')? + 1;

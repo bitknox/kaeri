@@ -32,7 +32,7 @@ use kaeri_plugin_store::{
     manifest,
     protocol::{
         self as wire, EndReason, Index, IndexEntry, InviteKind, InviteRequest, NO_END_DATE,
-        OpenState, PendingInvite, RESERVED_IDS, Role, host_set,
+        OpenState, PendingInvite, RESERVED_IDS, Role, SETUP_OWNER_NAME, host_set,
     },
 };
 use kaeri_track::secret::TokenStore;
@@ -384,7 +384,10 @@ impl Stores {
             host: kaeri_model::stores::host(&invite.base),
             fingerprint: invite.key.fingerprint(),
             already_joined: previous.is_some(),
-            owners: index.as_ref().map(|index| index.owners.clone()).unwrap_or_default(),
+            owners: index
+                .as_ref()
+                .map(|index| run_by(&index.owners, info.contact.as_deref()))
+                .unwrap_or_default(),
             plugins: index
                 .as_ref()
                 .map(|index| plugin_rows(&state, &id, index, &self.plugin_dir, self.reading))
@@ -1044,6 +1047,23 @@ fn until(expires_at: i64) -> Option<i64> {
     (expires_at < NO_END_DATE).then_some(expires_at)
 }
 
+/// Who runs a store, for "Run by …": its owners from its signed list, the longest-standing first.
+/// An owner who kept the name the store's setup gave them is named by the store's `contact` when
+/// there is one, and left out otherwise, so the line falls back to the store's host.
+fn run_by(owners: &[String], contact: Option<&str>) -> Vec<String> {
+    let contact = contact.map(str::trim).filter(|contact| !contact.is_empty());
+    let mut names: Vec<String> = Vec::new();
+    for owner in owners.iter().map(|owner| owner.trim()) {
+        let name = if owner == SETUP_OWNER_NAME { contact } else { Some(owner) };
+        if let Some(name) = name.filter(|name| !name.is_empty())
+            && !names.iter().any(|known| known == name)
+        {
+            names.push(name.to_owned());
+        }
+    }
+    names
+}
+
 /// The most owners an error names before it stops: "Ask Alex, Sam or Kim for a new one".
 const OWNERS_NAMED: usize = 3;
 
@@ -1058,7 +1078,7 @@ fn refused(error: ClientError, store: &str) -> Refused {
     let named: Vec<&str> = owners
         .iter()
         .map(|name| name.trim())
-        .filter(|name| !name.is_empty())
+        .filter(|name| !name.is_empty() && *name != SETUP_OWNER_NAME)
         .take(OWNERS_NAMED)
         .collect();
     let owners = match named.as_slice() {
@@ -1134,7 +1154,11 @@ pub fn rows(
                 .as_ref()
                 .map(|index| plugin_rows(state, &joined.id, index, plugin_dir, reading))
                 .unwrap_or_default(),
-            owners: joined.index.as_ref().map(|index| index.owners.clone()).unwrap_or_default(),
+            owners: joined
+                .index
+                .as_ref()
+                .map(|index| run_by(&index.owners, None))
+                .unwrap_or_default(),
             open: joined.index.as_ref().is_some_and(|index| index.open),
             anonymous: joined.anonymous,
         })
@@ -1231,6 +1255,27 @@ mod tests {
         local::Installed,
         protocol::{Member, PROTOCOL},
     };
+
+    #[test]
+    fn run_by_names_the_setup_owner_by_the_stores_contact_or_not_at_all() {
+        let names =
+            |owners: &[&str]| owners.iter().map(|o| (*o).to_owned()).collect::<Vec<_>>();
+        let contact = Some(" owner@store.example ");
+        assert_eq!(run_by(&names(&["Owner"]), contact), ["owner@store.example"]);
+        assert!(run_by(&names(&["Owner"]), None).is_empty(), "the host stands alone");
+        assert!(run_by(&names(&["Owner"]), Some("  ")).is_empty());
+        assert_eq!(
+            run_by(&names(&["Owner", "Ren"]), None),
+            ["Ren"],
+            "an owner who chose a name keeps it"
+        );
+        assert_eq!(run_by(&names(&["Ren", " ", "Sora"]), contact), ["Ren", "Sora"]);
+        assert_eq!(
+            run_by(&names(&["owner@store.example", "Owner"]), contact),
+            ["owner@store.example"],
+            "named once"
+        );
+    }
 
     fn entry(id: &str, version: &str) -> IndexEntry {
         IndexEntry {

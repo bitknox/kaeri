@@ -217,6 +217,11 @@ impl Feed {
         self.pages.lock().is_ok_and(|p| p.iter().all(|p| matches!(p, FeedPage::Landed(_))))
     }
 
+    /// No page is still on its way: each landed or failed.
+    pub fn settled(&self) -> bool {
+        self.pages.lock().is_ok_and(|p| p.iter().all(|p| !matches!(p, FeedPage::Coming)))
+    }
+
     /// Fetch a failed page again, answering on `out` once it lands. `false` when it had not
     /// failed.
     pub fn retry(&self, index: usize, out: &Outbox) -> bool {
@@ -244,6 +249,29 @@ impl Feed {
         {
             *slot = page;
         }
+    }
+}
+
+#[cfg(test)]
+impl Feed {
+    /// A feed of `pages` as they stand, that nothing fetches: for tests.
+    pub(crate) fn standing(chapter: ChapterId, dir: PathBuf, pages: Vec<FeedPage>) -> Self {
+        let (again, _) = mpsc::unbounded_channel();
+        let (wanted, _) = mpsc::unbounded_channel();
+        Self {
+            chapter,
+            dir,
+            pages: Mutex::new(pages),
+            credits: Vec::new(),
+            parts: None,
+            again,
+            wanted,
+        }
+    }
+
+    /// Page `index` landed or failed, as the fetcher would say.
+    pub(crate) fn put(&self, index: usize, page: FeedPage) {
+        self.set(index, page);
     }
 }
 
@@ -613,7 +641,7 @@ async fn within(
 /// Write a page's bytes into `dir` as `name`, with the type they are. The write runs to its
 /// end even when the fetch waiting on it stops, and a page written after the session closed
 /// goes with its folder.
-async fn write(dir: &Path, name: &str, bytes: Vec<u8>, gone: &Gone) -> FeedPage {
+pub(crate) async fn write(dir: &Path, name: &str, bytes: Vec<u8>, gone: &Gone) -> FeedPage {
     let Some(ext) = page_extension(&bytes) else {
         return FeedPage::Failed(ReadingFailure::Unsupported { extension: "page".into() });
     };

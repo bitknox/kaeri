@@ -1187,17 +1187,19 @@ reader-row-volume-swap = Swap the volume keys
 # @max 30
 eink-sheet-screen = This screen
 
-# Row in the e-ink reader's settings: a full refresh on every page with a picture.
+# Row in the e-ink reader's settings: a full refresh on every page with a picture. Off by default,
+# so the device's own settings decide how the screen clears.
 # @only android
 # @max 40
 eink-row-refresh-image = Full refresh on picture pages
 
-# Row in the e-ink reader's settings: how often text pages get a full refresh.
+# Row in the e-ink reader's settings: how often text pages get a full refresh, or Off, the default.
 # @only android
 # @max 36
 eink-row-refresh-text = Full refresh on text pages
 
-# Row in the e-ink reader's settings: how often lists get a full refresh as they page.
+# Row in the e-ink reader's settings: how often lists get a full refresh as they page, or Off, the
+# default.
 # @only android
 # @max 36
 eink-row-refresh-list = Full refresh on lists
@@ -1211,22 +1213,46 @@ eink-refresh-every = { $count ->
    *[other] Every { $count } pages
  }
 
-# Row in the e-ink reader's settings on a colour screen with speed modes: which mode pages use.
+# Row in the e-ink reader's settings: which of the screen's own update modes pages are drawn in,
+# shown only where the app can set them. Its choices are the device's setting and the modes below,
+# or Standard, Fast and Best quality on a colour screen with speed modes.
 # @only android
 # @max 30
-eink-row-screen-speed = Screen speed
+eink-row-screen-mode = Screen mode
 
-# Choice of Screen speed: the screen's usual mode.
+# Choice of Screen mode, and its default: the app leaves the update mode to the device's own
+# settings for this app.
+# @only android
+# @max 28
+eink-mode-device = The { -device }'s setting
+
+# Choice of Screen mode: the screen's sharpest grey mode. HD is the name e-readers give this mode.
+# @only android
+# @max 16
+eink-mode-hd = HD
+
+# Choice of Screen mode: the screen's mode with the least ghosting on text pages. Regal is the name
+# e-readers give this mode; keep it as the device shows it.
+# @only android
+# @max 16
+eink-mode-regal = Regal
+
+# Choice of Screen mode: quicker updates in fewer greys, with a little ghosting.
+# @only android
+# @max 16
+eink-mode-balanced = Balanced
+
+# Choice of Screen mode on a colour screen with speed modes: the screen's usual mode.
 # @only android
 # @max 16
 eink-speed-standard = Standard
 
-# Choice of Screen speed: quicker updates with more ghosting.
+# Choice of Screen mode: quicker updates with more ghosting.
 # @only android
 # @max 16
 eink-speed-fast = Fast
 
-# Choice of Screen speed: the slowest and cleanest updates.
+# Choice of Screen mode on a colour screen with speed modes: the slowest and cleanest updates.
 # @only android
 # @max 16
 eink-speed-best = Best quality
@@ -1261,6 +1287,18 @@ eink-step-down = Less
 # @only android
 # @max 30
 eink-step-up = More
+
+# Button before a list setting's value in the e-ink reader's settings, such as Screen mode: picks
+# the choice before. Read out by screen readers.
+# @only android
+# @max 30
+eink-step-previous = Previous choice
+
+# Button after a list setting's value in the e-ink reader's settings, such as Screen mode: picks
+# the choice after. Read out by screen readers.
+# @only android
+# @max 30
+eink-step-next = Next choice
 
 # Marks the chapter open in the reader on the e-ink contents page.
 # @only android

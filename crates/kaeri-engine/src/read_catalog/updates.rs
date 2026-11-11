@@ -230,12 +230,7 @@ pub fn check(kit: &Kit, ask: Ask, tx: &Outbox) {
         flag.store(false, Ordering::Release);
         load(&kit, ask, &tx);
         if checked.queued > 0 {
-            let lent = Lent {
-                sources: kit.sources.clone(),
-                plugins: kit.plugins.clone(),
-                clock: kit.clock.clone(),
-                tx: tx.clone(),
-            };
+            let lent = Lent::of_kit(&kit, &tx);
             kit.sources.downloads.publish(&kit.store, &tx);
             kit.sources.downloads.start(&lent);
         }

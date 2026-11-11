@@ -94,7 +94,10 @@ reader-volume = Band { $volume }
 reader-chapter-in-progress = Seite { $page } von { $total }
 reader-chapter-read = Gelesen
 reader-chapter-new = neu
-reader-chapter-pages = { $pages } Seiten
+reader-chapter-pages = { $pages ->
+    [one] 1 Seite
+   *[other] { $pages } Seiten
+ }
 reader-offline-line = Offline. Heruntergeladene Kapitel öffnen sich trotzdem.
 reader-menu-go = Gehe zu
 reader-menu-next-page = Nächste Seite

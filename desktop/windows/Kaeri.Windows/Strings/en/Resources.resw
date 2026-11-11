@@ -8354,6 +8354,18 @@
     <value>Swipe to keep reading</value>
     <comment>Line on the page between chapters, near its buttons: one more swipe opens the next chapter.</comment>
   </data>
+  <data name="ReaderEndSkipTo" xml:space="preserve">
+    <value>Skip to chapter {chapter}</value>
+    <comment>Button beside Continue on the page between chapters, shown only when the next chapter is an extra (such as 16.5 between 16 and 17). It opens the chapter named, passing over the extras before it. The chapter is its number, such as 17.</comment>
+  </data>
+  <data name="ReaderEndSkipHint" xml:space="preserve">
+    <value>Chapter {chapter} stays unread.</value>
+    <comment>What a screen reader adds after "Skip to chapter 17": the extra it passes over stays unread in the chapter list. The chapter is the extra's number, such as 16.5.</comment>
+  </data>
+  <data name="ReaderEndSkipHintExtras" xml:space="preserve">
+    <value>The extras before it stay unread.</value>
+    <comment>What a screen reader adds after "Skip to chapter 17" when it passes over more than one extra, or an extra with no number (such as an omake): those chapters stay unread in the chapter list.</comment>
+  </data>
   <data name="ReaderDividerImages_one" xml:space="preserve">
     <value>One image</value>
     <comment>The next episode's length on the divider inside a strip.</comment>
@@ -8861,6 +8873,10 @@
   <data name="SeriesTrackerChapters_other" xml:space="preserve">
     <value>{n} chapters</value>
     <comment>A tracker's progress in chapters, total unknown.</comment>
+  </data>
+  <data name="SeriesTrackerNotStarted" xml:space="preserve">
+    <value>Not started</value>
+    <comment>A tracker's progress when the person has read none of the series yet, in place of "0 chapters".</comment>
   </data>
   <data name="SeriesTrackerWithVolume" xml:space="preserve">
     <value>{chapters} · volume {volume}</value>
@@ -10211,6 +10227,10 @@
   <data name="SettingsDeleteAfterReadingNote" xml:space="preserve">
     <value>Bookmarked chapters are kept</value>
     <comment>Line under Delete chapters after reading.</comment>
+  </data>
+  <data name="SettingsShowVolumesNote" xml:space="preserve">
+    <value>Grouped when most chapters have a volume</value>
+    <comment>Line under Show volumes: the list is grouped only when most chapters have a volume.</comment>
   </data>
   <data name="SettingsChapterNotificationsNote" xml:space="preserve">
     <value>Series on your Reading list</value>
@@ -11760,6 +11780,10 @@
     <value>Delete chapters after reading</value>
     <comment>Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.</comment>
   </data>
+  <data name="SettingsShowVolumes" xml:space="preserve">
+    <value>Show volumes</value>
+    <comment>Row: group a series' chapters under volume headings. Off by default.</comment>
+  </data>
   <data name="SettingsSeriesChoicesFollow" xml:space="preserve">
     <value>Series settings follow you</value>
     <comment>Row: whether a series' reader mode, direction and colour follow you to your other devices.</comment>
@@ -12043,6 +12067,14 @@
   <data name="AccountsChangesWaiting_other" xml:space="preserve">
     <value>{count} changes waiting to sync</value>
     <comment>Line under a signed-in account while changes wait to be sent.</comment>
+  </data>
+  <data name="AccountsChangesHeld_one" xml:space="preserve">
+    <value>One change can't sync yet</value>
+    <comment>Line under a signed-in account when nothing else waits but some changes can't go out yet: the { -tracker } has no match for those titles. They go out by themselves once it has one.</comment>
+  </data>
+  <data name="AccountsChangesHeld_other" xml:space="preserve">
+    <value>{count} changes can't sync yet</value>
+    <comment>Line under a signed-in account when nothing else waits but some changes can't go out yet: the { -tracker } has no match for those titles. They go out by themselves once it has one.</comment>
   </data>
   <data name="SettingsQualityHigher" xml:space="preserve">
     <value>Higher</value>

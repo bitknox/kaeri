@@ -146,15 +146,77 @@ struct FixturesLaunchTests {
         #expect(watching == .watchingMedia(media: "/m.mp4"))
     }
 
-    @Test func aFixturesLaunchNeverStartsOnTheSharedDirectories() {
-        let (launch, temporary) = EngineLaunch.fixtures(platform: .macOs, arguments: ["app"], environment: [:])
-        let root = try! #require(temporary)
+    @Test func aFixturesLaunchNeverStartsOnTheSharedDirectories() throws {
+        let parent = try Self.parent()
+        defer { try? FileManager.default.removeItem(at: parent) }
+        let (launch, temporary) = EngineLaunch.fixtures(
+            platform: .macOs, arguments: ["app"], environment: [:], temporaryParent: parent
+        )
+        let root = try #require(temporary)
         #expect(launch.home == .override(root: root))
-        #expect(root.path.hasPrefix(FileManager.default.temporaryDirectory.path))
+        #expect(root.path.hasPrefix(parent.path))
         let (overridden, none) = EngineLaunch.fixtures(
             platform: .macOs, arguments: ["app"], environment: [EngineHome.overrideVariable: "/tmp/shots"]
         )
         #expect(none == nil)
         #expect(overridden.home.data.path == "/tmp/shots/data")
+    }
+
+    /// A killed Fixtures app never removes its home at quit, so the next launch removes the
+    /// homes whose owner is gone, and keeps those of apps still running.
+    @Test func aLaunchRemovesTheHomesKilledAppsLeftAndKeepsLiveOnes() throws {
+        let files = FileManager.default
+        let parent = try Self.parent()
+        defer { try? files.removeItem(at: parent) }
+        func home(_ name: String, owner: pid_t?, age: TimeInterval = 0) throws -> URL {
+            let home = parent.appending(path: "kaeri-fixtures-\(name)", directoryHint: .isDirectory)
+            try files.createDirectory(at: home.appending(path: "data"), withIntermediateDirectories: true)
+            try Data(repeating: 1, count: 1024).write(to: home.appending(path: "data/kaeri.db"))
+            if let owner { try Data("\(owner)\n".utf8).write(to: home.appending(path: ".owner")) }
+            try files.setAttributes([.modificationDate: Date().addingTimeInterval(-age)], ofItemAtPath: home.path)
+            return home
+        }
+        // A process that ran and is gone, as a killed app is.
+        let gone = Process()
+        gone.executableURL = URL(filePath: "/usr/bin/true")
+        try gone.run()
+        gone.waitUntilExit()
+        let killed = try home("killed", owner: gone.processIdentifier)
+        let running = try home("running", owner: ProcessInfo.processInfo.processIdentifier, age: 86_400)
+        let launchd = try home("launchd", owner: 1, age: 86_400)
+        let oldOwnerless = try home("old", owner: nil, age: 2 * 60 * 60)
+        let newOwnerless = try home("new", owner: nil)
+        let unrelated = parent.appending(path: "elsewhere", directoryHint: .isDirectory)
+        try files.createDirectory(at: unrelated, withIntermediateDirectories: true)
+
+        let (_, temporary) = EngineLaunch.fixtures(
+            platform: .macOs, arguments: ["app"], environment: [:], temporaryParent: parent
+        )
+        let made = try #require(temporary)
+
+        #expect(!files.fileExists(atPath: killed.path))
+        #expect(!files.fileExists(atPath: oldOwnerless.path))
+        #expect(files.fileExists(atPath: running.path))
+        #expect(files.fileExists(atPath: launchd.path))
+        #expect(files.fileExists(atPath: newOwnerless.path))
+        #expect(files.fileExists(atPath: unrelated.path))
+        let owner = try String(contentsOf: made.appending(path: ".owner"), encoding: .utf8)
+        #expect(owner.trimmingCharacters(in: .whitespacesAndNewlines)
+            == "\(ProcessInfo.processInfo.processIdentifier)")
+
+        // The next launch keeps the home this process owns.
+        let (_, next) = EngineLaunch.fixtures(
+            platform: .macOs, arguments: ["app"], environment: [:], temporaryParent: parent
+        )
+        #expect(files.fileExists(atPath: made.path))
+        #expect(try #require(next) != made)
+    }
+
+    /// A directory of the test's own to make Fixtures homes in, never the shared temporary one.
+    static func parent() throws -> URL {
+        let parent = FileManager.default.temporaryDirectory
+            .appending(path: "kaeri-store-tests-\(UUID().uuidString)", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: parent, withIntermediateDirectories: true)
+        return parent
     }
 }

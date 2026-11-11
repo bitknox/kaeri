@@ -1702,24 +1702,32 @@
     <string name="reader_row_volume_swap">Swap the volume keys</string>
     <!-- Heading of the e-ink reader's settings sheet over the rows for the e-ink screen itself. -->
     <string name="eink_sheet_screen">This screen</string>
-    <!-- Row in the e-ink reader's settings: a full refresh on every page with a picture. -->
+    <!-- Row in the e-ink reader's settings: a full refresh on every page with a picture. Off by default, so the device's own settings decide how the screen clears. -->
     <string name="eink_row_refresh_image">Full refresh on picture pages</string>
-    <!-- Row in the e-ink reader's settings: how often text pages get a full refresh. -->
+    <!-- Row in the e-ink reader's settings: how often text pages get a full refresh, or Off, the default. -->
     <string name="eink_row_refresh_text">Full refresh on text pages</string>
-    <!-- Row in the e-ink reader's settings: how often lists get a full refresh as they page. -->
+    <!-- Row in the e-ink reader's settings: how often lists get a full refresh as they page, or Off, the default. -->
     <string name="eink_row_refresh_list">Full refresh on lists</string>
     <!-- Value of a full refresh row in the e-ink reader's settings: once every so many pages. -->
     <plurals name="eink_refresh_every">
         <item quantity="one">Every page</item>
         <item quantity="other">Every %1$,d pages</item>
     </plurals>
-    <!-- Row in the e-ink reader's settings on a colour screen with speed modes: which mode pages use. -->
-    <string name="eink_row_screen_speed">Screen speed</string>
-    <!-- Choice of Screen speed: the screen's usual mode. -->
+    <!-- Row in the e-ink reader's settings: which of the screen's own update modes pages are drawn in, shown only where the app can set them. Its choices are the device's setting and the modes below, or Standard, Fast and Best quality on a colour screen with speed modes. -->
+    <string name="eink_row_screen_mode">Screen mode</string>
+    <!-- Choice of Screen mode, and its default: the app leaves the update mode to the device's own settings for this app. -->
+    <string name="eink_mode_device">The device\'s setting</string>
+    <!-- Choice of Screen mode: the screen's sharpest grey mode. HD is the name e-readers give this mode. -->
+    <string name="eink_mode_hd">HD</string>
+    <!-- Choice of Screen mode: the screen's mode with the least ghosting on text pages. Regal is the name e-readers give this mode; keep it as the device shows it. -->
+    <string name="eink_mode_regal">Regal</string>
+    <!-- Choice of Screen mode: quicker updates in fewer greys, with a little ghosting. -->
+    <string name="eink_mode_balanced">Balanced</string>
+    <!-- Choice of Screen mode on a colour screen with speed modes: the screen's usual mode. -->
     <string name="eink_speed_standard">Standard</string>
-    <!-- Choice of Screen speed: quicker updates with more ghosting. -->
+    <!-- Choice of Screen mode: quicker updates with more ghosting. -->
     <string name="eink_speed_fast">Fast</string>
-    <!-- Choice of Screen speed: the slowest and cleanest updates. -->
+    <!-- Choice of Screen mode on a colour screen with speed modes: the slowest and cleanest updates. -->
     <string name="eink_speed_best">Best quality</string>
     <!-- Row in the e-ink reader's settings on a colour screen: softens the rainbow pattern in colour pictures. -->
     <string name="eink_row_rainbow">Soften colour patterns</string>
@@ -1733,6 +1741,10 @@
     <string name="eink_step_down">Less</string>
     <!-- Button that makes a setting in the e-ink reader's settings bigger. -->
     <string name="eink_step_up">More</string>
+    <!-- Button before a list setting's value in the e-ink reader's settings, such as Screen mode: picks the choice before. Read out by screen readers. -->
+    <string name="eink_step_previous">Previous choice</string>
+    <!-- Button after a list setting's value in the e-ink reader's settings, such as Screen mode: picks the choice after. Read out by screen readers. -->
+    <string name="eink_step_next">Next choice</string>
     <!-- Marks the chapter open in the reader on the e-ink contents page. -->
     <string name="eink_contents_reading">Reading</string>
     <!-- What TalkBack says the line of skipped credit pages does, after "Double-tap to": an imperative, as Android's click labels are. -->
@@ -4948,6 +4960,12 @@
     <string name="reader_divider_facts_source">%1$s · from %2$s</string>
     <!-- Line on the page between chapters, near its buttons: one more swipe opens the next chapter. -->
     <string name="reader_end_swipe">Swipe to keep reading</string>
+    <!-- Button beside Continue on the page between chapters, shown only when the next chapter is an extra (such as 16.5 between 16 and 17). It opens the chapter named, passing over the extras before it. The chapter is its number, such as 17. -->
+    <string name="reader_end_skip_to">Skip to chapter %1$s</string>
+    <!-- What a screen reader adds after "Skip to chapter 17": the extra it passes over stays unread in the chapter list. The chapter is the extra's number, such as 16.5. -->
+    <string name="reader_end_skip_hint">Chapter %1$s stays unread.</string>
+    <!-- What a screen reader adds after "Skip to chapter 17" when it passes over more than one extra, or an extra with no number (such as an omake): those chapters stay unread in the chapter list. -->
+    <string name="reader_end_skip_hint_extras">The extras before it stay unread.</string>
     <!-- The next episode's length on the divider inside a strip. -->
     <plurals name="reader_divider_images">
         <item quantity="one">One image</item>
@@ -5214,6 +5232,8 @@
         <item quantity="one">1 chapter</item>
         <item quantity="other">%1$,d chapters</item>
     </plurals>
+    <!-- A tracker's progress when the person has read none of the series yet, in place of "0 chapters". -->
+    <string name="series_tracker_not_started">Not started</string>
     <!-- A tracker's progress in chapters, then the volume. -->
     <string name="series_tracker_with_volume">%1$s · volume %2$d</string>
     <!-- A light novel tracker's progress in volumes. -->
@@ -5917,6 +5937,8 @@
     <string name="settings_keep_chapters_ready_note">The next chapters of series on your Reading list</string>
     <!-- Line under Delete chapters after reading. -->
     <string name="settings_delete_after_reading_note">Bookmarked chapters are kept</string>
+    <!-- Line under Show volumes: the list is grouped only when most chapters have a volume. -->
+    <string name="settings_show_volumes_note">Grouped when most chapters have a volume</string>
     <!-- Line under New chapters. -->
     <string name="settings_chapter_notifications_note">Series on your Reading list</string>
     <!-- Line under Downloads finished. -->
@@ -6707,6 +6729,8 @@
     <string name="settings_keep_chapters_ready">Keep next chapters ready</string>
     <!-- Row: delete a downloaded chapter once it is read. Bookmarked chapters stay. -->
     <string name="settings_delete_after_reading">Delete chapters after reading</string>
+    <!-- Row: group a series' chapters under volume headings. Off by default. -->
+    <string name="settings_show_volumes">Show volumes</string>
     <!-- Row: whether a series' reader mode, direction and colour follow you to your other devices. -->
     <string name="settings_series_choices_follow">Series settings follow you</string>
     <!-- Row in Downloads: which series' new chapters download by themselves. -->
@@ -6849,6 +6873,11 @@
     <plurals name="accounts_changes_waiting">
         <item quantity="one">One change waiting to sync</item>
         <item quantity="other">%1$,d changes waiting to sync</item>
+    </plurals>
+    <!-- Line under a signed-in account when nothing else waits but some changes can't go out yet: the { -tracker } has no match for those titles. They go out by themselves once it has one. -->
+    <plurals name="accounts_changes_held">
+        <item quantity="one">One change can\'t sync yet</item>
+        <item quantity="other">%1$,d changes can\'t sync yet</item>
     </plurals>
     <!-- Choice for the download quality: larger files with more detail. -->
     <string name="settings_quality_higher">Higher</string>

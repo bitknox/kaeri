@@ -213,6 +213,9 @@ pub struct Session {
     peeked: bool,
     /// The next chapter from a source, being fetched while this one is read.
     ahead: Option<novel::Ahead>,
+    /// The next chapter's first page for the end page, followed from the download queue's fetch
+    /// of that chapter.
+    first_page: Option<novel::FirstPage>,
     /// The place before the person's own jump, while Back to page is offered.
     back_to: Option<ReadPlace>,
     /// The place before another device moved the reader, for Go back.
@@ -394,7 +397,7 @@ impl Reader {
             if s.novel.is_some() {
                 s.restyle(cx);
             } else if settings::relays(key) {
-                let page = s.page().unwrap_or(0);
+                let page = s.page_now();
                 s.lay_out(cx, &pages, page);
             }
         }
@@ -588,7 +591,7 @@ impl Reader {
             }));
             return;
         };
-        let marks = store.read_marks(work.as_str()).unwrap_or_default();
+        let marks = crate::read_catalog::chapters::read_marks(store, work.as_str());
         let row = chapters[index].row(&marks);
         // A chapter not on this device is asked of its source, which the line names.
         let wait = (chapters[index].format == novel::SOURCE)
@@ -654,6 +657,7 @@ impl Reader {
             kept_of: of,
             peeked: false,
             ahead: None,
+            first_page: None,
             back_to: None,
             moved_back: None,
             read_fired: false,
@@ -690,10 +694,10 @@ impl Reader {
         let Some(s) = self.session.as_mut().filter(|s| s.id == session) else { return };
         match wake {
             ReaderWake::Laid => s.laid_out(cx, &pages),
-            // Every page of a source's chapter landed and they lay out otherwise than guessed:
-            // laid out again at the same page, as a change of screen is.
+            // Every page of a source's chapter landed or failed and they lay out otherwise than
+            // guessed: laid out again at the same page, as a change of screen is.
             ReaderWake::Relay(n) if n == s.generation && s.novel.is_none() => {
-                let page = s.page().unwrap_or(0);
+                let page = s.page_now();
                 s.lay_out(cx, &pages, page);
             }
             ReaderWake::Relay(_) => {}
@@ -760,11 +764,10 @@ fn downloading(cx: &Cx<'_>, work: &WorkId, chapter: &ChapterId) -> bool {
             State::Queued => !setup.hold,
             _ => false,
         },
-        Ok(None) if setup.keep_ready && !setup.hold => cx
-            .services
-            .store
-            .read_marks(work.as_str())
-            .is_ok_and(|marks| !marks.is_read(chapter.as_str())),
+        Ok(None) if setup.keep_ready && !setup.hold => {
+            !crate::read_catalog::chapters::read_marks(&cx.services.store, work.as_str())
+                .is_read(chapter.as_str())
+        }
         _ => false,
     }
 }
@@ -794,8 +797,10 @@ fn start_of(
         return None;
     }
     let store = &cx.services.store;
-    let kept = store.read_chapters(work.as_str()).unwrap_or_default();
-    let marks = store.read_marks(work.as_str()).unwrap_or_default();
+    // Parts read under their own numbers count for their whole chapter.
+    let folds = crate::read_catalog::chapters::Folds::of_work(store, work.as_str());
+    let marks = folds.marks(store.read_marks(work.as_str()).unwrap_or_default());
+    let kept = folds.places(store.read_chapters(work.as_str()).unwrap_or_default(), &marks);
     let index_of = |id: &ChapterId| chapters.iter().position(|c| &c.id == id);
     // The kept place of an unfinished chapter: its page, and in a long strip how far into that
     // page's image. A strip read partway down its first image is a place too.
@@ -832,6 +837,7 @@ fn start_of(
                         .ok()
                         .flatten()
                         .and_then(|w| w.last_chapter)
+                        .map(|c| folds.whole_of(&c).unwrap_or(c))
                         .and_then(|c| index_of(&ChapterId::new(c)));
                     match last {
                         // Finished: the next chapter, from its start.
@@ -857,7 +863,8 @@ fn start_of(
 impl Session {
     /// What `Opened` says of the open chapter.
     fn view(&self, cx: &Cx<'_>) -> ReaderView {
-        let marks = cx.services.store.read_marks(self.work.as_str()).unwrap_or_default();
+        let marks =
+            crate::read_catalog::chapters::read_marks(&cx.services.store, self.work.as_str());
         ReaderView {
             session: self.id,
             work: self.work.clone(),
@@ -893,6 +900,12 @@ impl Session {
 
     fn page(&self) -> Option<u32> {
         self.place.as_ref().and_then(|p| p.page.or(p.strip.map(|s| s.image)))
+    }
+
+    /// The page a layout again keeps the reader at: the one shown, or until one is, the one the
+    /// chapter opens at. A turned screen or a retry before the first leaf showed keeps the start.
+    fn page_now(&self) -> u32 {
+        self.page().or(self.start.page).unwrap_or(0)
     }
 
     /// The page a leaf starts on, and for a strip cut on e-ink its place in the strip.
@@ -1226,29 +1239,29 @@ impl Session {
             }
             C::Surface { surface, .. } => {
                 self.surface = surface;
-                let page = self.page().unwrap_or(0);
+                let page = self.page_now();
                 self.lay_out(cx, pages, page);
             }
             C::NeedPage { page, .. } => pages.again(self.id, page, cx.tx),
             C::Retry { page: Some(page), .. } => pages.again(self.id, page, cx.tx),
             C::Retry { page: None, .. } => {
-                let page = self.page().unwrap_or(0);
+                let page = self.page_now();
                 self.lay_out(cx, pages, page);
             }
             C::OpenChapter { chapter, .. } => {
                 let Some(index) = self.chapters.iter().position(|c| c.id == chapter) else {
                     return;
                 };
-                if index == self.at + 1 {
+                // Skipping the extras moves on as Continue does; they stay unread.
+                if index == self.at + 1 || Some(index) == self.skip_index() {
                     self.chapter_read(cx, Reached::MovedOn);
                 }
                 // A strip flows into the next chapter in the same scroll, under its marker:
                 // it starts at its first image, never at a place kept from before.
                 let flowing = self.mode == ReaderMode::Strip && index == self.at + 1;
                 let store = &cx.services.store;
-                let page = store
-                    .read_chapters(self.work.as_str())
-                    .unwrap_or_default()
+                let page = crate::read_catalog::chapters::read_state(store, self.work.as_str())
+                    .1
                     .into_iter()
                     .find(|k| k.chapter == chapter.as_str() && !k.read && !flowing)
                     .and_then(|k| k.last_page)
@@ -1283,7 +1296,7 @@ impl Session {
                         c.format = novel::SOURCE.into();
                         c.path = PathBuf::new();
                     }
-                    let page = self.page().unwrap_or(0);
+                    let page = self.page_now();
                     self.lay_out(cx, pages, page);
                 }
             }
@@ -1423,17 +1436,33 @@ impl Session {
         }
     }
 
-    /// Ask the worker for the next chapter's first page, once a chapter. A chapter from a
-    /// source is fetched ahead, and that page is made as it lands.
+    /// Ask the worker for the next chapter's first page, once a chapter. A downloaded chapter's
+    /// is made from its file. A chapter from a source is fetched ahead, and that page is made as
+    /// it lands; one the download queue has is followed, and its first page made from the
+    /// download as it lands.
     fn peek(&mut self, cx: &Cx<'_>, pages: &Pages) {
         if std::mem::replace(&mut self.peeked, true) {
             return;
         }
-        self.follow_download(cx, self.at + 1);
-        let Some(next) = self.chapters.get(self.at + 1) else { return };
+        let index = self.at + 1;
+        self.follow_download(cx, index);
+        let Some(next) = self.chapters.get(index) else { return };
         if next.format == novel::SOURCE {
-            // Its first page comes with the chapter fetched ahead.
-            self.read_ahead(cx, pages);
+            let fetching = self.ahead.as_ref().is_some_and(|a| a.chapter == next.id);
+            if !fetching && downloading(cx, &self.work, &next.id) {
+                let first = novel::follow_first_page(
+                    cx,
+                    pages,
+                    self.id,
+                    &self.work,
+                    (index, next),
+                    &self.gone,
+                );
+                self.first_page = Some(first);
+            } else {
+                // Its first page comes with the chapter fetched ahead.
+                self.read_ahead(cx, pages);
+            }
             return;
         }
         if novel::prepares(next) {
@@ -1454,14 +1483,32 @@ impl Session {
         if std::mem::replace(&mut self.end_page_said, true) {
             return;
         }
-        let marks = cx.services.store.read_marks(self.work.as_str()).unwrap_or_default();
+        let marks =
+            crate::read_catalog::chapters::read_marks(&cx.services.store, self.work.as_str());
         let following = self.chapters.get(self.at + 1);
         let next = following.map(|c| c.row(&marks));
         let next_source = following
             .and_then(|c| c.source.as_deref())
             .map(|id| cx.services.book_sources.source_name(id));
         let why_none = next.is_none().then(|| self.why_no_next(cx));
-        cx.send(ReaderEvent::EndPage { session: self.id, next, why_none, next_source });
+        let skip = self.skip_index();
+        let skip_to = skip.map(|i| self.chapters[i].row(&marks));
+        let extras = skip.map_or(0, |i| i - (self.at + 1)) as u32;
+        cx.send(ReaderEvent::EndPage {
+            session: self.id,
+            next,
+            why_none,
+            next_source,
+            skip_to,
+            extras,
+        });
+    }
+
+    /// Where the end page's skip goes: past the extras that follow the open chapter, to the
+    /// next whole chapter.
+    fn skip_index(&self) -> Option<usize> {
+        let ids: Vec<ChapterId> = self.chapters.iter().map(|c| c.id.clone()).collect();
+        super::extras::skip_to(&ids, self.at + 1)
     }
 
     /// Why the end page has no next chapter: the series ended with this one, which offers
@@ -1607,6 +1654,7 @@ impl Session {
         self.kept_of = None;
         // A chapter fetched ahead and not the one opening stops fetching.
         self.ahead = self.ahead.take().filter(|a| a.chapter == self.chapters[index].id);
+        self.first_page = None;
         self.start = place(&self.work, &self.chapters[index].id, Some(page));
         self.lay_out(cx, pages, page);
     }
@@ -1832,6 +1880,9 @@ mod tests {
     use crate::{host::QuietHost, outbox::Envelope};
 
     mod back_to;
+    mod cross_parts;
+    mod eink_strip;
+    mod extras;
     mod groups;
     mod hints;
     mod leaving;
@@ -2147,6 +2198,17 @@ mod tests {
                 _ => None,
             })
             .collect()
+    }
+
+    #[tokio::test]
+    async fn a_screen_turned_before_the_first_leaf_showed_keeps_the_start_page() {
+        let mut h = harness(Store::open_in_memory().unwrap());
+        h.open(OpenAt::Page { page: 2 }).await;
+        // The phone turns while the reader opens: the new shape comes before any leaf showed.
+        let session = h.session();
+        let surface = ReaderSurface { width_px: 900, height_px: 600, ..surface() };
+        h.send(ReaderCommand::Surface { session, surface });
+        assert_eq!(h.reader.session.as_ref().unwrap().start.page, Some(2));
     }
 
     /// The engine lends each piece of work a sender and holds none between them, so the page

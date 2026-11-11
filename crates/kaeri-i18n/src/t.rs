@@ -6087,6 +6087,11 @@ pub fn accounts_row_queued_held(queued: i64, held: i64) -> String {
     text("accounts-row-queued-held", &[("queued", Arg::Int(queued)), ("held", Arg::Int(held))])
 }
 
+/// Part of an account's overlay row: changes held back until the title is matched to the { -tracker }'s own id, with nothing else queued.
+pub fn accounts_row_held(count: i64) -> String {
+    text("accounts-row-held", &[("count", Arg::Int(count))])
+}
+
 /// Action beside a sync difference in the overlay: Enter keeps the value on this device.
 pub fn accounts_conflict_keep_mine() -> String {
     text("accounts-conflict-keep-mine", &[])
@@ -14417,6 +14422,21 @@ pub fn reader_end_swipe() -> String {
     text("reader-end-swipe", &[])
 }
 
+/// Button beside Continue on the page between chapters, shown only when the next chapter is an extra (such as 16.5 between 16 and 17). It opens the chapter named, passing over the extras before it. The chapter is its number, such as 17.
+pub fn reader_end_skip_to(chapter: &str) -> String {
+    text("reader-end-skip-to", &[("chapter", Arg::Text(chapter))])
+}
+
+/// What a screen reader adds after "Skip to chapter 17": the extra it passes over stays unread in the chapter list. The chapter is the extra's number, such as 16.5.
+pub fn reader_end_skip_hint(chapter: &str) -> String {
+    text("reader-end-skip-hint", &[("chapter", Arg::Text(chapter))])
+}
+
+/// What a screen reader adds after "Skip to chapter 17" when it passes over more than one extra, or an extra with no number (such as an omake): those chapters stay unread in the chapter list.
+pub fn reader_end_skip_hint_extras() -> String {
+    text("reader-end-skip-hint-extras", &[])
+}
+
 /// The next episode's length on the divider inside a strip.
 pub fn reader_divider_images(count: i64) -> String {
     text("reader-divider-images", &[("count", Arg::Int(count))])
@@ -14990,6 +15010,11 @@ pub fn series_tracker_chapters_of(n: i64, total: i64) -> String {
 /// A tracker's progress in chapters, total unknown.
 pub fn series_tracker_chapters(n: i64) -> String {
     text("series-tracker-chapters", &[("n", Arg::Int(n))])
+}
+
+/// A tracker's progress when the person has read none of the series yet, in place of "0 chapters".
+pub fn series_tracker_not_started() -> String {
+    text("series-tracker-not-started", &[])
 }
 
 /// A tracker's progress in chapters, then the volume.
@@ -16593,6 +16618,11 @@ pub fn settings_keep_chapters_ready_note() -> String {
 /// Line under Delete chapters after reading.
 pub fn settings_delete_after_reading_note() -> String {
     text("settings-delete-after-reading-note", &[])
+}
+
+/// Line under Show volumes: the list is grouped only when most chapters have a volume.
+pub fn settings_show_volumes_note() -> String {
+    text("settings-show-volumes-note", &[])
 }
 
 /// Line under New chapters.
@@ -18450,6 +18480,11 @@ pub fn settings_delete_after_reading() -> String {
     text("settings-delete-after-reading", &[])
 }
 
+/// Row: group a series' chapters under volume headings. Off by default.
+pub fn settings_show_volumes() -> String {
+    text("settings-show-volumes", &[])
+}
+
 /// Row: whether a series' reader mode, direction and colour follow you to your other devices.
 pub fn settings_series_choices_follow() -> String {
     text("settings-series-choices-follow", &[])
@@ -18798,6 +18833,11 @@ pub fn widget_resume_dubbed_label(episode: i64, title: &str) -> String {
 /// Line under a signed-in account while changes wait to be sent.
 pub fn accounts_changes_waiting(count: i64) -> String {
     text("accounts-changes-waiting", &[("count", Arg::Int(count))])
+}
+
+/// Line under a signed-in account when nothing else waits but some changes can't go out yet: the { -tracker } has no match for those titles. They go out by themselves once it has one.
+pub fn accounts_changes_held(count: i64) -> String {
+    text("accounts-changes-held", &[("count", Arg::Int(count))])
 }
 
 /// Choice for the download quality: larger files with more detail.

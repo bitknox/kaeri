@@ -81,8 +81,11 @@ pub fn page(ctx: &Rc<Ctx>, work: &WorkId) -> adw::NavigationPage {
         move || {
             let listed = listed.borrow();
             let Some((volumes, failure)) = listed.as_ref() else { return };
-            let novel = shown.borrow().as_ref().is_some_and(|v| v.medium == Medium::Novel);
-            let order = Order { newest: newest.get(), novel };
+            // Volumes only for a novel whose rows sit in volumes; a novel listed by chapter
+            // says Chapters, as its rows do.
+            let by_volume = shown.borrow().as_ref().is_some_and(|v| v.medium == Medium::Novel)
+                && volumes.iter().any(|group| group.volume.is_some());
+            let order = Order { newest: newest.get(), by_volume };
             list.show(volumes, failure.as_deref(), order);
         }
     });
@@ -266,6 +269,30 @@ fn status_menu(view: &SeriesView) -> gio::Menu {
     menu
 }
 
+/// The volumes Download offers. A flat list, drawn with no volume headings, still says each
+/// chapter's volume: its rows by volume, in reading order, and none for rows without one.
+fn download_volumes(volumes: &[VolumeGroup]) -> Vec<VolumeGroup> {
+    let [list] = volumes else { return volumes.to_vec() };
+    if !list.flat {
+        return volumes.to_vec();
+    }
+    let mut groups: Vec<VolumeGroup> = Vec::new();
+    for row in &list.chapters {
+        let Some(volume) = row.volume.as_ref().filter(|v| !v.is_empty()) else { continue };
+        match groups.iter_mut().find(|g| g.volume.as_ref() == Some(volume)) {
+            Some(group) => group.chapters.push(row.clone()),
+            None => groups.push(VolumeGroup {
+                volume: Some(volume.clone()),
+                title: None,
+                chapters: vec![row.clone()],
+                all_read: false,
+                flat: false,
+            }),
+        }
+    }
+    groups
+}
+
 /// The next 5 or 10 unread, every unread chapter, a volume, and deleting the downloads.
 fn download_menu(work: &WorkId, volumes: &[VolumeGroup]) -> gio::Menu {
     let pick = |name: &str| Some((work.0.clone(), name.to_owned()).to_variant());
@@ -282,7 +309,7 @@ fn download_menu(work: &WorkId, volumes: &[VolumeGroup]) -> gio::Menu {
     let menu = gio::Menu::new();
     menu.append_section(None, &first);
     let by_volume = gio::Menu::new();
-    for group in volumes {
+    for group in &download_volumes(volumes) {
         let Some(volume) = &group.volume else { continue };
         let missing = group.chapters.iter().filter(|c| c.download.is_none()).count();
         if missing == 0 {
@@ -447,17 +474,62 @@ fn draw_head(
     top.append(&text);
     head.append(&top);
     if let Some(synopsis) = &view.synopsis {
-        let body = gtk::Label::new(Some(synopsis));
-        body.set_wrap(true);
-        body.set_xalign(0.0);
-        body.set_selectable(true);
-        head.append(&body);
+        head.append(&synopsis_more(synopsis));
     }
     if !view.genres.is_empty() {
         head.append(&widgets::haze(&view.genres.join(" \u{b7} "), "caption"));
     }
     top
 }
+
+/// The synopsis in four lines, then "More" under it, as on a show's page, only where the text is
+/// cut. More opens the rest in place: the place holds its height while the label lets go of its
+/// lines, then eases to the new height on the standard spring, so what is under it moves with
+/// it. The label's text is whole for a screen reader either way, and focus moves to the text.
+fn synopsis_more(synopsis: &str) -> gtk::Widget {
+    let column = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    let body = gtk::Label::new(Some(synopsis));
+    body.set_wrap(true);
+    body.set_xalign(0.0);
+    body.set_selectable(true);
+    body.set_lines(SYNOPSIS_LINES);
+    body.set_ellipsize(gtk::pango::EllipsizeMode::End);
+    column.append(&body);
+    let more = gtk::Button::with_label(&t::action_more());
+    more.add_css_class("flat");
+    more.set_halign(gtk::Align::Start);
+    more.set_visible(false);
+    column.append(&more);
+    let place = crate::squeeze::Squeeze::new(&column, gtk::Orientation::Vertical, 0);
+    more.connect_clicked({
+        let (body, place) = (body.clone(), place.downgrade());
+        move |more| {
+            let Some(place) = place.upgrade() else { return };
+            place.hold();
+            body.set_lines(-1);
+            body.set_ellipsize(gtk::pango::EllipsizeMode::None);
+            more.set_visible(false);
+            place.release();
+            // Focus stays on the text, without selecting it, now More has gone.
+            body.grab_focus();
+            body.select_region(0, 0);
+        }
+    });
+    body.add_tick_callback({
+        let more = more.clone();
+        move |label, _| {
+            if label.width() == 0 {
+                return glib::ControlFlow::Continue;
+            }
+            more.set_visible(label.layout().is_ellipsized());
+            glib::ControlFlow::Break
+        }
+    });
+    place.upcast()
+}
+
+/// How many lines of the synopsis show before More.
+const SYNOPSIS_LINES: i32 = 4;
 
 pub(super) fn state_line(chapter: &ChapterRow) -> String {
     // The engine's words say it all: the state, when, and what is downloaded.
@@ -502,13 +574,16 @@ type Listed = Option<(Vec<VolumeGroup>, Option<String>)>;
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(super) struct Order {
     pub newest: bool,
-    pub novel: bool,
+    pub by_volume: bool,
 }
 
 /// The heading with the order menu at its end, as on the board.
 pub(super) fn chapters_head(order: Order) -> gtk::Box {
-    let heading =
-        widgets::heading(&if order.novel { t::series_volumes() } else { t::series_chapters() });
+    let heading = widgets::heading(&if order.by_volume {
+        t::series_volumes()
+    } else {
+        t::series_chapters()
+    });
     heading.set_hexpand(true);
     let shown = if order.newest { t::series_newest_first() } else { t::series_oldest_first() };
     let label = gtk::Box::new(gtk::Orientation::Horizontal, 4);
@@ -841,5 +916,53 @@ mod tests {
             assert!(normal <= 326, "the head needs {normal} px at the normal text size");
             assert!(large <= 326, "the head needs {large} px at twice the size");
         });
+    }
+
+    /// A flat list offers the volumes its rows say, in reading order, leaving out rows with none.
+    #[test]
+    fn a_flat_list_downloads_by_the_volumes_its_rows_say() {
+        use kaeri_model::reading::{ChapterReadState, ChapterRow, VolumeGroup};
+        let row = |n: u32, volume: Option<&str>| ChapterRow {
+            id: ChapterId(n.to_string()),
+            label: format!("Chapter {n}"), // i18n-skip
+            state: ChapterReadState::Unread,
+            number: Some(n.to_string()),
+            title: None,
+            volume: volume.map(str::to_owned),
+            published: None,
+            pages: None,
+            new_chapter: false,
+            download: None,
+            versions: 1,
+            bookmarked: false,
+            version_label: None,
+            read_at: None,
+            line: Vec::new(),
+            gone_from_source: false,
+            parts: 1,
+            missing_parts: Vec::new(),
+            part_groups: Vec::new(),
+            other_group: false,
+            group_language: None,
+            other_source: None,
+        };
+        let flat = VolumeGroup {
+            volume: None,
+            title: None,
+            chapters: vec![
+                row(1, Some("1")),
+                row(2, Some("1")),
+                row(3, Some("2")),
+                row(4, None),
+            ],
+            all_read: false,
+            flat: true,
+        };
+        let groups = super::download_volumes(std::slice::from_ref(&flat));
+        let shape: Vec<_> =
+            groups.iter().map(|g| (g.volume.clone(), g.chapters.len(), g.flat)).collect();
+        assert_eq!(shape, [(Some("1".into()), 2, false), (Some("2".into()), 1, false)]);
+        let grouped = VolumeGroup { flat: false, volume: Some("1".into()), ..flat };
+        assert_eq!(super::download_volumes(std::slice::from_ref(&grouped)).len(), 1);
     }
 }

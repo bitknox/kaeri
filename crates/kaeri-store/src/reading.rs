@@ -105,6 +105,12 @@ impl ReadMarks {
             *stamp > unread && covers(*milli, volume.as_deref(), chapter)
         })
     }
+
+    /// Count `chapter` as read in this answer only, nothing kept: a chapter whose parts were
+    /// read under their own numbers, as the engine folds them at read time.
+    pub fn count_read(&mut self, chapter: impl Into<String>) {
+        self.read.insert(chapter.into());
+    }
 }
 
 /// A series' own reader choice.

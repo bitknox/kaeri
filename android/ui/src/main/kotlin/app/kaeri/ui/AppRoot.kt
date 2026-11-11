@@ -81,7 +81,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavType
-import androidx.navigation.compose.DefaultNavTransitions
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -279,13 +278,32 @@ private fun readPageAway(to: Int): ExitTransition =
 /*
  * The same axis while a back swipe seeks it, linear so the pages follow the finger: the page
  * underneath stays whole and the leaving page fades over it across the whole swipe, so a swipe
- * held part way shows both and letting go finishes the crossfade.
+ * held part way shows both and letting go finishes the crossfade. Every page that does not fly
+ * back into what it was opened from leaves this way on a swipe.
  */
-private fun readPageBackUncovered(from: Int): EnterTransition =
+private fun pageBackUncovered(from: Int): EnterTransition =
     slideInHorizontally(tween(300, easing = LinearEasing)) { from }
 
-private fun readPageBackAway(to: Int): ExitTransition =
+private fun pageBackAway(to: Int): ExitTransition =
     slideOutHorizontally(tween(300, easing = LinearEasing)) { to } + fadeOut(tween(300, easing = LinearEasing))
+
+/** With Remove animations on, a swipe moves nothing: the leaving page fades over the one underneath. */
+private fun pageBackFaded(): ExitTransition = fadeOut(tween(300, easing = LinearEasing))
+
+/**
+ * Whether the entry flies back into what it was opened from as it leaves: a title page into its
+ * cover, a series page into its cover, the player into its banner. Its shared elements do the
+ * moving, over the page underneath, which stays whole; one opened from nowhere they can fly to
+ * fades over it instead (the page's flight bounds, unmatched, fade out).
+ */
+private fun NavBackStackEntry.fliesBack(player: PlayerSlot?): Boolean {
+    val route = destination.route ?: return false
+    if (route == PLAYER_ROUTE) return player?.title != null
+    return route.endsWith("/title/{id}") || route.endsWith("/series/{work}") // i18n-skip
+}
+
+/** The way a back swipe from [edge] moves a page: away from the edge the finger came from. */
+private fun swipeSign(edge: Int): Int = if (edge == androidx.activity.BackEventCompat.EDGE_RIGHT) -1 else 1
 
 /**
  * The frame. A switch between destinations fades the page through on the quick spring (T6); a
@@ -561,15 +579,23 @@ private fun AppRootFrame(
                                     else -> ExitTransition.KeepUntilTransitionsFinished
                                 }
                             },
-                            // Navigation's own back swipe scales the page to 0.7 and drops it at the end;
-                            // a reading page keeps its axis instead. Other pages keep Navigation's.
+                            // A back swipe seeks the app's own Back, never Navigation's default, which
+                            // scales the page to 0.7 and drops it at the end. A page that flew in flies
+                            // back as far as the finger goes (its shared elements seek); any other page
+                            // slides along the axis and fades over the page underneath, which stays whole.
                             predictivePopEnterTransition = { edge ->
-                                if (initialState.isReadPage && !eink) readPageBackUncovered(-axis)
-                                else DefaultNavTransitions.predictivePopEnterTransition(this, edge)
+                                when {
+                                    eink || removed || initialState.fliesBack(player) -> EnterTransition.None
+                                    else -> pageBackUncovered(-axis * swipeSign(edge))
+                                }
                             },
                             predictivePopExitTransition = { edge ->
-                                if (initialState.isReadPage && !eink) readPageBackAway(axis)
-                                else DefaultNavTransitions.predictivePopExitTransition(this, edge)
+                                when {
+                                    eink -> ExitTransition.None
+                                    initialState.fliesBack(player) -> ExitTransition.KeepUntilTransitionsFinished
+                                    removed -> pageBackFaded()
+                                    else -> pageBackAway(axis * swipeSign(edge))
+                                }
                             },
                         ) {
                             if (player != null) {

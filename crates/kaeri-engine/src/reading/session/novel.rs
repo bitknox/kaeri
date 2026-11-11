@@ -234,6 +234,117 @@ pub(super) fn fetch_ahead(
     Ahead { chapter: id, feed, task }
 }
 
+/// The next chapter's first page for the end page, while the download queue has the chapter.
+/// Dropped, it stops.
+#[derive(Debug)]
+pub(super) struct FirstPage {
+    task: tokio::task::JoinHandle<()>,
+}
+
+impl Drop for FirstPage {
+    fn drop(&mut self) {
+        self.task.abort();
+    }
+}
+
+/// How often the end page looks at the download it waits on.
+const FIRST_PAGE_LOOK: std::time::Duration = std::time::Duration::from_millis(300);
+/// How long a queued download may wait to start before the source is asked for the first page.
+const FIRST_PAGE_QUEUED: std::time::Duration = std::time::Duration::from_secs(5);
+
+/// Make the next chapter's first page for the end page from its download: from the page the
+/// download keeps first, as soon as it lands, or from the finished file. The source is not asked
+/// for the chapter a second time. Only a download still queued after [`FIRST_PAGE_QUEUED`], or
+/// one that failed, has the source asked for the first page alone.
+pub(super) fn follow_first_page(
+    cx: &Cx<'_>,
+    pages: &Pages,
+    session: u64,
+    work: &WorkId,
+    next: (usize, &ShelfChapter),
+    gone: &crate::reading::feed::Gone,
+) -> FirstPage {
+    use kaeri_store::book_downloads::BookDownloadState as State;
+    let (index, next) = next;
+    let sources = cx.services.book_sources.clone();
+    let store = cx.services.store.clone();
+    let clock = cx.services.clock.clone();
+    let (work, chapter) = (work.clone(), next.id.clone());
+    let peek_dir =
+        streamed_dir(&cx.services.paths.cache_dir, session).join(format!("first-{index}"));
+    let (worker, out, gone) = (pages.clone(), cx.tx.clone(), gone.clone());
+    let task = tokio::spawn(async move {
+        let peek = |path: PathBuf| {
+            if !gone.swept() {
+                worker.peek(PeekJob {
+                    session,
+                    chapter: chapter.clone(),
+                    path,
+                    out: out.clone(),
+                });
+            }
+        };
+        let started = tokio::time::Instant::now();
+        let bytes = loop {
+            let row = store.book_download(work.as_str(), chapter.as_str()).ok().flatten();
+            match row.as_ref().map(|r| r.state) {
+                Some(State::Done) => {
+                    if let Some(path) = row.and_then(|r| r.path).map(PathBuf::from)
+                        && path.exists()
+                    {
+                        peek(path);
+                        return;
+                    }
+                }
+                Some(State::Downloading) => {
+                    let kept =
+                        sources.downloads.first_kept_page(work.as_str(), chapter.as_str());
+                    if let Some(bytes) = kept.and_then(|p| std::fs::read(p).ok()) {
+                        break bytes;
+                    }
+                }
+                Some(State::Queued) | None if started.elapsed() < FIRST_PAGE_QUEUED => {}
+                // Waiting behind other downloads, or failed: the first page alone.
+                _ => match first_from_source(&sources, &work, &chapter, clock.now()).await {
+                    Some(bytes) => break bytes,
+                    None => return,
+                },
+            }
+            tokio::time::sleep(FIRST_PAGE_LOOK).await;
+        };
+        if gone.is() || tokio::fs::create_dir_all(&peek_dir).await.is_err() {
+            return;
+        }
+        let written = crate::reading::feed::write(&peek_dir, "00001", bytes, &gone).await;
+        if matches!(written, FeedPage::Landed(_)) {
+            peek(peek_dir);
+        }
+    });
+    FirstPage { task }
+}
+
+/// Ask the source for a chapter's first page and nothing more.
+async fn first_from_source(
+    sources: &crate::read_sources::BookSources,
+    work: &WorkId,
+    chapter: &ChapterId,
+    now: i64,
+) -> Option<Vec<u8>> {
+    let fetched = async {
+        let Some(mut opened) = sources.pictures(work, chapter, now).await? else {
+            return Ok(None);
+        };
+        sources.page(&mut opened, 0, now).await.map(Some)
+    };
+    match fetched.await {
+        Ok(bytes) => bytes,
+        Err(failure) => {
+            tracing::debug!(?failure, "the next chapter's first page was not fetched");
+            None
+        }
+    }
+}
+
 /// The format of a chapter read from a source rather than a file on the shelf.
 pub(crate) const SOURCE: &str = "source";
 
@@ -249,6 +360,34 @@ fn wake(tx: &Outbox, session: u64, wake: ReaderWake) -> impl Fn() + Send + 'stat
     let tx = tx.clone();
     move || {
         let _ = tx.internal(Internal::Reader { session, wake });
+    }
+}
+
+/// Where an open off the actor puts what it came to, once. An open that ends without putting
+/// anything, by a panic on the way, puts a failure as it unwinds, so the reader shows the chapter
+/// failed instead of waiting on it.
+struct PutOnce<F: FnOnce(Prepared)>(Option<F>);
+
+impl<F: FnOnce(Prepared)> PutOnce<F> {
+    fn put(mut self, prepared: Prepared) {
+        if let Some(put) = self.0.take() {
+            put(prepared);
+        }
+    }
+
+    /// Nothing to put: the reader closed before the open began.
+    fn forget(mut self) {
+        self.0 = None;
+    }
+}
+
+impl<F: FnOnce(Prepared)> Drop for PutOnce<F> {
+    fn drop(&mut self) {
+        if let Some(put) = self.0.take() {
+            put(Prepared::Failed(ReadingFailure::Other {
+                reason: "the chapter stopped opening".into(),
+            }));
+        }
     }
 }
 
@@ -484,17 +623,17 @@ impl Session {
         let opening = self.opening(cx);
         let done = wake(cx.tx, self.id, ReaderWake::Prepared(generation));
         // Opens can finish out of order: one for an older layout never replaces a newer one.
-        let put = move |p: Prepared| {
+        let put = PutOnce(Some(move |p: Prepared| {
             if let Ok(mut s) = slot.lock()
                 && s.as_ref().is_none_or(|(g, _)| *g < generation)
             {
                 *s = Some((generation, p));
             }
             done();
-        };
+        }));
         if chapter.format != SOURCE {
             let path = chapter.path.clone();
-            std::thread::spawn(move || put(open_file(&path, opening)));
+            std::thread::spawn(move || put.put(open_file(&path, opening)));
             return;
         }
         let sources = cx.services.book_sources.clone();
@@ -514,12 +653,13 @@ impl Session {
         tokio::spawn(async move {
             // Closed before its turn came: the source is not asked for nothing.
             if gone.is() {
+                put.forget();
                 return;
             }
             if let Some(ahead) = ahead
                 && let Some(feed) = ahead.feed().await
             {
-                put(Prepared::Feed(feed));
+                put.put(Prepared::Feed(feed));
                 return;
             }
             let prepared = match sources.open(&work, &id, None, now).await {
@@ -560,7 +700,13 @@ impl Session {
                         // few seconds at most: what comes later fills a box kept for it.
                         let pictures =
                             sources.reader_pictures(&opened.source_id, &mut xhtml).await;
-                        let title = opened.chapter.title.clone().unwrap_or(label);
+                        let xhtml = served::heading_once(&xhtml, &opened.chapter);
+                        let title = opened
+                            .chapter
+                            .title
+                            .as_deref()
+                            .map(|t| served::cleaned_title(&opened.chapter, t))
+                            .unwrap_or(label);
                         let identity = format!("{}/{}", opened.source_id, opened.chapter.id);
                         let lang = opened.chapter.language.clone();
                         Prepared::Novel(Box::new(served::open_text(
@@ -582,7 +728,7 @@ impl Session {
                     ChapterContent::Images(_) => Prepared::Failed(ReadingFailure::NotFound),
                 },
             };
-            put(prepared);
+            put.put(prepared);
         });
     }
 

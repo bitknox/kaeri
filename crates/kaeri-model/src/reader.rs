@@ -123,6 +123,12 @@ pub struct LeafPart {
     /// strip sizes each image with it, so nothing moves when the files land.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub ratio: Option<f32>,
+    /// For a strip cut on e-ink, where in the strip the cut starts: the image, by its page in
+    /// the chapter, and the offset inside it. A place the engine sends (the start, Go to, a
+    /// place another device reached) names images, so the front end finds the cut with this:
+    /// the last one starting at or above the place, as the engine does.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub strip: Option<StripPos>,
 }
 
 /// Which half of a split spread a part shows, as it lies on the page.
@@ -267,7 +273,9 @@ pub enum ReaderSettingKey {
     RefreshImage,
     RefreshText,
     RefreshList,
-    GallerySpeed,
+    /// How the e-ink panel updates pages: the device's setting or one of its modes, or Gallery 3's
+    /// colour speed.
+    ScreenMode,
     RainbowFilter,
     Saturation,
     Contrast,
@@ -337,7 +345,7 @@ impl ReaderSettingKey {
         Self::RefreshImage,
         Self::RefreshText,
         Self::RefreshList,
-        Self::GallerySpeed,
+        Self::ScreenMode,
         Self::RainbowFilter,
         Self::Saturation,
         Self::Contrast,
@@ -377,7 +385,7 @@ impl ReaderSettingKey {
             Self::RefreshImage => "refresh_image",
             Self::RefreshText => "refresh_text",
             Self::RefreshList => "refresh_list",
-            Self::GallerySpeed => "gallery_speed",
+            Self::ScreenMode => "screen_mode",
             Self::RainbowFilter => "rainbow_filter",
             Self::Saturation => "saturation",
             Self::Contrast => "contrast",
@@ -588,7 +596,7 @@ pub struct ReaderSurface {
     /// Room for two pages side by side.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub two_pages: bool,
-    /// The look is dark: on e-ink a full refresh comes every fourth text page.
+    /// The look is dark: on e-ink a text refresh the person turned on comes sooner.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub dark: bool,
 }
@@ -957,6 +965,8 @@ impl ReaderCommand {
     }
 }
 
+// The end page carries two chapter rows. Not boxed: the bindings carry records by value.
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
 pub enum ReaderEvent {
@@ -1025,6 +1035,16 @@ pub enum ReaderEvent {
         /// folder.
         #[cfg_attr(feature = "ffi", uniffi(default))]
         next_source: Option<String>,
+        /// When `next` is an extra (16.5 beside 16 and 17, or one with no number): the first
+        /// chapter after it that is not one, for "Skip to chapter 17" beside Continue. `None`
+        /// for a next chapter that is not an extra. Skipped extras stay unread.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        skip_to: Option<ChapterRow>,
+        /// How many extras the skip passes over, from `next` on: 0 with no skip. With more than
+        /// one, or an extra with no number, the hint says the extras stay unread rather than
+        /// naming the chapter.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        extras: u32,
     },
     /// The next chapter's first page, made while this chapter is read, for the end page and a
     /// strip's divider.

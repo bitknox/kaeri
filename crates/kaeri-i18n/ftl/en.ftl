@@ -3878,6 +3878,9 @@ accounts-row-queued =
 # Part of an account's overlay row: changes waiting to be sent, and some of them held back until the title is matched to the { -tracker }'s own id.
 accounts-row-queued-held = { $queued } queued, { $held } waiting for a match
 
+# Part of an account's overlay row: changes held back until the title is matched to the { -tracker }'s own id, with nothing else queued.
+accounts-row-held = { $count } waiting for a match
+
 # Action beside a sync difference in the overlay: Enter keeps the value on this device.
 accounts-conflict-keep-mine = Use local
 
@@ -9022,6 +9025,15 @@ reader-divider-facts-source = { $facts } · from { $source }
 # Line on the page between chapters, near its buttons: one more swipe opens the next chapter.
 reader-end-swipe = Swipe to keep reading
 
+# Button beside Continue on the page between chapters, shown only when the next chapter is an extra (such as 16.5 between 16 and 17). It opens the chapter named, passing over the extras before it. The chapter is its number, such as 17.
+reader-end-skip-to = Skip to chapter { $chapter }
+
+# What a screen reader adds after "Skip to chapter 17": the extra it passes over stays unread in the chapter list. The chapter is the extra's number, such as 16.5.
+reader-end-skip-hint = Chapter { $chapter } stays unread.
+
+# What a screen reader adds after "Skip to chapter 17" when it passes over more than one extra, or an extra with no number (such as an omake): those chapters stay unread in the chapter list.
+reader-end-skip-hint-extras = The extras before it stay unread.
+
 # The next episode's length on the divider inside a strip.
 reader-divider-images =
     { $count ->
@@ -9414,6 +9426,9 @@ series-tracker-chapters =
         [one] 1 chapter
        *[other] { $n } chapters
     }
+
+# A tracker's progress when the person has read none of the series yet, in place of "0 chapters".
+series-tracker-not-started = Not started
 
 # A tracker's progress in chapters, then the volume.
 series-tracker-with-volume = { $chapters } · volume { $volume }
@@ -10443,6 +10458,9 @@ settings-keep-chapters-ready-note = The next chapters of series on your Reading 
 
 # Line under Delete chapters after reading.
 settings-delete-after-reading-note = Bookmarked chapters are kept
+
+# Line under Show volumes: the list is grouped only when most chapters have a volume.
+settings-show-volumes-note = Grouped when most chapters have a volume
 
 # Line under New chapters.
 settings-chapter-notifications-note = Series on your Reading list
@@ -11621,6 +11639,9 @@ settings-keep-chapters-ready = Keep next chapters ready
 # Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.
 settings-delete-after-reading = Delete chapters after reading
 
+# Row: group a series' chapters under volume headings. Off by default.
+settings-show-volumes = Show volumes
+
 # Row: whether a series' reader mode, direction and colour follow you to your other devices.
 settings-series-choices-follow = Series settings follow you
 
@@ -11833,6 +11854,13 @@ accounts-changes-waiting =
     { $count ->
         [one] One change waiting to sync
        *[other] { $count } changes waiting to sync
+    }
+
+# Line under a signed-in account when nothing else waits but some changes can't go out yet: the { -tracker } has no match for those titles. They go out by themselves once it has one.
+accounts-changes-held =
+    { $count ->
+        [one] One change can't sync yet
+       *[other] { $count } changes can't sync yet
     }
 
 # Choice for the download quality: larger files with more detail.

@@ -357,7 +357,7 @@ fn token_pair(
 
 /// Renew an OAuth 2.0 access token with its refresh token, at the flow's token endpoint: Simkl's
 /// last a week. Simkl answers with the same refresh token, its window extended, and the old access
-/// token stops working at once.
+/// token stops working at once. Trakt renews at [`TRAKT_RENEW`] and replaces both.
 pub async fn refresh_token(
     http: &reqwest::Client,
     endpoints: &DeviceEndpoints,
@@ -390,15 +390,46 @@ fn refresh_request(
     client_secret: Option<&str>,
     refresh: &str,
 ) -> reqwest::RequestBuilder {
+    let secret = client_secret.map(str::trim).filter(|s| !s.is_empty());
+    if endpoints.flow == DeviceFlow::Trakt {
+        // Trakt takes JSON, and names the device flow's out-of-band redirect.
+        let mut body = serde_json::json!({
+            "grant_type": "refresh_token",
+            "refresh_token": refresh.trim(),
+            "client_id": client_id.trim(),
+            "redirect_uri": TRAKT_REDIRECT,
+        });
+        if let Some(secret) = secret {
+            body["client_secret"] = serde_json::json!(secret);
+        }
+        return named(http.post(endpoints.token_url).json(&body), endpoints);
+    }
     let mut form = vec![
         ("grant_type", "refresh_token"),
         ("client_id", client_id.trim()),
         ("refresh_token", refresh.trim()),
     ];
-    if let Some(secret) = client_secret.filter(|s| !s.trim().is_empty()) {
-        form.push(("client_secret", secret.trim()));
+    if let Some(secret) = secret {
+        form.push(("client_secret", secret));
     }
     named(http.post(endpoints.token_url).form(&form), endpoints)
+}
+
+impl DeviceError {
+    /// A failed renewal as a tracker reports it. Only the service saying no is a rejected
+    /// credential, the one thing a new sign-in mends. A renewal that never reached it, or an
+    /// answer that could not be read, is tried again with the rest of the queue.
+    pub(crate) fn renewal(self, tracker: &str) -> kaeri_core::Error {
+        match self {
+            Self::Network { .. } | Self::Decode { .. } => kaeri_core::Error::Tracker {
+                tracker: tracker.into(),
+                message: self.to_string(),
+            },
+            Self::Refused { .. } | Self::Expired { .. } | Self::Denied { .. } => {
+                kaeri_core::Error::Auth(self.to_string())
+            }
+        }
+    }
 }
 
 /// The service's refusal in its own words: `error_description`, or `message`, or the error's code,
@@ -449,6 +480,13 @@ pub const TRAKT: DeviceEndpoints = DeviceEndpoints {
     fallback: None,
     query: &[],
 };
+
+/// Where a Trakt sign-in is renewed: its token endpoint, which the device flow does not use.
+pub const TRAKT_RENEW: DeviceEndpoints =
+    DeviceEndpoints { token_url: "https://api.trakt.tv/oauth/token", ..TRAKT };
+
+/// The redirect a Trakt app made for the device flow is registered with.
+const TRAKT_REDIRECT: &str = "urn:ietf:wg:oauth:2.0:oob";
 
 /// Simkl's OAuth 2.0 device flow (AUTH V2), reading and writing the library, with its PIN flow
 /// behind it for an app registered before.
@@ -719,6 +757,38 @@ mod tests {
         let json = serde_json::json!({ "access_token": "simkl_at_B", "expires_in": 604800 });
         let pair = token_pair(&json, &SIMKL, 10).unwrap();
         assert_eq!(pair.expires_at, Some(10 + 604_800));
+    }
+
+    #[tokio::test]
+    async fn a_trakt_renewal_is_json_at_its_token_endpoint() {
+        let http = reqwest::Client::new();
+        let request =
+            refresh_request(&http, &TRAKT_RENEW, "id", Some("shh"), "rt").build().unwrap();
+        assert_eq!(request.url().as_str(), "https://api.trakt.tv/oauth/token");
+        let sent: serde_json::Value = serde_json::from_str(&body(&request)).unwrap();
+        assert_eq!(
+            sent,
+            serde_json::json!({
+                "grant_type": "refresh_token",
+                "refresh_token": "rt",
+                "client_id": "id",
+                "client_secret": "shh",
+                "redirect_uri": "urn:ietf:wg:oauth:2.0:oob",
+            })
+        );
+        // An app with no secret sends none.
+        let request = refresh_request(&http, &TRAKT_RENEW, "id", None, "rt").build().unwrap();
+        let sent: serde_json::Value = serde_json::from_str(&body(&request)).unwrap();
+        assert!(sent.get("client_secret").is_none(), "{sent}");
+    }
+
+    #[test]
+    fn only_a_refusal_is_a_rejected_credential() {
+        let refused =
+            DeviceError::Refused { service: "Trakt", message: "no".into(), error: None };
+        assert!(matches!(refused.renewal("trakt"), kaeri_core::Error::Auth(_)));
+        let offline = DeviceError::Network { service: "Trakt", message: "down".into() };
+        assert!(matches!(offline.renewal("trakt"), kaeri_core::Error::Tracker { .. }));
     }
 
     #[test]

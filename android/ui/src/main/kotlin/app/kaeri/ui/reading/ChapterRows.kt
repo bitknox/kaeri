@@ -10,6 +10,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -53,6 +54,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import app.kaeri.eink.EinkPressIndication
 import app.kaeri.design.Motion
 import app.kaeri.design.ObiSilk
 import app.kaeri.design.SwapFade
@@ -92,9 +94,10 @@ internal object SeriesWords {
     /** "AniList and MangaUpdates": the trackers that follow the series. */
     fun trackers(rows: List<TrackerReadRow>): String = Wording.list(rows.map { tracker(it.tracker) })
 
-    /** "87 of 88 chapters · volume 9", "Volume 5 of 5". */
+    /** "87 of 88 chapters · volume 9", "Volume 5 of 5", or "Not started" while nothing is read. */
     fun progress(context: Context, row: TrackerReadRow, series: SeriesView): String {
         val volumes = row.volumes
+        if (row.chapters == 0u && (volumes ?: 0u) == 0u) return Strings.seriesTrackerNotStarted(context)
         if (series.medium == Medium.NOVEL && volumes != null) {
             return Strings.seriesTrackerVolumes(context, volumes.toInt(), (series.volumesTotal ?: volumes).toInt())
         }
@@ -271,7 +274,10 @@ internal fun ChapterRowItem(
         modifier
             .fillMaxWidth()
             .heightIn(min = 72.dp)
+            // On e-ink the row inverts under the finger, as the board's pressed row does.
             .combinedClickable(
+                interactionSource = null,
+                indication = if (LocalEinkLayout.current != null) EinkPressIndication else LocalIndication.current,
                 onClick = onClick,
                 onLongClickLabel = stringResource(R.string.action_more),
                 onLongClick = if (chosen == null) {
@@ -409,16 +415,44 @@ internal const val CHOOSE_START_COUNT = 10
  */
 internal fun List<VolumeGroup>.chooseStart(): Set<String> {
     val rows = chapterRows()
-    val reading = rows.indexOfLast { it.state is ChapterReadState.InProgress }
-    val from = if (reading >= 0) reading else rows.indexOfLast { it.state is ChapterReadState.Read } + 1
+    val from = rows.placeIndex() ?: 0
     val wanted = { row: ChapterRow -> row.state !is ChapterReadState.Read && row.download == null }
     val next = rows.drop(from).filter(wanted).ifEmpty { rows.filter(wanted) }
     return next.take(CHOOSE_START_COUNT).map { it.id }.toSet()
 }
 
+/** The reader's place in the rows: the last chapter in progress, or the one after the last read one. Null when nothing was read. */
+private fun List<ChapterRow>.placeIndex(): Int? {
+    val reading = indexOfLast { it.state is ChapterReadState.InProgress }
+    if (reading >= 0) return reading
+    val read = indexOfLast { it.state is ChapterReadState.Read }
+    return if (read >= 0) read + 1 else null
+}
+
+/**
+ * The chapter at the reader's place, which Choose chapters opens centred on. Null when nothing was
+ * read or every chapter was: the list then opens where it is.
+ */
+internal fun List<VolumeGroup>.readerPlace(): String? {
+    val rows = chapterRows()
+    return rows.placeIndex()?.let(rows::getOrNull)?.id
+}
+
 /** All unread, from the bar. */
 internal fun List<VolumeGroup>.allUnread(): Set<String> =
     chapterRows().filter { it.state !is ChapterReadState.Read }.map { it.id }.toSet()
+
+/**
+ * The volumes Download offers. A flat list, drawn with no volume headings, still says each
+ * chapter's volume: its rows by volume, in reading order, and none for rows without one.
+ */
+internal fun List<VolumeGroup>.downloadVolumes(): List<VolumeGroup> {
+    val list = singleOrNull()?.takeIf { it.flat } ?: return this
+    return list.chapters
+        .filter { !it.volume.isNullOrEmpty() }
+        .groupBy { it.volume }
+        .map { (volume, rows) -> VolumeGroup(volume = volume, title = null, chapters = rows, allRead = false) }
+}
 
 /** The chapters downloaded here. */
 internal fun List<VolumeGroup>.downloaded(): List<ChapterRow> = chapterRows().filter { it.download is ChapterDownloadState.Done }

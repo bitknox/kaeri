@@ -17,6 +17,22 @@ use kaeri_i18n::t;
 use kaeri_model::reader::{Leaf, PageEncoding, PageFile, PixelFormat};
 use kaeri_model::reading::{ChapterReadState, ChapterRow, VolumeGroup};
 
+/// How many times one opening moves the list towards its open chapter before it settles for where
+/// the row is.
+const CENTRE_MOVES: u8 = 8;
+
+/// One step of centring the open chapter.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum Centring {
+    /// The row is as near the middle as the list's ends allow, or there is nothing to centre.
+    Done,
+    /// The list moved towards it: the layout this asks for looks again.
+    Moved,
+    /// Not laid out yet: the window or popover is still being mapped, so GTK has not placed the
+    /// row. The next layout looks again.
+    Waiting,
+}
+
 /// A thumbnail's width in the grid, and what it is decoded to: twice that, for a 2x screen.
 const THUMB_WIDTH: i32 = 84;
 const THUMB_PIXELS: u32 = 168;
@@ -60,6 +76,11 @@ pub struct Chapters {
     open_folds: Rc<RefCell<HashSet<usize>>>,
     volumes: RefCell<Option<Vec<VolumeGroup>>>,
     here: RefCell<Option<ChapterId>>,
+    /// The open chapter's row while it is bound, which the list centres on as it opens.
+    here_row: RefCell<glib::WeakRef<gtk::Widget>>,
+    /// The list still has to open on the open chapter: set as the popover fills, done once the
+    /// row sits in the middle.
+    centring: Cell<bool>,
     open_leaf: Cell<usize>,
     files: RefCell<HashMap<u32, PageFile>>,
     /// Thumbnails waiting for their page, by page.
@@ -136,6 +157,8 @@ impl Chapters {
             open_folds: Rc::default(),
             volumes: RefCell::default(),
             here: RefCell::default(),
+            here_row: RefCell::default(),
+            centring: Cell::new(false),
             open_leaf: Cell::new(0),
             files: RefCell::default(),
             waiting: RefCell::default(),
@@ -199,6 +222,9 @@ impl Chapters {
                     Entry::Fold { group, name, line } => this.fold(*group, name, line),
                     other => entry_widget(other),
                 };
+                if matches!(*entry, Entry::Chapter { here: true, .. }) {
+                    this.here_row.replace(widget.downgrade());
+                }
                 item.set_child(Some(&widget));
             }
         });
@@ -212,6 +238,17 @@ impl Chapters {
             move |_, position| {
                 if let Some(this) = this.upgrade() {
                     this.picked(position);
+                }
+            }
+        });
+        // The chapters tab shown: a manga's list opens on its open chapter as the tab does.
+        this.list.connect_map({
+            let this = Rc::downgrade(&this);
+            move |_| {
+                if let Some(this) = this.upgrade()
+                    && this.centring.get()
+                {
+                    this.centre_when_laid_out();
                 }
             }
         });
@@ -263,23 +300,108 @@ impl Chapters {
         self.stack.set_visible_child_name(tab);
         self.open_folds.borrow_mut().clear();
         self.draw_list();
-        // The open page and the open chapter in view.
-        let open = entries.iter().position(|(l, _)| *l == here.open_leaf);
+        // The open page in view before the grid is drawn.
+        if let Some(open) = entries.iter().position(|(l, _)| *l == here.open_leaf) {
+            self.grid.scroll_to(open as u32, gtk::ListScrollFlags::NONE, None);
+        }
+        // The open chapter in the middle of the list before it is drawn, so nothing scrolls:
+        // now when the list shows, else when its tab does.
+        self.centring.set(true);
+        if let Some(here) = self.here_position() {
+            self.list.scroll_to(here, gtk::ListScrollFlags::NONE, None);
+        }
+        if self.list.is_mapped() {
+            self.centre_when_laid_out();
+        }
+    }
+
+    /// Where the open chapter's row is in the list.
+    fn here_position(&self) -> Option<u32> {
+        (0..self.entries.n_items()).find(|&i| {
+            self.entries.item(i).and_downcast::<glib::BoxedAnyObject>().is_some_and(|e| {
+                matches!(*e.borrow::<Entry>(), Entry::Chapter { here: true, .. })
+            })
+        })
+    }
+
+    /// Centre the open chapter once the list is laid out and before the frame is painted: GDK
+    /// lays a frame out again, up to four times, while a layout asks for another, so the frame
+    /// painted has the row in place. A popover's surface maps a few layouts after the widget
+    /// does, and GTK places nothing until then, so those layouts only wait.
+    fn centre_when_laid_out(self: &Rc<Self>) {
+        let Some(clock) = self.list.frame_clock() else { return };
+        let handler: Rc<RefCell<Option<glib::SignalHandlerId>>> = Rc::default();
+        let moves = Cell::new(0u8);
         let this = Rc::downgrade(self);
-        glib::idle_add_local_once(move || {
-            let Some(this) = this.upgrade() else { return };
-            if let Some(open) = open {
-                this.grid.scroll_to(open as u32, gtk::ListScrollFlags::NONE, None);
-            }
-            let here = (0..this.entries.n_items()).find(|&i| {
-                this.entries.item(i).and_downcast::<glib::BoxedAnyObject>().is_some_and(|e| {
-                    matches!(*e.borrow::<Entry>(), Entry::Chapter { here: true, .. })
-                })
-            });
-            if let Some(here) = here {
-                this.list.scroll_to(here, gtk::ListScrollFlags::FOCUS, None);
+        // After GTK's own handler, which allocates the popover and binds the rows.
+        let id = clock.connect_local("layout", true, {
+            let handler = handler.clone();
+            let clock = clock.clone();
+            move |_| {
+                let step = match this.upgrade() {
+                    // Closed before it was laid out: the next opening starts again.
+                    Some(this) if this.list.is_mapped() => this.centre_here(),
+                    _ => Centring::Done,
+                };
+                if step == Centring::Moved {
+                    moves.set(moves.get() + 1);
+                }
+                if (step == Centring::Done || moves.get() >= CENTRE_MOVES)
+                    && let Some(id) = handler.take()
+                {
+                    clock.disconnect(id);
+                }
+                None
             }
         });
+        handler.replace(Some(id));
+        clock.request_phase(gdk::FrameClockPhase::LAYOUT);
+    }
+
+    /// One step of centring the open chapter's row. Once it is as near the middle as the list's
+    /// ends allow, the row takes the focus.
+    fn centre_here(&self) -> Centring {
+        if !self.centring.get() {
+            return Centring::Done;
+        }
+        let Some(here) = self.here_position() else {
+            // Still loading: the chapters coming in look again. Not listed: the list stays at
+            // its top.
+            if self.volumes.borrow().is_some() {
+                self.centring.set(false);
+            }
+            return Centring::Done;
+        };
+        let Some(row) = self.here_row.borrow().upgrade() else {
+            // Not bound yet: bring it into the list and look again on the next layout.
+            self.list.scroll_to(here, gtk::ListScrollFlags::NONE, None);
+            return Centring::Waiting;
+        };
+        let (Some(bounds), Some(adjustment)) =
+            (row.compute_bounds(&self.list), self.list.vadjustment())
+        else {
+            return Centring::Waiting;
+        };
+        let page = adjustment.page_size();
+        // A row GTK has not placed yet has no size, and the scroll position does not say where
+        // it is. A scroll asked for before the list was laid out is dropped, so it is asked
+        // again until the row is in view.
+        if page <= 0.0 || !row.is_mapped() || bounds.height() <= 0.0 {
+            self.list.scroll_to(here, gtk::ListScrollFlags::NONE, None);
+            return Centring::Waiting;
+        }
+        let middle = f64::from(bounds.y() + bounds.height() / 2.0);
+        let to = (adjustment.value() + middle - page / 2.0)
+            .clamp(adjustment.lower(), (adjustment.upper() - page).max(adjustment.lower()));
+        if (to - adjustment.value()).abs() >= 1.0 {
+            adjustment.set_value(to);
+            return Centring::Moved;
+        }
+        self.centring.set(false);
+        // Keyboard focus and the screen reader start on the open chapter; it is in view, so this
+        // moves nothing.
+        self.list.scroll_to(here, gtk::ListScrollFlags::FOCUS, None);
+        Centring::Done
     }
 
     /// Show `tab` for a shot.
@@ -290,10 +412,14 @@ impl Chapters {
     }
 
     /// The series' chapters as the engine last listed them.
-    pub fn set_volumes(&self, volumes: Vec<VolumeGroup>) {
+    pub fn set_volumes(self: &Rc<Self>, volumes: Vec<VolumeGroup>) {
         self.volumes.replace(Some(volumes));
         if self.popover.is_visible() {
             self.draw_list();
+            // Chapters listed after the popover opened: the list opens on the open one now.
+            if self.centring.get() && self.list.is_mapped() {
+                self.centre_when_laid_out();
+            }
         }
     }
 
@@ -301,6 +427,7 @@ impl Chapters {
     pub fn clear(&self) {
         self.volumes.replace(None);
         self.here.replace(None);
+        self.centring.set(false);
         self.files.borrow_mut().clear();
         self.waiting.borrow_mut().clear();
         self.model.splice(0, self.model.n_items(), &[]);
@@ -691,6 +818,7 @@ mod tests {
             rotate: false,
             half: None,
             ratio: None,
+            strip: None,
         };
         Leaf { index, parts: pages.iter().map(|&page| part(page)).collect(), end_page }
     }
@@ -753,5 +881,135 @@ mod tests {
         std::fs::write(&path, [0_u8; 10]).unwrap();
         let file = raw(&path, PixelFormat::Rgba8, 40, 10, 10);
         assert!(thumbnail(&file, 168).is_none());
+    }
+}
+
+#[cfg(test)]
+mod centring {
+    use std::{cell::Cell, rc::Rc};
+
+    use adw::prelude::*;
+    use kaeri_core::books::ChapterId;
+    use kaeri_model::reading::{ChapterReadState, ChapterRow, VolumeGroup};
+
+    use super::{Chapters, Here};
+    use crate::gtk_test::{pump, run};
+
+    fn chapter(n: usize) -> ChapterRow {
+        ChapterRow {
+            id: ChapterId(format!("c{n}")),
+            label: format!("Chapter {n}"), // i18n-skip
+            state: ChapterReadState::Unread,
+            number: Some(n.to_string()),
+            title: None,
+            volume: None,
+            published: None,
+            pages: None,
+            new_chapter: false,
+            download: None,
+            versions: 1,
+            bookmarked: false,
+            version_label: None,
+            read_at: None,
+            line: Vec::new(),
+            gone_from_source: false,
+            parts: 1,
+            missing_parts: Vec::new(),
+            part_groups: Vec::new(),
+            other_group: false,
+            group_language: None,
+            other_source: None,
+        }
+    }
+
+    /// The popover's content opened on chapter `here` of `count`, filled before it shows, as
+    /// the reader fills the popover. Drawn in a window of its own, since a headless X server
+    /// shows no popover. Gives the list's scroll position when the first frame was painted.
+    fn open(count: usize, here: usize) -> (gtk::Window, Rc<Chapters>, Rc<Cell<Option<f64>>>) {
+        let chapters = Chapters::new();
+        chapters.set_volumes(vec![VolumeGroup {
+            volume: None,
+            title: None,
+            chapters: (1..=count).map(chapter).collect(),
+            all_read: false,
+            flat: false,
+        }]);
+        let content = chapters.popover.child().expect("the popover has its content");
+        chapters.popover.set_child(gtk::Widget::NONE);
+        let window = gtk::Window::builder().default_width(700).default_height(700).build();
+        window.set_child(Some(&content));
+        chapters.show_here(Here {
+            chapter: ChapterId(format!("c{here}")),
+            label: format!("Chapter {here}"), // i18n-skip
+            pages: false,
+            rtl: false,
+            leaves: Vec::new(),
+            open_leaf: 0,
+            files: Default::default(),
+        });
+        let painted: Rc<Cell<Option<f64>>> = Rc::default();
+        chapters.list.connect_map({
+            let painted = painted.clone();
+            move |list| {
+                let Some(clock) = list.frame_clock() else { return };
+                let list = list.clone();
+                let painted = painted.clone();
+                clock.connect_local("after-paint", false, move |_| {
+                    if painted.get().is_none() {
+                        painted.set(list.vadjustment().map(|a| a.value()));
+                    }
+                    None
+                });
+            }
+        });
+        window.present();
+        pump(400);
+        (window, chapters, painted)
+    }
+
+    fn adjustment(chapters: &Chapters) -> gtk::Adjustment {
+        chapters.list.vadjustment().expect("the list scrolls")
+    }
+
+    #[test]
+    fn the_open_chapter_opens_in_the_middle_with_nothing_scrolled() {
+        run(|| {
+            let (window, chapters, painted) = open(120, 60);
+            let row = chapters.here_row.borrow().upgrade().expect("the open chapter is drawn");
+            let bounds = row.compute_bounds(&chapters.list).expect("the row is laid out");
+            let page = adjustment(&chapters).page_size();
+            let middle = f64::from(bounds.y() + bounds.height() / 2.0);
+            assert!(
+                (middle - page / 2.0).abs() <= 2.0,
+                "the row's middle is {middle} of {page}"
+            );
+            // The first frame painted already had it there.
+            assert_eq!(painted.get(), Some(adjustment(&chapters).value()));
+            // Keyboard focus and the screen reader start on it.
+            assert!(
+                row.parent().is_some_and(|item| item.is_focus()),
+                "the open chapter has the focus"
+            );
+            window.destroy();
+        });
+    }
+
+    #[test]
+    fn a_list_that_fits_stays_at_its_top_and_the_last_chapter_sits_at_the_end() {
+        run(|| {
+            let (window, chapters, _) = open(5, 3);
+            assert_eq!(adjustment(&chapters).value(), 0.0);
+            window.destroy();
+            let (window, chapters, painted) = open(120, 120);
+            let a = adjustment(&chapters);
+            assert!(
+                (a.value() - (a.upper() - a.page_size())).abs() <= 1.0,
+                "{} of {}",
+                a.value(),
+                a.upper()
+            );
+            assert_eq!(painted.get(), Some(a.value()));
+            window.destroy();
+        });
     }
 }

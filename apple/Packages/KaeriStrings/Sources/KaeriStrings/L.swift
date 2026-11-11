@@ -3616,6 +3616,14 @@ public enum L {
     /// Line in the list of what the engine is doing, when it is doing nothing.
     public static var shellNothingRunning: String { string("shell-nothing-running", fallback: "Nothing is running.") }
 
+    /// Line in the sync status's popover: changes a { -tracker } can't take yet, because it has no match for those titles. They go out by themselves once it has one.
+    public static func shellSyncHeld(count: Int, tracker: String) -> String {
+        Self.format("shell-sync-held", fallback: "%1$lld changes can't sync to %2$@ yet", count, tracker)
+    }
+
+    /// Under the lines above in the sync status's popover: why those changes wait, and that nothing needs doing.
+    public static var shellSyncHeldDetail: String { string("shell-sync-held-detail", fallback: "No match for these titles yet. They sync once there is one.") }
+
     /// Placeholder of the search field while Settings is open.
     public static var shellSearchSettings: String { string("shell-search-settings", fallback: "Search settings") }
 
@@ -8458,6 +8466,19 @@ public enum L {
     /// Line on the page between chapters, near its buttons: one more swipe opens the next chapter.
     public static var readerEndSwipe: String { string("reader-end-swipe", fallback: "Swipe to keep reading") }
 
+    /// Button beside Continue on the page between chapters, shown only when the next chapter is an extra (such as 16.5 between 16 and 17). It opens the chapter named, passing over the extras before it. The chapter is its number, such as 17.
+    public static func readerEndSkipTo(chapter: String) -> String {
+        Self.format("reader-end-skip-to", fallback: "Skip to chapter %1$@", chapter)
+    }
+
+    /// What a screen reader adds after "Skip to chapter 17": the extra it passes over stays unread in the chapter list. The chapter is the extra's number, such as 16.5.
+    public static func readerEndSkipHint(chapter: String) -> String {
+        Self.format("reader-end-skip-hint", fallback: "Chapter %1$@ stays unread.", chapter)
+    }
+
+    /// What a screen reader adds after "Skip to chapter 17" when it passes over more than one extra, or an extra with no number (such as an omake): those chapters stay unread in the chapter list.
+    public static var readerEndSkipHintExtras: String { string("reader-end-skip-hint-extras", fallback: "The extras before it stay unread.") }
+
     /// The next episode's length on the divider inside a strip.
     public static func readerDividerImages(count: Int) -> String {
         Self.format("reader-divider-images", fallback: "%1$lld images", count)
@@ -8906,6 +8927,9 @@ public enum L {
     public static func seriesTrackerChapters(n: Int) -> String {
         Self.format("series-tracker-chapters", fallback: "%1$lld chapters", n)
     }
+
+    /// A tracker's progress when the person has read none of the series yet, in place of "0 chapters".
+    public static var seriesTrackerNotStarted: String { string("series-tracker-not-started", fallback: "Not started") }
 
     /// A tracker's progress in chapters, then the volume.
     public static func seriesTrackerWithVolume(chapters: String, volume: Int) -> String {
@@ -10051,6 +10075,9 @@ public enum L {
 
     /// Line under Delete chapters after reading.
     public static var settingsDeleteAfterReadingNote: String { string("settings-delete-after-reading-note", fallback: "Bookmarked chapters are kept") }
+
+    /// Line under Show volumes: the list is grouped only when most chapters have a volume.
+    public static var settingsShowVolumesNote: String { string("settings-show-volumes-note", fallback: "Grouped when most chapters have a volume") }
 
     /// Line under New chapters.
     public static var settingsChapterNotificationsNote: String { string("settings-chapter-notifications-note", fallback: "Series on your Reading list") }
@@ -11333,6 +11360,9 @@ public enum L {
     /// Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.
     public static var settingsDeleteAfterReading: String { string("settings-delete-after-reading", fallback: "Delete chapters after reading") }
 
+    /// Row: group a series' chapters under volume headings. Off by default.
+    public static var settingsShowVolumes: String { string("settings-show-volumes", fallback: "Show volumes") }
+
     /// Row: whether a series' reader mode, direction and colour follow you to your other devices.
     public static var settingsSeriesChoicesFollow: String { string("settings-series-choices-follow", fallback: "Series settings follow you") }
 
@@ -11555,6 +11585,11 @@ public enum L {
     /// Line under a signed-in account while changes wait to be sent.
     public static func accountsChangesWaiting(count: Int) -> String {
         Self.format("accounts-changes-waiting", fallback: "%1$lld changes waiting to sync", count)
+    }
+
+    /// Line under a signed-in account when nothing else waits but some changes can't go out yet: the { -tracker } has no match for those titles. They go out by themselves once it has one.
+    public static func accountsChangesHeld(count: Int) -> String {
+        Self.format("accounts-changes-held", fallback: "%1$lld changes can't sync yet", count)
     }
 
     /// Choice for the download quality: larger files with more detail.

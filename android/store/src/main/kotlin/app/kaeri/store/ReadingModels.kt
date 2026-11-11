@@ -131,6 +131,12 @@ data class ReadChapters(
     val failure: ReadingFailure?,
 )
 
+/**
+ * Whether the search leaves AniList out, as the engine does: Your sources only is on, or the
+ * search is scoped to the sources picked under e-ink's Search in.
+ */
+val ReadSearchQuery.skipsAnilist: Boolean get() = sourcesOnly || sourceScope != null
+
 /** Reading's Search: the query asked, the pages answered so far and how many there are. */
 data class ReadSearchState(
     val query: ReadSearchQuery = ReadingModel.EMPTY_QUERY,
@@ -183,7 +189,7 @@ private fun ReadSearchState.answered(event: ReadingEvent.Search): ReadSearchStat
  */
 internal fun ReadSearchState.asking(query: ReadSearchQuery): ReadSearchState {
     val kept = sources?.takeIf { query.text.isNotBlank() }?.let {
-        it.copy(query = query, anilist = if (query.sourcesOnly) ReadAnilistState.SKIPPED else ReadAnilistState.ASKING, done = false)
+        it.copy(query = query, anilist = if (query.skipsAnilist) ReadAnilistState.SKIPPED else ReadAnilistState.ASKING, done = false)
     }
     return copy(
         query = query,
@@ -211,8 +217,8 @@ private fun ReadSearchState.sourcesIn(part: ReadSourceSearch): ReadSearchState {
     return copy(
         sources = part.copy(groups = groups),
         staleSources = staleSources intersect asking,
-        // With Your sources only, AniList is not asked: the groups are the whole answer.
-        loading = if (part.query.sourcesOnly) false else loading,
+        // With Your sources only, or a source picked, AniList is not asked: the groups are the whole answer.
+        loading = if (part.query.skipsAnilist) false else loading,
     )
 }
 

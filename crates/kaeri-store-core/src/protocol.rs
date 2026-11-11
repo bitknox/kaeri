@@ -33,6 +33,10 @@ pub const ENDED_INVITES_KEPT_SECS: i64 = 30 * 24 * 60 * 60;
 /// The longest name a member is shown by, in characters.
 pub const MAX_NAME_CHARS: usize = 64;
 
+/// The name the store gives the owner its setup invite makes. Clients take it as no name: "Run
+/// by" names that owner by the store's contact, or not at all.
+pub const SETUP_OWNER_NAME: &str = "Owner";
+
 /// `GET /v1/store`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct StoreInfo {

@@ -6,6 +6,7 @@ package app.kaeri.reader
 
 import app.kaeri.engine.core.ChapterId
 import app.kaeri.engine.core.WorkId
+import app.kaeri.i18n.Strings
 import app.kaeri.engine.model.ChapterRow
 import app.kaeri.engine.model.ChapterVersion
 import app.kaeri.engine.model.Command
@@ -50,7 +51,27 @@ import kotlinx.coroutines.flow.asStateFlow
 data class PageKey(val page: UInt, val half: PageHalf? = null)
 
 /** What the end page names: the next chapter and the source it came from, or why there is none. */
-data class EndPageView(val next: ChapterRow?, val whyNone: NoNext?, val source: String? = null)
+data class EndPageView(
+    val next: ChapterRow?,
+    val whyNone: NoNext?,
+    val source: String? = null,
+    /** When [next] is an extra: the first whole chapter after it, for "Skip to chapter 17". */
+    val skipTo: ChapterRow? = null,
+    /** How many extras the skip passes over. */
+    val extras: UInt = 0u,
+) {
+    /**
+     * What TalkBack adds after the skip: the extra's number, or with a run of extras or one with no
+     * number, that the extras stay unread.
+     */
+    fun skipHint(context: android.content.Context): String? {
+        val next = next ?: return null
+        if (skipTo == null) return null
+        val number = next.number
+        return if (extras > 1u || number == null) Strings.readerEndSkipHintExtras(context)
+        else Strings.readerEndSkipHint(context, number)
+    }
+}
 
 /** The next chapter's first page, made while this one is read, for the end page. */
 data class NextPreview(val chapter: ChapterId, val file: PageFile)
@@ -69,6 +90,9 @@ data class NovelGoTo(val pos: NovelPos, val id: Long)
 
 /** The clock a chapter's opening wait counts on, in milliseconds. */
 fun openingClock(): Long = System.nanoTime() / 1_000_000
+
+/** A chapter asked for from the one on screen: its row, when the session knows it. */
+data class ChapterAsk(val chapter: ChapterId, val row: ChapterRow?)
 
 /** What the engine said of the open session. */
 data class ReaderState(
@@ -116,6 +140,11 @@ data class ReaderState(
     val openingWait: ReaderWait? = null,
     /** When the chapter on screen was asked for, on [openingClock]; 0 when nothing was asked. */
     val openingSince: Long = 0L,
+    /**
+     * Another chapter asked for while this one is on screen, until it opens or fails: the screen
+     * says it is on its way, and no second chapter is asked meanwhile.
+     */
+    val asking: ChapterAsk? = null,
     val preview: NextPreview? = null,
     /** The chapter a strip flowed on from, drawn above this one in the same scroll. */
     val previous: ReaderState? = null,
@@ -155,8 +184,29 @@ data class ReaderState(
     /** The leaf that shows [page], or null when no leaf does. */
     fun leafOf(page: UInt): Int? = leaves.indexOfFirst { leaf -> leaf.parts.any { it.page == page } }.takeIf { it >= 0 }
 
-    /** The leaf a place shows: its page, its strip image, or the first. */
-    fun leafOf(place: ReadPlace): Int = place.page?.let(::leafOf) ?: place.strip?.image?.let(::leafOf) ?: 0
+    /**
+     * The leaf a place shows: its page, its strip image, or the first. A place names images; on
+     * e-ink a strip is cut into screens, each saying where it starts, and the place is in the
+     * last one starting at or above it, or for a page alone the first of that image.
+     */
+    fun leafOf(place: ReadPlace): Int {
+        val cuts = leaves.map { leaf -> leaf.parts.firstOrNull()?.strip }
+        if (cuts.none { it != null }) return place.page?.let(::leafOf) ?: place.strip?.image?.let(::leafOf) ?: 0
+        val at = place.strip
+        val found = when {
+            at != null -> cuts.indexOfLast { it != null && (it.image < at.image || it.image == at.image && it.offset <= at.offset) }
+            place.page != null -> cuts.indexOfFirst { it != null && it.image >= place.page!! }
+            else -> 0
+        }
+        return found.coerceAtLeast(0)
+    }
+
+    /** Where in the strip the e-ink cut on [leaf] starts, as a place in this chapter. */
+    fun placeOf(leaf: Int): ReadPlace? {
+        val at = leaves.getOrNull(leaf)?.parts?.firstOrNull()?.strip ?: return null
+        val view = view ?: return null
+        return ReadPlace(view.work, view.chapter.id, at.image, at, null)
+    }
 }
 
 /**
@@ -192,7 +242,9 @@ class ReaderSession(private val send: (Command) -> Unit) {
     private var ids = 0L
     private var work: WorkId? = null
     private var asked: Pair<ChapterId?, OpenAt>? = null
+    /** The screen's latest surface, and the one the engine lays out for: they differ while it opens. */
     private var surface: ReaderSurface? = null
+    private var engineSurface: ReaderSurface? = null
     /** A chapter asked for and not yet opened, so its failure is shown in its name. */
     private var awaiting: ChapterRow? = null
     private var awaitingOpen = false
@@ -200,6 +252,8 @@ class ReaderSession(private val send: (Command) -> Unit) {
     private var flowTo: ChapterId? = null
     private var flowFrom: ReaderState? = null
     private var startAt: ReadPlace? = null
+    /** The jump to [startAt]; once it was shown, the start place is done with. */
+    private var startJump: Long? = null
     private var shownPage: UInt? = null
     /** Where the reader is: the chapter on screen and the page, strip spot or text place shown. */
     private var here: ReadPlace? = null
@@ -218,10 +272,12 @@ class ReaderSession(private val send: (Command) -> Unit) {
         this.work = work
         this.asked = chapter to at
         this.surface = surface
+        engineSurface = surface
         awaitingOpen = true
         flowTo = null
         flowFrom = null
         startAt = null
+        startJump = null
         shownPage = null
         here = null
         shownLeaf = null
@@ -236,11 +292,21 @@ class ReaderSession(private val send: (Command) -> Unit) {
         reader(ReaderCommand.Open(work, chapter, at, surface))
     }
 
-    /** The surface changed size, room for two pages or look: sent only when it did. */
+    /**
+     * The surface changed size, room for two pages or look: sent only when it did. One that changes
+     * while the reader opens (a phone held sideways turns then) goes out once the session opened.
+     */
     fun surface(surface: ReaderSurface) {
         if (surface == this.surface) return
         this.surface = surface
+        sendSurface()
+    }
+
+    private fun sendSurface() {
+        val surface = surface ?: return
+        if (surface == engineSurface) return
         val session = state.value.session ?: return
+        engineSurface = surface
         reader(ReaderCommand.Surface(session, surface))
     }
 
@@ -250,7 +316,11 @@ class ReaderSession(private val send: (Command) -> Unit) {
         val session = now.session ?: return
         val chapter = now.chapter ?: return
         shownPage = now.leaves.getOrNull(leaf)?.parts?.firstOrNull()?.page ?: shownPage
-        here = here?.takeIf { it.chapter == chapter }?.copy(page = shownPage, strip = null)
+        // An e-ink cut's page is the cut's own number: the place is the image it starts in. A whole
+        // image keeps the spot in it the reader opened at, for the cuts a strip is laid out in later.
+        here = now.placeOf(leaf) ?: here?.takeIf { it.chapter == chapter }?.let { at ->
+            at.copy(page = shownPage, strip = at.strip?.takeIf { it.image == shownPage })
+        }
         // Off the leaf a credit page shows over, the credit page goes. A page kept from it waits
         // on: its Undo outlasts the turn, and the engine hears when it runs out or the chapter closes.
         val moved = shownLeaf != null && shownLeaf != leaf
@@ -307,13 +377,22 @@ class ReaderSession(private val send: (Command) -> Unit) {
         reader(ReaderCommand.Retry(now.session ?: return, now.chapter ?: return, page))
     }
 
-    fun openChapter(chapter: ChapterId) {
+    /**
+     * Open [chapter] in place of the one on screen. False, asking nothing, with no session yet or
+     * while another chapter is on its way: taps that come while it opens do not queue more jumps.
+     */
+    fun openChapter(chapter: ChapterId): Boolean {
+        if (state.value.session == null || state.value.asking != null) return false
         commitKeep()
         val now = state.value
-        val session = now.session ?: return
-        awaiting = now.view?.next?.takeIf { it.id == chapter } ?: now.volumes.flatMap { it.chapters }.firstOrNull { it.id == chapter }
+        val session = now.session ?: return false
+        val view = now.view
+        awaiting = listOfNotNull(view?.next, view?.previous).firstOrNull { it.id == chapter }
+            ?: now.volumes.flatMap { it.chapters }.firstOrNull { it.id == chapter }
         awaitingOpen = true
+        _state.value = now.copy(asking = ChapterAsk(chapter, awaiting), openingSince = openingClock())
         reader(ReaderCommand.OpenChapter(session, chapter))
+        return true
     }
 
     /**
@@ -323,7 +402,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
     fun crossOn(): Boolean {
         val now = state.value
         val next = now.end?.next ?: now.view?.next ?: return false
-        if (awaitingOpen && awaiting?.id == next.id) return true
+        if (now.asking != null) return true
         openChapter(next.id)
         return true
     }
@@ -432,6 +511,10 @@ class ReaderSession(private val send: (Command) -> Unit) {
     fun jumped(id: Long) {
         val now = state.value
         if (now.jump?.id == id) _state.value = now.copy(jump = null)
+        if (id == startJump) {
+            startAt = null
+            startJump = null
+        }
     }
 
     // Credit pages (what follows from them is in ReaderCredits.kt).
@@ -598,6 +681,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
                 awaitingOpen = false
                 awaiting = null
                 startAt = event.v1.start
+                startJump = null
                 shownPage = null
                 here = event.v1.start
                 askedPages.clear()
@@ -648,14 +732,35 @@ class ReaderSession(private val send: (Command) -> Unit) {
                 )
                 val placed = relaidWithKept(laid, now)
                 if (placed.jump != null && placed.jump != now.jump) return run { _state.value = placed }
-                val start = startAt?.also { startAt = null }
+                // The start place holds until the jump to it was shown: a layout that comes before
+                // then, as when the phone turns while the reader opens, opens there too.
+                val start = startAt
                 // Flowed into from above: the scroll is already where the chapter starts.
-                if (start != null && now.previous != null) return run { _state.value = placed }
+                if (start != null && now.previous != null) {
+                    startAt = null
+                    return run { _state.value = placed }
+                }
+                // Laid out again before any page was painted, as a long strip is once its images'
+                // sizes are known: the place it opened at still stands, not the old layout's leaf.
+                val shown = shownPage
+                val unpainted = if (start == null && shown == null) here?.takeIf { it.chapter == now.chapter } else null
+                // The leaf shown is found again by its place, never by its number: an e-ink cut by
+                // where it starts, as a new layout cuts anew; a whole image, as a strip whose pages
+                // were still coming is cut once they are all there, by the image and the spot in it.
+                val shownAt = shownLeaf?.let(now::placeOf)
+                    ?: here?.takeIf { shown != null && it.chapter == now.chapter && it.page == shown }
                 val leaf = when {
                     start != null -> placed.leafOf(start)
-                    else -> shownPage?.let(placed::leafOf)
+                    shownAt != null -> placed.leafOf(shownAt)
+                    shown != null -> placed.leafOf(shown)
+                    else -> unpainted?.let(placed::leafOf)
                 }
-                placed.copy(jump = leaf?.let { ReaderJump(it, start?.strip, ++ids) } ?: now.jump)
+                val jump = leaf?.let { ReaderJump(it, (start ?: unpainted)?.strip, ++ids) }
+                if (start != null) {
+                    startJump = jump?.id
+                    if (jump == null) startAt = null
+                }
+                placed.copy(jump = jump ?: now.jump)
             }
             is ReaderEvent.PageReady -> {
                 if (!ours(event.session) || event.chapter != now.chapter) return
@@ -673,7 +778,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
             }
             is ReaderEvent.NovelStyle -> if (ours(event.session)) now.copy(novelStyle = event) else return
             is ReaderEvent.ChapterRead -> if (event.work == now.view?.work) now.copy(read = now.read + event.chapter, readTrackers = now.readTrackers + (event.chapter to event.trackers)) else return
-            is ReaderEvent.EndPage -> if (ours(event.session)) now.copy(end = EndPageView(event.next, event.whyNone, event.nextSource)) else return
+            is ReaderEvent.EndPage -> if (ours(event.session)) now.copy(end = EndPageView(event.next, event.whyNone, event.nextSource, event.skipTo, event.extras)) else return
             is ReaderEvent.NextPreview -> if (ours(event.session)) now.copy(preview = NextPreview(event.chapter, event.file)) else return
             // Only while opening: a chapter opened from another one keeps its own page up meanwhile.
             is ReaderEvent.Opening -> if (now.opening) now.copy(openingChapter = event.chapter ?: now.openingChapter, openingWait = event.wait) else return
@@ -713,6 +818,8 @@ class ReaderSession(private val send: (Command) -> Unit) {
                 now.copy(parts = ReaderParts(event.parts, event.total, event.missing))
             }
         }
+        // The engine opened with the surface the open asked with; the screen may have turned since.
+        if (event is ReaderEvent.Opened) sendSurface()
     }
 
     private fun reader(command: ReaderCommand) {

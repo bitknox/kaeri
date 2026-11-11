@@ -139,7 +139,9 @@ async fn an_invite_is_previewed_then_joined() {
     let Event::Stores(rows) = &updates[1] else { unreachable!() };
     assert_eq!(rows[0].host, "127.0.0.1");
     assert!(rows[0].checked_at.is_some(), "checked");
-    assert_eq!(rows[0].owners, ["Owner"], "run by whoever the owner link made");
+    // The owner kept the name the setup gave them, and a joined store's row has no contact to
+    // name them by, so the row is named by its host alone.
+    assert!(rows[0].owners.is_empty(), "{:?}", rows[0].owners);
     ends(&updates, job);
 }
 
@@ -329,7 +331,7 @@ async fn an_owner_opens_the_store_and_anyone_with_its_link_joins_without_a_name(
         panic!("{updates:?}")
     };
     assert!(preview.open && preview.anonymous);
-    assert_eq!(preview.owners, ["Owner"]);
+    assert_eq!(preview.owners, ["owner@store.example"], "the owner kept the setup's name");
     assert_eq!(preview.device_label, "", "an open link sends no name");
     let job =
         guest.send(Command::JoinStore { link: Secret(link.clone()), label: None, name: None });
@@ -426,7 +428,8 @@ async fn a_group_invite_names_its_joiners_and_cancelling_it_keeps_them() {
     assert!(ended.iter().any(|i| i.id == invite));
     assert_eq!(members.len(), 2, "Alex stays");
 
-    // Someone else with the link hears that it was cancelled, and who to ask.
+    // Someone else with the link hears that it was cancelled, and who to ask: the owner kept
+    // the setup's name, so the store is named, with its contact under the reason.
     let mut late = Harness::new().await;
     late.send(Command::PreviewStore { link: Secret(group) });
     let updates = late.settle().await;
@@ -434,7 +437,7 @@ async fn a_group_invite_names_its_joiners_and_cancelling_it_keeps_them() {
         matches!(
             &updates[0],
             Event::StorePreview(InvitePreview::Failed { reason, contact: Some(contact) })
-                if reason == "This invite was cancelled. Ask Owner for a new one."
+                if reason == "This invite was cancelled. Ask the owners of Ours for a new one."
                     && contact == "owner@store.example"
         ),
         "{updates:?}"

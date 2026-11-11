@@ -94,7 +94,9 @@ reader-volume = { $volume }巻
 reader-chapter-in-progress = { $page }/{ $total }ページ
 reader-chapter-read = 既読
 reader-chapter-new = 新着
-reader-chapter-pages = { $pages }ページ
+reader-chapter-pages = { $pages ->
+   *[other] { $pages }ページ
+ }
 reader-offline-line = オフラインです。ダウンロード済みの章は開けます。
 reader-menu-go = 移動
 reader-menu-next-page = 次のページ

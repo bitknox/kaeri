@@ -34,6 +34,10 @@ private struct ReaderHost: ViewModifier {
         // reader crossfades in over it and out again.
         content
             .toolbarVisibility(model.request != nil ? .hidden : .automatic, for: .windowToolbar)
+            // In full screen the toolbar's strip stays at the top, drawn over the page in the
+            // window's own colours even with nothing in it. While a book is open it comes with the
+            // menu bar only, when the pointer goes to the top of the screen.
+            .windowToolbarFullScreenVisibility(model.request != nil ? .onHover : .automatic)
             .overlay {
                 if model.request != nil {
                     ReaderScreen(model: model) {}
@@ -93,13 +97,17 @@ private struct CloseKey: NSViewRepresentable {
 
 /// The window's close, minimise and zoom buttons come and go with the reader's chrome, over a
 /// title bar the reader's pages show through. The window has them back as they were once the
-/// reader closes.
+/// reader closes. The title bar's transparency is left to the toolbar's: hiding the toolbar makes
+/// it clear before this view is in the window, and showing the toolbar again makes it solid, which
+/// the toolbar's scroll edge effect needs.
 private struct TrafficLights: NSViewRepresentable {
     let visible: Bool
 
     final class Coordinator {
         weak var window: NSWindow?
-        var before: (transparent: Bool, title: NSWindow.TitleVisibility)?
+        var title: NSWindow.TitleVisibility?
+        /// Set once the reader is gone, so a change still queued does not hide the title again.
+        var closed = false
     }
 
     private static let buttons: [NSWindow.ButtonType] = [.closeButton, .miniaturizeButton, .zoomButton]
@@ -111,12 +119,11 @@ private struct TrafficLights: NSViewRepresentable {
     func updateNSView(_ view: NSView, context: Context) {
         let coordinator = context.coordinator
         DispatchQueue.main.async {
-            guard let window = view.window else { return }
+            guard !coordinator.closed, let window = view.window else { return }
             if coordinator.window == nil {
                 coordinator.window = window
-                coordinator.before = (window.titlebarAppearsTransparent, window.titleVisibility)
+                coordinator.title = window.titleVisibility
             }
-            window.titlebarAppearsTransparent = true
             window.titleVisibility = .hidden
             for kind in Self.buttons {
                 window.standardWindowButton(kind)?.animator().alphaValue = visible ? 1 : 0
@@ -125,9 +132,9 @@ private struct TrafficLights: NSViewRepresentable {
     }
 
     static func dismantleNSView(_ view: NSView, coordinator: Coordinator) {
-        guard let window = coordinator.window, let before = coordinator.before else { return }
-        window.titlebarAppearsTransparent = before.transparent
-        window.titleVisibility = before.title
+        coordinator.closed = true
+        guard let window = coordinator.window, let title = coordinator.title else { return }
+        window.titleVisibility = title
         for kind in buttons {
             window.standardWindowButton(kind)?.alphaValue = 1
         }

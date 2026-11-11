@@ -25,16 +25,17 @@ enum ReadSeriesWords {
         case .read(_, let label): L.actionReadNamed(label: label)
         case .continue(_, let label, let page) where numbered(label): L.actionContinueChapter(n: label, page: Int(page))
         case .continue(_, let label, let page): L.actionContinueNamedPage(label: label, page: Int(page))
-        // A part goes by the source's own name for it where it has one, as its row does.
+        // A light novel's part goes by the source's own name for it where it has one; one the
+        // source only numbers is a chapter, as its row, the reader and the end card call it.
         case .continuePart(_, _, let percent?, let named?): L.actionContinueNamed(label: midSentence(named), percent: Int(percent))
         case .continuePart(_, let label, let percent?, nil) where !numbered(label): L.actionContinueNamed(label: label, percent: Int(percent))
-        case .continuePart(_, let label, let percent?, nil): L.actionContinuePart(n: label, percent: Int(percent))
+        case .continuePart(_, let label, let percent?, nil): L.actionContinueChapterPercent(n: label, percent: Int(percent))
         case .continuePart(_, _, nil, let named?): L.actionContinueNamedPlain(label: midSentence(named))
         case .continuePart(_, let label, nil, nil) where !numbered(label): L.actionContinueNamedPlain(label: label)
-        case .continuePart(_, let label, nil, nil): L.actionContinuePartPlain(n: label)
+        case .continuePart(_, let label, nil, nil): L.actionContinueChapterPlain(n: label)
         case .readPart(_, _, let named?): L.actionReadNamed(label: midSentence(named))
         case .readPart(_, let label, nil) where !numbered(label): L.actionReadNamed(label: label)
-        case .readPart(_, let label, nil): L.actionReadPart(n: label)
+        case .readPart(_, let label, nil): L.actionReadChapter(n: label)
         case .readAgain: L.actionReadAgain
         case .noSource, .none: nil
         }
@@ -73,8 +74,10 @@ enum ReadSeriesWords {
         rows.map { AccountsModel.name($0.tracker) }.formatted(.list(type: .and).locale(AirTime.locale))
     }
 
-    /// "87 of 88 chapters · volume 9", "Volume 5 of 5 read".
+    /// "87 of 88 chapters · volume 9", "Volume 5 of 5 read", or "Not started" before the first
+    /// chapter, which "0 chapters" would read as the series having none.
     static func progress(_ row: TrackerReadRow, series: SeriesView) -> String {
+        if row.chapters == 0, (row.volumes ?? 0) == 0 { return L.seriesTrackerNotStarted }
         if series.medium == .novel, let volumes = row.volumes {
             return L.seriesTrackerVolumes(volume: Int(volumes), total: Int(series.volumesTotal ?? volumes))
         }
@@ -122,6 +125,22 @@ enum ReadSeriesWords {
         return (name, rest.joined(separator: " · ")) // i18n-skip
     }
 
+    /// The volumes Download offers. A flat list, drawn with no volume headings, still says each
+    /// chapter's volume: its rows by volume, in reading order, and none for rows without one.
+    static func downloadVolumes(_ groups: [VolumeGroup]) -> [VolumeGroup] {
+        guard groups.count == 1, let list = groups.first, list.flat else { return groups }
+        var volumes: [VolumeGroup] = []
+        for row in list.chapters {
+            guard let volume = row.volume, !volume.isEmpty else { continue }
+            if let at = volumes.firstIndex(where: { $0.volume == volume }) {
+                volumes[at].chapters.append(row)
+            } else {
+                volumes.append(VolumeGroup(volume: volume, chapters: [row]))
+            }
+        }
+        return volumes
+    }
+
     private static func number(_ value: Double) -> String {
         value.rounded() == value ? String(Int(value)) : String(value)
     }
@@ -140,6 +159,9 @@ struct SeriesPage: View {
     @State private var newestFirst = true
     /// The heading has scrolled under the bar: the bar takes the title, as the title page does.
     @State private var headingGone = false
+    /// The reader's place, which VoiceOver and the keyboard start on as Choose chapters opens.
+    @AccessibilityFocusState private var spokenRow: String?
+    @FocusState private var keyedRow: String?
 
     private var wide: Bool {
         #if os(iOS)
@@ -175,7 +197,8 @@ struct SeriesPage: View {
                             .padding(.top, wide ? 32 : 24)
                     } else {
                         SeriesChapters(series: series, chapters: store.reading.chapters[work],
-                                       choosing: $choosing, newestFirst: $newestFirst)
+                                       choosing: $choosing, newestFirst: $newestFirst,
+                                       spoken: $spokenRow, keyed: $keyedRow)
                             .padding(.top, wide ? 32 : 24)
                     }
                     if let demo = series.demo, let other = series.demoOther,
@@ -214,6 +237,17 @@ struct SeriesPage: View {
             guard !Task.isCancelled else { return }
             navigator.launchScroll = nil
             proxy.scrollTo("series-group", anchor: UnitPoint(x: 0, y: 0.2))
+        }
+        // Choose chapters opens with the reader's place as near the middle as the list allows,
+        // under the window's crossfade (SeriesChoosing.enter), so no scroll shows.
+        .onChange(of: choosing == nil) { _, ended in
+            guard !ended, let place = SeriesChoosing.place(store.reading.chapters[work]) else { return }
+            WindowCrossfade.still { proxy.scrollTo(place, anchor: .center) }
+            Task {
+                try? await Task.sleep(for: .milliseconds(400))
+                spokenRow = place
+                keyedRow = place
+            }
         }
         }
         .scrollIndicators(.automatic)
@@ -265,7 +299,7 @@ struct SeriesPage: View {
             for _ in 0..<30 where store.reading.chapters[work] == nil {
                 try? await Task.sleep(for: .milliseconds(100))
             }
-            choosing = SeriesChoosing.start(store.reading.chapters[work])
+            SeriesChoosing.enter($choosing, store.reading.chapters[work])
             // Taken once the bar is up, so the snapshot waits for it.
             try? await Task.sleep(for: .milliseconds(500))
             navigator.launchSheet = nil
@@ -332,12 +366,34 @@ enum SeriesChoosing {
     /// the bar still takes every unread one.
     static func start(_ chapters: ReadChapters?) -> Set<String> {
         let rows = chapters?.volumes.flatMap(\.chapters) ?? []
-        let reading = rows.lastIndex { if case .inProgress = $0.state { true } else { false } }
-        let at = reading ?? rows.lastIndex { $0.state == .read }.map { $0 + 1 } ?? 0
+        let at = at(rows) ?? 0
         let wanted = { (row: ChapterRow) in row.state != .read && row.download == nil }
         let after = rows[min(at, rows.count)...].filter(wanted)
         let next = after.isEmpty ? rows.filter(wanted) : after
         return Set(next.prefix(ahead).map(\.id))
+    }
+
+    /// The reader's place in `rows`: the last chapter in progress, or the one after the last read
+    /// one. Nil when nothing was read.
+    private static func at(_ rows: [ChapterRow]) -> Int? {
+        let reading = rows.lastIndex { if case .inProgress = $0.state { true } else { false } }
+        return reading ?? rows.lastIndex { $0.state == .read }.map { $0 + 1 }
+    }
+
+    /// The chapter at the reader's place, which Choose chapters opens centred on. Nil when
+    /// nothing was read or every chapter was: the list then opens where it is.
+    static func place(_ chapters: ReadChapters?) -> String? {
+        let rows = chapters?.volumes.flatMap(\.chapters) ?? []
+        guard let at = at(rows), at < rows.count else { return nil }
+        return rows[at].id
+    }
+
+    /// Starts choosing with `start`'s chapters. With a place to centre on, the window crossfades
+    /// to the list already there; with none, the bar comes up on its own.
+    @MainActor static func enter(_ choosing: Binding<Set<String>?>, _ chapters: ReadChapters?) {
+        let chosen = start(chapters)
+        guard place(chapters) != nil else { choosing.wrappedValue = chosen; return }
+        WindowCrossfade.run { WindowCrossfade.still { choosing.wrappedValue = chosen } }
     }
 
     /// All unread, in the bar.
@@ -467,14 +523,19 @@ private struct SeriesTitleBlock: View {
                         .accessibilityLabel(Text(all.joined(separator: ", "))) // i18n-skip
                 }
                 if let synopsis = series.synopsis, !synopsis.isEmpty {
-                    Text(synopsis.replacing(/\s*\n+\s*/, with: " "))
-                        .font(.plat(mac: 13, touch: 15))
-                        .fixedLineHeight(Device.isMac ? 20 : 22, relativeTo: .subheadline)
-                        .foregroundStyle(.haze)
-                        .lineLimit(4)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: 460, alignment: .leading)
-                        .padding(.top, 14)
+                    // Four lines with More at the end of the last, as a show's page has it.
+                    InlineMoreText(
+                        text: synopsis.replacing(/\s*\n+\s*/, with: " "),
+                        lines: 4,
+                        font: .plat(mac: 13, touch: 15),
+                        lineHeight: Device.isMac ? 20 : 22,
+                        lineStyle: .subheadline,
+                        lineHeightEverywhere: true
+                    )
+                    .id(series.work)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: 460, alignment: .leading)
+                    .padding(.top, 14)
                 }
             }
         }
@@ -550,7 +611,7 @@ private struct SeriesActions: View {
     private func mainButton(icon: Bool) -> some View {
         if stillAsking {
             Button {} label: {
-                Text(L.actionReadPart(n: "1")).lineLimit(1).frame(maxWidth: stretch ? .infinity : nil)
+                Text(L.actionReadChapter(n: "1")).lineLimit(1).frame(maxWidth: stretch ? .infinity : nil)
             }
             .buttonStyle(PrimaryCapsuleStyle(height: height, fontSize: font, offIsRaised: true))
             .disabled(true)
@@ -636,12 +697,13 @@ private struct SeriesActions: View {
         let volumes = store.reading.chapters[series.work]?.volumes ?? []
         let unread = volumes.flatMap(\.chapters).filter { $0.state != .read && $0.download == nil }
         let downloaded = volumes.flatMap(\.chapters).filter { $0.download != nil }
+        let byVolume = ReadSeriesWords.downloadVolumes(volumes)
         return Menu {
             Button(L.downloadNext(n: 5)) { store.reading.download(series.work, .nextUnread(n: 5)) }
             Button(L.downloadNext(n: 10)) { store.reading.download(series.work, .nextUnread(n: 10)) }
             Button(L.downloadUnread) { store.reading.download(series.work, .unread) }
                 .disabled(unread.isEmpty)
-            let toFetch = volumes.filter { group in group.chapters.contains { $0.download == nil } }
+            let toFetch = byVolume.filter { group in group.chapters.contains { $0.download == nil } }
             if !toFetch.isEmpty { Divider() }
             ForEach(toFetch, id: \.volume) { group in
                 let count = group.chapters.filter { $0.download == nil }.count
@@ -655,7 +717,7 @@ private struct SeriesActions: View {
             }
             Divider()
             Button(L.downloadChoose) {
-                choosing = SeriesChoosing.start(store.reading.chapters[series.work])
+                SeriesChoosing.enter($choosing, store.reading.chapters[series.work])
             }
             if !downloaded.isEmpty {
                 Divider()
@@ -905,15 +967,22 @@ private struct SeriesChapters: View {
     let chapters: ReadChapters?
     @Binding var choosing: Set<String>?
     @Binding var newestFirst: Bool
+    var spoken: AccessibilityFocusState<String?>.Binding
+    var keyed: FocusState<String?>.Binding
     @State private var open: Set<String> = []
     @State private var closed: Set<String> = []
 
     private var novel: Bool { series.medium == .novel }
 
+    /// "Volumes" only over a novel's volumes; a list with none is its chapters.
+    private var byVolume: Bool {
+        novel && (chapters?.volumes ?? []).contains { $0.volume != nil }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .firstTextBaseline) {
-                Text(novel ? L.seriesVolumes : L.seriesChapters)
+                Text(byVolume ? L.seriesVolumes : L.seriesChapters)
                     .font(.ui(Device.isMac ? 17 : 20, weight: Device.isMac ? .semibold : .bold))
                     .foregroundStyle(.silk)
                     .accessibilityAddTraits(.isHeader)
@@ -1024,6 +1093,20 @@ private struct SeriesChapters: View {
 
     @ViewBuilder
     private func volume(_ group: VolumeGroup) -> some View {
+        if group.flat {
+            // Show volumes is off, or too few chapters have one: the rows alone, never folded.
+            let rows = newestFirst ? group.chapters.reversed() : group.chapters
+            ForEach(rows, id: \.id) { row in
+                rule
+                ChapterRowView(series: series, row: row, preferred: chapters?.edition?.versionLabel, choosing: $choosing)
+            }
+        } else {
+            grouped(group)
+        }
+    }
+
+    @ViewBuilder
+    private func grouped(_ group: VolumeGroup) -> some View {
         let words = ReadSeriesWords.volume(group, novel: novel)
         let shown = isOpen(group)
         rule
@@ -1064,6 +1147,9 @@ private struct SeriesChapters: View {
             ForEach(rows, id: \.id) { row in
                 rule
                 ChapterRowView(series: series, row: row, preferred: chapters?.edition?.versionLabel, choosing: $choosing)
+                    .id(row.id)
+                    .accessibilityFocused(spoken, equals: row.id)
+                    .focused(keyed, equals: row.id)
             }
         }
     }

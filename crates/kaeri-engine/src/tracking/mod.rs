@@ -67,6 +67,9 @@ pub struct Sync {
     /// The Simkl tracker as its concrete type, for the same reason: a sign-in through its
     /// OAuth 2.0 lasts a week, and the pair renewed mid-call has to be written back.
     pub simkl: Option<Arc<kaeri_track::SimklTracker>>,
+    /// The Trakt tracker as its concrete type, for the same reason: its access token runs out,
+    /// and the pair renewed mid-call has to be written back.
+    pub trakt: Option<Arc<kaeri_track::TraktTracker>>,
     pub tokens: TokenStore,
     pub store: Store,
     pub config: Config,
@@ -134,6 +137,7 @@ impl Sync {
         let mut mal = None;
         let mut kitsu = None;
         let mut simkl = None;
+        let mut trakt = None;
         let mut mangaupdates = None;
         let reads: Arc<dyn kaeri_track::read::ReadMapping> =
             Arc::new(StoreReadMapping { store: store.clone() });
@@ -232,12 +236,18 @@ impl Sync {
         if config.trackers.is_enabled("trakt")
             && let Some(client_id) = config.trackers.trakt.client_id.clone()
         {
-            trackers.push(Arc::new(kaeri_track::TraktTracker::new(
-                client_id,
-                http.plain().clone(),
-                Arc::new(StoreMapping { store: store.clone() }),
-                tokens.get_pair("trakt").ok(),
-            )));
+            let tracker = Arc::new(
+                kaeri_track::TraktTracker::new(
+                    client_id,
+                    http.plain().clone(),
+                    Arc::new(StoreMapping { store: store.clone() }),
+                    tokens.get_pair("trakt").ok(),
+                )
+                .with_client_secret(config.trackers.trakt.client_secret.clone())
+                .with_token_store(tokens.clone()),
+            );
+            trackers.push(tracker.clone());
+            trakt = Some(tracker);
         }
 
         Self {
@@ -250,6 +260,7 @@ impl Sync {
             mangaupdates_api: kaeri_track::mangaupdates::API.to_owned(),
             lookups: Arc::new(kaeri_track::lookup::Lookups::new(http.plain().clone())),
             simkl,
+            trakt,
             tokens,
             store: store.clone(),
             config: config.clone(),
@@ -392,9 +403,12 @@ impl Sync {
                     user: None,
                     storage: Some(storage.describe().to_owned()),
                     storage_degraded: storage.is_degraded(),
-                    outbox: self.store.outbox_depth(Some(id)).unwrap_or(0),
+                    outbox: self.store.outbox_waiting(id).unwrap_or(0),
                     deferred: self.store.outbox_deferred(id).unwrap_or(0),
-                    needs_reauth: false,
+                    // A credential rejected before this launch is still dead: said from the
+                    // first state, not after the first drain asks again.
+                    needs_reauth: tracker.is_authenticated()
+                        && sync::credential_rejected(&self.store, id),
                     last: None,
                     pull_error: self.pull_error(id),
                 }
@@ -416,9 +430,10 @@ impl Sync {
             user: None,
             storage: Some(storage.describe().to_owned()),
             storage_degraded: storage.is_degraded(),
-            outbox: self.store.outbox_depth(Some(id)).unwrap_or(0),
+            outbox: self.store.outbox_waiting(id).unwrap_or(0),
             deferred: self.store.outbox_deferred(id).unwrap_or(0),
-            needs_reauth,
+            needs_reauth: needs_reauth
+                || (tracker.is_authenticated() && sync::credential_rejected(&self.store, id)),
             last,
             pull_error: self.pull_error(id),
         }
@@ -928,6 +943,19 @@ async fn persist_renewed_tokens(sync: &Sync) {
             Err(e) => tracing::warn!(error = %e, "could not store the renewed simkl token"),
         }
     }
+    if let Some(trakt) = sync.trakt.as_ref()
+        && let Some(pair) = trakt.take_renewed().await
+    {
+        match sync.tokens.set_pair(
+            "trakt",
+            &pair.access,
+            pair.refresh.as_deref(),
+            pair.expires_at,
+        ) {
+            Ok(_) => tracing::info!("stored the renewed trakt token"),
+            Err(e) => tracing::warn!(error = %e, "could not store the renewed trakt token"),
+        }
+    }
 }
 
 /// A tracker's name as a person knows it. An id it has no name for is shown as it is.
@@ -1127,6 +1155,7 @@ pub async fn pull_once(sync: &Sync, tx: &Outbox) {
             Ok(report) => {
                 sync.note_pull(tracker.id(), None);
                 let _ = sync.store.set_meta_i64(&pull_key(tracker.id()), now);
+                let _ = sync::credential_accepted(&sync.store, tracker.id());
                 // Said after every pull that went through, changed or not: the Accounts row's
                 // "Synced" time and Sync now's answer come from it, and a pull can move the
                 // list's statuses or the outbox without adopting a title.
@@ -1160,7 +1189,15 @@ pub async fn pull_once(sync: &Sync, tx: &Outbox) {
                     let _ = tx.send(Event::Conflicts(rows));
                 }
             }
-            Err(kaeri_core::Error::Auth(_)) => {
+            Err(kaeri_core::Error::Auth(message)) => {
+                // Held as a rejected push is, so the drain stops presenting the same credential
+                // and the next launch still says to sign in again.
+                let _ = sync::note_rejected(&sync.store, tracker.id(), now);
+                tracing::warn!(
+                    tracker = tracker.id(),
+                    %message,
+                    "the tracker rejected the credential on a library pull"
+                );
                 let _ = tx.send(Event::Sync(Box::new(sync.state_for(
                     tracker.as_ref(),
                     true,
@@ -1671,7 +1708,7 @@ pub fn disconnect(sync: &Sync, tracker_id: &str, tx: &Outbox) {
         // signing back in should send what accumulated.
         Ok(()) => {
             let tracker = tracker_name(tracker_id);
-            let count = sync.store.outbox_depth(Some(tracker_id)).unwrap_or(0);
+            let count = sync.store.outbox_waiting(tracker_id).unwrap_or(0);
             Event::Toast(Notice::info(if count == 0 {
                 Msg::NoticeSignedOut { tracker }
             } else {
@@ -2018,6 +2055,184 @@ mod tests {
         let Some(Event::Sync(state)) = rx.try_recv().ok() else { panic!("no state sent") };
         assert_eq!(state.pull_error, None);
         assert_eq!(state.last.as_deref(), Some("pulled 0 titles"));
+    }
+
+    /// A signed-in tracker for the stuck-badge tests: it holds a token, may have no id for some
+    /// titles, and may reject the credential, as the test sets it.
+    struct Fake {
+        id: &'static str,
+        unmapped: Vec<AnilistId>,
+        rejects: std::sync::atomic::AtomicBool,
+    }
+
+    impl Fake {
+        fn new(id: &'static str, unmapped: Vec<AnilistId>, rejects: bool) -> Arc<Self> {
+            Arc::new(Self { id, unmapped, rejects: rejects.into() })
+        }
+
+        fn answer(&self) -> Result<(), kaeri_core::Error> {
+            if self.rejects.load(std::sync::atomic::Ordering::Relaxed) {
+                Err(kaeri_core::Error::Auth("401".into()))
+            } else {
+                Ok(())
+            }
+        }
+    }
+
+    #[async_trait::async_trait]
+    impl Tracker for Fake {
+        fn id(&self) -> &str {
+            self.id
+        }
+        fn is_authenticated(&self) -> bool {
+            true
+        }
+        fn can_address(&self, op: &TrackOp) -> bool {
+            !self.unmapped.contains(&op.anilist_id())
+        }
+        async fn pull_library(
+            &self,
+        ) -> Result<Vec<kaeri_core::traits::TrackedEntry>, kaeri_core::Error> {
+            self.answer().map(|()| Vec::new())
+        }
+        async fn push(&self, _: &[TrackOp]) -> Result<(), kaeri_core::Error> {
+            self.answer()
+        }
+    }
+
+    fn progress(id: u32) -> TrackOp {
+        TrackOp::SetProgress { anilist_id: AnilistId::new(id), episode: 3 }
+    }
+
+    /// The trackers of a library found stuck, in made-up titles: AniList clear; Kitsu with
+    /// three changes for titles it has no id for; Trakt with seven changes for titles it has no
+    /// id for either. The test goes on to break Trakt's credential and queue seven more.
+    fn stuck_library(store: &Store) -> (Arc<Fake>, Arc<Fake>, Arc<Fake>) {
+        let kitsu_unmapped: Vec<_> = (990_101..=990_103).map(AnilistId::new).collect();
+        let trakt_unmapped: Vec<_> = (990_201..=990_207).map(AnilistId::new).collect();
+        for id in &kitsu_unmapped {
+            store.enqueue("kitsu", &progress(id.get()), 1_000).unwrap();
+        }
+        for id in &trakt_unmapped {
+            store.enqueue("trakt", &progress(id.get()), 1_000).unwrap();
+        }
+        (
+            Fake::new("anilist", Vec::new(), false),
+            Fake::new("kitsu", kitsu_unmapped, false),
+            Fake::new("trakt", trakt_unmapped, false),
+        )
+    }
+
+    /// The old badge: every queued row of every signed-in tracker, as the apps summed it.
+    fn badge_before(store: &Store, states: &[SyncState]) -> u32 {
+        states
+            .iter()
+            .filter(|s| s.connected)
+            .map(|s| store.outbox_depth(Some(&s.tracker)).unwrap())
+            .sum()
+    }
+
+    /// What the apps sum now: what is on its way, from trackers whose credential stands.
+    fn badge_after(states: &[SyncState]) -> u32 {
+        states.iter().filter(|s| s.connected && !s.needs_reauth).map(|s| s.outbox).sum()
+    }
+
+    fn state<'a>(states: &'a [SyncState], tracker: &str) -> &'a SyncState {
+        states.iter().find(|s| s.tracker == tracker).expect("a state for every tracker")
+    }
+
+    #[tokio::test]
+    async fn a_held_change_and_a_rejected_credential_are_not_counted_as_waiting() {
+        // Seventeen changes "waiting to sync" for days: three a tracker had no id for, held until
+        // a mapping arrives, and fourteen behind a credential the tracker kept rejecting.
+        let mut config = Config::default();
+        config.trackers.enabled.clear();
+        let store = Store::open_in_memory().unwrap();
+        let http = kaeri_net::HttpClient::new(&config.network).unwrap();
+        let dir = tempfile::tempdir().unwrap();
+        let (anilist, kitsu, trakt) = stuck_library(&store);
+        let sync = Sync {
+            trackers: vec![anilist, kitsu, trakt.clone()],
+            ..Sync::with_tokens(&config, &store, &http, files_in(dir.path()))
+        };
+        let (tx, _rx) = tokio::sync::mpsc::unbounded_channel();
+        let tx = Outbox::from(tx);
+
+        // Trakt's credential worked once: its drain held the seven it has no id for.
+        drain_once(&sync, &tx).await;
+        assert_eq!(store.outbox_deferred("kitsu").unwrap(), 3);
+        assert_eq!(store.outbox_deferred("trakt").unwrap(), 7);
+        // Then it stopped working. Seven more episodes were watched behind it, and a mapping
+        // refresh woke the held seven.
+        trakt.rejects.store(true, std::sync::atomic::Ordering::Relaxed);
+        for id in 990_301..=990_307 {
+            store.enqueue("trakt", &progress(id), 2_000).unwrap();
+        }
+        drain_once(&sync, &tx).await;
+        store.wake_deferred().unwrap();
+        drain_once(&sync, &tx).await;
+        assert_eq!(store.outbox_depth(Some("trakt")).unwrap(), 14);
+        assert_eq!(
+            store.outbox_deferred("trakt").unwrap(),
+            0,
+            "woken, and never drained again"
+        );
+
+        let states = sync.initial_states();
+        assert_eq!(badge_before(&store, &states), 17, "the pill said 17 changes waiting");
+        assert_eq!(badge_after(&states), 0, "nothing is on its way");
+
+        let kitsu = state(&states, "kitsu");
+        assert_eq!((kitsu.outbox, kitsu.deferred, kitsu.needs_reauth), (0, 3, false));
+        let trakt_state = state(&states, "trakt");
+        assert!(
+            trakt_state.needs_reauth,
+            "the rejected credential is said from the first state"
+        );
+        assert_eq!(trakt_state.outbox, 14, "kept for when it is signed in again");
+
+        // Signing in again lifts it, and the queue is waiting again until the drain sends it.
+        trakt.rejects.store(false, std::sync::atomic::Ordering::Relaxed);
+        kaeri_track::sync::clear_reauth_hold(&store, "trakt").unwrap();
+        assert!(!state(&sync.initial_states(), "trakt").needs_reauth);
+        drain_once(&sync, &tx).await;
+        let states = sync.initial_states();
+        let trakt_state = state(&states, "trakt");
+        assert_eq!(
+            (trakt_state.outbox, trakt_state.deferred),
+            (0, 7),
+            "sent, or held for an id"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_pull_the_tracker_rejects_holds_the_queue_and_one_that_goes_through_lifts_it() {
+        // A rejected pull only told the open window, so a restart forgot it and the queue behind
+        // it showed as waiting again.
+        let mut config = Config::default();
+        config.trackers.enabled.clear();
+        let store = Store::open_in_memory().unwrap();
+        let http = kaeri_net::HttpClient::new(&config.network).unwrap();
+        let dir = tempfile::tempdir().unwrap();
+        let trakt = Fake::new("trakt", Vec::new(), true);
+        let sync = Sync {
+            trackers: vec![trakt.clone()],
+            ..Sync::with_tokens(&config, &store, &http, files_in(dir.path()))
+        };
+        let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
+        let tx = Outbox::from(tx);
+
+        pull_once(&sync, &tx).await;
+        let Some(Event::Sync(state)) = rx.try_recv().ok() else { panic!("no state sent") };
+        assert!(state.needs_reauth);
+        assert!(kaeri_track::sync::credential_rejected(&store, "trakt"));
+        assert!(sync.initial_states()[0].needs_reauth, "and a launch still knows");
+
+        // A tracker's passing trouble dressed as a rejection: the next pull goes through.
+        trakt.rejects.store(false, std::sync::atomic::Ordering::Relaxed);
+        pull_once(&sync, &tx).await;
+        assert!(!kaeri_track::sync::credential_rejected(&store, "trakt"));
+        assert!(!sync.initial_states()[0].needs_reauth);
     }
 
     #[test]

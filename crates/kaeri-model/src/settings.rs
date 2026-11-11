@@ -114,6 +114,9 @@ pub enum SettingKey {
     KeepChaptersReady,
     /// Whether a downloaded chapter is deleted once it is read; bookmarked chapters stay.
     DeleteAfterReading,
+    /// Whether chapter lists are grouped by volume. Off by default; with it off a series' list
+    /// comes as one flat group (`VolumeGroup::flat`). Written as `reading.show_volumes`.
+    ShowVolumes,
     /// Whether a series' own mode and direction follow the person to their other devices. On
     /// by default. Set by the switch "Mode and direction".
     SeriesChoicesFollow,
@@ -268,7 +271,7 @@ impl SettingKey {
     /// The native apps' own rows, which the terminal's Settings screen does not show: a front
     /// end finds the rows both show among [`Self::ROWS`]. In no order of their own, since each
     /// app lays them out on its own panes; grouped by [`Self::category`] all the same.
-    pub const NATIVE_ROWS: [Self; 31] = [
+    pub const NATIVE_ROWS: [Self; 32] = [
         Self::UpNextCountdown,
         Self::SpoilerProtection,
         Self::DownloadQuality,
@@ -292,6 +295,7 @@ impl SettingKey {
         Self::NewChapters,
         Self::KeepChaptersReady,
         Self::DeleteAfterReading,
+        Self::ShowVolumes,
         Self::SeriesChoicesFollow,
         Self::ChapterNotifications,
         Self::DownloadsFinished,
@@ -375,6 +379,7 @@ impl SettingKey {
             Self::ChapterDownloadsOnCellular => (&["reading"], "downloads_on_cellular"),
             Self::KeepChaptersReady | Self::NewChapters => (&["reading"], "new_chapters"),
             Self::DeleteAfterReading => (&["reading"], "delete_after_reading"),
+            Self::ShowVolumes => (&["reading"], "show_volumes"),
             Self::OpdsFeed => (&["reading", "feed"], "on"),
             Self::OpdsPassword => (&["reading", "feed"], "password_set"),
             Self::OpdsPort => (&["reading", "feed"], "port"),
@@ -520,6 +525,7 @@ impl SettingKey {
             Self::DeleteAfterReading => {
                 to.reading.delete_after_reading = from.reading.delete_after_reading;
             }
+            Self::ShowVolumes => to.reading.show_volumes = from.reading.show_volumes,
             Self::OpdsFeed => to.reading.feed.on = from.reading.feed.on,
             Self::OpdsPassword => {
                 to.reading.feed.password_set = from.reading.feed.password_set;
@@ -615,6 +621,7 @@ impl SettingKey {
             | Self::DeleteAfterReading => "downloads",
             Self::OpdsFeed | Self::OpdsPassword | Self::OpdsPort => "downloads",
             Self::SeriesChoicesFollow
+            | Self::ShowVolumes
             | Self::LookFollows
             | Self::WebtoonMode
             | Self::CountsAsRead => "reading",
@@ -702,6 +709,7 @@ impl SettingKey {
             Self::KeepChaptersReady => "keep chapters ready",
             Self::NewChapters => "new chapters",
             Self::DeleteAfterReading => "delete after reading",
+            Self::ShowVolumes => "show volumes",
             Self::OpdsFeed => "share on this network",
             Self::OpdsPassword => "feed password",
             Self::OpdsPort => "feed port",
@@ -1080,6 +1088,7 @@ pub fn step(
             delta,
         )),
         SettingKey::DeleteAfterReading => V::Bool(!effective.reading.delete_after_reading),
+        SettingKey::ShowVolumes => V::Bool(!effective.reading.show_volumes),
         SettingKey::OpdsFeed => V::Bool(!effective.reading.feed.on),
         SettingKey::SeriesChoicesFollow => V::Bool(!effective.reading.mode_follows()),
         SettingKey::LookFollows => V::Bool(!effective.reading.look_follows()),
@@ -1318,6 +1327,7 @@ pub fn put(config: &mut Config, key: SettingKey, value: &SettingValue) -> bool {
         (SettingKey::DeleteAfterReading, V::Bool(on)) => {
             config.reading.delete_after_reading = *on;
         }
+        (SettingKey::ShowVolumes, V::Bool(on)) => config.reading.show_volumes = *on,
         (SettingKey::OpdsFeed, V::Bool(on)) => config.reading.feed.on = *on,
         (SettingKey::OpdsPassword, V::Str(password)) => {
             config.reading.feed.password_set = !password.trim().is_empty();
@@ -1549,6 +1559,7 @@ pub(crate) fn value(effective: &Config, saved: &Config, key: SettingKey) -> Stri
             effective.reading.new_chapters(NewChapters::Off).name().into()
         }
         SettingKey::DeleteAfterReading => on_off(effective.reading.delete_after_reading),
+        SettingKey::ShowVolumes => on_off(effective.reading.show_volumes),
         SettingKey::OpdsFeed => on_off(effective.reading.feed.on),
         // The password is never read back.
         SettingKey::OpdsPassword => {
@@ -1677,6 +1688,7 @@ fn two_state(effective: &Config, saved: &Config, key: SettingKey) -> Option<bool
         S::ChapterDownloadsOnCellular => c.reading.downloads_on_cellular,
         S::KeepChaptersReady => keeps_ready(c),
         S::DeleteAfterReading => c.reading.delete_after_reading,
+        S::ShowVolumes => c.reading.show_volumes,
         S::OpdsFeed => c.reading.feed.on,
         S::SeriesChoicesFollow => c.reading.mode_follows(),
         S::LookFollows => c.reading.look_follows(),
@@ -2040,6 +2052,7 @@ mod tests {
                 (SettingKey::NewChapters, "off"),
                 (SettingKey::KeepChaptersReady, "off"),
                 (SettingKey::DeleteAfterReading, "off"),
+                (SettingKey::ShowVolumes, "off"),
                 (SettingKey::SeriesChoicesFollow, "on"),
                 (SettingKey::ChapterNotifications, "off"),
                 (SettingKey::DownloadsFinished, "off"),

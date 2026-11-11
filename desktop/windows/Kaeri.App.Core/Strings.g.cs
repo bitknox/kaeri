@@ -6028,6 +6028,15 @@ public static partial class T
     /// <summary>Line on the page between chapters, near its buttons: one more swipe opens the next chapter.</summary>
     public static string ReaderEndSwipe => Get("ReaderEndSwipe");
 
+    /// <summary>Button beside Continue on the page between chapters, shown only when the next chapter is an extra (such as 16.5 between 16 and 17). It opens the chapter named, passing over the extras before it. The chapter is its number, such as 17.</summary>
+    public static string ReaderEndSkipTo(string chapter) => Fill(Get("ReaderEndSkipTo"), ("chapter", chapter));
+
+    /// <summary>What a screen reader adds after "Skip to chapter 17": the extra it passes over stays unread in the chapter list. The chapter is the extra's number, such as 16.5.</summary>
+    public static string ReaderEndSkipHint(string chapter) => Fill(Get("ReaderEndSkipHint"), ("chapter", chapter));
+
+    /// <summary>What a screen reader adds after "Skip to chapter 17" when it passes over more than one extra, or an extra with no number (such as an omake): those chapters stay unread in the chapter list.</summary>
+    public static string ReaderEndSkipHintExtras => Get("ReaderEndSkipHintExtras");
+
     /// <summary>The next episode's length on the divider inside a strip.</summary>
     public static string ReaderDividerImages(long count) => Fill(GetPlural("ReaderDividerImages", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -6372,6 +6381,9 @@ public static partial class T
 
     /// <summary>A tracker's progress in chapters, total unknown.</summary>
     public static string SeriesTrackerChapters(long n) => Fill(GetPlural("SeriesTrackerChapters", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A tracker's progress when the person has read none of the series yet, in place of "0 chapters".</summary>
+    public static string SeriesTrackerNotStarted => Get("SeriesTrackerNotStarted");
 
     /// <summary>A tracker's progress in chapters, then the volume.</summary>
     public static string SeriesTrackerWithVolume(string chapters, long volume) => Fill(Get("SeriesTrackerWithVolume"), ("chapters", chapters), ("volume", volume.ToString(System.Globalization.CultureInfo.CurrentCulture)));
@@ -7333,6 +7345,9 @@ public static partial class T
 
     /// <summary>Line under Delete chapters after reading.</summary>
     public static string SettingsDeleteAfterReadingNote => Get("SettingsDeleteAfterReadingNote");
+
+    /// <summary>Line under Show volumes: the list is grouped only when most chapters have a volume.</summary>
+    public static string SettingsShowVolumesNote => Get("SettingsShowVolumesNote");
 
     /// <summary>Line under New chapters.</summary>
     public static string SettingsChapterNotificationsNote => Get("SettingsChapterNotificationsNote");
@@ -8447,6 +8462,9 @@ public static partial class T
     /// <summary>Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.</summary>
     public static string SettingsDeleteAfterReading => Get("SettingsDeleteAfterReading");
 
+    /// <summary>Row: group a series' chapters under volume headings. Off by default.</summary>
+    public static string SettingsShowVolumes => Get("SettingsShowVolumes");
+
     /// <summary>Row: whether a series' reader mode, direction and colour follow you to your other devices.</summary>
     public static string SettingsSeriesChoicesFollow => Get("SettingsSeriesChoicesFollow");
 
@@ -8656,6 +8674,9 @@ public static partial class T
 
     /// <summary>Line under a signed-in account while changes wait to be sent.</summary>
     public static string AccountsChangesWaiting(long count) => Fill(GetPlural("AccountsChangesWaiting", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Line under a signed-in account when nothing else waits but some changes can't go out yet: the { -tracker } has no match for those titles. They go out by themselves once it has one.</summary>
+    public static string AccountsChangesHeld(long count) => Fill(GetPlural("AccountsChangesHeld", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Choice for the download quality: larger files with more detail.</summary>
     public static string SettingsQualityHigher => Get("SettingsQualityHigher");
@@ -13863,6 +13884,9 @@ public static partial class T
         ["ReaderChapterLine"] = "Chapter {chapter}",
         ["ReaderDividerFactsSource"] = "{facts} · from {source}",
         ["ReaderEndSwipe"] = "Swipe to keep reading",
+        ["ReaderEndSkipTo"] = "Skip to chapter {chapter}",
+        ["ReaderEndSkipHint"] = "Chapter {chapter} stays unread.",
+        ["ReaderEndSkipHintExtras"] = "The extras before it stay unread.",
         ["ReaderDividerImages_one"] = "One image",
         ["ReaderDividerImages_other"] = "{count} images",
         ["ReaderChapterLineTitled"] = "Chapter {chapter} · {title}",
@@ -13990,6 +14014,7 @@ public static partial class T
         ["SeriesTrackerChaptersOf_other"] = "{n} of {total} chapters",
         ["SeriesTrackerChapters_one"] = "1 chapter",
         ["SeriesTrackerChapters_other"] = "{n} chapters",
+        ["SeriesTrackerNotStarted"] = "Not started",
         ["SeriesTrackerWithVolume"] = "{chapters} · volume {volume}",
         ["SeriesTrackerVolumes"] = "Volume {volume} of {total}",
         ["SeriesReadFromAnother"] = "Read from another source",
@@ -14328,6 +14353,7 @@ public static partial class T
         ["SettingsDisagreeNote"] = "Status and score follow the latest change",
         ["SettingsKeepChaptersReadyNote"] = "The next chapters of series on your Reading list",
         ["SettingsDeleteAfterReadingNote"] = "Bookmarked chapters are kept",
+        ["SettingsShowVolumesNote"] = "Grouped when most chapters have a volume",
         ["SettingsChapterNotificationsNote"] = "Series on your Reading list",
         ["SettingsDownloadsFinishedNote"] = "When the chapters downloading are all done",
         ["SettingsChapterNotificationsFooter"] = "Chapters have their own system channel, so you can silence them and keep the rest.",
@@ -14715,6 +14741,7 @@ public static partial class T
         ["SettingsChapterDownloadsCellular"] = "Chapter downloads on mobile data",
         ["SettingsKeepChaptersReady"] = "Keep next chapters ready",
         ["SettingsDeleteAfterReading"] = "Delete chapters after reading",
+        ["SettingsShowVolumes"] = "Show volumes",
         ["SettingsSeriesChoicesFollow"] = "Series settings follow you",
         ["SettingsNewChaptersDownload"] = "New chapters",
         ["SettingsModeFollows"] = "Mode and direction",
@@ -14786,6 +14813,8 @@ public static partial class T
         ["WidgetResumeDubbedLabel"] = "Resume episode {episode}, dubbed, of {title}",
         ["AccountsChangesWaiting_one"] = "One change waiting to sync",
         ["AccountsChangesWaiting_other"] = "{count} changes waiting to sync",
+        ["AccountsChangesHeld_one"] = "One change can't sync yet",
+        ["AccountsChangesHeld_other"] = "{count} changes can't sync yet",
         ["SettingsQualityHigher"] = "Higher",
         ["SettingsQualityStandard"] = "Standard",
         ["SettingsUploadUnlimited"] = "Unlimited",

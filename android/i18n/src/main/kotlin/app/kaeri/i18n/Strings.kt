@@ -3169,15 +3169,15 @@ object Strings {
     fun einkSheetScreen(context: Context): String =
         context.getString(R.string.eink_sheet_screen)
 
-    /** Row in the e-ink reader's settings: a full refresh on every page with a picture. */
+    /** Row in the e-ink reader's settings: a full refresh on every page with a picture. Off by default, so the device's own settings decide how the screen clears. */
     fun einkRowRefreshImage(context: Context): String =
         context.getString(R.string.eink_row_refresh_image)
 
-    /** Row in the e-ink reader's settings: how often text pages get a full refresh. */
+    /** Row in the e-ink reader's settings: how often text pages get a full refresh, or Off, the default. */
     fun einkRowRefreshText(context: Context): String =
         context.getString(R.string.eink_row_refresh_text)
 
-    /** Row in the e-ink reader's settings: how often lists get a full refresh as they page. */
+    /** Row in the e-ink reader's settings: how often lists get a full refresh as they page, or Off, the default. */
     fun einkRowRefreshList(context: Context): String =
         context.getString(R.string.eink_row_refresh_list)
 
@@ -3185,19 +3185,35 @@ object Strings {
     fun einkRefreshEvery(context: Context, count: Int): String =
         context.resources.getQuantityString(R.plurals.eink_refresh_every, count, count)
 
-    /** Row in the e-ink reader's settings on a colour screen with speed modes: which mode pages use. */
-    fun einkRowScreenSpeed(context: Context): String =
-        context.getString(R.string.eink_row_screen_speed)
+    /** Row in the e-ink reader's settings: which of the screen's own update modes pages are drawn in, shown only where the app can set them. Its choices are the device's setting and the modes below, or Standard, Fast and Best quality on a colour screen with speed modes. */
+    fun einkRowScreenMode(context: Context): String =
+        context.getString(R.string.eink_row_screen_mode)
 
-    /** Choice of Screen speed: the screen's usual mode. */
+    /** Choice of Screen mode, and its default: the app leaves the update mode to the device's own settings for this app. */
+    fun einkModeDevice(context: Context): String =
+        context.getString(R.string.eink_mode_device)
+
+    /** Choice of Screen mode: the screen's sharpest grey mode. HD is the name e-readers give this mode. */
+    fun einkModeHd(context: Context): String =
+        context.getString(R.string.eink_mode_hd)
+
+    /** Choice of Screen mode: the screen's mode with the least ghosting on text pages. Regal is the name e-readers give this mode; keep it as the device shows it. */
+    fun einkModeRegal(context: Context): String =
+        context.getString(R.string.eink_mode_regal)
+
+    /** Choice of Screen mode: quicker updates in fewer greys, with a little ghosting. */
+    fun einkModeBalanced(context: Context): String =
+        context.getString(R.string.eink_mode_balanced)
+
+    /** Choice of Screen mode on a colour screen with speed modes: the screen's usual mode. */
     fun einkSpeedStandard(context: Context): String =
         context.getString(R.string.eink_speed_standard)
 
-    /** Choice of Screen speed: quicker updates with more ghosting. */
+    /** Choice of Screen mode: quicker updates with more ghosting. */
     fun einkSpeedFast(context: Context): String =
         context.getString(R.string.eink_speed_fast)
 
-    /** Choice of Screen speed: the slowest and cleanest updates. */
+    /** Choice of Screen mode on a colour screen with speed modes: the slowest and cleanest updates. */
     fun einkSpeedBest(context: Context): String =
         context.getString(R.string.eink_speed_best)
 
@@ -3224,6 +3240,14 @@ object Strings {
     /** Button that makes a setting in the e-ink reader's settings bigger. */
     fun einkStepUp(context: Context): String =
         context.getString(R.string.eink_step_up)
+
+    /** Button before a list setting's value in the e-ink reader's settings, such as Screen mode: picks the choice before. Read out by screen readers. */
+    fun einkStepPrevious(context: Context): String =
+        context.getString(R.string.eink_step_previous)
+
+    /** Button after a list setting's value in the e-ink reader's settings, such as Screen mode: picks the choice after. Read out by screen readers. */
+    fun einkStepNext(context: Context): String =
+        context.getString(R.string.eink_step_next)
 
     /** Marks the chapter open in the reader on the e-ink contents page. */
     fun einkContentsReading(context: Context): String =
@@ -9354,6 +9378,18 @@ object Strings {
     fun readerEndSwipe(context: Context): String =
         context.getString(R.string.reader_end_swipe)
 
+    /** Button beside Continue on the page between chapters, shown only when the next chapter is an extra (such as 16.5 between 16 and 17). It opens the chapter named, passing over the extras before it. The chapter is its number, such as 17. */
+    fun readerEndSkipTo(context: Context, chapter: String): String =
+        context.getString(R.string.reader_end_skip_to, chapter)
+
+    /** What a screen reader adds after "Skip to chapter 17": the extra it passes over stays unread in the chapter list. The chapter is the extra's number, such as 16.5. */
+    fun readerEndSkipHint(context: Context, chapter: String): String =
+        context.getString(R.string.reader_end_skip_hint, chapter)
+
+    /** What a screen reader adds after "Skip to chapter 17" when it passes over more than one extra, or an extra with no number (such as an omake): those chapters stay unread in the chapter list. */
+    fun readerEndSkipHintExtras(context: Context): String =
+        context.getString(R.string.reader_end_skip_hint_extras)
+
     /** The next episode's length on the divider inside a strip. */
     fun readerDividerImages(context: Context, count: Int): String =
         context.resources.getQuantityString(R.plurals.reader_divider_images, count, count)
@@ -9813,6 +9849,10 @@ object Strings {
     /** A tracker's progress in chapters, total unknown. */
     fun seriesTrackerChapters(context: Context, n: Int): String =
         context.resources.getQuantityString(R.plurals.series_tracker_chapters, n, n)
+
+    /** A tracker's progress when the person has read none of the series yet, in place of "0 chapters". */
+    fun seriesTrackerNotStarted(context: Context): String =
+        context.getString(R.string.series_tracker_not_started)
 
     /** A tracker's progress in chapters, then the volume. */
     fun seriesTrackerWithVolume(context: Context, chapters: String, volume: Int): String =
@@ -11119,6 +11159,10 @@ object Strings {
     /** Line under Delete chapters after reading. */
     fun settingsDeleteAfterReadingNote(context: Context): String =
         context.getString(R.string.settings_delete_after_reading_note)
+
+    /** Line under Show volumes: the list is grouped only when most chapters have a volume. */
+    fun settingsShowVolumesNote(context: Context): String =
+        context.getString(R.string.settings_show_volumes_note)
 
     /** Line under New chapters. */
     fun settingsChapterNotificationsNote(context: Context): String =
@@ -12604,6 +12648,10 @@ object Strings {
     fun settingsDeleteAfterReading(context: Context): String =
         context.getString(R.string.settings_delete_after_reading)
 
+    /** Row: group a series' chapters under volume headings. Off by default. */
+    fun settingsShowVolumes(context: Context): String =
+        context.getString(R.string.settings_show_volumes)
+
     /** Row: whether a series' reader mode, direction and colour follow you to your other devices. */
     fun settingsSeriesChoicesFollow(context: Context): String =
         context.getString(R.string.settings_series_choices_follow)
@@ -12883,6 +12931,10 @@ object Strings {
     /** Line under a signed-in account while changes wait to be sent. */
     fun accountsChangesWaiting(context: Context, count: Int): String =
         context.resources.getQuantityString(R.plurals.accounts_changes_waiting, count, count)
+
+    /** Line under a signed-in account when nothing else waits but some changes can't go out yet: the { -tracker } has no match for those titles. They go out by themselves once it has one. */
+    fun accountsChangesHeld(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.accounts_changes_held, count, count)
 
     /** Choice for the download quality: larger files with more detail. */
     fun settingsQualityHigher(context: Context): String =

@@ -42,6 +42,10 @@ pub enum Internal {
     Reader { session: u64, wake: ReaderWake },
     /// Reading arrived from another device: the open reader may move on.
     ReadingSynced,
+    /// A book source joined, was updated, left, or was switched on, off or moved, or a folder's
+    /// or a server's series came in: what reading shows is brought up to date, as
+    /// [`crate::read_catalog::changed`] says.
+    BookSourcesChanged,
 }
 
 /// What woke the reader session.

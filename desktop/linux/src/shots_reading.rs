@@ -14,7 +14,7 @@ use kaeri_model::{
 use crate::{pages::Dest, reading::reader::Reader, window::Shell};
 
 /// Every reading shot, in the order a run takes them.
-pub const NAMES: [&str; 43] = [
+pub const NAMES: [&str; 44] = [
     "read",
     "read-updates",
     "read-library",
@@ -37,6 +37,7 @@ pub const NAMES: [&str; 43] = [
     "read-end",
     "read-end-none",
     "read-end-plate",
+    "read-end-skip",
     "read-plate",
     "read-open-failed",
     "read-mode",
@@ -238,6 +239,14 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
             later(shell, 2500, |reader| reader.shot_end_plate());
             4.0
         }
+        // The next chapter an extra, 16.5, with Skip to chapter 17 beside Continue.
+        "read-end-skip" => {
+            read(shell, MANGA, "13");
+            later(shell, 2500, |reader| reader.shot_end());
+            // After the engine's own end page has come, which names no skip.
+            later(shell, 3500, |reader| reader.shot_end_skip());
+            5.0
+        }
         // A page still loading after 4 s: its plate, number and line.
         "read-plate" => {
             read(shell, MANGA, "13");
@@ -298,9 +307,10 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
             read(shell, STRIP, "2");
             4.0
         }
-        // Chapters over a manga page: the page grid, then the chapters by volume.
-        "read-chapters" | "read-chapters-list" => {
-            read(shell, MANGA, "13");
+        // Chapters over a manga page: the page grid, then the chapters by volume. The long one
+        // is the reading-long scene's chapter 60 of 120.
+        "read-chapters" | "read-chapters-list" | "read-chapters-long" => {
+            read(shell, MANGA, if shot == "read-chapters-long" { "60" } else { "13" });
             let reader = Rc::clone(&shell.reader);
             let tab = if shot == "read-chapters" { "pages" } else { "chapters" };
             gtk::glib::timeout_add_local_once(

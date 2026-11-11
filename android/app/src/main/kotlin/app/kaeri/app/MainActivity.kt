@@ -47,7 +47,7 @@ import app.kaeri.engine.model.MediaFormat
 import app.kaeri.engine.model.SearchQuery
 import app.kaeri.engine.model.Season
 import app.kaeri.engine.model.SettingKey
-import app.kaeri.engine.model.Refresh
+import app.kaeri.engine.model.EinkPaint
 import app.kaeri.player.takeBackBeforeShown
 import app.kaeri.player.ui.PictureInPictureOnLeave
 import app.kaeri.player.ui.PlayerFrame
@@ -65,6 +65,7 @@ import app.kaeri.ui.Destination
 import app.kaeri.ui.reading.LocalEinkLayout
 import app.kaeri.eink.EinkAnswerPrefs
 import app.kaeri.eink.EinkLook
+import app.kaeri.eink.EinkPainter
 import app.kaeri.eink.RefreshControllers
 import app.kaeri.reader.phone.ReaderLauncher
 import app.kaeri.reader.phone.ReaderRequest
@@ -266,16 +267,18 @@ class MainActivity : ComponentActivity() {
                     paperSplash(einkState.eink, paper)
                 }
                 // The layout switched while the app is open: every pixel changes, so once the new
-                // one has drawn the panel is asked for one full refresh, which leaves no ghost of
-                // the old one. A first frame needs none.
+                // one has drawn, the refresh policy decides as for the bars closing over a page: one
+                // full refresh when the person turned full refreshes on, else the device's own. A
+                // first frame needs none.
                 val shownLayout = androidx.compose.runtime.remember { booleanArrayOf(einkState.eink) }
                 androidx.compose.runtime.LaunchedEffect(einkState.eink) {
                     if (shownLayout[0] == einkState.eink) return@LaunchedEffect
                     shownLayout[0] = einkState.eink
                     androidx.compose.runtime.withFrameNanos { }
                     androidx.compose.runtime.withFrameNanos { }
-                    val family = einkState.profile?.family ?: return@LaunchedEffect
-                    RefreshControllers.of(family, this@MainActivity).refresh(decor, Refresh.FULL)
+                    val profile = einkState.profile ?: return@LaunchedEffect
+                    EinkPainter.forProfile(profile) { RefreshControllers.of(it, this@MainActivity) }
+                        .paint(decor, EinkPaint.ChromeClose)
                 }
                 CompositionLocalProvider(LocalEinkLayout provides einkLayout) {
                 ReaderHost(app.store, app.eink) { AppRoot(

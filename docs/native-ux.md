@@ -32,7 +32,7 @@ One SwiftUI app with three shapes: a split view on Mac, the same split view on i
 - The window's minimum size is 960 × 600 pt, and it restores its frame, sidebar width, section and scroll position (`SceneStorage`). The toolbar holds the search field (`searchable(placement: .toolbar)`) and the sync status, which opens a popover of running jobs.
 - The player has its own single-instance `Window` (M4), so browsing goes on during playback. It remembers its size and position, opening the first time at the video's size capped at 70% of the screen, and resizes at the video's aspect ratio. The title bar is transparent and hides with the controls, and dragging the video moves the window.
 - A book opens in the main window, not a window of its own. The sidebar and toolbar give way to the page, the traffic lights stay, and the window keeps its size, position and full screen. It crossfades in and out, and with Reduce Motion it swaps at once. Esc and the Back button in its bar return to exactly where the book was opened, scroll position included. Opening a second book replaces the first, and the player window goes on beside it.
-- The reader takes the keys as soon as it shows, with no click, and takes them back when a sheet or the page prompt closes. The Go menu and the reader share one key table. On pages, Left and Right follow the page, so in right to left Left goes forward; Up and Down, Space and Shift-Space, Page Down and Page Up turn pages; Home and End go to the first and last page; ] and [ change chapter. In a strip, Down and Up scroll a short step, Space, Shift-Space, Page Down and Page Up scroll a screen less a little overlap, Home and End go to the top and bottom, and Left and Right do nothing. Scrolling by key is smooth, and instant with Reduce Motion.
+- The reader takes the keys as soon as it shows, with no click, and takes them back when a sheet or the page prompt closes. The Go menu and the reader share one key table. On pages, Left and Right follow the page, so in right to left Left goes forward; Up and Down, Space and Shift-Space, Page Down and Page Up turn pages; Home and End go to the first and last page; ] and [ change chapter. In a strip, Down and Up scroll a short step, Space, Shift-Space, Page Down and Page Up scroll a screen less a little overlap, Home and End go to the top and bottom, and Left and Right do nothing. Scrolling by key is smooth, and instant with Reduce Motion. A turn past a chapter's last page, or a scrolled chapter's foot, shows the end page, in a novel as on a comic's pages, and the next turn forward opens the next chapter, by key, click zone or swipe alike; a turn back returns to the last page.
 - As in the companion, a click on the video pauses after the double-click interval, a double-click toggles full screen, and a drag of more than 8 pt never pauses. ⌘W stops playback with the position saved.
 - Rows highlight on press and selection only, with no hover highlight and no scale. A truncated title shows whole in a `help(_:)` tooltip.
 - Every cover and row has a `contextMenu` with the same items as the iPhone's long-press menu.
@@ -377,6 +377,19 @@ What is typed and every filter are one `SearchQuery`. The engine owns the rules:
 - On a Mac the filters are a 340 pt panel at the trailing edge (⌥⌘F); on an iPad an inspector and on an iPhone a sheet. Windows has a 340 epx panel at the right edge, opened by Filters or Ctrl+Shift+F, since Ctrl+F and Ctrl+E go to the search box. Esc closes it.
 - A genre or tag typed in the field is offered as a filter. Choosing it adds the filter and clears the words it was found by.
 - The Trending rail scrolls sideways with no scrollbar, as Home's shelves do.
+
+## Reading
+
+### Chapter lists open on the current chapter
+
+Decided 10 November 2026. A chapter list that opens on its own opens with the current chapter in the middle. That covers the reader's chapter list in every form (the Mac and Linux popover, the iPhone and Android sheets, iPad, tablet and e-ink) and Choose chapters, the download picker on the series page. The series page itself still opens at its header.
+
+- In the reader, the current chapter is the one open. Outside it, it is the chapter in progress, or else the one after the last chapter read: the same place Choose chapters starts its picks from. With nothing read, or everything read, the list opens at its top.
+- The row sits as near the middle as the list allows. Near either end it stops at that end, and a list short enough to fit does not move.
+- Nothing scrolls into place. The list is positioned before its first frame is drawn, or under a crossfade of the window, never by a fade through an empty screen.
+- On e-ink, Contents opens on the page that holds the current chapter, with no scrolling.
+- VoiceOver, TalkBack and the keyboard on Mac, Windows and Linux start on the current chapter's row.
+- Mark read up to is an action on a chapter's row, and a volume on the series page opens in place, so neither opens a list of its own.
 
 ## States
 

@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -39,10 +40,17 @@ import androidx.compose.ui.unit.dp
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun ReaderSheet(instant: Boolean, onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
+internal fun ReaderSheet(
+    instant: Boolean,
+    onDismiss: () -> Unit,
+    /** Opens at the content's full height rather than half the screen. */
+    whole: Boolean = false,
+    content: @Composable ColumnScope.() -> Unit,
+) {
     if (!instant) {
         ModalBottomSheet(
             onDismissRequest = onDismiss,
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = whole),
             containerColor = Chrome.plate,
             contentColor = Chrome.text,
             // The page behind stays undimmed.

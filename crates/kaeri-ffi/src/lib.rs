@@ -378,6 +378,7 @@ mod tests {
             rotate: false,
             half: Some(PageHalf::Right),
             ratio: Some(0.71),
+            strip: Some(StripPos { image: 2, offset: 0.25 }),
         };
         crosses_intact(Event::Reader(ReaderEvent::Leaves {
             session: 7,
@@ -439,6 +440,7 @@ mod tests {
             ppi: 300,
             family: VendorFamily::Onyx,
             refresh_hook: true,
+            panel_modes: true,
             page_buttons: true,
             colour_sure: true,
             novels: NovelSupport::Full,

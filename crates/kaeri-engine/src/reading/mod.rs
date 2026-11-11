@@ -8,6 +8,7 @@
 
 pub(crate) mod credits;
 pub(crate) mod eink;
+pub(crate) mod extras;
 pub(crate) mod feed;
 pub mod novel;
 pub(crate) mod pages;
@@ -426,7 +427,8 @@ fn search(services: &Services, query: ReadSearchQuery, page: u32, tx: &Outbox) {
     let plugins = services.book_plugins.clone();
     tokio::spawn(async move {
         sources.adopt_plugins(&plugins);
-        let tiles = sources.search(&query.text, query.medium, now).await;
+        let scope = query.source_scope.as_deref();
+        let tiles = sources.search_in(&query.text, query.medium, scope, now).await;
         let _ = tx.send(Event::Reading(ReadingEvent::Search {
             query,
             page: 0,

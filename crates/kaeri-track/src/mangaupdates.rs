@@ -348,10 +348,10 @@ fn entry_from(body: &serde_json::Value) -> Option<Entry> {
 }
 
 impl Renews for MangaUpdatesTracker {
-    async fn renew(&self, _refresh: &str, _now: i64) -> Result<TokenPair, String> {
+    async fn renew(&self, _refresh: &str, _now: i64) -> Result<TokenPair, kaeri_core::Error> {
         // A session has no refresh token, so this is only reached by a pair that has one stored
         // by hand; the person signs in on the form instead.
-        Err("MangaUpdates sessions are not renewed".into())
+        Err(kaeri_core::Error::Auth("MangaUpdates sessions are not renewed".into()))
     }
 }
 

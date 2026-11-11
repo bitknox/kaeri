@@ -513,6 +513,7 @@ public sealed partial class SettingsPage
         K.LookFollows => T.SettingsLookFollowsNote,
         K.NewChapters => row.Value == "reading" ? T.SettingsNewChaptersNote : null,
         K.DeleteAfterReading => T.SettingsDeleteAfterReadingNote,
+        K.ShowVolumes => T.SettingsShowVolumesNote,
         K.ChapterNotifications => T.SettingsChapterNotificationsNote,
         _ => null,
     };
