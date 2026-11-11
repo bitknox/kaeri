@@ -87,6 +87,9 @@ class EinkLargeHomeShots : ReadingShotHarness() {
     @Test @Config(qualifiers = EREADER_10, fontScale = AIR_SCALE) fun air_downloads() = downloads("b-air-085-downloads")
     @Test @Config(qualifiers = EREADER_10, fontScale = AIR_SCALE) fun air_more() = more("b-air-085-more")
 
+    // On its side, which keeps today's Home: drawn so it can be judged.
+    @Test @Config(qualifiers = "w1323dp-h992dp-land-300dpi", fontScale = AIR_SCALE) fun air_land_home() = home("air-land-085-home")
+
     // 10.3 inch at 1.0
 
     @Test @Config(qualifiers = EREADER_10) fun air_home_1() = home("b-air-100-home")
