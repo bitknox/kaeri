@@ -420,6 +420,25 @@ async fn a_page_that_hangs_holds_only_itself() {
     assert!(missing.is_empty(), "never asked for: {missing:?}");
 }
 
+/// `wait`, or `None` once `limit` of real time has passed. With the clock paused, a timeout on it
+/// runs out the moment the runtime has nothing to do, as while the page worker, a thread outside
+/// the runtime, makes a page; this one is kept by a thread of its own.
+async fn within_real<T>(limit: Duration, wait: impl Future<Output = T>) -> Option<T> {
+    let (ran_out, out) = tokio::sync::oneshot::channel::<()>();
+    let (done, stop) = std::sync::mpsc::channel::<()>();
+    std::thread::spawn(move || {
+        if let Err(std::sync::mpsc::RecvTimeoutError::Timeout) = stop.recv_timeout(limit) {
+            let _ = ran_out.send(());
+        }
+    });
+    let got = tokio::select! {
+        got = wait => Some(got),
+        _ = out => None,
+    };
+    drop(done);
+    got
+}
+
 /// A page that never comes is asked for once more after its wait, then fails as its source not
 /// answering, with its own retry; the rest of the chapter still comes. The clock stops once the
 /// chapter is laid out, so the waits pass at once.
@@ -434,8 +453,8 @@ async fn a_page_that_never_comes_fails_after_one_more_try() {
     let leaf = leaves.iter().find(|l| l.parts.iter().any(|p| p.page == 2)).unwrap().index;
     tokio::time::pause();
     h.shown(leaf, TurnHow::Jump).await;
-    let failure = timeout(
-        Duration::from_secs(120),
+    let failure = within_real(
+        Duration::from_secs(20),
         h.until(|e| match e {
             ReaderEvent::PageFailed { page: 2, failure, .. } => Some(failure.clone()),
             _ => None,
