@@ -326,9 +326,14 @@ private fun SheetFrame(
                 .then(if (full) Modifier.statusBarsPadding() else Modifier.topRule())
                 .holdsTouches()
                 .navigationBarsPadding()
-                .padding(horizontal = EinkSizes.SheetPadding, vertical = 12.dp),
+                // A full page's header rule runs edge to edge, so there the sides are padded inside.
+                .padding(horizontal = if (full) 0.dp else EinkSizes.SheetPadding, vertical = 12.dp),
         ) {
-            Row(Modifier.fillMaxWidth().height(EinkSizes.SheetRow), verticalAlignment = Alignment.CenterVertically) {
+            val sides = if (full) Modifier.padding(horizontal = EinkSizes.SheetPadding) else Modifier
+            Row(
+                Modifier.fillMaxWidth().then(if (full) Modifier.bottomRule() else Modifier).then(sides).height(EinkSizes.SheetRow),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 if (onBack != null) {
                     Box(
                         Modifier.size(52.dp).semantics { contentDescription = Strings.einkBack(context) }.einkClick(onClick = onBack),
@@ -338,7 +343,7 @@ private fun SheetFrame(
                 Text(title, style = EinkType.ReaderTitle, modifier = Modifier.weight(1f).semantics { heading() })
                 EinkTextButton(Strings.actionDone(context), onDone)
             }
-            Column(Modifier.verticalScroll(rememberScrollState())) { content() }
+            Column(sides.verticalScroll(rememberScrollState())) { content() }
         }
     }
 }
