@@ -832,9 +832,20 @@ pub struct ReadSearchQuery {
     /// Ask only the person's sources, not AniList: the filter bar's "Your sources only".
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub sources_only: bool,
+    /// The ids of the only sources a search with words asks: the large e-ink panel's Search in.
+    /// `None` asks every source that is on. A source outside it never gets the words, nor a
+    /// source that joins while the search shows. AniList is still [`Self::sources_only`]'s.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub source_scope: Option<Vec<String>>,
 }
 
 impl ReadSearchQuery {
+    /// Whether a search with words may ask the source `id`: it is in [`Self::source_scope`],
+    /// or there is none.
+    pub fn asks_source(&self, id: &str) -> bool {
+        self.source_scope.as_ref().is_none_or(|scope| scope.iter().any(|s| s == id))
+    }
+
     /// [`Self::formats`] as the filter reads them: a saved `one-shot` is `manga`, each once,
     /// in the order chosen.
     pub fn format_keys(&self) -> Vec<&str> {

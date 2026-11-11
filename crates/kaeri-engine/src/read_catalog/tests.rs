@@ -700,6 +700,38 @@ async fn your_sources_only_leaves_anilist_out() {
     }
 }
 
+/// Search in one source: the words go to that source alone. The others get no request, not
+/// even when a source joins while the search shows, and their groups are not drawn.
+#[tokio::test]
+async fn a_scoped_search_asks_only_the_sources_in_its_scope() {
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(None, dir.path());
+    let wren = vec![hit("w-1", "Wren and the Iron Bridge", None)];
+    let near = Shelf::put(&kit, "near", "Near shelf", Answer::Now(Vec::new()));
+    let picked = Shelf::put(&kit, "picked", "Picked shelf", Answer::Now(wren));
+    let far = Shelf::put(&kit, "far", "Far shelf", Answer::Now(Vec::new()));
+    let scoped = ReadSearchQuery {
+        sources_only: true,
+        source_scope: Some(vec!["picked".into()]),
+        ..query("wren")
+    };
+    let (tx, mut rx) = outbox();
+    search::search(&kit, ask(), scoped.clone(), 0, &tx);
+    let done = part_until(&mut rx, |p| p.done).await;
+    let ids: Vec<&str> = done.groups.iter().map(|g| g.source_id.as_str()).collect();
+    assert_eq!(ids, ["picked"], "{done:?}");
+    assert_eq!(*state(&done, "picked"), ReadSourceState::Hits);
+
+    // A source that joins while the scoped search shows is not asked either.
+    let late = Shelf::put(&kit, "late", "Late shelf", Answer::Now(Vec::new()));
+    super::changed::sources_changed(&kit, ask(), &tx);
+    // Try again naming a source outside the scope asks nothing.
+    search::retry_source(&kit, ask(), scoped, "far".into(), &tx);
+    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    let asked = |s: &Shelf| s.asked.load(Ordering::SeqCst);
+    assert_eq!([asked(&near), asked(&picked), asked(&far), asked(&late)], [0, 1, 0, 0]);
+}
+
 /// Browse with only "Your sources only" on: no words for the sources, and AniList is never
 /// asked. The answer is an empty page, on a later page too.
 #[tokio::test]

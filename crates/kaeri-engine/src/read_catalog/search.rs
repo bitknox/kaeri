@@ -173,7 +173,7 @@ pub fn search(kit: &Kit, ask: Ask, query: ReadSearchQuery, page: u32, tx: &Outbo
                     .collect();
                 // AniList has no word of the demo: its works follow AniList's on the first page,
                 // while it is on.
-                if page == 0 {
+                if page == 0 && query.asks_source(kaeri_core::demo::DEMO_SOURCE_ID) {
                     for mut tile in kit.sources.demo_tiles(&query) {
                         tiles::mark(&mut tile, &kit.store, &kit.sources);
                         tiles.push(tile);
@@ -385,16 +385,18 @@ fn same_format(theirs: &ReadingFormat, ours: &ReadingFormat) -> bool {
     theirs == ours || matches!((theirs, ours), (Manga, OneShot) | (OneShot, Manga))
 }
 
-/// The sources a search asks, in the person's order: on, and carrying the query's medium.
+/// The sources a search asks, in the person's order: on, in the query's scope, and carrying its
+/// medium. A source outside the scope never gets the words.
 fn sources_for(
     kit: &Kit,
-    medium: Option<Medium>,
+    query: &ReadSearchQuery,
 ) -> Vec<(String, String, Option<ReadSourceKind>)> {
+    let medium = medium_of(query);
     let registry = &kit.sources.registry;
     registry
         .ids()
         .into_iter()
-        .filter(|id| !registry.is_off(id))
+        .filter(|id| !registry.is_off(id) && query.asks_source(id))
         .filter_map(|id| {
             let manifest = registry.manifest(&id)?;
             let carries =
@@ -419,7 +421,7 @@ fn kind_of(kind: BookSourceKind) -> Option<ReadSourceKind> {
 fn sources_search(kit: &Kit, ask: Ask, query: &ReadSearchQuery, tx: &Outbox) -> u64 {
     kit.sources.adopt_plugins(&kit.plugins);
     let medium = medium_of(query);
-    let asked = sources_for(kit, medium);
+    let asked = sources_for(kit, query);
     let generation = {
         let mut run = kit.sources.catalog.search.lock().unwrap_or_else(|e| e.into_inner());
         let generation = run.generation + 1;
@@ -561,7 +563,7 @@ pub(crate) fn sources_changed(kit: &Kit, ask: Ask, tx: &Outbox) {
         let medium = medium_of(&run.query);
         let mut before = std::mem::take(&mut run.groups);
         let mut named = Vec::new();
-        for (id, name, kind) in sources_for(kit, medium) {
+        for (id, name, kind) in sources_for(kit, &run.query) {
             let mark = kit.sources.source_mark(&id);
             let kept = before
                 .iter()
@@ -590,7 +592,7 @@ pub fn retry_source(kit: &Kit, ask: Ask, query: ReadSearchQuery, source: String,
         // A group still asking has an ask under way, which answers for it: a second would
         // ask the source twice and let the slower answer overwrite the other.
         let ready = |g: &Group| g.id == source && g.state != ReadSourceState::Asking;
-        if run.query != query || !run.groups.iter().any(ready) {
+        if run.query != query || !query.asks_source(&source) || !run.groups.iter().any(ready) {
             return;
         }
         let Some(group) = run.groups.iter_mut().find(|g| g.id == source) else { return };

@@ -293,10 +293,26 @@ impl BookRegistry {
         medium: Option<Medium>,
         now: i64,
     ) -> Searched {
+        self.search_in(query, hints, medium, None, now).await
+    }
+
+    /// [`Self::search`] asking only the sources in `scope`, by id; `None` asks every source.
+    /// A source outside it is never asked.
+    pub async fn search_in(
+        &self,
+        query: &str,
+        hints: &BookHints,
+        medium: Option<Medium>,
+        scope: Option<&[String]>,
+        now: i64,
+    ) -> Searched {
+        let scoped = |s: &Arc<dyn BookSource>| {
+            scope.is_none_or(|scope| scope.iter().any(|id| *id == s.manifest().id))
+        };
         let asked: Vec<_> = self
             .candidates()
             .into_iter()
-            .filter(|s| Self::covers(s.as_ref(), medium))
+            .filter(|s| scoped(s) && Self::covers(s.as_ref(), medium))
             .collect();
         let answers = join_all(asked.into_iter().map(|source| async move {
             let id = source.manifest().id.clone();
