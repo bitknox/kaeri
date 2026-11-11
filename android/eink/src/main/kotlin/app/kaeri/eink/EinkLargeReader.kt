@@ -118,10 +118,10 @@ private fun TopWords(text: String) {
 // The bottom bar
 
 /**
- * The series' own settings in the bottom bar: reading direction (or strip), one or two pages, and
- * cropping, each a segmented control after "This series". A change is the series' own, as in the
- * settings sheet; pages side by side stay the device's, as the engine keeps that setting. A
- * novel's settings stay in the sheet.
+ * The series' own settings in the bottom bar: reading direction (or strip) and cropping, each a
+ * segmented control after "This series", then one or two pages after "This device" when the
+ * engine keeps that setting for the device. A change goes where its row says, as in the settings
+ * sheet. A novel's settings stay in the sheet.
  */
 @Composable
 internal fun EinkSeriesBar(session: ReaderSession, state: ReaderState, modifier: Modifier = Modifier) {
@@ -161,17 +161,6 @@ internal fun EinkSeriesBar(session: ReaderSession, state: ReaderState, modifier:
             },
             modifier = Modifier.weight(390f),
         )
-        val layout = row(ReaderSettingKey.PAGE_LAYOUT)
-        if (!strip && layout != null) {
-            val two = word(ReaderSettingKey.PAGE_LAYOUT) == "double"
-            EinkSegmented(
-                choices = listOf(false, true),
-                chosen = two,
-                label = { if (it) Strings.einkLayoutTwo(context) else Strings.einkLayoutOne(context) },
-                onChoose = { if (it != two) session.setSetting(ReaderSettingKey.PAGE_LAYOUT, layout.scope, ReaderValue.Choice(if (it) "double" else "single")) },
-                modifier = Modifier.weight(250f),
-            )
-        }
         val crop = row(ReaderSettingKey.CROP_BORDERS)
         if (crop != null) {
             val on = (crop.value as? ReaderValue.Toggle)?.on == true
@@ -181,6 +170,22 @@ internal fun EinkSeriesBar(session: ReaderSession, state: ReaderState, modifier:
                 label = { if (it) Strings.einkCropOn(context) else Strings.einkCropOff(context) },
                 onChoose = { if (it != on) session.setSetting(ReaderSettingKey.CROP_BORDERS, SettingScope.SERIES_HERE, ReaderValue.Toggle(it)) },
                 modifier = Modifier.weight(210f),
+            )
+        }
+        // One or two pages is kept where its row says: on this device, it gets a label of its own
+        // after the series' choices, so "This series" never claims it.
+        val layout = row(ReaderSettingKey.PAGE_LAYOUT)
+        if (!strip && layout != null) {
+            if (layout.scope == SettingScope.DEVICE) {
+                Text(Strings.einkMoreThisDevice(context), style = GroupName, maxLines = 1, modifier = Modifier.padding(start = 16.dp))
+            }
+            val two = word(ReaderSettingKey.PAGE_LAYOUT) == "double"
+            EinkSegmented(
+                choices = listOf(false, true),
+                chosen = two,
+                label = { if (it) Strings.einkLayoutTwo(context) else Strings.einkLayoutOne(context) },
+                onChoose = { if (it != two) session.setSetting(ReaderSettingKey.PAGE_LAYOUT, layout.scope, ReaderValue.Choice(if (it) "double" else "single")) },
+                modifier = Modifier.weight(250f),
             )
         }
     }

@@ -10,6 +10,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performTouchInput
 import app.kaeri.engine.core.Medium
@@ -31,6 +32,7 @@ import app.kaeri.reader.PageImages
 import app.kaeri.reader.ReaderSession
 import com.github.takahirom.roborazzi.captureScreenRoboImage
 import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ExternalResource
@@ -96,6 +98,11 @@ class EinkLargeReaderShots {
     }
 
     private fun chrome(name: String) {
+        showChrome()
+        shot(name)
+    }
+
+    private fun showChrome() {
         opened()
         compose.setContent {
             EinkTheme {
@@ -106,7 +113,6 @@ class EinkLargeReaderShots {
         compose.waitForIdle()
         compose.onRoot().performTouchInput { click(androidx.compose.ui.geometry.Offset(width * 0.55f, height * 0.5f)) }
         compose.waitForIdle()
-        shot(name)
     }
 
     private fun end(name: String) {
@@ -154,6 +160,17 @@ class EinkLargeReaderShots {
         chapterRef = "1",
         published = null,
     )
+
+    /** One or two pages is kept for the device here: it comes after the series' choices, under "This device". */
+    @Test fun pagesSayWhereTheyAreKept() {
+        showChrome()
+        fun at(text: String) = compose.onNodeWithText(text, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        val series = at("This series") // i18n-skip
+        val crop = at("Crop off") // i18n-skip
+        val device = at("This device") // i18n-skip
+        val pages = at("One page") // i18n-skip
+        assertTrue(series.right <= crop.left && crop.right <= device.left && device.right <= pages.left)
+    }
 
     @Test @Config(fontScale = 0.85f) fun chrome_085() = chrome("chrome-085")
     @Test fun chrome_100() = chrome("chrome-100")
