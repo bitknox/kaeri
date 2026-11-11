@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -298,11 +297,10 @@ internal fun EinkTabletSettings(start: SettingsPane, actions: AppActions) {
                 Column(Modifier.width(listWidth).fillMaxHeight()) {
                     Text(stringResource(R.string.settings_title), style = EinkType.PageTitle, modifier = Modifier.semantics { heading() })
                     Spacer(Modifier.height(16.dp))
-                    // The grey of the open group reaches 14 dp past the words on each side.
-                    Box(Modifier.fillMaxWidth().weight(1f)) {
-                        Column(Modifier.requiredWidth(listWidth + 28.dp).fillMaxHeight().verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
-                            SettingsList(selected = pane) { pane = it }
-                        }
+                    // The hairlines and the grey of the open group start at the margin, as the right
+                    // pane's hairlines do, with the words 14 dp inside the grey.
+                    Column(Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
+                        SettingsList(selected = pane) { pane = it }
                     }
                 }
                 Spacer(Modifier.width(gap))
