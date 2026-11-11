@@ -276,8 +276,11 @@ class ReaderSession(private val send: (Command) -> Unit) {
         val session = now.session ?: return
         val chapter = now.chapter ?: return
         shownPage = now.leaves.getOrNull(leaf)?.parts?.firstOrNull()?.page ?: shownPage
-        // An e-ink cut's page is the cut's own number: the place is the image it starts in.
-        here = now.placeOf(leaf) ?: here?.takeIf { it.chapter == chapter }?.copy(page = shownPage, strip = null)
+        // An e-ink cut's page is the cut's own number: the place is the image it starts in. A whole
+        // image keeps the spot in it the reader opened at, for the cuts a strip is laid out in later.
+        here = now.placeOf(leaf) ?: here?.takeIf { it.chapter == chapter }?.let { at ->
+            at.copy(page = shownPage, strip = at.strip?.takeIf { it.image == shownPage })
+        }
         // Off the leaf a credit page shows over, the credit page goes. A page kept from it waits
         // on: its Undo outlasts the turn, and the engine hears when it runs out or the chapter closes.
         val moved = shownLeaf != null && shownLeaf != leaf
@@ -690,8 +693,11 @@ class ReaderSession(private val send: (Command) -> Unit) {
                 // sizes are known: the place it opened at still stands, not the old layout's leaf.
                 val shown = shownPage
                 val unpainted = if (start == null && shown == null) here?.takeIf { it.chapter == now.chapter } else null
-                // An e-ink cut shown is found again by where it starts: a new layout cuts anew.
+                // The leaf shown is found again by its place, never by its number: an e-ink cut by
+                // where it starts, as a new layout cuts anew; a whole image, as a strip whose pages
+                // were still coming is cut once they are all there, by the image and the spot in it.
                 val shownAt = shownLeaf?.let(now::placeOf)
+                    ?: here?.takeIf { shown != null && it.chapter == now.chapter && it.page == shown }
                 val leaf = when {
                     start != null -> placed.leafOf(start)
                     shownAt != null -> placed.leafOf(shownAt)

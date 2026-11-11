@@ -132,6 +132,38 @@ class ReaderSessionTest {
     }
 
     @Test
+    fun a_strip_whose_pages_were_coming_is_cut_at_the_place_it_showed() {
+        // Resumed half way down image 2 while the source's pages still stream: the engine lays
+        // the chapter out as whole images first, and the leaf of image 2 is reported shown before
+        // its picture came. Once every page is there, the strip is cut: image 2's half way mark
+        // starts cut 10, not cut 2.
+        session.open(WORK, ReaderFixtures.surface)
+        val start = ReadPlace(WORK, CHAPTER, 2u, StripPos(2u, 0.5f), null)
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view(mode = ReaderMode.STRIP).copy(start = start)))
+        session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, ReaderFixtures.leaves(4)))
+        val whole = session.state.value.jump!!
+        assertEquals(2, whole.leaf)
+        session.jumped(whole.id)
+        session.shown(2, TurnHow.PLACED)
+        session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, ReaderFixtures.cuts(images = 4, each = 4)))
+        assertEquals(10, session.state.value.jump?.leaf)
+    }
+
+    @Test
+    fun a_whole_image_turned_to_before_the_cuts_come_is_found_by_its_image() {
+        // Turned to image 3 on the whole images: no spot in it is known, so its first cut.
+        session.open(WORK, ReaderFixtures.surface)
+        val start = ReadPlace(WORK, CHAPTER, 2u, StripPos(2u, 0.5f), null)
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view(mode = ReaderMode.STRIP).copy(start = start)))
+        session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, ReaderFixtures.leaves(4)))
+        session.jumped(session.state.value.jump!!.id)
+        session.shown(2, TurnHow.PLACED)
+        session.shown(3, TurnHow.TURN)
+        session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, ReaderFixtures.cuts(images = 4, each = 4)))
+        assertEquals(12, session.state.value.jump?.leaf)
+    }
+
+    @Test
     fun a_new_e_ink_layout_keeps_the_cut_shown_by_where_it_starts() {
         openedCut(StripPos(0u, 0f))
         session.jumped(session.state.value.jump!!.id)

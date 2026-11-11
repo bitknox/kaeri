@@ -36,6 +36,7 @@ class PagedTurnsTest {
     private val pager = PagedReaderState()
     private val reports = mutableListOf<Triple<Int, TurnHow, Boolean>>()
     private var crossed = 0
+    private val missing = mutableListOf<Int>()
 
     private fun open() {
         session.open(WORK, ReaderFixtures.surface)
@@ -54,7 +55,7 @@ class PagedTurnsTest {
                     reports += Triple(leaf, how, turned)
                     session.shown(leaf, how)
                 },
-                onMissing = {},
+                onMissing = { missing += it.page.toInt() },
                 onRetry = {},
                 onJumped = session::jumped,
                 endPage = {},
@@ -92,6 +93,28 @@ class PagedTurnsTest {
         compose.runOnIdle { pager.forward() }
         compose.waitForIdle()
         assertEquals(Triple(3, TurnHow.TURN, true), reports.last())
+    }
+
+    @Test
+    fun a_new_layout_whose_jump_lands_on_the_same_leaf_number_is_reported() {
+        open()
+        assertEquals(Triple(3, TurnHow.PLACED, false), reports.last())
+        // Laid out again, the place it shows is on leaf 3 again: the pager does not move, and the
+        // engine still hears which leaf of the new layout is on screen.
+        val before = reports.size
+        compose.runOnIdle { session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, ReaderFixtures.leaves(8))) }
+        compose.waitForIdle()
+        assertEquals(before + 1, reports.size)
+        assertEquals(Triple(3, TurnHow.PLACED, false), reports.last())
+    }
+
+    @Test
+    fun a_page_on_screen_that_no_file_came_for_is_asked_for() {
+        open()
+        compose.mainClock.advanceTimeBy(PageWaits.ASK_MS + 100)
+        compose.waitForIdle()
+        // Only the leaf on screen asks; the pages beside it are the engine's to make ahead.
+        assertEquals(listOf(3), missing)
     }
 
     @Test
