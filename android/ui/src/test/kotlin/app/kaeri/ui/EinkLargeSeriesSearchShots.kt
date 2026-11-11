@@ -32,12 +32,10 @@ class EinkLargeSeriesSearchShots : ReadingShotHarness() {
     private fun series(name: String, chapters: Int? = null, after: (() -> Unit)? = null) = shoot(
         name, FixtureScene.READING_SERIES, Destination.Home, medium = KaeriIsFor.READ, page = "read/series/" + android.net.Uri.encode(MANGA), // i18n-skip
         eink = EinkLook(),
-        then = { if (chapters != null) LongChaptersStage.stage(it, chapters) },
+        act = chapters?.let { count -> { compose.runOnUiThread { LongChaptersStage.stage(requireNotNull(store), count) } } },
+        acted = { store -> chapters == null || store.reading.chapters.value[MANGA]?.volumes?.sumOf { it.chapters.size } == chapters },
         after = after,
-        ready = { store ->
-            val list = store.reading.chapters.value[MANGA]
-            store.reading.series.value[MANGA] != null && list != null && (chapters == null || list.volumes.sumOf { it.chapters.size } == chapters)
-        },
+        ready = { it.reading.series.value[MANGA] != null && it.reading.chapters.value[MANGA] != null },
     )
 
     /** Search with nothing asked and Your sources only on, as the board draws its start. */
