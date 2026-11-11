@@ -342,7 +342,13 @@ private fun OpenReader(
                     state = state,
                     images = images,
                     painter = painter,
-                    actions = EinkReaderActions(onBack = close, onSeries = close, onDownloads = close, onAddSource = addSource),
+                    actions = EinkReaderActions(
+                        onBack = close,
+                        onSeries = close,
+                        onDownloads = close,
+                        onAddSource = addSource,
+                        onDownload = { chapter -> store.reading.download(state.view?.work ?: request.work, app.kaeri.engine.model.DownloadPick.Chapters(listOf(chapter.id))) },
+                    ),
                 )
             }
         } else {

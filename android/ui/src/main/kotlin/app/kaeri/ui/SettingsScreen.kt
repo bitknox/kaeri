@@ -133,7 +133,16 @@ fun SettingsScreen(pane: SettingsPane?, actions: AppActions) {
             store.bookSources.load()
         }
     }
-    if (wideWindow()) {
+    if (einkSettings && wideWindow()) {
+        EinkTabletSettings(pane ?: if (answer.watches) SettingsPane.Playback else SettingsPane.General, actions)
+    } else if (einkSettings) {
+        if (pane == null) {
+            val navigator = LocalNavigator.current
+            EinkPhoneSettings(stringResource(R.string.nav_settings)) { SettingsList(selected = null) { navigator.openSettings(it) } }
+        } else {
+            EinkPhoneSettings(stringResource(pane.titleRes)) { PaneContent(pane, actions) }
+        }
+    } else if (wideWindow()) {
         TabletSettings(pane ?: if (answer.watches) SettingsPane.Playback else SettingsPane.General, actions)
     } else if (pane == null) {
         PhoneSettingsList(actions)
@@ -208,7 +217,7 @@ internal fun SettingsList(selected: SettingsPane?, open: (SettingsPane) -> Unit)
     val watches = answer.watches
     val reads = answer.reads
     // Kaeri is for, alone at the top, where the build can read and the answer is not fixed.
-    if (store.medium.choosable) {
+    if (store.medium.choosable && !einkSettings) {
         SettingsGroup(
             rows = listOf({ place ->
                 LinkRow(
@@ -221,7 +230,7 @@ internal fun SettingsList(selected: SettingsPane?, open: (SettingsPane) -> Unit)
             }),
         )
     }
-    AccountCard(trackers["anilist"], AccountWords.status(trackers["anilist"], syncedAt, working)) { open(SettingsPane.Accounts) }
+    if (!einkSettings) AccountCard(trackers["anilist"], AccountWords.status(trackers["anilist"], syncedAt, working)) { open(SettingsPane.Accounts) }
     val chapterBytes = if (reads) chapters?.meter?.used?.toLong() ?: 0L else 0L
     val episodeBytes = if (watches) store.downloads.bytes(downloads) else 0L
     val panes = listOfNotNull(
@@ -240,6 +249,20 @@ internal fun SettingsList(selected: SettingsPane?, open: (SettingsPane) -> Unit)
         if (watches) SettingsPane.Profiles to profilesSummary(context, profileList.profiles) else null,
         if (watches) SettingsPane.Hidden to null else null,
     )
+    val version = listOfNotNull(stringResource(R.string.about_version, appVersion()), update.offer?.let { stringResource(R.string.updates_version_out, it.version) }).joinToString(" · ") // i18n-skip
+    if (einkSettings) {
+        // On paper the list is one run of rows with hairlines between, the account among them.
+        val rows = buildList<@Composable (Place) -> Unit> {
+            if (store.medium.choosable) {
+                add(@Composable { place: Place -> LinkRow(place, stringResource(SettingsPane.Medium.titleRes), app.kaeri.ui.reading.mediumAnswerWords(context, answer), selected = selected == SettingsPane.Medium) { open(SettingsPane.Medium) } })
+            }
+            add(@Composable { place: Place -> EinkAccount(place, trackers["anilist"], AccountWords.status(trackers["anilist"], syncedAt, working), selected == SettingsPane.Accounts) { open(SettingsPane.Accounts) } })
+            for ((pane, line) in panes) add(@Composable { place: Place -> LinkRow(place, stringResource(pane.titleRes), line, selected = pane == selected) { open(pane) } })
+            add(@Composable { place: Place -> LinkRow(place, stringResource(SettingsPane.About.titleRes), version, selected = selected == SettingsPane.About) { open(SettingsPane.About) } })
+        }
+        rows.forEachIndexed { index, row -> row(Place.of(index, rows.size)) }
+        return
+    }
     SettingsGroup(
         rows = panes.map { (pane, line) ->
             @Composable { place: Place -> LinkRow(place, stringResource(pane.titleRes), line, pane.icon, selected = pane == selected) { open(pane) } }
@@ -247,7 +270,6 @@ internal fun SettingsList(selected: SettingsPane?, open: (SettingsPane) -> Unit)
     )
     SettingsGroup(
         rows = listOf({ place ->
-            val version = listOfNotNull(stringResource(R.string.about_version, appVersion()), update.offer?.let { stringResource(R.string.updates_version_out, it.version) }).joinToString(" · ") // i18n-skip
             LinkRow(place, stringResource(SettingsPane.About.titleRes), version, SettingsPane.About.icon, selected = selected == SettingsPane.About) {
                 open(SettingsPane.About)
             }
@@ -334,6 +356,16 @@ private fun AccountCard(anilist: SyncState?, status: AccountStatus, onOpen: () -
             }
         }
     }
+}
+
+/** The account on paper: who is signed in and how it last synced, as a row of the list, no avatar. */
+@Composable
+private fun EinkAccount(place: Place, anilist: SyncState?, status: AccountStatus, selected: Boolean, onOpen: () -> Unit) {
+    val context = LocalContext.current
+    val signedIn = anilist?.connected == true
+    val name = if (signedIn) anilist?.user ?: stringResource(R.string.accounts_signed_in_plain) else stringResource(R.string.accounts_state_signed_out)
+    val line = if (signedIn) Strings.accountsCardLine(context, AccountsModel.name("anilist"), status.text.replaceFirstChar { it.lowercase() }) else Strings.accountsLibraryNeeds(context, AccountsModel.name("anilist"))
+    LinkRow(place, name, line, selected = selected, onClick = onOpen)
 }
 
 /** The signed-in user's initial on a raised circle, or the account glyph signed out. */
