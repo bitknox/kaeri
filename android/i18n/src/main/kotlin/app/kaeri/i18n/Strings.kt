@@ -2969,6 +2969,90 @@ object Strings {
     fun einkKeepReadyOff(context: Context): String =
         context.getString(R.string.eink_keep_ready_off)
 
+    /** The underlined link beside the title of the e-reader's Library that opens the View sheet: how the covers are shown, which medium, the order and what is downloaded. */
+    fun einkLibraryView(context: Context): String =
+        context.getString(R.string.eink_library_view)
+
+    /** A side of the medium control on the e-reader's Library and in its View sheet: every series. */
+    fun einkLibraryMediumAll(context: Context): String =
+        context.getString(R.string.eink_library_medium_all)
+
+    /** A side of the medium control on the e-reader's Library: manga, manhwa and webtoons. */
+    fun einkLibraryMediumManga(context: Context): String =
+        context.getString(R.string.eink_library_medium_manga)
+
+    /** A side of the medium control on the e-reader's Library: light novels. */
+    fun einkLibraryMediumNovels(context: Context): String =
+        context.getString(R.string.eink_library_medium_novels)
+
+    /** On a 6 or 7 inch e-reader's Library: the button naming the list shown and how many series it holds, such as "Reading · 23". It opens the lists to choose another. */
+    fun einkLibraryListButton(context: Context, list: String, count: Int): String =
+        context.getString(R.string.eink_library_list_button, list, count)
+
+    /** Title of the sheet on a 6 or 7 inch e-reader's Library that chooses which list to show. */
+    fun einkLibraryListsTitle(context: Context): String =
+        context.getString(R.string.eink_library_lists_title)
+
+    /** A row label in the e-reader Library's View sheet: covers in a grid or rows in a list. */
+    fun einkLibraryShow(context: Context): String =
+        context.getString(R.string.eink_library_show)
+
+    /** A side of Show in the View sheet: the covers in a grid. */
+    fun einkLibraryShowCovers(context: Context): String =
+        context.getString(R.string.eink_library_show_covers)
+
+    /** A side of Show in the View sheet: rows with a small cover. */
+    fun einkLibraryShowList(context: Context): String =
+        context.getString(R.string.eink_library_show_list)
+
+    /** A row label in the View sheet: whether manga, novels or both show. */
+    fun einkLibraryMedium(context: Context): String =
+        context.getString(R.string.eink_library_medium)
+
+    /** A row label in the View sheet: the order of the series. */
+    fun einkLibrarySort(context: Context): String =
+        context.getString(R.string.eink_library_sort)
+
+    /** A side of Sort in the View sheet: the series read most recently first. */
+    fun einkLibrarySortRecent(context: Context): String =
+        context.getString(R.string.eink_library_sort_recent)
+
+    /** A side of Sort in the View sheet: by title, alphabetically. */
+    fun einkLibrarySortTitle(context: Context): String =
+        context.getString(R.string.eink_library_sort_title)
+
+    /** A side of Sort in the View sheet: series with a new chapter first. */
+    fun einkLibrarySortNew(context: Context): String =
+        context.getString(R.string.eink_library_sort_new)
+
+    /** A row label in the View sheet: every series, or only those with chapters downloaded. */
+    fun einkLibraryDownloaded(context: Context): String =
+        context.getString(R.string.eink_library_downloaded)
+
+    /** A side of Downloaded in the View sheet: every series on the list. */
+    fun einkLibraryDownloadedAll(context: Context): String =
+        context.getString(R.string.eink_library_downloaded_all)
+
+    /** A side of Downloaded in the View sheet: only series with chapters on this device. */
+    fun einkLibraryDownloadedHere(context: Context): String =
+        context.getString(R.string.eink_library_downloaded_here)
+
+    /** The note at the foot of the View sheet. The count is how many covers fit a page on this screen. */
+    fun einkLibraryViewNote(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.eink_library_view_note, count, count)
+
+    /** The note at the foot of the View sheet before the covers have been laid out. */
+    fun einkLibraryViewNoteShort(context: Context): String =
+        context.getString(R.string.eink_library_view_note_short)
+
+    /** On the e-reader's Library when the list has series but none match the choices in View. */
+    fun einkLibraryNoneMatch(context: Context, list: String): String =
+        context.getString(R.string.eink_library_none_match, list)
+
+    /** The line under it. */
+    fun einkLibraryNoneMatchLine(context: Context): String =
+        context.getString(R.string.eink_library_none_match_line)
+
     /** Switch under Volume keys turn pages in the phone reader's settings: volume up turns forward instead of volume down. */
     fun readerRowVolumeSwap(context: Context): String =
         context.getString(R.string.reader_row_volume_swap)
