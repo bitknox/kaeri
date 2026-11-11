@@ -130,7 +130,7 @@ fn queries(work: &fit::Work, languages: &[String]) -> Vec<String> {
 /// What a source's search came to.
 enum Answer {
     /// A series that is the work, now matched.
-    Found,
+    Found(String),
     /// No series that is the work, and one that may be another edition of it.
     Possible { choice: SourceSeriesChoice, query: String },
     /// Nothing, and why; with the words that came closest, for Search there.
@@ -342,7 +342,7 @@ async fn ask_one(kit: &Kit, source: &str, id: &WorkId, work: &fit::Work, now: i6
                 false,
                 now,
             );
-            return Answer::Found;
+            return Answer::Found(hit.id);
         }
     }
     if let Some((hit, query)) = possible {
@@ -352,10 +352,13 @@ async fn ask_one(kit: &Kit, source: &str, id: &WorkId, work: &fit::Work, now: i6
     Answer::Missed { reason: Msg::Reading(ReadingMsg::ReadingMissNoSeries), query }
 }
 
-/// Let go of the series matched to the work by itself whose kept chapters show it is not the
-/// work: a one-shot or pilot of a serialised work, or far more chapters than it has. A series
-/// the person chose stays. Its source is searched again.
-fn repair(kit: &Kit, id: &WorkId, work: &fit::Work) {
+/// The series matched to the work by itself whose kept chapters show it is not the work: a
+/// one-shot or pilot of a serialised work, or far more chapters than it has. A series the person
+/// chose stays. Each stays matched until its source, searched again, answers (see [`let_go`]), so
+/// the edition read from does not move to another source meanwhile. One whose source cannot be
+/// searched (no name to search by, or switched off) is let go at once.
+fn doubted(kit: &Kit, id: &WorkId, work: &fit::Work) -> Vec<(String, String)> {
+    let mut out = Vec::new();
     for (source, series) in kit.store.book_refs_for_work(id.as_str()).unwrap_or_default() {
         if !counts_chapters(&kit.sources, &source)
             || !matches!(kit.store.book_match_state(&source, &series), Ok(Some((_, false))))
@@ -372,8 +375,20 @@ fn repair(kit: &Kit, id: &WorkId, work: &fit::Work) {
                 source,
                 "a series matched by itself is not the work; searching again"
             );
-            let _ = kit.store.forget_book_match(&source, &series);
+            if work.names.is_empty() || kit.sources.registry.is_off(&source) {
+                let _ = kit.store.forget_book_match(&source, &series);
+            } else {
+                out.push((source, series));
+            }
         }
+    }
+    out
+}
+
+/// A doubted match's source answered: the match goes, unless the search found that same series.
+fn let_go(kit: &Kit, source: &str, series: &str, answer: &Answer) {
+    if !matches!(answer, Answer::Found(found) if found == series) {
+        let _ = kit.store.forget_book_match(source, series);
     }
 }
 
@@ -394,10 +409,11 @@ fn older(kit: &Kit, id: &WorkId) -> Vec<(String, String)> {
 }
 
 /// Check each older match by its series' name once: another edition of the work, as a
-/// colour release, or a one-shot is let go and its source searched again. The rest are kept
-/// as matched by the rules. Answers whether any was let go.
-async fn recheck(kit: &Kit, id: &WorkId, work: &fit::Work, now: i64) -> bool {
-    let mut forgot = false;
+/// colour release, or a one-shot is doubted, to be let go once its source is searched again
+/// (one on a source switched off goes at once). The rest are kept as matched by the rules.
+/// Answers the matches doubted.
+async fn recheck(kit: &Kit, id: &WorkId, work: &fit::Work, now: i64) -> Vec<(String, String)> {
+    let mut doubted = Vec::new();
     for (source, series) in older(kit, id) {
         let hints = BookHints::default();
         let asked = kit.sources.registry.series(&source, &series, &hints, now);
@@ -409,8 +425,11 @@ async fn recheck(kit: &Kit, id: &WorkId, work: &fit::Work, now: i64) -> bool {
                 source,
                 "an older match is another edition of the work; searching again"
             );
-            let _ = kit.store.forget_book_match(&source, &series);
-            forgot = true;
+            if kit.sources.registry.is_off(&source) {
+                let _ = kit.store.forget_book_match(&source, &series);
+            } else {
+                doubted.push((source, series));
+            }
         } else {
             let _ = kit.store.set_book_match(
                 &source,
@@ -423,7 +442,7 @@ async fn recheck(kit: &Kit, id: &WorkId, work: &fit::Work, now: i64) -> bool {
             );
         }
     }
-    forgot
+    doubted
 }
 
 /// The misses still standing for `work`: fresh, from sources that still lack it, and said by
@@ -503,17 +522,29 @@ pub(crate) fn check(kit: &Kit, ask: Ask, work: &WorkId, tx: &Outbox) -> Option<C
     running(kit, work)
 }
 
-/// The sources still to search for `work` by name, in the person's order.
-fn to_ask(kit: &Kit, work: &WorkId, about: &fit::Work, now: i64) -> Vec<String> {
+/// The sources still to search for `work` by name, in the person's order, and those holding a
+/// `doubted` match.
+fn to_ask(
+    kit: &Kit,
+    work: &WorkId,
+    about: &fit::Work,
+    now: i64,
+    doubted: &[(String, String)],
+) -> Vec<String> {
     let wanted = searchable(kit, work, about.medium);
     let known: HashSet<String> =
         kept_misses(kit, work, &wanted, now).into_iter().map(|m| m.source_id).collect();
     // Nothing to search by: the editions kept are the answer.
     if about.names.is_empty() {
-        Vec::new()
-    } else {
-        wanted.into_iter().filter(|id| !known.contains(id)).collect()
+        return Vec::new();
     }
+    let mut out: Vec<String> = wanted.into_iter().filter(|id| !known.contains(id)).collect();
+    for (source, _) in doubted {
+        if !out.contains(source) {
+            out.push(source.clone());
+        }
+    }
+    out
 }
 
 /// Read from for a work: the editions kept at once, then each source's answer as it comes. A
@@ -528,8 +559,8 @@ pub(crate) fn load(kit: &Kit, ask: Ask, work: WorkId, tx: &Outbox) {
         send_for_work(kit, &work, true, kept_misses(kit, &work, &wanted, now), tx);
         return;
     }
-    repair(kit, &work, &about);
-    let to_ask = to_ask(kit, &work, &about, now);
+    let doubted = doubted(kit, &work, &about);
+    let to_ask = to_ask(kit, &work, &about, now, &doubted);
     // Matches made by themselves before the name rules are checked by their series' name once.
     let recheck_older = !about.names.is_empty() && !older(kit, &work).is_empty();
     let arriving = kit.plugins.is_arriving();
@@ -545,7 +576,7 @@ pub(crate) fn load(kit: &Kit, ask: Ask, work: WorkId, tx: &Outbox) {
         settled(kit, ask, &work, tx);
         return;
     }
-    let had_edition = kit.sources.edition_of(&work, None).is_some();
+    let before = kit.sources.edition_of(&work, None);
     let (ended, check) = tokio::sync::watch::channel(());
     kit.sources
         .catalog
@@ -559,12 +590,21 @@ pub(crate) fn load(kit: &Kit, ask: Ask, work: WorkId, tx: &Outbox) {
         let mut to_ask = if arriving {
             kit.plugins.arrived(PLUGINS_WAIT).await;
             kit.sources.adopt_plugins(&kit.plugins);
-            self::to_ask(&kit, &work, &about, now)
+            self::to_ask(&kit, &work, &about, now, &doubted)
         } else {
             to_ask
         };
-        if recheck_older && recheck(&kit, &work, &about, now).await {
-            to_ask = self::to_ask(&kit, &work, &about, now);
+        let mut doubted = doubted;
+        if recheck_older {
+            let more = recheck(&kit, &work, &about, now).await;
+            if !more.is_empty() {
+                for pair in more {
+                    if !doubted.contains(&pair) {
+                        doubted.push(pair);
+                    }
+                }
+                to_ask = self::to_ask(&kit, &work, &about, now, &doubted);
+            }
         }
         if to_ask.is_empty() {
             let wanted = searchable(&kit, &work, medium);
@@ -578,6 +618,9 @@ pub(crate) fn load(kit: &Kit, ask: Ask, work: WorkId, tx: &Outbox) {
             })
             .collect();
         while let Some((source, answer)) = asking.next().await {
+            if let Some((_, series)) = doubted.iter().find(|(s, _)| *s == source) {
+                let_go(&kit, &source, series, &answer);
+            }
             let miss = |reason, possible, query| EditionMiss {
                 source_name: source_name(&kit, &source),
                 source_id: source.clone(),
@@ -586,7 +629,7 @@ pub(crate) fn load(kit: &Kit, ask: Ask, work: WorkId, tx: &Outbox) {
                 query,
             };
             let miss = match answer {
-                Answer::Found => None,
+                Answer::Found(_) => None,
                 Answer::Possible { choice, query } => Some(miss(
                     Msg::Reading(ReadingMsg::ReadingMissPossible),
                     Some(choice),
@@ -610,8 +653,14 @@ pub(crate) fn load(kit: &Kit, ask: Ask, work: WorkId, tx: &Outbox) {
         let waited = ended.receiver_count() > 0;
         // Its waiters hear the check end as the sender goes.
         drop(ended);
-        // A series that had nowhere to be read from now has: its page fills in.
-        if !had_edition && !waited && kit.sources.edition_of(&work, None).is_some() {
+        // A series that had nowhere to be read from now has, or a doubted match gave way to
+        // the series its source found: its page fills in again.
+        let after = kit.sources.edition_of(&work, None);
+        let moved = match &before {
+            None => after.is_some(),
+            Some(_) => !doubted.is_empty() && after != before,
+        };
+        if !waited && moved {
             series::load(&kit, ask, work, &tx);
         }
     });
@@ -1429,6 +1478,72 @@ mod tests {
             "the person's choice stays"
         );
         assert_eq!(clay.asks(), 0);
+    }
+
+    /// The edition the person picked stays the one read from while its source is searched again
+    /// for a one-shot it matched by itself, and moves to the series that search finds.
+    #[tokio::test]
+    async fn a_picked_edition_stays_in_use_while_its_one_shot_is_searched_again() {
+        picked_edition_while_searched_again(false).await;
+    }
+
+    /// The same for an older match that its series' name shows is another edition of the work.
+    #[tokio::test]
+    async fn a_picked_edition_stays_in_use_while_its_older_match_is_searched_again() {
+        picked_edition_while_searched_again(true).await;
+    }
+
+    async fn picked_edition_while_searched_again(older_by_name: bool) {
+        let dir = tempfile::tempdir().unwrap();
+        let manga = [Medium::Manga];
+        let english = "Starlit Council: Beyond the Night Hours";
+        let brick = Stock::new(
+            "brick",
+            &manga,
+            Ok(vec![hit("o-1", english, None), hit("s-1", english, None)]),
+        )
+        .listing("o-1", 1, Some("Oneshot"))
+        .listing("s-1", 120, None);
+        if older_by_name {
+            brick.naming("o-1", "Starlit Council: Beyond the Night Hours (Official Colored)");
+        }
+        let kiln = Stock::new("kiln", &manga, Ok(Vec::new()));
+        let kit = kit_of(dir.path(), &[&brick, &kiln], COUNCIL);
+        kit.store.set_book_match("brick", "o-1", WORK, OLDER, false, false, NOW).unwrap();
+        if !older_by_name {
+            let oneshot = [SourceChapter::new("o-1-0", "Oneshot")];
+            chapters::keep(&kit.store, "brick", "o-1", &oneshot, NOW);
+        }
+        kit.store.set_book_match("kiln", "k-1", WORK, MATCHED, false, false, NOW).unwrap();
+        let list: Vec<SourceChapter> =
+            (1..=60).map(|i| SourceChapter::new(format!("k{i}"), i.to_string())).collect();
+        chapters::keep(&kit.store, "kiln", "k-1", &list, NOW);
+        let pref = kaeri_store::reading::EditionPref {
+            source_id: "brick".into(),
+            version_label: None,
+            language: None,
+        };
+        kit.store.set_edition_pref(WORK, Some(&pref)).unwrap();
+        let (tx, mut rx) = mpsc::unbounded_channel();
+        load(&kit, ask(NOW), WorkId::new(WORK), &Outbox::from(tx));
+        let mut in_use = Vec::new();
+        loop {
+            let event = tokio::time::timeout(Duration::from_secs(5), rx.recv())
+                .await
+                .expect("Read from answers")
+                .expect("the outbox is open");
+            if let Event::BookSources(BookSourceEvent::ForWork { editions, asking, .. }) = event
+            {
+                in_use.push(editions.iter().find(|e| e.in_use).map(|e| e.source_id.clone()));
+                if !asking {
+                    break;
+                }
+            }
+        }
+        assert!(in_use.iter().all(|s| s.as_deref() == Some("brick")), "{in_use:?}");
+        let work = WorkId::new(WORK);
+        assert_eq!(kit.sources.edition_of(&work, None), Some(("brick".into(), "s-1".into())));
+        assert_eq!(kit.store.book_match_state("brick", "o-1").unwrap(), None, "let go");
     }
 
     #[tokio::test]
