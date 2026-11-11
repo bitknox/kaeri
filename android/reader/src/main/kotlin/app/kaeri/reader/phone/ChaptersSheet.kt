@@ -82,7 +82,8 @@ fun ChaptersSheet(
     var tab by remember { mutableStateOf(0) }
     val novel = view.medium == app.kaeri.engine.core.Medium.NOVEL
     LaunchedEffect(view.work) { session.loadChapters() }
-    ReaderSheet(instant = instant, onDismiss = onDismiss) {
+    // Whole, so the chapter list's middle, where the open chapter sits, is on screen.
+    ReaderSheet(instant = instant, onDismiss = onDismiss, whole = true) {
         Column(Modifier.navigationBarsPadding().padding(horizontal = 20.dp)) {
             Text(view.title, color = Chrome.text, fontFamily = robotoFlex(FontWeight.Bold, 18.sp), fontSize = 18.sp, maxLines = 1)
             Text(chapterWords(context, view.chapter), color = Chrome.faint, fontSize = 13.sp)

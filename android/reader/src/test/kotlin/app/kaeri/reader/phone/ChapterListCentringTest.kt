@@ -7,7 +7,9 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import app.kaeri.engine.core.Medium
@@ -45,8 +47,11 @@ class ChapterListCentringTest {
         compose.waitForIdle()
     }
 
+    /** Chapter [n]'s row in the list. The sheet's header names the open chapter too. */
     private fun row(n: Int): SemanticsNodeInteraction =
-        compose.onNode(hasText("Chapter $n") and hasClickAction(), useUnmergedTree = false)
+        compose.onNode(inList("Chapter $n"), useUnmergedTree = false)
+
+    private fun inList(words: String) = hasText(words) and hasClickAction() and hasAnyAncestor(hasScrollToIndexAction())
 
     @Test
     fun the_open_chapter_opens_in_the_middle_with_the_focus() {
@@ -54,7 +59,7 @@ class ChapterListCentringTest {
         row(60).assertIsDisplayed().assertIsFocused()
         // As many rows show above it as below, give or take the one cut at an edge. The list
         // draws only the rows in view.
-        val drawn = (30..90).filter { n -> compose.onAllNodes(hasText("Chapter $n") and hasClickAction()).fetchSemanticsNodes().isNotEmpty() }
+        val drawn = (30..90).filter { n -> compose.onAllNodes(inList("Chapter $n")).fetchSemanticsNodes().isNotEmpty() }
         val above = drawn.count { it < 60 }
         val below = drawn.count { it > 60 }
         assertTrue("$drawn", above >= 3 && kotlin.math.abs(above - below) <= 1)

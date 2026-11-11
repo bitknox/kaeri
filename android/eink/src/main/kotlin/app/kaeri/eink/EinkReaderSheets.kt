@@ -11,6 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.focusTarget
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -478,11 +479,17 @@ fun EinkContents(
             // TalkBack and the keyboard start on the chapter being read, once, as the page opens.
             val focus = remember { FocusRequester() }
             var focused by remember { mutableStateOf(false) }
-            LaunchedEffect(page) { onPage() }
+            // A turned page drops the row that had the focus, and the reader's keys follow the
+            // focus, so the page itself keeps it.
+            val pageFocus = remember { FocusRequester() }
+            LaunchedEffect(page) {
+                onPage()
+                if (focused) runCatching { pageFocus.requestFocus() }
+            }
             // The page buttons and volume keys turn the list's pages while it shows.
             SideEffect { keys.turn = { by -> page = (page + by).coerceIn(0, pages.size - 1) } }
             Column(Modifier.fillMaxSize()) {
-                Column(Modifier.weight(1f)) {
+                Column(Modifier.weight(1f).focusRequester(pageFocus).focusTarget()) {
                     pages[page].forEach { line ->
                         when (line) {
                             is ContentsLine.Heading -> Text(
