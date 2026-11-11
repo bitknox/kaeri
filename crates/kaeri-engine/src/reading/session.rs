@@ -690,8 +690,8 @@ impl Reader {
         let Some(s) = self.session.as_mut().filter(|s| s.id == session) else { return };
         match wake {
             ReaderWake::Laid => s.laid_out(cx, &pages),
-            // Every page of a source's chapter landed and they lay out otherwise than guessed:
-            // laid out again at the same page, as a change of screen is.
+            // Every page of a source's chapter landed or failed and they lay out otherwise than
+            // guessed: laid out again at the same page, as a change of screen is.
             ReaderWake::Relay(n) if n == s.generation && s.novel.is_none() => {
                 let page = s.page_now();
                 s.lay_out(cx, &pages, page);

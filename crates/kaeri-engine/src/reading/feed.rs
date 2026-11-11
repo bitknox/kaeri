@@ -217,6 +217,11 @@ impl Feed {
         self.pages.lock().is_ok_and(|p| p.iter().all(|p| matches!(p, FeedPage::Landed(_))))
     }
 
+    /// No page is still on its way: each landed or failed.
+    pub fn settled(&self) -> bool {
+        self.pages.lock().is_ok_and(|p| p.iter().all(|p| !matches!(p, FeedPage::Coming)))
+    }
+
     /// Fetch a failed page again, answering on `out` once it lands. `false` when it had not
     /// failed.
     pub fn retry(&self, index: usize, out: &Outbox) -> bool {
@@ -244,6 +249,29 @@ impl Feed {
         {
             *slot = page;
         }
+    }
+}
+
+#[cfg(test)]
+impl Feed {
+    /// A feed of `pages` as they stand, that nothing fetches: for tests.
+    pub(crate) fn standing(chapter: ChapterId, dir: PathBuf, pages: Vec<FeedPage>) -> Self {
+        let (again, _) = mpsc::unbounded_channel();
+        let (wanted, _) = mpsc::unbounded_channel();
+        Self {
+            chapter,
+            dir,
+            pages: Mutex::new(pages),
+            credits: Vec::new(),
+            parts: None,
+            again,
+            wanted,
+        }
+    }
+
+    /// Page `index` landed or failed, as the fetcher would say.
+    pub(crate) fn put(&self, index: usize, page: FeedPage) {
+        self.set(index, page);
     }
 }
 
