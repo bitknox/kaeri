@@ -327,6 +327,21 @@ class EinkReaderTest {
         compose.onNodeWithText("The Lantern Stair · volume 1").assertIsDisplayed() // i18n-skip
     }
 
+    @Test
+    fun a_chapter_asked_for_that_is_slow_gets_the_slow_line_and_try_again_asks_it_again() {
+        open(zones = false)
+        toEndPage()
+        compose.mainClock.autoAdvance = false
+        compose.onNodeWithText("Continue to chapter 13").performClick()
+        session.apply(ReaderEvent.Opening(EinkFixtures.chapter("local:lantern-stair/13", "13", null), ReaderWait.ChapterPages("13", "alpha")))
+        compose.mainClock.advanceTimeBy(11_000)
+        compose.waitForIdle()
+        compose.onNodeWithText("hasn't answered in 10 seconds", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("Try again").performClick()
+        compose.mainClock.advanceTimeBy(100)
+        assertEquals(List(2) { ReaderCommand.OpenChapter(EinkFixtures.SESSION, "local:lantern-stair/13") }, opens())
+    }
+
     private fun opens(): List<ReaderCommand.OpenChapter> = sent.filterIsInstance<ReaderCommand.OpenChapter>()
 
     /** Drawn inverted: paper where the solid button's ink was, beside its words. */

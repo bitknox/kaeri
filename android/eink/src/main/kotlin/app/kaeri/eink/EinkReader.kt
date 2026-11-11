@@ -331,9 +331,9 @@ fun EinkReader(
                 novelOpen && view != null && novel != null -> EinkNovel(state, session, place, actions, chrome, { paint(it) }, ::toggleChrome, novel)
                 waiting -> {
                     EinkWaiting(state, waited = asking != null && askWaited)
-                    // A first open still going after its slow mark: the series, what it waits on and
-                    // the ways on, over the line.
-                    if (state.leaves.isEmpty()) EinkSlowOpen(state, session, actions.onSeries)
+                    // A first open, or another chapter asked for, still going after its slow mark:
+                    // the series, what it waits on and the ways on, over the line.
+                    if (state.leaves.isEmpty() || asking != null) EinkSlowOpen(state, session, actions.onSeries)
                 }
                 else -> PagedReader(
                     state = state,
