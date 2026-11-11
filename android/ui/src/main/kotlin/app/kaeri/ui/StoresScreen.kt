@@ -580,14 +580,15 @@ private fun JoinPreview(preview: StoresModel.Preview?, offline: Boolean) {
                     supporting = stringResource(if (invited.namesJoiner) R.string.stores_join_your_name_detail else R.string.stores_device_name_detail),
                 )
             }
+            // What a plugin is, then whose plugins these are: the risk line comes first, as the
+            // first-run Join and the large panel board put it.
             if (app.kaeri.ui.reading.largePaper) {
-                Text(
-                    stringResource(R.string.stores_not_from_app),
-                    style = app.kaeri.eink.EinkType.Secondary.copy(lineHeight = app.kaeri.eink.EinkType.Secondary.fontSize * 1.4f),
-                    modifier = Modifier.padding(top = 16.dp),
-                )
+                val notice = app.kaeri.eink.EinkType.Secondary.copy(lineHeight = app.kaeri.eink.EinkType.Secondary.fontSize * 1.4f)
+                Text(stringResource(R.string.plugin_risk_warning), style = notice, modifier = Modifier.padding(top = 16.dp))
+                Text(stringResource(R.string.stores_not_from_app), style = notice, modifier = Modifier.padding(top = 8.dp))
             } else {
-                SheetText(stringResource(R.string.stores_not_from_app), Modifier.padding(top = 16.dp))
+                SheetText(stringResource(R.string.plugin_risk_warning), Modifier.padding(top = 16.dp))
+                SheetText(stringResource(R.string.stores_not_from_app), Modifier.padding(top = 8.dp))
             }
         }
         null -> {}
