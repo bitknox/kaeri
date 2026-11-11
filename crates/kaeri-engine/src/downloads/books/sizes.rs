@@ -269,7 +269,7 @@ impl BookDownloads {
             })
             .map(|d| d.chapter.as_str())
             .collect();
-        let picked = Self::picked(&pick, rows);
+        let picked = Self::to_fetch(&pick, rows);
         let chosen: Vec<&ChapterRow> =
             rows.iter().filter(|row| picked.iter().any(|w| w.chapter == row.id)).collect();
         let wanted: Vec<&ChapterRow> =
