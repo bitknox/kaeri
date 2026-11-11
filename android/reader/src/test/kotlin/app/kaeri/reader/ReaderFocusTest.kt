@@ -48,9 +48,12 @@ class ReaderFocusTest {
     private fun words(action: String) =
         compose.onNode(placeWith(action), useUnmergedTree = true).fetchSemanticsNode().config[SemanticsProperties.ContentDescription].joinToString()
 
+    /** Pages with no files: nothing is decoded on another thread, to run on past the test's end. */
+    private fun state(mode: ReaderMode = ReaderMode.PAGED) = TapZonesScenes.state(dir, mode = mode).copy(leaves = ReaderFixtures.leaves(3))
+
     @Test
     fun the_strip_says_its_page_and_carries_its_moves() {
-        val state = TapZonesScenes.state(dir, mode = ReaderMode.STRIP)
+        val state = state(ReaderMode.STRIP)
         compose.setContent {
             Box(Modifier.fillMaxSize().background(ObiSilk.Ground)) {
                 PhoneReader(session = session, state = state, images = PageImages(), actions = PhoneReaderActions(onClose = {}), novel = { _, _ -> })
@@ -64,7 +67,7 @@ class ReaderFocusTest {
 
     @Test
     fun the_novel_says_where_it_is_and_carries_its_moves() {
-        val state = TapZonesScenes.state(dir)
+        val state = state()
         compose.setContent {
             Box(Modifier.fillMaxSize().background(ObiSilk.Ground)) {
                 NovelScreen(session, state, NovelPlace(), NovelAssets("", "", ""), resource = { null }, onControls = {})
