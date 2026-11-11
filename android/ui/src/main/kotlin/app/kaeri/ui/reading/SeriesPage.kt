@@ -105,6 +105,7 @@ import app.kaeri.ui.Shared
 import app.kaeri.ui.TextPlaceholder
 import app.kaeri.ui.itemMotion
 import app.kaeri.ui.kaeriIsFor
+import app.kaeri.ui.labelFor
 import app.kaeri.ui.sharedWork
 import app.kaeri.ui.wideWindow
 import kotlinx.coroutines.delay
@@ -202,6 +203,31 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
     val failure = failures[ReadingAbout.SERIES]
     val coverKey = readerCoverKey("series", work)
 
+    // The series' menu: Tracking, Read from and Read again.
+    val overflow: @Composable () -> Unit = {
+        if (series != null) {
+            Box {
+                IconButton(onClick = { moreOpen = true }) { Icon(Icons.More, contentDescription = Strings.actionMore(context)) }
+                Menu(expanded = moreOpen, onDismissRequest = { moreOpen = false }) {
+                    DropdownMenuItem(text = { Text(Strings.seriesTracking(context)) }, onClick = {
+                        moreOpen = false
+                        sheet = SeriesSheet.Tracking
+                    })
+                    DropdownMenuItem(text = { Text(Strings.seriesReadFromMenu(context)) }, onClick = {
+                        moreOpen = false
+                        sheet = SeriesSheet.ReadFrom
+                    })
+                    if (volumes.chapterRows().any { it.state !is ChapterReadState.Unread }) {
+                        DropdownMenuItem(text = { Text(Strings.seriesReadAgainMenu(context)) }, onClick = {
+                            moreOpen = false
+                            sheet = SeriesSheet.ReadAgain
+                        })
+                    }
+                }
+            }
+        }
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
@@ -220,35 +246,23 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
                 )
+            } else if (einkLarge) {
+                // A large e-ink panel: where Back goes in words at the page's margin, as every
+                // pushed paper page has it; the menu keeps Tracking, Read from and Read again.
+                val under = navigator.under()
+                val answer = kaeriIsFor()
+                EinkSeriesBack(
+                    back = under?.let { androidx.compose.ui.res.stringResource(it.labelFor(answer)) } ?: Strings.einkBack(context),
+                    onBack = navigator::back,
+                    menu = overflow,
+                )
             } else {
                 TopAppBar(
                     title = {},
                     navigationIcon = {
                         IconButton(onClick = navigator::back) { Icon(Icons.Back, contentDescription = Strings.actionBack(context)) }
                     },
-                    actions = {
-                        if (series != null) {
-                            Box {
-                                IconButton(onClick = { moreOpen = true }) { Icon(Icons.More, contentDescription = Strings.actionMore(context)) }
-                                Menu(expanded = moreOpen, onDismissRequest = { moreOpen = false }) {
-                                    DropdownMenuItem(text = { Text(Strings.seriesTracking(context)) }, onClick = {
-                                        moreOpen = false
-                                        sheet = SeriesSheet.Tracking
-                                    })
-                                    DropdownMenuItem(text = { Text(Strings.seriesReadFromMenu(context)) }, onClick = {
-                                        moreOpen = false
-                                        sheet = SeriesSheet.ReadFrom
-                                    })
-                                    if (volumes.chapterRows().any { it.state !is ChapterReadState.Unread }) {
-                                        DropdownMenuItem(text = { Text(Strings.seriesReadAgainMenu(context)) }, onClick = {
-                                            moreOpen = false
-                                            sheet = SeriesSheet.ReadAgain
-                                        })
-                                    }
-                                }
-                            }
-                        }
-                    },
+                    actions = { overflow() },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
                 )
             }

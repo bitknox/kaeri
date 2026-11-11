@@ -82,6 +82,9 @@ class Navigator(private val nav: NavHostController, private val start: Destinati
     /** The destination on screen. */
     fun current(): Destination = nav.currentBackStackEntry?.destinationOf() ?: start
 
+    /** The tab whose own page lies right under the page on screen; null when another page does. */
+    fun under(): Destination? = nav.previousBackStackEntry?.destinationOf()
+
     /** Open [id]'s page in the current destination's back stack, flying from [from]. */
     fun openTitle(id: AnilistId, from: String) {
         source = "$from:$id"

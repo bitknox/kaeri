@@ -1,5 +1,7 @@
 package app.kaeri.ui
 
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
 import app.kaeri.eink.EinkLook
 import app.kaeri.engine.model.BookFolderRow
 import app.kaeri.engine.model.BookFolderScan
@@ -12,6 +14,7 @@ import app.kaeri.engine.model.Event
 import app.kaeri.engine.model.KaeriIsFor
 import app.kaeri.store.AppStore
 import app.kaeri.store.FixtureScene
+import app.kaeri.store.LongChaptersStage
 import app.kaeri.store.ReadDiscoveryStage
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.launch
@@ -26,10 +29,15 @@ import org.robolectric.annotation.Config
 class EinkLargeSeriesSearchShots : ReadingShotHarness() {
     private val lists = { store: AppStore -> store.reading.lists.value.isNotEmpty() }
 
-    private fun series(name: String) = shoot(
+    private fun series(name: String, chapters: Int? = null, after: (() -> Unit)? = null) = shoot(
         name, FixtureScene.READING_SERIES, Destination.Home, medium = KaeriIsFor.READ, page = "read/series/" + android.net.Uri.encode(MANGA), // i18n-skip
         eink = EinkLook(),
-        ready = { it.reading.series.value[MANGA] != null && it.reading.chapters.value[MANGA] != null },
+        then = { if (chapters != null) LongChaptersStage.stage(it, chapters) },
+        after = after,
+        ready = { store ->
+            val list = store.reading.chapters.value[MANGA]
+            store.reading.series.value[MANGA] != null && list != null && (chapters == null || list.volumes.sumOf { it.chapters.size } == chapters)
+        },
     )
 
     /** Search with nothing asked and Your sources only on, as the board draws its start. */
@@ -54,6 +62,16 @@ class EinkLargeSeriesSearchShots : ReadingShotHarness() {
 
     @Test @Config(qualifiers = EREADER_10, fontScale = AIR_SCALE) fun series_085() = series("series-085")
     @Test @Config(qualifiers = EREADER_10) fun series_100() = series("series-100")
+
+    // A long series, to see a page of chapters full: 41 of them at 0.85 and 1.0.
+    @Test @Config(qualifiers = EREADER_10, fontScale = AIR_SCALE) fun series_long_085() = series("series-long-085", chapters = 41)
+    @Test @Config(qualifiers = EREADER_10) fun series_long_100() = series("series-long-100", chapters = 41)
+
+    /** The top line says where Back goes in words, the tab under the page, and the menu stays. */
+    @Test @Config(qualifiers = EREADER_10, fontScale = AIR_SCALE) fun series_back() = series("series-back-085") {
+        compose.onNodeWithText("‹ Home").assertExists() // i18n-skip
+        compose.onNodeWithContentDescription("More").assertExists() // i18n-skip
+    }
     @Test @Config(qualifiers = EREADER_10, fontScale = AIR_SCALE) fun start_085() = start("search-start-085")
     @Test @Config(qualifiers = EREADER_10) fun start_100() = start("search-start-100")
     @Test @Config(qualifiers = EREADER_10, fontScale = AIR_SCALE) fun results_085() = results("search-results-085")

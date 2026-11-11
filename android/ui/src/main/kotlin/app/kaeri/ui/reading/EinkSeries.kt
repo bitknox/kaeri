@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,7 +28,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -183,6 +187,33 @@ internal fun EinkSeriesLarge(
             Spacer(Modifier.height(22.dp))
             Box(Modifier.fillMaxWidth().height(EinkSizes.Rule).background(EinkColours.Ink))
             SeriesChapters(series, chapters, late, newestFirst, onOrder, chosen, onChosen, onChoose, onOpen, onLong, onRetry, onReadFrom, Modifier.weight(1f))
+        }
+    }
+}
+
+/**
+ * The large series page's top line: "‹ Library", or wherever Back goes, in words at the page's
+ * margin as Browse and Settings have it, and the series' menu at the end.
+ */
+@Composable
+internal fun EinkSeriesBack(back: String, onBack: () -> Unit, menu: @Composable () -> Unit) {
+    val look = LocalEinkLayout.current ?: app.kaeri.eink.EinkLook()
+    EinkTheme(look) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .background(EinkColours.Paper)
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .padding(start = Side, end = Side - 12.dp, top = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                "‹ $back", // i18n-skip
+                style = EinkType.Label,
+                modifier = Modifier.heightIn(min = 48.dp).einkClick(onClick = onBack).wrapContentHeight(Alignment.CenterVertically),
+            )
+            Spacer(Modifier.weight(1f))
+            menu()
         }
     }
 }
