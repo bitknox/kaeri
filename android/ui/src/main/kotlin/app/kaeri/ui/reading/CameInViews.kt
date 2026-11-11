@@ -572,8 +572,17 @@ internal fun CameInDialog(open: Boolean, form: @Composable () -> CameInForm) {
     ) {
         val wide = wideWindow()
         // On paper: no motion, and a frame of its own, a 2 dp ink edge round solid paper, as
-        // the dimmed page behind shows no depth and a shadow does not draw.
+        // a shadow does not draw on the panel.
         val paper = LocalEinkLayout.current
+        if (paper != null) {
+            // On paper, at every size: no dim over the page behind and no window animation; the
+            // ink edge alone sets the dialog apart, and a grey page would cost a full refresh.
+            val window = (androidx.compose.ui.platform.LocalView.current.parent as? androidx.compose.ui.window.DialogWindowProvider)?.window
+            androidx.compose.runtime.SideEffect {
+                window?.setDimAmount(0f)
+                window?.setWindowAnimations(0)
+            }
+        }
         val enter = if (paper != null) EnterTransition.None else if (reduced) fadeIn(tween(200)) else fadeIn(tween(CameInMotion.OPEN_MILLIS, easing = CameInMotion.EmphasizedDecelerate)) +
             slideInVertically(tween(CameInMotion.OPEN_MILLIS, easing = CameInMotion.EmphasizedDecelerate)) { it / 10 }
         val exit = if (paper != null) ExitTransition.None else if (reduced) fadeOut(tween(200)) else fadeOut(tween(CameInMotion.CLOSE_MILLIS, easing = CameInMotion.EmphasizedAccelerate)) +
@@ -581,9 +590,6 @@ internal fun CameInDialog(open: Boolean, form: @Composable () -> CameInForm) {
         if (wide && paper != null && largePaper) {
             // A 10.3 inch panel: 720 wide, under the status bar, with its title and Cancel at the
             // top and Cancel and the solid action at the foot, as the large panel board draws it.
-            // No dim over the page behind: on paper the ink edge alone sets the dialog apart.
-            val window = (androidx.compose.ui.platform.LocalView.current.parent as? androidx.compose.ui.window.DialogWindowProvider)?.window
-            androidx.compose.runtime.SideEffect { window?.setDimAmount(0f) }
             Box(Modifier.fillMaxSize().statusBarsPadding().imePadding().padding(top = 56.dp, bottom = 24.dp), contentAlignment = Alignment.TopCenter) {
                 AnimatedVisibility(visible, enter = enter, exit = exit) {
                     Surface(
