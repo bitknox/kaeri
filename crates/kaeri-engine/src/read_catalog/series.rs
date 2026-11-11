@@ -22,6 +22,7 @@ use crate::outbox::Outbox;
 
 /// The page: the header at once, then AniList's page and the chapters.
 pub fn load(kit: &Kit, ask: Ask, work: WorkId, tx: &Outbox) {
+    super::changed::page(kit, &work);
     let id = tiles::anilist(work.as_str());
     let kept = id.and_then(|id| kit.meta.kept_book(id));
     let wants_page = id.is_some() && kept.as_ref().is_none_or(|k| !k.detail_fresh(ask.now));

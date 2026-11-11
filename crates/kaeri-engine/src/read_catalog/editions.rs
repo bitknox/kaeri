@@ -49,9 +49,10 @@ pub(crate) const MATCHED: u8 = 92;
 /// How sure a match made by itself before the name rules was: its series' name is checked once.
 const OLDER: u8 = 90;
 
-/// The misses kept per work, each with when it was found.
+/// The misses kept per work, each with when it was found and the
+/// [`crate::read_sources::BookSources::source_mark`] of the source that missed.
 #[derive(Debug, Default)]
-pub(crate) struct Misses(HashMap<String, Vec<(i64, EditionMiss)>>);
+pub(crate) struct Misses(HashMap<String, Vec<(i64, u64, EditionMiss)>>);
 
 /// A Read from command.
 pub(crate) fn command(kit: &Kit, ask: Ask, command: BookSourceCommand, tx: &Outbox) {
@@ -425,25 +426,31 @@ async fn recheck(kit: &Kit, id: &WorkId, work: &fit::Work, now: i64) -> bool {
     forgot
 }
 
-/// The misses still standing for `work`: fresh, and from sources that still lack it.
+/// The misses still standing for `work`: fresh, from sources that still lack it, and said by
+/// the source as it stands. A source updated or put again since it missed is asked anew.
 fn kept_misses(kit: &Kit, work: &WorkId, wanted: &[String], now: i64) -> Vec<EditionMiss> {
     let kept = kit.sources.catalog.misses.lock().unwrap_or_else(|e| e.into_inner());
     let Some(list) = kept.0.get(work.as_str()) else { return Vec::new() };
     let mut out: Vec<EditionMiss> = list
         .iter()
-        .filter(|(at, miss)| now - at < ASKED_FOR && wanted.contains(&miss.source_id))
-        .map(|(_, miss)| miss.clone())
+        .filter(|(at, mark, miss)| {
+            now - at < ASKED_FOR
+                && wanted.contains(&miss.source_id)
+                && kit.sources.source_mark(&miss.source_id) == Some(*mark)
+        })
+        .map(|(_, _, miss)| miss.clone())
         .collect();
     out.sort_by_key(|m| wanted.iter().position(|id| *id == m.source_id));
     out
 }
 
 fn keep_miss(kit: &Kit, work: &WorkId, miss: Option<EditionMiss>, source: &str, now: i64) {
+    let mark = kit.sources.source_mark(source);
     let mut kept = kit.sources.catalog.misses.lock().unwrap_or_else(|e| e.into_inner());
     let list = kept.0.entry(work.as_str().to_owned()).or_default();
-    list.retain(|(at, m)| m.source_id != source && now - at < ASKED_FOR);
-    if let Some(miss) = miss {
-        list.push((now, miss));
+    list.retain(|(at, _, m)| m.source_id != source && now - at < ASKED_FOR);
+    if let (Some(miss), Some(mark)) = (miss, mark) {
+        list.push((now, mark, miss));
     }
 }
 
@@ -610,6 +617,26 @@ pub(crate) fn load(kit: &Kit, ask: Ask, work: WorkId, tx: &Outbox) {
     });
 }
 
+/// The sources changed while `work`'s page may be open: the page again, and Read from asking
+/// the sources that have not answered for the work as they stand. A page read from an edition
+/// moves to a better one found meanwhile; a page with none waits on the search, as on opening.
+pub(crate) fn again(kit: &Kit, ask: Ask, work: WorkId, tx: &Outbox) {
+    let before = kit.sources.edition_of(&work, None);
+    series::load(kit, ask, work.clone(), tx);
+    load(kit, ask, work.clone(), tx);
+    if before.is_none() {
+        return;
+    }
+    let Some(check) = running(kit, &work) else { return };
+    let (kit, tx) = (kit.clone(), tx.clone());
+    tokio::spawn(async move {
+        ended(check).await;
+        if kit.sources.edition_of(&work, None) != before {
+            series::load(&kit, ask, work, &tx);
+        }
+    });
+}
+
 /// The editions whose chapter lists were never asked for, or not lately, so Read from can say
 /// what each holds: asked in the background, each line updated as its answer comes.
 fn list_unlisted(kit: &Kit, work: &WorkId, now: i64, tx: &Outbox) {
@@ -687,7 +714,8 @@ fn settled(kit: &Kit, ask: Ask, work: &WorkId, tx: &Outbox) {
     let changed = {
         let mut kept = kit.sources.catalog.not_found.lock().unwrap_or_else(|e| e.into_inner());
         if missing {
-            kept.insert(work.as_str().to_owned(), ask.now).is_none()
+            let mark = kit.sources.sources_mark();
+            kept.insert(work.as_str().to_owned(), (ask.now, mark)).is_none()
         } else {
             kept.remove(work.as_str()).is_some()
         }

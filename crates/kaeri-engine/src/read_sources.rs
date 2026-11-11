@@ -247,6 +247,10 @@ impl BookSource for FolderSource {
 // ---------------------------------------------------------------------------------------------
 // The holder
 
+/// When a chapter list came back empty, and the [`BookSources::source_mark`] of the source
+/// that said so.
+type EmptyList = (std::time::Instant, Option<u64>);
+
 /// Everything the Sources screen and the reading commands share. Cheap to clone.
 #[derive(Clone)]
 pub struct BookSources {
@@ -265,9 +269,10 @@ pub struct BookSources {
     pub demo: kaeri_providers::reading_demo::ReadingDemo,
     /// The series whose sources are being asked how they read, by source and series.
     hint_lookups: Arc<Mutex<HashMap<(String, String), HintLookup>>>,
-    /// The series whose chapter list came back empty lately, by source and series: an empty
-    /// answer is not kept, so this is what keeps a work from being read from it meanwhile.
-    empty: Arc<Mutex<HashMap<(String, String), std::time::Instant>>>,
+    /// The series whose chapter list came back empty lately, by source and series, with the
+    /// [`BookSources::source_mark`] of the source that said so: an empty answer is not kept, so
+    /// this is what keeps a work from being read from it meanwhile.
+    empty: Arc<Mutex<HashMap<(String, String), EmptyList>>>,
     /// The language the app speaks, as [`BookSources::set_language`] last gave it: the language
     /// a work's chapters are counted in when its editions are compared, and the group a series
     /// is read from is one in it when the person picked none.
@@ -867,10 +872,10 @@ pub fn command(
         BookSourceCommand::AddFolder { folder } => {
             let Some(id) = this.add_folder(&folder, now) else { return publish() };
             publish();
-            rescan(this, Some(id), now, publish, Some(tx));
+            rescan(this, Some(id), now, publish, tx, true);
         }
         BookSourceCommand::Scan => {
-            rescan(this.clone(), None, now, publish.clone(), None);
+            rescan(this.clone(), None, now, publish.clone(), tx.clone(), false);
             recheck(this, now, true, publish, tx);
         }
         BookSourceCommand::Recheck => recheck(this, now, true, publish, tx),
@@ -886,6 +891,7 @@ pub fn command(
             match this.add_found(&pending, libraries, report_progress, now) {
                 Some(came) => {
                     let _ = tx.send(Event::CameIn(came));
+                    changed(&tx);
                 }
                 None => tracing::debug!("a server was added that is no longer held"),
             }
@@ -904,12 +910,14 @@ pub fn command(
             this.removed.write().unwrap_or_else(|e| e.into_inner()).insert(id.clone());
             publish();
             let (keeper, forget) = (this.clone(), id.clone());
+            let tx = tx.clone();
             let handle = tokio::spawn(async move {
                 tokio::time::sleep(std::time::Duration::from_secs(UNDO_SECONDS)).await;
                 let gone =
                     keeper.removed.write().unwrap_or_else(|e| e.into_inner()).remove(&forget);
                 if gone {
                     let _ = keeper.store.remove_book_folder(&forget);
+                    changed(&tx);
                 }
                 keeper.undo.lock().unwrap_or_else(|e| e.into_inner()).remove(&forget);
                 publish();
@@ -942,6 +950,7 @@ pub fn command(
                 this.store.set_local_series_match(&group, Some(&work), "matched", 100, None);
             let _ = this.store.set_book_match(FOLDERS, &group, &work, 100, true, false, now);
             publish();
+            changed(&tx);
         }
         BookSourceCommand::Keep { group } => {
             let series = this.store.local_book_series().unwrap_or_default();
@@ -988,7 +997,11 @@ pub fn command(
         BookSourceCommand::SignIn { address, user, password } => {
             tokio::spawn(async move {
                 let event = sign_in(&this, &address, &user, &password.0, now).await;
+                let added = matches!(event, BookSourceEvent::ServerAdded { .. });
                 let _ = tx.send(Event::BookSources(event));
+                if added {
+                    changed(&tx);
+                }
                 publish();
             });
         }
@@ -998,6 +1011,7 @@ pub fn command(
             let _ = this.store.remove_book_server(&id);
             this.forget_server_meta(&id);
             publish();
+            changed(&tx);
         }
         BookSourceCommand::SetReportProgress { id, on } => {
             if let Ok(Some(server)) = this.store.book_server(&id) {
@@ -1016,10 +1030,12 @@ pub fn command(
         BookSourceCommand::SetOrder { ids } => {
             this.set_order(ids);
             publish();
+            changed(&tx);
         }
         BookSourceCommand::SetOff { id, off } => {
             this.set_off(&id, off);
             publish();
+            changed(&tx);
         }
         // The catalogue answers these: see `read_catalog::editions`.
         BookSourceCommand::LoadForWork { .. }
@@ -1028,13 +1044,20 @@ pub fn command(
     }
 }
 
+/// The book sources changed: what reading shows is brought up to date.
+fn changed(tx: &Outbox) {
+    let _ = tx.internal(crate::outbox::Internal::BookSourcesChanged);
+}
+
 /// Scan the folders, or only `only`. With `report`, what came in from each folder is said.
+/// Reading is brought up to date once they are scanned.
 fn rescan(
     this: BookSources,
     only: Option<String>,
     now: i64,
     publish: impl Fn() + Clone + Send + 'static,
-    report: Option<Outbox>,
+    tx: Outbox,
+    report: bool,
 ) {
     tokio::spawn(async move {
         let folders: Vec<_> = this
@@ -1044,13 +1067,17 @@ fn rescan(
             .into_iter()
             .filter(|f| only.as_ref().is_none_or(|id| *id == f.id))
             .collect();
+        let scanned = !folders.is_empty();
         for folder in folders {
             let tick = publish.clone();
             let found = this.scan_folder(folder, now, tick).await;
-            if let (Some(tx), Some(found)) = (&report, found) {
+            if let (true, Some(found)) = (report, found) {
                 let _ = tx.send(Event::CameIn(added::folder_came_in(found)));
             }
             publish();
+        }
+        if scanned {
+            changed(&tx);
         }
     });
 }
@@ -1071,6 +1098,9 @@ fn recheck(
                 // Asked again with what it now holds.
                 this.put_server(&stored);
             }
+        }
+        if !filled.is_empty() {
+            changed(&tx);
         }
         for server in filled {
             let _ = tx.send(Event::CameIn(kaeri_model::came_in::CameIn::ServerAdded(server)));
@@ -1099,6 +1129,9 @@ pub fn spawn_rechecks(
                 if let Some(stored) = this.store.book_server(&server.id).ok().flatten() {
                     this.put_server(&stored);
                 }
+            }
+            if !filled.is_empty() {
+                changed(&tx);
             }
             for server in filled {
                 let _ =
@@ -1182,6 +1215,36 @@ impl BookSources {
     /// A source's name as its manifest gives it, or its id when it is no longer loaded.
     pub fn source_name(&self, id: &str) -> String {
         self.registry.manifest(id).map_or_else(|| id.to_owned(), |m| m.name)
+    }
+
+    /// A mark of source `id` as it stands: its version and which join of it is in the chain.
+    /// What the source said is good only while the mark holds: an update, or a server put again
+    /// with what it now holds, makes another. `None` when it is not in the chain.
+    pub(crate) fn source_mark(&self, id: &str) -> Option<u64> {
+        use std::hash::{Hash, Hasher};
+        let manifest = self.registry.manifest(id)?;
+        let joined = self.registry.joined(id)?;
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        (id, manifest.version.as_str(), joined).hash(&mut hasher);
+        Some(hasher.finish())
+    }
+
+    /// A mark of the sources searched by name, the ones on beside the folders, each at its
+    /// [`Self::source_mark`], in no order: a work none of them had may be had once it changes.
+    /// Moving a source leaves it as it was, since a miss is every source saying no.
+    pub(crate) fn sources_mark(&self) -> u64 {
+        use std::hash::{Hash, Hasher};
+        let mut marks: Vec<u64> = self
+            .registry
+            .ids()
+            .into_iter()
+            .filter(|id| id != FOLDERS && !self.registry.is_off(id))
+            .filter_map(|id| self.source_mark(&id))
+            .collect();
+        marks.sort_unstable();
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        marks.hash(&mut hasher);
+        hasher.finish()
     }
 
     /// The editions a work has: every source holding a series matched to it.
@@ -1667,23 +1730,31 @@ impl BookSources {
         asked: Option<Asked>,
         now: i64,
     ) {
+        let mark = self.source_mark(source);
         let mut kept = self.catalog.listings.lock().unwrap_or_else(|e| e.into_inner());
         let key = (source.to_owned(), series.to_owned());
         match asked {
-            Some(asked) => kept.insert(key, (now, asked)),
+            Some(asked) => kept.insert(key, (now, asked, mark)),
             None => kept.remove(&key),
         };
     }
 
-    /// Where an edition's chapter list stands, for Read from's line.
-    pub(crate) fn listing_of(&self, source: &str, series: &str) -> Option<EditionListing> {
-        let asked = self
-            .catalog
+    /// The last ask of an edition's chapter list that left no list kept, with when, unless the
+    /// source joined anew since: what an update says is asked again.
+    fn last_listing(&self, source: &str, series: &str) -> Option<(i64, Asked)> {
+        let mark = self.source_mark(source);
+        self.catalog
             .listings
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .get(&(source.to_owned(), series.to_owned()))
-            .map(|(_, asked)| asked.clone());
+            .filter(|(_, _, asked_of)| *asked_of == mark)
+            .map(|(at, asked, _)| (*at, asked.clone()))
+    }
+
+    /// Where an edition's chapter list stands, for Read from's line.
+    pub(crate) fn listing_of(&self, source: &str, series: &str) -> Option<EditionListing> {
+        let asked = self.last_listing(source, series).map(|(_, asked)| asked);
         match asked {
             Some(Asked::Asking) => Some(EditionListing::Asking),
             Some(Asked::Empty) => Some(EditionListing::Empty),
@@ -1696,12 +1767,7 @@ impl BookSources {
 
     /// When an edition's list was last asked for, if that ask left no list kept.
     pub(crate) fn listing_asked_at(&self, source: &str, series: &str) -> Option<i64> {
-        self.catalog
-            .listings
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .get(&(source.to_owned(), series.to_owned()))
-            .map(|(at, _)| *at)
+        self.last_listing(source, series).map(|(at, _)| at)
     }
 
     /// Which source and series reference a work is read from: the chosen edition or the
@@ -1754,10 +1820,11 @@ impl BookSources {
 
     /// Note what a source's chapter list came back as: empty, or with chapters again.
     fn note_list(&self, source: &str, series: &str, chapters: &[SourceChapter]) {
+        let mark = self.source_mark(source);
         let mut empty = self.empty.lock().unwrap_or_else(|e| e.into_inner());
         let key = (source.to_owned(), series.to_owned());
         if chapters.is_empty() {
-            empty.insert(key, std::time::Instant::now());
+            empty.insert(key, (std::time::Instant::now(), mark));
         } else {
             empty.remove(&key);
         }
@@ -1775,14 +1842,15 @@ impl BookSources {
             .map(|id| self.source_name(&id))
     }
 
-    /// The series' chapter list came back empty within the last quarter hour, or was kept
-    /// empty before.
+    /// The series' chapter list came back empty within the last quarter hour from the source
+    /// as it stands, or was kept empty before.
     fn came_back_empty(&self, source: &str, series: &str) -> bool {
         const EMPTY_FOR: std::time::Duration = std::time::Duration::from_secs(15 * 60);
+        let mark = self.source_mark(source);
         let noted = self.empty.lock().unwrap_or_else(|e| e.into_inner());
         noted
             .get(&(source.to_owned(), series.to_owned()))
-            .is_some_and(|at| at.elapsed() < EMPTY_FOR)
+            .is_some_and(|(at, said_by)| at.elapsed() < EMPTY_FOR && *said_by == mark)
             || crate::read_catalog::chapters::kept(&self.store, source, series)
                 .is_some_and(|(list, _)| list.is_empty())
     }

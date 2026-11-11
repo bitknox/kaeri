@@ -195,16 +195,21 @@ pub fn add_from(ctx: &Ctx, tx: &Outbox, device: &str, servers: &[String], now: i
         *held = kept;
         picked
     };
+    let mut added_any = false;
     for server in picked {
         if ctx.book_sources.has_server(&server.gift.id()) {
             continue;
         }
         match ctx.book_sources.add_gift(server.gift, now) {
             Some(added) => {
+                added_any = true;
                 let _ = tx.send(Event::CameIn(CameIn::ServerAdded(added)));
             }
             None => tracing::warn!("a book server from a paired device could not be added"),
         }
+    }
+    if added_any {
+        let _ = tx.internal(crate::outbox::Internal::BookSourcesChanged);
     }
     crate::syncing::say_status(ctx, tx);
 }
