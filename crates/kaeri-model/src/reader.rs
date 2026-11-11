@@ -267,7 +267,9 @@ pub enum ReaderSettingKey {
     RefreshImage,
     RefreshText,
     RefreshList,
-    GallerySpeed,
+    /// How the e-ink panel updates pages: the device's setting or one of its modes, or Gallery 3's
+    /// colour speed.
+    ScreenMode,
     RainbowFilter,
     Saturation,
     Contrast,
@@ -337,7 +339,7 @@ impl ReaderSettingKey {
         Self::RefreshImage,
         Self::RefreshText,
         Self::RefreshList,
-        Self::GallerySpeed,
+        Self::ScreenMode,
         Self::RainbowFilter,
         Self::Saturation,
         Self::Contrast,
@@ -377,7 +379,7 @@ impl ReaderSettingKey {
             Self::RefreshImage => "refresh_image",
             Self::RefreshText => "refresh_text",
             Self::RefreshList => "refresh_list",
-            Self::GallerySpeed => "gallery_speed",
+            Self::ScreenMode => "screen_mode",
             Self::RainbowFilter => "rainbow_filter",
             Self::Saturation => "saturation",
             Self::Contrast => "contrast",
@@ -588,7 +590,7 @@ pub struct ReaderSurface {
     /// Room for two pages side by side.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub two_pages: bool,
-    /// The look is dark: on e-ink a full refresh comes every fourth text page.
+    /// The look is dark: on e-ink a text refresh the person turned on comes sooner.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub dark: bool,
 }

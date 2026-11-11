@@ -1600,24 +1600,32 @@
     <string name="reader_row_volume_swap">Swap the volume keys</string>
     <!-- Heading of the e-ink reader's settings sheet over the rows for the e-ink screen itself. -->
     <string name="eink_sheet_screen">This screen</string>
-    <!-- Row in the e-ink reader's settings: a full refresh on every page with a picture. -->
+    <!-- Row in the e-ink reader's settings: a full refresh on every page with a picture. Off by default, so the device's own settings decide how the screen clears. -->
     <string name="eink_row_refresh_image">Full refresh on picture pages</string>
-    <!-- Row in the e-ink reader's settings: how often text pages get a full refresh. -->
+    <!-- Row in the e-ink reader's settings: how often text pages get a full refresh, or Off, the default. -->
     <string name="eink_row_refresh_text">Full refresh on text pages</string>
-    <!-- Row in the e-ink reader's settings: how often lists get a full refresh as they page. -->
+    <!-- Row in the e-ink reader's settings: how often lists get a full refresh as they page, or Off, the default. -->
     <string name="eink_row_refresh_list">Full refresh on lists</string>
     <!-- Value of a full refresh row in the e-ink reader's settings: once every so many pages. -->
     <plurals name="eink_refresh_every">
         <item quantity="one">Every page</item>
         <item quantity="other">Every %1$,d pages</item>
     </plurals>
-    <!-- Row in the e-ink reader's settings on a colour screen with speed modes: which mode pages use. -->
-    <string name="eink_row_screen_speed">Screen speed</string>
-    <!-- Choice of Screen speed: the screen's usual mode. -->
+    <!-- Row in the e-ink reader's settings: which of the screen's own update modes pages are drawn in, shown only where the app can set them. Its choices are the device's setting and the modes below, or Standard, Fast and Best quality on a colour screen with speed modes. -->
+    <string name="eink_row_screen_mode">Screen mode</string>
+    <!-- Choice of Screen mode, and its default: the app leaves the update mode to the device's own settings for this app. -->
+    <string name="eink_mode_device">The device\'s setting</string>
+    <!-- Choice of Screen mode: the screen's sharpest grey mode. HD is the name e-readers give this mode. -->
+    <string name="eink_mode_hd">HD</string>
+    <!-- Choice of Screen mode: the screen's mode with the least ghosting on text pages. Regal is the name e-readers give this mode; keep it as the device shows it. -->
+    <string name="eink_mode_regal">Regal</string>
+    <!-- Choice of Screen mode: quicker updates in fewer greys, with a little ghosting. -->
+    <string name="eink_mode_balanced">Balanced</string>
+    <!-- Choice of Screen mode on a colour screen with speed modes: the screen's usual mode. -->
     <string name="eink_speed_standard">Standard</string>
-    <!-- Choice of Screen speed: quicker updates with more ghosting. -->
+    <!-- Choice of Screen mode: quicker updates with more ghosting. -->
     <string name="eink_speed_fast">Fast</string>
-    <!-- Choice of Screen speed: the slowest and cleanest updates. -->
+    <!-- Choice of Screen mode on a colour screen with speed modes: the slowest and cleanest updates. -->
     <string name="eink_speed_best">Best quality</string>
     <!-- Row in the e-ink reader's settings on a colour screen: softens the rainbow pattern in colour pictures. -->
     <string name="eink_row_rainbow">Soften colour patterns</string>
@@ -1631,6 +1639,10 @@
     <string name="eink_step_down">Less</string>
     <!-- Button that makes a setting in the e-ink reader's settings bigger. -->
     <string name="eink_step_up">More</string>
+    <!-- Button before a list setting's value in the e-ink reader's settings, such as Screen mode: picks the choice before. Read out by screen readers. -->
+    <string name="eink_step_previous">Previous choice</string>
+    <!-- Button after a list setting's value in the e-ink reader's settings, such as Screen mode: picks the choice after. Read out by screen readers. -->
+    <string name="eink_step_next">Next choice</string>
     <!-- Marks the chapter open in the reader on the e-ink contents page. -->
     <string name="eink_contents_reading">Reading</string>
     <!-- What TalkBack says the line of skipped credit pages does, after "Double-tap to": an imperative, as Android's click labels are. -->
