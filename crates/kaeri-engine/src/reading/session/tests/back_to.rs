@@ -109,6 +109,35 @@ async fn a_new_layout_offers_nothing() {
     assert_eq!(offers(&h.drain()), []);
 }
 
+/// A place this device kept while sync was on stays its own after sync is turned off: opening an
+/// earlier chapter stays where asked, with no Moved notice.
+#[tokio::test(start_paused = true)]
+async fn this_devices_place_from_before_sync_was_off_moves_nothing() {
+    let mine = Store::open_in_memory().unwrap();
+    mine.sync_enable("phone").unwrap();
+    let mut ahead = ReadEvent::new(WORK, "2", 2);
+    ahead.page = Some(9);
+    mine.record_read(&ahead, Vec::new()).unwrap();
+    assert_eq!(kept_device(&mine).as_deref(), Some("phone"), "kept under this device's id");
+    mine.sync_disable().unwrap();
+    let mut h = twelve_pages_in(mine, "paged");
+    let work = WorkId::new(WORK);
+    let chapter = Some(ChapterId::new("1"));
+    h.send(ReaderCommand::Open { work, chapter, at: OpenAt::Start, surface: surface() });
+    h.until(|e| matches!(e, ReaderEvent::Leaves { .. }).then_some(())).await;
+    h.shown(0, TurnHow::Placed).await;
+    let said = h.drain();
+    assert!(
+        !said.iter().any(|e| matches!(e, ReaderEvent::GoTo { .. } | ReaderEvent::Moved { .. })),
+        "{said:?}"
+    );
+    assert_eq!(h.reader.session.as_ref().unwrap().chapter().id.as_str(), "1");
+}
+
+fn kept_device(store: &Store) -> Option<String> {
+    store.read_chapters(WORK).unwrap().into_iter().find(|c| c.chapter == "2")?.device
+}
+
 #[tokio::test(start_paused = true)]
 async fn another_devices_place_and_going_back_from_it_offer_nothing() {
     let mine = Store::open_in_memory().unwrap();

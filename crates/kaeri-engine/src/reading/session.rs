@@ -1639,7 +1639,9 @@ impl Session {
             return;
         };
         let Some(device) = theirs.device.clone() else { return };
-        if store.sync_device().ok().flatten().as_deref() == Some(device.as_str()) {
+        // This device's own id stays its own with sync off: places it kept while sync was on
+        // carry it.
+        if store.sync_device_kept().ok().flatten().as_deref() == Some(device.as_str()) {
             return;
         }
         let Some(index) = self.chapters.iter().position(|c| c.id.as_str() == last) else {
