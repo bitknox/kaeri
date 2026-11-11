@@ -257,6 +257,18 @@ class ReaderSessionTest {
     }
 
     @Test
+    fun the_end_page_names_the_chapter_past_the_extras_and_the_skip_opens_it() {
+        opened()
+        val extra = ReaderFixtures.chapter("local:lantern-stair/12.5", "12.5", title = "Volume 1 extras")
+        val whole = ReaderFixtures.chapter("local:lantern-stair/13", "13")
+        session.apply(ReaderEvent.EndPage(SESSION, extra, null, null, whole))
+        assertEquals(EndPageView(extra, null, null, whole), session.state.value.end)
+        sent.clear()
+        session.openChapter(whole.id)
+        assertEquals(listOf<ReaderCommand>(ReaderCommand.OpenChapter(SESSION, whole.id)), sent)
+    }
+
+    @Test
     fun a_strip_place_goes_out_with_the_foot() {
         opened()
         sent.clear()

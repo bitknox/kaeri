@@ -76,6 +76,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -134,6 +135,7 @@ fun PhoneEndPage(
     val server = rememberServerLine(view.work, view.chapter.id)
     val read = view.chapter.id in state.read
     val continueFocus = remember { FocusRequester() }
+    val skipFocus = remember { FocusRequester() }
     val backFocus = remember { FocusRequester() }
     val retryFocus = remember { FocusRequester() }
     val retrying = server.line?.canRetry == true
@@ -143,6 +145,8 @@ fun PhoneEndPage(
         // the line follows Back.
         val finished = next == null && end?.whyNone == NoNext.FINISHED
         val second = next != null || finished
+        // Past the extras: under Continue, in the quiet fill, when the next chapter is one.
+        val skip = end?.skipTo?.takeIf { next != null }
         var foot by remember { mutableIntStateOf(0) }
         Column(
             Modifier
@@ -173,6 +177,7 @@ fun PhoneEndPage(
                     .focusRequester(continueFocus)
                     .focusProperties {
                         when {
+                            skip != null -> this.next = skipFocus
                             second -> this.next = backFocus
                             retrying -> this.next = retryFocus
                         }
@@ -186,11 +191,37 @@ fun PhoneEndPage(
                 )
             }
             Spacer(Modifier.height(10.dp))
+            if (skip != null && next != null) {
+                val hint = Strings.readerEndSkipHint(context, chapterNumber(next))
+                Button(
+                    onClick = { session.openChapter(skip.id) },
+                    shape = RoundedCornerShape(25.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Chrome.plate, contentColor = Chrome.text),
+                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 50.dp)
+                        .semantics { stateDescription = hint }
+                        .focusRequester(skipFocus)
+                        .focusProperties {
+                            previous = continueFocus
+                            this.next = backFocus
+                        },
+                ) {
+                    Text(
+                        Strings.readerEndSkipTo(context, chapterNumber(skip)),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+                Spacer(Modifier.height(10.dp))
+            }
             val secondModifier = Modifier
                 .heightIn(min = 38.dp)
                 .focusRequester(backFocus)
                 .focusProperties {
-                    previous = continueFocus
+                    previous = if (skip != null) skipFocus else continueFocus
                     if (retrying) this.next = retryFocus
                 }
             when {
