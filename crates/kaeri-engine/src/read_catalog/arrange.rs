@@ -4,10 +4,11 @@
 //! **Parts.** Within one group, entries that are parts of one chapter become one chapter with
 //! the parts in order: "Chapter 1 part 1" and "Chapter 1 part 2", "1-1" and "1-2", "1.1" and
 //! "1.2". What says so, strongest first:
-//! - "part" or "pt" with a number in the label or the title (the WIT `chapter` has no part
-//!   field of its own, so a source says it in words), with the parts in all when it says
-//!   ("part 1/3", "part 1 of 3"). A volume's parts ("Volume 2 Part 3", a light novel's) stay
-//!   as they are;
+//! - "part" or "pt" with a number in the label, or in the titles of entries that share one
+//!   number (the WIT `chapter` has no part field of its own, so a source says it in words),
+//!   with the parts in all when it says ("part 1/3", "part 1 of 3"). A title's part word on a
+//!   number of its own names a story told over several numbered chapters, each a chapter. A
+//!   volume's parts ("Volume 2 Part 3", a light novel's) stay as they are;
 //! - `a-b` labels where the group lists `a-1` and at least one more of `a`'s parts (a lone
 //!   `12-13` is a run of two chapters, as [`ChapterRange::parse`] reads it);
 //! - decimals the series uses as parts: `n.1`, `n.2`, ... from .1 with no gap and no whole `n`
@@ -357,6 +358,13 @@ fn parts_in(
     let mut hyphens: HashMap<ChapterNumber, Vec<(u32, usize)>> = HashMap::new();
     let mut decimals: HashMap<u32, Vec<(u32, usize)>> = HashMap::new();
     let mut wholes: HashMap<u32, usize> = HashMap::new();
+    // How many of the group's entries carry each number: parts named only in titles share one.
+    let mut sharing: HashMap<ChapterRange, usize> = HashMap::new();
+    for &i in entries {
+        if let Some(number) = list[i].number {
+            *sharing.entry(number).or_default() += 1;
+        }
+    }
     for &i in entries {
         let c = &list[i];
         if let Some(said) = part_word(&c.number_raw)
@@ -370,13 +378,24 @@ fn parts_in(
             && !said.of_volume()
             && let Some(number) = c.number
         {
-            // "1.2" titled "Part 2" is the second part of 1.
-            let base = match tenths(number) {
-                Some((whole, d)) if d == said.n => ChapterRange::single(whole_number(whole)),
-                _ => number,
-            };
-            found.insert(i, (base, said.n, said.total));
-            continue;
+            match tenths(number) {
+                // "1.2" titled "Part 2" is the second part of 1.
+                Some((whole, d)) if d == said.n => {
+                    found.insert(
+                        i,
+                        (ChapterRange::single(whole_number(whole)), said.n, said.total),
+                    );
+                    continue;
+                }
+                // Two entries numbered 4, titled "Pt. 1" and "Pt. 2", are 4 in parts. A title's
+                // part word on a number of its own names a story told over several numbered
+                // chapters ("287 The Tale Part 2" after 286 "Part 1"): each is a chapter.
+                _ if sharing.get(&number).is_some_and(|n| *n > 1) => {
+                    found.insert(i, (number, said.n, said.total));
+                    continue;
+                }
+                _ => {}
+            }
         }
         if let Some((a, b)) = hyphenated(&c.number_raw) {
             hyphens.entry(a).or_default().push((b, i));
@@ -697,6 +716,34 @@ mod tests {
             .map(|r| r.id.key().unwrap().range().unwrap().last().whole())
             .collect();
         assert_eq!(trackers, vec![1, 2, 3]);
+    }
+
+    /// A story told over several numbered chapters names its parts in the titles; each is a
+    /// chapter of its own, never part 4 of 289 with three parts missing.
+    #[test]
+    fn a_part_word_in_the_title_of_a_number_of_its_own_is_a_chapter() {
+        let mut list = [
+            entry("a", "285", None),
+            entry("b", "286", None),
+            entry("c", "287", None),
+            entry("d", "288", None),
+            entry("e", "289", None),
+        ];
+        list[1].title = Some("The Long Tale Part 1".into());
+        list[2].title = Some("The Long Tale Part 2".into());
+        list[3].title = Some("The Long Tale (Pt. 3)".into());
+        list[4].title = Some("The Long Tale Part 4".into());
+        let arranged = arrange(&list, None, None);
+        assert_eq!(
+            ids(&arranged),
+            vec![("285", 1), ("286", 1), ("287", 1), ("288", 1), ("289", 1)]
+        );
+        assert!(arranged.parts.iter().all(Option::is_none), "{:?}", arranged.parts);
+        assert!(arranged.rows.iter().all(|r| r.missing.is_empty() && r.numbers.is_empty()));
+        // A decimal whose title names the same part is still that part.
+        let mut decimal = [entry("a", "3.1", None), entry("b", "3.2", None)];
+        decimal[1].title = Some("Part 2".into());
+        assert_eq!(ids(&arrange(&decimal, None, None)), vec![("3", 2)]);
     }
 
     #[test]
