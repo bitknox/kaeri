@@ -94,7 +94,9 @@ reader-volume = Volume { $volume }
 reader-chapter-in-progress = Halaman { $page } dari { $total }
 reader-chapter-read = Dibaca
 reader-chapter-new = baru
-reader-chapter-pages = { $pages } halaman
+reader-chapter-pages = { $pages ->
+   *[other] { $pages } halaman
+ }
 reader-offline-line = Offline. Bab yang diunduh tetap bisa dibuka.
 reader-menu-go = Buka
 reader-menu-next-page = Halaman selanjutnya

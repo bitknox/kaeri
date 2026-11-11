@@ -273,7 +273,10 @@ reader-chapter-new = new
 
 # Chapters sheet: a chapter's length.
 # @arg pages: int
-reader-chapter-pages = { $pages } pages
+reader-chapter-pages = { $pages ->
+    [one] 1 page
+   *[other] { $pages } pages
+}
 
 # Chapters sheet: the offline line.
 reader-offline-line = Offline. Downloaded chapters still open.

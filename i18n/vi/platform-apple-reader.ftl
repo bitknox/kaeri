@@ -94,7 +94,9 @@ reader-volume = Tập { $volume }
 reader-chapter-in-progress = Trang { $page }/{ $total }
 reader-chapter-read = Đã đọc
 reader-chapter-new = mới
-reader-chapter-pages = { $pages } trang
+reader-chapter-pages = { $pages ->
+   *[other] { $pages } trang
+ }
 reader-offline-line = Ngoại tuyến. Các chương đã tải vẫn mở được.
 reader-menu-go = Đi
 reader-menu-next-page = Trang sau
