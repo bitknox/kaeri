@@ -897,27 +897,34 @@ mod centring {
         }
     }
 
-    /// The popover opened on chapter `here` of `count`, filled as it shows, as the reader does.
-    /// Gives the list's scroll position when the first frame was painted.
+    /// The popover's content opened on chapter `here` of `count`, filled before it shows, as
+    /// the reader fills the popover. Drawn in a window of its own, since a headless X server
+    /// shows no popover. Gives the list's scroll position when the first frame was painted.
     fn open(count: usize, here: usize) -> (gtk::Window, Rc<Chapters>, Rc<Cell<Option<f64>>>) {
-        let window = gtk::Window::builder().default_width(700).default_height(700).build();
-        let anchor = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        window.set_child(Some(&anchor));
         let chapters = Chapters::new();
-        chapters.popover.set_parent(&anchor);
         chapters.set_volumes(vec![VolumeGroup {
             volume: None,
             title: None,
             chapters: (1..=count).map(chapter).collect(),
             all_read: false,
         }]);
-        window.present();
-        pump(100);
+        let content = chapters.popover.child().expect("the popover has its content");
+        chapters.popover.set_child(gtk::Widget::NONE);
+        let window = gtk::Window::builder().default_width(700).default_height(700).build();
+        window.set_child(Some(&content));
+        chapters.show_here(Here {
+            chapter: ChapterId(format!("c{here}")),
+            label: format!("Chapter {here}"), // i18n-skip
+            pages: false,
+            rtl: false,
+            leaves: Vec::new(),
+            open_leaf: 0,
+            files: Default::default(),
+        });
         let painted: Rc<Cell<Option<f64>>> = Rc::default();
-        chapters.popover.connect_map({
-            let list = chapters.list.clone();
+        chapters.list.connect_map({
             let painted = painted.clone();
-            move |_| {
+            move |list| {
                 let Some(clock) = list.frame_clock() else { return };
                 let list = list.clone();
                 let painted = painted.clone();
@@ -929,23 +936,7 @@ mod centring {
                 });
             }
         });
-        chapters.popover.connect_show({
-            let chapters = Rc::downgrade(&chapters);
-            move |_| {
-                if let Some(chapters) = chapters.upgrade() {
-                    chapters.show_here(Here {
-                        chapter: ChapterId(format!("c{here}")),
-                        label: format!("Chapter {here}"), // i18n-skip
-                        pages: false,
-                        rtl: false,
-                        leaves: Vec::new(),
-                        open_leaf: 0,
-                        files: Default::default(),
-                    });
-                }
-            }
-        });
-        chapters.popover.popup();
+        window.present();
         pump(400);
         (window, chapters, painted)
     }
@@ -973,7 +964,6 @@ mod centring {
                 row.parent().is_some_and(|item| item.is_focus()),
                 "the open chapter has the focus"
             );
-            chapters.popover.popdown();
             window.destroy();
         });
     }
@@ -983,7 +973,6 @@ mod centring {
         run(|| {
             let (window, chapters, _) = open(5, 3);
             assert_eq!(adjustment(&chapters).value(), 0.0);
-            chapters.popover.popdown();
             window.destroy();
             let (window, chapters, painted) = open(120, 120);
             let a = adjustment(&chapters);
@@ -994,7 +983,6 @@ mod centring {
                 a.upper()
             );
             assert_eq!(painted.get(), Some(a.value()));
-            chapters.popover.popdown();
             window.destroy();
         });
     }
