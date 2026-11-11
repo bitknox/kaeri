@@ -484,8 +484,10 @@ impl Engine {
         if background.digest {
             // The airing digest: what aired for shows you watch since the last launch. Same
             // philosophy as the update check — one line, only when there is something to say.
+            // A device kept for reading alone has no calendar to point at, so it hears nothing.
             digest::spawn(
-                state.config.effective().notifications.airing_digest,
+                state.config.effective().notifications.airing_digest
+                    && state.reading.answer().watches(),
                 state.config.effective().notifications.desktop,
                 services.store.clone(),
                 services.meta.clone(),
