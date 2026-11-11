@@ -335,7 +335,7 @@ private fun LargeHero(tile: WorkTile, spot: ReadSpotlight, actions: AppActions) 
     }
 }
 
-/** Continue on a 10 inch Home: a 140 dp cover in each of the grid's columns, with its title and place. */
+/** Continue on a 10 inch Home: a 140 dp cover centred in each of the grid's columns, with its title and place. */
 @Composable
 private fun LargeContinue(tiles: List<WorkTile>) {
     val context = LocalContext.current
@@ -351,14 +351,15 @@ private fun LargeContinue(tiles: List<WorkTile>) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
             val shown = tiles.take(columns)
             for (tile in shown) {
-                Column(
-                    Modifier
-                        .weight(1f)
-                        .einkClick { navigator.openSeries(tile.work, "eink-continue") }
-                        .semantics(mergeDescendants = true) {},
-                ) {
-                    PaperCover(tile.cover, tile.title, LargeContinueCover, Modifier)
-                    Column(Modifier.width(LargeContinueCover)) {
+                // Centred in its column, as the grid's covers are.
+                Box(Modifier.weight(1f), contentAlignment = Alignment.TopCenter) {
+                    Column(
+                        Modifier
+                            .width(LargeContinueCover)
+                            .einkClick { navigator.openSeries(tile.work, "eink-continue") }
+                            .semantics(mergeDescendants = true) {},
+                    ) {
+                        PaperCover(tile.cover, tile.title, LargeContinueCover, Modifier)
                         Text(tile.title, style = EinkType.Label, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 8.dp))
                         val line = tile.line(context)
                         if (line.isNotEmpty()) Text(line, style = EinkType.Secondary, maxLines = 1, overflow = TextOverflow.Ellipsis)

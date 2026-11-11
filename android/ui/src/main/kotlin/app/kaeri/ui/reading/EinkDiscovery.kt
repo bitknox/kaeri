@@ -21,7 +21,9 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -44,6 +46,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
@@ -421,8 +424,9 @@ private val TileTitleLarge = EinkType.Label
 private val TileLineLarge = EinkType.Body.copy(color = EinkColours.Secondary)
 
 /**
- * A cover on paper with its edge at the grid's size, the title and its line under it across the
- * column, one line each and cut with an ellipsis, as the board draws them.
+ * A cover on paper with its edge at the grid's size, the title and its line under it, one line
+ * each and cut with an ellipsis, as the board draws them. Cover and words are centred in the
+ * column. A new chapter takes the line's place as the dot and "New", which TalkBack hears too.
  */
 @Composable
 internal fun PaperTile(
@@ -431,16 +435,26 @@ internal fun PaperTile(
     line: String = tile.line(LocalContext.current),
     onClick: () -> Unit,
 ) {
-    Column(
-        Modifier
-            // The words take the column's width; on a short page the cover is narrower than it.
-            .fillMaxWidth()
-            .einkClick(onClick = onClick)
-            .semantics(mergeDescendants = true) {},
-    ) {
-        ReadCover(tile.cover, grid.cover, Modifier.border(EinkSizes.Hairline, EinkColours.Ink), shape = RoundedCornerShape(0.dp), title = tile.title)
-        Text(tile.title, style = if (grid.large) TileTitleLarge else TileTitle, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 8.dp))
-        if (line.isNotEmpty()) Text(line, style = if (grid.large) TileLineLarge else EinkType.Secondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    val newWord = Strings.einkNew(LocalContext.current)
+    val lineStyle = if (grid.large) TileLineLarge else EinkType.Secondary
+    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+        Column(
+            Modifier
+                .width(grid.cover)
+                .einkClick(onClick = onClick)
+                .semantics(mergeDescendants = true) { if (tile.newChapter) stateDescription = newWord },
+        ) {
+            ReadCover(tile.cover, grid.cover, Modifier.border(EinkSizes.Hairline, EinkColours.Ink), shape = RoundedCornerShape(0.dp), title = tile.title)
+            Text(tile.title, style = if (grid.large) TileTitleLarge else TileTitle, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 8.dp))
+            if (tile.newChapter) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(EinkSizes.NewDot).background(EinkColours.Ink, CircleShape))
+                    Text(newWord, style = lineStyle.copy(color = EinkColours.Ink), maxLines = 1, modifier = Modifier.padding(start = 7.dp))
+                }
+            } else if (line.isNotEmpty()) {
+                Text(line, style = lineStyle, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
     }
 }
 
