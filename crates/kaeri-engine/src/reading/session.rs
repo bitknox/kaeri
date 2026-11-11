@@ -127,7 +127,8 @@ impl Cx<'_> {
             Some(source) => self.layers_with(medium, id, Some(source)),
             None => self.layers(medium, id),
         };
-        ReaderSettingsView { medium, work: work.cloned(), rows: layers.rows() }
+        let tap_zones = (medium != Medium::Anime).then(|| layers.tap_zones());
+        ReaderSettingsView { medium, work: work.cloned(), rows: layers.rows(), tap_zones }
     }
 }
 
@@ -337,6 +338,12 @@ impl Reader {
                     tracing::warn!(error = %e, "a reader setting was not kept");
                 }
                 self.settings_changed(cx, session, medium, work, key);
+            }
+            ReaderCommand::TapGuideSeen { guide } => {
+                let paths = cx.services.paths.clone();
+                if let Err(e) = settings::guide_seen(cx.config, &paths, &guide) {
+                    tracing::warn!(error = %e, "the tap zone guide was not kept as seen");
+                }
             }
             ReaderCommand::UseDefault { medium, work, key } => {
                 if let Err(e) =
@@ -745,6 +752,7 @@ fn session_of(command: &ReaderCommand) -> Option<u64> {
         C::Open { .. }
         | C::SetSetting { .. }
         | C::UseDefault { .. }
+        | C::TapGuideSeen { .. }
         | C::LoadSettings { .. } => None,
     }
 }
@@ -3178,6 +3186,41 @@ mod tests {
         assert_eq!(mode, ());
         assert_eq!(h.reader.session.as_ref().unwrap().mode, ReaderMode::Strip);
     }
+    /// The settings carry the tap zones, and a guide kept as seen stays seen for that kind of
+    /// reading only, in this device's config.
+    #[tokio::test(start_paused = true)]
+    async fn settings_carry_the_tap_zones_and_a_seen_guide_is_kept() {
+        use kaeri_model::tap_zones::{TapReading, ZoneLayout};
+        let mut h = harness(Store::open_in_memory().unwrap());
+        macro_rules! load {
+            ($h:expr) => {{
+                $h.send(ReaderCommand::LoadSettings { medium: Medium::Manga, work: None });
+                $h.until(|e| match e {
+                    ReaderEvent::Settings(view) => Some(view.tap_zones.clone()),
+                    _ => None,
+                })
+            }};
+        }
+        let zones = load!(h).await.expect("manga has tap zones");
+        assert_eq!((zones.paged, zones.scrolling), (ZoneLayout::Sides, ZoneLayout::Off));
+        let reading = TapReading::new(ReaderMode::Paged, ReadDirection::RightToLeft);
+        assert!(zones.guide_due(&reading), "never seen on this device");
+
+        let guide = zones.map(&reading, None).guide;
+        h.send(ReaderCommand::TapGuideSeen { guide: guide.clone() });
+        let zones = load!(h).await.unwrap();
+        assert_eq!(zones.guide_seen_paged, guide);
+        assert!(zones.guide_seen_scrolling.is_empty());
+        assert!(!zones.guide_due(&reading));
+        assert_eq!(
+            h.config.saved().reading.taps.get("guide_paged").and_then(|v| v.as_str()),
+            Some(guide.as_str())
+        );
+        // A value that names no kind of reading is dropped.
+        h.send(ReaderCommand::TapGuideSeen { guide: "sideways".into() });
+        assert_eq!(load!(h).await.unwrap().guide_seen_paged, guide);
+    }
+
     /// A strip hinted by the work's origin gives way to the mode the person picks, at once and
     /// not only after the reader is opened again.
     #[tokio::test(start_paused = true)]

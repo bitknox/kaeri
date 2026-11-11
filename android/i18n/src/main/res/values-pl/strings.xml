@@ -779,7 +779,6 @@
     <string name="reader_settings">Ustawienia czytnika</string>
     <string name="reader_novel_line_scroll">Rozdział %1$s · przewijanie</string>
     <string name="reader_minutes_left">%1$,d min</string>
-    <string name="reader_zone_next">Następna strona</string>
     <string name="reader_grid_title">Strony</string>
     <string name="reader_end_continue">Czytaj dalej</string>
     <string name="reader_end_series">Wróć do serii</string>
@@ -864,8 +863,6 @@
     <string name="reader_failed_choose">Wybierz źródło</string>
     <string name="reader_settings_search">Szukaj w ustawieniach</string>
     <string name="reader_paper_turn">Zmieniaj strony od razu</string>
-    <string name="reader_zone_previous">Poprzednia strona</string>
-    <string name="reader_zone_controls">Sterowanie</string>
     <string name="reader_size_small">Mniejszy tekst</string>
     <string name="reader_size_large">Większy tekst</string>
     <string name="reader_value_on">Włączony</string>
@@ -2611,8 +2608,10 @@
     <string name="reader_spreads_rotate">Obróć</string>
     <string name="reader_spreads_whole">Całość</string>
     <string name="reader_tap_edges">Krawędzie</string>
-    <string name="reader_tap_sides">Połowy</string>
     <string name="reader_tap_off">Wyłączone</string>
+    <string name="reader_zone_next">Następna strona</string>
+    <string name="reader_zone_previous">Poprzednia strona</string>
+    <string name="reader_zone_controls">Sterowanie</string>
     <string name="reader_chapters">Rozdziały</string>
     <plurals name="reader_pages_left">
         <item quantity="one">Została jedna strona w tym rozdziale</item>

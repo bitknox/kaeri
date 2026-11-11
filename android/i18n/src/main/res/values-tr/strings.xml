@@ -709,7 +709,6 @@
     <string name="reader_settings">Okuyucu ayarları</string>
     <string name="reader_novel_line_scroll">Bölüm %1$s · kaydırma</string>
     <string name="reader_minutes_left">%1$,d dk</string>
-    <string name="reader_zone_next">Sonraki sayfa</string>
     <string name="reader_grid_title">Sayfalar</string>
     <string name="reader_end_continue">Okumayı sürdür</string>
     <string name="reader_end_series">Seriye dön</string>
@@ -794,8 +793,6 @@
     <string name="reader_failed_choose">Kaynak seç</string>
     <string name="reader_settings_search">Ayarlarda ara</string>
     <string name="reader_paper_turn">Sayfaları anında çevir</string>
-    <string name="reader_zone_previous">Önceki sayfa</string>
-    <string name="reader_zone_controls">Kontroller</string>
     <string name="reader_size_small">Daha küçük metin</string>
     <string name="reader_size_large">Daha büyük metin</string>
     <string name="reader_value_on">Açık</string>
@@ -2443,8 +2440,10 @@
     <string name="reader_spreads_rotate">Çevir</string>
     <string name="reader_spreads_whole">Bütün</string>
     <string name="reader_tap_edges">Kenarlar</string>
-    <string name="reader_tap_sides">Yarılar</string>
     <string name="reader_tap_off">Kapalı</string>
+    <string name="reader_zone_next">Sonraki sayfa</string>
+    <string name="reader_zone_previous">Önceki sayfa</string>
+    <string name="reader_zone_controls">Kontroller</string>
     <string name="reader_chapters">Bölümler</string>
     <plurals name="reader_pages_left">
         <item quantity="one">Bu bölümde bir sayfa kaldı</item>

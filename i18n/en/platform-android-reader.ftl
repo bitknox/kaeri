@@ -55,6 +55,52 @@ eink-zone-next-ltr = Tap, or swipe left
 # @max 20
 eink-zone-tap = Tap
 
+# E-ink tap zones page: switch for whether a swipe turns the page. Off, only taps, the page
+# buttons and keys turn.
+# @only android
+# @max 28
+eink-swipe-turns = Swipes turn pages
+
+# At the foot of the e-ink tap zone guide, which the first touch on the page clears.
+# @only android
+# @max 140
+eink-zone-guide-note = Page buttons also turn pages. The first touch clears this. Change the zones in Reader settings.
+
+# E-ink tap zones page: the line under the layout Auto.
+# @only android
+# @max 50
+eink-tap-auto-note = Sides, or L shape for vertical pages
+
+# E-ink tap zones page: the line under the layout Sides.
+# @only android
+# @max 50
+eink-tap-sides-note = Next page wider, on the reading side
+
+# E-ink tap zones page: the line under the layout L shape.
+# @only android
+# @max 50
+eink-tap-l-shape-note = Next low and on the reading side
+
+# E-ink tap zones page: the line under the layout Wide next.
+# @only android
+# @max 50
+eink-tap-wide-next-note = Controls on top, next takes most
+
+# E-ink tap zones page: the line under the layout Top and bottom.
+# @only android
+# @max 50
+eink-tap-top-bottom-note = Previous on top, next at the bottom
+
+# E-ink tap zones page: the line under the layout Next on both sides.
+# @only android
+# @max 50
+eink-tap-both-next-note = Previous in the bottom middle
+
+# E-ink tap zones page: the line under the layout Off.
+# @only android
+# @max 50
+eink-tap-off-note = Swipes and page buttons only
+
 # The page number in the page's margin on an e-ink screen.
 # @only android
 # @arg page: plain
@@ -338,11 +384,6 @@ reader-novel-line-scroll = Chapter { $chapter } · scroll
 # @arg minutes: int
 # @max 12
 reader-minutes-left = { $minutes } min
-
-# Name of the tap zone on the reading side, shown once on the first chapter.
-# @only android
-# @max 24
-reader-zone-next = Next page
 
 # Heading of the page grid.
 # @only android
@@ -776,16 +817,6 @@ reader-settings-search = Search settings
 # @only android
 # @max 30
 reader-paper-turn = Turn pages at once
-
-# Label on the previous page tap zone.
-# @only android
-# @max 24
-reader-zone-previous = Previous page
-
-# Label on the middle tap zone.
-# @only android
-# @max 24
-reader-zone-controls = Controls
 
 # Description of the small A at the start of the text size slider.
 # @only android

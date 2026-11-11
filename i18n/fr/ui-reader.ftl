@@ -59,3 +59,6 @@ reader-divider-images = { $count ->
     [many] { $count } images
    *[other] { $count } images
  }
+reader-zone-next = Page suivante
+reader-zone-previous = Page précédente
+reader-zone-controls = Commandes

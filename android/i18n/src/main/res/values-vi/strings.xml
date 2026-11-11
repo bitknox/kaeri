@@ -674,7 +674,6 @@
     <string name="reader_settings">Cài đặt trình đọc</string>
     <string name="reader_novel_line_scroll">Chương %1$s · cuộn</string>
     <string name="reader_minutes_left">%1$,d phút</string>
-    <string name="reader_zone_next">Trang sau</string>
     <string name="reader_grid_title">Trang</string>
     <string name="reader_end_continue">Đọc tiếp</string>
     <string name="reader_end_series">Về trang truyện</string>
@@ -759,8 +758,6 @@
     <string name="reader_failed_choose">Chọn nguồn</string>
     <string name="reader_settings_search">Tìm cài đặt</string>
     <string name="reader_paper_turn">Lật trang ngay</string>
-    <string name="reader_zone_previous">Trang trước</string>
-    <string name="reader_zone_controls">Điều khiển</string>
     <string name="reader_size_small">Chữ nhỏ hơn</string>
     <string name="reader_size_large">Chữ lớn hơn</string>
     <string name="reader_value_on">Bật</string>
@@ -2359,8 +2356,10 @@
     <string name="reader_spreads_rotate">Xoay</string>
     <string name="reader_spreads_whole">Nguyên</string>
     <string name="reader_tap_edges">Hai mép</string>
-    <string name="reader_tap_sides">Hai nửa</string>
     <string name="reader_tap_off">Tắt</string>
+    <string name="reader_zone_next">Trang sau</string>
+    <string name="reader_zone_previous">Trang trước</string>
+    <string name="reader_zone_controls">Điều khiển</string>
     <string name="reader_chapters">Các chương</string>
     <plurals name="reader_pages_left">
         <item quantity="other">Còn %1$,d trang trong chương này</item>

@@ -20525,26 +20525,8 @@
     "by": "agent",
     "at": "2026-11-07"
   },
-  "reader-zone-back": {
-    "source": "c16e00a7a8b2",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
-  },
   "reader-zone-controls": {
     "source": "83cd32b685cc",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
-  },
-  "reader-zone-forward": {
-    "source": "9fc3568ec862",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
-  },
-  "reader-zone-menu": {
-    "source": "6d8c02aee480",
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"

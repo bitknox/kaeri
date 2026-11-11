@@ -674,7 +674,6 @@
     <string name="reader_settings">リーダーの設定</string>
     <string name="reader_novel_line_scroll">第%1$s話 · スクロール</string>
     <string name="reader_minutes_left">残り%1$,d分</string>
-    <string name="reader_zone_next">次のページ</string>
     <string name="reader_grid_title">ページ</string>
     <string name="reader_end_continue">次の章へ</string>
     <string name="reader_end_series">作品に戻る</string>
@@ -759,8 +758,6 @@
     <string name="reader_failed_choose">ソースを選ぶ</string>
     <string name="reader_settings_search">設定を検索</string>
     <string name="reader_paper_turn">ページを即座にめくる</string>
-    <string name="reader_zone_previous">前のページ</string>
-    <string name="reader_zone_controls">操作パネル</string>
     <string name="reader_size_small">文字を小さく</string>
     <string name="reader_size_large">文字を大きく</string>
     <string name="reader_value_on">オン</string>
@@ -2359,8 +2356,10 @@
     <string name="reader_spreads_rotate">回転</string>
     <string name="reader_spreads_whole">そのまま</string>
     <string name="reader_tap_edges">端</string>
-    <string name="reader_tap_sides">左右半分</string>
     <string name="reader_tap_off">オフ</string>
+    <string name="reader_zone_next">次のページ</string>
+    <string name="reader_zone_previous">前のページ</string>
+    <string name="reader_zone_controls">操作パネル</string>
     <string name="reader_chapters">章一覧</string>
     <plurals name="reader_pages_left">
         <item quantity="other">この章はあと%1$,dページ</item>

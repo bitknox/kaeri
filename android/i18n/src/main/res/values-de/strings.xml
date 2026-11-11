@@ -709,7 +709,6 @@
     <string name="reader_settings">Leseeinstellungen</string>
     <string name="reader_novel_line_scroll">Kapitel %1$s · Scrollen</string>
     <string name="reader_minutes_left">%1$,d Min.</string>
-    <string name="reader_zone_next">Nächste Seite</string>
     <string name="reader_grid_title">Seiten</string>
     <string name="reader_end_continue">Weiterlesen</string>
     <string name="reader_end_series">Zurück zur Serie</string>
@@ -794,8 +793,6 @@
     <string name="reader_failed_choose">Quelle wählen</string>
     <string name="reader_settings_search">Einstellungen durchsuchen</string>
     <string name="reader_paper_turn">Seiten sofort wechseln</string>
-    <string name="reader_zone_previous">Vorherige Seite</string>
-    <string name="reader_zone_controls">Steuerung</string>
     <string name="reader_size_small">Kleinerer Text</string>
     <string name="reader_size_large">Größerer Text</string>
     <string name="reader_value_on">An</string>
@@ -2443,8 +2440,10 @@
     <string name="reader_spreads_rotate">Drehen</string>
     <string name="reader_spreads_whole">Ganz</string>
     <string name="reader_tap_edges">Ränder</string>
-    <string name="reader_tap_sides">Hälften</string>
     <string name="reader_tap_off">Aus</string>
+    <string name="reader_zone_next">Nächste Seite</string>
+    <string name="reader_zone_previous">Vorherige Seite</string>
+    <string name="reader_zone_controls">Steuerung</string>
     <string name="reader_chapters">Kapitel</string>
     <plurals name="reader_pages_left">
         <item quantity="one">Noch eine Seite in diesem Kapitel</item>

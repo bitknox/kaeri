@@ -8794,14 +8794,20 @@ reader-spreads-rotate = Ruota
 # A choice for wide pages: shown whole.
 reader-spreads-whole = Intera
 
-# A choice for the reader's tap zones: taps near the left and right edges turn the page.
+# A choice for the reader's tap zones: taps near the left and right edges turn the page. Replaced by Sides; kept until every app has the new tap zones page.
 reader-tap-edges = Bordi
 
-# A choice for the reader's tap zones: the left and right halves turn the page.
-reader-tap-sides = Metà
-
-# A choice for the reader's tap zones: taps do not turn the page.
+# Tap zone layout: taps only show and hide the controls, and never turn the page.
 reader-tap-off = No
+
+# Name of the tap zone that turns to the next page, in the guide over the page and as a screen reader action.
+reader-zone-next = Pagina successiva
+
+# Name of the tap zone that turns to the previous page, in the guide and as a screen reader action.
+reader-zone-previous = Pagina precedente
+
+# Name of the tap zone that shows and hides the reader's controls, in the guide.
+reader-zone-controls = Controlli
 
 # Button in the reader's controls that opens the chapters and the page grid.
 reader-chapters = Capitoli

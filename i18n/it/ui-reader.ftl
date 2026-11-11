@@ -59,3 +59,6 @@ reader-divider-images = { $count ->
    *[other] { $count } immagini
  }
 reader-chapter-line-titled = Capitolo { $chapter } · { $title }
+reader-zone-next = Pagina successiva
+reader-zone-previous = Pagina precedente
+reader-zone-controls = Controlli

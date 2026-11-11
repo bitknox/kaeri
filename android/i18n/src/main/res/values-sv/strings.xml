@@ -709,7 +709,6 @@
     <string name="reader_settings">Läsarinställningar</string>
     <string name="reader_novel_line_scroll">Kapitel %1$s · rullning</string>
     <string name="reader_minutes_left">%1$,d min</string>
-    <string name="reader_zone_next">Nästa sida</string>
     <string name="reader_grid_title">Sidor</string>
     <string name="reader_end_continue">Läs vidare</string>
     <string name="reader_end_series">Tillbaka till serien</string>
@@ -794,8 +793,6 @@
     <string name="reader_failed_choose">Välj källa</string>
     <string name="reader_settings_search">Sök i inställningar</string>
     <string name="reader_paper_turn">Bläddra direkt</string>
-    <string name="reader_zone_previous">Föregående sida</string>
-    <string name="reader_zone_controls">Kontroller</string>
     <string name="reader_size_small">Mindre text</string>
     <string name="reader_size_large">Större text</string>
     <string name="reader_value_on">På</string>
@@ -2443,8 +2440,10 @@
     <string name="reader_spreads_rotate">Vrid</string>
     <string name="reader_spreads_whole">Hel</string>
     <string name="reader_tap_edges">Kanter</string>
-    <string name="reader_tap_sides">Halvor</string>
     <string name="reader_tap_off">Av</string>
+    <string name="reader_zone_next">Nästa sida</string>
+    <string name="reader_zone_previous">Föregående sida</string>
+    <string name="reader_zone_controls">Kontroller</string>
     <string name="reader_chapters">Kapitel</string>
     <plurals name="reader_pages_left">
         <item quantity="one">En sida kvar i det här kapitlet</item>

@@ -53,3 +53,6 @@ reader-end-swipe = スワイプして読み進める
 reader-divider-images = { $count ->
    *[other] { $count }枚の画像
  }
+reader-zone-next = 次のページ
+reader-zone-previous = 前のページ
+reader-zone-controls = 操作パネル

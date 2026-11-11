@@ -56,3 +56,6 @@ reader-divider-images = { $count ->
     [one] Bir görsel
    *[other] { $count } görsel
  }
+reader-zone-next = Sonraki sayfa
+reader-zone-previous = Önceki sayfa
+reader-zone-controls = Kontroller

@@ -744,7 +744,6 @@
     <string name="reader_settings">Impostazioni del lettore</string>
     <string name="reader_novel_line_scroll">Capitolo %1$s · scorrimento</string>
     <string name="reader_minutes_left">%1$,d min</string>
-    <string name="reader_zone_next">Pagina successiva</string>
     <string name="reader_grid_title">Pagine</string>
     <string name="reader_end_continue">Prosegui</string>
     <string name="reader_end_series">Torna alla serie</string>
@@ -829,8 +828,6 @@
     <string name="reader_failed_choose">Scegli una fonte</string>
     <string name="reader_settings_search">Cerca nelle impostazioni</string>
     <string name="reader_paper_turn">Gira le pagine subito</string>
-    <string name="reader_zone_previous">Pagina precedente</string>
-    <string name="reader_zone_controls">Controlli</string>
     <string name="reader_size_small">Testo più piccolo</string>
     <string name="reader_size_large">Testo più grande</string>
     <string name="reader_value_on">Attivo</string>
@@ -2527,8 +2524,10 @@
     <string name="reader_spreads_rotate">Ruota</string>
     <string name="reader_spreads_whole">Intera</string>
     <string name="reader_tap_edges">Bordi</string>
-    <string name="reader_tap_sides">Metà</string>
     <string name="reader_tap_off">No</string>
+    <string name="reader_zone_next">Pagina successiva</string>
+    <string name="reader_zone_previous">Pagina precedente</string>
+    <string name="reader_zone_controls">Controlli</string>
     <string name="reader_chapters">Capitoli</string>
     <plurals name="reader_pages_left">
         <item quantity="one">Una pagina rimasta in questo capitolo</item>

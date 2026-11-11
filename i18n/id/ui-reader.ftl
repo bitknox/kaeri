@@ -53,3 +53,6 @@ reader-end-swipe = Geser untuk terus membaca
 reader-divider-images = { $count ->
    *[other] { $count } gambar
  }
+reader-zone-next = Halaman selanjutnya
+reader-zone-previous = Halaman sebelumnya
+reader-zone-controls = Kontrol

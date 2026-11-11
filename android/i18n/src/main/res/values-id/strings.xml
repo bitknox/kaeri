@@ -674,7 +674,6 @@
     <string name="reader_settings">Pengaturan pembaca</string>
     <string name="reader_novel_line_scroll">Bab %1$s · gulir</string>
     <string name="reader_minutes_left">%1$,d mnt</string>
-    <string name="reader_zone_next">Halaman selanjutnya</string>
     <string name="reader_grid_title">Halaman</string>
     <string name="reader_end_continue">Lanjutkan</string>
     <string name="reader_end_series">Kembali ke seri</string>
@@ -759,8 +758,6 @@
     <string name="reader_failed_choose">Pilih sumber</string>
     <string name="reader_settings_search">Cari pengaturan</string>
     <string name="reader_paper_turn">Balik halaman seketika</string>
-    <string name="reader_zone_previous">Halaman sebelumnya</string>
-    <string name="reader_zone_controls">Kontrol</string>
     <string name="reader_size_small">Teks lebih kecil</string>
     <string name="reader_size_large">Teks lebih besar</string>
     <string name="reader_value_on">Aktif</string>
@@ -2359,8 +2356,10 @@
     <string name="reader_spreads_rotate">Putar</string>
     <string name="reader_spreads_whole">Utuh</string>
     <string name="reader_tap_edges">Tepi</string>
-    <string name="reader_tap_sides">Separuh</string>
     <string name="reader_tap_off">Mati</string>
+    <string name="reader_zone_next">Halaman selanjutnya</string>
+    <string name="reader_zone_previous">Halaman sebelumnya</string>
+    <string name="reader_zone_controls">Kontrol</string>
     <string name="reader_chapters">Bab</string>
     <plurals name="reader_pages_left">
         <item quantity="other">Sisa %1$,d halaman di bab ini</item>

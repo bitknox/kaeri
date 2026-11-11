@@ -211497,6 +211497,18 @@
         }
       }
     },
+    "reader-click-zones" : {
+      "comment" : "The reader's settings on a Mac, Windows or Linux: the row that opens the tap zones page, which is about clicks there.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Click zones"
+          }
+        }
+      }
+    },
     "reader-close" : {
       "comment" : "Closes the reader and goes back to the series.",
       "extractionState" : "manual",
@@ -224935,8 +224947,80 @@
         }
       }
     },
+    "reader-tap-auto" : {
+      "comment" : "Tap zone layout: Sides when pages turn sideways, L shape when they move downwards. The name under its tile.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto"
+          }
+        }
+      }
+    },
+    "reader-tap-both-next" : {
+      "comment" : "Tap zone layout: next page down both the left and the right side, previous page in the bottom middle.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next on both sides"
+          }
+        }
+      }
+    },
+    "reader-tap-both-next-about" : {
+      "comment" : "Tap zone layout in words, the accessibility value of its tile: Next on both sides.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next page down both sides, previous page at the bottom in the middle, controls above it"
+          }
+        }
+      }
+    },
+    "reader-tap-both-next-flipped-about" : {
+      "comment" : "Tap zone layout in words, the accessibility value of its tile: Next on both sides flipped top and bottom.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next page down both sides, previous page at the top in the middle, controls below it"
+          }
+        }
+      }
+    },
+    "reader-tap-both-next-flipped-scroll-about" : {
+      "comment" : "Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides flipped top and bottom.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scroll down on both sides, scroll up at the top in the middle, controls below it"
+          }
+        }
+      }
+    },
+    "reader-tap-both-next-scroll-about" : {
+      "comment" : "Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scroll down on both sides, scroll up at the bottom in the middle, controls above it"
+          }
+        }
+      }
+    },
     "reader-tap-edges" : {
-      "comment" : "A choice for the reader's tap zones: taps near the left and right edges turn the page.",
+      "comment" : "A choice for the reader's tap zones: taps near the left and right edges turn the page. Replaced by Sides; kept until every app has the new tap zones page.",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -225019,8 +225103,152 @@
         }
       }
     },
+    "reader-tap-flip-ends" : {
+      "comment" : "Tap zones page: switch that swaps the top and bottom zones.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flip top and bottom"
+          }
+        }
+      }
+    },
+    "reader-tap-flip-sides" : {
+      "comment" : "Tap zones page: switch that swaps the left and right zones, for the left hand.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flip left and right"
+          }
+        }
+      }
+    },
+    "reader-tap-here" : {
+      "comment" : "Tap zones page, beside Show zones: the setting is not synced. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”. Argument 1: kind (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stays on this %1$@"
+          }
+        }
+      }
+    },
+    "reader-tap-l-shape" : {
+      "comment" : "Tap zone layout: previous page along the top and down one side, next page along the bottom and down the other side, in the shape of the letter L.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L shape"
+          }
+        }
+      }
+    },
+    "reader-tap-l-shape-bottom-left-about" : {
+      "comment" : "Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the left.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next page along the bottom and on the left, previous page along the top and on the right, controls in the middle"
+          }
+        }
+      }
+    },
+    "reader-tap-l-shape-bottom-left-scroll-about" : {
+      "comment" : "Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the left.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scroll down along the bottom and on the left, scroll up along the top and on the right, controls in the middle"
+          }
+        }
+      }
+    },
+    "reader-tap-l-shape-bottom-right-about" : {
+      "comment" : "Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the right.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next page along the bottom and on the right, previous page along the top and on the left, controls in the middle"
+          }
+        }
+      }
+    },
+    "reader-tap-l-shape-bottom-right-scroll-about" : {
+      "comment" : "Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the right.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scroll down along the bottom and on the right, scroll up along the top and on the left, controls in the middle"
+          }
+        }
+      }
+    },
+    "reader-tap-l-shape-top-left-about" : {
+      "comment" : "Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next page along the top and on the left, previous page along the bottom and on the right, controls in the middle"
+          }
+        }
+      }
+    },
+    "reader-tap-l-shape-top-left-scroll-about" : {
+      "comment" : "Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scroll down along the top and on the left, scroll up along the bottom and on the right, controls in the middle"
+          }
+        }
+      }
+    },
+    "reader-tap-l-shape-top-right-about" : {
+      "comment" : "Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next page along the top and on the right, previous page along the bottom and on the left, controls in the middle"
+          }
+        }
+      }
+    },
+    "reader-tap-l-shape-top-right-scroll-about" : {
+      "comment" : "Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scroll down along the top and on the right, scroll up along the bottom and on the left, controls in the middle"
+          }
+        }
+      }
+    },
     "reader-tap-off" : {
-      "comment" : "A choice for the reader's tap zones: taps do not turn the page.",
+      "comment" : "Tap zone layout: taps only show and hide the controls, and never turn the page.",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -225103,86 +225331,314 @@
         }
       }
     },
-    "reader-tap-sides" : {
-      "comment" : "A choice for the reader's tap zones: the left and right halves turn the page.",
+    "reader-tap-off-about" : {
+      "comment" : "Tap zone layout Off in words, the accessibility value of its tile.",
       "extractionState" : "manual",
       "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hälften"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Halves"
+            "value" : "Taps show and hide the controls"
           }
-        },
-        "es-419" : {
+        }
+      }
+    },
+    "reader-tap-paged" : {
+      "comment" : "Tap zones page: the choice for paged reading (pages that turn), one of two at the top.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mitades"
+            "value" : "Paged"
           }
-        },
-        "fr" : {
+        }
+      }
+    },
+    "reader-tap-scrolling" : {
+      "comment" : "Tap zones page: the choice for strips and scrolled novels, one of two at the top.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Moitiés"
+            "value" : "Scrolling"
           }
-        },
-        "id" : {
+        }
+      }
+    },
+    "reader-tap-show" : {
+      "comment" : "Tap zones page: button that shows the zones over the page.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Separuh"
+            "value" : "Show zones"
           }
-        },
-        "it" : {
+        }
+      }
+    },
+    "reader-tap-sides" : {
+      "comment" : "Tap zone layout: previous page on one side, next page on the other, controls in the middle.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Metà"
+            "value" : "Sides"
           }
-        },
-        "ja" : {
+        }
+      }
+    },
+    "reader-tap-sides-left-about" : {
+      "comment" : "Tap zone layout in words, the accessibility value of its tile: Sides, next page on the left.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "左右半分"
+            "value" : "Next page on the left side, previous page on the right side, controls in the middle"
           }
-        },
-        "pl" : {
+        }
+      }
+    },
+    "reader-tap-sides-left-scroll-about" : {
+      "comment" : "Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the left.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Połowy"
+            "value" : "Scroll down on the left side, scroll up on the right side, controls in the middle"
           }
-        },
-        "pt-BR" : {
+        }
+      }
+    },
+    "reader-tap-sides-right-about" : {
+      "comment" : "Tap zone layout in words, the accessibility value of its tile: Sides, next page on the right.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Metades"
+            "value" : "Next page on the right side, previous page on the left side, controls in the middle"
           }
-        },
-        "ru" : {
+        }
+      }
+    },
+    "reader-tap-sides-right-scroll-about" : {
+      "comment" : "Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the right.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Половины"
+            "value" : "Scroll down on the right side, scroll up on the left side, controls in the middle"
           }
-        },
-        "sv" : {
+        }
+      }
+    },
+    "reader-tap-size" : {
+      "comment" : "Tap zones page: row that sets how wide the zones at the edges are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Halvor"
+            "value" : "Zone size"
           }
-        },
-        "tr" : {
+        }
+      }
+    },
+    "reader-tap-small" : {
+      "comment" : "Choice of Zone size: the edge zones are a quarter of the screen.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Yarılar"
+            "value" : "Small"
           }
-        },
-        "vi" : {
+        }
+      }
+    },
+    "reader-tap-standard" : {
+      "comment" : "Choice of Zone size: the edge zones are a third of the screen.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hai nửa"
+            "value" : "Standard"
+          }
+        }
+      }
+    },
+    "reader-tap-top-bottom" : {
+      "comment" : "Tap zone layout: previous page across the top, next page across the bottom.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Top and bottom"
+          }
+        }
+      }
+    },
+    "reader-tap-top-bottom-about" : {
+      "comment" : "Tap zone layout in words, the accessibility value of its tile: Top and bottom.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next page across the bottom, previous page across the top, controls in the middle"
+          }
+        }
+      }
+    },
+    "reader-tap-top-bottom-flipped-about" : {
+      "comment" : "Tap zone layout in words, the accessibility value of its tile: Top and bottom flipped.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next page across the top, previous page across the bottom, controls in the middle"
+          }
+        }
+      }
+    },
+    "reader-tap-top-bottom-flipped-scroll-about" : {
+      "comment" : "Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom flipped.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scroll down across the top, scroll up across the bottom, controls in the middle"
+          }
+        }
+      }
+    },
+    "reader-tap-top-bottom-scroll-about" : {
+      "comment" : "Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scroll down across the bottom, scroll up across the top, controls in the middle"
+          }
+        }
+      }
+    },
+    "reader-tap-wide-next" : {
+      "comment" : "Tap zone layout: controls along the top, a narrow column for previous page, and the rest of the page for next page.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wide next"
+          }
+        }
+      }
+    },
+    "reader-tap-wide-next-bottom-left-about" : {
+      "comment" : "Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controls along the bottom, previous page in a narrow column on the left, next page everywhere else"
+          }
+        }
+      }
+    },
+    "reader-tap-wide-next-bottom-left-scroll-about" : {
+      "comment" : "Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controls along the bottom, scroll up in a narrow column on the left, scroll down everywhere else"
+          }
+        }
+      }
+    },
+    "reader-tap-wide-next-bottom-right-about" : {
+      "comment" : "Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controls along the bottom, previous page in a narrow column on the right, next page everywhere else"
+          }
+        }
+      }
+    },
+    "reader-tap-wide-next-bottom-right-scroll-about" : {
+      "comment" : "Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controls along the bottom, scroll up in a narrow column on the right, scroll down everywhere else"
+          }
+        }
+      }
+    },
+    "reader-tap-wide-next-top-left-about" : {
+      "comment" : "Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the left.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controls along the top, previous page in a narrow column on the left, next page everywhere else"
+          }
+        }
+      }
+    },
+    "reader-tap-wide-next-top-left-scroll-about" : {
+      "comment" : "Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the left.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controls along the top, scroll up in a narrow column on the left, scroll down everywhere else"
+          }
+        }
+      }
+    },
+    "reader-tap-wide-next-top-right-about" : {
+      "comment" : "Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the right.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controls along the top, previous page in a narrow column on the right, next page everywhere else"
+          }
+        }
+      }
+    },
+    "reader-tap-wide-next-top-right-scroll-about" : {
+      "comment" : "Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the right.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controls along the top, scroll up in a narrow column on the right, scroll down everywhere else"
           }
         }
       }
@@ -225991,254 +226447,302 @@
         }
       }
     },
-    "reader-zone-back" : {
-      "comment" : "Accessibility value of the pointer hint on the first chapter's tap zones.",
+    "reader-zone-change" : {
+      "comment" : "Under Controls in the tap zone guide: where the zones are changed.",
       "extractionState" : "manual",
       "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zurück"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Back"
-          }
-        },
-        "es-419" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Atrás"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retour"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mundur"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Indietro"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "戻る"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wstecz"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Voltar"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Назад"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bakåt"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Geri"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lùi"
+            "value" : "Change in Reader settings"
           }
         }
       }
     },
-    "reader-zone-forward" : {
-      "comment" : "",
+    "reader-zone-controls" : {
+      "comment" : "Name of the tap zone that shows and hides the reader's controls, in the guide.",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vor"
+            "value" : "Steuerung"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Forward"
+            "value" : "Controls"
           }
         },
         "es-419" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Adelante"
+            "value" : "Controles"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Avancer"
+            "value" : "Commandes"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Maju"
+            "value" : "Kontrol"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Avanti"
+            "value" : "Controlli"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "進む"
+            "value" : "操作パネル"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Do przodu"
+            "value" : "Sterowanie"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Avançar"
+            "value" : "Controles"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Вперёд"
+            "value" : "Управление"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Framåt"
+            "value" : "Kontroller"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "İleri"
+            "value" : "Kontroller"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tiến"
+            "value" : "Điều khiển"
           }
         }
       }
     },
-    "reader-zone-menu" : {
-      "comment" : "",
+    "reader-zone-next" : {
+      "comment" : "Name of the tap zone that turns to the next page, in the guide over the page and as a screen reader action.",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Menü"
+            "value" : "Nächste Seite"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Menu"
+            "value" : "Next page"
           }
         },
         "es-419" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Menú"
+            "value" : "Avanzar página"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Menu"
+            "value" : "Page suivante"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Menu"
+            "value" : "Halaman selanjutnya"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Menu"
+            "value" : "Pagina successiva"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "メニュー"
+            "value" : "次のページ"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Menu"
+            "value" : "Następna strona"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Menu"
+            "value" : "Próxima página"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Меню"
+            "value" : "Следующая страница"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Meny"
+            "value" : "Nästa sida"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Menü"
+            "value" : "Sonraki sayfa"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Menu"
+            "value" : "Trang sau"
+          }
+        }
+      }
+    },
+    "reader-zone-previous" : {
+      "comment" : "Name of the tap zone that turns to the previous page, in the guide and as a screen reader action.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorherige Seite"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Previous page"
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Página anterior"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Page précédente"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Halaman sebelumnya"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pagina precedente"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前のページ"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Poprzednia strona"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Página anterior"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предыдущая страница"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Föregående sida"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önceki sayfa"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trang trước"
+          }
+        }
+      }
+    },
+    "reader-zone-scroll-down" : {
+      "comment" : "Name of the tap zone that scrolls a strip or a scrolled novel down, in the guide.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scroll down"
+          }
+        }
+      }
+    },
+    "reader-zone-scroll-up" : {
+      "comment" : "Name of the tap zone that scrolls a strip or a scrolled novel up, in the guide.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scroll up"
+          }
+        }
+      }
+    },
+    "reader-zone-show-controls" : {
+      "comment" : "Screen reader action on the page that shows the reader's controls.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show controls"
           }
         }
       }

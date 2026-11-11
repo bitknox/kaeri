@@ -744,7 +744,6 @@
     <string name="reader_settings">Réglages du lecteur</string>
     <string name="reader_novel_line_scroll">Chapitre %1$s · défilement</string>
     <string name="reader_minutes_left">%1$,d min</string>
-    <string name="reader_zone_next">Page suivante</string>
     <string name="reader_grid_title">Pages</string>
     <string name="reader_end_continue">Poursuivre</string>
     <string name="reader_end_series">Retour à la série</string>
@@ -829,8 +828,6 @@
     <string name="reader_failed_choose">Choisir une source</string>
     <string name="reader_settings_search">Rechercher dans les réglages</string>
     <string name="reader_paper_turn">Tourner les pages aussitôt</string>
-    <string name="reader_zone_previous">Page précédente</string>
-    <string name="reader_zone_controls">Commandes</string>
     <string name="reader_size_small">Texte plus petit</string>
     <string name="reader_size_large">Texte plus grand</string>
     <string name="reader_value_on">Activé</string>
@@ -2527,8 +2524,10 @@
     <string name="reader_spreads_rotate">Pivoter</string>
     <string name="reader_spreads_whole">Entière</string>
     <string name="reader_tap_edges">Bords</string>
-    <string name="reader_tap_sides">Moitiés</string>
     <string name="reader_tap_off">Aucune</string>
+    <string name="reader_zone_next">Page suivante</string>
+    <string name="reader_zone_previous">Page précédente</string>
+    <string name="reader_zone_controls">Commandes</string>
     <string name="reader_chapters">Chapitres</string>
     <plurals name="reader_pages_left">
         <item quantity="one">Il reste une page dans ce chapitre</item>
