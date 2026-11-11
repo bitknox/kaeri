@@ -330,7 +330,7 @@ private val EinkPrevious = Color(0xFFD4D4D4)
 /**
  * A layout as a small diagram: its cells from [map], a line where two kinds meet, and a chevron in
  * the labelled Next and Previous cells, pointing the way the page moves. [eink] draws it in black,
- * grey and white.
+ * grey and white, its chevrons in solid black and white.
  */
 @Composable
 fun TapZoneDiagram(map: TapMap, modifier: Modifier = Modifier, eink: Boolean = false) {
@@ -363,11 +363,16 @@ fun TapZoneDiagram(map: TapMap, modifier: Modifier = Modifier, eink: Boolean = f
                 TapArrow.DOWN -> { path.moveTo(cx - a, cy - a / 2); path.lineTo(cx, cy + a / 2); path.lineTo(cx + a, cy - a / 2) }
                 TapArrow.UP -> { path.moveTo(cx - a, cy + a / 2); path.lineTo(cx, cy - a / 2); path.lineTo(cx + a, cy + a / 2) }
             }
-            val ink = if (eink && next) Color.White else GuideColours.ink
+            // E-ink draws in pure ink at full strength: a tint or a see-through grey dithers on
+            // the panel and shows through a colour filter.
+            val ink = when {
+                eink -> if (next) Color.White else Color.Black
+                else -> GuideColours.ink.copy(alpha = if (next) 0.9f else 0.6f)
+            }
             drawPath(
                 path,
-                ink.copy(alpha = if (next) 0.9f else 0.6f),
-                style = Stroke(width = (if (next) 2f else 1.5f) * density, cap = StrokeCap.Round, join = StrokeJoin.Round),
+                ink,
+                style = Stroke(width = (if (next || eink) 2f else 1.5f) * density, cap = StrokeCap.Round, join = StrokeJoin.Round),
             )
         }
     }
