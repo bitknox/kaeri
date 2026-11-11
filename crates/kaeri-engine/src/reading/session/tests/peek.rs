@@ -322,8 +322,25 @@ async fn a_slow_preview_never_holds_up_the_reader() {
     assert_eq!(chapter, h.next_chapter());
 }
 
+/// The next preview within `wall`, or none.
+async fn preview_within(h: &mut Harness, wall: Duration) -> Option<(ChapterId, PageFile)> {
+    let deadline = tokio::time::Instant::now() + wall;
+    loop {
+        let found = h.drain().into_iter().find_map(|e| match e {
+            ReaderEvent::NextPreview { chapter, file, .. } => Some((chapter, file)),
+            _ => None,
+        });
+        if found.is_some() || tokio::time::Instant::now() >= deadline {
+            return found;
+        }
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
+}
+
 /// Queue the next chapter for download, as Keep next chapters ready does.
 fn queue_next(h: &Harness) -> i64 {
+    // A queue that may run: the network is said and nothing holds it.
+    h.services.book_sources.downloads.configure(crate::downloads::books::Setup::default());
     let chapter = h.next_chapter();
     let ask = kaeri_store::book_downloads::BookDownloadAsk {
         work: SERVED,
@@ -336,25 +353,63 @@ fn queue_next(h: &Harness) -> i64 {
     h.services.store.book_download(SERVED, chapter.as_str()).unwrap().unwrap().id
 }
 
-/// A next chapter the download queue is fetching is not fetched ahead as well, but its first
-/// page still comes for the end page: made from the download as it lands, with no page asked of
-/// the source twice.
+/// A next chapter the download queue is fetching is not fetched ahead as well: the end page's
+/// preview is made from the first page the download has kept, and the source is not asked.
 #[tokio::test(start_paused = true)]
 async fn a_chapter_being_downloaded_previews_from_the_download() {
     let server = Arc::new(ShelfServer::new(vec!["c1", "c2"]));
     let mut h = opened(server.clone()).await;
     let next = h.next_chapter();
-    queue_next(&h);
+    let id = queue_next(&h);
+    h.services.store.book_download_progress(id, 1, Some(3), 1).unwrap();
+    let mut png = Vec::new();
+    image::GrayImage::from_pixel(200, 300, image::Luma([70]))
+        .write_to(&mut Cursor::new(&mut png), image::ImageFormat::Png)
+        .unwrap();
+    let kept = h
+        .services
+        .book_sources
+        .downloads
+        .dir()
+        .join(crate::downloads::books::safe(SERVED))
+        .join(format!("{}.pages", crate::downloads::books::safe(next.as_str())));
+    std::fs::create_dir_all(&kept).unwrap();
+    std::fs::write(kept.join(format!("00000-{}-1.page", png.len())), &png).unwrap();
     h.near_the_end(1);
     let (chapter, file) = h.preview().await;
     assert_eq!(chapter, next);
-    assert!(Path::new(&file.path).exists());
+    assert_eq!((file.width, file.height), (200, 300), "made from the page the download kept");
     tokio::time::sleep(Duration::from_millis(50)).await;
-    let mut fetched = server.fetched_of("c2");
-    let all = fetched.len();
-    fetched.sort();
-    fetched.dedup();
-    assert_eq!(fetched.len(), all, "a page asked twice: {fetched:?}");
+    assert!(server.fetched_of("c2").is_empty(), "{:?}", server.fetched_of("c2"));
+}
+
+/// A next chapter still waiting in the download queue after five seconds has the source asked
+/// for its first page alone, so the end page does not wait on the queue. On the real clock: the
+/// page is fetched and written on blocking threads, which paused time runs ahead of.
+#[tokio::test]
+async fn a_download_still_queued_has_the_source_asked_for_the_first_page() {
+    let server = Arc::new(ShelfServer::new(vec!["c1", "c2"]));
+    let mut h = opened(server.clone()).await;
+    let next = h.next_chapter();
+    queue_next(&h);
+    h.near_the_end(1);
+    tokio::time::sleep(Duration::from_secs(4)).await;
+    let early = h.drain();
+    assert!(!early.iter().any(|e| matches!(e, ReaderEvent::NextPreview { .. })), "{early:?}");
+    assert!(server.fetched_of("c2").is_empty(), "the queue had its turn first");
+
+    // Past five seconds the source is asked for the first page alone.
+    let (chapter, file) = preview_within(&mut h, Duration::from_secs(10))
+        .await
+        .expect("the first page comes from the source");
+    assert_eq!(chapter, next);
+    assert_eq!((file.width, file.height), (320, 480));
+    tokio::time::sleep(Duration::from_millis(50)).await;
+    assert_eq!(
+        server.fetched_of("c2"),
+        ["https://books.example/c2/1?round=1"],
+        "one page alone"
+    );
 }
 
 /// A next chapter downloaded by the time the end page nears previews from its file, and the
