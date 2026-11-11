@@ -338,7 +338,7 @@ struct Fed {
     /// What the layout took, to lay the pages out again once their shapes are all known.
     kinds: Vec<layout::PageKind>,
     options: Option<LayoutOptions>,
-    /// Some pages' shapes were guessed from the first: the layout is checked once all land.
+    /// Some pages' shapes were guessed: the layout is checked once none is on its way.
     guessed: bool,
     /// An e-ink strip, shown image by image until every image is there to cut.
     eink_strip: bool,
@@ -506,7 +506,8 @@ impl Worker {
         page_file(&keep_original(&dir, 0, &bytes)?)
     }
 
-    /// Every page of the open chapter's feed landed, and they lay out otherwise than guessed.
+    /// Every page of the open chapter's feed landed or failed, and they lay out otherwise than
+    /// guessed.
     fn relay(&self, session: u64) {
         let Some(generation) = self.open.as_ref().map(|c| c.generation) else { return };
         if let Some(out) = &self.out {
@@ -674,15 +675,14 @@ impl Worker {
                 }
             }
         }
-        // A feed's pages not landed yet are laid out in the shape of the first that has: the
-        // pages of one chapter mostly share one. Their parts have no ratio until they land.
+        // A feed's pages not landed yet are laid out in a guessed shape. Their parts have no
+        // ratio until they land.
         let fed = job.feed.as_ref().is_some_and(|f| !f.complete());
-        let guess = originals
-            .iter()
-            .flatten()
-            .next()
-            .filter(|_| fed)
-            .map_or((1000, 1400), |o| (o.width, o.height));
+        let guess = if fed {
+            guessed_shape(originals.iter().flatten().map(|o| (o.width, o.height)))
+        } else {
+            UNKNOWN_SHAPE
+        };
         let shapes: Vec<(u32, u32)> = originals
             .iter()
             .map(|o| o.as_ref().map_or(guess, |o| (o.width, o.height)))
@@ -967,6 +967,24 @@ pub(crate) fn failure_of(
     }
 }
 
+/// The shape a page is laid out in when nothing tells it.
+const UNKNOWN_SHAPE: (u32, u32) = (1000, 1400);
+
+/// The shape a feed's pages not landed yet are laid out in, from the shapes of those landed:
+/// the middle one of the single pages by width to height, as the pages of one chapter mostly
+/// share one and the odd ones are wider. Many chapters open on a square colour page, a wide
+/// one or a banner. Every page to come laid out in a square shape shows shrunk until all have
+/// landed, and one taken for a spread is split in halves on a one-page screen, so a spread is
+/// no guess at all.
+fn guessed_shape(landed: impl IntoIterator<Item = (u32, u32)>) -> (u32, u32) {
+    let mut single: Vec<(u32, u32)> = landed
+        .into_iter()
+        .filter(|&(w, h)| w > 0 && h > 0 && !layout::is_spread(w, h))
+        .collect();
+    single.sort_by(|a, b| (a.0 as f32 / a.1 as f32).total_cmp(&(b.0 as f32 / b.1 as f32)));
+    single.get(single.len().saturating_sub(1) / 2).copied().unwrap_or(UNKNOWN_SHAPE)
+}
+
 /// Whether the pages are a vertical strip: most of them far taller than wide.
 pub fn is_strip(shapes: &[(u32, u32)]) -> bool {
     let tall = shapes.iter().filter(|(w, h)| *h as f32 > *w as f32 * 2.2).count();
@@ -1086,8 +1104,8 @@ impl Chapter {
         events
     }
 
-    /// A page of the feed landed or failed: the leaves waiting on it are made. `true` when it
-    /// was the last to land and the pages lay out otherwise than guessed before they had.
+    /// A page of the feed landed or failed: the leaves waiting on it are made. `true` when no
+    /// other page is on its way and the pages lay out otherwise than guessed before they had.
     fn landed(&mut self, page: u32) -> bool {
         let Some(fed) = self.feed.as_mut() else { return false };
         let leaves = &self.leaves;
@@ -1104,10 +1122,13 @@ impl Chapter {
             self.queue.push_front(leaf);
             self.asked.insert(leaf);
         }
-        if !fed.guessed || !fed.feed.complete() {
+        // Once no page is on its way the layout is checked, a failed page not waited for: it
+        // keeps its guess, and is checked again if it lands on a retry.
+        if !fed.guessed || !fed.feed.settled() {
             return false;
         }
-        fed.guessed = false;
+        let complete = fed.feed.complete();
+        fed.guessed = !complete;
         for (at, page) in fed.feed.pages().into_iter().enumerate() {
             if let FeedPage::Landed(file) = page
                 && self.originals.get(at).is_some_and(Option::is_none)
@@ -1117,15 +1138,17 @@ impl Chapter {
             }
         }
         if fed.eink_strip {
-            return true;
+            // An e-ink strip is cut only once every image is there.
+            return complete;
         }
         let Some(options) = fed.options else { return false };
+        let guess = guessed_shape(self.originals.iter().flatten().map(|o| (o.width, o.height)));
         let shapes: Vec<PageShape> = self
             .originals
             .iter()
             .zip(&fed.kinds)
             .map(|(o, &kind)| {
-                let (width, height) = o.as_ref().map_or((1000, 1400), |o| (o.width, o.height));
+                let (width, height) = o.as_ref().map_or(guess, |o| (o.width, o.height));
                 PageShape { width, height, kind }
             })
             .collect();
@@ -1577,6 +1600,34 @@ mod tests {
     }
 
     #[test]
+    fn a_chapter_opening_on_a_spread_lays_its_pages_to_come_out_whole() {
+        // A source's chapter opens on a two-page colour spread; the pages after it are single
+        // and have not landed when it is laid out.
+        let guess = guessed_shape([(2000, 1400), (1000, 1420)]);
+        assert_eq!(guess, (1000, 1420));
+        assert_eq!(guessed_shape([(2000, 1400)]), UNKNOWN_SHAPE);
+        // A strip's tall pages are still the guess.
+        assert_eq!(guessed_shape([(800, 4000)]), (800, 4000));
+        // On a one-page screen a page laid out in that shape is not split into halves.
+        let shapes = [(2000, 1400), guess, guess].map(|(width, height)| layout::PageShape {
+            width,
+            height,
+            kind: layout::PageKind::Story,
+        });
+        let leaves = layout::lay_out(
+            &shapes,
+            layout::LayoutOptions {
+                screen: layout::Screen::Single,
+                direction: layout::Direction::RightToLeft,
+                spread_on_single: layout::SpreadOnSingle::Split,
+                first_is_cover: false,
+            },
+        );
+        assert_eq!(leaves.len(), 4);
+        assert!(leaves[2..].iter().all(|l| l.parts[0].source.is_none()));
+    }
+
+    #[test]
     fn the_host_decodes_no_larger_than_twice_what_is_shown() {
         // A page the screen shows smaller than half its size is asked for smaller.
         assert_eq!(decode_room(3000, 4500, (600, 900)), (1200, 1800));
@@ -1594,6 +1645,78 @@ mod tests {
         // The wish comes first; 9 was asked for and is kept, 4 was only wished before.
         assert_eq!(wished(vec![5, 6, 7], &queue, &asked), VecDeque::from([5, 6, 7, 9]));
         assert_eq!(wished(vec![1], &VecDeque::new(), &HashSet::new()), VecDeque::from([1]));
+    }
+
+    #[test]
+    fn a_chapter_opening_on_a_square_page_guesses_the_shape_its_other_pages_share() {
+        // A source's chapter opens on a square colour page; the next page and the last ones
+        // are the chapter's own portrait pages.
+        assert_eq!(guessed_shape([(1300, 1300), (1131, 1608)]), (1131, 1608));
+        assert_eq!(
+            guessed_shape([(1300, 1300), (1131, 1608), (1131, 1608), (1131, 1608)]),
+            (1131, 1608)
+        );
+        // A strip's tall images stay the guess past a short last one.
+        assert_eq!(guessed_shape([(800, 4000), (800, 4000), (800, 900)]), (800, 4000));
+    }
+
+    #[test]
+    fn a_page_that_failed_leaves_the_rest_laid_out_in_their_own_shapes() {
+        // A source's chapter of three pages: the first has landed when it opens, the second
+        // lands later as a two-page spread, and the third fails.
+        let dir = tempfile::tempdir().unwrap();
+        let fed = dir.path().join("feed");
+        std::fs::create_dir_all(&fed).unwrap();
+        let land = |page: usize, (w, h): (u32, u32)| {
+            let file = fed.join(format!("{page:05}.jpg"));
+            std::fs::write(&file, stripes_jpeg(w, h)).unwrap();
+            FeedPage::Landed(file)
+        };
+        let chapter = ChapterId::new("1");
+        let pages = vec![land(0, (500, 700)), FeedPage::Coming, FeedPage::Coming];
+        let feed = Arc::new(Feed::standing(chapter.clone(), fed.clone(), pages));
+        let worker = Pages::start(dir.path().join("cache"), None);
+        let (out, mut inbox) = Outbox::inbox();
+        worker.open(OpenJob {
+            session: 1,
+            generation: 1,
+            chapter: chapter.clone(),
+            path: fed.clone(),
+            plan: Plan {
+                target: Target { panel: kaeri_pages::Panel::Lcd, width: 1080, height: 2400 },
+                look: Look::default(),
+                two_pages: false,
+                spreads: SpreadOnSingle::Split,
+                mode: ReaderMode::Paged,
+                direction: ReadDirection::RightToLeft,
+                guess_mode: false,
+                guess_direction: false,
+                fit_width: false,
+            },
+            start_page: 0,
+            shared: Shared::default(),
+            out: out.clone(),
+            feed: Some(feed.clone()),
+            credits: None,
+        });
+        feed.put(1, land(1, (1000, 700)));
+        worker.landed(1, chapter.clone(), 1, &out);
+        feed.put(2, FeedPage::Failed(ReadingFailure::NotFound));
+        worker.landed(1, chapter, 2, &out);
+        // Every page that could land has: the chapter is laid out again with the spread's
+        // shape, rather than waiting for a page that may never come.
+        let until = Instant::now() + Duration::from_secs(20);
+        loop {
+            assert!(Instant::now() < until, "the chapter was laid out again");
+            match inbox.try_recv() {
+                Ok(crate::outbox::Envelope::Internal(Internal::Reader {
+                    wake: ReaderWake::Relay(1),
+                    ..
+                })) => break,
+                Ok(_) => {}
+                Err(_) => std::thread::sleep(Duration::from_millis(10)),
+            }
+        }
     }
 
     /// A made-up strip image: fine colour stripes a pixel wide, as lettering would be.

@@ -81,6 +81,25 @@ class ReaderSessionTest {
     }
 
     @Test
+    fun a_new_layout_before_the_start_was_shown_still_opens_at_the_start() {
+        // The phone turned while the reader opened: a second layout comes before the jump to
+        // the start place was shown.
+        opened(start = 4u)
+        assertEquals(4, session.state.value.jump?.leaf)
+        val two = ReaderFixtures.leaves(6).filter { !it.endPage }.chunked(2).mapIndexed { i, pair ->
+            app.kaeri.engine.model.Leaf(i.toUInt(), pair.flatMap { it.parts }, false)
+        }
+        session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, two))
+        val jump = session.state.value.jump!!
+        assertEquals(2, jump.leaf)
+        // Once that jump was shown, a layout keeps the page shown, not the start.
+        session.jumped(jump.id)
+        session.shown(0, TurnHow.TURN)
+        session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, ReaderFixtures.leaves(6)))
+        assertEquals(0, session.state.value.jump?.leaf)
+    }
+
+    @Test
     fun a_second_layout_of_the_open_chapter_keeps_its_place_and_its_pictures() {
         // The page it opens at lays out first; the rest stream in and lay the chapter out again.
         opened(start = 0u)
@@ -165,6 +184,32 @@ class ReaderSessionTest {
         val wide = ReaderFixtures.surface.copy(widthPx = 1920u, heightPx = 1080u, twoPages = true)
         session.surface(wide)
         assertEquals(ReaderCommand.Surface(SESSION, wide), sent.single())
+    }
+
+    @Test
+    fun a_surface_that_changed_while_opening_goes_out_once_the_session_opened() {
+        // A phone held sideways turns while the reader opens: the engine opened for the old shape.
+        session.open(WORK, ReaderFixtures.surface)
+        val wide = ReaderFixtures.surface.copy(widthPx = 2400u, heightPx = 1080u, twoPages = true)
+        session.surface(wide)
+        sent.clear()
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view()))
+        assertEquals(ReaderCommand.Surface(SESSION, wide), sent.single())
+        // The engine has it now: the same size again sends nothing, nor does the next chapter's open.
+        sent.clear()
+        session.surface(wide)
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view()))
+        assertTrue(sent.isEmpty())
+    }
+
+    @Test
+    fun a_surface_back_to_the_opened_one_sends_nothing_once_the_session_opened() {
+        session.open(WORK, ReaderFixtures.surface)
+        session.surface(ReaderFixtures.surface.copy(widthPx = 2400u, heightPx = 1080u, twoPages = true))
+        session.surface(ReaderFixtures.surface)
+        sent.clear()
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view()))
+        assertTrue(sent.isEmpty())
     }
 
     @Test
