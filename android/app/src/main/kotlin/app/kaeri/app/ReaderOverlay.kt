@@ -155,7 +155,9 @@ private fun ReaderOverlay(
     }
     LaunchedEffect(request) {
         val next = request
-        val paper = ReaderLook.paper(context)
+        // Paper mode turning pages at once, and an e-ink screen, where nothing moves: the reader
+        // is there at once, and gone at once.
+        val paper = ReaderLook.paper(context) || next?.eink == true
         if (next != null && next == already) {
             already = null
             shown = next
@@ -190,7 +192,7 @@ private fun ReaderOverlay(
                 }
             }
         } else if (shown != null) {
-            val paper = ReaderLook.paper(context)
+            val paper = ReaderLook.paper(context) || shown?.eink == true
             if (zoomFrom != null && !paper && !removed) {
                 corner.snapTo(0f)
                 zoom(null)

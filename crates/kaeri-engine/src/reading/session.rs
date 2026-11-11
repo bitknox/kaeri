@@ -1832,6 +1832,7 @@ mod tests {
     use crate::{host::QuietHost, outbox::Envelope};
 
     mod back_to;
+    mod eink_strip;
     mod groups;
     mod hints;
     mod leaving;

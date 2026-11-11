@@ -297,6 +297,8 @@ struct Original {
 struct Strip {
     /// Each image's scaled file, its height and where it starts in the strip.
     images: Vec<(PathBuf, u32, u32)>,
+    /// Each image's page in the chapter: an image that could not be read is left out.
+    pages: Vec<u32>,
     width: u32,
     format: kaeri_pages::PixelFormat,
     cuts: Vec<StripCut>,
@@ -739,26 +741,24 @@ impl Worker {
         let (leaves, cuts) = if mode == ReaderMode::Strip && eink && !fed {
             chapter.strip = cut_strip(&chapter, plan.target);
             let strip = chapter.strip.as_ref();
-            let leaves: Vec<Leaf> = strip
-                .map(|s| {
-                    (0..s.cuts.len() as u32)
-                        .map(|i| Leaf {
-                            index: i,
-                            parts: vec![LeafPart {
-                                page: i,
-                                kind: PageKind::StripCut,
-                                file: None,
-                                place: UnitRect::WHOLE,
-                                rotate: false,
-                                half: None,
-                                ratio: None,
-                            }],
-                            end_page: false,
-                        })
-                        .collect()
-                })
-                .unwrap_or_default();
             let cuts = strip.map(strip_places).unwrap_or_default();
+            let leaves: Vec<Leaf> = (0..)
+                .zip(&cuts)
+                .map(|(i, at)| Leaf {
+                    index: i,
+                    parts: vec![LeafPart {
+                        page: i,
+                        kind: PageKind::StripCut,
+                        file: None,
+                        place: UnitRect::WHOLE,
+                        rotate: false,
+                        half: None,
+                        ratio: None,
+                        strip: Some(*at),
+                    }],
+                    end_page: false,
+                })
+                .collect();
             (leaves, cuts)
         } else {
             let pixels = known;
@@ -1008,6 +1008,7 @@ fn model_leaf(index: u32, leaf: &layout::Leaf, shapes: &[(u32, u32)]) -> Leaf {
                 rotate: p.rotate,
                 half: half_of(p),
                 ratio: ratio_of(p, shapes),
+                strip: None,
             })
             .collect(),
         end_page: false,
@@ -1353,6 +1354,7 @@ fn cut_strip(chapter: &Chapter, target: Target) -> Option<Strip> {
     let format =
         if colour { kaeri_pages::PixelFormat::Rgba8 } else { kaeri_pages::PixelFormat::Gray8 };
     let mut images = Vec::new();
+    let mut pages = Vec::new();
     let mut gaps = Vec::new();
     let mut top = 0u32;
     for (i, original) in chapter.originals.iter().enumerate() {
@@ -1389,6 +1391,7 @@ fn cut_strip(chapter: &Chapter, target: Target) -> Option<Strip> {
             continue;
         }
         images.push((path, h, top));
+        pages.push(i as u32);
         top += h;
     }
     if images.is_empty() {
@@ -1398,10 +1401,10 @@ fn cut_strip(chapter: &Chapter, target: Target) -> Option<Strip> {
         &gaps,
         StripOptions::for_screen(target.height, target.height / 12),
     );
-    Some(Strip { images, width, format, cuts })
+    Some(Strip { images, pages, width, format, cuts })
 }
 
-/// Where each cut starts: the image and the offset inside it.
+/// Where each cut starts: the image, by its page in the chapter, and the offset inside it.
 fn strip_places(strip: &Strip) -> Vec<StripPos> {
     strip
         .cuts
@@ -1409,7 +1412,10 @@ fn strip_places(strip: &Strip) -> Vec<StripPos> {
         .map(|cut| {
             let i = strip.images.iter().rposition(|(_, _, top)| *top <= cut.top).unwrap_or(0);
             let (_, height, top) = strip.images[i];
-            StripPos { image: i as u32, offset: (cut.top - top) as f32 / height.max(1) as f32 }
+            StripPos {
+                image: strip.pages.get(i).copied().unwrap_or(i as u32),
+                offset: (cut.top - top) as f32 / height.max(1) as f32,
+            }
         })
         .collect()
 }

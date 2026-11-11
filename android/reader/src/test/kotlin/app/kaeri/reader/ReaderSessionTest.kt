@@ -97,6 +97,51 @@ class ReaderSessionTest {
         assertTrue(jump.id != first.id)
     }
 
+    /** Open a long strip on e-ink at [place], cut four screens an image. */
+    private fun openedCut(place: StripPos) {
+        session.open(WORK, ReaderFixtures.surface)
+        val start = ReadPlace(WORK, CHAPTER, place.image, place, null)
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view(mode = ReaderMode.STRIP).copy(start = start)))
+        session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, ReaderFixtures.cuts(images = 4, each = 4)))
+    }
+
+    @Test
+    fun an_e_ink_strip_opens_on_the_cut_its_place_is_in() {
+        // Half way down image 2: the third cut of that image, not cut 2.
+        openedCut(StripPos(2u, 0.5f))
+        assertEquals(10, session.state.value.jump?.leaf)
+        // Between two cuts, the one above.
+        openedCut(StripPos(2u, 0.6f))
+        assertEquals(10, session.state.value.jump?.leaf)
+    }
+
+    @Test
+    fun resuming_an_e_ink_strip_three_times_keeps_the_place() {
+        var place = StripPos(2u, 0.5f)
+        repeat(3) { round ->
+            openedCut(place)
+            val jump = session.state.value.jump!!
+            session.jumped(jump.id)
+            sent.clear()
+            session.shown(jump.leaf, TurnHow.PLACED)
+            // The engine keeps where the cut shown starts, and the next open starts there.
+            val shown = sent.filterIsInstance<ReaderCommand.Shown>().single()
+            place = session.state.value.leaves[shown.leaf.toInt()].parts.single().strip!!
+            assertEquals("round ${round + 1}", StripPos(2u, 0.5f), place)
+        }
+    }
+
+    @Test
+    fun a_new_e_ink_layout_keeps_the_cut_shown_by_where_it_starts() {
+        openedCut(StripPos(0u, 0f))
+        session.jumped(session.state.value.jump!!.id)
+        session.shown(10, TurnHow.TURN)
+        // A turn of the device cuts the strip anew, two screens an image: image 2's half way
+        // mark starts cut 5.
+        session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, ReaderFixtures.cuts(images = 4, each = 2)))
+        assertEquals(5, session.state.value.jump?.leaf)
+    }
+
     @Test
     fun a_second_layout_of_the_open_chapter_keeps_its_place_and_its_pictures() {
         // The page it opens at lays out first; the rest stream in and lay the chapter out again.

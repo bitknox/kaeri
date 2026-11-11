@@ -16,6 +16,7 @@ import app.kaeri.engine.model.ReadPlace
 import app.kaeri.engine.model.ReaderMode
 import app.kaeri.engine.model.ReaderSurface
 import app.kaeri.engine.model.ReaderView
+import app.kaeri.engine.model.StripPos
 import app.kaeri.engine.model.UnitRect
 import java.io.File
 
@@ -67,6 +68,16 @@ object ReaderFixtures {
     fun leaves(pages: Int, file: (UInt) -> PageFile? = { null }): List<Leaf> =
         List(pages) { Leaf(it.toUInt(), listOf(part(it.toUInt(), file(it.toUInt()))), false) } +
             Leaf(pages.toUInt(), emptyList(), true)
+
+    /**
+     * A long strip of [images] images cut into screens on e-ink, [each] to an image, and the end
+     * page: each cut's page is its own number, and it says where in the strip it starts.
+     */
+    fun cuts(images: Int, each: Int): List<Leaf> =
+        List(images * each) { i ->
+            val at = StripPos((i / each).toUInt(), (i % each).toFloat() / each)
+            Leaf(i.toUInt(), listOf(LeafPart(page = i.toUInt(), kind = PageKind.STRIP_CUT, file = null, place = whole, rotate = false, half = null, strip = at)), false)
+        } + Leaf((images * each).toUInt(), emptyList(), true)
 
     val surface = ReaderSurface(widthPx = 1080u, heightPx = 1920u, scale = 2.625f, eink = false, twoPages = false, dark = true)
 
