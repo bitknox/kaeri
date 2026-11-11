@@ -12040,6 +12040,14 @@
     <value>{count} changes waiting to sync</value>
     <comment>Line under a signed-in account while changes wait to be sent.</comment>
   </data>
+  <data name="AccountsChangesHeld_one" xml:space="preserve">
+    <value>One change can't sync yet</value>
+    <comment>Line under a signed-in account when nothing else waits but some changes can't go out yet: the { -tracker } has no match for those titles. They go out by themselves once it has one.</comment>
+  </data>
+  <data name="AccountsChangesHeld_other" xml:space="preserve">
+    <value>{count} changes can't sync yet</value>
+    <comment>Line under a signed-in account when nothing else waits but some changes can't go out yet: the { -tracker } has no match for those titles. They go out by themselves once it has one.</comment>
+  </data>
   <data name="SettingsQualityHigher" xml:space="preserve">
     <value>Higher</value>
     <comment>Choice for the download quality: larger files with more detail.</comment>

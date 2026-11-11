@@ -3616,6 +3616,14 @@ public enum L {
     /// Line in the list of what the engine is doing, when it is doing nothing.
     public static var shellNothingRunning: String { string("shell-nothing-running", fallback: "Nothing is running.") }
 
+    /// Line in the sync status's popover: changes a { -tracker } can't take yet, because it has no match for those titles. They go out by themselves once it has one.
+    public static func shellSyncHeld(count: Int, tracker: String) -> String {
+        Self.format("shell-sync-held", fallback: "%1$lld changes can't sync to %2$@ yet", count, tracker)
+    }
+
+    /// Under the lines above in the sync status's popover: why those changes wait, and that nothing needs doing.
+    public static var shellSyncHeldDetail: String { string("shell-sync-held-detail", fallback: "No match for these titles yet. They sync once there is one.") }
+
     /// Placeholder of the search field while Settings is open.
     public static var shellSearchSettings: String { string("shell-search-settings", fallback: "Search settings") }
 
@@ -11550,6 +11558,11 @@ public enum L {
     /// Line under a signed-in account while changes wait to be sent.
     public static func accountsChangesWaiting(count: Int) -> String {
         Self.format("accounts-changes-waiting", fallback: "%1$lld changes waiting to sync", count)
+    }
+
+    /// Line under a signed-in account when nothing else waits but some changes can't go out yet: the { -tracker } has no match for those titles. They go out by themselves once it has one.
+    public static func accountsChangesHeld(count: Int) -> String {
+        Self.format("accounts-changes-held", fallback: "%1$lld changes can't sync yet", count)
     }
 
     /// Choice for the download quality: larger files with more detail.

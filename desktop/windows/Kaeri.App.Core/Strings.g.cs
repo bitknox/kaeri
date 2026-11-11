@@ -8654,6 +8654,9 @@ public static partial class T
     /// <summary>Line under a signed-in account while changes wait to be sent.</summary>
     public static string AccountsChangesWaiting(long count) => Fill(GetPlural("AccountsChangesWaiting", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>Line under a signed-in account when nothing else waits but some changes can't go out yet: the { -tracker } has no match for those titles. They go out by themselves once it has one.</summary>
+    public static string AccountsChangesHeld(long count) => Fill(GetPlural("AccountsChangesHeld", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
     /// <summary>Choice for the download quality: larger files with more detail.</summary>
     public static string SettingsQualityHigher => Get("SettingsQualityHigher");
 
@@ -14780,6 +14783,8 @@ public static partial class T
         ["WidgetResumeDubbedLabel"] = "Resume episode {episode}, dubbed, of {title}",
         ["AccountsChangesWaiting_one"] = "One change waiting to sync",
         ["AccountsChangesWaiting_other"] = "{count} changes waiting to sync",
+        ["AccountsChangesHeld_one"] = "One change can't sync yet",
+        ["AccountsChangesHeld_other"] = "{count} changes can't sync yet",
         ["SettingsQualityHigher"] = "Higher",
         ["SettingsQualityStandard"] = "Standard",
         ["SettingsUploadUnlimited"] = "Unlimited",

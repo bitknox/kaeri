@@ -555,6 +555,8 @@ enum AccountWords {
         if let error = state.pullError { return L.accountsSyncFailed(why: error.reason) }
         if accounts.isWorking("sync") { return L.accountsSyncRunning }
         if state.outbox > 0 { return L.settingsChangesWaiting(count: Int(state.outbox)) }
+        // Held for a match: not waiting, and said apart, so the row is not stuck on a count.
+        if state.deferred > 0 { return L.accountsChangesHeld(count: Int(state.deferred)) }
         if let at = accounts.syncedAt[state.tracker] {
             let seconds = Int64(now.timeIntervalSince(at))
             return seconds < 60 ? L.settingsSyncedJustNow : L.settingsSyncedAgo(ago: Wording.ago(seconds))

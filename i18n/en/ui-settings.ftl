@@ -466,6 +466,14 @@ accounts-changes-waiting = { $count ->
    *[other] { $count } changes waiting to sync
  }
 
+# Line under a signed-in account when nothing else waits but some changes can't go out yet:
+# the { -tracker } has no match for those titles. They go out by themselves once it has one.
+# @arg count: int
+accounts-changes-held = { $count ->
+    [one] One change can't sync yet
+   *[other] { $count } changes can't sync yet
+ }
+
 # Choice for the download quality: larger files with more detail.
 # @max 16
 settings-quality-higher = Higher

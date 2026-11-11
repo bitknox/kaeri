@@ -10,7 +10,7 @@
 # generated episode first on Continue), then after a colon a section (calendar, seasonal, search, library,
 # downloads, providers, pluginStores, settings) or title=<id>, select=<id>, query=<words>,
 # genre=<name> (Search browsing a genre), filters=set (Search with Fantasy, 2024, Spring, TV and two sheet filters set, on the fuller catalogue, which finds two titles), scroll=<points> (Search's results scrolled), available=<here|services> (Search with its Available filter set) or palette=<words>, with more joined by +: pane=<Settings
-# pane>, notice=alert (a failure toast), sheet=<torrent|proxy|join|kitsu|update|show|about|report|welcome-sources|welcome-setup|filters|messages|discussion-<episode>>,
+# pane>, notice=alert (a failure toast), sheet=<torrent|proxy|join|kitsu|update|show|about|report|welcome-sources|welcome-setup|filters|messages|discussion-<episode>|sync-status>,
 # prelaunch=<state> (a reading prelaunch state, see PrelaunchScene), sync=<state> (a Devices state or sync sheet, see SyncScene), tv=<paired|picker|code|expired|remote|lost|refused|empty|bar|away>, Play on TV with the Fixtures app's
 # fake TVs (FixtureTVs.swift says what each shows), cast=<scene>, casting to the made-up TVs with
 # Chromecast built in (FixtureCasts.swift lists the scenes), day=<days after today>, the calendar opened on
@@ -25,7 +25,7 @@
 # send=<preparing|waiting|failed> on a series' Send to e-reader sheet (sheet=send, work=<id>; sheet=stopped asks where you stopped), feed=<on|off> the Mac Reading settings' OPDS feed pane told as if it were (settings+pane=reading+sheet=feed), never switched on,
 # party=<form|joining|refused|invite|panel|ready|sync|chat|chatline|chatbusy|chatreact|chatfield|chatkeys|chatwait|chatoff|chatfail|chatpanel|chatmute|chathidden|chatshort|lost|left|nosource|choose|unaired|quit>, a
 # watch party on the testing engine's fake Syncplay server (PartyScene; the player's on the playing
-# scene: playing:party=panel), showcase=<sources|stores|downloads|invite|pale|messages|proxy|checking|unsaved|all>, the invented rows of `Showcase`
+# scene: playing:party=panel), showcase=<sources|stores|downloads|invite|pale|messages|proxy|checking|unsaved|held|stuck|all>, the invented rows of `Showcase`
 # (pale: 900001's page with a long title on a near-white banner; proxy: torrents through a saved proxy,
 # which sheet=proxy edits, and checking or unsaved its check under way or failed), and watched=<id>:<episodes>,
 # episodes marked watched as the shot starts (900006:8 is caught up), and
