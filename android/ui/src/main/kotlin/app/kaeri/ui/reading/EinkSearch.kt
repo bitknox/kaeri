@@ -244,7 +244,7 @@ internal fun EinkSearchPage(
         val lines = if (large) emptyList() else foundLines(context, search, opened)
         when {
             // Nothing asked: the start, not an empty search.
-            search.query.isStart() -> if (large) WideStart(only) { only = it } else SearchStart()
+            search.query.isStart() -> if (large) WideStart(only, search.query.sourcesOnly) { only = it } else SearchStart()
             // A large panel: the results in columns under each place's name (WideResults below).
             large -> WideResults(search, only)
             // After 600 ms one word; most searches answer first and cost the panel nothing.
@@ -701,11 +701,11 @@ private val GenreLeast = 200.dp
 
 /**
  * The large panel's start: Search in, naming only the sources you added; AniList's genres on the
- * grid's four columns; the formats; and a line on where Search looks. Kaeri keeps no recent
- * reading searches, so the board's Recent searches is not drawn.
+ * grid's four columns; the formats; and a line on where Search looks, AniList left out with Your
+ * sources only. Kaeri keeps no recent reading searches, so the board's Recent searches is not drawn.
  */
 @Composable
-private fun WideStart(only: String?, onOnly: (String?) -> Unit) {
+private fun WideStart(only: String?, sourcesOnly: Boolean, onOnly: (String?) -> Unit) {
     val store = LocalAppStore.current
     val context = LocalContext.current
     val sources by store.bookSources.view.collectAsStateWithLifecycle()
@@ -730,7 +730,8 @@ private fun WideStart(only: String?, onOnly: (String?) -> Unit) {
             add(if (index == 0) StartPart.Together(listOf(StartPart.Head(Strings.readFilterGenres(context), Strings.readSearchGenresFrom(context)), StartPart.Genres(run))) else StartPart.Genres(run))
         }
         if (filters.formats.isNotEmpty()) add(StartPart.Together(listOf(StartPart.Head(Strings.readSearchFormats(context)), StartPart.Formats(filters.formats))))
-        add(StartPart.Note(Strings.readSearchStartNote(context)))
+        // Your sources only leaves AniList out, and the line says so.
+        add(StartPart.Note(if (sourcesOnly) Strings.readSearchStartNoteOwn(context) else Strings.readSearchStartNote(context)))
     }
     PagedItems(parts, page, { page = it }, Modifier.padding(top = 4.dp)) { part -> StartLine(part, columns, only, onOnly) }
 }

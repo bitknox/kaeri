@@ -3293,6 +3293,10 @@ object Strings {
     fun readSearchStartNote(context: Context): String =
         context.getString(R.string.read_search_start_note)
 
+    /** E-ink Search start with Your sources only ticked: the line at its foot, where AniList is not asked. */
+    fun readSearchStartNoteOwn(context: Context): String =
+        context.getString(R.string.read_search_start_note_own)
+
     /** E-ink Search results on a large panel: the heading over the results already in the person's library. */
     fun readSearchGroupLibrary(context: Context): String =
         context.getString(R.string.read_search_group_library)

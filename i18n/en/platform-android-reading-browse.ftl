@@ -85,6 +85,11 @@ read-search-formats = Formats
 # @only android
 read-search-start-note = Searches your { -library }, AniList and each { -source } you added. A genre or format lists AniList's series with it.
 
+# E-ink Search start with Your sources only ticked: the line at its foot, where AniList is not
+# asked.
+# @only android
+read-search-start-note-own = Searches your { -library } and each { -source } you added.
+
 # E-ink Search results on a large panel: the heading over the results already in the person's
 # library.
 # @only android

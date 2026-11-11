@@ -1770,6 +1770,8 @@
     <string name="read_search_formats">Formats</string>
     <!-- E-ink Search start: the line at its foot. A genre or format chip opens Search with that filter and no words. -->
     <string name="read_search_start_note">Searches your library, AniList and each source you added. A genre or format lists AniList\'s series with it.</string>
+    <!-- E-ink Search start with Your sources only ticked: the line at its foot, where AniList is not asked. -->
+    <string name="read_search_start_note_own">Searches your library and each source you added.</string>
     <!-- E-ink Search results on a large panel: the heading over the results already in the person's library. -->
     <string name="read_search_group_library">In your library</string>
     <!-- E-ink Search results: the heading over AniList's results. -->
