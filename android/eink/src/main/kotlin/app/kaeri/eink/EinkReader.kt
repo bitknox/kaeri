@@ -9,7 +9,7 @@ package app.kaeri.eink
 import androidx.compose.foundation.background
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.activity.compose.BackHandler
+import app.kaeri.reader.ReaderBackHandler
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -198,7 +198,7 @@ fun EinkReader(
     }
 
     // Back closes the sheet or Contents first, then the reader, never the app's screens under it.
-    BackHandler {
+    ReaderBackHandler {
         when (layer) {
             EinkLayer.More -> show(EinkLayer.Settings)
             EinkLayer.Settings, EinkLayer.Contents -> show(EinkLayer.None)
@@ -802,7 +802,7 @@ fun BoxScope.EinkChapterFailed(
     LaunchedEffect(Unit) { session.loadSources() }
     val sources = state.sources.orEmpty()
     var choosing by remember { mutableStateOf(false) }
-    BackHandler(enabled = choosing) { choosing = false }
+    ReaderBackHandler(enabled = choosing) { choosing = false }
     if (choosing && sources.isNotEmpty()) {
         Column(Modifier.fillMaxSize().background(EinkColours.Paper).padding(horizontal = 44.dp, vertical = 92.dp)) {
             Text(Strings.readerSourcesTitle(context), style = EinkType.Secondary)

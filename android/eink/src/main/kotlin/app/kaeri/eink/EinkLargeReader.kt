@@ -6,7 +6,7 @@
 
 package app.kaeri.eink
 
-import androidx.activity.compose.BackHandler
+import app.kaeri.reader.ReaderBackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -336,7 +336,7 @@ internal fun BoxScope.EinkSlowOpen(state: ReaderState, session: ReaderSession, o
     if (!slow) return
     val sources = state.sources.orEmpty()
     var choosing by remember { mutableStateOf(false) }
-    BackHandler(enabled = choosing) { choosing = false }
+    ReaderBackHandler(enabled = choosing) { choosing = false }
     val side = if (einkLargePanel) 64.dp else 44.dp
     if (choosing && sources.isNotEmpty()) {
         Column(Modifier.fillMaxSize().background(EinkColours.Paper).padding(horizontal = side, vertical = 92.dp)) {

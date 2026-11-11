@@ -4,7 +4,6 @@
 package app.kaeri.app
 
 import android.content.pm.ActivityInfo
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
@@ -21,8 +20,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
-import androidx.navigationevent.compose.rememberNavigationEventDispatcherOwner
 import app.kaeri.design.ArtShape
 import app.kaeri.ui.reading.LocalReaderTransitions
 import app.kaeri.ui.reading.LocalReaderTransitionsView
@@ -61,6 +58,7 @@ import app.kaeri.eink.RefreshControllers
 import app.kaeri.engine.model.OpenAt
 import app.kaeri.reader.LocalServerLines
 import app.kaeri.reader.PageImages
+import app.kaeri.reader.ReaderBackHandler
 import app.kaeri.reader.ReaderSession
 import app.kaeri.reader.phone.NovelScreen
 import app.kaeri.reader.phone.PhoneReader
@@ -96,13 +94,10 @@ fun ReaderHost(store: AppStore, eink: EinkModel, app: @Composable () -> Unit) {
             kept = request?.let { listOfNotNull(it.work, if (it.eink) "eink" else "phone", it.cover) }
         }
     }
-    // The app under an open reader takes no Back: its pages stay where they are, and Back is the
-    // reader's even after the activity was made anew, when the app's handlers come in last.
-    val reading by ReaderLauncher.request.collectAsState()
-    val appBack = rememberNavigationEventDispatcherOwner(enabled = reading == null)
+    // Back is the open reader's, ahead of the app under it, even after the activity was made
+    // anew: see ReaderBackHandler. The app's sheets keep theirs.
     SharedTransitionLayout {
         CompositionLocalProvider(
-            LocalNavigationEventDispatcherOwner provides appBack,
             LocalReaderTransitions provides this,
             LocalReaderTransitionsView provides view,
             LocalReaderZoomOpen provides zoomed,
@@ -305,7 +300,7 @@ private fun OpenReader(
     }
     // Back closes the reader wherever its screens have no Back of their own, such as the e-ink
     // questions; the app under it takes none while it is open.
-    BackHandler(enabled = !leaving) { ReaderLauncher.close() }
+    ReaderBackHandler(enabled = !leaving) { ReaderLauncher.close() }
     Box(
         Modifier
             .fillMaxSize()

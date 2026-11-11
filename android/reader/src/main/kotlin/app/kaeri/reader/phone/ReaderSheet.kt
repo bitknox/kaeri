@@ -3,7 +3,7 @@
 
 package app.kaeri.reader.phone
 
-import androidx.activity.compose.BackHandler
+import app.kaeri.reader.ReaderBackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -60,7 +60,7 @@ internal fun ReaderSheet(
         return
     }
     // Drawn over the reader in its own layout, since a window of its own would animate.
-    BackHandler(onBack = onDismiss)
+    ReaderBackHandler(onBack = onDismiss)
     run {
         val height = LocalConfiguration.current.screenHeightDp.dp
         Box(Modifier.fillMaxSize()) {
