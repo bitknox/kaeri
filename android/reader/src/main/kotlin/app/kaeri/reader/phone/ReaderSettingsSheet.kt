@@ -58,6 +58,7 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -167,11 +168,11 @@ internal fun BackRow(title: String, context: Context, onBack: () -> Unit) {
     }
 }
 
-/** A row 46 dp tall with a value and a chevron. */
+/** A row at least 48 dp tall with a value and a chevron. */
 @Composable
 private fun NavRow(title: String, value: String?, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 46.dp).clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick),
+        Modifier.fillMaxWidth().heightIn(min = 48.dp).clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(title, color = Chrome.text, fontSize = 16.sp, modifier = Modifier.weight(1f))
@@ -523,22 +524,26 @@ private fun More(
     BackRow(Strings.readerSheetMore(context), context, onBack)
     var query by remember { mutableStateOf("") }
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 44.dp).clip(RoundedCornerShape(22.dp)).background(Chrome.selected).padding(horizontal = 14.dp),
+        Modifier.fillMaxWidth().heightIn(min = 48.dp).clip(RoundedCornerShape(24.dp)).background(Chrome.selected).padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         GlyphIcon(Glyph.Search, Chrome.faint, size = 20.dp)
         Spacer(Modifier.padding(start = 10.dp))
-        Box(Modifier.weight(1f)) {
-            if (query.isEmpty()) Text(Strings.readerSettingsSearch(context), color = Chrome.faint, fontSize = 15.sp)
-            BasicTextField(
-                value = query,
-                onValueChange = { query = it },
-                singleLine = true,
-                textStyle = TextStyle(color = Chrome.text, fontSize = 15.sp),
-                cursorBrush = SolidColor(Chrome.text),
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
+        // The field takes the row's whole height, so a touch anywhere on it starts typing.
+        BasicTextField(
+            value = query,
+            onValueChange = { query = it },
+            singleLine = true,
+            textStyle = TextStyle(color = Chrome.text, fontSize = 15.sp),
+            cursorBrush = SolidColor(Chrome.text),
+            modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+            decorationBox = { field ->
+                Box(Modifier.heightIn(min = 48.dp), contentAlignment = Alignment.CenterStart) {
+                    if (query.isEmpty()) Text(Strings.readerSettingsSearch(context), color = Chrome.faint, fontSize = 15.sp)
+                    field()
+                }
+            },
+        )
     }
     val groups = if (novel) {
         listOf(
@@ -617,7 +622,8 @@ private fun SettingLine(context: Context, session: ReaderSession, row: ReaderSet
                 if (labelled.size <= 4) {
                     Segments(labelled.map { it.second }, labelled.indexOfFirst { it.first == value }) { session.setSetting(row.key, scope, labelled[it].first) }
                 } else {
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    // Each choice takes a 48 dp touch around its pill, so the rows sit closer.
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         labelled.forEach { (choice, label) ->
                             val selected = choice == value
                             Text(
@@ -626,6 +632,7 @@ private fun SettingLine(context: Context, session: ReaderSession, row: ReaderSet
                                 fontSize = 14.sp,
                                 fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
                                 modifier = Modifier
+                                    .minimumInteractiveComponentSize()
                                     .clip(RoundedCornerShape(50))
                                     .background(if (selected) Chrome.selected else Color.Transparent)
                                     .clickable { session.setSetting(row.key, scope, choice) }
@@ -719,7 +726,7 @@ internal fun Segments(labels: List<String>, selected: Int, modifier: Modifier = 
 @Composable
 internal fun SwitchLine(title: String, line: String?, checked: Boolean, big: Boolean = false, onChange: (Boolean) -> Unit) {
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 46.dp).toggleable(value = checked, role = Role.Switch, onValueChange = onChange),
+        Modifier.fillMaxWidth().heightIn(min = 48.dp).toggleable(value = checked, role = Role.Switch, onValueChange = onChange),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
