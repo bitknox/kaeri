@@ -273,6 +273,8 @@ struct Group {
     id: String,
     name: String,
     kind: Option<ReadSourceKind>,
+    /// The source's [`crate::read_sources::BookSources::source_mark`] when it was asked.
+    mark: Option<u64>,
     state: ReadSourceState,
     hits: Vec<Hit>,
 }
@@ -435,6 +437,7 @@ fn sources_search(kit: &Kit, ask: Ask, query: &ReadSearchQuery, tx: &Outbox) -> 
                     id: id.clone(),
                     name: name.clone(),
                     kind: *kind,
+                    mark: kit.sources.source_mark(id),
                     state: ReadSourceState::Asking,
                     hits: Vec::new(),
                 })
@@ -546,6 +549,40 @@ async fn ask_source(
     }
 }
 
+/// The sources changed while a search with words was last shown: a source that joined, or
+/// joined anew since it answered, is asked for the words in its place in the person's order,
+/// and a source gone or switched off leaves with its group. The rest keep what they answered.
+pub(crate) fn sources_changed(kit: &Kit, ask: Ask, tx: &Outbox) {
+    let (generation, text, medium, named) = {
+        let mut run = kit.sources.catalog.search.lock().unwrap_or_else(|e| e.into_inner());
+        if run.generation == 0 || run.query.text.trim().is_empty() {
+            return;
+        }
+        let medium = medium_of(&run.query);
+        let mut before = std::mem::take(&mut run.groups);
+        let mut named = Vec::new();
+        for (id, name, kind) in sources_for(kit, medium) {
+            let mark = kit.sources.source_mark(&id);
+            let kept = before
+                .iter()
+                .position(|g| g.id == id && g.mark == mark)
+                .map(|at| before.remove(at));
+            let group = kept.unwrap_or_else(|| {
+                named.push((id.clone(), name.clone()));
+                Group { id, name, kind, mark, state: ReadSourceState::Asking, hits: Vec::new() }
+            });
+            run.groups.push(group);
+        }
+        // Nothing joined, and nothing left with its group: the search stands as it was sent.
+        if named.is_empty() && before.is_empty() {
+            return;
+        }
+        (run.generation, run.query.text.trim().to_owned(), medium, named)
+    };
+    update(kit, generation, tx, |_| {});
+    ask_sources(kit, ask, generation, text, medium, named, tx);
+}
+
 /// A group's Try again: ask its source once more for the search still shown.
 pub fn retry_source(kit: &Kit, ask: Ask, query: ReadSearchQuery, source: String, tx: &Outbox) {
     let (generation, name) = {
@@ -653,6 +690,7 @@ fn view(kit: &Kit, run: &mut Run) -> ReadSourceSearch {
 
 /// A reading list: at once from what was kept, then again once the books missing from it land.
 pub fn library(kit: &Kit, ask: Ask, segment: LibrarySegmentRead, tx: &Outbox) {
+    super::changed::library(kit, segment);
     send(tx, ReadingEvent::Library { segment, tiles: list(kit, ask, segment) });
     if segment == LibrarySegmentRead::YourFiles {
         return;

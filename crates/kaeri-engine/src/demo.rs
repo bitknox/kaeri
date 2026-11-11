@@ -82,6 +82,7 @@ pub fn set(on: bool, engine: &mut EngineState, services: &Services, tx: &Outbox)
     } else if !on {
         services.book_sources.remove_demo();
     }
+    let _ = tx.internal(Internal::BookSourcesChanged);
     crate::titles::refresh::sources_changed(engine, services, tx);
     let _ = tx.send(Event::Settings(engine.config.view()));
     let _ = tx.send(Event::Providers(data::provider_rows(registry, stores)));
