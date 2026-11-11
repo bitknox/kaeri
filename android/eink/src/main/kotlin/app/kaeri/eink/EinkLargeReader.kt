@@ -230,7 +230,7 @@ internal fun EinkLargeEnd(
             }
             Spacer(Modifier.height(40.dp))
             Row(
-                Modifier.fillMaxWidth().heightIn(min = 40.dp).semantics { heading() },
+                Modifier.fillMaxWidth().heightIn(min = 48.dp).semantics { heading() },
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(Strings.einkComingUp(context), style = EinkType.Label.copy(fontSize = 18.sp, fontWeight = FontWeight.Bold), modifier = Modifier.weight(1f))
@@ -238,7 +238,7 @@ internal fun EinkLargeEnd(
                     Text(
                         Strings.einkContents(context),
                         style = EinkType.Secondary.copy(color = EinkColours.Ink, fontWeight = FontWeight.Bold, textDecoration = TextDecoration.Underline),
-                        modifier = Modifier.heightIn(min = 40.dp).einkClick(onClick = onContents).wrapContentHeight(Alignment.CenterVertically),
+                        modifier = Modifier.heightIn(min = 48.dp).einkClick(onClick = onContents).wrapContentHeight(Alignment.CenterVertically),
                     )
                 }
             }

@@ -749,7 +749,7 @@ private fun StartLine(part: StartPart, columns: Int, only: String?, onOnly: (Str
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            part.places.forEach { (id, name) -> StartChip(name, chosen = id == only, height = 46.dp) { onOnly(id) } }
+            part.places.forEach { (id, name) -> StartChip(name, chosen = id == only, height = 48.dp) { onOnly(id) } }
         }
         is StartPart.Genres -> Row(Modifier.fillMaxWidth().padding(bottom = 12.dp), horizontalArrangement = Arrangement.spacedBy(ChipGap)) {
             for (column in 0 until columns) {
@@ -769,7 +769,7 @@ private fun StartLine(part: StartPart, columns: Int, only: String?, onOnly: (Str
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             part.formats.forEach { format ->
-                StartChip(format.label.text(context), chosen = false, height = 46.dp) {
+                StartChip(format.label.text(context), chosen = false, height = 48.dp) {
                     store.reading.runSearch(ReadingModel.EMPTY_QUERY.copy(formats = listOf(format.key)))
                 }
             }

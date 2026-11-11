@@ -542,7 +542,7 @@ private fun PaperSheet(title: String, onDone: () -> Unit, content: @Composable C
                 ) {
                     Row(Modifier.fillMaxWidth().height(66.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(title, style = SheetTitle, modifier = Modifier.weight(1f).semantics { heading() })
-                        EinkSolidButton(Strings.actionDone(context), onDone, Modifier.height(46.dp))
+                        EinkSolidButton(Strings.actionDone(context), onDone, Modifier.height(48.dp))
                     }
                     content()
                 }
