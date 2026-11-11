@@ -818,6 +818,7 @@ mod tests {
             rotate: false,
             half: None,
             ratio: None,
+            strip: None,
         };
         Leaf { index, parts: pages.iter().map(|&page| part(page)).collect(), end_page }
     }
@@ -931,6 +932,7 @@ mod centring {
             title: None,
             chapters: (1..=count).map(chapter).collect(),
             all_read: false,
+            flat: false,
         }]);
         let content = chapters.popover.child().expect("the popover has its content");
         chapters.popover.set_child(gtk::Widget::NONE);
