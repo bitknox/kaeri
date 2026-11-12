@@ -6131,11 +6131,17 @@
   <data name="ReaderTapEdges" xml:space="preserve">
     <value>Kenarlar</value>
   </data>
-  <data name="ReaderTapSides" xml:space="preserve">
-    <value>Yarılar</value>
-  </data>
   <data name="ReaderTapOff" xml:space="preserve">
     <value>Kapalı</value>
+  </data>
+  <data name="ReaderZoneNext" xml:space="preserve">
+    <value>Sonraki sayfa</value>
+  </data>
+  <data name="ReaderZonePrevious" xml:space="preserve">
+    <value>Önceki sayfa</value>
+  </data>
+  <data name="ReaderZoneControls" xml:space="preserve">
+    <value>Kontroller</value>
   </data>
   <data name="ReaderChapters" xml:space="preserve">
     <value>Bölümler</value>

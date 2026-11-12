@@ -391,6 +391,32 @@ Decided 10 November 2026. A chapter list that opens on its own opens with the cu
 - VoiceOver, TalkBack and the keyboard on Mac, Windows and Linux start on the current chapter's row.
 - Mark read up to is an action on a chapter's row, and a volume on the series page opens in place, so neither opens a list of its own.
 
+### Tap zones
+
+Decided 10 November 2026, with the Android review on 11 November. Where a tap lands on the page decides whether it turns forward, turns back or shows the controls. The engine owns the zones and the hit test (`tap_action` and `tap_map` in `kaeri-model`), and every front end asks it rather than keeping fractions of its own.
+
+- Paged reading offers Auto, Sides, L shape, Wide next, Top and bottom, Next on both sides and Off. Auto is Sides, or L shape for vertical pages. Scrolling reading, the strip and the scrolled novel, offers the same six without Auto. Paged starts on Auto on phones and tablets and on Sides on e-ink and desktop. Scrolling starts on Off, where a tap shows the controls.
+- Zone size is Standard (thirds) or Small (quarters), and two switches flip the zones left and right or top and bottom. The zones mirror with the reading direction. Flips never change which way the page moves.
+- The settings belong to the device, whatever the series or medium, and are not synced.
+- The Tap zones row (Click zones on Mac, Windows and Linux) opens a page of its own inside the reader's settings, on the kind of reading that is open. It has Paged and Scrolling segments, a tile for each layout as a radio group, Zone size, the two flips, Show zones and a line such as "Stays on this phone". Every change applies at once. Show zones is off for Off and hidden under a screen reader.
+- On pages a tap acts at once. On a zoomed page every tap shows or hides the controls. A spread takes its zones from the whole screen, not from each page.
+- In a strip a tap waits out the double tap time. Next and Previous scroll 90% of the visible height over 300 ms, at once with Reduce Motion or in Paper mode, and a second tap during a step adds its own step. A touch on a strip that is moving by itself only stops it. A tap up to 120 ms after the strip came to rest by itself counts as a normal tap.
+- The guide draws the zones over the page the first time each kind of reading opens on a device, and again when the layout, size, flips, flow or sideways direction differ from what was last seen. It also shows when the settings close after a tap zone change, and from Show zones. It never shows for Off, on a zoomed page or under a screen reader.
+- The guide paints Next in the zone blue at 86%, Previous in pale blue and Controls in cream at 82%, with a hairline only where two kinds meet. One cell of each kind carries its name and arrow, and "Change in Reader settings" sits under Controls. On desktop the key for each arrow replaces that line.
+- The guide fades in over 200 ms and stays with no timer. The first touch clears it with a 300 ms fade out and also does what it touched, as a crossfade, never through an empty page. The guide counts as seen once that finger lifts. In Paper mode it comes and goes at once. A guide that comes back takes the controls away.
+- On desktop a click in Next or Previous turns the page whether the controls are up or not, and only the Controls zone shows or hides them. While the controls are up, an arrow button sits at each edge. They are real buttons, reachable with Tab, and fade with the controls. A drag over 8 pt is not a click, and on the Mac a two-finger sideways swipe turns.
+- Screen readers get no zones and no guide. The page is one element with the actions Next page, Previous page and Show controls, or Scroll down and Scroll up in a strip.
+
+On e-ink:
+
+- One choice covers all reading, strips included. The page lists the layouts as radio rows, each with a small diagram and a line saying where its zones are. The line follows the size and the flips. Sides at Standard gives Next 40% of the width on the reading side, Controls the middle 30% and Previous the other 30%.
+- Swipes turn pages is on at first. Off, swipes stop turning while taps and page buttons still turn, and a drag is neither a turn nor a tap.
+- Off with Swipes turn pages off is allowed, with a warning in place of a block: the line under Off reads "Only page buttons turn pages". On a device without page buttons, that says nothing will turn the page.
+- The Tap zones page covers the whole screen and fits without a scroll. It has no rule over it, and a 2 dp ink rule runs under its header from edge to edge, as on the other full e-ink pages.
+- The guide is opaque black, grey and white with 2 dp rules. It notes at its foot that page buttons also turn pages, and on sideways pages Next says "Tap, or swipe" with the direction.
+- The guide comes in one refresh. The first touch clears it in that touch's own refresh, and the device decides the kind: a full refresh only when full refreshes on image pages are on.
+- E-ink never glides. Turns, strip steps and the guide all jump in one refresh.
+
 ## States
 
 Every screen has loading, content, empty, offline and failed states. All of them follow the TUI's rule: nothing for the first 600 ms, then the state shows where it applies.

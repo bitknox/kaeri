@@ -86,6 +86,7 @@ pub mod starting;
 pub mod stores;
 pub mod subtitle_style;
 pub mod sync;
+pub mod tap_zones;
 pub mod trailer;
 pub mod up_next;
 pub mod updates;

@@ -55,6 +55,127 @@ eink-zone-next-ltr = Tap, or swipe left
 # @max 20
 eink-zone-tap = Tap
 
+# E-ink tap zones page: switch for whether a swipe turns the page. Off, only taps, the page
+# buttons and keys turn.
+# @only android
+# @max 28
+eink-swipe-turns = Swipes turn pages
+
+# At the foot of the e-ink tap zone guide, which the first touch on the page clears.
+# @only android
+# @max 140
+eink-zone-guide-note = Page buttons also turn pages. The first touch clears this. Change the zones in Reader settings.
+
+# E-ink tap zones page: the line under the layout Auto.
+# @only android
+# @max 50
+eink-tap-auto-note = Sides, or L shape for vertical pages
+
+# E-ink tap zones page: the line under the layout Sides, as drawn for the open book at the standard size, where Next is wider than the other two zones and on the left.
+# @only android
+# @max 50
+# @allow up-next
+# @allow proceed
+eink-tap-sides-wide-left-note = Next on the left, the widest zone
+
+# E-ink tap zones page: the line under the layout Sides, as drawn for the open book at the standard size, where Next is wider than the other two zones and on the right.
+# @only android
+# @max 50
+# @allow up-next
+# @allow proceed
+eink-tap-sides-wide-right-note = Next on the right, the widest zone
+
+# E-ink tap zones page: the line under the layout Sides, as drawn for the open book at the small size, with Next on the left.
+# @only android
+# @max 50
+# @allow up-next
+# @allow proceed
+eink-tap-sides-left-note = Next on the left
+
+# E-ink tap zones page: the line under the layout Sides, as drawn for the open book at the small size, with Next on the right.
+# @only android
+# @max 50
+# @allow up-next
+# @allow proceed
+eink-tap-sides-right-note = Next on the right
+
+# E-ink tap zones page: the line under the layout L shape, as drawn for the open book, with Next along the bottom edge and up the right side.
+# @only android
+# @max 50
+# @allow up-next
+# @allow proceed
+eink-tap-l-shape-bottom-right-note = Next along the bottom and on the right
+
+# E-ink tap zones page: the line under the layout L shape, as drawn for the open book, with Next along the bottom edge and up the left side.
+# @only android
+# @max 50
+# @allow up-next
+# @allow proceed
+eink-tap-l-shape-bottom-left-note = Next along the bottom and on the left
+
+# E-ink tap zones page: the line under the layout L shape, as drawn for the open book with Flip top and bottom on: Next along the top edge and down the right side.
+# @only android
+# @max 50
+# @allow up-next
+# @allow proceed
+eink-tap-l-shape-top-right-note = Next along the top and on the right
+
+# E-ink tap zones page: the line under the layout L shape, as drawn for the open book with Flip top and bottom on: Next along the top edge and down the left side.
+# @only android
+# @max 50
+# @allow up-next
+# @allow proceed
+eink-tap-l-shape-top-left-note = Next along the top and on the left
+
+# E-ink tap zones page: the line under the layout Wide next.
+# @only android
+# @max 50
+# @allow up-next
+# @allow proceed
+eink-tap-wide-next-note = Controls on top, next takes most
+
+# E-ink tap zones page: the line under the layout Wide next with Flip top and bottom on, so the controls band is at the bottom.
+# @only android
+# @max 50
+# @allow up-next
+# @allow proceed
+eink-tap-wide-next-flipped-note = Controls below, next takes most
+
+# E-ink tap zones page: the line under the layout Top and bottom.
+# @only android
+# @max 50
+# @allow up-next
+# @allow proceed
+eink-tap-top-bottom-note = Previous on top, next at the bottom
+
+# E-ink tap zones page: the line under the layout Top and bottom with Flip top and bottom on.
+# @only android
+# @max 50
+# @allow up-next
+# @allow proceed
+eink-tap-top-bottom-flipped-note = Next on top, previous at the bottom
+
+# E-ink tap zones page: the line under the layout Next on both sides.
+# @only android
+# @max 50
+eink-tap-both-next-note = Previous in the bottom middle
+
+# E-ink tap zones page: the line under the layout Next on both sides with Flip top and bottom on.
+# @only android
+# @max 50
+eink-tap-both-next-flipped-note = Previous in the top middle
+
+# E-ink tap zones page: the line under the layout Off.
+# @only android
+# @max 50
+eink-tap-off-note = Swipes and page buttons only
+
+# E-ink tap zones page: the line under the layout Off while Swipes turn pages is off too, so
+# nothing on the page turns it.
+# @only android
+# @max 50
+eink-tap-off-keys-note = Only page buttons turn pages
+
 # The page number in the page's margin on an e-ink screen.
 # @only android
 # @arg page: plain
@@ -416,11 +537,6 @@ reader-novel-line-scroll = Chapter { $chapter } · scroll
 # @arg minutes: int
 # @max 12
 reader-minutes-left = { $minutes } min
-
-# Name of the tap zone on the reading side, shown once on the first chapter.
-# @only android
-# @max 24
-reader-zone-next = Next page
 
 # Heading of the page grid.
 # @only android
@@ -854,16 +970,6 @@ reader-settings-search = Search settings
 # @only android
 # @max 30
 reader-paper-turn = Turn pages at once
-
-# Label on the previous page tap zone.
-# @only android
-# @max 24
-reader-zone-previous = Previous page
-
-# Label on the middle tap zone.
-# @only android
-# @max 24
-reader-zone-controls = Controls
 
 # Description of the small A at the start of the text size slider.
 # @only android
@@ -1310,3 +1416,11 @@ eink-contents-reading = Reading
 # @only android
 # @max 24
 reader-credit-show-action = Show the page
+
+# What TalkBack says for one layout among the tap zone choices: the layout's name, then where its
+# zones are for the open book ("Sides, Next page on the right side, previous page on the left side,
+# controls in the middle"). The choice's own state, Selected or Not selected, follows it.
+# @only android
+# @arg layout: text
+# @arg about: text
+reader-tap-layout-spoken = { $layout }, { $about }

@@ -6332,11 +6332,17 @@
   <data name="ReaderTapEdges" xml:space="preserve">
     <value>Bordas</value>
   </data>
-  <data name="ReaderTapSides" xml:space="preserve">
-    <value>Metades</value>
-  </data>
   <data name="ReaderTapOff" xml:space="preserve">
     <value>Desligado</value>
+  </data>
+  <data name="ReaderZoneNext" xml:space="preserve">
+    <value>Próxima página</value>
+  </data>
+  <data name="ReaderZonePrevious" xml:space="preserve">
+    <value>Página anterior</value>
+  </data>
+  <data name="ReaderZoneControls" xml:space="preserve">
+    <value>Controles</value>
   </data>
   <data name="ReaderChapters" xml:space="preserve">
     <value>Capítulos</value>

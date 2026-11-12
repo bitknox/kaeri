@@ -62,3 +62,6 @@ reader-divider-images = { $count ->
    *[other] { $count } картинки
  }
 reader-chapter-line-titled = Глава { $chapter } · { $title }
+reader-zone-next = Следующая страница
+reader-zone-previous = Предыдущая страница
+reader-zone-controls = Управление

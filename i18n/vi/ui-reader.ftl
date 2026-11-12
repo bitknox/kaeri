@@ -53,3 +53,6 @@ reader-divider-images = { $count ->
    *[other] { $count } ảnh
  }
 reader-chapter-line-titled = Chương { $chapter } · { $title }
+reader-zone-next = Trang sau
+reader-zone-previous = Trang trước
+reader-zone-controls = Điều khiển

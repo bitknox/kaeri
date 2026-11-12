@@ -62,3 +62,6 @@ reader-divider-images = { $count ->
     [many] { $count } obrazów
    *[other] { $count } obrazu
  }
+reader-zone-next = Następna strona
+reader-zone-previous = Poprzednia strona
+reader-zone-controls = Sterowanie

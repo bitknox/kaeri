@@ -8794,14 +8794,20 @@ reader-spreads-rotate = Pivoter
 # A choice for wide pages: shown whole.
 reader-spreads-whole = Entière
 
-# A choice for the reader's tap zones: taps near the left and right edges turn the page.
+# A choice for the reader's tap zones: taps near the left and right edges turn the page. Replaced by Sides; kept until every app has the new tap zones page.
 reader-tap-edges = Bords
 
-# A choice for the reader's tap zones: the left and right halves turn the page.
-reader-tap-sides = Moitiés
-
-# A choice for the reader's tap zones: taps do not turn the page.
+# Tap zone layout: taps only show and hide the controls, and never turn the page.
 reader-tap-off = Aucune
+
+# Name of the tap zone that turns to the next page, in the guide over the page and as a screen reader action.
+reader-zone-next = Page suivante
+
+# Name of the tap zone that turns to the previous page, in the guide and as a screen reader action.
+reader-zone-previous = Page précédente
+
+# Name of the tap zone that shows and hides the reader's controls, in the guide.
+reader-zone-controls = Commandes
 
 # Button in the reader's controls that opens the chapters and the page grid.
 reader-chapters = Chapitres

@@ -1,8 +1,10 @@
-// The e-ink reader, on the :reader surface: pages turn at once by the 40/30/30 zones, the page
-// buttons and swipes; the bars are opaque with a 2 dp rule and no dim; the folio sits in the
-// page's own margin; the page between chapters is in the flow; nothing animates; each paint goes
-// through the engine's refresh policy, which asks the vendor for a full refresh only when the
-// person turned one on; and Screen mode sets the panel's own update mode where it can.
+// The e-ink reader, on the :reader surface: pages turn at once by the engine's tap zones (Sides
+// at Standard is 40/30/30), the page buttons and swipes, which a switch can stop; the zone guide is
+// opaque, drawn in one refresh and cleared in the touch's own refresh; the bars are opaque with a
+// 2 dp rule and no dim; the folio sits in the page's own margin; the page between chapters is in
+// the flow; nothing animates; each paint goes through the engine's refresh policy, which asks the
+// vendor for a full refresh only when the person turned one on; and Screen mode sets the panel's
+// own update mode where it can.
 
 package app.kaeri.eink
 
@@ -40,7 +42,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -82,7 +86,23 @@ import app.kaeri.reader.ReaderKeyRules
 import app.kaeri.reader.ReaderSession
 import app.kaeri.reader.ReaderState
 import app.kaeri.reader.ShownNotice
-import app.kaeri.reader.TapZones
+import app.kaeri.reader.Arrow
+import app.kaeri.reader.CellLabel
+import app.kaeri.reader.ShowTapGuideWhenDue
+import app.kaeri.reader.TapGuide
+import app.kaeri.reader.clearsTapGuide
+import app.kaeri.reader.drawCells
+import app.kaeri.reader.rememberScreenReader
+import app.kaeri.reader.tapReading
+import app.kaeri.reader.tapZones
+import app.kaeri.engine.model.TapAction
+import app.kaeri.engine.model.TapFlow
+import app.kaeri.engine.model.TapMap
+import app.kaeri.engine.model.TapReading
+import app.kaeri.engine.model.tapMap
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import app.kaeri.reader.readerKeys
 import app.kaeri.reader.onKeyDown
 import app.kaeri.reader.takesKeyUp
@@ -126,6 +146,7 @@ import app.kaeri.store.ServerLine
 import app.kaeri.reader.openingClock
 import androidx.compose.runtime.CompositionLocalProvider
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /** What the e-ink reader leaves to the app around it; its settings and Contents are its own. */
 class EinkReaderActions(
@@ -139,8 +160,9 @@ class EinkReaderActions(
 )
 
 /**
- * The e-ink reader for [session]. [showZones] puts the tap zone guide over the first chapter
- * until the first touch. Every paint goes through [painter].
+ * The e-ink reader for [session]. The tap zone guide shows when the engine says it is due, and
+ * [showZones] puts it over the first chapter whatever the engine says. Either way it stays until
+ * the first touch. Every paint goes through [painter].
  */
 @Composable
 fun EinkReader(
@@ -161,9 +183,30 @@ fun EinkReader(
     val novelOpen = novel != null && (state.novel != null || view?.medium == Medium.NOVEL)
     val host = LocalView.current
     var chrome by remember { mutableStateOf(false) }
-    var zones by remember { mutableStateOf(showZones) }
+    // The engine's tap zones and their guide. A screen reader turns the zones off.
+    val screenReader = rememberScreenReader()
+    val taps = state.tapZones(eink = true)
+    val reading = state.tapReading(zoomed = pager.zoomed, screenReader = screenReader)
+    val guide = remember { TapGuide() }
+    // Asked for at open: once, as soon as a chapter is open.
+    var forced by remember { mutableStateOf(showZones) }
+    LaunchedEffect(forced, reading != null) {
+        if (forced && reading != null) {
+            forced = false
+            if (!screenReader) guide.show(tapMap(taps, reading, null))
+        }
+    }
     var layer by remember { mutableStateOf(EinkLayer.None) }
-    val paint by rememberUpdatedState { what: EinkPaint -> painter.paint(host, what) }
+    // The touch or key that clears the guide pays for it in its own refresh, never in a second one:
+    // full when full refreshes on image pages are on, else what the touch paints, as the device
+    // decides. True from the clearing until that refresh goes out.
+    var clearing by remember { mutableStateOf(false) }
+    val paint by rememberUpdatedState { what: EinkPaint ->
+        val owed = clearing
+        clearing = false
+        painter.paint(host, if (owed && painter.policy.imageFull && what !is EinkPaint.ImagePage) EinkPaint.Clean else what)
+    }
+    val scope = rememberCoroutineScope()
 
     // Screen mode: the panel's own update mode for the reader's redraws while it is open, given
     // back to the device's setting on the way out. Only where the family's mode calls resolved.
@@ -180,6 +223,29 @@ fun EinkReader(
         paint(if (chrome) EinkPaint.ChromeOpen else EinkPaint.ChromeClose)
     }
 
+    // Drawn in one refresh. The first touch clears it and still does what it touched, in that one
+    // touch's refresh.
+    LaunchedEffect(guide.up) { if (guide.up) paint(EinkPaint.SheetChange) }
+    fun guideCleared(map: TapMap) {
+        guide.gone()
+        val turns = pager.turns
+        clearing = true
+        scope.launch {
+            // What the touch does paints within the frame; a turn paints once its page is drawn.
+            withFrameNanos { }
+            if (!clearing) return@launch
+            if (pager.turns == turns) {
+                // Nothing to paint for the touch: the cleared guide is the refresh.
+                clearing = false
+                if (painter.policy.imageFull) painter.paint(host, EinkPaint.Clean)
+            } else {
+                delay(1_000)
+                clearing = false
+            }
+        }
+        if (!screenReader) session.tapGuideSeen(map)
+    }
+
     fun show(next: EinkLayer) {
         layer = next
         when (next) {
@@ -194,12 +260,13 @@ fun EinkReader(
 
     // A setting changed under the sheet: the page above it is painted again once it has changed.
     LaunchedEffect(state.settings, state.leaves) {
-        if (layer == EinkLayer.Settings || layer == EinkLayer.More) paint(EinkPaint.SheetChange)
+        if (layer == EinkLayer.Settings || layer == EinkLayer.More || layer == EinkLayer.TapZones) paint(EinkPaint.SheetChange)
     }
 
     // Back closes the sheet or Contents first, then the reader, never the app's screens under it.
     ReaderBackHandler {
         when (layer) {
+            EinkLayer.TapZones -> show(EinkLayer.More)
             EinkLayer.More -> show(EinkLayer.Settings)
             EinkLayer.Settings, EinkLayer.Contents -> show(EinkLayer.None)
             EinkLayer.None -> actions.onBack()
@@ -265,6 +332,8 @@ fun EinkReader(
 
     val contentsKeys = remember { ContentsKeys() }
     fun act(action: ReaderAction) {
+        // A page button clears the guide as a touch does, and still turns.
+        guide.clear()?.let(::guideCleared)
         when (action) {
             // Contents turns its own pages, not the reader's under it.
             ReaderAction.FORWARD -> when {
@@ -316,13 +385,7 @@ fun EinkReader(
                 .background(EinkColours.Paper)
                 .readerKeys(keyRules, ::act)
                 // The first touch anywhere clears the guide, and still turns or opens what it touched.
-                .pointerInput(zones) {
-                    if (!zones) return@pointerInput
-                    awaitEachGesture {
-                        awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-                        zones = false
-                    }
-                },
+                .clearsTapGuide(guide, ::guideCleared),
         ) {
             val failure = state.failure
             when {
@@ -352,8 +415,10 @@ fun EinkReader(
                     pager = pager,
                     images = images,
                     direction = direction,
-                    zones = TapZones.eink(direction),
+                    taps = taps,
+                    reading = reading ?: TapReading(ReaderMode.PAGED, direction, false, screenReader),
                     onControls = ::toggleChrome,
+                    swipes = taps.swipesTurn,
                     onShown = { leaf, how, _ ->
                         session.shown(leaf, how)
                         if (state.leaves.getOrNull(leaf)?.endPage == true) paint(EinkPaint.EndPage)
@@ -421,7 +486,14 @@ fun EinkReader(
             if (creditNotice != null && !chrome && layer == EinkLayer.None && !waiting) {
                 EinkCreditNotice(creditNotice, session, Modifier.align(Alignment.TopCenter))
             }
-            if (zones && !waiting) EinkZonesGuide(direction)
+            ShowTapGuideWhenDue(
+                guide,
+                zones = state.settings?.tapZones,
+                reading = reading,
+                ready = !waiting && failure == null && layer == EinkLayer.None && !chrome,
+            )
+            val shownGuide = guide.map
+            if (guide.up && shownGuide != null && !waiting) EinkTapGuide(shownGuide, taps.swipesTurn, rtl = direction.rightToLeft)
             if (chrome && view != null && layer != EinkLayer.Contents) {
             val large = einkLargePanel
             val onDownload = actions.onDownload?.takeIf { large && view.demoCredit == null }
@@ -472,7 +544,24 @@ fun EinkReader(
             }
             when (layer) {
                 EinkLayer.Settings -> EinkSettingsSheet(session, state, onMore = { show(EinkLayer.More) }, onDone = { show(EinkLayer.None) })
-                EinkLayer.More -> EinkMoreSheet(session, state, onBack = { show(EinkLayer.Settings) }, onDone = { show(EinkLayer.None) })
+                EinkLayer.More -> EinkMoreSheet(session, state, onBack = { show(EinkLayer.Settings) }, onDone = { show(EinkLayer.None) }, onTapZones = { show(EinkLayer.TapZones) })
+                EinkLayer.TapZones -> EinkTapZonesSheet(
+                    session,
+                    state,
+                    onBack = { show(EinkLayer.More) },
+                    onDone = { show(EinkLayer.None) },
+                    onShowZones = {
+                        val map = reading?.let { tapMap(taps, it, null) }
+                        if (map == null) {
+                            show(EinkLayer.None)
+                        } else {
+                            // The sheet and the bars go under the guide, in the guide's one refresh.
+                            layer = EinkLayer.None
+                            chrome = false
+                            guide.show(map)
+                        }
+                    },
+                )
                 EinkLayer.Contents -> EinkContents(
                     session = session,
                     state = state,
@@ -499,42 +588,68 @@ private fun quietLeft(since: Long): Long = if (since <= 0) PAPER_QUIET_MS else (
 /** The chapter's number as the strings name it: its canonical number, or the source's label. */
 fun chapterNumber(row: ChapterRow): String = row.number ?: row.label
 
-/** The tap zone guide: three bands with their names, forward at the reading side. */
+/**
+ * The tap zone guide on e-ink: the engine's cells opaque in black, grey and white with a 2 dp rule
+ * where two kinds meet, each labelled cell's name and arrow, how Next takes a touch, and the note
+ * at the foot. A swipe toward the reading side turns, so Next says which way. Nothing moves.
+ */
 @Composable
-fun BoxScope.EinkZonesGuide(direction: ReadDirection) {
+fun BoxScope.EinkTapGuide(map: TapMap, swipes: Boolean, rtl: Boolean) {
     val context = LocalContext.current
-    val rtl = direction.rightToLeft
-    val forward = 0.4f
-    val controls = 0.3f
-    @Composable
-    fun RowScope.Band(weight: Float, title: String, line: String?) {
-        Box(
-            Modifier.fillMaxHeight().weight(weight).border(EinkSizes.Rule, EinkColours.Ink).background(EinkColours.Paper.copy(alpha = 0.92f)),
-            contentAlignment = Alignment.Center,
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(title, style = EinkType.Label, textAlign = TextAlign.Center)
-                if (line != null) Text(line, style = EinkType.Secondary, textAlign = TextAlign.Center)
+    val foot = Strings.einkZoneGuideNote(context)
+    val sideways = map.flow == TapFlow.SIDEWAYS
+    BoxWithConstraints(Modifier.matchParentSize()) {
+        val w = maxWidth
+        val h = maxHeight
+        Canvas(Modifier.fillMaxSize()) {
+            drawCells(
+                map.cells,
+                colour = {
+                    when (it.action) {
+                        TapAction.NEXT -> EinkGuideNext
+                        TapAction.PREVIOUS -> EinkGuidePrevious
+                        TapAction.CONTROLS -> EinkColours.Paper
+                    }
+                },
+                line = EinkColours.Ink,
+                lineWidth = EinkSizes.Rule.toPx(),
+            )
+        }
+        map.cells.filter { it.labelled }.forEach { cell ->
+            val next = cell.action == TapAction.NEXT
+            val ink = if (next) EinkColours.Paper else EinkColours.Ink
+            val how = when {
+                next && sideways && swipes -> if (rtl) Strings.einkZoneNextRtl(context) else Strings.einkZoneNextLtr(context)
+                next && sideways -> Strings.einkZoneTap(context)
+                cell.action == TapAction.CONTROLS -> Strings.einkZoneTap(context)
+                else -> null
+            }
+            CellLabel(cell, w, h, foot = EinkGuideFoot) {
+                cell.arrow?.let { Arrow(it, 26.dp, ink) }
+                Text(cell.name, style = EinkType.Label.copy(color = ink, fontWeight = FontWeight.Bold, fontSize = 19.sp, lineHeight = 24.sp), textAlign = TextAlign.Center)
+                if (how != null) Text(how, style = EinkType.Secondary.copy(color = ink, fontWeight = FontWeight.Medium), textAlign = TextAlign.Center)
             }
         }
-    }
-    Row(Modifier.matchParentSize()) {
-        val next = Strings.readerActionNext(context)
-        val how = if (rtl) Strings.einkZoneNextRtl(context) else Strings.einkZoneNextLtr(context)
-        val middle = Strings.readerActionControls(context)
-        val tap = Strings.einkZoneTap(context)
-        val back = Strings.readerActionPrevious(context)
-        if (rtl) {
-            Band(forward, next, how)
-            Band(controls, middle, tap)
-            Band(1f - forward - controls, back, null)
-        } else {
-            Band(1f - forward - controls, back, null)
-            Band(controls, middle, tap)
-            Band(forward, next, how)
-        }
+        Text(
+            foot,
+            style = EinkType.Secondary.copy(color = EinkColours.Ink),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .background(EinkColours.Paper)
+                .topRule()
+                .navigationBarsPadding()
+                .padding(horizontal = 24.dp, vertical = 14.dp),
+        )
     }
 }
+
+/** The guide's Next and Previous on e-ink: dark and light grey, opaque. */
+private val EinkGuideNext = Color(0xFF4A4A4A)
+private val EinkGuidePrevious = Color(0xFFD4D4D4)
+
+/** Room the note takes at the foot, which the labels keep above. */
+private val EinkGuideFoot = 108.dp
 
 
 /** The folio, centred in the page's bottom margin, drawn only where the page leaves one. */

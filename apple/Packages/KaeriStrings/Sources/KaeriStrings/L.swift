@@ -2991,13 +2991,6 @@ public enum L {
     /// Gap between a strip's images.
     public static var readerStripGap: String { string("reader-strip-gap", fallback: "Gap between images") }
 
-    /// Accessibility value of the pointer hint on the first chapter's tap zones.
-    public static var readerZoneBack: String { string("reader-zone-back", fallback: "Back") }
-
-    public static var readerZoneForward: String { string("reader-zone-forward", fallback: "Forward") }
-
-    public static var readerZoneMenu: String { string("reader-zone-menu", fallback: "Menu") }
-
     /// A jump button above the page grid in the chapters sheet, for a band of pages.
     public static func readerPagesRange(from: Int, to: Int) -> String {
         Self.format("reader-pages-range", fallback: "%1$lld–%2$lld", from, to)
@@ -8392,14 +8385,169 @@ public enum L {
     /// A choice for wide pages: shown whole.
     public static var readerSpreadsWhole: String { string("reader-spreads-whole", fallback: "Whole") }
 
-    /// A choice for the reader's tap zones: taps near the left and right edges turn the page.
+    /// A choice for the reader's tap zones: taps near the left and right edges turn the page. Replaced by Sides; kept until every app has the new tap zones page.
     public static var readerTapEdges: String { string("reader-tap-edges", fallback: "Edges") }
 
-    /// A choice for the reader's tap zones: the left and right halves turn the page.
-    public static var readerTapSides: String { string("reader-tap-sides", fallback: "Halves") }
+    /// Tap zone layout: Sides when pages turn sideways, L shape when they move downwards. The name under its tile.
+    public static var readerTapAuto: String { string("reader-tap-auto", fallback: "Auto") }
 
-    /// A choice for the reader's tap zones: taps do not turn the page.
+    /// Tap zone layout: previous page on one side, next page on the other, controls in the middle.
+    public static var readerTapSides: String { string("reader-tap-sides", fallback: "Sides") }
+
+    /// Tap zone layout: previous page along the top and down one side, next page along the bottom and down the other side, in the shape of the letter L.
+    public static var readerTapLShape: String { string("reader-tap-l-shape", fallback: "L shape") }
+
+    /// Tap zone layout: controls along the top, a narrow column for previous page, and the rest of the page for next page.
+    public static var readerTapWideNext: String { string("reader-tap-wide-next", fallback: "Wide next") }
+
+    /// Tap zone layout: previous page across the top, next page across the bottom.
+    public static var readerTapTopBottom: String { string("reader-tap-top-bottom", fallback: "Top and bottom") }
+
+    /// Tap zone layout: next page down both the left and the right side, previous page in the bottom middle.
+    public static var readerTapBothNext: String { string("reader-tap-both-next", fallback: "Next on both sides") }
+
+    /// Tap zone layout: taps only show and hide the controls, and never turn the page.
     public static var readerTapOff: String { string("reader-tap-off", fallback: "Off") }
+
+    /// Tap zones page: the choice for paged reading (pages that turn), one of two at the top.
+    public static var readerTapPaged: String { string("reader-tap-paged", fallback: "Paged") }
+
+    /// Tap zones page: the choice for strips and scrolled novels, one of two at the top.
+    public static var readerTapScrolling: String { string("reader-tap-scrolling", fallback: "Scrolling") }
+
+    /// Tap zones page: row that sets how wide the zones at the edges are.
+    public static var readerTapSize: String { string("reader-tap-size", fallback: "Zone size") }
+
+    /// Choice of Zone size: the edge zones are a third of the screen.
+    public static var readerTapStandard: String { string("reader-tap-standard", fallback: "Standard") }
+
+    /// Choice of Zone size: the edge zones are a quarter of the screen.
+    public static var readerTapSmall: String { string("reader-tap-small", fallback: "Small") }
+
+    /// Tap zones page: switch that swaps the left and right zones, for the left hand.
+    public static var readerTapFlipSides: String { string("reader-tap-flip-sides", fallback: "Flip left and right") }
+
+    /// Tap zones page: switch that swaps the top and bottom zones.
+    public static var readerTapFlipEnds: String { string("reader-tap-flip-ends", fallback: "Flip top and bottom") }
+
+    /// Tap zones page: button that shows the zones over the page.
+    public static var readerTapShow: String { string("reader-tap-show", fallback: "Show zones") }
+
+    /// Tap zones page, beside Show zones: the setting is not synced. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.
+    public static func readerTapHere(kind: String) -> String {
+        Self.format("reader-tap-here", fallback: "Stays on this %1$@", kind)
+    }
+
+    /// The reader's settings on a Mac, Windows or Linux: the row that opens the tap zones page, which is about clicks there.
+    public static var readerClickZones: String { string("reader-click-zones", fallback: "Click zones") }
+
+    /// Name of the tap zone that turns to the next page, in the guide over the page and as a screen reader action.
+    public static var readerZoneNext: String { string("reader-zone-next", fallback: "Next page") }
+
+    /// Name of the tap zone that turns to the previous page, in the guide and as a screen reader action.
+    public static var readerZonePrevious: String { string("reader-zone-previous", fallback: "Previous page") }
+
+    /// Name of the tap zone that shows and hides the reader's controls, in the guide.
+    public static var readerZoneControls: String { string("reader-zone-controls", fallback: "Controls") }
+
+    /// Screen reader action on the page that shows the reader's controls.
+    public static var readerZoneShowControls: String { string("reader-zone-show-controls", fallback: "Show controls") }
+
+    /// Name of the tap zone that scrolls a strip or a scrolled novel down, in the guide.
+    public static var readerZoneScrollDown: String { string("reader-zone-scroll-down", fallback: "Scroll down") }
+
+    /// Name of the tap zone that scrolls a strip or a scrolled novel up, in the guide.
+    public static var readerZoneScrollUp: String { string("reader-zone-scroll-up", fallback: "Scroll up") }
+
+    /// Under Controls in the tap zone guide: where the zones are changed.
+    public static var readerZoneChange: String { string("reader-zone-change", fallback: "Change in Reader settings") }
+
+    /// Tap zone layout Off in words, the accessibility value of its tile.
+    public static var readerTapOffAbout: String { string("reader-tap-off-about", fallback: "Taps show and hide the controls") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: Sides, next page on the right.
+    public static var readerTapSidesRightAbout: String { string("reader-tap-sides-right-about", fallback: "Next page on the right side, previous page on the left side, controls in the middle") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: Sides, next page on the left.
+    public static var readerTapSidesLeftAbout: String { string("reader-tap-sides-left-about", fallback: "Next page on the left side, previous page on the right side, controls in the middle") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the right.
+    public static var readerTapLShapeBottomRightAbout: String { string("reader-tap-l-shape-bottom-right-about", fallback: "Next page along the bottom and on the right, previous page along the top and on the left, controls in the middle") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the left.
+    public static var readerTapLShapeBottomLeftAbout: String { string("reader-tap-l-shape-bottom-left-about", fallback: "Next page along the bottom and on the left, previous page along the top and on the right, controls in the middle") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right.
+    public static var readerTapLShapeTopRightAbout: String { string("reader-tap-l-shape-top-right-about", fallback: "Next page along the top and on the right, previous page along the bottom and on the left, controls in the middle") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left.
+    public static var readerTapLShapeTopLeftAbout: String { string("reader-tap-l-shape-top-left-about", fallback: "Next page along the top and on the left, previous page along the bottom and on the right, controls in the middle") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the left.
+    public static var readerTapWideNextTopLeftAbout: String { string("reader-tap-wide-next-top-left-about", fallback: "Controls along the top, previous page in a narrow column on the left, next page everywhere else") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the right.
+    public static var readerTapWideNextTopRightAbout: String { string("reader-tap-wide-next-top-right-about", fallback: "Controls along the top, previous page in a narrow column on the right, next page everywhere else") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left.
+    public static var readerTapWideNextBottomLeftAbout: String { string("reader-tap-wide-next-bottom-left-about", fallback: "Controls along the bottom, previous page in a narrow column on the left, next page everywhere else") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right.
+    public static var readerTapWideNextBottomRightAbout: String { string("reader-tap-wide-next-bottom-right-about", fallback: "Controls along the bottom, previous page in a narrow column on the right, next page everywhere else") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: Top and bottom.
+    public static var readerTapTopBottomAbout: String { string("reader-tap-top-bottom-about", fallback: "Next page across the bottom, previous page across the top, controls in the middle") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: Top and bottom flipped.
+    public static var readerTapTopBottomFlippedAbout: String { string("reader-tap-top-bottom-flipped-about", fallback: "Next page across the top, previous page across the bottom, controls in the middle") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: Next on both sides.
+    public static var readerTapBothNextAbout: String { string("reader-tap-both-next-about", fallback: "Next page down both sides, previous page at the bottom in the middle, controls above it") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: Next on both sides flipped top and bottom.
+    public static var readerTapBothNextFlippedAbout: String { string("reader-tap-both-next-flipped-about", fallback: "Next page down both sides, previous page at the top in the middle, controls below it") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the right.
+    public static var readerTapSidesRightScrollAbout: String { string("reader-tap-sides-right-scroll-about", fallback: "Scroll down on the right side, scroll up on the left side, controls in the middle") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the left.
+    public static var readerTapSidesLeftScrollAbout: String { string("reader-tap-sides-left-scroll-about", fallback: "Scroll down on the left side, scroll up on the right side, controls in the middle") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the right.
+    public static var readerTapLShapeBottomRightScrollAbout: String { string("reader-tap-l-shape-bottom-right-scroll-about", fallback: "Scroll down along the bottom and on the right, scroll up along the top and on the left, controls in the middle") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the left.
+    public static var readerTapLShapeBottomLeftScrollAbout: String { string("reader-tap-l-shape-bottom-left-scroll-about", fallback: "Scroll down along the bottom and on the left, scroll up along the top and on the right, controls in the middle") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right.
+    public static var readerTapLShapeTopRightScrollAbout: String { string("reader-tap-l-shape-top-right-scroll-about", fallback: "Scroll down along the top and on the right, scroll up along the bottom and on the left, controls in the middle") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left.
+    public static var readerTapLShapeTopLeftScrollAbout: String { string("reader-tap-l-shape-top-left-scroll-about", fallback: "Scroll down along the top and on the left, scroll up along the bottom and on the right, controls in the middle") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the left.
+    public static var readerTapWideNextTopLeftScrollAbout: String { string("reader-tap-wide-next-top-left-scroll-about", fallback: "Controls along the top, scroll up in a narrow column on the left, scroll down everywhere else") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the right.
+    public static var readerTapWideNextTopRightScrollAbout: String { string("reader-tap-wide-next-top-right-scroll-about", fallback: "Controls along the top, scroll up in a narrow column on the right, scroll down everywhere else") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left.
+    public static var readerTapWideNextBottomLeftScrollAbout: String { string("reader-tap-wide-next-bottom-left-scroll-about", fallback: "Controls along the bottom, scroll up in a narrow column on the left, scroll down everywhere else") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right.
+    public static var readerTapWideNextBottomRightScrollAbout: String { string("reader-tap-wide-next-bottom-right-scroll-about", fallback: "Controls along the bottom, scroll up in a narrow column on the right, scroll down everywhere else") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom.
+    public static var readerTapTopBottomScrollAbout: String { string("reader-tap-top-bottom-scroll-about", fallback: "Scroll down across the bottom, scroll up across the top, controls in the middle") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom flipped.
+    public static var readerTapTopBottomFlippedScrollAbout: String { string("reader-tap-top-bottom-flipped-scroll-about", fallback: "Scroll down across the top, scroll up across the bottom, controls in the middle") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides.
+    public static var readerTapBothNextScrollAbout: String { string("reader-tap-both-next-scroll-about", fallback: "Scroll down on both sides, scroll up at the bottom in the middle, controls above it") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides flipped top and bottom.
+    public static var readerTapBothNextFlippedScrollAbout: String { string("reader-tap-both-next-flipped-scroll-about", fallback: "Scroll down on both sides, scroll up at the top in the middle, controls below it") }
 
     /// Button in the reader's controls that opens the chapters and the page grid.
     public static var readerChapters: String { string("reader-chapters", fallback: "Chapters") }

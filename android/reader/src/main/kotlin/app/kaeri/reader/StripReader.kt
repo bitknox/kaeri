@@ -1,13 +1,20 @@
 // The strip reader: the chapter's images one under the other, full width on a phone and 620 dp
-// wide on a large screen, with no side zones. A tap anywhere shows the controls and a scroll hides
-// them. Where the reader settles goes to the engine at most every 500 ms, with whether the foot of
+// wide on a large screen. A tap goes to the screen, which asks the engine's Scrolling tap zones
+// what it does (Off, the default, shows the controls); a touch while the strip still moves only
+// stops it, and a scroll hides the controls. There is no double tap here, so a tap acts at once. Where the reader settles goes to the engine at most every 500 ms, with whether the foot of
 // the last image is in view, which is what the read rule waits for. With a next chapter the strip
 // does not stop: a divider names it, and its images follow in the same scroll, with the chapter
 // left kept above them.
 
 package app.kaeri.reader
 
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.ui.input.pointer.AwaitPointerEventScope
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerInputChange
+import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,7 +41,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
@@ -44,7 +55,14 @@ import app.kaeri.engine.model.ChapterRow
 import app.kaeri.engine.model.Leaf
 import app.kaeri.engine.model.LeafPart
 import app.kaeri.engine.model.StripPos
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.animate
+import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.runtime.withFrameNanos
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 
@@ -57,6 +75,60 @@ fun LazyListState.stripPos(first: Int = 0, count: Int = Int.MAX_VALUE): StripPos
     val top = info.visibleItemsInfo.firstOrNull { it.index >= first && it.index - first < count } ?: return null
     val offset = if (top.size > 0) (-top.offset).toFloat() / top.size else 0f
     return StripPos((top.index - first).toUInt(), offset.coerceIn(0f, 1f))
+}
+
+/**
+ * The strip's step for Next and Previous. A tap that lands while a step still moves the strip adds
+ * its step to what is left of that one, so two quick taps go two steps: the touch's landing has
+ * stopped the first by then, so what was left is kept from that moment.
+ */
+class StripStep {
+    private var job: Job? = null
+    private var left = 0f
+    private var caught = 0f
+
+    /** At a touch's landing: true when a step moves the strip, keeping what is left of it for the touch. */
+    fun catch(): Boolean {
+        val moving = job?.isActive == true
+        caught = if (moving) left else 0f
+        return moving
+    }
+
+    /**
+     * Scroll [list] by [by] pixels and what is left of a step, gliding by [spec] when [smooth]. A
+     * [touch] carries on the step its landing stopped; a screen reader's action has no landing.
+     */
+    fun go(scope: CoroutineScope, list: LazyListState, by: Float, smooth: Boolean, spec: AnimationSpec<Float>, touch: Boolean) {
+        val total = (if (job?.isActive == true) left else if (touch) caught else 0f) + by
+        caught = 0f
+        job?.cancel()
+        left = total
+        job = scope.launch {
+            // The touch that stopped a step lets go of the list as it lifts: the step waits for that.
+            withFrameNanos { }
+            if (smooth) {
+                var done = 0f
+                list.scroll {
+                    animate(0f, total, animationSpec = spec) { value, _ ->
+                        done += scrollBy(value - done)
+                        left = total - done
+                    }
+                }
+            } else {
+                list.scrollBy(total)
+            }
+            left = 0f
+        }
+    }
+}
+
+/** The lift of [down]'s touch if it stays within [slop] of where it landed, whatever else takes its events; null once it moves. */
+private suspend fun AwaitPointerEventScope.awaitLift(down: PointerInputChange, slop: Float): PointerInputChange? {
+    while (true) {
+        val change = awaitPointerEvent(PointerEventPass.Initial).changes.firstOrNull { it.id == down.id } ?: return null
+        if ((change.position - down.position).getDistance() > slop) return null
+        if (change.changedToUpIgnoreConsumed()) return change
+    }
 }
 
 /** Whether the foot of the item at [last] is on screen. */
@@ -86,7 +158,7 @@ val StripDividerHeight = 168.dp
 /**
  * The strip over [state]'s leaves, each a single image. [onAt] gets each settled place, at most
  * every 500 ms; [onScrolled] runs when a scroll starts, for the screen to hide its controls;
- * [onTap] for any tap. [footer] follows the last image when there is no next chapter: the end
+ * [onTap] for a tap that did not stop the strip, at fractions of the strip's width and height. [footer] follows the last image when there is no next chapter: the end
  * page. With one, [divider] names it, and [onFlow] runs once the divider comes into view, for the
  * session to open that chapter under this one. [onShowing] says whether the chapter across the
  * middle of the screen is the one kept above.
@@ -96,7 +168,7 @@ fun StripReader(
     state: ReaderState,
     images: PageImages,
     onAt: (at: StripPos, footVisible: Boolean) -> Unit,
-    onTap: () -> Unit,
+    onTap: (x: Float, y: Float) -> Unit,
     onScrolled: () -> Unit,
     onMissing: (LeafPart) -> Unit,
     onRetry: (page: Int) -> Unit,
@@ -108,6 +180,8 @@ fun StripReader(
     onFlow: (next: ChapterRow) -> Unit = {},
     onShowing: (previous: Boolean) -> Unit = {},
     list: LazyListState = rememberLazyListState(),
+    /** At a touch's landing: true when the strip moves by a tap's own step, which a tap carries on. */
+    stepping: () -> Boolean = { false },
     maxWidth: Dp = 620.dp,
     gap: Dp = 0.dp,
     waiting: WaitingSlot = { page, long -> ImageWaiting(page, long) },
@@ -182,7 +256,27 @@ fun StripReader(
         }.distinctUntilChanged().collect { showing(it) }
     }
 
-    BoxWithConstraints(modifier.fillMaxSize().pointerInput(Unit) { detectTapGestures { onTap() } }) {
+    // A screen reader rests on the strip as on a paged page, by its page: the moves are its actions.
+    val context = LocalContext.current
+    val shown by remember(list, first, story.size) { derivedStateOf { list.stripPos(first, story.size)?.image?.toInt() ?: 0 } }
+    val words = story.getOrNull(shown)?.let { describe(context, it, state) }.orEmpty()
+    val tapped by rememberUpdatedState(onTap)
+    val stepped by rememberUpdatedState(stepping)
+    BoxWithConstraints(
+        modifier.fillMaxSize().pointerInput(list) {
+            awaitEachGesture {
+                // Read before the list sees the touch, which stops a moving strip. A strip moving by
+                // itself only stops; one moving by a tap's own step takes the next tap at once.
+                val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                val step = stepped()
+                val moving = list.isScrollInProgress && !step
+                // The list takes a touch on a moving strip as a drag, and keeps its lift: a tap
+                // during a step is the touch's own lift, as long as it stayed put.
+                val up = (if (step) awaitLift(down, viewConfiguration.touchSlop) else waitForUpOrCancellation()) ?: return@awaitEachGesture
+                if (!moving) tapped(up.position.x / size.width, up.position.y / size.height)
+            }
+        }.semantics { if (words.isNotEmpty()) contentDescription = words },
+    ) {
         val screen = maxHeight
         // Show on a divider or the end page puts the pages skipped at the end back above it: with
         // the divider or the end at the top, the scroll moves up onto them.

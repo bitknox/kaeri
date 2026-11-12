@@ -8703,14 +8703,20 @@ reader-spreads-rotate = Vrid
 # A choice for wide pages: shown whole.
 reader-spreads-whole = Hel
 
-# A choice for the reader's tap zones: taps near the left and right edges turn the page.
+# A choice for the reader's tap zones: taps near the left and right edges turn the page. Replaced by Sides; kept until every app has the new tap zones page.
 reader-tap-edges = Kanter
 
-# A choice for the reader's tap zones: the left and right halves turn the page.
-reader-tap-sides = Halvor
-
-# A choice for the reader's tap zones: taps do not turn the page.
+# Tap zone layout: taps only show and hide the controls, and never turn the page.
 reader-tap-off = Av
+
+# Name of the tap zone that turns to the next page, in the guide over the page and as a screen reader action.
+reader-zone-next = Nästa sida
+
+# Name of the tap zone that turns to the previous page, in the guide and as a screen reader action.
+reader-zone-previous = Föregående sida
+
+# Name of the tap zone that shows and hides the reader's controls, in the guide.
+reader-zone-controls = Kontroller
 
 # Button in the reader's controls that opens the chapters and the page grid.
 reader-chapters = Kapitel

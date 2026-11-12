@@ -5968,14 +5968,167 @@ public static partial class T
     /// <summary>A choice for wide pages: shown whole.</summary>
     public static string ReaderSpreadsWhole => Get("ReaderSpreadsWhole");
 
-    /// <summary>A choice for the reader's tap zones: taps near the left and right edges turn the page.</summary>
+    /// <summary>A choice for the reader's tap zones: taps near the left and right edges turn the page. Replaced by Sides; kept until every app has the new tap zones page.</summary>
     public static string ReaderTapEdges => Get("ReaderTapEdges");
 
-    /// <summary>A choice for the reader's tap zones: the left and right halves turn the page.</summary>
+    /// <summary>Tap zone layout: Sides when pages turn sideways, L shape when they move downwards. The name under its tile.</summary>
+    public static string ReaderTapAuto => Get("ReaderTapAuto");
+
+    /// <summary>Tap zone layout: previous page on one side, next page on the other, controls in the middle.</summary>
     public static string ReaderTapSides => Get("ReaderTapSides");
 
-    /// <summary>A choice for the reader's tap zones: taps do not turn the page.</summary>
+    /// <summary>Tap zone layout: previous page along the top and down one side, next page along the bottom and down the other side, in the shape of the letter L.</summary>
+    public static string ReaderTapLShape => Get("ReaderTapLShape");
+
+    /// <summary>Tap zone layout: controls along the top, a narrow column for previous page, and the rest of the page for next page.</summary>
+    public static string ReaderTapWideNext => Get("ReaderTapWideNext");
+
+    /// <summary>Tap zone layout: previous page across the top, next page across the bottom.</summary>
+    public static string ReaderTapTopBottom => Get("ReaderTapTopBottom");
+
+    /// <summary>Tap zone layout: next page down both the left and the right side, previous page in the bottom middle.</summary>
+    public static string ReaderTapBothNext => Get("ReaderTapBothNext");
+
+    /// <summary>Tap zone layout: taps only show and hide the controls, and never turn the page.</summary>
     public static string ReaderTapOff => Get("ReaderTapOff");
+
+    /// <summary>Tap zones page: the choice for paged reading (pages that turn), one of two at the top.</summary>
+    public static string ReaderTapPaged => Get("ReaderTapPaged");
+
+    /// <summary>Tap zones page: the choice for strips and scrolled novels, one of two at the top.</summary>
+    public static string ReaderTapScrolling => Get("ReaderTapScrolling");
+
+    /// <summary>Tap zones page: row that sets how wide the zones at the edges are.</summary>
+    public static string ReaderTapSize => Get("ReaderTapSize");
+
+    /// <summary>Choice of Zone size: the edge zones are a third of the screen.</summary>
+    public static string ReaderTapStandard => Get("ReaderTapStandard");
+
+    /// <summary>Choice of Zone size: the edge zones are a quarter of the screen.</summary>
+    public static string ReaderTapSmall => Get("ReaderTapSmall");
+
+    /// <summary>Tap zones page: switch that swaps the left and right zones, for the left hand.</summary>
+    public static string ReaderTapFlipSides => Get("ReaderTapFlipSides");
+
+    /// <summary>Tap zones page: switch that swaps the top and bottom zones.</summary>
+    public static string ReaderTapFlipEnds => Get("ReaderTapFlipEnds");
+
+    /// <summary>Tap zones page: button that shows the zones over the page.</summary>
+    public static string ReaderTapShow => Get("ReaderTapShow");
+
+    /// <summary>Tap zones page, beside Show zones: the setting is not synced. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.</summary>
+    public static string ReaderTapHere(string kind) => Fill(Get("ReaderTapHere"), ("kind", kind));
+
+    /// <summary>The reader's settings on a Mac, Windows or Linux: the row that opens the tap zones page, which is about clicks there.</summary>
+    public static string ReaderClickZones => Get("ReaderClickZones");
+
+    /// <summary>Name of the tap zone that turns to the next page, in the guide over the page and as a screen reader action.</summary>
+    public static string ReaderZoneNext => Get("ReaderZoneNext");
+
+    /// <summary>Name of the tap zone that turns to the previous page, in the guide and as a screen reader action.</summary>
+    public static string ReaderZonePrevious => Get("ReaderZonePrevious");
+
+    /// <summary>Name of the tap zone that shows and hides the reader's controls, in the guide.</summary>
+    public static string ReaderZoneControls => Get("ReaderZoneControls");
+
+    /// <summary>Screen reader action on the page that shows the reader's controls.</summary>
+    public static string ReaderZoneShowControls => Get("ReaderZoneShowControls");
+
+    /// <summary>Name of the tap zone that scrolls a strip or a scrolled novel down, in the guide.</summary>
+    public static string ReaderZoneScrollDown => Get("ReaderZoneScrollDown");
+
+    /// <summary>Name of the tap zone that scrolls a strip or a scrolled novel up, in the guide.</summary>
+    public static string ReaderZoneScrollUp => Get("ReaderZoneScrollUp");
+
+    /// <summary>Under Controls in the tap zone guide: where the zones are changed.</summary>
+    public static string ReaderZoneChange => Get("ReaderZoneChange");
+
+    /// <summary>Tap zone layout Off in words, the accessibility value of its tile.</summary>
+    public static string ReaderTapOffAbout => Get("ReaderTapOffAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: Sides, next page on the right.</summary>
+    public static string ReaderTapSidesRightAbout => Get("ReaderTapSidesRightAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: Sides, next page on the left.</summary>
+    public static string ReaderTapSidesLeftAbout => Get("ReaderTapSidesLeftAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the right.</summary>
+    public static string ReaderTapLShapeBottomRightAbout => Get("ReaderTapLShapeBottomRightAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the left.</summary>
+    public static string ReaderTapLShapeBottomLeftAbout => Get("ReaderTapLShapeBottomLeftAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right.</summary>
+    public static string ReaderTapLShapeTopRightAbout => Get("ReaderTapLShapeTopRightAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left.</summary>
+    public static string ReaderTapLShapeTopLeftAbout => Get("ReaderTapLShapeTopLeftAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the left.</summary>
+    public static string ReaderTapWideNextTopLeftAbout => Get("ReaderTapWideNextTopLeftAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the right.</summary>
+    public static string ReaderTapWideNextTopRightAbout => Get("ReaderTapWideNextTopRightAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left.</summary>
+    public static string ReaderTapWideNextBottomLeftAbout => Get("ReaderTapWideNextBottomLeftAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right.</summary>
+    public static string ReaderTapWideNextBottomRightAbout => Get("ReaderTapWideNextBottomRightAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: Top and bottom.</summary>
+    public static string ReaderTapTopBottomAbout => Get("ReaderTapTopBottomAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: Top and bottom flipped.</summary>
+    public static string ReaderTapTopBottomFlippedAbout => Get("ReaderTapTopBottomFlippedAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: Next on both sides.</summary>
+    public static string ReaderTapBothNextAbout => Get("ReaderTapBothNextAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: Next on both sides flipped top and bottom.</summary>
+    public static string ReaderTapBothNextFlippedAbout => Get("ReaderTapBothNextFlippedAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the right.</summary>
+    public static string ReaderTapSidesRightScrollAbout => Get("ReaderTapSidesRightScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the left.</summary>
+    public static string ReaderTapSidesLeftScrollAbout => Get("ReaderTapSidesLeftScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the right.</summary>
+    public static string ReaderTapLShapeBottomRightScrollAbout => Get("ReaderTapLShapeBottomRightScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the left.</summary>
+    public static string ReaderTapLShapeBottomLeftScrollAbout => Get("ReaderTapLShapeBottomLeftScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right.</summary>
+    public static string ReaderTapLShapeTopRightScrollAbout => Get("ReaderTapLShapeTopRightScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left.</summary>
+    public static string ReaderTapLShapeTopLeftScrollAbout => Get("ReaderTapLShapeTopLeftScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the left.</summary>
+    public static string ReaderTapWideNextTopLeftScrollAbout => Get("ReaderTapWideNextTopLeftScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the right.</summary>
+    public static string ReaderTapWideNextTopRightScrollAbout => Get("ReaderTapWideNextTopRightScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left.</summary>
+    public static string ReaderTapWideNextBottomLeftScrollAbout => Get("ReaderTapWideNextBottomLeftScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right.</summary>
+    public static string ReaderTapWideNextBottomRightScrollAbout => Get("ReaderTapWideNextBottomRightScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom.</summary>
+    public static string ReaderTapTopBottomScrollAbout => Get("ReaderTapTopBottomScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom flipped.</summary>
+    public static string ReaderTapTopBottomFlippedScrollAbout => Get("ReaderTapTopBottomFlippedScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides.</summary>
+    public static string ReaderTapBothNextScrollAbout => Get("ReaderTapBothNextScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides flipped top and bottom.</summary>
+    public static string ReaderTapBothNextFlippedScrollAbout => Get("ReaderTapBothNextFlippedScrollAbout");
 
     /// <summary>Button in the reader's controls that opens the chapters and the page grid.</summary>
     public static string ReaderChapters => Get("ReaderChapters");
@@ -13858,8 +14011,59 @@ public static partial class T
         ["ReaderSpreadsRotate"] = "Turn",
         ["ReaderSpreadsWhole"] = "Whole",
         ["ReaderTapEdges"] = "Edges",
-        ["ReaderTapSides"] = "Halves",
+        ["ReaderTapAuto"] = "Auto",
+        ["ReaderTapSides"] = "Sides",
+        ["ReaderTapLShape"] = "L shape",
+        ["ReaderTapWideNext"] = "Wide next",
+        ["ReaderTapTopBottom"] = "Top and bottom",
+        ["ReaderTapBothNext"] = "Next on both sides",
         ["ReaderTapOff"] = "Off",
+        ["ReaderTapPaged"] = "Paged",
+        ["ReaderTapScrolling"] = "Scrolling",
+        ["ReaderTapSize"] = "Zone size",
+        ["ReaderTapStandard"] = "Standard",
+        ["ReaderTapSmall"] = "Small",
+        ["ReaderTapFlipSides"] = "Flip left and right",
+        ["ReaderTapFlipEnds"] = "Flip top and bottom",
+        ["ReaderTapShow"] = "Show zones",
+        ["ReaderTapHere"] = "Stays on this {kind}",
+        ["ReaderClickZones"] = "Click zones",
+        ["ReaderZoneNext"] = "Next page",
+        ["ReaderZonePrevious"] = "Previous page",
+        ["ReaderZoneControls"] = "Controls",
+        ["ReaderZoneShowControls"] = "Show controls",
+        ["ReaderZoneScrollDown"] = "Scroll down",
+        ["ReaderZoneScrollUp"] = "Scroll up",
+        ["ReaderZoneChange"] = "Change in Reader settings",
+        ["ReaderTapOffAbout"] = "Taps show and hide the controls",
+        ["ReaderTapSidesRightAbout"] = "Next page on the right side, previous page on the left side, controls in the middle",
+        ["ReaderTapSidesLeftAbout"] = "Next page on the left side, previous page on the right side, controls in the middle",
+        ["ReaderTapLShapeBottomRightAbout"] = "Next page along the bottom and on the right, previous page along the top and on the left, controls in the middle",
+        ["ReaderTapLShapeBottomLeftAbout"] = "Next page along the bottom and on the left, previous page along the top and on the right, controls in the middle",
+        ["ReaderTapLShapeTopRightAbout"] = "Next page along the top and on the right, previous page along the bottom and on the left, controls in the middle",
+        ["ReaderTapLShapeTopLeftAbout"] = "Next page along the top and on the left, previous page along the bottom and on the right, controls in the middle",
+        ["ReaderTapWideNextTopLeftAbout"] = "Controls along the top, previous page in a narrow column on the left, next page everywhere else",
+        ["ReaderTapWideNextTopRightAbout"] = "Controls along the top, previous page in a narrow column on the right, next page everywhere else",
+        ["ReaderTapWideNextBottomLeftAbout"] = "Controls along the bottom, previous page in a narrow column on the left, next page everywhere else",
+        ["ReaderTapWideNextBottomRightAbout"] = "Controls along the bottom, previous page in a narrow column on the right, next page everywhere else",
+        ["ReaderTapTopBottomAbout"] = "Next page across the bottom, previous page across the top, controls in the middle",
+        ["ReaderTapTopBottomFlippedAbout"] = "Next page across the top, previous page across the bottom, controls in the middle",
+        ["ReaderTapBothNextAbout"] = "Next page down both sides, previous page at the bottom in the middle, controls above it",
+        ["ReaderTapBothNextFlippedAbout"] = "Next page down both sides, previous page at the top in the middle, controls below it",
+        ["ReaderTapSidesRightScrollAbout"] = "Scroll down on the right side, scroll up on the left side, controls in the middle",
+        ["ReaderTapSidesLeftScrollAbout"] = "Scroll down on the left side, scroll up on the right side, controls in the middle",
+        ["ReaderTapLShapeBottomRightScrollAbout"] = "Scroll down along the bottom and on the right, scroll up along the top and on the left, controls in the middle",
+        ["ReaderTapLShapeBottomLeftScrollAbout"] = "Scroll down along the bottom and on the left, scroll up along the top and on the right, controls in the middle",
+        ["ReaderTapLShapeTopRightScrollAbout"] = "Scroll down along the top and on the right, scroll up along the bottom and on the left, controls in the middle",
+        ["ReaderTapLShapeTopLeftScrollAbout"] = "Scroll down along the top and on the left, scroll up along the bottom and on the right, controls in the middle",
+        ["ReaderTapWideNextTopLeftScrollAbout"] = "Controls along the top, scroll up in a narrow column on the left, scroll down everywhere else",
+        ["ReaderTapWideNextTopRightScrollAbout"] = "Controls along the top, scroll up in a narrow column on the right, scroll down everywhere else",
+        ["ReaderTapWideNextBottomLeftScrollAbout"] = "Controls along the bottom, scroll up in a narrow column on the left, scroll down everywhere else",
+        ["ReaderTapWideNextBottomRightScrollAbout"] = "Controls along the bottom, scroll up in a narrow column on the right, scroll down everywhere else",
+        ["ReaderTapTopBottomScrollAbout"] = "Scroll down across the bottom, scroll up across the top, controls in the middle",
+        ["ReaderTapTopBottomFlippedScrollAbout"] = "Scroll down across the top, scroll up across the bottom, controls in the middle",
+        ["ReaderTapBothNextScrollAbout"] = "Scroll down on both sides, scroll up at the bottom in the middle, controls above it",
+        ["ReaderTapBothNextFlippedScrollAbout"] = "Scroll down on both sides, scroll up at the top in the middle, controls below it",
         ["ReaderChapters"] = "Chapters",
         ["ReaderPagesLeft_one"] = "One page left in this chapter",
         ["ReaderPagesLeft_other"] = "{count} pages left in this chapter",

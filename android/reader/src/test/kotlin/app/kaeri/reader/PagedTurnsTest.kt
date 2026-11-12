@@ -12,6 +12,8 @@ import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
 import app.kaeri.engine.model.Leaf
 import app.kaeri.engine.model.ReadDirection
+import app.kaeri.engine.model.ReaderMode
+import app.kaeri.engine.model.TapReading
 import app.kaeri.engine.model.ReaderEvent
 import app.kaeri.engine.model.TurnHow
 import app.kaeri.reader.ReaderFixtures.CHAPTER
@@ -49,7 +51,8 @@ class PagedTurnsTest {
                 pager = pager,
                 images = PageImages(),
                 direction = ReadDirection.RIGHT_TO_LEFT,
-                zones = TapZones.phone(ReadDirection.RIGHT_TO_LEFT),
+                taps = state.tapZones(),
+                reading = TapReading(ReaderMode.PAGED, ReadDirection.RIGHT_TO_LEFT, false, false),
                 onControls = {},
                 onShown = { leaf, how, turned ->
                     reports += Triple(leaf, how, turned)

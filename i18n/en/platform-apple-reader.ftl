@@ -314,11 +314,6 @@ reader-key-step-screen = Screen
 # Gap between a strip's images.
 reader-strip-gap = Gap between images
 
-# Accessibility value of the pointer hint on the first chapter's tap zones.
-reader-zone-back = Back
-reader-zone-forward = Forward
-reader-zone-menu = Menu
-
 # A jump button above the page grid in the chapters sheet, for a band of pages.
 # @arg from: int
 # @arg to: int
