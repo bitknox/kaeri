@@ -502,7 +502,7 @@ public final class ReaderModel {
         dropHeldStrip()
         let now = ContinuousClock.now
         let session = session
-        let send = { [weak self] in
+        let send: @MainActor () -> Void = { [weak self] in
             guard let self else { return }
             lastStrip = .now
             lastFoot = footVisible
