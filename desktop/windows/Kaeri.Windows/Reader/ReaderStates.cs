@@ -197,7 +197,21 @@ sealed class EndPageView : Grid
         words.Children.Add(read);
         words.Children.Add(owner.ServerLine.Take());
 
-        if (next is not null)
+        if (next is not null && reader.FlowFailed is { } failed && failed.Chapter.Id == next.Id)
+        {
+            // A strip flowing on could not open the next chapter: it says so here, at the join,
+            // and tries that chapter again.
+            var block = new StackPanel { Spacing = 6, Margin = new Thickness(0, 22, 0, 0) };
+            block.Children.Add(ReaderText.Line(T.ReaderEndNext, 13, palette.Haze, strong: true));
+            var label = next.Number is { Length: > 0 } n ? T.ReaderChapterLine(n) : next.Label;
+            block.Children.Add(ReaderText.Line(T.WindowsReaderChapterFailed(label), 20, palette.Silk, strong: true));
+            block.Children.Add(ReaderText.Line(failed.Failure.Words(), 15, palette.Haze));
+            words.Children.Add(block);
+            var again = ReaderButtons.Amber(T.ReaderTryAgain, palette, (_, _) => reader.RetryFlow());
+            again.Margin = new Thickness(0, 32, 0, 0);
+            words.Children.Add(again);
+        }
+        else if (next is not null)
         {
             var block = new StackPanel { Spacing = 4, Margin = new Thickness(0, 22, 0, 0) };
             block.Children.Add(ReaderText.Line(T.ReaderEndNext, 13, palette.Haze, strong: true));

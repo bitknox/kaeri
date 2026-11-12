@@ -321,7 +321,8 @@ sealed class StripView : Grid
         var next = Reader.EndNext;
         footPreview = null;
         footLead = 0;
-        if (next is null || !Flows)
+        // A flow into the next chapter that failed ends the strip at the join, with Try again for it.
+        if (next is null || !Flows || Reader.FlowFailed is not null)
             return owner.BuildEndPage();
         var palette = owner.PagePalette;
         var marker = new StackPanel();

@@ -96,6 +96,11 @@ public sealed class ReaderSession
     public StripPos? StripRestore { get; private set; }
     /// <summary>The chapter the end page goes on to.</summary>
     public ChapterRow? EndNext => ReaderEnd.NextOf(End, View);
+    /// <summary>
+    /// The chapter a strip was flowing into and could not open: the chapter read stays in the
+    /// scroll, and the strip ends at the join on an end page with Try again for it.
+    /// </summary>
+    public StripFlowFailure? FlowFailed { get; private set; }
     /// <summary>The novel's place as its view last told it: a web view made again after its process went opens there.</summary>
     public NovelPos? NovelShown { get; private set; }
     /// <summary>The chapters of the work, once the engine has listed them.</summary>
@@ -338,7 +343,28 @@ public sealed class ReaderSession
         // nor flowed out of.
         if (!StripLanded(from))
             return;
+        // A flow that failed into this chapter waits for Try again, rather than asking on every scroll past.
+        if (FlowFailed?.Chapter.Id == next.Id)
+            return;
+        Flow(next);
+    }
+
+    /// <summary>Try again on the end page a failed flow left at the join: the strip flows on into that chapter.</summary>
+    public void RetryFlow()
+    {
+        if (session == 0 || Flowing || FlowFailed is not { } failed)
+            return;
+        FlowFailed = null;
+        // The end page goes back to the marker the chapter opens under.
+        Changed?.Invoke(ReaderChange.End);
+        Flow(failed.Chapter);
+    }
+
+    void Flow(ChapterRow next)
+    {
         Flowing = true;
+        flowingTo = next;
+        flowLeft = (End, Read);
         End = null;
         Read = false;
         ClearNotices();
@@ -356,6 +382,35 @@ public sealed class ReaderSession
             return false;
         var parts = Leaves.Where(l => !l.EndPage).SelectMany(l => l.Parts).Skip((int)from).ToList();
         return parts.Count > 0 && parts.All(p => FileOf(p, view.Chapter.Id) is not null);
+    }
+
+    /// <summary>The chapter a strip is flowing into, and what the chapter read had at its end before.</summary>
+    ChapterRow? flowingTo;
+    (ReaderEnd? End, bool Read) flowLeft;
+
+    /// <summary>
+    /// The engine could not open a chapter. A strip flowing on keeps the chapter read, scrolled as
+    /// it was, and says so at the join; an open the reader waited on shows the failure in its place.
+    /// </summary>
+    void OpenFailed(ReadingFailure failure)
+    {
+        if (Flowing && flowingTo is { } to)
+        {
+            Flowing = false;
+            flowingTo = null;
+            // The chapter read counted as read on the way out stays so.
+            End ??= flowLeft.End;
+            Read |= flowLeft.Read;
+            FlowFailed = new StripFlowFailure(to, failure);
+            Changed?.Invoke(ReaderChange.End);
+            return;
+        }
+        if (Asked is null || Phase != ReaderPhase.Opening)
+            return;
+        ClearNotices();
+        Phase = ReaderPhase.Failed;
+        Failure = failure;
+        Changed?.Invoke(ReaderChange.Phase);
     }
 
     /// <summary>A strip is flowing into the next chapter: from <see cref="FlowOn"/> until the strip took its images.</summary>
@@ -510,6 +565,9 @@ public sealed class ReaderSession
             case Event.Reader reader:
                 Apply(reader.V1);
                 break;
+            case Event.Reading { V1: ReadingEvent.Failed { About: ReadingAbout.Reader } failed }:
+                OpenFailed(failed.Failure);
+                break;
             case Event.Reading { V1: ReadingEvent.Chapters chapters }:
                 if (chapters.Work != View?.Work && chapters.Work != Asked?.Work)
                     return;
@@ -535,6 +593,8 @@ public sealed class ReaderSession
                     return;
                 }
                 var flowedFrom = Flowing ? View?.Chapter.Id : null;
+                flowingTo = null;
+                FlowFailed = null;
                 session = view.Session;
                 View = view;
                 Phase = ReaderPhase.Open;
@@ -928,6 +988,8 @@ public sealed class ReaderSession
         NovelShown = null;
         novelPages = 0;
         Flowing = false;
+        flowingTo = null;
+        FlowFailed = null;
         GoTo = null;
         NovelGoTo = null;
         Read = false;
@@ -995,3 +1057,6 @@ public static class StripPlate
         return (above, Math.Max(height - above - room, 0));
     }
 }
+
+/// <summary>A strip's flow into <paramref name="Chapter"/> that failed with <paramref name="Failure"/>.</summary>
+public sealed record StripFlowFailure(ChapterRow Chapter, ReadingFailure Failure);

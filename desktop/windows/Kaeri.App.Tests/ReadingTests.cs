@@ -166,11 +166,13 @@ public class ReadingTests
     {
         public readonly object Gate = new();
         public readonly EngineSession Session;
+        /// <summary>The scene's own folders: its config, data and cache are under it.</summary>
+        public readonly string Root;
 
         public Scene(FfiScene scene, string name)
         {
             HomeGuard.Check();
-            var root = AppDirs.NewScratchRoot(name);
+            var root = Root = AppDirs.NewScratchRoot(name);
             var engine = FfiEngine.StartScene(AppDirs.Under(root), new QuietHost(), scene, EngineSession.AppStart(signIn: false));
             Session = new EngineSession(engine, a => { lock (Gate) a(); });
             Session.Known.SendReadingWith(c => Session.Send(c));
@@ -403,6 +405,54 @@ public class ReadingTests
         await scene.Until(k => k.Reader.StripLanded(last) ? k : null);
         scene.Do(() => reader.StripAt(new StripPos(last, 1f), footVisible: true));
         await scene.Until(k => k.Reader.Read ? k : null, seconds: 15);
+    }
+
+    [Fact]
+    public async Task AStripsFailedFlowKeepsTheChapterReadAndEndsAtTheJoin()
+    {
+        using var scene = new Scene(new FfiScene.ReaderStrip(), "cs-reader-strip-flow-failed");
+        var (reader, parts) = await OpenStrip(scene);
+        var last = (uint)(parts.Count - 1);
+        string read = "";
+        ChapterRow next = null!;
+        scene.Do(() =>
+        {
+            read = reader.View!.Chapter.Id;
+            next = reader.EndNext!;
+        });
+        // The next chapter can't be had, as with its source out of reach.
+        File.Delete(Path.Combine(scene.Root, "data", "fixture-books", "fixture-paper-kites", "Chapter 3.cbz"));
+        scene.Do(() => reader.StripAt(new StripPos(last, 0f), footVisible: false));
+        await scene.Until(k => k.Reader.StripLanded(last) ? k : null);
+        scene.Do(() =>
+        {
+            reader.FlowOn(last);
+            Assert.True(reader.Flowing);
+        });
+        var failed = await scene.Until(k => k.Reader.FlowFailed);
+        scene.Do(() =>
+        {
+            Assert.Equal(next.Id, failed.Chapter.Id);
+            // The chapter read stays, with its images, and the strip ends at the join for the next one.
+            Assert.False(reader.Flowing);
+            Assert.Equal(ReaderPhase.Open, reader.Phase);
+            Assert.Equal(read, reader.View!.Chapter.Id);
+            Assert.True(reader.ReadingLeaves > 0);
+            Assert.Equal(next.Id, reader.EndNext?.Id);
+            // Scrolling past the join again asks nothing; Try again does, for that chapter.
+            reader.FlowOn(last);
+            Assert.False(reader.Flowing);
+            reader.RetryFlow();
+            Assert.True(reader.Flowing);
+            Assert.Null(reader.FlowFailed);
+        });
+        failed = await scene.Until(k => k.Reader.FlowFailed);
+        scene.Do(() =>
+        {
+            Assert.Equal(next.Id, failed.Chapter.Id);
+            Assert.Equal(ReaderPhase.Open, reader.Phase);
+            Assert.Equal(read, reader.View!.Chapter.Id);
+        });
     }
 
     [Fact]
