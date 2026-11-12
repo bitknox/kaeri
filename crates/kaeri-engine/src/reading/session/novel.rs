@@ -75,6 +75,8 @@ pub(super) enum Prepared {
     Pages(PathBuf),
     /// A source's pictures, landing a page at a time in the feed's folder.
     Feed(Arc<crate::reading::feed::Feed>),
+    /// The download queue finished fetching the chapter: it opens from that file.
+    Downloaded,
     Novel(Box<NovelBook>),
     Failed(ReadingFailure),
 }
@@ -345,6 +347,33 @@ pub(super) fn follow_first_page(
         }
     });
     FirstPage { task }
+}
+
+/// How often an open looks at the download it waits on.
+const DOWNLOAD_LOOK: Duration = Duration::from_millis(100);
+
+/// Wait for the download queue's fetch of a chapter being opened, so the source is asked for it
+/// once: true once that download is done and its file is there. False when the queue is not
+/// fetching it, and as soon as the download fails, is taken out of the queue or held, or stays
+/// queued past [`FIRST_PAGE_QUEUED`]: the open then asks the source itself.
+async fn downloaded(
+    sources: &crate::read_sources::BookSources,
+    work: &WorkId,
+    chapter: &ChapterId,
+) -> bool {
+    use kaeri_store::book_downloads::BookDownloadState as State;
+    let started = Instant::now();
+    loop {
+        let row = sources.store().book_download(work.as_str(), chapter.as_str()).ok().flatten();
+        let queued = !sources.downloads.setup().hold && started.elapsed() < FIRST_PAGE_QUEUED;
+        match row.map(|r| (r.state, r.path)) {
+            Some((State::Done, path)) => return path.is_some_and(|p| Path::new(&p).exists()),
+            Some((State::Downloading, _)) => {}
+            Some((State::Queued, _)) if queued => {}
+            _ => return false,
+        }
+        tokio::time::sleep(DOWNLOAD_LOOK).await;
+    }
 }
 
 /// Ask the source for a chapter's first page and nothing more.
@@ -703,6 +732,12 @@ impl Session {
                 put.put(Prepared::Feed(feed));
                 return;
             }
+            // The download queue is fetching it, as one kept ready or asked for: the open waits
+            // for that file rather than asking the source a second time.
+            if downloaded(&sources, &work, &id).await {
+                put.put(Prepared::Downloaded);
+                return;
+            }
             let prepared = match sources.open(&work, &id, None, now).await {
                 Err(failure) => Prepared::Failed(failure),
                 // A source's pictures land a page at a time in a folder the page worker reads
@@ -802,6 +837,11 @@ impl Session {
                 let chapter = &mut self.chapters[self.at];
                 chapter.path = path;
                 chapter.format = "pages".into();
+                let page = self.start.page.unwrap_or(0);
+                self.lay_out(cx, pages, page);
+            }
+            // Laid out again, the chapter follows its download to the file.
+            Prepared::Downloaded => {
                 let page = self.start.page.unwrap_or(0);
                 self.lay_out(cx, pages, page);
             }
