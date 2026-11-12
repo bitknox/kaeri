@@ -309,6 +309,47 @@ public class ReadingTests
     }
 
     [Fact]
+    public async Task ARoundTripThroughSpreadsKeepsThePageShownAlone()
+    {
+        using var scene = new Scene(new FfiScene.ReaderMangaRtl(), "cs-reader-spreads");
+        var reader = scene.Known.Reader;
+        var single = new ReaderSurface(1280, 720, 1f, false, false, true);
+        var spreads = new ReaderSurface(1280, 720, 1f, false, true, true);
+        scene.Do(() =>
+        {
+            reader.Open("a:900301");
+            reader.SurfaceChanged(spreads);
+        });
+        var wide = await scene.Until(k => Paired(k.Reader.Leaves) ? k.Reader.Leaves : null);
+        uint page = 0;
+        scene.Do(() =>
+        {
+            // The second page of a spread, shown alone.
+            page = wide.First(l => Pages(l) == 2).Parts.Max(p => p.Page);
+            reader.SurfaceChanged(single);
+        });
+        var alone = await scene.Until(k => Alone(k.Reader.Leaves) ? k.Reader.Leaves : null);
+        scene.Do(() =>
+        {
+            reader.Shown(Array.FindIndex(alone, l => l.Parts.Any(p => p.Page == page)), TurnHow.Jump);
+            reader.SurfaceChanged(spreads);
+        });
+        wide = await scene.Until(k => Paired(k.Reader.Leaves) ? k.Reader.Leaves : null);
+        scene.Do(() =>
+        {
+            Assert.Contains(wide[reader.Current].Parts, p => p.Page == page);
+            reader.SurfaceChanged(single);
+        });
+        // Alone again: that page, not the spread's first.
+        alone = await scene.Until(k => Alone(k.Reader.Leaves) ? k.Reader.Leaves : null);
+        scene.Do(() => Assert.Equal(new[] { page }, alone[reader.Current].Parts.Select(p => p.Page)));
+
+        static int Pages(Leaf leaf) => leaf.Parts.Select(p => p.Page).Distinct().Count();
+        static bool Paired(Leaf[] leaves) => leaves.Any(l => Pages(l) == 2);
+        static bool Alone(Leaf[] leaves) => leaves.Length > 0 && leaves.All(l => Pages(l) <= 1);
+    }
+
+    [Fact]
     public async Task DownloadsNameEachSeriesByItsTitle()
     {
         using var scene = new Scene(new FfiScene.ReadingDownloads(), "cs-reading-downloads");
