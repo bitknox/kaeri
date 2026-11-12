@@ -69,7 +69,12 @@ sealed class StripView : Grid
         scroll.ViewChanged += (_, e) => Track(e.IsIntermediate);
         scroll.AddHandler(PointerWheelChangedEvent, new PointerEventHandler((_, _) => Interacted()), true);
         scroll.AddHandler(PointerPressedEvent, new PointerEventHandler((_, _) => Interacted()), true);
-        SizeChanged += (_, _) => Layout();
+        SizeChanged += (_, _) =>
+        {
+            Layout();
+            if (restoring)
+                Restore();
+        };
     }
 
     ReaderSession Reader => owner.Reader;
@@ -208,6 +213,8 @@ sealed class StripView : Grid
     {
         if (ActualWidth <= 0 || Current is null)
             return;
+        // What is at the window's top now, so a new width or new image heights keep it there.
+        var anchor = restoring ? null : Anchor();
         var factor = (Reader.Amount(ReaderSettingKey.StripWidth) ?? 0.6) / 0.6;
         columnWidth = Math.Min(ActualWidth, 720 * factor);
         double y = 0;
@@ -246,7 +253,63 @@ sealed class StripView : Grid
             view.Height = HeightOf(section, section.Parts[index]);
             Canvas.SetTop(view, section.Tops[index]);
         }
+        if (anchor is { } kept)
+            Keep(kept, column.Height);
         Mount();
+    }
+
+    /// <summary>A place in the strip that survives a relayout: a chapter, an image in it (-1 for its marker, Count for the foot) and how far into that.</summary>
+    readonly record struct Place(Section Section, int Index, double Into);
+
+    /// <summary>Where the scroll is about to be: a move asked of it lands a moment later.</summary>
+    double? going;
+
+    double Offset => going ?? scroll.VerticalOffset;
+
+    /// <summary>The place at the window's top, from the layout as it stands.</summary>
+    Place? Anchor()
+    {
+        var y = Offset;
+        foreach (var section in sections)
+        {
+            if (section.Tops.Count != section.Parts.Count || section.Parts.Count == 0)
+                return null;
+            var last = section == sections[^1];
+            if (y >= section.Bottom && !last)
+                continue;
+            if (y < section.Tops[0])
+                return new Place(section, -1, y - section.Top);
+            if (y >= section.Bottom)
+                return new Place(section, section.Parts.Count, y - section.Bottom);
+            var i = section.Tops.FindLastIndex(t => t <= y);
+            var span = (i + 1 < section.Tops.Count ? section.Tops[i + 1] : section.Bottom) - section.Tops[i];
+            return new Place(section, i, span > 0 ? (y - section.Tops[i]) / span : 0);
+        }
+        return null;
+    }
+
+    /// <summary>Puts the place back at the window's top after a relayout moved it.</summary>
+    void Keep(Place place, double height)
+    {
+        var section = place.Section;
+        if (!sections.Contains(section) || section.Tops.Count != section.Parts.Count || section.Parts.Count == 0)
+            return;
+        double y;
+        if (place.Index < 0)
+            y = section.Top + place.Into;
+        else if (place.Index >= section.Parts.Count)
+            y = section.Bottom + place.Into;
+        else
+        {
+            var i = place.Index;
+            var span = (i + 1 < section.Tops.Count ? section.Tops[i + 1] : section.Bottom) - section.Tops[i];
+            y = section.Tops[i] + place.Into * span;
+        }
+        y = Math.Clamp(y, 0, Math.Max(0, height - scroll.ViewportHeight));
+        if (Math.Abs(y - Offset) <= 0.5)
+            return;
+        going = y;
+        scroll.ChangeView(null, y, null, true);
     }
 
     /// <summary>
@@ -376,15 +439,19 @@ sealed class StripView : Grid
         var at = Reader.StripRestore ?? Reader.View?.Start.Strip;
         if (at is null)
         {
+            going = null;
             scroll.ChangeView(null, section.Top, null, true);
             return;
         }
         var index = Math.Min((int)at.Image, section.Parts.Count - 1);
+        going = null;
         scroll.ChangeView(null, section.Tops[index] + at.Offset * HeightOf(section, section.Parts[index]), null, true);
     }
 
     void Track(bool moving)
     {
+        if (!moving)
+            going = null;
         Mount();
         if (Current is not { } current || current.Tops.Count != current.Parts.Count)
             return;
@@ -462,7 +529,9 @@ sealed class StripView : Grid
     {
         restoring = false;
         var step = line ? 120 : scroll.ViewportHeight * 0.9;
-        scroll.ChangeView(null, Math.Max(0, scroll.VerticalOffset + (forward ? step : -step)), null, !Motion.Enabled || owner.PaperMode);
+        var from = Offset;
+        going = null;
+        scroll.ChangeView(null, Math.Max(0, from + (forward ? step : -step)), null, !Motion.Enabled || owner.PaperMode);
     }
 
     /// <summary>
@@ -482,6 +551,7 @@ sealed class StripView : Grid
             to = scroll.ScrollableHeight;
         else
             to = Math.Max(section.Tops[0], section.Bottom - scroll.ViewportHeight);
+        going = null;
         scroll.ChangeView(null, Math.Clamp(to, 0, scroll.ScrollableHeight), null, !Motion.Enabled || owner.PaperMode);
     }
 
@@ -493,7 +563,8 @@ sealed class StripView : Grid
             return;
         restoring = false;
         index = Math.Clamp(index, 0, section.Parts.Count - 1);
-        jumped = section == Current && Math.Abs(scroll.VerticalOffset - section.Tops[index]) > 1 ? index : null;
+        jumped = section == Current && Math.Abs(Offset - section.Tops[index]) > 1 ? index : null;
+        going = null;
         scroll.ChangeView(null, section.Tops[index], null, !Motion.Enabled || owner.PaperMode);
     }
 
