@@ -3,6 +3,7 @@
 //! In `cast-tvs.json` in the engine's data directory, beside `remote-tvs.json`, written whole to
 //! a temporary file and renamed over the old one as the paired TVs are. A refusal is dropped
 //! after 30 days, or as soon as the TV's firmware changes: an update may have added the codec.
+//! Refusals noted under an older [`JUDGEMENT`] are dropped when the memory is opened.
 
 use std::{
     collections::BTreeMap,
@@ -16,6 +17,13 @@ use crate::{client::VolumeControl, formats::CastPlan};
 
 /// How long a refusal is believed, in seconds.
 pub const REFUSAL_KEPT: i64 = 30 * 24 * 60 * 60;
+
+/// How refusals are judged, raised when the rules for blaming a format change, so a refusal
+/// the new rules would not have blamed is not kept for 30 days.
+///
+/// 2: a segment its host names as an image is served as the media it is, and a refusal after
+/// bytes no receiver plays blames nothing. Under 1, both counted against the video codec.
+pub const JUDGEMENT: u32 = 2;
 
 /// What happened when a TV was handed one format part, and when.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -43,9 +51,17 @@ pub struct CastCaps {
     /// The last cast to it went through this device: the picker's hint for the next.
     #[serde(default)]
     pub relayed_last: bool,
+    /// The [`JUDGEMENT`] its refusals were noted under; 0 in a file from before there was one.
+    #[serde(default)]
+    pub judgement: u32,
 }
 
 impl CastCaps {
+    /// What is known of a TV never cast to.
+    pub fn blank(id: &str) -> Self {
+        Self { id: id.to_owned(), judgement: JUDGEMENT, ..Self::default() }
+    }
+
     /// Whether the TV refused `part`, as far as is still believed.
     pub fn refused(&self, part: &str) -> bool {
         self.formats.get(part).is_some_and(|answer| !answer.played)
@@ -138,7 +154,13 @@ impl CastMemory {
         let mut tvs = BTreeMap::new();
         match std::fs::read(&path) {
             Ok(bytes) => match serde_json::from_slice::<Vec<CastCaps>>(&bytes) {
-                Ok(list) => tvs.extend(list.into_iter().map(|tv| (tv.id.clone(), tv))),
+                Ok(list) => tvs.extend(list.into_iter().map(|mut tv| {
+                    if tv.judgement < JUDGEMENT {
+                        tv.formats.retain(|_, answer| answer.played);
+                        tv.judgement = JUDGEMENT;
+                    }
+                    (tv.id.clone(), tv)
+                })),
                 Err(e) => {
                     tracing::warn!(error = %e, "cast-tvs.json unreadable; starting afresh");
                     let _ = std::fs::rename(&path, path.with_extension("json.unreadable"));
@@ -171,7 +193,7 @@ impl CastMemory {
                 caps.expire(now);
                 caps.clone()
             }
-            None => CastCaps { id: id.to_owned(), ..CastCaps::default() },
+            None => CastCaps::blank(id),
         }
     }
 
@@ -187,9 +209,7 @@ impl CastMemory {
     ) -> Result<(), MemoryError> {
         {
             let mut tvs = self.lock();
-            let caps = tvs
-                .entry(id.to_owned())
-                .or_insert_with(|| CastCaps { id: id.to_owned(), ..CastCaps::default() });
+            let caps = tvs.entry(id.to_owned()).or_insert_with(|| CastCaps::blank(id));
             if let Some(firmware) = firmware {
                 if caps.firmware.as_deref().is_some_and(|known| known != firmware) {
                     tracing::info!(tv = %caps.name, "new firmware; forgetting what it refused");
@@ -209,7 +229,7 @@ impl CastMemory {
         let now = (self.clock)();
         self.lock()
             .entry(id.to_owned())
-            .or_insert_with(|| CastCaps { id: id.to_owned(), ..CastCaps::default() })
+            .or_insert_with(|| CastCaps::blank(id))
             .record(plan, played, now);
         self.save()
     }
@@ -224,7 +244,7 @@ impl CastMemory {
         let blamed = self
             .lock()
             .entry(id.to_owned())
-            .or_insert_with(|| CastCaps { id: id.to_owned(), ..CastCaps::default() })
+            .or_insert_with(|| CastCaps::blank(id))
             .record_stall(plan, now);
         if blamed.is_some() {
             self.save()?;
@@ -237,7 +257,7 @@ impl CastMemory {
         let now = (self.clock)();
         self.lock()
             .entry(id.to_owned())
-            .or_insert_with(|| CastCaps { id: id.to_owned(), ..CastCaps::default() })
+            .or_insert_with(|| CastCaps::blank(id))
             .remember(part, played, now);
         self.save()
     }
@@ -348,6 +368,30 @@ mod tests {
         assert!(!caps.refused("opus/progressive"), "the update may have added it");
         assert!(caps.played("hls-ts"), "what played stays");
         assert_eq!(caps.volume, VolumeControl::MuteOnly);
+    }
+
+    #[test]
+    fn refusals_noted_under_an_older_judgement_are_forgotten() {
+        let dir = tempfile::tempdir().unwrap();
+        let old = r#"[{"id":"tv","name":"Bedroom","model":"Chromecast",
+            "formats":{"h264/1080/hls":{"played":false,"at":1},"hls-ts":{"played":true,"at":1}}}]"#;
+        std::fs::write(dir.path().join("cast-tvs.json"), old).unwrap();
+        let memory = CastMemory::open(dir.path()).unwrap().with_clock(Arc::new(|| 2_i64));
+        let caps = memory.caps("tv");
+        assert!(!caps.refused("h264/1080/hls"));
+        assert!(caps.played("hls-ts"), "what played stays");
+        assert_eq!(caps.judgement, JUDGEMENT);
+
+        // Noted under this judgement, a refusal is kept.
+        memory
+            .record(
+                "other",
+                &plan(VideoFormat::HevcMain10, AudioCodec::Aac, Delivery::HlsFmp4),
+                false,
+            )
+            .unwrap();
+        let again = CastMemory::open(dir.path()).unwrap().with_clock(Arc::new(|| 2_i64));
+        assert!(again.caps("other").refused("hevc-main10/1080/hls"));
     }
 
     #[test]

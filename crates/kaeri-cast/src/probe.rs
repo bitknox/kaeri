@@ -9,7 +9,8 @@
 //!
 //! The probe asks as the receiver will, with `Origin: https://www.gstatic.com`, and passes when
 //! the playlist and its first segment both answer with `Access-Control-Allow-Origin` and the
-//! segment's bytes are plain media: MPEG-TS or fragmented MP4.
+//! segment is plain media: MPEG-TS or fragmented MP4 bytes, under a type the receiver's player
+//! reads as media. A segment named as an image is refused by the player whatever its bytes are.
 
 use std::{
     io::{Read, Seek},
@@ -33,7 +34,7 @@ pub struct CorsProbe {
     pub manifest: bool,
     /// The first segment did too.
     pub segment: bool,
-    /// The segment's bytes are plain media: MPEG-TS or fragmented MP4.
+    /// The segment is plain media: MPEG-TS or fragmented MP4 bytes, under a media type.
     pub plain_media: bool,
 }
 
@@ -122,8 +123,9 @@ pub async fn hls(
             get(upstream, &resolve(&playlist_url, first), headers, Some("bytes=0-4095")).await
     {
         probe.segment = cors_allowed(&response);
+        let typed = response.header("content-type").is_none_or(read_as_media);
         if let Ok(head) = response.prefix(4096).await {
-            probe.plain_media = plain_media(&head, map.is_some());
+            probe.plain_media = typed && plain_media(&head, map.is_some());
         }
     }
     (info, probe)
@@ -201,6 +203,62 @@ fn plain_media(head: &[u8], fmp4: bool) -> bool {
             matches!(kind, b"ftyp" | b"styp" | b"moof" | b"sidx" | b"emsg" | b"prft")
         });
     ts || mp4
+}
+
+/// Whether a `Content-Type` names media: a video or audio type, `application/mp4` or
+/// `application/mp2t`.
+pub fn names_media(content_type: &str) -> bool {
+    let kind = content_type.trim().to_ascii_lowercase();
+    kind.starts_with("video/")
+        || kind.starts_with("audio/")
+        || kind.starts_with("application/mp4")
+        || kind.starts_with("application/mp2t")
+}
+
+/// Whether the receiver's player takes a segment of this type for media: one that
+/// [`names_media`], or plain bytes it looks into. It takes an image, text or page type for what
+/// it says and refuses the stream, whatever the bytes are.
+pub fn read_as_media(content_type: &str) -> bool {
+    let kind = content_type.trim().to_ascii_lowercase();
+    names_media(&kind)
+        || kind.starts_with("application/octet-stream")
+        || kind.starts_with("binary/octet-stream")
+}
+
+/// The media type a body's first bytes say, for the formats a receiver plays: MPEG-TS (perhaps
+/// after an ID3 tag), MP4 boxes, Matroska and WebM, ADTS AAC, MPEG audio, AC-3, FLAC and Ogg.
+/// `None` for anything else, and for an ID3 tag longer than `head`.
+pub fn media_type(head: &[u8]) -> Option<&'static str> {
+    let mut at = 0;
+    if head.starts_with(b"ID3") && head.len() >= 10 {
+        let size = head[6..10].iter().fold(0usize, |acc, b| (acc << 7) | usize::from(b & 0x7f));
+        at = 10 + size;
+    }
+    let rest = head.get(at..).filter(|rest| !rest.is_empty())?;
+    if rest[0] == 0x47 && rest.get(188).is_none_or(|b| *b == 0x47) {
+        return Some("video/mp2t");
+    }
+    if rest.get(4..8).is_some_and(|kind| {
+        matches!(kind, b"ftyp" | b"styp" | b"moof" | b"sidx" | b"emsg" | b"prft" | b"moov")
+    }) {
+        return Some("video/mp4");
+    }
+    if let Some(container) = sniff(rest).filter(|c| matches!(c, Delivery::Mkv | Delivery::WebM))
+    {
+        return Some(if container == Delivery::WebM {
+            "video/webm"
+        } else {
+            "video/x-matroska"
+        });
+    }
+    Some(match rest {
+        [0xFF, second, ..] if second & 0xF6 == 0xF0 => "audio/aac",
+        [0xFF, second, ..] if second & 0xE0 == 0xE0 => "audio/mpeg",
+        [0x0B, 0x77, ..] => "audio/ac3",
+        [b'f', b'L', b'a', b'C', ..] => "audio/flac",
+        [b'O', b'g', b'g', b'S', ..] => "audio/ogg",
+        _ => return None,
+    })
 }
 
 /// The container a progressive file's first bytes say.
@@ -386,6 +444,29 @@ mod tests {
         assert!(plain_media(&id3, false));
         assert!(plain_media(b"\0\0\0\x18moof....", true));
         assert!(!plain_media(b"\0\0\0\x18moof....", false));
+    }
+
+    #[test]
+    fn first_bytes_name_the_media_whatever_the_address_says() {
+        let mut ts = vec![0xFFu8; 400];
+        ts[0] = 0x47;
+        ts[188] = 0x47;
+        assert_eq!(media_type(&ts), Some("video/mp2t"));
+        let mut id3 = b"ID3\x04\x00\x00\x00\x00\x00\x02xx".to_vec();
+        id3.extend(&ts);
+        assert_eq!(media_type(&id3), Some("video/mp2t"));
+        assert_eq!(media_type(b"\0\0\0\x18styp...."), Some("video/mp4"));
+        assert_eq!(media_type(&[0xFF, 0xF1, 0x50, 0x80]), Some("audio/aac"));
+        assert_eq!(media_type(&[0x1A, 0x45, 0xDF, 0xA3, 0x42, 0x82]), Some("video/x-matroska"));
+        assert_eq!(media_type(b"\x89PNG\r\n\x1a\n...."), None);
+        assert_eq!(media_type(b"\xFF\xD8\xFF\xE0\0\x10JFIF"), None, "a real JPEG");
+        assert_eq!(media_type(b"<!doctype html>"), None);
+        assert_eq!(media_type(b""), None);
+
+        assert!(read_as_media("video/MP2T"));
+        assert!(read_as_media("application/octet-stream"));
+        assert!(!read_as_media("image/jpeg"));
+        assert!(!read_as_media("text/plain; charset=utf-8"));
     }
 
     #[test]
