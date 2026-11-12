@@ -284,7 +284,7 @@ sealed class PagedView : Grid
             return;
         if (forward && Reader.Leaves[current].EndPage)
         {
-            if ((Reader.End?.Next ?? Reader.View?.Next) is { } next)
+            if (Reader.EndNext is { } next)
                 Reader.OpenChapter(next.Id);
             return;
         }
@@ -424,7 +424,7 @@ sealed class PagedView : Grid
     bool CanGo(bool forward)
     {
         if (forward && Reader.Leaves[current].EndPage)
-            return (Reader.End?.Next ?? Reader.View?.Next) is not null;
+            return Reader.EndNext is not null;
         var target = current + (forward ? 1 : -1);
         return target >= 0 && target < Reader.Leaves.Length;
     }

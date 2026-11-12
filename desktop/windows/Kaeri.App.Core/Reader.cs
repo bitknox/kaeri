@@ -23,6 +23,12 @@ public sealed record ReaderEnd(ChapterRow? Next, NoNext? Why, string? NextSource
     public string? SkipHint => SkipTo is null || Next is null ? null
         : Extras > 1 || Next.Number is null ? T.ReaderEndSkipHintExtras
         : T.ReaderEndSkipHint(Next.Number);
+
+    /// <summary>
+    /// The chapter an end page goes on to: the engine's word once it has one, the view's next
+    /// chapter until then. Offline the engine leaves out a next chapter that is not on the device.
+    /// </summary>
+    public static ChapterRow? NextOf(ReaderEnd? end, ReaderView? view) => end is not null ? end.Next : view?.Next;
 }
 
 /// <summary>The notice over the page, with the action it offers.</summary>
@@ -88,6 +94,8 @@ public sealed class ReaderSession
     public int? Ring { get; private set; }
     /// <summary>Where a strip is asked to scroll to once its images are in.</summary>
     public StripPos? StripRestore { get; private set; }
+    /// <summary>The chapter the end page goes on to.</summary>
+    public ChapterRow? EndNext => ReaderEnd.NextOf(End, View);
     /// <summary>The chapters of the work, once the engine has listed them.</summary>
     public VolumeGroup[] Chapters { get; private set; } = [];
     public bool ChaptersLoaded { get; private set; }
@@ -303,7 +311,7 @@ public sealed class ReaderSession
     /// </summary>
     public void FlowOn()
     {
-        if (session == 0 || Flowing || View?.Next is not { } next)
+        if (session == 0 || Flowing || EndNext is not { } next)
             return;
         Flowing = true;
         End = null;

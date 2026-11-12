@@ -440,7 +440,7 @@ sealed class NovelView : Grid
         {
             if (!forward)
                 HideEnd();
-            else if ((Reader.End?.Next ?? Reader.View?.Next) is { } next)
+            else if (Reader.EndNext is { } next)
                 Reader.OpenChapter(next.Id);
             return;
         }

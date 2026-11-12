@@ -170,7 +170,7 @@ sealed class EndPageView : Grid
         var view = reader.View;
         var finished = view?.Chapter;
         var chapter = finished?.Number is { Length: > 0 } number ? T.ReaderEndOfChapterNumber(number) : T.WindowsReaderEndOfChapter(finished?.Label ?? "");
-        var next = reader.End?.Next ?? view?.Next;
+        var next = reader.EndNext;
         var demo = view?.DemoCredit;
         var novel = reader.Medium == Medium.Novel;
 
@@ -246,7 +246,7 @@ sealed class EndPageView : Grid
         }
         else if (reader.End?.Why is { } why)
         {
-            var label = finished?.Label ?? "";
+            var label = Following(view);
             var block = new StackPanel { Spacing = 6, Margin = new Thickness(0, 22, 0, 0) };
             var title = why switch
             {
@@ -282,6 +282,20 @@ sealed class EndPageView : Grid
             HorizontalScrollMode = ScrollMode.Disabled,
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
         });
+    }
+
+    /// <summary>
+    /// The chapter a heading with no next chapter names: the next one listed, which offline is
+    /// one only a source has; past the last one listed, the next whole number.
+    /// </summary>
+    internal static string Following(ReaderView? view)
+    {
+        if (view?.Next is { } next)
+            return next.Number is { Length: > 0 } n ? T.ReaderChapterLine(n) : next.Label;
+        if (view?.Chapter.Number is { } number
+            && double.TryParse(number, global::System.Globalization.NumberStyles.Float, global::System.Globalization.CultureInfo.InvariantCulture, out var at))
+            return T.ReaderChapterLine(((long)Math.Floor(at) + 1).ToString(global::System.Globalization.CultureInfo.InvariantCulture));
+        return "";
     }
 
     /// <summary>

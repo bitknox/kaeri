@@ -255,7 +255,7 @@ sealed class StripView : Grid
     /// </summary>
     FrameworkElement BuildFoot()
     {
-        var next = Reader.End?.Next ?? Reader.View?.Next;
+        var next = Reader.EndNext;
         footPreview = null;
         footLead = 0;
         if (next is null || !Flows)
@@ -431,7 +431,7 @@ sealed class StripView : Grid
 
         // The marker into the next chapter reached the middle: the chapter opens under it.
         if (!restoring && Flows && foot is not null and not EndPageView && !Reader.Flowing
-            && Canvas.GetTop(foot) <= middle && Reader.View?.Next is not null)
+            && Canvas.GetTop(foot) <= middle && Reader.EndNext is not null)
             Reader.FlowOn();
 
         if (!moving)
