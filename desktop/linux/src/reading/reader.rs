@@ -3226,6 +3226,48 @@ impl Reader {
         }
     }
 
+    /// Read a novel's chapter to its end for a shot: turn on until the end page shows, then
+    /// Continue, and say what was read and what opened.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_novel_end(self: &Rc<Self>) {
+        let turns = Rc::new(Cell::new(0));
+        let this = Rc::downgrade(self);
+        glib::timeout_add_local(Duration::from_millis(700), move || {
+            let Some(this) = this.upgrade() else { return glib::ControlFlow::Break };
+            let (ended, chapter) = {
+                let state = this.state.borrow();
+                (state.novel_end, state.chapter.as_ref().map(|c| c.id.to_string()))
+            };
+            if !ended && turns.get() < 60 {
+                turns.set(turns.get() + 1);
+                let novel = this.novel.borrow().clone();
+                if let Some(novel) = novel {
+                    novel.turn(true);
+                }
+                return glib::ControlFlow::Continue;
+            }
+            eprintln!("novel end: shown {ended} after {} turns in {chapter:?}", turns.get()); // i18n-skip
+            let later = Rc::downgrade(&this);
+            glib::timeout_add_local_once(Duration::from_millis(2000), move || {
+                let Some(this) = later.upgrade() else { return };
+                let (read, next) = {
+                    let state = this.state.borrow();
+                    (state.read.is_some(), state.next.as_ref().map(|c| c.id.to_string()))
+                };
+                eprintln!("novel end: read {read}, next {next:?}"); // i18n-skip
+                this.continue_on();
+                let after = Rc::downgrade(&this);
+                glib::timeout_add_local_once(Duration::from_millis(3000), move || {
+                    let Some(this) = after.upgrade() else { return };
+                    let chapter =
+                        this.state.borrow().chapter.as_ref().map(|c| c.id.to_string());
+                    eprintln!("novel end: continued to {chapter:?}"); // i18n-skip
+                });
+            });
+            glib::ControlFlow::Break
+        });
+    }
+
     /// Open Chapters for a shot, on its `tab`: "pages" or "chapters".
     #[cfg(feature = "fixtures")]
     pub fn shot_chapters(self: &Rc<Self>, tab: &str) {

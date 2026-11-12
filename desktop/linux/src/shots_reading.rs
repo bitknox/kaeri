@@ -14,7 +14,7 @@ use kaeri_model::{
 use crate::{pages::Dest, reading::reader::Reader, window::Shell};
 
 /// Every reading shot, in the order a run takes them.
-pub const NAMES: [&str; 48] = [
+pub const NAMES: [&str; 49] = [
     "read",
     "read-updates",
     "read-library",
@@ -67,6 +67,8 @@ pub const NAMES: [&str; 48] = [
     "read-novel",
     "read-novel-light",
     "read-novel-paper",
+    // A novel read to its end page counts as read, and Continue opens the next chapter.
+    "read-novel-end",
     "read-send",
 ];
 
@@ -350,6 +352,11 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
             let chrome = shot == "read-novel-notice";
             later(shell, 3000, move |reader| reader.shot_notice(chrome));
             4.5
+        }
+        "read-novel-end" => {
+            read(shell, NOVEL, "3");
+            later(shell, 3000, |reader| reader.shot_novel_end());
+            30.0
         }
         "read-novel" => {
             shell.reader.shot_setting(ReaderSettingKey::Look, "system");
