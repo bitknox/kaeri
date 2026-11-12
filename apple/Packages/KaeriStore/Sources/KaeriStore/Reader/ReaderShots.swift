@@ -128,7 +128,7 @@ extension ReaderModel {
                 id: ChapterId(id), label: label, state: .unread, number: nil, title: nil, volume: nil, published: nil,
                 pages: pages, newChapter: false, download: nil, versions: 1, bookmarked: false)
         }
-        let title = strip ? "Paper Kites Over Juniper Row" : "The Lantern Ferry"
+        let title = strip ? "Juniper Row" : "Mr. Arai Runs the Night Ferry"
         let here = row(chapter, "Chapter \(chapter)", UInt32(count))
         let place = ReadPlace(
             work: WorkId(work), chapter: chapter, page: strip ? nil : (scene == "readermoved" ? 4 : 8),

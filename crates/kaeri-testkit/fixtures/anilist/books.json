@@ -3,13 +3,13 @@
   "id": 900301,
   "idMal": null,
   "title": {
-   "romaji": "Touro no Watashibune",
-   "english": "The Lantern Ferry",
-   "native": "灯籠の渡し舟"
+   "romaji": "Yobune no Arai-san",
+   "english": "Mr. Arai Runs the Night Ferry",
+   "native": "夜舟の新井さん"
   },
   "format": "MANGA",
   "status": "RELEASING",
-  "description": "A ferry keeper carries the lanterns of the departed across a quiet river, one passenger a night.",
+  "description": "Kenta Arai runs the last ferry of the night between Minase harbour and the island across the bay. The pay is bad and the engine is older than he is. Most nights he has four passengers, and one of them has started bringing him dinner.",
   "chapters": null,
   "volumes": null,
   "countryOfOrigin": "JP",
@@ -100,13 +100,13 @@
   "id": 900302,
   "idMal": null,
   "title": {
-   "romaji": "Garasu no Kajuen",
-   "english": "The Glass Orchard",
-   "native": "硝子の果樹園"
+   "romaji": "Kamiya Garasu Koubou",
+   "english": "Kamiya Glassworks",
+   "native": "神谷硝子工房"
   },
   "format": "NOVEL",
   "status": "RELEASING",
-  "description": "An apprentice glassblower inherits an orchard whose fruit rings like bells.",
+  "description": "Rin Kamiya is twenty-three, out of work and back in her home town when her grandfather breaks his hip. Someone has to keep his glass workshop open until spring. She has never blown glass, and the furnace takes four hours to heat.",
   "chapters": null,
   "volumes": 9,
   "countryOfOrigin": "JP",
@@ -179,7 +179,7 @@
   "idMal": null,
   "title": {
    "romaji": "Juniper Row",
-   "english": "Paper Kites Over Juniper Row",
+   "english": "Juniper Row",
    "native": "주니퍼 골목의 종이연"
   },
   "format": "MANGA",
