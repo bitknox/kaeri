@@ -400,14 +400,14 @@ public sealed partial class BookSourcesSection : UserControl
     {
         var books = ctx.Known.Books;
         var on = new ToggleSwitch { IsOn = !plugin.Off, OnContent = "", OffContent = "", MinWidth = 0 };
-        AutomationProperties.SetName(on, T.BookSourcesUse);
+        AutomationProperties.SetName(on, T.WindowsReadSourcesUsePlugin);
         on.Toggled += (_, _) =>
         {
             if (on.IsOn == plugin.Off)
                 books.SetOff(plugin.Id, !on.IsOn);
         };
         var menu = new MenuFlyout();
-        var use = new ToggleMenuFlyoutItem { Text = T.BookSourcesUse, IsChecked = !plugin.Off };
+        var use = new ToggleMenuFlyoutItem { Text = T.WindowsReadSourcesUsePlugin, IsChecked = !plugin.Off };
         use.Click += (_, _) => books.SetOff(plugin.Id, !use.IsChecked);
         menu.Items.Add(use);
         if (order.Count > 1)

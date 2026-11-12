@@ -2058,6 +2058,9 @@ public static partial class T
     /// <summary>Narrator's help on Search's filters while Your sources only is on.</summary>
     public static string WindowsReadSearchFiltersDimmed => Get("WindowsReadSearchFiltersDimmed");
 
+    /// <summary>Name of the switch that turns a book plugin on or off in the book sources.</summary>
+    public static string WindowsReadSourcesUsePlugin => Get("WindowsReadSourcesUsePlugin");
+
     /// <summary>Notice after Read again from the start, with an Undo button beside it. The title is the series' name.</summary>
     public static string SeriesReadAgainDoneWindows(string title) => Fill(Get("SeriesReadAgainDoneWindows"), ("title", title));
 
@@ -12700,6 +12703,7 @@ public static partial class T
         ["WindowsReadSearchSourceTimeoutSaid_one"] = "No answer in {seconds} second.",
         ["WindowsReadSearchSourceTimeoutSaid_other"] = "No answer in {seconds} seconds.",
         ["WindowsReadSearchFiltersDimmed"] = "The filters apply to AniList's results only.",
+        ["WindowsReadSourcesUsePlugin"] = "Use this plugin",
         ["SeriesReadAgainDoneWindows"] = "Reading {title} again from the start",
         ["SendSaveFilesWindows"] = "Save files",
         ["SendSavedWindows_one"] = "Saved the file",

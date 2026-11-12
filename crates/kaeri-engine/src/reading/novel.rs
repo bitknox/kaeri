@@ -1,7 +1,7 @@
 //! Novels in the platform web view: the open book served through the platform's scheme, its
 //! documents cleaned, and the paginator's settings.
 //!
-//! The web view asks for `kaeri-book://<session>/<path>` (Apple, WebView2, WebKitGTK) or
+//! The web view asks for `kaeri-book://s<session>/<path>` (Apple, WebView2, WebKitGTK) or
 //! `https://appassets.androidplatform.net/book/<session>/<path>` (Android). The scheme handler
 //! calls [`NovelBooks::resource`] on whatever thread it runs on: it reads the book directly,
 //! never through the event loop, so a page never waits behind a command. Every answer carries
@@ -80,13 +80,17 @@ pub fn assets() -> NovelAssets {
 /// Where the platform's web view loads books from.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Scheme {
-    /// `kaeri-book://<session>/<path>`.
+    /// `kaeri-book://s<session>/<path>`. The host is a name, never a bare number: WebView2
+    /// registers the scheme as a standard one, and Chromium reads a numeric host such as `7` as
+    /// the IPv4 address `0.0.0.7`, so the URL it asks for would name no session.
     Kaeri,
     /// `https://appassets.androidplatform.net/book/<session>/<path>` (WebViewAssetLoader).
     AndroidAssets,
 }
 
 const KAERI_PREFIX: &str = "kaeri-book://";
+/// What goes before the session number in a `kaeri-book` host.
+const KAERI_HOST: &str = "s";
 const ANDROID_PREFIX: &str = "https://appassets.androidplatform.net/book/";
 
 impl Scheme {
@@ -120,8 +124,8 @@ impl NovelBooks {
     pub fn url(&self, session: u64, path: &str) -> String {
         let encoded: Vec<String> = path.split('/').map(encode_segment).collect();
         let prefix = match self.scheme {
-            Scheme::Kaeri => KAERI_PREFIX,
-            Scheme::AndroidAssets => ANDROID_PREFIX,
+            Scheme::Kaeri => format!("{KAERI_PREFIX}{KAERI_HOST}"),
+            Scheme::AndroidAssets => ANDROID_PREFIX.to_owned(),
         };
         format!("{prefix}{session}/{}", encoded.join("/"))
     }
@@ -170,10 +174,13 @@ fn encode_segment(s: &str) -> String {
 /// The session and the normalised path in the book: `None` for a URL off both origins,
 /// `Some((session, None))` for one whose path leaves the book.
 fn parse_url(url: &str) -> Option<(u64, Option<String>)> {
-    let rest = url.strip_prefix(KAERI_PREFIX).or_else(|| url.strip_prefix(ANDROID_PREFIX))?;
+    let (rest, host) = match url.strip_prefix(KAERI_PREFIX) {
+        Some(rest) => (rest, KAERI_HOST),
+        None => (url.strip_prefix(ANDROID_PREFIX)?, ""),
+    };
     let rest = rest.split(['?', '#']).next().unwrap_or_default();
     let (session, path) = rest.split_once('/')?;
-    let session = session.parse().ok()?;
+    let session = session.strip_prefix(host)?.parse().ok()?;
     let path = kaeri_books::path::percent_decode(path).and_then(|p| {
         let limits = Limits::default();
         kaeri_books::path::entry_name(&p, limits.max_name_bytes, limits.max_path_depth)
@@ -1041,7 +1048,7 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let (books, _) = text_book(Scheme::Kaeri, dir.path());
         let url = books.url(7, TEXT_CHAPTER);
-        assert_eq!(url, "kaeri-book://7/chapter.xhtml");
+        assert_eq!(url, "kaeri-book://s7/chapter.xhtml");
         let r = books.resource(&format!("{url}#kaeri:pos=0/0/3")).unwrap();
         assert_eq!((r.status, r.mime.as_str()), (200, "application/xhtml+xml"));
         assert!(header(&r, "Content-Security-Policy").unwrap().contains("script-src 'none'"));
@@ -1056,13 +1063,16 @@ mod tests {
             "{text}"
         );
         // Off the book, another session, a climb out: refused without reading anything.
-        assert_eq!(books.resource("kaeri-book://7/other.xhtml").unwrap().status, 404);
-        assert_eq!(books.resource("kaeri-book://8/chapter.xhtml").unwrap().status, 404);
-        assert_eq!(books.resource("kaeri-book://7/../../etc/passwd").unwrap().status, 404);
+        assert_eq!(books.resource("kaeri-book://s7/other.xhtml").unwrap().status, 404);
+        assert_eq!(books.resource("kaeri-book://s8/chapter.xhtml").unwrap().status, 404);
+        assert_eq!(books.resource("kaeri-book://s7/../../etc/passwd").unwrap().status, 404);
+        // A bare number names no session: Chromium would have read it as an address.
+        assert!(books.resource("kaeri-book://7/chapter.xhtml").is_none());
+        assert!(books.resource("kaeri-book://0.0.0.7/chapter.xhtml").is_none());
         assert!(books.resource("https://x.example/a").is_none());
         // Kaeri's stylesheet comes with the paginator: the chapter links none, and none is served.
         assert!(!text.contains("<link"), "{text}");
-        assert_eq!(books.resource("kaeri-book://7/_kaeri/reader.css").unwrap().status, 404);
+        assert_eq!(books.resource("kaeri-book://s7/_kaeri/reader.css").unwrap().status, 404);
         books.remove(7);
         assert_eq!(books.resource(&url).unwrap().status, 404);
     }
@@ -1137,7 +1147,7 @@ mod tests {
             NovelBooks::default().url(1, "OEBPS/Text/Chapter One.xhtml"),
             format!(
                 "{}1/OEBPS/Text/Chapter%20One.xhtml",
-                if cfg!(target_os = "android") { ANDROID_PREFIX } else { KAERI_PREFIX }
+                if cfg!(target_os = "android") { ANDROID_PREFIX } else { "kaeri-book://s" }
             )
         );
     }

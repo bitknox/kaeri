@@ -678,7 +678,7 @@ pub enum WritingMode {
 pub struct NovelOpenView {
     pub session: u64,
     pub chapter: ChapterId,
-    /// The scheme URL of the first document: `kaeri-book://<session>/<path>`, or Android's
+    /// The scheme URL of the first document: `kaeri-book://s<session>/<path>`, or Android's
     /// asset-loader address.
     pub entry: String,
     pub writing_mode: WritingMode,

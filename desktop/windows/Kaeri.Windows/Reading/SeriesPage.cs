@@ -8,6 +8,7 @@ using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 
@@ -51,6 +52,9 @@ public sealed partial class SeriesPage : Page
     string? drawnHead, drawnSide, drawnChapters;
     /// <summary>The header's words as last drawn, which hold the send rows.</summary>
     StackPanel? drawnWords;
+    /// <summary>The amber action (or Read from another source) as last drawn.</summary>
+    Button? mainAction;
+    bool headDrawn;
 
     public SeriesPage()
     {
@@ -275,6 +279,11 @@ public sealed partial class SeriesPage : Page
         drawnWords = words;
         head.Children.Add(words);
         Ui.RestoreFocus(head, focus);
+        if (!headDrawn)
+        {
+            headDrawn = true;
+            FocusAction();
+        }
     }
 
     /// <summary>
@@ -313,33 +322,76 @@ public sealed partial class SeriesPage : Page
         return place;
     }
 
-    /// <summary>The amber action naming the chapter and page, then Status, Download and More.</summary>
-    StackPanel Actions(SeriesView series)
+    /// <summary>
+    /// The page took its first focus before the series was in, on whatever came first (the
+    /// chapters' order): once the header is drawn, focus starts on its main action instead,
+    /// unless the person has moved it.
+    /// </summary>
+    void FocusAction() => DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
     {
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(0, 12, 0, 0) };
+        if (XamlRoot is not { } root || mainAction is not { IsLoaded: true } action)
+            return;
+        var focused = FocusManager.GetFocusedElement(root) as DependencyObject;
+        if (focused is Control { FocusState: not FocusState.Programmatic })
+            return;
+        if (focused is not null && focused != this && !Within(focused, this))
+            return;
+        if (focused is not null && Within(focused, head))
+            return;
+        action.Focus(FocusState.Programmatic);
+    });
+
+    static bool Within(DependencyObject at, DependencyObject root)
+    {
+        for (var up = at; up is not null; up = VisualTreeHelper.GetParent(up))
+            if (up == root)
+                return true;
+        return false;
+    }
+
+    /// <summary>
+    /// The amber action naming the chapter and page, then Status, Download and More. In a narrow
+    /// window or a longer language the row wraps, so every button stays in sight.
+    /// </summary>
+    Player.WrapRow Actions(SeriesView series)
+    {
+        var row = new Player.WrapRow { Gap = 8, Margin = new Thickness(0, 12, 0, 0) };
+        Button main;
         if (SeriesWords.Action(series.Action) is { } words)
         {
-            var main = new Button { Content = words, Style = Ui.Res<Style>("PrimaryActionStyle") };
+            main = new Button { Content = words, Style = Ui.Res<Style>("PrimaryActionStyle") };
             main.Click += (_, _) => Perform(series);
-            row.Children.Add(main);
         }
         else
         {
             // No source has it: the way on is another source.
-            var another = new Button { Content = T.SeriesReadFromAnother, MinHeight = 40 };
-            another.Click += async (_, _) => await SeriesDialogs.ReadFrom(ctx, XamlRoot, work);
-            row.Children.Add(another);
+            main = new Button { Content = T.SeriesReadFromAnother, MinHeight = 40 };
+            main.Click += async (_, _) => await SeriesDialogs.ReadFrom(ctx, XamlRoot, work);
         }
-        row.Children.Add(Menu(series.List is { } list ? SeriesWords.List(list) : T.SeriesAddToList, StatusMenu(series)));
-        row.Children.Add(Menu(T.SeriesDownload, DownloadMenu()));
-        var more = new DropDownButton { Content = new FontIcon { Glyph = "", FontSize = 14 }, MinHeight = 40, Flyout = MoreMenu(series) };
+        row.Children.Add(main);
+        mainAction = main;
+        var status = series.List is { } list ? SeriesWords.List(list) : T.SeriesAddToList;
+        row.Children.Add(Menu(status, StatusMenu(series), status));
+        row.Children.Add(Menu(T.SeriesDownload, DownloadMenu(), T.SeriesDownload));
+        var more = new DropDownButton { Content = new FontIcon { Glyph = "\uE712", FontSize = 14 }, MinHeight = 40, Flyout = Named(MoreMenu(series), T.ActionMore) };
         AutomationProperties.SetName(more, T.ActionMore);
         ToolTipService.SetToolTip(more, T.ActionMore);
         row.Children.Add(more);
         return row;
     }
 
-    static DropDownButton Menu(string words, MenuFlyout flyout) => new() { Content = words, MinHeight = 40, Flyout = flyout };
+    static DropDownButton Menu(string words, MenuFlyout flyout, string name) => new() { Content = words, MinHeight = 40, Flyout = Named(flyout, name) };
+
+    /// <summary>A menu a screen reader names as its button is named, on the menu's own look.</summary>
+    static MenuFlyout Named(MenuFlyout flyout, string name)
+    {
+        if (!Application.Current.Resources.TryGetValue("DefaultMenuFlyoutPresenterStyle", out var basis) || basis is not Style look)
+            return flyout;
+        var style = new Style(typeof(MenuFlyoutPresenter)) { BasedOn = look };
+        style.Setters.Add(new Setter(AutomationProperties.NameProperty, name));
+        flyout.MenuFlyoutPresenterStyle = style;
+        return flyout;
+    }
 
     void Perform(SeriesView series)
     {

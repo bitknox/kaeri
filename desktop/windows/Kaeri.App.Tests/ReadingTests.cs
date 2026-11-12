@@ -242,6 +242,73 @@ public class ReadingTests
     }
 
     [Fact]
+    public async Task ANovelsAddressesHaveAHostTheWebViewKeepsAsItIs()
+    {
+        using var scene = new Scene(new FfiScene.ReaderNovel(), "cs-reader-novel-host");
+        var reader = scene.Known.Reader;
+        scene.Do(() =>
+        {
+            reader.Open("a:900302");
+            reader.SurfaceChanged(new ReaderSurface(1280, 720, 1f, false, false, true));
+        });
+        var novel = await scene.Until(k => k.Reader.Novel);
+        // A host of digits alone reaches the engine as an IPv4 address from a standard scheme.
+        var host = new Uri(novel.Entry).Host;
+        Assert.False(host.All(char.IsAsciiDigit), novel.Entry);
+        Assert.NotNull(reader.BookResource!(novel.Entry.Split('#')[0]));
+        Assert.Null(reader.BookResource!(novel.Entry.Split('#')[0].Replace($"//{host}/", "//0.0.0.7/")));
+    }
+
+    [Fact]
+    public async Task AReaderLeftWhileItOpensStaysClosedAndTheNextOneOpens()
+    {
+        using var scene = new Scene(new FfiScene.ReaderMangaRtl(), "cs-reader-left");
+        var reader = scene.Known.Reader;
+        scene.Do(() =>
+        {
+            reader.Open("a:900301");
+            reader.SurfaceChanged(new ReaderSurface(1280, 720, 1f, false, false, true));
+            reader.Close();
+            Assert.Equal(ReaderPhase.Closed, reader.Phase);
+        });
+        await Task.Delay(1500, TestContext.Current.CancellationToken);
+        scene.Do(() =>
+        {
+            Assert.Equal(ReaderPhase.Closed, reader.Phase);
+            Assert.Null(reader.View);
+            Assert.Empty(reader.Leaves);
+            reader.Open("a:900301");
+            reader.SurfaceChanged(new ReaderSurface(1280, 720, 1f, false, false, true));
+        });
+        await scene.Until(k => k.Reader.Leaves.Length > 0 ? k.Reader.Leaves : null);
+        scene.Do(() => Assert.Equal(ReaderPhase.Open, reader.Phase));
+    }
+
+    [Fact]
+    public async Task ANewLayoutKeepsThePageOnScreen()
+    {
+        using var scene = new Scene(new FfiScene.ReaderMangaRtl(), "cs-reader-relayout");
+        var reader = scene.Known.Reader;
+        scene.Do(() =>
+        {
+            reader.Open("a:900301");
+            reader.SurfaceChanged(new ReaderSurface(1280, 720, 1f, false, false, true));
+        });
+        var first = await scene.Until(k => k.Reader.Leaves.Length > 3 ? k.Reader.Leaves : null);
+        uint page = 0;
+        scene.Do(() =>
+        {
+            var at = first.Length / 2;
+            reader.Shown(at, TurnHow.Jump);
+            page = first[at].Parts.Min(p => p.Page);
+            // Full screen: the same book in a taller window lays out again.
+            reader.SurfaceChanged(new ReaderSurface(720, 1280, 1f, false, false, true));
+        });
+        var after = await scene.Until(k => !ReferenceEquals(k.Reader.Leaves, first) && k.Reader.Leaves.Length > 0 ? k.Reader.Leaves : null);
+        scene.Do(() => Assert.Contains(after[reader.Current].Parts, p => p.Page == page));
+    }
+
+    [Fact]
     public async Task DownloadsNameEachSeriesByItsTitle()
     {
         using var scene = new Scene(new FfiScene.ReadingDownloads(), "cs-reading-downloads");
