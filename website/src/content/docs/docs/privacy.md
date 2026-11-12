@@ -3,7 +3,7 @@ title: Privacy
 description: What the Kaeri apps send, where and when, what they keep on your device, and how to turn each part off.
 ---
 
-Kaeri doesn't host any shows or books. It has no servers of its own. The one exception is this website.
+Kaeri has no servers of its own apart from this website.
 There is no Kaeri account, and nothing the apps do is reported to the people who make
 Kaeri. Every request an app makes goes straight to one of the services on this page, and most
 of them only happen once you set something up.
