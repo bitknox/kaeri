@@ -91,20 +91,19 @@ public struct ReaderScreen: View {
         .focused($holdsKeys)
         .onExitCommand { escape() }
         .onKeyPress(phases: [.down, .repeat]) { press in
-            if press.key == .escape, press.phase == .down, press.modifiers.isEmpty {
-                escape()
-                return .handled
-            }
-            guard model.sheet == nil, !model.askingPage,
-                  let key = ReaderKeys.action(press.key, modifiers: press.modifiers, in: keyContext)
-            else { return .ignored }
-            actions.perform(key)
-            return .handled
+            take(press.key, press.modifiers, repeated: press.phase == .repeat) ? .handled : .ignored
         }
         .onAppear { holdsKeys = true }
         .onChange(of: model.sheet == nil) { _, closed in if closed { holdsKeys = true } }
         .onChange(of: model.askingPage) { _, asking in if !asking { holdsKeys = true } }
         .onChange(of: scenePhase) { _, phase in if phase == .active { holdsKeys = true } }
+        #else
+        // On iPad the reader holds the keyboard in a view of its own while nothing is over it.
+        .background {
+            ReaderKeyCatcher(holds: model.sheet == nil && !model.askingPage && scenePhase == .active) { key, modifiers in
+                take(key, modifiers, repeated: false)
+            }
+        }
         #endif
         .onChange(of: model.sheet) { _, sheet in if sheet != nil { model.chromeShown = true } }
         .onChange(of: model.held?.tick) { _, _ in heldShown = 1 }
@@ -223,6 +222,20 @@ public struct ReaderScreen: View {
     #endif
 
     private func escape() { ReaderActions.escape(model, close: close) }
+
+    /// A key for the reader: Esc steps out, and the reader's table turns while nothing is over
+    /// the pages. True when the reader took it.
+    private func take(_ key: KeyEquivalent, _ modifiers: EventModifiers, repeated: Bool) -> Bool {
+        if key == .escape, !repeated, modifiers.isEmpty {
+            escape()
+            return true
+        }
+        guard model.sheet == nil, !model.askingPage,
+              let action = ReaderKeys.action(key, modifiers: modifiers, in: keyContext)
+        else { return false }
+        actions.perform(action)
+        return true
+    }
 
     /// The place as VoiceOver hears it, once a turn has settled.
     private var spokenPlace: String {

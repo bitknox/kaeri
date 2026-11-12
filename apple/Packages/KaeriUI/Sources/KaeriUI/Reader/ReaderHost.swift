@@ -207,26 +207,30 @@ private struct ReaderMenuItems: View {
         let plain = on && front?.plain == true
         let reader = ReaderActions(model: model) { model.close() }
         let keys = front?.keys ?? reader.keys
+        // A key with no modifier is the reader's only while no sheet or Go to page is up. The
+        // menu binds those keys by `plain`, but iPadOS can keep the commands it built before the
+        // prompt came up, so each checks again as it comes.
+        let free = { model.sheet == nil && !model.askingPage }
         Group {
             // The same keys as ReaderKeys, which the reader also takes itself.
             if let next = ReaderKeys.arrow(forward: true, in: keys),
                let previous = ReaderKeys.arrow(forward: false, in: keys) {
-                Button(L.readerMenuNextPage) { reader.perform(.page(forward: true)) }.plainKey(next, when: plain)
-                Button(L.readerMenuPreviousPage) { reader.perform(.page(forward: false)) }.plainKey(previous, when: plain)
+                Button(L.readerMenuNextPage) { if free() { reader.perform(.page(forward: true)) } }.plainKey(next, when: plain)
+                Button(L.readerMenuPreviousPage) { if free() { reader.perform(.page(forward: false)) } }.plainKey(previous, when: plain)
             }
-            Button(L.readerMenuNextPage) { reader.perform(.page(forward: true)) }.plainKey(.space, when: plain)
-            Button(L.readerMenuPreviousPage) { reader.perform(.page(forward: false)) }
+            Button(L.readerMenuNextPage) { if free() { reader.perform(.page(forward: true)) } }.plainKey(.space, when: plain)
+            Button(L.readerMenuPreviousPage) { if free() { reader.perform(.page(forward: false)) } }
                 .key(.space, .shift, when: plain)
-            Button(L.readerMenuNextPage) { reader.perform(.page(forward: true)) }.plainKey(.pageDown, when: plain)
-            Button(L.readerMenuPreviousPage) { reader.perform(.page(forward: false)) }.plainKey(.pageUp, when: plain)
-            Button(L.readerMenuNextPage) { reader.perform(.line(forward: true)) }.plainKey(.downArrow, when: plain)
-            Button(L.readerMenuPreviousPage) { reader.perform(.line(forward: false)) }.plainKey(.upArrow, when: plain)
-            Button(L.readerMenuFirstPage) { reader.perform(.edge(first: true)) }.plainKey(.home, when: plain)
-            Button(L.readerMenuLastPage) { reader.perform(.edge(first: false)) }.plainKey(.end, when: plain)
+            Button(L.readerMenuNextPage) { if free() { reader.perform(.page(forward: true)) } }.plainKey(.pageDown, when: plain)
+            Button(L.readerMenuPreviousPage) { if free() { reader.perform(.page(forward: false)) } }.plainKey(.pageUp, when: plain)
+            Button(L.readerMenuNextPage) { if free() { reader.perform(.line(forward: true)) } }.plainKey(.downArrow, when: plain)
+            Button(L.readerMenuPreviousPage) { if free() { reader.perform(.line(forward: false)) } }.plainKey(.upArrow, when: plain)
+            Button(L.readerMenuFirstPage) { if free() { reader.perform(.edge(first: true)) } }.plainKey(.home, when: plain)
+            Button(L.readerMenuLastPage) { if free() { reader.perform(.edge(first: false)) } }.plainKey(.end, when: plain)
             Divider()
-            Button(L.readerMenuNextChapter) { reader.perform(.chapter(next: true)) }.plainKey("]", when: plain)
-            Button(L.readerMenuPreviousChapter) { reader.perform(.chapter(next: false)) }.plainKey("[", when: plain)
-            Button(L.readerMenuGoToPage) { reader.askPage() }.plainKey("g", when: plain)
+            Button(L.readerMenuNextChapter) { if free() { reader.perform(.chapter(next: true)) } }.plainKey("]", when: plain)
+            Button(L.readerMenuPreviousChapter) { if free() { reader.perform(.chapter(next: false)) } }.plainKey("[", when: plain)
+            Button(L.readerMenuGoToPage) { if free() { reader.askPage() } }.plainKey("g", when: plain)
             if let page = front?.backPage {
                 Button(L.readerMenuBackToPage(page: page)) { reader.back() }.key("[", .command, when: on)
             } else {
