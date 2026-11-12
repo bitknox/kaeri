@@ -7643,6 +7643,12 @@ public static partial class T
     /// <summary>Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.</summary>
     public static string SendShareAgain => Get("SendShareAgain");
 
+    /// <summary>A ready send whose files were cleared before they were shared or saved. Ready files are kept for a day.</summary>
+    public static string SendFilesGone => Get("SendFilesGone");
+
+    /// <summary>Button on a send whose files are gone: prepares the same chapters for the same e-reader again.</summary>
+    public static string SendAgain => Get("SendAgain");
+
     /// <summary>A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.</summary>
     public static string SendBanner(string device) => Fill(Get("SendBanner"), ("device", device));
 
@@ -14640,6 +14646,8 @@ public static partial class T
         ["SendReady_one"] = "One file is ready.",
         ["SendReady_other"] = "{n} files are ready.",
         ["SendShareAgain"] = "Share again",
+        ["SendFilesGone"] = "The files are gone. Send again to prepare them.",
+        ["SendAgain"] = "Send again",
         ["SendBanner"] = "Sending to {device}",
         ["SendFormatFixedEpub"] = "Fixed-layout EPUB",
         ["SendFormatKepub"] = "KEPUB",

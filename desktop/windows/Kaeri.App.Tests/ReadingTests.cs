@@ -61,6 +61,39 @@ public class ReadingTests
     }
 
     [Fact]
+    public void AReadySendWhoseFilesWentFailsForSendAgain()
+    {
+        HomeGuard.Check();
+        List<Command> sent = [];
+        var sending = new SendState { Send = sent.Add };
+        var id = sending.Begin("a:900301", ["c1", "c2"], Kobo(), novel: false)!.Value;
+        var dir = AppDirs.NewScratchRoot("cs-send-files-gone");
+        Directory.CreateDirectory(dir);
+        try
+        {
+            var kept = Path.Combine(dir, "Chapter 1.cbz");
+            var gone = Path.Combine(dir, "Chapter 2.cbz");
+            File.WriteAllBytes(kept, [1]);
+            File.WriteAllBytes(gone, [1]);
+            sending.Apply(new ReadingEvent.ExportReady(7, [new ExportFile(kept, "Chapter 1.cbz", 1, null), new ExportFile(gone, "Chapter 2.cbz", 1, null)]));
+            Assert.True(sending.FilesThere(id));
+            // A day on, the engine cleared one: the send says so rather than passing it on.
+            File.Delete(gone);
+            Assert.False(sending.FilesThere(id));
+            var send = sending.Get(id)!;
+            Assert.Equal(SendPhase.Failed, send.Phase);
+            Assert.True(send.FilesGone);
+            Assert.Equal(T.SendFilesGone, send.Line);
+            Assert.Empty(send.Files);
+            Assert.DoesNotContain(sent, c => c is Command.Reading { V1: ReadingCommand.Shared });
+        }
+        finally
+        {
+            Directory.Delete(dir, true);
+        }
+    }
+
+    [Fact]
     public void ASendStoppedBeforeItsJobIsNamedStopsWhenItIs()
     {
         List<Command> sent = [];

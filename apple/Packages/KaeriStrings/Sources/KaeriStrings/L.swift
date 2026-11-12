@@ -10415,6 +10415,12 @@ public enum L {
     /// Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.
     public static var sendShareAgain: String { string("send-share-again", fallback: "Share again") }
 
+    /// A ready send whose files were cleared before they were shared or saved. Ready files are kept for a day.
+    public static var sendFilesGone: String { string("send-files-gone", fallback: "The files are gone. Send again to prepare them.") }
+
+    /// Button on a send whose files are gone: prepares the same chapters for the same e-reader again.
+    public static var sendAgain: String { string("send-again", fallback: "Send again") }
+
     /// A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
     public static func sendBanner(device: String) -> String {
         Self.format("send-banner", fallback: "Sending to %1$@", device)

@@ -11608,6 +11608,14 @@ object Strings {
     fun sendShareAgain(context: Context): String =
         context.getString(R.string.send_share_again)
 
+    /** A ready send whose files were cleared before they were shared or saved. Ready files are kept for a day. */
+    fun sendFilesGone(context: Context): String =
+        context.getString(R.string.send_files_gone)
+
+    /** Button on a send whose files are gone: prepares the same chapters for the same e-reader again. */
+    fun sendAgain(context: Context): String =
+        context.getString(R.string.send_again)
+
     /** A send in a list or banner that is under way, with a ring beside it. The device is the e-reader. */
     fun sendBanner(context: Context, device: String): String =
         context.getString(R.string.send_banner, device)

@@ -10644,6 +10644,14 @@
     <value>Share again</value>
     <comment>Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.</comment>
   </data>
+  <data name="SendFilesGone" xml:space="preserve">
+    <value>The files are gone. Send again to prepare them.</value>
+    <comment>A ready send whose files were cleared before they were shared or saved. Ready files are kept for a day.</comment>
+  </data>
+  <data name="SendAgain" xml:space="preserve">
+    <value>Send again</value>
+    <comment>Button on a send whose files are gone: prepares the same chapters for the same e-reader again.</comment>
+  </data>
   <data name="SendBanner" xml:space="preserve">
     <value>Sending to {device}</value>
     <comment>A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.</comment>

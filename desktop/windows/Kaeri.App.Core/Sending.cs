@@ -31,6 +31,8 @@ public sealed record EReaderSend
     /// <summary>Why it waits, or why it failed, in words.</summary>
     public string Line { get; set; } = "";
     public ExportFile[] Files { get; set; } = [];
+    /// <summary>A ready send whose files went before they were shared or saved: it fails, for Send again.</summary>
+    public bool FilesGone { get; set; }
     internal bool CancelOnBind { get; set; }
 
     public bool IsRunning => Phase is SendPhase.Preparing or SendPhase.Waiting;
@@ -118,6 +120,24 @@ public sealed class SendState
     }
 
     public void Dismiss(int id) => Sends.RemoveAll(s => s.Id == id);
+
+    /// <summary>
+    /// Whether a ready send's files are all still there, checked before they're shared or saved:
+    /// the engine keeps them for a day once ready. With any gone the send fails saying so, for
+    /// Send again, rather than passing on files that aren't there.
+    /// </summary>
+    public bool FilesThere(int id)
+    {
+        if (Get(id) is not { Phase: SendPhase.Ready } send)
+            return false;
+        if (send.Files.Length > 0 && send.Files.All(f => File.Exists(f.Path)))
+            return true;
+        send.Phase = SendPhase.Failed;
+        send.FilesGone = true;
+        send.Line = T.SendFilesGone;
+        send.Files = [];
+        return false;
+    }
 
     public EReaderSend? Get(int id) => Sends.FirstOrDefault(s => s.Id == id);
 

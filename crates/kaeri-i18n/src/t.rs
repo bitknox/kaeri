@@ -17105,6 +17105,16 @@ pub fn send_share_again() -> String {
     text("send-share-again", &[])
 }
 
+/// A ready send whose files were cleared before they were shared or saved. Ready files are kept for a day.
+pub fn send_files_gone() -> String {
+    text("send-files-gone", &[])
+}
+
+/// Button on a send whose files are gone: prepares the same chapters for the same e-reader again.
+pub fn send_again() -> String {
+    text("send-again", &[])
+}
+
 /// A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
 pub fn send_banner(device: &str) -> String {
     text("send-banner", &[("device", Arg::Text(device))])
