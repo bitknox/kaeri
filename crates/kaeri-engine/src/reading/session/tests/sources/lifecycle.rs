@@ -31,6 +31,8 @@ struct Many {
     fetched: Mutex<Vec<(String, usize)>>,
     /// `None`: every page comes. `Some(set)`: only these page numbers come; the rest wait.
     let_through: Mutex<Option<HashSet<usize>>>,
+    /// Every page of this chapter (its id in the source) waits, whatever else comes.
+    held_chapter: Mutex<Option<String>>,
     changed: tokio::sync::Notify,
 }
 
@@ -51,6 +53,7 @@ impl Many {
             pages,
             fetched: Mutex::default(),
             let_through: Mutex::new(None),
+            held_chapter: Mutex::new(None),
             changed: tokio::sync::Notify::new(),
         }
     }
@@ -76,8 +79,14 @@ impl Many {
         self.changed.notify_waiters();
     }
 
-    fn passes(&self, index: usize) -> bool {
-        self.let_through.lock().unwrap().as_ref().is_none_or(|s| s.contains(&index))
+    fn hold_chapter(&self, chapter: &str) {
+        *self.held_chapter.lock().unwrap() = Some(chapter.to_owned());
+        self.changed.notify_waiters();
+    }
+
+    fn passes(&self, chapter: &str, index: usize) -> bool {
+        self.held_chapter.lock().unwrap().as_deref() != Some(chapter)
+            && self.let_through.lock().unwrap().as_ref().is_none_or(|s| s.contains(&index))
     }
 
     fn fetched(&self) -> Vec<(String, usize)> {
@@ -116,12 +125,12 @@ impl kaeri_core::traits::BookSource for Many {
         let mut parts = page.url.rsplit('/');
         let index: usize = parts.next().unwrap().parse().unwrap();
         let chapter = parts.next().unwrap().to_owned();
-        self.fetched.lock().unwrap().push((chapter, index));
+        self.fetched.lock().unwrap().push((chapter.clone(), index));
         loop {
             let changed = self.changed.notified();
             tokio::pin!(changed);
             changed.as_mut().enable();
-            if self.passes(index) {
+            if self.passes(&chapter, index) {
                 break;
             }
             changed.await;
@@ -402,6 +411,53 @@ async fn a_jump_asks_for_the_page_jumped_to_first() {
     let after = source.fetched();
     let next: Vec<usize> = after[asked..].iter().map(|(_, p)| *p).collect();
     assert!(next.iter().take(3).any(|p| *p == 30), "asked after the jump: {next:?}");
+}
+
+/// Leaving a chapter for another stops fetching the one left, while the other's pages are
+/// still on their way: no page of it shares the link with the page the reader waits on.
+#[tokio::test]
+async fn the_chapter_left_stops_fetching_its_pages() {
+    let source = Arc::new(Many::new(2, 40));
+    source.hold_all_but(&[0, 1, 38, 39]);
+    let mut h = many(source.clone());
+    h.open_many(Some("1"));
+    timeout(Duration::from_secs(20), h.leaves_of("1")).await.expect("laid out");
+    h.pump(Duration::from_millis(300)).await;
+    // Chapter 2's pages wait, so it is not yet with the page worker.
+    source.hold_chapter("ch-2");
+    let session = h.session();
+    h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("2") });
+    h.pump(Duration::from_millis(100)).await;
+    let of_one = |s: &Many| s.fetched().iter().filter(|(c, _)| c == "ch-1").count();
+    let left = of_one(&source);
+    source.let_all();
+    h.pump(Duration::from_millis(800)).await;
+    assert_eq!(of_one(&source), left, "chapter 1 was fetched on after it was left");
+}
+
+/// A place past the chapter's last page, as one kept from a longer copy of it, opens at the
+/// last page, and the view says that page rather than the one asked for.
+#[tokio::test]
+async fn an_open_past_the_last_page_opens_at_the_last_page() {
+    let source = Arc::new(Many::new(1, 5));
+    let mut h = many(source.clone());
+    h.send(ReaderCommand::Open {
+        work: WorkId::new(MANY),
+        chapter: Some(ChapterId::new("1")),
+        at: OpenAt::Page { page: 99 },
+        surface: surface(),
+    });
+    let opened = h.until(|e| match e {
+        ReaderEvent::Opened(view) => Some(view.as_ref().clone()),
+        _ => None,
+    });
+    let view = timeout(Duration::from_secs(20), opened).await.expect("opened");
+    assert_eq!(view.start.page, Some(4));
+    let first = h.until(|e| match e {
+        ReaderEvent::PageReady { page, .. } => Some(*page),
+        _ => None,
+    });
+    assert_eq!(timeout(Duration::from_secs(20), first).await.expect("a page"), 4);
 }
 
 /// A page that does not come holds only itself: the pages after it are asked for and land.

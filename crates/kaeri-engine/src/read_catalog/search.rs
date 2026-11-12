@@ -267,6 +267,9 @@ pub(crate) struct Run {
     /// The hits a join was kept for, so it is written once.
     kept_joins: HashSet<(String, String)>,
     now: i64,
+    /// Plugins were still loading when the search was sent: it is not done until they have
+    /// joined it, or stopped coming.
+    waiting: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -420,6 +423,9 @@ fn kind_of(kind: BookSourceKind) -> Option<ReadSourceKind> {
 /// Start the sources' part of a search with words: every group asking at once, then each
 /// answer as it comes. Gives the run's generation.
 fn sources_search(kit: &Kit, ask: Ask, query: &ReadSearchQuery, tx: &Outbox) -> u64 {
+    // Read before the plugins are taken in, so a load that ends in between is waited for
+    // rather than missed.
+    let waiting = kit.plugins.is_arriving();
     kit.sources.adopt_plugins(&kit.plugins);
     let medium = medium_of(query);
     let asked = sources_for(kit, query);
@@ -446,6 +452,7 @@ fn sources_search(kit: &Kit, ask: Ask, query: &ReadSearchQuery, tx: &Outbox) -> 
                 })
                 .collect(),
             now: ask.now,
+            waiting,
             ..Run::default()
         };
         generation
@@ -454,7 +461,21 @@ fn sources_search(kit: &Kit, ask: Ask, query: &ReadSearchQuery, tx: &Outbox) -> 
     let named: Vec<(String, String)> =
         asked.into_iter().map(|(id, name, _)| (id, name)).collect();
     ask_sources(kit, ask, generation, query.text.trim().to_owned(), medium, named, tx);
+    if waiting {
+        after_plugins(kit, ask, generation, tx);
+    }
     generation
+}
+
+/// A search sent while the plugins load, at launch: once they have joined, or stopped coming,
+/// the ones it would ask are asked in their place, as for a source that joins while it shows.
+fn after_plugins(kit: &Kit, ask: Ask, generation: u64, tx: &Outbox) {
+    let (kit, tx) = (kit.clone(), tx.clone());
+    tokio::spawn(async move {
+        kit.plugins.arrived(super::editions::PLUGINS_WAIT).await;
+        kit.sources.adopt_plugins(&kit.plugins);
+        rejoin(&kit, ask, &tx, Some(generation));
+    });
 }
 
 /// Ask each of `named` (id and the name its group shows) for `text`, each answer landing in
@@ -556,10 +577,22 @@ async fn ask_source(
 /// joined anew since it answered, is asked for the words in its place in the person's order,
 /// and a source gone or switched off leaves with its group. The rest keep what they answered.
 pub(crate) fn sources_changed(kit: &Kit, ask: Ask, tx: &Outbox) {
+    rejoin(kit, ask, tx, None);
+}
+
+/// [`sources_changed`], or with `landed`, the plugins a search of that generation waited for
+/// have come: it stops waiting, and says so even when no source joined.
+fn rejoin(kit: &Kit, ask: Ask, tx: &Outbox, landed: Option<u64>) {
     let (generation, text, medium, named) = {
         let mut run = kit.sources.catalog.search.lock().unwrap_or_else(|e| e.into_inner());
         if run.generation == 0 || run.query.text.trim().is_empty() {
             return;
+        }
+        if let Some(generation) = landed {
+            if run.generation != generation {
+                return;
+            }
+            run.waiting = false;
         }
         let medium = medium_of(&run.query);
         let mut before = std::mem::take(&mut run.groups);
@@ -577,7 +610,7 @@ pub(crate) fn sources_changed(kit: &Kit, ask: Ask, tx: &Outbox) {
             run.groups.push(group);
         }
         // Nothing joined, and nothing left with its group: the search stands as it was sent.
-        if named.is_empty() && before.is_empty() {
+        if named.is_empty() && before.is_empty() && landed.is_none() {
             return;
         }
         (run.generation, run.query.text.trim().to_owned(), medium, named)
@@ -616,6 +649,11 @@ fn update(kit: &Kit, generation: u64, tx: &Outbox, change: impl FnOnce(&mut Run)
             return;
         }
         change(&mut run);
+        // A search waiting on the plugins with no group yet says nothing: an empty part would
+        // read as nothing found, where its sources are still to come.
+        if run.waiting && run.groups.is_empty() {
+            return;
+        }
         view(kit, &mut run)
     };
     send(tx, ReadingEvent::SourceSearch(Box::new(view)));
@@ -687,7 +725,9 @@ fn view(kit: &Kit, run: &mut Run) -> ReadSourceSearch {
         }
     }
     let settled = |state: &ReadSourceState| !matches!(state, ReadSourceState::Asking);
-    let done = anilist != ReadAnilistState::Asking && groups.iter().all(|g| settled(&g.state));
+    let done = anilist != ReadAnilistState::Asking
+        && !run.waiting
+        && groups.iter().all(|g| settled(&g.state));
     ReadSourceSearch { query: run.query.clone(), anilist, groups, joins, done }
 }
 

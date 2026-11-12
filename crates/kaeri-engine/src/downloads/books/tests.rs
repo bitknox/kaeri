@@ -549,6 +549,60 @@ async fn a_pick_names_unread_chapters_a_volume_or_the_ones_asked_for() {
     assert_eq!(queued, ["2", "3", "4"]);
 }
 
+/// A chapter the series page lists from another source downloads from that source, in its
+/// place among the rest, so Download next and reading on offline do not stop at it.
+#[tokio::test]
+async fn a_chapter_listed_from_another_source_downloads_from_there() {
+    let mut kit = kit(&["1", "2", "3"]);
+    let other = Arc::new(Shelf {
+        manifest: BookSourceManifest {
+            id: "other".into(),
+            name: "Other shelf".into(),
+            ..kit.shelf.manifest.clone()
+        },
+        listed: Mutex::new(
+            ["1", "2", "2.5", "3"].map(|id| SourceChapter::new(id, id)).to_vec(),
+        ),
+        fetched: Mutex::new(0),
+        asked: Mutex::default(),
+        broken: Mutex::default(),
+        held: Mutex::default(),
+    });
+    kit.lent.sources.registry.put(other.clone());
+    kit.store().set_book_match("other", "s-2", WORK, 90, true, false, 1).unwrap();
+    // Read in the first source, as picked on the series page.
+    let pref = kaeri_store::reading::EditionPref {
+        source_id: "shelf".into(),
+        version_label: None,
+        language: None,
+    };
+    kit.store().set_edition_pref(WORK, Some(&pref)).unwrap();
+    let work = WorkId::new(WORK);
+    let now = kit.lent.clock.now();
+    // The other source was listed once, so the series page fills 2.5 in from its list.
+    kit.lent.sources.chapters(&work, Some("other"), now).await.unwrap();
+    let (source, rows) = ordered_chapters(&kit.lent.sources, &work, now).await.unwrap();
+    assert_eq!(source, "shelf");
+    let filled = rows.iter().find(|r| r.id.as_str() == "2.5").expect("2.5 filled in");
+    assert!(filled.other_source.is_some());
+
+    kit.queue.download(&kit.lent, work.clone(), DownloadPick::NextUnread { n: 4 }).await;
+    kit.settle().await;
+    let done: Vec<_> = kit.states().into_iter().map(|(c, _)| c).collect();
+    assert_eq!(done, ["1", "2", "2.5", "3"]);
+    assert!(kit.states().iter().all(|(_, s)| *s == ChapterDownloadState::Done));
+    let row = |c: &str| kit.store().book_download(WORK, c).unwrap().unwrap().source_id;
+    assert_eq!([row("2"), row("2.5")], ["shelf", "other"]);
+    assert_eq!(*other.fetched.lock().unwrap(), 3, "only 2.5's pages from the other source");
+    assert!(!kit.drain().iter().any(|e| matches!(e, ReadingEvent::Failed { .. })));
+
+    // A chapter listed from a source that no longer lists it has no source to come from.
+    let listers = Listers::of(&kit.lent.sources, &work, "shelf");
+    let gone = ChapterRow { other_source: Some("Other shelf".into()), ..listed("2.7", None) };
+    assert_eq!(listers.of_row(&gone), None);
+    assert_eq!(listers.of_row(filled), Some("other"));
+}
+
 #[tokio::test]
 async fn cancel_takes_queued_chapters_out_and_leaves_finished_ones() {
     let kit = kit(&["1", "2", "3"]);

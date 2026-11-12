@@ -184,6 +184,8 @@ pub struct Feed {
     again: mpsc::UnboundedSender<(usize, Outbox)>,
     /// Pages the reader waits on, for the fetcher to fetch before the rest.
     wanted: mpsc::UnboundedSender<usize>,
+    /// Set once the reader left the chapter for another: see [`Feed::leave`].
+    left: tokio::sync::watch::Sender<bool>,
 }
 
 /// What a feed's fetcher is lent: the source, its chapter, and who hears of each page. It holds
@@ -200,6 +202,7 @@ struct Fetcher<F> {
     again: mpsc::UnboundedReceiver<(usize, Outbox)>,
     wanted: mpsc::UnboundedReceiver<usize>,
     gone: Gone,
+    left: tokio::sync::watch::Receiver<bool>,
 }
 
 impl Feed {
@@ -243,6 +246,13 @@ impl Feed {
         }
     }
 
+    /// The reader left the chapter for another: no more of its pages are fetched, and those
+    /// on their way stop, so the chapter opening has the link to itself. The page worker may
+    /// hold the feed a while longer, until the other chapter reaches it.
+    pub fn leave(&self) {
+        self.left.send_replace(true);
+    }
+
     fn set(&self, index: usize, page: FeedPage) {
         if let Ok(mut pages) = self.pages.lock()
             && let Some(slot) = pages.get_mut(index)
@@ -266,6 +276,7 @@ impl Feed {
             parts: None,
             again,
             wanted,
+            left: tokio::sync::watch::Sender::new(false),
         }
     }
 
@@ -378,7 +389,8 @@ pub(crate) async fn start(
     let (again, asked) = mpsc::unbounded_channel();
     let (wanted, waited) = mpsc::unbounded_channel();
     let pages = Mutex::new(pages);
-    let feed = Arc::new(Feed { chapter, dir, pages, credits, parts, again, wanted });
+    let (left, leaving) = tokio::sync::watch::channel(false);
+    let feed = Arc::new(Feed { chapter, dir, pages, credits, parts, again, wanted, left });
     let fetcher = Fetcher {
         sources,
         opened,
@@ -389,6 +401,7 @@ pub(crate) async fn start(
         again: asked,
         wanted: waited,
         gone,
+        left: leaving,
     };
     tokio::spawn(fetcher.run(Arc::downgrade(&feed), rest, out));
     Ok(feed)
@@ -503,7 +516,8 @@ impl<F: Fn(u32, &Outbox) + Send + 'static> Fetcher<F> {
         let mut asked: HashSet<usize> = HashSet::new();
         let mut open = true;
         loop {
-            if feed.strong_count() == 0 || self.gone.is() {
+            // Returning drops the fetches on their way.
+            if feed.strong_count() == 0 || self.gone.is() || *self.left.borrow() {
                 return;
             }
             // A page waited on starts even with the others all under way.
@@ -560,6 +574,8 @@ impl<F: Fn(u32, &Outbox) + Send + 'static> Fetcher<F> {
                     }
                     None => open = false,
                 },
+                // Seen at the top of the loop. An error means the feed is gone, also seen there.
+                _ = self.left.changed() => {}
                 else => return,
             }
         }

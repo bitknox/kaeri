@@ -1009,6 +1009,17 @@ impl Session {
         }
     }
 
+    /// A start past the chapter's last page, as a place kept from a longer copy of it, is its
+    /// last page: the reader opens there and `Opened` says so.
+    fn clamp_start(&mut self, total: u32) {
+        let Some(last) = total.checked_sub(1) else { return };
+        if self.start.page.is_some_and(|p| p > last) {
+            self.start.page = Some(last);
+            self.start.strip = None;
+            self.resumed = self.resumed.map(|p| p.min(last));
+        }
+    }
+
     /// Ask the worker for the open chapter, starting at `page`.
     fn lay_out(&mut self, cx: &Cx<'_>, pages: &Pages, page: u32) {
         self.generation += 1;
@@ -1019,7 +1030,12 @@ impl Session {
         self.start.strip = self.start.strip.filter(|s| s.image == page);
         // Another chapter's pages that had not all landed are fetched again when it opens, and
         // so is one with credit pages or parts, which its folder alone does not tell.
-        if let Some(left) = self.feed.take_if(|f| f.chapter != chapter.id)
+        let left = self.feed.take_if(|f| f.chapter != chapter.id);
+        // The chapter left stops fetching, so its pages never hold up the one opening.
+        if let Some(left) = &left {
+            left.leave();
+        }
+        if let Some(left) = left
             && (!left.complete() || !left.credits.is_empty() || left.parts.is_some())
             && let Some(c) = self.chapters.iter_mut().find(|c| c.id == left.chapter)
         {
@@ -1111,6 +1127,7 @@ impl Session {
         // A place kept in a split of the chapter with other pages, as another source's, goes to
         // the same point in this one.
         self.rescale_kept(laid.pages);
+        self.clamp_start(laid.pages);
         let eink = self.eink();
         // A guess is kept for the series on this device, and said once.
         let now = cx.now();
