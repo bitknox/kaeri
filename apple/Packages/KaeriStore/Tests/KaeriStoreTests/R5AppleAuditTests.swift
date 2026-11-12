@@ -1,17 +1,15 @@
-// Reading hunt round 5, Apple code audit: each test shows one bug and fails until it is fixed.
-// They are off by default; KAERI_R5_AUDIT=1 runs them. A fixer turns a test on for good with
-// the fix.
+// The reader through a failed chapter open, a close, the app leaving and a second book: what
+// the round 5 Apple audit of reading checked.
 
 @testable import KaeriStore
 import KaeriKit
 import Foundation
 import Testing
 
-private let audit = ProcessInfo.processInfo.environment["KAERI_R5_AUDIT"] != nil
-
 @MainActor
 private final class Sent {
     var all: [Command] = []
+    var opens: Int { all.filter { if case .reader(.open) = $0 { true } else { false } }.count }
 }
 
 @MainActor
@@ -64,11 +62,10 @@ struct R5AppleAuditTests {
         return model
     }
 
-    /// R5-A1 (stuck): Continue from the end page into a chapter whose open fails. The engine says
-    /// so with `ReadingEvent.failed(.reader)` and no `opened` (session.rs `laid_out`), but
-    /// `observe` never settles the held end page, so it stays over the failure with its spinner
-    /// and eats every tap; on iPhone and iPad the hidden chrome can't come back to close.
-    @Test(.disabled(if: !audit, "R5-A1: a failed chapter open leaves the held end page up for good"))
+    /// Continue from the end page into a chapter whose open fails: the engine says so with
+    /// `ReadingEvent.failed(.reader)` and no `opened`, and the held end page goes, so the failure
+    /// and its buttons show and take taps.
+    @Test
     func a1_aChapterOpenThatFailsLetsTheHeldPageGo() {
         let model = onEndPage()
         model.openChapter(ChapterId("14"))
@@ -78,10 +75,8 @@ struct R5AppleAuditTests {
         #expect(model.held?.landed == true, "the held end page must go so the failure and its buttons show")
     }
 
-    /// R5-A2 (wrong state): the same failure names the chapter that was left, not the one that
-    /// failed: the engine sends no `opened` for it, so `view` is still chapter 13 and
-    /// ReaderChapterFailed reads "Chapter 13 didn't open".
-    @Test(.disabled(if: !audit, "R5-A2: a failed chapter open names the chapter before it"))
+    /// The same failure names the chapter that would not open, not the one it was left from.
+    @Test
     func a2_aFailedChapterOpenNamesTheChapterThatFailed() {
         let model = onEndPage()
         model.shown(1, how: .turn)
@@ -90,10 +85,9 @@ struct R5AppleAuditTests {
         #expect(model.view?.chapter.id != ChapterId("13"), "the failure screen names chapter 13, which opened fine")
     }
 
-    /// R5-A3 (lost place): a strip report held back by the 500 ms pacing is dropped when the
-    /// reader closes (`reset` cancels `pendingStrip`), so the engine keeps the place from up to
-    /// half a second before: a fling or Space then Esc resumes images earlier.
-    @Test(.disabled(if: !audit, "R5-A3: closing within 500 ms of a strip scroll loses the last place"))
+    /// A strip report held back by the 500 ms pacing goes to the engine as the reader closes, so
+    /// the place kept is the one shown last.
+    @Test
     func a3_closingSendsTheStripPlaceHeldBack() {
         let sent = Sent()
         let model = opening(sent)
@@ -109,11 +103,9 @@ struct R5AppleAuditTests {
         #expect(places.last == later, "the engine last heard \(String(describing: places.last))")
     }
 
-    /// R5-A4 (data loss, minor): Not a credit page waits out its 8 s Undo before the engine
-    /// hears, but the countdown stops while the app is away (`countdown` skips while
-    /// `noticesPaused`, which includes `away`). Kept, then the app leaves and is ended in the
-    /// background: the keep is never sent.
-    @Test(.disabled(if: !audit, "R5-A4: a page kept as not a credit page is lost when the app leaves"))
+    /// Not a credit page waits out its 8 s Undo before the engine hears, and goes at once when
+    /// the app leaves, which may end it in the background.
+    @Test
     func a4_aKeepGoesToTheEngineWhileTheAppIsAway() async throws {
         let sent = Sent()
         let model = opening(sent)
@@ -134,10 +126,9 @@ struct R5AppleAuditTests {
         #expect(kept(), "the keep waits for the app to come back, and is lost if it never does")
     }
 
-    /// R5-A5 (wrong state): closed while opening, then another book opened before the engine
-    /// answered the first. `begin` clears `closedOpening`, so the first book's late `opened`
-    /// is taken as the second: its chapter shows under the second book's request.
-    @Test(.disabled(if: !audit, "R5-A5: a book closed while opening shows up as the next book"))
+    /// Closed while opening, then another book opened before the engine answered the first: the
+    /// first book's late `opened` is closed, never shown as the second.
+    @Test
     func a5_aBookClosedWhileOpeningNeverShowsAsTheNext() {
         let sent = Sent()
         let model = ReaderModel()
@@ -149,5 +140,57 @@ struct R5AppleAuditTests {
         model.apply(.opened(view("676", next: nil, session: 7, work: "a:900301")))
         #expect(model.request?.work == "a:900302")
         #expect(model.view?.work != WorkId("a:900301"), "the closed book's chapter shows as the new one")
+        #expect(sent.all.contains { if case .reader(.close(7)) = $0 { true } else { false } })
+        // The engine answers the close sent while the first book opened, then the second opens.
+        model.apply(.closed(session: 7))
+        model.apply(.closed(session: 0))
+        model.apply(.opened(view("1", next: nil, session: 8, work: "a:900302")))
+        #expect(model.phase == .open)
+        #expect(model.view?.work == WorkId("a:900302"))
+        #expect(sent.opens == 2, "the second book is asked for once")
+    }
+
+    /// The same book opened again after a close while it opened, and the engine dropped the
+    /// first open: the one open that comes, after the close is answered, is shown.
+    @Test
+    func theSameBookReopenedOpensOnceTheCloseIsAnswered() {
+        let sent = Sent()
+        let model = opening(sent)
+        model.close()
+        #expect(sent.all.contains { if case .reader(.close(0)) = $0 { true } else { false } })
+        model.open(work: "a:900301")
+        model.apply(.closed(session: 0))
+        model.apply(.opened(view("13", next: "14", session: 2)))
+        #expect(model.phase == .open)
+        #expect(model.view?.chapter.id == ChapterId("13"))
+    }
+
+    /// A failure that answers the closed book's open is that book's: the next book keeps opening.
+    @Test
+    func aFailureOfABookClosedWhileOpeningLeavesTheNextOpening() {
+        let model = opening()
+        model.close()
+        model.open(work: "a:900302")
+        model.observe(.reading(.failed(about: .reader, failure: .notFound)))
+        #expect(model.phase == .opening)
+        model.apply(.closed(session: 0))
+        model.observe(.reading(.failed(about: .reader, failure: .offline)))
+        #expect(model.phase == .failed(.offline))
+    }
+
+    /// Picking a chapter in a strip sends the place held back by the pacing before it opens.
+    @Test
+    func leavingAStripChapterSendsThePlaceHeldBackFirst() {
+        let sent = Sent()
+        let model = opening(sent)
+        model.apply(.opened(view("13", next: "14", mode: .strip)))
+        model.apply(.leaves(session: session, chapter: ChapterId("13"), leaves: leaves(8)))
+        model.stripAt(StripPos(image: 1, offset: 0), footVisible: false)
+        let later = StripPos(image: 4, offset: 0.25)
+        model.stripAt(later, footVisible: false)
+        model.openChapter(ChapterId("14"))
+        let last = sent.all.lastIndex { if case .reader(.stripAt(_, _, let at, _)) = $0 { at == later } else { false } }
+        let open = sent.all.lastIndex { if case .reader(.openChapter) = $0 { true } else { false } }
+        #expect(last != nil && open != nil && last! < open!)
     }
 }
