@@ -178,6 +178,9 @@ fun StripReader(
     /** The divider into a chapter; with it the strip flows on instead of stopping on [footer]. */
     divider: (@Composable (ChapterRow) -> Unit)? = null,
     onFlow: (next: ChapterRow) -> Unit = {},
+    /** [onMissing] and [onRetry] for the chapter kept above after a flow, asked by its own id. */
+    onMissingAbove: (LeafPart) -> Unit = {},
+    onRetryAbove: (page: Int) -> Unit = {},
     onShowing: (previous: Boolean) -> Unit = {},
     list: LazyListState = rememberLazyListState(),
     /** At a touch's landing: true when the strip moves by a tap's own step, which a tap carries on. */
@@ -307,7 +310,7 @@ fun StripReader(
         ) {
             val into = state.view?.chapter
             if (previous != null && into != null && divider != null) {
-                images(previous, above, images, {}, {}, maxWidth, waiting, failed, state, credits)
+                images(previous, above, images, onMissingAbove, onRetryAbove, maxWidth, waiting, failed, state, credits)
                 item(key = dividerKey(into)) {
                     Box(Modifier.widthIn(max = maxWidth).fillMaxWidth().height(StripDividerHeight)) { divider(into) }
                 }

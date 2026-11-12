@@ -265,6 +265,8 @@ class ReaderSession(private val send: (Command) -> Unit) {
     /** Where the reader is: the chapter on screen and the page, strip spot or text place shown. */
     private var here: ReadPlace? = null
     private val askedPages = mutableSetOf<PageKey>()
+    /** The same for the chapter a strip keeps above the open one. */
+    private val askedAbove = mutableSetOf<PageKey>()
     /** The leaf last reported shown, so a new layout of the same place is not a turn. */
     private var shownLeaf: Int? = null
     /** A kept page's chapter is laid out again with it: the pages after it move up one. */
@@ -316,6 +318,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
         here = null
         shownLeaf = null
         askedPages.clear()
+        askedAbove.clear()
         commitKeep()
         _state.value = ReaderState(
             opening = true,
@@ -418,6 +421,28 @@ class ReaderSession(private val send: (Command) -> Unit) {
         if (!askedPages.add(PageKey(part.page, part.half))) return
         _state.value = now.copy(files = now.files - PageKey(part.page, part.half))
         reader(ReaderCommand.NeedPage(now.session ?: return, now.chapter ?: return, part.page))
+    }
+
+    /**
+     * A row of the chapter a strip keeps above the open one has no file: its image never landed
+     * before the strip flowed on, or its file is gone. Asked for by that chapter's id, once.
+     */
+    fun needPageAbove(part: LeafPart) {
+        val now = state.value
+        val above = now.previous ?: return
+        val chapter = above.chapter ?: return
+        if (!askedAbove.add(PageKey(part.page, part.half))) return
+        _state.value = now.copy(previous = above.copy(files = above.files - PageKey(part.page, part.half)))
+        reader(ReaderCommand.NeedPage(now.session ?: return, chapter, part.page))
+    }
+
+    /** Try a failed page of the chapter kept above again. */
+    fun retryAbove(page: UInt) {
+        val now = state.value
+        val above = now.previous ?: return
+        val chapter = above.chapter ?: return
+        _state.value = now.copy(previous = above.copy(failures = above.failures - page))
+        reader(ReaderCommand.Retry(now.session ?: return, chapter, page))
     }
 
     /** Try a failed page again, or the whole chapter with no page. */
@@ -780,8 +805,13 @@ class ReaderSession(private val send: (Command) -> Unit) {
                 shownPage = null
                 here = event.v1.start
                 askedPages.clear()
-                // A strip that flowed on keeps the chapter it left above this one.
-                val previous = flowFrom?.takeIf { flowTo == event.v1.chapter.id }
+                // A strip that flowed on keeps the chapter it left above this one, with the
+                // images that landed while the next one opened. The engine still makes the rest
+                // when asked by that chapter's id.
+                val previous = flowFrom?.takeIf { flowTo == event.v1.chapter.id }?.let { from ->
+                    if (now.chapter == from.chapter) from.copy(files = now.files, held = now.held, failures = now.failures) else from
+                }
+                askedAbove.clear()
                 flowTo = null
                 flowFrom = null
                 shownLeaf = null
@@ -858,12 +888,22 @@ class ReaderSession(private val send: (Command) -> Unit) {
                 placed.copy(jump = jump ?: now.jump)
             }
             is ReaderEvent.PageReady -> {
+                val above = now.previous
+                if (ours(event.session) && above != null && event.chapter == above.chapter && event.chapter != now.chapter) {
+                    val key = PageKey(event.page, event.half)
+                    askedAbove -= key
+                    return run { _state.value = now.copy(previous = above.copy(files = above.files + (key to event.file), failures = above.failures - event.page)) }
+                }
                 if (!ours(event.session) || event.chapter != now.chapter) return
                 val key = PageKey(event.page, event.half)
                 askedPages -= key
                 now.copy(files = now.files + (key to event.file), failures = now.failures - event.page)
             }
             is ReaderEvent.PageFailed -> {
+                val above = now.previous
+                if (ours(event.session) && above != null && event.chapter == above.chapter && event.chapter != now.chapter) {
+                    return run { _state.value = now.copy(previous = above.copy(failures = above.failures + (event.page to event.failure))) }
+                }
                 if (!ours(event.session) || event.chapter != now.chapter) return
                 now.copy(failures = now.failures + (event.page to event.failure))
             }
