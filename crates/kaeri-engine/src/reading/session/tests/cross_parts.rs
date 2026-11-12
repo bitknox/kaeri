@@ -498,3 +498,75 @@ async fn the_reader_reads_on_through_the_series_list_with_the_others_extras_down
         .collect();
     assert_eq!(chain, ids, "the reader's chapters are the series page's");
 }
+
+/// A source not installed, or switched off: the work reads from the edition still here and
+/// keeps the pick for the source's return, the rows it filled in stay out, and a chapter
+/// downloaded from it still opens.
+#[tokio::test(start_paused = true)]
+async fn a_source_gone_or_off_lends_no_rows_and_its_downloads_still_open() {
+    for off in [false, true] {
+        let a = Listing::new("alpha", &["1", "2", "3"]);
+        let b = Listing::new("beta", &["1", "2", "3", "4", "5"]);
+        let mut h = harness_with(&[&b, &a]);
+        rows(&h, "beta").await;
+        let filled = rows(&h, "alpha").await;
+        assert!(filled.iter().any(|r| r.id.as_str() == "4" && r.other_source.is_some()));
+        let path = h._dir.path().join("beta-5.cbz");
+        cbz(&path, 3);
+        let store = &h.services.store;
+        let ask = BookDownloadAsk {
+            work: WORK,
+            chapter: "5",
+            source_id: "beta",
+            version_label: None,
+            keep_ready: false,
+        };
+        store.queue_book_download(&ask, 1).unwrap();
+        let id = store.book_download(WORK, "5").unwrap().unwrap().id;
+        store.book_download_done(id, path.to_str().unwrap(), Some(3), 10, 1).unwrap();
+        let sources = h.services.book_sources.clone();
+        if off {
+            sources.registry.set_off(["beta".to_owned()]);
+        } else {
+            sources.unload("beta");
+        }
+        let work = WorkId::new(WORK);
+        let read_from = sources.edition_of(&work, None).map(|(source, _)| source);
+        assert_eq!(read_from.as_deref(), Some("alpha"), "off={off}");
+        let pick = store.edition_pref(WORK).unwrap().map(|p| p.source_id);
+        assert_eq!(pick.as_deref(), Some("beta"), "the pick is kept");
+        let listed = rows(&h, "alpha").await;
+        let lent: Vec<&str> =
+            listed.iter().filter(|r| r.other_source.is_some()).map(|r| r.id.as_str()).collect();
+        assert!(
+            lent.is_empty(),
+            "rows from a source that can't be asked: {lent:?} (off={off})"
+        );
+        let downloaded = listed.iter().find(|r| r.id.as_str() == "5");
+        assert!(downloaded.is_some(), "the download is listed (off={off})");
+        h.send(ReaderCommand::Open {
+            work: work.clone(),
+            chapter: Some(ChapterId::new("5")),
+            at: OpenAt::Start,
+            surface: surface(),
+        });
+        let opened = h
+            .until(|e| match e {
+                ReaderEvent::Opened(v) => Some(v.chapter.id.as_str().to_owned()),
+                _ => None,
+            })
+            .await;
+        assert_eq!(opened, "5", "off={off}");
+        let session = h.session();
+        h.send(ReaderCommand::Close { session });
+        h.drain();
+        // The source is back: so is the pick.
+        if off {
+            sources.registry.set_off(Vec::<String>::new());
+        } else {
+            sources.registry.put(Arc::clone(&b) as Arc<dyn kaeri_core::traits::BookSource>);
+        }
+        let read_from = sources.edition_of(&work, None).map(|(source, _)| source);
+        assert_eq!(read_from.as_deref(), Some("beta"), "off={off}");
+    }
+}

@@ -1812,7 +1812,13 @@ impl BookSources {
         let order = self.registry.ids();
         let mut held = refs;
         match wanted {
-            Some(wanted) if held.iter().any(|(source, _)| *source == wanted) => {
+            // The person's pick waits while its source is not installed or is switched off:
+            // the work reads from another edition until the source is back, and the pick is
+            // kept for then. An edition asked for by name is read from as it is.
+            Some(wanted)
+                if (edition.is_some() || self.is_available(&wanted))
+                    && held.iter().any(|(source, _)| *source == wanted) =>
+            {
                 held.retain(|(source, _)| *source == wanted);
             }
             // Never a source switched off, nor one whose chapter list came back empty: with
@@ -1842,6 +1848,11 @@ impl BookSources {
                 (!confirmed, fit.0, fit.1, position(source))
             })
             .map(|(held, _)| held)
+    }
+
+    /// Whether `source` can be asked: installed, and not switched off.
+    pub(crate) fn is_available(&self, source: &str) -> bool {
+        self.registry.get(source).is_some() && !self.registry.is_off(source)
     }
 
     /// While plugins are still loading: the edition a work is held in from a source not in
@@ -2322,7 +2333,7 @@ impl BookSources {
         for (other, other_series) in
             self.store.book_refs_for_work(work.as_str()).unwrap_or_default()
         {
-            if other == source {
+            if other == source || !self.is_available(&other) {
                 continue;
             }
             let Some((list, _)) =
@@ -2474,7 +2485,10 @@ impl BookSources {
             rows.iter().map(|c| c.id.as_str().to_owned()).collect();
         let mut here = extras::Following::of(rows.iter().map(|c| (&c.id, c.title.as_deref())));
         let refs = self.store.book_refs_for_work(work.as_str()).unwrap_or_default();
-        for (other, series) in refs.into_iter().filter(|(s, _)| s != source) {
+        // A source not installed or switched off can't open what it listed, so its rows stay
+        // out.
+        let others = refs.into_iter().filter(|(s, _)| s != source && self.is_available(s));
+        for (other, series) in others {
             let Some((list, _)) =
                 crate::read_catalog::chapters::kept(&self.store, &other, &series)
             else {

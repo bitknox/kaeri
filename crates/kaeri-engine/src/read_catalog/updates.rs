@@ -15,8 +15,8 @@ use kaeri_core::{
     config::NewChapters,
 };
 use kaeri_model::reading::{
-    ChapterReadState, ChapterRow, NewChapter, ReadingEvent, UpdateDay, UpdateFailure,
-    UpdateRow, UpdatesView, WorkTile,
+    ChapterReadState, ChapterRow, NewChapter, ReadingEvent, ReadingFailure, UpdateDay,
+    UpdateFailure, UpdateRow, UpdatesView, WorkTile,
 };
 use kaeri_store::Store;
 
@@ -253,6 +253,9 @@ pub(crate) struct Checked {
 /// chapters the New chapters setting downloads.
 pub(crate) async fn run(kit: &Kit, ask: Ask) -> Checked {
     let (store, sources) = (&kit.store, &kit.sources);
+    // A check sent at launch waits for the book plugins still loading, as search does: a
+    // source not in yet is never told it has none of the series.
+    kit.plugins.arrived(super::editions::PLUGINS_WAIT).await;
     sources.adopt_plugins(&kit.plugins);
     let zone = kit.clock.zone();
     let tell = ask.chapter_notices && ask.answer.reads();
@@ -266,9 +269,26 @@ pub(crate) async fn run(kit: &Kit, ask: Ask) -> Checked {
     let mut found = Vec::new();
     let mut failures = Vec::new();
     let mut asked = HashSet::new();
+    // Whether a series could not be asked for want of its source.
+    let mut held_back = false;
     for work in followed(store) {
         let id = WorkId::new(work.clone());
-        let Some((source, series)) = sources.edition_of(&id, None) else { continue };
+        let Some((source, series)) = sources.edition_of(&id, None) else {
+            // Held only by sources not installed or switched off: the source can't be asked,
+            // which is not the source saying it has no such series. Its list stays as kept.
+            if let Some(source) = away(sources, &id) {
+                held_back = true;
+                let title = tile_of(kit, &work).map_or_else(|| work.clone(), |t| t.title);
+                let name = source_name(sources, &source);
+                let failure = if sources.registry.is_off(&source) {
+                    ReadingFailure::SourceOff { source: name.clone() }
+                } else {
+                    ReadingFailure::SourceDown { source: name.clone() }
+                };
+                failures.push(UpdateFailure { work: id, title, source_name: name, failure });
+            }
+            continue;
+        };
         if !asked.insert((source.clone(), series.clone())) {
             continue;
         }
@@ -350,11 +370,26 @@ pub(crate) async fn run(kit: &Kit, ask: Ask) -> Checked {
             });
         }
     }
-    if let Err(e) = store.set_meta_text(CHECKED, &ask.now.to_string()) {
+    // A check that could ask none of the series it had to has not checked.
+    if !(asked.is_empty() && held_back)
+        && let Err(e) = store.set_meta_text(CHECKED, &ask.now.to_string())
+    {
         tracing::warn!(error = %e, "the check's time was not kept");
     }
     *sources.catalog.failures.lock().unwrap_or_else(|e| e.into_inner()) = failures;
     Checked { found, queued }
+}
+
+/// The source a work is held in when every one holding it is not installed or switched off:
+/// the person's pick first, then the first held.
+fn away(sources: &BookSources, work: &WorkId) -> Option<String> {
+    let refs = sources.store().book_refs_for_work(work.as_str()).unwrap_or_default();
+    let pick = sources.store().edition_pref(work.as_str()).ok().flatten().map(|p| p.source_id);
+    if refs.is_empty() || refs.iter().any(|(source, _)| sources.is_available(source)) {
+        return None;
+    }
+    pick.filter(|p| refs.iter().any(|(source, _)| source == p))
+        .or_else(|| refs.first().map(|(source, _)| source.clone()))
 }
 
 #[cfg(test)]
@@ -684,5 +719,77 @@ mod tests {
         *shelf.listed.lock().unwrap() = more;
         let added = run(&kit, ask(4_000, true)).await;
         assert_eq!(added.found.len(), 1);
+    }
+
+    fn native(id: &str, listed: Vec<SourceChapter>) -> Arc<Shelf> {
+        let manifest = BookSourceManifest {
+            id: id.into(),
+            name: id.into(),
+            version: "1".into(),
+            kind: BookSourceKind::Native,
+            media: vec![Medium::Manga],
+            languages: vec!["en".into()],
+            allowed_hosts: Vec::new(),
+            capabilities: Vec::new(),
+        };
+        Arc::new(Shelf { manifest, listed: Mutex::new(listed) })
+    }
+
+    fn failures(kit: &Kit) -> Vec<UpdateFailure> {
+        kit.sources.catalog.failures.lock().unwrap().clone()
+    }
+
+    /// A check sent while the book plugins are still loading waits for them and asks the
+    /// source once it is in: it is never told the source has none of the series.
+    #[tokio::test]
+    async fn a_check_at_launch_waits_for_a_source_still_arriving() {
+        let dir = tempfile::tempdir().unwrap();
+        let kit = kit(dir.path(), native("near", Vec::new()));
+        let work = "a:900301";
+        kit.store.set_book_match("late", "l-1", work, 100, true, false, 1).unwrap();
+        kit.store.adopt_read(work, "10", None, 2).unwrap();
+        kit.store.set_read_status(work, Some("reading"), 2).unwrap();
+        kit.plugins.expect_arrivals();
+        let checking = {
+            let kit = kit.clone();
+            tokio::spawn(async move { run(&kit, ask(1_000, true)).await })
+        };
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        assert!(!checking.is_finished(), "the check waits for the plugins");
+        kit.sources.registry.put(native("late", (1..=11).map(chapter).collect()));
+        kit.plugins.arrivals_done();
+        checking.await.unwrap();
+        assert_eq!(failures(&kit), Vec::new());
+        assert_eq!(chapters::kept(&kit.store, "late", "l-1").unwrap().0.len(), 11);
+        assert_eq!(kit.store.get_meta_text(CHECKED).unwrap().as_deref(), Some("1000"));
+    }
+
+    /// A source that never arrives can't be asked: the series says so rather than that the
+    /// source has none of it, its list stays as kept, and a check that asked nothing has not
+    /// checked.
+    #[tokio::test(start_paused = true)]
+    async fn a_source_that_never_arrives_is_unavailable_not_missing_the_series() {
+        let dir = tempfile::tempdir().unwrap();
+        let kit = kit(dir.path(), native("near", Vec::new()));
+        let work = "a:900301";
+        kit.store.set_book_match("late", "l-1", work, 100, true, false, 1).unwrap();
+        let kept: Vec<SourceChapter> = (1..=10).map(chapter).collect();
+        chapters::keep(&kit.store, "late", "l-1", &kept, 1);
+        kit.store.adopt_read(work, "10", None, 2).unwrap();
+        kit.store.set_read_status(work, Some("reading"), 2).unwrap();
+        kit.plugins.expect_arrivals();
+        let checked = run(&kit, ask(1_000, true)).await;
+        assert!(checked.found.is_empty());
+        let said: Vec<ReadingFailure> = failures(&kit).into_iter().map(|f| f.failure).collect();
+        assert_eq!(said, [ReadingFailure::SourceDown { source: "late".into() }]);
+        assert_eq!(chapters::kept(&kit.store, "late", "l-1").unwrap().0.len(), 10);
+        assert_eq!(kit.store.get_meta_text(CHECKED).unwrap(), None, "nothing was checked");
+
+        // Switched off, it says so.
+        kit.sources.registry.set_off(["late".to_owned()]);
+        kit.plugins.arrivals_done();
+        run(&kit, ask(2_000, true)).await;
+        let said: Vec<ReadingFailure> = failures(&kit).into_iter().map(|f| f.failure).collect();
+        assert_eq!(said, [ReadingFailure::SourceOff { source: "late".into() }]);
     }
 }

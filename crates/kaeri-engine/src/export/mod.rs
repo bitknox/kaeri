@@ -515,8 +515,11 @@ impl OneSend {
             self.told.gathered.store(n, Ordering::Relaxed);
             return Ok((chapters, 0));
         }
-        let now = self.lent.clock.now();
+        // A send held over from the last run starts at launch, maybe before the plugins are
+        // in: they are waited for, so the source is asked rather than missed.
+        self.lent.sources.plugins_in(&self.lent.plugins, None).await;
         self.lent.sources.adopt_plugins(&self.lent.plugins);
+        let now = self.lent.clock.now();
         let (source, rows) =
             crate::downloads::books::ordered_chapters(&self.lent.sources, &self.work, now)
                 .await

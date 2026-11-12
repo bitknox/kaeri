@@ -793,6 +793,7 @@ impl BookDownloads {
             return;
         }
         let now = lent.clock.now();
+        lent.sources.plugins_in(&lent.plugins, None).await;
         lent.sources.adopt_plugins(&lent.plugins);
         // The list the reader opened from serves while it is fresh: a chapter read is no reason
         // to ask the source for the whole list again.
@@ -835,6 +836,7 @@ impl BookDownloads {
         let lent = lent.clone();
         tokio::spawn(async move {
             let now = lent.clock.now();
+            lent.sources.plugins_in(&lent.plugins, None).await;
             lent.sources.adopt_plugins(&lent.plugins);
             // Only the downloads changed: the list as kept says the rest.
             let listed = match lent.sources.kept_listing(&work, now, i64::MAX) {
@@ -1522,7 +1524,7 @@ impl Listers {
             .book_refs_for_work(work.as_str())
             .unwrap_or_default()
             .into_iter()
-            .filter(|(other, _)| other != edition)
+            .filter(|(other, _)| other != edition && sources.is_available(other))
             .filter_map(|(other, series)| {
                 let (list, _) = crate::read_catalog::chapters::kept(store, &other, &series)?;
                 Some((other, list.into_iter().map(|k| k.id).collect()))
