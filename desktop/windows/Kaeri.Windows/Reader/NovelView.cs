@@ -88,6 +88,9 @@ sealed class NovelView : Grid
 
     ReaderSession Reader => owner.Reader;
 
+    /// <summary>The web view didn't start or its process went: this view shows nothing more.</summary>
+    public bool Broken => failed;
+
     async Task Start()
     {
         try
@@ -313,14 +316,17 @@ sealed class NovelView : Grid
 
     // Opening
 
-    /// <summary>The engine opened a book's chapter: load its entry, or the place it restores.</summary>
-    public void Open(NovelOpenView open)
+    /// <summary>
+    /// The engine opened a book's chapter: load its entry, or the place it restores. A view made
+    /// again after the last one's process went opens at <paramref name="shown"/>, where that one was.
+    /// </summary>
+    public void Open(NovelOpenView open, NovelPos? shown = null)
     {
         book = open;
         HideEnd();
         Page = 0;
         Pages = 1;
-        if (open.Restore is { } at && at.Spine < open.Spine.Length)
+        if ((shown ?? open.Restore) is { } at && at.Spine < open.Spine.Length)
             Load(open.Spine[(int)at.Spine].Url, "kaeri:pos=" + PosText(at));
         else
             Load(open.Entry, null);

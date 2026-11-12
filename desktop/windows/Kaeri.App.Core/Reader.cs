@@ -96,6 +96,8 @@ public sealed class ReaderSession
     public StripPos? StripRestore { get; private set; }
     /// <summary>The chapter the end page goes on to.</summary>
     public ChapterRow? EndNext => ReaderEnd.NextOf(End, View);
+    /// <summary>The novel's place as its view last told it: a web view made again after its process went opens there.</summary>
+    public NovelPos? NovelShown { get; private set; }
     /// <summary>The chapters of the work, once the engine has listed them.</summary>
     public VolumeGroup[] Chapters { get; private set; } = [];
     public bool ChaptersLoaded { get; private set; }
@@ -280,6 +282,7 @@ public sealed class ReaderSession
         if (session == 0 || View is not { } view)
             return;
         NovelPainted = true;
+        NovelShown = pos;
         Ask(new ReaderCommand.NovelAt(session, view.Chapter.Id, pos, (uint)Math.Max(page, 0), (uint)Math.Max(pages, 0), how));
     }
 
@@ -510,6 +513,7 @@ public sealed class ReaderSession
                 PageFailures.Clear();
                 Novel = null;
                 NovelPainted = false;
+                NovelShown = null;
                 End = null;
                 Read = false;
                 ReadTrackers = [];
@@ -580,6 +584,7 @@ public sealed class ReaderSession
                 if (novelOpen.V1.Session != session)
                     return;
                 Novel = novelOpen.V1;
+                NovelShown = null;
                 NovelStyle = novelOpen.V1.Style;
                 NovelCountKey = novelOpen.V1.CountKey;
                 NovelCounted = novelOpen.V1.Counted;
@@ -883,6 +888,7 @@ public sealed class ReaderSession
         heldPage = null;
         Ring = null;
         StripRestore = null;
+        NovelShown = null;
         Flowing = false;
         GoTo = null;
         NovelGoTo = null;

@@ -317,6 +317,31 @@ public class ReadingTests
     }
 
     [Fact]
+    public async Task ANovelKeepsThePlaceItsViewLastToldForAViewMadeAgain()
+    {
+        using var scene = new Scene(new FfiScene.ReaderNovel(), "cs-reader-novel-shown");
+        var reader = scene.Known.Reader;
+        scene.Do(() =>
+        {
+            reader.Open("a:900302");
+            reader.SurfaceChanged(new ReaderSurface(1280, 720, 1f, false, false, true));
+        });
+        await scene.Until(k => k.Reader.Novel);
+        NovelPos? before = null;
+        scene.Do(() => before = reader.NovelShown);
+        Assert.Null(before);
+        // The web view read on; its process then went, and the new view opens here, not where the chapter opened.
+        var place = new NovelPos(0, 40, [2, 3]);
+        NovelPos? kept = null;
+        scene.Do(() =>
+        {
+            reader.NovelAt(place, 3, 12, TurnHow.Swipe);
+            kept = reader.NovelShown;
+        });
+        Assert.Same(place, kept);
+    }
+
+    [Fact]
     public async Task ANovelsAddressesHaveAHostTheWebViewKeepsAsItIs()
     {
         using var scene = new Scene(new FfiScene.ReaderNovel(), "cs-reader-novel-host");

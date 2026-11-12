@@ -44,7 +44,13 @@ static class TrailerHub
     /// The environment every trailer's web view and the novel reader's are made in: one browser
     /// process for both, instead of two.
     /// </summary>
-    public static Task<CoreWebView2Environment> Environment() => environment ??= Make();
+    public static Task<CoreWebView2Environment> Environment()
+    {
+        // One that failed to start is made again on the next ask, so Try again can work.
+        if (environment is { IsFaulted: true } or { IsCanceled: true })
+            environment = null;
+        return environment ??= Make();
+    }
 
     static async Task<CoreWebView2Environment> Make()
     {

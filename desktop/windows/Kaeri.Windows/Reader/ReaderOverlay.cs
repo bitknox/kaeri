@@ -272,6 +272,9 @@ public sealed partial class ReaderOverlay : UserControl
                 chrome.RefreshPreview();
                 break;
             case ReaderChange.Novel:
+                // Try again after the web view failed to start: a new one, not the dead one.
+                if (novel is { Broken: true })
+                    DropNovel();
                 Render();
                 if (Reader.Novel is { } book && novel is not null)
                 {
@@ -350,7 +353,8 @@ public sealed partial class ReaderOverlay : UserControl
             if (made is not null)
                 stage.Children.Add(made);
             if (want == Kind.Novel && Reader.Novel is { } book)
-                novel!.Open(book);
+                novel!.Open(book, reopenAt);
+            reopenAt = null;
             paged?.Rebuild();
             strip?.Rebuild();
             Repaint(force: true);
@@ -470,6 +474,8 @@ public sealed partial class ReaderOverlay : UserControl
     }
 
     DateTimeOffset novelLostAt = DateTimeOffset.MinValue;
+    /// <summary>Where the lost novel view was, for the one made in its place.</summary>
+    NovelPos? reopenAt;
 
     /// <summary>
     /// The novel's web view process crashed or was killed: the view goes, and a new one opens
@@ -482,14 +488,25 @@ public sealed partial class ReaderOverlay : UserControl
         var now = DateTimeOffset.UtcNow;
         var again = now - novelLostAt > TimeSpan.FromSeconds(30);
         novelLostAt = now;
+        DropNovel();
+        if (again && Reader.Novel is not null)
+        {
+            reopenAt = Reader.NovelShown;
+            Render();
+        }
+        else
+            ShowState("failed", () => new ChapterFailedView(this, ChapterLabel(), null));
+    }
+
+    /// <summary>The novel's view goes; the next <see cref="Render"/> makes a new one.</summary>
+    void DropNovel()
+    {
+        if (novel is null)
+            return;
         novel.Close();
         stage.Children.Remove(novel);
         novel = null;
         kind = Kind.None;
-        if (again && Reader.Novel is not null)
-            Render();
-        else
-            ShowState("failed", () => new ChapterFailedView(this, ChapterLabel(), null));
     }
 
     /// <summary>
