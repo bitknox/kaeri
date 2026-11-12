@@ -306,6 +306,8 @@ impl Home {
             .collect();
         let asks: Vec<BookAsk> = missing.chunks(50).map(|c| BookAsk::Ids(c.to_vec())).collect();
         if asks.is_empty() && stale.is_empty() {
+            // Online with every row fresh: what is shown is current, whenever the path went.
+            self.memory().offline_since = None;
             self.landed(ReadHomePart::Yours);
             self.send(tx);
             return;
