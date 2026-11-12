@@ -6,6 +6,8 @@ using Medium = Kaeri.Engine.Core.Medium;
 namespace Kaeri.App.Tests;
 
 /// <summary>Reading's discovery: Search's From your sources as the store keeps it, and the words Home and Search show.</summary>
+/// <remarks>In the Strings collection, as it reads T while other tests swap T's resolver.</remarks>
+[Collection("Strings")]
 public class ReadDiscoveryTests
 {
     static WorkTile Tile(string work, string title = "Lantern Orchard") => new(Work: work, Title: title, Medium: Medium.Manga);
