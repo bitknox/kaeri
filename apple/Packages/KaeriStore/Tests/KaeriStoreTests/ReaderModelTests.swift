@@ -43,6 +43,60 @@ struct ReaderModelTests {
         #expect(opens(box.commands) == 1)
     }
 
+    /// The surfaces the engine heard of after the open, by session.
+    private func surfaces(_ commands: [Command]) -> [(UInt64, ReaderSurface)] {
+        commands.compactMap { if case .reader(.surface(let session, let surface)) = $0 { (session, surface) } else { nil } }
+    }
+
+    private func opened(_ model: ReaderModel, session: UInt64) {
+        let work = WorkId("a:900301")
+        let chapter = ChapterRow(
+            id: ChapterId("c1"), label: "Chapter 1", state: .unread, number: nil, title: nil, volume: nil,
+            published: nil, pages: 3, newChapter: false, download: nil, versions: 1, bookmarked: false)
+        model.apply(.opened(ReaderView(
+            session: session, work: work, title: "The Lantern Ferry", medium: .manga, chapter: chapter,
+            mode: .paged, direction: .rightToLeft,
+            start: ReadPlace(work: work, chapter: chapter.id, page: 0, strip: nil, novel: nil),
+            next: nil, previous: nil, settings: nil)))
+    }
+
+    @Test func aSizeChangedWhileTheBookOpensReachesTheEngineOnceItHasOpened() {
+        let (model, box) = model()
+        model.open(work: "a:900301")
+        model.surfaceChanged(surface)
+        var turned = surface
+        turned.widthPx = 1688
+        turned.heightPx = 780
+        turned.twoPages = true
+        // Turned while the engine is still opening: there is no session to send it to yet.
+        model.surfaceChanged(turned)
+        #expect(surfaces(box.commands).isEmpty)
+        opened(model, session: 7)
+        let sent = surfaces(box.commands)
+        #expect(sent.count == 1)
+        #expect(sent.first?.0 == 7)
+        #expect(sent.first?.1 == turned)
+        #expect(opens(box.commands) == 1)
+    }
+
+    @Test func aSizeThatStayedWhileTheBookOpenedIsNotSentAgain() {
+        let (model, box) = model()
+        model.open(work: "a:900301")
+        model.surfaceChanged(surface)
+        opened(model, session: 7)
+        #expect(surfaces(box.commands).isEmpty)
+        // Turned there and back while opening: the engine already has this size.
+        let (other, otherBox) = self.model()
+        other.open(work: "a:900301")
+        other.surfaceChanged(surface)
+        var turned = surface
+        turned.widthPx = 1688
+        other.surfaceChanged(turned)
+        other.surfaceChanged(surface)
+        opened(other, session: 8)
+        #expect(surfaces(otherBox.commands).isEmpty)
+    }
+
     @Test func theStripChoiceIsTheSeriesOwn() {
         let (model, box) = model()
         model.open(work: "a:900303")

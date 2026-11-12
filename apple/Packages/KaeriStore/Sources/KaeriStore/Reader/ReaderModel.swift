@@ -398,6 +398,7 @@ public final class ReaderModel {
     private func sendOpen() {
         guard let request, let surface, phase == .opening, session == 0, !opened else { return }
         opened = true
+        sentSurface = surface
         send?(.reader(.open(
             work: WorkId(request.work), chapter: request.chapter.map { ChapterId($0) },
             at: request.at, surface: surface)))
@@ -802,6 +803,12 @@ public final class ReaderModel {
             creditLineFor = nil
             flowing = nil
             session = opened.session
+            // The screen changed size while the book opened: the engine laid it out for the
+            // size the open carried, so it hears of the new one now the session exists.
+            if let surface, sentSurface != surface {
+                sentSurface = surface
+                send?(.reader(.surface(session: opened.session, surface: surface)))
+            }
             view = opened
             phase = .open
             leaves = []
