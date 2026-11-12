@@ -6,9 +6,10 @@
 //! asked for each page once. A fetch runs on its own: it lands and is kept for the other one even
 //! when the side that asked stops waiting for it (a reader closed, or past its wait), as long as
 //! the download still runs to want the page. With no download, a fetch nobody waits on any more
-//! is cut off. One that fails is fetched once more by the side that waited on it, unless a newer
-//! fetch of the page is on its way, which it waits on instead. A reader past its wait asks again
-//! for itself, as it would without a download. Both fetch from the chapter as the download
+//! is cut off, a fetch a later one of its page replaced included. One that fails is fetched once
+//! more by the side that waited on it, unless a newer fetch of the page is on its way, which it
+//! waits on instead. A reader past its wait asks again for itself, as it would without a
+//! download. Both fetch from the chapter as the download
 //! opened it, with the page addresses the last fetch had, so the source is not asked for the
 //! chapter again either.
 //!
@@ -53,8 +54,9 @@ struct Sharing {
     kept: KeptPages,
     /// The chapter as the download opened it, with the page addresses the last fetch had.
     opened: Opened,
-    /// The fetches on their way, by page: the latest one of each.
-    fetching: HashMap<u32, Fetching>,
+    /// The fetches on their way, by page, the latest last: one a later fetch of its page
+    /// replaced is still counted and cut off as any other.
+    fetching: HashMap<u32, Vec<Fetching>>,
     /// Pages that came but could not be kept, and why.
     unkept: HashMap<u32, ReadingFailure>,
     /// Downloads running on these pages now: one, or none once it ended.
@@ -75,13 +77,21 @@ impl Sharing {
         if self.downloads > 0 && !self.left {
             return;
         }
-        self.fetching.retain(|_, f| {
-            let wanted = f.waiters > 0;
-            if !wanted {
-                f.task.abort();
-            }
-            wanted
+        self.fetching.retain(|_, fetches| {
+            fetches.retain(|f| {
+                let wanted = f.waiters > 0;
+                if !wanted {
+                    f.task.abort();
+                }
+                wanted
+            });
+            !fetches.is_empty()
         });
+    }
+
+    /// The fetch of page `index` whose end is `ended`, while it is on its way.
+    fn fetch_of(&mut self, index: u32, ended: &Fetch) -> Option<&mut Fetching> {
+        self.fetching.get_mut(&index)?.iter_mut().find(|f| f.ended.same_channel(ended))
     }
 }
 
@@ -95,9 +105,7 @@ struct Waiting<'a> {
 impl Drop for Waiting<'_> {
     fn drop(&mut self) {
         let mut state = self.pages.state();
-        if let Some(f) = state.fetching.get_mut(&self.index)
-            && f.ended.same_channel(&self.ended)
-        {
+        if let Some(f) = state.fetch_of(self.index, &self.ended) {
             f.waiters = f.waiters.saturating_sub(1);
         }
         state.cut_unwanted();
@@ -175,7 +183,8 @@ impl SharedPages {
                 match state.kept.path(index).map(Path::to_path_buf) {
                     Some(path) => (Some(path), None, None),
                     None => {
-                        let fetch = match (&mine, state.fetching.get(&index)) {
+                        let latest = state.fetching.get(&index).and_then(|f| f.last());
+                        let fetch = match (&mine, latest) {
                             (Some(fetch), _) => fetch.clone(),
                             (None, Some(f))
                                 if !again
@@ -193,10 +202,7 @@ impl SharedPages {
                         };
                         let held =
                             waiting.as_ref().is_some_and(|w| w.ended.same_channel(&fetch));
-                        if !held
-                            && let Some(f) = state.fetching.get_mut(&index)
-                            && f.ended.same_channel(&fetch)
-                        {
+                        if !held && let Some(f) = state.fetch_of(index, &fetch) {
                             f.waiters += 1;
                         }
                         (None, Some(fetch.clone()), (!held).then_some(fetch))
@@ -265,7 +271,7 @@ impl SharedPages {
             pages.changed.notify_waiters();
         });
         let fetching = Fetching { ended: ended.clone(), waiters: 0, task: task.abort_handle() };
-        state.fetching.insert(index, fetching);
+        state.fetching.entry(index).or_default().push(fetching);
         #[cfg(test)]
         {
             state.started += 1;
@@ -283,8 +289,11 @@ impl SharedPages {
         (before, after): (&Opened, Opened),
     ) {
         let mut state = self.state();
-        if state.fetching.get(&index).is_some_and(|f| f.ended.same_channel(this)) {
-            state.fetching.remove(&index);
+        if let Some(fetches) = state.fetching.get_mut(&index) {
+            fetches.retain(|f| !f.ended.same_channel(this));
+            if fetches.is_empty() {
+                state.fetching.remove(&index);
+            }
         }
         if crate::reading::feed::moved(&after, before) {
             state.opened = after;

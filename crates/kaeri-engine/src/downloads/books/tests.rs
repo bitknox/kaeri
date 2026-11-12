@@ -1298,6 +1298,34 @@ async fn a_fetch_nobody_waits_on_is_cut_off_once_no_download_wants_it() {
     assert!(!dir.exists(), "the pages stayed");
 }
 
+/// A reader past its wait asks again while the download runs, and the download then ends: the
+/// request the new one replaced is cut off as well, once nobody waits on it.
+#[tokio::test]
+async fn a_fetch_replaced_by_a_second_try_is_cut_off_once_no_download_wants_it() {
+    let kit = kit(&["1"]);
+    let url = "https://pages.example/1/2";
+    let _answers = kit.shelf.gate(url, 2);
+    let (download, _) = shared_pages(&kit).await;
+    let pages = Arc::clone(&download);
+    let sources = &kit.lent.sources;
+    {
+        let mut first = std::pin::pin!(pages.page(sources, 1, 2, false));
+        assert!(poll_once(first.as_mut()).await.is_none());
+        kit.shelf.until(|s| s.times(url) == 1).await;
+    }
+    {
+        let mut second = std::pin::pin!(pages.page(sources, 1, 2, true));
+        assert!(poll_once(second.as_mut()).await.is_none());
+        kit.shelf.until(|s| s.times(url) == 2).await;
+        download.let_go();
+        drop(download);
+        // The first request goes; the second, still waited on, stays.
+        kit.shelf.until(|s| !s.cut.lock().unwrap().is_empty()).await;
+        assert_eq!(kit.shelf.cut.lock().unwrap().len(), 1);
+    }
+    kit.shelf.until(|s| s.cut.lock().unwrap().len() == 2).await;
+}
+
 /// A download opens a chapter's folder just as the share let go of before it deletes it: the
 /// folder stays for the download.
 #[tokio::test]
