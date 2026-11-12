@@ -3540,4 +3540,22 @@ mod tests {
         let again = h.drain().iter().any(|e| matches!(e, ReaderEvent::NextPreview { .. }));
         assert!(!again, "made once per chapter");
     }
+
+    /// Round 5 audit (R5A-3): the apps wait on an asked chapter until it opens or fails, and ask
+    /// no other meanwhile. A chapter the session's own list does not name, as one the Chapters
+    /// sheet lists from a list refreshed since the open, gets neither.
+    #[tokio::test(start_paused = true)]
+    #[ignore = "R5A-3"]
+    async fn r5a_a_chapter_the_session_does_not_list_is_answered() {
+        let mut h = harness(Store::open_in_memory().unwrap());
+        h.failures = true;
+        h.open(OpenAt::Resume).await;
+        h.drain();
+        let session = h.session();
+        h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("3") });
+        tokio::time::sleep(Duration::from_secs(60)).await;
+        let said = h.drain();
+        let opened = said.iter().any(|e| matches!(e, ReaderEvent::Opened(_)));
+        assert!(opened || !h.failed.is_empty(), "nothing answered the ask: {said:?}");
+    }
 }
