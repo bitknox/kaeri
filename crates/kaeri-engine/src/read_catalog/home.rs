@@ -1343,12 +1343,12 @@ mod tests {
         followed(&kit);
         kit.store.set_edition_pref(WORK, None).unwrap();
         kit.store.adopt_read(WORK, "10", None, NOW - 3 * DAY).unwrap();
-        let mut place = ReadEvent::new(WORK, "c-11", NOW - 2 * DAY);
+        let mut place = ReadEvent::new(WORK, "11", NOW - 2 * DAY);
         place.page = Some(8);
         place.of_pages = Some(20);
         kit.store.record_read(&place, Vec::new()).unwrap();
         let continuing = Some(SeriesAction::Continue {
-            chapter: ChapterId::new("c-11"),
+            chapter: ChapterId::new("11"),
             label: "11".into(),
             page: 9,
         });
