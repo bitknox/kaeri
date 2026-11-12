@@ -87,11 +87,17 @@ fn unreadable(path: &Path, format: &str) -> Stop {
     })
 }
 
+/// A file read failed: it is not there, or no longer whole.
 fn io(e: &std::io::Error, path: &Path) -> Stop {
     if e.kind() == std::io::ErrorKind::StorageFull {
         return Stop::Failed(ReadingFailure::DiskFull);
     }
     Stop::Failed(ReadingFailure::FileMissing { path: path.display().to_string() })
+}
+
+/// A file or folder could not be written.
+fn write_failed(e: &std::io::Error, path: &Path) -> Stop {
+    Stop::Failed(crate::downloads::books::io_failure(e, path))
 }
 
 fn book(e: &BookError, path: &Path) -> Stop {
@@ -120,7 +126,7 @@ pub fn run(
     if !req.profile.accepts(text).contains(&req.format) {
         return Err(unsupported(req.format));
     }
-    fs::create_dir_all(&req.out).map_err(|e| io(&e, &req.out))?;
+    fs::create_dir_all(&req.out).map_err(|e| write_failed(&e, &req.out))?;
     let result = if text { novel(req, progress, cancel) } else { manga(req, progress, cancel) };
     let result = result.and_then(|files| preflight(req, &files).map(|()| files));
     if result.is_err() {
@@ -182,15 +188,21 @@ fn stopped(cancel: &AtomicBool) -> Result<(), Stop> {
     if cancel.load(Ordering::Relaxed) { Err(Stop::Cancelled) } else { Ok(()) }
 }
 
-/// A file name from a title: letters, digits, spaces and a few marks.
+/// The most bytes a file's name takes from its title. With the part and the extension the name
+/// stays far under the 255 bytes file systems allow, in any script.
+const TITLE_BYTES: usize = 160;
+
+/// A file name from a title: letters, digits, spaces and a few marks, at most 80 characters
+/// and [`TITLE_BYTES`] bytes, and never a name Windows reserves.
 fn clean(title: &str) -> String {
     let kept: String = title
         .chars()
         .map(|c| if c.is_alphanumeric() || " -_.,'()".contains(c) { c } else { ' ' })
         .collect();
     let kept = kept.split_whitespace().collect::<Vec<_>>().join(" ");
-    let kept = kept.trim_matches(|c| c == '.' || c == ' ');
-    if kept.is_empty() { "Book".into() } else { kept.chars().take(80).collect() }
+    let kept: String = kept.trim_matches(|c| c == '.' || c == ' ').chars().take(80).collect();
+    let kept = kaeri_core::file_name::readable(&kept, TITLE_BYTES);
+    if kept.is_empty() { "Book".into() } else { kept }
 }
 
 /// `Title 40-45`, `Title 7`; the part, when there are several, as ` (2 of 3)`.
@@ -284,7 +296,7 @@ fn manga(
     };
     let mut renderer = Renderer::new(target, Look::default());
     let scratch = req.out.join(".pages");
-    fs::create_dir_all(&scratch).map_err(|e| io(&e, &scratch))?;
+    fs::create_dir_all(&scratch).map_err(|e| write_failed(&e, &scratch))?;
     let mut prepared: Vec<Prepared> = Vec::new();
     let mut done = 0u32;
     progress(0, total);
@@ -300,7 +312,7 @@ fn manga(
                 })?;
             for page in pages {
                 let file = scratch.join(format!("{:06}", prepared.len()));
-                fs::write(&file, &page.bytes).map_err(|e| io(&e, &file))?;
+                fs::write(&file, &page.bytes).map_err(|e| write_failed(&e, &file))?;
                 prepared.push(Prepared { chapter, file, bytes: page.bytes.len() as u64 });
             }
             done += 1;
@@ -316,7 +328,7 @@ fn manga(
         stopped(cancel)?;
         let name = file_name(req, Some((n + 1, count)));
         let path = req.out.join(&name);
-        let out = BufWriter::new(File::create(&path).map_err(|e| io(&e, &path))?);
+        let out = BufWriter::new(File::create(&path).map_err(|e| write_failed(&e, &path))?);
         let items = &prepared[range];
         match req.format {
             ExportFormat::Cbz => {
@@ -495,7 +507,7 @@ fn novel(
     for (n, range) in parts.into_iter().enumerate() {
         let name = file_name(req, Some((n + 1, count)));
         let path = req.out.join(&name);
-        let out = BufWriter::new(File::create(&path).map_err(|e| io(&e, &path))?);
+        let out = BufWriter::new(File::create(&path).map_err(|e| write_failed(&e, &path))?);
         let title = book_title(req, Some((n + 1, count)));
         let meta = BookMeta {
             title,
@@ -614,6 +626,34 @@ mod tests {
 
     fn go(req: &Request) -> Result<Vec<ExportFile>, Stop> {
         run(req, &mut |_, _| {}, &AtomicBool::new(false))
+    }
+
+    #[test]
+    fn a_long_cjk_title_makes_a_name_any_file_system_takes() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut req = request(dir.path(), Vec::new(), "kobo", ExportFormat::Kepub);
+        let label: String = std::iter::repeat_n('話', 60).collect();
+        req.title = std::iter::repeat_n('灯', 90).collect();
+        req.chapters = vec![
+            Chapter { label: label.clone(), path: PathBuf::new() },
+            Chapter { label: format!("{label}二"), path: PathBuf::new() },
+        ];
+        let name = file_name(&req, Some((12, 12)));
+        assert!(name.len() <= 200, "{} bytes", name.len());
+        assert!(name.ends_with(" (12 of 12).kepub.epub"), "{name}");
+        let written = dir.path().join(&name);
+        File::create(&written).unwrap();
+        assert!(written.exists());
+    }
+
+    #[test]
+    fn a_title_windows_reserves_is_not_a_file_name() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut req = request(dir.path(), Vec::new(), "kobo", ExportFormat::Epub);
+        req.title = "Con".into();
+        assert_eq!(file_name(&req, None), "Con_.epub");
+        req.title = "Lantern...".into();
+        assert_eq!(file_name(&req, None), "Lantern.epub");
     }
 
     #[test]

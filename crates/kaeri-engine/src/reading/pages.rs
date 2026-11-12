@@ -58,6 +58,22 @@ const fn wall_budget(secs: u64) -> Duration {
 /// holds the decoder until it ends.
 pub const HOST_DECODE_BUDGET: Duration = Duration::from_secs(2);
 
+/// The most one page sent to the screen may take once decoded, in bytes at four a pixel, as
+/// the platforms decode it. Android refuses to draw a bitmap over 100 MB, and a long strip
+/// image can pass that whole: one 720 by 40,000 pixels is 115 MB.
+pub const PAGE_BYTES: u64 = 64 * 1024 * 1024;
+
+/// `(w, h)` shrunk evenly, if need be, to fit [`PAGE_BYTES`].
+fn within_page_bytes((w, h): (u32, u32)) -> (u32, u32) {
+    let bytes = u64::from(w) * u64::from(h) * 4;
+    if bytes <= PAGE_BYTES {
+        return (w, h);
+    }
+    let scale = (PAGE_BYTES as f64 / bytes as f64).sqrt();
+    let shrink = |side: u32| ((f64::from(side) * scale) as u32).max(1);
+    (shrink(w), shrink(h))
+}
+
 /// What the session decided before the book is open; the rest is decided from the book.
 #[derive(Debug, Clone)]
 pub struct Plan {
@@ -1236,12 +1252,18 @@ impl Chapter {
             .source
             .unwrap_or(kaeri_pages::PixelRect::full(original.width, original.height));
         let format = original.format.ok_or_else(|| self.unreadable())?;
+        // Nothing goes out larger than a platform can draw: a page whose box would pass the
+        // budget is made smaller, and an original that would is never sent as it is.
+        let (w, h) = within_page_bytes((w, h));
+        let original_fits =
+            u64::from(original.width) * u64::from(original.height) * 4 <= PAGE_BYTES;
         let fitted = Target { width: w, height: h, ..target };
         // What the page is decoded for: the screen, or the box it is drawn in by width, which
         // is taller than the screen.
         let room = if self.by_width { (w, h) } else { (target.width, target.height) };
-        if kaeri_pages::delivery(format, (region.width, region.height), &fitted)
-            == Delivery::Original
+        if original_fits
+            && kaeri_pages::delivery(format, (region.width, region.height), &fitted)
+                == Delivery::Original
         {
             // Crop borders only changes which part of the file shows, so the original still
             // goes, with the content box as its crop. Made here, the page would come out at the
@@ -2156,5 +2178,36 @@ mod tests {
     fn rectangles_follow_a_smaller_decode() {
         let r = kaeri_pages::PixelRect::new(2000, 0, 2000, 2800);
         assert_eq!(scale_rect(r, 4000, 2000), kaeri_pages::PixelRect::new(1000, 0, 1000, 1400));
+    }
+
+    #[test]
+    fn a_strip_image_too_big_to_draw_whole_goes_out_within_the_budget() {
+        // 720 by 40,000: narrower than the screen, but 115 MB decoded, past what Android
+        // draws.
+        let picture = image::GrayImage::from_fn(720, 40_000, |x, y| {
+            image::Luma([if (x / 9 + y / 13) % 2 == 0 { 40 } else { 210 }])
+        });
+        let mut png = Vec::new();
+        image::DynamicImage::ImageLuma8(picture)
+            .write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
+            .unwrap();
+        let pages = [("00001.png".to_owned(), png)];
+        let made = made_files(&pages, (1080, 2400), ReaderMode::Strip, false, Look::default());
+        let file = &made[0];
+        assert!(matches!(file.encoding, PageEncoding::Raw { .. }), "{file:?}");
+        let decoded = u64::from(file.width) * u64::from(file.height) * 4;
+        assert!(decoded <= PAGE_BYTES, "{decoded} bytes: {file:?}");
+        // Its shape stays the page's.
+        let (aspect, made_aspect) =
+            (40_000.0 / 720.0, f64::from(file.height) / f64::from(file.width));
+        assert!((aspect - made_aspect).abs() < 0.2, "{file:?}");
+    }
+
+    #[test]
+    fn a_box_past_the_budget_shrinks_evenly() {
+        assert_eq!(within_page_bytes((720, 4000)), (720, 4000));
+        let (w, h) = within_page_bytes((1080, 60_000));
+        assert!(u64::from(w) * u64::from(h) * 4 <= PAGE_BYTES);
+        assert!(w > 500 && h > 30_000, "{w}x{h}");
     }
 }

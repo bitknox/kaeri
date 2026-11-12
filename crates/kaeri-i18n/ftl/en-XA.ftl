@@ -675,6 +675,15 @@ reading-failed-protected = [Ţĥîš ƀööķ îš çöþý-þŕöţéçţéð, 
 # Why a chapter could not be saved: the disk is full.
 reading-failed-disk-full = [Ţĥéŕé'š ñö ŕööɱ ļéƒţ öñ ţĥîš ðéṽîçé. Ƒŕéé šöɱé šþàçé àñð ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~~~]
 
+# Why a chapter or a file for an e-reader could not be saved: the storage refused the name, because it is too long or has characters the storage doesn't allow. The path is the file's or the folder's.
+reading-failed-write-name = [Ţĥé šţöŕàĝé ðöéšñ'ţ ţàķé ţĥé ñàɱé { $path }. Îţ ɱàý ƀé ţöö ļöñĝ.~~~~~~~~~~~~~~~~~~]
+
+# Why a chapter or a file for an e-reader could not be saved: the storage is read-only, or Kaeri isn't allowed to write there. The path is the file's or the folder's.
+reading-failed-write-denied = [Ķàéŕî îšñ'ţ àļļöŵéð ţö ŵŕîţé { $path }. Çĥéçķ ţĥàţ ţĥé šţöŕàĝé îšñ'ţ ŕéàð-öñļý, ţĥéñ ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Why a chapter or a file for an e-reader could not be saved, for another reason the system gave. The path is the file's or the folder's.
+reading-failed-write = [Ķàéŕî çöüļðñ'ţ ŵŕîţé { $path }. Ţŕý àĝàîñ.~~~~~~~~~~~]
+
 # Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.
 reading-failed-webview = [Ñöṽéļš ñééð à ñéŵéŕ šýšţéɱ ŴéƀṼîéŵ ţĥàñ ṽéŕšîöñ { $version }. Ûþðàţé Åñðŕöîð Šýšţéɱ ŴéƀṼîéŵ àñð ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 

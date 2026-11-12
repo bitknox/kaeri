@@ -234969,6 +234969,42 @@
         }
       }
     },
+    "reading-failed-write" : {
+      "comment" : "Why a chapter or a file for an e-reader could not be saved, for another reason the system gave. The path is the file's or the folder's. Argument 1: path (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri couldn't write %1$@. Try again."
+          }
+        }
+      }
+    },
+    "reading-failed-write-denied" : {
+      "comment" : "Why a chapter or a file for an e-reader could not be saved: the storage is read-only, or Kaeri isn't allowed to write there. The path is the file's or the folder's. Argument 1: path (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri isn't allowed to write %1$@. Check that the storage isn't read-only, then try again."
+          }
+        }
+      }
+    },
+    "reading-failed-write-name" : {
+      "comment" : "Why a chapter or a file for an e-reader could not be saved: the storage refused the name, because it is too long or has characters the storage doesn't allow. The path is the file's or the folder's. Argument 1: path (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The storage doesn't take the name %1$@. It may be too long."
+          }
+        }
+      }
+    },
     "reading-kind-light-novel" : {
       "comment" : "Under a cover or on a series page: what kind of book it is. A light novel is a novel from Japan.",
       "extractionState" : "manual",

@@ -247,6 +247,28 @@ async fn an_open_after_the_series_page_asks_the_source_only_for_content() {
     assert_eq!(source.opened_of("ch-1"), 1, "one content call for the chapter opened");
 }
 
+/// A chapter the session's list does not hold, as the Chapters sheet shows once the series
+/// page's fresh list has it, opens from that list rather than leaving the reader waiting.
+#[tokio::test(start_paused = true)]
+async fn a_chapter_newer_than_the_sessions_list_opens_from_the_fresh_one() {
+    let mut h = reading(Arc::new(PageSource::new(&["1", "2", "3"])));
+    h.open_read(Some("2")).await;
+    h.leaves_of("2").await;
+    // The source has a new chapter, and the series page lists it.
+    h.services.book_sources.registry.put(Arc::new(PageSource::new(&["1", "2", "3", "4"])));
+    let now = h.services.clock.now();
+    h.services.book_sources.chapters(&WorkId::new(READ), None, now).await.unwrap();
+    assert_eq!(h.chapter_ids(), ["1", "2", "3"]);
+
+    let session = h.session();
+    h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("4") });
+    h.leaves_of("4").await;
+    assert_eq!(h.chapter_ids(), ["1", "2", "3", "4"]);
+    let s = h.reader.session.as_ref().unwrap();
+    assert_eq!(s.chapter().id.as_str(), "4");
+    assert_eq!(s.id, session, "the same session goes on");
+}
+
 /// With a chapter downloaded, the reader still reads the source's whole list: the download
 /// from its file, the rest from the source, and the end page after it goes on.
 #[tokio::test(start_paused = true)]

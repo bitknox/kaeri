@@ -860,6 +860,21 @@ public enum L {
     /// Why a chapter could not be saved: the disk is full.
     public static var readingFailedDiskFull: String { string("reading-failed-disk-full", fallback: "There's no room left on this device. Free some space and try again.") }
 
+    /// Why a chapter or a file for an e-reader could not be saved: the storage refused the name, because it is too long or has characters the storage doesn't allow. The path is the file's or the folder's.
+    public static func readingFailedWriteName(path: String) -> String {
+        Self.format("reading-failed-write-name", fallback: "The storage doesn't take the name %1$@. It may be too long.", path)
+    }
+
+    /// Why a chapter or a file for an e-reader could not be saved: the storage is read-only, or Kaeri isn't allowed to write there. The path is the file's or the folder's.
+    public static func readingFailedWriteDenied(path: String) -> String {
+        Self.format("reading-failed-write-denied", fallback: "Kaeri isn't allowed to write %1$@. Check that the storage isn't read-only, then try again.", path)
+    }
+
+    /// Why a chapter or a file for an e-reader could not be saved, for another reason the system gave. The path is the file's or the folder's.
+    public static func readingFailedWrite(path: String) -> String {
+        Self.format("reading-failed-write", fallback: "Kaeri couldn't write %1$@. Try again.", path)
+    }
+
     /// Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.
     public static func readingFailedWebview(version: Int) -> String {
         Self.format("reading-failed-webview", fallback: "Novels need a newer system WebView than version %1$@. Update Android System WebView and try again.", String(version))

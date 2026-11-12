@@ -9,6 +9,7 @@ pub mod books;
 pub mod config;
 pub mod demo;
 pub mod error;
+pub mod file_name;
 pub mod hash;
 pub mod ids;
 pub mod media;

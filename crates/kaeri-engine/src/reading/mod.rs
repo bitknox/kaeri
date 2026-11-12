@@ -425,6 +425,7 @@ fn search(services: &Services, query: ReadSearchQuery, page: u32, tx: &Outbox) {
     let (sources, tx, now) = (services.book_sources.clone(), tx.clone(), services.clock.now());
     let plugins = services.book_plugins.clone();
     tokio::spawn(async move {
+        sources.plugins_in(&plugins, None).await;
         sources.adopt_plugins(&plugins);
         let scope = query.source_scope.as_deref();
         let tiles = sources.search_in(&query.text, query.medium, scope, now).await;

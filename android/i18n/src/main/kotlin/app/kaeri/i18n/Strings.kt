@@ -861,6 +861,18 @@ object Strings {
     fun readingFailedDiskFull(context: Context): String =
         context.getString(R.string.reading_failed_disk_full)
 
+    /** Why a chapter or a file for an e-reader could not be saved: the storage refused the name, because it is too long or has characters the storage doesn't allow. The path is the file's or the folder's. */
+    fun readingFailedWriteName(context: Context, path: String): String =
+        context.getString(R.string.reading_failed_write_name, path)
+
+    /** Why a chapter or a file for an e-reader could not be saved: the storage is read-only, or Kaeri isn't allowed to write there. The path is the file's or the folder's. */
+    fun readingFailedWriteDenied(context: Context, path: String): String =
+        context.getString(R.string.reading_failed_write_denied, path)
+
+    /** Why a chapter or a file for an e-reader could not be saved, for another reason the system gave. The path is the file's or the folder's. */
+    fun readingFailedWrite(context: Context, path: String): String =
+        context.getString(R.string.reading_failed_write, path)
+
     /** Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80. */
     fun readingFailedWebview(context: Context, version: Int): String =
         context.getString(R.string.reading_failed_webview, version)
