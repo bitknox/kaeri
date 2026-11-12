@@ -2109,13 +2109,15 @@ mod tests {
     }
 
     /// [`until`], for an event anywhere in what comes, not only last in its batch: what a
-    /// party says comes in bursts. The wait is long because Windows takes about two seconds to
-    /// refuse a connection to a closed local port.
+    /// party says comes in bursts. The wait between batches only guards against an engine that
+    /// stopped, so it is long: Windows takes about two seconds to refuse a connection to a
+    /// closed local port, and a send's last page and its file take over ten seconds on a loaded
+    /// machine.
     #[cfg(any(feature = "party", feature = "cast"))]
     async fn seen_until(events: &mut EventStream, done: impl Fn(&Event) -> bool) -> Vec<Event> {
         let mut seen = Vec::new();
         while !seen.iter().any(&done) {
-            match tokio::time::timeout(Duration::from_secs(10), events.next_events()).await {
+            match tokio::time::timeout(Duration::from_secs(60), events.next_events()).await {
                 Ok(batch) if !batch.is_empty() => seen.extend(batch),
                 _ => panic!("nothing more, having seen {seen:?}"),
             }
