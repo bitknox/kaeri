@@ -38,6 +38,57 @@ struct Shelf {
     held: Mutex<Option<Held>>,
     /// The chapters whose pages were asked for, in order.
     contents: Mutex<Vec<String>>,
+    /// Each ask of these addresses waits for the next answer here: `true` brings the page,
+    /// `false` a 404.
+    gates: Mutex<std::collections::HashMap<String, std::collections::VecDeque<Gate>>>,
+    /// The gated addresses whose request was dropped before its answer came.
+    cut: Mutex<Vec<String>>,
+    /// Told on every ask and every cut.
+    knock: tokio::sync::Notify,
+}
+
+type Gate = tokio::sync::oneshot::Receiver<bool>;
+
+/// A gated request dropped before its answer came says so.
+struct Cut<'a>(&'a Shelf, String, bool);
+
+impl Drop for Cut<'_> {
+    fn drop(&mut self) {
+        if !self.2 {
+            self.0.cut.lock().unwrap().push(self.1.clone());
+            self.0.knock.notify_waiters();
+        }
+    }
+}
+
+impl Shelf {
+    /// The next `n` asks of `url` wait for the answers sent here.
+    fn gate(&self, url: &str, n: usize) -> Vec<tokio::sync::oneshot::Sender<bool>> {
+        let (senders, gates): (Vec<_>, std::collections::VecDeque<_>) =
+            (0..n).map(|_| tokio::sync::oneshot::channel()).unzip();
+        self.gates.lock().unwrap().insert(url.to_owned(), gates);
+        senders
+    }
+
+    fn times(&self, url: &str) -> usize {
+        self.asked.lock().unwrap().iter().filter(|a| *a == url).count()
+    }
+
+    /// Until `done` holds, for ten seconds at most.
+    async fn until(&self, done: impl Fn(&Self) -> bool) {
+        let wait = async {
+            loop {
+                let knocked = self.knock.notified();
+                tokio::pin!(knocked);
+                knocked.as_mut().enable();
+                if done(self) {
+                    return;
+                }
+                knocked.await;
+            }
+        };
+        tokio::time::timeout(Duration::from_secs(10), wait).await.expect("never came");
+    }
 }
 
 /// A page held back: its address, a notify that says it was asked and one that lets it answer.
@@ -104,6 +155,17 @@ impl BookSource for Shelf {
             None => page_ref.url.clone(),
         };
         self.asked.lock().unwrap().push(asked);
+        self.knock.notify_waiters();
+        let gate =
+            self.gates.lock().unwrap().get_mut(&page_ref.url).and_then(|g| g.pop_front());
+        if let Some(gate) = gate {
+            let mut cut = Cut(self, page_ref.url.clone(), false);
+            let answer = gate.await.unwrap_or(false);
+            cut.2 = true;
+            if !answer {
+                return Err(PageError::Status(404));
+            }
+        }
         let held = self.held.lock().unwrap().clone();
         if let Some((_, asked, answer)) = held.filter(|(url, ..)| *url == page_ref.url) {
             asked.notify_one();
@@ -202,6 +264,9 @@ fn kit_of(chapters: &[&str], hosts: &[&str]) -> Kit {
         broken: Mutex::default(),
         held: Mutex::default(),
         contents: Mutex::default(),
+        gates: Mutex::default(),
+        cut: Mutex::default(),
+        knock: tokio::sync::Notify::new(),
     });
     sources.registry.put(shelf.clone());
     store.set_book_match("shelf", "s-1", WORK, 100, true, false, 1).unwrap();
@@ -599,6 +664,9 @@ async fn a_chapter_listed_from_another_source_downloads_from_there() {
         broken: Mutex::default(),
         held: Mutex::default(),
         contents: Mutex::default(),
+        gates: Mutex::default(),
+        cut: Mutex::default(),
+        knock: tokio::sync::Notify::new(),
     });
     kit.lent.sources.registry.put(other.clone());
     kit.store().set_book_match("other", "s-2", WORK, 90, true, false, 1).unwrap();
@@ -1123,27 +1191,137 @@ async fn series_are_named_in_the_chosen_title_language() {
     assert_eq!(view.rows[0].title, "Touro no Watashibune");
 }
 
-/// A page that comes but cannot be written fails the chapter with what the disk said, as a full
-/// device does, rather than as a page gone missing.
-#[cfg(unix)]
+/// A page that comes but cannot be written for a full disk fails the chapter as a full disk and
+/// stops the queue, as a full device does.
 #[tokio::test]
-async fn a_page_that_cannot_be_kept_fails_the_chapter_as_the_disk_says() {
-    use std::os::unix::fs::PermissionsExt;
-    let kit = kit(&["1"]);
+async fn a_page_that_cannot_be_kept_for_a_full_disk_stops_the_queue() {
+    let kit = kit(&["1", "2"]);
     let (asked, answer) =
         (Arc::new(tokio::sync::Notify::new()), Arc::new(tokio::sync::Notify::new()));
     let held = ("https://pages.example/1/2".to_owned(), asked.clone(), answer.clone());
     *kit.shelf.held.lock().unwrap() = Some(held);
     kit.queue.download(&kit.lent, WorkId::new(WORK), DownloadPick::Unread).await;
     asked.notified().await;
-    let first = kit.queue.first_kept_page(WORK, "1").expect("the first page kept");
-    let dir = first.parent().unwrap().to_path_buf();
-    std::fs::set_permissions(&dir, std::fs::Permissions::from_mode(0o555)).unwrap();
+    let pages = kit.queue.sharing(WORK, "1").expect("shared");
+    pages.write_with(|_, _| Err(std::io::ErrorKind::StorageFull.into()));
+    drop(pages);
     answer.notify_one();
     kit.settle().await;
-    std::fs::set_permissions(&dir, std::fs::Permissions::from_mode(0o755)).unwrap();
-    let failure = ReadingFailure::FileMissing { path: dir.to_string_lossy().into_owned() };
-    assert_eq!(kit.states(), [("1".into(), ChapterDownloadState::Failed { failure })]);
+    assert_eq!(
+        kit.states(),
+        [
+            ("1".into(), ChapterDownloadState::Failed { failure: ReadingFailure::DiskFull }),
+            ("2".into(), ChapterDownloadState::Queued),
+        ]
+    );
+}
+
+/// Chapter 1 opened as a download opens it, and its pages shared from a folder of their own.
+async fn shared_pages(kit: &Kit) -> (shared::Downloading, PathBuf) {
+    let (work, chapter) = (WorkId::new(WORK), ChapterId::new("1"));
+    let opened = kit.lent.sources.open(&work, &chapter, Some("shelf"), 1).await.unwrap();
+    let dir = kit._dir.path().join("1.pages");
+    (kit.queue.0.shares.open(&dir, 3, opened).unwrap(), dir)
+}
+
+/// Poll `future` once: what it gives, if it is done.
+async fn poll_once<F: Future>(mut future: std::pin::Pin<&mut F>) -> Option<F::Output> {
+    std::future::poll_fn(|cx| {
+        std::task::Poll::Ready(match future.as_mut().poll(cx) {
+            std::task::Poll::Ready(out) => Some(out),
+            std::task::Poll::Pending => None,
+        })
+    })
+    .await
+}
+
+/// A fetch fails while a newer one of the same page is on its way: the side that waited on the
+/// failed one waits on the newer one rather than asking a third time.
+#[tokio::test]
+async fn a_side_let_down_by_a_failed_fetch_waits_on_the_newer_one() {
+    let kit = kit(&["1"]);
+    let url = "https://pages.example/1/2";
+    let mut answers = kit.shelf.gate(url, 3).into_iter();
+    let (first, second, third) =
+        (answers.next().unwrap(), answers.next().unwrap(), answers.next().unwrap());
+    let (pages, _) = shared_pages(&kit).await;
+    let sources = &kit.lent.sources;
+    let mut asker = std::pin::pin!(pages.page(sources, 1, 2, false));
+    assert!(poll_once(asker.as_mut()).await.is_none());
+    kit.shelf.until(|s| s.times(url) == 1).await;
+    let mut waiter = std::pin::pin!(pages.page(sources, 1, 2, false));
+    assert!(poll_once(waiter.as_mut()).await.is_none());
+    // Past its wait, a reader asks once more.
+    let mut again = std::pin::pin!(pages.page(sources, 1, 2, true));
+    assert!(poll_once(again.as_mut()).await.is_none());
+    kit.shelf.until(|s| s.times(url) == 2).await;
+    first.send(false).unwrap();
+    assert!(asker.await.is_err());
+    // The waiter sees the failure and takes up the newer fetch.
+    assert!(poll_once(waiter.as_mut()).await.is_none());
+    assert_eq!(pages.started(), 2, "asked a third time");
+    let _ = third.send(true);
+    second.send(true).unwrap();
+    assert!(waiter.await.is_ok());
+    assert!(again.await.is_ok());
+}
+
+/// A fetch nobody waits on goes on while the download runs to want its page, and is cut off
+/// once the download ends; the pages folder then goes with the last holder.
+#[tokio::test]
+async fn a_fetch_nobody_waits_on_is_cut_off_once_no_download_wants_it() {
+    let kit = kit(&["1"]);
+    let url = "https://pages.example/1/2";
+    let _answer = kit.shelf.gate(url, 2);
+    let (pages, dir) = shared_pages(&kit).await;
+    let sources = &kit.lent.sources;
+    {
+        let mut reader = std::pin::pin!(pages.page(sources, 1, 2, false));
+        assert!(poll_once(reader.as_mut()).await.is_none());
+        kit.shelf.until(|s| s.times(url) == 1).await;
+    }
+    // Still on its way: a side asking now waits on it.
+    {
+        let mut reader = std::pin::pin!(pages.page(sources, 1, 2, false));
+        assert!(poll_once(reader.as_mut()).await.is_none());
+    }
+    assert_eq!(pages.started(), 1);
+    assert!(kit.shelf.cut.lock().unwrap().is_empty());
+    let held = Arc::clone(&pages);
+    pages.let_go();
+    drop(pages);
+    kit.shelf.until(|s| s.cut.lock().unwrap().len() == 1).await;
+    while Arc::strong_count(&held) > 1 {
+        tokio::task::yield_now().await;
+    }
+    drop(held);
+    assert!(!dir.exists(), "the pages stayed");
+}
+
+/// A download opens a chapter's folder just as the share let go of before it deletes it: the
+/// folder stays for the download.
+#[tokio::test]
+async fn a_folder_let_go_is_not_deleted_from_under_a_download_opening_it() {
+    let kit = kit(&["1"]);
+    let (old, dir) = shared_pages(&kit).await;
+    let opened = old.opened();
+    old.let_go();
+    let (inside, entered) = std::sync::mpsc::channel();
+    let (go, wait) = std::sync::mpsc::channel::<()>();
+    let wait = Mutex::new(wait);
+    let hook: shared::BeforeRemoving = Arc::new(move || {
+        inside.send(()).unwrap();
+        wait.lock().unwrap().recv().unwrap();
+    });
+    *shared::BEFORE_REMOVING.lock().unwrap() = Some((dir.clone(), hook));
+    let dropping = std::thread::spawn(move || drop(old));
+    entered.recv().unwrap();
+    let new = kit.queue.0.shares.open(&dir, 3, opened).unwrap();
+    go.send(()).unwrap();
+    dropping.join().unwrap();
+    *shared::BEFORE_REMOVING.lock().unwrap() = None;
+    assert!(dir.join("count").exists(), "the folder went from under the download");
+    drop(new);
 }
 
 /// The reader takes a chapter kept ready out of the queue just as the queue picked it: the

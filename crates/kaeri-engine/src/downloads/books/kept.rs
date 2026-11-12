@@ -45,10 +45,14 @@ pub(crate) fn pages_of(stem: &Path) -> PathBuf {
     stem.with_file_name(name)
 }
 
+/// How a page is written to its file: as the disk does, or as a test's disk.
+pub(crate) type Write = fn(&Path, &[u8]) -> io::Result<()>;
+
 /// The pages kept for one chapter.
 pub(crate) struct KeptPages {
     dir: PathBuf,
     good: BTreeMap<u32, PathBuf>,
+    write: Write,
 }
 
 impl KeptPages {
@@ -90,7 +94,7 @@ impl KeptPages {
                 }
             }
         }
-        Ok(Self { dir: dir.to_path_buf(), good })
+        Ok(Self { dir: dir.to_path_buf(), good, write: |path, bytes| fs::write(path, bytes) })
     }
 
     pub(crate) fn has(&self, index: u32) -> bool {
@@ -107,6 +111,12 @@ impl KeptPages {
         self.good.remove(&index);
     }
 
+    /// Pages are written with `write` from now on.
+    #[cfg(test)]
+    pub(crate) fn write_with(&mut self, write: Write) {
+        self.write = write;
+    }
+
     pub(crate) fn dir(&self) -> &Path {
         &self.dir
     }
@@ -119,7 +129,7 @@ impl KeptPages {
     /// Keep page `index`, whole or not at all.
     pub(crate) fn put(&mut self, index: u32, bytes: &[u8]) -> io::Result<()> {
         let temp = self.dir.join(format!("{index:05}.tmp"));
-        fs::write(&temp, bytes)?;
+        (self.write)(&temp, bytes)?;
         let path = self.dir.join(name_of(index, bytes));
         fs::rename(&temp, &path)?;
         self.good.insert(index, path);

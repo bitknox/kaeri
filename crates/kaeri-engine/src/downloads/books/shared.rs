@@ -4,14 +4,17 @@
 //! Each page is fetched by whichever of the two asks for it first. The other waits for it and
 //! takes it from the kept pages, told by [`SharedPages::changed`] as each lands, so the source is
 //! asked for each page once. A fetch runs on its own: it lands and is kept for the other one even
-//! when the side that asked stops waiting for it (a reader closed, or past its wait). One that
-//! fails is fetched once more by the side that waited on it. A reader past its wait asks again
+//! when the side that asked stops waiting for it (a reader closed, or past its wait), as long as
+//! the download still runs to want the page. With no download, a fetch nobody waits on any more
+//! is cut off. One that fails is fetched once more by the side that waited on it, unless a newer
+//! fetch of the page is on its way, which it waits on instead. A reader past its wait asks again
 //! for itself, as it would without a download. Both fetch from the chapter as the download
 //! opened it, with the page addresses the last fetch had, so the source is not asked for the
 //! chapter again either.
 //!
 //! There is one share per pages folder: a download that starts again while a reader still holds
-//! the pages takes up the same share.
+//! the pages takes up the same share. A share let go deletes its folder under the same lock a
+//! download opening the folder takes, so the two never overlap.
 
 use std::{
     collections::HashMap,
@@ -28,12 +31,22 @@ use crate::read_sources::{BookSources, Opened};
 /// How a fetch of a page ended, once it has.
 type Fetch = watch::Receiver<Option<Result<Vec<u8>, ReadingFailure>>>;
 
+/// A fetch of a page on its way.
+struct Fetching {
+    ended: Fetch,
+    /// The sides waiting on it now.
+    waiters: usize,
+    task: tokio::task::AbortHandle,
+}
+
 pub(crate) struct SharedPages {
     /// How many pages the chapter has.
     total: u32,
     state: Mutex<Sharing>,
     /// Told when a page lands or a fetch of one ends.
     changed: tokio::sync::Notify,
+    /// Every folder's share, locked while this one's folder is deleted.
+    shares: Arc<Mutex<Vec<Share>>>,
 }
 
 struct Sharing {
@@ -41,14 +54,54 @@ struct Sharing {
     /// The chapter as the download opened it, with the page addresses the last fetch had.
     opened: Opened,
     /// The fetches on their way, by page: the latest one of each.
-    fetching: HashMap<u32, Fetch>,
+    fetching: HashMap<u32, Fetching>,
     /// Pages that came but could not be kept, and why.
     unkept: HashMap<u32, ReadingFailure>,
+    /// Downloads running on these pages now: one, or none once it ended.
+    downloads: usize,
     /// The download is done with the pages: they go once nothing holds them.
     let_go: bool,
     /// The folder went to a fetch of the chapter in another number of pages: nothing more is
     /// kept here and the folder is left as it is.
     left: bool,
+    /// How many fetches were started, for tests to count.
+    #[cfg(test)]
+    started: usize,
+}
+
+impl Sharing {
+    /// With no download to keep them for, the fetches nobody waits on are cut off.
+    fn cut_unwanted(&mut self) {
+        if self.downloads > 0 && !self.left {
+            return;
+        }
+        self.fetching.retain(|_, f| {
+            let wanted = f.waiters > 0;
+            if !wanted {
+                f.task.abort();
+            }
+            wanted
+        });
+    }
+}
+
+/// A side waiting on a fetch: while one waits, the fetch goes on.
+struct Waiting<'a> {
+    pages: &'a SharedPages,
+    index: u32,
+    ended: Fetch,
+}
+
+impl Drop for Waiting<'_> {
+    fn drop(&mut self) {
+        let mut state = self.pages.state();
+        if let Some(f) = state.fetching.get_mut(&self.index)
+            && f.ended.same_channel(&self.ended)
+        {
+            f.waiters = f.waiters.saturating_sub(1);
+        }
+        state.cut_unwanted();
+    }
 }
 
 impl std::fmt::Debug for SharedPages {
@@ -58,20 +111,8 @@ impl std::fmt::Debug for SharedPages {
 }
 
 impl SharedPages {
-    fn new(kept: KeptPages, opened: Opened, total: u32) -> Self {
-        let state = Sharing {
-            kept,
-            opened,
-            fetching: HashMap::new(),
-            unkept: HashMap::new(),
-            let_go: false,
-            left: false,
-        };
-        Self { total, state: Mutex::new(state), changed: tokio::sync::Notify::new() }
-    }
-
     fn state(&self) -> MutexGuard<'_, Sharing> {
-        self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+        lock(&self.state)
     }
 
     /// The chapter as the download opened it, with the page addresses the last fetch had.
@@ -98,9 +139,22 @@ impl SharedPages {
         self.state().let_go = true;
     }
 
+    /// How many fetches were started.
+    #[cfg(test)]
+    pub(crate) fn started(&self) -> usize {
+        self.state().started
+    }
+
+    /// Pages are written with `write` from now on, as a disk would.
+    #[cfg(test)]
+    pub(crate) fn write_with(&self, write: super::kept::Write) {
+        self.state().kept.write_with(write);
+    }
+
     /// Page `index`: as kept, or once a fetch of it on its way lands, or fetched and kept. With
     /// `again`, a fetch on its way is not waited on: the page is asked for once more. A page
-    /// another fetch failed to bring is asked for once more too.
+    /// another fetch failed to bring is asked for once more too, unless a newer fetch of it is on
+    /// its way, which is waited on instead.
     pub(crate) async fn page(
         self: &Arc<Self>,
         sources: &BookSources,
@@ -108,30 +162,51 @@ impl SharedPages {
         now: i64,
         again: bool,
     ) -> Result<Vec<u8>, ReadingFailure> {
-        let mut again = again;
         let mut mine: Option<Fetch> = None;
+        // Another's fetch that failed, not to be waited on again.
+        let mut failed: Option<Fetch> = None;
+        let mut waiting: Option<Waiting<'_>> = None;
         loop {
             let changed = self.changed.notified();
             tokio::pin!(changed);
             changed.as_mut().enable();
-            let (path, fetch) = {
+            let (path, fetch, joined) = {
                 let mut state = self.state();
                 match state.kept.path(index).map(Path::to_path_buf) {
-                    Some(path) => (Some(path), None),
+                    Some(path) => (Some(path), None, None),
                     None => {
                         let fetch = match (&mine, state.fetching.get(&index)) {
                             (Some(fetch), _) => fetch.clone(),
-                            (None, Some(fetch)) if !again => fetch.clone(),
+                            (None, Some(f))
+                                if !again
+                                    && !failed
+                                        .as_ref()
+                                        .is_some_and(|x| x.same_channel(&f.ended)) =>
+                            {
+                                f.ended.clone()
+                            }
                             _ => {
                                 let fetch = self.start(&mut state, sources, index, now);
                                 mine = Some(fetch.clone());
                                 fetch
                             }
                         };
-                        (None, Some(fetch))
+                        let held =
+                            waiting.as_ref().is_some_and(|w| w.ended.same_channel(&fetch));
+                        if !held
+                            && let Some(f) = state.fetching.get_mut(&index)
+                            && f.ended.same_channel(&fetch)
+                        {
+                            f.waiters += 1;
+                        }
+                        (None, Some(fetch.clone()), (!held).then_some(fetch))
                     }
                 }
             };
+            // Out of the lock: the wait it replaces lets go of its fetch.
+            if let Some(ended) = joined {
+                waiting = Some(Waiting { pages: self, index, ended });
+            }
             if let Some(path) = path {
                 match std::fs::read(&path) {
                     Ok(bytes) => return Ok(bytes),
@@ -143,9 +218,10 @@ impl SharedPages {
                 }
             }
             let Some(mut fetch) = fetch else { continue };
+            let mut let_down = false;
             tokio::select! {
-                // Another fetch may have brought it.
-                () = &mut changed => {}
+                // How the fetch waited on ended comes first, so a failure is always seen as one.
+                biased;
                 ended = fetch.wait_for(Option::is_some) => {
                     let ended = ended.ok().and_then(|e| e.clone());
                     match ended {
@@ -155,15 +231,22 @@ impl SharedPages {
                             let reason = format!("page {index} was not fetched");
                             return Err(ReadingFailure::Other { reason });
                         }
-                        // Another's fetch failed: this one asks once more itself.
-                        _ => again = true,
+                        _ => let_down = true,
                     }
                 }
+                // Another fetch may have brought it.
+                () = &mut changed => {}
+            }
+            // Another's fetch failed: a newer one on its way is waited on, or this side asks
+            // once more itself.
+            if let_down {
+                failed = Some(fetch);
             }
         }
     }
 
-    /// Fetch page `index` on its own: it lands and is kept whether or not anyone still waits.
+    /// Fetch page `index` on its own: it lands and is kept while anyone waits for it or a
+    /// download runs to want it.
     fn start(
         self: &Arc<Self>,
         state: &mut Sharing,
@@ -171,18 +254,23 @@ impl SharedPages {
         index: u32,
         now: i64,
     ) -> Fetch {
-        let (tx, fetch) = watch::channel(None);
-        state.fetching.insert(index, fetch.clone());
+        let (tx, ended) = watch::channel(None);
         let mut opened = state.opened.clone();
-        let (pages, sources, this) = (Arc::clone(self), sources.clone(), fetch.clone());
-        tokio::spawn(async move {
+        let (pages, sources, this) = (Arc::clone(self), sources.clone(), ended.clone());
+        let task = tokio::spawn(async move {
             let before = opened.clone();
             let came = sources.page(&mut opened, index as usize, now).await;
             pages.landed(index, &this, &came, (&before, opened));
             let _ = tx.send(Some(came));
             pages.changed.notify_waiters();
         });
-        fetch
+        let fetching = Fetching { ended: ended.clone(), waiters: 0, task: task.abort_handle() };
+        state.fetching.insert(index, fetching);
+        #[cfg(test)]
+        {
+            state.started += 1;
+        }
+        ended
     }
 
     /// A fetch of page `index` ended: the page is kept when it came, and fresh page addresses
@@ -195,7 +283,7 @@ impl SharedPages {
         (before, after): (&Opened, Opened),
     ) {
         let mut state = self.state();
-        if state.fetching.get(&index).is_some_and(|f| f.same_channel(this)) {
+        if state.fetching.get(&index).is_some_and(|f| f.ended.same_channel(this)) {
             state.fetching.remove(&index);
         }
         if crate::reading::feed::moved(&after, before) {
@@ -220,31 +308,77 @@ impl SharedPages {
 
 impl Drop for SharedPages {
     fn drop(&mut self) {
-        let state = self.state();
-        if state.let_go && !state.left {
-            KeptPages::remove(state.kept.dir());
+        let state = self.state.get_mut().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if !state.let_go || state.left {
+            return;
+        }
+        let dir = state.kept.dir().to_path_buf();
+        #[cfg(test)]
+        before_removing(&dir);
+        // Under the list, so a download opening the folder meanwhile either waits until it has
+        // gone or keeps it. The list is read without taking up any share, so no share is
+        // dropped under its lock.
+        let list = lock(&self.shares);
+        if !list.iter().any(|(d, p)| *d == dir && p.strong_count() > 0) {
+            KeptPages::remove(&dir);
         }
     }
+}
+
+/// Run before a share let go takes the list to delete its folder: a test stops it there.
+#[cfg(test)]
+pub(crate) type BeforeRemoving = Arc<dyn Fn() + Send + Sync>;
+
+#[cfg(test)]
+pub(crate) static BEFORE_REMOVING: Mutex<Option<(PathBuf, BeforeRemoving)>> = Mutex::new(None);
+
+#[cfg(test)]
+fn before_removing(dir: &Path) {
+    let hook =
+        lock(&BEFORE_REMOVING).as_ref().filter(|(d, _)| d == dir).map(|(_, f)| f.clone());
+    if let Some(hook) = hook {
+        hook();
+    }
+}
+
+fn lock<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
+    mutex.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
 }
 
 type Share = (PathBuf, Weak<SharedPages>);
 
 /// The pages each chapter's folder shares now, while anything holds them.
 #[derive(Default)]
-pub(crate) struct Shares(Mutex<Vec<Share>>);
+pub(crate) struct Shares(Arc<Mutex<Vec<Share>>>);
 
 fn find(list: &[Share], dir: &Path) -> Option<Arc<SharedPages>> {
     list.iter().find(|(d, _)| d == dir).and_then(|(_, p)| p.upgrade())
 }
 
-impl Shares {
-    fn list(&self) -> MutexGuard<'_, Vec<Share>> {
-        self.0.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
-    }
+/// The pages as a download holds them: once it ends, however it ends, the fetches nobody waits
+/// on are cut off.
+pub(crate) struct Downloading(Arc<SharedPages>);
 
+impl std::ops::Deref for Downloading {
+    type Target = Arc<SharedPages>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl Drop for Downloading {
+    fn drop(&mut self) {
+        let mut state = self.0.state();
+        state.downloads = state.downloads.saturating_sub(1);
+        state.cut_unwanted();
+    }
+}
+
+impl Shares {
     /// The pages kept in `dir`, while anything holds them.
     pub(crate) fn of(&self, dir: &Path) -> Option<Arc<SharedPages>> {
-        find(&self.list(), dir)
+        find(&lock(&self.0), dir)
     }
 
     /// The pages of a chapter of `total` pages kept in `dir`, for its download: the share a
@@ -254,18 +388,21 @@ impl Shares {
         dir: &Path,
         total: u32,
         opened: Opened,
-    ) -> std::io::Result<Arc<SharedPages>> {
-        let mut list = self.list();
+    ) -> std::io::Result<Downloading> {
+        let mut list = lock(&self.0);
         list.retain(|(_, p)| p.strong_count() > 0);
         if let Some(live) = find(&list, dir) {
             let mut state = live.state();
             if live.total == total {
                 state.let_go = false;
                 state.opened = opened;
+                state.downloads += 1;
                 drop(state);
-                return Ok(live);
+                return Ok(Downloading(live));
             }
+            // Marked left before it can drop here, so it takes neither the list nor the folder.
             state.left = true;
+            state.cut_unwanted();
             drop(state);
             list.retain(|(d, _)| d != dir);
         }
@@ -273,8 +410,24 @@ impl Shares {
         if kept.len() > 0 {
             tracing::info!(kept = kept.len(), total, "a chapter fetch picks up its pages");
         }
-        let pages = Arc::new(SharedPages::new(kept, opened, total));
+        let state = Sharing {
+            kept,
+            opened,
+            fetching: HashMap::new(),
+            unkept: HashMap::new(),
+            downloads: 1,
+            let_go: false,
+            left: false,
+            #[cfg(test)]
+            started: 0,
+        };
+        let pages = Arc::new(SharedPages {
+            total,
+            state: Mutex::new(state),
+            changed: tokio::sync::Notify::new(),
+            shares: Arc::clone(&self.0),
+        });
         list.push((dir.to_path_buf(), Arc::downgrade(&pages)));
-        Ok(pages)
+        Ok(Downloading(pages))
     }
 }
