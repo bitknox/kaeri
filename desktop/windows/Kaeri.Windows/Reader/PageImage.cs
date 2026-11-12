@@ -297,8 +297,8 @@ sealed class PageImageView : Canvas
 /// The Raised plate that holds a page's place with its number, "Page 23", or "Image 23" for a
 /// strip image. Nothing shows for 600 ms, and from 4 s a line under the number says it is
 /// loading. A plate that takes over from one already on screen (the opening plate) shows at once,
-/// so nothing blinks between them. A strip image taller than the window centres its words in its
-/// first window-height, so they stay in view when the image is reached from above or by a jump.
+/// so nothing blinks between them. A strip image's words sit in the middle of the part of it on
+/// screen, so they stay in view however tall the image is and wherever the strip is scrolled to.
 /// </summary>
 sealed class PagePlate : Grid
 {
@@ -306,13 +306,28 @@ sealed class PagePlate : Grid
     readonly TextBlock line;
     readonly StackPanel stack;
     readonly DispatcherQueueTimer first, slow;
+    ScrollViewer? scroller;
 
     public PagePlate(int page, ReaderPalette palette, bool atOnce = false, bool image = false)
         : this(image ? T.ReaderImagePlate(page) : T.ReaderPagePlate(page),
                image ? T.ReaderImageLoading(page) : T.ReaderPageLoading(page), palette, atOnce)
     {
-        if (image)
-            SizeChanged += (_, _) => FirstWindow();
+        if (!image)
+            return;
+        Loaded += (_, _) =>
+        {
+            scroller = Scroller(this);
+            if (scroller is not null)
+                scroller.ViewChanged += Scrolled;
+            OnScreen();
+        };
+        Unloaded += (_, _) =>
+        {
+            if (scroller is not null)
+                scroller.ViewChanged -= Scrolled;
+            scroller = null;
+        };
+        SizeChanged += (_, _) => OnScreen();
     }
 
     public PagePlate(string label, string loading, ReaderPalette palette, bool atOnce)
@@ -344,12 +359,30 @@ sealed class PagePlate : Grid
     /// <summary>The plate is on screen, or on its way.</summary>
     public bool Shown => Opacity > 0;
 
-    /// <summary>Centre the words in the plate's first window-height: the bottom margin takes the rest.</summary>
-    void FirstWindow()
+    void Scrolled(object? sender, ScrollViewerViewChangedEventArgs e) => OnScreen();
+
+    /// <summary>Centre the words on the part of the plate inside the strip's scroll viewer.</summary>
+    void OnScreen()
     {
-        var window = XamlRoot?.Size.Height ?? 0;
-        var rest = window > 0 ? Math.Max(0, ActualHeight - window) : 0;
-        stack.Margin = new Thickness(16, 16, 16, 16 + rest);
+        (double, double)? seen = null;
+        if (scroller is { ActualHeight: > 0 } view)
+        {
+            // The scroll viewer's top and bottom in the plate's own units, through any zoom.
+            var into = view.TransformToVisual(this);
+            seen = (into.TransformPoint(new global::Windows.Foundation.Point(0, 0)).Y,
+                    into.TransformPoint(new global::Windows.Foundation.Point(0, view.ActualHeight)).Y);
+        }
+        var room = number.ActualHeight > 0 ? number.ActualHeight * 2 + stack.Spacing : 48;
+        var (above, below) = StripPlate.WordsMargins(ActualHeight, seen, room);
+        stack.Margin = new Thickness(16, above, 16, below);
+    }
+
+    static ScrollViewer? Scroller(DependencyObject at)
+    {
+        for (var up = VisualTreeHelper.GetParent(at); up is not null; up = VisualTreeHelper.GetParent(up))
+            if (up is ScrollViewer view)
+                return view;
+        return null;
     }
 
     /// <summary>The loading line says something else from now on (how long a source search has taken).</summary>
