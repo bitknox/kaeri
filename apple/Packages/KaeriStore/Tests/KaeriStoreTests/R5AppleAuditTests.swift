@@ -168,7 +168,7 @@ struct R5AppleAuditTests {
     /// A failure that answers the closed book's open is that book's: the next book keeps opening.
     @Test
     func aFailureOfABookClosedWhileOpeningLeavesTheNextOpening() {
-        let model = opening()
+        let model = opening(Sent())
         model.close()
         model.open(work: "a:900302")
         model.observe(.reading(.failed(about: .reader, failure: .notFound)))
