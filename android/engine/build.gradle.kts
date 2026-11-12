@@ -33,7 +33,7 @@ KaeriSdk.engines.forEach { (flavour, engine) ->
     val name = flavour.replaceFirstChar(Char::uppercase)
     val check = tasks.register<Exec>("check${name}Engine") {
         description = "Checks that the $engine engine in android/.engine is current."
-        commandLine(rootDir.resolve("scripts/engine.sh").path, "--check", engine)
+        commandLine(KaeriSdk.script(rootDir.resolve("scripts/engine.sh"), "--check", engine))
     }
     tasks.configureEach {
         if (this.name == "pre${name}DebugBuild" || this.name == "pre${name}ReleaseBuild") dependsOn(check)

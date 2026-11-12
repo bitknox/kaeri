@@ -93,7 +93,7 @@ dependencies {
 if (native) {
     val mpvCheck = tasks.register<Exec>("mpvCheck") {
         description = "Checks that android/.mpv holds the libmpv mpv.sh builds."
-        commandLine(rootDir.resolve("scripts/mpv.sh").path, "--check")
+        commandLine(KaeriSdk.script(rootDir.resolve("scripts/mpv.sh"), "--check"))
     }
     tasks.named("preBuild") { dependsOn(mpvCheck) }
 }
