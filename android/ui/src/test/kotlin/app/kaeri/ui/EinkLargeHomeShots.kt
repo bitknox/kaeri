@@ -37,12 +37,20 @@ class EinkLargeHomeShots : ReadingShotHarness() {
         name, FixtureScene.READING_HOME, Destination.Home, medium = KaeriIsFor.READ, eink = EinkLook(), ready = homeRows,
     )
 
-    /** Home with Continue and New chapters filled from the discovery rows' series. */
+    /**
+     * Home with Continue and New chapters filled from the discovery rows' series. The fill waits
+     * for the engine's last Home, with every part in and the hero chosen: the engine sends Home
+     * again as each part lands, and a fill made before the hero's series is known draws no hero.
+     */
     private fun fullHome(name: String, after: (() -> Unit)? = null) = shoot(
         name, FixtureScene.READING_HOME, Destination.Home, medium = KaeriIsFor.READ, eink = EinkLook(),
         then = { store -> fill(store) },
         after = after,
-        ready = { homeRows(it) && (it.reading.home.value?.continueReading?.size ?: 0) >= 1 },
+        ready = { store ->
+            val view = store.reading.home.value
+            homeRows(store) && view != null && view.continueReading.isNotEmpty() && view.pending.isEmpty() &&
+                view.spotlight != null && view.spot != null
+        },
     )
 
     /**
