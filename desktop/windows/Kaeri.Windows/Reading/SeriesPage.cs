@@ -763,9 +763,12 @@ public sealed partial class SeriesPage : Page
         }
         grid.Children.Add(words);
 
-        if (row.Download is ChapterDownloadState.Downloading { Total: > 0 } d)
+        if (row.Download is ChapterDownloadState.Downloading or ChapterDownloadState.Queued or ChapterDownloadState.WaitsForWifi)
         {
-            var ring = new ProgressRing { IsIndeterminate = false, Value = 100.0 * d.DoneValue / d.Total, Width = 20, Height = 20 };
+            // Queued, waiting for Wi-Fi or just started (no count yet): the same stop, with no progress to show.
+            var ring = row.Download is ChapterDownloadState.Downloading { Total: > 0 } d
+                ? new ProgressRing { IsIndeterminate = false, Value = 100.0 * d.DoneValue / d.Total, Width = 20, Height = 20 }
+                : new ProgressRing { IsIndeterminate = row.Download is ChapterDownloadState.Downloading, Value = 0, Width = 20, Height = 20 };
             // The stop square in the ring, as on the Mac and Android.
             var square = new Microsoft.UI.Xaml.Shapes.Rectangle
             {

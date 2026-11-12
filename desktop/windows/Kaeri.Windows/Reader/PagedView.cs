@@ -423,6 +423,9 @@ sealed class PagedView : Grid
     /// <summary>Whether a drag that way has somewhere to go: a leaf, or the next chapter past the end page.</summary>
     bool CanGo(bool forward)
     {
+        // The leaves can be empty for a moment as a chapter opens under a drag.
+        if (current < 0 || current >= Reader.Leaves.Length)
+            return false;
         if (forward && Reader.Leaves[current].EndPage)
             return Reader.EndNext is not null;
         var target = current + (forward ? 1 : -1);

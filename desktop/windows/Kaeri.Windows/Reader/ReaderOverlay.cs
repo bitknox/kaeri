@@ -153,6 +153,7 @@ public sealed partial class ReaderOverlay : UserControl
         {
             showing = true;
             Reader.Changed += OnChanged;
+            Dialogs.Opening += DialogOpening;
             Visibility = Visibility.Visible;
             Ctx.Window.ReaderShowing(true);
             if (Motion.Enabled)
@@ -210,6 +211,7 @@ public sealed partial class ReaderOverlay : UserControl
             return;
         showing = false;
         Reader.Changed -= OnChanged;
+        Dialogs.Opening -= DialogOpening;
         settingsFlyout.Hide();
         chaptersFlyout.Hide();
         Reader.Close();
@@ -756,7 +758,7 @@ public sealed partial class ReaderOverlay : UserControl
     /// <summary>The pointer goes with the chrome, but never over a screen with buttons to reach.</summary>
     void HidePointer()
     {
-        if (pointerHidden || !showing || StateShown || OnEndPage)
+        if (pointerHidden || !showing || StateShown || OnEndPage || Dialogs.Open)
             return;
         pointerHidden = true;
         while (ShowCursor(false) >= 0)
@@ -764,6 +766,9 @@ public sealed partial class ReaderOverlay : UserControl
             // The count falls below zero and the pointer is gone.
         }
     }
+
+    /// <summary>A dialog opens over the reader: the pointer comes back to reach its buttons.</summary>
+    void DialogOpening() => ShowPointer();
 
     void ShowPointer()
     {

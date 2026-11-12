@@ -282,11 +282,19 @@ sealed class NovelView : Grid
         catch (Exception ex)
         {
             KaeriFfiMethods.LogLine(FfiLogLevel.Warn, "windows", $"a book resource failed: {ex.GetType().Name}");
-            e.Response = env.CreateWebResourceResponse(null, 500, "Internal Server Error", "");
+            if (!closed)
+                e.Response = env.CreateWebResourceResponse(null, 500, "Internal Server Error", "");
         }
         finally
         {
-            deferral.Complete();
+            try
+            {
+                deferral.Complete();
+            }
+            catch (Exception) when (closed)
+            {
+                // The web view went while the engine answered: nobody waits on the request.
+            }
         }
     }
 
