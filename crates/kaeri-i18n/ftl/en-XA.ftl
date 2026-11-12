@@ -2094,6 +2094,12 @@ linux-reader-end-offline-body = [Ýöü'ŕé öƒƒļîñé. Îţ öþéñš ĥ�
 # Hint under a page's error: turning the page goes on past it.
 linux-reader-page-failed-hint = [Ţüŕñ ţĥé þàĝé ţö ĝö öñ ŵîţĥöüţ îţ.~~~~~~~~~~~]
 
+# Why a page failed: its file came in, but no image decoder on this system could show it.
+linux-reader-page-undecodable = [Ţĥé îɱàĝé çàɱé îñ, ƀüţ îţ çöüļðñ'ţ ƀé šĥöŵñ.~~~~~~~~~~~~~~]
+
+# Why a light novel's chapter stopped showing: the view that draws its text closed or failed to load it.
+linux-reader-novel-stopped = [Ţĥé ṽîéŵ ţĥàţ šĥöŵš ţĥé ţéẋţ šţöþþéð.~~~~~~~~~~~~]
+
 # Line while a chapter opens, once its number is known.
 linux-reader-opening-number = [Öþéñîñĝ çĥàþţéŕ { $chapter }~~~~~~]
 
@@ -8900,6 +8906,9 @@ reader-image-plate = [Îɱàĝé { $image }~~~]
 # Under a strip image's number after four seconds.
 reader-image-loading = [Ļöàðîñĝ îɱàĝé { $image }~~~~~~]
 
+# Under a strip image's number (Image 4) when it couldn't be loaded, above Try again.
+reader-image-failed = [Çöüļðñ'ţ ļöàð~~~~]
+
 # Heading where a page could not be loaded.
 reader-page-failed = [Çöüļðñ'ţ ļöàð þàĝé { $page }~~~~~~~]
 
@@ -10677,6 +10686,9 @@ read-downloads-queued =
 # A series' line in Downloads when a chapter failed, with the reason.
 read-downloads-failed = [{ $chapter } çöüļðñ'ţ ðöŵñļöàð. { $reason }~~~~~~~~]
 
+# Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows.
+read-download-not-started = [Ţĥé ðöŵñļöàð ðîðñ'ţ šţàŕţ. { $reason }~~~~~~~~~]
+
 # A series' line in Downloads: how many chapters are kept.
 read-downloads-kept =
     { $n ->
@@ -12376,6 +12388,22 @@ book-folder-empty-line =
 
 # Primary action after an empty folder.
 book-folder-choose-other = [Çĥööšé àñöţĥéŕ ƒöļðéŕ~~~~~~~]
+
+# Folder result title when the picked folder is already a source. It was scanned again.
+book-folder-already = [{ $folder } îš àļŕéàðý îñ ýöüŕ šöüŕçéš~~~~~~~~~]
+
+# Line under it: what the new scan found. Closing the sheet keeps the folder.
+book-folder-already-line =
+    { $series ->
+        [one] [Ķàéŕî ļööķéð ţĥŕöüĝĥ îţ àĝàîñ àñð ƒöüñð öñé šéŕîéš. Îţ šţàýš àš îţ îš.~~~~~~~~~~~~~~~~~~~~~]
+       *[other] [Ķàéŕî ļööķéð ţĥŕöüĝĥ îţ àĝàîñ àñð ƒöüñð { $series } šéŕîéš. Îţ šţàýš àš îţ îš.~~~~~~~~~~~~~~~~~~~~~]
+    }
+
+# Folder result title when the folder can't be read: it is gone, or Kaeri may not open it.
+book-folder-unreadable = [Çöüļðñ'ţ ŕéàð { $folder }~~~~~~]
+
+# Line under it.
+book-folder-unreadable-line = [Îţ ɱàý ĥàṽé ɱöṽéð, öŕ Ķàéŕî îšñ'ţ àļļöŵéð ţö öþéñ îţ. Ţŕý àñöţĥéŕ ƒöļðéŕ.~~~~~~~~~~~~~~~~~~~~~~]
 
 # Title of the Join a plugin store sheet.
 store-join-title = [Ĵöîñ à þļüĝîñ šţöŕé~~~~~~]

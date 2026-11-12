@@ -422,9 +422,9 @@ impl Home {
         all.connect_clicked({
             let (ctx, query) = (Rc::downgrade(ctx), Rc::clone(&query));
             move |all| {
-                if let (Some(ctx), Some((query, line))) =
-                    (ctx.upgrade(), query.borrow().clone())
-                {
+                // A local, so the borrow ends before view_all runs the window's action.
+                let asked = query.borrow().clone();
+                if let (Some(ctx), Some((query, line))) = (ctx.upgrade(), asked) {
                     view_all(&ctx, query, line, all);
                 }
             }

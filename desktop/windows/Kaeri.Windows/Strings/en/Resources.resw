@@ -8194,6 +8194,10 @@
     <value>Loading image {image}</value>
     <comment>Under a strip image's number after four seconds.</comment>
   </data>
+  <data name="ReaderImageFailed" xml:space="preserve">
+    <value>Couldn't load</value>
+    <comment>Under a strip image's number (Image 4) when it couldn't be loaded, above Try again.</comment>
+  </data>
   <data name="ReaderPageFailed" xml:space="preserve">
     <value>Couldn't load page {page}</value>
     <comment>Heading where a page could not be loaded.</comment>
@@ -10520,6 +10524,10 @@
     <value>{chapter} couldn't download. {reason}</value>
     <comment>A series' line in Downloads when a chapter failed, with the reason.</comment>
   </data>
+  <data name="ReadDownloadNotStarted" xml:space="preserve">
+    <value>The download didn't start. {reason}</value>
+    <comment>Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows.</comment>
+  </data>
   <data name="ReadDownloadsKept_one" xml:space="preserve">
     <value>{n} chapter</value>
     <comment>A series' line in Downloads: how many chapters are kept.</comment>
@@ -12759,6 +12767,26 @@
   <data name="BookFolderChooseOther" xml:space="preserve">
     <value>Choose another folder</value>
     <comment>Primary action after an empty folder.</comment>
+  </data>
+  <data name="BookFolderAlready" xml:space="preserve">
+    <value>{folder} is already in your sources</value>
+    <comment>Folder result title when the picked folder is already a source. It was scanned again.</comment>
+  </data>
+  <data name="BookFolderAlreadyLine_one" xml:space="preserve">
+    <value>Kaeri looked through it again and found one series. It stays as it is.</value>
+    <comment>Line under it: what the new scan found. Closing the sheet keeps the folder.</comment>
+  </data>
+  <data name="BookFolderAlreadyLine_other" xml:space="preserve">
+    <value>Kaeri looked through it again and found {series} series. It stays as it is.</value>
+    <comment>Line under it: what the new scan found. Closing the sheet keeps the folder.</comment>
+  </data>
+  <data name="BookFolderUnreadable" xml:space="preserve">
+    <value>Couldn't read {folder}</value>
+    <comment>Folder result title when the folder can't be read: it is gone, or Kaeri may not open it.</comment>
+  </data>
+  <data name="BookFolderUnreadableLine" xml:space="preserve">
+    <value>It may have moved, or Kaeri isn't allowed to open it. Try another folder.</value>
+    <comment>Line under it.</comment>
   </data>
   <data name="StoreJoinTitle" xml:space="preserve">
     <value>Join a plugin store</value>

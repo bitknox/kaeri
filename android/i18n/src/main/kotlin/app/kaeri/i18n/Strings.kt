@@ -9282,6 +9282,10 @@ object Strings {
     fun readerImageLoading(context: Context, image: Int): String =
         context.getString(R.string.reader_image_loading, image)
 
+    /** Under a strip image's number (Image 4) when it couldn't be loaded, above Try again. */
+    fun readerImageFailed(context: Context): String =
+        context.getString(R.string.reader_image_failed)
+
     /** Heading where a page could not be loaded. */
     fun readerPageFailed(context: Context, page: Int): String =
         context.getString(R.string.reader_page_failed, page)
@@ -11500,6 +11504,10 @@ object Strings {
     fun readDownloadsFailed(context: Context, chapter: String, reason: String): String =
         context.getString(R.string.read_downloads_failed, chapter, reason)
 
+    /** Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows. */
+    fun readDownloadNotStarted(context: Context, reason: String): String =
+        context.getString(R.string.read_download_not_started, reason)
+
     /** A series' line in Downloads: how many chapters are kept. */
     fun readDownloadsKept(context: Context, n: Int): String =
         context.resources.getQuantityString(R.plurals.read_downloads_kept, n, n)
@@ -13659,6 +13667,22 @@ object Strings {
     /** Primary action after an empty folder. */
     fun bookFolderChooseOther(context: Context): String =
         context.getString(R.string.book_folder_choose_other)
+
+    /** Folder result title when the picked folder is already a source. It was scanned again. */
+    fun bookFolderAlready(context: Context, folder: String): String =
+        context.getString(R.string.book_folder_already, folder)
+
+    /** Line under it: what the new scan found. Closing the sheet keeps the folder. */
+    fun bookFolderAlreadyLine(context: Context, series: Int): String =
+        context.resources.getQuantityString(R.plurals.book_folder_already_line, series, series)
+
+    /** Folder result title when the folder can't be read: it is gone, or Kaeri may not open it. */
+    fun bookFolderUnreadable(context: Context, folder: String): String =
+        context.getString(R.string.book_folder_unreadable, folder)
+
+    /** Line under it. */
+    fun bookFolderUnreadableLine(context: Context): String =
+        context.getString(R.string.book_folder_unreadable_line)
 
     /** Title of the Join a plugin store sheet. */
     fun storeJoinTitle(context: Context): String =

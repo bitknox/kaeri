@@ -3225,6 +3225,16 @@ pub fn linux_reader_page_failed_hint() -> String {
     text("linux-reader-page-failed-hint", &[])
 }
 
+/// Why a page failed: its file came in, but no image decoder on this system could show it.
+pub fn linux_reader_page_undecodable() -> String {
+    text("linux-reader-page-undecodable", &[])
+}
+
+/// Why a light novel's chapter stopped showing: the view that draws its text closed or failed to load it.
+pub fn linux_reader_novel_stopped() -> String {
+    text("linux-reader-novel-stopped", &[])
+}
+
 /// Line while a chapter opens, once its number is known.
 pub fn linux_reader_opening_number(chapter: &str) -> String {
     text("linux-reader-opening-number", &[("chapter", Arg::Text(chapter))])
@@ -14227,6 +14237,11 @@ pub fn reader_image_loading(image: i64) -> String {
     text("reader-image-loading", &[("image", Arg::Plain(image))])
 }
 
+/// Under a strip image's number (Image 4) when it couldn't be loaded, above Try again.
+pub fn reader_image_failed() -> String {
+    text("reader-image-failed", &[])
+}
+
 /// Heading where a page could not be loaded.
 pub fn reader_page_failed(page: i64) -> String {
     text("reader-page-failed", &[("page", Arg::Plain(page))])
@@ -16970,6 +16985,11 @@ pub fn read_downloads_failed(chapter: &str, reason: &str) -> String {
     text("read-downloads-failed", &[("chapter", Arg::Text(chapter)), ("reason", Arg::Text(reason))])
 }
 
+/// Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows.
+pub fn read_download_not_started(reason: &str) -> String {
+    text("read-download-not-started", &[("reason", Arg::Text(reason))])
+}
+
 /// A series' line in Downloads: how many chapters are kept.
 pub fn read_downloads_kept(n: i64) -> String {
     text("read-downloads-kept", &[("n", Arg::Int(n))])
@@ -19668,6 +19688,26 @@ pub fn book_folder_empty_line(files: i64) -> String {
 /// Primary action after an empty folder.
 pub fn book_folder_choose_other() -> String {
     text("book-folder-choose-other", &[])
+}
+
+/// Folder result title when the picked folder is already a source. It was scanned again.
+pub fn book_folder_already(folder: &str) -> String {
+    text("book-folder-already", &[("folder", Arg::Text(folder))])
+}
+
+/// Line under it: what the new scan found. Closing the sheet keeps the folder.
+pub fn book_folder_already_line(series: i64) -> String {
+    text("book-folder-already-line", &[("series", Arg::Int(series))])
+}
+
+/// Folder result title when the folder can't be read: it is gone, or Kaeri may not open it.
+pub fn book_folder_unreadable(folder: &str) -> String {
+    text("book-folder-unreadable", &[("folder", Arg::Text(folder))])
+}
+
+/// Line under it.
+pub fn book_folder_unreadable_line() -> String {
+    text("book-folder-unreadable-line", &[])
 }
 
 /// Title of the Join a plugin store sheet.

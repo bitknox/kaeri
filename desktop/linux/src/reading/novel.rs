@@ -244,6 +244,9 @@ pub enum NovelSays {
     Middle,
     /// Past the last page of the last document.
     End,
+    /// The page can't show the text any more: its web process stopped, or the document
+    /// failed to load.
+    Failed,
 }
 
 impl NovelView {
@@ -341,6 +344,24 @@ impl NovelView {
             Some(decide_policy(values).to_value())
         });
         view.connect_local("context-menu", false, |_| Some(true.to_value()));
+        // A web process that stops leaves a blank page that turns go to: the reader says the
+        // chapter couldn't show, with Try again. Told after the signal, on the main loop.
+        view.connect_local("web-process-terminated", false, {
+            let tell = Rc::downgrade(&this.tell);
+            move |_| {
+                failed_later(&tell);
+                None
+            }
+        });
+        view.connect_local("load-failed", false, {
+            let tell = Rc::downgrade(&this.tell);
+            move |values| {
+                if values.get(3).is_some_and(load_really_failed) {
+                    failed_later(&tell);
+                }
+                Some(false.to_value())
+            }
+        });
         let mut url = open.entry.clone();
         if let Some(at) = &open.restore
             && let Some(item) = open.spine.get(at.spine as usize)
@@ -540,6 +561,35 @@ impl NovelView {
         let uri = unsafe { (api.uri_of_view)(self.view.as_ptr()) };
         (!uri.is_null()).then(|| unsafe { CStr::from_ptr(uri) }.to_string_lossy().into_owned())
     }
+}
+
+/// Tell the reader the page failed, once the signal that said so has returned.
+fn failed_later(tell: &std::rc::Weak<dyn Fn(NovelSays)>) {
+    let tell = tell.clone();
+    glib::idle_add_local_once(move || {
+        if let Some(tell) = tell.upgrade() {
+            tell(NovelSays::Failed);
+        }
+    });
+}
+
+/// WebKitNetworkError's code for a load cancelled by the next one, as a quick second turn does.
+const NETWORK_CANCELLED: i32 = 302;
+
+/// Whether `load-failed`'s error is a real failure: not a load the next one replaced, and not
+/// one the page's own policy stopped.
+fn load_really_failed(error: &glib::Value) -> bool {
+    let Ok(error) = error.get::<glib::Error>() else { return false };
+    let code = {
+        let raw: *const glib::ffi::GError = error.to_glib_none().0;
+        // SAFETY: the error is alive for the call and owns its GError.
+        unsafe { (*raw).code }
+    };
+    let domain = error.domain();
+    let policy = domain == glib::Quark::from_str("WebKitPolicyError");
+    let cancelled =
+        domain == glib::Quark::from_str("WebKitNetworkError") && code == NETWORK_CANCELLED;
+    !(policy || cancelled)
 }
 
 /// WebKitPolicyDecisionType's navigation and new-window actions, which both carry a URI.

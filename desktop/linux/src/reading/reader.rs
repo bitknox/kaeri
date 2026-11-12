@@ -1149,7 +1149,7 @@ impl Reader {
             plate.set_visible(true);
             if let Some(words) = plate.first_child() {
                 words.set_opacity(1.0);
-                if let Some(said) = words.last_child() {
+                if let Some(said) = plate_line(&words) {
                     said.set_opacity(1.0);
                     said.set_visible(line);
                 }
@@ -1191,8 +1191,10 @@ impl Reader {
         if was_showing && let Some(ctx) = self.ctx.upgrade() {
             self.opener.give_back(&ctx.window, &self.widget);
         }
+        // A local: an if-let scrutinee's borrow would live through the action's handler.
+        let work = self.state.borrow().work.clone();
         if let Some(ctx) = self.ctx.upgrade()
-            && let Some(work) = self.state.borrow().work.clone()
+            && let Some(work) = work
         {
             let _ = WidgetExt::activate_action(
                 &ctx.window,
@@ -1363,7 +1365,9 @@ impl Reader {
 
     /// Open the last chapter asked for again, after it failed.
     fn open_again(self: &Rc<Self>) {
-        if let Some((work, chapter)) = self.asked_open.borrow().clone() {
+        // A local, so the borrow ends before open() replaces asked_open.
+        let asked = self.asked_open.borrow().clone();
+        if let Some((work, chapter)) = asked {
             self.open(work, chapter);
         }
     }
@@ -1389,7 +1393,9 @@ impl Reader {
                     state.failed.insert(*page);
                     state.failures.insert(*page, failure.clone());
                 }
-                if self.is_current_page(*page) && !self.flows() {
+                if self.flows() {
+                    self.fail_strip_page(*page);
+                } else if self.is_current_page(*page) {
                     self.failed_page(*page, true);
                 }
             }
@@ -1903,13 +1909,32 @@ impl Reader {
     }
 
     fn texture_for(&self, page: u32) -> Option<gdk::Texture> {
-        if let Some(texture) = self.state.borrow().textures.get(&page) {
-            return Some(texture.clone());
+        let cached = self.state.borrow().textures.get(&page).cloned();
+        if cached.is_some() {
+            return cached;
         }
         let file = self.state.borrow().files.get(&page).cloned()?;
-        let texture = load_texture(&file)?;
+        let Some(texture) = load_texture(&file) else {
+            // The file is here and nothing can show it: the page failed, with Try again,
+            // rather than waiting on its plate for good.
+            let mut state = self.state.borrow_mut();
+            state.failed.insert(page);
+            state.failures.insert(
+                page,
+                ReadingFailure::Other { reason: t::linux_reader_page_undecodable() },
+            );
+            return None;
+        };
         self.state.borrow_mut().textures.insert(page, texture.clone());
         Some(texture)
+    }
+
+    /// The failed page among a leaf's, if one is.
+    fn failed_in(&self, index: usize) -> Option<u32> {
+        let state = self.state.borrow();
+        state.leaves.get(index).and_then(|l| {
+            l.parts.iter().map(|p| p.page).find(|page| state.failed.contains(page))
+        })
     }
 
     /// The leaf drawn as one picture: each part at its place, cropped to what the engine says to
@@ -2082,6 +2107,48 @@ impl Reader {
         }
     }
 
+    /// The strip picture of image `page`, if the strip has one.
+    fn strip_picture(&self, page: u32) -> Option<gtk::Picture> {
+        let state = self.state.borrow();
+        let at = state
+            .leaves
+            .iter()
+            .filter(|l| !l.end_page)
+            .position(|l| l.parts.first().is_some_and(|p| p.page == page))?;
+        state.strip_frames.get(at).map(|(picture, _)| picture.clone())
+    }
+
+    /// A strip image that failed, from the engine or because nothing could decode it: its plate
+    /// says so, with Try again, instead of loading for good.
+    fn fail_strip_page(&self, page: u32) {
+        let Some(picture) = self.strip_picture(page) else { return };
+        let me = self.me.clone();
+        strip_frame_failed(&picture, move || {
+            if let Some(this) = me.upgrade() {
+                this.retry_strip_page(page);
+            }
+        });
+    }
+
+    /// Try again on a strip image: its plate goes back to loading and the engine sends the
+    /// page again.
+    fn retry_strip_page(&self, page: u32) {
+        let (session, chapter) = {
+            let mut state = self.state.borrow_mut();
+            state.failed.remove(&page);
+            state.failures.remove(&page);
+            state.textures.remove(&page);
+            state.files.remove(&page);
+            (state.session, state.chapter.as_ref().map(|c| c.id.clone()))
+        };
+        if let Some(picture) = self.strip_picture(page) {
+            strip_frame_retried(&picture, page);
+        }
+        if let Some(chapter) = chapter {
+            self.send(ReaderCommand::Retry { session, chapter, page: Some(page) });
+        }
+    }
+
     fn retry_failed(self: &Rc<Self>) {
         if self.failed_kind.get() == Failed::Chapter {
             self.open_again();
@@ -2120,18 +2187,15 @@ impl Reader {
         self.state.borrow_mut().index = index;
         self.want(index);
         self.show_pages(self.page_number(index), self.story_pages());
-        let failed = {
-            let state = self.state.borrow();
-            state.leaves.get(index).and_then(|l| {
-                l.parts.iter().map(|p| p.page).find(|page| state.failed.contains(page))
-            })
-        };
-        if let Some(page) = failed {
+        if let Some(page) = self.failed_in(index) {
             self.failed_page(page, true);
             return;
         }
         let Some(paintable) = self.compose(index) else {
-            if let Some(page) = self.page_of(index) {
+            // A part that came in and couldn't be decoded failed as it was composed.
+            if let Some(page) = self.failed_in(index) {
+                self.failed_page(page, true);
+            } else if let Some(page) = self.page_of(index) {
                 self.wait(Waiting::Page(page));
             }
             return;
@@ -2150,7 +2214,8 @@ impl Reader {
     /// Tell the engine a leaf was painted.
     fn shown(&self, index: usize, how: TurnHow) {
         // The demo's credit capsule shows on its first page only.
-        if let Some((_, capsule)) = &self.state.borrow().demo {
+        let capsule = self.state.borrow().demo.as_ref().map(|(_, capsule)| capsule.clone());
+        if let Some(capsule) = capsule {
             capsule.set_visible(index == 0);
         }
         self.credit_line_on(index);
@@ -2296,17 +2361,19 @@ impl Reader {
         };
         let on_end = self.stack.visible_child_name().as_deref() == Some("end");
         if medium == Some(Medium::Novel) {
+            // A local, so no borrow of the cell is held while the page turns.
+            let novel = self.novel.borrow().clone();
             if on_end {
                 // Forward from the end page goes on; back returns to the text.
                 if forward {
                     self.continue_on();
-                } else if let Some(novel) = self.novel.borrow().clone() {
+                } else if let Some(novel) = novel {
                     self.state.borrow_mut().novel_end = false;
                     motion::turn(&self.veil, &self.stack, || {
                         self.stack.set_visible_child(&novel.widget);
                     });
                 }
-            } else if let Some(novel) = self.novel.borrow().clone() {
+            } else if let Some(novel) = novel {
                 novel.turn(forward);
             }
             return;
@@ -2549,35 +2616,38 @@ impl Reader {
             .iter()
             .filter(|l| !l.end_page)
             .position(|l| l.parts.first().is_some_and(|p| p.page == page));
-        if let Some(at) = at
-            && let Some(texture) = self.texture_for(page)
-        {
-            // With crop borders on, the engine sends the original with the part to show.
-            let crop = self.state.borrow().files.get(&page).and_then(|f| f.crop);
-            let (paintable, ratio) = match crop.filter(|c| c.width > 0 && c.height > 0) {
-                Some(c) => (cropped(&texture, c), c.width as f32 / c.height as f32),
-                None => (
-                    texture.clone().upcast::<gdk::Paintable>(),
-                    texture.width() as f32 / texture.height().max(1) as f32,
-                ),
-            };
-            let (picture, resized) = {
-                let mut state = self.state.borrow_mut();
-                match state.strip_frames.get_mut(at) {
-                    Some((picture, guess)) => {
-                        let resized = (*guess - ratio).abs() > 0.01;
-                        *guess = ratio;
-                        (Some(picture.clone()), resized)
-                    }
-                    None => (None, false),
+        let Some(at) = at else { return };
+        let Some(texture) = self.texture_for(page) else {
+            if self.state.borrow().failed.contains(&page) {
+                self.fail_strip_page(page);
+            }
+            return;
+        };
+        // With crop borders on, the engine sends the original with the part to show.
+        let crop = self.state.borrow().files.get(&page).and_then(|f| f.crop);
+        let (paintable, ratio) = match crop.filter(|c| c.width > 0 && c.height > 0) {
+            Some(c) => (cropped(&texture, c), c.width as f32 / c.height as f32),
+            None => (
+                texture.clone().upcast::<gdk::Paintable>(),
+                texture.width() as f32 / texture.height().max(1) as f32,
+            ),
+        };
+        let (picture, resized) = {
+            let mut state = self.state.borrow_mut();
+            match state.strip_frames.get_mut(at) {
+                Some((picture, guess)) => {
+                    let resized = (*guess - ratio).abs() > 0.01;
+                    *guess = ratio;
+                    (Some(picture.clone()), resized)
                 }
-            };
-            if let Some(picture) = picture {
-                fill_strip_frame(&picture, &paintable, redrawn);
+                None => (None, false),
             }
-            if resized {
-                self.size_strip();
-            }
+        };
+        if let Some(picture) = picture {
+            fill_strip_frame(&picture, &paintable, redrawn);
+        }
+        if resized {
+            self.size_strip();
         }
     }
 
@@ -2783,6 +2853,10 @@ impl Reader {
                     }
                     NovelSays::Middle => this.toggle_chrome(),
                     NovelSays::End => this.novel_end(),
+                    // Try again opens the chapter afresh, in a new page.
+                    NovelSays::Failed => this.open_failed(&ReadingFailure::Other {
+                        reason: t::linux_reader_novel_stopped(),
+                    }),
                 }
             })
         };
@@ -3096,7 +3170,8 @@ impl Reader {
     fn jump_to_page(self: &Rc<Self>, page: usize) {
         let novel = self.state.borrow().medium == Some(Medium::Novel);
         if novel {
-            if let Some(novel) = self.novel.borrow().clone() {
+            let novel = self.novel.borrow().clone();
+            if let Some(novel) = novel {
                 novel.go_to(page.saturating_sub(1) as u32);
             }
             return;
@@ -3456,6 +3531,32 @@ fn cropped(texture: &gdk::Texture, crop: kaeri_model::reader::PixelRect) -> gdk:
         .unwrap_or_else(|| texture.clone().upcast())
 }
 
+/// A picture file decoded by the image crate, as RGBA.
+fn decode_texture(path: impl AsRef<std::path::Path>) -> Option<gdk::Texture> {
+    let image =
+        image::ImageReader::open(path).ok()?.with_guessed_format().ok()?.decode().ok()?;
+    rgba_texture(image.into_rgba8())
+}
+
+fn rgba_texture(rgba: image::RgbaImage) -> Option<gdk::Texture> {
+    let (width, height) =
+        (i32::try_from(rgba.width()).ok()?, i32::try_from(rgba.height()).ok()?);
+    if width == 0 || height == 0 {
+        return None;
+    }
+    let stride = rgba.width() as usize * 4;
+    Some(
+        gdk::MemoryTexture::new(
+            width,
+            height,
+            gdk::MemoryFormat::R8g8b8a8,
+            &glib::Bytes::from_owned(rgba.into_raw()),
+            stride,
+        )
+        .upcast(),
+    )
+}
+
 /// As [`load_texture`], cut to the file's crop when it has one: for a picture that is not
 /// composed as a leaf is.
 fn load_texture_cropped(file: &PageFile) -> Option<gdk::Texture> {
@@ -3467,35 +3568,41 @@ fn load_texture_cropped(file: &PageFile) -> Option<gdk::Texture> {
     if c.x + c.width > image.width() || c.y + c.height > image.height() {
         return load_texture(file);
     }
-    let rgba = image.crop_imm(c.x, c.y, c.width, c.height).into_rgba8();
-    Some(
-        gdk::MemoryTexture::new(
-            c.width as i32,
-            c.height as i32,
-            gdk::MemoryFormat::R8g8b8a8,
-            &glib::Bytes::from_owned(rgba.into_raw()),
-            c.width as usize * 4,
-        )
-        .upcast(),
-    )
+    rgba_texture(image.crop_imm(c.x, c.y, c.width, c.height).into_rgba8())
 }
 
+/// A page's picture: GTK's own loaders first, then the image crate where they can't (no WebP or
+/// AVIF loader, or glycin's sandbox can't start). `None` when nothing can decode it, or a raw
+/// file is shorter than its size says.
 fn load_texture(file: &PageFile) -> Option<gdk::Texture> {
     match &file.encoding {
-        PageEncoding::Original { .. } => gdk::Texture::from_filename(&file.path).ok(),
+        PageEncoding::Original { .. } => {
+            gdk::Texture::from_filename(&file.path).ok().or_else(|| decode_texture(&file.path))
+        }
         PageEncoding::Raw { format, stride } => {
             let bytes = std::fs::read(&file.path).ok()?;
-            let format = match format {
-                PixelFormat::Gray8 => gdk::MemoryFormat::G8,
-                PixelFormat::Rgba8 => gdk::MemoryFormat::R8g8b8a8,
+            let (format, depth) = match format {
+                PixelFormat::Gray8 => (gdk::MemoryFormat::G8, 1),
+                PixelFormat::Rgba8 => (gdk::MemoryFormat::R8g8b8a8, 4),
             };
+            // GTK hands back no texture for a size the bytes don't fill, and drawing that aborts.
+            let (width, height, stride) =
+                (file.width as usize, file.height as usize, *stride as usize);
+            if width == 0
+                || height == 0
+                || stride < width * depth
+                || bytes.len() < stride * (height - 1) + width * depth
+                || i32::try_from(width.max(height)).is_err()
+            {
+                return None;
+            }
             Some(
                 gdk::MemoryTexture::new(
                     file.width as i32,
                     file.height as i32,
                     format,
                     &glib::Bytes::from_owned(bytes),
-                    *stride as usize,
+                    stride,
                 )
                 .upcast(),
             )
@@ -3675,11 +3782,10 @@ fn strip_frame_seen(picture: &gtk::Picture, seen: Option<(f64, f64)>) {
     };
     let number =
         words.first_child().map_or(24, |n| n.measure(gtk::Orientation::Vertical, -1).1);
-    let (above, below) = strip_words_margins(
-        picture.height_request().max(0),
-        seen,
-        number * 2 + words_gap(&words),
-    );
+    // Room for the number and its line, or more when a failed image's Try again is under them.
+    let room =
+        (number * 2 + words_gap(&words)).max(words.measure(gtk::Orientation::Vertical, -1).1);
+    let (above, below) = strip_words_margins(picture.height_request().max(0), seen, room);
     if words.margin_top() != above {
         words.set_margin_top(above);
     }
@@ -3716,6 +3822,57 @@ fn strip_plate(picture: &gtk::Picture) -> Option<gtk::Widget> {
     picture.next_sibling()
 }
 
+/// The line under a plate's number: "Loading image 12", or that it failed.
+fn plate_line(words: &gtk::Widget) -> Option<gtk::Label> {
+    words.first_child()?.next_sibling().and_downcast()
+}
+
+/// A strip image that failed: its plate shows with "Couldn't load" and Try again, and
+/// takes clicks while it does.
+fn strip_frame_failed(picture: &gtk::Picture, retry: impl Fn() + 'static) {
+    let Some(plate) = strip_plate(picture) else { return };
+    let Some(words) = plate.first_child().and_downcast::<gtk::Box>() else { return };
+    if picture.paintable().is_some() || plate.has_css_class("strip-failed") {
+        return;
+    }
+    plate.add_css_class("strip-failed");
+    plate.set_can_target(true);
+    if let Some(line) = plate_line(words.upcast_ref()) {
+        line.set_label(&t::reader_image_failed());
+        line.set_opacity(1.0);
+        line.set_visible(true);
+    }
+    let again = gtk::Button::with_label(&t::reader_try_again());
+    again.add_css_class("pill");
+    again.set_halign(gtk::Align::Center);
+    again.set_margin_top(6);
+    again.connect_clicked(move |_| retry());
+    words.append(&again);
+    if !plate.is_visible() {
+        plate.set_opacity(1.0);
+        plate.set_visible(true);
+        motion::fade_in(&plate);
+    }
+}
+
+/// Try again on a failed strip image: its plate says it is loading again.
+fn strip_frame_retried(picture: &gtk::Picture, page: u32) {
+    let Some(plate) = strip_plate(picture) else { return };
+    if !plate.has_css_class("strip-failed") {
+        return;
+    }
+    plate.remove_css_class("strip-failed");
+    plate.set_can_target(false);
+    let Some(words) = plate.first_child().and_downcast::<gtk::Box>() else { return };
+    let line = plate_line(words.upcast_ref());
+    if let Some(again) = line.as_ref().and_then(gtk::Label::next_sibling) {
+        words.remove(&again);
+    }
+    if let Some(line) = line {
+        line.set_label(&t::reader_image_loading(i64::from(page + 1)));
+    }
+}
+
 /// A strip picture's page was asked for: if its file has not come 4 s later, its plate says it
 /// is loading. Only the first ask counts.
 fn strip_frame_asked(picture: &gtk::Picture) {
@@ -3724,7 +3881,7 @@ fn strip_frame_asked(picture: &gtk::Picture) {
         return;
     }
     plate.add_css_class("strip-asked");
-    let line = plate.first_child().and_then(|words| words.last_child());
+    let line = plate.first_child().as_ref().and_then(plate_line);
     let (Some(line), picture) = (line.map(|l| l.downgrade()), picture.downgrade()) else {
         return;
     };
@@ -4004,8 +4161,9 @@ mod plate_tests {
     use gtk::{gdk, glib};
 
     use super::{
-        fill_strip_frame, notice_lift, popover_middle, strip_frame, strip_frame_asked,
-        strip_frame_seen, strip_words_margins,
+        fill_strip_frame, load_texture, notice_lift, popover_middle, strip_frame,
+        strip_frame_asked, strip_frame_failed, strip_frame_retried, strip_frame_seen,
+        strip_words_margins,
     };
     use crate::{
         gtk_test::{pump, run},
@@ -4034,6 +4192,96 @@ mod plate_tests {
             words(&c, out);
             child = c.next_sibling();
         }
+    }
+
+    fn page_file(
+        path: &std::path::Path,
+        encoding: kaeri_model::reader::PageEncoding,
+    ) -> kaeri_model::reader::PageFile {
+        kaeri_model::reader::PageFile {
+            path: path.to_string_lossy().into_owned(),
+            encoding,
+            width: 3,
+            height: 2,
+            crop: None,
+            colour: true,
+            bytes: 0,
+        }
+    }
+
+    /// A WebP page decodes through the image crate where GTK's loaders can't, and a file
+    /// nothing can decode, or a raw page shorter than its size, gives no texture to draw.
+    #[test]
+    fn a_page_gtk_cannot_decode_falls_back_or_fails() {
+        use kaeri_model::reader::{PageEncoding, PixelFormat};
+        run(|| {
+            let dir = tempfile::tempdir().expect("a temporary folder");
+            let webp = dir.path().join("page.webp");
+            image::RgbaImage::from_pixel(3, 2, image::Rgba([10, 20, 30, 255]))
+                .save_with_format(&webp, image::ImageFormat::WebP)
+                .expect("a WebP page");
+            let original = || PageEncoding::Original { mime: "image/webp".into() };
+            let texture = load_texture(&page_file(&webp, original())).expect("decoded");
+            assert_eq!((texture.width(), texture.height()), (3, 2));
+            assert!(super::decode_texture(&webp).is_some(), "the image crate decodes WebP");
+
+            let broken = dir.path().join("page.bin");
+            std::fs::write(&broken, b"not a picture at all").expect("a broken page");
+            assert!(load_texture(&page_file(&broken, original())).is_none());
+
+            let raw = dir.path().join("page.raw");
+            std::fs::write(&raw, [0u8; 7]).expect("a short raw page");
+            let rgba = PageEncoding::Raw { format: PixelFormat::Rgba8, stride: 12 };
+            assert!(
+                load_texture(&page_file(&raw, rgba.clone())).is_none(),
+                "short of its size"
+            );
+            std::fs::write(&raw, [0u8; 24]).expect("a whole raw page");
+            assert!(load_texture(&page_file(&raw, rgba)).is_some());
+        });
+    }
+
+    /// A strip image that failed says so on its plate with Try again, which asks again and
+    /// puts the plate back to loading; the image then crossfades over it as usual.
+    #[test]
+    fn a_failed_strip_image_offers_try_again() {
+        run(|| {
+            let (frame, picture) = strip_frame(11);
+            picture.set_size_request(200, 280);
+            let window = gtk::Window::builder().default_width(400).default_height(400).build();
+            window.set_child(Some(&frame));
+            window.present();
+            let plate = picture.next_sibling().expect("a plate over the picture");
+            let asked = std::rc::Rc::new(std::cell::Cell::new(0));
+            strip_frame_failed(&picture, {
+                let asked = asked.clone();
+                move || asked.set(asked.get() + 1)
+            });
+            pump(400);
+            assert!(
+                plate.is_visible() && plate.can_target(),
+                "the plate shows and takes clicks"
+            );
+            let mut said = Vec::new();
+            words(&plate, &mut said);
+            assert_eq!(said, ["Image 12", "Couldn't load", "Try again"]);
+            let again = plate
+                .first_child()
+                .and_then(|w| w.last_child())
+                .and_downcast::<gtk::Button>()
+                .expect("Try again");
+            again.emit_clicked();
+            assert_eq!(asked.get(), 1);
+            strip_frame_retried(&picture, 11);
+            let mut said = Vec::new();
+            words(&plate, &mut said);
+            assert_eq!(said, ["Image 12", "Loading image 12"]);
+            assert!(!plate.can_target());
+            fill_strip_frame(&picture, &texture(), false);
+            pump(500);
+            assert!(!plate.is_visible(), "the plate is gone once the image is in");
+            window.destroy();
+        });
     }
 
     /// A strip image whose file is still coming shows its plate with its number from 600 ms,

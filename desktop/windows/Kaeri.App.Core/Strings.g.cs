@@ -5914,6 +5914,9 @@ public static partial class T
     /// <summary>Under a strip image's number after four seconds.</summary>
     public static string ReaderImageLoading(long image) => Fill(Get("ReaderImageLoading"), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>Under a strip image's number (Image 4) when it couldn't be loaded, above Try again.</summary>
+    public static string ReaderImageFailed => Get("ReaderImageFailed");
+
     /// <summary>Heading where a page could not be loaded.</summary>
     public static string ReaderPageFailed(long page) => Fill(Get("ReaderPageFailed"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -7559,6 +7562,9 @@ public static partial class T
     /// <summary>A series' line in Downloads when a chapter failed, with the reason.</summary>
     public static string ReadDownloadsFailed(string chapter, string reason) => Fill(Get("ReadDownloadsFailed"), ("chapter", chapter), ("reason", reason));
 
+    /// <summary>Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows.</summary>
+    public static string ReadDownloadNotStarted(string reason) => Fill(Get("ReadDownloadNotStarted"), ("reason", reason));
+
     /// <summary>A series' line in Downloads: how many chapters are kept.</summary>
     public static string ReadDownloadsKept(long n) => Fill(GetPlural("ReadDownloadsKept", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -9178,6 +9184,18 @@ public static partial class T
 
     /// <summary>Primary action after an empty folder.</summary>
     public static string BookFolderChooseOther => Get("BookFolderChooseOther");
+
+    /// <summary>Folder result title when the picked folder is already a source. It was scanned again.</summary>
+    public static string BookFolderAlready(string folder) => Fill(Get("BookFolderAlready"), ("folder", folder));
+
+    /// <summary>Line under it: what the new scan found. Closing the sheet keeps the folder.</summary>
+    public static string BookFolderAlreadyLine(long series) => Fill(GetPlural("BookFolderAlreadyLine", series), ("series", series.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Folder result title when the folder can't be read: it is gone, or Kaeri may not open it.</summary>
+    public static string BookFolderUnreadable(string folder) => Fill(Get("BookFolderUnreadable"), ("folder", folder));
+
+    /// <summary>Line under it.</summary>
+    public static string BookFolderUnreadableLine => Get("BookFolderUnreadableLine");
 
     /// <summary>Title of the Join a plugin store sheet.</summary>
     public static string StoreJoinTitle => Get("StoreJoinTitle");
@@ -14024,6 +14042,7 @@ public static partial class T
         ["ReaderPagePlate"] = "Page {page}",
         ["ReaderImagePlate"] = "Image {image}",
         ["ReaderImageLoading"] = "Loading image {image}",
+        ["ReaderImageFailed"] = "Couldn't load",
         ["ReaderPageFailed"] = "Couldn't load page {page}",
         ["ReaderTryAgain"] = "Try again",
         ["ReaderClose"] = "Close",
@@ -14606,6 +14625,7 @@ public static partial class T
         ["ReadDownloadsQueued_one"] = "{n} chapter queued",
         ["ReadDownloadsQueued_other"] = "{n} chapters queued",
         ["ReadDownloadsFailed"] = "{chapter} couldn't download. {reason}",
+        ["ReadDownloadNotStarted"] = "The download didn't start. {reason}",
         ["ReadDownloadsKept_one"] = "{n} chapter",
         ["ReadDownloadsKept_other"] = "{n} chapters",
         ["ReadDownloadsRead"] = "{n} read",
@@ -15166,6 +15186,11 @@ public static partial class T
         ["BookFolderEmptyLine_one"] = "It holds one file, which isn't CBZ, CBR, EPUB, PDF or an image.",
         ["BookFolderEmptyLine_other"] = "It holds {files} files, none of them CBZ, CBR, EPUB, PDF or images.",
         ["BookFolderChooseOther"] = "Choose another folder",
+        ["BookFolderAlready"] = "{folder} is already in your sources",
+        ["BookFolderAlreadyLine_one"] = "Kaeri looked through it again and found one series. It stays as it is.",
+        ["BookFolderAlreadyLine_other"] = "Kaeri looked through it again and found {series} series. It stays as it is.",
+        ["BookFolderUnreadable"] = "Couldn't read {folder}",
+        ["BookFolderUnreadableLine"] = "It may have moved, or Kaeri isn't allowed to open it. Try another folder.",
         ["StoreJoinTitle"] = "Join a plugin store",
         ["StoreInviteField"] = "Invite",
         ["StoreJoinedTitle"] = "Joined {store}",

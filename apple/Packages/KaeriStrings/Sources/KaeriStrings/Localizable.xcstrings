@@ -16935,6 +16935,52 @@
         }
       }
     },
+    "book-folder-already" : {
+      "comment" : "Folder result title when the picked folder is already a source. It was scanned again. Argument 1: folder (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ is already in your sources"
+          }
+        }
+      }
+    },
+    "book-folder-already-line" : {
+      "comment" : "Line under it: what the new scan found. Closing the sheet keeps the folder. Argument 1: series (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@series@"
+          },
+          "substitutions" : {
+            "series" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Kaeri looked through it again and found one series. It stays as it is."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Kaeri looked through it again and found %1$lld series. It stays as it is."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "book-folder-change" : {
       "comment" : "Folder row action that picks another folder.",
       "extractionState" : "manual",
@@ -18319,6 +18365,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hiện tệp"
+          }
+        }
+      }
+    },
+    "book-folder-unreadable" : {
+      "comment" : "Folder result title when the folder can't be read: it is gone, or Kaeri may not open it. Argument 1: folder (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't read %1$@"
+          }
+        }
+      }
+    },
+    "book-folder-unreadable-line" : {
+      "comment" : "Line under it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It may have moved, or Kaeri isn't allowed to open it. Try another folder."
           }
         }
       }
@@ -197613,6 +197683,18 @@
         }
       }
     },
+    "read-download-not-started" : {
+      "comment" : "Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows. Argument 1: reason (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The download didn't start. %1$@"
+          }
+        }
+      }
+    },
     "read-downloads-active" : {
       "comment" : "A series' line in Downloads while a chapter downloads. Argument 1: chapter (Text). Argument 2: done (Int). Argument 3: total (Int).",
       "extractionState" : "manual",
@@ -217837,6 +217919,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Văn bản"
+          }
+        }
+      }
+    },
+    "reader-image-failed" : {
+      "comment" : "Under a strip image's number (Image 4) when it couldn't be loaded, above Try again.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load"
           }
         }
       }

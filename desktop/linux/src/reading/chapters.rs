@@ -561,8 +561,10 @@ impl Chapters {
                 }
             }
         });
-        // Before it is shown, so it opens without the slide.
-        fold.set_expanded(self.open_folds.borrow().contains(&group));
+        // Before it is shown, so it opens without the slide. The borrow ends before
+        // set_expanded, whose notify handler above borrows the same set mutably.
+        let was_open = self.open_folds.borrow().contains(&group);
+        fold.set_expanded(was_open);
         let list = gtk::ListBox::new();
         list.set_selection_mode(gtk::SelectionMode::None);
         list.add_css_class("reader-chapter-list");
@@ -1113,7 +1115,6 @@ mod centring {
     /// `set_expanded(true)`, whose notify handler borrows the same cell mutably. The panic is
     /// inside a GTK callback, so the process aborts; run this test on its own.
     #[test]
-    #[ignore = "L5A-1: drawing an opened read volume again aborts (chapters.rs fold)"]
     fn an_opened_read_volume_drawn_again_stays_open() {
         run(|| {
             let volume =

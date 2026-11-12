@@ -1503,6 +1503,10 @@ read-downloads-queued = { $n ->
 # @arg reason: text
 read-downloads-failed = { $chapter } couldn't download. { $reason }
 
+# Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows.
+# @arg reason: text
+read-download-not-started = The download didn't start. { $reason }
+
 # A series' line in Downloads: how many chapters are kept.
 # @arg n: int
 read-downloads-kept = { $n ->

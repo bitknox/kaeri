@@ -8339,6 +8339,9 @@ public enum L {
         Self.format("reader-image-loading", fallback: "Loading image %1$@", String(image))
     }
 
+    /// Under a strip image's number (Image 4) when it couldn't be loaded, above Try again.
+    public static var readerImageFailed: String { string("reader-image-failed", fallback: "Couldn't load") }
+
     /// Heading where a page could not be loaded.
     public static func readerPageFailed(page: Int) -> String {
         Self.format("reader-page-failed", fallback: "Couldn't load page %1$@", String(page))
@@ -10308,6 +10311,11 @@ public enum L {
         Self.format("read-downloads-failed", fallback: "%1$@ couldn't download. %2$@", chapter, reason)
     }
 
+    /// Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows.
+    public static func readDownloadNotStarted(reason: String) -> String {
+        Self.format("read-download-not-started", fallback: "The download didn't start. %1$@", reason)
+    }
+
     /// A series' line in Downloads: how many chapters are kept.
     public static func readDownloadsKept(n: Int) -> String {
         Self.format("read-downloads-kept", fallback: "%1$lld chapters", n)
@@ -12145,6 +12153,24 @@ public enum L {
 
     /// Primary action after an empty folder.
     public static var bookFolderChooseOther: String { string("book-folder-choose-other", fallback: "Choose another folder") }
+
+    /// Folder result title when the picked folder is already a source. It was scanned again.
+    public static func bookFolderAlready(folder: String) -> String {
+        Self.format("book-folder-already", fallback: "%1$@ is already in your sources", folder)
+    }
+
+    /// Line under it: what the new scan found. Closing the sheet keeps the folder.
+    public static func bookFolderAlreadyLine(series: Int) -> String {
+        Self.format("book-folder-already-line", fallback: "Kaeri looked through it again and found %1$lld series. It stays as it is.", series)
+    }
+
+    /// Folder result title when the folder can't be read: it is gone, or Kaeri may not open it.
+    public static func bookFolderUnreadable(folder: String) -> String {
+        Self.format("book-folder-unreadable", fallback: "Couldn't read %1$@", folder)
+    }
+
+    /// Line under it.
+    public static var bookFolderUnreadableLine: String { string("book-folder-unreadable-line", fallback: "It may have moved, or Kaeri isn't allowed to open it. Try another folder.") }
 
     /// Title of the Join a plugin store sheet.
     public static var storeJoinTitle: String { string("store-join-title", fallback: "Join a plugin store") }
