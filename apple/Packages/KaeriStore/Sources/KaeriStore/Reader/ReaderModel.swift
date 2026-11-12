@@ -623,6 +623,21 @@ public final class ReaderModel {
         flow(into: failed.next, .reader(.retry(session: session, chapter: failed.next.id, page: nil)))
     }
 
+    /// Where the strip puts the place once its images are in: where it was asked to go, or else
+    /// where the chapter opened. A place kept only as a page, as when the chapter was last read
+    /// page by page, is the top of the image that holds that page, the one the Resumed notice
+    /// names.
+    public var stripStart: StripPos? {
+        if let stripRestore { return stripRestore }
+        guard let start = view?.start else { return nil }
+        if let strip = start.strip { return strip }
+        guard let page = start.page else { return nil }
+        let parts = leaves.filter { !$0.endPage }.flatMap(\.parts)
+        guard !parts.isEmpty else { return nil }
+        let image = parts.firstIndex { $0.page >= page } ?? parts.count - 1
+        return StripPos(image: UInt32(image), offset: 0)
+    }
+
     /// Every image of the open chapter has its real height: its shape known from the book, its
     /// file landed, or its failure said. Until then the strip's heights are guesses, so where
     /// the chapter ends is too: it is not passed, and its foot is not seen.
