@@ -175,7 +175,11 @@ struct StripReader: View {
         }
         guard !parts.isEmpty else { return rows }
         images(chapter, parts, nil)
-        if let next {
+        if model.flowFailure != nil {
+            // The next chapter would not open: the end page takes the marker's and the lead's
+            // room, so the strip keeps its length and nothing on screen moves.
+            add("\(chapter)!", .foot, max(size.height * 0.8, 420, markerHeight(chapter) + leadHeight), nil)
+        } else if let next {
             add("\(chapter)>", .marker(next: next, source: model.end?.nextSource, chapter: chapter), markerHeight(chapter), nil)
             add("lead", .lead, leadHeight, nil) // i18n-skip: a row id
         } else {
