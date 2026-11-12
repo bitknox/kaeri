@@ -11,6 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.IndicationNodeFactory
+import androidx.compose.foundation.interaction.FocusInteraction
 import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
@@ -51,7 +52,17 @@ import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.input.InputMode
+import androidx.compose.ui.node.CompositionLocalConsumerModifierNode
+import androidx.compose.ui.node.currentValueOf
+import androidx.compose.ui.platform.LocalInputModeManager
 import androidx.compose.ui.node.DelegatableNode
 import androidx.compose.ui.node.DrawModifierNode
 import androidx.compose.ui.node.invalidateDraw
@@ -74,10 +85,19 @@ import app.kaeri.i18n.Strings
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/** A click with no ripple and no press of its own drawn: for what is not a control, such as a cover. */
+/**
+ * A click with no ripple and no press of its own drawn: for what is not a control, such as a
+ * cover. Keyboard and D-pad focus draws the focus mark along [shape], [inset] inside its edge.
+ */
 @Composable
-fun Modifier.einkClick(enabled: Boolean = true, role: Role = Role.Button, onClick: () -> Unit): Modifier =
-    clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, enabled = enabled, role = role, onClick = onClick)
+fun Modifier.einkClick(
+    enabled: Boolean = true,
+    role: Role = Role.Button,
+    shape: Shape = RectangleShape,
+    inset: Dp = 0.dp,
+    onClick: () -> Unit,
+): Modifier =
+    clickable(interactionSource = remember { MutableInteractionSource() }, indication = einkFocus(shape, inset), enabled = enabled, role = role, onClick = onClick)
 
 /**
  * Something the person asked for is under way here, such as a chapter opening: the control
@@ -159,9 +179,16 @@ fun rememberEinkPress(result: Any? = NoResult): EinkPress {
     return press
 }
 
-/** A click on a control that draws [press]. */
-fun Modifier.einkPress(press: EinkPress, enabled: Boolean = true, role: Role = Role.Button, onClick: () -> Unit): Modifier =
-    clickable(interactionSource = press.source, indication = null, enabled = enabled, role = role) { press.click(onClick) }
+/** A click on a control that draws [press], with the focus mark along [shape], [inset] inside its edge. */
+fun Modifier.einkPress(
+    press: EinkPress,
+    enabled: Boolean = true,
+    role: Role = Role.Button,
+    shape: Shape = RectangleShape,
+    inset: Dp = 0.dp,
+    onClick: () -> Unit,
+): Modifier =
+    clickable(interactionSource = press.source, indication = einkFocus(shape, inset), enabled = enabled, role = role) { press.click(onClick) }
 
 private val negative = ColorFilter.colorMatrix(
     ColorMatrix(
@@ -189,28 +216,48 @@ fun Modifier.einkInverted(on: Boolean): Modifier = if (!on) this else drawWithCo
 
 /**
  * The press for clickable rows outside the e-ink controls, such as a series page's chapter rows:
- * the row inverts while the finger is down. A chapter opened from it covers it at once.
+ * the row inverts while the finger is down. A chapter opened from it covers it at once. Keyboard
+ * and D-pad focus draws the focus mark round the row.
  */
-object EinkPressIndication : IndicationNodeFactory {
-    override fun create(interactionSource: InteractionSource): DelegatableNode = PressNode(interactionSource)
+val EinkPressIndication: IndicationNodeFactory = EinkMark(RectangleShape, 0.dp, invertOnPress = true)
 
-    override fun equals(other: Any?): Boolean = other === this
+/**
+ * The focus mark for keyboard and D-pad users, for any clickable on paper: a 3 dp ink ring along
+ * [shape], [inset] inside the control's edge, with a 2 dp paper line inside the ring. A negative
+ * [inset] draws it outside a row whose words start at its edge, where nothing clips it. It is one
+ * still paint, with no motion, so the panel's fast update draws it, and it shows only while keys
+ * move the focus: a touch never draws it, and the first touch after keys takes it away.
+ */
+fun einkFocus(shape: Shape = RectangleShape, inset: Dp = 0.dp): IndicationNodeFactory = EinkMark(shape, inset, invertOnPress = false)
 
-    override fun hashCode(): Int = javaClass.hashCode()
+private data class EinkMark(val shape: Shape, val inset: Dp, val invertOnPress: Boolean) : IndicationNodeFactory {
+    override fun create(interactionSource: InteractionSource): DelegatableNode = MarkNode(interactionSource, shape, inset, invertOnPress)
 
-    private class PressNode(private val source: InteractionSource) : Node(), DrawModifierNode {
+    private class MarkNode(
+        private val source: InteractionSource,
+        private val shape: Shape,
+        private val inset: Dp,
+        private val invertOnPress: Boolean,
+    ) : Node(), DrawModifierNode, CompositionLocalConsumerModifierNode {
         private var pressed = false
+        private var focused = false
 
         override fun onAttach() {
             coroutineScope.launch {
                 source.interactions.collect {
-                    val now = when (it) {
-                        is PressInteraction.Press -> true
+                    val press = when (it) {
+                        is PressInteraction.Press -> invertOnPress
                         is PressInteraction.Release, is PressInteraction.Cancel -> false
                         else -> pressed
                     }
-                    if (now != pressed) {
-                        pressed = now
+                    val focus = when (it) {
+                        is FocusInteraction.Focus -> true
+                        is FocusInteraction.Unfocus -> false
+                        else -> focused
+                    }
+                    if (press != pressed || focus != focused) {
+                        pressed = press
+                        focused = focus
                         invalidateDraw()
                     }
                 }
@@ -219,8 +266,25 @@ object EinkPressIndication : IndicationNodeFactory {
 
         override fun ContentDrawScope.draw() {
             if (pressed) inverted { drawContent() } else drawContent()
+            // The input mode is state: the first touch after keys redraws without the mark.
+            if (focused && currentValueOf(LocalInputModeManager).inputMode == InputMode.Keyboard) focusMark(shape, inset)
         }
     }
+}
+
+/** The focus mark: the ink ring along [shape], [inset] in from the edge, and the paper line inside it. */
+private fun DrawScope.focusMark(shape: Shape, inset: Dp) {
+    val ring = EinkSizes.FocusRing.toPx()
+    val line = EinkSizes.FocusLine.toPx()
+    fun stroke(from: Float, width: Float, colour: Color) {
+        val at = from + width / 2
+        val box = Size(size.width - 2 * at, size.height - 2 * at)
+        if (box.width <= 0f || box.height <= 0f) return
+        val outline = shape.createOutline(box, layoutDirection, this)
+        translate(at, at) { drawOutline(outline, colour, style = Stroke(width)) }
+    }
+    stroke(inset.toPx(), ring, EinkColours.Ink)
+    stroke(inset.toPx() + ring, line, EinkColours.Paper)
 }
 
 /**
@@ -240,7 +304,7 @@ fun EinkSolidButton(text: String, onClick: () -> Unit, modifier: Modifier = Modi
             // Until it can be pressed: light grey with grey words, no fade on paper.
             .background(if (!enabled) EinkColours.Selected else if (on) EinkColours.Paper else look.primary)
             .then(if (on && enabled) Modifier.border(BorderStroke(EinkSizes.Rule, EinkColours.Ink), shape) else Modifier)
-            .einkPress(press, enabled = enabled, onClick = onClick)
+            .einkPress(press, enabled = enabled, shape = shape, onClick = onClick)
             .padding(horizontal = EinkSizes.ButtonSide),
         contentAlignment = Alignment.Center,
     ) {
@@ -258,7 +322,7 @@ fun EinkOutlinedButton(text: String, onClick: () -> Unit, modifier: Modifier = M
             .clip(RoundedCornerShape(height / 2))
             .einkInverted(press.inverted)
             .border(BorderStroke(EinkSizes.Rule, EinkColours.Ink), RoundedCornerShape(height / 2))
-            .einkPress(press, onClick = onClick)
+            .einkPress(press, shape = RoundedCornerShape(height / 2), inset = EinkSizes.FocusInsideBorder, onClick = onClick)
             .padding(horizontal = EinkSizes.ButtonSide),
         contentAlignment = Alignment.Center,
     ) {
@@ -286,7 +350,7 @@ fun EinkTextButton(
             .widthIn(min = EinkSizes.TextButtonLeast)
             .clip(RoundedCornerShape(EinkSizes.TextButtonHeight / 2))
             .einkInverted(press.inverted)
-            .einkPress(press, onClick = onClick)
+            .einkPress(press, shape = RoundedCornerShape(EinkSizes.TextButtonHeight / 2), onClick = onClick)
             .padding(horizontal = 12.dp),
         contentAlignment = align,
     ) {
@@ -311,7 +375,7 @@ fun EinkBackButton(onBack: () -> Unit, size: Dp) {
             .clip(CircleShape)
             .einkInverted(press.inverted)
             .semantics { contentDescription = Strings.einkBack(context) }
-            .einkPress(press, onClick = onBack),
+            .einkPress(press, shape = CircleShape, onClick = onBack),
         contentAlignment = Alignment.Center,
     ) { Text("‹", style = EinkType.PageTitle) }
 }
@@ -333,7 +397,7 @@ fun <T> EinkSegmented(choices: List<T>, chosen: T, label: @Composable (T) -> Str
                     .einkInverted(press.inverted)
                     .background(if (on) EinkColours.Selected else EinkColours.Paper)
                     .semantics { selected = on }
-                    .einkPress(press, role = Role.Tab) { onChoose(choice) },
+                    .einkPress(press, role = Role.Tab, shape = shape, inset = EinkSizes.FocusInsideBorder) { onChoose(choice) },
                 contentAlignment = Alignment.Center,
             ) {
                 // One line: a long choice shrinks a little to fit its part, never wrapping onto the border.
@@ -381,7 +445,7 @@ private fun PagerArrow(glyph: String, enabled: Boolean, description: String, pag
             .einkInverted(press.inverted)
             .border(EinkSizes.Rule, ink, RoundedCornerShape(EinkSizes.PagerArrowHeight / 2))
             .semantics { contentDescription = description }
-            .einkPress(press, enabled = enabled, onClick = onClick),
+            .einkPress(press, enabled = enabled, shape = RoundedCornerShape(EinkSizes.PagerArrowHeight / 2), inset = EinkSizes.FocusInsideBorder, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Text(glyph, style = EinkType.Button.copy(color = ink))

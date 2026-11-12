@@ -555,7 +555,7 @@ internal fun PaperChip(text: String, onClick: () -> Unit) {
             .heightIn(min = EinkSizes.SegmentHeight)
             .clip(shape)
             .border(EinkSizes.Rule, EinkColours.Ink, shape)
-            .einkClick(onClick = onClick)
+            .einkClick(shape = shape, inset = EinkSizes.FocusInsideBorder, onClick = onClick)
             .padding(horizontal = 18.dp, vertical = 6.dp),
         contentAlignment = Alignment.Center,
     ) {

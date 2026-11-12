@@ -258,6 +258,13 @@ fun EinkReader(
         }
     }
 
+    // The reader's own focus, for its keys. A control that held the focus goes with the bars or a
+    // sheet, so once both are gone the reader takes the focus back and the page keys still turn.
+    val readerFocus = remember { FocusRequester() }
+    LaunchedEffect(chrome, layer) {
+        if (!chrome && layer == EinkLayer.None) runCatching { readerFocus.requestFocus() }
+    }
+
     // A setting changed under the sheet: the page above it is painted again once it has changed.
     LaunchedEffect(state.settings, state.leaves) {
         if (layer == EinkLayer.Settings || layer == EinkLayer.More || layer == EinkLayer.TapZones) paint(EinkPaint.SheetChange)
@@ -383,7 +390,7 @@ fun EinkReader(
             modifier
                 .fillMaxSize()
                 .background(EinkColours.Paper)
-                .readerKeys(keyRules, ::act)
+                .readerKeys(keyRules, ::act, readerFocus)
                 // The first touch anywhere clears the guide, and still turns or opens what it touched.
                 .clearsTapGuide(guide, ::guideCleared),
         ) {

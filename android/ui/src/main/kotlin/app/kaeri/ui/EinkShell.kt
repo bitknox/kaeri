@@ -4,6 +4,7 @@
 
 package app.kaeri.ui
 
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -19,6 +20,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import app.kaeri.design.LocalStillPanel
 import app.kaeri.eink.EinkColours
 import app.kaeri.eink.EinkLook
+import app.kaeri.eink.einkFocus
 import app.kaeri.engine.model.KaeriIsFor
 
 /**
@@ -39,6 +41,8 @@ fun EinkPaperTheme(look: EinkLook?, content: @Composable () -> Unit) {
     ) {
         CompositionLocalProvider(
             LocalRippleConfiguration provides if (look != null) null else LocalRippleConfiguration.current,
+            // Any other clickable on paper shows keyboard and D-pad focus with the e-ink focus mark.
+            LocalIndication provides if (look != null) einkFocus() else LocalIndication.current,
             LocalStillPanel provides (look != null),
             content = content,
         )
