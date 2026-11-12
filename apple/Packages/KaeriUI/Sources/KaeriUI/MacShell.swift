@@ -38,9 +38,6 @@ struct MacShell: View {
                     .background(.ground)
                     // Under a page the section's banners are not where the player grows from.
                     .environment(\.playerZoomAside, navigator.pageCovers ? "section" : nil)
-                    // Under a series page the section's scroll keeps out of the title bar: its
-                    // edge effect would draw the section there, over the page.
-                    .scrollEdgeEffectHidden(navigator.seriesOnMac != nil && navigator.titleOnMac == nil, for: .top)
                 if let id = navigator.titleOnMac {
                     TitlePage(id: id)
                         // The page crossfades over the section on standard, as it opens and on Back;
@@ -120,7 +117,11 @@ struct MacShell: View {
                     }
                 }
             }
-            .toolbarBackgroundVisibility(navigator.titleOnMac == nil ? .automatic : .hidden, for: .windowToolbar)
+            // A page over the section clears the toolbar's own background. Left automatic, macOS
+            // draws the section's scroll into the title bar, over the page.
+            .toolbarBackgroundVisibility(
+                navigator.titleOnMac == nil && navigator.seriesOnMac == nil ? .automatic : .hidden,
+                for: .windowToolbar)
             .titleSearchField(
                 text: navigator.section == .settings ? $navigator.settingsQuery : $navigator.query,
                 titles: navigator.section != .settings && !ReadSearchScope.active(store: store, navigator: navigator),
