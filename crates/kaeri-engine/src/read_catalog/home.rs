@@ -1038,14 +1038,8 @@ impl Home {
     /// Where Continue opens a series: the chapter in progress, or the next one.
     fn continue_action(&self, book: &Book) -> Option<SeriesAction> {
         let work = tiles::work_of(book.id);
-        Some(tiles::action(
-            &self.store,
-            &self.sources,
-            &work,
-            book.medium(),
-            self.plugins.is_arriving(),
-        ))
-        .filter(|a| !matches!(a, SeriesAction::NoSource | SeriesAction::ReadAgain))
+        Some(tiles::action(&self.store, &self.sources, &work, book.medium(), &self.plugins))
+            .filter(|a| !matches!(a, SeriesAction::NoSource | SeriesAction::ReadAgain))
     }
 }
 
@@ -1357,9 +1351,11 @@ mod tests {
         let spot = home(&kit).spot.unwrap();
         assert_eq!(spot.case, ReadSpotlightCase::Continuing);
         assert_eq!(spot.action, continuing, "the chapter in progress, from the kept list");
+        assert!(kit.plugins.take_leaned(), "the load's end draws Home again");
 
         // The load ended without the plugin: it is in no source the person has.
         kit.plugins.arrivals_done();
         assert_eq!(home(&kit).spot.unwrap().action, None);
+        assert!(!kit.plugins.take_leaned());
     }
 }

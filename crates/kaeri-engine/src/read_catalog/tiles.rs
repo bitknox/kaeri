@@ -284,11 +284,11 @@ pub fn action(
     sources: &crate::read_sources::BookSources,
     work: &WorkId,
     medium: kaeri_core::media::Medium,
-    arriving: bool,
+    plugins: &crate::book_plugins::BookPlugins,
 ) -> SeriesAction {
     let edition = sources
         .edition_of(work, None)
-        .or_else(|| arriving.then(|| sources.edition_not_in_yet(work)).flatten());
+        .or_else(|| plugins.lean_on_arrivals(|| sources.edition_not_in_yet(work)));
     let Some((source, series)) = edition else {
         return SeriesAction::NoSource;
     };
