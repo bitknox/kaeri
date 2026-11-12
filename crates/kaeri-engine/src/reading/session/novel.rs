@@ -355,7 +355,8 @@ const DOWNLOAD_LOOK: Duration = Duration::from_millis(100);
 /// Wait for the download queue's fetch of a chapter being opened, so the source is asked for it
 /// once: true once that download is done and its file is there. False when the queue is not
 /// fetching it, and as soon as the download fails, is taken out of the queue or held, or stays
-/// queued past [`FIRST_PAGE_QUEUED`]: the open then asks the source itself.
+/// queued past [`FIRST_PAGE_QUEUED`]: the open then asks the source itself. The queue says
+/// nothing as a fetch ends, so its row is looked at every [`DOWNLOAD_LOOK`].
 async fn downloaded(
     sources: &crate::read_sources::BookSources,
     work: &WorkId,
@@ -738,6 +739,8 @@ impl Session {
                 put.put(Prepared::Downloaded);
                 return;
             }
+            // Still queued only to be kept ready, it leaves the queue: this open fetches it.
+            sources.downloads.reader_fetches(sources.store(), &out, (&work, &id), now);
             let prepared = match sources.open(&work, &id, None, now).await {
                 Err(failure) => Prepared::Failed(failure),
                 // A source's pictures land a page at a time in a folder the page worker reads

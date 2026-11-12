@@ -471,6 +471,37 @@ async fn a_reader_closed_while_waiting_on_a_download_leaves_it_running() {
     assert_eq!(asked, vec![(0, 1), (1, 1), (2, 1)], "chapter 2 asked again: {asked:?}");
 }
 
+/// A chapter opened while its keep-ready download waits in a held queue is fetched by the
+/// reader, and leaves the queue: once the queue runs, the source is not asked for it again.
+#[tokio::test]
+async fn a_chapter_the_reader_fetches_leaves_the_keep_ready_queue() {
+    use kaeri_core::config::NewChapters;
+    use kaeri_store::book_downloads::BookDownloadState as State;
+
+    use crate::downloads::books::{Lent, Setup};
+    let source = Arc::new(Many::new(5, 3));
+    let mut h = many(source.clone());
+    let setup =
+        Setup { keep_ready: true, new_chapters: NewChapters::Reading, ..Setup::default() };
+    h.services.book_sources.downloads.configure(Setup { hold: true, ..setup });
+    h.open_many(Some("1"));
+    timeout(Duration::from_secs(20), h.leaves_of("1")).await.expect("laid out");
+    h.until_download("2", State::Queued).await;
+    let session = h.session();
+    h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("2") });
+    timeout(Duration::from_secs(20), h.leaves_of("2")).await.expect("laid out");
+    h.until_download("2", State::Removed).await;
+    h.until_download("5", State::Queued).await;
+    let downloads = h.services.book_sources.downloads.clone();
+    downloads.configure(setup);
+    downloads.start(&Lent::of(&h.services, &h.tx));
+    h.until_download("5", State::Done).await;
+    for chapter in ["ch-2", "ch-3", "ch-4", "ch-5"] {
+        let asked = source.asked_in(chapter);
+        assert_eq!(asked, vec![(0, 1), (1, 1), (2, 1)], "{chapter} asked again: {asked:?}");
+    }
+}
+
 /// The download of a chapter being read is deleted; crossing on and back to it in the same
 /// session reads it from the source.
 #[tokio::test]

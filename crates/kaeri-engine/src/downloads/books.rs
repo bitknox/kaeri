@@ -693,6 +693,28 @@ impl BookDownloads {
         tokio::spawn(async move { this.keep_ready(&lent, &work, &chapter).await });
     }
 
+    /// The reader fetches `chapter` itself, as the queue had not started it: a chapter waiting
+    /// only to be kept ready leaves the queue, so the source is not asked for it again. One the
+    /// person asked for stays.
+    pub(crate) fn reader_fetches(
+        &self,
+        store: &Store,
+        tx: &Outbox,
+        (work, chapter): (&WorkId, &ChapterId),
+        now: i64,
+    ) {
+        let Ok(Some(row)) = store.book_download(work.as_str(), chapter.as_str()) else {
+            return;
+        };
+        if !row.keep_ready || row.state != BookDownloadState::Queued {
+            return;
+        }
+        let chapters = [row.chapter];
+        if store.remove_book_downloads(work.as_str(), &chapters, false, now).is_ok() {
+            self.publish(store, tx);
+        }
+    }
+
     /// Let go of the downloads of read chapters, of one work or all: every one kept ready on
     /// its own, and every one with delete after reading on, bookmarked chapters spared.
     pub fn sweep(&self, lent: &Lent, work: Option<&str>) -> usize {
