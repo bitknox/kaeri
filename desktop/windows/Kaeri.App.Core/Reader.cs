@@ -183,6 +183,8 @@ public sealed class ReaderSession
         if (Asked is not { } asked || surface is not { } at || Phase != ReaderPhase.Opening || session != 0 || opened)
             return;
         opened = true;
+        // The open carries the surface; a change before the engine names the session goes once it has.
+        sentSurface = at;
         Ask(new ReaderCommand.Open(asked.Work, asked.Chapter, asked.At, at));
         Send?.Invoke(new Command.Reading(new ReadingCommand.LoadChapters(asked.Work, null)));
     }
@@ -520,7 +522,11 @@ public sealed class ReaderSession
                 if (view.Mode != ReaderMode.Strip)
                     Flowing = false;
                 if (surface is { } now && sentSurface != now)
+                {
+                    // The window changed while the chapter opened: the engine lays out again for it.
                     sentSurface = now;
+                    Ask(new ReaderCommand.Surface(session, now));
+                }
                 Changed?.Invoke(ReaderChange.Phase);
                 Changed?.Invoke(ReaderChange.Settings);
                 break;

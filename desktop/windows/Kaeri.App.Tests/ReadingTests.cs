@@ -247,7 +247,7 @@ public class ReadingTests
         });
     }
 
-    [Fact(Skip = "W-R5-1: a surface change while a chapter opens never reaches the engine", SkipUnless = nameof(Probing))]
+    [Fact]
     public async Task ASurfaceChangeWhileOpeningReachesTheEngine()
     {
         using var scene = new Scene(new FfiScene.ReaderMangaRtl(), "cs-reader-surface-opening");
