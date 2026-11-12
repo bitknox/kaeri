@@ -1611,6 +1611,15 @@ send-ready = { $n ->
 # Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.
 send-share-again = Share again
 
+# Line in the Send to e-reader sheet and in a send's row when the prepared files were cleared
+# before they were shared. Prepared files are kept for a day.
+# @only apple
+send-files-gone = These files are gone. Prepared files are kept for a day.
+
+# Button that prepares a send's files again after they were cleared.
+# @only apple
+send-again = Send again
+
 # A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
 # @arg device: text
 send-banner = Sending to { $device }
