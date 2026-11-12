@@ -126,9 +126,17 @@ private struct TrafficLights: NSViewRepresentable {
             }
             window.titleVisibility = .hidden
             for kind in Self.buttons {
-                window.standardWindowButton(kind)?.animator().alphaValue = visible ? 1 : 0
+                window.standardWindowButton(kind)?.animator().alphaValue = visible ? 1 : Self.gone(kind)
             }
         }
+    }
+
+    /// How far a button fades while the chrome is hidden. A minimise button at no opacity at all
+    /// turns Window › Minimize and ⌘M off, so it stays at a trace no one sees. The title bar
+    /// that holds them is left alone: it holds the toolbar too, which comes back as the book
+    /// closes.
+    private static func gone(_ kind: NSWindow.ButtonType) -> CGFloat {
+        kind == .miniaturizeButton ? 0.01 : 0
     }
 
     static func dismantleNSView(_ view: NSView, coordinator: Coordinator) {
