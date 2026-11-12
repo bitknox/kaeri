@@ -25,6 +25,8 @@ struct StripReader: View {
     @State private var position = ScrollPosition()
     @State private var offsetY: CGFloat = 0
     @State private var restoring = true
+    /// Where the restore sent the scroll, so a scroll it did not make ends it.
+    @State private var restored = RestoreMark()
     /// A jump is scrolling: the places it passes are not reported, and where it lands goes to the
     /// engine as the person's jump.
     @State private var jumping = false
@@ -297,6 +299,7 @@ struct StripReader: View {
             pinch = 1
             lead = nil
             restoring = true
+            restored.target = 0
             position.scrollTo(y: 0)
         }
         .onChange(of: next.flatMap { model.previews[$0.id] }?.path) { _, _ in keepLead() }
@@ -478,7 +481,9 @@ struct StripReader: View {
         let images = rows.filter { $0.isImage && $0.trail == nil }
         guard !images.isEmpty else { return }
         let row = images[min(Int(at.image), images.count - 1)]
-        position.scrollTo(y: row.top + CGFloat(at.offset) * (row.height - spacing))
+        let y = row.top + CGFloat(at.offset) * (row.height - spacing)
+        restored.target = y
+        position.scrollTo(y: y)
     }
 
     /// The open chapter's marker is above the middle of the screen: the next chapter opens under
@@ -521,6 +526,12 @@ struct StripReader: View {
     /// opens the next chapter under it.
     private func track(_ metrics: Metrics) {
         offsetY = metrics.y
+        // A scroll the restore did not make is the person's, whatever moved it: a finger, a
+        // pointer, the keyboard or an assistive scroll, which has no interacting phase. The place
+        // is theirs from here, and a late image no longer pulls the strip back.
+        if restored.moved(to: metrics.y, foot: metrics.content - metrics.height), restoring {
+            restoring = false
+        }
         let step = Int((metrics.y / max(metrics.height, 1)).rounded(.down))
         if step != band { band = step }
         let rows = self.rows
@@ -564,6 +575,25 @@ struct StripReader: View {
             }
             ahead.decode(file, longest: max(column, row.height - spacing) * scale)
         }
+    }
+}
+
+/// Where the strip's restore last sent the scroll and where the scroll was last seen. Not
+/// observed: it changes with every scroll and draws nothing.
+@MainActor
+final class RestoreMark {
+    var target: CGFloat?
+    private var seen: CGFloat?
+
+    /// The scroll is at `y`, with `foot` the furthest it goes. True when it moved somewhere the
+    /// restore did not send it: not to the target, and not held short of it at the foot while
+    /// the rows below are still shorter than their place needs.
+    func moved(to y: CGFloat, foot: CGFloat) -> Bool {
+        defer { seen = y }
+        guard let target, let seen, abs(y - seen) > 1 else { return false }
+        if abs(y - target) <= 2 { return false }
+        if y < target, y >= foot - 2 { return false }
+        return true
     }
 }
 

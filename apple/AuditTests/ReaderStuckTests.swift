@@ -67,4 +67,38 @@ final class ReaderStuckTests: XCTestCase {
         }
         XCTAssertTrue(read.waitForExistence(timeout: 5), "the end page came after \(turns) turns and the chapter did not count as read")
     }
+
+    // MARK: The strip's restore
+
+    /// A resumed strip scrolled to its top by the system, with no finger on it, stays there as
+    /// the images above load, and the place is the top.
+    func testAStripScrolledToItsTopWithoutAFingerStaysThere() throws {
+        let app = launch("readerstrip")
+        Thread.sleep(forTimeInterval: 3)
+        let resumed = number(after: "image ", in: line(app, containing: " · image "))
+        XCTAssertNotNil(resumed)
+        XCTAssertGreaterThan(resumed ?? 0, 1, "the strip did not resume down the chapter")
+        // The controls up bring the status bar; a tap on it scrolls to the top, as the system does.
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        Thread.sleep(forTimeInterval: 0.8)
+        let bar = XCUIApplication(bundleIdentifier: "com.apple.springboard").statusBars.firstMatch
+        if bar.exists {
+            bar.tap()
+        } else {
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0)).withOffset(CGVector(dx: 0, dy: 8)).tap()
+        }
+        // The images above come in as the top shows, and turning the device lays the strip out
+        // again: neither may pull the strip back to where it resumed.
+        Thread.sleep(forTimeInterval: 2)
+        XCUIDevice.shared.orientation = .landscapeLeft
+        Thread.sleep(forTimeInterval: 3)
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        Thread.sleep(forTimeInterval: 0.6)
+        let now = number(after: "image ", in: line(app, containing: " · image "))
+        if now != 1, let marks = ProcessInfo.processInfo.environment["KAERI_TEST_MARKS"] {
+            try? app.debugDescription.write(to: URL(filePath: marks).appending(path: "strip-tree.txt"), atomically: true, encoding: .utf8)
+        }
+        XCUIDevice.shared.orientation = .portrait
+        XCTAssertEqual(now, 1, "the strip went back to the resumed place")
+    }
 }
