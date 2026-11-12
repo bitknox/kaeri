@@ -58,6 +58,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -230,7 +231,11 @@ fun BoxScope.EinkTapZonesSheet(session: ReaderSession, state: ReaderState, onBac
         if (rows.any { it.key == Key.SWIPE_TURNS }) EinkSwitchLine(Strings.einkSwipeTurns(context), zones.swipesTurn) { toggle(Key.SWIPE_TURNS, it) }
         // The guide cannot be read aloud, and Off has no zones to show.
         if (!rememberScreenReader() && zones.paged != ZoneLayout.OFF) {
-            EinkOutlinedButton(Strings.readerTapShow(context), onShowZones, Modifier.padding(top = 12.dp, bottom = 4.dp), height = 48.dp)
+            // The guide takes the page at once, so the press asks for no refresh of its own: the
+            // sheet, the bars and the press all go in the guide's one refresh.
+            CompositionLocalProvider(LocalEinkPaint provides {}) {
+                EinkOutlinedButton(Strings.readerTapShow(context), onShowZones, Modifier.padding(top = 12.dp, bottom = 4.dp), height = 48.dp)
+            }
         }
     }
 }
