@@ -1089,4 +1089,76 @@ mod centring {
             window.destroy();
         });
     }
+
+    /// The first `ExpanderRow` under `widget`, depth first.
+    fn expander(widget: &gtk::Widget) -> Option<adw::ExpanderRow> {
+        if let Some(row) = widget.downcast_ref::<adw::ExpanderRow>() {
+            return Some(row.clone());
+        }
+        let mut child = widget.first_child();
+        while let Some(c) = child {
+            if let Some(found) = expander(&c) {
+                return Some(found);
+            }
+            child = c.next_sibling();
+        }
+        None
+    }
+
+    /// A read volume opened in Chapters stays open when its line is drawn again: the chapters
+    /// listed again while the popover is open (`set_volumes` draws the list then), or its line
+    /// scrolled away and back. Drawing it open must not take the app down.
+    ///
+    /// r5 Linux audit, L5A-1: `fold` reads the open volumes with a borrow that lives through
+    /// `set_expanded(true)`, whose notify handler borrows the same cell mutably. The panic is
+    /// inside a GTK callback, so the process aborts; run this test on its own.
+    #[test]
+    #[ignore = "L5A-1: drawing an opened read volume again aborts (chapters.rs fold)"]
+    fn an_opened_read_volume_drawn_again_stays_open() {
+        run(|| {
+            let volume =
+                |n: &str, numbers: std::ops::RangeInclusive<usize>, read: bool| VolumeGroup {
+                    volume: Some(n.into()),
+                    title: None,
+                    chapters: numbers
+                        .map(|c| {
+                            let mut row = chapter(c);
+                            if read {
+                                row.state = ChapterReadState::Read;
+                            }
+                            row
+                        })
+                        .collect(),
+                    all_read: read,
+                    flat: false,
+                };
+            let chapters = Chapters::new();
+            chapters.set_volumes(vec![volume("1", 1..=3, true), volume("2", 4..=6, false)]);
+            let content = chapters.popover.child().expect("the popover has its content");
+            chapters.popover.set_child(gtk::Widget::NONE);
+            let window = gtk::Window::builder().default_width(700).default_height(700).build();
+            window.set_child(Some(&content));
+            chapters.show_here(Here {
+                chapter: ChapterId("c5".into()),
+                label: "Chapter 5".into(), // i18n-skip
+                pages: false,
+                rtl: false,
+                leaves: Vec::new(),
+                open_leaf: 0,
+                files: Default::default(),
+            });
+            window.present();
+            pump(300);
+            let fold = expander(chapters.list.upcast_ref()).expect("volume 1 is folded");
+            // The person opens the read volume.
+            fold.set_expanded(true);
+            pump(100);
+            // The chapters come again while Chapters is open, as set_volumes draws them then.
+            chapters.draw_list();
+            pump(300);
+            let again = expander(chapters.list.upcast_ref()).expect("volume 1 is drawn again");
+            assert!(again.is_expanded(), "the volume opened stays open");
+            window.destroy();
+        });
+    }
 }
