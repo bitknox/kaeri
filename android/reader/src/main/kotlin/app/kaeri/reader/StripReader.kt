@@ -202,6 +202,17 @@ fun StripReader(
     // The chapter kept above and the divider into this one come first.
     val first = if (previous != null) above.size + 1 else 0
     val last = first + story.size - 1
+    // A chapter counts as passed only with its images in: one still loading is short, so its
+    // divider or foot could come into view with nothing read. Its foot is the end only once the
+    // last image is there, and it flows on only while every image of it on screen landed or failed.
+    val now by rememberUpdatedState(state)
+    val placed by rememberUpdatedState(story to first)
+    fun inView(): Boolean = list.layoutInfo.visibleItemsInfo.all { item ->
+        val (images, from) = placed
+        val leaf = images.getOrNull(item.index - from) ?: return@all true
+        leaf.parts.all { now.file(it) != null || now.failures[it.page] != null }
+    }
+    val lastLanded by rememberUpdatedState(story.lastOrNull()?.parts?.all { state.file(it) != null } == true)
     val at by rememberUpdatedState(onAt)
     val scrolled by rememberUpdatedState(onScrolled)
     val flow by rememberUpdatedState(onFlow)
@@ -225,7 +236,7 @@ fun StripReader(
                 if (moving) {
                     scrolled()
                 } else if (state.jump == null && story.isNotEmpty()) {
-                    list.stripPos(first, story.size)?.let { at(it, list.footVisible(last)) }
+                    list.stripPos(first, story.size)?.let { at(it, lastLanded && list.footVisible(last)) }
                     delay(500)
                 }
             }
@@ -235,16 +246,18 @@ fun StripReader(
         snapshotFlow { list.firstVisibleItemIndex }
             .filter { list.isScrollInProgress && story.isNotEmpty() }
             .collect {
-                list.stripPos(first, story.size)?.let { pos -> at(pos, list.footVisible(last)) }
+                list.stripPos(first, story.size)?.let { pos -> at(pos, lastLanded && list.footVisible(last)) }
                 delay(500)
             }
     }
-    // The next chapter opens once its divider is on screen, so its images are there to scroll on to.
+    // The next chapter opens once its divider comes on screen in a scroll, so its images are there
+    // to scroll on to. A chapter that just opened under it, or is still short of its images, never
+    // flows on by itself.
     LaunchedEffect(list, next?.id, story.isNotEmpty()) {
         val upcoming = next ?: return@LaunchedEffect
         if (story.isEmpty()) return@LaunchedEffect
         val key = dividerKey(upcoming)
-        snapshotFlow { list.layoutInfo.visibleItemsInfo.any { it.key == key } }
+        snapshotFlow { list.isScrollInProgress && inView() && list.layoutInfo.visibleItemsInfo.any { it.key == key } }
             .filter { it }
             .collect { flow(upcoming) }
     }
