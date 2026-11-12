@@ -126,6 +126,8 @@ struct State {
     flowing: Option<ChapterId>,
     /// The open chapter came in under the strip's marker: it starts where the scroll is.
     flowed: bool,
+    /// The mode changed in the reader: its next layout shows the chapter in the new one.
+    switched: bool,
     /// The demo's work being read, with its credit capsule in the header on page 1.
     demo: Option<(kaeri_model::sources::DemoWorkInfo, gtk::Widget)>,
     /// The open chapter's credit pages, skipped, from the engine's last layout.
@@ -1541,20 +1543,7 @@ impl Reader {
         self.title.set_label(&view.title);
         self.group_title.set_label(&view.title);
         self.line.set_label(&view.chapter.label);
-        // The scrubber runs with the book: right to left fills from the right, with the count
-        // at the right and the total at the left, as the board draws it. A strip runs top to
-        // bottom and fills from the left. The scale keeps its own direction and is inverted.
-        let rtl = view.direction == ReadDirection::RightToLeft
-            && (view.medium == Medium::Novel || !view.mode.flows());
-        if let Some(row) = self.scrub.parent() {
-            row.set_direction(if rtl {
-                gtk::TextDirection::Rtl
-            } else {
-                gtk::TextDirection::Ltr
-            });
-        }
-        self.scrub.set_direction(gtk::TextDirection::Ltr);
-        self.scrub.set_inverted(rtl);
+        self.scrub_runs(view.medium, view.mode, view.direction);
         self.fill_sheet(true);
         self.apply_look();
         self.fill_end();
@@ -1566,6 +1555,84 @@ impl Reader {
         if self.stack.visible_child_name().as_deref() != Some(name) {
             motion::turn(&self.veil, &self.stack, || self.stack.set_visible_child_name(name));
         }
+    }
+
+    /// The scrubber runs with the book: right to left fills from the right, with the count
+    /// at the right and the total at the left, as the board draws it. A strip runs top to
+    /// bottom and fills from the left. The scale keeps its own direction and is inverted.
+    fn scrub_runs(&self, medium: Medium, mode: ReaderMode, direction: ReadDirection) {
+        let rtl = direction == ReadDirection::RightToLeft
+            && (medium == Medium::Novel || !mode.flows());
+        if let Some(row) = self.scrub.parent() {
+            row.set_direction(if rtl {
+                gtk::TextDirection::Rtl
+            } else {
+                gtk::TextDirection::Ltr
+            });
+        }
+        self.scrub.set_direction(gtk::TextDirection::Ltr);
+        self.scrub.set_inverted(rtl);
+    }
+
+    /// A mode or direction picked in the reader: the engine lays the chapter out again
+    /// without opening it, and the page on screen stays on screen in the other mode.
+    fn follow_settings(self: &Rc<Self>, view: &ReaderSettingsView) {
+        let (medium, now) = {
+            let state = self.state.borrow();
+            let (Some(medium), Some(mode), Some(direction)) =
+                (state.medium, state.mode, state.direction)
+            else {
+                return;
+            };
+            if state.session == 0 {
+                return;
+            }
+            let Some(now) = followed(medium, state.work.as_ref(), (mode, direction), view)
+            else {
+                return;
+            };
+            (medium, now)
+        };
+        let (mode, direction) = now;
+        let was = self.state.borrow().mode;
+        if was != Some(mode) {
+            // The page on screen: the first of the leaf, or the strip's image at the top.
+            let page = if self.flows() {
+                let image = self.strip_place().map_or(0, |p| p.image as usize);
+                let state = self.state.borrow();
+                state
+                    .leaves
+                    .iter()
+                    .filter(|l| !l.end_page)
+                    .nth(image)
+                    .and_then(|l| l.parts.first())
+                    .map(|p| p.page)
+            } else {
+                let state = self.state.borrow();
+                let leaf =
+                    state.leaves.get(state.index).filter(|l| !l.end_page).or_else(|| {
+                        // On the end page: the chapter's last page.
+                        state.leaves.iter().rev().find(|l| !l.end_page)
+                    });
+                page_kept(leaf, state.held_page)
+            };
+            let mut state = self.state.borrow_mut();
+            state.start_page = page.or(state.start_page);
+            state.start_strip = None;
+            state.strip_anchor = None;
+            state.flowed = false;
+            state.held_page = None;
+            state.index = 0;
+            // The next layout is a first one, in the new mode.
+            state.leaves.clear();
+            state.switched = true;
+        }
+        {
+            let mut state = self.state.borrow_mut();
+            state.mode = Some(mode);
+            state.direction = Some(direction);
+        }
+        self.scrub_runs(medium, mode, direction);
     }
 
     // ---------------------------------------------------------------------------------------
@@ -1648,6 +1715,7 @@ impl Reader {
     fn leaves(self: &Rc<Self>, leaves: Vec<Leaf>) {
         let flows = self.flows();
         let first = self.state.borrow().leaves.is_empty();
+        let switched = std::mem::take(&mut self.state.borrow_mut().switched);
         // The credit pages and parts that follow a layout are the engine's word on it.
         let on_credit = self.relaid();
         let relay = self.relay_kept();
@@ -1708,6 +1776,19 @@ impl Reader {
                 self.drop_strip_credits();
                 self.build_strip();
             }
+            if switched && self.stack.visible_child_name().as_deref() != Some("strip") {
+                // From pages: the images in hand at the kept page are drawn first, while the
+                // strip is off screen and they take no fade, so the page fades into the strip
+                // rather than into its empty frames. The picture goes with the turn.
+                let anchor = self.state.borrow().strip_anchor.map_or(0, |a| a.image as usize);
+                for index in anchor..anchor + 3 {
+                    self.want_strip(index);
+                }
+                motion::turn(&self.veil, &self.stack, || {
+                    self.stack.set_visible_child_name("strip");
+                    self.picture.set_paintable(gdk::Paintable::NONE);
+                });
+            }
             return;
         }
         if let Some(relay) = &relay
@@ -1760,6 +1841,23 @@ impl Reader {
         let index = self.state.borrow().index;
         // The first layout, or a new one: the reader put the place there, not the person.
         self.show_leaf(index, TurnHow::Placed);
+        if switched {
+            self.leave_strip();
+        }
+    }
+
+    /// From the strip to pages: once the pages are on screen the strip's images go, and the
+    /// chapters it ran on from with them. A page still on its way leaves the strip up until it
+    /// comes, and the strip goes with the next layout or the close.
+    fn leave_strip(&self) {
+        if self.stack.visible_child_name().as_deref() == Some("strip") {
+            return;
+        }
+        while let Some(child) = self.strip.first_child() {
+            self.strip.remove(&child);
+        }
+        self.state.borrow_mut().strip_frames.clear();
+        self.trail.clear();
     }
 
     fn page_of(&self, index: usize) -> Option<u32> {
@@ -2648,6 +2746,7 @@ impl Reader {
         if medium.is_some_and(|m| m != view.medium) {
             return;
         }
+        self.follow_settings(&view);
         self.state.borrow_mut().settings = Some(view);
         self.fill_sheet(false);
         self.apply_look();
@@ -3542,11 +3641,53 @@ fn page_kept(leaf: Option<&Leaf>, held: Option<u32>) -> Option<u32> {
         .or_else(|| leaf.parts.first().map(|p| p.page))
 }
 
+/// The mode and direction the open book takes from `settings`, when they differ from `now`.
+/// A mode or direction changed in the reader lays the chapter out again without opening it
+/// anew, so the reader follows the settings, as the engine's plan reads them: settings for
+/// another work or medium, and a novel's, leave it as it is.
+fn followed(
+    medium: Medium,
+    work: Option<&WorkId>,
+    now: (ReaderMode, ReadDirection),
+    settings: &ReaderSettingsView,
+) -> Option<(ReaderMode, ReadDirection)> {
+    if medium == Medium::Novel || settings.medium != medium || work != settings.work.as_ref() {
+        return None;
+    }
+    let word = |key: ReaderSettingKey| {
+        settings.rows.iter().find(|r| r.key == key).and_then(|r| match &r.value {
+            ReaderValue::Choice { name } => Some(name.as_str()),
+            _ => None,
+        })
+    };
+    let mode = match word(ReaderSettingKey::Mode) {
+        Some("strip") => ReaderMode::Strip,
+        Some("vertical") => ReaderMode::Vertical,
+        Some("paged") => ReaderMode::Paged,
+        _ => now.0,
+    };
+    let direction = if mode.flows() {
+        ReadDirection::TopToBottom
+    } else {
+        match word(ReaderSettingKey::Direction) {
+            Some("ltr") => ReadDirection::LeftToRight,
+            Some("rtl") => ReadDirection::RightToLeft,
+            _ if now.1 == ReadDirection::TopToBottom => ReadDirection::RightToLeft,
+            _ => now.1,
+        }
+    };
+    ((mode, direction) != now).then_some((mode, direction))
+}
+
 #[cfg(test)]
 mod layout_tests {
-    use kaeri_model::reader::{Leaf, LeafPart, PageKind, UnitRect};
+    use kaeri_core::{books::WorkId, media::Medium};
+    use kaeri_model::reader::{
+        Leaf, LeafPart, PageKind, ReadDirection, ReaderMode, ReaderSettingKey,
+        ReaderSettingRow, ReaderSettingsView, ReaderValue, SettingScope, UnitRect,
+    };
 
-    use super::page_kept;
+    use super::{followed, page_kept};
 
     fn leaf(pages: &[u32]) -> Leaf {
         let parts = pages
@@ -3575,6 +3716,62 @@ mod layout_tests {
         assert_eq!(page_kept(Some(&leaf(&[4, 5])), held), Some(4));
         assert_eq!(page_kept(Some(&leaf(&[4, 5])), None), Some(4));
         assert_eq!(page_kept(None, held), None);
+    }
+
+    fn settings(medium: Medium, work: &str, mode: &str, direction: &str) -> ReaderSettingsView {
+        let row = |key, name: &str| ReaderSettingRow {
+            key,
+            value: ReaderValue::Choice { name: name.to_owned() },
+            scope: SettingScope::Series,
+            detected: false,
+            overridden: true,
+            choices: Vec::new(),
+        };
+        ReaderSettingsView {
+            medium,
+            work: Some(WorkId(work.to_owned())),
+            rows: vec![
+                row(ReaderSettingKey::Mode, mode),
+                row(ReaderSettingKey::Direction, direction),
+            ],
+            tap_zones: None,
+        }
+    }
+
+    /// Strip picked in the open chapter's settings: the reader turns to the strip, and back
+    /// to pages, with the direction the settings give, as the engine lays the chapter out.
+    #[test]
+    fn the_open_book_follows_a_mode_picked_in_the_reader() {
+        let work = WorkId("a:1".to_owned());
+        let paged = (ReaderMode::Paged, ReadDirection::RightToLeft);
+        let strip = (ReaderMode::Strip, ReadDirection::TopToBottom);
+        let manga = |mode, direction| settings(Medium::Manga, "a:1", mode, direction);
+        assert_eq!(
+            followed(Medium::Manga, Some(&work), paged, &manga("strip", "rtl")),
+            Some(strip)
+        );
+        assert_eq!(
+            followed(Medium::Manga, Some(&work), strip, &manga("paged", "ltr")),
+            Some((ReaderMode::Paged, ReadDirection::LeftToRight))
+        );
+        assert_eq!(
+            followed(Medium::Manga, Some(&work), paged, &manga("paged", "ltr")),
+            Some((ReaderMode::Paged, ReadDirection::LeftToRight)),
+            "a direction alone turns the pages the other way"
+        );
+        assert_eq!(
+            followed(Medium::Manga, Some(&work), paged, &manga("vertical", "rtl")),
+            Some((ReaderMode::Vertical, ReadDirection::TopToBottom))
+        );
+        // Nothing changed, or settings that are not the open book's: the reader stays.
+        assert_eq!(followed(Medium::Manga, Some(&work), paged, &manga("paged", "rtl")), None);
+        assert_eq!(followed(Medium::Manga, Some(&work), strip, &manga("strip", "ltr")), None);
+        let other = settings(Medium::Manga, "a:2", "strip", "rtl");
+        assert_eq!(followed(Medium::Manga, Some(&work), paged, &other), None);
+        let defaults = ReaderSettingsView { work: None, ..manga("strip", "rtl") };
+        assert_eq!(followed(Medium::Manga, Some(&work), paged, &defaults), None);
+        let novel = settings(Medium::Novel, "a:1", "strip", "rtl");
+        assert_eq!(followed(Medium::Novel, Some(&work), paged, &novel), None);
     }
 }
 
