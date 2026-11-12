@@ -345,7 +345,18 @@ async fn keeping_chapters_ready_asks_the_source_once() {
     for leaf in 0..=3 {
         h.shown(leaf, TurnHow::Turn).await;
     }
-    h.pump(Duration::from_millis(500)).await;
+    // Reading on once chapter 2 is kept ready: its download is done. A reader that opens it
+    // while the download still runs asks the source for it as well.
+    let start = tokio::time::Instant::now();
+    let done = |h: &Harness| {
+        h.services.store.book_download(READ, "2").unwrap().is_some_and(|row| {
+            row.state == kaeri_store::book_downloads::BookDownloadState::Done
+        })
+    };
+    while !done(&h) && start.elapsed() < wait {
+        h.pump(Duration::from_millis(50)).await;
+    }
+    assert!(done(&h), "chapter 2 was never kept ready");
     let session = h.session();
     h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("2") });
     timeout(wait, h.leaves_of("2")).await.unwrap();
