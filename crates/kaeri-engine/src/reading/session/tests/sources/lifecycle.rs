@@ -394,6 +394,71 @@ async fn a_download_deleted_while_reading_opens_from_the_source() {
     assert_eq!(source.opened_of("ch-2"), 1, "read from the source");
 }
 
+impl Many {
+    /// The pages of `chapter` asked for, as (page, times asked), in page order.
+    fn asked_in(&self, chapter: &str) -> Vec<(usize, usize)> {
+        let mut counts = std::collections::BTreeMap::new();
+        for (c, p) in self.fetched() {
+            if c == chapter {
+                *counts.entry(p).or_insert(0) += 1;
+            }
+        }
+        counts.into_iter().collect()
+    }
+}
+
+impl Harness {
+    /// Carry what comes until `source` has been asked for a page.
+    async fn until_asked(&mut self, source: &Many) {
+        let start = tokio::time::Instant::now();
+        while source.fetched().is_empty() && start.elapsed() < Duration::from_secs(5) {
+            self.pump(Duration::from_millis(10)).await;
+        }
+        assert!(!source.fetched().is_empty(), "the source was never asked");
+    }
+}
+
+/// A chapter opened again while it opens, as when another device's place opens it and the
+/// person opens it too, takes the open under way: each page is asked for once.
+#[tokio::test]
+async fn a_chapter_opened_again_while_it_opens_asks_for_each_page_once() {
+    let source = Arc::new(Many::new(2, 8));
+    source.hold_all_but(&[]);
+    let mut h = many(source.clone());
+    h.open_many(Some("2"));
+    h.until_asked(&source).await;
+    let session = h.session();
+    h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("2") });
+    source.let_all();
+    timeout(Duration::from_secs(20), h.leaves_of("2")).await.expect("laid out");
+    let start = tokio::time::Instant::now();
+    while source.asked_in("ch-2").len() < 8 && start.elapsed() < Duration::from_secs(10) {
+        h.pump(Duration::from_millis(50)).await;
+    }
+    h.pump(Duration::from_millis(300)).await;
+    let asked = source.asked_in("ch-2");
+    assert_eq!(asked.len(), 8, "every page asked for: {asked:?}");
+    assert!(asked.iter().all(|(_, n)| *n == 1), "asked for more than once: {asked:?}");
+}
+
+/// A chapter left while it opens stops: none of its pages is asked for once another chapter
+/// opens.
+#[tokio::test]
+async fn a_chapter_left_while_it_opens_stops_fetching() {
+    let source = Arc::new(Many::new(2, 12));
+    source.hold_all_but(&[]);
+    let mut h = many(source.clone());
+    h.open_many(Some("1"));
+    h.until_asked(&source).await;
+    let before = source.asked_in("ch-1");
+    let session = h.session();
+    h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("2") });
+    source.let_all();
+    timeout(Duration::from_secs(20), h.leaves_of("2")).await.expect("laid out");
+    h.pump(Duration::from_secs(1)).await;
+    assert_eq!(source.asked_in("ch-1"), before, "the chapter left went on fetching");
+}
+
 /// A jump once the chapter is laid out asks for the page jumped to next, ahead of the pages
 /// before it still to come, even while those hang.
 #[tokio::test]
@@ -476,6 +541,25 @@ async fn a_page_that_hangs_holds_only_itself() {
     assert!(missing.is_empty(), "never asked for: {missing:?}");
 }
 
+/// `wait`, or `None` once `limit` of real time has passed. With the clock paused, a timeout on it
+/// runs out the moment the runtime has nothing to do, as while the page worker, a thread outside
+/// the runtime, makes a page; this one is kept by a thread of its own.
+async fn within_real<T>(limit: Duration, wait: impl Future<Output = T>) -> Option<T> {
+    let (ran_out, out) = tokio::sync::oneshot::channel::<()>();
+    let (done, stop) = std::sync::mpsc::channel::<()>();
+    std::thread::spawn(move || {
+        if let Err(std::sync::mpsc::RecvTimeoutError::Timeout) = stop.recv_timeout(limit) {
+            let _ = ran_out.send(());
+        }
+    });
+    let got = tokio::select! {
+        got = wait => Some(got),
+        _ = out => None,
+    };
+    drop(done);
+    got
+}
+
 /// A page that never comes is asked for once more after its wait, then fails as its source not
 /// answering, with its own retry; the rest of the chapter still comes. The clock stops once the
 /// chapter is laid out, so the waits pass at once.
@@ -490,8 +574,8 @@ async fn a_page_that_never_comes_fails_after_one_more_try() {
     let leaf = leaves.iter().find(|l| l.parts.iter().any(|p| p.page == 2)).unwrap().index;
     tokio::time::pause();
     h.shown(leaf, TurnHow::Jump).await;
-    let failure = timeout(
-        Duration::from_secs(120),
+    let failure = within_real(
+        Duration::from_secs(20),
         h.until(|e| match e {
             ReaderEvent::PageFailed { page: 2, failure, .. } => Some(failure.clone()),
             _ => None,

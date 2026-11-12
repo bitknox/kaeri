@@ -211,6 +211,11 @@ impl Feed {
         self.pages.lock().map(|p| p.clone()).unwrap_or_default()
     }
 
+    /// How many pages the reader counts: the source's, credit pages left out.
+    pub fn count(&self) -> usize {
+        self.pages.lock().map_or(0, |p| p.len())
+    }
+
     pub fn page(&self, index: usize) -> Option<FeedPage> {
         self.pages.lock().ok()?.get(index).cloned()
     }
@@ -298,7 +303,7 @@ pub(crate) async fn start(
     mut opened: Opened,
     (chapter, learning): (ChapterId, Learning),
     dir: PathBuf,
-    first: impl FnOnce(u32) -> usize + Send,
+    first: impl FnOnce(u32, &[u32]) -> usize + Send,
     now: i64,
     out: Outbox,
     gone: Gone,
@@ -324,8 +329,9 @@ pub(crate) async fn start(
         let (learning, chapter, group) =
             (learning.clone(), chapter.as_str().to_owned(), opened.group.clone());
         let count = u32::try_from(total).unwrap_or(u32::MAX);
+        let wanted = crate::reading::credits::edges(&spans);
         tokio::task::spawn_blocking(move || {
-            learning.keep_and_find((&chapter, group.as_deref()), &mine, count, now)
+            learning.keep_and_find((&chapter, group.as_deref()), (&mine, &wanted), count, now)
         })
         .await
         .unwrap_or_default()
@@ -368,7 +374,7 @@ pub(crate) async fn start(
     let skipped: Vec<u32> = credits.iter().map(|c| c.page).collect();
     let parts = SourceParts::of(&opened).map(|p| p.counted(&skipped));
     let count = order.len();
-    let first = first(u32::try_from(count).unwrap_or(u32::MAX)).min(count - 1);
+    let first = first(u32::try_from(count).unwrap_or(u32::MAX), &skipped).min(count - 1);
     if !matches!(pages[first], FeedPage::Landed(_)) {
         let slow = pending.remove(&order[first]);
         let page =
