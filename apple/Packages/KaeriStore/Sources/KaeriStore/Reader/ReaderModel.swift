@@ -276,6 +276,10 @@ public final class ReaderModel {
 
     /// Go to page is open.
     public var askingPage = false
+    /// The window the book is open in has the keys, or no window of the app does. Another of the
+    /// app's windows in front keeps its own keys: the Go menu binds the reader's only while this
+    /// holds. The Mac's reader follows its window; on iPad and iPhone it stays true.
+    public var windowInFront = true
     /// Paper mode the person's Focus turned on, for this open.
     public var focusPaper = false
 

@@ -101,6 +101,8 @@ struct ReaderKeyCatcher: UIViewRepresentable {
             case .keyboardHome: equivalent = .home
             case .keyboardEnd: equivalent = .end
             case .keyboardEscape: equivalent = .escape
+            // ⌘=, which the Go menu's Zoom In on ⌘+ does not answer.
+            case .keyboardEqualSign where modifiers == .command: equivalent = "="
             // Space, the brackets and G reach the Go menu's commands, which take them first.
             default: return nil
             }

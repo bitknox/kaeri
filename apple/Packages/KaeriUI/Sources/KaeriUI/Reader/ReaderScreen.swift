@@ -402,6 +402,7 @@ extension ReaderActions {
         case .line(let forward): turn(forward, true)
         case .edge(let first): edge(first)
         case .chapter(let next): chapter(next)
+        case .zoom(let step): zoom(step)
         }
     }
 }
