@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
@@ -258,7 +259,9 @@ fun PhoneEndPage(
             // Pages skipped at the end are named under what was updated, with Show; those at the
             // start were named on page 1.
             val skipped = state.endSkipped(view.chapter.id)
-            if (skipped.isNotEmpty()) SkippedLine(skipped.size, onShow = onShowCredits)
+            // Drawn back by the line's own 16 dp side padding, so its words start with the column
+            // while its 44 dp touch area stays.
+            if (skipped.isNotEmpty()) SkippedLine(skipped.size, Modifier.offset(x = (-16).dp), onShow = onShowCredits)
             if (next != null) {
                 Spacer(Modifier.height(if (server.held || narrow) 18.dp else 34.dp))
                 Text(Strings.readerEndNext(context), color = Chrome.faint, fontSize = 13.sp)
@@ -300,7 +303,10 @@ fun PhoneEndPage(
                 }
             } else {
                 val why = end?.whyNone ?: NoNext.CAUGHT_UP
-                val following = view.chapter.number?.toDoubleOrNull()?.let { (it.toInt() + 1).toString() } ?: ""
+                // The chapter the end page would open: the next one listed, as offline that is one
+                // only a source has; past the last one listed, the next whole number.
+                val following = view.next?.let(::chapterNumber)
+                    ?: view.chapter.number?.toDoubleOrNull()?.let { (it.toInt() + 1).toString() } ?: ""
                 val (title, line) = when (why) {
                     NoNext.NO_SOURCE_HAS_IT, NoNext.NOT_OUT_YET -> Strings.readerEndNone(context, following) to Strings.readerEndNoneLine(context)
                     NoNext.CAUGHT_UP -> Strings.readerEndCaughtUp(context) to Strings.readerEndNoneLine(context)

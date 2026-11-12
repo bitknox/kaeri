@@ -593,3 +593,51 @@ async fn offline_the_end_page_leads_into_the_next_download() {
     h.leaves_of("4").await;
     assert_eq!(source.opened_of("ch-3") + source.opened_of("ch-4"), 0);
 }
+
+/// An end page said offline follows the connection: back online it leads into the chapter only
+/// the source has, and offline again it says so.
+#[tokio::test(start_paused = true)]
+async fn the_end_page_follows_the_connection_while_it_is_open() {
+    let source = Arc::new(PageSource::new(&["1", "2", "3"]));
+    let mut h = reading(source.clone());
+    let store = h.services.store.clone();
+    let now = h.services.clock.now();
+    h.services.book_sources.chapters(&WorkId::new(READ), None, now).await.unwrap();
+    let folder = tempfile::tempdir().unwrap();
+    for n in 1..=3 {
+        let page = image::GrayImage::from_pixel(320, 480, image::Luma([60 + n]));
+        page.save(folder.path().join(format!("{n:03}.png"))).unwrap();
+    }
+    let ask = kaeri_store::book_downloads::BookDownloadAsk {
+        work: READ,
+        chapter: "2",
+        source_id: SOURCE,
+        version_label: None,
+        keep_ready: true,
+    };
+    store.queue_book_download(&ask, 1).unwrap();
+    let id = store.book_download(READ, "2").unwrap().unwrap().id;
+    store.book_download_done(id, folder.path().to_str().unwrap(), Some(3), 1, 1).unwrap();
+    let end = async |h: &mut Harness| {
+        h.until(|e| match e {
+            ReaderEvent::EndPage { next, why_none, .. } => {
+                Some((next.as_ref().map(|c| c.id.as_str().to_owned()), *why_none))
+            }
+            _ => None,
+        })
+        .await
+    };
+    h.network(true);
+    h.open_read(Some("2")).await;
+    h.leaves_of("2").await;
+    h.shown(2, TurnHow::Turn).await;
+    assert_eq!(end(&mut h).await, (None, Some(NoNext::Offline)), "3 is only at the source");
+
+    h.network(false);
+    assert_eq!(end(&mut h).await, (Some("3".into()), None), "online, 3 opens from the source");
+    h.network(true);
+    assert_eq!(end(&mut h).await, (None, Some(NoNext::Offline)), "offline again");
+    // The same connection again says nothing new.
+    h.network(true);
+    assert!(!h.drain().iter().any(|e| matches!(e, ReaderEvent::EndPage { .. })));
+}

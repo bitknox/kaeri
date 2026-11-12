@@ -79,6 +79,8 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
 
     val store: AppStore by lazy {
         AppStore(scope).also { store ->
+            // The bar and rail draw for the last answer from the first frame.
+            store.medium.keepIn(app.kaeri.store.DevicePreferences.of(this))
             store.tv.openLink = { url -> open(url) }
             store.collectCrashes(this, scope)
             DeviceWatch(this, store::send).start()

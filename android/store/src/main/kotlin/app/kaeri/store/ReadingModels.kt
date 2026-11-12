@@ -78,8 +78,22 @@ class MediumModel(private val send: (Command) -> Unit) {
     /** The question on screen: held from the engine's ask until it is answered. */
     val asking: StateFlow<MediumAsk?> = _asking.asStateFlow()
 
-    /** What Kaeri is for on this device: Watch until the engine says. */
-    val answer: KaeriIsFor get() = _view.value?.answer ?: KaeriIsFor.WATCH
+    /** What Kaeri is for on this device: the answer kept from before until the engine says, else Watch. */
+    val answer: KaeriIsFor get() = _view.value?.answer ?: kept ?: KaeriIsFor.WATCH
+
+    /**
+     * The engine's last answer, kept on the device so a launch draws its bar and rail for it from
+     * the first frame rather than Watch's until the engine has started.
+     */
+    var kept: KaeriIsFor? = null
+        private set
+    private var keeper: ((KaeriIsFor) -> Unit)? = null
+
+    /** Start from the answer kept in [prefs], and keep each new one there. */
+    fun keepIn(prefs: android.content.SharedPreferences) {
+        kept = prefs.getString(KEPT_ANSWER, null)?.let { name -> KaeriIsFor.entries.firstOrNull { it.name == name } }
+        keeper = { prefs.edit().putString(KEPT_ANSWER, it.name).apply() }
+    }
 
     /** Whether the person can choose: reading is in the build and the edition does not fix it. */
     val choosable: Boolean get() = _view.value?.let { it.readingAvailable && !it.fixed } ?: false
@@ -89,6 +103,10 @@ class MediumModel(private val send: (Command) -> Unit) {
 
     internal fun apply(view: MediumView) {
         _view.value = view
+        if (view.answer != kept) {
+            kept = view.answer
+            keeper?.invoke(view.answer)
+        }
         val ask = view.ask
         if (ask == null) _asking.value = null else if (_asking.value == null) _asking.value = ask
         launchChoice?.let { wanted ->
@@ -117,6 +135,9 @@ class MediumModel(private val send: (Command) -> Unit) {
         send(Command.Medium(MediumCommand.Answer(ask, answer)))
     }
 }
+
+/** Where [MediumModel.keepIn] keeps the last answer. */
+private const val KEPT_ANSWER = "kaeriIsFor"
 
 /** Whether the answer reads. */
 val KaeriIsFor.reads: Boolean get() = this == KaeriIsFor.READ || this == KaeriIsFor.BOTH

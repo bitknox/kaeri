@@ -554,7 +554,9 @@ private fun SpotlightActions(tile: WorkTile, spot: ReadSpotlight, side: Boolean,
                 }
             }
         }
-        action == null && !planned -> {
+        // Planning is offered only for a series not begun: one in Continue has no button here
+        // while there is nothing to read it on from.
+        action == null && !planned && (spot.case == ReadSpotlightCase.UP_NEXT || spot.case == ReadSpotlightCase.POPULAR) -> {
             {
                 Button(
                     onClick = {

@@ -276,18 +276,24 @@ pub fn number_of(list: Option<&[chapters::Kept]>, chapter: &str) -> String {
 }
 
 /// The series page's main button: the chapter in progress, the next one, Read again once
-/// everything is read, and No source when none of the person's sources has it.
+/// everything is read, and No source when none of the person's sources has it. While plugins
+/// are still `arriving`, a series held in a source not in yet goes on from its kept list rather
+/// than being said to be in none.
 pub fn action(
     store: &Store,
     sources: &crate::read_sources::BookSources,
     work: &WorkId,
     medium: kaeri_core::media::Medium,
+    plugins: &crate::book_plugins::BookPlugins,
 ) -> SeriesAction {
-    let Some((source, series)) = sources.edition_of(work, None) else {
+    let edition = sources
+        .edition_of(work, None)
+        .or_else(|| plugins.lean_on_arrivals(|| sources.edition_not_in_yet(work)));
+    let Some((source, series)) = edition else {
         return SeriesAction::NoSource;
     };
     let read = Read::of(store, work.as_str());
-    let list = chapters::of_work(sources, store, work).map(|(_, _, l)| l);
+    let list = chapters::kept(store, &source, &series).map(|(l, _)| l);
     if let Some((chapter, page, of)) = read.in_progress.clone() {
         let label = number_of(list.as_deref(), &chapter);
         let named = named_in(list.as_deref(), &chapter);

@@ -735,6 +735,12 @@ pub(crate) fn dispatch(
                 let ask = crate::read_catalog::Ask::of(engine, services);
                 crate::read_catalog::home::path_moved(&kit, ask, tx);
             }
+            // The reader's open end page offers what opens with the connection as it is now.
+            if moved {
+                let EngineState { config, reader, .. } = &mut *engine;
+                let mut cx = reader.cx(config, services, tx);
+                reader.network_moved(&mut cx, !offline);
+            }
         }
         Command::DeviceState {
             reduce_motion,
