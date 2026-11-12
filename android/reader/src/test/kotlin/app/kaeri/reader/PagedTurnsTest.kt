@@ -1,12 +1,15 @@
 // What the paged reader tells the screen about each leaf it shows: only a turn the person made
 // counts as turned, so the engine's start place and a new layout after a rotation keep the chrome.
 // A strip cut into screens also moves on with an upward swipe. The leaf shown and the ones beside
-// it stay decoded however small the cache.
+// it stay decoded however small the cache, and a new layout keeps the picture on screen until its
+// own is drawn.
 
 package app.kaeri.reader
 
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performTouchInput
@@ -22,6 +25,8 @@ import app.kaeri.reader.ReaderFixtures.CHAPTER
 import app.kaeri.reader.ReaderFixtures.SESSION
 import app.kaeri.reader.ReaderFixtures.WORK
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -200,5 +205,31 @@ class PagedTurnsTest {
         compose.waitUntil(5_000) { (3..5).all { images.cached(files[it]) != null } }
         assertEquals(4, pager.leaf)
         dir.deleteRecursively()
+    }
+
+    @Test
+    fun a_new_layout_keeps_the_picture_shown_until_its_own_is_drawn() {
+        val dir = java.nio.file.Files.createTempDirectory("turns").toFile()
+        val files = List(8) { ReaderFixtures.grey(dir, "$it.gray", 40, 60) }
+        open(ReaderFixtures.cuts(4, 2) { files[it.toInt()] })
+        compose.waitUntil(5_000) { pictured() }
+        // The device turned: the strip is cut into screens again, and the new cuts' files have not
+        // come yet. The picture shown stays past the plate's wait, then gives way to the plate.
+        compose.mainClock.autoAdvance = false
+        compose.runOnIdle { session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, ReaderFixtures.cuts(4, 3))) }
+        compose.mainClock.advanceTimeBy(PageWaits.PLATE_MS + 200)
+        assertTrue("the old picture past the plate's wait", pictured())
+        compose.mainClock.advanceTimeBy(PageWaits.WORDS_MS)
+        assertFalse("the plate once its words are due", pictured())
+        dir.deleteRecursively()
+    }
+
+    /** A page drawn: the fixture's pages run from black at their left to white at their right. */
+    private fun pictured(): Boolean {
+        val image = compose.onRoot().captureToImage().asAndroidBitmap()
+        val y = image.height / 2
+        val left = android.graphics.Color.red(image.getPixel(image.width / 10, y))
+        val right = android.graphics.Color.red(image.getPixel(image.width * 9 / 10, y))
+        return right - left > 100
     }
 }
