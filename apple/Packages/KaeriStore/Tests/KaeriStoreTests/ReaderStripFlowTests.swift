@@ -126,4 +126,72 @@ struct ReaderStripFlowTests {
         model.stripAt(StripPos(image: 2, offset: 0.5), footVisible: true)
         #expect(sent.feet == [false, true])
     }
+
+    /// Online but the source cannot be reached, or offline with the next chapter only a source
+    /// has: the flow fails, and the chapter read stays open, every image where it was, with its
+    /// end page naming the chapter that would not open and why.
+    @Test(arguments: [ReadingFailure.sourceDown(source: "books.home.example"), .offline])
+    func aStripThatCannotFlowOnKeepsTheChapterRead(_ failure: ReadingFailure) {
+        let sent = Sent()
+        let model = strip(sent, ratio: 0.7)
+        model.flowOn()
+        model.apply(.chapterRead(work: WorkId("a:900301"), chapter: ChapterId("1"), trackers: []))
+        model.observe(.reading(.failed(about: .reader, failure: failure)))
+        #expect(model.phase == .open)
+        #expect(model.view?.chapter.id == ChapterId("1"))
+        #expect(model.leaves.count == 2)
+        #expect(model.trail.chapters.isEmpty, "the chapter read is the open one again, not a trail above nothing")
+        #expect(model.flowing == nil)
+        #expect(model.read)
+        #expect(model.flowFailure == ReaderModel.FlowFailure(next: row("2"), failure: failure))
+
+        // Scrolling past the end again asks nothing more: the end page's Try again does.
+        model.flowOn()
+        #expect(sent.opened == [ChapterId("2")])
+    }
+
+    /// Try again flows into the chapter under the one read, asking the engine, whose session is
+    /// on that chapter, for it again; a second failure says so the same way.
+    @Test func tryAgainFlowsOnIntoTheChapterThatFailed() {
+        let sent = Sent()
+        let model = strip(sent, ratio: 0.7)
+        model.flowOn()
+        model.observe(.reading(.failed(about: .reader, failure: .offline)))
+        sent.all = []
+
+        model.retry(page: nil)
+        #expect(sent.all.count == 1)
+        #expect(sent.all.contains { if case .reader(.retry(1, ChapterId("2"), nil)) = $0 { true } else { false } })
+        #expect(model.phase == .open, "no opening screen over the chapter read")
+        #expect(model.flowing == ChapterId("2"))
+        #expect(model.flowFailure == nil)
+        #expect(model.trail.chapters.map(\.id) == [ChapterId("1")])
+
+        model.observe(.reading(.failed(about: .reader, failure: .pageFetch(status: 503))))
+        #expect(model.phase == .open)
+        #expect(model.flowFailure?.failure == .pageFetch(status: 503))
+        #expect(model.trail.chapters.isEmpty)
+
+        model.retryFlow()
+        model.apply(.opened(ReaderView(
+            session: 1, work: WorkId("a:900301"), title: "The Lantern Ferry", medium: .manga,
+            chapter: row("2"), mode: .strip, direction: .topToBottom,
+            start: ReadPlace(work: WorkId("a:900301"), chapter: ChapterId("2"), page: 0, strip: nil, novel: nil),
+            next: nil, previous: row("1"), settings: nil)))
+        #expect(model.view?.chapter.id == ChapterId("2"))
+        #expect(model.trail.chapters.map(\.id) == [ChapterId("1")], "it opens under the chapter read")
+        #expect(model.flowFailure == nil)
+    }
+
+    /// A chapter opened by hand after a failed flow starts clean.
+    @Test func openingAChapterClearsAFailedFlow() {
+        let sent = Sent()
+        let model = strip(sent, ratio: 0.7)
+        model.flowOn()
+        model.observe(.reading(.failed(about: .reader, failure: .offline)))
+        model.openChapter(ChapterId("3"))
+        #expect(model.flowFailure == nil)
+        #expect(model.phase == .opening)
+    }
 }
+

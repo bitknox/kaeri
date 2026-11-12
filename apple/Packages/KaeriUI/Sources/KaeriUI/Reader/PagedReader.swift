@@ -325,6 +325,11 @@ struct ReaderEndPage: View {
     private var read: Bool { held?.read ?? model.read }
     private var readTrackers: [String] { held?.readTrackers ?? model.readTrackers }
     private var medium: Medium { view?.medium ?? .manga }
+    /// A strip that could not flow into its next chapter ends here: that chapter, why, and Try
+    /// again in place of Continue. Turned to pages, Continue opens it as any chapter opens.
+    private var flowFailure: ReaderModel.FlowFailure? {
+        held == nil && model.view?.mode == .strip ? model.flowFailure : nil
+    }
 
     private func previewFile(_ id: ChapterId) -> PageFile? {
         if let held { return held.previews[id] }
@@ -418,7 +423,7 @@ struct ReaderEndPage: View {
     /// next chapter with its facts and its first page, and Continue. On a phone the buttons are
     /// pinned at the foot; wider, the column is centred with the buttons under it.
     private var standard: some View {
-        let next = ReaderEnd.next(end, view: view)
+        let next = flowFailure?.next ?? ReaderEnd.next(end, view: view)
         let phone = size.width < 600
         // At the largest sizes nothing is pinned: the buttons follow the column in the scroll.
         let pinned = phone && !type.isAccessibilitySize
@@ -465,8 +470,13 @@ struct ReaderEndPage: View {
                         .frame(maxWidth: .infinity)
                         .padding(.bottom, 10)
                 }
-                Button { model.openChapter(next.id) } label: { continueLabel(next.id) }
-                    .buttonStyle(ReaderAmberStyle(theme: theme))
+                if flowFailure != nil {
+                    Button(L.readerTryAgain) { model.retryFlow() }
+                        .buttonStyle(ReaderAmberStyle(theme: theme))
+                } else {
+                    Button { model.openChapter(next.id) } label: { continueLabel(next.id) }
+                        .buttonStyle(ReaderAmberStyle(theme: theme))
+                }
                 if end?.skipTo != nil {
                     skipButton(next, height: 50, wide: true)
                         .padding(.top, 10)
@@ -524,6 +534,18 @@ struct ReaderEndPage: View {
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.top, 4)
                 }
+                // Why the strip could not go on into it, over Try again.
+                if let failure = flowFailure?.failure {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(theme.vermilion)
+                            .accessibilityHidden(true)
+                        Text(failure.words).foregroundStyle(theme.silk)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .font(.ui(15))
+                    .padding(.top, 10)
+                    .accessibilityElement(children: .combine)
+                }
                 // The next chapter's first page once the engine made it, its plate until then. A
                 // novel's chapter has no page to show.
                 if medium != .novel {
@@ -578,10 +600,17 @@ struct ReaderEndPage: View {
     private func wideButtons(_ next: ChapterRow?, stacked: Bool) -> some View {
         let height: CGFloat = Device.isMac ? 28 : 44
         if let next {
-            Button { model.openChapter(next.id) } label: {
-                continueLabel(next.id).padding(.horizontal, 18)
+            if flowFailure != nil {
+                Button { model.retryFlow() } label: {
+                    Text(L.readerTryAgain).padding(.horizontal, 18)
+                }
+                .buttonStyle(ReaderAmberStyle(theme: theme, height: height))
+            } else {
+                Button { model.openChapter(next.id) } label: {
+                    continueLabel(next.id).padding(.horizontal, 18)
+                }
+                .buttonStyle(ReaderAmberStyle(theme: theme, height: height))
             }
-            .buttonStyle(ReaderAmberStyle(theme: theme, height: height))
             skipButton(next, height: height, wide: stacked)
         }
         Button(L.readerBackToSeries) { closeReader() }
