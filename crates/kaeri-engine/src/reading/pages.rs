@@ -2157,4 +2157,20 @@ mod tests {
         let r = kaeri_pages::PixelRect::new(2000, 0, 2000, 2800);
         assert_eq!(scale_rect(r, 4000, 2000), kaeri_pages::PixelRect::new(1000, 0, 1000, 1400));
     }
+
+    /// Android draws pages on a hardware canvas, which throws for any bitmap over 100 MB
+    /// (RecordingCanvas.MAX_BITMAP_SIZE), and its PageDecoder decodes an original at full size.
+    /// A strip image 720 by 40000, as a stitched local chapter can hold, goes as its original
+    /// on a phone screen: 115 MB once decoded, so drawing it ends the app.
+    #[test]
+    #[ignore = "R5A-4"]
+    fn r5a_no_strip_page_decodes_past_what_a_hardware_canvas_draws() {
+        let made = made_pages(&[(720, 40_000)], (1080, 2400), ReaderMode::Strip, false);
+        for file in made {
+            let (w, h) =
+                file.crop.as_ref().map_or((file.width, file.height), |c| (c.width, c.height));
+            let bytes = u64::from(w) * u64::from(h) * 4;
+            assert!(bytes <= 100 * 1024 * 1024, "{bytes} bytes to draw: {file:?}");
+        }
+    }
 }
