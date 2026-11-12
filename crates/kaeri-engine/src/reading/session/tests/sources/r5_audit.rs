@@ -111,6 +111,8 @@ fn odd(source: Odd) -> Harness {
     h
 }
 
+// The waits below are on the real clock: with a paused clock tokio jumps to the deadline while
+// a page is decoded on a blocking thread, and a wait for the view ends before the view comes.
 impl Harness {
     /// Carry what comes for `wait`.
     async fn carry_for(&mut self, wait: Duration) {
@@ -161,7 +163,7 @@ fn chapter(id: &str, label: &str) -> SourceChapter {
 /// R5E-2. A chapter in parts sums its parts' page counts as the plugin gave them
 /// (`read_sources.rs` `source_row`, `sum::<Option<u32>>()`). Two parts with a count near
 /// `u32::MAX` overflow: a panic in a debug or QA build, a wrong count in a release one.
-#[tokio::test(start_paused = true)]
+#[tokio::test]
 #[ignore = "R5E-2: page counts of parts overflow when summed"]
 async fn parts_with_huge_page_counts_still_open() {
     let mut list =
@@ -176,7 +178,7 @@ async fn parts_with_huge_page_counts_still_open() {
 }
 
 /// A chapter whose source lists no pages fails to open; it never waits.
-#[tokio::test(start_paused = true)]
+#[tokio::test]
 async fn a_chapter_of_no_pages_fails_at_once() {
     let mut source = Odd::new(vec![chapter("ch-1", "1"), chapter("ch-2", "2")]);
     source.pages.insert("ch-1".into(), 0);
@@ -190,7 +192,7 @@ async fn a_chapter_of_no_pages_fails_at_once() {
 /// Labels with no number, odd numbers and repeated ids: the reader opens on each list, and
 /// lists each id once. Each odd entry gets a list of its own beside chapters 1 and 2, so a
 /// failure names the entry.
-#[tokio::test(start_paused = true)]
+#[tokio::test]
 async fn odd_labels_and_repeated_ids_open() {
     let odd_ones = [
         ("ch-x", ""),
