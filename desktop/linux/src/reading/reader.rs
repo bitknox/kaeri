@@ -3488,10 +3488,16 @@ fn strip_frame(page: u32) -> (gtk::Overlay, gtk::Picture) {
 /// of that part in the image's own pixels: margins above and below the words leave that part
 /// for them, kept inside the image and never narrower than the words with their line.
 fn strip_frame_seen(picture: &gtk::Picture, seen: Option<(f64, f64)>) {
-    let Some(words) = strip_plate(picture).and_then(|plate| plate.first_child()) else { return };
-    let number = words.first_child().map_or(24, |n| n.measure(gtk::Orientation::Vertical, -1).1);
-    let (above, below) =
-        strip_words_margins(picture.height_request().max(0), seen, number * 2 + words_gap(&words));
+    let Some(words) = strip_plate(picture).and_then(|plate| plate.first_child()) else {
+        return;
+    };
+    let number =
+        words.first_child().map_or(24, |n| n.measure(gtk::Orientation::Vertical, -1).1);
+    let (above, below) = strip_words_margins(
+        picture.height_request().max(0),
+        seen,
+        number * 2 + words_gap(&words),
+    );
     if words.margin_top() != above {
         words.set_margin_top(above);
     }
@@ -3510,7 +3516,8 @@ fn words_gap(words: &gtk::Widget) -> i32 {
 /// thinner part widens to `room` about its middle, inside the image. Off screen, none.
 fn strip_words_margins(height: i32, seen: Option<(f64, f64)>, room: i32) -> (i32, i32) {
     let full = f64::from(height);
-    let Some((top, bottom)) = seen.map(|(t, b)| (t.max(0.0), b.min(full))).filter(|(t, b)| b > t)
+    let Some((top, bottom)) =
+        seen.map(|(t, b)| (t.max(0.0), b.min(full))).filter(|(t, b)| b > t)
     else {
         return (0, 0);
     };
@@ -3665,6 +3672,7 @@ mod plate_tests {
 
     use super::{
         fill_strip_frame, notice_lift, popover_middle, strip_frame, strip_frame_asked,
+        strip_frame_seen, strip_words_margins,
     };
     use crate::{
         gtk_test::{pump, run},
@@ -3748,7 +3756,10 @@ mod plate_tests {
             picture.set_size_request(200, 300);
             strip_frame_seen(&picture, Some((0.0, 300.0)));
             pump(100);
-            assert!((middle(&frame) - 150.0).abs() <= 2.0, "centred in an image wholly on screen");
+            assert!(
+                (middle(&frame) - 150.0).abs() <= 2.0,
+                "centred in an image wholly on screen"
+            );
             picture.set_size_request(200, 1600);
             strip_frame_seen(&picture, Some((1000.0, 1400.0)));
             pump(100);
