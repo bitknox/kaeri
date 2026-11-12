@@ -218,6 +218,8 @@ struct Inner {
     told: Mutex<Option<Instant>>,
     /// The title language setting, for the series' names; English first until it is given.
     titles: std::sync::OnceLock<kaeri_meta::titles::Titles>,
+    /// The pages of the chapters being fetched, for a reader that opens one meanwhile.
+    shares: shared::Shares,
 }
 
 impl std::fmt::Debug for BookDownloads {
@@ -264,6 +266,7 @@ impl BookDownloads {
             free: Mutex::new(None),
             told: Mutex::new(None),
             titles: std::sync::OnceLock::new(),
+            shares: shared::Shares::default(),
         }))
     }
 
@@ -964,6 +967,12 @@ impl BookDownloads {
         })
     }
 
+    /// The pages of a chapter of pictures being fetched now, for the reader to share: it takes
+    /// the pages kept and those still to come from them, and fetches any other only once.
+    pub(crate) fn sharing(&self, work: &str, chapter: &str) -> Option<Arc<SharedPages>> {
+        self.0.shares.of(work, chapter)
+    }
+
     fn file_stem(&self, row: &BookDownload) -> PathBuf {
         self.0.dir.join(safe(&row.work)).join(safe(&row.chapter))
     }
@@ -1049,7 +1058,7 @@ impl BookDownloads {
                 // Each page is kept as it lands, so a fetch cut short fetches only the pages it
                 // lacks next time.
                 let dir = pages_of(&stem);
-                let mut kept = KeptPages::open(&dir, total)
+                let kept = KeptPages::open(&dir, total)
                     .map_err(|e| Stop::Failed(io_failure(&e, &dir)))?;
                 if kept.len() > 0 {
                     tracing::info!(
@@ -1058,25 +1067,29 @@ impl BookDownloads {
                         "a chapter fetch picks up its pages"
                     );
                 }
+                // A reader opening the chapter meanwhile shares the pages: each is fetched once,
+                // by whichever asks first.
+                let kept = Arc::new(SharedPages::new(kept, opened.clone()));
+                let _shared = self.0.shares.share((work.as_str(), chapter.as_str()), &kept);
                 for index in 0..total {
                     if self.setup().hold {
                         return Err(Stop::Held);
                     }
                     if !(job.wanted)() {
-                        KeptPages::remove(&dir);
+                        kept.let_go();
                         return Err(Stop::Cancelled);
                     }
                     if !kept.has(index) {
                         if self.free().is_some_and(|free| free < KEEP_FREE) {
                             return Err(ReadingFailure::DiskFull.into());
                         }
-                        let bytes = lent
-                            .sources
-                            .page(&mut opened, index as usize, lent.clock.now())
-                            .await
-                            .map_err(Stop::Failed)?;
-                        kept.put(index, &bytes)
-                            .map_err(|e| Stop::Failed(io_failure(&e, &dir)))?;
+                        let now = lent.clock.now();
+                        let fetch = lent.sources.page(&mut opened, index as usize, now);
+                        kept.page(index, fetch).await.map_err(Stop::Failed)?;
+                        if !kept.has(index) {
+                            let reason = format!("page {index} was not kept");
+                            return Err(Stop::Failed(ReadingFailure::Other { reason }));
+                        }
                     }
                     (job.progress)(index + 1, total);
                 }
@@ -1118,7 +1131,7 @@ impl BookDownloads {
                 drop(out);
                 let done = finish(&part, &stem.with_extension("cbz"), Some(total));
                 if done.is_ok() {
-                    KeptPages::remove(&dir);
+                    kept.let_go();
                 }
                 done
             }
@@ -1534,8 +1547,10 @@ pub fn launched(engine: &crate::state::EngineState, services: &Services, tx: &Ou
 }
 
 mod kept;
+mod shared;
 mod sizes;
 #[cfg(test)]
 mod tests;
 
 use kept::{KeptPages, pages_of};
+pub(crate) use shared::SharedPages;

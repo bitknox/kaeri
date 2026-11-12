@@ -33,6 +33,12 @@ struct Many {
     let_through: Mutex<Option<HashSet<usize>>>,
     /// Every page of this chapter (its id in the source) waits, whatever else comes.
     held_chapter: Mutex<Option<String>>,
+    /// These pages, as (chapter, page), wait whatever else comes.
+    held_pages: Mutex<HashSet<(String, usize)>>,
+    /// These pages fail the next time they are asked for, once.
+    fail_once: Mutex<HashSet<(String, usize)>>,
+    /// Every chapter whose page list was asked for.
+    contents: Mutex<Vec<String>>,
     changed: tokio::sync::Notify,
 }
 
@@ -54,6 +60,9 @@ impl Many {
             fetched: Mutex::default(),
             let_through: Mutex::new(None),
             held_chapter: Mutex::new(None),
+            held_pages: Mutex::default(),
+            fail_once: Mutex::default(),
+            contents: Mutex::default(),
             changed: tokio::sync::Notify::new(),
         }
     }
@@ -84,13 +93,9 @@ impl Many {
         self.changed.notify_waiters();
     }
 
-    fn let_chapter(&self) {
-        *self.held_chapter.lock().unwrap() = None;
-        self.changed.notify_waiters();
-    }
-
     fn passes(&self, chapter: &str, index: usize) -> bool {
         self.held_chapter.lock().unwrap().as_deref() != Some(chapter)
+            && !self.held_pages.lock().unwrap().contains(&(chapter.to_owned(), index))
             && self.let_through.lock().unwrap().as_ref().is_none_or(|s| s.contains(&index))
     }
 
@@ -120,6 +125,7 @@ impl kaeri_core::traits::BookSource for Many {
             .collect())
     }
     async fn content(&self, _: &str, chapter: &str) -> Result<ChapterContent, ProviderError> {
+        self.contents.lock().unwrap().push(chapter.to_owned());
         Ok(ChapterContent::Images(
             (0..self.pages)
                 .map(|n| PageRef::new(format!("https://pages.example/{chapter}/{n}")))
@@ -139,6 +145,9 @@ impl kaeri_core::traits::BookSource for Many {
                 break;
             }
             changed.await;
+        }
+        if self.fail_once.lock().unwrap().remove(&(chapter.clone(), index)) {
+            return Err(PageError::Status(404));
         }
         let shade = 40 + u8::try_from(index % 200).unwrap();
         let picture = image::GrayImage::from_pixel(320, 480, image::Luma([shade]));
@@ -376,132 +385,6 @@ async fn keeping_chapters_ready_asks_the_source_once() {
     );
 }
 
-/// Chapter 1 of [`MANY`] open with chapters kept ready, and the keep-ready download of chapter
-/// 2 held on its first page.
-async fn kept_ready_and_held(source: &Arc<Many>) -> Harness {
-    use kaeri_core::config::NewChapters;
-
-    use crate::downloads::books::Setup;
-    source.hold_chapter("ch-2");
-    let mut h = many(source.clone());
-    h.services.book_sources.downloads.configure(Setup {
-        keep_ready: true,
-        new_chapters: NewChapters::Reading,
-        ..Setup::default()
-    });
-    h.open_many(Some("1"));
-    timeout(Duration::from_secs(20), h.leaves_of("1")).await.expect("laid out");
-    let start = tokio::time::Instant::now();
-    let held = |source: &Many| source.asked_in("ch-2").first().is_some_and(|(p, _)| *p == 0);
-    while !held(source) && start.elapsed() < Duration::from_secs(20) {
-        h.pump(Duration::from_millis(20)).await;
-    }
-    assert!(held(source), "chapter 2 was never kept ready");
-    h
-}
-
-impl Harness {
-    /// Carry what comes until chapter `chapter` of [`MANY`]'s download is `state`.
-    async fn until_download(
-        &mut self,
-        chapter: &str,
-        state: kaeri_store::book_downloads::BookDownloadState,
-    ) {
-        let start = tokio::time::Instant::now();
-        let reached = |h: &Self| {
-            h.services
-                .store
-                .book_download(MANY, chapter)
-                .unwrap()
-                .is_some_and(|r| r.state == state)
-        };
-        while !reached(self) && start.elapsed() < Duration::from_secs(20) {
-            self.pump(Duration::from_millis(20)).await;
-        }
-        assert!(reached(self), "chapter {chapter}'s download never came to {state:?}");
-    }
-}
-
-/// A chapter opened while its keep-ready download runs waits for that download and opens from
-/// its file: the source is asked for each of its pages once.
-#[tokio::test]
-async fn a_chapter_opened_while_kept_ready_joins_its_download() {
-    let source = Arc::new(Many::new(4, 3));
-    let mut h = kept_ready_and_held(&source).await;
-    let session = h.session();
-    h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("2") });
-    source.let_chapter();
-    let leaves = timeout(Duration::from_secs(20), h.leaves_of("2")).await.expect("laid out");
-    assert!(!leaves.is_empty(), "no pages shown");
-    let s = h.reader.session.as_ref().unwrap();
-    assert_eq!(s.chapter().format, "cbz", "not opened from the download");
-    let asked = source.asked_in("ch-2");
-    assert_eq!(asked, vec![(0, 1), (1, 1), (2, 1)], "chapter 2 asked again: {asked:?}");
-}
-
-/// A download taken out of the queue while its chapter waits on it: the reader asks the source
-/// for the chapter itself.
-#[tokio::test]
-async fn a_download_cancelled_while_its_chapter_opens_reads_from_the_source() {
-    let source = Arc::new(Many::new(4, 3));
-    let mut h = kept_ready_and_held(&source).await;
-    let session = h.session();
-    h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("2") });
-    let lent = crate::downloads::books::Lent::of(&h.services, &h.tx);
-    let work = WorkId::new(MANY);
-    h.services.book_sources.downloads.cancel(&lent, &work, &[ChapterId::new("2")]);
-    source.let_chapter();
-    let leaves = timeout(Duration::from_secs(20), h.leaves_of("2")).await.expect("laid out");
-    assert!(!leaves.is_empty(), "no pages shown");
-    assert_eq!(h.reader.session.as_ref().unwrap().chapter().format, "pages");
-}
-
-/// The reader closed while its chapter waits on a download: the download goes on and the source
-/// is not asked for the chapter again.
-#[tokio::test]
-async fn a_reader_closed_while_waiting_on_a_download_leaves_it_running() {
-    let source = Arc::new(Many::new(4, 3));
-    let mut h = kept_ready_and_held(&source).await;
-    let session = h.session();
-    h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("2") });
-    h.send(ReaderCommand::Close { session });
-    source.let_chapter();
-    h.until_download("2", kaeri_store::book_downloads::BookDownloadState::Done).await;
-    let asked = source.asked_in("ch-2");
-    assert_eq!(asked, vec![(0, 1), (1, 1), (2, 1)], "chapter 2 asked again: {asked:?}");
-}
-
-/// A chapter opened while its keep-ready download waits in a held queue is fetched by the
-/// reader, and leaves the queue: once the queue runs, the source is not asked for it again.
-#[tokio::test]
-async fn a_chapter_the_reader_fetches_leaves_the_keep_ready_queue() {
-    use kaeri_core::config::NewChapters;
-    use kaeri_store::book_downloads::BookDownloadState as State;
-
-    use crate::downloads::books::{Lent, Setup};
-    let source = Arc::new(Many::new(5, 3));
-    let mut h = many(source.clone());
-    let setup =
-        Setup { keep_ready: true, new_chapters: NewChapters::Reading, ..Setup::default() };
-    h.services.book_sources.downloads.configure(Setup { hold: true, ..setup });
-    h.open_many(Some("1"));
-    timeout(Duration::from_secs(20), h.leaves_of("1")).await.expect("laid out");
-    h.until_download("2", State::Queued).await;
-    let session = h.session();
-    h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("2") });
-    timeout(Duration::from_secs(20), h.leaves_of("2")).await.expect("laid out");
-    h.until_download("2", State::Removed).await;
-    h.until_download("5", State::Queued).await;
-    let downloads = h.services.book_sources.downloads.clone();
-    downloads.configure(setup);
-    downloads.start(&Lent::of(&h.services, &h.tx));
-    h.until_download("5", State::Done).await;
-    for chapter in ["ch-2", "ch-3", "ch-4", "ch-5"] {
-        let asked = source.asked_in(chapter);
-        assert_eq!(asked, vec![(0, 1), (1, 1), (2, 1)], "{chapter} asked again: {asked:?}");
-    }
-}
-
 /// The download of a chapter being read is deleted; crossing on and back to it in the same
 /// session reads it from the source.
 #[tokio::test]
@@ -729,3 +612,5 @@ async fn a_page_that_never_comes_fails_after_one_more_try() {
     let missing: Vec<usize> = (3..12).filter(|p| source.asked_of(*p) == 0).collect();
     assert!(missing.is_empty(), "never asked for: {missing:?}");
 }
+
+mod joined;

@@ -97,6 +97,15 @@ impl KeptPages {
         self.good.contains_key(&index)
     }
 
+    /// Where page `index` is kept, once it is.
+    pub(crate) fn path(&self, index: u32) -> Option<&Path> {
+        self.good.get(&index).map(PathBuf::as_path)
+    }
+
+    pub(crate) fn dir(&self) -> &Path {
+        &self.dir
+    }
+
     /// How many pages are kept and sound.
     pub(crate) fn len(&self) -> usize {
         self.good.len()
