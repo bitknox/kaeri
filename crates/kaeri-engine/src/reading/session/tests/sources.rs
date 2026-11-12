@@ -560,6 +560,7 @@ async fn a_strip_writes_its_place_when_the_image_changes() {
     assert_eq!(offset(&h), 0.5, "the close keeps the place within the image");
 }
 
+mod kept_above;
 mod lifecycle;
 
 /// Offline, the end page leads into the next chapter on this device, past the ones only the
