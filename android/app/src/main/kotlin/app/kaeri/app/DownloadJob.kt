@@ -155,7 +155,7 @@ internal sealed interface RunStep {
     /** Chapters alone keep it, saying how many are left. */
     data class Chapters(val left: Int) : RunStep
 
-    /** Episodes keep it; [grace] when they are all paused, so it goes after a while. */
+    /** Episodes keep it; [grace] when they are all paused and no chapter downloads, so it goes after a while. */
     data class Episodes(val live: LiveDownloads, val grace: Boolean) : RunStep
 
     companion object {
@@ -164,7 +164,7 @@ internal sealed interface RunStep {
          * chapters wait or download, which counts only once [chaptersLoaded].
          */
         fun of(live: LiveDownloads?, chapters: Int, chaptersLoaded: Boolean): RunStep = when {
-            live != null -> Episodes(live, grace = live.paused)
+            live != null -> Episodes(live, grace = live.paused && chaptersLoaded && chapters == 0)
             chapters > 0 -> Chapters(chapters)
             // The engine says when the chapters are all done (Downloads finished).
             !chaptersLoaded -> Wait

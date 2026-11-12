@@ -45,4 +45,15 @@ class DownloadRunTest {
         // Reading off answers the ask with a failure and no view.
         assertEquals(RunStep.End, RunStep.of(null, chaptersBusy(null), chaptersLoaded = true))
     }
+
+    @Test
+    fun paused_episodes_keep_it_without_a_grace_while_chapters_download() {
+        val downloading = books(ChapterDownloadState.Downloading(3u, 20u))
+        assertEquals(RunStep.Episodes(paused, grace = false), RunStep.of(paused, chaptersBusy(downloading), chaptersLoaded = true))
+        // Not before the chapters answered either.
+        assertEquals(RunStep.Episodes(paused, grace = false), RunStep.of(paused, chaptersBusy(null), chaptersLoaded = false))
+        // Once the chapters are done, the paused episodes keep it only a while.
+        assertEquals(RunStep.Episodes(paused, grace = true), RunStep.of(paused, chaptersBusy(books(ChapterDownloadState.Done)), chaptersLoaded = true))
+        assertEquals(RunStep.Episodes(running, grace = false), RunStep.of(running, 0, chaptersLoaded = true))
+    }
 }
