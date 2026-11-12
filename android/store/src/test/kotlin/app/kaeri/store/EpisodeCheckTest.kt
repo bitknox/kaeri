@@ -79,10 +79,10 @@ class EpisodeCheckTest {
             assertEquals(emptyList<NewEpisode>(), check.newEpisodes())
             assertEquals(1, records.size)
 
-            // Past The Library Above the Clouds' episode 6, which airs 2 d 3 h 15 m after the scene's moment.
+            // Past Mountain Library Night Shift' episode 6, which airs 2 d 3 h 15 m after the scene's moment.
             engine.advance(2 * DAY + 4 * HOUR)
             val said = check.newEpisodes()
-            assertEquals(listOf(Triple(900002u, "The Library Above the Clouds", 6u)), said.map { Triple(it.id, it.title, it.episode) })
+            assertEquals(listOf(Triple(900002u, "Mountain Library Night Shift", 6u)), said.map { Triple(it.id, it.title, it.episode) })
             assertTrue("the fixture's cover, for the notification", said.single().coverUrl?.startsWith("http://127.0.0.1:") == true)
 
             // The widgets' record after each check, of the shape the widgets read.

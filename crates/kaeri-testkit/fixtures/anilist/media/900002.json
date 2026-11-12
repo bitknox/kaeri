@@ -3,12 +3,12 @@
   "idMal": 800002,
   "title": {
     "romaji": "Kumo no Ue no Toshokan",
-    "english": "The Library Above the Clouds",
+    "english": "Mountain Library Night Shift",
     "native": "雲の上の図書館"
   },
   "format": "TV",
   "status": "RELEASING",
-  "description": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+  "description": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
   "episodes": 24,
   "duration": 23,
   "seasonYear": 2026,
@@ -292,7 +292,7 @@
         "role": "Director",
         "node": {
           "name": {
-            "full": "Director of The Library Above the Clouds"
+            "full": "Director of Mountain Library Night Shift"
           }
         }
       },
@@ -300,7 +300,7 @@
         "role": "Series Composition",
         "node": {
           "name": {
-            "full": "Writer of The Library Above the Clouds"
+            "full": "Writer of Mountain Library Night Shift"
           }
         }
       }

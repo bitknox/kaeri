@@ -1101,7 +1101,7 @@
        {
         "entry": {
          "id": "900005",
-         "title": "The Steel Gardener",
+         "title": "Garden on the Roof",
          "secondary": "Hagane no Niwashi",
          "format": "ONA",
          "episodes": "10",
@@ -1137,7 +1137,7 @@
          "trailerUrl": null,
          "listStatus": null,
          "titleRomaji": "Hagane no Niwashi",
-         "titleEnglish": "The Steel Gardener",
+         "titleEnglish": "Garden on the Roof",
          "titleNative": "鋼の庭師",
          "season": "SUMMER",
          "startDate": {
@@ -1218,7 +1218,7 @@
        {
         "entry": {
          "id": "900002",
-         "title": "The Library Above the Clouds",
+         "title": "Mountain Library Night Shift",
          "secondary": "Kumo no Ue no Toshokan",
          "format": "TV",
          "episodes": "24",
@@ -1252,7 +1252,7 @@
          "trailerUrl": null,
          "listStatus": null,
          "titleRomaji": "Kumo no Ue no Toshokan",
-         "titleEnglish": "The Library Above the Clouds",
+         "titleEnglish": "Mountain Library Night Shift",
          "titleNative": "雲の上の図書館",
          "season": "FALL",
          "startDate": {
@@ -1531,7 +1531,7 @@
        {
         "entry": {
          "id": "900002",
-         "title": "The Library Above the Clouds",
+         "title": "Mountain Library Night Shift",
          "secondary": "Kumo no Ue no Toshokan",
          "format": "TV",
          "episodes": "24",
@@ -1565,7 +1565,7 @@
          "trailerUrl": null,
          "listStatus": null,
          "titleRomaji": "Kumo no Ue no Toshokan",
-         "titleEnglish": "The Library Above the Clouds",
+         "titleEnglish": "Mountain Library Night Shift",
          "titleNative": "雲の上の図書館",
          "season": "FALL",
          "startDate": {
@@ -3107,7 +3107,7 @@
      },
      {
       "id": "900005",
-      "title": "The Steel Gardener",
+      "title": "Garden on the Roof",
       "secondary": "Hagane no Niwashi",
       "format": "ONA",
       "episodes": "10",
@@ -3143,7 +3143,7 @@
       "trailerUrl": null,
       "listStatus": null,
       "titleRomaji": "Hagane no Niwashi",
-      "titleEnglish": "The Steel Gardener",
+      "titleEnglish": "Garden on the Roof",
       "titleNative": "鋼の庭師",
       "season": "SUMMER",
       "startDate": {
@@ -3202,7 +3202,7 @@
      },
      {
       "id": "900002",
-      "title": "The Library Above the Clouds",
+      "title": "Mountain Library Night Shift",
       "secondary": "Kumo no Ue no Toshokan",
       "format": "TV",
       "episodes": "24",
@@ -3236,7 +3236,7 @@
       "trailerUrl": null,
       "listStatus": null,
       "titleRomaji": "Kumo no Ue no Toshokan",
-      "titleEnglish": "The Library Above the Clouds",
+      "titleEnglish": "Mountain Library Night Shift",
       "titleNative": "雲の上の図書館",
       "season": "FALL",
       "startDate": {
@@ -3731,7 +3731,7 @@
     "v1": [
      {
       "id": "900002",
-      "title": "The Library Above the Clouds",
+      "title": "Mountain Library Night Shift",
       "secondary": "Kumo no Ue no Toshokan",
       "format": "TV",
       "episodes": "24",
@@ -3765,7 +3765,7 @@
       "trailerUrl": null,
       "listStatus": "WATCHING",
       "titleRomaji": "Kumo no Ue no Toshokan",
-      "titleEnglish": "The Library Above the Clouds",
+      "titleEnglish": "Mountain Library Night Shift",
       "titleNative": "雲の上の図書館",
       "season": "FALL",
       "startDate": {
@@ -5387,7 +5387,7 @@
    "@type": "Detail",
    "v1": {
     "id": "900002",
-    "title": "The Library Above the Clouds",
+    "title": "Mountain Library Night Shift",
     "secondary": "Kumo no Ue no Toshokan",
     "format": "TV",
     "episodes": "24",
@@ -5421,7 +5421,7 @@
     "trailerUrl": null,
     "listStatus": null,
     "titleRomaji": "Kumo no Ue no Toshokan",
-    "titleEnglish": "The Library Above the Clouds",
+    "titleEnglish": "Mountain Library Night Shift",
     "titleNative": "雲の上の図書館",
     "season": "FALL",
     "startDate": {
@@ -6379,7 +6379,7 @@
    "@type": "Detail",
    "v1": {
     "id": "900005",
-    "title": "The Steel Gardener",
+    "title": "Garden on the Roof",
     "secondary": "Hagane no Niwashi",
     "format": "ONA",
     "episodes": "10",
@@ -6415,7 +6415,7 @@
     "trailerUrl": null,
     "listStatus": null,
     "titleRomaji": "Hagane no Niwashi",
-    "titleEnglish": "The Steel Gardener",
+    "titleEnglish": "Garden on the Roof",
     "titleNative": "鋼の庭師",
     "season": "SUMMER",
     "startDate": {

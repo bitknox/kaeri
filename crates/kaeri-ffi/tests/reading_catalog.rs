@@ -305,7 +305,7 @@ fn a_series_page_says_where_you_are_what_else_it_is_and_its_versions() {
         matches!(&page.action, SeriesAction::Continue { chapter, page: 10, .. } if chapter.as_str() == "13")
     );
     let show = page.other_medium.as_ref().unwrap();
-    assert_eq!(show.title, "The Library Above the Clouds");
+    assert_eq!(show.title, "Mountain Library Night Shift");
     assert_eq!(show.relation, Msg::Reading(ReadingMsg::ReadingAlsoAShow));
     assert!(!page.recommended.is_empty());
     // The scene's folder holds chapters 12 to 15, which the folder lists afresh.

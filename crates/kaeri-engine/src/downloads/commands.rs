@@ -233,7 +233,7 @@ mod tests {
             .enqueue_download(
                 AnilistId::new(900_002),
                 episode,
-                "The Library Above the Clouds",
+                "Mountain Library Night Shift",
                 "magnet:?xt=urn:btih:0",
             )
             .unwrap();

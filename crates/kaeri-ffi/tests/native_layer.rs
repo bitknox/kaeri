@@ -277,7 +277,7 @@ fn an_episode_that_airs_later_is_said_once_for_one_request() {
     let [episode] = &said[..] else { panic!("one episode: {said:?}") };
     assert_eq!(
         (episode.id, episode.title.as_str(), episode.episode, episode.aired_at),
-        (AIRING, "The Library Above the Clouds", 6, fixture_airs(AIRING, 6) + shift)
+        (AIRING, "Mountain Library Night Shift", 6, fixture_airs(AIRING, 6) + shift)
     );
     let cover = episode.cover_url.as_deref().unwrap_or_default();
     assert!(cover.starts_with("http://127.0.0.1:"), "the fixture's cover, served: {cover}");
@@ -597,8 +597,8 @@ fn the_widgets_record_for_the_watching_scene() {
         continuing,
         [
             (FINISHED, "Stardust Wayfarer", 7, 6, Some(12), Some(606.0 / 1_440.0)),
-            (ONA, "The Steel Gardener", 2, 1, Some(10), Some(810.0 / 1_080.0)),
-            (AIRING, "The Library Above the Clouds", 4, 3, Some(24), None),
+            (ONA, "Garden on the Roof", 2, 1, Some(10), Some(810.0 / 1_080.0)),
+            (AIRING, "Mountain Library Night Shift", 4, 3, Some(24), None),
             (AIRING_NO_MAL, "Summer Wind Relay", 8, 7, Some(12), None),
         ]
     );
@@ -645,7 +645,7 @@ fn the_widgets_record_for_the_watching_scene() {
             (false, None)
         ]
     );
-    // The mark: the Steel Gardener is being watched dubbed, the others subbed.
+    // The mark: Garden on the Roof is being watched dubbed, the others subbed.
     let marks: Vec<_> = rows.iter().map(|row| row.mark.as_deref()).collect();
     assert_eq!(marks, [None, Some("Dub"), None, None]);
     for row in rows {
@@ -671,7 +671,7 @@ fn the_widgets_record_for_the_watching_scene() {
     // The next broadcast due of a show followed, for "Nothing airing today".
     let ep6 = WidgetNextAiring {
         id: AIRING,
-        title: "The Library Above the Clouds".into(),
+        title: "Mountain Library Night Shift".into(),
         episode: 6,
         airs_at: fixture_airs(AIRING, 6) + shift,
     };

@@ -610,7 +610,7 @@ public sealed partial class MainWindow : Window
             ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
             {
                 await Task.Delay(2500);
-                (uint Id, string Title)[] titles = [(910_001, "Stardust Wayfarer"), (910_002, "The Steel Gardener")]; // i18n-skip
+                (uint Id, string Title)[] titles = [(910_001, "Stardust Wayfarer"), (910_002, "Garden on the Roof")]; // i18n-skip
                 ctx.Inject(new Event.Conflicts([.. titles.Select((t, i) => new ConflictRow(t.Id, t.Title, i == 0 ? "progress" : "score", i == 0 ? "7" : "8", i == 0 ? "5" : "6"))])); // i18n-skip
                 if (options.Show == "conflicts-open")
                 {

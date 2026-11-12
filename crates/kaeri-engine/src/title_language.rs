@@ -220,7 +220,7 @@ mod tests {
         }];
         page.recommended = vec![RelatedTitle {
             id: AnilistId::new(5),
-            title: "The Steel Gardener".into(),
+            title: "Garden on the Roof".into(),
             relation: String::new(),
             format: None,
         }];
@@ -230,7 +230,7 @@ mod tests {
                 "Hoshikuzu no Tabibito 2nd Season",
                 "Stardust Wayfarer Season 2",
             )],
-            recommendations: vec![card(5, "Hagane no Niwashi", "The Steel Gardener")],
+            recommendations: vec![card(5, "Hagane no Niwashi", "Garden on the Roof")],
             ..TitleDetail::default()
         });
         let mut event = Event::Detail(Box::new(page));

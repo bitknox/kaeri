@@ -50,7 +50,7 @@ class ComingTest {
         val week = UpcomingNotices(
             enabled = false,
             generatedAt = 1_792_000_000,
-            airings = listOf(UpcomingNotice(900002u, "The Library Above the Clouds", 6u, 1_792_163_730, NoticeReason.SWITCHED_ON, 6u, notifies = true)),
+            airings = listOf(UpcomingNotice(900002u, "Mountain Library Night Shift", 6u, 1_792_163_730, NoticeReason.SWITCHED_ON, 6u, notifies = true)),
         )
         store.apply(Event.UpcomingNotices(week))
         assertEquals(week, store.coming.week.value)
@@ -67,7 +67,7 @@ class ComingTest {
                 row(1u, "Summer Wind Relay", NoticeReason.WATCHING, Translation.DUB),
                 row(1u, "Summer Wind Relay", NoticeReason.WATCHING, Translation.DUB),
                 row(2u, "Amber Forest", NoticeReason.SWITCHED_OFF),
-                row(3u, "The Library Above the Clouds", NoticeReason.SWITCHED_ON),
+                row(3u, "Mountain Library Night Shift", NoticeReason.SWITCHED_ON),
             ),
         )
         assertEquals(listOf(1u, 1u, 3u), ComingModel.listed(week).map { it.id })

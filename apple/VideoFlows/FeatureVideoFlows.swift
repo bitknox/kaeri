@@ -63,7 +63,7 @@ final class FeatureVideoFlows: XCTestCase {
         wednesday.tap()
         pause(0.6)
         // Wednesday's row, now in view under its heading.
-        let rows = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'The Library Above the Clouds,'"))
+        let rows = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mountain Library Night Shift,'"))
         let row = rows.allElementsBoundByIndex.last { $0.isHittable && $0.frame.minY > 200 } ?? rows.firstMatch
         row.tap()
         _ = find(app.buttons["More about this show"].firstMatch, in: app)

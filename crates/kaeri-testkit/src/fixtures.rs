@@ -3,10 +3,10 @@
 //! | id | title (romaji / english) | shape |
 //! |---|---|---|
 //! | [`FINISHED`] 900001 | Hoshikuzu no Tabibito / Stardust Wayfarer | TV, finished, 12 episodes; a sequel, recommendations, per-episode streaming links |
-//! | [`AIRING`] 900002 | Kumo no Ue no Toshokan / The Library Above the Clouds | TV, releasing, 5 of 24 aired; episode 6 airs in 2d 3h 15m |
+//! | [`AIRING`] 900002 | Kumo no Ue no Toshokan / Mountain Library Night Shift | TV, releasing, 5 of 24 aired; episode 6 airs in 2d 3h 15m |
 //! | [`MOVIE`] 900003 | Tsukiakari no Teishajo / Moonlit Platform | movie, 108 minutes |
 //! | [`SEQUEL`] 900004 | Hoshikuzu no Tabibito 2nd Season / Stardust Wayfarer Season 2 | TV, finished, 12 episodes; prequel is 900001 |
-//! | [`ONA`] 900005 | Hagane no Niwashi / The Steel Gardener | ONA, finished, 10 episodes; no banner |
+//! | [`ONA`] 900005 | Hagane no Niwashi / Garden on the Roof | ONA, finished, 10 episodes; no banner |
 //! | [`AIRING_NO_MAL`] 900006 | Natsukaze Relay / Summer Wind Relay | TV, releasing, 8 of 12 aired; no MAL id, no score, no studio; a five-paragraph synopsis |
 //!
 //! Each title also carries what its page shows beside that: a season, dates, what it was adapted

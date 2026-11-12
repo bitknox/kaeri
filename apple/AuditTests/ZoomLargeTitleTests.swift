@@ -52,7 +52,7 @@ final class ZoomLargeTitleTests: XCTestCase {
 
     func testLibraryKeepsItsLargeTitle() throws {
         let app = launch(["-KaeriSection", "library"])
-        let cover = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'The Library Above the Clouds,'")).firstMatch
+        let cover = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mountain Library Night Shift,'")).firstMatch
         XCTAssertTrue(cover.waitForExistence(timeout: 30), "no titles in the Library")
         Thread.sleep(forTimeInterval: 1.5)
         let before = largeTitle(in: app, "Library")

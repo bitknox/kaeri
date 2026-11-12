@@ -3,12 +3,12 @@
   "idMal": 800005,
   "title": {
     "romaji": "Hagane no Niwashi",
-    "english": "The Steel Gardener",
+    "english": "Garden on the Roof",
     "native": "鋼の庭師"
   },
   "format": "ONA",
   "status": "FINISHED",
-  "description": "A decommissioned construction robot tends a rooftop garden and, one season at a time, the neighbours who come to see it.",
+  "description": "A retired construction robot looks after the vegetable beds on the roof of an old apartment block. The residents who come up to help each bring a problem, and the robot is bad at most of them.",
   "episodes": 10,
   "duration": 18,
   "seasonYear": 2023,
@@ -77,7 +77,7 @@
         "role": "Director",
         "node": {
           "name": {
-            "full": "Director of The Steel Gardener"
+            "full": "Director of Garden on the Roof"
           }
         }
       }

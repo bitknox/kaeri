@@ -379,7 +379,7 @@ struct NoticeRefreshTests {
         #expect(outcome.posted.isEmpty, "a first check only notes where things stand")
         // Kumo no Ue no Toshokan's episode 6, with episode 3 the last watched.
         let library = try #require(outcome.scheduled.first { $0.identifier == "ep.900002.6.sub" }, "\(outcome.scheduled)")
-        #expect(library.title == "The Library Above the Clouds")
+        #expect(library.title == "Mountain Library Night Shift")
         #expect(library.body == "Episode 6 is out. Next for you: episode 4.")
         #expect(library.category == .behind)
         #expect(library.fireAt.map { $0 > .now } == true)

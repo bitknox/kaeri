@@ -9,7 +9,7 @@ import app.kaeri.engine.model.TitleProgress
 /** The wide art a title's page and hero show, by the Apple app's rule. */
 class HeroArtTest {
     private fun entry(banner: String? = null, done: UInt? = null) = Entry(
-        id = 900005u, title = "The Steel Gardener", secondary = "Hagane no Niwashi", format = "ONA", episodes = 10u,
+        id = 900005u, title = "Garden on the Roof", secondary = "Hagane no Niwashi", format = "ONA", episodes = 10u,
         year = 2026u, score = null, studio = null, synopsis = "", coverUrl = null, coverColor = null, bannerUrl = banner,
         genres = emptyList(), availableOn = emptyList(), progress = done?.let { TitleProgress(it, it + 1u) },
         airingIn = null, airingEpisode = null, nextEpisode = null, nextAiringIn = null, lastAired = null,

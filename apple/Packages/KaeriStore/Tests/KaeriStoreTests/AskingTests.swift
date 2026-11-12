@@ -79,7 +79,7 @@ struct AskingTests {
 
     @Test func stillsAndTheEpisodesShareOneQuestion() {
         let store = AppStore()
-        store.apply(.detail(entry(900_005, "The Steel Gardener")))
+        store.apply(.detail(entry(900_005, "Garden on the Roof")))
         store.loadEpisodes(900_005)
         #expect(!store.loadStills(900_005), "the episodes are on their way")
         #expect(store.sentLog == ["loadEpisodes"])

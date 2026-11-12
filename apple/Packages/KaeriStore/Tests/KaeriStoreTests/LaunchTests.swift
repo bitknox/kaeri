@@ -82,7 +82,7 @@ struct LaunchTests {
         #expect(queue.inProgress.map(\.entry.secondary) == [
             "Hoshikuzu no Tabibito", "Hagane no Niwashi", "Kumo no Ue no Toshokan",
         ])
-        // The Steel Gardener is watched dubbed, so its row is marked, as the engine's queue is.
+        // Garden on the Roof is watched dubbed, so its row is marked, as the engine's queue is.
         #expect(queue.inProgress.map(\.action) == [
             "Resume E7 · 10:06", "Resume E2 dubbed · 13:30", "Play E4",
         ])

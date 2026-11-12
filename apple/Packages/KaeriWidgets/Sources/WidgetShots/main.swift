@@ -347,7 +347,7 @@ enum Shots {
         draw(playExpanded, "playback-island-expanded", width: 371, height: 160, radius: 44, background: .black)
 
         let airing = AiringActivityState(
-            titleID: 900002, title: "The Library Above the Clouds", episode: 6, airsAt: moment.addingTimeInterval(12 * 60 + 4), // i18n-skip
+            titleID: 900002, title: "Mountain Library Night Shift", episode: 6, airsAt: moment.addingTimeInterval(12 * 60 + 4), // i18n-skip
             since: moment.addingTimeInterval(-20 * 60), coverFile: airingPoster)
         draw(AiringLockScreenView(state: airing, out: false), "airing", width: 358, height: nil, radius: 24, background: card)
         draw(AiringLockScreenView(state: airing, out: true), "airing-out", width: 358, height: nil, radius: 24, background: card)

@@ -206,14 +206,14 @@ struct AiringActivityFeedTests {
 
     @Test func theTitleIsTheOneTheScreensShowAndFollowsAChange() {
         let titles = TitleCache()
-        titles.merge([entry(900_002, "The Library Above the Clouds")])
+        titles.merge([entry(900_002, "Mountain Library Night Shift")])
         let feed = feed()
         feed.weekChanged(week([airing(in: 20 * 60)]), titles: titles, artwork: nil)
         guard case .start(let state, _) = host.calls.first else {
             Issue.record("did not start: \(host.calls)")
             return
         }
-        #expect(state.title == "The Library Above the Clouds")
+        #expect(state.title == "Mountain Library Night Shift")
         // Settings › Title language changed: the activity says the title the new way.
         titles.merge([entry(900_002, "Kumo no Ue no Toshokan")])
         feed.weekChanged(week([airing(in: 20 * 60)]), titles: titles, artwork: nil)

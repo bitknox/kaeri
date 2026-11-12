@@ -76,7 +76,7 @@ public class ActivityTests
         var known = new Known();
         var said = 0;
         known.ConflictsChanged += () => said++;
-        known.Take(new Event.Conflicts([new ConflictRow(5, "Stardust Wayfarer", "progress", "7", "5"), new ConflictRow(6, "The Steel Gardener", "score", "8", "6")]));
+        known.Take(new Event.Conflicts([new ConflictRow(5, "Stardust Wayfarer", "progress", "7", "5"), new ConflictRow(6, "Garden on the Roof", "score", "8", "6")]));
         var command = known.Resolve(5, keepLocal: true);
         Assert.Equal(new Command.ResolveConflict(5, true), command);
         Assert.Equal([6u], known.Conflicts.Select(c => c.AnilistId));

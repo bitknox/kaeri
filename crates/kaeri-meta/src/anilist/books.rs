@@ -497,7 +497,7 @@ mod tests {
                 "relations": {"edges": [
                     {"relationType": "SPIN_OFF", "node": {"id": 900309, "type": "MANGA"}},
                     {"relationType": "ADAPTATION", "node": {"id": 900002, "type": "ANIME",
-                     "format": "TV", "title": {"english": "The Library Above the Clouds"}}}]},
+                     "format": "TV", "title": {"english": "Mountain Library Night Shift"}}}]},
                 "recommendations": {"nodes": [
                     {"mediaRecommendation": {"id": 900304, "type": "MANGA"}},
                     {"mediaRecommendation": null},

@@ -141,7 +141,7 @@ class SettingsShots {
                         generatedAt = now,
                         airings = listOf(
                             app.kaeri.engine.model.UpcomingNotice(
-                                900002u, "The Library Above the Clouds", 6u, now + 2 * 86_400 + 11_700,
+                                900002u, "Mountain Library Night Shift", 6u, now + 2 * 86_400 + 11_700,
                                 app.kaeri.engine.model.NoticeReason.WATCHING, 4u, coverUrl = coverOf(store, 900002u),
                             ),
                             app.kaeri.engine.model.UpcomingNotice(

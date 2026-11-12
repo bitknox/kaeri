@@ -138,8 +138,8 @@ class ShortcutsTest {
     @Test
     fun the_long_label_stays_under_25_characters() {
         assertEquals("Hoshikuzu no Tabibito E7", ContinueShortcut.longLabel("Hoshikuzu no Tabibito", 7u))
-        val long = ContinueShortcut.longLabel("The Library Above the Clouds", 12u)
-        assertEquals("The Library Above t… E12", long)
+        val long = ContinueShortcut.longLabel("Mountain Library Night Shift", 12u)
+        assertEquals("Mountain Library Ni… E12", long)
         assertTrue(long.length < 25)
     }
 

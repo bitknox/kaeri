@@ -117,7 +117,7 @@ class ReducerTest {
             resume = ResumePoint(position = 606.0, fraction = 606.0 / 1440.0),
             watchedIn = Translation.DUB,
         )
-        val sub = entry(900002u, "The Library Above the Clouds").copy(
+        val sub = entry(900002u, "Mountain Library Night Shift").copy(
             progress = TitleProgress(done = 3u, next = 4u),
             watchedIn = Translation.SUB,
         )
@@ -144,7 +144,7 @@ class ReducerTest {
             progress = TitleProgress(done = 6u, next = 7u),
             resume = ResumePoint(position = 606.0, fraction = 606.0 / 1440.0),
         )
-        val next = entry(900002u, "The Library Above the Clouds").copy(progress = TitleProgress(done = 3u, next = 4u))
+        val next = entry(900002u, "Mountain Library Night Shift").copy(progress = TitleProgress(done = 3u, next = 4u))
         val fresh = entry(900006u, "Summer Wind Relay").copy(
             progress = TitleProgress(done = 8u, next = 9u),
             lastAired = Aired(episode = 9u, ago = 7_200),

@@ -758,7 +758,7 @@ mod tests {
         let said = vec![
             NewEpisode {
                 id,
-                title: "The Library Above the Clouds".into(),
+                title: "Mountain Library Night Shift".into(),
                 episode: 6,
                 aired_at: 1_792_163_730,
                 cover_url: Some("https://img.example/library-poster.png".into()),
@@ -787,7 +787,7 @@ mod tests {
             airings: vec![
                 UpcomingNotice {
                     id,
-                    title: "The Library Above the Clouds".into(),
+                    title: "Mountain Library Night Shift".into(),
                     episode: 6,
                     airs_at: 1_792_163_730,
                     reason: NoticeReason::Watching,
@@ -841,7 +841,7 @@ mod tests {
             }],
             airing_today: vec![WidgetAiring {
                 id,
-                title: "The Library Above the Clouds".into(),
+                title: "Mountain Library Night Shift".into(),
                 episode: 6,
                 airs_at: 1_792_163_730,
                 on_list: true,
@@ -855,7 +855,7 @@ mod tests {
             tracker: Some("anilist".into()),
             next_airing: Some(WidgetNextAiring {
                 id,
-                title: "The Library Above the Clouds".into(),
+                title: "Mountain Library Night Shift".into(),
                 episode: 6,
                 airs_at: 1_792_163_730,
             }),

@@ -107,7 +107,7 @@ class NotificationsPaneTest {
                         enabled = false,
                         generatedAt = 1_792_000_000,
                         airings = listOf(
-                            UpcomingNotice(900002u, "The Library Above the Clouds", 6u, 1_792_163_730, NoticeReason.WATCHING, 4u),
+                            UpcomingNotice(900002u, "Mountain Library Night Shift", 6u, 1_792_163_730, NoticeReason.WATCHING, 4u),
                             UpcomingNotice(900006u, "Summer Wind Relay", 9u, 1_792_515_630, NoticeReason.SWITCHED_ON, 9u, notifies = true),
                             UpcomingNotice(900003u, "Amber Forest", 2u, 1_792_600_000, NoticeReason.SWITCHED_OFF, 2u),
                         ),

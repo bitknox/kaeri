@@ -658,7 +658,7 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
                     .borrow()
                     .entries
                     .values()
-                    .find(|entry| entry.title == "The Library Above the Clouds")
+                    .find(|entry| entry.title == "Mountain Library Night Shift")
                     .map(|entry| entry.id.get());
                 if let (Some(cover), Some(id)) = (cover, id) {
                     crate::trailer::show_preview(&shell.ctx.hub, &cover, id);

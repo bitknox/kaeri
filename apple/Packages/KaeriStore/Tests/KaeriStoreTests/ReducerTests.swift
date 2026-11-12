@@ -16,11 +16,11 @@ struct ReducerTests {
                 $0.progress = TitleProgress(done: 6, next: 7)
                 $0.resume = ResumePoint(position: 606, fraction: 606.0 / 1440)
             },
-            entry(900_005, "The Steel Gardener") {
+            entry(900_005, "Garden on the Roof") {
                 $0.progress = TitleProgress(done: 1, next: 2)
                 $0.resume = ResumePoint(position: 810, fraction: 0.75)
             },
-            entry(900_002, "The Library Above the Clouds") {
+            entry(900_002, "Mountain Library Night Shift") {
                 $0.progress = TitleProgress(done: 3, next: 4)
                 $0.airingIn = 184_500
                 $0.nextEpisode = 6
@@ -105,7 +105,7 @@ struct ReducerTests {
 
     @Test func stillsAreAskedForOnceAndOnlyForATitleWithNoBanner() {
         let store = AppStore()
-        store.apply(.detail(entry(900_005, "The Steel Gardener")))
+        store.apply(.detail(entry(900_005, "Garden on the Roof")))
         store.apply(.detail(entry(900_001, "Stardust Wayfarer") { $0.bannerUrl = "banner/900001.jpg" }))
         #expect(store.loadStills(900_005))
         #expect(!store.loadStills(900_005), "once a session")
@@ -385,14 +385,14 @@ struct ReducerTests {
     @Test func theRailsBringTheirTitlesAndTheStartItsRecents() {
         let store = AppStore()
         let rail = BrowseRail(title: "Trending now", detail: nil, query: SearchQuery(sort: .trending),
-                              entries: [entry(900_002, "The Library Above the Clouds")])
+                              entries: [entry(900_002, "Mountain Library Night Shift")])
         store.apply([
             .browse([rail]),
             .recentSearches([SearchQuery(text: "hoshi", genres: ["Mecha"])]),
             .liveSearch(paused: true),
         ])
         #expect(store.search.rails?.first?.title == "Trending now")
-        #expect(store.titles[900_002]?.title == "The Library Above the Clouds")
+        #expect(store.titles[900_002]?.title == "Mountain Library Night Shift")
         #expect(store.search.recents.first?.genres == ["Mecha"])
         #expect(store.search.livePaused)
     }
@@ -412,11 +412,11 @@ struct ReducerTests {
         let store = AppStore()
         store.apply([
             .caption(view: .seasonal, text: "autumn 2026"),
-            .content(view: .seasonal, content: .entries([entry(900_002, "The Library Above the Clouds")])),
+            .content(view: .seasonal, content: .entries([entry(900_002, "Mountain Library Night Shift")])),
             .content(view: .library(.planning), content: .entries([entry(900_003, "Moonlit Platform")])),
             .calendarWindow(anchor: 1_800_000_000, pages: 1, morePast: true, floor: 1_792_224_000, ceiling: 1_802_419_200, aheadPages: 1, moreAhead: false),
             .content(view: .calendar, content: .entries([entry(900_006, "Summer Wind Relay")])),
-            .calendarBackfill(page: 2, entries: [entry(900_002, "The Library Above the Clouds")], morePast: false),
+            .calendarBackfill(page: 2, entries: [entry(900_002, "Mountain Library Night Shift")], morePast: false),
         ])
         #expect(store.seasonal.caption == "autumn 2026")
         #expect(store.seasonal.state == .loaded([900_002]))

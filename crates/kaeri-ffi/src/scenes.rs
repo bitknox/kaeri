@@ -138,8 +138,8 @@ pub enum FfiScene {
     SourcesBusy,
     /// [`Self::Library`] and [`Self::Servers`] together, with Lantern Library chosen as a licensed
     /// service, for Search's Available filter. A result's line ends "In your library" for
-    /// Stardust Wayfarer (the folder comes before the server), "On Mika's Jellyfin" for The
-    /// Library Above the Clouds and "On Lantern Library" for Stardust Wayfarer Season 2. Plays here
+    /// Stardust Wayfarer (the folder comes before the server), "On Mika's Jellyfin" for
+    /// Mountain Library Night Shift and "On Lantern Library" for Stardust Wayfarer Season 2. Plays here
     /// keeps to the first two, and On your services to the titles Lantern Library carries.
     Available,
     /// [`Self::Watching`] with three watch party rooms kept, as Together shows them: Natsukaze

@@ -168,20 +168,28 @@ fn archive(path: &Path, images: impl Iterator<Item = RgbImage>) {
     zip.finish().expect("closing a chapter");
 }
 
-/// Made-up sentences, a paragraph of them per call.
+/// Made-up sentences, four in a row per call.
 fn paragraph(chapter: usize, n: usize) -> String {
-    const LINES: [&str; 8] = [
-        "The orchard had no gate, only a row of glass lamps that someone lit each dusk.",
-        "Mira counted the lamps twice and came to a different number each time.",
-        "Past the last tree the path went on as if it had been waiting for her.",
-        "A kettle sang somewhere behind the wall, and she followed the sound.",
-        "Nobody in the village could say who kept the lamps, only that they were never dark.",
-        "She wrote the number on her sleeve in ink, so that morning could argue with it.",
-        "The wind carried the smell of pears and warm glass across the open yard.",
-        "By the time the bell rang, the orchard had rearranged itself around her.",
+    const LINES: [&str; 16] = [
+        "The furnace had been lit since five, and it would not be ready before nine.",
+        "Rin swept the yard while it heated, then swept it again because there was nothing else to do.",
+        "Her grandfather had left a list on the workbench in pencil.",
+        "Most of it was about the furnace, and the last line said not to touch the blue jars.",
+        "Mr. Sato from the shop next door came by at seven to ask if they were open.",
+        "She said they were, although she wasn't sure what that meant yet.",
+        "The first gather of glass stuck to the pipe and then slid off onto the floor.",
+        "She left it there to cool and wrote the time in the notebook.",
+        "By ten she had broken four pieces and kept one, a small cup that leaned to the left.",
+        "Her mother called at lunch to ask how the hospital visit had gone.",
+        "Rin told her about the hip and the doctor, and not about the cup.",
+        "The afternoon delivery was two sacks of sand and a bill she put in the drawer.",
+        "At four the furnace door started to stick, the way the list said it would.",
+        "She found the wooden wedge where he kept it, behind the radio.",
+        "The workshop closed at six, but she stayed until the glass in the annealer had cooled.",
+        "On the walk home she bought rice and eggs and forgot the milk again.",
     ];
     (0..4)
-        .map(|k| LINES[(chapter * 3 + n * 5 + k * 3) % LINES.len()])
+        .map(|k| LINES[(chapter * 3 + n * 4 + k) % LINES.len()])
         .collect::<Vec<_>>()
         .join(" ")
 }

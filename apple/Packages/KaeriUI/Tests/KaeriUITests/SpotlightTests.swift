@@ -36,7 +36,7 @@ struct SpotlightTests {
     }
 
     @Test func aFinishedOrPlannedTitleSaysItsListAlone() {
-        let movie = ShelfTitle(shelved(900_005, "The Steel Gardener") {
+        let movie = ShelfTitle(shelved(900_005, "Garden on the Roof") {
             $0.format = "MOVIE"
             $0.year = 2025
             $0.episodes = 1
@@ -46,7 +46,7 @@ struct SpotlightTests {
         #expect(movie.line == "Completed")
         #expect(movie.keywords == ["Movie", "2025"])
         #expect(ShelfTitle(shelved(900_003, "Moonlit Ferry"), list: .planning).line == "Planning")
-        let caughtUp = ShelfTitle(shelved(900_002, "The Library Above the Clouds") {
+        let caughtUp = ShelfTitle(shelved(900_002, "Mountain Library Night Shift") {
             $0.episodes = 12
             $0.progress = TitleProgress(done: 12, next: 13)
         }, list: .paused)
@@ -211,7 +211,7 @@ struct SpotlightTests {
 
         store.apply([
             .content(view: .library(.watching), content: .entries([
-                shelved(900_002, "The Library Above the Clouds") { $0.coverUrl = "cover/900002.jpg" },
+                shelved(900_002, "Mountain Library Night Shift") { $0.coverUrl = "cover/900002.jpg" },
             ])),
             .content(view: .library(.completed), content: .entries([steelGardener()])),
         ])
@@ -460,7 +460,7 @@ struct SpotlightTests {
     }
 
     func steelGardener() -> Entry {
-        shelved(900_005, "The Steel Gardener") { $0.progress = TitleProgress(done: 1, next: 2) }
+        shelved(900_005, "Garden on the Roof") { $0.progress = TitleProgress(done: 1, next: 2) }
     }
 
     /// Continue with two titles, Watching with one of them and another, Planning with a third.
@@ -470,7 +470,7 @@ struct SpotlightTests {
             .content(view: .continue, content: .entries([wayfarer(), steelGardener()])),
             .content(view: .library(.watching), content: .entries([
                 steelGardener(),
-                shelved(900_002, "The Library Above the Clouds") { $0.coverUrl = "cover/900002.jpg" },
+                shelved(900_002, "Mountain Library Night Shift") { $0.coverUrl = "cover/900002.jpg" },
             ])),
             .content(view: .library(.planning), content: .entries([shelved(900_003, "Moonlit Ferry")])),
         ])

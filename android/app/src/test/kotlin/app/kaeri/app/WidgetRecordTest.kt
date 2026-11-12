@@ -39,11 +39,11 @@ class WidgetRecordTest {
             WidgetContinue(900006u, "Summer Wind Relay", episode = 8u),
         ),
         airingToday = listOf(
-            WidgetAiring(900002u, "The Library Above the Clouds", episode = 6u, airsAt = 1_792_163_730, onList = true, translation = Translation.SUB),
+            WidgetAiring(900002u, "Mountain Library Night Shift", episode = 6u, airsAt = 1_792_163_730, onList = true, translation = Translation.SUB),
         ),
         signedIn = true,
         tracker = "anilist",
-        nextAiring = WidgetNextAiring(900002u, "The Library Above the Clouds", 6u, 1_792_163_730),
+        nextAiring = WidgetNextAiring(900002u, "Mountain Library Night Shift", 6u, 1_792_163_730),
         nextDays = listOf(WidgetAiring(900006u, "Summer Wind Relay", episode = 9u, airsAt = 1_792_250_000, watched = false, translation = Translation.DUB, coverColor = "#e4a050")),
     )
 
@@ -65,7 +65,7 @@ class WidgetRecordTest {
         root.resolve("widgets/record.json").writeText(
             """{"version":1,"generated_at":1792000000,
                "continue_watching":[{"id":900001,"title":"Stardust Wayfarer","episode":7,"watched":6,"episodes":12,"fraction":0.42}],
-               "airing_today":[{"id":900002,"title":"The Library Above the Clouds","episode":6,"airs_at":1792163730,"on_list":true}]}""",
+               "airing_today":[{"id":900002,"title":"Mountain Library Night Shift","episode":6,"airs_at":1792163730,"on_list":true}]}""",
         )
         val read = WidgetRecord.of(root).latest.value!!
         assertEquals(1u, read.version)

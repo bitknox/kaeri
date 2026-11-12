@@ -8,7 +8,7 @@
   },
   "format": "TV",
   "status": "FINISHED",
-  "description": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.<br><br>Each town she saves remembers a little of her, and she, a little less of herself.",
+  "description": "Aki relights the old beacons along the roads between the hill towns, one town a week. She doesn't remember where she grew up.<br><br>In the town of Seto, an innkeeper says he has seen her face before, on a poster from twenty years ago.",
   "episodes": 12,
   "duration": 24,
   "seasonYear": 2024,
@@ -177,7 +177,7 @@
           "id": 900005,
           "title": {
             "romaji": "Hagane no Niwashi",
-            "english": "The Steel Gardener",
+            "english": "Garden on the Roof",
             "native": "鋼の庭師"
           },
           "format": "ONA",

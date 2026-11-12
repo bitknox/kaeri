@@ -564,7 +564,7 @@ mod tests {
     fn broadcast(id: AnilistId, episode: u32, airing_at: i64) -> AiringEntry {
         let media = serde_json::json!({
             "id": id.get(),
-            "title": { "romaji": "Kumo no Ue no Toshokan", "english": "The Library Above the Clouds" },
+            "title": { "romaji": "Kumo no Ue no Toshokan", "english": "Mountain Library Night Shift" },
             "coverImage": { "large": "https://img.example/library-poster.png" },
         });
         AiringEntry { episode, airing_at, media: serde_json::from_value(media).unwrap() }
@@ -610,7 +610,7 @@ mod tests {
 
         let said = check.said(&aired, &mut notices, NOW);
         let said: Vec<_> = said.iter().map(|e| (e.id, e.episode, e.title.as_str())).collect();
-        assert_eq!(said, [(LISTED, 6, "The Library Above the Clouds")]);
+        assert_eq!(said, [(LISTED, 6, "Mountain Library Night Shift")]);
         // Each show's notice moved to the newest episode it has aired, said or not.
         assert_eq!(notices[&LISTED].episode, 6);
         assert_eq!(notices[&WATCHED].episode, 9);

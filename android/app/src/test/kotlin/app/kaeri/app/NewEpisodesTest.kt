@@ -72,7 +72,7 @@ class NewEpisodesTest {
 
     private val wayfarer = NewEpisode(900001u, "Stardust Wayfarer", 8u, airedAt = 1_792_600_000)
     private val relay = NewEpisode(900006u, "Summer Wind Relay", 3u, airedAt = 1_792_603_600)
-    private val library = NewEpisode(900002u, "The Library Above the Clouds", 11u, airedAt = 1_792_607_200)
+    private val library = NewEpisode(900002u, "Mountain Library Night Shift", 11u, airedAt = 1_792_607_200)
 
     @Before
     fun setUp() {
@@ -231,11 +231,11 @@ class NewEpisodesTest {
         val summary = summary()!!
         assertEquals("3 new episodes", summary.extras.getString(Notification.EXTRA_TITLE))
         assertEquals(
-            "The Library Above the Clouds, Summer Wind Relay, and Stardust Wayfarer",
+            "Mountain Library Night Shift, Summer Wind Relay, and Stardust Wayfarer",
             summary.extras.getCharSequence(Notification.EXTRA_TEXT).toString(),
         )
         assertEquals(
-            listOf("The Library Above the Clouds  Episode 11", "Summer Wind Relay  Episode 3", "Stardust Wayfarer  Episode 8"),
+            listOf("Mountain Library Night Shift  Episode 11", "Summer Wind Relay  Episode 3", "Stardust Wayfarer  Episode 8"),
             summary.extras.getCharSequenceArray(Notification.EXTRA_TEXT_LINES)!!.map(CharSequence::toString),
         )
         assertEquals(EpisodeNotifier.GROUP, summary.group)

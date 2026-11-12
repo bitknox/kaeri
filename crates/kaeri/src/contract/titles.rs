@@ -103,7 +103,7 @@ async fn english_names_every_title_in_english_with_romaji_beside_it() {
     let detail = page.detail.expect("the page's own");
     assert_eq!(detail.relations[0].title, "Stardust Wayfarer Season 2");
     let recommended: Vec<_> = detail.recommendations.iter().map(|r| r.title.as_str()).collect();
-    assert_eq!(recommended, ["The Steel Gardener", "Moonlit Platform"]);
+    assert_eq!(recommended, ["Garden on the Roof", "Moonlit Platform"]);
     assert_eq!(
         searched(&mut h, "hoshikuzu").await,
         ["Stardust Wayfarer", "Stardust Wayfarer Season 2"]

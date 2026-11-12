@@ -76,7 +76,7 @@ struct IntentsTests {
             early.shelfFile = file
             #expect(early.suggestedTitles().map(\.id) == [900_001, 900_005, 900_002, 900_003])
             #expect(early.titles(matching: "moonlit").map(\.id) == [900_003])
-            #expect(early.titles(for: [900_002]).map(\.title) == ["The Library Above the Clouds"])
+            #expect(early.titles(for: [900_002]).map(\.title) == ["Mountain Library Night Shift"])
         }
     }
 
@@ -94,7 +94,7 @@ struct IntentsTests {
         store.apply([
             .content(view: .continue, content: .entries([
                 shelved(900_006, "Summer Wind Relay") { $0.progress = TitleProgress(done: 7, next: 8) },
-                shelved(900_005, "The Steel Gardener") {
+                shelved(900_005, "Garden on the Roof") {
                     $0.progress = TitleProgress(done: 1, next: 2)
                     $0.resume = ResumePoint(position: 810, fraction: 0.75)
                 },
@@ -103,8 +103,8 @@ struct IntentsTests {
         ])
         let continuing = bridge(store)
         let answer = await continuing.continueWatching()
-        #expect(answer == .play(900_005, episode: 2, title: "The Steel Gardener"))
-        #expect(answer.spoken == "Starting episode 2 of The Steel Gardener.")
+        #expect(answer == .play(900_005, episode: 2, title: "Garden on the Roof"))
+        #expect(answer.spoken == "Starting episode 2 of Garden on the Roof.")
 
         continuing.navigator?.open(.library)
         let mark = store.sentLog.count

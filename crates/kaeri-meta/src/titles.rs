@@ -145,7 +145,7 @@ mod tests {
         assert!(!clone.choose(TitleChoice::Anilist));
         assert_eq!(titles.choice(), TitleChoice::Anilist, "a clone's change is everyone's");
         let whole =
-            title(Some("Kumo no Ue no Toshokan"), Some("The Library Above the Clouds"), None);
-        assert_eq!(titles.pick(&whole), "The Library Above the Clouds");
+            title(Some("Kumo no Ue no Toshokan"), Some("Mountain Library Night Shift"), None);
+        assert_eq!(titles.pick(&whole), "Mountain Library Night Shift");
     }
 }
