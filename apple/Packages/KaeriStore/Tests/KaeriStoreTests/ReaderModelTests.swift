@@ -97,6 +97,45 @@ struct ReaderModelTests {
         #expect(surfaces(otherBox.commands).isEmpty)
     }
 
+    /// The novel turns the engine heard, as (page, pages, how).
+    private func novelTurns(_ commands: [Command]) -> [(UInt32, UInt32, TurnHow)] {
+        commands.compactMap {
+            if case .reader(.novelAt(_, _, _, let page, let pages, let how)) = $0 { (page, pages, how) } else { nil }
+        }
+    }
+
+    @Test func aNovelsEndPageReachesTheEngineAsThePageAfterTheLast() {
+        let (model, box) = model()
+        model.open(work: "a:900302")
+        model.surfaceChanged(surface)
+        opened(model, session: 3)
+        let pos = NovelPos(spine: 4, path: [2, 1], offset: 30)
+        model.novelAt(pos, page: 6, pages: 7, how: .turn)
+        model.novelEnded()
+        let turns = novelTurns(box.commands)
+        #expect(turns.count == 2)
+        #expect(turns.last?.0 == 7)
+        #expect(turns.last?.1 == 7)
+        #expect(turns.last?.2 == .turn)
+        let last = box.commands.last
+        if case .reader(.novelAt(let session, let chapter, let at, _, _, _)) = last {
+            #expect(session == 3)
+            #expect(chapter == ChapterId("c1"))
+            #expect(at == pos)
+        } else {
+            Issue.record("the end page was not sent: \(String(describing: last))")
+        }
+    }
+
+    @Test func aNovelEndPageWithNoPageReportedSendsNothing() {
+        let (model, box) = model()
+        model.open(work: "a:900302")
+        model.surfaceChanged(surface)
+        opened(model, session: 3)
+        model.novelEnded()
+        #expect(novelTurns(box.commands).isEmpty)
+    }
+
     @Test func theStripChoiceIsTheSeriesOwn() {
         let (model, box) = model()
         model.open(work: "a:900303")

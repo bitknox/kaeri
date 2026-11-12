@@ -541,10 +541,32 @@ public final class ReaderModel {
     public func novelAt(_ pos: NovelPos, page: Int, pages: Int, how: TurnHow) {
         guard session != 0, let chapter = view?.chapter.id else { return }
         novelPainted = true
+        novelHere = NovelHere(session: session, chapter: chapter, pos: pos, pages: pages)
         send?(.reader(.novelAt(
             session: session, chapter: chapter, pos: pos, page: UInt32(max(page, 0)),
             pages: UInt32(max(pages, 0)), how: how)))
     }
+
+    /// The novel's end page showed, past the last page of its last document. The engine hears
+    /// it as the page after the last, which counts the chapter read at once, as a paged
+    /// chapter's end page does.
+    public func novelEnded() {
+        guard session != 0, let chapter = view?.chapter.id, let here = novelHere,
+              here.session == session, here.chapter == chapter
+        else { return }
+        let pages = UInt32(max(here.pages, 1))
+        send?(.reader(.novelAt(session: session, chapter: chapter, pos: here.pos, page: pages, pages: pages, how: .turn)))
+    }
+
+    /// The last page the paginator reported: the end page goes to the engine from there.
+    private struct NovelHere {
+        var session: UInt64
+        var chapter: ChapterId
+        var pos: NovelPos
+        var pages: Int
+    }
+
+    @ObservationIgnored private var novelHere: NovelHere?
 
     /// The chapter opened by going back from the first page of the one after it: it shows its
     /// last page, or the top of its last image in a strip, once its leaves come.
