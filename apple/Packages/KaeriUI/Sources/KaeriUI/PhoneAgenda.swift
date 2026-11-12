@@ -101,6 +101,8 @@ struct PhoneCalendar: View {
             .padding(.bottom, 24)
         }
         .scrollPosition($position, anchor: .top)
+        // A scroll by hand lets go of a day held.
+        .onScrollPhaseChange { _, phase in if phase == .interacting { holding = nil } }
         .onScrollTargetVisibilityChange(idType: Date.self, threshold: 0.1) { ids in
             let wasShown = todayShown
             // Today's button fades in (0.2 s) once today has left, and out (0.3 s) as it returns.
@@ -372,7 +374,9 @@ struct PhoneCalendar: View {
         guard opened, !days.isEmpty else { return }
         let near = Set(days.prefix(3))
         let far = Set(days.suffix(3))
-        if model.morePast, !model.pastFailed, !model.loadingPast, !near.isDisjoint(with: ids) {
+        // While the day held is not back at the top, the earlier days that just came in sit on
+        // screen above it: they ask for nothing more, and the day held stays the one held.
+        if holding == nil, model.morePast, !model.pastFailed, !model.loadingPast, !near.isDisjoint(with: ids) {
             holding = ids.min()
             store.loadCalendarPast()
         }
