@@ -316,7 +316,7 @@ async fn chapters_opened_back_and_forth_each_get_every_page() {
 
 /// R5E-1 end to end: a local book whose second and third pages have a picture's first bytes
 /// and a header that does not read, on a two-page screen.
-#[tokio::test(start_paused = true)]
+#[tokio::test]
 #[ignore = "R5E-1: two 0x0 pages pair with a NaN place"]
 async fn damaged_pages_on_a_two_page_screen_get_finite_places() {
     let mut h = harness_of(Store::open_in_memory().unwrap(), "manga", |books| {
