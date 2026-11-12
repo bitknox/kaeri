@@ -135,8 +135,14 @@ class EinkLargeHomeShots : ReadingShotHarness() {
             val browse = compose.onNodeWithText("Browse").getBoundsInRoot().top // i18n-skip
             check(browse - captions <= 120.dp) { "Browse starts ${browse - captions} under Continue" } // i18n-skip
         },
-        // Ready before the offline Home is applied too: the harness waits for it on both sides.
-        ready = { homeRows(it) && (it.reading.home.value?.continueReading?.size ?: 0) >= 1 },
+        // The engine's last Home, every part in and the hero chosen: it sends Home again as each
+        // part lands, and one landing after the offline Home is applied would replace it. Ready
+        // before the offline Home is applied too: the harness waits for it on both sides.
+        ready = { store ->
+            val view = store.reading.home.value
+            homeRows(store) && view != null && view.continueReading.isNotEmpty() && view.pending.isEmpty() &&
+                view.spotlight != null && view.spot != null
+        },
     )
 
     /** More series on this device, made from the fixtures' own under made-up titles, for the two paged columns. */
