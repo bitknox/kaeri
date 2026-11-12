@@ -387,7 +387,7 @@ struct StripReader: View {
         case .image(let chapter, let part):
             StripImage(
                 model: model, chapter: chapter, part: part, theme: theme, tone: tone,
-                width: column, window: size.height, longest: max(column, row.height - spacing) * scale)
+                width: column, longest: max(column, row.height - spacing) * scale)
                 .frame(width: column, height: row.height - spacing)
                 .padding(.bottom, spacing)
                 .onAppear {
@@ -407,7 +407,7 @@ struct StripReader: View {
             .frame(width: column)
         case .lead:
             ZStack(alignment: .top) {
-                PagePlate(page: 1, theme: theme, atOnce: true, image: true, window: size.height)
+                PagePlate(page: 1, theme: theme, atOnce: true, image: true)
                 if let lead {
                     PageImage(file: lead, longest: leadHeight * scale, tone: tone)
                         .frame(width: column, height: column * CGFloat(lead.height) / CGFloat(max(lead.width, 1)))
@@ -534,20 +534,18 @@ private struct StripImage: View {
     let theme: ReaderTheme
     let tone: PageTone
     let width: CGFloat
-    /// The window's height, where a tall image's plate centres its words.
-    let window: CGFloat
     let longest: CGFloat
     @State private var painted = false
 
     var body: some View {
         ZStack {
             if let file = model.file(of: part, chapter: chapter) {
-                if !painted { PagePlate(page: Int(part.page) + 1, theme: theme, image: true, window: window) }
+                if !painted { PagePlate(page: Int(part.page) + 1, theme: theme, image: true) }
                 PageImage(file: file, longest: longest, tone: tone) { painted = true }
             } else if let failure = model.failure(of: part, chapter: chapter) {
                 PageFailed(page: Int(part.page) + 1, failure: failure, theme: theme) { model.retry(page: part.page) }
             } else {
-                PagePlate(page: Int(part.page) + 1, theme: theme, image: true, window: window)
+                PagePlate(page: Int(part.page) + 1, theme: theme, image: true)
             }
         }
         .frame(width: width)

@@ -79,22 +79,38 @@ struct PageImage: View {
 /// The Raised plate that holds a page's place with its number, "Page 23", or "Image 23" for a
 /// strip image. Nothing shows for 600 ms, and from 4 s a line under the number says it is
 /// loading. A chapter that is opening shows it at once: it is the place the first page comes
-/// into. A strip image taller than the window centres its words in its first window-height, so
-/// they stay in view when the image is reached from above or by a jump.
+/// into. A strip image's words sit in the middle of the part of it on screen, so they stay in
+/// view however tall the image is and wherever the strip is scrolled to.
 struct PagePlate: View {
     let page: Int
     let theme: ReaderTheme
     let image: Bool
-    let window: CGFloat?
     @State private var shown: Bool
     @State private var line = false
+    @State private var words: CGFloat = 0
 
-    init(page: Int, theme: ReaderTheme, atOnce: Bool = false, image: Bool = false, window: CGFloat? = nil) {
+    init(page: Int, theme: ReaderTheme, atOnce: Bool = false, image: Bool = false) {
         self.page = page
         self.theme = theme
         self.image = image
-        self.window = window
         _shown = State(initialValue: atOnce)
+    }
+
+    /// How far a strip plate's words move from its middle so they sit in the middle of the part
+    /// of the plate on screen, kept inside the plate. `visible` is that part in the plate's own
+    /// coordinates; with none on screen the words stay in the middle.
+    nonisolated static func wordsShift(plate: CGFloat, visible: ClosedRange<CGFloat>?, words: CGFloat) -> CGFloat {
+        guard let visible, visible.upperBound > visible.lowerBound, plate > words else { return 0 }
+        let middle = (visible.lowerBound + visible.upperBound) / 2
+        return min(max(middle, words / 2), plate - words / 2) - plate / 2
+    }
+
+    /// The part of the plate inside its scroll view, in the plate's coordinates.
+    private nonisolated static func onScreen(_ proxy: GeometryProxy) -> ClosedRange<CGFloat>? {
+        guard let bounds = proxy.bounds(of: .scrollView) else { return nil }
+        let top = max(bounds.minY, 0)
+        let bottom = min(bounds.maxY, proxy.size.height)
+        return top < bottom ? top...bottom : nil
     }
 
     var body: some View {
@@ -110,8 +126,12 @@ struct PagePlate: View {
                             .transition(.opacity)
                     }
                 }
-                .frame(maxWidth: .infinity, maxHeight: window.map { max($0, 1) } ?? .infinity)
-                .frame(maxHeight: .infinity, alignment: .top)
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { words = $0 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .visualEffect { [image, words] content, proxy in
+                    content.offset(y: image ? Self.wordsShift(
+                        plate: proxy.size.height, visible: Self.onScreen(proxy), words: words) : 0)
+                }
                 .transition(.opacity)
             }
         }
