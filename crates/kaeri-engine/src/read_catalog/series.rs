@@ -283,7 +283,8 @@ pub(crate) fn kept_rows(
             arranged.fill(arranged_row, language.as_deref(), &mut row);
             if super::arrange::Arranged::in_parts(arranged_row) {
                 row.label = super::arrange::merged_label(&entries[first], &row.id);
-                row.pages = arranged_row.parts.iter().map(|&i| list[i].pages).sum();
+                row.pages =
+                    chapters::pages_of_parts(arranged_row.parts.iter().map(|&i| list[i].pages));
                 row.number =
                     row.id.key().and_then(|k| k.range()).map(|r| r.to_string()).or(row.number);
                 let title = super::arrange::merged_title(&entries[first]);

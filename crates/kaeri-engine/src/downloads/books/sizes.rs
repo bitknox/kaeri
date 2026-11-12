@@ -287,7 +287,10 @@ impl BookDownloads {
             if novel {
                 learnt.text_chapter.unwrap_or(TEXT_CHAPTER_BYTES)
             } else {
-                let pages = row.pages.filter(|p| *p > 0).or(learnt.pages).unwrap_or(PAGES);
+                let pages = crate::read_catalog::chapters::plausible_pages(row.pages)
+                    .filter(|p| *p > 0)
+                    .or(learnt.pages)
+                    .unwrap_or(PAGES);
                 u64::from(pages) * page
             }
         };
