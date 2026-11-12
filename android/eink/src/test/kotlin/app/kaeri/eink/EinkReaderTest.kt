@@ -159,11 +159,14 @@ class EinkReaderTest {
     @Test
     fun out_of_the_box_page_turns_ask_for_no_full_refresh() {
         open()
-        repeat(2) {
+        // Each page is drawn before the next turn: a page turned away before its image came in
+        // asks for nothing.
+        imagePagesDrawn(Refresh.PARTIAL, 1)
+        repeat(2) { turn ->
             compose.onRoot().performKeyInput { pressKey(Key.VolumeDown) }
             compose.waitForIdle()
+            imagePagesDrawn(Refresh.PARTIAL, turn + 2)
         }
-        compose.waitUntil(5_000) { fake.requests.count { it.refresh == Refresh.PARTIAL } >= 2 }
         assertTrue(fake.requests.none { it.refresh == Refresh.FULL })
     }
 
@@ -180,13 +183,20 @@ class EinkReaderTest {
     @Test
     fun the_lower_volume_key_turns_forward_and_each_image_page_is_a_full_refresh_when_asked() {
         open(policy = optedIn)
+        // Pages decode off the main thread: the refresh follows once the page is drawn, and a page
+        // turned away before then asks for none, so the first is drawn before the turn.
+        imagePagesDrawn(Refresh.FULL, 1)
         // Down goes forward, as on the phone, until the phone's swap says otherwise.
         compose.onRoot().performKeyInput { pressKey(Key.VolumeDown) }
         compose.waitForIdle()
         assertEquals(TurnHow.KEY, shown().last().how)
         assertEquals(1u, shown().last().leaf)
-        // Pages decode off the main thread: the refresh follows once the page is drawn.
-        compose.waitUntil(5_000) { fake.requests.count { it.refresh == Refresh.FULL } >= 2 }
+        imagePagesDrawn(Refresh.FULL, 2)
+    }
+
+    /** Waits until [count] refreshes of the kind [refresh] were asked for. */
+    private fun imagePagesDrawn(refresh: Refresh, count: Int) {
+        compose.waitUntil(5_000) { fake.requests.count { it.refresh == refresh } >= count }
     }
 
     @Test
