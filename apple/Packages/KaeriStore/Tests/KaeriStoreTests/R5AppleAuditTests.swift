@@ -45,10 +45,18 @@ struct R5AppleAuditTests {
         return all
     }
 
-    /// Chapter 13 open on its end page.
-    private func onEndPage(_ sent: Sent = Sent()) -> ReaderModel {
+    /// A reader asked for chapter 13 of the book, as the app opens one, with its surface known.
+    private func opening(_ sent: Sent, chapter: String = "13") -> ReaderModel {
         let model = ReaderModel()
         model.send = { sent.all.append($0) }
+        model.open(work: "a:900301", chapter: chapter)
+        model.surfaceChanged(surface)
+        return model
+    }
+
+    /// Chapter 13 open on its end page.
+    private func onEndPage(_ sent: Sent = Sent()) -> ReaderModel {
+        let model = opening(sent)
         model.heldCue = .milliseconds(30)
         model.apply(.opened(view("13", next: "14")))
         model.apply(.leaves(session: session, chapter: ChapterId("13"), leaves: leaves(3)))
@@ -88,8 +96,7 @@ struct R5AppleAuditTests {
     @Test(.disabled(if: !audit, "R5-A3: closing within 500 ms of a strip scroll loses the last place"))
     func a3_closingSendsTheStripPlaceHeldBack() {
         let sent = Sent()
-        let model = ReaderModel()
-        model.send = { sent.all.append($0) }
+        let model = opening(sent)
         model.apply(.opened(view("13", next: "14", mode: .strip)))
         model.apply(.leaves(session: session, chapter: ChapterId("13"), leaves: leaves(8)))
         model.stripAt(StripPos(image: 1, offset: 0), footVisible: false)
@@ -109,8 +116,7 @@ struct R5AppleAuditTests {
     @Test(.disabled(if: !audit, "R5-A4: a page kept as not a credit page is lost when the app leaves"))
     func a4_aKeepGoesToTheEngineWhileTheAppIsAway() async throws {
         let sent = Sent()
-        let model = ReaderModel()
-        model.send = { sent.all.append($0) }
+        let model = opening(sent)
         model.apply(.opened(view("13", next: "14")))
         model.apply(.leaves(session: session, chapter: ChapterId("13"), leaves: leaves(3)))
         let file = PageFile(path: "/tmp/credit.png", encoding: .original(mime: "image/png"), width: 800,
