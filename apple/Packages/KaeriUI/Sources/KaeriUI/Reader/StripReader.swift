@@ -48,6 +48,9 @@ struct StripReader: View {
     /// it, and the scroll follows it so what is on screen stays put.
     @State private var anchor: Anchor?
     @State private var phase: ScrollPhase = .idle
+    /// The screen's height step the top of the screen is in. Rows a screen above it to two
+    /// below are drawn; the rest is room of their height, so every row sits where `rows` puts it.
+    @State private var band = 0
 
     private struct Anchor {
         var id: String
@@ -215,14 +218,18 @@ struct StripReader: View {
 
     var body: some View {
         let rows = self.rows
+        let shown = drawn(rows)
         ScrollView(mac ? Axis.Set.vertical : [.vertical, .horizontal], showsIndicators: false) {
-            LazyVStack(spacing: 0) {
-                ForEach(rows) { row in
+            // Not a lazy stack: it guesses the height of the rows it has not drawn, so a scroll to
+            // a place far down showed another image than the one the place names.
+            VStack(spacing: 0) {
+                Color.clear.frame(height: shown.first?.top ?? 0)
+                ForEach(shown) { row in
                     view(of: row).frame(height: row.height)
                 }
             }
             // As wide as the screen while fitted, so it only scrolls sideways once zoomed.
-            .frame(width: max(size.width, column))
+            .frame(width: max(size.width, column), height: rows.last.map { $0.top + $0.height } ?? 0, alignment: .top)
         }
         .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
         .scrollPosition($position)
@@ -474,6 +481,13 @@ struct StripReader: View {
         return true
     }
 
+    /// The rows in the band around the screen, in order.
+    private func drawn(_ rows: [Row]) -> [Row] {
+        let screen = max(size.height, 1)
+        let from = CGFloat(band - 1) * screen, to = CGFloat(band + 3) * screen
+        return rows.filter { $0.top + $0.height >= from && $0.top <= to }
+    }
+
     /// Rows above the one at the top of the screen changed height: the scroll moves with it, at
     /// once, and the place is worked out again from there. A scroll under way, a restore or a
     /// jump goes on as it was. True when it moved.
@@ -498,6 +512,8 @@ struct StripReader: View {
     /// opens the next chapter under it.
     private func track(_ metrics: Metrics) {
         offsetY = metrics.y
+        let step = Int((metrics.y / max(metrics.height, 1)).rounded(.down))
+        if step != band { band = step }
         let rows = self.rows
         if follow(rows, metrics) { contentHeight = metrics.content; return }
         let middle = metrics.y + metrics.height / 2
