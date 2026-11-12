@@ -23,6 +23,12 @@ private struct ReaderHost: ViewModifier {
     }
 
     func body(content: Content) -> some View {
+        // Set here, in a body that follows the model: the app's scene closure does not, so a
+        // value set there kept the book it saw first.
+        hosted(content).focusedSceneValue(\.readerInFront, ReaderInFront.of(model))
+    }
+
+    @ViewBuilder private func hosted(_ content: Content) -> some View {
         #if os(iOS)
         content.fullScreenCover(isPresented: isOpen) {
             ReaderScreen(model: model) {}
@@ -167,7 +173,7 @@ public struct ReaderMenu: Commands {
 }
 
 extension FocusedValues {
-    /// The book open in a window, set by the app on the window's scene, so the Go menu has it
+    /// The book open in a window, set on the window's scene by `hostsReader`, so the Go menu has it
     /// only while that window is in front, and draws again as it changes.
     @Entry public var readerInFront: ReaderInFront?
 }

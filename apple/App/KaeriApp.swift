@@ -33,7 +33,6 @@ struct KaeriApp: App {
                 .environment(delegate.navigator)
                 // A book open over the player takes the keys.
                 .focusedSceneValue(\.playerInFront, delegate.player.inMainWindow && delegate.store.reader.request == nil)
-                .focusedSceneValue(\.readerInFront, ReaderInFront.of(delegate.store.reader))
         }
         // The Fixtures app keeps the exact 1280 by 800 the shot scripts rely on. The real app opens
         // at 80% of the display's usable area, centred; a remembered frame still wins over this.
@@ -98,7 +97,6 @@ struct KaeriApp: App {
                 .environment(delegate.navigator)
                 // The player covers the window it plays in, so it is in front while it shows.
                 .focusedSceneValue(\.playerInFront, delegate.player.isPresented)
-                .focusedSceneValue(\.readerInFront, ReaderInFront.of(delegate.store.reader))
         }
         .commands {
             KaeriCommands(store: delegate.store, navigator: delegate.navigator) {

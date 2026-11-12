@@ -34,7 +34,6 @@ struct KaeriDev: App {
                 .environment(delegate.navigator)
                 .frame(minWidth: 960, minHeight: 600)
                 .focusedSceneValue(\.playerInFront, delegate.player.inMainWindow)
-                .focusedSceneValue(\.readerInFront, ReaderInFront.of(delegate.store.reader))
                 .task { await delegate.run() }
         }
         .defaultSize(width: options.width, height: options.height)
