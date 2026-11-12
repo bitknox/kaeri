@@ -6159,6 +6159,10 @@
     <string name="send_failed_chapter">Couldn\'t prepare chapter %1$s. %2$s</string>
     <!-- A send that failed before or after its chapters. The cause is the sentence that says why. -->
     <string name="send_failed">Couldn\'t prepare the files. %1$s</string>
+    <!-- A send that was ready, when its files were gone by the time they were saved or shared. Ready files are kept for a day, then removed. Above Send again. -->
+    <string name="send_files_gone">These files are gone. Prepared files are kept for a day.</string>
+    <!-- Button on a send whose files are gone: prepares the same chapters again. -->
+    <string name="send_again">Send again</string>
     <!-- Text of the Send sheet's Size row while the size is still being worked out. -->
     <string name="send_size_working">Working it out</string>
     <!-- Spoken value of the Chapters row in the Send sheet while its list is open. -->

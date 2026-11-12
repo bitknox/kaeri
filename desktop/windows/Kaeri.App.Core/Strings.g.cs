@@ -7619,6 +7619,12 @@ public static partial class T
     /// <summary>A send that failed before or after its chapters. The cause is the sentence that says why.</summary>
     public static string SendFailed(string cause) => Fill(Get("SendFailed"), ("cause", cause));
 
+    /// <summary>A send that was ready, when its files were gone by the time they were saved or shared. Ready files are kept for a day, then removed. Above Send again.</summary>
+    public static string SendFilesGone => Get("SendFilesGone");
+
+    /// <summary>Button on a send whose files are gone: prepares the same chapters again.</summary>
+    public static string SendAgain => Get("SendAgain");
+
     /// <summary>Text of the Send sheet's Size row while the size is still being worked out.</summary>
     public static string SendSizeWorking => Get("SendSizeWorking");
 
@@ -14646,6 +14652,8 @@ public static partial class T
         ["SendInParts"] = "Over {size}, so the files go in parts.",
         ["SendFailedChapter"] = "Couldn't prepare chapter {chapter}. {cause}",
         ["SendFailed"] = "Couldn't prepare the files. {cause}",
+        ["SendFilesGone"] = "These files are gone. Prepared files are kept for a day.",
+        ["SendAgain"] = "Send again",
         ["SendSizeWorking"] = "Working it out",
         ["SendChaptersOpen"] = "Open",
         ["SendChaptersClosed"] = "Closed",

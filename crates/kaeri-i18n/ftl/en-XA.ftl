@@ -10751,6 +10751,12 @@ send-failed-chapter = [Çöüļðñ'ţ þŕéþàŕé çĥàþţéŕ { $chapter 
 # A send that failed before or after its chapters. The cause is the sentence that says why.
 send-failed = [Çöüļðñ'ţ þŕéþàŕé ţĥé ƒîļéš. { $cause }~~~~~~~~~~]
 
+# A send that was ready, when its files were gone by the time they were saved or shared. Ready files are kept for a day, then removed. Above Send again.
+send-files-gone = [Ţĥéšé ƒîļéš àŕé ĝöñé. Þŕéþàŕéð ƒîļéš àŕé ķéþţ ƒöŕ à ðàý.~~~~~~~~~~~~~~~~~]
+
+# Button on a send whose files are gone: prepares the same chapters again.
+send-again = [Šéñð àĝàîñ~~~]
+
 # Text of the Send sheet's Size row while the size is still being worked out.
 send-size-working = [Ŵöŕķîñĝ îţ öüţ~~~~~]
 

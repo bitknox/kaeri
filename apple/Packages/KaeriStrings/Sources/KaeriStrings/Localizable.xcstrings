@@ -254963,6 +254963,18 @@
         }
       }
     },
+    "send-again" : {
+      "comment" : "Button on a send whose files are gone: prepares the same chapters again.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send again"
+          }
+        }
+      }
+    },
     "send-banner" : {
       "comment" : "A send in a list or banner that is under way, with a ring beside it. The device is the e-reader. Argument 1: device (Text).",
       "extractionState" : "manual",
@@ -255799,6 +255811,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hãy thử lại khi bạn có mạng."
+          }
+        }
+      }
+    },
+    "send-files-gone" : {
+      "comment" : "A send that was ready, when its files were gone by the time they were saved or shared. Ready files are kept for a day, then removed. Above Send again.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "These files are gone. Prepared files are kept for a day."
           }
         }
       }

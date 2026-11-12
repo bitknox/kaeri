@@ -10390,6 +10390,12 @@ public enum L {
         Self.format("send-failed", fallback: "Couldn't prepare the files. %1$@", cause)
     }
 
+    /// A send that was ready, when its files were gone by the time they were saved or shared. Ready files are kept for a day, then removed. Above Send again.
+    public static var sendFilesGone: String { string("send-files-gone", fallback: "These files are gone. Prepared files are kept for a day.") }
+
+    /// Button on a send whose files are gone: prepares the same chapters again.
+    public static var sendAgain: String { string("send-again", fallback: "Send again") }
+
     /// Text of the Send sheet's Size row while the size is still being worked out.
     public static var sendSizeWorking: String { string("send-size-working", fallback: "Working it out") }
 

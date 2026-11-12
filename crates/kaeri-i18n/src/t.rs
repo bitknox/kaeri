@@ -17080,6 +17080,16 @@ pub fn send_failed(cause: &str) -> String {
     text("send-failed", &[("cause", Arg::Text(cause))])
 }
 
+/// A send that was ready, when its files were gone by the time they were saved or shared. Ready files are kept for a day, then removed. Above Send again.
+pub fn send_files_gone() -> String {
+    text("send-files-gone", &[])
+}
+
+/// Button on a send whose files are gone: prepares the same chapters again.
+pub fn send_again() -> String {
+    text("send-again", &[])
+}
+
 /// Text of the Send sheet's Size row while the size is still being worked out.
 pub fn send_size_working() -> String {
     text("send-size-working", &[])

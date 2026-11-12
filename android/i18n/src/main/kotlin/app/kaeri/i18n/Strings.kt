@@ -11580,6 +11580,14 @@ object Strings {
     fun sendFailed(context: Context, cause: String): String =
         context.getString(R.string.send_failed, cause)
 
+    /** A send that was ready, when its files were gone by the time they were saved or shared. Ready files are kept for a day, then removed. Above Send again. */
+    fun sendFilesGone(context: Context): String =
+        context.getString(R.string.send_files_gone)
+
+    /** Button on a send whose files are gone: prepares the same chapters again. */
+    fun sendAgain(context: Context): String =
+        context.getString(R.string.send_again)
+
     /** Text of the Send sheet's Size row while the size is still being worked out. */
     fun sendSizeWorking(context: Context): String =
         context.getString(R.string.send_size_working)

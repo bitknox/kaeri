@@ -10608,6 +10608,14 @@
     <value>Couldn't prepare the files. {cause}</value>
     <comment>A send that failed before or after its chapters. The cause is the sentence that says why.</comment>
   </data>
+  <data name="SendFilesGone" xml:space="preserve">
+    <value>These files are gone. Prepared files are kept for a day.</value>
+    <comment>A send that was ready, when its files were gone by the time they were saved or shared. Ready files are kept for a day, then removed. Above Send again.</comment>
+  </data>
+  <data name="SendAgain" xml:space="preserve">
+    <value>Send again</value>
+    <comment>Button on a send whose files are gone: prepares the same chapters again.</comment>
+  </data>
   <data name="SendSizeWorking" xml:space="preserve">
     <value>Working it out</value>
     <comment>Text of the Send sheet's Size row while the size is still being worked out.</comment>

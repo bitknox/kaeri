@@ -10751,6 +10751,12 @@ send-failed-chapter = Couldn't prepare chapter { $chapter }. { $cause }
 # A send that failed before or after its chapters. The cause is the sentence that says why.
 send-failed = Couldn't prepare the files. { $cause }
 
+# A send that was ready, when its files were gone by the time they were saved or shared. Ready files are kept for a day, then removed. Above Send again.
+send-files-gone = These files are gone. Prepared files are kept for a day.
+
+# Button on a send whose files are gone: prepares the same chapters again.
+send-again = Send again
+
 # Text of the Send sheet's Size row while the size is still being worked out.
 send-size-working = Working it out
 
