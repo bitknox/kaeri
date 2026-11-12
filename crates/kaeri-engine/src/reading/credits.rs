@@ -177,25 +177,20 @@ impl Learning {
         whole_or_not(credit_pages(&all, &kept, (chapter, group.as_deref()), &mine), count)
     }
 
-    /// Keep the edge fingerprints `mine` of `chapter`, read in `group`, in place of those kept
-    /// for it before, and give the credit pages among them when the person leaves them out.
+    /// Keep the edge fingerprints `mine` of `chapter`, read in `group`, as [`keep_prints`] does
+    /// with the chapter's `edges`, and give the credit pages among them when the person leaves
+    /// them out.
     pub(crate) fn keep_and_find(
         &self,
         (chapter, group): (&str, Option<&str>),
-        mine: &[PagePrint],
+        (mine, edges): (&[PagePrint], &[(u32, bool)]),
         count: u32,
         now: i64,
     ) -> Vec<PagePrint> {
         if mine.is_empty() {
             return Vec::new();
         }
-        if let Err(e) = self
-            .store
-            .forget_page_prints(&self.work, chapter)
-            .and_then(|()| self.store.put_page_prints(&self.work, chapter, mine, group, now))
-        {
-            tracing::warn!(error = %e, "a chapter's page fingerprints were not kept");
-        }
+        keep_prints(&self.store, &self.work, (chapter, group), (mine, edges), now);
         if !self.skip {
             return Vec::new();
         }
@@ -230,8 +225,7 @@ impl Recorder {
         }
     }
 
-    /// Keep what was taken. The chapter's earlier fingerprints go first: its pages may have
-    /// changed, as when a part was added.
+    /// Keep what was taken, as [`keep_prints`] does.
     pub(crate) fn keep(
         self,
         store: &Store,
@@ -243,12 +237,36 @@ impl Recorder {
         if self.prints.is_empty() {
             return;
         }
-        if let Err(e) = store
-            .forget_page_prints(work, chapter)
-            .and_then(|()| store.put_page_prints(work, chapter, &self.prints, group, now))
-        {
-            tracing::warn!(error = %e, "a chapter's page fingerprints were not kept");
-        }
+        keep_prints(store, work, (chapter, group), (&self.prints, &self.spans), now);
+    }
+}
+
+/// Keep the fingerprints `mine` of `chapter`, read in `group`, in place of those kept for it
+/// before. Its pages may have changed, as when a part was added, so one kept for a page that is
+/// no longer among its `edges` goes. One kept for an edge whose page did not come this time
+/// stays: a page slow to come never makes a known credit page unknown.
+fn keep_prints(
+    store: &Store,
+    work: &str,
+    (chapter, group): (&str, Option<&str>),
+    (mine, edges): (&[PagePrint], &[(u32, bool)]),
+    now: i64,
+) {
+    let still = store.page_prints(work).unwrap_or_default().into_iter().filter(|p| {
+        p.chapter == chapter
+            && edges.contains(&(p.page, p.at_end))
+            && !mine.iter().any(|m| m.page == p.page)
+    });
+    let prints: Vec<PagePrint> = mine
+        .iter()
+        .copied()
+        .chain(still.map(|p| PagePrint { page: p.page, at_end: p.at_end, print: p.print }))
+        .collect();
+    if let Err(e) = store
+        .forget_page_prints(work, chapter)
+        .and_then(|()| store.put_page_prints(work, chapter, &prints, group, now))
+    {
+        tracing::warn!(error = %e, "a chapter's page fingerprints were not kept");
     }
 }
 

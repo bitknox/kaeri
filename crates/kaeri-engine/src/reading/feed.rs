@@ -318,8 +318,9 @@ pub(crate) async fn start(
         let (learning, chapter, group) =
             (learning.clone(), chapter.as_str().to_owned(), opened.group.clone());
         let count = u32::try_from(total).unwrap_or(u32::MAX);
+        let wanted = crate::reading::credits::edges(&spans);
         tokio::task::spawn_blocking(move || {
-            learning.keep_and_find((&chapter, group.as_deref()), &mine, count, now)
+            learning.keep_and_find((&chapter, group.as_deref()), (&mine, &wanted), count, now)
         })
         .await
         .unwrap_or_default()
