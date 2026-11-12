@@ -92,7 +92,7 @@ class StripScrollBackTest {
         // Back up, until only chapter 12 is on screen.
         compose.runOnIdle { scope.launch { list.animateScrollToItem(0) } }
         compose.waitForIdle()
-        assertEquals(ReaderCommand.OpenChapter(SESSION, CHAPTER), sent.first())
+        assertEquals(listOf(ReaderCommand.OpenChapter(SESSION, CHAPTER)), sent.filterIsInstance<ReaderCommand.OpenChapter>())
         val view = ReaderFixtures.view(start = 0u, mode = ReaderMode.STRIP)
         session.apply(ReaderEvent.Opened(view))
         compose.waitForIdle()

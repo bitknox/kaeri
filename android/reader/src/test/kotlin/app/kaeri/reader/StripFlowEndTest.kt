@@ -11,10 +11,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performScrollToIndex
 import androidx.test.core.app.ApplicationProvider
 import app.kaeri.design.ObiSilk
 import app.kaeri.engine.model.NoNext
@@ -23,6 +21,7 @@ import app.kaeri.engine.model.ReadingFailure
 import app.kaeri.i18n.Strings
 import app.kaeri.reader.phone.PhoneReader
 import app.kaeri.reader.phone.PhoneReaderActions
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -51,7 +50,7 @@ class StripFlowEndTest {
         }
         compose.waitForIdle()
         // Down to the join, under the last image.
-        compose.onNode(hasScrollAction()).performScrollToIndex(3)
+        compose.runOnIdle { runBlocking { list.scrollToItem(3) } }
         compose.waitForIdle()
         return list
     }
