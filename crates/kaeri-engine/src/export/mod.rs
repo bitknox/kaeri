@@ -551,10 +551,8 @@ impl OneSend {
             self.told.chapter(Some(label.clone()));
             let missing = u32::try_from(to_fetch).unwrap_or(u32::MAX).saturating_sub(fetched);
             self.may_fetch(missing).await?;
-            std::fs::create_dir_all(temp).map_err(|_| {
-                prepare::Stop::Failed(ReadingFailure::FileMissing {
-                    path: temp.display().to_string(),
-                })
+            std::fs::create_dir_all(temp).map_err(|e| {
+                prepare::Stop::Failed(crate::downloads::books::io_failure(&e, temp))
             })?;
             let base = fetched * FETCH_WEIGHT;
             let told = self.told.clone();

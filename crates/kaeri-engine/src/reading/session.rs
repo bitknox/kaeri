@@ -380,7 +380,11 @@ impl Reader {
                 let Some(s) =
                     self.session.as_mut().filter(|s| Some(s.id) == session_of(&other))
                 else {
-                    // Reports for a closed session are dropped.
+                    // Reports for a closed session are dropped. A command the app waits on
+                    // hears that the session is closed, so it never waits for good.
+                    if let Some(session) = session_of(&other).filter(|_| waits_on(&other)) {
+                        cx.send(ReaderEvent::Closed { session });
+                    }
                     return;
                 };
                 s.report(cx, &pages, other);
@@ -477,14 +481,7 @@ impl Reader {
         surface: ReaderSurface,
     ) {
         cx.services.book_sources.take_in_plugins(&cx.services.book_plugins);
-        let mut chapters = shelf::chapters(&cx.services.store, work.as_str());
-        if let Some((_, _, list)) = crate::read_catalog::chapters::of_work(
-            &cx.services.book_sources,
-            &cx.services.store,
-            &work,
-        ) {
-            shelf::name_downloads(&mut chapters, &list);
-        }
+        let mut chapters = shelf_of(cx, &work);
         // A work from a source reads the source's whole list, the series page's, with what is
         // on the shelf read from its file. The list as kept serves when there is one to read;
         // with nothing on the shelf, the source is asked off the actor. A shelf with no list
@@ -774,6 +771,33 @@ fn session_of(command: &ReaderCommand) -> Option<u64> {
         | C::TapGuideSeen { .. }
         | C::LoadSettings { .. } => None,
     }
+}
+
+/// Whether the app waits on an answer to `command`: a chapter or a place it asked to open, or
+/// a chapter to lay out again.
+fn waits_on(command: &ReaderCommand) -> bool {
+    use ReaderCommand as C;
+    matches!(
+        command,
+        C::OpenChapter { .. }
+            | C::BackTo { .. }
+            | C::GoBack { .. }
+            | C::StartOver { .. }
+            | C::Retry { .. }
+    )
+}
+
+/// What is on the shelf of `work`, its downloads named as the work's list names them.
+fn shelf_of(cx: &Cx<'_>, work: &WorkId) -> Vec<ShelfChapter> {
+    let mut chapters = shelf::chapters(&cx.services.store, work.as_str());
+    if let Some((_, _, list)) = crate::read_catalog::chapters::of_work(
+        &cx.services.book_sources,
+        &cx.services.store,
+        work,
+    ) {
+        shelf::name_downloads(&mut chapters, &list);
+    }
+    chapters
 }
 
 /// Whether the download queue is fetching `chapter`, or will once its turn comes: queued, or
@@ -1320,7 +1344,8 @@ impl Session {
                 self.lay_out(cx, pages, page);
             }
             C::OpenChapter { chapter, .. } => {
-                let Some(index) = self.chapters.iter().position(|c| c.id == chapter) else {
+                let Some(index) = self.index_of(cx, &chapter) else {
+                    self.not_found(cx);
                     return;
                 };
                 // Skipping the extras moves on as Continue does; they stay unread. So does the
@@ -1349,6 +1374,9 @@ impl Session {
                 if let Some(back) = self.back_to.clone() {
                     self.drop_back(cx);
                     self.go_to(cx, pages, back);
+                } else {
+                    // An offer already withdrawn: the app hears again that it is gone.
+                    cx.send(ReaderEvent::BackToPage { session: self.id, page: None });
                 }
             }
             C::StartOver { .. } => {
@@ -1813,9 +1841,41 @@ impl Session {
     fn go_to(&mut self, cx: &mut Cx<'_>, pages: &Pages, to: ReadPlace) {
         if to.chapter == self.chapter().id {
             cx.send(ReaderEvent::GoTo { session: self.id, place: to });
-        } else if let Some(index) = self.chapters.iter().position(|c| c.id == to.chapter) {
+        } else if let Some(index) = self.index_of(cx, &to.chapter) {
             self.open_chapter(cx, pages, index, to.page.unwrap_or(0), to.novel.clone());
+        } else {
+            self.not_found(cx);
         }
+    }
+
+    /// Where `chapter` is in the session's list. One the list does not name is looked for in
+    /// the work's chapters as this device has them now: a list loaded since the session
+    /// opened, such as the series page's fresh one, can name a chapter the session's own does
+    /// not. That list becomes the session's when it names both `chapter` and the open one.
+    fn index_of(&mut self, cx: &Cx<'_>, chapter: &ChapterId) -> Option<usize> {
+        if let Some(index) = self.chapters.iter().position(|c| c.id == *chapter) {
+            return Some(index);
+        }
+        let mut now = shelf_of(cx, &self.work);
+        if novel::sourced(cx, &self.work)
+            && let Some(listed) = novel::kept_list(cx, &self.work, &now)
+        {
+            now = listed;
+        }
+        let index = now.iter().position(|c| c.id == *chapter)?;
+        let at = now.iter().position(|c| c.id == self.chapter().id)?;
+        self.chapters = now;
+        self.at = at;
+        Some(index)
+    }
+
+    /// A chapter asked for is in no list this device has: the reader says so rather than
+    /// waiting on it.
+    fn not_found(&self, cx: &Cx<'_>) {
+        let _ = cx.tx.send(Event::Reading(ReadingEvent::Failed {
+            about: ReadingAbout::Reader,
+            failure: ReadingFailure::NotFound,
+        }));
     }
 
     /// A newer place from another device moves the reader only when it is further on.
@@ -2072,6 +2132,7 @@ mod tests {
     use super::*;
     use crate::{host::QuietHost, outbox::Envelope};
 
+    mod answers;
     mod back_to;
     mod cross_parts;
     mod eink_strip;
