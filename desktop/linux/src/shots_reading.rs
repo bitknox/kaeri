@@ -285,7 +285,8 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
             read(shell, STRIP, "2");
             let line = shot == "read-strip-plate-slow";
             later(shell, 2500, move |reader| reader.shot_strip_plate(line));
-            4.0
+            // Before the 4 s line of an image asked for at open fades in over the staged one.
+            3.5
         }
         // After the last chapter there is, the strip ends on the end page.
         "read-strip-end" => {
