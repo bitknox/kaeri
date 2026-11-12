@@ -352,6 +352,10 @@ struct PhoneCalendar: View {
             navigator.calendarOpensOn = 0
         }
         position.scrollTo(id: target, anchor: .top)
+        // Held like a day that earlier days came in above: the agenda guesses the height of the
+        // days it has not drawn, so the first jump can land days short of the target.
+        holding = target
+        holdTries = 0
         // A jump without animation can land before the visibility callback reports the new days,
         // which leaves the strip on the agenda's first week; the strip follows the target now.
         topDay = target
@@ -371,13 +375,13 @@ struct PhoneCalendar: View {
         }
     }
 
-    /// Lets go of the day held once it is back at the top. A scroll back right after days came in
-    /// above can land short of it, among the new days, which would ask for more past and hold one
-    /// of those, and the agenda would run back to the first day it can show. So it scrolls back
-    /// again, a few times at most.
+    /// Lets go of the day held once it is back at the top. A scroll to it, on opening or right
+    /// after days came in above, can land short of it, among days whose height the agenda guessed;
+    /// those days would ask for more past and one of them would be held, and the agenda would run
+    /// back to the first day it can show. So it scrolls to the day again, a few times at most.
     private func hold(ids: [Date], days: [Date]) {
         guard let holding, days.contains(holding), !store.calendar.loadingPast else { return }
-        if ids.min() == holding || holdTries >= 3 {
+        if ids.min() == holding || holdTries >= 4 {
             self.holding = nil
         } else {
             holdTries += 1
