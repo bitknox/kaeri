@@ -716,12 +716,18 @@ pub(crate) fn dispatch(
         Command::NetworkPath { cellular, constrained, offline } => {
             let network = crate::phases::Network { cellular, constrained, offline };
             let moved = engine.network.offline != offline;
-            services.offline.store(offline, std::sync::atomic::Ordering::Relaxed);
+            let was_offline = services.offline.swap(offline, std::sync::atomic::Ordering::Relaxed);
             services.connection.send_replace(offline);
             services.book_sources.write_back_network(offline, services.clock.now());
             crate::phases::network_path(network, engine, tx);
             ahead::resume(engine, services, tx);
             crate::downloads::books::resume(engine, services, tx);
+            // An open end page offers what opens with the connection as it is now.
+            if was_offline != offline {
+                let EngineState { config, reader, .. } = &mut *engine;
+                let mut cx = reader.cx(config, services, tx);
+                reader.network_moved(&mut cx, was_offline);
+            }
             // Home open says it is offline, and since when, or stops saying so, at once.
             if moved && engine.home.asked() {
                 let (ask, memory) = (home_ask(engine, services, false), engine.home.clone());
