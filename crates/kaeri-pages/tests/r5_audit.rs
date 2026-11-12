@@ -48,10 +48,9 @@ fn options(rng: &mut Rng) -> LayoutOptions {
 }
 
 /// R5E-1. A page whose header the engine cannot read is laid out as 0x0 (pages.rs
-/// `keep_original`, `original_at`). Two such pages side by side on a two-page screen get a NaN
-/// place, which Android's `LeafView` rounds with `roundToInt()` and throws.
+/// `keep_original`, `original_at`). Two such pages side by side on a two-page screen must get
+/// finite places: Android's `LeafView` rounds them with `roundToInt()`, which throws on NaN.
 #[test]
-#[ignore = "R5E-1: two 0x0 pages pair with a NaN place"]
 fn two_unreadable_pages_on_a_two_page_screen_get_finite_places() {
     let unread = PageShape::story(0, 0);
     let options =
@@ -67,23 +66,27 @@ fn two_unreadable_pages_on_a_two_page_screen_get_finite_places() {
     }
 }
 
-/// Every leaf part sits inside the leaf, every page that is not skipped is shown, and pages
-/// come in order, for any sizes a book can give (zero included).
+/// Every leaf part sits inside the leaf at a finite place, every page that is not skipped is
+/// shown, and pages come in order, for any sizes a book can give (zero and the largest
+/// included) and any kind it can say.
 #[test]
 fn layout_of_any_sizes_keeps_every_page_in_order() {
     let mut rng = Rng(0x5eed_0001);
+    let sides: Vec<u32> = ODD_SIDES.iter().copied().chain([u32::MAX - 1, u32::MAX]).collect();
     for round in 0..20_000 {
         let n = rng.below(9) as usize;
         let pages: Vec<PageShape> = (0..n)
             .map(|_| PageShape {
-                // Zero sides are R5E-1's; this test covers every other size.
-                width: rng.pick(&ODD_SIDES[1..]),
-                height: rng.pick(&ODD_SIDES[1..]),
+                width: rng.pick(&sides),
+                height: rng.pick(&sides),
                 kind: rng.pick(&[
                     PageKind::Story,
                     PageKind::Story,
+                    PageKind::Story,
+                    PageKind::Spread,
                     PageKind::Cover,
                     PageKind::Skip,
+                    PageKind::StripCut,
                 ]),
             })
             .collect();
