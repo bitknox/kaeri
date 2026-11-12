@@ -23,6 +23,8 @@ struct PagedReader: View {
     @AppStorage(ReaderDefaults.background) private var background = "theme"
     @State private var settling = false
     @State private var zoom = PageZoom()
+    /// The pinch gesture is live. It goes back to false however the gesture stops, cancelled too.
+    @GestureState private var magnifying = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var rtl: Bool { model.view?.direction == .rightToLeft }
@@ -54,8 +56,12 @@ struct PagedReader: View {
                 .exclusively(before: SpatialTapGesture().onEnded { tap($0.location.x / max(size.width, 1)) }))
         .simultaneousGesture(
             MagnifyGesture()
+                .updating($magnifying) { _, live, _ in live = true }
                 .onChanged { zoom.pinch($0.magnification, at: $0.startLocation, in: size) }
                 .onEnded { _ in zoom.pinchEnded(in: size, motion: !reduceMotion && !paper) })
+        .onChange(of: magnifying) { _, live in
+            if !live { zoom.pinchGone(in: size, motion: !reduceMotion && !paper) }
+        }
         #else
         .simultaneousGesture(SpatialTapGesture().onEnded { tap($0.location.x / max(size.width, 1)) })
         #endif
