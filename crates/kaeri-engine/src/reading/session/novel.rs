@@ -356,7 +356,8 @@ const DOWNLOAD_LOOK: Duration = Duration::from_millis(100);
 enum Joined {
     /// The download is done: the chapter opens from its file.
     File,
-    /// The download is fetching the chapter's pictures: the open shares its pages.
+    /// The download fetches the chapter's pictures, or a reader still holds the pages it
+    /// fetched: the open shares them.
     Pages(Arc<crate::downloads::books::SharedPages>),
     /// The queue is not fetching it: the open asks the source itself.
     Not,
@@ -365,8 +366,10 @@ enum Joined {
 /// Join the download queue's fetch of a chapter being opened, so the source is asked for it
 /// once: its pages as soon as it fetches pictures, or its file once it is done. Not when the
 /// queue is not fetching it, and as soon as the download fails, is taken out of the queue or
-/// held, or stays queued past [`FIRST_PAGE_QUEUED`]. Until the download starts sharing its pages
-/// or ends, its row is looked at every [`DOWNLOAD_LOOK`]: the queue says nothing as it does.
+/// held. A queued one is waited on only while the queue is about to start it, for
+/// [`FIRST_PAGE_QUEUED`] at most: not one behind another download or in a queue that does not
+/// run. Until the download starts sharing its pages or ends, its row is looked at every
+/// [`DOWNLOAD_LOOK`]: the queue says nothing as it does.
 async fn joined(
     sources: &crate::read_sources::BookSources,
     work: &WorkId,
@@ -379,7 +382,9 @@ async fn joined(
             return Joined::Pages(pages);
         }
         let row = sources.store().book_download(work.as_str(), chapter.as_str()).ok().flatten();
-        let queued = !sources.downloads.setup().hold && started.elapsed() < FIRST_PAGE_QUEUED;
+        // Queued, it is waited on only while the queue is about to start it.
+        let queued = started.elapsed() < FIRST_PAGE_QUEUED
+            && sources.downloads.starts_soon(sources.store(), work.as_str(), chapter.as_str());
         match row.map(|r| (r.state, r.path)) {
             Some((State::Done, Some(path))) if Path::new(&path).exists() => {
                 return Joined::File;
@@ -751,20 +756,24 @@ impl Session {
             // The download queue is fetching it, as one kept ready or asked for: pictures open
             // from the pages it has kept, the rest shared with it as they come, and a book
             // waits for its file. The source is not asked for the chapter a second time.
-            let (kept, opened) = match joined(&sources, &work, &id).await {
-                Joined::File => {
-                    put.put(Prepared::Downloaded);
-                    return;
-                }
-                Joined::Pages(kept) => {
-                    let opened = kept.opened.clone();
-                    (Some(kept), Ok(opened))
-                }
-                Joined::Not => {
+            let (kept, opened) = loop {
+                match joined(&sources, &work, &id).await {
+                    Joined::File => {
+                        put.put(Prepared::Downloaded);
+                        return;
+                    }
+                    Joined::Pages(kept) => {
+                        let opened = kept.opened();
+                        break (Some(kept), Ok(opened));
+                    }
                     // Still queued only to be kept ready, it leaves the queue: this open
-                    // fetches it.
-                    sources.downloads.reader_fetches(sources.store(), &out, (&work, &id), now);
-                    (None, sources.open(&work, &id, None, now).await)
+                    // fetches it. One the queue started meanwhile is joined.
+                    Joined::Not => {
+                        let store = sources.store();
+                        if sources.downloads.reader_fetches(store, &out, (&work, &id), now) {
+                            break (None, sources.open(&work, &id, None, now).await);
+                        }
+                    }
                 }
             };
             let prepared = match opened {

@@ -36,6 +36,8 @@ struct Shelf {
     broken: Mutex<Vec<String>>,
     /// The page at this address waits: see [`Held`].
     held: Mutex<Option<Held>>,
+    /// The chapters whose pages were asked for, in order.
+    contents: Mutex<Vec<String>>,
 }
 
 /// A page held back: its address, a notify that says it was asked and one that lets it answer.
@@ -64,6 +66,7 @@ impl BookSource for Shelf {
     }
 
     async fn content(&self, _: &str, chapter: &str) -> Result<ChapterContent, ProviderError> {
+        self.contents.lock().unwrap().push(chapter.to_owned());
         if chapter.contains("gone") {
             return Err(ProviderError::NotFound);
         }
@@ -198,6 +201,7 @@ fn kit_of(chapters: &[&str], hosts: &[&str]) -> Kit {
         asked: Mutex::default(),
         broken: Mutex::default(),
         held: Mutex::default(),
+        contents: Mutex::default(),
     });
     sources.registry.put(shelf.clone());
     store.set_book_match("shelf", "s-1", WORK, 100, true, false, 1).unwrap();
@@ -594,6 +598,7 @@ async fn a_chapter_listed_from_another_source_downloads_from_there() {
         asked: Mutex::default(),
         broken: Mutex::default(),
         held: Mutex::default(),
+        contents: Mutex::default(),
     });
     kit.lent.sources.registry.put(other.clone());
     kit.store().set_book_match("other", "s-2", WORK, 90, true, false, 1).unwrap();
@@ -1116,4 +1121,57 @@ async fn series_are_named_in_the_chosen_title_language() {
     let view = kit.queue.view(kit.store());
     assert_eq!(view.series[0].title, "Touro no Watashibune");
     assert_eq!(view.rows[0].title, "Touro no Watashibune");
+}
+
+/// A page that comes but cannot be written fails the chapter with what the disk said, as a full
+/// device does, rather than as a page gone missing.
+#[cfg(unix)]
+#[tokio::test]
+async fn a_page_that_cannot_be_kept_fails_the_chapter_as_the_disk_says() {
+    use std::os::unix::fs::PermissionsExt;
+    let kit = kit(&["1"]);
+    let (asked, answer) =
+        (Arc::new(tokio::sync::Notify::new()), Arc::new(tokio::sync::Notify::new()));
+    let held = ("https://pages.example/1/2".to_owned(), asked.clone(), answer.clone());
+    *kit.shelf.held.lock().unwrap() = Some(held);
+    kit.queue.download(&kit.lent, WorkId::new(WORK), DownloadPick::Unread).await;
+    asked.notified().await;
+    let first = kit.queue.first_kept_page(WORK, "1").expect("the first page kept");
+    let dir = first.parent().unwrap().to_path_buf();
+    std::fs::set_permissions(&dir, std::fs::Permissions::from_mode(0o555)).unwrap();
+    answer.notify_one();
+    kit.settle().await;
+    std::fs::set_permissions(&dir, std::fs::Permissions::from_mode(0o755)).unwrap();
+    let failure = ReadingFailure::FileMissing { path: dir.to_string_lossy().into_owned() };
+    assert_eq!(kit.states(), [("1".into(), ChapterDownloadState::Failed { failure })]);
+}
+
+/// The reader takes a chapter kept ready out of the queue just as the queue picked it: the
+/// queue does not ask the source for it. One the queue has started stays, for the reader to
+/// join.
+#[tokio::test]
+async fn a_chapter_taken_out_of_the_queue_as_it_starts_is_not_asked_for() {
+    let kit = kit(&["1", "2"]);
+    let ask = |chapter| kaeri_store::book_downloads::BookDownloadAsk {
+        work: WORK,
+        chapter,
+        source_id: "shelf",
+        version_label: None,
+        keep_ready: true,
+    };
+    kit.store().queue_book_download(&ask("1"), 1).unwrap();
+    let row = kit.store().next_book_download().unwrap().unwrap();
+    let reader = (&WorkId::new(WORK), &ChapterId::new("1"));
+    assert!(kit.queue.reader_fetches(kit.store(), &kit.lent.tx, reader, 2));
+    let (go_on, done) = kit.queue.one(&kit.lent, kit.store(), row).await;
+    assert!(go_on && !done);
+    assert!(kit.shelf.contents.lock().unwrap().is_empty(), "asked for its pages");
+
+    kit.store().queue_book_download(&ask("2"), 3).unwrap();
+    let row = kit.store().next_book_download().unwrap().unwrap();
+    kit.store().book_download_progress(row.id, 0, None, 4).unwrap();
+    let reader = (&WorkId::new(WORK), &ChapterId::new("2"));
+    assert!(!kit.queue.reader_fetches(kit.store(), &kit.lent.tx, reader, 5), "started");
+    let state = kit.store().book_download(WORK, "2").unwrap().unwrap().state;
+    assert_eq!(state, BookDownloadState::Downloading);
 }

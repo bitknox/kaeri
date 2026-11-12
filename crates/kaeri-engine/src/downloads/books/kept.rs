@@ -102,6 +102,11 @@ impl KeptPages {
         self.good.get(&index).map(PathBuf::as_path)
     }
 
+    /// Page `index` is no longer kept as it was: its file went.
+    pub(crate) fn forget(&mut self, index: u32) {
+        self.good.remove(&index);
+    }
+
     pub(crate) fn dir(&self) -> &Path {
         &self.dir
     }

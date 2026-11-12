@@ -697,25 +697,22 @@ impl BookDownloads {
     }
 
     /// The reader fetches `chapter` itself, as the queue had not started it: a chapter waiting
-    /// only to be kept ready leaves the queue, so the source is not asked for it again. One the
-    /// person asked for stays.
+    /// only to be kept ready leaves the queue in the same step, so the source is not asked for
+    /// it again. One the person asked for stays. False when the queue started it meanwhile: the
+    /// reader joins that fetch instead.
     pub(crate) fn reader_fetches(
         &self,
         store: &Store,
         tx: &Outbox,
         (work, chapter): (&WorkId, &ChapterId),
         now: i64,
-    ) {
-        let Ok(Some(row)) = store.book_download(work.as_str(), chapter.as_str()) else {
-            return;
-        };
-        if !row.keep_ready || row.state != BookDownloadState::Queued {
-            return;
-        }
-        let chapters = [row.chapter];
-        if store.remove_book_downloads(work.as_str(), &chapters, false, now).is_ok() {
+    ) -> bool {
+        if store.unqueue_kept_ready(work.as_str(), chapter.as_str(), now).unwrap_or(false) {
             self.publish(store, tx);
+            return true;
         }
+        let row = store.book_download(work.as_str(), chapter.as_str()).ok().flatten();
+        !row.is_some_and(|r| r.state == BookDownloadState::Downloading)
     }
 
     /// Let go of the downloads of read chapters, of one work or all: every one kept ready on
@@ -970,7 +967,25 @@ impl BookDownloads {
     /// The pages of a chapter of pictures being fetched now, for the reader to share: it takes
     /// the pages kept and those still to come from them, and fetches any other only once.
     pub(crate) fn sharing(&self, work: &str, chapter: &str) -> Option<Arc<SharedPages>> {
-        self.0.shares.of(work, chapter)
+        self.0.shares.of(&pages_of(&self.0.dir.join(safe(work)).join(safe(chapter))))
+    }
+
+    /// Whether the queue is about to fetch `chapter`: it runs, fetches nothing now, and takes
+    /// this chapter next. One waiting behind another download, or in a queue that does not run,
+    /// is not.
+    pub(crate) fn starts_soon(&self, store: &Store, work: &str, chapter: &str) -> bool {
+        if self.setup().hold || !*self.0.running.lock().unwrap_or_else(|e| e.into_inner()) {
+            return false;
+        }
+        let rows = store.book_downloads(None).unwrap_or_default();
+        if rows.iter().any(|r| r.state == BookDownloadState::Downloading) {
+            return false;
+        }
+        store
+            .next_book_download()
+            .ok()
+            .flatten()
+            .is_some_and(|next| next.work == work && next.chapter == chapter)
     }
 
     fn file_stem(&self, row: &BookDownload) -> PathBuf {
@@ -1025,6 +1040,11 @@ impl BookDownloads {
         }
         lent.sources.plugins_in(&lent.plugins, Some(&job.source_id)).await;
         let (work, chapter) = (&job.work, &job.chapter);
+        // Taken out of the queue as it started, by a reader fetching it itself: the source is
+        // not asked for it.
+        if !(job.wanted)() {
+            return Err(Stop::Cancelled);
+        }
         let mut opened = lent
             .sources
             .open(work, chapter, Some(&job.source_id), now)
@@ -1058,19 +1078,13 @@ impl BookDownloads {
                 // Each page is kept as it lands, so a fetch cut short fetches only the pages it
                 // lacks next time.
                 let dir = pages_of(&stem);
-                let kept = KeptPages::open(&dir, total)
-                    .map_err(|e| Stop::Failed(io_failure(&e, &dir)))?;
-                if kept.len() > 0 {
-                    tracing::info!(
-                        kept = kept.len(),
-                        total,
-                        "a chapter fetch picks up its pages"
-                    );
-                }
                 // A reader opening the chapter meanwhile shares the pages: each is fetched once,
-                // by whichever asks first.
-                let kept = Arc::new(SharedPages::new(kept, opened.clone()));
-                let _shared = self.0.shares.share((work.as_str(), chapter.as_str()), &kept);
+                // by whichever asks first. One still holding them from before is shared again.
+                let kept = self
+                    .0
+                    .shares
+                    .open(&dir, total, opened.clone())
+                    .map_err(|e| Stop::Failed(io_failure(&e, &dir)))?;
                 for index in 0..total {
                     if self.setup().hold {
                         return Err(Stop::Held);
@@ -1084,11 +1098,15 @@ impl BookDownloads {
                             return Err(ReadingFailure::DiskFull.into());
                         }
                         let now = lent.clock.now();
-                        let fetch = lent.sources.page(&mut opened, index as usize, now);
-                        kept.page(index, fetch).await.map_err(Stop::Failed)?;
+                        kept.page(&lent.sources, index, now, false)
+                            .await
+                            .map_err(Stop::Failed)?;
                         if !kept.has(index) {
-                            let reason = format!("page {index} was not kept");
-                            return Err(Stop::Failed(ReadingFailure::Other { reason }));
+                            let failure = kept.unkept(index).unwrap_or_else(|| {
+                                let reason = format!("page {index} was not kept");
+                                ReadingFailure::Other { reason }
+                            });
+                            return Err(Stop::Failed(failure));
                         }
                     }
                     (job.progress)(index + 1, total);

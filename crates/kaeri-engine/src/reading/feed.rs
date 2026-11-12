@@ -208,8 +208,7 @@ struct Fetcher<F> {
     wanted: mpsc::UnboundedReceiver<usize>,
     gone: Gone,
     left: tokio::sync::watch::Receiver<bool>,
-    /// Held until the first pass is under way and done, then let go: the download's pages go
-    /// once it is done with them.
+    /// The download's pages, shared until every page has landed.
     kept: Kept,
 }
 
@@ -457,9 +456,11 @@ async fn edge_pages(
     let lead = wanted.next();
     let lead = match lead {
         Some((page, at_end)) => {
-            let got =
-                tokio::time::timeout_at(deadline, page_of(sources, kept, opened, page, now))
-                    .await;
+            let got = tokio::time::timeout_at(
+                deadline,
+                page_of((sources, kept), opened, page, now, false),
+            )
+            .await;
             Some((page, at_end, got.ok().and_then(Result::ok)))
         }
         None => None,
@@ -469,7 +470,7 @@ async fn edge_pages(
             let fetch = opened.pictures_copy().map(|mut own| {
                 let (sources, kept) = (sources.clone(), kept.clone());
                 Pending(tokio::spawn(async move {
-                    page_of(&sources, &kept, &mut own, page, now).await
+                    page_of((&sources, &kept), &mut own, page, now, false).await
                 }))
             });
             (page, at_end, fetch)
@@ -557,10 +558,6 @@ impl<F: Fn(u32, &Outbox) + Send + 'static> Fetcher<F> {
             // an engine waiting on nothing can go idle.
             if order.is_empty() && urgent.is_empty() {
                 out = None;
-                // Every page has come or failed: a retry asks the source itself.
-                if running.is_empty() {
-                    self.kept = None;
-                }
             }
             if running.is_empty() && !open {
                 return;
@@ -575,6 +572,11 @@ impl<F: Fn(u32, &Outbox) + Send + 'static> Fetcher<F> {
                     let Some(feed) = feed.upgrade() else { return };
                     feed.set(index, page);
                     asked.remove(&index);
+                    // Every page landed: nothing more is fetched from the download's pages, and
+                    // they go once it is done with them.
+                    if feed.complete() {
+                        self.kept = None;
+                    }
                     if let Some(told) = told {
                         (self.landed)(index as u32, &told);
                     }
@@ -625,7 +627,7 @@ impl<F: Fn(u32, &Outbox) + Send + 'static> Fetcher<F> {
 }
 
 /// Whether a fetch asked for `after`'s page addresses again, so they differ from `before`'s.
-fn moved(after: &Opened, before: &Opened) -> bool {
+pub(crate) fn moved(after: &Opened, before: &Opened) -> bool {
     after.content != before.content
         || after.parts.iter().zip(&before.parts).any(|(a, b)| a.pages != b.pages)
 }
@@ -646,11 +648,11 @@ async fn fetch(
     let came = match slow {
         Some(mut slow) => match tokio::time::timeout(PAGE_WAIT, &mut slow.0).await {
             Ok(Ok(Ok(bytes))) => Ok(bytes),
-            Ok(_) => within((sources, kept), opened, source, now, 2).await,
+            Ok(_) => within((sources, kept), opened, source, now, 0..2).await,
             // The edge fetch was its first try.
-            Err(_) => within((sources, kept), opened, source, now, 1).await,
+            Err(_) => within((sources, kept), opened, source, now, 1..2).await,
         },
-        None => within((sources, kept), opened, source, now, 2).await,
+        None => within((sources, kept), opened, source, now, 0..2).await,
     };
     match came {
         Ok(bytes) => write(dir, &format!("{:05}", index + 1), bytes, gone).await,
@@ -658,18 +660,19 @@ async fn fetch(
     }
 }
 
-/// The source's page `index`, with `tries` tries of [`PAGE_WAIT`] each. A page the download
-/// fetches is waited on the same.
+/// The source's page `index`, with `tries` tries of [`PAGE_WAIT`] each, counted from 0. A
+/// page the download fetches is waited on the same, and a try after the first asks the source
+/// once more rather than waiting on the fetch that did not come.
 async fn within(
     (sources, kept): (&BookSources, &Kept),
     opened: &mut Opened,
     index: usize,
     now: i64,
-    tries: u32,
+    tries: std::ops::Range<u32>,
 ) -> Result<Vec<u8>, ReadingFailure> {
     let page = u32::try_from(index).unwrap_or(u32::MAX);
-    for _ in 0..tries {
-        let came = page_of(sources, kept, opened, page, now);
+    for at in tries {
+        let came = page_of((sources, kept), opened, page, now, at > 0);
         if let Ok(came) = tokio::time::timeout(PAGE_WAIT, came).await {
             return came;
         }
@@ -678,18 +681,17 @@ async fn within(
 }
 
 /// The source's page `index`: from the download's pages when it shares them, which fetch it
-/// only when neither has.
+/// only when neither has, or `again` asks for it once more.
 async fn page_of(
-    sources: &BookSources,
-    kept: &Kept,
+    (sources, kept): (&BookSources, &Kept),
     opened: &mut Opened,
     index: u32,
     now: i64,
+    again: bool,
 ) -> Result<Vec<u8>, ReadingFailure> {
-    let fetch = sources.page(opened, index as usize, now);
     match kept {
-        Some(kept) => kept.page(index, fetch).await,
-        None => fetch.await,
+        Some(kept) => kept.page(sources, index, now, again).await,
+        None => sources.page(opened, index as usize, now).await,
     }
 }
 

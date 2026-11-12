@@ -37,6 +37,8 @@ struct Many {
     held_pages: Mutex<HashSet<(String, usize)>>,
     /// These pages fail the next time they are asked for, once.
     fail_once: Mutex<HashSet<(String, usize)>>,
+    /// These pages never answer the next time they are asked for, once.
+    hang_once: Mutex<HashSet<(String, usize)>>,
     /// Every chapter whose page list was asked for.
     contents: Mutex<Vec<String>>,
     changed: tokio::sync::Notify,
@@ -62,6 +64,7 @@ impl Many {
             held_chapter: Mutex::new(None),
             held_pages: Mutex::default(),
             fail_once: Mutex::default(),
+            hang_once: Mutex::default(),
             contents: Mutex::default(),
             changed: tokio::sync::Notify::new(),
         }
@@ -145,6 +148,9 @@ impl kaeri_core::traits::BookSource for Many {
                 break;
             }
             changed.await;
+        }
+        if self.hang_once.lock().unwrap().remove(&(chapter.clone(), index)) {
+            std::future::pending::<()>().await;
         }
         if self.fail_once.lock().unwrap().remove(&(chapter.clone(), index)) {
             return Err(PageError::Status(404));
