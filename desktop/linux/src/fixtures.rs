@@ -517,6 +517,9 @@ fn write_config(file: &Path, demo: bool, home: HomeScene) -> Result<(), String> 
                         HomeScene::ReadingDownloads => {
                             "\n[reading]\nkaeri_is_for = \"both\"\nkeep_chapters_ready = true\n"
                         }
+                        // Watching only, answered already, so the reading update's question
+                        // stays out of the watching shots. The demo run keeps its first launch.
+                        _ if !demo => "\n[reading]\nkaeri_is_for = \"watch\"\n",
                         _ => "",
                     }
                 ),
