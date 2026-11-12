@@ -494,19 +494,28 @@ async fn fetch_like_a_receiver(
         let response = PlainHttp.get(&url, &headers).await.map_err(|_| 502u16)?;
         let (status, cors) =
             (response.status, response.header("access-control-allow-origin").is_some());
+        let kind = response.header("content-type").map(str::to_owned);
         let body = response.prefix(4 << 20).await.map_err(|_| 502u16)?;
-        Ok::<_, u16>((url, status, cors, body))
+        Ok::<_, u16>((url, status, cors, kind, body))
     };
     let mut all = Vec::new();
-    let mut note = |(url, status, cors, body): (String, u16, bool, Vec<u8>)| {
-        lock(fetched).push(Fetched { url, status, bytes: body.len(), cors });
-        if !(200..300).contains(&status) || (hls && !cors) {
-            return Err(status);
-        }
-        all.extend_from_slice(&body);
-        Ok(body)
-    };
-    let body = note(get(url.to_owned()).await?)?;
+    // A segment's type is believed, as the receiver's player believes it: one named as an
+    // image is refused, whatever its bytes are.
+    let mut note =
+        |(url, status, cors, kind, body): (String, u16, bool, Option<String>, Vec<u8>),
+         segment: bool| {
+            lock(fetched).push(Fetched { url, status, bytes: body.len(), cors });
+            if !(200..300).contains(&status) || (hls && !cors) {
+                return Err(status);
+            }
+            if segment && kind.as_deref().is_some_and(|kind| !crate::probe::read_as_media(kind))
+            {
+                return Err(415);
+            }
+            all.extend_from_slice(&body);
+            Ok(body)
+        };
+    let body = note(get(url.to_owned()).await?, false)?;
     if !hls {
         return Ok((None, all));
     }
@@ -518,7 +527,7 @@ async fn fetch_like_a_receiver(
         .find(|l| !l.starts_with('#') && !l.trim().is_empty())
     {
         url = resolve(&url, variant.trim());
-        let body = note(get(url.clone()).await?)?;
+        let body = note(get(url.clone()).await?, false)?;
         text = String::from_utf8_lossy(&body).into_owned();
     }
     let duration: f64 = text
@@ -530,10 +539,10 @@ async fn fetch_like_a_receiver(
         let at = l.find("URI=\"")? + 5;
         l.starts_with("#EXT-X-MAP").then(|| l[at..].split('"').next().map(str::to_owned))?
     }) {
-        note(get(resolve(&url, &map)).await?)?;
+        note(get(resolve(&url, &map)).await?, true)?;
     }
     if let Some(first) = text.lines().find(|l| !l.starts_with('#') && !l.trim().is_empty()) {
-        note(get(resolve(&url, first.trim())).await?)?;
+        note(get(resolve(&url, first.trim())).await?, true)?;
     }
     Ok(((duration > 0.0).then_some(duration), all))
 }

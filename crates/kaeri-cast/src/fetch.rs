@@ -318,6 +318,15 @@ pub(crate) mod tests {
 
     /// A loopback server answering every GET with `body`, with ranges, chunked when asked.
     pub(crate) async fn serve(body: Vec<u8>, chunked: bool) -> String {
+        serve_typed(body, chunked, None).await
+    }
+
+    /// [`serve`], naming the body `content_type` when given.
+    pub(crate) async fn serve_typed(
+        body: Vec<u8>,
+        chunked: bool,
+        content_type: Option<&'static str>,
+    ) -> String {
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let address = listener.local_addr().unwrap();
         tokio::spawn(async move {
@@ -346,7 +355,7 @@ pub(crate) mod tests {
                         }
                     }
                     let mut socket = reader.into_inner();
-                    let (status, part, extra) = match range {
+                    let (status, part, mut extra) = match range {
                         Some((a, b)) => (
                             "206 Partial Content",
                             &body[a..=b],
@@ -354,6 +363,9 @@ pub(crate) mod tests {
                         ),
                         None => ("200 OK", &body[..], String::new()),
                     };
+                    if let Some(content_type) = content_type {
+                        extra.push_str(&format!("Content-Type: {content_type}\r\n"));
+                    }
                     let head = if chunked {
                         format!(
                             "HTTP/1.1 {status}\r\n{extra}Transfer-Encoding: chunked\r\n\r\n"
