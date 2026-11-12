@@ -5,6 +5,7 @@
 package app.kaeri.reader
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -272,11 +273,15 @@ fun PageCanvas(page: PageBitmap, rotate: Boolean, modifier: Modifier = Modifier,
     }
 }
 
-/** The phone's waiting plate: it fills the page's place with "Page N", and from four seconds a line under it. */
+/**
+ * The phone's waiting plate: it fills the page's place with "Page N", and from four seconds a line
+ * under it. It fades in over what is under it as it comes, as Apple's and Windows' plates do.
+ */
 @Composable
 fun BoxScope.PageWaiting(page: Int, long: Boolean) {
     val context = LocalContext.current
-    Box(Modifier.fillMaxSize().background(ObiSilk.Raised)) {
+    val shown = rememberFadedIn()
+    Box(Modifier.fillMaxSize().graphicsLayer { alpha = shown.value }.background(ObiSilk.Raised)) {
         PlateWords(Strings.readerPagePlate(context, page + 1), Strings.readerPageLoading(context, page + 1).takeIf { long }, Modifier.align(Alignment.Center))
     }
 }
@@ -284,15 +289,16 @@ fun BoxScope.PageWaiting(page: Int, long: Boolean) {
 /**
  * The phone's plate for a strip image: "Image N", and from four seconds a line under it. The words
  * sit in the middle of the part of the image on screen, so they stay in view however tall the image
- * is and wherever the strip is scrolled to.
+ * is and wherever the strip is scrolled to. It fades in as it comes, as the page's plate does.
  */
 @Composable
 fun BoxScope.ImageWaiting(page: Int, long: Boolean) {
     val context = LocalContext.current
+    val shown = rememberFadedIn()
     // The part of the plate on screen, in its own pixels, read only while placing the words.
     var seen by remember { mutableStateOf<ClosedFloatingPointRange<Float>?>(null) }
     Box(
-        Modifier.fillMaxSize().background(ObiSilk.Raised).onGloballyPositioned { at ->
+        Modifier.fillMaxSize().graphicsLayer { alpha = shown.value }.background(ObiSilk.Raised).onGloballyPositioned { at ->
             // The part inside every parent, the strip's list among them, back in the plate's own
             // pixels through any zoom.
             val shown = at.boundsInWindow()
@@ -309,6 +315,21 @@ fun BoxScope.ImageWaiting(page: Int, long: Boolean) {
             }
         }
     }
+}
+
+/**
+ * An opacity that fades from nothing to whole once, from when it is first composed, with the fade-in
+ * token. Remove animations keeps the fade on its own clock, as Apple keeps it under Reduce Motion: a
+ * fade is not movement.
+ */
+@Composable
+private fun rememberFadedIn(): Animatable<Float, AnimationVector1D> {
+    val shown = remember { Animatable(0f) }
+    val removed = rememberAnimationsRemoved()
+    LaunchedEffect(Unit) {
+        if (removed) atFullSpeed { shown.animateTo(1f, Motion.fadeIn()) } else shown.animateTo(1f, Motion.fadeIn())
+    }
+    return shown
 }
 
 /**
