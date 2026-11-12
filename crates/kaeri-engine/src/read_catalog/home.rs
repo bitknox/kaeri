@@ -1180,9 +1180,62 @@ mod tests {
         }
     }
 
+    /// The source [`followed`] reads from, installed: it is never asked.
+    struct Here(kaeri_core::books::BookSourceManifest);
+
+    #[async_trait::async_trait]
+    impl kaeri_core::traits::BookSource for Here {
+        fn manifest(&self) -> &kaeri_core::books::BookSourceManifest {
+            &self.0
+        }
+
+        async fn search(
+            &self,
+            _: &str,
+            _: &kaeri_core::books::BookHints,
+        ) -> Result<Vec<kaeri_core::books::SeriesHit>, kaeri_core::ProviderError> {
+            Ok(Vec::new())
+        }
+
+        async fn series(
+            &self,
+            id: &str,
+            _: &kaeri_core::books::BookHints,
+        ) -> Result<kaeri_core::books::SeriesDetail, kaeri_core::ProviderError> {
+            Ok(kaeri_core::books::SeriesDetail::new(id, id))
+        }
+
+        async fn chapters(
+            &self,
+            _: &str,
+            _: &kaeri_core::books::BookHints,
+        ) -> Result<Vec<SourceChapter>, kaeri_core::ProviderError> {
+            Err(kaeri_core::ProviderError::NotFound)
+        }
+
+        async fn content(
+            &self,
+            _: &str,
+            _: &str,
+        ) -> Result<kaeri_core::books::ChapterContent, kaeri_core::ProviderError> {
+            Err(kaeri_core::ProviderError::NotFound)
+        }
+    }
+
     /// A series on Reading whose source listed chapters 1 to 12 a week ago, and chapter 13,
     /// "The Far Shore", an hour ago.
     fn followed(kit: &Kit) {
+        let manifest = kaeri_core::books::BookSourceManifest {
+            id: "shelf".into(),
+            name: "Shelf".into(),
+            version: "1".into(),
+            kind: kaeri_core::books::BookSourceKind::Native,
+            media: vec![kaeri_core::media::Medium::Manga],
+            languages: vec!["en".into()],
+            allowed_hosts: Vec::new(),
+            capabilities: Vec::new(),
+        };
+        kit.sources.registry.put(Arc::new(Here(manifest)));
         let store = &kit.store;
         let meta = r#"{"book":{"id":900301,"title":{"romaji":"The Lantern Ferry"}}}"#;
         let work = BookWork {

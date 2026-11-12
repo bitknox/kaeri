@@ -88,17 +88,3 @@ async fn a_command_for_a_closed_session_hears_it_is_closed() {
     });
     assert!(h.drain().is_empty());
 }
-
-#[tokio::test]
-async fn back_to_page_with_nothing_to_go_back_to_says_the_offer_is_gone() {
-    let mut h = harness(Store::open_in_memory().unwrap());
-    h.open(OpenAt::Start).await;
-    h.drain();
-    let session = h.session();
-    h.send(ReaderCommand::BackTo { session });
-    let said = h.drain();
-    assert!(
-        said.iter().any(|e| matches!(e, ReaderEvent::BackToPage { page: None, .. })),
-        "{said:?}"
-    );
-}

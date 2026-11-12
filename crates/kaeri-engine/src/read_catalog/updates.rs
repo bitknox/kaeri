@@ -273,10 +273,13 @@ pub(crate) async fn run(kit: &Kit, ask: Ask) -> Checked {
     let mut held_back = false;
     for work in followed(store) {
         let id = WorkId::new(work.clone());
-        let Some((source, series)) = sources.edition_of(&id, None) else {
-            // Held only by sources not installed or switched off: the source can't be asked,
-            // which is not the source saying it has no such series. Its list stays as kept.
-            if let Some(source) = away(sources, &id) {
+        let edition = sources.edition_of(&id, None);
+        let Some((source, series)) = edition.clone().filter(|(s, _)| sources.is_available(s))
+        else {
+            // Held only by sources not installed or switched off, or picked from a plugin that
+            // never loaded: the source can't be asked, which is not the source saying it has
+            // no such series. Its list stays as kept.
+            if let Some(source) = edition.map(|(s, _)| s).or_else(|| away(sources, &id)) {
                 held_back = true;
                 let title = tile_of(kit, &work).map_or_else(|| work.clone(), |t| t.title);
                 let name = source_name(sources, &source);
@@ -773,6 +776,12 @@ mod tests {
         let kit = kit(dir.path(), native("near", Vec::new()));
         let work = "a:900301";
         kit.store.set_book_match("late", "l-1", work, 100, true, false, 1).unwrap();
+        let pick = kaeri_store::reading::EditionPref {
+            source_id: "late".into(),
+            version_label: None,
+            language: None,
+        };
+        kit.store.set_edition_pref(work, Some(&pick)).unwrap();
         let kept: Vec<SourceChapter> = (1..=10).map(chapter).collect();
         chapters::keep(&kit.store, "late", "l-1", &kept, 1);
         kit.store.adopt_read(work, "10", None, 2).unwrap();

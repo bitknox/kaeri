@@ -291,6 +291,8 @@ pub struct BookSources {
     pub feed: crate::export::feed::Feed,
     /// Reading progress waiting for book servers: see [`crate::write_back`].
     pub write_back: crate::write_back::WriteBack,
+    /// The book plugins as last taken in, asked whether a load is still under way.
+    plugins: Arc<RwLock<Option<BookPlugins>>>,
 }
 
 impl std::fmt::Debug for BookSources {
@@ -332,6 +334,7 @@ impl BookSources {
             #[cfg(feature = "opds-feed")]
             feed: crate::export::feed::Feed::default(),
             write_back: crate::write_back::WriteBack::default(),
+            plugins: Arc::default(),
         };
         this.registry.put(Arc::new(FolderSource::new(this.store.clone())));
         this.restore();
@@ -385,6 +388,9 @@ impl BookSources {
     /// Put plugins that have loaded into the registry, leaving the rest as it is; the ids of
     /// the plugins loaded.
     pub(crate) fn take_in_plugins(&self, plugins: &BookPlugins) -> HashSet<String> {
+        if let Ok(mut seen) = self.plugins.write() {
+            seen.get_or_insert_with(|| plugins.clone());
+        }
         let here: HashSet<String> = plugins.ids().into_iter().collect();
         for id in &here {
             if let Some(plugin) = plugins.get(id) {
@@ -1814,9 +1820,10 @@ impl BookSources {
         match wanted {
             // The person's pick waits while its source is not installed or is switched off:
             // the work reads from another edition until the source is back, and the pick is
-            // kept for then. An edition asked for by name is read from as it is.
+            // kept for then. While plugins are loading it holds, as its plugin may be on the
+            // way. An edition asked for by name is read from as it is.
             Some(wanted)
-                if (edition.is_some() || self.is_available(&wanted))
+                if (edition.is_some() || self.may_be_available(&wanted))
                     && held.iter().any(|(source, _)| *source == wanted) =>
             {
                 held.retain(|(source, _)| *source == wanted);
@@ -1853,6 +1860,18 @@ impl BookSources {
     /// Whether `source` can be asked: installed, and not switched off.
     pub(crate) fn is_available(&self, source: &str) -> bool {
         self.registry.get(source).is_some() && !self.registry.is_off(source)
+    }
+
+    /// Whether `source` may yet be asked: available, or not switched off while plugins are
+    /// still loading, when it may be one of them.
+    fn may_be_available(&self, source: &str) -> bool {
+        let arriving = self
+            .plugins
+            .read()
+            .ok()
+            .and_then(|p| p.as_ref().map(BookPlugins::is_arriving))
+            .unwrap_or(false);
+        self.is_available(source) || (arriving && !self.registry.is_off(source))
     }
 
     /// While plugins are still loading: the edition a work is held in from a source not in

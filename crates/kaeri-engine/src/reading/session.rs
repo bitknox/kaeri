@@ -1374,9 +1374,6 @@ impl Session {
                 if let Some(back) = self.back_to.clone() {
                     self.drop_back(cx);
                     self.go_to(cx, pages, back);
-                } else {
-                    // An offer already withdrawn: the app hears again that it is gone.
-                    cx.send(ReaderEvent::BackToPage { session: self.id, page: None });
                 }
             }
             C::StartOver { .. } => {
