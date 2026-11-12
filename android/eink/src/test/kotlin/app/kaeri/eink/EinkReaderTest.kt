@@ -109,6 +109,10 @@ class EinkReaderTest {
             }
         }
         compose.waitForIdle()
+        // The first page decodes off the main thread and paints once it is drawn: wait for it, so
+        // a test's own paints come after it.
+        compose.waitUntil(5_000) { paints.any { it is EinkPaint.ImagePage } }
+        compose.waitForIdle()
     }
 
     private var readerOn by mutableStateOf(true)
