@@ -304,11 +304,9 @@ fn comic_info_never_panics() {
 }
 
 /// R5E-4. An attribute whose name starts with a letter of three or more bytes (`<p あa="1">`,
-/// well-formed XML) is cut at byte 2 to look for `on…` handlers: in the reader's sanitiser
-/// (`novel/sanitize.rs:472`) and in the EPUB writer downloads and Send to e-reader use
-/// (`write/xhtml.rs:201`). Either panics.
+/// well-formed XML) goes through the `on…` handler check in the reader's sanitiser and in the
+/// EPUB writer downloads and Send to e-reader use. Neither may panic.
 #[test]
-#[ignore = "R5E-4: attribute names are sliced at byte 2"]
 fn attributes_named_in_wide_letters_are_cleaned() {
     let limits = Limits::default();
     let clean = Clean { path: "c.xhtml", lang: None, soft_hyphens: false, limits: &limits };
