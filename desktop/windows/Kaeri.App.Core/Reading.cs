@@ -358,6 +358,10 @@ public sealed class ReadingStore
                 Search.HasMore = search.HasMore;
                 Search.OtherScope = search.OtherScope;
                 Search.Loading = false;
+                // Results for the query on screen: a failure that came before them (an older
+                // query's, which names none) no longer stands.
+                Search.Failure = null;
+                Failures.Remove(ReadingAbout.Search);
                 Changed?.Invoke(ReadingPart.Search);
                 break;
             case ReadingEvent.SourceSearch found:
