@@ -234,7 +234,7 @@ fn search_asks_anilist_with_its_filters() {
     let (_root, engine) = start(FfiScene::ReadingHome);
     let (found, other, total) = search(
         &engine,
-        ReadSearchQuery { text: "lantern".into(), ..ReadSearchQuery::default() },
+        ReadSearchQuery { text: "ferry".into(), ..ReadSearchQuery::default() },
     );
     assert_eq!(found, ["a:900301"]);
     // Both media are on: the count of shows rides along.

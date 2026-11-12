@@ -865,7 +865,7 @@
       "year": "2024",
       "score": "82",
       "studio": "Kujaku Animation Works",
-      "synopsis": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+      "synopsis": "Aki relights the old beacons along the roads between the hill towns, one town a week. She doesn't remember where she grew up.\n\nIn the town of Seto, an innkeeper says he has seen her face before, on a poster from twenty years ago.",
       "coverUrl": "https://img.example/cover/900001-xl.jpg",
       "coverColor": "#e4a15d",
       "bannerUrl": "https://img.example/banner/900001.jpg",
@@ -932,7 +932,7 @@
       "madeOutsideJapan": false,
       "synopsisSpans": [
        {
-        "text": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+        "text": "Aki relights the old beacons along the roads between the hill towns, one town a week. She doesn't remember where she grew up.\n\nIn the town of Seto, an innkeeper says he has seen her face before, on a poster from twenty years ago.",
         "spoiler": false
        }
       ],
@@ -988,7 +988,7 @@
          "year": "2024",
          "score": "82",
          "studio": "Kujaku Animation Works",
-         "synopsis": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+         "synopsis": "Aki relights the old beacons along the roads between the hill towns, one town a week. She doesn't remember where she grew up.\n\nIn the town of Seto, an innkeeper says he has seen her face before, on a poster from twenty years ago.",
          "coverUrl": "https://img.example/cover/900001-xl.jpg",
          "coverColor": "#e4a15d",
          "bannerUrl": "https://img.example/banner/900001.jpg",
@@ -1055,7 +1055,7 @@
          "madeOutsideJapan": false,
          "synopsisSpans": [
           {
-           "text": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+           "text": "Aki relights the old beacons along the roads between the hill towns, one town a week. She doesn't remember where she grew up.\n\nIn the town of Seto, an innkeeper says he has seen her face before, on a poster from twenty years ago.",
            "spoiler": false
           }
          ],
@@ -1108,7 +1108,7 @@
          "year": "2023",
          "score": "71",
          "studio": "Studio Mokusei",
-         "synopsis": "A decommissioned construction robot tends a rooftop garden and, one season at a time, the neighbours who come to see it.",
+         "synopsis": "A retired construction robot looks after the vegetable beds on the roof of an old apartment block. The residents who come up to help each bring a problem, and the robot is bad at most of them.",
          "coverUrl": "https://img.example/cover/900005-xl.jpg",
          "coverColor": "#7ac47f",
          "bannerUrl": null,
@@ -1174,7 +1174,7 @@
          "madeOutsideJapan": false,
          "synopsisSpans": [
           {
-           "text": "A decommissioned construction robot tends a rooftop garden and, one season at a time, the neighbours who come to see it.",
+           "text": "A retired construction robot looks after the vegetable beds on the roof of an old apartment block. The residents who come up to help each bring a problem, and the robot is bad at most of them.",
            "spoiler": false
           }
          ],
@@ -1225,7 +1225,7 @@
          "year": "2026",
          "score": "77",
          "studio": "Hanabishi Pictures",
-         "synopsis": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+         "synopsis": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
          "coverUrl": "https://img.example/cover/900002-xl.jpg",
          "coverColor": "#5d9be4",
          "bannerUrl": "https://img.example/banner/900002.jpg",
@@ -1280,7 +1280,7 @@
          "madeOutsideJapan": false,
          "synopsisSpans": [
           {
-           "text": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+           "text": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
            "spoiler": false
           }
          ],
@@ -1327,7 +1327,7 @@
          "year": "2026",
          "score": null,
          "studio": null,
-         "synopsis": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+         "synopsis": "The relay team at Minato High has four runners and one summer to qualify for the prefectural meet.\n\nNobody on the team has won a race before. Captain Mio Haraki writes a plan for every practice, and none of them has lasted past the warm-up.\n\nThe first practice ends with the baton in the harbour and the stopwatch broken. The coach also teaches music and has never timed a race. He spends most of the session reading the rule book out loud.\n\nOver the next weeks the four of them learn each other's strides and start eating lunch together. Ryo is the fastest runner and the worst at handing over. Natsu is the slowest and has never dropped the baton.\n\nThen the regional heats move a week earlier, a storm floods the school track, and the team has six days to fix the second handover.",
          "coverUrl": "https://img.example/cover/900006-xl.jpg",
          "coverColor": null,
          "bannerUrl": null,
@@ -1381,7 +1381,7 @@
          "madeOutsideJapan": false,
          "synopsisSpans": [
           {
-           "text": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+           "text": "The relay team at Minato High has four runners and one summer to qualify for the prefectural meet.\n\nNobody on the team has won a race before. Captain Mio Haraki writes a plan for every practice, and none of them has lasted past the warm-up.\n\nThe first practice ends with the baton in the harbour and the stopwatch broken. The coach also teaches music and has never timed a race. He spends most of the session reading the rule book out loud.\n\nOver the next weeks the four of them learn each other's strides and start eating lunch together. Ryo is the fastest runner and the worst at handing over. Natsu is the slowest and has never dropped the baton.\n\nThen the regional heats move a week earlier, a storm floods the school track, and the team has six days to fix the second handover.",
            "spoiler": false
           }
          ],
@@ -1440,7 +1440,7 @@
          "year": "2026",
          "score": "77",
          "studio": "Hanabishi Pictures",
-         "synopsis": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+         "synopsis": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
          "coverUrl": "https://img.example/cover/900002-xl.jpg",
          "coverColor": "#5d9be4",
          "bannerUrl": "https://img.example/banner/900002.jpg",
@@ -1495,7 +1495,7 @@
          "madeOutsideJapan": false,
          "synopsisSpans": [
           {
-           "text": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+           "text": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
            "spoiler": false
           }
          ],
@@ -1539,7 +1539,7 @@
          "year": "2026",
          "score": null,
          "studio": null,
-         "synopsis": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+         "synopsis": "The relay team at Minato High has four runners and one summer to qualify for the prefectural meet.\n\nNobody on the team has won a race before. Captain Mio Haraki writes a plan for every practice, and none of them has lasted past the warm-up.\n\nThe first practice ends with the baton in the harbour and the stopwatch broken. The coach also teaches music and has never timed a race. He spends most of the session reading the rule book out loud.\n\nOver the next weeks the four of them learn each other's strides and start eating lunch together. Ryo is the fastest runner and the worst at handing over. Natsu is the slowest and has never dropped the baton.\n\nThen the regional heats move a week earlier, a storm floods the school track, and the team has six days to fix the second handover.",
          "coverUrl": "https://img.example/cover/900006-xl.jpg",
          "coverColor": null,
          "bannerUrl": null,
@@ -1593,7 +1593,7 @@
          "madeOutsideJapan": false,
          "synopsisSpans": [
           {
-           "text": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+           "text": "The relay team at Minato High has four runners and one summer to qualify for the prefectural meet.\n\nNobody on the team has won a race before. Captain Mio Haraki writes a plan for every practice, and none of them has lasted past the warm-up.\n\nThe first practice ends with the baton in the harbour and the stopwatch broken. The coach also teaches music and has never timed a race. He spends most of the session reading the rule book out loud.\n\nOver the next weeks the four of them learn each other's strides and start eating lunch together. Ryo is the fastest runner and the worst at handing over. Natsu is the slowest and has never dropped the baton.\n\nThen the regional heats move a week earlier, a storm floods the school track, and the team has six days to fix the second handover.",
            "spoiler": false
           }
          ],
@@ -2088,7 +2088,7 @@
       "year": "2024",
       "score": "82",
       "studio": "Kujaku Animation Works",
-      "synopsis": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+      "synopsis": "Aki relights the old beacons along the roads between the hill towns, one town a week. She doesn't remember where she grew up.\n\nIn the town of Seto, an innkeeper says he has seen her face before, on a poster from twenty years ago.",
       "coverUrl": "https://img.example/cover/900001-xl.jpg",
       "coverColor": "#e4a15d",
       "bannerUrl": "https://img.example/banner/900001.jpg",
@@ -2155,7 +2155,7 @@
       "madeOutsideJapan": false,
       "synopsisSpans": [
        {
-        "text": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+        "text": "Aki relights the old beacons along the roads between the hill towns, one town a week. She doesn't remember where she grew up.\n\nIn the town of Seto, an innkeeper says he has seen her face before, on a poster from twenty years ago.",
         "spoiler": false
        }
       ],
@@ -2186,7 +2186,7 @@
       "year": "2023",
       "score": "71",
       "studio": "Studio Mokusei",
-      "synopsis": "A decommissioned construction robot tends a rooftop garden and, one season at a time, the neighbours who come to see it.",
+      "synopsis": "A retired construction robot looks after the vegetable beds on the roof of an old apartment block. The residents who come up to help each bring a problem, and the robot is bad at most of them.",
       "coverUrl": "https://img.example/cover/900005-xl.jpg",
       "coverColor": "#7ac47f",
       "bannerUrl": null,
@@ -2252,7 +2252,7 @@
       "madeOutsideJapan": false,
       "synopsisSpans": [
        {
-        "text": "A decommissioned construction robot tends a rooftop garden and, one season at a time, the neighbours who come to see it.",
+        "text": "A retired construction robot looks after the vegetable beds on the roof of an old apartment block. The residents who come up to help each bring a problem, and the robot is bad at most of them.",
         "spoiler": false
        }
       ],
@@ -2281,7 +2281,7 @@
       "year": "2026",
       "score": "77",
       "studio": "Hanabishi Pictures",
-      "synopsis": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+      "synopsis": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
       "coverUrl": "https://img.example/cover/900002-xl.jpg",
       "coverColor": "#5d9be4",
       "bannerUrl": "https://img.example/banner/900002.jpg",
@@ -2336,7 +2336,7 @@
       "madeOutsideJapan": false,
       "synopsisSpans": [
        {
-        "text": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+        "text": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
         "spoiler": false
        }
       ],
@@ -2365,7 +2365,7 @@
       "year": "2026",
       "score": null,
       "studio": null,
-      "synopsis": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+      "synopsis": "The relay team at Minato High has four runners and one summer to qualify for the prefectural meet.\n\nNobody on the team has won a race before. Captain Mio Haraki writes a plan for every practice, and none of them has lasted past the warm-up.\n\nThe first practice ends with the baton in the harbour and the stopwatch broken. The coach also teaches music and has never timed a race. He spends most of the session reading the rule book out loud.\n\nOver the next weeks the four of them learn each other's strides and start eating lunch together. Ryo is the fastest runner and the worst at handing over. Natsu is the slowest and has never dropped the baton.\n\nThen the regional heats move a week earlier, a storm floods the school track, and the team has six days to fix the second handover.",
       "coverUrl": "https://img.example/cover/900006-xl.jpg",
       "coverColor": null,
       "bannerUrl": null,
@@ -2419,7 +2419,7 @@
       "madeOutsideJapan": false,
       "synopsisSpans": [
        {
-        "text": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+        "text": "The relay team at Minato High has four runners and one summer to qualify for the prefectural meet.\n\nNobody on the team has won a race before. Captain Mio Haraki writes a plan for every practice, and none of them has lasted past the warm-up.\n\nThe first practice ends with the baton in the harbour and the stopwatch broken. The coach also teaches music and has never timed a race. He spends most of the session reading the rule book out loud.\n\nOver the next weeks the four of them learn each other's strides and start eating lunch together. Ryo is the fastest runner and the worst at handing over. Natsu is the slowest and has never dropped the baton.\n\nThen the regional heats move a week earlier, a storm floods the school track, and the team has six days to fix the second handover.",
         "spoiler": false
        }
       ],
@@ -2494,7 +2494,7 @@
       "year": "2026",
       "score": "77",
       "studio": "Hanabishi Pictures",
-      "synopsis": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+      "synopsis": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
       "coverUrl": "https://img.example/cover/900002-xl.jpg",
       "coverColor": "#5d9be4",
       "bannerUrl": "https://img.example/banner/900002.jpg",
@@ -2551,7 +2551,7 @@
       "madeOutsideJapan": false,
       "synopsisSpans": [
        {
-        "text": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+        "text": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
         "spoiler": false
        }
       ],
@@ -2580,7 +2580,7 @@
       "year": "2026",
       "score": null,
       "studio": null,
-      "synopsis": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+      "synopsis": "The relay team at Minato High has four runners and one summer to qualify for the prefectural meet.\n\nNobody on the team has won a race before. Captain Mio Haraki writes a plan for every practice, and none of them has lasted past the warm-up.\n\nThe first practice ends with the baton in the harbour and the stopwatch broken. The coach also teaches music and has never timed a race. He spends most of the session reading the rule book out loud.\n\nOver the next weeks the four of them learn each other's strides and start eating lunch together. Ryo is the fastest runner and the worst at handing over. Natsu is the slowest and has never dropped the baton.\n\nThen the regional heats move a week earlier, a storm floods the school track, and the team has six days to fix the second handover.",
       "coverUrl": "https://img.example/cover/900006-xl.jpg",
       "coverColor": null,
       "bannerUrl": null,
@@ -2634,7 +2634,7 @@
       "madeOutsideJapan": false,
       "synopsisSpans": [
        {
-        "text": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+        "text": "The relay team at Minato High has four runners and one summer to qualify for the prefectural meet.\n\nNobody on the team has won a race before. Captain Mio Haraki writes a plan for every practice, and none of them has lasted past the warm-up.\n\nThe first practice ends with the baton in the harbour and the stopwatch broken. The coach also teaches music and has never timed a race. He spends most of the session reading the rule book out loud.\n\nOver the next weeks the four of them learn each other's strides and start eating lunch together. Ryo is the fastest runner and the worst at handing over. Natsu is the slowest and has never dropped the baton.\n\nThen the regional heats move a week earlier, a storm floods the school track, and the team has six days to fix the second handover.",
         "spoiler": false
        }
       ],
@@ -2712,7 +2712,7 @@
       "year": "2026",
       "score": "77",
       "studio": "Hanabishi Pictures",
-      "synopsis": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+      "synopsis": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
       "coverUrl": "https://img.example/cover/900002-xl.jpg",
       "coverColor": "#5d9be4",
       "bannerUrl": "https://img.example/banner/900002.jpg",
@@ -2767,7 +2767,7 @@
       "madeOutsideJapan": false,
       "synopsisSpans": [
        {
-        "text": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+        "text": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
         "spoiler": false
        }
       ],
@@ -2796,7 +2796,7 @@
       "year": "2026",
       "score": "77",
       "studio": "Hanabishi Pictures",
-      "synopsis": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+      "synopsis": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
       "coverUrl": "https://img.example/cover/900002-xl.jpg",
       "coverColor": "#5d9be4",
       "bannerUrl": "https://img.example/banner/900002.jpg",
@@ -2851,7 +2851,7 @@
       "madeOutsideJapan": false,
       "synopsisSpans": [
        {
-        "text": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+        "text": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
         "spoiler": false
        }
       ],
@@ -2880,7 +2880,7 @@
       "year": "2026",
       "score": null,
       "studio": null,
-      "synopsis": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+      "synopsis": "The relay team at Minato High has four runners and one summer to qualify for the prefectural meet.\n\nNobody on the team has won a race before. Captain Mio Haraki writes a plan for every practice, and none of them has lasted past the warm-up.\n\nThe first practice ends with the baton in the harbour and the stopwatch broken. The coach also teaches music and has never timed a race. He spends most of the session reading the rule book out loud.\n\nOver the next weeks the four of them learn each other's strides and start eating lunch together. Ryo is the fastest runner and the worst at handing over. Natsu is the slowest and has never dropped the baton.\n\nThen the regional heats move a week earlier, a storm floods the school track, and the team has six days to fix the second handover.",
       "coverUrl": "https://img.example/cover/900006-xl.jpg",
       "coverColor": null,
       "bannerUrl": null,
@@ -2934,7 +2934,7 @@
       "madeOutsideJapan": false,
       "synopsisSpans": [
        {
-        "text": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+        "text": "The relay team at Minato High has four runners and one summer to qualify for the prefectural meet.\n\nNobody on the team has won a race before. Captain Mio Haraki writes a plan for every practice, and none of them has lasted past the warm-up.\n\nThe first practice ends with the baton in the harbour and the stopwatch broken. The coach also teaches music and has never timed a race. He spends most of the session reading the rule book out loud.\n\nOver the next weeks the four of them learn each other's strides and start eating lunch together. Ryo is the fastest runner and the worst at handing over. Natsu is the slowest and has never dropped the baton.\n\nThen the regional heats move a week earlier, a storm floods the school track, and the team has six days to fix the second handover.",
         "spoiler": false
        }
       ],
@@ -2963,7 +2963,7 @@
       "year": "2026",
       "score": "77",
       "studio": "Hanabishi Pictures",
-      "synopsis": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+      "synopsis": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
       "coverUrl": "https://img.example/cover/900002-xl.jpg",
       "coverColor": "#5d9be4",
       "bannerUrl": "https://img.example/banner/900002.jpg",
@@ -3018,7 +3018,7 @@
       "madeOutsideJapan": false,
       "synopsisSpans": [
        {
-        "text": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+        "text": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
         "spoiler": false
        }
       ],
@@ -3047,7 +3047,7 @@
       "year": "2026",
       "score": null,
       "studio": null,
-      "synopsis": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+      "synopsis": "The relay team at Minato High has four runners and one summer to qualify for the prefectural meet.\n\nNobody on the team has won a race before. Captain Mio Haraki writes a plan for every practice, and none of them has lasted past the warm-up.\n\nThe first practice ends with the baton in the harbour and the stopwatch broken. The coach also teaches music and has never timed a race. He spends most of the session reading the rule book out loud.\n\nOver the next weeks the four of them learn each other's strides and start eating lunch together. Ryo is the fastest runner and the worst at handing over. Natsu is the slowest and has never dropped the baton.\n\nThen the regional heats move a week earlier, a storm floods the school track, and the team has six days to fix the second handover.",
       "coverUrl": "https://img.example/cover/900006-xl.jpg",
       "coverColor": null,
       "bannerUrl": null,
@@ -3101,7 +3101,7 @@
       "madeOutsideJapan": false,
       "synopsisSpans": [
        {
-        "text": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+        "text": "The relay team at Minato High has four runners and one summer to qualify for the prefectural meet.\n\nNobody on the team has won a race before. Captain Mio Haraki writes a plan for every practice, and none of them has lasted past the warm-up.\n\nThe first practice ends with the baton in the harbour and the stopwatch broken. The coach also teaches music and has never timed a race. He spends most of the session reading the rule book out loud.\n\nOver the next weeks the four of them learn each other's strides and start eating lunch together. Ryo is the fastest runner and the worst at handing over. Natsu is the slowest and has never dropped the baton.\n\nThen the regional heats move a week earlier, a storm floods the school track, and the team has six days to fix the second handover.",
         "spoiler": false
        }
       ],
@@ -3130,7 +3130,7 @@
       "year": "2026",
       "score": "77",
       "studio": "Hanabishi Pictures",
-      "synopsis": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+      "synopsis": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
       "coverUrl": "https://img.example/cover/900002-xl.jpg",
       "coverColor": "#5d9be4",
       "bannerUrl": "https://img.example/banner/900002.jpg",
@@ -3185,7 +3185,7 @@
       "madeOutsideJapan": false,
       "synopsisSpans": [
        {
-        "text": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+        "text": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
         "spoiler": false
        }
       ],
@@ -3214,7 +3214,7 @@
       "year": "2026",
       "score": null,
       "studio": null,
-      "synopsis": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+      "synopsis": "The relay team at Minato High has four runners and one summer to qualify for the prefectural meet.\n\nNobody on the team has won a race before. Captain Mio Haraki writes a plan for every practice, and none of them has lasted past the warm-up.\n\nThe first practice ends with the baton in the harbour and the stopwatch broken. The coach also teaches music and has never timed a race. He spends most of the session reading the rule book out loud.\n\nOver the next weeks the four of them learn each other's strides and start eating lunch together. Ryo is the fastest runner and the worst at handing over. Natsu is the slowest and has never dropped the baton.\n\nThen the regional heats move a week earlier, a storm floods the school track, and the team has six days to fix the second handover.",
       "coverUrl": "https://img.example/cover/900006-xl.jpg",
       "coverColor": null,
       "bannerUrl": null,
@@ -3268,7 +3268,7 @@
       "madeOutsideJapan": false,
       "synopsisSpans": [
        {
-        "text": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+        "text": "The relay team at Minato High has four runners and one summer to qualify for the prefectural meet.\n\nNobody on the team has won a race before. Captain Mio Haraki writes a plan for every practice, and none of them has lasted past the warm-up.\n\nThe first practice ends with the baton in the harbour and the stopwatch broken. The coach also teaches music and has never timed a race. He spends most of the session reading the rule book out loud.\n\nOver the next weeks the four of them learn each other's strides and start eating lunch together. Ryo is the fastest runner and the worst at handing over. Natsu is the slowest and has never dropped the baton.\n\nThen the regional heats move a week earlier, a storm floods the school track, and the team has six days to fix the second handover.",
         "spoiler": false
        }
       ],
@@ -3297,7 +3297,7 @@
       "year": "2026",
       "score": "77",
       "studio": "Hanabishi Pictures",
-      "synopsis": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+      "synopsis": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
       "coverUrl": "https://img.example/cover/900002-xl.jpg",
       "coverColor": "#5d9be4",
       "bannerUrl": "https://img.example/banner/900002.jpg",
@@ -3352,7 +3352,7 @@
       "madeOutsideJapan": false,
       "synopsisSpans": [
        {
-        "text": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+        "text": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
         "spoiler": false
        }
       ],
@@ -3437,7 +3437,7 @@
        "year": "2024",
        "score": "82",
        "studio": "Kujaku Animation Works",
-       "synopsis": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+       "synopsis": "Aki relights the old beacons along the roads between the hill towns, one town a week. She doesn't remember where she grew up.\n\nIn the town of Seto, an innkeeper says he has seen her face before, on a poster from twenty years ago.",
        "coverUrl": "https://img.example/cover/900001-xl.jpg",
        "coverColor": "#e4a15d",
        "bannerUrl": "https://img.example/banner/900001.jpg",
@@ -3504,7 +3504,7 @@
        "madeOutsideJapan": false,
        "synopsisSpans": [
         {
-         "text": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+         "text": "Aki relights the old beacons along the roads between the hill towns, one town a week. She doesn't remember where she grew up.\n\nIn the town of Seto, an innkeeper says he has seen her face before, on a poster from twenty years ago.",
          "spoiler": false
         }
        ],
@@ -3535,7 +3535,7 @@
        "year": "2026",
        "score": "77",
        "studio": "Hanabishi Pictures",
-       "synopsis": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+       "synopsis": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
        "coverUrl": "https://img.example/cover/900002-xl.jpg",
        "coverColor": "#5d9be4",
        "bannerUrl": "https://img.example/banner/900002.jpg",
@@ -3592,7 +3592,7 @@
        "madeOutsideJapan": false,
        "synopsisSpans": [
         {
-         "text": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+         "text": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
          "spoiler": false
         }
        ],
@@ -3621,7 +3621,7 @@
        "year": "2025",
        "score": "84",
        "studio": "Kujaku Animation Works",
-       "synopsis": "The beacons are lit, and the roads lead somewhere new: to the city that sent the first lamplighters out.",
+       "synopsis": "Season two follows Aki to the coast, where the first beacons were built and where the road office keeps records of every lamplighter it ever hired.",
        "coverUrl": "https://img.example/cover/900004-xl.jpg",
        "coverColor": "#d77f4a",
        "bannerUrl": "https://img.example/banner/900004.jpg",
@@ -3684,7 +3684,7 @@
        "madeOutsideJapan": false,
        "synopsisSpans": [
         {
-         "text": "The beacons are lit, and the roads lead somewhere new: to the city that sent the first lamplighters out.",
+         "text": "Season two follows Aki to the coast, where the first beacons were built and where the road office keeps records of every lamplighter it ever hired.",
          "spoiler": false
         }
        ],
@@ -3718,7 +3718,7 @@
        "year": "2025",
        "score": "85",
        "studio": "Kujaku Animation Works",
-       "synopsis": "On the last night a rural station is open, two strangers wait for a train that only runs under a full moon.",
+       "synopsis": "The rural station at Tsukino closes for good at the end of March. On its last night, the stationmaster and one stranded passenger wait for a train that is two hours late.",
        "coverUrl": "https://img.example/cover/900003-xl.jpg",
        "coverColor": "#f1d97a",
        "bannerUrl": "https://img.example/banner/900003.jpg",
@@ -3777,7 +3777,7 @@
        "madeOutsideJapan": false,
        "synopsisSpans": [
         {
-         "text": "On the last night a rural station is open, two strangers wait for a train that only runs under a full moon.",
+         "text": "The rural station at Tsukino closes for good at the end of March. On its last night, the stationmaster and one stranded passenger wait for a train that is two hours late.",
          "spoiler": false
         }
        ],
@@ -3806,7 +3806,7 @@
        "year": "2023",
        "score": "71",
        "studio": "Studio Mokusei",
-       "synopsis": "A decommissioned construction robot tends a rooftop garden and, one season at a time, the neighbours who come to see it.",
+       "synopsis": "A retired construction robot looks after the vegetable beds on the roof of an old apartment block. The residents who come up to help each bring a problem, and the robot is bad at most of them.",
        "coverUrl": "https://img.example/cover/900005-xl.jpg",
        "coverColor": "#7ac47f",
        "bannerUrl": null,
@@ -3872,7 +3872,7 @@
        "madeOutsideJapan": false,
        "synopsisSpans": [
         {
-         "text": "A decommissioned construction robot tends a rooftop garden and, one season at a time, the neighbours who come to see it.",
+         "text": "A retired construction robot looks after the vegetable beds on the roof of an old apartment block. The residents who come up to help each bring a problem, and the robot is bad at most of them.",
          "spoiler": false
         }
        ],
@@ -3901,7 +3901,7 @@
        "year": "2026",
        "score": null,
        "studio": null,
-       "synopsis": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+       "synopsis": "The relay team at Minato High has four runners and one summer to qualify for the prefectural meet.\n\nNobody on the team has won a race before. Captain Mio Haraki writes a plan for every practice, and none of them has lasted past the warm-up.\n\nThe first practice ends with the baton in the harbour and the stopwatch broken. The coach also teaches music and has never timed a race. He spends most of the session reading the rule book out loud.\n\nOver the next weeks the four of them learn each other's strides and start eating lunch together. Ryo is the fastest runner and the worst at handing over. Natsu is the slowest and has never dropped the baton.\n\nThen the regional heats move a week earlier, a storm floods the school track, and the team has six days to fix the second handover.",
        "coverUrl": "https://img.example/cover/900006-xl.jpg",
        "coverColor": null,
        "bannerUrl": null,
@@ -3955,7 +3955,7 @@
        "madeOutsideJapan": false,
        "synopsisSpans": [
         {
-         "text": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+         "text": "The relay team at Minato High has four runners and one summer to qualify for the prefectural meet.\n\nNobody on the team has won a race before. Captain Mio Haraki writes a plan for every practice, and none of them has lasted past the warm-up.\n\nThe first practice ends with the baton in the harbour and the stopwatch broken. The coach also teaches music and has never timed a race. He spends most of the session reading the rule book out loud.\n\nOver the next weeks the four of them learn each other's strides and start eating lunch together. Ryo is the fastest runner and the worst at handing over. Natsu is the slowest and has never dropped the baton.\n\nThen the regional heats move a week earlier, a storm floods the school track, and the team has six days to fix the second handover.",
          "spoiler": false
         }
        ],
@@ -4023,7 +4023,7 @@
        "year": "2026",
        "score": "77",
        "studio": "Hanabishi Pictures",
-       "synopsis": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+       "synopsis": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
        "coverUrl": "https://img.example/cover/900002-xl.jpg",
        "coverColor": "#5d9be4",
        "bannerUrl": "https://img.example/banner/900002.jpg",
@@ -4080,7 +4080,7 @@
        "madeOutsideJapan": false,
        "synopsisSpans": [
         {
-         "text": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+         "text": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
          "spoiler": false
         }
        ],
@@ -4109,7 +4109,7 @@
        "year": "2026",
        "score": null,
        "studio": null,
-       "synopsis": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+       "synopsis": "The relay team at Minato High has four runners and one summer to qualify for the prefectural meet.\n\nNobody on the team has won a race before. Captain Mio Haraki writes a plan for every practice, and none of them has lasted past the warm-up.\n\nThe first practice ends with the baton in the harbour and the stopwatch broken. The coach also teaches music and has never timed a race. He spends most of the session reading the rule book out loud.\n\nOver the next weeks the four of them learn each other's strides and start eating lunch together. Ryo is the fastest runner and the worst at handing over. Natsu is the slowest and has never dropped the baton.\n\nThen the regional heats move a week earlier, a storm floods the school track, and the team has six days to fix the second handover.",
        "coverUrl": "https://img.example/cover/900006-xl.jpg",
        "coverColor": null,
        "bannerUrl": null,
@@ -4163,7 +4163,7 @@
        "madeOutsideJapan": false,
        "synopsisSpans": [
         {
-         "text": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+         "text": "The relay team at Minato High has four runners and one summer to qualify for the prefectural meet.\n\nNobody on the team has won a race before. Captain Mio Haraki writes a plan for every practice, and none of them has lasted past the warm-up.\n\nThe first practice ends with the baton in the harbour and the stopwatch broken. The coach also teaches music and has never timed a race. He spends most of the session reading the rule book out loud.\n\nOver the next weeks the four of them learn each other's strides and start eating lunch together. Ryo is the fastest runner and the worst at handing over. Natsu is the slowest and has never dropped the baton.\n\nThen the regional heats move a week earlier, a storm floods the school track, and the team has six days to fix the second handover.",
          "spoiler": false
         }
        ],
@@ -4231,7 +4231,7 @@
        "year": "2024",
        "score": "82",
        "studio": "Kujaku Animation Works",
-       "synopsis": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+       "synopsis": "Aki relights the old beacons along the roads between the hill towns, one town a week. She doesn't remember where she grew up.\n\nIn the town of Seto, an innkeeper says he has seen her face before, on a poster from twenty years ago.",
        "coverUrl": "https://img.example/cover/900001-xl.jpg",
        "coverColor": "#e4a15d",
        "bannerUrl": "https://img.example/banner/900001.jpg",
@@ -4298,7 +4298,7 @@
        "madeOutsideJapan": false,
        "synopsisSpans": [
         {
-         "text": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+         "text": "Aki relights the old beacons along the roads between the hill towns, one town a week. She doesn't remember where she grew up.\n\nIn the town of Seto, an innkeeper says he has seen her face before, on a poster from twenty years ago.",
          "spoiler": false
         }
        ],
@@ -4329,7 +4329,7 @@
        "year": "2026",
        "score": "77",
        "studio": "Hanabishi Pictures",
-       "synopsis": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+       "synopsis": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
        "coverUrl": "https://img.example/cover/900002-xl.jpg",
        "coverColor": "#5d9be4",
        "bannerUrl": "https://img.example/banner/900002.jpg",
@@ -4386,7 +4386,7 @@
        "madeOutsideJapan": false,
        "synopsisSpans": [
         {
-         "text": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+         "text": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
          "spoiler": false
         }
        ],
@@ -4415,7 +4415,7 @@
        "year": "2025",
        "score": "84",
        "studio": "Kujaku Animation Works",
-       "synopsis": "The beacons are lit, and the roads lead somewhere new: to the city that sent the first lamplighters out.",
+       "synopsis": "Season two follows Aki to the coast, where the first beacons were built and where the road office keeps records of every lamplighter it ever hired.",
        "coverUrl": "https://img.example/cover/900004-xl.jpg",
        "coverColor": "#d77f4a",
        "bannerUrl": "https://img.example/banner/900004.jpg",
@@ -4478,7 +4478,7 @@
        "madeOutsideJapan": false,
        "synopsisSpans": [
         {
-         "text": "The beacons are lit, and the roads lead somewhere new: to the city that sent the first lamplighters out.",
+         "text": "Season two follows Aki to the coast, where the first beacons were built and where the road office keeps records of every lamplighter it ever hired.",
          "spoiler": false
         }
        ],
@@ -4512,7 +4512,7 @@
        "year": "2025",
        "score": "85",
        "studio": "Kujaku Animation Works",
-       "synopsis": "On the last night a rural station is open, two strangers wait for a train that only runs under a full moon.",
+       "synopsis": "The rural station at Tsukino closes for good at the end of March. On its last night, the stationmaster and one stranded passenger wait for a train that is two hours late.",
        "coverUrl": "https://img.example/cover/900003-xl.jpg",
        "coverColor": "#f1d97a",
        "bannerUrl": "https://img.example/banner/900003.jpg",
@@ -4571,7 +4571,7 @@
        "madeOutsideJapan": false,
        "synopsisSpans": [
         {
-         "text": "On the last night a rural station is open, two strangers wait for a train that only runs under a full moon.",
+         "text": "The rural station at Tsukino closes for good at the end of March. On its last night, the stationmaster and one stranded passenger wait for a train that is two hours late.",
          "spoiler": false
         }
        ],
@@ -4600,7 +4600,7 @@
        "year": "2023",
        "score": "71",
        "studio": "Studio Mokusei",
-       "synopsis": "A decommissioned construction robot tends a rooftop garden and, one season at a time, the neighbours who come to see it.",
+       "synopsis": "A retired construction robot looks after the vegetable beds on the roof of an old apartment block. The residents who come up to help each bring a problem, and the robot is bad at most of them.",
        "coverUrl": "https://img.example/cover/900005-xl.jpg",
        "coverColor": "#7ac47f",
        "bannerUrl": null,
@@ -4666,7 +4666,7 @@
        "madeOutsideJapan": false,
        "synopsisSpans": [
         {
-         "text": "A decommissioned construction robot tends a rooftop garden and, one season at a time, the neighbours who come to see it.",
+         "text": "A retired construction robot looks after the vegetable beds on the roof of an old apartment block. The residents who come up to help each bring a problem, and the robot is bad at most of them.",
          "spoiler": false
         }
        ],
@@ -4695,7 +4695,7 @@
        "year": "2026",
        "score": null,
        "studio": null,
-       "synopsis": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+       "synopsis": "The relay team at Minato High has four runners and one summer to qualify for the prefectural meet.\n\nNobody on the team has won a race before. Captain Mio Haraki writes a plan for every practice, and none of them has lasted past the warm-up.\n\nThe first practice ends with the baton in the harbour and the stopwatch broken. The coach also teaches music and has never timed a race. He spends most of the session reading the rule book out loud.\n\nOver the next weeks the four of them learn each other's strides and start eating lunch together. Ryo is the fastest runner and the worst at handing over. Natsu is the slowest and has never dropped the baton.\n\nThen the regional heats move a week earlier, a storm floods the school track, and the team has six days to fix the second handover.",
        "coverUrl": "https://img.example/cover/900006-xl.jpg",
        "coverColor": null,
        "bannerUrl": null,
@@ -4749,7 +4749,7 @@
        "madeOutsideJapan": false,
        "synopsisSpans": [
         {
-         "text": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+         "text": "The relay team at Minato High has four runners and one summer to qualify for the prefectural meet.\n\nNobody on the team has won a race before. Captain Mio Haraki writes a plan for every practice, and none of them has lasted past the warm-up.\n\nThe first practice ends with the baton in the harbour and the stopwatch broken. The coach also teaches music and has never timed a race. He spends most of the session reading the rule book out loud.\n\nOver the next weeks the four of them learn each other's strides and start eating lunch together. Ryo is the fastest runner and the worst at handing over. Natsu is the slowest and has never dropped the baton.\n\nThen the regional heats move a week earlier, a storm floods the school track, and the team has six days to fix the second handover.",
          "spoiler": false
         }
        ],
@@ -4817,7 +4817,7 @@
        "year": "2025",
        "score": "85",
        "studio": "Kujaku Animation Works",
-       "synopsis": "On the last night a rural station is open, two strangers wait for a train that only runs under a full moon.",
+       "synopsis": "The rural station at Tsukino closes for good at the end of March. On its last night, the stationmaster and one stranded passenger wait for a train that is two hours late.",
        "coverUrl": "https://img.example/cover/900003-xl.jpg",
        "coverColor": "#f1d97a",
        "bannerUrl": "https://img.example/banner/900003.jpg",
@@ -4876,7 +4876,7 @@
        "madeOutsideJapan": false,
        "synopsisSpans": [
         {
-         "text": "On the last night a rural station is open, two strangers wait for a train that only runs under a full moon.",
+         "text": "The rural station at Tsukino closes for good at the end of March. On its last night, the stationmaster and one stranded passenger wait for a train that is two hours late.",
          "spoiler": false
         }
        ],
@@ -4905,7 +4905,7 @@
        "year": "2025",
        "score": "84",
        "studio": "Kujaku Animation Works",
-       "synopsis": "The beacons are lit, and the roads lead somewhere new: to the city that sent the first lamplighters out.",
+       "synopsis": "Season two follows Aki to the coast, where the first beacons were built and where the road office keeps records of every lamplighter it ever hired.",
        "coverUrl": "https://img.example/cover/900004-xl.jpg",
        "coverColor": "#d77f4a",
        "bannerUrl": "https://img.example/banner/900004.jpg",
@@ -4968,7 +4968,7 @@
        "madeOutsideJapan": false,
        "synopsisSpans": [
         {
-         "text": "The beacons are lit, and the roads lead somewhere new: to the city that sent the first lamplighters out.",
+         "text": "Season two follows Aki to the coast, where the first beacons were built and where the road office keeps records of every lamplighter it ever hired.",
          "spoiler": false
         }
        ],
@@ -5002,7 +5002,7 @@
        "year": "2024",
        "score": "82",
        "studio": "Kujaku Animation Works",
-       "synopsis": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+       "synopsis": "Aki relights the old beacons along the roads between the hill towns, one town a week. She doesn't remember where she grew up.\n\nIn the town of Seto, an innkeeper says he has seen her face before, on a poster from twenty years ago.",
        "coverUrl": "https://img.example/cover/900001-xl.jpg",
        "coverColor": "#e4a15d",
        "bannerUrl": "https://img.example/banner/900001.jpg",
@@ -5069,7 +5069,7 @@
        "madeOutsideJapan": false,
        "synopsisSpans": [
         {
-         "text": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+         "text": "Aki relights the old beacons along the roads between the hill towns, one town a week. She doesn't remember where she grew up.\n\nIn the town of Seto, an innkeeper says he has seen her face before, on a poster from twenty years ago.",
          "spoiler": false
         }
        ],
@@ -5100,7 +5100,7 @@
        "year": "2026",
        "score": "77",
        "studio": "Hanabishi Pictures",
-       "synopsis": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+       "synopsis": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
        "coverUrl": "https://img.example/cover/900002-xl.jpg",
        "coverColor": "#5d9be4",
        "bannerUrl": "https://img.example/banner/900002.jpg",
@@ -5157,7 +5157,7 @@
        "madeOutsideJapan": false,
        "synopsisSpans": [
         {
-         "text": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+         "text": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
          "spoiler": false
         }
        ],
@@ -5186,7 +5186,7 @@
        "year": "2023",
        "score": "71",
        "studio": "Studio Mokusei",
-       "synopsis": "A decommissioned construction robot tends a rooftop garden and, one season at a time, the neighbours who come to see it.",
+       "synopsis": "A retired construction robot looks after the vegetable beds on the roof of an old apartment block. The residents who come up to help each bring a problem, and the robot is bad at most of them.",
        "coverUrl": "https://img.example/cover/900005-xl.jpg",
        "coverColor": "#7ac47f",
        "bannerUrl": null,
@@ -5252,7 +5252,7 @@
        "madeOutsideJapan": false,
        "synopsisSpans": [
         {
-         "text": "A decommissioned construction robot tends a rooftop garden and, one season at a time, the neighbours who come to see it.",
+         "text": "A retired construction robot looks after the vegetable beds on the roof of an old apartment block. The residents who come up to help each bring a problem, and the robot is bad at most of them.",
          "spoiler": false
         }
        ],
@@ -5281,7 +5281,7 @@
        "year": "2026",
        "score": null,
        "studio": null,
-       "synopsis": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+       "synopsis": "The relay team at Minato High has four runners and one summer to qualify for the prefectural meet.\n\nNobody on the team has won a race before. Captain Mio Haraki writes a plan for every practice, and none of them has lasted past the warm-up.\n\nThe first practice ends with the baton in the harbour and the stopwatch broken. The coach also teaches music and has never timed a race. He spends most of the session reading the rule book out loud.\n\nOver the next weeks the four of them learn each other's strides and start eating lunch together. Ryo is the fastest runner and the worst at handing over. Natsu is the slowest and has never dropped the baton.\n\nThen the regional heats move a week earlier, a storm floods the school track, and the team has six days to fix the second handover.",
        "coverUrl": "https://img.example/cover/900006-xl.jpg",
        "coverColor": null,
        "bannerUrl": null,
@@ -5335,7 +5335,7 @@
        "madeOutsideJapan": false,
        "synopsisSpans": [
         {
-         "text": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+         "text": "The relay team at Minato High has four runners and one summer to qualify for the prefectural meet.\n\nNobody on the team has won a race before. Captain Mio Haraki writes a plan for every practice, and none of them has lasted past the warm-up.\n\nThe first practice ends with the baton in the harbour and the stopwatch broken. The coach also teaches music and has never timed a race. He spends most of the session reading the rule book out loud.\n\nOver the next weeks the four of them learn each other's strides and start eating lunch together. Ryo is the fastest runner and the worst at handing over. Natsu is the slowest and has never dropped the baton.\n\nThen the regional heats move a week earlier, a storm floods the school track, and the team has six days to fix the second handover.",
          "spoiler": false
         }
        ],
@@ -5449,7 +5449,7 @@
      "year": "2025",
      "score": "85",
      "studio": "Kujaku Animation Works",
-     "synopsis": "On the last night a rural station is open, two strangers wait for a train that only runs under a full moon.",
+     "synopsis": "The rural station at Tsukino closes for good at the end of March. On its last night, the stationmaster and one stranded passenger wait for a train that is two hours late.",
      "coverUrl": "https://img.example/cover/900003-xl.jpg",
      "coverColor": "#f1d97a",
      "bannerUrl": "https://img.example/banner/900003.jpg",
@@ -5508,7 +5508,7 @@
      "madeOutsideJapan": false,
      "synopsisSpans": [
       {
-       "text": "On the last night a rural station is open, two strangers wait for a train that only runs under a full moon.",
+       "text": "The rural station at Tsukino closes for good at the end of March. On its last night, the stationmaster and one stranded passenger wait for a train that is two hours late.",
        "spoiler": false
       }
      ],
@@ -5537,7 +5537,7 @@
      "year": "2023",
      "score": "71",
      "studio": "Studio Mokusei",
-     "synopsis": "A decommissioned construction robot tends a rooftop garden and, one season at a time, the neighbours who come to see it.",
+     "synopsis": "A retired construction robot looks after the vegetable beds on the roof of an old apartment block. The residents who come up to help each bring a problem, and the robot is bad at most of them.",
      "coverUrl": "https://img.example/cover/900005-xl.jpg",
      "coverColor": "#7ac47f",
      "bannerUrl": null,
@@ -5603,7 +5603,7 @@
      "madeOutsideJapan": false,
      "synopsisSpans": [
       {
-       "text": "A decommissioned construction robot tends a rooftop garden and, one season at a time, the neighbours who come to see it.",
+       "text": "A retired construction robot looks after the vegetable beds on the roof of an old apartment block. The residents who come up to help each bring a problem, and the robot is bad at most of them.",
        "spoiler": false
       }
      ],
@@ -5632,7 +5632,7 @@
      "year": "2026",
      "score": null,
      "studio": null,
-     "synopsis": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+     "synopsis": "The relay team at Minato High has four runners and one summer to qualify for the prefectural meet.\n\nNobody on the team has won a race before. Captain Mio Haraki writes a plan for every practice, and none of them has lasted past the warm-up.\n\nThe first practice ends with the baton in the harbour and the stopwatch broken. The coach also teaches music and has never timed a race. He spends most of the session reading the rule book out loud.\n\nOver the next weeks the four of them learn each other's strides and start eating lunch together. Ryo is the fastest runner and the worst at handing over. Natsu is the slowest and has never dropped the baton.\n\nThen the regional heats move a week earlier, a storm floods the school track, and the team has six days to fix the second handover.",
      "coverUrl": "https://img.example/cover/900006-xl.jpg",
      "coverColor": null,
      "bannerUrl": null,
@@ -5686,7 +5686,7 @@
      "madeOutsideJapan": false,
      "synopsisSpans": [
       {
-       "text": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+       "text": "The relay team at Minato High has four runners and one summer to qualify for the prefectural meet.\n\nNobody on the team has won a race before. Captain Mio Haraki writes a plan for every practice, and none of them has lasted past the warm-up.\n\nThe first practice ends with the baton in the harbour and the stopwatch broken. The coach also teaches music and has never timed a race. He spends most of the session reading the rule book out loud.\n\nOver the next weeks the four of them learn each other's strides and start eating lunch together. Ryo is the fastest runner and the worst at handing over. Natsu is the slowest and has never dropped the baton.\n\nThen the regional heats move a week earlier, a storm floods the school track, and the team has six days to fix the second handover.",
        "spoiler": false
       }
      ],
@@ -5715,7 +5715,7 @@
      "year": "2024",
      "score": "82",
      "studio": "Kujaku Animation Works",
-     "synopsis": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+     "synopsis": "Aki relights the old beacons along the roads between the hill towns, one town a week. She doesn't remember where she grew up.\n\nIn the town of Seto, an innkeeper says he has seen her face before, on a poster from twenty years ago.",
      "coverUrl": "https://img.example/cover/900001-xl.jpg",
      "coverColor": "#e4a15d",
      "bannerUrl": "https://img.example/banner/900001.jpg",
@@ -5784,7 +5784,7 @@
      "madeOutsideJapan": false,
      "synopsisSpans": [
       {
-       "text": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+       "text": "Aki relights the old beacons along the roads between the hill towns, one town a week. She doesn't remember where she grew up.\n\nIn the town of Seto, an innkeeper says he has seen her face before, on a poster from twenty years ago.",
        "spoiler": false
       }
      ],
@@ -5815,7 +5815,7 @@
      "year": "2026",
      "score": "77",
      "studio": "Hanabishi Pictures",
-     "synopsis": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+     "synopsis": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
      "coverUrl": "https://img.example/cover/900002-xl.jpg",
      "coverColor": "#5d9be4",
      "bannerUrl": "https://img.example/banner/900002.jpg",
@@ -5872,7 +5872,7 @@
      "madeOutsideJapan": false,
      "synopsisSpans": [
       {
-       "text": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+       "text": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
        "spoiler": false
       }
      ],
@@ -5901,7 +5901,7 @@
      "year": "2025",
      "score": "84",
      "studio": "Kujaku Animation Works",
-     "synopsis": "The beacons are lit, and the roads lead somewhere new: to the city that sent the first lamplighters out.",
+     "synopsis": "Season two follows Aki to the coast, where the first beacons were built and where the road office keeps records of every lamplighter it ever hired.",
      "coverUrl": "https://img.example/cover/900004-xl.jpg",
      "coverColor": "#d77f4a",
      "bannerUrl": "https://img.example/banner/900004.jpg",
@@ -5964,7 +5964,7 @@
      "madeOutsideJapan": false,
      "synopsisSpans": [
       {
-       "text": "The beacons are lit, and the roads lead somewhere new: to the city that sent the first lamplighters out.",
+       "text": "Season two follows Aki to the coast, where the first beacons were built and where the road office keeps records of every lamplighter it ever hired.",
        "spoiler": false
       }
      ],
@@ -6007,7 +6007,7 @@
      "year": "2025",
      "score": "84",
      "studio": "Kujaku Animation Works",
-     "synopsis": "The beacons are lit, and the roads lead somewhere new: to the city that sent the first lamplighters out.",
+     "synopsis": "Season two follows Aki to the coast, where the first beacons were built and where the road office keeps records of every lamplighter it ever hired.",
      "coverUrl": "https://img.example/cover/900004-xl.jpg",
      "coverColor": "#d77f4a",
      "bannerUrl": "https://img.example/banner/900004.jpg",
@@ -6070,7 +6070,7 @@
      "madeOutsideJapan": false,
      "synopsisSpans": [
       {
-       "text": "The beacons are lit, and the roads lead somewhere new: to the city that sent the first lamplighters out.",
+       "text": "Season two follows Aki to the coast, where the first beacons were built and where the road office keeps records of every lamplighter it ever hired.",
        "spoiler": false
       }
      ],
@@ -6104,7 +6104,7 @@
      "year": "2026",
      "score": "77",
      "studio": "Hanabishi Pictures",
-     "synopsis": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+     "synopsis": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
      "coverUrl": "https://img.example/cover/900002-xl.jpg",
      "coverColor": "#5d9be4",
      "bannerUrl": "https://img.example/banner/900002.jpg",
@@ -6161,7 +6161,7 @@
      "madeOutsideJapan": false,
      "synopsisSpans": [
       {
-       "text": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+       "text": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
        "spoiler": false
       }
      ],
@@ -6190,7 +6190,7 @@
      "year": "2024",
      "score": "82",
      "studio": "Kujaku Animation Works",
-     "synopsis": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+     "synopsis": "Aki relights the old beacons along the roads between the hill towns, one town a week. She doesn't remember where she grew up.\n\nIn the town of Seto, an innkeeper says he has seen her face before, on a poster from twenty years ago.",
      "coverUrl": "https://img.example/cover/900001-xl.jpg",
      "coverColor": "#e4a15d",
      "bannerUrl": "https://img.example/banner/900001.jpg",
@@ -6259,7 +6259,7 @@
      "madeOutsideJapan": false,
      "synopsisSpans": [
       {
-       "text": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+       "text": "Aki relights the old beacons along the roads between the hill towns, one town a week. She doesn't remember where she grew up.\n\nIn the town of Seto, an innkeeper says he has seen her face before, on a poster from twenty years ago.",
        "spoiler": false
       }
      ],
@@ -6290,7 +6290,7 @@
      "year": "2026",
      "score": null,
      "studio": null,
-     "synopsis": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+     "synopsis": "The relay team at Minato High has four runners and one summer to qualify for the prefectural meet.\n\nNobody on the team has won a race before. Captain Mio Haraki writes a plan for every practice, and none of them has lasted past the warm-up.\n\nThe first practice ends with the baton in the harbour and the stopwatch broken. The coach also teaches music and has never timed a race. He spends most of the session reading the rule book out loud.\n\nOver the next weeks the four of them learn each other's strides and start eating lunch together. Ryo is the fastest runner and the worst at handing over. Natsu is the slowest and has never dropped the baton.\n\nThen the regional heats move a week earlier, a storm floods the school track, and the team has six days to fix the second handover.",
      "coverUrl": "https://img.example/cover/900006-xl.jpg",
      "coverColor": null,
      "bannerUrl": null,
@@ -6344,7 +6344,7 @@
      "madeOutsideJapan": false,
      "synopsisSpans": [
       {
-       "text": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+       "text": "The relay team at Minato High has four runners and one summer to qualify for the prefectural meet.\n\nNobody on the team has won a race before. Captain Mio Haraki writes a plan for every practice, and none of them has lasted past the warm-up.\n\nThe first practice ends with the baton in the harbour and the stopwatch broken. The coach also teaches music and has never timed a race. He spends most of the session reading the rule book out loud.\n\nOver the next weeks the four of them learn each other's strides and start eating lunch together. Ryo is the fastest runner and the worst at handing over. Natsu is the slowest and has never dropped the baton.\n\nThen the regional heats move a week earlier, a storm floods the school track, and the team has six days to fix the second handover.",
        "spoiler": false
       }
      ],
@@ -6373,7 +6373,7 @@
      "year": "2023",
      "score": "71",
      "studio": "Studio Mokusei",
-     "synopsis": "A decommissioned construction robot tends a rooftop garden and, one season at a time, the neighbours who come to see it.",
+     "synopsis": "A retired construction robot looks after the vegetable beds on the roof of an old apartment block. The residents who come up to help each bring a problem, and the robot is bad at most of them.",
      "coverUrl": "https://img.example/cover/900005-xl.jpg",
      "coverColor": "#7ac47f",
      "bannerUrl": null,
@@ -6439,7 +6439,7 @@
      "madeOutsideJapan": false,
      "synopsisSpans": [
       {
-       "text": "A decommissioned construction robot tends a rooftop garden and, one season at a time, the neighbours who come to see it.",
+       "text": "A retired construction robot looks after the vegetable beds on the roof of an old apartment block. The residents who come up to help each bring a problem, and the robot is bad at most of them.",
        "spoiler": false
       }
      ],
@@ -6468,7 +6468,7 @@
      "year": "2025",
      "score": "85",
      "studio": "Kujaku Animation Works",
-     "synopsis": "On the last night a rural station is open, two strangers wait for a train that only runs under a full moon.",
+     "synopsis": "The rural station at Tsukino closes for good at the end of March. On its last night, the stationmaster and one stranded passenger wait for a train that is two hours late.",
      "coverUrl": "https://img.example/cover/900003-xl.jpg",
      "coverColor": "#f1d97a",
      "bannerUrl": "https://img.example/banner/900003.jpg",
@@ -6527,7 +6527,7 @@
      "madeOutsideJapan": false,
      "synopsisSpans": [
       {
-       "text": "On the last night a rural station is open, two strangers wait for a train that only runs under a full moon.",
+       "text": "The rural station at Tsukino closes for good at the end of March. On its last night, the stationmaster and one stranded passenger wait for a train that is two hours late.",
        "spoiler": false
       }
      ],
@@ -6565,7 +6565,7 @@
      "year": "2024",
      "score": "82",
      "studio": "Kujaku Animation Works",
-     "synopsis": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+     "synopsis": "Aki relights the old beacons along the roads between the hill towns, one town a week. She doesn't remember where she grew up.\n\nIn the town of Seto, an innkeeper says he has seen her face before, on a poster from twenty years ago.",
      "coverUrl": "https://img.example/cover/900001-xl.jpg",
      "coverColor": "#e4a15d",
      "bannerUrl": "https://img.example/banner/900001.jpg",
@@ -6634,7 +6634,7 @@
      "madeOutsideJapan": false,
      "synopsisSpans": [
       {
-       "text": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+       "text": "Aki relights the old beacons along the roads between the hill towns, one town a week. She doesn't remember where she grew up.\n\nIn the town of Seto, an innkeeper says he has seen her face before, on a poster from twenty years ago.",
        "spoiler": false
       }
      ],
@@ -6665,7 +6665,7 @@
      "year": "2026",
      "score": "77",
      "studio": "Hanabishi Pictures",
-     "synopsis": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+     "synopsis": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
      "coverUrl": "https://img.example/cover/900002-xl.jpg",
      "coverColor": "#5d9be4",
      "bannerUrl": "https://img.example/banner/900002.jpg",
@@ -6722,7 +6722,7 @@
      "madeOutsideJapan": false,
      "synopsisSpans": [
       {
-       "text": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+       "text": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
        "spoiler": false
       }
      ],
@@ -6751,7 +6751,7 @@
      "year": "2025",
      "score": "84",
      "studio": "Kujaku Animation Works",
-     "synopsis": "The beacons are lit, and the roads lead somewhere new: to the city that sent the first lamplighters out.",
+     "synopsis": "Season two follows Aki to the coast, where the first beacons were built and where the road office keeps records of every lamplighter it ever hired.",
      "coverUrl": "https://img.example/cover/900004-xl.jpg",
      "coverColor": "#d77f4a",
      "bannerUrl": "https://img.example/banner/900004.jpg",
@@ -6814,7 +6814,7 @@
      "madeOutsideJapan": false,
      "synopsisSpans": [
       {
-       "text": "The beacons are lit, and the roads lead somewhere new: to the city that sent the first lamplighters out.",
+       "text": "Season two follows Aki to the coast, where the first beacons were built and where the road office keeps records of every lamplighter it ever hired.",
        "spoiler": false
       }
      ],
@@ -6848,7 +6848,7 @@
      "year": "2025",
      "score": "85",
      "studio": "Kujaku Animation Works",
-     "synopsis": "On the last night a rural station is open, two strangers wait for a train that only runs under a full moon.",
+     "synopsis": "The rural station at Tsukino closes for good at the end of March. On its last night, the stationmaster and one stranded passenger wait for a train that is two hours late.",
      "coverUrl": "https://img.example/cover/900003-xl.jpg",
      "coverColor": "#f1d97a",
      "bannerUrl": "https://img.example/banner/900003.jpg",
@@ -6907,7 +6907,7 @@
      "madeOutsideJapan": false,
      "synopsisSpans": [
       {
-       "text": "On the last night a rural station is open, two strangers wait for a train that only runs under a full moon.",
+       "text": "The rural station at Tsukino closes for good at the end of March. On its last night, the stationmaster and one stranded passenger wait for a train that is two hours late.",
        "spoiler": false
       }
      ],
@@ -6936,7 +6936,7 @@
      "year": "2023",
      "score": "71",
      "studio": "Studio Mokusei",
-     "synopsis": "A decommissioned construction robot tends a rooftop garden and, one season at a time, the neighbours who come to see it.",
+     "synopsis": "A retired construction robot looks after the vegetable beds on the roof of an old apartment block. The residents who come up to help each bring a problem, and the robot is bad at most of them.",
      "coverUrl": "https://img.example/cover/900005-xl.jpg",
      "coverColor": "#7ac47f",
      "bannerUrl": null,
@@ -7002,7 +7002,7 @@
      "madeOutsideJapan": false,
      "synopsisSpans": [
       {
-       "text": "A decommissioned construction robot tends a rooftop garden and, one season at a time, the neighbours who come to see it.",
+       "text": "A retired construction robot looks after the vegetable beds on the roof of an old apartment block. The residents who come up to help each bring a problem, and the robot is bad at most of them.",
        "spoiler": false
       }
      ],
@@ -7031,7 +7031,7 @@
      "year": "2026",
      "score": null,
      "studio": null,
-     "synopsis": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+     "synopsis": "The relay team at Minato High has four runners and one summer to qualify for the prefectural meet.\n\nNobody on the team has won a race before. Captain Mio Haraki writes a plan for every practice, and none of them has lasted past the warm-up.\n\nThe first practice ends with the baton in the harbour and the stopwatch broken. The coach also teaches music and has never timed a race. He spends most of the session reading the rule book out loud.\n\nOver the next weeks the four of them learn each other's strides and start eating lunch together. Ryo is the fastest runner and the worst at handing over. Natsu is the slowest and has never dropped the baton.\n\nThen the regional heats move a week earlier, a storm floods the school track, and the team has six days to fix the second handover.",
      "coverUrl": "https://img.example/cover/900006-xl.jpg",
      "coverColor": null,
      "bannerUrl": null,
@@ -7085,7 +7085,7 @@
      "madeOutsideJapan": false,
      "synopsisSpans": [
       {
-       "text": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+       "text": "The relay team at Minato High has four runners and one summer to qualify for the prefectural meet.\n\nNobody on the team has won a race before. Captain Mio Haraki writes a plan for every practice, and none of them has lasted past the warm-up.\n\nThe first practice ends with the baton in the harbour and the stopwatch broken. The coach also teaches music and has never timed a race. He spends most of the session reading the rule book out loud.\n\nOver the next weeks the four of them learn each other's strides and start eating lunch together. Ryo is the fastest runner and the worst at handing over. Natsu is the slowest and has never dropped the baton.\n\nThen the regional heats move a week earlier, a storm floods the school track, and the team has six days to fix the second handover.",
        "spoiler": false
       }
      ],
@@ -7294,7 +7294,7 @@
       "year": "2024",
       "score": "82",
       "studio": "Kujaku Animation Works",
-      "synopsis": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+      "synopsis": "Aki relights the old beacons along the roads between the hill towns, one town a week. She doesn't remember where she grew up.\n\nIn the town of Seto, an innkeeper says he has seen her face before, on a poster from twenty years ago.",
       "coverUrl": "https://img.example/cover/900001-xl.jpg",
       "coverColor": "#e4a15d",
       "bannerUrl": "https://img.example/banner/900001.jpg",
@@ -7363,7 +7363,7 @@
       "madeOutsideJapan": false,
       "synopsisSpans": [
        {
-        "text": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+        "text": "Aki relights the old beacons along the roads between the hill towns, one town a week. She doesn't remember where she grew up.\n\nIn the town of Seto, an innkeeper says he has seen her face before, on a poster from twenty years ago.",
         "spoiler": false
        }
       ],
@@ -7394,7 +7394,7 @@
       "year": "2025",
       "score": "84",
       "studio": "Kujaku Animation Works",
-      "synopsis": "The beacons are lit, and the roads lead somewhere new: to the city that sent the first lamplighters out.",
+      "synopsis": "Season two follows Aki to the coast, where the first beacons were built and where the road office keeps records of every lamplighter it ever hired.",
       "coverUrl": "https://img.example/cover/900004-xl.jpg",
       "coverColor": "#d77f4a",
       "bannerUrl": "https://img.example/banner/900004.jpg",
@@ -7457,7 +7457,7 @@
       "madeOutsideJapan": false,
       "synopsisSpans": [
        {
-        "text": "The beacons are lit, and the roads lead somewhere new: to the city that sent the first lamplighters out.",
+        "text": "Season two follows Aki to the coast, where the first beacons were built and where the road office keeps records of every lamplighter it ever hired.",
         "spoiler": false
        }
       ],
@@ -7512,7 +7512,7 @@
       "year": "2026",
       "score": "77",
       "studio": "Hanabishi Pictures",
-      "synopsis": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+      "synopsis": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
       "coverUrl": "https://img.example/cover/900002-xl.jpg",
       "coverColor": "#5d9be4",
       "bannerUrl": "https://img.example/banner/900002.jpg",
@@ -7567,7 +7567,7 @@
       "madeOutsideJapan": false,
       "synopsisSpans": [
        {
-        "text": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+        "text": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
         "spoiler": false
        }
       ],
@@ -7617,7 +7617,7 @@
       "year": "2025",
       "score": "85",
       "studio": "Kujaku Animation Works",
-      "synopsis": "On the last night a rural station is open, two strangers wait for a train that only runs under a full moon.",
+      "synopsis": "The rural station at Tsukino closes for good at the end of March. On its last night, the stationmaster and one stranded passenger wait for a train that is two hours late.",
       "coverUrl": "https://img.example/cover/900003-xl.jpg",
       "coverColor": "#f1d97a",
       "bannerUrl": "https://img.example/banner/900003.jpg",
@@ -7679,7 +7679,7 @@
       "madeOutsideJapan": false,
       "synopsisSpans": [
        {
-        "text": "On the last night a rural station is open, two strangers wait for a train that only runs under a full moon.",
+        "text": "The rural station at Tsukino closes for good at the end of March. On its last night, the stationmaster and one stranded passenger wait for a train that is two hours late.",
         "spoiler": false
        }
       ],
@@ -7729,7 +7729,7 @@
       "year": "2024",
       "score": "82",
       "studio": "Kujaku Animation Works",
-      "synopsis": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+      "synopsis": "Aki relights the old beacons along the roads between the hill towns, one town a week. She doesn't remember where she grew up.\n\nIn the town of Seto, an innkeeper says he has seen her face before, on a poster from twenty years ago.",
       "coverUrl": "https://img.example/cover/900001-xl.jpg",
       "coverColor": "#e4a15d",
       "bannerUrl": "https://img.example/banner/900001.jpg",
@@ -7796,7 +7796,7 @@
       "madeOutsideJapan": false,
       "synopsisSpans": [
        {
-        "text": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+        "text": "Aki relights the old beacons along the roads between the hill towns, one town a week. She doesn't remember where she grew up.\n\nIn the town of Seto, an innkeeper says he has seen her face before, on a poster from twenty years ago.",
         "spoiler": false
        }
       ],
@@ -7885,7 +7885,7 @@
     "year": "2024",
     "score": "82",
     "studio": "Kujaku Animation Works",
-    "synopsis": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+    "synopsis": "Aki relights the old beacons along the roads between the hill towns, one town a week. She doesn't remember where she grew up.\n\nIn the town of Seto, an innkeeper says he has seen her face before, on a poster from twenty years ago.",
     "coverUrl": "https://img.example/cover/900001-xl.jpg",
     "coverColor": "#e4a15d",
     "bannerUrl": "https://img.example/banner/900001.jpg",
@@ -8208,7 +8208,7 @@
     "madeOutsideJapan": false,
     "synopsisSpans": [
      {
-      "text": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+      "text": "Aki relights the old beacons along the roads between the hill towns, one town a week. She doesn't remember where she grew up.\n\nIn the town of Seto, an innkeeper says he has seen her face before, on a poster from twenty years ago.",
       "spoiler": false
      }
     ],
@@ -8245,7 +8245,7 @@
      "year": "2025",
      "score": "84",
      "studio": "Kujaku Animation Works",
-     "synopsis": "The beacons are lit, and the roads lead somewhere new: to the city that sent the first lamplighters out.",
+     "synopsis": "Season two follows Aki to the coast, where the first beacons were built and where the road office keeps records of every lamplighter it ever hired.",
      "coverUrl": "https://img.example/cover/900004-xl.jpg",
      "coverColor": "#d77f4a",
      "bannerUrl": "https://img.example/banner/900004.jpg",
@@ -8313,7 +8313,7 @@
      "madeOutsideJapan": false,
      "synopsisSpans": [
       {
-       "text": "The beacons are lit, and the roads lead somewhere new: to the city that sent the first lamplighters out.",
+       "text": "Season two follows Aki to the coast, where the first beacons were built and where the road office keeps records of every lamplighter it ever hired.",
        "spoiler": false
       }
      ],
@@ -8687,7 +8687,7 @@
     "year": "2026",
     "score": "77",
     "studio": "Hanabishi Pictures",
-    "synopsis": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+    "synopsis": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
     "coverUrl": "https://img.example/cover/900002-xl.jpg",
     "coverColor": "#5d9be4",
     "bannerUrl": "https://img.example/banner/900002.jpg",
@@ -8933,7 +8933,7 @@
     "madeOutsideJapan": false,
     "synopsisSpans": [
      {
-      "text": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+      "text": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
       "spoiler": false
      }
     ],
@@ -9172,7 +9172,7 @@
     "year": "2025",
     "score": "85",
     "studio": "Kujaku Animation Works",
-    "synopsis": "On the last night a rural station is open, two strangers wait for a train that only runs under a full moon.",
+    "synopsis": "The rural station at Tsukino closes for good at the end of March. On its last night, the stationmaster and one stranded passenger wait for a train that is two hours late.",
     "coverUrl": "https://img.example/cover/900003-xl.jpg",
     "coverColor": "#f1d97a",
     "bannerUrl": "https://img.example/banner/900003.jpg",
@@ -9291,7 +9291,7 @@
     "madeOutsideJapan": false,
     "synopsisSpans": [
      {
-      "text": "On the last night a rural station is open, two strangers wait for a train that only runs under a full moon.",
+      "text": "The rural station at Tsukino closes for good at the end of March. On its last night, the stationmaster and one stranded passenger wait for a train that is two hours late.",
       "spoiler": false
      }
     ],
@@ -9452,7 +9452,7 @@
     "year": "2025",
     "score": "84",
     "studio": "Kujaku Animation Works",
-    "synopsis": "The beacons are lit, and the roads lead somewhere new: to the city that sent the first lamplighters out.",
+    "synopsis": "Season two follows Aki to the coast, where the first beacons were built and where the road office keeps records of every lamplighter it ever hired.",
     "coverUrl": "https://img.example/cover/900004-xl.jpg",
     "coverColor": "#d77f4a",
     "bannerUrl": "https://img.example/banner/900004.jpg",
@@ -9577,7 +9577,7 @@
     "madeOutsideJapan": false,
     "synopsisSpans": [
      {
-      "text": "The beacons are lit, and the roads lead somewhere new: to the city that sent the first lamplighters out.",
+      "text": "Season two follows Aki to the coast, where the first beacons were built and where the road office keeps records of every lamplighter it ever hired.",
       "spoiler": false
      }
     ],
@@ -9614,7 +9614,7 @@
     "year": "2025",
     "score": "84",
     "studio": "Kujaku Animation Works",
-    "synopsis": "The beacons are lit, and the roads lead somewhere new: to the city that sent the first lamplighters out.",
+    "synopsis": "Season two follows Aki to the coast, where the first beacons were built and where the road office keeps records of every lamplighter it ever hired.",
     "coverUrl": "https://img.example/cover/900004-xl.jpg",
     "coverColor": "#d77f4a",
     "bannerUrl": "https://img.example/banner/900004.jpg",
@@ -9747,7 +9747,7 @@
     "madeOutsideJapan": false,
     "synopsisSpans": [
      {
-      "text": "The beacons are lit, and the roads lead somewhere new: to the city that sent the first lamplighters out.",
+      "text": "Season two follows Aki to the coast, where the first beacons were built and where the road office keeps records of every lamplighter it ever hired.",
       "spoiler": false
      }
     ],
@@ -9784,7 +9784,7 @@
      "year": "2024",
      "score": "82",
      "studio": "Kujaku Animation Works",
-     "synopsis": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+     "synopsis": "Aki relights the old beacons along the roads between the hill towns, one town a week. She doesn't remember where she grew up.\n\nIn the town of Seto, an innkeeper says he has seen her face before, on a poster from twenty years ago.",
      "coverUrl": "https://img.example/cover/900001-xl.jpg",
      "coverColor": "#e4a15d",
      "bannerUrl": "https://img.example/banner/900001.jpg",
@@ -9858,7 +9858,7 @@
      "madeOutsideJapan": false,
      "synopsisSpans": [
       {
-       "text": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+       "text": "Aki relights the old beacons along the roads between the hill towns, one town a week. She doesn't remember where she grew up.\n\nIn the town of Seto, an innkeeper says he has seen her face before, on a poster from twenty years ago.",
        "spoiler": false
       }
      ],
@@ -10227,7 +10227,7 @@
     "year": "2023",
     "score": "71",
     "studio": "Studio Mokusei",
-    "synopsis": "A decommissioned construction robot tends a rooftop garden and, one season at a time, the neighbours who come to see it.",
+    "synopsis": "A retired construction robot looks after the vegetable beds on the roof of an old apartment block. The residents who come up to help each bring a problem, and the robot is bad at most of them.",
     "coverUrl": "https://img.example/cover/900005-xl.jpg",
     "coverColor": "#7ac47f",
     "bannerUrl": null,
@@ -10319,7 +10319,7 @@
     "madeOutsideJapan": false,
     "synopsisSpans": [
      {
-      "text": "A decommissioned construction robot tends a rooftop garden and, one season at a time, the neighbours who come to see it.",
+      "text": "A retired construction robot looks after the vegetable beds on the roof of an old apartment block. The residents who come up to help each bring a problem, and the robot is bad at most of them.",
       "spoiler": false
      }
     ],
@@ -10651,7 +10651,7 @@
     "year": "2026",
     "score": null,
     "studio": null,
-    "synopsis": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+    "synopsis": "The relay team at Minato High has four runners and one summer to qualify for the prefectural meet.\n\nNobody on the team has won a race before. Captain Mio Haraki writes a plan for every practice, and none of them has lasted past the warm-up.\n\nThe first practice ends with the baton in the harbour and the stopwatch broken. The coach also teaches music and has never timed a race. He spends most of the session reading the rule book out loud.\n\nOver the next weeks the four of them learn each other's strides and start eating lunch together. Ryo is the fastest runner and the worst at handing over. Natsu is the slowest and has never dropped the baton.\n\nThen the regional heats move a week earlier, a storm floods the school track, and the team has six days to fix the second handover.",
     "coverUrl": "https://img.example/cover/900006-xl.jpg",
     "coverColor": null,
     "bannerUrl": null,
@@ -10767,7 +10767,7 @@
     "madeOutsideJapan": false,
     "synopsisSpans": [
      {
-      "text": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+      "text": "The relay team at Minato High has four runners and one summer to qualify for the prefectural meet.\n\nNobody on the team has won a race before. Captain Mio Haraki writes a plan for every practice, and none of them has lasted past the warm-up.\n\nThe first practice ends with the baton in the harbour and the stopwatch broken. The coach also teaches music and has never timed a race. He spends most of the session reading the rule book out loud.\n\nOver the next weeks the four of them learn each other's strides and start eating lunch together. Ryo is the fastest runner and the worst at handing over. Natsu is the slowest and has never dropped the baton.\n\nThen the regional heats move a week earlier, a storm floods the school track, and the team has six days to fix the second handover.",
       "spoiler": false
      }
     ],
@@ -23655,7 +23655,7 @@
       "year": "2024",
       "score": "82",
       "studio": "Kujaku Animation Works",
-      "synopsis": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+      "synopsis": "Aki relights the old beacons along the roads between the hill towns, one town a week. She doesn't remember where she grew up.\n\nIn the town of Seto, an innkeeper says he has seen her face before, on a poster from twenty years ago.",
       "coverUrl": "https://img.example/cover/900001-xl.jpg",
       "coverColor": "#e4a15d",
       "bannerUrl": "https://img.example/banner/900001.jpg",
@@ -23724,7 +23724,7 @@
       "madeOutsideJapan": false,
       "synopsisSpans": [
        {
-        "text": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+        "text": "Aki relights the old beacons along the roads between the hill towns, one town a week. She doesn't remember where she grew up.\n\nIn the town of Seto, an innkeeper says he has seen her face before, on a poster from twenty years ago.",
         "spoiler": false
        }
       ],
@@ -23755,7 +23755,7 @@
       "year": "2026",
       "score": "77",
       "studio": "Hanabishi Pictures",
-      "synopsis": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+      "synopsis": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
       "coverUrl": "https://img.example/cover/900002-xl.jpg",
       "coverColor": "#5d9be4",
       "bannerUrl": "https://img.example/banner/900002.jpg",
@@ -23812,7 +23812,7 @@
       "madeOutsideJapan": false,
       "synopsisSpans": [
        {
-        "text": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+        "text": "The library on Mount Kumo stays open until two in the morning for the observatory staff. Saki Ono takes the night shift for the extra pay and finds the late regulars are more work than the books.",
         "spoiler": false
        }
       ],
@@ -23841,7 +23841,7 @@
       "year": "2025",
       "score": "84",
       "studio": "Kujaku Animation Works",
-      "synopsis": "The beacons are lit, and the roads lead somewhere new: to the city that sent the first lamplighters out.",
+      "synopsis": "Season two follows Aki to the coast, where the first beacons were built and where the road office keeps records of every lamplighter it ever hired.",
       "coverUrl": "https://img.example/cover/900004-xl.jpg",
       "coverColor": "#d77f4a",
       "bannerUrl": "https://img.example/banner/900004.jpg",
@@ -23904,7 +23904,7 @@
       "madeOutsideJapan": false,
       "synopsisSpans": [
        {
-        "text": "The beacons are lit, and the roads lead somewhere new: to the city that sent the first lamplighters out.",
+        "text": "Season two follows Aki to the coast, where the first beacons were built and where the road office keeps records of every lamplighter it ever hired.",
         "spoiler": false
        }
       ],

@@ -108,7 +108,7 @@ class ReadBrowseShots : ReadingShotHarness() {
         places()
         shoot(
             "phone-search-read-query", FixtureScene.READING_HOME, Destination.Search, medium = KaeriIsFor.READ,
-            then = { it.reading.runSearch(ReadingModel.EMPTY_QUERY.copy(text = "lantern")) },
+            then = { it.reading.runSearch(ReadingModel.EMPTY_QUERY.copy(text = "ferry")) },
         ) { searched(it) }
     }
 
@@ -118,7 +118,7 @@ class ReadBrowseShots : ReadingShotHarness() {
         places(search = true)
         shoot(
             "phone-search-both-reading", FixtureScene.READING_HOME, Destination.Search,
-            then = { it.reading.runSearch(ReadingModel.EMPTY_QUERY.copy(text = "paper")) },
+            then = { it.reading.runSearch(ReadingModel.EMPTY_QUERY.copy(text = "juniper")) },
         ) { searched(it) }
     }
 
