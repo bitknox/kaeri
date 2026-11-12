@@ -47,6 +47,8 @@
 //             reader's pressed and loading states on chapters that open at once here
 //   openwait  ms the reader's first open waits before the engine hears of it, to see the opening
 //             plate, which comes at 600 ms, on works that open at once here
+//   readerat  ms after the engine is up that a reader scene opens, so a recording of its opening
+//             starts on a settled app, past the splash screen
 //   party     a watch party on the testing engine's fake server, for the chat board (PartyShot):
 //             chatline, chatbusy, chatreact, chatfield, chatoff, chatfail, chatmute, chathidden,
 //             chatshort, chatloop, lobby or bar; with media=<path> the player plays that file.
@@ -429,7 +431,12 @@ internal object Flavour {
         app.kaeri.reader.CreditShot.step = intent.getStringExtra("creditshot")
         // plate=hold: every page waits on its plate, for the plate's shots.
         app.kaeri.reader.PlateShot.hold = intent.getStringExtra("plate") == "hold"
-        openReaderScene(intent)
+        val readerAt = intent.getStringExtra("readerat")?.toLongOrNull()?.coerceAtLeast(0) ?: 0L
+        if (readerAt > 0) {
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ openReaderScene(intent) }, readerAt)
+        } else {
+            openReaderScene(intent)
+        }
         if (intent.getStringExtra("shell") == "eink") {
             // The panel's question answered as a person would: e-ink, in greys.
             val eink = (context.applicationContext as KaeriApp).eink
