@@ -43,9 +43,13 @@ object PageDecoder {
         if (!source.isFile) {
             PageDecodeResult.Missing
         } else {
+            // Settled before the first picture: the probe's one-pixel copy makes the first native
+            // buffer and file calls under the lazy's lock. The JVM test runtime sets those up for
+            // one first caller at a time, and pages beside the shown one decode alongside it.
+            val rgba = rgbaInMemory
             when (val encoding = file.encoding) {
                 is PageEncoding.Original -> PageDecodeResult.Decoded(PageBitmap(original(source, file), grey = false))
-                is PageEncoding.Raw -> PageDecodeResult.Decoded(raw(source, file, encoding))
+                is PageEncoding.Raw -> PageDecodeResult.Decoded(raw(source, file, encoding, rgba))
             }
         }
     } catch (_: FileNotFoundException) {
@@ -81,7 +85,7 @@ object PageDecoder {
         return BitmapFactory.decodeFile(source.path) ?: error("not a picture")
     }
 
-    private fun raw(source: File, file: PageFile, encoding: PageEncoding.Raw): PageBitmap {
+    private fun raw(source: File, file: PageFile, encoding: PageEncoding.Raw, rgba: Boolean): PageBitmap {
         val width = file.width.toInt()
         val height = file.height.toInt()
         val grey = encoding.format == PixelFormat.GRAY8
@@ -93,7 +97,7 @@ object PageDecoder {
             check(mapped.capacity().toLong() >= stride.toLong() * (height - 1) + width * pixel) { "the page file is short" }
             val rowBytes = bitmap.rowBytes
             // RGBA in memory is what ARGB_8888 holds on Android; a host whose order differs swaps.
-            val swap = !grey && !rgbaInMemory
+            val swap = !grey && !rgba
             val packed = if (!swap && stride == rowBytes && mapped.capacity() >= rowBytes * height) {
                 mapped.limit(rowBytes * height)
                 mapped
