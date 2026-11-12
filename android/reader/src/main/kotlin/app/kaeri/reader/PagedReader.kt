@@ -3,14 +3,16 @@
 // drawn, never through empty, and Remove animations keeps that fade;
 // a swipe follows the finger and turns past 25% of the width or a 450 dp/s flick with a spring that
 // does not bounce. With motion off (e-ink, Paper mode) every turn is at once. Taps act at once:
-// there is no double tap until the page is zoomed. Pinch zooms, and while zoomed a drag pans and the
-// tap zones are off. With swipes off (an e-ink switch) a drag neither turns nor counts as a tap.
+// there is no double tap until the page is zoomed. A strip cut into screens (e-ink) also moves on
+// with an upward swipe and back with a downward one. Pinch zooms, and while zoomed a drag pans and
+// the tap zones are off. With swipes off (an e-ink switch) a drag neither turns nor counts as a tap.
 
 package app.kaeri.reader
 
 import androidx.compose.runtime.key
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
+import app.kaeri.engine.model.PageKind
 import app.kaeri.engine.model.ReadingFailure
 import app.kaeri.engine.model.TapAction
 import app.kaeri.engine.model.TapReading
@@ -221,6 +223,8 @@ fun PagedReader(
     swipes: Boolean = true,
 ) {
     val leaves = state.leaves
+    // On e-ink a strip is cut into screens shown one at a time.
+    val cuts = leaves.firstOrNull { !it.endPage }?.parts?.firstOrNull()?.kind == PageKind.STRIP_CUT
     val zonesNow by rememberUpdatedState(taps)
     val readingNow by rememberUpdatedState(reading)
     pager.count = leaves.size
@@ -272,6 +276,19 @@ fun PagedReader(
     val fade = remember { Animatable(1f) }
     val removed = rememberAnimationsRemoved()
     var drawn by remember { mutableIntStateOf(-1) }
+    // With motion off each picture is drawn once. The leaf last drawn whole stays on screen until
+    // the one after it (a turn, or the same place laid out anew when the device turns) is drawn
+    // whole, for at most the plate's wait: the panel never shows the empty ground between them.
+    var drawnLeaf by remember { mutableStateOf<Leaf?>(null) }
+    val heldFrame = remember { arrayOfNulls<HeldFrame>(1) }
+
+    // The pages beside the one shown are decoded ahead, so a turn draws its page in one frame.
+    val near = remember(leaves, pager.leaf, state.files, state.held) {
+        listOf(pager.leaf + 1, pager.leaf - 1).flatMap { leaves.getOrNull(it)?.parts.orEmpty() }.mapNotNull(state::file)
+    }
+    LaunchedEffect(near) {
+        if (near.isNotEmpty()) withContext(Dispatchers.IO) { near.forEach { if (images.cached(it) == null) images.load(it) } }
+    }
     LaunchedEffect(pager.turns) {
         if (pager.under == null) return@LaunchedEffect
         if (!motion) {
@@ -422,7 +439,7 @@ fun PagedReader(
                         }
                     }
                 }
-                .pointerInput(rtl, motion, swipes) {
+                .pointerInput(rtl, motion, cuts, swipes) {
                     awaitEachGesture {
                         val down = awaitFirstDown(requireUnconsumed = false)
                         // A new touch takes over a settling swipe from where it is. A page caught
@@ -433,6 +450,8 @@ fun PagedReader(
                         val tracker = VelocityTracker()
                         tracker.addPosition(down.uptimeMillis, down.position)
                         var dragging = false
+                        // A strip cut into screens moves on with an upward swipe, as a strip does.
+                        var upDown = false
                         var total = Offset.Zero
                         var moved = Offset.Zero
                         var event: androidx.compose.ui.input.pointer.PointerEvent
@@ -477,8 +496,10 @@ fun PagedReader(
                                     if (!swipes) {
                                         // A hand resting on the glass: past a tap's slop it is no tap either.
                                         if (moved.getDistance() > viewConfiguration.touchSlop) change.consume()
-                                    } else if (!dragging && abs(total.x) > viewConfiguration.touchSlop && abs(total.x) > abs(total.y)) {
-                                        dragging = true
+                                    } else {
+                                        if (!dragging && abs(total.x) > viewConfiguration.touchSlop && abs(total.x) > abs(total.y)) dragging = true
+                                        if (cuts && !dragging && !upDown && abs(total.y) > viewConfiguration.touchSlop && abs(total.y) > abs(total.x)) upDown = true
+                                        if (upDown) change.consume()
                                     }
                                     if (dragging) {
                                         tracker.addPosition(change.uptimeMillis, change.position)
@@ -494,7 +515,9 @@ fun PagedReader(
                             pager.zoom = 1f
                             pager.pan = clampPan(pager.pan, f.scale, size.width.toFloat(), size.height.toFloat(), f.content)
                         }
-                        if (dragging) {
+                        if (upDown) {
+                            if (total.y < 0) pager.forward(TurnHow.SWIPE) else pager.back(TurnHow.SWIPE)
+                        } else if (dragging) {
                             settle(tracker.calculateVelocity().x)
                         } else if (caught && drag != 0f) {
                             // A tap on a page caught mid-swipe finishes the swipe the way it was going,
@@ -541,7 +564,17 @@ fun PagedReader(
                             onReady = {
                                 if (current) {
                                     drawn = index
-                                    onReady(index)
+                                    val was = drawnLeaf
+                                    drawnLeaf = leaf
+                                    if (motion || leaf == was) {
+                                        onReady(index)
+                                    } else {
+                                        // A held frame gives way in the next frame: the leaf is ready once it is on screen.
+                                        scope.launch {
+                                            withFrameNanos { }
+                                            onReady(index)
+                                        }
+                                    }
                                 }
                             },
                             waiting = waiting,
@@ -592,7 +625,39 @@ fun PagedReader(
                 val leafAlpha = if (landing != null) 1f else alpha
                 // A credit step back to its own leaf slides the credit page away and leaves the leaf in place.
                 val stepsToSelf = drag != 0f && state.creditStep((drag > 0) == rtl, pager.leaf).let { it is CreditStep.Leaf && it.leaf == pager.leaf }
-                Show(landing ?: pager.leaf, alpha = leafAlpha, shift = if (stepsToSelf) 0f else shift, current = true)
+                val showing = landing ?: pager.leaf
+                val hold = if (motion || landing != null) null else held(heldFrame, leaves.getOrNull(showing), drawnLeaf, state)
+                Show(showing, alpha = if (hold != null) 0f else leafAlpha, shift = if (stepsToSelf) 0f else shift, current = true)
+                if (hold != null) {
+                    // The old frame as it was drawn, over the new leaf that draws unseen under it.
+                    LeafView(
+                        leaf = hold.leaf,
+                        state = hold.state,
+                        images = images,
+                        onMissing = {},
+                        onRetry = {},
+                        modifier = Modifier.fillMaxSize().graphicsLayer {
+                            translationX = hold.pan.x
+                            translationY = hold.pan.y
+                            scaleX = hold.scale
+                            scaleY = hold.scale
+                        },
+                        instant = true,
+                        waiting = { _, _ -> },
+                        failed = { _, _, _ -> },
+                    )
+                } else if (!motion) {
+                    leaves.getOrNull(showing)?.takeIf { it == drawnLeaf }?.let { leaf ->
+                        heldFrame[0] = HeldFrame(leaf, state, pager.pan, pager.zoom * fitting(showing).scale)
+                    }
+                }
+                // The leaf shown, the ones beside it and the frame held stay decoded whatever the
+                // cache's size, so a held frame never leaves the screen to decode again.
+                val shownFiles = leaves.getOrNull(showing)?.parts.orEmpty().mapNotNull(state::file)
+                SideEffect {
+                    val held = heldFrame[0]?.let { h -> h.leaf.parts.mapNotNull(h.state::file) }.orEmpty()
+                    images.keep(shownFiles + near + held)
+                }
                 if (landing == null) {
                     leavingCredit?.let { Credit(it, leafAlpha, shift) }
                     heldCredit?.let { Credit(it, leafAlpha * creditFade.value, shift) }
@@ -600,6 +665,28 @@ fun PagedReader(
             }
         }
     }
+}
+
+/** A leaf drawn whole with motion off, as it was drawn: the state it was drawn from, its pan and scale. */
+internal class HeldFrame(val leaf: Leaf, val state: ReaderState, val pan: Offset, val scale: Float)
+
+/**
+ * The frame to keep on screen over [showing], which is not drawn whole yet: the last one drawn
+ * whole in this chapter, until [showing] is drawn or the plate's wait runs out. A new layout, the
+ * device turned, keeps it until the plate's words would show: the pages are cut again first. Null
+ * to draw [showing] as it is.
+ */
+@Composable
+private fun held(frame: Array<HeldFrame?>, showing: Leaf?, drawnLeaf: Leaf?, state: ReaderState): HeldFrame? {
+    val relaid = frame[0]?.let { it.state.layout != state.layout } == true
+    // Each leaf waits afresh, also one shown before under the same layout.
+    var waitedOut by remember(showing, relaid) { mutableStateOf(false) }
+    LaunchedEffect(showing, relaid) {
+        delay(if (relaid) PageWaits.WORDS_MS else PageWaits.PLATE_MS)
+        waitedOut = true
+    }
+    if (showing == null || showing.endPage || showing == drawnLeaf || waitedOut) return null
+    return frame[0]?.takeIf { it.state.chapter == state.chapter && it.leaf != showing }
 }
 
 /**

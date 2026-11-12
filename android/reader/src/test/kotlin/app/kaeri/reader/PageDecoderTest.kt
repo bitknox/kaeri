@@ -1,5 +1,6 @@
 // Page files to bitmaps: raw greys mapped row by row whatever their stride, originals through the
-// platform's decoder, and a file gone from the cache said as missing.
+// platform's decoder, a file gone from the cache said as missing, and the pages named to keep kept
+// whatever the cache's size.
 
 package app.kaeri.reader
 
@@ -82,5 +83,19 @@ class PageDecoderTest {
         val file = ReaderFixtures.grey(dir.root, "kept.gray", 3, 3)
         val first = (images.load(file) as PageDecodeResult.Decoded).page
         assertTrue(images.cached(file) === first)
+    }
+
+    @Test
+    fun kept_pages_stay_when_the_cache_is_full_until_no_longer_named() {
+        val images = PageImages(maxBytes = 4 * 4)
+        val shown = ReaderFixtures.grey(dir.root, "shown.gray", 4, 4)
+        val next = ReaderFixtures.grey(dir.root, "next.gray", 4, 4)
+        images.keep(listOf(shown, next))
+        images.load(shown)
+        images.load(next)
+        assertTrue(images.cached(shown) != null && images.cached(next) != null)
+        images.keep(listOf(next))
+        assertEquals(null, images.cached(shown))
+        assertTrue(images.cached(next) != null)
     }
 }

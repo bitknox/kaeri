@@ -225,6 +225,8 @@ internal fun PaperPage(
     title: String,
     link: String? = null,
     onLink: () -> Unit = {},
+    /** A line under the title, such as Home's offline line; null draws none. */
+    line: String? = null,
     content: @Composable () -> Unit,
 ) {
     val navigator = LocalNavigator.current
@@ -248,6 +250,7 @@ internal fun PaperPage(
                 Text(title, style = EinkType.PageTitle, modifier = Modifier.weight(1f).semantics { heading() })
                 if (link != null) EinkTextButton(link, onLink, underline = true, modifier = Modifier.padding(start = 8.dp))
             }
+            if (line != null) Text(line, style = EinkType.Secondary, modifier = Modifier.padding(bottom = 8.dp))
             content()
         }
     }

@@ -1,15 +1,22 @@
 // What the paged reader tells the screen about each leaf it shows: only a turn the person made
 // counts as turned, so the engine's start place and a new layout after a rotation keep the chrome.
+// A strip cut into screens also moves on with an upward swipe. The leaf shown and the ones beside
+// it stay decoded however small the cache, and a new layout keeps the picture on screen until its
+// own is drawn.
 
 package app.kaeri.reader
 
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeDown
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
+import androidx.compose.ui.test.swipeUp
 import app.kaeri.engine.model.Leaf
 import app.kaeri.engine.model.ReadDirection
 import app.kaeri.engine.model.ReaderMode
@@ -20,6 +27,8 @@ import app.kaeri.reader.ReaderFixtures.CHAPTER
 import app.kaeri.reader.ReaderFixtures.SESSION
 import app.kaeri.reader.ReaderFixtures.WORK
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,20 +45,21 @@ class PagedTurnsTest {
 
     private val session = ReaderSession {}
     private val pager = PagedReaderState()
+    private var images = PageImages()
     private val reports = mutableListOf<Triple<Int, TurnHow, Boolean>>()
     private var crossed = 0
     private val missing = mutableListOf<Int>()
 
-    private fun open() {
+    private fun open(leaves: List<Leaf> = ReaderFixtures.leaves(8)) {
         session.open(WORK, ReaderFixtures.surface)
         session.apply(ReaderEvent.Opened(ReaderFixtures.view(start = 3u)))
-        session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, ReaderFixtures.leaves(8)))
+        session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, leaves))
         compose.setContent {
             val state = session.state.collectAsState().value
             PagedReader(
                 state = state,
                 pager = pager,
-                images = PageImages(),
+                images = images,
                 direction = ReadDirection.RIGHT_TO_LEFT,
                 taps = state.tapZones(),
                 reading = TapReading(ReaderMode.PAGED, ReadDirection.RIGHT_TO_LEFT, false, false),
@@ -151,5 +161,78 @@ class PagedTurnsTest {
         compose.waitForIdle()
         assertEquals(8, pager.leaf)
         assertEquals(0, crossed)
+    }
+
+    @Test
+    fun a_strip_cut_into_screens_moves_on_with_an_upward_swipe() {
+        open(ReaderFixtures.cuts(4, 2))
+        val from = pager.leaf
+        compose.onRoot().performTouchInput { swipeUp() }
+        compose.waitForIdle()
+        assertEquals(from + 1, pager.leaf)
+        assertEquals(TurnHow.SWIPE, reports.last().second)
+        compose.onRoot().performTouchInput { swipeDown() }
+        compose.waitForIdle()
+        assertEquals(from, pager.leaf)
+    }
+
+    @Test
+    fun an_upward_swipe_on_pages_turns_nothing() {
+        open()
+        val from = pager.leaf
+        compose.onRoot().performTouchInput { swipeUp() }
+        compose.waitForIdle()
+        assertEquals(from, pager.leaf)
+    }
+
+    @Test
+    fun the_pages_beside_the_one_shown_are_decoded_ahead() {
+        val dir = java.nio.file.Files.createTempDirectory("turns").toFile()
+        val files = List(8) { ReaderFixtures.grey(dir, "$it.gray", 40, 60) }
+        open(ReaderFixtures.leaves(8) { files[it.toInt()] })
+        compose.waitUntil(5_000) { images.cached(files[2]) != null && images.cached(files[4]) != null }
+        assertEquals(null, images.cached(files[6]))
+        dir.deleteRecursively()
+    }
+
+    @Test
+    fun with_room_for_one_page_the_page_shown_and_those_beside_it_stay_decoded() {
+        // An e-ink panel's raw pages can be so big that the cache holds only one.
+        images = PageImages(maxBytes = 40 * 60)
+        val dir = java.nio.file.Files.createTempDirectory("turns").toFile()
+        val files = List(8) { ReaderFixtures.grey(dir, "$it.gray", 40, 60) }
+        open(ReaderFixtures.leaves(8) { files[it.toInt()] })
+        compose.waitUntil(5_000) { (2..4).all { images.cached(files[it]) != null } }
+        // After a turn the page left, held over the new one until it is drawn, is still decoded.
+        compose.runOnIdle { pager.forward() }
+        compose.waitUntil(5_000) { (3..5).all { images.cached(files[it]) != null } }
+        assertEquals(4, pager.leaf)
+        dir.deleteRecursively()
+    }
+
+    @Test
+    fun a_new_layout_keeps_the_picture_shown_until_its_own_is_drawn() {
+        val dir = java.nio.file.Files.createTempDirectory("turns").toFile()
+        val files = List(8) { ReaderFixtures.grey(dir, "$it.gray", 40, 60) }
+        open(ReaderFixtures.cuts(4, 2) { files[it.toInt()] })
+        compose.waitUntil(5_000) { pictured() }
+        // The device turned: the strip is cut into screens again, and the new cuts' files have not
+        // come yet. The picture shown stays past the plate's wait, then gives way to the plate.
+        compose.mainClock.autoAdvance = false
+        compose.runOnIdle { session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, ReaderFixtures.cuts(4, 3))) }
+        compose.mainClock.advanceTimeBy(PageWaits.PLATE_MS + 200)
+        assertTrue("the old picture past the plate's wait", pictured())
+        compose.mainClock.advanceTimeBy(PageWaits.WORDS_MS)
+        assertFalse("the plate once its words are due", pictured())
+        dir.deleteRecursively()
+    }
+
+    /** A page drawn: the fixture's pages run from black at their left to white at their right. */
+    private fun pictured(): Boolean {
+        val image = compose.onRoot().captureToImage().asAndroidBitmap()
+        val y = image.height / 2
+        val left = android.graphics.Color.red(image.getPixel(image.width / 10, y))
+        val right = android.graphics.Color.red(image.getPixel(image.width * 9 / 10, y))
+        return right - left > 100
     }
 }

@@ -128,6 +128,21 @@ fn begin(memory: &std::sync::Mutex<Loading>, refresh: bool) -> Option<u64> {
     Some(loading.generation)
 }
 
+/// The network path came or went: an opened Home says so at once, and coming back loads it
+/// again, asking only for what is stale, so it stops saying offline without the app asking.
+pub fn path_moved(kit: &Kit, ask: Ask, tx: &Outbox) {
+    let opened =
+        kit.sources.catalog.home.lock().unwrap_or_else(|e| e.into_inner()).generation > 0;
+    if !opened {
+        return;
+    }
+    if kit.offline.load(Ordering::Relaxed) {
+        resend(kit, ask, tx);
+    } else {
+        load(kit, ask, false, tx);
+    }
+}
+
 /// Home as it stands, asking for nothing: for a change that shows on it, such as a series found
 /// in no source.
 pub fn resend(kit: &Kit, ask: Ask, tx: &Outbox) {

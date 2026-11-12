@@ -115,6 +115,36 @@ class EinkLargeHomeShots : ReadingShotHarness() {
         store.apply(Event.Reading(ReadingEvent.Home(view.copy(continueReading = continuing, week = week))))
     }
 
+    /**
+     * Offline with no New chapters: the offline line under the title, and Browse right under
+     * Continue rather than at the foot of the page with empty room between.
+     */
+    private fun quietHome(name: String) = shoot(
+        name, FixtureScene.READING_HOME, Destination.Home, medium = KaeriIsFor.READ, eink = EinkLook(),
+        then = { store ->
+            fill(store)
+            val view = store.reading.home.value
+            if (view != null) {
+                val since = System.currentTimeMillis() / 1000 - 3600
+                store.apply(Event.Reading(ReadingEvent.Home(view.copy(week = emptyList(), offline = true, offlineSince = since))))
+            }
+        },
+        after = {
+            compose.onNodeWithText("Offline.", substring = true).assertExists() // i18n-skip
+            val captions = compose.onNodeWithText(CONTINUE_TITLES.first()).getBoundsInRoot().bottom
+            val browse = compose.onNodeWithText("Browse").getBoundsInRoot().top // i18n-skip
+            check(browse - captions <= 120.dp) { "Browse starts ${browse - captions} under Continue" } // i18n-skip
+        },
+        // The engine's last Home, every part in and the hero chosen: it sends Home again as each
+        // part lands, and one landing after the offline Home is applied would replace it. Ready
+        // before the offline Home is applied too: the harness waits for it on both sides.
+        ready = { store ->
+            val view = store.reading.home.value
+            homeRows(store) && view != null && view.continueReading.isNotEmpty() && view.pending.isEmpty() &&
+                view.spotlight != null && view.spot != null
+        },
+    )
+
     /** More series on this device, made from the fixtures' own under made-up titles, for the two paged columns. */
     private fun fillDownloads(store: AppStore) {
         val view = store.reading.downloads.value ?: return
@@ -128,6 +158,7 @@ class EinkLargeHomeShots : ReadingShotHarness() {
 
     @Test @Config(qualifiers = EREADER_10, fontScale = AIR_SCALE) fun air_home() = home("b-air-085-home")
     @Test @Config(qualifiers = EREADER_10, fontScale = AIR_SCALE) fun air_home_full() = fullHome("b-air-085-home-full")
+    @Test @Config(qualifiers = EREADER_10, fontScale = AIR_SCALE) fun air_home_offline_quiet() = quietHome("b-air-085-home-offline")
     @Test @Config(qualifiers = EREADER_10, fontScale = AIR_SCALE) fun air_browse() = browse("b-air-085-browse")
     @Test @Config(qualifiers = EREADER_10, fontScale = AIR_SCALE) fun air_downloads() = downloads("b-air-085-downloads")
     @Test @Config(qualifiers = EREADER_10, fontScale = AIR_SCALE) fun air_more() = more("b-air-085-more")

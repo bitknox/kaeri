@@ -431,6 +431,13 @@ class ReaderSession(private val send: (Command) -> Unit) {
     /** Try the open again, from the start, when it failed before any chapter opened. */
     fun retryOpen() {
         val now = state.value
+        // Another chapter asked for and slow to come: asked for again, its wait counted afresh.
+        val asking = now.asking
+        val session = now.session
+        if (asking != null && session != null) {
+            _state.value = now.copy(openingSince = openingClock())
+            return reader(ReaderCommand.OpenChapter(session, asking.chapter))
+        }
         if (now.session != null && now.view != null) return retry(null)
         val work = work ?: return
         val surface = surface ?: return
@@ -442,7 +449,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
     fun loadSources() {
         val now = state.value
         val work = work ?: return
-        val chapter = now.openingChapter?.id ?: now.chapter ?: asked?.first ?: return
+        val chapter = now.asking?.chapter ?: now.openingChapter?.id ?: now.chapter ?: asked?.first ?: return
         send(Command.Reading(ReadingCommand.LoadVersions(work, chapter)))
     }
 
@@ -815,8 +822,8 @@ class ReaderSession(private val send: (Command) -> Unit) {
             is ReaderEvent.ChapterRead -> if (event.work == now.view?.work) now.copy(read = now.read + event.chapter, readTrackers = now.readTrackers + (event.chapter to event.trackers)) else return
             is ReaderEvent.EndPage -> if (ours(event.session)) now.copy(end = EndPageView(event.next, event.whyNone, event.nextSource, event.skipTo, event.extras)) else return
             is ReaderEvent.NextPreview -> if (ours(event.session)) now.copy(preview = NextPreview(event.chapter, event.file)) else return
-            // Only while opening: a chapter opened from another one keeps its own page up meanwhile.
-            is ReaderEvent.Opening -> if (now.opening) now.copy(openingChapter = event.chapter ?: now.openingChapter, openingWait = event.wait) else return
+            // While opening, or while another chapter is asked for: what the wait is on, for the slow line.
+            is ReaderEvent.Opening -> if (now.opening || now.asking != null) now.copy(openingChapter = event.chapter ?: now.openingChapter, openingWait = event.wait) else return
             is ReaderEvent.Notice -> now.copy(notice = ShownNotice(event.v1, ++ids))
             is ReaderEvent.Moved -> if (ours(event.session)) now.copy(moved = event) else return
             is ReaderEvent.Settings -> {

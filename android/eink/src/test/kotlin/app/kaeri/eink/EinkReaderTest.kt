@@ -109,6 +109,10 @@ class EinkReaderTest {
             }
         }
         compose.waitForIdle()
+        // The first page decodes off the main thread and paints once it is drawn: wait for it, so
+        // a test's own paints come after it.
+        compose.waitUntil(5_000) { paints.any { it is EinkPaint.ImagePage } }
+        compose.waitForIdle()
     }
 
     private var readerOn by mutableStateOf(true)
@@ -231,6 +235,23 @@ class EinkReaderTest {
     }
 
     @Test
+    fun taps_on_the_bars_never_turn_the_page_under_them() {
+        open(zones = false)
+        compose.onRoot().performTouchInput { click(androidx.compose.ui.geometry.Offset(width * 0.55f, height * 0.5f)) }
+        compose.waitForIdle()
+        val line = compose.onNodeWithText("Page 1 of 3").fetchSemanticsNode().boundsInRoot
+        val top = compose.onNodeWithText("Chapter 12 · The Long Stair").fetchSemanticsNode().boundsInRoot
+        // Right to left, the forward zone is the left 40%: the progress, the space beside the
+        // page line and the top bar beside the title all sit over it.
+        for (y in listOf(line.bottom + 24f, line.center.y, top.bottom + 4f)) {
+            compose.onRoot().performTouchInput { click(androidx.compose.ui.geometry.Offset(width * 0.3f, y)) }
+            compose.waitForIdle()
+        }
+        assertTrue(shown().none { it.leaf != 0u })
+        compose.onNodeWithText("Page 1 of 3").assertIsDisplayed()
+    }
+
+    @Test
     fun the_page_between_chapters_is_in_the_flow() {
         open()
         repeat(3) {
@@ -338,6 +359,21 @@ class EinkReaderTest {
         compose.mainClock.advanceTimeBy(11_000)
         compose.waitForIdle()
         compose.onNodeWithText("The Lantern Stair · volume 1").assertIsDisplayed() // i18n-skip
+    }
+
+    @Test
+    fun a_chapter_asked_for_that_is_slow_gets_the_slow_line_and_try_again_asks_it_again() {
+        open(zones = false)
+        toEndPage()
+        compose.mainClock.autoAdvance = false
+        compose.onNodeWithText("Continue to chapter 13").performClick()
+        session.apply(ReaderEvent.Opening(EinkFixtures.chapter("local:lantern-stair/13", "13", null), ReaderWait.ChapterPages("13", "alpha")))
+        compose.mainClock.advanceTimeBy(11_000)
+        compose.waitForIdle()
+        compose.onNodeWithText("hasn't answered in 10 seconds", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("Try again").performClick()
+        compose.mainClock.advanceTimeBy(100)
+        assertEquals(List(2) { ReaderCommand.OpenChapter(EinkFixtures.SESSION, "local:lantern-stair/13") }, opens())
     }
 
     private fun opens(): List<ReaderCommand.OpenChapter> = sent.filterIsInstance<ReaderCommand.OpenChapter>()

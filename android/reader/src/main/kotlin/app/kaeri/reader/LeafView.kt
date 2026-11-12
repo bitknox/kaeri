@@ -123,8 +123,10 @@ fun LeafView(
                     .offset { IntOffset(x, y) }
                     .size(with(density) { w.toDp() }, with(density) { h.toDp() }),
             ) {
-                // Each page, and each file of it, starts afresh: nothing of another page is kept.
-                key(part.page, part.half, state.file(part)?.path) {
+                // Each page starts afresh: nothing of another page is kept. A new file of the same
+                // page (made again for a new size or look) replaces the old picture once it is
+                // decoded, never through empty.
+                key(part.page, part.half) {
                     PartView(
                     part = part,
                     state = state,
@@ -182,15 +184,21 @@ private fun BoxScope.PartView(
         onMissing(part)
     }
     val wasCached = remember(file?.path) { file?.let(images::cached) != null }
+    // Set once a picture of this page was drawn: a later file of it goes in at once.
+    val drewOnce = remember { booleanArrayOf(false) }
     val result by produceState(file?.let(images::cached)?.let { PageDecodeResult.Decoded(it) } as PageDecodeResult?, file) {
-        if (file != null && value == null) value = withContext(Dispatchers.IO) { images.load(file) }
+        if (file == null) return@produceState
+        val cached = images.cached(file)
+        // The picture there stays until the new file's is decoded.
+        value = if (cached != null) PageDecodeResult.Decoded(cached) else withContext(Dispatchers.IO) { images.load(file) }
     }
     val removed = rememberAnimationsRemoved()
     when (val now = result) {
         is PageDecodeResult.Decoded -> {
             // A page that was there at once goes in at once; one that came later fades over its plate,
             // on its own clock when Remove animations is on. It is ready once fully drawn.
-            val alpha = remember(file?.path) { Animatable(if (instant || wasCached) 1f else 0f) }
+            val alpha = remember(file?.path) { Animatable(if (instant || wasCached || drewOnce[0]) 1f else 0f) }
+            drewOnce[0] = true
             LaunchedEffect(now) {
                 when {
                     instant -> alpha.snapTo(1f)
