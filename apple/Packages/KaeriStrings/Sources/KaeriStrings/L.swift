@@ -12146,6 +12146,14 @@ public enum L {
     /// Primary action after an empty folder.
     public static var bookFolderChooseOther: String { string("book-folder-choose-other", fallback: "Choose another folder") }
 
+    /// Title when a folder could not be read: the look through it could not start, or stopped.
+    public static func bookFolderUnreadable(folder: String) -> String {
+        Self.format("book-folder-unreadable", fallback: "Couldn't read %1$@", folder)
+    }
+
+    /// Line under it.
+    public static var bookFolderUnreadableLine: String { string("book-folder-unreadable-line", fallback: "It may have moved, or Kaeri no longer has access to it.") }
+
     /// Title of the Join a plugin store sheet.
     public static var storeJoinTitle: String { string("store-join-title", fallback: "Join a plugin store") }
 

@@ -12377,6 +12377,12 @@ book-folder-empty-line =
 # Primary action after an empty folder.
 book-folder-choose-other = [Çĥööšé àñöţĥéŕ ƒöļðéŕ~~~~~~~]
 
+# Title when a folder could not be read: the look through it could not start, or stopped.
+book-folder-unreadable = [Çöüļðñ'ţ ŕéàð { $folder }~~~~~~]
+
+# Line under it.
+book-folder-unreadable-line = [Îţ ɱàý ĥàṽé ɱöṽéð, öŕ Ķàéŕî ñö ļöñĝéŕ ĥàš àççéšš ţö îţ.~~~~~~~~~~~~~~~~~]
+
 # Title of the Join a plugin store sheet.
 store-join-title = [Ĵöîñ à þļüĝîñ šţöŕé~~~~~~]
 

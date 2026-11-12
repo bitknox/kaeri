@@ -140,6 +140,13 @@ impl FolderSource {
     }
 }
 
+/// Where a book folder is read from: its path, or the platform's reference for a folder the
+/// host opens for Kaeri. `None` when it has neither that can be read.
+fn reach(path: Option<&str>, tree_uri: Option<&str>) -> Option<PathBuf> {
+    path.map(PathBuf::from)
+        .or_else(|| tree_uri.map(PathBuf::from).filter(|p| kaeri_books::tree::is_tree(p)))
+}
+
 /// `10500` as `10.5`.
 fn milli_label(milli: i64) -> String {
     let (whole, part) = (milli / 1000, milli % 1000);
@@ -237,7 +244,8 @@ impl BookSource for FolderSource {
         chapter: &str,
     ) -> Result<ChapterContent, ProviderError> {
         let path = PathBuf::from(chapter);
-        if !path.exists() {
+        // A file in a folder the platform opens is there when the platform says so.
+        if kaeri_books::tree::stat(&path).is_err() {
             return Err(ProviderError::NotFound);
         }
         Ok(ChapterContent::Book(BookFile { path, temporary: false }))
@@ -291,6 +299,9 @@ pub struct BookSources {
     pub feed: crate::export::feed::Feed,
     /// Reading progress waiting for book servers: see [`crate::write_back`].
     pub write_back: crate::write_back::WriteBack,
+    /// The host's way into folders the platform opens rather than by path, while one is
+    /// offered: see [`BookSources::open_folders_through`].
+    folder_access: Arc<Mutex<Option<kaeri_books::tree::Registered>>>,
 }
 
 impl std::fmt::Debug for BookSources {
@@ -332,6 +343,7 @@ impl BookSources {
             #[cfg(feature = "opds-feed")]
             feed: crate::export::feed::Feed::default(),
             write_back: crate::write_back::WriteBack::default(),
+            folder_access: Arc::default(),
         };
         this.registry.put(Arc::new(FolderSource::new(this.store.clone())));
         this.restore();
@@ -618,6 +630,13 @@ impl BookSources {
     // -----------------------------------------------------------------------------------------
     // Folders
 
+    /// Read the folders the platform opens for Kaeri, rather than by path, through `access`:
+    /// the host's, offered at launch. `None` leaves such folders unread, marked not found.
+    pub fn open_folders_through(&self, access: Option<Arc<dyn kaeri_books::tree::Tree>>) {
+        *self.folder_access.lock().unwrap_or_else(|e| e.into_inner()) =
+            access.map(kaeri_books::tree::register);
+    }
+
     fn add_folder(&self, folder: &FolderRef, now: i64) -> Option<String> {
         let basis = folder.path.as_deref().or(folder.tree_uri.as_deref())?;
         let id = short_id(basis);
@@ -626,7 +645,7 @@ impl BookSources {
                 std::path::Path::new(p).file_name().map(|n| n.to_string_lossy().into_owned())
             })
         });
-        let usable = folder.path.is_some();
+        let usable = reach(folder.path.as_deref(), folder.tree_uri.as_deref()).is_some();
         let row = Folder {
             id: id.clone(),
             path: folder.path.clone(),
@@ -649,7 +668,8 @@ impl BookSources {
         now: i64,
         progress: impl Fn() + Send + 'static,
     ) -> Option<kaeri_model::came_in::FolderReport> {
-        let Some(path) = folder.path.clone().map(PathBuf::from) else {
+        let Some(path) = reach(folder.path.as_deref(), folder.tree_uri.as_deref()) else {
+            tracing::info!("a book folder has no path and nothing opens it");
             let _ = self.store.set_book_folder_available(&folder.id, false);
             return None;
         };
@@ -874,7 +894,24 @@ pub fn command(
     match command {
         BookSourceCommand::Load => publish(),
         BookSourceCommand::AddFolder { folder } => {
-            let Some(id) = this.add_folder(&folder, now) else { return publish() };
+            let Some(id) = this.add_folder(&folder, now) else {
+                // Nothing to keep it by, or it was not kept: said at once, so nothing waits.
+                let row = Folder {
+                    id: String::new(),
+                    path: folder.path.clone(),
+                    tree_uri: folder.tree_uri.clone(),
+                    bookmark: None,
+                    name: folder.name.clone(),
+                    added_at: now,
+                    last_scan: None,
+                    available: false,
+                };
+                let unread = added::folder_report(&row, &kaeri_books::library::Scan::default());
+                let _ = tx.send(Event::CameIn(kaeri_model::came_in::CameIn::Empty(
+                    kaeri_model::came_in::NothingCameIn::FolderUnreadable { folder: unread },
+                )));
+                return publish();
+            };
             publish();
             rescan(this, Some(id), now, publish, tx, true);
         }
@@ -1074,9 +1111,19 @@ fn rescan(
         let scanned = !folders.is_empty();
         for folder in folders {
             let tick = publish.clone();
+            // What is said when the scan can't start or stops: the folder, and nothing found.
+            let unread = added::folder_report(&folder, &kaeri_books::library::Scan::default());
             let found = this.scan_folder(folder, now, tick).await;
-            if let (true, Some(found)) = (report, found) {
-                let _ = tx.send(Event::CameIn(added::folder_came_in(found)));
+            if report {
+                let came = match found {
+                    Some(found) => added::folder_came_in(found),
+                    None => kaeri_model::came_in::CameIn::Empty(
+                        kaeri_model::came_in::NothingCameIn::FolderUnreadable {
+                            folder: unread,
+                        },
+                    ),
+                };
+                let _ = tx.send(Event::CameIn(came));
             }
             publish();
         }

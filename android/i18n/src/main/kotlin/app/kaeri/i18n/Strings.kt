@@ -13660,6 +13660,14 @@ object Strings {
     fun bookFolderChooseOther(context: Context): String =
         context.getString(R.string.book_folder_choose_other)
 
+    /** Title when a folder could not be read: the look through it could not start, or stopped. */
+    fun bookFolderUnreadable(context: Context, folder: String): String =
+        context.getString(R.string.book_folder_unreadable, folder)
+
+    /** Line under it. */
+    fun bookFolderUnreadableLine(context: Context): String =
+        context.getString(R.string.book_folder_unreadable_line)
+
     /** Title of the Join a plugin store sheet. */
     fun storeJoinTitle(context: Context): String =
         context.getString(R.string.store_join_title)

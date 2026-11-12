@@ -9179,6 +9179,12 @@ public static partial class T
     /// <summary>Primary action after an empty folder.</summary>
     public static string BookFolderChooseOther => Get("BookFolderChooseOther");
 
+    /// <summary>Title when a folder could not be read: the look through it could not start, or stopped.</summary>
+    public static string BookFolderUnreadable(string folder) => Fill(Get("BookFolderUnreadable"), ("folder", folder));
+
+    /// <summary>Line under it.</summary>
+    public static string BookFolderUnreadableLine => Get("BookFolderUnreadableLine");
+
     /// <summary>Title of the Join a plugin store sheet.</summary>
     public static string StoreJoinTitle => Get("StoreJoinTitle");
 
@@ -15166,6 +15172,8 @@ public static partial class T
         ["BookFolderEmptyLine_one"] = "It holds one file, which isn't CBZ, CBR, EPUB, PDF or an image.",
         ["BookFolderEmptyLine_other"] = "It holds {files} files, none of them CBZ, CBR, EPUB, PDF or images.",
         ["BookFolderChooseOther"] = "Choose another folder",
+        ["BookFolderUnreadable"] = "Couldn't read {folder}",
+        ["BookFolderUnreadableLine"] = "It may have moved, or Kaeri no longer has access to it.",
         ["StoreJoinTitle"] = "Join a plugin store",
         ["StoreInviteField"] = "Invite",
         ["StoreJoinedTitle"] = "Joined {store}",

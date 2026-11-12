@@ -7253,6 +7253,10 @@
     </plurals>
     <!-- Primary action after an empty folder. -->
     <string name="book_folder_choose_other">Choose another folder</string>
+    <!-- Title when a folder could not be read: the look through it could not start, or stopped. -->
+    <string name="book_folder_unreadable">Couldn\'t read %1$s</string>
+    <!-- Line under it. -->
+    <string name="book_folder_unreadable_line">It may have moved, or Kaeri no longer has access to it.</string>
     <!-- Title of the Join a plugin store sheet. -->
     <string name="store_join_title">Join a plugin store</string>
     <!-- Label of the invite field. -->

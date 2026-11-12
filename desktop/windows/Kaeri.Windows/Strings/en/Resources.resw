@@ -12760,6 +12760,14 @@
     <value>Choose another folder</value>
     <comment>Primary action after an empty folder.</comment>
   </data>
+  <data name="BookFolderUnreadable" xml:space="preserve">
+    <value>Couldn't read {folder}</value>
+    <comment>Title when a folder could not be read: the look through it could not start, or stopped.</comment>
+  </data>
+  <data name="BookFolderUnreadableLine" xml:space="preserve">
+    <value>It may have moved, or Kaeri no longer has access to it.</value>
+    <comment>Line under it.</comment>
+  </data>
   <data name="StoreJoinTitle" xml:space="preserve">
     <value>Join a plugin store</value>
     <comment>Title of the Join a plugin store sheet.</comment>

@@ -621,7 +621,7 @@ pub(crate) fn open_epub(path: &Path, opening: Opening) -> Result<Opened, Reading
     let identity = {
         let mut h = DefaultHasher::new();
         shown.hash(&mut h);
-        std::fs::metadata(path).map(|m| m.len()).unwrap_or(0).hash(&mut h);
+        kaeri_books::tree::stat(path).map(|m| m.size).unwrap_or(0).hash(&mut h);
         epub.metadata().identifier.hash(&mut h);
         format!("{:016x}", h.finish())
     };

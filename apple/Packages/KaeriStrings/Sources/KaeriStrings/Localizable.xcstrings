@@ -18323,6 +18323,30 @@
         }
       }
     },
+    "book-folder-unreadable" : {
+      "comment" : "Title when a folder could not be read: the look through it could not start, or stopped. Argument 1: folder (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't read %1$@"
+          }
+        }
+      }
+    },
+    "book-folder-unreadable-line" : {
+      "comment" : "Line under it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It may have moved, or Kaeri no longer has access to it."
+          }
+        }
+      }
+    },
     "book-folder-unsupported" : {
       "comment" : "Row in the folder result: files that are books in formats Kaeri can't open. Argument 1: count (Int).",
       "extractionState" : "manual",

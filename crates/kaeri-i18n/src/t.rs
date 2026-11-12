@@ -19670,6 +19670,16 @@ pub fn book_folder_choose_other() -> String {
     text("book-folder-choose-other", &[])
 }
 
+/// Title when a folder could not be read: the look through it could not start, or stopped.
+pub fn book_folder_unreadable(folder: &str) -> String {
+    text("book-folder-unreadable", &[("folder", Arg::Text(folder))])
+}
+
+/// Line under it.
+pub fn book_folder_unreadable_line() -> String {
+    text("book-folder-unreadable-line", &[])
+}
+
 /// Title of the Join a plugin store sheet.
 pub fn store_join_title() -> String {
     text("store-join-title", &[])

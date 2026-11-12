@@ -8,6 +8,7 @@ import java.io.File
 import app.kaeri.engine.ffi.FfiBackground
 import app.kaeri.engine.ffi.FfiDirs
 import app.kaeri.engine.ffi.FfiEngine
+import app.kaeri.engine.ffi.FfiFolderAccess
 import app.kaeri.engine.ffi.FfiHost
 import app.kaeri.engine.ffi.FfiPageDecoder
 import app.kaeri.engine.ffi.FfiPlatform
@@ -76,6 +77,8 @@ data class EngineLaunch(
     val audioTap: Boolean = true,
     /** The platform's image decoder for page formats the engine cannot read, AVIF on e-ink. */
     val pageDecoder: FfiPageDecoder? = PlatformPageDecoder(),
+    /** The way into book folders picked in the system folder picker: [PickedFolders] in the app. */
+    val folderAccess: FfiFolderAccess? = null,
 ) {
     /** Which engine. */
     sealed interface Engine {
@@ -108,6 +111,7 @@ data class EngineLaunch(
             audioTap = audioTap,
             reading = engine == Engine.App,
             pageDecoder = pageDecoder,
+            folderAccess = folderAccess,
         )
 
     /** Stand the engine up. Blocks while it opens its files, so call it off the main thread. */
