@@ -2378,6 +2378,43 @@ mod tests {
         }
     }
 
+    /// Reading hunt round 5, R5-A6 (stuck on Apple): a chapter the session's list does not
+    /// name, as the reader's Chapters sheet shows once the source's fresh list lands after the
+    /// kept list the open used, gets no answer at all: no opened, no leaves, no failure. The
+    /// app waits on its opening screen for good. Off by default; `KAERI_R5_AUDIT=1` runs it.
+    #[tokio::test]
+    async fn r5_a6_a_chapter_the_session_does_not_list_gets_an_answer() {
+        if std::env::var_os("KAERI_R5_AUDIT").is_none() {
+            return;
+        }
+        let mut h = harness(Store::open_in_memory().unwrap());
+        h.failures = true;
+        h.open(OpenAt::Resume).await;
+        h.drain();
+        // A chapter the session lists opens.
+        let session = h.session();
+        h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("2") });
+        let known = tokio::time::timeout(
+            Duration::from_secs(10),
+            h.until(|e| matches!(e, ReaderEvent::Leaves { .. }).then_some(())),
+        )
+        .await;
+        assert!(known.is_ok(), "a listed chapter opens");
+        h.drain();
+        // One the session's list does not hold, as a newer list from the source has it.
+        h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("3") });
+        let answer = tokio::time::timeout(
+            Duration::from_secs(5),
+            h.until(|e| matches!(e, ReaderEvent::Opened(_) | ReaderEvent::Leaves { .. }).then_some(())),
+        )
+        .await;
+        h.drain();
+        assert!(
+            answer.is_ok() || !h.failed.is_empty(),
+            "OpenChapter for a chapter outside the session's list is dropped without a word"
+        );
+    }
+
     /// What Back to page offered and took away, in order: `Some(page)` offered, `None` gone.
     fn offers(events: &[ReaderEvent]) -> Vec<Option<u32>> {
         events
