@@ -360,7 +360,13 @@ struct PhoneCalendar: View {
         // which leaves the strip on the agenda's first week; the strip follows the target now.
         topDay = target
         opened = true
-        if target != today { return }
+        // The visibility callback runs only when the days on screen change, and a jump that lands
+        // short can stay put; scroll to the day again until it is let go.
+        for _ in 0..<4 {
+            try? await Task.sleep(for: .milliseconds(150))
+            guard !Task.isCancelled, holding == target else { return }
+            position.scrollTo(id: target, anchor: .top)
+        }
     }
 
     /// Scrolls to a day that arrived after it was asked for, and stays where the person was when
