@@ -11608,6 +11608,10 @@ object Strings {
     fun sendShareAgain(context: Context): String =
         context.getString(R.string.send_share_again)
 
+    /** A ready send whose files are no longer there when Share is pressed, in the Send to e-reader sheet and in the send's row. The sheet offers to prepare them again. */
+    fun sendFilesGone(context: Context): String =
+        context.getString(R.string.send_files_gone)
+
     /** A send in a list or banner that is under way, with a ring beside it. The device is the e-reader. */
     fun sendBanner(context: Context, device: String): String =
         context.getString(R.string.send_banner, device)

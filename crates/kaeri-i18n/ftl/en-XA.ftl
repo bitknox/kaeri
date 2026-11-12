@@ -10770,6 +10770,9 @@ send-ready =
 # Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.
 send-share-again = [Šĥàŕé àĝàîñ~~~~]
 
+# A ready send whose files are no longer there when Share is pressed, in the Send to e-reader sheet and in the send's row. The sheet offers to prepare them again.
+send-files-gone = [Ţĥé ƒîļéš àŕé ĝöñé. Šéñð ţĥéɱ àĝàîñ.~~~~~~~~~~~]
+
 # A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
 send-banner = [Šéñðîñĝ ţö { $device }~~~~~]
 

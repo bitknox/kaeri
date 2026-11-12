@@ -255733,6 +255733,18 @@
         }
       }
     },
+    "send-files-gone" : {
+      "comment" : "A ready send whose files are no longer there when Share is pressed, in the Send to e-reader sheet and in the send's row. The sheet offers to prepare them again.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The files are gone. Send them again."
+          }
+        }
+      }
+    },
     "send-for" : {
       "comment" : "Heading over the e-readers to choose from in the Send to e-reader sheet.",
       "extractionState" : "manual",
