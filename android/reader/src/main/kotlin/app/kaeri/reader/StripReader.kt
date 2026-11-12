@@ -179,6 +179,8 @@ fun StripReader(
     divider: (@Composable (ChapterRow) -> Unit)? = null,
     onFlow: (next: ChapterRow) -> Unit = {},
     onShowing: (previous: Boolean) -> Unit = {},
+    /** The strip came to rest scrolled back into the chapter kept above, for the session to open it again. */
+    onBack: () -> Unit = {},
     list: LazyListState = rememberLazyListState(),
     /** At a touch's landing: true when the strip moves by a tap's own step, which a tap carries on. */
     stepping: () -> Boolean = { false },
@@ -217,6 +219,7 @@ fun StripReader(
     val scrolled by rememberUpdatedState(onScrolled)
     val flow by rememberUpdatedState(onFlow)
     val showing by rememberUpdatedState(onShowing)
+    val back by rememberUpdatedState(onBack)
 
     LaunchedEffect(state.jump, story.size) {
         val jump = state.jump ?: return@LaunchedEffect
@@ -228,13 +231,18 @@ fun StripReader(
         if (into > 0) list.scrollToItem(index, into)
         onJumped(jump.id)
     }
-    // The place, once a scroll comes to rest, and no more often than every 500 ms.
-    LaunchedEffect(list, story.size, first) {
+    // The place, once a scroll comes to rest, and no more often than every 500 ms; again with each
+    // layout, which a chapter opened again from above it gets after the place was said. At rest
+    // with only the chapter kept above on screen, the divider into this one gone below, that
+    // chapter is the one read again.
+    LaunchedEffect(list, story.size, first, state.layout) {
         snapshotFlow { list.isScrollInProgress }
             .distinctUntilChanged()
             .collect { moving ->
                 if (moving) {
                     scrolled()
+                } else if (first > 0 && list.layoutInfo.visibleItemsInfo.let { items -> items.isNotEmpty() && items.all { it.index < first - 1 } }) {
+                    back()
                 } else if (state.jump == null && story.isNotEmpty()) {
                     list.stripPos(first, story.size)?.let { at(it, lastLanded && list.footVisible(last)) }
                     delay(500)
