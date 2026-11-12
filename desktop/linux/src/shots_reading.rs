@@ -14,7 +14,7 @@ use kaeri_model::{
 use crate::{pages::Dest, reading::reader::Reader, window::Shell};
 
 /// Every reading shot, in the order a run takes them.
-pub const NAMES: [&str; 46] = [
+pub const NAMES: [&str; 47] = [
     "read",
     "read-updates",
     "read-library",
@@ -34,6 +34,8 @@ pub const NAMES: [&str; 46] = [
     "read-paged-single",
     "read-paged-width",
     "read-paged-settings",
+    // Tab after the chrome has gone brings it, with the focus on its first control.
+    "read-paged-tab",
     "read-end",
     "read-end-none",
     "read-end-plate",
@@ -217,6 +219,11 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
             shell.reader.shot_setting(ReaderSettingKey::Fit, "width");
             read(shell, MANGA, "13");
             4.0
+        }
+        "read-paged-tab" => {
+            read(shell, MANGA, "13");
+            later(shell, 4500, |reader| reader.shot_tab());
+            6.0
         }
         "read-paged-settings" => {
             read(shell, MANGA, "13");

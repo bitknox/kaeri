@@ -3074,7 +3074,7 @@ impl Reader {
 
     /// Bring the chrome, and take it away again `CHROME_REST` after the last call: the pointer
     /// moving calls this as it moves. It stays while the settings are open, the pointer is over
-    /// the group or a shot pinned it.
+    /// the group, the keyboard is in it or a shot pinned it.
     fn reveal_chrome(self: &Rc<Self>) {
         self.head_fade.set(&self.head, true);
         // The group first: a hidden one measures nothing, and the notice would sit on it.
@@ -3092,7 +3092,7 @@ impl Reader {
             let open = this.settings.is_active()
                 || this.chapters_button.is_active()
                 || this.go_to.is_visible();
-            if open || this.group_hovered() || this.pinned.get() {
+            if open || this.group_hovered() || this.keyboard_in_chrome() || this.pinned.get() {
                 this.reveal_chrome();
                 return;
             }
@@ -3101,12 +3101,13 @@ impl Reader {
         *self.hide_timer.borrow_mut() = Some(id);
     }
 
-    /// The chrome goes, and the pointer with it.
+    /// The chrome goes, and the pointer with it. It stays while the keyboard is in it: a
+    /// hidden control would take the focus with it.
     fn hide_chrome(&self) {
         if let Some(id) = self.hide_timer.borrow_mut().take() {
             id.remove();
         }
-        if self.pinned.get() {
+        if self.pinned.get() || self.keyboard_in_chrome() {
             return;
         }
         self.head_fade.set(&self.head, false);
@@ -3143,6 +3144,43 @@ impl Reader {
         self.group_hover.contains_pointer()
     }
 
+    /// The focus is on one of the chrome's controls.
+    fn focus_in_chrome(&self) -> bool {
+        let Some(focus) = self.widget.root().and_then(|root| root.focus()) else {
+            return false;
+        };
+        focus.is_ancestor(&self.head)
+            || focus.is_ancestor(&self.group)
+            || focus == *self.head.upcast_ref::<gtk::Widget>()
+            || focus == *self.group.upcast_ref::<gtk::Widget>()
+    }
+
+    /// The keyboard is walking the chrome: the focus is on a control in it, and shows.
+    fn keyboard_in_chrome(&self) -> bool {
+        self.widget
+            .root()
+            .and_downcast::<gtk::Window>()
+            .is_some_and(|window| window.property::<bool>("focus-visible"))
+            && self.focus_in_chrome()
+    }
+
+    /// Tab brings the chrome. From the page it goes to the chrome's first control, or its last
+    /// with Shift; inside the chrome the window moves the focus as usual. False when the
+    /// window should move it.
+    fn tab_into_chrome(self: &Rc<Self>, back: bool) -> bool {
+        self.reveal_chrome();
+        if self.focus_in_chrome() {
+            return false;
+        }
+        let (head, group) = (self.head.upcast_ref::<gtk::Widget>(), self.group.upcast_ref());
+        let (direction, order) = if back {
+            (gtk::DirectionType::TabBackward, [group, head])
+        } else {
+            (gtk::DirectionType::TabForward, [head, group])
+        };
+        order.iter().any(|part| part.child_focus(direction))
+    }
+
     /// Keep the chrome up for a shot, as the board draws it.
     #[cfg(feature = "fixtures")]
     pub fn shot_chrome(self: &Rc<Self>, pinned: bool) {
@@ -3152,6 +3190,19 @@ impl Reader {
         } else {
             self.chapters.popover.popdown();
         }
+    }
+
+    /// Tab on the page for a shot, after the chrome has gone, as the keyboard presses it. The
+    /// window shows focus on a key, as GTK does for a real one.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_tab(self: &Rc<Self>) {
+        if let Some(window) = self.widget.root().and_downcast::<gtk::Window>() {
+            window.set_focus_visible(true);
+        }
+        let took = self.take_key(gdk::Key::Tab, gdk::ModifierType::empty());
+        let (shown, inside) =
+            (self.head.is_visible() && self.group.is_visible(), self.focus_in_chrome());
+        eprintln!("reader tab: took {took}, chrome shown {shown}, focus in chrome {inside}"); // i18n-skip
     }
 
     /// Open Chapters for a shot, on its `tab`: "pages" or "chapters".
@@ -3343,6 +3394,10 @@ impl Reader {
             let this = Rc::downgrade(self);
             move |gesture, _, x, _| {
                 let Some(this) = this.upgrade() else { return };
+                // A click on the page takes the keys back from the chrome, which may go then.
+                if this.focus_in_chrome() {
+                    this.widget.grab_focus();
+                }
                 if this.stack.visible_child_name().as_deref() != Some("paged") {
                     this.reveal_chrome();
                     return;
@@ -3372,6 +3427,19 @@ impl Reader {
         });
         self.widget.add_controller(moved);
         self.group.add_controller(self.group_hover.clone());
+        // Focus that comes into the chrome by any key brings it, and the keyboard holds it.
+        for part in [self.head.upcast_ref::<gtk::Widget>(), self.group.upcast_ref()] {
+            let came = gtk::EventControllerFocus::new();
+            came.connect_enter({
+                let this = Rc::downgrade(self);
+                move |_| {
+                    if let Some(this) = this.upgrade() {
+                        this.reveal_chrome();
+                    }
+                }
+            });
+            part.add_controller(came);
+        }
 
         // A new size or new images move every plate's part on screen.
         self.strip_scroll.vadjustment().connect_changed({
@@ -3513,6 +3581,11 @@ impl Reader {
         }
         let mut turned = true;
         match key {
+            K::Tab | K::KP_Tab | K::ISO_Left_Tab => {
+                let back =
+                    key == K::ISO_Left_Tab || modifiers.contains(gdk::ModifierType::SHIFT_MASK);
+                return self.tab_into_chrome(back);
+            }
             K::Escape => self.close(),
             K::Right => self.turn(!rtl, TurnHow::Key),
             K::Left => self.turn(rtl, TurnHow::Key),
