@@ -6,8 +6,8 @@
 use std::panic::{AssertUnwindSafe, catch_unwind};
 
 use kaeri_pages::{
-    Bitmap, ColourChoice, DecodeLimits, Look, Panel, PixelFormat, Renderer, SourceFormat, Target,
-    decode, decode_for, inspect,
+    Bitmap, ColourChoice, DecodeLimits, Look, Panel, PixelFormat, Renderer, SourceFormat,
+    Target, decode, decode_for, inspect,
     layout::{Direction, LayoutOptions, PageKind, PageShape, Screen, SpreadOnSingle, lay_out},
     print::fingerprint,
     strip::{StripOptions, extract, plan_cuts},
@@ -54,7 +54,8 @@ fn options(rng: &mut Rng) -> LayoutOptions {
 #[ignore = "R5E-1: two 0x0 pages pair with a NaN place"]
 fn two_unreadable_pages_on_a_two_page_screen_get_finite_places() {
     let unread = PageShape::story(0, 0);
-    let options = LayoutOptions { screen: Screen::Double, first_is_cover: false, ..Default::default() };
+    let options =
+        LayoutOptions { screen: Screen::Double, first_is_cover: false, ..Default::default() };
     let leaves = lay_out(&[unread, unread], options);
     for part in leaves.iter().flat_map(|l| &l.parts) {
         let p = part.place;
@@ -78,7 +79,12 @@ fn layout_of_any_sizes_keeps_every_page_in_order() {
                 // Zero sides are R5E-1's; this test covers every other size.
                 width: rng.pick(&ODD_SIDES[1..]),
                 height: rng.pick(&ODD_SIDES[1..]),
-                kind: rng.pick(&[PageKind::Story, PageKind::Story, PageKind::Cover, PageKind::Skip]),
+                kind: rng.pick(&[
+                    PageKind::Story,
+                    PageKind::Story,
+                    PageKind::Cover,
+                    PageKind::Skip,
+                ]),
             })
             .collect();
         let opts = options(&mut rng);
@@ -159,9 +165,11 @@ fn extract_of_any_cut_errs_or_fits() {
 fn seeds() -> Vec<Vec<u8>> {
     let page = testpages::manga_page(48, 64, 7);
     let colour = testpages::colour_page(40, 30, 3);
-    let mut out = vec![testpages::jpeg(&page, 80), testpages::png(&page), testpages::png(&colour)];
+    let mut out =
+        vec![testpages::jpeg(&page, 80), testpages::png(&page), testpages::png(&colour)];
     let rgb = image::RgbImage::from_raw(40, 30, colour.data().to_vec()).unwrap();
-    for format in [image::ImageFormat::Gif, image::ImageFormat::WebP, image::ImageFormat::Jpeg] {
+    for format in [image::ImageFormat::Gif, image::ImageFormat::WebP, image::ImageFormat::Jpeg]
+    {
         let mut bytes = Vec::new();
         let img = image::DynamicImage::ImageRgb8(rgb.clone());
         let img = if format == image::ImageFormat::WebP { img.to_rgba8().into() } else { img };
@@ -253,7 +261,13 @@ fn every_panel_renders_odd_sizes() {
                 _ => testpages::colour_page(w, h, 1),
             };
             let bytes = testpages::png(&page);
-            for panel in [Panel::Lcd, Panel::Grey, Panel::Kaleido3, Panel::Gallery3, Panel::UnknownColour] {
+            for panel in [
+                Panel::Lcd,
+                Panel::Grey,
+                Panel::Kaleido3,
+                Panel::Gallery3,
+                Panel::UnknownColour,
+            ] {
                 for &(tw, th) in &targets {
                     for crop in [false, true] {
                         let look = Look {

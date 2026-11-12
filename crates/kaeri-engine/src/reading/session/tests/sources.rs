@@ -539,6 +539,7 @@ async fn a_strip_writes_its_place_when_the_image_changes() {
 }
 
 mod lifecycle;
+mod r5_audit;
 
 /// Offline, the end page leads into the next chapter on this device, past the ones only the
 /// source has, says it is downloaded, and opening it moves on as Continue does.
