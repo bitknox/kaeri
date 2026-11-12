@@ -3205,6 +3205,27 @@ impl Reader {
         eprintln!("reader tab: took {took}, chrome shown {shown}, focus in chrome {inside}"); // i18n-skip
     }
 
+    /// Press Try again on the plate of a chapter that couldn't open, for a shot.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_try_again(self: &Rc<Self>) {
+        fn find(widget: &gtk::Widget, label: &str) -> Option<gtk::Button> {
+            if let Some(button) = widget.downcast_ref::<gtk::Button>()
+                && button.is_drawable()
+                && button.label().is_some_and(|words| words.as_str() == label)
+            {
+                return Some(button.clone());
+            }
+            std::iter::successors(widget.first_child(), gtk::Widget::next_sibling)
+                .find_map(|child| find(&child, label))
+        }
+        let again = find(self.widget.upcast_ref(), &t::reader_try_again());
+        eprintln!("reader try again: found {}", again.is_some()); // i18n-skip
+        if let Some(again) = again {
+            again.emit_clicked();
+            eprintln!("reader try again: pressed"); // i18n-skip
+        }
+    }
+
     /// Open Chapters for a shot, on its `tab`: "pages" or "chapters".
     #[cfg(feature = "fixtures")]
     pub fn shot_chapters(self: &Rc<Self>, tab: &str) {

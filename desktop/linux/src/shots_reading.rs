@@ -14,7 +14,7 @@ use kaeri_model::{
 use crate::{pages::Dest, reading::reader::Reader, window::Shell};
 
 /// Every reading shot, in the order a run takes them.
-pub const NAMES: [&str; 47] = [
+pub const NAMES: [&str; 48] = [
     "read",
     "read-updates",
     "read-library",
@@ -42,6 +42,8 @@ pub const NAMES: [&str; 47] = [
     "read-end-skip",
     "read-plate",
     "read-open-failed",
+    // Try again on a chapter that couldn't open opens it again.
+    "read-open-again",
     "read-mode",
     "read-turn-a",
     "read-turn-b",
@@ -263,6 +265,11 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
             4.0
         }
         // A chapter that could not open: a series no source has.
+        "read-open-again" => {
+            read(shell, MANGA, "999");
+            later(shell, 3000, |reader| reader.shot_try_again());
+            5.0
+        }
         "read-open-failed" => {
             read(shell, "a:900399", "1");
             4.0
