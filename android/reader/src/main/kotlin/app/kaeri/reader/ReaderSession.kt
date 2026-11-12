@@ -269,15 +269,40 @@ class ReaderSession(private val send: (Command) -> Unit) {
     private var shownLeaf: Int? = null
     /** A kept page's chapter is laid out again with it: the pages after it move up one. */
     private var relayKeep: CreditKeep? = null
+    /**
+     * The session the engine last opened for this reader. It outlives the state's view: a chapter
+     * that fails to open leaves the engine's session open behind the failure, and the close is
+     * owed to it all the same.
+     */
+    private var engineSession: ULong? = null
+    /**
+     * Closed while the open was on its way, before the engine named the session: an Opened still
+     * coming is closed as it lands. The engine answers the close with Closed(0) after it.
+     */
+    private var closedUnnamed = false
+    /** Called once the close above is answered, when the screen let go of the reader before that. */
+    private var unbindLater: (() -> Unit)? = null
 
-    /** Hear the store's reader events until what is returned is called. */
-    fun bind(store: AppStore): () -> Unit = store.listenToReading(::apply)
+    /**
+     * Hear the store's reader events until what is returned is called. Closed while the open was
+     * on its way, the session hears on until the engine answers the close, so an Opened sent
+     * before it is closed too.
+     */
+    fun bind(store: AppStore): () -> Unit {
+        val unbind = store.listenToReading(::apply)
+        return {
+            if (closedUnnamed) unbindLater = unbind else unbind()
+        }
+    }
 
     // What the screen sends.
 
     fun open(work: WorkId, surface: ReaderSurface, chapter: ChapterId? = null, at: OpenAt = OpenAt.Resume, title: String? = null) {
         this.work = work
         this.asked = chapter to at
+        // The engine closes the session it had as it opens the next.
+        engineSession = null
+        closedUnnamed = false
         this.surface = surface
         engineSurface = surface
         awaitingOpen = true
@@ -537,10 +562,21 @@ class ReaderSession(private val send: (Command) -> Unit) {
         _state.value = now.copy(jump = ReaderJump(now.leafOf(at), at.strip, ++ids))
     }
 
+    /**
+     * The reader is going. The engine's session is closed even when the state holds none, as
+     * after a chapter that failed to open; closed while the open is on its way, the open waiting
+     * is dropped (Close(0)) and an Opened already sent is closed as it lands.
+     */
     fun close() {
         commitKeep()
-        val session = state.value.session ?: return
-        reader(ReaderCommand.Close(session))
+        val session = state.value.session ?: engineSession
+        if (session != null) {
+            reader(ReaderCommand.Close(session))
+            return
+        }
+        closedUnnamed = awaitingOpen
+        awaitingOpen = false
+        reader(ReaderCommand.Close(0uL))
     }
 
     /** The notice went: its time ran out or the next turn took it. */
@@ -714,6 +750,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
     }
 
     fun apply(event: ReaderEvent) {
+        if (closedUnnamed) return closingUnnamed(event)
         val now = state.value
         fun ours(session: ULong) = session == now.session
         _state.value = when (event) {
@@ -721,6 +758,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
             is ReaderEvent.Opened -> {
                 if (!now.opening && now.session != null && event.v1.session != now.session) return
                 awaitingOpen = false
+                engineSession = event.v1.session
                 awaiting = null
                 startAt = event.v1.start
                 startJump = null
@@ -862,6 +900,19 @@ class ReaderSession(private val send: (Command) -> Unit) {
         }
         // The engine opened with the surface the open asked with; the screen may have turned since.
         if (event is ReaderEvent.Opened) sendSurface()
+    }
+
+    /** Closed before the engine named the session: what the engine sent before the close. */
+    private fun closingUnnamed(event: ReaderEvent) {
+        when (event) {
+            is ReaderEvent.Opened -> reader(ReaderCommand.Close(event.v1.session))
+            is ReaderEvent.Closed -> if (event.session == 0uL) {
+                closedUnnamed = false
+                unbindLater?.invoke()
+                unbindLater = null
+            }
+            else -> {}
+        }
     }
 
     private fun reader(command: ReaderCommand) {
