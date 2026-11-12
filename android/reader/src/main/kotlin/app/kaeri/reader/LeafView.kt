@@ -45,8 +45,10 @@ import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -318,14 +320,37 @@ internal fun stripWordsTop(plate: Int, seen: ClosedFloatingPointRange<Float>?, w
     return (middle - words / 2f).roundToInt().coerceIn(0, maxOf(0, plate - words))
 }
 
-/** A plate's number, and the loading line added under it, never in its place. */
+/**
+ * A plate's number, and the loading line added under it, never in its place. The line fades in as
+ * it is added and the number eases up to make room, on its own clock when Remove animations is on,
+ * as Apple's plate keeps its fade under Reduce Motion. A plate that starts with the line shows it
+ * at once.
+ */
 @Composable
 private fun PlateWords(number: String, line: String?, modifier: Modifier = Modifier) {
+    val shown = remember { Animatable(if (line != null) 1f else 0f) }
+    val removed = rememberAnimationsRemoved()
+    LaunchedEffect(line != null) {
+        if (line != null && shown.value < 1f) {
+            if (removed) atFullSpeed { shown.animateTo(1f, Motion.fadeIn()) } else shown.animateTo(1f, Motion.fadeIn())
+        }
+    }
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Text(number, color = ObiSilk.Haze, fontSize = 15.sp)
         if (line != null) {
-            Spacer(Modifier.height(6.dp))
-            Text(line, color = ObiSilk.Haze, fontSize = 13.sp)
+            Column(
+                Modifier
+                    .layout { measurable, constraints ->
+                        // Grows into its full height with the fade, so the words stay centred.
+                        val placeable = measurable.measure(constraints)
+                        layout(placeable.width, (placeable.height * shown.value).roundToInt()) { placeable.place(0, 0) }
+                    }
+                    .graphicsLayer { alpha = shown.value },
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Spacer(Modifier.height(6.dp))
+                Text(line, color = ObiSilk.Haze, fontSize = 13.sp)
+            }
         }
     }
 }
