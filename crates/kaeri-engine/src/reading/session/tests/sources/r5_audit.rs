@@ -365,3 +365,32 @@ async fn damaged_pages_on_a_two_page_screen_get_finite_places() {
         }
     }
 }
+
+/// R5E-5. `read_catalog/arrange.rs` `part_word` finds "part" in the label lowercased and cuts
+/// the label itself at those byte offsets (`&text[..at]`, `&text[end..]`). A letter before
+/// "part" whose lowercase has another length (Turkish İ, the Kelvin sign) moves every offset
+/// after it, so the cut lands inside a letter and panics, or cuts the wrong text.
+#[test]
+#[ignore = "R5E-5: part labels with a case-changing letter are cut at the wrong byte"]
+fn part_labels_with_case_changing_letters_arrange() {
+    let mut panicked = Vec::new();
+    for (a, b) in [
+        ("İ 5 Part 1話", "İ 5 Part 2話"),
+        ("\u{212A}5 Part 1", "\u{212A}5 Part 2"),
+        ("İİ 7 pt. 1/2", "İİ 7 pt. 2/2"),
+    ] {
+        let list = vec![chapter("ch-1", "1"), chapter("ch-5a", a), chapter("ch-5b", b)];
+        let run = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            crate::read_catalog::arrange::arrange(&list, None, None);
+        }));
+        let mut titled = SourceChapter::new("ch-5c", "5");
+        titled.title = Some(a.to_owned());
+        let titled_run = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            crate::read_catalog::arrange::merged_title(&titled);
+        }));
+        if run.is_err() || titled_run.is_err() {
+            panicked.push(a);
+        }
+    }
+    assert!(panicked.is_empty(), "arranging panicked on {panicked:?}");
+}
