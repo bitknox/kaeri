@@ -298,7 +298,7 @@ sealed class PageImageView : Canvas
     public void Show(PageFile next, double rasterScale)
     {
         scale = rasterScale;
-        if (file is { } was && was.Path == next.Path && was.Crop == next.Crop && source is not null)
+        if (file is { } was && was.Path == next.Path && was.Crop == next.Crop && (source is not null || IsBroken))
         {
             Place();
             return;
