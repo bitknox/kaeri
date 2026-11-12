@@ -636,6 +636,13 @@ fun PagedReader(
                         heldFrame[0] = HeldFrame(leaf, state, pager.pan, pager.zoom * fitting(showing).scale)
                     }
                 }
+                // The leaf shown, the ones beside it and the frame held stay decoded whatever the
+                // cache's size, so a held frame never leaves the screen to decode again.
+                val shownFiles = leaves.getOrNull(showing)?.parts.orEmpty().mapNotNull(state::file)
+                SideEffect {
+                    val held = heldFrame[0]?.let { h -> h.leaf.parts.mapNotNull(h.state::file) }.orEmpty()
+                    images.keep(shownFiles + near + held)
+                }
                 if (landing == null) {
                     leavingCredit?.let { Credit(it, leafAlpha, shift) }
                     heldCredit?.let { Credit(it, leafAlpha * creditFade.value, shift) }

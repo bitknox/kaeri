@@ -1,6 +1,7 @@
 // What the paged reader tells the screen about each leaf it shows: only a turn the person made
 // counts as turned, so the engine's start place and a new layout after a rotation keep the chrome.
-// A strip cut into screens also moves on with an upward swipe.
+// A strip cut into screens also moves on with an upward swipe. The leaf shown and the ones beside
+// it stay decoded however small the cache.
 
 package app.kaeri.reader
 
@@ -37,7 +38,7 @@ class PagedTurnsTest {
 
     private val session = ReaderSession {}
     private val pager = PagedReaderState()
-    private val images = PageImages()
+    private var images = PageImages()
     private val reports = mutableListOf<Triple<Int, TurnHow, Boolean>>()
     private var crossed = 0
     private val missing = mutableListOf<Int>()
@@ -183,6 +184,21 @@ class PagedTurnsTest {
         open(ReaderFixtures.leaves(8) { files[it.toInt()] })
         compose.waitUntil(5_000) { images.cached(files[2]) != null && images.cached(files[4]) != null }
         assertEquals(null, images.cached(files[6]))
+        dir.deleteRecursively()
+    }
+
+    @Test
+    fun with_room_for_one_page_the_page_shown_and_those_beside_it_stay_decoded() {
+        // An e-ink panel's raw pages can be so big that the cache holds only one.
+        images = PageImages(maxBytes = 40 * 60)
+        val dir = java.nio.file.Files.createTempDirectory("turns").toFile()
+        val files = List(8) { ReaderFixtures.grey(dir, "$it.gray", 40, 60) }
+        open(ReaderFixtures.leaves(8) { files[it.toInt()] })
+        compose.waitUntil(5_000) { (2..4).all { images.cached(files[it]) != null } }
+        // After a turn the page left, held over the new one until it is drawn, is still decoded.
+        compose.runOnIdle { pager.forward() }
+        compose.waitUntil(5_000) { (3..5).all { images.cached(files[it]) != null } }
+        assertEquals(4, pager.leaf)
         dir.deleteRecursively()
     }
 }
