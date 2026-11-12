@@ -648,6 +648,8 @@ sealed class NovelView : Grid
                 return;
             }
         }
+        // Past the last page: the engine counts the chapter read.
+        Reader.NovelEnded();
         ShowEnd();
     }
 

@@ -283,7 +283,23 @@ public sealed class ReaderSession
             return;
         NovelPainted = true;
         NovelShown = pos;
+        novelPages = Math.Max(pages, 0);
         Ask(new ReaderCommand.NovelAt(session, view.Chapter.Id, pos, (uint)Math.Max(page, 0), (uint)Math.Max(pages, 0), how));
+    }
+
+    /// <summary>The novel's page count as its view last told it, for its end page.</summary>
+    int novelPages;
+
+    /// <summary>
+    /// The novel's last page was turned past and the end page shows. The engine hears it as the
+    /// page after the last, which counts the chapter read at once, as a paged chapter's end page does.
+    /// </summary>
+    public void NovelEnded()
+    {
+        if (session == 0 || View is not { } view || NovelShown is not { } pos)
+            return;
+        var pages = (uint)Math.Max(novelPages, 1);
+        Ask(new ReaderCommand.NovelAt(session, view.Chapter.Id, pos, pages, pages, TurnHow.Turn));
     }
 
     /// <summary>The paginator counted the volume's pages under the style's key.</summary>
@@ -514,6 +530,7 @@ public sealed class ReaderSession
                 Novel = null;
                 NovelPainted = false;
                 NovelShown = null;
+                novelPages = 0;
                 End = null;
                 Read = false;
                 ReadTrackers = [];
@@ -585,6 +602,7 @@ public sealed class ReaderSession
                     return;
                 Novel = novelOpen.V1;
                 NovelShown = null;
+                novelPages = 0;
                 NovelStyle = novelOpen.V1.Style;
                 NovelCountKey = novelOpen.V1.CountKey;
                 NovelCounted = novelOpen.V1.Counted;
@@ -889,6 +907,7 @@ public sealed class ReaderSession
         Ring = null;
         StripRestore = null;
         NovelShown = null;
+        novelPages = 0;
         Flowing = false;
         GoTo = null;
         NovelGoTo = null;

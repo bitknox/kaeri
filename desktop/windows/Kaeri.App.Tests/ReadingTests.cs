@@ -342,6 +342,27 @@ public class ReadingTests
     }
 
     [Fact]
+    public async Task ANovelsEndPageCountsTheChapterRead()
+    {
+        using var scene = new Scene(new FfiScene.ReaderNovel(), "cs-reader-novel-end");
+        var reader = scene.Known.Reader;
+        scene.Do(() =>
+        {
+            reader.Open("a:900302");
+            reader.SurfaceChanged(new ReaderSurface(1280, 720, 1f, false, false, true));
+        });
+        var novel = await scene.Until(k => k.Reader.Novel);
+        var last = (uint)Math.Max(novel.Spine.Length - 1, 0);
+        scene.Do(() =>
+        {
+            // Into the last document, then past its end: the end page shows.
+            reader.NovelAt(new NovelPos(last, 0, []), 1, 3, TurnHow.Turn);
+            reader.NovelEnded();
+        });
+        await scene.Until(k => k.Reader.Read ? k : null, seconds: 10);
+    }
+
+    [Fact]
     public async Task ANovelsAddressesHaveAHostTheWebViewKeepsAsItIs()
     {
         using var scene = new Scene(new FfiScene.ReaderNovel(), "cs-reader-novel-host");
