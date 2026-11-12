@@ -1211,17 +1211,28 @@ impl Chapter {
             .unwrap_or(kaeri_pages::PixelRect::full(original.width, original.height));
         let format = original.format.ok_or_else(|| self.unreadable())?;
         let fitted = Target { width: w, height: h, ..target };
+        // What the page is decoded for: the screen, or the box it is drawn in by width, which
+        // is taller than the screen.
+        let room = if self.by_width { (w, h) } else { (target.width, target.height) };
         if kaeri_pages::delivery(format, (region.width, region.height), &fitted)
             == Delivery::Original
-            && !self.renderer.look().crop
         {
+            // Crop borders only changes which part of the file shows, so the original still
+            // goes, with the content box as its crop. Made here, the page would come out at the
+            // size it is drawn: on a wide window a strip image 720 pixels wide would become
+            // 2560 wide and over 100 MB.
+            let crop = match part.source {
+                Some(source) => Some(source),
+                None if self.renderer.look().crop => self.content_box(&original, format, room),
+                None => None,
+            };
             let bytes = std::fs::metadata(&original.path).map(|m| m.len()).unwrap_or(0);
             return Ok(PageFile {
                 path: original.path.display().to_string(),
                 encoding: PageEncoding::Original { mime: format.mime().to_owned() },
                 width: original.width,
                 height: original.height,
-                crop: part.source.map(|s| PixelRect {
+                crop: crop.map(|s| PixelRect {
                     x: s.x,
                     y: s.y,
                     width: s.width,
@@ -1231,33 +1242,7 @@ impl Chapter {
                 bytes,
             });
         }
-        let bytes = std::fs::read(&original.path).map_err(|_| self.unreadable())?;
-        // What the page is decoded for: the screen, or the box it is drawn in by width, which
-        // is taller than the screen.
-        let room = if self.by_width { (w, h) } else { (target.width, target.height) };
-        let page = if format.decodes() {
-            self.renderer.open_for(&bytes, room).map_err(|e| {
-                tracing::warn!(error = %e, "a page did not decode");
-                self.unreadable()
-            })?
-        } else {
-            // A format the engine cannot read: the platform decodes it, small if it can.
-            let room = decode_room(original.width, original.height, room);
-            match self.decoder.bitmap(bytes, format, room) {
-                Hosted::Image(bitmap) => {
-                    self.renderer.open_bitmap(bitmap, format).map_err(|e| {
-                        tracing::warn!(error = %e, "a page did not decode");
-                        self.unreadable()
-                    })?
-                }
-                Hosted::Unsupported => {
-                    return Err(ReadingFailure::Unsupported {
-                        extension: extension_of(format).into(),
-                    });
-                }
-                Hosted::Unreadable => return Err(self.unreadable()),
-            }
-        };
+        let page = self.open_page(&original, format, room)?;
         // The layout's rectangles are in the file's pixels; a large scan may decode smaller.
         let region = part.source.map(|s| scale_rect(s, original.width, page.bitmap.width()));
         let raw = self.renderer.render(&page, region, w, h).map_err(|e| {
@@ -1273,6 +1258,52 @@ impl Chapter {
             look_key(self.renderer.look())
         );
         self.write_raw(&name, raw.bytes(), raw.width(), raw.height(), raw.format(), raw.colour)
+    }
+
+    /// Decodes a page for a box of `room` pixels: in the engine, or by the platform for a
+    /// format the engine cannot read.
+    fn open_page(
+        &mut self,
+        original: &Original,
+        format: SourceFormat,
+        room: (u32, u32),
+    ) -> Result<kaeri_pages::SourcePage, ReadingFailure> {
+        let bytes = std::fs::read(&original.path).map_err(|_| self.unreadable())?;
+        if format.decodes() {
+            return self.renderer.open_for(&bytes, room).map_err(|e| {
+                tracing::warn!(error = %e, "a page did not decode");
+                self.unreadable()
+            });
+        }
+        // A format the engine cannot read: the platform decodes it, small if it can.
+        let room = decode_room(original.width, original.height, room);
+        match self.decoder.bitmap(bytes, format, room) {
+            Hosted::Image(bitmap) => self.renderer.open_bitmap(bitmap, format).map_err(|e| {
+                tracing::warn!(error = %e, "a page did not decode");
+                self.unreadable()
+            }),
+            Hosted::Unsupported => {
+                Err(ReadingFailure::Unsupported { extension: extension_of(format).into() })
+            }
+            Hosted::Unreadable => Err(self.unreadable()),
+        }
+    }
+
+    /// A page's content box with crop borders on, in the file's pixels. `None` when nothing
+    /// is cropped, or when the page does not decode here, so the app shows it whole.
+    fn content_box(
+        &mut self,
+        original: &Original,
+        format: SourceFormat,
+        room: (u32, u32),
+    ) -> Option<kaeri_pages::PixelRect> {
+        let page = self.open_page(original, format, room).ok()?;
+        if page.content == page.bitmap.bounds() {
+            return None;
+        }
+        let r = scale_rect(page.content, page.bitmap.width(), original.width);
+        let height = r.height.min(original.height.saturating_sub(r.y)).max(1);
+        Some(kaeri_pages::PixelRect::new(r.x, r.y, r.width, height))
     }
 
     fn write_raw(
@@ -1752,12 +1783,27 @@ mod tests {
         mode: ReaderMode,
         fit_width: bool,
     ) -> Vec<PageFile> {
+        let files: Vec<_> = pages
+            .iter()
+            .enumerate()
+            .map(|(i, (w, h))| (format!("{:05}.jpg", i + 1), stripes_jpeg(*w, *h)))
+            .collect();
+        made_files(&files, screen, mode, fit_width, Look::default())
+    }
+
+    /// As [`made_pages`], for page files of any kind and a look of their own.
+    fn made_files(
+        pages: &[(String, Vec<u8>)],
+        screen: (u32, u32),
+        mode: ReaderMode,
+        fit_width: bool,
+        look: Look,
+    ) -> Vec<PageFile> {
         let dir = tempfile::tempdir().unwrap();
         let book = dir.path().join("1-pages");
         std::fs::create_dir_all(&book).unwrap();
-        for (i, (w, h)) in pages.iter().enumerate() {
-            std::fs::write(book.join(format!("{:05}.jpg", i + 1)), stripes_jpeg(*w, *h))
-                .unwrap();
+        for (name, bytes) in pages {
+            std::fs::write(book.join(name), bytes).unwrap();
         }
         let worker = Pages::start(dir.path().join("cache"), None);
         let (out, mut inbox) = Outbox::inbox();
@@ -1773,7 +1819,7 @@ mod tests {
                     width: screen.0,
                     height: screen.1,
                 },
-                look: Look::default(),
+                look,
                 two_pages: false,
                 spreads: SpreadOnSingle::Split,
                 mode,
@@ -1826,6 +1872,45 @@ mod tests {
             assert_eq!(file.width, 720, "{file:?}");
             assert!(file.crop.is_none());
         }
+    }
+
+    /// A made-up page: stripes inside a white border `margin` pixels wide, as a PNG so the
+    /// border stays blank.
+    fn framed_png(width: u32, height: u32, margin: u32) -> Vec<u8> {
+        let image = image::RgbImage::from_fn(width, height, |x, y| {
+            let inside =
+                x >= margin && x < width - margin && y >= margin && y < height - margin;
+            match (inside, (x + y / 7) % 2 == 0) {
+                (false, _) => image::Rgb([255, 255, 255]),
+                (true, true) => image::Rgb([200, 40, 30]),
+                (true, false) => image::Rgb([20, 30, 160]),
+            }
+        });
+        let mut out = Vec::new();
+        image::DynamicImage::ImageRgb8(image)
+            .write_to(&mut std::io::Cursor::new(&mut out), image::ImageFormat::Png)
+            .unwrap();
+        out
+    }
+
+    #[test]
+    fn a_cropped_page_goes_as_its_original_with_the_content_box() {
+        // On a window far wider than the strip image the engine would have made the cropped
+        // page at the window's width: over three times the original's pixels.
+        let look = Look { crop: true, ..Look::default() };
+        let pages = [
+            ("00001.png".to_owned(), framed_png(720, 4000, 40)),
+            ("00002.png".to_owned(), stripes_jpeg(720, 4000)),
+        ];
+        let made = made_files(&pages, (2560, 1600), ReaderMode::Strip, false, look);
+        for file in &made {
+            assert!(matches!(file.encoding, PageEncoding::Original { .. }), "{file:?}");
+            assert_eq!((file.width, file.height), (720, 4000), "{file:?}");
+        }
+        let crop = made[0].crop.as_ref().expect("the border is cropped");
+        assert_eq!((crop.x, crop.y, crop.width, crop.height), (40, 40, 640, 3920));
+        // Nothing blank to crop: the page shows whole.
+        assert!(made[1].crop.is_none(), "{:?}", made[1]);
     }
 
     #[test]

@@ -78,6 +78,17 @@ struct ReaderPageTests {
         #expect(image.height == 4000)
     }
 
+    @Test func aCroppedOriginalDecodesForTheSizeItsCropIsDrawnAt() throws {
+        // A scan with its borders cropped, as the engine sends it with crop borders on, shown
+        // 600 pixels tall. Decoded for 600 on the whole file, the crop would come out smaller.
+        var file = try original(width: 3000, height: 4000)
+        defer { try? FileManager.default.removeItem(atPath: file.path) }
+        file.crop = PixelRect(x: 300, y: 400, width: 2400, height: 3200)
+        let image = try #require(PageImages.decode(file, longestSide: 600))
+        #expect(image.height >= 600)
+        #expect(abs(Double(image.width) / Double(image.height) - 0.75) < 0.01)
+    }
+
     @Test func aMissingFileDecodesToNothing() {
         let file = PageFile(
             path: "/nonexistent/page.raw", encoding: .raw(format: .gray8, stride: 4), width: 4, height: 4,
