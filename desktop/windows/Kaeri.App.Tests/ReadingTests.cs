@@ -71,6 +71,38 @@ public class ReadingTests
     }
 
     [Fact]
+    public void ProgressFromAStoppedSendDoesNotTakeOverTheNextOne()
+    {
+        List<Command> sent = [];
+        var sending = new SendState { Send = sent.Add };
+        var first = sending.Begin("a:900301", ["c1"], Kobo(), novel: false)!.Value;
+        sending.Apply(new ReadingEvent.ExportProgress(5, 1, 4, 0, 1));
+        sending.Cancel(first);
+        Assert.Contains(sent, c => c is Command.Reading { V1: ReadingCommand.CancelPrepare { Job: 5 } });
+        var second = sending.Begin("a:900302", ["c2"], Kobo(), novel: false)!.Value;
+        // The stopped job's last progress was already on its way.
+        sending.Apply(new ReadingEvent.ExportProgress(5, 2, 4, 0, 1));
+        sending.Apply(new ReadingEvent.ExportProgress(6, 1, 4, 0, 1));
+        sending.Apply(new ReadingEvent.ExportReady(6, []));
+        var send = Assert.Single(sending.Sends);
+        Assert.Equal(second, send.Id);
+        Assert.Equal(6ul, send.Job);
+        Assert.Equal(SendPhase.Ready, send.Phase);
+    }
+
+    [Fact]
+    public void ProgressFromAStoppedSendLeavesNoRow()
+    {
+        var sending = new SendState { Send = _ => { } };
+        var id = sending.Begin("a:900301", ["c1"], Kobo(), novel: false)!.Value;
+        sending.Apply(new ReadingEvent.ExportProgress(5, 1, 4, 0, 1));
+        sending.Cancel(id);
+        Assert.Empty(sending.Sends);
+        sending.Apply(new ReadingEvent.ExportProgress(5, 2, 4, 0, 1));
+        Assert.Empty(sending.Sends);
+    }
+
+    [Fact]
     public void ASendHeldAcrossARestartShowsAsItsOwnRow()
     {
         var sending = new SendState { Send = _ => { } };
@@ -210,6 +242,46 @@ public class ReadingTests
             Assert.Equal(ReaderPhase.Closed, reader.Phase);
             Assert.False(reader.IsOpen);
         });
+    }
+
+    [Fact]
+    public async Task ASurfaceChangeWhileOpeningReachesTheEngine()
+    {
+        using var scene = new Scene(new FfiScene.ReaderMangaRtl(), "cs-reader-surface-opening");
+        var reader = scene.Known.Reader;
+        var narrow = new ReaderSurface(720, 1280, 1f, false, false, true);
+        var wide = new ReaderSurface(2560, 1440, 1f, false, true, true);
+        scene.Do(() =>
+        {
+            reader.Open("a:900301");
+            reader.SurfaceChanged(narrow);
+        });
+        await scene.Until(k => k.Reader.Phase == ReaderPhase.Open && k.Reader.Leaves.Length > 0 ? k.Reader.Leaves : null);
+        int single = 0;
+        scene.Do(() => single = reader.Leaves.Length);
+        // An open chapter lays out again for two pages: the counts differ.
+        scene.Do(() => reader.SurfaceChanged(wide));
+        var spreads = (await scene.Until(k => k.Reader.Leaves.Length > 0 && k.Reader.Leaves.Length != single ? k.Reader.Leaves : null)).Length;
+        scene.Do(reader.Close);
+        await scene.Until(k => k.Reader.SessionId == 0 ? k : null);
+        scene.Do(() =>
+        {
+            reader.SurfaceChanged(narrow);
+            // The window goes full screen before the engine says the chapter is open.
+            reader.Open("a:900301");
+            reader.SurfaceChanged(wide);
+        });
+        await scene.Until(k => k.Reader.Phase == ReaderPhase.Open && k.Reader.Leaves.Length > 0 ? k.Reader.Leaves : null);
+        try
+        {
+            await scene.Until(k => k.Reader.Leaves.Length == spreads ? k.Reader.Leaves : null, seconds: 10);
+        }
+        catch (TimeoutException)
+        {
+            int now = 0;
+            scene.Do(() => now = reader.Leaves.Length);
+            Assert.Fail($"laid out for {now} leaves, the old surface's count was {single} and the surface on screen needs {spreads}");
+        }
     }
 
     [Fact]
