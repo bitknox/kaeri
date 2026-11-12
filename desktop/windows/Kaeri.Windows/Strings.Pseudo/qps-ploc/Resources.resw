@@ -923,6 +923,18 @@
     <value>[Ţĥéŕé'š ñö ŕööɱ ļéƒţ öñ ţĥîš ðéṽîçé. Ƒŕéé šöɱé šþàçé àñð ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Why a chapter could not be saved: the disk is full.</comment>
   </data>
+  <data name="ReadingFailedWriteName" xml:space="preserve">
+    <value>[Ţĥé šţöŕàĝé ðöéšñ'ţ ţàķé ţĥé ñàɱé {path}. Îţ ɱàý ƀé ţöö ļöñĝ.~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Why a chapter or a file for an e-reader could not be saved: the storage refused the name, because it is too long or has characters the storage doesn't allow. The path is the file's or the folder's.</comment>
+  </data>
+  <data name="ReadingFailedWriteDenied" xml:space="preserve">
+    <value>[Ķàéŕî îšñ'ţ àļļöŵéð ţö ŵŕîţé {path}. Çĥéçķ ţĥàţ ţĥé šţöŕàĝé îšñ'ţ ŕéàð-öñļý, ţĥéñ ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Why a chapter or a file for an e-reader could not be saved: the storage is read-only, or Kaeri isn't allowed to write there. The path is the file's or the folder's.</comment>
+  </data>
+  <data name="ReadingFailedWrite" xml:space="preserve">
+    <value>[Ķàéŕî çöüļðñ'ţ ŵŕîţé {path}. Ţŕý àĝàîñ.~~~~~~~~~~~]</value>
+    <comment>Why a chapter or a file for an e-reader could not be saved, for another reason the system gave. The path is the file's or the folder's.</comment>
+  </data>
   <data name="ReadingFailedWebview" xml:space="preserve">
     <value>[Ñöṽéļš ñééð à ñéŵéŕ šýšţéɱ ŴéƀṼîéŵ ţĥàñ ṽéŕšîöñ {version}. Ûþðàţé Åñðŕöîð Šýšţéɱ ŴéƀṼîéŵ àñð ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.</comment>

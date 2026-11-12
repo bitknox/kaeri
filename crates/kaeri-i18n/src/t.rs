@@ -1070,6 +1070,21 @@ pub fn reading_failed_disk_full() -> String {
     text("reading-failed-disk-full", &[])
 }
 
+/// Why a chapter or a file for an e-reader could not be saved: the storage refused the name, because it is too long or has characters the storage doesn't allow. The path is the file's or the folder's.
+pub fn reading_failed_write_name(path: &str) -> String {
+    text("reading-failed-write-name", &[("path", Arg::Text(path))])
+}
+
+/// Why a chapter or a file for an e-reader could not be saved: the storage is read-only, or Kaeri isn't allowed to write there. The path is the file's or the folder's.
+pub fn reading_failed_write_denied(path: &str) -> String {
+    text("reading-failed-write-denied", &[("path", Arg::Text(path))])
+}
+
+/// Why a chapter or a file for an e-reader could not be saved, for another reason the system gave. The path is the file's or the folder's.
+pub fn reading_failed_write(path: &str) -> String {
+    text("reading-failed-write", &[("path", Arg::Text(path))])
+}
+
 /// Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.
 pub fn reading_failed_webview(version: i64) -> String {
     text("reading-failed-webview", &[("version", Arg::Plain(version))])

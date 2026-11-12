@@ -1341,6 +1341,12 @@ pub enum ReadingMsg {
     ReadingFailedProtected,
     /// Why a chapter could not be saved: the disk is full.
     ReadingFailedDiskFull,
+    /// Why a chapter or a file for an e-reader could not be saved: the storage refused the name, because it is too long or has characters the storage doesn't allow. The path is the file's or the folder's.
+    ReadingFailedWriteName { path: String },
+    /// Why a chapter or a file for an e-reader could not be saved: the storage is read-only, or Kaeri isn't allowed to write there. The path is the file's or the folder's.
+    ReadingFailedWriteDenied { path: String },
+    /// Why a chapter or a file for an e-reader could not be saved, for another reason the system gave. The path is the file's or the folder's.
+    ReadingFailedWrite { path: String },
     /// Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.
     ReadingFailedWebview { version: i64 },
     /// Why a book plugin could not be used: it was built for a newer Kaeri. The world is the plugin interface's name and version.
@@ -1712,6 +1718,9 @@ impl ReadingMsg {
             Self::ReadingFailedUnsupported { .. } => "reading-failed-unsupported",
             Self::ReadingFailedProtected => "reading-failed-protected",
             Self::ReadingFailedDiskFull => "reading-failed-disk-full",
+            Self::ReadingFailedWriteName { .. } => "reading-failed-write-name",
+            Self::ReadingFailedWriteDenied { .. } => "reading-failed-write-denied",
+            Self::ReadingFailedWrite { .. } => "reading-failed-write",
             Self::ReadingFailedWebview { .. } => "reading-failed-webview",
             Self::ReadingFailedNeedsNewer { .. } => "reading-failed-needs-newer",
             Self::ReadingFailedOff => "reading-failed-off",
@@ -1921,6 +1930,9 @@ impl ReadingMsg {
             Self::ReadingFailedUnsupported { kind } => vec![("kind", Value::Text(kind.clone()))],
             Self::ReadingFailedProtected => Vec::new(),
             Self::ReadingFailedDiskFull => Vec::new(),
+            Self::ReadingFailedWriteName { path } => vec![("path", Value::Text(path.clone()))],
+            Self::ReadingFailedWriteDenied { path } => vec![("path", Value::Text(path.clone()))],
+            Self::ReadingFailedWrite { path } => vec![("path", Value::Text(path.clone()))],
             Self::ReadingFailedWebview { version } => vec![("version", Value::Plain(*version))],
             Self::ReadingFailedNeedsNewer { world } => vec![("world", Value::Text(world.clone()))],
             Self::ReadingFailedOff => Vec::new(),
