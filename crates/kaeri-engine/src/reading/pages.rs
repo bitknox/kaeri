@@ -42,10 +42,17 @@ use crate::{
 };
 
 /// How long a book may take to open before the chapter fails.
-pub const OPEN_BUDGET: Duration = Duration::from_secs(8);
+pub const OPEN_BUDGET: Duration = wall_budget(8);
 /// How long one PDF page may take to render. The PDF reader cannot be stopped, so a page over
 /// this fails the chapter and the render is left to finish on its own thread.
-pub const PDF_PAGE_BUDGET: Duration = Duration::from_secs(2);
+pub const PDF_PAGE_BUDGET: Duration = wall_budget(2);
+
+/// A wall-clock budget for work the engine cannot stop. Tests get a minute instead: a debug
+/// build's render on a loaded machine takes over two seconds with nothing wrong, and no test
+/// times these two budgets.
+const fn wall_budget(secs: u64) -> Duration {
+    if cfg!(test) { Duration::from_secs(60) } else { Duration::from_secs(secs) }
+}
 /// How long the platform's decoder may take over one page it was asked to decode. It cannot be
 /// stopped, so a page over this fails and the call is left to finish on its own thread, which
 /// holds the decoder until it ends.
