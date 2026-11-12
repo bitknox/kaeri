@@ -296,19 +296,20 @@ pub(crate) fn kept_rows(
         .collect()
 }
 
-/// The edition's chapters as last kept, grouped by volume when the person shows volumes.
+/// The edition's chapters as last kept, grouped by volume when the person shows volumes. The
+/// rows are built as the source's answer builds them, with their downloads, bookmarks and when
+/// they were read, so the list shown while the source is asked, or after it failed, says the
+/// same of each chapter.
 pub(crate) fn kept_volumes(
     kit: &Kit,
     work: &WorkId,
 ) -> (Option<BookEditionRow>, Vec<VolumeGroup>) {
-    let Some((source, _, list)) = chapters::of_work(&kit.sources, &kit.store, work) else {
+    let Some((source, _)) = kit.sources.edition_of(work, None) else {
         return (None, Vec::new());
     };
-    let read = chapters::Read::of(&kit.store, work.as_str());
-    let rows: Vec<ChapterRow> =
-        kept_rows(kit, work, &source, &list, &read).into_iter().map(|(_, row)| row).collect();
-    let known = super::volumes::Known::of_work(&kit.store, work.as_str());
-    let groups = super::volumes::group(rows, &known, kit.sources.show_volumes());
+    let Some((_, groups)) = kit.sources.kept_listing(work, kit.clock.now(), i64::MAX) else {
+        return (None, Vec::new());
+    };
     let edition = kit.sources.editions(work).into_iter().find(|e| e.source_id == source);
     (edition, groups)
 }
