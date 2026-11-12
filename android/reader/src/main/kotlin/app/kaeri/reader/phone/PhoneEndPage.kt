@@ -300,7 +300,10 @@ fun PhoneEndPage(
                 }
             } else {
                 val why = end?.whyNone ?: NoNext.CAUGHT_UP
-                val following = view.chapter.number?.toDoubleOrNull()?.let { (it.toInt() + 1).toString() } ?: ""
+                // The chapter the end page would open: the next one listed, as offline that is one
+                // only a source has; past the last one listed, the next whole number.
+                val following = view.next?.let(::chapterNumber)
+                    ?: view.chapter.number?.toDoubleOrNull()?.let { (it.toInt() + 1).toString() } ?: ""
                 val (title, line) = when (why) {
                     NoNext.NO_SOURCE_HAS_IT, NoNext.NOT_OUT_YET -> Strings.readerEndNone(context, following) to Strings.readerEndNoneLine(context)
                     NoNext.CAUGHT_UP -> Strings.readerEndCaughtUp(context) to Strings.readerEndNoneLine(context)
