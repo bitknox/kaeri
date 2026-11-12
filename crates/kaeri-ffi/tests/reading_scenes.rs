@@ -155,7 +155,7 @@ fn the_downloads_scene_fills_the_screen_and_fetches_nothing_by_itself() {
             ("2".to_owned(), S::Failed { failure: ReadingFailure::Offline }),
         ]
     );
-    assert_eq!(view.rows[0].title, "The Lantern Ferry");
+    assert_eq!(view.rows[0].title, "Mr. Arai Runs the Night Ferry");
     assert_eq!((view.meter.chapters, view.meter.used), (2, 10_600_000));
     engine.shutdown();
 }
@@ -227,7 +227,7 @@ fn the_reader_scenes_have_generated_books_to_open() {
             _ => None,
         })
         .expect("opened");
-    assert_eq!(opened.title, "The Lantern Ferry");
+    assert_eq!(opened.title, "Mr. Arai Runs the Night Ferry");
     assert_eq!(opened.chapter.id.as_str(), "13");
     assert_eq!(opened.start.page, Some(9));
 

@@ -14,8 +14,8 @@ Kaeri                                                      plugins ·  ·  kitsu
    │
    │  Available on Lantern Library
    │
-   │  A lamplighter with no memory of her home walks the old star roads,
-   │  relighting the beacons that guide travellers between the towns.…
+   │  Aki relights the old beacons along the roads between the hill towns, one
+   │  town a week. She doesn't remember where she grew up.…
    │
    │  Adventure  ·  Drama  ·  Fantasy
    │

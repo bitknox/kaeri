@@ -221,11 +221,11 @@ pub enum FfiScene {
     /// Reading on, this device set to Watch, and the account set to Read by Kim's iPad: the
     /// question says so, with Read chosen.
     ReadingJoinAsk,
-    /// Reading on and set to Both, with reading history: The Lantern Ferry (manga, a:900301)
-    /// chapter 13 at page 9 of 20 after 1 to 12 read, and The Glass Orchard (novel, a:900302)
-    /// part way into chapter 3 after 1 and 2. Manga read most, light novels next, a webtoon
-    /// on Reading: Home's discovery fills all eight rows, Because you finished and More Slice
-    /// of Life among them. The engine answers Home with its empty shape until the catalogue
+    /// Reading on and set to Both, with reading history: Mr. Arai Runs the Night Ferry (manga,
+    /// a:900301) chapter 13 at page 9 of 20 after 1 to 12 read, and Kamiya Glassworks (novel,
+    /// a:900302) part way into chapter 3 after 1 and 2. Manga read most, light novels next, a
+    /// webtoon on Reading: Home's discovery fills all eight rows, Because you finished and More
+    /// Slice of Life among them. The engine answers Home with its empty shape until the catalogue
     /// lands.
     ReadingHome,
     /// [`Self::ReadingHome`] with the manga's series choices: right to left, kept for the
@@ -233,7 +233,7 @@ pub enum FfiScene {
     ReadingSeries,
     /// [`Self::ReadingHome`] for a right-to-left manga in the reader.
     ReaderMangaRtl,
-    /// [`Self::ReadingHome`] with a strip series, Paper Kites Over Juniper Row (a:900303), set
+    /// [`Self::ReadingHome`] with a strip series, Juniper Row (a:900303), set
     /// to strip and part way down chapter 2.
     ReaderStrip,
     /// [`Self::ReadingHome`] for the novel in the reader, at its place in chapter 3.
@@ -276,7 +276,7 @@ pub const READING_STRIP: &str = "a:900303";
 const MANGA_SERIES: scene_books::Series = scene_books::Series {
     id: "fixture-lantern-ferry",
     work: READING_MANGA,
-    name: "The Lantern Ferry",
+    name: "Mr. Arai Runs the Night Ferry",
     medium: "manga",
     format: "MANGA",
     origin: Some("JP"),
@@ -284,7 +284,7 @@ const MANGA_SERIES: scene_books::Series = scene_books::Series {
 const NOVEL_SERIES: scene_books::Series = scene_books::Series {
     id: "fixture-glass-orchard",
     work: READING_NOVEL,
-    name: "The Glass Orchard",
+    name: "Kamiya Glassworks",
     medium: "novel",
     format: "NOVEL",
     origin: Some("JP"),
@@ -292,7 +292,7 @@ const NOVEL_SERIES: scene_books::Series = scene_books::Series {
 const STRIP_SERIES: scene_books::Series = scene_books::Series {
     id: "fixture-paper-kites",
     work: READING_STRIP,
-    name: "Paper Kites Over Juniper Row",
+    name: "Juniper Row",
     medium: "manga",
     format: "MANGA",
     origin: Some("KR"),
@@ -1288,9 +1288,9 @@ fn seed_book_downloads(store: &Store, now: i64) {
     };
     // The titles the Downloads screen names the series by, as the catalogue keeps them.
     for (work, medium, title) in [
-        (READING_MANGA, "manga", "The Lantern Ferry"),
-        (READING_NOVEL, "novel", "The Glass Orchard"),
-        (READING_STRIP, "manga", "Paper Kites Over Juniper Row"),
+        (READING_MANGA, "manga", "Mr. Arai Runs the Night Ferry"),
+        (READING_NOVEL, "novel", "Kamiya Glassworks"),
+        (READING_STRIP, "manga", "Juniper Row"),
     ] {
         store.seed_book_work(work, medium, None, None, title, now).unwrap_or_else(warn);
     }
@@ -1635,7 +1635,7 @@ mod tests {
         let kind = store.book_work_kind(READING_STRIP).expect("a kind").expect("a row");
         assert_eq!(
             (kind.origin.as_deref(), kind.title.as_deref()),
-            (Some("KR"), Some("Paper Kites Over Juniper Row"))
+            (Some("KR"), Some("Juniper Row"))
         );
         seed_books(&store, dir.path(), &FfiScene::Fresh, 1_800_000_000);
     }

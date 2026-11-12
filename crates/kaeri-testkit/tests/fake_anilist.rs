@@ -35,7 +35,7 @@ async fn a_search_is_answered_from_the_fixtures_and_recorded() {
 
     // By its English title too, in any case.
     let found =
-        kit.meta.search("STEEL GARDENER", &BrowseFilter::default(), 1, 20).await.unwrap();
+        kit.meta.search("GARDEN ON THE ROOF", &BrowseFilter::default(), 1, 20).await.unwrap();
     assert_eq!(ids(&found.items), [ONA.get()]);
     let none = kit.meta.search("no such show", &BrowseFilter::default(), 1, 20).await.unwrap();
     assert!(none.items.is_empty());

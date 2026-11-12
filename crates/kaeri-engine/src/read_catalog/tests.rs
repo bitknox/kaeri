@@ -453,8 +453,8 @@ async fn a_slow_source_never_holds_up_anilist_or_the_others() {
     let dir = tempfile::tempdir().unwrap();
     let kit = kit(Some(&fake), dir.path());
     let gate = Arc::new(Notify::new());
-    let lantern = vec![hit("s-1", "the lantern ferry!", Some(ReadingFormat::Manga))];
-    Shelf::put_as(&kit, "home", "Home library", BookSourceKind::Server, Answer::Now(lantern));
+    let ferry = vec![hit("s-1", "mr. arai runs the night ferry!", Some(ReadingFormat::Manga))];
+    Shelf::put_as(&kit, "home", "Home library", BookSourceKind::Server, Answer::Now(ferry));
     let unknown = vec![SeriesHit {
         amount: Some(HitAmount::Episodes(40)),
         ..hit("n-9", "Lantern Street Notes", Some(ReadingFormat::Novel))
@@ -465,7 +465,7 @@ async fn a_slow_source_never_holds_up_anilist_or_the_others() {
     kit.sources.registry.set_order(vec!["home".into(), "northwind".into()]);
 
     let (tx, mut rx) = outbox();
-    search::search(&kit, ask(), query("lantern"), 0, &tx);
+    search::search(&kit, ask(), query("ferry"), 0, &tx);
     let first = next_part(&mut rx).await;
     // The folder source is always there; the two here keep the person's order around it.
     let ours = ["home", "northwind"];
@@ -486,7 +486,8 @@ async fn a_slow_source_never_holds_up_anilist_or_the_others() {
     .await;
     assert_eq!(*state(&landed, "northwind"), ReadSourceState::Asking);
     assert!(!landed.done);
-    // The hit is The Lantern Ferry once folded, and both are manga: it joins AniList's row.
+    // The hit is Mr. Arai Runs the Night Ferry once folded, and both are manga: it joins
+    // AniList's row.
     let home = landed.groups.iter().find(|g| g.source_id == "home").unwrap();
     assert_eq!((home.joined, home.tiles.len()), (1, 0));
     assert_eq!(landed.joins[0].work.as_str(), "a:900301");
@@ -563,7 +564,7 @@ async fn anilists_results_say_their_origin_and_a_total_only_when_it_is_exact() {
         }
     };
     // A few results, all on the first page: the count is exact.
-    search::search(&kit, ask(), query("lantern"), 0, &tx);
+    search::search(&kit, ask(), query("ferry"), 0, &tx);
     let (tiles, has_more, total) = results(&mut rx).await;
     assert!(!has_more);
     assert_eq!(total, Some(u32::try_from(tiles.len()).unwrap()));

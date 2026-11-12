@@ -116,7 +116,7 @@ fn home_comes_whole_from_one_request_and_the_queue_behind_it() {
     assert!(continuing.contains(&"a:900301".to_owned()), "{continuing:?}");
     assert!(continuing.contains(&"a:900302".to_owned()), "{continuing:?}");
     let manga = home.continue_reading.iter().find(|t| t.work.0 == "a:900301").unwrap();
-    assert_eq!(manga.title, "The Lantern Ferry");
+    assert_eq!(manga.title, "Mr. Arai Runs the Night Ferry");
     // Chapter 15 came out since, but the person is part way through 13: no new-chapter dot,
     // the track shows.
     assert!(!manga.new_chapter, "chapter 13 is in progress");
@@ -296,7 +296,7 @@ fn a_series_page_says_where_you_are_what_else_it_is_and_its_versions() {
         })
         .collect();
     let page = pages.last().unwrap();
-    assert_eq!(page.titles.display, "The Lantern Ferry");
+    assert_eq!(page.titles.display, "Mr. Arai Runs the Night Ferry");
     assert_eq!(page.format.as_deref(), Some("manga"));
     assert_eq!(page.origin.as_deref(), Some("JP"));
     assert_eq!(page.status.as_deref(), Some("releasing"));
