@@ -145,7 +145,10 @@ fun NovelScreen(
                     place.pages = message.pages
                 }
                 // The last page of the last document turned past: the end page, as manga has.
-                is NovelMessage.End -> place.ended = true
+                is NovelMessage.End -> {
+                    place.ended = true
+                    session.novelEnded()
+                }
                 is NovelMessage.Failed -> place.failed = message.why
                 NovelMessage.Gone -> lives++
                 else -> {}

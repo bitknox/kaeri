@@ -615,4 +615,23 @@ class ReaderSessionTest {
         session.reshow(null)
         assertEquals(3, session.state.value.jump?.leaf)
     }
+
+    @Test
+    fun a_novels_end_page_is_told_to_the_engine_as_the_page_after_the_last() {
+        // The end page counts the chapter read at once, as a paged chapter's does.
+        opened()
+        val last = app.kaeri.engine.model.NovelPos(spine = 2u, path = listOf(0u, 4u), offset = 120u)
+        session.novelAt(last, 2u, 3u, TurnHow.TURN)
+        sent.clear()
+        session.novelEnded()
+        assertEquals(listOf<ReaderCommand>(ReaderCommand.NovelAt(SESSION, CHAPTER, last, 3u, 3u, TurnHow.TURN)), sent)
+    }
+
+    @Test
+    fun a_novels_end_before_any_page_was_reported_tells_nothing() {
+        opened()
+        sent.clear()
+        session.novelEnded()
+        assertTrue("sent: $sent", sent.none { it is ReaderCommand.NovelAt })
+    }
 }

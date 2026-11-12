@@ -269,6 +269,8 @@ class ReaderSession(private val send: (Command) -> Unit) {
     private var shownLeaf: Int? = null
     /** A kept page's chapter is laid out again with it: the pages after it move up one. */
     private var relayKeep: CreditKeep? = null
+    /** The page count of the novel document last reported, for its end page. */
+    private var novelPages = 0u
     /**
      * The session the engine last opened for this reader. It outlives the state's view: a chapter
      * that fails to open leaves the engine's session open behind the failure, and the close is
@@ -381,9 +383,22 @@ class ReaderSession(private val send: (Command) -> Unit) {
         val chapter = now.novel?.chapter ?: now.chapter ?: return
         val work = work
         if (work != null) here = (here?.takeIf { it.chapter == chapter } ?: ReadPlace(work, chapter, null, null, null)).copy(novel = pos)
+        novelPages = pages
         reader(ReaderCommand.NovelAt(now.session ?: return, chapter, pos, page, pages, how))
         val notice = now.notice
         if (notice != null && how != TurnHow.JUMP && how != TurnHow.PLACED) dismissNotice(notice.id)
+    }
+
+    /**
+     * A novel's last page was turned past: the end page shows. The engine hears it as the page
+     * after the last, which counts the chapter read at once, as a paged chapter's end page does.
+     */
+    fun novelEnded() {
+        val now = state.value
+        val chapter = now.novel?.chapter ?: now.chapter ?: return
+        val pos = here?.takeIf { it.chapter == chapter }?.novel ?: return
+        val pages = novelPages.coerceAtLeast(1u)
+        reader(ReaderCommand.NovelAt(now.session ?: return, chapter, pos, pages, pages, TurnHow.TURN))
     }
 
     /** The hidden web view counted the volume's pages for these settings and this screen. */
