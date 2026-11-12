@@ -1,9 +1,11 @@
 // The reader's sheets go when what they were opened for is done: a chapter picked from the
-// Chapters sheet opens with the sheet gone, as a page picked from it does.
+// Chapters sheet opens with the sheet gone, as a page picked from it does. Back from a page of the
+// settings sheet goes to its main page, and the next Back closes it.
 
 package app.kaeri.reader.phone
 
 import androidx.activity.ComponentActivity
+import androidx.activity.ComponentDialog
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,6 +33,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import org.robolectric.shadows.ShadowDialog
 
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -78,5 +81,29 @@ class ReaderSheetsTest {
         compose.waitForIdle()
         row(13).assertDoesNotExist()
         compose.onNode(hasText("Pages") and hasClickAction()).assertDoesNotExist()
+    }
+
+    /** Back as the sheet's own window takes it. */
+    private fun back() {
+        val dialog = ShadowDialog.getLatestDialog() as ComponentDialog
+        compose.runOnUiThread { dialog.onBackPressedDispatcher.onBackPressed() }
+        compose.waitForIdle()
+    }
+
+    @Test
+    fun back_from_more_settings_goes_to_the_main_page_and_the_next_back_closes_the_sheet() {
+        reader()
+        compose.onNode(hasContentDescription("Reader settings") and hasClickAction()).performClick()
+        compose.waitForIdle()
+        val more = compose.onNode(hasText("More reader settings") and hasClickAction())
+        more.performClick()
+        compose.waitForIdle()
+        more.assertDoesNotExist()
+
+        back()
+        more.assertExists()
+
+        back()
+        compose.onNode(hasText("More reader settings")).assertDoesNotExist()
     }
 }

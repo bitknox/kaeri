@@ -23,12 +23,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,6 +38,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 /**
  * A sheet over the reader in the chrome's colours, the page behind left undimmed. [instant] draws
@@ -51,10 +54,18 @@ internal fun ReaderSheet(
     /** Opens at the content's full height rather than half the screen. */
     whole: Boolean = false,
     expanded: Boolean = false,
+    /**
+     * Back on a sheet with pages of its own: true when it went to the page it came from, false
+     * on the first page, where Back closes the sheet. The sheet holds one handler for all of it
+     * while it is open, since a handler taken away or switched off as the page changed left the
+     * next Back to land on nothing.
+     */
+    onBack: (() -> Boolean)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     if (!instant) {
         val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = whole)
+        val scope = rememberCoroutineScope()
         LaunchedEffect(expanded) {
             if (!expanded) return@LaunchedEffect
             // After the sheet's own slide in, or at once when it is already up.
@@ -68,12 +79,21 @@ internal fun ReaderSheet(
             contentColor = Chrome.text,
             // The page behind stays undimmed.
             scrimColor = Color.Transparent,
-            content = content,
-        )
+            properties = ModalBottomSheetProperties(shouldDismissOnBackPress = onBack == null),
+        ) {
+            if (onBack != null) {
+                // In the sheet's window, where Back goes while it is open; on the first page the
+                // sheet slides away as Material's own Back has it.
+                ReaderBackHandler {
+                    if (!onBack()) scope.launch { sheet.hide() }.invokeOnCompletion { if (!sheet.isVisible) onDismiss() }
+                }
+            }
+            content()
+        }
         return
     }
     // Drawn over the reader in its own layout, since a window of its own would animate.
-    ReaderBackHandler(onBack = onDismiss)
+    ReaderBackHandler { if (onBack?.invoke() != true) onDismiss() }
     run {
         val height = LocalConfiguration.current.screenHeightDp.dp
         Box(Modifier.fillMaxSize()) {
