@@ -107,8 +107,6 @@ public final class ReaderModel {
     public internal(set) var backToPage: Int?
     /// The reader is out of sight: the app is inactive or in the background. Notices wait.
     public var away = false
-    /// The reader's window is the one taking keys: the Go menu acts on the reader only then.
-    public var inFront = false
     /// VoiceOver rests on the notice, or the pointer is over it. It waits.
     public var noticeHeld = false
     private var noticesPaused: Bool { away || noticeHeld }

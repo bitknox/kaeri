@@ -166,21 +166,45 @@ public struct ReaderMenu: Commands {
     }
 }
 
+extension FocusedValues {
+    /// The book open in a window, set by the app on the window's scene, so the Go menu has it
+    /// only while that window is in front, and draws again as it changes.
+    @Entry public var readerInFront: ReaderInFront?
+}
+
+/// What the Go menu shows of the book in front.
+public struct ReaderInFront: Equatable {
+    /// Keys with no modifier go to the reader: no sheet and no Go to page field is up.
+    var plain: Bool
+    var backPage: Int?
+    var keys: ReaderKeyContext
+
+    /// The book open in `model`, or nil when none is.
+    @MainActor public static func of(_ model: ReaderModel) -> ReaderInFront? {
+        guard model.request != nil else { return nil }
+        return ReaderInFront(plain: model.sheet == nil && !model.askingPage, backPage: model.backToPage,
+                             keys: ReaderActions.keys(model))
+    }
+}
+
 /// The Go menu's items, on the open reader's model. Dimmed when no reader is in front, and its
 /// keys with no modifier are bound only while the reader takes them: AppKit stops at the first
 /// menu item with a key, enabled or not, so a bound arrow or Space would take it from a sheet or
-/// the Go to page field.
+/// the Go to page field. The menu draws again with the focused value: the commands do not follow
+/// the model's own changes.
 private struct ReaderMenuItems: View {
     let model: ReaderModel
+    @FocusedValue(\.readerInFront) private var front
 
     var body: some View {
-        let on = model.request != nil && model.inFront
-        let plain = on && model.sheet == nil && !model.askingPage
+        let on = front != nil && model.request != nil
+        let plain = on && front?.plain == true
         let reader = ReaderActions(model: model) { model.close() }
+        let keys = front?.keys ?? reader.keys
         Group {
             // The same keys as ReaderKeys, which the reader also takes itself.
-            if let next = ReaderKeys.arrow(forward: true, in: reader.keys),
-               let previous = ReaderKeys.arrow(forward: false, in: reader.keys) {
+            if let next = ReaderKeys.arrow(forward: true, in: keys),
+               let previous = ReaderKeys.arrow(forward: false, in: keys) {
                 Button(L.readerMenuNextPage) { reader.perform(.page(forward: true)) }.plainKey(next, when: plain)
                 Button(L.readerMenuPreviousPage) { reader.perform(.page(forward: false)) }.plainKey(previous, when: plain)
             }
@@ -197,7 +221,7 @@ private struct ReaderMenuItems: View {
             Button(L.readerMenuNextChapter) { reader.perform(.chapter(next: true)) }.plainKey("]", when: plain)
             Button(L.readerMenuPreviousChapter) { reader.perform(.chapter(next: false)) }.plainKey("[", when: plain)
             Button(L.readerMenuGoToPage) { reader.askPage() }.plainKey("g", when: plain)
-            if let page = reader.backPage {
+            if let page = front?.backPage {
                 Button(L.readerMenuBackToPage(page: page)) { reader.back() }.key("[", .command, when: on)
             } else {
                 Button(L.readerMenuBack) { reader.back() }.key("[", .command, when: on).disabled(true)

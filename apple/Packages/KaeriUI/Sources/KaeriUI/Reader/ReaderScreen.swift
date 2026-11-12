@@ -19,9 +19,6 @@ public struct ReaderScreen: View {
     @AppStorage(ReaderDefaults.system) private var system = false
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.scenePhase) private var scenePhase
-    #if os(macOS)
-    @Environment(\.controlActiveState) private var activeState
-    #endif
     @Environment(Navigator.self) private var navigator: Navigator?
     @State private var spoken: Task<Void, Never>?
     @State private var groupHeight: CGFloat = 84
@@ -108,12 +105,7 @@ public struct ReaderScreen: View {
         .onChange(of: model.sheet == nil) { _, closed in if closed { holdsKeys = true } }
         .onChange(of: model.askingPage) { _, asking in if !asking { holdsKeys = true } }
         .onChange(of: scenePhase) { _, phase in if phase == .active { holdsKeys = true } }
-        // The Go menu acts on the reader while its window takes keys.
-        .onChange(of: activeState, initial: true) { _, state in model.inFront = state == .key }
-        #else
-        .onChange(of: scenePhase, initial: true) { _, phase in model.inFront = phase == .active }
         #endif
-        .onDisappear { model.inFront = false }
         .onChange(of: model.sheet) { _, sheet in if sheet != nil { model.chromeShown = true } }
         .onChange(of: model.held?.tick) { _, _ in heldShown = 1 }
         .onChange(of: model.held?.landed == true) { _, landed in if landed { letHeldGo() } }
