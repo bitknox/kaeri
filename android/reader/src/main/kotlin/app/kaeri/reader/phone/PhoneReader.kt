@@ -10,7 +10,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.view.accessibility.AccessibilityManager
-import androidx.activity.compose.PredictiveBackHandler
+import app.kaeri.reader.ReaderPredictiveBackHandler
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
@@ -424,9 +424,9 @@ fun PhoneReader(
 
     // Back closes the reader, even with the chrome up; it follows the finger toward the series.
     var backProgress by remember { mutableFloatStateOf(0f) }
-    PredictiveBackHandler(enabled = sheet == Sheet.None) { progress ->
+    ReaderPredictiveBackHandler(enabled = sheet == Sheet.None) { progress ->
         try {
-            progress.collect { backProgress = it.progress }
+            progress.collect { backProgress = it }
             actions.onClose()
         } catch (e: CancellationException) {
             backProgress = 0f
@@ -823,14 +823,18 @@ fun PhoneReader(
     }
 }
 
-/** Hides the system bars with the chrome and shows them with it; the icons follow the look. */
+/**
+ * Hides the system bars with the chrome and shows them with it; the icons follow the look. Hidden,
+ * the system's gestures still work on the first swipe, so one edge swipe goes back, as on iPhone;
+ * a swipe from the top or bottom brings the bars back.
+ */
 @Composable
 private fun SystemBars(context: Context, shown: Boolean, light: Boolean) {
     val view = LocalView.current
     val window = remember { context.activity()?.window }
     val controller = remember(window) { window?.let { WindowCompat.getInsetsController(it, view) } }
     LaunchedEffect(controller) {
-        controller?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        controller?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
     }
     LaunchedEffect(controller, shown) {
         if (shown) controller?.show(WindowInsetsCompat.Type.systemBars()) else controller?.hide(WindowInsetsCompat.Type.systemBars())
@@ -1235,7 +1239,7 @@ private fun NovelEndPage(
 ) {
     val density = LocalDensity.current
     val far = with(density) { 80.dp.toPx() }
-    val next = (state.end?.next ?: state.view?.next)
+    val next = state.endNext
     Box(
         Modifier.fillMaxSize().pointerInput(zones) {
             // A tap in the forward zone goes on, in the back zone returns to the text; the page's

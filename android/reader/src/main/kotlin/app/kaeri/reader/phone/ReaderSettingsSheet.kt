@@ -7,7 +7,7 @@
 
 package app.kaeri.reader.phone
 
-import androidx.activity.compose.BackHandler
+import app.kaeri.reader.ReaderBackHandler
 import android.content.Context
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.text.TextAutoSize
@@ -123,7 +123,7 @@ fun ReaderSettingsSheet(
     val strip = view.mode == ReaderMode.STRIP || view.mode == ReaderMode.VERTICAL
     ReaderSheet(instant = instant, onDismiss = onDismiss) {
         // Back from a page of the sheet goes to the page it came from, not out of the sheet.
-        BackHandler(enabled = pane != Pane.Main) { pane = if (pane == Pane.Paper) paperBack else Pane.Main }
+        ReaderBackHandler(enabled = pane != Pane.Main) { pane = if (pane == Pane.Paper) paperBack else Pane.Main }
         Column(Modifier.verticalScroll(rememberScrollState()).navigationBarsPadding().padding(horizontal = 20.dp, vertical = 4.dp)) {
             when (pane) {
                 Pane.Main -> Main(

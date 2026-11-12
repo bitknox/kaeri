@@ -554,4 +554,34 @@ class ReaderSessionTest {
         assertEquals(false, session.crossOn())
         assertTrue(sent.isEmpty())
     }
+
+    /** Offline the engine's end page can lead past the next chapter, or nowhere: a turn follows it. */
+    @Test
+    fun a_forward_turn_follows_the_end_page_over_the_chapter_after() {
+        opened()
+        session.apply(ReaderEvent.EndPage(SESSION, null, NoNext.OFFLINE))
+        sent.clear()
+        assertEquals(false, session.crossOn())
+        assertTrue(sent.isEmpty())
+
+        val download = ReaderFixtures.chapter("local:lantern-stair/15", "15")
+        session.apply(ReaderEvent.EndPage(SESSION, download, null))
+        assertTrue(session.crossOn())
+        assertEquals(listOf<ReaderCommand>(ReaderCommand.OpenChapter(SESSION, "local:lantern-stair/15")), sent)
+    }
+
+    /** A screen made anew around the session starts its pager at the first leaf: it jumps back. */
+    @Test
+    fun a_screen_made_anew_jumps_back_to_the_place_shown() {
+        opened(start = 0u)
+        session.jumped(session.state.value.jump!!.id)
+        session.shown(3, TurnHow.TURN)
+        val before = session.place()
+        session.shown(0, TurnHow.PLACED)
+        session.reshow(before)
+        assertEquals(3, session.state.value.jump?.leaf)
+
+        session.reshow(null)
+        assertEquals(3, session.state.value.jump?.leaf)
+    }
 }

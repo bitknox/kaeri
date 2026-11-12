@@ -291,6 +291,11 @@ impl Home {
             .collect();
         let asks: Vec<BookAsk> = missing.chunks(50).map(|c| BookAsk::Ids(c.to_vec())).collect();
         if asks.is_empty() && stale.is_empty() {
+            // Online with all of it kept: an earlier offline pass no longer stands.
+            let mut memory = self.memory();
+            memory.offline_since = None;
+            memory.failed = false;
+            drop(memory);
             self.landed(ReadHomePart::Yours);
             self.send(tx);
             return;
@@ -1194,6 +1199,31 @@ mod tests {
 
     fn reading(msg: ReadingMsg) -> Option<Msg> {
         Some(Msg::Reading(msg))
+    }
+
+    /// Home loaded offline says so; loaded again once the connection is back, with every row
+    /// it shows first still fresh, it no longer does.
+    #[tokio::test]
+    async fn the_offline_line_goes_when_a_load_runs_online() {
+        let dir = tempfile::tempdir().unwrap();
+        let kit = kit(dir.path());
+        for format in ReadRowFormat::ALL {
+            Shelf { at: NOW, ids: Vec::new(), name: None }
+                .keep(&kit.store, &key_of(Planned::Trending(format)));
+        }
+        let ask =
+            Ask { answer: KaeriIsFor::Both, adult: false, chapter_notices: false, now: NOW };
+        let (tx, _rx) = Outbox::inbox();
+        kit.offline.store(true, Ordering::Relaxed);
+        Home::of(&kit, ask).run(false, &tx).await;
+        let view = home(&kit);
+        assert!(view.offline && view.offline_since == Some(NOW));
+
+        kit.offline.store(false, Ordering::Relaxed);
+        Home::of(&kit, ask).run(false, &tx).await;
+        let view = home(&kit);
+        assert!(!view.offline, "back online");
+        assert_eq!(view.offline_since, None);
     }
 
     /// A refresh sent while the first load runs starts its own; the first one ending leaves

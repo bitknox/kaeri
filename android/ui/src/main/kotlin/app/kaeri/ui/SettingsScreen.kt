@@ -133,8 +133,11 @@ fun SettingsScreen(pane: SettingsPane?, actions: AppActions) {
             store.bookSources.load()
         }
     }
+    // The pane open on a tablet, which stays open as the e-ink layout is turned on or off.
+    val start = pane ?: if (answer.watches) SettingsPane.Playback else SettingsPane.General
+    var open by rememberSaveable(start) { mutableStateOf(start) }
     if (einkSettings && wideWindow()) {
-        EinkTabletSettings(pane ?: if (answer.watches) SettingsPane.Playback else SettingsPane.General, actions)
+        EinkTabletSettings(open, { open = it }, actions)
     } else if (einkSettings) {
         if (pane == null) {
             val navigator = LocalNavigator.current
@@ -143,7 +146,7 @@ fun SettingsScreen(pane: SettingsPane?, actions: AppActions) {
             EinkPhoneSettings(stringResource(pane.titleRes)) { PaneContent(pane, actions) }
         }
     } else if (wideWindow()) {
-        TabletSettings(pane ?: if (answer.watches) SettingsPane.Playback else SettingsPane.General, actions)
+        TabletSettings(open, { open = it }, actions)
     } else if (pane == null) {
         PhoneSettingsList(actions)
     } else {
@@ -404,9 +407,8 @@ internal fun appVersion(): String {
  * tapped, 320 wide. Picking another pane crossfades the middle on fade-in; the list stays.
  */
 @Composable
-private fun TabletSettings(start: SettingsPane, actions: AppActions) {
+private fun TabletSettings(pane: SettingsPane, onPane: (SettingsPane) -> Unit, actions: AppActions) {
     val navigator = LocalNavigator.current
-    var pane by rememberSaveable(start) { mutableStateOf(start) }
     val colors = MaterialTheme.colorScheme
     BoxWithConstraints(
         Modifier
@@ -427,7 +429,7 @@ private fun TabletSettings(start: SettingsPane, actions: AppActions) {
                         .padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 24.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
-                    SettingsList(selected = pane) { pane = it }
+                    SettingsList(selected = pane) { onPane(it) }
                 }
             }
             AnimatedContent(

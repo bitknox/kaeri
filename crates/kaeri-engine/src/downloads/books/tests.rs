@@ -271,6 +271,33 @@ async fn a_chapter_downloads_into_a_cbz_the_shelf_reads() {
 }
 
 #[tokio::test]
+async fn next_unread_counts_from_the_place_and_passes_over_what_is_downloaded() {
+    // Chapters 1 and 2 were passed over; 3 and 4 were read, so the place is chapter 5.
+    let kit = kit(&["1", "2", "3", "4", "5", "6", "7", "8", "9"]);
+    kit.read("3", 5);
+    kit.read("4", 6);
+    let next = DownloadPick::NextUnread { n: 2 };
+    kit.queue.download(&kit.lent, WorkId::new(WORK), next.clone()).await;
+    kit.settle().await;
+    let done: Vec<String> = kit.states().into_iter().map(|(id, _)| id).collect();
+    assert_eq!(done, ["5", "6"]);
+
+    // A second ask fetches the two after them, not the same two again.
+    kit.queue.download(&kit.lent, WorkId::new(WORK), next.clone()).await;
+    kit.settle().await;
+    let done: Vec<String> = kit.states().into_iter().map(|(id, _)| id).collect();
+    assert_eq!(done, ["5", "6", "7", "8"]);
+
+    // With the rest on this device too, nothing more is asked for, not the ones passed over.
+    kit.queue.download(&kit.lent, WorkId::new(WORK), DownloadPick::NextUnread { n: 5 }).await;
+    kit.settle().await;
+    kit.queue.download(&kit.lent, WorkId::new(WORK), next).await;
+    kit.settle().await;
+    let done: Vec<String> = kit.states().into_iter().map(|(id, _)| id).collect();
+    assert_eq!(done, ["5", "6", "7", "8", "9"]);
+}
+
+#[tokio::test]
 async fn a_chapter_of_pages_the_source_makes_downloads_as_one_it_fetches_does() {
     let kit = kit(&[]);
     kit.shelf.listed.lock().unwrap().push(SourceChapter::new("made-1", "1"));

@@ -729,14 +729,16 @@ internal fun DownloadMenu(
     val work = series.work
     val all = volumes.chapterRows()
     val unread = all.filter { it.state !is ChapterReadState.Read && it.download == null }
+    val ahead = volumes.unreadAhead()
     val downloaded = volumes.downloaded()
     val any = all.filter { it.download != null }
     val toFetch = volumes.downloadVolumes().filter { group -> group.chapters.any { it.state !is ChapterReadState.Read && it.download == null } }.take(3)
     val snackbars = app.kaeri.ui.LocalSnackbars.current
     fun pick(what: DownloadPick) {
-        // The next unread are the engine's pick too: all of them here already queues nothing, so say so.
-        val next = (what as? DownloadPick.NextUnread)?.let { all.filter { it.state !is ChapterReadState.Read }.take(it.n.toInt()) }
-        if (next != null && next.isNotEmpty() && next.all { it.download is ChapterDownloadState.Done }) {
+        // The next unread are the engine's pick too, the next not here yet: with every one ahead
+        // here or on its way, it queues nothing, so say so.
+        val next = (what as? DownloadPick.NextUnread)?.let { volumes.nextToFetch(it.n.toInt()) }
+        if (next != null && next.isEmpty()) {
             snackbars.show(context.getString(app.kaeri.i18n.R.string.download_already))
         } else {
             store.reading.download(work, what)
@@ -744,8 +746,8 @@ internal fun DownloadMenu(
         onDismiss()
     }
     Menu(expanded = expanded, onDismissRequest = onDismiss) {
-        DropdownMenuItem(text = { Text(Strings.downloadNext(context, 5)) }, enabled = unread.isNotEmpty(), onClick = { pick(DownloadPick.NextUnread(5u)) })
-        DropdownMenuItem(text = { Text(Strings.downloadNext(context, 10)) }, enabled = unread.size > 5, onClick = { pick(DownloadPick.NextUnread(10u)) })
+        DropdownMenuItem(text = { Text(Strings.downloadNext(context, 5)) }, enabled = ahead.isNotEmpty(), onClick = { pick(DownloadPick.NextUnread(5u)) })
+        DropdownMenuItem(text = { Text(Strings.downloadNext(context, 10)) }, enabled = ahead.size > 5, onClick = { pick(DownloadPick.NextUnread(10u)) })
         DropdownMenuItem(text = { Text(Strings.downloadUnread(context)) }, enabled = unread.isNotEmpty(), onClick = { pick(DownloadPick.Unread) })
         if (toFetch.isNotEmpty()) HorizontalDivider()
         toFetch.forEach { group ->

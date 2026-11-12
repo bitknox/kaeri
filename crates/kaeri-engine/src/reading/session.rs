@@ -772,6 +772,23 @@ fn downloading(cx: &Cx<'_>, work: &WorkId, chapter: &ChapterId) -> bool {
     }
 }
 
+/// Whether `chapter` opens with no network: downloaded, or a file on this device.
+fn on_device(chapter: &ShelfChapter) -> bool {
+    chapter.format != novel::SOURCE && !chapter.path.as_os_str().is_empty()
+}
+
+/// A chapter's row for the end page, which says when a downloaded one is here.
+fn end_row(
+    chapter: &ShelfChapter,
+    marks: &kaeri_store::reading::ReadMarks,
+) -> kaeri_model::reading::ChapterRow {
+    let mut row = chapter.row(marks);
+    if chapter.source.is_some() && on_device(chapter) {
+        row.download = Some(kaeri_model::reading::ChapterDownloadState::Done);
+    }
+    row
+}
+
 /// Where a chapter opens.
 struct Start {
     /// The chapter's index in the shelf.
@@ -1269,8 +1286,13 @@ impl Session {
                 let Some(index) = self.chapters.iter().position(|c| c.id == chapter) else {
                     return;
                 };
-                // Skipping the extras moves on as Continue does; they stay unread.
-                if index == self.at + 1 || Some(index) == self.skip_index() {
+                // Skipping the extras moves on as Continue does; they stay unread. So does the
+                // end page's next chapter offline, the next one on this device.
+                let offline = cx.services.offline.load(std::sync::atomic::Ordering::Relaxed);
+                if index == self.at + 1
+                    || Some(index) == self.skip_from(self.at + 1, false)
+                    || Some(index) == self.end_next(offline)
+                {
                     self.chapter_read(cx, Reached::MovedOn);
                 }
                 // A strip flows into the next chapter in the same scroll, under its marker:
@@ -1461,7 +1483,8 @@ impl Session {
         if std::mem::replace(&mut self.peeked, true) {
             return;
         }
-        let index = self.at + 1;
+        let offline = cx.services.offline.load(std::sync::atomic::Ordering::Relaxed);
+        let Some(index) = self.end_next(offline) else { return };
         self.follow_download(cx, index);
         let Some(next) = self.chapters.get(index) else { return };
         if next.format == novel::SOURCE {
@@ -1502,15 +1525,17 @@ impl Session {
         }
         let marks =
             crate::read_catalog::chapters::read_marks(&cx.services.store, self.work.as_str());
-        let following = self.chapters.get(self.at + 1);
-        let next = following.map(|c| c.row(&marks));
+        let offline = cx.services.offline.load(std::sync::atomic::Ordering::Relaxed);
+        let index = self.end_next(offline);
+        let following = index.map(|i| &self.chapters[i]);
+        let next = following.map(|c| end_row(c, &marks));
         let next_source = following
             .and_then(|c| c.source.as_deref())
             .map(|id| cx.services.book_sources.source_name(id));
         let why_none = next.is_none().then(|| self.why_no_next(cx));
-        let skip = self.skip_index();
-        let skip_to = skip.map(|i| self.chapters[i].row(&marks));
-        let extras = skip.map_or(0, |i| i - (self.at + 1)) as u32;
+        let skip = index.and_then(|i| self.skip_from(i, offline).map(|s| (i, s)));
+        let skip_to = skip.map(|(_, s)| end_row(&self.chapters[s], &marks));
+        let extras = skip.map_or(0, |(i, s)| s - i) as u32;
         cx.send(ReaderEvent::EndPage {
             session: self.id,
             next,
@@ -1521,11 +1546,17 @@ impl Session {
         });
     }
 
-    /// Where the end page's skip goes: past the extras that follow the open chapter, to the
-    /// next whole chapter.
-    fn skip_index(&self) -> Option<usize> {
+    /// The chapter the end page leads into: the one after the open chapter, and offline the
+    /// next one on this device, since one only a source has would not open.
+    fn end_next(&self, offline: bool) -> Option<usize> {
+        (self.at + 1..self.chapters.len()).find(|&i| !offline || on_device(&self.chapters[i]))
+    }
+
+    /// Where the end page's skip goes from its next chapter, `next`: past the extras from
+    /// there, to the next whole chapter. Offline, only to one on this device.
+    fn skip_from(&self, next: usize, offline: bool) -> Option<usize> {
         let ids: Vec<ChapterId> = self.chapters.iter().map(|c| c.id.clone()).collect();
-        super::extras::skip_to(&ids, self.at + 1)
+        super::extras::skip_to(&ids, next).filter(|&i| !offline || on_device(&self.chapters[i]))
     }
 
     /// Why the end page has no next chapter: the series ended with this one, which offers
