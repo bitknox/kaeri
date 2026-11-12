@@ -227,6 +227,11 @@ pub struct Session {
     unsent: Option<(ChapterId, i64)>,
     end_page_said: bool,
     read_timer: u64,
+    /// Where the read rule's wait was started: a report from there keeps it, and only a move
+    /// starts it again. `None` while it does not wait.
+    read_wait: Option<Spot>,
+    /// Where the report being handled puts the reader.
+    reporting: Option<Spot>,
     flush_timer: u64,
     flush_pending: bool,
     dirty: bool,
@@ -423,6 +428,7 @@ impl Reader {
         self.listing = None;
         if let Some(mut s) = self.session.take() {
             s.read_timer += 1;
+            s.read_wait = None;
             s.flush_leaving(cx);
             // Progress held for the close goes now: the furthest chapter read this time.
             if let Some((chapter, at)) = s.unsent.take()
@@ -672,6 +678,8 @@ impl Reader {
             unsent: None,
             end_page_said: false,
             read_timer: 0,
+            read_wait: None,
+            reporting: None,
             flush_timer: 0,
             flush_pending: false,
             dirty: false,
@@ -726,6 +734,7 @@ impl Reader {
     pub fn background(&mut self, cx: &Cx<'_>) {
         if let Some(s) = self.session.as_mut() {
             s.read_timer += 1;
+            s.read_wait = None;
             s.flush_leaving(cx);
         }
     }
@@ -744,6 +753,31 @@ impl Reader {
         let pages = self.pages(cx);
         if let Some(s) = self.session.as_mut() {
             s.moved_on(cx, &pages);
+        }
+    }
+}
+
+/// Where a report puts the reader, as the read rule's wait tells places apart: a leaf, the
+/// foot of a strip image, or a page of a novel's document.
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum Spot {
+    Leaf(ChapterId, u32),
+    Foot(ChapterId, u32),
+    Novel(ChapterId, u32, u32),
+}
+
+impl Spot {
+    fn of(command: &ReaderCommand) -> Option<Self> {
+        use ReaderCommand as C;
+        match command {
+            C::Shown { chapter, leaf, .. } => Some(Self::Leaf(chapter.clone(), *leaf)),
+            C::StripAt { chapter, at, foot_visible: true, .. } => {
+                Some(Self::Foot(chapter.clone(), at.image))
+            }
+            C::NovelAt { chapter, pos, page, .. } => {
+                Some(Self::Novel(chapter.clone(), pos.spine, *page))
+            }
+            _ => None,
         }
     }
 }
@@ -1293,8 +1327,15 @@ impl Session {
 
     fn report(&mut self, cx: &mut Cx<'_>, pages: &Pages, command: ReaderCommand) {
         use ReaderCommand as C;
-        // Any report stops the read rule's wait; the one that keeps it starts it again.
-        self.read_timer += 1;
+        // A report stops the read rule's wait, and the one that keeps it starts it again. One
+        // from where the wait started, such as a novel's scroll within its last page, keeps it
+        // going: reports every half second would otherwise never let it end.
+        let spot = Spot::of(&command);
+        self.reporting = spot.clone();
+        if spot.is_none() || spot != self.read_wait {
+            self.read_timer += 1;
+            self.read_wait = None;
+        }
         match command {
             C::Shown { chapter, leaf, how, .. } if chapter == self.chapter().id => {
                 self.shown(cx, pages, leaf, how)
@@ -1662,7 +1703,12 @@ impl Session {
     }
 
     fn wait_to_read(&mut self, cx: &Cx<'_>) {
+        // Waiting already, from this spot.
+        if self.read_wait.is_some() && self.read_wait == self.reporting {
+            return;
+        }
         if !self.read_fired && counts(cx, Reached::Stayed) {
+            self.read_wait = self.reporting.clone();
             after(cx.tx, READ_AFTER, self.id, ReaderWake::ReadRule(self.read_timer));
         }
     }
@@ -1822,6 +1868,7 @@ impl Session {
         self.at = index;
         self.opened = false;
         self.read_fired = false;
+        self.read_wait = None;
         self.end_page_said = false;
         self.peeked = false;
         self.back_to = None;
@@ -2676,6 +2723,27 @@ mod tests {
         h.shown(3, TurnHow::Turn).await;
         let said = h.drain();
         assert!(said.iter().any(|e| matches!(e, ReaderEvent::ChapterRead { .. })), "at once");
+        assert!(h.kept("1").unwrap().read);
+    }
+
+    /// Reports from the last page that keep the reader there, every half second, let the read
+    /// rule's wait run out: only a move to another page starts it again.
+    #[tokio::test(start_paused = true)]
+    async fn reports_from_the_last_page_itself_let_the_read_rule_run_out() {
+        let mut h = harness(Store::open_in_memory().unwrap());
+        h.open(OpenAt::Resume).await;
+        h.shown(2, TurnHow::Turn).await;
+        let mut read = 0;
+        for _ in 0..10 {
+            tokio::time::sleep(Duration::from_millis(500)).await;
+            h.shown(2, TurnHow::Placed).await;
+            read += h
+                .drain()
+                .iter()
+                .filter(|e| matches!(e, ReaderEvent::ChapterRead { .. }))
+                .count();
+        }
+        assert_eq!(read, 1, "counted read once");
         assert!(h.kept("1").unwrap().read);
     }
 
