@@ -1,0 +1,129 @@
+// A strip flows into the next chapter only past the real end of the one open: a chapter whose
+// images have not landed is never passed, and its foot starts no read.
+
+@testable import KaeriStore
+import KaeriKit
+import Foundation
+import Testing
+
+@MainActor
+private final class Sent {
+    var all: [Command] = []
+
+    var opened: [ChapterId] {
+        all.compactMap { if case .reader(.openChapter(_, let chapter)) = $0 { chapter } else { nil } }
+    }
+
+    var feet: [Bool] {
+        all.compactMap { if case .reader(.stripAt(_, _, _, let foot)) = $0 { foot } else { nil } }
+    }
+}
+
+@MainActor
+struct ReaderStripFlowTests {
+    private func row(_ id: String) -> ChapterRow {
+        ChapterRow(
+            id: ChapterId(id), label: id, state: .unread, number: id, title: nil, volume: nil,
+            published: nil, pages: 3, newChapter: false, download: nil, versions: 1, bookmarked: false)
+    }
+
+    private func file(_ page: UInt32) -> PageFile {
+        PageFile(path: "/tmp/kaeri-test/\(page).png", encoding: .original(mime: "image/png"), width: 800,
+                 height: 1200, crop: nil, colour: true, bytes: 1)
+    }
+
+    /// Chapter 1 open in a strip, chapter 2 after it, its three images with `ratio`.
+    private func strip(_ sent: Sent, ratio: Float? = nil) -> ReaderModel {
+        let model = ReaderModel()
+        model.send = { sent.all.append($0) }
+        model.open(work: "a:900301", chapter: "1")
+        model.surfaceChanged(ReaderSurface(widthPx: 1170, heightPx: 2532, scale: 3, eink: false, twoPages: false, dark: true))
+        sent.all = []
+        model.apply(.opened(ReaderView(
+            session: 1, work: WorkId("a:900301"), title: "The Lantern Ferry", medium: .manga,
+            chapter: row("1"), mode: .strip, direction: .topToBottom,
+            start: ReadPlace(work: WorkId("a:900301"), chapter: ChapterId("1"), page: 0, strip: nil, novel: nil),
+            next: row("2"), previous: nil, settings: nil)))
+        let parts = (0..<3).map { page in
+            LeafPart(page: UInt32(page), kind: .story, file: nil, place: UnitRect(x: 0, y: 0, width: 1, height: 1),
+                     rotate: false, half: nil, ratio: ratio)
+        }
+        model.apply(.leaves(session: 1, chapter: ChapterId("1"), leaves: [
+            Leaf(index: 0, parts: parts, endPage: false),
+            Leaf(index: 1, parts: [], endPage: true),
+        ]))
+        return model
+    }
+
+    private func land(_ model: ReaderModel, _ pages: [UInt32]) {
+        for page in pages {
+            model.apply(.pageReady(session: 1, chapter: ChapterId("1"), page: page, half: nil, file: file(page)))
+        }
+    }
+
+    /// Opening the next chapter counts this one as read, so a chapter whose images are still
+    /// coming, its heights guesses, is never passed: the next one opens once they have landed.
+    @Test func aChapterStillLandingIsNotPassed() {
+        let sent = Sent()
+        let model = strip(sent)
+        land(model, [0, 1])
+        #expect(!model.stripSettled)
+        model.flowOn()
+        #expect(model.flowing == nil)
+        #expect(sent.opened.isEmpty)
+
+        land(model, [2])
+        #expect(model.stripSettled)
+        model.flowOn()
+        #expect(model.flowing == ChapterId("2"))
+        #expect(sent.opened == [ChapterId("2")])
+    }
+
+    /// A chapter on the device knows its images' shapes before their files are made.
+    @Test func aChapterWithKnownShapesIsPassed() {
+        let sent = Sent()
+        let model = strip(sent, ratio: 0.7)
+        #expect(model.stripSettled)
+        model.flowOn()
+        #expect(sent.opened == [ChapterId("2")])
+    }
+
+    /// An image that failed has said all it will: the strip can go on past it.
+    @Test func anImageThatFailedDoesNotHoldTheStrip() {
+        let sent = Sent()
+        let model = strip(sent)
+        land(model, [0, 1])
+        model.apply(.pageFailed(session: 1, chapter: ChapterId("1"), page: 2, failure: .pageFetch(status: 503)))
+        #expect(model.stripSettled)
+        model.flowOn()
+        #expect(sent.opened == [ChapterId("2")])
+    }
+
+    /// Nothing laid out yet: there is no end to pass.
+    @Test func aChapterWithNoImagesYetIsNotPassed() {
+        let sent = Sent()
+        let model = ReaderModel()
+        model.send = { sent.all.append($0) }
+        model.apply(.opened(ReaderView(
+            session: 1, work: WorkId("a:900301"), title: "The Lantern Ferry", medium: .manga,
+            chapter: row("1"), mode: .strip, direction: .topToBottom,
+            start: ReadPlace(work: WorkId("a:900301"), chapter: ChapterId("1"), page: 0, strip: nil, novel: nil),
+            next: row("2"), previous: nil, settings: nil)))
+        model.flowOn()
+        #expect(sent.opened.isEmpty)
+    }
+
+    /// The foot of a chapter still landing is only where a guess put it: the report says it is
+    /// not in sight, so no read starts and no place at the end is kept as the end.
+    @Test func theFootOfAChapterStillLandingStartsNoRead() {
+        let sent = Sent()
+        let model = strip(sent)
+        land(model, [0])
+        model.stripAt(StripPos(image: 2, offset: 0), footVisible: true)
+        #expect(sent.feet == [false])
+
+        land(model, [1, 2])
+        model.stripAt(StripPos(image: 2, offset: 0.5), footVisible: true)
+        #expect(sent.feet == [false, true])
+    }
+}

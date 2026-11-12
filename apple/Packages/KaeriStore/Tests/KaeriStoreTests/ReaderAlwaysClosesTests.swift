@@ -109,7 +109,8 @@ struct ReaderAlwaysClosesTests {
         model.apply(.opened(view("1", session: 1, next: "2", mode: .strip)))
         model.apply(.leaves(session: 1, chapter: ChapterId("1"), leaves: [
             Leaf(index: 0, parts: [
-                LeafPart(page: 0, kind: .story, file: nil, place: UnitRect(x: 0, y: 0, width: 1, height: 1), rotate: false, half: nil),
+                LeafPart(page: 0, kind: .story, file: nil, place: UnitRect(x: 0, y: 0, width: 1, height: 1), rotate: false,
+                         half: nil, ratio: 0.7),
             ], endPage: false),
         ]))
         model.flowOn()

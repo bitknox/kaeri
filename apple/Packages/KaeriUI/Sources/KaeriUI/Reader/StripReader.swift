@@ -48,14 +48,21 @@ struct StripReader: View {
     /// it, and the scroll follows it so what is on screen stays put.
     @State private var anchor: Anchor?
     @State private var phase: ScrollPhase = .idle
+    /// The person's own last move went down the strip: only that passes the open chapter's
+    /// marker. A scroll the strip makes itself, to follow rows that changed height, to restore a
+    /// place or to land a jump, never does.
+    @State private var goingOn = false
     /// The screen's height step the top of the screen is in. Rows a screen above it to two
     /// below are drawn; the rest is room of their height, so every row sits where `rows` puts it.
     @State private var band = 0
 
-    private struct Anchor {
+    struct Anchor: Equatable {
         var id: String
         var top: CGFloat
+        /// How far into the row, from 0 to 1.
         var into: CGFloat
+        /// How far past the row's foot, in points: the row above the lead holds a place in it.
+        var past: CGFloat = 0
     }
 
     private struct Metrics: Equatable {
@@ -70,7 +77,7 @@ struct StripReader: View {
 
     /// One row of the scroll, where it sits and how tall it is, so the place in it is worked out
     /// without measuring.
-    private struct Row: Identifiable {
+    struct Row: Identifiable {
         enum Kind {
             case image(chapter: String, part: LeafPart)
             /// Credit pages the engine skipped where they were: a 44 point line while skipped,
@@ -93,6 +100,7 @@ struct StripReader: View {
 
         var isImage: Bool { if case .image = kind { true } else { false } }
         var isMarker: Bool { if case .marker = kind { true } else { false } }
+        var isLead: Bool { if case .lead = kind { true } else { false } }
     }
 
     private var parts: [LeafPart] { model.leaves.filter { !$0.endPage }.flatMap(\.parts) }
@@ -296,6 +304,10 @@ struct StripReader: View {
             restoring = true
             restore()
         }
+        // Scrolled past the marker of a chapter still landing: it flows on once its end is real.
+        .onChange(of: model.stripSettled) { _, settled in
+            if settled, goingOn { flowIfPast(y: offsetY, height: size.height) }
+        }
         .onChange(of: model.stripRelaid) { _, _ in
             restoring = true
             restore()
@@ -382,6 +394,7 @@ struct StripReader: View {
         let images = rows.filter { $0.isImage && $0.trail == trail }
         guard !images.isEmpty else { return }
         let image = min(max(index, 0), images.count - 1)
+        goingOn = false
         jumping = true
         landing = image
         withAnimation(instant ? nil : .standard) {
@@ -475,9 +488,12 @@ struct StripReader: View {
     /// The open chapter's marker is above the middle of the screen: the next chapter opens under
     /// it. True when it did.
     @discardableResult private func flowIfPast(y: CGFloat, height: CGFloat) -> Bool {
-        guard !restoring, let marker = rows.last(where: \.isMarker), marker.trail == nil,
+        guard !restoring, model.stripSettled, let marker = rows.last(where: \.isMarker), marker.trail == nil,
               y + height / 2 > marker.top + marker.height / 2 else { return false }
         model.flowOn()
+        guard model.flowing != nil else { return false }
+        // Into the next chapter: passing its marker takes a move of the person's own again.
+        goingOn = false
         return true
     }
 
@@ -492,26 +508,49 @@ struct StripReader: View {
     /// once, and the place is worked out again from there. A scroll under way, a restore or a
     /// jump goes on as it was. True when it moved.
     private func follow(_ rows: [Row], _ metrics: Metrics) -> Bool {
-        if let held = anchor, let row = rows.first(where: { $0.id == held.id }), row.top != held.top,
-           phase == .idle, !restoring, !jumping, landing == nil {
-            let to = max(0, row.top + held.into * row.height)
-            anchor = Anchor(id: row.id, top: row.top, into: held.into)
+        if let held = anchor, phase == .idle, !restoring, !jumping, landing == nil,
+           let to = Self.following(held, in: rows) {
+            anchor = Self.anchor(in: rows, at: to)
             if abs(to - metrics.y) >= 1 {
                 position.scrollTo(y: to)
+                // The strip moved itself: the next report is not the person going on.
+                offsetY = to
                 return true
             }
         }
-        if let row = rows.last(where: { $0.top <= metrics.y }) {
-            anchor = Anchor(id: row.id, top: row.top, into: (metrics.y - row.top) / max(row.height, 1))
-        }
+        anchor = Self.anchor(in: rows, at: metrics.y)
         return false
+    }
+
+    /// What holds the place at `y`: the row there and how far into it. Never the lead, which
+    /// stands in for the next chapter's first image and moves under that chapter's images once
+    /// they come: the row above it holds the place then, so the images take the lead's room
+    /// rather than the strip running on past them.
+    static func anchor(in rows: [Row], at y: CGFloat) -> Anchor? {
+        guard let row = rows.last(where: { $0.top <= y && !$0.isLead }) else { return nil }
+        let offset = y - row.top
+        if offset > row.height { return Anchor(id: row.id, top: row.top, into: 1, past: offset - row.height) }
+        return Anchor(id: row.id, top: row.top, into: offset / max(row.height, 1))
+    }
+
+    /// Where the strip scrolls to keep `anchor` in place in `rows`, when that row moved; nil
+    /// when it has not moved or is gone.
+    static func following(_ anchor: Anchor, in rows: [Row]) -> CGFloat? {
+        guard let row = rows.first(where: { $0.id == anchor.id }), row.top != anchor.top else { return nil }
+        return max(0, row.top + anchor.into * row.height + anchor.past)
     }
 
     /// Where the person is. The chapter whose rows hold the middle of the screen names the line,
     /// the image at the top is the place, and the open chapter's marker crossing the middle
     /// opens the next chapter under it.
     private func track(_ metrics: Metrics) {
+        let before = offsetY
         offsetY = metrics.y
+        // Which way the person last went. The strip's own scrolls set `offsetY` where they land,
+        // so they show here as no move.
+        if !restoring, !jumping, landing == nil {
+            if metrics.y > before + 0.5 { goingOn = true } else if metrics.y < before - 0.5 { goingOn = false }
+        }
         let step = Int((metrics.y / max(metrics.height, 1)).rounded(.down))
         if step != band { band = step }
         let rows = self.rows
@@ -529,7 +568,9 @@ struct StripReader: View {
             }
             if let landing, at == landing, !jumping { self.landing = nil }
             if on == nil, !restoring, !waiting, !jumping, landing == nil {
-                let foot = images[images.count - 1].top + images[images.count - 1].height <= metrics.y + metrics.height
+                // Only once every image has its real height is the foot where the strip draws it.
+                let foot = model.stripSettled
+                    && images[images.count - 1].top + images[images.count - 1].height <= metrics.y + metrics.height
                 // With the last image's foot in sight the chapter has been seen to its end: the
                 // place is that image, which is what counts it as read, though short credit
                 // pages above it may still hold the top of the screen.
@@ -540,7 +581,7 @@ struct StripReader: View {
             }
         }
         contentHeight = metrics.content
-        flowIfPast(y: metrics.y, height: metrics.height)
+        if goingOn { flowIfPast(y: metrics.y, height: metrics.height) }
         prepare(rows, from: metrics.y + metrics.height, to: metrics.y + metrics.height * 2)
     }
 
