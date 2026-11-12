@@ -43,6 +43,17 @@ struct StripReader: View {
     @State private var pinching = false
     @State private var offsetX: CGFloat = 0
     @State private var contentHeight: CGFloat = 0
+    /// The row at the top of the screen, where it sat and how far into it the screen's top was.
+    /// Rows above it that change height, images landing taller or shorter than their guess, move
+    /// it, and the scroll follows it so what is on screen stays put.
+    @State private var anchor: Anchor?
+    @State private var phase: ScrollPhase = .idle
+
+    private struct Anchor {
+        var id: String
+        var top: CGFloat
+        var into: CGFloat
+    }
 
     private struct Metrics: Equatable {
         var x: CGFloat
@@ -224,6 +235,7 @@ struct StripReader: View {
             track(metrics)
         }
         .onScrollPhaseChange { _, phase in
+            self.phase = phase
             if phase == .interacting { restoring = false; model.hideChrome() }
         }
         #if os(iOS)
@@ -333,6 +345,8 @@ struct StripReader: View {
         restoring = false
         let before = rows
         let oldColumn = column
+        // The zoom keeps the place under the fingers, not the top row.
+        anchor = nil
         // The row under the point and how far into it, and how far across the column.
         let y = offsetY + point.y
         let x = offsetX + point.x - (max(size.width, oldColumn) - oldColumn) / 2
@@ -460,12 +474,32 @@ struct StripReader: View {
         return true
     }
 
+    /// Rows above the one at the top of the screen changed height: the scroll moves with it, at
+    /// once, and the place is worked out again from there. A scroll under way, a restore or a
+    /// jump goes on as it was. True when it moved.
+    private func follow(_ rows: [Row], _ metrics: Metrics) -> Bool {
+        if let held = anchor, let row = rows.first(where: { $0.id == held.id }), row.top != held.top,
+           phase == .idle, !restoring, !jumping, landing == nil {
+            let to = max(0, row.top + held.into * row.height)
+            anchor = Anchor(id: row.id, top: row.top, into: held.into)
+            if abs(to - metrics.y) >= 1 {
+                position.scrollTo(y: to)
+                return true
+            }
+        }
+        if let row = rows.last(where: { $0.top <= metrics.y }) {
+            anchor = Anchor(id: row.id, top: row.top, into: (metrics.y - row.top) / max(row.height, 1))
+        }
+        return false
+    }
+
     /// Where the person is. The chapter whose rows hold the middle of the screen names the line,
     /// the image at the top is the place, and the open chapter's marker crossing the middle
     /// opens the next chapter under it.
     private func track(_ metrics: Metrics) {
         offsetY = metrics.y
         let rows = self.rows
+        if follow(rows, metrics) { contentHeight = metrics.content; return }
         let middle = metrics.y + metrics.height / 2
         let markers = rows.filter(\.isMarker)
         let on = markers.first { middle < $0.top + $0.height / 2 }?.trail
