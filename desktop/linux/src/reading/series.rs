@@ -951,6 +951,7 @@ mod tests {
             other_group: false,
             group_language: None,
             other_source: None,
+            on_device: false,
         };
         let flat = VolumeGroup {
             volume: None,

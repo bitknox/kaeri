@@ -132,7 +132,7 @@ pub(crate) async fn chapters(
     let asking = kit.sources.edition_of(work, edition.as_deref()).map(|(source, _)| source);
     let (kept_edition, mut kept) = kept_volumes(kit, work);
     if !kept.is_empty() && kept_edition.as_ref().map(|e| &e.source_id) == asking.as_ref() {
-        finish(kit, work, &mut kept, now);
+        finish(kit, work, kept_edition.as_ref(), &mut kept, now);
         send(
             tx,
             ReadingEvent::Chapters {
@@ -152,13 +152,13 @@ pub(crate) async fn chapters(
     }
     let event = match asked {
         Ok((edition, mut volumes)) => {
-            finish(kit, work, &mut volumes, now);
+            finish(kit, work, edition.as_ref(), &mut volumes, now);
             ReadingEvent::Chapters { work: work.clone(), edition, volumes, failure: None }
         }
         // The source did not answer: the list it gave last, with why.
         Err(failure) => {
             let (edition, mut volumes) = kept_volumes(kit, work);
-            finish(kit, work, &mut volumes, now);
+            finish(kit, work, edition.as_ref(), &mut volumes, now);
             ReadingEvent::Chapters {
                 work: work.clone(),
                 edition,
@@ -180,7 +180,7 @@ pub(crate) fn regroup(kit: &Kit, ask: Ask, work: &WorkId, tx: &Outbox) {
         let Some((edition, mut volumes)) = kit.sources.kept_listing(work, now, i64::MAX) else {
             return;
         };
-        finish(kit, work, &mut volumes, now);
+        finish(kit, work, edition.as_ref(), &mut volumes, now);
         (edition, volumes)
     } else {
         // The files on this device are the list.
@@ -327,11 +327,19 @@ pub(crate) fn kept_volumes(
 
 /// The rows as every screen shows them: how many versions each has, the new ones, and the
 /// words on their second line.
-pub(crate) fn finish(kit: &Kit, work: &WorkId, volumes: &mut [VolumeGroup], now: i64) {
+pub(crate) fn finish(
+    kit: &Kit,
+    work: &WorkId,
+    edition: Option<&BookEditionRow>,
+    volumes: &mut [VolumeGroup],
+    now: i64,
+) {
     count_versions(kit, work, volumes);
     mark_new(kit, work, volumes);
     let medium = medium_of(kit, work);
-    super::rows::fill(volumes, super::rows::Kept::Source, medium, now, &kit.clock.zone());
+    // The person's folders list files already on this device: nothing to download there.
+    let kept = super::rows::kept_by(edition.map(|e| e.source_id.as_str()));
+    super::rows::fill(volumes, kept, medium, now, &kit.clock.zone());
 }
 
 /// How many versions each chapter has across the person's editions.

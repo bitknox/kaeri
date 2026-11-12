@@ -122,7 +122,13 @@ impl Lent {
     ) -> ReadingEvent {
         let (edition, mut volumes) = listed;
         let now = self.clock.now();
-        crate::read_catalog::series::finish(&self.kit(), &work, &mut volumes, now);
+        crate::read_catalog::series::finish(
+            &self.kit(),
+            &work,
+            edition.as_ref(),
+            &mut volumes,
+            now,
+        );
         ReadingEvent::Chapters { work, edition, volumes, failure: None }
     }
 }
@@ -1356,6 +1362,7 @@ pub(crate) fn chapter_row(d: &BookDownload, read: bool, bookmarked: bool) -> Cha
         part_groups: Vec::new(),
         group_language: None,
         other_source: None,
+        on_device: false,
     }
 }
 

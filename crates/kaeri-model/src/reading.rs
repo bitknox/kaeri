@@ -354,6 +354,10 @@ pub struct ChapterRow {
     /// source's name. It opens from there.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub other_source: Option<String>,
+    /// A file on this device that is not a download, such as one in the person's folders: it
+    /// opens from there, and there is nothing to download, so no Download is offered for it.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub on_device: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

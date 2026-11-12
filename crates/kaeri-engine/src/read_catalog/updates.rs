@@ -210,6 +210,7 @@ pub(crate) fn row_of(chapter: &chapters::Kept, read: &chapters::Read) -> Chapter
         part_groups: Vec::new(),
         group_language: None,
         other_source: None,
+        on_device: false,
     }
 }
 

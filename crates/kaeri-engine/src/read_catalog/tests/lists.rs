@@ -71,7 +71,7 @@ async fn two_versions_of_a_chapter_are_one_row_with_both_counted() {
         .unwrap();
 
     let (_, mut volumes) = kit.sources.chapters(&work, None, NOW).await.unwrap();
-    super::super::series::finish(&kit, &work, &mut volumes, NOW);
+    super::super::series::finish(&kit, &work, None, &mut volumes, NOW);
     let shown: Vec<(&str, u32, Option<&str>)> = rows(&volumes)
         .iter()
         .map(|r| (r.id.as_str(), r.versions, r.version_label.as_deref()))
@@ -80,7 +80,7 @@ async fn two_versions_of_a_chapter_are_one_row_with_both_counted() {
 
     // The list as kept, shown when the source does not answer, is the same.
     let (_, mut kept) = super::super::series::kept_volumes(&kit, &work);
-    super::super::series::finish(&kit, &work, &mut kept, NOW);
+    super::super::series::finish(&kit, &work, None, &mut kept, NOW);
     let ids: Vec<&str> = rows(&kept).iter().map(|r| r.id.as_str()).collect();
     assert_eq!(ids, ["12", "13"]);
 }
@@ -112,7 +112,7 @@ async fn the_kept_list_carries_the_downloads() {
     kit.store.book_download_done(id, folder.path().to_str().unwrap(), Some(3), 1, NOW).unwrap();
 
     let (_, mut kept) = super::super::series::kept_volumes(&kit, &work);
-    super::super::series::finish(&kit, &work, &mut kept, NOW);
+    super::super::series::finish(&kit, &work, None, &mut kept, NOW);
     let shown: Vec<(&str, bool)> = rows(&kept)
         .iter()
         .map(|r| {
@@ -145,7 +145,7 @@ async fn time_to_list(n: u32) -> std::time::Duration {
         for round in 0..2 {
             let (_, mut volumes) =
                 kit.sources.chapters(&work, None, NOW + round).await.unwrap();
-            super::super::series::finish(&kit, &work, &mut volumes, NOW);
+            super::super::series::finish(&kit, &work, None, &mut volumes, NOW);
             assert_eq!(rows(&volumes).len(), n as usize);
         }
         quickest = quickest.min(started.elapsed());

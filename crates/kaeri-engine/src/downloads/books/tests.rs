@@ -1000,6 +1000,7 @@ fn listed(id: &str, pages: Option<u32>) -> ChapterRow {
         part_groups: Vec::new(),
         group_language: None,
         other_source: None,
+        on_device: false,
     }
 }
 
