@@ -23,12 +23,16 @@ export KAERI_TOKEN_STORAGE=file
 # The engine cache every worktree shares stays the real home's: the temporary home below would hide
 # it, and engine.sh would build the engine again rather than reuse what another worktree built.
 export KAERI_ENGINE_CACHE="${KAERI_ENGINE_CACHE:-$user_home/.cache/kaeri-engine}"
-home="$(mktemp -d -t kaeri-android-test)"
+# A template of its own with X's, which GNU mktemp needs as well as BSD's; TMPDIR on a Mac ends in a slash.
+tmp="${TMPDIR:-/tmp}"
+home="$(mktemp -d "${tmp%/}/kaeri-android-test.XXXXXX")"
 trap 'rm -rf "$home"' EXIT
 export HOME="$home"
 
-# The real home, by the account rather than by HOME, which a caller may have set already.
-account_home="$(dscl . -read "/Users/$(id -un)" NFSHomeDirectory 2>/dev/null | awk '{print $2}')"
+# The real home, by the account rather than by HOME, which a caller may have set already: dscl on a
+# Mac, the passwd entry elsewhere.
+account_home="$(dscl . -read "/Users/$(id -un)" NFSHomeDirectory 2>/dev/null | awk '{print $2}' || true)"
+[[ -n "$account_home" ]] || account_home="$(getent passwd "$(id -un)" 2>/dev/null | cut -d: -f6 || true)"
 for real in "$user_home" "$account_home" "/Users/$(id -un)"; do
   if [[ -n "$real" && "$(cd "$HOME" && pwd -P)" == "$(cd "$real" 2>/dev/null && pwd -P)" ]]; then
     echo "test.sh: refusing to run with HOME at $real, the user's own" >&2
