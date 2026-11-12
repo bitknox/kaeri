@@ -95,6 +95,9 @@ fun openingClock(): Long = System.nanoTime() / 1_000_000
 /** A chapter asked for from the one on screen: its row, when the session knows it. */
 data class ChapterAsk(val chapter: ChapterId, val row: ChapterRow?)
 
+/** A strip's flow into [chapter] that failed with [failure]; [row] when the session knows it. */
+data class FlowFailure(val chapter: ChapterId, val row: ChapterRow?, val failure: ReadingFailure)
+
 /** What the engine said of the open session. */
 data class ReaderState(
     /** Asked to open and not yet answered. */
@@ -149,6 +152,11 @@ data class ReaderState(
     val preview: NextPreview? = null,
     /** The chapter a strip flowed on from, drawn above this one in the same scroll. */
     val previous: ReaderState? = null,
+    /**
+     * The chapter a strip was flowing into and could not open: the chapter read stays, and the
+     * strip ends at the join on an end page with Try again for it.
+     */
+    val flowFailed: FlowFailure? = null,
     /** The other sources a failed chapter can be read from; null until the engine answers. */
     val sources: List<ChapterVersion>? = null,
     /**
@@ -397,7 +405,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
         val now = state.value
         val session = now.session ?: return false
         val view = now.view
-        awaiting = listOfNotNull(view?.next, view?.previous).firstOrNull { it.id == chapter }
+        awaiting = listOfNotNull(view?.next, view?.previous, now.end?.next, now.end?.skipTo).firstOrNull { it.id == chapter }
             ?: now.volumes.flatMap { it.chapters }.firstOrNull { it.id == chapter }
         awaitingOpen = true
         _state.value = now.copy(asking = ChapterAsk(chapter, awaiting), openingSince = openingClock())
@@ -423,9 +431,22 @@ class ReaderSession(private val send: (Command) -> Unit) {
      */
     fun flowInto(chapter: ChapterId) {
         if (flowTo == chapter) return
-        flowFrom = state.value.copy(previous = null)
+        val now = state.value
+        // A flow that failed into this chapter waits for Try again, rather than asking on every scroll past.
+        if (now.flowFailed?.chapter == chapter) return
+        flowFrom = now.copy(previous = null)
         flowTo = chapter
-        openChapter(chapter)
+        if (!openChapter(chapter)) {
+            flowTo = null
+            flowFrom = null
+        }
+    }
+
+    /** Try again on the end page a failed flow left at the join: the strip flows on into that chapter. */
+    fun retryFlow() {
+        val failed = state.value.flowFailed ?: return
+        _state.value = state.value.copy(flowFailed = null)
+        flowInto(failed.chapter)
     }
 
     /** Try the open again, from the start, when it failed before any chapter opened. */
@@ -694,8 +715,23 @@ class ReaderSession(private val send: (Command) -> Unit) {
                 if (failed.about != ReadingAbout.READER || !awaitingOpen) return
                 awaitingOpen = false
                 val now = state.value
+                val flowing = flowTo
+                val before = flowFrom
                 flowTo = null
                 flowFrom = null
+                // A strip flowing on keeps the chapter read, scrolled as it was: the failure is said
+                // at the join, with Try again, for any reason the next chapter could not be had.
+                if (flowing != null && now.view != null) {
+                    val row = awaiting?.takeIf { it.id == flowing }
+                    awaiting = null
+                    _state.value = now.copy(
+                        asking = null,
+                        openingChapter = before?.openingChapter,
+                        openingWait = before?.openingWait,
+                        flowFailed = FlowFailure(flowing, row, failed.failure),
+                    )
+                    return
+                }
                 // A chapter asked for from another one: the reader shows that chapter's failure in its place.
                 val chapter = awaiting ?: now.openingChapter
                 awaiting = null

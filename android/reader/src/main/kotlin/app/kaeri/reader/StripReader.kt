@@ -194,7 +194,9 @@ fun StripReader(
 ) {
     val story = state.leaves.filter { !it.endPage }
     val end = state.leaves.lastOrNull()?.takeIf { it.endPage }
-    val next = state.view?.next?.takeIf { divider != null }
+    // The end page's next chapter, which offline is the next one on the device or none; a chapter
+    // the strip failed to flow into ends it on the end page instead, with Try again.
+    val next = state.endNext?.takeIf { divider != null && it.id != state.flowFailed?.chapter }
     val previous = state.previous?.takeIf { divider != null }
     val above = previous?.leaves?.filter { !it.endPage }.orEmpty()
     // The chapter kept above and the divider into this one come first.

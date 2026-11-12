@@ -98,6 +98,7 @@ import app.kaeri.reader.PageFileView
 import app.kaeri.reader.PageImages
 import app.kaeri.reader.ReaderSession
 import app.kaeri.reader.ReaderState
+import app.kaeri.reader.text
 import app.kaeri.reader.endSkipped
 import app.kaeri.reader.TextThenLink
 import app.kaeri.reader.rememberServerLine
@@ -131,7 +132,10 @@ fun PhoneEndPage(
     }
     val context = LocalContext.current
     val end = state.end
-    val next = state.endNext
+    // A strip that could not flow into its next chapter ends here, naming that chapter, with Try again.
+    val failedFlow = state.flowFailed
+    val next = failedFlow?.row ?: state.endNext
+    val retryFlow = failedFlow != null && next?.id == failedFlow.chapter
     val number = chapterNumber(view.chapter)
     val server = rememberServerLine(view.work, view.chapter.id)
     val read = view.chapter.id in state.read
@@ -156,7 +160,7 @@ fun PhoneEndPage(
         // on the iPad; a phone's buttons stay at the foot.
         val wide = maxWidth >= 600.dp
         val buttons: @Composable () -> Unit = {
-            if (next != null) {
+            if (next != null && !retryFlow) {
                 Text(
                     Strings.readerEndSwipe(context),
                     color = Chrome.faint,
@@ -167,7 +171,13 @@ fun PhoneEndPage(
                 Spacer(Modifier.height(12.dp))
             }
             Button(
-                onClick = { if (next != null) session.openChapter(next.id) else actions.onSeries() },
+                onClick = {
+                    when {
+                        retryFlow -> session.retryFlow()
+                        next != null -> session.openChapter(next.id)
+                        else -> actions.onSeries()
+                    }
+                },
                 shape = RoundedCornerShape(25.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Chrome.accent, contentColor = Chrome.onAccent),
                 contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
@@ -184,7 +194,11 @@ fun PhoneEndPage(
                     },
             ) {
                 Text(
-                    if (next != null) Strings.readerEndContinue(context) else Strings.readerEndSeries(context),
+                    when {
+                        retryFlow -> Strings.readerTryAgain(context)
+                        next != null -> Strings.readerEndContinue(context)
+                        else -> Strings.readerEndSeries(context)
+                    },
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center,
@@ -276,6 +290,16 @@ fun PhoneEndPage(
                 Spacer(Modifier.height(4.dp))
                 val facts = endFacts(context, next, end?.source?.takeIf { end.next?.id == next.id })
                 if (facts.isNotEmpty()) Text(facts, color = Chrome.faint, fontSize = 14.sp, lineHeight = 20.sp)
+                if (retryFlow && failedFlow != null) {
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        failedFlow.failure.text(context),
+                        color = Chrome.text,
+                        fontSize = 14.sp,
+                        lineHeight = 20.sp,
+                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                    )
+                }
                 // The next chapter's first page, once the engine made it; its plate until then. A
                 // novel's chapter has no page to show.
                 if (view.medium != Medium.NOVEL) {
