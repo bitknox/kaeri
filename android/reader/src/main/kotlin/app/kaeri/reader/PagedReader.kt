@@ -657,17 +657,20 @@ internal class HeldFrame(val leaf: Leaf, val state: ReaderState, val pan: Offset
 
 /**
  * The frame to keep on screen over [showing], which is not drawn whole yet: the last one drawn
- * whole in this chapter, until [showing] is drawn or the plate's wait runs out. Null to draw
- * [showing] as it is.
+ * whole in this chapter, until [showing] is drawn or the plate's wait runs out. A new layout, the
+ * device turned, keeps it until the plate's words would show: the pages are cut again first. Null
+ * to draw [showing] as it is.
  */
 @Composable
 private fun held(frame: Array<HeldFrame?>, showing: Leaf?, drawnLeaf: Leaf?, state: ReaderState): HeldFrame? {
-    var waitedOut by remember { mutableStateOf<Leaf?>(null) }
-    LaunchedEffect(showing) {
-        delay(PageWaits.PLATE_MS)
-        waitedOut = showing
+    val relaid = frame[0]?.let { it.state.layout != state.layout } == true
+    // Each leaf waits afresh, also one shown before under the same layout.
+    var waitedOut by remember(showing, relaid) { mutableStateOf(false) }
+    LaunchedEffect(showing, relaid) {
+        delay(if (relaid) PageWaits.WORDS_MS else PageWaits.PLATE_MS)
+        waitedOut = true
     }
-    if (showing == null || showing.endPage || showing == drawnLeaf || waitedOut == showing) return null
+    if (showing == null || showing.endPage || showing == drawnLeaf || waitedOut) return null
     return frame[0]?.takeIf { it.state.chapter == state.chapter && it.leaf != showing }
 }
 
