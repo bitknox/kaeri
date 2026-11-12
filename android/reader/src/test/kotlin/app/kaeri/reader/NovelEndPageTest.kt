@@ -1,6 +1,6 @@
 // A novel's end page and the controls: turning past the last page takes them away, so the end
 // page's buttons are clear of them, and a tap in the middle shows and hides them there as on any
-// page.
+// page. Under the end page, the last page's text is out of a screen reader's way.
 
 package app.kaeri.reader
 
@@ -9,6 +9,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -17,8 +21,10 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performTouchInput
 import app.kaeri.design.ObiSilk
 import app.kaeri.engine.core.Medium
+import app.kaeri.engine.model.NovelAssets
 import app.kaeri.engine.model.ReaderMode
 import app.kaeri.reader.phone.NovelPlace
+import app.kaeri.reader.phone.NovelScreen
 import app.kaeri.reader.phone.PhoneReader
 import app.kaeri.reader.phone.PhoneReaderActions
 import org.junit.Rule
@@ -75,5 +81,24 @@ class NovelEndPageTest {
         compose.onRoot().performTouchInput { click(center) }
         compose.waitForIdle()
         compose.onNodeWithContentDescription("Chapters").assertDoesNotExist()
+    }
+
+    @Test
+    fun under_the_end_page_the_text_is_out_of_a_screen_readers_way() {
+        val place = NovelPlace()
+        compose.setContent {
+            Box(Modifier.fillMaxSize().background(ObiSilk.Ground)) {
+                NovelScreen(session, novel(), place, NovelAssets("", "", ""), resource = { null }, onControls = {})
+            }
+        }
+        val page = SemanticsMatcher("the page with its moves") { node ->
+            !node.config.getOrNull(SemanticsProperties.ContentDescription).isNullOrEmpty() &&
+                node.config.getOrNull(SemanticsActions.CustomActions).orEmpty().any { it.label == "Next page" }
+        }
+        compose.waitForIdle()
+        compose.onNode(page, useUnmergedTree = true).assertExists()
+        compose.runOnIdle { place.ended = true }
+        compose.waitForIdle()
+        compose.onNode(page, useUnmergedTree = true).assertDoesNotExist()
     }
 }
