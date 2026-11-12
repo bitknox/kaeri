@@ -256,6 +256,8 @@ public sealed class ReaderSession
     {
         if (session == 0 || View is not { } view)
             return;
+        // The foot under images still coming is no end reached: nothing counts as read there.
+        footVisible = footVisible && StripLanded(at.Image);
         pendingStrip?.Cancel();
         var since = DateTimeOffset.UtcNow - lastStrip;
         if (since < TimeSpan.FromMilliseconds(500))
@@ -328,15 +330,32 @@ public sealed class ReaderSession
     /// under it in the same scroll, with no opening screen and no kept place. The engine opens a
     /// strip's next chapter at its first image and says nothing of where it was.
     /// </summary>
-    public void FlowOn()
+    public void FlowOn(uint from)
     {
         if (session == 0 || Flowing || EndNext is not { } next)
+            return;
+        // Images still coming are no end reached: the chapter is not passed, so it is neither read
+        // nor flowed out of.
+        if (!StripLanded(from))
             return;
         Flowing = true;
         End = null;
         Read = false;
         ClearNotices();
         Ask(new ReaderCommand.OpenChapter(session, next.Id));
+    }
+
+    /// <summary>
+    /// Every image of the open chapter from <paramref name="from"/> on has landed. Under an image
+    /// still coming or failed the strip's foot is no end: the chapter isn't read there and the
+    /// strip doesn't flow on from it.
+    /// </summary>
+    public bool StripLanded(uint from)
+    {
+        if (View is not { } view)
+            return false;
+        var parts = Leaves.Where(l => !l.EndPage).SelectMany(l => l.Parts).Skip((int)from).ToList();
+        return parts.Count > 0 && parts.All(p => FileOf(p, view.Chapter.Id) is not null);
     }
 
     /// <summary>A strip is flowing into the next chapter: from <see cref="FlowOn"/> until the strip took its images.</summary>

@@ -499,7 +499,7 @@ sealed class StripView : Grid
         // The marker into the next chapter reached the middle: the chapter opens under it.
         if (!restoring && Flows && foot is not null and not EndPageView && !Reader.Flowing
             && Canvas.GetTop(foot) <= middle && Reader.EndNext is not null)
-            Reader.FlowOn();
+            Reader.FlowOn(under == current ? (uint)found : 0);
 
         if (!moving)
             Trim();

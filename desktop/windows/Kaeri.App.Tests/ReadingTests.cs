@@ -362,6 +362,49 @@ public class ReadingTests
         await scene.Until(k => k.Reader.Read ? k : null, seconds: 10);
     }
 
+    /// <summary>The strip scene's reader, open at its place in chapter 2, and its images as the strip lays them out.</summary>
+    static async Task<(ReaderSession Reader, List<LeafPart> Parts)> OpenStrip(Scene scene)
+    {
+        var reader = scene.Known.Reader;
+        scene.Do(() =>
+        {
+            reader.Open("a:900303");
+            reader.SurfaceChanged(new ReaderSurface(1280, 720, 1f, false, false, true));
+        });
+        await scene.Until(k => k.Reader.View is { Mode: ReaderMode.Strip } v && k.Reader.ReadingLeaves > 0 && k.Reader.EndNext is not null ? v : null);
+        List<LeafPart> parts = [];
+        scene.Do(() => parts = [.. reader.Leaves.Where(l => !l.EndPage).SelectMany(l => l.Parts)]);
+        return (reader, parts);
+    }
+
+    [Fact]
+    public async Task AStripsFootUnderImagesStillComingIsNoEnd()
+    {
+        using var scene = new Scene(new FfiScene.ReaderStrip(), "cs-reader-strip-unloaded");
+        var (reader, parts) = await OpenStrip(scene);
+        var last = (uint)(parts.Count - 1);
+        scene.Do(() =>
+        {
+            // The images as a slow source leaves them: not in yet.
+            reader.Pages.Clear();
+            Assert.False(reader.StripLanded(last));
+            reader.StripAt(new StripPos(last, 1f), footVisible: true);
+            reader.FlowOn(last);
+            Assert.False(reader.Flowing);
+        });
+        // Longer than the engine waits on a last page before it counts the chapter read.
+        await Task.Delay(3500, TestContext.Current.CancellationToken);
+        scene.Do(() =>
+        {
+            Assert.False(reader.Read);
+            reader.Retry(parts[^1].Page);
+        });
+        // Once the last image is in, the foot under it is the chapter's end.
+        await scene.Until(k => k.Reader.StripLanded(last) ? k : null);
+        scene.Do(() => reader.StripAt(new StripPos(last, 1f), footVisible: true));
+        await scene.Until(k => k.Reader.Read ? k : null, seconds: 15);
+    }
+
     [Fact]
     public async Task ANovelsAddressesHaveAHostTheWebViewKeepsAsItIs()
     {
