@@ -9177,6 +9177,9 @@ reader-look-system = System
 # Top line of the page between chapters. The chapter is its number, such as 12.
 reader-end-of-chapter-number = End of chapter { $chapter }
 
+# Top line of the page between chapters when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own, such as Rooftop Lantern.
+reader-end-of-named = End of { $name }
+
 # The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.
 reader-end-facts = Chapter { $chapter } · { $facts }
 

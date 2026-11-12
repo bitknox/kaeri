@@ -2677,6 +2677,10 @@ object Strings {
     fun readerNovelLineScroll(context: Context, chapter: String): String =
         context.getString(R.string.reader_novel_line_scroll, chapter)
 
+    /** Under the novel's title in the reader's controls, while it scrolls, when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own. */
+    fun readerNovelLineScrollNamed(context: Context, name: String): String =
+        context.getString(R.string.reader_novel_line_scroll_named, name)
+
     /** At the end of a scrolling novel's scrubber: the time left in the chapter at the person's pace. */
     fun readerMinutesLeft(context: Context, minutes: Int): String =
         context.getString(R.string.reader_minutes_left, minutes)
@@ -9645,6 +9649,10 @@ object Strings {
     /** Top line of the page between chapters. The chapter is its number, such as 12. */
     fun readerEndOfChapterNumber(context: Context, chapter: String): String =
         context.getString(R.string.reader_end_of_chapter_number, chapter)
+
+    /** Top line of the page between chapters when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own, such as Rooftop Lantern. */
+    fun readerEndOfNamed(context: Context, name: String): String =
+        context.getString(R.string.reader_end_of_named, name)
 
     /** The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written. */
     fun readerEndFacts(context: Context, chapter: String, facts: String): String =

@@ -933,6 +933,10 @@ private fun SystemBars(context: Context, shown: Boolean, light: Boolean) {
 /** The chapter's number as the strings name it. */
 internal fun chapterNumber(row: ChapterRow): String = row.number ?: row.label
 
+/** "Chapter 12", or a chapter with no number by its own name: a book in one file is its title, never "Chapter <title>". */
+internal fun chapterName(context: Context, row: ChapterRow): String =
+    row.number?.let { Strings.readerChapterLine(context, it) } ?: row.label
+
 private fun actionWords(context: Context, notice: ShownNotice): String? = when (notice.notice.action) {
     null -> null
     NoticeAction.START_OVER -> Strings.readerNoticeStartOver(context)
@@ -1275,7 +1279,7 @@ private fun NovelScrubber(state: ReaderState, place: NovelPlace) {
 private fun novelLine(context: Context, state: ReaderState): String {
     val chapter = state.view?.chapter ?: return ""
     return if (state.choice(ReaderSettingKey.MODE) == "scrolled") {
-        Strings.readerNovelLineScroll(context, chapterNumber(chapter))
+        chapter.number?.let { Strings.readerNovelLineScroll(context, it) } ?: Strings.readerNovelLineScrollNamed(context, chapter.label)
     } else {
         chapterWords(context, chapter)
     }

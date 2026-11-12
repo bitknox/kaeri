@@ -214441,6 +214441,18 @@
         }
       }
     },
+    "reader-end-of-named" : {
+      "comment" : "Top line of the page between chapters when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own, such as Rooftop Lantern. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "End of %1$@"
+          }
+        }
+      }
+    },
     "reader-end-offline" : {
       "comment" : "End page heading when the next chapter is not downloaded and the device is offline. Argument 1: chapter (Text).",
       "extractionState" : "manual",

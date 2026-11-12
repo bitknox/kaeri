@@ -6187,6 +6187,9 @@ public static partial class T
     /// <summary>Top line of the page between chapters. The chapter is its number, such as 12.</summary>
     public static string ReaderEndOfChapterNumber(string chapter) => Fill(Get("ReaderEndOfChapterNumber"), ("chapter", chapter));
 
+    /// <summary>Top line of the page between chapters when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own, such as Rooftop Lantern.</summary>
+    public static string ReaderEndOfNamed(string name) => Fill(Get("ReaderEndOfNamed"), ("name", name));
+
     /// <summary>The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.</summary>
     public static string ReaderEndFacts(string chapter, string facts) => Fill(Get("ReaderEndFacts"), ("chapter", chapter), ("facts", facts));
 
@@ -14116,6 +14119,7 @@ public static partial class T
         ["ReaderGapSmall"] = "Small",
         ["ReaderLookSystem"] = "System",
         ["ReaderEndOfChapterNumber"] = "End of chapter {chapter}",
+        ["ReaderEndOfNamed"] = "End of {name}",
         ["ReaderEndFacts"] = "Chapter {chapter} · {facts}",
         ["ReaderEndPages_one"] = "One page",
         ["ReaderEndPages_other"] = "{count} pages",

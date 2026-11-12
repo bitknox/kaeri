@@ -8562,6 +8562,10 @@
     <value>[Éñð öƒ çĥàþţéŕ {chapter}~~~~~~]</value>
     <comment>Top line of the page between chapters. The chapter is its number, such as 12.</comment>
   </data>
+  <data name="ReaderEndOfNamed" xml:space="preserve">
+    <value>[Éñð öƒ {name}~~~]</value>
+    <comment>Top line of the page between chapters when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own, such as Rooftop Lantern.</comment>
+  </data>
   <data name="ReaderEndFacts" xml:space="preserve">
     <value>[Çĥàþţéŕ {chapter} · {facts}~~~~~~]</value>
     <comment>The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.</comment>

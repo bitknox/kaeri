@@ -132,7 +132,7 @@ fun PhoneEndPage(
     val context = LocalContext.current
     val end = state.end
     val next = state.endNext
-    val number = chapterNumber(view.chapter)
+    val ending = view.chapter.number?.let { Strings.readerEndOfChapterNumber(context, it) } ?: Strings.readerEndOfNamed(context, view.chapter.label)
     val server = rememberServerLine(view.work, view.chapter.id)
     val read = view.chapter.id in state.read
     val continueFocus = remember { FocusRequester() }
@@ -235,7 +235,7 @@ fun PhoneEndPage(
             }
         }
         val body: @Composable () -> Unit = {
-            Text(Strings.readerEndOfChapterNumber(context, number), color = Chrome.faint, fontSize = 15.sp, lineHeight = 20.sp)
+            Text(ending, color = Chrome.faint, fontSize = 15.sp, lineHeight = 20.sp)
             // With a server line coming, the tracker line's place is kept too, so nothing under it moves.
             if (read || server.held) {
                 Spacer(Modifier.height(4.dp))
@@ -267,7 +267,7 @@ fun PhoneEndPage(
                 Text(Strings.readerEndNext(context), color = Chrome.faint, fontSize = 13.sp)
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    next.title ?: Strings.readerChapterLine(context, chapterNumber(next)),
+                    next.title ?: chapterName(context, next),
                     color = Chrome.text,
                     fontFamily = robotoFlex(FontWeight.Bold, if (narrow) 26.sp else 30.sp),
                     fontSize = if (narrow) 26.sp else 30.sp,
@@ -292,7 +292,7 @@ fun PhoneEndPage(
                         // With no preview the plate names the chapter, as the page plate names its page.
                         Box(Modifier.fillMaxSize().background(Chrome.plate)) {
                             Text(
-                                Strings.readerChapterLine(context, chapterNumber(next)),
+                                chapterName(context, next),
                                 color = Chrome.faint,
                                 fontSize = 15.sp,
                                 textAlign = TextAlign.Center,
@@ -524,8 +524,9 @@ private fun DemoEndCard(
 
 /** "Chapter 13 · 34 pages", with "· from" its source when it comes from one. */
 internal fun endFacts(context: Context, next: ChapterRow, source: String?): String {
-    // The heading already names an untitled chapter, and a novel's chapter has no page count.
-    val chapter = next.title?.let { chapterNumber(next) }
+    // The heading already names an untitled chapter, and a novel's chapter has no page count. A
+    // chapter with no number has only its name, which the heading says.
+    val chapter = next.title?.let { next.number }
     val pages = next.pages?.takeIf { it > 0u }?.let { Strings.readerEndPages(context, it.toInt()) }
     val facts = when {
         chapter != null && pages != null -> Strings.readerEndFacts(context, chapter, pages)

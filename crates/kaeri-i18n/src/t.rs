@@ -14682,6 +14682,11 @@ pub fn reader_end_of_chapter_number(chapter: &str) -> String {
     text("reader-end-of-chapter-number", &[("chapter", Arg::Text(chapter))])
 }
 
+/// Top line of the page between chapters when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own, such as Rooftop Lantern.
+pub fn reader_end_of_named(name: &str) -> String {
+    text("reader-end-of-named", &[("name", Arg::Text(name))])
+}
+
 /// The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.
 pub fn reader_end_facts(chapter: &str, facts: &str) -> String {
     text("reader-end-facts", &[("chapter", Arg::Text(chapter)), ("facts", Arg::Text(facts))])

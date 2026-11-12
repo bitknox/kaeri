@@ -532,6 +532,12 @@ reader-settings = Reader settings
 # @max 50
 reader-novel-line-scroll = Chapter { $chapter } · scroll
 
+# Under the novel's title in the reader's controls, while it scrolls, when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own.
+# @only android
+# @arg name: text
+# @max 50
+reader-novel-line-scroll-named = { $name } · scroll
+
 # At the end of a scrolling novel's scrubber: the time left in the chapter at the person's pace.
 # @only android
 # @arg minutes: int
