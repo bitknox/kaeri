@@ -755,7 +755,14 @@ class ReaderSession(private val send: (Command) -> Unit) {
         _state.value = when (event) {
             // Each open and each chapter opened: a fresh chapter, its start place kept for the leaves.
             is ReaderEvent.Opened -> {
-                if (!now.opening && now.session != null && event.v1.session != now.session) return
+                // The engine keeps one session and numbers them upwards. While this reader opens, an
+                // Opened for another series answers an open left behind by a reader that went; one
+                // for this series with a newer number replaces the session held, as the engine
+                // closed that one when it opened the newer, even when the one held came from an open
+                // left behind.
+                val held = now.session
+                if (event.v1.work != work) return
+                if (!now.opening && held != null && event.v1.session != held && event.v1.session < held) return
                 awaitingOpen = false
                 awaiting = null
                 startAt = event.v1.start

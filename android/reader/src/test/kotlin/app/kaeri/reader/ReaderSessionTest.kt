@@ -516,6 +516,22 @@ class ReaderSessionTest {
         flowFailsWith(ReadingFailure.SourceDown("Lantern Archive"))
 
     @Test
+    fun an_opened_left_behind_by_a_reader_that_went_is_not_kept() {
+        session.open(WORK, ReaderFixtures.surface)
+        // Another series' open, left behind by a reader that went, answers while this one opens.
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view().copy(session = SESSION - 1u, work = "local:another-stair")))
+        assertTrue(session.state.value.opening)
+        assertNull(session.state.value.view)
+        // One of this series from before is shown, until this reader's own, newer, comes.
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view().copy(session = SESSION - 1u)))
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view()))
+        assertEquals(SESSION, session.state.value.session)
+        // An older one coming late changes nothing.
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view().copy(session = SESSION - 2u)))
+        assertEquals(SESSION, session.state.value.session)
+    }
+
+    @Test
     fun a_chapter_opened_by_hand_does_not_keep_the_one_before() {
         opened()
         session.openChapter("local:lantern-stair/13")
