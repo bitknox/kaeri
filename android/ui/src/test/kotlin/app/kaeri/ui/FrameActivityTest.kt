@@ -5,6 +5,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -52,7 +53,10 @@ class FrameActivityTest {
         }
         compose.waitForIdle()
         compose.mainClock.autoAdvance = false
-        activity = "Loading suggestions"
+        compose.runOnUiThread {
+            activity = "Loading suggestions"
+            Snapshot.sendApplyNotifications()
+        }
         // Part way through the crossfade, both are there.
         compose.mainClock.advanceTimeBy(100)
         val account = compose.activity.getString(I18nR.string.nav_accounts_and_settings)
