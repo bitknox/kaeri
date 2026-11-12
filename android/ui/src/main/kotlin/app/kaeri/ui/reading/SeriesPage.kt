@@ -661,7 +661,7 @@ private fun SeriesActions(
                     StatusMenu(series, statusOpen) { onStatus(false) }
                 }
                 Box(Modifier.weight(1f)) {
-                    MenuButton(Strings.seriesDownload(context), enabled = !choosing && chapters != null) { onDownload(true) }
+                    MenuButton(Strings.seriesDownload(context), enabled = !choosing && chapters?.volumes?.hasDownloads() == true) { onDownload(true) }
                     DownloadMenu(series, chapters?.volumes.orEmpty(), downloadOpen, onDismiss = { onDownload(false) }, onChoose = onChoose, onSend = onSend)
                 }
             }
