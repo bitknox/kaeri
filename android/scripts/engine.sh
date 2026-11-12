@@ -18,7 +18,8 @@
 #                                                                      and armeabi-v7a
 #   android/.engine/<flavour>/kotlin/                                  the bindings, a package per crate
 #   android/.engine/<flavour>/host/libkaeri_ffi.dylib              this machine's build, for the unit
-#                                                                      tests (.so on Linux, as in CI)
+#                                                                      tests (.so on Linux, as in CI,
+#                                                                      kaeri_ffi.dll on Windows)
 #   android/.engine/<flavour>/stamp                                    what the build was made from
 #
 # Nothing is built when the stamp says the sources, Cargo.lock and the profile are what the last
@@ -219,8 +220,14 @@ cargo_clean() {
 # as mpv.sh holds its libraries to. libc++_shared.so, which the NDK's -lc++ means when nothing says
 # static, would otherwise show only as a crash at launch.
 needs_only_system_libraries() {
-  local readelf needed
-  readelf="$ndk/toolchains/llvm/prebuilt/$(uname -s | tr '[:upper:]' '[:lower:]')-x86_64/bin/llvm-readelf"
+  local readelf needed host
+  # The NDK's tools for this machine: darwin-x86_64 or linux-x86_64, and on Windows (Git Bash),
+  # whose uname says MINGW64_NT and the like, windows-x86_64.
+  case "$(uname -s)" in
+    MINGW* | MSYS* | CYGWIN*) host=windows ;;
+    *) host="$(uname -s | tr '[:upper:]' '[:lower:]')" ;;
+  esac
+  readelf="$ndk/toolchains/llvm/prebuilt/$host-x86_64/bin/llvm-readelf"
   while IFS= read -r needed; do
     case "$needed" in
       libc.so | libm.so | libdl.so | liblog.so | libandroid.so) ;;
@@ -240,9 +247,11 @@ profile_dir() {
   esac
 }
 
-# This machine's library, as the JVM tests load it: a .dylib on macOS, a .so on Linux, as in CI.
+# This machine's library, as the JVM tests load it: a .dylib on macOS, a .so on Linux, as in CI,
+# and a .dll without the lib prefix on Windows.
 case "$(uname -s)" in
   Darwin) host_library=libkaeri_ffi.dylib ;;
+  MINGW* | MSYS* | CYGWIN*) host_library=kaeri_ffi.dll ;;
   *) host_library=libkaeri_ffi.so ;;
 esac
 
