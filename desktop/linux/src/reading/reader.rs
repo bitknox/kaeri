@@ -1827,20 +1827,9 @@ impl Reader {
                 state.index = 0;
             } else if first {
                 let mut state = self.state.borrow_mut();
-                let image = state.start_strip.map_or_else(
-                    || {
-                        state
-                            .start_page
-                            .and_then(|p| {
-                                leaves.iter().position(|l| l.parts.iter().any(|x| x.page == p))
-                            })
-                            .unwrap_or(0) as u32
-                    },
-                    |s| s.image,
-                );
-                let offset = state.start_strip.map_or(0.0, |s| s.offset);
-                state.strip_anchor = Some(StripPos { image, offset });
-                state.index = image as usize;
+                let at = strip_opening(&leaves, state.start_strip, state.start_page);
+                state.strip_anchor = Some(at);
+                state.index = at.image as usize;
             }
             self.state.borrow_mut().leaves = leaves;
             if same {
@@ -3853,6 +3842,19 @@ fn strip_target(heights: &[i32], spacing: i32, index: usize, offset: Option<f32>
 }
 
 /// Each strip leaf's pages, to tell a new layout of the same images from new images.
+/// Where a strip opens on its first layout. Opened gives a strip start whenever the place has a
+/// page, at the top of that page's image when the place was kept in paged mode, and the engine's
+/// "Resumed at image N" names that image, so the strip opens there. Without one, the frame that
+/// holds the start page; without either, the top.
+fn strip_opening(leaves: &[Leaf], strip: Option<StripPos>, page: Option<u32>) -> StripPos {
+    strip.unwrap_or_else(|| StripPos {
+        image: page
+            .and_then(|p| leaves.iter().position(|l| l.parts.iter().any(|x| x.page == p)))
+            .unwrap_or(0) as u32,
+        offset: 0.0,
+    })
+}
+
 fn strip_leaves(leaves: &[Leaf]) -> Vec<Vec<u32>> {
     leaves
         .iter()
@@ -4196,7 +4198,7 @@ mod layout_tests {
         ReaderSettingRow, ReaderSettingsView, ReaderValue, SettingScope, UnitRect,
     };
 
-    use super::{followed, page_kept};
+    use super::{StripPos, followed, page_kept, strip_opening};
 
     fn leaf(pages: &[u32]) -> Leaf {
         let parts = pages
@@ -4281,6 +4283,27 @@ mod layout_tests {
         assert_eq!(followed(Medium::Manga, Some(&work), paged, &defaults), None);
         let novel = settings(Medium::Novel, "a:1", "strip", "rtl");
         assert_eq!(followed(Medium::Novel, Some(&work), paged, &novel), None);
+    }
+
+    /// P18. A place kept in paged mode reaches a strip as a strip start at the top of its
+    /// page's image: the strip opens on the frame of that image, the one "Resumed at image N"
+    /// names (the engine says N for page N - 1), and not at the first.
+    #[test]
+    fn a_strip_opens_at_the_start_the_engine_gives() {
+        let leaves: Vec<Leaf> = (0..9).map(|p| leaf(&[p])).collect();
+        let kept_in_pages = StripPos { image: 6, offset: 0.0 };
+        let at = strip_opening(&leaves, Some(kept_in_pages), Some(6));
+        assert_eq!(at, kept_in_pages);
+        let shown = leaves[at.image as usize].parts[0].page;
+        assert_eq!(i64::from(shown) + 1, 7, "Resumed at image 7 is the frame of page 6");
+
+        // A place kept in a strip keeps how far into its image it was.
+        let in_strip = StripPos { image: 3, offset: 0.4 };
+        assert_eq!(strip_opening(&leaves, Some(in_strip), Some(3)), in_strip);
+
+        // No strip start: the frame of the start page, else the top.
+        assert_eq!(strip_opening(&leaves, None, Some(5)), StripPos { image: 5, offset: 0.0 });
+        assert_eq!(strip_opening(&leaves, None, None), StripPos { image: 0, offset: 0.0 });
     }
 }
 
