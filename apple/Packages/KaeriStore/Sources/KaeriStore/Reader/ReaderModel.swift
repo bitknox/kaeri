@@ -30,6 +30,12 @@ public struct ReaderEnd: Equatable, Sendable {
     /// How many extras the skip passes over.
     public var extras: UInt32 = 0
 
+    /// The chapter an end page goes on to: the engine's word once it has one, the view's next
+    /// chapter until then. Offline the engine leaves out a next chapter that is not on the device.
+    public static func next(_ end: ReaderEnd?, view: ReaderView?) -> ChapterRow? {
+        end != nil ? end?.next : view?.next
+    }
+
     /// What a screen reader adds after the skip: the extra's number, or with a run of extras or
     /// one with no number, that the extras stay unread.
     public var skipHint: String? {
@@ -98,6 +104,8 @@ public final class ReaderModel {
     public private(set) var novel: NovelOpenView?
     public private(set) var novelStyle = ""
     public private(set) var end: ReaderEnd?
+    /// The chapter the end page goes on to.
+    public var endNext: ChapterRow? { ReaderEnd.next(end, view: view) }
     /// The next chapter's first page, made while this one is read, for the page between chapters.
     public private(set) var previews: [ChapterId: PageFile] = [:]
     public private(set) var settings: ReaderSettingsView?
@@ -531,7 +539,7 @@ public final class ReaderModel {
     /// opens in the same scroll, under the marker, with no opening screen. The images read so
     /// far stay above it.
     public func flowOn() {
-        guard session != 0, flowing == nil, let view, view.mode == .strip, let next = end?.next ?? view.next else { return }
+        guard session != 0, flowing == nil, let view, view.mode == .strip, let next = endNext else { return }
         commitKeep()
         let chapter = view.chapter.id
         let parts = leaves.filter { !$0.endPage }.flatMap(\.parts).map { part in

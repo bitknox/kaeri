@@ -97,7 +97,7 @@ struct StripReader: View {
 
     private var parts: [LeafPart] { model.leaves.filter { !$0.endPage }.flatMap(\.parts) }
     private var chapter: String { model.view?.chapter.id ?? "" }
-    private var next: ChapterRow? { model.end?.next ?? model.view?.next }
+    private var next: ChapterRow? { model.endNext }
     /// The strip ran on and the next chapter's images are not here yet.
     private var waiting: Bool { model.flowing != nil || (!model.trail.chapters.isEmpty && parts.isEmpty) }
     /// Paper mode and Reduce Motion jump instead of scrolling.
