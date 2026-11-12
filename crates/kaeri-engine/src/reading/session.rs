@@ -959,6 +959,23 @@ fn start_of(
 }
 
 impl Session {
+    /// Where the chapter opens, said for every mode. Pages and a strip's images count the
+    /// same way, one per image of the chapter however its pages are laid out (spreads, split
+    /// images), so a page with no place in a strip, as one kept in paged mode, opens a strip
+    /// at that page's image: at its top, or where a strip cut into screens opens for that page
+    /// (the first screen that starts in it). A place kept in a strip carries its page already.
+    fn start_in_every_mode(&self) -> ReadPlace {
+        let mut start = self.start.clone();
+        if start.strip.is_none()
+            && start.novel.is_none()
+            && let Some(page) = start.page.filter(|p| *p > 0)
+        {
+            let cut = self.cuts.iter().find(|c| c.image >= page).copied();
+            start.strip = Some(cut.unwrap_or(StripPos { image: page, offset: 0.0 }));
+        }
+        start
+    }
+
     /// What `Opened` says of the open chapter.
     fn view(&self, cx: &Cx<'_>) -> ReaderView {
         let marks =
@@ -971,7 +988,7 @@ impl Session {
             chapter: self.chapter().row(&marks),
             mode: self.mode,
             direction: self.direction,
-            start: self.start.clone(),
+            start: self.start_in_every_mode(),
             next: self.chapters.get(self.at + 1).map(|c| c.row(&marks)),
             previous: self
                 .at
