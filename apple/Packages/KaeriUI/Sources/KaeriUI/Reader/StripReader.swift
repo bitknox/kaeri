@@ -481,8 +481,7 @@ struct StripReader: View {
     }
 
     private func restore() {
-        let at = model.stripRestore ?? model.view?.start.strip
-        guard let at, restoring, !parts.isEmpty else { return }
+        guard let at = model.stripStart, restoring, !parts.isEmpty else { return }
         let images = rows.filter { $0.isImage && $0.trail == nil }
         guard !images.isEmpty else { return }
         let row = images[min(Int(at.image), images.count - 1)]

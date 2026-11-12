@@ -1,5 +1,6 @@
 // A strip flows into the next chapter only past the real end of the one open: a chapter whose
-// last image has not landed is never passed, and its foot starts no read.
+// last image has not landed is never passed, and its foot starts no read. A strip opens at the place
+// kept, even one kept only as a page.
 
 @testable import KaeriStore
 import KaeriKit
@@ -204,5 +205,50 @@ struct ReaderStripFlowTests {
         #expect(model.flowFailure == nil)
         #expect(model.phase == .opening)
     }
-}
 
+    /// A chapter opened in a strip at `page` and maybe `strip`, its images showing `pages`.
+    private func resumed(page: UInt32, strip: StripPos?, pages: [UInt32]) -> ReaderModel {
+        let model = ReaderModel()
+        model.send = { _ in }
+        model.apply(.opened(ReaderView(
+            session: 1, work: WorkId("a:900301"), title: "The Lantern Ferry", medium: .manga,
+            chapter: row("1"), mode: .strip, direction: .topToBottom,
+            start: ReadPlace(work: WorkId("a:900301"), chapter: ChapterId("1"), page: page, strip: strip, novel: nil),
+            next: row("2"), previous: nil, settings: nil)))
+        let parts = pages.map { page in
+            LeafPart(page: page, kind: .story, file: nil, place: UnitRect(x: 0, y: 0, width: 1, height: 1),
+                     rotate: false, half: nil, ratio: 0.7)
+        }
+        model.apply(.leaves(session: 1, chapter: ChapterId("1"), leaves: [
+            Leaf(index: 0, parts: parts, endPage: false),
+            Leaf(index: 1, parts: [], endPage: true),
+        ]))
+        return model
+    }
+
+    /// A chapter last read page by page keeps its place as a page only: the strip opens at the
+    /// image that holds it, the one the Resumed notice names, not at the first.
+    @Test func aPlaceKeptAsAPageOpensTheStripAtItsImage() {
+        let model = resumed(page: 8, strip: nil, pages: Array(0..<12))
+        #expect(model.stripStart == StripPos(image: 8, offset: 0))
+    }
+
+    /// Pages the strip leaves out, such as a credit page, do not shift the place: it is the
+    /// image that holds the page, or the first after it.
+    @Test func aPlaceKeptAsAPageFollowsThePagesTheStripShows() {
+        let model = resumed(page: 8, strip: nil, pages: [0, 1, 3, 4, 5, 6, 7, 8, 9])
+        #expect(model.stripStart == StripPos(image: 7, offset: 0))
+        let past = resumed(page: 20, strip: nil, pages: Array(0..<12))
+        #expect(past.stripStart == StripPos(image: 11, offset: 0))
+    }
+
+    /// A place kept in the strip itself, partway down an image, is used as it is, and a jump asked
+    /// for later goes before either.
+    @Test func aPlaceKeptInTheStripWins() {
+        let model = resumed(page: 8, strip: StripPos(image: 5, offset: 0.4), pages: Array(0..<12))
+        #expect(model.stripStart == StripPos(image: 5, offset: 0.4))
+        model.apply(.goTo(session: 1, place: ReadPlace(work: WorkId("a:900301"), chapter: ChapterId("1"),
+                                                      page: nil, strip: StripPos(image: 2, offset: 0), novel: nil)))
+        #expect(model.stripStart == StripPos(image: 2, offset: 0))
+    }
+}
