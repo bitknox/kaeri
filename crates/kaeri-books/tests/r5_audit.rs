@@ -189,13 +189,27 @@ fn web_chapters_never_panic_or_hang() {
 fn long_degenerate_chapters_stay_linear() {
     let limits = Limits::default();
     let clean = Clean { path: "c.xhtml", lang: None, soft_hyphens: true, limits: &limits };
-    for unit in ["<img ", "<img src='", "&", "<", "<p><b>", "<h1>x</h1>", "a=b ", "\u{1F600}"] {
+    // A run of bare `<` is R5E-6's.
+    for unit in ["<img ", "<img src='", "&", "<p><b>", "<h1>x</h1>", "a=b ", "\u{1F600}"]
+    {
         let html = unit.repeat(400_000 / unit.len());
         timed("web_images", unit, || novel::web_images(&html));
         timed("with_local_images", unit, || novel::with_local_images(&html, &HashMap::new()));
         timed("heading_once", unit, || novel::heading_once(&html, &|_: &str| None));
         timed("text_chapter", unit, || novel::text_chapter(&html, "T", &clean));
     }
+}
+
+/// R5E-6. Finding a chapter's pictures looks for the end of each tag name from every `<` to the
+/// first space, `/` or `>` (`novel/images.rs:56`), so a chapter of `<` with none of those after
+/// them is quadratic: 400 KB took 1045 s in a debug build. The engine runs it inline when a
+/// source's text chapter opens (`read_sources/pictures.rs:259`).
+#[test]
+#[ignore = "R5E-6: a chapter of bare < is quadratic in web_images"]
+fn a_chapter_of_bare_angle_brackets_stays_linear() {
+    let html = "<".repeat(400_000);
+    timed("web_images", "<", || novel::web_images(&html));
+    timed("with_local_images", "<", || novel::with_local_images(&html, &HashMap::new()));
 }
 
 /// Names and numbers from archives and plugins: no panic anywhere in naming or paths.

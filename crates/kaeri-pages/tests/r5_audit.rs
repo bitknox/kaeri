@@ -164,10 +164,10 @@ fn extract_of_any_cut_errs_or_fits() {
 
 fn seeds() -> Vec<Vec<u8>> {
     let page = testpages::manga_page(48, 64, 7);
-    let colour = testpages::colour_page(40, 30, 3);
+    let colour = testpages::colour_page(300, 420, 3);
     let mut out =
         vec![testpages::jpeg(&page, 80), testpages::png(&page), testpages::png(&colour)];
-    let rgb = image::RgbImage::from_raw(40, 30, colour.data().to_vec()).unwrap();
+    let rgb = image::RgbImage::from_raw(300, 420, colour.data().to_vec()).unwrap();
     for format in [image::ImageFormat::Gif, image::ImageFormat::WebP, image::ImageFormat::Jpeg]
     {
         let mut bytes = Vec::new();
@@ -256,9 +256,12 @@ fn every_panel_renders_odd_sizes() {
     let targets = [(1, 1), (2, 3), (1, 2000), (1860, 2480), (0, 0), (0, 10)];
     for &(w, h) in &sizes {
         for format in [PixelFormat::Gray8, PixelFormat::Rgb8] {
+            // The drawn test pages need room for their panels; small sizes are a flat fill.
+            let drawn = w >= 300 && h >= 300;
             let page = match format {
-                PixelFormat::Gray8 => testpages::manga_page(w, h, 1),
-                _ => testpages::colour_page(w, h, 1),
+                PixelFormat::Gray8 if drawn => testpages::manga_page(w, h, 1),
+                _ if drawn => testpages::colour_page(w, h, 1),
+                _ => Bitmap::filled(w, h, format, 180),
             };
             let bytes = testpages::png(&page);
             for panel in [
