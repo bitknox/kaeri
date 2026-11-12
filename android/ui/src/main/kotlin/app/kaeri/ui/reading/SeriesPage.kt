@@ -599,7 +599,7 @@ private fun SeriesSynopsis(text: String, work: WorkId, modifier: Modifier = Modi
                     if (open) {
                         Modifier
                     } else {
-                        Modifier.clickable(onClickLabel = Strings.titleSynopsisHint(context), role = Role.Button) { expanded = true }
+                        Modifier.clickable(onClickLabel = Strings.titleSynopsisMore(context), role = Role.Button) { expanded = true }
                     },
                 )
                 .semantics { contentDescription = text },

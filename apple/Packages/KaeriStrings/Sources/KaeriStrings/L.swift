@@ -768,6 +768,26 @@ public enum L {
         Self.format("reader-moved-number-elsewhere", fallback: "Moved to chapter %1$@, page %2$@, where another device stopped", chapter, String(page))
     }
 
+    /// The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its whole label, such as The Long Night.
+    public static func readerMovedImage(chapter: String, image: Int, device: String) -> String {
+        Self.format("reader-moved-image", fallback: "Moved to %1$@, image %2$@, where %3$@ stopped", chapter, String(image), device)
+    }
+
+    /// The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+    public static func readerMovedNumberImage(chapter: String, image: Int, device: String) -> String {
+        Self.format("reader-moved-number-image", fallback: "Moved to chapter %1$@, image %2$@, where %3$@ stopped", chapter, String(image), device)
+    }
+
+    /// The notice in a strip when another device read further and its name is not known.
+    public static func readerMovedElsewhereImage(chapter: String, image: Int) -> String {
+        Self.format("reader-moved-elsewhere-image", fallback: "Moved to %1$@, image %2$@, where another device stopped", chapter, String(image))
+    }
+
+    /// The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+    public static func readerMovedNumberElsewhereImage(chapter: String, image: Int) -> String {
+        Self.format("reader-moved-number-elsewhere-image", fallback: "Moved to chapter %1$@, image %2$@, where another device stopped", chapter, String(image))
+    }
+
     /// A notice the first time a series opens with its reading direction guessed. It offers Change.
     public static var readerDetectedRightToLeft: String { string("reader-detected-right-to-left", fallback: "Looks like right to left") }
 
@@ -1104,6 +1124,9 @@ public enum L {
     public static func readingRowDownloading(done: Int, total: Int) -> String {
         Self.format("reading-row-downloading", fallback: "Downloading · %1$lld of %2$lld pages", done, total)
     }
+
+    /// A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count.
+    public static var readingRowDownloadingPlain: String { string("reading-row-downloading-plain", fallback: "Downloading") }
 
     /// A chapter row's state: the download failed. The reason follows as the next part.
     public static var readingRowFailed: String { string("reading-row-failed", fallback: "Couldn't download") }
@@ -9264,6 +9287,9 @@ public enum L {
         Self.format("chapter-state-downloading", fallback: "Downloading · %1$lld of %2$lld pages", done, total)
     }
 
+    /// A chapter downloading before its page count is known, and throughout for a novel's chapter.
+    public static var chapterStateDownloadingPlain: String { string("chapter-state-downloading-plain", fallback: "Downloading") }
+
     /// A chapter that failed to download, with the reason.
     public static func chapterStateFailed(reason: String) -> String {
         Self.format("chapter-state-failed", fallback: "Couldn't download. %1$@", reason)
@@ -14124,8 +14150,8 @@ public enum L {
     /// Button that opens the full page of facts about a show.
     public static var titleMoreAbout: String { string("title-more-about", fallback: "More about this show") }
 
-    /// Accessibility hint of the button that expands a synopsis.
-    public static var titleSynopsisHint: String { string("title-synopsis-hint", fallback: "Shows the whole synopsis") }
+    /// Accessible name of the More at the end of a cut synopsis, which shows the rest of it. The page's menu of extra actions is called More too, so this one says what it does.
+    public static var titleSynopsisMore: String { string("title-synopsis-more", fallback: "Show the whole synopsis") }
 
     /// Label under a season: which episodes are dubbed so far.
     public static func titleDubbedTo(episode: Int) -> String {

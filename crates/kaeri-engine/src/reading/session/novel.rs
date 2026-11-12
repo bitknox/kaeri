@@ -488,8 +488,10 @@ pub(super) fn source_chapters(groups: Vec<VolumeGroup>) -> Vec<ShelfChapter> {
 }
 
 /// One list of a work's chapters: the source's, in its order, with each chapter on the shelf
-/// (a download, or a file in a folder) read from its file. A file the source does not list
-/// goes in among the others by its number, or at the end without one.
+/// (a download, or a file in a folder) read from its file. A file in a folder the source does
+/// not list goes in among the others by its number, or at the end without one. A download the
+/// list does not have stays out: the series list already holds every download it shows, so the
+/// reader reads on through the chapters the series page lists and no others.
 pub(super) fn with_shelf(
     listed: Vec<ShelfChapter>,
     shelf: Vec<ShelfChapter>,
@@ -505,7 +507,7 @@ pub(super) fn with_shelf(
         })
         .collect();
     let range = |c: &ShelfChapter| c.id.key().and_then(|k| k.range());
-    for file in shelf.into_iter().flatten() {
+    for file in shelf.into_iter().flatten().filter(|f| f.source.is_none()) {
         let at = range(&file).map_or(out.len(), |mine| {
             out.iter().position(|c| range(c).is_some_and(|r| r > mine)).unwrap_or(out.len())
         });

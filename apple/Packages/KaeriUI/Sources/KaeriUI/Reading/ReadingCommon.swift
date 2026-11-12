@@ -217,6 +217,8 @@ enum ReadWords {
             switch download {
             case .queued: return L.chapterStateQueued
             case .waitsForWifi: return L.chapterStateWifi
+            // No page count yet, or a novel's chapter, which has none: nothing to count.
+            case .downloading(_, 0): return L.chapterStateDownloadingPlain
             case .downloading(let done, let total): return L.chapterStateDownloading(done: Int(done), total: Int(total))
             case .failed(let failure): return L.chapterStateFailed(reason: failure.words)
             case .done: break

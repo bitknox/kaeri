@@ -82,6 +82,37 @@ class ReaderSessionTest {
     }
 
     @Test
+    fun a_round_trip_through_spreads_keeps_the_second_page_of_the_spread() {
+        opened(start = 0u)
+        session.jumped(session.state.value.jump!!.id)
+        val single = ReaderFixtures.leaves(6)
+        val two = single.filter { !it.endPage }.chunked(2).mapIndexed { i, pair ->
+            app.kaeri.engine.model.Leaf(i.toUInt(), pair.flatMap { it.parts }, false)
+        }
+        // Page 3 alone, then the spread of 2 and 3, then 3 alone again, twice over.
+        session.shown(3, TurnHow.TURN)
+        repeat(2) {
+            session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, two))
+            val spread = session.state.value.jump!!
+            assertEquals(1, spread.leaf)
+            session.jumped(spread.id)
+            session.shown(spread.leaf, TurnHow.PLACED)
+            session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, single))
+            val back = session.state.value.jump!!
+            assertEquals(3, back.leaf)
+            session.jumped(back.id)
+            session.shown(back.leaf, TurnHow.PLACED)
+        }
+        // A turn in spreads goes by the spread turned to: its first page.
+        session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, two))
+        session.jumped(session.state.value.jump!!.id)
+        session.shown(1, TurnHow.PLACED)
+        session.shown(2, TurnHow.TURN)
+        session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, single))
+        assertEquals(4, session.state.value.jump?.leaf)
+    }
+
+    @Test
     fun a_new_layout_before_the_start_was_shown_still_opens_at_the_start() {
         // The phone turned while the reader opened: a second layout comes before the jump to
         // the start place was shown.

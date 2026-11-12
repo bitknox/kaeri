@@ -835,6 +835,22 @@
     <value>[Ṁöṽéð ţö çĥàþţéŕ {chapter}, þàĝé {page}, ŵĥéŕé àñöţĥéŕ ðéṽîçé šţöþþéð~~~~~~~~~~~~~~~~~~]</value>
     <comment>The same notice for a chapter known only by its number, such as 14 or 14.5.</comment>
   </data>
+  <data name="ReaderMovedImage" xml:space="preserve">
+    <value>[Ṁöṽéð ţö {chapter}, îɱàĝé {image}, ŵĥéŕé {device} šţöþþéð~~~~~~~~~~~~~]</value>
+    <comment>The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its whole label, such as The Long Night.</comment>
+  </data>
+  <data name="ReaderMovedNumberImage" xml:space="preserve">
+    <value>[Ṁöṽéð ţö çĥàþţéŕ {chapter}, îɱàĝé {image}, ŵĥéŕé {device} šţöþþéð~~~~~~~~~~~~~~~]</value>
+    <comment>The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.</comment>
+  </data>
+  <data name="ReaderMovedElsewhereImage" xml:space="preserve">
+    <value>[Ṁöṽéð ţö {chapter}, îɱàĝé {image}, ŵĥéŕé àñöţĥéŕ ðéṽîçé šţöþþéð~~~~~~~~~~~~~~~~]</value>
+    <comment>The notice in a strip when another device read further and its name is not known.</comment>
+  </data>
+  <data name="ReaderMovedNumberElsewhereImage" xml:space="preserve">
+    <value>[Ṁöṽéð ţö çĥàþţéŕ {chapter}, îɱàĝé {image}, ŵĥéŕé àñöţĥéŕ ðéṽîçé šţöþþéð~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.</comment>
+  </data>
   <data name="ReaderDetectedRightToLeft" xml:space="preserve">
     <value>[Ļööķš ļîķé ŕîĝĥţ ţö ļéƒţ~~~~~~~~]</value>
     <comment>A notice the first time a series opens with its reading direction guessed. It offers Change.</comment>
@@ -1186,6 +1202,10 @@
   <data name="ReadingRowDownloading" xml:space="preserve">
     <value>[Ðöŵñļöàðîñĝ · {done} öƒ {total} þàĝéš~~~~~~~~~]</value>
     <comment>A chapter row's state while it downloads.</comment>
+  </data>
+  <data name="ReadingRowDownloadingPlain" xml:space="preserve">
+    <value>[Ðöŵñļöàðîñĝ~~~~]</value>
+    <comment>A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count.</comment>
   </data>
   <data name="ReadingRowFailed" xml:space="preserve">
     <value>[Çöüļðñ'ţ ðöŵñļöàð~~~~~~]</value>
@@ -9302,6 +9322,10 @@
     <value>[Ðöŵñļöàðîñĝ · {done} öƒ {total} þàĝéš~~~~~~~~~]</value>
     <comment>A chapter downloading.</comment>
   </data>
+  <data name="ChapterStateDownloadingPlain" xml:space="preserve">
+    <value>[Ðöŵñļöàðîñĝ~~~~]</value>
+    <comment>A chapter downloading before its page count is known, and throughout for a novel's chapter.</comment>
+  </data>
   <data name="ChapterStateFailed" xml:space="preserve">
     <value>[Çöüļðñ'ţ ðöŵñļöàð. {reason}~~~~~~~]</value>
     <comment>A chapter that failed to download, with the reason.</comment>
@@ -15063,9 +15087,9 @@
     <value>[Ṁöŕé àƀöüţ ţĥîš šĥöŵ~~~~~~]</value>
     <comment>Button that opens the full page of facts about a show.</comment>
   </data>
-  <data name="TitleSynopsisHint" xml:space="preserve">
-    <value>[Šĥöŵš ţĥé ŵĥöļé šýñöþšîš~~~~~~~~]</value>
-    <comment>Accessibility hint of the button that expands a synopsis.</comment>
+  <data name="TitleSynopsisMore" xml:space="preserve">
+    <value>[Šĥöŵ ţĥé ŵĥöļé šýñöþšîš~~~~~~~]</value>
+    <comment>Accessible name of the More at the end of a cut synopsis, which shows the rest of it. The page's menu of extra actions is called More too, so this one says what it does.</comment>
   </data>
   <data name="TitleDubbedTo" xml:space="preserve">
     <value>[Ðüƀƀéð ţö éþîšöðé {episode}~~~~~~~]</value>

@@ -10,6 +10,7 @@ pub(crate) mod changed;
 pub(crate) mod chapters;
 pub(crate) mod discovery;
 pub(crate) mod editions;
+pub(crate) mod extras;
 pub(crate) mod fit;
 pub(crate) mod home;
 pub(crate) mod rows;

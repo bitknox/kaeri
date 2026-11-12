@@ -4316,7 +4316,6 @@
     <string name="title_studio">Studio</string>
     <string name="title_tags">Mots-clés</string>
     <string name="title_more_about">Plus d\'informations sur ce titre</string>
-    <string name="title_synopsis_hint">Affiche le synopsis complet</string>
     <string name="title_dubbed_to">Doublé jusqu\'à l\'épisode %1$d</string>
     <string name="title_no_episodes">Pas encore d\'épisodes</string>
     <string name="title_episodes_load_failed">Impossible d\'afficher les épisodes</string>

@@ -60,6 +60,15 @@ pub(crate) fn home(kit: &Kit) {
     shown(kit).home = true;
 }
 
+/// Show volumes was turned on or off: the series pages loaded lately are sent again, grouped
+/// the new way, from their lists as kept. No source is asked.
+pub(crate) fn volumes_shown(kit: &Kit, ask: Ask, tx: &Outbox) {
+    let pages = shown(kit).pages.clone();
+    for work in &pages {
+        super::series::regroup(kit, ask, work, tx);
+    }
+}
+
 /// The sources changed: bring what is on screen up to date, and ask again behind it about the
 /// series told this session that no source had them.
 pub(crate) fn sources_changed(kit: &Kit, ask: Ask, tx: &Outbox) {

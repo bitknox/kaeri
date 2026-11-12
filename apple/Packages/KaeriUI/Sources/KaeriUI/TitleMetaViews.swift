@@ -83,7 +83,8 @@ struct InlineMoreText: View {
                                     .init(color: Palette.ground, location: 0.45)],
                             startPoint: .leading, endPoint: .trailing))
                         .contentShape(.rect.inset(by: -12))
-                        .accessibilityHint(L.titleSynopsisHint)
+                        // The page's menu is More too: this one says what it does.
+                        .accessibilityLabel(L.titleSynopsisMore)
                 }
             }
     }

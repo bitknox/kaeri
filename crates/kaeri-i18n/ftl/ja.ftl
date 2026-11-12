@@ -13321,9 +13321,6 @@ title-tags = タグ
 # Button that opens the full page of facts about a show.
 title-more-about = 詳細を見る
 
-# Accessibility hint of the button that expands a synopsis.
-title-synopsis-hint = あらすじ全文を表示します
-
 # Label under a season: which episodes are dubbed so far.
 title-dubbed-to = 第{ $episode }話まで吹替版
 

@@ -4165,7 +4165,6 @@
     <string name="title_studio">Studio</string>
     <string name="title_tags">Schlagwörter</string>
     <string name="title_more_about">Mehr zu dieser Serie</string>
-    <string name="title_synopsis_hint">Zeigt die ganze Inhaltsangabe</string>
     <string name="title_dubbed_to">Synchronisiert bis Folge %1$d</string>
     <string name="title_no_episodes">Noch keine Folgen</string>
     <string name="title_episodes_load_failed">Folgen konnten nicht geladen werden</string>

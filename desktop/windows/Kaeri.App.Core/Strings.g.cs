@@ -588,6 +588,18 @@ public static partial class T
     /// <summary>The same notice for a chapter known only by its number, such as 14 or 14.5.</summary>
     public static string ReaderMovedNumberElsewhere(string chapter, long page) => Fill(Get("ReaderMovedNumberElsewhere"), ("chapter", chapter), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its whole label, such as The Long Night.</summary>
+    public static string ReaderMovedImage(string chapter, long image, string device) => Fill(Get("ReaderMovedImage"), ("chapter", chapter), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("device", device));
+
+    /// <summary>The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.</summary>
+    public static string ReaderMovedNumberImage(string chapter, long image, string device) => Fill(Get("ReaderMovedNumberImage"), ("chapter", chapter), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("device", device));
+
+    /// <summary>The notice in a strip when another device read further and its name is not known.</summary>
+    public static string ReaderMovedElsewhereImage(string chapter, long image) => Fill(Get("ReaderMovedElsewhereImage"), ("chapter", chapter), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.</summary>
+    public static string ReaderMovedNumberElsewhereImage(string chapter, long image) => Fill(Get("ReaderMovedNumberElsewhereImage"), ("chapter", chapter), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
     /// <summary>A notice the first time a series opens with its reading direction guessed. It offers Change.</summary>
     public static string ReaderDetectedRightToLeft => Get("ReaderDetectedRightToLeft");
 
@@ -842,6 +854,9 @@ public static partial class T
 
     /// <summary>A chapter row's state while it downloads.</summary>
     public static string ReadingRowDownloading(long done, long total) => Fill(Get("ReadingRowDownloading"), ("done", done.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count.</summary>
+    public static string ReadingRowDownloadingPlain => Get("ReadingRowDownloadingPlain");
 
     /// <summary>A chapter row's state: the download failed. The reason follows as the next part.</summary>
     public static string ReadingRowFailed => Get("ReadingRowFailed");
@@ -6697,6 +6712,9 @@ public static partial class T
     /// <summary>A chapter downloading.</summary>
     public static string ChapterStateDownloading(long done, long total) => Fill(Get("ChapterStateDownloading"), ("done", done.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>A chapter downloading before its page count is known, and throughout for a novel's chapter.</summary>
+    public static string ChapterStateDownloadingPlain => Get("ChapterStateDownloadingPlain");
+
     /// <summary>A chapter that failed to download, with the reason.</summary>
     public static string ChapterStateFailed(string reason) => Fill(Get("ChapterStateFailed"), ("reason", reason));
 
@@ -10847,8 +10865,8 @@ public static partial class T
     /// <summary>Button that opens the full page of facts about a show.</summary>
     public static string TitleMoreAbout => Get("TitleMoreAbout");
 
-    /// <summary>Accessibility hint of the button that expands a synopsis.</summary>
-    public static string TitleSynopsisHint => Get("TitleSynopsisHint");
+    /// <summary>Accessible name of the More at the end of a cut synopsis, which shows the rest of it. The page's menu of extra actions is called More too, so this one says what it does.</summary>
+    public static string TitleSynopsisMore => Get("TitleSynopsisMore");
 
     /// <summary>Label under a season: which episodes are dubbed so far.</summary>
     public static string TitleDubbedTo(long episode) => Fill(Get("TitleDubbedTo"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
@@ -12150,6 +12168,10 @@ public static partial class T
         ["ReaderMovedNumber"] = "Moved to chapter {chapter}, page {page}, where {device} stopped",
         ["ReaderMovedElsewhere"] = "Moved to {chapter}, page {page}, where another device stopped",
         ["ReaderMovedNumberElsewhere"] = "Moved to chapter {chapter}, page {page}, where another device stopped",
+        ["ReaderMovedImage"] = "Moved to {chapter}, image {image}, where {device} stopped",
+        ["ReaderMovedNumberImage"] = "Moved to chapter {chapter}, image {image}, where {device} stopped",
+        ["ReaderMovedElsewhereImage"] = "Moved to {chapter}, image {image}, where another device stopped",
+        ["ReaderMovedNumberElsewhereImage"] = "Moved to chapter {chapter}, image {image}, where another device stopped",
         ["ReaderDetectedRightToLeft"] = "Looks like right to left",
         ["ReaderDetectedLeftToRight"] = "Looks like left to right",
         ["ReaderDetectedStrip"] = "Looks like a long strip",
@@ -12238,6 +12260,7 @@ public static partial class T
         ["ReadingRowQueued"] = "Queued",
         ["ReadingRowWaitsWifi"] = "Queued · waits for Wi-Fi",
         ["ReadingRowDownloading"] = "Downloading · {done} of {total} pages",
+        ["ReadingRowDownloadingPlain"] = "Downloading",
         ["ReadingRowFailed"] = "Couldn't download",
         ["ReadingRowPageOf"] = "Page {page} of {of}",
         ["ReadingRowPage"] = "Page {page}",
@@ -14274,6 +14297,7 @@ public static partial class T
         ["ChapterStateQueued"] = "Queued",
         ["ChapterStateWifi"] = "Queued · waits for Wi-Fi",
         ["ChapterStateDownloading"] = "Downloading · {done} of {total} pages",
+        ["ChapterStateDownloadingPlain"] = "Downloading",
         ["ChapterStateFailed"] = "Couldn't download. {reason}",
         ["ChapterStatePageOf"] = "Page {page} of {of}",
         ["ChapterStatePage"] = "Page {page}",
@@ -15717,7 +15741,7 @@ public static partial class T
         ["TitleStudio"] = "Studio",
         ["TitleTags"] = "Tags",
         ["TitleMoreAbout"] = "More about this show",
-        ["TitleSynopsisHint"] = "Shows the whole synopsis",
+        ["TitleSynopsisMore"] = "Show the whole synopsis",
         ["TitleDubbedTo"] = "Dubbed to episode {episode}",
         ["TitleNoEpisodes"] = "No episodes yet",
         ["TitleEpisodesLoadFailed"] = "Couldn't list episodes",

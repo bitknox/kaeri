@@ -609,6 +609,18 @@ reader-moved-elsewhere = Moved to { $chapter }, page { $page }, where another de
 # The same notice for a chapter known only by its number, such as 14 or 14.5.
 reader-moved-number-elsewhere = Moved to chapter { $chapter }, page { $page }, where another device stopped
 
+# The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its whole label, such as The Long Night.
+reader-moved-image = Moved to { $chapter }, image { $image }, where { $device } stopped
+
+# The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+reader-moved-number-image = Moved to chapter { $chapter }, image { $image }, where { $device } stopped
+
+# The notice in a strip when another device read further and its name is not known.
+reader-moved-elsewhere-image = Moved to { $chapter }, image { $image }, where another device stopped
+
+# The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+reader-moved-number-elsewhere-image = Moved to chapter { $chapter }, image { $image }, where another device stopped
+
 # A notice the first time a series opens with its reading direction guessed. It offers Change.
 reader-detected-right-to-left = Looks like right to left
 
@@ -875,6 +887,9 @@ reading-row-waits-wifi = Queued · waits for Wi-Fi
 
 # A chapter row's state while it downloads.
 reading-row-downloading = Downloading · { $done } of { $total } pages
+
+# A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count.
+reading-row-downloading-plain = Downloading
 
 # A chapter row's state: the download failed. The reason follows as the next part.
 reading-row-failed = Couldn't download
@@ -9750,6 +9765,9 @@ chapter-state-wifi = Queued · waits for Wi-Fi
 # A chapter downloading.
 chapter-state-downloading = Downloading · { $done } of { $total } pages
 
+# A chapter downloading before its page count is known, and throughout for a novel's chapter.
+chapter-state-downloading-plain = Downloading
+
 # A chapter that failed to download, with the reason.
 chapter-state-failed = Couldn't download. { $reason }
 
@@ -14124,8 +14142,8 @@ title-tags = Tags
 # Button that opens the full page of facts about a show.
 title-more-about = More about this show
 
-# Accessibility hint of the button that expands a synopsis.
-title-synopsis-hint = Shows the whole synopsis
+# Accessible name of the More at the end of a cut synopsis, which shows the rest of it. The page's menu of extra actions is called More too, so this one says what it does.
+title-synopsis-more = Show the whole synopsis
 
 # Label under a season: which episodes are dubbed so far.
 title-dubbed-to = Dubbed to episode { $episode }

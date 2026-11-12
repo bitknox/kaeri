@@ -4467,7 +4467,6 @@
     <string name="title_studio">Студия</string>
     <string name="title_tags">Теги</string>
     <string name="title_more_about">Подробнее о тайтле</string>
-    <string name="title_synopsis_hint">Показывает весь синопсис</string>
     <string name="title_dubbed_to">С дубляжом до серии %1$d</string>
     <string name="title_no_episodes">Серий пока нет</string>
     <string name="title_episodes_load_failed">Не удалось получить список серий</string>

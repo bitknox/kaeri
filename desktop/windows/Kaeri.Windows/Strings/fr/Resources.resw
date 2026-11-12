@@ -11249,9 +11249,6 @@
   <data name="TitleMoreAbout" xml:space="preserve">
     <value>Plus d'informations sur ce titre</value>
   </data>
-  <data name="TitleSynopsisHint" xml:space="preserve">
-    <value>Affiche le synopsis complet</value>
-  </data>
   <data name="TitleDubbedTo" xml:space="preserve">
     <value>Doublé jusqu'à l'épisode {episode}</value>
   </data>

@@ -322,7 +322,10 @@ class ReaderSession(private val send: (Command) -> Unit) {
         val now = state.value
         val session = now.session ?: return
         val chapter = now.chapter ?: return
-        shownPage = now.leaves.getOrNull(leaf)?.parts?.firstOrNull()?.page ?: shownPage
+        // A leaf that holds the page kept, as a new layout's spread holds a page shown alone
+        // before it, keeps that page: single pages again show it, not the spread's first.
+        val pages = now.leaves.getOrNull(leaf)?.parts?.map { it.page }.orEmpty()
+        shownPage = if (shownPage in pages) shownPage else pages.firstOrNull() ?: shownPage
         // An e-ink cut's page is the cut's own number: the place is the image it starts in. A whole
         // image keeps the spot in it the reader opened at, for the cuts a strip is laid out in later.
         here = now.placeOf(leaf) ?: here?.takeIf { it.chapter == chapter }?.let { at ->

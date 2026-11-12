@@ -10445,9 +10445,6 @@
   <data name="TitleMoreAbout" xml:space="preserve">
     <value>Info selengkapnya tentang tayangan ini</value>
   </data>
-  <data name="TitleSynopsisHint" xml:space="preserve">
-    <value>Menampilkan seluruh sinopsis</value>
-  </data>
   <data name="TitleDubbedTo" xml:space="preserve">
     <value>Berdubbing sampai episode {episode}</value>
   </data>

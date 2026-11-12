@@ -32147,6 +32147,18 @@
         }
       }
     },
+    "chapter-state-downloading-plain" : {
+      "comment" : "A chapter downloading before its page count is known, and throughout for a novel's chapter.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloading"
+          }
+        }
+      }
+    },
     "chapter-state-failed" : {
       "comment" : "A chapter that failed to download, with the reason. Argument 1: reason (Text).",
       "extractionState" : "manual",
@@ -222041,6 +222053,30 @@
         }
       }
     },
+    "reader-moved-elsewhere-image" : {
+      "comment" : "The notice in a strip when another device read further and its name is not known. Argument 1: chapter (Text). Argument 2: image (Plain).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moved to %1$@, image %2$@, where another device stopped"
+          }
+        }
+      }
+    },
+    "reader-moved-image" : {
+      "comment" : "The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its whole label, such as The Long Night. Argument 1: chapter (Text). Argument 2: image (Plain). Argument 3: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moved to %1$@, image %2$@, where %3$@ stopped"
+          }
+        }
+      }
+    },
     "reader-moved-number" : {
       "comment" : "The same notice for a chapter known only by its number, such as 14 or 14.5. Argument 1: chapter (Text). Argument 2: page (Plain). Argument 3: device (Text).",
       "extractionState" : "manual",
@@ -222133,6 +222169,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Moved to chapter %1$@, page %2$@, where another device stopped"
+          }
+        }
+      }
+    },
+    "reader-moved-number-elsewhere-image" : {
+      "comment" : "The same notice in a strip for a chapter known only by its number, such as 14 or 14.5. Argument 1: chapter (Text). Argument 2: image (Plain).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moved to chapter %1$@, image %2$@, where another device stopped"
+          }
+        }
+      }
+    },
+    "reader-moved-number-image" : {
+      "comment" : "The same notice in a strip for a chapter known only by its number, such as 14 or 14.5. Argument 1: chapter (Text). Argument 2: image (Plain). Argument 3: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moved to chapter %1$@, image %2$@, where %3$@ stopped"
           }
         }
       }
@@ -237761,6 +237821,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đang tải · %1$lld/%2$lld trang"
+          }
+        }
+      }
+    },
+    "reading-row-downloading-plain" : {
+      "comment" : "A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloading"
           }
         }
       }
@@ -358471,86 +358543,14 @@
         }
       }
     },
-    "title-synopsis-hint" : {
-      "comment" : "Accessibility hint of the button that expands a synopsis.",
+    "title-synopsis-more" : {
+      "comment" : "Accessible name of the More at the end of a cut synopsis, which shows the rest of it. The page's menu of extra actions is called More too, so this one says what it does.",
       "extractionState" : "manual",
       "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zeigt die ganze Inhaltsangabe"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Shows the whole synopsis"
-          }
-        },
-        "es-419" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Muestra la sinopsis completa"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Affiche le synopsis complet"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Menampilkan seluruh sinopsis"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mostra la trama completa"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "あらすじ全文を表示します"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pokazuje cały opis"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mostra a sinopse completa"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Показывает весь синопсис"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Visar hela synopsen"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Özetin tamamını gösterir"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hiển thị toàn bộ tóm tắt"
+            "value" : "Show the whole synopsis"
           }
         }
       }

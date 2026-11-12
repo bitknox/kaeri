@@ -10445,9 +10445,6 @@
   <data name="TitleMoreAbout" xml:space="preserve">
     <value>Xem thêm về tác phẩm này</value>
   </data>
-  <data name="TitleSynopsisHint" xml:space="preserve">
-    <value>Hiển thị toàn bộ tóm tắt</value>
-  </data>
   <data name="TitleDubbedTo" xml:space="preserve">
     <value>Lồng tiếng đến tập {episode}</value>
   </data>

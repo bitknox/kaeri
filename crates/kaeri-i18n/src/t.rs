@@ -960,6 +960,26 @@ pub fn reader_moved_number_elsewhere(chapter: &str, page: i64) -> String {
     text("reader-moved-number-elsewhere", &[("chapter", Arg::Text(chapter)), ("page", Arg::Plain(page))])
 }
 
+/// The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its whole label, such as The Long Night.
+pub fn reader_moved_image(chapter: &str, image: i64, device: &str) -> String {
+    text("reader-moved-image", &[("chapter", Arg::Text(chapter)), ("image", Arg::Plain(image)), ("device", Arg::Text(device))])
+}
+
+/// The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+pub fn reader_moved_number_image(chapter: &str, image: i64, device: &str) -> String {
+    text("reader-moved-number-image", &[("chapter", Arg::Text(chapter)), ("image", Arg::Plain(image)), ("device", Arg::Text(device))])
+}
+
+/// The notice in a strip when another device read further and its name is not known.
+pub fn reader_moved_elsewhere_image(chapter: &str, image: i64) -> String {
+    text("reader-moved-elsewhere-image", &[("chapter", Arg::Text(chapter)), ("image", Arg::Plain(image))])
+}
+
+/// The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+pub fn reader_moved_number_elsewhere_image(chapter: &str, image: i64) -> String {
+    text("reader-moved-number-elsewhere-image", &[("chapter", Arg::Text(chapter)), ("image", Arg::Plain(image))])
+}
+
 /// A notice the first time a series opens with its reading direction guessed. It offers Change.
 pub fn reader_detected_right_to_left() -> String {
     text("reader-detected-right-to-left", &[])
@@ -1383,6 +1403,11 @@ pub fn reading_row_waits_wifi() -> String {
 /// A chapter row's state while it downloads.
 pub fn reading_row_downloading(done: i64, total: i64) -> String {
     text("reading-row-downloading", &[("done", Arg::Int(done)), ("total", Arg::Int(total))])
+}
+
+/// A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count.
+pub fn reading_row_downloading_plain() -> String {
+    text("reading-row-downloading-plain", &[])
 }
 
 /// A chapter row's state: the download failed. The reason follows as the next part.
@@ -15537,6 +15562,11 @@ pub fn chapter_state_downloading(done: i64, total: i64) -> String {
     text("chapter-state-downloading", &[("done", Arg::Int(done)), ("total", Arg::Int(total))])
 }
 
+/// A chapter downloading before its page count is known, and throughout for a novel's chapter.
+pub fn chapter_state_downloading_plain() -> String {
+    text("chapter-state-downloading-plain", &[])
+}
+
 /// A chapter that failed to download, with the reason.
 pub fn chapter_state_failed(reason: &str) -> String {
     text("chapter-state-failed", &[("reason", Arg::Text(reason))])
@@ -22461,9 +22491,9 @@ pub fn title_more_about() -> String {
     text("title-more-about", &[])
 }
 
-/// Accessibility hint of the button that expands a synopsis.
-pub fn title_synopsis_hint() -> String {
-    text("title-synopsis-hint", &[])
+/// Accessible name of the More at the end of a cut synopsis, which shows the rest of it. The page's menu of extra actions is called More too, so this one says what it does.
+pub fn title_synopsis_more() -> String {
+    text("title-synopsis-more", &[])
 }
 
 /// Label under a season: which episodes are dubbed so far.

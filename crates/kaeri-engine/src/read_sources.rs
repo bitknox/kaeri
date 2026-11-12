@@ -2151,11 +2151,22 @@ impl BookSources {
             );
             rows.push(row);
         }
-        keep_dropped(&self.store, work, &read, &marks, &bookmarks, &mut rows);
-        self.fill_from_others(work, source, (&read, &marks), &numbering, &mut rows);
+        // Another source's chapters that what follows a chapter here stands for stay out, and
+        // still say which volume the rows beside them are in.
+        let mut held = Vec::new();
+        keep_dropped(
+            &self.store,
+            (work, source),
+            &read,
+            &marks,
+            &bookmarks,
+            &mut rows,
+            &mut held,
+        );
+        self.fill_from_others(work, source, (&read, &marks), &numbering, &mut rows, &mut held);
         tidy_filled(&mut rows);
         let known = crate::read_catalog::volumes::Known::of_work(&self.store, work.as_str());
-        crate::read_catalog::volumes::group(rows, &known, self.show_volumes())
+        crate::read_catalog::volumes::group_beside(rows, held, &known, self.show_volumes())
     }
 
     /// Open a chapter: its content from the edition, with the source named so the reader can
@@ -2430,7 +2441,9 @@ impl BookSources {
 impl BookSources {
     /// Chapters the edition does not list that the person's other sources for the work do, as
     /// last asked: listed in their place, marked with the source they come from, so the list
-    /// never hides a chapter another source has. Opening one reads it from that source.
+    /// never hides a chapter another source has. Opening one reads it from that source. What
+    /// follows a chapter here stands for what follows it there, as
+    /// [`crate::read_catalog::extras`] says: those rows go to `held` instead.
     fn fill_from_others(
         &self,
         work: &WorkId,
@@ -2441,9 +2454,12 @@ impl BookSources {
         ),
         numbering: &crate::read_catalog::arrange::Numbering,
         rows: &mut Vec<ChapterRow>,
+        held: &mut Vec<ChapterRow>,
     ) {
+        use crate::read_catalog::extras;
         let mut listed: HashSet<String> =
             rows.iter().map(|c| c.id.as_str().to_owned()).collect();
+        let mut here = extras::Following::of(rows.iter().map(|c| (&c.id, c.title.as_deref())));
         let refs = self.store.book_refs_for_work(work.as_str()).unwrap_or_default();
         for (other, series) in refs.into_iter().filter(|(s, _)| s != source) {
             let Some((list, _)) =
@@ -2464,9 +2480,14 @@ impl BookSources {
                 numbering,
             );
             let name = self.source_name(&other);
-            let missing: Vec<_> =
-                arranged.rows.iter().filter(|r| !listed.contains(r.id.as_str())).collect();
-            for row in missing {
+            let after = extras::follows(arranged.rows.iter().map(|r| &r.id));
+            let titles = extras::titles_chapters(
+                arranged.rows.iter().map(|r| (&r.id, entries[r.parts[0]].title.as_deref())),
+            );
+            for (row, after) in arranged.rows.iter().zip(after) {
+                if listed.contains(row.id.as_str()) {
+                    continue;
+                }
                 // The kept list's ids are the ones its source lists; arranged again they match.
                 let parts: Vec<&SourceChapter> =
                     row.parts.iter().map(|&i| &entries[i]).collect();
@@ -2484,6 +2505,14 @@ impl BookSources {
                 chapter_row.other_group = false;
                 chapter_row.group_language = None;
                 chapter_row.other_source = Some(name.clone());
+                let title = chapter_row.title.as_deref();
+                if let Some(after) = after {
+                    if here.stands_for(&after, title, titles) {
+                        held.push(chapter_row);
+                        continue;
+                    }
+                    here.add(after, title);
+                }
                 listed.insert(row.id.as_str().to_owned());
                 let at = place_of(rows, &chapter_row);
                 rows.insert(at, chapter_row);
@@ -2514,16 +2543,20 @@ fn state_of(
 
 /// Chapters downloaded here that the source no longer lists stay on the series page, marked as
 /// gone from the source, in their place among the others: the file is still on the device and
-/// still opens.
+/// still opens. One downloaded from another source that what follows a chapter here stands for,
+/// as [`crate::read_catalog::extras`] says, goes to `held` instead.
 fn keep_dropped(
     store: &Store,
-    work: &WorkId,
+    (work, source): (&WorkId, &str),
     read: &HashMap<String, kaeri_store::reading::ReadChapter>,
     marks: &kaeri_store::reading::ReadMarks,
     bookmarks: &HashSet<String>,
     rows: &mut Vec<ChapterRow>,
+    held: &mut Vec<ChapterRow>,
 ) {
+    use crate::read_catalog::extras;
     let listed: HashSet<String> = rows.iter().map(|c| c.id.as_str().to_owned()).collect();
+    let here = extras::Following::of(rows.iter().map(|c| (&c.id, c.title.as_deref())));
     // A download of a part now read as its whole chapter ("7.1" before "7.2" came) is that
     // chapter's: the list has it already.
     let folds = crate::read_catalog::chapters::Folds::of_work(store, work.as_str());
@@ -2548,6 +2581,11 @@ fn keep_dropped(
             }
         }
         row.gone_from_source = true;
+        let after = extras::follows([&row.id]).pop().flatten();
+        if d.source_id != source && after.is_some_and(|a| here.stands_for(&a, None, false)) {
+            held.push(row);
+            continue;
+        }
         let at = place_of(rows, &row);
         rows.insert(at, row);
     }

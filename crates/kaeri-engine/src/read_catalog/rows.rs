@@ -87,6 +87,10 @@ pub fn line(
         (Some(ChapterDownloadState::WaitsForWifi), _) => {
             parts.push(r(ReadingMsg::ReadingRowWaitsWifi));
         }
+        // No page count yet: the source has not answered, or a novel's chapter has none.
+        (Some(ChapterDownloadState::Downloading { total: 0, .. }), _) => {
+            parts.push(r(ReadingMsg::ReadingRowDownloadingPlain));
+        }
         (Some(ChapterDownloadState::Downloading { done, total }), _) => {
             parts.push(r(ReadingMsg::ReadingRowDownloading {
                 done: i64::from(*done),
@@ -413,5 +417,23 @@ mod tests {
         let east = TimeZone::fixed(jiff::tz::offset(13));
         assert_eq!(since(NOW - 2 * 3_600), msg(ReadingMsg::ReadingAgoToday));
         assert_eq!(ago(NOW - 2 * 3_600, NOW, &east), msg(ReadingMsg::ReadingAgoYesterday));
+    }
+
+    /// A download whose page count isn't known yet, as while its source answers or for a novel's
+    /// chapter, says it downloads without counting pages.
+    #[test]
+    fn a_download_with_no_page_count_yet_counts_nothing() {
+        let utc = TimeZone::UTC;
+        let words = |row: &ChapterRow| ids(&line(row, Kept::Source, Medium::Manga, NOW, &utc));
+        let starting = ChapterRow {
+            download: Some(ChapterDownloadState::Downloading { done: 0, total: 0 }),
+            ..row(ChapterReadState::Unread)
+        };
+        assert_eq!(words(&starting), ["reading-row-downloading-plain"]);
+        let counting = ChapterRow {
+            download: Some(ChapterDownloadState::Downloading { done: 1, total: 27 }),
+            ..starting
+        };
+        assert_eq!(words(&counting), ["reading-row-downloading"]);
     }
 }

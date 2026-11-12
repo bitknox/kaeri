@@ -101,6 +101,9 @@ struct State {
     failures: HashMap<u32, ReadingFailure>,
     asked: HashSet<u32>,
     index: usize,
+    /// The page a new layout kept, while the leaf that holds it stays on screen: a spread's
+    /// second page shown alone before the spread comes back alone after it.
+    held_page: Option<u32>,
     settings: Option<ReaderSettingsView>,
     /// Each strip image and its width over height.
     strip_frames: Vec<(gtk::Picture, f32)>,
@@ -1531,6 +1534,7 @@ impl Reader {
             state.asked.clear();
             state.strip_frames.clear();
             state.index = 0;
+            state.held_page = None;
         }
         self.forget_credits();
         self.demo_credit(view.demo_credit.as_ref());
@@ -1737,9 +1741,11 @@ impl Reader {
             let start = if first {
                 state.start_page
             } else {
-                // A new layout keeps the page that was showing, one on from a kept page before it.
-                state.leaves.get(state.index).and_then(|l| l.parts.first()).map(|p| {
-                    p.page + u32::from(relay.as_ref().is_some_and(|r| r.page <= p.page))
+                // A new layout keeps the page that was showing, one on from a kept page before
+                // it: the page kept by the last layout while its leaf is still on screen, else
+                // the leaf's first.
+                page_kept(state.leaves.get(state.index), state.held_page).map(|page| {
+                    page + u32::from(relay.as_ref().is_some_and(|r| r.page <= page))
                 })
             };
             state.index = start
@@ -1748,6 +1754,7 @@ impl Reader {
                 })
                 .unwrap_or(0)
                 .min(leaves.len().saturating_sub(1));
+            state.held_page = if first { None } else { start };
             state.leaves = leaves;
         }
         let index = self.state.borrow().index;
@@ -1960,6 +1967,12 @@ impl Reader {
     }
 
     fn show_leaf(self: &Rc<Self>, index: usize, how: TurnHow) {
+        {
+            let mut state = self.state.borrow_mut();
+            if state.index != index {
+                state.held_page = None;
+            }
+        }
         self.leave_credit();
         if self.is_end(index) {
             self.show_end(index, how);
@@ -3518,6 +3531,51 @@ fn strip_place_of(heights: &[i32], spacing: i32, top: f64) -> (usize, f32) {
         y += h + f64::from(spacing);
     }
     (0, 0.0)
+}
+
+/// The page a new layout keeps of `leaf`, the leaf on screen: `held`, the page the last layout
+/// kept, while the leaf still holds it, as a spread holds a page shown alone before it;
+/// otherwise the leaf's first.
+fn page_kept(leaf: Option<&Leaf>, held: Option<u32>) -> Option<u32> {
+    let leaf = leaf?;
+    held.filter(|held| leaf.parts.iter().any(|p| p.page == *held))
+        .or_else(|| leaf.parts.first().map(|p| p.page))
+}
+
+#[cfg(test)]
+mod layout_tests {
+    use kaeri_model::reader::{Leaf, LeafPart, PageKind, UnitRect};
+
+    use super::page_kept;
+
+    fn leaf(pages: &[u32]) -> Leaf {
+        let parts = pages
+            .iter()
+            .map(|&page| LeafPart {
+                page,
+                kind: PageKind::Story,
+                file: None,
+                place: UnitRect { x: 0.0, y: 0.0, width: 1.0, height: 1.0 },
+                rotate: false,
+                half: None,
+                ratio: None,
+                strip: None,
+            })
+            .collect();
+        Leaf { index: 0, parts, end_page: false }
+    }
+
+    #[test]
+    fn a_round_trip_through_spreads_keeps_the_second_page_of_the_spread() {
+        // Page 3 alone, then the spread of 2 and 3, then 3 alone again.
+        let held = page_kept(Some(&leaf(&[3])), None);
+        assert_eq!(held, Some(3));
+        assert_eq!(page_kept(Some(&leaf(&[2, 3])), held), Some(3));
+        // A spread turned to, with nothing held, gives its first page.
+        assert_eq!(page_kept(Some(&leaf(&[4, 5])), held), Some(4));
+        assert_eq!(page_kept(Some(&leaf(&[4, 5])), None), Some(4));
+        assert_eq!(page_kept(None, held), None);
+    }
 }
 
 #[cfg(test)]

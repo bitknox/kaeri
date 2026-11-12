@@ -4014,7 +4014,6 @@
     <string name="title_studio">Hãng sản xuất</string>
     <string name="title_tags">Thẻ</string>
     <string name="title_more_about">Xem thêm về tác phẩm này</string>
-    <string name="title_synopsis_hint">Hiển thị toàn bộ tóm tắt</string>
     <string name="title_dubbed_to">Lồng tiếng đến tập %1$d</string>
     <string name="title_no_episodes">Chưa có tập nào</string>
     <string name="title_episodes_load_failed">Không tải được danh sách tập</string>

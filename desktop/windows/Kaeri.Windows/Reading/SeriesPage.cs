@@ -292,6 +292,8 @@ public sealed partial class SeriesPage : Page
         text.TextTrimming = TextTrimming.WordEllipsis;
         text.IsTextSelectionEnabled = true;
         var more = new HyperlinkButton { Content = T.ActionMore, Style = Ui.Res<Style>("SilkLinkLeadingStyle"), Visibility = Visibility.Collapsed };
+        // The page's menu is More too: this one says what it does.
+        AutomationProperties.SetName(more, T.TitleSynopsisMore);
         text.IsTextTrimmedChanged += (sender, _) =>
         {
             if (sender.MaxLines != 0)

@@ -427,6 +427,9 @@ chapter-state-wifi = Queued · waits for Wi-Fi
 # @arg total: int
 chapter-state-downloading = Downloading · { $done } of { $total } pages
 
+# A chapter downloading before its page count is known, and throughout for a novel's chapter.
+chapter-state-downloading-plain = Downloading
+
 # A chapter that failed to download, with the reason.
 # @arg reason: text
 chapter-state-failed = Couldn't download. { $reason }

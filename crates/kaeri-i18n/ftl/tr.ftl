@@ -13479,9 +13479,6 @@ title-tags = Etiketler
 # Button that opens the full page of facts about a show.
 title-more-about = Bu dizi hakkında daha fazla
 
-# Accessibility hint of the button that expands a synopsis.
-title-synopsis-hint = Özetin tamamını gösterir
-
 # Label under a season: which episodes are dubbed so far.
 title-dubbed-to = Dublajlı, { $episode }. bölüme kadar
 
