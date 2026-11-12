@@ -813,3 +813,24 @@ pub(crate) fn apply_feed(engine: &EngineState, services: &Services, tx: &Outbox)
 
 #[cfg(not(feature = "opds-feed"))]
 pub(crate) fn apply_feed(_: &EngineState, _: &Services, _: &Outbox) {}
+
+#[cfg(test)]
+mod r5a_tests {
+    use super::*;
+
+    /// A send left Ready keeps its Share again on Android (the send banner and the sheet keep a
+    /// Ready job until it is shared or put away). Starting another send removes its files, so
+    /// sharing it again hands the e-reader app files that are gone, and the job counts as shared.
+    #[test]
+    #[ignore = "R5A-6"]
+    fn r5a_a_ready_send_keeps_its_files_when_another_starts() {
+        let dir = tempfile::tempdir().unwrap();
+        let exports = Exports::new(dir.path().to_owned());
+        let first = exports.folder(JobId::new(1));
+        std::fs::create_dir_all(&first).unwrap();
+        std::fs::write(first.join("Made-up Series 1.cbz"), b"pk").unwrap();
+        // The first send is Ready: no longer running, not yet shared.
+        let _second = exports.folder(JobId::new(2));
+        assert!(first.join("Made-up Series 1.cbz").exists(), "the Ready send's file is gone");
+    }
+}
