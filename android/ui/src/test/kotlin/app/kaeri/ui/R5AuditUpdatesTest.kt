@@ -9,7 +9,6 @@ import app.kaeri.store.AppStore
 import app.kaeri.store.FixtureScene
 import app.kaeri.store.ReadingModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import org.junit.Assert.assertSame
 import org.junit.Ignore
 import org.junit.Test
 import org.robolectric.annotation.Config
@@ -26,6 +25,7 @@ class R5AuditUpdatesTest : ReadingShotHarness() {
     fun two_series_with_the_same_chapter_on_one_day() {
         var asked = false
         var shown: UpdatesView? = null
+        var held = 0
         shoot(
             "r5a-updates-same-chapter",
             FixtureScene.READING_HOME,
@@ -47,9 +47,25 @@ class R5AuditUpdatesTest : ReadingShotHarness() {
                 asked = true
                 store.reading.loadUpdates()
             }
-            store.reading.updates.value?.days?.any { it.rows.isNotEmpty() } == true
+            val staged = shown
+            if (staged == null) {
+                store.reading.updates.value?.days?.any { it.rows.isNotEmpty() } == true
+            } else if (store.reading.updates.value !== staged) {
+                // The engine's own answer came after the staging: stage it again over it.
+                updatesFlow(store).value = staged
+                held = 0
+                false
+            } else {
+                // Held for several frames, so the list is composed with both rows.
+                ++held >= HELD_FRAMES
+            }
         }
-        assertSame("the staged list was replaced before it was drawn", shown, store?.reading?.updates?.value)
+        // Reaching here means the list composed both rows: with the bug, LazyColumn throws on
+        // the repeated key while the staged list is held.
+    }
+
+    private companion object {
+        const val HELD_FRAMES = 10
     }
 
     @Suppress("UNCHECKED_CAST")
