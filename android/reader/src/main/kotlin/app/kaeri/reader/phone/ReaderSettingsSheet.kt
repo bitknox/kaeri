@@ -128,17 +128,19 @@ fun ReaderSettingsSheet(
     val strip = view.mode == ReaderMode.STRIP || view.mode == ReaderMode.VERTICAL
     // The Tap zones page runs past a half-open sheet: it opens the sheet all the way.
     // Back from a page of the sheet goes to the page it came from, not out of the sheet.
-    val back = {
-        val from = pane
-        pane = when (from) {
-            Pane.Main -> Pane.Main
-            Pane.Paper -> paperBack
-            Pane.TapZones -> Pane.More
-            else -> Pane.Main
-        }
-        from != Pane.Main
-    }
-    ReaderSheet(instant = instant, onDismiss = onDismiss, expanded = pane == Pane.TapZones, onBack = back) {
+    ReaderSheet(
+        instant = instant,
+        onDismiss = onDismiss,
+        expanded = pane == Pane.TapZones,
+        firstPage = pane == Pane.Main,
+        pageBack = {
+            pane = when (pane) {
+                Pane.Paper -> paperBack
+                Pane.TapZones -> Pane.More
+                else -> Pane.Main
+            }
+        },
+    ) {
         Column(Modifier.verticalScroll(rememberScrollState()).navigationBarsPadding().padding(horizontal = 20.dp, vertical = 4.dp)) {
             when (pane) {
                 Pane.Main -> Main(
