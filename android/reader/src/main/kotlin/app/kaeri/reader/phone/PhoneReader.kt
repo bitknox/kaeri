@@ -170,6 +170,7 @@ import app.kaeri.reader.LocalPageTone
 import app.kaeri.reader.PageImages
 import app.kaeri.reader.PageWaits
 import app.kaeri.reader.openingClock
+import app.kaeri.reader.rememberFadedIn
 import app.kaeri.reader.PagedReader
 import app.kaeri.reader.ReaderAction
 import app.kaeri.reader.ReaderKeyRules
@@ -1443,10 +1444,10 @@ fun openingStage(context: android.content.Context, wait: ReaderWait?, chapter: S
 internal const val OPENING_LONG_MS = 15_000
 
 /**
- * While a chapter opens: nothing for 600 ms, then the page plate in the page's place with what
- * the open waits on, from 3 s with how long, and from [OPENING_LONG_MS] Try again, another
- * source and Go back. Try again counts the wait from the start. Once the first page is [done] and
- * drawn over it, the plate fades out.
+ * While a chapter opens: nothing for 600 ms, then the page plate in the page's place, fading in,
+ * with what the open waits on, from 3 s with how long, and from [OPENING_LONG_MS] Try again,
+ * another source and Go back. Try again counts the wait from the start. Once the first page is
+ * [done] and drawn over it, the plate fades out.
  */
 @Composable
 private fun Opening(
@@ -1480,6 +1481,8 @@ private fun Opening(
         }
     }
     if (waited < PageWaits.PLATE_MS) return
+    // The plate fades in from nothing as the page plates do, rather than appearing whole at 600 ms.
+    val faded = rememberFadedIn()
     val number = (state.openingChapter ?: state.view?.chapter)?.let(::chapterNumber)
     val stage = openingStage(context, state.openingWait, number)
     val line = when {
@@ -1489,7 +1492,7 @@ private fun Opening(
     val long = waited >= OPENING_LONG_MS && !done
     LaunchedEffect(long) { if (long) session.loadSources() }
     var choosing by remember { mutableStateOf(false) }
-    BoxWithConstraints(Modifier.fillMaxSize().graphicsLayer { alpha = shown.value }, contentAlignment = Alignment.Center) {
+    BoxWithConstraints(Modifier.fillMaxSize().graphicsLayer { alpha = shown.value * faded.value }, contentAlignment = Alignment.Center) {
         // The page's place: a page's shape, as wide as it fits.
         val width = minOf(maxWidth, maxHeight * 0.703f)
         Box(Modifier.width(width).aspectRatio(0.703f).background(Chrome.plate)) {

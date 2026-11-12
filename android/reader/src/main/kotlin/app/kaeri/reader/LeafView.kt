@@ -331,7 +331,7 @@ fun BoxScope.ImageWaiting(page: Int, long: Boolean) {
  * fade is not movement.
  */
 @Composable
-private fun rememberFadedIn(): Animatable<Float, AnimationVector1D> {
+internal fun rememberFadedIn(): Animatable<Float, AnimationVector1D> {
     val shown = remember { Animatable(0f) }
     val removed = rememberAnimationsRemoved()
     LaunchedEffect(Unit) {
