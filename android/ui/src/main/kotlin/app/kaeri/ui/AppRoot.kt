@@ -155,11 +155,15 @@ internal fun barOwner(destination: Destination, answer: KaeriIsFor): Destination
 internal fun Destination.labelFor(answer: KaeriIsFor): Int =
     if (this == Destination.Home && answer == KaeriIsFor.BOTH) R.string.nav_watch else label
 
-/** What Kaeri is for on this device, as the screens read it: Watch until the engine says. */
+/**
+ * What Kaeri is for on this device, as the screens read it: until the engine says, the answer kept
+ * from the last launch, or Watch.
+ */
 @Composable
 internal fun kaeriIsFor(): KaeriIsFor {
-    val view by LocalAppStore.current.medium.view.collectAsStateWithLifecycle()
-    return view?.answer ?: KaeriIsFor.WATCH
+    val medium = LocalAppStore.current.medium
+    val view by medium.view.collectAsStateWithLifecycle()
+    return view?.answer ?: medium.kept ?: KaeriIsFor.WATCH
 }
 
 /** What the screens' actions open, which later phases fill in. */
@@ -420,7 +424,7 @@ private fun AppRootFrame(
     val wide = wideWindow() && !eink
     val einkReader = eink && einkReaderShape()
     val mediumView by store.medium.view.collectAsStateWithLifecycle()
-    val answer = mediumView?.answer ?: KaeriIsFor.WATCH
+    val answer = mediumView?.answer ?: store.medium.kept ?: KaeriIsFor.WATCH
     // Settings on a 10 inch e-reader keeps the bar, with More marked.
     val settingsTab = if (eink && fullWindow) einkSettingsTab(answer, einkReader, app.kaeri.ui.reading.largePanel()) else null
 
