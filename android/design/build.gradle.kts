@@ -21,7 +21,7 @@ android {
 // google/fonts; once there it costs a checksum, and needs no network.
 val checkFonts = tasks.register<Exec>("checkFonts") {
     description = "Fetches the fonts with android/scripts/fonts.sh unless they are there."
-    commandLine(rootDir.resolve("scripts/fonts.sh").path)
+    commandLine(KaeriSdk.script(rootDir.resolve("scripts/fonts.sh")))
 }
 tasks.configureEach {
     if (name == "preBuild") dependsOn(checkFonts)
