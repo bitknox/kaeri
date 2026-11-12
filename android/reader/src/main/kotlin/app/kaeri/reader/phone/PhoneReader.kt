@@ -307,6 +307,9 @@ fun PhoneReader(
     }
     // The guide is drawn over the whole page, so the controls go when it comes, as Show zones has it.
     LaunchedEffect(guide.up) { if (guide.up) chrome = false }
+    // Turning past a novel's last page is a turn like any other: the controls go, so the end page's
+    // buttons are clear of them.
+    LaunchedEffect(place.ended) { if (place.ended) chrome = false }
 
     // A Fixtures shot's step, once the credit pages or parts it staged have come.
     val creditShot = CreditShot.step
@@ -580,7 +583,7 @@ fun PhoneReader(
                                 instant = instant,
                             )
                         }
-                        place.ended -> NovelEndPage(state, session, actions, images, direction, zones, reading, onBack = { place.ended = false }, cover = cover, onFirstPage = {
+                        place.ended -> NovelEndPage(state, session, actions, images, direction, zones, reading, onControls = { chrome = !chrome }, onBack = { place.ended = false }, cover = cover, onFirstPage = {
                             place.ended = false
                             place.go(0)
                         })
@@ -1301,7 +1304,8 @@ private fun BoxScope.PagesLeft(state: ReaderState, place: NovelPlace) {
 
 /**
  * A novel's end page over its last page: the same page as manga's. A swipe back returns to the
- * text, a swipe on goes to the next chapter.
+ * text, a swipe on goes to the next chapter, and a tap in the Controls zone shows or hides the
+ * controls, as on any page.
  */
 @Composable
 private fun NovelEndPage(
@@ -1312,6 +1316,7 @@ private fun NovelEndPage(
     direction: ReadDirection,
     zones: TapZoneSettings,
     reading: TapReading?,
+    onControls: () -> Unit,
     onBack: () -> Unit,
     cover: (@Composable (Modifier) -> Unit)?,
     onFirstPage: () -> Unit,
@@ -1321,13 +1326,13 @@ private fun NovelEndPage(
     val next = state.endNext
     Box(
         Modifier.fillMaxSize().pointerInput(zones, reading) {
-            // A tap in a Next zone goes on, in a Previous zone returns to the text; the page's
-            // buttons take their own taps first.
+            // A tap in a Next zone goes on, in a Previous zone returns to the text, and in the
+            // Controls zone shows or hides the controls; the page's buttons take their own taps first.
             detectTapGestures { at ->
-                when (reading?.let { zones.actionAt(it, at.x / size.width, at.y / size.height) }) {
+                when (reading?.let { zones.actionAt(it, at.x / size.width, at.y / size.height) } ?: TapAction.CONTROLS) {
                     TapAction.NEXT -> session.crossOn()
                     TapAction.PREVIOUS -> onBack()
-                    else -> {}
+                    TapAction.CONTROLS -> onControls()
                 }
             }
         }.pointerInput(next?.id, direction) {
