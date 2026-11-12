@@ -9,8 +9,11 @@ package app.kaeri.reader.phone
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
-import android.view.accessibility.AccessibilityManager
-import androidx.activity.compose.PredictiveBackHandler
+import app.kaeri.reader.ReaderPredictiveBackHandler
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
@@ -29,6 +32,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableIntStateOf
@@ -173,7 +177,21 @@ import app.kaeri.reader.ReaderSession
 import app.kaeri.reader.ReaderState
 import app.kaeri.reader.ShownNotice
 import app.kaeri.reader.StripReader
-import app.kaeri.reader.TapZones
+import app.kaeri.reader.StripStep
+import app.kaeri.reader.TapGuide
+import app.kaeri.reader.TapGuideLayer
+import app.kaeri.reader.ShowTapGuideWhenDue
+import app.kaeri.reader.actionAt
+import app.kaeri.reader.clearsTapGuide
+import app.kaeri.reader.rememberScreenReader
+import app.kaeri.reader.tapReading
+import app.kaeri.reader.tapZones
+import app.kaeri.engine.model.TapAction
+import app.kaeri.engine.model.TapMap
+import app.kaeri.engine.model.TapReading
+import app.kaeri.engine.model.TapZoneSettings
+import app.kaeri.engine.model.tapMap
+import app.kaeri.engine.model.tapScrollStep
 import app.kaeri.reader.onKeyDown
 import app.kaeri.reader.readerKeys
 import app.kaeri.reader.takesKeyUp
@@ -211,13 +229,6 @@ private tailrec fun Context.activity(): Activity? = when (this) {
     else -> null
 }
 
-/** The tap bands for the Tap zones setting: edges are thirds, halves keep a band in the middle, off has none. */
-internal fun zonesFor(choice: String?, direction: ReadDirection): TapZones = when (choice) {
-    "sides" -> if (direction.rightToLeft) TapZones(0f..0.45f, 0.45f..0.55f) else TapZones(0.55f..1f, 0.45f..0.55f)
-    "off" -> TapZones(2f..2f, 0f..1f)
-    else -> TapZones.phone(direction)
-}
-
 /**
  * The phone reader for [session]. Pages and strips are drawn here; a novel is drawn by [novel],
  * which the app supplies with the engine's book server.
@@ -238,7 +249,10 @@ fun PhoneReader(
     onSettingsShown: () -> Unit = {},
     /** Off while the reader leaves: touches go nowhere. */
     enabled: Boolean = true,
+    /** Where the strip is scrolled to. */
+    stripList: LazyListState = rememberLazyListState(),
 ) {
+    val stripStep = remember { StripStep() }
     val context = LocalContext.current
     val view = state.view
     val density = LocalDensity.current
@@ -278,15 +292,23 @@ fun PhoneReader(
         onSettingsShown()
     }
 
-    // While TalkBack runs the chrome stays shown.
-    val accessibility = remember { context.getSystemService(AccessibilityManager::class.java) }
-    val exploring = accessibility?.isTouchExplorationEnabled == true
+    // While TalkBack runs the chrome stays shown, and the tap zones are off.
+    val exploring = rememberScreenReader()
     val shown = chrome || exploring
+
+    // The engine's tap zones for what is open, and their guide.
+    val zones = state.tapZones()
+    val reading = state.tapReading(zoomed = pager.zoomed, screenReader = exploring)
+    val guide = remember { TapGuide() }
+    fun guideSeen(map: TapMap) {
+        if (!exploring) session.tapGuideSeen(map)
+    }
+    // The guide is drawn over the whole page, so the controls go when it comes, as Show zones has it.
+    LaunchedEffect(guide.up) { if (guide.up) chrome = false }
 
     // A Fixtures shot's step, once the credit pages or parts it staged have come.
     val creditShot = CreditShot.step
     val staged = state.openCredits.isNotEmpty() || state.parts != null
-    val stripList = rememberLazyListState()
     LaunchedEffect(creditShot, staged) {
         if (creditShot == null || !staged) return@LaunchedEffect
         delay(600)
@@ -381,6 +403,8 @@ fun PhoneReader(
     }
 
     fun act(action: ReaderAction) {
+        // A key clears the guide as a touch does, and still does what it asks.
+        guide.clear()?.let(::guideSeen)
         // The last page of the chapter's story, before its end page.
         val last = state.leaves.indexOfLast { !it.endPage }.coerceAtLeast(0)
         when (action) {
@@ -424,9 +448,9 @@ fun PhoneReader(
 
     // Back closes the reader, even with the chrome up; it follows the finger toward the series.
     var backProgress by remember { mutableFloatStateOf(0f) }
-    PredictiveBackHandler(enabled = sheet == Sheet.None) { progress ->
+    ReaderPredictiveBackHandler(enabled = sheet == Sheet.None) { progress ->
         try {
-            progress.collect { backProgress = it.progress }
+            progress.collect { backProgress = it }
             actions.onClose()
         } catch (e: CancellationException) {
             backProgress = 0f
@@ -466,11 +490,13 @@ fun PhoneReader(
                     if (state.view == null && !state.opening) return@readerSurface
                     session.surface(surface)
                 }
-                .readerKeys(keyRules, ::act),
+                .readerKeys(keyRules, ::act)
+                // The guide's first touch clears it, and still turns, scrolls or opens the controls.
+                .clearsTapGuide(guide, ::guideSeen),
         ) {
             val failure = state.failure
-            val tapZones = zonesFor(state.choice(ReaderSettingKey.TAP_LAYOUT), direction)
             val strip = view?.mode == ReaderMode.STRIP || view?.mode == ReaderMode.VERTICAL
+            val scope = rememberCoroutineScope()
             var showingAbove by remember(view?.chapter?.id) { mutableStateOf(false) }
             var openingHeld by remember { mutableStateOf(true) }
             var plateGone by remember { mutableStateOf(false) }
@@ -552,7 +578,7 @@ fun PhoneReader(
                                 instant = instant,
                             )
                         }
-                        place.ended -> NovelEndPage(state, session, actions, images, direction, tapZones, onBack = { place.ended = false }, cover = cover, onFirstPage = {
+                        place.ended -> NovelEndPage(state, session, actions, images, direction, zones, reading, onBack = { place.ended = false }, cover = cover, onFirstPage = {
                             place.ended = false
                             place.go(0)
                         })
@@ -560,11 +586,35 @@ fun PhoneReader(
                 }
                 strip && view != null && (state.leaves.isNotEmpty() || state.previous != null) -> {
                     val gap = if (state.choice(ReaderSettingKey.STRIP_GAP) == "small") 8.dp else 0.dp
+                    // Next and Previous scroll by the engine's step of the visible height, at once with
+                    // Remove animations or in Paper mode; Off, the default, shows the controls.
+                    // A tap during a step adds to what is left of it.
+                    fun scrollStep(down: Boolean, touch: Boolean = false) {
+                        val by = stripList.layoutInfo.viewportSize.height * tapScrollStep().toFloat() * (if (down) 1f else -1f)
+                        stripStep.go(scope, stripList, by, smooth = fades && !removed, Motion.standard(), touch)
+                    }
+                    val scrollDown = Strings.readerZoneScrollDown(context)
+                    val scrollUp = Strings.readerZoneScrollUp(context)
+                    val showControls = Strings.readerActionControls(context)
                     StripReader(
                         state = state,
                         images = images,
                         onAt = { at, foot -> session.stripAt(at, foot) },
-                        onTap = { chrome = !chrome },
+                        onTap = { x, y ->
+                            when (reading?.let { zones.actionAt(it, x, y) } ?: TapAction.CONTROLS) {
+                                TapAction.NEXT -> scrollStep(true, touch = true)
+                                TapAction.PREVIOUS -> scrollStep(false, touch = true)
+                                TapAction.CONTROLS -> chrome = !chrome
+                            }
+                        },
+                        // TalkBack: the strip offers its moves as actions.
+                        modifier = Modifier.semantics {
+                            customActions = listOf(
+                                CustomAccessibilityAction(scrollDown) { scrollStep(true); true },
+                                CustomAccessibilityAction(scrollUp) { scrollStep(false); true },
+                                CustomAccessibilityAction(showControls) { chrome = !chrome; true },
+                            )
+                        },
                         onScrolled = { chrome = false },
                         onMissing = session::needPage,
                         onRetry = { session.retry(it.toUInt()) },
@@ -575,6 +625,7 @@ fun PhoneReader(
                         onFlow = { next -> session.flowInto(next.id) },
                         onShowing = { showingAbove = it },
                         list = stripList,
+                        stepping = stripStep::catch,
                         gap = gap,
                     )
                 }
@@ -600,7 +651,8 @@ fun PhoneReader(
                     pager = pager,
                     images = images,
                     direction = direction,
-                    zones = tapZones,
+                    taps = zones,
+                    reading = reading ?: TapReading(view?.mode ?: ReaderMode.PAGED, direction, false, exploring),
                     onControls = { chrome = !chrome },
                     onShown = { leaf, how, turned ->
                         session.shown(leaf, how)
@@ -644,9 +696,20 @@ fun PhoneReader(
                 }
             }
 
-            if (view != null && view.mode != ReaderMode.STRIP && view.mode != ReaderMode.VERTICAL && !novelOpen && state.leaves.isNotEmpty()) {
-                TapZonesHint(context, direction, tapZones, pager.turns, shown, fades)
+            // The tap zone guide, over the page and under the controls: once the page is drawn and
+            // nothing covers it, when the engine says it is due.
+            val pageUp = when {
+                novelOpen -> place.ready && !place.ended && place.failed == null
+                strip -> state.leaves.isNotEmpty()
+                else -> state.leaves.isNotEmpty() && !openingHeld && leaving == null
             }
+            ShowTapGuideWhenDue(
+                guide,
+                zones = state.settings?.tapZones,
+                reading = reading,
+                ready = view != null && failure == null && pageUp && sheet == Sheet.None,
+            )
+            TapGuideLayer(guide, fades)
 
             if (view != null) {
                 AnimatedVisibility(
@@ -811,6 +874,12 @@ fun PhoneReader(
                     session,
                     state,
                     onDismiss = { sheet = Sheet.None },
+                    // Show zones: the sheet and the controls go, and the guide shows over the page.
+                    onShowZones = {
+                        sheet = Sheet.None
+                        chrome = false
+                        reading?.let { guide.show(tapMap(zones, it, null)) }
+                    },
                     toggle = ::toggleSetting,
                     instant = instant,
                     start = settingsStart,
@@ -823,14 +892,18 @@ fun PhoneReader(
     }
 }
 
-/** Hides the system bars with the chrome and shows them with it; the icons follow the look. */
+/**
+ * Hides the system bars with the chrome and shows them with it; the icons follow the look. Hidden,
+ * the system's gestures still work on the first swipe, so one edge swipe goes back, as on iPhone;
+ * a swipe from the top or bottom brings the bars back.
+ */
 @Composable
 private fun SystemBars(context: Context, shown: Boolean, light: Boolean) {
     val view = LocalView.current
     val window = remember { context.activity()?.window }
     val controller = remember(window) { window?.let { WindowCompat.getInsetsController(it, view) } }
     LaunchedEffect(controller) {
-        controller?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        controller?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
     }
     LaunchedEffect(controller, shown) {
         if (shown) controller?.show(WindowInsetsCompat.Type.systemBars()) else controller?.hide(WindowInsetsCompat.Type.systemBars())
@@ -1228,22 +1301,23 @@ private fun NovelEndPage(
     actions: PhoneReaderActions,
     images: PageImages,
     direction: ReadDirection,
-    zones: TapZones,
+    zones: TapZoneSettings,
+    reading: TapReading?,
     onBack: () -> Unit,
     cover: (@Composable (Modifier) -> Unit)?,
     onFirstPage: () -> Unit,
 ) {
     val density = LocalDensity.current
     val far = with(density) { 80.dp.toPx() }
-    val next = (state.end?.next ?: state.view?.next)
+    val next = state.endNext
     Box(
-        Modifier.fillMaxSize().pointerInput(zones) {
-            // A tap in the forward zone goes on, in the back zone returns to the text; the page's
+        Modifier.fillMaxSize().pointerInput(zones, reading) {
+            // A tap in a Next zone goes on, in a Previous zone returns to the text; the page's
             // buttons take their own taps first.
             detectTapGestures { at ->
-                when (zones.at(at.x / size.width)) {
-                    ReaderAction.FORWARD -> session.crossOn()
-                    ReaderAction.BACK -> onBack()
+                when (reading?.let { zones.actionAt(it, at.x / size.width, at.y / size.height) }) {
+                    TapAction.NEXT -> session.crossOn()
+                    TapAction.PREVIOUS -> onBack()
                     else -> {}
                 }
             }
@@ -1319,42 +1393,6 @@ private fun BackToPage(words: String, rtl: Boolean, onClick: () -> Unit) {
         Text(words, color = Chrome.text, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
-
-/** The three tap zones, shown once on the first chapter and when the direction changes. */
-@Composable
-private fun TapZonesHint(context: Context, direction: ReadDirection, zones: TapZones, turns: Int, chromeShown: Boolean, fades: Boolean) {
-    val prefs = remember { context.getSharedPreferences("kaeri_reader_ui", Context.MODE_PRIVATE) }
-    var visible by remember { mutableStateOf(prefs.getString("zones_direction", null) != direction.name) }
-    LaunchedEffect(direction) {
-        if (visible) {
-            prefs.edit().putString("zones_direction", direction.name).apply()
-            delay(5000)
-            visible = false
-        }
-    }
-    // The first touch ends it.
-    LaunchedEffect(turns, chromeShown) { if (turns > 1 || chromeShown) visible = false }
-    // Shown at once; it leaves on the fade-out, or at once in Paper mode.
-    AnimatedVisibility(visible = visible, enter = EnterTransition.None, exit = if (fades) fadeOut(tween300()) else ExitTransition.None) {
-        Row(Modifier.fillMaxSize()) {
-            val forward = zones.forward.endInclusive - zones.forward.start
-            val middle = zones.controls.endInclusive - zones.controls.start
-            val back = (1f - forward - middle).coerceAtLeast(0.01f)
-            val first = if (direction.rightToLeft) forward to Strings.readerZoneNext(context) else back to Strings.readerZonePrevious(context)
-            val last = if (direction.rightToLeft) back to Strings.readerZonePrevious(context) else forward to Strings.readerZoneNext(context)
-            for ((weight, label) in listOf(first, middle.coerceAtLeast(0.01f) to Strings.readerZoneControls(context), last)) {
-                Box(
-                    Modifier.weight(weight).fillMaxSize().background(Color(0x33000000)).border(0.5.dp, Chrome.rule),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(label, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                }
-            }
-        }
-    }
-}
-
-private fun tween300() = androidx.compose.animation.core.tween<Float>(300)
 
 /**
  * The strip's divider into the next chapter, 168 dp on the ground: Next, its name at 22 on 28,

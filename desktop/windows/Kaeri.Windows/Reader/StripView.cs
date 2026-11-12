@@ -347,7 +347,7 @@ sealed class StripView : Grid
             var part = section.Parts[index];
             var view = new PartView(Reader, part, section.Chapter, owner.PagePalette, HorizontalAlignment.Center, true, false,
                 T.WindowsReaderImageLabel(index + 1, section.Parts.Count), atOnce,
-                section.Kept.Count > 0 ? p => FileFor(section, p) : null)
+                section.Kept.Count > 0 ? p => FileFor(section, p) : null, strip: true)
             {
                 Width = columnWidth,
                 Height = HeightOf(section, part),

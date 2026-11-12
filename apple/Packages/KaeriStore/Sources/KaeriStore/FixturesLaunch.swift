@@ -32,11 +32,13 @@ extension EngineLaunch {
     public static let mediaArgument = "-KaeriMedia"
 
     /// What the Playing scene streams when the arguments name nothing: the episode
-    /// `apple/scripts/player-media.sh` makes in this checkout.
+    /// `apple/scripts/player-media.sh` makes in this checkout. The path stays in the checkout:
+    /// `standardizedFileURL` would follow `apple/.mpv` when it links to a shared libmpv folder
+    /// and the episode is there, so `standardized` only drops the `..` steps.
     public static let fixtureEpisode = URL(filePath: #filePath)
         .deletingLastPathComponent()
         .appending(path: "../../../../.mpv/media/episode.mkv")
-        .standardizedFileURL
+        .standardized
 
     /// The scene `arguments` name, Watching when they name none.
     public static func scene(arguments: [String]) -> FfiScene? {

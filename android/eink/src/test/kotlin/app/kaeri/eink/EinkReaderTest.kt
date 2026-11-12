@@ -163,11 +163,14 @@ class EinkReaderTest {
     @Test
     fun out_of_the_box_page_turns_ask_for_no_full_refresh() {
         open()
-        repeat(2) {
+        // Each page is drawn before the next turn: a page turned away before its image came in
+        // asks for nothing.
+        imagePagesDrawn(Refresh.PARTIAL, 1)
+        repeat(2) { turn ->
             compose.onRoot().performKeyInput { pressKey(Key.VolumeDown) }
             compose.waitForIdle()
+            imagePagesDrawn(Refresh.PARTIAL, turn + 2)
         }
-        compose.waitUntil(5_000) { fake.requests.count { it.refresh == Refresh.PARTIAL } >= 2 }
         assertTrue(fake.requests.none { it.refresh == Refresh.FULL })
     }
 
@@ -184,24 +187,51 @@ class EinkReaderTest {
     @Test
     fun the_lower_volume_key_turns_forward_and_each_image_page_is_a_full_refresh_when_asked() {
         open(policy = optedIn)
+        // Pages decode off the main thread: the refresh follows once the page is drawn, and a page
+        // turned away before then asks for none, so the first is drawn before the turn.
+        imagePagesDrawn(Refresh.FULL, 1)
         // Down goes forward, as on the phone, until the phone's swap says otherwise.
         compose.onRoot().performKeyInput { pressKey(Key.VolumeDown) }
         compose.waitForIdle()
         assertEquals(TurnHow.KEY, shown().last().how)
         assertEquals(1u, shown().last().leaf)
-        // Pages decode off the main thread: the refresh follows once the page is drawn.
-        compose.waitUntil(5_000) { fake.requests.count { it.refresh == Refresh.FULL } >= 2 }
+        imagePagesDrawn(Refresh.FULL, 2)
+    }
+
+    /** Waits until [count] refreshes of the kind [refresh] were asked for. */
+    private fun imagePagesDrawn(refresh: Refresh, count: Int) {
+        compose.waitUntil(5_000) { fake.requests.count { it.refresh == refresh } >= count }
+    }
+
+    /** Once the first page is drawn, with its refresh in, the log starts again. */
+    private fun drawn() {
+        compose.waitUntil(5_000) { fake.requests.any { it.refresh == Refresh.FULL || it.refresh == Refresh.PARTIAL } }
+        compose.waitForIdle()
+        fake.clear()
     }
 
     @Test
     fun a_middle_tap_shows_the_bars() {
-        open()
+        open(policy = optedIn)
+        drawn()
         compose.onRoot().performTouchInput { click(androidx.compose.ui.geometry.Offset(width * 0.55f, height * 0.5f)) }
         compose.waitForIdle()
         compose.onNodeWithText("Page 1 of 3").assertIsDisplayed()
         compose.onNodeWithText("2 pages left in chapter").assertIsDisplayed()
         compose.onNodeWithText("Chapter 12 · The Long Stair").assertIsDisplayed()
-        assertEquals(Refresh.FAST, fake.requests.last().refresh)
+        // The touch that clears the guide is one refresh: full, since full refreshes on image pages are on.
+        assertEquals(listOf(Refresh.FULL), fake.requests.map { it.refresh })
+    }
+
+    @Test
+    fun without_full_refreshes_the_touch_that_clears_the_guide_is_its_own_refresh() {
+        open(policy = einkPolicyDefaults(EinkPanel.GREY).copy(imageFull = false))
+        drawn()
+        compose.onRoot().performTouchInput { click(androidx.compose.ui.geometry.Offset(width * 0.55f, height * 0.5f)) }
+        compose.waitForIdle()
+        compose.onNodeWithText("Page 1 of 3").assertIsDisplayed()
+        // The device decides: the bars' own fast refresh, and nothing for the guide.
+        assertEquals(listOf(Refresh.FAST), fake.requests.map { it.refresh })
     }
 
     @Test

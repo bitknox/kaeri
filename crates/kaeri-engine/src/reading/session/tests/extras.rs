@@ -120,3 +120,29 @@ async fn the_end_page_counts_the_extras_the_skip_passes() {
     let (_, _, extras) = end_page_extras(&mut h).await;
     assert_eq!(extras, 1);
 }
+
+/// A chapter split into parts from .1 is the story: the end page never skips a part, and the
+/// skip after the last part passes the half chapter that follows it.
+#[tokio::test(start_paused = true)]
+async fn the_parts_of_a_split_chapter_are_never_skipped() {
+    let mut h = harness_of(Store::open_in_memory().unwrap(), "manga", |books| {
+        numbered(books, &[21_000, 21_100, 21_200, 21_500, 22_000])
+    });
+    let (view, _, _) = h.open(OpenAt::Start).await;
+    assert_eq!(view.chapter.id.as_str(), "21");
+    let (next, skip_to) = end_page(&mut h).await;
+    assert_eq!((id(next), id(skip_to)), (Some("21.1".into()), None));
+
+    let session = h.session();
+    h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("21.2") });
+    let view = h
+        .until(|e| match e {
+            ReaderEvent::Opened(view) => Some(view.as_ref().clone()),
+            _ => None,
+        })
+        .await;
+    assert_eq!(view.chapter.id.as_str(), "21.2");
+    h.until(|e| matches!(e, ReaderEvent::Leaves { .. }).then_some(())).await;
+    let (next, skip_to, extras) = end_page_extras(&mut h).await;
+    assert_eq!((id(next), id(skip_to), extras), (Some("21.5".into()), Some("22".into()), 1));
+}

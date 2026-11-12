@@ -34,7 +34,7 @@ use kaeri_model::{
 };
 
 use super::{
-    chapters::{Ask, Chapters, Here},
+    chapters::{Ask, Chapters, Here, fit_size as chapters_fit},
     listen,
     novel::{NovelSays, NovelView},
 };
@@ -101,6 +101,9 @@ struct State {
     failures: HashMap<u32, ReadingFailure>,
     asked: HashSet<u32>,
     index: usize,
+    /// The page a new layout kept, while the leaf that holds it stays on screen: a spread's
+    /// second page shown alone before the spread comes back alone after it.
+    held_page: Option<u32>,
     settings: Option<ReaderSettingsView>,
     /// Each strip image and its width over height.
     strip_frames: Vec<(gtk::Picture, f32)>,
@@ -123,6 +126,8 @@ struct State {
     flowing: Option<ChapterId>,
     /// The open chapter came in under the strip's marker: it starts where the scroll is.
     flowed: bool,
+    /// The mode changed in the reader: its next layout shows the chapter in the new one.
+    switched: bool,
     /// The demo's work being read, with its credit capsule in the header on page 1.
     demo: Option<(kaeri_model::sources::DemoWorkInfo, gtk::Widget)>,
     /// The open chapter's credit pages, skipped, from the engine's last layout.
@@ -814,6 +819,12 @@ impl Reader {
             let this = Rc::downgrade(&this);
             popover.connect_show(move |popover| {
                 let Some(this) = this.upgrade() else { return };
+                // The window may have changed size since the sheet was filled.
+                if popover == &this.sheet
+                    && *this.sheet_shape_now.borrow() != this.sheet_shape()
+                {
+                    this.fill_sheet(true);
+                }
                 this.aim(popover, &button);
                 // The group may still be coming in with the chrome, its place not laid out yet:
                 // aim again once it is, so the sheet ends just over it.
@@ -900,7 +911,21 @@ impl Reader {
             return;
         };
         let y = group.y().round() as i32 - 8;
-        let aim = gdk::Rectangle::new(0, y, button.width().max(1), 1);
+        // Over the button, but slid along so all of it stays in the window: popovers are kept on
+        // the screen, not in the window, and a narrow window would cut a centred one off.
+        let (x, width) = match button.compute_bounds(&self.widget) {
+            Some(at) => {
+                let (_, natural, _, _) = popover.measure(gtk::Orientation::Horizontal, -1);
+                let middle = popover_middle(
+                    f64::from(at.x()) + f64::from(at.width()) / 2.0,
+                    f64::from(natural),
+                    f64::from(self.widget.width()),
+                );
+                ((middle - f64::from(at.x())).round() as i32, 1)
+            }
+            None => (0, button.width().max(1)),
+        };
+        let aim = gdk::Rectangle::new(x, y, width, 1);
         if popover.pointing_to() != (true, aim) {
             popover.set_pointing_to(Some(&aim));
         }
@@ -1113,6 +1138,26 @@ impl Reader {
         self.fill_end();
     }
 
+    /// Every strip image as if its file were still coming: its plate with its number, and with
+    /// `line` the line under it as from 4 s.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_strip_plate(&self, line: bool) {
+        for (picture, _) in &self.state.borrow().strip_frames {
+            picture.set_paintable(gdk::Paintable::NONE);
+            let Some(plate) = strip_plate(picture) else { continue };
+            plate.set_opacity(1.0);
+            plate.set_visible(true);
+            if let Some(words) = plate.first_child() {
+                words.set_opacity(1.0);
+                if let Some(said) = words.last_child() {
+                    said.set_opacity(1.0);
+                    said.set_visible(line);
+                }
+            }
+        }
+        self.place_plate_words();
+    }
+
     /// The page plate of page 23, still loading, with its line.
     #[cfg(feature = "fixtures")]
     pub fn shot_plate(self: &Rc<Self>) {
@@ -1225,7 +1270,7 @@ impl Reader {
     fn show_plate(self: &Rc<Self>, what: Waiting) {
         let number = match what {
             Waiting::Chapter => self.opening_line.borrow().clone(),
-            Waiting::Page(page) => t::linux_reader_page_plate(i64::from(page + 1)),
+            Waiting::Page(page) => t::reader_page_plate(i64::from(page + 1)),
         };
         if what == Waiting::Chapter {
             self.count_wait();
@@ -1374,7 +1419,7 @@ impl Reader {
                 self.fill_end();
             }
             ReaderEvent::NextPreview { session, chapter, file } if self.mine(*session) => {
-                if let Some(texture) = load_texture(file) {
+                if let Some(texture) = load_texture_cropped(file) {
                     self.state.borrow_mut().preview = Some((chapter.clone(), texture));
                     self.fill_end();
                 }
@@ -1511,26 +1556,14 @@ impl Reader {
             state.asked.clear();
             state.strip_frames.clear();
             state.index = 0;
+            state.held_page = None;
         }
         self.forget_credits();
         self.demo_credit(view.demo_credit.as_ref());
         self.title.set_label(&view.title);
         self.group_title.set_label(&view.title);
         self.line.set_label(&view.chapter.label);
-        // The scrubber runs with the book: right to left fills from the right, with the count
-        // at the right and the total at the left, as the board draws it. A strip runs top to
-        // bottom and fills from the left. The scale keeps its own direction and is inverted.
-        let rtl = view.direction == ReadDirection::RightToLeft
-            && (view.medium == Medium::Novel || !view.mode.flows());
-        if let Some(row) = self.scrub.parent() {
-            row.set_direction(if rtl {
-                gtk::TextDirection::Rtl
-            } else {
-                gtk::TextDirection::Ltr
-            });
-        }
-        self.scrub.set_direction(gtk::TextDirection::Ltr);
-        self.scrub.set_inverted(rtl);
+        self.scrub_runs(view.medium, view.mode, view.direction);
         self.fill_sheet(true);
         self.apply_look();
         self.fill_end();
@@ -1542,6 +1575,84 @@ impl Reader {
         if self.stack.visible_child_name().as_deref() != Some(name) {
             motion::turn(&self.veil, &self.stack, || self.stack.set_visible_child_name(name));
         }
+    }
+
+    /// The scrubber runs with the book: right to left fills from the right, with the count
+    /// at the right and the total at the left, as the board draws it. A strip runs top to
+    /// bottom and fills from the left. The scale keeps its own direction and is inverted.
+    fn scrub_runs(&self, medium: Medium, mode: ReaderMode, direction: ReadDirection) {
+        let rtl = direction == ReadDirection::RightToLeft
+            && (medium == Medium::Novel || !mode.flows());
+        if let Some(row) = self.scrub.parent() {
+            row.set_direction(if rtl {
+                gtk::TextDirection::Rtl
+            } else {
+                gtk::TextDirection::Ltr
+            });
+        }
+        self.scrub.set_direction(gtk::TextDirection::Ltr);
+        self.scrub.set_inverted(rtl);
+    }
+
+    /// A mode or direction picked in the reader: the engine lays the chapter out again
+    /// without opening it, and the page on screen stays on screen in the other mode.
+    fn follow_settings(self: &Rc<Self>, view: &ReaderSettingsView) {
+        let (medium, now) = {
+            let state = self.state.borrow();
+            let (Some(medium), Some(mode), Some(direction)) =
+                (state.medium, state.mode, state.direction)
+            else {
+                return;
+            };
+            if state.session == 0 {
+                return;
+            }
+            let Some(now) = followed(medium, state.work.as_ref(), (mode, direction), view)
+            else {
+                return;
+            };
+            (medium, now)
+        };
+        let (mode, direction) = now;
+        let was = self.state.borrow().mode;
+        if was != Some(mode) {
+            // The page on screen: the first of the leaf, or the strip's image at the top.
+            let page = if self.flows() {
+                let image = self.strip_place().map_or(0, |p| p.image as usize);
+                let state = self.state.borrow();
+                state
+                    .leaves
+                    .iter()
+                    .filter(|l| !l.end_page)
+                    .nth(image)
+                    .and_then(|l| l.parts.first())
+                    .map(|p| p.page)
+            } else {
+                let state = self.state.borrow();
+                let leaf =
+                    state.leaves.get(state.index).filter(|l| !l.end_page).or_else(|| {
+                        // On the end page: the chapter's last page.
+                        state.leaves.iter().rev().find(|l| !l.end_page)
+                    });
+                page_kept(leaf, state.held_page)
+            };
+            let mut state = self.state.borrow_mut();
+            state.start_page = page.or(state.start_page);
+            state.start_strip = None;
+            state.strip_anchor = None;
+            state.flowed = false;
+            state.held_page = None;
+            state.index = 0;
+            // The next layout is a first one, in the new mode.
+            state.leaves.clear();
+            state.switched = true;
+        }
+        {
+            let mut state = self.state.borrow_mut();
+            state.mode = Some(mode);
+            state.direction = Some(direction);
+        }
+        self.scrub_runs(medium, mode, direction);
     }
 
     // ---------------------------------------------------------------------------------------
@@ -1624,15 +1735,26 @@ impl Reader {
     fn leaves(self: &Rc<Self>, leaves: Vec<Leaf>) {
         let flows = self.flows();
         let first = self.state.borrow().leaves.is_empty();
+        let switched = std::mem::take(&mut self.state.borrow_mut().switched);
         // The credit pages and parts that follow a layout are the engine's word on it.
         let on_credit = self.relaid();
         let relay = self.relay_kept();
+        // Pages whose file or crop changed, as after crop borders changed: redrawn in place.
+        let mut redrawn = Vec::new();
         {
             let mut state = self.state.borrow_mut();
             for leaf in &leaves {
                 for part in &leaf.parts {
                     if let Some(file) = &part.file {
-                        state.files.insert(part.page, file.clone());
+                        let old = state.files.insert(part.page, file.clone());
+                        if let Some(old) = old
+                            && (old.path != file.path || old.crop != file.crop)
+                        {
+                            if old.path != file.path {
+                                state.textures.remove(&part.page);
+                            }
+                            redrawn.push(part.page);
+                        }
                     }
                 }
             }
@@ -1679,10 +1801,26 @@ impl Reader {
             }
             self.state.borrow_mut().leaves = leaves;
             if same {
+                for page in redrawn {
+                    self.fill_strip_page(page, true);
+                }
                 self.size_strip();
             } else {
                 self.drop_strip_credits();
                 self.build_strip();
+            }
+            if switched && self.stack.visible_child_name().as_deref() != Some("strip") {
+                // From pages: the images in hand at the kept page are drawn first, while the
+                // strip is off screen and they take no fade, so the page fades into the strip
+                // rather than into its empty frames. The picture goes with the turn.
+                let anchor = self.state.borrow().strip_anchor.map_or(0, |a| a.image as usize);
+                for index in anchor..anchor + 3 {
+                    self.want_strip(index);
+                }
+                motion::turn(&self.veil, &self.stack, || {
+                    self.stack.set_visible_child_name("strip");
+                    self.picture.set_paintable(gdk::Paintable::NONE);
+                });
             }
             return;
         }
@@ -1717,9 +1855,11 @@ impl Reader {
             let start = if first {
                 state.start_page
             } else {
-                // A new layout keeps the page that was showing, one on from a kept page before it.
-                state.leaves.get(state.index).and_then(|l| l.parts.first()).map(|p| {
-                    p.page + u32::from(relay.as_ref().is_some_and(|r| r.page <= p.page))
+                // A new layout keeps the page that was showing, one on from a kept page before
+                // it: the page kept by the last layout while its leaf is still on screen, else
+                // the leaf's first.
+                page_kept(state.leaves.get(state.index), state.held_page).map(|page| {
+                    page + u32::from(relay.as_ref().is_some_and(|r| r.page <= page))
                 })
             };
             state.index = start
@@ -1728,11 +1868,29 @@ impl Reader {
                 })
                 .unwrap_or(0)
                 .min(leaves.len().saturating_sub(1));
+            state.held_page = if first { None } else { start };
             state.leaves = leaves;
         }
         let index = self.state.borrow().index;
         // The first layout, or a new one: the reader put the place there, not the person.
         self.show_leaf(index, TurnHow::Placed);
+        if switched {
+            self.leave_strip();
+        }
+    }
+
+    /// From the strip to pages: once the pages are on screen the strip's images go, and the
+    /// chapters it ran on from with them. A page still on its way leaves the strip up until it
+    /// comes, and the strip goes with the next layout or the close.
+    fn leave_strip(&self) {
+        if self.stack.visible_child_name().as_deref() == Some("strip") {
+            return;
+        }
+        while let Some(child) = self.strip.first_child() {
+            self.strip.remove(&child);
+        }
+        self.state.borrow_mut().strip_frames.clear();
+        self.trail.clear();
     }
 
     fn page_of(&self, index: usize) -> Option<u32> {
@@ -1819,8 +1977,8 @@ impl Reader {
         let (session, chapter, pages) = {
             let state = self.state.borrow();
             let Some(chapter) = state.chapter.as_ref().map(|c| c.id.clone()) else { return };
-            let pages: Vec<u32> = (index.saturating_sub(1)
-                ..(index + 3).min(state.leaves.len()))
+            let pages: Vec<u32> = wanted_leaves(index, state.leaves.len())
+                .into_iter()
                 .filter_map(|i| state.leaves.get(i))
                 .flat_map(|l| l.parts.iter().map(|p| p.page))
                 .filter(|p| !state.files.contains_key(p) && !state.asked.contains(p))
@@ -1835,21 +1993,26 @@ impl Reader {
 
     fn page_ready(self: &Rc<Self>, page: u32, file: PageFile) {
         self.chapters.page_ready(page, &file);
-        {
+        let redrawn = {
             // Another file under a page's number, as after a kept credit page: drawn afresh.
             let mut state = self.state.borrow_mut();
-            if state.files.get(&page).is_some_and(|old| old.path != file.path) {
+            let old = state
+                .files
+                .get(&page)
+                .map(|old| (old.path != file.path, old.crop != file.crop));
+            if old.is_some_and(|(path, _)| path) {
                 state.textures.remove(&page);
             }
             state.files.insert(page, file);
-        }
+            old.is_some_and(|(path, crop)| path || crop)
+        };
         {
             let mut state = self.state.borrow_mut();
             state.failures.remove(&page);
             state.failed.remove(&page);
         }
         if self.flows() {
-            self.fill_strip_page(page);
+            self.fill_strip_page(page, redrawn);
         } else if self.is_current_page(page) {
             let index = self.state.borrow().index;
             self.show_leaf(index, TurnHow::Placed);
@@ -1940,6 +2103,12 @@ impl Reader {
     }
 
     fn show_leaf(self: &Rc<Self>, index: usize, how: TurnHow) {
+        {
+            let mut state = self.state.borrow_mut();
+            if state.index != index {
+                state.held_page = None;
+            }
+        }
         self.leave_credit();
         if self.is_end(index) {
             self.show_end(index, how);
@@ -2254,16 +2423,18 @@ impl Reader {
                 .first()
                 .and_then(|p| {
                     p.ratio.or_else(|| {
-                        p.file.as_ref().map(|f| f.width as f32 / f.height.max(1) as f32)
+                        p.file.as_ref().map(|f| {
+                            let (w, h) =
+                                f.crop.map_or((f.width, f.height), |c| (c.width, c.height));
+                            w as f32 / h.max(1) as f32
+                        })
                     })
                 })
                 .unwrap_or(0.7)
                 .max(0.05);
-            let picture = gtk::Picture::new();
-            picture.set_content_fit(gtk::ContentFit::Fill);
-            picture.set_can_shrink(true);
-            picture.add_css_class("strip-leaf");
-            self.strip.append(&picture);
+            let page = leaf.parts.first().map_or(0, |p| p.page);
+            let (frame, picture) = strip_frame(page);
+            self.strip.append(&frame);
             frames.push((picture, ratio));
         }
         self.state.borrow_mut().strip_frames = frames;
@@ -2368,7 +2539,9 @@ impl Reader {
         }
     }
 
-    fn fill_strip_page(&self, page: u32) {
+    /// Draws a strip page once its file is here. `redrawn` when the page had another file or
+    /// crop before, as after crop borders changed: the picture swaps in place, without a fade.
+    fn fill_strip_page(&self, page: u32, redrawn: bool) {
         let at = self
             .state
             .borrow()
@@ -2379,7 +2552,15 @@ impl Reader {
         if let Some(at) = at
             && let Some(texture) = self.texture_for(page)
         {
-            let ratio = texture.width() as f32 / texture.height().max(1) as f32;
+            // With crop borders on, the engine sends the original with the part to show.
+            let crop = self.state.borrow().files.get(&page).and_then(|f| f.crop);
+            let (paintable, ratio) = match crop.filter(|c| c.width > 0 && c.height > 0) {
+                Some(c) => (cropped(&texture, c), c.width as f32 / c.height as f32),
+                None => (
+                    texture.clone().upcast::<gdk::Paintable>(),
+                    texture.width() as f32 / texture.height().max(1) as f32,
+                ),
+            };
             let (picture, resized) = {
                 let mut state = self.state.borrow_mut();
                 match state.strip_frames.get_mut(at) {
@@ -2391,15 +2572,28 @@ impl Reader {
                     None => (None, false),
                 }
             };
-            if let Some(picture) = picture
-                && picture.paintable().is_none()
-            {
-                picture.set_paintable(Some(&texture));
-                motion::fade_in(&picture);
+            if let Some(picture) = picture {
+                fill_strip_frame(&picture, &paintable, redrawn);
             }
             if resized {
                 self.size_strip();
             }
+        }
+    }
+
+    /// Put each waiting strip image's words in the middle of the part of it on screen, as laid
+    /// out: on every scroll, and once the strip has been laid out at a new size.
+    fn place_plate_words(&self) {
+        let window = f64::from(self.strip_scroll.height());
+        for (picture, _) in &self.state.borrow().strip_frames {
+            if picture.paintable().is_some() {
+                continue;
+            }
+            let top = picture
+                .compute_point(&self.strip_scroll, &gtk::graphene::Point::new(0.0, 0.0))
+                .map(|at| f64::from(at.y()));
+            let seen = top.filter(|_| window > 0.0).map(|top| (-top, window - top));
+            strip_frame_seen(picture, seen);
         }
     }
 
@@ -2425,22 +2619,14 @@ impl Reader {
         if self.line.label() != line {
             self.line.set_label(&line);
         }
+        self.place_plate_words();
         let (top, bottom) = (adj.value() - base, adj.value() + adj.page_size() - base);
         let reach = adj.page_size() * 1.5;
         let (heights, spacing) = self.strip_heights();
         if heights.is_empty() {
             return;
         }
-        let mut wanted = Vec::new();
-        let mut y = 0.0;
-        for (i, h) in heights.iter().enumerate() {
-            let h = f64::from(*h);
-            if y + h >= top - reach && y <= bottom + reach {
-                wanted.push(i);
-            }
-            y += h + f64::from(spacing);
-        }
-        let foot_top = y - f64::from(spacing);
+        let (wanted, foot_top) = strip_wanted(&heights, spacing, top, bottom, reach);
         for i in wanted {
             self.want_strip(i);
         }
@@ -2525,10 +2711,19 @@ impl Reader {
         let page = self.page_of(index);
         let Some(page) = page else { return };
         if self.state.borrow().files.contains_key(&page) {
-            self.fill_strip_page(page);
+            self.fill_strip_page(page, false);
             return;
         }
         self.want(index);
+        let at = {
+            let state = self.state.borrow();
+            let at = state.leaves.iter().take(index).filter(|l| !l.end_page).count();
+            let image = state.leaves.get(index).is_some_and(|l| !l.end_page);
+            state.strip_frames.get(at).filter(|_| image).map(|(picture, _)| picture.clone())
+        };
+        if let Some(picture) = at {
+            strip_frame_asked(&picture);
+        }
     }
 
     /// Space and Page Down in a strip: nine tenths of the window on, on the quick token, from
@@ -2620,6 +2815,7 @@ impl Reader {
         if medium.is_some_and(|m| m != view.medium) {
             return;
         }
+        self.follow_settings(&view);
         self.state.borrow_mut().settings = Some(view);
         self.fill_sheet(false);
         self.apply_look();
@@ -2769,9 +2965,10 @@ impl Reader {
     /// moving calls this as it moves. It stays while the settings are open, the pointer is over
     /// the group or a shot pinned it.
     fn reveal_chrome(self: &Rc<Self>) {
-        self.place_notice(true);
         self.head_fade.set(&self.head, true);
+        // The group first: a hidden one measures nothing, and the notice would sit on it.
         self.group_fade.set(&self.group, true);
+        self.place_notice(true);
         self.credit_line_chrome(true);
         self.widget.set_cursor(None);
         if let Some(id) = self.hide_timer.borrow_mut().take() {
@@ -2812,14 +3009,9 @@ impl Reader {
     /// of the text, and over the group while the group shows, which uses the same margin.
     fn place_notice(&self, chrome: bool) {
         if self.state.borrow().medium == Some(Medium::Novel) {
-            let (_, group, _, _) = self.group.measure(gtk::Orientation::Vertical, -1);
             self.notice.set_valign(gtk::Align::End);
             self.notice.set_margin_top(0);
-            self.notice.set_margin_bottom(if chrome {
-                self.group.margin_bottom() + group + 12
-            } else {
-                44
-            });
+            self.notice.set_margin_bottom(notice_lift(&self.group, chrome));
         } else {
             self.notice.set_valign(gtk::Align::Start);
             self.notice.set_margin_top(60);
@@ -3069,6 +3261,15 @@ impl Reader {
         self.widget.add_controller(moved);
         self.group.add_controller(self.group_hover.clone());
 
+        // A new size or new images move every plate's part on screen.
+        self.strip_scroll.vadjustment().connect_changed({
+            let this = Rc::downgrade(self);
+            move |_| {
+                if let Some(this) = this.upgrade() {
+                    this.place_plate_words();
+                }
+            }
+        });
         self.strip_scroll.vadjustment().connect_value_changed({
             let this = Rc::downgrade(self);
             move |_| {
@@ -3146,6 +3347,12 @@ impl Reader {
                     this.apply_fit();
                     this.size_strip();
                     this.group.set_width_request(GROUP_WIDTH.min(size.0 - 32).max(240));
+                    this.chapters.fit(size);
+                    if this.sheet.is_visible()
+                        && *this.sheet_shape_now.borrow() != this.sheet_shape()
+                    {
+                        this.fill_sheet(true);
+                    }
                     let plate = ((f64::from(size.1) * 0.7).round() as i32).min(size.0.max(1));
                     this.failed_plate.set_size_request(plate, -1);
                 }
@@ -3234,6 +3441,43 @@ impl Reader {
         }
         true
     }
+}
+
+/// The part of `texture` that `crop` names, in the texture's pixels, as a picture that size.
+fn cropped(texture: &gdk::Texture, crop: kaeri_model::reader::PixelRect) -> gdk::Paintable {
+    let (x, y, w, h) = (crop.x as f32, crop.y as f32, crop.width as f32, crop.height as f32);
+    let snapshot = gtk::Snapshot::new();
+    snapshot.push_clip(&gtk::graphene::Rect::new(0.0, 0.0, w, h));
+    snapshot.translate(&gtk::graphene::Point::new(-x, -y));
+    texture.snapshot(&snapshot, f64::from(texture.width()), f64::from(texture.height()));
+    snapshot.pop();
+    snapshot
+        .to_paintable(Some(&gtk::graphene::Size::new(w, h)))
+        .unwrap_or_else(|| texture.clone().upcast())
+}
+
+/// As [`load_texture`], cut to the file's crop when it has one: for a picture that is not
+/// composed as a leaf is.
+fn load_texture_cropped(file: &PageFile) -> Option<gdk::Texture> {
+    let Some(c) = file.crop.filter(|c| c.width > 0 && c.height > 0) else {
+        return load_texture(file);
+    };
+    let image =
+        image::ImageReader::open(&file.path).ok()?.with_guessed_format().ok()?.decode().ok()?;
+    if c.x + c.width > image.width() || c.y + c.height > image.height() {
+        return load_texture(file);
+    }
+    let rgba = image.crop_imm(c.x, c.y, c.width, c.height).into_rgba8();
+    Some(
+        gdk::MemoryTexture::new(
+            c.width as i32,
+            c.height as i32,
+            gdk::MemoryFormat::R8g8b8a8,
+            &glib::Bytes::from_owned(rgba.into_raw()),
+            c.width as usize * 4,
+        )
+        .upcast(),
+    )
 }
 
 fn load_texture(file: &PageFile) -> Option<gdk::Texture> {
@@ -3337,6 +3581,214 @@ fn strip_leaves(leaves: &[Leaf]) -> Vec<Vec<u32>> {
         .collect()
 }
 
+/// The leaves to ask for around leaf `index` of `count`, in the order the engine fetches them:
+/// the one wanted first, then the two after it, then the one before. Asked in reading order, a
+/// jump far into a chapter on a slow source waited for the page before it.
+fn wanted_leaves(index: usize, count: usize) -> Vec<usize> {
+    let ahead = (index..(index + 3).min(count)).collect::<Vec<_>>();
+    let behind = index.checked_sub(1).filter(|i| *i < count);
+    ahead.into_iter().chain(behind).collect()
+}
+
+/// The strip images to ask for with the viewport from `top` to `bottom`, given each image's
+/// height and the gap between them, and where the foot starts. The images in view come first,
+/// then those up to `reach` below it, then those up to `reach` above it, nearest first: a jump
+/// far into a long strip fetches what it lands on before the images it passed.
+fn strip_wanted(
+    heights: &[i32],
+    spacing: i32,
+    top: f64,
+    bottom: f64,
+    reach: f64,
+) -> (Vec<usize>, f64) {
+    let (mut seen, mut ahead, mut behind) = (Vec::new(), Vec::new(), Vec::new());
+    let mut y = 0.0;
+    for (i, h) in heights.iter().enumerate() {
+        let h = f64::from(*h);
+        if y + h >= top && y <= bottom {
+            seen.push(i);
+        } else if y > bottom && y <= bottom + reach {
+            ahead.push(i);
+        } else if y + h < top && y + h >= top - reach {
+            behind.push(i);
+        }
+        y += h + f64::from(spacing);
+    }
+    behind.reverse();
+    seen.extend(ahead);
+    seen.extend(behind);
+    (seen, y - f64::from(spacing))
+}
+
+/// A strip image's place: the picture, and over it the plate while its file is on its way, as a
+/// page waits in the paged reader: nothing for 600 ms, then the plate with the image's number,
+/// and a line under it once it has been asked for 4 s ([`strip_frame_asked`]). The words sit in
+/// the middle of the part of the image on screen ([`strip_frame_seen`]). A jump far into a long
+/// chapter lands among plates, never on an empty window.
+fn strip_frame(page: u32) -> (gtk::Overlay, gtk::Picture) {
+    let picture = gtk::Picture::new();
+    picture.set_content_fit(gtk::ContentFit::Fill);
+    picture.set_can_shrink(true);
+    picture.add_css_class("strip-leaf");
+    let number = gtk::Label::new(Some(&t::reader_image_plate(i64::from(page + 1))));
+    number.add_css_class("reader-plate-number");
+    number.add_css_class("numeric");
+    let line = gtk::Label::new(Some(&t::reader_image_loading(i64::from(page + 1))));
+    line.add_css_class("reader-plate-line");
+    line.set_wrap(true);
+    line.set_justify(gtk::Justification::Center);
+    line.set_visible(false);
+    let words = gtk::Box::new(gtk::Orientation::Vertical, 6);
+    words.set_valign(gtk::Align::Center);
+    words.set_vexpand(true);
+    words.set_margin_start(24);
+    words.set_margin_end(24);
+    words.append(&number);
+    words.append(&line);
+    let plate = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    plate.add_css_class("reader-plate");
+    plate.set_accessible_role(gtk::AccessibleRole::Presentation);
+    plate.set_can_target(false);
+    plate.append(&words);
+    plate.set_visible(false);
+    let frame = gtk::Overlay::new();
+    frame.set_child(Some(&picture));
+    frame.add_overlay(&plate);
+    let (weak_plate, weak_picture) = (plate.downgrade(), picture.downgrade());
+    glib::timeout_add_local_once(SILENT, move || {
+        if let (Some(plate), Some(picture)) = (weak_plate.upgrade(), weak_picture.upgrade())
+            && picture.paintable().is_none()
+        {
+            plate.set_visible(true);
+            motion::fade_in(&plate);
+        }
+    });
+    (frame, picture)
+}
+
+/// Centre a strip plate's words on the part of its image on screen, `seen` as the top and bottom
+/// of that part in the image's own pixels: margins above and below the words leave that part
+/// for them, kept inside the image and never narrower than the words with their line.
+fn strip_frame_seen(picture: &gtk::Picture, seen: Option<(f64, f64)>) {
+    let Some(words) = strip_plate(picture).and_then(|plate| plate.first_child()) else {
+        return;
+    };
+    let number =
+        words.first_child().map_or(24, |n| n.measure(gtk::Orientation::Vertical, -1).1);
+    let (above, below) = strip_words_margins(
+        picture.height_request().max(0),
+        seen,
+        number * 2 + words_gap(&words),
+    );
+    if words.margin_top() != above {
+        words.set_margin_top(above);
+    }
+    if words.margin_bottom() != below {
+        words.set_margin_bottom(below);
+    }
+}
+
+/// The gap between a plate's number and its line.
+fn words_gap(words: &gtk::Widget) -> i32 {
+    words.downcast_ref::<gtk::Box>().map_or(6, gtk::Box::spacing)
+}
+
+/// The margins above and below a strip plate's words in an image `height` tall, so they centre
+/// on the part on screen, `seen` in the image's pixels, while that part leaves them `room`; a
+/// thinner part widens to `room` about its middle, inside the image. Off screen, none.
+fn strip_words_margins(height: i32, seen: Option<(f64, f64)>, room: i32) -> (i32, i32) {
+    let full = f64::from(height);
+    let Some((top, bottom)) =
+        seen.map(|(t, b)| (t.max(0.0), b.min(full))).filter(|(t, b)| b > t)
+    else {
+        return (0, 0);
+    };
+    let (top, bottom) = (top.round() as i32, bottom.round() as i32);
+    if bottom - top >= room {
+        return (top, height - bottom);
+    }
+    let above = ((top + bottom) / 2 - room / 2).clamp(0, (height - room).max(0));
+    (above, (height - above - room).max(0))
+}
+
+/// The plate over a strip picture, made by [`strip_frame`].
+fn strip_plate(picture: &gtk::Picture) -> Option<gtk::Widget> {
+    picture.next_sibling()
+}
+
+/// A strip picture's page was asked for: if its file has not come 4 s later, its plate says it
+/// is loading. Only the first ask counts.
+fn strip_frame_asked(picture: &gtk::Picture) {
+    let Some(plate) = strip_plate(picture) else { return };
+    if picture.paintable().is_some() || plate.has_css_class("strip-asked") {
+        return;
+    }
+    plate.add_css_class("strip-asked");
+    let line = plate.first_child().and_then(|words| words.last_child());
+    let (Some(line), picture) = (line.map(|l| l.downgrade()), picture.downgrade()) else {
+        return;
+    };
+    glib::timeout_add_local_once(SAY_LOADING, move || {
+        if let (Some(line), Some(picture)) = (line.upgrade(), picture.upgrade())
+            && picture.paintable().is_none()
+        {
+            line.set_visible(true);
+            motion::fade_in(&line);
+        }
+    });
+}
+
+/// The strip image's file landed: it takes the place, crossfading over its plate when the plate
+/// shows, fading in when nothing did yet. `redrawn` swaps a drawn picture in place, as after
+/// crop borders changed, without a fade.
+fn fill_strip_frame(
+    picture: &gtk::Picture,
+    paintable: &impl IsA<gdk::Paintable>,
+    redrawn: bool,
+) {
+    if picture.paintable().is_some() {
+        if redrawn {
+            picture.set_paintable(Some(paintable));
+        }
+        return;
+    }
+    picture.set_paintable(Some(paintable));
+    let plate = strip_plate(picture).filter(|plate| plate.is_visible());
+    match plate {
+        Some(plate) => {
+            motion::fade_out(&plate);
+        }
+        None => {
+            motion::fade_in(picture);
+        }
+    }
+}
+
+/// How far over the window's foot a novel's notice sits: clear of the group while the chrome
+/// shows, which needs the group shown to be measured, else in the text's bottom margin.
+fn notice_lift(group: &gtk::Box, chrome: bool) -> i32 {
+    if !chrome {
+        return 44;
+    }
+    // As wide as it is laid out, or will be: a narrow window wraps what is in it.
+    let width = if group.width() > 0 { group.width() } else { group.width_request() };
+    let (_, height, _, _) = group.measure(gtk::Orientation::Vertical, width.max(-1));
+    group.margin_bottom() + height + 12
+}
+
+/// Where a popover `width` wide centres to sit over `middle`, the middle of its button, while
+/// staying 8 px inside a window `window` wide; in the middle of a window it can't fit in.
+fn popover_middle(middle: f64, width: f64, window: f64) -> f64 {
+    let half = width / 2.0;
+    if window <= 0.0 {
+        return middle;
+    }
+    if width + 16.0 >= window {
+        return window / 2.0;
+    }
+    middle.clamp(8.0 + half, window - 8.0 - half)
+}
+
 /// Which image `top` falls in, and how far down it, from the images' heights and the gap.
 fn strip_place_of(heights: &[i32], spacing: i32, top: f64) -> (usize, f32) {
     let mut y = 0.0;
@@ -3348,6 +3800,149 @@ fn strip_place_of(heights: &[i32], spacing: i32, top: f64) -> (usize, f32) {
         y += h + f64::from(spacing);
     }
     (0, 0.0)
+}
+
+/// The page a new layout keeps of `leaf`, the leaf on screen: `held`, the page the last layout
+/// kept, while the leaf still holds it, as a spread holds a page shown alone before it;
+/// otherwise the leaf's first.
+fn page_kept(leaf: Option<&Leaf>, held: Option<u32>) -> Option<u32> {
+    let leaf = leaf?;
+    held.filter(|held| leaf.parts.iter().any(|p| p.page == *held))
+        .or_else(|| leaf.parts.first().map(|p| p.page))
+}
+
+/// The mode and direction the open book takes from `settings`, when they differ from `now`.
+/// A mode or direction changed in the reader lays the chapter out again without opening it
+/// anew, so the reader follows the settings, as the engine's plan reads them: settings for
+/// another work or medium, and a novel's, leave it as it is.
+fn followed(
+    medium: Medium,
+    work: Option<&WorkId>,
+    now: (ReaderMode, ReadDirection),
+    settings: &ReaderSettingsView,
+) -> Option<(ReaderMode, ReadDirection)> {
+    if medium == Medium::Novel || settings.medium != medium || work != settings.work.as_ref() {
+        return None;
+    }
+    let word = |key: ReaderSettingKey| {
+        settings.rows.iter().find(|r| r.key == key).and_then(|r| match &r.value {
+            ReaderValue::Choice { name } => Some(name.as_str()),
+            _ => None,
+        })
+    };
+    let mode = match word(ReaderSettingKey::Mode) {
+        Some("strip") => ReaderMode::Strip,
+        Some("vertical") => ReaderMode::Vertical,
+        Some("paged") => ReaderMode::Paged,
+        _ => now.0,
+    };
+    let direction = if mode.flows() {
+        ReadDirection::TopToBottom
+    } else {
+        match word(ReaderSettingKey::Direction) {
+            Some("ltr") => ReadDirection::LeftToRight,
+            Some("rtl") => ReadDirection::RightToLeft,
+            _ if now.1 == ReadDirection::TopToBottom => ReadDirection::RightToLeft,
+            _ => now.1,
+        }
+    };
+    ((mode, direction) != now).then_some((mode, direction))
+}
+
+#[cfg(test)]
+mod layout_tests {
+    use kaeri_core::{books::WorkId, media::Medium};
+    use kaeri_model::reader::{
+        Leaf, LeafPart, PageKind, ReadDirection, ReaderMode, ReaderSettingKey,
+        ReaderSettingRow, ReaderSettingsView, ReaderValue, SettingScope, UnitRect,
+    };
+
+    use super::{followed, page_kept};
+
+    fn leaf(pages: &[u32]) -> Leaf {
+        let parts = pages
+            .iter()
+            .map(|&page| LeafPart {
+                page,
+                kind: PageKind::Story,
+                file: None,
+                place: UnitRect { x: 0.0, y: 0.0, width: 1.0, height: 1.0 },
+                rotate: false,
+                half: None,
+                ratio: None,
+                strip: None,
+            })
+            .collect();
+        Leaf { index: 0, parts, end_page: false }
+    }
+
+    #[test]
+    fn a_round_trip_through_spreads_keeps_the_second_page_of_the_spread() {
+        // Page 3 alone, then the spread of 2 and 3, then 3 alone again.
+        let held = page_kept(Some(&leaf(&[3])), None);
+        assert_eq!(held, Some(3));
+        assert_eq!(page_kept(Some(&leaf(&[2, 3])), held), Some(3));
+        // A spread turned to, with nothing held, gives its first page.
+        assert_eq!(page_kept(Some(&leaf(&[4, 5])), held), Some(4));
+        assert_eq!(page_kept(Some(&leaf(&[4, 5])), None), Some(4));
+        assert_eq!(page_kept(None, held), None);
+    }
+
+    fn settings(medium: Medium, work: &str, mode: &str, direction: &str) -> ReaderSettingsView {
+        let row = |key, name: &str| ReaderSettingRow {
+            key,
+            value: ReaderValue::Choice { name: name.to_owned() },
+            scope: SettingScope::Series,
+            detected: false,
+            overridden: true,
+            choices: Vec::new(),
+        };
+        ReaderSettingsView {
+            medium,
+            work: Some(WorkId(work.to_owned())),
+            rows: vec![
+                row(ReaderSettingKey::Mode, mode),
+                row(ReaderSettingKey::Direction, direction),
+            ],
+            tap_zones: None,
+        }
+    }
+
+    /// Strip picked in the open chapter's settings: the reader turns to the strip, and back
+    /// to pages, with the direction the settings give, as the engine lays the chapter out.
+    #[test]
+    fn the_open_book_follows_a_mode_picked_in_the_reader() {
+        let work = WorkId("a:1".to_owned());
+        let paged = (ReaderMode::Paged, ReadDirection::RightToLeft);
+        let strip = (ReaderMode::Strip, ReadDirection::TopToBottom);
+        let manga = |mode, direction| settings(Medium::Manga, "a:1", mode, direction);
+        assert_eq!(
+            followed(Medium::Manga, Some(&work), paged, &manga("strip", "rtl")),
+            Some(strip)
+        );
+        assert_eq!(
+            followed(Medium::Manga, Some(&work), strip, &manga("paged", "ltr")),
+            Some((ReaderMode::Paged, ReadDirection::LeftToRight))
+        );
+        assert_eq!(
+            followed(Medium::Manga, Some(&work), paged, &manga("paged", "ltr")),
+            Some((ReaderMode::Paged, ReadDirection::LeftToRight)),
+            "a direction alone turns the pages the other way"
+        );
+        assert_eq!(
+            followed(Medium::Manga, Some(&work), paged, &manga("vertical", "rtl")),
+            Some((ReaderMode::Vertical, ReadDirection::TopToBottom))
+        );
+        // Nothing changed, or settings that are not the open book's: the reader stays.
+        assert_eq!(followed(Medium::Manga, Some(&work), paged, &manga("paged", "rtl")), None);
+        assert_eq!(followed(Medium::Manga, Some(&work), strip, &manga("strip", "ltr")), None);
+        let other = settings(Medium::Manga, "a:2", "strip", "rtl");
+        assert_eq!(followed(Medium::Manga, Some(&work), paged, &other), None);
+        let defaults = ReaderSettingsView { work: None, ..manga("strip", "rtl") };
+        assert_eq!(followed(Medium::Manga, Some(&work), paged, &defaults), None);
+        let novel = settings(Medium::Novel, "a:1", "strip", "rtl");
+        assert_eq!(followed(Medium::Novel, Some(&work), paged, &novel), None);
+    }
 }
 
 #[cfg(test)]
@@ -3400,5 +3995,200 @@ mod strip_tests {
         let (image, offset) = strip_place_of(&heights, 8, target);
         assert_eq!(image, 1);
         assert!((offset - 0.25).abs() < 1e-3);
+    }
+}
+
+#[cfg(test)]
+mod plate_tests {
+    use adw::prelude::*;
+    use gtk::{gdk, glib};
+
+    use super::{
+        fill_strip_frame, notice_lift, popover_middle, strip_frame, strip_frame_asked,
+        strip_frame_seen, strip_words_margins,
+    };
+    use crate::{
+        gtk_test::{pump, run},
+        motion::Fader,
+    };
+
+    fn texture() -> gdk::Texture {
+        gdk::MemoryTexture::new(
+            1,
+            1,
+            gdk::MemoryFormat::R8g8b8,
+            &glib::Bytes::from_owned(vec![0u8, 0, 0]),
+            3,
+        )
+        .upcast()
+    }
+
+    fn words(widget: &gtk::Widget, out: &mut Vec<String>) {
+        if let Some(label) = widget.downcast_ref::<gtk::Label>()
+            && label.is_visible()
+        {
+            out.push(label.label().to_string());
+        }
+        let mut child = widget.first_child();
+        while let Some(c) = child {
+            words(&c, out);
+            child = c.next_sibling();
+        }
+    }
+
+    /// A strip image whose file is still coming shows its plate with its number from 600 ms,
+    /// adds a line under it 4 s after it was asked for, and its file crossfades over the plate.
+    #[test]
+    fn a_strip_image_on_its_way_holds_a_plate() {
+        run(|| {
+            let (frame, picture) = strip_frame(11);
+            picture.set_size_request(200, 280);
+            let window = gtk::Window::builder().default_width(400).default_height(400).build();
+            window.set_child(Some(&frame));
+            window.present();
+            let plate = picture.next_sibling().expect("a plate over the picture");
+            pump(200);
+            assert!(!plate.is_visible(), "nothing shows in the first 600 ms");
+            pump(600);
+            assert!(plate.is_visible(), "the plate shows from 600 ms");
+            let mut said = Vec::new();
+            words(&plate, &mut said);
+            assert_eq!(said, vec!["Image 12".to_owned()]);
+            strip_frame_asked(&picture);
+            pump(4200);
+            let mut said = Vec::new();
+            words(&plate, &mut said);
+            assert_eq!(said, vec!["Image 12".to_owned(), "Loading image 12".to_owned()]);
+            fill_strip_frame(&picture, &texture(), false);
+            assert!(picture.paintable().is_some());
+            pump(500);
+            assert!(!plate.is_visible(), "the plate is gone once the image is in");
+            window.destroy();
+        });
+    }
+
+    /// The words sit in the middle of the part of the image on screen, kept inside the image.
+    #[test]
+    fn a_strip_plate_centres_its_words_on_the_part_on_screen() {
+        run(|| {
+            let (frame, picture) = strip_frame(4);
+            // At the image's own height, as in the strip's column.
+            frame.set_valign(gtk::Align::Start);
+            let window = gtk::Window::builder().default_width(400).default_height(400).build();
+            window.set_child(Some(&frame));
+            window.present();
+            pump(800);
+            let plate = picture.next_sibling().expect("a plate over the picture");
+            let words = plate.first_child().expect("the plate's words");
+            let middle = |frame: &gtk::Overlay| {
+                let at = words
+                    .compute_point(frame, &gtk::graphene::Point::new(0.0, 0.0))
+                    .expect("the words are in the frame");
+                f64::from(at.y()) + f64::from(words.height()) / 2.0
+            };
+            picture.set_size_request(200, 300);
+            strip_frame_seen(&picture, Some((0.0, 300.0)));
+            pump(100);
+            assert!(
+                (middle(&frame) - 150.0).abs() <= 2.0,
+                "centred in an image wholly on screen"
+            );
+            picture.set_size_request(200, 1600);
+            strip_frame_seen(&picture, Some((1000.0, 1400.0)));
+            pump(100);
+            assert!((middle(&frame) - 1200.0).abs() <= 2.0, "centred on the part on screen");
+            window.destroy();
+        });
+    }
+
+    /// A sliver on screen still leaves the words their room, inside the image; off screen they
+    /// take the middle.
+    #[test]
+    fn strip_plate_margins_keep_the_words_inside_the_image() {
+        assert_eq!(strip_words_margins(3000, Some((1600.0, 2400.0)), 50), (1600, 600));
+        assert_eq!(strip_words_margins(3000, Some((-500.0, 10.0)), 50), (0, 2950));
+        assert_eq!(strip_words_margins(3000, Some((2990.0, 3400.0)), 50), (2950, 0));
+        assert_eq!(strip_words_margins(3000, None, 50), (0, 0));
+        assert_eq!(strip_words_margins(3000, Some((3200.0, 3600.0)), 50), (0, 0));
+    }
+
+    /// A file that comes within 600 ms never shows a plate.
+    #[test]
+    fn a_quick_strip_image_shows_no_plate() {
+        run(|| {
+            let (frame, picture) = strip_frame(0);
+            let window = gtk::Window::builder().default_width(400).default_height(400).build();
+            window.set_child(Some(&frame));
+            window.present();
+            pump(100);
+            fill_strip_frame(&picture, &texture(), false);
+            pump(800);
+            assert!(!picture.next_sibling().expect("a plate").is_visible());
+            window.destroy();
+        });
+    }
+
+    /// A novel's notice clears the group once the chrome shows, also when the group comes back
+    /// from hidden: it is shown before it is measured.
+    #[test]
+    fn the_notice_clears_a_group_that_was_hidden() {
+        run(|| {
+            let group = gtk::Box::new(gtk::Orientation::Vertical, 2);
+            for _ in 0..3 {
+                let row = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+                row.set_size_request(300, 36);
+                group.append(&row);
+            }
+            group.set_margin_bottom(16);
+            group.set_valign(gtk::Align::End);
+            let window = gtk::Window::builder().default_width(360).default_height(780).build();
+            window.set_child(Some(&group));
+            window.present();
+            let fade = Fader::always();
+            fade.hide_now(&group);
+            pump(50);
+            // Hidden, the group measures nothing: measured before it shows, the notice would
+            // sit on it, which is why the chrome shows the group first.
+            assert_eq!(notice_lift(&group, true), 16 + 12);
+            fade.set(&group, true);
+            let lift = notice_lift(&group, true);
+            assert!(lift >= 16 + 3 * 36 + 12, "the notice sits {lift} px up, on the group");
+            assert_eq!(notice_lift(&group, false), 44);
+            window.destroy();
+        });
+    }
+
+    #[test]
+    fn a_page_is_asked_for_before_its_neighbours() {
+        use super::wanted_leaves;
+        assert_eq!(wanted_leaves(99, 150), vec![99, 100, 101, 98]);
+        assert_eq!(wanted_leaves(0, 150), vec![0, 1, 2]);
+        assert_eq!(wanted_leaves(149, 150), vec![149, 148]);
+        assert_eq!(wanted_leaves(5, 0), Vec::<usize>::new());
+    }
+
+    #[test]
+    fn a_strip_asks_for_what_is_in_view_first() {
+        use super::strip_wanted;
+        // Ten images 100 tall with 10 between, the window over the sixth and seventh.
+        let heights = [100; 10];
+        let (wanted, foot) = strip_wanted(&heights, 10, 560.0, 760.0, 250.0);
+        assert_eq!(wanted, vec![5, 6, 7, 8, 9, 4, 3, 2]);
+        assert_eq!(foot, 1090.0);
+        // At the top nothing lies behind.
+        let (wanted, _) = strip_wanted(&heights, 10, 0.0, 150.0, 120.0);
+        assert_eq!(wanted, vec![0, 1, 2]);
+        assert_eq!(strip_wanted(&[], 10, 0.0, 100.0, 50.0).0, Vec::<usize>::new());
+    }
+
+    #[test]
+    fn a_popover_slides_to_stay_in_the_window() {
+        // Over its button where it fits.
+        assert_eq!(popover_middle(500.0, 340.0, 1280.0), 500.0);
+        // At the end of a narrow window it slides in, 8 px from the edge.
+        assert_eq!(popover_middle(300.0, 300.0, 360.0), 360.0 - 8.0 - 150.0);
+        assert_eq!(popover_middle(20.0, 300.0, 360.0), 8.0 + 150.0);
+        // Wider than the window: in its middle.
+        assert_eq!(popover_middle(300.0, 400.0, 360.0), 180.0);
     }
 }

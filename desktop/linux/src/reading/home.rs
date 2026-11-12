@@ -13,6 +13,7 @@ use std::{
 
 use adw::prelude::*;
 use gtk::glib;
+use kaeri_core::books::WorkId;
 use kaeri_i18n::t;
 use kaeri_model::{
     event::Event,
@@ -28,7 +29,14 @@ use super::{
     discovery::{self, Caption, Landing, Part},
     listen, place, read_button, send,
 };
-use crate::{motion, pages::Dest, say, states::Shape, widgets, window::Ctx};
+use crate::{
+    motion,
+    pages::Dest,
+    say,
+    states::Shape,
+    widgets,
+    window::{Ctx, Size},
+};
 
 /// Between one row and the next.
 const BETWEEN: i32 = 36;
@@ -76,7 +84,12 @@ struct Home {
     capsule: gtk::Box,
     capsule_spin: gtk::Spinner,
     activity: RefCell<Option<glib::SourceId>>,
+    /// The spotlight's card and its actions, and its placeholder's, laid out for the window.
+    spots: RefCell<Vec<Spot>>,
 }
+
+/// A spotlight card and its row of actions; a placeholder has no actions.
+type Spot = (glib::WeakRef<gtk::Box>, Option<glib::WeakRef<gtk::Box>>);
 
 pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     let empty = crate::states::plain(&t::home_read_end(), &t::home_read_no_sources());
@@ -119,10 +132,37 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
         capsule,
         capsule_spin,
         activity: RefCell::default(),
+        spots: RefCell::default(),
+    });
+    // A narrow window puts the spotlight's cover over its words, as on phones.
+    ctx.on_size({
+        let home = Rc::downgrade(&home);
+        move |size| {
+            if let Some(home) = home.upgrade() {
+                home.spots.borrow_mut().retain(|(card, buttons)| {
+                    let Some(card) = card.upgrade() else { return false };
+                    lay_spotlight(
+                        &card,
+                        buttons.as_ref().and_then(|b| b.upgrade()).as_ref(),
+                        size,
+                    );
+                    true
+                });
+            }
+        }
     });
     home.own_slots.replace(
         [
-            Landing::new(spotlight_placeholder),
+            Landing::new({
+                let home = Rc::downgrade(&home);
+                move || {
+                    let card = spotlight_placeholder();
+                    if let Some(home) = home.upgrade() {
+                        home.keep_spot(&card, None);
+                    }
+                    card.upcast()
+                }
+            }),
             Landing::new(discovery::row_placeholders),
             Landing::new(discovery::row_placeholders),
             Landing::new(discovery::row_placeholders),
@@ -184,6 +224,15 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
 }
 
 impl Home {
+    /// Lay out a spotlight card, or its placeholder, for the window now and as it changes.
+    fn keep_spot(&self, card: &gtk::Box, buttons: Option<&gtk::Box>) {
+        let size = self.ctx.upgrade().map_or(Size::Wide, |ctx| ctx.size());
+        lay_spotlight(card, buttons, size);
+        let mut spots = self.spots.borrow_mut();
+        spots.retain(|(card, _)| card.upgrade().is_some());
+        spots.push((card.downgrade(), buttons.map(|b| b.downgrade())));
+    }
+
     fn draw(self: &Rc<Self>, ctx: &Rc<Ctx>, view: &ReadingHomeView) {
         let demo = ctx.hub.known.borrow().demo.only_books;
         self.draw_own(ctx, view, demo);
@@ -271,7 +320,10 @@ impl Home {
         } else if let Some(spot) = &view.spot
             && let Some(tile) = &view.spotlight
         {
-            Some(spotlight(ctx, tile, spot).upcast())
+            let art = cover(&ctx.hub, tile.cover.as_deref(), &tile.title, 160);
+            let (card, buttons) = spotlight(art.upcast_ref(), &tile.work, &tile.title, spot);
+            self.keep_spot(&card, Some(&buttons));
+            Some(card.upcast())
         } else {
             None
         };
@@ -537,7 +589,7 @@ fn posters(
 
 /// The spotlight's place while the popular pick is on its way: the cover's plate and bars for
 /// its words, at the spotlight's size.
-fn spotlight_placeholder() -> gtk::Widget {
+fn spotlight_placeholder() -> gtk::Box {
     let card = gtk::Box::new(gtk::Orientation::Horizontal, 20);
     card.add_css_class("read-spotlight");
     card.set_accessible_role(gtk::AccessibleRole::Presentation);
@@ -545,13 +597,33 @@ fn spotlight_placeholder() -> gtk::Widget {
     let text = gtk::Box::new(gtk::Orientation::Vertical, 10);
     text.set_valign(gtk::Align::Center);
     text.set_hexpand(true);
-    for (width, height) in [(120, 12), (300, 28), (180, 12), (320, 12), (300, 12), (240, 12)] {
+    // No bar wider than the narrowest window's column, where the words go under the plate.
+    for (width, height) in [(120, 12), (280, 28), (180, 12), (280, 12), (260, 12), (240, 12)] {
         let bar = crate::states::plate(width, height, "bar");
         bar.set_halign(gtk::Align::Start);
         text.append(&bar);
     }
     card.append(&text);
-    card.upcast()
+    card
+}
+
+/// The cover beside the words, or over them in a narrow window, with the main action full
+/// width and Details under it, as the spotlight stacks on phones.
+fn lay_spotlight(card: &gtk::Box, buttons: Option<&gtk::Box>, size: Size) {
+    let narrow = size == Size::Narrow;
+    card.set_orientation(if narrow {
+        gtk::Orientation::Vertical
+    } else {
+        gtk::Orientation::Horizontal
+    });
+    card.set_spacing(if narrow { 14 } else { 20 });
+    if let Some(buttons) = buttons {
+        buttons.set_orientation(if narrow {
+            gtk::Orientation::Vertical
+        } else {
+            gtk::Orientation::Horizontal
+        });
+    }
 }
 
 /// A row's heading: its title (a heading for screen readers), the side text and View all.
@@ -619,21 +691,23 @@ fn demo_line() -> gtk::Box {
     row
 }
 
+/// The spotlight's card beside `art`, its cover, and the row of its actions.
 fn spotlight(
-    ctx: &Rc<Ctx>,
-    tile: &WorkTile,
+    art: &gtk::Widget,
+    work: &WorkId,
+    title: &str,
     spot: &kaeri_model::reading::ReadSpotlight,
-) -> gtk::Box {
+) -> (gtk::Box, gtk::Box) {
     let card = gtk::Box::new(gtk::Orientation::Horizontal, 20);
     card.add_css_class("read-spotlight");
-    card.append(&cover(&ctx.hub, tile.cover.as_deref(), &tile.title, 160));
+    card.append(art);
     let text = gtk::Box::new(gtk::Orientation::Vertical, 6);
     text.set_valign(gtk::Align::Center);
     text.set_hexpand(true);
     let label = widgets::haze(&say::msg(&spot.label), "caption-heading");
     label.set_xalign(0.0);
     text.append(&label);
-    text.append(&widgets::show_title(&tile.title, "home-spot-title"));
+    text.append(&widgets::show_title(title, "home-spot-title"));
     let facts = super::dotted(&spot.facts);
     if !facts.is_empty() {
         text.append(&widgets::haze(&facts, "caption"));
@@ -655,12 +729,12 @@ fn spotlight(
     // One amber action: read or go on, or Add to Planning for a series no source was checked
     // for yet. Details beside it, or On your Planning list once it is planned.
     if let Some((chapter, label)) = spot.action.as_ref().and_then(action_chapter) {
-        buttons.append(&read_button(&label, &tile.work, &chapter));
+        buttons.append(&read_button(&label, work, &chapter));
     } else if spot.action.is_none() && !spot.planned {
         let plan = gtk::Button::with_label(&t::library_add_planning());
         plan.add_css_class("pill");
         plan.add_css_class("suggested-action");
-        plan.set_action_target_value(Some(&tile.work.0.to_variant()));
+        plan.set_action_target_value(Some(&work.0.to_variant()));
         plan.set_action_name(Some("win.read-plan"));
         buttons.append(&plan);
     }
@@ -678,10 +752,87 @@ fn spotlight(
         gtk::Button::with_label(&t::home_details())
     };
     open.add_css_class("pill");
-    open.set_action_target_value(Some(&tile.work.0.to_variant()));
+    open.set_action_target_value(Some(&work.0.to_variant()));
     open.set_action_name(Some("win.open-series"));
     buttons.append(&open);
     text.append(&buttons);
     card.append(&text);
-    card
+    (card, buttons)
+}
+
+#[cfg(test)]
+mod tests {
+    use adw::prelude::*;
+    use kaeri_core::books::{ChapterId, WorkId};
+    use kaeri_model::{
+        Msg, ReadingMsg,
+        reading::{ReadSpotlight, ReadSpotlightCase, SeriesAction},
+    };
+
+    use super::{Size, lay_spotlight, spotlight, spotlight_placeholder};
+    use crate::gtk_test::{pump, run};
+
+    /// The spotlight and its placeholder in the smallest window, 350 px inside, whose column
+    /// leaves 302 px: the cover goes over the words and the actions stack, at twice the text
+    /// size too.
+    #[test]
+    fn the_spotlight_fits_a_narrow_window_at_any_text_size() {
+        run(|| {
+            let min_width =
+                |widget: &gtk::Widget| widget.measure(gtk::Orientation::Horizontal, -1).0;
+            let spot = ReadSpotlight {
+                case: ReadSpotlightCase::Continuing,
+                label: Msg::Reading(ReadingMsg::ReadingSpotlightContinue),
+                facts: Vec::new(),
+                synopsis: Some("A ferry crosses a lantern-lit river every night. ".repeat(4)),
+                line: None,
+                action: Some(SeriesAction::Continue {
+                    chapter: ChapterId("13".into()),
+                    label: "13".into(),
+                    page: 10,
+                }),
+                planned: false,
+                banner: None,
+            };
+            let art = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            art.set_size_request(160, 240);
+            let work = WorkId("a:1".into());
+            let (card, buttons) =
+                spotlight(art.upcast_ref(), &work, "The Lantern Ferry", &spot);
+            let placeholder = spotlight_placeholder();
+            let column = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            column.append(&card);
+            column.append(&placeholder);
+            let window = gtk::Window::builder().default_width(1280).default_height(800).build();
+            window.set_child(Some(&column));
+            window.present();
+
+            lay_spotlight(&card, Some(&buttons), Size::Wide);
+            pump(100);
+            assert_eq!(card.orientation(), gtk::Orientation::Horizontal);
+            assert_eq!(buttons.orientation(), gtk::Orientation::Horizontal);
+            lay_spotlight(&card, Some(&buttons), Size::Narrow);
+            lay_spotlight(&placeholder, None, Size::Narrow);
+            pump(100);
+            let normal = (min_width(card.upcast_ref()), min_width(placeholder.upcast_ref()));
+            let settings = gtk::Settings::default().expect("a display");
+            let dpi = settings.gtk_xft_dpi();
+            settings.set_gtk_xft_dpi(2 * 96 * 1024);
+            pump(150);
+            let large = (min_width(card.upcast_ref()), min_width(placeholder.upcast_ref()));
+            settings.set_gtk_xft_dpi(dpi);
+            window.destroy();
+
+            assert_eq!(card.orientation(), gtk::Orientation::Vertical);
+            assert_eq!(buttons.orientation(), gtk::Orientation::Vertical);
+            assert!(normal.0 <= 302, "the spotlight needs {} px at the normal size", normal.0);
+            assert!(
+                normal.1 <= 302,
+                "its placeholder needs {} px at the normal size",
+                normal.1
+            );
+            assert!(large.0 <= 302, "the spotlight needs {} px at twice the size", large.0);
+            assert!(large.1 <= 302, "its placeholder needs {} px at twice the size", large.1);
+        });
+    }
 }

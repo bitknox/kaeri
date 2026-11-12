@@ -267,6 +267,8 @@ pub enum ReaderSettingKey {
     Margins,
     LineSpacing,
     Justify,
+    /// The one tap zones setting before there were layouts: Edges, Halves or Off, per medium.
+    /// No longer offered or shown; [`Self::TapPaged`] reads it when it has no value of its own.
     TapLayout,
     VolumeKeysTurn,
     StripWidth,
@@ -296,6 +298,19 @@ pub enum ReaderSettingKey {
     /// Skip the credit pages a series repeats at the start or end of its chapters. On by
     /// default.
     SkipCreditPages,
+    /// Tap zones for paged reading (paged manga, vertical paging, paged novels): one of
+    /// [`crate::tap_zones::ZoneLayout`]'s names. On e-ink, the one layout for all reading.
+    TapPaged,
+    /// Tap zones for strips and scrolled novels. Not shown on e-ink.
+    TapScroll,
+    /// The outer bands a third (`standard`) or a quarter (`small`) of the screen.
+    TapSize,
+    /// Flip left and right: the columns mirror after the reading direction is applied.
+    TapFlipSides,
+    /// Flip top and bottom: the rows mirror.
+    TapFlipEnds,
+    /// E-ink only: swipes turn pages. On by default.
+    SwipeTurns,
 }
 
 /// Where a setting's value is kept.
@@ -339,7 +354,12 @@ impl ReaderSettingKey {
         Self::Margins,
         Self::LineSpacing,
         Self::Justify,
-        Self::TapLayout,
+        Self::TapPaged,
+        Self::TapScroll,
+        Self::TapSize,
+        Self::TapFlipSides,
+        Self::TapFlipEnds,
+        Self::SwipeTurns,
         Self::VolumeKeysTurn,
         Self::StripWidth,
         Self::RefreshImage,
@@ -400,11 +420,19 @@ impl ReaderSettingKey {
             Self::PaperDim => "paper_dim",
             Self::PaperVolume => "paper_volume",
             Self::SkipCreditPages => "skip_credit_pages",
+            Self::TapPaged => "tap_paged",
+            Self::TapScroll => "tap_scroll",
+            Self::TapSize => "tap_size",
+            Self::TapFlipSides => "tap_flip_sides",
+            Self::TapFlipEnds => "tap_flip_ends",
+            Self::SwipeTurns => "swipe_turns",
         }
     }
 
+    /// The key a name in the store or the config is kept under. [`Self::TapLayout`], no longer
+    /// in [`Self::ALL`], is found too.
     pub fn from_name(name: &str) -> Option<Self> {
-        Self::ALL.iter().copied().find(|key| key.name() == name)
+        Self::ALL.iter().copied().chain([Self::TapLayout]).find(|key| key.name() == name)
     }
 
     /// Whether the setting is offered for `medium` at all.
@@ -519,6 +547,10 @@ pub struct ReaderSettingsView {
     pub work: Option<WorkId>,
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub rows: Vec<ReaderSettingRow>,
+    /// The tap zone settings worked out from the rows, with the guides seen: hand them to
+    /// `tap_action`, `tap_map` and `tap_guide_due`. `None` for anime.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub tap_zones: Option<crate::tap_zones::TapZoneSettings>,
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -953,6 +985,12 @@ pub enum ReaderCommand {
         /// From [`CreditPage::fingerprint`].
         fingerprint: u64,
     },
+    /// The tap zone guide was seen: its first touch cleared it. `guide` is
+    /// [`crate::tap_zones::TapMap::guide`]; the guide shows again only once that changes.
+    /// Not sent while a screen reader runs, so the guide still shows once without it.
+    TapGuideSeen {
+        guide: String,
+    },
 }
 
 impl ReaderCommand {
@@ -1169,13 +1207,21 @@ mod tests {
             assert!(key.syncs(), "{key:?}");
             assert_eq!(key.home_scope(), SettingScope::Medium);
         }
-        for key in
-            [K::TextSize, K::Margins, K::TapLayout, K::PageLayout, K::Fit, K::CropBorders]
+        for key in [K::TextSize, K::Margins, K::TapPaged, K::PageLayout, K::Fit, K::CropBorders]
         {
             assert!(!key.syncs(), "{key:?}");
             assert_eq!(key.home_scope(), SettingScope::Device);
         }
-        for key in [K::RefreshText, K::VolumeKeysTurn, K::PaperMode] {
+        for key in [
+            K::RefreshText,
+            K::VolumeKeysTurn,
+            K::PaperMode,
+            K::TapScroll,
+            K::TapSize,
+            K::TapFlipSides,
+            K::TapFlipEnds,
+            K::SwipeTurns,
+        ] {
             assert!(!key.syncs(), "{key:?}");
         }
         assert_eq!(K::Mode.series_scope(), Some(SettingScope::Series));
@@ -1186,6 +1232,8 @@ mod tests {
         for key in K::ALL {
             assert_eq!(K::from_name(key.name()), Some(*key));
         }
+        assert!(!K::ALL.contains(&K::TapLayout), "the earlier tap setting is not offered");
+        assert_eq!(K::from_name("tap_layout"), Some(K::TapLayout));
     }
 
     #[test]

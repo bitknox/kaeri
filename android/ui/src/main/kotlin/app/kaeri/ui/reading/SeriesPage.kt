@@ -599,7 +599,7 @@ private fun SeriesSynopsis(text: String, work: WorkId, modifier: Modifier = Modi
                     if (open) {
                         Modifier
                     } else {
-                        Modifier.clickable(onClickLabel = Strings.titleSynopsisHint(context), role = Role.Button) { expanded = true }
+                        Modifier.clickable(onClickLabel = Strings.titleSynopsisMore(context), role = Role.Button) { expanded = true }
                     },
                 )
                 .semantics { contentDescription = text },
@@ -613,7 +613,8 @@ private const val SERIES_SYNOPSIS_LINES = 4
 /**
  * The one main action, amber, 56 high, with Status and Download outlined side by side under it.
  * With no source, or a source that failed, Read from another source takes its place as a
- * secondary button, since reading from here is not possible.
+ * secondary button, since reading from here is not possible; a failed source keeps the main
+ * action when its chapter is downloaded, which still opens.
  */
 @Composable
 private fun SeriesActions(
@@ -631,7 +632,7 @@ private fun SeriesActions(
 ) {
     val context = LocalContext.current
     val words = SeriesWords.action(context, series.action)
-    val failed = chapters?.failure != null
+    val failed = chapters?.let { it.failure != null && !series.action.opensDownloaded(it.volumes) } == true
     // No source is known to have it yet, but the engine is still asking: the chapters have not
     // come. The main button holds its place, quiet, rather than say there is nothing to read.
     val asking = series.action is SeriesAction.NoSource && chapters == null
@@ -917,6 +918,18 @@ private fun LazyListScope.seriesChapters(
     }
 }
 
+/** Whether the action opens a chapter that is downloaded, so it opens with the source failed. */
+private fun SeriesAction.opensDownloaded(volumes: List<VolumeGroup>): Boolean {
+    val chapter = when (this) {
+        is SeriesAction.Read -> chapter
+        is SeriesAction.Continue -> chapter
+        is SeriesAction.ContinuePart -> chapter
+        is SeriesAction.ReadPart -> chapter
+        else -> return false
+    }
+    return volumes.downloaded().any { it.id == chapter }
+}
+
 /** With the source failed, what is downloaded still opens: only those chapters, under no volume. */
 private fun ReadChapters.listedGroups(): List<VolumeGroup> = if (failure != null) {
     listOfNotNull(
@@ -964,7 +977,8 @@ internal class OpenFocus(val id: ChapterId) {
 
 /**
  * The chapters' list. Choose chapters opens it with the reader's place, item [choosingAt], as near
- * the middle as the list's ends allow, placed before choosing's first frame so nothing scrolls.
+ * the middle as the list's ends allow, placed before choosing's first frame so nothing scrolls, and
+ * leaving it puts the list back where it was.
  */
 @Composable
 private fun ChapterColumn(modifier: Modifier, choosingAt: Int, content: LazyListScope.() -> Unit) {
@@ -973,9 +987,18 @@ private fun ChapterColumn(modifier: Modifier, choosingAt: Int, content: LazyList
         val density = LocalDensity.current
         val viewport = with(density) { (maxHeight - LIST_BOTTOM).roundToPx() }
         val row = with(density) { CHAPTER_ROW.roundToPx() }
-        // Run as choosing starts, in the frame that lays the list out for it.
+        // Where the page was before choosing moved it: leaving Choose chapters goes back there.
+        val before = remember { intArrayOf(-1, 0) }
+        // Run as choosing starts and ends, in the frame that lays the list out for it.
         DisposableEffect(choosingAt >= 0) {
-            if (choosingAt >= 0) listed.requestScrollToItem(choosingAt, centredOffset(viewport, row))
+            if (choosingAt >= 0) {
+                before[0] = listed.firstVisibleItemIndex
+                before[1] = listed.firstVisibleItemScrollOffset
+                listed.requestScrollToItem(choosingAt, centredOffset(viewport, row))
+            } else if (before[0] >= 0) {
+                listed.requestScrollToItem(before[0], before[1])
+                before[0] = -1
+            }
             onDispose {}
         }
         LazyColumn(

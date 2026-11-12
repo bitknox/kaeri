@@ -521,6 +521,11 @@ impl OneSend {
             crate::downloads::books::ordered_chapters(&self.lent.sources, &self.work, now)
                 .await
                 .map_err(prepare::Stop::Failed)?;
+        // Each chapter comes from the source that lists it; one no source lists any more is
+        // left out, as a download of it would fail.
+        let listers =
+            crate::downloads::books::Listers::of(&self.lent.sources, &self.work, &source);
+        let rows: Vec<_> = rows.into_iter().filter(|r| listers.of_row(r).is_some()).collect();
         let wanted = BookDownloads::picked(&self.pick, &rows);
         if wanted.is_empty() {
             return Err(ReadingFailure::NotFound.into());
@@ -562,7 +567,7 @@ impl OneSend {
             let job = Fetching {
                 work: self.work.clone(),
                 chapter: want.chapter.clone(),
-                source_id: source.clone(),
+                source_id: listers.of_row(row).unwrap_or(&source).to_owned(),
                 stem: temp.join(crate::downloads::books::safe(want.chapter.as_str())),
                 wanted: &wanted_now,
                 progress: &progress,

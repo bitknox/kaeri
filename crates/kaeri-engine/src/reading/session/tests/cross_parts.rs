@@ -18,7 +18,7 @@ use kaeri_store::{book_downloads::BookDownloadAsk, reading::EditionPref};
 
 use super::*;
 
-/// A source that lists the chapters it is given, three pages each.
+/// A source that lists the chapters it is given, three pages each: a label, or `label|title`.
 struct Listing {
     manifest: BookSourceManifest,
     labels: Mutex<Vec<&'static str>>,
@@ -66,7 +66,13 @@ impl kaeri_core::traits::BookSource for Listing {
         let labels = self.labels.lock().unwrap().clone();
         Ok(labels
             .into_iter()
-            .map(|label| SourceChapter::new(format!("{}-{label}", self.manifest.id), label))
+            .map(|text| {
+                let (label, title) = text.split_once('|').unwrap_or((text, ""));
+                let mut chapter =
+                    SourceChapter::new(format!("{}-{label}", self.manifest.id), label);
+                chapter.title = (!title.is_empty()).then(|| title.to_owned());
+                chapter
+            })
             .collect())
     }
 
@@ -348,4 +354,147 @@ async fn downloads_follow_a_part_into_its_chapter() {
     let again = store.book_download(WORK, "7").unwrap().unwrap();
     assert_eq!(again.state, kaeri_store::book_downloads::BookDownloadState::Queued);
     assert_eq!(again.pages_total, None, "fetched again with its new part");
+}
+
+/// What follows a chapter is numbered each source's own way: 7.5 and 7.6 here, 7.1 and 7.2 there.
+/// What the source in use has after a chapter stands for all the other has after it, a shared
+/// number or not, so none of it fills in. Where the source in use has nothing after a chapter,
+/// the other's fill in.
+#[tokio::test(start_paused = true)]
+async fn extras_numbered_differently_elsewhere_never_fill_in_beside_the_ones_here() {
+    let a = Listing::new("alpha", &["5", "5.5", "6", "7", "7.5", "7.6", "8", "10", "10.5"]);
+    let b = Listing::new(
+        "beta",
+        &["5", "5.1", "6", "7", "7.1", "7.2", "8", "9", "9.5", "10", "10.5", "10.6"],
+    );
+    let h = harness_with(&[&a, &b]);
+    rows(&h, "beta").await;
+    let listed = rows(&h, "alpha").await;
+    let ids: Vec<&str> = listed.iter().map(|r| r.id.as_str()).collect();
+    assert_eq!(ids, vec!["5", "5.5", "6", "7", "7.5", "7.6", "8", "9", "9.5", "10", "10.5"]);
+    let filled: Vec<&str> =
+        listed.iter().filter(|r| r.other_source.is_some()).map(|r| r.id.as_str()).collect();
+    assert_eq!(filled, vec!["9", "9.5"]);
+}
+
+/// Two sources share an extra's number but not the extra: 28.5 is one title here and another
+/// there. The other's 28.7 and 28.8 carry titles listed here, so they stay out; an extra whose
+/// title none here carries, beside extras that each have a title, fills in.
+#[tokio::test(start_paused = true)]
+async fn a_shared_number_lets_none_of_the_others_extras_in_but_a_title_not_here_does() {
+    let a = Listing::new(
+        "alpha",
+        &[
+            "16",
+            "16.5|Volume One Extras",
+            "17",
+            "28",
+            "28.1|Short Extra",
+            "28.2|Short Extra",
+            "28.5|Volume Three Extras",
+            "28.6|Shop Extra",
+            "29",
+        ],
+    );
+    let b = Listing::new(
+        "beta",
+        &[
+            "16",
+            "16.5|Volume One Extras",
+            "16.6|Volume One Extras 2",
+            "17",
+            "28",
+            "28.5|Short Extra",
+            "28.6|Short Extra",
+            "28.7|Volume Three Extras",
+            "28.8|Shop Extra",
+            "29",
+        ],
+    );
+    let h = harness_with(&[&a, &b]);
+    rows(&h, "beta").await;
+    let listed = rows(&h, "alpha").await;
+    let ids: Vec<&str> = listed.iter().map(|r| r.id.as_str()).collect();
+    assert_eq!(
+        ids,
+        vec!["16", "16.5", "16.6", "17", "28", "28.1", "28.2", "28.5", "28.6", "29"]
+    );
+}
+
+/// An extra the source in use names in words, with no number, follows the chapter before it and
+/// stands for the other source's numbered extra of that chapter.
+#[tokio::test(start_paused = true)]
+async fn an_extra_named_in_words_here_stands_for_the_others_numbered_one() {
+    let a = Listing::new("alpha", &["6", "7", "Extra", "8"]);
+    let b = Listing::new("beta", &["6", "7", "7.5", "8"]);
+    let h = harness_with(&[&a, &b]);
+    rows(&h, "beta").await;
+    let listed = rows(&h, "alpha").await;
+    let ids: Vec<&str> = listed.iter().map(|r| r.id.as_str()).collect();
+    assert_eq!(ids, vec!["6", "7", "x/-/extra", "8"]);
+}
+
+/// The other source's half chapter after 21 is what the source in use splits into 21.1 and 21.2:
+/// it stays out, while those parts stay the story the end page never skips.
+#[tokio::test(start_paused = true)]
+async fn a_half_chapter_there_stays_out_beside_the_parts_here() {
+    let a = Listing::new("alpha", &["21", "21.1", "21.2", "22", "23"]);
+    let b = Listing::new("beta", &["21", "21.5", "22", "22.5", "23"]);
+    let h = harness_with(&[&a, &b]);
+    rows(&h, "beta").await;
+    let listed = rows(&h, "alpha").await;
+    let ids: Vec<&str> = listed.iter().map(|r| r.id.as_str()).collect();
+    assert_eq!(ids, vec!["21", "21.1", "21.2", "22", "22.5", "23"]);
+}
+
+/// Extras downloaded from another source before reading from this one: the series page keeps
+/// them out, as it does when they are only listed there, and the reader reads on through the
+/// same list.
+#[tokio::test(start_paused = true)]
+async fn the_reader_reads_on_through_the_series_list_with_the_others_extras_downloaded() {
+    let a = Listing::new("alpha", &["6", "7", "7.5", "7.6", "8"]);
+    let b = Listing::new("beta", &["6", "7", "7.1", "7.2", "8"]);
+    let mut h = harness_with(&[&a, &b]);
+    rows(&h, "beta").await;
+    rows(&h, "alpha").await;
+    let store = &h.services.store;
+    for chapter in ["7.1", "7.2"] {
+        let ask = BookDownloadAsk {
+            work: WORK,
+            chapter,
+            source_id: "beta",
+            version_label: None,
+            keep_ready: false,
+        };
+        store.queue_book_download(&ask, 1).unwrap();
+        let id = store.book_download(WORK, chapter).unwrap().unwrap().id;
+        let path = format!("/books/beta-{chapter}.cbz");
+        store.book_download_done(id, &path, Some(3), 10, 1).unwrap();
+    }
+    let listed = rows(&h, "alpha").await;
+    let ids: Vec<String> = listed.iter().map(|r| r.id.as_str().to_owned()).collect();
+    assert_eq!(ids, ["6", "7", "7.5", "7.6", "8"]);
+    h.send(ReaderCommand::Open {
+        work: WorkId::new(WORK),
+        chapter: Some(ChapterId::new("7")),
+        at: OpenAt::Start,
+        surface: surface(),
+    });
+    let next = h
+        .until(|e| match e {
+            ReaderEvent::Opened(v) => Some(v.next.as_ref().map(|c| c.id.as_str().to_owned())),
+            _ => None,
+        })
+        .await;
+    assert_eq!(next.as_deref(), Some("7.5"));
+    let chain: Vec<String> = h
+        .reader
+        .session
+        .as_ref()
+        .unwrap()
+        .chapters
+        .iter()
+        .map(|c| c.id.as_str().to_owned())
+        .collect();
+    assert_eq!(chain, ids, "the reader's chapters are the series page's");
 }

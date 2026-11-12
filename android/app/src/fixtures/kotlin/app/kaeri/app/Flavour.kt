@@ -414,6 +414,8 @@ internal object Flavour {
             if (!app.kaeri.store.CreditsStage.stage(context, store, what, grey)) Log.w(KaeriApp.TAG, "credits takes ${app.kaeri.store.CreditsStage.STATES.joinToString()}, not $what")
         }
         app.kaeri.reader.CreditShot.step = intent.getStringExtra("creditshot")
+        // plate=hold: every page waits on its plate, for the plate's shots.
+        app.kaeri.reader.PlateShot.hold = intent.getStringExtra("plate") == "hold"
         openReaderScene(intent)
         if (intent.getStringExtra("shell") == "eink") {
             // The panel's question answered as a person would: e-ink, in greys.

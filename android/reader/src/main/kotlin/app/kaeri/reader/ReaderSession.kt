@@ -41,6 +41,7 @@ import app.kaeri.engine.model.ReadingEvent
 import app.kaeri.engine.model.ReadingFailure
 import app.kaeri.engine.model.SettingScope
 import app.kaeri.engine.model.StripPos
+import app.kaeri.engine.model.TapMap
 import app.kaeri.engine.model.TurnHow
 import app.kaeri.store.AppStore
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -168,6 +169,12 @@ data class ReaderState(
 ) {
     val session: ULong? get() = view?.session
     val chapter: ChapterId? get() = view?.chapter?.id
+
+    /**
+     * The chapter the end page leads into: the engine's answer once the end page is said, which
+     * offline is the next one on the device or none, and the one after this until then.
+     */
+    val endNext: ChapterRow? get() = end.let { if (it != null) it.next else view?.next }
 
     /**
      * The chapter's pages, without the end page: as many as the leaves on one page a leaf, more
@@ -315,7 +322,10 @@ class ReaderSession(private val send: (Command) -> Unit) {
         val now = state.value
         val session = now.session ?: return
         val chapter = now.chapter ?: return
-        shownPage = now.leaves.getOrNull(leaf)?.parts?.firstOrNull()?.page ?: shownPage
+        // A leaf that holds the page kept, as a new layout's spread holds a page shown alone
+        // before it, keeps that page: single pages again show it, not the spread's first.
+        val pages = now.leaves.getOrNull(leaf)?.parts?.map { it.page }.orEmpty()
+        shownPage = if (shownPage in pages) shownPage else pages.firstOrNull() ?: shownPage
         // An e-ink cut's page is the cut's own number: the place is the image it starts in. A whole
         // image keeps the spot in it the reader opened at, for the cuts a strip is laid out in later.
         here = now.placeOf(leaf) ?: here?.takeIf { it.chapter == chapter }?.let { at ->
@@ -401,7 +411,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
      */
     fun crossOn(): Boolean {
         val now = state.value
-        val next = now.end?.next ?: now.view?.next ?: return false
+        val next = now.endNext ?: return false
         if (now.asking != null) return true
         openChapter(next.id)
         return true
@@ -497,10 +507,35 @@ class ReaderSession(private val send: (Command) -> Unit) {
     fun loadSettings(medium: Medium, work: WorkId?) = reader(ReaderCommand.LoadSettings(medium, work))
 
     /**
+     * The tap zone guide for [map] was seen: kept on this device, so it shows again only once the
+     * zones or the direction change. Never sent while a screen reader runs.
+     */
+    fun tapGuideSeen(map: TapMap) {
+        val now = state.value
+        val settings = now.settings
+        val zones = settings?.tapZones
+        if (settings != null && zones != null) {
+            val seen = if (zones.scrollingKind(map)) zones.copy(guideSeenScrolling = map.guide) else zones.copy(guideSeenPaged = map.guide)
+            _state.value = now.copy(settings = settings.copy(tapZones = seen))
+        }
+        reader(ReaderCommand.TapGuideSeen(map.guide))
+    }
+
+    /**
      * Where the reader is, to open there again when the activity is made anew: the chapter on
      * screen and the page, strip spot or text place it shows. Null before a chapter opened.
      */
     fun place(): ReadPlace? = here
+
+    /**
+     * The screen was made anew around this session, as for a change of font size: its pager
+     * starts at the first leaf, so it jumps back to [at], the [place] shown before.
+     */
+    fun reshow(at: ReadPlace?) {
+        val now = state.value
+        if (at == null || at.chapter != now.chapter || now.leaves.isEmpty()) return
+        _state.value = now.copy(jump = ReaderJump(now.leafOf(at), at.strip, ++ids))
+    }
 
     fun close() {
         commitKeep()

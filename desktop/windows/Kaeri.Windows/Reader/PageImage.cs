@@ -294,19 +294,40 @@ sealed class PageImageView : Canvas
 }
 
 /// <summary>
-/// The Raised plate that holds a page's place with its number. Nothing shows for 600 ms, and a
-/// line says it is loading from 4 s. A plate that takes over from one already on screen (the
-/// opening plate) shows at once, so nothing blinks between them.
+/// The Raised plate that holds a page's place with its number, "Page 23", or "Image 23" for a
+/// strip image. Nothing shows for 600 ms, and from 4 s a line under the number says it is
+/// loading. A plate that takes over from one already on screen (the opening plate) shows at once,
+/// so nothing blinks between them. A strip image's words sit in the middle of the part of it on
+/// screen, so they stay in view however tall the image is and wherever the strip is scrolled to.
 /// </summary>
 sealed class PagePlate : Grid
 {
     readonly TextBlock number;
     readonly TextBlock line;
+    readonly StackPanel stack;
     readonly DispatcherQueueTimer first, slow;
+    ScrollViewer? scroller;
 
-    public PagePlate(int page, ReaderPalette palette, bool atOnce = false)
-        : this(page.ToString(System.Globalization.CultureInfo.CurrentCulture), T.ReaderPageLoading(page), palette, atOnce)
+    public PagePlate(int page, ReaderPalette palette, bool atOnce = false, bool image = false)
+        : this(image ? T.ReaderImagePlate(page) : T.ReaderPagePlate(page),
+               image ? T.ReaderImageLoading(page) : T.ReaderPageLoading(page), palette, atOnce)
     {
+        if (!image)
+            return;
+        Loaded += (_, _) =>
+        {
+            scroller = Scroller(this);
+            if (scroller is not null)
+                scroller.ViewChanged += Scrolled;
+            OnScreen();
+        };
+        Unloaded += (_, _) =>
+        {
+            if (scroller is not null)
+                scroller.ViewChanged -= Scrolled;
+            scroller = null;
+        };
+        SizeChanged += (_, _) => OnScreen();
     }
 
     public PagePlate(string label, string loading, ReaderPalette palette, bool atOnce)
@@ -316,7 +337,7 @@ sealed class PagePlate : Grid
         IsHitTestVisible = false;
         number = new TextBlock { Text = label, FontSize = 15, Foreground = new SolidColorBrush(palette.Haze), HorizontalAlignment = HorizontalAlignment.Center, TextWrapping = TextWrapping.WrapWholeWords, TextAlignment = TextAlignment.Center };
         line = new TextBlock { Text = loading, FontSize = 13, Foreground = new SolidColorBrush(palette.Haze), HorizontalAlignment = HorizontalAlignment.Center, Visibility = Visibility.Collapsed, TextWrapping = TextWrapping.WrapWholeWords, TextAlignment = TextAlignment.Center };
-        var stack = new StackPanel { Spacing = 6, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(16) };
+        stack = new StackPanel { Spacing = 6, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(16) };
         stack.Children.Add(number);
         stack.Children.Add(line);
         Children.Add(stack);
@@ -337,6 +358,32 @@ sealed class PagePlate : Grid
 
     /// <summary>The plate is on screen, or on its way.</summary>
     public bool Shown => Opacity > 0;
+
+    void Scrolled(object? sender, ScrollViewerViewChangedEventArgs e) => OnScreen();
+
+    /// <summary>Centre the words on the part of the plate inside the strip's scroll viewer.</summary>
+    void OnScreen()
+    {
+        (double, double)? seen = null;
+        if (scroller is { ActualHeight: > 0 } view)
+        {
+            // The scroll viewer's top and bottom in the plate's own units, through any zoom.
+            var into = view.TransformToVisual(this);
+            seen = (into.TransformPoint(new global::Windows.Foundation.Point(0, 0)).Y,
+                    into.TransformPoint(new global::Windows.Foundation.Point(0, view.ActualHeight)).Y);
+        }
+        var room = number.ActualHeight > 0 ? number.ActualHeight * 2 + stack.Spacing : 48;
+        var (above, below) = StripPlate.WordsMargins(ActualHeight, seen, room);
+        stack.Margin = new Thickness(16, above, 16, below);
+    }
+
+    static ScrollViewer? Scroller(DependencyObject at)
+    {
+        for (var up = VisualTreeHelper.GetParent(at); up is not null; up = VisualTreeHelper.GetParent(up))
+            if (up is ScrollViewer view)
+                return view;
+        return null;
+    }
 
     /// <summary>The loading line says something else from now on (how long a source search has taken).</summary>
     public void Loading(string text) => line.Text = text;
@@ -385,6 +432,7 @@ sealed class PartView : Grid
     readonly ReaderPalette palette;
     readonly PageImageView image = new();
     readonly bool atOnce;
+    readonly bool strip;
     readonly Func<LeafPart, PageFile?>? kept;
     PagePlate? plate;
     PageFailedView? failed;
@@ -392,10 +440,12 @@ sealed class PartView : Grid
     /// <summary>
     /// <paramref name="atOnce"/>: the plate shows from the first frame, as it takes over from the
     /// opening plate. <paramref name="kept"/> names the file a part shows when the session no
-    /// longer has it (a chapter a strip ran on from).
+    /// longer has it (a chapter a strip ran on from). <paramref name="strip"/>: the part is a strip
+    /// image, so its plate says "Image 23".
     /// </summary>
-    public PartView(ReaderSession reader, LeafPart part, string chapter, ReaderPalette palette, HorizontalAlignment align, bool fitWidth, bool fitHeight, string label, bool atOnce = false, Func<LeafPart, PageFile?>? kept = null)
+    public PartView(ReaderSession reader, LeafPart part, string chapter, ReaderPalette palette, HorizontalAlignment align, bool fitWidth, bool fitHeight, string label, bool atOnce = false, Func<LeafPart, PageFile?>? kept = null, bool strip = false)
     {
+        this.strip = strip;
         this.reader = reader;
         this.part = part;
         this.chapter = chapter;
@@ -471,7 +521,7 @@ sealed class PartView : Grid
             image.Show(file, rasterScale);
         if (!image.IsPainted && plate is null)
         {
-            plate = new PagePlate((int)part.Page + 1, palette, atOnce);
+            plate = new PagePlate((int)part.Page + 1, palette, atOnce, strip);
             Children.Insert(0, plate);
         }
     }

@@ -16,7 +16,6 @@ title-details = Detaljer
 title-studio = Studio
 title-tags = Taggar
 title-more-about = Mer om den här titeln
-title-synopsis-hint = Visar hela synopsen
 title-dubbed-to = { -dubbed-cap } till avsnitt { $episode }
 title-no-episodes = Inga avsnitt än
 title-episodes-load-failed = Det gick inte att lista avsnitten.

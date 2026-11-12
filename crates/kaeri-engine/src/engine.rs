@@ -2111,13 +2111,15 @@ mod tests {
     }
 
     /// [`until`], for an event anywhere in what comes, not only last in its batch: what a
-    /// party says comes in bursts. The wait is long because Windows takes about two seconds to
-    /// refuse a connection to a closed local port.
+    /// party says comes in bursts. The wait between batches only guards against an engine that
+    /// stopped, so it is long: Windows takes about two seconds to refuse a connection to a
+    /// closed local port, and a send's last page and its file take over ten seconds on a loaded
+    /// machine.
     #[cfg(any(feature = "party", feature = "cast"))]
     async fn seen_until(events: &mut EventStream, done: impl Fn(&Event) -> bool) -> Vec<Event> {
         let mut seen = Vec::new();
         while !seen.iter().any(&done) {
-            match tokio::time::timeout(Duration::from_secs(10), events.next_events()).await {
+            match tokio::time::timeout(Duration::from_secs(60), events.next_events()).await {
                 Ok(batch) if !batch.is_empty() => seen.extend(batch),
                 _ => panic!("nothing more, having seen {seen:?}"),
             }
@@ -3345,6 +3347,8 @@ mod tests {
             published: i64,
             held: AtomicBool,
             holds: &'static str,
+            /// Its chapters name their volumes: two to a volume.
+            volumes: bool,
         }
 
         #[async_trait]
@@ -3374,10 +3378,13 @@ mod tests {
                 _: &str,
                 _: &BookHints,
             ) -> Result<Vec<SourceChapter>, ProviderError> {
-                Ok((1..=5)
+                Ok((1_u32..=5)
                     .map(|n| {
                         let mut chapter = SourceChapter::new(n.to_string(), n.to_string());
                         chapter.published = Some(self.published);
+                        if self.volumes {
+                            chapter.volume = Some(n.div_ceil(2).to_string());
+                        }
                         chapter
                     })
                     .collect())
@@ -3589,6 +3596,7 @@ mod tests {
                 held: AtomicBool::new(true),
                 // The second chapter waits on its pages.
                 holds: "/2/",
+                volumes: false,
             });
             let held = Arc::clone(&source);
             let (engine, mut events) = engine_with(dir.path(), host, |o| {
@@ -3681,6 +3689,71 @@ mod tests {
             rows.iter().filter(|(_, s)| *s == Some(ChapterDownloadState::Done)).count()
         }
 
+        /// Show volumes turned on or off regroups the series page already open, from the list
+        /// as kept, without asking the source again.
+        #[tokio::test]
+        async fn show_volumes_regroups_the_open_series_page() {
+            use kaeri_model::settings::SettingKey;
+            let dir = tempfile::tempdir().unwrap();
+            let host = Arc::new(QuietHost::in_dir(&dir.path().join("tokens")));
+            let source = Arc::new(Gated {
+                manifest: BookSourceManifest {
+                    id: "shelf".into(),
+                    name: "Shelf".into(),
+                    version: "1".into(),
+                    kind: BookSourceKind::Native,
+                    media: vec![Medium::Manga],
+                    languages: vec!["en".into()],
+                    allowed_hosts: Vec::new(),
+                    capabilities: Vec::new(),
+                },
+                published: kaeri_store::now() - 3_600,
+                held: AtomicBool::new(false),
+                holds: "",
+                volumes: true,
+            });
+            let (engine, mut events) = engine_with(dir.path(), host, |o| {
+                o.reading = true;
+                o.store.set_book_match("shelf", "s-1", WORK, 100, true, false, 1).unwrap();
+                o.store
+                    .seed_book_work(WORK, "manga", None, None, "The Lantern Ferry", 1)
+                    .unwrap();
+                o.book_source = Some(source);
+            })
+            .await;
+            events.launch().await;
+            let work = WorkId::new(WORK);
+            let grouped = |e: &Event| match e {
+                Event::Reading(ReadingEvent::Chapters { work: w, volumes, .. })
+                    if *w == work =>
+                {
+                    Some(volumes.iter().map(|v| (v.chapters.len(), v.flat)).collect::<Vec<_>>())
+                }
+                _ => None,
+            };
+            engine.send(Command::Reading(ReadingCommand::LoadSeries { work: work.clone() }));
+            let seen = seen_until(&mut events, |e| grouped(e).is_some()).await;
+            assert_eq!(seen.iter().rev().find_map(grouped), Some(vec![(5, true)]), "off: flat");
+
+            engine.send(Command::SetSetting {
+                key: SettingKey::ShowVolumes,
+                value: kaeri_core::settings::SettingValue::Bool(true),
+            });
+            let seen = seen_until(&mut events, |e| grouped(e).is_some()).await;
+            assert_eq!(
+                seen.iter().rev().find_map(grouped),
+                Some(vec![(2, false), (2, false), (1, false)]),
+                "on: by volume"
+            );
+
+            engine.send(Command::SetSetting {
+                key: SettingKey::ShowVolumes,
+                value: kaeri_core::settings::SettingValue::Bool(false),
+            });
+            let seen = seen_until(&mut events, |e| grouped(e).is_some()).await;
+            assert_eq!(seen.iter().rev().find_map(grouped), Some(vec![(5, true)]), "off again");
+        }
+
         /// The series page follows a download of five chapters as it runs: each chapter as it
         /// starts and lands, and the pages of the one downloading, not all five at the end.
         #[tokio::test]
@@ -3702,6 +3775,7 @@ mod tests {
                 held: AtomicBool::new(true),
                 // The second chapter's second page waits for the test.
                 holds: "/2/2",
+                volumes: false,
             });
             let held = Arc::clone(&source);
             let (engine, mut events) = engine_with(dir.path(), host, |o| {

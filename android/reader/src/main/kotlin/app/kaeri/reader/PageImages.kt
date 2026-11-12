@@ -84,7 +84,12 @@ object PageDecoder {
                 }
             }
         }
-        return BitmapFactory.decodeFile(source.path) ?: error("not a picture")
+        val whole = BitmapFactory.decodeFile(source.path) ?: error("not a picture")
+        // The crop names the part to show; this path decodes the whole file, so cut it here.
+        if (crop != null && crop.right <= whole.width && crop.bottom <= whole.height && !crop.isEmpty) {
+            return Bitmap.createBitmap(whole, crop.left, crop.top, crop.width(), crop.height())
+        }
+        return whole
     }
 
     private fun raw(source: File, file: PageFile, encoding: PageEncoding.Raw, rgba: Boolean): PageBitmap {

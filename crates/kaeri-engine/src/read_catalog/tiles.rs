@@ -233,7 +233,7 @@ pub fn library_line(
             }
         }
     } else {
-        match newest_number(&list) {
+        match newest_number(&list, &number) {
             Some(of) => ReadingMsg::ReadingChapterOf { chapter: number, of },
             None => return,
         }
@@ -241,15 +241,24 @@ pub fn library_line(
     tile.next = Some(Msg::Reading(line));
 }
 
-/// The newest chapter's number as people read it: the highest of the numbered ones.
-fn newest_number(list: &[chapters::Kept]) -> Option<String> {
-    list.iter()
+/// The newest chapter's number as people read it: the highest of the numbered ones, an extra
+/// after it, 115.6, counted as its chapter, 115. Whole when `at`, the chapter the person is at,
+/// is not past it.
+fn newest_number(list: &[chapters::Kept], at: &str) -> Option<String> {
+    let (value, number) = list
+        .iter()
         .filter_map(|c| {
             let number = c.number.as_deref()?;
             Some((number.parse::<f64>().ok()?, number))
         })
-        .max_by(|a, b| a.0.total_cmp(&b.0))
-        .map(|(_, n)| n.to_owned())
+        .max_by(|a, b| a.0.total_cmp(&b.0))?;
+    let whole = value.trunc();
+    let past = at.parse::<f64>().is_ok_and(|at| at > whole);
+    if whole == value || past || !(0.0..=f64::from(u32::MAX)).contains(&whole) {
+        return Some(number.to_owned());
+    }
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+    Some((whole as u32).to_string())
 }
 
 /// The source's own name for a light novel's part, when it says more than the number: what its
@@ -374,4 +383,35 @@ pub fn missing(meta: &Meta, works: &[String], now: i64) -> Vec<AnilistId> {
     ids.into_iter()
         .filter(|id| !kept.iter().any(|k| k.book.id == *id && k.fresh(now)))
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn list(numbers: &[&str]) -> Vec<chapters::Kept> {
+        numbers
+            .iter()
+            .map(|n| {
+                serde_json::from_value(serde_json::json!({
+                    "id": n, "source_ref": format!("c-{n}"), "label": format!("Chapter {n}"),
+                    "number": n,
+                }))
+                .unwrap()
+            })
+            .collect()
+    }
+
+    /// A Library cover counts to the newest chapter, an extra after it counted as its chapter.
+    #[test]
+    fn the_newest_chapter_counts_an_extra_as_its_chapter() {
+        assert_eq!(newest_number(&list(&["1", "2", "115"]), "5").as_deref(), Some("115"));
+        assert_eq!(newest_number(&list(&["1", "115", "115.6"]), "5").as_deref(), Some("115"));
+        // A chapter read past the whole number keeps the extra, never "115.6 of 115".
+        assert_eq!(
+            newest_number(&list(&["1", "115", "115.6"]), "115.6").as_deref(),
+            Some("115.6")
+        );
+        assert_eq!(newest_number(&list(&[]), "1"), None);
+    }
 }

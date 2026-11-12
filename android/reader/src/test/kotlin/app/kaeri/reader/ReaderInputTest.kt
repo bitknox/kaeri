@@ -1,9 +1,12 @@
-// The zones and keys of both boards, mirrored for each direction.
+// The zones the reader falls back on before the engine sends its own, and the keys, mirrored for each direction.
 
 package app.kaeri.reader
 
 import android.view.KeyEvent
 import app.kaeri.engine.model.ReadDirection
+import app.kaeri.engine.model.ReaderMode
+import app.kaeri.engine.model.TapAction
+import app.kaeri.engine.model.TapReading
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -12,29 +15,32 @@ class ReaderInputTest {
     private val rtl = ReadDirection.RIGHT_TO_LEFT
     private val ltr = ReadDirection.LEFT_TO_RIGHT
 
+    private fun paged(direction: ReadDirection) = TapReading(ReaderMode.PAGED, direction, false, false)
+
     @Test
-    fun phone_zones_are_thirds_with_forward_at_the_reading_side() {
-        val r = TapZones.phone(rtl)
-        assertEquals(ReaderAction.FORWARD, r.at(0.1f))
-        assertEquals(ReaderAction.CONTROLS, r.at(0.5f))
-        assertEquals(ReaderAction.BACK, r.at(0.9f))
-        val l = TapZones.phone(ltr)
-        assertEquals(ReaderAction.BACK, l.at(0.1f))
-        assertEquals(ReaderAction.CONTROLS, l.at(0.5f))
-        assertEquals(ReaderAction.FORWARD, l.at(0.9f))
+    fun phone_zones_before_the_engine_sends_them_are_thirds_with_forward_at_the_reading_side() {
+        val zones = ReaderState().tapZones()
+        assertEquals(TapAction.NEXT, zones.actionAt(paged(rtl), 0.1f, 0.5f))
+        assertEquals(TapAction.CONTROLS, zones.actionAt(paged(rtl), 0.5f, 0.5f))
+        assertEquals(TapAction.PREVIOUS, zones.actionAt(paged(rtl), 0.9f, 0.5f))
+        assertEquals(TapAction.PREVIOUS, zones.actionAt(paged(ltr), 0.1f, 0.5f))
+        assertEquals(TapAction.NEXT, zones.actionAt(paged(ltr), 0.9f, 0.5f))
     }
 
     @Test
-    fun eink_zones_are_forty_thirty_thirty() {
-        val r = TapZones.eink(rtl)
-        assertEquals(ReaderAction.FORWARD, r.at(0.39f))
-        assertEquals(ReaderAction.CONTROLS, r.at(0.41f))
-        assertEquals(ReaderAction.CONTROLS, r.at(0.69f))
-        assertEquals(ReaderAction.BACK, r.at(0.71f))
-        val l = TapZones.eink(ltr)
-        assertEquals(ReaderAction.BACK, l.at(0.29f))
-        assertEquals(ReaderAction.CONTROLS, l.at(0.31f))
-        assertEquals(ReaderAction.FORWARD, l.at(0.61f))
+    fun eink_zones_before_the_engine_sends_them_are_forty_thirty_thirty() {
+        val zones = ReaderState().tapZones(eink = true)
+        assertEquals(TapAction.NEXT, zones.actionAt(paged(rtl), 0.39f, 0.5f))
+        assertEquals(TapAction.CONTROLS, zones.actionAt(paged(rtl), 0.41f, 0.5f))
+        assertEquals(TapAction.PREVIOUS, zones.actionAt(paged(rtl), 0.71f, 0.5f))
+        assertEquals(TapAction.PREVIOUS, zones.actionAt(paged(ltr), 0.29f, 0.5f))
+        assertEquals(TapAction.NEXT, zones.actionAt(paged(ltr), 0.61f, 0.5f))
+    }
+
+    @Test
+    fun a_screen_reader_makes_every_tap_the_controls() {
+        val zones = ReaderState().tapZones()
+        assertEquals(TapAction.CONTROLS, zones.actionAt(TapReading(ReaderMode.PAGED, rtl, false, true), 0.05f, 0.5f))
     }
 
     @Test

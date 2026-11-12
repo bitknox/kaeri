@@ -16,7 +16,6 @@ title-details = Ayrıntılar
 title-studio = Stüdyo
 title-tags = Etiketler
 title-more-about = Bu dizi hakkında daha fazla
-title-synopsis-hint = Özetin tamamını gösterir
 title-dubbed-to = { -dubbed-cap }, { $episode }. bölüme kadar
 title-no-episodes = Henüz bölüm yok
 title-episodes-load-failed = Bölümler listelenemedi

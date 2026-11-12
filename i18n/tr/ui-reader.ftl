@@ -1,4 +1,7 @@
 reader-page-loading = Sayfa { $page } yükleniyor
+reader-page-plate = Sayfa { $page }
+reader-image-plate = Görsel { $image }
+reader-image-loading = Görsel { $image } yükleniyor
 reader-page-failed = Sayfa { $page } yüklenemedi
 reader-try-again = Tekrar dene
 reader-close = Kapat
@@ -56,3 +59,6 @@ reader-divider-images = { $count ->
     [one] Bir görsel
    *[other] { $count } görsel
  }
+reader-zone-next = Sonraki sayfa
+reader-zone-previous = Önceki sayfa
+reader-zone-controls = Kontroller

@@ -127,7 +127,8 @@ impl Cx<'_> {
             Some(source) => self.layers_with(medium, id, Some(source)),
             None => self.layers(medium, id),
         };
-        ReaderSettingsView { medium, work: work.cloned(), rows: layers.rows() }
+        let tap_zones = (medium != Medium::Anime).then(|| layers.tap_zones());
+        ReaderSettingsView { medium, work: work.cloned(), rows: layers.rows(), tap_zones }
     }
 }
 
@@ -232,12 +233,16 @@ pub struct Session {
     last_write: Option<Instant>,
     /// The chapter and page of the place last written.
     written: Option<(ChapterId, Option<u32>)>,
+    /// The place last written counted past credit pages learnt while it was open, and that count.
+    written_past_credits: Option<(ReadPlace, u32)>,
     /// The novel open in the web view.
     novel: Option<novel::Open>,
     /// Where the next novel chapter opens.
     restore: Option<NovelPos>,
     /// What a chapter opened off the actor gave.
     prepared: novel::Slot,
+    /// The source's chapter opening off the actor, until what it gave is laid out.
+    source_open: Option<novel::SourceOpen>,
     /// The open chapter's pages from a source, landing as they are fetched.
     feed: Option<Arc<crate::reading::feed::Feed>>,
     /// "Resumed at page N" waits for a novel's first page.
@@ -341,6 +346,12 @@ impl Reader {
                 }
                 self.settings_changed(cx, session, medium, work, key);
             }
+            ReaderCommand::TapGuideSeen { guide } => {
+                let paths = cx.services.paths.clone();
+                if let Err(e) = settings::guide_seen(cx.config, &paths, &guide) {
+                    tracing::warn!(error = %e, "the tap zone guide was not kept as seen");
+                }
+            }
             ReaderCommand::UseDefault { medium, work, key } => {
                 if let Err(e) =
                     settings::use_default(&cx.services.store, work.as_str(), key, cx.now())
@@ -408,7 +419,7 @@ impl Reader {
         self.listing = None;
         if let Some(mut s) = self.session.take() {
             s.read_timer += 1;
-            s.flush(cx);
+            s.flush_leaving(cx);
             // Progress held for the close goes now: the furthest chapter read this time.
             if let Some((chapter, at)) = s.unsent.take()
                 && !queue_trackers(cx, &s.work, &chapter, at).is_empty()
@@ -669,9 +680,11 @@ impl Reader {
             dirty: false,
             last_write: None,
             written: None,
+            written_past_credits: None,
             novel: None,
             restore,
             prepared: Arc::default(),
+            source_open: None,
             feed: None,
             novel_resumed: false,
             gone: crate::reading::feed::Gone::new(novel::streamed_dir(
@@ -716,7 +729,7 @@ impl Reader {
     pub fn background(&mut self, cx: &Cx<'_>) {
         if let Some(s) = self.session.as_mut() {
             s.read_timer += 1;
-            s.flush(cx);
+            s.flush_leaving(cx);
         }
     }
 
@@ -749,6 +762,7 @@ fn session_of(command: &ReaderCommand) -> Option<u64> {
         C::Open { .. }
         | C::SetSetting { .. }
         | C::UseDefault { .. }
+        | C::TapGuideSeen { .. }
         | C::LoadSettings { .. } => None,
     }
 }
@@ -770,6 +784,23 @@ fn downloading(cx: &Cx<'_>, work: &WorkId, chapter: &ChapterId) -> bool {
         }
         _ => false,
     }
+}
+
+/// Whether `chapter` opens with no network: downloaded, or a file on this device.
+fn on_device(chapter: &ShelfChapter) -> bool {
+    chapter.format != novel::SOURCE && !chapter.path.as_os_str().is_empty()
+}
+
+/// A chapter's row for the end page, which says when a downloaded one is here.
+fn end_row(
+    chapter: &ShelfChapter,
+    marks: &kaeri_store::reading::ReadMarks,
+) -> kaeri_model::reading::ChapterRow {
+    let mut row = chapter.row(marks);
+    if chapter.source.is_some() && on_device(chapter) {
+        row.download = Some(kaeri_model::reading::ChapterDownloadState::Done);
+    }
+    row
 }
 
 /// Where a chapter opens.
@@ -995,17 +1026,33 @@ impl Session {
     }
 
     /// Move a kept place read in a split of the chapter `kept_of` pages long to the same point
-    /// of this one, `total` pages long. Once, as the chapter is first laid out.
-    fn rescale_kept(&mut self, total: u32) {
+    /// of this one, `total` pages long once the credit pages `skipped` are left out. Once, as the
+    /// chapter is first laid out.
+    fn rescale_kept(&mut self, total: u32, skipped: &[u32]) {
         if let Some(of) = self.kept_of.take()
-            && let Some((page, strip)) =
-                rescaled(self.start.page.unwrap_or(0), self.start.strip, of, total)
+            && let Some((page, strip)) = kept_past_credits(
+                self.start.page.unwrap_or(0),
+                self.start.strip,
+                of,
+                (total, skipped),
+            )
         {
             self.start.page = Some(page);
             self.start.strip = strip;
             if self.resumed.is_some() {
                 self.resumed = Some(page);
             }
+        }
+    }
+
+    /// A start past the chapter's last page, as a place kept from a longer copy of it, is its
+    /// last page: the reader opens there and `Opened` says so.
+    fn clamp_start(&mut self, total: u32) {
+        let Some(last) = total.checked_sub(1) else { return };
+        if self.start.page.is_some_and(|p| p > last) {
+            self.start.page = Some(last);
+            self.start.strip = None;
+            self.resumed = self.resumed.map(|p| p.min(last));
         }
     }
 
@@ -1017,9 +1064,22 @@ impl Session {
         self.start.page = Some(page);
         // The place within a strip holds only while the chapter opens at its image.
         self.start.strip = self.start.strip.filter(|s| s.image == page);
+        // An open of another chapter, or of this one before it was downloaded, stops.
+        if self
+            .source_open
+            .as_ref()
+            .is_some_and(|o| o.chapter != chapter.id || chapter.format != novel::SOURCE)
+        {
+            self.source_open = None;
+        }
         // Another chapter's pages that had not all landed are fetched again when it opens, and
         // so is one with credit pages or parts, which its folder alone does not tell.
-        if let Some(left) = self.feed.take_if(|f| f.chapter != chapter.id)
+        let left = self.feed.take_if(|f| f.chapter != chapter.id);
+        // The chapter left stops fetching, so its pages never hold up the one opening.
+        if let Some(left) = &left {
+            left.leave();
+        }
+        if let Some(left) = left
             && (!left.complete() || !left.credits.is_empty() || left.parts.is_some())
             && let Some(c) = self.chapters.iter_mut().find(|c| c.id == left.chapter)
         {
@@ -1110,7 +1170,9 @@ impl Session {
         self.pages_total = laid.pages;
         // A place kept in a split of the chapter with other pages, as another source's, goes to
         // the same point in this one.
-        self.rescale_kept(laid.pages);
+        let skipped: Vec<u32> = laid.credits.iter().map(|c| c.page).collect();
+        self.rescale_kept(laid.pages, &skipped);
+        self.clamp_start(laid.pages);
         let eink = self.eink();
         // A guess is kept for the series on this device, and said once.
         let now = cx.now();
@@ -1252,8 +1314,13 @@ impl Session {
                 let Some(index) = self.chapters.iter().position(|c| c.id == chapter) else {
                     return;
                 };
-                // Skipping the extras moves on as Continue does; they stay unread.
-                if index == self.at + 1 || Some(index) == self.skip_index() {
+                // Skipping the extras moves on as Continue does; they stay unread. So does the
+                // end page's next chapter offline, the next one on this device.
+                let offline = cx.services.offline.load(std::sync::atomic::Ordering::Relaxed);
+                if index == self.at + 1
+                    || Some(index) == self.skip_from(self.at + 1, false)
+                    || Some(index) == self.end_next(offline)
+                {
                     self.chapter_read(cx, Reached::MovedOn);
                 }
                 // A strip flows into the next chapter in the same scroll, under its marker:
@@ -1444,7 +1511,8 @@ impl Session {
         if std::mem::replace(&mut self.peeked, true) {
             return;
         }
-        let index = self.at + 1;
+        let offline = cx.services.offline.load(std::sync::atomic::Ordering::Relaxed);
+        let Some(index) = self.end_next(offline) else { return };
         self.follow_download(cx, index);
         let Some(next) = self.chapters.get(index) else { return };
         if next.format == novel::SOURCE {
@@ -1485,15 +1553,17 @@ impl Session {
         }
         let marks =
             crate::read_catalog::chapters::read_marks(&cx.services.store, self.work.as_str());
-        let following = self.chapters.get(self.at + 1);
-        let next = following.map(|c| c.row(&marks));
+        let offline = cx.services.offline.load(std::sync::atomic::Ordering::Relaxed);
+        let index = self.end_next(offline);
+        let following = index.map(|i| &self.chapters[i]);
+        let next = following.map(|c| end_row(c, &marks));
         let next_source = following
             .and_then(|c| c.source.as_deref())
             .map(|id| cx.services.book_sources.source_name(id));
         let why_none = next.is_none().then(|| self.why_no_next(cx));
-        let skip = self.skip_index();
-        let skip_to = skip.map(|i| self.chapters[i].row(&marks));
-        let extras = skip.map_or(0, |i| i - (self.at + 1)) as u32;
+        let skip = index.and_then(|i| self.skip_from(i, offline).map(|s| (i, s)));
+        let skip_to = skip.map(|(_, s)| end_row(&self.chapters[s], &marks));
+        let extras = skip.map_or(0, |(i, s)| s - i) as u32;
         cx.send(ReaderEvent::EndPage {
             session: self.id,
             next,
@@ -1504,11 +1574,19 @@ impl Session {
         });
     }
 
-    /// Where the end page's skip goes: past the extras that follow the open chapter, to the
-    /// next whole chapter.
-    fn skip_index(&self) -> Option<usize> {
-        let ids: Vec<ChapterId> = self.chapters.iter().map(|c| c.id.clone()).collect();
-        super::extras::skip_to(&ids, self.at + 1)
+    /// The chapter the end page leads into: the one after the open chapter, and offline the
+    /// next one on this device, since one only a source has would not open.
+    fn end_next(&self, offline: bool) -> Option<usize> {
+        (self.at + 1..self.chapters.len()).find(|&i| !offline || on_device(&self.chapters[i]))
+    }
+
+    /// Where the end page's skip goes from its next chapter, `next`: past the extras from
+    /// there, to the next whole chapter. Offline, only to one on this device.
+    fn skip_from(&self, next: usize, offline: bool) -> Option<usize> {
+        let list: Vec<(ChapterId, Option<String>)> =
+            self.chapters.iter().map(|c| (c.id.clone(), c.title.clone())).collect();
+        crate::read_catalog::extras::skip_to(&list, next)
+            .filter(|&i| !offline || on_device(&self.chapters[i]))
     }
 
     /// Why the end page has no next chapter: the series ended with this one, which offers
@@ -1618,9 +1696,56 @@ impl Session {
         let Some(here) = self.place.clone() else { return };
         self.last_write = Some(Instant::now());
         self.written = Some((here.chapter.clone(), here.page));
+        self.write_place(cx, &here, self.pages_total);
+    }
+
+    /// Write the place as the chapter is left. When credit pages of the chapter were learnt while
+    /// it was open, the place is written as the chapter counts its pages once they are left out,
+    /// so the Continue row and the next open agree.
+    fn flush_leaving(&mut self, cx: &Cx<'_>) {
+        let Some(past) = self.place_past_new_credits(cx) else {
+            self.flush(cx);
+            return;
+        };
+        if !self.dirty && self.written_past_credits.as_ref() == Some(&past) {
+            return;
+        }
+        self.dirty = false;
+        self.last_write = Some(Instant::now());
+        self.written = self.place.as_ref().map(|p| (p.chapter.clone(), p.page));
+        self.write_place(cx, &past.0, past.1);
+        self.written_past_credits = Some(past);
+    }
+
+    /// The place and the chapter's count once the credit pages learnt since it was laid out
+    /// leave it, as from the next chapter fetched ahead. The page read stays the same: a place
+    /// on a page now left out goes to the one before it. `None` when nothing was learnt.
+    fn place_past_new_credits(&self, cx: &Cx<'_>) -> Option<(ReadPlace, u32)> {
+        let here = self.place.clone().filter(|p| p.novel.is_none() && !self.read_fired)?;
+        let feed = self.feed.as_ref().filter(|f| f.chapter == here.chapter)?;
+        let page = here.page?;
+        let left: Vec<u32> = feed.credits.iter().map(|c| c.page).collect();
+        let total = u32::try_from(feed.count() + left.len()).ok()?;
+        let found = self.learning(cx).find(here.chapter.as_str(), total);
+        let new: Vec<u32> =
+            found.iter().map(|p| p.page).filter(|p| !left.contains(p)).collect();
+        if new.is_empty() {
+            return None;
+        }
+        // Pages by where they are in the source's chapter, as counted now and as they will be.
+        let order: Vec<u32> = (0..total).filter(|p| !left.contains(p)).collect();
+        let kept: Vec<u32> = order.iter().copied().filter(|p| !new.contains(p)).collect();
+        let moved = moved_to(&order, &kept, page)?;
+        let mut place = here;
+        place.page = Some(moved);
+        place.strip = place.strip.map(|s| StripPos { image: moved, ..s });
+        Some((place, u32::try_from(kept.len()).ok()?))
+    }
+
+    fn write_place(&self, cx: &Cx<'_>, here: &ReadPlace, of: u32) {
         let mut event = ReadEvent::new(self.work.as_str(), here.chapter.as_str(), cx.now());
         event.page = here.page;
-        event.of_pages = Some(self.pages_total).filter(|n| *n > 0);
+        event.of_pages = Some(of).filter(|n| *n > 0);
         event.strip_image = here.strip.map(|s| s.image);
         event.strip_offset = here.strip.map(|s| f64::from(s.offset));
         event.novel_pos = here.novel.as_ref().map(NovelPos::encode);
@@ -1638,7 +1763,7 @@ impl Session {
         page: u32,
         novel: Option<NovelPos>,
     ) {
-        self.flush(cx);
+        self.flush_leaving(cx);
         if self.novel.take().is_some() {
             cx.services.novels.remove(self.id);
         }
@@ -1684,7 +1809,9 @@ impl Session {
             return;
         };
         let Some(device) = theirs.device.clone() else { return };
-        if store.sync_device().ok().flatten().as_deref() == Some(device.as_str()) {
+        // This device's own id stays its own with sync off: places it kept while sync was on
+        // carry it.
+        if store.sync_device_kept().ok().flatten().as_deref() == Some(device.as_str()) {
             return;
         }
         let Some(index) = self.chapters.iter().position(|c| c.id.as_str() == last) else {
@@ -1723,7 +1850,7 @@ impl Session {
         self.go_to(cx, pages, to.clone());
         let from_device = name.clone().unwrap_or_default();
         cx.send(ReaderEvent::Moved { session: self.id, to, from_device, back });
-        let msg = moved_msg(&label, i64::from(page) + 1, name);
+        let msg = moved_msg(self.mode, &label, i64::from(page) + 1, name);
         cx.send(notice(msg, Some(ReaderAction::GoBack), MOVED_MS, self.eink()));
     }
 }
@@ -1749,6 +1876,33 @@ pub(super) fn rescaled(
     Some((image, strip.map(|_| StripPos { image, offset })))
 }
 
+/// As [`rescaled`], for a chapter that now leaves out the credit pages `skipped` (by where they
+/// are among every page the source has). A place counted with every page moves past the credit
+/// pages before it, so the page read stays the same; a place counted otherwise is scaled.
+pub(super) fn kept_past_credits(
+    page: u32,
+    strip: Option<StripPos>,
+    of: u32,
+    (total, skipped): (u32, &[u32]),
+) -> Option<(u32, Option<StripPos>)> {
+    if skipped.is_empty() || of as usize != total as usize + skipped.len() {
+        return rescaled(page, strip, of, total);
+    }
+    let every: Vec<u32> = (0..of).collect();
+    let kept: Vec<u32> = every.iter().copied().filter(|p| !skipped.contains(p)).collect();
+    let image = moved_to(&every, &kept, page)?;
+    Some((image, strip.filter(|s| s.image == page).map(|s| StripPos { image, ..s })))
+}
+
+/// Page `page` of a chapter whose pages are `before` (each by where it is among every page the
+/// source has), in the same chapter with the pages `after`: the same page, or on one left out,
+/// the one before it.
+fn moved_to(before: &[u32], after: &[u32], page: u32) -> Option<u32> {
+    let at = *before.get(page as usize)?;
+    let moved = after.iter().rposition(|p| *p <= at).unwrap_or(0);
+    u32::try_from(moved).ok()
+}
+
 fn resumed_msg(mode: ReaderMode, page: u32, strip: Option<StripPos>) -> Option<ReadingMsg> {
     let into = strip.filter(|s| s.image == page).map_or(0.0, |s| s.offset);
     if page == 0 && into < 0.05 {
@@ -1763,22 +1917,36 @@ fn resumed_msg(mode: ReaderMode, page: u32, strip: Option<StripPos>) -> Option<R
 
 /// The Moved notice for a chapter's label. A label that is only a number, with or without a
 /// chapter word (`14`, `14.5`, `Chapter 14`), reads "chapter 14"; any other label is shown whole.
-fn moved_msg(label: &str, page: i64, device: Option<String>) -> ReadingMsg {
+/// The Moved notice for a move to `page` of the chapter `label`: in images in a strip, as every
+/// other line there counts.
+fn moved_msg(mode: ReaderMode, label: &str, page: i64, device: Option<String>) -> ReadingMsg {
     let lower = label.trim().to_lowercase();
     let rest = ["chapter", "chap.", "chap", "ch.", "ch"]
         .iter()
         .find_map(|w| lower.strip_prefix(w))
         .map_or(lower.as_str(), |r| r.trim_start_matches([' ', '.', ':', '#']));
     let number = kaeri_core::books::ChapterNumber::parse(rest).map(|n| n.to_string());
-    match (number, device) {
-        (Some(chapter), Some(device)) => {
+    let strip = mode == ReaderMode::Strip;
+    let (image, label) = (page, label.to_owned());
+    match (number, device, strip) {
+        (Some(chapter), Some(device), false) => {
             ReadingMsg::ReaderMovedNumber { chapter, page, device }
         }
-        (Some(chapter), None) => ReadingMsg::ReaderMovedNumberElsewhere { chapter, page },
-        (None, Some(device)) => {
-            ReadingMsg::ReaderMoved { chapter: label.to_owned(), page, device }
+        (Some(chapter), Some(device), true) => {
+            ReadingMsg::ReaderMovedNumberImage { chapter, image, device }
         }
-        (None, None) => ReadingMsg::ReaderMovedElsewhere { chapter: label.to_owned(), page },
+        (Some(chapter), None, false) => {
+            ReadingMsg::ReaderMovedNumberElsewhere { chapter, page }
+        }
+        (Some(chapter), None, true) => {
+            ReadingMsg::ReaderMovedNumberElsewhereImage { chapter, image }
+        }
+        (None, Some(device), false) => ReadingMsg::ReaderMoved { chapter: label, page, device },
+        (None, Some(device), true) => {
+            ReadingMsg::ReaderMovedImage { chapter: label, image, device }
+        }
+        (None, None, false) => ReadingMsg::ReaderMovedElsewhere { chapter: label, page },
+        (None, None, true) => ReadingMsg::ReaderMovedElsewhereImage { chapter: label, image },
     }
 }
 
@@ -1844,7 +2012,7 @@ fn queue_trackers(cx: &Cx<'_>, work: &WorkId, chapter: &ChapterId, at: i64) -> V
 mod tests {
     #[test]
     fn moved_notice_names_the_chapter_once() {
-        let moved = |label: &str| moved_msg(label, 6, Some("Desk".into()));
+        let moved = |label: &str| moved_msg(ReaderMode::Paged, label, 6, Some("Desk".into()));
         let number = |n: &str| ReadingMsg::ReaderMovedNumber {
             chapter: n.into(),
             page: 6,
@@ -3240,6 +3408,41 @@ mod tests {
         assert_eq!(mode, ());
         assert_eq!(h.reader.session.as_ref().unwrap().mode, ReaderMode::Strip);
     }
+    /// The settings carry the tap zones, and a guide kept as seen stays seen for that kind of
+    /// reading only, in this device's config.
+    #[tokio::test(start_paused = true)]
+    async fn settings_carry_the_tap_zones_and_a_seen_guide_is_kept() {
+        use kaeri_model::tap_zones::{TapReading, ZoneLayout};
+        let mut h = harness(Store::open_in_memory().unwrap());
+        macro_rules! load {
+            ($h:expr) => {{
+                $h.send(ReaderCommand::LoadSettings { medium: Medium::Manga, work: None });
+                $h.until(|e| match e {
+                    ReaderEvent::Settings(view) => Some(view.tap_zones.clone()),
+                    _ => None,
+                })
+            }};
+        }
+        let zones = load!(h).await.expect("manga has tap zones");
+        assert_eq!((zones.paged, zones.scrolling), (ZoneLayout::Sides, ZoneLayout::Off));
+        let reading = TapReading::new(ReaderMode::Paged, ReadDirection::RightToLeft);
+        assert!(zones.guide_due(&reading), "never seen on this device");
+
+        let guide = zones.map(&reading, None).guide;
+        h.send(ReaderCommand::TapGuideSeen { guide: guide.clone() });
+        let zones = load!(h).await.unwrap();
+        assert_eq!(zones.guide_seen_paged, guide);
+        assert!(zones.guide_seen_scrolling.is_empty());
+        assert!(!zones.guide_due(&reading));
+        assert_eq!(
+            h.config.saved().reading.taps.get("guide_paged").and_then(|v| v.as_str()),
+            Some(guide.as_str())
+        );
+        // A value that names no kind of reading is dropped.
+        h.send(ReaderCommand::TapGuideSeen { guide: "sideways".into() });
+        assert_eq!(load!(h).await.unwrap().guide_seen_paged, guide);
+    }
+
     /// A strip hinted by the work's origin gives way to the mode the person picks, at once and
     /// not only after the reader is opened again.
     #[tokio::test(start_paused = true)]

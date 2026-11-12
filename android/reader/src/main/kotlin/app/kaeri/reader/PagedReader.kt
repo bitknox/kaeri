@@ -1,10 +1,11 @@
-// The paged reader: one leaf at a time, turned by taps in the zones, swipes, keys and jumps. On a
+// The paged reader: one leaf at a time, turned by taps in the engine's zones, swipes, keys and jumps. On a
 // phone a tap or key turn is a 0.2 s crossfade with the old page held under until the new one is
 // drawn, never through empty, and Remove animations keeps that fade;
 // a swipe follows the finger and turns past 25% of the width or a 450 dp/s flick with a spring that
-// does not bounce. With motion off (e-ink, Paper mode) every turn is at once. A strip cut into
-// screens (e-ink) also moves on with an upward swipe and back with a downward one. Pinch zooms, and
-// while zoomed a drag pans and the tap zones are off.
+// does not bounce. With motion off (e-ink, Paper mode) every turn is at once. Taps act at once:
+// there is no double tap until the page is zoomed. A strip cut into screens (e-ink) also moves on
+// with an upward swipe and back with a downward one. Pinch zooms, and while zoomed a drag pans and
+// the tap zones are off. With swipes off (an e-ink switch) a drag neither turns nor counts as a tap.
 
 package app.kaeri.reader
 
@@ -13,6 +14,9 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import app.kaeri.engine.model.PageKind
 import app.kaeri.engine.model.ReadingFailure
+import app.kaeri.engine.model.TapAction
+import app.kaeri.engine.model.TapReading
+import app.kaeri.engine.model.TapZoneSettings
 import kotlinx.coroutines.delay
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animate
@@ -181,8 +185,9 @@ class PagedReaderState(initial: Int = 0) {
 fun rememberPagedReaderState(initial: Int = 0): PagedReaderState = remember { PagedReaderState(initial) }
 
 /**
- * The paged reader over [state]'s leaves. [motion] is false on e-ink and in Paper mode. [onControls]
- * runs for a tap in the middle zone, or any tap while zoomed. [onShown] runs after the frame that
+ * The paged reader over [state]'s leaves. [motion] is false on e-ink and in Paper mode. A tap asks
+ * the engine's tap zones in [taps] for [reading]; [onControls] runs for a tap in a Controls zone,
+ * or any tap while zoomed. [onShown] runs after the frame that
  * shows a leaf, with how it was reached and whether the person turned to it (not the engine's start
  * place, and not the same leaf laid out again after a rotation); the screen passes it to
  * [ReaderSession.shown]. The end page leaf is drawn by [endPage].
@@ -193,7 +198,8 @@ fun PagedReader(
     pager: PagedReaderState,
     images: PageImages,
     direction: ReadDirection,
-    zones: TapZones,
+    taps: TapZoneSettings,
+    reading: TapReading,
     onControls: () -> Unit,
     onShown: (leaf: Int, how: TurnHow, turned: Boolean) -> Unit,
     onMissing: (LeafPart) -> Unit,
@@ -213,10 +219,14 @@ fun PagedReader(
     onCredit: (UInt?) -> Unit = {},
     /** What a credit page is drawn on, so the leaf under it does not show through. */
     creditGround: Color = Color.Black,
+    /** A swipe turns the page; off, only taps, keys and page buttons do. */
+    swipes: Boolean = true,
 ) {
     val leaves = state.leaves
     // On e-ink a strip is cut into screens shown one at a time.
     val cuts = leaves.firstOrNull { !it.endPage }?.parts?.firstOrNull()?.kind == PageKind.STRIP_CUT
+    val zonesNow by rememberUpdatedState(taps)
+    val readingNow by rememberUpdatedState(reading)
     pager.count = leaves.size
     pager.endLast = leaves.lastOrNull()?.endPage == true
     val pastEnd by rememberUpdatedState(onPastEnd)
@@ -409,7 +419,7 @@ fun PagedReader(
                         CustomAccessibilityAction(Strings.readerActionControls(context)) { onControls(); true },
                     )
                 }
-                .pointerInput(rtl, zones, motion, pager.zoomed) {
+                .pointerInput(pager.zoomed) {
                     if (pager.zoomed) {
                         // A double tap returns to fit; a single tap shows the controls.
                         detectTapGestures(
@@ -421,15 +431,15 @@ fun PagedReader(
                         )
                     } else {
                         detectTapGestures { at ->
-                            when (zones.at(at.x / size.width)) {
-                                ReaderAction.FORWARD -> pager.forward()
-                                ReaderAction.BACK -> pager.back()
-                                else -> onControls()
+                            when (zonesNow.actionAt(readingNow, at.x / size.width, at.y / size.height)) {
+                                TapAction.NEXT -> pager.forward()
+                                TapAction.PREVIOUS -> pager.back()
+                                TapAction.CONTROLS -> onControls()
                             }
                         }
                     }
                 }
-                .pointerInput(rtl, motion, cuts) {
+                .pointerInput(rtl, motion, cuts, swipes) {
                     awaitEachGesture {
                         val down = awaitFirstDown(requireUnconsumed = false)
                         // A new touch takes over a settling swipe from where it is. A page caught
@@ -483,9 +493,14 @@ fun PagedReader(
                                         delta = Offset(wanted.x - panned.x, 0f)
                                     }
                                     total += delta
-                                    if (!dragging && abs(total.x) > viewConfiguration.touchSlop && abs(total.x) > abs(total.y)) dragging = true
-                                    if (cuts && !dragging && !upDown && abs(total.y) > viewConfiguration.touchSlop && abs(total.y) > abs(total.x)) upDown = true
-                                    if (upDown) change.consume()
+                                    if (!swipes) {
+                                        // A hand resting on the glass: past a tap's slop it is no tap either.
+                                        if (moved.getDistance() > viewConfiguration.touchSlop) change.consume()
+                                    } else {
+                                        if (!dragging && abs(total.x) > viewConfiguration.touchSlop && abs(total.x) > abs(total.y)) dragging = true
+                                        if (cuts && !dragging && !upDown && abs(total.y) > viewConfiguration.touchSlop && abs(total.y) > abs(total.x)) upDown = true
+                                        if (upDown) change.consume()
+                                    }
                                     if (dragging) {
                                         tracker.addPosition(change.uptimeMillis, change.position)
                                         // With motion off the page stays put until the finger lifts.
@@ -730,7 +745,7 @@ fun CreditPageView(credit: CreditPage, images: PageImages, ground: Color, modifi
 }
 
 /** What a screen reader says for a leaf: its page, or its two pages. */
-private fun describe(context: android.content.Context, leaf: Leaf, state: ReaderState): String {
+internal fun describe(context: android.content.Context, leaf: Leaf, state: ReaderState): String {
     val pages = state.shownPages
     val numbers = leaf.parts.map { state.shownPage(it.page.toInt()) + 1 }.distinct()
     return when (numbers.size) {

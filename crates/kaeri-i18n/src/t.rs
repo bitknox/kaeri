@@ -960,6 +960,26 @@ pub fn reader_moved_number_elsewhere(chapter: &str, page: i64) -> String {
     text("reader-moved-number-elsewhere", &[("chapter", Arg::Text(chapter)), ("page", Arg::Plain(page))])
 }
 
+/// The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its whole label, such as The Long Night.
+pub fn reader_moved_image(chapter: &str, image: i64, device: &str) -> String {
+    text("reader-moved-image", &[("chapter", Arg::Text(chapter)), ("image", Arg::Plain(image)), ("device", Arg::Text(device))])
+}
+
+/// The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+pub fn reader_moved_number_image(chapter: &str, image: i64, device: &str) -> String {
+    text("reader-moved-number-image", &[("chapter", Arg::Text(chapter)), ("image", Arg::Plain(image)), ("device", Arg::Text(device))])
+}
+
+/// The notice in a strip when another device read further and its name is not known.
+pub fn reader_moved_elsewhere_image(chapter: &str, image: i64) -> String {
+    text("reader-moved-elsewhere-image", &[("chapter", Arg::Text(chapter)), ("image", Arg::Plain(image))])
+}
+
+/// The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+pub fn reader_moved_number_elsewhere_image(chapter: &str, image: i64) -> String {
+    text("reader-moved-number-elsewhere-image", &[("chapter", Arg::Text(chapter)), ("image", Arg::Plain(image))])
+}
+
 /// A notice the first time a series opens with its reading direction guessed. It offers Change.
 pub fn reader_detected_right_to_left() -> String {
     text("reader-detected-right-to-left", &[])
@@ -1383,6 +1403,11 @@ pub fn reading_row_waits_wifi() -> String {
 /// A chapter row's state while it downloads.
 pub fn reading_row_downloading(done: i64, total: i64) -> String {
     text("reading-row-downloading", &[("done", Arg::Int(done)), ("total", Arg::Int(total))])
+}
+
+/// A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count.
+pub fn reading_row_downloading_plain() -> String {
+    text("reading-row-downloading-plain", &[])
 }
 
 /// A chapter row's state: the download failed. The reason follows as the next part.
@@ -3345,11 +3370,6 @@ pub fn linux_shortcuts_close_reader() -> String {
 /// Two names joined, or a list's last name joined to the rest, in the end page's tracker line: "AniList and MangaUpdates".
 pub fn linux_reader_names_and(first: &str, last: &str) -> String {
     text("linux-reader-names-and", &[("first", Arg::Text(first)), ("last", Arg::Text(last))])
-}
-
-/// On the plate that holds a page's place while it loads. The page is its number, such as 23.
-pub fn linux_reader_page_plate(page: i64) -> String {
-    text("linux-reader-page-plate", &[("page", Arg::Int(page))])
 }
 
 /// Heading when a chapter could not open. The chapter is its number, such as 13.
@@ -14192,6 +14212,21 @@ pub fn reader_page_loading(page: i64) -> String {
     text("reader-page-loading", &[("page", Arg::Plain(page))])
 }
 
+/// On the plate of a page that is still loading.
+pub fn reader_page_plate(page: i64) -> String {
+    text("reader-page-plate", &[("page", Arg::Plain(page))])
+}
+
+/// On the plate of a strip image that is still loading.
+pub fn reader_image_plate(image: i64) -> String {
+    text("reader-image-plate", &[("image", Arg::Plain(image))])
+}
+
+/// Under a strip image's number after four seconds.
+pub fn reader_image_loading(image: i64) -> String {
+    text("reader-image-loading", &[("image", Arg::Plain(image))])
+}
+
 /// Heading where a page could not be loaded.
 pub fn reader_page_failed(page: i64) -> String {
     text("reader-page-failed", &[("page", Arg::Plain(page))])
@@ -14322,19 +14357,274 @@ pub fn reader_spreads_whole() -> String {
     text("reader-spreads-whole", &[])
 }
 
-/// A choice for the reader's tap zones: taps near the left and right edges turn the page.
+/// A choice for the reader's tap zones: taps near the left and right edges turn the page. Replaced by Sides; kept until every app has the new tap zones page.
 pub fn reader_tap_edges() -> String {
     text("reader-tap-edges", &[])
 }
 
-/// A choice for the reader's tap zones: the left and right halves turn the page.
+/// Tap zone layout: Sides when pages turn sideways, L shape when they move downwards. The name under its tile.
+pub fn reader_tap_auto() -> String {
+    text("reader-tap-auto", &[])
+}
+
+/// Tap zone layout: previous page on one side, next page on the other, controls in the middle.
 pub fn reader_tap_sides() -> String {
     text("reader-tap-sides", &[])
 }
 
-/// A choice for the reader's tap zones: taps do not turn the page.
+/// Tap zone layout: previous page along the top and down one side, next page along the bottom and down the other side, in the shape of the letter L.
+pub fn reader_tap_l_shape() -> String {
+    text("reader-tap-l-shape", &[])
+}
+
+/// Tap zone layout: controls along the top, a narrow column for previous page, and the rest of the page for next page.
+pub fn reader_tap_wide_next() -> String {
+    text("reader-tap-wide-next", &[])
+}
+
+/// Tap zone layout: previous page across the top, next page across the bottom.
+pub fn reader_tap_top_bottom() -> String {
+    text("reader-tap-top-bottom", &[])
+}
+
+/// Tap zone layout: next page down both the left and the right side, previous page in the bottom middle.
+pub fn reader_tap_both_next() -> String {
+    text("reader-tap-both-next", &[])
+}
+
+/// Tap zone layout: taps only show and hide the controls, and never turn the page.
 pub fn reader_tap_off() -> String {
     text("reader-tap-off", &[])
+}
+
+/// Tap zones page: the choice for paged reading (pages that turn), one of two at the top.
+pub fn reader_tap_paged() -> String {
+    text("reader-tap-paged", &[])
+}
+
+/// Tap zones page: the choice for strips and scrolled novels, one of two at the top.
+pub fn reader_tap_scrolling() -> String {
+    text("reader-tap-scrolling", &[])
+}
+
+/// Tap zones page: row that sets how wide the zones at the edges are.
+pub fn reader_tap_size() -> String {
+    text("reader-tap-size", &[])
+}
+
+/// Choice of Zone size: the edge zones are a third of the screen.
+pub fn reader_tap_standard() -> String {
+    text("reader-tap-standard", &[])
+}
+
+/// Choice of Zone size: the edge zones are a quarter of the screen.
+pub fn reader_tap_small() -> String {
+    text("reader-tap-small", &[])
+}
+
+/// Tap zones page: switch that swaps the left and right zones, for the left hand.
+pub fn reader_tap_flip_sides() -> String {
+    text("reader-tap-flip-sides", &[])
+}
+
+/// Tap zones page: switch that swaps the top and bottom zones.
+pub fn reader_tap_flip_ends() -> String {
+    text("reader-tap-flip-ends", &[])
+}
+
+/// Tap zones page: button that shows the zones over the page.
+pub fn reader_tap_show() -> String {
+    text("reader-tap-show", &[])
+}
+
+/// Tap zones page, beside Show zones: the setting is not synced. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.
+pub fn reader_tap_here(kind: &str) -> String {
+    text("reader-tap-here", &[("kind", Arg::Text(kind))])
+}
+
+/// The reader's settings on a Mac, Windows or Linux: the row that opens the tap zones page, which is about clicks there.
+pub fn reader_click_zones() -> String {
+    text("reader-click-zones", &[])
+}
+
+/// Name of the tap zone that turns to the next page, in the guide over the page and as a screen reader action.
+pub fn reader_zone_next() -> String {
+    text("reader-zone-next", &[])
+}
+
+/// Name of the tap zone that turns to the previous page, in the guide and as a screen reader action.
+pub fn reader_zone_previous() -> String {
+    text("reader-zone-previous", &[])
+}
+
+/// Name of the tap zone that shows and hides the reader's controls, in the guide.
+pub fn reader_zone_controls() -> String {
+    text("reader-zone-controls", &[])
+}
+
+/// Screen reader action on the page that shows the reader's controls.
+pub fn reader_zone_show_controls() -> String {
+    text("reader-zone-show-controls", &[])
+}
+
+/// Name of the tap zone that scrolls a strip or a scrolled novel down, in the guide.
+pub fn reader_zone_scroll_down() -> String {
+    text("reader-zone-scroll-down", &[])
+}
+
+/// Name of the tap zone that scrolls a strip or a scrolled novel up, in the guide.
+pub fn reader_zone_scroll_up() -> String {
+    text("reader-zone-scroll-up", &[])
+}
+
+/// Under Controls in the tap zone guide: where the zones are changed.
+pub fn reader_zone_change() -> String {
+    text("reader-zone-change", &[])
+}
+
+/// Tap zone layout Off in words, the accessibility value of its tile.
+pub fn reader_tap_off_about() -> String {
+    text("reader-tap-off-about", &[])
+}
+
+/// Tap zone layout in words, the accessibility value of its tile: Sides, next page on the right.
+pub fn reader_tap_sides_right_about() -> String {
+    text("reader-tap-sides-right-about", &[])
+}
+
+/// Tap zone layout in words, the accessibility value of its tile: Sides, next page on the left.
+pub fn reader_tap_sides_left_about() -> String {
+    text("reader-tap-sides-left-about", &[])
+}
+
+/// Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the right.
+pub fn reader_tap_l_shape_bottom_right_about() -> String {
+    text("reader-tap-l-shape-bottom-right-about", &[])
+}
+
+/// Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the left.
+pub fn reader_tap_l_shape_bottom_left_about() -> String {
+    text("reader-tap-l-shape-bottom-left-about", &[])
+}
+
+/// Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right.
+pub fn reader_tap_l_shape_top_right_about() -> String {
+    text("reader-tap-l-shape-top-right-about", &[])
+}
+
+/// Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left.
+pub fn reader_tap_l_shape_top_left_about() -> String {
+    text("reader-tap-l-shape-top-left-about", &[])
+}
+
+/// Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the left.
+pub fn reader_tap_wide_next_top_left_about() -> String {
+    text("reader-tap-wide-next-top-left-about", &[])
+}
+
+/// Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the right.
+pub fn reader_tap_wide_next_top_right_about() -> String {
+    text("reader-tap-wide-next-top-right-about", &[])
+}
+
+/// Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left.
+pub fn reader_tap_wide_next_bottom_left_about() -> String {
+    text("reader-tap-wide-next-bottom-left-about", &[])
+}
+
+/// Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right.
+pub fn reader_tap_wide_next_bottom_right_about() -> String {
+    text("reader-tap-wide-next-bottom-right-about", &[])
+}
+
+/// Tap zone layout in words, the accessibility value of its tile: Top and bottom.
+pub fn reader_tap_top_bottom_about() -> String {
+    text("reader-tap-top-bottom-about", &[])
+}
+
+/// Tap zone layout in words, the accessibility value of its tile: Top and bottom flipped.
+pub fn reader_tap_top_bottom_flipped_about() -> String {
+    text("reader-tap-top-bottom-flipped-about", &[])
+}
+
+/// Tap zone layout in words, the accessibility value of its tile: Next on both sides.
+pub fn reader_tap_both_next_about() -> String {
+    text("reader-tap-both-next-about", &[])
+}
+
+/// Tap zone layout in words, the accessibility value of its tile: Next on both sides flipped top and bottom.
+pub fn reader_tap_both_next_flipped_about() -> String {
+    text("reader-tap-both-next-flipped-about", &[])
+}
+
+/// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the right.
+pub fn reader_tap_sides_right_scroll_about() -> String {
+    text("reader-tap-sides-right-scroll-about", &[])
+}
+
+/// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the left.
+pub fn reader_tap_sides_left_scroll_about() -> String {
+    text("reader-tap-sides-left-scroll-about", &[])
+}
+
+/// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the right.
+pub fn reader_tap_l_shape_bottom_right_scroll_about() -> String {
+    text("reader-tap-l-shape-bottom-right-scroll-about", &[])
+}
+
+/// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the left.
+pub fn reader_tap_l_shape_bottom_left_scroll_about() -> String {
+    text("reader-tap-l-shape-bottom-left-scroll-about", &[])
+}
+
+/// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right.
+pub fn reader_tap_l_shape_top_right_scroll_about() -> String {
+    text("reader-tap-l-shape-top-right-scroll-about", &[])
+}
+
+/// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left.
+pub fn reader_tap_l_shape_top_left_scroll_about() -> String {
+    text("reader-tap-l-shape-top-left-scroll-about", &[])
+}
+
+/// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the left.
+pub fn reader_tap_wide_next_top_left_scroll_about() -> String {
+    text("reader-tap-wide-next-top-left-scroll-about", &[])
+}
+
+/// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the right.
+pub fn reader_tap_wide_next_top_right_scroll_about() -> String {
+    text("reader-tap-wide-next-top-right-scroll-about", &[])
+}
+
+/// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left.
+pub fn reader_tap_wide_next_bottom_left_scroll_about() -> String {
+    text("reader-tap-wide-next-bottom-left-scroll-about", &[])
+}
+
+/// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right.
+pub fn reader_tap_wide_next_bottom_right_scroll_about() -> String {
+    text("reader-tap-wide-next-bottom-right-scroll-about", &[])
+}
+
+/// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom.
+pub fn reader_tap_top_bottom_scroll_about() -> String {
+    text("reader-tap-top-bottom-scroll-about", &[])
+}
+
+/// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom flipped.
+pub fn reader_tap_top_bottom_flipped_scroll_about() -> String {
+    text("reader-tap-top-bottom-flipped-scroll-about", &[])
+}
+
+/// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides.
+pub fn reader_tap_both_next_scroll_about() -> String {
+    text("reader-tap-both-next-scroll-about", &[])
+}
+
+/// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides flipped top and bottom.
+pub fn reader_tap_both_next_flipped_scroll_about() -> String {
+    text("reader-tap-both-next-flipped-scroll-about", &[])
 }
 
 /// Button in the reader's controls that opens the chapters and the page grid.
@@ -15280,6 +15570,11 @@ pub fn chapter_state_wifi() -> String {
 /// A chapter downloading.
 pub fn chapter_state_downloading(done: i64, total: i64) -> String {
     text("chapter-state-downloading", &[("done", Arg::Int(done)), ("total", Arg::Int(total))])
+}
+
+/// A chapter downloading before its page count is known, and throughout for a novel's chapter.
+pub fn chapter_state_downloading_plain() -> String {
+    text("chapter-state-downloading-plain", &[])
 }
 
 /// A chapter that failed to download, with the reason.
@@ -22206,9 +22501,9 @@ pub fn title_more_about() -> String {
     text("title-more-about", &[])
 }
 
-/// Accessibility hint of the button that expands a synopsis.
-pub fn title_synopsis_hint() -> String {
-    text("title-synopsis-hint", &[])
+/// Accessible name of the More at the end of a cut synopsis, which shows the rest of it. The page's menu of extra actions is called More too, so this one says what it does.
+pub fn title_synopsis_more() -> String {
+    text("title-synopsis-more", &[])
 }
 
 /// Label under a season: which episodes are dubbed so far.

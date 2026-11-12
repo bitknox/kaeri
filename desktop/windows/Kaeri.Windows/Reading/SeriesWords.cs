@@ -115,6 +115,9 @@ static class SeriesWords
                 return T.ChapterStateQueued;
             case ChapterDownloadState.WaitsForWifi:
                 return T.ChapterStateWifi;
+            // No page count yet, or a novel's chapter, which has none: nothing to count.
+            case ChapterDownloadState.Downloading { Total: 0 }:
+                return T.ChapterStateDownloadingPlain;
             case ChapterDownloadState.Downloading d:
                 return T.ChapterStateDownloading(d.DoneValue, d.Total);
             case ChapterDownloadState.Failed f:

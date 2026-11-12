@@ -466,6 +466,26 @@ impl BookDownloads {
             .collect()
     }
 
+    /// The chapters asking for `pick` fetches. Next unread counts from the reader's place, the
+    /// chapter in progress or the one after the last read, and passes over chapters already on
+    /// this device or on their way: a second Next 5 unread fetches the five after the first.
+    /// Unread chapters behind the place, the person passed over, are left out. Every other pick
+    /// is [`Self::picked`].
+    pub fn to_fetch(pick: &DownloadPick, rows: &[ChapterRow]) -> Vec<Wanted> {
+        let DownloadPick::NextUnread { n } = pick else { return Self::picked(pick, rows) };
+        let fetched = |r: &ChapterRow| {
+            r.download
+                .as_ref()
+                .is_some_and(|d| !matches!(d, ChapterDownloadState::Failed { .. }))
+        };
+        rows[place(rows)..]
+            .iter()
+            .filter(|r| !matches!(r.state, ChapterReadState::Read) && !fetched(r))
+            .take(*n as usize)
+            .map(|r| Wanted { chapter: r.id.clone(), version_label: r.version_label.clone() })
+            .collect()
+    }
+
     /// Ask for the chapters `pick` names. Lists the work's chapters first, so this answers
     /// after the source does; a source that cannot be asked ends in `Failed` for the screen
     /// that asked.
@@ -481,12 +501,52 @@ impl BookDownloads {
                 return;
             }
         };
-        let wanted = Self::picked(&pick, &rows);
+        let wanted = Self::to_fetch(&pick, &rows);
         let store = lent.sources.store();
-        if self.queue(store, &work, &source, &wanted, false, now) > 0 || !wanted.is_empty() {
+        let listers = Listers::of(&lent.sources, &work, &source);
+        let (added, unlisted) =
+            self.queue_listed(store, &work, (&listers, &rows), &wanted, false, now);
+        // A chapter the series page listed from a source that no longer has it.
+        if unlisted > 0 {
+            let about = kaeri_model::reading::ReadingAbout::Downloads;
+            let failure = ReadingFailure::NotFound;
+            let _ = lent.tx.send(Event::Reading(ReadingEvent::Failed { about, failure }));
+        }
+        if added > 0 || wanted.len() > unlisted {
             self.publish(store, &lent.tx);
             self.start(lent);
         }
+    }
+
+    /// Queue `wanted`, in their order, each from the source `listers` gives its row in `rows`.
+    /// Says how many were newly queued, and how many no source lists any more.
+    fn queue_listed(
+        &self,
+        store: &Store,
+        work: &WorkId,
+        (listers, rows): (&Listers, &[ChapterRow]),
+        wanted: &[Wanted],
+        keep_ready: bool,
+        now: i64,
+    ) -> (usize, usize) {
+        let (mut added, mut unlisted) = (0, 0);
+        for want in wanted {
+            let row = rows.iter().find(|r| r.id == want.chapter);
+            match row.map_or(Some(listers.edition.as_str()), |row| listers.of_row(row)) {
+                Some(source) => {
+                    added += self.queue(
+                        store,
+                        work,
+                        source,
+                        std::slice::from_ref(want),
+                        keep_ready,
+                        now,
+                    )
+                }
+                None => unlisted += 1,
+            }
+        }
+        (added, unlisted)
     }
 
     /// Queue every unread chapter Updates lists.
@@ -690,7 +750,8 @@ impl BookDownloads {
             &rows[at + 1..],
         );
         let store = lent.sources.store();
-        if self.queue(store, work, &source, &ahead, true, now) > 0 {
+        let listers = Listers::of(&lent.sources, work, &source);
+        if self.queue_listed(store, work, (&listers, &rows), &ahead, true, now).0 > 0 {
             self.publish(store, &lent.tx);
             self.start(lent);
         }
@@ -1329,9 +1390,57 @@ pub(crate) async fn ordered_chapters(
         .map(|e| e.source_id)
         .or_else(|| sources.edition_of(work, None).map(|(source, _)| source))
         .ok_or(ReadingFailure::NotFound)?;
-    // Downloads come from the edition: a chapter listed from another source is read there.
-    let rows = flatten(groups).into_iter().filter(|r| r.other_source.is_none()).collect();
-    Ok((source, rows))
+    // A chapter listed from another source is downloaded from there: see [`Listers`].
+    Ok((source, flatten(groups)))
+}
+
+/// Where each chapter of a work is downloaded from: the edition's source, or for a chapter the
+/// series page lists from another source, the first other source whose kept list has it, as
+/// the series page fills it in and the reader opens it.
+pub(crate) struct Listers {
+    edition: String,
+    /// Each other source with the chapter ids its kept list has, in the work's order.
+    others: Vec<(String, HashSet<String>)>,
+}
+
+impl Listers {
+    pub(crate) fn of(sources: &BookSources, work: &WorkId, edition: &str) -> Self {
+        let store = sources.store();
+        let others = store
+            .book_refs_for_work(work.as_str())
+            .unwrap_or_default()
+            .into_iter()
+            .filter(|(other, _)| other != edition)
+            .filter_map(|(other, series)| {
+                let (list, _) = crate::read_catalog::chapters::kept(store, &other, &series)?;
+                Some((other, list.into_iter().map(|k| k.id).collect()))
+            })
+            .collect();
+        Self { edition: edition.to_owned(), others }
+    }
+
+    /// The source `row` is downloaded from. `None` for a chapter listed from another source
+    /// that no source's kept list has any more.
+    pub(crate) fn of_row(&self, row: &ChapterRow) -> Option<&str> {
+        if row.other_source.is_none() {
+            return Some(&self.edition);
+        }
+        self.others
+            .iter()
+            .find(|(_, ids)| ids.contains(row.id.as_str()))
+            .map(|(s, _)| s.as_str())
+    }
+}
+
+/// The reader's place in `rows`, in reading order: the last chapter in progress, or the one
+/// after the last read, and the start when nothing was read. Choose chapters starts there too.
+fn place(rows: &[ChapterRow]) -> usize {
+    if let Some(at) =
+        rows.iter().rposition(|r| matches!(r.state, ChapterReadState::InProgress { .. }))
+    {
+        return at;
+    }
+    rows.iter().rposition(|r| matches!(r.state, ChapterReadState::Read)).map_or(0, |at| at + 1)
 }
 
 /// The chapters of every volume, ordered by volume then number; chapters with no number last,

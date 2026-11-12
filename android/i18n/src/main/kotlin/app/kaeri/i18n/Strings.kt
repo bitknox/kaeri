@@ -773,6 +773,22 @@ object Strings {
     fun readerMovedNumberElsewhere(context: Context, chapter: String, page: Int): String =
         context.getString(R.string.reader_moved_number_elsewhere, chapter, page)
 
+    /** The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its whole label, such as The Long Night. */
+    fun readerMovedImage(context: Context, chapter: String, image: Int, device: String): String =
+        context.getString(R.string.reader_moved_image, chapter, image, device)
+
+    /** The same notice in a strip for a chapter known only by its number, such as 14 or 14.5. */
+    fun readerMovedNumberImage(context: Context, chapter: String, image: Int, device: String): String =
+        context.getString(R.string.reader_moved_number_image, chapter, image, device)
+
+    /** The notice in a strip when another device read further and its name is not known. */
+    fun readerMovedElsewhereImage(context: Context, chapter: String, image: Int): String =
+        context.getString(R.string.reader_moved_elsewhere_image, chapter, image)
+
+    /** The same notice in a strip for a chapter known only by its number, such as 14 or 14.5. */
+    fun readerMovedNumberElsewhereImage(context: Context, chapter: String, image: Int): String =
+        context.getString(R.string.reader_moved_number_elsewhere_image, chapter, image)
+
     /** A notice the first time a series opens with its reading direction guessed. It offers Change. */
     fun readerDetectedRightToLeft(context: Context): String =
         context.getString(R.string.reader_detected_right_to_left)
@@ -1112,6 +1128,10 @@ object Strings {
     /** A chapter row's state while it downloads. */
     fun readingRowDownloading(context: Context, done: Int, total: Int): String =
         context.getString(R.string.reading_row_downloading, done, total)
+
+    /** A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count. */
+    fun readingRowDownloadingPlain(context: Context): String =
+        context.getString(R.string.reading_row_downloading_plain)
 
     /** A chapter row's state: the download failed. The reason follows as the next part. */
     fun readingRowFailed(context: Context): String =
@@ -2317,6 +2337,82 @@ object Strings {
     fun einkZoneTap(context: Context): String =
         context.getString(R.string.eink_zone_tap)
 
+    /** E-ink tap zones page: switch for whether a swipe turns the page. Off, only taps, the page buttons and keys turn. */
+    fun einkSwipeTurns(context: Context): String =
+        context.getString(R.string.eink_swipe_turns)
+
+    /** At the foot of the e-ink tap zone guide, which the first touch on the page clears. */
+    fun einkZoneGuideNote(context: Context): String =
+        context.getString(R.string.eink_zone_guide_note)
+
+    /** E-ink tap zones page: the line under the layout Auto. */
+    fun einkTapAutoNote(context: Context): String =
+        context.getString(R.string.eink_tap_auto_note)
+
+    /** E-ink tap zones page: the line under the layout Sides, as drawn for the open book at the standard size, where Next is wider than the other two zones and on the left. */
+    fun einkTapSidesWideLeftNote(context: Context): String =
+        context.getString(R.string.eink_tap_sides_wide_left_note)
+
+    /** E-ink tap zones page: the line under the layout Sides, as drawn for the open book at the standard size, where Next is wider than the other two zones and on the right. */
+    fun einkTapSidesWideRightNote(context: Context): String =
+        context.getString(R.string.eink_tap_sides_wide_right_note)
+
+    /** E-ink tap zones page: the line under the layout Sides, as drawn for the open book at the small size, with Next on the left. */
+    fun einkTapSidesLeftNote(context: Context): String =
+        context.getString(R.string.eink_tap_sides_left_note)
+
+    /** E-ink tap zones page: the line under the layout Sides, as drawn for the open book at the small size, with Next on the right. */
+    fun einkTapSidesRightNote(context: Context): String =
+        context.getString(R.string.eink_tap_sides_right_note)
+
+    /** E-ink tap zones page: the line under the layout L shape, as drawn for the open book, with Next along the bottom edge and up the right side. */
+    fun einkTapLShapeBottomRightNote(context: Context): String =
+        context.getString(R.string.eink_tap_l_shape_bottom_right_note)
+
+    /** E-ink tap zones page: the line under the layout L shape, as drawn for the open book, with Next along the bottom edge and up the left side. */
+    fun einkTapLShapeBottomLeftNote(context: Context): String =
+        context.getString(R.string.eink_tap_l_shape_bottom_left_note)
+
+    /** E-ink tap zones page: the line under the layout L shape, as drawn for the open book with Flip top and bottom on: Next along the top edge and down the right side. */
+    fun einkTapLShapeTopRightNote(context: Context): String =
+        context.getString(R.string.eink_tap_l_shape_top_right_note)
+
+    /** E-ink tap zones page: the line under the layout L shape, as drawn for the open book with Flip top and bottom on: Next along the top edge and down the left side. */
+    fun einkTapLShapeTopLeftNote(context: Context): String =
+        context.getString(R.string.eink_tap_l_shape_top_left_note)
+
+    /** E-ink tap zones page: the line under the layout Wide next. */
+    fun einkTapWideNextNote(context: Context): String =
+        context.getString(R.string.eink_tap_wide_next_note)
+
+    /** E-ink tap zones page: the line under the layout Wide next with Flip top and bottom on, so the controls band is at the bottom. */
+    fun einkTapWideNextFlippedNote(context: Context): String =
+        context.getString(R.string.eink_tap_wide_next_flipped_note)
+
+    /** E-ink tap zones page: the line under the layout Top and bottom. */
+    fun einkTapTopBottomNote(context: Context): String =
+        context.getString(R.string.eink_tap_top_bottom_note)
+
+    /** E-ink tap zones page: the line under the layout Top and bottom with Flip top and bottom on. */
+    fun einkTapTopBottomFlippedNote(context: Context): String =
+        context.getString(R.string.eink_tap_top_bottom_flipped_note)
+
+    /** E-ink tap zones page: the line under the layout Next on both sides. */
+    fun einkTapBothNextNote(context: Context): String =
+        context.getString(R.string.eink_tap_both_next_note)
+
+    /** E-ink tap zones page: the line under the layout Next on both sides with Flip top and bottom on. */
+    fun einkTapBothNextFlippedNote(context: Context): String =
+        context.getString(R.string.eink_tap_both_next_flipped_note)
+
+    /** E-ink tap zones page: the line under the layout Off. */
+    fun einkTapOffNote(context: Context): String =
+        context.getString(R.string.eink_tap_off_note)
+
+    /** E-ink tap zones page: the line under the layout Off while Swipes turn pages is off too, so nothing on the page turns it. */
+    fun einkTapOffKeysNote(context: Context): String =
+        context.getString(R.string.eink_tap_off_keys_note)
+
     /** The page number in the page's margin on an e-ink screen. */
     fun einkFolioOne(context: Context, page: Int, pages: Int): String =
         context.getString(R.string.eink_folio_one, page, pages)
@@ -2584,10 +2680,6 @@ object Strings {
     /** At the end of a scrolling novel's scrubber: the time left in the chapter at the person's pace. */
     fun readerMinutesLeft(context: Context, minutes: Int): String =
         context.getString(R.string.reader_minutes_left, minutes)
-
-    /** Name of the tap zone on the reading side, shown once on the first chapter. */
-    fun readerZoneNext(context: Context): String =
-        context.getString(R.string.reader_zone_next)
 
     /** Heading of the page grid. */
     fun readerGridTitle(context: Context): String =
@@ -2897,18 +2989,6 @@ object Strings {
     fun readerVolumeNone(context: Context): String =
         context.getString(R.string.reader_volume_none)
 
-    /** On the plate of a page that is still loading. */
-    fun readerPagePlate(context: Context, page: Int): String =
-        context.getString(R.string.reader_page_plate, page)
-
-    /** On the plate of a strip image that is still loading. */
-    fun readerImagePlate(context: Context, image: Int): String =
-        context.getString(R.string.reader_image_plate, image)
-
-    /** On a strip image's plate in place of its number after four seconds. */
-    fun readerImageLoading(context: Context, image: Int): String =
-        context.getString(R.string.reader_image_loading, image)
-
     /** Under Opening chapter when it takes more than three seconds. */
     fun readerOpeningFinding(context: Context): String =
         context.getString(R.string.reader_opening_finding)
@@ -2924,14 +3004,6 @@ object Strings {
     /** Paper mode part. */
     fun readerPaperTurn(context: Context): String =
         context.getString(R.string.reader_paper_turn)
-
-    /** Label on the previous page tap zone. */
-    fun readerZonePrevious(context: Context): String =
-        context.getString(R.string.reader_zone_previous)
-
-    /** Label on the middle tap zone. */
-    fun readerZoneControls(context: Context): String =
-        context.getString(R.string.reader_zone_controls)
 
     /** Description of the small A at the start of the text size slider. */
     fun readerSizeSmall(context: Context): String =
@@ -3256,6 +3328,10 @@ object Strings {
     /** What TalkBack says the line of skipped credit pages does, after "Double-tap to": an imperative, as Android's click labels are. */
     fun readerCreditShowAction(context: Context): String =
         context.getString(R.string.reader_credit_show_action)
+
+    /** What TalkBack says for one layout among the tap zone choices: the layout's name, then where its zones are for the open book ("Sides, Next page on the right side, previous page on the left side, controls in the middle"). The choice's own state, Selected or Not selected, follows it. */
+    fun readerTapLayoutSpoken(context: Context, layout: String, about: String): String =
+        context.getString(R.string.reader_tap_layout_spoken, layout, about)
 
     /** Line under "You're offline" on reading's Home when it has never loaded, so nothing is kept to show. It has an Open Downloads button. */
     fun readHomeOfflineLine(context: Context): String =
@@ -9194,6 +9270,18 @@ object Strings {
     fun readerPageLoading(context: Context, page: Int): String =
         context.getString(R.string.reader_page_loading, page)
 
+    /** On the plate of a page that is still loading. */
+    fun readerPagePlate(context: Context, page: Int): String =
+        context.getString(R.string.reader_page_plate, page)
+
+    /** On the plate of a strip image that is still loading. */
+    fun readerImagePlate(context: Context, image: Int): String =
+        context.getString(R.string.reader_image_plate, image)
+
+    /** Under a strip image's number after four seconds. */
+    fun readerImageLoading(context: Context, image: Int): String =
+        context.getString(R.string.reader_image_loading, image)
+
     /** Heading where a page could not be loaded. */
     fun readerPageFailed(context: Context, page: Int): String =
         context.getString(R.string.reader_page_failed, page)
@@ -9298,17 +9386,221 @@ object Strings {
     fun readerSpreadsWhole(context: Context): String =
         context.getString(R.string.reader_spreads_whole)
 
-    /** A choice for the reader's tap zones: taps near the left and right edges turn the page. */
+    /** A choice for the reader's tap zones: taps near the left and right edges turn the page. Replaced by Sides; kept until every app has the new tap zones page. */
     fun readerTapEdges(context: Context): String =
         context.getString(R.string.reader_tap_edges)
 
-    /** A choice for the reader's tap zones: the left and right halves turn the page. */
+    /** Tap zone layout: Sides when pages turn sideways, L shape when they move downwards. The name under its tile. */
+    fun readerTapAuto(context: Context): String =
+        context.getString(R.string.reader_tap_auto)
+
+    /** Tap zone layout: previous page on one side, next page on the other, controls in the middle. */
     fun readerTapSides(context: Context): String =
         context.getString(R.string.reader_tap_sides)
 
-    /** A choice for the reader's tap zones: taps do not turn the page. */
+    /** Tap zone layout: previous page along the top and down one side, next page along the bottom and down the other side, in the shape of the letter L. */
+    fun readerTapLShape(context: Context): String =
+        context.getString(R.string.reader_tap_l_shape)
+
+    /** Tap zone layout: controls along the top, a narrow column for previous page, and the rest of the page for next page. */
+    fun readerTapWideNext(context: Context): String =
+        context.getString(R.string.reader_tap_wide_next)
+
+    /** Tap zone layout: previous page across the top, next page across the bottom. */
+    fun readerTapTopBottom(context: Context): String =
+        context.getString(R.string.reader_tap_top_bottom)
+
+    /** Tap zone layout: next page down both the left and the right side, previous page in the bottom middle. */
+    fun readerTapBothNext(context: Context): String =
+        context.getString(R.string.reader_tap_both_next)
+
+    /** Tap zone layout: taps only show and hide the controls, and never turn the page. */
     fun readerTapOff(context: Context): String =
         context.getString(R.string.reader_tap_off)
+
+    /** Tap zones page: the choice for paged reading (pages that turn), one of two at the top. */
+    fun readerTapPaged(context: Context): String =
+        context.getString(R.string.reader_tap_paged)
+
+    /** Tap zones page: the choice for strips and scrolled novels, one of two at the top. */
+    fun readerTapScrolling(context: Context): String =
+        context.getString(R.string.reader_tap_scrolling)
+
+    /** Tap zones page: row that sets how wide the zones at the edges are. */
+    fun readerTapSize(context: Context): String =
+        context.getString(R.string.reader_tap_size)
+
+    /** Choice of Zone size: the edge zones are a third of the screen. */
+    fun readerTapStandard(context: Context): String =
+        context.getString(R.string.reader_tap_standard)
+
+    /** Choice of Zone size: the edge zones are a quarter of the screen. */
+    fun readerTapSmall(context: Context): String =
+        context.getString(R.string.reader_tap_small)
+
+    /** Tap zones page: switch that swaps the left and right zones, for the left hand. */
+    fun readerTapFlipSides(context: Context): String =
+        context.getString(R.string.reader_tap_flip_sides)
+
+    /** Tap zones page: switch that swaps the top and bottom zones. */
+    fun readerTapFlipEnds(context: Context): String =
+        context.getString(R.string.reader_tap_flip_ends)
+
+    /** Tap zones page: button that shows the zones over the page. */
+    fun readerTapShow(context: Context): String =
+        context.getString(R.string.reader_tap_show)
+
+    /** Tap zones page, beside Show zones: the setting is not synced. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”. */
+    fun readerTapHere(context: Context, kind: String): String =
+        context.getString(R.string.reader_tap_here, kind)
+
+    /** The reader's settings on a Mac, Windows or Linux: the row that opens the tap zones page, which is about clicks there. */
+    fun readerClickZones(context: Context): String =
+        context.getString(R.string.reader_click_zones)
+
+    /** Name of the tap zone that turns to the next page, in the guide over the page and as a screen reader action. */
+    fun readerZoneNext(context: Context): String =
+        context.getString(R.string.reader_zone_next)
+
+    /** Name of the tap zone that turns to the previous page, in the guide and as a screen reader action. */
+    fun readerZonePrevious(context: Context): String =
+        context.getString(R.string.reader_zone_previous)
+
+    /** Name of the tap zone that shows and hides the reader's controls, in the guide. */
+    fun readerZoneControls(context: Context): String =
+        context.getString(R.string.reader_zone_controls)
+
+    /** Screen reader action on the page that shows the reader's controls. */
+    fun readerZoneShowControls(context: Context): String =
+        context.getString(R.string.reader_zone_show_controls)
+
+    /** Name of the tap zone that scrolls a strip or a scrolled novel down, in the guide. */
+    fun readerZoneScrollDown(context: Context): String =
+        context.getString(R.string.reader_zone_scroll_down)
+
+    /** Name of the tap zone that scrolls a strip or a scrolled novel up, in the guide. */
+    fun readerZoneScrollUp(context: Context): String =
+        context.getString(R.string.reader_zone_scroll_up)
+
+    /** Under Controls in the tap zone guide: where the zones are changed. */
+    fun readerZoneChange(context: Context): String =
+        context.getString(R.string.reader_zone_change)
+
+    /** Tap zone layout Off in words, the accessibility value of its tile. */
+    fun readerTapOffAbout(context: Context): String =
+        context.getString(R.string.reader_tap_off_about)
+
+    /** Tap zone layout in words, the accessibility value of its tile: Sides, next page on the right. */
+    fun readerTapSidesRightAbout(context: Context): String =
+        context.getString(R.string.reader_tap_sides_right_about)
+
+    /** Tap zone layout in words, the accessibility value of its tile: Sides, next page on the left. */
+    fun readerTapSidesLeftAbout(context: Context): String =
+        context.getString(R.string.reader_tap_sides_left_about)
+
+    /** Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the right. */
+    fun readerTapLShapeBottomRightAbout(context: Context): String =
+        context.getString(R.string.reader_tap_l_shape_bottom_right_about)
+
+    /** Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the left. */
+    fun readerTapLShapeBottomLeftAbout(context: Context): String =
+        context.getString(R.string.reader_tap_l_shape_bottom_left_about)
+
+    /** Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right. */
+    fun readerTapLShapeTopRightAbout(context: Context): String =
+        context.getString(R.string.reader_tap_l_shape_top_right_about)
+
+    /** Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left. */
+    fun readerTapLShapeTopLeftAbout(context: Context): String =
+        context.getString(R.string.reader_tap_l_shape_top_left_about)
+
+    /** Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the left. */
+    fun readerTapWideNextTopLeftAbout(context: Context): String =
+        context.getString(R.string.reader_tap_wide_next_top_left_about)
+
+    /** Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the right. */
+    fun readerTapWideNextTopRightAbout(context: Context): String =
+        context.getString(R.string.reader_tap_wide_next_top_right_about)
+
+    /** Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left. */
+    fun readerTapWideNextBottomLeftAbout(context: Context): String =
+        context.getString(R.string.reader_tap_wide_next_bottom_left_about)
+
+    /** Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right. */
+    fun readerTapWideNextBottomRightAbout(context: Context): String =
+        context.getString(R.string.reader_tap_wide_next_bottom_right_about)
+
+    /** Tap zone layout in words, the accessibility value of its tile: Top and bottom. */
+    fun readerTapTopBottomAbout(context: Context): String =
+        context.getString(R.string.reader_tap_top_bottom_about)
+
+    /** Tap zone layout in words, the accessibility value of its tile: Top and bottom flipped. */
+    fun readerTapTopBottomFlippedAbout(context: Context): String =
+        context.getString(R.string.reader_tap_top_bottom_flipped_about)
+
+    /** Tap zone layout in words, the accessibility value of its tile: Next on both sides. */
+    fun readerTapBothNextAbout(context: Context): String =
+        context.getString(R.string.reader_tap_both_next_about)
+
+    /** Tap zone layout in words, the accessibility value of its tile: Next on both sides flipped top and bottom. */
+    fun readerTapBothNextFlippedAbout(context: Context): String =
+        context.getString(R.string.reader_tap_both_next_flipped_about)
+
+    /** Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the right. */
+    fun readerTapSidesRightScrollAbout(context: Context): String =
+        context.getString(R.string.reader_tap_sides_right_scroll_about)
+
+    /** Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the left. */
+    fun readerTapSidesLeftScrollAbout(context: Context): String =
+        context.getString(R.string.reader_tap_sides_left_scroll_about)
+
+    /** Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the right. */
+    fun readerTapLShapeBottomRightScrollAbout(context: Context): String =
+        context.getString(R.string.reader_tap_l_shape_bottom_right_scroll_about)
+
+    /** Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the left. */
+    fun readerTapLShapeBottomLeftScrollAbout(context: Context): String =
+        context.getString(R.string.reader_tap_l_shape_bottom_left_scroll_about)
+
+    /** Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right. */
+    fun readerTapLShapeTopRightScrollAbout(context: Context): String =
+        context.getString(R.string.reader_tap_l_shape_top_right_scroll_about)
+
+    /** Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left. */
+    fun readerTapLShapeTopLeftScrollAbout(context: Context): String =
+        context.getString(R.string.reader_tap_l_shape_top_left_scroll_about)
+
+    /** Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the left. */
+    fun readerTapWideNextTopLeftScrollAbout(context: Context): String =
+        context.getString(R.string.reader_tap_wide_next_top_left_scroll_about)
+
+    /** Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the right. */
+    fun readerTapWideNextTopRightScrollAbout(context: Context): String =
+        context.getString(R.string.reader_tap_wide_next_top_right_scroll_about)
+
+    /** Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left. */
+    fun readerTapWideNextBottomLeftScrollAbout(context: Context): String =
+        context.getString(R.string.reader_tap_wide_next_bottom_left_scroll_about)
+
+    /** Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right. */
+    fun readerTapWideNextBottomRightScrollAbout(context: Context): String =
+        context.getString(R.string.reader_tap_wide_next_bottom_right_scroll_about)
+
+    /** Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom. */
+    fun readerTapTopBottomScrollAbout(context: Context): String =
+        context.getString(R.string.reader_tap_top_bottom_scroll_about)
+
+    /** Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom flipped. */
+    fun readerTapTopBottomFlippedScrollAbout(context: Context): String =
+        context.getString(R.string.reader_tap_top_bottom_flipped_scroll_about)
+
+    /** Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides. */
+    fun readerTapBothNextScrollAbout(context: Context): String =
+        context.getString(R.string.reader_tap_both_next_scroll_about)
+
+    /** Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides flipped top and bottom. */
+    fun readerTapBothNextFlippedScrollAbout(context: Context): String =
+        context.getString(R.string.reader_tap_both_next_flipped_scroll_about)
 
     /** Button in the reader's controls that opens the chapters and the page grid. */
     fun readerChapters(context: Context): String =
@@ -10065,6 +10357,10 @@ object Strings {
     /** A chapter downloading. */
     fun chapterStateDownloading(context: Context, done: Int, total: Int): String =
         context.getString(R.string.chapter_state_downloading, done, total)
+
+    /** A chapter downloading before its page count is known, and throughout for a novel's chapter. */
+    fun chapterStateDownloadingPlain(context: Context): String =
+        context.getString(R.string.chapter_state_downloading_plain)
 
     /** A chapter that failed to download, with the reason. */
     fun chapterStateFailed(context: Context, reason: String): String =
@@ -15635,9 +15931,9 @@ object Strings {
     fun titleMoreAbout(context: Context): String =
         context.getString(R.string.title_more_about)
 
-    /** Accessibility hint of the button that expands a synopsis. */
-    fun titleSynopsisHint(context: Context): String =
-        context.getString(R.string.title_synopsis_hint)
+    /** Accessible name of the More at the end of a cut synopsis, which shows the rest of it. The page's menu of extra actions is called More too, so this one says what it does. */
+    fun titleSynopsisMore(context: Context): String =
+        context.getString(R.string.title_synopsis_more)
 
     /** Label under a season: which episodes are dubbed so far. */
     fun titleDubbedTo(context: Context, episode: Int): String =

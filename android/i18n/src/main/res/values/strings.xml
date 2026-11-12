@@ -411,6 +411,14 @@
     <string name="reader_moved_elsewhere">Moved to %1$s, page %2$d, where another device stopped</string>
     <!-- The same notice for a chapter known only by its number, such as 14 or 14.5. -->
     <string name="reader_moved_number_elsewhere">Moved to chapter %1$s, page %2$d, where another device stopped</string>
+    <!-- The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its whole label, such as The Long Night. -->
+    <string name="reader_moved_image">Moved to %1$s, image %2$d, where %3$s stopped</string>
+    <!-- The same notice in a strip for a chapter known only by its number, such as 14 or 14.5. -->
+    <string name="reader_moved_number_image">Moved to chapter %1$s, image %2$d, where %3$s stopped</string>
+    <!-- The notice in a strip when another device read further and its name is not known. -->
+    <string name="reader_moved_elsewhere_image">Moved to %1$s, image %2$d, where another device stopped</string>
+    <!-- The same notice in a strip for a chapter known only by its number, such as 14 or 14.5. -->
+    <string name="reader_moved_number_elsewhere_image">Moved to chapter %1$s, image %2$d, where another device stopped</string>
     <!-- A notice the first time a series opens with its reading direction guessed. It offers Change. -->
     <string name="reader_detected_right_to_left">Looks like right to left</string>
     <!-- A notice the first time a series opens with its reading direction guessed. It offers Change. -->
@@ -590,6 +598,8 @@
     <string name="reading_row_waits_wifi">Queued · waits for Wi-Fi</string>
     <!-- A chapter row's state while it downloads. -->
     <string name="reading_row_downloading">Downloading · %1$,d of %2$,d pages</string>
+    <!-- A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count. -->
+    <string name="reading_row_downloading_plain">Downloading</string>
     <!-- A chapter row's state: the download failed. The reason follows as the next part. -->
     <string name="reading_row_failed">Couldn\'t download</string>
     <!-- A chapter row's state: the page the person stopped on, of how many. -->
@@ -1264,6 +1274,44 @@
     <string name="eink_zone_next_ltr">Tap, or swipe left</string>
     <!-- Under Controls on the e-ink tap zone guide. -->
     <string name="eink_zone_tap">Tap</string>
+    <!-- E-ink tap zones page: switch for whether a swipe turns the page. Off, only taps, the page buttons and keys turn. -->
+    <string name="eink_swipe_turns">Swipes turn pages</string>
+    <!-- At the foot of the e-ink tap zone guide, which the first touch on the page clears. -->
+    <string name="eink_zone_guide_note">Page buttons also turn pages. The first touch clears this. Change the zones in Reader settings.</string>
+    <!-- E-ink tap zones page: the line under the layout Auto. -->
+    <string name="eink_tap_auto_note">Sides, or L shape for vertical pages</string>
+    <!-- E-ink tap zones page: the line under the layout Sides, as drawn for the open book at the standard size, where Next is wider than the other two zones and on the left. -->
+    <string name="eink_tap_sides_wide_left_note">Next on the left, the widest zone</string>
+    <!-- E-ink tap zones page: the line under the layout Sides, as drawn for the open book at the standard size, where Next is wider than the other two zones and on the right. -->
+    <string name="eink_tap_sides_wide_right_note">Next on the right, the widest zone</string>
+    <!-- E-ink tap zones page: the line under the layout Sides, as drawn for the open book at the small size, with Next on the left. -->
+    <string name="eink_tap_sides_left_note">Next on the left</string>
+    <!-- E-ink tap zones page: the line under the layout Sides, as drawn for the open book at the small size, with Next on the right. -->
+    <string name="eink_tap_sides_right_note">Next on the right</string>
+    <!-- E-ink tap zones page: the line under the layout L shape, as drawn for the open book, with Next along the bottom edge and up the right side. -->
+    <string name="eink_tap_l_shape_bottom_right_note">Next along the bottom and on the right</string>
+    <!-- E-ink tap zones page: the line under the layout L shape, as drawn for the open book, with Next along the bottom edge and up the left side. -->
+    <string name="eink_tap_l_shape_bottom_left_note">Next along the bottom and on the left</string>
+    <!-- E-ink tap zones page: the line under the layout L shape, as drawn for the open book with Flip top and bottom on: Next along the top edge and down the right side. -->
+    <string name="eink_tap_l_shape_top_right_note">Next along the top and on the right</string>
+    <!-- E-ink tap zones page: the line under the layout L shape, as drawn for the open book with Flip top and bottom on: Next along the top edge and down the left side. -->
+    <string name="eink_tap_l_shape_top_left_note">Next along the top and on the left</string>
+    <!-- E-ink tap zones page: the line under the layout Wide next. -->
+    <string name="eink_tap_wide_next_note">Controls on top, next takes most</string>
+    <!-- E-ink tap zones page: the line under the layout Wide next with Flip top and bottom on, so the controls band is at the bottom. -->
+    <string name="eink_tap_wide_next_flipped_note">Controls below, next takes most</string>
+    <!-- E-ink tap zones page: the line under the layout Top and bottom. -->
+    <string name="eink_tap_top_bottom_note">Previous on top, next at the bottom</string>
+    <!-- E-ink tap zones page: the line under the layout Top and bottom with Flip top and bottom on. -->
+    <string name="eink_tap_top_bottom_flipped_note">Next on top, previous at the bottom</string>
+    <!-- E-ink tap zones page: the line under the layout Next on both sides. -->
+    <string name="eink_tap_both_next_note">Previous in the bottom middle</string>
+    <!-- E-ink tap zones page: the line under the layout Next on both sides with Flip top and bottom on. -->
+    <string name="eink_tap_both_next_flipped_note">Previous in the top middle</string>
+    <!-- E-ink tap zones page: the line under the layout Off. -->
+    <string name="eink_tap_off_note">Swipes and page buttons only</string>
+    <!-- E-ink tap zones page: the line under the layout Off while Swipes turn pages is off too, so nothing on the page turns it. -->
+    <string name="eink_tap_off_keys_note">Only page buttons turn pages</string>
     <!-- The page number in the page's margin on an e-ink screen. -->
     <string name="eink_folio_one">%1$d of %2$d</string>
     <!-- The page numbers in the margin when two pages show side by side. -->
@@ -1404,8 +1452,6 @@
     <string name="reader_novel_line_scroll">Chapter %1$s · scroll</string>
     <!-- At the end of a scrolling novel's scrubber: the time left in the chapter at the person's pace. -->
     <string name="reader_minutes_left">%1$,d min</string>
-    <!-- Name of the tap zone on the reading side, shown once on the first chapter. -->
-    <string name="reader_zone_next">Next page</string>
     <!-- Heading of the page grid. -->
     <string name="reader_grid_title">Pages</string>
     <!-- Main button on the page between chapters. -->
@@ -1560,12 +1606,6 @@
     <string name="reader_volume_read">Volume %1$s · read</string>
     <!-- Heading for chapters outside any volume. -->
     <string name="reader_volume_none">Chapters</string>
-    <!-- On the plate of a page that is still loading. -->
-    <string name="reader_page_plate">Page %1$d</string>
-    <!-- On the plate of a strip image that is still loading. -->
-    <string name="reader_image_plate">Image %1$,d</string>
-    <!-- On a strip image's plate in place of its number after four seconds. -->
-    <string name="reader_image_loading">Loading image %1$,d</string>
     <!-- Under Opening chapter when it takes more than three seconds. -->
     <string name="reader_opening_finding">Finding a source</string>
     <!-- Button on a chapter that could not open. -->
@@ -1574,10 +1614,6 @@
     <string name="reader_settings_search">Search settings</string>
     <!-- Paper mode part. -->
     <string name="reader_paper_turn">Turn pages at once</string>
-    <!-- Label on the previous page tap zone. -->
-    <string name="reader_zone_previous">Previous page</string>
-    <!-- Label on the middle tap zone. -->
-    <string name="reader_zone_controls">Controls</string>
     <!-- Description of the small A at the start of the text size slider. -->
     <string name="reader_size_small">Smaller text</string>
     <!-- Description of the large A at the end of the text size slider. -->
@@ -1749,6 +1785,8 @@
     <string name="eink_contents_reading">Reading</string>
     <!-- What TalkBack says the line of skipped credit pages does, after "Double-tap to": an imperative, as Android's click labels are. -->
     <string name="reader_credit_show_action">Show the page</string>
+    <!-- What TalkBack says for one layout among the tap zone choices: the layout's name, then where its zones are for the open book ("Sides, Next page on the right side, previous page on the left side, controls in the middle"). The choice's own state, Selected or Not selected, follows it. -->
+    <string name="reader_tap_layout_spoken">%1$s, %2$s</string>
     <!-- Line under "You're offline" on reading's Home when it has never loaded, so nothing is kept to show. It has an Open Downloads button. -->
     <string name="read_home_offline_line">Reading\'s Home needs a connection the first time it opens. Downloaded chapters still open.</string>
     <!-- Screen readers: a source group in Search while its source is still being asked. The source is its name. -->
@@ -4862,6 +4900,12 @@
     <string name="player_subs_more">More in Settings…</string>
     <!-- Under a page that is still loading after four seconds. -->
     <string name="reader_page_loading">Loading page %1$d</string>
+    <!-- On the plate of a page that is still loading. -->
+    <string name="reader_page_plate">Page %1$d</string>
+    <!-- On the plate of a strip image that is still loading. -->
+    <string name="reader_image_plate">Image %1$d</string>
+    <!-- Under a strip image's number after four seconds. -->
+    <string name="reader_image_loading">Loading image %1$d</string>
     <!-- Heading where a page could not be loaded. -->
     <string name="reader_page_failed">Couldn\'t load page %1$d</string>
     <!-- Button that loads a failed page again. -->
@@ -4914,12 +4958,114 @@
     <string name="reader_spreads_rotate">Turn</string>
     <!-- A choice for wide pages: shown whole. -->
     <string name="reader_spreads_whole">Whole</string>
-    <!-- A choice for the reader's tap zones: taps near the left and right edges turn the page. -->
+    <!-- A choice for the reader's tap zones: taps near the left and right edges turn the page. Replaced by Sides; kept until every app has the new tap zones page. -->
     <string name="reader_tap_edges">Edges</string>
-    <!-- A choice for the reader's tap zones: the left and right halves turn the page. -->
-    <string name="reader_tap_sides">Halves</string>
-    <!-- A choice for the reader's tap zones: taps do not turn the page. -->
+    <!-- Tap zone layout: Sides when pages turn sideways, L shape when they move downwards. The name under its tile. -->
+    <string name="reader_tap_auto">Auto</string>
+    <!-- Tap zone layout: previous page on one side, next page on the other, controls in the middle. -->
+    <string name="reader_tap_sides">Sides</string>
+    <!-- Tap zone layout: previous page along the top and down one side, next page along the bottom and down the other side, in the shape of the letter L. -->
+    <string name="reader_tap_l_shape">L shape</string>
+    <!-- Tap zone layout: controls along the top, a narrow column for previous page, and the rest of the page for next page. -->
+    <string name="reader_tap_wide_next">Wide next</string>
+    <!-- Tap zone layout: previous page across the top, next page across the bottom. -->
+    <string name="reader_tap_top_bottom">Top and bottom</string>
+    <!-- Tap zone layout: next page down both the left and the right side, previous page in the bottom middle. -->
+    <string name="reader_tap_both_next">Next on both sides</string>
+    <!-- Tap zone layout: taps only show and hide the controls, and never turn the page. -->
     <string name="reader_tap_off">Off</string>
+    <!-- Tap zones page: the choice for paged reading (pages that turn), one of two at the top. -->
+    <string name="reader_tap_paged">Paged</string>
+    <!-- Tap zones page: the choice for strips and scrolled novels, one of two at the top. -->
+    <string name="reader_tap_scrolling">Scrolling</string>
+    <!-- Tap zones page: row that sets how wide the zones at the edges are. -->
+    <string name="reader_tap_size">Zone size</string>
+    <!-- Choice of Zone size: the edge zones are a third of the screen. -->
+    <string name="reader_tap_standard">Standard</string>
+    <!-- Choice of Zone size: the edge zones are a quarter of the screen. -->
+    <string name="reader_tap_small">Small</string>
+    <!-- Tap zones page: switch that swaps the left and right zones, for the left hand. -->
+    <string name="reader_tap_flip_sides">Flip left and right</string>
+    <!-- Tap zones page: switch that swaps the top and bottom zones. -->
+    <string name="reader_tap_flip_ends">Flip top and bottom</string>
+    <!-- Tap zones page: button that shows the zones over the page. -->
+    <string name="reader_tap_show">Show zones</string>
+    <!-- Tap zones page, beside Show zones: the setting is not synced. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”. -->
+    <string name="reader_tap_here">Stays on this %1$s</string>
+    <!-- The reader's settings on a Mac, Windows or Linux: the row that opens the tap zones page, which is about clicks there. -->
+    <string name="reader_click_zones">Click zones</string>
+    <!-- Name of the tap zone that turns to the next page, in the guide over the page and as a screen reader action. -->
+    <string name="reader_zone_next">Next page</string>
+    <!-- Name of the tap zone that turns to the previous page, in the guide and as a screen reader action. -->
+    <string name="reader_zone_previous">Previous page</string>
+    <!-- Name of the tap zone that shows and hides the reader's controls, in the guide. -->
+    <string name="reader_zone_controls">Controls</string>
+    <!-- Screen reader action on the page that shows the reader's controls. -->
+    <string name="reader_zone_show_controls">Show controls</string>
+    <!-- Name of the tap zone that scrolls a strip or a scrolled novel down, in the guide. -->
+    <string name="reader_zone_scroll_down">Scroll down</string>
+    <!-- Name of the tap zone that scrolls a strip or a scrolled novel up, in the guide. -->
+    <string name="reader_zone_scroll_up">Scroll up</string>
+    <!-- Under Controls in the tap zone guide: where the zones are changed. -->
+    <string name="reader_zone_change">Change in Reader settings</string>
+    <!-- Tap zone layout Off in words, the accessibility value of its tile. -->
+    <string name="reader_tap_off_about">Taps show and hide the controls</string>
+    <!-- Tap zone layout in words, the accessibility value of its tile: Sides, next page on the right. -->
+    <string name="reader_tap_sides_right_about">Next page on the right side, previous page on the left side, controls in the middle</string>
+    <!-- Tap zone layout in words, the accessibility value of its tile: Sides, next page on the left. -->
+    <string name="reader_tap_sides_left_about">Next page on the left side, previous page on the right side, controls in the middle</string>
+    <!-- Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the right. -->
+    <string name="reader_tap_l_shape_bottom_right_about">Next page along the bottom and on the right, previous page along the top and on the left, controls in the middle</string>
+    <!-- Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the left. -->
+    <string name="reader_tap_l_shape_bottom_left_about">Next page along the bottom and on the left, previous page along the top and on the right, controls in the middle</string>
+    <!-- Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right. -->
+    <string name="reader_tap_l_shape_top_right_about">Next page along the top and on the right, previous page along the bottom and on the left, controls in the middle</string>
+    <!-- Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left. -->
+    <string name="reader_tap_l_shape_top_left_about">Next page along the top and on the left, previous page along the bottom and on the right, controls in the middle</string>
+    <!-- Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the left. -->
+    <string name="reader_tap_wide_next_top_left_about">Controls along the top, previous page in a narrow column on the left, next page everywhere else</string>
+    <!-- Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the right. -->
+    <string name="reader_tap_wide_next_top_right_about">Controls along the top, previous page in a narrow column on the right, next page everywhere else</string>
+    <!-- Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left. -->
+    <string name="reader_tap_wide_next_bottom_left_about">Controls along the bottom, previous page in a narrow column on the left, next page everywhere else</string>
+    <!-- Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right. -->
+    <string name="reader_tap_wide_next_bottom_right_about">Controls along the bottom, previous page in a narrow column on the right, next page everywhere else</string>
+    <!-- Tap zone layout in words, the accessibility value of its tile: Top and bottom. -->
+    <string name="reader_tap_top_bottom_about">Next page across the bottom, previous page across the top, controls in the middle</string>
+    <!-- Tap zone layout in words, the accessibility value of its tile: Top and bottom flipped. -->
+    <string name="reader_tap_top_bottom_flipped_about">Next page across the top, previous page across the bottom, controls in the middle</string>
+    <!-- Tap zone layout in words, the accessibility value of its tile: Next on both sides. -->
+    <string name="reader_tap_both_next_about">Next page down both sides, previous page at the bottom in the middle, controls above it</string>
+    <!-- Tap zone layout in words, the accessibility value of its tile: Next on both sides flipped top and bottom. -->
+    <string name="reader_tap_both_next_flipped_about">Next page down both sides, previous page at the top in the middle, controls below it</string>
+    <!-- Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the right. -->
+    <string name="reader_tap_sides_right_scroll_about">Scroll down on the right side, scroll up on the left side, controls in the middle</string>
+    <!-- Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the left. -->
+    <string name="reader_tap_sides_left_scroll_about">Scroll down on the left side, scroll up on the right side, controls in the middle</string>
+    <!-- Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the right. -->
+    <string name="reader_tap_l_shape_bottom_right_scroll_about">Scroll down along the bottom and on the right, scroll up along the top and on the left, controls in the middle</string>
+    <!-- Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the left. -->
+    <string name="reader_tap_l_shape_bottom_left_scroll_about">Scroll down along the bottom and on the left, scroll up along the top and on the right, controls in the middle</string>
+    <!-- Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right. -->
+    <string name="reader_tap_l_shape_top_right_scroll_about">Scroll down along the top and on the right, scroll up along the bottom and on the left, controls in the middle</string>
+    <!-- Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left. -->
+    <string name="reader_tap_l_shape_top_left_scroll_about">Scroll down along the top and on the left, scroll up along the bottom and on the right, controls in the middle</string>
+    <!-- Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the left. -->
+    <string name="reader_tap_wide_next_top_left_scroll_about">Controls along the top, scroll up in a narrow column on the left, scroll down everywhere else</string>
+    <!-- Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the right. -->
+    <string name="reader_tap_wide_next_top_right_scroll_about">Controls along the top, scroll up in a narrow column on the right, scroll down everywhere else</string>
+    <!-- Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left. -->
+    <string name="reader_tap_wide_next_bottom_left_scroll_about">Controls along the bottom, scroll up in a narrow column on the left, scroll down everywhere else</string>
+    <!-- Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right. -->
+    <string name="reader_tap_wide_next_bottom_right_scroll_about">Controls along the bottom, scroll up in a narrow column on the right, scroll down everywhere else</string>
+    <!-- Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom. -->
+    <string name="reader_tap_top_bottom_scroll_about">Scroll down across the bottom, scroll up across the top, controls in the middle</string>
+    <!-- Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom flipped. -->
+    <string name="reader_tap_top_bottom_flipped_scroll_about">Scroll down across the top, scroll up across the bottom, controls in the middle</string>
+    <!-- Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides. -->
+    <string name="reader_tap_both_next_scroll_about">Scroll down on both sides, scroll up at the bottom in the middle, controls above it</string>
+    <!-- Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides flipped top and bottom. -->
+    <string name="reader_tap_both_next_flipped_scroll_about">Scroll down on both sides, scroll up at the top in the middle, controls below it</string>
     <!-- Button in the reader's controls that opens the chapters and the page grid. -->
     <string name="reader_chapters">Chapters</string>
     <!-- Line in the margin of a novel's page. -->
@@ -5346,6 +5492,8 @@
     <string name="chapter_state_wifi">Queued · waits for Wi-Fi</string>
     <!-- A chapter downloading. -->
     <string name="chapter_state_downloading">Downloading · %1$,d of %2$,d pages</string>
+    <!-- A chapter downloading before its page count is known, and throughout for a novel's chapter. -->
+    <string name="chapter_state_downloading_plain">Downloading</string>
     <!-- A chapter that failed to download, with the reason. -->
     <string name="chapter_state_failed">Couldn\'t download. %1$s</string>
     <!-- A part-read chapter. -->
@@ -8293,8 +8441,8 @@
     <string name="title_tags">Tags</string>
     <!-- Button that opens the full page of facts about a show. -->
     <string name="title_more_about">More about this show</string>
-    <!-- Accessibility hint of the button that expands a synopsis. -->
-    <string name="title_synopsis_hint">Shows the whole synopsis</string>
+    <!-- Accessible name of the More at the end of a cut synopsis, which shows the rest of it. The page's menu of extra actions is called More too, so this one says what it does. -->
+    <string name="title_synopsis_more">Show the whole synopsis</string>
     <!-- Label under a season: which episodes are dubbed so far. -->
     <string name="title_dubbed_to">Dubbed to episode %1$d</string>
     <!-- State of a title with no episodes listed yet. -->

@@ -609,6 +609,18 @@ reader-moved-elsewhere = Moved to { $chapter }, page { $page }, where another de
 # The same notice for a chapter known only by its number, such as 14 or 14.5.
 reader-moved-number-elsewhere = Moved to chapter { $chapter }, page { $page }, where another device stopped
 
+# The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its whole label, such as The Long Night.
+reader-moved-image = Moved to { $chapter }, image { $image }, where { $device } stopped
+
+# The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+reader-moved-number-image = Moved to chapter { $chapter }, image { $image }, where { $device } stopped
+
+# The notice in a strip when another device read further and its name is not known.
+reader-moved-elsewhere-image = Moved to { $chapter }, image { $image }, where another device stopped
+
+# The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+reader-moved-number-elsewhere-image = Moved to chapter { $chapter }, image { $image }, where another device stopped
+
 # A notice the first time a series opens with its reading direction guessed. It offers Change.
 reader-detected-right-to-left = Looks like right to left
 
@@ -875,6 +887,9 @@ reading-row-waits-wifi = Queued · waits for Wi-Fi
 
 # A chapter row's state while it downloads.
 reading-row-downloading = Downloading · { $done } of { $total } pages
+
+# A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count.
+reading-row-downloading-plain = Downloading
 
 # A chapter row's state: the download failed. The reason follows as the next part.
 reading-row-failed = Couldn't download
@@ -2165,9 +2180,6 @@ linux-shortcuts-close-reader = Close the reader
 
 # Two names joined, or a list's last name joined to the rest, in the end page's tracker line: "AniList and MangaUpdates".
 linux-reader-names-and = { $first } and { $last }
-
-# On the plate that holds a page's place while it loads. The page is its number, such as 23.
-linux-reader-page-plate = Page { $page }
 
 # Heading when a chapter could not open. The chapter is its number, such as 13.
 linux-reader-open-failed = Couldn't open chapter { $chapter }
@@ -8879,6 +8891,15 @@ player-subs-more = More in Settings…
 # Under a page that is still loading after four seconds.
 reader-page-loading = Loading page { $page }
 
+# On the plate of a page that is still loading.
+reader-page-plate = Page { $page }
+
+# On the plate of a strip image that is still loading.
+reader-image-plate = Image { $image }
+
+# Under a strip image's number after four seconds.
+reader-image-loading = Loading image { $image }
+
 # Heading where a page could not be loaded.
 reader-page-failed = Couldn't load page { $page }
 
@@ -8957,14 +8978,167 @@ reader-spreads-rotate = Turn
 # A choice for wide pages: shown whole.
 reader-spreads-whole = Whole
 
-# A choice for the reader's tap zones: taps near the left and right edges turn the page.
+# A choice for the reader's tap zones: taps near the left and right edges turn the page. Replaced by Sides; kept until every app has the new tap zones page.
 reader-tap-edges = Edges
 
-# A choice for the reader's tap zones: the left and right halves turn the page.
-reader-tap-sides = Halves
+# Tap zone layout: Sides when pages turn sideways, L shape when they move downwards. The name under its tile.
+reader-tap-auto = Auto
 
-# A choice for the reader's tap zones: taps do not turn the page.
+# Tap zone layout: previous page on one side, next page on the other, controls in the middle.
+reader-tap-sides = Sides
+
+# Tap zone layout: previous page along the top and down one side, next page along the bottom and down the other side, in the shape of the letter L.
+reader-tap-l-shape = L shape
+
+# Tap zone layout: controls along the top, a narrow column for previous page, and the rest of the page for next page.
+reader-tap-wide-next = Wide next
+
+# Tap zone layout: previous page across the top, next page across the bottom.
+reader-tap-top-bottom = Top and bottom
+
+# Tap zone layout: next page down both the left and the right side, previous page in the bottom middle.
+reader-tap-both-next = Next on both sides
+
+# Tap zone layout: taps only show and hide the controls, and never turn the page.
 reader-tap-off = Off
+
+# Tap zones page: the choice for paged reading (pages that turn), one of two at the top.
+reader-tap-paged = Paged
+
+# Tap zones page: the choice for strips and scrolled novels, one of two at the top.
+reader-tap-scrolling = Scrolling
+
+# Tap zones page: row that sets how wide the zones at the edges are.
+reader-tap-size = Zone size
+
+# Choice of Zone size: the edge zones are a third of the screen.
+reader-tap-standard = Standard
+
+# Choice of Zone size: the edge zones are a quarter of the screen.
+reader-tap-small = Small
+
+# Tap zones page: switch that swaps the left and right zones, for the left hand.
+reader-tap-flip-sides = Flip left and right
+
+# Tap zones page: switch that swaps the top and bottom zones.
+reader-tap-flip-ends = Flip top and bottom
+
+# Tap zones page: button that shows the zones over the page.
+reader-tap-show = Show zones
+
+# Tap zones page, beside Show zones: the setting is not synced. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.
+reader-tap-here = Stays on this { $kind }
+
+# The reader's settings on a Mac, Windows or Linux: the row that opens the tap zones page, which is about clicks there.
+reader-click-zones = Click zones
+
+# Name of the tap zone that turns to the next page, in the guide over the page and as a screen reader action.
+reader-zone-next = Next page
+
+# Name of the tap zone that turns to the previous page, in the guide and as a screen reader action.
+reader-zone-previous = Previous page
+
+# Name of the tap zone that shows and hides the reader's controls, in the guide.
+reader-zone-controls = Controls
+
+# Screen reader action on the page that shows the reader's controls.
+reader-zone-show-controls = Show controls
+
+# Name of the tap zone that scrolls a strip or a scrolled novel down, in the guide.
+reader-zone-scroll-down = Scroll down
+
+# Name of the tap zone that scrolls a strip or a scrolled novel up, in the guide.
+reader-zone-scroll-up = Scroll up
+
+# Under Controls in the tap zone guide: where the zones are changed.
+reader-zone-change = Change in Reader settings
+
+# Tap zone layout Off in words, the accessibility value of its tile.
+reader-tap-off-about = Taps show and hide the controls
+
+# Tap zone layout in words, the accessibility value of its tile: Sides, next page on the right.
+reader-tap-sides-right-about = Next page on the right side, previous page on the left side, controls in the middle
+
+# Tap zone layout in words, the accessibility value of its tile: Sides, next page on the left.
+reader-tap-sides-left-about = Next page on the left side, previous page on the right side, controls in the middle
+
+# Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the right.
+reader-tap-l-shape-bottom-right-about = Next page along the bottom and on the right, previous page along the top and on the left, controls in the middle
+
+# Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the left.
+reader-tap-l-shape-bottom-left-about = Next page along the bottom and on the left, previous page along the top and on the right, controls in the middle
+
+# Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right.
+reader-tap-l-shape-top-right-about = Next page along the top and on the right, previous page along the bottom and on the left, controls in the middle
+
+# Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left.
+reader-tap-l-shape-top-left-about = Next page along the top and on the left, previous page along the bottom and on the right, controls in the middle
+
+# Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the left.
+reader-tap-wide-next-top-left-about = Controls along the top, previous page in a narrow column on the left, next page everywhere else
+
+# Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the right.
+reader-tap-wide-next-top-right-about = Controls along the top, previous page in a narrow column on the right, next page everywhere else
+
+# Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left.
+reader-tap-wide-next-bottom-left-about = Controls along the bottom, previous page in a narrow column on the left, next page everywhere else
+
+# Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right.
+reader-tap-wide-next-bottom-right-about = Controls along the bottom, previous page in a narrow column on the right, next page everywhere else
+
+# Tap zone layout in words, the accessibility value of its tile: Top and bottom.
+reader-tap-top-bottom-about = Next page across the bottom, previous page across the top, controls in the middle
+
+# Tap zone layout in words, the accessibility value of its tile: Top and bottom flipped.
+reader-tap-top-bottom-flipped-about = Next page across the top, previous page across the bottom, controls in the middle
+
+# Tap zone layout in words, the accessibility value of its tile: Next on both sides.
+reader-tap-both-next-about = Next page down both sides, previous page at the bottom in the middle, controls above it
+
+# Tap zone layout in words, the accessibility value of its tile: Next on both sides flipped top and bottom.
+reader-tap-both-next-flipped-about = Next page down both sides, previous page at the top in the middle, controls below it
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the right.
+reader-tap-sides-right-scroll-about = Scroll down on the right side, scroll up on the left side, controls in the middle
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the left.
+reader-tap-sides-left-scroll-about = Scroll down on the left side, scroll up on the right side, controls in the middle
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the right.
+reader-tap-l-shape-bottom-right-scroll-about = Scroll down along the bottom and on the right, scroll up along the top and on the left, controls in the middle
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the left.
+reader-tap-l-shape-bottom-left-scroll-about = Scroll down along the bottom and on the left, scroll up along the top and on the right, controls in the middle
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right.
+reader-tap-l-shape-top-right-scroll-about = Scroll down along the top and on the right, scroll up along the bottom and on the left, controls in the middle
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left.
+reader-tap-l-shape-top-left-scroll-about = Scroll down along the top and on the left, scroll up along the bottom and on the right, controls in the middle
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the left.
+reader-tap-wide-next-top-left-scroll-about = Controls along the top, scroll up in a narrow column on the left, scroll down everywhere else
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the right.
+reader-tap-wide-next-top-right-scroll-about = Controls along the top, scroll up in a narrow column on the right, scroll down everywhere else
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left.
+reader-tap-wide-next-bottom-left-scroll-about = Controls along the bottom, scroll up in a narrow column on the left, scroll down everywhere else
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right.
+reader-tap-wide-next-bottom-right-scroll-about = Controls along the bottom, scroll up in a narrow column on the right, scroll down everywhere else
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom.
+reader-tap-top-bottom-scroll-about = Scroll down across the bottom, scroll up across the top, controls in the middle
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom flipped.
+reader-tap-top-bottom-flipped-scroll-about = Scroll down across the top, scroll up across the bottom, controls in the middle
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides.
+reader-tap-both-next-scroll-about = Scroll down on both sides, scroll up at the bottom in the middle, controls above it
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides flipped top and bottom.
+reader-tap-both-next-flipped-scroll-about = Scroll down on both sides, scroll up at the top in the middle, controls below it
 
 # Button in the reader's controls that opens the chapters and the page grid.
 reader-chapters = Chapters
@@ -9596,6 +9770,9 @@ chapter-state-wifi = Queued · waits for Wi-Fi
 
 # A chapter downloading.
 chapter-state-downloading = Downloading · { $done } of { $total } pages
+
+# A chapter downloading before its page count is known, and throughout for a novel's chapter.
+chapter-state-downloading-plain = Downloading
 
 # A chapter that failed to download, with the reason.
 chapter-state-failed = Couldn't download. { $reason }
@@ -13971,8 +14148,8 @@ title-tags = Tags
 # Button that opens the full page of facts about a show.
 title-more-about = More about this show
 
-# Accessibility hint of the button that expands a synopsis.
-title-synopsis-hint = Shows the whole synopsis
+# Accessible name of the More at the end of a cut synopsis, which shows the rest of it. The page's menu of extra actions is called More too, so this one says what it does.
+title-synopsis-more = Show the whole synopsis
 
 # Label under a season: which episodes are dubbed so far.
 title-dubbed-to = Dubbed to episode { $episode }

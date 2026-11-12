@@ -1983,9 +1983,6 @@ linux-shortcuts-close-reader = リーダーを閉じる
 # Two names joined, or a list's last name joined to the rest, in the end page's tracker line: "AniList and MangaUpdates".
 linux-reader-names-and = { $first }と{ $last }
 
-# On the plate that holds a page's place while it loads. The page is its number, such as 23.
-linux-reader-page-plate = { $page }ページ
-
 # Heading when a chapter could not open. The chapter is its number, such as 13.
 linux-reader-open-failed = 第{ $chapter }話を開けませんでした
 
@@ -8534,6 +8531,15 @@ player-subs-more = 設定でさらに表示…
 # Under a page that is still loading after four seconds.
 reader-page-loading = { $page }ページを読み込み中
 
+# On the plate of a page that is still loading.
+reader-page-plate = { $page }ページ
+
+# On the plate of a strip image that is still loading.
+reader-image-plate = 画像 { $image }
+
+# Under a strip image's number after four seconds.
+reader-image-loading = 画像 { $image } を読み込み中
+
 # Heading where a page could not be loaded.
 reader-page-failed = { $page }ページを読み込めませんでした
 
@@ -8612,14 +8618,20 @@ reader-spreads-rotate = 回転
 # A choice for wide pages: shown whole.
 reader-spreads-whole = そのまま
 
-# A choice for the reader's tap zones: taps near the left and right edges turn the page.
+# A choice for the reader's tap zones: taps near the left and right edges turn the page. Replaced by Sides; kept until every app has the new tap zones page.
 reader-tap-edges = 端
 
-# A choice for the reader's tap zones: the left and right halves turn the page.
-reader-tap-sides = 左右半分
-
-# A choice for the reader's tap zones: taps do not turn the page.
+# Tap zone layout: taps only show and hide the controls, and never turn the page.
 reader-tap-off = オフ
+
+# Name of the tap zone that turns to the next page, in the guide over the page and as a screen reader action.
+reader-zone-next = 次のページ
+
+# Name of the tap zone that turns to the previous page, in the guide and as a screen reader action.
+reader-zone-previous = 前のページ
+
+# Name of the tap zone that shows and hides the reader's controls, in the guide.
+reader-zone-controls = 操作パネル
 
 # Button in the reader's controls that opens the chapters and the page grid.
 reader-chapters = 章一覧
@@ -13314,9 +13326,6 @@ title-tags = タグ
 
 # Button that opens the full page of facts about a show.
 title-more-about = 詳細を見る
-
-# Accessibility hint of the button that expands a synopsis.
-title-synopsis-hint = あらすじ全文を表示します
 
 # Label under a season: which episodes are dubbed so far.
 title-dubbed-to = 第{ $episode }話まで吹替版

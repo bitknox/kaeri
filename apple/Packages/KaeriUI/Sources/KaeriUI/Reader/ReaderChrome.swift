@@ -208,6 +208,11 @@ struct ReaderChrome: View {
 
     /// A number at the scrubber's end. None while a credit page shows, which has no number of
     /// its own; a count that changes rolls to the new one.
+    ///
+    /// The roll is drawn in a drawing group. Without one, macOS draws each frame of the roll
+    /// through Core Graphics in software, and every frame adds glyph bitmaps to a process-wide
+    /// font cache. A page number rolls on every turn, so a long read would fill that cache with
+    /// tens of megabytes that stay after the reader closes.
     private func end(_ number: Int?) -> some View {
         Text(verbatim: number.map { "\($0)" } ?? "")
             .font(.ui(12)).monospacedDigit()
@@ -215,6 +220,7 @@ struct ReaderChrome: View {
             .lineLimit(1)
             .fixedSize()
             .contentTransition(.numericText(value: Double(number ?? 0)))
+            .drawingGroup()
             .animation(paper ? nil : .standard, value: number)
             .accessibilityHidden(true)
     }

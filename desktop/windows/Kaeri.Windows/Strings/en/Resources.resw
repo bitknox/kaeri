@@ -835,6 +835,22 @@
     <value>Moved to chapter {chapter}, page {page}, where another device stopped</value>
     <comment>The same notice for a chapter known only by its number, such as 14 or 14.5.</comment>
   </data>
+  <data name="ReaderMovedImage" xml:space="preserve">
+    <value>Moved to {chapter}, image {image}, where {device} stopped</value>
+    <comment>The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its whole label, such as The Long Night.</comment>
+  </data>
+  <data name="ReaderMovedNumberImage" xml:space="preserve">
+    <value>Moved to chapter {chapter}, image {image}, where {device} stopped</value>
+    <comment>The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.</comment>
+  </data>
+  <data name="ReaderMovedElsewhereImage" xml:space="preserve">
+    <value>Moved to {chapter}, image {image}, where another device stopped</value>
+    <comment>The notice in a strip when another device read further and its name is not known.</comment>
+  </data>
+  <data name="ReaderMovedNumberElsewhereImage" xml:space="preserve">
+    <value>Moved to chapter {chapter}, image {image}, where another device stopped</value>
+    <comment>The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.</comment>
+  </data>
   <data name="ReaderDetectedRightToLeft" xml:space="preserve">
     <value>Looks like right to left</value>
     <comment>A notice the first time a series opens with its reading direction guessed. It offers Change.</comment>
@@ -1186,6 +1202,10 @@
   <data name="ReadingRowDownloading" xml:space="preserve">
     <value>Downloading · {done} of {total} pages</value>
     <comment>A chapter row's state while it downloads.</comment>
+  </data>
+  <data name="ReadingRowDownloadingPlain" xml:space="preserve">
+    <value>Downloading</value>
+    <comment>A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count.</comment>
   </data>
   <data name="ReadingRowFailed" xml:space="preserve">
     <value>Couldn't download</value>
@@ -8162,6 +8182,18 @@
     <value>Loading page {page}</value>
     <comment>Under a page that is still loading after four seconds.</comment>
   </data>
+  <data name="ReaderPagePlate" xml:space="preserve">
+    <value>Page {page}</value>
+    <comment>On the plate of a page that is still loading.</comment>
+  </data>
+  <data name="ReaderImagePlate" xml:space="preserve">
+    <value>Image {image}</value>
+    <comment>On the plate of a strip image that is still loading.</comment>
+  </data>
+  <data name="ReaderImageLoading" xml:space="preserve">
+    <value>Loading image {image}</value>
+    <comment>Under a strip image's number after four seconds.</comment>
+  </data>
   <data name="ReaderPageFailed" xml:space="preserve">
     <value>Couldn't load page {page}</value>
     <comment>Heading where a page could not be loaded.</comment>
@@ -8268,15 +8300,219 @@
   </data>
   <data name="ReaderTapEdges" xml:space="preserve">
     <value>Edges</value>
-    <comment>A choice for the reader's tap zones: taps near the left and right edges turn the page.</comment>
+    <comment>A choice for the reader's tap zones: taps near the left and right edges turn the page. Replaced by Sides; kept until every app has the new tap zones page.</comment>
+  </data>
+  <data name="ReaderTapAuto" xml:space="preserve">
+    <value>Auto</value>
+    <comment>Tap zone layout: Sides when pages turn sideways, L shape when they move downwards. The name under its tile.</comment>
   </data>
   <data name="ReaderTapSides" xml:space="preserve">
-    <value>Halves</value>
-    <comment>A choice for the reader's tap zones: the left and right halves turn the page.</comment>
+    <value>Sides</value>
+    <comment>Tap zone layout: previous page on one side, next page on the other, controls in the middle.</comment>
+  </data>
+  <data name="ReaderTapLShape" xml:space="preserve">
+    <value>L shape</value>
+    <comment>Tap zone layout: previous page along the top and down one side, next page along the bottom and down the other side, in the shape of the letter L.</comment>
+  </data>
+  <data name="ReaderTapWideNext" xml:space="preserve">
+    <value>Wide next</value>
+    <comment>Tap zone layout: controls along the top, a narrow column for previous page, and the rest of the page for next page.</comment>
+  </data>
+  <data name="ReaderTapTopBottom" xml:space="preserve">
+    <value>Top and bottom</value>
+    <comment>Tap zone layout: previous page across the top, next page across the bottom.</comment>
+  </data>
+  <data name="ReaderTapBothNext" xml:space="preserve">
+    <value>Next on both sides</value>
+    <comment>Tap zone layout: next page down both the left and the right side, previous page in the bottom middle.</comment>
   </data>
   <data name="ReaderTapOff" xml:space="preserve">
     <value>Off</value>
-    <comment>A choice for the reader's tap zones: taps do not turn the page.</comment>
+    <comment>Tap zone layout: taps only show and hide the controls, and never turn the page.</comment>
+  </data>
+  <data name="ReaderTapPaged" xml:space="preserve">
+    <value>Paged</value>
+    <comment>Tap zones page: the choice for paged reading (pages that turn), one of two at the top.</comment>
+  </data>
+  <data name="ReaderTapScrolling" xml:space="preserve">
+    <value>Scrolling</value>
+    <comment>Tap zones page: the choice for strips and scrolled novels, one of two at the top.</comment>
+  </data>
+  <data name="ReaderTapSize" xml:space="preserve">
+    <value>Zone size</value>
+    <comment>Tap zones page: row that sets how wide the zones at the edges are.</comment>
+  </data>
+  <data name="ReaderTapStandard" xml:space="preserve">
+    <value>Standard</value>
+    <comment>Choice of Zone size: the edge zones are a third of the screen.</comment>
+  </data>
+  <data name="ReaderTapSmall" xml:space="preserve">
+    <value>Small</value>
+    <comment>Choice of Zone size: the edge zones are a quarter of the screen.</comment>
+  </data>
+  <data name="ReaderTapFlipSides" xml:space="preserve">
+    <value>Flip left and right</value>
+    <comment>Tap zones page: switch that swaps the left and right zones, for the left hand.</comment>
+  </data>
+  <data name="ReaderTapFlipEnds" xml:space="preserve">
+    <value>Flip top and bottom</value>
+    <comment>Tap zones page: switch that swaps the top and bottom zones.</comment>
+  </data>
+  <data name="ReaderTapShow" xml:space="preserve">
+    <value>Show zones</value>
+    <comment>Tap zones page: button that shows the zones over the page.</comment>
+  </data>
+  <data name="ReaderTapHere" xml:space="preserve">
+    <value>Stays on this {kind}</value>
+    <comment>Tap zones page, beside Show zones: the setting is not synced. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.</comment>
+  </data>
+  <data name="ReaderClickZones" xml:space="preserve">
+    <value>Click zones</value>
+    <comment>The reader's settings on a Mac, Windows or Linux: the row that opens the tap zones page, which is about clicks there.</comment>
+  </data>
+  <data name="ReaderZoneNext" xml:space="preserve">
+    <value>Next page</value>
+    <comment>Name of the tap zone that turns to the next page, in the guide over the page and as a screen reader action.</comment>
+  </data>
+  <data name="ReaderZonePrevious" xml:space="preserve">
+    <value>Previous page</value>
+    <comment>Name of the tap zone that turns to the previous page, in the guide and as a screen reader action.</comment>
+  </data>
+  <data name="ReaderZoneControls" xml:space="preserve">
+    <value>Controls</value>
+    <comment>Name of the tap zone that shows and hides the reader's controls, in the guide.</comment>
+  </data>
+  <data name="ReaderZoneShowControls" xml:space="preserve">
+    <value>Show controls</value>
+    <comment>Screen reader action on the page that shows the reader's controls.</comment>
+  </data>
+  <data name="ReaderZoneScrollDown" xml:space="preserve">
+    <value>Scroll down</value>
+    <comment>Name of the tap zone that scrolls a strip or a scrolled novel down, in the guide.</comment>
+  </data>
+  <data name="ReaderZoneScrollUp" xml:space="preserve">
+    <value>Scroll up</value>
+    <comment>Name of the tap zone that scrolls a strip or a scrolled novel up, in the guide.</comment>
+  </data>
+  <data name="ReaderZoneChange" xml:space="preserve">
+    <value>Change in Reader settings</value>
+    <comment>Under Controls in the tap zone guide: where the zones are changed.</comment>
+  </data>
+  <data name="ReaderTapOffAbout" xml:space="preserve">
+    <value>Taps show and hide the controls</value>
+    <comment>Tap zone layout Off in words, the accessibility value of its tile.</comment>
+  </data>
+  <data name="ReaderTapSidesRightAbout" xml:space="preserve">
+    <value>Next page on the right side, previous page on the left side, controls in the middle</value>
+    <comment>Tap zone layout in words, the accessibility value of its tile: Sides, next page on the right.</comment>
+  </data>
+  <data name="ReaderTapSidesLeftAbout" xml:space="preserve">
+    <value>Next page on the left side, previous page on the right side, controls in the middle</value>
+    <comment>Tap zone layout in words, the accessibility value of its tile: Sides, next page on the left.</comment>
+  </data>
+  <data name="ReaderTapLShapeBottomRightAbout" xml:space="preserve">
+    <value>Next page along the bottom and on the right, previous page along the top and on the left, controls in the middle</value>
+    <comment>Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the right.</comment>
+  </data>
+  <data name="ReaderTapLShapeBottomLeftAbout" xml:space="preserve">
+    <value>Next page along the bottom and on the left, previous page along the top and on the right, controls in the middle</value>
+    <comment>Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the left.</comment>
+  </data>
+  <data name="ReaderTapLShapeTopRightAbout" xml:space="preserve">
+    <value>Next page along the top and on the right, previous page along the bottom and on the left, controls in the middle</value>
+    <comment>Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right.</comment>
+  </data>
+  <data name="ReaderTapLShapeTopLeftAbout" xml:space="preserve">
+    <value>Next page along the top and on the left, previous page along the bottom and on the right, controls in the middle</value>
+    <comment>Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left.</comment>
+  </data>
+  <data name="ReaderTapWideNextTopLeftAbout" xml:space="preserve">
+    <value>Controls along the top, previous page in a narrow column on the left, next page everywhere else</value>
+    <comment>Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the left.</comment>
+  </data>
+  <data name="ReaderTapWideNextTopRightAbout" xml:space="preserve">
+    <value>Controls along the top, previous page in a narrow column on the right, next page everywhere else</value>
+    <comment>Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the right.</comment>
+  </data>
+  <data name="ReaderTapWideNextBottomLeftAbout" xml:space="preserve">
+    <value>Controls along the bottom, previous page in a narrow column on the left, next page everywhere else</value>
+    <comment>Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left.</comment>
+  </data>
+  <data name="ReaderTapWideNextBottomRightAbout" xml:space="preserve">
+    <value>Controls along the bottom, previous page in a narrow column on the right, next page everywhere else</value>
+    <comment>Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right.</comment>
+  </data>
+  <data name="ReaderTapTopBottomAbout" xml:space="preserve">
+    <value>Next page across the bottom, previous page across the top, controls in the middle</value>
+    <comment>Tap zone layout in words, the accessibility value of its tile: Top and bottom.</comment>
+  </data>
+  <data name="ReaderTapTopBottomFlippedAbout" xml:space="preserve">
+    <value>Next page across the top, previous page across the bottom, controls in the middle</value>
+    <comment>Tap zone layout in words, the accessibility value of its tile: Top and bottom flipped.</comment>
+  </data>
+  <data name="ReaderTapBothNextAbout" xml:space="preserve">
+    <value>Next page down both sides, previous page at the bottom in the middle, controls above it</value>
+    <comment>Tap zone layout in words, the accessibility value of its tile: Next on both sides.</comment>
+  </data>
+  <data name="ReaderTapBothNextFlippedAbout" xml:space="preserve">
+    <value>Next page down both sides, previous page at the top in the middle, controls below it</value>
+    <comment>Tap zone layout in words, the accessibility value of its tile: Next on both sides flipped top and bottom.</comment>
+  </data>
+  <data name="ReaderTapSidesRightScrollAbout" xml:space="preserve">
+    <value>Scroll down on the right side, scroll up on the left side, controls in the middle</value>
+    <comment>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the right.</comment>
+  </data>
+  <data name="ReaderTapSidesLeftScrollAbout" xml:space="preserve">
+    <value>Scroll down on the left side, scroll up on the right side, controls in the middle</value>
+    <comment>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the left.</comment>
+  </data>
+  <data name="ReaderTapLShapeBottomRightScrollAbout" xml:space="preserve">
+    <value>Scroll down along the bottom and on the right, scroll up along the top and on the left, controls in the middle</value>
+    <comment>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the right.</comment>
+  </data>
+  <data name="ReaderTapLShapeBottomLeftScrollAbout" xml:space="preserve">
+    <value>Scroll down along the bottom and on the left, scroll up along the top and on the right, controls in the middle</value>
+    <comment>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the left.</comment>
+  </data>
+  <data name="ReaderTapLShapeTopRightScrollAbout" xml:space="preserve">
+    <value>Scroll down along the top and on the right, scroll up along the bottom and on the left, controls in the middle</value>
+    <comment>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right.</comment>
+  </data>
+  <data name="ReaderTapLShapeTopLeftScrollAbout" xml:space="preserve">
+    <value>Scroll down along the top and on the left, scroll up along the bottom and on the right, controls in the middle</value>
+    <comment>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left.</comment>
+  </data>
+  <data name="ReaderTapWideNextTopLeftScrollAbout" xml:space="preserve">
+    <value>Controls along the top, scroll up in a narrow column on the left, scroll down everywhere else</value>
+    <comment>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the left.</comment>
+  </data>
+  <data name="ReaderTapWideNextTopRightScrollAbout" xml:space="preserve">
+    <value>Controls along the top, scroll up in a narrow column on the right, scroll down everywhere else</value>
+    <comment>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the right.</comment>
+  </data>
+  <data name="ReaderTapWideNextBottomLeftScrollAbout" xml:space="preserve">
+    <value>Controls along the bottom, scroll up in a narrow column on the left, scroll down everywhere else</value>
+    <comment>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left.</comment>
+  </data>
+  <data name="ReaderTapWideNextBottomRightScrollAbout" xml:space="preserve">
+    <value>Controls along the bottom, scroll up in a narrow column on the right, scroll down everywhere else</value>
+    <comment>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right.</comment>
+  </data>
+  <data name="ReaderTapTopBottomScrollAbout" xml:space="preserve">
+    <value>Scroll down across the bottom, scroll up across the top, controls in the middle</value>
+    <comment>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom.</comment>
+  </data>
+  <data name="ReaderTapTopBottomFlippedScrollAbout" xml:space="preserve">
+    <value>Scroll down across the top, scroll up across the bottom, controls in the middle</value>
+    <comment>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom flipped.</comment>
+  </data>
+  <data name="ReaderTapBothNextScrollAbout" xml:space="preserve">
+    <value>Scroll down on both sides, scroll up at the bottom in the middle, controls above it</value>
+    <comment>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides.</comment>
+  </data>
+  <data name="ReaderTapBothNextFlippedScrollAbout" xml:space="preserve">
+    <value>Scroll down on both sides, scroll up at the top in the middle, controls below it</value>
+    <comment>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides flipped top and bottom.</comment>
   </data>
   <data name="ReaderChapters" xml:space="preserve">
     <value>Chapters</value>
@@ -9097,6 +9333,10 @@
   <data name="ChapterStateDownloading" xml:space="preserve">
     <value>Downloading · {done} of {total} pages</value>
     <comment>A chapter downloading.</comment>
+  </data>
+  <data name="ChapterStateDownloadingPlain" xml:space="preserve">
+    <value>Downloading</value>
+    <comment>A chapter downloading before its page count is known, and throughout for a novel's chapter.</comment>
   </data>
   <data name="ChapterStateFailed" xml:space="preserve">
     <value>Couldn't download. {reason}</value>
@@ -14859,9 +15099,9 @@
     <value>More about this show</value>
     <comment>Button that opens the full page of facts about a show.</comment>
   </data>
-  <data name="TitleSynopsisHint" xml:space="preserve">
-    <value>Shows the whole synopsis</value>
-    <comment>Accessibility hint of the button that expands a synopsis.</comment>
+  <data name="TitleSynopsisMore" xml:space="preserve">
+    <value>Show the whole synopsis</value>
+    <comment>Accessible name of the More at the end of a cut synopsis, which shows the rest of it. The page's menu of extra actions is called More too, so this one says what it does.</comment>
   </data>
   <data name="TitleDubbedTo" xml:space="preserve">
     <value>Dubbed to episode {episode}</value>

@@ -1,4 +1,7 @@
 reader-page-loading = Wczytywanie strony { $page }
+reader-page-plate = Strona { $page }
+reader-image-plate = Obraz { $image }
+reader-image-loading = Wczytywanie obrazu { $image }
 reader-page-failed = Nie udało się wczytać strony { $page }
 reader-try-again = Spróbuj ponownie
 reader-close = Zamknij
@@ -62,3 +65,6 @@ reader-divider-images = { $count ->
     [many] { $count } obrazów
    *[other] { $count } obrazu
  }
+reader-zone-next = Następna strona
+reader-zone-previous = Poprzednia strona
+reader-zone-controls = Sterowanie

@@ -126,6 +126,8 @@ public sealed class ReaderSession
     int ticks, noticeCount;
     bool opened;
     int? pendingGoTo;
+    /// <summary>The page a layout kept, while the leaf that holds it stays on screen.</summary>
+    uint? heldPage;
     Request? afterClose;
     CancellationTokenSource? noticeTimer;
     DateTimeOffset lastStrip = DateTimeOffset.MinValue;
@@ -217,6 +219,8 @@ public sealed class ReaderSession
             return;
         if (how == TurnHow.Jump && leaf != Current)
             Ring = Current;
+        if (leaf != Current)
+            heldPage = null;
         Current = leaf;
         Ask(new ReaderCommand.Shown(session, view.Chapter.Id, Leaves[leaf].Index, how));
     }
@@ -481,6 +485,7 @@ public sealed class ReaderSession
                 BackTo = null;
                 Notice = null;
                 Current = 0;
+                heldPage = null;
                 if (view.Settings is { } settings)
                     Settings = settings;
                 Ask(new ReaderCommand.LoadSettings(view.Medium, view.Work));
@@ -495,9 +500,23 @@ public sealed class ReaderSession
             case ReaderEvent.Leaves leaves:
                 if (leaves.Session != session)
                     return;
+                // Pages laid out again, as when the window widens into spreads: the page on
+                // screen stays, in whichever leaf holds it now, and the end page stays the end.
+                var again = Leaves.Length > 0 && Novel is null && View?.Mode == ReaderMode.Paged
+                    && leaves.Chapter == View?.Chapter.Id;
+                var keptPage = again ? PageKept(Current) : null;
+                var atEnd = again && Current >= 0 && Current < Leaves.Length && Leaves[Current].EndPage;
                 Leaves = leaves.LeavesValue;
                 Phase = ReaderPhase.Open;
-                if (Leaves.Length > 0)
+                if (keptPage is { } kept && LeafOfPageIndex(kept) is { } holding)
+                {
+                    Current = holding;
+                    // Kept while its leaf stays on screen, so single pages again show it.
+                    heldPage = kept;
+                }
+                else if (atEnd && Array.FindLastIndex(Leaves, l => l.EndPage) is var end && end >= 0)
+                    Current = end;
+                else if (Leaves.Length > 0)
                     Current = Math.Clamp(Math.Max(Current, StartLeaf()), 0, Leaves.Length - 1);
                 Changed?.Invoke(ReaderChange.Leaves);
                 if (pendingGoTo is { } page && LeafOfPageIndex((uint)page) is { } at)
@@ -625,6 +644,20 @@ public sealed class ReaderSession
         }
     }
 
+    /// <summary>
+    /// The page a new layout keeps of a leaf: the one the last layout kept while that leaf still
+    /// holds it, as a spread holds a page shown alone before it; otherwise the leaf's first.
+    /// </summary>
+    uint? PageKept(int leaf)
+    {
+        if (leaf < 0 || leaf >= Leaves.Length || Leaves[leaf].Parts.Length == 0)
+            return null;
+        var parts = Leaves[leaf].Parts;
+        if (heldPage is { } held && parts.Any(p => p.Page == held))
+            return held;
+        return parts.Min(p => p.Page);
+    }
+
     int StartLeaf() => View?.Start.Page is { } page && LeafOfPageIndex(page) is { } at ? at : 0;
 
     /// <summary>The leaf that holds a page, counted from 0.</summary>
@@ -662,6 +695,8 @@ public sealed class ReaderSession
     void Show(int leaf)
     {
         pendingGoTo = null;
+        if (leaf != Current)
+            heldPage = null;
         Current = leaf;
         GoTo = (leaf, Bump());
         Changed?.Invoke(ReaderChange.GoTo);
@@ -784,6 +819,7 @@ public sealed class ReaderSession
         Notice = null;
         BackTo = null;
         Current = 0;
+        heldPage = null;
         Ring = null;
         StripRestore = null;
         Flowing = false;
@@ -828,4 +864,28 @@ public sealed class ReaderSession
 
     /// <summary>The leaves the person sees as pages: the end page's leaf is not one.</summary>
     public int ReadingLeaves => Leaves.Count(l => !l.EndPage);
+}
+
+/// <summary>Where a strip plate's words sit: in the middle of the part of the image on screen.</summary>
+public static class StripPlate
+{
+    /// <summary>
+    /// The margins above and below the words in an image <paramref name="height"/> tall, so they
+    /// centre on the part on screen (<paramref name="seen"/>, top and bottom in the image's own
+    /// units) while that part leaves them <paramref name="room"/>; a thinner part widens to the
+    /// room about its middle, inside the image. Off screen, none.
+    /// </summary>
+    public static (double Above, double Below) WordsMargins(double height, (double Top, double Bottom)? seen, double room)
+    {
+        if (seen is not { } part)
+            return (0, 0);
+        var top = Math.Max(part.Top, 0);
+        var bottom = Math.Min(part.Bottom, height);
+        if (bottom <= top)
+            return (0, 0);
+        if (bottom - top >= room)
+            return (top, height - bottom);
+        var above = Math.Clamp((top + bottom) / 2 - room / 2, 0, Math.Max(height - room, 0));
+        return (above, Math.Max(height - above - room, 0));
+    }
 }

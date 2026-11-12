@@ -407,7 +407,7 @@ struct StripReader: View {
             .frame(width: column)
         case .lead:
             ZStack(alignment: .top) {
-                PagePlate(page: 1, theme: theme, atOnce: true)
+                PagePlate(page: 1, theme: theme, atOnce: true, image: true)
                 if let lead {
                     PageImage(file: lead, longest: leadHeight * scale, tone: tone)
                         .frame(width: column, height: column * CGFloat(lead.height) / CGFloat(max(lead.width, 1)))
@@ -540,12 +540,12 @@ private struct StripImage: View {
     var body: some View {
         ZStack {
             if let file = model.file(of: part, chapter: chapter) {
-                if !painted { PagePlate(page: Int(part.page) + 1, theme: theme) }
+                if !painted { PagePlate(page: Int(part.page) + 1, theme: theme, image: true) }
                 PageImage(file: file, longest: longest, tone: tone) { painted = true }
             } else if let failure = model.failure(of: part, chapter: chapter) {
                 PageFailed(page: Int(part.page) + 1, failure: failure, theme: theme) { model.retry(page: part.page) }
             } else {
-                PagePlate(page: Int(part.page) + 1, theme: theme)
+                PagePlate(page: Int(part.page) + 1, theme: theme, image: true)
             }
         }
         .frame(width: width)

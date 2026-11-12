@@ -14,6 +14,18 @@ public class ReadingTests
             MangaFormats: [ExportFormat.Cbz, ExportFormat.Kepub], NovelFormats: [ExportFormat.Kepub], Split: false, Chosen: chosen);
 
     [Fact]
+    public void AStripPlatesWordsSitInTheMiddleOfThePartOnScreen()
+    {
+        Assert.Equal((1600d, 600d), StripPlate.WordsMargins(3000, (1600, 2400), 50));
+        // A sliver on screen still leaves the words their room, inside the image.
+        Assert.Equal((0d, 2950d), StripPlate.WordsMargins(3000, (-500, 10), 50));
+        Assert.Equal((2950d, 0d), StripPlate.WordsMargins(3000, (2990, 3400), 50));
+        // Off screen, or not yet laid out: the middle.
+        Assert.Equal((0d, 0d), StripPlate.WordsMargins(3000, null, 50));
+        Assert.Equal((0d, 0d), StripPlate.WordsMargins(3000, (3200, 3600), 50));
+    }
+
+    [Fact]
     public void AReaderNoticeHoldsLongerForLongTextAndWaitsForAScreenReader()
     {
         Assert.Equal(6_000u, ReaderSession.NoticeHold(6_000, 4, true, false));

@@ -10,7 +10,8 @@
 //! **A row's volume.** A row without a volume takes the one any of the work's sources or groups
 //! lists for the same chapter ([`Known`]). Rows still without one between two rows of one
 //! volume take that volume, and a run of at most [`STRAY`] rows between two volumes (an extra
-//! after a volume's last chapter) takes the volume before it.
+//! after a volume's last chapter) takes the volume before it. Rows another source lists that the
+//! list keeps out ([`super::extras`]) count here as if they were listed, then go.
 //!
 //! **When volumes show.** With the setting on, rows are grouped by volume when at least half of
 //! them have one ([`SHOWN_FROM`]) and every row without one comes after the last volume's: those
@@ -104,6 +105,33 @@ fn fits(rows: &[ChapterRow]) -> bool {
     }
     let last = rows.iter().rposition(|r| r.volume.is_some()).unwrap_or(0);
     rows[..last].iter().all(|r| r.volume.is_some())
+}
+
+/// As [`group`], with the volumes of rows kept out of the list (`beside`) filling the gaps
+/// beside them first.
+pub fn group_beside(
+    rows: Vec<ChapterRow>,
+    beside: Vec<ChapterRow>,
+    known: &Known,
+    show: bool,
+) -> Vec<VolumeGroup> {
+    if beside.is_empty() || rows.is_empty() {
+        return group(rows, known, show);
+    }
+    let range = |r: &ChapterRow| r.id.key().and_then(|k| k.range());
+    let mut all: Vec<(bool, ChapterRow)> = rows.into_iter().map(|r| (true, r)).collect();
+    for row in beside {
+        let Some(mine) = range(&row) else { continue };
+        let at = all
+            .iter()
+            .position(|(_, r)| range(r).is_some_and(|theirs| theirs > mine))
+            .unwrap_or(all.len());
+        all.insert(at, (false, row));
+    }
+    let (kept, mut rows): (Vec<bool>, Vec<ChapterRow>) = all.into_iter().unzip();
+    known.fill(&mut rows);
+    let rows = rows.into_iter().zip(kept).filter_map(|(r, kept)| kept.then_some(r)).collect();
+    group(rows, known, show)
 }
 
 /// Rows in reading order into the groups a list shows, with `show` the Show volumes setting.
@@ -235,5 +263,32 @@ mod tests {
         let volumes: Vec<Option<&str>> = groups.iter().map(|g| g.volume.as_deref()).collect();
         assert_eq!(volumes, vec![Some("1"), Some("2"), Some("4"), None]);
         assert_eq!(groups[3].chapters[0].id, ChapterId::new("10"));
+    }
+
+    /// Rows kept out of the list, such as another source's extras, still lend their volumes to
+    /// the rows beside them, so the list stays grouped.
+    #[test]
+    fn rows_kept_out_still_lend_their_volumes() {
+        let rows = || {
+            vec![
+                row("28", Some("3")),
+                row("28.5", Some("3")),
+                row("29", None),
+                row("29.1", None),
+                row("30", None),
+                row("30.1", None),
+                row("31", Some("4")),
+            ]
+        };
+        let held = vec![row("29.5", Some("4")), row("30.5", Some("4"))];
+        assert!(group(rows(), &Known::default(), true)[0].flat, "four rows with none");
+        let groups = group_beside(rows(), held, &Known::default(), true);
+        assert_eq!(
+            shape(&groups),
+            vec![
+                (Some("3"), vec!["28", "28.5", "29", "29.1"], false),
+                (Some("4"), vec!["30", "30.1", "31"], false),
+            ]
+        );
     }
 }

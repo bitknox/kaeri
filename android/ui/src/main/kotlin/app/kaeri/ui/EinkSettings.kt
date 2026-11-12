@@ -36,7 +36,6 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -272,10 +271,9 @@ internal fun EinkInfoRow(place: Place, title: String, value: String?, note: Stri
  * once; nothing fades.
  */
 @Composable
-internal fun EinkTabletSettings(start: SettingsPane, actions: AppActions) {
+internal fun EinkTabletSettings(pane: SettingsPane, onPane: (SettingsPane) -> Unit, actions: AppActions) {
     val navigator = LocalNavigator.current
     val context = LocalContext.current
-    var pane by rememberSaveable(start) { mutableStateOf(start) }
     val large = LocalConfiguration.current.screenWidthDp >= 900
     val listWidth = if (large) ListWide else ListNarrow
     val gap = if (large) PaneGap else PaneGapNarrow
@@ -300,7 +298,7 @@ internal fun EinkTabletSettings(start: SettingsPane, actions: AppActions) {
                     // The hairlines and the grey of the open group start at the margin, as the right
                     // pane's hairlines do, with the words 14 dp inside the grey.
                     Column(Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
-                        SettingsList(selected = pane) { pane = it }
+                        SettingsList(selected = pane) { onPane(it) }
                     }
                 }
                 Spacer(Modifier.width(gap))

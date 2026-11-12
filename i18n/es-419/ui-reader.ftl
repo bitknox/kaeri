@@ -1,4 +1,7 @@
 reader-page-loading = Cargando la página { $page }
+reader-page-plate = Página { $page }
+reader-image-plate = Imagen { $image }
+reader-image-loading = Cargando la imagen { $image }
 reader-page-failed = No se pudo cargar la página { $page }
 reader-try-again = Reintentar
 reader-close = Cerrar
@@ -59,3 +62,6 @@ reader-divider-images = { $count ->
    *[other] { $count } imágenes
  }
 reader-chapter-line-titled = Capítulo { $chapter } · { $title }
+reader-zone-next = Avanzar página
+reader-zone-previous = Página anterior
+reader-zone-controls = Controles

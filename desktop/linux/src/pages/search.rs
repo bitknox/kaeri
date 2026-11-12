@@ -201,8 +201,8 @@ pub fn build(ctx: &Rc<Ctx>) -> SearchPage {
     let column = gtk::Box::new(gtk::Orientation::Vertical, 6);
     column.append(&bar);
     // Shows or Reading leads the content bar, where Library has it.
-    filters.row.prepend(&crate::reading::scope(ctx, super::Dest::Search, false));
-    column.append(&filters.row);
+    let scope = crate::reading::scope(ctx, super::Dest::Search, false);
+    column.append(&super::search_filters::with_scope(ctx, &filters.row, &scope));
     column.append(&filters.chips);
     let demo_line = widgets::haze(&t::search_demo_only(), "caption");
     demo_line.set_margin_start(18);
