@@ -70,6 +70,14 @@ const SHOTS: Record<string, Spec> = {
 	'tv-skip-found': { from: 'tv-found-review.png', widths: TV },
 	'android-party-chat': { from: 'phone-party-chatreact.png', widths: PHONE_WIDE },
 	'mac-devices': { from: 'mac-devices-sync-on.png', widths: MAC },
+	// Reading, from the reading scenes: the Mac's reading Home, the iPad's manga reader in landscape,
+	// the iPhone's long strip, series page and Send to e-reader sheet, and the e-ink tablet.
+	'mac-read-home': { from: 'mac-reading-home-read.png', widths: MAC },
+	'ipad-spread': { from: 'ipad-landscape-reader-manga-rtl.png', widths: TABLET },
+	'iphone-strip': { from: 'iphone-reader-strip.png', widths: PHONE },
+	'iphone-series': { from: 'iphone-reading-series-work-a-900301.png', widths: PHONE },
+	'iphone-send': { from: 'iphone-reading-series-work-a-900301-sheet-send.png', widths: PHONE },
+	'eink-home': { from: 'tablet-eink-grey.png', widths: [560, 1120] },
 };
 
 const dir = process.argv[2];

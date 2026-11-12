@@ -9,12 +9,34 @@ interface Props {
 	between: string[];
 	/** Boxes that stand side by side in the last place, as the plugin store's devices do. */
 	last?: { title: string; text: string }[];
+	/** Boxes stacked in the first place, as the places books come from, and the words after them. */
+	first?: { title: string; text: string }[];
+	firstBetween?: string;
 }
 
-const { label, steps, between, last } = Astro.props;
+const { label, steps, between, last, first, firstBetween } = Astro.props;
+const arrow = '<svg width="40" height="8" viewBox="0 0 40 8" shape-rendering="crispEdges"><path d="M0 3h36v2H0zM34 1h2v6h-2zM36 2h2v4h-2zM38 3h2v2h-2z" fill="currentColor"></path></svg>';
 ---
 
 <div class="flow" role="img" aria-label={label}>
+	{
+		first && (
+			<>
+				<div class="flow-stack">
+					{first.map((box) => (
+						<div class="flow-box">
+							<div class="flow-title">{box.title}</div>
+							<div class="flow-text">{box.text}</div>
+						</div>
+					))}
+				</div>
+				<div class="flow-link" aria-hidden="true">
+					<span>{firstBetween}</span>
+					<Fragment set:html={arrow} />
+				</div>
+			</>
+		)
+	}
 	{
 		steps.map((step, i) => (
 			<>

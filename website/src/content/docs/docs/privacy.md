@@ -13,7 +13,7 @@ terminal app. They all run the same engine, so unless a section names one of the
 every one.
 
 - There is no telemetry, analytics or crash reporting, in any app or on this website.
-- Your watch history is kept on your device. A tracker gets it only if you sign in to one.
+- Your watch and reading history is kept on your device. A tracker gets it only if you sign in to one.
 - Sources come only from plugins and services you add yourself.
 
 ## AniList, for browsing
@@ -132,6 +132,9 @@ and sends nothing until you sign in. In the terminal app, Kitsu is on by default
 | Kitsu | `kitsu.io` | Progress, list status and score |
 | Simkl | `api.simkl.com` | Watched episodes, list status and rating |
 | Trakt | `api.trakt.tv` | Watched episodes |
+| MangaUpdates | `api.mangaupdates.com` | Chapters read, list status and score |
+
+For books, AniList, MyAnimeList and Kitsu receive the chapters read, the list status and the score.
 
 An episode counts as watched once you pass 85% of it, and the tracker is told about a minute
 later. A status or score goes when you set it. Changes made offline wait in a queue on the device
@@ -142,7 +145,7 @@ prefers.
 Signing in uses the tracker's own page. On Apple devices that is the system's sign-in sheet in a
 private browser session, and on Android a browser tab. On Windows, AniList and MyAnimeList open
 in your browser and send the answer back to a port on `127.0.0.1`, which is your own computer.
-On Linux they open in your browser and send the answer back through an `kaeri://auth` link
+On Linux they open in your browser and send the answer back through a `kaeri://auth` link
 that the desktop hands to the app. Simkl and Trakt give a code that you type on their site. Kitsu has no sign-in page: your email or username and
 password go once to Kitsu, which answers with a token, and the password is not kept.
 
@@ -173,6 +176,27 @@ Accounts screen.
 
 Signing out on the Accounts screen deletes the token from the device. To withdraw a token
 everywhere, also remove Kaeri from the connected apps in the tracker's own settings.
+
+## Reading
+
+Reading browses AniList as shows do. Home, search and covers come from `graphql.anilist.co` and
+AniList's image server, and so does fixing the match of a series from a folder.
+
+To match a series across the trackers, the engine looks up its ids at `api.mangabaka.org`,
+`kitsu.app` and `api.mangaupdates.com`, where it can be a title search. It asks only while a
+tracker that needs the answer is signed in.
+
+A Komga or Kavita server you add receives Kaeri's requests for its series and pages, and your
+progress while **Send progress to the server** is on. An OPDS catalogue receives requests only. A
+book plugin reaches only the hosts it lists, and the app fetches its page images under the same
+rule.
+
+The [OPDS feed](/docs/reading/e-ink/#the-opds-feed) on a Mac or a Windows PC lets e-readers on your
+network that have its password read the books it shares. It answers no address outside your
+network.
+
+Your reading history, bookmarks and downloaded chapters stay on your device, like your watch
+history. Reading sends nothing to a Kaeri server.
 
 ## Plugins
 

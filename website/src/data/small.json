@@ -30,9 +30,18 @@
   ]
  },
  {
+  "id": "reading",
+  "items": [
+   "firstRun",
+   "newChapters",
+   "downloads",
+   "serverProgress",
+   "tapZones"
+  ]
+ },
+ {
   "id": "other",
   "items": [
-   "reading",
    "updates",
    "torrentsOnTheTv",
    "englishOrRomaji",

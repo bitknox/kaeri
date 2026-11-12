@@ -84,6 +84,128 @@
    ]
   },
   {
+   "id": "reading",
+   "rows": [
+    {
+     "id": "readingPlaces",
+     "cells": [
+      "y",
+      "y",
+      "y",
+      "y",
+      "n",
+      "y",
+      "y",
+      "homeAndSearch"
+     ]
+    },
+    {
+     "id": "pagedReaders",
+     "cells": [
+      "y",
+      "y",
+      "y",
+      "y",
+      "n",
+      "y",
+      "y",
+      "n"
+     ]
+    },
+    {
+     "id": "novelReader",
+     "cells": [
+      "y",
+      "y",
+      "y",
+      "y",
+      "n",
+      "y",
+      "y",
+      "n"
+     ]
+    },
+    {
+     "id": "paperMode",
+     "cells": [
+      "n",
+      "y",
+      "y",
+      "y",
+      "n",
+      "n",
+      "n",
+      "n"
+     ]
+    },
+    {
+     "id": "einkTablets",
+     "cells": [
+      "n",
+      "n",
+      "n",
+      "y",
+      "n",
+      "n",
+      "n",
+      "n"
+     ]
+    },
+    {
+     "id": "chapterDownloads",
+     "cells": [
+      "y",
+      "y",
+      "y",
+      "y",
+      "n",
+      "y",
+      "y",
+      "n"
+     ]
+    },
+    {
+     "id": "sendToEreader",
+     "cells": [
+      "y",
+      "y",
+      "y",
+      "y",
+      "n",
+      "y",
+      "y",
+      "n"
+     ]
+    },
+    {
+     "id": "opdsFeed",
+     "cells": [
+      "y",
+      "n",
+      "n",
+      "n",
+      "n",
+      "y",
+      "d",
+      "n"
+     ]
+    },
+    {
+     "id": "mangaUpdates",
+     "cells": [
+      "y",
+      "y",
+      "y",
+      "y",
+      "n",
+      "y",
+      "n",
+      "n"
+     ]
+    }
+   ]
+  },
+  {
    "id": "titlePagesAndContinue",
    "rows": [
     {

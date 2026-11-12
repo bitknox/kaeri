@@ -41,10 +41,10 @@ const bands = ['f1', 'f2', 'f3', 'f4'] as const;
 					<HeroVideo eager morph="shot-hero" alt={t('home.hero.macAlt')} />
 				</div>
 				<div class="dev-ipad bezel">
-					<Pic name="ipad-title" sizes="(min-width: 1280px) 420px, 34vw" alt={t('home.hero.ipadAlt')} />
+					<Pic name="ipad-spread" sizes="(min-width: 1280px) 420px, 34vw" alt={t('home.hero.ipadAlt')} />
 				</div>
 				<div class="dev-phone bezel">
-					<Pic name="iphone-title" sizes="(min-width: 1280px) 190px, 154px" alt={t('home.hero.phoneAlt')} />
+					<Pic name="iphone-strip" sizes="(min-width: 1280px) 190px, 154px" alt={t('home.hero.phoneAlt')} />
 				</div>
 			</div>
 			<figcaption>{t('home.hero.caption')}</figcaption>
@@ -58,25 +58,25 @@ const bands = ['f1', 'f2', 'f3', 'f4'] as const;
 				<p><span class="lead">{t('home.f1.lead')}</span> {t('home.f1.text')}</p>
 			</div>
 			<figure>
-				<div class="crop crop-a" style="aspect-ratio: 1200 / 540; view-transition-name: shot-continue">
-					<Pic name="mac-continue" sizes="min(1476px, 125vw)" style="left: -23%; top: -70%; width: 123%" alt={t('home.f1.alt')} />
+				<div class="crop crop-a" style="aspect-ratio: 1200 / 480; view-transition-name: shot-continue">
+					<Pic name="mac-continue" sizes="min(1476px, 125vw)" style="left: -23%; top: -92.3%; width: 123%" alt={t('home.f1.alt')} />
 				</div>
 				<figcaption>{t('home.f1.caption')}</figcaption>
 			</figure>
 		</div>
 	</section>
 
-	<section class="band" aria-labelledby="f2-h">
+	<section class="band" aria-labelledby="r1-h">
 		<div class="band-in band-rule band-rule-violet">
 			<div class="band-head">
-				<h2 id="f2-h">{t('home.f2.title')}</h2>
-				<p><span class="lead">{t('home.f2.lead')}</span> {t('home.f2.text')}</p>
+				<h2 id="r1-h">{t('home.r1.title')}</h2>
+				<p><span class="lead">{t('home.r1.lead')}</span> {t('home.r1.text')}</p>
 			</div>
 			<figure>
-				<div class="crop crop-b" style="aspect-ratio: 1200 / 620; view-transition-name: shot-title">
-					<Pic name="ipad-title" sizes="min(1404px, 117vw)" style="left: -17.4%; top: -8.9%; width: 117%" alt={t('home.f2.alt')} />
+				<div class="crop crop-a" style="aspect-ratio: 1200 / 400">
+					<Pic name="mac-read-home" sizes="min(1476px, 125vw)" style="left: -23%; top: -13%; width: 123%" alt={t('home.r1.alt')} />
 				</div>
-				<figcaption>{t('home.f2.caption')}</figcaption>
+				<figcaption>{t('home.r1.caption')}</figcaption>
 			</figure>
 		</div>
 	</section>
@@ -96,6 +96,46 @@ const bands = ['f1', 'f2', 'f3', 'f4'] as const;
 		</div>
 	</section>
 
+	<section class="band" aria-labelledby="r2-h">
+		<div class="band-in band-rule">
+			<div class="band-head">
+				<h2 id="r2-h">{t('home.r2.title')}</h2>
+				<p><span class="lead">{t('home.r2.lead')}</span> {t('home.r2.text')}</p>
+			</div>
+			<figure>
+				<div class="r-pair">
+					<div class="bezel r-ipad">
+						<Pic name="ipad-spread" sizes="(min-width: 1264px) 860px, 70vw" alt={t('home.r2.ipadAlt')} />
+					</div>
+					<div class="bezel r-phone">
+						<Pic name="iphone-strip" sizes="(min-width: 1264px) 280px, 26vw" alt={t('home.r2.phoneAlt')} />
+					</div>
+				</div>
+				<figcaption>{t('home.r2.caption')}</figcaption>
+			</figure>
+		</div>
+	</section>
+
+	<section class="band band-blue" aria-labelledby="r3-h">
+		<div class="band-in">
+			<div class="band-head">
+				<h2 id="r3-h">{t('home.r3.title')}</h2>
+				<p><span class="lead">{t('home.r3.lead')}</span> {t('home.r3.text')}</p>
+			</div>
+			<figure>
+				<div class="r-pair r-pair-eink">
+					<div class="r-eink">
+						<Pic name="eink-home" sizes="(min-width: 1264px) 560px, 50vw" alt={t('home.r3.einkAlt')} />
+					</div>
+					<div class="bezel r-phone">
+						<Pic name="iphone-send" sizes="(min-width: 1264px) 280px, 26vw" alt={t('home.r3.sendAlt')} />
+					</div>
+				</div>
+				<figcaption>{t('home.r3.caption')}</figcaption>
+			</figure>
+		</div>
+	</section>
+
 	<section class="band" aria-labelledby="f4-h">
 		<div class="band-in band-rule band-rule-sky">
 			<div class="band-head">
@@ -103,8 +143,8 @@ const bands = ['f1', 'f2', 'f3', 'f4'] as const;
 				<p><span class="lead">{t('home.f4.lead')}</span> {t('home.f4.text')}</p>
 			</div>
 			<figure>
-				<div class="crop crop-b" style="aspect-ratio: 1200 / 420; view-transition-name: shot-calendar">
-					<Pic name="mac-calendar" sizes="min(1464px, 122vw)" style="left: -21.9%; top: 0; width: 122%" alt={t('home.f4.alt')} />
+				<div class="crop crop-b" style="aspect-ratio: 1200 / 320; view-transition-name: shot-calendar">
+					<Pic name="mac-calendar" sizes="min(1464px, 122vw)" style="left: -21.9%; top: -14%; width: 122%" alt={t('home.f4.alt')} />
 				</div>
 				<figcaption>{t('home.f4.caption')}</figcaption>
 			</figure>

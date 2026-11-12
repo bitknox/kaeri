@@ -14,7 +14,7 @@ export default defineConfig({
 		starlight({
 			title: 'Kaeri',
 			description:
-				'An open-source anime client with native apps for Mac, iPhone, iPad, Android, Android TV, Windows and Linux, and a terminal app, for browsing, watching, tracking and syncing.',
+				'An open-source app for anime and manga, with native apps for Mac, iPhone, iPad, Android, Android TV, Windows and Linux, and a terminal app, for watching, reading, tracking and syncing.',
 			logo: { src: './src/assets/icon-32.svg', alt: '', replacesTitle: false },
 			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/bitknox/kaeri' }],
 			defaultLocale: 'root',
@@ -36,7 +36,7 @@ export default defineConfig({
 				{ tag: 'meta', attrs: { property: 'og:image:height', content: '630' } },
 				{ tag: 'meta', attrs: { name: 'twitter:card', content: 'summary_large_image' } },
 				{ tag: 'meta', attrs: { name: 'twitter:image', content: 'https://kaeri.app/og.png' } },
-				{ tag: 'meta', attrs: { property: 'og:image:alt', content: 'Kaeri, on every screen: the Mac app with the iPhone app in front of it' } },
+				{ tag: 'meta', attrs: { property: 'og:image:alt', content: "The Mac app's reading Home, with the iPhone app in front of it reading a manhwa as one long strip" } },
 				{ tag: 'meta', attrs: { name: 'theme-color', content: '#f0ede4' } },
 			],
 			sidebar: [
@@ -53,6 +53,11 @@ export default defineConfig({
 					entry('Torrents', 'torrents', 'docs/guides/torrents/'),
 					entry('Trackers and sync', 'trackers', 'docs/guides/trackers-sync/'),
 					entry('Troubleshooting', 'troubleshooting', 'docs/guides/troubleshooting/'),
+				]),
+				group('Reading', 'reading', [
+					entry('Adding books', 'addingBooks', 'docs/reading/adding-books/'),
+					entry('The readers', 'readers', 'docs/reading/readers/'),
+					entry('E-ink and e-readers', 'eink', 'docs/reading/e-ink/'),
 				]),
 				group('Plugins', 'plugins', [
 					entry('Plugin stores', 'stores', 'docs/plugins/stores/'),

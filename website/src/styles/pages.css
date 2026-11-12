@@ -548,3 +548,99 @@
 		padding-inline: 16px;
 	}
 }
+
+/* The readers on the landing and features pages: an iPad beside an iPhone, and an e-ink tablet in
+   its own grey case beside the iPhone. */
+:root {
+	--r-eink-frame: #d6d3cb;
+	--r-eink-edge: #bdb9b0;
+	--r-eink-screen: #f2f0ea;
+}
+
+:root[data-theme='dark'] {
+	--r-eink-frame: #2a2d3b;
+	--r-eink-edge: #434653;
+	--r-eink-screen: #e9e7e1;
+}
+
+.r-pair {
+	display: flex;
+	align-items: flex-end;
+	gap: 40px;
+}
+
+.r-pair .bezel {
+	position: static;
+}
+
+.r-ipad {
+	flex: 1 1 auto;
+	min-width: 0;
+	padding: 9px;
+	border-radius: 26px;
+}
+
+.r-ipad img {
+	border-radius: 17px;
+}
+
+.r-phone {
+	flex: 0 0 min(22%, 264px);
+	padding: 6px;
+	border-radius: 34px;
+}
+
+.r-phone img {
+	border-radius: 28px;
+}
+
+.r-pair-eink {
+	justify-content: center;
+	gap: 56px;
+}
+
+.r-eink {
+	flex: 0 1 560px;
+	min-width: 0;
+	padding: 22px 22px 40px;
+	border-radius: 22px;
+	background: var(--r-eink-frame);
+	border: 1px solid var(--r-eink-edge);
+}
+
+.r-eink img {
+	display: block;
+	width: 100%;
+	border-radius: 3px;
+	background: var(--r-eink-screen);
+}
+
+@media (max-width: 700px) {
+	.r-pair {
+		gap: 16px;
+	}
+
+	.r-phone {
+		flex-basis: 30%;
+		border-radius: 22px;
+		padding: 4px;
+	}
+
+	.r-phone img {
+		border-radius: 18px;
+	}
+
+	.r-ipad {
+		padding: 5px;
+		border-radius: 14px;
+	}
+
+	.r-ipad img {
+		border-radius: 10px;
+	}
+
+	.r-eink {
+		padding: 10px 10px 20px;
+		border-radius: 12px;
+	}
+}

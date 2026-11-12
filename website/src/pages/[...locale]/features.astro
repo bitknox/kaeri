@@ -8,7 +8,7 @@ import Pic from '../../components/Pic.astro';
 import matrix from '../../data/matrix.json';
 import small from '../../data/small.json';
 import Page from '../../layouts/Page.astro';
-import { CC, DEMO_PART_1, DEMO_PART_2, DOWNLOAD, INSTALL_GUIDE, STORES } from '../../data/site';
+import { ADDING_BOOKS, CC, DEMO_PART_1, DEMO_PART_2, DOWNLOAD, INSTALL_GUIDE, STORES } from '../../data/site';
 import { localePaths, useSite } from '../../i18n/site';
 
 export const getStaticPaths = localePaths;
@@ -48,10 +48,83 @@ const state = { y: 'available', d: 'development', n: 'none' } as const;
 				<div class="f-pair">
 					<Pic name="mac-search" sizes="(min-width: 1264px) 1008px, 90vw" alt={t('features.find.searchAlt')} class="f-win" />
 					<div class="bezel f-phone" style="view-transition-name: shot-calendar">
-						<Pic name="iphone-calendar" sizes="(min-width: 1264px) 264px, 22vw" alt={t('features.find.calendarAlt')} />
+						<Pic name="android-calendar" sizes="(min-width: 1264px) 264px, 22vw" alt={t('features.find.calendarAlt')} />
 					</div>
 				</div>
 				<figcaption>{t('features.find.caption')}</figcaption>
+			</figure>
+		</div>
+	</section>
+
+	<section class="band band-red" aria-labelledby="seasons-h">
+		<div class="band-in">
+			<div class="band-head">
+				<h2 id="seasons-h">{t('features.seasons.title')}</h2>
+				<p><span class="lead">{t('features.seasons.lead')}</span> {t('features.seasons.text')}</p>
+			</div>
+			<figure>
+				<div class="crop crop-b" style="aspect-ratio: 1200 / 620; view-transition-name: shot-title">
+					<Pic name="ipad-title" sizes="min(1404px, 117vw)" style="left: -17.4%; top: -8.9%; width: 117%" alt={t('features.seasons.alt')} />
+				</div>
+				<figcaption>{t('features.seasons.caption')}</figcaption>
+			</figure>
+		</div>
+	</section>
+
+	<section class="f-sect" id="reading" aria-labelledby="reading-h">
+		<div class="f-in">
+			<div class="band-head">
+				<h2 id="reading-h">{t('features.reading.title')}</h2>
+				<p><span class="lead">{t('features.reading.lead')}</span> {t('features.reading.text')}</p>
+			</div>
+			<figure class="f-fig">
+				<div class="f-pair">
+					<Pic name="mac-read-home" sizes="(min-width: 1264px) 1008px, 90vw" alt={t('features.reading.homeAlt')} class="f-win" />
+					<div class="bezel f-phone">
+						<Pic name="iphone-series" sizes="(min-width: 1264px) 264px, 22vw" alt={t('features.reading.seriesAlt')} />
+					</div>
+				</div>
+				<figcaption>{t('features.reading.caption')}</figcaption>
+			</figure>
+		</div>
+	</section>
+
+	<section class="band band-green" aria-labelledby="readers-h">
+		<div class="band-in">
+			<div class="band-head">
+				<h2 id="readers-h">{t('features.readers.title')}</h2>
+				<p><span class="lead">{t('features.readers.lead')}</span> {t('features.readers.text')}</p>
+			</div>
+			<figure>
+				<div class="r-pair">
+					<div class="bezel r-ipad">
+						<Pic name="ipad-spread" sizes="(min-width: 1264px) 860px, 70vw" alt={t('home.r2.ipadAlt')} />
+					</div>
+					<div class="bezel r-phone">
+						<Pic name="iphone-strip" sizes="(min-width: 1264px) 280px, 26vw" alt={t('home.r2.phoneAlt')} />
+					</div>
+				</div>
+				<figcaption>{t('features.readers.caption')}</figcaption>
+			</figure>
+		</div>
+	</section>
+
+	<section class="f-sect" aria-labelledby="eink-h">
+		<div class="f-in">
+			<div class="band-head">
+				<h2 id="eink-h">{t('features.eink.title')}</h2>
+				<p><span class="lead">{t('features.eink.lead')}</span> {t('features.eink.text')}</p>
+			</div>
+			<figure class="f-fig">
+				<div class="r-pair r-pair-eink">
+					<div class="r-eink">
+						<Pic name="eink-home" sizes="(min-width: 1264px) 560px, 50vw" alt={t('home.r3.einkAlt')} />
+					</div>
+					<div class="bezel r-phone">
+						<Pic name="iphone-send" sizes="(min-width: 1264px) 280px, 26vw" alt={t('home.r3.sendAlt')} />
+					</div>
+				</div>
+				<figcaption>{t('features.eink.caption')}</figcaption>
 			</figure>
 		</div>
 	</section>
@@ -150,6 +223,28 @@ const state = { y: 'available', d: 'development', n: 'none' } as const;
 			</figure>
 			<p class="more"><a class="k-arrow" href={href(STORES)}>
 				{t('features.plugins.link')}
+				<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+			</a></p>
+		</div>
+	</section>
+
+	<section class="band band-red" aria-labelledby="books-h">
+		<div class="band-in">
+			<div class="band-head">
+				<h2 id="books-h">{t('features.books.title')}</h2>
+				<p><span class="lead">{t('features.books.lead')}</span> {t('features.books.text')}</p>
+			</div>
+			<figure class="f-fig f-diagram">
+				<Flow
+					label={t('features.books.diagram')}
+					first={['folder', 'server', 'plugin'].map((id) => ({ title: t(`features.books.${id}`), text: t(`features.books.${id}Text`) }))}
+					firstBetween={t('features.books.passes')}
+					steps={[{ title: t('features.books.kaeri'), text: t('features.books.kaeriText') }]}
+					between={[]}
+				/>
+			</figure>
+			<p class="more"><a class="k-arrow" href={href(ADDING_BOOKS)}>
+				{t('features.books.link')}
 				<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
 			</a></p>
 		</div>

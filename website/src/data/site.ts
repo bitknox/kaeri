@@ -14,6 +14,7 @@ export const INSTALL_GUIDE = '/docs/getting-started/installation/';
 export const FEATURES = '/features/';
 export const DOWNLOAD = '/download/';
 export const STORES = '/docs/plugins/stores/';
+export const ADDING_BOOKS = '/docs/reading/adding-books/';
 export const PRIVACY = '/docs/privacy/';
 export const LEGAL = '/legal/';
 
