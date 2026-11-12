@@ -437,7 +437,7 @@ sealed class StripView : Grid
     {
         if (Current is not { } section || section.Parts.Count == 0 || section.Tops.Count != section.Parts.Count)
             return;
-        var at = Reader.StripRestore ?? Reader.View?.Start.Strip;
+        var at = Reader.StripStart;
         if (at is null)
         {
             going = null;

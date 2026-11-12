@@ -94,6 +94,16 @@ public sealed class ReaderSession
     public int? Ring { get; private set; }
     /// <summary>Where a strip is asked to scroll to once its images are in.</summary>
     public StripPos? StripRestore { get; private set; }
+    /// <summary>Where the strip opens: the place asked for, else the chapter's start.</summary>
+    public StripPos? StripStart => StripRestore ?? StripOf(View?.Start);
+
+    /// <summary>
+    /// A start's place in a strip. A page with none, as a place kept in paged mode, is the top of
+    /// that page's image: pages and a strip's images count the same way, one per image, so the
+    /// strip opens where the engine's "Resumed at" says.
+    /// </summary>
+    public static StripPos? StripOf(ReadPlace? start) =>
+        start?.Strip ?? (start is { Novel: null, Page: { } page } && page > 0 ? new StripPos(page, 0f) : null);
     /// <summary>The chapter the end page goes on to.</summary>
     public ChapterRow? EndNext => ReaderEnd.NextOf(End, View);
     /// <summary>
@@ -626,7 +636,7 @@ public sealed class ReaderSession
                 if (view.Settings is { } settings)
                     Settings = settings;
                 Ask(new ReaderCommand.LoadSettings(view.Medium, view.Work));
-                StripRestore = view.Mode == ReaderMode.Strip && !Flowing ? view.Start.Strip : null;
+                StripRestore = view.Mode == ReaderMode.Strip && !Flowing ? StripOf(view.Start) : null;
                 if (view.Mode != ReaderMode.Strip)
                     Flowing = false;
                 if (surface is { } now && sentSurface != now)

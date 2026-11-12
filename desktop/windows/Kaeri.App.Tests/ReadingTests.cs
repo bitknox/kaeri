@@ -413,6 +413,40 @@ public class ReadingTests
     }
 
     [Fact]
+    public async Task AStripOpensAtThePageKeptInPagedModeWhereItSaysItResumed()
+    {
+        using var scene = new Scene(new FfiScene.ReaderMangaRtl(), "cs-reader-strip-from-paged");
+        var reader = scene.Known.Reader;
+        var surface = new ReaderSurface(1280, 720, 1f, false, false, true);
+        scene.Do(() =>
+        {
+            reader.Open("a:900301");
+            reader.SurfaceChanged(surface);
+        });
+        var paged = await scene.Until(k => k.Reader.View is { Mode: ReaderMode.Paged } v && k.Reader.Leaves.Length > 0 ? v : null);
+        var page = paged.Start.Page ?? 0;
+        Assert.True(page > 0);
+        // The series goes to long strip, and the chapter opens again from its place kept in pages.
+        scene.Do(() => reader.ChooseMode(ReaderSession.ModeChoice.Strip));
+        scene.Do(reader.Close);
+        await scene.Until(k => k.Reader.SessionId == 0 ? k : null);
+        scene.Do(() =>
+        {
+            reader.SurfaceChanged(surface);
+            reader.Open("a:900301");
+        });
+        await scene.Until(k => k.Reader.View is { Mode: ReaderMode.Strip } v ? v : null);
+        var notice = await scene.Until(k => k.Reader.Notice);
+        scene.Do(() =>
+        {
+            // The strip scrolls to the top of the page's image, the one the notice names.
+            Assert.Equal(page, reader.StripStart?.Image);
+            Assert.Equal(0f, reader.StripStart?.Offset);
+            Assert.Equal(T.ReaderResumedImage(page + 1), notice.Text);
+        });
+    }
+
+    [Fact]
     public async Task AStripsFootUnderImagesStillComingIsNoEnd()
     {
         using var scene = new Scene(new FfiScene.ReaderStrip(), "cs-reader-strip-unloaded");
