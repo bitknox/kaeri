@@ -199,6 +199,8 @@ pub struct Reader {
     waiting: Cell<Option<Waiting>>,
     /// The last open asked for, to open again after a failure.
     asked_open: RefCell<Option<(WorkId, Option<ChapterId>)>>,
+    /// The surface the engine was last told about, in an open or on its own.
+    told: Cell<Option<ReaderSurface>>,
     /// The control that opened the reader, which has the keyboard back when it closes.
     opener: Rc<keys::Opener>,
     /// The toasts over the pages: a shown credit page's notice.
@@ -666,6 +668,7 @@ impl Reader {
                 wait_ticker: RefCell::default(),
                 waiting: Cell::new(None),
                 asked_open: RefCell::default(),
+                told: Cell::new(None),
                 opener: Rc::default(),
                 notices: crate::notices::Notices::new(&toasts),
                 toasts,
@@ -947,16 +950,30 @@ impl Reader {
         if matches!(command, ReaderCommand::OpenChapter { .. } | ReaderCommand::Close { .. }) {
             self.commit_keep();
         }
+        if let ReaderCommand::Open { surface, .. } | ReaderCommand::Surface { surface, .. } =
+            &command
+        {
+            self.told.set(Some(*surface));
+        }
         if let Some(hub) = self.hub() {
             hub.send(Command::Reader(command));
         }
     }
 
+    /// The screen the pages are prepared for. Before the reader's first layout it has no size
+    /// of its own, and it takes the size of the page it is about to cover.
     fn surface(&self) -> ReaderSurface {
-        let scale = self.widget.scale_factor().max(1);
         let dark = adw::StyleManager::default().is_dark();
-        let width_px = (self.widget.width().max(800) * scale) as u32;
-        let height_px = (self.widget.height().max(600) * scale) as u32;
+        let (size, scale) = match surface_size(self.widget.upcast_ref()) {
+            Some((width, height, scale)) => ((width, height), scale),
+            None => (
+                self.ctx.upgrade().map_or((1, 1), |ctx| ctx.window.default_size()),
+                self.widget.scale_factor(),
+            ),
+        };
+        let scale = scale.max(1);
+        let width_px = (size.0.max(1) * scale) as u32;
+        let height_px = (size.1.max(1) * scale) as u32;
         ReaderSurface {
             width_px,
             height_px,
@@ -964,6 +981,24 @@ impl Reader {
             eink: false,
             two_pages: width_px >= height_px * 13 / 10,
             dark,
+        }
+    }
+
+    /// The reader's own size, after its first layout or a resize that settled, goes to the
+    /// engine when it differs from the surface the engine last heard. An open prepared for the
+    /// page the reader covers has the same size, so nothing is laid out again.
+    fn surface_settled(&self) {
+        let session = self.state.borrow().session;
+        if session == 0
+            || !self.widget.is_mapped()
+            || self.widget.width() <= 0
+            || self.widget.height() <= 0
+        {
+            return;
+        }
+        let surface = self.surface();
+        if self.told.get() != Some(surface) {
+            self.send(ReaderCommand::Surface { session, surface });
         }
     }
 
@@ -1564,6 +1599,8 @@ impl Reader {
             state.index = 0;
             state.held_page = None;
         }
+        // The open went out before the reader's first layout; its own size may be known now.
+        self.surface_settled();
         self.forget_credits();
         self.demo_credit(view.demo_credit.as_ref());
         self.title.set_label(&view.title);
@@ -3434,18 +3471,18 @@ impl Reader {
                 if let Some(id) = pending.borrow_mut().take() {
                     id.remove();
                 }
+                // The first size is the reader's first layout, after an open that went out
+                // without one: the engine hears it at once if it differs.
+                if first && let Some(this) = this.upgrade() {
+                    this.surface_settled();
+                }
                 if !first {
                     let (this, done) = (this.clone(), Rc::clone(&pending));
                     let id =
                         glib::timeout_add_local_once(Duration::from_millis(250), move || {
                             done.borrow_mut().take();
-                            let Some(this) = this.upgrade() else { return };
-                            let session = this.state.borrow().session;
-                            if session != 0 && this.widget.is_mapped() {
-                                this.send(ReaderCommand::Surface {
-                                    session,
-                                    surface: this.surface(),
-                                });
+                            if let Some(this) = this.upgrade() {
+                                this.surface_settled();
                             }
                         });
                     *pending.borrow_mut() = Some(id);
@@ -3822,6 +3859,15 @@ fn strip_plate(picture: &gtk::Picture) -> Option<gtk::Widget> {
     picture.next_sibling()
 }
 
+/// A widget's size and scale while it is on screen, or else those of the nearest enclosing
+/// widget that is. The reader fills the page it covers, so before its first layout, and while
+/// it is hidden (its last size may be old), that page's size is the reader's.
+fn surface_size(widget: &gtk::Widget) -> Option<(i32, i32, i32)> {
+    std::iter::successors(Some(widget.clone()), gtk::Widget::parent)
+        .find(|w| w.is_mapped() && w.width() > 0 && w.height() > 0)
+        .map(|w| (w.width(), w.height(), w.scale_factor()))
+}
+
 /// The line under a plate's number: "Loading image 12", or that it failed.
 fn plate_line(words: &gtk::Widget) -> Option<gtk::Label> {
     words.first_child()?.next_sibling().and_downcast()
@@ -4163,7 +4209,7 @@ mod plate_tests {
     use super::{
         fill_strip_frame, load_texture, notice_lift, popover_middle, strip_frame,
         strip_frame_asked, strip_frame_failed, strip_frame_retried, strip_frame_seen,
-        strip_words_margins,
+        strip_words_margins, surface_size,
     };
     use crate::{
         gtk_test::{pump, run},
@@ -4238,6 +4284,38 @@ mod plate_tests {
             );
             std::fs::write(&raw, [0u8; 24]).expect("a whole raw page");
             assert!(load_texture(&page_file(&raw, rgba)).is_some());
+        });
+    }
+
+    /// The first open in a run goes out before the reader has been laid out. It is prepared
+    /// for the page the reader covers, which is the size the reader then gets, so a portrait
+    /// window is not laid out as a landscape one with two pages side by side.
+    #[test]
+    fn the_first_open_is_prepared_for_the_window_it_shows_in() {
+        run(|| {
+            assert_eq!(surface_size(gtk::Box::default().upcast_ref()), None);
+            let window = gtk::Window::builder().default_width(360).default_height(720).build();
+            let top = gtk::Stack::new();
+            top.set_hhomogeneous(false);
+            top.set_vhomogeneous(false);
+            let main = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            let reader = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            top.add_named(&main, Some("main"));
+            top.add_named(&reader, Some("reader"));
+            window.set_child(Some(&top));
+            window.present();
+            pump(300);
+            let (width, height, _) =
+                surface_size(reader.upcast_ref()).expect("a size before the reader's layout");
+            assert!(height > width, "a portrait window gives a portrait surface");
+            top.set_visible_child_name("reader");
+            pump(300);
+            assert_eq!(
+                (reader.width(), reader.height()),
+                (width, height),
+                "the reader's first layout has the size its open was prepared for"
+            );
+            window.destroy();
         });
     }
 
