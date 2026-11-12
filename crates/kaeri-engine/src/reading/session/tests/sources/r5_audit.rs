@@ -187,33 +187,45 @@ async fn a_chapter_of_no_pages_fails_at_once() {
     assert!(opened.is_some(), "neither opened nor failed in a minute");
 }
 
-/// Labels with no number, odd numbers and repeated ids: the reader opens and lists each id
-/// once.
+/// Labels with no number, odd numbers and repeated ids: the reader opens on each list, and
+/// lists each id once. Each odd entry gets a list of its own beside chapters 1 and 2, so a
+/// failure names the entry.
 #[tokio::test(start_paused = true)]
 async fn odd_labels_and_repeated_ids_open() {
-    let list = vec![
-        chapter("ch-x", ""),
-        chapter("ch-a", "Extra"),
-        chapter("ch-1", "1"),
-        chapter("ch-1", "1"),
-        chapter("ch-big", "99999999999999999999"),
-        chapter("ch-neg", "-1"),
-        chapter("ch-nan", "NaN"),
-        chapter("ch-r", "3-2"),
-        chapter("ch-d", "0.0001"),
-        chapter("ch-u", "第3話"),
+    let odd_ones = [
+        ("ch-x", ""),
+        ("ch-a", "Extra"),
+        ("ch-1", "1"),
+        ("ch-big", "99999999999999999999"),
+        ("ch-neg", "-1"),
+        ("ch-nan", "NaN"),
+        ("ch-r", "3-2"),
+        ("ch-d", "0.0001"),
+        ("ch-u", "\u{7B2C}3\u{8A71}"),
     ];
-    let mut h = odd(Odd::new(list));
-    h.failures = true;
-    h.open_odd(None, surface());
-    let opened = h.opened_or_failed(Duration::from_secs(60)).await;
-    let Some(Ok(_)) = opened else { panic!("did not open: {opened:?}") };
-    let ids = h.reader.session.as_ref().unwrap().chapters.iter().map(|c| c.id.to_string());
-    let ids: Vec<String> = ids.collect();
-    let mut unique = ids.clone();
-    unique.sort();
-    unique.dedup();
-    assert_eq!(unique.len(), ids.len(), "an id twice: {ids:?}");
+    let mut wrong = Vec::new();
+    for (id, label) in odd_ones {
+        let list = vec![chapter("ch-1", "1"), chapter("ch-2", "2"), chapter(id, label)];
+        let mut h = odd(Odd::new(list));
+        h.failures = true;
+        h.open_odd(None, surface());
+        match h.opened_or_failed(Duration::from_secs(60)).await {
+            Some(Ok(_)) => {
+                let s = h.reader.session.as_ref().unwrap();
+                let mut ids: Vec<String> =
+                    s.chapters.iter().map(|c| c.id.to_string()).collect();
+                let all = ids.len();
+                ids.sort();
+                ids.dedup();
+                if ids.len() != all {
+                    wrong.push(format!("{id} {label:?}: an id twice"));
+                }
+            }
+            Some(Err(f)) => wrong.push(format!("{id} {label:?}: failed {f:?}")),
+            None => wrong.push(format!("{id} {label:?}: neither opened nor failed")),
+        }
+    }
+    assert!(wrong.is_empty(), "{wrong:#?}");
 }
 
 /// Pages a source answers with something that is not a picture fail with their own retry, and
@@ -228,6 +240,9 @@ async fn pages_that_are_not_pictures_each_fail_once() {
     h.open_odd(Some("1"), surface());
     let opened = h.opened_or_failed(Duration::from_secs(30)).await;
     let Some(Ok(_)) = opened else { panic!("did not open: {opened:?}") };
+    let wait = Duration::from_secs(20);
+    timeout(wait, h.leaves_of("1")).await.expect("the chapter is laid out");
+    h.shown(0, TurnHow::Turn).await;
     let made = timeout(Duration::from_secs(60), h.pages_made(3)).await;
     let made = made.expect("a page never came nor failed");
     assert_eq!(made, [(0, true), (1, false), (2, false)]);
@@ -351,8 +366,10 @@ async fn damaged_pages_on_a_two_page_screen_get_finite_places() {
             _ => None,
         }),
     )
-    .await
-    .expect("no leaves");
+    .await;
+    let Ok(leaves) = leaves else {
+        panic!("no leaves; failures {:?}; seen {:?}", h.failed, h.seen);
+    };
     for leaf in &leaves {
         for part in &leaf.parts {
             let p = &part.place;

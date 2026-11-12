@@ -253,7 +253,9 @@ fn damaged_page_files_err_without_panicking() {
 #[test]
 fn every_panel_renders_odd_sizes() {
     let sizes = [(1, 1), (1, 3000), (3000, 1), (2, 2), (5, 3), (3, 5), (1201, 1000)];
-    let targets = [(1, 1), (2, 3), (1, 2000), (1860, 2480), (0, 0), (0, 10)];
+    // Send to e-reader keeps a screen between 100 and 8000 pixels a side (export/profiles.rs);
+    // the reader's own targets are its view's size, never 0.
+    let targets = [(1, 1), (2, 3), (1, 2000), (100, 100), (100, 8000), (1860, 2480)];
     for &(w, h) in &sizes {
         for format in [PixelFormat::Gray8, PixelFormat::Rgb8] {
             // The drawn test pages need room for their panels; small sizes are a flat fill.
