@@ -14,11 +14,8 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -48,7 +45,9 @@ import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.rotate
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -276,30 +275,53 @@ fun PageCanvas(page: PageBitmap, rotate: Boolean, modifier: Modifier = Modifier,
 fun BoxScope.PageWaiting(page: Int, long: Boolean) {
     val context = LocalContext.current
     Box(Modifier.fillMaxSize().background(ObiSilk.Raised)) {
-        PlateWords(Strings.readerPagePlate(context, page + 1), Strings.readerPageLoading(context, page + 1).takeIf { long })
+        PlateWords(Strings.readerPagePlate(context, page + 1), Strings.readerPageLoading(context, page + 1).takeIf { long }, Modifier.align(Alignment.Center))
     }
 }
 
 /**
- * The phone's plate for a strip image: "Image N", and from four seconds a line under it. An image
- * taller than the window centres its words in its first window-height, so they stay in view when the
- * image is reached from above or by a jump.
+ * The phone's plate for a strip image: "Image N", and from four seconds a line under it. The words
+ * sit in the middle of the part of the image on screen, so they stay in view however tall the image
+ * is and wherever the strip is scrolled to.
  */
 @Composable
 fun BoxScope.ImageWaiting(page: Int, long: Boolean) {
     val context = LocalContext.current
-    val window = LocalConfiguration.current.screenHeightDp.dp
-    Box(Modifier.fillMaxSize().background(ObiSilk.Raised)) {
-        Box(Modifier.align(Alignment.TopCenter).fillMaxWidth().heightIn(max = window).fillMaxHeight()) {
-            PlateWords(Strings.readerImagePlate(context, page + 1), Strings.readerImageLoading(context, page + 1).takeIf { long })
+    // The part of the plate on screen, in its own pixels, read only while placing the words.
+    var seen by remember { mutableStateOf<ClosedFloatingPointRange<Float>?>(null) }
+    Box(
+        Modifier.fillMaxSize().background(ObiSilk.Raised).onGloballyPositioned { at ->
+            // The part inside every parent, the strip's list among them, back in the plate's own
+            // pixels through any zoom.
+            val shown = at.boundsInWindow()
+            seen = if (shown.height > 0f) at.windowToLocal(shown.topLeft).y..at.windowToLocal(shown.bottomLeft).y else null
+        },
+    ) {
+        Layout(
+            content = { PlateWords(Strings.readerImagePlate(context, page + 1), Strings.readerImageLoading(context, page + 1).takeIf { long }) },
+            modifier = Modifier.fillMaxSize(),
+        ) { measurables, constraints ->
+            val words = measurables.single().measure(constraints.copy(minWidth = 0, minHeight = 0))
+            layout(constraints.maxWidth, constraints.maxHeight) {
+                words.place((constraints.maxWidth - words.width) / 2, stripWordsTop(constraints.maxHeight, seen, words.height))
+            }
         }
     }
 }
 
+/**
+ * Where a strip plate's words start: centred on the part of the plate on screen, [seen] in the
+ * plate's own pixels, and kept inside the plate. With none of it on screen they sit in its middle.
+ */
+internal fun stripWordsTop(plate: Int, seen: ClosedFloatingPointRange<Float>?, words: Int): Int {
+    val middle = if (seen == null || seen.isEmpty()) plate / 2f else (seen.start + seen.endInclusive) / 2f
+    return (middle - words / 2f).roundToInt().coerceIn(0, maxOf(0, plate - words))
+}
+
 /** A plate's number, and the loading line added under it, never in its place. */
 @Composable
-private fun BoxScope.PlateWords(number: String, line: String?) {
-    Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
+private fun PlateWords(number: String, line: String?, modifier: Modifier = Modifier) {
+    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Text(number, color = ObiSilk.Haze, fontSize = 15.sp)
         if (line != null) {
             Spacer(Modifier.height(6.dp))
