@@ -188,10 +188,7 @@ fn paragraph(chapter: usize, n: usize) -> String {
         "The workshop closed at six, but she stayed until the glass in the annealer had cooled.",
         "On the walk home she bought rice and eggs and forgot the milk again.",
     ];
-    (0..4)
-        .map(|k| LINES[(chapter * 3 + n * 4 + k) % LINES.len()])
-        .collect::<Vec<_>>()
-        .join(" ")
+    (0..4).map(|k| LINES[(chapter * 3 + n * 4 + k) % LINES.len()]).collect::<Vec<_>>().join(" ")
 }
 
 fn epub(path: &Path, chapter: usize, title: &str) {
