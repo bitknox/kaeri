@@ -627,7 +627,13 @@ async fn a_page_kept_at_the_start_comes_back_as_page_0_and_the_rest_move_one_on(
         })
         .await;
     assert_eq!(left.iter().map(|c| (c.page, c.at_end)).collect::<Vec<_>>(), vec![(4, true)]);
-    tokio::time::sleep(std::time::Duration::from_secs(5)).await;
-    let after = first(h.drain()).expect("page 0 sent again");
+    // Made again on the pages' own threads: waited for, not a paused clock's five seconds,
+    // which pass at once while those threads are still at work.
+    let after = h
+        .until(|e| match e {
+            ReaderEvent::PageReady { page: 0, file, .. } => Some(file.path.clone()),
+            _ => None,
+        })
+        .await;
     assert_ne!(after, before, "page 0 is another file now");
 }
