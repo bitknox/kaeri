@@ -25,6 +25,7 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.width
 import app.kaeri.design.ObiSilk
 import app.kaeri.engine.model.VolumeGroup
 import app.kaeri.reader.PageImages
