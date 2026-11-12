@@ -1150,6 +1150,7 @@ impl Reader {
                 }
             }
         }
+        self.place_plate_words();
     }
 
     /// The page plate of page 23, still loading, with its line.
