@@ -51,7 +51,7 @@ struct KaeriDev: App {
             } playerWindowItems: {
                 PictureInPictureMenuItem(model: delegate.player)
             }
-            ReaderMenu()
+            ReaderMenu(model: delegate.store.reader)
         }
     }
 }

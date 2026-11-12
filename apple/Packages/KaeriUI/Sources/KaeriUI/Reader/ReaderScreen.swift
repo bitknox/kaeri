@@ -19,6 +19,9 @@ public struct ReaderScreen: View {
     @AppStorage(ReaderDefaults.system) private var system = false
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.scenePhase) private var scenePhase
+    #if os(macOS)
+    @Environment(\.controlActiveState) private var activeState
+    #endif
     @Environment(Navigator.self) private var navigator: Navigator?
     @State private var spoken: Task<Void, Never>?
     @State private var groupHeight: CGFloat = 84
@@ -84,13 +87,17 @@ public struct ReaderScreen: View {
         .onContinuousHover { phase in
             if case .active = phase { pointerMoved() }
         }
-        .onExitCommand { escape() }
         // The Go menu carries the keys; the reader also takes them itself, for a key the menu
-        // has not bound.
+        // has not bound. Esc is the reader's own, on the view that holds the keys.
         .focusable()
         .focusEffectDisabled()
         .focused($holdsKeys)
+        .onExitCommand { escape() }
         .onKeyPress(phases: [.down, .repeat]) { press in
+            if press.key == .escape, press.phase == .down, press.modifiers.isEmpty {
+                escape()
+                return .handled
+            }
             guard model.sheet == nil, !model.askingPage,
                   let key = ReaderKeys.action(press.key, modifiers: press.modifiers, in: keyContext)
             else { return .ignored }
@@ -101,11 +108,15 @@ public struct ReaderScreen: View {
         .onChange(of: model.sheet == nil) { _, closed in if closed { holdsKeys = true } }
         .onChange(of: model.askingPage) { _, asking in if !asking { holdsKeys = true } }
         .onChange(of: scenePhase) { _, phase in if phase == .active { holdsKeys = true } }
+        // The Go menu acts on the reader while its window takes keys.
+        .onChange(of: activeState, initial: true) { _, state in model.inFront = state == .key }
+        #else
+        .onChange(of: scenePhase, initial: true) { _, phase in model.inFront = phase == .active }
         #endif
+        .onDisappear { model.inFront = false }
         .onChange(of: model.sheet) { _, sheet in if sheet != nil { model.chromeShown = true } }
         .onChange(of: model.held?.tick) { _, _ in heldShown = 1 }
         .onChange(of: model.held?.landed == true) { _, landed in if landed { letHeldGo() } }
-        .focusedSceneValue(\.readerActions, actions)
         #if os(iOS)
         .statusBarHidden(!model.chromeShown)
         .persistentSystemOverlays(model.chromeShown ? .automatic : .hidden)
@@ -215,24 +226,11 @@ public struct ReaderScreen: View {
         }
     }
 
-    /// Esc steps out: a sheet first, then Go to page, then the reader, back to where the book
-    /// was opened. Full screen is the window's, and stays.
-    private func escape() {
-        if model.sheet != nil { model.sheet = nil; return }
-        if model.askingPage { model.askingPage = false; return }
-        close()
-    }
     #else
     private func pointerMoved() {}
-
-    /// Esc steps out: a sheet first, then Go to page, then the chrome, then the reader.
-    private func escape() {
-        if model.sheet != nil { model.sheet = nil; return }
-        if model.askingPage { model.askingPage = false; return }
-        if model.chromeShown { model.chromeShown = false; return }
-        close()
-    }
     #endif
+
+    private func escape() { ReaderActions.escape(model, close: close) }
 
     /// The place as VoiceOver hears it, once a turn has settled.
     private var spokenPlace: String {
@@ -273,48 +271,9 @@ public struct ReaderScreen: View {
         onClose()
     }
 
-    var actions: ReaderActions {
-        ReaderActions(
-            rtl: rtl, keys: keyContext, canGoBack: model.backToPage != nil, backPage: model.backToPage,
-            turn: { forward, line in model.requestTurn(forward: forward, line: line) },
-            chapter: { next in
-                if let row = next ? model.view?.next : model.view?.previous { model.openChapter(row.id) }
-            },
-            back: { model.back() },
-            askPage: { model.chromeShown = true; model.askingPage = true },
-            edge: { first in edge(first: first) },
-            escape: { escape() },
-            showChapters: { model.sheet = .chapters },
-            showSettings: { model.sheet = .settings },
-            zoom: { step in zoom(step) })
-    }
+    var actions: ReaderActions { ReaderActions(model: model, close: close) }
 
-    var keyContext: ReaderKeyContext {
-        ReaderKeyContext(novel: model.novel != nil, mode: model.view?.mode, direction: model.view?.direction)
-    }
-
-    /// Home and End: the first page or image, or the last one before the end page.
-    private func edge(first: Bool) {
-        model.hideChrome()
-        if model.novel != nil || model.view?.mode == .strip {
-            model.requestJump(first ? 0 : max(model.position.count - 1, 0))
-            return
-        }
-        let last = model.leaves.lastIndex { !$0.endPage } ?? 0
-        model.requestJump(first ? 0 : last)
-    }
-
-    private func zoom(_ step: Int) {
-        if model.medium == .novel {
-            let now = model.amount(.textSize) ?? 1
-            let next = step == 0 ? 1 : min(3, max(0.5, now + Double(step) * 0.1))
-            model.set(.textSize, .amount(value: next))
-        } else if model.view?.mode == .strip {
-            let now = model.amount(.stripWidth) ?? 0.6
-            let next = step == 0 ? 0.6 : min(1, max(0.3, now + Double(step) * 0.1))
-            model.set(.stripWidth, .amount(value: next))
-        }
-    }
+    var keyContext: ReaderKeyContext { ReaderActions.keys(model) }
 }
 
 // MARK: Environment and menu actions
@@ -368,6 +327,69 @@ public struct ReaderActions {
 }
 
 extension ReaderActions {
+    /// The open reader's actions, for its keys and the Go menu.
+    @MainActor init(model: ReaderModel, close: @escaping () -> Void) {
+        self.init(
+            rtl: model.view?.direction == .rightToLeft, keys: Self.keys(model),
+            canGoBack: model.backToPage != nil, backPage: model.backToPage,
+            turn: { forward, line in model.requestTurn(forward: forward, line: line) },
+            chapter: { next in
+                if let row = next ? model.view?.next : model.view?.previous { model.openChapter(row.id) }
+            },
+            back: { model.back() },
+            askPage: { model.chromeShown = true; model.askingPage = true },
+            edge: { first in Self.edge(model, first: first) },
+            escape: { Self.escape(model, close: close) },
+            showChapters: { model.sheet = .chapters },
+            showSettings: { model.sheet = .settings },
+            zoom: { step in Self.zoom(model, step) })
+    }
+
+    @MainActor static func keys(_ model: ReaderModel) -> ReaderKeyContext {
+        ReaderKeyContext(novel: model.novel != nil, mode: model.view?.mode, direction: model.view?.direction)
+    }
+
+    #if os(macOS)
+    /// Esc steps out: a sheet first, then Go to page, then the reader, back to where the book
+    /// was opened. Full screen is the window's, and stays.
+    @MainActor static func escape(_ model: ReaderModel, close: () -> Void) {
+        if model.sheet != nil { model.sheet = nil; return }
+        if model.askingPage { model.askingPage = false; return }
+        close()
+    }
+    #else
+    /// Esc steps out: a sheet first, then Go to page, then the chrome, then the reader.
+    @MainActor static func escape(_ model: ReaderModel, close: () -> Void) {
+        if model.sheet != nil { model.sheet = nil; return }
+        if model.askingPage { model.askingPage = false; return }
+        if model.chromeShown { model.chromeShown = false; return }
+        close()
+    }
+    #endif
+
+    /// Home and End: the first page or image, or the last one before the end page.
+    @MainActor private static func edge(_ model: ReaderModel, first: Bool) {
+        model.hideChrome()
+        if model.novel != nil || model.view?.mode == .strip {
+            model.requestJump(first ? 0 : max(model.position.count - 1, 0))
+            return
+        }
+        let last = model.leaves.lastIndex { !$0.endPage } ?? 0
+        model.requestJump(first ? 0 : last)
+    }
+
+    @MainActor private static func zoom(_ model: ReaderModel, _ step: Int) {
+        if model.medium == .novel {
+            let now = model.amount(.textSize) ?? 1
+            let next = step == 0 ? 1 : min(3, max(0.5, now + Double(step) * 0.1))
+            model.set(.textSize, .amount(value: next))
+        } else if model.view?.mode == .strip {
+            let now = model.amount(.stripWidth) ?? 0.6
+            let next = step == 0 ? 0.6 : min(1, max(0.3, now + Double(step) * 0.1))
+            model.set(.stripWidth, .amount(value: next))
+        }
+    }
+
     /// Carry out what a key or its menu item asks.
     func perform(_ key: ReaderKey) {
         switch key {
@@ -376,17 +398,6 @@ extension ReaderActions {
         case .edge(let first): edge(first)
         case .chapter(let next): chapter(next)
         }
-    }
-}
-
-public struct ReaderActionsKey: FocusedValueKey {
-    public typealias Value = ReaderActions
-}
-
-extension FocusedValues {
-    public var readerActions: ReaderActions? {
-        get { self[ReaderActionsKey.self] }
-        set { self[ReaderActionsKey.self] = newValue }
     }
 }
 

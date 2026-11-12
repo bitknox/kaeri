@@ -145,51 +145,80 @@ private struct TrafficLights: NSViewRepresentable {
 
 /// The Go menu while a reader is in front. Every key of the reader is an item here.
 public struct ReaderMenu: Commands {
-    @FocusedValue(\.readerActions) private var reader
+    let model: ReaderModel
 
-    public init() {}
+    public init(model: ReaderModel) {
+        self.model = model
+    }
 
     public var body: some Commands {
         CommandMenu(L.readerMenuGo) {
-            if let reader {
-                // The same keys as ReaderKeys, which the reader also takes itself.
-                if let next = ReaderKeys.arrow(forward: true, in: reader.keys),
-                   let previous = ReaderKeys.arrow(forward: false, in: reader.keys) {
-                    Button(L.readerMenuNextPage) { reader.perform(.page(forward: true)) }.keyboardShortcut(next, modifiers: [])
-                    Button(L.readerMenuPreviousPage) { reader.perform(.page(forward: false)) }.keyboardShortcut(previous, modifiers: [])
-                }
-                Button(L.readerMenuNextPage) { reader.perform(.page(forward: true)) }.keyboardShortcut(.space, modifiers: [])
-                Button(L.readerMenuPreviousPage) { reader.perform(.page(forward: false)) }.keyboardShortcut(.space, modifiers: .shift)
-                Button(L.readerMenuNextPage) { reader.perform(.page(forward: true)) }.keyboardShortcut(.pageDown, modifiers: [])
-                Button(L.readerMenuPreviousPage) { reader.perform(.page(forward: false)) }.keyboardShortcut(.pageUp, modifiers: [])
-                Button(L.readerMenuNextPage) { reader.perform(.line(forward: true)) }.keyboardShortcut(.downArrow, modifiers: [])
-                Button(L.readerMenuPreviousPage) { reader.perform(.line(forward: false)) }.keyboardShortcut(.upArrow, modifiers: [])
-                Button(L.readerMenuFirstPage) { reader.perform(.edge(first: true)) }.keyboardShortcut(.home, modifiers: [])
-                Button(L.readerMenuLastPage) { reader.perform(.edge(first: false)) }.keyboardShortcut(.end, modifiers: [])
-                Divider()
-                Button(L.readerMenuNextChapter) { reader.perform(.chapter(next: true)) }.keyboardShortcut("]", modifiers: [])
-                Button(L.readerMenuPreviousChapter) { reader.perform(.chapter(next: false)) }.keyboardShortcut("[", modifiers: [])
-                Button(L.readerMenuGoToPage) { reader.askPage() }.keyboardShortcut("g", modifiers: [])
-                if let page = reader.backPage {
-                    Button(L.readerMenuBackToPage(page: page)) { reader.back() }.keyboardShortcut("[", modifiers: .command)
-                } else {
-                    Button(L.readerMenuBack) { reader.back() }.keyboardShortcut("[", modifiers: .command).disabled(true)
-                }
-                Divider()
-                Button(L.readerMenuChapters) { reader.showChapters() }.keyboardShortcut("l", modifiers: .command)
-                Button(L.readerMenuSettings) { reader.showSettings() }.keyboardShortcut("t", modifiers: .command)
-                Divider()
-                Button(L.readerMenuZoomIn) { reader.zoom(1) }.keyboardShortcut("+", modifiers: .command)
-                Button(L.readerMenuZoomOut) { reader.zoom(-1) }.keyboardShortcut("-", modifiers: .command)
-                Button(L.readerMenuZoomFit) { reader.zoom(0) }.keyboardShortcut("0", modifiers: .command)
-                #if os(iOS)
-                // The Mac's window takes Esc itself; on iPad it is an item of its own.
-                Divider()
-                Button(L.readerClose) { reader.escape() }.keyboardShortcut(.escape, modifiers: [])
-                #endif
-            } else {
-                Button(L.readerMenuNextPage) {}.disabled(true)
-            }
+            ReaderMenuItems(model: model)
         }
+    }
+}
+
+/// The Go menu's items, on the open reader's model. Dimmed when no reader is in front, and its
+/// keys with no modifier are bound only while the reader takes them: AppKit stops at the first
+/// menu item with a key, enabled or not, so a bound arrow or Space would take it from a sheet or
+/// the Go to page field.
+private struct ReaderMenuItems: View {
+    let model: ReaderModel
+
+    var body: some View {
+        let on = model.request != nil && model.inFront
+        let plain = on && model.sheet == nil && !model.askingPage
+        let reader = ReaderActions(model: model) { model.close() }
+        Group {
+            // The same keys as ReaderKeys, which the reader also takes itself.
+            if let next = ReaderKeys.arrow(forward: true, in: reader.keys),
+               let previous = ReaderKeys.arrow(forward: false, in: reader.keys) {
+                Button(L.readerMenuNextPage) { reader.perform(.page(forward: true)) }.plainKey(next, when: plain)
+                Button(L.readerMenuPreviousPage) { reader.perform(.page(forward: false)) }.plainKey(previous, when: plain)
+            }
+            Button(L.readerMenuNextPage) { reader.perform(.page(forward: true)) }.plainKey(.space, when: plain)
+            Button(L.readerMenuPreviousPage) { reader.perform(.page(forward: false)) }
+                .key(.space, .shift, when: plain)
+            Button(L.readerMenuNextPage) { reader.perform(.page(forward: true)) }.plainKey(.pageDown, when: plain)
+            Button(L.readerMenuPreviousPage) { reader.perform(.page(forward: false)) }.plainKey(.pageUp, when: plain)
+            Button(L.readerMenuNextPage) { reader.perform(.line(forward: true)) }.plainKey(.downArrow, when: plain)
+            Button(L.readerMenuPreviousPage) { reader.perform(.line(forward: false)) }.plainKey(.upArrow, when: plain)
+            Button(L.readerMenuFirstPage) { reader.perform(.edge(first: true)) }.plainKey(.home, when: plain)
+            Button(L.readerMenuLastPage) { reader.perform(.edge(first: false)) }.plainKey(.end, when: plain)
+            Divider()
+            Button(L.readerMenuNextChapter) { reader.perform(.chapter(next: true)) }.plainKey("]", when: plain)
+            Button(L.readerMenuPreviousChapter) { reader.perform(.chapter(next: false)) }.plainKey("[", when: plain)
+            Button(L.readerMenuGoToPage) { reader.askPage() }.plainKey("g", when: plain)
+            if let page = reader.backPage {
+                Button(L.readerMenuBackToPage(page: page)) { reader.back() }.key("[", .command, when: on)
+            } else {
+                Button(L.readerMenuBack) { reader.back() }.key("[", .command, when: on).disabled(true)
+            }
+            Divider()
+            Button(L.readerMenuChapters) { reader.showChapters() }.key("l", .command, when: on)
+            Button(L.readerMenuSettings) { reader.showSettings() }.key("t", .command, when: on)
+            Divider()
+            Button(L.readerMenuZoomIn) { reader.zoom(1) }.key("+", .command, when: on)
+            Button(L.readerMenuZoomOut) { reader.zoom(-1) }.key("-", .command, when: on)
+            Button(L.readerMenuZoomFit) { reader.zoom(0) }.key("0", .command, when: on)
+            #if os(iOS)
+            // The Mac's reader takes Esc itself; on iPad it is an item of its own.
+            Divider()
+            Button(L.readerClose) { reader.escape() }.plainKey(.escape, when: on)
+            #endif
+        }
+        .disabled(!on)
+    }
+}
+
+private extension View {
+    /// A key, bound only while `on`.
+    func key(_ key: KeyEquivalent, _ modifiers: EventModifiers, when on: Bool) -> some View {
+        keyboardShortcut(on ? KeyboardShortcut(key, modifiers: modifiers) : nil)
+    }
+
+    /// A key with no modifier, bound only while `on`.
+    func plainKey(_ key: KeyEquivalent, when on: Bool) -> some View {
+        self.key(key, [], when: on)
     }
 }
