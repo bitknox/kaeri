@@ -98,6 +98,14 @@ pub struct FolderReport {
     /// The files behind `unsupported` and `locked`, for Show files. At most 200.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub listed: Vec<String>,
+    /// The folder was already in Your sources when it was picked again. It was scanned again,
+    /// and it stays when the dialog closes: Cancel and Change never take it back out.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub already_added: bool,
+    /// The folder couldn't be read (gone, or no permission). It comes as `EmptyFolder`, so the
+    /// dialog leaves its scan even where this field isn't known.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub unreadable: bool,
 }
 
 impl FolderReport {

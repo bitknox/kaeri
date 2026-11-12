@@ -163,6 +163,26 @@ pub(crate) fn folder_report(folder: &Folder, scan: &Scan) -> FolderReport {
             .collect(),
         locked,
         listed: scan.unsupported_files.clone(),
+        already_added: false,
+        unreadable: false,
+    }
+}
+
+/// A folder that couldn't be read: said as an empty one, with `unreadable` set.
+pub(crate) fn unreadable_report(folder: &Folder) -> FolderReport {
+    FolderReport {
+        id: folder.id.clone(),
+        name: folder.name.clone().or_else(|| folder.path.clone()).unwrap_or_default(),
+        path: folder.path.clone(),
+        series: 0,
+        books: 0,
+        files: 0,
+        matched: 0,
+        unsupported: Vec::new(),
+        locked: Vec::new(),
+        listed: Vec::new(),
+        already_added: false,
+        unreadable: true,
     }
 }
 

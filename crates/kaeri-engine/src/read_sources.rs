@@ -618,9 +618,14 @@ impl BookSources {
     // -----------------------------------------------------------------------------------------
     // Folders
 
-    fn add_folder(&self, folder: &FolderRef, now: i64) -> Option<String> {
+    /// Add a picked folder, or take a folder already in Your sources as it is: its id, and
+    /// whether it was there already. A folder waiting out its removal's undo comes back as new,
+    /// since it had already left the list.
+    fn add_folder(&self, folder: &FolderRef, now: i64) -> Option<(String, bool)> {
         let basis = folder.path.as_deref().or(folder.tree_uri.as_deref())?;
         let id = short_id(basis);
+        let leaving = self.removed.read().unwrap_or_else(|e| e.into_inner()).contains(&id);
+        let before = self.store.book_folders().ok()?.into_iter().find(|f| f.id == id);
         let name = folder.name.clone().or_else(|| {
             folder.path.as_deref().and_then(|p| {
                 std::path::Path::new(p).file_name().map(|n| n.to_string_lossy().into_owned())
@@ -631,15 +636,15 @@ impl BookSources {
             id: id.clone(),
             path: folder.path.clone(),
             tree_uri: folder.tree_uri.clone(),
-            bookmark: folder.bookmark.clone(),
-            name,
-            added_at: now,
-            last_scan: None,
+            bookmark: folder.bookmark.clone().or_else(|| before.as_ref()?.bookmark.clone()),
+            name: name.or_else(|| before.as_ref()?.name.clone()),
+            added_at: before.as_ref().map_or(now, |f| f.added_at),
+            last_scan: before.as_ref().and_then(|f| f.last_scan),
             available: usable,
         };
         self.store.put_book_folder(&row).ok()?;
         self.removed.write().unwrap_or_else(|e| e.into_inner()).remove(&id);
-        Some(id)
+        Some((id, before.is_some() && !leaving))
     }
 
     /// Scan one folder on a blocking thread, telling `progress` what it has found.
@@ -874,12 +879,12 @@ pub fn command(
     match command {
         BookSourceCommand::Load => publish(),
         BookSourceCommand::AddFolder { folder } => {
-            let Some(id) = this.add_folder(&folder, now) else { return publish() };
+            let Some((id, already)) = this.add_folder(&folder, now) else { return publish() };
             publish();
-            rescan(this, Some(id), now, publish, tx, true);
+            rescan(this, Some(id), now, publish, tx, Some(already));
         }
         BookSourceCommand::Scan => {
-            rescan(this.clone(), None, now, publish.clone(), tx.clone(), false);
+            rescan(this.clone(), None, now, publish.clone(), tx.clone(), None);
             recheck(this, now, true, publish, tx);
         }
         BookSourceCommand::Recheck => recheck(this, now, true, publish, tx),
@@ -1061,7 +1066,9 @@ fn rescan(
     now: i64,
     publish: impl Fn() + Clone + Send + 'static,
     tx: Outbox,
-    report: bool,
+    // For a folder just picked, whether it was already a source: its report then comes in,
+    // and a folder that can't be read comes in as one, so the dialog never waits on it.
+    answer: Option<bool>,
 ) {
     tokio::spawn(async move {
         let folders: Vec<_> = this
@@ -1074,9 +1081,13 @@ fn rescan(
         let scanned = !folders.is_empty();
         for folder in folders {
             let tick = publish.clone();
+            let unreadable = answer.map(|_| added::unreadable_report(&folder));
             let found = this.scan_folder(folder, now, tick).await;
-            if let (true, Some(found)) = (report, found) {
-                let _ = tx.send(Event::CameIn(added::folder_came_in(found)));
+            if let Some(already) = answer
+                && let Some(mut report) = found.or(unreadable)
+            {
+                report.already_added = already;
+                let _ = tx.send(Event::CameIn(added::folder_came_in(report)));
             }
             publish();
         }
