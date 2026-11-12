@@ -356,7 +356,7 @@ private fun PaperResult(tile: WorkTile, joined: String?, hit: Boolean = false) {
             if (facts.isNotEmpty()) Text(facts, style = EinkType.Secondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (joined != null) Text(joined, style = EinkType.Label.copy(fontSize = EinkType.Secondary.fontSize))
         }
-        Text("›", style = EinkType.Button, modifier = Modifier.padding(start = 12.dp)) // i18n-skip
+        Icon(Icons.Chevron, contentDescription = null, tint = EinkColours.Ink, modifier = Modifier.padding(start = 12.dp).size(22.dp))
     }
 }
 
@@ -682,7 +682,7 @@ private fun WideResult(cell: WideCell, ruled: Boolean) {
             if (cell.facts.isNotEmpty()) Text(cell.facts, style = EinkType.Secondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(cell.from, style = EinkType.Secondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        Text("›", style = EinkType.Button, modifier = Modifier.padding(start = 12.dp)) // i18n-skip
+        Icon(Icons.Chevron, contentDescription = null, tint = EinkColours.Ink, modifier = Modifier.padding(start = 12.dp).size(22.dp))
     }
 }
 

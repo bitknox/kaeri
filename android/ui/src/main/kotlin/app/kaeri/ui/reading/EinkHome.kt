@@ -180,9 +180,9 @@ internal fun EinkHomeScreen(actions: AppActions) {
                 val came = cameOut(view.week)
                 val rows = view.rows.filter { it.tiles.isNotEmpty() }
                 val own = continuing.isNotEmpty() || came.isNotEmpty() || (tile != null && !demo.onlyBooks)
-                // A 10 inch panel upright has its own Home, as the large panel board draws it; the
-                // first run, the demo and large text keep the smaller panels' Home.
-                if (reader && own && !large && !demo.onlyBooks && largePanel(upright = true)) {
+                // A 10 inch panel has its own Home, as the large panel board draws it, widened when
+                // held on its side; the first run, the demo and large text keep the smaller panels' Home.
+                if (reader && own && !large && !demo.onlyBooks && largePanel()) {
                     LargeHome(tile?.takeIf { spot != null }, spot, continuing, came, rows, view.rows.any { it.pending }, actions)
                     return@PaperPage
                 }
@@ -223,15 +223,22 @@ internal fun EinkHomeScreen(actions: AppActions) {
 /** A panel this many dp across and wider is the 10.3 inch board's, as [Side] measures it. */
 private const val WIDE_PANEL_DP = 900
 
-/**
- * A 10 inch panel: 900 dp across and wider, where lists take two columns and more. [upright] also
- * asks for it held upright, for Home, which the board draws only so.
- */
+/** A 10 inch panel: 900 dp across and wider, where lists take two columns and more. */
 @Composable
-internal fun largePanel(upright: Boolean = false): Boolean {
-    val configuration = LocalConfiguration.current
-    return configuration.screenWidthDp >= WIDE_PANEL_DP && (!upright || configuration.screenHeightDp >= configuration.screenWidthDp)
-}
+internal fun largePanel(): Boolean = LocalConfiguration.current.screenWidthDp >= WIDE_PANEL_DP
+
+/** The least room New chapters takes on a 10 inch Home: its heading and one 64 dp row, with their gaps. */
+private val NewChaptersLeast = 140.dp
+
+/** New chapters beside the hero on a 10 inch panel held on its side: one list column. */
+private val NewChaptersBeside = 480.dp
+
+/** Whether the panel is held on its side, wider than it is tall. */
+@Composable
+private fun landscapePanel(): Boolean = LocalConfiguration.current.let { it.screenWidthDp > it.screenHeightDp }
+
+/** Continue's columns on a 10 inch panel held on its side, filling the wider page. */
+private const val LANDSCAPE_CONTINUE_COLUMNS = 5
 
 /** Between list columns on a large panel; each is at least [ListColumnLeast] wide. */
 private val ListGap = 40.dp
@@ -271,10 +278,35 @@ private fun LargeHome(
     actions: AppActions,
 ) {
     val context = LocalContext.current
+    val hero = tile != null && spot != null
+    // On its side the panel has room beside the hero: New chapters goes there, as many rows as
+    // the hero's height holds, so the page below keeps Continue and Browse.
+    val beside = hero && came.isNotEmpty() && landscapePanel()
     Column(Modifier.fillMaxSize()) {
-        if (tile != null && spot != null) LargeHero(tile, spot, actions)
+        if (tile != null && spot != null) {
+            if (beside) {
+                Row(Modifier.fillMaxWidth()) {
+                    Box(Modifier.weight(1f)) { LargeHero(tile, spot, actions) }
+                    LargeNewChapters(
+                        came,
+                        Modifier.padding(start = ListGap).width(NewChaptersBeside).height(LargeHeroCover * 1.5f),
+                        beside = true,
+                    )
+                }
+            } else {
+                LargeHero(tile, spot, actions)
+            }
+        }
         if (continuing.isNotEmpty()) LargeContinue(continuing)
-        if (came.isNotEmpty()) LargeNewChapters(came, Modifier.weight(1f)) else Spacer(Modifier.weight(1f))
+        // New chapters takes the room left, and gives way when that can't hold its heading and a
+        // row rather than show a clipped heading.
+        if (came.isNotEmpty() && !beside) {
+            BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+                if (maxHeight >= NewChaptersLeast) LargeNewChapters(came, Modifier.fillMaxSize())
+            }
+        } else {
+            Spacer(Modifier.weight(1f))
+        }
         when {
             rows.isNotEmpty() -> LargeBrowseChips(rows)
             pending -> PaperWaiting { Text(Strings.stateLoading(context), style = EinkType.Secondary, modifier = Modifier.padding(bottom = 24.dp)) }
@@ -335,50 +367,61 @@ private fun LargeHero(tile: WorkTile, spot: ReadSpotlight, actions: AppActions) 
     }
 }
 
-/** Continue on a 10 inch Home: a 140 dp cover centred in each of the grid's columns, with its title and place. */
+/**
+ * Continue on a 10 inch Home: 140 dp covers on the grid's columns, from margin to margin, with
+ * their title and place; five columns when the panel is held on its side.
+ */
 @Composable
 private fun LargeContinue(tiles: List<WorkTile>) {
     val context = LocalContext.current
     val navigator = LocalNavigator.current
     Spacer(Modifier.height(18.dp))
-    PaperHeading(Strings.homeReadContinue(context), Strings.einkHomeAll(context)) {
+    PaperHeading(Strings.homeReadContinue(context), Strings.einkHomeAll(context), flush = true) {
         ReadPlaces.showList(LibrarySegmentRead.READING)
         navigator.go(Destination.Library)
     }
     BoxWithConstraints(Modifier.fillMaxWidth().padding(top = 4.dp)) {
-        // The grid rule's columns: as many of at least 200 dp as the width holds.
-        val columns = paperGrid(maxWidth, 1000.dp, 0.dp, 0.dp).columns
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-            val shown = tiles.take(columns)
-            for (tile in shown) {
-                // Centred in its column, as the grid's covers are.
-                Box(Modifier.weight(1f), contentAlignment = Alignment.TopCenter) {
-                    Column(
-                        Modifier
-                            .width(LargeContinueCover)
-                            .einkClick { navigator.openSeries(tile.work, "eink-continue") }
-                            .semantics(mergeDescendants = true) {},
-                    ) {
-                        PaperCover(tile.cover, tile.title, LargeContinueCover, Modifier)
-                        Text(tile.title, style = EinkType.Label, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 8.dp))
-                        val line = tile.line(context)
-                        if (line.isNotEmpty()) Text(line, style = EinkType.Secondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    }
+        // The grid rule's columns upright: as many of at least 200 dp as the width holds.
+        val columns = if (landscapePanel()) {
+            LANDSCAPE_CONTINUE_COLUMNS
+        } else {
+            paperGrid(maxWidth, 1000.dp, 0.dp, 0.dp).columns
+        }
+        // The first cover on the start margin and the last on the end one, the gaps shared out
+        // between; with fewer series the tiles keep their places from the start.
+        val gap = (maxWidth - LargeContinueCover * columns) / (columns - 1).coerceAtLeast(1)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(gap)) {
+            for (tile in tiles.take(columns)) {
+                Column(
+                    Modifier
+                        .width(LargeContinueCover)
+                        .einkClick { navigator.openSeries(tile.work, "eink-continue") }
+                        .semantics(mergeDescendants = true) {},
+                ) {
+                    PaperCover(tile.cover, tile.title, LargeContinueCover, Modifier)
+                    Text(tile.title, style = EinkType.Label, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 8.dp))
+                    val line = tile.line(context)
+                    if (line.isNotEmpty()) Text(line, style = EinkType.Secondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
-            repeat(columns - shown.size) { Spacer(Modifier.weight(1f)) }
         }
     }
 }
 
-/** New chapters on a 10 inch Home: rows down the first column, then the second, as many as the room holds. */
+/**
+ * New chapters on a 10 inch Home: rows down the first column, then the second, as many as the room
+ * holds; [beside] the hero on a panel held on its side, one column as tall as the hero.
+ */
 @Composable
-private fun LargeNewChapters(came: List<CameOut>, modifier: Modifier) {
+private fun LargeNewChapters(came: List<CameOut>, modifier: Modifier, beside: Boolean = false) {
     val context = LocalContext.current
     val navigator = LocalNavigator.current
-    Column(modifier.fillMaxWidth()) {
-        Spacer(Modifier.height(18.dp))
-        PaperHeading(Strings.einkHomeNewChapters(context), Strings.einkHomeAllNewChapters(context), flush = true) { navigator.go(Destination.Updates) }
+    Column(if (beside) modifier else modifier.fillMaxWidth()) {
+        // Beside the hero the heading shares the baseline of the hero's "Continue reading".
+        if (!beside) Spacer(Modifier.height(18.dp))
+        PaperHeading(Strings.einkHomeNewChapters(context), Strings.einkHomeAllNewChapters(context), flush = true, top = if (beside) 3.dp else 10.dp) {
+            navigator.go(Destination.Updates)
+        }
         PagedColumns(came, page = 0, onPage = {}, modifier = Modifier.weight(1f).padding(top = 4.dp, bottom = 12.dp), paged = false) { (day, entry), first ->
             val tile = entry.tile
             val line = cameWords(context, day, entry)
@@ -675,10 +718,11 @@ private fun PaperDemoLine() {
 
 /** A heading on paper with an underlined link at its end, its words on the margin when [flush]. */
 @Composable
-private fun PaperHeading(title: String, link: String?, flush: Boolean = false, onLink: () -> Unit) {
-    Row(Modifier.fillMaxWidth().padding(top = 10.dp).height(HeadingHeight), verticalAlignment = Alignment.CenterVertically) {
+private fun PaperHeading(title: String, link: String?, flush: Boolean = false, top: Dp = 10.dp, onLink: () -> Unit) {
+    Row(Modifier.fillMaxWidth().padding(top = top).height(HeadingHeight), verticalAlignment = Alignment.CenterVertically) {
         Text(title, style = EinkType.RowTitle, modifier = Modifier.weight(1f).semantics { heading() })
-        if (link != null) EinkTextButton(link, onLink, Modifier.overhang().then(if (flush) FlushEnd else Modifier), underline = true)
+        // The link's words keep to the end, so a short one grows its target to the left.
+        if (link != null) EinkTextButton(link, onLink, Modifier.overhang().then(if (flush) FlushEnd else Modifier), underline = true, align = Alignment.CenterEnd)
     }
 }
 
@@ -700,7 +744,7 @@ private fun Modifier.overhang(): Modifier = layout { measurable, constraints ->
 private fun PaperContinue(tiles: List<WorkTile>, reader: Boolean) {
     val context = LocalContext.current
     val navigator = LocalNavigator.current
-    PaperHeading(Strings.homeReadContinue(context), Strings.einkHomeAll(context)) {
+    PaperHeading(Strings.homeReadContinue(context), Strings.einkHomeAll(context), flush = true) {
         ReadPlaces.showList(LibrarySegmentRead.READING)
         navigator.go(Destination.Library)
     }
@@ -1176,7 +1220,7 @@ private fun QueueRow(row: BookDownloadRow, first: Boolean) {
             modifier = Modifier.padding(start = 16.dp),
         )
         if (state is ChapterDownloadState.Failed) {
-            EinkTextButton(stringResource(R.string.chapter_retry), { store.reading.download(row.work, DownloadPick.Chapters(listOf(row.chapter.id))) }, FlushEnd)
+            EinkTextButton(stringResource(R.string.chapter_retry), { store.reading.download(row.work, DownloadPick.Chapters(listOf(row.chapter.id))) }, FlushEnd, underline = true)
         }
     }
 }

@@ -18540,6 +18540,11 @@ pub fn settings_adult_detail(tracker: &str) -> String {
     text("settings-adult-detail", &[("tracker", Arg::Text(tracker))])
 }
 
+/// Line under it when the app is for reading alone.
+pub fn settings_adult_detail_read(tracker: &str) -> String {
+    text("settings-adult-detail-read", &[("tracker", Arg::Text(tracker))])
+}
+
 /// Row: quality.
 pub fn settings_quality() -> String {
     text("settings-quality", &[])
@@ -22250,6 +22255,10 @@ pub fn device_kind_tablet() -> String {
 
 pub fn device_kind_tv() -> String {
     text("device-kind-tv", &[])
+}
+
+pub fn device_kind_other() -> String {
+    text("device-kind-other", &[])
 }
 
 /// TV welcome, text button.

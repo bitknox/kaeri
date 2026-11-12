@@ -8498,6 +8498,9 @@ public static partial class T
     /// <summary>Line under it. The tracker is a name.</summary>
     public static string SettingsAdultDetail(string tracker) => Fill(Get("SettingsAdultDetail"), ("tracker", tracker));
 
+    /// <summary>Line under it when the app is for reading alone.</summary>
+    public static string SettingsAdultDetailRead(string tracker) => Fill(Get("SettingsAdultDetailRead"), ("tracker", tracker));
+
     /// <summary>Row: quality.</summary>
     public static string SettingsQuality => Get("SettingsQuality");
 
@@ -10721,6 +10724,8 @@ public static partial class T
     public static string DeviceKindTablet => Get("DeviceKindTablet");
 
     public static string DeviceKindTv => Get("DeviceKindTv");
+
+    public static string DeviceKindOther => Get("DeviceKindOther");
 
     /// <summary>TV welcome, text button.</summary>
     public static string FirstSetupPhone => Get("FirstSetupPhone");
@@ -14900,6 +14905,7 @@ public static partial class T
         ["SettingsTitleNative"] = "Native",
         ["SettingsAdult"] = "Show adult titles",
         ["SettingsAdultDetail"] = "Titles {tracker} marks adult, in Search and Seasonal",
+        ["SettingsAdultDetailRead"] = "Titles {tracker} marks adult, in Search and Browse",
         ["SettingsQuality"] = "Quality",
         ["SettingsAutoPlay"] = "Auto-play next",
         ["SettingsUpNextCountdown"] = "Up next countdown",
@@ -15670,6 +15676,7 @@ public static partial class T
         ["DeviceKindPhone"] = "phone",
         ["DeviceKindTablet"] = "tablet",
         ["DeviceKindTv"] = "TV",
+        ["DeviceKindOther"] = "device",
         ["FirstSetupPhone"] = "Set up from your phone",
         ["DevicesOtherDevice"] = "the other device",
         ["CloudSheetLine"] = "{service}’s page is open. Allow access there, and Kaeri carries on by itself.",

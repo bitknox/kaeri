@@ -61,6 +61,8 @@ import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.text
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -530,7 +532,7 @@ private fun ChaptersNote(title: String, line: String, action: String, onAction: 
     }
 }
 
-/** A chapter row's height at the text size in use: one 17 sp line and 22 dp, 44 at the least. */
+/** A chapter row's height at the text size in use: one 17 sp line and 22 dp, 48 at the least. */
 @Composable
 private fun chapterRowHeight(): Dp {
     val measurer = rememberTextMeasurer()
@@ -625,7 +627,9 @@ private fun ChapterLine(
     val weight = if (current) FontWeight.Bold else FontWeight.Medium
     val name = SeriesWords.name(context, row)
     val number = row.number?.takeIf { it.isNotBlank() }
-    val title = SeriesWords.title(row, name) ?: name
+    // A chapter with no title of its own leaves the cell empty under its number, rather than say
+    // the number twice; a row without a number names the chapter there instead.
+    val title = SeriesWords.title(row, name) ?: name.takeIf { number == null }
     val state = chapterState(context, row)
     val ticked = chosen?.contains(row.id)
     val actions = listOf(
@@ -664,8 +668,14 @@ private fun ChapterLine(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val text = EinkType.Body.copy(color = ink, fontWeight = weight)
-        Text(number.orEmpty(), style = text.copy(fontFeatureSettings = "tnum"), maxLines = 1, modifier = Modifier.width(ChapterNumber))
-        Text(title, style = text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).padding(start = 12.dp))
+        Text(
+            number.orEmpty(),
+            style = text.copy(fontFeatureSettings = "tnum"),
+            maxLines = 1,
+            // Read out as the chapter's name when the number stands alone.
+            modifier = Modifier.width(ChapterNumber).then(if (title == null) Modifier.clearAndSetSemantics { this.text = AnnotatedString(name) } else Modifier),
+        )
+        Text(title.orEmpty(), style = text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).padding(start = 12.dp))
         when {
             ticked != null -> ChooseBox(ticked, Modifier.padding(start = 12.dp))
             state != null -> Row(Modifier.padding(start = 12.dp), verticalAlignment = Alignment.CenterVertically) {

@@ -11824,6 +11824,10 @@
     <value>Titles {tracker} marks adult, in Search and Seasonal</value>
     <comment>Line under it. The tracker is a name.</comment>
   </data>
+  <data name="SettingsAdultDetailRead" xml:space="preserve">
+    <value>Titles {tracker} marks adult, in Search and Browse</value>
+    <comment>Line under it when the app is for reading alone.</comment>
+  </data>
   <data name="SettingsQuality" xml:space="preserve">
     <value>Quality</value>
     <comment>Row: quality.</comment>
@@ -14895,6 +14899,9 @@
   </data>
   <data name="DeviceKindTv" xml:space="preserve">
     <value>TV</value>
+  </data>
+  <data name="DeviceKindOther" xml:space="preserve">
+    <value>device</value>
   </data>
   <data name="FirstSetupPhone" xml:space="preserve">
     <value>Set up from your phone</value>

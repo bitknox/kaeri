@@ -110,6 +110,10 @@ settings-adult = Show adult titles
 # @arg tracker: text
 settings-adult-detail = Titles { $tracker } marks adult, in Search and Seasonal
 
+# Line under it when the app is for reading alone.
+# @arg tracker: text
+settings-adult-detail-read = Titles { $tracker } marks adult, in Search and Browse
+
 # Row: quality.
 settings-quality = Quality
 

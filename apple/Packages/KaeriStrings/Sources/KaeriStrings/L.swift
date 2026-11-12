@@ -11387,6 +11387,11 @@ public enum L {
         Self.format("settings-adult-detail", fallback: "Titles %1$@ marks adult, in Search and Seasonal", tracker)
     }
 
+    /// Line under it when the app is for reading alone.
+    public static func settingsAdultDetailRead(tracker: String) -> String {
+        Self.format("settings-adult-detail-read", fallback: "Titles %1$@ marks adult, in Search and Browse", tracker)
+    }
+
     /// Row: quality.
     public static var settingsQuality: String { string("settings-quality", fallback: "Quality") }
 
@@ -13970,6 +13975,8 @@ public enum L {
     public static var deviceKindTablet: String { string("device-kind-tablet", fallback: "tablet") }
 
     public static var deviceKindTv: String { string("device-kind-tv", fallback: "TV") }
+
+    public static var deviceKindOther: String { string("device-kind-other", fallback: "device") }
 
     /// TV welcome, text button.
     public static var firstSetupPhone: String { string("first-setup-phone", fallback: "Set up from your phone") }

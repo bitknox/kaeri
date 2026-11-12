@@ -1,5 +1,7 @@
 package app.kaeri.ui
 
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import app.kaeri.eink.EinkLook
@@ -62,7 +64,12 @@ class EinkLargeSeriesSearchShots : ReadingShotHarness() {
     @Test @Config(qualifiers = EREADER_10) fun series_100() = series("series-100")
 
     // A long series, to see a page of chapters full: 41 of them at 0.85 and 1.0.
-    @Test @Config(qualifiers = EREADER_10, fontScale = AIR_SCALE) fun series_long_085() = series("series-long-085", chapters = 41)
+    @Test @Config(qualifiers = EREADER_10, fontScale = AIR_SCALE) fun series_long_085() = series("series-long-085", chapters = 41) {
+        // A chapter with no title shows its number once, and is read out by its name.
+        compose.onAllNodesWithText("Chapter 40", useUnmergedTree = true).assertCountEquals(1) // i18n-skip
+        compose.onAllNodesWithText("40", useUnmergedTree = true).assertCountEquals(0) // i18n-skip
+        compose.onAllNodesWithText("39", useUnmergedTree = true).assertCountEquals(1) // i18n-skip
+    }
     @Test @Config(qualifiers = EREADER_10) fun series_long_100() = series("series-long-100", chapters = 41)
 
     /** The top line says where Back goes in words, the tab under the page, and the menu stays. */

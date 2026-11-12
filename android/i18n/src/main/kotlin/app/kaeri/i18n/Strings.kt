@@ -12764,6 +12764,10 @@ object Strings {
     fun settingsAdultDetail(context: Context, tracker: String): String =
         context.getString(R.string.settings_adult_detail, tracker)
 
+    /** Line under it when the app is for reading alone. */
+    fun settingsAdultDetailRead(context: Context, tracker: String): String =
+        context.getString(R.string.settings_adult_detail_read, tracker)
+
     /** Row: quality. */
     fun settingsQuality(context: Context): String =
         context.getString(R.string.settings_quality)
@@ -15739,6 +15743,9 @@ object Strings {
 
     fun deviceKindTv(context: Context): String =
         context.getString(R.string.device_kind_tv)
+
+    fun deviceKindOther(context: Context): String =
+        context.getString(R.string.device_kind_other)
 
     /** TV welcome, text button. */
     fun firstSetupPhone(context: Context): String =

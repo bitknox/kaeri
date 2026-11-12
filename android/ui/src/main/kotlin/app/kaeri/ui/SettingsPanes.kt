@@ -282,7 +282,7 @@ internal fun GeneralPane() {
             title = stringResource(R.string.settings_group_titles),
             rows = listOf(
                 { place -> TitleLanguageRow(place) },
-                { place -> SettingSwitch(place, SettingKey.ADULT_TITLES, stringResource(R.string.settings_adult), note = stringResource(R.string.settings_adult_detail, "AniList")) },
+                { place -> SettingSwitch(place, SettingKey.ADULT_TITLES, stringResource(R.string.settings_adult), note = stringResource(if (answer == app.kaeri.engine.model.KaeriIsFor.READ) R.string.settings_adult_detail_read else R.string.settings_adult_detail, "AniList")) },
             ),
         )
     }

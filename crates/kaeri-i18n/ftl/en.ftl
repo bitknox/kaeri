@@ -11671,6 +11671,9 @@ settings-adult = Show adult titles
 # Line under it. The tracker is a name.
 settings-adult-detail = Titles { $tracker } marks adult, in Search and Seasonal
 
+# Line under it when the app is for reading alone.
+settings-adult-detail-read = Titles { $tracker } marks adult, in Search and Browse
+
 # Row: quality.
 settings-quality = Quality
 
@@ -13998,6 +14001,8 @@ device-kind-phone = phone
 device-kind-tablet = tablet
 
 device-kind-tv = TV
+
+device-kind-other = device
 
 # TV welcome, text button.
 first-setup-phone = Set up from your phone

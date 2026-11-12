@@ -421,6 +421,8 @@ private fun AppRootFrame(
     val einkReader = eink && einkReaderShape()
     val mediumView by store.medium.view.collectAsStateWithLifecycle()
     val answer = mediumView?.answer ?: KaeriIsFor.WATCH
+    // Settings on a 10 inch e-reader keeps the bar, with More marked.
+    val settingsTab = if (eink && fullWindow) einkSettingsTab(answer, einkReader, app.kaeri.ui.reading.largePanel()) else null
 
     CompositionLocalProvider(
         LocalAppStore provides store,
@@ -524,9 +526,9 @@ private fun AppRootFrame(
                     if (!onPlayer) CastNowPlayingBar()
                     // Watch together's bar, above the navigation bar while a party is on.
                     if (!onPlayer) PartyBar(hidden = entry?.destination?.route == LOBBY_ROUTE)
-                    if (!wide && !onPage && !onPlayer && !sheets.barHidden) {
+                    if (!wide && (!onPage || settingsTab != null) && !onPlayer && !sheets.barHidden) {
                         // On an e-ink panel the bar is words on paper, as the e-ink boards draw it.
-                        if (eink) EinkTabBar(current ?: start, answer, einkReader, navigator::go) else PhoneBar(current ?: start, answer, navigator::go)
+                        if (eink) EinkTabBar(settingsTab ?: current ?: start, answer, einkReader, navigator::go) else PhoneBar(current ?: start, answer, navigator::go)
                     }
                 }
             },

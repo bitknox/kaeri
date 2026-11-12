@@ -1,5 +1,6 @@
 // A long series, staged for shots on the fixtures engine: every chapter list from now on holds
-// [count] chapters made from its first, so a page of chapters can be seen full. Titles are made up.
+// [count] chapters made from its first, so a page of chapters can be seen full. Titles are made up,
+// and every fifth chapter has none.
 
 package app.kaeri.store
 
@@ -19,7 +20,8 @@ object LongChaptersStage {
                 id = "${template.id}-long-$n",
                 label = "Chapter $n", // i18n-skip
                 number = "$n",
-                title = TITLES[(n - 1) % TITLES.size],
+                // Every fifth chapter has no title of its own, as many sources leave it.
+                title = if (n % 5 == 0) null else TITLES[(n - 1) % TITLES.size],
                 newChapter = false,
             )
         }

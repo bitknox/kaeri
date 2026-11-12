@@ -1,5 +1,12 @@
 package app.kaeri.ui
 
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import app.kaeri.eink.EinkLook
 import app.kaeri.engine.model.Event
 import app.kaeri.engine.model.KaeriIsFor
@@ -10,6 +17,7 @@ import app.kaeri.engine.model.ReadWeekEntry
 import app.kaeri.engine.model.ReadingEvent
 import app.kaeri.store.AppStore
 import app.kaeri.store.FixtureScene
+import kotlin.math.abs
 import org.junit.Test
 import org.robolectric.annotation.Config
 
@@ -30,11 +38,40 @@ class EinkLargeHomeShots : ReadingShotHarness() {
     )
 
     /** Home with Continue and New chapters filled from the discovery rows' series. */
-    private fun fullHome(name: String) = shoot(
+    private fun fullHome(name: String, after: (() -> Unit)? = null) = shoot(
         name, FixtureScene.READING_HOME, Destination.Home, medium = KaeriIsFor.READ, eink = EinkLook(),
         then = { store -> fill(store) },
+        after = after,
         ready = { homeRows(it) && (it.reading.home.value?.continueReading?.size ?: 0) >= 1 },
     )
+
+    /**
+     * On its side the large Home is widened, with Continue reaching a fifth series and New
+     * chapters beside the hero: right of 800 dp and above Continue, its heading on the hero's
+     * "Continue reading" line, its link kept.
+     */
+    private fun landHome(name: String) = fullHome(name) {
+        compose.onNodeWithText(CONTINUE_TITLES.last()).assertExists()
+        val continueTop = compose.onNodeWithText("Continue").getBoundsInRoot().top // i18n-skip
+        val link = compose.onNodeWithText("All new chapters").getBoundsInRoot() // i18n-skip
+        check(link.left >= 800.dp && link.bottom <= continueTop) { "All new chapters is not beside the hero" } // i18n-skip
+        // The Quiet Forge, a made-up title the hero doesn't share; placed where the list is.
+        val rows = compose.onAllNodesWithText(NEW_TITLES.first(), substring = true).fetchSemanticsNodes().map { node ->
+            with(compose.density) { node.boundsInRoot.left.toDp() to node.boundsInRoot.bottom.toDp() }
+        }
+        check(rows.any { (left, bottom) -> left >= 800.dp && bottom <= continueTop }) { "New chapters is not beside the hero: $rows" } // i18n-skip
+        val heading = baseline("New chapters") // i18n-skip
+        val kicker = baseline("Continue reading") // i18n-skip
+        check(abs((heading - kicker).value) <= 1f) { "New chapters baseline at $heading, Continue reading at $kicker" } // i18n-skip
+    }
+
+    /** Where [text]'s first line sits on the page: its node's top and the first baseline. */
+    private fun baseline(text: String): Dp {
+        val node = compose.onNodeWithText(text, useUnmergedTree = true).fetchSemanticsNode()
+        val layouts = mutableListOf<TextLayoutResult>()
+        node.config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+        return with(compose.density) { (node.boundsInRoot.top + layouts.first().firstBaseline).toDp() }
+    }
 
     private fun browse(name: String) = shoot(
         name, FixtureScene.READING_HOME, Destination.Home, medium = KaeriIsFor.READ, page = "home/read/browse", eink = EinkLook(), ready = homeRows, // i18n-skip
@@ -87,8 +124,8 @@ class EinkLargeHomeShots : ReadingShotHarness() {
     @Test @Config(qualifiers = EREADER_10, fontScale = AIR_SCALE) fun air_downloads() = downloads("b-air-085-downloads")
     @Test @Config(qualifiers = EREADER_10, fontScale = AIR_SCALE) fun air_more() = more("b-air-085-more")
 
-    // On its side, which keeps today's Home: drawn so it can be judged.
-    @Test @Config(qualifiers = "w1323dp-h992dp-land-300dpi", fontScale = AIR_SCALE) fun air_land_home() = home("air-land-085-home")
+    // On its side: the large Home widened, New chapters beside the hero, Continue on five columns.
+    @Test @Config(qualifiers = AIR_LAND, fontScale = AIR_SCALE) fun air_land_home() = landHome("air-land-085-home")
 
     // 10.3 inch at 1.0
 
@@ -97,6 +134,7 @@ class EinkLargeHomeShots : ReadingShotHarness() {
     @Test @Config(qualifiers = EREADER_10) fun air_browse_1() = browse("b-air-100-browse")
     @Test @Config(qualifiers = EREADER_10) fun air_downloads_1() = downloads("b-air-100-downloads")
     @Test @Config(qualifiers = EREADER_10) fun air_more_1() = more("b-air-100-more")
+    @Test @Config(qualifiers = AIR_LAND) fun air_land_home_1() = landHome("air-land-100-home")
 
     // Home on the smaller panels, as before
 
@@ -106,6 +144,7 @@ class EinkLargeHomeShots : ReadingShotHarness() {
 
     private companion object {
         const val AIR_SCALE = 0.85f
+        const val AIR_LAND = "w1323dp-h992dp-land-300dpi" // i18n-skip
         val CONTINUE_TITLES = listOf("Saltglass Tower", "Lamplight Arithmetic", "Kumo no Shoten", "Tidewater Detective") // i18n-skip
         val NEW_TITLES = listOf("The Quiet Forge", "Umbrella Choir", "Harbour of Moths", "Ember Post Office", "Paper Comets", "The Heron Clerk", "Canal Lights", "Rooftop Gardeners", "Bellmaker's Daughter", "A Map of Snowfall", "Glass Orchard", "Fog Harbour Bakery") // i18n-skip
         val DOWNLOAD_TITLES = listOf("Yorugawa Courier", "Kite Season", "The Quiet Forge", "Tidewater Detective", "Kumo no Shoten", "Fog Harbour Bakery", "Ember Post Office", "Harbour of Moths", "Paper Comets", "The Heron Clerk", "Canal Lights", "Night Ferry Club", "Rooftop Gardeners", "Inkwell Station") // i18n-skip
