@@ -729,6 +729,12 @@ pub(crate) fn dispatch(
                     home::changed(&lent.meta, &lent.store, &lent.tx, &ask, &memory);
                 });
             }
+            // Reading's Home the same, once opened.
+            if moved && engine.reading.available {
+                let kit = crate::read_catalog::Kit::of(services);
+                let ask = crate::read_catalog::Ask::of(engine, services);
+                crate::read_catalog::home::path_moved(&kit, ask, tx);
+            }
         }
         Command::DeviceState {
             reduce_motion,
