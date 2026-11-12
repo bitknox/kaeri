@@ -191,7 +191,7 @@ internal fun EpisodeLine(
         Column(Modifier.weight(1f)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Bottom) {
                 Text(
-                    row.title ?: stringResource(R.string.episode_number, row.number.toInt()),
+                    row.title ?: app.kaeri.store.episodeName(context, row.number),
                     style = MaterialTheme.typography.bodyLarge,
                     color = if (unaired) colors.onSurfaceVariant else lerp(colors.onSurface, colors.onSurfaceVariant, dim.value),
                     maxLines = 1,
@@ -221,8 +221,8 @@ internal fun EpisodeLine(
                 }
                 if (unaired) Box(Modifier.size(6.dp).background(colors.secondary, androidx.compose.foundation.shape.CircleShape))
                 Text(
-                    if (unaired) Strings.episodeLineDetail(context, row.number.toInt(), airs?.let { Strings.episodeRowAirs(context, it) } ?: Strings.episodeRowNotOut(context))
-                    else if (row.unsourced) Strings.episodeLineDetail(context, row.number.toInt(), Strings.episodeUnsourced(context))
+                    if (unaired) episodeLineDetail(context, row, airs?.let { Strings.episodeRowAirs(context, it) } ?: Strings.episodeRowNotOut(context))
+                    else if (row.unsourced) episodeLineDetail(context, row, Strings.episodeUnsourced(context))
                     else episodeDetail(context, row, resume = resume.takeIf { !row.completed }),
                     style = MaterialTheme.typography.bodyMedium.tabular(),
                     color = colors.onSurfaceVariant,
@@ -286,8 +286,13 @@ internal fun rememberRowMarks(row: EpisodeRow, fraction: Float?): RowMarks {
 /** "E7 · 14 min left" or "E6 · 24 min". */
 internal fun episodeDetail(context: Context, row: EpisodeRow, resume: app.kaeri.engine.model.ResumePoint?): String {
     val detail = episodeDetailOnly(context, row, resume)
-    return if (detail != null) Strings.episodeLineDetail(context, row.number.toInt(), detail) else Strings.episodeNumberShort(context, row.number.toInt())
+    return if (detail != null) episodeLineDetail(context, row, detail)
+    else app.kaeri.store.episodeLine(context, row.number, null) { Strings.episodeNumberShort(context, it) }
 }
+
+/** "E7 · Not out yet", or "Episode 5.5 · Not out yet" for a half episode. */
+private fun episodeLineDetail(context: Context, row: EpisodeRow, detail: String): String =
+    app.kaeri.store.episodeLine(context, row.number, detail) { Strings.episodeLineDetail(context, it, detail) }
 
 /** The part of [episodeDetail] after the number: "14 min left" or "24 min", or null when there is none. */
 internal fun episodeDetailOnly(context: Context, row: EpisodeRow, resume: app.kaeri.engine.model.ResumePoint?): String? {
