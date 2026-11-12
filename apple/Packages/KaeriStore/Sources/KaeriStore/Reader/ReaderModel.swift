@@ -982,6 +982,14 @@ public final class ReaderModel {
             return
         }
         guard let page = place.page else { return }
+        // A place by page alone, in a strip: the top of the image that holds the page.
+        if view?.mode == .strip, novel == nil {
+            let parts = leaves.filter { !$0.endPage }.flatMap(\.parts)
+            let image = parts.firstIndex { $0.page >= page } ?? Int(page)
+            stripRestore = StripPos(image: UInt32(image), offset: 0)
+            self.goTo = (image, bump(), .placed)
+            return
+        }
         if let index = leaves.firstIndex(where: { $0.parts.contains { $0.page >= page } }) {
             show(index)
         } else {

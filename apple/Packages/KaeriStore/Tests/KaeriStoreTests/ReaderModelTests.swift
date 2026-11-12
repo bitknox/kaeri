@@ -125,6 +125,33 @@ struct ReaderModelTests {
         #expect(model.goTo?.how == .placed)
     }
 
+    /// A place by page alone, as Moved sends it, scrolls a strip to that page's image.
+    @Test func aPlaceByPageAloneScrollsTheStripToItsImage() {
+        let (model, _) = model()
+        let work = WorkId("a:900302")
+        let chapter = ChapterRow(
+            id: ChapterId("c4"), label: "Chapter 4", state: .unread, number: nil, title: nil, volume: nil,
+            published: nil, pages: 6, newChapter: false, download: nil, versions: 1, bookmarked: false)
+        model.apply(.opened(ReaderView(
+            session: 1, work: work, title: "The Lantern Ferry", medium: .manga, chapter: chapter,
+            mode: .strip, direction: .leftToRight,
+            start: ReadPlace(work: work, chapter: chapter.id, page: 0, strip: nil, novel: nil),
+            next: nil, previous: nil, settings: nil)))
+        let leaves = (0..<6).map { page in
+            Leaf(index: UInt32(page), parts: [
+                LeafPart(page: UInt32(page), kind: .story, file: nil, place: UnitRect(x: 0, y: 0, width: 1, height: 1),
+                         rotate: false, half: nil),
+            ], endPage: false)
+        } + [Leaf(index: 6, parts: [], endPage: true)]
+        model.apply(.leaves(session: 1, chapter: chapter.id, leaves: leaves))
+        model.apply(.goTo(session: 1, place: ReadPlace(work: work, chapter: chapter.id, page: 4, strip: nil, novel: nil)))
+        #expect(model.stripRestore == StripPos(image: 4, offset: 0))
+        // A place with its strip position keeps that position.
+        model.apply(.goTo(session: 1, place: ReadPlace(
+            work: work, chapter: chapter.id, page: 2, strip: StripPos(image: 2, offset: 0.5), novel: nil)))
+        #expect(model.stripRestore == StripPos(image: 2, offset: 0.5))
+    }
+
     /// Twenty pages as single leaves, or as a cover and spreads of two after it.
     private func layout(_ chapter: ChapterId, spreads: Bool) -> [Leaf] {
         let groups: [[UInt32]] = spreads
