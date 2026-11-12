@@ -6,7 +6,6 @@ package app.kaeri.store
 import app.kaeri.engine.model.DownloadRow
 import app.kaeri.engine.model.DownloadState
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -26,8 +25,8 @@ class R5AuditLiveDownloadsTest {
 
     @Test
     fun a_half_episode_downloading_is_described() {
-        val live = assertNotNull(LiveDownloads.of(context, listOf(row(1, "5.5")), emptyMap()))
-        assertTrue(live!!.text, live.text.startsWith("Episode 5.5"))
+        val live = LiveDownloads.of(context, listOf(row(1, "5.5")), emptyMap())!!
+        assertTrue(live.text, live.text.startsWith("Episode 5.5"))
     }
 
     @Test
