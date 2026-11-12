@@ -735,4 +735,4 @@ class ContentsKeys {
 }
 
 /** Touches here stay here, never reaching the page under it. */
-private fun Modifier.holdsTouches(): Modifier = pointerInput(Unit) { detectTapGestures { } }
+internal fun Modifier.holdsTouches(): Modifier = pointerInput(Unit) { detectTapGestures { } }

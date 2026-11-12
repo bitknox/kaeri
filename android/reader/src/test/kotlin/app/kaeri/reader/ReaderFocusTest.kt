@@ -13,6 +13,13 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
+import app.kaeri.engine.model.ReadingMsg
+import app.kaeri.engine.model.ReaderNotice
+import app.kaeri.engine.model.ReaderAction
+import app.kaeri.engine.model.Msg
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import app.kaeri.design.ObiSilk
 import app.kaeri.engine.model.NovelAssets
@@ -78,5 +85,23 @@ class ReaderFocusTest {
         assertEquals("Chapter 12 · The Long Stair", words("Next page"))
         compose.onNode(placeWith("Previous page"), useUnmergedTree = true).assertExists()
         compose.onNode(placeWith("Controls"), useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun under_talkback_the_resume_notice_shows_with_the_controls_up() {
+        val manager = compose.activity.getSystemService(android.view.accessibility.AccessibilityManager::class.java)
+        org.robolectric.Shadows.shadowOf(manager).setTouchExplorationEnabled(true)
+        val notice = ReaderNotice(Msg.Reading(ReadingMsg.ReaderResumed(5)), ReaderAction.START_OVER, 6000u)
+        val state = state().copy(notice = ShownNotice(notice, 1L))
+        compose.setContent {
+            Box(Modifier.fillMaxSize().background(ObiSilk.Ground)) {
+                PhoneReader(session = session, state = state, images = PageImages(), actions = PhoneReaderActions(onClose = {}), novel = { _, _ -> })
+            }
+        }
+        compose.waitForIdle()
+        // The controls stay up for the screen reader, and the notice shows over the page with them.
+        compose.onNodeWithContentDescription("Chapters").assertIsDisplayed()
+        compose.onNodeWithText("Resumed at page 5").assertIsDisplayed()
+        compose.onNodeWithText("Start over").assertIsDisplayed()
     }
 }

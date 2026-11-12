@@ -235,6 +235,62 @@ async fn a_cold_home_asks_four_times_and_a_warm_one_not_at_all() {
     assert_eq!(warm.rows, cold.rows);
 }
 
+/// Home is offline while the path is gone and online again once it is back, though every row is
+/// still fresh and nothing is asked: the path coming back says Home again without the app asking.
+#[tokio::test]
+async fn home_is_online_again_once_the_path_is_back() {
+    let fake = FakeAniList::start().await;
+    fake.add_books(popular("MANGA", 911_000));
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(Some(&fake), dir.path());
+    let (tx, mut rx) = outbox();
+    home::load(&kit, ask(), false, &tx);
+    assert!(!whole_home(&mut rx).await.offline);
+    loaded(&kit, &mut rx).await;
+    let asked = books_asked(&fake);
+
+    kit.offline.store(true, Ordering::Relaxed);
+    home::path_moved(&kit, ask(), &tx);
+    assert!(whole_home(&mut rx).await.offline, "said offline at once");
+    home::load(&kit, ask(), false, &tx);
+    assert!(whole_home(&mut rx).await.offline, "offline while the path is gone");
+    loaded(&kit, &mut rx).await;
+
+    // Back: the engine says Home again by itself, and Home opened again says the same.
+    kit.offline.store(false, Ordering::Relaxed);
+    home::path_moved(&kit, ask(), &tx);
+    let back = whole_home(&mut rx).await;
+    assert!(!back.offline, "online once the path is back: {:?}", back.offline_since);
+    loaded(&kit, &mut rx).await;
+    home::load(&kit, ask(), false, &tx);
+    assert!(!whole_home(&mut rx).await.offline);
+    assert_eq!(books_asked(&fake), asked, "every row is fresh: nothing is asked");
+}
+
+/// Waits for Home's load to end, then drops what it said, so the next view read is the next
+/// step's. The load's last view is sent with no wait after it is marked done.
+async fn loaded(kit: &Kit, rx: &mut mpsc::UnboundedReceiver<Event>) {
+    let running = || kit.sources.catalog.home.lock().unwrap().running;
+    tokio::time::timeout(PATIENCE, async {
+        while running() {
+            tokio::time::sleep(std::time::Duration::from_millis(5)).await;
+        }
+    })
+    .await
+    .expect("the load ends");
+    while rx.try_recv().is_ok() {}
+}
+
+/// A Home never opened is not loaded by the path changing.
+#[tokio::test]
+async fn the_path_changing_loads_no_home_never_opened() {
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(None, dir.path());
+    let (tx, mut rx) = outbox();
+    home::path_moved(&kit, ask(), &tx);
+    assert!(rx.try_recv().is_err(), "nothing said");
+}
+
 #[tokio::test]
 async fn a_first_run_shows_each_trending_row_then_new_manga() {
     let fake = FakeAniList::start().await;

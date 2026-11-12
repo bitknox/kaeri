@@ -192,7 +192,7 @@ internal fun EinkSearchPage(
     var opened by remember(search.query) { mutableStateOf(emptySet<String>()) }
     // A large panel's Search in: one source, or every source (null). The words go to that source
     // alone: it is the query's scope, so the engine asks no other.
-    var only by rememberSaveable { mutableStateOf<String?>(null) }
+    var only by rememberSaveable { mutableStateOf(search.query.sourceScope?.singleOrNull()) }
     LaunchedEffect(text) {
         snapshotFlow { text.text.toString() }.drop(1).debounce(TYPING_REST_EINK).collect { typed ->
             val now = store.reading.search.value.query
@@ -248,7 +248,13 @@ internal fun EinkSearchPage(
             // Nothing asked: the start, not an empty search.
             search.query.isStart() -> if (large) WideStart(only, search.query.sourcesOnly) { only = it } else SearchStart()
             // A large panel: the results in columns under each place's name (WideResults below).
-            large -> WideResults(search, only)
+            large -> {
+                SearchInLine(only) { id ->
+                    only = id
+                    store.reading.runSearch(search.query.copy(sourceScope = id?.let { listOf(it) }))
+                }
+                WideResults(search, only)
+            }
             // After 600 ms one word; most searches answer first and cost the panel nothing.
             (search.query.text.isBlank() && search.tiles.isEmpty() && search.loading) || (lines.isEmpty() && search.loading) ->
                 PaperWaiting { Text(Strings.stateLoading(context), style = EinkType.Body, modifier = Modifier.padding(top = 16.dp)) }
@@ -711,18 +717,8 @@ private val GenreLeast = 200.dp
 private fun WideStart(only: String?, sourcesOnly: Boolean, onOnly: (String?) -> Unit) {
     val store = LocalAppStore.current
     val context = LocalContext.current
-    val sources by store.bookSources.view.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (store.bookSources.view.value == null) store.bookSources.load() }
     var page by rememberSaveable { mutableIntStateOf(0) }
-    val view = sources
-    // Folders are one source to search; then each server and plugin that is on, in your order.
-    val places = buildList {
-        if (view != null) {
-            if (view.folders.any { !it.removed }) add(READ_FOLDERS to Strings.readSourceFolders(context))
-            view.servers.filter { !it.off }.forEach { add(it.id to it.name) }
-            view.plugins.filter { !it.off }.forEach { add(it.id to it.name) }
-        }
-    }.sortedBy { (id, _) -> view?.order?.indexOf(id)?.takeIf { it >= 0 } ?: Int.MAX_VALUE }
+    val places = searchPlaces()
     val filters = store.reading.filters
     val columns = ((LocalConfiguration.current.screenWidthDp.dp - Side * 2 + ChipGap) / (GenreLeast + ChipGap)).toInt().coerceAtLeast(2)
     val parts = buildList {
@@ -737,6 +733,34 @@ private fun WideStart(only: String?, sourcesOnly: Boolean, onOnly: (String?) -> 
         add(StartPart.Note(if (sourcesOnly) Strings.readSearchStartNoteOwn(context) else Strings.readSearchStartNote(context)))
     }
     PagedItems(parts, page, { page = it }, Modifier.padding(top = 4.dp)) { part -> StartLine(part, columns, only, onOnly) }
+}
+
+/** Search in's places on a large panel: Folders as one source, then each server and plugin that is on, in your order. */
+@Composable
+private fun searchPlaces(): List<Pair<String, String>> {
+    val store = LocalAppStore.current
+    val context = LocalContext.current
+    val sources by store.bookSources.view.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) { if (store.bookSources.view.value == null) store.bookSources.load() }
+    val view = sources ?: return emptyList()
+    return buildList {
+        if (view.folders.any { !it.removed }) add(READ_FOLDERS to Strings.readSourceFolders(context))
+        view.servers.filter { !it.off }.forEach { add(it.id to it.name) }
+        view.plugins.filter { !it.off }.forEach { add(it.id to it.name) }
+    }.sortedBy { (id, _) -> view.order.indexOf(id).takeIf { it >= 0 } ?: Int.MAX_VALUE }
+}
+
+/**
+ * Search in over a large panel's results: the same chips as the start, so the scope stays in view
+ * and changes without clearing the words.
+ */
+@Composable
+private fun SearchInLine(only: String?, onOnly: (String?) -> Unit) {
+    val context = LocalContext.current
+    val places = searchPlaces()
+    if (places.isEmpty()) return
+    val all = listOf<Pair<String?, String>>(null to Strings.readSearchInAll(context)) + places
+    StartLine(StartPart.Together(listOf(StartPart.Head(Strings.readSearchIn(context)), StartPart.Places(all))), columns = 1, only = only, onOnly = onOnly)
 }
 
 /** The Folders source's id, as the engine names it. */

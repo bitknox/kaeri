@@ -57,6 +57,10 @@ KaeriSdk.engines.forEach { (flavour, engine) ->
             // The engine's clock stopped at one moment, a Wednesday morning, so that every run
             // records the same scenes whatever the day it runs on.
             environment("KAERI_SCENES_AT", "1793782800")
+            // The device's region comes from the JVM's locale, which is the host's: en_DK on the
+            // Mac the scenes were first recorded on, none under a C locale on Linux. Pinned, so
+            // every host records the same region.
+            jvmArgs("-Duser.language=en", "-Duser.country=DK")
             outputs.upToDateWhen { false }
         }
         doFirst {

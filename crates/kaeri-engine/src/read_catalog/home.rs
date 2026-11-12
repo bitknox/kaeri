@@ -128,6 +128,21 @@ fn begin(memory: &std::sync::Mutex<Loading>, refresh: bool) -> Option<u64> {
     Some(loading.generation)
 }
 
+/// The network path came or went: an opened Home says so at once, and coming back loads it
+/// again, asking only for what is stale, so it stops saying offline without the app asking.
+pub fn path_moved(kit: &Kit, ask: Ask, tx: &Outbox) {
+    let opened =
+        kit.sources.catalog.home.lock().unwrap_or_else(|e| e.into_inner()).generation > 0;
+    if !opened {
+        return;
+    }
+    if kit.offline.load(Ordering::Relaxed) {
+        resend(kit, ask, tx);
+    } else {
+        load(kit, ask, false, tx);
+    }
+}
+
 /// Home as it stands, asking for nothing: for a change that shows on it, such as a series found
 /// in no source.
 pub fn resend(kit: &Kit, ask: Ask, tx: &Outbox) {
@@ -144,12 +159,16 @@ struct Home {
     zone: jiff::tz::TimeZone,
     offline: std::sync::Arc<std::sync::atomic::AtomicBool>,
     no_sources: bool,
+    /// Plugins, asked whether a load is still under way.
+    plugins: crate::book_plugins::BookPlugins,
     /// The load this is, as [`begin`] gave it; 0 for a view alone.
     generation: u64,
 }
 
 impl Home {
     fn of(kit: &Kit, ask: Ask) -> Self {
+        // Book plugins that have loaded are read from before Home is drawn from them.
+        kit.sources.take_in_plugins(&kit.plugins);
         Self {
             meta: kit.meta.clone(),
             store: kit.store.clone(),
@@ -158,6 +177,7 @@ impl Home {
             zone: kit.clock.zone(),
             offline: kit.offline.clone(),
             no_sources: kit.no_sources(),
+            plugins: kit.plugins.clone(),
             generation: 0,
         }
     }
@@ -1033,7 +1053,7 @@ impl Home {
     /// Where Continue opens a series: the chapter in progress, or the next one.
     fn continue_action(&self, book: &Book) -> Option<SeriesAction> {
         let work = tiles::work_of(book.id);
-        Some(tiles::action(&self.store, &self.sources, &work, book.medium()))
+        Some(tiles::action(&self.store, &self.sources, &work, book.medium(), &self.plugins))
             .filter(|a| !matches!(a, SeriesAction::NoSource | SeriesAction::ReadAgain))
     }
 }
@@ -1321,5 +1341,36 @@ mod tests {
         assert!(!tile.new_chapter, "no dot on a place");
         assert_eq!(tile.progress, Some(0.4));
         assert_eq!(tile.next, spot.line);
+    }
+
+    /// At launch, before the plugin a series is held in has loaded, the spotlight already
+    /// continues it, rather than having no button to read on with until the plugin is in.
+    #[test]
+    fn a_series_in_progress_continues_while_its_plugin_still_loads() {
+        let dir = tempfile::tempdir().unwrap();
+        let kit = kit(dir.path());
+        followed(&kit);
+        kit.store.set_edition_pref(WORK, None).unwrap();
+        kit.store.adopt_read(WORK, "10", None, NOW - 3 * DAY).unwrap();
+        let mut place = ReadEvent::new(WORK, "11", NOW - 2 * DAY);
+        place.page = Some(8);
+        place.of_pages = Some(20);
+        kit.store.record_read(&place, Vec::new()).unwrap();
+        let continuing = Some(SeriesAction::Continue {
+            chapter: ChapterId::new("11"),
+            label: "11".into(),
+            page: 9,
+        });
+
+        kit.plugins.expect_arrivals();
+        let spot = home(&kit).spot.unwrap();
+        assert_eq!(spot.case, ReadSpotlightCase::Continuing);
+        assert_eq!(spot.action, continuing, "the chapter in progress, from the kept list");
+        assert!(kit.plugins.take_leaned(), "the load's end draws Home again");
+
+        // The load ended without the plugin: it is in no source the person has.
+        kit.plugins.arrivals_done();
+        assert_eq!(home(&kit).spot.unwrap().action, None);
+        assert!(!kit.plugins.take_leaned());
     }
 }

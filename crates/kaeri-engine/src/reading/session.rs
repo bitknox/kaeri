@@ -733,6 +733,15 @@ impl Reader {
         }
     }
 
+    /// The device went off line or came back: an end page already said follows the connection,
+    /// since what it leads into, and why it has nothing, depend on it.
+    pub fn network_moved(&mut self, cx: &mut Cx<'_>, was_offline: bool) {
+        let pages = self.pages(cx);
+        if let Some(s) = self.session.as_mut() {
+            s.network_moved(cx, &pages, was_offline);
+        }
+    }
+
     /// Reading arrived from another device: move on when it read further.
     pub fn synced(&mut self, cx: &mut Cx<'_>) {
         let pages = self.pages(cx);
@@ -1576,6 +1585,22 @@ impl Session {
         });
     }
 
+    /// Said again with the connection as it is now, once the end page was said with it the
+    /// other way. Its next chapter's first page is asked for again when that chapter changed.
+    fn network_moved(&mut self, cx: &Cx<'_>, pages: &Pages, was_offline: bool) {
+        let offline = cx.services.offline.load(std::sync::atomic::Ordering::Relaxed);
+        if !self.end_page_said || offline == was_offline {
+            return;
+        }
+        let before = self.end_next(was_offline);
+        self.end_page_said = false;
+        self.say_end_page(cx);
+        if self.peeked && before != self.end_next(offline) {
+            self.peeked = false;
+            self.peek(cx, pages);
+        }
+    }
+
     /// The chapter the end page leads into: the one after the open chapter, and offline the
     /// next one on this device, since one only a source has would not open.
     fn end_next(&self, offline: bool) -> Option<usize> {
@@ -2243,6 +2268,13 @@ mod tests {
         fn synced(&mut self) {
             let mut cx = self.reader.cx(&mut self.config, &self.services, &self.tx);
             self.reader.synced(&mut cx);
+        }
+
+        /// The device goes off line or comes back, as `NetworkPath` tells the reader.
+        fn network(&mut self, offline: bool) {
+            let was = self.services.offline.swap(offline, std::sync::atomic::Ordering::Relaxed);
+            let mut cx = self.reader.cx(&mut self.config, &self.services, &self.tx);
+            self.reader.network_moved(&mut cx, was);
         }
 
         fn session(&self) -> u64 {

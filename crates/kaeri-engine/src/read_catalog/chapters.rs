@@ -697,20 +697,20 @@ impl Read {
         {
             furthest = furthest.max(Some(adopted));
         }
-        // A chapter left part way and passed over: once a later chapter is read, Continue goes
-        // on from there, and the one left stays unread in the list. Opened again, it is the
-        // latest place and Continue goes back to it; an extra stays passed over.
-        let passed = |id: &str| {
-            let behind = range(id).is_some_and(|r| furthest.is_some_and(|f| r <= f));
-            let extra = range(id).is_some_and(|r| r.end.is_none() && r.start.is_split());
-            behind && (extra || last.as_deref() != Some(id))
-        };
+        let behind = |id: &str| furthest.is_some_and(|f| range(id).is_some_and(|r| r <= f));
+        let extra = |id: &str| range(id).is_some_and(|r| r.end.is_none() && r.start.is_split());
         let in_progress = chapters
             .iter()
             .filter(|c| !c.read && !marked.contains(&c.chapter))
             .filter(|c| c.last_page.is_some() || c.novel_pos.is_some())
             .filter(|c| !folds.is_part(&c.chapter))
-            .filter(|c| !passed(&c.chapter))
+            // A chapter left part way and passed over: once a later chapter is read, Continue
+            // goes on from there, and the chapter stays unread in the list. A whole chapter keeps
+            // its place while it is the last one opened, as when the person goes back to it; an
+            // extra is passed over even then.
+            .filter(|c| {
+                !behind(&c.chapter) || (!extra(&c.chapter) && Some(&c.chapter) == last.as_ref())
+            })
             .max_by_key(|c| (Some(&c.chapter) == last.as_ref(), c.stamp))
             .map(|c| (c.chapter.clone(), c.last_page, c.of_pages));
         Self { marked, work: work_row, in_progress, furthest }
@@ -1114,10 +1114,10 @@ mod tests {
     }
 
     #[test]
-    fn a_chapter_left_part_way_is_passed_over_once_a_later_one_is_read() {
+    fn a_chapter_left_part_way_is_passed_over_once_later_chapters_are_read() {
         const WORK: &str = "a:900304";
         let store = Store::open_in_memory().unwrap();
-        let list: Vec<_> = ["23", "24", "25", "26", "26.1", "27"]
+        let list: Vec<_> = ["1", "2", "3", "3.5", "4", "4.5", "5"]
             .into_iter()
             .map(|n| SourceChapter::new(format!("c-{n}"), n))
             .collect();
@@ -1128,19 +1128,19 @@ mod tests {
             let at = read.in_progress.as_ref().map(|(id, page, _)| (id.clone(), *page));
             at.or_else(|| read.next(&kept).map(|c| (c.id.clone(), None)))
         };
-        read(&store, WORK, "23", None, 10);
-        read(&store, WORK, "24", Some(14), 20);
-        assert_eq!(next(&store), Some(("24".into(), Some(14))));
-        // A jump on to 26, read part way: 26 is where the person is.
-        read(&store, WORK, "26", Some(2), 30);
-        assert_eq!(next(&store), Some(("26".into(), Some(2))));
-        // Once 26 is read, Continue goes on from it, and 24 stays unread in the list.
-        read(&store, WORK, "26", None, 40);
-        assert_eq!(next(&store), Some(("26.1".into(), None)));
-        assert!(!Read::of(&store, WORK).is_read("24"));
-        // Opened again, 24 is the latest place, and Continue goes back to it.
-        read(&store, WORK, "24", Some(15), 50);
-        assert_eq!(next(&store), Some(("24".into(), Some(15))));
+        read(&store, WORK, "1", Some(20), 10);
+        assert_eq!(next(&store), Some(("1".into(), Some(20))));
+        read(&store, WORK, "2", None, 20);
+        read(&store, WORK, "3", None, 30);
+        read(&store, WORK, "4", Some(2), 40);
+        assert_eq!(next(&store), Some(("4".into(), Some(2))), "the place in 4 wins");
+        // Once 4 is read to its end, Continue goes on past it, not back to page 20 of 1.
+        read(&store, WORK, "4", None, 50);
+        assert_eq!(next(&store), Some(("4.5".into(), None)));
+        assert!(!Read::of(&store, WORK).is_read("1"), "chapter 1 stays unread");
+        // Going back to chapter 1 by choice keeps its place while it is the last one opened.
+        read(&store, WORK, "1", Some(21), 60);
+        assert_eq!(next(&store), Some(("1".into(), Some(21))));
     }
 
     #[test]

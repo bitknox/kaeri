@@ -152,6 +152,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import app.kaeri.design.Motion
+import app.kaeri.design.recommendedNoticeMillis
 import app.kaeri.design.SwapFade
 import app.kaeri.design.atFullSpeed
 import app.kaeri.design.rememberAnimationsRemoved
@@ -170,6 +171,7 @@ import app.kaeri.reader.LocalPageTone
 import app.kaeri.reader.PageImages
 import app.kaeri.reader.PageWaits
 import app.kaeri.reader.openingClock
+import app.kaeri.reader.rememberFadedIn
 import app.kaeri.reader.PagedReader
 import app.kaeri.reader.ReaderAction
 import app.kaeri.reader.ReaderKeyRules
@@ -711,6 +713,15 @@ fun PhoneReader(
             )
             TapGuideLayer(guide, fades)
 
+            // Notices sit at the top centre while the chrome is away, as the board has them. A novel's
+            // text runs up to the top margin, so its notices take the bottom margin in place of the
+            // pages left. Under a screen reader the chrome stays up, so they show with it, at the top
+            // clear of its group at the foot.
+            val notice = state.notice
+            val clear = (!shown || exploring) && sheet == Sheet.None
+            val plated = notice != null && clear
+            val noticeAtFoot = novelOpen && !shown
+
             if (view != null) {
                 AnimatedVisibility(
                     visible = shown,
@@ -754,7 +765,7 @@ fun PhoneReader(
                 // A demo work's credit, at the top centre with the chrome; not over its end card.
                 val onEnd = state.leaves.getOrNull(pager.leaf)?.endPage == true || place.ended
                 AnimatedVisibility(
-                    visible = demo != null && shown && sheet == Sheet.None && !onEnd,
+                    visible = demo != null && shown && sheet == Sheet.None && !onEnd && !plated,
                     enter = if (fades) fadeIn(Motion.reveal()) else EnterTransition.None,
                     exit = if (fades) fadeOut(Motion.reveal()) else ExitTransition.None,
                     modifier = Modifier.align(Alignment.TopCenter),
@@ -798,13 +809,6 @@ fun PhoneReader(
                 }
             }
 
-            // Notices sit at the top centre while the chrome is away, as the board has them. A novel's
-            // text runs up to the top margin, so its notices take the bottom margin in place of the
-            // pages left.
-            val notice = state.notice
-            val clear = !shown && sheet == Sheet.None
-            val plated = notice != null && clear
-
             // At rest a novel's only line: the pages left in the chapter, in the bottom margin.
             if (novelOpen && !shown && place.failed == null && !place.ended && !plated) PagesLeft(state, place)
 
@@ -812,12 +816,12 @@ fun PhoneReader(
                 visible = plated,
                 enter = if (fades) fadeIn(Motion.fadeIn()) else EnterTransition.None,
                 exit = if (fades) fadeOut(Motion.fadeOut()) else ExitTransition.None,
-                modifier = Modifier.align(if (novelOpen) Alignment.BottomCenter else Alignment.TopCenter),
+                modifier = Modifier.align(if (noticeAtFoot) Alignment.BottomCenter else Alignment.TopCenter),
             ) {
                 val held = remember { mutableStateOf<ShownNotice?>(null) }
                 if (notice != null) held.value = notice
                 held.value?.let { n ->
-                    NoticePlate(n.notice.msg.text(context), actionWords(context, n), Modifier, atFoot = novelOpen) {
+                    NoticePlate(n.notice.msg.text(context), actionWords(context, n), Modifier, atFoot = noticeAtFoot) {
                         n.notice.action?.let { action ->
                             when (action) {
                                 NoticeAction.START_OVER -> session.startOver()
@@ -829,10 +833,11 @@ fun PhoneReader(
                     }
                 }
             }
-            // Every notice goes after the time the engine gave it, button or not, counting only while
-            // it is on screen with nothing over it. On e-ink it has none and the next turn takes it.
+            // Every notice goes after the time the engine gave it, button or not, or the longer time
+            // the person's accessibility setting asks for, counting only while it is on screen with
+            // nothing over it. On e-ink it has none and the next turn takes it.
             if (notice != null) {
-                val lasts = notice.notice.lastsMs.toLong()
+                val lasts = notice.notice.lastsMs.toLong().let { if (it > 0) recommendedNoticeMillis(context, it, notice.notice.action != null) else it }
                 val id = notice.id
                 LaunchedEffect(id, clear) {
                     if (lasts > 0 && clear) {
@@ -868,6 +873,10 @@ fun PhoneReader(
                         sheet = Sheet.None
                     },
                     onDismiss = { sheet = Sheet.None },
+                    onChapter = {
+                        session.openChapter(it)
+                        sheet = Sheet.None
+                    },
                     instant = instant,
                 )
                 Sheet.Settings -> ReaderSettingsSheet(
@@ -1443,10 +1452,10 @@ fun openingStage(context: android.content.Context, wait: ReaderWait?, chapter: S
 internal const val OPENING_LONG_MS = 15_000
 
 /**
- * While a chapter opens: nothing for 600 ms, then the page plate in the page's place with what
- * the open waits on, from 3 s with how long, and from [OPENING_LONG_MS] Try again, another
- * source and Go back. Try again counts the wait from the start. Once the first page is [done] and
- * drawn over it, the plate fades out.
+ * While a chapter opens: nothing for 600 ms, then the page plate in the page's place, fading in,
+ * with what the open waits on, from 3 s with how long, and from [OPENING_LONG_MS] Try again,
+ * another source and Go back. Try again counts the wait from the start. Once the first page is
+ * [done] and drawn over it, the plate fades out.
  */
 @Composable
 private fun Opening(
@@ -1480,6 +1489,8 @@ private fun Opening(
         }
     }
     if (waited < PageWaits.PLATE_MS) return
+    // The plate fades in from nothing as the page plates do, rather than appearing whole at 600 ms.
+    val faded = rememberFadedIn()
     val number = (state.openingChapter ?: state.view?.chapter)?.let(::chapterNumber)
     val stage = openingStage(context, state.openingWait, number)
     val line = when {
@@ -1489,7 +1500,7 @@ private fun Opening(
     val long = waited >= OPENING_LONG_MS && !done
     LaunchedEffect(long) { if (long) session.loadSources() }
     var choosing by remember { mutableStateOf(false) }
-    BoxWithConstraints(Modifier.fillMaxSize().graphicsLayer { alpha = shown.value }, contentAlignment = Alignment.Center) {
+    BoxWithConstraints(Modifier.fillMaxSize().graphicsLayer { alpha = shown.value * faded.value }, contentAlignment = Alignment.Center) {
         // The page's place: a page's shape, as wide as it fits.
         val width = minOf(maxWidth, maxHeight * 0.703f)
         Box(Modifier.width(width).aspectRatio(0.703f).background(Chrome.plate)) {

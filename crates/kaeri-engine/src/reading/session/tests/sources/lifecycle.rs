@@ -33,6 +33,14 @@ struct Many {
     let_through: Mutex<Option<HashSet<usize>>>,
     /// Every page of this chapter (its id in the source) waits, whatever else comes.
     held_chapter: Mutex<Option<String>>,
+    /// These pages, as (chapter, page), wait whatever else comes.
+    held_pages: Mutex<HashSet<(String, usize)>>,
+    /// These pages fail the next time they are asked for, once.
+    fail_once: Mutex<HashSet<(String, usize)>>,
+    /// These pages never answer the next time they are asked for, once.
+    hang_once: Mutex<HashSet<(String, usize)>>,
+    /// Every chapter whose page list was asked for.
+    contents: Mutex<Vec<String>>,
     changed: tokio::sync::Notify,
 }
 
@@ -54,6 +62,10 @@ impl Many {
             fetched: Mutex::default(),
             let_through: Mutex::new(None),
             held_chapter: Mutex::new(None),
+            held_pages: Mutex::default(),
+            fail_once: Mutex::default(),
+            hang_once: Mutex::default(),
+            contents: Mutex::default(),
             changed: tokio::sync::Notify::new(),
         }
     }
@@ -86,6 +98,7 @@ impl Many {
 
     fn passes(&self, chapter: &str, index: usize) -> bool {
         self.held_chapter.lock().unwrap().as_deref() != Some(chapter)
+            && !self.held_pages.lock().unwrap().contains(&(chapter.to_owned(), index))
             && self.let_through.lock().unwrap().as_ref().is_none_or(|s| s.contains(&index))
     }
 
@@ -115,6 +128,7 @@ impl kaeri_core::traits::BookSource for Many {
             .collect())
     }
     async fn content(&self, _: &str, chapter: &str) -> Result<ChapterContent, ProviderError> {
+        self.contents.lock().unwrap().push(chapter.to_owned());
         Ok(ChapterContent::Images(
             (0..self.pages)
                 .map(|n| PageRef::new(format!("https://pages.example/{chapter}/{n}")))
@@ -134,6 +148,12 @@ impl kaeri_core::traits::BookSource for Many {
                 break;
             }
             changed.await;
+        }
+        if self.hang_once.lock().unwrap().remove(&(chapter.clone(), index)) {
+            std::future::pending::<()>().await;
+        }
+        if self.fail_once.lock().unwrap().remove(&(chapter.clone(), index)) {
+            return Err(PageError::Status(404));
         }
         let shade = 40 + u8::try_from(index % 200).unwrap();
         let picture = image::GrayImage::from_pixel(320, 480, image::Luma([shade]));
@@ -345,8 +365,7 @@ async fn keeping_chapters_ready_asks_the_source_once() {
     for leaf in 0..=3 {
         h.shown(leaf, TurnHow::Turn).await;
     }
-    // Reading on once chapter 2 is kept ready: its download is done. A reader that opens it
-    // while the download still runs asks the source for it as well.
+    // Reading on once chapter 2 is kept ready: its download is done.
     let start = tokio::time::Instant::now();
     let done = |h: &Harness| {
         h.services.store.book_download(READ, "2").unwrap().is_some_and(|row| {
@@ -599,3 +618,5 @@ async fn a_page_that_never_comes_fails_after_one_more_try() {
     let missing: Vec<usize> = (3..12).filter(|p| source.asked_of(*p) == 0).collect();
     assert!(missing.is_empty(), "never asked for: {missing:?}");
 }
+
+mod joined;

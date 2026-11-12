@@ -587,10 +587,17 @@ private fun ChapterPages(
     }
 }
 
-/** What a row says at its end: Read, the page, the download's state, New, or nothing at all. */
+/** Whether a row's first words are a light novel's place: a percent, or Opened. */
+private fun novelPlace(msg: Msg): Boolean = (msg as? Msg.Reading)?.v1.let { it is ReadingMsg.ReadingRowPercent || it is ReadingMsg.ReadingRowOpened }
+
+/**
+ * What a row says at its end: Read, the page, the download's state, New, or nothing at all. A
+ * light novel's part says how far in as the engine words it, a percent or Opened, since its kept
+ * place is no page the reader counts.
+ */
 private fun chapterState(context: android.content.Context, row: ChapterRow): String? = when (val state = row.state) {
     is ChapterReadState.Read -> context.getString(R.string.chapter_state_read)
-    is ChapterReadState.InProgress -> state.of?.let { Strings.chapterStatePageOf(context, state.page.toInt(), it.toInt()) }
+    is ChapterReadState.InProgress -> row.line.firstOrNull()?.takeIf { novelPlace(it) }?.text(context) ?: state.of?.let { Strings.chapterStatePageOf(context, state.page.toInt(), it.toInt()) }
         ?: Strings.chapterStatePage(context, state.page.toInt())
     is ChapterReadState.Unread -> when (val download = row.download) {
         ChapterDownloadState.Done -> Strings.seriesRowOnDevice(context)

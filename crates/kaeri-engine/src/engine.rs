@@ -484,8 +484,10 @@ impl Engine {
         if background.digest {
             // The airing digest: what aired for shows you watch since the last launch. Same
             // philosophy as the update check — one line, only when there is something to say.
+            // A device kept for reading alone has no calendar to point at, so it hears nothing.
             digest::spawn(
-                state.config.effective().notifications.airing_digest,
+                state.config.effective().notifications.airing_digest
+                    && state.reading.answer().watches(),
                 state.config.effective().notifications.desktop,
                 services.store.clone(),
                 services.meta.clone(),
@@ -496,7 +498,7 @@ impl Engine {
             );
         }
         if let Some(loading) = plugins_loading {
-            say_plugin_load(loading, inbox.sender());
+            say_plugin_load(loading, services.book_plugins.clone(), inbox.sender());
         }
         if background.store_refresh && joined {
             refresh_joined(services.stores.clone(), inbox.sender());
@@ -776,9 +778,17 @@ impl Engine {
 
 /// Say whatever the background plugin load concluded, once. A plugin that failed to load must
 /// not be silent: the Providers screen is where a missing source gets explained.
-fn say_plugin_load(loading: JoinHandle<Option<Msg>>, tx: Outbox) {
+fn say_plugin_load(
+    loading: JoinHandle<Option<Msg>>,
+    books: crate::book_plugins::BookPlugins,
+    tx: Outbox,
+) {
     tokio::spawn(async move {
         if let Ok(outcome) = loading.await {
+            // Reading's screens are drawn again when book plugins came, so a series held in one
+            // reads on at once, or when one was drawn from a plugin on its way that may not have
+            // come. Otherwise nothing on them changed.
+            let books_came = !books.is_empty() || books.take_leaned();
             match outcome {
                 Some(note) => {
                     // Plugins skipped for an old ABI are said, but the rest did arrive.
@@ -787,6 +797,9 @@ fn say_plugin_load(loading: JoinHandle<Option<Msg>>, tx: Outbox) {
                     let _ = tx.send(Event::ProviderNote(note));
                     if arrived {
                         let _ = tx.internal(Internal::SourcesReordered);
+                        if books_came {
+                            let _ = tx.internal(Internal::BookSourcesChanged);
+                        }
                     }
                 }
                 // Ranked again by the order as it stands now, since the user may have moved a
@@ -794,6 +807,9 @@ fn say_plugin_load(loading: JoinHandle<Option<Msg>>, tx: Outbox) {
                 // arrivals actually appear on it.
                 None => {
                     let _ = tx.internal(Internal::SourcesReordered);
+                    if books_came {
+                        let _ = tx.internal(Internal::BookSourcesChanged);
+                    }
                 }
             }
         }

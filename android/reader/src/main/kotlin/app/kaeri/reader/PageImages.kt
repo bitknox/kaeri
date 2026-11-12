@@ -1,6 +1,8 @@
 // Page files to bitmaps. The engine writes each page to its cache whole, as the book had it or as
 // raw pixels ready to map (a grey e-ink page is Gray8), and names the crop to show. Decoding runs
-// off the main thread and the bitmaps are kept in a cache sized from the app's memory.
+// off the main thread and the bitmaps are kept in a cache sized from the app's memory. The pages
+// the reader has on screen, beside it and held over a turn are kept whatever that size: an e-ink
+// panel's raw pages are big enough that the cache may hold only one.
 
 package app.kaeri.reader
 
@@ -43,9 +45,13 @@ object PageDecoder {
         if (!source.isFile) {
             PageDecodeResult.Missing
         } else {
+            // Settled before the first picture: the probe's one-pixel copy makes the first native
+            // buffer and file calls under the lazy's lock. The JVM test runtime sets those up for
+            // one first caller at a time, and pages beside the shown one decode alongside it.
+            val rgba = rgbaInMemory
             when (val encoding = file.encoding) {
                 is PageEncoding.Original -> PageDecodeResult.Decoded(PageBitmap(original(source, file), grey = false))
-                is PageEncoding.Raw -> PageDecodeResult.Decoded(raw(source, file, encoding))
+                is PageEncoding.Raw -> PageDecodeResult.Decoded(raw(source, file, encoding, rgba))
             }
         }
     } catch (_: FileNotFoundException) {
@@ -86,7 +92,7 @@ object PageDecoder {
         return whole
     }
 
-    private fun raw(source: File, file: PageFile, encoding: PageEncoding.Raw): PageBitmap {
+    private fun raw(source: File, file: PageFile, encoding: PageEncoding.Raw, rgba: Boolean): PageBitmap {
         val width = file.width.toInt()
         val height = file.height.toInt()
         val grey = encoding.format == PixelFormat.GRAY8
@@ -98,7 +104,7 @@ object PageDecoder {
             check(mapped.capacity().toLong() >= stride.toLong() * (height - 1) + width * pixel) { "the page file is short" }
             val rowBytes = bitmap.rowBytes
             // RGBA in memory is what ARGB_8888 holds on Android; a host whose order differs swaps.
-            val swap = !grey && !rgbaInMemory
+            val swap = !grey && !rgba
             val packed = if (!swap && stride == rowBytes && mapped.capacity() >= rowBytes * height) {
                 mapped.limit(rowBytes * height)
                 mapped
@@ -139,24 +145,47 @@ object PageDecoder {
 
 /**
  * The decoded pages kept in memory, by file and crop. Sized to an eighth of what the app may use,
- * so a 2 GB e-reader keeps working; the engine's own cache holds the files.
+ * so a 2 GB e-reader keeps working; the engine's own cache holds the files. The pages named by
+ * [keep] stay besides, whatever that size, until they are no longer named.
  */
 class PageImages(maxBytes: Int = defaultBytes()) {
     private val cache = object : LruCache<String, PageBitmap>(maxBytes.coerceAtLeast(1)) {
         override fun sizeOf(key: String, value: PageBitmap): Int = value.bitmap.allocationByteCount
     }
+    private val kept = java.util.concurrent.ConcurrentHashMap<String, PageBitmap>()
+    @Volatile private var keeping: Set<String> = emptySet()
 
-    fun cached(file: PageFile): PageBitmap? = cache.get(keyOf(file))
+    fun cached(file: PageFile): PageBitmap? = keyOf(file).let { kept[it] ?: cache.get(it) }
+
+    /**
+     * Keeps [files]' pictures, once decoded, whatever the cache's size: the page shown, the pages
+     * beside it and a page held on screen over a turn. Pages kept before and not named now go back
+     * to the cache alone.
+     */
+    fun keep(files: Collection<PageFile>) {
+        val keys = files.mapTo(HashSet(), ::keyOf)
+        if (keys == keeping) return
+        keeping = keys
+        kept.keys.retainAll(keys)
+        for (key in keys) if (!kept.containsKey(key)) cache.get(key)?.let { kept[key] = it }
+    }
 
     /** The page's bitmap, decoded now if it is not kept. Call it off the main thread. */
     fun load(file: PageFile): PageDecodeResult {
-        cache.get(keyOf(file))?.let { return PageDecodeResult.Decoded(it) }
+        val key = keyOf(file)
+        cached(file)?.let { return PageDecodeResult.Decoded(it) }
         val result = PageDecoder.decode(file)
-        if (result is PageDecodeResult.Decoded) cache.put(keyOf(file), result.page)
+        if (result is PageDecodeResult.Decoded) {
+            cache.put(key, result.page)
+            if (key in keeping) kept[key] = result.page
+        }
         return result
     }
 
-    fun clear() = cache.evictAll()
+    fun clear() {
+        kept.clear()
+        cache.evictAll()
+    }
 
     companion object {
         fun defaultBytes(): Int = (Runtime.getRuntime().maxMemory() / 8).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
