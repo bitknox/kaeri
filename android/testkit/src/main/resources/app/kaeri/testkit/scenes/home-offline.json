@@ -1310,10 +1310,6 @@
    }
   },
   {
-   "@type": "JobDone",
-   "v1": "4"
-  },
-  {
    "@type": "MetaStatus",
    "v1": [
     {
@@ -1355,6 +1351,10 @@
      }
     }
    }
+  },
+  {
+   "@type": "JobDone",
+   "v1": "4"
   },
   {
    "@type": "JobStarted",
