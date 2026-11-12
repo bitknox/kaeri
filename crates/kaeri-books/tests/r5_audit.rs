@@ -289,3 +289,41 @@ fn comic_info_never_panics() {
         });
     }
 }
+
+/// R5E-4. An attribute whose name starts with a letter of three or more bytes (`<p あa="1">`,
+/// well-formed XML) is cut at byte 2 to look for `on…` handlers: in the reader's sanitiser
+/// (`novel/sanitize.rs:472`) and in the EPUB writer downloads and Send to e-reader use
+/// (`write/xhtml.rs:201`). Either panics.
+#[test]
+#[ignore = "R5E-4: attribute names are sliced at byte 2"]
+fn attributes_named_in_wide_letters_are_cleaned() {
+    let limits = Limits::default();
+    let clean = Clean { path: "c.xhtml", lang: None, soft_hyphens: false, limits: &limits };
+    let body = "<p あa=\"1\">Text of the chapter.</p>";
+    let mut panicked = Vec::new();
+    if catch_unwind(AssertUnwindSafe(|| novel::text_chapter(body, "One", &clean))).is_err() {
+        panicked.push("novel::text_chapter");
+    }
+    let page = format!(
+        "<html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>t</title></head><body>{body}</body></html>"
+    );
+    if catch_unwind(AssertUnwindSafe(|| novel::document(page.as_bytes(), &clean))).is_err() {
+        panicked.push("novel::document");
+    }
+    let wrote = catch_unwind(AssertUnwindSafe(|| {
+        let meta = kaeri_books::write::BookMeta { title: "One".into(), ..Default::default() };
+        let out = std::io::Cursor::new(Vec::new());
+        let mut book = kaeri_books::write::EpubWriter::new(
+            out,
+            meta,
+            kaeri_books::write::EpubFlavor::Epub,
+            None,
+        )
+        .unwrap();
+        let _ = book.add_chapter("One", body);
+    }));
+    if wrote.is_err() {
+        panicked.push("write::EpubWriter::add_chapter");
+    }
+    assert!(panicked.is_empty(), "panicked: {panicked:?}");
+}
