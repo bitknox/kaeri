@@ -868,6 +868,10 @@ fun PhoneReader(
                         sheet = Sheet.None
                     },
                     onDismiss = { sheet = Sheet.None },
+                    onChapter = {
+                        session.openChapter(it)
+                        sheet = Sheet.None
+                    },
                     instant = instant,
                 )
                 Sheet.Settings -> ReaderSettingsSheet(

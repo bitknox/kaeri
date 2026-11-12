@@ -4,6 +4,7 @@
 package app.kaeri.reader.phone
 
 import androidx.compose.foundation.background
+import app.kaeri.engine.core.ChapterId
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
@@ -75,6 +76,8 @@ fun ChaptersSheet(
     rtl: Boolean,
     onGo: (leaf: Int) -> Unit,
     onDismiss: () -> Unit,
+    /** A chapter picked from the list: it opens and the sheet closes, as a page picked does. */
+    onChapter: (ChapterId) -> Unit = { session.openChapter(it) },
     /** Paper mode: the sheet comes and goes at once. */
     instant: Boolean = false,
 ) {
@@ -102,7 +105,7 @@ fun ChaptersSheet(
                 if (tab == 0) {
                     PageGrid(state, images, currentLeaf, rtl, onGo, session::needPage)
                 } else {
-                    ChapterList(session, state)
+                    ChapterList(state, onChapter)
                 }
             }
             Spacer(Modifier.height(16.dp))
@@ -171,7 +174,7 @@ private fun PageGrid(state: ReaderState, images: PageImages, currentLeaf: Int, r
 }
 
 @Composable
-private fun ChapterList(session: ReaderSession, state: ReaderState) {
+private fun ChapterList(state: ReaderState, onChapter: (ChapterId) -> Unit) {
     val context = LocalContext.current
     val current = state.chapter
     var open by remember { mutableStateOf(setOf<Int>()) }
@@ -247,7 +250,7 @@ private fun ChapterList(session: ReaderSession, state: ReaderState) {
                                 .background(if (here) Chrome.selected else Color.Transparent)
                                 // TalkBack and the keyboard start on the open chapter.
                                 .then(if (here) Modifier.focusRequester(focus).focusable() else Modifier)
-                                .clickable { session.openChapter(chapter.id) }
+                                .clickable { onChapter(chapter.id) }
                                 .padding(horizontal = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
