@@ -343,6 +343,21 @@ impl Store {
         })
     }
 
+    /// Take a chapter waiting only to be kept ready out of the queue, in one step, as
+    /// [`Self::remove_book_downloads`] would: true when it was taken. One the queue has started,
+    /// or one the person asked for, stays.
+    pub fn unqueue_kept_ready(&self, work: &str, chapter: &str, now: i64) -> Result<bool> {
+        self.with_conn(|c| {
+            let taken = c.execute(
+                "UPDATE book_download SET state = 'removed', path = NULL, bytes = 0,
+                    pages_done = 0, error = NULL, updated_at = ?3
+                  WHERE work = ?1 AND chapter = ?2 AND keep_ready = 1 AND state = 'queued'",
+                params![work, chapter, now],
+            )?;
+            Ok(taken > 0)
+        })
+    }
+
     /// Take chapters out. A chapter fetched ahead on its own leaves a mark so it is not fetched
     /// again; any other row goes. With `chapters` empty, all of the work's. Returns the rows as
     /// they were, so their files can go.
@@ -451,6 +466,24 @@ mod tests {
         assert_eq!(store.queue_book_download(&ask("1", false), 13).unwrap(), Queued::Added);
         let again = store.book_download("a:900401", "1").unwrap().unwrap();
         assert_eq!((again.state, again.error), (BookDownloadState::Queued, None));
+    }
+
+    #[test]
+    fn only_a_kept_ready_row_still_queued_is_unqueued() {
+        let store = Store::open_in_memory().unwrap();
+        store.queue_book_download(&ask("1", true), 1).unwrap();
+        store.queue_book_download(&ask("2", true), 1).unwrap();
+        store.queue_book_download(&ask("3", false), 1).unwrap();
+        let first = store.next_book_download().unwrap().unwrap();
+        store.book_download_progress(first.id, 0, None, 2).unwrap();
+        assert_eq!(first.chapter, "3", "asked rows first");
+        assert!(!store.unqueue_kept_ready("a:900401", "3", 3).unwrap(), "asked for");
+        let started = store.book_download("a:900401", "1").unwrap().unwrap();
+        store.book_download_progress(started.id, 0, None, 3).unwrap();
+        assert!(!store.unqueue_kept_ready("a:900401", "1", 4).unwrap(), "started");
+        assert!(store.unqueue_kept_ready("a:900401", "2", 4).unwrap());
+        assert!(store.book_downloads(None).unwrap().iter().all(|d| d.chapter != "2"));
+        assert_eq!(store.book_downloads_let_go("a:900401").unwrap(), ["2"]);
     }
 
     #[test]

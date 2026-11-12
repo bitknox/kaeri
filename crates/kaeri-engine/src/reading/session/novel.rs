@@ -75,6 +75,8 @@ pub(super) enum Prepared {
     Pages(PathBuf),
     /// A source's pictures, landing a page at a time in the feed's folder.
     Feed(Arc<crate::reading::feed::Feed>),
+    /// The download queue finished fetching the chapter: it opens from that file.
+    Downloaded,
     Novel(Box<NovelBook>),
     Failed(ReadingFailure),
 }
@@ -225,7 +227,7 @@ pub(super) fn fetch_ahead(
                 move |page, out: &Outbox| worker.landed(session, chapter.clone(), page, out)
             };
             let started = crate::reading::feed::start(
-                sources,
+                (sources, None),
                 opened,
                 (chapter.clone(), learning),
                 dir,
@@ -345,6 +347,54 @@ pub(super) fn follow_first_page(
         }
     });
     FirstPage { task }
+}
+
+/// How often an open looks at the download it waits on.
+const DOWNLOAD_LOOK: Duration = Duration::from_millis(100);
+
+/// How an open of a chapter the download queue has goes.
+enum Joined {
+    /// The download is done: the chapter opens from its file.
+    File,
+    /// The download fetches the chapter's pictures, or a reader still holds the pages it
+    /// fetched: the open shares them.
+    Pages(Arc<crate::downloads::books::SharedPages>),
+    /// The queue is not fetching it: the open asks the source itself.
+    Not,
+}
+
+/// Join the download queue's fetch of a chapter being opened, so the source is asked for it
+/// once: its pages as soon as it fetches pictures, or its file once it is done. Not when the
+/// queue is not fetching it, and as soon as the download fails, is taken out of the queue or
+/// held. A queued one is waited on only while the queue is about to start it, for
+/// [`FIRST_PAGE_QUEUED`] at most: not one behind another download or in a queue that does not
+/// run. Until the download starts sharing its pages or ends, its row is looked at every
+/// [`DOWNLOAD_LOOK`]: the queue says nothing as it does.
+async fn joined(
+    sources: &crate::read_sources::BookSources,
+    work: &WorkId,
+    chapter: &ChapterId,
+) -> Joined {
+    use kaeri_store::book_downloads::BookDownloadState as State;
+    let started = Instant::now();
+    loop {
+        if let Some(pages) = sources.downloads.sharing(work.as_str(), chapter.as_str()) {
+            return Joined::Pages(pages);
+        }
+        let row = sources.store().book_download(work.as_str(), chapter.as_str()).ok().flatten();
+        // Queued, it is waited on only while the queue is about to start it.
+        let queued = started.elapsed() < FIRST_PAGE_QUEUED
+            && sources.downloads.starts_soon(sources.store(), work.as_str(), chapter.as_str());
+        match row.map(|r| (r.state, r.path)) {
+            Some((State::Done, Some(path))) if Path::new(&path).exists() => {
+                return Joined::File;
+            }
+            Some((State::Downloading, _)) => {}
+            Some((State::Queued, _)) if queued => {}
+            _ => return Joined::Not,
+        }
+        tokio::time::sleep(DOWNLOAD_LOOK).await;
+    }
 }
 
 /// Ask the source for a chapter's first page and nothing more.
@@ -703,7 +753,30 @@ impl Session {
                 put.put(Prepared::Feed(feed));
                 return;
             }
-            let prepared = match sources.open(&work, &id, None, now).await {
+            // The download queue is fetching it, as one kept ready or asked for: pictures open
+            // from the pages it has kept, the rest shared with it as they come, and a book
+            // waits for its file. The source is not asked for the chapter a second time.
+            let (kept, opened) = loop {
+                match joined(&sources, &work, &id).await {
+                    Joined::File => {
+                        put.put(Prepared::Downloaded);
+                        return;
+                    }
+                    Joined::Pages(kept) => {
+                        let opened = kept.opened();
+                        break (Some(kept), Ok(opened));
+                    }
+                    // Still queued only to be kept ready, it leaves the queue: this open
+                    // fetches it. One the queue started meanwhile is joined.
+                    Joined::Not => {
+                        let store = sources.store();
+                        if sources.downloads.reader_fetches(store, &out, (&work, &id), now) {
+                            break (None, sources.open(&work, &id, None, now).await);
+                        }
+                    }
+                }
+            };
+            let prepared = match opened {
                 Err(failure) => Prepared::Failed(failure),
                 // A source's pictures land a page at a time in a folder the page worker reads
                 // as a book, laid out once the page it opens at is there.
@@ -722,7 +795,7 @@ impl Session {
                         worker.landed(session, chapter.clone(), page, out);
                     };
                     let fed = crate::reading::feed::start(
-                        sources,
+                        (sources, kept),
                         opened,
                         (id, learning),
                         streamed,
@@ -802,6 +875,11 @@ impl Session {
                 let chapter = &mut self.chapters[self.at];
                 chapter.path = path;
                 chapter.format = "pages".into();
+                let page = self.start.page.unwrap_or(0);
+                self.lay_out(cx, pages, page);
+            }
+            // Laid out again, the chapter follows its download to the file.
+            Prepared::Downloaded => {
                 let page = self.start.page.unwrap_or(0);
                 self.lay_out(cx, pages, page);
             }

@@ -29,10 +29,15 @@ use kaeri_store::book_credits::PagePrint;
 use tokio::{sync::mpsc, task::JoinSet};
 
 use crate::{
+    downloads::books::SharedPages,
     outbox::Outbox,
     read_sources::{BookSources, Opened},
     reading::credits::Learning,
 };
+
+/// The pages of a chapter its download fetches too: each page comes from them, or is fetched
+/// into them, so the source is asked for it once.
+pub(crate) type Kept = Option<Arc<SharedPages>>;
 
 /// The longest an edge page is waited on before the chapter is laid out without it, as long
 /// as a novel's pictures are.
@@ -203,6 +208,8 @@ struct Fetcher<F> {
     wanted: mpsc::UnboundedReceiver<usize>,
     gone: Gone,
     left: tokio::sync::watch::Receiver<bool>,
+    /// The download's pages, shared until every page has landed.
+    kept: Kept,
 }
 
 impl Feed {
@@ -296,10 +303,12 @@ impl Feed {
 /// `first` gives for the pages left, fetched before this returns. The feed is `Err` when that
 /// page fails, as the chapter failing to open would be. The rest come behind it, `landed`
 /// called with each page's index, and `out` to answer on, once it has landed or failed. Once
-/// `gone` says the session closed, nothing more is fetched and what landed goes.
+/// `gone` says the session closed, nothing more is fetched and what landed goes. With `kept`,
+/// the chapter's download shares its pages: those it kept come at once, and the rest from
+/// whichever of the two asks first.
 #[allow(clippy::too_many_arguments)]
 pub(crate) async fn start(
-    sources: BookSources,
+    (sources, kept): (BookSources, Kept),
     mut opened: Opened,
     (chapter, learning): (ChapterId, Learning),
     dir: PathBuf,
@@ -320,7 +329,7 @@ pub(crate) async fn start(
         .await
         .map_err(|e| ReadingFailure::Other { reason: e.to_string() })?;
     let spans = opened.spans();
-    let (edges, mut pending) = edge_pages(&sources, &mut opened, &spans, now).await;
+    let (edges, mut pending) = edge_pages((&sources, &kept), &mut opened, &spans, now).await;
     let mine: Vec<PagePrint> = edges
         .iter()
         .filter_map(|e| Some(PagePrint { page: e.page, at_end: e.at_end, print: e.print? }))
@@ -377,8 +386,8 @@ pub(crate) async fn start(
     let first = first(u32::try_from(count).unwrap_or(u32::MAX), &skipped).min(count - 1);
     if !matches!(pages[first], FeedPage::Landed(_)) {
         let slow = pending.remove(&order[first]);
-        let page =
-            fetch(&sources, &mut opened, &dir, (first, order[first]), slow, now, &gone).await;
+        let at = (first, order[first]);
+        let page = fetch((&sources, &kept), &mut opened, &dir, at, slow, now, &gone).await;
         if let FeedPage::Failed(failure) = page {
             return Err(failure);
         }
@@ -408,6 +417,7 @@ pub(crate) async fn start(
         wanted: waited,
         gone,
         left: leaving,
+        kept,
     };
     tokio::spawn(fetcher.run(Arc::downgrade(&feed), rest, out));
     Ok(feed)
@@ -436,7 +446,7 @@ impl Drop for Pending {
 /// are asked for again once; the rest then come together. Those still coming are given back to
 /// be waited on in their turn.
 async fn edge_pages(
-    sources: &BookSources,
+    (sources, kept): (&BookSources, &Kept),
     opened: &mut Opened,
     spans: &[(u32, u32)],
     now: i64,
@@ -446,9 +456,11 @@ async fn edge_pages(
     let lead = wanted.next();
     let lead = match lead {
         Some((page, at_end)) => {
-            let got =
-                tokio::time::timeout_at(deadline, sources.page(opened, page as usize, now))
-                    .await;
+            let got = tokio::time::timeout_at(
+                deadline,
+                page_of((sources, kept), opened, page, now, false),
+            )
+            .await;
             Some((page, at_end, got.ok().and_then(Result::ok)))
         }
         None => None,
@@ -456,9 +468,9 @@ async fn edge_pages(
     let mut fetches: Vec<(u32, bool, Option<Pending>)> = wanted
         .map(|(page, at_end)| {
             let fetch = opened.pictures_copy().map(|mut own| {
-                let sources = sources.clone();
+                let (sources, kept) = (sources.clone(), kept.clone());
                 Pending(tokio::spawn(async move {
-                    sources.page(&mut own, page as usize, now).await
+                    page_of((&sources, &kept), &mut own, page, now, false).await
                 }))
             });
             (page, at_end, fetch)
@@ -560,6 +572,11 @@ impl<F: Fn(u32, &Outbox) + Send + 'static> Fetcher<F> {
                     let Some(feed) = feed.upgrade() else { return };
                     feed.set(index, page);
                     asked.remove(&index);
+                    // Every page landed: nothing more is fetched from the download's pages, and
+                    // they go once it is done with them.
+                    if feed.complete() {
+                        self.kept = None;
+                    }
                     if let Some(told) = told {
                         (self.landed)(index as u32, &told);
                     }
@@ -600,16 +617,17 @@ impl<F: Fn(u32, &Outbox) + Send + 'static> Fetcher<F> {
         let slow = self.pending.remove(&source);
         let (sources, mut opened, now, gone) =
             (self.sources.clone(), self.opened.clone(), self.now, self.gone.clone());
+        let kept = self.kept.clone();
         running.spawn(async move {
-            let page =
-                fetch(&sources, &mut opened, &dir, (index, source), slow, now, &gone).await;
+            let at = (index, source);
+            let page = fetch((&sources, &kept), &mut opened, &dir, at, slow, now, &gone).await;
             (index, page, opened, told)
         });
     }
 }
 
 /// Whether a fetch asked for `after`'s page addresses again, so they differ from `before`'s.
-fn moved(after: &Opened, before: &Opened) -> bool {
+pub(crate) fn moved(after: &Opened, before: &Opened) -> bool {
     after.content != before.content
         || after.parts.iter().zip(&before.parts).any(|(a, b)| a.pages != b.pages)
 }
@@ -619,7 +637,7 @@ fn moved(after: &Opened, before: &Opened) -> bool {
 /// A try not answered within [`PAGE_WAIT`] is made once more; a page that hangs then fails as
 /// its source not answering.
 async fn fetch(
-    sources: &BookSources,
+    (sources, kept): (&BookSources, &Kept),
     opened: &mut Opened,
     dir: &Path,
     (index, source): (usize, usize),
@@ -630,11 +648,11 @@ async fn fetch(
     let came = match slow {
         Some(mut slow) => match tokio::time::timeout(PAGE_WAIT, &mut slow.0).await {
             Ok(Ok(Ok(bytes))) => Ok(bytes),
-            Ok(_) => within(sources, opened, source, now, 2).await,
+            Ok(_) => within((sources, kept), opened, source, now, 0..2).await,
             // The edge fetch was its first try.
-            Err(_) => within(sources, opened, source, now, 1).await,
+            Err(_) => within((sources, kept), opened, source, now, 1..2).await,
         },
-        None => within(sources, opened, source, now, 2).await,
+        None => within((sources, kept), opened, source, now, 0..2).await,
     };
     match came {
         Ok(bytes) => write(dir, &format!("{:05}", index + 1), bytes, gone).await,
@@ -642,22 +660,39 @@ async fn fetch(
     }
 }
 
-/// The source's page `index`, with `tries` tries of [`PAGE_WAIT`] each.
+/// The source's page `index`, with `tries` tries of [`PAGE_WAIT`] each, counted from 0. A
+/// page the download fetches is waited on the same, and a try after the first asks the source
+/// once more rather than waiting on the fetch that did not come.
 async fn within(
-    sources: &BookSources,
+    (sources, kept): (&BookSources, &Kept),
     opened: &mut Opened,
     index: usize,
     now: i64,
-    tries: u32,
+    tries: std::ops::Range<u32>,
 ) -> Result<Vec<u8>, ReadingFailure> {
-    for _ in 0..tries {
-        if let Ok(came) =
-            tokio::time::timeout(PAGE_WAIT, sources.page(opened, index, now)).await
-        {
+    let page = u32::try_from(index).unwrap_or(u32::MAX);
+    for at in tries {
+        let came = page_of((sources, kept), opened, page, now, at > 0);
+        if let Ok(came) = tokio::time::timeout(PAGE_WAIT, came).await {
             return came;
         }
     }
     Err(ReadingFailure::SourceDown { source: sources.source_name(&opened.source_id) })
+}
+
+/// The source's page `index`: from the download's pages when it shares them, which fetch it
+/// only when neither has, or `again` asks for it once more.
+async fn page_of(
+    (sources, kept): (&BookSources, &Kept),
+    opened: &mut Opened,
+    index: u32,
+    now: i64,
+    again: bool,
+) -> Result<Vec<u8>, ReadingFailure> {
+    match kept {
+        Some(kept) => kept.page(sources, index, now, again).await,
+        None => sources.page(opened, index as usize, now).await,
+    }
 }
 
 /// Write a page's bytes into `dir` as `name`, with the type they are. The write runs to its
