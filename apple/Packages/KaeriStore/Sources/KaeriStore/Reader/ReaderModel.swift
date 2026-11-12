@@ -480,6 +480,9 @@ public final class ReaderModel {
     /// A strip settled: the image and how far down it, at most every 500 ms.
     public func stripAt(_ at: StripPos, footVisible: Bool) {
         guard session != 0, let chapter = view?.chapter.id else { return }
+        // The foot of a chapter whose last image has not landed is only where a guess put it: it
+        // starts no read.
+        let footVisible = footVisible && stripEndIn
         stripHere = at
         pendingStrip?.cancel()
         let now = ContinuousClock.now
@@ -537,9 +540,12 @@ public final class ReaderModel {
 
     /// A strip's marker into the next chapter crossed the middle of the screen: that chapter
     /// opens in the same scroll, under the marker, with no opening screen. The images read so
-    /// far stay above it.
+    /// far stay above it. Only once the chapter's end is where the strip draws it: a chapter whose
+    /// last image has not landed is never passed, since opening the next chapter counts this one
+    /// as read.
     public func flowOn() {
-        guard session != 0, flowing == nil, let view, view.mode == .strip, let next = endNext else { return }
+        guard session != 0, flowing == nil, let view, view.mode == .strip, stripEndIn,
+              let next = endNext else { return }
         commitKeep()
         let chapter = view.chapter.id
         let parts = leaves.filter { !$0.endPage }.flatMap(\.parts).map { part in
@@ -558,6 +564,21 @@ public final class ReaderModel {
 
     /// The chapter a strip is flowing into, until it has opened.
     public private(set) var flowing: ChapterId?
+
+    /// An image of `chapter` is in: its shape known from the book, its file landed, or its
+    /// failure said. Until then its height in a strip is a guess.
+    public func isIn(_ part: LeafPart, chapter: String) -> Bool {
+        (part.ratio ?? 0) > 0 || file(of: part, chapter: chapter) != nil
+            || failure(of: part, chapter: chapter) != nil
+    }
+
+    /// The open chapter's last image is in. Until then its foot is only where a guess put it:
+    /// the chapter is not passed, and its foot is not seen.
+    public var stripEndIn: Bool {
+        guard let chapter = view?.chapter.id,
+              let last = leaves.last(where: { !$0.endPage && !$0.parts.isEmpty })?.parts.last else { return false }
+        return isIn(last, chapter: chapter)
+    }
 
     public func retry(page: UInt32?) {
         // An open that failed before the engine named a session is asked for again whole.
