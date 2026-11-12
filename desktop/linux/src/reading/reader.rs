@@ -2581,10 +2581,6 @@ impl Reader {
         }
     }
 
-    /// Ask for the pages near the viewport and, a moment after the scrolling stops, say where
-    /// it stopped and whether the foot is in sight. While the strip holds its opening place it
-    /// only asks. Over a chapter read before, the group names it and nothing is said; the marker
-    /// into the next chapter crossing the middle opens that chapter.
     /// Put each waiting strip image's words in the middle of the part of it on screen, as laid
     /// out: on every scroll, and once the strip has been laid out at a new size.
     fn place_plate_words(&self) {
@@ -2601,6 +2597,10 @@ impl Reader {
         }
     }
 
+    /// Ask for the pages near the viewport and, a moment after the scrolling stops, say where
+    /// it stopped and whether the foot is in sight. While the strip holds its opening place it
+    /// only asks. Over a chapter read before, the group names it and nothing is said; the marker
+    /// into the next chapter crossing the middle opens that chapter.
     fn strip_moved(self: &Rc<Self>) {
         let adj = self.strip_scroll.vadjustment();
         let base = self.strip_base();
