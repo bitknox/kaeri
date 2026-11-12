@@ -15,7 +15,6 @@ export const getStaticPaths = localePaths;
 
 const { t, href, words } = useSite(Astro);
 
-const bands = ['f1', 'f2', 'f3', 'f4'] as const;
 ---
 
 <Page title={t('home.title')} description={t('home.description')} credit={1}>
@@ -51,47 +50,17 @@ const bands = ['f1', 'f2', 'f3', 'f4'] as const;
 		</figure>
 	</section>
 
-	<section class="band band-green" aria-labelledby="f1-h">
+	<section class="band band-green" aria-labelledby="sync-h">
 		<div class="band-in">
 			<div class="band-head">
-				<h2 id="f1-h">{t('home.f1.title')}</h2>
-				<p><span class="lead">{t('home.f1.lead')}</span> {t('home.f1.text')}</p>
+				<h2 id="sync-h">{t('home.sync.title')}</h2>
+				<p><span class="lead">{t('home.sync.lead')}</span> {t('home.sync.text')}</p>
 			</div>
 			<figure>
-				<div class="crop crop-a" style="aspect-ratio: 1200 / 480; view-transition-name: shot-continue">
-					<Pic name="mac-continue" sizes="min(1476px, 125vw)" style="left: -23%; top: -92.3%; width: 123%" alt={t('home.f1.alt')} />
+				<div class="crop crop-a sync-crop" style="aspect-ratio: 1200 / 400">
+					<Pic name="mac-continue-from" sizes="min(1476px, 125vw)" style="left: -23%; top: -15.9%; width: 123%" alt={t('home.sync.alt')} />
 				</div>
-				<figcaption>{t('home.f1.caption')}</figcaption>
-			</figure>
-		</div>
-	</section>
-
-	<section class="band" aria-labelledby="r1-h">
-		<div class="band-in band-rule band-rule-violet">
-			<div class="band-head">
-				<h2 id="r1-h">{t('home.r1.title')}</h2>
-				<p><span class="lead">{t('home.r1.lead')}</span> {t('home.r1.text')}</p>
-			</div>
-			<figure>
-				<div class="crop crop-a" style="aspect-ratio: 1200 / 400">
-					<Pic name="mac-read-home" sizes="min(1476px, 125vw)" style="left: -23%; top: -13%; width: 123%" alt={t('home.r1.alt')} />
-				</div>
-				<figcaption>{t('home.r1.caption')}</figcaption>
-			</figure>
-		</div>
-	</section>
-
-	<section class="band band-red" aria-labelledby="f3-h">
-		<div class="band-in">
-			<div class="band-head">
-				<h2 id="f3-h">{t('home.f3.title')}</h2>
-				<p><span class="lead">{t('home.f3.lead')}</span> {t('home.f3.text')}</p>
-			</div>
-			<figure class="player-fig">
-				<div class="player-bezel" style="view-transition-name: shot-player">
-					<Pic name="iphone-player" sizes="(min-width: 1100px) 1020px, 90vw" alt={t('home.f3.alt')} />
-				</div>
-				<figcaption set:html={t('home.f3.caption', { source: DEMO_PART_1, licence: CC })} />
+				<figcaption>{t('home.sync.caption')}</figcaption>
 			</figure>
 		</div>
 	</section>
@@ -112,6 +81,36 @@ const bands = ['f1', 'f2', 'f3', 'f4'] as const;
 					</div>
 				</div>
 				<figcaption>{t('home.r2.caption')}</figcaption>
+			</figure>
+		</div>
+	</section>
+
+	<section class="band band-red" aria-labelledby="f3-h">
+		<div class="band-in">
+			<div class="band-head">
+				<h2 id="f3-h">{t('home.f3.title')}</h2>
+				<p><span class="lead">{t('home.f3.lead')}</span> {t('home.f3.text')}</p>
+			</div>
+			<figure class="player-fig">
+				<div class="player-bezel" style="view-transition-name: shot-player">
+					<Pic name="iphone-player" sizes="(min-width: 1100px) 1020px, 90vw" alt={t('home.f3.alt')} />
+				</div>
+				<figcaption set:html={t('home.f3.caption', { source: DEMO_PART_1, licence: CC })} />
+			</figure>
+		</div>
+	</section>
+
+	<section class="band" aria-labelledby="library-h">
+		<div class="band-in band-rule band-rule-violet">
+			<div class="band-head">
+				<h2 id="library-h">{t('home.library.title')}</h2>
+				<p><span class="lead">{t('home.library.lead')}</span> {t('home.library.text')}</p>
+			</div>
+			<figure>
+				<div class="crop crop-a" style="aspect-ratio: 1400 / 375">
+					<Pic name="mac-book-sources" sizes="min(2194px, 183vw)" style="left: -31.43%; top: -28%; width: 182.86%" alt={t('home.library.alt')} />
+				</div>
+				<figcaption>{t('home.library.caption')}</figcaption>
 			</figure>
 		</div>
 	</section>
@@ -151,30 +150,35 @@ const bands = ['f1', 'f2', 'f3', 'f4'] as const;
 		</div>
 	</section>
 
-	<section class="band band-plain" aria-labelledby="fx-h">
+	<section class="band band-plain" aria-labelledby="native-h">
 		<div class="band-in">
 			<div class="band-head">
-				<h2 id="fx-h">{t('home.fx.title')}</h2>
-				<p><span class="lead">{t('home.fx.lead')}</span> {t('home.fx.text')}</p>
+				<h2 id="native-h">{t('home.native.title')}</h2>
+				<p><span class="lead">{t('home.native.lead')}</span> {t('home.native.text')}</p>
 			</div>
-			<div class="fx-grid">
-				<figure>
-					<div class="fx-crop"><Pic name="tv-continue" sizes="(min-width: 1200px) 420px, 60vw" style="left: -14%; top: 0; height: 100%; width: auto; max-width: none" alt={t('home.fx.tvAlt')} /></div>
-					<figcaption>{t('home.fx.tv')}</figcaption>
+			<div class="fx-grid nx-grid">
+				<figure class="nx-mac">
+					<div class="fx-crop"><Pic name="mac-continue" sizes="(min-width: 1100px) 440px, 92vw" style="left: -50%; top: -13.6%; width: 290.9%" alt={t('home.native.macAlt')} /></div>
+					<figcaption>{t('home.native.mac')}</figcaption>
 				</figure>
-				<figure>
-					<div class="fx-crop"><Pic name="android-continue" sizes="(min-width: 1200px) 288px, 45vw" style="left: 0; top: -10%; width: 100%" alt={t('home.fx.androidAlt')} /></div>
-					<figcaption>{t('home.fx.android')}</figcaption>
+				<figure class="nx-iphone">
+					<div class="fx-crop"><Pic name="iphone-continue" sizes="(min-width: 1100px) 220px, 46vw" style="left: 0; top: -73.7%; width: 100%" alt={t('home.native.iphoneAlt')} /></div>
+					<figcaption>{t('home.native.iphone')}</figcaption>
 				</figure>
-				<figure>
-					<div class="fx-crop"><Pic name="windows-stores" sizes="(min-width: 1200px) 420px, 60vw" style="left: -39%; top: 0; height: 100%; width: auto; max-width: none" alt={t('home.fx.windowsAlt')} /></div>
-					<figcaption>{t('home.fx.windows')}</figcaption>
+				<figure class="nx-android">
+					<div class="fx-crop"><Pic name="android-continue" sizes="(min-width: 1100px) 220px, 46vw" style="left: 0; top: -72.6%; width: 100%" alt={t('home.native.androidAlt')} /></div>
+					<figcaption>{t('home.native.android')}</figcaption>
 				</figure>
-				<figure>
-					<div class="fx-crop"><Pic name="linux-continue" sizes="(min-width: 1200px) 420px, 60vw" style="left: -25%; top: 0; height: 100%; width: auto; max-width: none" alt={t('home.fx.linuxAlt')} /></div>
-					<figcaption>{t('home.fx.linux')}</figcaption>
+				<figure class="nx-linux">
+					<div class="fx-crop"><Pic name="linux-continue" sizes="(min-width: 1100px) 660px, 140vw" style="left: -58.3%; top: -9.5%; width: 302.4%" alt={t('home.native.linuxAlt')} /></div>
+					<figcaption>{t('home.native.linux')}</figcaption>
+				</figure>
+				<figure class="nx-tv">
+					<div class="fx-crop"><Pic name="tv-continue" sizes="(min-width: 1100px) 620px, 130vw" style="left: -27.8%; top: -6.7%; width: 237%" alt={t('home.native.tvAlt')} /></div>
+					<figcaption>{t('home.native.tv')}</figcaption>
 				</figure>
 			</div>
+			<p class="nx-caption">{t('home.native.caption')}</p>
 			<p class="more"><a class="k-arrow" href={href(FEATURES)}>
 				{t('home.more')}
 				<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>

@@ -70,6 +70,10 @@ const SHOTS: Record<string, Spec> = {
 	'tv-skip-found': { from: 'tv-found-review.png', widths: TV },
 	'android-party-chat': { from: 'phone-party-chatreact.png', widths: PHONE_WIDE },
 	'mac-devices': { from: 'mac-devices-sync-on.png', widths: MAC },
+	// Home after the TV stopped the episodes, for the landing's sync band, and the reading side's
+	// book sources.
+	'mac-continue-from': { from: 'mac-watching-continuefrom.png', widths: MAC },
+	'mac-book-sources': { from: 'mac-book-sources.png', widths: MAC },
 	// Reading, from the reading scenes: the Mac's reading Home, the iPad's manga reader in landscape,
 	// the iPhone's long strip, series page and Send to e-reader sheet, and the e-ink tablet.
 	'mac-read-home': { from: 'mac-reading-home-read.png', widths: MAC },
