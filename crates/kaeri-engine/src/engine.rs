@@ -787,13 +787,16 @@ fn say_plugin_load(loading: JoinHandle<Option<Msg>>, tx: Outbox) {
                     let _ = tx.send(Event::ProviderNote(note));
                     if arrived {
                         let _ = tx.internal(Internal::SourcesReordered);
+                        let _ = tx.internal(Internal::BookSourcesChanged);
                     }
                 }
                 // Ranked again by the order as it stands now, since the user may have moved a
                 // source while these compiled, and the Providers screen refreshed so late
-                // arrivals actually appear on it.
+                // arrivals actually appear on it. Reading's screens are brought up to date with
+                // the book plugins that came, so a series held in one reads on at once.
                 None => {
                     let _ = tx.internal(Internal::SourcesReordered);
+                    let _ = tx.internal(Internal::BookSourcesChanged);
                 }
             }
         }

@@ -404,7 +404,8 @@ pub(crate) fn view(kit: &Kit, ask: Ask, work: &WorkId, partial: bool) -> SeriesV
         (None, Some(demo)) => demo.medium(),
         (None, None) => local_medium(kit, work),
     };
-    let action = tiles::action(&kit.store, &kit.sources, work, medium);
+    let action =
+        tiles::action(&kit.store, &kit.sources, work, medium, kit.plugins.is_arriving());
     let mut view = SeriesView {
         work: work.clone(),
         medium,

@@ -1844,6 +1844,19 @@ impl BookSources {
             .map(|(held, _)| held)
     }
 
+    /// While plugins are still loading: the edition a work is held in from a source not in
+    /// yet, the person's preference first. Not one switched off.
+    pub(crate) fn edition_not_in_yet(&self, work: &WorkId) -> Option<(String, String)> {
+        let order = self.registry.ids();
+        let mut held = self.store.book_refs_for_work(work.as_str()).unwrap_or_default();
+        held.retain(|(source, _)| !order.contains(source) && !self.registry.is_off(source));
+        let pref = self.store.edition_pref(work.as_str()).ok().flatten();
+        let first = pref
+            .and_then(|p| held.iter().position(|(source, _)| *source == p.source_id))
+            .unwrap_or(0);
+        (first < held.len()).then(|| held.swap_remove(first))
+    }
+
     /// Note what a source's chapter list came back as: empty, or with chapters again.
     fn note_list(&self, source: &str, series: &str, chapters: &[SourceChapter]) {
         let mark = self.source_mark(source);
