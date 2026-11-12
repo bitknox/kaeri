@@ -716,7 +716,8 @@ pub(crate) fn dispatch(
         Command::NetworkPath { cellular, constrained, offline } => {
             let network = crate::phases::Network { cellular, constrained, offline };
             let moved = engine.network.offline != offline;
-            let was_offline = services.offline.swap(offline, std::sync::atomic::Ordering::Relaxed);
+            let was_offline =
+                services.offline.swap(offline, std::sync::atomic::Ordering::Relaxed);
             services.connection.send_replace(offline);
             services.book_sources.write_back_network(offline, services.clock.now());
             crate::phases::network_path(network, engine, tx);
