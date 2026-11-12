@@ -73,7 +73,7 @@ public class ReadingTests
         Assert.Contains(sent, c => c is Command.Reading { V1: ReadingCommand.CancelPrepare { Job: 9 } });
     }
 
-    [Fact(Skip = "W-R5-6: late progress from a stopped send binds to the next send, which then never ends", SkipUnless = nameof(Probing))]
+    [Fact]
     public void ProgressFromAStoppedSendDoesNotTakeOverTheNextOne()
     {
         List<Command> sent = [];
@@ -93,7 +93,7 @@ public class ReadingTests
         Assert.Equal(SendPhase.Ready, send.Phase);
     }
 
-    [Fact(Skip = "W-R5-6: late progress from a stopped send leaves a row preparing for ever", SkipUnless = nameof(Probing))]
+    [Fact]
     public void ProgressFromAStoppedSendLeavesNoRow()
     {
         var sending = new SendState { Send = _ => { } };

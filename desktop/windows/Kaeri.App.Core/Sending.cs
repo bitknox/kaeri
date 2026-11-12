@@ -50,6 +50,8 @@ public sealed class SendState
 
     int lastId;
     bool feedStaged;
+    // Jobs stopped here. Their last events may still be on their way and belong to no send.
+    readonly HashSet<ulong> stopped = [];
 
     void Ask(ReadingCommand command) => Send?.Invoke(new Command.Reading(command));
 
@@ -91,7 +93,10 @@ public sealed class SendState
         if (send.IsRunning)
         {
             if (send.Job is { } job)
+            {
+                stopped.Add(job);
                 Ask(new ReadingCommand.CancelPrepare(job));
+            }
             else
             {
                 send.CancelOnBind = true;
@@ -221,9 +226,12 @@ public sealed class SendState
     /// <summary>
     /// The send a job belongs to: the one already bound to it, else the first one asked for that
     /// the engine had not named yet, else one the app never started (a send held across a restart).
+    /// A job stopped here belongs to none.
     /// </summary>
     void Update(ulong job, string? work, string? target, Action<EReaderSend> change)
     {
+        if (stopped.Contains(job))
+            return;
         var send = Sends.FirstOrDefault(s => s.Job == job);
         if (send is null && Sends.FirstOrDefault(s => s.Job is null && s.IsRunning) is { } unbound)
         {
@@ -242,6 +250,7 @@ public sealed class SendState
             send.Target = target;
         if (send.CancelOnBind && send.Job is { } bound)
         {
+            stopped.Add(bound);
             Ask(new ReadingCommand.CancelPrepare(bound));
             Sends.Remove(send);
             return;
