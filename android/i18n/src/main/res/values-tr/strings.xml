@@ -803,9 +803,6 @@
     <string name="reader_volume_line">Cilt %1$s</string>
     <string name="reader_volume_read">Cilt %1$s · okundu</string>
     <string name="reader_volume_none">Bölümler</string>
-    <string name="reader_page_plate">Sayfa %1$d</string>
-    <string name="reader_image_plate">Görsel %1$,d</string>
-    <string name="reader_image_loading">Görsel %1$,d yükleniyor</string>
     <string name="reader_opening_finding">Kaynak aranıyor</string>
     <string name="reader_failed_choose">Kaynak seç</string>
     <string name="reader_settings_search">Ayarlarda ara</string>
@@ -2431,6 +2428,9 @@
     <string name="player_subs_bg_box">Kutu</string>
     <string name="player_subs_more">Ayarlar\'da daha fazlası…</string>
     <string name="reader_page_loading">Sayfa %1$d yükleniyor</string>
+    <string name="reader_page_plate">Sayfa %1$d</string>
+    <string name="reader_image_plate">Görsel %1$d</string>
+    <string name="reader_image_loading">Görsel %1$d yükleniyor</string>
     <string name="reader_page_failed">Sayfa %1$d yüklenemedi</string>
     <string name="reader_try_again">Tekrar dene</string>
     <string name="reader_close">Kapat</string>

@@ -37,6 +37,15 @@ import app.kaeri.reader.phone.StripDivider
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.captureScreenRoboImage
 import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -249,9 +258,9 @@ class ReaderShots {
     }
 
     @Test
-    fun a_strip_image_waits_with_its_number_then_one_line() {
+    fun a_strip_image_waits_with_its_number_then_a_line_under_it() {
         compose.setContent {
-            androidx.compose.foundation.layout.Column {
+            Column {
                 for (long in listOf(false, true)) {
                     Box(Modifier.fillMaxWidth().height(240.dp).background(Chrome.ground)) { ImageWaiting(7, long) }
                 }
@@ -259,6 +268,23 @@ class ReaderShots {
         }
         compose.waitForIdle()
         compose.onRoot().captureRoboImage(file("strip-waiting"))
+    }
+
+    @Test
+    fun a_tall_strip_image_keeps_its_words_in_the_middle_of_the_part_on_screen() {
+        compose.setContent {
+            val into = with(LocalDensity.current) { 1000.dp.roundToPx() }
+            Box(Modifier.fillMaxWidth().height(400.dp).testTag("window")) {
+                Column(Modifier.verticalScroll(rememberScrollState(into))) {
+                    Box(Modifier.fillMaxWidth().height(2400.dp)) { ImageWaiting(7, false) }
+                }
+            }
+        }
+        compose.waitForIdle()
+        val window = compose.onNodeWithTag("window").getBoundsInRoot()
+        val words = compose.onNodeWithText("Image 8").getBoundsInRoot()
+        val middle = (words.top + words.bottom) / 2 - window.top
+        assertEquals(200f, middle.value, 2f)
     }
 
     @Test

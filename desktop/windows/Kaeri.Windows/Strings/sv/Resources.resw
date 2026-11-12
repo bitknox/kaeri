@@ -6050,6 +6050,15 @@
   <data name="ReaderPageLoading" xml:space="preserve">
     <value>Laddar sida {page}</value>
   </data>
+  <data name="ReaderPagePlate" xml:space="preserve">
+    <value>Sida {page}</value>
+  </data>
+  <data name="ReaderImagePlate" xml:space="preserve">
+    <value>Bild {image}</value>
+  </data>
+  <data name="ReaderImageLoading" xml:space="preserve">
+    <value>Laddar bild {image}</value>
+  </data>
   <data name="ReaderPageFailed" xml:space="preserve">
     <value>Kunde inte ladda sida {page}</value>
   </data>

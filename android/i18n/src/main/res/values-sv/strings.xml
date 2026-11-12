@@ -803,9 +803,6 @@
     <string name="reader_volume_line">Volym %1$s</string>
     <string name="reader_volume_read">Volym %1$s · läst</string>
     <string name="reader_volume_none">Kapitel</string>
-    <string name="reader_page_plate">Sida %1$d</string>
-    <string name="reader_image_plate">Bild %1$,d</string>
-    <string name="reader_image_loading">Laddar bild %1$,d</string>
     <string name="reader_opening_finding">Letar efter en källa</string>
     <string name="reader_failed_choose">Välj källa</string>
     <string name="reader_settings_search">Sök i inställningar</string>
@@ -2431,6 +2428,9 @@
     <string name="player_subs_bg_box">Ruta</string>
     <string name="player_subs_more">Mer i Inställningar…</string>
     <string name="reader_page_loading">Laddar sida %1$d</string>
+    <string name="reader_page_plate">Sida %1$d</string>
+    <string name="reader_image_plate">Bild %1$d</string>
+    <string name="reader_image_loading">Laddar bild %1$d</string>
     <string name="reader_page_failed">Kunde inte ladda sida %1$d</string>
     <string name="reader_try_again">Försök igen</string>
     <string name="reader_close">Stäng</string>

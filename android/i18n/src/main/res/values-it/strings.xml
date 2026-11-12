@@ -838,9 +838,6 @@
     <string name="reader_volume_line">Volume %1$s</string>
     <string name="reader_volume_read">Volume %1$s · letto</string>
     <string name="reader_volume_none">Capitoli</string>
-    <string name="reader_page_plate">Pagina %1$d</string>
-    <string name="reader_image_plate">Immagine %1$,d</string>
-    <string name="reader_image_loading">Caricamento immagine %1$,d</string>
     <string name="reader_opening_finding">Ricerca di una fonte</string>
     <string name="reader_failed_choose">Scegli una fonte</string>
     <string name="reader_settings_search">Cerca nelle impostazioni</string>
@@ -2515,6 +2512,9 @@
     <string name="player_subs_bg_box">Riquadro</string>
     <string name="player_subs_more">Altro in Impostazioni…</string>
     <string name="reader_page_loading">Caricamento pagina %1$d</string>
+    <string name="reader_page_plate">Pagina %1$d</string>
+    <string name="reader_image_plate">Immagine %1$d</string>
+    <string name="reader_image_loading">Caricamento immagine %1$d</string>
     <string name="reader_page_failed">Pagina %1$d non caricata</string>
     <string name="reader_try_again">Riprova</string>
     <string name="reader_close">Chiudi</string>

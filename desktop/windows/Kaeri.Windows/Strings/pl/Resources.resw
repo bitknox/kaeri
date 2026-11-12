@@ -6452,6 +6452,15 @@
   <data name="ReaderPageLoading" xml:space="preserve">
     <value>Wczytywanie strony {page}</value>
   </data>
+  <data name="ReaderPagePlate" xml:space="preserve">
+    <value>Strona {page}</value>
+  </data>
+  <data name="ReaderImagePlate" xml:space="preserve">
+    <value>Obraz {image}</value>
+  </data>
+  <data name="ReaderImageLoading" xml:space="preserve">
+    <value>Wczytywanie obrazu {image}</value>
+  </data>
   <data name="ReaderPageFailed" xml:space="preserve">
     <value>Nie udało się wczytać strony {page}</value>
   </data>

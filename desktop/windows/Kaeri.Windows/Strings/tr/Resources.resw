@@ -6050,6 +6050,15 @@
   <data name="ReaderPageLoading" xml:space="preserve">
     <value>Sayfa {page} yükleniyor</value>
   </data>
+  <data name="ReaderPagePlate" xml:space="preserve">
+    <value>Sayfa {page}</value>
+  </data>
+  <data name="ReaderImagePlate" xml:space="preserve">
+    <value>Görsel {image}</value>
+  </data>
+  <data name="ReaderImageLoading" xml:space="preserve">
+    <value>Görsel {image} yükleniyor</value>
+  </data>
   <data name="ReaderPageFailed" xml:space="preserve">
     <value>Sayfa {page} yüklenemedi</value>
   </data>

@@ -873,9 +873,6 @@
     <string name="reader_volume_line">Том %1$s</string>
     <string name="reader_volume_read">Том %1$s · прочитан</string>
     <string name="reader_volume_none">Главы</string>
-    <string name="reader_page_plate">Страница %1$d</string>
-    <string name="reader_image_plate">Картинка %1$,d</string>
-    <string name="reader_image_loading">Загрузка картинки %1$,d</string>
     <string name="reader_opening_finding">Поиск источника</string>
     <string name="reader_failed_choose">Выбрать источник</string>
     <string name="reader_settings_search">Поиск по настройкам</string>
@@ -2599,6 +2596,9 @@
     <string name="player_subs_bg_box">Рамка</string>
     <string name="player_subs_more">Больше в настройках…</string>
     <string name="reader_page_loading">Загрузка страницы %1$d</string>
+    <string name="reader_page_plate">Страница %1$d</string>
+    <string name="reader_image_plate">Картинка %1$d</string>
+    <string name="reader_image_loading">Загрузка картинки %1$d</string>
     <string name="reader_page_failed">Не удалось загрузить страницу %1$d</string>
     <string name="reader_try_again">Повторить</string>
     <string name="reader_close">Закрыть</string>

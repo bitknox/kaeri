@@ -1136,6 +1136,26 @@ impl Reader {
         self.fill_end();
     }
 
+    /// Every strip image as if its file were still coming: its plate with its number, and with
+    /// `line` the line under it as from 4 s.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_strip_plate(&self, line: bool) {
+        for (picture, _) in &self.state.borrow().strip_frames {
+            picture.set_paintable(gdk::Paintable::NONE);
+            let Some(plate) = strip_plate(picture) else { continue };
+            plate.set_opacity(1.0);
+            plate.set_visible(true);
+            if let Some(words) = plate.first_child() {
+                words.set_opacity(1.0);
+                if let Some(said) = words.last_child() {
+                    said.set_opacity(1.0);
+                    said.set_visible(line);
+                }
+            }
+        }
+        self.place_plate_words();
+    }
+
     /// The page plate of page 23, still loading, with its line.
     #[cfg(feature = "fixtures")]
     pub fn shot_plate(self: &Rc<Self>) {
@@ -1248,7 +1268,7 @@ impl Reader {
     fn show_plate(self: &Rc<Self>, what: Waiting) {
         let number = match what {
             Waiting::Chapter => self.opening_line.borrow().clone(),
-            Waiting::Page(page) => t::linux_reader_page_plate(i64::from(page + 1)),
+            Waiting::Page(page) => t::reader_page_plate(i64::from(page + 1)),
         };
         if what == Waiting::Chapter {
             self.count_wait();
@@ -2467,6 +2487,22 @@ impl Reader {
     /// it stopped and whether the foot is in sight. While the strip holds its opening place it
     /// only asks. Over a chapter read before, the group names it and nothing is said; the marker
     /// into the next chapter crossing the middle opens that chapter.
+    /// Put each waiting strip image's words in the middle of the part of it on screen, as laid
+    /// out: on every scroll, and once the strip has been laid out at a new size.
+    fn place_plate_words(&self) {
+        let window = f64::from(self.strip_scroll.height());
+        for (picture, _) in &self.state.borrow().strip_frames {
+            if picture.paintable().is_some() {
+                continue;
+            }
+            let top = picture
+                .compute_point(&self.strip_scroll, &gtk::graphene::Point::new(0.0, 0.0))
+                .map(|at| f64::from(at.y()));
+            let seen = top.filter(|_| window > 0.0).map(|top| (-top, window - top));
+            strip_frame_seen(picture, seen);
+        }
+    }
+
     fn strip_moved(self: &Rc<Self>) {
         let adj = self.strip_scroll.vadjustment();
         let base = self.strip_base();
@@ -2485,6 +2521,7 @@ impl Reader {
         if self.line.label() != line {
             self.line.set_label(&line);
         }
+        self.place_plate_words();
         let (top, bottom) = (adj.value() - base, adj.value() + adj.page_size() - base);
         let reach = adj.page_size() * 1.5;
         let (heights, spacing) = self.strip_heights();
@@ -3125,6 +3162,15 @@ impl Reader {
         self.widget.add_controller(moved);
         self.group.add_controller(self.group_hover.clone());
 
+        // A new size or new images move every plate's part on screen.
+        self.strip_scroll.vadjustment().connect_changed({
+            let this = Rc::downgrade(self);
+            move |_| {
+                if let Some(this) = this.upgrade() {
+                    this.place_plate_words();
+                }
+            }
+        });
         self.strip_scroll.vadjustment().connect_value_changed({
             let this = Rc::downgrade(self);
             move |_| {
@@ -3475,25 +3521,27 @@ fn strip_wanted(
     (seen, y - f64::from(spacing))
 }
 
-/// A strip image's place: the picture, and over it the page plate while its file is on its way,
-/// as a page waits in the paged reader: nothing for 600 ms, then the plate with the page's
-/// number, and a line once it has been asked for 4 s ([`strip_frame_asked`]). A jump far into
-/// a long chapter lands among plates, never on an empty window.
+/// A strip image's place: the picture, and over it the plate while its file is on its way, as a
+/// page waits in the paged reader: nothing for 600 ms, then the plate with the image's number,
+/// and a line under it once it has been asked for 4 s ([`strip_frame_asked`]). The words sit in
+/// the middle of the part of the image on screen ([`strip_frame_seen`]). A jump far into a long
+/// chapter lands among plates, never on an empty window.
 fn strip_frame(page: u32) -> (gtk::Overlay, gtk::Picture) {
     let picture = gtk::Picture::new();
     picture.set_content_fit(gtk::ContentFit::Fill);
     picture.set_can_shrink(true);
     picture.add_css_class("strip-leaf");
-    let number = gtk::Label::new(Some(&t::linux_reader_page_plate(i64::from(page + 1))));
+    let number = gtk::Label::new(Some(&t::reader_image_plate(i64::from(page + 1))));
     number.add_css_class("reader-plate-number");
     number.add_css_class("numeric");
-    let line = gtk::Label::new(Some(&t::reader_page_loading(i64::from(page + 1))));
+    let line = gtk::Label::new(Some(&t::reader_image_loading(i64::from(page + 1))));
     line.add_css_class("reader-plate-line");
     line.set_wrap(true);
     line.set_justify(gtk::Justification::Center);
     line.set_visible(false);
     let words = gtk::Box::new(gtk::Orientation::Vertical, 6);
     words.set_valign(gtk::Align::Center);
+    words.set_vexpand(true);
     words.set_margin_start(24);
     words.set_margin_end(24);
     words.append(&number);
@@ -3517,6 +3565,51 @@ fn strip_frame(page: u32) -> (gtk::Overlay, gtk::Picture) {
         }
     });
     (frame, picture)
+}
+
+/// Centre a strip plate's words on the part of its image on screen, `seen` as the top and bottom
+/// of that part in the image's own pixels: margins above and below the words leave that part
+/// for them, kept inside the image and never narrower than the words with their line.
+fn strip_frame_seen(picture: &gtk::Picture, seen: Option<(f64, f64)>) {
+    let Some(words) = strip_plate(picture).and_then(|plate| plate.first_child()) else {
+        return;
+    };
+    let number =
+        words.first_child().map_or(24, |n| n.measure(gtk::Orientation::Vertical, -1).1);
+    let (above, below) = strip_words_margins(
+        picture.height_request().max(0),
+        seen,
+        number * 2 + words_gap(&words),
+    );
+    if words.margin_top() != above {
+        words.set_margin_top(above);
+    }
+    if words.margin_bottom() != below {
+        words.set_margin_bottom(below);
+    }
+}
+
+/// The gap between a plate's number and its line.
+fn words_gap(words: &gtk::Widget) -> i32 {
+    words.downcast_ref::<gtk::Box>().map_or(6, gtk::Box::spacing)
+}
+
+/// The margins above and below a strip plate's words in an image `height` tall, so they centre
+/// on the part on screen, `seen` in the image's pixels, while that part leaves them `room`; a
+/// thinner part widens to `room` about its middle, inside the image. Off screen, none.
+fn strip_words_margins(height: i32, seen: Option<(f64, f64)>, room: i32) -> (i32, i32) {
+    let full = f64::from(height);
+    let Some((top, bottom)) =
+        seen.map(|(t, b)| (t.max(0.0), b.min(full))).filter(|(t, b)| b > t)
+    else {
+        return (0, 0);
+    };
+    let (top, bottom) = (top.round() as i32, bottom.round() as i32);
+    if bottom - top >= room {
+        return (top, height - bottom);
+    }
+    let above = ((top + bottom) / 2 - room / 2).clamp(0, (height - room).max(0));
+    (above, (height - above - room).max(0))
 }
 
 /// The plate over a strip picture, made by [`strip_frame`].
@@ -3715,6 +3808,7 @@ mod plate_tests {
 
     use super::{
         fill_strip_frame, notice_lift, popover_middle, strip_frame, strip_frame_asked,
+        strip_frame_seen, strip_words_margins,
     };
     use crate::{
         gtk_test::{pump, run},
@@ -3745,8 +3839,8 @@ mod plate_tests {
         }
     }
 
-    /// A strip image whose file is still coming shows its page plate from 600 ms, says it is
-    /// loading 4 s after it was asked for, and its file crossfades over the plate.
+    /// A strip image whose file is still coming shows its plate with its number from 600 ms,
+    /// adds a line under it 4 s after it was asked for, and its file crossfades over the plate.
     #[test]
     fn a_strip_image_on_its_way_holds_a_plate() {
         run(|| {
@@ -3762,18 +3856,63 @@ mod plate_tests {
             assert!(plate.is_visible(), "the plate shows from 600 ms");
             let mut said = Vec::new();
             words(&plate, &mut said);
-            assert_eq!(said, vec!["Page 12".to_owned()]);
+            assert_eq!(said, vec!["Image 12".to_owned()]);
             strip_frame_asked(&picture);
             pump(4200);
             let mut said = Vec::new();
             words(&plate, &mut said);
-            assert_eq!(said, vec!["Page 12".to_owned(), "Loading page 12".to_owned()]);
+            assert_eq!(said, vec!["Image 12".to_owned(), "Loading image 12".to_owned()]);
             fill_strip_frame(&picture, &texture(), false);
             assert!(picture.paintable().is_some());
             pump(500);
             assert!(!plate.is_visible(), "the plate is gone once the image is in");
             window.destroy();
         });
+    }
+
+    /// The words sit in the middle of the part of the image on screen, kept inside the image.
+    #[test]
+    fn a_strip_plate_centres_its_words_on_the_part_on_screen() {
+        run(|| {
+            let (frame, picture) = strip_frame(4);
+            // At the image's own height, as in the strip's column.
+            frame.set_valign(gtk::Align::Start);
+            let window = gtk::Window::builder().default_width(400).default_height(400).build();
+            window.set_child(Some(&frame));
+            window.present();
+            pump(800);
+            let plate = picture.next_sibling().expect("a plate over the picture");
+            let words = plate.first_child().expect("the plate's words");
+            let middle = |frame: &gtk::Overlay| {
+                let at = words
+                    .compute_point(frame, &gtk::graphene::Point::new(0.0, 0.0))
+                    .expect("the words are in the frame");
+                f64::from(at.y()) + f64::from(words.height()) / 2.0
+            };
+            picture.set_size_request(200, 300);
+            strip_frame_seen(&picture, Some((0.0, 300.0)));
+            pump(100);
+            assert!(
+                (middle(&frame) - 150.0).abs() <= 2.0,
+                "centred in an image wholly on screen"
+            );
+            picture.set_size_request(200, 1600);
+            strip_frame_seen(&picture, Some((1000.0, 1400.0)));
+            pump(100);
+            assert!((middle(&frame) - 1200.0).abs() <= 2.0, "centred on the part on screen");
+            window.destroy();
+        });
+    }
+
+    /// A sliver on screen still leaves the words their room, inside the image; off screen they
+    /// take the middle.
+    #[test]
+    fn strip_plate_margins_keep_the_words_inside_the_image() {
+        assert_eq!(strip_words_margins(3000, Some((1600.0, 2400.0)), 50), (1600, 600));
+        assert_eq!(strip_words_margins(3000, Some((-500.0, 10.0)), 50), (0, 2950));
+        assert_eq!(strip_words_margins(3000, Some((2990.0, 3400.0)), 50), (2950, 0));
+        assert_eq!(strip_words_margins(3000, None, 50), (0, 0));
+        assert_eq!(strip_words_margins(3000, Some((3200.0, 3600.0)), 50), (0, 0));
     }
 
     /// A file that comes within 600 ms never shows a plate.

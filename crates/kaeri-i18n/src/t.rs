@@ -3372,11 +3372,6 @@ pub fn linux_reader_names_and(first: &str, last: &str) -> String {
     text("linux-reader-names-and", &[("first", Arg::Text(first)), ("last", Arg::Text(last))])
 }
 
-/// On the plate that holds a page's place while it loads. The page is its number, such as 23.
-pub fn linux_reader_page_plate(page: i64) -> String {
-    text("linux-reader-page-plate", &[("page", Arg::Int(page))])
-}
-
 /// Heading when a chapter could not open. The chapter is its number, such as 13.
 pub fn linux_reader_open_failed(chapter: &str) -> String {
     text("linux-reader-open-failed", &[("chapter", Arg::Text(chapter))])
@@ -14215,6 +14210,21 @@ pub fn player_subs_more() -> String {
 /// Under a page that is still loading after four seconds.
 pub fn reader_page_loading(page: i64) -> String {
     text("reader-page-loading", &[("page", Arg::Plain(page))])
+}
+
+/// On the plate of a page that is still loading.
+pub fn reader_page_plate(page: i64) -> String {
+    text("reader-page-plate", &[("page", Arg::Plain(page))])
+}
+
+/// On the plate of a strip image that is still loading.
+pub fn reader_image_plate(image: i64) -> String {
+    text("reader-image-plate", &[("image", Arg::Plain(image))])
+}
+
+/// Under a strip image's number after four seconds.
+pub fn reader_image_loading(image: i64) -> String {
+    text("reader-image-loading", &[("image", Arg::Plain(image))])
 }
 
 /// Heading where a page could not be loaded.

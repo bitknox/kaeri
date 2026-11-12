@@ -1,4 +1,7 @@
 reader-page-loading = Đang tải trang { $page }
+reader-page-plate = Trang { $page }
+reader-image-plate = Ảnh { $image }
+reader-image-loading = Đang tải ảnh { $image }
 reader-page-failed = Không tải được trang { $page }
 reader-try-again = Thử lại
 reader-close = Đóng

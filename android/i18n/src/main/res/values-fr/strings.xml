@@ -838,9 +838,6 @@
     <string name="reader_volume_line">Tome %1$s</string>
     <string name="reader_volume_read">Tome %1$s · lu</string>
     <string name="reader_volume_none">Chapitres</string>
-    <string name="reader_page_plate">Page %1$d</string>
-    <string name="reader_image_plate">Image %1$,d</string>
-    <string name="reader_image_loading">Chargement de l\'image %1$,d</string>
     <string name="reader_opening_finding">Recherche d\'une source</string>
     <string name="reader_failed_choose">Choisir une source</string>
     <string name="reader_settings_search">Rechercher dans les réglages</string>
@@ -2515,6 +2512,9 @@
     <string name="player_subs_bg_box">Boîte</string>
     <string name="player_subs_more">Plus dans les paramètres…</string>
     <string name="reader_page_loading">Chargement de la page %1$d</string>
+    <string name="reader_page_plate">Page %1$d</string>
+    <string name="reader_image_plate">Image %1$d</string>
+    <string name="reader_image_loading">Chargement de l\'image %1$d</string>
     <string name="reader_page_failed">Impossible de charger la page %1$d</string>
     <string name="reader_try_again">Réessayer</string>
     <string name="reader_close">Fermer</string>

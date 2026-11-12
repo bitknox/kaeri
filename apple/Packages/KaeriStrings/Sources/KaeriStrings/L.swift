@@ -8324,6 +8324,21 @@ public enum L {
         Self.format("reader-page-loading", fallback: "Loading page %1$@", String(page))
     }
 
+    /// On the plate of a page that is still loading.
+    public static func readerPagePlate(page: Int) -> String {
+        Self.format("reader-page-plate", fallback: "Page %1$@", String(page))
+    }
+
+    /// On the plate of a strip image that is still loading.
+    public static func readerImagePlate(image: Int) -> String {
+        Self.format("reader-image-plate", fallback: "Image %1$@", String(image))
+    }
+
+    /// Under a strip image's number after four seconds.
+    public static func readerImageLoading(image: Int) -> String {
+        Self.format("reader-image-loading", fallback: "Loading image %1$@", String(image))
+    }
+
     /// Heading where a page could not be loaded.
     public static func readerPageFailed(page: Int) -> String {
         Self.format("reader-page-failed", fallback: "Couldn't load page %1$@", String(page))

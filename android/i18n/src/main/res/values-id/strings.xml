@@ -768,9 +768,6 @@
     <string name="reader_volume_line">Volume %1$s</string>
     <string name="reader_volume_read">Volume %1$s · dibaca</string>
     <string name="reader_volume_none">Bab</string>
-    <string name="reader_page_plate">Halaman %1$d</string>
-    <string name="reader_image_plate">Gambar %1$,d</string>
-    <string name="reader_image_loading">Memuat gambar %1$,d</string>
     <string name="reader_opening_finding">Mencari sumber</string>
     <string name="reader_failed_choose">Pilih sumber</string>
     <string name="reader_settings_search">Cari pengaturan</string>
@@ -2347,6 +2344,9 @@
     <string name="player_subs_bg_box">Kotak</string>
     <string name="player_subs_more">Selengkapnya di Pengaturan…</string>
     <string name="reader_page_loading">Memuat halaman %1$d</string>
+    <string name="reader_page_plate">Halaman %1$d</string>
+    <string name="reader_image_plate">Gambar %1$d</string>
+    <string name="reader_image_loading">Memuat gambar %1$d</string>
     <string name="reader_page_failed">Halaman %1$d gagal dimuat</string>
     <string name="reader_try_again">Coba lagi</string>
     <string name="reader_close">Tutup</string>

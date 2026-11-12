@@ -45,6 +45,9 @@ import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -164,7 +167,7 @@ private fun BoxScope.PartView(
 ) {
     val page = part.page.toInt()
     val failure = state.failures[part.page]
-    val file = state.file(part)
+    val file = state.file(part).takeUnless { PlateShot.hold }
     if (failure != null && file == null) {
         failed(page, failure) { onRetry(page) }
         return
@@ -203,6 +206,11 @@ private fun BoxScope.PartView(
         is PageDecodeResult.Unreadable -> failed(page, ReadingFailure.Other(now.reason)) { onRetry(page) }
         null -> Waited(page, waiting)
     }
+}
+
+/** Set by the fixtures build for the plate's shots: every page waits on its plate. */
+object PlateShot {
+    var hold by mutableStateOf(false)
 }
 
 /** Where a part's page sits in its box: the two pages of a spread against the spine between them. */
@@ -262,28 +270,63 @@ fun PageCanvas(page: PageBitmap, rotate: Boolean, modifier: Modifier = Modifier,
     }
 }
 
-/** The phone's waiting plate: it fills the page's place with the page's number, and its words at four seconds. */
+/** The phone's waiting plate: it fills the page's place with "Page N", and from four seconds a line under it. */
 @Composable
 fun BoxScope.PageWaiting(page: Int, long: Boolean) {
     val context = LocalContext.current
     Box(Modifier.fillMaxSize().background(ObiSilk.Raised)) {
-        Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(Strings.readerPagePlate(context, page + 1), color = ObiSilk.Haze, fontSize = 15.sp)
-            if (long) {
-                Spacer(Modifier.height(8.dp))
-                Text(Strings.readerPageLoading(context, page + 1), color = ObiSilk.Haze, fontSize = 15.sp)
+        PlateWords(Strings.readerPagePlate(context, page + 1), Strings.readerPageLoading(context, page + 1).takeIf { long }, Modifier.align(Alignment.Center))
+    }
+}
+
+/**
+ * The phone's plate for a strip image: "Image N", and from four seconds a line under it. The words
+ * sit in the middle of the part of the image on screen, so they stay in view however tall the image
+ * is and wherever the strip is scrolled to.
+ */
+@Composable
+fun BoxScope.ImageWaiting(page: Int, long: Boolean) {
+    val context = LocalContext.current
+    // The part of the plate on screen, in its own pixels, read only while placing the words.
+    var seen by remember { mutableStateOf<ClosedFloatingPointRange<Float>?>(null) }
+    Box(
+        Modifier.fillMaxSize().background(ObiSilk.Raised).onGloballyPositioned { at ->
+            // The part inside every parent, the strip's list among them, back in the plate's own
+            // pixels through any zoom.
+            val shown = at.boundsInWindow()
+            seen = if (shown.height > 0f) at.windowToLocal(shown.topLeft).y..at.windowToLocal(shown.bottomLeft).y else null
+        },
+    ) {
+        Layout(
+            content = { PlateWords(Strings.readerImagePlate(context, page + 1), Strings.readerImageLoading(context, page + 1).takeIf { long }) },
+            modifier = Modifier.fillMaxSize(),
+        ) { measurables, constraints ->
+            val words = measurables.single().measure(constraints.copy(minWidth = 0, minHeight = 0))
+            layout(constraints.maxWidth, constraints.maxHeight) {
+                words.place((constraints.maxWidth - words.width) / 2, stripWordsTop(constraints.maxHeight, seen, words.height))
             }
         }
     }
 }
 
-/** The phone's plate for a strip image: its number, then from four seconds the one line that it is loading. */
+/**
+ * Where a strip plate's words start: centred on the part of the plate on screen, [seen] in the
+ * plate's own pixels, and kept inside the plate. With none of it on screen they sit in its middle.
+ */
+internal fun stripWordsTop(plate: Int, seen: ClosedFloatingPointRange<Float>?, words: Int): Int {
+    val middle = if (seen == null || seen.isEmpty()) plate / 2f else (seen.start + seen.endInclusive) / 2f
+    return (middle - words / 2f).roundToInt().coerceIn(0, maxOf(0, plate - words))
+}
+
+/** A plate's number, and the loading line added under it, never in its place. */
 @Composable
-fun BoxScope.ImageWaiting(page: Int, long: Boolean) {
-    val context = LocalContext.current
-    Box(Modifier.fillMaxSize().background(ObiSilk.Raised)) {
-        val words = if (long) Strings.readerImageLoading(context, page + 1) else Strings.readerImagePlate(context, page + 1)
-        Text(words, color = ObiSilk.Haze, fontSize = 15.sp, modifier = Modifier.align(Alignment.Center))
+private fun PlateWords(number: String, line: String?, modifier: Modifier = Modifier) {
+    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(number, color = ObiSilk.Haze, fontSize = 15.sp)
+        if (line != null) {
+            Spacer(Modifier.height(6.dp))
+            Text(line, color = ObiSilk.Haze, fontSize = 13.sp)
+        }
     }
 }
 

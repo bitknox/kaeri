@@ -3,6 +3,21 @@
 # @max 40
 reader-page-loading = Loading page { $page }
 
+# On the plate of a page that is still loading.
+# @arg page: plain
+# @max 20
+reader-page-plate = Page { $page }
+
+# On the plate of a strip image that is still loading.
+# @arg image: plain
+# @max 20
+reader-image-plate = Image { $image }
+
+# Under a strip image's number after four seconds.
+# @arg image: plain
+# @max 30
+reader-image-loading = Loading image { $image }
+
 # Heading where a page could not be loaded.
 # @arg page: plain
 # @max 40

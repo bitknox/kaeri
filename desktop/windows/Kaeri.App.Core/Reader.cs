@@ -865,3 +865,27 @@ public sealed class ReaderSession
     /// <summary>The leaves the person sees as pages: the end page's leaf is not one.</summary>
     public int ReadingLeaves => Leaves.Count(l => !l.EndPage);
 }
+
+/// <summary>Where a strip plate's words sit: in the middle of the part of the image on screen.</summary>
+public static class StripPlate
+{
+    /// <summary>
+    /// The margins above and below the words in an image <paramref name="height"/> tall, so they
+    /// centre on the part on screen (<paramref name="seen"/>, top and bottom in the image's own
+    /// units) while that part leaves them <paramref name="room"/>; a thinner part widens to the
+    /// room about its middle, inside the image. Off screen, none.
+    /// </summary>
+    public static (double Above, double Below) WordsMargins(double height, (double Top, double Bottom)? seen, double room)
+    {
+        if (seen is not { } part)
+            return (0, 0);
+        var top = Math.Max(part.Top, 0);
+        var bottom = Math.Min(part.Bottom, height);
+        if (bottom <= top)
+            return (0, 0);
+        if (bottom - top >= room)
+            return (top, height - bottom);
+        var above = Math.Clamp((top + bottom) / 2 - room / 2, 0, Math.Max(height - room, 0));
+        return (above, Math.Max(height - above - room, 0));
+    }
+}

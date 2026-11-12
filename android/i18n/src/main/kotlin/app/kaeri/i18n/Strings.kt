@@ -2989,18 +2989,6 @@ object Strings {
     fun readerVolumeNone(context: Context): String =
         context.getString(R.string.reader_volume_none)
 
-    /** On the plate of a page that is still loading. */
-    fun readerPagePlate(context: Context, page: Int): String =
-        context.getString(R.string.reader_page_plate, page)
-
-    /** On the plate of a strip image that is still loading. */
-    fun readerImagePlate(context: Context, image: Int): String =
-        context.getString(R.string.reader_image_plate, image)
-
-    /** On a strip image's plate in place of its number after four seconds. */
-    fun readerImageLoading(context: Context, image: Int): String =
-        context.getString(R.string.reader_image_loading, image)
-
     /** Under Opening chapter when it takes more than three seconds. */
     fun readerOpeningFinding(context: Context): String =
         context.getString(R.string.reader_opening_finding)
@@ -9281,6 +9269,18 @@ object Strings {
     /** Under a page that is still loading after four seconds. */
     fun readerPageLoading(context: Context, page: Int): String =
         context.getString(R.string.reader_page_loading, page)
+
+    /** On the plate of a page that is still loading. */
+    fun readerPagePlate(context: Context, page: Int): String =
+        context.getString(R.string.reader_page_plate, page)
+
+    /** On the plate of a strip image that is still loading. */
+    fun readerImagePlate(context: Context, image: Int): String =
+        context.getString(R.string.reader_image_plate, image)
+
+    /** Under a strip image's number after four seconds. */
+    fun readerImageLoading(context: Context, image: Int): String =
+        context.getString(R.string.reader_image_loading, image)
 
     /** Heading where a page could not be loaded. */
     fun readerPageFailed(context: Context, page: Int): String =

@@ -803,9 +803,6 @@
     <string name="reader_volume_line">Band %1$s</string>
     <string name="reader_volume_read">Band %1$s · gelesen</string>
     <string name="reader_volume_none">Kapitel</string>
-    <string name="reader_page_plate">Seite %1$d</string>
-    <string name="reader_image_plate">Bild %1$,d</string>
-    <string name="reader_image_loading">Bild %1$,d wird geladen</string>
     <string name="reader_opening_finding">Eine Quelle wird gesucht</string>
     <string name="reader_failed_choose">Quelle wählen</string>
     <string name="reader_settings_search">Einstellungen durchsuchen</string>
@@ -2431,6 +2428,9 @@
     <string name="player_subs_bg_box">Box</string>
     <string name="player_subs_more">Mehr in den Einstellungen…</string>
     <string name="reader_page_loading">Seite %1$d wird geladen</string>
+    <string name="reader_page_plate">Seite %1$d</string>
+    <string name="reader_image_plate">Bild %1$d</string>
+    <string name="reader_image_loading">Bild %1$d wird geladen</string>
     <string name="reader_page_failed">Seite %1$d nicht geladen</string>
     <string name="reader_try_again">Erneut versuchen</string>
     <string name="reader_close">Schließen</string>

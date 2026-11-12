@@ -5849,6 +5849,15 @@
   <data name="ReaderPageLoading" xml:space="preserve">
     <value>Đang tải trang {page}</value>
   </data>
+  <data name="ReaderPagePlate" xml:space="preserve">
+    <value>Trang {page}</value>
+  </data>
+  <data name="ReaderImagePlate" xml:space="preserve">
+    <value>Ảnh {image}</value>
+  </data>
+  <data name="ReaderImageLoading" xml:space="preserve">
+    <value>Đang tải ảnh {image}</value>
+  </data>
   <data name="ReaderPageFailed" xml:space="preserve">
     <value>Không tải được trang {page}</value>
   </data>

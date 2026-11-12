@@ -5905,6 +5905,15 @@ public static partial class T
     /// <summary>Under a page that is still loading after four seconds.</summary>
     public static string ReaderPageLoading(long page) => Fill(Get("ReaderPageLoading"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>On the plate of a page that is still loading.</summary>
+    public static string ReaderPagePlate(long page) => Fill(Get("ReaderPagePlate"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>On the plate of a strip image that is still loading.</summary>
+    public static string ReaderImagePlate(long image) => Fill(Get("ReaderImagePlate"), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a strip image's number after four seconds.</summary>
+    public static string ReaderImageLoading(long image) => Fill(Get("ReaderImageLoading"), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
     /// <summary>Heading where a page could not be loaded.</summary>
     public static string ReaderPageFailed(long page) => Fill(Get("ReaderPageFailed"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -14012,6 +14021,9 @@ public static partial class T
         ["PlayerSubsBgBox"] = "Box",
         ["PlayerSubsMore"] = "More in Settings…",
         ["ReaderPageLoading"] = "Loading page {page}",
+        ["ReaderPagePlate"] = "Page {page}",
+        ["ReaderImagePlate"] = "Image {image}",
+        ["ReaderImageLoading"] = "Loading image {image}",
         ["ReaderPageFailed"] = "Couldn't load page {page}",
         ["ReaderTryAgain"] = "Try again",
         ["ReaderClose"] = "Close",
