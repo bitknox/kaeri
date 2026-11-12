@@ -30,6 +30,14 @@ struct PageZoomTests {
         #expect(zoom.pan != before)
     }
 
+    @Test func aDoubleTapAfterACancelledPinchLetsItGo() {
+        let zoom = PageZoom()
+        zoom.pinch(2, at: CGPoint(x: 200, y: 400), in: size)
+        zoom.doubleTap(at: CGPoint(x: 200, y: 400), in: size, motion: false)
+        #expect(!zoom.pinching)
+        #expect(!zoom.zoomed)
+    }
+
     @Test func aPinchThatEndedIsNotSettledTwice() {
         let zoom = PageZoom()
         zoom.pinch(2, at: CGPoint(x: 200, y: 400), in: size)

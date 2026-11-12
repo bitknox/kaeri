@@ -96,6 +96,10 @@ final class PageZoom {
 
     /// A double tap: in at the point, or back to fitted.
     func doubleTap(at point: CGPoint, in size: CGSize, motion: Bool) {
+        // Two taps never come mid-pinch: a pinch still marked is one the system cancelled.
+        pinchFrom = nil
+        panFrom = nil
+        if pinching { pinching = false }
         withAnimation(motion ? .standard : nil) {
             if zoomed {
                 scale = 1
