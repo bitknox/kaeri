@@ -145,7 +145,9 @@ private fun androidx.compose.foundation.lazy.LazyListScope.updateItems(view: Upd
         item(key = "d-${day.day}", contentType = "day") {
             Box(itemMotion().readingColumn()) { DayHeading(day) }
         }
-        items(day.rows, key = { "r-${day.day}-${it.chapter.id}" }, contentType = { "row" }) { row ->
+        // A chapter's id is its key within its work: two series can both have a chapter "12" out
+        // on one day, so the work is in the row's key too.
+        items(day.rows, key = { "r-${day.day}-${it.tile.work}-${it.chapter.id}" }, contentType = { "row" }) { row ->
             Column(itemMotion().readingColumn()) {
                 HorizontalDivider(Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
                 UpdateRowView(row, actions)
