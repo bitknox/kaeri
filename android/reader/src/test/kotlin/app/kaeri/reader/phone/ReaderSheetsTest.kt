@@ -22,7 +22,7 @@ import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
-import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.width
@@ -136,21 +136,22 @@ class ReaderSheetsTest {
         compose.onNode(hasContentDescription("Reader settings") and hasClickAction()).performClick()
         compose.waitForIdle()
         val more = compose.onNode(hasText("More reader settings") and hasClickAction())
-        val open = more.getUnclippedBoundsInRoot()
+        // Bounds with the layers' scale on them, as drawn.
+        val open = more.getBoundsInRoot()
 
         gesture(1f)
-        val drawn = more.getUnclippedBoundsInRoot()
+        val drawn = more.getBoundsInRoot()
         // Narrowed by Material's 48 dp at the gesture's end, less the row's share of the margins.
         assertTrue("the row is ${drawn.width} wide while drawn, ${open.width} open", drawn.width < open.width - 30.dp)
         letGo()
-        assertEquals(open.width, more.getUnclippedBoundsInRoot().width)
+        assertEquals(open.width, more.getBoundsInRoot().width)
 
         more.performClick()
         compose.waitForIdle()
         val back = compose.onNode(hasContentDescription("Back, More reader settings", substring = true), useUnmergedTree = true)
-        val page = back.getUnclippedBoundsInRoot()
+        val page = back.getBoundsInRoot()
         gesture(1f)
-        assertEquals(page, back.getUnclippedBoundsInRoot())
+        assertEquals(page, back.getBoundsInRoot())
         letGo()
         more.assertDoesNotExist()
     }
