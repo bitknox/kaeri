@@ -83,6 +83,22 @@ const PROGRESS_EVERY: Duration =
 /// The rest between chapters.
 const PACE: Duration =
     if cfg!(test) { Duration::from_millis(2) } else { Duration::from_millis(400) };
+/// The waits before a chapter's opening or one of its pages is asked for again when the source
+/// did not answer, after the tries the source itself makes: three more asks, each through the
+/// source as any other, so its pacing holds. A source still not answering after them ends the
+/// fetch, which Try again starts over.
+const ASK_AGAIN: [Duration; 3] = if cfg!(test) {
+    [Duration::from_millis(1), Duration::from_millis(2), Duration::from_millis(3)]
+} else {
+    [Duration::from_secs(2), Duration::from_secs(6), Duration::from_secs(15)]
+};
+
+/// Whether a fetch that failed this way may work when asked again a moment later: the source
+/// did not answer, as a request lost on the way says. Not when the device has no network, nor
+/// when the source answered with a refusal or without the chapter.
+fn asked_again(failure: &ReadingFailure) -> bool {
+    matches!(failure, ReadingFailure::SourceDown { .. })
+}
 
 /// What the engine lends a download: the sources, the clock and the way to speak.
 #[derive(Clone)]
@@ -1121,11 +1137,13 @@ impl BookDownloads {
         if !(job.wanted)() {
             return Err(Stop::Cancelled);
         }
-        let mut opened = lent
-            .sources
-            .open(work, chapter, Some(&job.source_id), now)
-            .await
-            .map_err(Stop::Failed)?;
+        let mut waits = ASK_AGAIN.iter();
+        let mut opened = loop {
+            match lent.sources.open(work, chapter, Some(&job.source_id), now).await {
+                Ok(opened) => break opened,
+                Err(failure) => self.wait_to_ask_again(job, &mut waits, failure).await?,
+            }
+        };
         if !(job.wanted)() {
             return Err(Stop::Cancelled);
         }
@@ -1173,10 +1191,21 @@ impl BookDownloads {
                         if self.free().is_some_and(|free| free < KEEP_FREE) {
                             return Err(ReadingFailure::DiskFull.into());
                         }
-                        let now = lent.clock.now();
-                        kept.page(&lent.sources, index, now, false)
-                            .await
-                            .map_err(Stop::Failed)?;
+                        // A page lost on the way is asked for again, a few times, before the
+                        // fetch ends: one dropped request never ends a whole chapter.
+                        let mut waits = ASK_AGAIN.iter();
+                        while let Err(failure) =
+                            kept.page(&lent.sources, index, lent.clock.now(), false).await
+                        {
+                            if let Err(stop) =
+                                self.wait_to_ask_again(job, &mut waits, failure).await
+                            {
+                                if matches!(stop, Stop::Cancelled) {
+                                    kept.let_go();
+                                }
+                                return Err(stop);
+                            }
+                        }
                         if !kept.has(index) {
                             let failure = kept.unkept(index).unwrap_or_else(|| {
                                 let reason = format!("page {index} was not kept");
@@ -1278,6 +1307,31 @@ impl BookDownloads {
                 finish(&part, &stem.with_extension(extension), None)
             }
         }
+    }
+}
+
+impl BookDownloads {
+    /// After `failure`, wait the next of `waits` to ask the source again, when the failure is
+    /// one asking again may mend and a wait is left; otherwise the fetch stops with it. A fetch
+    /// held or taken out of the queue meanwhile stops as that.
+    async fn wait_to_ask_again(
+        &self,
+        job: &Fetching<'_>,
+        waits: &mut std::slice::Iter<'_, Duration>,
+        failure: ReadingFailure,
+    ) -> Result<(), Stop> {
+        let Some(wait) = waits.next().filter(|_| asked_again(&failure)) else {
+            return Err(Stop::Failed(failure));
+        };
+        tracing::debug!(chapter = job.chapter.as_str(), ?failure, "asking the source again");
+        tokio::time::sleep(*wait).await;
+        if self.setup().hold {
+            return Err(Stop::Held);
+        }
+        if !(job.wanted)() {
+            return Err(Stop::Cancelled);
+        }
+        Ok(())
     }
 }
 
