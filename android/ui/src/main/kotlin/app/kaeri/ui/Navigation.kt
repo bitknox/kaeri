@@ -89,19 +89,27 @@ class Navigator(private val nav: NavHostController, private val start: Destinati
     /** The destination on screen. */
     fun current(): Destination = nav.currentBackStackEntry?.destinationOf() ?: start
 
+    /**
+     * The destination whose back stack a page opened now goes on: the one on screen, or, over a
+     * page outside every destination such as Downloads, the nearest one under it, so a series
+     * opened from Library's Downloads stays in Library.
+     */
+    private fun owner(): Destination =
+        nav.currentBackStack.value.asReversed().firstNotNullOfOrNull { it.destinationOf() } ?: start
+
     /** The tab whose own page lies right under the page on screen; null when another page does. */
     fun under(): Destination? = nav.previousBackStackEntry?.destinationOf()
 
-    /** Open [id]'s page in the current destination's back stack, flying from [from]. */
+    /** Open [id]'s page in the [owner]'s back stack, flying from [from]. */
     fun openTitle(id: AnilistId, from: String) {
         source = "$from:$id"
-        nav.navigate(titleRoute(current(), id))
+        nav.navigate(titleRoute(owner(), id))
     }
 
-    /** Open a reading series' page in the current destination's back stack, its cover flying from [from]. */
+    /** Open a reading series' page in the [owner]'s back stack, its cover flying from [from]. */
     fun openSeries(work: WorkId, from: String) {
         source = "$from:$work"
-        nav.navigate(seriesRoute(current(), work))
+        nav.navigate(seriesRoute(owner(), work))
     }
 
     /** Whether a title page is being swapped for another in place (Another): the pages crossfade. */
@@ -166,9 +174,9 @@ class Navigator(private val nav: NavHostController, private val start: Destinati
         private set
 
     /** Push the page at [route] over whatever is on screen. */
-    /** Push a reading page ([page] names it) onto the current destination's back stack. */
+    /** Push a reading page ([page] names it) onto the [owner]'s back stack. */
     internal fun openReadPage(page: String) {
-        nav.navigate("${current().route}/read/${android.net.Uri.encode(page)}")
+        nav.navigate("${owner().route}/read/${android.net.Uri.encode(page)}")
     }
 
     fun open(route: String) {
