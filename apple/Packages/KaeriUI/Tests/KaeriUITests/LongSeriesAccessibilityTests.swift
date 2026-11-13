@@ -1,7 +1,8 @@
 #if os(macOS)
 // A series of thousands of chapters builds only the rows in view, for VoiceOver as for the screen
 // (Mac R8-M9: the first accessibility walk of a 3245-chapter page held the main thread for 109 s
-// and grew the app past 1 GB). The walk's time and the app's footprint are printed for the notes.
+// and grew the app past 1 GB, every row built for it). The rows that appear are counted, since a
+// test process gives no accessibility tree; the build time and footprint are printed for the notes.
 
 import AppKit
 import Darwin
@@ -45,22 +46,19 @@ extension WindowEventTests {
             return result == KERN_SUCCESS ? Double(info.phys_footprint) / 1_048_576 : -1
         }
 
-        @Test func aLongSeriesBuildsOnlyTheRowsInViewForVoiceOver() async throws {
+        @Test func aLongSeriesBuildsOnlyTheRowsInView() async throws {
             let store = store()
+            ChapterRowsShown.count = 0
+            let before = Self.footprint()
+            let start = Date()
             let window = TapWindow(SeriesPage(work: work).environment(store).environment(Navigator()), size: size)
             defer { window.close() }
             try await window.settle()
-            let before = Self.footprint()
-            let start = Date()
-            let elements = window.accessibilityElements()
-            let walk = Date().timeIntervalSince(start)
-            let after = Self.footprint()
-            let rows = elements.filter { element in
-                TapWindow.text(of: element).contains { $0.contains("The lamp at the stair") }
-            }.count
-            print("measure: first walk \(String(format: "%.2f", walk)) s, \(elements.count) elements, \(rows) chapter rows, footprint \(Int(before)) MB to \(Int(after)) MB") // i18n-skip
-            #expect(rows > 0, "the rows in view are in the tree")
-            #expect(rows < 200, "every one of \(count) rows was built for the walk: \(rows)")
+            let built = Date().timeIntervalSince(start)
+            let rows = ChapterRowsShown.count
+            print("measure: page built in \(String(format: "%.2f", built)) s, \(rows) chapter rows, footprint \(Int(before)) MB to \(Int(Self.footprint())) MB") // i18n-skip
+            #expect(rows > 0, "the rows in view are built")
+            #expect(rows < 200, "every one of \(count) rows was built: \(rows)")
         }
     }
 }

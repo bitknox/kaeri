@@ -43,11 +43,13 @@ extension WindowEventTests {
             return store
         }
 
-        private func press(_ window: TapWindow, _ name: String) throws {
-            let row = try #require(window.accessibilityElements().first { element in
-                element.accessibilityRole() == .button && TapWindow.text(of: element).contains { $0.contains(name) }
-            }, "\(name)'s row is a button")
-            #expect(row.accessibilityPerformPress())
+        /// Clicks down (or up) the middle of the sheet until a click chooses a source, the
+        /// first row met in that direction.
+        private func clickFirstRow(_ window: TapWindow, _ sent: Sent, fromBottom: Bool) async throws {
+            let ys = stride(from: 4.0, to: size.height, by: 6.0).map { fromBottom ? size.height - $0 : $0 }
+            for y in ys where sent.chosen.isEmpty {
+                try await window.click(CGPoint(x: size.width / 2, y: y))
+            }
         }
 
         @Test func theRowInUseChoosesItAgain() async throws {
@@ -56,8 +58,8 @@ extension WindowEventTests {
             let window = TapWindow(ReadFromSheet(work: work).environment(store).environment(Navigator()), size: size)
             defer { window.close() }
             try await window.settle()
-            try press(window, "Harbour Shelf")
-            try await window.wait(0.2)
+            // The row in use is first. Without its choice, the click goes on to the next row.
+            try await clickFirstRow(window, sent, fromBottom: false)
             #expect(sent.chosen == ["harbour-shelf"], "the source in use is chosen again")
         }
 
@@ -67,8 +69,7 @@ extension WindowEventTests {
             let window = TapWindow(ReadFromSheet(work: work).environment(store).environment(Navigator()), size: size)
             defer { window.close() }
             try await window.settle()
-            try press(window, "Lantern Pages")
-            try await window.wait(0.2)
+            try await clickFirstRow(window, sent, fromBottom: true)
             #expect(sent.chosen == ["lantern-pages"])
         }
     }

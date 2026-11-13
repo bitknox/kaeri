@@ -90,28 +90,6 @@ final class TapWindow {
 
     var firstResponder: NSResponder? { window.firstResponder }
 
-    /// The window's accessibility tree, as VoiceOver walks it.
-    func accessibilityElements() -> [any NSAccessibilityProtocol] {
-        var found: [any NSAccessibilityProtocol] = []
-        func walk(_ element: Any, depth: Int) {
-            guard depth < 60, found.count < 50_000, let element = element as? any NSAccessibilityProtocol else { return }
-            found.append(element)
-            for child in element.accessibilityChildren() ?? [] { walk(child, depth: depth + 1) }
-        }
-        if let root = window.contentView { walk(root, depth: 0) }
-        return found
-    }
-
-    /// Every label, title and value in the window's accessibility tree.
-    func accessibilityText() -> [String] {
-        accessibilityElements().flatMap { Self.text(of: $0) }
-    }
-
-    static func text(of element: any NSAccessibilityProtocol) -> [String] {
-        [element.accessibilityLabel(), element.accessibilityTitle(), element.accessibilityValue() as? String]
-            .compactMap { $0 }.filter { !$0.isEmpty }
-    }
-
     func close() { window.close() }
 
     private func turn(_ seconds: Double) async throws {
