@@ -650,9 +650,10 @@ private struct SeriesActions: View {
                     if icon {
                         Image(systemName: "book").font(.ui(font < 15 ? 12 : 15)).accessibilityHidden(true)
                     }
+                    // At the accessibility sizes the words wrap rather than run off the row.
                     Text(words).lineLimit(type.isAccessibilitySize ? 3 : 1)
                         .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: !stretch, vertical: type.isAccessibilitySize)
+                        .fixedSize(horizontal: !stretch && !type.isAccessibilitySize, vertical: type.isAccessibilitySize)
                 }
                 .frame(maxWidth: stretch ? .infinity : nil)
             }
@@ -771,22 +772,48 @@ private struct SeriesActions: View {
 }
 
 /// The main action and its menus on one line, or the main action over the rest when the line
-/// is too narrow. Each keeps its own width.
-private struct SeriesActionRow: Layout {
+/// is too narrow. Each keeps its own width, up to the line's. At the largest text sizes the rest
+/// wraps again where it does not fit on one line.
+struct SeriesActionRow: Layout {
     var spacing: CGFloat
 
-    private func lines(_ subviews: Subviews, width: CGFloat?) -> [[Int]] {
-        let all = Array(subviews.indices)
+    /// The subviews' indices line by line, for lines `width` wide whose items are `widths` wide.
+    nonisolated static func wrap(_ widths: [CGFloat], width: CGFloat?, spacing: CGFloat) -> [[Int]] {
+        let all = Array(widths.indices)
         guard let width, all.count > 1 else { return [all] }
-        let sizes = subviews.map { $0.sizeThatFits(.unspecified).width }
-        let one = sizes.reduce(0, +) + spacing * CGFloat(sizes.count - 1)
-        return one <= width ? [all] : [[all[0]], Array(all.dropFirst())]
+        let one = widths.reduce(0, +) + spacing * CGFloat(widths.count - 1)
+        if one <= width { return [all] }
+        var wrapped = [[all[0]]], line: [Int] = [], used: CGFloat = 0
+        for index in all.dropFirst() {
+            let added = line.isEmpty ? widths[index] : used + spacing + widths[index]
+            if !line.isEmpty, added > width {
+                wrapped.append(line)
+                line = [index]
+                used = widths[index]
+            } else {
+                line.append(index)
+                used = added
+            }
+        }
+        wrapped.append(line)
+        return wrapped
+    }
+
+    private func lines(_ subviews: Subviews, width: CGFloat?) -> [[Int]] {
+        Self.wrap(subviews.map { $0.sizeThatFits(.unspecified).width }, width: width, spacing: spacing)
+    }
+
+    /// A subview's own size, or its size at the line's width when it is wider than the line.
+    private func fitted(_ subview: LayoutSubview, width: CGFloat?) -> CGSize {
+        let own = subview.sizeThatFits(.unspecified)
+        guard let width, own.width > width else { return own }
+        return subview.sizeThatFits(ProposedViewSize(width: width, height: nil))
     }
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         var width: CGFloat = 0, height: CGFloat = 0
         for (n, line) in lines(subviews, width: proposal.width).enumerated() {
-            let sizes = line.map { subviews[$0].sizeThatFits(.unspecified) }
+            let sizes = line.map { fitted(subviews[$0], width: proposal.width) }
             width = max(width, sizes.map(\.width).reduce(0, +) + spacing * CGFloat(max(sizes.count - 1, 0)))
             height += (n > 0 ? spacing : 0) + (sizes.map(\.height).max() ?? 0)
         }
@@ -796,7 +823,7 @@ private struct SeriesActionRow: Layout {
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
         var y = bounds.minY
         for line in lines(subviews, width: bounds.width) {
-            let sizes = line.map { subviews[$0].sizeThatFits(.unspecified) }
+            let sizes = line.map { fitted(subviews[$0], width: bounds.width) }
             let tall = sizes.map(\.height).max() ?? 0
             var x = bounds.minX
             for (index, size) in zip(line, sizes) {
