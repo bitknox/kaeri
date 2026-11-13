@@ -630,6 +630,15 @@ impl OneSend {
                 continue;
             }
             self.told.chapter(Some(label.clone()));
+            // A download of the chapter already under way is waited for and its file taken,
+            // so the source is asked for its pages once.
+            if let Some(path) = self.joined(want).await? {
+                chapters.push(prepare::Chapter { label, path });
+                self.told.gathered.fetch_add(1, Ordering::Relaxed);
+                self.told.chapter(None);
+                fetched += 1;
+                continue;
+            }
             let missing = u32::try_from(to_fetch).unwrap_or(u32::MAX).saturating_sub(fetched);
             self.may_fetch(missing, &wanted).await?;
             std::fs::create_dir_all(temp).map_err(|e| {
@@ -668,6 +677,30 @@ impl OneSend {
             fetched += 1;
         }
         Ok((chapters, fetch_count))
+    }
+
+    /// The file of a download of `want` that is fetching, once it is done, or one that has
+    /// finished since the send began. `None` when no download of it is fetching, or the one
+    /// that was stops without the file (it failed, was cancelled or waits again): the send
+    /// then fetches the chapter itself.
+    async fn joined(&self, want: &Wanted) -> Result<Option<PathBuf>, prepare::Stop> {
+        let store = self.lent.sources.store();
+        let (work, chapter) = (self.work.as_str(), want.chapter.as_str());
+        loop {
+            if self.cancel.load(Ordering::Relaxed) {
+                return Err(prepare::Stop::Cancelled);
+            }
+            let state = store.book_download(work, chapter).ok().flatten().map(|d| d.state);
+            match state {
+                Some(BookDownloadState::Downloading) => {}
+                Some(BookDownloadState::Done) => {
+                    let here = OnDevice::of(store, work);
+                    return Ok(here.file(chapter).map(|file| file.path().to_owned()));
+                }
+                _ => return Ok(None),
+            }
+            tokio::time::sleep(LOOK_AGAIN).await;
+        }
     }
 
     /// Wait until chapters may be fetched, `missing` of them still to come. A send waits while

@@ -4822,6 +4822,66 @@ mod tests {
             engine.shutdown().await;
         }
 
+        /// R7E-10. A send of a chapter whose download is fetching waits for it and takes its
+        /// file, so the source is asked for each page once; when the download is cancelled
+        /// instead, the send fetches the chapter itself.
+        #[tokio::test]
+        async fn a_send_of_a_chapter_downloading_takes_the_download() {
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, store, source) = launch_engine(dir.path(), None).await;
+            events.launch().await;
+            engine.send(network(false, false));
+            let fetching = |chapter: &'static str| {
+                let store = store.clone();
+                move || {
+                    store.book_download(WORK, chapter).unwrap().is_some_and(|d| {
+                        d.state == kaeri_store::book_downloads::BookDownloadState::Downloading
+                    })
+                }
+            };
+            let download = |chapter: &str| {
+                Command::Reading(ReadingCommand::Download {
+                    work: WorkId::new(WORK),
+                    pick: DownloadPick::Chapters { ids: vec![ChapterId::new(chapter)] },
+                })
+            };
+
+            // Chapter 2's download holds on its second page while the send starts.
+            source.held.store(true, Ordering::SeqCst);
+            engine.send(download("2"));
+            store_waits("chapter 2 downloading", fetching("2")).await;
+            let pages = source.clone();
+            store_waits("both pages asked", move || pages.fetched() == 2).await;
+            engine.send(send_of(&["2"]));
+            tokio::time::sleep(Duration::from_millis(500)).await;
+            assert_eq!(source.fetched(), 2, "the send asks for no page of its own");
+            source.held.store(false, Ordering::SeqCst);
+            let seen = seen_until(&mut events, send_ended).await;
+            assert_eq!(pages_sent(&seen).map(|(_, pages)| pages), Some(2), "{seen:?}");
+            assert_eq!(source.fetched(), 2, "each page once");
+
+            // Chapter 3's download is cancelled while the send waits for it: the send
+            // fetches the chapter.
+            source.held.store(true, Ordering::SeqCst);
+            engine.send(download("3"));
+            store_waits("chapter 3 downloading", fetching("3")).await;
+            let pages = source.clone();
+            store_waits("both pages asked", move || pages.fetched() == 4).await;
+            engine.send(send_of(&["3"]));
+            tokio::time::sleep(Duration::from_millis(500)).await;
+            engine.send(Command::Reading(ReadingCommand::DownloadCancel {
+                work: WorkId::new(WORK),
+                chapters: vec![ChapterId::new("3")],
+            }));
+            let cancelled = fetching("3");
+            store_waits("chapter 3 cancelled", move || !cancelled()).await;
+            source.held.store(false, Ordering::SeqCst);
+            let seen = seen_until(&mut events, send_ended).await;
+            assert_eq!(pages_sent(&seen).map(|(_, pages)| pages), Some(2), "{seen:?}");
+            assert_eq!(source.fetched(), 6, "the send fetched chapter 3 itself");
+            engine.shutdown().await;
+        }
+
         /// R7E-4. A send of a downloaded chapter from a book server's series no catalogue lists
         /// (Komga, Kavita or OPDS alike) names its file and its ComicInfo Title and Series by
         /// the series' own name, and one with no name at all as an untitled series; never by
