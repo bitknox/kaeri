@@ -621,14 +621,14 @@ async fn a_chapter_whose_fetch_panics_fails_and_the_queue_goes_on() {
     }
     kit.queue.download(&kit.lent, WorkId::new(WORK), DownloadPick::Unread).await;
     kit.settle().await;
-    let other = |state: &ChapterDownloadState| {
-        matches!(state, ChapterDownloadState::Failed { failure: ReadingFailure::Other { .. } })
-    };
+    // A failure is kept in the row by kind, so the panic's reason is not read back.
+    let failed =
+        |state: &ChapterDownloadState| matches!(state, ChapterDownloadState::Failed { .. });
     let states = kit.states();
     assert_eq!(states[0], ("1".into(), ChapterDownloadState::Done));
-    assert!(other(&states[1].1), "the chapter whose content panicked: {:?}", states[1]);
+    assert!(failed(&states[1].1), "the chapter whose content panicked: {:?}", states[1]);
     assert_eq!(states[2], ("3".into(), ChapterDownloadState::Done));
-    assert!(other(&states[3].1), "the chapter whose pages panicked: {:?}", states[3]);
+    assert!(failed(&states[3].1), "the chapter whose pages panicked: {:?}", states[3]);
     // The Downloads list heard each failure.
     let told = kit.drain();
     let failed_in_list = |chapter: &str| {

@@ -54,8 +54,13 @@ fn books_feed(count: &str) -> String {
 fn opds(address: &str) -> Arc<dyn BookSource> {
     let server =
         Server { id: "s", name: "Shelf", kind: Kind::Opds, address, credential: "basic:" };
-    source(&reqwest::Client::new(), &server, std::env::temp_dir(), Arc::new(AtomicBool::new(false)))
-        .unwrap()
+    source(
+        &reqwest::Client::new(),
+        &server,
+        std::env::temp_dir(),
+        Arc::new(AtomicBool::new(false)),
+    )
+    .unwrap()
 }
 
 /// Every call to a hostile server answers soon: building billions of page refs would not.
@@ -73,13 +78,18 @@ async fn an_opds_page_stream_past_any_books_length_is_not_read() {
         ("4000000000", false),
         ("4294967295", false),
     ] {
-        let address = serve(vec![("/opds/s1", "application/atom+xml", books_feed(count))]).await;
+        let address =
+            serve(vec![("/opds/s1", "application/atom+xml", books_feed(count))]).await;
         let source = opds(&address);
         let series = format!("feed|{address}/opds/s1");
 
         let chapters = soon(source.chapters(&series, &BookHints::default())).await.unwrap();
         let stated = chapters[0].page_count;
-        assert_eq!(stated, readable.then_some(MOST_PAGES), "{count} pages listed as {stated:?}");
+        assert_eq!(
+            stated,
+            readable.then_some(MOST_PAGES),
+            "{count} pages listed as {stated:?}"
+        );
 
         let pages = soon(source.chapter_pages(&series, "urn:x:b1")).await.unwrap();
         assert_eq!(pages.map(|p| p.len()), readable.then_some(MOST_PAGES as usize), "{count}");

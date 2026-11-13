@@ -4515,7 +4515,13 @@ mod tests {
             })
             .await;
             let job = seen.iter().find_map(|e| match e {
-                Event::Reading(ReadingEvent::ExportWaiting { job, work, target, line, chapters }) => {
+                Event::Reading(ReadingEvent::ExportWaiting {
+                    job,
+                    work,
+                    target,
+                    line,
+                    chapters,
+                }) => {
                     assert_eq!((work.as_str(), target.as_str()), (WORK, "kobo"));
                     // Every send that waits here holds chapters 1 and 2: a screen that never
                     // asked for it learns them from this.
