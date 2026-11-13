@@ -366,7 +366,7 @@ impl KomgaSource {
         if pages.len() > crate::MOST_PAGES as usize {
             return Err(crate::too_many_pages(pages.len()));
         }
-        let header: Vec<(String, String)> = self.http.auth().header().into_iter().collect();
+        // A page carries no sign-in: fetching it adds the server's own, on its origin alone.
         Ok(Some(ChapterContent::Images(
             pages
                 .into_iter()
@@ -376,7 +376,7 @@ impl KomgaSource {
                         encode(book),
                         p.number
                     )),
-                    headers: header.clone(),
+                    headers: Vec::new(),
                     made: None,
                     width: p.width,
                     height: p.height,

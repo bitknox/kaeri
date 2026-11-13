@@ -1043,7 +1043,12 @@ mod tests {
             cache_dir: dir.join("cache"),
         };
         let tokens = kaeri_track::TokenStore::new(dir.join("tokens"));
-        let books = BookSources::new(store.clone(), tokens, reqwest::Client::new(), &paths);
+        let books = BookSources::new(
+            store.clone(),
+            tokens,
+            &kaeri_net::HttpClient::new(&Default::default()).unwrap(),
+            &paths,
+        );
         for source in sources {
             books.registry.put((*source).clone());
         }

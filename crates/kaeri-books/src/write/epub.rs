@@ -11,7 +11,7 @@ use zip::CompressionMethod;
 use zip::write::{SimpleFileOptions, ZipWriter};
 
 use super::xhtml::Writer;
-use super::{escape_attr, escape_text, image_kind, zip_err};
+use super::{escape_attr, escape_text, image_kind, plain_text, zip_err};
 use crate::epub::{Direction, PageSpread, Series};
 use crate::{BookError, Format, Limits, Result, path, xml};
 
@@ -90,10 +90,17 @@ impl<W: Write + Seek> EpubWriter<W> {
     /// the container.
     pub fn new(
         out: W,
-        meta: BookMeta,
+        mut meta: BookMeta,
         flavor: EpubFlavor,
         fixed: Option<FixedLayout>,
     ) -> Result<Self> {
+        // A title and authors as plain text; a book needs a title, and no author is empty.
+        meta.title = plain_text(&meta.title);
+        if meta.title.is_empty() {
+            return Err(BookError::Unsupported { what: "a book with no title".to_owned() });
+        }
+        meta.creators =
+            meta.creators.iter().map(|c| plain_text(c)).filter(|c| !c.is_empty()).collect();
         if let Some(f) = fixed
             && (f.width == 0 || f.height == 0)
         {
@@ -180,12 +187,13 @@ impl<W: Write + Seek> EpubWriter<W> {
                 what: "a text chapter in a fixed-layout book".to_owned(),
             });
         }
+        let title = plain_text(title);
         let lang = language(&self.meta.language);
         let source = crate::epub::html_entities(&format!(
             "<html xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:epub=\"http://www.idpf.org/2007/ops\" \
              xml:lang=\"{l}\" lang=\"{l}\"><head><meta charset=\"utf-8\"/><title>{t}</title></head><body>{body}</body></html>",
             l = escape_attr(&lang),
-            t = escape_text(title),
+            t = escape_text(&title),
         ));
         let doc = xml::parse(&source, Format::Epub, &self.limits)?;
         let out = Writer::new(self.flavor == EpubFlavor::Kepub).document(&doc);
@@ -200,7 +208,7 @@ impl<W: Write + Seek> EpubWriter<W> {
             properties: Vec::new(),
         });
         self.spine.push(SpineRef { id, spread: None });
-        self.toc.push((title.to_owned(), href));
+        self.toc.push((title, href));
         Ok(())
     }
 
@@ -250,7 +258,7 @@ impl<W: Write + Seek> EpubWriter<W> {
         });
         self.spine.push(SpineRef { id, spread });
         if let Some(t) = title {
-            self.toc.push((t.to_owned(), page));
+            self.toc.push((plain_text(t), page));
         }
         Ok(())
     }

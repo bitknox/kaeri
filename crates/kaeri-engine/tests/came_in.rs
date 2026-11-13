@@ -36,7 +36,12 @@ fn sources(dir: &std::path::Path) -> BookSources {
         cache_dir: dir.join("cache"),
     };
     let tokens = TokenStore::new(dir.join("tokens"));
-    BookSources::new(Store::open_in_memory().unwrap(), tokens, reqwest::Client::new(), &paths)
+    BookSources::new(
+        Store::open_in_memory().unwrap(),
+        tokens,
+        &kaeri_net::HttpClient::new(&Default::default()).unwrap(),
+        &paths,
+    )
 }
 
 fn run(

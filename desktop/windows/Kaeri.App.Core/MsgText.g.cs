@@ -482,6 +482,8 @@ public static class MsgText
         ReadingMsg.ReadingEstimateWifi => T.ReadingEstimateWifi,
         ReadingMsg.ReadingEstimateMobile => T.ReadingEstimateMobile,
         ReadingMsg.ReadingEstimateWaitsWifi => T.ReadingEstimateWaitsWifi,
+        ReadingMsg.ReadingDownloadOnDevice => T.ReadingDownloadOnDevice,
+        ReadingMsg.ReadingUntitledSeries => T.ReadingUntitledSeries,
         ReadingMsg.ReadingDownloadsDoneTitle => T.ReadingDownloadsDoneTitle,
         ReadingMsg.ReadingDownloadsDoneChapters x => T.ReadingDownloadsDoneChapters(x.Title, x.Count),
         ReadingMsg.ReadingDownloadsDoneParts x => T.ReadingDownloadsDoneParts(x.Title, x.Count),

@@ -2036,6 +2036,17 @@ pub enum ReadingEvent {
         #[cfg_attr(feature = "ffi", uniffi(default))]
         chapters: Vec<ChapterId>,
     },
+    /// A send that was ready when the app last stopped, its files still kept: told at launch
+    /// as a job of this launch, which no screen sent, so Downloads and the series page can
+    /// offer its Share again. `chapters` are the chapters it holds, in reading order.
+    /// `CancelPrepare` puts it away; unshared, it goes after a day as any ready send does.
+    ExportKept {
+        job: JobId,
+        work: WorkId,
+        target: String,
+        chapters: Vec<ChapterId>,
+        files: Vec<ExportFile>,
+    },
     Feed(FeedView),
     Eink(EinkProfile),
     Failed {

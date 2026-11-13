@@ -732,6 +732,10 @@
     <string name="reading_estimate_mobile">over mobile data</string>
     <!-- The device is on mobile data and the chapters wait until it's on Wi-Fi. -->
     <string name="reading_estimate_waits_wifi">waits for Wi-Fi</string>
+    <!-- Notice after Download on chapters that are files in the person's own folders: they open from where they are, so nothing is downloaded. -->
+    <string name="reading_download_on_device">These are files on this device already. They read offline without a download.</string>
+    <!-- A series' name where neither the catalogue nor its source gave one: on Downloads, in a sent file's name and in the e-reader's library. -->
+    <string name="reading_untitled_series">Untitled series</string>
     <!-- The notification's title. -->
     <string name="reading_downloads_done_title">Downloads finished</string>
     <!-- The notification's text: one series' chapters are downloaded. -->

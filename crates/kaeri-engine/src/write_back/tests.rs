@@ -153,7 +153,12 @@ fn sources_at(dir: &Path, store: Store) -> BookSources {
         dir.join("tokens"),
         kaeri_track::secret::Backend::File,
     );
-    BookSources::new(store, tokens, reqwest::Client::new(), &paths)
+    BookSources::new(
+        store,
+        tokens,
+        &kaeri_net::HttpClient::new(&Default::default()).unwrap(),
+        &paths,
+    )
 }
 
 async fn kit(flavour: Flavour) -> Kit {

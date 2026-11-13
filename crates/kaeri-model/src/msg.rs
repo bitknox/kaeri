@@ -1579,6 +1579,10 @@ pub enum ReadingMsg {
     ReadingEstimateMobile,
     /// The device is on mobile data and the chapters wait until it's on Wi-Fi.
     ReadingEstimateWaitsWifi,
+    /// Notice after Download on chapters that are files in the person's own folders: they open from where they are, so nothing is downloaded.
+    ReadingDownloadOnDevice,
+    /// A series' name where neither the catalogue nor its source gave one: on Downloads, in a sent file's name and in the e-reader's library.
+    ReadingUntitledSeries,
     /// The notification's title.
     ReadingDownloadsDoneTitle,
     /// The notification's text: one series' chapters are downloaded.
@@ -1837,6 +1841,8 @@ impl ReadingMsg {
             Self::ReadingEstimateWifi => "reading-estimate-wifi",
             Self::ReadingEstimateMobile => "reading-estimate-mobile",
             Self::ReadingEstimateWaitsWifi => "reading-estimate-waits-wifi",
+            Self::ReadingDownloadOnDevice => "reading-download-on-device",
+            Self::ReadingUntitledSeries => "reading-untitled-series",
             Self::ReadingDownloadsDoneTitle => "reading-downloads-done-title",
             Self::ReadingDownloadsDoneChapters { .. } => "reading-downloads-done-chapters",
             Self::ReadingDownloadsDoneParts { .. } => "reading-downloads-done-parts",
@@ -2049,6 +2055,8 @@ impl ReadingMsg {
             Self::ReadingEstimateWifi => Vec::new(),
             Self::ReadingEstimateMobile => Vec::new(),
             Self::ReadingEstimateWaitsWifi => Vec::new(),
+            Self::ReadingDownloadOnDevice => Vec::new(),
+            Self::ReadingUntitledSeries => Vec::new(),
             Self::ReadingDownloadsDoneTitle => Vec::new(),
             Self::ReadingDownloadsDoneChapters { title, count } => vec![("title", Value::Text(title.clone())), ("count", Value::Int(*count))],
             Self::ReadingDownloadsDoneParts { title, count } => vec![("title", Value::Text(title.clone())), ("count", Value::Int(*count))],
