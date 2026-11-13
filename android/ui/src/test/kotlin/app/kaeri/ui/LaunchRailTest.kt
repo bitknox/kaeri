@@ -16,6 +16,8 @@ import app.kaeri.design.KaeriTheme
 import app.kaeri.eink.EinkLook
 import app.kaeri.engine.model.AppEdition
 import app.kaeri.engine.model.Event
+import app.kaeri.engine.model.HomePart
+import app.kaeri.engine.model.HomeView
 import app.kaeri.engine.model.KaeriIsFor
 import app.kaeri.engine.model.MediumView
 import app.kaeri.i18n.R
@@ -134,6 +136,22 @@ class LaunchRailTest {
         shows(text(R.string.nav_library))
         compose.onAllNodesWithText(text(R.string.nav_calendar)).assertCountEquals(0)
         shot("tablet-read")
+    }
+
+    @Test
+    @Config(qualifiers = "w1280dp-h800dp-land-xhdpi")
+    fun the_placeholders_stay_when_home_comes_with_parts_pending() {
+        launch()
+        compose.mainClock.advanceTimeBy(1_000)
+        answer(KaeriIsFor.WATCH)
+        compose.mainClock.advanceTimeBy(600)
+        assertTrue("the placeholders stay", plateAt(400, 300))
+        // The view comes with everything still on its way: no second wait, no empty page.
+        compose.runOnUiThread { store.apply(Event.Home(HomeView(pending = listOf(HomePart.SUGGESTIONS, HomePart.WEEK)))) }
+        repeat(50) {
+            compose.mainClock.advanceTimeBy(16)
+            assertTrue("the placeholders stay at frame $it", plateAt(400, 300))
+        }
     }
 
     @Test

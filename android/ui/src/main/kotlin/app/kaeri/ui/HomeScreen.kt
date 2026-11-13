@@ -121,6 +121,8 @@ fun HomeScreen(actions: AppActions) {
     // Taking over from Home's wait before the answer: its placeholders and activity line stay, and
     // Watch together's button comes in with the rail.
     val handover = homeHandover()
+    // Placeholders that already stand, from the wait or from this Home's own: the column's stay on.
+    var stood by remember { mutableStateOf(handover.placeholders) }
     // Home with no view yet waits as much as one with parts pending, as reading's Home does.
     val slow = pendingForLong(view == null || pending.isNotEmpty(), already = handover.activity)
     val offlineSince = view?.offlineSince
@@ -148,12 +150,12 @@ fun HomeScreen(actions: AppActions) {
             val home = view
             when {
                 home == null -> LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = top, bottom = 24.dp)) {
-                    item(key = "loading") { AfterWait(already = handover.placeholders) { HomeLoadingColumn() } }
+                    item(key = "loading") { AfterWait(already = handover.placeholders, onShown = { stood = true }) { HomeLoadingColumn() } }
                 }
                 // Offline with nothing kept: the existing state, with the way to what plays.
                 home.offline && home.offlineSince == null && home.spotlight == null && home.sections.isEmpty() ->
                     OfflineHome(Modifier.padding(top = top))
-                else -> HomeColumn(home, handlers, gone, top)
+                else -> HomeColumn(home, handlers, gone, top, stood)
             }
         }
     }
@@ -166,11 +168,12 @@ private fun clock(unix: Long): String =
 /**
  * The parts to draw placeholders for: none for 600 ms, so a fast answer never shows them, then
  * what is still pending, and once nothing is, the last parts shown until they have stood 0.3 s,
- * so they never flicker away.
+ * so they never flicker away. With [already], placeholders stood before the column opened, and
+ * what is pending shows from the first frame.
  */
 @Composable
-private fun heldPlaceholders(pending: List<HomePart>): List<HomePart> {
-    var shown by remember { mutableStateOf(emptyList<HomePart>()) }
+private fun heldPlaceholders(pending: List<HomePart>, already: Boolean): List<HomePart> {
+    var shown by remember { mutableStateOf(if (already) pending else emptyList()) }
     var since by remember { mutableLongStateOf(0L) }
     val current by rememberUpdatedState(pending)
     val waiting = pending.isNotEmpty()
@@ -211,10 +214,12 @@ private fun pendingForLong(pending: Boolean, already: Boolean = false): Boolean 
 }
 
 @Composable
-private fun HomeColumn(home: HomeView, h: HomeHandlers, gone: List<AnilistId>, top: Dp) {
+private fun HomeColumn(home: HomeView, h: HomeHandlers, gone: List<AnilistId>, top: Dp, stood: Boolean) {
     val list = rememberLazyListState()
     val goneSet = gone.toSet()
-    val held = heldPlaceholders(home.pending)
+    // Placeholders that stood before the view came stay up with no second wait.
+    val already = remember { stood }
+    val held = heldPlaceholders(home.pending, already)
     LazyColumn(Modifier.fillMaxSize(), state = list, contentPadding = PaddingValues(top = top, bottom = 24.dp)) {
         // The spotlight changes in place: a crossfade on standard when its title or case moves, and
         // only then, so a sources check or a mark inside it never flashes.
@@ -228,7 +233,7 @@ private fun HomeColumn(home: HomeView, h: HomeHandlers, gone: List<AnilistId>, t
                     label = "spotlight", // i18n-skip
                 ) { shown ->
                     if (shown != null) SpotlightBlock(shown, h)
-                    else if (home.pending.isNotEmpty()) AfterWait { SpotlightPlaceholder() }
+                    else if (home.pending.isNotEmpty()) AfterWait(already = already) { SpotlightPlaceholder() }
                 }
             }
         }

@@ -171,6 +171,8 @@ internal fun ReadHomeScreen(actions: AppActions) {
     val waiting = (view == null && failure == null) || view?.pending.orEmpty().isNotEmpty()
     // Taking over from Home's wait before the answer: its placeholders and activity line stay.
     val handover = homeHandover()
+    // Placeholders that already stand, from the wait or from this Home's own: the column's stay on.
+    var stood by remember { mutableStateOf(handover.placeholders) }
     val slow = pendingForLong(waiting, already = handover.activity)
     val since = view?.offlineSince
     val line = when {
@@ -207,9 +209,9 @@ internal fun ReadHomeScreen(actions: AppActions) {
                         item(key = "offline") { ReadOfflineHome() }
                     }
                 view == null -> LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = top, bottom = 24.dp), userScrollEnabled = false) {
-                    item(key = "loading") { AfterWait(already = handover.placeholders) { HomeLoadingColumn() } }
+                    item(key = "loading") { AfterWait(already = handover.placeholders, onShown = { stood = true }) { HomeLoadingColumn() } }
                 }
-                else -> ReadHomeColumn(view, actions, gone, top)
+                else -> ReadHomeColumn(view, actions, gone, top, stood)
             }
         }
     }
@@ -248,11 +250,12 @@ private fun pendingForLong(pending: Boolean, already: Boolean = false): Boolean 
 
 /**
  * Whether placeholders stand for [pending]: not for the first 600 ms, so a fast answer never shows
- * them, and once shown, at least 0.3 s, so they never flicker away.
+ * them, and once shown, at least 0.3 s, so they never flicker away. With [already], placeholders
+ * stood before the column opened, and pending parts show theirs from the first frame.
  */
 @Composable
-private fun heldPlaceholders(pending: Boolean): Boolean {
-    var shown by remember { mutableStateOf(false) }
+private fun heldPlaceholders(pending: Boolean, already: Boolean): Boolean {
+    var shown by remember { mutableStateOf(already && pending) }
     var since by remember { mutableLongStateOf(0L) }
     LaunchedEffect(pending) {
         if (pending) {
@@ -271,14 +274,16 @@ private fun heldPlaceholders(pending: Boolean): Boolean {
 }
 
 @Composable
-private fun ReadHomeColumn(home: ReadingHomeView, actions: AppActions, gone: MutableList<WorkId>, top: Dp) {
+private fun ReadHomeColumn(home: ReadingHomeView, actions: AppActions, gone: MutableList<WorkId>, top: Dp, stood: Boolean) {
     val context = LocalContext.current
     val navigator = LocalNavigator.current
     val store = LocalAppStore.current
     val goneSet = gone.toSet()
     val hide = rememberHide(gone)
-    val yours = heldPlaceholders(ReadHomePart.YOURS in home.pending)
-    val discovery = heldPlaceholders(ReadHomePart.DISCOVERY in home.pending || ReadHomePart.BECAUSE in home.pending)
+    // Placeholders that stood before the view came stay up with no second wait.
+    val already = remember { stood }
+    val yours = heldPlaceholders(ReadHomePart.YOURS in home.pending, already)
+    val discovery = heldPlaceholders(ReadHomePart.DISCOVERY in home.pending || ReadHomePart.BECAUSE in home.pending, already)
     // While the demo is the only thing to read, its own spotlight and end, as the demo's board draws them.
     val demo by store.demo.collectAsStateWithLifecycle()
     val viewAll = rememberViewAll()
