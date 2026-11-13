@@ -4281,13 +4281,14 @@ struct FullBefore(Cell<Option<bool>>);
 impl FullBefore {
     /// The reader is about to change full screen, which is `now`.
     fn toggled(&self, now: bool) {
-        let _ = now;
+        if self.0.get().is_none() {
+            self.0.set(Some(now));
+        }
     }
 
     /// The reader closes with the window's full screen at `now`: what to set it to, if anything.
     fn give_back(&self, now: bool) -> Option<bool> {
-        let _ = now;
-        self.0.take()
+        self.0.take().filter(|&before| before != now)
     }
 }
 
@@ -4587,6 +4588,38 @@ mod tab_tests {
             go_to.unparent();
             window.destroy();
         });
+    }
+}
+
+#[cfg(test)]
+mod full_tests {
+    use super::FullBefore;
+
+    #[test]
+    fn closing_leaves_the_full_screen_the_reader_entered() {
+        let full = FullBefore::default();
+        full.toggled(false);
+        assert_eq!(full.give_back(true), Some(false));
+        // Closed once, the next close changes nothing.
+        assert_eq!(full.give_back(true), None);
+    }
+
+    #[test]
+    fn closing_keeps_the_window_as_it_was_when_the_reader_did_not_change_it() {
+        let full = FullBefore::default();
+        assert_eq!(full.give_back(false), None);
+        assert_eq!(full.give_back(true), None);
+        // Into full screen and out again: nothing to undo.
+        full.toggled(false);
+        full.toggled(true);
+        assert_eq!(full.give_back(false), None);
+    }
+
+    #[test]
+    fn a_window_full_screen_before_the_reader_gets_it_back() {
+        let full = FullBefore::default();
+        full.toggled(true);
+        assert_eq!(full.give_back(false), Some(true));
     }
 }
 
