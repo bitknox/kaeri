@@ -976,6 +976,69 @@ fn a_name_the_storage_refuses_is_said_as_such_not_as_a_missing_file() {
     assert_eq!(io_failure(&full, &long), ReadingFailure::DiskFull);
 }
 
+/// R6K-2. A whole book that can't be read names the book, never the copy being written.
+#[test]
+fn a_book_copy_that_cannot_read_its_book_names_the_book() {
+    let dir = tempfile::tempdir().unwrap();
+    let gone = dir.path().join("The Long Ferry.epub");
+    let part = dir.path().join("x.part");
+    let Err(Stop::Failed(failure)) = copy_book(&gone, &part) else { panic!("copied") };
+    assert_eq!(failure, ReadingFailure::FileMissing { path: gone.display().to_string() });
+
+    std::fs::write(&gone, b"made-up book").unwrap();
+    assert!(copy_book(&gone, &part).is_ok());
+    assert_eq!(std::fs::read(&part).unwrap(), b"made-up book");
+}
+
+/// R6K-2. Download on a book in the person's folders fetches nothing and says it opens from
+/// where it is.
+#[tokio::test]
+async fn download_on_a_book_in_a_folder_says_it_needs_none() {
+    let mut kit = kit(&[]);
+    let books = kit._dir.path().join("books");
+    std::fs::create_dir_all(&books).unwrap();
+    let path = books.join("The Long Ferry.epub");
+    std::fs::write(&path, b"made-up book").unwrap();
+    let series = kaeri_store::shelf::LocalSeries {
+        id: "books:ferry".into(),
+        folder: books.display().to_string(),
+        name: "The Long Ferry".into(),
+        medium: "manga".into(),
+        work: Some(WORK.into()),
+        state: "matched".into(),
+    };
+    kit.store().put_local_series(&series).unwrap();
+    let file = kaeri_store::shelf::ShelfFile {
+        path: path.display().to_string(),
+        chapter: None,
+        label: "The Long Ferry".into(),
+        volume: None,
+        number_milli: None,
+        format: "epub".into(),
+        pages: None,
+        comicinfo: None,
+        source: None,
+    };
+    kit.store().put_local_file("books:ferry", &file, 1, 1).unwrap();
+    kit.store().set_book_match("shelf", "s-1", WORK, 0, false, false, 1).unwrap();
+    kit.store()
+        .set_book_match(crate::read_sources::FOLDERS, "books:ferry", WORK, 100, true, false, 1)
+        .unwrap();
+
+    kit.queue.download(&kit.lent, WorkId::new(WORK), DownloadPick::Unread).await;
+    kit.settle().await;
+
+    assert!(kit.states().is_empty(), "nothing is queued: {:?}", kit.states());
+    let mut said = Vec::new();
+    while let Ok(event) = kit.events.try_recv() {
+        if let Event::Toast(notice) = event {
+            said.extend(notice.msg.map(|m| m.id()));
+        }
+    }
+    assert_eq!(said, ["reading-download-on-device"]);
+    assert_eq!(std::fs::read(&path).unwrap(), b"made-up book", "the book is left as it was");
+}
+
 fn msg_ids(parts: &[kaeri_model::Msg]) -> Vec<&'static str> {
     parts.iter().map(kaeri_model::Msg::id).collect()
 }

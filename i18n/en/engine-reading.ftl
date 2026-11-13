@@ -831,6 +831,10 @@ reading-estimate-mobile = over mobile data
 # The device is on mobile data and the chapters wait until it's on Wi-Fi.
 reading-estimate-waits-wifi = waits for Wi-Fi
 
+# Notice after Download on chapters that are files in the person's own folders: they open from
+# where they are, so nothing is downloaded.
+reading-download-on-device = These are files on this { -device } already. They read offline without a download.
+
 ## Downloads finished
 ## The notification a native app shows when the chapters it was downloading are all done, when
 ## the person turned it on.

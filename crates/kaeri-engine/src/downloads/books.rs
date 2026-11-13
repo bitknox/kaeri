@@ -41,6 +41,7 @@ use kaeri_model::{
     command::AppState,
     event::Event,
     medium::AppEdition,
+    notice::Notice,
     reading::{
         BookDownloadRow, BookDownloadsView, ChapterDownloadState, ChapterReadState, ChapterRow,
         DownloadPick, ReadingEvent, ReadingFailure, StorageMeter, VolumeGroup, WriteProblem,
@@ -553,6 +554,19 @@ impl BookDownloads {
         let wanted = Self::to_fetch(&pick, &rows);
         let store = lent.sources.store();
         let listers = Listers::of(&lent.sources, &work, &source);
+        // A file in the person's folders opens from where it is: nothing of it is fetched, and
+        // asking for only such files says so.
+        let on_device = |w: &Wanted| {
+            let row = rows.iter().find(|r| r.id == w.chapter);
+            row.map_or(Some(listers.edition.as_str()), |row| listers.of_row(row))
+                == Some(crate::read_sources::FOLDERS)
+        };
+        if !wanted.is_empty() && wanted.iter().all(on_device) {
+            let notice = Notice::info(Msg::Reading(ReadingMsg::ReadingDownloadOnDevice));
+            let _ = lent.tx.send(Event::Toast(notice));
+            return;
+        }
+        let wanted: Vec<Wanted> = wanted.into_iter().filter(|w| !on_device(w)).collect();
         let (added, unlisted) =
             self.queue_listed(store, &work, (&listers, &rows), &wanted, false, now);
         // A chapter the series page listed from a source that no longer has it.
@@ -1242,8 +1256,7 @@ impl BookDownloads {
                     .extension()
                     .and_then(|e| e.to_str())
                     .map_or_else(|| "cbz".to_owned(), str::to_ascii_lowercase);
-                std::fs::copy(&book.path, &part)
-                    .map_err(|e| Stop::Failed(io_failure(&e, &part)))?;
+                copy_book(&book.path, &part)?;
                 if book.temporary {
                     let _ = std::fs::remove_file(&book.path);
                 }
@@ -1350,6 +1363,27 @@ pub(crate) fn io_failure(e: &std::io::Error, path: &Path) -> ReadingFailure {
         _ => WriteProblem::Other,
     };
     ReadingFailure::CannotWrite { path, problem }
+}
+
+/// A whole book file copied as it is, from a plain path or a folder the platform opens. A
+/// failure names the file it is about: the book when it can't be read, the copy when it can't be
+/// written.
+fn copy_book(from: &Path, to: &Path) -> Result<(), Stop> {
+    let mut source =
+        kaeri_books::tree::open_file(from).map_err(|e| Stop::Failed(io_failure(&e, from)))?;
+    let mut out =
+        BufWriter::new(File::create(to).map_err(|e| Stop::Failed(io_failure(&e, to)))?);
+    let mut buffer = vec![0; 64 * 1024];
+    loop {
+        let read = match std::io::Read::read(&mut source, &mut buffer) {
+            Ok(0) => break,
+            Ok(read) => read,
+            Err(e) if e.kind() == std::io::ErrorKind::Interrupted => continue,
+            Err(e) => return Err(Stop::Failed(io_failure(&e, from))),
+        };
+        out.write_all(&buffer[..read]).map_err(|e| Stop::Failed(io_failure(&e, to)))?;
+    }
+    out.flush().map_err(|e| Stop::Failed(io_failure(&e, to)))
 }
 
 fn book_failure(e: &kaeri_books::BookError, path: &Path, source: &str) -> ReadingFailure {
