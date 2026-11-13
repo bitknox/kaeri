@@ -50,10 +50,11 @@ struct PagedReader: View {
         .contentShape(.rect)
         .gesture(swipe)
         #if os(iOS)
-        // A double tap zooms, so a single tap waits for it not to be one.
-        .simultaneousGesture(
-            SpatialTapGesture(count: 2).onEnded { zoom.doubleTap(at: $0.location, in: size, motion: !reduceMotion && !paper) }
-                .exclusively(before: SpatialTapGesture().onEnded { tap($0.location.x / max(size.width, 1)) }))
+        // A double tap zooms, so a single tap waits for it not to be one. A tap on a control in
+        // the page, a failed page's Try again, is the control's alone.
+        .readerTaps(double: { zoom.doubleTap(at: $0, in: size, motion: !reduceMotion && !paper) }) {
+            tap($0.x / max(size.width, 1))
+        }
         .simultaneousGesture(
             MagnifyGesture()
                 .updating($magnifying) { _, live, _ in live = true }
@@ -63,7 +64,7 @@ struct PagedReader: View {
             if !live { zoom.pinchGone(in: size, motion: !reduceMotion && !paper) }
         }
         #else
-        .simultaneousGesture(SpatialTapGesture().onEnded { tap($0.location.x / max(size.width, 1)) })
+        .readerTaps { tap($0.x / max(size.width, 1)) }
         #endif
         .onAppear { model.position = (current, max(model.leaves.count, 1)) }
         .onChange(of: model.current) { _, _ in
@@ -414,6 +415,7 @@ struct ReaderEndPage: View {
                     .foregroundStyle(theme.silk)
                     .frame(minHeight: 44)
                     .buttonStyle(.plain)
+                    .takesItsOwnTaps()
                     .padding(.top, 4)
             }
         }
@@ -493,6 +495,7 @@ struct ReaderEndPage: View {
                     .frame(maxWidth: .infinity, minHeight: 44)
                     .contentShape(.rect)
                     .buttonStyle(.plain)
+                    .takesItsOwnTaps()
                     .padding(.top, 5)
             } else {
                 Button(L.readerBackToSeries) { closeReader() }
@@ -743,6 +746,8 @@ struct ReaderServerLine: View {
                 .foregroundStyle(Self.failed(line) ? theme.silk : theme.haze)
                 .fixedSize(horizontal: false, vertical: true)
         }
+        // Its Try again link is a control: a tap on the line is not a turn or the bar's.
+        .background { if line.canRetry { Color.clear.takesItsOwnTaps() } }
         .accessibilityElement(children: .combine)
         .accessibilityAction(named: L.readerTryAgain) { if line.canRetry { retry() } }
     }
@@ -845,7 +850,7 @@ struct ReaderSkippedLine: View {
                 .underline()
                 .buttonStyle(.plain)
                 // A 44 point target that keeps the line's own height.
-                .padding(.vertical, 12).contentShape(.rect).padding(.vertical, -12)
+                .padding(.vertical, 12).contentShape(.rect).takesItsOwnTaps().padding(.vertical, -12)
                 .pointerHover()
                 .accessibilityHint(L.readerCreditShowHint)
         }

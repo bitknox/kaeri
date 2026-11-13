@@ -197,6 +197,8 @@ struct ReaderPillStyle: ButtonStyle {
             .frame(maxWidth: wide ? .infinity : nil, minHeight: height)
             .background((fill ?? theme.high).opacity(configuration.isPressed ? 0.8 : 1), in: .capsule)
             .contentShape(.capsule)
+            // In a page, a tap on it is its own, not a turn or the bar's.
+            .takesItsOwnTaps()
     }
 }
 
@@ -212,6 +214,7 @@ struct ReaderAmberStyle: ButtonStyle {
             .frame(maxWidth: .infinity, minHeight: height)
             .background(theme.amber.opacity(configuration.isPressed ? 0.85 : 1), in: .capsule)
             .contentShape(.capsule)
+            .takesItsOwnTaps()
     }
 }
 
