@@ -355,7 +355,14 @@ final class ReaderStuckTests: XCTestCase {
             XCTAssertTrue(choose.exists, "the sheet has no Choose a torrent file")
             app.buttons["Cancel"].firstMatch.tap()
             XCTAssertTrue(choose.waitForNonExistence(timeout: 5), "Cancel left the sheet up")
-            XCTAssertEqual(page(app), start, "the arrows turned the book behind the sheet")
+            // Command-L under the sheet must not have asked for the chapters, to come up once it goes.
+            let chapters = app.buttons["Chapters"].firstMatch
+            XCTAssertFalse(chapters.waitForExistence(timeout: 2), "Command-L opened the chapters behind the sheet")
+            let after = page(app)
+            if after == nil {
+                print("audit: no page after Cancel; images \(app.images.count), buttons \(app.buttons.allElementsBoundByIndex.prefix(12).map(\.label))")
+            }
+            XCTAssertEqual(after, start, "the arrows turned the book behind the sheet")
         } else {
             key(app, .leftArrow)
             XCTAssertNotEqual(page(app), start, "with nothing over it the book did not turn")
