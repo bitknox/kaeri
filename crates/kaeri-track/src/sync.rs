@@ -499,7 +499,7 @@ fn settle(
                 );
             }
             Some(PushFailure::Auth(message)) => {
-                // Deliberately *not* counted as a failure: the queue has to still be intact
+                // Not counted as a failure: the queue has to still be intact
                 // when the user re-authorises, and no amount of waiting fixes it.
                 rejected = Some(message.clone());
             }

@@ -316,6 +316,7 @@ mod tests {
         store.forget_book_progress("k").unwrap();
         assert_eq!(store.book_progress_state("k").unwrap(), BookProgressState::default());
     }
+
     #[test]
     fn a_wait_set_while_the_clock_ran_ahead_is_due_once_it_is_put_right() {
         let store = store();

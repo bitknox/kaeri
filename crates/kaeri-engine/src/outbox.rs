@@ -134,11 +134,6 @@ impl Outbox {
         }
     }
 
-    /// Say what happened. As `UnboundedSender::send`: the event comes back when nobody reads
-    /// any more, which is how a task long outlived by its reader learns to stop.
-    // The channel's own shape, large event and all, so no caller of the channel it stands in
-    // for has to change.
-    #[allow(clippy::result_large_err)]
     /// A change the person made that the store could not keep, even after waiting out a lock
     /// another engine on the same library held: logged, and said to the person as an alert, so
     /// it is never lost without a word.
@@ -152,6 +147,11 @@ impl Outbox {
         let _ = self.send(Event::Toast(notice));
     }
 
+    /// Say what happened. As `UnboundedSender::send`: the event comes back when nobody reads
+    /// any more, which is how a task long outlived by its reader learns to stop.
+    // The channel's own shape, large event and all, so no caller of the channel it stands in
+    // for has to change.
+    #[allow(clippy::result_large_err)]
     pub fn send(&self, event: Event) -> Result<(), SendError<Event>> {
         match &self.0 {
             Route::Events(tx) => tx.send(event),

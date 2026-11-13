@@ -411,7 +411,7 @@ impl Store {
     /// Count the tracker's refusal of a reading op, as [`Self::fail`] does. True when it was
     /// given up.
     pub fn fail_read(&self, id: i64, error: &str, now: i64) -> Result<bool> {
-        self.with_personal(|c| refuse_in(c, "read_outbox", id, error, now))
+        self.with_personal_tx(|c| refuse_in(c, "read_outbox", id, error, now))
     }
 
     /// Hold a reading op until it can be addressed or the tracker may be asked again at `until`.
@@ -522,7 +522,7 @@ impl Store {
     /// above zero for good. Only refusals reach here: a failure that is not the tracker's word
     /// on this change waits through [`Self::postpone`] instead, and never counts.
     pub fn fail(&self, id: i64, error: &str, now: i64) -> Result<bool> {
-        self.with_personal(|c| refuse_in(c, "sync_outbox", id, error, now))
+        self.with_personal_tx(|c| refuse_in(c, "sync_outbox", id, error, now))
     }
 
     /// Hold an op until `until` without counting anything against it: a failure that says
