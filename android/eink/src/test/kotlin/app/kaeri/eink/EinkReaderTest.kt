@@ -23,6 +23,12 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.input.InputMode
 import androidx.compose.ui.input.InputModeManager
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalInputModeManager
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.isFocused
@@ -107,7 +113,7 @@ class EinkReaderTest {
     /** Every full refresh turned on, as a person may in the Refresh rows. */
     private val optedIn = einkPolicyDefaults(EinkPanel.GREY).copy(imageFull = true, textEvery = 6u, textEveryDark = 4u, listEvery = 3u)
 
-    private fun open(onBack: () -> Unit = {}, policy: EinkPolicy = einkPolicyDefaults(EinkPanel.GREY), mode: String? = null, zones: Boolean = true) {
+    private fun open(onBack: () -> Unit = {}, policy: EinkPolicy = einkPolicyDefaults(EinkPanel.GREY), mode: String? = null, zones: Boolean = true, behind: @Composable () -> Unit = {}) {
         session.open(EinkFixtures.WORK, EinkFixtures.surface.copy(eink = true))
         session.apply(ReaderEvent.Opened(EinkFixtures.view(start = 0u)))
         session.apply(ReaderEvent.Leaves(EinkFixtures.SESSION, EinkFixtures.CHAPTER, EinkFixtures.leaves(3) { EinkFixtures.grey(dir.root, "$it.gray", 80, 80) }))
@@ -121,6 +127,7 @@ class EinkReaderTest {
         compose.setContent {
             modes = LocalInputModeManager.current
             EinkTheme {
+                behind()
                 val state = session.state.collectAsState().value
                 if (readerOn) EinkReader(session, state, images, painter, actions, showZones = zones)
             }
@@ -134,6 +141,7 @@ class EinkReaderTest {
 
     private var readerOn by mutableStateOf(true)
     private var modes: InputModeManager? = null
+    private var behindFocused = false
 
     private fun shown(): List<ReaderCommand.Shown> = sent.filterIsInstance<ReaderCommand.Shown>()
 
@@ -638,27 +646,42 @@ class EinkReaderTest {
 
     @Test
     fun after_try_again_by_key_the_chapter_it_opens_takes_the_keys() {
-        open(zones = false)
+        // A focusable on the screen behind the reader, as the series page is.
+        open(zones = false, behind = { Box(Modifier.size(8.dp).onFocusChanged { behindFocused = it.isFocused }.focusable()) })
         toEndPage()
         compose.onNodeWithText("Continue to chapter 13").performClick()
         compose.waitForIdle()
         session.apply(Event.Reading(ReadingEvent.Failed(ReadingAbout.READER, ReadingFailure.Offline)))
         compose.waitForIdle()
-        // Try again by key: the focus is on it when the chapter opens and the button goes.
+        // Try again by key, through the window as a keyboard's keys come: the focus is on it when
+        // the button goes.
         keyboard()
         compose.onNodeWithText("Try again").requestFocus().assertIsFocused()
         sent.clear()
-        key(Key.Enter)
+        windowKey(android.view.KeyEvent.KEYCODE_ENTER)
         assertEquals(1, sent.filterIsInstance<ReaderCommand.Open>().size)
         session.apply(ReaderEvent.Opened(EinkFixtures.view(start = 0u)))
         session.apply(ReaderEvent.Leaves(EinkFixtures.SESSION, EinkFixtures.CHAPTER, EinkFixtures.leaves(3) { EinkFixtures.grey(dir.root, "again-$it.gray", 80, 80) }))
         compose.waitForIdle()
         assertTrue(!shows("Try again"))
-        // The reader has the keys again, with no touch to the bars.
+        // The focus that went with the button is the reader's again, not the screen's behind it,
+        // with no touch to the bars.
+        assertTrue(!behindFocused)
         sent.clear()
-        key(Key.PageDown)
+        windowKey(android.view.KeyEvent.KEYCODE_PAGE_DOWN)
         assertEquals(1u, shown().last().leaf)
     }
+
+    /** A key down and up through the window, to whatever view holds the focus there. */
+    private fun windowKey(code: Int) {
+        compose.runOnUiThread {
+            val window = compose.activity.window
+            window.superDispatchKeyEvent(android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, code))
+            window.superDispatchKeyEvent(android.view.KeyEvent(android.view.KeyEvent.ACTION_UP, code))
+        }
+        compose.waitForIdle()
+    }
+
 
     @Test
     fun in_a_novel_tab_from_the_page_reaches_the_bars() {
