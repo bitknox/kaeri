@@ -294,7 +294,8 @@ mod tests {
     fn a_title_loop_goes_past_a_refusal_and_stops_at_an_outage() {
         use kaeri_core::{ids::AnilistId, traits::PushFailure};
         let id = AnilistId::new;
-        let refused = || Err(kaeri_core::Error::Tracker { tracker: "t".into(), message: "gone".into() });
+        let refused =
+            || Err(kaeri_core::Error::Tracker { tracker: "t".into(), message: "gone".into() });
         let down = || Err(kaeri_core::Error::Network("dns".into()));
         let mut titles = Titles::default();
         titles.record(id(1), refused());

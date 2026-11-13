@@ -12,7 +12,7 @@ use kaeri_core::{
 use kaeri_net::HttpClient;
 use kaeri_store::Store;
 use kaeri_testkit::{
-    anilist::{FakeAniList, Failure, Operation},
+    anilist::{Failure, FakeAniList, Operation},
     readlists::{FakeReadLists, KITSU_TOKEN, MAL_TOKEN},
 };
 use kaeri_track::{
@@ -111,7 +111,9 @@ impl Media {
         let status = WatchStatus::Completed;
         match self {
             Self::Watching => TrackOp::SetStatus { anilist_id, status, at: 1_000 },
-            Self::Reading => TrackOp::SetReadStatus { anilist_id, status, rereading: false, at: 1_000 },
+            Self::Reading => {
+                TrackOp::SetReadStatus { anilist_id, status, rereading: false, at: 1_000 }
+            }
         }
     }
 
@@ -209,7 +211,8 @@ async fn anilist_down_or_unreachable_loses_nothing() {
             let fake = FakeAniList::start().await;
             let store = Store::open_in_memory().unwrap();
             let tracker = anilist_tracker(&fake);
-            let up = |up: bool| if up { fake.heal() } else { fake.fail_always(failure.clone()) };
+            let up =
+                |up: bool| if up { fake.heal() } else { fake.fail_always(failure.clone()) };
             down_then_back(media, &store, &tracker, up).await;
             // Two failures in a row end a pass, and the passes back off to one an hour: a day
             // down is a few dozen saves, not three a minute.

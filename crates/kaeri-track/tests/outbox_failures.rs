@@ -101,7 +101,8 @@ impl Fake {
         seen.pushes += 1;
         let refused = self.refused.lock().unwrap().clone();
         let troubled = self.troubled.lock().unwrap().clone();
-        let refusal = |message: &str| Error::Tracker { tracker: ID.into(), message: message.into() };
+        let refusal =
+            |message: &str| Error::Tracker { tracker: ID.into(), message: message.into() };
         if self.batched {
             // One request for the batch: any failure fails all of it.
             if let Some(error) = self.outage() {
@@ -127,13 +128,19 @@ impl Fake {
         for title in titles {
             let failure = match self.outage() {
                 Some(error) => Some(PushFailure::of(&error)),
-                None if refused.contains(&title.get()) => Some(PushFailure::Refused("Not Found.".into())),
-                None if troubled.contains(&title.get()) => Some(PushFailure::Unavailable("500".into())),
+                None if refused.contains(&title.get()) => {
+                    Some(PushFailure::Refused("Not Found.".into()))
+                }
+                None if troubled.contains(&title.get()) => {
+                    Some(PushFailure::Unavailable("500".into()))
+                }
                 None => None,
             };
             match failure {
                 Some(failure) => pushed.failed.push((title, failure)),
-                None => seen.sent.extend(ops.iter().filter(|op| op.anilist_id() == title).cloned()),
+                None => {
+                    seen.sent.extend(ops.iter().filter(|op| op.anilist_id() == title).cloned())
+                }
             }
         }
         Ok(pushed)
@@ -178,7 +185,9 @@ impl Media {
         let anilist_id = AnilistId::new(id);
         match self {
             Self::Watching => TrackOp::SetStatus { anilist_id, status, at },
-            Self::Reading => TrackOp::SetReadStatus { anilist_id, status, rereading: false, at },
+            Self::Reading => {
+                TrackOp::SetReadStatus { anilist_id, status, rereading: false, at }
+            }
         }
     }
 
@@ -282,7 +291,11 @@ async fn one_refused_change_does_not_sink_the_changes_queued_behind_it() {
         assert_eq!(kept[0].tracker_id, ID);
         assert!(kept[0].error.contains("Not Found."), "{:?}", kept[0].error);
         // Fifty refusals on a backoff, plus the isolation requests of the first pass.
-        assert!(tracker.pushes() < 60, "{media:?} batched {batched}: {} pushes", tracker.pushes());
+        assert!(
+            tracker.pushes() < 60,
+            "{media:?} batched {batched}: {} pushes",
+            tracker.pushes()
+        );
     }
 }
 
@@ -307,8 +320,11 @@ async fn three_days_without_the_tracker_lose_nothing() {
             assert_eq!(media.depth(&store), 3, "{case}: every change is still queued");
             assert_eq!(media.attempts(&store), [0, 0, 0], "{case}: nothing was counted");
             assert!(store.dropped_track_ops().unwrap().is_empty(), "{case}");
-            // A backoff up to an hour while it stays down, rather than a request each minute.
-            assert!(tracker.pushes() < 100, "{case}: {} pushes", tracker.pushes());
+            // A backoff up to an hour while it stays down, rather than a request each minute. A
+            // batch failed by the tracker's own trouble is asked again title by title, which
+            // stops at the second failure: three requests a pass at most.
+            let passes = tracker.pushes() / if batched && outage == Mode::Down { 3 } else { 1 };
+            assert!(passes < 100, "{case}: {} pushes", tracker.pushes());
 
             tracker.set(Mode::Up);
             let (sent, _) = tick(media, &store, &tracker, end, end + 3_600).await;
@@ -392,30 +408,32 @@ async fn a_pause_the_tracker_asks_for_is_waited_out_and_not_counted() {
 }
 
 /// The tracker failing on its own side for one title, while it answers for the others: that
-/// title waits, uncounted, and the rest of the queue keeps moving.
+/// title waits, uncounted, and the rest of the queue keeps moving. A tracker that writes the
+/// batch in one request fails all of it, and is asked again title by title to find which.
 #[tokio::test]
 async fn trouble_with_one_title_does_not_hold_up_the_others() {
-    for media in BOTH {
+    for (media, batched) in cases() {
+        let case = format!("{media:?} batched {batched}");
         let store = Store::open_in_memory().unwrap();
         for op in media.three() {
             store.enqueue(ID, &op, 1_000).unwrap();
         }
-        let tracker = Fake::new(false);
+        let tracker = Fake::new(batched);
         tracker.trouble(&[990_001]);
 
         let first = media.drain(&store, &tracker, 1_000).await;
-        assert_eq!((first.sent, first.remaining), (2, 1), "{media:?}");
-        assert_eq!(media.attempts(&store), [0], "{media:?}: not counted");
+        assert_eq!((first.sent, first.remaining), (2, 1), "{case}");
+        assert_eq!(media.attempts(&store), [0], "{case}: not counted");
 
         // A change made a minute later goes on the next pass: the tracker is not on hold.
         store.enqueue(ID, &media.progress(990_004, 1), 1_050).unwrap();
         let next = media.drain(&store, &tracker, 1_060).await;
-        assert_eq!(next.sent, 1, "{media:?}");
+        assert_eq!(next.sent, 1, "{case}");
 
         tracker.trouble(&[]);
         let (sent, _) = tick(media, &store, &tracker, 1_120, 1_000 + 2 * 3_600).await;
-        assert_eq!(sent, 1, "{media:?}: the troubled title goes once the trouble is over");
-        assert_eq!(media.depth(&store), 0, "{media:?}");
+        assert_eq!(sent, 1, "{case}: the troubled title goes once the trouble is over");
+        assert_eq!(media.depth(&store), 0, "{case}");
     }
 }
 
@@ -433,7 +451,9 @@ async fn a_newer_change_never_overtakes_an_older_one_for_the_same_title() {
         assert_eq!(first.sent, 0, "{case}");
 
         // The newer status, queued while the older one waits out its backoff.
-        store.enqueue(ID, &media.status(990_001, WatchStatus::Completed, 1_010), 1_010).unwrap();
+        store
+            .enqueue(ID, &media.status(990_001, WatchStatus::Completed, 1_010), 1_010)
+            .unwrap();
         tracker.refused.lock().unwrap().clear();
         let early = media.drain(&store, &tracker, 1_015).await;
         assert_eq!(early.sent, 0, "{case}: the newer status waits behind the older one");

@@ -731,7 +731,10 @@ mod tests {
     fn only_graphqls_own_refusal_counts_as_a_refusal() {
         use kaeri_core::traits::PushFailure;
         let class = |error| PushFailure::of(&to_core(error));
-        assert!(matches!(class(AniListError::Api("validation".into())), PushFailure::Refused(_)));
+        assert!(matches!(
+            class(AniListError::Api("validation".into())),
+            PushFailure::Refused(_)
+        ));
         assert!(matches!(class(AniListError::NotFound), PushFailure::Refused(_)));
         for waits in [
             AniListError::Network("dns".into()),

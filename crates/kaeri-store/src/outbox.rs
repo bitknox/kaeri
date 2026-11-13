@@ -76,7 +76,13 @@ fn claim_sql(table: &str) -> String {
 
 /// Count a refusal of the op `id` in `table`, and schedule its retry, or give it up and
 /// remember it once it has had [`MAX_ATTEMPTS`]. True when it was given up.
-fn refuse_in(c: &rusqlite::Connection, table: &str, id: i64, error: &str, now: i64) -> Result<bool> {
+fn refuse_in(
+    c: &rusqlite::Connection,
+    table: &str,
+    id: i64,
+    error: &str,
+    now: i64,
+) -> Result<bool> {
     let row: Option<(u32, String, String)> = c
         .query_row(
             &format!("SELECT attempts + 1, tracker_id, op FROM {table} WHERE id = ?1"),

@@ -1174,8 +1174,9 @@ impl AniList {
             variables.insert("scoreRaw".into(), ((score * 10.0).round() as u32).into());
         }
 
-        let data: serde_json::Value =
-            self.execute_write(query::SAVE_PROGRESS, serde_json::Value::Object(variables)).await?;
+        let data: serde_json::Value = self
+            .execute_write(query::SAVE_PROGRESS, serde_json::Value::Object(variables))
+            .await?;
         // The entry id, so a caller that needs to remove the entry again can. `None` is not a
         // failure — the mutation succeeded either way.
         Ok(data["SaveMediaListEntry"]["id"].as_u64().map(|id| id as u32))

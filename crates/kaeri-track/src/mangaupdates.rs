@@ -340,7 +340,9 @@ impl MangaUpdatesTracker {
 /// MangaUpdates' answer as JSON, or the error it amounts to: [`crate::page_json`], with its 412
 /// read as the pause it is. MangaUpdates answers 412 to a write that came too soon after the
 /// last, so one that outlasts [`DELAY_RETRIES`] waits is a rate limit, never a refusal.
-async fn answer_json(response: reqwest::Response) -> Result<serde_json::Value, kaeri_core::Error> {
+async fn answer_json(
+    response: reqwest::Response,
+) -> Result<serde_json::Value, kaeri_core::Error> {
     if response.status() == reqwest::StatusCode::PRECONDITION_FAILED {
         return Err(kaeri_core::Error::RateLimited {
             tracker: "mangaupdates".into(),

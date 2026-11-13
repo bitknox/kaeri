@@ -387,18 +387,25 @@ fn titles_of(entries: &[OutboxEntry]) -> Vec<AnilistId> {
 
 /// Push `entries` and say what became of each title.
 ///
-/// A tracker that writes the batch in one request can only refuse it whole. That refusal is
-/// about one change in it, as far as anyone can tell, so the batch is asked again title by
-/// title and only the title the tracker refuses alone fails. Anything else that fails a whole
-/// batch (the network, the credential) fails every title in it.
+/// A tracker that writes the batch in one request can only fail it whole. A refusal, or a
+/// failure on the tracker's side while the network works, may be about one change in it, so
+/// the batch is asked again title by title: only the title the tracker refuses alone fails, and
+/// a tracker that fails twice in a row is taken to be down. Anything else that fails a whole
+/// batch (the network, the credential, a pause) fails every title in it.
 async fn push_each(tracker: &dyn Tracker, queue: Queue, entries: &[OutboxEntry]) -> Pushed {
     let ops: Vec<TrackOp> = entries.iter().map(|entry| entry.op.clone()).collect();
     let titles = titles_of(entries);
-    let failure = match queue.push(tracker, &ops).await {
+    let (failure, maybe_one) = match queue.push(tracker, &ops).await {
         Ok(pushed) => return pushed,
-        Err(error) => PushFailure::of(&error),
+        Err(error) => (
+            PushFailure::of(&error),
+            matches!(
+                error,
+                kaeri_core::Error::Tracker { .. } | kaeri_core::Error::Unavailable { .. }
+            ),
+        ),
     };
-    if !matches!(failure, PushFailure::Refused(_)) || titles.len() < 2 {
+    if !maybe_one || titles.len() < 2 {
         let failed = titles.into_iter().map(|title| (title, failure.clone())).collect();
         return Pushed { ignored: Vec::new(), failed };
     }
@@ -406,7 +413,7 @@ async fn push_each(tracker: &dyn Tracker, queue: Queue, entries: &[OutboxEntry])
         tracker = tracker.id(),
         titles = titles.len(),
         reason = failure.message(),
-        "the tracker refused a batch; asking title by title"
+        "the tracker failed a batch; asking title by title"
     );
     let mut each = crate::Titles::default();
     let mut ignored = Vec::new();
@@ -447,9 +454,8 @@ fn settle(
     let answered = |title: &AnilistId| {
         matches!(pushed.failure_for(*title), None | Some(PushFailure::Refused(_)))
     };
-    let answered_after = |title: AnilistId| {
-        titles.iter().skip_while(|t| **t != title).skip(1).any(answered)
-    };
+    let answered_after =
+        |title: AnilistId| titles.iter().skip_while(|t| **t != title).skip(1).any(answered);
 
     let mut rejected = None;
     let mut pause: Option<Option<u64>> = None;
