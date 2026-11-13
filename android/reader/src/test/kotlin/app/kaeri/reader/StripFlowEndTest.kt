@@ -64,6 +64,13 @@ class StripFlowEndTest {
         compose.onNodeWithText(next.title!!).assertDoesNotExist()
     }
 
+    @Test
+    fun offline_before_the_engines_end_page_the_strip_shows_no_divider_into_the_chapter_after() {
+        val list = strip(base().copy(offline = true))
+        assertEquals("end", list.layoutInfo.visibleItemsInfo.last().key)
+        compose.onNodeWithText(next.title!!).assertDoesNotExist()
+    }
+
     private fun failedFlow(failure: ReadingFailure) {
         val list = strip(base().copy(flowFailed = FlowFailure(next.id, next, failure)))
         assertEquals("end", list.layoutInfo.visibleItemsInfo.last().key)

@@ -1417,7 +1417,11 @@ class AppStore(
             is Event.Trending -> search.trending(event.period, TrendAnswer(event.entries, event.updatedAt, event.failed, event.waiting), titles)
             is Event.Surprise -> surprise.answer(event.pool, event.outcome)
 
-            is Event.Connectivity -> _offline.value = event.offline
+            is Event.Connectivity -> {
+                _offline.value = event.offline
+                // The reader's strip flows on only into a chapter that can be had.
+                readers.forEach { it(event) }
+            }
             // A failed sign-in the open sheet says in its place: the snackbar would draw under it.
             // The page says an uncertain match in its own line, so it is not said twice.
             is Event.Toast -> when {

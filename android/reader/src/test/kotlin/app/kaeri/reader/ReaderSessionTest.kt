@@ -511,6 +511,53 @@ class ReaderSessionTest {
     @Test
     fun a_strip_that_cannot_flow_on_offline_keeps_the_chapter_read() = flowFailsWith(ReadingFailure.Offline)
 
+    /** Offline only the engine knows which chapter is on the device: until its end page answers, there is none to flow into. */
+    @Test
+    fun offline_the_chapter_after_waits_for_the_engines_end_page() {
+        opened(start = 0u)
+        assertEquals("local:lantern-stair/13", session.state.value.endNext?.id)
+        session.apply(Event.Connectivity(offline = true))
+        assertNull(session.state.value.endNext)
+        // The answer comes late, naming the next chapter on the device.
+        val download = ReaderFixtures.chapter("local:lantern-stair/15", "15")
+        session.apply(ReaderEvent.EndPage(SESSION, download, null))
+        assertEquals(download, session.state.value.endNext)
+        // Another chapter opened offline starts without one again, and back online the one after it is offered.
+        session.flowInto(download.id)
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view(start = 0u).copy(chapter = download)))
+        assertNull(session.state.value.endNext)
+        session.apply(Event.Connectivity(offline = false))
+        assertEquals("local:lantern-stair/13", session.state.value.endNext?.id)
+    }
+
+    /**
+     * A fast fling reaches the divider before the engine's end page: the flow into the chapter
+     * after goes out, the end page then names another chapter, and the divider with it. The flow
+     * on its way still fails at the join, never as the whole reader's failure.
+     */
+    @Test
+    fun a_flow_on_its_way_fails_at_the_join_when_the_end_page_answers_late() {
+        opened(start = 0u)
+        session.jumped(session.state.value.jump!!.id)
+        val next = "local:lantern-stair/13"
+        val download = ReaderFixtures.chapter("local:lantern-stair/15", "15")
+        val before = session.state.value
+        sent.clear()
+        session.flowInto(next)
+        session.apply(ReaderEvent.EndPage(SESSION, download, null))
+        session.flowInto(download.id)
+        assertEquals(listOf<ReaderCommand>(ReaderCommand.OpenChapter(SESSION, next)), sent)
+        session.apply(Event.Reading(ReadingEvent.Failed(ReadingAbout.READER, ReadingFailure.Offline)))
+        val state = session.state.value
+        assertNull(state.failure)
+        assertEquals(CHAPTER, state.chapter)
+        assertEquals(before.leaves, state.leaves)
+        assertEquals(next, state.flowFailed?.chapter)
+        // The chapter the end page names flows on from the join.
+        session.flowInto(download.id)
+        assertEquals(listOf<ReaderCommand>(ReaderCommand.OpenChapter(SESSION, next), ReaderCommand.OpenChapter(SESSION, download.id)), sent)
+    }
+
     @Test
     fun a_strip_whose_next_chapter_cannot_be_had_online_keeps_the_chapter_read() =
         flowFailsWith(ReadingFailure.SourceDown("Lantern Archive"))
