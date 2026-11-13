@@ -32,8 +32,12 @@ extension ReadingModel {
     /// The series page, Read Home's Continue and Updates again, where they are on screen.
     func readerMoved(_ work: String, home: Bool) {
         if series[work] != nil || chapters[work] != nil {
+            // The series lists the edition it reads from again with itself: only another edition
+            // the page shows needs an ask of its own, so a close asks its source once.
             send?(.reading(.loadSeries(work: work)))
-            send?(.reading(.loadChapters(work: work, edition: chapters[work]?.edition?.sourceId)))
+            if let edition = chapters[work]?.edition, !edition.inUse {
+                send?(.reading(.loadChapters(work: work, edition: edition.sourceId)))
+            }
         }
         if home, self.home != nil { send?(.reading(.loadHome(refresh: false))) }
         if updates != nil { send?(.reading(.loadUpdates)) }

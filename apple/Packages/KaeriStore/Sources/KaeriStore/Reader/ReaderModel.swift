@@ -406,7 +406,13 @@ public final class ReaderModel {
         send?(.reader(.open(
             work: WorkId(request.work), chapter: request.chapter.map { ChapterId($0) },
             at: request.at, surface: surface)))
-        send?(.reading(.loadChapters(work: WorkId(request.work), edition: nil)))
+    }
+
+    /// The chapter list, asked for when the Chapters sheet shows without one. Never on open: a
+    /// book opened and closed again asks its source for nothing beyond what the open needs.
+    public func loadChapters() {
+        guard !chaptersLoaded, let work = view?.work ?? request.map({ WorkId($0.work) }) else { return }
+        send?(.reading(.loadChapters(work: work, edition: nil)))
     }
 
     @ObservationIgnored private var opened = false
