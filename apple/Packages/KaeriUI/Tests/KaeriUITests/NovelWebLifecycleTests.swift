@@ -11,7 +11,8 @@ import WebKit
 /// chapters open and close and the screen is drawn again, and let go with the reader. A tap on a
 /// page's side turns it in the page, which says so once. And two columns capped in a wide view
 /// keep their usual gap and sit in the middle, on the first page and the last, with scroll bars
-/// that take room as well. A turn past a chapter's end goes on into the next one.
+/// that take room as well. A turn past a chapter's end goes on into the next one, with the page
+/// put away while the end page shows.
 @MainActor
 @Suite(.serialized)
 struct NovelWebLifecycleTests {
@@ -180,8 +181,11 @@ struct NovelWebLifecycleTests {
 
         _ = try await view.evaluateJavaScript(Self.key("ArrowRight"))
         #expect(await until(5) { controller.shown.end }, "the end page")
+        // The web view draws over the end page on the Mac: the page goes while it shows.
+        #expect(await until(5) { view.alphaValue == 0 }, "the page under the end page: \(view.alphaValue)")
         model.requestTurn(forward: false)
         #expect(await until(5) { !controller.shown.end }, "back to the last page")
+        #expect(await until(5) { view.alphaValue == 1 }, "the last page shown again: \(view.alphaValue)")
         model.requestTurn(forward: true)
         #expect(await until(5) { controller.shown.end }, "the end page again")
         #expect(Self.opens(sent).isEmpty)

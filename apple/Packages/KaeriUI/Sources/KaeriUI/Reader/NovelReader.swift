@@ -180,6 +180,8 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
     private var onTap: (Double) -> Void = { _ in }
     private var book: NovelOpenView?
     private var openedChapter: String?
+    /// A view that showed another chapter, hidden until the new one is laid out.
+    private var hidden = false
     /// The place the page last said, to open again at after WebKit ended the page's process.
     private var lastPlace: (spine: Int, pos: NovelPos)?
     /// What the page last heard of input(): sent again with each new document.
@@ -215,7 +217,12 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
         }
         config.userContentController.add(ScriptProxy(self), name: "kaeri")
         webView.navigationDelegate = self
-        shown.changed = { [weak self] in self?.sendInput() }
+        shown.changed = { [weak self] in
+            self?.sendInput()
+            #if os(macOS)
+            self?.showPage(animated: true)
+            #endif
+        }
         #if os(iOS)
         webView.isOpaque = false
         webView.backgroundColor = .clear
@@ -282,12 +289,29 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
     }
 
     private func setHidden(_ hidden: Bool) {
+        self.hidden = hidden
         #if os(iOS)
         webView.alpha = hidden ? 0 : 1
         #else
-        webView.alphaValue = hidden ? 0 : 1
+        showPage(animated: false)
         #endif
     }
+
+    #if os(macOS)
+    /// On the Mac the web view draws over the SwiftUI views around it, the end page among them,
+    /// so the page goes while the end page shows: it fades out as the end page fades in, and back
+    /// in as the end page goes. Paper mode puts it away and back at once.
+    private func showPage(animated: Bool) {
+        let alpha: CGFloat = hidden || shown.end ? 0 : 1
+        guard webView.alphaValue != alpha else { return }
+        let duration = animated && !paper ? 0.2 : 0
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = duration
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            webView.animator().alphaValue = alpha
+        }
+    }
+    #endif
 
     func scrolled(_ on: Bool) {
         #if os(iOS)
