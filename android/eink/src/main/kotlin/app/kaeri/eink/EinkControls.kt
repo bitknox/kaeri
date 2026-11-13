@@ -238,6 +238,14 @@ fun Modifier.keepsArrows(tab: Boolean): Modifier = focusProperties {
     }
 }.focusGroup()
 
+/** A focus group Left and Right stay in, as each bar is: Up and Down still leave it. */
+fun Modifier.keepsSides(): Modifier = focusProperties {
+    onExit = {
+        val way = requestedFocusDirection
+        if (way == FocusDirection.Left || way == FocusDirection.Right) cancelFocusChange()
+    }
+}.focusGroup()
+
 /** Puts the focus here if it can go here now; a clickable cannot while the screen is in touch mode. */
 fun FocusRequester.tryFocus(): Boolean = runCatching { requestFocus(FocusDirection.Enter) }.getOrDefault(false)
 

@@ -8,7 +8,6 @@ package app.kaeri.eink
 
 import android.content.Context
 import androidx.compose.foundation.background
-import androidx.compose.foundation.focusable
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -721,7 +720,7 @@ fun EinkContents(
                                 val firstHere = if (line === first) Modifier.focusRequester(firstRow) else Modifier
                                 EinkRow(
                                     onClick = { onOpen(line.row.id) },
-                                    modifier = if (reading) firstHere.focusRequester(focus).focusable() else firstHere,
+                                    modifier = if (reading) firstHere.focusRequester(focus) else firstHere,
                                     selected = reading,
                                     height = EinkSizes.ChapterRow,
                                 ) {

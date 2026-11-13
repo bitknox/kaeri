@@ -450,8 +450,13 @@ class EinkReaderTest {
         key(Key.DirectionUp)
         assertEquals(edge, focused().id)
         assertTrue(shows("Page 1 of 3"))
-        // Along the bottom bar to Settings, the sheet, and back to Settings.
+        // Along the bottom bar to Settings, the sheet, and back to Settings. Left and Right never
+        // take the focus from one bar to the other.
         key(Key.DirectionDown)
+        repeat(6) {
+            key(Key.DirectionLeft)
+            assertTrue(focused().boundsInRoot.top > screen.height / 2)
+        }
         repeat(6) { if (!focusedOn("Settings")) key(Key.DirectionRight) }
         repeat(6) { if (!focusedOn("Settings")) key(Key.DirectionLeft) }
         assertTrue(focusedOn("Settings"))
