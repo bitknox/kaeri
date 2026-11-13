@@ -231,4 +231,27 @@ final class ReaderStuckTests: XCTestCase {
             XCTAssertEqual(page(app), swiped, "the swipe did not turn after Command-0")
         }
     }
+
+    /// The strip's twin: a pinch the app loses to the background leaves the strip at the scale the
+    /// fingers left, and Command-0 fits it back to its column.
+    func testCommandZeroFitsAStripAfterAPinchCutOffByTheBackground() throws {
+        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "Command-0 is an iPad check")
+        let env = ProcessInfo.processInfo.environment
+        let marks = try XCTUnwrap(env["KAERI_TEST_MARKS"].map { URL(filePath: $0) }, "needs the script's hand")
+        let app = launch("readerstrip")
+        Thread.sleep(forTimeInterval: 3)
+        let images = app.images.matching(NSPredicate(format: "label BEGINSWITH 'Page '"))
+        let width = { images.allElementsBoundByIndex.first(where: \.isHittable)?.frame.width ?? 0 }
+        let fitted = width()
+        XCTAssertGreaterThan(fitted, 0, "no image on screen")
+        try "go".write(to: marks.appending(path: "pinching"), atomically: true, encoding: .utf8)
+        try XCTUnwrap(images.allElementsBoundByIndex.first(where: \.isHittable), "no image to pinch")
+            .pinch(withScale: 2.5, velocity: 0.15)
+        app.activate()
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 10))
+        Thread.sleep(forTimeInterval: 1)
+        key(app, "0", .command)
+        Thread.sleep(forTimeInterval: 1)
+        XCTAssertEqual(width(), fitted, accuracy: 2, "Command-0 left the strip magnified")
+    }
 }
