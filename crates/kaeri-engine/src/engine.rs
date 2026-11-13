@@ -4517,8 +4517,17 @@ mod tests {
             })
             .await;
             let job = seen.iter().find_map(|e| match e {
-                Event::Reading(ReadingEvent::ExportWaiting { job, work, target, line }) => {
+                Event::Reading(ReadingEvent::ExportWaiting {
+                    job,
+                    work,
+                    target,
+                    line,
+                    chapters,
+                }) => {
                     assert_eq!((work.as_str(), target.as_str()), (WORK, "kobo"));
+                    // Every send that waits here holds chapters 1 and 2: a screen that never
+                    // asked for it learns them from this.
+                    assert_eq!(chapters, &[ChapterId::new("1"), ChapterId::new("2")]);
                     assert_eq!(
                         *line,
                         Msg::Reading(kaeri_model::ReadingMsg::ExportWaitsForWifi { n: 1 })
@@ -4751,6 +4760,10 @@ mod tests {
             assert!(!seen.iter().any(send_ended), "{seen:?}");
             assert_eq!(source.fetched(), 0);
             assert!(kept_waiting(&store));
+            // On cellular it says it waits, as the job the screen never sent, with its chapters.
+            engine.send(network(true, false));
+            let (waited, _) = waiting(&mut events).await;
+            assert_eq!(Some(waited), started);
             engine.send(network(false, false));
             let seen = seen_until(&mut events, send_ended).await;
             let (job, pages) = pages_sent(&seen).unwrap_or_else(|| panic!("{seen:?}"));

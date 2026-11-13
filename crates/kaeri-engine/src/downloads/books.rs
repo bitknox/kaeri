@@ -27,10 +27,13 @@ use std::{
     collections::{HashMap, HashSet},
     fs::File,
     io::{BufWriter, Write},
+    panic::AssertUnwindSafe,
     path::{Path, PathBuf},
     sync::{Arc, Mutex},
     time::{Duration, Instant},
 };
+
+use futures::FutureExt;
 
 use kaeri_core::{
     books::{ChapterContent, ChapterId, WorkId},
@@ -56,6 +59,19 @@ use crate::{
     book_plugins::BookPlugins, clock::Clock, outbox::Outbox, phases::Network,
     read_sources::BookSources, services::Services,
 };
+
+/// Clears the queue's running mark when a run ends in a panic outside a chapter's fetch, so the
+/// next start runs the queue again. A run that ends as it should clears the mark itself, under
+/// the lock that decides it is done.
+struct NotRunningOnPanic<'a>(&'a Mutex<bool>);
+
+impl Drop for NotRunningOnPanic<'_> {
+    fn drop(&mut self) {
+        if std::thread::panicking() {
+            *self.0.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = false;
+        }
+    }
+}
 
 /// How many unread chapters after the one being read are kept ready.
 pub const KEEP_AHEAD: usize = 3;
@@ -898,6 +914,7 @@ impl BookDownloads {
     }
 
     async fn run(&self, lent: Lent) {
+        let _unwinding = NotRunningOnPanic(&self.0.running);
         let store = lent.sources.store().clone();
         let mut touched: Vec<WorkId> = Vec::new();
         // The chapters the person asked for that finished in this run, by series.
@@ -975,7 +992,18 @@ impl BookDownloads {
         row: &BookDownload,
         now: i64,
     ) -> (bool, bool) {
-        match self.fetch(lent, store, row).await {
+        // A panic in one chapter's fetch, from content no one foresaw, fails that chapter: the
+        // queue goes on to the next instead of ending with its task, still marked running.
+        let fetched = AssertUnwindSafe(self.fetch(lent, store, row))
+            .catch_unwind()
+            .await
+            .unwrap_or_else(|_| {
+                tracing::warn!(chapter = %row.chapter, "a download panicked; it fails");
+                Err(Stop::Failed(ReadingFailure::Other {
+                    reason: "the chapter could not be downloaded".into(),
+                }))
+            });
+        match fetched {
             Ok(done) => {
                 let path = done.path.to_string_lossy().into_owned();
                 let kept =
