@@ -847,7 +847,9 @@ pub struct Published {
 
 impl Published {
     /// RFC 3339, a date and time with no offset, or a date (`2026-01-02`), as the WIT `chapter`
-    /// allows. Text that only starts with a date is read as that day.
+    /// allows. Text that only starts with a date is read as that day. A date before 1970 is no
+    /// date: servers write the least date they can hold (`0001-01-01T00:00:00`) for a chapter
+    /// with none, and no chapter came out then.
     pub fn read(text: &str) -> Option<Self> {
         use jiff::{civil::Time, fmt::temporal::Pieces, tz::Offset};
         let text = text.trim();
@@ -860,6 +862,9 @@ impl Published {
             Err(_) => (text.get(..10)?.parse().ok()?, Time::midnight(), None),
         };
         let at = offset.unwrap_or(Offset::UTC).to_timestamp(date.to_datetime(time)).ok()?;
+        if at < jiff::Timestamp::UNIX_EPOCH {
+            return None;
+        }
         let day = (offset.is_none() || time == Time::midnight()).then_some(date);
         Some(Self { at: at.as_second(), day })
     }
@@ -1082,6 +1087,11 @@ mod tests {
         // Text that only starts with a date is that day.
         assert_eq!(read("2026-10-23 at the shop"), Some((FRIDAY, day(2026, 10, 23))));
         assert_eq!(read("nope"), None);
+        // A server's least date stands for none, and so does any day before 1970.
+        assert_eq!(read("0001-01-01T00:00:00"), None);
+        assert_eq!(read("0001-01-01T00:00:00Z"), None);
+        assert_eq!(read("1969-12-31"), None);
+        assert_eq!(read("1970-01-01"), Some((0, day(1970, 1, 1))));
 
         let mut chapter = SourceChapter::new("1", "1");
         chapter.dated(Some("2026-10-23"));

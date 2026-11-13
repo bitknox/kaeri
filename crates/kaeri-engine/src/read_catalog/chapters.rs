@@ -899,18 +899,30 @@ pub fn chosen_group(store: &Store, work: &str, source: &str) -> Option<String> {
         .and_then(|p| p.version_label)
 }
 
+/// The longest gap between two chapters that still says how often a series comes out.
+const LONGEST_GAP_DAYS: i64 = 366;
+
 /// How a series comes out, learnt from the dates of its newest chapters: a weekday when most of
 /// them came out on one day about a week apart, and the usual days between two chapters. A
 /// chapter dated by its day counts on that day wherever the person is ([`Kept::out_at_in`]).
+/// Undated chapters, dates before 1970 and gaps of more than a year say nothing of a rhythm.
 pub fn rhythm(list: &[Kept], zone: &jiff::tz::TimeZone, now: i64) -> Option<BookRhythm> {
-    let mut dates: Vec<i64> = list.iter().filter_map(|c| c.out_at_in(zone)).collect();
+    let mut dates: Vec<i64> =
+        list.iter().filter_map(|c| c.out_at_in(zone)).filter(|at| *at >= 0).collect();
     dates.sort_unstable();
     dates.dedup_by(|a, b| (*a - *b).abs() < 6 * 3_600);
     let newest: Vec<i64> = dates.iter().rev().take(8).copied().collect();
     if newest.len() < 3 {
         return None;
     }
-    let mut gaps: Vec<i64> = newest.windows(2).map(|w| (w[0] - w[1]) / 86_400).collect();
+    let mut gaps: Vec<i64> = newest
+        .windows(2)
+        .map(|w| (w[0] - w[1]) / 86_400)
+        .filter(|days| *days <= LONGEST_GAP_DAYS)
+        .collect();
+    if gaps.is_empty() {
+        return None;
+    }
     gaps.sort_unstable();
     let every = gaps[gaps.len() / 2].max(1);
     let weekdays: Vec<u8> = newest.iter().filter_map(|at| weekday(*at, zone)).collect();
@@ -1104,6 +1116,44 @@ mod tests {
         assert_eq!(found.weekday, None);
         assert_eq!(rhythm_words(&found).unwrap().english(), "About every 2 weeks");
         assert_eq!(rhythm(&weekly[..2], &zone, FRIDAY), None);
+    }
+
+    #[test]
+    fn undated_chapters_and_gaps_past_belief_teach_no_rhythm() {
+        let zone = jiff::tz::TimeZone::UTC;
+        let dated = |published: &[i64]| -> Vec<Kept> {
+            published
+                .iter()
+                .enumerate()
+                .map(|(n, at)| Kept {
+                    id: n.to_string(),
+                    source_ref: n.to_string(),
+                    label: n.to_string(),
+                    number: None,
+                    volume: None,
+                    title: None,
+                    version_label: None,
+                    language: None,
+                    published: Some(*at),
+                    published_day: None,
+                    pages: None,
+                    seen_at: None,
+                    part: None,
+                })
+                .collect()
+        };
+        // Three chapters a server marked with its least date (0001-01-01), as a list kept before
+        // such dates were read as none still holds them, then two real ones.
+        const LEAST: i64 = -62_135_596_800;
+        let marked = dated(&[LEAST, LEAST, LEAST, FRIDAY - 3 * DAY, FRIDAY]);
+        assert_eq!(rhythm(&marked, &zone, FRIDAY), None, "two dates teach nothing");
+        // Years between chapters are no rhythm either.
+        let years = dated(&[FRIDAY - 2_000 * DAY, FRIDAY - 1_000 * DAY, FRIDAY]);
+        assert_eq!(rhythm(&years, &zone, FRIDAY), None);
+        // One long pause among weekly chapters leaves the week.
+        let paused = dated(&[FRIDAY - 800 * DAY, FRIDAY - 14 * DAY, FRIDAY - 7 * DAY, FRIDAY]);
+        let found = rhythm(&paused, &zone, FRIDAY).unwrap();
+        assert_eq!((found.weekday, found.every_days), (Some(4), Some(7)));
     }
 
     #[test]

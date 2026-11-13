@@ -34,7 +34,7 @@ fn routes() -> HashMap<&'static str, &'static str> {
         ),
         (
             "/api/Series/series-detail",
-            r#"{"specials":[{"id":903,"range":"Extra","title":"","titleName":"Extra","pages":4,"isSpecial":true,"files":[{"format":1}]}],"chapters":[],"volumes":[{"id":11,"name":"1","chapters":[{"id":901,"range":"1-9","titleName":"","title":"","pages":3,"isSpecial":false,"releaseDate":"2025-02-03T00:00:00","files":[{"format":1}]}]},{"id":12,"name":"2","chapters":[{"id":902,"range":"0","titleName":"","title":"","pages":2,"isSpecial":false,"files":[{"format":1}]}]}],"storylineChapters":[]}"#,
+            r#"{"specials":[{"id":903,"range":"Extra","title":"","titleName":"Extra","pages":4,"isSpecial":true,"files":[{"format":1}]}],"chapters":[],"volumes":[{"id":11,"name":"1","chapters":[{"id":901,"range":"1-9","titleName":"","title":"","pages":3,"isSpecial":false,"releaseDate":"2025-02-03T00:00:00","files":[{"format":1}]}]},{"id":12,"name":"2","chapters":[{"id":902,"range":"0","titleName":"","title":"","pages":2,"isSpecial":false,"releaseDate":"0001-01-01T00:00:00","files":[{"format":1}]}]}],"storylineChapters":[]}"#,
         ),
         ("/api/Series/7", r#"{"id":7,"name":"Lantern Keeper","libraryId":1}"#),
         ("/api/Reader/chapter-info", r#"{"pages":3,"fileDimensions":[]}"#),
@@ -86,6 +86,8 @@ async fn kavita_signs_in_lists_opens_and_writes_progress_back() {
     assert!(chapters[0].published.is_some());
     // Kavita keeps a release date as midnight with no offset: that day, wherever the person is.
     assert_eq!(chapters[0].published_day.map(|d| d.to_string()).as_deref(), Some("2025-02-03"));
+    // Kavita marks a chapter with no date by the least date it holds: no date.
+    assert_eq!((chapters[1].published, chapters[1].published_day), (None, None));
 
     let ChapterContent::Images(pages) = source.content("7", "901").await.unwrap() else {
         panic!("images");
