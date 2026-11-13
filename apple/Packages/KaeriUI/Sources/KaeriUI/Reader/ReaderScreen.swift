@@ -440,7 +440,7 @@ struct ReaderOpening: View {
     }
 
     var body: some View {
-        let chapter = model.view?.chapter
+        let chapter = model.openingChapter
         let label = chapter.map { $0.number ?? $0.label } ?? ""
         let stage = Self.stage(model.openingWait, chapter: label)
         ZStack {
