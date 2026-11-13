@@ -12,7 +12,8 @@ import WebKit
 /// only the open session's addresses answer, and each part carries its spine index in its
 /// settings. The same book opened again in a new session crosses into its own next part, a part
 /// that does not come leaves the page and its keys where they were and keeps no place, and
-/// parts with spaces in their names cross both ways.
+/// parts with spaces in their names cross both ways. The last page of a part sits on the page
+/// grid like the others.
 @MainActor
 @Suite(.serialized)
 struct NovelCrossTests {
@@ -24,12 +25,19 @@ struct NovelCrossTests {
         let spaces: Bool
         /// Notes in a file of their own outside the spine, linked from the first part.
         let notes: Bool
+        /// Top to bottom and right to left, in Japanese.
+        let vertical: Bool
+        /// Paragraphs in each part, 60 where it says none.
+        let paragraphs: [Int]
         private let state = Mutex((session: UInt64(1), missing: Set<Int>()))
 
-        init(parts: Int, spaces: Bool = false, notes: Bool = false, missing: Set<Int> = []) {
+        init(parts: Int, spaces: Bool = false, notes: Bool = false, vertical: Bool = false, paragraphs: [Int] = [],
+             missing: Set<Int> = []) {
             self.parts = parts
             self.spaces = spaces
             self.notes = notes
+            self.vertical = vertical
+            self.paragraphs = paragraphs
             state.withLock { $0.missing = missing }
         }
 
@@ -74,11 +82,15 @@ struct NovelCrossTests {
                 return BookResource(status: 404, mime: "text/plain", headers: [], body: .bytes(data: Data()))
             }
             let setup = "{&quot;spine&quot;:\(part),&quot;last&quot;:\(part == parts - 1)}"
-            let words = "The ferry keeper rang the copper bell and counted the lanterns along the quiet harbour wall."
+            let words = vertical ? "渡し守は銅の鐘を鳴らし、静かな港の壁に沿って灯りを数えた。"
+                : "The ferry keeper rang the copper bell and counted the lanterns along the quiet harbour wall."
+            let lang = vertical ? " xml:lang=\"ja\" lang=\"ja\"" : ""
+            let body = vertical ? " style=\"writing-mode: vertical-rl\"" : ""
+            let count = part < paragraphs.count ? paragraphs[part] : 60
             let text = """
-            <?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml"><head>\
-            <meta name="kaeri-setup" content="\(setup)"/><title>Part \(part + 1)</title></head><body>\
-            <h1>Part \(part + 1)</h1>\(notes && part == 0 ? "<p><a id=\"ref\" href=\"notes.xhtml#n1\">1</a></p>" : "")\(String(repeating: "<p>\(words) \(words)</p>", count: 60))</body></html>
+            <?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml"\(lang)><head>\
+            <meta name="kaeri-setup" content="\(setup)"/><title>Part \(part + 1)</title></head><body\(body)>\
+            <h1>Part \(part + 1)</h1>\(notes && part == 0 ? "<p><a id=\"ref\" href=\"notes.xhtml#n1\">1</a></p>" : "")\(String(repeating: "<p>\(words) \(words)</p>", count: count))</body></html>
             """
             return BookResource(status: 200, mime: "application/xhtml+xml", headers: [], body: .bytes(data: Data(text.utf8)))
         }
@@ -105,8 +117,8 @@ struct NovelCrossTests {
             session: session, work: Self.work, title: "The Glass Orchard", medium: .novel, chapter: row, mode: .paged,
             direction: .leftToRight, start: ReadPlace(work: Self.work, chapter: Self.chapter), next: next)))
         model.apply(.novelOpen(NovelOpenView(
-            session: session, chapter: Self.chapter, entry: book.url(0, session: session), writingMode: .horizontal,
-            progression: .leftToRight, support: .full, spine: book.spine(session: session))))
+            session: session, chapter: Self.chapter, entry: book.url(0, session: session),
+            writingMode: book.vertical ? .verticalRightToLeft : .horizontal, progression: book.vertical ? .rightToLeft : .leftToRight, support: .full, spine: book.spine(session: session))))
     }
 
     /// The places the reader reported to the engine.
@@ -133,9 +145,8 @@ struct NovelCrossTests {
         return done()
     }
 
-    private func window(_ model: ReaderModel) -> NSWindow {
+    private func window(_ model: ReaderModel, _ size: CGSize = CGSize(width: 800, height: 600)) -> NSWindow {
         _ = NSApplication.shared
-        let size = CGSize(width: 800, height: 600)
         let window = NSWindow(contentRect: NSRect(origin: .zero, size: size), styleMask: [.borderless], backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
         window.contentView = NSHostingView(rootView: ReaderScreen(model: model) {}.frame(width: size.width, height: size.height)
@@ -303,6 +314,69 @@ struct NovelCrossTests {
                 && model.position.index == model.position.count - 1
         }, "part 1's last page: \(shown(window) ?? "-") at \(model.position)")
         #expect(Self.places(sent).allSatisfy { $0.pages > 1 }, "every place from a laid-out page")
+    }
+
+    /// Where the page stands against where its number puts it, along the reading axis.
+    private struct Grid: Decodable {
+        let page: Int
+        let pages: Int
+        /// The scroll along the reading axis, and the page's length along it.
+        let at: Double
+        let pitch: Double
+        var off: Double { at - Double(page) * pitch }
+    }
+
+    private func grid(_ view: WKWebView) async throws -> Grid {
+        let js = """
+        (function () {
+          var s = kaeriReader.state(), h = document.documentElement, v = h.classList.contains('k-v');
+          return JSON.stringify({ page: s.page, pages: s.pages, at: v ? window.scrollY : Math.abs(window.scrollX),
+            pitch: v ? h.clientHeight : parseFloat(getComputedStyle(h).width) });
+        })()
+        """
+        let value = try await view.evaluateJavaScript(js)
+        let text = try #require(value as? String)
+        return try JSONDecoder().decode(Grid.self, from: Data(text.utf8))
+    }
+
+    /// Each part's last page scrolled to where its number puts it, as every other page is, at the
+    /// size of a Mac's window: parts of different lengths end on a full spread or on one
+    /// column, and a page short of its place would show the spread before it again.
+    private func lastPagesOnTheGrid(_ book: Book, _ size: CGSize) async throws {
+        let sent = Sent()
+        let model = model(sent, book)
+        model.open(work: Self.workId)
+        let window = window(model, size)
+        defer {
+            model.close()
+            window.contentView = nil
+            window.close()
+        }
+        await spin(0.2)
+        opened(model, book, session: 1)
+        for part in 0..<book.parts {
+            let address = book.url(part, session: 1)
+            #expect(await until(10) { shown(window)?.hasPrefix(address) == true && model.position.count > 1 },
+                    "part \(part + 1) laid out: \(shown(window) ?? "-") at \(model.position)")
+            await spin(0.3)
+            let view = try #require(window.contentView.flatMap(Self.webView(in:)))
+            let middle = try await grid(view)
+            #expect(abs(middle.off) < 1, "part \(part + 1)'s first page on the grid: \(middle)")
+            model.requestJump(model.position.count - 1)
+            #expect(await until(5) { model.position.index == model.position.count - 1 }, "part \(part + 1)'s last page")
+            await spin(0.5)
+            let last = try await grid(view)
+            #expect(last.page == last.pages - 1 && abs(last.off) < 1, "part \(part + 1)'s last page on the grid: \(last)")
+            if part < book.parts - 1 { model.requestTurn(forward: true) }
+        }
+    }
+
+    @Test func theLastPageOfAPartSitsOnTheGrid() async throws {
+        try await lastPagesOnTheGrid(Book(parts: 4, paragraphs: [30, 33, 36, 39]), CGSize(width: 1280, height: 794))
+    }
+
+    @Test func theLastPageOfAVerticalPartSitsOnTheGrid() async throws {
+        try await lastPagesOnTheGrid(Book(parts: 3, vertical: true, paragraphs: [24, 27, 30]), CGSize(width: 1280, height: 794))
     }
 }
 #endif

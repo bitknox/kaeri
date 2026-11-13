@@ -41,6 +41,7 @@ html.kaeri {
   --k-column: 720px;
   --k-outer: 0px;
   --k-page: 100vw;
+  --k-reach: 0px;
   margin: 0 !important;
   background: var(--k-bg) !important;
   color: var(--k-fg) !important;
@@ -90,13 +91,13 @@ html.kaeri.k-paged.k-h {
   padding: var(--k-top) var(--k-margin) var(--k-bottom) var(--k-margin) !important;
   column-count: var(--k-cols) !important;
 }
-html.kaeri.k-paged.k-h.k-capped {
-  position: relative !important;
-  margin: 0 var(--k-outer) !important;
-}
-html.kaeri.k-paged.k-h.k-capped body { position: static !important; }
-/* Room past the last page, so it scrolls into place as the others do. */
-html.kaeri.k-paged.k-h.k-capped body::after {
+html.kaeri.k-paged.k-h.k-capped { margin: 0 var(--k-outer) !important; }
+/* Room past the last page, so it scrolls into place as the others do. The columns alone end
+   short of it by the end padding, and by a column where the last spread has only one, and
+   the scroll stops at the end of the content. */
+html.kaeri.k-paged { position: relative !important; }
+html.kaeri.k-paged body { position: static !important; }
+html.kaeri.k-paged body::after {
   content: "" !important;
   position: absolute !important;
   top: 0 !important;
@@ -104,7 +105,8 @@ html.kaeri.k-paged.k-h.k-capped body::after {
   width: 1px !important;
   height: 1px !important;
 }
-html.kaeri.k-paged.k-h.k-capped.k-rtl body::after { left: auto !important; right: var(--k-reach) !important; }
+html.kaeri.k-paged.k-h.k-rtl body::after { left: auto !important; right: var(--k-reach) !important; }
+html.kaeri.k-paged.k-v body::after { top: var(--k-reach) !important; left: 0 !important; }
 html.kaeri.k-paged.k-h.k-capped::before,
 html.kaeri.k-paged.k-h.k-capped::after {
   content: "" !important;

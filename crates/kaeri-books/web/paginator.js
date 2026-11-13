@@ -226,9 +226,11 @@
     state.nodes = null;
     void (state.axis === 'y' ? scroller().scrollHeight : scroller().scrollWidth); // lay out now
     state.pages = count();
-    // The last page is scrolled to like the others: room past it to the view's far edge, which
-    // the columns alone leave short of a capped page's outer margin.
-    set('--k-reach', state.width ? (state.pages * state.width + side - 1) + 'px' : '0px');
+    // The last page is scrolled to like the others: room past it to the view's far edge. The
+    // scroll stops where the content ends, and the columns end short of that edge by the end
+    // padding, by an empty column where the last spread has one, and by a capped page's outer
+    // margin.
+    set('--k-reach', !state.scrolled && !S.fixed ? (state.pages * pitch() + side - 1) + 'px' : '0px');
   }
 
   // A margin above the first thing in the text (a chapter title's) is kept at the top of the
