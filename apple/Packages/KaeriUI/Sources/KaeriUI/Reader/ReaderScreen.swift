@@ -339,7 +339,7 @@ extension ReaderActions {
             canGoBack: model.backToPage != nil, backPage: model.backToPage,
             turn: { forward, line in model.requestTurn(forward: forward, line: line) },
             chapter: { next in
-                if let row = next ? model.view?.next : model.view?.previous { model.openChapter(row.id) }
+                if let row = model.chapterStep(next: next) { model.openChapter(row.id) }
             },
             back: { model.back() },
             askPage: { model.chromeShown = true; model.askingPage = true },
@@ -441,9 +441,14 @@ struct ReaderOpening: View {
         }
     }
 
+    /// The chapter the opening and the failure name: the one asked for, not the one left, which
+    /// stays the model's view until the new one opens.
+    static func label(_ model: ReaderModel) -> String {
+        model.chapterHere.map { $0.number ?? $0.label } ?? ""
+    }
+
     var body: some View {
-        let chapter = model.view?.chapter
-        let label = chapter.map { $0.number ?? $0.label } ?? ""
+        let label = Self.label(model)
         let stage = Self.stage(model.openingWait, chapter: label)
         ZStack {
             if model.medium != .novel {
@@ -511,13 +516,12 @@ struct ReaderChapterFailed: View {
     @Environment(\.dynamicTypeSize) private var type
 
     var body: some View {
-        let chapter = model.view?.chapter
         VStack(alignment: .leading, spacing: 0) {
             Spacer(minLength: 120).frame(maxHeight: 240)
             HStack(alignment: .firstTextBaseline, spacing: 10) {
                 Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(theme.vermilion)
                     .accessibilityHidden(true)
-                Text(L.readerChapterFailed(chapter: chapter.map { $0.number ?? $0.label } ?? ""))
+                Text(L.readerChapterFailed(chapter: ReaderOpening.label(model)))
                     .foregroundStyle(theme.silk)
                     .fixedSize(horizontal: false, vertical: true)
             }

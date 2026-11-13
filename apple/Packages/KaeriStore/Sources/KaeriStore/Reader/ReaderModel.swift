@@ -338,6 +338,40 @@ public final class ReaderModel {
     @ObservationIgnored private var staleOpens = 0
     /// The chapter asked for in the open book, until it opens.
     @ObservationIgnored private var asked: ChapterId?
+    /// The chapter asked for, with the chapter it was asked from, until it opens; kept when it
+    /// fails. The view stays the chapter left until the engine says the new one opened.
+    private var aim: Aim?
+
+    private struct Aim {
+        let row: ChapterRow
+        /// The view of the chapter open when the first of these asks went.
+        let from: ReaderView
+    }
+
+    /// The chapter the reader is on: the one opening, or the one that would not open, else the
+    /// open one. The opening line and the failure name it.
+    public var chapterHere: ChapterRow? { aim?.row ?? view?.chapter }
+
+    /// The chapter `]` (next) or `[` goes to: either side of the chapter the reader is on, so
+    /// from a chapter still opening or one that failed, never the chapter left.
+    public func chapterStep(next: Bool) -> ChapterRow? {
+        guard let aim else { return next ? view?.next : view?.previous }
+        let around = Self.around(aim.row, from: aim.from, list: chapters.flatMap(\.chapters))
+        return next ? around.next : around.previous
+    }
+
+    /// The chapters either side of `row`: the open view's own, the chapter list's once it is in
+    /// (in reading order), else the chapter left when `row` is next to it.
+    static func around(_ row: ChapterRow, from view: ReaderView, list: [ChapterRow])
+        -> (previous: ChapterRow?, next: ChapterRow?) {
+        if row.id == view.chapter.id { return (view.previous, view.next) }
+        if let at = list.firstIndex(where: { $0.id == row.id }) {
+            return (at > 0 ? list[at - 1] : nil, at + 1 < list.count ? list[at + 1] : nil)
+        }
+        if view.next?.id == row.id { return (view.chapter, nil) }
+        if view.previous?.id == row.id { return (nil, view.chapter) }
+        return (nil, nil)
+    }
 
     public init() {
         focusPaper = Self.defaults.bool(forKey: Self.focusKey)
@@ -594,6 +628,7 @@ public final class ReaderModel {
         commitKeep()
         flushStrip()
         asked = id
+        if let from = aim?.from ?? view { aim = chapterRow(id).map { Aim(row: $0, from: from) } }
         openAtEnd = atEnd ? id : nil
         holdEnd(to: id)
         end = nil
@@ -927,6 +962,7 @@ public final class ReaderModel {
                 return
             }
             asked = nil
+            aim = nil
             // A strip that flowed on keeps the chapters above; any other open starts clean.
             if flowing != opened.chapter.id || opened.mode != .strip {
                 trail = StripTrail()
@@ -1260,6 +1296,7 @@ public final class ReaderModel {
         noticeTask?.cancel()
         dropHeldStrip()
         asked = nil
+        aim = nil
         view = nil
         leaves = []
         pages = [:]
@@ -1309,7 +1346,10 @@ public final class ReaderModel {
     /// The row of a chapter of the open book: a neighbour the view or end page names, or one
     /// from the listed chapters.
     private func chapterRow(_ id: ChapterId) -> ChapterRow? {
-        let near = [view?.next, view?.previous, end?.next, end?.skipTo, held?.end?.next, held?.end?.skipTo]
+        let near = [
+            view?.next, view?.previous, end?.next, end?.skipTo, held?.end?.next, held?.end?.skipTo,
+            aim?.row, aim?.from.chapter, aim?.from.next, aim?.from.previous,
+        ]
         if let row = near.lazy.compactMap({ $0 }).first(where: { $0.id == id }) { return row }
         return chapters.lazy.flatMap(\.chapters).first { $0.id == id }
     }
