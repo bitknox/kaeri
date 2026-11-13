@@ -94,7 +94,10 @@ reader-volume = Volym { $volume }
 reader-chapter-in-progress = Sida { $page } av { $total }
 reader-chapter-read = Läst
 reader-chapter-new = ny
-reader-chapter-pages = { $pages } sidor
+reader-chapter-pages = { $pages ->
+    [one] 1 sida
+   *[other] { $pages } sidor
+ }
 reader-offline-line = Offline. Nedladdade kapitel går fortfarande att öppna.
 reader-menu-go = Gå
 reader-menu-next-page = { -up-next-cap } sida
@@ -116,8 +119,5 @@ reader-key-step = Tangentsteg
 reader-key-step-panel = Ruta
 reader-key-step-screen = Skärm
 reader-strip-gap = Avstånd mellan bilder
-reader-zone-back = Bakåt
-reader-zone-forward = Framåt
-reader-zone-menu = Meny
 reader-pages-range = { $from }–{ $to }
 send-failed-offline = Försök igen när du är online.

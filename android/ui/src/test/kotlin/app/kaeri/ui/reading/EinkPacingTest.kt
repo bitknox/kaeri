@@ -4,7 +4,9 @@
 
 package app.kaeri.ui.reading
 
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import app.kaeri.eink.EinkSizes
 import app.kaeri.engine.model.BookDownloadRow
 import app.kaeri.engine.model.BookDownloadSeries
 import app.kaeri.engine.model.BookDownloadsView
@@ -136,16 +138,48 @@ class EinkPacingTest {
         assertEquals(emptySet<Int>(), linesToShed(heights, List(heights.size) { false }, 100))
     }
 
+    /** A grid's rows with their covers and words fit the page, the pager under them. */
+    private fun fits(grid: PaperGrid, height: Dp, words: Dp) =
+        (grid.cover * 1.5f + 24.dp + words) * grid.rows + EinkSizes.PagerRow <= height
+
     @Test
-    fun a_rows_grid_fits_three_rows_a_page() {
-        // The 6 inch panel's page under the title: covers shrink to fit three rows.
-        val six = gridCoverWidth(540.dp, 35.dp)
-        assertTrue(six < 84.dp)
-        assertTrue((six * 1.5f + 24.dp + 35.dp) * 3 + 68.dp <= 540.dp)
-        // A 7 inch panel keeps the board's 84 dp.
-        assertEquals(84.dp, gridCoverWidth(664.dp, 35.dp))
-        // Large text never shrinks them past 56 dp; the page holds fewer rows instead.
-        assertEquals(56.dp, gridCoverWidth(540.dp, 120.dp))
+    fun a_grid_takes_its_columns_from_the_width_and_its_rows_from_the_height() {
+        // The page under the title on each panel (the window less 232 dp of bars and title), at
+        // the Air's 0.85 text: 36 and 40 dp of words.
+        val small = 36.dp
+        val large = 40.dp
+        // 6 inch (572 × 772 dp): three by three, as the boards draw it.
+        val six = paperGrid(516.dp, 540.dp, small, large)
+        assertEquals(3 to 3, six.columns to six.rows)
+        assertTrue(fits(six, 540.dp, small) && !six.large)
+        // 7 inch (674 × 896 dp): still three across, the covers larger.
+        val seven = paperGrid(618.dp, 664.dp, small, large)
+        assertEquals(3 to 3, seven.columns to seven.rows)
+        assertTrue(seven.cover > six.cover && fits(seven, 664.dp, small))
+        // 10.3 inch (992 × 1323 dp, the Note Air 4C): four across, each cover filling most of
+        // its 210 dp column, at the body size; three rows fill the page.
+        val ten = paperGrid(912.dp, 1090.dp, small, large)
+        assertEquals(4 to 3, ten.columns to ten.rows)
+        assertTrue(ten.large && ten.cover >= 180.dp && fits(ten, 1090.dp, large))
+        // On its side: five by two, as the e-ink board says.
+        val side = paperGrid(1243.dp, 760.dp, small, large, upright = false)
+        assertEquals(5 to 2, side.columns to side.rows)
+        assertTrue(fits(side, 760.dp, large))
+        // The e-ink phone (439 × 879 dp): three across.
+        val phone = paperGrid(383.dp, 647.dp, small, large)
+        assertEquals(3, phone.columns)
+        assertTrue(fits(phone, 647.dp, small))
+        // No cover is wider than its column.
+        for (grid in listOf(six to 516.dp, seven to 618.dp, ten to 912.dp, side to 1243.dp, phone to 383.dp)) {
+            assertTrue(grid.first.cover * grid.first.columns + 24.dp * (grid.first.columns - 1) <= grid.second)
+        }
+    }
+
+    @Test
+    fun large_text_takes_fewer_rows_rather_than_covers_under_56_dp() {
+        val grid = paperGrid(516.dp, 540.dp, 120.dp, 130.dp)
+        assertTrue(grid.cover >= 56.dp && grid.rows < 3)
+        assertTrue(fits(grid, 540.dp, 120.dp))
     }
 
     private companion object {

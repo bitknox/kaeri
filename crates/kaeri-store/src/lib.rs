@@ -14,6 +14,7 @@
 pub mod airing_times;
 pub mod aniskip_outbox;
 pub mod book_catalog;
+pub mod book_credits;
 pub mod book_downloads;
 pub mod book_progress;
 pub mod book_sources;
@@ -116,6 +117,10 @@ pub struct Store {
     active: Arc<Mutex<Option<String>>>,
     /// The sync log's clock; the log itself is in the database.
     sync: Arc<sync::SyncCtx>,
+    /// The data folder the database is in: downloaded files are kept by their path within it,
+    /// so a folder the system moves (an iOS restore, a new device) keeps them. `None` for a
+    /// database in memory.
+    files: Option<Arc<PathBuf>>,
 }
 
 impl std::fmt::Debug for Store {
@@ -192,7 +197,9 @@ impl Store {
         }
         let conn = Connection::open(path)?;
         schema::migrate(&conn)?;
-        Ok(Self::from_conn(conn))
+        let mut store = Self::from_conn(conn);
+        store.files = path.parent().map(|p| Arc::new(p.to_path_buf()));
+        Ok(store)
     }
 
     /// [`Self::open`], with a database too damaged to open moved aside and a new one started in
@@ -262,6 +269,28 @@ impl Store {
             active: Arc::default(),
             conn,
             sync: Arc::new(sync::SyncCtx::new()),
+            files: None,
+        }
+    }
+
+    /// A downloaded file's path as kept: within the data folder when it is there.
+    pub(crate) fn kept_path(&self, path: &str) -> String {
+        let Some(base) = &self.files else { return path.to_owned() };
+        match Path::new(path).strip_prefix(base.as_path()) {
+            Ok(within) if !within.as_os_str().is_empty() => {
+                within.to_string_lossy().into_owned()
+            }
+            _ => path.to_owned(),
+        }
+    }
+
+    /// A kept path as a whole one, in the data folder as it is now.
+    pub(crate) fn full_path(&self, kept: String) -> String {
+        match &self.files {
+            Some(base) if Path::new(&kept).is_relative() => {
+                base.join(&kept).to_string_lossy().into_owned()
+            }
+            _ => kept,
         }
     }
 

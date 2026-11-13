@@ -22,10 +22,12 @@ import UIKit
 /// code with most of its time left, or none; `proxy`, Sources with torrents through a saved
 /// proxy, and `checking` and `unsaved`, the same with a check through an edited proxy under way,
 /// or failed with nothing saved; and `trailer`, 900001 and 900002 with a trailer on record, played
-/// by a stand-in page. `all` leaves these out too.
+/// by a stand-in page; `held`, AniList synced, Kitsu with three changes it has no match for and
+/// Trakt's credential rejected with fourteen behind it, and `stuck`, the same queue as the engine
+/// told it before it said held changes and a rejection apart. `all` leaves these out too.
 public enum Showcase: String, CaseIterable, Sendable {
     case sources, stores, downloads, invite, update, pale, trailer, offline, stranded, failed, messages, calendar,
-         signin, expired, proxy, checking, unsaved, picker, all
+         signin, expired, proxy, checking, unsaved, picker, held, stuck, all
 
     /// The one the launch arguments name.
     public static func from(arguments: [String]) -> Showcase? {
@@ -116,11 +118,34 @@ public enum Showcase: String, CaseIterable, Sendable {
             case .picker:
                 events.append(.sourceOptions(id: Self.pickerTitle, options: Self.pickerOptions))
                 held.insert("sourceOptions")
+            case .held, .stuck:
+                events += Self.trackerQueue(told: self == .held).map { .sync($0) }
+                held.insert("sync")
             case .all:
                 break
             }
         }
         return (events, held)
+    }
+
+    /// Three trackers' queue: Kitsu holding three changes for want of a match, Trakt fourteen
+    /// behind a credential it rejected. `told` as the engine says it now: the held three apart
+    /// from what is on its way, and the rejection standing; otherwise as it said it before, all
+    /// seventeen waiting.
+    static func trackerQueue(told: Bool) -> [SyncState] {
+        func state(_ tracker: String, user: String? = nil, outbox: UInt32 = 0, deferred: UInt32 = 0,
+                   reauth: Bool = false) -> SyncState {
+            SyncState(
+                tracker: tracker, connected: true, user: user, storage: "OS keychain",
+                storageDegraded: false, outbox: outbox, deferred: deferred, needsReauth: reauth,
+                last: "pulled 40 titles", pullError: nil
+            )
+        }
+        return [
+            state("anilist", user: "Mika"),
+            state("kitsu", outbox: told ? 0 : 3, deferred: 3),
+            state("trakt", outbox: 14, reauth: told),
+        ]
     }
 
     /// The title the picker's invented options are for.
@@ -382,6 +407,7 @@ extension Event {
         case .connectivity: "connectivity"
         case .content: "content"
         case .sourceOptions: "sourceOptions"
+        case .sync: "sync"
         case .bookSources(.view): "bookSourcesView"
         default: nil
         }

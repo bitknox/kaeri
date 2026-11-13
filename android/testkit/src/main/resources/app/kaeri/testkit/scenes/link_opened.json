@@ -668,6 +668,15 @@
       }
      },
      {
+      "key": "SHOW_VOLUMES",
+      "value": "off",
+      "change": {
+       "@type": "Steps",
+       "back": false,
+       "forward": true
+      }
+     },
+     {
       "key": "SERIES_CHOICES_FOLLOW",
       "value": "on",
       "change": {
@@ -2729,10 +2738,6 @@
    }
   },
   {
-   "@type": "JobDone",
-   "v1": "4"
-  },
-  {
    "@type": "LastAired",
    "v1": [
     {
@@ -2750,6 +2755,10 @@
      }
     }
    ]
+  },
+  {
+   "@type": "JobDone",
+   "v1": "4"
   },
   {
    "@type": "JobStarted",
@@ -2944,10 +2953,6 @@
    }
   },
   {
-   "@type": "JobDone",
-   "v1": "5"
-  },
-  {
    "@type": "LastAired",
    "v1": [
     {
@@ -2965,6 +2970,10 @@
      }
     }
    ]
+  },
+  {
+   "@type": "JobDone",
+   "v1": "5"
   },
   {
    "@type": "JobStarted",
@@ -8516,10 +8525,6 @@
    }
   },
   {
-   "@type": "JobDone",
-   "v1": "14"
-  },
-  {
    "@type": "Cards",
    "v1": [
     {
@@ -8625,6 +8630,10 @@
      }
     }
    ]
+  },
+  {
+   "@type": "JobDone",
+   "v1": "14"
   },
   {
    "@type": "JobStarted",
@@ -10055,10 +10064,6 @@
    }
   },
   {
-   "@type": "JobDone",
-   "v1": "20"
-  },
-  {
    "@type": "Cards",
    "v1": [
     {
@@ -10165,6 +10170,10 @@
      }
     }
    ]
+  },
+  {
+   "@type": "JobDone",
+   "v1": "20"
   },
   {
    "@type": "JobStarted",
@@ -11898,10 +11907,6 @@
    }
   },
   {
-   "@type": "JobDone",
-   "v1": "27"
-  },
-  {
    "@type": "Cards",
    "v1": [
     {
@@ -13098,6 +13103,10 @@
    ]
   },
   {
+   "@type": "JobDone",
+   "v1": "27"
+  },
+  {
    "@type": "JobStarted",
    "job": "28",
    "activity": "loading episodes"
@@ -13998,10 +14007,6 @@
      "dub": null
     }
    }
-  },
-  {
-   "@type": "JobDone",
-   "v1": "29"
   },
   {
    "@type": "Cards",
@@ -15187,6 +15192,10 @@
    ]
   },
   {
+   "@type": "JobDone",
+   "v1": "29"
+  },
+  {
    "@type": "JobStarted",
    "job": "30",
    "activity": "loading episodes"
@@ -16087,10 +16096,6 @@
      "dub": null
     }
    }
-  },
-  {
-   "@type": "JobDone",
-   "v1": "31"
   },
   {
    "@type": "Cards",
@@ -17269,6 +17274,10 @@
    ]
   },
   {
+   "@type": "JobDone",
+   "v1": "31"
+  },
+  {
    "@type": "JobStarted",
    "job": "32",
    "activity": "loading episodes"
@@ -18169,10 +18178,6 @@
      "dub": null
     }
    }
-  },
-  {
-   "@type": "JobDone",
-   "v1": "33"
   },
   {
    "@type": "Cards",
@@ -19344,6 +19349,10 @@
    ]
   },
   {
+   "@type": "JobDone",
+   "v1": "33"
+  },
+  {
    "@type": "JobStarted",
    "job": "34",
    "activity": "loading episodes"
@@ -20263,10 +20272,6 @@
      "dub": null
     }
    }
-  },
-  {
-   "@type": "JobDone",
-   "v1": "35"
   },
   {
    "@type": "Cards",
@@ -21431,6 +21436,10 @@
    ]
   },
   {
+   "@type": "JobDone",
+   "v1": "35"
+  },
+  {
    "@type": "JobStarted",
    "job": "36",
    "activity": "loading episodes"
@@ -22289,10 +22298,6 @@
      "dub": null
     }
    }
-  },
-  {
-   "@type": "JobDone",
-   "v1": "37"
   },
   {
    "@type": "Cards",
@@ -23458,6 +23463,10 @@
    ]
   },
   {
+   "@type": "JobDone",
+   "v1": "37"
+  },
+  {
    "@type": "JobStarted",
    "job": "38",
    "activity": "loading episodes"
@@ -24219,10 +24228,6 @@
    }
   },
   {
-   "@type": "JobDone",
-   "v1": "39"
-  },
-  {
    "@type": "LastAired",
    "v1": [
     {
@@ -24233,6 +24238,10 @@
      }
     }
    ]
+  },
+  {
+   "@type": "JobDone",
+   "v1": "39"
   }
  ]
 }

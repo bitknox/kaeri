@@ -56,11 +56,12 @@ static class SeriesWords
         SeriesAction.Continue go when !Numbered(go.Label) => T.ActionContinueNamedPage(go.Label, go.Page),
         SeriesAction.Continue go => T.ActionContinueChapter(go.Label, go.Page),
         SeriesAction.ContinuePart { Percent: { } percent } part when !Numbered(part.Label) => T.ActionContinueNamed(part.Label, percent),
-        SeriesAction.ContinuePart { Percent: { } percent } part => T.ActionContinuePart(part.Label, percent),
+        // A bare number is a chapter, as its row and the reader call it.
+        SeriesAction.ContinuePart { Percent: { } percent } part => T.ActionContinueChapterPercent(part.Label, percent),
         SeriesAction.ContinuePart part when !Numbered(part.Label) => T.ActionContinueNamedPlain(part.Label),
-        SeriesAction.ContinuePart part => T.ActionContinuePartPlain(part.Label),
+        SeriesAction.ContinuePart part => T.ActionContinueChapterPlain(part.Label),
         SeriesAction.ReadPart part when !Numbered(part.Label) => T.ActionReadNamed(part.Label),
-        SeriesAction.ReadPart part => T.ActionReadPart(part.Label),
+        SeriesAction.ReadPart part => T.ActionReadChapter(part.Label),
         SeriesAction.ReadAgain => T.ActionReadAgain,
         _ => null,
     };
@@ -83,9 +84,11 @@ static class SeriesWords
         _ => T.NamesPair(list.Take(list.Count - 1).Skip(1).Aggregate(list[0], T.NamesList), list[^1]),
     };
 
-    /// <summary>"87 of 88 chapters · volume 9", "Volume 5 of 5".</summary>
+    /// <summary>"87 of 88 chapters · volume 9", "Volume 5 of 5", or "Not started" while nothing is read.</summary>
     public static string Progress(TrackerReadRow row, SeriesView series)
     {
+        if (row.Chapters == 0 && (row.Volumes ?? 0) == 0)
+            return T.SeriesTrackerNotStarted;
         if (series.Medium == Medium.Novel && row.Volumes is { } volumes)
             return T.SeriesTrackerVolumes(volumes, series.VolumesTotal ?? volumes);
         var chapters = series.ChaptersTotal is { } total ? T.SeriesTrackerChaptersOf(row.Chapters, total) : T.SeriesTrackerChapters(row.Chapters);
@@ -112,6 +115,9 @@ static class SeriesWords
                 return T.ChapterStateQueued;
             case ChapterDownloadState.WaitsForWifi:
                 return T.ChapterStateWifi;
+            // No page count yet, or a novel's chapter, which has none: nothing to count.
+            case ChapterDownloadState.Downloading { Total: 0 }:
+                return T.ChapterStateDownloadingPlain;
             case ChapterDownloadState.Downloading d:
                 return T.ChapterStateDownloading(d.DoneValue, d.Total);
             case ChapterDownloadState.Failed f:
@@ -164,6 +170,18 @@ static class SeriesWords
         if (group.AllRead)
             rest.Add(T.SeriesVolumeRead);
         return (name, string.Join(" · ", rest));
+    }
+
+    /// <summary>The volumes Download offers. A flat list, drawn with no volume headings, still says
+    /// each chapter's volume: its rows by volume, in reading order, and none for rows without one.</summary>
+    public static IReadOnlyList<VolumeGroup> DownloadVolumes(IReadOnlyList<VolumeGroup> groups)
+    {
+        if (groups is not [{ Flat: true } list])
+            return groups;
+        return [.. list.Chapters
+            .Where(c => c.Volume is { Length: > 0 })
+            .GroupBy(c => c.Volume!)
+            .Select(rows => list with { Volume = rows.Key, Title = null, Chapters = [.. rows], AllRead = false, Flat = false })];
     }
 
     static string Number(double n) => n.ToString("0.##", System.Globalization.CultureInfo.CurrentCulture);

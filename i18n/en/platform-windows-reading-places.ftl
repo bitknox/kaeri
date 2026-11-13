@@ -32,3 +32,7 @@ windows-read-search-source-timeout-said = No answer in { $seconds ->
 # Narrator's help on Search's filters while Your sources only is on.
 # @only windows
 windows-read-search-filters-dimmed = The filters apply to AniList's results only.
+
+# Name of the switch that turns a book plugin on or off in the book sources.
+# @only windows
+windows-read-sources-use-plugin = Use this { -plugin }

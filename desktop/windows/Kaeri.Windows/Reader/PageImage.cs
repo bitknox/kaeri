@@ -1,6 +1,7 @@
 using Medium = Kaeri.Engine.Core.Medium;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Kaeri.App;
+using Kaeri.Engine.Ffi;
 using Kaeri.Engine.Model;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
@@ -25,6 +26,7 @@ static class PageImages
     static readonly LinkedList<(string Key, ImageSource Source)> recent = new();
     static readonly Dictionary<string, LinkedListNode<(string Key, ImageSource Source)>> byKey = [];
     static readonly HashSet<ImageSource> opened = [];
+    static readonly HashSet<ImageSource> broken = [];
     const int Keep = 18;
 
     /// <summary>The width a file decodes to for a box <paramref name="pixels"/> wide, in steps so a resize reuses it.</summary>
@@ -76,6 +78,7 @@ static class PageImages
         if (width < file.Width)
             bitmap.DecodePixelWidth = width;
         bitmap.ImageOpened += (_, _) => opened.Add(bitmap);
+        bitmap.ImageFailed += (_, e) => Broke(bitmap, e.ErrorMessage);
         bitmap.UriSource = uri;
         return bitmap;
     }
@@ -86,7 +89,17 @@ static class PageImages
         int width = (int)file.Width, height = (int)file.Height;
         if (width <= 0 || height <= 0)
             return null;
-        var bitmap = new WriteableBitmap(width, height);
+        WriteableBitmap bitmap;
+        try
+        {
+            bitmap = new WriteableBitmap(width, height);
+        }
+        catch (Exception e)
+        {
+            // Too large for a bitmap: the page says it failed.
+            KaeriFfiMethods.LogLine(FfiLogLevel.Warn, "windows", $"a raw page {width}x{height} has no bitmap: {e.GetType().Name}");
+            return null;
+        }
         var queue = DispatcherQueue.GetForCurrentThread();
         var path = file.Path;
         var stride = (int)raw.Stride;
@@ -127,8 +140,10 @@ static class PageImages
                     }
                 }
             }
-            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            catch (Exception e)
             {
+                // A file gone or locked, or a page too large to convert: the page says it failed.
+                queue.TryEnqueue(() => Broke(bitmap, e.GetType().Name));
                 return;
             }
             queue.TryEnqueue(() =>
@@ -146,7 +161,28 @@ static class PageImages
     /// <summary>A raw page finished converting.</summary>
     public static event Action<ImageSource>? Painted;
 
+    /// <summary>A page's image could not be decoded or converted.</summary>
+    public static event Action<ImageSource>? Broken;
+
     public static bool IsOpened(ImageSource source) => opened.Contains(source);
+
+    public static bool IsBroken(ImageSource source) => broken.Contains(source);
+
+    /// <summary>The image failed: it is no longer kept, so the next ask decodes the file again.</summary>
+    static void Broke(ImageSource source, string why)
+    {
+        KaeriFfiMethods.LogLine(FfiLogLevel.Warn, "windows", "a page image failed to decode: " + why);
+        if (broken.Count >= Keep)
+            broken.Clear();
+        broken.Add(source);
+        foreach (var node in byKey.Values.Where(n => n.Value.Source == source).ToList())
+        {
+            byKey.Remove(node.Value.Key);
+            recent.Remove(node);
+        }
+        opened.Remove(source);
+        Broken?.Invoke(source);
+    }
 
     /// <summary>The engine re-made the files (a retry): nothing kept is trusted.</summary>
     public static void Forget()
@@ -154,6 +190,7 @@ static class PageImages
         recent.Clear();
         byKey.Clear();
         opened.Clear();
+        broken.Clear();
     }
 }
 
@@ -187,7 +224,13 @@ sealed class PageImageView : Canvas
     /// <summary>The image is fully on screen: its fade, if it had one, is over.</summary>
     public event Action? Settled;
 
+    /// <summary>The file could not be decoded: the page shows its failed plate.</summary>
+    public event Action? Failed;
+
     public bool IsPainted { get; private set; }
+
+    /// <summary>The file could not be decoded at this size. It stays so until another file or <see cref="Again"/>.</summary>
+    public bool IsBroken { get; private set; }
 
     /// <summary>Paper mode: the image appears at once, with no fade.</summary>
     public bool Cut { get; set; }
@@ -199,8 +242,19 @@ sealed class PageImageView : Canvas
         Children.Add(frame);
         AutomationProperties.SetAccessibilityView(image, AccessibilityView.Raw);
         image.ImageOpened += (_, _) => Shown(fade: true);
-        Loaded += (_, _) => PageImages.Painted += OnRawPainted;
-        Unloaded += (_, _) => PageImages.Painted -= OnRawPainted;
+        Loaded += (_, _) =>
+        {
+            PageImages.Painted += OnRawPainted;
+            PageImages.Broken += OnBroken;
+            // It failed while the view was off screen.
+            if (source is not null && PageImages.IsBroken(source))
+                OnBroken(source);
+        };
+        Unloaded += (_, _) =>
+        {
+            PageImages.Painted -= OnRawPainted;
+            PageImages.Broken -= OnBroken;
+        };
         SizeChanged += (_, _) => Place();
     }
 
@@ -208,6 +262,31 @@ sealed class PageImageView : Canvas
     {
         if (painted == source)
             Shown(fade: true);
+    }
+
+    void OnBroken(ImageSource failed)
+    {
+        if (failed == source)
+            Broke();
+    }
+
+    void Broke()
+    {
+        if (IsBroken || IsPainted)
+            return;
+        IsBroken = true;
+        Failed?.Invoke();
+    }
+
+    /// <summary>Try again: the file is decoded afresh.</summary>
+    public void Again()
+    {
+        IsBroken = false;
+        IsPainted = false;
+        source = null;
+        image.Source = null;
+        image.Opacity = 0;
+        Place();
     }
 
     /// <summary>Paper mode dims the page's white a little instead of tinting it.</summary>
@@ -219,13 +298,14 @@ sealed class PageImageView : Canvas
     public void Show(PageFile next, double rasterScale)
     {
         scale = rasterScale;
-        if (file is { } was && was.Path == next.Path && was.Crop == next.Crop && source is not null)
+        if (file is { } was && was.Path == next.Path && was.Crop == next.Crop && (source is not null || IsBroken))
         {
             Place();
             return;
         }
         file = next;
         IsPainted = false;
+        IsBroken = false;
         image.Opacity = 0;
         Place();
     }
@@ -267,7 +347,15 @@ sealed class PageImageView : Canvas
         };
         SetLeft(frame, FitWidth ? 0 : left);
         SetTop(frame, FitHeight || FitWidth ? Math.Max(0, (ActualHeight - shown.Height) / 2) : (ActualHeight - shown.Height) / 2);
+        // A file that failed isn't decoded again on every resize; Try again asks for that.
+        if (IsBroken)
+            return;
         var next = PageImages.Get(f, f.Width * s * scale, out var ready);
+        if (next is null)
+        {
+            Broke();
+            return;
+        }
         if (next != source)
         {
             source = next;
@@ -294,19 +382,40 @@ sealed class PageImageView : Canvas
 }
 
 /// <summary>
-/// The Raised plate that holds a page's place with its number. Nothing shows for 600 ms, and a
-/// line says it is loading from 4 s. A plate that takes over from one already on screen (the
-/// opening plate) shows at once, so nothing blinks between them.
+/// The Raised plate that holds a page's place with its number, "Page 23", or "Image 23" for a
+/// strip image. Nothing shows for 600 ms, and from 4 s a line under the number says it is
+/// loading. A plate that takes over from one already on screen (the opening plate) shows at once,
+/// so nothing blinks between them. A strip image's words sit in the middle of the part of it on
+/// screen, so they stay in view however tall the image is and wherever the strip is scrolled to.
 /// </summary>
 sealed class PagePlate : Grid
 {
     readonly TextBlock number;
     readonly TextBlock line;
+    readonly StackPanel stack;
     readonly DispatcherQueueTimer first, slow;
+    ScrollViewer? scroller;
 
-    public PagePlate(int page, ReaderPalette palette, bool atOnce = false)
-        : this(page.ToString(System.Globalization.CultureInfo.CurrentCulture), T.ReaderPageLoading(page), palette, atOnce)
+    public PagePlate(int page, ReaderPalette palette, bool atOnce = false, bool image = false)
+        : this(image ? T.ReaderImagePlate(page) : T.ReaderPagePlate(page),
+               image ? T.ReaderImageLoading(page) : T.ReaderPageLoading(page), palette, atOnce)
     {
+        if (!image)
+            return;
+        Loaded += (_, _) =>
+        {
+            scroller = Scroller(this);
+            if (scroller is not null)
+                scroller.ViewChanged += Scrolled;
+            OnScreen();
+        };
+        Unloaded += (_, _) =>
+        {
+            if (scroller is not null)
+                scroller.ViewChanged -= Scrolled;
+            scroller = null;
+        };
+        SizeChanged += (_, _) => OnScreen();
     }
 
     public PagePlate(string label, string loading, ReaderPalette palette, bool atOnce)
@@ -316,7 +425,7 @@ sealed class PagePlate : Grid
         IsHitTestVisible = false;
         number = new TextBlock { Text = label, FontSize = 15, Foreground = new SolidColorBrush(palette.Haze), HorizontalAlignment = HorizontalAlignment.Center, TextWrapping = TextWrapping.WrapWholeWords, TextAlignment = TextAlignment.Center };
         line = new TextBlock { Text = loading, FontSize = 13, Foreground = new SolidColorBrush(palette.Haze), HorizontalAlignment = HorizontalAlignment.Center, Visibility = Visibility.Collapsed, TextWrapping = TextWrapping.WrapWholeWords, TextAlignment = TextAlignment.Center };
-        var stack = new StackPanel { Spacing = 6, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(16) };
+        stack = new StackPanel { Spacing = 6, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(16) };
         stack.Children.Add(number);
         stack.Children.Add(line);
         Children.Add(stack);
@@ -337,6 +446,32 @@ sealed class PagePlate : Grid
 
     /// <summary>The plate is on screen, or on its way.</summary>
     public bool Shown => Opacity > 0;
+
+    void Scrolled(object? sender, ScrollViewerViewChangedEventArgs e) => OnScreen();
+
+    /// <summary>Centre the words on the part of the plate inside the strip's scroll viewer.</summary>
+    void OnScreen()
+    {
+        (double, double)? seen = null;
+        if (scroller is { ActualHeight: > 0 } view)
+        {
+            // The scroll viewer's top and bottom in the plate's own units, through any zoom.
+            var into = view.TransformToVisual(this);
+            seen = (into.TransformPoint(new global::Windows.Foundation.Point(0, 0)).Y,
+                    into.TransformPoint(new global::Windows.Foundation.Point(0, view.ActualHeight)).Y);
+        }
+        var room = number.ActualHeight > 0 ? number.ActualHeight * 2 + stack.Spacing : 48;
+        var (above, below) = StripPlate.WordsMargins(ActualHeight, seen, room);
+        stack.Margin = new Thickness(16, above, 16, below);
+    }
+
+    static ScrollViewer? Scroller(DependencyObject at)
+    {
+        for (var up = VisualTreeHelper.GetParent(at); up is not null; up = VisualTreeHelper.GetParent(up))
+            if (up is ScrollViewer view)
+                return view;
+        return null;
+    }
 
     /// <summary>The loading line says something else from now on (how long a source search has taken).</summary>
     public void Loading(string text) => line.Text = text;
@@ -385,17 +520,21 @@ sealed class PartView : Grid
     readonly ReaderPalette palette;
     readonly PageImageView image = new();
     readonly bool atOnce;
+    readonly bool strip;
     readonly Func<LeafPart, PageFile?>? kept;
     PagePlate? plate;
     PageFailedView? failed;
+    double scale = 1;
 
     /// <summary>
     /// <paramref name="atOnce"/>: the plate shows from the first frame, as it takes over from the
     /// opening plate. <paramref name="kept"/> names the file a part shows when the session no
-    /// longer has it (a chapter a strip ran on from).
+    /// longer has it (a chapter a strip ran on from). <paramref name="strip"/>: the part is a strip
+    /// image, so its plate says "Image 23".
     /// </summary>
-    public PartView(ReaderSession reader, LeafPart part, string chapter, ReaderPalette palette, HorizontalAlignment align, bool fitWidth, bool fitHeight, string label, bool atOnce = false, Func<LeafPart, PageFile?>? kept = null)
+    public PartView(ReaderSession reader, LeafPart part, string chapter, ReaderPalette palette, HorizontalAlignment align, bool fitWidth, bool fitHeight, string label, bool atOnce = false, Func<LeafPart, PageFile?>? kept = null, bool strip = false)
     {
+        this.strip = strip;
         this.reader = reader;
         this.part = part;
         this.chapter = chapter;
@@ -424,6 +563,8 @@ sealed class PartView : Grid
             image.RenderTransformOrigin = new global::Windows.Foundation.Point(0.5, 0.5);
             image.RenderTransform = new RotateTransform { Angle = 90 };
         }
+        // A file that doesn't decode is a failed page, with Try again.
+        image.Failed += () => Refresh(scale);
         SizeChanged += (_, _) => Fit();
         Refresh(1);
     }
@@ -445,14 +586,22 @@ sealed class PartView : Grid
     /// <summary>The engine's files or failures changed: show what there is now.</summary>
     public void Refresh(double rasterScale)
     {
+        scale = rasterScale;
         var file = reader.FileOf(part, chapter) ?? kept?.Invoke(part);
         // A chapter the strip ran on from has no failures of its own any more; the open one does.
         var failure = file is null && (kept is null || reader.View?.Chapter.Id == chapter) ? reader.FailureOf(part, chapter) : null;
-        if (failure is not null)
+        if (file is not null)
+            image.Show(file, rasterScale);
+        if (failure is not null || (file is not null && image.IsBroken))
         {
             if (failed is null)
             {
-                failed = new PageFailedView((int)part.Page + 1, failure.Words(), palette, () => reader.Retry(part.Page));
+                // Try again decodes the file afresh and has the engine make the page again.
+                failed = new PageFailedView((int)part.Page + 1, failure?.Words(), palette, () =>
+                {
+                    image.Again();
+                    reader.Retry(part.Page);
+                });
                 Children.Add(failed);
             }
             if (plate is not null)
@@ -467,11 +616,9 @@ sealed class PartView : Grid
             Children.Remove(failed);
             failed = null;
         }
-        if (file is not null)
-            image.Show(file, rasterScale);
         if (!image.IsPainted && plate is null)
         {
-            plate = new PagePlate((int)part.Page + 1, palette, atOnce);
+            plate = new PagePlate((int)part.Page + 1, palette, atOnce, strip);
             Children.Insert(0, plate);
         }
     }

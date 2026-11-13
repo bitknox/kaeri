@@ -11,6 +11,6 @@ into the plugin directory (`kaeri --plugins` prints it). Kaeri loads book source
 reading is on.
 
 It exists to be read. It uses every part of the book ABI: the manifest with its media and
-languages, the lent `fetch`, regex and `config-get`, title hints, image and text chapters and
-the error vocabulary. Its two series are made up, and its hosts, `books.example` and
-`pages.example`, stand for your own server.
+languages, the lent `fetch`, regex and `config-get`, title hints, image and text chapters (one
+with a picture the host fetches from `pages.example`) and the error vocabulary. Its two series
+are made up, and its hosts, `books.example` and `pages.example`, stand for your own server.

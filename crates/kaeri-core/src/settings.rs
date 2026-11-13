@@ -270,13 +270,49 @@ fn write_atomically(path: &Path, bytes: &[u8]) -> Result<(), crate::Error> {
             file.set_permissions(std::fs::Permissions::from_mode(mode))?;
         }
         file.sync_all()?;
-        std::fs::rename(&temporary, path)
+        replace(&temporary, path)
     })();
     if let Err(e) = written {
         let _ = std::fs::remove_file(&temporary);
         return Err(crate::Error::Config(format!("cannot replace {}: {e}", path.display())));
     }
     Ok(())
+}
+
+/// Move `from` over `to`, waiting a moment for another program to let go of either.
+///
+/// On Windows a file that another program has open without sharing deletion can't be replaced,
+/// and the rename fails with access denied or a sharing violation. Antivirus and the search
+/// indexer open a file as soon as it is written to read it, so the next setting written a moment
+/// later can meet one of them holding the file it replaces. They let go within moments, slower
+/// on a busy machine, so the rename is tried again for up to two seconds before the write is
+/// refused. Elsewhere a rename never waits on a reader.
+fn replace(from: &Path, to: &Path) -> std::io::Result<()> {
+    #[cfg(windows)]
+    {
+        use std::time::{Duration, Instant};
+        const ACCESS_DENIED: i32 = 5;
+        const SHARING_VIOLATION: i32 = 32;
+        const LOCK_VIOLATION: i32 = 33;
+        let deadline = Instant::now() + Duration::from_secs(2);
+        let mut pause = Duration::from_millis(2);
+        loop {
+            match std::fs::rename(from, to) {
+                Err(e)
+                    if matches!(
+                        e.raw_os_error(),
+                        Some(ACCESS_DENIED | SHARING_VIOLATION | LOCK_VIOLATION)
+                    ) && Instant::now() < deadline =>
+                {
+                    std::thread::sleep(pause);
+                    pause = (pause * 2).min(Duration::from_millis(100));
+                }
+                done => return done,
+            }
+        }
+    }
+    #[cfg(not(windows))]
+    std::fs::rename(from, to)
 }
 
 /// The file a link at `path` leads to, or `path` itself when it is no link.
@@ -780,5 +816,50 @@ proxy = \"socks5://192.0.2.10:1080\"
         assert!(said.contains("config.toml") && said.contains("line 3"), "{said}");
         assert!(said.contains("left as it is"), "{said}");
         assert_eq!(std::fs::read_to_string(&paths.config_file).unwrap(), broken);
+    }
+
+    /// A file held open without sharing deletion, as antivirus or the search indexer holds a
+    /// file it reads, the way the catalog test meets it under load.
+    #[cfg(windows)]
+    fn held(path: &Path) -> std::fs::File {
+        use std::os::windows::fs::OpenOptionsExt;
+        const FILE_SHARE_READ: u32 = 1;
+        std::fs::OpenOptions::new().read(true).share_mode(FILE_SHARE_READ).open(path).unwrap()
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn a_write_waits_for_a_reader_that_holds_the_file_for_a_moment() {
+        let dir = temp_dir("held-moment");
+        let paths = paths_in(&dir);
+        write_key(&paths, &["theme"], "trailers", SettingValue::Str("always".into())).unwrap();
+        let file = held(&paths.config_file);
+        let letting_go = std::thread::spawn(move || {
+            std::thread::sleep(std::time::Duration::from_millis(300));
+            drop(file);
+        });
+        write_key(&paths, &["theme"], "trailers", SettingValue::Str("wifi-only".into()))
+            .expect("written once the reader let go");
+        letting_go.join().unwrap();
+        let config = crate::config::Config::load(&paths).unwrap();
+        assert_eq!(config.theme.trailers, crate::config::TrailerAutoplay::WifiOnly);
+        assert_eq!(std::fs::read_dir(&dir).unwrap().count(), 1, "no temporary file left");
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn a_write_against_a_reader_that_never_lets_go_is_refused_and_the_file_kept() {
+        let dir = temp_dir("held-long");
+        let paths = paths_in(&dir);
+        write_key(&paths, &["theme"], "trailers", SettingValue::Str("always".into())).unwrap();
+        let before = std::fs::read_to_string(&paths.config_file).unwrap();
+        let file = held(&paths.config_file);
+        let refused =
+            write_key(&paths, &["theme"], "trailers", SettingValue::Str("off".into()))
+                .unwrap_err();
+        drop(file);
+        assert!(refused.to_string().contains("cannot replace"), "{refused}");
+        assert_eq!(std::fs::read_to_string(&paths.config_file).unwrap(), before);
+        assert_eq!(std::fs::read_dir(&dir).unwrap().count(), 1, "no temporary file left");
     }
 }

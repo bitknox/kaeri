@@ -54,6 +54,8 @@ public final class AppStore {
     public let medium = MediumModel()
     /// Reading's places.
     public let reading = ReadingModel()
+    /// The reading screens ask again for what the reader changed.
+    @ObservationIgnored private let afterReader = ReadingAfterReader()
     /// Folders, servers and plugins that books come from.
     public let bookSources = BookSourcesModel()
     /// What came in after a server, folder or store was added.
@@ -978,6 +980,7 @@ public final class AppStore {
         notifications.observe(event)
         reader.observe(event)
         reading.observe(event)
+        afterReader.observe(event, reading: reading)
         bookSources.observe(event)
         cameIn.apply(event)
         serverProgress.apply(event)

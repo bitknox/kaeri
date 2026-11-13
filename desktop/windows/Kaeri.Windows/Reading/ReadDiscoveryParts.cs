@@ -221,12 +221,13 @@ sealed partial class CoverStrip : Grid
         Margin = new Thickness(HomeWording.HoverOutset),
     };
     readonly Button previous, next;
-    readonly double cardWidth;
+    readonly double cardWidth, artHeight;
     bool inside;
 
     public CoverStrip(string name, double cardWidth = HomeWording.PosterWidth, double artHeight = HomeWording.PosterHeight)
     {
         this.cardWidth = cardWidth;
+        this.artHeight = artHeight;
         AutomationProperties.SetName(strip, name);
         scroll.Margin = new Thickness(-HomeWording.HoverOutset);
         scroll.Content = strip;
@@ -260,6 +261,11 @@ sealed partial class CoverStrip : Grid
     }
 
     public int Count => strip.Children.Count;
+
+    /// <summary>A card's width and its art's height, for a fresh strip of the same cards.</summary>
+    public double CardWidth => cardWidth;
+
+    public double ArtHeight => artHeight;
 
     /// <summary>How far the strip is scrolled: a new drawing of the same row starts where the old one stood.</summary>
     public double Offset
@@ -479,7 +485,7 @@ sealed partial class CoverSlot : Grid
             return;
         if (shown == Layer.Covers)
         {
-            var fresh = new CoverStrip(label);
+            var fresh = new CoverStrip(label, strip.CardWidth, strip.ArtHeight);
             fresh.Set(cards);
             Replace(fresh);
             return;
@@ -953,7 +959,7 @@ sealed partial class SourceRowView : StackPanel
         this.ctx = ctx;
         Id = id;
         // The name trims before the kind and the ring are pushed off the row.
-        head = new Grid { Margin = new Thickness(0, 26, 0, 10) };
+        head = new Grid { Margin = new Thickness(0, 26, 0, 12) };
         head.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         head.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         heading = new TextBlock { FontSize = 14, LineHeight = 19, TextWrapping = TextWrapping.NoWrap, TextTrimming = TextTrimming.CharacterEllipsis, HorizontalAlignment = HorizontalAlignment.Left };
@@ -967,7 +973,8 @@ sealed partial class SourceRowView : StackPanel
         Grid.SetColumn(ring, 1);
         head.Children.Add(ring);
         Children.Add(head);
-        slot = new CoverSlot(ReadPlates.Row(FirstHits), new CoverStrip(id));
+        // The shows' rail: their covers and plates, 16 apart.
+        slot = new CoverSlot((FrameworkElement)States.Covers(FirstHits, rail: true), new CoverStrip(id, SearchParts.CoverWidth, SearchParts.CoverHeight));
         slot.Label = id;
         // The ring comes and goes with the placeholders, not with every ask.
         slot.Changed += () =>
@@ -996,7 +1003,7 @@ sealed partial class SourceRowView : StackPanel
     /// <summary>The first row comes closer to the section's heading.</summary>
     public bool First
     {
-        set => head.Margin = new Thickness(0, value ? 12 : 26, 0, 10);
+        set => head.Margin = new Thickness(0, value ? 12 : 26, 0, 12);
     }
 
     /// <summary>New words are on their way: what shows stays 600 ms, then the placeholders.</summary>
@@ -1061,7 +1068,7 @@ sealed partial class SourceRowView : StackPanel
             drawn = key;
             // Under a hit's title, how much of it the source holds; nothing when it does not say.
             // A hit's menu is Details alone.
-            slot.Covers([.. shown.Select(t => (FrameworkElement)ReadingParts.Card(ctx, t, caption: ReadDiscovery.Amount(t), lists: false))]);
+            slot.Covers([.. shown.Select(t => (FrameworkElement)ReadingParts.SearchCard(ctx, t, caption: ReadDiscovery.Amount(t), lists: false))]);
         }
         More(hits.Length - shown.Length);
     }

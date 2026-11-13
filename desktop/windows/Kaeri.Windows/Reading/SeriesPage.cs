@@ -8,6 +8,7 @@ using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 
@@ -51,6 +52,9 @@ public sealed partial class SeriesPage : Page
     string? drawnHead, drawnSide, drawnChapters;
     /// <summary>The header's words as last drawn, which hold the send rows.</summary>
     StackPanel? drawnWords;
+    /// <summary>The amber action (or Read from another source) as last drawn.</summary>
+    Button? mainAction;
+    bool headDrawn;
 
     public SeriesPage()
     {
@@ -266,15 +270,7 @@ public sealed partial class SeriesPage : Page
         if (series.Facts.Joined() is { Length: > 0 } facts)
             words.Children.Add(SeriesWords.SmallCaps(facts));
         if (series.Synopsis is { Length: > 0 } synopsis)
-        {
-            // Six lines, and all of it on a click; a screen reader reads it whole either way.
-            var text = Ui.Text(synopsis, "BodyTextBlockStyle");
-            text.MaxLines = 6;
-            text.TextTrimming = TextTrimming.WordEllipsis;
-            text.Margin = new Thickness(0, 4, 0, 0);
-            text.Tapped += (_, _) => text.MaxLines = text.MaxLines == 0 ? 6 : 0;
-            words.Children.Add(text);
-        }
+            words.Children.Add(Synopsis(synopsis));
         words.Children.Add(Actions(series));
         // The send rows are kept across redraws: they leave the old words for the new.
         // Parent can read null while they still sit in the old words, so the old words are kept.
@@ -283,35 +279,119 @@ public sealed partial class SeriesPage : Page
         drawnWords = words;
         head.Children.Add(words);
         Ui.RestoreFocus(head, focus);
+        if (!headDrawn)
+        {
+            headDrawn = true;
+            FocusAction();
+        }
     }
 
-    /// <summary>The amber action naming the chapter and page, then Status, Download and More.</summary>
-    StackPanel Actions(SeriesView series)
+    /// <summary>
+    /// The synopsis in four lines, then More under it where the text is cut, as on a show's page.
+    /// More opens the rest in place, the height easing to the new one on the standard token so the
+    /// actions under it move with it, and focus goes to the text. A screen reader reads it whole
+    /// either way.
+    /// </summary>
+    static StackPanel Synopsis(string synopsis)
     {
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(0, 12, 0, 0) };
+        const int lines = 4;
+        var place = new StackPanel { Margin = new Thickness(0, 4, 0, 0) };
+        var text = Ui.Text(synopsis, "BodyTextBlockStyle");
+        text.MaxLines = lines;
+        text.TextTrimming = TextTrimming.WordEllipsis;
+        text.IsTextSelectionEnabled = true;
+        var more = new HyperlinkButton { Content = T.ActionMore, Style = Ui.Res<Style>("SilkLinkLeadingStyle"), Visibility = Visibility.Collapsed };
+        // The page's menu is More too: this one says what it does.
+        AutomationProperties.SetName(more, T.TitleSynopsisMore);
+        text.IsTextTrimmedChanged += (sender, _) =>
+        {
+            if (sender.MaxLines != 0)
+                more.Visibility = sender.IsTextTrimmed ? Visibility.Visible : Visibility.Collapsed;
+        };
+        more.Click += (_, _) =>
+        {
+            var from = place.ActualHeight;
+            text.MaxLines = 0;
+            more.Visibility = Visibility.Collapsed;
+            place.Measure(new global::Windows.Foundation.Size(place.ActualWidth > 0 ? place.ActualWidth : double.PositiveInfinity, double.PositiveInfinity));
+            Motion.Height(place, from, place.DesiredSize.Height);
+            text.Focus(FocusState.Keyboard);
+        };
+        place.Children.Add(text);
+        place.Children.Add(more);
+        return place;
+    }
+
+    /// <summary>
+    /// The page took its first focus before the series was in, on whatever came first (the
+    /// chapters' order): once the header is drawn, focus starts on its main action instead,
+    /// unless the person has moved it.
+    /// </summary>
+    void FocusAction() => DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
+    {
+        if (XamlRoot is not { } root || mainAction is not { IsLoaded: true } action)
+            return;
+        var focused = FocusManager.GetFocusedElement(root) as DependencyObject;
+        if (focused is Control { FocusState: not FocusState.Programmatic })
+            return;
+        if (focused is not null && focused != this && !Within(focused, this))
+            return;
+        if (focused is not null && Within(focused, head))
+            return;
+        action.Focus(FocusState.Programmatic);
+    });
+
+    static bool Within(DependencyObject at, DependencyObject root)
+    {
+        for (var up = at; up is not null; up = VisualTreeHelper.GetParent(up))
+            if (up == root)
+                return true;
+        return false;
+    }
+
+    /// <summary>
+    /// The amber action naming the chapter and page, then Status, Download and More. In a narrow
+    /// window or a longer language the row wraps, so every button stays in sight.
+    /// </summary>
+    Player.WrapRow Actions(SeriesView series)
+    {
+        var row = new Player.WrapRow { Gap = 8, Margin = new Thickness(0, 12, 0, 0) };
+        Button main;
         if (SeriesWords.Action(series.Action) is { } words)
         {
-            var main = new Button { Content = words, Style = Ui.Res<Style>("PrimaryActionStyle") };
+            main = new Button { Content = words, Style = Ui.Res<Style>("PrimaryActionStyle") };
             main.Click += (_, _) => Perform(series);
-            row.Children.Add(main);
         }
         else
         {
             // No source has it: the way on is another source.
-            var another = new Button { Content = T.SeriesReadFromAnother, MinHeight = 40 };
-            another.Click += async (_, _) => await SeriesDialogs.ReadFrom(ctx, XamlRoot, work);
-            row.Children.Add(another);
+            main = new Button { Content = T.SeriesReadFromAnother, MinHeight = 40 };
+            main.Click += async (_, _) => await SeriesDialogs.ReadFrom(ctx, XamlRoot, work);
         }
-        row.Children.Add(Menu(series.List is { } list ? SeriesWords.List(list) : T.SeriesAddToList, StatusMenu(series)));
-        row.Children.Add(Menu(T.SeriesDownload, DownloadMenu()));
-        var more = new DropDownButton { Content = new FontIcon { Glyph = "", FontSize = 14 }, MinHeight = 40, Flyout = MoreMenu(series) };
+        row.Children.Add(main);
+        mainAction = main;
+        var status = series.List is { } list ? SeriesWords.List(list) : T.SeriesAddToList;
+        row.Children.Add(Menu(status, StatusMenu(series), status));
+        row.Children.Add(Menu(T.SeriesDownload, DownloadMenu(), T.SeriesDownload));
+        var more = new DropDownButton { Content = new FontIcon { Glyph = "\uE712", FontSize = 14 }, MinHeight = 40, Flyout = Named(MoreMenu(series), T.ActionMore) };
         AutomationProperties.SetName(more, T.ActionMore);
         ToolTipService.SetToolTip(more, T.ActionMore);
         row.Children.Add(more);
         return row;
     }
 
-    static DropDownButton Menu(string words, MenuFlyout flyout) => new() { Content = words, MinHeight = 40, Flyout = flyout };
+    static DropDownButton Menu(string words, MenuFlyout flyout, string name) => new() { Content = words, MinHeight = 40, Flyout = Named(flyout, name) };
+
+    /// <summary>A menu a screen reader names as its button is named, on the menu's own look.</summary>
+    static MenuFlyout Named(MenuFlyout flyout, string name)
+    {
+        if (!Application.Current.Resources.TryGetValue("DefaultMenuFlyoutPresenterStyle", out var basis) || basis is not Style look)
+            return flyout;
+        var style = new Style(typeof(MenuFlyoutPresenter)) { BasedOn = look };
+        style.Setters.Add(new Setter(AutomationProperties.NameProperty, name));
+        flyout.MenuFlyoutPresenterStyle = style;
+        return flyout;
+    }
 
     void Perform(SeriesView series)
     {
@@ -372,7 +452,7 @@ public sealed partial class SeriesPage : Page
         menu.Items.Add(SeriesWords.Item(T.DownloadNext(5), () => ctx.Known.Reading.Download(work, new DownloadPick.NextUnread(5))));
         menu.Items.Add(SeriesWords.Item(T.DownloadNext(10), () => ctx.Known.Reading.Download(work, new DownloadPick.NextUnread(10))));
         menu.Items.Add(SeriesWords.Item(T.DownloadUnread, () => ctx.Known.Reading.Download(work, new DownloadPick.Unread()), enabled: unread));
-        var toFetch = volumes.Where(g => g.Chapters.Any(c => c.Download is null)).ToList();
+        var toFetch = SeriesWords.DownloadVolumes(volumes).Where(g => g.Chapters.Any(c => c.Download is null)).ToList();
         if (toFetch.Count > 0)
             menu.Items.Add(new MenuFlyoutSeparator());
         var novel = Series?.Medium == Medium.Novel;
@@ -508,7 +588,8 @@ public sealed partial class SeriesPage : Page
         chapters.Children.Clear();
 
         var volumes = read?.Volumes ?? [];
-        var byVolume = volumes.Any(v => v.Volume is { Length: > 0 }) && volumes.Length > 1;
+        // A flat list (Show volumes off, or too few chapters with a volume) is its rows alone.
+        var byVolume = volumes is not [{ Flat: true }] && volumes.Any(v => v.Volume is { Length: > 0 }) && volumes.Length > 1;
         var top = new Grid { Margin = new Thickness(0, 8, 0, 8) };
         top.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         top.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -521,6 +602,13 @@ public sealed partial class SeriesPage : Page
         if (read is null)
         {
             chapters.Children.Add(States.Rows(6, 0, 0, 46, 0));
+            return;
+        }
+        if (read.Failure is ReadingFailure.NoSource)
+        {
+            // Nothing was ever read from a source, so nothing failed: an empty state that leads to Read from.
+            chapters.Children.Add(States.Unavailable(T.SeriesNoSourceTitle, T.SeriesNoSourceLine, T.SeriesNoSourceSearch,
+                () => _ = SeriesDialogs.ReadFrom(ctx, XamlRoot, work)));
             return;
         }
         if (read.Failure is { } failure)
@@ -675,9 +763,12 @@ public sealed partial class SeriesPage : Page
         }
         grid.Children.Add(words);
 
-        if (row.Download is ChapterDownloadState.Downloading { Total: > 0 } d)
+        if (row.Download is ChapterDownloadState.Downloading or ChapterDownloadState.Queued or ChapterDownloadState.WaitsForWifi)
         {
-            var ring = new ProgressRing { IsIndeterminate = false, Value = 100.0 * d.DoneValue / d.Total, Width = 20, Height = 20 };
+            // Queued, waiting for Wi-Fi or just started (no count yet): the same stop, with no progress to show.
+            var ring = row.Download is ChapterDownloadState.Downloading { Total: > 0 } d
+                ? new ProgressRing { IsIndeterminate = false, Value = 100.0 * d.DoneValue / d.Total, Width = 20, Height = 20 }
+                : new ProgressRing { IsIndeterminate = row.Download is ChapterDownloadState.Downloading, Value = 0, Width = 20, Height = 20 };
             // The stop square in the ring, as on the Mac and Android.
             var square = new Microsoft.UI.Xaml.Shapes.Rectangle
             {

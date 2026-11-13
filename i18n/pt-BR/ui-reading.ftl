@@ -255,7 +255,6 @@ read-search-nothing-browse = Nada corresponde a estes filtros
 read-search-nothing-line = Tente outras palavras ou um título em outro idioma.
 read-search-nothing-filters-line = Menos filtros podem achar mais.
 read-search-clear-filters = Limpar filtros
-read-sort-popular = Popular
 read-sort-trending = Em alta
 read-sort-score = Nota
 read-sort-newest = Mais recentes

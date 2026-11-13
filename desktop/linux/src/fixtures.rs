@@ -171,6 +171,12 @@ pub const HOME_WORLD_VAR: &str = "KAERI_FIXTURES_HOME_WORLD";
 pub static OFFLINE_SCENE: std::sync::atomic::AtomicBool =
     std::sync::atomic::AtomicBool::new(false);
 
+/// Set by the reading scene, so the network path says online and the chapters queued there
+/// download, from the scene's own sources. The other scenes leave the network unsaid: their
+/// seeded queues, the downloads scene's rows in every state among them, hold still for shots.
+pub static ONLINE_SCENE: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
+
 /// How long a slow scene holds each of Home's discovery answers: long enough for the shots to
 /// catch the placeholders and the activity line after four seconds, inside the wait the slow
 /// scene gives the client.
@@ -207,6 +213,9 @@ pub enum HomeScene {
     Reading,
     /// [`Self::Reading`] with keeping chapters ready on and the Downloads place filled.
     ReadingDownloads,
+    /// [`Self::Reading`] with the manga a long series: 120 chapters listed, 1 to 59 read and
+    /// chapter 60 at page 9 of 20.
+    ReadingLong,
     /// Watching with no source installed.
     Sourceless,
 }
@@ -226,8 +235,14 @@ impl HomeScene {
             "sourceless" => Self::Sourceless,
             "reading" => Self::Reading,
             "reading-downloads" => Self::ReadingDownloads,
+            "reading-long" => Self::ReadingLong,
             _ => return None,
         })
+    }
+
+    /// Whether the scene has reading on, with its books and history.
+    fn reading(self) -> bool {
+        matches!(self, Self::Reading | Self::ReadingDownloads | Self::ReadingLong)
     }
 
     fn signed_in(self) -> bool {
@@ -278,8 +293,13 @@ pub async fn start(root: &Path, scene: &Scene, host: Arc<dyn Host>) -> Result<St
     let world = world_asked().then(|| HomeWorld::at(HomeClock::in_zone(now, &clock.zone())));
     if !scene.demo {
         seed_scene(&store, scene.home, now);
-        if matches!(scene.home, HomeScene::Reading | HomeScene::ReadingDownloads) {
-            crate::fixtures_reading::seed_books(&store, &paths.data_dir, now);
+        if scene.home.reading() {
+            crate::fixtures_reading::seed_books(
+                &store,
+                &paths.data_dir,
+                scene.home == HomeScene::ReadingLong,
+                now,
+            );
         }
     }
     if let Some(world) = world.as_ref().filter(|_| scene.home.world_history()) {
@@ -309,7 +329,7 @@ pub async fn start(root: &Path, scene: &Scene, host: Arc<dyn Host>) -> Result<St
     server.add_titles(fixtures::long_franchise());
     server.serve_art();
     let _ = ART_BASE.set(server.art_base());
-    if !scene.demo && matches!(scene.home, HomeScene::Reading | HomeScene::ReadingDownloads) {
+    if !scene.demo && scene.home.reading() {
         crate::fixtures_reading::keep_books(&store, &server.art_base(), now);
     }
     // Home's world: this season's titles, the rest in the browse, and their broadcasts.
@@ -340,6 +360,9 @@ pub async fn start(root: &Path, scene: &Scene, host: Arc<dyn Host>) -> Result<St
         HomeScene::Offline => {
             OFFLINE_SCENE.store(true, std::sync::atomic::Ordering::Relaxed);
             server.fail_always(Failure::Disconnect)
+        }
+        HomeScene::Reading | HomeScene::ReadingLong if !scene.demo => {
+            ONLINE_SCENE.store(true, std::sync::atomic::Ordering::Relaxed);
         }
         _ => {}
     }
@@ -513,7 +536,8 @@ fn write_config(file: &Path, demo: bool, home: HomeScene) -> Result<(), String> 
                  [playback]\nskip_opening = false\nupscaling = \"off\"\n{}{}",
                     if demo { "\n[sources]\ndemo = true\n" } else { "" },
                     match home {
-                        HomeScene::Reading => "\n[reading]\nkaeri_is_for = \"both\"\n",
+                        HomeScene::Reading | HomeScene::ReadingLong =>
+                            "\n[reading]\nkaeri_is_for = \"both\"\n",
                         HomeScene::ReadingDownloads => {
                             "\n[reading]\nkaeri_is_for = \"both\"\nkeep_chapters_ready = true\n"
                         }
@@ -547,11 +571,12 @@ fn seed_scene(store: &Store, scene: HomeScene, now: i64) {
         HomeScene::Watching | HomeScene::Slow | HomeScene::Failed | HomeScene::Sourceless => {
             seed_history(store, now)
         }
-        HomeScene::Reading | HomeScene::ReadingDownloads => {
+        HomeScene::Reading | HomeScene::ReadingDownloads | HomeScene::ReadingLong => {
             seed_history(store, now);
             crate::fixtures_reading::seed_reading(
                 store,
                 scene == HomeScene::ReadingDownloads,
+                scene == HomeScene::ReadingLong,
                 now,
             );
         }

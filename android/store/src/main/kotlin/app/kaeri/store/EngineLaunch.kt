@@ -8,6 +8,7 @@ import java.io.File
 import app.kaeri.engine.ffi.FfiBackground
 import app.kaeri.engine.ffi.FfiDirs
 import app.kaeri.engine.ffi.FfiEngine
+import app.kaeri.engine.ffi.FfiFolderAccess
 import app.kaeri.engine.ffi.FfiHost
 import app.kaeri.engine.ffi.FfiPageDecoder
 import app.kaeri.engine.ffi.FfiPlatform
@@ -76,6 +77,8 @@ data class EngineLaunch(
     val audioTap: Boolean = true,
     /** The platform's image decoder for page formats the engine cannot read, AVIF on e-ink. */
     val pageDecoder: FfiPageDecoder? = PlatformPageDecoder(),
+    /** The way into book folders picked in the system folder picker: [PickedFolders] in the app. */
+    val folderAccess: FfiFolderAccess? = null,
 ) {
     /** Which engine. */
     sealed interface Engine {
@@ -108,6 +111,7 @@ data class EngineLaunch(
             audioTap = audioTap,
             reading = engine == Engine.App,
             pageDecoder = pageDecoder,
+            folderAccess = folderAccess,
         )
 
     /** Stand the engine up. Blocks while it opens its files, so call it off the main thread. */
@@ -335,11 +339,17 @@ enum class FixtureScene {
     /** [READING_HOME] with the manga read further on Kim's iPad. */
     READER_MOVED,
 
+    /** [READING_HOME] with the manga a long series, chapter 60 of 120 open. */
+    READER_LONG,
+
     /** Reading on, set to Read, e-ink on and the screen in greys. */
     EINK_GREY,
 
     /** Reading on, set to Read, e-ink on and the colour question still to ask. */
     EINK_KALEIDO_UNSURE,
+
+    /** [EINK_GREY] with [READER_LONG]'s history and long manga. */
+    EINK_LONG,
 
     /** Reading off as in release builds, with Both kept: the medium is Watch. */
     READING_DARK,

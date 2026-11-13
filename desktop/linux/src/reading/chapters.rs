@@ -6,7 +6,7 @@
 
 use std::{
     cell::{Cell, RefCell},
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     rc::Rc,
 };
 
@@ -16,6 +16,22 @@ use kaeri_core::books::ChapterId;
 use kaeri_i18n::t;
 use kaeri_model::reader::{Leaf, PageEncoding, PageFile, PixelFormat};
 use kaeri_model::reading::{ChapterReadState, ChapterRow, VolumeGroup};
+
+/// How many times one opening moves the list towards its open chapter before it settles for where
+/// the row is.
+const CENTRE_MOVES: u8 = 8;
+
+/// One step of centring the open chapter.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum Centring {
+    /// The row is as near the middle as the list's ends allow, or there is nothing to centre.
+    Done,
+    /// The list moved towards it: the layout this asks for looks again.
+    Moved,
+    /// Not laid out yet: the window or popover is still being mapped, so GTK has not placed the
+    /// row. The next layout looks again.
+    Waiting,
+}
 
 /// A thumbnail's width in the grid, and what it is decoded to: twice that, for a 2x screen.
 const THUMB_WIDTH: i32 = 84;
@@ -46,16 +62,40 @@ pub struct Here {
 /// Where the popover sends what is picked.
 type Asker = Rc<dyn Fn(Ask)>;
 
+/// The popover's size on the reader board.
+const WIDTH: i32 = 520;
+const HEIGHT: i32 = 480;
+
+/// A popover's `board` size in a `window`: at most the window less 16 px on each side across, and
+/// less room for the group under it down, never under 200 by 200.
+pub fn fit_size(board: (i32, i32), window: (i32, i32)) -> (i32, i32) {
+    if window.0 <= 0 || window.1 <= 0 {
+        return board;
+    }
+    (board.0.min(window.0 - 32).max(200), board.1.min(window.1 - 220).max(200))
+}
+
 pub struct Chapters {
     pub popover: gtk::Popover,
+    /// What the popover holds, at the board's size or less in a small window.
+    column: gtk::Box,
     title: gtk::Label,
     tabs: adw::ToggleGroup,
     stack: gtk::Stack,
     model: gtk::StringList,
     grid: gtk::GridView,
-    list: gtk::Box,
+    /// The chapters, a row each, drawn as they scroll into view: a series can list a thousand.
+    list: gtk::ListView,
+    entries: gio::ListStore,
+    /// The read volumes opened since the popover opened, by their place in `volumes`.
+    open_folds: Rc<RefCell<HashSet<usize>>>,
     volumes: RefCell<Option<Vec<VolumeGroup>>>,
     here: RefCell<Option<ChapterId>>,
+    /// The open chapter's row while it is bound, which the list centres on as it opens.
+    here_row: RefCell<glib::WeakRef<gtk::Widget>>,
+    /// The list still has to open on the open chapter: set as the popover fills, done once the
+    /// row sits in the middle.
+    centring: Cell<bool>,
     open_leaf: Cell<usize>,
     files: RefCell<HashMap<u32, PageFile>>,
     /// Thumbnails waiting for their page, by page.
@@ -64,6 +104,19 @@ pub struct Chapters {
 }
 
 impl Chapters {
+    /// The popover at the board's 520 by 480, or what a smaller window leaves of it.
+    pub fn fit(&self, window: (i32, i32)) {
+        let size = fit_size((WIDTH, HEIGHT), window);
+        if self.column.size_request() != size {
+            self.column.set_size_request(size.0, size.1);
+            // Five thumbnails a row on the board; fewer where the column is narrower, each
+            // with its padding.
+            let columns = ((size.0 - 36) / (THUMB_WIDTH + 12)).clamp(2, 5) as u32;
+            self.grid.set_min_columns(columns);
+            self.grid.set_max_columns(columns);
+        }
+    }
+
     pub fn new() -> Rc<Self> {
         let title = gtk::Label::new(None);
         title.add_css_class("reader-chapters-title");
@@ -95,7 +148,14 @@ impl Chapters {
             .vexpand(true)
             .build();
 
-        let list = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        let entries = gio::ListStore::new::<glib::BoxedAnyObject>();
+        let rows = gtk::SignalListItemFactory::new();
+        let list = gtk::ListView::new(
+            Some(gtk::NoSelection::new(Some(entries.clone()))),
+            Some(rows.clone()),
+        );
+        list.set_single_click_activate(true);
+        list.add_css_class("reader-chapter-list");
         let chapters = gtk::ScrolledWindow::builder()
             .hscrollbar_policy(gtk::PolicyType::Never)
             .child(&list)
@@ -107,7 +167,7 @@ impl Chapters {
         stack.add_named(&chapters, Some("chapters"));
         let column = gtk::Box::new(gtk::Orientation::Vertical, 14);
         column.add_css_class("reader-chapters");
-        column.set_size_request(520, 480);
+        column.set_size_request(WIDTH, HEIGHT);
         column.append(&top);
         column.append(&stack);
         let popover = gtk::Popover::new();
@@ -115,14 +175,19 @@ impl Chapters {
 
         let this = Rc::new(Self {
             popover,
+            column,
             title,
             tabs,
             stack,
             model,
             grid,
             list,
+            entries,
+            open_folds: Rc::default(),
             volumes: RefCell::default(),
             here: RefCell::default(),
+            here_row: RefCell::default(),
+            centring: Cell::new(false),
             open_leaf: Cell::new(0),
             files: RefCell::default(),
             waiting: RefCell::default(),
@@ -163,6 +228,57 @@ impl Chapters {
                     return;
                 };
                 this.bind(item);
+            }
+        });
+        rows.connect_bind({
+            let this = Rc::downgrade(&this);
+            move |_, item| {
+                let (Some(this), Some(item)) =
+                    (this.upgrade(), item.downcast_ref::<gtk::ListItem>())
+                else {
+                    return;
+                };
+                let Some(entry) = item.item().and_downcast::<glib::BoxedAnyObject>() else {
+                    return;
+                };
+                let entry = entry.borrow::<Entry>();
+                // A chapter is the list's own row; a folded volume's row is inside its line.
+                let take = matches!(*entry, Entry::Chapter { .. });
+                item.set_activatable(take);
+                item.set_focusable(take);
+                item.set_accessible_label(&entry_label(&entry));
+                let widget = match &*entry {
+                    Entry::Fold { group, name, line } => this.fold(*group, name, line),
+                    other => entry_widget(other),
+                };
+                if matches!(*entry, Entry::Chapter { here: true, .. }) {
+                    this.here_row.replace(widget.downgrade());
+                }
+                item.set_child(Some(&widget));
+            }
+        });
+        rows.connect_unbind(|_, item| {
+            if let Some(item) = item.downcast_ref::<gtk::ListItem>() {
+                item.set_child(gtk::Widget::NONE);
+            }
+        });
+        this.list.connect_activate({
+            let this = Rc::downgrade(&this);
+            move |_, position| {
+                if let Some(this) = this.upgrade() {
+                    this.picked(position);
+                }
+            }
+        });
+        // The chapters tab shown: a manga's list opens on its open chapter as the tab does.
+        this.list.connect_map({
+            let this = Rc::downgrade(&this);
+            move |_| {
+                if let Some(this) = this.upgrade()
+                    && this.centring.get()
+                {
+                    this.centre_when_laid_out();
+                }
             }
         });
         this.grid.connect_activate({
@@ -211,19 +327,110 @@ impl Chapters {
         let tab = if here.pages { "pages" } else { "chapters" };
         self.tabs.set_active_name(Some(tab));
         self.stack.set_visible_child_name(tab);
+        self.open_folds.borrow_mut().clear();
         self.draw_list();
-        // The open page and the open chapter in view.
-        let open = entries.iter().position(|(l, _)| *l == here.open_leaf);
+        // The open page in view before the grid is drawn.
+        if let Some(open) = entries.iter().position(|(l, _)| *l == here.open_leaf) {
+            self.grid.scroll_to(open as u32, gtk::ListScrollFlags::NONE, None);
+        }
+        // The open chapter in the middle of the list before it is drawn, so nothing scrolls:
+        // now when the list shows, else when its tab does.
+        self.centring.set(true);
+        if let Some(here) = self.here_position() {
+            self.list.scroll_to(here, gtk::ListScrollFlags::NONE, None);
+        }
+        if self.list.is_mapped() {
+            self.centre_when_laid_out();
+        }
+    }
+
+    /// Where the open chapter's row is in the list.
+    fn here_position(&self) -> Option<u32> {
+        (0..self.entries.n_items()).find(|&i| {
+            self.entries.item(i).and_downcast::<glib::BoxedAnyObject>().is_some_and(|e| {
+                matches!(*e.borrow::<Entry>(), Entry::Chapter { here: true, .. })
+            })
+        })
+    }
+
+    /// Centre the open chapter once the list is laid out and before the frame is painted: GDK
+    /// lays a frame out again, up to four times, while a layout asks for another, so the frame
+    /// painted has the row in place. A popover's surface maps a few layouts after the widget
+    /// does, and GTK places nothing until then, so those layouts only wait.
+    fn centre_when_laid_out(self: &Rc<Self>) {
+        let Some(clock) = self.list.frame_clock() else { return };
+        let handler: Rc<RefCell<Option<glib::SignalHandlerId>>> = Rc::default();
+        let moves = Cell::new(0u8);
         let this = Rc::downgrade(self);
-        glib::idle_add_local_once(move || {
-            let Some(this) = this.upgrade() else { return };
-            if let Some(open) = open {
-                this.grid.scroll_to(open as u32, gtk::ListScrollFlags::NONE, None);
-            }
-            if let Some(row) = find_here(this.list.upcast_ref()) {
-                row.grab_focus();
+        // After GTK's own handler, which allocates the popover and binds the rows.
+        let id = clock.connect_local("layout", true, {
+            let handler = handler.clone();
+            let clock = clock.clone();
+            move |_| {
+                let step = match this.upgrade() {
+                    // Closed before it was laid out: the next opening starts again.
+                    Some(this) if this.list.is_mapped() => this.centre_here(),
+                    _ => Centring::Done,
+                };
+                if step == Centring::Moved {
+                    moves.set(moves.get() + 1);
+                }
+                if (step == Centring::Done || moves.get() >= CENTRE_MOVES)
+                    && let Some(id) = handler.take()
+                {
+                    clock.disconnect(id);
+                }
+                None
             }
         });
+        handler.replace(Some(id));
+        clock.request_phase(gdk::FrameClockPhase::LAYOUT);
+    }
+
+    /// One step of centring the open chapter's row. Once it is as near the middle as the list's
+    /// ends allow, the row takes the focus.
+    fn centre_here(&self) -> Centring {
+        if !self.centring.get() {
+            return Centring::Done;
+        }
+        let Some(here) = self.here_position() else {
+            // Still loading: the chapters coming in look again. Not listed: the list stays at
+            // its top.
+            if self.volumes.borrow().is_some() {
+                self.centring.set(false);
+            }
+            return Centring::Done;
+        };
+        let Some(row) = self.here_row.borrow().upgrade() else {
+            // Not bound yet: bring it into the list and look again on the next layout.
+            self.list.scroll_to(here, gtk::ListScrollFlags::NONE, None);
+            return Centring::Waiting;
+        };
+        let (Some(bounds), Some(adjustment)) =
+            (row.compute_bounds(&self.list), self.list.vadjustment())
+        else {
+            return Centring::Waiting;
+        };
+        let page = adjustment.page_size();
+        // A row GTK has not placed yet has no size, and the scroll position does not say where
+        // it is. A scroll asked for before the list was laid out is dropped, so it is asked
+        // again until the row is in view.
+        if page <= 0.0 || !row.is_mapped() || bounds.height() <= 0.0 {
+            self.list.scroll_to(here, gtk::ListScrollFlags::NONE, None);
+            return Centring::Waiting;
+        }
+        let middle = f64::from(bounds.y() + bounds.height() / 2.0);
+        let to = (adjustment.value() + middle - page / 2.0)
+            .clamp(adjustment.lower(), (adjustment.upper() - page).max(adjustment.lower()));
+        if (to - adjustment.value()).abs() >= 1.0 {
+            adjustment.set_value(to);
+            return Centring::Moved;
+        }
+        self.centring.set(false);
+        // Keyboard focus and the screen reader start on the open chapter; it is in view, so this
+        // moves nothing.
+        self.list.scroll_to(here, gtk::ListScrollFlags::FOCUS, None);
+        Centring::Done
     }
 
     /// Show `tab` for a shot.
@@ -234,10 +441,14 @@ impl Chapters {
     }
 
     /// The series' chapters as the engine last listed them.
-    pub fn set_volumes(&self, volumes: Vec<VolumeGroup>) {
+    pub fn set_volumes(self: &Rc<Self>, volumes: Vec<VolumeGroup>) {
         self.volumes.replace(Some(volumes));
         if self.popover.is_visible() {
             self.draw_list();
+            // Chapters listed after the popover opened: the list opens on the open one now.
+            if self.centring.get() && self.list.is_mapped() {
+                self.centre_when_laid_out();
+            }
         }
     }
 
@@ -245,9 +456,12 @@ impl Chapters {
     pub fn clear(&self) {
         self.volumes.replace(None);
         self.here.replace(None);
+        self.centring.set(false);
         self.files.borrow_mut().clear();
         self.waiting.borrow_mut().clear();
         self.model.splice(0, self.model.n_items(), &[]);
+        self.entries.remove_all();
+        self.open_folds.borrow_mut().clear();
     }
 
     /// A page landed: thumbnails waiting for it show it.
@@ -290,122 +504,253 @@ impl Chapters {
     }
 
     fn draw_list(&self) {
-        while let Some(child) = self.list.first_child() {
-            self.list.remove(&child);
-        }
         let volumes = self.volumes.borrow().clone();
-        let Some(volumes) = volumes else {
-            let loading = crate::widgets::haze(&t::reader_chapters_loading(), "body");
-            loading.set_margin_top(16);
-            self.list.append(&loading);
+        let entries = match volumes {
+            Some(volumes) => entries(&volumes, self.here.borrow().as_ref()),
+            None => vec![Entry::Loading],
+        };
+        let entries: Vec<glib::BoxedAnyObject> =
+            entries.into_iter().map(glib::BoxedAnyObject::new).collect();
+        self.entries.splice(0, self.entries.n_items(), &entries);
+    }
+
+    /// A row was picked: a chapter opens, a read volume folds open or shut.
+    fn picked(&self, position: u32) {
+        let Some(entry) = self.entries.item(position).and_downcast::<glib::BoxedAnyObject>()
+        else {
             return;
         };
-        let here = self.here.borrow().clone();
-        for group in &volumes {
-            let name =
-                group.volume.as_deref().map_or_else(t::series_no_volume, t::series_volume);
-            let list = gtk::ListBox::new();
-            list.set_selection_mode(gtk::SelectionMode::None);
-            list.add_css_class("reader-chapter-list");
-            // A read volume folds into one line, unless the open chapter is in it.
-            let holds_here = group.chapters.iter().any(|c| Some(&c.id) == here.as_ref());
-            if group.all_read && volumes.len() > 1 && !holds_here {
-                let mut line = Vec::new();
-                if let (Some(low), Some(high)) = (group.chapters.first(), group.chapters.last())
-                {
-                    let number =
-                        |c: &ChapterRow| c.number.clone().unwrap_or_else(|| c.label.clone());
-                    line.push(t::series_chapter_range(&number(low), &number(high)));
+        let entry = entry.borrow::<Entry>().clone();
+        match entry {
+            Entry::Chapter { row, here, .. } => {
+                self.popover.popdown();
+                if !here {
+                    self.tell(Ask::Open(row.id));
                 }
-                line.push(t::series_volume_read());
-                let fold = adw::ExpanderRow::builder()
-                    .title(glib::markup_escape_text(&name))
-                    .subtitle(glib::markup_escape_text(&line.join(" \u{b7} ")))
-                    .build();
-                for chapter in &group.chapters {
-                    fold.add_row(&self.row(chapter, false));
-                }
-                list.append(&fold);
-                self.list.append(&list);
-                continue;
             }
-            if volumes.len() > 1 {
-                let heading = crate::widgets::haze(&name, "caption-heading");
-                heading.set_margin_top(14);
-                heading.set_margin_bottom(6);
-                heading.set_accessible_role(gtk::AccessibleRole::Heading);
-                self.list.append(&heading);
-            }
-            for chapter in &group.chapters {
-                list.append(&self.row(chapter, Some(&chapter.id) == here.as_ref()));
-            }
-            self.list.append(&list);
+            Entry::Fold { .. } | Entry::Heading(_) | Entry::Loading => {}
         }
     }
 
-    /// A chapter: its words, its title and state under them, the open one on the selected fill
-    /// and a new one with the water dot in a place every row keeps. No icon on any row.
-    fn row(&self, chapter: &ChapterRow, here: bool) -> adw::ActionRow {
-        let read = matches!(chapter.state, ChapterReadState::Read);
-        let mut under: Vec<String> = Vec::new();
-        if let Some(title) = chapter.title.as_deref().filter(|t| !t.is_empty()) {
-            under.push(title.to_owned());
-        }
-        let state = super::series::state_line(chapter);
-        if !state.is_empty() {
-            under.push(state);
-        }
-        let row = adw::ActionRow::builder()
-            .title(glib::markup_escape_text(&chapter.label))
-            .subtitle(glib::markup_escape_text(&under.join(" \u{b7} ")))
-            .title_lines(1)
-            .subtitle_lines(1)
-            .activatable(true)
+    /// A read volume folded into one line that opens to its chapters, drawn the first time it
+    /// opens. It stays open when its line scrolls away and back.
+    fn fold(&self, group: usize, name: &str, line: &str) -> gtk::Widget {
+        let fold = adw::ExpanderRow::builder()
+            .title(glib::markup_escape_text(name))
+            .subtitle(glib::markup_escape_text(line))
             .build();
-        if read {
-            row.add_css_class("reader-read");
-        }
-        if here {
-            row.add_css_class("reader-here");
-            row.upcast_ref::<gtk::Widget>()
-                .update_state(&[gtk::accessible::State::Selected(Some(true))]);
-        }
-        // Every row keeps the dot's place, so titles line up with and without it.
-        let slot = gtk::Box::new(gtk::Orientation::Horizontal, 0);
-        slot.set_width_request(6);
-        slot.set_valign(gtk::Align::Center);
-        if chapter.new_chapter && !read {
-            slot.add_css_class("home-new");
-        }
-        row.add_prefix(&slot);
-        let id = chapter.id.clone();
-        let popover = self.popover.downgrade();
-        let ask = self.ask.borrow().clone();
-        row.connect_activated(move |_| {
-            if let Some(popover) = popover.upgrade() {
-                popover.popdown();
+        let chapters = self
+            .volumes
+            .borrow()
+            .as_ref()
+            .and_then(|v| v.get(group))
+            .map(|g| g.chapters.clone())
+            .unwrap_or_default();
+        let filled = Cell::new(false);
+        let (popover, ask, open) =
+            (self.popover.downgrade(), self.ask.borrow().clone(), Rc::clone(&self.open_folds));
+        fold.connect_expanded_notify(move |fold| {
+            if fold.is_expanded() {
+                open.borrow_mut().insert(group);
+            } else {
+                open.borrow_mut().remove(&group);
             }
-            if !here && let Some(ask) = &ask {
-                ask(Ask::Open(id.clone()));
+            if fold.is_expanded() && !filled.replace(true) {
+                for chapter in &chapters {
+                    fold.add_row(&fold_row(chapter, &popover, ask.clone()));
+                }
             }
         });
-        row
+        // Before it is shown, so it opens without the slide. The borrow ends before
+        // set_expanded, whose notify handler above borrows the same set mutably.
+        let was_open = self.open_folds.borrow().contains(&group);
+        fold.set_expanded(was_open);
+        let list = gtk::ListBox::new();
+        list.set_selection_mode(gtk::SelectionMode::None);
+        list.add_css_class("reader-chapter-list");
+        list.append(&fold);
+        list.upcast()
     }
 }
 
-/// The open chapter's row among `widget` and what it holds.
-fn find_here(widget: &gtk::Widget) -> Option<gtk::Widget> {
-    if widget.has_css_class("reader-here") {
-        return Some(widget.clone());
+/// A chapter in an opened volume: picking it opens it.
+fn fold_row(
+    chapter: &ChapterRow,
+    popover: &glib::WeakRef<gtk::Popover>,
+    ask: Option<Asker>,
+) -> adw::ActionRow {
+    let read = matches!(chapter.state, ChapterReadState::Read);
+    let row = adw::ActionRow::builder()
+        .title(glib::markup_escape_text(&chapter.label))
+        .subtitle(glib::markup_escape_text(&under_line(chapter)))
+        .title_lines(1)
+        .subtitle_lines(1)
+        .activatable(true)
+        .build();
+    if read {
+        row.add_css_class("reader-read");
     }
-    let mut child = widget.first_child();
-    while let Some(c) = child {
-        if let Some(found) = find_here(&c) {
-            return Some(found);
+    // Every row keeps the dot's place, so titles line up with and without it.
+    let slot = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+    slot.set_width_request(6);
+    slot.set_valign(gtk::Align::Center);
+    if chapter.new_chapter && !read {
+        slot.add_css_class("home-new");
+    }
+    row.add_prefix(&slot);
+    let (id, popover) = (chapter.id.clone(), popover.clone());
+    row.connect_activated(move |_| {
+        if let Some(popover) = popover.upgrade() {
+            popover.popdown();
         }
-        child = c.next_sibling();
+        if let Some(ask) = &ask {
+            ask(Ask::Open(id.clone()));
+        }
+    });
+    row
+}
+
+/// A chapter's title and state, under its words.
+fn under_line(chapter: &ChapterRow) -> String {
+    let mut under: Vec<String> = Vec::new();
+    if let Some(title) = chapter.title.as_deref().filter(|t| !t.is_empty()) {
+        under.push(title.to_owned());
     }
-    None
+    let state = super::series::state_line(chapter);
+    if !state.is_empty() {
+        under.push(state);
+    }
+    under.join(" \u{b7} ")
+}
+
+/// A line of the Chapters list.
+#[derive(Clone)]
+enum Entry {
+    /// The chapters have not come yet.
+    Loading,
+    /// A volume's name, when the series has more than one.
+    Heading(String),
+    /// A read volume folded into one line, unless the open chapter is in it.
+    Fold {
+        group: usize,
+        name: String,
+        line: String,
+    },
+    Chapter {
+        row: Box<ChapterRow>,
+        here: bool,
+    },
+}
+
+/// The lines for `volumes`, with the open chapter `here` marked.
+fn entries(volumes: &[VolumeGroup], here: Option<&ChapterId>) -> Vec<Entry> {
+    let mut entries = Vec::new();
+    for (index, group) in volumes.iter().enumerate() {
+        let name = group.volume.as_deref().map_or_else(t::series_no_volume, t::series_volume);
+        let holds_here = group.chapters.iter().any(|c| Some(&c.id) == here);
+        if group.all_read && volumes.len() > 1 && !holds_here {
+            let mut line = Vec::new();
+            if let (Some(low), Some(high)) = (group.chapters.first(), group.chapters.last()) {
+                let number =
+                    |c: &ChapterRow| c.number.clone().unwrap_or_else(|| c.label.clone());
+                line.push(t::series_chapter_range(&number(low), &number(high)));
+            }
+            line.push(t::series_volume_read());
+            let line = line.join(" \u{b7} ");
+            entries.push(Entry::Fold { group: index, name, line });
+            continue;
+        }
+        if volumes.len() > 1 {
+            entries.push(Entry::Heading(name));
+        }
+        entries.extend(group.chapters.iter().map(|chapter| Entry::Chapter {
+            row: Box::new(chapter.clone()),
+            here: Some(&chapter.id) == here,
+        }));
+    }
+    entries
+}
+
+/// What a line shows. A chapter: its words, its title and state under them, the open one on the
+/// selected fill and a new one with the water dot in a place every row keeps. No icon on any
+/// row. A folded volume: its name and range, with the arrow that says it opens.
+fn entry_widget(entry: &Entry) -> gtk::Widget {
+    match entry {
+        Entry::Loading => {
+            let loading = crate::widgets::haze(&t::reader_chapters_loading(), "body");
+            loading.set_margin_top(16);
+            loading.upcast()
+        }
+        Entry::Heading(name) => {
+            let heading = crate::widgets::haze(name, "caption-heading");
+            heading.set_margin_top(14);
+            heading.set_margin_bottom(6);
+            heading.set_accessible_role(gtk::AccessibleRole::Heading);
+            heading.upcast()
+        }
+        // Drawn by the popover, which opens it: see `Chapters::fold`.
+        Entry::Fold { name, .. } => crate::widgets::haze(name, "body").upcast(),
+        Entry::Chapter { row: chapter, here } => {
+            let read = matches!(chapter.state, ChapterReadState::Read);
+            let row = two_lines(&chapter.label, &under_line(chapter));
+            // Every row keeps the dot's place, so titles line up with and without it.
+            let slot = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+            slot.set_width_request(6);
+            slot.set_valign(gtk::Align::Center);
+            if chapter.new_chapter && !read {
+                slot.add_css_class("home-new");
+            }
+            row.prepend(&slot);
+            if read {
+                row.add_css_class("reader-read");
+            }
+            if *here {
+                row.add_css_class("reader-here");
+                row.update_state(&[gtk::accessible::State::Selected(Some(true))]);
+            }
+            row.upcast()
+        }
+    }
+}
+
+/// What a screen reader says for a line: its words, as the row shows them.
+fn entry_label(entry: &Entry) -> String {
+    match entry {
+        Entry::Loading => t::reader_chapters_loading(),
+        Entry::Heading(name) => name.clone(),
+        Entry::Fold { name, line, .. } => [name.as_str(), line].join(", "), // i18n-skip
+        Entry::Chapter { row, .. } => {
+            let under = under_line(row);
+            if under.is_empty() {
+                row.label.clone()
+            } else {
+                [row.label.as_str(), &under].join(", ") // i18n-skip
+            }
+        }
+    }
+}
+
+/// A row with a title and, when there is one, a line under it, each cut to one line.
+fn two_lines(title: &str, line: &str) -> gtk::Box {
+    let words = gtk::Box::new(gtk::Orientation::Vertical, 2);
+    words.set_valign(gtk::Align::Center);
+    words.set_hexpand(true);
+    let title = gtk::Label::new(Some(title));
+    title.add_css_class("reader-chapter-title");
+    title.set_xalign(0.0);
+    title.set_ellipsize(gtk::pango::EllipsizeMode::End);
+    words.append(&title);
+    if !line.is_empty() {
+        let line = gtk::Label::new(Some(line));
+        line.add_css_class("reader-chapter-line");
+        line.set_xalign(0.0);
+        line.set_ellipsize(gtk::pango::EllipsizeMode::End);
+        words.append(&line);
+    }
+    let row = gtk::Box::new(gtk::Orientation::Horizontal, 12);
+    row.add_css_class("reader-chapter");
+    row.append(&words);
+    row
 }
 
 /// Every page of the chapter as the person counts them, with the leaf it is on: both halves of
@@ -482,6 +827,18 @@ fn thumbnail(file: &PageFile, width: u32) -> Option<(u32, u32, Vec<u8>)> {
             }
         }
     };
+    // With crop borders on, the original comes with the part to show.
+    let image = match file.crop {
+        Some(c)
+            if c.width > 0
+                && c.height > 0
+                && c.x + c.width <= image.width()
+                && c.y + c.height <= image.height() =>
+        {
+            image.crop_imm(c.x, c.y, c.width, c.height)
+        }
+        _ => image,
+    };
     let small = image.thumbnail(width, width.saturating_mul(4)).into_rgba8();
     let (w, h) = small.dimensions();
     Some((w, h, small.into_raw()))
@@ -490,10 +847,21 @@ fn thumbnail(file: &PageFile, width: u32) -> Option<(u32, u32, Vec<u8>)> {
 #[cfg(test)]
 mod tests {
     use kaeri_model::reader::{
-        Leaf, LeafPart, PageEncoding, PageFile, PageKind, PixelFormat, UnitRect,
+        Leaf, LeafPart, PageEncoding, PageFile, PageKind, PixelFormat, PixelRect, UnitRect,
     };
 
-    use super::{entry, page_entries, thumbnail};
+    use super::{entry, fit_size, page_entries, thumbnail};
+
+    /// The board's 520 by 480 where the window has room, less in a narrow or short one.
+    #[test]
+    fn the_popover_fits_the_window() {
+        assert_eq!(fit_size((520, 480), (1280, 800)), (520, 480));
+        assert_eq!(fit_size((520, 480), (360, 780)), (328, 480));
+        assert_eq!(fit_size((520, 480), (360, 500)), (328, 280));
+        assert_eq!(fit_size((520, 480), (100, 100)), (200, 200));
+        // Not laid out yet: the board's size.
+        assert_eq!(fit_size((520, 480), (0, 0)), (520, 480));
+    }
 
     fn leaf(index: u32, pages: &[u32], end_page: bool) -> Leaf {
         let part = |page| LeafPart {
@@ -504,6 +872,7 @@ mod tests {
             rotate: false,
             half: None,
             ratio: None,
+            strip: None,
         };
         Leaf { index, parts: pages.iter().map(|&page| part(page)).collect(), end_page }
     }
@@ -560,11 +929,238 @@ mod tests {
     }
 
     #[test]
+    fn an_original_shows_only_its_crop() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("page.png");
+        // White borders 40 pixels wide round a dark page.
+        let page = image::RgbImage::from_fn(400, 600, |x, y| {
+            let inside = (40..360).contains(&x) && (40..560).contains(&y);
+            if inside { image::Rgb([30, 30, 30]) } else { image::Rgb([255, 255, 255]) }
+        });
+        page.save(&path).unwrap();
+        let file = PageFile {
+            path: path.display().to_string(),
+            encoding: PageEncoding::Original { mime: "image/png".into() },
+            width: 400,
+            height: 600,
+            crop: Some(PixelRect { x: 40, y: 40, width: 320, height: 520 }),
+            colour: false,
+            bytes: 0,
+        };
+        let (tw, th, rgba) = thumbnail(&file, 160).unwrap();
+        assert_eq!((tw, th), (160, 260));
+        // The corner is the page, not its border.
+        assert_eq!(&rgba[..3], &[30, 30, 30]);
+    }
+
+    #[test]
     fn a_missing_or_short_page_has_no_thumbnail() {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("short.raw");
         std::fs::write(&path, [0_u8; 10]).unwrap();
         let file = raw(&path, PixelFormat::Rgba8, 40, 10, 10);
         assert!(thumbnail(&file, 168).is_none());
+    }
+}
+
+#[cfg(test)]
+mod centring {
+    use std::{cell::Cell, rc::Rc};
+
+    use adw::prelude::*;
+    use kaeri_core::books::ChapterId;
+    use kaeri_model::reading::{ChapterReadState, ChapterRow, VolumeGroup};
+
+    use super::{Chapters, Here};
+    use crate::gtk_test::{pump, run};
+
+    fn chapter(n: usize) -> ChapterRow {
+        ChapterRow {
+            id: ChapterId(format!("c{n}")),
+            label: format!("Chapter {n}"), // i18n-skip
+            state: ChapterReadState::Unread,
+            number: Some(n.to_string()),
+            title: None,
+            volume: None,
+            published: None,
+            pages: None,
+            new_chapter: false,
+            download: None,
+            versions: 1,
+            bookmarked: false,
+            version_label: None,
+            read_at: None,
+            line: Vec::new(),
+            gone_from_source: false,
+            parts: 1,
+            missing_parts: Vec::new(),
+            part_groups: Vec::new(),
+            other_group: false,
+            group_language: None,
+            other_source: None,
+            on_device: false,
+        }
+    }
+
+    /// The popover's content opened on chapter `here` of `count`, filled before it shows, as
+    /// the reader fills the popover. Drawn in a window of its own, since a headless X server
+    /// shows no popover. Gives the list's scroll position when the first frame was painted.
+    fn open(count: usize, here: usize) -> (gtk::Window, Rc<Chapters>, Rc<Cell<Option<f64>>>) {
+        let chapters = Chapters::new();
+        chapters.set_volumes(vec![VolumeGroup {
+            volume: None,
+            title: None,
+            chapters: (1..=count).map(chapter).collect(),
+            all_read: false,
+            flat: false,
+        }]);
+        let content = chapters.popover.child().expect("the popover has its content");
+        chapters.popover.set_child(gtk::Widget::NONE);
+        let window = gtk::Window::builder().default_width(700).default_height(700).build();
+        window.set_child(Some(&content));
+        chapters.show_here(Here {
+            chapter: ChapterId(format!("c{here}")),
+            label: format!("Chapter {here}"), // i18n-skip
+            pages: false,
+            rtl: false,
+            leaves: Vec::new(),
+            open_leaf: 0,
+            files: Default::default(),
+        });
+        let painted: Rc<Cell<Option<f64>>> = Rc::default();
+        chapters.list.connect_map({
+            let painted = painted.clone();
+            move |list| {
+                let Some(clock) = list.frame_clock() else { return };
+                let list = list.clone();
+                let painted = painted.clone();
+                clock.connect_local("after-paint", false, move |_| {
+                    if painted.get().is_none() {
+                        painted.set(list.vadjustment().map(|a| a.value()));
+                    }
+                    None
+                });
+            }
+        });
+        window.present();
+        pump(400);
+        (window, chapters, painted)
+    }
+
+    fn adjustment(chapters: &Chapters) -> gtk::Adjustment {
+        chapters.list.vadjustment().expect("the list scrolls")
+    }
+
+    #[test]
+    fn the_open_chapter_opens_in_the_middle_with_nothing_scrolled() {
+        run(|| {
+            let (window, chapters, painted) = open(120, 60);
+            let row = chapters.here_row.borrow().upgrade().expect("the open chapter is drawn");
+            let bounds = row.compute_bounds(&chapters.list).expect("the row is laid out");
+            let page = adjustment(&chapters).page_size();
+            let middle = f64::from(bounds.y() + bounds.height() / 2.0);
+            assert!(
+                (middle - page / 2.0).abs() <= 2.0,
+                "the row's middle is {middle} of {page}"
+            );
+            // The first frame painted already had it there.
+            assert_eq!(painted.get(), Some(adjustment(&chapters).value()));
+            // Keyboard focus and the screen reader start on it.
+            assert!(
+                row.parent().is_some_and(|item| item.is_focus()),
+                "the open chapter has the focus"
+            );
+            window.destroy();
+        });
+    }
+
+    #[test]
+    fn a_list_that_fits_stays_at_its_top_and_the_last_chapter_sits_at_the_end() {
+        run(|| {
+            let (window, chapters, _) = open(5, 3);
+            assert_eq!(adjustment(&chapters).value(), 0.0);
+            window.destroy();
+            let (window, chapters, painted) = open(120, 120);
+            let a = adjustment(&chapters);
+            assert!(
+                (a.value() - (a.upper() - a.page_size())).abs() <= 1.0,
+                "{} of {}",
+                a.value(),
+                a.upper()
+            );
+            assert_eq!(painted.get(), Some(a.value()));
+            window.destroy();
+        });
+    }
+
+    /// The first `ExpanderRow` under `widget`, depth first.
+    fn expander(widget: &gtk::Widget) -> Option<adw::ExpanderRow> {
+        if let Some(row) = widget.downcast_ref::<adw::ExpanderRow>() {
+            return Some(row.clone());
+        }
+        let mut child = widget.first_child();
+        while let Some(c) = child {
+            if let Some(found) = expander(&c) {
+                return Some(found);
+            }
+            child = c.next_sibling();
+        }
+        None
+    }
+
+    /// A read volume opened in Chapters stays open when its line is drawn again: the chapters
+    /// listed again while the popover is open (`set_volumes` draws the list then), or its line
+    /// scrolled away and back. Drawing it open must not take the app down.
+    ///
+    /// r5 Linux audit, L5A-1: `fold` reads the open volumes with a borrow that lives through
+    /// `set_expanded(true)`, whose notify handler borrows the same cell mutably. The panic is
+    /// inside a GTK callback, so the process aborts; run this test on its own.
+    #[test]
+    fn an_opened_read_volume_drawn_again_stays_open() {
+        run(|| {
+            let volume =
+                |n: &str, numbers: std::ops::RangeInclusive<usize>, read: bool| VolumeGroup {
+                    volume: Some(n.into()),
+                    title: None,
+                    chapters: numbers
+                        .map(|c| {
+                            let mut row = chapter(c);
+                            if read {
+                                row.state = ChapterReadState::Read;
+                            }
+                            row
+                        })
+                        .collect(),
+                    all_read: read,
+                    flat: false,
+                };
+            let chapters = Chapters::new();
+            chapters.set_volumes(vec![volume("1", 1..=3, true), volume("2", 4..=6, false)]);
+            let content = chapters.popover.child().expect("the popover has its content");
+            chapters.popover.set_child(gtk::Widget::NONE);
+            let window = gtk::Window::builder().default_width(700).default_height(700).build();
+            window.set_child(Some(&content));
+            chapters.show_here(Here {
+                chapter: ChapterId("c5".into()),
+                label: "Chapter 5".into(), // i18n-skip
+                pages: false,
+                rtl: false,
+                leaves: Vec::new(),
+                open_leaf: 0,
+                files: Default::default(),
+            });
+            window.present();
+            pump(300);
+            let fold = expander(chapters.list.upcast_ref()).expect("volume 1 is folded");
+            // The person opens the read volume.
+            fold.set_expanded(true);
+            pump(100);
+            // The chapters come again while Chapters is open, as set_volumes draws them then.
+            chapters.draw_list();
+            pump(300);
+            let again = expander(chapters.list.upcast_ref()).expect("volume 1 is drawn again");
+            assert!(again.is_expanded(), "the volume opened stays open");
+            window.destroy();
+        });
     }
 }

@@ -70,7 +70,6 @@ linux-shortcuts-text-size = Teks lebih besar, lebih kecil, atau bawaan
 linux-shortcuts-reader-back = Kembali ke halaman sebelum lompatan
 linux-shortcuts-close-reader = Tutup pembaca
 linux-reader-names-and = { $first } dan { $last }
-linux-reader-page-plate = Halaman { $page }
 linux-reader-open-failed = Bab { $chapter } tidak bisa dibuka
 linux-reader-open-failed-plain = Bab ini tidak bisa dibuka
 linux-send-next = { $n ->

@@ -10,7 +10,7 @@
 //! | `search` | Never returns: the epoch deadline must stop it. |
 //! | `series` | Allocates without bound: the memory ceiling must stop it. |
 //! | `list-chapters` | Fetches a host it did not declare: the allowlist must deny it. |
-//! | `chapter-content` | Names page images on an undeclared host and reads a setting it was never granted: the host must refuse the pages and answer `none`. It also names pages under `/made/` that it makes itself, one per attack below and one honest page. |
+//! | `chapter-content` | Names page images on an undeclared host and reads a setting it was never granted: the host must refuse the pages and answer `none`. It also names pages under `/made/` that it makes itself, one per attack below and one honest page. For the chapter `panics` it panics instead, which traps the guest: the host must answer with an error, run the plugin again and never take the app down. |
 //! | `page-bytes` | Per page under `/made/`: hands over more bytes than a page may have, bytes that are no image, an image whose header claims more pixels than a page may have, spins forever, or allocates without bound. The host must refuse or stop each one. The honest page is a real image, and every other page is left to the host to fetch. |
 //! | `describe` | Declares one harmless host, so the attempts above are real escapes. |
 
@@ -85,7 +85,10 @@ impl Guest for Component {
 
     /// Pages on a host it never declared, which the host must refuse to fetch, and a setting it
     /// was never granted, which the host must answer with `none`.
-    fn chapter_content(_series: String, _chapter: String) -> Result<Content, SourceError> {
+    fn chapter_content(_series: String, chapter: String) -> Result<Content, SourceError> {
+        if chapter == "panics" {
+            return Ok(Content::Text(entity_scan(std::hint::black_box(PANICS_ON))));
+        }
         if let Some(value) = host::config_get("credential-that-does-not-exist") {
             return Err(SourceError::Other(format!("ESCAPED: config-get leaked {value:?}")));
         }
@@ -106,6 +109,25 @@ impl Guest for Component {
         pages.extend(MADE.iter().map(|name| at(&format!("{MADE_AT}{name}.png"), vec![])));
         Ok(Content::Images(pages))
     }
+}
+
+/// Two entities and then long dashes: three bytes each, so byte 12 falls inside one.
+const PANICS_ON: &str = "&gt;&gt;\u{2014}\u{2014}\u{2014} a line of text";
+
+/// A chapter's text with its entities looked for in the first twelve bytes after each `&`,
+/// sliced by bytes: on [`PANICS_ON`] that slice cuts a character, and the guest panics.
+fn entity_scan(text: &str) -> String {
+    let mut out = String::new();
+    let mut rest = text;
+    while let Some(at) = rest.find('&') {
+        out.push_str(&rest[..at]);
+        let tail = &rest[at..];
+        let window = &tail[..tail.len().min(12)];
+        out.push_str(window);
+        rest = &tail[window.len()..];
+    }
+    out.push_str(rest);
+    out
 }
 
 impl pages::Guest for Component {

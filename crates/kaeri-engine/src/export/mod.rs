@@ -54,16 +54,23 @@ use crate::{
     state::EngineState,
 };
 
-/// The sends under way, so one can be stopped, and where their files go.
+/// How long the files of a ready send are kept for its Share, in seconds from when it became
+/// ready. Sharing does not end it, as a ready send can be shared again until it is put away.
+const READY_KEPT: i64 = 24 * 60 * 60;
+
+/// The sends under way, so one can be stopped, the ready ones whose files wait for the share
+/// sheet, and where their files go.
 #[derive(Clone, Debug)]
 pub struct Exports {
     dir: PathBuf,
     running: Arc<Mutex<HashMap<u64, Arc<AtomicBool>>>>,
+    /// Ready sends by job, with when each became ready on the engine's clock.
+    ready: Arc<Mutex<HashMap<u64, i64>>>,
 }
 
 impl Exports {
     pub fn new(dir: PathBuf) -> Self {
-        Self { dir, running: Arc::default() }
+        Self { dir, running: Arc::default(), ready: Arc::default() }
     }
 
     fn begin(&self, job: JobId) -> Arc<AtomicBool> {
@@ -72,40 +79,56 @@ impl Exports {
         flag
     }
 
+    /// A send's files are written: they are kept for its Share, see [`Self::folder`].
+    fn ready(&self, job: JobId, now: i64) {
+        self.ready.lock().unwrap_or_else(|e| e.into_inner()).insert(job.get(), now);
+    }
+
     fn end(&self, job: JobId) {
         self.running.lock().unwrap_or_else(|e| e.into_inner()).remove(&job.get());
     }
 
-    /// Stops a send; false when it is not running.
+    /// Stops a send; false when it is not running. A ready send is put away instead: its
+    /// files are removed, as the screen that asked has dropped it.
     pub fn cancel(&self, job: JobId) -> bool {
         let running = self.running.lock().unwrap_or_else(|e| e.into_inner());
-        match running.get(&job.get()) {
-            Some(flag) => {
-                flag.store(true, Ordering::Relaxed);
-                true
-            }
-            None => false,
+        if let Some(flag) = running.get(&job.get()) {
+            flag.store(true, Ordering::Relaxed);
+            return true;
         }
+        drop(running);
+        let put_away = self.ready.lock().unwrap_or_else(|e| e.into_inner()).remove(&job.get());
+        if put_away.is_some() {
+            let _ = std::fs::remove_dir_all(self.dir.join(job.get().to_string()));
+        }
+        false
     }
 
-    /// The folder one send writes to, with the files of earlier sends removed: they were
-    /// shared, or abandoned, by the time another is asked for.
-    fn folder(&self, job: JobId) -> PathBuf {
-        let busy: Vec<String> = self
+    /// The folder one send writes to. The folder's other entries are removed, except those of
+    /// sends still running and of ready ones younger than [`READY_KEPT`], which a Share may
+    /// still hand over: older ready sends, and leftovers such as an earlier launch's sends and
+    /// scratch folders, go.
+    fn folder(&self, job: JobId, now: i64) -> PathBuf {
+        let mut keep: Vec<String> = self
             .running
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .keys()
             .map(|k| k.to_string())
             .collect();
+        {
+            let mut ready = self.ready.lock().unwrap_or_else(|e| e.into_inner());
+            ready.retain(|_, at| now.saturating_sub(*at) < READY_KEPT);
+            keep.extend(ready.keys().map(|k| k.to_string()));
+        }
         if let Ok(entries) = std::fs::read_dir(&self.dir) {
             for entry in entries.flatten() {
                 let name = entry.file_name().to_string_lossy().into_owned();
                 // A send's scratch folder is its id and `-fetch`.
-                let running = busy
+                let kept = keep
                     .iter()
                     .any(|b| name == *b || name.strip_suffix("-fetch") == Some(b.as_str()));
-                if !running {
+                if !kept {
                     let _ = std::fs::remove_dir_all(entry.path());
                 }
             }
@@ -167,6 +190,8 @@ pub(crate) fn command(
         }
         ReadingCommand::SetSendTarget { target } => {
             use kaeri_core::settings::SettingValue;
+            // In effect before it is written, as a setting is: `write` keeps only the file.
+            engine.config.effective_mut().reading.send_target = Some(target.clone());
             if let Err(e) = engine.config.write(
                 &services.paths,
                 &["reading"],
@@ -174,6 +199,8 @@ pub(crate) fn command(
                 SettingValue::Str(target),
             ) {
                 tracing::warn!(error = %e, "the send target was not kept");
+                let kept = engine.config.saved().reading.send_target.clone();
+                engine.config.effective_mut().reading.send_target = kept;
             }
             let _ = tx.send(Event::Reading(ReadingEvent::ExportTargets(targets_of(engine))));
         }
@@ -254,8 +281,13 @@ pub fn chosen(store: &Store, work: &str, pick: &DownloadPick) -> Vec<prepare::Ch
         .iter()
         .map(|d| chapter_row(d, marks.is_read(&d.chapter), false))
         .collect::<Vec<_>>();
-    let rows =
-        flatten(vec![VolumeGroup { volume: None, title: None, chapters, all_read: false }]);
+    let rows = flatten(vec![VolumeGroup {
+        volume: None,
+        title: None,
+        chapters,
+        all_read: false,
+        flat: true,
+    }]);
     BookDownloads::picked(pick, &rows)
         .into_iter()
         .filter_map(|want| {
@@ -292,16 +324,12 @@ fn prepare_files(
         .flatten()
         .and_then(|kind| kind.title_in(crate::data::title_form(services.meta.titles())))
         .unwrap_or_else(|| work.as_str().to_owned());
-    let right_to_left = store
-        .series_settings(work.as_str())
-        .unwrap_or_default()
-        .into_iter()
-        .find(|s| s.setting == "direction")
-        .map(|s| s.value == "rtl");
+    let direction = page_direction(engine, services, &work);
     let id = job.as_ref().map_or(JobId::new(0), |j| j.id);
     let exports = services.book_sources.exports.clone();
     let cancel = exports.begin(id);
-    let out = exports.folder(id);
+    let out = exports.folder(id, services.clock.now());
+    let clock = services.clock.clone();
     let send = OneSend {
         key: id.get().to_string(),
         target: target.to_owned(),
@@ -317,12 +345,15 @@ fn prepare_files(
         profile,
         format,
         out,
-        right_to_left,
+        direction,
     };
     tokio::spawn(async move {
         let _job = job;
         let tx = send.lent.tx.clone();
         let result = send.run().await;
+        if result.is_ok() {
+            send.exports.ready(send.id, clock.now());
+        }
         send.exports.end(send.id);
         let chapter = send.told.failing_chapter();
         match result {
@@ -340,6 +371,31 @@ fn prepare_files(
             }
         }
     });
+}
+
+/// Which way the series' pages turn on the e-reader: as the reader turns them, from the same
+/// layers (the person's choice for the series, its source's word, the reader's kept guess, the
+/// medium's default). A series read as a strip or scrolled turns its pages forward.
+fn page_direction(
+    engine: &EngineState,
+    services: &Services,
+    work: &WorkId,
+) -> prepare::PageDirection {
+    use kaeri_model::reader::ReaderSettingKey as Key;
+
+    use crate::reading::settings::{Layers, Screen, SourceWord};
+    let layers = Layers::read(
+        services.book_sources.store(),
+        &engine.config.effective().reading,
+        kaeri_core::media::Medium::Manga,
+        Some(work.as_str()),
+        Screen::default(),
+    )
+    .with_source(SourceWord::of(services, work));
+    let flows = matches!(layers.word(Key::Mode).as_str(), "strip" | "vertical");
+    let right_to_left = !flows && layers.word(Key::Direction) == "rtl";
+    let said = flows || layers.series_has(Key::Direction) || layers.sourced(Key::Direction);
+    prepare::PageDirection { said: said.then_some(right_to_left), otherwise: right_to_left }
 }
 
 /// Progress of one send, told at most every 150 ms except for its end.
@@ -411,7 +467,7 @@ struct OneSend {
     profile: profiles::Profile,
     format: ExportFormat,
     out: PathBuf,
-    right_to_left: Option<bool>,
+    direction: prepare::PageDirection,
 }
 
 impl OneSend {
@@ -445,7 +501,7 @@ impl OneSend {
             format: self.format,
             out: self.out.clone(),
             limit: None,
-            right_to_left: self.right_to_left,
+            direction: self.direction,
         };
         let (told, cancel) = (self.told.clone(), self.cancel.clone());
         let blocking = tokio::task::spawn_blocking(move || {
@@ -486,12 +542,20 @@ impl OneSend {
             self.told.gathered.store(n, Ordering::Relaxed);
             return Ok((chapters, 0));
         }
-        let now = self.lent.clock.now();
+        // A send held over from the last run starts at launch, maybe before the plugins are
+        // in: they are waited for, so the source is asked rather than missed.
+        self.lent.sources.plugins_in(&self.lent.plugins, None).await;
         self.lent.sources.adopt_plugins(&self.lent.plugins);
+        let now = self.lent.clock.now();
         let (source, rows) =
             crate::downloads::books::ordered_chapters(&self.lent.sources, &self.work, now)
                 .await
                 .map_err(prepare::Stop::Failed)?;
+        // Each chapter comes from the source that lists it; one no source lists any more is
+        // left out, as a download of it would fail.
+        let listers =
+            crate::downloads::books::Listers::of(&self.lent.sources, &self.work, &source);
+        let rows: Vec<_> = rows.into_iter().filter(|r| listers.of_row(r).is_some()).collect();
         let wanted = BookDownloads::picked(&self.pick, &rows);
         if wanted.is_empty() {
             return Err(ReadingFailure::NotFound.into());
@@ -517,10 +581,8 @@ impl OneSend {
             self.told.chapter(Some(label.clone()));
             let missing = u32::try_from(to_fetch).unwrap_or(u32::MAX).saturating_sub(fetched);
             self.may_fetch(missing).await?;
-            std::fs::create_dir_all(temp).map_err(|_| {
-                prepare::Stop::Failed(ReadingFailure::FileMissing {
-                    path: temp.display().to_string(),
-                })
+            std::fs::create_dir_all(temp).map_err(|e| {
+                prepare::Stop::Failed(crate::downloads::books::io_failure(&e, temp))
             })?;
             let base = fetched * FETCH_WEIGHT;
             let told = self.told.clone();
@@ -533,7 +595,7 @@ impl OneSend {
             let job = Fetching {
                 work: self.work.clone(),
                 chapter: want.chapter.clone(),
-                source_id: source.clone(),
+                source_id: listers.of_row(row).unwrap_or(&source).to_owned(),
                 stem: temp.join(crate::downloads::books::safe(want.chapter.as_str())),
                 wanted: &wanted_now,
                 progress: &progress,
@@ -675,15 +737,27 @@ fn set_feed_share(
 ) {
     use kaeri_core::settings::SettingValue;
     use kaeri_model::reading::FeedShelf;
+    fn share(feed: &mut kaeri_core::config::FeedConfig, shelf: FeedShelf) -> &mut Option<bool> {
+        match shelf {
+            FeedShelf::Downloads => &mut feed.share_downloads,
+            FeedShelf::MangaFolders => &mut feed.share_manga,
+            FeedShelf::NovelFolders => &mut feed.share_novels,
+        }
+    }
     let key = match shelf {
         FeedShelf::Downloads => "share_downloads",
         FeedShelf::MangaFolders => "share_manga",
         FeedShelf::NovelFolders => "share_novels",
     };
+    // In effect before it is written, as a setting is: the feed reads what is in effect.
+    *share(&mut engine.config.effective_mut().reading.feed, shelf) = Some(on);
     if let Err(e) =
         engine.config.write(&services.paths, &["reading", "feed"], key, SettingValue::Bool(on))
     {
         tracing::warn!(error = %e, "the feed shelf was not kept");
+        let mut saved = engine.config.saved().reading.feed.clone();
+        *share(&mut engine.config.effective_mut().reading.feed, shelf) =
+            *share(&mut saved, shelf);
     }
     apply_feed(engine, services, tx);
 }
@@ -714,8 +788,12 @@ fn set_feed(
 ) {
     use kaeri_core::settings::SettingValue;
     let paths = &services.paths;
+    // Each value is put in effect before it is written, as a setting is: `write` keeps the
+    // file and puts back only a value it refused, and the feed follows what is in effect. So
+    // off stops serving at once, and on starts at once.
     if let Some(password) = password {
         let set = keep_password(services, &password);
+        engine.config.effective_mut().reading.feed.password_set = set;
         if let Err(e) = engine.config.write(
             paths,
             &["reading", "feed"],
@@ -725,10 +803,16 @@ fn set_feed(
             tracing::warn!(error = %e, "the feed password flag was not kept");
         }
     }
+    engine.config.effective_mut().reading.feed.on = on;
     if let Err(e) =
         engine.config.write(paths, &["reading", "feed"], "on", SettingValue::Bool(on))
     {
         tracing::warn!(error = %e, "the feed switch was not kept");
+    }
+    // Off stays off for this launch even when the file refused it: the library is not served
+    // a moment longer than the person wants.
+    if !on {
+        engine.config.effective_mut().reading.feed.on = false;
     }
     apply_feed(engine, services, tx);
 }
@@ -757,3 +841,62 @@ pub(crate) fn apply_feed(engine: &EngineState, services: &Services, tx: &Outbox)
 
 #[cfg(not(feature = "opds-feed"))]
 pub(crate) fn apply_feed(_: &EngineState, _: &Services, _: &Outbox) {}
+
+#[cfg(test)]
+mod ready_tests {
+    use super::*;
+
+    const NOW: i64 = 1_800_000_000;
+
+    /// A send that is ready, with one file written.
+    fn ready_send(exports: &Exports, job: u64, at: i64) -> PathBuf {
+        let job = JobId::new(job);
+        exports.begin(job);
+        let folder = exports.folder(job, at);
+        std::fs::create_dir_all(&folder).unwrap();
+        let file = folder.join("Made-up Series 1.cbz");
+        std::fs::write(&file, b"pk").unwrap();
+        exports.ready(job, at);
+        exports.end(job);
+        file
+    }
+
+    /// R5A-6. A send left ready keeps its Share (the send banner and the sheet keep a ready
+    /// send until it is shared or put away), so starting another send keeps its files.
+    #[test]
+    fn r5a_a_ready_send_keeps_its_files_when_another_starts() {
+        let dir = tempfile::tempdir().unwrap();
+        let exports = Exports::new(dir.path().to_owned());
+        let first = ready_send(&exports, 1, NOW);
+        let _second = exports.folder(JobId::new(2), NOW + 60);
+        assert!(first.exists(), "the ready send's file is gone");
+    }
+
+    #[test]
+    fn ready_files_go_after_a_day_and_leftovers_at_once() {
+        let dir = tempfile::tempdir().unwrap();
+        let exports = Exports::new(dir.path().to_owned());
+        let leftover = dir.path().join("7");
+        std::fs::create_dir_all(dir.path().join("8-fetch")).unwrap();
+        std::fs::create_dir_all(&leftover).unwrap();
+        let first = ready_send(&exports, 1, NOW);
+        assert!(!leftover.exists() && !dir.path().join("8-fetch").exists());
+        exports.folder(JobId::new(2), NOW + READY_KEPT - 1);
+        assert!(first.exists(), "a ready send younger than a day lost its file");
+        exports.folder(JobId::new(3), NOW + READY_KEPT);
+        assert!(!first.exists(), "a ready send a day old kept its file");
+    }
+
+    #[test]
+    fn putting_a_ready_send_away_removes_its_files() {
+        let dir = tempfile::tempdir().unwrap();
+        let exports = Exports::new(dir.path().to_owned());
+        let first = ready_send(&exports, 1, NOW);
+        assert!(!exports.cancel(JobId::new(1)));
+        assert!(!first.exists());
+        // A running send is stopped, not removed: its own end cleans up.
+        let running = JobId::new(2);
+        let flag = exports.begin(running);
+        assert!(exports.cancel(running) && flag.load(Ordering::Relaxed));
+    }
+}

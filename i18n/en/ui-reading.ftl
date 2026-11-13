@@ -185,6 +185,45 @@ series-tracker-ask = Which series is this? Choose
 # Value of the group row: the chosen group is used for this series.
 series-preferred-group = Your preferred group here
 
+# Label of the series page's row for the group whose version of each chapter the series lists,
+# inside the source in use. Its value is the group's name.
+series-group = Group
+
+# After the group's name on the Group row: it is in use because it has the most chapters.
+# @max 20
+series-group-most = most chapters
+
+# After the group's name on the Group row: the person picked it.
+# @max 20
+series-group-picked = your pick
+
+# Spoken hint of the Group row's Change button.
+series-group-hint = Picks the group
+
+# Under the group picker's title: the source the groups are in.
+# @arg source: text
+group-picker-in = In { $source }
+
+# The group picker's first choice: the group with the most chapters, whichever that is.
+group-picker-most = Most chapters
+
+# Under Most chapters: the group that means today.
+# @arg group: text
+group-picker-most-now = Now { $group }
+
+# A group in the picker: how many of the series' chapters it has released. Its language follows,
+# after a middle dot.
+# @arg have: int
+# @arg total: int
+# @max 28
+group-picker-count = { $have } of { $total ->
+    [one] { $total } chapter
+   *[other] { $total } chapters
+ }
+
+# Under the group picker's choices.
+group-picker-fallback = Chapters a group doesn't have come from another group, and their rows say which.
+
 # A tracker's progress in chapters, with the total.
 # @arg n: int
 # @arg total: int
@@ -199,6 +238,9 @@ series-tracker-chapters = { $n ->
     [one] 1 chapter
    *[other] { $n } chapters
  }
+
+# A tracker's progress when the person has read none of the series yet, in place of "0 chapters".
+series-tracker-not-started = Not started
 
 # A tracker's progress in chapters, then the volume.
 # @arg chapters: text
@@ -309,6 +351,16 @@ series-no-chapters-title = No chapters in this { -source } yet
 # Line under it.
 series-no-chapters-line = Another { -source } may have them.
 
+# The chapter list when none of the person's sources holds the series and none was picked: an
+# empty state, not a failure. Its button opens Read from.
+series-no-source-title = None of your { -source-pl } has this series yet
+
+# Line under it.
+series-no-source-line = Search for it by another name, or add a { -source } in Your { -source-pl }.
+
+# Its button: opens Read from, where each source can be searched by another name.
+series-no-source-search = Search by another name
+
 # The chapter list when the source failed. Downloaded chapters are listed under it.
 # @arg source: text
 series-chapters-failed = Couldn't load chapters from { $source }.
@@ -375,6 +427,9 @@ chapter-state-wifi = Queued · waits for Wi-Fi
 # @arg total: int
 chapter-state-downloading = Downloading · { $done } of { $total } pages
 
+# A chapter downloading before its page count is known, and throughout for a novel's chapter.
+chapter-state-downloading-plain = Downloading
+
 # A chapter that failed to download, with the reason.
 # @arg reason: text
 chapter-state-failed = Couldn't download. { $reason }
@@ -411,6 +466,11 @@ download-next = Next { $n } unread
 
 # Download menu item.
 download-unread = Every unread chapter
+
+# Short note after Next 5 or Next 10 unread when those chapters are all on this device already.
+# @only android
+# @max 40
+download-already = Already downloaded
 
 # Download menu item: a volume's chapters not yet downloaded.
 # @arg volume: text
@@ -469,6 +529,18 @@ series-read-from-chapters = Chapters 1 to { $latest }
 # A source's chapters, after its kind on the line.
 # @arg latest: text
 series-read-from-chapters-later = chapters 1 to { $latest }
+
+# A source's line while it is asked for its chapter list, first on its line.
+series-read-from-checking = Checking chapters
+
+# The same, after its kind on the line.
+series-read-from-checking-later = checking chapters
+
+# A source that answered with no chapters for this series, first on its line.
+series-read-from-empty = No chapters here yet
+
+# The same, after its kind on the line.
+series-read-from-empty-later = no chapters here yet
 
 # After a folder's chapters.
 # @arg device: text
@@ -776,9 +848,6 @@ read-search-nothing-filters-line = Fewer filters may find more.
 read-search-clear-filters = Clear filters
 
 # A sort of reading's Search, AniList's.
-read-sort-popular = Popular
-
-# A sort of reading's Search, AniList's.
 read-sort-trending = Trending
 
 # A sort of reading's Search, AniList's.
@@ -792,6 +861,9 @@ read-filter-format = Format
 
 # A filter.
 read-filter-origin = Origin
+
+# The first choice of the Origin filter's menu in reading's Search once an origin is set: it takes them all off.
+read-filter-any-origin = Any origin
 
 # A filter.
 read-filter-status = Status
@@ -1306,8 +1378,34 @@ settings-counts-read-moving-on-note = Turning past the last page, or opening the
 # Value of Counts as read: only the person's own marks; the reader marks nothing.
 settings-counts-read-marked = When you mark it
 
+# Reader default for manga: pages a group repeats at the start or end of its chapters are left out.
+settings-skip-credits = Skip credit pages
+
+# Line under Skip credit pages.
+settings-skip-credits-note = Pages a group repeats at the start or end of its chapters
+
 # Line under Counts as read when it is When you mark it.
 settings-counts-read-marked-note = { -continue-reading-cap } and your { -tracker-pl } follow your marks
+
+# Group in the Reading pane: how this device's screen is drawn.
+# @only android
+settings-screen-group = Screen
+
+# Row in Screen: the e-ink layout, on or off.
+# @only android
+settings-eink-layout = E-ink layout
+
+# Line under E-ink layout.
+# @only android
+settings-eink-layout-note = Pages instead of scrolling, nothing animates, and the screen clears itself when it needs to
+
+# Row in Screen, with the e-ink layout on: the panel shows colour.
+# @only android
+settings-eink-colour = Colour screen
+
+# Line under Colour screen.
+# @only android
+settings-eink-colour-note = Off draws every picture in greys
 
 # Group: series settings that follow you to your other devices.
 settings-follow-group = Series settings that follow you
@@ -1355,6 +1453,9 @@ settings-keep-chapters-ready-note = The next chapters of series on your Reading 
 # Line under Delete chapters after reading.
 settings-delete-after-reading-note = Bookmarked chapters are kept
 
+# Line under Show volumes: the list is grouped only when most chapters have a volume.
+settings-show-volumes-note = Grouped when most chapters have a volume
+
 # Line under New chapters.
 settings-chapter-notifications-note = Series on your Reading list
 
@@ -1401,6 +1502,10 @@ read-downloads-queued = { $n ->
 # @arg chapter: text
 # @arg reason: text
 read-downloads-failed = { $chapter } couldn't download. { $reason }
+
+# Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows.
+# @arg reason: text
+read-download-not-started = The download didn't start. { $reason }
 
 # A series' line in Downloads: how many chapters are kept.
 # @arg n: int
@@ -1509,6 +1614,13 @@ send-ready = { $n ->
 
 # Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.
 send-share-again = Share again
+
+# A ready send whose files were cleared before they were shared or saved, in the Send to e-reader
+# sheet and in the send's row. Prepared files are kept for a day.
+send-files-gone = These files are gone. Prepared files are kept for a day.
+
+# Button on a send whose files are gone: prepares the same chapters for the same e-reader again.
+send-again = Send again
 
 # A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
 # @arg device: text

@@ -117,7 +117,11 @@ struct MacShell: View {
                     }
                 }
             }
-            .toolbarBackgroundVisibility(navigator.titleOnMac == nil ? .automatic : .hidden, for: .windowToolbar)
+            // A page over the section clears the toolbar's own background. Left automatic, macOS
+            // draws the section's scroll into the title bar, over the page.
+            .toolbarBackgroundVisibility(
+                navigator.titleOnMac == nil && navigator.seriesOnMac == nil ? .automatic : .hidden,
+                for: .windowToolbar)
             .titleSearchField(
                 text: navigator.section == .settings ? $navigator.settingsQuery : $navigator.query,
                 titles: navigator.section != .settings && !ReadSearchScope.active(store: store, navigator: navigator),
@@ -176,6 +180,10 @@ struct MacShell: View {
             return store.seasonName ?? ""
         case .search:
             // The search as a job past 600 ms, then what is asked (Running jobs, native-ux.md).
+            if ReadSearchScope.active(store: store, navigator: navigator) {
+                let search = store.reading.search
+                return search.query.atStart ? "" : ReadFilterWords.headline(search.query, filters: store.reading.filters)
+            }
             return store.search.searchingLine ?? (store.search.atStart ? "" : store.search.query.headline())
         case .downloads:
             return downloadsSubtitle(store)
@@ -434,6 +442,9 @@ struct Sidebar: View {
             var instant = Transaction()
             instant.disablesAnimations = true
             withTransaction(instant) { selection = section }
+            // The section already chosen, under a series' page: its own first screen again, as a
+            // tab chosen twice goes back to its top.
+            if selected, navigator.seriesOnMac != nil { navigator.closeSeries() }
         } label: {
             HStack(spacing: 10) {
                 Image(systemName: section.symbol)
@@ -484,7 +495,8 @@ struct SectionView: View {
         case .calendar: CalendarScreen()
         case .seasonal: SeasonalScreen()
         case .search:
-            if ReadSearchScope.active(store: store, navigator: navigator) { ReadSearchScreen() } else { SearchScreen() }
+            // One screen for both scopes: reading's Search is drawn inside it.
+            SearchScreen()
         case .library: LibraryScreen()
         case .settings: SettingsScreen()
         case .downloads: DownloadsScreen()

@@ -203,6 +203,16 @@ linux-reader-end-offline-body = You're offline. It opens here once you're connec
 # @max 60
 linux-reader-page-failed-hint = Turn the page to go on without it.
 
+# Why a page failed: its file came in, but no image decoder on this system could show it.
+# @only linux
+# @max 80
+linux-reader-page-undecodable = The image came in, but it couldn't be shown.
+
+# Why a light novel's chapter stopped showing: the view that draws its text closed or failed to load it.
+# @only linux
+# @max 80
+linux-reader-novel-stopped = The view that shows the text stopped.
+
 # Line while a chapter opens, once its number is known.
 # @arg chapter: text
 # @only linux
@@ -354,12 +364,6 @@ linux-shortcuts-close-reader = Close the reader
 # @only linux
 # @max 60
 linux-reader-names-and = { $first } and { $last }
-
-# On the plate that holds a page's place while it loads. The page is its number, such as 23.
-# @arg page: int
-# @only linux
-# @max 20
-linux-reader-page-plate = Page { $page }
 
 # Heading when a chapter could not open. The chapter is its number, such as 13.
 # @arg chapter: text

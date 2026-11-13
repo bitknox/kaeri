@@ -1,9 +1,13 @@
 reader-page-loading = { $page }ページを読み込み中
+reader-page-plate = { $page }ページ
+reader-image-plate = 画像 { $image }
+reader-image-loading = 画像 { $image } を読み込み中
 reader-page-failed = { $page }ページを読み込めませんでした
 reader-try-again = もう一度試す
 reader-close = 閉じる
 reader-end-read = 既読になりました
 reader-end-tracker = 既読になりました · { $trackers }を更新しました
+reader-end-tracker-offline = 既読になりました · { $tracker }はオンラインに戻ると更新されます
 reader-end-next = 次の章
 reader-mode-rtl = 右から左
 reader-mode-ltr = 左から右
@@ -52,3 +56,6 @@ reader-end-swipe = スワイプして読み進める
 reader-divider-images = { $count ->
    *[other] { $count }枚の画像
  }
+reader-zone-next = 次のページ
+reader-zone-previous = 前のページ
+reader-zone-controls = 操作パネル

@@ -7,10 +7,17 @@
 package app.kaeri.ui.reading
 
 import androidx.activity.compose.BackHandler
+import app.kaeri.ui.synopsisCut
+import app.kaeri.ui.SynopsisCuts
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -23,7 +30,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.focusable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -55,19 +68,28 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.kaeri.design.Motion
+import app.kaeri.design.centredOffset
 import app.kaeri.design.ObiSilk
 import app.kaeri.design.ShowTitle
+import app.kaeri.design.SwapFade
 import app.kaeri.engine.core.ChapterId
 import app.kaeri.engine.core.Medium
 import app.kaeri.engine.core.WorkId
@@ -80,6 +102,7 @@ import app.kaeri.engine.model.ReadingAbout
 import app.kaeri.engine.model.ReadingFailure
 import app.kaeri.engine.model.SeriesAction
 import app.kaeri.engine.model.SeriesView
+import app.kaeri.engine.model.WorkTile
 import app.kaeri.engine.model.TrackerMapping
 import app.kaeri.engine.model.VolumeGroup
 import app.kaeri.i18n.Strings
@@ -93,13 +116,16 @@ import app.kaeri.ui.LocalNavigator
 import app.kaeri.ui.Menu
 import app.kaeri.ui.Shared
 import app.kaeri.ui.TextPlaceholder
+import app.kaeri.ui.itemMotion
 import app.kaeri.ui.kaeriIsFor
+import app.kaeri.ui.labelFor
 import app.kaeri.ui.sharedWork
 import app.kaeri.ui.wideWindow
+import kotlinx.coroutines.delay
 
 /**
  * What the screenshots open on the series page once it has loaded: a sheet or menu by name
- * (chapter, read-from, tracking, read-again, send, where-stop, choose, status, remove, download),
+ * (chapter, read-from, group, tracking, read-again, send, where-stop, choose, status, remove, download),
  * set by the JVM shots and the Fixtures app's `series` extra.
  */
 object SeriesShots {
@@ -134,13 +160,31 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
     }
     val series = seriesMap[work]
     val chapters = chapterMap[work]
+    // The chapters' placeholders come only once the wait is long enough to notice (native-ux.md).
+    var lateChapters by remember(work) { mutableStateOf(false) }
+    LaunchedEffect(work, chapters == null) {
+        lateChapters = false
+        if (chapters == null) {
+            delay(600)
+            lateChapters = true
+        }
+    }
     val volumes = chapters?.volumes.orEmpty()
     var chosen by remember { mutableStateOf<Set<ChapterId>?>(null) }
+    // The reader's place, which Choose chapters opens centred on.
+    var opening by remember { mutableStateOf<OpenFocus?>(null) }
+    fun startChoosing() {
+        chosen = volumes.chooseStart()
+        opening = volumes.readerPlace()?.let(::OpenFocus)
+    }
     var sheet by remember { mutableStateOf<SeriesSheet?>(null) }
     var statusOpen by remember { mutableStateOf(false) }
     var downloadOpen by remember { mutableStateOf(false) }
     var moreOpen by remember { mutableStateOf(false) }
-    var newestFirst by rememberSaveable { mutableStateOf(true) }
+    // The group picker: a menu from Change on a tablet, a sheet on a phone, a page on e-ink.
+    var groupOpen by remember { mutableStateOf(false) }
+    // The order last chosen, on any series: the engine sends chapters in reading order.
+    var newestFirst by remember { mutableStateOf(ChapterOrder.newestFirst(context)) }
     // Volumes the person opened or closed; the others are open while not all read.
     val folds = remember { mutableStateMapOf<String, Boolean>() }
     val wide = wideWindow()
@@ -153,11 +197,12 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
         when (shot) {
             "chapter" -> (rows.firstOrNull { it.versions > 1u } ?: rows.lastOrNull())?.let { sheet = SeriesSheet.Chapter(it.id) }
             "read-from" -> sheet = SeriesSheet.ReadFrom
+            "group" -> groupOpen = true
             "tracking" -> sheet = SeriesSheet.Tracking
             "read-again" -> sheet = SeriesSheet.ReadAgain
             "send" -> sheet = SeriesSheet.Send(volumes.downloaded().map { it.id }.ifEmpty { rows.takeLast(3).map { it.id } })
             "where-stop" -> sheet = SeriesSheet.WhereStop
-            "choose" -> chosen = volumes.chooseStart()
+            "choose" -> startChoosing()
             "status" -> statusOpen = true
             "remove" -> {
                 SeriesShots.removing = true
@@ -177,7 +222,34 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
     val failure = failures[ReadingAbout.SERIES]
     val coverKey = readerCoverKey("series", work)
 
+    // The series' menu: Tracking, Read from and Read again.
+    val overflow: @Composable () -> Unit = {
+        if (series != null) {
+            Box {
+                IconButton(onClick = { moreOpen = true }) { Icon(Icons.More, contentDescription = Strings.actionMore(context)) }
+                Menu(expanded = moreOpen, onDismissRequest = { moreOpen = false }) {
+                    DropdownMenuItem(text = { Text(Strings.seriesTracking(context)) }, onClick = {
+                        moreOpen = false
+                        sheet = SeriesSheet.Tracking
+                    })
+                    DropdownMenuItem(text = { Text(Strings.seriesReadFromMenu(context)) }, onClick = {
+                        moreOpen = false
+                        sheet = SeriesSheet.ReadFrom
+                    })
+                    if (volumes.chapterRows().any { it.state !is ChapterReadState.Unread }) {
+                        DropdownMenuItem(text = { Text(Strings.seriesReadAgainMenu(context)) }, onClick = {
+                            moreOpen = false
+                            sheet = SeriesSheet.ReadAgain
+                        })
+                    }
+                }
+            }
+        }
+    }
+
     Scaffold(
+        // The page grows out of the tile it was opened from and shrinks back into it, as a show's does.
+        modifier = Modifier.fillMaxSize().sharedWork(Shared.Page, work, ground = MaterialTheme.colorScheme.surface),
         containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
             val choosing = chosen
@@ -195,35 +267,23 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
                 )
+            } else if (einkLarge) {
+                // A large e-ink panel: where Back goes in words at the page's margin, as every
+                // pushed paper page has it; the menu keeps Tracking, Read from and Read again.
+                val under = navigator.under()
+                val answer = kaeriIsFor()
+                EinkSeriesBack(
+                    back = under?.let { androidx.compose.ui.res.stringResource(it.labelFor(answer)) } ?: Strings.einkBack(context),
+                    onBack = navigator::back,
+                    menu = overflow,
+                )
             } else {
                 TopAppBar(
                     title = {},
                     navigationIcon = {
                         IconButton(onClick = navigator::back) { Icon(Icons.Back, contentDescription = Strings.actionBack(context)) }
                     },
-                    actions = {
-                        if (series != null) {
-                            Box {
-                                IconButton(onClick = { moreOpen = true }) { Icon(Icons.More, contentDescription = Strings.actionMore(context)) }
-                                Menu(expanded = moreOpen, onDismissRequest = { moreOpen = false }) {
-                                    DropdownMenuItem(text = { Text(Strings.seriesTracking(context)) }, onClick = {
-                                        moreOpen = false
-                                        sheet = SeriesSheet.Tracking
-                                    })
-                                    DropdownMenuItem(text = { Text(Strings.seriesReadFromMenu(context)) }, onClick = {
-                                        moreOpen = false
-                                        sheet = SeriesSheet.ReadFrom
-                                    })
-                                    if (volumes.chapterRows().any { it.state !is ChapterReadState.Unread }) {
-                                        DropdownMenuItem(text = { Text(Strings.seriesReadAgainMenu(context)) }, onClick = {
-                                            moreOpen = false
-                                            sheet = SeriesSheet.ReadAgain
-                                        })
-                                    }
-                                }
-                            }
-                        }
-                    },
+                    actions = { overflow() },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
                 )
             }
@@ -247,13 +307,56 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
         },
     ) { padding ->
         when {
-            series == null && failure != null -> FailedState(
-                title = Strings.titleLoadFailed(context),
-                reason = failureWords(context, failure),
-                retry = { store.reading.loadSeries(work) },
+            series == null && failure != null -> Column(Modifier.padding(padding)) {
+                // The header that was known stays above why the rest did not come.
+                store.reading.knownTile(work)?.let { KnownSeriesHeader(it) }
+                FailedState(
+                    title = Strings.titleLoadFailed(context),
+                    reason = failureWords(context, failure),
+                    retry = { store.reading.loadSeries(work) },
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            series == null -> store.reading.knownTile(work)?.let { tile ->
+                // What the tile tapped already showed, at once and where the header puts it.
+                Box(Modifier.padding(padding)) { KnownSeriesHeader(tile) }
+            } ?: SeriesLoading(Modifier.padding(padding))
+            // A large e-ink panel: the board's page, chapters in columns a page at a time (EinkSeries.kt).
+            einkLarge -> EinkSeriesLarge(
+                series = series,
+                chapters = chapters,
+                late = lateChapters,
+                newestFirst = newestFirst,
+                onOrder = {
+                    newestFirst = it
+                    ChapterOrder.keep(context, it)
+                },
+                chosen = chosen,
+                onChosen = { chosen = it },
+                onCover = { actions.openReader(work, series.action.chapter, series.cover, null) },
+                onMain = { action ->
+                    if (action is SeriesAction.ReadAgain) sheet = SeriesSheet.ReadAgain else actions.openReader(work, action.chapter, series.cover, null)
+                },
+                onReadFrom = { sheet = SeriesSheet.ReadFrom },
+                onGroup = { groupOpen = true },
+                onStatus = { statusOpen = true },
+                onDownload = { downloadOpen = true },
+                onChoose = { chosen = volumes.chooseStart() },
+                onOpen = { row -> actions.openReader(work, row.id, series.cover, null) },
+                onLong = { row -> sheet = SeriesSheet.Chapter(row.id) },
+                onRetry = { store.reading.loadChapters(work, chapters?.edition?.sourceId) },
+                statusMenu = { StatusMenu(series, statusOpen) { statusOpen = false } },
+                downloadMenu = {
+                    DownloadMenu(series, volumes, downloadOpen, onDismiss = { downloadOpen = false }, onChoose = { chosen = volumes.chooseStart() }, onSend = { sheet = SeriesSheet.Send(it) })
+                },
+                notes = {
+                    if (series.askWhereStopped != null) {
+                        WhereStopNote(series, onAsk = { sheet = SeriesSheet.WhereStop }, modifier = Modifier.padding(top = 16.dp))
+                    }
+                    if (sheet !is SeriesSheet.Send) SendStatusRows(work, actions, Modifier.padding(top = 16.dp))
+                },
                 modifier = Modifier.padding(padding),
             )
-            series == null -> SeriesLoading(Modifier.padding(padding))
             else -> {
                 val top: @Composable () -> Unit = {
                     SeriesHeader(series, wide, coverKey, onCover = {
@@ -276,11 +379,18 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
                             }
                         },
                         onReadFrom = { sheet = SeriesSheet.ReadFrom },
-                        onChoose = { chosen = volumes.chooseStart() },
+                        onChoose = { startChoosing() },
                         onSend = { sheet = SeriesSheet.Send(it) },
                     )
                     Spacer(Modifier.height(12.dp))
-                    SeriesPanel(series, onReadFrom = { sheet = SeriesSheet.ReadFrom }, onTracking = { sheet = SeriesSheet.Tracking })
+                    SeriesPanel(
+                        series,
+                        onReadFrom = { sheet = SeriesSheet.ReadFrom },
+                        onTracking = { sheet = SeriesSheet.Tracking },
+                        groupMenu = wide && LocalEinkLayout.current == null,
+                        groupOpen = groupOpen,
+                        onGroup = { groupOpen = it },
+                    )
                     if (series.askWhereStopped != null) {
                         WhereStopNote(series, onAsk = { sheet = SeriesSheet.WhereStop }, modifier = Modifier.padding(top = 16.dp))
                     }
@@ -291,13 +401,18 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
                     seriesChapters(
                         series = series,
                         chapters = chapters,
+                        late = lateChapters,
                         newestFirst = newestFirst,
-                        onOrder = { newestFirst = it },
+                        onOrder = {
+                            newestFirst = it
+                            ChapterOrder.keep(context, it)
+                        },
                         folds = folds,
                         chosen = chosen,
                         onChosen = { chosen = it },
                         onOpen = { row -> actions.openReader(work, row.id, series.cover, null) },
                         onLong = { row -> sheet = SeriesSheet.Chapter(row.id) },
+                        opening = opening.takeIf { chosen != null },
                         onRetry = { store.reading.loadChapters(work, chapters?.edition?.sourceId) },
                         onReadFrom = { sheet = SeriesSheet.ReadFrom },
                     )
@@ -305,6 +420,8 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
                         item(key = "recommended") { SeriesRecommended(series) }
                     }
                 }
+                val place = opening?.takeIf { chosen != null }
+                val choosingAt = if (place != null && chapters != null) chapters.choosingItem(newestFirst, folds, place.id) else -1
                 if (wide) {
                     Row(Modifier.padding(padding).fillMaxSize()) {
                         Column(
@@ -315,10 +432,10 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
                                 .padding(start = 24.dp, end = 24.dp, bottom = 24.dp),
                         ) { top() }
                         VerticalDivider(color = ObiSilk.FaintRule)
-                        LazyColumn(Modifier.weight(1f).fillMaxHeight(), contentPadding = PaddingValues(bottom = 24.dp)) { list() }
+                        ChapterColumn(Modifier.weight(1f).fillMaxHeight(), choosingAt) { list() }
                     }
                 } else {
-                    LazyColumn(Modifier.padding(padding).fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
+                    ChapterColumn(Modifier.padding(padding).fillMaxSize(), choosingAt) {
                         if (chosen == null) {
                             item(key = "top") { Column(Modifier.padding(horizontal = 16.dp)) { top() } }
                         }
@@ -329,6 +446,13 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
         }
     }
 
+    val edition = series?.edition
+    if (groupOpen && edition != null && edition.groups.size > 1) {
+        when {
+            LocalEinkLayout.current != null -> EinkGroupPage(work, series.titles.display, edition) { groupOpen = false }
+            !wide -> GroupSheet(work, edition) { groupOpen = false }
+        }
+    }
     when (val open = sheet) {
         null -> {}
         is SeriesSheet.Chapter -> {
@@ -342,6 +466,22 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
         SeriesSheet.ReadAgain -> series?.let { ReadAgainDialog(it) { sheet = null } }
         is SeriesSheet.Send -> SendToEreaderSheet(work, open.chapters, actions) { sheet = null }
         SeriesSheet.WhereStop -> series?.let { WhereStopSheet(it) { sheet = null } }
+    }
+}
+
+/** The cover and title the tapped tile carried, in the header's own sizes and place. */
+@Composable
+private fun KnownSeriesHeader(tile: WorkTile) {
+    Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        ReadCover(tile.cover, 112.dp, Modifier.sharedWork(Shared.Cover, tile.work))
+        Text(
+            tile.title,
+            style = ShowTitle.page,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f).semantics { heading() },
+        )
     }
 }
 
@@ -411,23 +551,70 @@ private fun SeriesHeader(series: SeriesView, wide: Boolean, coverKey: String, on
         }
         val synopsis = series.synopsis?.replace(Regex("\\s*\\n+\\s*"), " ")
         if (wide && !synopsis.isNullOrBlank()) {
-            var open by rememberSaveable { mutableStateOf(false) }
-            Text(
-                synopsis,
-                style = MaterialTheme.typography.bodyMedium,
-                color = colors.onSurfaceVariant,
-                maxLines = if (open) Int.MAX_VALUE else 4,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 16.dp).clickable { open = !open },
-            )
+            SeriesSynopsis(synopsis, series.work, Modifier.padding(top = 16.dp))
         }
     }
 }
 
 /**
+ * The synopsis in four lines, ending "… More" where there is more, as on a show's page; a tap, or
+ * the screen reader's action, opens it in place and it stays open. The height grows with the text
+ * on the standard spring, so what sits under it moves with it instead of jumping, and a screen
+ * reader reads the whole text either way.
+ */
+@Composable
+private fun SeriesSynopsis(text: String, work: WorkId, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    var expanded by rememberSaveable(work) { mutableStateOf(false) }
+    val colors = MaterialTheme.colorScheme
+    val style = MaterialTheme.typography.bodyMedium
+    val measurer = rememberTextMeasurer()
+    val more = Strings.actionMore(context)
+    val eink = LocalEinkLayout.current != null
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+        val width = constraints.maxWidth
+        val density = LocalDensity.current
+        val cut = remember(text, width, style, density, more) {
+            SynopsisCuts.get(text, width, style, density, more, SERIES_SYNOPSIS_LINES) {
+                synopsisCut(text, width, style, measurer, more, SERIES_SYNOPSIS_LINES)
+            }
+        }
+        val open = expanded || cut == null
+        Text(
+            buildAnnotatedString {
+                if (open) {
+                    append(text)
+                } else {
+                    append(cut)
+                    append(" ")
+                    withStyle(SpanStyle(color = colors.onSurface, fontWeight = FontWeight.Medium)) { append(more) }
+                }
+            },
+            style = style,
+            color = colors.onSurfaceVariant,
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(if (eink) Modifier else Modifier.animateContentSize(Motion.standard()))
+                .then(
+                    if (open) {
+                        Modifier
+                    } else {
+                        Modifier.clickable(onClickLabel = Strings.titleSynopsisMore(context), role = Role.Button) { expanded = true }
+                    },
+                )
+                .semantics { contentDescription = text },
+        )
+    }
+}
+
+/** How many lines the series synopsis shows before "More". */
+private const val SERIES_SYNOPSIS_LINES = 4
+
+/**
  * The one main action, amber, 56 high, with Status and Download outlined side by side under it.
  * With no source, or a source that failed, Read from another source takes its place as a
- * secondary button, since reading from here is not possible.
+ * secondary button, since reading from here is not possible; a failed source keeps the main
+ * action when its chapter is downloaded, which still opens.
  */
 @Composable
 private fun SeriesActions(
@@ -445,9 +632,18 @@ private fun SeriesActions(
 ) {
     val context = LocalContext.current
     val words = SeriesWords.action(context, series.action)
-    val failed = chapters?.failure != null
+    val failed = chapters?.let { it.failure != null && !series.action.opensDownloaded(it.volumes) } == true
+    // No source is known to have it yet, but the engine is still asking: the chapters have not
+    // come. The main button holds its place, quiet, rather than say there is nothing to read.
+    val asking = series.action is SeriesAction.NoSource && chapters == null
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (words == null || failed) {
+        if (asking) {
+            Button(
+                onClick = {},
+                enabled = false,
+                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).clearAndSetSemantics {},
+            ) {}
+        } else if (words == null || failed) {
             FilledTonalButton(onClick = onReadFrom, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) {
                 Text(Strings.seriesReadFromAnother(context), style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
             }
@@ -458,14 +654,14 @@ private fun SeriesActions(
                 modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
             ) { Text(words, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center) }
         }
-        if (!failed && words != null) {
+        if (!failed && (words != null || asking)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Box(Modifier.weight(1f)) {
                     MenuButton(series.list?.let { listWords(context, it) } ?: Strings.seriesAddToList(context), enabled = !choosing) { onStatus(true) }
                     StatusMenu(series, statusOpen) { onStatus(false) }
                 }
                 Box(Modifier.weight(1f)) {
-                    MenuButton(Strings.seriesDownload(context), enabled = !choosing && chapters != null) { onDownload(true) }
+                    MenuButton(Strings.seriesDownload(context), enabled = !choosing && chapters?.volumes?.hasDownloads() == true) { onDownload(true) }
                     DownloadMenu(series, chapters?.volumes.orEmpty(), downloadOpen, onDismiss = { onDownload(false) }, onChoose = onChoose, onSend = onSend)
                 }
             }
@@ -493,7 +689,15 @@ private fun MenuButton(text: String, enabled: Boolean, onClick: () -> Unit) {
  * it, and, with Both, the same story as a show.
  */
 @Composable
-private fun SeriesPanel(series: SeriesView, onReadFrom: () -> Unit, onTracking: () -> Unit) {
+private fun SeriesPanel(
+    series: SeriesView,
+    onReadFrom: () -> Unit,
+    onTracking: () -> Unit,
+    /** The group picker is a menu from Change here, as on a tablet. */
+    groupMenu: Boolean = false,
+    groupOpen: Boolean = false,
+    onGroup: (Boolean) -> Unit = {},
+) {
     val context = LocalContext.current
     val store = LocalAppStore.current
     val navigator = LocalNavigator.current
@@ -512,6 +716,27 @@ private fun SeriesPanel(series: SeriesView, onReadFrom: () -> Unit, onTracking: 
                 Strings.seriesChange(context),
                 onReadFrom,
             )
+            // Whose version of each chapter, inside the source: only when it has a choice.
+            if (edition.groups.size > 1) {
+                PanelRule()
+                Box {
+                    PanelRow(
+                        Strings.seriesGroup(context),
+                        GroupWords.inUse(edition),
+                        Strings.seriesChange(context),
+                        onClick = { onGroup(true) },
+                        tail = GroupWords.why(context, edition),
+                        actionHint = Strings.seriesGroupAction(context),
+                    )
+                    if (groupMenu) {
+                        Box(Modifier.align(Alignment.TopEnd)) {
+                            Menu(expanded = groupOpen, onDismissRequest = { onGroup(false) }) {
+                                GroupMenuRows(series.work, edition) { onGroup(false) }
+                            }
+                        }
+                    }
+                }
+            }
         }
         val first = followed.firstOrNull()
         if (first != null) {
@@ -554,23 +779,46 @@ private fun PanelRule() {
     HorizontalDivider(color = ObiSilk.FaintRule)
 }
 
-/** A panel row: its label small in haze over its value, and an action in silk at the end. */
+/**
+ * A panel row: its label small in haze over its value, and an action in silk at the end,
+ * underlined on e-ink. [tail] follows the value in haze: "· most chapters".
+ */
 @Composable
-private fun PanelRow(label: String, value: String, action: String?, onClick: () -> Unit) {
+private fun PanelRow(label: String, value: String, action: String?, onClick: () -> Unit, tail: String? = null, actionHint: String? = null) {
+    val haze = MaterialTheme.colorScheme.onSurfaceVariant
+    val eink = LocalEinkLayout.current != null
     Row(
         Modifier
             .fillMaxWidth()
             .heightIn(min = 64.dp)
-            .clickable(onClick = onClick)
+            .clickable(onClickLabel = actionHint, onClick = onClick)
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(Modifier.weight(1f)) {
-            Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(value, style = MaterialTheme.typography.bodyLarge)
+        // TalkBack hears the label, the value and the tail, with a comma for the dot.
+        val spoken = listOf(label, value, tail).filter { !it.isNullOrBlank() }.joinToString(", ") // i18n-skip: a separator
+        Column(Modifier.weight(1f).clearAndSetSemantics { contentDescription = spoken }) {
+            Text(label, style = MaterialTheme.typography.bodySmall, color = haze)
+            val words = if (tail == null) {
+                AnnotatedString(value)
+            } else {
+                buildAnnotatedString {
+                    append(value)
+                    withStyle(SpanStyle(color = haze)) { append(" · $tail") } // i18n-skip: a separator
+                }
+            }
+            // A new value crossfades, as a group picked; e-ink swaps it at once.
+            val text = @Composable { shown: AnnotatedString -> Text(shown, style = MaterialTheme.typography.bodyLarge) }
+            if (eink) text(words) else SwapFade(words, animationSpec = Motion.fadeIn()) { text(it) }
         }
         if (action != null) {
-            Text(action, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(start = 12.dp))
+            Text(
+                action,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+                textDecoration = if (eink) TextDecoration.Underline else null,
+                modifier = Modifier.padding(start = 12.dp),
+            )
         }
     }
 }
@@ -582,6 +830,7 @@ private fun PanelRow(label: String, value: String, action: String?, onClick: () 
 private fun LazyListScope.seriesChapters(
     series: SeriesView,
     chapters: ReadChapters?,
+    late: Boolean,
     newestFirst: Boolean,
     onOrder: (Boolean) -> Unit,
     folds: SnapshotStateMap<String, Boolean>,
@@ -589,6 +838,7 @@ private fun LazyListScope.seriesChapters(
     onChosen: (Set<ChapterId>) -> Unit,
     onOpen: (ChapterRow) -> Unit,
     onLong: (ChapterRow) -> Unit,
+    opening: OpenFocus?,
     onRetry: () -> Unit,
     onReadFrom: () -> Unit,
 ) {
@@ -598,10 +848,16 @@ private fun LazyListScope.seriesChapters(
     if (chosen == null) {
         item(key = "chapters-heading") { ChaptersHeading(byVolume, newestFirst, onOrder) }
     }
+    // Until the chapters come the space is held, its placeholders drawn only after [late]; the
+    // rows fade in where they fade out, so nothing above moves and nothing goes blank.
     if (chapters == null) {
+        if (!late) {
+            item(key = "placeholder-hold") { Spacer(Modifier.height(288.dp)) }
+            return
+        }
         items(4, key = { "placeholder-$it" }) {
             Column(
-                Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = 16.dp, vertical = 14.dp),
+                itemMotion().fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = 16.dp, vertical = 14.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 TextPlaceholder(0.5f)
@@ -611,29 +867,37 @@ private fun LazyListScope.seriesChapters(
         return
     }
     val failure = chapters.failure
-    // With the source failed, what is downloaded still opens: only those chapters, under no volume.
-    val groups = if (failure != null) {
-        listOfNotNull(
-            chapters.volumes.downloaded().takeIf { it.isNotEmpty() }?.let { VolumeGroup(volume = null, title = null, chapters = it, allRead = false) },
-        )
-    } else {
-        chapters.volumes
-    }
-    if (failure != null) {
-        item(key = "chapters-failed") { ChaptersFailed(series, failure, groups.chapterRows().size, onRetry) }
+    val groups = chapters.listedGroups()
+    if (failure is ReadingFailure.NoSource) {
+        // Nothing was ever read from a source, so nothing failed: an empty state that leads to Read from.
+        item(key = "chapters-no-source") {
+            val context = LocalContext.current
+            Box(itemMotion()) {
+                PlainEmpty(
+                    Strings.seriesNoSourceTitle(context),
+                    Strings.seriesNoSourceLine(context),
+                    action = Strings.seriesNoSourceSearch(context),
+                    onAction = onReadFrom,
+                )
+            }
+        }
+    } else if (failure != null) {
+        item(key = "chapters-failed") { Box(itemMotion()) { ChaptersFailed(series, failure, groups.chapterRows().size, onRetry) } }
     } else if (groups.isEmpty()) {
         item(key = "chapters-none") {
             val context = LocalContext.current
+            Box(itemMotion()) {
             PlainEmpty(
                 Strings.seriesNoChaptersTitle(context),
                 Strings.seriesNoChaptersLine(context),
                 action = Strings.seriesReadFromAnother(context),
                 onAction = onReadFrom,
             )
+            }
         }
     }
     val ordered = if (newestFirst) groups.reversed() else groups
-    val single = failure != null || (ordered.size == 1 && ordered.first().volume == null)
+    val single = chapters.singleGroup(ordered)
     ordered.forEachIndexed { index, group ->
         val key = group.volume ?: "none-$index"
         val open = single || (folds[key] ?: !group.allRead)
@@ -641,7 +905,7 @@ private fun LazyListScope.seriesChapters(
             item(key = "volume-$key") {
                 val context = LocalContext.current
                 val (name, rest) = SeriesWords.volume(context, group, novel)
-                Column {
+                Column(itemMotion()) {
                     SeriesRule()
                     VolumeRowItem(name, rest, open, onToggle = { folds[key] = !open })
                 }
@@ -649,10 +913,108 @@ private fun LazyListScope.seriesChapters(
         }
         if (open) {
             val rows = if (newestFirst) group.chapters.reversed() else group.chapters
-            items(rows, key = { "chapter-${it.id}" }) { row -> ChapterItem(series, row, chosen, onChosen, onOpen, onLong) }
+            items(rows, key = { "chapter-${it.id}" }) { row -> Box(itemMotion()) { ChapterItem(series, row, chosen, onChosen, onOpen, onLong, opening) } }
         }
     }
 }
+
+/** Whether the action opens a chapter that is downloaded, so it opens with the source failed. */
+private fun SeriesAction.opensDownloaded(volumes: List<VolumeGroup>): Boolean {
+    val chapter = when (this) {
+        is SeriesAction.Read -> chapter
+        is SeriesAction.Continue -> chapter
+        is SeriesAction.ContinuePart -> chapter
+        is SeriesAction.ReadPart -> chapter
+        else -> return false
+    }
+    return volumes.downloaded().any { it.id == chapter }
+}
+
+/** With the source failed, what is downloaded still opens: only those chapters, under no volume. */
+private fun ReadChapters.listedGroups(): List<VolumeGroup> = if (failure != null) {
+    listOfNotNull(
+        volumes.downloaded().takeIf { it.isNotEmpty() }?.let { VolumeGroup(volume = null, title = null, chapters = it, allRead = false) },
+    )
+} else {
+    volumes
+}
+
+/**
+ * Whether the chapters are one run with no volume rows: the downloaded ones after a failure, a list
+ * with no volumes, or a flat one (Show volumes off, or too few chapters with a volume).
+ */
+private fun ReadChapters.singleGroup(groups: List<VolumeGroup>): Boolean =
+    failure != null || (groups.size == 1 && (groups.first().flat || groups.first().volume == null))
+
+/**
+ * The item [seriesChapters] lists [id]'s row at while choosing, when the page has no header or
+ * heading above the chapters: -1 when the row is not listed, as in a volume folded away.
+ */
+private fun ReadChapters.choosingItem(newestFirst: Boolean, folds: Map<String, Boolean>, id: ChapterId): Int {
+    val groups = listedGroups()
+    // The failure's or the empty list's one item comes first.
+    var item = if (failure != null || groups.isEmpty()) 1 else 0
+    val ordered = if (newestFirst) groups.reversed() else groups
+    val single = singleGroup(ordered)
+    ordered.forEachIndexed { index, group ->
+        val key = group.volume ?: "none-$index"
+        if (!single) item += 1
+        if (single || (folds[key] ?: !group.allRead)) {
+            val rows = if (newestFirst) group.chapters.reversed() else group.chapters
+            val at = rows.indexOfFirst { it.id == id }
+            if (at >= 0) return item + at
+            item += rows.size
+        }
+    }
+    return -1
+}
+
+/** The row Choose chapters opens on, which TalkBack and the keyboard start on once. */
+internal class OpenFocus(val id: ChapterId) {
+    val requester = FocusRequester()
+    var asked = false
+}
+
+/**
+ * The chapters' list. Choose chapters opens it with the reader's place, item [choosingAt], as near
+ * the middle as the list's ends allow, placed before choosing's first frame so nothing scrolls, and
+ * leaving it puts the list back where it was.
+ */
+@Composable
+private fun ChapterColumn(modifier: Modifier, choosingAt: Int, content: LazyListScope.() -> Unit) {
+    BoxWithConstraints(modifier) {
+        val listed = rememberLazyListState()
+        val density = LocalDensity.current
+        val viewport = with(density) { (maxHeight - LIST_BOTTOM).roundToPx() }
+        val row = with(density) { CHAPTER_ROW.roundToPx() }
+        // Where the page was before choosing moved it: leaving Choose chapters goes back there.
+        val before = remember { intArrayOf(-1, 0) }
+        // Run as choosing starts and ends, in the frame that lays the list out for it.
+        DisposableEffect(choosingAt >= 0) {
+            if (choosingAt >= 0) {
+                before[0] = listed.firstVisibleItemIndex
+                before[1] = listed.firstVisibleItemScrollOffset
+                listed.requestScrollToItem(choosingAt, centredOffset(viewport, row))
+            } else if (before[0] >= 0) {
+                listed.requestScrollToItem(before[0], before[1])
+                before[0] = -1
+            }
+            onDispose {}
+        }
+        LazyColumn(
+            Modifier.fillMaxSize().panelPageKeys(listed),
+            state = listed,
+            contentPadding = PaddingValues(bottom = LIST_BOTTOM),
+            content = content,
+        )
+    }
+}
+
+/** The space under the chapters' list. */
+private val LIST_BOTTOM = 24.dp
+
+/** A chapter row's least height, which Choose chapters centres the reader's place by. */
+private val CHAPTER_ROW = 72.dp
 
 @Composable
 private fun ChapterItem(
@@ -662,14 +1024,25 @@ private fun ChapterItem(
     onChosen: (Set<ChapterId>) -> Unit,
     onOpen: (ChapterRow) -> Unit,
     onLong: (ChapterRow) -> Unit,
+    opening: OpenFocus?,
 ) {
     val store = LocalAppStore.current
     val context = LocalContext.current
     val work = series.work
     val read = row.state is ChapterReadState.Read
+    val place = opening?.takeIf { it.id == row.id }
+    if (place != null) {
+        LaunchedEffect(place) {
+            if (!place.asked) {
+                place.asked = true
+                runCatching { place.requester.requestFocus() }
+            }
+        }
+    }
     Column {
         SeriesRule()
         ChapterRowItem(
+            modifier = if (place != null) Modifier.focusRequester(place.requester).focusable() else Modifier,
             row = row,
             chosen = chosen?.contains(row.id),
             onClick = {
@@ -763,5 +1136,18 @@ private fun SeriesRecommended(series: SeriesView) {
         LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             items(series.recommended, key = { it.work }) { tile -> ReadTile(tile, 112.dp, from = "series-recommended") }
         }
+    }
+}
+
+/** The chapter list's order, kept on this device for every series. */
+private object ChapterOrder {
+    private const val PREFS = "kaeri_series_ui"
+    private const val NEWEST = "newest_first"
+
+    fun newestFirst(context: android.content.Context): Boolean =
+        context.getSharedPreferences(PREFS, android.content.Context.MODE_PRIVATE).getBoolean(NEWEST, true)
+
+    fun keep(context: android.content.Context, newest: Boolean) {
+        context.getSharedPreferences(PREFS, android.content.Context.MODE_PRIVATE).edit().putBoolean(NEWEST, newest).apply()
     }
 }

@@ -729,6 +729,18 @@ pub(crate) fn dispatch(
                     home::changed(&lent.meta, &lent.store, &lent.tx, &ask, &memory);
                 });
             }
+            // Reading's Home the same, once opened.
+            if moved && engine.reading.available {
+                let kit = crate::read_catalog::Kit::of(services);
+                let ask = crate::read_catalog::Ask::of(engine, services);
+                crate::read_catalog::home::path_moved(&kit, ask, tx);
+            }
+            // The reader's open end page offers what opens with the connection as it is now.
+            if moved {
+                let EngineState { config, reader, .. } = &mut *engine;
+                let mut cx = reader.cx(config, services, tx);
+                reader.network_moved(&mut cx, !offline);
+            }
         }
         Command::DeviceState {
             reduce_motion,
@@ -1298,6 +1310,14 @@ pub(crate) async fn handle_internal(
             let lent = crate::downloads::books::Lent::of(services, tx);
             services.book_sources.downloads.sweep(&lent, None);
         }
+        Internal::BookSourcesChanged if engine.reading.available => {
+            crate::read_catalog::changed::sources_changed(
+                &crate::read_catalog::Kit::of(services),
+                crate::read_catalog::Ask::of(engine, services),
+                tx,
+            );
+        }
+        Internal::BookSourcesChanged => {}
         Internal::SyncEffects => {
             let effects = services.syncing.take_effects();
             crate::sync::apply_effects(effects, engine, services, tx);

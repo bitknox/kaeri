@@ -15,6 +15,10 @@ pub const SPREAD_ASPECT: f32 = 1.16;
 /// Two pages pair on a two-page screen when their aspects differ by this much or less.
 pub const PAIR_TOLERANCE: f32 = 0.1;
 
+/// Width over height taken for a page whose size is not known (a side of 0, as for a page whose
+/// header could not be read): a usual comic page, 5 by 7.
+pub const UNKNOWN_ASPECT: f32 = 5.0 / 7.0;
+
 /// Whether a page of this size is a spread.
 pub fn is_spread(width: u32, height: u32) -> bool {
     height > 0 && width as f32 > height as f32 * SPREAD_ASPECT
@@ -74,7 +78,12 @@ impl PageShape {
         PageShape { width, height, kind: PageKind::Story }
     }
 
+    /// Width over height, [`UNKNOWN_ASPECT`] for a page with a side of 0. Always finite and
+    /// above 0, so places worked out from it are finite.
     fn aspect(&self) -> f32 {
+        if self.width == 0 || self.height == 0 {
+            return UNKNOWN_ASPECT;
+        }
         PixelRect::full(self.width, self.height).aspect()
     }
 }
@@ -206,7 +215,8 @@ pub fn lay_out(pages: &[PageShape], options: LayoutOptions) -> Vec<Leaf> {
     leaves
 }
 
-/// Two pages side by side at one height, the first in reading order on the reading side.
+/// Two pages side by side at one height, the first in reading order on the reading side. Both
+/// aspects are finite and above 0, so the shares are finite and between 0 and 1.
 fn pair(a: u32, sa: &PageShape, b: u32, sb: &PageShape, direction: Direction) -> Leaf {
     let (wa, wb) = (sa.aspect(), sb.aspect());
     let share_a = wa / (wa + wb);
@@ -300,6 +310,23 @@ mod tests {
         let p = &leaves[0].parts;
         assert_eq!((p[0].page, p[0].place.x), (0, 0.5));
         assert_eq!((p[1].page, p[1].place.x), (1, 0.0));
+    }
+
+    #[test]
+    fn pages_of_unknown_size_pair_as_usual_pages() {
+        let unknown = PageShape::story(0, 0);
+        let o = LayoutOptions {
+            screen: Screen::Double,
+            first_is_cover: false,
+            ..LayoutOptions::default()
+        };
+        for pages in [[unknown, unknown], [unknown, PAGE], [PageShape::story(700, 0), PAGE]] {
+            let leaves = lay_out(&pages, o);
+            assert_eq!(pages_of(&leaves), vec![vec![0, 1]], "{pages:?}");
+            for p in &leaves[0].parts {
+                assert!(p.place.width > 0.0 && p.place.width < 1.0, "{pages:?}: {p:?}");
+            }
+        }
     }
 
     #[test]

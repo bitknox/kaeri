@@ -7,10 +7,15 @@
 #
 # SHOTS picks every run's shots (comma-separated; the wide run takes all by default), and SIZES
 # picks the runs. The match picker's run, on a scene where a source cannot choose a match, is
-# SIZES=match.
+# SIZES=match. TEXT_SCALE=1.25 draws text as GNOME's Large Text does, through GTK's font
+# resolution.
 set -euo pipefail
 mkdir -p "$HOME/.config/gtk-4.0" /out/media
-printf '[Settings]\ngtk-font-name=Inter 11\n' \
+dpi=
+if [ -n "${TEXT_SCALE:-}" ]; then
+  dpi="gtk-xft-dpi=$(awk -v s="$TEXT_SCALE" 'BEGIN { printf "%d", 96 * 1024 * s }')"
+fi
+printf '[Settings]\ngtk-font-name=Inter 11\n%s\n' "$dpi" \
   >"$HOME/.config/gtk-4.0/settings.ini"
 
 cargo build --manifest-path desktop/linux/Cargo.toml --features fixtures 2>&1 \
@@ -47,7 +52,11 @@ runs=(
   # Reading's places, series page and reader on the reading scene: SIZES=reading. The Downloads
   # place has a queue of its own scene.
   "reading 1280x800 ${SHOTS:-reading}"
+  # The same at a phone's width: SIZES=readingnarrow.
+  "readingnarrow 360x780 ${SHOTS:-reading}"
   "readingdl 1280x800 ${SHOTS:-read-downloads}"
+  # The reader's chapters on a long series, chapter 60 of 120: SIZES=readinglong.
+  "readinglong 1280x800 ${SHOTS:-read-chapters-long}"
   # A first launch with the demo as the only source: a run of its own, as its shots need it.
   "demo 1280x800 ${SHOTS:-demo-home,demo-search,demo-title,demo-starting,demo-removed}"
   # Reading's prelaunch states on the reading scene, and the demo as the only book source:
@@ -63,8 +72,9 @@ for run in "${runs[@]}"; do
   extra=(--showcase)
   case "$name" in
     demo) extra=(--demo) ;;
-    reading) extra=(--scene reading) ;;
+    reading | readingnarrow) extra=(--scene reading) ;;
     readingdl) extra=(--scene reading-downloads) ;;
+    readinglong) extra=(--scene reading-long) ;;
     prelaunch) extra=(--scene reading) ;;
     pldemo) extra=(--demo --scene reading) ;;
   esac

@@ -603,6 +603,24 @@ reader-moved = Moved to { $chapter }, page { $page }, where { $device } stopped
 # The same notice for a chapter known only by its number, such as 14 or 14.5.
 reader-moved-number = Moved to chapter { $chapter }, page { $page }, where { $device } stopped
 
+# The notice when another device read further and its name is not known: a device removed from sync, or this one before a reinstall.
+reader-moved-elsewhere = Moved to { $chapter }, page { $page }, where another device stopped
+
+# The same notice for a chapter known only by its number, such as 14 or 14.5.
+reader-moved-number-elsewhere = Moved to chapter { $chapter }, page { $page }, where another device stopped
+
+# The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its whole label, such as The Long Night.
+reader-moved-image = Moved to { $chapter }, image { $image }, where { $device } stopped
+
+# The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+reader-moved-number-image = Moved to chapter { $chapter }, image { $image }, where { $device } stopped
+
+# The notice in a strip when another device read further and its name is not known.
+reader-moved-elsewhere-image = Moved to { $chapter }, image { $image }, where another device stopped
+
+# The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+reader-moved-number-elsewhere-image = Moved to chapter { $chapter }, image { $image }, where another device stopped
+
 # A notice the first time a series opens with its reading direction guessed. It offers Change.
 reader-detected-right-to-left = Looks like right to left
 
@@ -618,8 +636,14 @@ reading-failed-offline = You're offline. Downloaded chapters still open.
 # Why a chapter or a list could not load: the source did not answer. The source is its name.
 reading-failed-source-down = { $source } isn't answering. Try again later.
 
+# Why something could not load: the source the series reads from is switched off in Your sources.
+reading-failed-source-off = { $source } is switched off. Switch it on in Your sources, or read from another source.
+
 # Why a chapter could not load: the source no longer has it.
 reading-failed-not-found = This source doesn't have it anymore. Try another source.
+
+# Why a series has no chapters: none of the person's sources holds it, and none was ever picked.
+reading-failed-no-source = None of your sources has this series yet. Search for it by another name in Read from, or add a source in Your sources.
 
 # Why a chapter or a list could not load: the source refused. The reason comes from the source.
 reading-failed-blocked = { $source } refused the request. { $reason }
@@ -629,6 +653,9 @@ reading-failed-parse = Kaeri couldn't read what { $source } sent. Its plugin may
 
 # Why one page did not load. The status is the server's HTTP status code, such as 404.
 reading-failed-page = This page didn't load (error { $status }). Try again.
+
+# In the reader, in a novel's text, in the box where a picture from the source did not load. Try again sits under it.
+reading-picture-failed = Couldn't load picture
 
 # Why something could not load: a sign-in is needed. What is a server's or a tracker's name.
 reading-failed-sign-in = Sign in to { $what } again to keep reading.
@@ -647,6 +674,15 @@ reading-failed-protected = This book is copy-protected, so Kaeri can't open it.
 
 # Why a chapter could not be saved: the disk is full.
 reading-failed-disk-full = There's no room left on this device. Free some space and try again.
+
+# Why a chapter or a file for an e-reader could not be saved: the storage refused the name, because it is too long or has characters the storage doesn't allow. The path is the file's or the folder's.
+reading-failed-write-name = The storage doesn't take the name { $path }. It may be too long.
+
+# Why a chapter or a file for an e-reader could not be saved: the storage is read-only, or Kaeri isn't allowed to write there. The path is the file's or the folder's.
+reading-failed-write-denied = Kaeri isn't allowed to write { $path }. Check that the storage isn't read-only, then try again.
+
+# Why a chapter or a file for an e-reader could not be saved, for another reason the system gave. The path is the file's or the folder's.
+reading-failed-write = Kaeri couldn't write { $path }. Try again.
 
 # Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.
 reading-failed-webview = Novels need a newer system WebView than version { $version }. Update Android System WebView and try again.
@@ -861,6 +897,9 @@ reading-row-waits-wifi = Queued · waits for Wi-Fi
 # A chapter row's state while it downloads.
 reading-row-downloading = Downloading · { $done } of { $total } pages
 
+# A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count.
+reading-row-downloading-plain = Downloading
+
 # A chapter row's state: the download failed. The reason follows as the next part.
 reading-row-failed = Couldn't download
 
@@ -891,6 +930,45 @@ reading-row-versions =
     { $n ->
         [one] 1 version
        *[other] { $n } versions
+    }
+
+# A chapter row: the source lists this chapter in parts, and the reader runs through them as one chapter. Shown beside the chapter's name: "Chapter 1, 2 parts".
+reading-row-parts =
+    { $n ->
+        [one] 1 part
+       *[other] { $n } parts
+    }
+
+# A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it. Lower case, as the line's other words; an app that starts a line with it capitalises the first letter.
+reading-row-from-group = from { $group }
+
+# A chapter row: the same, for a group in another language than the app's, named after the group. "from Saltmarsh Team, Spanish".
+reading-row-from-group-in = from { $group }, { $language }
+
+# A chapter row: a chapter in parts that is missing some, as no group has released them. The reader runs through the parts there are. Followed by the missing part: "2 of 3 parts".
+reading-row-parts-of = { $have } of { $n } parts
+
+# A chapter row, after the parts count: the part no group has released. With several, how many.
+reading-row-part-missing =
+    { $count ->
+        [one] part { $part } missing
+       *[other] { $count } parts missing
+    }
+
+# A chapter row: one part of a chapter in parts comes from another group, as the group the series is read from lacks it. "part 2 from Saltmarsh Team".
+reading-row-part-from-group = part { $part } from { $group }
+
+# The same, for a group in another language than the app's. "part 2 from Saltmarsh Team, Spanish".
+reading-row-part-from-group-in = part { $part } from { $group }, { $language }
+
+# A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there. Lower case, as the line's other words.
+reading-row-from-source = from { $source }
+
+# A quiet line in the reader: pages a series repeats at the start or end of its chapters (a group's credits or notices) were left out of this chapter. Tapping it shows them.
+reader-credit-pages-skipped =
+    { $count ->
+        [one] { $count } credit page skipped
+       *[other] { $count } credit pages skipped
     }
 
 # A chapter row: when it was read or came out, under a minute ago.
@@ -956,6 +1034,9 @@ reading-miss-down-since = Not answering since { $time }
 
 # The source has failed every ask, since a time on another day or not known.
 reading-miss-down = Not answering
+
+# The source has no series by the series' names, but has one that may be it in another edition, as a full-colour release. That series is shown under this line, and choosing it confirms it.
+reading-miss-possible = Possible match
 
 # How many parts of a light novel are downloaded.
 reading-dl-parts =
@@ -1856,6 +1937,9 @@ linux-book-plugin-use = Use this plugin
 # Screen reader name of a discovery row's View all button: the row's heading follows, so a list of links makes sense on its own.
 read-linux-view-all-row = View all, { $row }
 
+# Screen reader name of See all on a row of reading's Search start: the row's heading follows, as for Read's rows.
+read-linux-see-all-row = See all, { $row }
+
 # Screen reader name of a discovery row's heading while its covers are on their way.
 read-linux-row-loading = { $row }, loading
 
@@ -2019,6 +2103,12 @@ linux-reader-end-offline-body = You're offline. It opens here once you're connec
 # Hint under a page's error: turning the page goes on past it.
 linux-reader-page-failed-hint = Turn the page to go on without it.
 
+# Why a page failed: its file came in, but no image decoder on this system could show it.
+linux-reader-page-undecodable = The image came in, but it couldn't be shown.
+
+# Why a light novel's chapter stopped showing: the view that draws its text closed or failed to load it.
+linux-reader-novel-stopped = The view that shows the text stopped.
+
 # Line while a chapter opens, once its number is known.
 linux-reader-opening-number = Opening chapter { $chapter }
 
@@ -2105,9 +2195,6 @@ linux-shortcuts-close-reader = Close the reader
 
 # Two names joined, or a list's last name joined to the rest, in the end page's tracker line: "AniList and MangaUpdates".
 linux-reader-names-and = { $first } and { $last }
-
-# On the plate that holds a page's place while it loads. The page is its number, such as 23.
-linux-reader-page-plate = Page { $page }
 
 # Heading when a chapter could not open. The chapter is its number, such as 13.
 linux-reader-open-failed = Couldn't open chapter { $chapter }
@@ -3817,6 +3904,9 @@ accounts-row-queued =
 
 # Part of an account's overlay row: changes waiting to be sent, and some of them held back until the title is matched to the { -tracker }'s own id.
 accounts-row-queued-held = { $queued } queued, { $held } waiting for a match
+
+# Part of an account's overlay row: changes held back until the title is matched to the { -tracker }'s own id, with nothing else queued.
+accounts-row-held = { $count } waiting for a match
 
 # Action beside a sync difference in the overlay: Enter keeps the value on this device.
 accounts-conflict-keep-mine = Use local
@@ -8816,6 +8906,18 @@ player-subs-more = More in Settings…
 # Under a page that is still loading after four seconds.
 reader-page-loading = Loading page { $page }
 
+# On the plate of a page that is still loading.
+reader-page-plate = Page { $page }
+
+# On the plate of a strip image that is still loading.
+reader-image-plate = Image { $image }
+
+# Under a strip image's number after four seconds.
+reader-image-loading = Loading image { $image }
+
+# Under a strip image's number (Image 4) when it couldn't be loaded, above Try again.
+reader-image-failed = Couldn't load
+
 # Heading where a page could not be loaded.
 reader-page-failed = Couldn't load page { $page }
 
@@ -8830,6 +8932,9 @@ reader-end-read = Counted as read
 
 # Under the end of chapter line, naming the trackers the read went to.
 reader-end-tracker = Counted as read · { $trackers } updated
+
+# Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online.
+reader-end-tracker-offline = Counted as read · { $tracker } updates when you're back online
 
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = Next
@@ -8891,14 +8996,167 @@ reader-spreads-rotate = Turn
 # A choice for wide pages: shown whole.
 reader-spreads-whole = Whole
 
-# A choice for the reader's tap zones: taps near the left and right edges turn the page.
+# A choice for the reader's tap zones: taps near the left and right edges turn the page. Replaced by Sides; kept until every app has the new tap zones page.
 reader-tap-edges = Edges
 
-# A choice for the reader's tap zones: the left and right halves turn the page.
-reader-tap-sides = Halves
+# Tap zone layout: Sides when pages turn sideways, L shape when they move downwards. The name under its tile.
+reader-tap-auto = Auto
 
-# A choice for the reader's tap zones: taps do not turn the page.
+# Tap zone layout: previous page on one side, next page on the other, controls in the middle.
+reader-tap-sides = Sides
+
+# Tap zone layout: previous page along the top and down one side, next page along the bottom and down the other side, in the shape of the letter L.
+reader-tap-l-shape = L shape
+
+# Tap zone layout: controls along the top, a narrow column for previous page, and the rest of the page for next page.
+reader-tap-wide-next = Wide next
+
+# Tap zone layout: previous page across the top, next page across the bottom.
+reader-tap-top-bottom = Top and bottom
+
+# Tap zone layout: next page down both the left and the right side, previous page in the bottom middle.
+reader-tap-both-next = Next on both sides
+
+# Tap zone layout: taps only show and hide the controls, and never turn the page.
 reader-tap-off = Off
+
+# Tap zones page: the choice for paged reading (pages that turn), one of two at the top.
+reader-tap-paged = Paged
+
+# Tap zones page: the choice for strips and scrolled novels, one of two at the top.
+reader-tap-scrolling = Scrolling
+
+# Tap zones page: row that sets how wide the zones at the edges are.
+reader-tap-size = Zone size
+
+# Choice of Zone size: the edge zones are a third of the screen.
+reader-tap-standard = Standard
+
+# Choice of Zone size: the edge zones are a quarter of the screen.
+reader-tap-small = Small
+
+# Tap zones page: switch that swaps the left and right zones, for the left hand.
+reader-tap-flip-sides = Flip left and right
+
+# Tap zones page: switch that swaps the top and bottom zones.
+reader-tap-flip-ends = Flip top and bottom
+
+# Tap zones page: button that shows the zones over the page.
+reader-tap-show = Show zones
+
+# Tap zones page, beside Show zones: the setting is not synced. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.
+reader-tap-here = Stays on this { $kind }
+
+# The reader's settings on a Mac, Windows or Linux: the row that opens the tap zones page, which is about clicks there.
+reader-click-zones = Click zones
+
+# Name of the tap zone that turns to the next page, in the guide over the page and as a screen reader action.
+reader-zone-next = Next page
+
+# Name of the tap zone that turns to the previous page, in the guide and as a screen reader action.
+reader-zone-previous = Previous page
+
+# Name of the tap zone that shows and hides the reader's controls, in the guide.
+reader-zone-controls = Controls
+
+# Screen reader action on the page that shows the reader's controls.
+reader-zone-show-controls = Show controls
+
+# Name of the tap zone that scrolls a strip or a scrolled novel down, in the guide.
+reader-zone-scroll-down = Scroll down
+
+# Name of the tap zone that scrolls a strip or a scrolled novel up, in the guide.
+reader-zone-scroll-up = Scroll up
+
+# Under Controls in the tap zone guide: where the zones are changed.
+reader-zone-change = Change in Reader settings
+
+# Tap zone layout Off in words, the accessibility value of its tile.
+reader-tap-off-about = Taps show and hide the controls
+
+# Tap zone layout in words, the accessibility value of its tile: Sides, next page on the right.
+reader-tap-sides-right-about = Next page on the right side, previous page on the left side, controls in the middle
+
+# Tap zone layout in words, the accessibility value of its tile: Sides, next page on the left.
+reader-tap-sides-left-about = Next page on the left side, previous page on the right side, controls in the middle
+
+# Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the right.
+reader-tap-l-shape-bottom-right-about = Next page along the bottom and on the right, previous page along the top and on the left, controls in the middle
+
+# Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the left.
+reader-tap-l-shape-bottom-left-about = Next page along the bottom and on the left, previous page along the top and on the right, controls in the middle
+
+# Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right.
+reader-tap-l-shape-top-right-about = Next page along the top and on the right, previous page along the bottom and on the left, controls in the middle
+
+# Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left.
+reader-tap-l-shape-top-left-about = Next page along the top and on the left, previous page along the bottom and on the right, controls in the middle
+
+# Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the left.
+reader-tap-wide-next-top-left-about = Controls along the top, previous page in a narrow column on the left, next page everywhere else
+
+# Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the right.
+reader-tap-wide-next-top-right-about = Controls along the top, previous page in a narrow column on the right, next page everywhere else
+
+# Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left.
+reader-tap-wide-next-bottom-left-about = Controls along the bottom, previous page in a narrow column on the left, next page everywhere else
+
+# Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right.
+reader-tap-wide-next-bottom-right-about = Controls along the bottom, previous page in a narrow column on the right, next page everywhere else
+
+# Tap zone layout in words, the accessibility value of its tile: Top and bottom.
+reader-tap-top-bottom-about = Next page across the bottom, previous page across the top, controls in the middle
+
+# Tap zone layout in words, the accessibility value of its tile: Top and bottom flipped.
+reader-tap-top-bottom-flipped-about = Next page across the top, previous page across the bottom, controls in the middle
+
+# Tap zone layout in words, the accessibility value of its tile: Next on both sides.
+reader-tap-both-next-about = Next page down both sides, previous page at the bottom in the middle, controls above it
+
+# Tap zone layout in words, the accessibility value of its tile: Next on both sides flipped top and bottom.
+reader-tap-both-next-flipped-about = Next page down both sides, previous page at the top in the middle, controls below it
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the right.
+reader-tap-sides-right-scroll-about = Scroll down on the right side, scroll up on the left side, controls in the middle
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the left.
+reader-tap-sides-left-scroll-about = Scroll down on the left side, scroll up on the right side, controls in the middle
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the right.
+reader-tap-l-shape-bottom-right-scroll-about = Scroll down along the bottom and on the right, scroll up along the top and on the left, controls in the middle
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the left.
+reader-tap-l-shape-bottom-left-scroll-about = Scroll down along the bottom and on the left, scroll up along the top and on the right, controls in the middle
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right.
+reader-tap-l-shape-top-right-scroll-about = Scroll down along the top and on the right, scroll up along the bottom and on the left, controls in the middle
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left.
+reader-tap-l-shape-top-left-scroll-about = Scroll down along the top and on the left, scroll up along the bottom and on the right, controls in the middle
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the left.
+reader-tap-wide-next-top-left-scroll-about = Controls along the top, scroll up in a narrow column on the left, scroll down everywhere else
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the right.
+reader-tap-wide-next-top-right-scroll-about = Controls along the top, scroll up in a narrow column on the right, scroll down everywhere else
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left.
+reader-tap-wide-next-bottom-left-scroll-about = Controls along the bottom, scroll up in a narrow column on the left, scroll down everywhere else
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right.
+reader-tap-wide-next-bottom-right-scroll-about = Controls along the bottom, scroll up in a narrow column on the right, scroll down everywhere else
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom.
+reader-tap-top-bottom-scroll-about = Scroll down across the bottom, scroll up across the top, controls in the middle
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom flipped.
+reader-tap-top-bottom-flipped-scroll-about = Scroll down across the top, scroll up across the bottom, controls in the middle
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides.
+reader-tap-both-next-scroll-about = Scroll down on both sides, scroll up at the bottom in the middle, controls above it
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides flipped top and bottom.
+reader-tap-both-next-flipped-scroll-about = Scroll down on both sides, scroll up at the top in the middle, controls below it
 
 # Button in the reader's controls that opens the chapters and the page grid.
 reader-chapters = Chapters
@@ -8937,6 +9195,9 @@ reader-look-system = System
 # Top line of the page between chapters. The chapter is its number, such as 12.
 reader-end-of-chapter-number = End of chapter { $chapter }
 
+# Top line of the page between chapters when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own, such as Rooftop Lantern.
+reader-end-of-named = End of { $name }
+
 # The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.
 reader-end-facts = Chapter { $chapter } · { $facts }
 
@@ -8959,6 +9220,15 @@ reader-divider-facts-source = { $facts } · from { $source }
 # Line on the page between chapters, near its buttons: one more swipe opens the next chapter.
 reader-end-swipe = Swipe to keep reading
 
+# Button beside Continue on the page between chapters, shown only when the next chapter is an extra (such as 16.5 between 16 and 17). It opens the chapter named, passing over the extras before it. The chapter is its number, such as 17.
+reader-end-skip-to = Skip to chapter { $chapter }
+
+# What a screen reader adds after "Skip to chapter 17": the extra it passes over stays unread in the chapter list. The chapter is the extra's number, such as 16.5.
+reader-end-skip-hint = Chapter { $chapter } stays unread.
+
+# What a screen reader adds after "Skip to chapter 17" when it passes over more than one extra, or an extra with no number (such as an omake): those chapters stay unread in the chapter list.
+reader-end-skip-hint-extras = The extras before it stay unread.
+
 # The next episode's length on the divider inside a strip.
 reader-divider-images =
     { $count ->
@@ -8968,6 +9238,57 @@ reader-divider-images =
 
 # Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.
 reader-chapter-line-titled = Chapter { $chapter } · { $title }
+
+# The reader's opening line while the series' source sends its chapter list.
+reader-wait-chapter-list = Getting the chapter list from { $source }
+
+# The reader's opening line while the source sends the chapter's pages or text.
+reader-wait-chapter-pages = Getting chapter { $chapter } from { $source }
+
+# The opening line after a few seconds, with how long it has waited so far.
+reader-wait-seconds = { $line } · { $seconds } s
+
+# Under the opening line once the wait has gone on for a long time, above Read from another source and Go back.
+reader-wait-long = This is taking a while.
+
+# Beside the line that says how many credit pages were skipped, on the end page and in a long strip. Tapping it shows them.
+reader-credit-show = Show
+
+# Spoken hint of the line that says how many credit pages were skipped.
+reader-credit-show-hint = Shows the page
+
+# Notice over a credit page shown again, and the caption above it in a long strip.
+reader-credit-shown = Skipped as a credit page
+
+# The notice's action on a shown credit page: show this page from now on.
+reader-credit-not = Not a credit page
+
+# Notice after Not a credit page, with Undo.
+reader-credit-kept = This page will show from now on
+
+# In the reader's line in place of a page number, while a credit page shows: "Chapter 87 · credit page".
+reader-credit-page = credit page
+
+# The same, when more than one credit page is shown: "credit page 1 of 2".
+reader-credit-page-of = credit page { $n } of { $total }
+
+# The reader's line under the title while a credit page shows: the chapter, then "credit page" or "credit page 1 of 2".
+reader-group-line-place = { $chapter } · { $place }
+
+# Spoken name of a credit page shown again.
+reader-credit-page-label = Credit page
+
+# Notice when a skipped credit page's picture can't be read, so it can't be shown.
+reader-credit-failed = Couldn't load this credit page
+
+# The scrubber's preview on the first page of a chapter's later part.
+reader-part-preview = Page { $page } · part { $part }
+
+# The same, when the part before it is missing from every group: "Page 14 · part 4 · part 3 missing".
+reader-part-preview-missing = Page { $page } · part { $part } · part { $missing } missing
+
+# Spoken value of the scrubber on the first page of a chapter's later part.
+reader-part-starts = Part { $part } starts at page { $page }
 
 # Button in the first run that opens the reading demo.
 onboarding-read-demo = Read the demo
@@ -9256,6 +9577,37 @@ series-tracker-ask = Which series is this? Choose
 # Value of the group row: the chosen group is used for this series.
 series-preferred-group = Your preferred group here
 
+# Label of the series page's row for the group whose version of each chapter the series lists, inside the source in use. Its value is the group's name.
+series-group = Group
+
+# After the group's name on the Group row: it is in use because it has the most chapters.
+series-group-most = most chapters
+
+# After the group's name on the Group row: the person picked it.
+series-group-picked = your pick
+
+# Spoken hint of the Group row's Change button.
+series-group-hint = Picks the group
+
+# Under the group picker's title: the source the groups are in.
+group-picker-in = In { $source }
+
+# The group picker's first choice: the group with the most chapters, whichever that is.
+group-picker-most = Most chapters
+
+# Under Most chapters: the group that means today.
+group-picker-most-now = Now { $group }
+
+# A group in the picker: how many of the series' chapters it has released. Its language follows, after a middle dot.
+group-picker-count =
+    { $total ->
+        [one] { $have } of { $total } chapter
+       *[other] { $have } of { $total } chapters
+    }
+
+# Under the group picker's choices.
+group-picker-fallback = Chapters a group doesn't have come from another group, and their rows say which.
+
 # A tracker's progress in chapters, with the total.
 series-tracker-chapters-of =
     { $total ->
@@ -9269,6 +9621,9 @@ series-tracker-chapters =
         [one] 1 chapter
        *[other] { $n } chapters
     }
+
+# A tracker's progress when the person has read none of the series yet, in place of "0 chapters".
+series-tracker-not-started = Not started
 
 # A tracker's progress in chapters, then the volume.
 series-tracker-with-volume = { $chapters } · volume { $volume }
@@ -9370,6 +9725,15 @@ series-no-chapters-title = No chapters in this source yet
 # Line under it.
 series-no-chapters-line = Another source may have them.
 
+# The chapter list when none of the person's sources holds the series and none was picked: an empty state, not a failure. Its button opens Read from.
+series-no-source-title = None of your sources has this series yet
+
+# Line under it.
+series-no-source-line = Search for it by another name, or add a source in Your sources.
+
+# Its button: opens Read from, where each source can be searched by another name.
+series-no-source-search = Search by another name
+
 # The chapter list when the source failed. Downloaded chapters are listed under it.
 series-chapters-failed = Couldn't load chapters from { $source }.
 
@@ -9427,6 +9791,9 @@ chapter-state-wifi = Queued · waits for Wi-Fi
 
 # A chapter downloading.
 chapter-state-downloading = Downloading · { $done } of { $total } pages
+
+# A chapter downloading before its page count is known, and throughout for a novel's chapter.
+chapter-state-downloading-plain = Downloading
 
 # A chapter that failed to download, with the reason.
 chapter-state-failed = Couldn't download. { $reason }
@@ -9507,6 +9874,18 @@ series-read-from-chapters = Chapters 1 to { $latest }
 
 # A source's chapters, after its kind on the line.
 series-read-from-chapters-later = chapters 1 to { $latest }
+
+# A source's line while it is asked for its chapter list, first on its line.
+series-read-from-checking = Checking chapters
+
+# The same, after its kind on the line.
+series-read-from-checking-later = checking chapters
+
+# A source that answered with no chapters for this series, first on its line.
+series-read-from-empty = No chapters here yet
+
+# The same, after its kind on the line.
+series-read-from-empty-later = no chapters here yet
 
 # After a folder's chapters.
 series-read-from-on-device = on this { $device }
@@ -9784,9 +10163,6 @@ read-search-nothing-filters-line = Fewer filters may find more.
 read-search-clear-filters = Clear filters
 
 # A sort of reading's Search, AniList's.
-read-sort-popular = Popular
-
-# A sort of reading's Search, AniList's.
 read-sort-trending = Trending
 
 # A sort of reading's Search, AniList's.
@@ -9800,6 +10176,9 @@ read-filter-format = Format
 
 # A filter.
 read-filter-origin = Origin
+
+# The first choice of the Origin filter's menu in reading's Search once an origin is set: it takes them all off.
+read-filter-any-origin = Any origin
 
 # A filter.
 read-filter-status = Status
@@ -10224,6 +10603,12 @@ settings-counts-read-moving-on-note = Turning past the last page, or opening the
 # Value of Counts as read: only the person's own marks; the reader marks nothing.
 settings-counts-read-marked = When you mark it
 
+# Reader default for manga: pages a group repeats at the start or end of its chapters are left out.
+settings-skip-credits = Skip credit pages
+
+# Line under Skip credit pages.
+settings-skip-credits-note = Pages a group repeats at the start or end of its chapters
+
 # Line under Counts as read when it is When you mark it.
 settings-counts-read-marked-note = Continue and your trackers follow your marks
 
@@ -10272,6 +10657,9 @@ settings-keep-chapters-ready-note = The next chapters of series on your Reading 
 # Line under Delete chapters after reading.
 settings-delete-after-reading-note = Bookmarked chapters are kept
 
+# Line under Show volumes: the list is grouped only when most chapters have a volume.
+settings-show-volumes-note = Grouped when most chapters have a volume
+
 # Line under New chapters.
 settings-chapter-notifications-note = Series on your Reading list
 
@@ -10309,6 +10697,9 @@ read-downloads-queued =
 
 # A series' line in Downloads when a chapter failed, with the reason.
 read-downloads-failed = { $chapter } couldn't download. { $reason }
+
+# Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows.
+read-download-not-started = The download didn't start. { $reason }
 
 # A series' line in Downloads: how many chapters are kept.
 read-downloads-kept =
@@ -10402,6 +10793,12 @@ send-ready =
 
 # Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.
 send-share-again = Share again
+
+# A ready send whose files were cleared before they were shared or saved, in the Send to e-reader sheet and in the send's row. Prepared files are kept for a day.
+send-files-gone = These files are gone. Prepared files are kept for a day.
+
+# Button on a send whose files are gone: prepares the same chapters for the same e-reader again.
+send-again = Send again
 
 # A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
 send-banner = Sending to { $device }
@@ -11328,6 +11725,9 @@ settings-adult = Show adult titles
 # Line under it. The tracker is a name.
 settings-adult-detail = Titles { $tracker } marks adult, in Search and Seasonal
 
+# Line under it when the app is for reading alone.
+settings-adult-detail-read = Titles { $tracker } marks adult, in Search and Browse
+
 # Row: quality.
 settings-quality = Quality
 
@@ -11445,6 +11845,9 @@ settings-keep-chapters-ready = Keep next chapters ready
 
 # Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.
 settings-delete-after-reading = Delete chapters after reading
+
+# Row: group a series' chapters under volume headings. Off by default.
+settings-show-volumes = Show volumes
 
 # Row: whether a series' reader mode, direction and colour follow you to your other devices.
 settings-series-choices-follow = Series settings follow you
@@ -11658,6 +12061,13 @@ accounts-changes-waiting =
     { $count ->
         [one] One change waiting to sync
        *[other] { $count } changes waiting to sync
+    }
+
+# Line under a signed-in account when nothing else waits but some changes can't go out yet: the { -tracker } has no match for those titles. They go out by themselves once it has one.
+accounts-changes-held =
+    { $count ->
+        [one] One change can't sync yet
+       *[other] { $count } changes can't sync yet
     }
 
 # Choice for the download quality: larger files with more detail.
@@ -11996,6 +12406,22 @@ book-folder-empty-line =
 
 # Primary action after an empty folder.
 book-folder-choose-other = Choose another folder
+
+# Folder result title when the picked folder is already a source. It was scanned again.
+book-folder-already = { $folder } is already in your sources
+
+# Line under it: what the new scan found. Closing the sheet keeps the folder.
+book-folder-already-line =
+    { $series ->
+        [one] Kaeri looked through it again and found one series. It stays as it is.
+       *[other] Kaeri looked through it again and found { $series } series. It stays as it is.
+    }
+
+# Title when a folder could not be read: the look through it could not start, or stopped.
+book-folder-unreadable = Couldn't read { $folder }
+
+# Line under it.
+book-folder-unreadable-line = It may have moved, or Kaeri no longer has access to it.
 
 # Title of the Join a plugin store sheet.
 store-join-title = Join a plugin store
@@ -13646,6 +14072,8 @@ device-kind-tablet = tablet
 
 device-kind-tv = TV
 
+device-kind-other = device
+
 # TV welcome, text button.
 first-setup-phone = Set up from your phone
 
@@ -13766,8 +14194,8 @@ title-tags = Tags
 # Button that opens the full page of facts about a show.
 title-more-about = More about this show
 
-# Accessibility hint of the button that expands a synopsis.
-title-synopsis-hint = Shows the whole synopsis
+# Accessible name of the More at the end of a cut synopsis, which shows the rest of it. The page's menu of extra actions is called More too, so this one says what it does.
+title-synopsis-more = Show the whole synopsis
 
 # Label under a season: which episodes are dubbed so far.
 title-dubbed-to = Dubbed to episode { $episode }

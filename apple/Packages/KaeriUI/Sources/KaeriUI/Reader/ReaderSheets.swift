@@ -324,8 +324,19 @@ struct ReaderSettingsSheet: View {
                     chips(L.readerKeyStep, [(L.readerKeyStepPanel, "panel"), (L.readerKeyStepScreen, "screen")], step) { step = $0 }
                 }
                 if show(L.readerVolumeKeys), model.row(.volumeKeysTurn) != nil { toggle(L.readerVolumeKeys, .volumeKeysTurn) }
+                if !query.isEmpty, !moreRows.contains(where: { $0.here && show($0.name) }) {
+                    Text(L.settingsNoMatch).font(.ui(15)).foregroundStyle(theme.haze)
+                }
             }
         }
+    }
+
+    /// The rows under More settings and whether this reader has each, for saying when a search
+    /// finds none.
+    private var moreRows: [(name: String, here: Bool)] {
+        [(L.readerPageLayout, !novel), (L.readerSpreads, !novel), (L.readerTapZones, true),
+         (L.readerStripGap, !novel && model.view?.mode == .strip), (L.readerKeyStep, mac),
+         (L.readerVolumeKeys, model.row(.volumeKeysTurn) != nil)]
     }
 
     private func show(_ name: String) -> Bool {
@@ -432,6 +443,18 @@ struct ReaderSettingsSheet: View {
                 }
             }
             .buttonStyle(.plain)
+            // One adjustable control for a screen reader, as a stepper is, rather than two
+            // buttons named by their symbols ("Remove", "Add").
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(title)
+            .accessibilityValue(Text(value, format: .percent.precision(.fractionLength(0))))
+            .accessibilityAdjustableAction { direction in
+                switch direction {
+                case .increment: model.set(key, .amount(value: min(range.upperBound, value + by)))
+                case .decrement: model.set(key, .amount(value: max(range.lowerBound, value - by)))
+                @unknown default: break
+                }
+            }
         }
     }
 
@@ -466,9 +489,12 @@ enum ReaderDevice {
 struct ReaderChaptersSheet: View {
     @Bindable var model: ReaderModel
     let theme: ReaderTheme
-    @State private var tab = 0
+    @State private var tab = ReaderModel.chapterListShot ? 1 : 0
     /// The loading line waits 600 ms, as every state does.
     @State private var loadingShown = false
+    /// The open chapter's row, which VoiceOver and the keyboard start on when the list opens.
+    @AccessibilityFocusState private var spoken: String?
+    @FocusState private var keyed: String?
 
     private var hasPages: Bool { model.medium == .manga }
     /// Pages a jump in the grid covers.
@@ -506,7 +532,9 @@ struct ReaderChaptersSheet: View {
     }
 
     private var pages: some View {
-        let rtl = model.view?.direction == .rightToLeft
+        // The strip reads down whatever the series' direction, so its pages run as it does.
+        let strip = model.view?.mode == .strip
+        let rtl = model.view?.direction == .rightToLeft && !strip
         let columns = ReaderDevice.isPhone
             ? Array(repeating: GridItem(.flexible(), spacing: 10), count: 4)
             : Array(repeating: GridItem(.fixed(84), spacing: 10), count: 5)
@@ -534,12 +562,13 @@ struct ReaderChaptersSheet: View {
                     }
                     .padding(.bottom, 10)
                 }
-                pageGrid(list, columns: columns, rtl: rtl)
+                pageGrid(list, columns: columns, rtl: rtl, strip: strip)
             }
         }
     }
 
-    private func pageGrid(_ list: [(number: Int, leaf: Int, part: LeafPart)], columns: [GridItem], rtl: Bool) -> some View {
+    private func pageGrid(_ list: [(number: Int, leaf: Int, part: LeafPart)], columns: [GridItem], rtl: Bool,
+                          strip: Bool) -> some View {
         ScrollView {
             LazyVGrid(columns: columns, spacing: 10) {
                 ForEach(list, id: \.number) { entry in
@@ -547,7 +576,9 @@ struct ReaderChaptersSheet: View {
                         model.requestJump(entry.leaf)
                         model.sheet = nil
                     } label: {
-                        thumb(entry.part, number: entry.number, open: entry.leaf == model.current)
+                        // The strip's place is the image at its top, not the leaf it opened on.
+                        thumb(entry.part, number: entry.number,
+                              open: strip ? entry.number == model.position.index + 1 : entry.leaf == model.current)
                     }
                     .buttonStyle(.plain)
                     .id(entry.number)
@@ -578,7 +609,35 @@ struct ReaderChaptersSheet: View {
         .onAppear { if file == nil { model.needPage(part.page) } }
     }
 
+    /// The chapter open in the reader, which the list opens centred on.
+    private var here: String? {
+        guard let id = model.view?.chapter.id,
+              model.chapters.contains(where: { $0.chapters.contains { $0.id == id } }) else { return nil }
+        return id
+    }
+
+    /// The list opens with the open chapter's row as near the middle as its ends allow, placed
+    /// before it is drawn: no scroll shows. A list that fits has nowhere to go and stays put.
+    private func place(_ proxy: ScrollViewProxy) {
+        guard let here else { return }
+        WindowCrossfade.still { proxy.scrollTo(here, anchor: .center) }
+        Task {
+            // VoiceOver and the keyboard land on the row once the sheet has settled.
+            try? await Task.sleep(for: .milliseconds(100))
+            spoken = here
+            keyed = here
+        }
+    }
+
     private var chapters: some View {
+        ScrollViewReader { proxy in
+            chapterList.onAppear { place(proxy) }
+                // Chapters listed after the sheet opened are placed as they come in.
+                .onChange(of: model.chaptersLoaded) { _, loaded in if loaded { place(proxy) } }
+        }
+    }
+
+    private var chapterList: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0) {
                 if !model.chaptersLoaded, loadingShown {
@@ -591,7 +650,7 @@ struct ReaderChaptersSheet: View {
                         Text(name).font(.ui(13, weight: .semibold)).foregroundStyle(theme.haze).textCase(nil)
                             .padding(.horizontal, 16).padding(.top, 14).padding(.bottom, 6)
                     }
-                    ForEach(0..<volume.chapters.count, id: \.self) { row in chapterRow(volume.chapters[row]) }
+                    ForEach(volume.chapters, id: \.id) { row in chapterRow(row) }
                 }
             }
         }
@@ -609,7 +668,7 @@ struct ReaderChaptersSheet: View {
         } label: {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(row.title ?? row.label).font(.ui(16, weight: here ? .semibold : .regular))
+                    Text(row.title ?? ReaderChrome.chapterName(row.label)).font(.ui(16, weight: here ? .semibold : .regular))
                         .foregroundStyle(rowRead(row) ? theme.haze : theme.silk).lineLimit(1)
                     Text(state(row)).font(.ui(13)).foregroundStyle(theme.haze)
                 }
@@ -621,6 +680,9 @@ struct ReaderChaptersSheet: View {
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(here ? .isSelected : [])
+        .accessibilityFocused($spoken, equals: row.id)
+        .focused($keyed, equals: row.id)
+        .id(row.id)
     }
 
     private func rowRead(_ row: ChapterRow) -> Bool {
@@ -628,8 +690,21 @@ struct ReaderChaptersSheet: View {
         return false
     }
 
+    /// The row's state, then its parts and the group it comes from: "Reading · page 30 of 46 · 2 parts".
     private func state(_ row: ChapterRow) -> String {
-        switch row.state {
+        ReadWords.leading(([stateWords(row)] + ReadWords.rowOrigin(row)).filter { !$0.isEmpty }.joined(separator: " · ")) // i18n-skip
+    }
+
+    private func stateWords(_ row: ChapterRow) -> String {
+        // The open chapter's row says the page on screen: the list was made when the reader opened.
+        if row.id == model.view?.chapter.id, !rowRead(row), let view = model.view, view.medium != .novel,
+           !model.leaves.isEmpty {
+            let strip = view.mode == .strip
+            let page = strip ? model.position.index + 1 : model.pageNumber(of: model.current)
+            let total = strip ? model.position.count : model.pageCount
+            return L.readerChapterInProgress(page: page, total: total)
+        }
+        return switch row.state {
         case .read: L.readerChapterRead
         case .inProgress(let page, let of): L.readerChapterInProgress(page: Int(page), total: Int(of ?? 0))
         case .unread: row.newChapter ? L.readerChapterNew : (row.pages.map { L.readerChapterPages(pages: Int($0)) } ?? row.label)

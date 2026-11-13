@@ -2757,6 +2757,7 @@ name = "kaeri-bookserver"
 version = "0.4.0"
 dependencies = [
  "async-trait",
+ "futures",
  "kaeri-books",
  "kaeri-core",
  "reqwest 0.13.1",

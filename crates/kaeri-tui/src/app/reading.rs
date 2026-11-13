@@ -1221,6 +1221,7 @@ fn failed_reason(name: &str, failure: Option<&ReadingFailure>, seconds: Option<u
         (
             Some(
                 failure @ (ReadingFailure::SourceDown { .. }
+                | ReadingFailure::SourceOff { .. }
                 | ReadingFailure::Blocked { .. }
                 | ReadingFailure::Parse { .. }),
             ),
@@ -1251,7 +1252,7 @@ pub fn read_filter_labels() -> [String; READ_FILTER_ROWS] {
 /// A sort as the shows' search words it.
 fn sort_word(sort: &str) -> Option<String> {
     Some(match sort {
-        "POPULARITY_DESC" => t::read_sort_popular(),
+        "POPULARITY_DESC" => t::sort_popularity(),
         "TRENDING_DESC" => t::read_sort_trending(),
         "SCORE_DESC" => t::read_sort_score(),
         "START_DATE_DESC" => t::read_sort_newest(),

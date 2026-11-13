@@ -21,7 +21,8 @@ pub enum Kept {
     Device,
 }
 
-/// Every row's line, for rows of a `medium` series read from `kept`.
+/// Every row's line, for rows of a `medium` series read from `kept`. A row read from a file on
+/// the device that no download made is marked so, as nothing of it can be downloaded.
 pub fn fill(
     volumes: &mut [VolumeGroup],
     kept: Kept,
@@ -31,7 +32,14 @@ pub fn fill(
 ) {
     for row in volumes.iter_mut().flat_map(|v| v.chapters.iter_mut()) {
         row.line = line(row, kept, medium, now, zone);
+        row.on_device = kept == Kept::Device && row.download.is_none();
     }
+}
+
+/// Where the rows of `source`'s edition are read from: the person's folders are files on this
+/// device, every other source is read from the source.
+pub fn kept_by(source: Option<&str>) -> Kept {
+    if source == Some(crate::read_sources::FOLDERS) { Kept::Device } else { Kept::Source }
 }
 
 /// A row's line: its reading state, when that happened, then what this device keeps of it. A
@@ -70,12 +78,6 @@ pub fn line(
         ChapterReadState::Unread if row.new_chapter => {
             parts.push(r(ReadingMsg::ReadingRowNew));
             parts.extend(row.published.map(|at| ago(at, now, zone)));
-            if let Some(label) = &row.version_label {
-                parts.push(Msg::Verbatim { text: label.clone() });
-            }
-            if row.versions > 1 {
-                parts.push(r(ReadingMsg::ReadingRowVersions { n: i64::from(row.versions) }));
-            }
         }
         ChapterReadState::Unread => {}
     }
@@ -92,6 +94,10 @@ pub fn line(
         (Some(ChapterDownloadState::Queued), _) => parts.push(r(ReadingMsg::ReadingRowQueued)),
         (Some(ChapterDownloadState::WaitsForWifi), _) => {
             parts.push(r(ReadingMsg::ReadingRowWaitsWifi));
+        }
+        // No page count yet: the source has not answered, or a novel's chapter has none.
+        (Some(ChapterDownloadState::Downloading { total: 0, .. }), _) => {
+            parts.push(r(ReadingMsg::ReadingRowDownloadingPlain));
         }
         (Some(ChapterDownloadState::Downloading { done, total }), _) => {
             parts.push(r(ReadingMsg::ReadingRowDownloading {
@@ -113,10 +119,67 @@ pub fn line(
         }),
         (None, _) => {}
     }
+    parts.extend(parts_line(row));
+    // Where a chapter comes from when the group or edition in use lacks it. The versions it has
+    // are in the row's menu, not here.
+    match (&row.other_source, &row.version_label) {
+        (Some(source), _) => {
+            parts.push(r(ReadingMsg::ReadingRowFromSource { source: source.clone() }));
+        }
+        (None, Some(group)) if row.other_group => parts.push(r(match &row.group_language {
+            Some(tag) => ReadingMsg::ReadingRowFromGroupIn {
+                group: group.clone(),
+                language: language_of(tag),
+            },
+            None => ReadingMsg::ReadingRowFromGroup { group: group.clone() },
+        })),
+        _ => {}
+    }
     if row.gone_from_source {
         parts.push(r(ReadingMsg::ReadingRowGoneFromSource));
     }
     parts
+}
+
+/// What a row says of a chapter in parts: how many, the missing ones, and those from another
+/// group. "3 parts", or "2 of 3 parts · part 2 missing".
+fn parts_line(row: &ChapterRow) -> Vec<Msg> {
+    let r = Msg::Reading;
+    let mut out = Vec::new();
+    if row.parts <= 1 && row.missing_parts.is_empty() {
+        return out;
+    }
+    let n = i64::from(row.parts);
+    match row.missing_parts.as_slice() {
+        [] => out.push(r(ReadingMsg::ReadingRowParts { n })),
+        missing => {
+            let count = i64::try_from(missing.len()).unwrap_or(i64::MAX);
+            out.push(r(ReadingMsg::ReadingRowPartsOf { have: n - count, n }));
+            out.push(r(ReadingMsg::ReadingRowPartMissing {
+                count,
+                part: i64::from(missing[0]),
+            }));
+        }
+    }
+    for from in &row.part_groups {
+        let part = i64::from(from.part);
+        let group = from.group.clone();
+        out.push(r(match &from.language {
+            Some(tag) => ReadingMsg::ReadingRowPartFromGroupIn {
+                part,
+                group,
+                language: language_of(tag),
+            },
+            None => ReadingMsg::ReadingRowPartFromGroup { part, group },
+        }));
+    }
+    out
+}
+
+/// A source's language tag by name: "es" and "es-419" read "Spanish".
+fn language_of(tag: &str) -> String {
+    let primary = tag.split(['-', '_']).next().unwrap_or(tag);
+    kaeri_model::present::language_name(primary)
 }
 
 /// How long ago `at` was, by the person's calendar past the first hour: "12 min ago", "today",
@@ -177,6 +240,13 @@ mod tests {
             read_at: None,
             line: Vec::new(),
             gone_from_source: false,
+            parts: 1,
+            other_group: false,
+            missing_parts: Vec::new(),
+            part_groups: Vec::new(),
+            group_language: None,
+            other_source: None,
+            on_device: false,
         }
     }
 
@@ -229,7 +299,8 @@ mod tests {
         };
         assert_eq!(
             words(&new, Kept::Source),
-            ["reading-row-new", "reading-ago-yesterday", "verbatim", "reading-row-versions"]
+            ["reading-row-new", "reading-ago-yesterday"],
+            "a row names no group of its own, and its versions are in its menu"
         );
 
         let page = row(ChapterReadState::InProgress { page: 8, of: Some(19) });
@@ -248,6 +319,47 @@ mod tests {
         assert_eq!(
             words(&failed, Kept::Source),
             ["reading-row-failed", "reading-failed-offline"]
+        );
+    }
+
+    #[test]
+    fn a_chapter_in_parts_says_how_many_which_are_missing_and_where_others_come_from() {
+        let utc = TimeZone::UTC;
+        let words = |row: &ChapterRow| line(row, Kept::Source, Medium::Manga, NOW, &utc);
+        let whole = ChapterRow { parts: 3, ..row(ChapterReadState::Read) };
+        assert_eq!(words(&whole)[1], Msg::Reading(ReadingMsg::ReadingRowParts { n: 3 }));
+
+        let gap = ChapterRow {
+            parts: 3,
+            missing_parts: vec![2],
+            part_groups: vec![kaeri_model::reading::PartGroup {
+                part: 3,
+                group: "Group B".into(),
+                language: Some("es-419".into()),
+            }],
+            ..row(ChapterReadState::Read)
+        };
+        assert_eq!(
+            words(&gap)[1..],
+            [
+                Msg::Reading(ReadingMsg::ReadingRowPartsOf { have: 2, n: 3 }),
+                Msg::Reading(ReadingMsg::ReadingRowPartMissing { count: 1, part: 2 }),
+                Msg::Reading(ReadingMsg::ReadingRowPartFromGroupIn {
+                    part: 3,
+                    group: "Group B".into(),
+                    language: "Spanish".into(),
+                }),
+            ]
+        );
+
+        let other = ChapterRow {
+            other_group: true,
+            version_label: Some("Group B".into()),
+            ..row(ChapterReadState::Read)
+        };
+        assert_eq!(
+            words(&other)[1],
+            Msg::Reading(ReadingMsg::ReadingRowFromGroup { group: "Group B".into() })
         );
     }
 
@@ -314,5 +426,54 @@ mod tests {
         let east = TimeZone::fixed(jiff::tz::offset(13));
         assert_eq!(since(NOW - 2 * 3_600), msg(ReadingMsg::ReadingAgoToday));
         assert_eq!(ago(NOW - 2 * 3_600, NOW, &east), msg(ReadingMsg::ReadingAgoYesterday));
+    }
+
+    /// A download whose page count isn't known yet, as while its source answers or for a novel's
+    /// chapter, says it downloads without counting pages.
+    #[test]
+    fn a_download_with_no_page_count_yet_counts_nothing() {
+        let utc = TimeZone::UTC;
+        let words = |row: &ChapterRow| ids(&line(row, Kept::Source, Medium::Manga, NOW, &utc));
+        let starting = ChapterRow {
+            download: Some(ChapterDownloadState::Downloading { done: 0, total: 0 }),
+            ..row(ChapterReadState::Unread)
+        };
+        assert_eq!(words(&starting), ["reading-row-downloading-plain"]);
+        let counting = ChapterRow {
+            download: Some(ChapterDownloadState::Downloading { done: 1, total: 27 }),
+            ..starting
+        };
+        assert_eq!(words(&counting), ["reading-row-downloading"]);
+    }
+
+    #[test]
+    fn a_folders_rows_are_files_on_the_device_with_nothing_to_download() {
+        assert_eq!(kept_by(Some(crate::read_sources::FOLDERS)), Kept::Device);
+        assert_eq!(kept_by(Some("plugin-example")), Kept::Source);
+        assert_eq!(kept_by(None), Kept::Source);
+
+        let utc = TimeZone::UTC;
+        let group = |rows: Vec<ChapterRow>| VolumeGroup {
+            volume: None,
+            title: None,
+            chapters: rows,
+            all_read: false,
+            flat: false,
+        };
+        let file = ChapterRow { pages: Some(19), ..row(ChapterReadState::Unread) };
+        let downloaded =
+            ChapterRow { download: Some(ChapterDownloadState::Done), ..file.clone() };
+
+        let mut folder = [group(vec![file.clone(), downloaded.clone()])];
+        fill(&mut folder, Kept::Device, Medium::Manga, NOW, &utc);
+        let rows = &folder[0].chapters;
+        assert_eq!(ids(&rows[0].line), ["reading-row-pages"], "never Not downloaded");
+        assert!(rows[0].on_device, "a folder's file offers no Download");
+        assert!(!rows[1].on_device, "a download is a download, which can be deleted");
+
+        let mut source = [group(vec![file])];
+        fill(&mut source, Kept::Source, Medium::Manga, NOW, &utc);
+        assert_eq!(ids(&source[0].chapters[0].line), ["reading-row-not-downloaded"]);
+        assert!(!source[0].chapters[0].on_device);
     }
 }

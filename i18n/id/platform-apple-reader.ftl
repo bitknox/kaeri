@@ -94,7 +94,9 @@ reader-volume = Volume { $volume }
 reader-chapter-in-progress = Halaman { $page } dari { $total }
 reader-chapter-read = Dibaca
 reader-chapter-new = baru
-reader-chapter-pages = { $pages } halaman
+reader-chapter-pages = { $pages ->
+   *[other] { $pages } halaman
+ }
 reader-offline-line = Offline. Bab yang diunduh tetap bisa dibuka.
 reader-menu-go = Buka
 reader-menu-next-page = Halaman selanjutnya
@@ -116,8 +118,5 @@ reader-key-step = Langkah keyboard
 reader-key-step-panel = Panel
 reader-key-step-screen = Layar
 reader-strip-gap = Jarak antar gambar
-reader-zone-back = Mundur
-reader-zone-forward = Maju
-reader-zone-menu = Menu
 reader-pages-range = { $from }–{ $to }
 send-failed-offline = Coba lagi saat Anda online.

@@ -5,11 +5,33 @@
 
    The look sets colours and at most the font, never spacing. */
 
+/* The serif for Japanese, Chinese and Korean text, from the system's own faces. Literata has no
+   kana or kanji, and the generic serif falls back to a sans CJK face on Android when the text's
+   language is unknown, so the serif stacks name this before it. */
+@font-face {
+  font-family: "Kaeri Serif CJK";
+  font-weight: 100 599;
+  src: local("NotoSerifCJKjp-Regular"), local("Noto Serif CJK JP"), local("NotoSerifJP-Regular"),
+    local("HiraMinProN-W3"), local("Hiragino Mincho ProN"), local("YuMincho-Regular"),
+    local("Yu Mincho Regular"), local("SourceHanSerif-Regular");
+  unicode-range: U+2E80-2FDF, U+3000-30FF, U+3100-31FF, U+3400-4DBF, U+4E00-9FFF, U+AC00-D7AF,
+    U+F900-FAFF, U+FE30-FE4F, U+FF00-FFEF, U+20000-2FA1F;
+}
+@font-face {
+  font-family: "Kaeri Serif CJK";
+  font-weight: 600 900;
+  src: local("NotoSerifCJKjp-Bold"), local("Noto Serif CJK JP Bold"), local("NotoSerifJP-Bold"),
+    local("HiraMinProN-W6"), local("Hiragino Mincho ProN W6"), local("YuMincho-Demibold"),
+    local("SourceHanSerif-Bold");
+  unicode-range: U+2E80-2FDF, U+3000-30FF, U+3100-31FF, U+3400-4DBF, U+4E00-9FFF, U+AC00-D7AF,
+    U+F900-FAFF, U+FE30-FE4F, U+FF00-FFEF, U+20000-2FA1F;
+}
+
 html.kaeri {
   --k-bg: #F7F5F0;
   --k-fg: #1E2033;
   --k-link: #1E2033;
-  --k-font: "Literata", "Iowan Old Style", Charter, Georgia, serif;
+  --k-font: "Literata", "Iowan Old Style", Charter, Georgia, "Kaeri Serif CJK", serif;
   --k-size: 19px;
   --k-line: 1.5;
   --k-margin: 28px;
@@ -44,6 +66,8 @@ html.kaeri body {
 
 html.kaeri.k-justify body { text-align: justify; }
 html.kaeri.k-hyphens body { -webkit-hyphens: auto; hyphens: auto; }
+/* A CJK book keeps its own faces; where it names none, the serif setting reads in a Mincho. */
+html.kaeri.k-book-font { font-family: "Kaeri Serif CJK", serif; }
 html.kaeri.k-book-font body { font-family: inherit; }
 
 /* Paged: columns on <html>. The gap is twice the margin and the side padding equals it, so
@@ -122,6 +146,21 @@ html.kaeri.k-scrolled {
 html.kaeri.k-scrolled body { max-width: var(--k-column); margin: 0 auto !important; }
 html.kaeri.k-scrolled img,
 html.kaeri.k-scrolled svg { max-width: 100%; height: auto; }
+
+/* A text chapter's picture that is still coming, or did not come: a box of a fixed size, so the
+   picture filling it later moves nothing on the page. */
+html.kaeri img[data-k-picture] {
+  display: block !important;
+  box-sizing: border-box !important;
+  width: min(100%, 22em) !important;
+  height: auto !important;
+  aspect-ratio: 4 / 3 !important;
+  margin: 1em auto !important;
+  object-fit: contain !important;
+  border-radius: 8px;
+  background: rgba(128, 128, 128, 0.12);
+}
+html.kaeri img[data-k-picture="in"] { background: none; }
 
 html.kaeri figure,
 html.kaeri h1, html.kaeri h2, html.kaeri h3, html.kaeri h4 { break-inside: avoid; }

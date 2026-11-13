@@ -1,9 +1,13 @@
 reader-page-loading = Memuat halaman { $page }
+reader-page-plate = Halaman { $page }
+reader-image-plate = Gambar { $image }
+reader-image-loading = Memuat gambar { $image }
 reader-page-failed = Halaman { $page } gagal dimuat
 reader-try-again = Coba lagi
 reader-close = Tutup
 reader-end-read = Dihitung sudah dibaca
 reader-end-tracker = Dihitung sudah dibaca · { $trackers } diperbarui
+reader-end-tracker-offline = Dihitung sudah dibaca · { $tracker } diperbarui saat Anda kembali online
 reader-end-next = Selanjutnya
 reader-mode-rtl = Kanan ke kiri
 reader-mode-ltr = Kiri ke kanan
@@ -52,3 +56,6 @@ reader-end-swipe = Geser untuk terus membaca
 reader-divider-images = { $count ->
    *[other] { $count } gambar
  }
+reader-zone-next = Halaman selanjutnya
+reader-zone-previous = Halaman sebelumnya
+reader-zone-controls = Kontrol

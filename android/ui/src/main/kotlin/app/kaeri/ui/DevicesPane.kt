@@ -71,9 +71,15 @@ internal fun cloudName(kind: SyncFolderKind): String = when (kind) {
     SyncFolderKind.DIRECTORY -> "" // the caller says a folder in its own words
 }
 
-/** "this phone", "this tablet": the device word a sentence uses. */
+/** "this phone", "this tablet", or "this device" on an e-reader: the device word a sentence uses. */
 @Composable
-internal fun kindWord(): String = stringResource(if (wideWindow()) R.string.device_kind_tablet else R.string.device_kind_phone)
+internal fun kindWord(): String = stringResource(
+    when {
+        app.kaeri.ui.reading.LocalEinkLayout.current != null && einkReaderShape() -> R.string.device_kind_other
+        wideWindow() -> R.string.device_kind_tablet
+        else -> R.string.device_kind_phone
+    },
+)
 
 /** The icon a device wears, from what its name says it is. */
 internal fun deviceIcon(name: String): ImageVector {

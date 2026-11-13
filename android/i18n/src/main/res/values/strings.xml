@@ -407,6 +407,18 @@
     <string name="reader_moved">Moved to %1$s, page %2$d, where %3$s stopped</string>
     <!-- The same notice for a chapter known only by its number, such as 14 or 14.5. -->
     <string name="reader_moved_number">Moved to chapter %1$s, page %2$d, where %3$s stopped</string>
+    <!-- The notice when another device read further and its name is not known: a device removed from sync, or this one before a reinstall. -->
+    <string name="reader_moved_elsewhere">Moved to %1$s, page %2$d, where another device stopped</string>
+    <!-- The same notice for a chapter known only by its number, such as 14 or 14.5. -->
+    <string name="reader_moved_number_elsewhere">Moved to chapter %1$s, page %2$d, where another device stopped</string>
+    <!-- The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its whole label, such as The Long Night. -->
+    <string name="reader_moved_image">Moved to %1$s, image %2$d, where %3$s stopped</string>
+    <!-- The same notice in a strip for a chapter known only by its number, such as 14 or 14.5. -->
+    <string name="reader_moved_number_image">Moved to chapter %1$s, image %2$d, where %3$s stopped</string>
+    <!-- The notice in a strip when another device read further and its name is not known. -->
+    <string name="reader_moved_elsewhere_image">Moved to %1$s, image %2$d, where another device stopped</string>
+    <!-- The same notice in a strip for a chapter known only by its number, such as 14 or 14.5. -->
+    <string name="reader_moved_number_elsewhere_image">Moved to chapter %1$s, image %2$d, where another device stopped</string>
     <!-- A notice the first time a series opens with its reading direction guessed. It offers Change. -->
     <string name="reader_detected_right_to_left">Looks like right to left</string>
     <!-- A notice the first time a series opens with its reading direction guessed. It offers Change. -->
@@ -417,14 +429,20 @@
     <string name="reading_failed_offline">You\'re offline. Downloaded chapters still open.</string>
     <!-- Why a chapter or a list could not load: the source did not answer. The source is its name. -->
     <string name="reading_failed_source_down">%1$s isn\'t answering. Try again later.</string>
+    <!-- Why something could not load: the source the series reads from is switched off in Your sources. -->
+    <string name="reading_failed_source_off">%1$s is switched off. Switch it on in Your sources, or read from another source.</string>
     <!-- Why a chapter could not load: the source no longer has it. -->
     <string name="reading_failed_not_found">This source doesn\'t have it anymore. Try another source.</string>
+    <!-- Why a series has no chapters: none of the person's sources holds it, and none was ever picked. -->
+    <string name="reading_failed_no_source">None of your sources has this series yet. Search for it by another name in Read from, or add a source in Your sources.</string>
     <!-- Why a chapter or a list could not load: the source refused. The reason comes from the source. -->
     <string name="reading_failed_blocked">%1$s refused the request. %2$s</string>
     <!-- Why a chapter or a list could not load: the source answered with something Kaeri could not read. -->
     <string name="reading_failed_parse">Kaeri couldn\'t read what %1$s sent. Its plugin may need an update.</string>
     <!-- Why one page did not load. The status is the server's HTTP status code, such as 404. -->
     <string name="reading_failed_page">This page didn\'t load (error %1$d). Try again.</string>
+    <!-- In the reader, in a novel's text, in the box where a picture from the source did not load. Try again sits under it. -->
+    <string name="reading_picture_failed">Couldn\'t load picture</string>
     <!-- Why something could not load: a sign-in is needed. What is a server's or a tracker's name. -->
     <string name="reading_failed_sign_in">Sign in to %1$s again to keep reading.</string>
     <!-- Why a book could not open: its file or folder is gone, perhaps on a drive that is not connected. The path is the file's. -->
@@ -437,6 +455,12 @@
     <string name="reading_failed_protected">This book is copy-protected, so Kaeri can\'t open it.</string>
     <!-- Why a chapter could not be saved: the disk is full. -->
     <string name="reading_failed_disk_full">There\'s no room left on this device. Free some space and try again.</string>
+    <!-- Why a chapter or a file for an e-reader could not be saved: the storage refused the name, because it is too long or has characters the storage doesn't allow. The path is the file's or the folder's. -->
+    <string name="reading_failed_write_name">The storage doesn\'t take the name %1$s. It may be too long.</string>
+    <!-- Why a chapter or a file for an e-reader could not be saved: the storage is read-only, or Kaeri isn't allowed to write there. The path is the file's or the folder's. -->
+    <string name="reading_failed_write_denied">Kaeri isn\'t allowed to write %1$s. Check that the storage isn\'t read-only, then try again.</string>
+    <!-- Why a chapter or a file for an e-reader could not be saved, for another reason the system gave. The path is the file's or the folder's. -->
+    <string name="reading_failed_write">Kaeri couldn\'t write %1$s. Try again.</string>
     <!-- Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80. -->
     <string name="reading_failed_webview">Novels need a newer system WebView than version %1$d. Update Android System WebView and try again.</string>
     <!-- Why a book plugin could not be used: it was built for a newer Kaeri. The world is the plugin interface's name and version. -->
@@ -580,6 +604,8 @@
     <string name="reading_row_waits_wifi">Queued · waits for Wi-Fi</string>
     <!-- A chapter row's state while it downloads. -->
     <string name="reading_row_downloading">Downloading · %1$,d of %2$,d pages</string>
+    <!-- A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count. -->
+    <string name="reading_row_downloading_plain">Downloading</string>
     <!-- A chapter row's state: the download failed. The reason follows as the next part. -->
     <string name="reading_row_failed">Couldn\'t download</string>
     <!-- A chapter row's state: the page the person stopped on, of how many. -->
@@ -601,6 +627,33 @@
     <plurals name="reading_row_versions">
         <item quantity="one">1 version</item>
         <item quantity="other">%1$,d versions</item>
+    </plurals>
+    <!-- A chapter row: the source lists this chapter in parts, and the reader runs through them as one chapter. Shown beside the chapter's name: "Chapter 1, 2 parts". -->
+    <plurals name="reading_row_parts">
+        <item quantity="one">1 part</item>
+        <item quantity="other">%1$,d parts</item>
+    </plurals>
+    <!-- A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it. Lower case, as the line's other words; an app that starts a line with it capitalises the first letter. -->
+    <string name="reading_row_from_group">from %1$s</string>
+    <!-- A chapter row: the same, for a group in another language than the app's, named after the group. "from Saltmarsh Team, Spanish". -->
+    <string name="reading_row_from_group_in">from %1$s, %2$s</string>
+    <!-- A chapter row: a chapter in parts that is missing some, as no group has released them. The reader runs through the parts there are. Followed by the missing part: "2 of 3 parts". -->
+    <string name="reading_row_parts_of">%1$,d of %2$,d parts</string>
+    <!-- A chapter row, after the parts count: the part no group has released. With several, how many. -->
+    <plurals name="reading_row_part_missing">
+        <item quantity="one">part %2$d missing</item>
+        <item quantity="other">%1$,d parts missing</item>
+    </plurals>
+    <!-- A chapter row: one part of a chapter in parts comes from another group, as the group the series is read from lacks it. "part 2 from Saltmarsh Team". -->
+    <string name="reading_row_part_from_group">part %1$d from %2$s</string>
+    <!-- The same, for a group in another language than the app's. "part 2 from Saltmarsh Team, Spanish". -->
+    <string name="reading_row_part_from_group_in">part %1$d from %2$s, %3$s</string>
+    <!-- A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there. Lower case, as the line's other words. -->
+    <string name="reading_row_from_source">from %1$s</string>
+    <!-- A quiet line in the reader: pages a series repeats at the start or end of its chapters (a group's credits or notices) were left out of this chapter. Tapping it shows them. -->
+    <plurals name="reader_credit_pages_skipped">
+        <item quantity="one">%1$,d credit page skipped</item>
+        <item quantity="other">%1$,d credit pages skipped</item>
     </plurals>
     <!-- A chapter row: when it was read or came out, under a minute ago. -->
     <string name="reading_ago_now">just now</string>
@@ -646,6 +699,8 @@
     <string name="reading_miss_down_since">Not answering since %1$s</string>
     <!-- The source has failed every ask, since a time on another day or not known. -->
     <string name="reading_miss_down">Not answering</string>
+    <!-- The source has no series by the series' names, but has one that may be it in another edition, as a full-colour release. That series is shown under this line, and choosing it confirms it. -->
+    <string name="reading_miss_possible">Possible match</string>
     <!-- How many parts of a light novel are downloaded. -->
     <plurals name="reading_dl_parts">
         <item quantity="one">1 part</item>
@@ -1225,6 +1280,44 @@
     <string name="eink_zone_next_ltr">Tap, or swipe left</string>
     <!-- Under Controls on the e-ink tap zone guide. -->
     <string name="eink_zone_tap">Tap</string>
+    <!-- E-ink tap zones page: switch for whether a swipe turns the page. Off, only taps, the page buttons and keys turn. -->
+    <string name="eink_swipe_turns">Swipes turn pages</string>
+    <!-- At the foot of the e-ink tap zone guide, which the first touch on the page clears. -->
+    <string name="eink_zone_guide_note">Page buttons also turn pages. The first touch clears this. Change the zones in Reader settings.</string>
+    <!-- E-ink tap zones page: the line under the layout Auto. -->
+    <string name="eink_tap_auto_note">Sides, or L shape for vertical pages</string>
+    <!-- E-ink tap zones page: the line under the layout Sides, as drawn for the open book at the standard size, where Next is wider than the other two zones and on the left. -->
+    <string name="eink_tap_sides_wide_left_note">Next on the left, the widest zone</string>
+    <!-- E-ink tap zones page: the line under the layout Sides, as drawn for the open book at the standard size, where Next is wider than the other two zones and on the right. -->
+    <string name="eink_tap_sides_wide_right_note">Next on the right, the widest zone</string>
+    <!-- E-ink tap zones page: the line under the layout Sides, as drawn for the open book at the small size, with Next on the left. -->
+    <string name="eink_tap_sides_left_note">Next on the left</string>
+    <!-- E-ink tap zones page: the line under the layout Sides, as drawn for the open book at the small size, with Next on the right. -->
+    <string name="eink_tap_sides_right_note">Next on the right</string>
+    <!-- E-ink tap zones page: the line under the layout L shape, as drawn for the open book, with Next along the bottom edge and up the right side. -->
+    <string name="eink_tap_l_shape_bottom_right_note">Next along the bottom and on the right</string>
+    <!-- E-ink tap zones page: the line under the layout L shape, as drawn for the open book, with Next along the bottom edge and up the left side. -->
+    <string name="eink_tap_l_shape_bottom_left_note">Next along the bottom and on the left</string>
+    <!-- E-ink tap zones page: the line under the layout L shape, as drawn for the open book with Flip top and bottom on: Next along the top edge and down the right side. -->
+    <string name="eink_tap_l_shape_top_right_note">Next along the top and on the right</string>
+    <!-- E-ink tap zones page: the line under the layout L shape, as drawn for the open book with Flip top and bottom on: Next along the top edge and down the left side. -->
+    <string name="eink_tap_l_shape_top_left_note">Next along the top and on the left</string>
+    <!-- E-ink tap zones page: the line under the layout Wide next. -->
+    <string name="eink_tap_wide_next_note">Controls on top, next takes most</string>
+    <!-- E-ink tap zones page: the line under the layout Wide next with Flip top and bottom on, so the controls band is at the bottom. -->
+    <string name="eink_tap_wide_next_flipped_note">Controls below, next takes most</string>
+    <!-- E-ink tap zones page: the line under the layout Top and bottom. -->
+    <string name="eink_tap_top_bottom_note">Previous on top, next at the bottom</string>
+    <!-- E-ink tap zones page: the line under the layout Top and bottom with Flip top and bottom on. -->
+    <string name="eink_tap_top_bottom_flipped_note">Next on top, previous at the bottom</string>
+    <!-- E-ink tap zones page: the line under the layout Next on both sides. -->
+    <string name="eink_tap_both_next_note">Previous in the bottom middle</string>
+    <!-- E-ink tap zones page: the line under the layout Next on both sides with Flip top and bottom on. -->
+    <string name="eink_tap_both_next_flipped_note">Previous in the top middle</string>
+    <!-- E-ink tap zones page: the line under the layout Off. -->
+    <string name="eink_tap_off_note">Swipes and page buttons only</string>
+    <!-- E-ink tap zones page: the line under the layout Off while Swipes turn pages is off too, so nothing on the page turns it. -->
+    <string name="eink_tap_off_keys_note">Only page buttons turn pages</string>
     <!-- The page number in the page's margin on an e-ink screen. -->
     <string name="eink_folio_one">%1$d of %2$d</string>
     <!-- The page numbers in the margin when two pages show side by side. -->
@@ -1235,6 +1328,12 @@
     <string name="eink_chapter">Chapter %1$s</string>
     <!-- Button in the e-ink reader's top bar that lists the chapters. -->
     <string name="eink_contents">Contents</string>
+    <!-- Button in the e-ink reader's top bar on a large panel that downloads the open chapter. -->
+    <string name="eink_download">Download</string>
+    <!-- In the e-ink reader's top bar on a large panel once the open chapter is downloading. -->
+    <string name="eink_download_running">Downloading</string>
+    <!-- In the e-ink reader's top bar on a large panel when the open chapter is on the device. -->
+    <string name="eink_download_done">On this device</string>
     <!-- Button that goes back out of the reader. -->
     <string name="eink_back">Back</string>
     <!-- Under the page number in the e-ink reader's bottom bar. -->
@@ -1267,6 +1366,30 @@
     <string name="eink_reads_strip">long strip</string>
     <!-- The next chapter is downloaded, on the page between chapters. -->
     <string name="eink_on_device">on this device</string>
+    <!-- After the pages left in the e-ink reader's bottom bar on a large panel, when the next chapter is downloaded: "16 pages left in chapter · chapter 13 is on this device". -->
+    <string name="eink_next_on_device">chapter %1$s is on this device</string>
+    <!-- Choice in the e-ink reader's bottom bar on a large panel: one page at a time. -->
+    <string name="eink_layout_one">One page</string>
+    <!-- Choice in the e-ink reader's bottom bar on a large panel: two pages side by side. -->
+    <string name="eink_layout_two">Two pages</string>
+    <!-- Choice in the e-ink reader's bottom bar on a large panel: the page's white borders stay. -->
+    <string name="eink_crop_off">Crop off</string>
+    <!-- Choice in the e-ink reader's bottom bar on a large panel: the page's white borders are cut. -->
+    <string name="eink_crop_on">Crop on</string>
+    <!-- Caption under the next chapter's first page, beside the end of a chapter on a large panel. -->
+    <string name="eink_end_preview">Chapter %1$s, page 1</string>
+    <!-- Heading over the next chapters, under the end of a chapter on a large panel. -->
+    <string name="eink_coming_up">Coming up</string>
+    <!-- Kicker over a chapter that is slow to open: the series and its volume. -->
+    <string name="eink_slow_kicker">%1$s · volume %2$s</string>
+    <!-- A chapter still opening after 10 seconds, when other sources of the series can be asked. -->
+    <string name="eink_slow_line">%1$s hasn\'t answered in 10 seconds. You can keep waiting, try again, or read this series from another of your sources.</string>
+    <!-- A chapter still opening after 10 seconds, when no other source of the series has it. -->
+    <string name="eink_slow_line_alone">%1$s hasn\'t answered in 10 seconds. You can keep waiting or try again.</string>
+    <!-- A chapter still opening after 10 seconds, before the engine has named the source it asked. -->
+    <string name="eink_slow_line_unnamed">No answer in 10 seconds. You can keep waiting or try again.</string>
+    <!-- Button on a chapter that is slow to open: lists the series' other sources. -->
+    <string name="eink_slow_another">Another source</string>
     <!-- The main button on the page between chapters. -->
     <string name="eink_continue_to">Continue to chapter %1$s</string>
     <!-- Line at the foot of the page between chapters. -->
@@ -1302,7 +1425,7 @@
     <!-- The answer that keeps the phone layout. -->
     <string name="eink_ask_no">Keep the standard layout</string>
     <!-- Foot of the e-ink question. -->
-    <string name="eink_ask_later">You can change this later in Settings, under Screen.</string>
+    <string name="eink_ask_later">You can change this later in Settings, under Reading.</string>
     <!-- Heading of the question asked when an e-ink screen may or may not show colour. -->
     <string name="eink_colour_title">Does this screen show colour?</string>
     <!-- Line under it, above four coloured squares. -->
@@ -1310,7 +1433,7 @@
     <!-- What a screen reader says for the four squares. -->
     <string name="eink_colour_squares">Four squares: red, green, blue and amber</string>
     <!-- Line under the squares. -->
-    <string name="eink_colour_hint">If they look like four greys, choose Only greys. You can change this in Settings › Screen.</string>
+    <string name="eink_colour_hint">If they look like four greys, choose Only greys. You can change this in Settings › Reading.</string>
     <!-- The answer for a colour screen. -->
     <string name="eink_colour_yes">Yes, colour</string>
     <!-- The answer for a grey screen. -->
@@ -1333,10 +1456,10 @@
     <string name="reader_settings">Reader settings</string>
     <!-- Under the novel's title in the reader's controls, while it scrolls. The chapter is its number, such as 4. -->
     <string name="reader_novel_line_scroll">Chapter %1$s · scroll</string>
+    <!-- Under the novel's title in the reader's controls, while it scrolls, when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own. -->
+    <string name="reader_novel_line_scroll_named">%1$s · scroll</string>
     <!-- At the end of a scrolling novel's scrubber: the time left in the chapter at the person's pace. -->
     <string name="reader_minutes_left">%1$,d min</string>
-    <!-- Name of the tap zone on the reading side, shown once on the first chapter. -->
-    <string name="reader_zone_next">Next page</string>
     <!-- Heading of the page grid. -->
     <string name="reader_grid_title">Pages</string>
     <!-- Main button on the page between chapters. -->
@@ -1459,8 +1582,6 @@
     <string name="reader_scrubber_in_chapter">Page in chapter</string>
     <!-- Heading when a novel could not be shown. -->
     <string name="reader_failed_novel">Couldn\'t show this chapter</string>
-    <!-- Under the end of chapter line when the phone is offline. -->
-    <string name="reader_end_tracker_offline">Counted as read · %1$s updates when you\'re back online</string>
     <!-- Title of the end page when no source has the next chapter. -->
     <string name="reader_end_none">No chapter %1$s in your sources yet</string>
     <!-- Line under the no next chapter title. -->
@@ -1493,12 +1614,6 @@
     <string name="reader_volume_read">Volume %1$s · read</string>
     <!-- Heading for chapters outside any volume. -->
     <string name="reader_volume_none">Chapters</string>
-    <!-- On the plate of a page that is still loading. -->
-    <string name="reader_page_plate">Page %1$d</string>
-    <!-- On the plate of a strip image that is still loading. -->
-    <string name="reader_image_plate">Image %1$,d</string>
-    <!-- On a strip image's plate in place of its number after four seconds. -->
-    <string name="reader_image_loading">Loading image %1$,d</string>
     <!-- Under Opening chapter when it takes more than three seconds. -->
     <string name="reader_opening_finding">Finding a source</string>
     <!-- Button on a chapter that could not open. -->
@@ -1507,10 +1622,6 @@
     <string name="reader_settings_search">Search settings</string>
     <!-- Paper mode part. -->
     <string name="reader_paper_turn">Turn pages at once</string>
-    <!-- Label on the previous page tap zone. -->
-    <string name="reader_zone_previous">Previous page</string>
-    <!-- Label on the middle tap zone. -->
-    <string name="reader_zone_controls">Controls</string>
     <!-- Description of the small A at the start of the text size slider. -->
     <string name="reader_size_small">Smaller text</string>
     <!-- Description of the large A at the end of the text size slider. -->
@@ -1559,6 +1670,131 @@
     <string name="eink_keep_ready_on">On · the next chapters of series you\'re reading</string>
     <!-- The line under Keep next chapters ready on the e-reader's Downloads while it is off. -->
     <string name="eink_keep_ready_off">Off</string>
+    <!-- The underlined link beside the title of the e-reader's Library that opens the View sheet: how the covers are shown, which medium, the order and what is downloaded. -->
+    <string name="eink_library_view">View</string>
+    <!-- A side of the medium control on the e-reader's Library and in its View sheet: every series. -->
+    <string name="eink_library_medium_all">All</string>
+    <!-- A side of the medium control on the e-reader's Library: manga, manhwa and webtoons. -->
+    <string name="eink_library_medium_manga">Manga</string>
+    <!-- A side of the medium control on the e-reader's Library: light novels. -->
+    <string name="eink_library_medium_novels">Novels</string>
+    <!-- On a 6 or 7 inch e-reader's Library: the button naming the list shown and how many series it holds, such as "Reading · 23". It opens the lists to choose another. -->
+    <string name="eink_library_list_button">%1$s · %2$,d</string>
+    <!-- Title of the sheet on a 6 or 7 inch e-reader's Library that chooses which list to show. -->
+    <string name="eink_library_lists_title">Lists</string>
+    <!-- A row label in the e-reader Library's View sheet: covers in a grid or rows in a list. -->
+    <string name="eink_library_show">Show</string>
+    <!-- A side of Show in the View sheet: the covers in a grid. -->
+    <string name="eink_library_show_covers">Covers</string>
+    <!-- A side of Show in the View sheet: rows with a small cover. -->
+    <string name="eink_library_show_list">List</string>
+    <!-- A row label in the View sheet: whether manga, novels or both show. -->
+    <string name="eink_library_medium">Medium</string>
+    <!-- A row label in the View sheet: the order of the series. -->
+    <string name="eink_library_sort">Sort</string>
+    <!-- A side of Sort in the View sheet: the series read most recently first. -->
+    <string name="eink_library_sort_recent">Recent</string>
+    <!-- A side of Sort in the View sheet: by title, alphabetically. -->
+    <string name="eink_library_sort_title">A to Z</string>
+    <!-- A side of Sort in the View sheet: series with a new chapter first. -->
+    <string name="eink_library_sort_new">New</string>
+    <!-- A row label in the View sheet: every series, or only those with chapters downloaded. -->
+    <string name="eink_library_downloaded">Downloaded</string>
+    <!-- A side of Downloaded in the View sheet: every series on the list. -->
+    <string name="eink_library_downloaded_all">All</string>
+    <!-- A side of Downloaded in the View sheet: only series with chapters on this device. -->
+    <string name="eink_library_downloaded_here">On this device</string>
+    <!-- The note at the foot of the View sheet. The count is how many covers fit a page on this screen. -->
+    <plurals name="eink_library_view_note">
+        <item quantity="one">Recent sorts by when you last read. Covers show 1 to a page on this screen.</item>
+        <item quantity="other">Recent sorts by when you last read. Covers show %1$,d to a page on this screen.</item>
+    </plurals>
+    <!-- The note at the foot of the View sheet before the covers have been laid out. -->
+    <string name="eink_library_view_note_short">Recent sorts by when you last read.</string>
+    <!-- On the e-reader's Library when the list has series but none match the choices in View. -->
+    <string name="eink_library_none_match">No series on %1$s match this view</string>
+    <!-- The line under it. -->
+    <string name="eink_library_none_match_line">Change Medium or Downloaded under View to see the rest.</string>
+    <!-- Text button at the end of Keep next chapters ready on a 10 inch e-reader's Downloads. It opens the downloads settings. -->
+    <string name="eink_keep_ready_change">Change</string>
+    <!-- Text button beside the series in progress on a 10 inch e-reader's Home, next to Continue. It opens the series' page. -->
+    <string name="eink_home_series_page">Series page</string>
+    <!-- The link at the end of the New chapters heading on a 10 inch e-reader's Home. It opens Updates. -->
+    <string name="eink_home_all_new_chapters">All new chapters</string>
+    <!-- The link at the end of the Browse heading on a 10 inch e-reader's Home, over the discovery rows as chips. It opens the list of every row. -->
+    <string name="eink_home_all_rows">All rows</string>
+    <!-- Beside the Genres heading at the foot of Browse on a 10 inch e-reader: where the genres come from. -->
+    <string name="eink_browse_genres_from">From AniList</string>
+    <!-- Heading on a 10 inch e-reader's Downloads over the chapters downloading or waiting, with how many there are. -->
+    <string name="eink_downloads_downloading_count">Downloading · %1$,d</string>
+    <!-- Text button at the end of the Downloading heading on a 10 inch e-reader's Downloads. It stops every chapter still to come. -->
+    <string name="eink_downloads_stop_all">Stop all</string>
+    <!-- Heading on a 10 inch e-reader's Downloads over the series with chapters kept here, with how many series. -->
+    <plurals name="eink_downloads_here_count">
+        <item quantity="one">On this device · %1$,d series</item>
+        <item quantity="other">On this device · %1$,d series</item>
+    </plurals>
+    <!-- Heading over the first column of rows on a 10 inch e-reader's More: sources, trackers, sync and reader settings. -->
+    <string name="eink_more_your_reading">Your reading</string>
+    <!-- Heading over the second column of rows on a 10 inch e-reader's More: settings and About. -->
+    <string name="eink_more_this_device">This device</string>
+    <!-- Heading on a 10 inch e-reader's More over the newest notices and errors, each with its time. -->
+    <string name="eink_more_messages">Recent messages</string>
+    <!-- Under Recent messages on a 10 inch e-reader's More while there are none since the app started. -->
+    <string name="eink_more_messages_none">Notices and errors since Kaeri started show here.</string>
+    <!-- Switch under Volume keys turn pages in the phone reader's settings: volume up turns forward instead of volume down. -->
+    <string name="reader_row_volume_swap">Swap the volume keys</string>
+    <!-- Heading of the e-ink reader's settings sheet over the rows for the e-ink screen itself. -->
+    <string name="eink_sheet_screen">This screen</string>
+    <!-- Row in the e-ink reader's settings: a full refresh on every page with a picture. Off by default, so the device's own settings decide how the screen clears. -->
+    <string name="eink_row_refresh_image">Full refresh on picture pages</string>
+    <!-- Row in the e-ink reader's settings: how often text pages get a full refresh, or Off, the default. -->
+    <string name="eink_row_refresh_text">Full refresh on text pages</string>
+    <!-- Row in the e-ink reader's settings: how often lists get a full refresh as they page, or Off, the default. -->
+    <string name="eink_row_refresh_list">Full refresh on lists</string>
+    <!-- Value of a full refresh row in the e-ink reader's settings: once every so many pages. -->
+    <plurals name="eink_refresh_every">
+        <item quantity="one">Every page</item>
+        <item quantity="other">Every %1$,d pages</item>
+    </plurals>
+    <!-- Row in the e-ink reader's settings: which of the screen's own update modes pages are drawn in, shown only where the app can set them. Its choices are the device's setting and the modes below, or Standard, Fast and Best quality on a colour screen with speed modes. -->
+    <string name="eink_row_screen_mode">Screen mode</string>
+    <!-- Choice of Screen mode, and its default: the app leaves the update mode to the device's own settings for this app. -->
+    <string name="eink_mode_device">The device\'s setting</string>
+    <!-- Choice of Screen mode: the screen's sharpest grey mode. HD is the name e-readers give this mode. -->
+    <string name="eink_mode_hd">HD</string>
+    <!-- Choice of Screen mode: the screen's mode with the least ghosting on text pages. Regal is the name e-readers give this mode; keep it as the device shows it. -->
+    <string name="eink_mode_regal">Regal</string>
+    <!-- Choice of Screen mode: quicker updates in fewer greys, with a little ghosting. -->
+    <string name="eink_mode_balanced">Balanced</string>
+    <!-- Choice of Screen mode on a colour screen with speed modes: the screen's usual mode. -->
+    <string name="eink_speed_standard">Standard</string>
+    <!-- Choice of Screen mode: quicker updates with more ghosting. -->
+    <string name="eink_speed_fast">Fast</string>
+    <!-- Choice of Screen mode on a colour screen with speed modes: the slowest and cleanest updates. -->
+    <string name="eink_speed_best">Best quality</string>
+    <!-- Row in the e-ink reader's settings on a colour screen: softens the rainbow pattern in colour pictures. -->
+    <string name="eink_row_rainbow">Soften colour patterns</string>
+    <!-- Row in the e-ink reader's settings on a colour screen: how strong colours are drawn. -->
+    <string name="eink_row_saturation">Colour strength</string>
+    <!-- Row in the e-ink reader's settings on a colour screen: the pictures' contrast. -->
+    <string name="eink_row_contrast">Contrast</string>
+    <!-- Value of an amount row in the e-ink reader's settings, such as Text size or Contrast. -->
+    <string name="eink_percent">%1$,d%%</string>
+    <!-- Button that makes a setting in the e-ink reader's settings smaller. -->
+    <string name="eink_step_down">Less</string>
+    <!-- Button that makes a setting in the e-ink reader's settings bigger. -->
+    <string name="eink_step_up">More</string>
+    <!-- Button before a list setting's value in the e-ink reader's settings, such as Screen mode: picks the choice before. Read out by screen readers. -->
+    <string name="eink_step_previous">Previous choice</string>
+    <!-- Button after a list setting's value in the e-ink reader's settings, such as Screen mode: picks the choice after. Read out by screen readers. -->
+    <string name="eink_step_next">Next choice</string>
+    <!-- Marks the chapter open in the reader on the e-ink contents page. -->
+    <string name="eink_contents_reading">Reading</string>
+    <!-- What TalkBack says the line of skipped credit pages does, after "Double-tap to": an imperative, as Android's click labels are. -->
+    <string name="reader_credit_show_action">Show the page</string>
+    <!-- What TalkBack says for one layout among the tap zone choices: the layout's name, then where its zones are for the open book ("Sides, Next page on the right side, previous page on the left side, controls in the middle"). The choice's own state, Selected or Not selected, follows it. -->
+    <string name="reader_tap_layout_spoken">%1$s, %2$s</string>
     <!-- Line under "You're offline" on reading's Home when it has never loaded, so nothing is kept to show. It has an Open Downloads button. -->
     <string name="read_home_offline_line">Reading\'s Home needs a connection the first time it opens. Downloaded chapters still open.</string>
     <!-- Screen readers: a source group in Search while its source is still being asked. The source is its name. -->
@@ -1582,6 +1818,29 @@
     <string name="read_tile_spoken">%1$s. %2$s.</string>
     <!-- Screen readers: a reading cover, its title, the line under it and where the person has it. -->
     <string name="read_tile_spoken_in">%1$s. %2$s. %3$s.</string>
+    <!-- E-ink Search on a large panel, before anything is typed: the heading over the chips that pick which of the person's own sources to search. -->
+    <string name="read_search_in">Search in</string>
+    <!-- E-ink Search start: the first chip under Search in, every source the person added. -->
+    <string name="read_search_in_all">All your sources</string>
+    <!-- E-ink Search start: the plain note at the end of the Genres heading, where the genres come from. -->
+    <string name="read_search_genres_from">From AniList</string>
+    <!-- E-ink Search start: the heading over the format chips. -->
+    <string name="read_search_formats">Formats</string>
+    <!-- E-ink Search start: the line at its foot. A genre or format chip opens Search with that filter and no words. -->
+    <string name="read_search_start_note">Searches your library, AniList and each source you added. A genre or format lists AniList\'s series with it.</string>
+    <!-- E-ink Search start with Your sources only ticked: the line at its foot, where AniList is not asked. -->
+    <string name="read_search_start_note_own">Searches your library and each source you added.</string>
+    <!-- E-ink Search results on a large panel: the heading over the results already in the person's library. -->
+    <string name="read_search_group_library">In your library</string>
+    <!-- E-ink Search results: the heading over AniList's results. -->
+    <string name="read_search_group_anilist">From AniList</string>
+    <!-- E-ink Search results: the heading over one source's results. The source is its name. -->
+    <string name="read_search_group_source">From %1$s</string>
+    <!-- E-ink Search results: the count at the end of a group's heading. -->
+    <plurals name="read_search_group_count">
+        <item quantity="one">%1$,d result</item>
+        <item quantity="other">%1$,d results</item>
+    </plurals>
     <!-- Name of the notification channel for new chapters, shown in the system's settings. -->
     <string name="channel_chapters_name">New chapters</string>
     <!-- What the new chapters channel is for, shown in the system's settings. -->
@@ -1615,6 +1874,20 @@
     <string name="read_downloads_empty_detail">Downloaded chapters open without a connection.</string>
     <!-- Downloads' empty line for a person who watches and reads, under "No downloads". -->
     <string name="read_downloads_empty_both">Downloaded episodes and chapters open without a connection.</string>
+    <!-- The head of the group menu on a large screen, over its choices: the source the groups are in. -->
+    <string name="group_menu_in">Group in %1$s</string>
+    <!-- What TalkBack says the Group row does, after "Double-tap to": an imperative, as Android's click labels are. -->
+    <string name="series_group_action">Pick a group</string>
+    <!-- E-ink series page on a large panel: the text button beside the chapter order that starts choosing chapters. -->
+    <string name="series_select">Select</string>
+    <!-- E-ink series page on a large panel: the label over the person's own score, shown as "8 / 10". -->
+    <string name="series_fact_score">Your score</string>
+    <!-- E-ink series page on a large panel: the label over the series' status, "Releasing". -->
+    <string name="series_fact_status">Status</string>
+    <!-- E-ink series page on a large panel: the label over how often chapters come out, "Usually Fridays". -->
+    <string name="series_fact_releases">New chapters</string>
+    <!-- E-ink series page on a large panel: the state at the end of an unread chapter row that is downloaded here. -->
+    <string name="series_row_on_device">On this device</string>
     <!-- Line under Notifications in the Settings list: chapter notifications are on. -->
     <string name="settings_summary_chapters_on">New chapters on</string>
     <!-- Line under Notifications in the Settings list: chapter notifications are off. -->
@@ -2134,6 +2407,11 @@
     <plurals name="settings_downloads_count">
         <item quantity="one">One episode</item>
         <item quantity="other">%1$,d episodes</item>
+    </plurals>
+    <!-- Settings, Downloads: the count of downloaded chapters of manga, webtoons and books. -->
+    <plurals name="settings_downloads_chapters">
+        <item quantity="one">One chapter</item>
+        <item quantity="other">%1$,d chapters</item>
     </plurals>
     <!-- Settings, Accounts: the group about the main tracker. -->
     <string name="settings_anilist_footer">Progress and list changes sync to AniList. Library shows your AniList lists.</string>
@@ -4630,6 +4908,14 @@
     <string name="player_subs_more">More in Settings…</string>
     <!-- Under a page that is still loading after four seconds. -->
     <string name="reader_page_loading">Loading page %1$d</string>
+    <!-- On the plate of a page that is still loading. -->
+    <string name="reader_page_plate">Page %1$d</string>
+    <!-- On the plate of a strip image that is still loading. -->
+    <string name="reader_image_plate">Image %1$d</string>
+    <!-- Under a strip image's number after four seconds. -->
+    <string name="reader_image_loading">Loading image %1$d</string>
+    <!-- Under a strip image's number (Image 4) when it couldn't be loaded, above Try again. -->
+    <string name="reader_image_failed">Couldn\'t load</string>
     <!-- Heading where a page could not be loaded. -->
     <string name="reader_page_failed">Couldn\'t load page %1$d</string>
     <!-- Button that loads a failed page again. -->
@@ -4640,6 +4926,8 @@
     <string name="reader_end_read">Counted as read</string>
     <!-- Under the end of chapter line, naming the trackers the read went to. -->
     <string name="reader_end_tracker">Counted as read · %1$s updated</string>
+    <!-- Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online. -->
+    <string name="reader_end_tracker_offline">Counted as read · %1$s updates when you\'re back online</string>
     <!-- Small heading above the next chapter on the page between chapters. -->
     <string name="reader_end_next">Next</string>
     <!-- A reading mode, and a reading direction. -->
@@ -4680,12 +4968,114 @@
     <string name="reader_spreads_rotate">Turn</string>
     <!-- A choice for wide pages: shown whole. -->
     <string name="reader_spreads_whole">Whole</string>
-    <!-- A choice for the reader's tap zones: taps near the left and right edges turn the page. -->
+    <!-- A choice for the reader's tap zones: taps near the left and right edges turn the page. Replaced by Sides; kept until every app has the new tap zones page. -->
     <string name="reader_tap_edges">Edges</string>
-    <!-- A choice for the reader's tap zones: the left and right halves turn the page. -->
-    <string name="reader_tap_sides">Halves</string>
-    <!-- A choice for the reader's tap zones: taps do not turn the page. -->
+    <!-- Tap zone layout: Sides when pages turn sideways, L shape when they move downwards. The name under its tile. -->
+    <string name="reader_tap_auto">Auto</string>
+    <!-- Tap zone layout: previous page on one side, next page on the other, controls in the middle. -->
+    <string name="reader_tap_sides">Sides</string>
+    <!-- Tap zone layout: previous page along the top and down one side, next page along the bottom and down the other side, in the shape of the letter L. -->
+    <string name="reader_tap_l_shape">L shape</string>
+    <!-- Tap zone layout: controls along the top, a narrow column for previous page, and the rest of the page for next page. -->
+    <string name="reader_tap_wide_next">Wide next</string>
+    <!-- Tap zone layout: previous page across the top, next page across the bottom. -->
+    <string name="reader_tap_top_bottom">Top and bottom</string>
+    <!-- Tap zone layout: next page down both the left and the right side, previous page in the bottom middle. -->
+    <string name="reader_tap_both_next">Next on both sides</string>
+    <!-- Tap zone layout: taps only show and hide the controls, and never turn the page. -->
     <string name="reader_tap_off">Off</string>
+    <!-- Tap zones page: the choice for paged reading (pages that turn), one of two at the top. -->
+    <string name="reader_tap_paged">Paged</string>
+    <!-- Tap zones page: the choice for strips and scrolled novels, one of two at the top. -->
+    <string name="reader_tap_scrolling">Scrolling</string>
+    <!-- Tap zones page: row that sets how wide the zones at the edges are. -->
+    <string name="reader_tap_size">Zone size</string>
+    <!-- Choice of Zone size: the edge zones are a third of the screen. -->
+    <string name="reader_tap_standard">Standard</string>
+    <!-- Choice of Zone size: the edge zones are a quarter of the screen. -->
+    <string name="reader_tap_small">Small</string>
+    <!-- Tap zones page: switch that swaps the left and right zones, for the left hand. -->
+    <string name="reader_tap_flip_sides">Flip left and right</string>
+    <!-- Tap zones page: switch that swaps the top and bottom zones. -->
+    <string name="reader_tap_flip_ends">Flip top and bottom</string>
+    <!-- Tap zones page: button that shows the zones over the page. -->
+    <string name="reader_tap_show">Show zones</string>
+    <!-- Tap zones page, beside Show zones: the setting is not synced. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”. -->
+    <string name="reader_tap_here">Stays on this %1$s</string>
+    <!-- The reader's settings on a Mac, Windows or Linux: the row that opens the tap zones page, which is about clicks there. -->
+    <string name="reader_click_zones">Click zones</string>
+    <!-- Name of the tap zone that turns to the next page, in the guide over the page and as a screen reader action. -->
+    <string name="reader_zone_next">Next page</string>
+    <!-- Name of the tap zone that turns to the previous page, in the guide and as a screen reader action. -->
+    <string name="reader_zone_previous">Previous page</string>
+    <!-- Name of the tap zone that shows and hides the reader's controls, in the guide. -->
+    <string name="reader_zone_controls">Controls</string>
+    <!-- Screen reader action on the page that shows the reader's controls. -->
+    <string name="reader_zone_show_controls">Show controls</string>
+    <!-- Name of the tap zone that scrolls a strip or a scrolled novel down, in the guide. -->
+    <string name="reader_zone_scroll_down">Scroll down</string>
+    <!-- Name of the tap zone that scrolls a strip or a scrolled novel up, in the guide. -->
+    <string name="reader_zone_scroll_up">Scroll up</string>
+    <!-- Under Controls in the tap zone guide: where the zones are changed. -->
+    <string name="reader_zone_change">Change in Reader settings</string>
+    <!-- Tap zone layout Off in words, the accessibility value of its tile. -->
+    <string name="reader_tap_off_about">Taps show and hide the controls</string>
+    <!-- Tap zone layout in words, the accessibility value of its tile: Sides, next page on the right. -->
+    <string name="reader_tap_sides_right_about">Next page on the right side, previous page on the left side, controls in the middle</string>
+    <!-- Tap zone layout in words, the accessibility value of its tile: Sides, next page on the left. -->
+    <string name="reader_tap_sides_left_about">Next page on the left side, previous page on the right side, controls in the middle</string>
+    <!-- Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the right. -->
+    <string name="reader_tap_l_shape_bottom_right_about">Next page along the bottom and on the right, previous page along the top and on the left, controls in the middle</string>
+    <!-- Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the left. -->
+    <string name="reader_tap_l_shape_bottom_left_about">Next page along the bottom and on the left, previous page along the top and on the right, controls in the middle</string>
+    <!-- Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right. -->
+    <string name="reader_tap_l_shape_top_right_about">Next page along the top and on the right, previous page along the bottom and on the left, controls in the middle</string>
+    <!-- Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left. -->
+    <string name="reader_tap_l_shape_top_left_about">Next page along the top and on the left, previous page along the bottom and on the right, controls in the middle</string>
+    <!-- Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the left. -->
+    <string name="reader_tap_wide_next_top_left_about">Controls along the top, previous page in a narrow column on the left, next page everywhere else</string>
+    <!-- Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the right. -->
+    <string name="reader_tap_wide_next_top_right_about">Controls along the top, previous page in a narrow column on the right, next page everywhere else</string>
+    <!-- Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left. -->
+    <string name="reader_tap_wide_next_bottom_left_about">Controls along the bottom, previous page in a narrow column on the left, next page everywhere else</string>
+    <!-- Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right. -->
+    <string name="reader_tap_wide_next_bottom_right_about">Controls along the bottom, previous page in a narrow column on the right, next page everywhere else</string>
+    <!-- Tap zone layout in words, the accessibility value of its tile: Top and bottom. -->
+    <string name="reader_tap_top_bottom_about">Next page across the bottom, previous page across the top, controls in the middle</string>
+    <!-- Tap zone layout in words, the accessibility value of its tile: Top and bottom flipped. -->
+    <string name="reader_tap_top_bottom_flipped_about">Next page across the top, previous page across the bottom, controls in the middle</string>
+    <!-- Tap zone layout in words, the accessibility value of its tile: Next on both sides. -->
+    <string name="reader_tap_both_next_about">Next page down both sides, previous page at the bottom in the middle, controls above it</string>
+    <!-- Tap zone layout in words, the accessibility value of its tile: Next on both sides flipped top and bottom. -->
+    <string name="reader_tap_both_next_flipped_about">Next page down both sides, previous page at the top in the middle, controls below it</string>
+    <!-- Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the right. -->
+    <string name="reader_tap_sides_right_scroll_about">Scroll down on the right side, scroll up on the left side, controls in the middle</string>
+    <!-- Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the left. -->
+    <string name="reader_tap_sides_left_scroll_about">Scroll down on the left side, scroll up on the right side, controls in the middle</string>
+    <!-- Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the right. -->
+    <string name="reader_tap_l_shape_bottom_right_scroll_about">Scroll down along the bottom and on the right, scroll up along the top and on the left, controls in the middle</string>
+    <!-- Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the left. -->
+    <string name="reader_tap_l_shape_bottom_left_scroll_about">Scroll down along the bottom and on the left, scroll up along the top and on the right, controls in the middle</string>
+    <!-- Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right. -->
+    <string name="reader_tap_l_shape_top_right_scroll_about">Scroll down along the top and on the right, scroll up along the bottom and on the left, controls in the middle</string>
+    <!-- Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left. -->
+    <string name="reader_tap_l_shape_top_left_scroll_about">Scroll down along the top and on the left, scroll up along the bottom and on the right, controls in the middle</string>
+    <!-- Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the left. -->
+    <string name="reader_tap_wide_next_top_left_scroll_about">Controls along the top, scroll up in a narrow column on the left, scroll down everywhere else</string>
+    <!-- Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the right. -->
+    <string name="reader_tap_wide_next_top_right_scroll_about">Controls along the top, scroll up in a narrow column on the right, scroll down everywhere else</string>
+    <!-- Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left. -->
+    <string name="reader_tap_wide_next_bottom_left_scroll_about">Controls along the bottom, scroll up in a narrow column on the left, scroll down everywhere else</string>
+    <!-- Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right. -->
+    <string name="reader_tap_wide_next_bottom_right_scroll_about">Controls along the bottom, scroll up in a narrow column on the right, scroll down everywhere else</string>
+    <!-- Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom. -->
+    <string name="reader_tap_top_bottom_scroll_about">Scroll down across the bottom, scroll up across the top, controls in the middle</string>
+    <!-- Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom flipped. -->
+    <string name="reader_tap_top_bottom_flipped_scroll_about">Scroll down across the top, scroll up across the bottom, controls in the middle</string>
+    <!-- Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides. -->
+    <string name="reader_tap_both_next_scroll_about">Scroll down on both sides, scroll up at the bottom in the middle, controls above it</string>
+    <!-- Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides flipped top and bottom. -->
+    <string name="reader_tap_both_next_flipped_scroll_about">Scroll down on both sides, scroll up at the top in the middle, controls below it</string>
     <!-- Button in the reader's controls that opens the chapters and the page grid. -->
     <string name="reader_chapters">Chapters</string>
     <!-- Line in the margin of a novel's page. -->
@@ -4711,6 +5101,8 @@
     <string name="reader_look_system">System</string>
     <!-- Top line of the page between chapters. The chapter is its number, such as 12. -->
     <string name="reader_end_of_chapter_number">End of chapter %1$s</string>
+    <!-- Top line of the page between chapters when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own, such as Rooftop Lantern. -->
+    <string name="reader_end_of_named">End of %1$s</string>
     <!-- The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written. -->
     <string name="reader_end_facts">Chapter %1$s · %2$s</string>
     <!-- The next chapter's length on the page between chapters. -->
@@ -4726,6 +5118,12 @@
     <string name="reader_divider_facts_source">%1$s · from %2$s</string>
     <!-- Line on the page between chapters, near its buttons: one more swipe opens the next chapter. -->
     <string name="reader_end_swipe">Swipe to keep reading</string>
+    <!-- Button beside Continue on the page between chapters, shown only when the next chapter is an extra (such as 16.5 between 16 and 17). It opens the chapter named, passing over the extras before it. The chapter is its number, such as 17. -->
+    <string name="reader_end_skip_to">Skip to chapter %1$s</string>
+    <!-- What a screen reader adds after "Skip to chapter 17": the extra it passes over stays unread in the chapter list. The chapter is the extra's number, such as 16.5. -->
+    <string name="reader_end_skip_hint">Chapter %1$s stays unread.</string>
+    <!-- What a screen reader adds after "Skip to chapter 17" when it passes over more than one extra, or an extra with no number (such as an omake): those chapters stay unread in the chapter list. -->
+    <string name="reader_end_skip_hint_extras">The extras before it stay unread.</string>
     <!-- The next episode's length on the divider inside a strip. -->
     <plurals name="reader_divider_images">
         <item quantity="one">One image</item>
@@ -4733,6 +5131,40 @@
     </plurals>
     <!-- Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12. -->
     <string name="reader_chapter_line_titled">Chapter %1$s · %2$s</string>
+    <!-- The reader's opening line while the series' source sends its chapter list. -->
+    <string name="reader_wait_chapter_list">Getting the chapter list from %1$s</string>
+    <!-- The reader's opening line while the source sends the chapter's pages or text. -->
+    <string name="reader_wait_chapter_pages">Getting chapter %1$s from %2$s</string>
+    <!-- The opening line after a few seconds, with how long it has waited so far. -->
+    <string name="reader_wait_seconds">%1$s · %2$,d s</string>
+    <!-- Under the opening line once the wait has gone on for a long time, above Read from another source and Go back. -->
+    <string name="reader_wait_long">This is taking a while.</string>
+    <!-- Beside the line that says how many credit pages were skipped, on the end page and in a long strip. Tapping it shows them. -->
+    <string name="reader_credit_show">Show</string>
+    <!-- Spoken hint of the line that says how many credit pages were skipped. -->
+    <string name="reader_credit_show_hint">Shows the page</string>
+    <!-- Notice over a credit page shown again, and the caption above it in a long strip. -->
+    <string name="reader_credit_shown">Skipped as a credit page</string>
+    <!-- The notice's action on a shown credit page: show this page from now on. -->
+    <string name="reader_credit_not">Not a credit page</string>
+    <!-- Notice after Not a credit page, with Undo. -->
+    <string name="reader_credit_kept">This page will show from now on</string>
+    <!-- In the reader's line in place of a page number, while a credit page shows: "Chapter 87 · credit page". -->
+    <string name="reader_credit_page">credit page</string>
+    <!-- The same, when more than one credit page is shown: "credit page 1 of 2". -->
+    <string name="reader_credit_page_of">credit page %1$d of %2$d</string>
+    <!-- The reader's line under the title while a credit page shows: the chapter, then "credit page" or "credit page 1 of 2". -->
+    <string name="reader_group_line_place">%1$s · %2$s</string>
+    <!-- Spoken name of a credit page shown again. -->
+    <string name="reader_credit_page_label">Credit page</string>
+    <!-- Notice when a skipped credit page's picture can't be read, so it can't be shown. -->
+    <string name="reader_credit_failed">Couldn\'t load this credit page</string>
+    <!-- The scrubber's preview on the first page of a chapter's later part. -->
+    <string name="reader_part_preview">Page %1$d · part %2$d</string>
+    <!-- The same, when the part before it is missing from every group: "Page 14 · part 4 · part 3 missing". -->
+    <string name="reader_part_preview_missing">Page %1$d · part %2$d · part %3$d missing</string>
+    <!-- Spoken value of the scrubber on the first page of a chapter's later part. -->
+    <string name="reader_part_starts">Part %1$d starts at page %2$d</string>
     <!-- Button in the first run that opens the reading demo. -->
     <string name="onboarding_read_demo">Read the demo</string>
     <!-- Under the first run's demo heading when the device is for reading. -->
@@ -4927,6 +5359,27 @@
     <string name="series_tracker_ask">Which series is this? Choose</string>
     <!-- Value of the group row: the chosen group is used for this series. -->
     <string name="series_preferred_group">Your preferred group here</string>
+    <!-- Label of the series page's row for the group whose version of each chapter the series lists, inside the source in use. Its value is the group's name. -->
+    <string name="series_group">Group</string>
+    <!-- After the group's name on the Group row: it is in use because it has the most chapters. -->
+    <string name="series_group_most">most chapters</string>
+    <!-- After the group's name on the Group row: the person picked it. -->
+    <string name="series_group_picked">your pick</string>
+    <!-- Spoken hint of the Group row's Change button. -->
+    <string name="series_group_hint">Picks the group</string>
+    <!-- Under the group picker's title: the source the groups are in. -->
+    <string name="group_picker_in">In %1$s</string>
+    <!-- The group picker's first choice: the group with the most chapters, whichever that is. -->
+    <string name="group_picker_most">Most chapters</string>
+    <!-- Under Most chapters: the group that means today. -->
+    <string name="group_picker_most_now">Now %1$s</string>
+    <!-- A group in the picker: how many of the series' chapters it has released. Its language follows, after a middle dot. -->
+    <plurals name="group_picker_count">
+        <item quantity="one">%1$,d of %2$,d chapter</item>
+        <item quantity="other">%1$,d of %2$,d chapters</item>
+    </plurals>
+    <!-- Under the group picker's choices. -->
+    <string name="group_picker_fallback">Chapters a group doesn\'t have come from another group, and their rows say which.</string>
     <!-- A tracker's progress in chapters, with the total. -->
     <plurals name="series_tracker_chapters_of">
         <item quantity="one">%1$,d of %2$,d chapter</item>
@@ -4937,6 +5390,8 @@
         <item quantity="one">1 chapter</item>
         <item quantity="other">%1$,d chapters</item>
     </plurals>
+    <!-- A tracker's progress when the person has read none of the series yet, in place of "0 chapters". -->
+    <string name="series_tracker_not_started">Not started</string>
     <!-- A tracker's progress in chapters, then the volume. -->
     <string name="series_tracker_with_volume">%1$s · volume %2$d</string>
     <!-- A light novel tracker's progress in volumes. -->
@@ -5004,6 +5459,12 @@
     <string name="series_no_chapters_title">No chapters in this source yet</string>
     <!-- Line under it. -->
     <string name="series_no_chapters_line">Another source may have them.</string>
+    <!-- The chapter list when none of the person's sources holds the series and none was picked: an empty state, not a failure. Its button opens Read from. -->
+    <string name="series_no_source_title">None of your sources has this series yet</string>
+    <!-- Line under it. -->
+    <string name="series_no_source_line">Search for it by another name, or add a source in Your sources.</string>
+    <!-- Its button: opens Read from, where each source can be searched by another name. -->
+    <string name="series_no_source_search">Search by another name</string>
     <!-- The chapter list when the source failed. Downloaded chapters are listed under it. -->
     <string name="series_chapters_failed">Couldn\'t load chapters from %1$s.</string>
     <!-- A chapter row's title. -->
@@ -5043,6 +5504,8 @@
     <string name="chapter_state_wifi">Queued · waits for Wi-Fi</string>
     <!-- A chapter downloading. -->
     <string name="chapter_state_downloading">Downloading · %1$,d of %2$,d pages</string>
+    <!-- A chapter downloading before its page count is known, and throughout for a novel's chapter. -->
+    <string name="chapter_state_downloading_plain">Downloading</string>
     <!-- A chapter that failed to download, with the reason. -->
     <string name="chapter_state_failed">Couldn\'t download. %1$s</string>
     <!-- A part-read chapter. -->
@@ -5063,6 +5526,8 @@
     <string name="download_next">Next %1$,d unread</string>
     <!-- Download menu item. -->
     <string name="download_unread">Every unread chapter</string>
+    <!-- Short note after Next 5 or Next 10 unread when those chapters are all on this device already. -->
+    <string name="download_already">Already downloaded</string>
     <!-- Download menu item: a volume's chapters not yet downloaded. -->
     <plurals name="download_volume_count">
         <item quantity="one">%1$s · 1 chapter</item>
@@ -5097,6 +5562,14 @@
     <string name="series_read_from_chapters">Chapters 1 to %1$s</string>
     <!-- A source's chapters, after its kind on the line. -->
     <string name="series_read_from_chapters_later">chapters 1 to %1$s</string>
+    <!-- A source's line while it is asked for its chapter list, first on its line. -->
+    <string name="series_read_from_checking">Checking chapters</string>
+    <!-- The same, after its kind on the line. -->
+    <string name="series_read_from_checking_later">checking chapters</string>
+    <!-- A source that answered with no chapters for this series, first on its line. -->
+    <string name="series_read_from_empty">No chapters here yet</string>
+    <!-- The same, after its kind on the line. -->
+    <string name="series_read_from_empty_later">no chapters here yet</string>
     <!-- After a folder's chapters. -->
     <string name="series_read_from_on_device">on this %1$s</string>
     <!-- Footnote of the Read from sheet. -->
@@ -5283,8 +5756,6 @@
     <!-- The button under it. -->
     <string name="read_search_clear_filters">Clear filters</string>
     <!-- A sort of reading's Search, AniList's. -->
-    <string name="read_sort_popular">Popular</string>
-    <!-- A sort of reading's Search, AniList's. -->
     <string name="read_sort_trending">Trending</string>
     <!-- A sort of reading's Search, AniList's. -->
     <string name="read_sort_score">Score</string>
@@ -5294,6 +5765,8 @@
     <string name="read_filter_format">Format</string>
     <!-- A filter. -->
     <string name="read_filter_origin">Origin</string>
+    <!-- The first choice of the Origin filter's menu in reading's Search once an origin is set: it takes them all off. -->
+    <string name="read_filter_any_origin">Any origin</string>
     <!-- A filter. -->
     <string name="read_filter_status">Status</string>
     <!-- A filter. -->
@@ -5578,8 +6051,22 @@
     <string name="settings_counts_read_moving_on_note">Turning past the last page, or opening the next chapter</string>
     <!-- Value of Counts as read: only the person's own marks; the reader marks nothing. -->
     <string name="settings_counts_read_marked">When you mark it</string>
+    <!-- Reader default for manga: pages a group repeats at the start or end of its chapters are left out. -->
+    <string name="settings_skip_credits">Skip credit pages</string>
+    <!-- Line under Skip credit pages. -->
+    <string name="settings_skip_credits_note">Pages a group repeats at the start or end of its chapters</string>
     <!-- Line under Counts as read when it is When you mark it. -->
     <string name="settings_counts_read_marked_note">Continue and your trackers follow your marks</string>
+    <!-- Group in the Reading pane: how this device's screen is drawn. -->
+    <string name="settings_screen_group">Screen</string>
+    <!-- Row in Screen: the e-ink layout, on or off. -->
+    <string name="settings_eink_layout">E-ink layout</string>
+    <!-- Line under E-ink layout. -->
+    <string name="settings_eink_layout_note">Pages instead of scrolling, nothing animates, and the screen clears itself when it needs to</string>
+    <!-- Row in Screen, with the e-ink layout on: the panel shows colour. -->
+    <string name="settings_eink_colour">Colour screen</string>
+    <!-- Line under Colour screen. -->
+    <string name="settings_eink_colour_note">Off draws every picture in greys</string>
     <!-- Group: series settings that follow you to your other devices. -->
     <string name="settings_follow_group">Series settings that follow you</string>
     <!-- Row in that group. -->
@@ -5610,6 +6097,8 @@
     <string name="settings_keep_chapters_ready_note">The next chapters of series on your Reading list</string>
     <!-- Line under Delete chapters after reading. -->
     <string name="settings_delete_after_reading_note">Bookmarked chapters are kept</string>
+    <!-- Line under Show volumes: the list is grouped only when most chapters have a volume. -->
+    <string name="settings_show_volumes_note">Grouped when most chapters have a volume</string>
     <!-- Line under New chapters. -->
     <string name="settings_chapter_notifications_note">Series on your Reading list</string>
     <!-- Line under Downloads finished. -->
@@ -5636,6 +6125,8 @@
     </plurals>
     <!-- A series' line in Downloads when a chapter failed, with the reason. -->
     <string name="read_downloads_failed">%1$s couldn\'t download. %2$s</string>
+    <!-- Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows. -->
+    <string name="read_download_not_started">The download didn\'t start. %1$s</string>
     <!-- A series' line in Downloads: how many chapters are kept. -->
     <plurals name="read_downloads_kept">
         <item quantity="one">%1$,d chapter</item>
@@ -5699,6 +6190,10 @@
     </plurals>
     <!-- Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing. -->
     <string name="send_share_again">Share again</string>
+    <!-- A ready send whose files were cleared before they were shared or saved, in the Send to e-reader sheet and in the send's row. Prepared files are kept for a day. -->
+    <string name="send_files_gone">These files are gone. Prepared files are kept for a day.</string>
+    <!-- Button on a send whose files are gone: prepares the same chapters for the same e-reader again. -->
+    <string name="send_again">Send again</string>
     <!-- A send in a list or banner that is under way, with a ring beside it. The device is the e-reader. -->
     <string name="send_banner">Sending to %1$s</string>
     <!-- The format of the files an e-reader is sent: a manga as a fixed-layout EPUB. -->
@@ -6319,6 +6814,8 @@
     <string name="settings_adult">Show adult titles</string>
     <!-- Line under it. The tracker is a name. -->
     <string name="settings_adult_detail">Titles %1$s marks adult, in Search and Seasonal</string>
+    <!-- Line under it when the app is for reading alone. -->
+    <string name="settings_adult_detail_read">Titles %1$s marks adult, in Search and Browse</string>
     <!-- Row: quality. -->
     <string name="settings_quality">Quality</string>
     <!-- Row: play the next episode on its own. -->
@@ -6398,6 +6895,8 @@
     <string name="settings_keep_chapters_ready">Keep next chapters ready</string>
     <!-- Row: delete a downloaded chapter once it is read. Bookmarked chapters stay. -->
     <string name="settings_delete_after_reading">Delete chapters after reading</string>
+    <!-- Row: group a series' chapters under volume headings. Off by default. -->
+    <string name="settings_show_volumes">Show volumes</string>
     <!-- Row: whether a series' reader mode, direction and colour follow you to your other devices. -->
     <string name="settings_series_choices_follow">Series settings follow you</string>
     <!-- Row in Downloads: which series' new chapters download by themselves. -->
@@ -6540,6 +7039,11 @@
     <plurals name="accounts_changes_waiting">
         <item quantity="one">One change waiting to sync</item>
         <item quantity="other">%1$,d changes waiting to sync</item>
+    </plurals>
+    <!-- Line under a signed-in account when nothing else waits but some changes can't go out yet: the { -tracker } has no match for those titles. They go out by themselves once it has one. -->
+    <plurals name="accounts_changes_held">
+        <item quantity="one">One change can\'t sync yet</item>
+        <item quantity="other">%1$,d changes can\'t sync yet</item>
     </plurals>
     <!-- Choice for the download quality: larger files with more detail. -->
     <string name="settings_quality_higher">Higher</string>
@@ -6767,6 +7271,17 @@
     </plurals>
     <!-- Primary action after an empty folder. -->
     <string name="book_folder_choose_other">Choose another folder</string>
+    <!-- Folder result title when the picked folder is already a source. It was scanned again. -->
+    <string name="book_folder_already">%1$s is already in your sources</string>
+    <!-- Line under it: what the new scan found. Closing the sheet keeps the folder. -->
+    <plurals name="book_folder_already_line">
+        <item quantity="one">Kaeri looked through it again and found one series. It stays as it is.</item>
+        <item quantity="other">Kaeri looked through it again and found %1$,d series. It stays as it is.</item>
+    </plurals>
+    <!-- Title when a folder could not be read: the look through it could not start, or stopped. -->
+    <string name="book_folder_unreadable">Couldn\'t read %1$s</string>
+    <!-- Line under it. -->
+    <string name="book_folder_unreadable_line">It may have moved, or Kaeri no longer has access to it.</string>
     <!-- Title of the Join a plugin store sheet. -->
     <string name="store_join_title">Join a plugin store</string>
     <!-- Label of the invite field. -->
@@ -7455,6 +7970,8 @@
         <item quantity="one">One plugin</item>
         <item quantity="other">%1$,d plugins</item>
     </plurals>
+    <!-- Heading over the store's plugins in the join dialog on a large e-ink panel. The count sits beside it. -->
+    <string name="stores_preview_plugins">Plugins in this store</string>
     <!-- Button of a notice that opens the plugin stores page. -->
     <string name="notice_open_stores">Open plugin stores</string>
     <!-- Explainer on the empty plugin stores page. -->
@@ -7872,6 +8389,7 @@
     <string name="device_kind_phone">phone</string>
     <string name="device_kind_tablet">tablet</string>
     <string name="device_kind_tv">TV</string>
+    <string name="device_kind_other">device</string>
     <!-- TV welcome, text button. -->
     <string name="first_setup_phone">Set up from your phone</string>
     <!-- Error naming a device that is not known by name. -->
@@ -7952,8 +8470,8 @@
     <string name="title_tags">Tags</string>
     <!-- Button that opens the full page of facts about a show. -->
     <string name="title_more_about">More about this show</string>
-    <!-- Accessibility hint of the button that expands a synopsis. -->
-    <string name="title_synopsis_hint">Shows the whole synopsis</string>
+    <!-- Accessible name of the More at the end of a cut synopsis, which shows the rest of it. The page's menu of extra actions is called More too, so this one says what it does. -->
+    <string name="title_synopsis_more">Show the whole synopsis</string>
     <!-- Label under a season: which episodes are dubbed so far. -->
     <string name="title_dubbed_to">Dubbed to episode %1$d</string>
     <!-- State of a title with no episodes listed yet. -->

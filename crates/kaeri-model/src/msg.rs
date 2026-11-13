@@ -1293,6 +1293,18 @@ pub enum ReadingMsg {
     ReaderMoved { chapter: String, page: i64, device: String },
     /// The same notice for a chapter known only by its number, such as 14 or 14.5.
     ReaderMovedNumber { chapter: String, page: i64, device: String },
+    /// The notice when another device read further and its name is not known: a device removed from sync, or this one before a reinstall.
+    ReaderMovedElsewhere { chapter: String, page: i64 },
+    /// The same notice for a chapter known only by its number, such as 14 or 14.5.
+    ReaderMovedNumberElsewhere { chapter: String, page: i64 },
+    /// The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its whole label, such as The Long Night.
+    ReaderMovedImage { chapter: String, image: i64, device: String },
+    /// The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+    ReaderMovedNumberImage { chapter: String, image: i64, device: String },
+    /// The notice in a strip when another device read further and its name is not known.
+    ReaderMovedElsewhereImage { chapter: String, image: i64 },
+    /// The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+    ReaderMovedNumberElsewhereImage { chapter: String, image: i64 },
     /// A notice the first time a series opens with its reading direction guessed. It offers Change.
     ReaderDetectedRightToLeft,
     /// A notice the first time a series opens with its reading direction guessed. It offers Change.
@@ -1303,14 +1315,20 @@ pub enum ReadingMsg {
     ReadingFailedOffline,
     /// Why a chapter or a list could not load: the source did not answer. The source is its name.
     ReadingFailedSourceDown { source: String },
+    /// Why something could not load: the source the series reads from is switched off in Your sources.
+    ReadingFailedSourceOff { source: String },
     /// Why a chapter could not load: the source no longer has it.
     ReadingFailedNotFound,
+    /// Why a series has no chapters: none of the person's sources holds it, and none was ever picked.
+    ReadingFailedNoSource,
     /// Why a chapter or a list could not load: the source refused. The reason comes from the source.
     ReadingFailedBlocked { source: String, reason: String },
     /// Why a chapter or a list could not load: the source answered with something Kaeri could not read.
     ReadingFailedParse { source: String },
     /// Why one page did not load. The status is the server's HTTP status code, such as 404.
     ReadingFailedPage { status: i64 },
+    /// In the reader, in a novel's text, in the box where a picture from the source did not load. Try again sits under it.
+    ReadingPictureFailed,
     /// Why something could not load: a sign-in is needed. What is a server's or a tracker's name.
     ReadingFailedSignIn { what: String },
     /// Why a book could not open: its file or folder is gone, perhaps on a drive that is not connected. The path is the file's.
@@ -1323,6 +1341,12 @@ pub enum ReadingMsg {
     ReadingFailedProtected,
     /// Why a chapter could not be saved: the disk is full.
     ReadingFailedDiskFull,
+    /// Why a chapter or a file for an e-reader could not be saved: the storage refused the name, because it is too long or has characters the storage doesn't allow. The path is the file's or the folder's.
+    ReadingFailedWriteName { path: String },
+    /// Why a chapter or a file for an e-reader could not be saved: the storage is read-only, or Kaeri isn't allowed to write there. The path is the file's or the folder's.
+    ReadingFailedWriteDenied { path: String },
+    /// Why a chapter or a file for an e-reader could not be saved, for another reason the system gave. The path is the file's or the folder's.
+    ReadingFailedWrite { path: String },
     /// Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.
     ReadingFailedWebview { version: i64 },
     /// Why a book plugin could not be used: it was built for a newer Kaeri. The world is the plugin interface's name and version.
@@ -1457,6 +1481,8 @@ pub enum ReadingMsg {
     ReadingRowWaitsWifi,
     /// A chapter row's state while it downloads.
     ReadingRowDownloading { done: i64, total: i64 },
+    /// A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count.
+    ReadingRowDownloadingPlain,
     /// A chapter row's state: the download failed. The reason follows as the next part.
     ReadingRowFailed,
     /// A chapter row's state: the page the person stopped on, of how many.
@@ -1473,6 +1499,24 @@ pub enum ReadingMsg {
     ReadingRowPages { n: i64 },
     /// A chapter row: how many versions the person's sources have of it. The row's menu lists them.
     ReadingRowVersions { n: i64 },
+    /// A chapter row: the source lists this chapter in parts, and the reader runs through them as one chapter. Shown beside the chapter's name: "Chapter 1, 2 parts".
+    ReadingRowParts { n: i64 },
+    /// A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it. Lower case, as the line's other words; an app that starts a line with it capitalises the first letter.
+    ReadingRowFromGroup { group: String },
+    /// A chapter row: the same, for a group in another language than the app's, named after the group. "from Saltmarsh Team, Spanish".
+    ReadingRowFromGroupIn { group: String, language: String },
+    /// A chapter row: a chapter in parts that is missing some, as no group has released them. The reader runs through the parts there are. Followed by the missing part: "2 of 3 parts".
+    ReadingRowPartsOf { have: i64, n: i64 },
+    /// A chapter row, after the parts count: the part no group has released. With several, how many.
+    ReadingRowPartMissing { count: i64, part: i64 },
+    /// A chapter row: one part of a chapter in parts comes from another group, as the group the series is read from lacks it. "part 2 from Saltmarsh Team".
+    ReadingRowPartFromGroup { part: i64, group: String },
+    /// The same, for a group in another language than the app's. "part 2 from Saltmarsh Team, Spanish".
+    ReadingRowPartFromGroupIn { part: i64, group: String, language: String },
+    /// A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there. Lower case, as the line's other words.
+    ReadingRowFromSource { source: String },
+    /// A quiet line in the reader: pages a series repeats at the start or end of its chapters (a group's credits or notices) were left out of this chapter. Tapping it shows them.
+    ReaderCreditPagesSkipped { count: i64 },
     /// A chapter row: when it was read or came out, under a minute ago.
     ReadingAgoNow,
     /// A chapter row: when it was read or came out, in minutes.
@@ -1505,6 +1549,8 @@ pub enum ReadingMsg {
     ReadingMissDownSince { time: String },
     /// The source has failed every ask, since a time on another day or not known.
     ReadingMissDown,
+    /// The source has no series by the series' names, but has one that may be it in another edition, as a full-colour release. That series is shown under this line, and choosing it confirms it.
+    ReadingMissPossible,
     /// How many parts of a light novel are downloaded.
     ReadingDlParts { count: i64 },
     /// What the downloads take up on this device.
@@ -1648,21 +1694,33 @@ impl ReadingMsg {
             Self::ReaderBackToPage { .. } => "reader-back-to-page",
             Self::ReaderMoved { .. } => "reader-moved",
             Self::ReaderMovedNumber { .. } => "reader-moved-number",
+            Self::ReaderMovedElsewhere { .. } => "reader-moved-elsewhere",
+            Self::ReaderMovedNumberElsewhere { .. } => "reader-moved-number-elsewhere",
+            Self::ReaderMovedImage { .. } => "reader-moved-image",
+            Self::ReaderMovedNumberImage { .. } => "reader-moved-number-image",
+            Self::ReaderMovedElsewhereImage { .. } => "reader-moved-elsewhere-image",
+            Self::ReaderMovedNumberElsewhereImage { .. } => "reader-moved-number-elsewhere-image",
             Self::ReaderDetectedRightToLeft => "reader-detected-right-to-left",
             Self::ReaderDetectedLeftToRight => "reader-detected-left-to-right",
             Self::ReaderDetectedStrip => "reader-detected-strip",
             Self::ReadingFailedOffline => "reading-failed-offline",
             Self::ReadingFailedSourceDown { .. } => "reading-failed-source-down",
+            Self::ReadingFailedSourceOff { .. } => "reading-failed-source-off",
             Self::ReadingFailedNotFound => "reading-failed-not-found",
+            Self::ReadingFailedNoSource => "reading-failed-no-source",
             Self::ReadingFailedBlocked { .. } => "reading-failed-blocked",
             Self::ReadingFailedParse { .. } => "reading-failed-parse",
             Self::ReadingFailedPage { .. } => "reading-failed-page",
+            Self::ReadingPictureFailed => "reading-picture-failed",
             Self::ReadingFailedSignIn { .. } => "reading-failed-sign-in",
             Self::ReadingFailedFileMissing { .. } => "reading-failed-file-missing",
             Self::ReadingFailedUnreadable { .. } => "reading-failed-unreadable",
             Self::ReadingFailedUnsupported { .. } => "reading-failed-unsupported",
             Self::ReadingFailedProtected => "reading-failed-protected",
             Self::ReadingFailedDiskFull => "reading-failed-disk-full",
+            Self::ReadingFailedWriteName { .. } => "reading-failed-write-name",
+            Self::ReadingFailedWriteDenied { .. } => "reading-failed-write-denied",
+            Self::ReadingFailedWrite { .. } => "reading-failed-write",
             Self::ReadingFailedWebview { .. } => "reading-failed-webview",
             Self::ReadingFailedNeedsNewer { .. } => "reading-failed-needs-newer",
             Self::ReadingFailedOff => "reading-failed-off",
@@ -1730,6 +1788,7 @@ impl ReadingMsg {
             Self::ReadingRowQueued => "reading-row-queued",
             Self::ReadingRowWaitsWifi => "reading-row-waits-wifi",
             Self::ReadingRowDownloading { .. } => "reading-row-downloading",
+            Self::ReadingRowDownloadingPlain => "reading-row-downloading-plain",
             Self::ReadingRowFailed => "reading-row-failed",
             Self::ReadingRowPageOf { .. } => "reading-row-page-of",
             Self::ReadingRowPage { .. } => "reading-row-page",
@@ -1738,6 +1797,15 @@ impl ReadingMsg {
             Self::ReadingRowBookmarked => "reading-row-bookmarked",
             Self::ReadingRowPages { .. } => "reading-row-pages",
             Self::ReadingRowVersions { .. } => "reading-row-versions",
+            Self::ReadingRowParts { .. } => "reading-row-parts",
+            Self::ReadingRowFromGroup { .. } => "reading-row-from-group",
+            Self::ReadingRowFromGroupIn { .. } => "reading-row-from-group-in",
+            Self::ReadingRowPartsOf { .. } => "reading-row-parts-of",
+            Self::ReadingRowPartMissing { .. } => "reading-row-part-missing",
+            Self::ReadingRowPartFromGroup { .. } => "reading-row-part-from-group",
+            Self::ReadingRowPartFromGroupIn { .. } => "reading-row-part-from-group-in",
+            Self::ReadingRowFromSource { .. } => "reading-row-from-source",
+            Self::ReaderCreditPagesSkipped { .. } => "reader-credit-pages-skipped",
             Self::ReadingAgoNow => "reading-ago-now",
             Self::ReadingAgoMinutes { .. } => "reading-ago-minutes",
             Self::ReadingAgoToday => "reading-ago-today",
@@ -1754,6 +1822,7 @@ impl ReadingMsg {
             Self::ReadingMissNoSeries => "reading-miss-no-series",
             Self::ReadingMissDownSince { .. } => "reading-miss-down-since",
             Self::ReadingMissDown => "reading-miss-down",
+            Self::ReadingMissPossible => "reading-miss-possible",
             Self::ReadingDlParts { .. } => "reading-dl-parts",
             Self::ReadingDlSize { .. } => "reading-dl-size",
             Self::ReadingDlRead { .. } => "reading-dl-read",
@@ -1837,21 +1906,33 @@ impl ReadingMsg {
             Self::ReaderBackToPage { page } => vec![("page", Value::Plain(*page))],
             Self::ReaderMoved { chapter, page, device } => vec![("chapter", Value::Text(chapter.clone())), ("page", Value::Plain(*page)), ("device", Value::Text(device.clone()))],
             Self::ReaderMovedNumber { chapter, page, device } => vec![("chapter", Value::Text(chapter.clone())), ("page", Value::Plain(*page)), ("device", Value::Text(device.clone()))],
+            Self::ReaderMovedElsewhere { chapter, page } => vec![("chapter", Value::Text(chapter.clone())), ("page", Value::Plain(*page))],
+            Self::ReaderMovedNumberElsewhere { chapter, page } => vec![("chapter", Value::Text(chapter.clone())), ("page", Value::Plain(*page))],
+            Self::ReaderMovedImage { chapter, image, device } => vec![("chapter", Value::Text(chapter.clone())), ("image", Value::Plain(*image)), ("device", Value::Text(device.clone()))],
+            Self::ReaderMovedNumberImage { chapter, image, device } => vec![("chapter", Value::Text(chapter.clone())), ("image", Value::Plain(*image)), ("device", Value::Text(device.clone()))],
+            Self::ReaderMovedElsewhereImage { chapter, image } => vec![("chapter", Value::Text(chapter.clone())), ("image", Value::Plain(*image))],
+            Self::ReaderMovedNumberElsewhereImage { chapter, image } => vec![("chapter", Value::Text(chapter.clone())), ("image", Value::Plain(*image))],
             Self::ReaderDetectedRightToLeft => Vec::new(),
             Self::ReaderDetectedLeftToRight => Vec::new(),
             Self::ReaderDetectedStrip => Vec::new(),
             Self::ReadingFailedOffline => Vec::new(),
             Self::ReadingFailedSourceDown { source } => vec![("source", Value::Text(source.clone()))],
+            Self::ReadingFailedSourceOff { source } => vec![("source", Value::Text(source.clone()))],
             Self::ReadingFailedNotFound => Vec::new(),
+            Self::ReadingFailedNoSource => Vec::new(),
             Self::ReadingFailedBlocked { source, reason } => vec![("source", Value::Text(source.clone())), ("reason", Value::Text(reason.clone()))],
             Self::ReadingFailedParse { source } => vec![("source", Value::Text(source.clone()))],
             Self::ReadingFailedPage { status } => vec![("status", Value::Plain(*status))],
+            Self::ReadingPictureFailed => Vec::new(),
             Self::ReadingFailedSignIn { what } => vec![("what", Value::Text(what.clone()))],
             Self::ReadingFailedFileMissing { path } => vec![("path", Value::Text(path.clone()))],
             Self::ReadingFailedUnreadable { path, format } => vec![("path", Value::Text(path.clone())), ("format", Value::Text(format.clone()))],
             Self::ReadingFailedUnsupported { kind } => vec![("kind", Value::Text(kind.clone()))],
             Self::ReadingFailedProtected => Vec::new(),
             Self::ReadingFailedDiskFull => Vec::new(),
+            Self::ReadingFailedWriteName { path } => vec![("path", Value::Text(path.clone()))],
+            Self::ReadingFailedWriteDenied { path } => vec![("path", Value::Text(path.clone()))],
+            Self::ReadingFailedWrite { path } => vec![("path", Value::Text(path.clone()))],
             Self::ReadingFailedWebview { version } => vec![("version", Value::Plain(*version))],
             Self::ReadingFailedNeedsNewer { world } => vec![("world", Value::Text(world.clone()))],
             Self::ReadingFailedOff => Vec::new(),
@@ -1919,6 +2000,7 @@ impl ReadingMsg {
             Self::ReadingRowQueued => Vec::new(),
             Self::ReadingRowWaitsWifi => Vec::new(),
             Self::ReadingRowDownloading { done, total } => vec![("done", Value::Int(*done)), ("total", Value::Int(*total))],
+            Self::ReadingRowDownloadingPlain => Vec::new(),
             Self::ReadingRowFailed => Vec::new(),
             Self::ReadingRowPageOf { page, of } => vec![("page", Value::Plain(*page)), ("of", Value::Plain(*of))],
             Self::ReadingRowPage { page } => vec![("page", Value::Plain(*page))],
@@ -1927,6 +2009,15 @@ impl ReadingMsg {
             Self::ReadingRowBookmarked => Vec::new(),
             Self::ReadingRowPages { n } => vec![("n", Value::Int(*n))],
             Self::ReadingRowVersions { n } => vec![("n", Value::Int(*n))],
+            Self::ReadingRowParts { n } => vec![("n", Value::Int(*n))],
+            Self::ReadingRowFromGroup { group } => vec![("group", Value::Text(group.clone()))],
+            Self::ReadingRowFromGroupIn { group, language } => vec![("group", Value::Text(group.clone())), ("language", Value::Text(language.clone()))],
+            Self::ReadingRowPartsOf { have, n } => vec![("have", Value::Int(*have)), ("n", Value::Int(*n))],
+            Self::ReadingRowPartMissing { count, part } => vec![("count", Value::Int(*count)), ("part", Value::Plain(*part))],
+            Self::ReadingRowPartFromGroup { part, group } => vec![("part", Value::Plain(*part)), ("group", Value::Text(group.clone()))],
+            Self::ReadingRowPartFromGroupIn { part, group, language } => vec![("part", Value::Plain(*part)), ("group", Value::Text(group.clone())), ("language", Value::Text(language.clone()))],
+            Self::ReadingRowFromSource { source } => vec![("source", Value::Text(source.clone()))],
+            Self::ReaderCreditPagesSkipped { count } => vec![("count", Value::Int(*count))],
             Self::ReadingAgoNow => Vec::new(),
             Self::ReadingAgoMinutes { minutes } => vec![("minutes", Value::Int(*minutes))],
             Self::ReadingAgoToday => Vec::new(),
@@ -1943,6 +2034,7 @@ impl ReadingMsg {
             Self::ReadingMissNoSeries => Vec::new(),
             Self::ReadingMissDownSince { time } => vec![("time", Value::Text(time.clone()))],
             Self::ReadingMissDown => Vec::new(),
+            Self::ReadingMissPossible => Vec::new(),
             Self::ReadingDlParts { count } => vec![("count", Value::Int(*count))],
             Self::ReadingDlSize { size } => vec![("size", Value::Size(*size))],
             Self::ReadingDlRead { count } => vec![("count", Value::Int(*count))],

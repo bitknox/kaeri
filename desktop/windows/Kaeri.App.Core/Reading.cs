@@ -358,6 +358,10 @@ public sealed class ReadingStore
                 Search.HasMore = search.HasMore;
                 Search.OtherScope = search.OtherScope;
                 Search.Loading = false;
+                // Results for the query on screen: a failure that came before them (an older
+                // query's, which names none) no longer stands.
+                Search.Failure = null;
+                Failures.Remove(ReadingAbout.Search);
                 Changed?.Invoke(ReadingPart.Search);
                 break;
             case ReadingEvent.SourceSearch found:
@@ -427,7 +431,8 @@ public sealed class ReadingStore
         a.Text == b.Text && a.Medium == b.Medium && a.Status == b.Status && a.Sort == b.Sort
         && Started(a.Started) == Started(b.Started) && a.SourcesOnly == b.SourcesOnly
         && Same(a.Formats, b.Formats) && Same(a.Origins, b.Origins)
-        && Same(a.Genres, b.Genres) && Same(a.ExcludeGenres, b.ExcludeGenres);
+        && Same(a.Genres, b.Genres) && Same(a.ExcludeGenres, b.ExcludeGenres)
+        && (a.SourceScope is null ? b.SourceScope is null : b.SourceScope is not null && Same(a.SourceScope, b.SourceScope));
 
     static bool Same(string[]? a, string[]? b) => (a ?? []).SequenceEqual(b ?? []);
 

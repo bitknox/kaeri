@@ -9,11 +9,15 @@ package app.kaeri.reader
 import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
+import android.view.Choreographer
+import android.view.ViewGroup
 import android.webkit.JavascriptInterface
+import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.webkit.ScriptHandler
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import app.kaeri.engine.model.BookBody
@@ -55,6 +59,12 @@ sealed interface NovelMessage {
 
     data class Failed(val why: String) : NovelMessage
 
+    /**
+     * The web view's renderer went away (killed for memory, or crashed). The view is dead: the
+     * screen drops this host and opens the chapter again in a new one.
+     */
+    data object Gone : NovelMessage
+
     companion object {
         /** One message, or null for one this host does not know. */
         fun parse(text: String): NovelMessage? = runCatching {
@@ -90,6 +100,7 @@ sealed interface NovelMessage {
             "key" -> TurnHow.KEY
             "jump" -> TurnHow.JUMP
             "scroll" -> TurnHow.SCROLL
+            "placed" -> TurnHow.PLACED
             else -> TurnHow.TURN
         }
 
@@ -114,6 +125,18 @@ class NovelWebHost(
     private var index = 0
     private var scriptByHand = false
 
+    /** The paginator put in at document start, taken out again before the view goes. */
+    private var script: ScriptHandler? = null
+    private var listening = false
+    private var bridged = false
+
+    /** [destroy] was called: nothing more reaches the view or the screen. */
+    var destroyed = false
+        private set
+
+    /** The renderer went: the view may only be destroyed now. */
+    private var gone = false
+
     init {
         // A web view left at wrap-content gives vh and percentages no height, and the columns one line.
         view.layoutParams = android.view.ViewGroup.LayoutParams(
@@ -134,7 +157,7 @@ class NovelWebHost(
         }
         val origins = setOf(ORIGIN)
         if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
-            WebViewCompat.addDocumentStartJavaScript(view, assets.script, origins)
+            script = WebViewCompat.addDocumentStartJavaScript(view, assets.script, origins)
         } else {
             // Older web views: the script goes in once the page is parsed, and lays it out then.
             scriptByHand = true
@@ -143,8 +166,10 @@ class NovelWebHost(
             WebViewCompat.addWebMessageListener(view, HOST, origins) { _, message, source, isMainFrame, _ ->
                 if (isMainFrame && source.toString().startsWith(ORIGIN)) message.data?.let(::received)
             }
+            listening = true
         } else {
             view.addJavascriptInterface(Bridge(), HOST)
+            bridged = true
         }
         view.webViewClient = object : WebViewClient() {
             // Nothing navigates: the paginator reports links, and the host decides.
@@ -154,7 +179,17 @@ class NovelWebHost(
                 answer(request.url)
 
             override fun onPageFinished(view: WebView, url: String) {
-                if (scriptByHand && url.startsWith(PREFIX)) view.evaluateJavascript(assets.script, null)
+                if (scriptByHand && !destroyed && url.startsWith(PREFIX)) view.evaluateJavascript(assets.script, null)
+            }
+
+            // A renderer that died takes only this view with it, never the app: the screen opens
+            // the chapter again in a new view. Returning false here would end the whole app.
+            override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
+                if (view !== this@NovelWebHost.view) return false
+                if (gone) return true
+                gone = true
+                if (!destroyed) onMessage(NovelMessage.Gone)
+                return true
             }
         }
     }
@@ -167,9 +202,8 @@ class NovelWebHost(
     }
 
     private fun received(text: String) {
+        if (destroyed) return
         val message = NovelMessage.parse(text) ?: return
-        // A new document's paginator starts with no taps of its own: tell it which.
-        if (message is NovelMessage.Page && message.how == null) taps?.let(::call)
         when (message) {
             // The next linear document on a turn past the end, the previous one before the start.
             is NovelMessage.End -> nextDocument(+1)?.let { turnInto(it) } ?: onMessage(message)
@@ -207,34 +241,23 @@ class NovelWebHost(
         val at = restore?.spine?.toInt()?.takeIf { it in spine.indices }
         index = at ?: spine.indexOfFirst { it.url == entry }.coerceAtLeast(0)
         val url = spine.getOrNull(index)?.url ?: entry
+        if (destroyed || gone) return
         view.loadUrl(if (restore != null) "$url#kaeri:pos=${restore.text()}" else url)
     }
 
     private fun load(document: Int, fragment: String? = null) {
         index = document
         val url = spine[document].url
+        if (destroyed || gone) return
         view.loadUrl(if (fragment != null) "$url#$fragment" else url)
     }
 
     /** Go to a contents entry: its document, and the element its fragment names. */
     fun openEntry(spineIndex: Int, url: String) {
+        turnedInto = TurnHow.JUMP
         index = spineIndex.coerceIn(0, (spine.size - 1).coerceAtLeast(0))
+        if (destroyed || gone) return
         view.loadUrl(url)
-    }
-
-    /** The input call last sent, said again to each document as it is ready. */
-    private var taps: String? = null
-
-    /**
-     * Let the page turn itself on a tap within [edge] of a side, forward on the right or, in a
-     * right-to-left book, the left, and report the new page once. Taps elsewhere still come as
-     * [NovelMessage.Tap], and [next], [prev] and [goTo] still turn it for keys and accessibility.
-     */
-    fun tapsTurn(edge: Float, rtl: Boolean) {
-        val js = "input({edge: $edge, forward: ${quote(if (rtl) "left" else "right")}, keys: false, hold: false})"
-        if (js == taps) return
-        taps = js
-        call(js)
     }
 
     fun next(how: TurnHow = TurnHow.TURN) = call("next(${quote(NovelMessage.word(how))})")
@@ -246,6 +269,7 @@ class NovelWebHost(
     fun goToPos(pos: NovelPos, how: TurnHow = TurnHow.JUMP) {
         if (pos.spine.toInt() != index && pos.spine.toInt() in spine.indices) {
             index = pos.spine.toInt()
+            if (destroyed || gone) return
             view.loadUrl("${spine[index].url}#kaeri:pos=${pos.text()}")
         } else {
             call("goToPos(${quote(pos.text())}, ${quote(NovelMessage.word(how))})")
@@ -255,12 +279,33 @@ class NovelWebHost(
     /** A live settings change: NovelStyle's style. */
     fun configure(style: String) = call("configure(${quote(style)})")
 
+    /**
+     * Let go of the view, in the order the system WebView asks for: out of the view hierarchy
+     * first, its script and message channel taken out, the page stopped and blanked so the
+     * renderer lets go of the book, and the view itself destroyed on the next frame, once the
+     * last frame that drew it is done. After a renderer went away only the destroy is left to do.
+     * Safe to call twice.
+     */
     fun destroy() {
-        view.stopLoading()
-        view.destroy()
+        if (destroyed) return
+        destroyed = true
+        (view.parent as? ViewGroup)?.removeView(view)
+        view.setOnTouchListener(null)
+        view.setOnKeyListener(null)
+        if (!gone) {
+            script?.remove()
+            if (listening) WebViewCompat.removeWebMessageListener(view, HOST)
+            if (bridged) view.removeJavascriptInterface(HOST)
+            view.stopLoading()
+            view.loadUrl(BLANK)
+        }
+        script = null
+        Choreographer.getInstance().postFrameCallback { view.destroy() }
     }
 
-    private fun call(js: String) = view.evaluateJavascript("window.kaeriReader && window.kaeriReader.$js", null)
+    private fun call(js: String) {
+        if (!destroyed && !gone) view.evaluateJavascript("window.kaeriReader && window.kaeriReader.$js", null)
+    }
 
     private fun answer(url: Uri): WebResourceResponse {
         val text = url.toString().substringBefore('#')
@@ -283,6 +328,9 @@ class NovelWebHost(
 
         /** The name the paginator posts to. */
         const val HOST = "kaeriHost"
+
+        /** What the view shows while it is let go of: nothing, and nothing of the book. */
+        const val BLANK = "about:blank"
 
         private fun quote(text: String): String = JSONObject.quote(text)
 

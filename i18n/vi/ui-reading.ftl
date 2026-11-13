@@ -229,7 +229,6 @@ read-search-nothing-browse = Không có gì khớp với các bộ lọc này
 read-search-nothing-line = Hãy thử từ khác, hoặc một tên bằng ngôn ngữ khác.
 read-search-nothing-filters-line = Ít bộ lọc hơn có thể tìm thấy nhiều hơn.
 read-search-clear-filters = Xóa bộ lọc
-read-sort-popular = Phổ biến
 read-sort-trending = Thịnh hành
 read-sort-score = Điểm
 read-sort-newest = Mới nhất

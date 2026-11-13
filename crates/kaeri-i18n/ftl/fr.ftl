@@ -2059,9 +2059,6 @@ linux-shortcuts-close-reader = Fermer le lecteur
 # Two names joined, or a list's last name joined to the rest, in the end page's tracker line: "AniList and MangaUpdates".
 linux-reader-names-and = { $first } et { $last }
 
-# On the plate that holds a page's place while it loads. The page is its number, such as 23.
-linux-reader-page-plate = Page { $page }
-
 # Heading when a chapter could not open. The chapter is its number, such as 13.
 linux-reader-open-failed = Impossible d'ouvrir le chapitre { $chapter }
 
@@ -8716,6 +8713,15 @@ player-subs-more = Plus dans les paramètres…
 # Under a page that is still loading after four seconds.
 reader-page-loading = Chargement de la page { $page }
 
+# On the plate of a page that is still loading.
+reader-page-plate = Page { $page }
+
+# On the plate of a strip image that is still loading.
+reader-image-plate = Image { $image }
+
+# Under a strip image's number after four seconds.
+reader-image-loading = Chargement de l'image { $image }
+
 # Heading where a page could not be loaded.
 reader-page-failed = Impossible de charger la page { $page }
 
@@ -8730,6 +8736,9 @@ reader-end-read = Compté comme lu
 
 # Under the end of chapter line, naming the trackers the read went to.
 reader-end-tracker = Compté comme lu · { $trackers } à jour
+
+# Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online.
+reader-end-tracker-offline = Compté comme lu · { $tracker } se mettra à jour une fois en ligne
 
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = Suivant
@@ -8791,14 +8800,20 @@ reader-spreads-rotate = Pivoter
 # A choice for wide pages: shown whole.
 reader-spreads-whole = Entière
 
-# A choice for the reader's tap zones: taps near the left and right edges turn the page.
+# A choice for the reader's tap zones: taps near the left and right edges turn the page. Replaced by Sides; kept until every app has the new tap zones page.
 reader-tap-edges = Bords
 
-# A choice for the reader's tap zones: the left and right halves turn the page.
-reader-tap-sides = Moitiés
-
-# A choice for the reader's tap zones: taps do not turn the page.
+# Tap zone layout: taps only show and hide the controls, and never turn the page.
 reader-tap-off = Aucune
+
+# Name of the tap zone that turns to the next page, in the guide over the page and as a screen reader action.
+reader-zone-next = Page suivante
+
+# Name of the tap zone that turns to the previous page, in the guide and as a screen reader action.
+reader-zone-previous = Page précédente
+
+# Name of the tap zone that shows and hides the reader's controls, in the guide.
+reader-zone-controls = Commandes
 
 # Button in the reader's controls that opens the chapters and the page grid.
 reader-chapters = Chapitres
@@ -9701,9 +9716,6 @@ read-search-nothing-filters-line = Moins de filtres donneront peut-être plus de
 
 # The button under it.
 read-search-clear-filters = Effacer les filtres
-
-# A sort of reading's Search, AniList's.
-read-sort-popular = Populaires
 
 # A sort of reading's Search, AniList's.
 read-sort-trending = Tendances
@@ -13630,9 +13642,6 @@ title-tags = Mots-clés
 
 # Button that opens the full page of facts about a show.
 title-more-about = Plus d'informations sur ce titre
-
-# Accessibility hint of the button that expands a synopsis.
-title-synopsis-hint = Affiche le synopsis complet
 
 # Label under a season: which episodes are dubbed so far.
 title-dubbed-to = Doublé jusqu'à l'épisode { $episode }

@@ -123,12 +123,7 @@ struct ReadHomeRowView: View {
     @Environment(\.homeLayout) private var layout
     let row: ReadHomeRow
 
-    /// A row of one format says the origin then the status, a mixed row the format then the
-    /// status, and a row that fixes the status (Finished) the count in its place.
-    private var caption: ReadCaption {
-        let fixed = row.kind == .finished || row.viewAll?.status != nil
-        return row.format == nil ? .mixedRow(statusFixed: fixed) : .formatRow(statusFixed: fixed)
-    }
+    private var caption: ReadCaption { row.caption }
 
     var body: some View {
         let title = row.title.text
@@ -154,6 +149,16 @@ struct ReadHomeRowView: View {
                 ReadCoverRowPlaceholder()
             }
         }
+    }
+}
+
+extension ReadHomeRow {
+    /// A row of one format says the origin then the status, a mixed row the format then the
+    /// status, and a row that fixes the status (Finished) the count in its place. Home's rows and
+    /// Search's rails both caption their covers so.
+    var caption: ReadCaption {
+        let fixed = kind == .finished || viewAll?.status != nil
+        return format == nil ? .mixedRow(statusFixed: fixed) : .formatRow(statusFixed: fixed)
     }
 }
 
@@ -241,11 +246,7 @@ struct ReadViewAllPage: View {
                     // The row's own caption, so the first covers read as they did on Home.
                     ReadGrid(tiles: search.tiles, twoLines: true,
                              caption: .list(search.query, viewAll: search.query == page.query))
-                    if search.hasMore {
-                        HStack { if search.loading { ProgressView().controlSize(.small) } }
-                            .frame(maxWidth: .infinity, minHeight: 32)
-                            .onAppear { store.reading.searchMore() }
-                    }
+                    ReadSearchMore()
                 }
             }
             .padding(EdgeInsets(top: 8, leading: 16, bottom: 24, trailing: 16))
@@ -262,7 +263,11 @@ struct ReadViewAllPage: View {
                 ReadFilterButton { filtersShown = true }
             }
         }
-        .sheet(isPresented: $filtersShown) { ReadFiltersSheet() }
+        .sheet(isPresented: $filtersShown) {
+            ReadFiltersPanel(compact: true) { filtersShown = false }
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+        }
         #endif
     }
 }

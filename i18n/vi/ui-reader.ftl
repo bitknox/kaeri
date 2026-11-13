@@ -1,9 +1,13 @@
 reader-page-loading = Đang tải trang { $page }
+reader-page-plate = Trang { $page }
+reader-image-plate = Ảnh { $image }
+reader-image-loading = Đang tải ảnh { $image }
 reader-page-failed = Không tải được trang { $page }
 reader-try-again = Thử lại
 reader-close = Đóng
 reader-end-read = Đã tính là đã đọc
 reader-end-tracker = Đã tính là đã đọc · đã cập nhật { $trackers }
+reader-end-tracker-offline = Đã tính là đã đọc · { $tracker } sẽ cập nhật khi bạn có mạng lại
 reader-end-next = Kế tiếp
 reader-mode-rtl = Phải sang trái
 reader-mode-ltr = Trái sang phải
@@ -52,3 +56,6 @@ reader-divider-images = { $count ->
    *[other] { $count } ảnh
  }
 reader-chapter-line-titled = Chương { $chapter } · { $title }
+reader-zone-next = Trang sau
+reader-zone-previous = Trang trước
+reader-zone-controls = Điều khiển

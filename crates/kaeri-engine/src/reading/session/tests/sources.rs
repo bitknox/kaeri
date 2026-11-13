@@ -247,6 +247,28 @@ async fn an_open_after_the_series_page_asks_the_source_only_for_content() {
     assert_eq!(source.opened_of("ch-1"), 1, "one content call for the chapter opened");
 }
 
+/// A chapter the session's list does not hold, as the Chapters sheet shows once the series
+/// page's fresh list has it, opens from that list rather than leaving the reader waiting.
+#[tokio::test(start_paused = true)]
+async fn a_chapter_newer_than_the_sessions_list_opens_from_the_fresh_one() {
+    let mut h = reading(Arc::new(PageSource::new(&["1", "2", "3"])));
+    h.open_read(Some("2")).await;
+    h.leaves_of("2").await;
+    // The source has a new chapter, and the series page lists it.
+    h.services.book_sources.registry.put(Arc::new(PageSource::new(&["1", "2", "3", "4"])));
+    let now = h.services.clock.now();
+    h.services.book_sources.chapters(&WorkId::new(READ), None, now).await.unwrap();
+    assert_eq!(h.chapter_ids(), ["1", "2", "3"]);
+
+    let session = h.session();
+    h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("4") });
+    h.leaves_of("4").await;
+    assert_eq!(h.chapter_ids(), ["1", "2", "3", "4"]);
+    let s = h.reader.session.as_ref().unwrap();
+    assert_eq!(s.chapter().id.as_str(), "4");
+    assert_eq!(s.id, session, "the same session goes on");
+}
+
 /// With a chapter downloaded, the reader still reads the source's whole list: the download
 /// from its file, the rest from the source, and the end page after it goes on.
 #[tokio::test(start_paused = true)]
@@ -406,6 +428,20 @@ fn a_kept_place_scales_to_the_chapters_length() {
     assert_eq!(rescaled(27, None, 28, 4), Some((3, None)), "never past the last page");
 }
 
+/// A place counted with every page moves past the credit pages left out before it, so it is the
+/// same page; one counted in another split is scaled.
+#[test]
+fn a_kept_place_moves_past_the_credit_pages_left_out() {
+    use crate::reading::session::{kept_past_credits, rescaled};
+    let at = |image, offset| Some(StripPos { image, offset });
+    assert_eq!(kept_past_credits(26, None, 36, (35, &[0])), Some((25, None)), "first page out");
+    assert_eq!(kept_past_credits(26, None, 36, (35, &[35])), Some((26, None)), "last page out");
+    assert_eq!(kept_past_credits(35, None, 36, (35, &[35])), Some((34, None)), "on the credit");
+    assert_eq!(kept_past_credits(4, at(4, 0.5), 6, (4, &[0, 5])), Some((3, at(3, 0.5))));
+    assert_eq!(kept_past_credits(26, None, 35, (35, &[0])), None, "counted without it already");
+    assert_eq!(kept_past_credits(4, None, 12, (3, &[0])), rescaled(4, None, 12, 3));
+}
+
 /// Mark read up to here counts every chapter under it as read on the series page, not only the
 /// ones read one by one.
 #[tokio::test(start_paused = true)]
@@ -522,4 +558,110 @@ async fn a_strip_writes_its_place_when_the_image_changes() {
     let session = h.session();
     h.send(ReaderCommand::Close { session });
     assert_eq!(offset(&h), 0.5, "the close keeps the place within the image");
+}
+
+mod kept_above;
+mod lifecycle;
+mod r5_audit;
+
+/// Offline, the end page leads into the next chapter on this device, past the ones only the
+/// source has, says it is downloaded, and opening it moves on as Continue does.
+#[tokio::test(start_paused = true)]
+async fn offline_the_end_page_leads_into_the_next_download() {
+    let source = Arc::new(PageSource::new(&["1", "2", "3", "4", "5"]));
+    let mut h = reading(source.clone());
+    let store = h.services.store.clone();
+    let now = h.services.clock.now();
+    h.services.book_sources.chapters(&WorkId::new(READ), None, now).await.unwrap();
+    let folders: Vec<_> = (0..2).map(|_| tempfile::tempdir().unwrap()).collect();
+    for (chapter, folder) in ["2", "4"].into_iter().zip(&folders) {
+        for n in 1..=3 {
+            let page = image::GrayImage::from_pixel(320, 480, image::Luma([60 + n]));
+            page.save(folder.path().join(format!("{n:03}.png"))).unwrap();
+        }
+        let ask = kaeri_store::book_downloads::BookDownloadAsk {
+            work: READ,
+            chapter,
+            source_id: SOURCE,
+            version_label: None,
+            keep_ready: true,
+        };
+        store.queue_book_download(&ask, 1).unwrap();
+        let id = store.book_download(READ, chapter).unwrap().unwrap().id;
+        store.book_download_done(id, folder.path().to_str().unwrap(), Some(3), 1, 1).unwrap();
+    }
+    h.services.offline.store(true, Ordering::Relaxed);
+
+    h.open_read(Some("2")).await;
+    h.leaves_of("2").await;
+    h.shown(2, TurnHow::Turn).await;
+    let next = h
+        .until(|e| match e {
+            ReaderEvent::EndPage { next, .. } => Some(next.clone()),
+            _ => None,
+        })
+        .await
+        .expect("a next chapter");
+    assert_eq!(next.id.as_str(), "4", "chapter 3 is only at the source");
+    assert_eq!(next.download, Some(kaeri_model::reading::ChapterDownloadState::Done));
+
+    let session = h.session();
+    h.send(ReaderCommand::OpenChapter { session, chapter: next.id });
+    let read = h
+        .until(|e| match e {
+            ReaderEvent::ChapterRead { chapter, .. } => Some(chapter.clone()),
+            _ => None,
+        })
+        .await;
+    assert_eq!(read.as_str(), "2", "moving on to the download marks the one read");
+    h.leaves_of("4").await;
+    assert_eq!(source.opened_of("ch-3") + source.opened_of("ch-4"), 0);
+}
+
+/// An end page said offline follows the connection: back online it leads into the chapter only
+/// the source has, and offline again it says so.
+#[tokio::test(start_paused = true)]
+async fn the_end_page_follows_the_connection_while_it_is_open() {
+    let source = Arc::new(PageSource::new(&["1", "2", "3"]));
+    let mut h = reading(source.clone());
+    let store = h.services.store.clone();
+    let now = h.services.clock.now();
+    h.services.book_sources.chapters(&WorkId::new(READ), None, now).await.unwrap();
+    let folder = tempfile::tempdir().unwrap();
+    for n in 1..=3 {
+        let page = image::GrayImage::from_pixel(320, 480, image::Luma([60 + n]));
+        page.save(folder.path().join(format!("{n:03}.png"))).unwrap();
+    }
+    let ask = kaeri_store::book_downloads::BookDownloadAsk {
+        work: READ,
+        chapter: "2",
+        source_id: SOURCE,
+        version_label: None,
+        keep_ready: true,
+    };
+    store.queue_book_download(&ask, 1).unwrap();
+    let id = store.book_download(READ, "2").unwrap().unwrap().id;
+    store.book_download_done(id, folder.path().to_str().unwrap(), Some(3), 1, 1).unwrap();
+    let end = async |h: &mut Harness| {
+        h.until(|e| match e {
+            ReaderEvent::EndPage { next, why_none, .. } => {
+                Some((next.as_ref().map(|c| c.id.as_str().to_owned()), *why_none))
+            }
+            _ => None,
+        })
+        .await
+    };
+    h.network(true);
+    h.open_read(Some("2")).await;
+    h.leaves_of("2").await;
+    h.shown(2, TurnHow::Turn).await;
+    assert_eq!(end(&mut h).await, (None, Some(NoNext::Offline)), "3 is only at the source");
+
+    h.network(false);
+    assert_eq!(end(&mut h).await, (Some("3".into()), None), "online, 3 opens from the source");
+    h.network(true);
+    assert_eq!(end(&mut h).await, (None, Some(NoNext::Offline)), "offline again");
+    // The same connection again says nothing new.
+    h.network(true);
+    assert!(!h.drain().iter().any(|e| matches!(e, ReaderEvent::EndPage { .. })));
 }

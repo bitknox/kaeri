@@ -439,3 +439,53 @@ fn a_tv_only_watches_and_the_e_reader_only_reads_and_neither_asks() {
     assert_eq!((view.answer, view.fixed, view.ask), (KaeriIsFor::Read, true, None));
     engine.shutdown();
 }
+
+/// The profile the engine answers with next, after `command`.
+fn eink_after(
+    engine: &Arc<FfiEngine>,
+    command: ReadingCommand,
+) -> kaeri_model::eink::EinkProfile {
+    engine.send(Command::Reading(command));
+    let read =
+        read_until(engine, |event| matches!(event, Event::Reading(ReadingEvent::Eink(_))));
+    read.into_iter()
+        .rev()
+        .find_map(|event| match event {
+            Event::Reading(ReadingEvent::Eink(profile)) => Some(profile),
+            _ => None,
+        })
+        .expect("a profile")
+}
+
+#[test]
+fn the_e_ink_layout_switch_takes_at_once_off_and_on_again() {
+    use kaeri_model::eink::{EinkMatch, ScreenFacts};
+    let (_root, engine) = start(FfiScene::ReadingHome);
+    // A 10.3 inch panel of a known e-ink family, as Android reports one.
+    let facts = ScreenFacts {
+        manufacturer: "Onyx".into(),
+        brand: "Onyx".into(),
+        model: "Panel".into(),
+        device: "panel".into(),
+        product: "panel".into(),
+        hardware: "qcom".into(),
+        sdk: 33,
+        width_px: 1860,
+        height_px: 2480,
+        dpi: 300,
+        refresh_hz: 60.0,
+        eink_support: None,
+        onyx_name: Some("Panel".into()),
+        wide_colour_gamut: true,
+        hooks: vec![],
+        page_keys: false,
+        webview: None,
+    };
+    let sure = eink_after(&engine, ReadingCommand::DeviceFacts { facts });
+    assert_eq!(sure.eink, EinkMatch::Sure);
+    let answer = |eink| ReadingCommand::AnswerEink { eink: Some(eink), colour: None };
+    assert_eq!(eink_after(&engine, answer(false)).eink, EinkMatch::No, "off takes at once");
+    assert_eq!(eink_after(&engine, answer(true)).eink, EinkMatch::Sure, "and on again");
+    assert_eq!(eink_after(&engine, answer(false)).eink, EinkMatch::No);
+    engine.shutdown();
+}

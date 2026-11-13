@@ -473,7 +473,7 @@ pub fn about_page(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     remove_list.append(&remove);
     column.append(&remove_list);
     let header = adw::HeaderBar::new();
-    widgets::content_page(
+    widgets::read_content_page(
         &t::sources_demo_about(),
         &header,
         &widgets::column_page(&column, 640),

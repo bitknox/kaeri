@@ -35,7 +35,9 @@ import app.kaeri.store.AppLanguage
 import app.kaeri.store.AppStore
 import app.kaeri.store.chaptersBusy
 import kotlinx.coroutines.launch
+import app.kaeri.engine.model.BookDownloadsView
 import app.kaeri.engine.model.DownloadRow
+import app.kaeri.engine.model.ReadingAbout
 import app.kaeri.engine.model.DownloadState
 import app.kaeri.store.DownloadsModel
 import app.kaeri.store.DownloadSession
@@ -102,33 +104,73 @@ internal class DownloadRun(
         scope.launch {
             app.store.loadDownloads(force = true)
             app.store.reading.loadDownloads()
-            combine(app.store.downloads.rows, app.store.downloads.rates, app.store.reading.downloads, ::Triple).collect { (rows, rates, books) ->
-                if (!app.store.downloads.loaded.value) return@collect
-                session.saw(rows).forEach(notifier::postFinished)
-                val live = LiveDownloads.of(service, rows, rates, session.finished)
-                if (live == null) {
-                    // Chapters alone keep it, saying how many are left; the engine says when
-                    // they are all done (Downloads finished).
-                    val chapters = chaptersBusy(books)
-                    grace?.cancel()
-                    grace = null
-                    if (chapters > 0) manager.notify(Downloads.NOTIFICATION, notifier.chapters(chapters)) else end()
-                    return@collect
-                }
-                // Paused, nothing runs; the notification stays a while for Resume, then goes.
-                if (live.paused) {
-                    if (grace == null) grace = launch { delay(Downloads.PAUSE_GRACE_MILLIS); end() }
-                } else {
+            val reading = app.store.reading
+            combine(app.store.downloads.rows, app.store.downloads.rates, app.store.downloads.loaded, reading.downloads, reading.failures) { rows, rates, loaded, books, failures ->
+                Queue(rows, rates, loaded, books, books != null || ReadingAbout.DOWNLOADS in failures)
+            }.collect { queue ->
+                if (!queue.episodesLoaded) return@collect
+                session.saw(queue.rows).forEach(notifier::postFinished)
+                val live = LiveDownloads.of(service, queue.rows, queue.rates, session.finished)
+                val step = RunStep.of(live, chaptersBusy(queue.books), queue.chaptersLoaded)
+                if (step !is RunStep.Episodes || !step.grace) {
                     grace?.cancel()
                     grace = null
                 }
-                manager.notify(Downloads.NOTIFICATION, notifier.ongoing(live))
+                when (step) {
+                    RunStep.Wait -> {}
+                    RunStep.End -> end()
+                    is RunStep.Chapters -> manager.notify(Downloads.NOTIFICATION, notifier.chapters(step.left))
+                    is RunStep.Episodes -> {
+                        // Paused, nothing runs; the notification stays a while for Resume, then goes.
+                        if (step.grace && grace == null) grace = launch { delay(Downloads.PAUSE_GRACE_MILLIS); end() }
+                        manager.notify(Downloads.NOTIFICATION, notifier.ongoing(step.live))
+                    }
+                }
             }
         }
     }
 
     /** The system took it back: the engine keeps the queue for the next time. */
     fun cancel() = scope.cancel()
+}
+
+/** The queue as the run sees it: the episodes, and the chapters once the engine answered. */
+private class Queue(
+    val rows: List<DownloadRow>,
+    val rates: Map<Long, Double>,
+    val episodesLoaded: Boolean,
+    val books: BookDownloadsView?,
+    /** The chapters answered, or reading said it has none to give. */
+    val chaptersLoaded: Boolean,
+)
+
+/** What the download run does with the queue as it stands, once the episodes have loaded. */
+internal sealed interface RunStep {
+    /** The chapters have not answered yet: started again by the system, they may still wait. */
+    data object Wait : RunStep
+
+    /** Nothing is left: the run ends. */
+    data object End : RunStep
+
+    /** Chapters alone keep it, saying how many are left. */
+    data class Chapters(val left: Int) : RunStep
+
+    /** Episodes keep it; [grace] when they are all paused and no chapter downloads, so it goes after a while. */
+    data class Episodes(val live: LiveDownloads, val grace: Boolean) : RunStep
+
+    companion object {
+        /**
+         * [live] is the episodes' notification, `null` with none left; [chapters] how many
+         * chapters wait or download, which counts only once [chaptersLoaded].
+         */
+        fun of(live: LiveDownloads?, chapters: Int, chaptersLoaded: Boolean): RunStep = when {
+            live != null -> Episodes(live, grace = live.paused && chaptersLoaded && chapters == 0)
+            chapters > 0 -> Chapters(chapters)
+            // The engine says when the chapters are all done (Downloads finished).
+            !chaptersLoaded -> Wait
+            else -> End
+        }
+    }
 }
 
 /** The job's own service, from Android 14, which alone asks for the job. */

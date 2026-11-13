@@ -1,7 +1,7 @@
 // Library's reading side: AniList's six reading lists, then Your files for series in folders and
 // servers that are on no list, as M3 filter chips in one scrolling line, and the chosen list's
 // covers. With Both, the Shows or Reading control sits first. An empty list is a title, a line
-// and one outlined button, with no picture.
+// and one outlined button, with no picture. On e-ink it is EinkLibraryPage instead.
 
 package app.kaeri.ui.reading
 
@@ -76,6 +76,11 @@ private enum class ReadSort { LastRead, Title }
 
 @Composable
 internal fun ReadLibraryScreen(actions: AppActions) {
+    // On e-ink, the board's paged Library on paper.
+    if (LocalEinkLayout.current != null) {
+        EinkLibraryPage()
+        return
+    }
     val store = LocalAppStore.current
     val context = LocalContext.current
     val lists by store.reading.lists.collectAsStateWithLifecycle()

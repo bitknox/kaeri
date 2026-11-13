@@ -204,10 +204,15 @@ pub struct FfiStart {
     /// screen. `None` when it has none, and such a page fails as unsupported.
     #[uniffi(default = None)]
     pub page_decoder: Option<Arc<dyn FfiPageDecoder>>,
+    /// The app's way into book folders it opens for Kaeri rather than by path, such as a
+    /// folder picked in Android's system folder picker. `None` when every folder it adds has a
+    /// path; one added without a path then shows as not found.
+    #[uniffi(default = None)]
+    pub folder_access: Option<Arc<dyn crate::FfiFolderAccess>>,
 }
 
 impl PartialEq for FfiStart {
-    /// Field by field, the decoder by identity.
+    /// Field by field, the decoder and the folder access by identity.
     fn eq(&self, other: &Self) -> bool {
         let Self {
             theme,
@@ -230,6 +235,7 @@ impl PartialEq for FfiStart {
             reading,
             edition,
             page_decoder,
+            folder_access,
         } = self;
         *theme == other.theme
             && *platform == other.platform
@@ -255,6 +261,11 @@ impl PartialEq for FfiStart {
                 (Some(a), Some(b)) => Arc::ptr_eq(a, b),
                 _ => false,
             }
+            && match (folder_access, &other.folder_access) {
+                (None, None) => true,
+                (Some(a), Some(b)) => Arc::ptr_eq(a, b),
+                _ => false,
+            }
     }
 }
 
@@ -264,6 +275,7 @@ impl std::fmt::Debug for FfiStart {
             .field("platform", &self.platform)
             .field("reading", &self.reading)
             .field("page_decoder", &self.page_decoder.is_some())
+            .field("folder_access", &self.folder_access.is_some())
             .finish_non_exhaustive()
     }
 }

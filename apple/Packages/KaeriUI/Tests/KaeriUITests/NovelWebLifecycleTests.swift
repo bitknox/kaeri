@@ -11,7 +11,7 @@ import WebKit
 /// chapters open and close and the screen is drawn again, and let go with the reader. A tap on a
 /// page's side turns it in the page, which says so once. And two columns capped in a wide view
 /// keep their usual gap and sit in the middle, on the first page and the last, with scroll bars
-/// that take room as well.
+/// that take room as well. A turn past a chapter's end goes on into the next one.
 @MainActor
 @Suite(.serialized)
 struct NovelWebLifecycleTests {
@@ -34,17 +34,17 @@ struct NovelWebLifecycleTests {
         return model
     }
 
-    private func opened(_ model: ReaderModel, chapter n: Int) {
+    private func opened(_ model: ReaderModel, chapter n: Int, rtl: Bool = false) {
         let chapter = ChapterId("c\(n)")
         let row = ChapterRow(id: chapter, label: "\(n)", state: .unread)
         let next = ChapterRow(id: ChapterId("c\(n + 1)"), label: "\(n + 1)", state: .unread)
         let work = WorkId("a:900302")
         model.apply(.opened(ReaderView(
             session: 1, work: work, title: "The Glass Orchard", medium: .novel, chapter: row, mode: .paged,
-            direction: .leftToRight, start: ReadPlace(work: work, chapter: chapter), next: next)))
+            direction: rtl ? .rightToLeft : .leftToRight, start: ReadPlace(work: work, chapter: chapter), next: next)))
         let url = "kaeri-book://1/c\(n)/text.xhtml"
         model.apply(.novelOpen(NovelOpenView(
-            session: 1, chapter: chapter, entry: url, writingMode: .horizontal, progression: .leftToRight,
+            session: 1, chapter: chapter, entry: url, writingMode: .horizontal, progression: rtl ? .rightToLeft : .leftToRight,
             support: .full, spine: [NovelSpineItem(url: url, linear: true)])))
     }
 
@@ -69,7 +69,9 @@ struct NovelWebLifecycleTests {
         _ = NSApplication.shared
         let window = NSWindow(contentRect: NSRect(origin: .zero, size: size), styleMask: [.borderless], backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
-        window.contentView = NSHostingView(rootView: ReaderScreen(model: model) {}.frame(width: size.width, height: size.height))
+        // The end page reads the app's store and navigator.
+        window.contentView = NSHostingView(rootView: ReaderScreen(model: model) {}.frame(width: size.width, height: size.height)
+            .environment(AppStore()).environment(Navigator()))
         window.setFrameOrigin(NSPoint(x: -20_000, y: -20_000))
         window.orderFrontRegardless()
         return window
@@ -144,6 +146,79 @@ struct NovelWebLifecycleTests {
             "document.body.dispatchEvent(new MouseEvent('click', {clientX: 400, clientY: 300, bubbles: true})); 0")
         #expect(await until(5) { model.chromeShown })
         #expect(model.position.index == 1)
+    }
+
+    /// The chapters asked to open.
+    private static func opens(_ sent: Sent) -> [String] {
+        sent.commands.compactMap { if case .reader(.openChapter(_, let chapter)) = $0 { chapter } else { nil } }
+    }
+
+    private static func key(_ name: String) -> String {
+        "document.dispatchEvent(new KeyboardEvent('keydown', {key: '\(name)', bubbles: true})); 0"
+    }
+
+    /// Past the last page a turn shows the end page, and one more goes on into the next chapter:
+    /// a key the page turns on, a key while the end page holds the page, the reader's own turn.
+    /// A turn back from the end page puts it away.
+    @Test func aTurnPastTheLastPageGoesOnIntoTheNextChapter() async throws {
+        let sent = Sent()
+        let model = model(sent)
+        model.open(work: "a:900302")
+        let window = window(model)
+        defer {
+            model.close()
+            window.contentView = nil
+            window.close()
+        }
+        await spin(0.2)
+        opened(model, chapter: 1)
+        #expect(await until(10) { model.position.count > 2 })
+        let view = try #require(window.contentView.flatMap(Self.webView(in:)))
+        let controller = try #require(view.navigationDelegate as? NovelWebController)
+        _ = try await view.evaluateJavaScript("window.kaeriReader.goTo(window.kaeriReader.state().pages - 1, 'jump'); 0")
+        #expect(await until(5) { model.position.index == model.position.count - 1 }, "the last page")
+
+        _ = try await view.evaluateJavaScript(Self.key("ArrowRight"))
+        #expect(await until(5) { controller.shown.end }, "the end page")
+        model.requestTurn(forward: false)
+        #expect(await until(5) { !controller.shown.end }, "back to the last page")
+        model.requestTurn(forward: true)
+        #expect(await until(5) { controller.shown.end }, "the end page again")
+        #expect(Self.opens(sent).isEmpty)
+        _ = try await view.evaluateJavaScript(Self.key("PageDown"))
+        #expect(await until(5) { Self.opens(sent) == ["c2"] }, "on into the next chapter: \(Self.opens(sent))")
+    }
+
+    /// A scrolled chapter read right to left: a turn at its foot shows the end page, and a tap
+    /// on the end page's forward side, the left, goes on.
+    @Test func aScrolledChapterGoesOnFromItsFoot() async throws {
+        let sent = Sent()
+        let model = model(sent)
+        model.open(work: "a:900302")
+        let window = window(model)
+        defer {
+            model.close()
+            window.contentView = nil
+            window.close()
+        }
+        await spin(0.2)
+        opened(model, chapter: 1, rtl: true)
+        #expect(await until(10) { model.position.count > 2 })
+        let view = try #require(window.contentView.flatMap(Self.webView(in:)))
+        let controller = try #require(view.navigationDelegate as? NovelWebController)
+        _ = try await view.evaluateJavaScript("window.kaeriReader.configure({mode: 'scrolled'}); 0")
+        await spin(0.3)
+        let atFoot = "(function () { var s = document.scrollingElement; s.scrollTop = s.scrollHeight; return s.scrollTop > 0; })()"
+        #expect(try await view.evaluateJavaScript(atFoot) as? Bool == true, "the chapter scrolls")
+        await spin(0.4)
+        _ = try await view.evaluateJavaScript(Self.key("ArrowLeft"))
+        #expect(await until(5) { controller.shown.end }, "the end page from the foot")
+        controller.tapped(0.9)
+        #expect(await until(5) { !controller.shown.end }, "the back side puts it away")
+        model.requestTurn(forward: true)
+        #expect(await until(5) { controller.shown.end })
+        controller.tapped(0.1)
+        #expect(await until(5) { Self.opens(sent) == ["c2"] }, "on into the next chapter: \(Self.opens(sent))")
     }
 
     /// The text's columns on the page shown: the left one's edges and the right one's.

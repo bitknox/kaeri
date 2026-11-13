@@ -15,9 +15,8 @@ namespace Kaeri.Windows.Pages;
 
 /// <summary>
 /// The reader's chrome: the top row that is the title bar while the reader is up, the group at
-/// the foot (the scrubber with a number at each end, then Chapters, the title and its line, Aa
-/// and Full screen), the notice at the top centre and the Back to pill in the bottom leading
-/// corner. The group is acrylic, 640 wide, 16 above the bottom, with 32 px buttons on 4 px corners.
+/// the foot (Back to page while a jump offers it, the scrubber with a number at each end, then
+/// Chapters, the title and its line, Aa and Full screen) and the notice at the top centre. The group is acrylic, 640 wide, 16 above the bottom, with 32 px buttons on 4 px corners.
 /// </summary>
 sealed class ReaderChrome
 {
@@ -147,6 +146,7 @@ sealed class ReaderChrome
         Grid.SetColumn(Fullscreen, 3);
         row.Children.Add(Fullscreen);
         var stack = new StackPanel { Spacing = 6 };
+        stack.Children.Add(BackTo);
         stack.Children.Add(scrubRow);
         stack.Children.Add(row);
         Group.Child = stack;
@@ -185,14 +185,14 @@ sealed class ReaderChrome
                 owner.Reader.Act(action);
         };
 
-        // Back to page N: the bottom leading corner.
+        // Back to page N: over the scrubber, at its leading end, while the engine offers it.
         BackTo.HorizontalAlignment = HorizontalAlignment.Left;
-        BackTo.VerticalAlignment = VerticalAlignment.Bottom;
-        BackTo.Margin = new Thickness(16, 0, 16, 16);
-        BackTo.MinHeight = 32;
-        BackTo.Padding = new Thickness(14, 0, 14, 0);
-        BackTo.CornerRadius = new CornerRadius(16);
-        BackTo.Click += (_, _) => owner.Reader.Act(ReaderAction.BackTo);
+        BackTo.Margin = new Thickness(8, 0, 8, 0);
+        BackTo.MinHeight = 28;
+        BackTo.FontSize = 13;
+        BackTo.Padding = new Thickness(12, 0, 12, 0);
+        BackTo.CornerRadius = new CornerRadius(14);
+        BackTo.Click += (_, _) => owner.Reader.GoBackTo();
 
         Paint(owner.Palette);
     }
@@ -261,10 +261,9 @@ sealed class ReaderChrome
         noticeText.Foreground = silk;
         Tint(noticeAction, palette);
         noticeAction.Background = new SolidColorBrush(palette.High);
-        BackTo.Background = new SolidColorBrush(ReaderPalette.WithAlpha(palette.Glass, 0.96));
-        BackTo.Foreground = silk;
         Tint(BackTo, palette);
-        BackTo.Resources["ButtonBackground"] = new SolidColorBrush(ReaderPalette.WithAlpha(palette.Glass, 0.96));
+        BackTo.Background = new SolidColorBrush(palette.High);
+        BackTo.Foreground = silk;
         var res = scrubber.Resources;
         res["SliderTrackFill"] = new SolidColorBrush(ReaderPalette.WithAlpha(palette.Silk, 0.25));
         res["SliderTrackFillPointerOver"] = new SolidColorBrush(ReaderPalette.WithAlpha(palette.Silk, 0.3));
@@ -297,11 +296,9 @@ sealed class ReaderChrome
     public void Fit(double width)
     {
         Group.Width = Math.Max(0, Math.Min(640, width - 32));
-        windowWidth = width;
         Place();
     }
 
-    double windowWidth;
     bool groupUp = true, noticeAtFoot;
 
     /// <summary>The group came up or went: the notice and Back to keep clear of it.</summary>
@@ -337,10 +334,6 @@ sealed class ReaderChrome
             Notice.VerticalAlignment = VerticalAlignment.Top;
             Notice.Margin = new Thickness(16, 56, 16, 0);
         }
-        // Beside the group there is room for the pill only on a wide window; otherwise it sits
-        // above the group while the group shows.
-        var beside = (windowWidth - Group.Width) / 2 >= 200;
-        BackTo.Margin = new Thickness(16, 0, 16, groupUp && !beside ? GroupRoom : 16);
     }
 
     public void Titles(string series, string? demoCredit)
@@ -553,20 +546,26 @@ sealed class ReaderChrome
         ReaderSpeech.Raise(noticeText);
     }
 
-    public void ShowBackTo(ReaderNoticeLine? line)
+    /// <summary>Back to page <paramref name="page"/> over the scrubber, or nothing. It shows with the group.</summary>
+    public void ShowBackTo(uint? page)
     {
-        if (line is null)
+        if (page is not { } at)
         {
-            Motion.Set(BackTo, false);
+            if (owner.PaperMode)
+                Motion.Set(BackTo, false);
+            else
+                Motion.Hide(BackTo);
             return;
         }
-        BackTo.Content = line.Text;
-        AutomationProperties.SetName(BackTo, line.Text);
-        if (!owner.PaperMode)
-            Motion.Show(BackTo);
-        else
+        var words = T.ReaderBackToPage(at);
+        BackTo.Content = words;
+        AutomationProperties.SetName(BackTo, words);
+        if (owner.PaperMode)
             Motion.Set(BackTo, true);
-        ReaderSpeech.Say(BackTo, line.Text, "kaeri-reader-back-to");
+        else
+            Motion.Show(BackTo);
+        if (Group.Visibility == Visibility.Visible)
+            ReaderSpeech.Say(BackTo, words, "kaeri-reader-back-to");
     }
 
     /// <summary>Keyboard focus or the pointer is in the chrome: it stays up.</summary>
@@ -579,6 +578,21 @@ sealed class ReaderChrome
         for (DependencyObject? at = focused; at is not null; at = VisualTreeHelper.GetParent(at))
             if (at == Group || at == Top)
                 return true;
+        return false;
+    }
+
+    /// <summary>Keyboard focus goes to the chrome's first control (Back), or its last. False while none can take it yet.</summary>
+    public bool FocusEdge(bool last)
+    {
+        UIElement[] order = last ? [Group, Top] : [Top, Group];
+        foreach (var scope in order)
+        {
+            if (scope.Visibility != Visibility.Visible)
+                continue;
+            var found = last ? FocusManager.FindLastFocusableElement(scope) : FocusManager.FindFirstFocusableElement(scope);
+            if (found is UIElement element && element.Focus(FocusState.Keyboard))
+                return true;
+        }
         return false;
     }
 }

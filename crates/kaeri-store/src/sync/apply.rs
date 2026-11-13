@@ -959,6 +959,7 @@ fn apply_reg(
         | kinds::READ_HIDE
         | kinds::READ_BOOKMARK
         | kinds::READ_TRACK_MAP
+        | kinds::READ_CREDIT_KEEP
         | kinds::BOOK_MATCH => {
             if let Some(work) = crate::reading::apply_read_reg(tx, kind, key, value, at)? {
                 works.insert(work);

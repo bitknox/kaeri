@@ -91,6 +91,40 @@ reader-moved = Moved to { $chapter }, page { $page }, where { $device } stopped
 # @arg device: text
 reader-moved-number = Moved to chapter { $chapter }, page { $page }, where { $device } stopped
 
+# The notice when another device read further and its name is not known: a device removed from
+# sync, or this one before a reinstall.
+# @arg chapter: text
+# @arg page: plain
+reader-moved-elsewhere = Moved to { $chapter }, page { $page }, where another { -device } stopped
+
+# The same notice for a chapter known only by its number, such as 14 or 14.5.
+# @arg chapter: text
+# @arg page: plain
+reader-moved-number-elsewhere = Moved to chapter { $chapter }, page { $page }, where another { -device } stopped
+
+# The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its
+# whole label, such as The Long Night.
+# @arg chapter: text
+# @arg image: plain
+# @arg device: text
+reader-moved-image = Moved to { $chapter }, image { $image }, where { $device } stopped
+
+# The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+# @arg chapter: text
+# @arg image: plain
+# @arg device: text
+reader-moved-number-image = Moved to chapter { $chapter }, image { $image }, where { $device } stopped
+
+# The notice in a strip when another device read further and its name is not known.
+# @arg chapter: text
+# @arg image: plain
+reader-moved-elsewhere-image = Moved to { $chapter }, image { $image }, where another { -device } stopped
+
+# The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+# @arg chapter: text
+# @arg image: plain
+reader-moved-number-elsewhere-image = Moved to chapter { $chapter }, image { $image }, where another { -device } stopped
+
 # A notice the first time a series opens with its reading direction guessed. It offers Change.
 # @max 32
 reader-detected-right-to-left = Looks like right to left
@@ -111,8 +145,15 @@ reading-failed-offline = You're offline. Downloaded chapters still open.
 # @arg source: text
 reading-failed-source-down = { $source } isn't answering. Try again later.
 
+# Why something could not load: the source the series reads from is switched off in Your sources.
+# @arg source: text
+reading-failed-source-off = { $source } is switched off. Switch it on in Your { -source-pl }, or read from another { -source }.
+
 # Why a chapter could not load: the source no longer has it.
 reading-failed-not-found = This { -source } doesn't have it anymore. Try another { -source }.
+
+# Why a series has no chapters: none of the person's sources holds it, and none was ever picked.
+reading-failed-no-source = None of your { -source-pl } has this series yet. Search for it by another name in Read from, or add a { -source } in Your { -source-pl }.
 
 # Why a chapter or a list could not load: the source refused. The reason comes from the source.
 # @arg source: text
@@ -126,6 +167,11 @@ reading-failed-parse = { -app-name } couldn't read what { $source } sent. Its { 
 # Why one page did not load. The status is the server's HTTP status code, such as 404.
 # @arg status: plain
 reading-failed-page = This page didn't load (error { $status }). Try again.
+
+# In the reader, in a novel's text, in the box where a picture from the source did not load.
+# Try again sits under it.
+# @max 40
+reading-picture-failed = Couldn't load picture
 
 # Why something could not load: a sign-in is needed. What is a server's or a tracker's name.
 # @arg what: text
@@ -151,6 +197,22 @@ reading-failed-protected = This book is copy-protected, so { -app-name } can't o
 
 # Why a chapter could not be saved: the disk is full.
 reading-failed-disk-full = There's no room left on this { -device }. Free some space and try again.
+
+# Why a chapter or a file for an e-reader could not be saved: the storage refused the name,
+# because it is too long or has characters the storage doesn't allow. The path is the file's
+# or the folder's.
+# @arg path: text
+reading-failed-write-name = The storage doesn't take the name { $path }. It may be too long.
+
+# Why a chapter or a file for an e-reader could not be saved: the storage is read-only, or
+# Kaeri isn't allowed to write there. The path is the file's or the folder's.
+# @arg path: text
+reading-failed-write-denied = { -app-name } isn't allowed to write { $path }. Check that the storage isn't read-only, then try again.
+
+# Why a chapter or a file for an e-reader could not be saved, for another reason the system
+# gave. The path is the file's or the folder's.
+# @arg path: text
+reading-failed-write = { -app-name } couldn't write { $path }. Try again.
 
 # Why a novel could not open: the system's web view is too old. The version is its major version
 # number, such as 80.
@@ -495,6 +557,11 @@ reading-row-waits-wifi = Queued · waits for Wi-Fi
 # @max 44
 reading-row-downloading = Downloading · { $done } of { $total } pages
 
+# A chapter row's state while it downloads, before its page count is known, and throughout for
+# a novel's chapter, which has no pages to count.
+# @max 24
+reading-row-downloading-plain = Downloading
+
 # A chapter row's state: the download failed. The reason follows as the next part.
 # @max 24
 reading-row-failed = Couldn't download
@@ -538,6 +605,75 @@ reading-row-pages = { $n ->
 reading-row-versions = { $n ->
     [one] 1 version
    *[other] { $n } versions
+ }
+
+# A chapter row: the source lists this chapter in parts, and the reader runs through them as one
+# chapter. Shown beside the chapter's name: "Chapter 1, 2 parts".
+# @arg n: int
+# @max 20
+reading-row-parts = { $n ->
+    [one] 1 part
+   *[other] { $n } parts
+ }
+
+# A chapter row: the group the series is listed from has not released this chapter, so it comes
+# from another group, named here as the source names it. Lower case, as the line's other words;
+# an app that starts a line with it capitalises the first letter.
+# @arg group: text
+# @max 32
+reading-row-from-group = from { $group }
+
+# A chapter row: the same, for a group in another language than the app's, named after the group.
+# "from Saltmarsh Team, Spanish".
+# @arg group: text
+# @arg language: text
+# @max 40
+reading-row-from-group-in = from { $group }, { $language }
+
+# A chapter row: a chapter in parts that is missing some, as no group has released them. The
+# reader runs through the parts there are. Followed by the missing part: "2 of 3 parts".
+# @arg have: int
+# @arg n: int
+# @max 28
+reading-row-parts-of = { $have } of { $n } parts
+
+# A chapter row, after the parts count: the part no group has released. With several, how many.
+# @arg count: int
+# @arg part: plain
+# @max 24
+reading-row-part-missing = { $count ->
+    [one] part { $part } missing
+   *[other] { $count } parts missing
+ }
+
+# A chapter row: one part of a chapter in parts comes from another group, as the group the series
+# is read from lacks it. "part 2 from Saltmarsh Team".
+# @arg part: plain
+# @arg group: text
+# @max 40
+reading-row-part-from-group = part { $part } from { $group }
+
+# The same, for a group in another language than the app's. "part 2 from Saltmarsh Team, Spanish".
+# @arg part: plain
+# @arg group: text
+# @arg language: text
+# @max 48
+reading-row-part-from-group-in = part { $part } from { $group }, { $language }
+
+# A chapter row: the version the series is read from lacks this chapter, and another of the
+# person's sources has it. Its name follows; the chapter opens from there. Lower case, as the
+# line's other words.
+# @arg source: text
+# @max 32
+reading-row-from-source = from { $source }
+
+# A quiet line in the reader: pages a series repeats at the start or end of its chapters (a
+# group's credits or notices) were left out of this chapter. Tapping it shows them.
+# @arg count: int
+# @max 36
+reader-credit-pages-skipped = { $count ->
+    [one] { $count } credit page skipped
+   *[other] { $count } credit pages skipped
  }
 
 # A chapter row: when it was read or came out, under a minute ago.
@@ -625,6 +761,10 @@ reading-miss-down-since = Not answering since { $time }
 
 # The source has failed every ask, since a time on another day or not known.
 reading-miss-down = Not answering
+
+# The source has no series by the series' names, but has one that may be it in another edition,
+# as a full-colour release. That series is shown under this line, and choosing it confirms it.
+reading-miss-possible = Possible match
 
 ## Downloads by series
 ## Each series on Downloads gets one line: "6 chapters · 214 MB · 2 read", or while one downloads

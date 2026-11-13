@@ -36,8 +36,8 @@ use kaeri_store::{Store, book_downloads::BookDownloadState, shelf::TitleForm};
 use network_interface::{Addr, NetworkInterface, NetworkInterfaceConfig};
 use serde::{Deserialize, Serialize};
 use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt},
-    net::{TcpListener, TcpStream},
+    io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt},
+    net::TcpListener,
     sync::Semaphore,
     task::JoinHandle,
 };
@@ -50,6 +50,11 @@ const READ_LIMIT: usize = 16 * 1024;
 /// How long a reader has to send its whole request. A reader trickling bytes would otherwise
 /// keep one of the feed's few connections for minutes.
 const READ_TIME: Duration = Duration::from_secs(10);
+/// How long a reader may take nothing of an answer before it is let go. A whole download has
+/// no deadline: a big book to an e-reader on slow Wi-Fi takes as long as it takes.
+const IDLE_TIME: Duration = Duration::from_secs(60);
+/// How long the answer may take to put together.
+const ROUTE_TIME: Duration = Duration::from_secs(120);
 
 #[derive(Default)]
 struct Running {
@@ -608,22 +613,25 @@ fn bind(ip: IpAddr, wanted: Option<u16>) -> Option<TcpListener> {
     None
 }
 
+/// Takes readers' connections on one address. Each connection is a task of this one's own, so
+/// stopping the listener ends the requests and downloads under way with it: switched off, the
+/// feed serves nothing more, not even the rest of a file.
 async fn serve(listener: TcpListener, store: Store, feed: Feed, room: Arc<Semaphore>) {
+    let mut connections = tokio::task::JoinSet::new();
     loop {
-        let Ok((stream, peer)) = listener.accept().await else { continue };
+        let accepted = tokio::select! {
+            accepted = listener.accept() => accepted,
+            Some(_) = connections.join_next(), if !connections.is_empty() => continue,
+        };
+        let Ok((stream, peer)) = accepted else { continue };
         if !peer_allowed(peer.ip()) {
             continue;
         }
         let Ok(permit) = room.clone().try_acquire_owned() else { continue };
         let (store, feed) = (store.clone(), feed.clone());
-        tokio::spawn(async move {
+        connections.spawn(async move {
             let _permit = permit;
-            let password = feed.password();
-            let _ = tokio::time::timeout(
-                Duration::from_secs(300),
-                handle(stream, peer.ip(), &password, store, &feed),
-            )
-            .await;
+            connection(stream, peer.ip(), store, &feed).await;
         });
     }
 }
@@ -674,11 +682,11 @@ struct Request {
     agent: Option<String>,
 }
 
-async fn read_request(stream: &mut TcpStream, within: Duration) -> Option<Request> {
+async fn read_request(stream: &mut impl Conn, within: Duration) -> Option<Request> {
     tokio::time::timeout(within, read_head(stream)).await.ok()?
 }
 
-async fn read_head(stream: &mut TcpStream) -> Option<Request> {
+async fn read_head(stream: &mut impl Conn) -> Option<Request> {
     let mut buf = Vec::new();
     let mut chunk = [0u8; 2048];
     loop {
@@ -766,31 +774,46 @@ impl Response {
     }
 }
 
+/// A reader's connection: a socket, or a pipe in the tests.
+trait Conn: AsyncRead + AsyncWrite + Unpin + Send {}
+
+impl<T: AsyncRead + AsyncWrite + Unpin + Send> Conn for T {}
+
+/// One reader's request and its answer. The reader is let go once it takes nothing of the
+/// answer for [`IDLE_TIME`]; the answer as a whole has no deadline.
+async fn connection(stream: impl Conn, peer: IpAddr, store: Store, feed: &Feed) {
+    let password = feed.password();
+    handle(stream, peer, &password, store, feed).await;
+}
+
 async fn handle(
-    mut stream: TcpStream,
+    mut stream: impl Conn,
     peer: IpAddr,
     password: &str,
     store: Store,
     feed: &Feed,
 ) {
     let Some(request) = read_request(&mut stream, READ_TIME).await else {
-        let _ =
-            send(&mut stream, Response::text("400 Bad Request", "Bad request"), false).await;
+        let bad = Response::text("400 Bad Request", "Bad request");
+        let _ = send(&mut stream, bad, false).await;
         return;
     };
     let response = if feed.locked(peer) {
         Response::text("429 Too Many Requests", "Too many wrong passwords. Try again later.")
     } else if authorised(&request, password) {
         feed.forgive(peer);
-        let response = route(
+        let words = feed.words();
+        let routed = route(
             &request.path,
             store,
             feed.shares(),
             feed.title_form(),
-            &feed.words(),
+            &words,
             feed.unpacked(),
-        )
-        .await;
+        );
+        let response = tokio::time::timeout(ROUTE_TIME, routed).await.unwrap_or_else(|_| {
+            Response::text("503 Service Unavailable", "Busy. Try again in a moment.")
+        });
         let file = !request.head
             && response.status.starts_with("200")
             && matches!(response.body, Body::File(_));
@@ -809,20 +832,71 @@ async fn handle(
     let _ = send(&mut stream, response, request.head).await;
 }
 
-async fn send(stream: &mut TcpStream, response: Response, head: bool) -> std::io::Result<()> {
+/// Write all of `bytes`, failing once the reader takes none of them for [`IDLE_TIME`].
+async fn write_within(stream: &mut impl Conn, bytes: &[u8]) -> std::io::Result<()> {
+    let mut rest = bytes;
+    while !rest.is_empty() {
+        let wrote = tokio::time::timeout(IDLE_TIME, stream.write(rest))
+            .await
+            .map_err(|_| std::io::Error::from(std::io::ErrorKind::TimedOut))??;
+        if wrote == 0 {
+            return Err(std::io::ErrorKind::WriteZero.into());
+        }
+        rest = &rest[wrote..];
+    }
+    Ok(())
+}
+
+/// A book's file being sent as it is: from the device, or through the folder the platform
+/// opens it from. Read a chunk at a time on a blocking thread.
+struct Sending(Option<Box<dyn kaeri_books::Source>>);
+
+impl Sending {
+    /// The file at `path` and its length.
+    async fn open(path: PathBuf) -> std::io::Result<(u64, Self)> {
+        tokio::task::spawn_blocking(move || {
+            let size = kaeri_books::tree::stat(&path)?.size;
+            Ok((size, Self(Some(kaeri_books::tree::open_file(&path)?))))
+        })
+        .await
+        .map_err(std::io::Error::other)?
+    }
+
+    /// The next bytes, empty at the end.
+    async fn next(&mut self) -> std::io::Result<Vec<u8>> {
+        let Some(mut file) = self.0.take() else { return Ok(Vec::new()) };
+        let (file, chunk) = tokio::task::spawn_blocking(move || {
+            let mut chunk = vec![0u8; 64 * 1024];
+            let read = std::io::Read::read(&mut file, &mut chunk);
+            (
+                file,
+                read.map(|n| {
+                    chunk.truncate(n);
+                    chunk
+                }),
+            )
+        })
+        .await
+        .map_err(std::io::Error::other)?;
+        self.0 = Some(file);
+        chunk
+    }
+}
+
+async fn send(stream: &mut impl Conn, response: Response, head: bool) -> std::io::Result<()> {
     let (length, file) = match &response.body {
         Body::Bytes(b) => (b.len() as u64, None),
-        Body::File(path) => match tokio::fs::File::open(path).await {
-            Ok(f) => (f.metadata().await?.len(), Some(f)),
+        Body::File(path) => match Sending::open(path.clone()).await {
+            Ok((size, f)) => (size, Some(f)),
             Err(_) => {
                 let body = b"Not found";
                 let h = format!(
                     "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
                     body.len()
                 );
-                stream.write_all(h.as_bytes()).await?;
+                write_within(stream, h.as_bytes()).await?;
                 if !head {
-                    stream.write_all(body).await?;
+                    write_within(stream, body).await?;
                 }
                 return stream.shutdown().await;
             }
@@ -836,12 +910,22 @@ async fn send(stream: &mut TcpStream, response: Response, head: bool) -> std::io
         header.push_str("WWW-Authenticate: Basic realm=\"Kaeri\"\r\n");
     }
     header.push_str("\r\n");
-    stream.write_all(header.as_bytes()).await?;
+    write_within(stream, header.as_bytes()).await?;
     if !head {
         match (response.body, file) {
-            (Body::Bytes(b), _) => stream.write_all(&b).await?,
+            (Body::Bytes(b), _) => write_within(stream, &b).await?,
             (Body::File(_), Some(mut f)) => {
-                tokio::io::copy(&mut f, stream).await?;
+                // Never more than the length said: a file that grew since is cut there.
+                let mut left = length;
+                while left > 0 {
+                    let chunk = f.next().await?;
+                    if chunk.is_empty() {
+                        break;
+                    }
+                    let n = chunk.len().min(usize::try_from(left).unwrap_or(usize::MAX));
+                    write_within(stream, &chunk[..n]).await?;
+                    left -= n as u64;
+                }
             }
             _ => {}
         }
@@ -1237,7 +1321,7 @@ fn acquisition(id: &str, title: &str, href: &str, books: &[Shelved]) -> Document
 /// One page image of a book, for page streaming.
 async fn page(book: Shelved, index: usize, unpacked: Unpacked) -> Response {
     let read = tokio::task::spawn_blocking(move || {
-        let changed = std::fs::metadata(&book.path).and_then(|m| m.modified()).ok();
+        let changed = kaeri_books::tree::stat(&book.path).ok().and_then(|m| m.modified);
         let held = |u: &Option<Unpacking>| {
             u.as_ref()
                 .filter(|u| u.path == book.path && u.changed == changed)
@@ -1290,7 +1374,10 @@ mod tests {
 
     use kaeri_books::{opds::REL_PAGE_STREAM, write::CbzWriter};
     use kaeri_store::book_downloads::BookDownloadAsk;
-    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    use tokio::{
+        io::{AsyncReadExt, AsyncWriteExt},
+        net::TcpStream,
+    };
 
     use super::*;
 
@@ -1552,6 +1639,58 @@ mod tests {
         assert_eq!(&reply.body[..2], b"PK");
         let head = get(s.port, path, Some(PASSWORD), "HEAD").await;
         assert!(head.body.is_empty());
+    }
+
+    /// The shelf's one download made bigger than the pipe a reader takes it through, and the
+    /// path the feed serves it at.
+    fn big_file(s: &Shelf) -> (usize, String) {
+        let row = &s.store.book_downloads(Some("w-1")).unwrap()[0];
+        let size = 4 << 20;
+        let bytes: Vec<u8> = (0..size).map(|i: usize| (i % 251) as u8).collect();
+        std::fs::write(row.path.as_ref().unwrap(), &bytes).unwrap();
+        (size, format!("/opds/book/d/{}/file", row.id))
+    }
+
+    /// Ask for `path` through a pipe and read the answer a piece at a time, `pause` between
+    /// pieces; the body as far as it came.
+    async fn trickle(s: &Shelf, path: &str, pause: Duration) -> Vec<u8> {
+        let (mut reader, served) = tokio::io::duplex(64 * 1024);
+        let (store, feed) = (s.store.clone(), s.feed.clone());
+        let ip = IpAddr::from([127, 0, 0, 1]);
+        tokio::spawn(async move { connection(served, ip, store, &feed).await });
+        let auth = STANDARD.encode(format!("reader:{PASSWORD}"));
+        let request = format!(
+            "GET {path} HTTP/1.1\r\nHost: feed.example\r\nAuthorization: Basic {auth}\r\n\r\n"
+        );
+        reader.write_all(request.as_bytes()).await.unwrap();
+        let (mut raw, mut chunk) = (Vec::new(), vec![0u8; 64 * 1024]);
+        while let Ok(n) = reader.read(&mut chunk).await
+            && n > 0
+        {
+            raw.extend_from_slice(&chunk[..n]);
+            tokio::time::sleep(pause).await;
+        }
+        let split = raw.windows(4).position(|w| w == b"\r\n\r\n").unwrap();
+        raw.split_off(split + 4)
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_reader_that_keeps_taking_a_file_gets_all_of_it_however_long_it_takes() {
+        let s = shelf();
+        let (size, path) = big_file(&s);
+        let start = tokio::time::Instant::now();
+        let body = trickle(&s, &path, Duration::from_secs(20)).await;
+        assert_eq!(body.len(), size);
+        // Longer than any fixed limit on a whole answer would allow.
+        assert!(start.elapsed() > Duration::from_secs(600), "{:?}", start.elapsed());
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_reader_that_stops_taking_a_file_is_let_go() {
+        let s = shelf();
+        let (size, path) = big_file(&s);
+        let body = trickle(&s, &path, Duration::from_secs(150)).await;
+        assert!(body.len() < size, "the whole file went to a reader that stopped");
     }
 
     async fn get_as(port: u16, path: &str, agent: &str) -> u16 {

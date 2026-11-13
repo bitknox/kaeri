@@ -38,7 +38,11 @@ pub fn state(engine: &EngineState, services: &Services) -> DemoState {
         played: services.store.progress(DEMO_ANILIST_ID).ok().flatten().is_some(),
         watching: on && answer.watches(),
         reading,
-        only_books: reading && !services.book_sources.has_own(),
+        // Book plugins join the registry when a reading task first asks for them, but they count
+        // as the person's own sources from the moment they have loaded.
+        only_books: reading
+            && !services.book_sources.has_own()
+            && services.book_plugins.is_empty(),
     }
 }
 
@@ -78,6 +82,7 @@ pub fn set(on: bool, engine: &mut EngineState, services: &Services, tx: &Outbox)
     } else if !on {
         services.book_sources.remove_demo();
     }
+    let _ = tx.internal(Internal::BookSourcesChanged);
     crate::titles::refresh::sources_changed(engine, services, tx);
     let _ = tx.send(Event::Settings(engine.config.view()));
     let _ = tx.send(Event::Providers(data::provider_rows(registry, stores)));
