@@ -78,10 +78,16 @@ struct InlineMoreText: View {
                         .font(font.weight(.semibold))
                         .foregroundStyle(.silk)
                         .padding(.leading, 28)
-                        .background(LinearGradient(
-                            stops: [.init(color: Palette.ground.opacity(0), location: 0),
-                                    .init(color: Palette.ground, location: 0.45)],
-                            startPoint: .leading, endPoint: .trailing))
+                        // The text fades out over the 28 pt before the word, which sits on the
+                        // ground alone at every text size.
+                        .background {
+                            HStack(spacing: 0) {
+                                LinearGradient(colors: [Palette.ground.opacity(0), Palette.ground],
+                                               startPoint: .leading, endPoint: .trailing)
+                                    .frame(width: 28)
+                                Palette.ground
+                            }
+                        }
                         .contentShape(.rect.inset(by: -12))
                         // The page's menu is More too: this one says what it does.
                         .accessibilityLabel(L.titleSynopsisMore)

@@ -149,23 +149,16 @@ struct TabShell: View {
 
     /// A place with no tab of its own in a narrow window goes onto the tab that leads to it.
     private func narrowed() {
-        guard sizeClass == .compact, let to = NarrowTabs.narrow(navigator.section, store.medium.answer) else { return }
-        switch to.pushed {
-        case .downloads: navigator.downloadsPushed = true
-        case .place(let place): navigator.placePushed = place
-        }
-        navigator.section = to.tab
+        guard sizeClass == .compact else { return }
+        NarrowTabs.narrow(navigator, store.medium.answer)
     }
 
     private static var pad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
 
     /// The place pushed for a narrow window is its own section again in a wide iPad window.
     private func widened() {
-        guard Self.pad, let to = NarrowTabs.widen(navigator.section, downloads: navigator.downloadsPushed,
-                                  place: navigator.placePushed, store.medium.answer) else { return }
-        navigator.downloadsPushed = false
-        navigator.placePushed = nil
-        navigator.section = to
+        guard Self.pad else { return }
+        NarrowTabs.widen(navigator, store.medium.answer)
     }
 
     /// A place as a tab: Home's and Read's identity carries the answer they are named for.

@@ -153,11 +153,13 @@ struct PagePlate: View {
 }
 
 /// A page that failed: left-aligned in the page's place, vermilion only on the glyph, Try again
-/// as the one action, and turning past it works.
+/// as the one action, and turning past it works. In a strip it names the image ("Image 4",
+/// "Couldn't load") and leaves out the swipe hint, since scrolling goes on past it.
 struct PageFailed: View {
     let page: Int
     let failure: ReadingFailure
     let theme: ReaderTheme
+    var strip = false
     let retry: () -> Void
 
     var body: some View {
@@ -165,12 +167,18 @@ struct PageFailed: View {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 22)).foregroundStyle(theme.vermilion)
                 .accessibilityHidden(true)
-            Text(L.readerPageFailed(page: page)).font(.ui(17, weight: .semibold)).foregroundStyle(theme.silk)
+            Text(strip ? L.readerImagePlate(image: page) : L.readerPageFailed(page: page))
+                .font(.ui(17, weight: .semibold)).foregroundStyle(theme.silk)
+            if strip {
+                Text(L.readerImageFailed).font(.ui(15)).foregroundStyle(theme.haze)
+            }
             Text(failure.words).font(.ui(15)).foregroundStyle(theme.haze)
             Button(L.readerTryAgain, action: retry)
                 .buttonStyle(ReaderPillStyle(theme: theme))
                 .padding(.top, 4)
-            Text(L.readerPageFailedHint).font(.ui(13)).foregroundStyle(theme.haze)
+            if !strip {
+                Text(L.readerPageFailedHint).font(.ui(13)).foregroundStyle(theme.haze)
+            }
         }
         .frame(maxWidth: 320, alignment: .leading)
         .padding(32)

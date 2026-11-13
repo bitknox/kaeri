@@ -721,7 +721,7 @@ private struct StripImage: View {
                 if !painted { PagePlate(page: Int(part.page) + 1, theme: theme, image: true) }
                 PageImage(file: file, longest: longest, tone: tone) { painted = true }
             } else if let failure = model.failure(of: part, chapter: chapter) {
-                PageFailed(page: Int(part.page) + 1, failure: failure, theme: theme) { model.retry(page: part.page) }
+                PageFailed(page: Int(part.page) + 1, failure: failure, theme: theme, strip: true) { model.retry(page: part.page) }
             } else {
                 PagePlate(page: Int(part.page) + 1, theme: theme, image: true)
             }

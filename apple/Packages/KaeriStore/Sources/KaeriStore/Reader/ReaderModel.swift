@@ -337,7 +337,14 @@ public final class ReaderModel {
     /// close the engine has not answered yet.
     @ObservationIgnored private var staleOpens = 0
     /// The chapter asked for in the open book, until it opens.
-    @ObservationIgnored private var asked: ChapterId?
+    private var asked: ChapterId?
+
+    /// The chapter the opening screen names: the one asked for while it opens, not the one on
+    /// screen that it is left from.
+    public var openingChapter: ChapterRow? {
+        guard let asked, view?.chapter.id != asked else { return view?.chapter }
+        return chapterRow(asked)
+    }
 
     public init() {
         focusPaper = Self.defaults.bool(forKey: Self.focusKey)

@@ -489,6 +489,10 @@ enum ReaderDevice {
 struct ReaderChaptersSheet: View {
     @Bindable var model: ReaderModel
     let theme: ReaderTheme
+    /// A popover, 520 pt square, on the Mac and an iPad window of regular width. A sheet as wide
+    /// as the window otherwise: the iPhone's, and an iPad window made narrow, which the popover
+    /// adapts to.
+    var popover = !ReaderDevice.isPhone
     @State private var tab = ReaderModel.chapterListShot ? 1 : 0
     /// The loading line waits 600 ms, as every state does.
     @State private var loadingShown = false
@@ -499,6 +503,8 @@ struct ReaderChaptersSheet: View {
     private var hasPages: Bool { model.medium == .manga }
     /// Pages a jump in the grid covers.
     private static let band = 20
+    /// The popover's width and height.
+    static let side: CGFloat = 520
 
     var body: some View {
         VStack(spacing: 0) {
@@ -513,7 +519,7 @@ struct ReaderChaptersSheet: View {
             }
             if hasPages && tab == 0 { pages } else { chapters }
         }
-        .frame(width: ReaderDevice.isPhone ? nil : 520, height: ReaderDevice.isPhone ? nil : 520)
+        .frame(width: popover ? Self.side : nil, height: popover ? Self.side : nil)
         .presentationDetents([.fraction(0.55), .large])
         .presentationBackgroundInteraction(.enabled)
         .presentationBackground(theme.glassSolid)
@@ -535,9 +541,9 @@ struct ReaderChaptersSheet: View {
         // The strip reads down whatever the series' direction, so its pages run as it does.
         let strip = model.view?.mode == .strip
         let rtl = model.view?.direction == .rightToLeft && !strip
-        let columns = ReaderDevice.isPhone
-            ? Array(repeating: GridItem(.flexible(), spacing: 10), count: 4)
-            : Array(repeating: GridItem(.fixed(84), spacing: 10), count: 5)
+        let columns = popover
+            ? Array(repeating: GridItem(.fixed(84), spacing: 10), count: 5)
+            : Array(repeating: GridItem(.flexible(), spacing: 10), count: 4)
         let list = pageList
         return ScrollViewReader { proxy in
             VStack(spacing: 0) {

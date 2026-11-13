@@ -43,13 +43,14 @@ One SwiftUI app with three shapes: a split view on Mac, the same split view on i
 ### iPad
 
 - The root is a `TabView` with `.tabViewStyle(.sidebarAdaptable)`: the Mac's sidebar on iPad and the tab bar on iPhone, from one definition. In Library, every list is the same poster grid on Mac, iPad and iPhone. Home scrolls as one page at every width.
+- A window made narrow keeps the section on screen. A section the bar has no tab for is pushed onto the tab that leads to it, with a Back button: Downloads onto Library, Calendar, Seasonal and Updates onto Home or Read, and Sources, Plugin stores and Settings onto the first tab. A resize never opens or closes a sheet. Made wide again while the section is still pushed, the window selects it in the sidebar; after Back or another tab, the selection stays.
 - Touch works as on iPhone. The pointer gets the system's button effects, rows highlight on press and selection only, and secondary click opens context menus.
 - The keyboard has the same `.commands` as Mac, shown in iPadOS 26's menu bar and by holding ⌘.
 - The player is a full-screen cover zoomed from the banner (T2), and it follows the window in Stage Manager.
 
 ### iPhone
 
-- Five tabs: Home, Calendar, Seasonal, Library and Search (`Tab(role: .search)`, with its field at the bottom). Downloads is Library's first row. Accounts, Sources, Plugin stores and Settings open as a sheet from the account button on Home and Library. Watch together is a people button in Home's toolbar, before the account button, and not a sixth tab; while the phone is in a party a bar above the tabs shows it. On iPad it is a sidebar item that the floating tab bar leaves out, so it keeps five tabs.
+- Five tabs: Home, Calendar, Seasonal, Library and Search (`Tab(role: .search)`, with its field at the bottom). Downloads is Library's first row. Accounts, Sources, Plugin stores and Settings open as a sheet from the account button on Home, Read, Updates and Library. Watch together is a people button in Home's toolbar, before the account button, and not a sixth tab; while the phone is in a party a bar above the tabs shows it. On iPad it is a sidebar item that the floating tab bar leaves out, so it keeps five tabs.
 - The tab bar minimises on scroll and the large title collapses, both the system's (T6).
 - The main action sits low. When a title page's Resume button scrolls away, a Resume capsule fades into the bottom toolbar. Sheets open at the medium detent with their action at the bottom.
 - Long press opens `contextMenu(menuItems:preview:)` with the banner as the preview. Pull to refresh (`refreshable`) works on Home, Calendar, Seasonal, Library (where it also syncs) and Downloads, and its spinner lasts until the engine's job ends, at most 15 s.

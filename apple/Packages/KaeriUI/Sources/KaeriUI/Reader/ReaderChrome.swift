@@ -165,7 +165,8 @@ struct ReaderChrome: View {
         button("list.bullet", L.readerChapters) { model.sheet = .chapters }
             .accessibilitySortPriority(3)
             .popover(isPresented: sheetBinding(.chapters), attachmentAnchor: .point(.top)) {
-                ReaderChaptersSheet(model: model, theme: theme)
+                // A narrow iPad window shows it as a sheet, which takes the window's width.
+                ReaderChaptersSheet(model: model, theme: theme, popover: wide && !ReaderDevice.isPhone)
             }
     }
 
