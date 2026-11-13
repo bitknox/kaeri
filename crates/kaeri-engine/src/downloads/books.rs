@@ -1269,8 +1269,13 @@ impl BookDownloads {
                 let file =
                     File::create(&part).map_err(|e| Stop::Failed(io_failure(&e, &part)))?;
                 let label = job.chapter.as_str().to_owned();
+                // The writer needs a title with something in it; a chapter id of only control
+                // characters gives way to the work's.
+                let title = Some(kaeri_books::write::plain_text(&label))
+                    .filter(|t| !t.is_empty())
+                    .unwrap_or_else(|| job.work.as_str().to_owned());
                 let meta = kaeri_books::write::BookMeta {
-                    title: label.clone(),
+                    title,
                     language: language.unwrap_or_else(|| "und".to_owned()),
                     ..Default::default()
                 };

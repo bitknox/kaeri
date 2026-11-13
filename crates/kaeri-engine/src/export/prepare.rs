@@ -18,7 +18,7 @@ use kaeri_books::{
     epub::Direction as BookDirection,
     write::{
         BookMeta, CbzWriter, EpubFlavor, EpubWriter, FixedLayout, KINDLE_PART_BYTES,
-        ProblemKind, check_epub, split_parts,
+        ProblemKind, check_epub, plain_text, split_parts,
     },
 };
 use kaeri_model::reading::{ExportFile, ExportFormat, ReadingFailure, SendProblem};
@@ -119,6 +119,24 @@ fn flushed(out: BufWriter<File>, path: &Path) -> Result<(), Stop> {
     file.sync_all().map_err(|e| write_failed(&e, path))
 }
 
+/// `req` with its title and chapter labels as plain text, as a book's metadata, contents and
+/// file names carry them. A title with nothing left is an untitled series, as a work with no
+/// name is; a label with nothing left is the chapter's place in the send.
+fn named(req: &Request) -> Request {
+    let mut req = req.clone();
+    req.title = plain_text(&req.title);
+    if req.title.is_empty() {
+        req.title = kaeri_i18n::t::reading_untitled_series();
+    }
+    for (n, chapter) in req.chapters.iter_mut().enumerate() {
+        chapter.label = plain_text(&chapter.label);
+        if chapter.label.is_empty() {
+            chapter.label = (n + 1).to_string();
+        }
+    }
+    req
+}
+
 /// Whether the chapters are text (EPUB) or pages.
 fn is_text(chapters: &[Chapter]) -> bool {
     chapters
@@ -136,6 +154,7 @@ pub fn run(
     if req.chapters.is_empty() {
         return Err(ReadingFailure::NotFound.into());
     }
+    let req = &named(req);
     let text = is_text(&req.chapters);
     if !req.profile.accepts(text).contains(&req.format) {
         return Err(unsupported(req.format));
@@ -930,6 +949,56 @@ mod tests {
             }
         }
         out
+    }
+
+    /// R7E-15, from the title parts of the novel fuzz's crash inputs. A work title and a
+    /// chapter label made only of control characters, which the writer's escaping empties,
+    /// still make a book that passes its own check: an untitled series, its chapter named by
+    /// its place in the send, in the metadata, the contents and the file name.
+    #[test]
+    fn a_title_of_only_control_characters_still_makes_a_book() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("n.epub");
+        text_epub(&path, "Ferry Notes", 5);
+        let nul = |n: usize| "\0".repeat(n);
+        let names = [
+            "\u{15}".to_owned(),
+            "\u{1e}".to_owned(),
+            format!("{}\u{15}", nul(3)),
+            format!("\u{11}{}\u{b}", nul(7)),
+            format!("\u{15}{}", nul(18)),
+            format!("\u{15}{}", nul(83)),
+        ];
+        let untitled = kaeri_i18n::t::reading_untitled_series();
+        let chapter = chapter_title("1");
+        for (n, name) in names.iter().enumerate() {
+            for (format, profile) in [
+                (ExportFormat::Epub, "kindle"),
+                (ExportFormat::Kepub, "kobo"),
+                (ExportFormat::FixedEpub, "kindle"),
+            ] {
+                let mut chapters = if format == ExportFormat::FixedEpub {
+                    chapters(dir.path(), 1, 1)
+                } else {
+                    vec![Chapter { label: String::new(), path: path.clone() }]
+                };
+                chapters[0].label = name.clone();
+                let mut req = request(dir.path(), chapters, profile, format);
+                req.title = name.clone();
+                req.out = dir.path().join(format!("out-{n}-{format:?}"));
+                let files = go(&req).unwrap_or_else(|e| panic!("{name:?} {format:?}: {e:?}"));
+                let at = Path::new(&files[0].path);
+                check_epub(at, &Limits::default()).unwrap();
+                assert!(files[0].name.starts_with(&untitled), "{}", files[0].name);
+                let Ok(Book::Epub(epub)) = kaeri_books::open(at, &Limits::default()) else {
+                    panic!("not an EPUB");
+                };
+                assert_eq!(epub.metadata().titles, [format!("{untitled} 1")]);
+                let nav = documents(at).into_iter().find(|(n, _)| n.ends_with("nav.xhtml"));
+                let (_, nav) = nav.expect("a nav document");
+                assert!(nav.contains(&format!(">{chapter}</a>")), "{format:?}: {nav}");
+            }
+        }
     }
 
     #[test]
