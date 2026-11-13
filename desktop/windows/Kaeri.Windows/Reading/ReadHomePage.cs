@@ -214,8 +214,15 @@ public sealed partial class ReadHomePage : Page
             Ui.RestoreFocus(weekHost, mark);
         }
         waitingHost.Visibility = home.Pending.Contains(ReadHomePart.Yours) ? Visibility.Visible : Visibility.Collapsed;
-        Section(upNextHost, ref upNextKey, home.UpNext, tiles => new ReadShelf(T.HomeUpNext, Cards(tiles), T.HomeViewAll, () => ReadingParts.OpenList(ctx, LibrarySegmentRead.Planning)),
-            (shelf, tiles) => shelf.Set(Cards(tiles)));
+        // View all opens Planning, so it shows only with Planning series in the row; a change in
+        // that makes the shelf again with or without its link.
+        var planning = ReadDiscovery.UpNextLinksPlanning(home.UpNext);
+        ReadShelf UpNext(WorkTile[] tiles) => planning
+            ? new ReadShelf(T.HomeUpNext, Cards(tiles), T.HomeViewAll, () => ReadingParts.OpenList(ctx, LibrarySegmentRead.Planning))
+            : new ReadShelf(T.HomeUpNext, Cards(tiles));
+        Section(upNextHost, ref upNextKey, home.UpNext, UpNext,
+            (shelf, tiles) => { if (shelf.Linked == planning) shelf.Set(Cards(tiles)); else upNextHost.Child = UpNext(tiles); },
+            planning ? "planning" : "");
 
         Rows(home.Rows ?? []);
 
@@ -256,9 +263,9 @@ public sealed partial class ReadHomePage : Page
     /// A shelf of the person's own in its place: made when it first has tiles, its cards changed
     /// in the same strip after, gone with its heading when it has none.
     /// </summary>
-    static void Section(Border host, ref string key, WorkTile[] tiles, Func<WorkTile[], ReadShelf> make, Action<ReadShelf, WorkTile[]> update)
+    static void Section(Border host, ref string key, WorkTile[] tiles, Func<WorkTile[], ReadShelf> make, Action<ReadShelf, WorkTile[]> update, string extra = "")
     {
-        var now = string.Join("\n", tiles.Select(t => $"{t.Work}\t{t.Title}\t{t.Cover}\t{t.Progress}\t{t.NewChapter}\t{ReadingParts.Line(t)}"));
+        var now = extra + "\n" + string.Join("\n", tiles.Select(t => $"{t.Work}\t{t.Title}\t{t.Cover}\t{t.Progress}\t{t.NewChapter}\t{ReadingParts.Line(t)}"));
         if (now == key)
             return;
         key = now;

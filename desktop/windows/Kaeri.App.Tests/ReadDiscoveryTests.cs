@@ -228,4 +228,14 @@ public class ReadDiscoveryTests
         Assert.Equal("30 of 212 shown", ReadDiscovery.Shown(30, 212));
         Assert.Equal("30 shown", ReadDiscovery.Shown(30, null));
     }
+
+    // Up next's View all opens Planning: with suggestions alone it would open an empty list.
+    [Fact]
+    public void UpNextLeadsToPlanningOnlyWithPlanningInTheRow()
+    {
+        var planned = Tile("a:900301") with { Facts = [Manga, new Msg.Reading(new ReadingMsg.ReadingOnPlanning())] };
+        var suggested = Tile("a:900302") with { Facts = [Manga] };
+        Assert.False(ReadDiscovery.UpNextLinksPlanning([suggested, Tile("a:900303")]));
+        Assert.True(ReadDiscovery.UpNextLinksPlanning([planned, suggested]));
+    }
 }

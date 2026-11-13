@@ -65,6 +65,13 @@ public static class ReadDiscovery
     public static string? Count(WorkTile tile) =>
         (tile.Facts ?? []).FirstOrDefault(f => f is Msg.Reading { V1: ReadingMsg.ReadingChapters or ReadingMsg.ReadingVolumes })?.Text();
 
+    /// <summary>
+    /// Whether Up next's View all leads anywhere: to Planning, which only the row's Planning
+    /// series are on. A row of suggestions alone has no list to show.
+    /// </summary>
+    public static bool UpNextLinksPlanning(IEnumerable<WorkTile> tiles) =>
+        tiles.Any(t => (t.Facts ?? []).Any(f => f is Msg.Reading { V1: ReadingMsg.ReadingOnPlanning }));
+
     static bool IsStatus(Msg fact) => fact is Msg.Reading
     {
         V1: ReadingMsg.ReadingStatusReleasing or ReadingMsg.ReadingStatusFinished or ReadingMsg.ReadingStatusHiatus
