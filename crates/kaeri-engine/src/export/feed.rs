@@ -25,13 +25,17 @@ use kaeri_books::{
         REL_THUMBNAIL,
     },
 };
-use kaeri_core::config::FeedConfig;
+use kaeri_core::{books::ChapterId, config::FeedConfig};
 use kaeri_model::{
     event::Event,
     reading::{FeedClient, FeedPause, FeedShare, FeedShelf, FeedView, ReadingEvent},
     stores::Secret,
 };
-use kaeri_store::{Store, book_downloads::BookDownloadState, shelf::TitleForm};
+use kaeri_store::{
+    Store,
+    book_downloads::{BookDownload, BookDownloadState},
+    shelf::TitleForm,
+};
 #[cfg(not(test))]
 use network_interface::{Addr, NetworkInterface, NetworkInterfaceConfig};
 use serde::{Deserialize, Serialize};
@@ -42,7 +46,7 @@ use tokio::{
     task::JoinHandle,
 };
 
-use crate::outbox::Outbox;
+use crate::{outbox::Outbox, read_catalog::chapters::Kept};
 
 /// How many ports past the wanted one are tried when it is taken.
 const PORT_TRIES: u16 = 10;
@@ -1015,8 +1019,56 @@ fn title_of(store: &Store, work: &str, form: TitleForm) -> String {
         .unwrap_or_else(|| work.to_owned())
 }
 
-fn download_books(store: &Store, work: &str, form: TitleForm) -> Vec<Shelved> {
+/// `label` with the series' `name` before it, unless it already names the series, as a file
+/// name such as "Paper Moth Garden v01" does.
+fn named(name: &str, label: &str) -> String {
+    let label = label.trim();
+    if label.is_empty() {
+        return name.to_owned();
+    }
+    if name.trim().is_empty() || label.to_lowercase().contains(&name.trim().to_lowercase()) {
+        return label.to_owned();
+    }
+    format!("{name} {label}")
+}
+
+/// What a downloaded chapter is called on an e-reader: "Chapter 12" for a numbered one, else the
+/// source's own label for it ("Volume 1", "Extra") as its kept list has it, the source it was
+/// downloaded from asked first, else what its id says of it. The id itself only when nothing
+/// else names it.
+fn chapter_name(
+    lists: &[(String, String, Vec<Kept>)],
+    d: &BookDownload,
+    words: &Words,
+) -> String {
+    let id = ChapterId::new(d.chapter.as_str());
+    let key = id.key();
+    if let Some(range) = key.as_ref().and_then(kaeri_core::books::ChapterKey::range) {
+        return words.chapter(&range.to_string());
+    }
+    let own = lists.iter().filter(|(source, ..)| *source == d.source_id);
+    let others = lists.iter().filter(|(source, ..)| *source != d.source_id);
+    let kept = own
+        .chain(others)
+        .flat_map(|(_, _, list)| list)
+        .find(|k| k.id == d.chapter || k.source_ref == d.chapter);
+    if let Some(label) = kept
+        .map(|k| k.label.clone())
+        .filter(|l| !l.trim().is_empty())
+        .or_else(|| kept.and_then(|k| k.title.clone()).filter(|t| !t.trim().is_empty()))
+    {
+        return label;
+    }
+    // An unnumbered key is `x/<volume>/<label>`: the label is the part people know.
+    match key.as_ref().map(kaeri_core::books::ChapterKey::as_str) {
+        Some(k) if k.starts_with("x/") => k.splitn(3, '/').nth(2).unwrap_or(k).to_owned(),
+        _ => d.chapter.clone(),
+    }
+}
+
+fn download_books(store: &Store, work: &str, form: TitleForm, words: &Words) -> Vec<Shelved> {
     let title = title_of(store, work, form);
+    let lists = crate::read_catalog::chapters::lists_of(store, work);
     let mut rows: Vec<_> = store
         .book_downloads(Some(work))
         .unwrap_or_default()
@@ -1032,7 +1084,7 @@ fn download_books(store: &Store, work: &str, form: TitleForm) -> Vec<Shelved> {
                 .and_then(|e| e.to_str())
                 .map_or_else(String::new, str::to_ascii_lowercase);
             Shelved {
-                title: format!("{title} {}", d.chapter),
+                title: named(&title, &chapter_name(&lists, &d, words)),
                 path,
                 format,
                 pages: d.pages_total,
@@ -1043,20 +1095,25 @@ fn download_books(store: &Store, work: &str, form: TitleForm) -> Vec<Shelved> {
         .collect()
 }
 
-fn folder_books(store: &Store, series: &str) -> Vec<Shelved> {
-    let name = store
+/// A folder series' name, as the folder has it.
+fn folder_name(store: &Store, series: &str) -> String {
+    store
         .local_book_series()
         .unwrap_or_default()
         .into_iter()
         .find(|s| s.id == series)
-        .map_or_else(|| series.to_owned(), |s| s.name);
+        .map_or_else(|| series.to_owned(), |s| s.name)
+}
+
+fn folder_books(store: &Store, series: &str) -> Vec<Shelved> {
+    let name = folder_name(store, series);
     let mut files = store.local_book_files(series).unwrap_or_default();
     files.sort_by(|a, b| kaeri_books::natural::compare(&a.path, &b.path));
     files
         .into_iter()
         .enumerate()
         .map(|(n, f)| Shelved {
-            title: format!("{name} {}", f.label),
+            title: named(&name, &f.label),
             path: PathBuf::from(&f.path),
             format: f.format.clone(),
             pages: f.pages,
@@ -1073,19 +1130,21 @@ fn find_book(
     first: &str,
     second: Option<&str>,
     form: TitleForm,
+    words: &Words,
 ) -> Option<Shelved> {
     match kind {
         "d" => {
             let id: i64 = first.parse().ok()?;
             let row = store.book_downloads(None).ok()?.into_iter().find(|d| d.id == id)?;
-            download_books(store, &row.work, form)
+            download_books(store, &row.work, form, words)
                 .into_iter()
                 .find(|b| b.key == format!("d/{id}"))
         }
+        // The segments come decoded once, as the route has them: a folder named with a `%`
+        // sequence such as `%20` keeps it.
         "f" => {
-            let series = decode(first);
             let n: usize = second?.parse().ok()?;
-            folder_books(store, &series).into_iter().nth(n)
+            folder_books(store, first).into_iter().nth(n)
         }
         _ => None,
     }
@@ -1150,6 +1209,7 @@ fn book_entry(book: &Shelved) -> Entry {
 /// What the feed calls its sections, in the app's language.
 #[derive(Debug, Clone)]
 struct Words {
+    tag: String,
     downloads: String,
     folders: String,
 }
@@ -1158,9 +1218,16 @@ impl Words {
     fn in_language(tag: &str) -> Words {
         use kaeri_model::{Msg, ReadingMsg};
         Words {
+            tag: tag.to_owned(),
             downloads: Msg::from(ReadingMsg::ReadFeedDownloads).text_in(tag),
             folders: crate::read_sources::folders_name(tag),
         }
+    }
+
+    /// "Chapter 12", for a chapter numbered `number`.
+    fn chapter(&self, number: &str) -> String {
+        use kaeri_model::{Msg, ReadingMsg};
+        Msg::from(ReadingMsg::ExportChapter { chapter: number.to_owned() }).text_in(&self.tag)
     }
 }
 
@@ -1190,13 +1257,13 @@ async fn route(
             &format!("urn:kaeri:downloads:{work}"),
             &title_of(&store, work, form),
             &format!("/opds/downloads/{}", encode(work)),
-            &download_books(&store, work, form),
+            &download_books(&store, work, form, words),
         )),
         ["opds", "folders"] => Response::document(&folders(&store, shares, words)),
         ["opds", "folders", series] if folder_shared(&store, series, shares) => {
             Response::document(&acquisition(
                 &format!("urn:kaeri:folders:{series}"),
-                series,
+                &folder_name(&store, series),
                 &format!("/opds/folders/{}", encode(series)),
                 &folder_books(&store, series),
             ))
@@ -1210,7 +1277,7 @@ async fn route(
             } else {
                 (None, rest)
             };
-            let Some(book) = find_book(&store, kind, first, second, form) else {
+            let Some(book) = find_book(&store, kind, first, second, form, words) else {
                 return Response::text("404 Not Found", "Not found");
             };
             match tail {
@@ -1278,7 +1345,7 @@ fn downloads(store: &Store, form: TitleForm, words: &Words) -> Document {
     let mut works = store.book_download_works().unwrap_or_default();
     works.sort();
     for work in works {
-        if download_books(store, &work, form).is_empty() {
+        if download_books(store, &work, form, words).is_empty() {
             continue;
         }
         feed.entries.push(section(
@@ -1734,6 +1801,133 @@ mod tests {
         let none = get(s.port, "/opds", None, "GET").await;
         assert_eq!(none.status, 401);
         assert_eq!(s.feed.view(Some(PASSWORD.into()), &s.store, &s.config).clients.len(), 1);
+    }
+
+    /// A folder series named `name` in folder `f1`, whose one book is the shelf's CBZ, filed
+    /// under `label`.
+    fn folder_series(s: &Shelf, id: &str, name: &str, label: &str) {
+        let folder = kaeri_store::book_sources::Folder {
+            id: "f1".into(),
+            path: Some(s._dir.path().display().to_string()),
+            added_at: 1,
+            available: true,
+            ..Default::default()
+        };
+        s.store.put_book_folder(&folder).unwrap();
+        let series = kaeri_store::book_sources::LocalSeries {
+            id: id.into(),
+            folder: "f1".into(),
+            name: name.into(),
+            medium: "manga".into(),
+            work: None,
+            state: "unmatched".into(),
+            confidence: 0,
+            reason: None,
+        };
+        let file = kaeri_store::book_sources::LocalFile {
+            path: s._dir.path().join("one.cbz").display().to_string(),
+            series: id.into(),
+            volume: Some("1".into()),
+            label: label.into(),
+            number_milli: None,
+            format: "cbz".into(),
+            pages: Some(3),
+            size: 100,
+            mtime: 50,
+            comicinfo: None,
+        };
+        s.store.replace_book_scan("f1", &[(series, vec![file])], 2).unwrap();
+    }
+
+    /// The path of a link the feed gave, made absolute by the parser.
+    fn path_of(s: &Shelf, href: &str) -> String {
+        href.split_once(&format!(":{}", s.port)).map_or(href, |(_, p)| p).to_owned()
+    }
+
+    async fn feed_at(s: &Shelf, href: &str) -> kaeri_books::opds::Feed {
+        let path = path_of(s, href);
+        let reply = get(s.port, &path, Some(PASSWORD), "GET").await;
+        assert_eq!(reply.status, 200, "{path}");
+        let text = String::from_utf8(reply.body).unwrap();
+        kaeri_bookserver::opds::parse(&text, &format!("http://127.0.0.1:{}/", s.port)).unwrap()
+    }
+
+    /// R6E-2. A folder named with a `%XX` sequence, as names saved from the web are, listed
+    /// its books and then answered 404 for every one of their links.
+    #[tokio::test]
+    async fn a_folder_series_named_with_a_percent_sequence_serves_its_books() {
+        let s = shelf();
+        let id = "f1:Paper%20Moth%20Garden";
+        folder_series(&s, id, "Paper%20Moth%20Garden", "Paper%20Moth%20Garden v01");
+        let folders = feed_at(&s, "/opds/folders").await;
+        let series =
+            folders.entries.iter().find(|e| e.title == "Paper%20Moth%20Garden").unwrap();
+        let books = feed_at(&s, &series.links[0].href).await;
+        assert_eq!(books.entries.len(), 1);
+        let book = &books.entries[0];
+        assert!(!book.links.is_empty());
+        for link in &book.links {
+            let path = path_of(&s, &link.href.replace("{pageNumber}", "1"));
+            let reply = get(s.port, &path, Some(PASSWORD), "GET").await;
+            assert_eq!(reply.status, 200, "{} {path}", link.rel);
+        }
+    }
+
+    /// R6E-3. The feed named a downloaded chapter by its id and a folder series' feed by its
+    /// folder id, and said a folder book's series twice when its file name already did.
+    #[tokio::test]
+    async fn books_and_series_are_named_as_people_know_them() {
+        let s = shelf();
+        folder_series(
+            &s,
+            "f1:Lantern Test Ferry",
+            "Lantern Test Ferry",
+            "Lantern Test Ferry v01",
+        );
+        let folders = feed_at(&s, "/opds/folders").await;
+        let series = folders.entries.iter().find(|e| e.title == "Lantern Test Ferry").unwrap();
+        let books = feed_at(&s, &series.links[0].href).await;
+        assert_eq!(books.title, "Lantern Test Ferry");
+        assert_eq!(books.entries[0].title, "Lantern Test Ferry v01");
+
+        // A numbered chapter, and a book a server lists as a volume, kept as `x/1/volume 1`.
+        let row = kaeri_store::book_catalog::BookWork {
+            work: "w-1".into(),
+            medium: "manga".into(),
+            titles: r#"{"romaji":null,"english":"The Lantern Ferry","native":null}"#.into(),
+            fetched_at: 3,
+            ..kaeri_store::book_catalog::BookWork::default()
+        };
+        s.store.put_book_work(&row).unwrap();
+        let ask = BookDownloadAsk {
+            work: "w-1",
+            chapter: "x/1/volume 1",
+            source_id: "server",
+            version_label: None,
+            keep_ready: false,
+        };
+        s.store.queue_book_download(&ask, 10).unwrap();
+        let id = s.store.book_download("w-1", "x/1/volume 1").unwrap().unwrap().id;
+        let path = s._dir.path().join("one.cbz").display().to_string();
+        s.store.book_download_done(id, &path, Some(3), 100, 20).unwrap();
+        let titles = |feed: &kaeri_books::opds::Feed| -> Vec<String> {
+            feed.entries.iter().map(|e| e.title.clone()).collect()
+        };
+        let feed = feed_at(&s, "/opds/downloads/w-1").await;
+        assert_eq!(
+            titles(&feed),
+            ["The Lantern Ferry Chapter 1", "The Lantern Ferry volume 1"]
+        );
+
+        // With the server's list kept, its own label.
+        s.store.set_book_match("server", "series-1", "w-1", 100, true, false, 5).unwrap();
+        let list = r#"[{"id":"x/1/volume 1","source_ref":"urn:x:b1","label":"Volume 1"}]"#;
+        s.store.put_book_chapters("server", "series-1", list, 5).unwrap();
+        let feed = feed_at(&s, "/opds/downloads/w-1").await;
+        assert_eq!(
+            titles(&feed),
+            ["The Lantern Ferry Chapter 1", "The Lantern Ferry Volume 1"]
+        );
     }
 
     #[tokio::test]
