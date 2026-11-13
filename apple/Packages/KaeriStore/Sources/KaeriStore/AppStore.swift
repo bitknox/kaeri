@@ -1011,6 +1011,10 @@ public final class AppStore {
         notifications.observe(event)
         reader.observe(event)
         reading.observe(event)
+        // A download that fails before it starts has no row to say so on: a notice says why.
+        if case .reading(.failed(.downloads, let failure)) = event {
+            notices.post(Notice(kind: .alert, text: L.readDownloadNotStarted(reason: failure.words), hint: nil))
+        }
         bookSources.observe(event)
         cameIn.apply(event)
         serverProgress.apply(event)

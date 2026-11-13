@@ -426,7 +426,12 @@ public final class ReadingModel {
         case .series(let view):
             series[view.work] = Self.shot(view)
         case .chapters(let work, let edition, let volumes, let failure):
-            chapters[work] = Self.shot(ReadChapters(edition: edition, volumes: volumes, failure: failure))
+            // A refresh that failed keeps the list already shown under why, never an empty one.
+            if failure != nil, volumes.isEmpty, let kept = chapters[work], !kept.volumes.isEmpty {
+                chapters[work] = ReadChapters(edition: edition ?? kept.edition, volumes: kept.volumes, failure: failure)
+            } else {
+                chapters[work] = Self.shot(ReadChapters(edition: edition, volumes: volumes, failure: failure))
+            }
         case .versions(_, let chapter, let list):
             versions[chapter] = list
         case .tracking(let work, let rows):
