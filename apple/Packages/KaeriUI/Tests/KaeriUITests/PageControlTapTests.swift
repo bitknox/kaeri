@@ -85,10 +85,10 @@ final class TapWindow {
     var firstResponder: NSResponder? { window.firstResponder }
 
     /// The window's accessibility tree, as VoiceOver walks it.
-    func accessibilityElements() -> [NSObject] {
-        var found: [NSObject] = []
+    func accessibilityElements() -> [any NSAccessibilityProtocol] {
+        var found: [any NSAccessibilityProtocol] = []
         func walk(_ element: Any, depth: Int) {
-            guard depth < 60, found.count < 50_000, let element = element as? NSObject else { return }
+            guard depth < 60, found.count < 50_000, let element = element as? any NSAccessibilityProtocol else { return }
             found.append(element)
             for child in element.accessibilityChildren() ?? [] { walk(child, depth: depth + 1) }
         }
@@ -101,7 +101,7 @@ final class TapWindow {
         accessibilityElements().flatMap { Self.text(of: $0) }
     }
 
-    static func text(of element: NSObject) -> [String] {
+    static func text(of element: any NSAccessibilityProtocol) -> [String] {
         [element.accessibilityLabel(), element.accessibilityTitle(), element.accessibilityValue() as? String]
             .compactMap { $0 }.filter { !$0.isEmpty }
     }
@@ -134,68 +134,68 @@ extension WindowEventTests {
             PageFailed(page: 9, failure: .offline, theme: .dark) { heard.retries += 1 }
                 .frame(width: size.width, height: size.height)
         }
-}
 
-    /// The pager: the page under the surface, as PagedReader lays a leaf out.
-    private func pager(_ heard: Heard) -> some View {
-        ZStack { failed(heard) }
+        /// The pager: the page under the surface, as PagedReader lays a leaf out.
+        private func pager(_ heard: Heard) -> some View {
+            ZStack { failed(heard) }
+                .frame(width: size.width, height: size.height)
+                .contentShape(.rect)
+                .readerTaps { _ in heard.pageTaps += 1 }
+                .onPreferenceChange(ReaderControlFrames.self) { [heard] frames in
+                    MainActor.assumeIsolated { heard.controls = frames }
+                }
+        }
+
+        /// The strip: the page in a scroll view under the surface, as StripReader lays its parts out.
+        private func strip(_ heard: Heard) -> some View {
+            ScrollView(.vertical) {
+                VStack(spacing: 0) {
+                    Color.gray.frame(height: 300)
+                    failed(heard)
+                    Color.gray.frame(height: 300)
+                }
+            }
             .frame(width: size.width, height: size.height)
-            .contentShape(.rect)
             .readerTaps { _ in heard.pageTaps += 1 }
             .onPreferenceChange(ReaderControlFrames.self) { [heard] frames in
                 MainActor.assumeIsolated { heard.controls = frames }
             }
-    }
-
-    /// The strip: the page in a scroll view under the surface, as StripReader lays its parts out.
-    private func strip(_ heard: Heard) -> some View {
-        ScrollView(.vertical) {
-            VStack(spacing: 0) {
-                Color.gray.frame(height: 300)
-                failed(heard)
-                Color.gray.frame(height: 300)
-            }
         }
-        .frame(width: size.width, height: size.height)
-        .readerTaps { _ in heard.pageTaps += 1 }
-        .onPreferenceChange(ReaderControlFrames.self) { [heard] frames in
-            MainActor.assumeIsolated { heard.controls = frames }
+
+        private func check(_ view: some View, _ heard: Heard) async throws {
+            let window = TapWindow(view, size: size)
+            defer { window.close() }
+            try await window.settle()
+            let button = try #require(heard.controls.first, "Try again is marked as the page's control")
+            #expect(heard.controls.count == 1)
+
+            try await window.click(CGPoint(x: button.midX, y: button.midY))
+            #expect(heard.retries == 1, "Try again retried")
+            #expect(heard.pageTaps == 0, "and the page heard nothing: no turn, no bar")
+
+            // Anywhere else on the page is still the page's.
+            try await window.click(CGPoint(x: size.width - 40, y: size.height - 40))
+            #expect(heard.retries == 1)
+            #expect(heard.pageTaps == 1, "a tap off the button turns or brings the bar as before")
         }
-    }
 
-    private func check(_ view: some View, _ heard: Heard) async throws {
-        let window = TapWindow(view, size: size)
-        defer { window.close() }
-        try await window.settle()
-        let button = try #require(heard.controls.first, "Try again is marked as the page's control")
-        #expect(heard.controls.count == 1)
+        @Test func aPagesTryAgainDoesNotTurnThePage() async throws {
+            let heard = Heard()
+            try await check(pager(heard), heard)
+        }
 
-        try await window.click(CGPoint(x: button.midX, y: button.midY))
-        #expect(heard.retries == 1, "Try again retried")
-        #expect(heard.pageTaps == 0, "and the page heard nothing: no turn, no bar")
+        @Test func aStripPagesTryAgainDoesNotBringTheBar() async throws {
+            let heard = Heard()
+            try await check(strip(heard), heard)
+        }
 
-        // Anywhere else on the page is still the page's.
-        try await window.click(CGPoint(x: size.width - 40, y: size.height - 40))
-        #expect(heard.retries == 1)
-        #expect(heard.pageTaps == 1, "a tap off the button turns or brings the bar as before")
-    }
-
-    @Test func aPagesTryAgainDoesNotTurnThePage() async throws {
-        let heard = Heard()
-        try await check(pager(heard), heard)
-    }
-
-    @Test func aStripPagesTryAgainDoesNotBringTheBar() async throws {
-        let heard = Heard()
-        try await check(strip(heard), heard)
-    }
-
-    @Test func aTapNearAControlIsTheControlsAndOneFarOffIsThePages() {
-        let button = CGRect(x: 100, y: 200, width: 120, height: 40)
-        #expect(!ReaderControlFrames.pageTakes(CGPoint(x: 160, y: 220), controls: [button]))
-        #expect(!ReaderControlFrames.pageTakes(CGPoint(x: 98, y: 220), controls: [button]))
-        #expect(ReaderControlFrames.pageTakes(CGPoint(x: 160, y: 300), controls: [button]))
-        #expect(ReaderControlFrames.pageTakes(CGPoint(x: 160, y: 220), controls: []))
+        @Test func aTapNearAControlIsTheControlsAndOneFarOffIsThePages() {
+            let button = CGRect(x: 100, y: 200, width: 120, height: 40)
+            #expect(!ReaderControlFrames.pageTakes(CGPoint(x: 160, y: 220), controls: [button]))
+            #expect(!ReaderControlFrames.pageTakes(CGPoint(x: 98, y: 220), controls: [button]))
+            #expect(ReaderControlFrames.pageTakes(CGPoint(x: 160, y: 300), controls: [button]))
+            #expect(ReaderControlFrames.pageTakes(CGPoint(x: 160, y: 220), controls: []))
+        }
     }
 }
 #endif

@@ -54,43 +54,43 @@ extension WindowEventTests {
             model.shown(2, how: .turn)
             return model
         }
-}
 
-    /// How far the page nearest `rest` is from it.
-    private func shift(_ seen: Seen, from rest: CGFloat) -> CGFloat {
-        seen.frames.map { abs($0.midX - rest) }.min() ?? .infinity
-    }
-
-    @Test func aSwipeCancelledMidDragLeavesThePagesAtRest() async throws {
-        let model = chapter()
-        let gate = Gate()
-        let seen = Seen()
-        let view = PagedReader(model: model, theme: .dark, size: size, scale: 2, tone: PageTone(), paper: false) { _ in }
-            .onPreferenceChange(ReaderControlFrames.self) { [seen] frames in
-                MainActor.assumeIsolated { seen.frames = frames }
-            }
-        let window = TapWindow(Wrapper(gate: gate) { view }, size: size)
-        defer { window.close() }
-        try await window.settle()
-        #expect(model.current == 2)
-        let rest = try #require(seen.frames.min { abs($0.midX - size.width / 2) < abs($1.midX - size.width / 2) }).midX
-
-        // A drag toward the page before, held.
-        let start = CGPoint(x: 300, y: 450)
-        try await window.mouse(.leftMouseDown, at: start)
-        for step in 1...8 {
-            try await window.mouse(.leftMouseDragged, at: CGPoint(x: start.x + CGFloat(step) * 10, y: start.y))
+        /// How far the page nearest `rest` is from it.
+        private func shift(_ seen: Seen, from rest: CGFloat) -> CGFloat {
+            seen.frames.map { abs($0.midX - rest) }.min() ?? .infinity
         }
-        try await window.wait(0.2)
-        #expect(shift(seen, from: rest) > 40, "the pages follow the drag")
 
-        // The system takes it: no end comes to the swipe.
-        gate.live = false
-        try await window.wait(0.3)
-        try await window.mouse(.leftMouseUp, at: CGPoint(x: start.x + 80, y: start.y))
-        try await window.wait(1.5)
-        #expect(model.current == 2, "no turn")
-        #expect(shift(seen, from: rest) < 1, "a slice of the next page shows: the pages stayed where the drag had them")
+        @Test func aSwipeCancelledMidDragLeavesThePagesAtRest() async throws {
+            let model = chapter()
+            let gate = Gate()
+            let seen = Seen()
+            let view = PagedReader(model: model, theme: .dark, size: size, scale: 2, tone: PageTone(), paper: false) { _ in }
+                .onPreferenceChange(ReaderControlFrames.self) { [seen] frames in
+                    MainActor.assumeIsolated { seen.frames = frames }
+                }
+            let window = TapWindow(Wrapper(gate: gate) { view }, size: size)
+            defer { window.close() }
+            try await window.settle()
+            #expect(model.current == 2)
+            let rest = try #require(seen.frames.min { abs($0.midX - size.width / 2) < abs($1.midX - size.width / 2) }).midX
+
+            // A drag toward the page before, held.
+            let start = CGPoint(x: 300, y: 450)
+            try await window.mouse(.leftMouseDown, at: start)
+            for step in 1...8 {
+                try await window.mouse(.leftMouseDragged, at: CGPoint(x: start.x + CGFloat(step) * 10, y: start.y))
+            }
+            try await window.wait(0.2)
+            #expect(shift(seen, from: rest) > 40, "the pages follow the drag")
+
+            // The system takes it: no end comes to the swipe.
+            gate.live = false
+            try await window.wait(0.3)
+            try await window.mouse(.leftMouseUp, at: CGPoint(x: start.x + 80, y: start.y))
+            try await window.wait(1.5)
+            #expect(model.current == 2, "no turn")
+            #expect(shift(seen, from: rest) < 1, "a slice of the next page shows: the pages stayed where the drag had them")
+        }
     }
 }
 

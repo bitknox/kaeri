@@ -32,36 +32,36 @@ extension WindowEventTests {
                 work: WorkId(work), edition: nil, volumes: [VolumeGroup(chapters: rows, flat: true)], failure: nil))
             return store
         }
-}
 
-    /// The app's physical footprint, in MB.
-    private static func footprint() -> Double {
-        var info = task_vm_info_data_t()
-        var size = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<integer_t>.size)
-        let result = withUnsafeMutablePointer(to: &info) {
-            $0.withMemoryRebound(to: integer_t.self, capacity: Int(size)) {
-                task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &size)
+        /// The app's physical footprint, in MB.
+        private static func footprint() -> Double {
+            var info = task_vm_info_data_t()
+            var size = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<integer_t>.size)
+            let result = withUnsafeMutablePointer(to: &info) {
+                $0.withMemoryRebound(to: integer_t.self, capacity: Int(size)) {
+                    task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &size)
+                }
             }
+            return result == KERN_SUCCESS ? Double(info.phys_footprint) / 1_048_576 : -1
         }
-        return result == KERN_SUCCESS ? Double(info.phys_footprint) / 1_048_576 : -1
-    }
 
-    @Test func aLongSeriesBuildsOnlyTheRowsInViewForVoiceOver() async throws {
-        let store = store()
-        let window = TapWindow(SeriesPage(work: work).environment(store).environment(Navigator()), size: size)
-        defer { window.close() }
-        try await window.settle()
-        let before = Self.footprint()
-        let start = Date()
-        let elements = window.accessibilityElements()
-        let walk = Date().timeIntervalSince(start)
-        let after = Self.footprint()
-        let rows = elements.filter { element in
-            TapWindow.text(of: element).contains { $0.contains("The lamp at the stair") }
-        }.count
-        print("measure: first walk \(String(format: "%.2f", walk)) s, \(elements.count) elements, \(rows) chapter rows, footprint \(Int(before)) MB to \(Int(after)) MB") // i18n-skip
-        #expect(rows > 0, "the rows in view are in the tree")
-        #expect(rows < 200, "every one of \(count) rows was built for the walk: \(rows)")
+        @Test func aLongSeriesBuildsOnlyTheRowsInViewForVoiceOver() async throws {
+            let store = store()
+            let window = TapWindow(SeriesPage(work: work).environment(store).environment(Navigator()), size: size)
+            defer { window.close() }
+            try await window.settle()
+            let before = Self.footprint()
+            let start = Date()
+            let elements = window.accessibilityElements()
+            let walk = Date().timeIntervalSince(start)
+            let after = Self.footprint()
+            let rows = elements.filter { element in
+                TapWindow.text(of: element).contains { $0.contains("The lamp at the stair") }
+            }.count
+            print("measure: first walk \(String(format: "%.2f", walk)) s, \(elements.count) elements, \(rows) chapter rows, footprint \(Int(before)) MB to \(Int(after)) MB") // i18n-skip
+            #expect(rows > 0, "the rows in view are in the tree")
+            #expect(rows < 200, "every one of \(count) rows was built for the walk: \(rows)")
+        }
     }
 }
 #endif

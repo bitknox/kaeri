@@ -42,35 +42,35 @@ extension WindowEventTests {
                 asking: false)))
             return store
         }
-}
 
-    private func press(_ window: TapWindow, _ name: String) throws {
-        let row = try #require(window.accessibilityElements().first { element in
-            element.accessibilityRole() == .button && TapWindow.text(of: element).contains { $0.contains(name) }
-        }, "\(name)'s row is a button")
-        #expect(row.accessibilityPerformPress())
-    }
+        private func press(_ window: TapWindow, _ name: String) throws {
+            let row = try #require(window.accessibilityElements().first { element in
+                element.accessibilityRole() == .button && TapWindow.text(of: element).contains { $0.contains(name) }
+            }, "\(name)'s row is a button")
+            #expect(row.accessibilityPerformPress())
+        }
 
-    @Test func theRowInUseChoosesItAgain() async throws {
-        let sent = Sent()
-        let store = store(sent)
-        let window = TapWindow(ReadFromSheet(work: work).environment(store).environment(Navigator()), size: size)
-        defer { window.close() }
-        try await window.settle()
-        try press(window, "Harbour Shelf")
-        try await window.wait(0.2)
-        #expect(sent.chosen == ["harbour-shelf"], "the source in use is chosen again")
-    }
+        @Test func theRowInUseChoosesItAgain() async throws {
+            let sent = Sent()
+            let store = store(sent)
+            let window = TapWindow(ReadFromSheet(work: work).environment(store).environment(Navigator()), size: size)
+            defer { window.close() }
+            try await window.settle()
+            try press(window, "Harbour Shelf")
+            try await window.wait(0.2)
+            #expect(sent.chosen == ["harbour-shelf"], "the source in use is chosen again")
+        }
 
-    @Test func anotherRowChoosesThatSource() async throws {
-        let sent = Sent()
-        let store = store(sent)
-        let window = TapWindow(ReadFromSheet(work: work).environment(store).environment(Navigator()), size: size)
-        defer { window.close() }
-        try await window.settle()
-        try press(window, "Lantern Pages")
-        try await window.wait(0.2)
-        #expect(sent.chosen == ["lantern-pages"])
+        @Test func anotherRowChoosesThatSource() async throws {
+            let sent = Sent()
+            let store = store(sent)
+            let window = TapWindow(ReadFromSheet(work: work).environment(store).environment(Navigator()), size: size)
+            defer { window.close() }
+            try await window.settle()
+            try press(window, "Lantern Pages")
+            try await window.wait(0.2)
+            #expect(sent.chosen == ["lantern-pages"])
+        }
     }
 }
 #endif
