@@ -1588,7 +1588,8 @@ impl Shell {
     }
 
     /// Tell the engine where the network stands, now and as it changes: offline without a
-    /// route past the local network, and a metered connection as a constrained one.
+    /// route past the local network, or with one that does not reach the internet (a link up
+    /// with no route or no name server past it), and a metered connection as a constrained one.
     fn watch_network(&self) {
         let monitor = gio::NetworkMonitor::default();
         let told: Rc<Cell<Option<(bool, bool)>>> = Rc::default();
@@ -1597,7 +1598,10 @@ impl Shell {
             move |monitor: &gio::NetworkMonitor| {
                 let Some(hub) = hub.upgrade() else { return };
                 let offline = !monitor.is_network_available()
-                    || monitor.connectivity() == gio::NetworkConnectivity::Local;
+                    || matches!(
+                        monitor.connectivity(),
+                        gio::NetworkConnectivity::Local | gio::NetworkConnectivity::Limited
+                    );
                 #[cfg(feature = "fixtures")]
                 let offline = offline
                     || crate::fixtures::OFFLINE_SCENE

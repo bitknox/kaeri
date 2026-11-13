@@ -347,7 +347,8 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
         val say = { capabilities: NetworkCapabilities? ->
             val cellular = capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true
             val constrained = connectivity.restrictBackgroundStatus == ConnectivityManager.RESTRICT_BACKGROUND_STATUS_ENABLED
-            val offline = capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) != true
+            // Validated: the system reached the internet through it, not only a link that is up.
+            val offline = capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) != true
             val now = Triple(cellular, constrained, offline)
             if (now != said) {
                 said = now
