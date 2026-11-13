@@ -4,6 +4,11 @@
 //! it records that a chapter fetched ahead on its own was let go of by hand, so keeping chapters
 //! ready does not fetch it again. A download asked for by hand takes the row over. Finished
 //! downloads reach the reader through [`Store::shelf`](crate::Store::shelf).
+//!
+//! Two engines can have one data folder open, as an app and the terminal do. A chapter being
+//! fetched is the engine's that claimed it ([`Store::claim_book_download`]), for as long as that
+//! engine keeps saying so ([`LEASE_SECS`]): the other engine neither fetches it nor puts it back
+//! in the queue, and takes it over only once its owner has stopped saying so.
 
 use rusqlite::{OptionalExtension, Row, params};
 
@@ -83,8 +88,19 @@ pub enum Queued {
     Skipped,
 }
 
+/// How long a claim on a chapter lasts without word from the engine fetching it: it renews the
+/// claim with each page and every few seconds between ([`Store::book_download_heartbeat`]).
+pub const LEASE_SECS: i64 = 45;
+
 const COLUMNS: &str = "id, work, chapter, source_id, version_label, state, path, pages_done,
     pages_total, bytes, error, keep_ready, created_at, updated_at";
+
+/// The SQL for a claim that has lapsed at `now` (with [`LEASE_SECS`] as `?2`): its engine said
+/// nothing for the length of a lease, or it runs out further off than a lease, which only a
+/// clock that ran ahead sets.
+fn lapsed(now: &str) -> String {
+    format!("(lease_until < {now} OR lease_until > {now} + ?2)")
+}
 
 fn row_of(r: &Row<'_>) -> rusqlite::Result<BookDownload> {
     let state: String = r.get(5)?;
@@ -129,7 +145,7 @@ impl Store {
                         version_label = excluded.version_label, state = 'queued',
                         path = NULL, pages_done = 0, pages_total = NULL, bytes = 0,
                         error = NULL, keep_ready = excluded.keep_ready,
-                        updated_at = excluded.updated_at",
+                        owner = NULL, lease_until = 0, updated_at = excluded.updated_at",
                     params![
                         ask.work,
                         ask.chapter,
@@ -232,7 +248,86 @@ impl Store {
         })
     }
 
-    /// A fetch began, or moved on by a page.
+    /// Claim the oldest chapter waiting to be fetched, for this engine: it is then downloading,
+    /// and no other engine on the database takes it while this one renews the claim. A chapter
+    /// whose fetch another engine left without word for longer than [`LEASE_SECS`] is waiting
+    /// too: that engine has stopped.
+    pub fn claim_book_download(&self, now: i64) -> Result<Option<BookDownload>> {
+        let owner = self.owner().to_owned();
+        let claimed = self.with_tx(|tx| {
+            let next = tx
+                .query_row(
+                    &format!(
+                        "SELECT {COLUMNS} FROM book_download
+                          WHERE state = 'queued'
+                             OR (state = 'downloading' AND {lapsed})
+                          ORDER BY keep_ready, id LIMIT 1",
+                        lapsed = lapsed("?1")
+                    ),
+                    params![now, LEASE_SECS],
+                    row_of,
+                )
+                .optional()?;
+            let Some(mut row) = next else { return Ok(None) };
+            tx.execute(
+                "UPDATE book_download SET state = 'downloading', owner = ?2,
+                    lease_until = ?3 + ?4, updated_at = ?3 WHERE id = ?1",
+                params![row.id, owner, now, LEASE_SECS],
+            )?;
+            row.state = BookDownloadState::Downloading;
+            Ok(Some(row))
+        })?;
+        Ok(claimed.map(|r| self.whole(r)))
+    }
+
+    /// This engine still fetches chapter `id`: its claim goes on for [`LEASE_SECS`] more.
+    pub fn book_download_heartbeat(&self, id: i64, now: i64) -> Result<()> {
+        self.with_conn(|c| {
+            c.execute(
+                "UPDATE book_download SET lease_until = ?3 + ?4
+                  WHERE id = ?1 AND owner = ?2 AND state = 'downloading'",
+                params![id, self.owner(), now, LEASE_SECS],
+            )?;
+            Ok(())
+        })
+    }
+
+    /// The chapters another engine on the database is fetching now, each with when its claim
+    /// runs out unless that engine renews it.
+    pub fn book_downloads_held_elsewhere(&self, now: i64) -> Result<Vec<(i64, i64)>> {
+        self.with_conn(|c| {
+            let mut stmt = c.prepare(&format!(
+                "SELECT id, lease_until FROM book_download
+                  WHERE state = 'downloading' AND owner IS NOT NULL AND owner <> ?3
+                    AND NOT {lapsed}",
+                lapsed = lapsed("?1")
+            ))?;
+            let rows = stmt.query_map(params![now, LEASE_SECS, self.owner()], |r| {
+                Ok((r.get(0)?, r.get(1)?))
+            })?;
+            Ok(rows.collect::<rusqlite::Result<_>>()?)
+        })
+    }
+
+    /// Whether another engine on the database has chapter `id` now: it fetches it under a claim
+    /// that has not lapsed, or has fetched it. The files of such a chapter are that engine's.
+    pub fn book_download_taken(&self, id: i64, now: i64) -> Result<bool> {
+        self.with_conn(|c| {
+            Ok(c.query_row(
+                &format!(
+                    "SELECT EXISTS (SELECT 1 FROM book_download WHERE id = ?1 AND (state = 'done'
+                        OR (state = 'downloading' AND owner IS NOT NULL AND owner <> ?3
+                            AND NOT {lapsed})))",
+                    lapsed = lapsed("?4")
+                ),
+                params![id, LEASE_SECS, self.owner(), now],
+                |r| r.get(0),
+            )?)
+        })
+    }
+
+    /// A fetch began, or moved on by a page: the claim on it is renewed. A chapter another
+    /// engine fetches is left as it is.
     pub fn book_download_progress(
         &self,
         id: i64,
@@ -243,8 +338,9 @@ impl Store {
         self.with_conn(|c| {
             c.execute(
                 "UPDATE book_download SET state = 'downloading', pages_done = ?2,
-                    pages_total = ?3, updated_at = ?4 WHERE id = ?1 AND state <> 'removed'",
-                params![id, done, total, now],
+                    pages_total = ?3, updated_at = ?4, owner = ?5, lease_until = ?4 + ?6
+                  WHERE id = ?1 AND state <> 'removed' AND (owner IS NULL OR owner = ?5)",
+                params![id, done, total, now, self.owner(), LEASE_SECS],
             )?;
             Ok(())
         })
@@ -264,7 +360,7 @@ impl Store {
             c.execute(
                 "UPDATE book_download SET state = 'done', path = ?2, pages_total = ?3,
                     pages_done = COALESCE(?3, pages_done), bytes = ?4, error = NULL,
-                    updated_at = ?5 WHERE id = ?1",
+                    owner = NULL, lease_until = 0, updated_at = ?5 WHERE id = ?1",
                 params![id, kept, pages, i64::try_from(bytes).unwrap_or(i64::MAX), now],
             )?;
             Ok(())
@@ -272,7 +368,7 @@ impl Store {
     }
 
     /// The file is whole, for a fetch still wanted: false, and nothing changes, when the row
-    /// was cancelled or deleted while it was being fetched.
+    /// was cancelled or deleted while it was being fetched, or is another engine's now.
     pub fn book_download_fetched(
         &self,
         id: i64,
@@ -286,20 +382,29 @@ impl Store {
             let changed = c.execute(
                 "UPDATE book_download SET state = 'done', path = ?2, pages_total = ?3,
                     pages_done = COALESCE(?3, pages_done), bytes = ?4, error = NULL,
-                    updated_at = ?5 WHERE id = ?1 AND state = 'downloading'",
-                params![id, kept, pages, i64::try_from(bytes).unwrap_or(i64::MAX), now],
+                    owner = NULL, lease_until = 0, updated_at = ?5
+                  WHERE id = ?1 AND state = 'downloading' AND (owner IS NULL OR owner = ?6)",
+                params![
+                    id,
+                    kept,
+                    pages,
+                    i64::try_from(bytes).unwrap_or(i64::MAX),
+                    now,
+                    self.owner()
+                ],
             )?;
             Ok(changed > 0)
         })
     }
 
-    /// The fetch failed for `error`.
+    /// The fetch failed for `error`. A chapter another engine fetches now is left as it is.
     pub fn book_download_failed(&self, id: i64, error: &str, now: i64) -> Result<()> {
         self.with_conn(|c| {
             c.execute(
-                "UPDATE book_download SET state = 'failed', error = ?2, updated_at = ?3
-                  WHERE id = ?1",
-                params![id, error, now],
+                "UPDATE book_download SET state = 'failed', error = ?2, updated_at = ?3,
+                    owner = NULL, lease_until = 0
+                  WHERE id = ?1 AND (owner IS NULL OR owner = ?4)",
+                params![id, error, now, self.owner()],
             )?;
             Ok(())
         })
@@ -309,9 +414,10 @@ impl Store {
     pub fn book_download_requeue(&self, id: i64, now: i64) -> Result<()> {
         self.with_conn(|c| {
             c.execute(
-                "UPDATE book_download SET state = 'queued', pages_done = 0, updated_at = ?2
-                  WHERE id = ?1 AND state = 'downloading'",
-                params![id, now],
+                "UPDATE book_download SET state = 'queued', pages_done = 0, updated_at = ?2,
+                    owner = NULL, lease_until = 0
+                  WHERE id = ?1 AND state = 'downloading' AND (owner IS NULL OR owner = ?3)",
+                params![id, now, self.owner()],
             )?;
             Ok(())
         })
@@ -332,13 +438,19 @@ impl Store {
         })
     }
 
-    /// Fetches the last run left half done go back in the queue. Returns how many.
+    /// Fetches the last run left half done go back in the queue. Returns how many. One another
+    /// engine on the database still makes, and says so, stays its own.
     pub fn book_downloads_recover(&self, now: i64) -> Result<usize> {
         self.with_conn(|c| {
             Ok(c.execute(
-                "UPDATE book_download SET state = 'queued', pages_done = 0, updated_at = ?1
-                  WHERE state = 'downloading'",
-                [now],
+                &format!(
+                    "UPDATE book_download SET state = 'queued', pages_done = 0, updated_at = ?1,
+                        owner = NULL, lease_until = 0
+                      WHERE state = 'downloading'
+                        AND (owner IS NULL OR owner = ?3 OR {lapsed})",
+                    lapsed = lapsed("?1")
+                ),
+                params![now, LEASE_SECS, self.owner()],
             )?)
         })
     }
@@ -558,5 +670,98 @@ mod tests {
         assert_eq!(store.book_download_works_of("manga").unwrap(), ["a:900401"]);
         assert!(store.book_download_works_of("novel").unwrap().is_empty());
         assert_eq!(store.book_download_works().unwrap(), ["a:900401"]);
+    }
+
+    /// Two engines on one database, each with its own store, as an app and the terminal.
+    fn two_engines() -> (tempfile::TempDir, Store, Store) {
+        let dir = tempfile::tempdir().unwrap();
+        let db = dir.path().join("kaeri.db");
+        let first = Store::open(&db).unwrap();
+        let second = Store::open(&db).unwrap();
+        (dir, first, second)
+    }
+
+    #[test]
+    fn a_chapter_one_engine_claimed_is_not_the_other_engines_while_the_claim_lasts() {
+        let (_dir, a, b) = two_engines();
+        a.queue_book_download(&ask("1", false), 1).unwrap();
+        a.queue_book_download(&ask("2", false), 1).unwrap();
+        let mine = a.claim_book_download(100).unwrap().unwrap();
+        assert_eq!((mine.chapter.as_str(), mine.state), ("1", BookDownloadState::Downloading));
+        let theirs = b.claim_book_download(100).unwrap().unwrap();
+        assert_eq!(theirs.chapter, "2", "the other engine takes the next one");
+        assert!(b.claim_book_download(100).unwrap().is_none());
+        assert_eq!(
+            b.book_downloads_held_elsewhere(100).unwrap(),
+            [(mine.id, 100 + LEASE_SECS)]
+        );
+        assert!(b.book_download_taken(mine.id, 100).unwrap());
+        assert!(!a.book_download_taken(mine.id, 100).unwrap());
+
+        // Another engine's progress, failure or requeue leaves the row as its owner has it.
+        b.book_download_progress(mine.id, 2, Some(9), 101).unwrap();
+        b.book_download_failed(mine.id, "offline", 101).unwrap();
+        b.book_download_requeue(mine.id, 101).unwrap();
+        assert!(!b.book_download_fetched(mine.id, "/dl/1.cbz", Some(9), 1, 101).unwrap());
+        let row = a.book_download("a:900401", "1").unwrap().unwrap();
+        assert_eq!((row.state, row.pages_done), (BookDownloadState::Downloading, 0));
+
+        // Its owner renews the claim with each page and between them.
+        a.book_download_progress(mine.id, 3, Some(9), 130).unwrap();
+        a.book_download_heartbeat(mine.id, 160).unwrap();
+        assert!(b.claim_book_download(200).unwrap().is_none(), "renewed at 160");
+        assert!(a.book_download_fetched(mine.id, "/dl/1.cbz", Some(9), 1, 201).unwrap());
+        assert!(b.book_downloads_held_elsewhere(201).unwrap().is_empty());
+    }
+
+    #[test]
+    fn a_claim_its_engine_stopped_renewing_lapses_and_is_taken_over() {
+        let (_dir, a, b) = two_engines();
+        a.queue_book_download(&ask("1", false), 1).unwrap();
+        let mine = a.claim_book_download(100).unwrap().unwrap();
+        // The other engine starts while the claim lasts: its launch leaves the row alone.
+        assert_eq!(b.book_downloads_recover(110).unwrap(), 0);
+        assert_eq!(
+            b.book_download("a:900401", "1").unwrap().unwrap().state,
+            BookDownloadState::Downloading
+        );
+        // The first engine was killed: nothing renews the claim, and once it lapses the other
+        // engine takes the chapter, at launch or from its queue.
+        let late = 100 + LEASE_SECS + 1;
+        assert!(!b.book_download_taken(mine.id, late).unwrap());
+        assert!(b.book_downloads_held_elsewhere(late).unwrap().is_empty());
+        let taken = b.claim_book_download(late).unwrap().unwrap();
+        assert_eq!(taken.id, mine.id);
+        assert!(a.book_download_taken(mine.id, late).unwrap(), "it is the other engine's now");
+        assert_eq!(a.book_downloads_recover(late).unwrap(), 0);
+
+        // A claim set while the clock ran a year ahead lapses once it is put right.
+        b.book_download_progress(mine.id, 0, None, late + 31_536_000).unwrap();
+        assert!(a.claim_book_download(late + 1).unwrap().is_some());
+    }
+
+    #[test]
+    fn a_crash_requeues_this_engines_fetches_and_those_of_none() {
+        let (_dir, a, b) = two_engines();
+        a.queue_book_download(&ask("1", false), 1).unwrap();
+        a.queue_book_download(&ask("2", false), 1).unwrap();
+        let ours = a.claim_book_download(100).unwrap().unwrap();
+        b.claim_book_download(100).unwrap().unwrap();
+        // A row an earlier version left downloading has no owner.
+        a.with_conn(|c| {
+            c.execute("UPDATE book_download SET owner = NULL WHERE id = ?1", [ours.id])?;
+            Ok(())
+        })
+        .unwrap();
+        assert_eq!(a.book_downloads_recover(101).unwrap(), 1);
+        let states: Vec<_> =
+            a.book_downloads(None).unwrap().into_iter().map(|r| (r.chapter, r.state)).collect();
+        assert_eq!(
+            states,
+            [
+                ("1".to_owned(), BookDownloadState::Queued),
+                ("2".to_owned(), BookDownloadState::Downloading)
+            ]
+        );
     }
 }

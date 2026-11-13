@@ -186,7 +186,7 @@ struct Kit {
     shelf: Arc<Shelf>,
     queue: BookDownloads,
     events: mpsc::UnboundedReceiver<Event>,
-    _dir: tempfile::TempDir,
+    _dir: Arc<tempfile::TempDir>,
 }
 
 impl Kit {
@@ -236,8 +236,21 @@ fn kit(chapters: &[&str]) -> Kit {
 }
 
 fn kit_of(chapters: &[&str], hosts: &[&str]) -> Kit {
-    let dir = tempfile::tempdir().unwrap();
     let store = Store::open_in_memory().unwrap();
+    kit_in(chapters, hosts, store, Arc::new(tempfile::tempdir().unwrap()))
+}
+
+/// Two engines on one data folder and one database, as an app and the terminal: each with its
+/// own store and its own copy of the source, to count what each fetches.
+fn two_engines(chapters: &[&str]) -> (Kit, Kit) {
+    let dir = Arc::new(tempfile::tempdir().unwrap());
+    let db = dir.path().join("kaeri.db");
+    let first = kit_in(chapters, &[], Store::open(&db).unwrap(), dir.clone());
+    let second = kit_in(chapters, &[], Store::open(&db).unwrap(), dir);
+    (first, second)
+}
+
+fn kit_in(chapters: &[&str], hosts: &[&str], store: Store, dir: Arc<tempfile::TempDir>) -> Kit {
     let paths = Paths {
         config_file: dir.path().join("config.toml"),
         data_dir: dir.path().join("data"),
@@ -1540,4 +1553,105 @@ async fn a_chapter_taken_out_of_the_queue_as_it_starts_is_not_asked_for() {
     assert!(!kit.queue.reader_fetches(kit.store(), &kit.lent.tx, reader, 5), "started");
     let state = kit.store().book_download(WORK, "2").unwrap().unwrap().state;
     assert_eq!(state, BookDownloadState::Downloading);
+}
+
+/// What `kit`'s copy of the source was asked for chapter `chapter`.
+fn asked_for(kit: &Kit, chapter: &str) -> usize {
+    let prefix = format!("https://pages.example/{chapter}/");
+    kit.shelf.asked.lock().unwrap().iter().filter(|a| a.starts_with(&prefix)).count()
+}
+
+#[tokio::test]
+async fn a_second_engine_on_the_data_folder_leaves_a_running_download_alone() {
+    let (a, b) = two_engines(&["1", "2"]);
+    let mut gate = a.shelf.gate("https://pages.example/1/2", 1);
+    a.queue
+        .download(&a.lent, WorkId::new(WORK), DownloadPick::Chapters { ids: ids(&["1", "2"]) })
+        .await;
+    a.shelf.until(|s| s.times("https://pages.example/1/2") == 1).await;
+    for _ in 0..500 {
+        if !kept_pages(&a, "1").is_empty() {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(10)).await;
+    }
+    let kept_before = kept_pages(&a, "1");
+    assert!(!kept_before.is_empty(), "a page is kept");
+
+    // The second engine launches meanwhile and starts its queue.
+    b.queue.recover(b.store(), b.lent.clock.now());
+    assert_eq!(kept_pages(&b, "1"), kept_before, "the pages being fetched stay");
+    assert!(matches!(b.states()[0].1, ChapterDownloadState::Downloading { .. }));
+    b.queue.start(&b.lent);
+    b.shelf.until(|s| s.times("https://pages.example/2/3") == 1).await;
+    tokio::time::sleep(Duration::from_millis(100)).await;
+    assert_eq!(
+        asked_for(&b, "1"),
+        0,
+        "the second engine never fetches the first one's chapter"
+    );
+
+    gate.remove(0).send(true).unwrap();
+    a.settle().await;
+    b.settle().await;
+    let done: [(String, ChapterDownloadState); 2] =
+        [("1".into(), ChapterDownloadState::Done), ("2".into(), ChapterDownloadState::Done)];
+    assert_eq!(a.states(), done);
+    assert_eq!(b.states(), done);
+    assert_eq!(asked_for(&a, "1"), 3, "each page of chapter 1 once");
+    assert_eq!(asked_for(&a, "2") + asked_for(&b, "2"), 3, "each page of chapter 2 once");
+    assert_eq!(asked_for(&b, "1"), 0);
+}
+
+#[tokio::test]
+async fn a_download_whose_engine_was_killed_is_taken_over_once_its_claim_lapses() {
+    let (a, b) = two_engines(&["1"]);
+    b.setup(Setup { hold: true, ..Setup::default() });
+    b.queue
+        .download(&b.lent, WorkId::new(WORK), DownloadPick::Chapters { ids: ids(&["1"]) })
+        .await;
+    // The first engine claimed the chapter, wrote half of it and was killed.
+    let claimed = a.store().claim_book_download(a.lent.clock.now()).unwrap().unwrap();
+    drop(a);
+    let dir = b.queue.dir().join(safe(WORK));
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(part_of(&dir.join(safe("1"))), b"half").unwrap();
+
+    // While its claim lasts, the second engine's launch and queue leave it alone.
+    b.queue.recover(b.store(), b.lent.clock.now());
+    assert!(part_of(&dir.join(safe("1"))).exists());
+    b.setup(Setup::default());
+    b.queue.start(&b.lent);
+    tokio::time::sleep(Duration::from_millis(150)).await;
+    assert_eq!(*b.shelf.fetched.lock().unwrap(), 0);
+    assert!(matches!(b.states()[0].1, ChapterDownloadState::Downloading { .. }));
+
+    // Nothing renews it: once it lapses, the second engine fetches the chapter.
+    b.lent.clock.advance(kaeri_store::book_downloads::LEASE_SECS + 1);
+    b.settle().await;
+    assert_eq!(b.states(), [("1".into(), ChapterDownloadState::Done)]);
+    assert_eq!(asked_for(&b, "1"), 3);
+    let row = b.store().book_download(WORK, "1").unwrap().unwrap();
+    assert_eq!(row.id, claimed.id);
+}
+
+#[tokio::test]
+async fn a_failed_download_whose_whole_file_is_there_is_done_at_launch() {
+    let kit = kit(&["1"]);
+    kit.setup(Setup { hold: true, ..Setup::default() });
+    kit.queue
+        .download(&kit.lent, WorkId::new(WORK), DownloadPick::Chapters { ids: ids(&["1"]) })
+        .await;
+    let row = kit.store().next_book_download().unwrap().unwrap();
+    // Another engine finished the file as this one failed the row.
+    let file = kit.queue.dir().join(safe(WORK)).join(safe("1")).with_extension("cbz");
+    std::fs::create_dir_all(file.parent().unwrap()).unwrap();
+    std::fs::write(&file, b"a whole chapter").unwrap();
+    kit.store().book_download_failed(row.id, &encode(&ReadingFailure::Offline), 5).unwrap();
+
+    kit.queue.recover(kit.store(), 6);
+    assert_eq!(kit.states(), [("1".into(), ChapterDownloadState::Done)]);
+    let row = kit.store().book_download(WORK, "1").unwrap().unwrap();
+    assert!(row.path.is_some_and(|p| p.ends_with("1.cbz")), "the row keeps the file");
+    assert_eq!(row.bytes, 15);
 }

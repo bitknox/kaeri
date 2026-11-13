@@ -67,6 +67,14 @@ const PROGRESS_EVERY: Duration =
 /// The rest between chapters.
 const PACE: Duration =
     if cfg!(test) { Duration::from_millis(2) } else { Duration::from_millis(400) };
+/// How often a fetch tells other engines on the data folder that it goes on, well inside its
+/// claim ([`kaeri_store::book_downloads::LEASE_SECS`]).
+const HEARTBEAT: Duration =
+    if cfg!(test) { Duration::from_millis(20) } else { Duration::from_secs(15) };
+/// How often a queue with nothing left but chapters another engine fetches looks whether that
+/// engine has stopped.
+const LOOK_AGAIN: Duration =
+    if cfg!(test) { Duration::from_millis(20) } else { Duration::from_secs(5) };
 
 /// What the engine lends a download: the sources, the clock and the way to speak.
 #[derive(Clone)]
@@ -308,6 +316,9 @@ impl BookDownloads {
 
     /// Fetches the last run left half done go back in the queue, and half-written files go.
     /// The pages a fetch kept stay for it to pick up, while its chapter is still to be fetched.
+    /// A fetch another engine on the same data folder makes now is its own: its row and its
+    /// files stay as they are. A chapter whose fetch failed but whose whole file is there is
+    /// downloaded.
     pub fn recover(&self, store: &Store, now: i64) {
         match store.book_downloads_recover(now) {
             Ok(0) => {}
@@ -323,16 +334,43 @@ impl BookDownloads {
             })
             .map(|r| pages_of(&self.file_stem(r)))
             .collect();
+        // Still downloading after the reset: another engine fetches these now.
+        let elsewhere: HashSet<PathBuf> = rows
+            .iter()
+            .filter(|r| r.state == BookDownloadState::Downloading)
+            .flat_map(|r| {
+                let stem = self.file_stem(r);
+                [part_of(&stem), pages_of(&stem)]
+            })
+            .collect();
+        let failed: Vec<&BookDownload> =
+            rows.iter().filter(|r| r.state == BookDownloadState::Failed).collect();
         let Ok(works) = std::fs::read_dir(&self.0.dir) else { return };
         for work in works.flatten() {
             let Ok(files) = std::fs::read_dir(work.path()) else { continue };
             for file in files.flatten() {
                 let path = file.path();
                 let ext = path.extension().and_then(|e| e.to_str()).unwrap_or_default();
+                if elsewhere.contains(&path) {
+                    continue;
+                }
                 if ext == "part" {
                     let _ = std::fs::remove_file(&path);
-                } else if ext == "pages" && !to_fetch.contains(&path) {
-                    KeptPages::remove(&path);
+                } else if ext == "pages" {
+                    if !to_fetch.contains(&path) {
+                        KeptPages::remove(&path);
+                    }
+                } else if let Some(row) =
+                    failed.iter().find(|r| self.file_stem(r).with_extension(ext) == path)
+                {
+                    let bytes = file.metadata().map(|m| m.len()).unwrap_or(0);
+                    let kept = path.to_string_lossy();
+                    match store.book_download_done(row.id, &kept, None, bytes, now) {
+                        Ok(()) => {
+                            tracing::info!("a failed download whose file is whole is done")
+                        }
+                        Err(e) => tracing::warn!(error = %e, "a whole download was not kept"),
+                    }
                 }
             }
         }
@@ -895,17 +933,31 @@ impl BookDownloads {
                 let next = if self.setup().hold {
                     None
                 } else {
-                    store.next_book_download().unwrap_or_else(|e| {
+                    store.claim_book_download(lent.clock.now()).unwrap_or_else(|e| {
                         tracing::warn!(error = %e, "the download queue was not read");
                         None
                     })
                 };
-                if next.is_none() {
+                // Another engine on the data folder fetches the rest: this one waits to take
+                // over a fetch whose engine has stopped.
+                let elsewhere = next.is_none()
+                    && !self.setup().hold
+                    && store
+                        .book_downloads_held_elsewhere(lent.clock.now())
+                        .is_ok_and(|held| !held.is_empty());
+                if next.is_none() && !elsewhere {
                     *running = false;
                 }
-                next
+                (next, elsewhere)
             };
-            let Some(row) = next else { break };
+            let row = match next {
+                (Some(row), _) => row,
+                (None, true) => {
+                    tokio::time::sleep(LOOK_AGAIN).await;
+                    continue;
+                }
+                (None, false) => break,
+            };
             let work = WorkId::new(row.work.clone());
             if !touched.contains(&work) {
                 touched.push(work);
@@ -947,7 +999,18 @@ impl BookDownloads {
         }
         self.publish(store, &lent.tx);
         self.relist_kept(lent, &row.work);
+        // Other engines on the data folder hear that this fetch goes on between its pages too.
+        let beat = {
+            let (store, clock, id) = (store.clone(), lent.clock.clone(), row.id);
+            tokio::spawn(async move {
+                loop {
+                    tokio::time::sleep(HEARTBEAT).await;
+                    let _ = store.book_download_heartbeat(id, clock.now());
+                }
+            })
+        };
         let outcome = self.ended(lent, store, &row, now).await;
+        beat.abort();
         // The series page hears each chapter land, not the whole run at its end.
         self.relist_kept(lent, &row.work);
         outcome
@@ -970,7 +1033,7 @@ impl BookDownloads {
                     tracing::warn!(error = %e, "a finished download was not kept");
                     true
                 });
-                if !kept {
+                if !kept && !Self::taken(store, lent, row) {
                     // Cancelled or deleted while its last page or its file was made: the file
                     // goes with the row, and a row kept as removed stays removed.
                     let _ = std::fs::remove_file(&done.path);
@@ -979,18 +1042,24 @@ impl BookDownloads {
                 (true, kept)
             }
             Err(Stop::Cancelled) => {
-                let _ = std::fs::remove_file(part_of(&self.file_stem(row)));
+                if !Self::taken(store, lent, row) {
+                    let _ = std::fs::remove_file(part_of(&self.file_stem(row)));
+                }
                 self.publish(store, &lent.tx);
                 (true, false)
             }
             Err(Stop::Held) => {
-                let _ = std::fs::remove_file(part_of(&self.file_stem(row)));
+                if !Self::taken(store, lent, row) {
+                    let _ = std::fs::remove_file(part_of(&self.file_stem(row)));
+                }
                 let _ = store.book_download_requeue(row.id, now);
                 self.publish(store, &lent.tx);
                 (true, false)
             }
             Err(Stop::Failed(failure)) => {
-                let _ = std::fs::remove_file(part_of(&self.file_stem(row)));
+                if !Self::taken(store, lent, row) {
+                    let _ = std::fs::remove_file(part_of(&self.file_stem(row)));
+                }
                 let full = failure == ReadingFailure::DiskFull;
                 if let Err(e) = store.book_download_failed(row.id, &encode(&failure), now) {
                     tracing::warn!(error = %e, "a failed download was not kept");
@@ -1040,13 +1109,21 @@ impl BookDownloads {
         self.0.dir.join(safe(&row.work)).join(safe(&row.chapter))
     }
 
-    /// Whether the row is still being fetched: it can be taken out of the queue meanwhile.
-    fn wanted(store: &Store, row: &BookDownload) -> bool {
+    /// Whether the row is still being fetched, by this engine: it can be taken out of the queue
+    /// meanwhile, or taken over by another engine when this one went unheard too long.
+    fn wanted(store: &Store, lent: &Lent, row: &BookDownload) -> bool {
         store
             .book_download(&row.work, &row.chapter)
             .ok()
             .flatten()
             .is_some_and(|now| now.id == row.id && now.state == BookDownloadState::Downloading)
+            && !Self::taken(store, lent, row)
+    }
+
+    /// Whether another engine on the data folder fetches or fetched the chapter now: its files
+    /// are that engine's to keep or clear.
+    fn taken(store: &Store, lent: &Lent, row: &BookDownload) -> bool {
+        store.book_download_taken(row.id, lent.clock.now()).unwrap_or(false)
     }
 
     async fn fetch(
@@ -1055,7 +1132,7 @@ impl BookDownloads {
         store: &Store,
         row: &BookDownload,
     ) -> Result<Fetched, Stop> {
-        let wanted = || Self::wanted(store, row);
+        let wanted = || Self::wanted(store, lent, row);
         let progress = |done: u32, total: u32| {
             let _ = store.book_download_progress(row.id, done, Some(total), lent.clock.now());
             // The series page counts the pages with Downloads, as often as Downloads does.

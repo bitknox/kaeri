@@ -1115,6 +1115,17 @@ const MIGRATIONS: &[(&str, &str)] = &[
      WHERE path LIKE '_:\%' AND instr(path, '\book-downloads\') > 0;
     "#,
     ),
+    (
+        "0036_book_download_owner",
+        r#"
+    -- Which engine fetches a chapter, and until when it has last said it still does. Two engines
+    -- on one data folder (an app and the terminal) never fetch the same chapter, and one that
+    -- starts leaves a fetch another still makes alone. Rows from before have no owner and a lease
+    -- long over.
+    ALTER TABLE book_download ADD COLUMN owner TEXT;
+    ALTER TABLE book_download ADD COLUMN lease_until INTEGER NOT NULL DEFAULT 0;
+    "#,
+    ),
 ];
 
 /// How long a statement waits for a lock another connection or process holds before it fails.
@@ -1151,12 +1162,22 @@ pub fn migrate_until(conn: &Connection, stop: Option<&str>) -> rusqlite::Result<
         if Some(*name) == stop {
             break;
         }
-        let already: bool = conn.query_row(
-            "SELECT EXISTS(SELECT 1 FROM schema_migration WHERE name = ?1)",
-            [name],
-            |r| r.get(0),
-        )?;
-        if already {
+        let already = |conn: &Connection| -> rusqlite::Result<bool> {
+            conn.query_row(
+                "SELECT EXISTS(SELECT 1 FROM schema_migration WHERE name = ?1)",
+                [name],
+                |r| r.get(0),
+            )
+        };
+        if already(conn)? {
+            continue;
+        }
+        // Another engine opening the same database at the same moment may be applying it: the
+        // write lock is taken first, waiting for that engine's, and the record asked again
+        // under it, so the migration is never run twice.
+        conn.execute_batch("BEGIN IMMEDIATE;")?;
+        if already(conn)? {
+            conn.execute_batch("COMMIT;")?;
             continue;
         }
         // Each migration is one transaction, **and the record of it is inside that
@@ -1166,12 +1187,16 @@ pub fn migrate_until(conn: &Connection, stop: Option<&str>) -> rusqlite::Result<
         // `table … already exists`, and `Store::open` returns an error every time from then on.
         // There is no repair path for that short of deleting the database, so the two facts
         // have to become durable together.
-        conn.execute_batch(&format!(
-            "BEGIN;\n\
-             {sql}\n\
+        let applied_now = conn.execute_batch(&format!(
+            "{sql}\n\
              INSERT INTO schema_migration (name, applied_at) VALUES ('{name}', unixepoch());\n\
              COMMIT;"
-        ))?;
+        ));
+        if let Err(e) = applied_now {
+            // Nothing of it is kept: the next open tries it again.
+            let _ = conn.execute_batch("ROLLBACK;");
+            return Err(e);
+        }
         tracing::info!(migration = name, "applied migration");
         applied += 1;
     }
