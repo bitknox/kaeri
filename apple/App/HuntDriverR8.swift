@@ -8,7 +8,7 @@ import KaeriStore
 import KaeriUI
 import WebKit
 
-/// One accessibility element as the AX API reports it, read off the main thread.
+/// One accessibility element as the AX API reports it. In-process AX calls run on the calling thread, so walks stay on the main actor.
 struct AXLine: Sendable {
     var depth: Int
     var role: String
@@ -133,7 +133,7 @@ extension HuntDriver {
             let limit = ms(w, 0, 4000)
             let prefix = w.count > 1 && w[1] != "-" ? w[1...].filter { $0 != "all" }.joined(separator: " ") : nil
             let printAll = w.contains("all")
-            let (err, lines) = await Task.detached { AXWalk.walk(pid: pid, windowPrefix: prefix, limit: limit) }.value
+            let (err, lines) = { AXWalk.walk(pid: pid, windowPrefix: prefix, limit: limit) }()
             guard err == .success else { say("axapi error \(err.rawValue) trusted=\(AXIsProcessTrusted())"); return true }
             var nameless = 0, images = 0
             var roles: [String: Int] = [:]
@@ -150,13 +150,13 @@ extension HuntDriver {
         case "axq":
             // axq <text>: AX API elements whose title, description or value holds the text
             let needle = w.joined(separator: " ").lowercased()
-            let (err, lines) = await Task.detached { AXWalk.walk(pid: pid, windowPrefix: nil, limit: 6000) }.value
+            let (err, lines) = { AXWalk.walk(pid: pid, windowPrefix: nil, limit: 6000) }()
             guard err == .success else { say("axq error \(err.rawValue)"); return true }
             var n = 0
             for l in lines where (l.title + "|" + l.desc + "|" + l.value).lowercased().contains(needle) { n += 1; if n <= 40 { say(AXWalk.text(l)) } }
             say("axq \(n) for '\(needle)'")
         case "axfocus":
-            let (err, l, path) = await Task.detached { AXWalk.focused(pid: pid) }.value
+            let (err, l, path) = { AXWalk.focused(pid: pid) }()
             say("axfocus err=\(err.rawValue) " + (l.map(AXWalk.text) ?? "-") + " in " + path.reversed().joined(separator: ">")
                 + " fr=\(NSApp.keyWindow?.firstResponder.map { String(describing: type(of: $0)) } ?? "nil") key='\(NSApp.keyWindow?.title ?? "-")'")
         case "tabs":
@@ -173,7 +173,7 @@ extension HuntDriver {
                     }
                 }
                 try? await Task.sleep(for: .milliseconds(gap))
-                let (_, l, path) = await Task.detached { AXWalk.focused(pid: pid) }.value
+                let (_, l, path) = { AXWalk.focused(pid: pid) }()
                 say("tab \(i + 1): " + (l.map(AXWalk.text) ?? "-") + " in " + path.reversed().suffix(3).joined(separator: ">")
                     + " fr=\(NSApp.keyWindow?.firstResponder.map { String(describing: type(of: $0)) } ?? "nil")")
             }
@@ -182,7 +182,7 @@ extension HuntDriver {
             var words = w; var pick = 0
             if let last = words.last, last.hasPrefix("#"), let k = Int(last.dropFirst()) { pick = k; words.removeLast() }
             let needle = words.joined(separator: " ").lowercased()
-            let result: String = await Task.detached {
+            let result: String = {
                 let app = AXUIElementCreateApplication(pid)
                 AXUIElementSetMessagingTimeout(app, 5)
                 var hits: [AXUIElement] = []
@@ -198,7 +198,7 @@ extension HuntDriver {
                 let el = hits[pick]
                 let e = AXUIElementPerformAction(el, kAXPressAction as CFString)
                 return "axpress #\(pick) " + AXWalk.text(AXWalk.line(el, depth: 0)) + " -> \(e.rawValue)"
-            }.value
+            }()
             say(result)
             try? await Task.sleep(for: .milliseconds(1200)); say(state(r, nav))
         case "targets":
