@@ -16,7 +16,9 @@ namespace Kaeri.Windows.Pages;
 /// A light novel in a WebView2. The book's documents come from the engine over the
 /// <c>kaeri-book://</c> scheme, answered in WebResourceRequested; nothing else loads, and the
 /// engine's answers carry the content security policy. The paginator script lays each
-/// document out in pages and talks to the reader in JSON messages.
+/// document out in pages and talks to the reader in JSON messages. A main document the engine
+/// does not serve never replaces the page shown, and only the book's own documents keep a place
+/// (<see cref="NovelCross"/>).
 /// </summary>
 sealed class NovelView : Grid
 {
@@ -29,10 +31,12 @@ sealed class NovelView : Grid
     readonly TextBlock noteText;
     readonly Button noteClose;
     NovelOpenView? book;
+    NovelCross cross = new([], "", "");
     bool ready, failed, closed, resting;
+    /// <summary>Main documents refused whose navigations have not ended: they end with no failure to show.</summary>
+    int refusals;
     CoreWebView2Environment? made;
     (string Url, string? Fragment)? pendingLoad;
-    string currentUrl = "";
 
     /// <summary>The document's page and how many it has, as the paginator last said.</summary>
     public int Page { get; private set; }
@@ -139,7 +143,12 @@ sealed class NovelView : Grid
             };
             core.NavigationCompleted += (_, e) =>
             {
-                currentUrl = core.Source;
+                // A document refused in OnResource ends its navigation with the page as it was.
+                if (refusals > 0)
+                {
+                    refusals--;
+                    return;
+                }
                 // A document that didn't load never says ready, and the reader would wait on it.
                 if (!e.IsSuccess && e.WebErrorStatus != CoreWebView2WebErrorStatus.OperationCanceled)
                     Failed($"a book document didn't load: {e.WebErrorStatus}");
@@ -262,6 +271,19 @@ sealed class NovelView : Grid
                 };
                 return (res, stream);
             });
+            // A main document that does not come, or comes empty, never replaces the page shown:
+            // a 204 ends the navigation with the page as it was, where an error's empty answer
+            // would lay out as a blank page at the book's address.
+            if (!closed && e.ResourceContext == CoreWebView2WebResourceContext.Document
+                && (answer is null || NovelCross.Refuses(answer.Status, answer.Body is BookBody.Bytes { Data.Length: 0 })))
+            {
+                body?.Dispose();
+                refusals++;
+                e.Response = env.CreateWebResourceResponse(null, 204, "No Content", "");
+                // After this answer: a load from here would start inside the request it replaces.
+                DispatcherQueue.TryEnqueue(() => Run(cross.Refused(uri)));
+                return;
+            }
             if (answer is null || closed)
             {
                 body?.Dispose();
@@ -313,10 +335,11 @@ sealed class NovelView : Grid
         HideEnd();
         Page = 0;
         Pages = 1;
-        if (open.Restore is { } at && at.Spine < open.Spine.Length)
-            Load(open.Spine[(int)at.Spine].Url, "kaeri:pos=" + PosText(at));
-        else
-            Load(open.Entry, null);
+        var opening = open.Restore is { } at && at.Spine < open.Spine.Length
+            ? open.Spine[(int)at.Spine].Url + "#kaeri:pos=" + NovelCross.PosText(at)
+            : open.Entry;
+        cross = new NovelCross([.. open.Spine.Select(s => (s.Url, s.Linear))], open.Entry, opening);
+        GoToUrl(opening);
     }
 
     public void Ground(global::Windows.UI.Color colour) => web.DefaultBackgroundColor = colour;
@@ -332,25 +355,21 @@ sealed class NovelView : Grid
         }
         var bare = url.Split('#')[0];
         var target = fragment is null ? url : bare + "#" + fragment;
-        currentUrl = bare;
-        web.CoreWebView2.Navigate(target);
+        web.CoreWebView2.Navigate(cross.Load(target));
     }
 
-    static string PosText(NovelPos pos) => $"{pos.Spine}/{string.Join('.', pos.Path)}/{pos.Offset}";
-
-    /// <summary>The index in the spine of the document showing.</summary>
-    int? CurrentSpine
+    /// <summary>What the book's cross says to do with the page.</summary>
+    void Run(NovelCross.Act act)
     {
-        get
+        switch (act)
         {
-            if (book is null)
-                return null;
-            var url = (ready ? web.CoreWebView2?.Source : null) ?? currentUrl;
-            var bare = url.Split('#')[0];
-            for (var i = 0; i < book.Spine.Length; i++)
-                if (book.Spine[i].Url == bare)
-                    return i;
-            return null;
+            case NovelCross.Act.Load load:
+                var parts = load.Url.Split('#', 2);
+                Load(parts[0], parts.Length > 1 ? parts[1] : null);
+                break;
+            case NovelCross.Act.End:
+                ShowEnd();
+                break;
         }
     }
 
@@ -462,10 +481,10 @@ sealed class NovelView : Grid
         if (book is null)
             return;
         HideEnd();
-        if (CurrentSpine == (int)pos.Spine)
-            Call($"window.kaeriReader && window.kaeriReader.goToPos('{PosText(pos)}', 'jump')");
+        if (cross.Index(cross.Shown) == (int)pos.Spine)
+            Call($"window.kaeriReader && window.kaeriReader.goToPos('{NovelCross.PosText(pos)}', 'jump')");
         else if (pos.Spine < book.Spine.Length)
-            Load(book.Spine[(int)pos.Spine].Url, "kaeri:pos=" + PosText(pos));
+            Load(book.Spine[(int)pos.Spine].Url, "kaeri:pos=" + NovelCross.PosText(pos));
     }
 
 #if KAERI_TESTING
@@ -528,22 +547,24 @@ sealed class NovelView : Grid
                 case "ready":
                     // A new document starts with no input of its own: it is told again.
                     inputSent = null;
-                    Paged(root);
+                    Paged(root, ready: true);
                     SyncInput();
                     break;
                 case "page":
-                    Paged(root);
+                    Paged(root, ready: false);
                     break;
                 case "layout":
                     Page = Int(root, "page");
                     Pages = Math.Max(Int(root, "pages"), 1);
                     owner.PositionChanged();
                     break;
+                // Past the last page of a document: the next one in the spine, or the end page;
+                // before the first, the previous one.
                 case "end":
-                    Next();
+                    Run(cross.Next());
                     break;
                 case "start":
-                    Previous();
+                    Run(cross.Previous());
                     break;
                 case "tap":
                     if (root.TryGetProperty("x", out var x) && x.ValueKind == JsonValueKind.Number)
@@ -573,10 +594,8 @@ sealed class NovelView : Grid
         }
     }
 
-    void Paged(JsonElement root)
+    void Paged(JsonElement root, bool ready)
     {
-        Page = Int(root, "page");
-        Pages = Math.Max(Int(root, "pages"), 1);
         if (!root.TryGetProperty("pos", out var pos) || pos.ValueKind != JsonValueKind.Object)
             return;
         var path = new List<uint>();
@@ -585,6 +604,16 @@ sealed class NovelView : Grid
                 if (item.TryGetUInt32(out var v))
                     path.Add(v);
         var place = new NovelPos((uint)Int(pos, "spine"), (uint)Int(pos, "offset"), [.. path]);
+        var spine = Int(root, "spine");
+        var act = ready ? cross.Ready(web.CoreWebView2?.Source, spine, place) : cross.Turned(spine, place);
+        // A page that is not the book's keeps nothing, and the book goes back to its last place.
+        if (act is NovelCross.Act.Load or NovelCross.Act.Stay)
+        {
+            Run(act);
+            return;
+        }
+        Page = Int(root, "page");
+        Pages = Math.Max(Int(root, "pages"), 1);
         var how = Str(root, "how") switch
         {
             "swipe" => TurnHow.Swipe,
@@ -593,41 +622,12 @@ sealed class NovelView : Grid
             "turn" => TurnHow.Turn,
             _ => TurnHow.Jump,
         };
-        Reader.NovelAt(place, Page, Pages, how);
+        if (act is NovelCross.Act.Keep)
+            Reader.NovelAt(place, Page, Pages, how);
         owner.PositionChanged();
         owner.NovelPaintedNow(this);
         if (Str(root, "type") == "page")
             owner.NovelTurned(this);
-    }
-
-    /// <summary>Past the last page of a document: the next one in the spine, or the end page.</summary>
-    void Next()
-    {
-        if (book is null || CurrentSpine is not { } at)
-            return;
-        for (var i = at + 1; i < book.Spine.Length; i++)
-        {
-            if (book.Spine[i].Linear)
-            {
-                Load(book.Spine[i].Url, null);
-                return;
-            }
-        }
-        ShowEnd();
-    }
-
-    void Previous()
-    {
-        if (book is null || CurrentSpine is not { } at)
-            return;
-        for (var i = at - 1; i >= 0; i--)
-        {
-            if (book.Spine[i].Linear)
-            {
-                Load(book.Spine[i].Url, "kaeri:end");
-                return;
-            }
-        }
     }
 
     /// <summary>
@@ -664,7 +664,7 @@ sealed class NovelView : Grid
         Call($"window.kaeriReader && window.kaeriReader.input && window.kaeriReader.input({how})");
     }
 
-    /// <summary>Only links inside the book are followed; a footnote shows over the page.</summary>
+    /// <summary>Only links to the book's own files are followed; a footnote shows over the page.</summary>
     void Link(JsonElement root)
     {
         var noteWords = Str(root, "note");
@@ -688,11 +688,8 @@ sealed class NovelView : Grid
             ReaderSpeech.Say(note, noteWords, "kaeri-reader-note");
             return;
         }
-        if (Bool(root, "internal") && Str(root, "href") is { Length: > 0 } href && href.StartsWith(Scheme + "://", StringComparison.OrdinalIgnoreCase))
-        {
-            var parts = href.Split('#', 2);
-            Load(parts[0], parts.Length > 1 ? parts[1] : null);
-        }
+        if (Str(root, "href") is { Length: > 0 } href)
+            Run(cross.Link(href, Bool(root, "internal")));
     }
 
     /// <summary>The direction pages run: right to left for a vertical Japanese book.</summary>
