@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
@@ -40,6 +41,7 @@ class ChapterFailedWidthTest {
 
     private val context: Context = ApplicationProvider.getApplicationContext()
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Test
     fun the_buttons_keep_to_a_sheets_width_centred_on_a_wide_screen() {
         val state = ReaderState(failure = ReadingFailure.Offline, openingChapter = ReaderFixtures.chapter())

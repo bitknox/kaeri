@@ -181,6 +181,15 @@ data class ReaderState(
     val chapter: ChapterId? get() = view?.chapter?.id
 
     /**
+     * Whether the open chapter is already a file on this device, as a picked folder's books are:
+     * the reader then offers no download for it. The engine marks the row; the series' chapter
+     * list is asked too, as it marks the rows the Contents shows.
+     */
+    val chapterOnDevice: Boolean get() = view?.chapter?.let { open ->
+        open.onDevice || volumes.any { group -> group.chapters.any { it.id == open.id && it.onDevice } }
+    } ?: false
+
+    /**
      * The chapter the end page leads into: the engine's answer once the end page is said, which
      * offline is the next one on the device or none. Until then the one after this online, and
      * offline none, since only the engine knows which chapter is on the device: a strip flung to
