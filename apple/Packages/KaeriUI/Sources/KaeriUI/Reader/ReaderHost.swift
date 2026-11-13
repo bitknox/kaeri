@@ -100,9 +100,11 @@ private struct CloseKey: NSViewRepresentable {
 /// The menu bar's keys as they are now. SwiftUI hands a changed item to AppKit's menu only as
 /// that menu opens, so a key that moves from one item to another, as ⌘L does from View to Go
 /// when a book opens, stays with the old item until the menu is opened, and AppKit gives the
-/// key to that item, dimmed or not. So after the reader's keys change, the next key brings every
-/// menu up to date first, as opening it would.
-private struct MenuKeys: NSViewRepresentable {
+/// key to that item, dimmed or not. So once the reader's keys change, every menu is brought up
+/// to date as opening it would, as soon as the change is drawn, or before the next key if that
+/// comes first. The menu bar is also read without a menu being opened, as the Help menu's search
+/// reads it, so a closed book's Go menu must not wait for a key to dim.
+struct MenuKeys: NSViewRepresentable {
     /// What the menus' keys hang on: the View menu's while no book is open, the Go menu's.
     struct Keys: Equatable {
         var reading: Bool
@@ -116,27 +118,41 @@ private struct MenuKeys: NSViewRepresentable {
         var keys: Keys?
         /// The keys as the menu bar last had them.
         var held: Keys?
+        /// Brings every menu up to date.
+        var refresh: @MainActor () -> Void = { MenuKeys.update() }
+        /// Runs its work once the change that called it is drawn: the menus are not touched in
+        /// the middle of SwiftUI's update.
+        var later: (@escaping @MainActor () -> Void) -> Void = { work in Task { @MainActor in work() } }
+
+        /// The keys as the window has them now: the menus follow once the change is drawn.
+        func follow(_ keys: Keys) {
+            self.keys = keys
+            guard keys != held else { return }
+            later { [weak self] in self?.catchUp() }
+        }
+
+        /// The menus brought up to the keys, unless they already are.
+        func catchUp() {
+            guard held != keys else { return }
+            held = keys
+            refresh()
+        }
     }
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
     func makeNSView(context: Context) -> NSView {
         let coordinator = context.coordinator
-        coordinator.keys = keys
+        coordinator.follow(keys)
         coordinator.monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            MainActor.assumeIsolated {
-                if coordinator.held != coordinator.keys {
-                    coordinator.held = coordinator.keys
-                    Self.update()
-                }
-            }
+            MainActor.assumeIsolated { coordinator.catchUp() }
             return event
         }
         return NSView()
     }
 
     func updateNSView(_ view: NSView, context: Context) {
-        context.coordinator.keys = keys
+        context.coordinator.follow(keys)
     }
 
     static func dismantleNSView(_ view: NSView, coordinator: Coordinator) {
