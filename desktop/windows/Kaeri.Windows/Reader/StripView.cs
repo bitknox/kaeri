@@ -239,6 +239,10 @@ sealed class StripView : Grid
                 Canvas.SetZIndex(marker, 0);
                 y += MarkerHeight;
             }
+            // The strip's first row of credit pages starts under the top row, where its button
+            // can be reached: the top row drags the window.
+            if (section == sections[0] && section.Marker is null && section.Lead is not null)
+                y += ReaderChrome.TopHeight;
             y = PlaceCredits(section.Lead, y);
             section.Tops.Clear();
             foreach (var part in section.Parts)
@@ -609,7 +613,8 @@ sealed class StripView : Grid
         if (atEnd)
         {
             restoring = false;
-            scroll.ChangeView(null, Canvas.GetTop(block), null, !Motion.Enabled || owner.PaperMode);
+            // The first page's caption lands under the top row, not behind it.
+            scroll.ChangeView(null, Math.Max(0, Canvas.GetTop(block) - ReaderChrome.TopHeight), null, !Motion.Enabled || owner.PaperMode);
         }
         return true;
     }

@@ -22,7 +22,9 @@ sealed class ReaderChrome
 {
     readonly ReaderOverlay owner;
 
-    public Grid Top { get; } = new() { Height = 48, VerticalAlignment = VerticalAlignment.Top };
+    /// <summary>The top row's height: Back, the title that drags the window, the caption buttons.</summary>
+    public const double TopHeight = 48;
+    public Grid Top { get; } = new() { Height = TopHeight, VerticalAlignment = VerticalAlignment.Top };
     public Grid DragArea { get; } = new() { Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent) };
     public Border Group { get; } = new();
     public Border Notice { get; } = new() { Visibility = Visibility.Collapsed };
@@ -119,6 +121,7 @@ sealed class ReaderChrome
         scrubber.AddHandler(UIElement.PointerCaptureLostEvent, new PointerEventHandler((_, _) => EndScrub()), true);
         scrubber.ValueChanged += (_, e) =>
         {
+            PlaceTicks();
             if (setting)
                 return;
             ShowNumbers((int)e.NewValue);
@@ -315,9 +318,9 @@ sealed class ReaderChrome
         CreditPill.Resources["ButtonBorderBrushPointerOver"] = Group.BorderBrush;
         CreditPill.Resources["ButtonBorderBrushPressed"] = Group.BorderBrush;
         noticeGhost.Foreground = silk;
-        foreach (var (_, mark) in ticks)
-            mark.Fill = haze;
         tickBrush = haze;
+        tickFilled = new SolidColorBrush(palette.Ground);
+        PlaceTicks();
         var res = scrubber.Resources;
         res["SliderTrackFill"] = new SolidColorBrush(ReaderPalette.WithAlpha(palette.Silk, 0.25));
         res["SliderTrackFillPointerOver"] = new SolidColorBrush(ReaderPalette.WithAlpha(palette.Silk, 0.3));
@@ -331,7 +334,8 @@ sealed class ReaderChrome
         res["SliderOuterThumbBackground"] = new SolidColorBrush(palette.Raised);
     }
 
-    Brush? tickBrush;
+    /// <summary>A tick on the empty track in haze, on the filled part in the ground, so it keeps its contrast on silk.</summary>
+    Brush? tickBrush, tickFilled;
 
     /// <summary>The pill sits under the top row while the chrome shows, 44 from the top otherwise.</summary>
     public void PillUnder(bool chrome) => CreditPill.Margin = new Thickness(0, chrome ? 56 : 44, 16, 0);
@@ -487,8 +491,8 @@ sealed class ReaderChrome
     }
 
     /// <summary>
-    /// The parts' ticks on the track, 2 by 9 in haze: where each part after the first starts and
-    /// where a missing part would, at scrubber values from 1.
+    /// The parts' ticks on the track, 2 by 9 and centred on it: where each part after the first
+    /// starts and where a missing part would, at scrubber values from 1.
     /// </summary>
     public void Ticks(IReadOnlyList<double> values)
     {
@@ -511,14 +515,21 @@ sealed class ReaderChrome
         if (scrubber.ActualWidth <= 0)
             return;
         const double thumb = 20;
+        var at = scrubber.Value;
         foreach (var (value, mark) in ticks)
         {
             var fraction = total <= 1 ? 0 : Math.Clamp((value - 1) / (total - 1), 0, 1);
             if (reversed)
                 fraction = 1 - fraction;
             Canvas.SetLeft(mark, thumb / 2 + fraction * (scrubber.ActualWidth - thumb) - mark.Width / 2);
-            // Under the track, as the board draws them.
-            Canvas.SetTop(mark, scrubber.ActualHeight / 2 + 4);
+            // Centred on the track, as the board draws them.
+            Canvas.SetTop(mark, (scrubber.ActualHeight - mark.Height) / 2);
+            mark.Fill = value <= at ? tickFilled ?? tickBrush : tickBrush;
+            // The thumb covers a tick it stands on; the layer is drawn over the slider.
+            var thumbFraction = total <= 1 ? 0 : Math.Clamp((at - 1) / (total - 1), 0, 1);
+            if (reversed)
+                thumbFraction = 1 - thumbFraction;
+            mark.Opacity = Math.Abs(fraction - thumbFraction) * (scrubber.ActualWidth - thumb) < thumb / 2 ? 0 : 1;
         }
     }
 

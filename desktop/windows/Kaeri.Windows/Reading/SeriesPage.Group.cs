@@ -14,6 +14,12 @@ public sealed partial class SeriesPage
 {
     /// <summary>The parts of the page a group pick redraws, which crossfade when the series comes back.</summary>
     readonly HashSet<string> groupPicked = [];
+    /// <summary>A pick redraws the row: the keys go back to its Change, which has new words.</summary>
+    bool refocusGroup;
+#if KAERI_TESTING
+    /// <summary>Shots: the next Group row drawn opens its picker.</summary>
+    internal static bool ShotGroupPicker { get; set; }
+#endif
 
     /// <summary>"Group · Lanternlight Scans · most chapters", with Change opening the picker.</summary>
     void AddGroup(BookEditionRow edition)
@@ -36,6 +42,22 @@ public sealed partial class SeriesPage
         style.Setters.Add(new Setter(Control.CornerRadiusProperty, new CornerRadius(8)));
         flyout.FlyoutPresenterStyle = style;
         change.Click += (_, _) => flyout.ShowAt(change);
+#if KAERI_TESTING
+        if (ShotGroupPicker)
+        {
+            ShotGroupPicker = false;
+            change.Loaded += async (_, _) =>
+            {
+                await System.Threading.Tasks.Task.Delay(600);
+                flyout.ShowAt(change);
+            };
+        }
+#endif
+        if (refocusGroup)
+        {
+            refocusGroup = false;
+            change.Loaded += (_, _) => change.Focus(FocusState.Programmatic);
+        }
         Grid.SetColumn(change, 1);
         row.Children.Add(change);
         side.Children.Add(row);
@@ -79,6 +101,7 @@ public sealed partial class SeriesPage
                 return;
             groupPicked.Add("side");
             groupPicked.Add("chapters");
+            refocusGroup = true;
             ctx.Known.Reading.ChooseGroup(work, pick.Group);
         }, pickOnArrow: false);
         // The keys start on the choice in use.

@@ -515,6 +515,10 @@ public sealed partial class SeriesPage : Page
         if (series.Edition is { } edition)
             AddSide(T.SeriesReadingFrom, SeriesWords.Source(edition, Math.Max(0, editions.Length - 1)), T.SeriesChange,
                 () => _ = SeriesDialogs.ReadFrom(ctx, XamlRoot, work));
+        // The group, when the source has more than one to read a chapter from: under Reading
+        // from, before the trackers, as the board orders them.
+        if (GroupPicker.Offered(series.Edition))
+            AddGroup(series.Edition!);
         var followed = tracking.Where(t => t.Mapping is TrackerMapping.Mapped).ToList();
         if (followed.Count > 0)
             AddSide(SeriesWords.Names([.. followed.Select(t => SeriesWords.Tracker(t.Tracker))]), SeriesWords.Progress(followed[0], series), T.SeriesTracking,
@@ -522,9 +526,6 @@ public sealed partial class SeriesPage : Page
         else if (tracking.Length > 0)
             AddSide(SeriesWords.Names([.. tracking.Select(t => SeriesWords.Tracker(t.Tracker))]), T.SeriesTrackerAsk, T.SeriesChange,
                 () => _ = SeriesDialogs.Tracking(ctx, XamlRoot, work));
-        // The group, when the source has more than one to read a chapter from.
-        if (GroupPicker.Offered(series.Edition))
-            AddGroup(series.Edition!);
         if (series.AskWhereStopped is { } sent)
             AddSide(T.SendTitle, T.StopNote(SeriesWords.Device(ctx, sent.Target)), T.StopNoteAction,
                 () => _ = StoppedDialog.Show(ctx, XamlRoot, series, sent));

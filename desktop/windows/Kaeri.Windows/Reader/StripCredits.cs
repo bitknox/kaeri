@@ -203,9 +203,14 @@ sealed class StripCredits : Grid
         opening = true;
         if (line is not null && row.Children.Count > 1 && row.Children[1] is FrameworkElement caption)
         {
+            var focused = line.FocusState != FocusState.Unfocused;
             caption.Visibility = Visibility.Visible;
             line.IsHitTestVisible = false;
+            line.IsTabStop = false;
             AutomationProperties.SetAccessibilityView(line, Microsoft.UI.Xaml.Automation.Peers.AccessibilityView.Raw);
+            // Show had the keyboard: it goes on to the caption's Not a credit page, not to nowhere.
+            if (focused && captions.Count > 0)
+                captions[0].Not.Focus(FocusState.Keyboard);
             if (animate)
                 Motion.Crossfade(line, caption);
             else
