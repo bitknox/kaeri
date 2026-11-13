@@ -97,4 +97,19 @@ struct SeriesAfterReadingTests {
         model.observe(.reader(.closed(session: 1)))
         #expect(chapterAsks(box) == ["pages.example"])
     }
+
+    /// The whole store follows the reader once: a close asks for the series once and for the list
+    /// of the edition in use not at all, and a chapter read asks once more.
+    @Test func theStoreAsksOnceForAClose() {
+        let store = AppStore()
+        let box = Box()
+        store.reading.send = { box.commands.append($0) }
+        store.apply(.reading(.chapters(work: WorkId(work), edition: nil, volumes: [], failure: nil)))
+        store.apply(.reader(.opened(view())))
+        store.apply(.reader(.closed(session: 1)))
+        #expect(asks(box) == 1)
+        #expect(chapterAsks(box).isEmpty)
+        store.apply(.reader(.chapterRead(work: WorkId(work), chapter: ChapterId("1"), trackers: [])))
+        #expect(asks(box) == 2)
+    }
 }
