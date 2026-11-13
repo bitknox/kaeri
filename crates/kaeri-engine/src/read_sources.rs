@@ -526,6 +526,9 @@ impl BookSources {
             return;
         };
         self.flag(&server.id).store(server.signed_out, Ordering::Relaxed);
+        if !server.signed_out {
+            self.downloads.signed_in(&self.store, &server.id, kaeri_store::now());
+        }
         let libraries = self.server_meta(&server.id).libraries;
         let built = kaeri_bookserver::source_with(
             &self.client,

@@ -12,7 +12,7 @@ use std::{
 
 use kaeri_core::{books::BookHints, config::Paths};
 use kaeri_model::{book_sources::BookServerRow, event::Event};
-use kaeri_store::{Store, book_sources::BookServer};
+use kaeri_store::{Store, book_downloads::BookDownloadState, book_sources::BookServer};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::TcpListener,
@@ -517,4 +517,45 @@ async fn a_kavita_sign_in_that_cannot_be_renewed_is_signed_out_until_signed_in_a
 fn the_waits_are_30_s_2_min_10_min_then_hourly() {
     let waits: Vec<i64> = (1..=6).map(retry_in).collect();
     assert_eq!(waits, [30, 120, 600, 3_600, 3_600, 3_600]);
+}
+
+#[tokio::test]
+async fn downloads_cut_for_want_of_a_sign_in_go_back_in_the_queue_once_signed_in_again() {
+    let kit = kit(Flavour::Kavita).await;
+    let store = kit.store().clone();
+    let failed = |chapter: &str, source: &str, error: &str| {
+        let ask = kaeri_store::book_downloads::BookDownloadAsk {
+            work: WORK,
+            chapter,
+            source_id: source,
+            version_label: None,
+            keep_ready: false,
+        };
+        store.queue_book_download(&ask, 1).unwrap();
+        let id = store.book_download(WORK, chapter).unwrap().unwrap().id;
+        store.book_download_failed(id, error, 2).unwrap();
+    };
+    failed("c1", "k", "sign_in:Home shelf");
+    failed("c2", "k", "sign_in:Home shelf");
+    failed("c3", "k", "page:500");
+    failed("c4", "other", "sign_in:Other shelf");
+    let state = |chapter: &str| store.book_download(WORK, chapter).unwrap().unwrap().state;
+
+    // Signed out, nothing goes back.
+    let server = store.book_server("k").unwrap().unwrap();
+    store.put_book_server(&BookServer { signed_out: true, ..server.clone() }).unwrap();
+    let out = sources_at(kit.dir.path(), store.clone());
+    assert!(!out.downloads.take_requeued());
+    assert_eq!(state("c1"), BookDownloadState::Failed);
+
+    // Signed in again: the server's fetches that wanted it are queued, and only those.
+    store.put_book_server(&BookServer { signed_out: false, ..server }).unwrap();
+    let back = sources_at(kit.dir.path(), store.clone());
+    assert!(back.downloads.take_requeued());
+    assert!(!back.downloads.take_requeued(), "the queue is started for them once");
+    assert_eq!(state("c1"), BookDownloadState::Queued);
+    assert_eq!(state("c2"), BookDownloadState::Queued);
+    assert_eq!(store.book_download(WORK, "c1").unwrap().unwrap().error, None);
+    assert_eq!(state("c3"), BookDownloadState::Failed);
+    assert_eq!(state("c4"), BookDownloadState::Failed);
 }
