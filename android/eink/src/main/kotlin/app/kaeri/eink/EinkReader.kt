@@ -511,7 +511,7 @@ fun EinkReader(
             if (guide.up && shownGuide != null && !waiting) EinkTapGuide(shownGuide, taps.swipesTurn, rtl = direction.rightToLeft)
             if (chrome && view != null && layer != EinkLayer.Contents) {
             val large = einkLargePanel
-            val onDownload = actions.onDownload?.takeIf { large && view.demoCredit == null }
+            val onDownload = actions.onDownload?.takeIf { large && view.demoCredit == null && !state.chapterOnDevice }
                 EinkTopBar(
                     title = view.title,
                     chapter = view.chapter,
