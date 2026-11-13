@@ -2,7 +2,9 @@
 // the 40% forward zone and the upper page button, the folio in the margin, the bars on a middle
 // tap, the page between chapters in the flow, no full refresh until the person asks for one, Screen
 // mode set while the reader is open, and the reader's own settings and Contents, which Back closes
-// before it closes the reader, and which keys reach and leave without losing the reader. A chapter
+// before it closes the reader, one step at a time, and which keys reach and leave without losing the
+// reader; with the bars up the D-pad moves between their controls and stays in them and in the
+// sheets, and the focus comes back to the control that opened a sheet. A chapter
 // asked for keeps its control pressed, then names itself loading, and is asked for once; the series
 // title shows over a first chapter that is slow to open.
 
@@ -23,6 +25,8 @@ import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.requestFocus
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.SemanticsNodeInteraction
+import androidx.compose.ui.semantics.SemanticsNode
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.graphics.asAndroidBitmap
 import app.kaeri.engine.ffi.einkPaint
@@ -321,14 +325,6 @@ class EinkReaderTest {
     fun settings_and_contents_are_the_readers_own_and_back_closes_them_first() {
         var closed = 0
         open(onBack = { closed++ })
-        fun middle() {
-            compose.onRoot().performTouchInput { click(androidx.compose.ui.geometry.Offset(width * 0.55f, height * 0.5f)) }
-            compose.waitForIdle()
-        }
-        fun back() {
-            compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
-            compose.waitForIdle()
-        }
         middle()
         compose.onNodeWithText("Settings").performClick()
         compose.waitForIdle()
@@ -336,15 +332,24 @@ class EinkReaderTest {
         assertEquals(Refresh.REGION, fake.requests.last().refresh)
         back()
         assertTrue(compose.onAllNodes(hasText("Reader settings")).fetchSemanticsNodes().isEmpty())
+        // Back goes one step: the sheet to the bars, then the bars.
+        compose.onNodeWithText("Page 1 of 3").assertIsDisplayed()
+        assertEquals(Refresh.REGION, fake.requests.last().refresh)
+        back()
+        assertTrue(compose.onAllNodes(hasText("Page 1 of 3")).fetchSemanticsNodes().isEmpty())
         assertEquals(0, closed)
 
         middle()
         compose.onNodeWithText("Contents").performClick()
         compose.waitForIdle()
         assertEquals(Refresh.FAST, fake.requests.last().refresh)
+        assertTrue(compose.onAllNodes(hasText("Page 1 of 3")).fetchSemanticsNodes().isEmpty())
         back()
-        assertTrue(compose.onAllNodes(hasText("Contents")).fetchSemanticsNodes().isEmpty())
+        // Contents gives the page back under the bars it was opened from.
+        compose.onNodeWithText("Page 1 of 3").assertIsDisplayed()
         assertEquals(Refresh.PARTIAL, fake.requests.last().refresh)
+        back()
+        assertTrue(compose.onAllNodes(hasText("Page 1 of 3")).fetchSemanticsNodes().isEmpty())
         assertEquals(0, closed)
 
         // With nothing over the page, Back closes the reader.
@@ -352,44 +357,176 @@ class EinkReaderTest {
         assertEquals(1, closed)
     }
 
+    private fun middle() {
+        compose.onRoot().performTouchInput { click(androidx.compose.ui.geometry.Offset(width * 0.55f, height * 0.5f)) }
+        compose.waitForIdle()
+    }
+
+    private fun key(key: Key) {
+        compose.onRoot().performKeyInput { pressKey(key) }
+        compose.waitForIdle()
+    }
+
+    private fun back() {
+        compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        compose.waitForIdle()
+    }
+
+    private fun shows(words: String) = compose.onAllNodes(hasText(words)).fetchSemanticsNodes().isNotEmpty()
+
+    /** The one node with the focus. */
+    private fun focused(): SemanticsNode = compose.onAllNodes(isFocused()).fetchSemanticsNodes().single()
+
+    private fun focusedOn(words: String): Boolean = compose.onAllNodes(isFocused() and hasText(words)).fetchSemanticsNodes().isNotEmpty()
+
     @OptIn(ExperimentalComposeUiApi::class)
+    private fun keyboard() = compose.runOnIdle { modes!!.requestInputMode(InputMode.Keyboard) }
+
     @Test
     fun keys_reach_the_settings_sheet_and_never_lose_the_reader() {
         open()
-        fun middle() {
-            compose.onRoot().performTouchInput { click(androidx.compose.ui.geometry.Offset(width * 0.55f, height * 0.5f)) }
-            compose.waitForIdle()
-        }
-        fun key(key: Key) {
-            compose.onRoot().performKeyInput { pressKey(key) }
-            compose.waitForIdle()
-        }
-        fun shows(words: String) = compose.onAllNodes(hasText(words)).fetchSemanticsNodes().isNotEmpty()
-
-        // A sheet opened by touch leaves the keys with the reader: Escape closes it and the bars.
+        // A sheet opened by touch leaves the keys with the reader: Escape closes it back to the bars,
+        // and then the bars.
         middle()
         compose.onNodeWithText("Settings").performClick()
         compose.waitForIdle()
         assertTrue(shows("Reader settings"))
         key(Key.Escape)
         assertTrue(!shows("Reader settings"))
+        assertTrue(shows("Page 1 of 3"))
+        key(Key.Escape)
         assertTrue(!shows("Page 1 of 3"))
 
         // With keys: Enter shows the bars, Enter on a focused Settings opens the sheet and the focus
-        // goes into it, and Escape still closes the sheet and the bars, leaving the keys with the reader.
+        // goes into it, Escape closes the sheet back to Settings, and Escape again the bars, leaving
+        // the keys with the reader.
         key(Key.Enter)
         assertTrue(shows("Page 1 of 3"))
-        compose.runOnIdle { modes!!.requestInputMode(InputMode.Keyboard) }
+        keyboard()
         compose.onNodeWithText("Settings").requestFocus().assertIsFocused()
         key(Key.Enter)
         assertTrue(shows("Reader settings"))
-        assertTrue(compose.onAllNodes(isFocused()).fetchSemanticsNodes().isNotEmpty())
-        assertTrue(compose.onAllNodes(isFocused() and hasText("Settings")).fetchSemanticsNodes().isEmpty())
+        assertTrue(!focusedOn("Settings"))
+        assertTrue(focused().boundsInRoot.top >= compose.onNodeWithText("Reader settings").fetchSemanticsNode().boundsInRoot.top - 40f)
         key(Key.Escape)
         assertTrue(!shows("Reader settings"))
+        assertTrue(focusedOn("Settings"))
+        key(Key.Escape)
         assertTrue(!shows("Page 1 of 3"))
         key(Key.Enter)
         assertTrue(shows("Page 1 of 3"))
+    }
+
+    @Test
+    fun with_the_bars_up_the_d_pad_moves_between_their_controls_and_turns_again_once_they_hide() {
+        open(zones = false)
+        keyboard()
+        val screen = compose.onRoot().fetchSemanticsNode().boundsInRoot
+
+        // Enter shows the bars with the focus on Contents, the top bar's first control that stays in the reader.
+        key(Key.Enter)
+        assertTrue(shows("Page 1 of 3"))
+        assertTrue(focusedOn("Contents"))
+        val contents = focused().boundsInRoot
+
+        // Down goes to the bottom bar and Up back to the top one; nothing turns.
+        key(Key.DirectionDown)
+        assertTrue(focused().boundsInRoot.top > screen.height / 2)
+        key(Key.DirectionUp)
+        assertTrue(focused().boundsInRoot.bottom < screen.height / 2)
+        // Left and Right go along the top bar: Contents and Back.
+        repeat(4) { if (!focusedOn("Contents")) key(Key.DirectionRight) }
+        assertTrue(focusedOn("Contents"))
+        key(Key.DirectionLeft)
+        assertTrue(focused().boundsInRoot.right <= contents.left)
+        assertTrue(focused().config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.ContentDescription).orEmpty().isNotEmpty())
+        // At the bars' edge the focus stays put, and the bars stay up.
+        val edge = focused().id
+        key(Key.DirectionLeft)
+        key(Key.DirectionUp)
+        assertEquals(edge, focused().id)
+        assertTrue(shows("Page 1 of 3"))
+        // Along the bottom bar to Settings, the sheet, and back to Settings.
+        key(Key.DirectionDown)
+        repeat(6) { if (!focusedOn("Settings")) key(Key.DirectionRight) }
+        repeat(6) { if (!focusedOn("Settings")) key(Key.DirectionLeft) }
+        assertTrue(focusedOn("Settings"))
+        assertTrue(shown().none { it.leaf != 0u })
+
+        // The sheet keeps the D-pad: no arrow takes the focus out of it or turns the page.
+        key(Key.Enter)
+        assertTrue(shows("Reader settings"))
+        val sheetTop = compose.onNodeWithText("Reader settings").fetchSemanticsNode().boundsInRoot.top - 40f
+        for (arrow in listOf(Key.DirectionUp, Key.DirectionUp, Key.DirectionLeft, Key.DirectionDown, Key.DirectionRight, Key.DirectionUp, Key.Tab)) {
+            key(arrow)
+            assertTrue("$arrow left the sheet", focused().boundsInRoot.top >= sheetTop)
+        }
+        assertTrue(shows("Reader settings"))
+        assertTrue(shown().none { it.leaf != 0u })
+        // Back closes the sheet back to the control that opened it.
+        back()
+        assertTrue(!shows("Reader settings"))
+        assertTrue(focusedOn("Settings"))
+
+        // Back hides the bars, and the D-pad turns the page again.
+        back()
+        assertTrue(!shows("Page 1 of 3"))
+        key(Key.DirectionDown)
+        assertEquals(1u, shown().last().leaf)
+    }
+
+    @OptIn(ExperimentalComposeUiApi::class)
+    @Test
+    fun bars_shown_by_touch_take_no_focus_until_an_arrow_comes() {
+        open(zones = false)
+        middle()
+        assertTrue(shows("Page 1 of 3"))
+        // Touch: no control has the focus, so no ring shows.
+        assertTrue(!focusedOn("Contents"))
+        assertTrue(!focusedOn("Settings"))
+        // The first arrow goes to Contents and turns nothing.
+        keyboard()
+        key(Key.DirectionDown)
+        assertTrue(focusedOn("Contents"))
+        assertTrue(shown().none { it.leaf != 0u })
+        // A middle tap hides the bars, and the arrows turn again.
+        middle()
+        assertTrue(!shows("Page 1 of 3"))
+        key(Key.DirectionDown)
+        assertEquals(1u, shown().last().leaf)
+    }
+
+    @Test
+    fun contents_keeps_the_d_pad_and_back_returns_the_focus_to_its_button() {
+        open(zones = false)
+        keyboard()
+        key(Key.Enter)
+        assertTrue(focusedOn("Contents"))
+        key(Key.Enter)
+        val rows = List(60) { EinkFixtures.chapter(id = "local:lantern-stair/${it + 1}", number = "${it + 1}", title = null) }
+        session.apply(Event.Reading(ReadingEvent.Chapters(EinkFixtures.WORK, null, listOf(VolumeGroup(null, null, rows, false)), null)))
+        compose.waitForIdle()
+        fun listPage(n: Int) = compose.onAllNodes(hasText("Page $n of", substring = true)).fetchSemanticsNodes().isNotEmpty()
+        assertTrue(listPage(2))
+        // The chapter being read has the focus, and the D-pad moves along the list without turning it.
+        assertTrue(focusedOn("Reading"))
+        val reading = focused().boundsInRoot
+        key(Key.DirectionDown)
+        assertTrue(focused().boundsInRoot.top > reading.top)
+        key(Key.DirectionUp)
+        key(Key.DirectionUp)
+        assertTrue(focused().boundsInRoot.top < reading.top)
+        assertTrue(listPage(2))
+        // A page key turns the list, and the focus goes to the new page's first chapter.
+        key(Key.PageDown)
+        assertTrue(listPage(3))
+        assertTrue(compose.onAllNodes(isFocused()).fetchSemanticsNodes().size == 1)
+        assertTrue(focused().config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.Text).orEmpty().isNotEmpty())
+        // Back returns to the bars with the focus on Contents, and the reader's page never moved.
+        back()
+        assertTrue(shows("Page 1 of 3"))
+        assertTrue(focusedOn("Contents"))
+        assertEquals(0u, shown().last().leaf)
     }
 
     @Test

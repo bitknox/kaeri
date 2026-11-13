@@ -12,6 +12,10 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.IndicationNodeFactory
 import androidx.compose.foundation.interaction.FocusInteraction
+import androidx.compose.foundation.focusGroup
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
@@ -220,6 +224,22 @@ fun Modifier.einkInverted(on: Boolean): Modifier = if (!on) this else drawWithCo
  * and D-pad focus draws the focus mark round the row.
  */
 val EinkPressIndication: IndicationNodeFactory = EinkMark(RectangleShape, 0.dp, invertOnPress = true)
+
+/**
+ * A focus group the D-pad's arrows stay in, and with [tab] Tab and Shift Tab too: a move that
+ * would leave it leaves the focus where it is. Focus asked for elsewhere, as when a sheet opens
+ * or closes, still goes.
+ */
+fun Modifier.keepsArrows(tab: Boolean): Modifier = focusProperties {
+    onExit = {
+        val way = requestedFocusDirection
+        val arrow = way == FocusDirection.Up || way == FocusDirection.Down || way == FocusDirection.Left || way == FocusDirection.Right
+        if (arrow || (tab && (way == FocusDirection.Next || way == FocusDirection.Previous))) cancelFocusChange()
+    }
+}.focusGroup()
+
+/** Puts the focus here if it can go here now; a clickable cannot while the screen is in touch mode. */
+fun FocusRequester.tryFocus(): Boolean = runCatching { requestFocus(FocusDirection.Enter) }.getOrDefault(false)
 
 /**
  * The focus mark for keyboard and D-pad users, for any clickable on paper: a 3 dp ink ring along
