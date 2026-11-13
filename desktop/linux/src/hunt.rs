@@ -569,6 +569,48 @@ pub fn labels(widget: &gtk::Widget, out: &mut Vec<String>) {
     }
 }
 
+/// r8: every mapped text field under `widget`, with its text and, for a spin button, its value.
+fn editables(widget: &gtk::Widget, out: &mut Vec<String>) {
+    if !widget.is_mapped() {
+        return;
+    }
+    if let Some(spin) = widget.downcast_ref::<gtk::SpinButton>() {
+        out.push(format!("spin text={:?} value={}", spin.text(), spin.value()));
+        return;
+    }
+    if let Some(e) = widget.dynamic_cast_ref::<gtk::Editable>() {
+        out.push(format!("{} text={:?}", widget.type_().name(), e.text()));
+    }
+    let mut child = widget.first_child();
+    while let Some(next) = child {
+        editables(&next, out);
+        child = next.next_sibling();
+    }
+}
+
+/// r8: log keys that reach any popover under `widget`, since a popover's keys never pass the
+/// window's own controllers.
+fn keylog_popovers(widget: &gtk::Widget) {
+    if let Some(pop) = widget.downcast_ref::<gtk::Popover>() {
+        let keys = gtk::EventControllerKey::new();
+        keys.set_propagation_phase(gtk::PropagationPhase::Capture);
+        let name = describe(widget);
+        keys.connect_key_pressed(move |_, key, code, mods| {
+            tracing::info!(
+                "HUNT popkey {:?} code={code} mods={mods:?} in={name}",
+                key.name().map(|n| n.to_string())
+            );
+            glib::Propagation::Proceed
+        });
+        pop.add_controller(keys);
+    }
+    let mut child = widget.first_child();
+    while let Some(next) = child {
+        keylog_popovers(&next);
+        child = next.next_sibling();
+    }
+}
+
 fn screen_text(shell: &Rc<Shell>) -> String {
     let mut out = Vec::new();
     labels(shell.ctx.window.upcast_ref(), &mut out);
@@ -678,6 +720,9 @@ fn serve_requests(shell: &Rc<Shell>) {
                 let tag = ask.trim_start_matches("req-").to_owned();
                 probe(&shell, &format!("x {tag}"));
                 tracing::info!("HUNT x {tag} text: {}", screen_text(&shell));
+                let mut eds = Vec::new();
+                editables(shell.ctx.window.upcast_ref(), &mut eds);
+                tracing::info!("HUNT x {tag} edits: {}", eds.join(" | "));
                 shot(&shell, &format!("x-{tag}")).await;
             }
         }
@@ -2539,6 +2584,13 @@ fn keylog(shell: &Rc<Shell>) {
         }
     });
     window.add_controller(keys);
+    keylog_popovers(window.upcast_ref());
+    tracing::info!(
+        "HUNT gtk {}.{}.{}",
+        gtk::major_version(),
+        gtk::minor_version(),
+        gtk::micro_version()
+    );
     window.connect_fullscreened_notify(|w| {
         tracing::info!("HUNT fullscreen-> {} size={}x{}", w.is_fullscreen(), w.width(), w.height())
     });
