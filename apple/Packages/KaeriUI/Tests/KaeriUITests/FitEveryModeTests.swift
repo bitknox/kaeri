@@ -22,7 +22,7 @@ struct FitEveryModeTests {
     @Test func fitAsksThePagesToUndoTheirPinch() {
         for mode in [ReaderMode.paged, .vertical] {
             let model = model(mode)
-            ReaderScreen.zoom(model, 0)
+            ReaderActions.zoom(model, 0)
             #expect(model.pageZoomAsked?.step == 0, "\(mode)")
             #expect(model.stripFitAsked == 0, "\(mode)")
         }
@@ -30,7 +30,7 @@ struct FitEveryModeTests {
 
     @Test func fitAsksTheStripToUndoItsPinch() {
         let model = model(.strip)
-        ReaderScreen.zoom(model, 0)
+        ReaderActions.zoom(model, 0)
         #expect(model.stripFitAsked == 1)
         #expect(model.pageZoomAsked == nil)
     }
