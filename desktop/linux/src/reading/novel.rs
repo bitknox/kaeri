@@ -270,7 +270,8 @@ impl NovelView {
         let setup = format!("window.kaeriSetup = {{top: {HEAD_ROOM}}};\n{}", assets.script); // i18n-skip
         // QA: the probe runs before the paginator, so its first look is the bare page.
         let setup = if std::env::var_os("KAERI_QA_NOVEL_PROBE").is_some() {
-            format!("{}\n{setup}", include_str!("novel_probe.js"))
+            let unfix = std::env::var_os("KAERI_QA_UNFIX").is_some();
+            format!("window.kaeriQaUnfix = {unfix};\n{}\n{setup}", include_str!("novel_probe.js"))
         } else {
             setup
         };

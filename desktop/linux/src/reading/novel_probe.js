@@ -18,6 +18,15 @@
       nodeRects: all.length, nodeFirst: all.length ? [Math.round(all[0].left), Math.round(all[0].top)] : null,
       nodeLast: all.length ? [Math.round(all[all.length - 1].left), Math.round(all[all.length - 1].top)] : null };
   }
+  function box(cols) {
+    var d = document.createElementNS('http://www.w3.org/1999/xhtml', 'div');
+    d.style.cssText = 'position:fixed;left:0;top:0;width:200px;height:60px;column-fill:auto;column-gap:10px;overflow:hidden;font-size:16px;line-height:20px;visibility:hidden;' + cols;
+    d.textContent = new Array(120).join('word ');
+    document.documentElement.appendChild(d);
+    var out = [d.scrollWidth, d.clientWidth, d.scrollHeight];
+    document.documentElement.removeChild(d);
+    return out;
+  }
   function q(tag) {
     try {
       var h = document.documentElement, b = document.body, cs = getComputedStyle(h), se = document.scrollingElement || h;
@@ -35,6 +44,10 @@
         styleEl: !!document.getElementById('kaeri-reader-style'), sheets: document.styleSheets.length,
         vars: [cs.getPropertyValue('--k-cols'), cs.getPropertyValue('--k-page'), cs.getPropertyValue('--k-top')],
         last: lastChar() };
+      // The bare engine: one column by count alone, then with the 1px width beside it.
+      o.one = box('column-count:1');
+      o.oneW = box('column-count:1;column-width:1px');
+      o.two = box('column-count:2;column-width:1px');
       var d = document.createElementNS('http://www.w3.org/1999/xhtml', 'div');
       d.style.cssText = 'position:fixed;left:0;top:0;width:200px;height:60px;column-width:100px;column-gap:0;column-fill:auto;overflow:hidden;font-size:16px;line-height:20px;visibility:hidden';
       d.textContent = new Array(200).join('word ');
@@ -48,7 +61,11 @@
   }
   window.kaeriQa = q;
   q('start');
-  document.addEventListener('DOMContentLoaded', function () { q('dom'); });
+  document.addEventListener('DOMContentLoaded', function () {
+    // The page as it was before the fix: the column width back to auto.
+    if (window.kaeriQaUnfix) document.documentElement.style.setProperty('column-width', 'auto', 'important');
+    q('dom');
+  });
   window.addEventListener('load', function () {
     q('load');
     [300, 1500, 4000, 9000].forEach(function (t) { setTimeout(function () { q('load+' + t); }, t); });
