@@ -302,12 +302,12 @@ impl Capabilities {
     }
 }
 
-/// QA ONLY, never merged: the env path, or on Android a file in the QA app's own folder.
+/// QA ONLY, never merged: the env path, or on Android a file in the app's external files folder (r6 e-ink QA).
 #[cfg(feature = "fetch")]
 fn qa_path(var: &str, file: &str) -> Result<String, std::env::VarError> {
     std::env::var(var).or_else(|e| {
         if cfg!(target_os = "android") {
-            Ok(format!("/data/user/0/app.kaeri.app.qa/files/{file}"))
+            Ok(format!("/storage/emulated/0/Android/data/app.kaeri.app/files/{file}"))
         } else {
             Err(e)
         }
