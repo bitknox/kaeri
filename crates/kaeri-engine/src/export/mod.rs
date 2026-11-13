@@ -86,8 +86,13 @@ pub struct Exports {
 }
 
 /// The jobs that joined a running send: each is told what it is told, and ends when it ends.
+/// When its own job is put away while others joined it, it runs on for them alone.
 #[derive(Default)]
-struct Joined(Mutex<Vec<(JobId, Option<JobGuard>)>>);
+struct Joined {
+    jobs: Mutex<Vec<(JobId, Option<JobGuard>)>>,
+    /// Its own job was put away; set only with `jobs` locked.
+    lead_gone: AtomicBool,
+}
 
 impl std::fmt::Debug for Joined {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -98,7 +103,11 @@ impl std::fmt::Debug for Joined {
 
 impl Joined {
     fn lock(&self) -> std::sync::MutexGuard<'_, Vec<(JobId, Option<JobGuard>)>> {
-        self.0.lock().unwrap_or_else(|e| e.into_inner())
+        self.jobs.lock().unwrap_or_else(|e| e.into_inner())
+    }
+
+    fn lead_gone(&self) -> bool {
+        self.lead_gone.load(Ordering::Relaxed)
     }
 
     fn jobs(&self) -> Vec<JobId> {
@@ -235,19 +244,43 @@ impl Exports {
     /// Stops a send; false when it is not running. A ready send is put away instead: its
     /// files are removed, as the screen that asked has dropped it.
     pub fn cancel(&self, job: JobId) -> bool {
-        let running = self.running.lock().unwrap_or_else(|e| e.into_inner());
-        if let Some(flag) = running.get(&job.get()) {
+        let flag =
+            self.running.lock().unwrap_or_else(|e| e.into_inner()).get(&job.get()).cloned();
+        if let Some(flag) = flag {
+            // A send others joined runs on for them; only its own job leaves.
+            let followed = self
+                .joins
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .values()
+                .find(|(lead, _)| *lead == job.get())
+                .map(|(_, joined)| joined.clone());
+            if let Some(joined) = followed {
+                let jobs = joined.lock();
+                if !jobs.is_empty() {
+                    joined.lead_gone.store(true, Ordering::Relaxed);
+                    return true;
+                }
+            }
             flag.store(true, Ordering::Relaxed);
             return true;
         }
-        drop(running);
-        // A send that joined another leaves it; the other goes on.
-        for (_, joined) in self.joins.lock().unwrap_or_else(|e| e.into_inner()).values() {
+        // A send that joined another leaves it; the other goes on, unless no one is left.
+        let mut left = None;
+        for (lead, joined) in self.joins.lock().unwrap_or_else(|e| e.into_inner()).values() {
             let mut jobs = joined.lock();
             if let Some(at) = jobs.iter().position(|(j, _)| *j == job) {
                 jobs.remove(at);
-                return true;
+                left = Some((*lead, jobs.is_empty() && joined.lead_gone()));
+                break;
             }
+        }
+        if let Some((lead, last)) = left {
+            let running = self.running.lock().unwrap_or_else(|e| e.into_inner());
+            if last && let Some(flag) = running.get(&lead) {
+                flag.store(true, Ordering::Relaxed);
+            }
+            return true;
         }
         let mut ready = self.ready.lock().unwrap_or_else(|e| e.into_inner());
         if let Some((_, name)) = ready.remove(&job.get()) {
@@ -533,13 +566,21 @@ fn prepare_files(
         let result = send.run().await;
         // No send joins this one from here on; those that did end with it.
         send.exports.unlead(&identity, send.id);
-        let also = std::mem::take(&mut *joined.lock());
-        let jobs: Vec<JobId> =
-            std::iter::once(send.id).chain(also.iter().map(|(job, _)| *job)).collect();
+        let (also, gone) = {
+            let mut jobs = joined.lock();
+            (std::mem::take(&mut *jobs), joined.lead_gone())
+        };
+        let jobs: Vec<JobId> = (!gone)
+            .then_some(send.id)
+            .into_iter()
+            .chain(also.iter().map(|(job, _)| *job))
+            .collect();
         if let Ok(files) = &result {
             let now = clock.now();
-            send.exports.ready(send.id, now);
-            for job in &jobs[1..] {
+            if !gone {
+                send.exports.ready(send.id, now);
+            }
+            for (job, _) in &also {
                 send.exports.ready_as(*job, send.id, now);
             }
             send.keep_ready(files);
@@ -614,9 +655,10 @@ impl Told {
         })
     }
 
-    /// This send's job and those of the sends that joined it.
+    /// This send's job, unless it was put away, and those of the sends that joined it.
     fn jobs(&self) -> Vec<JobId> {
-        std::iter::once(self.job).chain(self.joined.jobs()).collect()
+        let own = (!self.joined.lead_gone()).then_some(self.job);
+        own.into_iter().chain(self.joined.jobs()).collect()
     }
 
     fn chapter(&self, label: Option<String>) {

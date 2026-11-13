@@ -4872,6 +4872,51 @@ mod tests {
             engine.shutdown().await;
         }
 
+        /// R7I-2. Putting away a send that another joined, while it prepares, leaves it
+        /// preparing for the other: that one turns ready, and the chapter is fetched once.
+        #[tokio::test]
+        async fn a_send_put_away_while_another_joined_it_goes_on_for_the_other() {
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, _, source) = launch_engine(dir.path(), None).await;
+            events.launch().await;
+            engine.send(network(false, false));
+            source.held.store(true, Ordering::SeqCst);
+            engine.send(send_of(&["2"]));
+            let seen = seen_until(&mut events, |e| {
+                matches!(e, Event::Reading(ReadingEvent::ExportProgress { .. }))
+            })
+            .await;
+            let first = seen
+                .iter()
+                .find_map(|e| match e {
+                    Event::Reading(ReadingEvent::ExportProgress { job, .. }) => Some(*job),
+                    _ => None,
+                })
+                .unwrap();
+            engine.send(send_of(&["2"]));
+            tokio::time::sleep(Duration::from_millis(300)).await;
+            engine.send(Command::Reading(ReadingCommand::CancelPrepare { job: first }));
+            tokio::time::sleep(Duration::from_millis(300)).await;
+            source.held.store(false, Ordering::SeqCst);
+            let seen = seen_until(&mut events, send_ended).await;
+            let (job, path) = seen
+                .iter()
+                .find_map(|e| match e {
+                    Event::Reading(ReadingEvent::ExportReady { job, files }) => {
+                        Some((*job, files[0].path.clone()))
+                    }
+                    _ => None,
+                })
+                .unwrap_or_else(|| panic!("the other send turns ready: {seen:?}"));
+            assert_ne!(job, first, "the send put away is not told it is ready");
+            assert!(std::path::Path::new(&path).is_file());
+            assert_eq!(source.fetched(), 2, "chapter 2 is fetched once");
+
+            engine.send(Command::Reading(ReadingCommand::CancelPrepare { job }));
+            store_waits("put away", move || !std::path::Path::new(&path).exists()).await;
+            engine.shutdown().await;
+        }
+
         /// Android R7-2. A send that was ready but never shared when the app was killed is
         /// offered again at the next launch, with its chapters and its files, until it is put
         /// away.
