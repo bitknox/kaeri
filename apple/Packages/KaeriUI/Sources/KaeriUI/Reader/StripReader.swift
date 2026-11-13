@@ -174,7 +174,8 @@ struct StripReader: View {
             add("\(past.id)>", .marker(next: past.next, source: past.nextSource, chapter: past.id), markerHeight(past.id), n)
         }
         if waiting {
-            add("lead", .lead, leadHeight, nil) // i18n-skip: a row id
+            let into = model.flowing ?? model.trail.chapters.last?.next.id
+            add(Self.leadId(into), .lead, leadHeight, nil)
             return rows
         }
         guard !parts.isEmpty else { return rows }
@@ -185,11 +186,18 @@ struct StripReader: View {
             add("\(chapter)!", .foot, max(size.height * 0.8, 420, markerHeight(chapter) + leadHeight), nil)
         } else if let next {
             add("\(chapter)>", .marker(next: next, source: model.end?.nextSource, chapter: chapter), markerHeight(chapter), nil)
-            add("lead", .lead, leadHeight, nil) // i18n-skip: a row id
+            add(Self.leadId(next.id), .lead, leadHeight, nil)
         } else {
             add("\(chapter)!", .foot, max(size.height * 0.8, 420), nil)
         }
         return rows
+    }
+
+    /// The lead under the marker into `chapter`. Keyed by that chapter, so the room the strip
+    /// waits in while it opens and the lead under its own marker after it are two rows, never one
+    /// row that moves down past the chapter's images when they come.
+    static func leadId(_ chapter: ChapterId?) -> String {
+        "lead \(chapter ?? "")" // i18n-skip: a row id
     }
 
     /// A chapter's credit pages by the image they sat before; those at the end under the count.
