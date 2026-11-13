@@ -547,8 +547,11 @@
     if (a && href) {
       e.preventDefault(); e.stopPropagation();
       var url = new URL(href), self = new URL(location.href);
-      var internal = url.origin === self.origin && url.protocol === self.protocol &&
-        url.pathname.split('/').slice(0, 3).join('/') === self.pathname.split('/').slice(0, 3).join('/');
+      // The same book: on kaeri-book the session is the host; on Android's asset address it
+      // is the path's second part.
+      var internal = url.protocol === self.protocol && url.host === self.host &&
+        (url.protocol === 'kaeri-book:' ||
+          url.pathname.split('/').slice(0, 3).join('/') === self.pathname.split('/').slice(0, 3).join('/'));
       var msg = { type: 'link', href: href, internal: internal };
       var sameDoc = internal && url.pathname === self.pathname;
       var type = (a.getAttributeNS('http://www.idpf.org/2007/ops', 'type') || a.getAttribute('epub:type') || '');

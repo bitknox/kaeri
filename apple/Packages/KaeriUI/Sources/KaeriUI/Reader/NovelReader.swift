@@ -439,14 +439,26 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
             sentInput = nil
             sendInput()
             setHidden(false)
-            guard ofTheBook(json) else {
+            switch shownDocument(json) {
+            case .spine:
+                recovering = false
+                page(json, ready: true)
+            case .other:
+                // A note or another file of the book, reached by a link: it shows and turns, and
+                // keeps no reading place. A turn past its edges goes back to the place.
+                recovering = false
+                readyHow = nil
+                pageCount(json)
+            case .notServed:
                 notServed()
-                return
             }
-            recovering = false
-            page(json, ready: true)
         case "failed": setHidden(false)
-        case "page": if ofTheBook(json) { page(json, ready: false) }
+        case "page":
+            switch shownDocument(json) {
+            case .spine: page(json, ready: false)
+            case .other: pageCount(json)
+            case .notServed: break
+            }
         case "layout":
             if let page = json["page"] as? Int, let pages = json["pages"] as? Int { model?.position = (page, max(pages, 1)) }
         case "end": next()
@@ -507,7 +519,7 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
     /// the next chapter.
     private func next() {
         guard let book else { return }
-        guard let current = currentSpine ?? lastPlace?.spine else {
+        guard let current = currentSpine else {
             reopen()
             return
         }
@@ -532,7 +544,7 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
 
     private func previous() {
         guard let book else { return }
-        guard let current = currentSpine ?? lastPlace?.spine else {
+        guard let current = currentSpine else {
             reopen()
             return
         }
@@ -560,12 +572,22 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
         return path.removingPercentEncoding ?? path
     }
 
-    /// Whether a report comes from the book's document at the address shown. The engine tells
-    /// each document its spine index; a page the engine did not serve as the book's, such as an
-    /// error's empty answer, has none of its settings and says the first.
-    private func ofTheBook(_ json: [String: Any]) -> Bool {
-        guard let current = currentSpine else { return false }
-        return (json["spine"] as? Int ?? 0) == current
+    private enum Shown { case spine, other, notServed }
+
+    /// What a report comes from. A spine document of the book, whose spine index the engine
+    /// told it; another file of the book, such as a note outside the spine; or a page the
+    /// engine did not serve as the book's, such as an error's empty answer, which has none of
+    /// the book's settings and says the first index.
+    private func shownDocument(_ json: [String: Any]) -> Shown {
+        guard let url = webView.url?.absoluteString else { return .notServed }
+        if let status = handler.status(of: url), !(200..<300).contains(status) { return .notServed }
+        guard let current = currentSpine else { return book == nil ? .notServed : .other }
+        return (json["spine"] as? Int ?? 0) == current ? .spine : .notServed
+    }
+
+    /// The pages of a document that keeps no place, for the reader's count.
+    private func pageCount(_ json: [String: Any]) {
+        if let page = json["page"] as? Int, let pages = json["pages"] as? Int { model?.position = (page, max(pages, 1)) }
     }
 
     /// The document shown is not the book's: its place is never kept, and the page goes back to
@@ -590,13 +612,12 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
 
     private func link(_ json: [String: Any]) {
         if let note = json["note"] as? String, !note.isEmpty { shown.note = note; return }
-        // Only links to the book's own documents are followed; everything else stays where it
-        // is, as a document outside the reading order has no place to turn on from.
-        guard json["internal"] as? Bool == true, let href = json["href"] as? String, let target = URL(string: href),
-              spineIndex(of: href) != nil
-        else { return }
-        readyHow = .jump
-        webView.load(URLRequest(url: target))
+        // Only links inside the book are followed; everything else stays where it is. A file
+        // the book does not have is answered with an error, which never replaces the page.
+        if json["internal"] as? Bool == true, let href = json["href"] as? String, let target = URL(string: href) {
+            readyHow = .jump
+            webView.load(URLRequest(url: target))
+        }
     }
 
     /// A key the page did not turn on, while the chrome or the end page is up.
@@ -700,6 +721,13 @@ final class BookSchemeHandler: NSObject, WKURLSchemeHandler, @unchecked Sendable
     /// The tasks started and not yet answered or stopped. A stopped task is never answered,
     /// and a stop that comes after the answer leaves nothing behind for a later task to meet.
     private var live = Set<ObjectIdentifier>()
+    /// The status of each address answered lately, without its fragment: the page asks it of
+    /// the document it shows. Main thread only.
+    private var statuses: [String: Int] = [:]
+
+    @MainActor func status(of address: String) -> Int? {
+        statuses[NovelWebController.document(address)]
+    }
 
     func webView(_ webView: WKWebView, start task: any WKURLSchemeTask) {
         guard let url = task.request.url else {
@@ -731,6 +759,8 @@ final class BookSchemeHandler: NSObject, WKURLSchemeHandler, @unchecked Sendable
     }
 
     private func respond(_ task: any WKURLSchemeTask, url: URL, answer: BookResource?) {
+        if statuses.count >= 64 { statuses.removeAll() }
+        statuses[NovelWebController.document(url.absoluteString)] = answer.map { Int($0.status) } ?? 404
         guard let answer else {
             task.didFailWithError(URLError(.fileDoesNotExist))
             return

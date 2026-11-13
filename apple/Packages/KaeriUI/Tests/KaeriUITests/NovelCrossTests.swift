@@ -22,11 +22,14 @@ struct NovelCrossTests {
     final class Book: Sendable {
         let parts: Int
         let spaces: Bool
+        /// Notes in a file of their own outside the spine, linked from the first part.
+        let notes: Bool
         private let state = Mutex((session: UInt64(1), missing: Set<Int>()))
 
-        init(parts: Int, spaces: Bool = false, missing: Set<Int> = []) {
+        init(parts: Int, spaces: Bool = false, notes: Bool = false, missing: Set<Int> = []) {
             self.parts = parts
             self.spaces = spaces
+            self.notes = notes
             state.withLock { $0.missing = missing }
         }
 
@@ -41,6 +44,8 @@ struct NovelCrossTests {
 
         func url(_ part: Int, session: UInt64) -> String { "kaeri-book://s\(session)/\(name(part))" }
 
+        func notesURL(session: UInt64) -> String { "kaeri-book://s\(session)/OEBPS/notes.xhtml" }
+
         func spine(session: UInt64) -> [NovelSpineItem] {
             (0..<parts).map { NovelSpineItem(url: url($0, session: session), linear: true) }
         }
@@ -54,6 +59,15 @@ struct NovelCrossTests {
         func resource(_ address: String) -> BookResource {
             let (session, missing) = state.withLock { ($0.session, $0.missing) }
             let path = Self.document(address)
+            if notes, path == Self.document(notesURL(session: session)) {
+                // The engine gives a file outside the spine the first index in its settings.
+                let text = """
+                <?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml"><head>\
+                <meta name="kaeri-setup" content="{&quot;spine&quot;:0}"/><title>Notes</title></head><body>\
+                <p id="n1">1. The bell was cast from the harbour's old kettles.</p></body></html>
+                """
+                return BookResource(status: 200, mime: "application/xhtml+xml", headers: [], body: .bytes(data: Data(text.utf8)))
+            }
             guard let part = (0..<parts).first(where: { Self.document(url($0, session: session)) == path }),
                   !missing.contains(part)
             else {
@@ -64,7 +78,7 @@ struct NovelCrossTests {
             let text = """
             <?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml"><head>\
             <meta name="kaeri-setup" content="\(setup)"/><title>Part \(part + 1)</title></head><body>\
-            <h1>Part \(part + 1)</h1>\(String(repeating: "<p>\(words) \(words)</p>", count: 60))</body></html>
+            <h1>Part \(part + 1)</h1>\(notes && part == 0 ? "<p><a id=\"ref\" href=\"notes.xhtml#n1\">1</a></p>" : "")\(String(repeating: "<p>\(words) \(words)</p>", count: 60))</body></html>
             """
             return BookResource(status: 200, mime: "application/xhtml+xml", headers: [], body: .bytes(data: Data(text.utf8)))
         }
@@ -217,6 +231,44 @@ struct NovelCrossTests {
 
         model.requestTurn(forward: false)
         #expect(await until(5) { model.position.index == count - 2 }, "the keys still turn: \(model.position)")
+    }
+
+    /// A note in a file outside the spine: its link opens it, it keeps no reading place, and a
+    /// turn back from it shows the page the link was followed from.
+    @Test func aNoteOutsideTheSpineOpensAndTurnsBackToThePlace() async throws {
+        let book = Book(parts: 3, notes: true)
+        let sent = Sent()
+        let model = model(sent, book)
+        model.open(work: Self.workId)
+        let window = window(model)
+        defer {
+            model.close()
+            window.contentView = nil
+            window.close()
+        }
+        await spin(0.2)
+        opened(model, book, session: 1)
+        #expect(await until(10) { model.position.count > 2 }, "part 1 laid out")
+        model.requestTurn(forward: true)
+        #expect(await until(5) { model.position.index == 1 }, "page 2")
+        await spin(0.3)
+        let count = model.position.count
+        let before = Self.places(sent).count
+
+        let view = try #require(window.contentView.flatMap(Self.webView(in:)))
+        _ = try await view.evaluateJavaScript("document.getElementById('ref').click(); 0")
+        let notes = book.notesURL(session: 1)
+        #expect(await until(10) { shown(window)?.hasPrefix(notes) == true }, "the notes: \(shown(window) ?? "-")")
+        await spin(1)
+        #expect(Self.places(sent).count == before, "no place kept from the notes: \(Self.places(sent).dropFirst(before))")
+
+        model.requestTurn(forward: false)
+        let first = book.url(0, session: 1)
+        #expect(await until(10) {
+            shown(window)?.hasPrefix(first) == true && model.position.count == count && model.position.index == 1
+        }, "back on page 2 of part 1: \(shown(window) ?? "-") at \(model.position)")
+        let after = Self.places(sent).dropFirst(before)
+        #expect(after.allSatisfy { $0.spine == 0 && $0.pages > 1 }, "places from part 1 only: \(after)")
     }
 
     /// Parts with spaces in their names, escaped as the engine writes them: a turn crosses into
