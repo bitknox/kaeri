@@ -2051,6 +2051,8 @@ async fn drive(shell: &Rc<Shell>, name: &str) {
 thread_local! {
     /// r8: the last series whose chapter list came, and its chapter ids in order.
     static LAST: std::cell::RefCell<(String, Vec<String>)> = std::cell::RefCell::default();
+    /// r8: the first source hit of the last search with words (a join first, else a tile).
+    static HIT: std::cell::RefCell<String> = std::cell::RefCell::default();
 }
 
 fn key_named(name: &str) -> Option<gtk::gdk::Key> {
@@ -2140,6 +2142,27 @@ fn listen_all(shell: &Rc<Shell>) {
                     LAST.with(|l| *l.borrow_mut() = (work.0.clone(), ids));
                 }
                 line
+            }
+            Event::Reading(kaeri_model::reading::ReadingEvent::SourceSearch(r)) => {
+                let first = r
+                    .joins
+                    .first()
+                    .map(|j| j.work.0.clone())
+                    .or_else(|| r.groups.iter().find_map(|g| g.tiles.first().map(|t| t.work.0.clone())));
+                if let Some(w) = &first {
+                    HIT.with(|h| *h.borrow_mut() = w.clone());
+                }
+                let groups: Vec<String> = r
+                    .groups
+                    .iter()
+                    .map(|g| format!("{}:{:?}:{}+{}", g.source_id, g.state, g.tiles.len(), g.joined))
+                    .collect();
+                format!(
+                    "SourceSearch anilist={:?} done={} joins={} groups={groups:?} first={first:?}",
+                    r.anilist,
+                    r.done,
+                    r.joins.len()
+                )
             }
             Event::Reading(kaeri_model::reading::ReadingEvent::Feed(f)) => format!(
                 "Feed on={} addresses={:?} port={} password_set={} serving={} shares={:?} \
@@ -2401,6 +2424,14 @@ async fn do_steps(shell: &Rc<Shell>) {
             "focus" => tracing::info!("HUNT focus {}: {}", arg(1), focus_line(shell)),
             // r8: the series whose chapters came last: read its chapter at index n (or "end"),
             // download n from it, or open its send dialog.
+            // r8: open the series of the first source hit of the last search.
+            "hitfirst" => {
+                let work = HIT.with(|h| h.borrow().clone());
+                tracing::info!("HUNT do hitfirst {work:?}");
+                if !work.is_empty() {
+                    series(shell, &work);
+                }
+            }
             "readlast" | "dllast" | "sendlast" | "serieslast" => {
                 let (work, ids) = LAST.with(|l| l.borrow().clone());
                 if work.is_empty() {
