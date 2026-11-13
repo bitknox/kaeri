@@ -2933,6 +2933,10 @@
     <value>The filters apply to AniList's results only.</value>
     <comment>Narrator's help on Search's filters while Your sources only is on.</comment>
   </data>
+  <data name="WindowsReadSourcesUsePlugin" xml:space="preserve">
+    <value>Use this plugin</value>
+    <comment>Name of the switch that turns a book plugin on or off in the book sources.</comment>
+  </data>
   <data name="SeriesReadAgainDoneWindows" xml:space="preserve">
     <value>Reading {title} again from the start</value>
     <comment>Notice after Read again from the start, with an Undo button beside it. The title is the series' name.</comment>
