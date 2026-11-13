@@ -1,6 +1,11 @@
+//! OPDS catalogues on loopback.
+//!
 //! R6E-1: a book server's sign-in goes only to its own origin (scheme, host and port), never
 //! to another host its feed names, and never along a redirect that leaves the origin. Two fake
-//! servers on loopback: the catalogue on one port, the pages and files it links to on another.
+//! servers: the catalogue on one port, the pages and files it links to on another.
+//!
+//! R6E-4: a catalogue whose search link is an OpenSearch description is searched through the
+//! template the description holds.
 
 use std::sync::{Arc, Mutex, atomic::AtomicBool};
 
@@ -248,4 +253,63 @@ async fn a_redirect_to_another_origin_drops_the_sign_in_and_one_back_home_keeps_
         assert_eq!(home.len(), 4, "{home:?}");
         assert_eq!(signed(&home).len(), 4, "{auth:?} was not kept at home: {home:?}");
     }
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn a_catalogue_searched_through_an_opensearch_description_finds_its_books() {
+    let (listener, address) = listener().await;
+    let root = r#"<?xml version="1.0"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+ <id>urn:x:root</id><title>Made-up Books</title><updated>2026-01-01T00:00:00Z</updated>
+ <link rel="search" href="/opds/osd" type="application/opensearchdescription+xml"/>
+ <entry><id>urn:x:lib</id><title>Library</title><updated>2026-01-01T00:00:00Z</updated>
+  <link rel="subsection" href="/opds/lib" type="application/atom+xml;profile=opds-catalog;kind=navigation"/></entry>
+</feed>"#;
+    let osd = r#"<?xml version="1.0"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+ <ShortName>Made-up Books</ShortName>
+ <Url type="application/atom+xml;profile=opds-catalog;kind=acquisition" template="/opds/search?q={searchTerms}"/>
+</OpenSearchDescription>"#;
+    let found = r#"<?xml version="1.0"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+ <id>urn:x:found</id><title>Search</title><updated>2026-01-01T00:00:00Z</updated>
+ <entry><id>urn:x:b1</id><title>Lantern Test Ferry v01</title><updated>2026-01-02T00:00:00Z</updated>
+  <category term="Lantern Test Ferry" label="Lantern Test Ferry"/>
+  <link rel="http://opds-spec.org/acquisition" href="/files/b1.epub" type="application/epub+zip"/></entry>
+ <entry><id>urn:x:b2</id><title>Lantern Test Ferry v02</title><updated>2026-01-03T00:00:00Z</updated>
+  <category term="Lantern Test Ferry" label="Lantern Test Ferry"/>
+  <link rel="http://opds-spec.org/acquisition" href="/files/b2.epub" type="application/epub+zip"/></entry>
+</feed>"#;
+    let seen = serve(
+        listener,
+        vec![
+            ("/opds/".into(), ok(ATOM, root.as_bytes())),
+            ("/opds/osd".into(), ok("application/opensearchdescription+xml", osd.as_bytes())),
+            ("/opds/search".into(), ok(ATOM, found.as_bytes())),
+        ],
+    )
+    .await;
+    let keep = tempfile::tempdir().unwrap();
+    let credential = format!("basic:{}", basic("reader", "made-up-pass"));
+    let source = source(
+        &client(),
+        &Server {
+            id: "a",
+            name: "Made-up Books",
+            kind: Kind::Opds,
+            address: &format!("{address}/opds"),
+            credential: &credential,
+        },
+        keep.path().to_owned(),
+        Arc::new(AtomicBool::new(false)),
+    )
+    .unwrap();
+    let hints = BookHints::default();
+    let hits = source.search("Lantern", &hints).await.expect("the search answers");
+    assert_eq!(hits.len(), 1, "{hits:?}");
+    assert_eq!(hits[0].title, "Lantern Test Ferry");
+    let chapters = source.chapters(&hits[0].id, &hints).await.unwrap();
+    assert_eq!(chapters.len(), 2);
+    let asked: Vec<String> = seen.lock().unwrap().iter().map(|a| a.path.clone()).collect();
+    assert!(asked.iter().any(|p| p == "/opds/search?q=Lantern"), "{asked:?}");
 }
