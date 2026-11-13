@@ -759,6 +759,26 @@ class ReaderSessionTest {
         assertEquals(listOf<ReaderCommand>(ReaderCommand.NovelAt(SESSION, CHAPTER, last, 3u, 3u, TurnHow.TURN)), sent)
     }
 
+    /**
+     * A font size or language change makes the screen anew around the open session. The new web
+     * view opens the chapter at the text the session last showed, three pages in, and not where
+     * the chapter opened; a renderer that went still comes back to its own last place.
+     */
+    @Test
+    fun a_novel_screen_made_anew_opens_at_the_text_last_shown() {
+        opened()
+        val opening = app.kaeri.engine.model.NovelPos(spine = 0u, path = emptyList(), offset = 0u)
+        val read = app.kaeri.engine.model.NovelPos(spine = 1u, path = listOf(0u, 3u), offset = 42u)
+        session.novelAt(read, 3u, 9u, TurnHow.TURN)
+        assertEquals(read, session.novelPos(CHAPTER))
+        assertEquals(read, app.kaeri.reader.phone.novelOpenAt(null, session.novelPos(CHAPTER), opening))
+        // Another chapter has no place of its own yet: the engine's.
+        assertNull(session.novelPos("local:lantern-stair/13"))
+        assertEquals(opening, app.kaeri.reader.phone.novelOpenAt(null, session.novelPos("local:lantern-stair/13"), opening))
+        val renderer = app.kaeri.engine.model.NovelPos(spine = 1u, path = listOf(0u, 5u), offset = 7u)
+        assertEquals(renderer, app.kaeri.reader.phone.novelOpenAt(renderer, read, opening))
+    }
+
     @Test
     fun a_novels_end_before_any_page_was_reported_tells_nothing() {
         opened()

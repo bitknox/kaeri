@@ -653,6 +653,13 @@ class ReaderSession(private val send: (Command) -> Unit) {
     fun place(): ReadPlace? = here
 
     /**
+     * Where [chapter]'s text was last shown, as its paginator reported it. A text position, not a
+     * page: a screen made anew around this session (a new font size or language) opens the chapter
+     * there, on whichever page that text now falls.
+     */
+    fun novelPos(chapter: ChapterId): NovelPos? = here?.takeIf { it.chapter == chapter }?.novel
+
+    /**
      * The screen was made anew around this session, as for a change of font size: its pager
      * starts at the first leaf, so it jumps back to [at], the [place] shown before.
      */
