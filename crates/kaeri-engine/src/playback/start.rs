@@ -128,7 +128,7 @@ pub fn cast_to(
         Some(at) if at >= CARRY_FROM => {
             let event = kaeri_store::WatchEvent::new(id, episode.clone(), at);
             if let Err(e) = services.store.record_event(&event) {
-                tracing::warn!(error = %e, "couldn't carry the position over to the cast");
+                tx.not_kept("the position carried over to the cast", &e);
             }
             false
         }

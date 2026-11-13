@@ -515,7 +515,9 @@ pub fn set_watched(
         if watched {
             let mut event = kaeri_store::WatchEvent::new(id, episode.clone(), 0.0);
             event.completed = true;
-            let _ = store.record_event(&event);
+            if let Err(e) = store.record_event(&event) {
+                tx.not_kept("a watched mark", &e);
+            }
         } else if let Ok(Some(left)) = store.unmark_episode(id, episode) {
             kept.push(Watch {
                 episode: episode.clone(),

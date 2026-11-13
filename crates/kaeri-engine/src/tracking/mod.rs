@@ -1746,8 +1746,15 @@ pub fn disconnect(sync: &Sync, tracker_id: &str, tx: &Outbox) {
 /// account that may never exist would grow a badge nobody can act on. A tracker signed
 /// in but offline still queues — its credentials are present — which is the case the
 /// outbox exists for.
-pub fn set_status(sync: &Sync, id: AnilistId, status: LibrarySegment) {
+///
+/// The first change that could not be queued comes back, for the person to be told.
+pub fn set_status(
+    sync: &Sync,
+    id: AnilistId,
+    status: LibrarySegment,
+) -> Result<(), kaeri_store::StoreError> {
     let now = kaeri_store::now();
+    let mut failed = Ok(());
     let watch = segment_to_status(status);
     let op = TrackOp::SetStatus { anilist_id: id, status: watch, at: now };
     let library = sync.trackers.first().map(|t| t.id());
@@ -1764,25 +1771,38 @@ pub fn set_status(sync: &Sync, id: AnilistId, status: LibrarySegment) {
                 }
             }
             Ok(_) => {}
-            Err(e) => tracing::warn!(error = %e, "could not queue a status change"),
+            Err(e) => {
+                if failed.is_ok() {
+                    failed = Err(e);
+                }
+            }
         }
     }
+    failed
 }
 
 /// Queue a score for every tracker.
 ///
 /// Out of ten, because it is the one scale every connected service understands; each
 /// tracker converts on push if it stores something else.
-pub fn set_score(sync: &Sync, id: AnilistId, score: f32) {
+pub fn set_score(
+    sync: &Sync,
+    id: AnilistId,
+    score: f32,
+) -> Result<(), kaeri_store::StoreError> {
     let now = kaeri_store::now();
     let op = TrackOp::SetScore { anilist_id: id, score, at: now };
+    let mut failed = Ok(());
     // Signed-in only, for the same reason as `set_status`.
     for tracker in sync.trackers.iter().filter(|t| t.is_authenticated() && t.serves_watching())
     {
-        if let Err(e) = sync.store.enqueue(tracker.id(), &op, now) {
-            tracing::warn!(error = %e, "could not queue a score");
+        if let Err(e) = sync.store.enqueue(tracker.id(), &op, now)
+            && failed.is_ok()
+        {
+            failed = Err(e);
         }
     }
+    failed
 }
 
 /// Settle a divergence.
@@ -1991,8 +2011,8 @@ mod tests {
         let tokens = files_in(dir.path());
         let sync = Sync::with_tokens(&config, &store, &http, tokens);
 
-        set_status(&sync, AnilistId::new(1), LibrarySegment::Completed);
-        set_score(&sync, AnilistId::new(1), 8.0);
+        set_status(&sync, AnilistId::new(1), LibrarySegment::Completed).unwrap();
+        set_score(&sync, AnilistId::new(1), 8.0).unwrap();
         assert_eq!(store.outbox_depth(Some("kitsu")).unwrap(), 0);
     }
 

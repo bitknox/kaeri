@@ -317,7 +317,7 @@ impl Store {
     ) -> Result<T> {
         let conn = self.personal_conn();
         let mut guard = conn.lock().map_err(|_| StoreError::Poisoned)?;
-        let tx = guard.transaction()?;
+        let tx = write_tx(&mut guard)?;
         let out = f(&tx)?;
         tx.commit()?;
         Ok(out)
@@ -335,11 +335,19 @@ impl Store {
         f: impl FnOnce(&rusqlite::Transaction<'_>) -> Result<T>,
     ) -> Result<T> {
         let mut guard = self.conn.lock().map_err(|_| StoreError::Poisoned)?;
-        let tx = guard.transaction()?;
+        let tx = write_tx(&mut guard)?;
         let out = f(&tx)?;
         tx.commit()?;
         Ok(out)
     }
+}
+
+/// A transaction that takes the write lock as it begins, waiting [`schema::BUSY_WAIT`] for it.
+///
+/// A deferred one that reads first and writes after cannot wait: when another process wrote in
+/// between, SQLite fails the write at once rather than let it act on what it read before.
+pub(crate) fn write_tx(conn: &mut Connection) -> rusqlite::Result<rusqlite::Transaction<'_>> {
+    conn.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)
 }
 
 /// The moment a scene recording stopped the clock at, in seconds since the Unix epoch: nought
@@ -352,6 +360,14 @@ static STOPPED: std::sync::atomic::AtomicI64 = std::sync::atomic::AtomicI64::new
 #[cfg(feature = "testing")]
 pub fn stop_clock_at(at: i64) {
     STOPPED.store(at, std::sync::atomic::Ordering::Relaxed);
+}
+
+/// A transaction that takes the write lock as it begins, waiting [`schema::BUSY_WAIT`] for it.
+///
+/// A deferred one that reads first and writes after cannot wait: when another process wrote in
+/// between, SQLite fails the write at once rather than let it act on what it read before.
+pub(crate) fn write_tx(conn: &mut Connection) -> rusqlite::Result<rusqlite::Transaction<'_>> {
+    conn.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)
 }
 
 /// The moment a scene recording stopped the clock at ([`stop_clock_at`]), if one did.

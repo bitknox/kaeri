@@ -127,11 +127,12 @@ pub fn connect_kitsu(
 /// Move a title to another of the trackers' lists, queued for the drain.
 pub fn set_status(id: AnilistId, status: LibrarySegment, services: &Services, tx: &Outbox) {
     let Services { sync, store, meta, .. } = services;
-    tracking::set_status(sync, id, status);
     // And as the person set it on this device, for the devices that have no tracker to ask. The
     // tracker's own list wins where it has the title; this fills where it has not.
-    if let Err(e) = store.set_synced_status(id.get(), Some(status.wire())) {
-        tracing::warn!(error = %e, "could not record the status for sync");
+    let queued = tracking::set_status(sync, id, status);
+    let kept = queued.and(store.set_synced_status(id.get(), Some(status.wire())));
+    if let Err(e) = kept {
+        tx.not_kept("a list change", &e);
     }
     // Queued, not sent — the drain owns the network. Reporting the new depth is what
     // makes the badge move immediately.
@@ -158,9 +159,10 @@ pub fn set_status(id: AnilistId, status: LibrarySegment, services: &Services, tx
 /// Score a title on the trackers, queued for the drain.
 pub fn set_score(id: AnilistId, score: f32, services: &Services, tx: &Outbox) {
     let Services { sync, store, .. } = services;
-    tracking::set_score(sync, id, score);
-    if let Err(e) = store.set_synced_score(id.get(), Some(score)) {
-        tracing::warn!(error = %e, "could not record the score for sync");
+    let queued = tracking::set_score(sync, id, score);
+    let kept = queued.and(store.set_synced_score(id.get(), Some(score)));
+    if let Err(e) = kept {
+        tx.not_kept("a score", &e);
     }
     for state in sync.state_after_enqueue() {
         let _ = tx.send(Event::Sync(Box::new(state)));

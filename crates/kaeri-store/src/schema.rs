@@ -1117,6 +1117,12 @@ const MIGRATIONS: &[(&str, &str)] = &[
     ),
 ];
 
+/// How long a statement waits for a lock another connection or process holds before it fails.
+///
+/// WAL lets readers go on beside a writer, but two writers still take turns. Long enough for any
+/// write the app makes to finish; a write that still fails is said to the person.
+pub const BUSY_WAIT: std::time::Duration = std::time::Duration::from_secs(5);
+
 /// Apply any migrations the database has not yet seen.
 pub fn migrate(conn: &Connection) -> rusqlite::Result<u32> {
     migrate_until(conn, None)
@@ -1125,6 +1131,10 @@ pub fn migrate(conn: &Connection) -> rusqlite::Result<u32> {
 /// [`migrate`], stopping before the migration called `stop`: a database as an older release left
 /// it, for the tests of what a migration does to existing data.
 pub fn migrate_until(conn: &Connection, stop: Option<&str>) -> rusqlite::Result<u32> {
+    // Every connection comes through here. Two engines can have the database open at once (the
+    // Mac app and the terminal share a data folder), and without a wait a write that meets the
+    // other's lock fails at once and the change is lost.
+    conn.busy_timeout(BUSY_WAIT)?;
     conn.pragma_update(None, "journal_mode", "WAL")?;
     conn.pragma_update(None, "foreign_keys", "ON")?;
     conn.pragma_update(None, "synchronous", "NORMAL")?;

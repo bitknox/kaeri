@@ -239,7 +239,7 @@ pub(crate) fn reading(
         ReadingCommand::ChooseEdition { work, source_id, version_label, language } => {
             let pref = kaeri_store::reading::EditionPref { source_id, version_label, language };
             if let Err(e) = services.store.set_edition_pref(work.as_str(), Some(&pref)) {
-                tracing::warn!(error = %e, "the edition choice was not kept");
+                tx.not_kept("the edition choice", &e);
             }
             return chapters(engine, services, work, Some(pref.source_id), tx);
         }
@@ -274,7 +274,7 @@ pub(crate) fn reading(
                 _ => None,
             };
             if let Err(e) = marks(&services.store, command, now) {
-                tracing::warn!(error = %e, "a reading mark was not kept");
+                tx.not_kept("a reading mark", &e);
                 return;
             }
             if let Some(again) = again {
@@ -506,13 +506,13 @@ fn mark_read(
                 kaeri_store::reading::ReadEvent::new(work.as_str(), id.as_str(), now);
             event.completed = true;
             if let Err(e) = services.store.record_read(&event, Vec::new()) {
-                tracing::warn!(error = %e, "a read mark was not kept");
+                tx.not_kept("a read mark", &e);
             }
         }
     } else {
         let chapters: Vec<String> = ids.iter().map(|c| c.as_str().to_owned()).collect();
         if let Err(e) = services.store.unread(work.as_str(), &chapters) {
-            tracing::warn!(error = %e, "an unread mark was not kept");
+            tx.not_kept("an unread mark", &e);
         }
     }
     if read {
@@ -539,7 +539,7 @@ fn rereading(services: &Services, work: &WorkId, again: bool, now: i64, tx: &Out
             return;
         }
         if let Err(e) = store.set_meta_text(&key, was.as_deref().unwrap_or("")) {
-            tracing::warn!(error = %e, "the list before Read again was not kept");
+            tx.not_kept("the list before Read again", &e);
         }
         Some(LibrarySegmentRead::Rereading)
     } else {
@@ -549,7 +549,7 @@ fn rereading(services: &Services, work: &WorkId, again: bool, now: i64, tx: &Out
     };
     let name = status.map(LibrarySegmentRead::as_str);
     if let Err(e) = store.set_read_status(work.as_str(), name, now) {
-        tracing::warn!(error = %e, "the reading list was not kept");
+        tx.not_kept("the reading list", &e);
     }
     if let Some(status) = status {
         crate::read_tracking::queue_status(services, work, status, now, tx);

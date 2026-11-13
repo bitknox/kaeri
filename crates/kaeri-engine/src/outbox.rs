@@ -139,6 +139,19 @@ impl Outbox {
     // The channel's own shape, large event and all, so no caller of the channel it stands in
     // for has to change.
     #[allow(clippy::result_large_err)]
+    /// A change the person made that the store could not keep, even after waiting out a lock
+    /// another engine on the same library held: logged, and said to the person as an alert, so
+    /// it is never lost without a word.
+    pub fn not_kept(&self, what: &str, error: &dyn std::fmt::Display) {
+        tracing::warn!(%error, what, "a change was not kept");
+        let reason = error.to_string();
+        let notice =
+            kaeri_model::notice::Notice::alert(kaeri_model::Msg::NoticeChangeNotKept {
+                reason,
+            });
+        let _ = self.send(Event::Toast(notice));
+    }
+
     pub fn send(&self, event: Event) -> Result<(), SendError<Event>> {
         match &self.0 {
             Route::Events(tx) => tx.send(event),
@@ -218,6 +231,21 @@ impl WeakOutbox {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_change_not_kept_is_said_as_an_alert_with_the_reason() {
+        let (events, mut said) = mpsc::unbounded_channel();
+        let outbox = Outbox::from(events);
+        outbox.not_kept("a reading mark", &"storage: database is locked");
+        let Ok(Event::Toast(notice)) = said.try_recv() else { panic!("nothing was said") };
+        assert_eq!(notice.kind, kaeri_model::notice::NoticeKind::Alert);
+        assert_eq!(
+            notice.msg,
+            Some(kaeri_model::Msg::NoticeChangeNotKept {
+                reason: "storage: database is locked".into()
+            })
+        );
+    }
 
     #[test]
     fn events_and_messages_come_out_in_the_order_they_went_in() {
