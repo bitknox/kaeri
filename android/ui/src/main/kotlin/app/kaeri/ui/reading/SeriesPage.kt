@@ -882,7 +882,7 @@ private fun LazyListScope.seriesChapters(
             }
         }
     } else if (failure != null) {
-        item(key = "chapters-failed") { Box(itemMotion()) { ChaptersFailed(series, failure, groups.chapterRows().size, onRetry) } }
+        item(key = "chapters-failed") { Box(itemMotion()) { ChaptersFailed(series, failure, groups.downloaded().size, onRetry) } }
     } else if (groups.isEmpty()) {
         item(key = "chapters-none") {
             val context = LocalContext.current
@@ -930,25 +930,25 @@ private fun SeriesAction.opensDownloaded(volumes: List<VolumeGroup>): Boolean {
     return volumes.downloaded().any { it.id == chapter }
 }
 
-/** With the source failed, what is downloaded still opens: only those chapters, under no volume. */
-internal fun ReadChapters.listedGroups(): List<VolumeGroup> = if (failure != null) {
-    listOfNotNull(
-        volumes.downloaded().takeIf { it.isNotEmpty() }?.let { VolumeGroup(volume = null, title = null, chapters = it, allRead = false) },
-    )
-} else {
-    volumes
-}
-
-/** Whether the main button leads to another source in place of [action]: the source failed and it opens nothing downloaded. */
-internal fun ReadChapters.leadsElsewhere(action: SeriesAction): Boolean =
-    failure != null && !action.opensDownloaded(volumes)
+/**
+ * The chapters listed: with the source failed, the list it gave before, as the engine keeps it,
+ * stays under the failure's note and opens as it did.
+ */
+internal fun ReadChapters.listedGroups(): List<VolumeGroup> = volumes
 
 /**
- * Whether the chapters are one run with no volume rows: the downloaded ones after a failure, a list
- * with no volumes, or a flat one (Show volumes off, or too few chapters with a volume).
+ * Whether the main button leads to another source in place of [action]: the source failed and no
+ * list is kept from before, so the page has the failure alone.
+ */
+internal fun ReadChapters.leadsElsewhere(action: SeriesAction): Boolean =
+    failure != null && volumes.chapterRows().isEmpty() && !action.opensDownloaded(volumes)
+
+/**
+ * Whether the chapters are one run with no volume rows: a list with no volumes, or a flat one (Show
+ * volumes off, or too few chapters with a volume).
  */
 private fun ReadChapters.singleGroup(groups: List<VolumeGroup>): Boolean =
-    failure != null || (groups.size == 1 && (groups.first().flat || groups.first().volume == null))
+    groups.size == 1 && (groups.first().flat || groups.first().volume == null)
 
 /**
  * The item [seriesChapters] lists [id]'s row at while choosing, when the page has no header or
@@ -1112,7 +1112,10 @@ private fun ChaptersHeading(volumes: Boolean, newestFirst: Boolean, onOrder: (Bo
     }
 }
 
-/** The source failed (fig 82): what failed and where, why, what still opens, and Try again. */
+/**
+ * The source failed (fig 82): what failed and where, why, what still opens, and Try again. A list
+ * kept from before stays under it.
+ */
 @Composable
 private fun ChaptersFailed(series: SeriesView, failure: ReadingFailure, downloaded: Int, onRetry: () -> Unit) {
     val context = LocalContext.current

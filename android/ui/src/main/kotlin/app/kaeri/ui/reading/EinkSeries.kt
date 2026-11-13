@@ -404,7 +404,7 @@ private fun SeriesButtons(
 ) {
     val context = LocalContext.current
     val words = SeriesWords.action(context, series.action)
-    val failed = chapters?.failure != null
+    val failed = chapters?.leadsElsewhere(series.action) == true
     val asking = series.action is SeriesAction.NoSource && chapters == null
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
         when {
@@ -448,17 +448,13 @@ private fun SeriesChapters(
 ) {
     val context = LocalContext.current
     val failure = chapters?.failure
-    // With the source failed, what is downloaded still opens: only those chapters.
-    val all = when {
-        chapters == null -> emptyList()
-        failure != null -> chapters.volumes.downloaded()
-        else -> chapters.volumes.chapterRows()
-    }
+    // With the source failed, the list it gave before stays under the failure and opens as it did.
+    val all = chapters?.listedGroups()?.chapterRows().orEmpty()
     val rows = if (newestFirst) all.reversed() else all
     var page by rememberSaveable(series.work) { mutableIntStateOf(0) }
     LaunchedEffect(newestFirst) { page = 0 }
     Column(modifier.fillMaxWidth()) {
-        ChaptersHead(series, chapters, newestFirst, onOrder, choosing = chosen != null, canChoose = chapters != null && failure == null && all.isNotEmpty(), onChoose)
+        ChaptersHead(series, chapters, newestFirst, onOrder, choosing = chosen != null, canChoose = chapters != null && all.isNotEmpty(), onChoose)
         when {
             chapters == null -> if (late) {
                 PaperWaiting { Text(Strings.stateLoading(context), style = EinkType.Body, modifier = Modifier.padding(top = 8.dp)) }
@@ -472,7 +468,7 @@ private fun SeriesChapters(
             failure != null -> {
                 val line = listOfNotNull(
                     failureWords(context, failure),
-                    if (all.isNotEmpty()) Strings.readSeriesDownloadedOpen(context, all.size) else null,
+                    chapters.volumes.downloaded().size.takeIf { it > 0 }?.let { Strings.readSeriesDownloadedOpen(context, it) },
                 ).joinToString(" ") // i18n-skip
                 PaperFailure(Strings.seriesChaptersFailed(context, series.edition?.sourceName.orEmpty()), line, Strings.actionTryAgain(context), onRetry)
             }
