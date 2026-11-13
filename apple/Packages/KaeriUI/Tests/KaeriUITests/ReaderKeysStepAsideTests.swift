@@ -17,7 +17,7 @@ struct ReaderKeysStepAsideTests {
     }
 
     /// The things of the app's that come up over a book, each a window on the reader's.
-    static let appSheets = ["Open link or file", "Join Plugin Store", "Open Invite Link"]
+    nonisolated static let appSheets = ["Open link or file", "Join Plugin Store", "Open Invite Link"]
 
     @Test(arguments: appSheets)
     func anAppSheetOverTheBookTakesTheKeys(_ sheet: String) {
