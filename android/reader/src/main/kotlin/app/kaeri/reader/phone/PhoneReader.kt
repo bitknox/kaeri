@@ -620,6 +620,8 @@ fun PhoneReader(
                         onScrolled = { chrome = false },
                         onMissing = session::needPage,
                         onRetry = { session.retry(it.toUInt()) },
+                        onMissingAbove = session::needPageAbove,
+                        onRetryAbove = { session.retryAbove(it.toUInt()) },
                         onJumped = session::jumped,
                         footer = { PhoneEndPage(state, session, actions, images, onFirstPage = { session.startOver() }, cover = cover, pageGround = background, onShowCredits = { session.showEndCredits() }) },
                         divider = { next -> StripDivider(state, next, onShowCredits = { session.showEndCredits(it) }) },

@@ -270,7 +270,7 @@ internal fun EpisodeCard(
     val stacked = density.fontScale >= RowDims.StackScale
     val header = with(density) { maxOf(RowDims.StillHeight, ((RowDims.TitleLine * 2).toDp() + (RowDims.FactsLine * 2).toDp() + 4.dp)) }
     val band = with(density) { (RowDims.BodyLine * RowDims.SynopsisLines).toDp() }
-    val title = row.title?.takeIf { it.isNotBlank() } ?: stringResource(R.string.episode_number, row.number.toInt())
+    val title = row.title?.takeIf { it.isNotBlank() } ?: app.kaeri.store.episodeName(LocalContext.current, row.number)
     // A watched row keeps a silk title; the check and the dimmed still say watched.
     val titleColor = if (unaired) colors.onSurfaceVariant else colors.onSurface
     // A row that grows on screen (a reveal) takes its height first; its text fades in after.
@@ -644,7 +644,7 @@ internal fun EpisodeSheet(
         scope.launch { state.hide() }.invokeOnCompletion { onDismiss() }
     }
     val items = episodeActions(entry, row, actions, ::close)
-    val title = row.title?.takeIf { it.isNotBlank() } ?: stringResource(R.string.episode_number, row.number.toInt())
+    val title = row.title?.takeIf { it.isNotBlank() } ?: app.kaeri.store.episodeName(LocalContext.current, row.number)
     // The row's own facts: "E7 · 14 min left", then when it aired.
     val (kicker, aired) = rowFacts(context, entry, row, current, unaired = false)
     val synopsis = row.description?.takeIf { it.isNotBlank() && !hidden }
@@ -717,7 +717,8 @@ internal fun episodeActions(entry: Entry, row: EpisodeRow, actions: AppActions, 
     val marks = LocalUserMarks.current
     val snackbars = LocalSnackbars.current
     val navigator = LocalNavigator.current
-    val markedWatched = stringResource(R.string.episode_marked_watched, row.number.toInt())
+    val markedWatched = app.kaeri.store.wholeEpisode(row.number)?.let { stringResource(R.string.episode_marked_watched, it) }
+        ?: listOf(app.kaeri.store.episodeName(LocalContext.current, row.number), stringResource(R.string.episode_watched)).joinToString(" · ") // i18n-skip
     val undoWord = stringResource(R.string.action_undo)
     val watched = row.completed
     val list = mutableListOf<SheetAction>()

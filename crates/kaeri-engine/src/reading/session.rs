@@ -250,6 +250,9 @@ pub struct Session {
     source_open: Option<novel::SourceOpen>,
     /// The open chapter's pages from a source, landing as they are fetched.
     feed: Option<Arc<crate::reading::feed::Feed>>,
+    /// The chapter a strip flowed on from, which the app keeps above the open one: its pages
+    /// are still made when asked for by its id. Cleared by any other open.
+    flowed_from: Option<ChapterId>,
     /// "Resumed at page N" waits for a novel's first page.
     novel_resumed: bool,
     /// A work of the reading demo, whose credit the reader shows.
@@ -691,6 +694,7 @@ impl Reader {
             prepared: Arc::default(),
             source_open: None,
             feed: None,
+            flowed_from: None,
             novel_resumed: false,
             gone: crate::reading::feed::Gone::new(novel::streamed_dir(
                 &cx.services.paths.cache_dir,
@@ -1159,9 +1163,14 @@ impl Session {
         // Another chapter's pages that had not all landed are fetched again when it opens, and
         // so is one with credit pages or parts, which its folder alone does not tell.
         let left = self.feed.take_if(|f| f.chapter != chapter.id);
-        // The chapter left stops fetching, so its pages never hold up the one opening.
+        // The chapter left stops fetching, so its pages never hold up the one opening. One a
+        // strip flowed on from stays above it: the pages it never had are fetched when asked.
         if let Some(left) = &left {
-            left.leave();
+            if self.flowed_from.as_ref() == Some(&left.chapter) {
+                left.aside();
+            } else {
+                left.leave();
+            }
         }
         if let Some(left) = left
             && (!left.complete() || !left.credits.is_empty() || left.parts.is_some())
@@ -1187,6 +1196,7 @@ impl Session {
             feed: self.feed.clone(),
             // A feed left its credit pages out as it came.
             credits: self.credit_check(cx).filter(|_| self.feed.is_none()),
+            keep: self.flowed_from.clone(),
         });
     }
 
@@ -1395,8 +1405,11 @@ impl Session {
                 let page = self.page_now();
                 self.lay_out(cx, pages, page);
             }
-            C::NeedPage { page, .. } => pages.again(self.id, page, cx.tx),
-            C::Retry { page: Some(page), .. } => pages.again(self.id, page, cx.tx),
+            // The open chapter's page, or the kept one's a strip flowed on from.
+            C::NeedPage { chapter, page, .. } => pages.again(self.id, chapter, page, cx.tx),
+            C::Retry { chapter, page: Some(page), .. } => {
+                pages.again(self.id, chapter, page, cx.tx)
+            }
             C::Retry { page: None, .. } => {
                 let page = self.page_now();
                 self.lay_out(cx, pages, page);
@@ -1426,7 +1439,7 @@ impl Session {
                     .and_then(|k| k.last_page)
                     .unwrap_or(0);
                 let novel = novel::kept_novel(cx, &self.work, &chapter);
-                self.open_chapter(cx, pages, index, page, novel);
+                self.open_chapter(cx, pages, index, page, novel, flowing);
             }
             C::BackTo { .. } => {
                 if let Some(back) = self.back_to.clone() {
@@ -1877,8 +1890,11 @@ impl Session {
         index: usize,
         page: u32,
         novel: Option<NovelPos>,
+        flowing: bool,
     ) {
         self.flush_leaving(cx);
+        // A strip flowing on keeps the chapter it leaves above the one opening.
+        self.flowed_from = flowing.then(|| self.chapter().id.clone());
         if self.novel.take().is_some() {
             cx.services.novels.remove(self.id);
         }
@@ -1905,7 +1921,7 @@ impl Session {
         if to.chapter == self.chapter().id {
             cx.send(ReaderEvent::GoTo { session: self.id, place: to });
         } else if let Some(index) = self.index_of(cx, &to.chapter) {
-            self.open_chapter(cx, pages, index, to.page.unwrap_or(0), to.novel.clone());
+            self.open_chapter(cx, pages, index, to.page.unwrap_or(0), to.novel.clone(), false);
         } else {
             self.not_found(cx);
         }

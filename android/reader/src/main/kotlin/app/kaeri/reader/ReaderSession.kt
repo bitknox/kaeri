@@ -265,19 +265,48 @@ class ReaderSession(private val send: (Command) -> Unit) {
     /** Where the reader is: the chapter on screen and the page, strip spot or text place shown. */
     private var here: ReadPlace? = null
     private val askedPages = mutableSetOf<PageKey>()
+    /** The same for the chapter a strip keeps above the open one. */
+    private val askedAbove = mutableSetOf<PageKey>()
     /** The leaf last reported shown, so a new layout of the same place is not a turn. */
     private var shownLeaf: Int? = null
     /** A kept page's chapter is laid out again with it: the pages after it move up one. */
     private var relayKeep: CreditKeep? = null
+    /** The page count of the novel document last reported, for its end page. */
+    private var novelPages = 0u
+    /**
+     * The session the engine last opened for this reader. It outlives the state's view: a chapter
+     * that fails to open leaves the engine's session open behind the failure, and the close is
+     * owed to it all the same.
+     */
+    private var engineSession: ULong? = null
+    /**
+     * Closed while the open was on its way, before the engine named the session: an Opened still
+     * coming is closed as it lands. The engine answers the close with Closed(0) after it.
+     */
+    private var closedUnnamed = false
+    /** Called once the close above is answered, when the screen let go of the reader before that. */
+    private var unbindLater: (() -> Unit)? = null
 
-    /** Hear the store's reader events until what is returned is called. */
-    fun bind(store: AppStore): () -> Unit = store.listenToReading(::apply)
+    /**
+     * Hear the store's reader events until what is returned is called. Closed while the open was
+     * on its way, the session hears on until the engine answers the close, so an Opened sent
+     * before it is closed too.
+     */
+    fun bind(store: AppStore): () -> Unit {
+        val unbind = store.listenToReading(::apply)
+        return {
+            if (closedUnnamed) unbindLater = unbind else unbind()
+        }
+    }
 
     // What the screen sends.
 
     fun open(work: WorkId, surface: ReaderSurface, chapter: ChapterId? = null, at: OpenAt = OpenAt.Resume, title: String? = null) {
         this.work = work
         this.asked = chapter to at
+        // The engine closes the session it had as it opens the next.
+        engineSession = null
+        closedUnnamed = false
         this.surface = surface
         engineSurface = surface
         awaitingOpen = true
@@ -289,6 +318,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
         here = null
         shownLeaf = null
         askedPages.clear()
+        askedAbove.clear()
         commitKeep()
         _state.value = ReaderState(
             opening = true,
@@ -356,9 +386,22 @@ class ReaderSession(private val send: (Command) -> Unit) {
         val chapter = now.novel?.chapter ?: now.chapter ?: return
         val work = work
         if (work != null) here = (here?.takeIf { it.chapter == chapter } ?: ReadPlace(work, chapter, null, null, null)).copy(novel = pos)
+        novelPages = pages
         reader(ReaderCommand.NovelAt(now.session ?: return, chapter, pos, page, pages, how))
         val notice = now.notice
         if (notice != null && how != TurnHow.JUMP && how != TurnHow.PLACED) dismissNotice(notice.id)
+    }
+
+    /**
+     * A novel's last page was turned past: the end page shows. The engine hears it as the page
+     * after the last, which counts the chapter read at once, as a paged chapter's end page does.
+     */
+    fun novelEnded() {
+        val now = state.value
+        val chapter = now.novel?.chapter ?: now.chapter ?: return
+        val pos = here?.takeIf { it.chapter == chapter }?.novel ?: return
+        val pages = novelPages.coerceAtLeast(1u)
+        reader(ReaderCommand.NovelAt(now.session ?: return, chapter, pos, pages, pages, TurnHow.TURN))
     }
 
     /** The hidden web view counted the volume's pages for these settings and this screen. */
@@ -378,6 +421,28 @@ class ReaderSession(private val send: (Command) -> Unit) {
         if (!askedPages.add(PageKey(part.page, part.half))) return
         _state.value = now.copy(files = now.files - PageKey(part.page, part.half))
         reader(ReaderCommand.NeedPage(now.session ?: return, now.chapter ?: return, part.page))
+    }
+
+    /**
+     * A row of the chapter a strip keeps above the open one has no file: its image never landed
+     * before the strip flowed on, or its file is gone. Asked for by that chapter's id, once.
+     */
+    fun needPageAbove(part: LeafPart) {
+        val now = state.value
+        val above = now.previous ?: return
+        val chapter = above.chapter ?: return
+        if (!askedAbove.add(PageKey(part.page, part.half))) return
+        _state.value = now.copy(previous = above.copy(files = above.files - PageKey(part.page, part.half)))
+        reader(ReaderCommand.NeedPage(now.session ?: return, chapter, part.page))
+    }
+
+    /** Try a failed page of the chapter kept above again. */
+    fun retryAbove(page: UInt) {
+        val now = state.value
+        val above = now.previous ?: return
+        val chapter = above.chapter ?: return
+        _state.value = now.copy(previous = above.copy(failures = above.failures - page))
+        reader(ReaderCommand.Retry(now.session ?: return, chapter, page))
     }
 
     /** Try a failed page again, or the whole chapter with no page. */
@@ -537,10 +602,21 @@ class ReaderSession(private val send: (Command) -> Unit) {
         _state.value = now.copy(jump = ReaderJump(now.leafOf(at), at.strip, ++ids))
     }
 
+    /**
+     * The reader is going. The engine's session is closed even when the state holds none, as
+     * after a chapter that failed to open; closed while the open is on its way, the open waiting
+     * is dropped (Close(0)) and an Opened already sent is closed as it lands.
+     */
     fun close() {
         commitKeep()
-        val session = state.value.session ?: return
-        reader(ReaderCommand.Close(session))
+        val session = state.value.session ?: engineSession
+        if (session != null) {
+            reader(ReaderCommand.Close(session))
+            return
+        }
+        closedUnnamed = awaitingOpen
+        awaitingOpen = false
+        reader(ReaderCommand.Close(0uL))
     }
 
     /** The notice went: its time ran out or the next turn took it. */
@@ -714,6 +790,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
     }
 
     fun apply(event: ReaderEvent) {
+        if (closedUnnamed) return closingUnnamed(event)
         val now = state.value
         fun ours(session: ULong) = session == now.session
         _state.value = when (event) {
@@ -721,14 +798,20 @@ class ReaderSession(private val send: (Command) -> Unit) {
             is ReaderEvent.Opened -> {
                 if (!now.opening && now.session != null && event.v1.session != now.session) return
                 awaitingOpen = false
+                engineSession = event.v1.session
                 awaiting = null
                 startAt = event.v1.start
                 startJump = null
                 shownPage = null
                 here = event.v1.start
                 askedPages.clear()
-                // A strip that flowed on keeps the chapter it left above this one.
-                val previous = flowFrom?.takeIf { flowTo == event.v1.chapter.id }
+                // A strip that flowed on keeps the chapter it left above this one, with the
+                // images that landed while the next one opened. The engine still makes the rest
+                // when asked by that chapter's id.
+                val previous = flowFrom?.takeIf { flowTo == event.v1.chapter.id }?.let { from ->
+                    if (now.chapter == from.chapter) from.copy(files = now.files, held = now.held, failures = now.failures) else from
+                }
+                askedAbove.clear()
                 flowTo = null
                 flowFrom = null
                 shownLeaf = null
@@ -805,12 +888,22 @@ class ReaderSession(private val send: (Command) -> Unit) {
                 placed.copy(jump = jump ?: now.jump)
             }
             is ReaderEvent.PageReady -> {
+                val above = now.previous
+                if (ours(event.session) && above != null && event.chapter == above.chapter && event.chapter != now.chapter) {
+                    val key = PageKey(event.page, event.half)
+                    askedAbove -= key
+                    return run { _state.value = now.copy(previous = above.copy(files = above.files + (key to event.file), failures = above.failures - event.page)) }
+                }
                 if (!ours(event.session) || event.chapter != now.chapter) return
                 val key = PageKey(event.page, event.half)
                 askedPages -= key
                 now.copy(files = now.files + (key to event.file), failures = now.failures - event.page)
             }
             is ReaderEvent.PageFailed -> {
+                val above = now.previous
+                if (ours(event.session) && above != null && event.chapter == above.chapter && event.chapter != now.chapter) {
+                    return run { _state.value = now.copy(previous = above.copy(failures = above.failures + (event.page to event.failure))) }
+                }
                 if (!ours(event.session) || event.chapter != now.chapter) return
                 now.copy(failures = now.failures + (event.page to event.failure))
             }
@@ -862,6 +955,19 @@ class ReaderSession(private val send: (Command) -> Unit) {
         }
         // The engine opened with the surface the open asked with; the screen may have turned since.
         if (event is ReaderEvent.Opened) sendSurface()
+    }
+
+    /** Closed before the engine named the session: what the engine sent before the close. */
+    private fun closingUnnamed(event: ReaderEvent) {
+        when (event) {
+            is ReaderEvent.Opened -> reader(ReaderCommand.Close(event.v1.session))
+            is ReaderEvent.Closed -> if (event.session == 0uL) {
+                closedUnnamed = false
+                unbindLater?.invoke()
+                unbindLater = null
+            }
+            else -> {}
+        }
     }
 
     private fun reader(command: ReaderCommand) {
