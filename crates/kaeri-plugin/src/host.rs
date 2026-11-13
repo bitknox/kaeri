@@ -314,6 +314,31 @@ fn qa_path(var: &str, file: &str) -> Result<String, std::env::VarError> {
     })
 }
 
+/// QA ONLY, never merged: per-source gaps from the file KAERI_QA_GATE_FILE names (on Android
+/// files/qa-gate in the QA app's folder), lines of "<plugin id> <ms>", plus the same 50 ms
+/// margin. A request takes the longest gap among its turns; zero when none is listed.
+#[cfg(feature = "fetch")]
+fn qa_file_gap(keys: &[String]) -> std::time::Duration {
+    let Ok(path) = qa_path("KAERI_QA_GATE_FILE", "qa-gate") else {
+        return std::time::Duration::ZERO;
+    };
+    qa_parse_gaps(&std::fs::read_to_string(path).unwrap_or_default(), keys)
+}
+
+/// QA ONLY, never merged: the longest listed gap among `keys` in a gate file's text.
+#[cfg(feature = "fetch")]
+fn qa_parse_gaps(text: &str, keys: &[String]) -> std::time::Duration {
+    text.lines()
+        .filter_map(|line| {
+            let mut words = line.split_whitespace();
+            let id = words.next()?;
+            let ms = words.next()?.parse::<u64>().ok()?;
+            keys.iter().any(|k| k == id).then_some(ms)
+        })
+        .max()
+        .map_or(std::time::Duration::ZERO, |ms| std::time::Duration::from_millis(ms + 50))
+}
+
 /// QA ONLY, never merged: the gap between two requests of one source, 4 s unless
 /// KAERI_QA_GATE_MS sets it in milliseconds, plus 50 ms so the fetch log's wall clock never
 /// reads a pair under the gap.
@@ -482,6 +507,8 @@ pub async fn qa_gate(
         gate.waiting.insert(key, keys.clone());
         (key, keys)
     };
+    // QA ONLY: a longer gap for some sources, from the per-plugin gate file.
+    let gap = gap.max(qa_file_gap(&keys));
     let mut place = QaPlace { key, armed: true };
     let moved = qa_state().1;
     loop {
@@ -574,6 +601,15 @@ pub fn qa_log(who: &str, url: &str) {
             tail.chars().rev().take(24).collect::<Vec<_>>().into_iter().rev().collect();
         let _ = writeln!(f, "{ms} {who} {} {tail}", url.split('/').nth(2).unwrap_or("-"));
     }
+}
+
+#[cfg(all(test, feature = "fetch"))]
+#[test]
+fn qa_gate_file_gaps() {
+    let keys = vec!["a".to_owned(), "b".to_owned()];
+    let text = "a 8000\nc 9000\nbad\nb x\n";
+    assert_eq!(qa_parse_gaps(text, &keys), std::time::Duration::from_millis(8050));
+    assert_eq!(qa_parse_gaps("c 9000", &keys), std::time::Duration::ZERO);
 }
 
 #[cfg(all(test, feature = "fetch"))]
