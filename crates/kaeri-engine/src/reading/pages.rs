@@ -1711,9 +1711,9 @@ fn look_key(look: &Look) -> u64 {
 fn book_key(path: &Path) -> String {
     let mut h = DefaultHasher::new();
     path.hash(&mut h);
-    if let Ok(meta) = std::fs::metadata(path) {
-        meta.len().hash(&mut h);
-        meta.modified().ok().hash(&mut h);
+    if let Ok(meta) = kaeri_books::tree::stat(path) {
+        meta.size.hash(&mut h);
+        meta.modified.hash(&mut h);
     }
     format!("{:016x}", h.finish())
 }

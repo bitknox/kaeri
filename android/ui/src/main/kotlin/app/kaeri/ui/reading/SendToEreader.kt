@@ -64,6 +64,7 @@ import app.kaeri.engine.core.Medium
 import app.kaeri.engine.core.WorkId
 import app.kaeri.engine.model.ChapterRow
 import app.kaeri.engine.model.DownloadPick
+import app.kaeri.engine.model.ExportFile
 import app.kaeri.engine.model.ExportFormat
 import app.kaeri.engine.model.ExportTarget
 import app.kaeri.engine.model.SeriesAction
@@ -150,8 +151,17 @@ internal fun sentDay(unix: Long): String =
     DateTimeFormatter.ofPattern(AirTime.bestPattern("dMMMM", "d MMMM"), AirTime.locale)
         .format(Instant.ofEpochSecond(unix).atZone(AppClock.zone))
 
-/** Where the sheet is: choosing, a send under way or held for Wi-Fi, ready, or failed. */
-private enum class SendPhase { Choose, Preparing, Waiting, Ready, Failed }
+/**
+ * Where the sheet is: choosing, a send under way or held for Wi-Fi, ready, failed, or ready but its
+ * files gone before they were shared.
+ */
+private enum class SendPhase { Choose, Preparing, Waiting, Ready, Failed, Gone }
+
+/** Whether prepared files can still be shared. */
+object ExportShare {
+    /** True when there is nothing to share or a file is no longer where it was prepared. */
+    fun gone(files: List<ExportFile>): Boolean = files.isEmpty() || files.any { !java.io.File(it.path).isFile }
+}
 
 /**
  * The Send to e-reader sheet for [chapters] of [work] (figs 62, 63): the e-reader with the format
@@ -203,17 +213,22 @@ internal fun SendToEreaderSheet(work: WorkId, chapters: List<ChapterId>, actions
         job = store.export.prepare(work, chapters, device.id, format)?.toLong()
     }
 
-    // Leaving the sheet puts away only what was seen to its end: a failure, or files already shared.
+    // A ready send whose files went before they were shared: it says so, and offers to prepare again.
+    var gone by remember(job) { mutableStateOf(false) }
+    // Leaving the sheet puts away only what was seen to its end: a failure, files already shared,
+    // or files gone.
     fun dismiss() {
         when (now) {
             is ExportJob.Failed -> store.export.forget(now.job)
-            is ExportJob.Ready -> if (store.export.wasShared(now.job)) store.export.forget(now.job)
+            is ExportJob.Ready -> if (gone || store.export.wasShared(now.job)) store.export.forget(now.job)
             else -> {}
         }
         onDismiss()
     }
     val ready = now as? ExportJob.Ready
-    fun share(files: ExportJob.Ready) = actions.shareFiles(files.files) { store.export.shared(files.job) }
+    fun share(files: ExportJob.Ready) {
+        if (actions.shareFiles(files.files)) store.export.shared(files.job) else gone = true
+    }
     LaunchedEffect(ready?.job) { ready?.let(::share) }
     SettingsSheet(onDismiss = ::dismiss) {
         SheetTitle(Strings.sendTitle(context))
@@ -222,7 +237,7 @@ internal fun SendToEreaderSheet(work: WorkId, chapters: List<ChapterId>, actions
             null -> SendPhase.Choose
             is ExportJob.Preparing -> SendPhase.Preparing
             is ExportJob.Waiting -> SendPhase.Waiting
-            is ExportJob.Ready -> SendPhase.Ready
+            is ExportJob.Ready -> if (gone) SendPhase.Gone else SendPhase.Ready
             is ExportJob.Failed -> SendPhase.Failed
         }
         AnimatedContent(
@@ -300,6 +315,13 @@ internal fun SendToEreaderSheet(work: WorkId, chapters: List<ChapterId>, actions
                     SheetButtons {
                         QuietButton(Strings.actionClose(context), onClick = ::dismiss)
                         Button(onClick = ::start) { Text(Strings.actionTryAgain(context)) }
+                    }
+                }
+                SendPhase.Gone -> Column {
+                    SheetProblem(Strings.sendFilesGone(context))
+                    SheetButtons {
+                        QuietButton(Strings.actionClose(context), onClick = ::dismiss)
+                        Button(onClick = ::start) { Text(Strings.sendPrepare(context)) }
                     }
                 }
             }
@@ -463,6 +485,8 @@ private fun SendStatusRow(send: ExportJob, actions: AppActions) {
     val seriesMap by store.reading.series.collectAsStateWithLifecycle()
     val colors = MaterialTheme.colorScheme
     val device = deviceName(send.target)
+    // Its files went before Share could hand them over: it says so, with Done.
+    var gone by remember(send.job) { mutableStateOf(false) }
     Column(Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Column(Modifier.weight(1f)) {
@@ -490,25 +514,20 @@ private fun SendStatusRow(send: ExportJob, actions: AppActions) {
                 ) { Text(Strings.sendWaitingCancel(context)) }
                 is ExportJob.Ready -> Row(verticalAlignment = Alignment.CenterVertically) {
                     QuietButton(Strings.actionDone(context)) { store.export.forget(send.job) }
-                    OutlinedButton(
-                        onClick = { actions.shareFiles(send.files) { store.export.shared(send.job) } },
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.onSurface),
-                    ) { Text(Strings.actionShare(context)) }
+                    if (!gone) {
+                        OutlinedButton(
+                            onClick = { if (actions.shareFiles(send.files)) store.export.shared(send.job) else gone = true },
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.onSurface),
+                        ) { Text(Strings.actionShare(context)) }
+                    }
                 }
                 is ExportJob.Failed -> QuietButton(Strings.actionDone(context)) { store.export.forget(send.job) }
             }
         }
         when (send) {
             is ExportJob.Waiting -> WaitingLine(send.line.text(context), Modifier.padding(top = 8.dp), MaterialTheme.typography.bodyMedium)
-            is ExportJob.Failed -> Row(
-                Modifier.padding(top = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(Icons.Problem, contentDescription = null, tint = colors.error, modifier = Modifier.size(18.dp))
-                Text(sendFailedWords(context, send), style = MaterialTheme.typography.bodyMedium)
-            }
-            is ExportJob.Ready -> Text(
+            is ExportJob.Failed -> SendRowProblem(sendFailedWords(context, send))
+            is ExportJob.Ready -> if (gone) SendRowProblem(Strings.sendFilesGone(context)) else Text(
                 Strings.sendReady(context, send.files.size),
                 style = MaterialTheme.typography.bodyMedium,
                 color = colors.onSurfaceVariant,
@@ -516,6 +535,19 @@ private fun SendStatusRow(send: ExportJob, actions: AppActions) {
             )
             is ExportJob.Preparing -> {}
         }
+    }
+}
+
+/** Why a send in a row went no further, with the problem mark. */
+@Composable
+private fun SendRowProblem(text: String) {
+    Row(
+        Modifier.padding(top = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(Icons.Problem, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp))
+        Text(text, style = MaterialTheme.typography.bodyMedium)
     }
 }
 

@@ -302,7 +302,9 @@ class CameInModel(scope: CoroutineScope, private val send: (Command) -> Unit) {
                 is NothingCameIn.Unreachable, is NothingCameIn.WrongPassword, is NothingCameIn.WrongKey,
                 is NothingCameIn.NotABookServer, is NothingCameIn.EmptyCatalogue,
                 -> Adding.SERVER
-                is NothingCameIn.UnsupportedFiles, is NothingCameIn.EmptyFolder -> Adding.FOLDER
+                is NothingCameIn.UnsupportedFiles, is NothingCameIn.EmptyFolder,
+                is NothingCameIn.FolderUnreadable,
+                -> Adding.FOLDER
                 is NothingCameIn.EmptyStore, is NothingCameIn.OtherMedium, is NothingCameIn.StoreUnreachable -> Adding.STORE
             }
         }
@@ -394,6 +396,9 @@ object CameInSteps {
 
         /** Nothing readable: [report]'s skipped files, or none at all. */
         data class Nothing(val report: FolderReport) : FolderStep
+
+        /** The folder could not be read at all: gone, or no longer open to the app. */
+        data class Unreadable(val report: FolderReport) : FolderStep
     }
 
     fun folder(outcome: CameIn?): FolderStep = when (outcome) {
@@ -401,6 +406,7 @@ object CameInSteps {
         is CameIn.Empty -> when (val why = outcome.v1) {
             is NothingCameIn.UnsupportedFiles -> FolderStep.Nothing(why.folder)
             is NothingCameIn.EmptyFolder -> FolderStep.Nothing(why.folder)
+            is NothingCameIn.FolderUnreadable -> FolderStep.Unreadable(why.folder)
             else -> FolderStep.Scanning
         }
         else -> FolderStep.Scanning

@@ -1297,7 +1297,8 @@ pub fn shot_folder(ctx: &Rc<Ctx>, came: CameIn) {
         CameIn::Folder(r)
         | CameIn::Empty(
             NothingCameIn::UnsupportedFiles { folder: r }
-            | NothingCameIn::EmptyFolder { folder: r },
+            | NothingCameIn::EmptyFolder { folder: r }
+            | NothingCameIn::FolderUnreadable { folder: r },
         ) => (r.name.clone(), r.path.clone()),
         _ => return,
     };
@@ -1307,11 +1308,16 @@ pub fn shot_folder(ctx: &Rc<Ctx>, came: CameIn) {
 impl Folder {
     fn heard(self: &Rc<Self>, came: &CameIn) {
         let report = match came {
-            CameIn::Folder(report) => (report.clone(), report.series > 0),
+            CameIn::Folder(report) => (report.clone(), report.series > 0, false),
             CameIn::Empty(
                 NothingCameIn::UnsupportedFiles { folder }
                 | NothingCameIn::EmptyFolder { folder },
-            ) if folder.name == self.name => (folder.clone(), false),
+            ) if folder.name == self.name => (folder.clone(), false, false),
+            CameIn::Empty(NothingCameIn::FolderUnreadable { folder })
+                if folder.name == self.name =>
+            {
+                (folder.clone(), false, true)
+            }
             _ => return,
         };
         if report.0.name != self.name {
@@ -1325,9 +1331,15 @@ impl Folder {
         });
     }
 
-    fn show(&self, (report, found): (FolderReport, bool)) {
+    fn show(&self, (report, found, unreadable): (FolderReport, bool, bool)) {
         let column = gtk::Box::new(gtk::Orientation::Vertical, 14);
-        if found {
+        if unreadable {
+            column.append(&note(
+                Mark::Failed,
+                &t::book_folder_unreadable(&report.name),
+                Some(&t::book_folder_unreadable_line()),
+            ));
+        } else if found {
             column.append(&note(
                 Mark::Found,
                 &t::book_folder_found(i64::from(report.series), i64::from(report.files)),
@@ -1346,7 +1358,9 @@ impl Folder {
         if report.skipped() > 0 {
             column.append(&unsupported(&report));
         }
-        column.append(&widgets::haze(&t::book_folder_opens(), "caption"));
+        if !unreadable {
+            column.append(&widgets::haze(&t::book_folder_opens(), "caption"));
+        }
         self.primary.set_label(&if found {
             t::book_folder_add()
         } else {

@@ -167,6 +167,10 @@ pub enum NothingCameIn {
     UnsupportedFiles { folder: FolderReport },
     /// "Nothing in { $folder } that Kaeri can open": no books at all.
     EmptyFolder { folder: FolderReport },
+    /// "Couldn't read { $folder }": the scan could not start or stopped, for a folder that is
+    /// gone, on a drive that went, or that the device no longer lets Kaeri open. Its counts are
+    /// zero. The folder stays in Your sources, marked as not found, until it is taken out.
+    FolderUnreadable { folder: FolderReport },
     /// "{ $store } has no plugins yet".
     EmptyStore { store: StoreReport },
     /// "Every plugin in { $store } is for watching": none for what this device does.

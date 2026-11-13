@@ -18323,6 +18323,30 @@
         }
       }
     },
+    "book-folder-unreadable" : {
+      "comment" : "Title when a folder could not be read: the look through it could not start, or stopped. Argument 1: folder (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't read %1$@"
+          }
+        }
+      }
+    },
+    "book-folder-unreadable-line" : {
+      "comment" : "Line under it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It may have moved, or Kaeri no longer has access to it."
+          }
+        }
+      }
+    },
     "book-folder-unsupported" : {
       "comment" : "Row in the folder result: files that are books in formats Kaeri can't open. Argument 1: count (Int).",
       "extractionState" : "manual",
@@ -254906,7 +254930,7 @@
       }
     },
     "send-again" : {
-      "comment" : "Button that prepares a send's files again after they were cleared.",
+      "comment" : "Button on a send whose files are gone: prepares the same chapters for the same e-reader again.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -255758,7 +255782,7 @@
       }
     },
     "send-files-gone" : {
-      "comment" : "Line in the Send to e-reader sheet and in a send's row when the prepared files were cleared before they were shared. Prepared files are kept for a day.",
+      "comment" : "A ready send whose files were cleared before they were shared or saved, in the Send to e-reader sheet and in the send's row. Prepared files are kept for a day.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {

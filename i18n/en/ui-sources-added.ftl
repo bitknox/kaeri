@@ -140,6 +140,13 @@ book-folder-empty-line = { $files ->
 # Primary action after an empty folder.
 book-folder-choose-other = Choose another folder
 
+# Title when a folder could not be read: the look through it could not start, or stopped.
+# @arg folder: text
+book-folder-unreadable = Couldn't read { $folder }
+
+# Line under it.
+book-folder-unreadable-line = It may have moved, or { -app-name } no longer has access to it.
+
 # Title of the Join a plugin store sheet.
 store-join-title = Join a { -plugin-store }
 

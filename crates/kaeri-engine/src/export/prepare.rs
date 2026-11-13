@@ -488,7 +488,7 @@ fn novel(
     let sizes: Vec<u64> = req
         .chapters
         .iter()
-        .map(|c| fs::metadata(&c.path).map(|m| m.len()).map_err(|e| io(&e, &c.path)))
+        .map(|c| kaeri_books::tree::stat(&c.path).map(|m| m.size).map_err(|e| io(&e, &c.path)))
         .collect::<Result<_, _>>()?;
     let parts = split_parts(&sizes, limit_of(req));
     let count = parts.len();

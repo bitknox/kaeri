@@ -63,6 +63,7 @@ import app.kaeri.ui.AppRoot
 import app.kaeri.ui.NotificationActions
 import app.kaeri.ui.Destination
 import app.kaeri.ui.reading.LocalEinkLayout
+import app.kaeri.ui.reading.ExportShare
 import app.kaeri.eink.EinkAnswerPrefs
 import app.kaeri.eink.EinkLook
 import app.kaeri.eink.EinkPainter
@@ -235,7 +236,7 @@ class MainActivity : ComponentActivity() {
             openReader = { work, chapter, cover, from ->
                 ReaderLauncher.open(ReaderRequest(work, chapter, eink = app.eink.state.value.eink, cover = cover, from = from))
             },
-            shareFiles = { files, then -> shareExport(files); then() },
+            shareFiles = ::shareExport,
         )
         // Play on TV from the player: the episode and where it is, which the TV starts from.
         val player = PlayerFrame(app.player) {
@@ -345,15 +346,18 @@ class MainActivity : ComponentActivity() {
 
     /**
      * Send to e-reader: hand the prepared files to the share sheet, where the person picks the app
-     * that carries them to the e-reader (Send to Kindle, a cloud folder, mail).
+     * that carries them to the e-reader (Send to Kindle, a cloud folder, mail). True once the sheet
+     * is up; false when a file is gone or can't be offered, so the send says its files are gone
+     * and nothing is marked shared.
      */
-    private fun shareExport(files: List<app.kaeri.engine.model.ExportFile>) {
+    private fun shareExport(files: List<app.kaeri.engine.model.ExportFile>): Boolean {
+        if (ExportShare.gone(files)) return false
         val uris = files.mapNotNull { file ->
             runCatching {
                 androidx.core.content.FileProvider.getUriForFile(this, "$packageName.exports", java.io.File(file.path), file.name)
             }.onFailure { Log.w(KaeriApp.TAG, "an export could not be shared", it) }.getOrNull()
         }
-        if (uris.isEmpty()) return
+        if (uris.size != files.size) return false
         val send = if (uris.size == 1) {
             Intent(Intent.ACTION_SEND).putExtra(Intent.EXTRA_STREAM, uris.first())
         } else {
@@ -363,6 +367,7 @@ class MainActivity : ComponentActivity() {
         send.clipData = android.content.ClipData.newRawUri(null, uris.first()).apply { uris.drop(1).forEach { addItem(android.content.ClipData.Item(it)) } }
         send.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         startActivity(Intent.createChooser(send, null))
+        return true
     }
 
     /**

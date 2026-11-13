@@ -10779,6 +10779,12 @@ send-ready =
 # Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.
 send-share-again = [Šĥàŕé àĝàîñ~~~~]
 
+# A ready send whose files were cleared before they were shared or saved, in the Send to e-reader sheet and in the send's row. Prepared files are kept for a day.
+send-files-gone = [Ţĥéšé ƒîļéš àŕé ĝöñé. Þŕéþàŕéð ƒîļéš àŕé ķéþţ ƒöŕ à ðàý.~~~~~~~~~~~~~~~~~]
+
+# Button on a send whose files are gone: prepares the same chapters for the same e-reader again.
+send-again = [Šéñð àĝàîñ~~~]
+
 # A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
 send-banner = [Šéñðîñĝ ţö { $device }~~~~~]
 
@@ -12385,6 +12391,12 @@ book-folder-empty-line =
 
 # Primary action after an empty folder.
 book-folder-choose-other = [Çĥööšé àñöţĥéŕ ƒöļðéŕ~~~~~~~]
+
+# Title when a folder could not be read: the look through it could not start, or stopped.
+book-folder-unreadable = [Çöüļðñ'ţ ŕéàð { $folder }~~~~~~]
+
+# Line under it.
+book-folder-unreadable-line = [Îţ ɱàý ĥàṽé ɱöṽéð, öŕ Ķàéŕî ñö ļöñĝéŕ ĥàš àççéšš ţö îţ.~~~~~~~~~~~~~~~~~]
 
 # Title of the Join a plugin store sheet.
 store-join-title = [Ĵöîñ à þļüĝîñ šţöŕé~~~~~~]

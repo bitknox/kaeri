@@ -194,8 +194,11 @@ data class AppActions(
      * [from] the cover's place on screen when the reader grows out of it.
      */
     val openReader: (work: WorkId, chapter: ChapterId?, cover: String?, from: String?) -> Unit = { _, _, _, _ -> },
-    /** Hand prepared files to the share sheet, for Send to e-reader; then is called once it is up. */
-    val shareFiles: (files: List<app.kaeri.engine.model.ExportFile>, then: () -> Unit) -> Unit = { _, then -> then() },
+    /**
+     * Hand prepared files to the share sheet, for Send to e-reader: true once it is up, false when
+     * a file is gone ([app.kaeri.ui.reading.ExportShare.gone]) and nothing was offered.
+     */
+    val shareFiles: (files: List<app.kaeri.engine.model.ExportFile>) -> Boolean = { true },
 )
 
 /** The app's side of the Notifications pane, and of a show's own New episodes switch. */
