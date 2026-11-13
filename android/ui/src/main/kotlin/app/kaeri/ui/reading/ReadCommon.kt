@@ -582,7 +582,8 @@ internal fun failureWords(context: Context, failure: ReadingFailure): String = w
     is ReadingFailure.NeedsNewerKaeri -> ReadingMsg.ReadingFailedNeedsNewer(failure.world)
     is ReadingFailure.ReadingOff -> ReadingMsg.ReadingFailedOff
     is ReadingFailure.Other -> ReadingMsg.ReadingFailedOther(failure.reason)
-    is ReadingFailure.SendTooLarge, is ReadingFailure.SendCheck -> readingFailureMsg(failure)
+    is ReadingFailure.SendTooLarge, is ReadingFailure.SendCheck, is ReadingFailure.CannotWrite ->
+        readingFailureMsg(failure)
 }.text(context)
 
 // Between places

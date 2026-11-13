@@ -903,6 +903,13 @@ fn failures_survive_the_row() {
         ReadingFailure::SourceDown { source: "shelf".into() },
         ReadingFailure::Blocked { source: "shelf".into(), reason: "slow down: later".into() },
         ReadingFailure::SignInNeeded { what: "shelf".into() },
+        ReadingFailure::FileMissing { path: "/d/a:1/1.cbz".into() },
+        ReadingFailure::CannotWrite {
+            path: "/d/a:1/1.cbz".into(),
+            problem: WriteProblem::Name,
+        },
+        ReadingFailure::CannotWrite { path: "/d/x".into(), problem: WriteProblem::Denied },
+        ReadingFailure::CannotWrite { path: "/d/x".into(), problem: WriteProblem::Other },
     ] {
         assert_eq!(decode(&encode(&failure)), failure);
     }
@@ -913,6 +920,55 @@ fn ids_with_slashes_make_safe_distinct_file_names() {
     assert_eq!(safe("a:900501"), "a~3a900501");
     assert_ne!(safe("v2/1"), safe("v2_1"));
     assert!(!safe("x/-/extra").contains('/'));
+}
+
+#[test]
+fn ids_whose_old_names_collided_get_files_of_their_own() {
+    for (a, b) in [(":1", "\u{3a1}"), ("1.5", "1\u{2e5}"), ("x/-/a:c", "x/-/a\u{3ac}")] {
+        assert_ne!(safe(a), safe(b), "{a} and {b}");
+    }
+}
+
+/// A side story named in Japanese, with no number: its key is its whole label.
+const LONG_KANA: &str = "ひとりぼっちのよるにきみとはなしたことをわすれないでいたいとおもうばんがいへんそのいちのつづきのおまけまんが";
+
+#[tokio::test]
+async fn an_unnumbered_chapter_with_a_long_cjk_title_downloads() {
+    let kit = kit(&["1", LONG_KANA]);
+    let key = kaeri_core::books::ChapterKey::unnumbered(None, LONG_KANA);
+    assert!(kaeri_core::file_name::legacy(key.as_str()).len() > 255, "too long the old way");
+    kit.queue
+        .download(
+            &kit.lent,
+            WorkId::new(WORK),
+            DownloadPick::Chapters { ids: vec![ChapterId::new(key.as_str())] },
+        )
+        .await;
+    kit.settle().await;
+    assert_eq!(kit.states(), [(key.as_str().to_owned(), ChapterDownloadState::Done)]);
+    let shelf = kit.store().shelf(WORK).unwrap();
+    let file = std::path::Path::new(&shelf[0].path);
+    assert!(file.file_name().unwrap().len() <= 64 + ".cbz".len(), "{file:?}");
+}
+
+#[test]
+fn a_name_the_storage_refuses_is_said_as_such_not_as_a_missing_file() {
+    let dir = tempfile::tempdir().unwrap();
+    let long = dir.path().join("a".repeat(300));
+    let e = std::fs::create_dir_all(&long).unwrap_err();
+    let ReadingFailure::CannotWrite { problem, .. } = io_failure(&e, &long) else {
+        panic!("{e}: {:?}", io_failure(&e, &long));
+    };
+    assert_eq!(problem, WriteProblem::Name);
+    let denied = std::io::Error::from(std::io::ErrorKind::PermissionDenied);
+    assert!(matches!(
+        io_failure(&denied, &long),
+        ReadingFailure::CannotWrite { problem: WriteProblem::Denied, .. }
+    ));
+    let gone = std::io::Error::from(std::io::ErrorKind::NotFound);
+    assert!(matches!(io_failure(&gone, &long), ReadingFailure::FileMissing { .. }));
+    let full = std::io::Error::from(std::io::ErrorKind::StorageFull);
+    assert_eq!(io_failure(&full, &long), ReadingFailure::DiskFull);
 }
 
 fn msg_ids(parts: &[kaeri_model::Msg]) -> Vec<&'static str> {
@@ -1152,6 +1208,106 @@ async fn a_kept_page_that_does_not_check_out_is_fetched_again() {
         *kit.shelf.asked.lock().unwrap(),
         ["https://pages.example/1/1", "https://pages.example/1/3"]
     );
+}
+
+/// An unnumbered chapter whose old file name an earlier version could write, but that is now
+/// shortened.
+const LONG_LATIN: &str = "the long road home and everything that came after";
+
+fn long_latin_key() -> String {
+    kaeri_core::books::ChapterKey::unnumbered(None, LONG_LATIN).as_str().to_owned()
+}
+
+/// The pages kept for `chapter` in the folder an earlier version named.
+fn legacy_pages(kit: &Kit, chapter: &str) -> std::path::PathBuf {
+    let name = kaeri_core::file_name::legacy;
+    kept::pages_of(&kit.queue.dir().join(name(WORK)).join(name(chapter)))
+}
+
+#[tokio::test]
+async fn pages_an_earlier_version_kept_under_its_old_name_are_picked_up() {
+    let key = long_latin_key();
+    assert_ne!(safe(&key), kaeri_core::file_name::legacy(&key));
+    let kit = kit(&[LONG_LATIN]);
+    let page3 = format!("https://pages.example/{LONG_LATIN}/3");
+    kit.shelf.broken.lock().unwrap().push(page3.clone());
+    let pick = || DownloadPick::Chapters { ids: vec![ChapterId::new(key.as_str())] };
+    kit.queue.download(&kit.lent, WorkId::new(WORK), pick()).await;
+    kit.settle().await;
+    assert_eq!(kept_pages(&kit, &key).len(), 2);
+    // As the earlier version left them: under the old name.
+    let (new, old) = (
+        kept::pages_of(&kit.queue.dir().join(safe(WORK)).join(safe(&key))),
+        legacy_pages(&kit, &key),
+    );
+    std::fs::rename(&new, &old).unwrap();
+    kit.shelf.broken.lock().unwrap().clear();
+    kit.shelf.asked.lock().unwrap().clear();
+
+    kit.queue.recover(kit.store(), 10);
+    assert!(!old.exists());
+    assert_eq!(kept_pages(&kit, &key).len(), 2, "moved to the new name");
+    // A second launch finds nothing more to move.
+    kit.queue.recover(kit.store(), 11);
+    assert_eq!(kept_pages(&kit, &key).len(), 2);
+
+    kit.queue.download(&kit.lent, WorkId::new(WORK), pick()).await;
+    kit.settle().await;
+    assert_eq!(kit.states(), [(key.clone(), ChapterDownloadState::Done)]);
+    assert_eq!(*kit.shelf.asked.lock().unwrap(), [page3]);
+}
+
+#[tokio::test]
+async fn pages_under_an_old_name_two_chapters_shared_are_not_handed_to_either() {
+    // `x/-/a:c` and `x/-/aά` were both `x~2f-~2fa~3ac`. The first keeps that name; the second
+    // has one of its own now, and does not take pages that may be the first's.
+    let (kept_name, moved) = ("x/-/a:c", "x/-/a\u{3ac}");
+    let kit = kit(&[]);
+    for chapter in [kept_name, moved] {
+        let ask = BookDownloadAsk {
+            work: WORK,
+            chapter,
+            source_id: "shelf",
+            version_label: None,
+            keep_ready: false,
+        };
+        kit.store().queue_book_download(&ask, 1).unwrap();
+    }
+    let old = legacy_pages(&kit, moved);
+    assert_eq!(old, legacy_pages(&kit, kept_name));
+    std::fs::create_dir_all(&old).unwrap();
+    std::fs::write(old.join("count"), b"3").unwrap();
+
+    kit.queue.recover(kit.store(), 10);
+    assert!(old.join("count").exists(), "left for the chapter whose name it still is");
+    assert!(!kept::pages_of(&kit.queue.dir().join(safe(WORK)).join(safe(moved))).exists());
+}
+
+#[tokio::test]
+async fn a_chapter_downloaded_under_its_old_name_still_opens_from_there() {
+    let key = long_latin_key();
+    let kit = kit(&[LONG_LATIN]);
+    let pick = DownloadPick::Chapters { ids: vec![ChapterId::new(key.as_str())] };
+    kit.queue.download(&kit.lent, WorkId::new(WORK), pick).await;
+    kit.settle().await;
+    // As an earlier version left it: the file under the old name, and the row saying so.
+    let row = kit.store().book_download(WORK, &key).unwrap().unwrap();
+    let old = kit
+        .queue
+        .dir()
+        .join(kaeri_core::file_name::legacy(WORK))
+        .join(format!("{}.cbz", kaeri_core::file_name::legacy(&key)));
+    std::fs::rename(row.path.as_deref().unwrap(), &old).unwrap();
+    let path = old.to_string_lossy();
+    kit.store().book_download_progress(row.id, 3, Some(3), 4).unwrap();
+    assert!(kit.store().book_download_fetched(row.id, &path, Some(3), row.bytes, 5).unwrap());
+
+    kit.queue.recover(kit.store(), 10);
+    assert!(old.exists(), "a finished file stays where it is");
+    assert_eq!(kit.states(), [(key.clone(), ChapterDownloadState::Done)]);
+    let shelf = kit.store().shelf(WORK).unwrap();
+    assert_eq!(std::path::Path::new(&shelf[0].path), old);
+    assert!(kaeri_books::open(&old, &kaeri_books::Limits::default()).is_ok());
 }
 
 #[tokio::test]

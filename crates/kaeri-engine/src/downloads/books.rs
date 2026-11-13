@@ -43,7 +43,7 @@ use kaeri_model::{
     medium::AppEdition,
     reading::{
         BookDownloadRow, BookDownloadsView, ChapterDownloadState, ChapterReadState, ChapterRow,
-        DownloadPick, ReadingEvent, ReadingFailure, StorageMeter, VolumeGroup,
+        DownloadPick, ReadingEvent, ReadingFailure, StorageMeter, VolumeGroup, WriteProblem,
     },
 };
 use kaeri_store::{
@@ -309,6 +309,7 @@ impl BookDownloads {
             Err(e) => tracing::warn!(error = %e, "downloads cut short were not queued again"),
         }
         let Ok(rows) = store.book_downloads(None) else { return };
+        self.move_legacy_pages(&rows);
         let to_fetch: HashSet<PathBuf> = rows
             .iter()
             .filter(|r| {
@@ -327,6 +328,45 @@ impl BookDownloads {
                 } else if ext == "pages" && !to_fetch.contains(&path) {
                     KeptPages::remove(&path);
                 }
+            }
+        }
+    }
+
+    /// Pages an earlier version kept under its old names move to the names this one uses, so a
+    /// fetch it cut short goes on from them. Its finished files stay where they are: each row
+    /// keeps its file's path. Only an old name no other row shares, where case is ignored,
+    /// moves; pages under a shared one stay and are fetched again. Each move is one rename, so
+    /// a launch cut short leaves the pages either moved or where they were, for the next one.
+    fn move_legacy_pages(&self, rows: &[BookDownload]) {
+        let legacy = |r: &BookDownload| {
+            let name = kaeri_core::file_name::legacy;
+            self.0.dir.join(name(&r.work)).join(name(&r.chapter))
+        };
+        let key = |path: &Path| path.to_string_lossy().to_lowercase();
+        let mut owners: HashMap<String, usize> = HashMap::new();
+        for row in rows {
+            *owners.entry(key(&legacy(row))).or_default() += 1;
+        }
+        let current: HashSet<String> = rows.iter().map(|r| key(&self.file_stem(r))).collect();
+        for row in rows {
+            if !matches!(row.state, BookDownloadState::Queued | BookDownloadState::Failed) {
+                continue;
+            }
+            let (old, new) = (legacy(row), self.file_stem(row));
+            let old_key = key(&old);
+            if old == new || owners.get(&old_key) != Some(&1) || current.contains(&old_key) {
+                continue;
+            }
+            let (from, to) = (pages_of(&old), pages_of(&new));
+            if !from.is_dir() || to.exists() {
+                continue;
+            }
+            let moved = to
+                .parent()
+                .map_or(Ok(()), std::fs::create_dir_all)
+                .and_then(|()| std::fs::rename(&from, &to));
+            if let Err(e) = moved {
+                tracing::warn!(error = %e, "pages kept under an old name were not moved");
             }
         }
     }
@@ -753,6 +793,7 @@ impl BookDownloads {
             return;
         }
         let now = lent.clock.now();
+        lent.sources.plugins_in(&lent.plugins, None).await;
         lent.sources.adopt_plugins(&lent.plugins);
         // The list the reader opened from serves while it is fresh: a chapter read is no reason
         // to ask the source for the whole list again.
@@ -795,6 +836,7 @@ impl BookDownloads {
         let lent = lent.clone();
         tokio::spawn(async move {
             let now = lent.clock.now();
+            lent.sources.plugins_in(&lent.plugins, None).await;
             lent.sources.adopt_plugins(&lent.plugins);
             // Only the downloads changed: the list as kept says the rest.
             let listed = match lent.sources.kept_listing(&work, now, i64::MAX) {
@@ -1123,8 +1165,10 @@ impl BookDownloads {
                 // The edge pages are fingerprinted on the way, for the series' credit pages.
                 let mut prints = crate::reading::credits::Recorder::new(&opened.spans());
                 for index in 0..total {
-                    let bytes =
-                        kept.read(index).map_err(|e| Stop::Failed(io_failure(&e, &dir)))?;
+                    let bytes = kept.read(index).map_err(|_| {
+                        let path = dir.to_string_lossy().into_owned();
+                        Stop::Failed(ReadingFailure::FileMissing { path })
+                    })?;
                     prints.page(index, &bytes).await;
                     cbz.add_page(&bytes)
                         .map_err(|e| Stop::Failed(book_failure(&e, &part, &source)))?;
@@ -1267,17 +1311,10 @@ fn part_of(stem: &Path) -> PathBuf {
     stem.with_file_name(name)
 }
 
-/// A name that is safe in any file system and tells different ids apart.
+/// The file or folder name for a work's id or a chapter's key: short enough for any file
+/// system, and never another id's ([`kaeri_core::file_name::of_id`]).
 pub(crate) fn safe(id: &str) -> String {
-    let mut out = String::with_capacity(id.len());
-    for ch in id.chars() {
-        if ch.is_ascii_alphanumeric() || ch == '-' || ch == '_' {
-            out.push(ch);
-        } else {
-            out.push_str(&format!("~{:x}", u32::from(ch)));
-        }
-    }
-    out
+    kaeri_core::file_name::of_id(id)
 }
 
 /// Take a downloaded file away. True when it is gone, or was never there.
@@ -1293,13 +1330,20 @@ fn forget_file(row: &BookDownload) -> bool {
     }
 }
 
-fn io_failure(e: &std::io::Error, path: &Path) -> ReadingFailure {
-    // Out of room is the one the person can act on; the rest are the file's.
-    if e.raw_os_error() == Some(28) || e.kind() == std::io::ErrorKind::StorageFull {
-        ReadingFailure::DiskFull
-    } else {
-        ReadingFailure::FileMissing { path: path.to_string_lossy().into_owned() }
-    }
+/// Why writing `path` failed, in the reader's terms: out of room, a folder that is gone, a name
+/// the storage does not take, storage that may not be written, or another error.
+pub(crate) fn io_failure(e: &std::io::Error, path: &Path) -> ReadingFailure {
+    use std::io::ErrorKind as K;
+    let path = path.to_string_lossy().into_owned();
+    let problem = match e.kind() {
+        _ if e.raw_os_error() == Some(28) => return ReadingFailure::DiskFull,
+        K::StorageFull | K::QuotaExceeded => return ReadingFailure::DiskFull,
+        K::NotFound => return ReadingFailure::FileMissing { path },
+        K::InvalidFilename => WriteProblem::Name,
+        K::PermissionDenied | K::ReadOnlyFilesystem => WriteProblem::Denied,
+        _ => WriteProblem::Other,
+    };
+    ReadingFailure::CannotWrite { path, problem }
 }
 
 fn book_failure(e: &kaeri_books::BookError, path: &Path, source: &str) -> ReadingFailure {
@@ -1373,6 +1417,14 @@ fn encode(failure: &ReadingFailure) -> String {
         ReadingFailure::SignInNeeded { what } => format!("sign_in:{what}"),
         ReadingFailure::Blocked { source, reason } => format!("blocked:{source}:{reason}"),
         ReadingFailure::FileMissing { path } => format!("file:{path}"),
+        ReadingFailure::CannotWrite { path, problem } => {
+            let problem = match problem {
+                WriteProblem::Name => "name",
+                WriteProblem::Denied => "denied",
+                WriteProblem::Other => "other",
+            };
+            format!("write:{problem}:{path}")
+        }
         _ => "other".into(),
     }
 }
@@ -1393,6 +1445,15 @@ fn decode(text: &str) -> ReadingFailure {
             ReadingFailure::Blocked { source: source.to_owned(), reason: reason.to_owned() }
         }
         "file" => ReadingFailure::FileMissing { path: rest.to_owned() },
+        "write" => {
+            let (problem, path) = rest.split_once(':').unwrap_or(("other", rest));
+            let problem = match problem {
+                "name" => WriteProblem::Name,
+                "denied" => WriteProblem::Denied,
+                _ => WriteProblem::Other,
+            };
+            ReadingFailure::CannotWrite { path: path.to_owned(), problem }
+        }
         _ => ReadingFailure::SourceDown { source: rest.to_owned() },
     }
 }
@@ -1463,7 +1524,7 @@ impl Listers {
             .book_refs_for_work(work.as_str())
             .unwrap_or_default()
             .into_iter()
-            .filter(|(other, _)| other != edition)
+            .filter(|(other, _)| other != edition && sources.is_available(other))
             .filter_map(|(other, series)| {
                 let (list, _) = crate::read_catalog::chapters::kept(store, &other, &series)?;
                 Some((other, list.into_iter().map(|k| k.id).collect()))

@@ -21,6 +21,17 @@ use std::{
 use ratatui::layout::Rect;
 use ratatui_image::{picker::Picker, protocol::StatefulProtocol};
 
+/// Whether the terminal answers a cursor position report. crossterm waits for the answer for
+/// at most two seconds without leaving a read behind, and keeps keys pressed meanwhile for the
+/// app's own event loop. On Windows the position comes from the console itself, so this says
+/// nothing there and the query runs as before.
+fn answers_queries() -> bool {
+    if cfg!(windows) {
+        return true;
+    }
+    crossterm::cursor::position().is_ok()
+}
+
 /// What the terminal can actually do.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Graphics {
@@ -62,8 +73,23 @@ impl ImageEngine {
     /// Detection can fail — a pipe, a CI runner, a terminal that ignores the query — and
     /// that is not an error. It degrades to halfblocks, which work anywhere.
     pub fn detect(enabled: bool) -> Self {
+        Self::detect_with(enabled, answers_queries)
+    }
+
+    /// [`Self::detect`], with `answers` telling whether the terminal answers queries at all.
+    ///
+    /// The graphics query reads its reply from stdin on a thread of its own. When no reply
+    /// comes, the query gives up but the thread stays blocked on that read, and the first key
+    /// pressed after start-up goes to it instead of the app. So the full query runs only in
+    /// a terminal that answered a cursor position report in time; it ends on a status report
+    /// any such terminal answers, so it never leaves a read behind.
+    fn detect_with(enabled: bool, answers: impl FnOnce() -> bool) -> Self {
         if !enabled {
             return Self::disabled();
+        }
+        if !answers() {
+            tracing::info!("the terminal answers no queries; using halfblocks");
+            return Self::halfblocks_with_default_cells();
         }
         match Picker::from_query_stdio() {
             Ok(picker) => {
@@ -79,15 +105,19 @@ impl ImageEngine {
             }
             Err(e) => {
                 tracing::info!(error = %e, "no graphics protocol; using halfblocks");
-                // A sensible default cell aspect for halfblocks, which pack two vertical
-                // pixels per cell.
-                Self {
-                    picker: Some(Picker::halfblocks()),
-                    graphics: Graphics::Halfblocks,
-                    cache_dir: PathBuf::new(),
-                    font_size: (8, 16),
-                }
+                Self::halfblocks_with_default_cells()
             }
+        }
+    }
+
+    /// Halfblocks with a sensible default cell aspect, as halfblocks pack two vertical pixels
+    /// per cell.
+    fn halfblocks_with_default_cells() -> Self {
+        Self {
+            picker: Some(Picker::halfblocks()),
+            graphics: Graphics::Halfblocks,
+            cache_dir: PathBuf::new(),
+            font_size: (8, 16),
         }
     }
 
@@ -455,6 +485,22 @@ mod tests {
         let engine = ImageEngine::detect(true);
         assert!(engine.graphics() != Graphics::Disabled);
         assert!(engine.is_enabled());
+    }
+
+    #[test]
+    fn a_terminal_that_answers_nothing_gets_halfblocks_without_a_query() {
+        // The graphics query is never started, so no read of stdin is left waiting for a
+        // reply that will not come and the first key pressed reaches the app.
+        let engine = ImageEngine::detect_with(true, || false);
+        assert_eq!(engine.graphics(), Graphics::Halfblocks);
+        assert!(engine.is_enabled());
+        let mut asked = false;
+        let off = ImageEngine::detect_with(false, || {
+            asked = true;
+            true
+        });
+        assert_eq!(off.graphics(), Graphics::Disabled);
+        assert!(!asked, "images off asks the terminal nothing");
     }
 
     #[test]

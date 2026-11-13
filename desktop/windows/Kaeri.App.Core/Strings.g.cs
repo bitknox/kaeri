@@ -654,6 +654,15 @@ public static partial class T
     /// <summary>Why a chapter could not be saved: the disk is full.</summary>
     public static string ReadingFailedDiskFull => Get("ReadingFailedDiskFull");
 
+    /// <summary>Why a chapter or a file for an e-reader could not be saved: the storage refused the name, because it is too long or has characters the storage doesn't allow. The path is the file's or the folder's.</summary>
+    public static string ReadingFailedWriteName(string path) => Fill(Get("ReadingFailedWriteName"), ("path", path));
+
+    /// <summary>Why a chapter or a file for an e-reader could not be saved: the storage is read-only, or Kaeri isn't allowed to write there. The path is the file's or the folder's.</summary>
+    public static string ReadingFailedWriteDenied(string path) => Fill(Get("ReadingFailedWriteDenied"), ("path", path));
+
+    /// <summary>Why a chapter or a file for an e-reader could not be saved, for another reason the system gave. The path is the file's or the folder's.</summary>
+    public static string ReadingFailedWrite(string path) => Fill(Get("ReadingFailedWrite"), ("path", path));
+
     /// <summary>Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.</summary>
     public static string ReadingFailedWebview(long version) => Fill(Get("ReadingFailedWebview"), ("version", version.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -12199,6 +12208,9 @@ public static partial class T
         ["ReadingFailedUnsupported"] = "Kaeri can't read {kind} files.",
         ["ReadingFailedProtected"] = "This book is copy-protected, so Kaeri can't open it.",
         ["ReadingFailedDiskFull"] = "There's no room left on this device. Free some space and try again.",
+        ["ReadingFailedWriteName"] = "The storage doesn't take the name {path}. It may be too long.",
+        ["ReadingFailedWriteDenied"] = "Kaeri isn't allowed to write {path}. Check that the storage isn't read-only, then try again.",
+        ["ReadingFailedWrite"] = "Kaeri couldn't write {path}. Try again.",
         ["ReadingFailedWebview"] = "Novels need a newer system WebView than version {version}. Update Android System WebView and try again.",
         ["ReadingFailedNeedsNewer"] = "This plugin needs a newer Kaeri ({world}). Update Kaeri to use it.",
         ["ReadingFailedOff"] = "Reading isn't available in this version of Kaeri.",

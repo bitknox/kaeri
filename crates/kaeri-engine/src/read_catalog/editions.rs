@@ -803,9 +803,12 @@ pub(crate) fn search_there(
     query: String,
     tx: &Outbox,
 ) {
-    kit.sources.adopt_plugins(&kit.plugins);
     let (kit, tx) = (kit.clone(), tx.clone());
     tokio::spawn(async move {
+        // At launch the source's plugin may not be in yet: it is waited for, not told it
+        // has nothing.
+        kit.sources.plugins_in(&kit.plugins, Some(&source)).await;
+        kit.sources.adopt_plugins(&kit.plugins);
         let about = about(&kit, &work);
         let hints = BookHints::default();
         let asked = kit
@@ -1737,5 +1740,52 @@ mod tests {
             kit.sources.edition_of(&work, Some("bare")),
             Some(("bare".into(), "b-1".into()))
         );
+    }
+
+    /// The person's pick on a source not installed, or switched off, while another source
+    /// lists the work: the work reads from that one, and the pick is kept for the source's
+    /// return.
+    #[tokio::test]
+    async fn a_picked_edition_whose_source_is_gone_or_off_gives_way_until_it_is_back() {
+        for off in [false, true] {
+            let dir = tempfile::tempdir().unwrap();
+            let manga = [Medium::Manga];
+            let brick = Stock::new("brick", &manga, Ok(Vec::new())).listing("s-1", 30, None);
+            let kiln = Stock::new("kiln", &manga, Ok(Vec::new())).listing("k-1", 30, None);
+            let sources: Vec<&Arc<Stock>> = if off { vec![&brick, &kiln] } else { vec![&kiln] };
+            let kit = kit_of(dir.path(), &sources, COUNCIL);
+            if off {
+                kit.sources.registry.set_off(["brick".to_owned()]);
+            }
+            kit.store.set_book_match("brick", "s-1", WORK, MATCHED, true, false, NOW).unwrap();
+            kit.store.set_book_match("kiln", "k-1", WORK, MATCHED, true, false, NOW).unwrap();
+            let pref = kaeri_store::reading::EditionPref {
+                source_id: "brick".into(),
+                version_label: None,
+                language: None,
+            };
+            kit.store.set_edition_pref(WORK, Some(&pref)).unwrap();
+            let work = WorkId::new(WORK);
+            assert_eq!(
+                kit.sources.edition_of(&work, None),
+                Some(("kiln".into(), "k-1".into())),
+                "off={off}"
+            );
+            let (row, groups) = kit.sources.chapters(&work, None, NOW).await.unwrap();
+            assert_eq!(row.map(|r| r.source_id).as_deref(), Some("kiln"));
+            assert_eq!(groups.iter().map(|g| g.chapters.len()).sum::<usize>(), 30);
+            let kept = kit.store.edition_pref(WORK).unwrap().map(|p| p.source_id);
+            assert_eq!(kept.as_deref(), Some("brick"), "the pick is kept");
+            if off {
+                kit.sources.registry.set_off(Vec::<String>::new());
+            } else {
+                kit.sources.registry.put(brick.clone());
+            }
+            assert_eq!(
+                kit.sources.edition_of(&work, None),
+                Some(("brick".into(), "s-1".into())),
+                "back (off={off})"
+            );
+        }
     }
 }

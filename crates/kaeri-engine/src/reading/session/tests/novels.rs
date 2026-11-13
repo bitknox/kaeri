@@ -923,3 +923,23 @@ async fn a_text_chapter_opens_with_its_pictures_and_a_dead_host_holds_it_back_se
     assert_eq!(h.get(&at("images/2?n=1")).status, 503, "still coming");
     assert_eq!(h.get(&at("images/2?state&n=1")).status, 404, "and not failed");
 }
+
+/// A novel's view reports its place as it scrolls within the last page: those reports keep the
+/// read rule's wait going, so the chapter counts as read once it has held.
+#[tokio::test(start_paused = true)]
+async fn scroll_reports_within_the_last_page_let_the_read_rule_run_out() {
+    let mut h = novel_harness();
+    let (_, novel) = h.open_novel(OpenAt::Resume).await;
+    let last = novel.spine.iter().rposition(|s| s.linear).unwrap() as u32;
+    h.at(pos(last, &[2], 0), 1, 2, TurnHow::Turn);
+    let mut read = 0;
+    for step in 1..=10 {
+        tokio::time::sleep(Duration::from_millis(500)).await;
+        h.at(pos(last, &[2], step * 3), 1, 2, TurnHow::Placed);
+        tokio::task::yield_now().await;
+        read +=
+            h.drain().iter().filter(|e| matches!(e, ReaderEvent::ChapterRead { .. })).count();
+    }
+    assert_eq!(read, 1, "counted read once");
+    assert!(h.kept("1").unwrap().read);
+}

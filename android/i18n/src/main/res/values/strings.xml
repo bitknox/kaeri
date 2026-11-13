@@ -455,6 +455,12 @@
     <string name="reading_failed_protected">This book is copy-protected, so Kaeri can\'t open it.</string>
     <!-- Why a chapter could not be saved: the disk is full. -->
     <string name="reading_failed_disk_full">There\'s no room left on this device. Free some space and try again.</string>
+    <!-- Why a chapter or a file for an e-reader could not be saved: the storage refused the name, because it is too long or has characters the storage doesn't allow. The path is the file's or the folder's. -->
+    <string name="reading_failed_write_name">The storage doesn\'t take the name %1$s. It may be too long.</string>
+    <!-- Why a chapter or a file for an e-reader could not be saved: the storage is read-only, or Kaeri isn't allowed to write there. The path is the file's or the folder's. -->
+    <string name="reading_failed_write_denied">Kaeri isn\'t allowed to write %1$s. Check that the storage isn\'t read-only, then try again.</string>
+    <!-- Why a chapter or a file for an e-reader could not be saved, for another reason the system gave. The path is the file's or the folder's. -->
+    <string name="reading_failed_write">Kaeri couldn\'t write %1$s. Try again.</string>
     <!-- Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80. -->
     <string name="reading_failed_webview">Novels need a newer system WebView than version %1$d. Update Android System WebView and try again.</string>
     <!-- Why a book plugin could not be used: it was built for a newer Kaeri. The world is the plugin interface's name and version. -->

@@ -515,8 +515,11 @@ impl OneSend {
             self.told.gathered.store(n, Ordering::Relaxed);
             return Ok((chapters, 0));
         }
-        let now = self.lent.clock.now();
+        // A send held over from the last run starts at launch, maybe before the plugins are
+        // in: they are waited for, so the source is asked rather than missed.
+        self.lent.sources.plugins_in(&self.lent.plugins, None).await;
         self.lent.sources.adopt_plugins(&self.lent.plugins);
+        let now = self.lent.clock.now();
         let (source, rows) =
             crate::downloads::books::ordered_chapters(&self.lent.sources, &self.work, now)
                 .await
@@ -551,10 +554,8 @@ impl OneSend {
             self.told.chapter(Some(label.clone()));
             let missing = u32::try_from(to_fetch).unwrap_or(u32::MAX).saturating_sub(fetched);
             self.may_fetch(missing).await?;
-            std::fs::create_dir_all(temp).map_err(|_| {
-                prepare::Stop::Failed(ReadingFailure::FileMissing {
-                    path: temp.display().to_string(),
-                })
+            std::fs::create_dir_all(temp).map_err(|e| {
+                prepare::Stop::Failed(crate::downloads::books::io_failure(&e, temp))
             })?;
             let base = fetched * FETCH_WEIGHT;
             let told = self.told.clone();
