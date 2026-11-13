@@ -563,6 +563,12 @@ public final class BookSourcesModel {
         return view.folders.isEmpty && view.servers.isEmpty && view.plugins.isEmpty
     }
 
+    /// Folders, servers and book plugins, all told.
+    public var count: Int {
+        guard let view else { return 0 }
+        return view.folders.count + view.servers.count + view.plugins.count
+    }
+
     public func load() { send?(.bookSources(.load)) }
     public func addFolder(_ folder: FolderRef) { send?(.bookSources(.addFolder(folder: folder))) }
     public func removeFolder(_ id: String) { send?(.bookSources(.removeFolder(id: id))) }
