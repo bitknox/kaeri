@@ -106,6 +106,8 @@ public struct ReaderScreen: View {
         }
         #endif
         .onChange(of: model.sheet) { _, sheet in if sheet != nil { model.chromeShown = true } }
+        // A chapter that would not open puts the group away, so Try again's open starts without it.
+        .onChange(of: ReaderChrome.failed(model)) { _, failed in if failed { model.hideChrome() } }
         .onChange(of: model.held?.tick) { _, _ in heldShown = 1 }
         .onChange(of: model.held?.landed == true) { _, landed in if landed { letHeldGo() } }
         #if os(iOS)
