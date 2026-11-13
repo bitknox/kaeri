@@ -110,8 +110,14 @@ impl Capabilities {
         limits: Limits,
         http: Option<crate::HttpClient>,
     ) -> Self {
+        let plugin_id = plugin_id.into();
+        // QA ONLY, never merged: the QA gate learns which hosts are this source's.
+        #[cfg(feature = "fetch")]
+        if http.is_some() {
+            qa_register(&plugin_id, &allowed_hosts);
+        }
         Self {
-            plugin_id: plugin_id.into(),
+            plugin_id,
             allowed_hosts,
             limits,
             fetches: Arc::new(AtomicU32::new(0)),
@@ -225,9 +231,12 @@ impl Capabilities {
         request: Request,
     ) -> Result<Response, HostError> {
         tracing::debug!(plugin = %self.plugin_id, url = %request.url, "plugin fetch");
-        // QA ONLY, never merged: at most one request per 4 s per plugin (KAERI_QA_GATE_MS),
-        // plugin calls ahead of page images.
-        qa_gate(&self.plugin_id, qa_gap(), QA_PAGE.try_with(|_| ()).is_ok()).await;
+        // QA ONLY, never merged: at most one request per 4 s per source (KAERI_QA_GATE_MS),
+        // plugin calls ahead of page images. The turn is held until the request has finished,
+        // so whatever holds it below (the net rule's delay, a slow connect) moves the next
+        // request's turn with it.
+        let page = QA_PAGE.try_with(|_| ()).is_ok();
+        let qa_turn = qa_gate(Some(&self.plugin_id), &request.url, qa_gap(), page).await;
         // QA ONLY: a poor network for plugin fetches, from the file KAERI_QA_NET names:
         // "offline" fails at once, "hang" waits out the deadline, "delay <ms>" adds a wait,
         // "drop <percent>" fails that share of requests.
@@ -241,7 +250,10 @@ impl Capabilities {
                     tokio::time::sleep(self.limits.deadline).await;
                     return Err(HostError::Timeout);
                 }
-                Some("delay") => tokio::time::sleep(std::time::Duration::from_millis(arg(words.next()))).await,
+                Some("delay") => {
+                    tokio::time::sleep(std::time::Duration::from_millis(arg(words.next())))
+                        .await
+                }
                 Some("drop") => {
                     let ns = std::time::SystemTime::now()
                         .duration_since(std::time::UNIX_EPOCH)
@@ -254,20 +266,8 @@ impl Capabilities {
                 _ => {}
             }
         }
-        if let Ok(path) = qa_path("KAERI_QA_FETCH_LOG", "qa-fetch.log") {
-            use std::io::Write as _;
-            let ms = std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .map(|d| d.as_millis())
-                .unwrap_or(0);
-            if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path)
-            {
-                // r6b iPad: the path's last part too, so page images show their number.
-                let tail = request.url.split(['?', '#']).next().unwrap_or("").rsplit('/').next().unwrap_or("-");
-                let tail: String = tail.chars().rev().take(24).collect::<Vec<_>>().into_iter().rev().collect();
-                let _ = writeln!(f, "{ms} {} {} {tail}", self.plugin_id, request.url.split('/').nth(2).unwrap_or("-"));
-            }
-        }
+        // QA ONLY: logged as it goes out, after any rule held it.
+        qa_log(&self.plugin_id, &request.url);
 
         // The same client the native sources use, so one place owns the connection settings.
         let mut builder = match request.method.to_ascii_uppercase().as_str() {
@@ -281,8 +281,10 @@ impl Capabilities {
             builder = builder.body(body);
         }
 
-        let response = tokio::time::timeout(self.limits.deadline, builder.send())
-            .await
+        let sent = tokio::time::timeout(self.limits.deadline, builder.send()).await;
+        // QA ONLY: the request has finished; the source's next turn counts from now.
+        drop(qa_turn);
+        let response = sent
             .map_err(|_| HostError::Timeout)?
             .map_err(|e| HostError::Transport(e.to_string()))?;
 
@@ -312,38 +314,16 @@ fn qa_path(var: &str, file: &str) -> Result<String, std::env::VarError> {
     })
 }
 
-/// QA ONLY, never merged (r6 iPad hunt): the same gate for the engine's own artwork fetches,
-/// keyed by host, with the same net rule ("offline" fails) and fetch log. False means fail.
-#[cfg(feature = "fetch")]
-pub async fn qa_art_gate(url: &str) -> bool {
-    let host = url.split('/').nth(2).unwrap_or("-").to_owned();
-    qa_gate(&format!("art:{host}"), qa_gap(), false).await;
-    if let Ok(path) = qa_path("KAERI_QA_NET", "qa-net")
-        && std::fs::read_to_string(path).unwrap_or_default().trim_start().starts_with("offline")
-    {
-        return false;
-    }
-    if let Ok(path) = qa_path("KAERI_QA_FETCH_LOG", "qa-fetch.log") {
-        use std::io::Write as _;
-        let ms = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map(|d| d.as_millis())
-            .unwrap_or(0);
-        if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
-            let _ = writeln!(f, "{ms} art {host}");
-        }
-    }
-    true
-}
-
-/// QA ONLY, never merged: the gap between two requests of one plugin, 4 s unless
-/// KAERI_QA_GATE_MS sets it in milliseconds.
+/// QA ONLY, never merged: the gap between two requests of one source, 4 s unless
+/// KAERI_QA_GATE_MS sets it in milliseconds, plus 50 ms so the fetch log's wall clock never
+/// reads a pair under the gap.
 #[cfg(feature = "fetch")]
 fn qa_gap() -> std::time::Duration {
     std::env::var("KAERI_QA_GATE_MS")
         .ok()
         .and_then(|v| v.trim().parse::<u64>().ok())
         .map_or(std::time::Duration::from_secs(4), std::time::Duration::from_millis)
+        + std::time::Duration::from_millis(50)
 }
 
 tokio::task_local! {
@@ -351,88 +331,192 @@ tokio::task_local! {
     static QA_PAGE: ();
 }
 
-/// QA ONLY, never merged: one plugin's turn: when its last request went out, and who waits.
+/// QA ONLY, never merged: the gate's state for the whole process. Each source (a plugin id)
+/// has a turn. A request takes the turn of its own plugin and of every plugin whose
+/// allowed-hosts cover its host, so a source's API host, its CDN and a host two plugins share
+/// all pace together, and Kaeri's own requests to a source's host (artwork) wait too.
 #[cfg(feature = "fetch")]
 #[derive(Default)]
-struct QaTurn {
-    queue: std::sync::Mutex<QaQueue>,
-    moved: tokio::sync::Notify,
-}
-
-#[cfg(feature = "fetch")]
-#[derive(Default)]
-struct QaQueue {
-    last: Option<tokio::time::Instant>,
-    /// Waiters in turn order: plugin calls (`false`) ahead of page images, each in arrival order.
-    waiting: std::collections::BTreeSet<(bool, u64)>,
+struct QaGate {
+    turns: std::collections::HashMap<String, QaTurn>,
+    /// Each plugin's allowed-hosts, as loaded.
+    hosts: std::collections::HashMap<String, Vec<String>>,
+    /// Waiters in turn order with the turns each needs: plugin calls (`false`) ahead of page
+    /// images, each in arrival order.
+    waiting: std::collections::BTreeMap<(bool, u64), Vec<String>>,
     tickets: u64,
 }
 
+/// QA ONLY, never merged: one source's turn.
 #[cfg(feature = "fetch")]
-impl QaTurn {
-    fn queue(&self) -> std::sync::MutexGuard<'_, QaQueue> {
-        self.queue.lock().unwrap_or_else(|e| e.into_inner())
+#[derive(Default)]
+struct QaTurn {
+    /// A request of this source is on its way and has not finished.
+    out: bool,
+    /// When the last request finished, which is after it went out.
+    last: Option<tokio::time::Instant>,
+    /// The last turn went to a plugin call ahead of a page image that was waiting longer.
+    /// The page images then go in arrival order with the calls, so a loop of plugin calls
+    /// (a series page asked again and again) cannot starve a download's pages: they get at
+    /// least every other turn.
+    jumped: bool,
+}
+
+#[cfg(feature = "fetch")]
+fn qa_state() -> (std::sync::MutexGuard<'static, QaGate>, &'static tokio::sync::Notify) {
+    static GATE: std::sync::LazyLock<(std::sync::Mutex<QaGate>, tokio::sync::Notify)> =
+        std::sync::LazyLock::new(Default::default);
+    (GATE.0.lock().unwrap_or_else(|e| e.into_inner()), &GATE.1)
+}
+
+/// QA ONLY, never merged: note a plugin's allowed-hosts, so a request to one of them from
+/// anywhere waits for that plugin's turn.
+#[cfg(feature = "fetch")]
+pub(crate) fn qa_register(plugin: &str, allowed_hosts: &[String]) {
+    if plugin.is_empty() || allowed_hosts.is_empty() {
+        return;
+    }
+    let (mut gate, _) = qa_state();
+    if gate.hosts.get(plugin).is_none_or(|known| known != allowed_hosts) {
+        gate.hosts.insert(plugin.to_owned(), allowed_hosts.to_vec());
     }
 }
 
-/// QA ONLY, never merged: the turn for a plugin, the same one for every call with its id.
+/// QA ONLY, never merged: where a waiter stands in the queues it shares with others. Plugin
+/// calls go first unless one of the waiter's turns last went to a call that jumped a page.
 #[cfg(feature = "fetch")]
-fn qa_turn(plugin: &str) -> std::sync::Arc<QaTurn> {
-    static TURNS: std::sync::LazyLock<
-        std::sync::Mutex<std::collections::HashMap<String, std::sync::Arc<QaTurn>>>,
-    > = std::sync::LazyLock::new(Default::default);
-    let mut turns = TURNS.lock().unwrap_or_else(|e| e.into_inner());
-    turns.entry(plugin.to_owned()).or_default().clone()
+fn qa_rank(gate: &QaGate, (page, ticket): (bool, u64), keys: &[String]) -> (bool, u64) {
+    let jumped = keys.iter().any(|k| gate.turns.get(k).is_some_and(|t| t.jumped));
+    (page && !jumped, ticket)
+}
+
+/// QA ONLY, never merged: the turns a request to `url` takes, sorted.
+#[cfg(feature = "fetch")]
+fn qa_keys(gate: &QaGate, plugin: Option<&str>, url: &str) -> Vec<String> {
+    let mut keys: Vec<String> = plugin.into_iter().map(str::to_owned).collect();
+    keys.extend(
+        gate.hosts
+            .iter()
+            .filter(|(_, hosts)| sandbox::is_allowed(url, hosts))
+            .map(|(id, _)| id.clone()),
+    );
+    keys.sort();
+    keys.dedup();
+    keys
 }
 
 /// QA ONLY, never merged: a place in the queue, given up when the waiter is dropped.
 #[cfg(feature = "fetch")]
-struct QaPlace<'a> {
-    turn: &'a QaTurn,
+struct QaPlace {
     key: (bool, u64),
+    armed: bool,
 }
 
 #[cfg(feature = "fetch")]
-impl Drop for QaPlace<'_> {
+impl Drop for QaPlace {
     fn drop(&mut self) {
-        self.turn.queue().waiting.remove(&self.key);
-        self.turn.moved.notify_waiters();
+        if self.armed {
+            let (mut gate, moved) = qa_state();
+            gate.waiting.remove(&self.key);
+            drop(gate);
+            moved.notify_waiters();
+        }
     }
 }
 
-/// QA ONLY, never merged: waits for the first place in the plugin's queue and `gap` after its
-/// last request that went out, then marks this one as sent. Plugin calls go ahead of page
-/// images, so an open or a Try again is next whatever a strip has queued. Only a waiter that
-/// gets through marks a send: one dropped or cancelled while it waits gives up its place and
-/// the next waiter starts on time.
+/// QA ONLY, never merged: a request that holds its source's turn. Hold it until the request
+/// has finished; dropping it, however the request ended, records that instant as the source's
+/// last send, so the next request goes out a gap after this one really went out, whatever
+/// held it after the gate (a QA net rule's delay, a slow connect).
 #[cfg(feature = "fetch")]
-async fn qa_gate(plugin: &str, gap: std::time::Duration, page: bool) {
-    let turn = qa_turn(plugin);
-    let key = {
-        let mut queue = turn.queue();
-        queue.tickets += 1;
-        let key = (page, queue.tickets);
-        queue.waiting.insert(key);
-        key
+#[must_use = "the turn is the source's until this is dropped"]
+pub struct QaSending {
+    keys: Vec<String>,
+}
+
+#[cfg(feature = "fetch")]
+impl Drop for QaSending {
+    fn drop(&mut self) {
+        let (mut gate, moved) = qa_state();
+        let now = tokio::time::Instant::now();
+        for key in &self.keys {
+            let turn = gate.turns.entry(key.clone()).or_default();
+            turn.out = false;
+            turn.last = Some(now);
+        }
+        drop(gate);
+        moved.notify_waiters();
+    }
+}
+
+/// QA ONLY, never merged: waits until this request's turns are free, first in their queues
+/// and `gap` past their last finished request, then holds them until the returned
+/// [`QaSending`] is dropped. `None` when the request is no source's (no plugin, and no
+/// plugin's allowed-hosts cover its host). Plugin calls go ahead of page images, so an open
+/// or a Try again is next whatever a strip has queued. A waiter dropped or cancelled while it
+/// waits gives up its place and records nothing.
+#[cfg(feature = "fetch")]
+pub async fn qa_gate(
+    plugin: Option<&str>,
+    url: &str,
+    gap: std::time::Duration,
+    page: bool,
+) -> Option<QaSending> {
+    let (key, keys) = {
+        let (mut gate, _) = qa_state();
+        let keys = qa_keys(&gate, plugin, url);
+        if keys.is_empty() {
+            return None;
+        }
+        gate.tickets += 1;
+        let key = (page, gate.tickets);
+        gate.waiting.insert(key, keys.clone());
+        (key, keys)
     };
-    let _place = QaPlace { turn: &turn, key };
+    let mut place = QaPlace { key, armed: true };
+    let moved = qa_state().1;
     loop {
-        let moved = turn.moved.notified();
-        tokio::pin!(moved);
-        moved.as_mut().enable();
+        let notified = moved.notified();
+        tokio::pin!(notified);
+        notified.as_mut().enable();
         let wake = {
-            let mut queue = turn.queue();
-            if queue.waiting.first() != Some(&key) {
+            let (mut gate, _) = qa_state();
+            let mine = qa_rank(&gate, key, &keys);
+            let ahead = gate.waiting.iter().any(|(theirs, their_keys)| {
+                *theirs != key
+                    && their_keys.iter().any(|k| keys.contains(k))
+                    && qa_rank(&gate, *theirs, their_keys) < mine
+            });
+            let busy = keys.iter().any(|k| gate.turns.get(k).is_some_and(|t| t.out));
+            if ahead || busy {
                 None
             } else {
                 let now = tokio::time::Instant::now();
-                match queue.last.map(|sent| sent + gap).filter(|at| *at > now) {
+                let ready = keys
+                    .iter()
+                    .filter_map(|k| gate.turns.get(k).and_then(|t| t.last))
+                    .map(|last| last + gap)
+                    .max()
+                    .filter(|at| *at > now);
+                match ready {
                     Some(at) => Some(at),
                     None => {
-                        queue.last = Some(now);
-                        drop(queue);
-                        // Dropping the place takes it out of the queue and wakes the next.
-                        return;
+                        // A call that goes while an older page image waits on one of its
+                        // turns has jumped it; a page image that goes clears the mark.
+                        let jumped = !page
+                            && gate.waiting.iter().any(|((their_page, ticket), their_keys)| {
+                                *their_page
+                                    && *ticket < key.1
+                                    && their_keys.iter().any(|k| keys.contains(k))
+                            });
+                        for k in &keys {
+                            let turn = gate.turns.entry(k.clone()).or_default();
+                            turn.out = true;
+                            turn.jumped = jumped;
+                        }
+                        gate.waiting.remove(&key);
+                        place.armed = false;
+                        return Some(QaSending { keys });
                     }
                 }
             }
@@ -440,10 +524,35 @@ async fn qa_gate(plugin: &str, gap: std::time::Duration, page: bool) {
         match wake {
             Some(at) => tokio::select! {
                 () = tokio::time::sleep_until(at) => {}
-                () = &mut moved => {}
+                () = &mut notified => {}
             },
-            None => moved.await,
+            None => notified.await,
         }
+    }
+}
+
+/// QA ONLY, never merged: [`qa_gate`] for a request Kaeri makes itself (artwork), with the
+/// gap from KAERI_QA_GATE_MS.
+#[cfg(feature = "fetch")]
+pub async fn qa_gate_url(url: &str) -> Option<QaSending> {
+    qa_gate(None, url, qa_gap(), true).await
+}
+
+/// QA ONLY, never merged: a line in the QA fetch log (KAERI_QA_FETCH_LOG), written just
+/// before a request goes out: epoch ms, who asked, the host.
+#[cfg(feature = "fetch")]
+pub fn qa_log(who: &str, url: &str) {
+    use std::io::Write as _;
+    let Ok(path) = qa_path("KAERI_QA_FETCH_LOG", "qa-fetch.log") else { return };
+    let ms = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis())
+        .unwrap_or(0);
+    if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+        // r6b/r8: the path's last part too, so page images show their number.
+        let tail = url.split(['?', '#']).next().unwrap_or("").rsplit('/').next().unwrap_or("-");
+        let tail: String = tail.chars().rev().take(24).collect::<Vec<_>>().into_iter().rev().collect();
+        let _ = writeln!(f, "{ms} {who} {} {tail}", url.split('/').nth(2).unwrap_or("-"));
     }
 }
 
@@ -461,12 +570,17 @@ mod qa_gate_tests {
         (to - from).as_millis() as u64
     }
 
+    fn url(plugin: &str) -> String {
+        format!("https://{plugin}.example/x")
+    }
+
+    /// A plugin call that finishes the moment it goes out.
     async fn call(plugin: &str) {
-        super::qa_gate(plugin, GAP, false).await;
+        drop(super::qa_gate(Some(plugin), &url(plugin), GAP, false).await);
     }
 
     async fn page(plugin: &str) {
-        super::qa_gate(plugin, GAP, true).await;
+        drop(super::qa_gate(Some(plugin), &url(plugin), GAP, true).await);
     }
 
     /// `n` waiters spawned now, each with `deadline`, recording when they went out.
@@ -482,9 +596,11 @@ mod qa_gate_tests {
             .map(|_| {
                 let sent = sent.clone();
                 tokio::spawn(async move {
-                    let gate = super::qa_gate(plugin, GAP, is_page);
-                    if tokio::time::timeout(deadline, gate).await.is_ok() {
+                    let u = url(plugin);
+                    let gate = super::qa_gate(Some(plugin), &u, GAP, is_page);
+                    if let Ok(turn) = tokio::time::timeout(deadline, gate).await {
                         sent.lock().unwrap().push(ms(start, Instant::now()));
+                        drop(turn);
                     }
                 })
             })
@@ -506,8 +622,54 @@ mod qa_gate_tests {
         let later = Instant::now();
         page("qa-spacing-a").await;
         assert_eq!(Instant::now(), later, "a quiet plugin starts at once");
-        super::qa_gate("qa-spacing-a", Duration::from_secs(8), false).await;
+        let u = url("qa-spacing-a");
+        drop(super::qa_gate(Some("qa-spacing-a"), &u, Duration::from_secs(8), false).await);
         assert_eq!(ms(later, Instant::now()), 8000, "the gap is the caller's");
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_request_held_after_the_gate_moves_the_next_turn_to_when_it_finished() {
+        // A QA net rule "delay 9000" holds the first request after it passed the gate; it goes
+        // out at 9 s. The next must go 4 s after that, not 4 s after the gate let the first by.
+        let start = Instant::now();
+        let held = super::qa_gate(Some("qa-held"), "https://api.qa-held.example/a", GAP, false)
+            .await
+            .expect("a plugin's request takes its turn");
+        let next = tokio::spawn(async move {
+            let turn =
+                super::qa_gate(Some("qa-held"), "https://cdn.qa-held.example/b", GAP, true)
+                    .await;
+            let at = ms(start, Instant::now());
+            drop(turn);
+            at
+        });
+        tokio::time::sleep(Duration::from_secs(9)).await;
+        drop(held);
+        assert_eq!(next.await.unwrap(), 13_000, "the source's CDN host shares its turn");
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_host_in_a_plugins_allowed_hosts_waits_for_that_plugin_from_anywhere() {
+        super::qa_register("qa-owner", &["cdn.qa-owner.example".into()]);
+        let start = Instant::now();
+        call("qa-owner").await;
+        // Artwork from the source's CDN, asked by Kaeri itself, with no plugin.
+        let art =
+            super::qa_gate(None, "https://img.cdn.qa-owner.example/c.jpg", GAP, true).await;
+        assert!(art.is_some(), "a source's host is gated");
+        assert_eq!(ms(start, Instant::now()), 4000);
+        drop(art);
+        // Another plugin on the same backend waits for both turns.
+        let other =
+            super::qa_gate(Some("qa-sibling"), "https://cdn.qa-owner.example/d", GAP, false)
+                .await;
+        assert_eq!(ms(start, Instant::now()), 8000);
+        drop(other);
+        assert!(
+            super::qa_gate(None, "https://elsewhere.example/e", GAP, true).await.is_none(),
+            "Kaeri's requests to hosts no source declared are not gated"
+        );
+        assert_eq!(ms(start, Instant::now()), 8000);
     }
 
     #[tokio::test(start_paused = true)]
@@ -568,6 +730,40 @@ mod qa_gate_tests {
         assert_eq!(behind.await.unwrap(), 4000, "the one behind takes the freed turn on time");
         call("qa-cancel").await;
         assert_eq!(ms(start, Instant::now()), 8000);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_request_cancelled_while_out_still_counts_as_sent() {
+        let start = Instant::now();
+        let out = tokio::spawn(async move {
+            let _turn = super::qa_gate(Some("qa-out"), &url("qa-out"), GAP, false).await;
+            tokio::time::sleep(Duration::from_secs(60)).await;
+        });
+        tokio::time::sleep(Duration::from_secs(2)).await;
+        out.abort();
+        assert!(out.await.unwrap_err().is_cancelled());
+        call("qa-out").await;
+        assert_eq!(ms(start, Instant::now()), 6000, "4 s after the cancelled one ended");
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_loop_of_plugin_calls_leaves_a_page_image_every_other_turn() {
+        // A series page asked again and again, back to back, while a download's page waits.
+        let start = Instant::now();
+        let calls = tokio::spawn(async {
+            loop {
+                call("qa-fair").await;
+            }
+        });
+        tokio::time::sleep(Duration::from_millis(500)).await;
+        let first = tokio::time::timeout(PAGE_WAIT, page("qa-fair")).await;
+        assert!(first.is_ok(), "the page went out within its wait");
+        // Calls at 0 and 4 s were queued first; the call at 8 s jumps the page; the page next.
+        assert_eq!(ms(start, Instant::now()), 12_000);
+        tokio::time::timeout(PAGE_WAIT, page("qa-fair")).await.expect("the next page went out");
+        // Asked at 12 s: behind the call queued at 8 s (16 s) and one that jumps it (20 s).
+        assert_eq!(ms(start, Instant::now()), 24_000, "never more than one jump in a row");
+        calls.abort();
     }
 
     #[tokio::test(start_paused = true)]
