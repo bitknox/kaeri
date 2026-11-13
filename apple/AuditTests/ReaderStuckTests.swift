@@ -343,11 +343,15 @@ final class ReaderStuckTests: XCTestCase {
             field.tap()
             field.typeText("abc")
             key(app, .rightArrow)
-            key(app, .leftArrow)
-            XCTAssertEqual(page(app), start, "the arrows turned the book behind the sheet")
+            key(app, .rightArrow)
             key(app, "l", .command)
             Thread.sleep(forTimeInterval: 1)
             XCTAssertTrue(field.exists, "Command-L took the sheet away")
+            // The book's pages leave the accessibility tree while a sheet is over them, so the
+            // page is read once the sheet is cancelled.
+            app.buttons["Cancel"].firstMatch.tap()
+            XCTAssertTrue(field.waitForNonExistence(timeout: 5), "Cancel left the sheet up")
+            XCTAssertEqual(page(app), start, "the arrows turned the book behind the sheet")
         } else {
             key(app, .leftArrow)
             XCTAssertNotEqual(page(app), start, "with nothing over it the book did not turn")
