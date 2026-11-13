@@ -575,10 +575,18 @@ impl Home {
             .filter_map(|work| {
                 match kept.iter().find(|k| tiles::work_of(k.book.id).as_str() == work) {
                     Some(kept) => Some(self.tile(kept)),
-                    None => self.known(work),
+                    None => self.known(work).or_else(|| self.local(work)),
                 }
             })
             .collect()
+    }
+
+    /// A series in the person's folders that AniList has never given a book for, as Library
+    /// shows it.
+    fn local(&self, work: &str) -> Option<WorkTile> {
+        let local = self.store.local_book_series().ok()?;
+        let series = local.iter().find(|s| s.work.as_deref() == Some(work))?;
+        Some(super::search::local_tile(&self.store, &self.sources, work, series))
     }
 
     /// A work's cover from what the store holds of it, without AniList's: its title, medium

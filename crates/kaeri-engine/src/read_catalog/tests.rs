@@ -391,6 +391,48 @@ async fn continue_and_the_sources_stay_when_anilist_fails() {
     assert_eq!(home.end, Some(kaeri_model::reading::ReadHomeEnd::Everything));
 }
 
+/// R6K-6. A series in the person's own folder that AniList does not list, read partway, is on
+/// Continue by its folder's name, as Library's Reading list shows it.
+#[tokio::test]
+async fn a_folder_series_anilist_does_not_list_is_on_continue() {
+    let fake = FakeAniList::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(Some(&fake), dir.path());
+    let folder = dir.path().join("books").display().to_string();
+    let added = kaeri_store::book_sources::Folder {
+        id: "books".into(),
+        path: Some(folder.clone()),
+        tree_uri: None,
+        bookmark: None,
+        name: None,
+        added_at: NOW,
+        last_scan: Some(NOW),
+        available: true,
+    };
+    kit.store.put_book_folder(&added).unwrap();
+    let work =
+        kaeri_core::books::WorkKey::local(Medium::Manga, "Rooftop Paper Club").to_string();
+    let series = kaeri_store::shelf::LocalSeries {
+        id: "books:rooftop".into(),
+        folder,
+        name: "Rooftop Paper Club".into(),
+        medium: "manga".into(),
+        work: Some(work.clone()),
+        state: "unmatched".into(),
+    };
+    kit.store.put_local_series(&series).unwrap();
+    let place =
+        ReadEvent { page: Some(2), of_pages: Some(20), ..ReadEvent::new(&work, "2", NOW) };
+    kit.store.record_read(&place, Vec::new()).unwrap();
+
+    let (tx, mut rx) = outbox();
+    home::load(&kit, ask(), false, &tx);
+    let home = whole_home(&mut rx).await;
+    let titles: Vec<(&str, &str)> =
+        home.continue_reading.iter().map(|t| (t.work.as_str(), t.title.as_str())).collect();
+    assert_eq!(titles, [(work.as_str(), "Rooftop Paper Club")]);
+}
+
 // ---------------------------------------------------------------------------------------------
 // Search
 
