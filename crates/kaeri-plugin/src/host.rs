@@ -84,15 +84,27 @@ pub struct Reach(Arc<Reached>);
 struct Reached {
     answered: AtomicU32,
     unsent: AtomicU32,
+    /// Of `unsent`, the ones that failed for the device having no network.
+    no_network: AtomicU32,
 }
 
 impl Reach {
     fn note(&self, sent: &Result<Response, HostError>) {
         match sent {
             Ok(_) => self.0.answered.fetch_add(1, Ordering::Relaxed),
-            Err(HostError::Transport(_)) => self.0.unsent.fetch_add(1, Ordering::Relaxed),
+            Err(HostError::Transport(said)) => {
+                if said.starts_with(kaeri_core::error::NO_NETWORK) {
+                    self.0.no_network.fetch_add(1, Ordering::Relaxed);
+                }
+                self.0.unsent.fetch_add(1, Ordering::Relaxed)
+            }
             Err(_) => return,
         };
+    }
+
+    /// Whether no request reached a server and one failed for the device having no network.
+    pub fn no_network(&self) -> bool {
+        self.never_reached() && self.0.no_network.load(Ordering::Relaxed) > 0
     }
 
     /// Whether the call asked the network and no request reached a server: every fetch failed
@@ -235,7 +247,7 @@ impl Capabilities {
         let response = tokio::time::timeout(self.limits.deadline, builder.send())
             .await
             .map_err(|_| HostError::Timeout)?
-            .map_err(|e| HostError::Transport(e.to_string()))?;
+            .map_err(|e| HostError::Transport(kaeri_net::reach::described(&e)))?;
 
         let status = response.status().as_u16();
         let headers = response
@@ -276,7 +288,7 @@ async fn read_capped(
     let mut body = Vec::with_capacity(declared.map_or(0, |n| n as usize));
     let mut chunks = response.bytes_stream();
     while let Some(chunk) = chunks.next().await {
-        let chunk = chunk.map_err(|e| HostError::Transport(e.to_string()))?;
+        let chunk = chunk.map_err(|e| HostError::Transport(kaeri_net::reach::described(&e)))?;
         if body.len() + chunk.len() > ceiling {
             return Err(too_large((body.len() + chunk.len()) as u64));
         }
@@ -332,6 +344,25 @@ pub fn regex_captures(pattern: &str, haystack: &str) -> Vec<Vec<String>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A call whose requests all failed for want of a network says so; one whose requests were
+    /// refused or timed out, or one that reached a server, does not.
+    #[test]
+    fn a_call_no_request_left_for_want_of_a_network_says_so() {
+        let unsent = |said: &str| Err(HostError::Transport(said.into()));
+        let reach = Reach::default();
+        reach.note(&unsent("no network: no route"));
+        assert!(reach.no_network());
+
+        let refused = Reach::default();
+        refused.note(&unsent("connection refused"));
+        assert!(refused.never_reached() && !refused.no_network());
+
+        let answered = Reach::default();
+        answered.note(&unsent("no network: no route"));
+        answered.note(&Ok(Response { status: 200, headers: Vec::new(), body: Vec::new() }));
+        assert!(!answered.no_network());
+    }
 
     /// A body with no length that never ends is refused once it passes the ceiling, rather than
     /// read until the client's timeout.

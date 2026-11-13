@@ -83,6 +83,9 @@ pub struct Exports {
     /// jobs of the identical sends asked for while it ran, which join it rather than fetch the
     /// same chapters again.
     joins: Arc<Mutex<Joins>>,
+    /// The sends this launch started again after the app was closed while they prepared, by
+    /// what they send, with how many times each was cut off so.
+    cut: Arc<Mutex<HashMap<String, u32>>>,
 }
 
 /// The sends running by what they send, each with its own job and the jobs that joined it.
@@ -182,7 +185,14 @@ impl Exports {
             running: Arc::default(),
             ready: Arc::default(),
             joins: Arc::default(),
+            cut: Arc::default(),
         }
+    }
+
+    /// How many times the send `identity` was cut off by the app being closed and started
+    /// again, taken once by the send that starts.
+    fn take_cut(&self, identity: &str) -> u32 {
+        self.cut.lock().unwrap_or_else(|e| e.into_inner()).remove(identity).unwrap_or(0)
     }
 
     /// The name of `job`'s folder: this engine's mark and the job.
@@ -542,6 +552,7 @@ fn prepare_files(
         Err(job) => job,
     };
     let joined = exports.lead(&identity, id);
+    let cut = exports.take_cut(&identity);
     let cancel = exports.begin(id);
     let out = exports.folder(id, services.clock.now());
     let clock = services.clock.clone();
@@ -551,7 +562,7 @@ fn prepare_files(
         lent: Lent::of(services, tx),
         downloads: services.book_sources.downloads.clone(),
         exports,
-        told: Told::new(tx.clone(), id, joined.clone()),
+        told: Told::new(tx.clone(), id, joined.clone(), &work, target),
         cancel,
         id,
         work,
@@ -561,12 +572,16 @@ fn prepare_files(
         format,
         out,
         direction,
-        sent: Mutex::default(),
+        cut,
     };
+    // Kept as under way until it ends, so a send the app is closed under starts again at the
+    // next launch.
+    held::keep(send.lent.sources.store(), send.held(true));
     tokio::spawn(async move {
         let _job = job;
         let tx = send.lent.tx.clone();
         let result = send.run().await;
+        held::forget(send.lent.sources.store(), &send.key);
         // No send joins this one from here on; those that did end with it.
         send.exports.unlead(&identity, send.id);
         let (also, gone) = {
@@ -598,6 +613,8 @@ fn prepare_files(
                     job,
                     chapter: chapter.clone(),
                     failure: failure.clone(),
+                    work: Some(send.work.clone()),
+                    target: Some(send.target.clone()),
                 },
             };
             let _ = tx.send(Event::Reading(said));
@@ -643,14 +660,30 @@ struct Told {
     current: Mutex<Option<String>>,
     /// The identical sends that joined this one, told the same.
     joined: Arc<Joined>,
+    /// What the send is of and for, said with its progress so a screen can place a send it
+    /// never asked for: one held across a restart.
+    work: WorkId,
+    target: String,
+    /// The chapters gathered, in reading order, once known: said with the progress, and the
+    /// record a ready send keeps.
+    sent: Mutex<Vec<kaeri_core::books::ChapterId>>,
 }
 
 impl Told {
-    fn new(tx: Outbox, job: JobId, joined: Arc<Joined>) -> Arc<Self> {
+    fn new(
+        tx: Outbox,
+        job: JobId,
+        joined: Arc<Joined>,
+        work: &WorkId,
+        target: &str,
+    ) -> Arc<Self> {
         Arc::new(Self {
             tx,
             job,
             joined,
+            work: work.clone(),
+            target: target.to_owned(),
+            sent: Mutex::default(),
             last: Mutex::new(Instant::now() - Duration::from_secs(1)),
             gathered: AtomicU32::new(0),
             of: AtomicU32::new(0),
@@ -678,6 +711,7 @@ impl Told {
             return;
         }
         *last = Instant::now();
+        let sent = self.sent.lock().unwrap_or_else(|e| e.into_inner()).clone();
         for job in self.jobs() {
             let _ = self.tx.send(Event::Reading(ReadingEvent::ExportProgress {
                 job,
@@ -685,6 +719,9 @@ impl Told {
                 total,
                 chapters_done: self.gathered.load(Ordering::Relaxed),
                 chapters: self.of.load(Ordering::Relaxed),
+                work: Some(self.work.clone()),
+                target: Some(self.target.clone()),
+                send_chapters: sent.clone(),
             }));
         }
     }
@@ -712,8 +749,8 @@ struct OneSend {
     format: ExportFormat,
     out: PathBuf,
     direction: prepare::PageDirection,
-    /// The chapters gathered, in reading order, for the record a ready send keeps.
-    sent: Mutex<Vec<kaeri_core::books::ChapterId>>,
+    /// How many times this send was cut off by the app being closed and started again.
+    cut: u32,
 }
 
 impl OneSend {
@@ -786,7 +823,7 @@ impl OneSend {
         if asked_all_downloaded {
             // Nothing to fetch, so nothing to ask a source.
             if let DownloadPick::Chapters { ids } = &self.pick {
-                *self.sent.lock().unwrap_or_else(|e| e.into_inner()) = ids.clone();
+                *self.told.sent.lock().unwrap_or_else(|e| e.into_inner()) = ids.clone();
             }
             let chapters = chosen(store, self.work.as_str(), &self.pick);
             let n = u32::try_from(chapters.len()).unwrap_or(u32::MAX);
@@ -812,7 +849,7 @@ impl OneSend {
         if wanted.is_empty() {
             return Err(ReadingFailure::NotFound.into());
         }
-        *self.sent.lock().unwrap_or_else(|e| e.into_inner()) =
+        *self.told.sent.lock().unwrap_or_else(|e| e.into_inner()) =
             wanted.iter().map(|w| w.chapter.clone()).collect();
         // A chapter on this device, downloaded or in the person's folders, is sent from its
         // file; only the rest are fetched, and only they wait for the network.
@@ -910,8 +947,8 @@ impl OneSend {
 
     /// Wait until chapters may be fetched, `missing` of them still to come. A send waits while
     /// the downloads do: for Wi-Fi it says so, naming the chapters it holds (`wanted`), and it
-    /// is kept in the store meanwhile. With no network at all it fails as offline; cancelled,
-    /// it stops.
+    /// is kept in the store as waiting meanwhile. With no network at all it fails as offline;
+    /// cancelled, it stops.
     async fn may_fetch(&self, missing: u32, wanted: &[Wanted]) -> Result<(), prepare::Stop> {
         let store = self.lent.sources.store();
         let mut changes = self.downloads.changes();
@@ -930,7 +967,7 @@ impl OneSend {
             }
             if !kept {
                 kept = true;
-                held::keep(store, self.held());
+                held::keep(store, self.held(false));
             }
             if setup.wifi && !said {
                 said = true;
@@ -949,15 +986,16 @@ impl OneSend {
             // A change to the network or the setting, or a look at whether it was cancelled.
             let _ = tokio::time::timeout(LOOK_AGAIN, changes.changed()).await;
         };
-        if kept {
-            held::forget(store, &self.key);
+        // Going on, it runs again; ending, the send forgets itself as it ends.
+        if kept && result.is_ok() {
+            held::keep(store, self.held(true));
         }
         result
     }
 
     /// Keep this ready send beside its files, for a launch after the app stops to offer again.
     fn keep_ready(&self, files: &[kaeri_model::reading::ExportFile]) {
-        let sent = self.sent.lock().unwrap_or_else(|e| e.into_inner()).clone();
+        let sent = self.told.sent.lock().unwrap_or_else(|e| e.into_inner()).clone();
         if let Some(record) =
             kept::KeptSend::new(&self.work, &self.target, &sent, &self.out, files)
         {
@@ -965,14 +1003,16 @@ impl OneSend {
         }
     }
 
-    /// This send as the list of those waiting keeps it.
-    fn held(&self) -> held::HeldSend {
+    /// This send as the list of those under way keeps it: `running`, or waiting for Wi-Fi.
+    fn held(&self, running: bool) -> held::HeldSend {
         held::HeldSend {
             key: self.key.clone(),
             work: self.work.as_str().to_owned(),
             pick: held::Pick::from(&self.pick),
             target: self.target.clone(),
             format: held::Format::from(self.format),
+            running,
+            cut: self.cut,
         }
     }
 }
@@ -1009,14 +1049,52 @@ pub(crate) fn offer_kept(
     }
 }
 
-/// The sends left waiting when the engine last stopped, asked for again: each starts as a job
-/// of its own and waits again while it must.
-pub(crate) fn held_sends(engine: &EngineState, services: &Services) -> Vec<ReadingCommand> {
+/// The sends left under way when the engine last stopped, asked for again: each starts as a
+/// job of its own and waits again while it must. A send the app was closed under while it
+/// prepared starts again once; cut off again, as a send that takes the app down would be, it
+/// ends as a failed send of `next_job`, which the screen shows with its series and target.
+pub(crate) fn held_sends(
+    engine: &EngineState,
+    services: &Services,
+    mut next_job: impl FnMut() -> JobId,
+    tx: &Outbox,
+) -> Vec<ReadingCommand> {
     if !engine.reading.available {
         return Vec::new();
     }
-    held::take(services.book_sources.store()).iter().map(held::HeldSend::command).collect()
+    let exports = &services.book_sources.exports;
+    let mut again = Vec::new();
+    for send in held::take(services.book_sources.store()) {
+        let command = send.command();
+        if !send.running {
+            again.push(command);
+            continue;
+        }
+        if send.cut >= CUT_AGAIN {
+            tracing::warn!(cut = send.cut, "a send cut off again by the app closing ends");
+            let _ = tx.send(Event::Reading(ReadingEvent::ExportFailed {
+                job: next_job(),
+                chapter: None,
+                failure: ReadingFailure::Other { reason: String::new() },
+                work: Some(WorkId::new(send.work.clone())),
+                target: Some(send.target.clone()),
+            }));
+            continue;
+        }
+        if let ReadingCommand::Prepare { work, pick, target, format } = &command {
+            exports
+                .cut
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .insert(identity(work, pick, target, *format), send.cut + 1);
+        }
+        again.push(command);
+    }
+    again
 }
+
+/// How many times a send the app was closed under is started again before it ends as failed.
+const CUT_AGAIN: u32 = 1;
 
 // ---------------------------------------------------------------------------------------------
 // The feed

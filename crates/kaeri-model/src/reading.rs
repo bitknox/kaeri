@@ -2010,12 +2010,28 @@ pub enum ReadingEvent {
         /// `chapters` means the send does not know yet.
         chapters_done: u32,
         chapters: u32,
+        /// The series the send is of. A send held across a restart starts again at launch as
+        /// a job no screen sent, so this is how a screen places it. The engine always says it.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        work: Option<WorkId>,
+        /// The target the send is for, as `Prepare` named it. The engine always says it.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        target: Option<String>,
+        /// The chapters the send holds, in reading order, once it knows them: for Set my place
+        /// after a send the screen never asked for. Empty until then.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        send_chapters: Vec<ChapterId>,
     },
-    /// A send failed. `chapter` is the chapter it could not prepare, when it was one.
+    /// A send failed. `chapter` is the chapter it could not prepare, when it was one. `work`
+    /// and `target` place a send no screen sent, as for [`Self::ExportProgress`].
     ExportFailed {
         job: JobId,
         chapter: Option<String>,
         failure: ReadingFailure,
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        work: Option<WorkId>,
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        target: Option<String>,
     },
     ExportReady {
         job: JobId,

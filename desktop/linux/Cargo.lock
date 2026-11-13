@@ -2760,6 +2760,7 @@ dependencies = [
  "futures",
  "kaeri-books",
  "kaeri-core",
+ "kaeri-net",
  "reqwest 0.13.1",
  "roxmltree",
  "serde",

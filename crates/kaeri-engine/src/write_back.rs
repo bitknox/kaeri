@@ -557,6 +557,7 @@ fn whole_server(problem: WriteBackProblem) -> bool {
 /// or a password.
 fn problem_of(error: &ProviderError, refused: WriteBackProblem) -> WriteBackProblem {
     match error {
+        error if error.is_no_network() => WriteBackProblem::Offline,
         ProviderError::Transport(_) => WriteBackProblem::NoAnswer,
         ProviderError::Unavailable(why) if why == "signed out" => refused,
         ProviderError::NotFound => WriteBackProblem::SeriesGone,

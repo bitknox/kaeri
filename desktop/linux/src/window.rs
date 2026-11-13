@@ -1589,6 +1589,10 @@ impl Shell {
 
     /// Tell the engine where the network stands, now and as it changes: offline without a
     /// route past the local network, and a metered connection as a constrained one.
+    /// Limited is never offline by itself: it comes from a connectivity check that ran and
+    /// failed, and a privacy DNS or firewall that blocks the check's host gives it while every
+    /// real fetch works. A request that fails is left to the engine to tell the network from
+    /// the source.
     fn watch_network(&self) {
         let monitor = gio::NetworkMonitor::default();
         let told: Rc<Cell<Option<(bool, bool)>>> = Rc::default();

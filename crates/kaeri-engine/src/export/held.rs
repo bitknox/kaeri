@@ -1,5 +1,7 @@
-//! Sends that wait for Wi-Fi, kept in the store so one left waiting when the engine stops is
-//! started again at the next launch, as a queued chapter download is.
+//! Sends under way, kept in the store so one left waiting for Wi-Fi, or cut off by the app
+//! being closed while it prepared, is started again at the next launch, as a queued chapter
+//! download is. One cut off a second time, as a send that takes the app down would be, ends
+//! with a failure the screen shows instead of starting again at every launch.
 
 use std::sync::Mutex;
 
@@ -8,7 +10,7 @@ use kaeri_model::reading::{DownloadPick, ExportFormat, ReadingCommand};
 use kaeri_store::Store;
 use serde::{Deserialize, Serialize};
 
-/// The store meta key the waiting sends are kept under, as a JSON list.
+/// The store meta key the sends under way are kept under, as a JSON list.
 const KEY: &str = "export:held";
 
 /// One read and write of the list at a time: sends wait and go on side by side.
@@ -23,6 +25,13 @@ pub(crate) struct HeldSend {
     pub pick: Pick,
     pub target: String,
     pub format: Format,
+    /// Fetching or writing, rather than waiting for Wi-Fi: one kept this way when the engine
+    /// stopped was cut off by the app being closed.
+    #[serde(default)]
+    pub running: bool,
+    /// How many times this send was started again after being cut off.
+    #[serde(default)]
+    pub cut: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -116,7 +125,7 @@ fn write(store: &Store, list: &[HeldSend]) {
     }
 }
 
-/// Keep `send` as waiting.
+/// Keep `send` as under way, waiting or running as it says.
 pub(crate) fn keep(store: &Store, send: HeldSend) {
     let _list = LIST.lock().unwrap_or_else(|e| e.into_inner());
     let mut list = read(store);
@@ -125,7 +134,7 @@ pub(crate) fn keep(store: &Store, send: HeldSend) {
     write(store, &list);
 }
 
-/// The send under `key` waits no more: it went on, was cancelled or failed.
+/// The send under `key` is no longer under way: it is ready, was cancelled or failed.
 pub(crate) fn forget(store: &Store, key: &str) {
     let _list = LIST.lock().unwrap_or_else(|e| e.into_inner());
     let mut list = read(store);
@@ -136,8 +145,8 @@ pub(crate) fn forget(store: &Store, key: &str) {
     }
 }
 
-/// The sends left waiting, taken off the list: each is asked for again, and keeps itself once
-/// more if it still waits.
+/// The sends left under way, taken off the list: each is asked for again, and keeps itself
+/// once more as it goes.
 pub(crate) fn take(store: &Store) -> Vec<HeldSend> {
     let _list = LIST.lock().unwrap_or_else(|e| e.into_inner());
     let list = read(store);
@@ -154,12 +163,17 @@ mod tests {
     #[test]
     fn a_waiting_send_is_kept_until_it_is_forgotten_or_taken() {
         let store = Store::open_in_memory().unwrap();
-        let send = |key: &str| HeldSend {
-            key: key.into(),
-            work: "a:900501".into(),
-            pick: Pick::from(&DownloadPick::Chapters { ids: vec![ChapterId::new("2")] }),
-            target: "kobo".into(),
-            format: Format::from(ExportFormat::Kepub),
+        // Kept as a list from before sends said whether they ran: each reads as waiting.
+        let send = |key: &str| -> HeldSend {
+            let pick = Pick::from(&DownloadPick::Chapters { ids: vec![ChapterId::new("2")] });
+            serde_json::from_value(serde_json::json!({
+                "key": key,
+                "work": "a:900501",
+                "pick": serde_json::to_value(pick).unwrap(),
+                "target": "kobo",
+                "format": serde_json::to_value(Format::from(ExportFormat::Kepub)).unwrap(),
+            }))
+            .unwrap()
         };
         keep(&store, send("1"));
         keep(&store, send("2"));
