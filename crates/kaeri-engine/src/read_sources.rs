@@ -1125,7 +1125,8 @@ fn rescan(
         for folder in folders {
             let tick = publish.clone();
             // What is said when the scan can't start or stops: the folder, and nothing found.
-            let mut unread = added::folder_report(&folder, &kaeri_books::library::Scan::default());
+            let mut unread =
+                added::folder_report(&folder, &kaeri_books::library::Scan::default());
             let found = this.scan_folder(folder, now, tick).await;
             if let Some(already) = answer {
                 let came = match found {
