@@ -151,8 +151,18 @@ fn mtime_of(meta: &fs::Metadata) -> i64 {
         .map_or(0, |d| i64::try_from(d.as_secs()).unwrap_or(0))
 }
 
+/// A path as a scan says it: with Windows' separators as `/`. Elsewhere a backslash is part of
+/// a name and stays.
 fn slash(path: &Path) -> String {
-    path.to_string_lossy().replace('\\', "/")
+    let text = path.to_string_lossy();
+    if cfg!(windows) { text.replace('\\', "/") } else { text.into_owned() }
+}
+
+/// A path as the store keeps it, to open the file by again: as [`slash`] says it, or `None` for
+/// a name that is not UTF-8, which a text path could not open again.
+fn stored_path(path: &Path) -> Option<String> {
+    let text = path.to_str()?;
+    Some(if cfg!(windows) { text.replace('\\', "/") } else { text.to_owned() })
 }
 
 fn extension(path: &Path) -> Option<String> {
@@ -238,11 +248,11 @@ impl Place<'_> {
         Ok(nodes)
     }
 
-    /// What a book at `node` is stored as.
-    fn stored(self, node: &Node) -> String {
+    /// What a book at `node` is stored as, or `None` when no text path would open it again.
+    fn stored(self, node: &Node) -> Option<String> {
         match self {
-            Place::Disk => slash(&node.at),
-            Place::Tree(_) => node.at.to_string_lossy().into_owned(),
+            Place::Disk => stored_path(&node.at),
+            Place::Tree(_) => Some(node.at.to_string_lossy().into_owned()),
         }
     }
 }
@@ -442,7 +452,7 @@ fn scan_file(
     if !folder && !node.file {
         return None;
     }
-    let text = place.stored(node);
+    let text = place.stored(node)?;
     if !folder && node.size == 0 {
         // An empty file is a download that never finished, not a book.
         return None;
@@ -748,6 +758,42 @@ mod tests {
                 (None, None) => f.label.clone(),
             })
             .collect()
+    }
+
+    /// A backslash is part of a name outside Windows: the book is kept by its real path.
+    #[cfg(unix)]
+    #[test]
+    fn a_backslash_in_a_name_is_kept_and_the_book_opens_by_it() {
+        let dir = tempfile::tempdir().unwrap();
+        let book = dir.path().join("back\\slash").join("back\\slash Ch. 1.cbz");
+        cbz(&book, 2, None);
+        let scan = scan_dir(dir.path());
+        assert_eq!(scan.series.len(), 1);
+        let s = &scan.series[0];
+        assert_eq!(s.files.len(), 1);
+        assert_eq!(Path::new(&s.files[0].path), book);
+        assert!(path_of(&s.files[0]).is_file());
+        assert_eq!(s.files[0].pages, Some(2));
+    }
+
+    /// A name that is not UTF-8 could not be opened again by a text path, so it is passed over
+    /// as a file Kaeri doesn't read, and the books beside it come in as usual. macOS keeps no
+    /// such names.
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn a_name_that_is_not_utf8_is_passed_over_and_its_neighbours_come_in() {
+        use std::os::unix::ffi::OsStrExt;
+        let dir = tempfile::tempdir().unwrap();
+        let shelf = dir.path().join("Glass Ferry");
+        cbz(&shelf.join("Glass Ferry Ch. 1.cbz"), 1, None);
+        cbz(&shelf.join(std::ffi::OsStr::from_bytes(b"Glass Ferry Ch. 2 \xff.cbz")), 1, None);
+        let odd = dir.path().join(std::ffi::OsStr::from_bytes(b"Odd \xfe Folder"));
+        cbz(&odd.join("Odd Ch. 1.cbz"), 1, None);
+        let scan = scan_dir(dir.path());
+        assert_eq!(numbers(series(&scan, "Glass Ferry")), ["c1"]);
+        assert_eq!(scan.ignored, 2);
+        let files = scan.series.iter().flat_map(|s| &s.files);
+        assert!(files.clone().count() == 1 && files.clone().all(|f| path_of(f).is_file()));
     }
 
     #[test]
