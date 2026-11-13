@@ -322,6 +322,9 @@ class ReadingModel(private val send: (Command) -> Unit) {
     /** New chapters a check found, for the app's notifications. */
     val newChapters: SharedFlow<List<NewChapter>> = _newChapters.asSharedFlow()
 
+    /** The download last asked for while the engine has not answered it, to name what a failure about downloads stopped. */
+    @Volatile private var downloadAsked: Pair<WorkId, DownloadPick>? = null
+
     private val _notStarted = MutableStateFlow<Map<WorkId, DownloadNotStarted>>(emptyMap())
 
     /**
@@ -507,6 +510,7 @@ class ReadingModel(private val send: (Command) -> Unit) {
         reading(ReadingCommand.ConnectMangaUpdates(username, password))
 
     fun download(work: WorkId, pick: DownloadPick) {
+        downloadAsked = work to pick
         _notStarted.update { it - work }
         reading(ReadingCommand.Download(work, pick))
         reloadChapters(work)
@@ -628,7 +632,11 @@ class ReadingModel(private val send: (Command) -> Unit) {
             }
             is ReadingEvent.Versions -> _versions.update { it + (event.chapter to event.versions) }
             is ReadingEvent.Tracking -> _tracking.update { it + (event.work to event.rows) }
-            is ReadingEvent.Downloads -> _downloads.value = event.v1
+            is ReadingEvent.Downloads -> {
+                // The queue the engine published answers the ask: it started.
+                downloadAsked = null
+                _downloads.value = event.v1
+            }
             is ReadingEvent.DownloadEstimate -> _estimates.update { it + (event.v1.work to event.v1) }
             is ReadingEvent.RemovedFromLists -> {
                 _removals.update { it + (event.work to event.results) }
@@ -638,6 +646,10 @@ class ReadingModel(private val send: (Command) -> Unit) {
             is ReadingEvent.DownloadsDone -> _downloadsDone.tryEmit(DownloadsDone(event.work, event.title, event.body))
             is ReadingEvent.Failed -> {
                 _failures.update { it + (event.about to event.failure) }
+                if (event.about == ReadingAbout.DOWNLOADS) {
+                    downloadAsked?.let { (work, pick) -> _notStarted.update { it + (work to DownloadNotStarted(pick, event.failure)) } }
+                    downloadAsked = null
+                }
                 if (event.about == ReadingAbout.HOME) _homeLoading.value = false
                 if (event.about == ReadingAbout.SEARCH) {
                     _search.update { it.failedWith(event.failure) }
