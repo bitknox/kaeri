@@ -107,6 +107,10 @@ class ReaderUnderTest {
         keys(Key.Tab, Key.Tab, Key.Enter)
         assertEquals(false, reached)
         assertEquals(0, clicks)
+        // The reader still has the keys: Escape hides its controls, and the next one closes it.
+        keys(Key.Escape)
+        if (ReaderLauncher.request.value != null) keys(Key.Escape)
+        assertEquals(null, ReaderLauncher.request.value)
         shut()
         // Nothing had the focus before the reader opened, so nothing takes it as it closes.
         compose.onNodeWithTag("more").assertIsNotFocused()
