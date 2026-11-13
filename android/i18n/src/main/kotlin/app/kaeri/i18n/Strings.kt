@@ -2017,6 +2017,10 @@ object Strings {
     fun noticeNotSaved(context: Context, reason: String): String =
         context.getString(R.string.notice_not_saved, reason)
 
+    /** Toast when something the person did, such as a chapter marked read, a place in a book, a watched episode or a list change, could not be stored. The reason comes from the system. */
+    fun noticeChangeNotKept(context: Context, reason: String): String =
+        context.getString(R.string.notice_change_not_kept, reason)
+
     /** Toast when a title's details did not load. */
     fun noticeTitleLoadFailed(context: Context): String =
         context.getString(R.string.notice_title_load_failed)

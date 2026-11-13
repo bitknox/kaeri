@@ -1638,6 +1638,9 @@ notice-saved = Saved { $label }.
 # Toast when a setting could not be stored. The reason comes from the system.
 notice-not-saved = Couldn't save that setting. { $reason }
 
+# Toast when something the person did, such as a chapter marked read, a place in a book, a watched episode or a list change, could not be stored. The reason comes from the system.
+notice-change-not-kept = Couldn't save that change. { $reason }
+
 # Toast when a title's details did not load.
 notice-title-load-failed = Couldn't load this title. Check your connection and try again.
 

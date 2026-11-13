@@ -1105,6 +1105,8 @@
     <string name="notice_saved">Saved %1$s.</string>
     <!-- Toast when a setting could not be stored. The reason comes from the system. -->
     <string name="notice_not_saved">Couldn\'t save that setting. %1$s</string>
+    <!-- Toast when something the person did, such as a chapter marked read, a place in a book, a watched episode or a list change, could not be stored. The reason comes from the system. -->
+    <string name="notice_change_not_kept">Couldn\'t save that change. %1$s</string>
     <!-- Toast when a title's details did not load. -->
     <string name="notice_title_load_failed">Couldn\'t load this title. Check your connection and try again.</string>
     <!-- Toast when playback stops with an error. -->

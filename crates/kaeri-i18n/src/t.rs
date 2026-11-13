@@ -2515,6 +2515,11 @@ pub fn notice_not_saved(reason: &str) -> String {
     text("notice-not-saved", &[("reason", Arg::Text(reason))])
 }
 
+/// Toast when something the person did, such as a chapter marked read, a place in a book, a watched episode or a list change, could not be stored. The reason comes from the system.
+pub fn notice_change_not_kept(reason: &str) -> String {
+    text("notice-change-not-kept", &[("reason", Arg::Text(reason))])
+}
+
 /// Toast when a title's details did not load.
 pub fn notice_title_load_failed() -> String {
     text("notice-title-load-failed", &[])

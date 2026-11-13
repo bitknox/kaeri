@@ -2051,6 +2051,11 @@ public enum L {
         Self.format("notice-not-saved", fallback: "Couldn't save that setting. %1$@", reason)
     }
 
+    /// Toast when something the person did, such as a chapter marked read, a place in a book, a watched episode or a list change, could not be stored. The reason comes from the system.
+    public static func noticeChangeNotKept(reason: String) -> String {
+        Self.format("notice-change-not-kept", fallback: "Couldn't save that change. %1$@", reason)
+    }
+
     /// Toast when a title's details did not load.
     public static var noticeTitleLoadFailed: String { string("notice-title-load-failed", fallback: "Couldn't load this title. Check your connection and try again.") }
 

@@ -215,6 +215,7 @@ fun Msg.text(context: Context): String =
         is Msg.LegalHostsNoContent -> Strings.legalHostsNoContent(context)
         is Msg.NoticeSaved -> Strings.noticeSaved(context, this.label)
         is Msg.NoticeNotSaved -> Strings.noticeNotSaved(context, this.reason)
+        is Msg.NoticeChangeNotKept -> Strings.noticeChangeNotKept(context, this.reason)
         is Msg.NoticeTitleLoadFailed -> Strings.noticeTitleLoadFailed(context)
         is Msg.NoticePlaybackFailed -> Strings.noticePlaybackFailed(context)
         is Msg.NoticeEngineFault -> Strings.noticeEngineFault(context)

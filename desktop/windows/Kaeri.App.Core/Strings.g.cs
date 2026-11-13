@@ -1521,6 +1521,9 @@ public static partial class T
     /// <summary>Toast when a setting could not be stored. The reason comes from the system.</summary>
     public static string NoticeNotSaved(string reason) => Fill(Get("NoticeNotSaved"), ("reason", reason));
 
+    /// <summary>Toast when something the person did, such as a chapter marked read, a place in a book, a watched episode or a list change, could not be stored. The reason comes from the system.</summary>
+    public static string NoticeChangeNotKept(string reason) => Fill(Get("NoticeChangeNotKept"), ("reason", reason));
+
     /// <summary>Toast when a title's details did not load.</summary>
     public static string NoticeTitleLoadFailed => Get("NoticeTitleLoadFailed");
 
@@ -12551,6 +12554,7 @@ public static partial class T
         ["LegalHostsNoContent"] = "Kaeri doesn't host any shows or books. You add your own sources.",
         ["NoticeSaved"] = "Saved {label}.",
         ["NoticeNotSaved"] = "Couldn't save that setting. {reason}",
+        ["NoticeChangeNotKept"] = "Couldn't save that change. {reason}",
         ["NoticeTitleLoadFailed"] = "Couldn't load this title. Check your connection and try again.",
         ["NoticePlaybackFailed"] = "Playback failed. Try another source.",
         ["NoticeEngineFault"] = "Something went wrong inside Kaeri. It carried on, but if a screen looks stuck, quit and open it again.",

@@ -409,6 +409,8 @@ pub enum Msg {
     NoticeSaved { label: String },
     /// Toast when a setting could not be stored. The reason comes from the system.
     NoticeNotSaved { reason: String },
+    /// Toast when something the person did, such as a chapter marked read, a place in a book, a watched episode or a list change, could not be stored. The reason comes from the system.
+    NoticeChangeNotKept { reason: String },
     /// Toast when a title's details did not load.
     NoticeTitleLoadFailed,
     /// Toast when playback stops with an error.
@@ -660,6 +662,7 @@ impl Msg {
             Self::LegalHostsNoContent => "legal-hosts-no-content",
             Self::NoticeSaved { .. } => "notice-saved",
             Self::NoticeNotSaved { .. } => "notice-not-saved",
+            Self::NoticeChangeNotKept { .. } => "notice-change-not-kept",
             Self::NoticeTitleLoadFailed => "notice-title-load-failed",
             Self::NoticePlaybackFailed => "notice-playback-failed",
             Self::NoticeEngineFault => "notice-engine-fault",
@@ -888,6 +891,7 @@ impl Msg {
             Self::LegalHostsNoContent => Vec::new(),
             Self::NoticeSaved { label } => vec![("label", Value::Text(label.clone()))],
             Self::NoticeNotSaved { reason } => vec![("reason", Value::Text(reason.clone()))],
+            Self::NoticeChangeNotKept { reason } => vec![("reason", Value::Text(reason.clone()))],
             Self::NoticeTitleLoadFailed => Vec::new(),
             Self::NoticePlaybackFailed => Vec::new(),
             Self::NoticeEngineFault => Vec::new(),

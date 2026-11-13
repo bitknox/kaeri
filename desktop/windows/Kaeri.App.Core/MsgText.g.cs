@@ -212,6 +212,7 @@ public static class MsgText
         Msg.LegalHostsNoContent => T.LegalHostsNoContent,
         Msg.NoticeSaved x => T.NoticeSaved(x.Label),
         Msg.NoticeNotSaved x => T.NoticeNotSaved(x.Reason),
+        Msg.NoticeChangeNotKept x => T.NoticeChangeNotKept(x.Reason),
         Msg.NoticeTitleLoadFailed => T.NoticeTitleLoadFailed,
         Msg.NoticePlaybackFailed => T.NoticePlaybackFailed,
         Msg.NoticeEngineFault => T.NoticeEngineFault,

@@ -2175,6 +2175,10 @@
     <value>Couldn't save that setting. {reason}</value>
     <comment>Toast when a setting could not be stored. The reason comes from the system.</comment>
   </data>
+  <data name="NoticeChangeNotKept" xml:space="preserve">
+    <value>Couldn't save that change. {reason}</value>
+    <comment>Toast when something the person did, such as a chapter marked read, a place in a book, a watched episode or a list change, could not be stored. The reason comes from the system.</comment>
+  </data>
   <data name="NoticeTitleLoadFailed" xml:space="preserve">
     <value>Couldn't load this title. Check your connection and try again.</value>
     <comment>Toast when a title's details did not load.</comment>

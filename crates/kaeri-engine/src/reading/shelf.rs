@@ -251,7 +251,7 @@ mod tests {
         let chapters = order(vec![book]);
         assert_eq!(chapters[0].id, listed.key(false).id());
         assert_eq!(chapters[0].id.as_str(), "x/1/volume 1");
-        assert_eq!(listed.label, "Volume 1");
+        assert_eq!(listed.number_raw, "Volume 1");
     }
 
     #[test]

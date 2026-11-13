@@ -121247,6 +121247,18 @@
         }
       }
     },
+    "notice-change-not-kept" : {
+      "comment" : "Toast when something the person did, such as a chapter marked read, a place in a book, a watched episode or a list change, could not be stored. The reason comes from the system. Argument 1: reason (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't save that change. %1$@"
+          }
+        }
+      }
+    },
     "notice-choice-not-saved" : {
       "comment" : "Toast when the chosen source or release for a title could not be saved. The reason comes from the database. Argument 1: reason (Text).",
       "extractionState" : "manual",

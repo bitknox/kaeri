@@ -208,6 +208,7 @@ extension Msg {
         case .legalHostsNoContent: L.legalHostsNoContent
         case .noticeSaved(let label): L.noticeSaved(label: label)
         case .noticeNotSaved(let reason): L.noticeNotSaved(reason: reason)
+        case .noticeChangeNotKept(let reason): L.noticeChangeNotKept(reason: reason)
         case .noticeTitleLoadFailed: L.noticeTitleLoadFailed
         case .noticePlaybackFailed: L.noticePlaybackFailed
         case .noticeEngineFault: L.noticeEngineFault
