@@ -60,17 +60,80 @@ const READY_KEPT: i64 = 24 * 60 * 60;
 
 /// The sends under way, so one can be stopped, the ready ones whose files wait for the share
 /// sheet, and where their files go.
+///
+/// Job ids start over at every launch, so a send's folders are named by this engine's own mark
+/// as well as its job: `<mark>-<job>` for its files and `<mark>-<job>-fetch` for the pages it
+/// fetches. A folder an earlier launch left (a send killed mid-fetch, a ready send never put
+/// away) is never taken for one of this launch's, and [`sweep`] removes it at launch.
 #[derive(Clone, Debug)]
 pub struct Exports {
     dir: PathBuf,
+    /// This engine's mark: see [`mark`].
+    mark: Arc<str>,
     running: Arc<Mutex<HashMap<u64, Arc<AtomicBool>>>>,
     /// Ready sends by job, with when each became ready on the engine's clock.
     ready: Arc<Mutex<HashMap<u64, i64>>>,
 }
 
+/// A mark no other engine has: the process id, then when it was made and a count, as
+/// `<pid>.<hex>`. The process id comes first so the launch sweep can tell a folder of this
+/// process (an engine still running) from one of a process that has ended.
+fn mark() -> String {
+    static MADE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+    let nanos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_nanos());
+    let count = MADE.fetch_add(1, Ordering::Relaxed);
+    format!("{}.{nanos:x}{count:x}", std::process::id())
+}
+
+/// Whether an entry of the sends' folder belongs to an engine of this process. Any other (a
+/// send of a process that has ended, or a folder named before marks) is a leftover.
+fn of_this_process(name: &str) -> bool {
+    name.split_once('.').is_some_and(|(pid, _)| pid == std::process::id().to_string())
+}
+
+/// Where sends write their files and fetch their pages.
+pub fn dir_of(paths: &kaeri_core::config::Paths) -> PathBuf {
+    paths.data_dir.join("exports")
+}
+
+/// Remove what sends of earlier launches left in `dir`, the sends' folder: their ready files,
+/// which no Share can hand over any more, and the pages of sends killed mid-fetch. Folders of
+/// this process's engines stay. Blocking. Returns how many entries went.
+pub fn sweep(dir: &Path) -> usize {
+    let Ok(entries) = std::fs::read_dir(dir) else { return 0 };
+    let mut removed = 0;
+    for entry in entries.flatten() {
+        if of_this_process(&entry.file_name().to_string_lossy()) {
+            continue;
+        }
+        let path = entry.path();
+        let gone = match std::fs::symlink_metadata(&path) {
+            Ok(meta) if meta.is_dir() => std::fs::remove_dir_all(&path),
+            Ok(_) => std::fs::remove_file(&path),
+            Err(e) => Err(e),
+        };
+        if gone.is_ok() {
+            removed += 1;
+        }
+    }
+    removed
+}
+
 impl Exports {
     pub fn new(dir: PathBuf) -> Self {
-        Self { dir, running: Arc::default(), ready: Arc::default() }
+        Self { dir, mark: mark().into(), running: Arc::default(), ready: Arc::default() }
+    }
+
+    /// The name of `job`'s folder: this engine's mark and the job.
+    fn name(&self, job: JobId) -> String {
+        format!("{}-{}", self.mark, job.get())
+    }
+
+    /// Where `job` keeps the pages it fetches, removed once its files are written.
+    fn scratch(&self, job: JobId) -> PathBuf {
+        self.dir.join(format!("{}-fetch", self.name(job)))
     }
 
     fn begin(&self, job: JobId) -> Arc<AtomicBool> {
@@ -99,7 +162,7 @@ impl Exports {
         drop(running);
         let put_away = self.ready.lock().unwrap_or_else(|e| e.into_inner()).remove(&job.get());
         if put_away.is_some() {
-            let _ = std::fs::remove_dir_all(self.dir.join(job.get().to_string()));
+            let _ = std::fs::remove_dir_all(self.dir.join(self.name(job)));
         }
         false
     }
@@ -114,17 +177,17 @@ impl Exports {
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .keys()
-            .map(|k| k.to_string())
+            .map(|k| self.name(JobId::new(*k)))
             .collect();
         {
             let mut ready = self.ready.lock().unwrap_or_else(|e| e.into_inner());
             ready.retain(|_, at| now.saturating_sub(*at) < READY_KEPT);
-            keep.extend(ready.keys().map(|k| k.to_string()));
+            keep.extend(ready.keys().map(|k| self.name(JobId::new(*k))));
         }
         if let Ok(entries) = std::fs::read_dir(&self.dir) {
             for entry in entries.flatten() {
                 let name = entry.file_name().to_string_lossy().into_owned();
-                // A send's scratch folder is its id and `-fetch`.
+                // A send's scratch folder is its name and `-fetch`.
                 let kept = keep
                     .iter()
                     .any(|b| name == *b || name.strip_suffix("-fetch") == Some(b.as_str()));
@@ -133,7 +196,7 @@ impl Exports {
                 }
             }
         }
-        self.dir.join(job.get().to_string())
+        self.dir.join(self.name(job))
     }
 }
 
@@ -472,7 +535,7 @@ struct OneSend {
 
 impl OneSend {
     async fn run(&self) -> Result<Vec<kaeri_model::reading::ExportFile>, prepare::Stop> {
-        let temp = self.exports.dir.join(format!("{}-fetch", self.id.get()));
+        let temp = self.exports.scratch(self.id);
         let gathered = self.gather(&temp).await;
         let result = match gathered {
             Ok((chapters, fetched)) => self.write(chapters, fetched).await,
@@ -885,6 +948,29 @@ mod ready_tests {
         assert!(first.exists(), "a ready send younger than a day lost its file");
         exports.folder(JobId::new(3), NOW + READY_KEPT);
         assert!(!first.exists(), "a ready send a day old kept its file");
+    }
+
+    /// R6E-5. Job ids start over at each launch: a send of a new launch must never take the
+    /// folders a killed send of an earlier one left under the same job id.
+    #[test]
+    fn a_send_never_takes_the_folders_an_earlier_launch_left_under_its_job_id() {
+        let dir = tempfile::tempdir().unwrap();
+        let before = Exports::new(dir.path().to_owned());
+        let job = JobId::new(1);
+        before.begin(job);
+        let old_out = before.folder(job, NOW);
+        let old_scratch = before.scratch(job);
+        std::fs::create_dir_all(old_scratch.join("3.pages")).unwrap();
+        std::fs::write(old_scratch.join("3.pages").join("count"), "13").unwrap();
+        // Killed here: the next launch is a new engine, whose first send is job 1 again.
+        let after = Exports::new(dir.path().to_owned());
+        after.begin(job);
+        let new_out = after.folder(job, NOW + 60);
+        let new_scratch = after.scratch(job);
+        assert_ne!(new_out, old_out);
+        assert_ne!(new_scratch, old_scratch);
+        assert!(!new_scratch.exists(), "the new send starts with no pages");
+        assert!(!old_scratch.exists(), "the dead send's pages were left");
     }
 
     #[test]

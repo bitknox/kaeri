@@ -346,7 +346,7 @@ impl BookSources {
             downloads: crate::downloads::books::BookDownloads::new(
                 paths.data_dir.join("book-downloads"),
             ),
-            exports: crate::export::Exports::new(paths.data_dir.join("exports")),
+            exports: crate::export::Exports::new(crate::export::dir_of(paths)),
             #[cfg(feature = "opds-feed")]
             feed: crate::export::feed::Feed::default(),
             write_back: crate::write_back::WriteBack::default(),
