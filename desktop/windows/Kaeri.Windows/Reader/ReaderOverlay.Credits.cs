@@ -228,7 +228,7 @@ public sealed partial class ReaderOverlay
         var end = await ShotCreditFile("end");
         // reader-credit-two: two pages skipped at the start. reader-credit-failed: a page whose file is gone.
         var pages = new List<CreditPage> { new(0, start, 0x11) };
-        if (what == "reader-credit-two")
+        if (what is "reader-credit-two" or "reader-credit-two-line")
             pages.Add(new CreditPage(1, await ShotCreditFile("second"), 0x33));
         if (what == "reader-credit-failed")
             pages[0] = new CreditPage(0, start with { Path = start.Path + ".gone" }, 0x11);
@@ -242,7 +242,7 @@ public sealed partial class ReaderOverlay
             4, [3]));
         switch (what)
         {
-            case "reader-credit-pill":
+            case "reader-credit-pill" or "reader-credit-two-line":
                 paged?.Jump(0);
                 ShowChrome(stay: true);
                 break;
@@ -251,11 +251,11 @@ public sealed partial class ReaderOverlay
                 paged?.Jump(0);
                 HideChrome();
                 break;
-            case "reader-credit" or "reader-credit-two" or "reader-credit-failed":
+            case "reader-credit" or "reader-credit-failed":
                 paged?.Jump(0);
                 ShowCredits(false);
                 break;
-            case "reader-credit-chrome":
+            case "reader-credit-chrome" or "reader-credit-two":
                 paged?.Jump(0);
                 ShowCredits(false);
                 ShowChrome(stay: true);
