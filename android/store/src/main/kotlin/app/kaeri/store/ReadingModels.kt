@@ -187,12 +187,17 @@ data class ReadSearchState(
     val words: Boolean get() = query.text.isNotBlank()
 }
 
-/** [this] with a page of AniList's answer in: the first page replaces, a later one adds. */
+/**
+ * [this] with a page of AniList's answer in: the first page replaces, a later one adds. AniList's
+ * pages can overlap when a work moves down a place between two asks, and the grids key by work,
+ * so each work is kept once, where it first came.
+ */
 private fun ReadSearchState.answered(event: ReadingEvent.Search): ReadSearchState {
     val first = event.page == 0u
+    val pageOne = if (first) event.tiles.distinctBy { it.work } else null
     return copy(
-        tiles = if (first) event.tiles else tiles + event.tiles,
-        firstPage = if (first) event.tiles.size else firstPage,
+        tiles = pageOne ?: (tiles + event.tiles).distinctBy { it.work },
+        firstPage = pageOne?.size ?: firstPage,
         page = event.page,
         hasMore = event.hasMore,
         otherScope = event.otherScope,

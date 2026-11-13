@@ -399,7 +399,7 @@ class SearchModel {
         titles.merge(entries)
         val ids = list.state.value.ids
         val seen = ids.toSet()
-        list.loaded(ids + entries.map { it.id }.filterNot { it in seen })
+        list.loaded(ids + entries.map { it.id }.filterNot { it in seen }.distinct())
         update { it.copy(loadingMore = false, pages = maxOf(it.pages, page), hasNext = hasNext) }
     }
 
