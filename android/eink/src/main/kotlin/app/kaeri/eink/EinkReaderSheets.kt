@@ -8,10 +8,10 @@ package app.kaeri.eink
 
 import android.content.Context
 import androidx.compose.foundation.background
-import androidx.compose.foundation.focusable
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.focusTarget
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -123,7 +123,7 @@ private val screenKeys = listOf(Key.REFRESH_IMAGE, Key.REFRESH_TEXT, Key.REFRESH
  * the mode for manga, the medium's own rows, and More reader settings.
  */
 @Composable
-fun BoxScope.EinkSettingsSheet(session: ReaderSession, state: ReaderState, onMore: () -> Unit, onDone: () -> Unit) {
+fun BoxScope.EinkSettingsSheet(session: ReaderSession, state: ReaderState, onMore: () -> Unit, onDone: () -> Unit, moreFocus: FocusRequester? = null) {
     val context = LocalContext.current
     val view = state.view ?: return
     val rows = state.settings?.rows.orEmpty()
@@ -141,7 +141,7 @@ fun BoxScope.EinkSettingsSheet(session: ReaderSession, state: ReaderState, onMor
             mangaFirst.forEach { key -> row(key)?.let { EinkSettingLine(context, session, it) } }
         }
         Spacer(Modifier.height(8.dp))
-        EinkRow(onClick = onMore, height = EinkSizes.SheetRow) {
+        EinkRow(onClick = onMore, height = EinkSizes.SheetRow, modifier = moreFocus?.let { Modifier.focusRequester(it) } ?: Modifier) {
             Text(Strings.readerSheetMore(context), style = EinkType.Label, modifier = Modifier.weight(1f))
             Text("›", style = EinkType.Button)
         }
@@ -150,7 +150,7 @@ fun BoxScope.EinkSettingsSheet(session: ReaderSession, state: ReaderState, onMor
 
 /** Every row the first level leaves out, grouped as the phone's More page groups them, with Tap zones first. */
 @Composable
-fun BoxScope.EinkMoreSheet(session: ReaderSession, state: ReaderState, onBack: () -> Unit, onDone: () -> Unit, onTapZones: () -> Unit) {
+fun BoxScope.EinkMoreSheet(session: ReaderSession, state: ReaderState, onBack: () -> Unit, onDone: () -> Unit, onTapZones: () -> Unit, tapZonesFocus: FocusRequester? = null) {
     val context = LocalContext.current
     val view = state.view ?: return
     val rows = state.settings?.rows.orEmpty()
@@ -160,7 +160,8 @@ fun BoxScope.EinkMoreSheet(session: ReaderSession, state: ReaderState, onBack: (
     SheetFrame(Strings.readerSheetMore(context), onDone, Modifier.align(Alignment.BottomCenter), onBack = onBack) {
         if (rows.any { it.key == Key.TAP_PAGED }) {
             val value = tapZonesValue(context, state, eink = true)
-            EinkRow(onClick = onTapZones, height = EinkSizes.SheetRow, modifier = Modifier.semantics { if (value != null) stateDescription = value }) {
+            val focus = tapZonesFocus?.let { Modifier.focusRequester(it) } ?: Modifier
+            EinkRow(onClick = onTapZones, height = EinkSizes.SheetRow, modifier = focus.semantics { if (value != null) stateDescription = value }) {
                 Text(Strings.readerRowTap(context), style = EinkType.Label, modifier = Modifier.weight(1f))
                 if (value != null) Text(value, style = EinkType.Secondary, modifier = Modifier.padding(end = 10.dp))
                 Text("›", style = EinkType.Button)
@@ -681,17 +682,26 @@ fun EinkContents(
             // TalkBack and the keyboard start on the chapter being read, once, as the page opens.
             val focus = remember { FocusRequester() }
             var focused by remember { mutableStateOf(false) }
-            // A turned page drops the row that had the focus, and the reader's keys follow the
-            // focus, so the page itself keeps it.
-            val pageFocus = remember { FocusRequester() }
+            // A turned page drops the row that had the focus, and a pager arrow at the end of the
+            // list stops taking it. Then the focus goes to the first chapter on the page while keys
+            // are in use, or else back to the reader, so the reader's keys always reach the list.
+            val firstRow = remember { FocusRequester() }
+            val holds = remember { ListFocus() }
             LaunchedEffect(page) {
                 onPage()
-                if (focused) runCatching { pageFocus.requestFocus() }
+                withFrameNanos { }
+                if (!holds.held && !firstRow.tryFocus()) keys.lost()
             }
-            // The page buttons and volume keys turn the list's pages while it shows.
-            SideEffect { keys.turn = { by -> page = (page + by).coerceIn(0, pages.size - 1) } }
-            Column(Modifier.fillMaxSize()) {
-                Column(Modifier.weight(1f).focusRequester(pageFocus).focusTarget()) {
+            // The page buttons and volume keys turn the list's pages while it shows, and the D-pad
+            // from the reader comes to the chapter being read or the page's first.
+            val onThisPage = pages[page].any { it is ContentsLine.Chapter && it.row.id == current }
+            SideEffect {
+                keys.turn = { by -> page = (page + by).coerceIn(0, pages.size - 1) }
+                keys.into = { (onThisPage && focus.tryFocus()) || firstRow.tryFocus() }
+            }
+            val first = pages[page].firstOrNull { it is ContentsLine.Chapter }
+            Column(Modifier.fillMaxSize().onFocusChanged { holds.held = it.hasFocus }) {
+                Column(Modifier.weight(1f)) {
                     pages[page].forEach { line ->
                         when (line) {
                             is ContentsLine.Heading -> Text(
@@ -707,9 +717,10 @@ fun EinkContents(
                                         focused = true
                                     }
                                 }
+                                val firstHere = if (line === first) Modifier.focusRequester(firstRow) else Modifier
                                 EinkRow(
                                     onClick = { onOpen(line.row.id) },
-                                    modifier = if (reading) Modifier.focusRequester(focus).focusable() else Modifier,
+                                    modifier = if (reading) firstHere.focusRequester(focus) else firstHere,
                                     selected = reading,
                                     height = EinkSizes.ChapterRow,
                                 ) {
@@ -731,14 +742,28 @@ fun EinkContents(
     }
 }
 
-/** The reader's keys while Contents shows: its pages turn, not the reader's page under it. */
-class ContentsKeys {
+/**
+ * The reader's keys while Contents shows: its pages turn, not the reader's page under it. [lost]
+ * gives the focus back to the reader when nothing in the list can hold it.
+ */
+class ContentsKeys(internal val lost: () -> Unit = {}) {
     /** Turn [by] pages of the list, -1 back and 1 on. */
     internal var turn: (by: Int) -> Unit = {}
+
+    /** Puts the focus on the chapter being read, or else the page's first; false when it cannot go there. */
+    internal var into: () -> Boolean = { false }
 
     fun forward() = turn(1)
 
     fun back() = turn(-1)
+
+    /** The D-pad from the reader: the focus goes into the list. False when it cannot. */
+    fun enter(): Boolean = into()
+}
+
+/** Whether a row or the pager in Contents holds the focus. */
+private class ListFocus {
+    var held = false
 }
 
 /** Touches here stay here, never reaching the page under it. */

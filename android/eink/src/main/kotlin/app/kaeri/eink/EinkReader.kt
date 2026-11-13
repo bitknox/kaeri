@@ -40,6 +40,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -104,6 +105,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import app.kaeri.reader.readerKeys
+import app.kaeri.reader.KeyRoute
+import app.kaeri.reader.ReaderControlKeys
+import app.kaeri.reader.keyRoute
 import app.kaeri.reader.onKeyDown
 import app.kaeri.reader.takesKeyUp
 import app.kaeri.reader.phone.NovelPlace
@@ -118,7 +122,6 @@ import app.kaeri.store.text
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.foundation.focusGroup
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.semantics.isTraversalGroup
@@ -261,16 +264,39 @@ fun EinkReader(
     }
 
     // The reader's own focus, for its keys. A control that held the focus goes when the bars or a
-    // sheet do, which would leave no focus and no keys, so each change moves the focus on: into a
-    // settings sheet that opens (its first control, where keys are in use), or else back to the
-    // reader, where Escape and the page keys still work. Contents puts the focus on its own row.
+    // sheet do, which would leave no focus and no keys, so each change moves the focus on: to the
+    // control asked for (the bars' first control when keys show them, or the control that opened
+    // the sheet that closed), into a settings sheet that opens, or into Contents' own row. Those
+    // take the focus only while keys are in use; otherwise it goes back to the reader, where Escape
+    // and the page keys still work.
     val readerFocus = remember { FocusRequester() }
     val sheetFocus = remember { FocusRequester() }
-    val sheetHolds = remember { SheetFocus() }
+    val contentsButton = remember { FocusRequester() }
+    val settingsButton = remember { FocusRequester() }
+    val moreRow = remember { FocusRequester() }
+    val tapZonesRow = remember { FocusRequester() }
+    val focusNext = remember { FocusNext() }
+    val contentsKeys = remember { ContentsKeys(lost = { runCatching { readerFocus.requestFocus() } }) }
     LaunchedEffect(chrome, layer) {
-        if (layer == EinkLayer.Contents) return@LaunchedEffect
-        if (layer != EinkLayer.None) runCatching { sheetFocus.requestFocus() }
-        if (!sheetHolds.held) runCatching { readerFocus.requestFocus() }
+        val asked = focusNext.take()
+        val held = when {
+            layer == EinkLayer.Contents -> contentsKeys.enter()
+            asked != null -> asked.tryFocus()
+            layer != EinkLayer.None -> sheetFocus.tryFocus()
+            else -> false
+        }
+        if (!held) runCatching { readerFocus.requestFocus() }
+    }
+    // While the bars or a sheet show, the D-pad moves the focus among their controls, and from the
+    // reader itself it goes to the first: Contents in the top bar, the first a sheet offers, or
+    // Contents' own row.
+    val controlsShown = (chrome && view != null) || layer != EinkLayer.None
+    fun enterControls() {
+        when (layer) {
+            EinkLayer.None -> contentsButton.tryFocus()
+            EinkLayer.Contents -> contentsKeys.enter()
+            else -> sheetFocus.tryFocus()
+        }
     }
 
     // A setting changed under the sheet: the page above it is painted again once it has changed.
@@ -278,15 +304,33 @@ fun EinkReader(
         if (layer == EinkLayer.Settings || layer == EinkLayer.More || layer == EinkLayer.TapZones) paint(EinkPaint.SheetChange)
     }
 
-    // Back closes the sheet or Contents first, then the reader, never the app's screens under it.
-    ReaderBackHandler {
+    // Back and Escape go one step at a time: a sheet to the one it came from, Settings and Contents
+    // opened from the bars back to the bars, the bars off the page, and only then out of the reader,
+    // never to the app's screens under it. The focus goes back to the control that opened what
+    // closed.
+    fun back() {
         when (layer) {
-            EinkLayer.TapZones -> show(EinkLayer.More)
-            EinkLayer.More -> show(EinkLayer.Settings)
-            EinkLayer.Settings, EinkLayer.Contents -> show(EinkLayer.None)
-            EinkLayer.None -> actions.onBack()
+            EinkLayer.TapZones -> {
+                focusNext.ask(tapZonesRow)
+                show(EinkLayer.More)
+            }
+            EinkLayer.More -> {
+                focusNext.ask(moreRow)
+                show(EinkLayer.Settings)
+            }
+            EinkLayer.Settings, EinkLayer.Contents -> if (chrome) {
+                val contents = layer == EinkLayer.Contents
+                focusNext.ask(if (contents) contentsButton else settingsButton)
+                layer = EinkLayer.None
+                // Contents covered the page: the page comes back as when the bars close.
+                paint(if (contents) EinkPaint.ChromeClose else EinkPaint.SheetChange)
+            } else {
+                show(EinkLayer.None)
+            }
+            EinkLayer.None -> if (chrome) toggleChrome() else actions.onBack()
         }
     }
+    ReaderBackHandler(onBack = ::back)
 
     // A demo work opens with the chrome, its credit in the top bar, for 3 s.
     LaunchedEffect(view?.demoCredit != null, view?.chapter?.id) {
@@ -345,7 +389,6 @@ fun EinkReader(
     // The waiting line in place of the page: nothing of the page is drawn over it.
     val waiting = state.leaves.isEmpty() || (asking != null && askWaited)
 
-    val contentsKeys = remember { ContentsKeys() }
     fun act(action: ReaderAction) {
         // A page button clears the guide as a touch does, and still turns.
         guide.clear()?.let(::guideCleared)
@@ -363,17 +406,34 @@ fun EinkReader(
                 novelOpen -> place.turn(false)
                 else -> pager.back(TurnHow.KEY)
             }
-            ReaderAction.CONTROLS -> toggleChrome()
+            // Bars shown by a key put the focus on their first control.
+            ReaderAction.CONTROLS -> {
+                if (!chrome) focusNext.ask(contentsButton)
+                toggleChrome()
+            }
             ReaderAction.CLEAN -> paint(EinkPaint.Clean)
             ReaderAction.FIRST -> if (novelOpen) place.go(0) else pager.go(0, TurnHow.JUMP)
             ReaderAction.LAST -> if (novelOpen) place.go((place.pages - 1).coerceAtLeast(0)) else pager.go(state.leaves.indexOfLast { !it.endPage }.coerceAtLeast(0), TurnHow.JUMP)
-            ReaderAction.ESCAPE -> when {
-                layer != EinkLayer.None -> show(EinkLayer.None)
-                chrome -> toggleChrome()
-                else -> actions.onBack()
+            ReaderAction.ESCAPE -> back()
+            ReaderAction.GO_TO -> if (!chrome) {
+                focusNext.ask(contentsButton)
+                toggleChrome()
             }
-            ReaderAction.GO_TO -> if (!chrome) toggleChrome()
         }
+    }
+
+    fun intoControls(keyCode: Int): Boolean =
+        keyRoute(keyCode, readerHolds = true, controlsShown) == KeyRoute.INTO_CONTROLS
+
+    // A control that held the focus can go with nothing changing in the bars or the sheets, as Try
+    // again does when the chapter it asked for opens. Whenever nothing in the reader holds the
+    // focus, the reader takes it back after the frame, so its keys always reach it.
+    val readerHolds = remember { HeldFocus() }
+    var keysLost by remember { mutableIntStateOf(0) }
+    LaunchedEffect(keysLost) {
+        if (keysLost == 0) return@LaunchedEffect
+        withFrameNanos { }
+        if (!readerHolds.held) runCatching { readerFocus.requestFocus() }
     }
 
     val keyRules = ReaderKeyRules(direction, volumeTurns = state.settings?.rows?.firstOrNull { it.key == ReaderSettingKey.VOLUME_KEYS_TURN }?.let { (it.value as? ReaderValue.Toggle)?.on } ?: true, volumeDownForward = !ReaderLook.volumeSwapped(LocalContext.current), holdCleans = painter.controller.available)
@@ -381,11 +441,18 @@ fun EinkReader(
     SideEffect {
         place.keys = { event ->
             when (event.action) {
-                android.view.KeyEvent.ACTION_DOWN -> keyRules.onKeyDown(event)?.let { answer ->
-                    answer.action?.let(::act)
+                // The web view is the reader itself: an arrow or Tab while the controls show goes
+                // to them, where Tab would otherwise only move inside the page.
+                android.view.KeyEvent.ACTION_DOWN -> if (intoControls(event.keyCode)) {
+                    enterControls()
                     true
-                } ?: false
-                android.view.KeyEvent.ACTION_UP -> keyRules.takesKeyUp(event.keyCode)
+                } else {
+                    keyRules.onKeyDown(event)?.let { answer ->
+                        answer.action?.let(::act)
+                        true
+                    } ?: false
+                }
+                android.view.KeyEvent.ACTION_UP -> intoControls(event.keyCode) || keyRules.takesKeyUp(event.keyCode)
                 else -> false
             }
         }
@@ -398,7 +465,11 @@ fun EinkReader(
             modifier
                 .fillMaxSize()
                 .background(EinkColours.Paper)
-                .readerKeys(keyRules, ::act, readerFocus)
+                .onFocusChanged {
+                    readerHolds.held = it.hasFocus
+                    if (!it.hasFocus) keysLost++
+                }
+                .readerKeys(keyRules, ::act, readerFocus, ReaderControlKeys(controlsShown, ::enterControls))
                 // The first touch anywhere clears the guide, and still turns or opens what it touched.
                 .clearsTapGuide(guide, ::guideCleared),
         ) {
@@ -509,7 +580,8 @@ fun EinkReader(
             )
             val shownGuide = guide.map
             if (guide.up && shownGuide != null && !waiting) EinkTapGuide(shownGuide, taps.swipesTurn, rtl = direction.rightToLeft)
-            if (chrome && view != null && layer != EinkLayer.Contents) {
+            // The bars, in one focus group the D-pad's arrows stay in.
+            if (chrome && view != null && layer != EinkLayer.Contents) Box(Modifier.fillMaxSize().keepsArrows(tab = false)) {
             val large = einkLargePanel
             val onDownload = actions.onDownload?.takeIf { large && view.demoCredit == null }
                 EinkTopBar(
@@ -517,9 +589,10 @@ fun EinkReader(
                     chapter = view.chapter,
                     onBack = actions.onBack,
                     onContents = { show(EinkLayer.Contents) },
-                    modifier = Modifier.align(Alignment.TopCenter),
+                    modifier = Modifier.align(Alignment.TopCenter).keepsSides(),
                     subtitle = view.demoCredit?.let { demo -> demo.licence?.let { Strings.readerDemoCredit(LocalContext.current, demo.series, demo.author, it) } ?: demo.credit },
                 download = if (onDownload != null) ({ EinkTopDownload(view.chapter) { onDownload(view.chapter) } }) else null,
+                    contentsFocus = contentsButton,
                 )
                 val page = if (novelOpen) place.page + 1 else state.shownPage(leaf?.parts?.firstOrNull()?.page?.toInt() ?: 0) + 1
                 EinkBottomBar(
@@ -537,10 +610,11 @@ fun EinkReader(
                     onPrevious = { view.previous?.let { session.openChapter(it.id) } },
                     onSettings = { show(EinkLayer.Settings) },
                     onClean = { paint(EinkPaint.Clean) },
-                    modifier = Modifier.align(Alignment.BottomCenter),
+                    modifier = Modifier.align(Alignment.BottomCenter).keepsSides(),
                 large = large,
                 nextHere = view.next?.takeIf { large && it.download is ChapterDownloadState.Done }?.let { Strings.einkNextOnDevice(LocalContext.current, chapterNumber(it)) },
                 series = if (large) ({ EinkSeriesBar(session, state) }) else null,
+                    settingsFocus = settingsButton,
                 )
             }
             val notice = state.notice
@@ -557,15 +631,16 @@ fun EinkReader(
                     session.dismissNotice(notice.id)
                 }, modifier = Modifier.align(Alignment.BottomCenter))
             }
-            // The sheets, in one focus group the focus moves into as one opens.
-            Box(Modifier.fillMaxSize().focusRequester(sheetFocus).onFocusChanged { sheetHolds.held = it.hasFocus }.focusGroup()) {
+            // The sheets, in one focus group the focus moves into as one opens and the D-pad and Tab
+            // stay in while it shows.
+            Box(Modifier.fillMaxSize().focusRequester(sheetFocus).keepsArrows(tab = true)) {
                 when (layer) {
-                    EinkLayer.Settings -> EinkSettingsSheet(session, state, onMore = { show(EinkLayer.More) }, onDone = { show(EinkLayer.None) })
-                    EinkLayer.More -> EinkMoreSheet(session, state, onBack = { show(EinkLayer.Settings) }, onDone = { show(EinkLayer.None) }, onTapZones = { show(EinkLayer.TapZones) })
+                    EinkLayer.Settings -> EinkSettingsSheet(session, state, onMore = { show(EinkLayer.More) }, onDone = { show(EinkLayer.None) }, moreFocus = moreRow)
+                    EinkLayer.More -> EinkMoreSheet(session, state, onBack = ::back, onDone = { show(EinkLayer.None) }, onTapZones = { show(EinkLayer.TapZones) }, tapZonesFocus = tapZonesRow)
                     EinkLayer.TapZones -> EinkTapZonesSheet(
                         session,
                         state,
-                        onBack = { show(EinkLayer.More) },
+                        onBack = ::back,
                         onDone = { show(EinkLayer.None) },
                         onShowZones = {
                             val map = reading?.let { tapMap(taps, it, null) }
@@ -582,7 +657,7 @@ fun EinkReader(
                     EinkLayer.Contents -> EinkContents(
                         session = session,
                         state = state,
-                        onBack = { show(EinkLayer.None) },
+                        onBack = ::back,
                         // The row stays pressed over the list while its chapter opens, as the board draws it.
                         onOpen = { chapter ->
                             if (chapter == view?.chapter?.id || !session.openChapter(chapter)) show(EinkLayer.None)
@@ -597,9 +672,20 @@ fun EinkReader(
     }
 }
 
-/** Whether a control in the open sheet holds the focus. */
-private class SheetFocus {
+/** Whether the reader or anything in it holds the focus. */
+private class HeldFocus {
     var held = false
+}
+
+/** The control the focus goes to at the next change of the bars or the sheets, once. */
+private class FocusNext {
+    private var asked: FocusRequester? = null
+
+    fun ask(to: FocusRequester) {
+        asked = to
+    }
+
+    fun take(): FocusRequester? = asked.also { asked = null }
 }
 
 /** Whether the quiet time has passed since [since], on [openingClock]; nothing asked counts from now. */
@@ -724,6 +810,8 @@ fun EinkTopBar(
     subtitle: String? = null,
     /** Download, before Contents, on a large panel. */
     download: (@Composable () -> Unit)? = null,
+    /** Puts the focus on Contents. */
+    contentsFocus: FocusRequester? = null,
 ) {
     val context = LocalContext.current
     Row(
@@ -740,11 +828,12 @@ fun EinkTopBar(
                 maxLines = 1,
             )
         }
+        val focus = contentsFocus?.let { Modifier.focusRequester(it) } ?: Modifier
         if (download != null) {
             download()
-            EinkTextButton(Strings.einkContents(context), onContents, underline = true)
+            EinkTextButton(Strings.einkContents(context), onContents, focus, underline = true)
         } else {
-            EinkTextButton(Strings.einkContents(context), onContents)
+            EinkTextButton(Strings.einkContents(context), onContents, focus)
         }
     }
 }
@@ -779,6 +868,8 @@ fun EinkBottomBar(
     nextHere: String? = null,
     /** On a large panel, the series' own settings under the progress. */
     series: (@Composable () -> Unit)? = null,
+    /** Puts the focus on Settings. */
+    settingsFocus: FocusRequester? = null,
 ) {
     val context = LocalContext.current
     Column(
@@ -817,7 +908,7 @@ fun EinkBottomBar(
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) { if (rtl) next(Modifier) else previous(Modifier) }
             Row {
-                EinkTextButton(Strings.einkSettings(context), onSettings)
+                EinkTextButton(Strings.einkSettings(context), onSettings, settingsFocus?.let { Modifier.focusRequester(it) } ?: Modifier)
                 if (canClean) EinkTextButton(Strings.einkCleanScreen(context), onClean)
             }
             Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) { if (rtl) previous(Modifier) else next(Modifier) }
