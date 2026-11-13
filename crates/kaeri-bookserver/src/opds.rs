@@ -276,7 +276,7 @@ pub struct OpdsSource {
     manifest: BookSourceManifest,
     http: Http,
     keep: PathBuf,
-    signed_out: Arc<AtomicBool>,
+    signed_out: crate::Gate,
 }
 
 /// How a series hit's id points back into the catalogue.
@@ -310,7 +310,7 @@ impl OpdsSource {
         name: &str,
         http: Http,
         keep: PathBuf,
-        signed_out: Arc<AtomicBool>,
+        signed_out: impl Into<crate::Gate>,
     ) -> Self {
         Self {
             manifest: BookSourceManifest {
@@ -325,7 +325,7 @@ impl OpdsSource {
             },
             http,
             keep,
-            signed_out,
+            signed_out: signed_out.into(),
         }
     }
 

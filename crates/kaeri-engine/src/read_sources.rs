@@ -102,6 +102,34 @@ fn kind_of(kind: Kind) -> BookServerKind {
     }
 }
 
+/// Keeps what a server's source learns about its sign-in while it runs.
+struct ServerKeeper {
+    id: String,
+    tokens: TokenStore,
+    store: Store,
+    write_back: crate::write_back::WriteBack,
+}
+
+impl kaeri_bookserver::Keeper for ServerKeeper {
+    fn renewed(&self, credential: &str) {
+        // A server removed while its source renewed has no sign-in to keep any more.
+        if !matches!(self.store.book_server(&self.id), Ok(Some(_))) {
+            return;
+        }
+        if let Err(e) = self.tokens.set(&secret_key(&self.id), credential) {
+            tracing::warn!(error = %e, "a book server's renewed sign-in was not kept");
+        }
+    }
+
+    fn refused(&self) {
+        match self.store.set_book_server_signed_out(&self.id, true) {
+            Ok(true) => self.write_back.publish(),
+            Ok(false) => {}
+            Err(e) => tracing::warn!(error = %e, "a book server's refusal was not kept"),
+        }
+    }
+}
+
 // ---------------------------------------------------------------------------------------------
 // The folders as a source
 
@@ -456,9 +484,29 @@ impl BookSources {
         }
     }
 
-    /// Ask `server` once more after it refused the sign-in.
+    /// Ask `server` once more after it refused the sign-in. Its row says signed in again while
+    /// it is asked, and says signed out again if it refuses once more.
     pub(crate) fn forget_refusal(&self, server: &str) {
         self.flag(server).store(false, Ordering::Relaxed);
+        if self.registry.get(server).is_some()
+            && let Err(e) = self.store.set_book_server_signed_out(server, false)
+        {
+            tracing::warn!(error = %e, "a book server's sign-in was not marked as tried again");
+        }
+    }
+
+    /// The sign-in state of `server`, with what its source tells about it kept: a renewed
+    /// sign-in goes to the secure store, a refusal to the server's row.
+    fn gate(&self, server: &str) -> kaeri_bookserver::Gate {
+        kaeri_bookserver::Gate::new(
+            self.flag(server),
+            Arc::new(ServerKeeper {
+                id: server.to_owned(),
+                tokens: self.tokens.clone(),
+                store: self.store.clone(),
+                write_back: self.write_back.clone(),
+            }),
+        )
     }
 
     fn put_server(&self, server: &BookServer) {
@@ -468,8 +516,7 @@ impl BookSources {
                 self.store.put_book_server(&BookServer { signed_out: true, ..server.clone() });
             return;
         };
-        let flag = self.flag(&server.id);
-        flag.store(server.signed_out, Ordering::Relaxed);
+        self.flag(&server.id).store(server.signed_out, Ordering::Relaxed);
         let libraries = self.server_meta(&server.id).libraries;
         let built = kaeri_bookserver::source_with(
             &self.client,
@@ -482,7 +529,7 @@ impl BookSources {
             },
             &libraries,
             self.keep.clone(),
-            flag,
+            self.gate(&server.id),
         );
         if let Some(source) = built {
             self.registry.put(source);

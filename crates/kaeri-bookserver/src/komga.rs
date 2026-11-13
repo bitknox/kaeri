@@ -4,11 +4,12 @@
 //! asked for one (`X-Auth-Token` with an empty value) and the token is what is kept; an older
 //! one gets the Basic credential kept instead. Either way the password itself is not written
 //! anywhere readable: what is kept goes to the secure store, never the database.
+//!
+//! A session token lapses when the server ends the session, and nothing kept can start a new
+//! one without the password. A refused sign-in signs the source out, once, and it waits for
+//! the person to sign in again.
 
-use std::{
-    path::PathBuf,
-    sync::{Arc, atomic::AtomicBool},
-};
+use std::path::PathBuf;
 
 use async_trait::async_trait;
 use kaeri_core::{
@@ -23,7 +24,7 @@ use kaeri_core::{
 use serde::Deserialize;
 
 use crate::{
-    SignedIn,
+    Gate, SignedIn,
     error::{Result, ServerError},
     http::{Auth, Http, basic},
     kept::keep_path,
@@ -253,7 +254,7 @@ pub struct KomgaSource {
     libraries: Vec<String>,
     http: Http,
     keep: PathBuf,
-    signed_out: Arc<AtomicBool>,
+    signed_out: Gate,
 }
 
 impl KomgaSource {
@@ -262,7 +263,7 @@ impl KomgaSource {
         name: &str,
         http: Http,
         keep: PathBuf,
-        signed_out: Arc<AtomicBool>,
+        signed_out: impl Into<Gate>,
     ) -> Self {
         Self {
             manifest: BookSourceManifest {
@@ -278,7 +279,7 @@ impl KomgaSource {
             libraries: Vec::new(),
             http,
             keep,
-            signed_out,
+            signed_out: signed_out.into(),
         }
     }
 

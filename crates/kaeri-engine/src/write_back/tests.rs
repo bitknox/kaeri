@@ -28,6 +28,11 @@ const UP: u8 = 0;
 const SILENT: u8 = 1;
 /// Answers 401.
 const REFUSING: u8 = 2;
+/// Kavita only: refuses the first JWT, and its refresh token hands out `jwt.two` with a new
+/// refresh token.
+const LAPSED: u8 = 3;
+/// Kavita only: refuses the first JWT, and turns down its refresh token and its API key.
+const EXPIRED: u8 = 4;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 enum Flavour {
@@ -107,12 +112,24 @@ async fn serve(flavour: Flavour, mode: Arc<AtomicU8>) -> (String, Seen) {
                 let mut first = text.lines().next().unwrap_or_default().split(' ');
                 let (method, path) = (first.next().unwrap_or(""), first.next().unwrap_or(""));
                 log.lock().unwrap().push((method.to_owned(), path.to_owned()));
+                let refused =
+                    "HTTP/1.1 401 Unauthorized\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+                        .to_owned();
+                let lapsed =
+                    text.to_ascii_lowercase().contains("authorization: bearer jwt.one");
+                let renewal = path.starts_with("/api/Account/refresh-token")
+                    || path.starts_with("/api/Plugin/authenticate");
                 let response = match mode.load(Ordering::SeqCst) {
                     SILENT => return,
-                    REFUSING => {
-                        "HTTP/1.1 401 Unauthorized\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
-                            .to_owned()
+                    REFUSING => refused,
+                    LAPSED if path.starts_with("/api/Account/refresh-token") => {
+                        let json = r#"{"token":"jwt.two","refreshToken":"refresh.two"}"#;
+                        format!(
+                            "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{json}",
+                            json.len()
+                        )
                     }
+                    LAPSED | EXPIRED if lapsed || renewal => refused,
                     _ => match routes
                         .iter()
                         .filter(|(prefix, _)| path.starts_with(prefix))
@@ -314,6 +331,7 @@ async fn a_refused_key_waits_for_try_again_and_is_not_retried_alone() {
         let pass = kit.sources.send_progress_due(100).await;
         assert_eq!(pass.held, 1, "{flavour:?}");
         assert_eq!(kit.row().progress_problem, Some(WriteBackProblem::RefusedKey));
+        assert!(kit.row().signed_out, "{flavour:?}: the row says what the source knows");
         let asked = kit.asked();
         assert_eq!(kit.sources.send_progress_due(1_000_000).await, Pass::default());
         assert_eq!(kit.asked(), asked, "{flavour:?}: a refusal is not retried on its own");
@@ -321,8 +339,10 @@ async fn a_refused_key_waits_for_try_again_and_is_not_retried_alone() {
         // The key was fixed on the server: Try again asks once more and it goes.
         kit.set(UP);
         kit.sources.retry_progress("k", 2_000_000);
+        assert!(!kit.row().signed_out, "{flavour:?}: asked again, it is not said signed out");
         assert_eq!(kit.sources.send_progress_due(2_000_000).await.sent, 1, "{flavour:?}");
         assert_eq!(kit.writes().len(), 1);
+        assert!(!kit.row().signed_out, "{flavour:?}");
         assert_eq!(kit.row().progress_saved_at, Some(2_000_000));
     }
 }
@@ -428,6 +448,69 @@ async fn the_reader_knows_the_host_progress_goes_to_before_a_chapter_is_read() {
         })
         .unwrap();
     assert_eq!(kit.sources.progress_host(&kit.work()), None);
+}
+
+impl Kit {
+    fn asked_at(&self, path: &str) -> usize {
+        self.seen.lock().unwrap().iter().filter(|(_, p)| p.starts_with(path)).count()
+    }
+
+    fn kept_tokens(&self) -> kaeri_bookserver::kavita::Tokens {
+        let tokens = kaeri_track::TokenStore::with_backend(
+            self.dir.path().join("tokens"),
+            kaeri_track::secret::Backend::File,
+        );
+        kaeri_bookserver::kavita::Tokens::parse(&tokens.get("book-server/k").unwrap()).unwrap()
+    }
+}
+
+#[tokio::test]
+async fn a_lapsed_kavita_sign_in_is_renewed_and_kept_across_a_restart() {
+    let kit = kit(Flavour::Kavita).await;
+    kit.set(LAPSED);
+    let hints = BookHints::default();
+    let listed = kit.sources.registry.chapters("k", "7", &hints, 2).await;
+    assert!(listed.is_ok(), "{listed:?}");
+    assert_eq!(kit.asked_at("/api/Account/refresh-token"), 1);
+    // The rotated refresh token is the one kept.
+    let kept = kit.kept_tokens();
+    assert_eq!(
+        (kept.token.as_str(), kept.refresh.as_str(), kept.api_key.as_str()),
+        ("jwt.two", "refresh.two", "key-one")
+    );
+    assert!(!kit.row().signed_out);
+    kit.sources.report(&kit.work(), vec![kit.keys[0].clone()], true, 100);
+    assert_eq!(kit.sources.send_progress_due(100).await.sent, 1);
+
+    // After a restart the kept JWT is the one sent, and nothing is renewed again.
+    let again = sources_at(kit.dir.path(), kit.store().clone());
+    assert!(again.registry.chapters("k", "7", &hints, 3).await.is_ok());
+    assert_eq!(kit.asked_at("/api/Account/refresh-token"), 1);
+    assert!(!again.view(&BookPlugins::default(), |_| None).servers[0].signed_out);
+}
+
+#[tokio::test]
+async fn a_kavita_sign_in_that_cannot_be_renewed_is_signed_out_until_signed_in_again() {
+    let kit = kit(Flavour::Kavita).await;
+    kit.set(EXPIRED);
+    let hints = BookHints::default();
+    let error = kit.sources.registry.chapters("k", "7", &hints, 2).await.unwrap_err();
+    assert_eq!(
+        kit.sources.failure("k", &error),
+        kaeri_model::reading::ReadingFailure::SignInNeeded { what: "Home shelf".into() }
+    );
+    assert_eq!(kit.asked_at("/api/Account/refresh-token"), 1);
+    assert_eq!(kit.asked_at("/api/Plugin/authenticate"), 1);
+    assert!(kit.row().signed_out);
+    assert!(kit.store().book_server("k").unwrap().unwrap().signed_out);
+
+    // Nothing more is asked, and a restart keeps it so.
+    let asked = kit.asked();
+    assert!(kit.sources.registry.chapters("k", "7", &hints, 3).await.is_err());
+    let again = sources_at(kit.dir.path(), kit.store().clone());
+    assert!(again.registry.chapters("k", "7", &hints, 4).await.is_err());
+    assert!(again.view(&BookPlugins::default(), |_| None).servers[0].signed_out);
+    assert_eq!(kit.asked(), asked);
 }
 
 #[test]
