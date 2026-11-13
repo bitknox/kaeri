@@ -2236,6 +2236,7 @@ async fn do_steps(shell: &Rc<Shell>) {
                 let text = if nth.is_some() { w[2..].join(" ") } else { w[1..].join(" ") };
                 tracing::info!("HUNT do focus: {}", focus_text(shell, &text, nth.unwrap_or(0)));
             }
+            "send" => crate::reading::export::open(&shell.ctx, &kaeri_core::books::WorkId::new(arg(1))),
             "chapters" => shell.reader.hunt_chapters(),
             "chapterstab" => shell.reader.hunt_chapters_tab(),
             "tryagain" => tracing::info!("HUNT do try again: {}", shell.reader.hunt_try_again()),
