@@ -69,6 +69,43 @@ final class TapWindow {
         while Date() < end { try await turn(0.02) }
     }
 
+    /// A key pressed and let go at the window, as the keyboard sends it.
+    func key(_ characters: String, code: UInt16) async throws {
+        for type in [NSEvent.EventType.keyDown, .keyUp] {
+            let event = NSEvent.keyEvent(
+                with: type, location: .zero, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
+                windowNumber: window.windowNumber, context: nil, characters: characters,
+                charactersIgnoringModifiers: characters, isARepeat: false, keyCode: code)!
+            window.sendEvent(event)
+            try await turn(0.01)
+        }
+        for _ in 0..<10 { try await turn(0.01) }
+    }
+
+    var firstResponder: NSResponder? { window.firstResponder }
+
+    /// The window's accessibility tree, as VoiceOver walks it.
+    func accessibilityElements() -> [NSObject] {
+        var found: [NSObject] = []
+        func walk(_ element: Any, depth: Int) {
+            guard depth < 60, found.count < 50_000, let element = element as? NSObject else { return }
+            found.append(element)
+            for child in element.accessibilityChildren() ?? [] { walk(child, depth: depth + 1) }
+        }
+        if let root = window.contentView { walk(root, depth: 0) }
+        return found
+    }
+
+    /// Every label, title and value in the window's accessibility tree.
+    func accessibilityText() -> [String] {
+        accessibilityElements().flatMap { Self.text(of: $0) }
+    }
+
+    static func text(of element: NSObject) -> [String] {
+        [element.accessibilityLabel(), element.accessibilityTitle(), element.accessibilityValue() as? String]
+            .compactMap { $0 }.filter { !$0.isEmpty }
+    }
+
     func close() { window.close() }
 
     private func turn(_ seconds: Double) async throws {

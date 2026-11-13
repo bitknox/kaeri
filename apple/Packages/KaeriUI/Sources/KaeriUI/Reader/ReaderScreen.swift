@@ -93,6 +93,9 @@ public struct ReaderScreen: View {
         .onKeyPress(phases: [.down, .repeat]) { press in
             take(press.key, press.modifiers, repeated: press.phase == .repeat) ? .handled : .ignored
         }
+        // Tab stays in the book: the window under it is covered, and its controls aren't the
+        // reader's to reach.
+        .onKeyPress(keys: [.tab, Self.backTab], phases: [.down, .repeat]) { _ in .handled }
         .onAppear { holdsKeys = true }
         .onChange(of: model.sheet == nil) { _, closed in if closed { holdsKeys = true } }
         .onChange(of: model.askingPage) { _, asking in if !asking { holdsKeys = true } }
@@ -193,6 +196,9 @@ public struct ReaderScreen: View {
             dark: !theme.isLight)
         model.surfaceChanged(surface)
     }
+
+    /// Shift-Tab, as AppKit names it.
+    static let backTab = KeyEquivalent("\u{19}")
 
     // MARK: Chrome
 
