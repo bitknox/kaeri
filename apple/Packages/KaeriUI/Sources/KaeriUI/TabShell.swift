@@ -14,10 +14,12 @@ struct TabShell: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
-        // The sidebar on a wide iPad; on iPhone the system's own tab bar, with Search apart.
-        if sizeClass == .regular {
-            // No customization: the bar's set is fixed, and the rest live in the sidebar only, so
-            // the sidebar has no Edit button.
+        // The sidebar on iPad, which turns into the bar in a narrow window; on iPhone the system's
+        // own tab bar, with Search apart. On iPad the style goes by the device, never the width:
+        // one tab view through every resize, so the pages in it keep what they hold (picks, a
+        // scroll). No customization: the bar's set is fixed, and the rest live in the sidebar
+        // only, so the sidebar has no Edit button.
+        if Self.pad || sizeClass == .regular {
             tabs.tabViewStyle(.sidebarAdaptable)
         } else {
             tabs
@@ -95,10 +97,11 @@ struct TabShell: View {
         .tabBarMinimizeBehavior(.onScrollDown)
         // A place with no tab here goes onto the tab that leads to it, as the headings on each
         // Home do.
-        .onChange(of: navigator.section, initial: true) { _, now in
-            guard sizeClass == .compact, let parent = Self.parent(of: now, store.medium.answer) else { return }
-            navigator.placePushed = now
-            navigator.section = parent
+        .onChange(of: navigator.section, initial: true) { _, _ in narrowed() }
+        // A window made narrow keeps the place the person was on, pushed onto its tab; made wide
+        // again, that place is its own section again.
+        .onChange(of: sizeClass) { _, now in
+            if now == .compact { narrowed() } else { widened() }
         }
         // Watch together has no tab on iPhone and in a narrow window: Home's people button
         // pushes it there.
@@ -144,13 +147,27 @@ struct TabShell: View {
         AppSection.groups(answer).flatMap { $0 }.filter { ![.search, .downloads, .together].contains($0) }
     }
 
-    /// The tab a place with no tab of its own is pushed onto, on iPhone and in a narrow window.
-    static func parent(of section: AppSection, _ answer: KaeriIsFor) -> AppSection? {
-        guard [.calendar, .seasonal, .updates].contains(section), !barTabs(answer).contains(section) else { return nil }
-        return section == .updates ? .read : .home
+    /// A place with no tab of its own in a narrow window goes onto the tab that leads to it.
+    private func narrowed() {
+        guard sizeClass == .compact, let to = NarrowTabs.narrow(navigator.section, store.medium.answer) else { return }
+        switch to.pushed {
+        case .downloads: navigator.downloadsPushed = true
+        case .place(let place): navigator.placePushed = place
+        }
+        navigator.section = to.tab
     }
 
-    /// The tabs the iPhone's bar shows.
+    private static var pad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
+
+    /// The place pushed for a narrow window is its own section again in a wide iPad window.
+    private func widened() {
+        guard Self.pad, let to = NarrowTabs.widen(navigator.section, downloads: navigator.downloadsPushed,
+                                  place: navigator.placePushed, store.medium.answer) else { return }
+        navigator.downloadsPushed = false
+        navigator.placePushed = nil
+        navigator.section = to
+    }
+
     /// A place as a tab: Home's and Read's identity carries the answer they are named for.
     struct NamedPlace: Identifiable {
         let section: AppSection
@@ -158,13 +175,7 @@ struct TabShell: View {
         var id: String { [.home, .read].contains(section) ? "\(section.rawValue).\(answer)" : section.rawValue }
     }
 
-    static func barTabs(_ answer: KaeriIsFor) -> [AppSection] {
-        switch answer {
-        case .watch: [.home, .calendar, .seasonal, .library]
-        case .read: [.read, .updates, .library]
-        case .both: [.home, .read, .library]
-        }
-    }
+    static func barTabs(_ answer: KaeriIsFor) -> [AppSection] { NarrowTabs.barTabs(answer) }
 
     @ViewBuilder
     private func screen(_ section: AppSection) -> some View {
