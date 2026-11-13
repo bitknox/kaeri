@@ -970,14 +970,17 @@ impl Home {
             && let Some(kept) =
                 tiles::anilist(tile.work.as_str()).and_then(|id| self.meta.kept_book(id))
         {
-            let action = self.continue_action(&kept.book);
-            return Some(self.spot(
+            let found = self.series_action(&kept.book);
+            let mut spot = self.spot(
                 &kept,
                 ReadSpotlightCase::Continuing,
                 ReadingMsg::ReadingSpotlightContinue,
                 tile.next.clone(),
-                action,
-            ));
+                Self::continuing(found.clone()),
+            );
+            // No source has it: the spotlight says so under its buttons, as Watch's does.
+            spot.0.not_in_sources = found == SeriesAction::NoSource;
+            return Some(spot);
         }
         if let Some(tile) = up_next.first()
             && let Some(kept) =
@@ -1051,10 +1054,14 @@ impl Home {
     }
 
     /// Where Continue opens a series: the chapter in progress, or the next one.
-    fn continue_action(&self, book: &Book) -> Option<SeriesAction> {
+    fn series_action(&self, book: &Book) -> SeriesAction {
         let work = tiles::work_of(book.id);
-        Some(tiles::action(&self.store, &self.sources, &work, book.medium(), &self.plugins))
-            .filter(|a| !matches!(a, SeriesAction::NoSource | SeriesAction::ReadAgain))
+        tiles::action(&self.store, &self.sources, &work, book.medium(), &self.plugins)
+    }
+
+    /// The button a series in Continue gets: none with nothing to read it on, or nothing left.
+    fn continuing(action: SeriesAction) -> Option<SeriesAction> {
+        Some(action).filter(|a| !matches!(a, SeriesAction::NoSource | SeriesAction::ReadAgain))
     }
 }
 
@@ -1422,14 +1429,19 @@ mod tests {
         });
 
         kit.plugins.expect_arrivals();
-        let spot = home(&kit).spot.unwrap();
+        let view = home(&kit);
+        let spot = view.spot.unwrap();
         assert_eq!(spot.case, ReadSpotlightCase::Continuing);
         assert_eq!(spot.action, continuing, "the chapter in progress, from the kept list");
+        assert!(!view.spotlight.unwrap().not_in_sources, "a source may still have it");
         assert!(kit.plugins.take_leaned(), "the load's end draws Home again");
 
-        // The load ended without the plugin: it is in no source the person has.
+        // The load ended without the plugin: it is in no source the person has, and the
+        // spotlight says why it has no button.
         kit.plugins.arrivals_done();
-        assert_eq!(home(&kit).spot.unwrap().action, None);
+        let view = home(&kit);
+        assert_eq!(view.spot.unwrap().action, None);
+        assert!(view.spotlight.unwrap().not_in_sources, "the reason under the buttons");
         assert!(!kit.plugins.take_leaned());
     }
 }
