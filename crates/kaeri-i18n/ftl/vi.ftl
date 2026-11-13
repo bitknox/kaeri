@@ -1983,9 +1983,6 @@ linux-shortcuts-close-reader = Đóng trình đọc
 # Two names joined, or a list's last name joined to the rest, in the end page's tracker line: "AniList and MangaUpdates".
 linux-reader-names-and = { $first } và { $last }
 
-# On the plate that holds a page's place while it loads. The page is its number, such as 23.
-linux-reader-page-plate = Trang { $page }
-
 # Heading when a chapter could not open. The chapter is its number, such as 13.
 linux-reader-open-failed = Không mở được chương { $chapter }
 
@@ -8534,6 +8531,15 @@ player-subs-more = Thêm trong Cài đặt…
 # Under a page that is still loading after four seconds.
 reader-page-loading = Đang tải trang { $page }
 
+# On the plate of a page that is still loading.
+reader-page-plate = Trang { $page }
+
+# On the plate of a strip image that is still loading.
+reader-image-plate = Ảnh { $image }
+
+# Under a strip image's number after four seconds.
+reader-image-loading = Đang tải ảnh { $image }
+
 # Heading where a page could not be loaded.
 reader-page-failed = Không tải được trang { $page }
 
@@ -8548,6 +8554,9 @@ reader-end-read = Đã tính là đã đọc
 
 # Under the end of chapter line, naming the trackers the read went to.
 reader-end-tracker = Đã tính là đã đọc · đã cập nhật { $trackers }
+
+# Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online.
+reader-end-tracker-offline = Đã tính là đã đọc · { $tracker } sẽ cập nhật khi bạn có mạng lại
 
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = Kế tiếp
@@ -8609,14 +8618,20 @@ reader-spreads-rotate = Xoay
 # A choice for wide pages: shown whole.
 reader-spreads-whole = Nguyên
 
-# A choice for the reader's tap zones: taps near the left and right edges turn the page.
+# A choice for the reader's tap zones: taps near the left and right edges turn the page. Replaced by Sides; kept until every app has the new tap zones page.
 reader-tap-edges = Hai mép
 
-# A choice for the reader's tap zones: the left and right halves turn the page.
-reader-tap-sides = Hai nửa
-
-# A choice for the reader's tap zones: taps do not turn the page.
+# Tap zone layout: taps only show and hide the controls, and never turn the page.
 reader-tap-off = Tắt
+
+# Name of the tap zone that turns to the next page, in the guide over the page and as a screen reader action.
+reader-zone-next = Trang sau
+
+# Name of the tap zone that turns to the previous page, in the guide and as a screen reader action.
+reader-zone-previous = Trang trước
+
+# Name of the tap zone that shows and hides the reader's controls, in the guide.
+reader-zone-controls = Điều khiển
 
 # Button in the reader's controls that opens the chapters and the page grid.
 reader-chapters = Các chương
@@ -8936,7 +8951,7 @@ action-continue-named = Đọc tiếp { $label } · { $percent }%
 # The main action for a light novel part, part read, named in the source's own words, when how far is not known.
 action-continue-named-plain = Đọc tiếp { $label }
 
-# The main action for a light novel part not opened yet, named in the source's own words.
+# The main action for a light novel part not opened yet, named in the source's own words, and for a chapter with no number, named by its own title ("Read Oneshot").
 action-read-named = Đọc { $label }
 
 # The main action when every chapter is read.
@@ -9475,9 +9490,6 @@ read-search-nothing-filters-line = Ít bộ lọc hơn có thể tìm thấy nhi
 
 # The button under it.
 read-search-clear-filters = Xóa bộ lọc
-
-# A sort of reading's Search, AniList's.
-read-sort-popular = Phổ biến
 
 # A sort of reading's Search, AniList's.
 read-sort-trending = Thịnh hành
@@ -13314,9 +13326,6 @@ title-tags = Thẻ
 
 # Button that opens the full page of facts about a show.
 title-more-about = Xem thêm về tác phẩm này
-
-# Accessibility hint of the button that expands a synopsis.
-title-synopsis-hint = Hiển thị toàn bộ tóm tắt
 
 # Label under a season: which episodes are dubbed so far.
 title-dubbed-to = Lồng tiếng đến tập { $episode }

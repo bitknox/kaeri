@@ -603,6 +603,24 @@ reader-moved = [Ṁöṽéð ţö { $chapter }, þàĝé { $page }, ŵĥéŕé {
 # The same notice for a chapter known only by its number, such as 14 or 14.5.
 reader-moved-number = [Ṁöṽéð ţö çĥàþţéŕ { $chapter }, þàĝé { $page }, ŵĥéŕé { $device } šţöþþéð~~~~~~~~~~~~~~~]
 
+# The notice when another device read further and its name is not known: a device removed from sync, or this one before a reinstall.
+reader-moved-elsewhere = [Ṁöṽéð ţö { $chapter }, þàĝé { $page }, ŵĥéŕé àñöţĥéŕ ðéṽîçé šţöþþéð~~~~~~~~~~~~~~~~]
+
+# The same notice for a chapter known only by its number, such as 14 or 14.5.
+reader-moved-number-elsewhere = [Ṁöṽéð ţö çĥàþţéŕ { $chapter }, þàĝé { $page }, ŵĥéŕé àñöţĥéŕ ðéṽîçé šţöþþéð~~~~~~~~~~~~~~~~~~]
+
+# The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its whole label, such as The Long Night.
+reader-moved-image = [Ṁöṽéð ţö { $chapter }, îɱàĝé { $image }, ŵĥéŕé { $device } šţöþþéð~~~~~~~~~~~~~]
+
+# The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+reader-moved-number-image = [Ṁöṽéð ţö çĥàþţéŕ { $chapter }, îɱàĝé { $image }, ŵĥéŕé { $device } šţöþþéð~~~~~~~~~~~~~~~]
+
+# The notice in a strip when another device read further and its name is not known.
+reader-moved-elsewhere-image = [Ṁöṽéð ţö { $chapter }, îɱàĝé { $image }, ŵĥéŕé àñöţĥéŕ ðéṽîçé šţöþþéð~~~~~~~~~~~~~~~~]
+
+# The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+reader-moved-number-elsewhere-image = [Ṁöṽéð ţö çĥàþţéŕ { $chapter }, îɱàĝé { $image }, ŵĥéŕé àñöţĥéŕ ðéṽîçé šţöþþéð~~~~~~~~~~~~~~~~~~~]
+
 # A notice the first time a series opens with its reading direction guessed. It offers Change.
 reader-detected-right-to-left = [Ļööķš ļîķé ŕîĝĥţ ţö ļéƒţ~~~~~~~~]
 
@@ -618,8 +636,14 @@ reading-failed-offline = [Ýöü'ŕé öƒƒļîñé. Ðöŵñļöàðéð çĥ�
 # Why a chapter or a list could not load: the source did not answer. The source is its name.
 reading-failed-source-down = [{ $source } îšñ'ţ àñšŵéŕîñĝ. Ţŕý àĝàîñ ļàţéŕ.~~~~~~~~~~~~]
 
+# Why something could not load: the source the series reads from is switched off in Your sources.
+reading-failed-source-off = [{ $source } îš šŵîţçĥéð öƒƒ. Šŵîţçĥ îţ öñ îñ Ýöüŕ šöüŕçéš, öŕ ŕéàð ƒŕöɱ àñöţĥéŕ šöüŕçé.~~~~~~~~~~~~~~~~~~~~~~~~]
+
 # Why a chapter could not load: the source no longer has it.
 reading-failed-not-found = [Ţĥîš šöüŕçé ðöéšñ'ţ ĥàṽé îţ àñýɱöŕé. Ţŕý àñöţĥéŕ šöüŕçé.~~~~~~~~~~~~~~~~~]
+
+# Why a series has no chapters: none of the person's sources holds it, and none was ever picked.
+reading-failed-no-source = [Ñöñé öƒ ýöüŕ šöüŕçéš ĥàš ţĥîš šéŕîéš ýéţ. Šéàŕçĥ ƒöŕ îţ ƀý àñöţĥéŕ ñàɱé îñ Ŕéàð ƒŕöɱ, öŕ àðð à šöüŕçé îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Why a chapter or a list could not load: the source refused. The reason comes from the source.
 reading-failed-blocked = [{ $source } ŕéƒüšéð ţĥé ŕéƣüéšţ. { $reason }~~~~~~~~~]
@@ -629,6 +653,9 @@ reading-failed-parse = [Ķàéŕî çöüļðñ'ţ ŕéàð ŵĥàţ { $source }
 
 # Why one page did not load. The status is the server's HTTP status code, such as 404.
 reading-failed-page = [Ţĥîš þàĝé ðîðñ'ţ ļöàð (éŕŕöŕ { $status }). Ţŕý àĝàîñ.~~~~~~~~~~~~~~]
+
+# In the reader, in a novel's text, in the box where a picture from the source did not load. Try again sits under it.
+reading-picture-failed = [Çöüļðñ'ţ ļöàð þîçţüŕé~~~~~~~]
 
 # Why something could not load: a sign-in is needed. What is a server's or a tracker's name.
 reading-failed-sign-in = [Šîĝñ îñ ţö { $what } àĝàîñ ţö ķééþ ŕéàðîñĝ.~~~~~~~~~~~~]
@@ -647,6 +674,15 @@ reading-failed-protected = [Ţĥîš ƀööķ îš çöþý-þŕöţéçţéð, 
 
 # Why a chapter could not be saved: the disk is full.
 reading-failed-disk-full = [Ţĥéŕé'š ñö ŕööɱ ļéƒţ öñ ţĥîš ðéṽîçé. Ƒŕéé šöɱé šþàçé àñð ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~~~]
+
+# Why a chapter or a file for an e-reader could not be saved: the storage refused the name, because it is too long or has characters the storage doesn't allow. The path is the file's or the folder's.
+reading-failed-write-name = [Ţĥé šţöŕàĝé ðöéšñ'ţ ţàķé ţĥé ñàɱé { $path }. Îţ ɱàý ƀé ţöö ļöñĝ.~~~~~~~~~~~~~~~~~~]
+
+# Why a chapter or a file for an e-reader could not be saved: the storage is read-only, or Kaeri isn't allowed to write there. The path is the file's or the folder's.
+reading-failed-write-denied = [Ķàéŕî îšñ'ţ àļļöŵéð ţö ŵŕîţé { $path }. Çĥéçķ ţĥàţ ţĥé šţöŕàĝé îšñ'ţ ŕéàð-öñļý, ţĥéñ ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Why a chapter or a file for an e-reader could not be saved, for another reason the system gave. The path is the file's or the folder's.
+reading-failed-write = [Ķàéŕî çöüļðñ'ţ ŵŕîţé { $path }. Ţŕý àĝàîñ.~~~~~~~~~~~]
 
 # Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.
 reading-failed-webview = [Ñöṽéļš ñééð à ñéŵéŕ šýšţéɱ ŴéƀṼîéŵ ţĥàñ ṽéŕšîöñ { $version }. Ûþðàţé Åñðŕöîð Šýšţéɱ ŴéƀṼîéŵ àñð ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
@@ -861,6 +897,9 @@ reading-row-waits-wifi = [Ǫüéüéð · ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~~~~]
 # A chapter row's state while it downloads.
 reading-row-downloading = [Ðöŵñļöàðîñĝ · { $done } öƒ { $total } þàĝéš~~~~~~~~~]
 
+# A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count.
+reading-row-downloading-plain = [Ðöŵñļöàðîñĝ~~~~]
+
 # A chapter row's state: the download failed. The reason follows as the next part.
 reading-row-failed = [Çöüļðñ'ţ ðöŵñļöàð~~~~~~]
 
@@ -891,6 +930,45 @@ reading-row-versions =
     { $n ->
         [one] [1 ṽéŕšîöñ~~~]
        *[other] [{ $n } ṽéŕšîöñš~~~~]
+    }
+
+# A chapter row: the source lists this chapter in parts, and the reader runs through them as one chapter. Shown beside the chapter's name: "Chapter 1, 2 parts".
+reading-row-parts =
+    { $n ->
+        [one] [1 þàŕţ~~]
+       *[other] [{ $n } þàŕţš~~~]
+    }
+
+# A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it. Lower case, as the line's other words; an app that starts a line with it capitalises the first letter.
+reading-row-from-group = [ƒŕöɱ { $group }~~~]
+
+# A chapter row: the same, for a group in another language than the app's, named after the group. "from Saltmarsh Team, Spanish".
+reading-row-from-group-in = [ƒŕöɱ { $group }, { $language }~~~~]
+
+# A chapter row: a chapter in parts that is missing some, as no group has released them. The reader runs through the parts there are. Followed by the missing part: "2 of 3 parts".
+reading-row-parts-of = [{ $have } öƒ { $n } þàŕţš~~~~~]
+
+# A chapter row, after the parts count: the part no group has released. With several, how many.
+reading-row-part-missing =
+    { $count ->
+        [one] [þàŕţ { $part } ɱîššîñĝ~~~~~]
+       *[other] [{ $count } þàŕţš ɱîššîñĝ~~~~~~]
+    }
+
+# A chapter row: one part of a chapter in parts comes from another group, as the group the series is read from lacks it. "part 2 from Saltmarsh Team".
+reading-row-part-from-group = [þàŕţ { $part } ƒŕöɱ { $group }~~~~~~]
+
+# The same, for a group in another language than the app's. "part 2 from Saltmarsh Team, Spanish".
+reading-row-part-from-group-in = [þàŕţ { $part } ƒŕöɱ { $group }, { $language }~~~~~~~]
+
+# A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there. Lower case, as the line's other words.
+reading-row-from-source = [ƒŕöɱ { $source }~~~]
+
+# A quiet line in the reader: pages a series repeats at the start or end of its chapters (a group's credits or notices) were left out of this chapter. Tapping it shows them.
+reader-credit-pages-skipped =
+    { $count ->
+        [one] [{ $count } çŕéðîţ þàĝé šķîþþéð~~~~~~~]
+       *[other] [{ $count } çŕéðîţ þàĝéš šķîþþéð~~~~~~~~]
     }
 
 # A chapter row: when it was read or came out, under a minute ago.
@@ -956,6 +1034,9 @@ reading-miss-down-since = [Ñöţ àñšŵéŕîñĝ šîñçé { $time }~~~~~~~
 
 # The source has failed every ask, since a time on another day or not known.
 reading-miss-down = [Ñöţ àñšŵéŕîñĝ~~~~]
+
+# The source has no series by the series' names, but has one that may be it in another edition, as a full-colour release. That series is shown under this line, and choosing it confirms it.
+reading-miss-possible = [Þöššîƀļé ɱàţçĥ~~~~~]
 
 # How many parts of a light novel are downloaded.
 reading-dl-parts =
@@ -1856,6 +1937,9 @@ linux-book-plugin-use = [Ûšé ţĥîš þļüĝîñ~~~~~]
 # Screen reader name of a discovery row's View all button: the row's heading follows, so a list of links makes sense on its own.
 read-linux-view-all-row = [Ṽîéŵ àļļ, { $row }~~~~]
 
+# Screen reader name of See all on a row of reading's Search start: the row's heading follows, as for Read's rows.
+read-linux-see-all-row = [Šéé àļļ, { $row }~~~~]
+
 # Screen reader name of a discovery row's heading while its covers are on their way.
 read-linux-row-loading = [{ $row }, ļöàðîñĝ~~~~]
 
@@ -2019,6 +2103,12 @@ linux-reader-end-offline-body = [Ýöü'ŕé öƒƒļîñé. Îţ öþéñš ĥ�
 # Hint under a page's error: turning the page goes on past it.
 linux-reader-page-failed-hint = [Ţüŕñ ţĥé þàĝé ţö ĝö öñ ŵîţĥöüţ îţ.~~~~~~~~~~~]
 
+# Why a page failed: its file came in, but no image decoder on this system could show it.
+linux-reader-page-undecodable = [Ţĥé îɱàĝé çàɱé îñ, ƀüţ îţ çöüļðñ'ţ ƀé šĥöŵñ.~~~~~~~~~~~~~~]
+
+# Why a light novel's chapter stopped showing: the view that draws its text closed or failed to load it.
+linux-reader-novel-stopped = [Ţĥé ṽîéŵ ţĥàţ šĥöŵš ţĥé ţéẋţ šţöþþéð.~~~~~~~~~~~~]
+
 # Line while a chapter opens, once its number is known.
 linux-reader-opening-number = [Öþéñîñĝ çĥàþţéŕ { $chapter }~~~~~~]
 
@@ -2105,9 +2195,6 @@ linux-shortcuts-close-reader = [Çļöšé ţĥé ŕéàðéŕ~~~~~]
 
 # Two names joined, or a list's last name joined to the rest, in the end page's tracker line: "AniList and MangaUpdates".
 linux-reader-names-and = [{ $first } àñð { $last }~~~~]
-
-# On the plate that holds a page's place while it loads. The page is its number, such as 23.
-linux-reader-page-plate = [Þàĝé { $page }~~~]
 
 # Heading when a chapter could not open. The chapter is its number, such as 13.
 linux-reader-open-failed = [Çöüļðñ'ţ öþéñ çĥàþţéŕ { $chapter }~~~~~~~~]
@@ -3817,6 +3904,9 @@ accounts-row-queued =
 
 # Part of an account's overlay row: changes waiting to be sent, and some of them held back until the title is matched to the { -tracker }'s own id.
 accounts-row-queued-held = [{ $queued } ƣüéüéð, { $held } ŵàîţîñĝ ƒöŕ à ɱàţçĥ~~~~~~~~~~~]
+
+# Part of an account's overlay row: changes held back until the title is matched to the { -tracker }'s own id, with nothing else queued.
+accounts-row-held = [{ $count } ŵàîţîñĝ ƒöŕ à ɱàţçĥ~~~~~~~]
 
 # Action beside a sync difference in the overlay: Enter keeps the value on this device.
 accounts-conflict-keep-mine = [Ûšé ļöçàļ~~~]
@@ -8816,6 +8906,18 @@ player-subs-more = [Ṁöŕé îñ Šéţţîñĝš…~~~~~~]
 # Under a page that is still loading after four seconds.
 reader-page-loading = [Ļöàðîñĝ þàĝé { $page }~~~~~]
 
+# On the plate of a page that is still loading.
+reader-page-plate = [Þàĝé { $page }~~~]
+
+# On the plate of a strip image that is still loading.
+reader-image-plate = [Îɱàĝé { $image }~~~]
+
+# Under a strip image's number after four seconds.
+reader-image-loading = [Ļöàðîñĝ îɱàĝé { $image }~~~~~~]
+
+# Under a strip image's number (Image 4) when it couldn't be loaded, above Try again.
+reader-image-failed = [Çöüļðñ'ţ ļöàð~~~~]
+
 # Heading where a page could not be loaded.
 reader-page-failed = [Çöüļðñ'ţ ļöàð þàĝé { $page }~~~~~~~]
 
@@ -8830,6 +8932,9 @@ reader-end-read = [Çöüñţéð àš ŕéàð~~~~~]
 
 # Under the end of chapter line, naming the trackers the read went to.
 reader-end-tracker = [Çöüñţéð àš ŕéàð · { $trackers } üþðàţéð~~~~~~~~~]
+
+# Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online.
+reader-end-tracker-offline = [Çöüñţéð àš ŕéàð · { $tracker } üþðàţéš ŵĥéñ ýöü'ŕé ƀàçķ öñļîñé~~~~~~~~~~~~~~~~]
 
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = [Ñéẋţ~~]
@@ -8891,14 +8996,167 @@ reader-spreads-rotate = [Ţüŕñ~~]
 # A choice for wide pages: shown whole.
 reader-spreads-whole = [Ŵĥöļé~~]
 
-# A choice for the reader's tap zones: taps near the left and right edges turn the page.
+# A choice for the reader's tap zones: taps near the left and right edges turn the page. Replaced by Sides; kept until every app has the new tap zones page.
 reader-tap-edges = [Éðĝéš~~]
 
-# A choice for the reader's tap zones: the left and right halves turn the page.
-reader-tap-sides = [Ĥàļṽéš~~]
+# Tap zone layout: Sides when pages turn sideways, L shape when they move downwards. The name under its tile.
+reader-tap-auto = [Åüţö~~]
 
-# A choice for the reader's tap zones: taps do not turn the page.
+# Tap zone layout: previous page on one side, next page on the other, controls in the middle.
+reader-tap-sides = [Šîðéš~~]
+
+# Tap zone layout: previous page along the top and down one side, next page along the bottom and down the other side, in the shape of the letter L.
+reader-tap-l-shape = [Ļ šĥàþé~~~]
+
+# Tap zone layout: controls along the top, a narrow column for previous page, and the rest of the page for next page.
+reader-tap-wide-next = [Ŵîðé ñéẋţ~~~]
+
+# Tap zone layout: previous page across the top, next page across the bottom.
+reader-tap-top-bottom = [Ţöþ àñð ƀöţţöɱ~~~~~]
+
+# Tap zone layout: next page down both the left and the right side, previous page in the bottom middle.
+reader-tap-both-next = [Ñéẋţ öñ ƀöţĥ šîðéš~~~~~~]
+
+# Tap zone layout: taps only show and hide the controls, and never turn the page.
 reader-tap-off = [Öƒƒ~]
+
+# Tap zones page: the choice for paged reading (pages that turn), one of two at the top.
+reader-tap-paged = [Þàĝéð~~]
+
+# Tap zones page: the choice for strips and scrolled novels, one of two at the top.
+reader-tap-scrolling = [Šçŕöļļîñĝ~~~]
+
+# Tap zones page: row that sets how wide the zones at the edges are.
+reader-tap-size = [Žöñé šîžé~~~]
+
+# Choice of Zone size: the edge zones are a third of the screen.
+reader-tap-standard = [Šţàñðàŕð~~~]
+
+# Choice of Zone size: the edge zones are a quarter of the screen.
+reader-tap-small = [Šɱàļļ~~]
+
+# Tap zones page: switch that swaps the left and right zones, for the left hand.
+reader-tap-flip-sides = [Ƒļîþ ļéƒţ àñð ŕîĝĥţ~~~~~~]
+
+# Tap zones page: switch that swaps the top and bottom zones.
+reader-tap-flip-ends = [Ƒļîþ ţöþ àñð ƀöţţöɱ~~~~~~]
+
+# Tap zones page: button that shows the zones over the page.
+reader-tap-show = [Šĥöŵ žöñéš~~~]
+
+# Tap zones page, beside Show zones: the setting is not synced. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.
+reader-tap-here = [Šţàýš öñ ţĥîš { $kind }~~~~~~]
+
+# The reader's settings on a Mac, Windows or Linux: the row that opens the tap zones page, which is about clicks there.
+reader-click-zones = [Çļîçķ žöñéš~~~~]
+
+# Name of the tap zone that turns to the next page, in the guide over the page and as a screen reader action.
+reader-zone-next = [Ñéẋţ þàĝé~~~]
+
+# Name of the tap zone that turns to the previous page, in the guide and as a screen reader action.
+reader-zone-previous = [Þŕéṽîöüš þàĝé~~~~]
+
+# Name of the tap zone that shows and hides the reader's controls, in the guide.
+reader-zone-controls = [Çöñţŕöļš~~~]
+
+# Screen reader action on the page that shows the reader's controls.
+reader-zone-show-controls = [Šĥöŵ çöñţŕöļš~~~~]
+
+# Name of the tap zone that scrolls a strip or a scrolled novel down, in the guide.
+reader-zone-scroll-down = [Šçŕöļļ ðöŵñ~~~~]
+
+# Name of the tap zone that scrolls a strip or a scrolled novel up, in the guide.
+reader-zone-scroll-up = [Šçŕöļļ üþ~~~]
+
+# Under Controls in the tap zone guide: where the zones are changed.
+reader-zone-change = [Çĥàñĝé îñ Ŕéàðéŕ šéţţîñĝš~~~~~~~~]
+
+# Tap zone layout Off in words, the accessibility value of its tile.
+reader-tap-off-about = [Ţàþš šĥöŵ àñð ĥîðé ţĥé çöñţŕöļš~~~~~~~~~~]
+
+# Tap zone layout in words, the accessibility value of its tile: Sides, next page on the right.
+reader-tap-sides-right-about = [Ñéẋţ þàĝé öñ ţĥé ŕîĝĥţ šîðé, þŕéṽîöüš þàĝé öñ ţĥé ļéƒţ šîðé, çöñţŕöļš îñ ţĥé ɱîððļé~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Tap zone layout in words, the accessibility value of its tile: Sides, next page on the left.
+reader-tap-sides-left-about = [Ñéẋţ þàĝé öñ ţĥé ļéƒţ šîðé, þŕéṽîöüš þàĝé öñ ţĥé ŕîĝĥţ šîðé, çöñţŕöļš îñ ţĥé ɱîððļé~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the right.
+reader-tap-l-shape-bottom-right-about = [Ñéẋţ þàĝé àļöñĝ ţĥé ƀöţţöɱ àñð öñ ţĥé ŕîĝĥţ, þŕéṽîöüš þàĝé àļöñĝ ţĥé ţöþ àñð öñ ţĥé ļéƒţ, çöñţŕöļš îñ ţĥé ɱîððļé~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the left.
+reader-tap-l-shape-bottom-left-about = [Ñéẋţ þàĝé àļöñĝ ţĥé ƀöţţöɱ àñð öñ ţĥé ļéƒţ, þŕéṽîöüš þàĝé àļöñĝ ţĥé ţöþ àñð öñ ţĥé ŕîĝĥţ, çöñţŕöļš îñ ţĥé ɱîððļé~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right.
+reader-tap-l-shape-top-right-about = [Ñéẋţ þàĝé àļöñĝ ţĥé ţöþ àñð öñ ţĥé ŕîĝĥţ, þŕéṽîöüš þàĝé àļöñĝ ţĥé ƀöţţöɱ àñð öñ ţĥé ļéƒţ, çöñţŕöļš îñ ţĥé ɱîððļé~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left.
+reader-tap-l-shape-top-left-about = [Ñéẋţ þàĝé àļöñĝ ţĥé ţöþ àñð öñ ţĥé ļéƒţ, þŕéṽîöüš þàĝé àļöñĝ ţĥé ƀöţţöɱ àñð öñ ţĥé ŕîĝĥţ, çöñţŕöļš îñ ţĥé ɱîððļé~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the left.
+reader-tap-wide-next-top-left-about = [Çöñţŕöļš àļöñĝ ţĥé ţöþ, þŕéṽîöüš þàĝé îñ à ñàŕŕöŵ çöļüɱñ öñ ţĥé ļéƒţ, ñéẋţ þàĝé éṽéŕýŵĥéŕé éļšé~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the right.
+reader-tap-wide-next-top-right-about = [Çöñţŕöļš àļöñĝ ţĥé ţöþ, þŕéṽîöüš þàĝé îñ à ñàŕŕöŵ çöļüɱñ öñ ţĥé ŕîĝĥţ, ñéẋţ þàĝé éṽéŕýŵĥéŕé éļšé~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left.
+reader-tap-wide-next-bottom-left-about = [Çöñţŕöļš àļöñĝ ţĥé ƀöţţöɱ, þŕéṽîöüš þàĝé îñ à ñàŕŕöŵ çöļüɱñ öñ ţĥé ļéƒţ, ñéẋţ þàĝé éṽéŕýŵĥéŕé éļšé~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right.
+reader-tap-wide-next-bottom-right-about = [Çöñţŕöļš àļöñĝ ţĥé ƀöţţöɱ, þŕéṽîöüš þàĝé îñ à ñàŕŕöŵ çöļüɱñ öñ ţĥé ŕîĝĥţ, ñéẋţ þàĝé éṽéŕýŵĥéŕé éļšé~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Tap zone layout in words, the accessibility value of its tile: Top and bottom.
+reader-tap-top-bottom-about = [Ñéẋţ þàĝé àçŕöšš ţĥé ƀöţţöɱ, þŕéṽîöüš þàĝé àçŕöšš ţĥé ţöþ, çöñţŕöļš îñ ţĥé ɱîððļé~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Tap zone layout in words, the accessibility value of its tile: Top and bottom flipped.
+reader-tap-top-bottom-flipped-about = [Ñéẋţ þàĝé àçŕöšš ţĥé ţöþ, þŕéṽîöüš þàĝé àçŕöšš ţĥé ƀöţţöɱ, çöñţŕöļš îñ ţĥé ɱîððļé~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Tap zone layout in words, the accessibility value of its tile: Next on both sides.
+reader-tap-both-next-about = [Ñéẋţ þàĝé ðöŵñ ƀöţĥ šîðéš, þŕéṽîöüš þàĝé àţ ţĥé ƀöţţöɱ îñ ţĥé ɱîððļé, çöñţŕöļš àƀöṽé îţ~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Tap zone layout in words, the accessibility value of its tile: Next on both sides flipped top and bottom.
+reader-tap-both-next-flipped-about = [Ñéẋţ þàĝé ðöŵñ ƀöţĥ šîðéš, þŕéṽîöüš þàĝé àţ ţĥé ţöþ îñ ţĥé ɱîððļé, çöñţŕöļš ƀéļöŵ îţ~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the right.
+reader-tap-sides-right-scroll-about = [Šçŕöļļ ðöŵñ öñ ţĥé ŕîĝĥţ šîðé, šçŕöļļ üþ öñ ţĥé ļéƒţ šîðé, çöñţŕöļš îñ ţĥé ɱîððļé~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the left.
+reader-tap-sides-left-scroll-about = [Šçŕöļļ ðöŵñ öñ ţĥé ļéƒţ šîðé, šçŕöļļ üþ öñ ţĥé ŕîĝĥţ šîðé, çöñţŕöļš îñ ţĥé ɱîððļé~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the right.
+reader-tap-l-shape-bottom-right-scroll-about = [Šçŕöļļ ðöŵñ àļöñĝ ţĥé ƀöţţöɱ àñð öñ ţĥé ŕîĝĥţ, šçŕöļļ üþ àļöñĝ ţĥé ţöþ àñð öñ ţĥé ļéƒţ, çöñţŕöļš îñ ţĥé ɱîððļé~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the left.
+reader-tap-l-shape-bottom-left-scroll-about = [Šçŕöļļ ðöŵñ àļöñĝ ţĥé ƀöţţöɱ àñð öñ ţĥé ļéƒţ, šçŕöļļ üþ àļöñĝ ţĥé ţöþ àñð öñ ţĥé ŕîĝĥţ, çöñţŕöļš îñ ţĥé ɱîððļé~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right.
+reader-tap-l-shape-top-right-scroll-about = [Šçŕöļļ ðöŵñ àļöñĝ ţĥé ţöþ àñð öñ ţĥé ŕîĝĥţ, šçŕöļļ üþ àļöñĝ ţĥé ƀöţţöɱ àñð öñ ţĥé ļéƒţ, çöñţŕöļš îñ ţĥé ɱîððļé~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left.
+reader-tap-l-shape-top-left-scroll-about = [Šçŕöļļ ðöŵñ àļöñĝ ţĥé ţöþ àñð öñ ţĥé ļéƒţ, šçŕöļļ üþ àļöñĝ ţĥé ƀöţţöɱ àñð öñ ţĥé ŕîĝĥţ, çöñţŕöļš îñ ţĥé ɱîððļé~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the left.
+reader-tap-wide-next-top-left-scroll-about = [Çöñţŕöļš àļöñĝ ţĥé ţöþ, šçŕöļļ üþ îñ à ñàŕŕöŵ çöļüɱñ öñ ţĥé ļéƒţ, šçŕöļļ ðöŵñ éṽéŕýŵĥéŕé éļšé~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the right.
+reader-tap-wide-next-top-right-scroll-about = [Çöñţŕöļš àļöñĝ ţĥé ţöþ, šçŕöļļ üþ îñ à ñàŕŕöŵ çöļüɱñ öñ ţĥé ŕîĝĥţ, šçŕöļļ ðöŵñ éṽéŕýŵĥéŕé éļšé~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left.
+reader-tap-wide-next-bottom-left-scroll-about = [Çöñţŕöļš àļöñĝ ţĥé ƀöţţöɱ, šçŕöļļ üþ îñ à ñàŕŕöŵ çöļüɱñ öñ ţĥé ļéƒţ, šçŕöļļ ðöŵñ éṽéŕýŵĥéŕé éļšé~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right.
+reader-tap-wide-next-bottom-right-scroll-about = [Çöñţŕöļš àļöñĝ ţĥé ƀöţţöɱ, šçŕöļļ üþ îñ à ñàŕŕöŵ çöļüɱñ öñ ţĥé ŕîĝĥţ, šçŕöļļ ðöŵñ éṽéŕýŵĥéŕé éļšé~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom.
+reader-tap-top-bottom-scroll-about = [Šçŕöļļ ðöŵñ àçŕöšš ţĥé ƀöţţöɱ, šçŕöļļ üþ àçŕöšš ţĥé ţöþ, çöñţŕöļš îñ ţĥé ɱîððļé~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom flipped.
+reader-tap-top-bottom-flipped-scroll-about = [Šçŕöļļ ðöŵñ àçŕöšš ţĥé ţöþ, šçŕöļļ üþ àçŕöšš ţĥé ƀöţţöɱ, çöñţŕöļš îñ ţĥé ɱîððļé~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides.
+reader-tap-both-next-scroll-about = [Šçŕöļļ ðöŵñ öñ ƀöţĥ šîðéš, šçŕöļļ üþ àţ ţĥé ƀöţţöɱ îñ ţĥé ɱîððļé, çöñţŕöļš àƀöṽé îţ~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides flipped top and bottom.
+reader-tap-both-next-flipped-scroll-about = [Šçŕöļļ ðöŵñ öñ ƀöţĥ šîðéš, šçŕöļļ üþ àţ ţĥé ţöþ îñ ţĥé ɱîððļé, çöñţŕöļš ƀéļöŵ îţ~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Button in the reader's controls that opens the chapters and the page grid.
 reader-chapters = [Çĥàþţéŕš~~~]
@@ -8937,6 +9195,9 @@ reader-look-system = [Šýšţéɱ~~]
 # Top line of the page between chapters. The chapter is its number, such as 12.
 reader-end-of-chapter-number = [Éñð öƒ çĥàþţéŕ { $chapter }~~~~~~]
 
+# Top line of the page between chapters when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own, such as Rooftop Lantern.
+reader-end-of-named = [Éñð öƒ { $name }~~~]
+
 # The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.
 reader-end-facts = [Çĥàþţéŕ { $chapter } · { $facts }~~~~~~]
 
@@ -8959,6 +9220,15 @@ reader-divider-facts-source = [{ $facts } · ƒŕöɱ { $source }~~~~~]
 # Line on the page between chapters, near its buttons: one more swipe opens the next chapter.
 reader-end-swipe = [Šŵîþé ţö ķééþ ŕéàðîñĝ~~~~~~~]
 
+# Button beside Continue on the page between chapters, shown only when the next chapter is an extra (such as 16.5 between 16 and 17). It opens the chapter named, passing over the extras before it. The chapter is its number, such as 17.
+reader-end-skip-to = [Šķîþ ţö çĥàþţéŕ { $chapter }~~~~~~]
+
+# What a screen reader adds after "Skip to chapter 17": the extra it passes over stays unread in the chapter list. The chapter is the extra's number, such as 16.5.
+reader-end-skip-hint = [Çĥàþţéŕ { $chapter } šţàýš üñŕéàð.~~~~~~~~]
+
+# What a screen reader adds after "Skip to chapter 17" when it passes over more than one extra, or an extra with no number (such as an omake): those chapters stay unread in the chapter list.
+reader-end-skip-hint-extras = [Ţĥé éẋţŕàš ƀéƒöŕé îţ šţàý üñŕéàð.~~~~~~~~~~]
+
 # The next episode's length on the divider inside a strip.
 reader-divider-images =
     { $count ->
@@ -8968,6 +9238,57 @@ reader-divider-images =
 
 # Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.
 reader-chapter-line-titled = [Çĥàþţéŕ { $chapter } · { $title }~~~~~~]
+
+# The reader's opening line while the series' source sends its chapter list.
+reader-wait-chapter-list = [Ĝéţţîñĝ ţĥé çĥàþţéŕ ļîšţ ƒŕöɱ { $source }~~~~~~~~~~]
+
+# The reader's opening line while the source sends the chapter's pages or text.
+reader-wait-chapter-pages = [Ĝéţţîñĝ çĥàþţéŕ { $chapter } ƒŕöɱ { $source }~~~~~~~~~]
+
+# The opening line after a few seconds, with how long it has waited so far.
+reader-wait-seconds = [{ $line } · { $seconds } š~~~~]
+
+# Under the opening line once the wait has gone on for a long time, above Read from another source and Go back.
+reader-wait-long = [Ţĥîš îš ţàķîñĝ à ŵĥîļé.~~~~~~~]
+
+# Beside the line that says how many credit pages were skipped, on the end page and in a long strip. Tapping it shows them.
+reader-credit-show = [Šĥöŵ~~]
+
+# Spoken hint of the line that says how many credit pages were skipped.
+reader-credit-show-hint = [Šĥöŵš ţĥé þàĝé~~~~~]
+
+# Notice over a credit page shown again, and the caption above it in a long strip.
+reader-credit-shown = [Šķîþþéð àš à çŕéðîţ þàĝé~~~~~~~~]
+
+# The notice's action on a shown credit page: show this page from now on.
+reader-credit-not = [Ñöţ à çŕéðîţ þàĝé~~~~~~]
+
+# Notice after Not a credit page, with Undo.
+reader-credit-kept = [Ţĥîš þàĝé ŵîļļ šĥöŵ ƒŕöɱ ñöŵ öñ~~~~~~~~~~]
+
+# In the reader's line in place of a page number, while a credit page shows: "Chapter 87 · credit page".
+reader-credit-page = [çŕéðîţ þàĝé~~~~]
+
+# The same, when more than one credit page is shown: "credit page 1 of 2".
+reader-credit-page-of = [çŕéðîţ þàĝé { $n } öƒ { $total }~~~~~~~]
+
+# The reader's line under the title while a credit page shows: the chapter, then "credit page" or "credit page 1 of 2".
+reader-group-line-place = [{ $chapter } · { $place }~~~]
+
+# Spoken name of a credit page shown again.
+reader-credit-page-label = [Çŕéðîţ þàĝé~~~~]
+
+# Notice when a skipped credit page's picture can't be read, so it can't be shown.
+reader-credit-failed = [Çöüļðñ'ţ ļöàð ţĥîš çŕéðîţ þàĝé~~~~~~~~~]
+
+# The scrubber's preview on the first page of a chapter's later part.
+reader-part-preview = [Þàĝé { $page } · þàŕţ { $part }~~~~~~]
+
+# The same, when the part before it is missing from every group: "Page 14 · part 4 · part 3 missing".
+reader-part-preview-missing = [Þàĝé { $page } · þàŕţ { $part } · þàŕţ { $missing } ɱîššîñĝ~~~~~~~~~~~~]
+
+# Spoken value of the scrubber on the first page of a chapter's later part.
+reader-part-starts = [Þàŕţ { $part } šţàŕţš àţ þàĝé { $page }~~~~~~~~~]
 
 # Button in the first run that opens the reading demo.
 onboarding-read-demo = [Ŕéàð ţĥé ðéɱö~~~~]
@@ -9228,7 +9549,10 @@ action-continue-named = [Çöñţîñüé { $label } · { $percent }%~~~~~~]
 # The main action for a light novel part, part read, named in the source's own words, when how far is not known.
 action-continue-named-plain = [Çöñţîñüé { $label }~~~~]
 
-# The main action for a light novel part not opened yet, named in the source's own words.
+# The main action for a chapter part read that has no number, named by its own title ("Oneshot", "Extra").
+action-continue-named-page = [Çöñţîñüé { $label } · þàĝé { $page }~~~~~~~]
+
+# The main action for a light novel part not opened yet, named in the source's own words, and for a chapter with no number, named by its own title ("Read Oneshot").
 action-read-named = [Ŕéàð { $label }~~~]
 
 # The main action when every chapter is read.
@@ -9253,6 +9577,37 @@ series-tracker-ask = [Ŵĥîçĥ šéŕîéš îš ţĥîš? Çĥööšé~~~~~~~
 # Value of the group row: the chosen group is used for this series.
 series-preferred-group = [Ýöüŕ þŕéƒéŕŕéð ĝŕöüþ ĥéŕé~~~~~~~~]
 
+# Label of the series page's row for the group whose version of each chapter the series lists, inside the source in use. Its value is the group's name.
+series-group = [Ĝŕöüþ~~]
+
+# After the group's name on the Group row: it is in use because it has the most chapters.
+series-group-most = [ɱöšţ çĥàþţéŕš~~~~]
+
+# After the group's name on the Group row: the person picked it.
+series-group-picked = [ýöüŕ þîçķ~~~]
+
+# Spoken hint of the Group row's Change button.
+series-group-hint = [Þîçķš ţĥé ĝŕöüþ~~~~~]
+
+# Under the group picker's title: the source the groups are in.
+group-picker-in = [Îñ { $source }~~]
+
+# The group picker's first choice: the group with the most chapters, whichever that is.
+group-picker-most = [Ṁöšţ çĥàþţéŕš~~~~]
+
+# Under Most chapters: the group that means today.
+group-picker-most-now = [Ñöŵ { $group }~~~]
+
+# A group in the picker: how many of the series' chapters it has released. Its language follows, after a middle dot.
+group-picker-count =
+    { $total ->
+        [one] [{ $have } öƒ { $total } çĥàþţéŕ~~~~~~]
+       *[other] [{ $have } öƒ { $total } çĥàþţéŕš~~~~~~]
+    }
+
+# Under the group picker's choices.
+group-picker-fallback = [Çĥàþţéŕš à ĝŕöüþ ðöéšñ'ţ ĥàṽé çöɱé ƒŕöɱ àñöţĥéŕ ĝŕöüþ, àñð ţĥéîŕ ŕöŵš šàý ŵĥîçĥ.~~~~~~~~~~~~~~~~~~~~~~~~]
+
 # A tracker's progress in chapters, with the total.
 series-tracker-chapters-of =
     { $total ->
@@ -9266,6 +9621,9 @@ series-tracker-chapters =
         [one] [1 çĥàþţéŕ~~~]
        *[other] [{ $n } çĥàþţéŕš~~~~]
     }
+
+# A tracker's progress when the person has read none of the series yet, in place of "0 chapters".
+series-tracker-not-started = [Ñöţ šţàŕţéð~~~~]
 
 # A tracker's progress in chapters, then the volume.
 series-tracker-with-volume = [{ $chapters } · ṽöļüɱé { $volume }~~~~~]
@@ -9367,6 +9725,15 @@ series-no-chapters-title = [Ñö çĥàþţéŕš îñ ţĥîš šöüŕçé ý�
 # Line under it.
 series-no-chapters-line = [Åñöţĥéŕ šöüŕçé ɱàý ĥàṽé ţĥéɱ.~~~~~~~~~]
 
+# The chapter list when none of the person's sources holds the series and none was picked: an empty state, not a failure. Its button opens Read from.
+series-no-source-title = [Ñöñé öƒ ýöüŕ šöüŕçéš ĥàš ţĥîš šéŕîéš ýéţ~~~~~~~~~~~~]
+
+# Line under it.
+series-no-source-line = [Šéàŕçĥ ƒöŕ îţ ƀý àñöţĥéŕ ñàɱé, öŕ àðð à šöüŕçé îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~~~~~~~]
+
+# Its button: opens Read from, where each source can be searched by another name.
+series-no-source-search = [Šéàŕçĥ ƀý àñöţĥéŕ ñàɱé~~~~~~~]
+
 # The chapter list when the source failed. Downloaded chapters are listed under it.
 series-chapters-failed = [Çöüļðñ'ţ ļöàð çĥàþţéŕš ƒŕöɱ { $source }.~~~~~~~~~~]
 
@@ -9424,6 +9791,9 @@ chapter-state-wifi = [Ǫüéüéð · ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~~~~]
 
 # A chapter downloading.
 chapter-state-downloading = [Ðöŵñļöàðîñĝ · { $done } öƒ { $total } þàĝéš~~~~~~~~~]
+
+# A chapter downloading before its page count is known, and throughout for a novel's chapter.
+chapter-state-downloading-plain = [Ðöŵñļöàðîñĝ~~~~]
 
 # A chapter that failed to download, with the reason.
 chapter-state-failed = [Çöüļðñ'ţ ðöŵñļöàð. { $reason }~~~~~~~]
@@ -9504,6 +9874,18 @@ series-read-from-chapters = [Çĥàþţéŕš 1 ţö { $latest }~~~~~~]
 
 # A source's chapters, after its kind on the line.
 series-read-from-chapters-later = [çĥàþţéŕš 1 ţö { $latest }~~~~~~]
+
+# A source's line while it is asked for its chapter list, first on its line.
+series-read-from-checking = [Çĥéçķîñĝ çĥàþţéŕš~~~~~~]
+
+# The same, after its kind on the line.
+series-read-from-checking-later = [çĥéçķîñĝ çĥàþţéŕš~~~~~~]
+
+# A source that answered with no chapters for this series, first on its line.
+series-read-from-empty = [Ñö çĥàþţéŕš ĥéŕé ýéţ~~~~~~]
+
+# The same, after its kind on the line.
+series-read-from-empty-later = [ñö çĥàþţéŕš ĥéŕé ýéţ~~~~~~]
 
 # After a folder's chapters.
 series-read-from-on-device = [öñ ţĥîš { $device }~~~~]
@@ -9781,9 +10163,6 @@ read-search-nothing-filters-line = [Ƒéŵéŕ ƒîļţéŕš ɱàý ƒîñð ɱ
 read-search-clear-filters = [Çļéàŕ ƒîļţéŕš~~~~]
 
 # A sort of reading's Search, AniList's.
-read-sort-popular = [Þöþüļàŕ~~~]
-
-# A sort of reading's Search, AniList's.
 read-sort-trending = [Ţŕéñðîñĝ~~~]
 
 # A sort of reading's Search, AniList's.
@@ -9797,6 +10176,9 @@ read-filter-format = [Ƒöŕɱàţ~~]
 
 # A filter.
 read-filter-origin = [Öŕîĝîñ~~]
+
+# The first choice of the Origin filter's menu in reading's Search once an origin is set: it takes them all off.
+read-filter-any-origin = [Åñý öŕîĝîñ~~~]
 
 # A filter.
 read-filter-status = [Šţàţüš~~]
@@ -10221,6 +10603,12 @@ settings-counts-read-moving-on-note = [Ţüŕñîñĝ þàšţ ţĥé ļàšţ �
 # Value of Counts as read: only the person's own marks; the reader marks nothing.
 settings-counts-read-marked = [Ŵĥéñ ýöü ɱàŕķ îţ~~~~~]
 
+# Reader default for manga: pages a group repeats at the start or end of its chapters are left out.
+settings-skip-credits = [Šķîþ çŕéðîţ þàĝéš~~~~~~]
+
+# Line under Skip credit pages.
+settings-skip-credits-note = [Þàĝéš à ĝŕöüþ ŕéþéàţš àţ ţĥé šţàŕţ öŕ éñð öƒ îţš çĥàþţéŕš~~~~~~~~~~~~~~~~~~]
+
 # Line under Counts as read when it is When you mark it.
 settings-counts-read-marked-note = [Çöñţîñüé àñð ýöüŕ ţŕàçķéŕš ƒöļļöŵ ýöüŕ ɱàŕķš~~~~~~~~~~~~~~]
 
@@ -10269,6 +10657,9 @@ settings-keep-chapters-ready-note = [Ţĥé ñéẋţ çĥàþţéŕš öƒ šé
 # Line under Delete chapters after reading.
 settings-delete-after-reading-note = [Ɓööķɱàŕķéð çĥàþţéŕš àŕé ķéþţ~~~~~~~~~]
 
+# Line under Show volumes: the list is grouped only when most chapters have a volume.
+settings-show-volumes-note = [Ĝŕöüþéð ŵĥéñ ɱöšţ çĥàþţéŕš ĥàṽé à ṽöļüɱé~~~~~~~~~~~~]
+
 # Line under New chapters.
 settings-chapter-notifications-note = [Šéŕîéš öñ ýöüŕ Ŕéàðîñĝ ļîšţ~~~~~~~~~]
 
@@ -10306,6 +10697,9 @@ read-downloads-queued =
 
 # A series' line in Downloads when a chapter failed, with the reason.
 read-downloads-failed = [{ $chapter } çöüļðñ'ţ ðöŵñļöàð. { $reason }~~~~~~~~]
+
+# Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows.
+read-download-not-started = [Ţĥé ðöŵñļöàð ðîðñ'ţ šţàŕţ. { $reason }~~~~~~~~~]
 
 # A series' line in Downloads: how many chapters are kept.
 read-downloads-kept =
@@ -10399,6 +10793,12 @@ send-ready =
 
 # Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.
 send-share-again = [Šĥàŕé àĝàîñ~~~~]
+
+# A ready send whose files were cleared before they were shared or saved, in the Send to e-reader sheet and in the send's row. Prepared files are kept for a day.
+send-files-gone = [Ţĥéšé ƒîļéš àŕé ĝöñé. Þŕéþàŕéð ƒîļéš àŕé ķéþţ ƒöŕ à ðàý.~~~~~~~~~~~~~~~~~]
+
+# Button on a send whose files are gone: prepares the same chapters for the same e-reader again.
+send-again = [Šéñð àĝàîñ~~~]
 
 # A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
 send-banner = [Šéñðîñĝ ţö { $device }~~~~~]
@@ -11325,6 +11725,9 @@ settings-adult = [Šĥöŵ àðüļţ ţîţļéš~~~~~~]
 # Line under it. The tracker is a name.
 settings-adult-detail = [Ţîţļéš { $tracker } ɱàŕķš àðüļţ, îñ Šéàŕçĥ àñð Šéàšöñàļ~~~~~~~~~~~~~~]
 
+# Line under it when the app is for reading alone.
+settings-adult-detail-read = [Ţîţļéš { $tracker } ɱàŕķš àðüļţ, îñ Šéàŕçĥ àñð Ɓŕöŵšé~~~~~~~~~~~~~~]
+
 # Row: quality.
 settings-quality = [Ǫüàļîţý~~~]
 
@@ -11442,6 +11845,9 @@ settings-keep-chapters-ready = [Ķééþ ñéẋţ çĥàþţéŕš ŕéàðý~~
 
 # Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.
 settings-delete-after-reading = [Ðéļéţé çĥàþţéŕš àƒţéŕ ŕéàðîñĝ~~~~~~~~~]
+
+# Row: group a series' chapters under volume headings. Off by default.
+settings-show-volumes = [Šĥöŵ ṽöļüɱéš~~~~]
 
 # Row: whether a series' reader mode, direction and colour follow you to your other devices.
 settings-series-choices-follow = [Šéŕîéš šéţţîñĝš ƒöļļöŵ ýöü~~~~~~~~]
@@ -11655,6 +12061,13 @@ accounts-changes-waiting =
     { $count ->
         [one] [Öñé çĥàñĝé ŵàîţîñĝ ţö šýñç~~~~~~~~]
        *[other] [{ $count } çĥàñĝéš ŵàîţîñĝ ţö šýñç~~~~~~~~~]
+    }
+
+# Line under a signed-in account when nothing else waits but some changes can't go out yet: the { -tracker } has no match for those titles. They go out by themselves once it has one.
+accounts-changes-held =
+    { $count ->
+        [one] [Öñé çĥàñĝé çàñ'ţ šýñç ýéţ~~~~~~~~]
+       *[other] [{ $count } çĥàñĝéš çàñ'ţ šýñç ýéţ~~~~~~~~]
     }
 
 # Choice for the download quality: larger files with more detail.
@@ -11993,6 +12406,22 @@ book-folder-empty-line =
 
 # Primary action after an empty folder.
 book-folder-choose-other = [Çĥööšé àñöţĥéŕ ƒöļðéŕ~~~~~~~]
+
+# Folder result title when the picked folder is already a source. It was scanned again.
+book-folder-already = [{ $folder } îš àļŕéàðý îñ ýöüŕ šöüŕçéš~~~~~~~~~]
+
+# Line under it: what the new scan found. Closing the sheet keeps the folder.
+book-folder-already-line =
+    { $series ->
+        [one] [Ķàéŕî ļööķéð ţĥŕöüĝĥ îţ àĝàîñ àñð ƒöüñð öñé šéŕîéš. Îţ šţàýš àš îţ îš.~~~~~~~~~~~~~~~~~~~~~]
+       *[other] [Ķàéŕî ļööķéð ţĥŕöüĝĥ îţ àĝàîñ àñð ƒöüñð { $series } šéŕîéš. Îţ šţàýš àš îţ îš.~~~~~~~~~~~~~~~~~~~~~]
+    }
+
+# Title when a folder could not be read: the look through it could not start, or stopped.
+book-folder-unreadable = [Çöüļðñ'ţ ŕéàð { $folder }~~~~~~]
+
+# Line under it.
+book-folder-unreadable-line = [Îţ ɱàý ĥàṽé ɱöṽéð, öŕ Ķàéŕî ñö ļöñĝéŕ ĥàš àççéšš ţö îţ.~~~~~~~~~~~~~~~~~]
 
 # Title of the Join a plugin store sheet.
 store-join-title = [Ĵöîñ à þļüĝîñ šţöŕé~~~~~~]
@@ -13643,6 +14072,8 @@ device-kind-tablet = [ţàƀļéţ~~]
 
 device-kind-tv = [ŢṼ~]
 
+device-kind-other = [ðéṽîçé~~]
+
 # TV welcome, text button.
 first-setup-phone = [Šéţ üþ ƒŕöɱ ýöüŕ þĥöñé~~~~~~~]
 
@@ -13763,8 +14194,8 @@ title-tags = [Ţàĝš~~]
 # Button that opens the full page of facts about a show.
 title-more-about = [Ṁöŕé àƀöüţ ţĥîš šĥöŵ~~~~~~]
 
-# Accessibility hint of the button that expands a synopsis.
-title-synopsis-hint = [Šĥöŵš ţĥé ŵĥöļé šýñöþšîš~~~~~~~~]
+# Accessible name of the More at the end of a cut synopsis, which shows the rest of it. The page's menu of extra actions is called More too, so this one says what it does.
+title-synopsis-more = [Šĥöŵ ţĥé ŵĥöļé šýñöþšîš~~~~~~~]
 
 # Label under a season: which episodes are dubbed so far.
 title-dubbed-to = [Ðüƀƀéð ţö éþîšöðé { $episode }~~~~~~~]

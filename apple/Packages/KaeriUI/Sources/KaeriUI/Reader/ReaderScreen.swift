@@ -26,6 +26,8 @@ public struct ReaderScreen: View {
     @State private var novelWeb = NovelWebSession()
     /// The held end page's opacity: 1 while it waits, faded to 0 once the next page has drawn.
     @State private var heldShown = 1.0
+    /// The reader holds the keyboard from the moment it shows, so its keys need no click first.
+    @FocusState private var holdsKeys: Bool
 
     public init(model: ReaderModel, onClose: @escaping () -> Void) {
         self.model = model
@@ -82,12 +84,30 @@ public struct ReaderScreen: View {
         .onContinuousHover { phase in
             if case .active = phase { pointerMoved() }
         }
+        // The Go menu carries the keys; the reader also takes them itself, for a key the menu
+        // has not bound. Esc is the reader's own, on the view that holds the keys.
+        .focusable()
+        .focusEffectDisabled()
+        .focused($holdsKeys)
         .onExitCommand { escape() }
+        .onKeyPress(phases: [.down, .repeat]) { press in
+            take(press.key, press.modifiers, repeated: press.phase == .repeat) ? .handled : .ignored
+        }
+        .onAppear { holdsKeys = true }
+        .onChange(of: model.sheet == nil) { _, closed in if closed { holdsKeys = true } }
+        .onChange(of: model.askingPage) { _, asking in if !asking { holdsKeys = true } }
+        .onChange(of: scenePhase) { _, phase in if phase == .active { holdsKeys = true } }
+        #else
+        // On iPad the reader holds the keyboard in a view of its own while nothing is over it.
+        .background {
+            ReaderKeyCatcher(holds: model.sheet == nil && !model.askingPage && scenePhase == .active) { key, modifiers in
+                take(key, modifiers, repeated: false)
+            }
+        }
         #endif
         .onChange(of: model.sheet) { _, sheet in if sheet != nil { model.chromeShown = true } }
         .onChange(of: model.held?.tick) { _, _ in heldShown = 1 }
         .onChange(of: model.held?.landed == true) { _, landed in if landed { letHeldGo() } }
-        .focusedSceneValue(\.readerActions, actions)
         #if os(iOS)
         .statusBarHidden(!model.chromeShown)
         .persistentSystemOverlays(model.chromeShown ? .automatic : .hidden)
@@ -97,7 +117,7 @@ public struct ReaderScreen: View {
     @ViewBuilder private var content: some View {
         switch model.phase {
         case .closed, .opening:
-            ReaderOpening(model: model, theme: theme, size: size)
+            ReaderOpening(model: model, theme: theme, size: size, chooseSource: chooseSource, close: close)
         case .failed(let failure):
             ReaderChapterFailed(model: model, theme: theme, failure: failure, chooseSource: chooseSource, close: close)
         case .open:
@@ -190,35 +210,38 @@ public struct ReaderScreen: View {
         hideTask?.cancel()
         hideTask = Task {
             try? await Task.sleep(for: .seconds(2))
-            guard !Task.isCancelled, model.sheet == nil, !model.pinChrome else { return }
+            // A shot holding the scrubber keeps the group up under a still pointer.
+            guard !Task.isCancelled, model.sheet == nil, !model.pinChrome, model.shotScrub == nil else { return }
             model.chromeShown = false
             NSCursor.setHiddenUntilMouseMoves(true)
         }
     }
 
-    /// Esc steps out: a sheet first, then the chrome, then full screen, then the reader.
-    private func escape() {
-        if model.sheet != nil { model.sheet = nil; return }
-        if model.chromeShown { model.chromeShown = false; return }
-        if let window = NSApp.keyWindow, window.styleMask.contains(.fullScreen) { window.toggleFullScreen(nil); return }
-        close()
-    }
     #else
     private func pointerMoved() {}
-
-    /// Esc steps out: a sheet first, then Go to page, then the chrome, then the reader.
-    private func escape() {
-        if model.sheet != nil { model.sheet = nil; return }
-        if model.askingPage { model.askingPage = false; return }
-        if model.chromeShown { model.chromeShown = false; return }
-        close()
-    }
     #endif
+
+    private func escape() { ReaderActions.escape(model, close: close) }
+
+    /// A key for the reader: Esc steps out, and the reader's table turns while nothing is over
+    /// the pages. True when the reader took it.
+    private func take(_ key: KeyEquivalent, _ modifiers: EventModifiers, repeated: Bool) -> Bool {
+        if key == .escape, !repeated, modifiers.isEmpty {
+            escape()
+            return true
+        }
+        guard model.sheet == nil, !model.askingPage,
+              let action = ReaderKeys.action(key, modifiers: modifiers, in: keyContext)
+        else { return false }
+        actions.perform(action)
+        return true
+    }
 
     /// The place as VoiceOver hears it, once a turn has settled.
     private var spokenPlace: String {
         guard voiceOver, model.phase == .open else { return "" }
-        return "\(model.view?.chapter.id ?? "")|\(model.inTrail?.id ?? "")|\(model.position.index)|\(model.position.count)"
+        // A credit page shown or left is a place of its own: "Chapter 87, credit page".
+        return "\(model.view?.chapter.id ?? "")|\(model.inTrail?.id ?? "")|\(model.position.index)|\(model.position.count)|\(model.onCredit.map(String.init) ?? "")"
     }
 
     private func announcePlace() {
@@ -253,44 +276,9 @@ public struct ReaderScreen: View {
         onClose()
     }
 
-    var actions: ReaderActions {
-        ReaderActions(
-            rtl: rtl, canGoBack: model.backTo != nil, backPage: model.backTo == nil ? nil : model.ring.map { model.pageNumber(of: $0) },
-            turn: { forward, line in model.requestTurn(forward: forward, line: line) },
-            chapter: { next in
-                if let row = next ? model.view?.next : model.view?.previous { model.openChapter(row.id) }
-            },
-            back: { model.act(.backTo) },
-            askPage: { model.chromeShown = true; model.askingPage = true },
-            edge: { first in edge(first: first) },
-            escape: { escape() },
-            showChapters: { model.sheet = .chapters },
-            showSettings: { model.sheet = .settings },
-            zoom: { step in zoom(step) })
-    }
+    var actions: ReaderActions { ReaderActions(model: model, close: close) }
 
-    /// Home and End: the first page or image, or the last one before the end page.
-    private func edge(first: Bool) {
-        model.hideChrome()
-        if model.novel != nil || model.view?.mode == .strip {
-            model.requestJump(first ? 0 : max(model.position.count - 1, 0))
-            return
-        }
-        let last = model.leaves.lastIndex { !$0.endPage } ?? 0
-        model.requestJump(first ? 0 : last)
-    }
-
-    private func zoom(_ step: Int) {
-        if model.medium == .novel {
-            let now = model.amount(.textSize) ?? 1
-            let next = step == 0 ? 1 : min(3, max(0.5, now + Double(step) * 0.1))
-            model.set(.textSize, .amount(value: next))
-        } else if model.view?.mode == .strip {
-            let now = model.amount(.stripWidth) ?? 0.6
-            let next = step == 0 ? 0.6 : min(1, max(0.3, now + Double(step) * 0.1))
-            model.set(.stripWidth, .amount(value: next))
-        }
-    }
+    var keyContext: ReaderKeyContext { ReaderActions.keys(model) }
 }
 
 // MARK: Environment and menu actions
@@ -326,6 +314,8 @@ extension EnvironmentValues {
 /// What the Go menu can ask of the reader that is open.
 public struct ReaderActions {
     public var rtl: Bool
+    /// How the reader reads, for its keys.
+    var keys: ReaderKeyContext
     public var canGoBack: Bool
     public var backPage: Int?
     public var turn: (_ forward: Bool, _ line: Bool) -> Void
@@ -341,14 +331,79 @@ public struct ReaderActions {
     public var zoom: (_ step: Int) -> Void
 }
 
-public struct ReaderActionsKey: FocusedValueKey {
-    public typealias Value = ReaderActions
-}
+extension ReaderActions {
+    /// The open reader's actions, for its keys and the Go menu.
+    @MainActor init(model: ReaderModel, close: @escaping () -> Void) {
+        self.init(
+            rtl: model.view?.direction == .rightToLeft, keys: Self.keys(model),
+            canGoBack: model.backToPage != nil, backPage: model.backToPage,
+            turn: { forward, line in model.requestTurn(forward: forward, line: line) },
+            chapter: { next in
+                if let row = next ? model.view?.next : model.view?.previous { model.openChapter(row.id) }
+            },
+            back: { model.back() },
+            askPage: { model.chromeShown = true; model.askingPage = true },
+            edge: { first in Self.edge(model, first: first) },
+            escape: { Self.escape(model, close: close) },
+            showChapters: { model.sheet = .chapters },
+            showSettings: { model.sheet = .settings },
+            zoom: { step in Self.zoom(model, step) })
+    }
 
-extension FocusedValues {
-    public var readerActions: ReaderActions? {
-        get { self[ReaderActionsKey.self] }
-        set { self[ReaderActionsKey.self] = newValue }
+    @MainActor static func keys(_ model: ReaderModel) -> ReaderKeyContext {
+        ReaderKeyContext(novel: model.novel != nil, mode: model.view?.mode, direction: model.view?.direction)
+    }
+
+    #if os(macOS)
+    /// Esc steps out: a sheet first, then Go to page, then the reader, back to where the book
+    /// was opened. Full screen is the window's, and stays.
+    @MainActor static func escape(_ model: ReaderModel, close: () -> Void) {
+        if model.sheet != nil { model.sheet = nil; return }
+        if model.askingPage { model.askingPage = false; return }
+        close()
+    }
+    #else
+    /// Esc steps out: a sheet first, then Go to page, then the chrome, then the reader.
+    @MainActor static func escape(_ model: ReaderModel, close: () -> Void) {
+        if model.sheet != nil { model.sheet = nil; return }
+        if model.askingPage { model.askingPage = false; return }
+        if model.chromeShown { model.chromeShown = false; return }
+        close()
+    }
+    #endif
+
+    /// Home and End: the first page or image, or the last one before the end page.
+    @MainActor private static func edge(_ model: ReaderModel, first: Bool) {
+        model.hideChrome()
+        if model.novel != nil || model.view?.mode == .strip {
+            model.requestJump(first ? 0 : max(model.position.count - 1, 0))
+            return
+        }
+        let last = model.leaves.lastIndex { !$0.endPage } ?? 0
+        model.requestJump(first ? 0 : last)
+    }
+
+    @MainActor private static func zoom(_ model: ReaderModel, _ step: Int) {
+        if model.medium == .novel {
+            let now = model.amount(.textSize) ?? 1
+            let next = step == 0 ? 1 : min(3, max(0.5, now + Double(step) * 0.1))
+            model.set(.textSize, .amount(value: next))
+        } else if model.view?.mode == .strip {
+            let now = model.amount(.stripWidth) ?? 0.6
+            let next = step == 0 ? 0.6 : min(1, max(0.3, now + Double(step) * 0.1))
+            model.set(.stripWidth, .amount(value: next))
+        }
+    }
+
+    /// Carry out what a key or its menu item asks.
+    func perform(_ key: ReaderKey) {
+        switch key {
+        case .page(let forward): turn(forward, false)
+        case .line(let forward): turn(forward, true)
+        case .edge(let first): edge(first)
+        case .chapter(let next): chapter(next)
+        case .zoom(let step): zoom(step)
+        }
     }
 }
 
@@ -358,8 +413,14 @@ struct ReaderOpening: View {
     let model: ReaderModel
     let theme: ReaderTheme
     let size: CGSize
+    let chooseSource: () -> Void
+    let close: () -> Void
     @State private var seconds = 0
     @State private var shown = false
+
+    /// How long a stage goes on before the screen offers another way: the player's own wait
+    /// before it offers another source.
+    static let longWait = 15
 
     /// The page's place as the opening holds it: the column of a strip, a page fitted to the
     /// screen otherwise. The first page fades in on the same plate.
@@ -369,33 +430,65 @@ struct ReaderOpening: View {
         return CGSize(width: width, height: min(size.height, width / 0.7))
     }
 
+    /// What the open waits on, in words: the stage the engine named, else the chapter.
+    static func stage(_ wait: ReaderWait?, chapter label: String) -> String {
+        switch wait {
+        case .chapterList(let source)?: L.readerWaitChapterList(source: source)
+        case .chapterPages(let chapter, let source)?: L.readerWaitChapterPages(chapter: chapter, source: source)
+        case .findingSource?, nil: L.readerOpening(chapter: label)
+        }
+    }
+
     var body: some View {
         let chapter = model.view?.chapter
         let label = chapter.map { $0.number ?? $0.label } ?? ""
+        let stage = Self.stage(model.openingWait, chapter: label)
         ZStack {
             if model.medium != .novel {
                 Rectangle().fill(theme.raised).frame(width: plate.width, height: plate.height)
             }
             VStack(spacing: 6) {
                 if shown {
-                    Text(seconds >= 3 ? L.readerOpeningSlow(seconds: seconds) : L.readerOpening(chapter: label))
+                    Text(seconds >= 3 ? L.readerWaitSeconds(line: stage, seconds: seconds) : stage)
                         .font(.ui(15)).foregroundStyle(theme.haze).monospacedDigit()
                         .multilineTextAlignment(.center)
                         .contentTransition(.opacity)
                         .transition(.opacity)
                 }
+                if seconds >= Self.longWait {
+                    // A stage that goes on offers the way on, as a failed open does.
+                    VStack(spacing: 12) {
+                        Text(L.readerWaitLong).font(.ui(13)).foregroundStyle(theme.haze)
+                        HStack(spacing: 10) {
+                            Button(L.seriesReadFromAnother, action: chooseSource)
+                                .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 28 : 40, fontSize: Device.isMac ? 13 : 15))
+                            Button(L.readerGoBack, action: close)
+                                .buttonStyle(.plain)
+                                .font(.plat(mac: 13, touch: 15, weight: .semibold))
+                                .foregroundStyle(theme.haze)
+                                .pointerHover()
+                        }
+                    }
+                    .padding(.top, 10)
+                    .transition(.opacity)
+                }
             }
             .padding(.horizontal, 28)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .contain)
+        .onChange(of: model.openingWait) { _, wait in
+            // A new stage is said aloud, as the first one was.
+            guard shown, let wait else { return }
+            AccessibilityNotification.Announcement(Self.stage(wait, chapter: label)).post()
+        }
         .task {
             // The plate at once; its line from 600 ms, and the wait admitted from 3 s.
             seconds = 0
             try? await Task.sleep(for: .milliseconds(600))
             guard !Task.isCancelled else { return }
             withAnimation(.fadeIn) { shown = true }
-            AccessibilityNotification.Announcement(L.readerOpening(chapter: label)).post()
+            AccessibilityNotification.Announcement(Self.stage(model.openingWait, chapter: label)).post()
             seconds = 1
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(1))

@@ -18,7 +18,14 @@ struct PagedReader: View {
     @State private var drag: CGFloat = 0
     @State private var fading: Int?
     @State private var fade: Double = 1
+    /// The credit page that was over the leaf fading out, so a turn off it fades it with its leaf.
+    @State private var fadingCredit: UInt32?
+    @AppStorage(ReaderDefaults.background) private var background = "theme"
     @State private var settling = false
+    @State private var zoom = PageZoom()
+    /// The pinch gesture is live. It goes back to false however the gesture stops, cancelled too.
+    @GestureState private var magnifying = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var rtl: Bool { model.view?.direction == .rightToLeft }
     /// Which way a drag goes to move forward: right in right-to-left, left otherwise.
@@ -30,7 +37,8 @@ struct PagedReader: View {
             // The neighbours stay mounted off screen, so a drag starts with its page already there,
             // and the page a tap turn leaves is the same view held under the one that fades in.
             ForEach(mounted, id: \.self) { index in
-                leaf(index)
+                slot(index)
+                    .zoomed(zoom, on: index == current)
                     .offset(x: offset(of: index))
                     .opacity(index == current && fading != nil ? fade : 1)
                     .zIndex(index == current ? 1 : 0)
@@ -41,12 +49,35 @@ struct PagedReader: View {
         .clipped()
         .contentShape(.rect)
         .gesture(swipe)
+        #if os(iOS)
+        // A double tap zooms, so a single tap waits for it not to be one.
+        .simultaneousGesture(
+            SpatialTapGesture(count: 2).onEnded { zoom.doubleTap(at: $0.location, in: size, motion: !reduceMotion && !paper) }
+                .exclusively(before: SpatialTapGesture().onEnded { tap($0.location.x / max(size.width, 1)) }))
+        .simultaneousGesture(
+            MagnifyGesture()
+                .updating($magnifying) { _, live, _ in live = true }
+                .onChanged { zoom.pinch($0.magnification, at: $0.startLocation, in: size) }
+                .onEnded { _ in zoom.pinchEnded(in: size, motion: !reduceMotion && !paper) })
+        .onChange(of: magnifying) { _, live in
+            if !live { zoom.pinchGone(in: size, motion: !reduceMotion && !paper) }
+        }
+        #else
         .simultaneousGesture(SpatialTapGesture().onEnded { tap($0.location.x / max(size.width, 1)) })
+        #endif
         .onAppear { model.position = (current, max(model.leaves.count, 1)) }
-        .onChange(of: model.current) { _, _ in model.position = (current, max(model.leaves.count, 1)) }
-        .onChange(of: model.leaves.count) { _, _ in model.position = (current, max(model.leaves.count, 1)) }
+        .onChange(of: model.current) { _, _ in
+            model.position = (current, max(model.leaves.count, 1))
+            zoom.reset()
+        }
+        .onChange(of: model.leaves.count) { _, _ in
+            model.position = (current, max(model.leaves.count, 1))
+            zoom.reset()
+        }
+        // A place the app chose (Back to page, Start over, another device's, a change of mode) is
+        // its own move, never the person's jump.
         .onChange(of: model.goTo?.tick) { _, _ in
-            if let to = model.goTo?.leaf { model.shown(to, how: .jump) }
+            if let to = model.goTo { model.shown(to.leaf, how: to.how) }
         }
         .onChange(of: model.jump?.tick) { _, _ in
             if let to = model.jump?.index, model.leaves.indices.contains(to) { model.shown(to, how: .jump) }
@@ -56,6 +87,13 @@ struct PagedReader: View {
             turn(forward: request.forward, how: .key)
         }
         .accessibilityScrollAction { edge in turn(forward: edge == .trailing || edge == .bottom, how: .turn) }
+        // The chapter's credit pages are decoded ahead, so Show draws one on its first frame.
+        .task(id: model.openCredits.map(\.page)) {
+            for credit in model.openCredits {
+                guard !Task.isCancelled else { return }
+                _ = await PageImages.load(credit.file, longestSide: CreditPageView.longest(size, scale))
+            }
+        }
     }
 
     private var mounted: [Int] {
@@ -72,6 +110,26 @@ struct PagedReader: View {
         return drag + (index > current ? -sign : sign) * size.width
     }
 
+    /// A leaf, with the credit page brought back over it while one shows. The leaf stays under
+    /// the credit page, so a step between them crossfades and never fades through empty.
+    private func slot(_ index: Int) -> some View {
+        ZStack {
+            leaf(index)
+            if let credit = credit(over: index) {
+                CreditPageView(credit: credit, size: size, scale: scale, tone: tone, backdrop: theme.backdrop(background))
+                    .id(credit.page)
+                    .transition(.opacity)
+                    .zIndex(1)
+            }
+        }
+    }
+
+    private func credit(over index: Int) -> CreditPage? {
+        if index == current, fading != index { return model.shownCredit }
+        if index == fading, let fadingCredit { return model.openCredits.first { $0.page == fadingCredit } }
+        return nil
+    }
+
     @ViewBuilder private func leaf(_ index: Int) -> some View {
         if model.leaves.indices.contains(index) {
             let item = model.leaves[index]
@@ -79,7 +137,9 @@ struct PagedReader: View {
                 ReaderEndPage(model: model, theme: theme, size: size)
             } else {
                 LeafView(
-                    model: model, leaf: item, size: size, theme: theme, tone: tone, scale: scale,
+                    model: model, leaf: item, size: size, theme: theme, tone: tone,
+                    // A zoomed page is decoded again at its zoom once the fingers are up, so it stays sharp.
+                    scale: scale * (index == current ? zoom.detail : 1),
                     fitWidth: model.choice(.fit) == "width")
                     .background(Color.clear)
             }
@@ -92,6 +152,8 @@ struct PagedReader: View {
 
     private func tap(_ x: Double) {
         let layout = model.choice(.tapLayout) ?? "edges"
+        // While zoomed the zones are off: a tap anywhere only brings the chrome or puts it away.
+        if zoom.zoomed { onTap(0.5); return }
         if model.chromeShown || layout == "off" { onTap(x); return }
         // Edges: the outer thirds turn. Halves: the outer 40 percent turn, and the middle band
         // still brings the chrome up.
@@ -108,17 +170,28 @@ struct PagedReader: View {
     private func turn(forward: Bool, how: TurnHow) {
         guard model.leaves.indices.contains(current) else { return }
         model.hideChrome()
+        if let step = model.creditStep(forward: forward) {
+            creditTurn(step, how: how)
+            return
+        }
         if forward, model.leaves[current].endPage {
-            if let next = model.view?.next { model.openChapter(next.id) }
+            if let next = model.endNext { model.openChapter(next.id) }
             return
         }
         let target = current + (forward ? 1 : -1)
-        guard model.leaves.indices.contains(target) else { return }
+        guard model.leaves.indices.contains(target) else {
+            // Back from the first page goes into the chapter before, at its last page.
+            if !forward, current == 0, let previous = model.view?.previous {
+                model.openChapter(previous.id, atEnd: true)
+            }
+            return
+        }
         if paper {
             model.shown(target, how: how)
             return
         }
         let old = current
+        fadingCredit = model.onCredit
         fading = old
         fade = 0
         model.shown(target, how: how)
@@ -126,6 +199,46 @@ struct PagedReader: View {
             fade = 1
         } completion: {
             fading = nil
+            fadingCredit = nil
+        }
+    }
+
+    /// A turn onto, between or off credit pages brought back. On the same leaf the credit page
+    /// crossfades over it; onto another leaf it turns as a tap does, the credit page with its leaf.
+    private func creditTurn(_ step: ReaderModel.CreditStep, how: TurnHow) {
+        let (page, leaf): (UInt32?, Int) = switch step {
+        case let .credit(page, leaf): (page, leaf)
+        case let .leaf(leaf): (nil, leaf)
+        }
+        if paper {
+            model.showCredit(page, leaf: leaf, how: how)
+            return
+        }
+        if leaf == current {
+            withAnimation(page == nil ? .fadeOut : .fadeIn) { model.showCredit(page, leaf: leaf, how: how) }
+            return
+        }
+        fadingCredit = model.onCredit
+        fading = current
+        fade = 0
+        model.showCredit(page, leaf: leaf, how: how)
+        withAnimation(.quick, completionCriteria: .logicallyComplete) {
+            fade = 1
+        } completion: {
+            fading = nil
+            fadingCredit = nil
+        }
+    }
+
+    /// Whether a drag the way `forward` stays on the same leaf: between credit pages, or from
+    /// one onto its leaf. Such a drag moves a little and lets go into a crossfade.
+    private func staysOnLeaf(forward: Bool) -> ReaderModel.CreditStep? {
+        guard let step = model.creditStep(forward: forward) else { return nil }
+        switch step {
+        case let .credit(_, leaf) where leaf == current: return step
+        case let .leaf(leaf) where leaf == current: return step
+        case .credit: return step
+        case .leaf: return nil
         }
     }
 
@@ -133,24 +246,40 @@ struct PagedReader: View {
         DragGesture(minimumDistance: 14)
             .onChanged { value in
                 guard !settling else { return }
+                // A zoomed page pans and never turns; a pinch's fingers do neither.
+                if zoom.zoomed || zoom.pinching {
+                    zoom.drag(value.translation, in: size)
+                    return
+                }
                 var x = value.translation.width
                 let forward = x * sign > 0
                 let target = current + (forward ? 1 : -1)
                 let endForward = forward && model.leaves.indices.contains(current) && model.leaves[current].endPage
-                if !model.leaves.indices.contains(target) || (endForward && model.view?.next == nil) { x /= 4 }
+                if !model.leaves.indices.contains(target) || (endForward && model.endNext == nil) { x /= 4 }
+                if staysOnLeaf(forward: forward) != nil { x /= 4 }
                 drag = x
             }
             .onEnded { value in
                 guard !settling else { return }
+                if zoom.zoomed || zoom.pinching {
+                    zoom.dragEnded()
+                    withAnimation(paper ? nil : .standard) { drag = 0 }
+                    return
+                }
                 let x = value.translation.width
                 let flick = abs(value.velocity.width) > 450 && value.velocity.width * x > 0
                 let commit = abs(x) > size.width * 0.25 || flick
                 let forward = x * sign > 0
                 let target = current + (forward ? 1 : -1)
                 let endForward = forward && model.leaves.indices.contains(current) && model.leaves[current].endPage
+                if let step = staysOnLeaf(forward: forward) {
+                    withAnimation(paper ? nil : .standard) { drag = 0 }
+                    if commit { creditTurn(step, how: .swipe) }
+                    return
+                }
                 if commit, endForward {
                     drag = 0
-                    if let next = model.view?.next { model.openChapter(next.id) }
+                    if let next = model.endNext { model.openChapter(next.id) }
                     return
                 }
                 guard commit, model.leaves.indices.contains(target) else {
@@ -187,13 +316,14 @@ struct ReaderEndPage: View {
     let size: CGSize
     /// The end page as it was when the chapter was left, held over the next one while it opens.
     var held: ReaderModel.HeldEnd?
+    @Environment(\.readerPaper) private var endPaper
     @Environment(\.readerClose) private var closeReader
     @Environment(Navigator.self) private var navigator
     @Environment(AppStore.self) private var store
     @Environment(\.dynamicTypeSize) private var type
 
-    /// One more swipe opens the next chapter: in the paged reader, not a strip's foot or a novel.
-    private var swipes: Bool { held != nil || (model.novel == nil && model.view?.mode != .strip) }
+    /// One more swipe opens the next chapter: in the paged reader and a novel, not a strip's foot.
+    private var swipes: Bool { held != nil || model.novel != nil || model.view?.mode != .strip }
 
     // What the page shows: the held chapter's, or the open one's.
     private var view: ReaderView? { held?.view ?? model.view }
@@ -201,6 +331,11 @@ struct ReaderEndPage: View {
     private var read: Bool { held?.read ?? model.read }
     private var readTrackers: [String] { held?.readTrackers ?? model.readTrackers }
     private var medium: Medium { view?.medium ?? .manga }
+    /// A strip that could not flow into its next chapter ends here: that chapter, why, and Try
+    /// again in place of Continue. Turned to pages, Continue opens it as any chapter opens.
+    private var flowFailure: ReaderModel.FlowFailure? {
+        held == nil && model.view?.mode == .strip ? model.flowFailure : nil
+    }
 
     private func previewFile(_ id: ChapterId) -> PageFile? {
         if let held { return held.previews[id] }
@@ -209,15 +344,33 @@ struct ReaderEndPage: View {
 
     /// Continue, or while the held page waits on a slow first page, a small spinner in its place.
     private func continueLabel(_ id: ChapterId) -> some View {
+        pressLabel(L.readerContinue, to: id, tint: theme.onAmber)
+    }
+
+    /// A button's words, or the spinner while the chapter it opens is slow to show.
+    private func pressLabel(_ text: String, to id: ChapterId, tint: Color) -> some View {
         let waiting = held?.slow == true && held?.to == id
-        return Text(L.readerContinue)
+        return Text(text)
+            .multilineTextAlignment(.center)
             .opacity(waiting ? 0 : 1)
             .overlay {
                 if waiting {
-                    ProgressView().controlSize(.small).tint(theme.onAmber).transition(.opacity)
+                    ProgressView().controlSize(.small).tint(tint).transition(.opacity)
                 }
             }
             .animation(.fadeIn, value: waiting)
+    }
+
+    /// Past the extras: "Skip to chapter 17" when the next chapter is one. The extras stay unread.
+    @ViewBuilder
+    private func skipButton(_ next: ChapterRow, height: CGFloat, wide: Bool) -> some View {
+        if let skip = end?.skipTo {
+            Button { model.openChapter(skip.id) } label: {
+                pressLabel(L.readerEndSkipTo(chapter: skip.number ?? skip.label), to: skip.id, tint: theme.silk)
+            }
+            .buttonStyle(ReaderPillStyle(theme: theme, height: height, wide: wide))
+            .accessibilityHint(end?.skipHint ?? "")
+        }
     }
 
     var body: some View {
@@ -276,7 +429,7 @@ struct ReaderEndPage: View {
     /// next chapter with its facts and its first page, and Continue. On a phone the buttons are
     /// pinned at the foot; wider, the column is centred with the buttons under it.
     private var standard: some View {
-        let next = end?.next ?? view?.next
+        let next = flowFailure?.next ?? ReaderEnd.next(end, view: view)
         let phone = size.width < 600
         // At the largest sizes nothing is pinned: the buttons follow the column in the scroll.
         let pinned = phone && !type.isAccessibilitySize
@@ -289,7 +442,8 @@ struct ReaderEndPage: View {
                             .padding(.top, 28)
                     }
                 }
-                .frame(width: phone ? size.width - 56 : 440, alignment: .leading)
+                // The iPad's column is wider, so Continue, the skip and Back fit one 44 pt row.
+                .frame(width: phone ? size.width - 56 : (Device.isMac ? 440 : 500), alignment: .leading)
                 .padding(.top, phone ? 100 : (Device.isMac ? 120 : 150))
                 .padding(.bottom, pinned ? 230 : 40)
                 .frame(maxWidth: .infinity, alignment: phone ? .leading : .center)
@@ -310,7 +464,8 @@ struct ReaderEndPage: View {
         .background(theme.page)
     }
 
-    /// The phone's buttons: the swipe line, Continue in amber and Back to the series under it.
+    /// The phone's buttons: the swipe line, Continue in amber, the skip past extras under it in
+    /// the quiet fill when there is one, and Back to the series.
     @ViewBuilder
     private func buttons(_ next: ChapterRow?) -> some View {
         VStack(spacing: 0) {
@@ -321,8 +476,17 @@ struct ReaderEndPage: View {
                         .frame(maxWidth: .infinity)
                         .padding(.bottom, 10)
                 }
-                Button { model.openChapter(next.id) } label: { continueLabel(next.id) }
-                    .buttonStyle(ReaderAmberStyle(theme: theme))
+                if flowFailure != nil {
+                    Button(L.readerTryAgain) { model.retryFlow() }
+                        .buttonStyle(ReaderAmberStyle(theme: theme))
+                } else {
+                    Button { model.openChapter(next.id) } label: { continueLabel(next.id) }
+                        .buttonStyle(ReaderAmberStyle(theme: theme))
+                }
+                if end?.skipTo != nil {
+                    skipButton(next, height: 50, wide: true)
+                        .padding(.top, 10)
+                }
                 Button(L.readerBackToSeries) { closeReader() }
                     .font(.ui(15, weight: .semibold))
                     .foregroundStyle(theme.silk)
@@ -352,10 +516,19 @@ struct ReaderEndPage: View {
                 }
                 .padding(.top, 2)
             }
+            // The pages skipped at the chapter's end, under what was updated, with Show beside it.
+            if held == nil, let chapterId = chapter?.id, !model.endSkipped(chapterId).isEmpty {
+                ReaderSkippedLine(count: model.endSkipped(chapterId).count, theme: theme) {
+                    // The page only appears over the end page, so it fades in; a strip grows it in.
+                    let strip = model.view?.mode == .strip
+                    withAnimation(endPaper ? nil : (strip ? .standard : .fadeIn)) { model.showEndCredits(chapterId) }
+                }
+                .padding(.top, 8)
+            }
             if let next {
                 Text(L.readerEndNext).font(.ui(13)).foregroundStyle(theme.haze)
                     .padding(.top, phone ? 18 : 22)
-                Text(next.title ?? next.label)
+                Text(next.title ?? ReaderChrome.chapterName(next.label))
                     .font(.showTitle(size: 30, relativeTo: .title))
                     .fontWeight(.bold)
                     .foregroundStyle(theme.silk)
@@ -367,6 +540,18 @@ struct ReaderEndPage: View {
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.top, 4)
                 }
+                // Why the strip could not go on into it, over Try again.
+                if let failure = flowFailure?.failure {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(theme.vermilion)
+                            .accessibilityHidden(true)
+                        Text(failure.words).foregroundStyle(theme.silk)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .font(.ui(15))
+                    .padding(.top, 10)
+                    .accessibilityElement(children: .combine)
+                }
                 // The next chapter's first page once the engine made it, its plate until then. A
                 // novel's chapter has no page to show.
                 if medium != .novel {
@@ -375,28 +560,37 @@ struct ReaderEndPage: View {
                 }
             } else if let why = end?.why {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(title(why, chapter?.label ?? ""))
+                    Text(title(why, Self.following(view)))
                         .font(.showTitle(size: 22, relativeTo: .title2)).fontWeight(.semibold)
                         .foregroundStyle(theme.silk)
                     if let body = body(why) { Text(body).font(.ui(15)).foregroundStyle(theme.haze) }
                 }
                 .padding(.top, phone ? 18 : 22)
+            } else {
+                // Neither the next chapter nor why there is none is known yet: a long list may
+                // still be loading, so the page says so rather than caught up.
+                HStack(spacing: 8) {
+                    ProgressView().controlSize(.small).tint(theme.haze)
+                    Text(L.readerChaptersLoading).font(.ui(15)).foregroundStyle(theme.haze)
+                }
+                .padding(.top, phone ? 18 : 22)
+                .transition(.opacity)
             }
             if !phone {
-                let row = Group {
-                    if let next {
-                        Button { model.openChapter(next.id) } label: {
-                            continueLabel(next.id).padding(.horizontal, 18)
-                        }
-                        .buttonStyle(ReaderAmberStyle(theme: theme, height: Device.isMac ? 28 : 44))
-                    }
-                    Button(L.readerBackToSeries) { closeReader() }
-                        .buttonStyle(ReaderPillStyle(theme: theme, height: Device.isMac ? 28 : 44))
+                let stack = VStack(alignment: .leading, spacing: 10) {
+                    wideButtons(next, stacked: true)
                 }
+                .padding(.top, 22)
                 if type.isAccessibilitySize {
-                    VStack(alignment: .leading, spacing: 10) { row }.padding(.top, 22)
+                    stack
                 } else {
-                    HStack(spacing: 10) { row }.fixedSize().padding(.top, 22)
+                    // One row, Continue first; a row too wide for the column stacks instead.
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: 10) { wideButtons(next, stacked: false) }
+                            .fixedSize()
+                            .padding(.top, 22)
+                        stack
+                    }
                 }
                 if next != nil, swipes, !Device.isMac {
                     Text(L.readerEndSwipe).font(.ui(13)).foregroundStyle(theme.haze)
@@ -404,6 +598,29 @@ struct ReaderEndPage: View {
                 }
             }
         }
+    }
+
+    /// Continue, the skip and Back on a Mac or iPad: in one row, or stacked, where all three run
+    /// the column's width as Continue does.
+    @ViewBuilder
+    private func wideButtons(_ next: ChapterRow?, stacked: Bool) -> some View {
+        let height: CGFloat = Device.isMac ? 28 : 44
+        if let next {
+            if flowFailure != nil {
+                Button { model.retryFlow() } label: {
+                    Text(L.readerTryAgain).padding(.horizontal, 18)
+                }
+                .buttonStyle(ReaderAmberStyle(theme: theme, height: height))
+            } else {
+                Button { model.openChapter(next.id) } label: {
+                    continueLabel(next.id).padding(.horizontal, 18)
+                }
+                .buttonStyle(ReaderAmberStyle(theme: theme, height: height))
+            }
+            skipButton(next, height: height, wide: stacked)
+        }
+        Button(L.readerBackToSeries) { closeReader() }
+            .buttonStyle(ReaderPillStyle(theme: theme, height: height, wide: stacked))
     }
 
     private func preview(_ next: ChapterRow, width: CGFloat) -> some View {
@@ -444,10 +661,23 @@ struct ReaderEndPage: View {
     }
 
     /// "Read · AniList updated", or Read alone when no tracker took it.
-    private var readLine: String {
+    private var readLine: String { Self.readLine(read: read, trackers: readTrackers, offline: store.offline) }
+
+    /// Offline the trackers hear of the read only once the device is back online, and the line
+    /// says so rather than call them updated.
+    static func readLine(read: Bool, trackers: [String], offline: Bool) -> String {
         guard read else { return L.readerEndNotRead }
-        guard !readTrackers.isEmpty else { return L.readerEndRead }
-        return L.readerEndTracker(trackers: readTrackers.formatted(.list(type: .and).locale(AirTime.locale)))
+        guard !trackers.isEmpty else { return L.readerEndRead }
+        let names = trackers.formatted(.list(type: .and).locale(AirTime.locale))
+        return offline ? L.readerEndTrackerOffline(tracker: names) : L.readerEndTracker(trackers: names)
+    }
+
+    /// The chapter the heading names: the next one listed, which offline is one only a source
+    /// has; past the last one listed, the next whole number.
+    static func following(_ view: ReaderView?) -> String {
+        if let next = view?.next { return ReaderChrome.chapterName(next.label) }
+        guard let number = view?.chapter.number.flatMap(Double.init) else { return "" }
+        return L.readerChapterLine(chapter: String(Int(number) + 1))
     }
 
     private func title(_ why: NoNext, _ chapter: String) -> String {
@@ -547,5 +777,73 @@ struct ReaderServerLine: View {
         case .retrying: "retrying" // i18n-skip: an animation key
         case .failed: "failed" // i18n-skip: an animation key
         }
+    }
+}
+
+/// A credit page brought back, drawn over its leaf on the reader's backdrop as one page.
+struct CreditPageView: View {
+    let credit: CreditPage
+    let size: CGSize
+    let scale: CGFloat
+    let tone: PageTone
+    let backdrop: Color
+    /// The image is decoded. Until then nothing of the credit page shows, its backdrop included,
+    /// so the page under it stays and the two crossfade instead of passing through an empty page.
+    @State private var ready: Bool
+    @Environment(\.readerPaper) private var paper
+
+    init(credit: CreditPage, size: CGSize, scale: CGFloat, tone: PageTone, backdrop: Color) {
+        self.credit = credit
+        self.size = size
+        self.scale = scale
+        self.tone = tone
+        self.backdrop = backdrop
+        _ready = State(initialValue: PageImages.cached(credit.file, longestSide: Self.longest(size, scale)) != nil)
+    }
+
+    static func longest(_ size: CGSize, _ scale: CGFloat) -> CGFloat { max(size.width, size.height) * scale }
+
+    var body: some View {
+        ZStack {
+            backdrop
+            PageImage(file: credit.file, longest: Self.longest(size, scale), tone: tone)
+                .accessibilityElement()
+                .accessibilityLabel(L.readerCreditPageLabel)
+                .accessibilityAddTraits(.isImage)
+        }
+        .frame(width: size.width, height: size.height)
+        .opacity(ready ? 1 : 0)
+        .task(id: credit.page) {
+            guard !ready else { return }
+            _ = await PageImages.load(credit.file, longestSide: Self.longest(size, scale))
+            guard !Task.isCancelled else { return }
+            withAnimation(paper ? nil : .fadeIn) { ready = true }
+        }
+    }
+}
+
+/// "1 credit page skipped  Show": the end page's line and the strip marker's, 13 point haze with
+/// Show underlined in silk.
+struct ReaderSkippedLine: View {
+    let count: Int
+    let theme: ReaderTheme
+    let show: () -> Void
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Text(L.readerCreditPagesSkipped(count: count))
+                .font(.ui(13)).foregroundStyle(theme.haze)
+            Button(L.readerCreditShow, action: show)
+                .font(.ui(13, weight: .semibold)).foregroundStyle(theme.silk)
+                .underline()
+                .buttonStyle(.plain)
+                // A 44 point target that keeps the line's own height.
+                .padding(.vertical, 12).contentShape(.rect).padding(.vertical, -12)
+                .pointerHover()
+                .accessibilityHint(L.readerCreditShowHint)
+        }
+        .accessibilityElement(children: .contain)
+        // As the paged credit line: it stops growing at accessibility1.
+        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
     }
 }

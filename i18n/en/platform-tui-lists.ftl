@@ -341,6 +341,12 @@ accounts-row-queued = { $count ->
 # @only tui
 accounts-row-queued-held = { $queued } queued, { $held } waiting for a match
 
+# Part of an account's overlay row: changes held back until the title is matched to the
+# { -tracker }'s own id, with nothing else queued.
+# @arg count: int
+# @only tui
+accounts-row-held = { $count } waiting for a match
+
 # Action beside a sync difference in the overlay: Enter keeps the value on this device.
 # @max 12
 # @only tui

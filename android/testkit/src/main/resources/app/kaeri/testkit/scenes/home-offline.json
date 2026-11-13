@@ -668,6 +668,15 @@
       }
      },
      {
+      "key": "SHOW_VOLUMES",
+      "value": "off",
+      "change": {
+       "@type": "Steps",
+       "back": false,
+       "forward": true
+      }
+     },
+     {
       "key": "SERIES_CHOICES_FOLLOW",
       "value": "on",
       "change": {
@@ -1301,10 +1310,6 @@
    }
   },
   {
-   "@type": "JobDone",
-   "v1": "4"
-  },
-  {
    "@type": "MetaStatus",
    "v1": [
     {
@@ -1346,6 +1351,10 @@
      }
     }
    }
+  },
+  {
+   "@type": "JobDone",
+   "v1": "4"
   },
   {
    "@type": "JobStarted",

@@ -518,6 +518,45 @@ struct ReducerTests {
         #expect(store.accounts.summary.text == "Sign in to AniList again")
     }
 
+    /// A library found saying "17 changes waiting to sync" for days: three changes Kitsu has no
+    /// match for, and fourteen behind a credential Trakt rejected. The engine used to send them
+    /// as `outbox` with no reauth flag after a launch; now held changes are `deferred` and the
+    /// rejection stands from the first state.
+    @Test func heldChangesAndARejectedCredentialAreNotWaiting() {
+        func state(_ tracker: String, outbox: UInt32, deferred: UInt32, reauth: Bool) -> SyncState {
+            SyncState(
+                tracker: tracker, connected: true, user: nil, storage: "keychain",
+                storageDegraded: false, outbox: outbox, deferred: deferred, needsReauth: reauth,
+                last: nil, pullError: nil
+            )
+        }
+        let before = AppStore()
+        before.apply([
+            .sync(state("anilist", outbox: 0, deferred: 0, reauth: false)),
+            .sync(state("kitsu", outbox: 3, deferred: 3, reauth: false)),
+            .sync(state("trakt", outbox: 14, deferred: 0, reauth: false)),
+        ])
+        #expect(before.accounts.summary.text == "17 changes waiting to sync")
+
+        let after = AppStore()
+        after.apply([
+            .sync(state("anilist", outbox: 0, deferred: 0, reauth: false)),
+            .sync(state("kitsu", outbox: 0, deferred: 3, reauth: false)),
+            .sync(state("trakt", outbox: 14, deferred: 0, reauth: true)),
+        ])
+        #expect(after.accounts.summary == SyncSummary(
+            text: "Sign in to Trakt again", state: .problem, tracker: "trakt"
+        ))
+        #expect(after.accounts.held == [HeldChanges(tracker: "kitsu", count: 3)])
+
+        // Signed in again and drained: what Trakt has no match for is held too, and quiet.
+        after.apply(.sync(state("trakt", outbox: 0, deferred: 7, reauth: false)))
+        #expect(after.accounts.summary == SyncSummary(text: "AniList synced", state: .synced, tracker: "anilist"))
+        #expect(after.accounts.held == [
+            HeldChanges(tracker: "kitsu", count: 3), HeldChanges(tracker: "trakt", count: 7),
+        ])
+    }
+
     @Test func offlineSaysWhatWaitsQuietly() {
         let store = AppStore()
         store.apply(.sync(SyncState(

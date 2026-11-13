@@ -13,8 +13,8 @@ use kaeri_model::{
     command::Command,
     event::Event,
     reading::{
-        BookEditionRow, ReadingCommand, ReadingEvent, SeriesView, TrackerMapping,
-        TrackerReadRow,
+        BookEditionRow, EditionListing, ReadingCommand, ReadingEvent, SeriesView,
+        TrackerMapping, TrackerReadRow,
     },
 };
 
@@ -58,18 +58,21 @@ pub fn follow(memo: &Rc<RefCell<Memo>>, work: &WorkId, event: &Event) -> bool {
     }
 }
 
-/// "books.home.example · Group · 1 more": the source, its group, and how many others have it.
+/// "books.home.example · 1 more": the source, and how many others have it. The group has a row
+/// of its own.
 fn source_line(edition: &BookEditionRow, others: usize) -> String {
     let mut parts = vec![edition.source_name.clone()];
-    parts.extend(edition.version_label.clone().filter(|l| !l.is_empty()));
     if others > 0 {
         parts.push(t::series_sources_more(others as i64));
     }
     parts.join(" \u{b7} ")
 }
 
-/// "87 of 88 chapters · volume 9", "Volume 5 of 5 read".
+/// "87 of 88 chapters · volume 9", "Volume 5 of 5 read", or "Not started" while nothing is read.
 fn progress(row: &TrackerReadRow, view: &SeriesView) -> String {
+    if row.chapters == 0 && row.volumes.unwrap_or(0) == 0 {
+        return t::series_tracker_not_started();
+    }
     if view.medium == kaeri_core::media::Medium::Novel
         && let Some(volumes) = row.volumes
     {
@@ -109,6 +112,52 @@ fn change_button(label: &str) -> gtk::Button {
     button
 }
 
+/// The name of the veil over the rows, which a group pick marks.
+pub const DETAILS_VEIL: &str = "series-details-veil";
+/// The mark a pick leaves on the veil until the series comes back with the group in use.
+const PICKED_NOW: &str = "group-picked-now";
+
+/// Draw the rows again from `memo`. When the series comes back after a group pick, the old rows
+/// fade over the new ones (0.3 s, or 0.2 s under Reduce Motion as every crossfade) and the
+/// keyboard goes back to the Group row's Change.
+pub fn redraw(
+    ctx: &Rc<Ctx>,
+    veil: &gtk::Overlay,
+    details: &gtk::Box,
+    memo: &Memo,
+    series: bool,
+) {
+    if !(series && veil.has_css_class(PICKED_NOW)) {
+        draw(ctx, details, memo);
+        return;
+    }
+    veil.remove_css_class(PICKED_NOW);
+    crate::motion::ghost(veil, details, true, || draw(ctx, details, memo));
+    let details = details.downgrade();
+    gtk::glib::idle_add_local_once(move || {
+        if let Some(change) = details.upgrade().and_then(|d| named(d.upcast_ref(), CHANGE)) {
+            change.grab_focus();
+        }
+    });
+}
+
+/// The Group row's Change, by its name.
+const CHANGE: &str = "series-group-change";
+
+fn named(widget: &gtk::Widget, name: &str) -> Option<gtk::Widget> {
+    if widget.widget_name() == name {
+        return Some(widget.clone());
+    }
+    let mut child = widget.first_child();
+    while let Some(next) = child {
+        if let Some(found) = named(&next, name) {
+            return Some(found);
+        }
+        child = next.next_sibling();
+    }
+    None
+}
+
 /// Draw the rows into `details` from `memo`.
 pub fn draw(ctx: &Rc<Ctx>, details: &gtk::Box, memo: &Memo) {
     super::clear(details);
@@ -129,6 +178,31 @@ pub fn draw(ctx: &Rc<Ctx>, details: &gtk::Box, memo: &Memo) {
                 }
             }
         });
+        line.add_suffix(&button);
+        list.append(&line);
+    }
+    // The group whose version of each chapter the series lists, with one more to pick from.
+    if let Some(edition) = view.edition.as_ref().filter(|e| e.groups.len() > 1)
+        && let Some(label) = edition.version_label.clone().filter(|l| !l.is_empty())
+    {
+        let why = if edition.group_chosen {
+            t::series_group_picked()
+        } else {
+            t::series_group_most()
+        };
+        let line = row(&t::series_group(), &[label, why].join(" \u{b7} "));
+        // A menu button holds the picker, so the picker goes with the row when the series is
+        // drawn again after a pick.
+        let button = gtk::MenuButton::new();
+        button.set_child(Some(&gtk::Label::new(Some(&t::series_change()))));
+        button.set_always_show_arrow(false);
+        button.add_css_class("flat");
+        button.set_valign(gtk::Align::Center);
+        button.update_property(&[gtk::accessible::Property::Description(
+            &t::series_group_hint(),
+        )]);
+        button.set_widget_name(CHANGE);
+        button.set_popover(Some(&group_picker(ctx, &view.work, edition)));
         line.add_suffix(&button);
         list.append(&line);
     }
@@ -164,26 +238,161 @@ pub fn draw(ctx: &Rc<Ctx>, details: &gtk::Box, memo: &Memo) {
         });
         list.append(&line);
     }
-    if let Some(label) = view.edition.as_ref().and_then(|e| e.version_label.clone())
-        && !label.is_empty()
-    {
-        let line = row(&label, &t::series_preferred_group());
-        let button = change_button(&t::series_change());
-        button.connect_clicked({
-            let (ctx, work, title) =
-                (Rc::downgrade(ctx), view.work.clone(), view.titles.display.clone());
-            move |_| {
-                if let Some(ctx) = ctx.upgrade() {
-                    read_from(&ctx, &work, &title);
-                }
-            }
-        });
-        line.add_suffix(&button);
-        list.append(&line);
-    }
     if list.first_child().is_some() {
         details.append(&list);
     }
+}
+
+// -------------------------------------------------------------------------------------------
+// Group
+
+/// The group picker: a popover with an arrow on the Group row's Change, naming the source it
+/// sits inside. Most chapters first, then each group with how many chapters it has and its
+/// language; a check on the one in use. A pick closes it, and the chapters follow the group.
+pub fn group_picker(ctx: &Rc<Ctx>, work: &WorkId, edition: &BookEditionRow) -> gtk::Popover {
+    let popover = gtk::Popover::new();
+    popover.add_css_class("group-picker");
+    popover.set_position(gtk::PositionType::Bottom);
+    let title = gtk::Label::new(Some(&t::series_group()));
+    title.add_css_class("heading");
+    title.set_xalign(0.0);
+    let within = widgets::haze(&t::group_picker_in(&edition.source_name), "caption");
+    within.set_xalign(0.0);
+    let head = gtk::Box::new(gtk::Orientation::Vertical, 2);
+    head.add_css_class("group-picker-head");
+    head.append(&title);
+    head.append(&within);
+    let list = gtk::ListBox::new();
+    list.set_selection_mode(gtk::SelectionMode::None);
+    list.add_css_class("group-picker-list");
+    list.update_property(&[gtk::accessible::Property::Label(&t::series_group())]);
+    let most = edition.groups.first().map(|g| g.label.clone()).unwrap_or_default();
+    let mut picks: Vec<Option<String>> = vec![None];
+    list.append(&choice_row(
+        &t::group_picker_most(),
+        &t::group_picker_most_now(&most),
+        !edition.group_chosen,
+    ));
+    let rule = gtk::ListBoxRow::new();
+    rule.set_child(Some(&gtk::Separator::new(gtk::Orientation::Horizontal)));
+    rule.add_css_class("group-picker-rule");
+    rule.set_activatable(false);
+    rule.set_selectable(false);
+    rule.set_focusable(false);
+    list.append(&rule);
+    picks.push(None);
+    for group in &edition.groups {
+        let mut said = vec![t::group_picker_count(
+            i64::from(group.chapters),
+            i64::from(edition.chapters.max(group.chapters)),
+        )];
+        said.extend(
+            group
+                .language
+                .as_deref()
+                .filter(|l| !l.is_empty())
+                .map(|l| say::language(l.split(['-', '_']).next().unwrap_or(l))),
+        );
+        list.append(&choice_row(
+            &group.label,
+            &said.join(" \u{b7} "),
+            edition.group_chosen && group.in_use,
+        ));
+        picks.push(Some(group.label.clone()));
+    }
+    let fallback = widgets::haze(&t::group_picker_fallback(), "caption");
+    fallback.set_wrap(true);
+    fallback.set_xalign(0.0);
+    fallback.set_max_width_chars(36);
+    fallback.add_css_class("group-picker-foot");
+    let column = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    column.set_width_request(320);
+    column.append(&head);
+    column.append(&list);
+    column.append(&fallback);
+    popover.set_child(Some(&column));
+    list.connect_row_activated({
+        let (ctx, work, popover) = (Rc::downgrade(ctx), work.clone(), popover.downgrade());
+        move |_, row| {
+            let index = row.index();
+            if index == 1 {
+                return;
+            }
+            if let Some(popover) = popover.upgrade() {
+                // The series that comes back with the pick redraws the rows by a crossfade.
+                let mut up = popover.parent();
+                while let Some(widget) = up {
+                    if widget.widget_name() == DETAILS_VEIL {
+                        widget.add_css_class(PICKED_NOW);
+                        break;
+                    }
+                    up = widget.parent();
+                }
+                popover.popdown();
+            }
+            if let Some(ctx) = ctx.upgrade()
+                && let Some(group) = usize::try_from(index).ok().and_then(|i| picks.get(i))
+            {
+                send(
+                    &ctx.hub,
+                    ReadingCommand::ChooseGroup { work: work.clone(), group: group.clone() },
+                );
+            }
+        }
+    });
+    // The keys start on the choice in use.
+    popover.connect_show({
+        let list = list.downgrade();
+        move |_| {
+            let Some(list) = list.upgrade() else { return };
+            let mut row = list.first_child();
+            while let Some(widget) = row {
+                if widget.has_css_class("group-picked") {
+                    widget.grab_focus();
+                    break;
+                }
+                row = widget.next_sibling();
+            }
+        }
+    });
+    popover
+}
+
+/// A choice in the group picker: its name, its line, and a check when it is the one in use.
+fn choice_row(title: &str, subtitle: &str, picked: bool) -> gtk::ListBoxRow {
+    // Long names and lines wrap at large sizes; none is cut.
+    let name = gtk::Label::new(Some(title));
+    name.set_xalign(0.0);
+    name.set_wrap(true);
+    name.set_wrap_mode(gtk::pango::WrapMode::WordChar);
+    let line = widgets::haze(subtitle, "caption");
+    line.set_xalign(0.0);
+    line.set_wrap(true);
+    line.set_wrap_mode(gtk::pango::WrapMode::WordChar);
+    let words = gtk::Box::new(gtk::Orientation::Vertical, 2);
+    words.set_hexpand(true);
+    words.set_valign(gtk::Align::Center);
+    words.append(&name);
+    words.append(&line);
+    let check = gtk::Image::from_icon_name("object-select-symbolic");
+    check.set_opacity(if picked { 1.0 } else { 0.0 });
+    check.set_valign(gtk::Align::Center);
+    check.set_accessible_role(gtk::AccessibleRole::Presentation);
+    let content = gtk::Box::new(gtk::Orientation::Horizontal, 12);
+    content.add_css_class("group-picker-row");
+    content.append(&words);
+    content.append(&check);
+    let row = gtk::ListBoxRow::new();
+    row.set_child(Some(&content));
+    if picked {
+        row.add_css_class("group-picked");
+        row.update_state(&[gtk::accessible::State::Selected(Some(true))]);
+    }
+    row.update_property(&[
+        gtk::accessible::Property::Label(title),
+        gtk::accessible::Property::Description(subtitle),
+    ]);
+    row
 }
 
 // -------------------------------------------------------------------------------------------
@@ -370,7 +579,8 @@ fn draw_read_from(
                 button.connect_clicked({
                     let (found, source) = (Rc::clone(found), miss.source_id.clone());
                     let ctx = Rc::downgrade(ctx);
-                    let (work, title) = (work.clone(), title.to_owned());
+                    let (work, query) =
+                        (work.clone(), miss.query.clone().unwrap_or_else(|| title.to_owned()));
                     move |_| {
                         let Some(ctx) = ctx.upgrade() else { return };
                         {
@@ -384,7 +594,7 @@ fn draw_read_from(
                             BookSourceCommand::SearchSourceForWork {
                                 work: work.clone(),
                                 source_id: source.clone(),
-                                query: title.clone(),
+                                query: query.clone(),
                             },
                         );
                         let redraw = found.borrow().redraw.clone();
@@ -398,6 +608,16 @@ fn draw_read_from(
             list.append(&line);
             if open {
                 list.append(&search_there(ctx, dialog, work, title, miss, &state));
+            } else if let Some(possible) = &miss.possible {
+                // Another edition the source has, which may be it: one press confirms it.
+                list.append(&possible_row(
+                    ctx,
+                    dialog,
+                    work,
+                    &miss.source_id,
+                    possible,
+                    &state,
+                ));
             }
         }
         body.append(&list);
@@ -431,19 +651,86 @@ fn edition_line(
             folder = true;
         }
     }
-    lead.extend(edition.version_label.clone().filter(|l| !l.is_empty()));
     lead.extend(edition.language.as_deref().filter(|l| !l.is_empty()).map(say::language));
-    let latest = edition.latest.clone().unwrap_or_else(|| edition.chapters.to_string());
     let mut parts = lead.clone();
-    parts.push(if lead.is_empty() {
-        t::series_read_from_chapters(&latest)
-    } else {
-        t::series_read_from_chapters_later(&latest)
-    });
+    parts.push(edition_chapters(edition, lead.is_empty()));
     if folder {
         parts.push(t::series_read_from_on_device(&t::device_kind_computer()));
     }
     parts.join(" \u{b7} ")
+}
+
+/// The chapters part of an edition's line. A list not asked for yet, or still on its way, says
+/// it is being checked; an empty one says so; one that failed says why. Only a list the source
+/// gave has a range, so it never reads "1 to 0".
+fn edition_chapters(edition: &BookEditionRow, first: bool) -> String {
+    let checking = || {
+        if first {
+            t::series_read_from_checking()
+        } else {
+            t::series_read_from_checking_later()
+        }
+    };
+    let empty =
+        || if first { t::series_read_from_empty() } else { t::series_read_from_empty_later() };
+    let has = edition.chapters > 0 || edition.latest.is_some();
+    match &edition.listing {
+        Some(EditionListing::Failed { failure }) => super::failure(failure),
+        Some(EditionListing::Empty) => empty(),
+        Some(EditionListing::Asking) => checking(),
+        None if !has => checking(),
+        Some(EditionListing::Listed) if !has => empty(),
+        Some(EditionListing::Listed) | None => {
+            let latest = edition.latest.clone().unwrap_or_else(|| edition.chapters.to_string());
+            if first {
+                t::series_read_from_chapters(&latest)
+            } else {
+                t::series_read_from_chapters_later(&latest)
+            }
+        }
+    }
+}
+
+/// A series a source has in another edition: its title with year and language, chosen with a press.
+fn possible_row(
+    ctx: &Rc<Ctx>,
+    dialog: &adw::Dialog,
+    work: &WorkId,
+    source_id: &str,
+    choice: &SourceSeriesChoice,
+    state: &Found,
+) -> adw::ActionRow {
+    let mut parts: Vec<String> = Vec::new();
+    parts.extend(choice.year.map(|y| y.to_string()));
+    parts.extend(choice.language.as_deref().filter(|l| !l.is_empty()).map(say::language));
+    let line = row(&choice.title, &parts.join(" \u{b7} "));
+    line.set_activatable(true);
+    line.connect_activated({
+        let (ctx, work, source, series_ref, dialog, picked) = (
+            Rc::downgrade(ctx),
+            work.clone(),
+            source_id.to_owned(),
+            choice.series_ref.clone(),
+            dialog.downgrade(),
+            Rc::clone(&state.picked),
+        );
+        move |_| {
+            let Some(ctx) = ctx.upgrade() else { return };
+            picked.set(true);
+            sources(
+                &ctx.hub,
+                BookSourceCommand::ChooseSourceSeries {
+                    work: work.clone(),
+                    source_id: source.clone(),
+                    series_ref: series_ref.clone(),
+                },
+            );
+            if let Some(dialog) = dialog.upgrade() {
+                dialog.close();
+            }
+        }
+    });
+    line
 }
 
 /// The field under a source that has no match, and what that source finds.
@@ -462,7 +749,7 @@ fn search_there(
     column.set_margin_end(12);
     let entry = gtk::SearchEntry::new();
     entry.set_placeholder_text(Some(&t::read_from_search_placeholder(&miss.source_name)));
-    entry.set_text(title);
+    entry.set_text(miss.query.as_deref().unwrap_or(title));
     column.append(&entry);
     let go = {
         let (ctx, work, source, entry) =

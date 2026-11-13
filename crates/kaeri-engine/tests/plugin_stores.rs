@@ -306,7 +306,11 @@ async fn an_open_store_is_joined_without_a_name_and_its_owner_decides_who_can_jo
     let (_, guest) = stores(&root.path().join("guest"));
     let preview = guest.preview(&link).await.unwrap();
     assert!(preview.open && preview.anonymous);
-    assert_eq!(preview.owners, ["Owner"]);
+    assert_eq!(
+        preview.owners,
+        ["owner@store.example"],
+        "an owner who kept the setup's name is named by the store's contact"
+    );
     assert_eq!(preview.device_label, "", "an open link sends no name, so none is offered");
     // A name typed anyway is not sent.
     let joined = guest.join(&link, Some("Living room")).await.unwrap();
@@ -403,15 +407,19 @@ async fn an_invite_for_a_group_names_each_joiner_and_says_why_it_stopped() {
     let refused = late.preview_checked(&made.link.0).await.unwrap_err();
     assert_eq!(
         *refused.msg,
-        Msg::Store(StoreMsg::StoreInviteWasCancelled { owners: "Owner".into() })
+        Msg::Store(StoreMsg::StoreInviteWasCancelled { owners: "the owners of Ours".into() })
     );
     assert_eq!(refused.contact, None, "this store gave no contact");
     assert!(late.rows().unwrap().is_empty());
+    // This store gave no contact, so nobody is named as running it: its line is its host.
+    assert!(owner.rows().unwrap()[0].owners.is_empty());
 
     // A link that works once does not ask for a name.
     let once = owner.invite(&id, Some("Sam".into())).await.unwrap();
     assert_eq!(once.max, 1);
-    assert!(!late.preview(&once.link.0).await.unwrap().names_joiner);
+    let preview = late.preview(&once.link.0).await.unwrap();
+    assert!(!preview.names_joiner);
+    assert!(preview.owners.is_empty(), "no contact, so the setup's name is not shown");
     assert_eq!(
         late.join_as(&once.link.0, None, Some("Not Sam")).await.unwrap().member.name,
         "Sam"
@@ -419,7 +427,7 @@ async fn an_invite_for_a_group_names_each_joiner_and_says_why_it_stopped() {
     let used_up = other.preview_checked(&once.link.0).await.unwrap_err();
     assert_eq!(
         *used_up.msg,
-        Msg::Store(StoreMsg::StoreInviteUsedUp { owners: "Owner".into() })
+        Msg::Store(StoreMsg::StoreInviteUsedUp { owners: "the owners of Ours".into() })
     );
 }
 

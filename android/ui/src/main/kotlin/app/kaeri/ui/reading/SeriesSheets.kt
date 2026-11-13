@@ -62,9 +62,11 @@ import app.kaeri.engine.model.ChapterDownloadState
 import app.kaeri.engine.model.ChapterReadState
 import app.kaeri.engine.model.ChapterRow
 import app.kaeri.engine.model.DownloadPick
+import app.kaeri.engine.model.EditionListing
 import app.kaeri.engine.model.EditionMiss
 import app.kaeri.engine.model.ListRemovalOutcome
 import app.kaeri.engine.model.SeriesView
+import app.kaeri.engine.model.SourceSeriesChoice
 import app.kaeri.engine.model.TrackerMapping
 import app.kaeri.engine.model.TrackerReadRow
 import app.kaeri.engine.model.VolumeGroup
@@ -127,8 +129,10 @@ internal fun ChapterSheet(
                 SheetAction(Strings.seriesMarkReadUpTo(context)) { then { store.reading.markReadUpTo(work, row.id) } }
             }
             when (row.download) {
-                null -> SheetAction(Strings.seriesDownload(context)) {
-                    then { store.reading.download(work, DownloadPick.Chapters(listOf(row.id))) }
+                null -> if (row.downloadable) {
+                    SheetAction(Strings.seriesDownload(context)) {
+                        then { store.reading.download(work, DownloadPick.Chapters(listOf(row.id))) }
+                    }
                 }
                 is ChapterDownloadState.Failed -> SheetAction(Strings.chapterRetry(context)) {
                     then { store.reading.download(work, DownloadPick.Chapters(listOf(row.id))) }
@@ -292,9 +296,8 @@ private fun EditionRow(edition: BookEditionRow, onClick: () -> Unit) {
     edition.language?.takeIf { it.isNotBlank() }?.let { code ->
         Locale.forLanguageTag(code).getDisplayLanguage(app.kaeri.store.AirTime.locale).takeIf { it.isNotBlank() }?.let { lead += it }
     }
-    val latest = edition.latest ?: edition.chapters.toString()
     val parts = lead.toMutableList()
-    parts += if (lead.isEmpty()) Strings.seriesReadFromChapters(context, latest) else Strings.seriesReadFromChaptersLater(context, latest)
+    parts += editionChapters(context, edition, first = lead.isEmpty())
     if (folder) parts += Strings.seriesReadFromOnDevice(context, deviceName(context))
     Row(
         Modifier
@@ -317,14 +320,40 @@ private fun EditionRow(edition: BookEditionRow, onClick: () -> Unit) {
     }
 }
 
-/** A source searched without finding the series: its name and why in haze, with Search there. */
+/**
+ * The chapters part of an edition's line. A list not asked for yet, or still on its way, says it
+ * is being checked; an empty one says so; one that failed says why. Only a list the source gave
+ * has a range, so it never reads "1 to 0".
+ */
+internal fun editionChapters(context: Context, edition: BookEditionRow, first: Boolean): String {
+    val has = edition.chapters > 0u || edition.latest != null
+    return when (val listing = edition.listing) {
+        is EditionListing.Failed -> failureWords(context, listing.failure)
+        is EditionListing.Empty -> if (first) Strings.seriesReadFromEmpty(context) else Strings.seriesReadFromEmptyLater(context)
+        is EditionListing.Listed, null -> when {
+            has -> (edition.latest ?: edition.chapters.toString()).let { latest ->
+                if (first) Strings.seriesReadFromChapters(context, latest) else Strings.seriesReadFromChaptersLater(context, latest)
+            }
+            listing == null -> if (first) Strings.seriesReadFromChecking(context) else Strings.seriesReadFromCheckingLater(context)
+            else -> if (first) Strings.seriesReadFromEmpty(context) else Strings.seriesReadFromEmptyLater(context)
+        }
+        is EditionListing.Asking -> if (first) Strings.seriesReadFromChecking(context) else Strings.seriesReadFromCheckingLater(context)
+    }
+}
+
+/**
+ * A source searched without finding the series: its name and why in haze, with Search there. A
+ * possible match, another edition of the series, sits under the reason, chosen with one tap.
+ */
 @Composable
 private fun MissRow(work: WorkId, miss: EditionMiss, title: String, open: Boolean, onOpen: () -> Unit) {
     val context = LocalContext.current
     val store = LocalAppStore.current
     val colors = MaterialTheme.colorScheme
     val found by store.bookSources.sourceSeries.collectAsStateWithLifecycle()
-    var query by rememberSaveable(miss.sourceId) { mutableStateOf(title) }
+    // The words most likely to find it there: the romaji when the English name found nothing.
+    val words = miss.query ?: title
+    var query by rememberSaveable(miss.sourceId) { mutableStateOf(words) }
     fun search() {
         val words = query.trim()
         if (words.isNotEmpty()) store.bookSources.searchSource(work, miss.sourceId, words)
@@ -339,12 +368,16 @@ private fun MissRow(work: WorkId, miss: EditionMiss, title: String, open: Boolea
                 TextButton(
                     onClick = {
                         onOpen()
-                        query = title
-                        store.bookSources.searchSource(work, miss.sourceId, title)
+                        query = words
+                        store.bookSources.searchSource(work, miss.sourceId, words)
                     },
                     colors = ButtonDefaults.textButtonColors(contentColor = colors.onSurface),
                 ) { Text(Strings.readFromSearchThere(context)) }
             }
+        }
+        val possible = miss.possible
+        if (possible != null && !open) {
+            ChoiceRow(possible) { store.bookSources.chooseSourceSeries(work, miss.sourceId, possible.seriesRef) }
         }
         if (open) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -371,30 +404,37 @@ private fun MissRow(work: WorkId, miss: EditionMiss, title: String, open: Boolea
                 result.choices.isEmpty() -> SheetText(Strings.readFromSearchNone(context), Modifier.padding(vertical = 12.dp))
                 else -> Column(Modifier.padding(top = 4.dp)) {
                     result.choices.forEach { choice ->
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 64.dp)
-                                .clickable { store.bookSources.chooseSourceSeries(work, miss.sourceId, choice.seriesRef) }
-                                .padding(vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        ) {
-                            ReadCover(choice.cover, 34.dp)
-                            Column(Modifier.weight(1f)) {
-                                Text(choice.title, style = MaterialTheme.typography.bodyLarge)
-                                val facts = listOfNotNull(
-                                    choice.year?.toString(),
-                                    choice.language?.takeIf { it.isNotBlank() }?.let {
-                                        Locale.forLanguageTag(it).getDisplayLanguage(app.kaeri.store.AirTime.locale).takeIf { name -> name.isNotBlank() }
-                                    },
-                                ).joinToString(" · ") // i18n-skip
-                                if (facts.isNotEmpty()) Text(facts, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
-                            }
-                        }
+                        ChoiceRow(choice) { store.bookSources.chooseSourceSeries(work, miss.sourceId, choice.seriesRef) }
                     }
                 }
             }
+        }
+    }
+}
+
+/** One of a source's series: its cover, title, and year and language, chosen with one tap. */
+@Composable
+private fun ChoiceRow(choice: SourceSeriesChoice, onChoose: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 64.dp)
+            .clickable(onClick = onChoose)
+            .padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        ReadCover(choice.cover, 34.dp)
+        Column(Modifier.weight(1f)) {
+            Text(choice.title, style = MaterialTheme.typography.bodyLarge)
+            val facts = listOfNotNull(
+                choice.year?.toString(),
+                choice.language?.takeIf { it.isNotBlank() }?.let {
+                    Locale.forLanguageTag(it).getDisplayLanguage(app.kaeri.store.AirTime.locale).takeIf { name -> name.isNotBlank() }
+                },
+            ).joinToString(" · ") // i18n-skip
+            if (facts.isNotEmpty()) Text(facts, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
         }
     }
 }
@@ -690,21 +730,30 @@ internal fun DownloadMenu(
     val store = LocalAppStore.current
     val work = series.work
     val all = volumes.chapterRows()
-    val unread = all.filter { it.state !is ChapterReadState.Read && it.download == null }
+    val unread = all.filter { it.state !is ChapterReadState.Read && it.downloadable }
+    val ahead = volumes.unreadAhead()
     val downloaded = volumes.downloaded()
     val any = all.filter { it.download != null }
-    val toFetch = volumes.filter { group -> group.chapters.any { it.state !is ChapterReadState.Read && it.download == null } }.take(3)
+    val toFetch = volumes.downloadVolumes().filter { group -> group.chapters.any { it.state !is ChapterReadState.Read && it.downloadable } }.take(3)
+    val snackbars = app.kaeri.ui.LocalSnackbars.current
     fun pick(what: DownloadPick) {
-        store.reading.download(work, what)
+        // The next unread are the engine's pick too, the next not here yet: with every one ahead
+        // here or on its way, it queues nothing, so say so.
+        val next = (what as? DownloadPick.NextUnread)?.let { volumes.nextToFetch(it.n.toInt()) }
+        if (next != null && next.isEmpty()) {
+            snackbars.show(context.getString(app.kaeri.i18n.R.string.download_already))
+        } else {
+            store.reading.download(work, what)
+        }
         onDismiss()
     }
     Menu(expanded = expanded, onDismissRequest = onDismiss) {
-        DropdownMenuItem(text = { Text(Strings.downloadNext(context, 5)) }, enabled = unread.isNotEmpty(), onClick = { pick(DownloadPick.NextUnread(5u)) })
-        DropdownMenuItem(text = { Text(Strings.downloadNext(context, 10)) }, enabled = unread.size > 5, onClick = { pick(DownloadPick.NextUnread(10u)) })
+        DropdownMenuItem(text = { Text(Strings.downloadNext(context, 5)) }, enabled = ahead.isNotEmpty(), onClick = { pick(DownloadPick.NextUnread(5u)) })
+        DropdownMenuItem(text = { Text(Strings.downloadNext(context, 10)) }, enabled = ahead.size > 5, onClick = { pick(DownloadPick.NextUnread(10u)) })
         DropdownMenuItem(text = { Text(Strings.downloadUnread(context)) }, enabled = unread.isNotEmpty(), onClick = { pick(DownloadPick.Unread) })
         if (toFetch.isNotEmpty()) HorizontalDivider()
         toFetch.forEach { group ->
-            val missing = group.chapters.filter { it.state !is ChapterReadState.Read && it.download == null }
+            val missing = group.chapters.filter { it.state !is ChapterReadState.Read && it.downloadable }
             val name = SeriesWords.volume(context, group, novel = false).first
             DropdownMenuItem(
                 text = { Text(Strings.downloadVolumeCount(context, name, missing.size)) },

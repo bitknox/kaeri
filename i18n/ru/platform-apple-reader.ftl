@@ -94,7 +94,12 @@ reader-volume = Том { $volume }
 reader-chapter-in-progress = Стр. { $page } из { $total }
 reader-chapter-read = Прочитано
 reader-chapter-new = новая
-reader-chapter-pages = { $pages } стр.
+reader-chapter-pages = { $pages ->
+    [one] { $pages } страница
+    [few] { $pages } страницы
+    [many] { $pages } страниц
+   *[other] { $pages } страницы
+ }
 reader-offline-line = Нет сети. Скачанные главы по-прежнему открываются.
 reader-menu-go = Переход
 reader-menu-next-page = Следующая страница
@@ -116,8 +121,5 @@ reader-key-step = Шаг клавиш
 reader-key-step-panel = Панель
 reader-key-step-screen = Экран
 reader-strip-gap = Промежуток между картинками
-reader-zone-back = Назад
-reader-zone-forward = Вперёд
-reader-zone-menu = Меню
 reader-pages-range = { $from }–{ $to }
 send-failed-offline = Повторите попытку, когда будете в сети.

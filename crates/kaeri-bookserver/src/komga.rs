@@ -363,6 +363,9 @@ impl KomgaSource {
         }
         let pages: Vec<PageInfo> =
             self.http.json(&format!("api/v1/books/{}/pages", encode(book))).await?;
+        if pages.len() > crate::MOST_PAGES as usize {
+            return Err(crate::too_many_pages(pages.len()));
+        }
         let header: Vec<(String, String)> = self.http.auth().header().into_iter().collect();
         Ok(Some(ChapterContent::Images(
             pages
@@ -458,7 +461,7 @@ impl BookSource for KomgaSource {
                 let title =
                     if b.metadata.title.is_empty() { &b.name } else { &b.metadata.title };
                 let mut chapter = chapter_of(&b.id, title, Some(&b.metadata.number));
-                chapter.page_count = (b.media.pages > 0).then_some(b.media.pages);
+                chapter.page_count = crate::pages_stated(b.media.pages);
                 chapter.published =
                     b.metadata.release_date.as_deref().and_then(crate::names::date);
                 chapter

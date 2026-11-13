@@ -34,12 +34,13 @@ use kaeri_model::{
 };
 
 use super::{
-    chapters::{Ask, Chapters, Here},
+    chapters::{Ask, Chapters, Here, fit_size as chapters_fit},
     listen,
     novel::{NovelSays, NovelView},
 };
 use crate::{motion, say, window::Ctx};
 
+mod credits;
 mod end;
 mod keys;
 mod sheet;
@@ -54,6 +55,9 @@ const GROUP_WIDTH: i32 = 640;
 const SILENT: Duration = Duration::from_millis(600);
 /// A page still loading says so on its plate from this long.
 const SAY_LOADING: Duration = Duration::from_secs(4);
+/// How long a chapter's open goes on before its plate offers another way, as the player's start
+/// does.
+const LONG_WAIT: Duration = Duration::from_secs(15);
 
 /// What the page plate holds the place of.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -97,6 +101,9 @@ struct State {
     failures: HashMap<u32, ReadingFailure>,
     asked: HashSet<u32>,
     index: usize,
+    /// The page a new layout kept, while the leaf that holds it stays on screen: a spread's
+    /// second page shown alone before the spread comes back alone after it.
+    held_page: Option<u32>,
     settings: Option<ReaderSettingsView>,
     /// Each strip image and its width over height.
     strip_frames: Vec<(gtk::Picture, f32)>,
@@ -107,6 +114,10 @@ struct State {
     read: Option<Vec<String>>,
     /// Where the next chapter came from, by name.
     next_source: Option<String>,
+    /// When the next chapter is an extra: the first whole chapter after it.
+    skip_to: Option<ChapterRow>,
+    /// How many extras the skip passes over.
+    extras: u32,
     /// The next chapter's first page, for the end page.
     preview: Option<(ChapterId, gdk::Texture)>,
     /// The end page is up over a novel.
@@ -115,12 +126,39 @@ struct State {
     flowing: Option<ChapterId>,
     /// The open chapter came in under the strip's marker: it starts where the scroll is.
     flowed: bool,
+    /// The mode changed in the reader: its next layout shows the chapter in the new one.
+    switched: bool,
     /// The demo's work being read, with its credit capsule in the header on page 1.
     demo: Option<(kaeri_model::sources::DemoWorkInfo, gtk::Widget)>,
+    /// The open chapter's credit pages, skipped, from the engine's last layout.
+    credits: Vec<kaeri_model::reader::CreditPage>,
+    /// The credit page on screen in paged reading, by its place in `credits`.
+    credit_on: Option<usize>,
+    /// The credit pages at the start, or at the end, were shown: they stay until the chapter
+    /// closes.
+    shown_start: bool,
+    shown_end: bool,
+    /// The line on page 1 has had its 4 s, or a turn took it.
+    credit_line_done: bool,
+    /// The credit page that was on screen when a new layout came: shown again if the layout
+    /// still skips it.
+    credit_wanted: Option<u64>,
+    credit_textures: HashMap<u64, gdk::Texture>,
+    /// A strip's credit pages above its first image and after its last.
+    lead: Option<credits::CreditBlock>,
+    tail: Option<credits::CreditBlock>,
+    /// The open chapter's parts, for the scrubber's ticks and its preview.
+    parts: Option<credits::Parts>,
+    /// Each part preview shown counts up; an older one's timer leaves a newer one alone.
+    tip_ask: u32,
+    /// A page kept from the credit pages was sent: the next layout numbers pages afresh.
+    relay_kept: Option<credits::Relay>,
 }
 
 pub struct Reader {
     pub widget: gtk::Overlay,
+    /// Itself, for the callbacks of widgets made after it.
+    me: std::rc::Weak<Self>,
     ctx: std::rc::Weak<Ctx>,
     show: Rc<dyn Fn(bool)>,
     state: RefCell<State>,
@@ -154,10 +192,36 @@ pub struct Reader {
     wait_plate: gtk::Box,
     wait_number: gtk::Label,
     wait_line: gtk::Label,
+    /// Under a chapter's plate once its wait has gone on: another source and Go back.
+    wait_more: gtk::Box,
+    /// Counts a chapter's wait each second, from when its plate shows.
+    wait_ticker: RefCell<Option<glib::SourceId>>,
     waiting: Cell<Option<Waiting>>,
     /// The last open asked for, to open again after a failure.
     asked_open: RefCell<Option<(WorkId, Option<ChapterId>)>>,
-    /// A line over the page for a while: resumed, back to page, moved, mode detected.
+    /// The surface the engine was last told about, in an open or on its own.
+    told: Cell<Option<ReaderSurface>>,
+    /// The control that opened the reader, which has the keyboard back when it closes.
+    opener: Rc<keys::Opener>,
+    /// The toasts over the pages: a shown credit page's notice.
+    toasts: adw::ToastOverlay,
+    /// Adds the toasts over the pages, so that they can all be dismissed safely.
+    notices: crate::notices::Notices,
+    /// "1 credit page skipped", top trailing on page 1; the whole pill shows the pages.
+    credit_line: gtk::Button,
+    credit_fade: motion::Fader,
+    credit_timer: RefCell<Option<glib::SourceId>>,
+    credit_toast: RefCell<Option<adw::Toast>>,
+    /// Not a credit page, held while its Undo shows: sent to the engine when the notice times
+    /// out, at a second keep, or as the chapter closes or another opens.
+    keeping: RefCell<Option<credits::Keeping>>,
+    /// A strip's credit pages: above its first image, and after its last.
+    strip_lead: gtk::Box,
+    strip_tail: gtk::Box,
+    /// "Page 25 · part 2" over the scrubber's thumb on a part's tick.
+    part_tip: gtk::Label,
+    part_tip_fade: motion::Fader,
+    /// A line over the page for a while: resumed, moved, mode detected.
     notice: gtk::Box,
     notice_text: gtk::Label,
     notice_button: gtk::Button,
@@ -180,6 +244,11 @@ pub struct Reader {
     scrub_at: gtk::Label,
     scrub_total: gtk::Label,
     scrub_timer: RefCell<Option<glib::SourceId>>,
+    /// Back to page N, over the scrubber, while the engine offers it after a jump.
+    back_to: gtk::Button,
+    back_to_label: gtk::Label,
+    back_to_page: Cell<Option<u32>>,
+    back_to_fade: motion::Fader,
     settings: gtk::MenuButton,
     /// The settings popover, filled from the engine's settings.
     sheet: gtk::Popover,
@@ -228,9 +297,15 @@ impl Reader {
         strip_foot.set_margin_top(64);
         strip_foot.set_margin_bottom(160);
         let trail = trail::Trail::new();
+        let strip_lead = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        strip_lead.set_halign(gtk::Align::Center);
+        let strip_tail = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        strip_tail.set_halign(gtk::Align::Center);
         let strip_column = gtk::Box::new(gtk::Orientation::Vertical, 0);
         strip_column.append(&trail.above);
+        strip_column.append(&strip_lead);
         strip_column.append(&strip);
+        strip_column.append(&strip_tail);
         strip_column.append(&strip_foot);
         strip_column.append(&trail.foot);
         let strip_scroll = gtk::ScrolledWindow::builder()
@@ -308,6 +383,24 @@ impl Reader {
         wait_words.set_margin_end(24);
         wait_words.append(&wait_number);
         wait_words.append(&wait_line);
+        let wait_choose = gtk::Button::with_label(&t::player_choose_source());
+        wait_choose.add_css_class("pill");
+        let wait_back = gtk::Button::with_label(&t::linux_reader_go_back());
+        wait_back.add_css_class("flat");
+        let wait_buttons = gtk::Box::new(gtk::Orientation::Horizontal, 8);
+        wait_buttons.set_halign(gtk::Align::Center);
+        wait_buttons.append(&wait_choose);
+        wait_buttons.append(&wait_back);
+        let wait_long = gtk::Label::new(Some(&t::reader_wait_long()));
+        wait_long.add_css_class("reader-plate-line");
+        wait_long.set_wrap(true);
+        wait_long.set_justify(gtk::Justification::Center);
+        let wait_more = gtk::Box::new(gtk::Orientation::Vertical, 12);
+        wait_more.set_margin_top(18);
+        wait_more.append(&wait_long);
+        wait_more.append(&wait_buttons);
+        wait_more.set_visible(false);
+        wait_words.append(&wait_more);
         let wait_plate = gtk::Box::new(gtk::Orientation::Vertical, 0);
         wait_plate.add_css_class("reader-plate");
         wait_plate.set_halign(gtk::Align::Center);
@@ -365,6 +458,18 @@ impl Reader {
         scrub_row.append(&scrub_at);
         scrub_row.append(&scrub);
         scrub_row.append(&scrub_total);
+        // Back to page: the place left by a jump, above the scrubber, only while offered.
+        let back_to_label = gtk::Label::new(None);
+        back_to_label.set_ellipsize(gtk::pango::EllipsizeMode::End);
+        let back_to_row = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+        back_to_row.append(&gtk::Image::from_icon_name("edit-undo-symbolic"));
+        back_to_row.append(&back_to_label);
+        let back_to = gtk::Button::new();
+        back_to.set_child(Some(&back_to_row));
+        back_to.add_css_class("reader-back-to");
+        back_to.set_halign(gtk::Align::Start);
+        back_to.set_margin_start(8);
+        back_to.set_visible(false);
 
         let group_title = gtk::Label::new(None);
         group_title.add_css_class("reader-group-title");
@@ -415,6 +520,7 @@ impl Reader {
         row.set_end_widget(Some(&ends));
         let group = gtk::Box::new(gtk::Orientation::Vertical, 2);
         group.add_css_class("reader-group");
+        group.append(&back_to);
         group.append(&scrub_row);
         group.append(&row);
         group.set_halign(gtk::Align::Center);
@@ -460,11 +566,38 @@ impl Reader {
         notice.set_margin_top(60);
         notice.set_visible(false);
 
+        // The credit line: the demo credit's capsule, top trailing, the whole pill the button.
+        let credit_line = gtk::Button::new();
+        credit_line.add_css_class("reader-credit-line");
+        credit_line.set_cursor_from_name(Some("pointer"));
+        credit_line.set_halign(gtk::Align::End);
+        credit_line.set_valign(gtk::Align::Start);
+        credit_line.set_margin_end(16);
+        credit_line.set_margin_top(credits::LINE_TOP);
+        credit_line.set_visible(false);
+        credit_line.update_property(&[gtk::accessible::Property::Description(
+            &t::reader_credit_show_hint(),
+        )]);
+        // The part preview over the scrubber's thumb: a label over the reader, placed above the
+        // thumb when it shows.
+        let part_tip = gtk::Label::new(None);
+        part_tip.add_css_class("reader-part-tip");
+        part_tip.add_css_class("numeric");
+        part_tip.set_halign(gtk::Align::Start);
+        part_tip.set_valign(gtk::Align::Start);
+        part_tip.set_can_target(false);
+        part_tip.set_visible(false);
+        let toasts = adw::ToastOverlay::new();
+        toasts.add_css_class("reader-toasts");
+        toasts.set_child(Some(&veil));
+
         let widget = gtk::Overlay::new();
-        widget.set_child(Some(&veil));
+        widget.set_child(Some(&toasts));
         widget.add_overlay(&head);
         widget.add_overlay(&group);
         widget.add_overlay(&notice);
+        widget.add_overlay(&credit_line);
+        widget.add_overlay(&part_tip);
         widget.set_focusable(true);
         widget.add_css_class("reader");
         let this = Rc::new_cyclic(|weak: &std::rc::Weak<Self>| {
@@ -484,10 +617,27 @@ impl Reader {
                     }
                 }
             });
-            let end = end::EndPage::new(go_on, back);
+            let skip: Rc<dyn Fn()> = Rc::new({
+                let weak = weak.clone();
+                move || {
+                    if let Some(this) = weak.upgrade() {
+                        this.skip_extras();
+                    }
+                }
+            });
+            let end = end::EndPage::new(go_on, skip, back);
+            end.credit_show.connect_clicked({
+                let weak = weak.clone();
+                move |_| {
+                    if let Some(this) = weak.upgrade() {
+                        this.show_credits(true);
+                    }
+                }
+            });
             stack.add_named(&end.scroll, Some("end"));
             Self {
                 widget,
+                me: weak.clone(),
                 ctx: Rc::downgrade(ctx),
                 show,
                 state: RefCell::default(),
@@ -514,8 +664,23 @@ impl Reader {
                 wait_plate,
                 wait_number,
                 wait_line,
+                wait_more,
+                wait_ticker: RefCell::default(),
                 waiting: Cell::new(None),
                 asked_open: RefCell::default(),
+                told: Cell::new(None),
+                opener: Rc::default(),
+                notices: crate::notices::Notices::new(&toasts),
+                toasts,
+                credit_line,
+                credit_fade: motion::Fader::always(),
+                credit_timer: RefCell::default(),
+                credit_toast: RefCell::default(),
+                keeping: RefCell::default(),
+                strip_lead,
+                strip_tail,
+                part_tip,
+                part_tip_fade: motion::Fader::default(),
                 notice,
                 notice_text,
                 notice_button,
@@ -535,6 +700,10 @@ impl Reader {
                 scrub_at,
                 scrub_total,
                 scrub_timer: RefCell::default(),
+                back_to,
+                back_to_label,
+                back_to_page: Cell::new(None),
+                back_to_fade: motion::Fader::default(),
                 settings,
                 sheet,
                 sheet_shape_now: RefCell::default(),
@@ -585,6 +754,38 @@ impl Reader {
                 }
             }
         });
+        wait_choose.connect_clicked({
+            let this = Rc::downgrade(&this);
+            move |_| {
+                if let Some(this) = this.upgrade() {
+                    this.choose_source();
+                }
+            }
+        });
+        wait_back.connect_clicked({
+            let this = Rc::downgrade(&this);
+            move |_| {
+                if let Some(this) = this.upgrade() {
+                    this.close();
+                }
+            }
+        });
+        this.back_to.connect_clicked({
+            let this = Rc::downgrade(&this);
+            move |_| {
+                if let Some(this) = this.upgrade() {
+                    this.go_back_to();
+                }
+            }
+        });
+        this.credit_line.connect_clicked({
+            let this = Rc::downgrade(&this);
+            move |_| {
+                if let Some(this) = this.upgrade() {
+                    this.show_credits(false);
+                }
+            }
+        });
         this.notice_button.connect_clicked({
             let this = Rc::downgrade(&this);
             move |_| {
@@ -621,6 +822,12 @@ impl Reader {
             let this = Rc::downgrade(&this);
             popover.connect_show(move |popover| {
                 let Some(this) = this.upgrade() else { return };
+                // The window may have changed size since the sheet was filled.
+                if popover == &this.sheet
+                    && *this.sheet_shape_now.borrow() != this.sheet_shape()
+                {
+                    this.fill_sheet(true);
+                }
                 this.aim(popover, &button);
                 // The group may still be coming in with the chrome, its place not laid out yet:
                 // aim again once it is, so the sheet ends just over it.
@@ -707,7 +914,21 @@ impl Reader {
             return;
         };
         let y = group.y().round() as i32 - 8;
-        let aim = gdk::Rectangle::new(0, y, button.width().max(1), 1);
+        // Over the button, but slid along so all of it stays in the window: popovers are kept on
+        // the screen, not in the window, and a narrow window would cut a centred one off.
+        let (x, width) = match button.compute_bounds(&self.widget) {
+            Some(at) => {
+                let (_, natural, _, _) = popover.measure(gtk::Orientation::Horizontal, -1);
+                let middle = popover_middle(
+                    f64::from(at.x()) + f64::from(at.width()) / 2.0,
+                    f64::from(natural),
+                    f64::from(self.widget.width()),
+                );
+                ((middle - f64::from(at.x())).round() as i32, 1)
+            }
+            None => (0, button.width().max(1)),
+        };
+        let aim = gdk::Rectangle::new(x, y, width, 1);
         if popover.pointing_to() != (true, aim) {
             popover.set_pointing_to(Some(&aim));
         }
@@ -725,16 +946,34 @@ impl Reader {
     }
 
     fn send(&self, command: ReaderCommand) {
+        // A held keep goes first when the chapter is left, while the session still has it.
+        if matches!(command, ReaderCommand::OpenChapter { .. } | ReaderCommand::Close { .. }) {
+            self.commit_keep();
+        }
+        if let ReaderCommand::Open { surface, .. } | ReaderCommand::Surface { surface, .. } =
+            &command
+        {
+            self.told.set(Some(*surface));
+        }
         if let Some(hub) = self.hub() {
             hub.send(Command::Reader(command));
         }
     }
 
+    /// The screen the pages are prepared for. Before the reader's first layout it has no size
+    /// of its own, and it takes the size of the page it is about to cover.
     fn surface(&self) -> ReaderSurface {
-        let scale = self.widget.scale_factor().max(1);
         let dark = adw::StyleManager::default().is_dark();
-        let width_px = (self.widget.width().max(800) * scale) as u32;
-        let height_px = (self.widget.height().max(600) * scale) as u32;
+        let (size, scale) = match surface_size(self.widget.upcast_ref()) {
+            Some((width, height, scale)) => ((width, height), scale),
+            None => (
+                self.ctx.upgrade().map_or((1, 1), |ctx| ctx.window.default_size()),
+                self.widget.scale_factor(),
+            ),
+        };
+        let scale = scale.max(1);
+        let width_px = (size.0.max(1) * scale) as u32;
+        let height_px = (size.1.max(1) * scale) as u32;
         ReaderSurface {
             width_px,
             height_px,
@@ -745,9 +984,32 @@ impl Reader {
         }
     }
 
+    /// The reader's own size, after its first layout or a resize that settled, goes to the
+    /// engine when it differs from the surface the engine last heard. An open prepared for the
+    /// page the reader covers has the same size, so nothing is laid out again.
+    fn surface_settled(&self) {
+        let session = self.state.borrow().session;
+        if session == 0
+            || !self.widget.is_mapped()
+            || self.widget.width() <= 0
+            || self.widget.height() <= 0
+        {
+            return;
+        }
+        let surface = self.surface();
+        if self.told.get() != Some(surface) {
+            self.send(ReaderCommand::Surface { session, surface });
+        }
+    }
+
     /// Open a chapter of a work, from where it was left when `chapter` is none.
     pub fn open(self: &Rc<Self>, work: WorkId, chapter: Option<ChapterId>) {
         self.reset();
+        if !self.showing.get()
+            && let Some(ctx) = self.ctx.upgrade()
+        {
+            self.opener.note(&ctx.window, &self.widget);
+        }
         self.showing.set(true);
         self.state.borrow_mut().work = Some(work.clone());
         self.asked_open.replace(Some((work.clone(), chapter.clone())));
@@ -766,6 +1028,7 @@ impl Reader {
     /// Drop everything the last open held: its pages and textures, the strip, the trail, the
     /// end page's preview and the novel's web view, which takes its WebKit processes with it.
     fn reset(&self) {
+        self.forget_credits();
         let old = self.state.replace(State::default());
         // The demo's credit capsule leaves with the work, or the next open adds a second one.
         if let Some((_, capsule)) = old.demo {
@@ -785,6 +1048,7 @@ impl Reader {
         self.line.set_label("");
         self.opening_line.replace(t::linux_reader_opening());
         self.hide_notice();
+        self.offer_back_to(None);
         self.show_pages(0, 0);
         self.chapters.clear();
     }
@@ -846,7 +1110,7 @@ impl Reader {
         let (heights, spacing) = self.strip_heights();
         let foot = strip_target(&heights, spacing, heights.len(), None) - f64::from(spacing);
         let page = self.strip_scroll.vadjustment().page_size();
-        self.scroll_strip_to(self.trail.height() + foot - page * share);
+        self.scroll_strip_to(self.strip_base() + foot + self.tail_height() - page * share);
     }
 
     /// "Resumed at page 2 · Start over" held over a novel, with the chrome up or gone, where the
@@ -876,6 +1140,59 @@ impl Reader {
         self.fill_end();
     }
 
+    /// The end of chapter 16 with the next chapter an extra, 16.5, and chapter 17 after it to
+    /// skip to. The extra's first page is one of the open chapter's pages.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_end_skip(self: &Rc<Self>) {
+        let first = self.texture_for(0);
+        {
+            let mut state = self.state.borrow_mut();
+            if let Some(chapter) = state.chapter.as_mut() {
+                chapter.number = Some("16".into());
+                chapter.label = "Chapter 16".into(); // i18n-skip: a shot's chapter label
+            }
+            let staged = state.next.as_mut().map(|next| {
+                next.number = Some("16.5".into());
+                next.label = "Chapter 16.5".into(); // i18n-skip: a shot's chapter label
+                next.title = Some("Volume 1 extras".into()); // i18n-skip: a shot's chapter title
+                let mut skip = next.clone();
+                skip.id = ChapterId("shot-skip-17".into());
+                skip.number = Some("17".into());
+                skip.label = "Chapter 17".into(); // i18n-skip: a shot's chapter label
+                skip.title = None;
+                (next.id.clone(), skip)
+            });
+            if let Some((next, skip)) = staged {
+                state.skip_to = Some(skip);
+                state.extras = 1;
+                if let Some(first) = first {
+                    state.preview = Some((next, first));
+                }
+            }
+        }
+        self.fill_end();
+    }
+
+    /// Every strip image as if its file were still coming: its plate with its number, and with
+    /// `line` the line under it as from 4 s.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_strip_plate(&self, line: bool) {
+        for (picture, _) in &self.state.borrow().strip_frames {
+            picture.set_paintable(gdk::Paintable::NONE);
+            let Some(plate) = strip_plate(picture) else { continue };
+            plate.set_opacity(1.0);
+            plate.set_visible(true);
+            if let Some(words) = plate.first_child() {
+                words.set_opacity(1.0);
+                if let Some(said) = plate_line(&words) {
+                    said.set_opacity(1.0);
+                    said.set_visible(line);
+                }
+            }
+        }
+        self.place_plate_words();
+    }
+
     /// The page plate of page 23, still loading, with its line.
     #[cfg(feature = "fixtures")]
     pub fn shot_plate(self: &Rc<Self>) {
@@ -902,10 +1219,17 @@ impl Reader {
         }
         self.stop_wait();
         self.hide_notice();
+        self.quiet_credits();
         self.widget.set_cursor(None);
+        let was_showing = self.showing.get();
         (self.show)(false);
+        if was_showing && let Some(ctx) = self.ctx.upgrade() {
+            self.opener.give_back(&ctx.window, &self.widget);
+        }
+        // A local: an if-let scrutinee's borrow would live through the action's handler.
+        let work = self.state.borrow().work.clone();
         if let Some(ctx) = self.ctx.upgrade()
-            && let Some(work) = self.state.borrow().work.clone()
+            && let Some(work) = work
         {
             let _ = WidgetExt::activate_action(
                 &ctx.window,
@@ -923,13 +1247,32 @@ impl Reader {
 
     /// Alt+Left: back to the page before a jump while that is offered, else out of the reader.
     pub fn back(&self) {
-        let session = self.state.borrow().session;
-        if self.notice_action.get() == Some(ReaderAction::BackTo) && session != 0 {
-            self.send(ReaderCommand::BackTo { session });
-            self.hide_notice();
-        } else {
+        if !self.go_back_to() {
             self.close();
         }
+    }
+
+    /// Back to the page a jump left, while the engine offers it. False when it does not.
+    fn go_back_to(&self) -> bool {
+        let session = self.state.borrow().session;
+        if self.back_to_page.get().is_none() || session == 0 {
+            return false;
+        }
+        self.offer_back_to(None);
+        self.send(ReaderCommand::BackTo { session });
+        true
+    }
+
+    /// Show Back to page `page` above the scrubber, or take it away. It shows with the chrome,
+    /// as part of the group, and fades in and out on its own.
+    fn offer_back_to(&self, page: Option<u32>) {
+        self.back_to_page.set(page);
+        if let Some(page) = page {
+            let words = t::reader_back_to_page(i64::from(page));
+            self.back_to_label.set_label(&words);
+            self.back_to.update_property(&[gtk::accessible::Property::Label(&words)]);
+        }
+        self.back_to_fade.set(&self.back_to, page.is_some());
     }
 
     /// Hold the place of what is on its way: nothing for 600 ms, then the page plate with the
@@ -961,11 +1304,14 @@ impl Reader {
         }
     }
 
-    fn show_plate(&self, what: Waiting) {
+    fn show_plate(self: &Rc<Self>, what: Waiting) {
         let number = match what {
             Waiting::Chapter => self.opening_line.borrow().clone(),
-            Waiting::Page(page) => t::linux_reader_page_plate(i64::from(page + 1)),
+            Waiting::Page(page) => t::reader_page_plate(i64::from(page + 1)),
         };
+        if what == Waiting::Chapter {
+            self.count_wait();
+        }
         self.wait_number.set_label(&number);
         self.wait_line.set_visible(false);
         self.wait_plate.update_property(&[gtk::accessible::Property::Label(&number)]);
@@ -980,9 +1326,34 @@ impl Reader {
         plate.set_size_request(((height * 0.7).round() as i32).min(width), -1);
     }
 
+    /// From the plate's 600 ms: the stage with its seconds from 3 s, as the player's start counts,
+    /// and from [`LONG_WAIT`] another source and Go back under it.
+    fn count_wait(self: &Rc<Self>) {
+        let this = Rc::downgrade(self);
+        let mut waited = SILENT;
+        let id = glib::timeout_add_local(Duration::from_secs(1), move || {
+            let Some(this) = this.upgrade() else { return glib::ControlFlow::Break };
+            waited += Duration::from_secs(1);
+            let line = this.opening_line.borrow().clone();
+            if waited >= Duration::from_secs(3) && !line.is_empty() {
+                let seconds = i64::try_from(waited.as_secs()).unwrap_or(i64::MAX);
+                this.wait_number.set_label(&t::reader_wait_seconds(&line, seconds));
+            }
+            if waited >= LONG_WAIT && !this.wait_more.is_visible() {
+                this.wait_more.set_visible(true);
+                motion::fade_in(&this.wait_more);
+            }
+            glib::ControlFlow::Continue
+        });
+        if let Some(old) = self.wait_ticker.replace(Some(id)) {
+            old.remove();
+        }
+    }
+
     fn stop_wait(&self) {
         self.waiting.set(None);
-        for timer in [&self.loading_timer, &self.loading_line_timer] {
+        self.wait_more.set_visible(false);
+        for timer in [&self.loading_timer, &self.loading_line_timer, &self.wait_ticker] {
             if let Some(id) = timer.borrow_mut().take() {
                 id.remove();
             }
@@ -1029,7 +1400,9 @@ impl Reader {
 
     /// Open the last chapter asked for again, after it failed.
     fn open_again(self: &Rc<Self>) {
-        if let Some((work, chapter)) = self.asked_open.borrow().clone() {
+        // A local, so the borrow ends before open() replaces asked_open.
+        let asked = self.asked_open.borrow().clone();
+        if let Some((work, chapter)) = asked {
             self.open(work, chapter);
         }
     }
@@ -1055,11 +1428,13 @@ impl Reader {
                     state.failed.insert(*page);
                     state.failures.insert(*page, failure.clone());
                 }
-                if self.is_current_page(*page) && !self.flows() {
+                if self.flows() {
+                    self.fail_strip_page(*page);
+                } else if self.is_current_page(*page) {
                     self.failed_page(*page, true);
                 }
             }
-            ReaderEvent::EndPage { session, next, why_none, next_source }
+            ReaderEvent::EndPage { session, next, why_none, next_source, skip_to, extras }
                 if self.mine(*session) =>
             {
                 {
@@ -1067,6 +1442,8 @@ impl Reader {
                     state.next = next.clone();
                     state.why_none = *why_none;
                     state.next_source = next_source.clone();
+                    state.skip_to = skip_to.clone();
+                    state.extras = *extras;
                 }
                 self.fill_end();
             }
@@ -1083,7 +1460,7 @@ impl Reader {
                 self.fill_end();
             }
             ReaderEvent::NextPreview { session, chapter, file } if self.mine(*session) => {
-                if let Some(texture) = load_texture(file) {
+                if let Some(texture) = load_texture_cropped(file) {
                     self.state.borrow_mut().preview = Some((chapter.clone(), texture));
                     self.fill_end();
                 }
@@ -1093,7 +1470,10 @@ impl Reader {
             }
             ReaderEvent::Settings(view) => self.settings_view(view.clone()),
             ReaderEvent::GoTo { session, place } if self.mine(*session) => {
-                if let Some(at) = place.strip.filter(|_| self.flows()) {
+                let novel = self.novel.borrow().clone();
+                if let (Some(pos), Some(novel)) = (&place.novel, novel) {
+                    novel.go_to_pos(pos);
+                } else if let Some(at) = place.strip.filter(|_| self.flows()) {
                     self.state.borrow_mut().strip_anchor = Some(at);
                     self.hold_strip_place();
                 } else if let Some(page) = place.page {
@@ -1105,12 +1485,17 @@ impl Reader {
             }
             ReaderEvent::Opening { chapter, wait } => {
                 let line = match (wait, chapter) {
-                    (Some(ReaderWait::FindingSource), _) => t::linux_reader_finding_source(),
-                    (None, Some(chapter)) => match &chapter.number {
+                    (Some(ReaderWait::ChapterList { source }), _) => {
+                        t::reader_wait_chapter_list(source)
+                    }
+                    (Some(ReaderWait::ChapterPages { chapter, source }), _) => {
+                        t::reader_wait_chapter_pages(chapter, source)
+                    }
+                    (_, Some(chapter)) => match &chapter.number {
                         Some(number) => t::linux_reader_opening_number(number),
                         None => t::linux_reader_opening(),
                     },
-                    (None, None) => t::linux_reader_opening(),
+                    (_, None) => t::linux_reader_opening(),
                 };
                 self.state.borrow_mut().opening_number = chapter
                     .as_ref()
@@ -1122,8 +1507,21 @@ impl Reader {
                 }
                 self.opening_line.replace(line);
             }
+            ReaderEvent::BackToPage { session, page } if self.mine(*session) => {
+                self.offer_back_to(*page);
+            }
             ReaderEvent::Notice(notice) if self.state.borrow().session != 0 => {
                 self.notice(notice);
+            }
+            ReaderEvent::CreditPages { session, chapter, pages, .. }
+                if self.mine(*session) && self.is_open(chapter) =>
+            {
+                self.credit_pages(pages.clone());
+            }
+            ReaderEvent::ChapterParts { session, chapter, parts, missing, .. }
+                if self.mine(*session) && self.is_open(chapter) =>
+            {
+                self.chapter_parts(parts.clone(), missing.clone());
             }
             _ => {}
         }
@@ -1180,6 +1578,8 @@ impl Reader {
             state.previous = view.previous.clone();
             state.why_none = None;
             state.next_source = None;
+            state.skip_to = None;
+            state.extras = 0;
             state.read = None;
             state.preview = None;
             state.novel_end = false;
@@ -1197,25 +1597,16 @@ impl Reader {
             state.asked.clear();
             state.strip_frames.clear();
             state.index = 0;
+            state.held_page = None;
         }
+        // The open went out before the reader's first layout; its own size may be known now.
+        self.surface_settled();
+        self.forget_credits();
         self.demo_credit(view.demo_credit.as_ref());
         self.title.set_label(&view.title);
         self.group_title.set_label(&view.title);
         self.line.set_label(&view.chapter.label);
-        // The scrubber runs with the book: right to left fills from the right, with the count
-        // at the right and the total at the left, as the board draws it. A strip runs top to
-        // bottom and fills from the left. The scale keeps its own direction and is inverted.
-        let rtl = view.direction == ReadDirection::RightToLeft
-            && (view.medium == Medium::Novel || !view.mode.flows());
-        if let Some(row) = self.scrub.parent() {
-            row.set_direction(if rtl {
-                gtk::TextDirection::Rtl
-            } else {
-                gtk::TextDirection::Ltr
-            });
-        }
-        self.scrub.set_direction(gtk::TextDirection::Ltr);
-        self.scrub.set_inverted(rtl);
+        self.scrub_runs(view.medium, view.mode, view.direction);
         self.fill_sheet(true);
         self.apply_look();
         self.fill_end();
@@ -1229,11 +1620,88 @@ impl Reader {
         }
     }
 
+    /// The scrubber runs with the book: right to left fills from the right, with the count
+    /// at the right and the total at the left, as the board draws it. A strip runs top to
+    /// bottom and fills from the left. The scale keeps its own direction and is inverted.
+    fn scrub_runs(&self, medium: Medium, mode: ReaderMode, direction: ReadDirection) {
+        let rtl = direction == ReadDirection::RightToLeft
+            && (medium == Medium::Novel || !mode.flows());
+        if let Some(row) = self.scrub.parent() {
+            row.set_direction(if rtl {
+                gtk::TextDirection::Rtl
+            } else {
+                gtk::TextDirection::Ltr
+            });
+        }
+        self.scrub.set_direction(gtk::TextDirection::Ltr);
+        self.scrub.set_inverted(rtl);
+    }
+
+    /// A mode or direction picked in the reader: the engine lays the chapter out again
+    /// without opening it, and the page on screen stays on screen in the other mode.
+    fn follow_settings(self: &Rc<Self>, view: &ReaderSettingsView) {
+        let (medium, now) = {
+            let state = self.state.borrow();
+            let (Some(medium), Some(mode), Some(direction)) =
+                (state.medium, state.mode, state.direction)
+            else {
+                return;
+            };
+            if state.session == 0 {
+                return;
+            }
+            let Some(now) = followed(medium, state.work.as_ref(), (mode, direction), view)
+            else {
+                return;
+            };
+            (medium, now)
+        };
+        let (mode, direction) = now;
+        let was = self.state.borrow().mode;
+        if was != Some(mode) {
+            // The page on screen: the first of the leaf, or the strip's image at the top.
+            let page = if self.flows() {
+                let image = self.strip_place().map_or(0, |p| p.image as usize);
+                let state = self.state.borrow();
+                state
+                    .leaves
+                    .iter()
+                    .filter(|l| !l.end_page)
+                    .nth(image)
+                    .and_then(|l| l.parts.first())
+                    .map(|p| p.page)
+            } else {
+                let state = self.state.borrow();
+                let leaf =
+                    state.leaves.get(state.index).filter(|l| !l.end_page).or_else(|| {
+                        // On the end page: the chapter's last page.
+                        state.leaves.iter().rev().find(|l| !l.end_page)
+                    });
+                page_kept(leaf, state.held_page)
+            };
+            let mut state = self.state.borrow_mut();
+            state.start_page = page.or(state.start_page);
+            state.start_strip = None;
+            state.strip_anchor = None;
+            state.flowed = false;
+            state.held_page = None;
+            state.index = 0;
+            // The next layout is a first one, in the new mode.
+            state.leaves.clear();
+            state.switched = true;
+        }
+        {
+            let mut state = self.state.borrow_mut();
+            state.mode = Some(mode);
+            state.direction = Some(direction);
+        }
+        self.scrub_runs(medium, mode, direction);
+    }
+
     // ---------------------------------------------------------------------------------------
     // Notices
 
-    /// A line over the page for a while, with its button when it has one: Back to page is the
-    /// whole line.
+    /// A line over the page for a while, with its button when it has one.
     fn notice(self: &Rc<Self>, notice: &ReaderNotice) {
         let text = say::msg(&notice.msg);
         if text.is_empty() {
@@ -1243,23 +1711,15 @@ impl Reader {
             Some(ReaderAction::StartOver) => Some(t::linux_reader_start_over()),
             Some(ReaderAction::GoBack) => Some(t::linux_reader_go_back()),
             Some(ReaderAction::ChangeMode) => Some(t::linux_reader_change()),
-            Some(ReaderAction::BackTo) | None => None,
+            None => None,
         };
         self.notice_action.set(notice.action);
         self.place_notice(self.head_fade.shown());
-        let back_to = notice.action == Some(ReaderAction::BackTo);
-        // Back to page is the whole line as one button; the others are a line and a button.
-        if back_to {
-            self.notice_text.set_visible(false);
-            self.notice_button.set_label(&text);
-            self.notice_button.set_visible(true);
-        } else {
-            self.notice_text.set_label(&text);
-            self.notice_text.set_visible(true);
-            self.notice_button.set_visible(words.is_some());
-            if let Some(words) = &words {
-                self.notice_button.set_label(words);
-            }
+        self.notice_text.set_label(&text);
+        self.notice_text.set_visible(true);
+        self.notice_button.set_visible(words.is_some());
+        if let Some(words) = &words {
+            self.notice_button.set_label(words);
         }
         self.notice_fade.set(&self.notice, true);
         if let Some(id) = self.notice_timer.borrow_mut().take() {
@@ -1302,7 +1762,6 @@ impl Reader {
         let Some(action) = self.notice_action.get() else { return };
         match action {
             ReaderAction::StartOver => self.send(ReaderCommand::StartOver { session }),
-            ReaderAction::BackTo => self.send(ReaderCommand::BackTo { session }),
             ReaderAction::GoBack => self.send(ReaderCommand::GoBack { session }),
             ReaderAction::ChangeMode => {
                 self.reveal_chrome();
@@ -1319,23 +1778,47 @@ impl Reader {
     fn leaves(self: &Rc<Self>, leaves: Vec<Leaf>) {
         let flows = self.flows();
         let first = self.state.borrow().leaves.is_empty();
+        let switched = std::mem::take(&mut self.state.borrow_mut().switched);
+        // The credit pages and parts that follow a layout are the engine's word on it.
+        let on_credit = self.relaid();
+        let relay = self.relay_kept();
+        // Pages whose file or crop changed, as after crop borders changed: redrawn in place.
+        let mut redrawn = Vec::new();
         {
             let mut state = self.state.borrow_mut();
             for leaf in &leaves {
                 for part in &leaf.parts {
                     if let Some(file) = &part.file {
-                        state.files.insert(part.page, file.clone());
+                        let old = state.files.insert(part.page, file.clone());
+                        if let Some(old) = old
+                            && (old.path != file.path || old.crop != file.crop)
+                        {
+                            if old.path != file.path {
+                                state.textures.remove(&part.page);
+                            }
+                            redrawn.push(part.page);
+                        }
                     }
                 }
             }
         }
         if flows {
             // The same images again, after a resize: the strip keeps its pictures and its place.
-            let same =
-                !first && strip_leaves(&self.state.borrow().leaves) == strip_leaves(&leaves);
+            let same = !first
+                && relay.is_none()
+                && strip_leaves(&self.state.borrow().leaves) == strip_leaves(&leaves);
             if !first && self.state.borrow().strip_anchor.is_none() {
                 let here = self.strip_place();
                 self.state.borrow_mut().strip_anchor = here;
+            }
+            if let Some(relay) = &relay {
+                // The images from the kept page on are one further down the strip.
+                let mut state = self.state.borrow_mut();
+                if let Some(anchor) = state.strip_anchor.as_mut()
+                    && anchor.image >= relay.page
+                {
+                    anchor.image += 1;
+                }
             }
             if first && std::mem::take(&mut self.state.borrow_mut().flowed) {
                 // Under the marker, where the scroll already is: nothing to hold.
@@ -1344,27 +1827,59 @@ impl Reader {
                 state.index = 0;
             } else if first {
                 let mut state = self.state.borrow_mut();
-                let image = state.start_strip.map_or_else(
-                    || {
-                        state
-                            .start_page
-                            .and_then(|p| {
-                                leaves.iter().position(|l| l.parts.iter().any(|x| x.page == p))
-                            })
-                            .unwrap_or(0) as u32
-                    },
-                    |s| s.image,
-                );
-                let offset = state.start_strip.map_or(0.0, |s| s.offset);
-                state.strip_anchor = Some(StripPos { image, offset });
-                state.index = image as usize;
+                let at = strip_opening(&leaves, state.start_strip, state.start_page);
+                state.strip_anchor = Some(at);
+                state.index = at.image as usize;
             }
             self.state.borrow_mut().leaves = leaves;
             if same {
+                for page in redrawn {
+                    self.fill_strip_page(page, true);
+                }
                 self.size_strip();
             } else {
+                self.drop_strip_credits();
                 self.build_strip();
             }
+            if switched && self.stack.visible_child_name().as_deref() != Some("strip") {
+                // From pages: the images in hand at the kept page are drawn first, while the
+                // strip is off screen and they take no fade, so the page fades into the strip
+                // rather than into its empty frames. The picture goes with the turn.
+                let anchor = self.state.borrow().strip_anchor.map_or(0, |a| a.image as usize);
+                for index in anchor..anchor + 3 {
+                    self.want_strip(index);
+                }
+                motion::turn(&self.veil, &self.stack, || {
+                    self.stack.set_visible_child_name("strip");
+                    self.picture.set_paintable(gdk::Paintable::NONE);
+                });
+            }
+            return;
+        }
+        if let Some(relay) = &relay
+            && on_credit.is_some_and(|(print, _)| print == relay.fingerprint)
+        {
+            // The kept page was on screen: it stays, now one of the chapter's pages.
+            {
+                let mut state = self.state.borrow_mut();
+                state.index = leaves
+                    .iter()
+                    .position(|l| l.parts.iter().any(|p| p.page == relay.page))
+                    .unwrap_or(0);
+                state.leaves = leaves;
+            }
+            let index = self.state.borrow().index;
+            self.show_leaf(index, TurnHow::Placed);
+            return;
+        }
+        if let Some((print, at_end)) = on_credit.filter(|_| !first) {
+            // A credit page is on screen: it stays if the new layout still skips it, and
+            // otherwise its own page takes its place, kept where it was.
+            let mut state = self.state.borrow_mut();
+            state.index =
+                if at_end { leaves.iter().rposition(|l| !l.end_page).unwrap_or(0) } else { 0 };
+            state.leaves = leaves;
+            state.credit_wanted = Some(print);
             return;
         }
         {
@@ -1372,8 +1887,12 @@ impl Reader {
             let start = if first {
                 state.start_page
             } else {
-                // A new layout keeps the page that was showing.
-                state.leaves.get(state.index).and_then(|l| l.parts.first()).map(|p| p.page)
+                // A new layout keeps the page that was showing, one on from a kept page before
+                // it: the page kept by the last layout while its leaf is still on screen, else
+                // the leaf's first.
+                page_kept(state.leaves.get(state.index), state.held_page).map(|page| {
+                    page + u32::from(relay.as_ref().is_some_and(|r| r.page <= page))
+                })
             };
             state.index = start
                 .and_then(|p| {
@@ -1381,10 +1900,29 @@ impl Reader {
                 })
                 .unwrap_or(0)
                 .min(leaves.len().saturating_sub(1));
+            state.held_page = if first { None } else { start };
             state.leaves = leaves;
         }
         let index = self.state.borrow().index;
-        self.show_leaf(index, TurnHow::Jump);
+        // The first layout, or a new one: the reader put the place there, not the person.
+        self.show_leaf(index, TurnHow::Placed);
+        if switched {
+            self.leave_strip();
+        }
+    }
+
+    /// From the strip to pages: once the pages are on screen the strip's images go, and the
+    /// chapters it ran on from with them. A page still on its way leaves the strip up until it
+    /// comes, and the strip goes with the next layout or the close.
+    fn leave_strip(&self) {
+        if self.stack.visible_child_name().as_deref() == Some("strip") {
+            return;
+        }
+        while let Some(child) = self.strip.first_child() {
+            self.strip.remove(&child);
+        }
+        self.state.borrow_mut().strip_frames.clear();
+        self.trail.clear();
     }
 
     fn page_of(&self, index: usize) -> Option<u32> {
@@ -1397,13 +1935,32 @@ impl Reader {
     }
 
     fn texture_for(&self, page: u32) -> Option<gdk::Texture> {
-        if let Some(texture) = self.state.borrow().textures.get(&page) {
-            return Some(texture.clone());
+        let cached = self.state.borrow().textures.get(&page).cloned();
+        if cached.is_some() {
+            return cached;
         }
         let file = self.state.borrow().files.get(&page).cloned()?;
-        let texture = load_texture(&file)?;
+        let Some(texture) = load_texture(&file) else {
+            // The file is here and nothing can show it: the page failed, with Try again,
+            // rather than waiting on its plate for good.
+            let mut state = self.state.borrow_mut();
+            state.failed.insert(page);
+            state.failures.insert(
+                page,
+                ReadingFailure::Other { reason: t::linux_reader_page_undecodable() },
+            );
+            return None;
+        };
         self.state.borrow_mut().textures.insert(page, texture.clone());
         Some(texture)
+    }
+
+    /// The failed page among a leaf's, if one is.
+    fn failed_in(&self, index: usize) -> Option<u32> {
+        let state = self.state.borrow();
+        state.leaves.get(index).and_then(|l| {
+            l.parts.iter().map(|p| p.page).find(|page| state.failed.contains(page))
+        })
     }
 
     /// The leaf drawn as one picture: each part at its place, cropped to what the engine says to
@@ -1471,8 +2028,8 @@ impl Reader {
         let (session, chapter, pages) = {
             let state = self.state.borrow();
             let Some(chapter) = state.chapter.as_ref().map(|c| c.id.clone()) else { return };
-            let pages: Vec<u32> = (index.saturating_sub(1)
-                ..(index + 3).min(state.leaves.len()))
+            let pages: Vec<u32> = wanted_leaves(index, state.leaves.len())
+                .into_iter()
                 .filter_map(|i| state.leaves.get(i))
                 .flat_map(|l| l.parts.iter().map(|p| p.page))
                 .filter(|p| !state.files.contains_key(p) && !state.asked.contains(p))
@@ -1487,17 +2044,29 @@ impl Reader {
 
     fn page_ready(self: &Rc<Self>, page: u32, file: PageFile) {
         self.chapters.page_ready(page, &file);
-        self.state.borrow_mut().files.insert(page, file);
+        let redrawn = {
+            // Another file under a page's number, as after a kept credit page: drawn afresh.
+            let mut state = self.state.borrow_mut();
+            let old = state
+                .files
+                .get(&page)
+                .map(|old| (old.path != file.path, old.crop != file.crop));
+            if old.is_some_and(|(path, _)| path) {
+                state.textures.remove(&page);
+            }
+            state.files.insert(page, file);
+            old.is_some_and(|(path, crop)| path || crop)
+        };
         {
             let mut state = self.state.borrow_mut();
             state.failures.remove(&page);
             state.failed.remove(&page);
         }
         if self.flows() {
-            self.fill_strip_page(page);
+            self.fill_strip_page(page, redrawn);
         } else if self.is_current_page(page) {
             let index = self.state.borrow().index;
-            self.show_leaf(index, TurnHow::Jump);
+            self.show_leaf(index, TurnHow::Placed);
         }
     }
 
@@ -1564,6 +2133,48 @@ impl Reader {
         }
     }
 
+    /// The strip picture of image `page`, if the strip has one.
+    fn strip_picture(&self, page: u32) -> Option<gtk::Picture> {
+        let state = self.state.borrow();
+        let at = state
+            .leaves
+            .iter()
+            .filter(|l| !l.end_page)
+            .position(|l| l.parts.first().is_some_and(|p| p.page == page))?;
+        state.strip_frames.get(at).map(|(picture, _)| picture.clone())
+    }
+
+    /// A strip image that failed, from the engine or because nothing could decode it: its plate
+    /// says so, with Try again, instead of loading for good.
+    fn fail_strip_page(&self, page: u32) {
+        let Some(picture) = self.strip_picture(page) else { return };
+        let me = self.me.clone();
+        strip_frame_failed(&picture, move || {
+            if let Some(this) = me.upgrade() {
+                this.retry_strip_page(page);
+            }
+        });
+    }
+
+    /// Try again on a strip image: its plate goes back to loading and the engine sends the
+    /// page again.
+    fn retry_strip_page(&self, page: u32) {
+        let (session, chapter) = {
+            let mut state = self.state.borrow_mut();
+            state.failed.remove(&page);
+            state.failures.remove(&page);
+            state.textures.remove(&page);
+            state.files.remove(&page);
+            (state.session, state.chapter.as_ref().map(|c| c.id.clone()))
+        };
+        if let Some(picture) = self.strip_picture(page) {
+            strip_frame_retried(&picture, page);
+        }
+        if let Some(chapter) = chapter {
+            self.send(ReaderCommand::Retry { session, chapter, page: Some(page) });
+        }
+    }
+
     fn retry_failed(self: &Rc<Self>) {
         if self.failed_kind.get() == Failed::Chapter {
             self.open_again();
@@ -1585,6 +2196,13 @@ impl Reader {
     }
 
     fn show_leaf(self: &Rc<Self>, index: usize, how: TurnHow) {
+        {
+            let mut state = self.state.borrow_mut();
+            if state.index != index {
+                state.held_page = None;
+            }
+        }
+        self.leave_credit();
         if self.is_end(index) {
             self.show_end(index, how);
             return;
@@ -1595,18 +2213,15 @@ impl Reader {
         self.state.borrow_mut().index = index;
         self.want(index);
         self.show_pages(self.page_number(index), self.story_pages());
-        let failed = {
-            let state = self.state.borrow();
-            state.leaves.get(index).and_then(|l| {
-                l.parts.iter().map(|p| p.page).find(|page| state.failed.contains(page))
-            })
-        };
-        if let Some(page) = failed {
+        if let Some(page) = self.failed_in(index) {
             self.failed_page(page, true);
             return;
         }
         let Some(paintable) = self.compose(index) else {
-            if let Some(page) = self.page_of(index) {
+            // A part that came in and couldn't be decoded failed as it was composed.
+            if let Some(page) = self.failed_in(index) {
+                self.failed_page(page, true);
+            } else if let Some(page) = self.page_of(index) {
                 self.wait(Waiting::Page(page));
             }
             return;
@@ -1625,9 +2240,11 @@ impl Reader {
     /// Tell the engine a leaf was painted.
     fn shown(&self, index: usize, how: TurnHow) {
         // The demo's credit capsule shows on its first page only.
-        if let Some((_, capsule)) = &self.state.borrow().demo {
+        let capsule = self.state.borrow().demo.as_ref().map(|(_, capsule)| capsule.clone());
+        if let Some(capsule) = capsule {
             capsule.set_visible(index == 0);
         }
+        self.credit_line_on(index);
         let (session, chapter) = {
             let state = self.state.borrow();
             (state.session, state.chapter.as_ref().map(|c| c.id.clone()))
@@ -1672,6 +2289,9 @@ impl Reader {
                 source: state.next_source.clone(),
                 preview,
                 novel: state.medium == Some(Medium::Novel),
+                credits: credits::end_line(&state),
+                skip_to: state.skip_to.clone(),
+                extras: state.extras,
             }
         };
         self.end.fill(&facts);
@@ -1696,7 +2316,8 @@ impl Reader {
                 .map(|(_, texture)| texture.clone());
             (next, state.next_source.clone(), preview)
         };
-        self.trail.show_next(next.as_ref(), source.as_deref());
+        let credits = next.as_ref().and_then(|_| self.marker_credit_line());
+        self.trail.show_next(next.as_ref(), source.as_deref(), credits.as_ref());
         self.trail.set_lead(preview.as_ref());
         self.strip_foot.set_visible(next.is_none());
         self.size_strip();
@@ -1726,6 +2347,19 @@ impl Reader {
         }
     }
 
+    /// Skip to chapter 17, from the end page: past the extras, which stay unread.
+    fn skip_extras(self: &Rc<Self>) {
+        let (session, skip) = {
+            let state = self.state.borrow();
+            (state.session, state.skip_to.clone())
+        };
+        if let Some(skip) = skip
+            && session != 0
+        {
+            self.open_chapter(session, skip.id);
+        }
+    }
+
     fn go_to_page(self: &Rc<Self>, page: u32) {
         let at = self
             .state
@@ -1739,7 +2373,8 @@ impl Reader {
                     Some(StripPos { image: at as u32, offset: 0.0 });
                 self.hold_strip_place();
             } else {
-                self.show_leaf(at, TurnHow::Jump);
+                // The engine's move: a resume, Back to page, another device's place.
+                self.show_leaf(at, TurnHow::Placed);
             }
         }
     }
@@ -1752,17 +2387,19 @@ impl Reader {
         };
         let on_end = self.stack.visible_child_name().as_deref() == Some("end");
         if medium == Some(Medium::Novel) {
+            // A local, so no borrow of the cell is held while the page turns.
+            let novel = self.novel.borrow().clone();
             if on_end {
                 // Forward from the end page goes on; back returns to the text.
                 if forward {
                     self.continue_on();
-                } else if let Some(novel) = self.novel.borrow().clone() {
+                } else if let Some(novel) = novel {
                     self.state.borrow_mut().novel_end = false;
                     motion::turn(&self.veil, &self.stack, || {
                         self.stack.set_visible_child(&novel.widget);
                     });
                 }
-            } else if let Some(novel) = self.novel.borrow().clone() {
+            } else if let Some(novel) = novel {
                 novel.turn(forward);
             }
             return;
@@ -1772,6 +2409,9 @@ impl Reader {
             return;
         }
         if matches!(how, TurnHow::Key) && !on_end && self.scroll_within(forward) {
+            return;
+        }
+        if self.credit_step(forward, on_end) {
             return;
         }
         if on_end && forward {
@@ -1876,16 +2516,18 @@ impl Reader {
                 .first()
                 .and_then(|p| {
                     p.ratio.or_else(|| {
-                        p.file.as_ref().map(|f| f.width as f32 / f.height.max(1) as f32)
+                        p.file.as_ref().map(|f| {
+                            let (w, h) =
+                                f.crop.map_or((f.width, f.height), |c| (c.width, c.height));
+                            w as f32 / h.max(1) as f32
+                        })
                     })
                 })
                 .unwrap_or(0.7)
                 .max(0.05);
-            let picture = gtk::Picture::new();
-            picture.set_content_fit(gtk::ContentFit::Fill);
-            picture.set_can_shrink(true);
-            picture.add_css_class("strip-leaf");
-            self.strip.append(&picture);
+            let page = leaf.parts.first().map_or(0, |p| p.page);
+            let (frame, picture) = strip_frame(page);
+            self.strip.append(&frame);
             frames.push((picture, ratio));
         }
         self.state.borrow_mut().strip_frames = frames;
@@ -1911,10 +2553,11 @@ impl Reader {
             return None;
         }
         // Above the open chapter, in the trail, there is no place in it.
-        let top = self.strip_scroll.vadjustment().value() - self.trail.height();
-        if top < 0.0 && !self.trail.is_empty() {
+        let value = self.strip_scroll.vadjustment().value();
+        if value < self.trail.height() && !self.trail.is_empty() {
             return None;
         }
+        let top = value - self.strip_base();
         let (image, offset) = strip_place_of(&heights, spacing, top);
         Some(StripPos { image: image as u32, offset })
     }
@@ -1923,12 +2566,9 @@ impl Reader {
     /// sent it, until the person scrolls.
     fn hold_strip_place(&self) {
         let Some(anchor) = self.state.borrow().strip_anchor else { return };
-        let (heights, spacing) = self.strip_heights();
-        let target =
-            strip_target(&heights, spacing, anchor.image as usize, Some(anchor.offset));
-        let total = heights.len();
+        let total = self.strip_heights().0.len();
         self.show_pages((anchor.image as usize + 1).min(total.max(1)), total);
-        self.scroll_strip_to(self.trail.height() + target);
+        self.scroll_strip_to(self.strip_scroll_for(anchor));
     }
 
     /// The person moved the strip: it no longer holds where it opened, and says where it is.
@@ -1986,15 +2626,15 @@ impl Reader {
                 changed = true;
             }
         }
+        changed |= self.size_strip_credits(column.round() as i32);
         if changed && let Some(keep) = keep {
-            let (heights, spacing) = self.strip_heights();
-            let target =
-                strip_target(&heights, spacing, keep.image as usize, Some(keep.offset));
-            self.scroll_strip_to(self.trail.height() + target);
+            self.scroll_strip_to(self.strip_scroll_for(keep));
         }
     }
 
-    fn fill_strip_page(&self, page: u32) {
+    /// Draws a strip page once its file is here. `redrawn` when the page had another file or
+    /// crop before, as after crop borders changed: the picture swaps in place, without a fade.
+    fn fill_strip_page(&self, page: u32, redrawn: bool) {
         let at = self
             .state
             .borrow()
@@ -2002,30 +2642,54 @@ impl Reader {
             .iter()
             .filter(|l| !l.end_page)
             .position(|l| l.parts.first().is_some_and(|p| p.page == page));
-        if let Some(at) = at
-            && let Some(texture) = self.texture_for(page)
-        {
-            let ratio = texture.width() as f32 / texture.height().max(1) as f32;
-            let (picture, resized) = {
-                let mut state = self.state.borrow_mut();
-                match state.strip_frames.get_mut(at) {
-                    Some((picture, guess)) => {
-                        let resized = (*guess - ratio).abs() > 0.01;
-                        *guess = ratio;
-                        (Some(picture.clone()), resized)
-                    }
-                    None => (None, false),
+        let Some(at) = at else { return };
+        let Some(texture) = self.texture_for(page) else {
+            if self.state.borrow().failed.contains(&page) {
+                self.fail_strip_page(page);
+            }
+            return;
+        };
+        // With crop borders on, the engine sends the original with the part to show.
+        let crop = self.state.borrow().files.get(&page).and_then(|f| f.crop);
+        let (paintable, ratio) = match crop.filter(|c| c.width > 0 && c.height > 0) {
+            Some(c) => (cropped(&texture, c), c.width as f32 / c.height as f32),
+            None => (
+                texture.clone().upcast::<gdk::Paintable>(),
+                texture.width() as f32 / texture.height().max(1) as f32,
+            ),
+        };
+        let (picture, resized) = {
+            let mut state = self.state.borrow_mut();
+            match state.strip_frames.get_mut(at) {
+                Some((picture, guess)) => {
+                    let resized = (*guess - ratio).abs() > 0.01;
+                    *guess = ratio;
+                    (Some(picture.clone()), resized)
                 }
-            };
-            if let Some(picture) = picture
-                && picture.paintable().is_none()
-            {
-                picture.set_paintable(Some(&texture));
-                motion::fade_in(&picture);
+                None => (None, false),
             }
-            if resized {
-                self.size_strip();
+        };
+        if let Some(picture) = picture {
+            fill_strip_frame(&picture, &paintable, redrawn);
+        }
+        if resized {
+            self.size_strip();
+        }
+    }
+
+    /// Put each waiting strip image's words in the middle of the part of it on screen, as laid
+    /// out: on every scroll, and once the strip has been laid out at a new size.
+    fn place_plate_words(&self) {
+        let window = f64::from(self.strip_scroll.height());
+        for (picture, _) in &self.state.borrow().strip_frames {
+            if picture.paintable().is_some() {
+                continue;
             }
+            let top = picture
+                .compute_point(&self.strip_scroll, &gtk::graphene::Point::new(0.0, 0.0))
+                .map(|at| f64::from(at.y()));
+            let seen = top.filter(|_| window > 0.0).map(|top| (-top, window - top));
+            strip_frame_seen(picture, seen);
         }
     }
 
@@ -2035,7 +2699,7 @@ impl Reader {
     /// into the next chapter crossing the middle opens that chapter.
     fn strip_moved(self: &Rc<Self>) {
         let adj = self.strip_scroll.vadjustment();
-        let base = self.trail.height();
+        let base = self.strip_base();
         let middle = adj.value() + adj.page_size() / 2.0;
         let over = self.trail.over(adj.value(), middle);
         let line = match &over {
@@ -2051,22 +2715,14 @@ impl Reader {
         if self.line.label() != line {
             self.line.set_label(&line);
         }
+        self.place_plate_words();
         let (top, bottom) = (adj.value() - base, adj.value() + adj.page_size() - base);
         let reach = adj.page_size() * 1.5;
         let (heights, spacing) = self.strip_heights();
         if heights.is_empty() {
             return;
         }
-        let mut wanted = Vec::new();
-        let mut y = 0.0;
-        for (i, h) in heights.iter().enumerate() {
-            let h = f64::from(*h);
-            if y + h >= top - reach && y <= bottom + reach {
-                wanted.push(i);
-            }
-            y += h + f64::from(spacing);
-        }
-        let foot_top = y - f64::from(spacing);
+        let (wanted, foot_top) = strip_wanted(&heights, spacing, top, bottom, reach);
         for i in wanted {
             self.want_strip(i);
         }
@@ -2078,7 +2734,7 @@ impl Reader {
             return;
         }
         if let Some(marker) = self.trail.marker_height()
-            && middle - base > foot_top + marker / 2.0
+            && middle - base > foot_top + self.tail_height() + marker / 2.0
         {
             self.flow_on();
             return;
@@ -2115,6 +2771,7 @@ impl Reader {
     /// The marker crossed the middle: the next chapter opens under it, in the same scroll, with
     /// no plate over the page. The chapter run from is read and stays above.
     fn flow_on(self: &Rc<Self>) {
+        self.commit_keep();
         let (session, chapter, next, work) = {
             let state = self.state.borrow();
             (state.session, state.chapter.clone(), state.next.clone(), state.work.clone())
@@ -2137,7 +2794,8 @@ impl Reader {
         });
         // A notice belongs to the chapter it was about.
         self.hide_notice();
-        self.trail.take(chapter.label.clone(), &self.strip, frames);
+        let (lead, tail) = self.give_strip_credits();
+        self.trail.take(chapter.label.clone(), &self.strip, frames, lead, tail);
         self.state.borrow_mut().flowing = Some(next.id.clone());
         if let Some(work) = work {
             self.asked_open.replace(Some((work, Some(next.id.clone()))));
@@ -2149,10 +2807,19 @@ impl Reader {
         let page = self.page_of(index);
         let Some(page) = page else { return };
         if self.state.borrow().files.contains_key(&page) {
-            self.fill_strip_page(page);
+            self.fill_strip_page(page, false);
             return;
         }
         self.want(index);
+        let at = {
+            let state = self.state.borrow();
+            let at = state.leaves.iter().take(index).filter(|l| !l.end_page).count();
+            let image = state.leaves.get(index).is_some_and(|l| !l.end_page);
+            state.strip_frames.get(at).filter(|_| image).map(|(picture, _)| picture.clone())
+        };
+        if let Some(picture) = at {
+            strip_frame_asked(&picture);
+        }
     }
 
     /// Space and Page Down in a strip: nine tenths of the window on, on the quick token, from
@@ -2212,6 +2879,10 @@ impl Reader {
                     }
                     NovelSays::Middle => this.toggle_chrome(),
                     NovelSays::End => this.novel_end(),
+                    // Try again opens the chapter afresh, in a new page.
+                    NovelSays::Failed => this.open_failed(&ReadingFailure::Other {
+                        reason: t::linux_reader_novel_stopped(),
+                    }),
                 }
             })
         };
@@ -2244,6 +2915,7 @@ impl Reader {
         if medium.is_some_and(|m| m != view.medium) {
             return;
         }
+        self.follow_settings(&view);
         self.state.borrow_mut().settings = Some(view);
         self.fill_sheet(false);
         self.apply_look();
@@ -2391,11 +3063,13 @@ impl Reader {
 
     /// Bring the chrome, and take it away again `CHROME_REST` after the last call: the pointer
     /// moving calls this as it moves. It stays while the settings are open, the pointer is over
-    /// the group or a shot pinned it.
+    /// the group, the keyboard is in it or a shot pinned it.
     fn reveal_chrome(self: &Rc<Self>) {
-        self.place_notice(true);
         self.head_fade.set(&self.head, true);
+        // The group first: a hidden one measures nothing, and the notice would sit on it.
         self.group_fade.set(&self.group, true);
+        self.place_notice(true);
+        self.credit_line_chrome(true);
         self.widget.set_cursor(None);
         if let Some(id) = self.hide_timer.borrow_mut().take() {
             id.remove();
@@ -2407,7 +3081,7 @@ impl Reader {
             let open = this.settings.is_active()
                 || this.chapters_button.is_active()
                 || this.go_to.is_visible();
-            if open || this.group_hovered() || this.pinned.get() {
+            if open || this.group_hovered() || this.keyboard_in_chrome() || this.pinned.get() {
                 this.reveal_chrome();
                 return;
             }
@@ -2416,16 +3090,18 @@ impl Reader {
         *self.hide_timer.borrow_mut() = Some(id);
     }
 
-    /// The chrome goes, and the pointer with it.
+    /// The chrome goes, and the pointer with it. It stays while the keyboard is in it: a
+    /// hidden control would take the focus with it.
     fn hide_chrome(&self) {
         if let Some(id) = self.hide_timer.borrow_mut().take() {
             id.remove();
         }
-        if self.pinned.get() {
+        if self.pinned.get() || self.keyboard_in_chrome() {
             return;
         }
         self.head_fade.set(&self.head, false);
         self.group_fade.set(&self.group, false);
+        self.credit_line_chrome(false);
         self.widget.set_cursor_from_name(Some("none"));
         self.place_notice(false);
     }
@@ -2434,14 +3110,9 @@ impl Reader {
     /// of the text, and over the group while the group shows, which uses the same margin.
     fn place_notice(&self, chrome: bool) {
         if self.state.borrow().medium == Some(Medium::Novel) {
-            let (_, group, _, _) = self.group.measure(gtk::Orientation::Vertical, -1);
             self.notice.set_valign(gtk::Align::End);
             self.notice.set_margin_top(0);
-            self.notice.set_margin_bottom(if chrome {
-                self.group.margin_bottom() + group + 12
-            } else {
-                44
-            });
+            self.notice.set_margin_bottom(notice_lift(&self.group, chrome));
         } else {
             self.notice.set_valign(gtk::Align::Start);
             self.notice.set_margin_top(60);
@@ -2462,6 +3133,43 @@ impl Reader {
         self.group_hover.contains_pointer()
     }
 
+    /// The focus is on one of the chrome's controls.
+    fn focus_in_chrome(&self) -> bool {
+        let Some(focus) = self.widget.root().and_then(|root| root.focus()) else {
+            return false;
+        };
+        focus.is_ancestor(&self.head)
+            || focus.is_ancestor(&self.group)
+            || focus == *self.head.upcast_ref::<gtk::Widget>()
+            || focus == *self.group.upcast_ref::<gtk::Widget>()
+    }
+
+    /// The keyboard is walking the chrome: the focus is on a control in it, and shows.
+    fn keyboard_in_chrome(&self) -> bool {
+        self.widget
+            .root()
+            .and_downcast::<gtk::Window>()
+            .is_some_and(|window| window.property::<bool>("focus-visible"))
+            && self.focus_in_chrome()
+    }
+
+    /// Tab brings the chrome. From the page it goes to the chrome's first control, or its last
+    /// with Shift; inside the chrome the window moves the focus as usual. False when the
+    /// window should move it.
+    fn tab_into_chrome(self: &Rc<Self>, back: bool) -> bool {
+        self.reveal_chrome();
+        if self.focus_in_chrome() {
+            return false;
+        }
+        let (head, group) = (self.head.upcast_ref::<gtk::Widget>(), self.group.upcast_ref());
+        let (direction, order) = if back {
+            (gtk::DirectionType::TabBackward, [group, head])
+        } else {
+            (gtk::DirectionType::TabForward, [head, group])
+        };
+        order.iter().any(|part| part.child_focus(direction))
+    }
+
     /// Keep the chrome up for a shot, as the board draws it.
     #[cfg(feature = "fixtures")]
     pub fn shot_chrome(self: &Rc<Self>, pinned: bool) {
@@ -2471,6 +3179,82 @@ impl Reader {
         } else {
             self.chapters.popover.popdown();
         }
+    }
+
+    /// Tab on the page for a shot, after the chrome has gone, as the keyboard presses it. The
+    /// window shows focus on a key, as GTK does for a real one.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_tab(self: &Rc<Self>) {
+        if let Some(window) = self.widget.root().and_downcast::<gtk::Window>() {
+            window.set_focus_visible(true);
+        }
+        let took = self.take_key(gdk::Key::Tab, gdk::ModifierType::empty());
+        let (shown, inside) =
+            (self.head.is_visible() && self.group.is_visible(), self.focus_in_chrome());
+        eprintln!("reader tab: took {took}, chrome shown {shown}, focus in chrome {inside}"); // i18n-skip
+    }
+
+    /// Press Try again on the plate of a chapter that couldn't open, for a shot.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_try_again(self: &Rc<Self>) {
+        fn find(widget: &gtk::Widget, label: &str) -> Option<gtk::Button> {
+            if let Some(button) = widget.downcast_ref::<gtk::Button>()
+                && button.is_drawable()
+                && button.label().is_some_and(|words| words.as_str() == label)
+            {
+                return Some(button.clone());
+            }
+            std::iter::successors(widget.first_child(), gtk::Widget::next_sibling)
+                .find_map(|child| find(&child, label))
+        }
+        let again = find(self.widget.upcast_ref(), &t::reader_try_again());
+        eprintln!("reader try again: found {}", again.is_some()); // i18n-skip
+        if let Some(again) = again {
+            again.emit_clicked();
+            eprintln!("reader try again: pressed"); // i18n-skip
+        }
+    }
+
+    /// Read a novel's chapter to its end for a shot: turn on until the end page shows, then
+    /// Continue, and say what was read and what opened.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_novel_end(self: &Rc<Self>) {
+        let turns = Rc::new(Cell::new(0));
+        let this = Rc::downgrade(self);
+        glib::timeout_add_local(Duration::from_millis(700), move || {
+            let Some(this) = this.upgrade() else { return glib::ControlFlow::Break };
+            let (ended, chapter) = {
+                let state = this.state.borrow();
+                (state.novel_end, state.chapter.as_ref().map(|c| c.id.to_string()))
+            };
+            if !ended && turns.get() < 60 {
+                turns.set(turns.get() + 1);
+                let novel = this.novel.borrow().clone();
+                if let Some(novel) = novel {
+                    novel.turn(true);
+                }
+                return glib::ControlFlow::Continue;
+            }
+            eprintln!("novel end: shown {ended} after {} turns in {chapter:?}", turns.get()); // i18n-skip
+            let later = Rc::downgrade(&this);
+            glib::timeout_add_local_once(Duration::from_millis(2000), move || {
+                let Some(this) = later.upgrade() else { return };
+                let (read, next) = {
+                    let state = this.state.borrow();
+                    (state.read.is_some(), state.next.as_ref().map(|c| c.id.to_string()))
+                };
+                eprintln!("novel end: read {read}, next {next:?}"); // i18n-skip
+                this.continue_on();
+                let after = Rc::downgrade(&this);
+                glib::timeout_add_local_once(Duration::from_millis(3000), move || {
+                    let Some(this) = after.upgrade() else { return };
+                    let chapter =
+                        this.state.borrow().chapter.as_ref().map(|c| c.id.to_string());
+                    eprintln!("novel end: continued to {chapter:?}"); // i18n-skip
+                });
+            });
+            glib::ControlFlow::Break
+        });
     }
 
     /// Open Chapters for a shot, on its `tab`: "pages" or "chapters".
@@ -2483,6 +3267,7 @@ impl Reader {
 
     /// Where the place is, for the scrubber: page `at` from 1 of `total`.
     fn show_pages(&self, at: usize, total: usize) {
+        let (at, total) = self.held_pages(at, total);
         let total = total.max(1);
         let at = at.clamp(1, total);
         self.scrub.set_range(1.0, total.max(2) as f64);
@@ -2492,7 +3277,9 @@ impl Reader {
             self.scrub_at.set_label(&at.to_string());
         }
         self.scrub_total.set_label(&total.to_string());
-        let said = t::linux_reader_page_of(at as i64, total as i64);
+        let said = self
+            .part_said(at)
+            .unwrap_or_else(|| t::linux_reader_page_of(at as i64, total as i64));
         self.scrub.update_property(&[gtk::accessible::Property::ValueText(&said)]);
         self.go_to_field.set_range(1.0, total as f64);
         let hint = t::linux_reader_go_to_page_field(total as i64);
@@ -2506,6 +3293,7 @@ impl Reader {
         let at = value.round().clamp(lower, upper) as usize;
         self.scrub_at.set_label(&at.to_string());
         self.reveal_chrome();
+        self.part_tip_at(at);
         if let Some(id) = self.scrub_timer.borrow_mut().take() {
             id.remove();
         }
@@ -2522,7 +3310,8 @@ impl Reader {
     fn jump_to_page(self: &Rc<Self>, page: usize) {
         let novel = self.state.borrow().medium == Some(Medium::Novel);
         if novel {
-            if let Some(novel) = self.novel.borrow().clone() {
+            let novel = self.novel.borrow().clone();
+            if let Some(novel) = novel {
                 novel.go_to(page.saturating_sub(1) as u32);
             }
             return;
@@ -2537,12 +3326,20 @@ impl Reader {
             self.state.borrow_mut().strip_anchor =
                 Some(StripPos { image: index as u32, offset: 0.0 });
             self.hold_strip_place();
-            // A jump is the person's: the place reports once the strip is there.
+            // A jump is the person's: it reports once the strip is there, so the engine can
+            // offer Back to page, and the place follows from the scroll.
             let this = Rc::downgrade(self);
             glib::timeout_add_local_once(Duration::from_millis(300), move || {
-                if let Some(this) = this.upgrade() {
-                    this.release_strip();
+                let Some(this) = this.upgrade() else { return };
+                let (session, chapter) = {
+                    let state = this.state.borrow();
+                    (state.session, state.chapter.as_ref().map(|c| c.id.clone()))
+                };
+                if let Some(chapter) = chapter {
+                    let (leaf, how) = (index as u32, TurnHow::Jump);
+                    this.send(ReaderCommand::Shown { session, chapter, leaf, how });
                 }
+                this.release_strip();
             });
         } else {
             self.show_leaf(index, TurnHow::Jump);
@@ -2627,6 +3424,7 @@ impl Reader {
                     this.upgrade().is_some_and(|this| this.take_key(key, modifiers))
                 }),
             );
+            self.opener.watch(&ctx.window, &self.widget);
         }
 
         // A closed reader lets go of what it held once the window has crossfaded away from it.
@@ -2648,6 +3446,10 @@ impl Reader {
             let this = Rc::downgrade(self);
             move |gesture, _, x, _| {
                 let Some(this) = this.upgrade() else { return };
+                // A click on the page takes the keys back from the chrome, which may go then.
+                if this.focus_in_chrome() {
+                    this.widget.grab_focus();
+                }
                 if this.stack.visible_child_name().as_deref() != Some("paged") {
                     this.reveal_chrome();
                     return;
@@ -2677,7 +3479,29 @@ impl Reader {
         });
         self.widget.add_controller(moved);
         self.group.add_controller(self.group_hover.clone());
+        // Focus that comes into the chrome by any key brings it, and the keyboard holds it.
+        for part in [self.head.upcast_ref::<gtk::Widget>(), self.group.upcast_ref()] {
+            let came = gtk::EventControllerFocus::new();
+            came.connect_enter({
+                let this = Rc::downgrade(self);
+                move |_| {
+                    if let Some(this) = this.upgrade() {
+                        this.reveal_chrome();
+                    }
+                }
+            });
+            part.add_controller(came);
+        }
 
+        // A new size or new images move every plate's part on screen.
+        self.strip_scroll.vadjustment().connect_changed({
+            let this = Rc::downgrade(self);
+            move |_| {
+                if let Some(this) = this.upgrade() {
+                    this.place_plate_words();
+                }
+            }
+        });
         self.strip_scroll.vadjustment().connect_value_changed({
             let this = Rc::downgrade(self);
             move |_| {
@@ -2755,24 +3579,30 @@ impl Reader {
                     this.apply_fit();
                     this.size_strip();
                     this.group.set_width_request(GROUP_WIDTH.min(size.0 - 32).max(240));
+                    this.chapters.fit(size);
+                    if this.sheet.is_visible()
+                        && *this.sheet_shape_now.borrow() != this.sheet_shape()
+                    {
+                        this.fill_sheet(true);
+                    }
                     let plate = ((f64::from(size.1) * 0.7).round() as i32).min(size.0.max(1));
                     this.failed_plate.set_size_request(plate, -1);
                 }
                 if let Some(id) = pending.borrow_mut().take() {
                     id.remove();
                 }
+                // The first size is the reader's first layout, after an open that went out
+                // without one: the engine hears it at once if it differs.
+                if first && let Some(this) = this.upgrade() {
+                    this.surface_settled();
+                }
                 if !first {
                     let (this, done) = (this.clone(), Rc::clone(&pending));
                     let id =
                         glib::timeout_add_local_once(Duration::from_millis(250), move || {
                             done.borrow_mut().take();
-                            let Some(this) = this.upgrade() else { return };
-                            let session = this.state.borrow().session;
-                            if session != 0 && this.widget.is_mapped() {
-                                this.send(ReaderCommand::Surface {
-                                    session,
-                                    surface: this.surface(),
-                                });
+                            if let Some(this) = this.upgrade() {
+                                this.surface_settled();
                             }
                         });
                     *pending.borrow_mut() = Some(id);
@@ -2796,17 +3626,34 @@ impl Reader {
                 K::plus | K::equal | K::KP_Add => self.step_text_size(1),
                 K::minus | K::KP_Subtract => self.step_text_size(-1),
                 K::_0 | K::KP_0 => self.step_text_size(0),
+                K::z if self.keeping.borrow().is_some() => self.undo_keep(),
                 _ => return false,
             }
             return true;
         }
         let mut turned = true;
         match key {
+            K::Tab | K::KP_Tab | K::ISO_Left_Tab => {
+                let back =
+                    key == K::ISO_Left_Tab || modifiers.contains(gdk::ModifierType::SHIFT_MASK);
+                return self.tab_into_chrome(back);
+            }
             K::Escape => self.close(),
             K::Right => self.turn(!rtl, TurnHow::Key),
             K::Left => self.turn(rtl, TurnHow::Key),
             K::space | K::Page_Down | K::Down => self.turn(true, TurnHow::Key),
             K::Page_Up | K::Up => self.turn(false, TurnHow::Key),
+            // A novel's first and last page are its paginator's, as Go to page has them.
+            K::Home | K::End if self.state.borrow().medium == Some(Medium::Novel) => {
+                let novel = self.novel.borrow().clone();
+                if let Some(novel) = novel {
+                    if key == K::Home {
+                        novel.go_to(0);
+                    } else {
+                        novel.go_to_end();
+                    }
+                }
+            }
             K::Home => self.jump_to(0),
             K::End => {
                 let last = if self.flows() {
@@ -2833,22 +3680,91 @@ impl Reader {
     }
 }
 
+/// The part of `texture` that `crop` names, in the texture's pixels, as a picture that size.
+fn cropped(texture: &gdk::Texture, crop: kaeri_model::reader::PixelRect) -> gdk::Paintable {
+    let (x, y, w, h) = (crop.x as f32, crop.y as f32, crop.width as f32, crop.height as f32);
+    let snapshot = gtk::Snapshot::new();
+    snapshot.push_clip(&gtk::graphene::Rect::new(0.0, 0.0, w, h));
+    snapshot.translate(&gtk::graphene::Point::new(-x, -y));
+    texture.snapshot(&snapshot, f64::from(texture.width()), f64::from(texture.height()));
+    snapshot.pop();
+    snapshot
+        .to_paintable(Some(&gtk::graphene::Size::new(w, h)))
+        .unwrap_or_else(|| texture.clone().upcast())
+}
+
+/// A picture file decoded by the image crate, as RGBA.
+fn decode_texture(path: impl AsRef<std::path::Path>) -> Option<gdk::Texture> {
+    let image =
+        image::ImageReader::open(path).ok()?.with_guessed_format().ok()?.decode().ok()?;
+    rgba_texture(image.into_rgba8())
+}
+
+fn rgba_texture(rgba: image::RgbaImage) -> Option<gdk::Texture> {
+    let (width, height) =
+        (i32::try_from(rgba.width()).ok()?, i32::try_from(rgba.height()).ok()?);
+    if width == 0 || height == 0 {
+        return None;
+    }
+    let stride = rgba.width() as usize * 4;
+    Some(
+        gdk::MemoryTexture::new(
+            width,
+            height,
+            gdk::MemoryFormat::R8g8b8a8,
+            &glib::Bytes::from_owned(rgba.into_raw()),
+            stride,
+        )
+        .upcast(),
+    )
+}
+
+/// As [`load_texture`], cut to the file's crop when it has one: for a picture that is not
+/// composed as a leaf is.
+fn load_texture_cropped(file: &PageFile) -> Option<gdk::Texture> {
+    let Some(c) = file.crop.filter(|c| c.width > 0 && c.height > 0) else {
+        return load_texture(file);
+    };
+    let image =
+        image::ImageReader::open(&file.path).ok()?.with_guessed_format().ok()?.decode().ok()?;
+    if c.x + c.width > image.width() || c.y + c.height > image.height() {
+        return load_texture(file);
+    }
+    rgba_texture(image.crop_imm(c.x, c.y, c.width, c.height).into_rgba8())
+}
+
+/// A page's picture: GTK's own loaders first, then the image crate where they can't (no WebP or
+/// AVIF loader, or glycin's sandbox can't start). `None` when nothing can decode it, or a raw
+/// file is shorter than its size says.
 fn load_texture(file: &PageFile) -> Option<gdk::Texture> {
     match &file.encoding {
-        PageEncoding::Original { .. } => gdk::Texture::from_filename(&file.path).ok(),
+        PageEncoding::Original { .. } => {
+            gdk::Texture::from_filename(&file.path).ok().or_else(|| decode_texture(&file.path))
+        }
         PageEncoding::Raw { format, stride } => {
             let bytes = std::fs::read(&file.path).ok()?;
-            let format = match format {
-                PixelFormat::Gray8 => gdk::MemoryFormat::G8,
-                PixelFormat::Rgba8 => gdk::MemoryFormat::R8g8b8a8,
+            let (format, depth) = match format {
+                PixelFormat::Gray8 => (gdk::MemoryFormat::G8, 1),
+                PixelFormat::Rgba8 => (gdk::MemoryFormat::R8g8b8a8, 4),
             };
+            // GTK hands back no texture for a size the bytes don't fill, and drawing that aborts.
+            let (width, height, stride) =
+                (file.width as usize, file.height as usize, *stride as usize);
+            if width == 0
+                || height == 0
+                || stride < width * depth
+                || bytes.len() < stride * (height - 1) + width * depth
+                || i32::try_from(width.max(height)).is_err()
+            {
+                return None;
+            }
             Some(
                 gdk::MemoryTexture::new(
                     file.width as i32,
                     file.height as i32,
                     format,
                     &glib::Bytes::from_owned(bytes),
-                    *stride as usize,
+                    stride,
                 )
                 .upcast(),
             )
@@ -2926,12 +3842,292 @@ fn strip_target(heights: &[i32], spacing: i32, index: usize, offset: Option<f32>
 }
 
 /// Each strip leaf's pages, to tell a new layout of the same images from new images.
+/// Where a strip opens on its first layout. Opened gives a strip start whenever the place has a
+/// page, at the top of that page's image when the place was kept in paged mode, and the engine's
+/// "Resumed at image N" names that image, so the strip opens there. Without one, the frame that
+/// holds the start page; without either, the top.
+fn strip_opening(leaves: &[Leaf], strip: Option<StripPos>, page: Option<u32>) -> StripPos {
+    strip.unwrap_or_else(|| StripPos {
+        image: page
+            .and_then(|p| leaves.iter().position(|l| l.parts.iter().any(|x| x.page == p)))
+            .unwrap_or(0) as u32,
+        offset: 0.0,
+    })
+}
+
 fn strip_leaves(leaves: &[Leaf]) -> Vec<Vec<u32>> {
     leaves
         .iter()
         .filter(|l| !l.end_page)
         .map(|l| l.parts.iter().map(|p| p.page).collect())
         .collect()
+}
+
+/// The leaves to ask for around leaf `index` of `count`, in the order the engine fetches them:
+/// the one wanted first, then the two after it, then the one before. Asked in reading order, a
+/// jump far into a chapter on a slow source waited for the page before it.
+fn wanted_leaves(index: usize, count: usize) -> Vec<usize> {
+    let ahead = (index..(index + 3).min(count)).collect::<Vec<_>>();
+    let behind = index.checked_sub(1).filter(|i| *i < count);
+    ahead.into_iter().chain(behind).collect()
+}
+
+/// The strip images to ask for with the viewport from `top` to `bottom`, given each image's
+/// height and the gap between them, and where the foot starts. The images in view come first,
+/// then those up to `reach` below it, then those up to `reach` above it, nearest first: a jump
+/// far into a long strip fetches what it lands on before the images it passed.
+fn strip_wanted(
+    heights: &[i32],
+    spacing: i32,
+    top: f64,
+    bottom: f64,
+    reach: f64,
+) -> (Vec<usize>, f64) {
+    let (mut seen, mut ahead, mut behind) = (Vec::new(), Vec::new(), Vec::new());
+    let mut y = 0.0;
+    for (i, h) in heights.iter().enumerate() {
+        let h = f64::from(*h);
+        if y + h >= top && y <= bottom {
+            seen.push(i);
+        } else if y > bottom && y <= bottom + reach {
+            ahead.push(i);
+        } else if y + h < top && y + h >= top - reach {
+            behind.push(i);
+        }
+        y += h + f64::from(spacing);
+    }
+    behind.reverse();
+    seen.extend(ahead);
+    seen.extend(behind);
+    (seen, y - f64::from(spacing))
+}
+
+/// A strip image's place: the picture, and over it the plate while its file is on its way, as a
+/// page waits in the paged reader: nothing for 600 ms, then the plate with the image's number,
+/// and a line under it once it has been asked for 4 s ([`strip_frame_asked`]). The words sit in
+/// the middle of the part of the image on screen ([`strip_frame_seen`]). A jump far into a long
+/// chapter lands among plates, never on an empty window.
+fn strip_frame(page: u32) -> (gtk::Overlay, gtk::Picture) {
+    let picture = gtk::Picture::new();
+    picture.set_content_fit(gtk::ContentFit::Fill);
+    picture.set_can_shrink(true);
+    picture.add_css_class("strip-leaf");
+    let number = gtk::Label::new(Some(&t::reader_image_plate(i64::from(page + 1))));
+    number.add_css_class("reader-plate-number");
+    number.add_css_class("numeric");
+    let line = gtk::Label::new(Some(&t::reader_image_loading(i64::from(page + 1))));
+    line.add_css_class("reader-plate-line");
+    line.set_wrap(true);
+    line.set_justify(gtk::Justification::Center);
+    line.set_visible(false);
+    let words = gtk::Box::new(gtk::Orientation::Vertical, 6);
+    words.set_valign(gtk::Align::Center);
+    words.set_vexpand(true);
+    words.set_margin_start(24);
+    words.set_margin_end(24);
+    words.append(&number);
+    words.append(&line);
+    let plate = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    plate.add_css_class("reader-plate");
+    plate.set_accessible_role(gtk::AccessibleRole::Presentation);
+    plate.set_can_target(false);
+    plate.append(&words);
+    plate.set_visible(false);
+    let frame = gtk::Overlay::new();
+    frame.set_child(Some(&picture));
+    frame.add_overlay(&plate);
+    let (weak_plate, weak_picture) = (plate.downgrade(), picture.downgrade());
+    glib::timeout_add_local_once(SILENT, move || {
+        if let (Some(plate), Some(picture)) = (weak_plate.upgrade(), weak_picture.upgrade())
+            && picture.paintable().is_none()
+        {
+            plate.set_visible(true);
+            motion::fade_in(&plate);
+        }
+    });
+    (frame, picture)
+}
+
+/// Centre a strip plate's words on the part of its image on screen, `seen` as the top and bottom
+/// of that part in the image's own pixels: margins above and below the words leave that part
+/// for them, kept inside the image and never narrower than the words with their line.
+fn strip_frame_seen(picture: &gtk::Picture, seen: Option<(f64, f64)>) {
+    let Some(words) = strip_plate(picture).and_then(|plate| plate.first_child()) else {
+        return;
+    };
+    let number =
+        words.first_child().map_or(24, |n| n.measure(gtk::Orientation::Vertical, -1).1);
+    // Room for the number and its line, or more when a failed image's Try again is under them.
+    let room =
+        (number * 2 + words_gap(&words)).max(words.measure(gtk::Orientation::Vertical, -1).1);
+    let (above, below) = strip_words_margins(picture.height_request().max(0), seen, room);
+    if words.margin_top() != above {
+        words.set_margin_top(above);
+    }
+    if words.margin_bottom() != below {
+        words.set_margin_bottom(below);
+    }
+}
+
+/// The gap between a plate's number and its line.
+fn words_gap(words: &gtk::Widget) -> i32 {
+    words.downcast_ref::<gtk::Box>().map_or(6, gtk::Box::spacing)
+}
+
+/// The margins above and below a strip plate's words in an image `height` tall, so they centre
+/// on the part on screen, `seen` in the image's pixels, while that part leaves them `room`; a
+/// thinner part widens to `room` about its middle, inside the image. Off screen, none.
+fn strip_words_margins(height: i32, seen: Option<(f64, f64)>, room: i32) -> (i32, i32) {
+    let full = f64::from(height);
+    let Some((top, bottom)) =
+        seen.map(|(t, b)| (t.max(0.0), b.min(full))).filter(|(t, b)| b > t)
+    else {
+        return (0, 0);
+    };
+    let (top, bottom) = (top.round() as i32, bottom.round() as i32);
+    if bottom - top >= room {
+        return (top, height - bottom);
+    }
+    let above = ((top + bottom) / 2 - room / 2).clamp(0, (height - room).max(0));
+    (above, (height - above - room).max(0))
+}
+
+/// The plate over a strip picture, made by [`strip_frame`].
+fn strip_plate(picture: &gtk::Picture) -> Option<gtk::Widget> {
+    picture.next_sibling()
+}
+
+/// A widget's size and scale while it is on screen, or else those of the nearest enclosing
+/// widget that is. The reader fills the page it covers, so before its first layout, and while
+/// it is hidden (its last size may be old), that page's size is the reader's.
+fn surface_size(widget: &gtk::Widget) -> Option<(i32, i32, i32)> {
+    std::iter::successors(Some(widget.clone()), gtk::Widget::parent)
+        .find(|w| w.is_mapped() && w.width() > 0 && w.height() > 0)
+        .map(|w| (w.width(), w.height(), w.scale_factor()))
+}
+
+/// The line under a plate's number: "Loading image 12", or that it failed.
+fn plate_line(words: &gtk::Widget) -> Option<gtk::Label> {
+    words.first_child()?.next_sibling().and_downcast()
+}
+
+/// A strip image that failed: its plate shows with "Couldn't load" and Try again, and
+/// takes clicks while it does.
+fn strip_frame_failed(picture: &gtk::Picture, retry: impl Fn() + 'static) {
+    let Some(plate) = strip_plate(picture) else { return };
+    let Some(words) = plate.first_child().and_downcast::<gtk::Box>() else { return };
+    if picture.paintable().is_some() || plate.has_css_class("strip-failed") {
+        return;
+    }
+    plate.add_css_class("strip-failed");
+    plate.set_can_target(true);
+    if let Some(line) = plate_line(words.upcast_ref()) {
+        line.set_label(&t::reader_image_failed());
+        line.set_opacity(1.0);
+        line.set_visible(true);
+    }
+    let again = gtk::Button::with_label(&t::reader_try_again());
+    again.add_css_class("pill");
+    again.set_halign(gtk::Align::Center);
+    again.set_margin_top(6);
+    again.connect_clicked(move |_| retry());
+    words.append(&again);
+    if !plate.is_visible() {
+        plate.set_opacity(1.0);
+        plate.set_visible(true);
+        motion::fade_in(&plate);
+    }
+}
+
+/// Try again on a failed strip image: its plate says it is loading again.
+fn strip_frame_retried(picture: &gtk::Picture, page: u32) {
+    let Some(plate) = strip_plate(picture) else { return };
+    if !plate.has_css_class("strip-failed") {
+        return;
+    }
+    plate.remove_css_class("strip-failed");
+    plate.set_can_target(false);
+    let Some(words) = plate.first_child().and_downcast::<gtk::Box>() else { return };
+    let line = plate_line(words.upcast_ref());
+    if let Some(again) = line.as_ref().and_then(gtk::Label::next_sibling) {
+        words.remove(&again);
+    }
+    if let Some(line) = line {
+        line.set_label(&t::reader_image_loading(i64::from(page + 1)));
+    }
+}
+
+/// A strip picture's page was asked for: if its file has not come 4 s later, its plate says it
+/// is loading. Only the first ask counts.
+fn strip_frame_asked(picture: &gtk::Picture) {
+    let Some(plate) = strip_plate(picture) else { return };
+    if picture.paintable().is_some() || plate.has_css_class("strip-asked") {
+        return;
+    }
+    plate.add_css_class("strip-asked");
+    let line = plate.first_child().as_ref().and_then(plate_line);
+    let (Some(line), picture) = (line.map(|l| l.downgrade()), picture.downgrade()) else {
+        return;
+    };
+    glib::timeout_add_local_once(SAY_LOADING, move || {
+        if let (Some(line), Some(picture)) = (line.upgrade(), picture.upgrade())
+            && picture.paintable().is_none()
+        {
+            line.set_visible(true);
+            motion::fade_in(&line);
+        }
+    });
+}
+
+/// The strip image's file landed: it takes the place, crossfading over its plate when the plate
+/// shows, fading in when nothing did yet. `redrawn` swaps a drawn picture in place, as after
+/// crop borders changed, without a fade.
+fn fill_strip_frame(
+    picture: &gtk::Picture,
+    paintable: &impl IsA<gdk::Paintable>,
+    redrawn: bool,
+) {
+    if picture.paintable().is_some() {
+        if redrawn {
+            picture.set_paintable(Some(paintable));
+        }
+        return;
+    }
+    picture.set_paintable(Some(paintable));
+    let plate = strip_plate(picture).filter(|plate| plate.is_visible());
+    match plate {
+        Some(plate) => {
+            motion::fade_out(&plate);
+        }
+        None => {
+            motion::fade_in(picture);
+        }
+    }
+}
+
+/// How far over the window's foot a novel's notice sits: clear of the group while the chrome
+/// shows, which needs the group shown to be measured, else in the text's bottom margin.
+fn notice_lift(group: &gtk::Box, chrome: bool) -> i32 {
+    if !chrome {
+        return 44;
+    }
+    // As wide as it is laid out, or will be: a narrow window wraps what is in it.
+    let width = if group.width() > 0 { group.width() } else { group.width_request() };
+    let (_, height, _, _) = group.measure(gtk::Orientation::Vertical, width.max(-1));
+    group.margin_bottom() + height + 12
+}
+
+/// Where a popover `width` wide centres to sit over `middle`, the middle of its button, while
+/// staying 8 px inside a window `window` wide; in the middle of a window it can't fit in.
+fn popover_middle(middle: f64, width: f64, window: f64) -> f64 {
+    let half = width / 2.0;
+    if window <= 0.0 {
+        return middle;
+    }
+    if width + 16.0 >= window {
+        return window / 2.0;
+    }
+    middle.clamp(8.0 + half, window - 8.0 - half)
 }
 
 /// Which image `top` falls in, and how far down it, from the images' heights and the gap.
@@ -2945,6 +4141,170 @@ fn strip_place_of(heights: &[i32], spacing: i32, top: f64) -> (usize, f32) {
         y += h + f64::from(spacing);
     }
     (0, 0.0)
+}
+
+/// The page a new layout keeps of `leaf`, the leaf on screen: `held`, the page the last layout
+/// kept, while the leaf still holds it, as a spread holds a page shown alone before it;
+/// otherwise the leaf's first.
+fn page_kept(leaf: Option<&Leaf>, held: Option<u32>) -> Option<u32> {
+    let leaf = leaf?;
+    held.filter(|held| leaf.parts.iter().any(|p| p.page == *held))
+        .or_else(|| leaf.parts.first().map(|p| p.page))
+}
+
+/// The mode and direction the open book takes from `settings`, when they differ from `now`.
+/// A mode or direction changed in the reader lays the chapter out again without opening it
+/// anew, so the reader follows the settings, as the engine's plan reads them: settings for
+/// another work or medium, and a novel's, leave it as it is.
+fn followed(
+    medium: Medium,
+    work: Option<&WorkId>,
+    now: (ReaderMode, ReadDirection),
+    settings: &ReaderSettingsView,
+) -> Option<(ReaderMode, ReadDirection)> {
+    if medium == Medium::Novel || settings.medium != medium || work != settings.work.as_ref() {
+        return None;
+    }
+    let word = |key: ReaderSettingKey| {
+        settings.rows.iter().find(|r| r.key == key).and_then(|r| match &r.value {
+            ReaderValue::Choice { name } => Some(name.as_str()),
+            _ => None,
+        })
+    };
+    let mode = match word(ReaderSettingKey::Mode) {
+        Some("strip") => ReaderMode::Strip,
+        Some("vertical") => ReaderMode::Vertical,
+        Some("paged") => ReaderMode::Paged,
+        _ => now.0,
+    };
+    let direction = if mode.flows() {
+        ReadDirection::TopToBottom
+    } else {
+        match word(ReaderSettingKey::Direction) {
+            Some("ltr") => ReadDirection::LeftToRight,
+            Some("rtl") => ReadDirection::RightToLeft,
+            _ if now.1 == ReadDirection::TopToBottom => ReadDirection::RightToLeft,
+            _ => now.1,
+        }
+    };
+    ((mode, direction) != now).then_some((mode, direction))
+}
+
+#[cfg(test)]
+mod layout_tests {
+    use kaeri_core::{books::WorkId, media::Medium};
+    use kaeri_model::reader::{
+        Leaf, LeafPart, PageKind, ReadDirection, ReaderMode, ReaderSettingKey,
+        ReaderSettingRow, ReaderSettingsView, ReaderValue, SettingScope, UnitRect,
+    };
+
+    use super::{StripPos, followed, page_kept, strip_opening};
+
+    fn leaf(pages: &[u32]) -> Leaf {
+        let parts = pages
+            .iter()
+            .map(|&page| LeafPart {
+                page,
+                kind: PageKind::Story,
+                file: None,
+                place: UnitRect { x: 0.0, y: 0.0, width: 1.0, height: 1.0 },
+                rotate: false,
+                half: None,
+                ratio: None,
+                strip: None,
+            })
+            .collect();
+        Leaf { index: 0, parts, end_page: false }
+    }
+
+    #[test]
+    fn a_round_trip_through_spreads_keeps_the_second_page_of_the_spread() {
+        // Page 3 alone, then the spread of 2 and 3, then 3 alone again.
+        let held = page_kept(Some(&leaf(&[3])), None);
+        assert_eq!(held, Some(3));
+        assert_eq!(page_kept(Some(&leaf(&[2, 3])), held), Some(3));
+        // A spread turned to, with nothing held, gives its first page.
+        assert_eq!(page_kept(Some(&leaf(&[4, 5])), held), Some(4));
+        assert_eq!(page_kept(Some(&leaf(&[4, 5])), None), Some(4));
+        assert_eq!(page_kept(None, held), None);
+    }
+
+    fn settings(medium: Medium, work: &str, mode: &str, direction: &str) -> ReaderSettingsView {
+        let row = |key, name: &str| ReaderSettingRow {
+            key,
+            value: ReaderValue::Choice { name: name.to_owned() },
+            scope: SettingScope::Series,
+            detected: false,
+            overridden: true,
+            choices: Vec::new(),
+        };
+        ReaderSettingsView {
+            medium,
+            work: Some(WorkId(work.to_owned())),
+            rows: vec![
+                row(ReaderSettingKey::Mode, mode),
+                row(ReaderSettingKey::Direction, direction),
+            ],
+            tap_zones: None,
+        }
+    }
+
+    /// Strip picked in the open chapter's settings: the reader turns to the strip, and back
+    /// to pages, with the direction the settings give, as the engine lays the chapter out.
+    #[test]
+    fn the_open_book_follows_a_mode_picked_in_the_reader() {
+        let work = WorkId("a:1".to_owned());
+        let paged = (ReaderMode::Paged, ReadDirection::RightToLeft);
+        let strip = (ReaderMode::Strip, ReadDirection::TopToBottom);
+        let manga = |mode, direction| settings(Medium::Manga, "a:1", mode, direction);
+        assert_eq!(
+            followed(Medium::Manga, Some(&work), paged, &manga("strip", "rtl")),
+            Some(strip)
+        );
+        assert_eq!(
+            followed(Medium::Manga, Some(&work), strip, &manga("paged", "ltr")),
+            Some((ReaderMode::Paged, ReadDirection::LeftToRight))
+        );
+        assert_eq!(
+            followed(Medium::Manga, Some(&work), paged, &manga("paged", "ltr")),
+            Some((ReaderMode::Paged, ReadDirection::LeftToRight)),
+            "a direction alone turns the pages the other way"
+        );
+        assert_eq!(
+            followed(Medium::Manga, Some(&work), paged, &manga("vertical", "rtl")),
+            Some((ReaderMode::Vertical, ReadDirection::TopToBottom))
+        );
+        // Nothing changed, or settings that are not the open book's: the reader stays.
+        assert_eq!(followed(Medium::Manga, Some(&work), paged, &manga("paged", "rtl")), None);
+        assert_eq!(followed(Medium::Manga, Some(&work), strip, &manga("strip", "ltr")), None);
+        let other = settings(Medium::Manga, "a:2", "strip", "rtl");
+        assert_eq!(followed(Medium::Manga, Some(&work), paged, &other), None);
+        let defaults = ReaderSettingsView { work: None, ..manga("strip", "rtl") };
+        assert_eq!(followed(Medium::Manga, Some(&work), paged, &defaults), None);
+        let novel = settings(Medium::Novel, "a:1", "strip", "rtl");
+        assert_eq!(followed(Medium::Novel, Some(&work), paged, &novel), None);
+    }
+
+    /// P18. A place kept in paged mode reaches a strip as a strip start at the top of its
+    /// page's image: the strip opens on the frame of that image, the one "Resumed at image N"
+    /// names (the engine says N for page N - 1), and not at the first.
+    #[test]
+    fn a_strip_opens_at_the_start_the_engine_gives() {
+        let leaves: Vec<Leaf> = (0..9).map(|p| leaf(&[p])).collect();
+        let kept_in_pages = StripPos { image: 6, offset: 0.0 };
+        let at = strip_opening(&leaves, Some(kept_in_pages), Some(6));
+        assert_eq!(at, kept_in_pages);
+        let shown = leaves[at.image as usize].parts[0].page;
+        assert_eq!(i64::from(shown) + 1, 7, "Resumed at image 7 is the frame of page 6");
+
+        // A place kept in a strip keeps how far into its image it was.
+        let in_strip = StripPos { image: 3, offset: 0.4 };
+        assert_eq!(strip_opening(&leaves, Some(in_strip), Some(3)), in_strip);
+
+        // No strip start: the frame of the start page, else the top.
+        assert_eq!(strip_opening(&leaves, None, Some(5)), StripPos { image: 5, offset: 0.0 });
+        assert_eq!(strip_opening(&leaves, None, None), StripPos { image: 0, offset: 0.0 });
+    }
 }
 
 #[cfg(test)]
@@ -2997,5 +4357,323 @@ mod strip_tests {
         let (image, offset) = strip_place_of(&heights, 8, target);
         assert_eq!(image, 1);
         assert!((offset - 0.25).abs() < 1e-3);
+    }
+}
+
+#[cfg(test)]
+mod plate_tests {
+    use adw::prelude::*;
+    use gtk::{gdk, glib};
+
+    use super::{
+        fill_strip_frame, load_texture, notice_lift, popover_middle, strip_frame,
+        strip_frame_asked, strip_frame_failed, strip_frame_retried, strip_frame_seen,
+        strip_words_margins, surface_size,
+    };
+    use crate::{
+        gtk_test::{pump, run},
+        motion::Fader,
+    };
+
+    fn texture() -> gdk::Texture {
+        gdk::MemoryTexture::new(
+            1,
+            1,
+            gdk::MemoryFormat::R8g8b8,
+            &glib::Bytes::from_owned(vec![0u8, 0, 0]),
+            3,
+        )
+        .upcast()
+    }
+
+    fn words(widget: &gtk::Widget, out: &mut Vec<String>) {
+        if let Some(label) = widget.downcast_ref::<gtk::Label>()
+            && label.is_visible()
+        {
+            out.push(label.label().to_string());
+        }
+        let mut child = widget.first_child();
+        while let Some(c) = child {
+            words(&c, out);
+            child = c.next_sibling();
+        }
+    }
+
+    fn page_file(
+        path: &std::path::Path,
+        encoding: kaeri_model::reader::PageEncoding,
+    ) -> kaeri_model::reader::PageFile {
+        kaeri_model::reader::PageFile {
+            path: path.to_string_lossy().into_owned(),
+            encoding,
+            width: 3,
+            height: 2,
+            crop: None,
+            colour: true,
+            bytes: 0,
+        }
+    }
+
+    /// A WebP page decodes through the image crate where GTK's loaders can't, and a file
+    /// nothing can decode, or a raw page shorter than its size, gives no texture to draw.
+    #[test]
+    fn a_page_gtk_cannot_decode_falls_back_or_fails() {
+        use kaeri_model::reader::{PageEncoding, PixelFormat};
+        run(|| {
+            let dir = tempfile::tempdir().expect("a temporary folder");
+            let webp = dir.path().join("page.webp");
+            image::RgbaImage::from_pixel(3, 2, image::Rgba([10, 20, 30, 255]))
+                .save_with_format(&webp, image::ImageFormat::WebP)
+                .expect("a WebP page");
+            let original = || PageEncoding::Original { mime: "image/webp".into() };
+            let texture = load_texture(&page_file(&webp, original())).expect("decoded");
+            assert_eq!((texture.width(), texture.height()), (3, 2));
+            assert!(super::decode_texture(&webp).is_some(), "the image crate decodes WebP");
+
+            let broken = dir.path().join("page.bin");
+            std::fs::write(&broken, b"not a picture at all").expect("a broken page");
+            assert!(load_texture(&page_file(&broken, original())).is_none());
+
+            let raw = dir.path().join("page.raw");
+            std::fs::write(&raw, [0u8; 7]).expect("a short raw page");
+            let rgba = PageEncoding::Raw { format: PixelFormat::Rgba8, stride: 12 };
+            assert!(
+                load_texture(&page_file(&raw, rgba.clone())).is_none(),
+                "short of its size"
+            );
+            std::fs::write(&raw, [0u8; 24]).expect("a whole raw page");
+            assert!(load_texture(&page_file(&raw, rgba)).is_some());
+        });
+    }
+
+    /// The first open in a run goes out before the reader has been laid out. It is prepared
+    /// for the page the reader covers, which is the size the reader then gets, so a portrait
+    /// window is not laid out as a landscape one with two pages side by side.
+    #[test]
+    fn the_first_open_is_prepared_for_the_window_it_shows_in() {
+        run(|| {
+            assert_eq!(surface_size(gtk::Box::default().upcast_ref()), None);
+            let window = gtk::Window::builder().default_width(360).default_height(720).build();
+            let top = gtk::Stack::new();
+            top.set_hhomogeneous(false);
+            top.set_vhomogeneous(false);
+            let main = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            let reader = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            top.add_named(&main, Some("main"));
+            top.add_named(&reader, Some("reader"));
+            window.set_child(Some(&top));
+            window.present();
+            pump(300);
+            let (width, height, _) =
+                surface_size(reader.upcast_ref()).expect("a size before the reader's layout");
+            assert!(height > width, "a portrait window gives a portrait surface");
+            top.set_visible_child_name("reader");
+            pump(300);
+            assert_eq!(
+                (reader.width(), reader.height()),
+                (width, height),
+                "the reader's first layout has the size its open was prepared for"
+            );
+            window.destroy();
+        });
+    }
+
+    /// A strip image that failed says so on its plate with Try again, which asks again and
+    /// puts the plate back to loading; the image then crossfades over it as usual.
+    #[test]
+    fn a_failed_strip_image_offers_try_again() {
+        run(|| {
+            let (frame, picture) = strip_frame(11);
+            picture.set_size_request(200, 280);
+            let window = gtk::Window::builder().default_width(400).default_height(400).build();
+            window.set_child(Some(&frame));
+            window.present();
+            let plate = picture.next_sibling().expect("a plate over the picture");
+            let asked = std::rc::Rc::new(std::cell::Cell::new(0));
+            strip_frame_failed(&picture, {
+                let asked = asked.clone();
+                move || asked.set(asked.get() + 1)
+            });
+            pump(400);
+            assert!(
+                plate.is_visible() && plate.can_target(),
+                "the plate shows and takes clicks"
+            );
+            let mut said = Vec::new();
+            words(&plate, &mut said);
+            assert_eq!(said, ["Image 12", "Couldn't load", "Try again"]);
+            let again = plate
+                .first_child()
+                .and_then(|w| w.last_child())
+                .and_downcast::<gtk::Button>()
+                .expect("Try again");
+            again.emit_clicked();
+            assert_eq!(asked.get(), 1);
+            strip_frame_retried(&picture, 11);
+            let mut said = Vec::new();
+            words(&plate, &mut said);
+            assert_eq!(said, ["Image 12", "Loading image 12"]);
+            assert!(!plate.can_target());
+            fill_strip_frame(&picture, &texture(), false);
+            pump(500);
+            assert!(!plate.is_visible(), "the plate is gone once the image is in");
+            window.destroy();
+        });
+    }
+
+    /// A strip image whose file is still coming shows its plate with its number from 600 ms,
+    /// adds a line under it 4 s after it was asked for, and its file crossfades over the plate.
+    #[test]
+    fn a_strip_image_on_its_way_holds_a_plate() {
+        run(|| {
+            let (frame, picture) = strip_frame(11);
+            picture.set_size_request(200, 280);
+            let window = gtk::Window::builder().default_width(400).default_height(400).build();
+            window.set_child(Some(&frame));
+            window.present();
+            let plate = picture.next_sibling().expect("a plate over the picture");
+            pump(200);
+            assert!(!plate.is_visible(), "nothing shows in the first 600 ms");
+            pump(600);
+            assert!(plate.is_visible(), "the plate shows from 600 ms");
+            let mut said = Vec::new();
+            words(&plate, &mut said);
+            assert_eq!(said, vec!["Image 12".to_owned()]);
+            strip_frame_asked(&picture);
+            pump(4200);
+            let mut said = Vec::new();
+            words(&plate, &mut said);
+            assert_eq!(said, vec!["Image 12".to_owned(), "Loading image 12".to_owned()]);
+            fill_strip_frame(&picture, &texture(), false);
+            assert!(picture.paintable().is_some());
+            pump(500);
+            assert!(!plate.is_visible(), "the plate is gone once the image is in");
+            window.destroy();
+        });
+    }
+
+    /// The words sit in the middle of the part of the image on screen, kept inside the image.
+    #[test]
+    fn a_strip_plate_centres_its_words_on_the_part_on_screen() {
+        run(|| {
+            let (frame, picture) = strip_frame(4);
+            // At the image's own height, as in the strip's column.
+            frame.set_valign(gtk::Align::Start);
+            let window = gtk::Window::builder().default_width(400).default_height(400).build();
+            window.set_child(Some(&frame));
+            window.present();
+            pump(800);
+            let plate = picture.next_sibling().expect("a plate over the picture");
+            let words = plate.first_child().expect("the plate's words");
+            let middle = |frame: &gtk::Overlay| {
+                let at = words
+                    .compute_point(frame, &gtk::graphene::Point::new(0.0, 0.0))
+                    .expect("the words are in the frame");
+                f64::from(at.y()) + f64::from(words.height()) / 2.0
+            };
+            picture.set_size_request(200, 300);
+            strip_frame_seen(&picture, Some((0.0, 300.0)));
+            pump(100);
+            assert!(
+                (middle(&frame) - 150.0).abs() <= 2.0,
+                "centred in an image wholly on screen"
+            );
+            picture.set_size_request(200, 1600);
+            strip_frame_seen(&picture, Some((1000.0, 1400.0)));
+            pump(100);
+            assert!((middle(&frame) - 1200.0).abs() <= 2.0, "centred on the part on screen");
+            window.destroy();
+        });
+    }
+
+    /// A sliver on screen still leaves the words their room, inside the image; off screen they
+    /// take the middle.
+    #[test]
+    fn strip_plate_margins_keep_the_words_inside_the_image() {
+        assert_eq!(strip_words_margins(3000, Some((1600.0, 2400.0)), 50), (1600, 600));
+        assert_eq!(strip_words_margins(3000, Some((-500.0, 10.0)), 50), (0, 2950));
+        assert_eq!(strip_words_margins(3000, Some((2990.0, 3400.0)), 50), (2950, 0));
+        assert_eq!(strip_words_margins(3000, None, 50), (0, 0));
+        assert_eq!(strip_words_margins(3000, Some((3200.0, 3600.0)), 50), (0, 0));
+    }
+
+    /// A file that comes within 600 ms never shows a plate.
+    #[test]
+    fn a_quick_strip_image_shows_no_plate() {
+        run(|| {
+            let (frame, picture) = strip_frame(0);
+            let window = gtk::Window::builder().default_width(400).default_height(400).build();
+            window.set_child(Some(&frame));
+            window.present();
+            pump(100);
+            fill_strip_frame(&picture, &texture(), false);
+            pump(800);
+            assert!(!picture.next_sibling().expect("a plate").is_visible());
+            window.destroy();
+        });
+    }
+
+    /// A novel's notice clears the group once the chrome shows, also when the group comes back
+    /// from hidden: it is shown before it is measured.
+    #[test]
+    fn the_notice_clears_a_group_that_was_hidden() {
+        run(|| {
+            let group = gtk::Box::new(gtk::Orientation::Vertical, 2);
+            for _ in 0..3 {
+                let row = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+                row.set_size_request(300, 36);
+                group.append(&row);
+            }
+            group.set_margin_bottom(16);
+            group.set_valign(gtk::Align::End);
+            let window = gtk::Window::builder().default_width(360).default_height(780).build();
+            window.set_child(Some(&group));
+            window.present();
+            let fade = Fader::always();
+            fade.hide_now(&group);
+            pump(50);
+            // Hidden, the group measures nothing: measured before it shows, the notice would
+            // sit on it, which is why the chrome shows the group first.
+            assert_eq!(notice_lift(&group, true), 16 + 12);
+            fade.set(&group, true);
+            let lift = notice_lift(&group, true);
+            assert!(lift >= 16 + 3 * 36 + 12, "the notice sits {lift} px up, on the group");
+            assert_eq!(notice_lift(&group, false), 44);
+            window.destroy();
+        });
+    }
+
+    #[test]
+    fn a_page_is_asked_for_before_its_neighbours() {
+        use super::wanted_leaves;
+        assert_eq!(wanted_leaves(99, 150), vec![99, 100, 101, 98]);
+        assert_eq!(wanted_leaves(0, 150), vec![0, 1, 2]);
+        assert_eq!(wanted_leaves(149, 150), vec![149, 148]);
+        assert_eq!(wanted_leaves(5, 0), Vec::<usize>::new());
+    }
+
+    #[test]
+    fn a_strip_asks_for_what_is_in_view_first() {
+        use super::strip_wanted;
+        // Ten images 100 tall with 10 between, the window over the sixth and seventh.
+        let heights = [100; 10];
+        let (wanted, foot) = strip_wanted(&heights, 10, 560.0, 760.0, 250.0);
+        assert_eq!(wanted, vec![5, 6, 7, 8, 9, 4, 3, 2]);
+        assert_eq!(foot, 1090.0);
+        // At the top nothing lies behind.
+        let (wanted, _) = strip_wanted(&heights, 10, 0.0, 150.0, 120.0);
+        assert_eq!(wanted, vec![0, 1, 2]);
+        assert_eq!(strip_wanted(&[], 10, 0.0, 100.0, 50.0).0, Vec::<usize>::new());
+    }
+
+    #[test]
+    fn a_popover_slides_to_stay_in_the_window() {
+        // Over its button where it fits.
+        assert_eq!(popover_middle(500.0, 340.0, 1280.0), 500.0);
+        // At the end of a narrow window it slides in, 8 px from the edge.
+        assert_eq!(popover_middle(300.0, 300.0, 360.0), 360.0 - 8.0 - 150.0);
+        assert_eq!(popover_middle(20.0, 300.0, 360.0), 8.0 + 150.0);
+        // Wider than the window: in its middle.
+        assert_eq!(popover_middle(300.0, 400.0, 360.0), 180.0);
     }
 }

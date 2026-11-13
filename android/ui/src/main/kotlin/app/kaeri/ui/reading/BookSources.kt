@@ -75,6 +75,7 @@ import app.kaeri.i18n.Strings
 import app.kaeri.store.Adding
 import app.kaeri.ui.Icons
 import app.kaeri.ui.InfoRow
+import app.kaeri.ui.RowMark
 import app.kaeri.ui.LocalAppStore
 import app.kaeri.ui.LocalNavigator
 import app.kaeri.ui.Place
@@ -335,7 +336,7 @@ internal fun BookSourcesList(onAdd: () -> Unit, storesLink: Boolean = true) {
         return
     }
     val unsure = shown.unsure().size
-    val chevron: @Composable () -> Unit = { Icon(Icons.Chevron, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) }
+    val chevron: @Composable () -> Unit = { RowMark(Icons.Chevron) }
     if (folders.isNotEmpty()) {
         SettingsGroup(
             title = stringResource(R.string.book_sources_folders),
@@ -478,7 +479,7 @@ internal fun AddSourceSheet(onDismiss: () -> Unit) {
     SettingsSheet(onDismiss) {
         app.kaeri.ui.SheetTitle(stringResource(R.string.sources_add_title))
         SheetText(stringResource(R.string.book_add_line))
-        val chevron: @Composable () -> Unit = { Icon(Icons.Chevron, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) }
+        val chevron: @Composable () -> Unit = { RowMark(Icons.Chevron) }
         SettingsGroup(
             modifier = Modifier.padding(top = 16.dp),
             rows = listOf(

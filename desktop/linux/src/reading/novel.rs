@@ -273,6 +273,9 @@ pub enum NovelSays {
     Middle,
     /// Past the last page of the last document.
     End,
+    /// The page can't show the text any more: its web process stopped, or the document
+    /// failed to load.
+    Failed,
 }
 
 impl NovelView {
@@ -385,10 +388,17 @@ impl NovelView {
             }
         });
         // A load that failed leaves the page as it was, never WebKit's error page, which would
-        // lay out at the book's address as if it were the book.
+        // lay out at the book's address as if it were the book. A real failure, not a load the
+        // next one replaced or one a policy stopped, has the reader say the chapter couldn't
+        // show, with Try again.
         view.connect_local("load-failed", false, {
+            let tell = Rc::downgrade(&this.tell);
             let this = Rc::downgrade(&this);
             move |values| {
+                if values.get(3).is_some_and(load_really_failed) {
+                    failed_later(&tell);
+                    return Some(true.to_value());
+                }
                 let uri = values.get(2).and_then(|v| v.get::<Option<String>>().ok()).flatten();
                 if let Some(uri) = uri {
                     let this = this.clone();
@@ -402,6 +412,15 @@ impl NovelView {
             }
         });
         view.connect_local("context-menu", false, |_| Some(true.to_value()));
+        // A web process that stops leaves a blank page that turns go to: the reader says the
+        // chapter couldn't show, with Try again. Told after the signal, on the main loop.
+        view.connect_local("web-process-terminated", false, {
+            let tell = Rc::downgrade(&this.tell);
+            move |_| {
+                failed_later(&tell);
+                None
+            }
+        });
         let opening = this.cross.borrow_mut().open();
         this.run(opening);
         if !open.style.is_empty() {
@@ -444,6 +463,36 @@ impl NovelView {
         self.call(&format!("window.kaeriReader && window.kaeriReader.goTo({page}, 'jump')")); // i18n-skip
     }
 
+    /// Show the document's last page, from End.
+    pub fn go_to_end(&self) {
+        self.call(
+            "window.kaeriReader && window.kaeriReader.goTo(window.kaeriReader.count() - 1, 'jump')", // i18n-skip
+        );
+    }
+
+    /// Show a place the engine moved to: a resume, Back to page, another device's place. It
+    /// reports as placed, so it neither offers Back to page nor takes it away.
+    pub fn go_to_pos(&self, pos: &NovelPos) {
+        let at = pos.encode();
+        let act = {
+            let mut cross = self.cross.borrow_mut();
+            let Some((url, _)) = cross.spine.get(pos.spine as usize).cloned() else { return };
+            cross.ready_how = None;
+            let shown = cross.shown.clone();
+            if cross.index(shown.as_deref()) == Some(pos.spine as usize) {
+                None
+            } else {
+                Some(cross.load(format!("{url}#kaeri:pos={at}"))) // i18n-skip
+            }
+        };
+        match act {
+            Some(act) => self.run(vec![act]),
+            None => self.call(&format!(
+                "window.kaeriReader && window.kaeriReader.goToPos('{at}', 'placed')" // i18n-skip
+            )),
+        }
+    }
+
     pub fn turn(&self, forward: bool) {
         self.call(&format!(
             "window.kaeriReader && window.kaeriReader.{}('key')", // i18n-skip
@@ -480,7 +529,15 @@ impl NovelView {
                 Act::Load(url) => self.load(&url),
                 Act::Turn(forward) => self.turn(forward),
                 Act::Middle => (self.tell)(NovelSays::Middle),
-                Act::End => (self.tell)(NovelSays::End),
+                Act::First => self.go_to(0),
+                Act::Last => self.go_to_end(),
+                Act::End => {
+                    let last = self.cross.borrow().reported.clone();
+                    if let Some(end) = end_at(self.session, &self.chapter, last.as_ref()) {
+                        (self.send)(end);
+                    }
+                    (self.tell)(NovelSays::End);
+                }
             }
         }
     }
@@ -517,6 +574,10 @@ enum Act {
     Load(String),
     Turn(bool),
     Middle,
+    /// The document's first page, from Home.
+    First,
+    /// The document's last page, from End.
+    Last,
     /// Past the last page of the last document.
     End,
 }
@@ -550,6 +611,12 @@ struct Cross {
     shown: Option<String>,
     /// The address being loaded, until its page is laid out or its load fails.
     pending: Option<String>,
+    /// How the document loading now came: a turn past a document's edge, or a link the
+    /// person followed. Anything else loaded is placed.
+    ready_how: Option<TurnHow>,
+    /// The last place the book's page reported, with its document's page count: the end page
+    /// is reported from it.
+    reported: Option<(NovelPos, u32)>,
 }
 
 impl Cross {
@@ -567,7 +634,17 @@ impl Cross {
             }
             None => entry.to_owned(),
         };
-        Self { spine, root, opening, last: None, recovering: false, shown: None, pending: None }
+        Self {
+            spine,
+            root,
+            opening,
+            last: None,
+            recovering: false,
+            shown: None,
+            pending: None,
+            ready_how: None,
+            reported: None,
+        }
     }
 
     /// The chapter's first load.
@@ -636,6 +713,7 @@ impl Cross {
             return Vec::new();
         }
         self.recovering = true;
+        self.ready_how = None;
         let back = self.back();
         vec![self.load(back)]
     }
@@ -646,6 +724,7 @@ impl Cross {
         let shown = self.shown.clone();
         let Some(current) = self.index(shown.as_deref()).or(self.last.as_ref().map(|l| l.0))
         else {
+            self.ready_how = None;
             let back = self.back();
             return vec![self.load(back)];
         };
@@ -654,6 +733,7 @@ impl Cross {
         {
             if *linear {
                 let url = if by < 0 { format!("{url}#kaeri:end") } else { url.clone() }; // i18n-skip
+                self.ready_how = Some(TurnHow::Turn);
                 return vec![self.load(url)];
             }
             i += by;
@@ -704,11 +784,14 @@ impl Cross {
                     Some("key") => TurnHow::Key,
                     Some("scroll") => TurnHow::Scroll,
                     Some("turn") => TurnHow::Turn,
-                    _ => TurnHow::Jump,
+                    Some("jump") => TurnHow::Jump,
+                    // Ready after a load: how it came, or the app's own move.
+                    _ => self.ready_how.unwrap_or(TurnHow::Placed),
                 };
                 let spine = json["spine"].as_u64().unwrap_or(0) as u32;
                 let keep = if kind == "ready" {
                     self.pending = None;
+                    self.ready_how = None;
                     match self.shown(uri, spine, &place) {
                         Shown::Book => {
                             self.shown = uri.map(str::to_owned);
@@ -728,6 +811,7 @@ impl Cross {
                 };
                 let mut acts = Vec::new();
                 if keep {
+                    self.reported = Some((place.clone(), pages));
                     acts.push(Act::Place { pos: place, page, pages, how });
                 }
                 acts.push(Act::Pages { page, pages });
@@ -745,6 +829,8 @@ impl Cross {
                 Some("ArrowLeft") => vec![Act::Turn(rtl)],   // i18n-skip
                 Some("ArrowDown" | "PageDown" | " ") => vec![Act::Turn(true)],
                 Some("ArrowUp" | "PageUp") => vec![Act::Turn(false)],
+                Some("Home") => vec![Act::First], // i18n-skip
+                Some("End") => vec![Act::Last],   // i18n-skip
                 _ => Vec::new(),
             },
             Some("tap") => match json["x"].as_f64() {
@@ -761,6 +847,7 @@ impl Cross {
                 Some(href)
                     if json["internal"].as_bool() == Some(true) && self.in_book(Some(href)) =>
                 {
+                    self.ready_how = Some(TurnHow::Jump);
                     vec![self.load(href.to_owned())]
                 }
                 _ => Vec::new(),
@@ -794,6 +881,35 @@ fn document(address: &str) -> String {
         }
     }
     String::from_utf8_lossy(&out).into_owned()
+}
+
+/// Tell the reader the page failed, once the signal that said so has returned.
+fn failed_later(tell: &std::rc::Weak<dyn Fn(NovelSays)>) {
+    let tell = tell.clone();
+    glib::idle_add_local_once(move || {
+        if let Some(tell) = tell.upgrade() {
+            tell(NovelSays::Failed);
+        }
+    });
+}
+
+/// WebKitNetworkError's code for a load cancelled by the next one, as a quick second turn does.
+const NETWORK_CANCELLED: i32 = 302;
+
+/// Whether `load-failed`'s error is a real failure: not a load the next one replaced, and not
+/// one the page's own policy stopped.
+fn load_really_failed(error: &glib::Value) -> bool {
+    let Ok(error) = error.get::<glib::Error>() else { return false };
+    let code = {
+        let raw: *const glib::ffi::GError = error.to_glib_none().0;
+        // SAFETY: the error is alive for the call and owns its GError.
+        unsafe { (*raw).code }
+    };
+    let domain = error.domain();
+    let policy = domain == glib::Quark::from_str("WebKitPolicyError");
+    let cancelled =
+        domain == glib::Quark::from_str("WebKitNetworkError") && code == NETWORK_CANCELLED;
+    !(policy || cancelled)
 }
 
 /// WebKitPolicyDecisionType's navigation and new-window actions, which both carry a URI, and
@@ -869,6 +985,25 @@ fn is_navigation(kind: i32) -> bool {
     matches!(kind, NAVIGATION_ACTION | NEW_WINDOW_ACTION)
 }
 
+/// The end page as the engine hears it: the last place the page reported, at the page after
+/// its last. The engine reads the chapter at once there, as "After the last page" asks. None
+/// before the page has reported a place.
+fn end_at(
+    session: u64,
+    chapter: &ChapterId,
+    last: Option<&(NovelPos, u32)>,
+) -> Option<ReaderCommand> {
+    let (pos, pages) = last?;
+    Some(ReaderCommand::NovelAt {
+        session,
+        chapter: chapter.clone(),
+        pos: pos.clone(),
+        page: *pages,
+        pages: *pages,
+        how: TurnHow::Turn,
+    })
+}
+
 /// Whether a navigation stays inside the book: its own scheme or the blank page. A navigation
 /// whose URI can't be read leaves.
 fn stays_in_book(uri: Option<&str>) -> bool {
@@ -878,6 +1013,21 @@ fn stays_in_book(uri: Option<&str>) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_end_page_is_the_page_after_the_last() {
+        let chapter = ChapterId::new("7");
+        assert!(end_at(3, &chapter, None).is_none(), "nothing reported yet");
+        let pos = NovelPos { spine: 4, path: vec![2], offset: 0 };
+        let Some(ReaderCommand::NovelAt { session, chapter: at, pos: place, page, pages, how }) =
+            end_at(3, &chapter, Some(&(pos.clone(), 12)))
+        else {
+            panic!("the end page is a place");
+        };
+        assert_eq!((session, at, place), (3, chapter, pos));
+        // The engine reads the chapter at once at page == pages.
+        assert_eq!((page, pages, how), (12, 12, TurnHow::Turn));
+    }
 
     #[test]
     fn only_the_book_and_the_blank_page_stay() {

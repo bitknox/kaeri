@@ -65,12 +65,42 @@ pub struct Capabilities {
     allowed_hosts: Vec<String>,
     limits: Limits,
     fetches: Arc<AtomicU32>,
+    /// What this call's fetches met, shared with whoever made the call.
+    reach: Reach,
     /// `None` in tests that exercise policy without a network.
     http: Option<crate::HttpClient>,
     /// This plugin's section of the user's configuration, served one key at a time through
     /// `config-get`. Read-only pairs the host does not interpret — how a login-gated source
     /// receives an API key without the guest gaining any filesystem access.
     settings: std::collections::BTreeMap<String, String>,
+}
+
+/// Whether one call's fetches got through to a server. A guest whose every request failed on
+/// the way out can only guess at why; the host knows it was the network.
+#[derive(Debug, Clone, Default)]
+pub struct Reach(Arc<Reached>);
+
+#[derive(Debug, Default)]
+struct Reached {
+    answered: AtomicU32,
+    unsent: AtomicU32,
+}
+
+impl Reach {
+    fn note(&self, sent: &Result<Response, HostError>) {
+        match sent {
+            Ok(_) => self.0.answered.fetch_add(1, Ordering::Relaxed),
+            Err(HostError::Transport(_)) => self.0.unsent.fetch_add(1, Ordering::Relaxed),
+            Err(_) => return,
+        };
+    }
+
+    /// Whether the call asked the network and no request reached a server: every fetch failed
+    /// on the way, as it does with no connection.
+    pub fn never_reached(&self) -> bool {
+        self.0.unsent.load(Ordering::Relaxed) > 0
+            && self.0.answered.load(Ordering::Relaxed) == 0
+    }
 }
 
 impl Capabilities {
@@ -85,6 +115,7 @@ impl Capabilities {
             allowed_hosts,
             limits,
             fetches: Arc::new(AtomicU32::new(0)),
+            reach: Reach::default(),
             http,
             settings: Default::default(),
         }
@@ -111,6 +142,11 @@ impl Capabilities {
 
     pub fn fetches_used(&self) -> u32 {
         self.fetches.load(Ordering::Relaxed)
+    }
+
+    /// What this call's fetches meet, readable after the call by whoever kept a copy.
+    pub fn reach(&self) -> Reach {
+        self.reach.clone()
     }
 
     /// Check a request against policy without performing it.
@@ -158,10 +194,12 @@ impl Capabilities {
         self.authorise(&request)?;
         self.fetches.fetch_add(1, Ordering::Relaxed);
 
-        let Some(http) = &self.http else {
-            return Err(HostError::Transport("no http client in this host".into()));
+        let sent = match &self.http {
+            Some(http) => self.send(http, request).await,
+            None => Err(HostError::Transport("no http client in this host".into())),
         };
-        self.send(http, request).await
+        self.reach.note(&sent);
+        sent
     }
 
     /// Without `fetch` there is no client, so there is nothing to send with.

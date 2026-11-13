@@ -47,8 +47,17 @@ struct PageImage: View {
                     .transition(.opacity)
             }
         }
-        .onAppear { if image != nil { onPaint?() } }
-        .task(id: "\(file.path)|\(Int(longest))") {
+        .onAppear {
+            // Back on screen after its pixels were let go: the cache's copy draws at once.
+            if image == nil { image = PageImages.cached(file, longestSide: longest) }
+            if image != nil { onPaint?() }
+        }
+        // Off screen, the page lets its pixels go: a long strip keeps every row it has shown,
+        // and each holding its own image would hold the whole run. The cache keeps the recent
+        // ones, up to its limit, for coming back.
+        .onDisappear { image = nil }
+        // The crop is in the id: crop borders on and off send the same original with another crop.
+        .task(id: "\(file.path)|\(file.crop.map { "\($0.x),\($0.y),\($0.width),\($0.height)" } ?? "")|\(Int(longest))") {
             guard let loaded = await PageImages.load(file, longestSide: longest), !Task.isCancelled else { return }
             if image === loaded { return }
             // A page that arrives late fades in over its plate; Reduce Motion keeps the fade,
@@ -68,19 +77,41 @@ struct PageImage: View {
     }
 }
 
-/// The Raised plate that holds a page's place with its number. Nothing shows for 600 ms, and a
-/// line says it is loading from 4 s. A chapter that is opening shows it at once: it is the
-/// place the first page comes into.
+/// The Raised plate that holds a page's place with its number, "Page 23", or "Image 23" for a
+/// strip image. Nothing shows for 600 ms, and from 4 s a line under the number says it is
+/// loading. A chapter that is opening shows it at once: it is the place the first page comes
+/// into. A strip image's words sit in the middle of the part of it on screen, so they stay in
+/// view however tall the image is and wherever the strip is scrolled to.
 struct PagePlate: View {
     let page: Int
     let theme: ReaderTheme
+    let image: Bool
     @State private var shown: Bool
     @State private var line = false
+    @State private var words: CGFloat = 0
 
-    init(page: Int, theme: ReaderTheme, atOnce: Bool = false) {
+    init(page: Int, theme: ReaderTheme, atOnce: Bool = false, image: Bool = false) {
         self.page = page
         self.theme = theme
+        self.image = image
         _shown = State(initialValue: atOnce)
+    }
+
+    /// How far a strip plate's words move from its middle so they sit in the middle of the part
+    /// of the plate on screen, kept inside the plate. `visible` is that part in the plate's own
+    /// coordinates; with none on screen the words stay in the middle.
+    nonisolated static func wordsShift(plate: CGFloat, visible: ClosedRange<CGFloat>?, words: CGFloat) -> CGFloat {
+        guard let visible, visible.upperBound > visible.lowerBound, plate > words else { return 0 }
+        let middle = (visible.lowerBound + visible.upperBound) / 2
+        return min(max(middle, words / 2), plate - words / 2) - plate / 2
+    }
+
+    /// The part of the plate inside its scroll view, in the plate's coordinates.
+    private nonisolated static func onScreen(_ proxy: GeometryProxy) -> ClosedRange<CGFloat>? {
+        guard let bounds = proxy.bounds(of: .scrollView) else { return nil }
+        let top = max(bounds.minY, 0)
+        let bottom = min(bounds.maxY, proxy.size.height)
+        return top < bottom ? top...bottom : nil
     }
 
     var body: some View {
@@ -88,11 +119,19 @@ struct PagePlate: View {
             if shown {
                 Rectangle().fill(theme.raised)
                 VStack(spacing: 6) {
-                    Text(verbatim: "\(page)").font(.ui(15)).monospacedDigit().foregroundStyle(theme.haze)
+                    Text(image ? L.readerImagePlate(image: page) : L.readerPagePlate(page: page))
+                        .font(.ui(15)).monospacedDigit().foregroundStyle(theme.haze)
                     if line {
-                        Text(L.readerPageLoading(page: page)).font(.ui(13)).foregroundStyle(theme.haze)
+                        Text(image ? L.readerImageLoading(image: page) : L.readerPageLoading(page: page))
+                            .font(.ui(13)).foregroundStyle(theme.haze)
                             .transition(.opacity)
                     }
+                }
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { words = $0 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .visualEffect { [image, words] content, proxy in
+                    content.offset(y: image ? Self.wordsShift(
+                        plate: proxy.size.height, visible: Self.onScreen(proxy), words: words) : 0)
                 }
                 .transition(.opacity)
             }
@@ -168,7 +207,7 @@ struct ReaderAmberStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.ui(height < 32 ? 12 : height < 44 ? 15 : 17, weight: .semibold))
+            .font(.ui(height < 32 ? 12 : height < 50 ? 15 : 17, weight: .semibold))
             .foregroundStyle(theme.onAmber)
             .frame(maxWidth: .infinity, minHeight: height)
             .background(theme.amber.opacity(configuration.isPressed ? 0.85 : 1), in: .capsule)
@@ -237,7 +276,10 @@ struct PartView: View {
                 PagePlate(page: number, theme: theme, atOnce: fresh)
             }
             if let file = model.file(of: part, chapter: chapter) {
-                let image = PageImage(file: file, longest: max(box.width, box.height) * scale, tone: tone, onPaint: {
+                // Fit width draws the page as wide as the box however tall that makes it, so it
+                // is decoded for that height, not the box's.
+                let shown = fitWidth && !part.rotate ? PageImages.longest(file, width: box.width) : max(box.width, box.height)
+                let image = PageImage(file: file, longest: shown * scale, tone: tone, onPaint: {
                     painted = true
                     model.pagePainted(chapter: chapter, page: part.page)
                 })

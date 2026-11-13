@@ -3,6 +3,8 @@ package app.kaeri.ui
 import android.view.ViewGroup
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onRoot
 import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
@@ -94,6 +96,26 @@ abstract class ReadingShotHarness {
         eink: app.kaeri.eink.EinkLook? = null,
         ready: (AppStore) -> Boolean,
     ) {
+        val store = launch(scene, start, page, medium, eink)
+        pump(name, ready)
+        compose.runOnUiThread { then(store) }
+        pump(name, ready)
+        if (act != null) {
+            settle(store)
+            act()
+            pump(name, acted)
+        }
+        if (after != null) {
+            settle(store)
+            after()
+        }
+        settle(store)
+        val file = "${roborazziSystemPropertyOutputDirectory()}/$name.png"
+        if (screen) captureScreenRoboImage(file) else compose.onRoot().captureRoboImage(file)
+    }
+
+    /** [scene] started on the testing engine and the frame drawn on [start], [medium] chosen. */
+    private fun launch(scene: FixtureScene, start: Destination, page: String?, medium: KaeriIsFor?, eink: app.kaeri.eink.EinkLook?): AppStore {
         val store = AppStore(scope)
         this.store = store
         store.start(EngineLaunch(EngineLaunch.Engine.Fixtures(scene), EngineHome.override(root)), AppHost(MemorySecrets()))
@@ -112,21 +134,38 @@ abstract class ReadingShotHarness {
             compose.runOnUiThread { store.medium.choose(medium) }
             pump("the medium $medium") { it.medium.view.value?.answer == medium }
         }
+        return store
+    }
+
+    /**
+     * A motion clip: [scene] on [start] as [shoot] draws it, settled, then [act] run on the UI
+     * thread and the screen captured every 16 ms of the frame clock for [clipMs], into
+     * [out]/[name] as frame-0000.png and on. The engine answers in its own time, as it would.
+     */
+    protected fun frames(
+        name: String,
+        scene: FixtureScene,
+        start: Destination,
+        out: File,
+        clipMs: Long = 800,
+        ready: (AppStore) -> Boolean = { true },
+        act: (AppStore) -> Unit,
+    ) {
+        val store = launch(scene, start, page = null, medium = null, eink = null)
         pump(name, ready)
-        compose.runOnUiThread { then(store) }
-        pump(name, ready)
-        if (act != null) {
-            settle(store)
-            act()
-            pump(name, acted)
-        }
-        if (after != null) {
-            settle(store)
-            after()
-        }
         settle(store)
-        val file = "${roborazziSystemPropertyOutputDirectory()}/$name.png"
-        if (screen) captureScreenRoboImage(file) else compose.onRoot().captureRoboImage(file)
+        compose.mainClock.autoAdvance = false
+        val dir = File(out, name).apply { deleteRecursively(); mkdirs() }
+        compose.runOnUiThread { act(store) }
+        var at = 0L
+        while (at <= clipMs) {
+            val frame = compose.onRoot().captureToImage().asAndroidBitmap()
+            File(dir, "frame-%04d.png".format(at)).outputStream().use { frame.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+            ShadowLooper.idleMainLooper()
+            compose.mainClock.advanceTimeBy(FRAME_MS)
+            at += FRAME_MS
+        }
+        compose.mainClock.autoAdvance = true
     }
 
     /** Run the main looper, where the engine's answers land, until [until] holds. */
@@ -190,7 +229,13 @@ abstract class ReadingShotHarness {
         /** The 7 inch e-reader of the e-ink board: 674 × 896 dp. */
         const val EREADER_7 = "w674dp-h896dp-port-xhdpi"
 
+        /** A 10.3 inch e-reader at 300 dpi, as an Onyx Boox Note Air 4C: 992 × 1323 dp, the e-ink board's 10.3 inch. */
+        const val EREADER_10 = "w992dp-h1323dp-port-300dpi"
+
         /** The e-ink phone of the discovery board: 439 × 879 dp. */
         const val EINK_PHONE = "w439dp-h879dp-port-xxhdpi"
+
+        /** A frame of a motion clip, at 60 Hz. */
+        const val FRAME_MS = 16L
     }
 }

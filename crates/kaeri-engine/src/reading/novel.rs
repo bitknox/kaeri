@@ -1,7 +1,7 @@
 //! Novels in the platform web view: the open book served through the platform's scheme, its
 //! documents cleaned, and the paginator's settings.
 //!
-//! The web view asks for `kaeri-book://<session>/<path>` (Apple, WebView2, WebKitGTK) or
+//! The web view asks for `kaeri-book://s<session>/<path>` (Apple, WebView2, WebKitGTK) or
 //! `https://appassets.androidplatform.net/book/<session>/<path>` (Android). The scheme handler
 //! calls [`NovelBooks::resource`] on whatever thread it runs on: it reads the book directly,
 //! never through the event loop, so a page never waits behind a command. Every answer carries
@@ -32,6 +32,7 @@ use kaeri_books::{
     Book, Epub, Limits,
     novel::{self, Clean, Document},
 };
+use kaeri_core::books::SourceChapter;
 use kaeri_model::{
     eink::NovelSupport,
     playback::HttpHeader,
@@ -44,10 +45,13 @@ use kaeri_model::{
 use kaeri_pages::{Look, Panel, Renderer, Target, resize::Fit};
 
 use super::settings::Layers;
+use crate::read_sources::pictures::{Shown, TextPictures};
 
 /// A stylesheet or picture kept for an open book: its type and its bytes.
 type Kept = (&'static str, Arc<[u8]>);
 
+/// A picture of nothing, the answer to the paginator's questions about a picture.
+const NOTHING: &[u8] = b"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1\" height=\"1\"/>";
 /// The path a source's text chapter is served at.
 pub const TEXT_CHAPTER: &str = "chapter.xhtml";
 /// The page's foot on a desktop: room for the reader's floating bottom group (about 90 px
@@ -76,13 +80,17 @@ pub fn assets() -> NovelAssets {
 /// Where the platform's web view loads books from.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Scheme {
-    /// `kaeri-book://<session>/<path>`.
+    /// `kaeri-book://s<session>/<path>`. The host is a name, never a bare number: WebView2
+    /// registers the scheme as a standard one, and Chromium reads a numeric host such as `7` as
+    /// the IPv4 address `0.0.0.7`, so the URL it asks for would name no session.
     Kaeri,
     /// `https://appassets.androidplatform.net/book/<session>/<path>` (WebViewAssetLoader).
     AndroidAssets,
 }
 
 const KAERI_PREFIX: &str = "kaeri-book://";
+/// What goes before the session number in a `kaeri-book` host.
+const KAERI_HOST: &str = "s";
 const ANDROID_PREFIX: &str = "https://appassets.androidplatform.net/book/";
 
 impl Scheme {
@@ -116,8 +124,8 @@ impl NovelBooks {
     pub fn url(&self, session: u64, path: &str) -> String {
         let encoded: Vec<String> = path.split('/').map(encode_segment).collect();
         let prefix = match self.scheme {
-            Scheme::Kaeri => KAERI_PREFIX,
-            Scheme::AndroidAssets => ANDROID_PREFIX,
+            Scheme::Kaeri => format!("{KAERI_PREFIX}{KAERI_HOST}"),
+            Scheme::AndroidAssets => ANDROID_PREFIX.to_owned(),
         };
         format!("{prefix}{session}/{}", encoded.join("/"))
     }
@@ -126,9 +134,10 @@ impl NovelBooks {
     /// which the host lets fail; a book's file that is missing or refused is a 404 or 403.
     pub fn resource(&self, url: &str) -> Option<BookResource> {
         let (session, path) = parse_url(url)?;
+        let query = url.split('#').next().and_then(|u| u.split_once('?')).map(|(_, q)| q);
         let book = self.books.read().ok()?.get(&session).cloned();
         Some(match (book, path) {
-            (Some(book), Some(path)) => book.resource(&path),
+            (Some(book), Some(path)) => book.resource_asked(&path, query),
             _ => respond(404, "text/plain", BookBody::Bytes { data: Vec::new() }),
         })
     }
@@ -165,10 +174,13 @@ fn encode_segment(s: &str) -> String {
 /// The session and the normalised path in the book: `None` for a URL off both origins,
 /// `Some((session, None))` for one whose path leaves the book.
 fn parse_url(url: &str) -> Option<(u64, Option<String>)> {
-    let rest = url.strip_prefix(KAERI_PREFIX).or_else(|| url.strip_prefix(ANDROID_PREFIX))?;
+    let (rest, host) = match url.strip_prefix(KAERI_PREFIX) {
+        Some(rest) => (rest, KAERI_HOST),
+        None => (url.strip_prefix(ANDROID_PREFIX)?, ""),
+    };
     let rest = rest.split(['?', '#']).next().unwrap_or_default();
     let (session, path) = rest.split_once('/')?;
-    let session = session.parse().ok()?;
+    let session = session.strip_prefix(host)?.parse().ok()?;
     let path = kaeri_books::path::percent_decode(path).and_then(|p| {
         let limits = Limits::default();
         kaeri_books::path::entry_name(&p, limits.max_name_bytes, limits.max_path_depth)
@@ -235,7 +247,8 @@ pub(crate) struct Opening {
 
 enum Content {
     Epub(Mutex<Box<Epub>>),
-    Text(Arc<Document>),
+    /// A source's text chapter and its pictures, some perhaps still coming.
+    Text(Arc<Document>, Option<Arc<TextPictures>>),
 }
 
 /// One open book, as the web view sees it.
@@ -290,12 +303,28 @@ impl ServedBook {
         let style = self.style.read().map(|s| s.clone()).unwrap_or_default();
         let index = spine.unwrap_or(0);
         let last = spine.is_some_and(|i| i >= self.last_linear);
-        let head = format!("{{\"spine\":{index},\"last\":{last}");
+        let head = format!("{{\"spine\":{index},\"last\":{last}{}", self.pictures_setup());
         match style.trim().strip_prefix('{') {
             Some(rest) if rest.trim_start().starts_with('}') => format!("{head}}}"),
             Some(rest) => format!("{head},{rest}"),
             None => format!("{head}}}"),
         }
+    }
+
+    /// For a text chapter with pictures not in yet: their paths, for the paginator to keep a
+    /// box of a fixed size for each, and the words of a picture that did not come.
+    fn pictures_setup(&self) -> String {
+        let Content::Text(_, Some(pictures)) = &self.content else { return String::new() };
+        let waiting = pictures.not_in();
+        if waiting.is_empty() {
+            return String::new();
+        }
+        let json = serde_json::json!({
+            "waiting": waiting,
+            "failed": kaeri_i18n::t::reading_picture_failed(),
+            "again": kaeri_i18n::t::reader_try_again(),
+        });
+        format!(",\"pictures\":{json}")
     }
 
     fn clean<'a>(&'a self, path: &'a str) -> Clean<'a> {
@@ -318,7 +347,13 @@ impl ServedBook {
         if let Some(doc) = self.docs.lock().ok().and_then(|d| d.get(path).cloned()) {
             return doc;
         }
-        let doc = Arc::new(novel::document(bytes, &self.clean(path)));
+        let mut doc = novel::document(bytes, &self.clean(path));
+        // A chapter kept from a source is a book of its own, its title said twice at times, as
+        // the source gave it (`heading_once`, which a chapter read from the source has too).
+        if doc.failed.is_none() {
+            doc.text = novel::heading_once(&doc.text, &|_| None);
+        }
+        let doc = Arc::new(doc);
         if let Ok(mut docs) = self.docs.lock() {
             if docs.len() >= KEPT_DOCUMENTS {
                 docs.clear();
@@ -328,12 +363,14 @@ impl ServedBook {
         doc
     }
 
-    pub fn resource(&self, path: &str) -> BookResource {
+    /// The answer for `path`, asked with `query` (the part of the URL after `?`).
+    pub fn resource_asked(&self, path: &str, query: Option<&str>) -> BookResource {
         let epub = match &self.content {
-            Content::Text(doc) if path == TEXT_CHAPTER => {
+            Content::Text(doc, _) if path == TEXT_CHAPTER => {
                 return self.served_document(path, doc);
             }
-            Content::Text(_) => return missing(),
+            Content::Text(_, Some(pictures)) => return self.picture(pictures, path, query),
+            Content::Text(_, None) => return missing(),
             Content::Epub(epub) => epub,
         };
         let cached = self.docs.lock().ok().and_then(|d| d.get(path).cloned());
@@ -386,6 +423,34 @@ impl ServedBook {
                 }
             }
             _ => refused(),
+        }
+    }
+
+    /// A text chapter's picture. The paginator asks `?state` of one not in yet, which answers
+    /// whether it failed, and `?retry` of a failed one, which fetches it again; both answer with
+    /// a picture of nothing, so a probe's load or error is the answer.
+    fn picture(
+        &self,
+        pictures: &Arc<TextPictures>,
+        path: &str,
+        query: Option<&str>,
+    ) -> BookResource {
+        let asks = |word: &str| {
+            query.is_some_and(|q| q.split('&').any(|p| p.split('=').next() == Some(word)))
+        };
+        let Some(shown) = pictures.shown(path) else { return missing() };
+        let yes = || respond(200, "image/svg+xml", BookBody::Bytes { data: NOTHING.to_vec() });
+        if asks("retry") {
+            pictures.retry(path);
+            return yes();
+        }
+        if asks("state") {
+            return if shown == Shown::Failed { yes() } else { missing() };
+        }
+        match shown {
+            Shown::Ready(fetched) => self.image(path, fetched.media_type, &fetched.bytes),
+            Shown::Waiting => respond(503, "text/plain", BookBody::Bytes { data: Vec::new() }),
+            Shown::Failed => missing(),
         }
     }
 
@@ -563,7 +628,7 @@ pub(crate) fn open_epub(path: &Path, opening: Opening) -> Result<Opened, Reading
     let identity = {
         let mut h = DefaultHasher::new();
         shown.hash(&mut h);
-        std::fs::metadata(path).map(|m| m.len()).unwrap_or(0).hash(&mut h);
+        kaeri_books::tree::stat(path).map(|m| m.size).unwrap_or(0).hash(&mut h);
         epub.metadata().identifier.hash(&mut h);
         format!("{:016x}", h.finish())
     };
@@ -653,12 +718,37 @@ fn flatten_toc(
     }
 }
 
-/// A source's text chapter, ready for the web view.
+/// A source's text chapter with its title said once at its start: a source's page often opens
+/// with the title twice, and with the chapter's number again at its end. The heading kept says
+/// the chapter's title as its list does ([`cleaned_title`]). The reader and the download that
+/// keeps the chapter give it the same.
+pub(crate) fn heading_once(xhtml: &str, chapter: &SourceChapter) -> String {
+    novel::heading_once(xhtml, &|heading| {
+        let cleaned = cleaned_title(chapter, heading);
+        (cleaned != heading.trim()).then_some(cleaned)
+    })
+}
+
+/// `title` as a chapter's list says it: without its number again at its end. A title that only
+/// names the chapter stays as it is: a heading saying "Chapter 15" says it well.
+pub(crate) fn cleaned_title(chapter: &SourceChapter, title: &str) -> String {
+    let number = chapter.number.as_ref().map(ToString::to_string);
+    crate::read_catalog::chapters::own_title(
+        Some(title),
+        &chapter.number_raw,
+        number.as_deref(),
+    )
+    .unwrap_or(title.trim())
+    .to_owned()
+}
+
+/// A source's text chapter, ready for the web view, with its pictures.
 pub(crate) fn open_text(
     xhtml: &str,
     title: &str,
     lang: Option<String>,
     identity: String,
+    pictures: Option<Arc<TextPictures>>,
     opening: Opening,
 ) -> NovelBook {
     let clean = Clean {
@@ -671,7 +761,7 @@ pub(crate) fn open_text(
     let flow = doc.flow.unwrap_or(novel::Flow::Horizontal);
     let served = Arc::new(ServedBook {
         session: opening.session,
-        content: Content::Text(Arc::new(doc)),
+        content: Content::Text(Arc::new(doc), pictures),
         lang,
         soft_hyphens: opening.soft_hyphens,
         limits: opening.limits.clone(),
@@ -782,7 +872,10 @@ fn look(
 /// paginator's columns keep to it.
 const MEASURE: [u32; 2] = [65, 75];
 
-const SERIF: &str = "\"Literata\", \"Iowan Old Style\", Charter, Georgia, serif";
+/// Kaeri Serif CJK is the system's own Mincho face (reader.css), named before the generic serif,
+/// which falls back to a sans face for kana and kanji on Android.
+const SERIF: &str =
+    "\"Literata\", \"Iowan Old Style\", Charter, Georgia, \"Kaeri Serif CJK\", serif";
 const SANS: &str = "system-ui, -apple-system, \"Segoe UI\", Roboto, \"Noto Sans\", Helvetica, Arial, sans-serif";
 
 /// The paginator's settings as JSON, from the reader's settings and the screen.
@@ -938,6 +1031,7 @@ mod tests {
             "Chapter 1",
             Some("en".into()),
             "w:1".into(),
+            None,
             opening,
         );
         book.served.set_style("{\"size\":18}".into());
@@ -954,7 +1048,7 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let (books, _) = text_book(Scheme::Kaeri, dir.path());
         let url = books.url(7, TEXT_CHAPTER);
-        assert_eq!(url, "kaeri-book://7/chapter.xhtml");
+        assert_eq!(url, "kaeri-book://s7/chapter.xhtml");
         let r = books.resource(&format!("{url}#kaeri:pos=0/0/3")).unwrap();
         assert_eq!((r.status, r.mime.as_str()), (200, "application/xhtml+xml"));
         assert!(header(&r, "Content-Security-Policy").unwrap().contains("script-src 'none'"));
@@ -969,15 +1063,77 @@ mod tests {
             "{text}"
         );
         // Off the book, another session, a climb out: refused without reading anything.
-        assert_eq!(books.resource("kaeri-book://7/other.xhtml").unwrap().status, 404);
-        assert_eq!(books.resource("kaeri-book://8/chapter.xhtml").unwrap().status, 404);
-        assert_eq!(books.resource("kaeri-book://7/../../etc/passwd").unwrap().status, 404);
+        assert_eq!(books.resource("kaeri-book://s7/other.xhtml").unwrap().status, 404);
+        assert_eq!(books.resource("kaeri-book://s8/chapter.xhtml").unwrap().status, 404);
+        assert_eq!(books.resource("kaeri-book://s7/../../etc/passwd").unwrap().status, 404);
+        // A bare number names no session: Chromium would have read it as an address.
+        assert!(books.resource("kaeri-book://7/chapter.xhtml").is_none());
+        assert!(books.resource("kaeri-book://0.0.0.7/chapter.xhtml").is_none());
         assert!(books.resource("https://x.example/a").is_none());
         // Kaeri's stylesheet comes with the paginator: the chapter links none, and none is served.
         assert!(!text.contains("<link"), "{text}");
-        assert_eq!(books.resource("kaeri-book://7/_kaeri/reader.css").unwrap().status, 404);
+        assert_eq!(books.resource("kaeri-book://s7/_kaeri/reader.css").unwrap().status, 404);
         books.remove(7);
         assert_eq!(books.resource(&url).unwrap().status, 404);
+    }
+
+    #[tokio::test]
+    async fn a_text_chapters_pictures_are_served_as_they_stand() {
+        use crate::read_sources::pictures::{Fetched, ONE_PIXEL_PNG};
+        let dir = tempfile::tempdir().unwrap();
+        let books = NovelBooks::with_scheme(Scheme::Kaeri);
+        let opening = Opening {
+            session: 9,
+            soft_hyphens: false,
+            dir: dir.path().join("novel-9"),
+            eink: None,
+            limits: Limits::default(),
+        };
+        let bottle = Fetched { media_type: "image/png", bytes: ONE_PIXEL_PNG.to_vec() };
+        let pictures = TextPictures::standing(vec![
+            Shown::Ready(Arc::new(bottle)),
+            Shown::Waiting,
+            Shown::Failed,
+        ]);
+        let book = open_text(
+            "<p>The bottle was cold.</p><img src=\"images/1\" alt=\"A bottle\"/>\
+             <img src=\"images/2\"/><img src=\"images/3\"/>\
+             <img src=\"https://img.books.example/gone.png\"/>",
+            "Chapter 1",
+            Some("en".into()),
+            "w:1".into(),
+            Some(pictures.clone()),
+            opening,
+        );
+        books.put(book.served.clone());
+        let r = books.resource(&books.url(9, TEXT_CHAPTER)).unwrap();
+        let BookBody::Bytes { data } = &r.body else { panic!("bytes") };
+        let text = String::from_utf8(data.clone()).unwrap();
+        assert!(text.contains("src=\"images/1\""), "{text}");
+        assert!(!text.contains("img.books.example"), "a web address never loads: {text}");
+        // The paginator keeps a box for each picture not in yet, and has the failed state's words.
+        assert!(
+            text.contains("&quot;waiting&quot;:[&quot;images/2&quot;,&quot;images/3&quot;]"),
+            "{text}"
+        );
+        assert!(text.contains("Try again"), "{text}");
+
+        let url = |p: &str| books.url(9, p);
+        let r = books.resource(&url("images/1")).unwrap();
+        assert_eq!((r.status, r.mime.as_str()), (200, "image/png"));
+        let BookBody::File { path } = &r.body else { panic!("a file") };
+        assert_eq!(std::fs::read(path).unwrap(), ONE_PIXEL_PNG);
+        let status = |u: String| books.resource(&u).unwrap().status;
+        assert_eq!(status(url("images/2")), 503, "still coming");
+        assert_eq!(status(url("images/2") + "?state&n=1"), 404, "not failed");
+        assert_eq!(status(url("images/3")), 404);
+        assert_eq!(status(url("images/3") + "?state&n=1"), 200, "failed");
+        assert_eq!(status(url("images/4")), 404);
+
+        // A retry of the failed one sets it coming again.
+        assert_eq!(status(url("images/3") + "?retry&n=2"), 200);
+        assert_eq!(pictures.shown("images/3"), Some(Shown::Waiting));
+        assert_eq!(status(url("images/3") + "?state&n=3"), 404);
     }
 
     #[test]
@@ -991,7 +1147,7 @@ mod tests {
             NovelBooks::default().url(1, "OEBPS/Text/Chapter One.xhtml"),
             format!(
                 "{}1/OEBPS/Text/Chapter%20One.xhtml",
-                if cfg!(target_os = "android") { ANDROID_PREFIX } else { KAERI_PREFIX }
+                if cfg!(target_os = "android") { ANDROID_PREFIX } else { "kaeri-book://s" }
             )
         );
     }

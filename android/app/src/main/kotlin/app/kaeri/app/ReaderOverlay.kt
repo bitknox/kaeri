@@ -3,6 +3,7 @@
 
 package app.kaeri.app
 
+import android.content.pm.ActivityInfo
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
@@ -40,6 +41,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
@@ -53,8 +55,10 @@ import app.kaeri.eink.EinkQuestions
 import app.kaeri.eink.EinkReader
 import app.kaeri.eink.EinkReaderActions
 import app.kaeri.eink.RefreshControllers
+import app.kaeri.engine.model.OpenAt
 import app.kaeri.reader.LocalServerLines
 import app.kaeri.reader.PageImages
+import app.kaeri.reader.ReaderBackHandler
 import app.kaeri.reader.ReaderSession
 import app.kaeri.reader.phone.NovelScreen
 import app.kaeri.reader.phone.PhoneReader
@@ -78,6 +82,20 @@ fun ReaderHost(store: AppStore, eink: EinkModel, app: @Composable () -> Unit) {
     val view = LocalView.current
     // The cover the open reader grew out of: hidden in the app while the reader holds it.
     var zoomed by remember { mutableStateOf<String?>(null) }
+    // The open reader's work, kept with the activity's state: after Android let the process go,
+    // coming back opens the reader again at the work's resume place.
+    var kept by rememberSaveable { mutableStateOf<List<String>?>(null) }
+    LaunchedEffect(Unit) {
+        val back = kept
+        if (back != null && ReaderLauncher.request.value == null) {
+            ReaderLauncher.open(ReaderRequest(work = back[0], eink = back[1] == "eink", cover = back.getOrNull(2)))
+        }
+        ReaderLauncher.request.collect { request ->
+            kept = request?.let { listOfNotNull(it.work, if (it.eink) "eink" else "phone", it.cover) }
+        }
+    }
+    // Back is the open reader's, ahead of the app under it, even after the activity was made
+    // anew: see ReaderBackHandler. The app's sheets keep theirs.
     SharedTransitionLayout {
         CompositionLocalProvider(
             LocalReaderTransitions provides this,
@@ -123,14 +141,26 @@ private fun ReaderOverlay(
     val corner = remember { Animatable(0f) }
     val ready = remember { mutableStateOf(false) }
     val removed = rememberAnimationsRemoved()
+    // A reader already open as this overlay is made: the activity was made anew under it (font
+    // size, language, the system letting it go), so it is there at once with no zoom or fade.
+    var already by remember { mutableStateOf(request) }
     suspend fun zoomSettled() {
         withTimeoutOrNull(150) { snapshotFlow { layout.isTransitionActive }.first { it } }
         withTimeoutOrNull(1500) { snapshotFlow { layout.isTransitionActive }.first { !it } }
     }
     LaunchedEffect(request) {
         val next = request
-        val paper = ReaderLook.paper(context)
-        if (next != null) {
+        // Paper mode turning pages at once, and an e-ink screen, where nothing moves: the reader
+        // is there at once, and gone at once.
+        val paper = ReaderLook.paper(context) || next?.eink == true
+        if (next != null && next == already) {
+            already = null
+            shown = next
+            zoomFrom = null
+            pages.snapTo(1f)
+            progress.snapTo(1f)
+        } else if (next != null) {
+            already = null
             val from = next.from?.takeIf { !paper && !removed && next.cover != null && !next.eink }
             ready.value = false
             shown = next
@@ -157,7 +187,7 @@ private fun ReaderOverlay(
                 }
             }
         } else if (shown != null) {
-            val paper = ReaderLook.paper(context)
+            val paper = ReaderLook.paper(context) || shown?.eink == true
             if (zoomFrom != null && !paper && !removed) {
                 corner.snapTo(0f)
                 zoom(null)
@@ -231,8 +261,10 @@ private fun OpenReader(
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current
-    val session = remember { ReaderSession { store.send(it) } }
-    val images = remember { PageImages() }
+    // Made anew for a change of font size or language, the reader takes on the open session.
+    val retained = remember { ReaderLauncher.takeRetained(request) }
+    val session = remember { retained?.session ?: ReaderSession { command -> Flavour.readerSend(command) { store.send(it) } } }
+    val images = remember { retained?.images ?: PageImages() }
     val quiet = remember { QuietPhone(context) }
     val state by session.state.collectAsState()
     val settingsAsked by ReaderLauncher.settings.collectAsState()
@@ -241,21 +273,59 @@ private fun OpenReader(
     // Something to show in the page's place: the first page, the novel, or why there is none.
     val shows = state.leaves.isNotEmpty() || state.novel != null || state.failure != null || state.closed
     LaunchedEffect(shows) { if (shows) ready.value = true }
-    val opened = remember { booleanArrayOf(false) }
-    DisposableEffect(session) {
-        val unbind = session.bind(store)
-        onDispose {
-            session.close()
-            unbind()
+    val opened = remember { booleanArrayOf(retained != null) }
+    // Its new pager starts at the first leaf: back to the place shown before.
+    val shownBefore = remember { retained?.session?.place() }
+    LaunchedEffect(Unit) { session.reshow(shownBefore) }
+    // Made anew with its activity: the reader opens where it was, with no "Resumed" notice.
+    val back = remember { ReaderLauncher.keptPlace(request) }
+    // On a phone the reader turns with the phone as the player does, unless rotation is locked;
+    // the app under it stays portrait, and is portrait again as the reader closes.
+    val activity = androidx.activity.compose.LocalActivity.current
+    DisposableEffect(activity) {
+        val phone = context.resources.configuration.smallestScreenWidthDp < 600
+        if (phone) activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
+        onDispose { if (phone) activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT }
+    }
+    LaunchedEffect(leaving) {
+        if (leaving && context.resources.configuration.smallestScreenWidthDp < 600) {
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
     }
+    DisposableEffect(session) {
+        val release = retained?.release ?: session.bind(store).let { unbind ->
+            {
+                session.close()
+                unbind()
+                // The series page under the reader shows where reading got to.
+                store.reading.readerClosed(request.work)
+            }
+        }
+        onDispose {
+            // Kept only while the request stays open: the activity going, not the reader closing.
+            ReaderLauncher.keep(request, session.place())
+            if (activity?.isChangingConfigurations == true) {
+                ReaderLauncher.retain(request, session, images, release)
+            } else {
+                release()
+            }
+        }
+    }
+    // Back closes the reader wherever its screens have no Back of their own, such as the e-ink
+    // questions; the app under it takes none while it is open.
+    ReaderBackHandler(enabled = !leaving) { ReaderLauncher.close() }
     Box(
         Modifier
             .fillMaxSize()
             .readerSurface(density, eink = request.eink, dark = true) { surface ->
                 if (!opened[0]) {
                     opened[0] = true
-                    session.open(request.work, surface, request.chapter)
+                    val title = store.reading.series.value[request.work]?.titles?.display
+                    if (back != null) {
+                        session.open(request.work, surface, back.chapter, OpenAt.Place(back), title)
+                    } else {
+                        session.open(request.work, surface, request.chapter, title = title)
+                    }
                 } else {
                     session.surface(surface)
                 }
@@ -283,7 +353,23 @@ private fun OpenReader(
                     state = state,
                     images = images,
                     painter = painter,
-                    actions = EinkReaderActions(onBack = close, onContents = close, onSettings = {}, onSeries = close, onDownloads = close, onAddSource = addSource),
+                    actions = EinkReaderActions(
+                        onBack = close,
+                        onSeries = close,
+                        onDownloads = close,
+                        onAddSource = addSource,
+                        onDownload = { chapter -> store.reading.download(state.view?.work ?: request.work, app.kaeri.engine.model.DownloadPick.Chapters(listOf(chapter.id))) },
+                    ),
+                    novel = { place, onControls ->
+                        NovelScreen(
+                            session = session,
+                            state = state,
+                            place = place,
+                            assets = remember { store.novelAssets() },
+                            resource = store::bookResource,
+                            onControls = onControls,
+                        )
+                    },
                 )
             }
         } else {

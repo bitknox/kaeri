@@ -6,7 +6,9 @@
 //! reading on, the reader opens what is on this device ([`session`]); the loads that have no part
 //! behind them yet answer with their empty shapes, and the rest are logged and dropped.
 
+pub(crate) mod credits;
 pub(crate) mod eink;
+pub(crate) mod feed;
 pub mod novel;
 pub(crate) mod pages;
 pub(crate) mod session;
@@ -228,7 +230,7 @@ pub(crate) fn reading(
         ReadingCommand::Search { query } => return search(services, query, 0, tx),
         ReadingCommand::SearchMore { query, page } => return search(services, query, page, tx),
         ReadingCommand::LoadChapters { work, edition } => {
-            return chapters(services, work, edition, tx);
+            return chapters(engine, services, work, edition, tx);
         }
         ReadingCommand::LoadVersions { work, chapter } => {
             let versions = other_sources(services, &work, &chapter);
@@ -239,7 +241,15 @@ pub(crate) fn reading(
             if let Err(e) = services.store.set_edition_pref(work.as_str(), Some(&pref)) {
                 tracing::warn!(error = %e, "the edition choice was not kept");
             }
-            return chapters(services, work, Some(pref.source_id), tx);
+            return chapters(engine, services, work, Some(pref.source_id), tx);
+        }
+        ReadingCommand::ChooseGroup { work, group } => {
+            choose_group(services, &work, group);
+            let ask = crate::read_catalog::Ask::of(engine, services);
+            let kit = crate::read_catalog::Kit::of(services);
+            chapters(engine, services, work.clone(), None, tx);
+            crate::read_catalog::series::header(&kit, ask, &work, tx);
+            return;
         }
         ReadingCommand::MarkRead { work, chapters: ids, read } => {
             mark_read(services, work, ids, read, tx);
@@ -415,8 +425,10 @@ fn search(services: &Services, query: ReadSearchQuery, page: u32, tx: &Outbox) {
     let (sources, tx, now) = (services.book_sources.clone(), tx.clone(), services.clock.now());
     let plugins = services.book_plugins.clone();
     tokio::spawn(async move {
+        sources.plugins_in(&plugins, None).await;
         sources.adopt_plugins(&plugins);
-        let tiles = sources.search(&query.text, query.medium, now).await;
+        let scope = query.source_scope.as_deref();
+        let tiles = sources.search_in(&query.text, query.medium, scope, now).await;
         let _ = tx.send(Event::Reading(ReadingEvent::Search {
             query,
             page: 0,
@@ -430,39 +442,52 @@ fn search(services: &Services, query: ReadSearchQuery, page: u32, tx: &Outbox) {
 
 /// A work's chapters for the reader's sheet and the series page. A series no source holds lists
 /// its files on this device; one with neither answers why.
-fn chapters(services: &Services, work: WorkId, edition: Option<String>, tx: &Outbox) {
+fn chapters(
+    engine: &EngineState,
+    services: &Services,
+    work: WorkId,
+    edition: Option<String>,
+    tx: &Outbox,
+) {
     let kit = crate::read_catalog::Kit::of(services);
-    let (tx, now) = (tx.clone(), services.clock.now());
+    let ask = crate::read_catalog::Ask::of(engine, services);
+    chapters_of(kit, ask, work, edition, tx);
+}
+
+/// [`chapters`] with the catalogue's handles, as the series page's tests drive it.
+pub(crate) fn chapters_of(
+    kit: crate::read_catalog::Kit,
+    ask: crate::read_catalog::Ask,
+    work: WorkId,
+    edition: Option<String>,
+    tx: &Outbox,
+) {
+    let tx = tx.clone();
     tokio::spawn(async move {
-        kit.sources.adopt_plugins(&kit.plugins);
-        let event = if kit.sources.edition_of(&work, edition.as_deref()).is_none() {
-            let list = crate::read_catalog::chapters::of_work(&kit.sources, &kit.store, &work);
-            let volumes = shelf::volumes(
-                &kit.store,
-                work.as_str(),
-                list.as_ref().map(|(_, _, l)| l.as_slice()),
-                crate::read_catalog::series::medium_of(&kit, &work),
-                now,
-                &kit.clock.zone(),
-            );
-            let failure = volumes.is_empty().then_some(ReadingFailure::NotFound);
-            ReadingEvent::Chapters { work, edition: None, volumes, failure }
-        } else {
-            match kit.sources.chapters(&work, edition.as_deref(), now).await {
-                Ok((edition, mut volumes)) => {
-                    crate::read_catalog::series::finish(&kit, &work, &mut volumes, now);
-                    ReadingEvent::Chapters { work, edition, volumes, failure: None }
-                }
-                Err(failure) => ReadingEvent::Chapters {
-                    work,
-                    edition: None,
-                    volumes: Vec::new(),
-                    failure: Some(failure),
-                },
-            }
-        };
-        let _ = tx.send(Event::Reading(event));
+        crate::read_catalog::series::chapters(&kit, ask, &work, edition, &tx).await;
     });
+}
+
+/// Keep the person's group for the edition in use. The group is the edition's version, so the
+/// pick is the edition choice with its version set: a choice of another source is replaced by
+/// the source in use.
+fn choose_group(services: &Services, work: &WorkId, group: Option<String>) {
+    let Some((source, _)) = services.book_sources.edition_of(work, None) else { return };
+    let kept = services.store.edition_pref(work.as_str()).ok().flatten();
+    let pref = match kept {
+        Some(mut pref) if pref.source_id == source => {
+            pref.version_label = group;
+            pref
+        }
+        _ => kaeri_store::reading::EditionPref {
+            source_id: source,
+            version_label: group,
+            language: None,
+        },
+    };
+    if let Err(e) = services.store.set_edition_pref(work.as_str(), Some(&pref)) {
+        tracing::warn!(error = %e, "the group choice was not kept");
+    }
 }
 
 /// The person's own mark is kept first; the server is told after, and a refusal there is only
@@ -592,6 +617,10 @@ fn eink(engine: &mut EngineState, services: &Services, command: ReadingCommand, 
                     tracing::warn!(error = %e, "the e-ink answer was not written");
                 }
             }
+            // The profile below reads the config in effect, which a write leaves alone: the
+            // file's answers go in effect too, or the switch would only take on the next start.
+            let answers = engine.config.saved().reading.eink.clone();
+            engine.config.effective_mut().reading.eink = answers;
         }
         _ => return,
     }

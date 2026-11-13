@@ -2097,9 +2097,6 @@ linux-shortcuts-close-reader = Zamknij czytnik
 # Two names joined, or a list's last name joined to the rest, in the end page's tracker line: "AniList and MangaUpdates".
 linux-reader-names-and = { $first } i { $last }
 
-# On the plate that holds a page's place while it loads. The page is its number, such as 23.
-linux-reader-page-plate = Strona { $page }
-
 # Heading when a chapter could not open. The chapter is its number, such as 13.
 linux-reader-open-failed = Nie udało się otworzyć rozdziału { $chapter }
 
@@ -8807,6 +8804,15 @@ player-subs-more = Więcej w Ustawieniach…
 # Under a page that is still loading after four seconds.
 reader-page-loading = Wczytywanie strony { $page }
 
+# On the plate of a page that is still loading.
+reader-page-plate = Strona { $page }
+
+# On the plate of a strip image that is still loading.
+reader-image-plate = Obraz { $image }
+
+# Under a strip image's number after four seconds.
+reader-image-loading = Wczytywanie obrazu { $image }
+
 # Heading where a page could not be loaded.
 reader-page-failed = Nie udało się wczytać strony { $page }
 
@@ -8821,6 +8827,9 @@ reader-end-read = Zaliczono jako przeczytany
 
 # Under the end of chapter line, naming the trackers the read went to.
 reader-end-tracker = Zaliczono jako przeczytany · zaktualizowano: { $trackers }
+
+# Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online.
+reader-end-tracker-offline = Zaliczono jako przeczytany · { $tracker } zaktualizuje się po powrocie online
 
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = Kolejny
@@ -8882,14 +8891,20 @@ reader-spreads-rotate = Obróć
 # A choice for wide pages: shown whole.
 reader-spreads-whole = Całość
 
-# A choice for the reader's tap zones: taps near the left and right edges turn the page.
+# A choice for the reader's tap zones: taps near the left and right edges turn the page. Replaced by Sides; kept until every app has the new tap zones page.
 reader-tap-edges = Krawędzie
 
-# A choice for the reader's tap zones: the left and right halves turn the page.
-reader-tap-sides = Połowy
-
-# A choice for the reader's tap zones: taps do not turn the page.
+# Tap zone layout: taps only show and hide the controls, and never turn the page.
 reader-tap-off = Wyłączone
+
+# Name of the tap zone that turns to the next page, in the guide over the page and as a screen reader action.
+reader-zone-next = Następna strona
+
+# Name of the tap zone that turns to the previous page, in the guide and as a screen reader action.
+reader-zone-previous = Poprzednia strona
+
+# Name of the tap zone that shows and hides the reader's controls, in the guide.
+reader-zone-controls = Sterowanie
 
 # Button in the reader's controls that opens the chapters and the page grid.
 reader-chapters = Rozdziały
@@ -9239,7 +9254,7 @@ action-continue-named = Czytaj dalej: { $label } · { $percent }%
 # The main action for a light novel part, part read, named in the source's own words, when how far is not known.
 action-continue-named-plain = Czytaj dalej: { $label }
 
-# The main action for a light novel part not opened yet, named in the source's own words.
+# The main action for a light novel part not opened yet, named in the source's own words, and for a chapter with no number, named by its own title ("Read Oneshot").
 action-read-named = Czytaj: { $label }
 
 # The main action when every chapter is read.
@@ -9814,9 +9829,6 @@ read-search-nothing-filters-line = Mniej filtrów może dać więcej wyników.
 
 # The button under it.
 read-search-clear-filters = Wyczyść filtry
-
-# A sort of reading's Search, AniList's.
-read-sort-popular = Popularne
 
 # A sort of reading's Search, AniList's.
 read-sort-trending = Na topie
@@ -13788,9 +13800,6 @@ title-tags = Tagi
 
 # Button that opens the full page of facts about a show.
 title-more-about = Więcej o tytule
-
-# Accessibility hint of the button that expands a synopsis.
-title-synopsis-hint = Pokazuje cały opis
 
 # Label under a season: which episodes are dubbed so far.
 title-dubbed-to = Z dubbingiem do odcinka { $episode }

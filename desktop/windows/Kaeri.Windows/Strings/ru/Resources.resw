@@ -6452,6 +6452,15 @@
   <data name="ReaderPageLoading" xml:space="preserve">
     <value>Загрузка страницы {page}</value>
   </data>
+  <data name="ReaderPagePlate" xml:space="preserve">
+    <value>Страница {page}</value>
+  </data>
+  <data name="ReaderImagePlate" xml:space="preserve">
+    <value>Картинка {image}</value>
+  </data>
+  <data name="ReaderImageLoading" xml:space="preserve">
+    <value>Загрузка картинки {image}</value>
+  </data>
   <data name="ReaderPageFailed" xml:space="preserve">
     <value>Не удалось загрузить страницу {page}</value>
   </data>
@@ -6466,6 +6475,9 @@
   </data>
   <data name="ReaderEndTracker" xml:space="preserve">
     <value>Засчитано как прочитанная · обновлено: {trackers}</value>
+  </data>
+  <data name="ReaderEndTrackerOffline" xml:space="preserve">
+    <value>Засчитано как прочитанная · {tracker} обновится, когда вы вернётесь в сеть</value>
   </data>
   <data name="ReaderEndNext" xml:space="preserve">
     <value>Следующая</value>
@@ -6530,11 +6542,17 @@
   <data name="ReaderTapEdges" xml:space="preserve">
     <value>Края</value>
   </data>
-  <data name="ReaderTapSides" xml:space="preserve">
-    <value>Половины</value>
-  </data>
   <data name="ReaderTapOff" xml:space="preserve">
     <value>Выкл.</value>
+  </data>
+  <data name="ReaderZoneNext" xml:space="preserve">
+    <value>Следующая страница</value>
+  </data>
+  <data name="ReaderZonePrevious" xml:space="preserve">
+    <value>Предыдущая страница</value>
+  </data>
+  <data name="ReaderZoneControls" xml:space="preserve">
+    <value>Управление</value>
   </data>
   <data name="ReaderChapters" xml:space="preserve">
     <value>Главы</value>
@@ -7525,9 +7543,6 @@
   </data>
   <data name="ReadSearchClearFilters" xml:space="preserve">
     <value>Сбросить фильтры</value>
-  </data>
-  <data name="ReadSortPopular" xml:space="preserve">
-    <value>Популярное</value>
   </data>
   <data name="ReadSortTrending" xml:space="preserve">
     <value>В тренде</value>
@@ -11644,9 +11659,6 @@
   </data>
   <data name="TitleMoreAbout" xml:space="preserve">
     <value>Подробнее о тайтле</value>
-  </data>
-  <data name="TitleSynopsisHint" xml:space="preserve">
-    <value>Показывает весь синопсис</value>
   </data>
   <data name="TitleDubbedTo" xml:space="preserve">
     <value>С дубляжом до серии {episode}</value>

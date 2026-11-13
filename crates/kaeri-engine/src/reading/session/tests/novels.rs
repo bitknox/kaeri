@@ -221,6 +221,23 @@ async fn a_hostile_book_reads_with_nothing_active_and_nothing_remote() {
 }
 
 #[tokio::test(start_paused = true)]
+async fn back_to_page_in_a_novel_follows_only_a_jump_of_more_than_two_screens() {
+    let mut h = novel_harness();
+    let (_, novel) = h.open_novel(OpenAt::Resume).await;
+    let first = novel.spine.iter().position(|s| s.linear).unwrap() as u32;
+    // The first layout and a new one after a font change are the app's own moves.
+    h.at(pos(first, &[1], 0), 0, 8, TurnHow::Placed);
+    h.at(pos(first, &[2], 0), 2, 8, TurnHow::Jump);
+    assert_eq!(offers(&h.drain()), [], "two screens on");
+    h.at(pos(first, &[2], 0), 5, 16, TurnHow::Placed);
+    assert_eq!(offers(&h.drain()), [], "laid out again");
+    h.at(pos(first, &[6], 0), 12, 16, TurnHow::Jump);
+    assert_eq!(offers(&h.drain()), [Some(6)]);
+    h.at(pos(first, &[6], 40), 13, 16, TurnHow::Swipe);
+    assert_eq!(offers(&h.drain()), [None]);
+}
+
+#[tokio::test(start_paused = true)]
 async fn novel_places_are_text_positions_that_resume_with_back_to_page() {
     let mut h = novel_harness();
     let (_, novel) = h.open_novel(OpenAt::Resume).await;
@@ -231,8 +248,8 @@ async fn novel_places_are_text_positions_that_resume_with_back_to_page() {
 
     // A jump offers the place it left.
     tokio::time::advance(WRITE_EVERY).await;
-    h.at(pos(first, &[3], 12), 2, 4, TurnHow::Jump);
-    assert_eq!(notices(&h.drain()), [ReadingMsg::ReaderBackToPage { page: 1 }]);
+    h.at(pos(first, &[3], 12), 3, 6, TurnHow::Jump);
+    assert_eq!(offers(&h.drain()), [Some(1)]);
     h.send(ReaderCommand::BackTo { session: h.session() });
     let back = h
         .until(|e| match e {
@@ -319,6 +336,8 @@ async fn the_last_page_of_the_last_document_reads_after_it_holds_and_the_end_pag
     let mut h = novel_harness();
     let (_, novel) = h.open_novel(OpenAt::Resume).await;
     let last = novel.spine.iter().rposition(|s| s.linear).unwrap() as u32;
+    // The end page is said as the book opens, so it is there before its last page shows.
+    h.until(|e| matches!(e, ReaderEvent::EndPage { .. }).then_some(())).await;
     // The last page of an earlier document is not the end.
     h.at(pos(0, &[0], 0), 2, 3, TurnHow::Turn);
     tokio::time::advance(READ_AFTER * 2).await;
@@ -326,7 +345,6 @@ async fn the_last_page_of_the_last_document_reads_after_it_holds_and_the_end_pag
 
     h.at(pos(last, &[2], 0), 1, 2, TurnHow::Turn);
     let before = Instant::now();
-    h.until(|e| matches!(e, ReaderEvent::EndPage { .. }).then_some(())).await;
     h.until(|e| matches!(e, ReaderEvent::ChapterRead { .. }).then_some(())).await;
     assert!(before.elapsed() >= READ_AFTER - Duration::from_millis(10));
     assert!(h.kept("1").unwrap().read);
@@ -431,6 +449,8 @@ struct TextSource {
     manifest: BookSourceManifest,
     reports: Option<tokio::sync::mpsc::UnboundedSender<(String, String, bool)>>,
     gate: Option<Arc<tokio::sync::Notify>>,
+    /// Its chapters' text panics on the way, as a broken source's might.
+    panics: std::sync::atomic::AtomicBool,
 }
 
 impl TextSource {
@@ -451,6 +471,7 @@ impl TextSource {
             },
             reports,
             gate,
+            panics: std::sync::atomic::AtomicBool::new(false),
         })
     }
 }
@@ -474,15 +495,23 @@ impl kaeri_core::traits::BookSource for TextSource {
         _: &str,
         _: &BookHints,
     ) -> Result<Vec<SourceChapter>, ProviderError> {
-        Ok(vec![SourceChapter::new("c1", "1"), SourceChapter::new("c2", "2")])
+        let mut first = SourceChapter::new("c1", "1");
+        first.title = Some("The Pier — 1".into());
+        Ok(vec![first, SourceChapter::new("c2", "2")])
     }
 
     async fn content(&self, _: &str, chapter: &str) -> Result<ChapterContent, ProviderError> {
         if let Some(gate) = self.gate.as_ref().filter(|_| chapter == "c1") {
             gate.notified().await;
         }
+        if self.panics.load(std::sync::atomic::Ordering::SeqCst) {
+            let line = std::hint::black_box("&gt;&gt;\u{2014}\u{2014}");
+            let _ = &line[..10];
+        }
+        // The title twice, as a plugin's heading and then the page's own, with the number again.
+        let n = chapter.trim_start_matches('c');
         Ok(ChapterContent::Text(format!(
-            "<p>Chapter {chapter} begins at the pier.</p><script>steal()</script><img src=\"https://tracker.example/p.png\"/>"
+            "<div><h2>Chapter {n}: The Pier — {n}</h2> <h4>Chapter {n}: The Pier — {n}</h4><p>Chapter {chapter} begins at the pier.</p><script>steal()</script><img src=\"https://tracker.example/p.png\"/></div>"
         )))
     }
 
@@ -512,11 +541,45 @@ async fn a_sources_text_chapter_is_served_like_a_book() {
     assert!(!doc.contains("<script") && !doc.contains("tracker.example"), "{doc}");
     // Kaeri's stylesheet comes with the paginator, as a book's documents get it: none is linked.
     assert!(!doc.contains("<link"), "{doc}");
+    // Its title once, as the chapter list says it: the page's own heading stays, hidden, so the
+    // places in it stay where they were.
+    assert!(doc.contains("<h2>The Pier</h2>"), "{doc}");
+    assert!(doc.contains("<h4 hidden=\"hidden\">Chapter 1: The Pier — 1</h4>"), "{doc}");
+    assert!(doc.contains("<title>The Pier</title>"), "{doc}");
 
     // Its place is kept like a book's.
     h.at(pos(0, &[0], 4), 0, 1, TurnHow::Turn);
     let chapter = view.chapter.id.as_str().to_owned();
     assert_eq!(h.kept(&chapter).and_then(|c| c.novel_pos).as_deref(), Some("0/0/4"));
+}
+
+/// A text chapter whose open panics on the way fails, as a chapter that cannot open does, and
+/// the reader is never left waiting on it.
+#[tokio::test]
+async fn a_text_chapter_that_panics_while_it_opens_fails_instead_of_waiting() {
+    let mut h = harness_of(Store::open_in_memory().unwrap(), "novel", |_| Vec::new());
+    h.failures = true;
+    let source = TextSource::new(None, None);
+    source.panics.store(true, std::sync::atomic::Ordering::SeqCst);
+    h.services.book_sources.registry.put(source);
+    h.services.store.set_book_match("texts", "series-1", WORK, 90, true, false, 1).unwrap();
+    h.send(ReaderCommand::Open {
+        work: WorkId::new(WORK),
+        chapter: None,
+        at: OpenAt::Start,
+        surface: surface(),
+    });
+    let end = tokio::time::Instant::now() + Duration::from_secs(10);
+    while h.failed.is_empty()
+        && let Ok(Some(envelope)) = tokio::time::timeout_at(end, h.inbox.recv()).await
+    {
+        h.carry(envelope);
+    }
+    assert_eq!(h.failed.len(), 1, "the open failed once: {:?}", h.failed);
+    assert!(
+        !h.drain().iter().any(|e| matches!(e, ReaderEvent::NovelOpen(_))),
+        "no chapter opened"
+    );
 }
 
 /// A source whose chapters are pictures, three pages each, fetched through the source. With
@@ -764,4 +827,120 @@ async fn a_chapter_opened_while_the_one_before_is_still_opening_opens() {
         _ => None,
     });
     assert_eq!(opened, Some(second));
+}
+
+/// A plugin's novel with the example books plugin's first Saltglass chapter: its picture on
+/// `pages.example`, which answers, and a second on `slow.example`, which never does.
+struct Illustrated {
+    manifest: BookSourceManifest,
+}
+
+impl Illustrated {
+    fn new() -> Arc<Self> {
+        Arc::new(Self {
+            manifest: BookSourceManifest {
+                id: "illustrated".into(),
+                name: "Illustrated".into(),
+                version: "1".into(),
+                kind: BookSourceKind::Plugin,
+                media: vec![Medium::Novel],
+                languages: vec!["en".into()],
+                allowed_hosts: vec!["pages.example".into(), "slow.example".into()],
+                capabilities: Vec::new(),
+            },
+        })
+    }
+}
+
+#[async_trait]
+impl kaeri_core::traits::BookSource for Illustrated {
+    fn manifest(&self) -> &BookSourceManifest {
+        &self.manifest
+    }
+
+    async fn search(&self, _: &str, _: &BookHints) -> Result<Vec<SeriesHit>, ProviderError> {
+        Ok(Vec::new())
+    }
+
+    async fn series(&self, id: &str, _: &BookHints) -> Result<SeriesDetail, ProviderError> {
+        Ok(SeriesDetail::new(id, "Saltglass Letters"))
+    }
+
+    async fn chapters(
+        &self,
+        _: &str,
+        _: &BookHints,
+    ) -> Result<Vec<SourceChapter>, ProviderError> {
+        Ok(vec![SourceChapter::new("saltglass-1", "1")])
+    }
+
+    async fn content(&self, _: &str, _: &str) -> Result<ChapterContent, ProviderError> {
+        Ok(ChapterContent::Text(
+            "<h2>The First Bottle</h2><p>The bottle was cold, and the letter inside was dry.</p>\
+             <p>It began, as they all did, with the tide.</p>\
+             <p><img src=\"https://pages.example/saltglass/bottle.jpg\" \
+             alt=\"A green bottle on wet sand\"/></p>\
+             <p><img src=\"https://slow.example/saltglass/gull.jpg\" alt=\"A gull\"/></p>"
+                .into(),
+        ))
+    }
+
+    async fn fetch_page(
+        &self,
+        page: &kaeri_core::books::PageRef,
+    ) -> Result<Vec<u8>, kaeri_core::traits::PageError> {
+        if page.url.starts_with("https://slow.example/") {
+            return std::future::pending().await;
+        }
+        Ok(crate::read_sources::pictures::ONE_PIXEL_PNG.to_vec())
+    }
+}
+
+#[tokio::test(start_paused = true)]
+async fn a_text_chapter_opens_with_its_pictures_and_a_dead_host_holds_it_back_seconds_at_most()
+{
+    use crate::read_sources::pictures::OPENING_WAIT;
+    let mut h = harness_of(Store::open_in_memory().unwrap(), "novel", |_| Vec::new());
+    h.services.book_sources.registry.put(Illustrated::new());
+    h.services
+        .store
+        .set_book_match("illustrated", "series-1", WORK, 90, true, false, 1)
+        .unwrap();
+    let began = tokio::time::Instant::now();
+    let (_, novel) = h.open_novel(OpenAt::Start).await;
+    let waited = began.elapsed();
+    assert!(waited >= OPENING_WAIT && waited < OPENING_WAIT * 2, "{waited:?}");
+
+    let doc = text(&h.get(&novel.entry));
+    assert!(doc.contains("src=\"images/1\" alt=\"A green bottle on wet sand\""), "{doc}");
+    assert!(doc.contains("src=\"images/2\" alt=\"A gull\""), "{doc}");
+    assert!(!doc.contains(".example/"), "no web address reaches the page: {doc}");
+    // The paginator keeps a box for the one still coming.
+    assert!(doc.contains("&quot;waiting&quot;:[&quot;images/2&quot;]"), "{doc}");
+
+    let at = |path: &str| novel.entry.replace(crate::reading::novel::TEXT_CHAPTER, path);
+    let bottle = h.get(&at("images/1"));
+    assert_eq!((bottle.status, bottle.mime.as_str()), (200, "image/png"));
+    assert_eq!(h.get(&at("images/2?n=1")).status, 503, "still coming");
+    assert_eq!(h.get(&at("images/2?state&n=1")).status, 404, "and not failed");
+}
+
+/// A novel's view reports its place as it scrolls within the last page: those reports keep the
+/// read rule's wait going, so the chapter counts as read once it has held.
+#[tokio::test(start_paused = true)]
+async fn scroll_reports_within_the_last_page_let_the_read_rule_run_out() {
+    let mut h = novel_harness();
+    let (_, novel) = h.open_novel(OpenAt::Resume).await;
+    let last = novel.spine.iter().rposition(|s| s.linear).unwrap() as u32;
+    h.at(pos(last, &[2], 0), 1, 2, TurnHow::Turn);
+    let mut read = 0;
+    for step in 1..=10 {
+        tokio::time::sleep(Duration::from_millis(500)).await;
+        h.at(pos(last, &[2], step * 3), 1, 2, TurnHow::Placed);
+        tokio::task::yield_now().await;
+        read +=
+            h.drain().iter().filter(|e| matches!(e, ReaderEvent::ChapterRead { .. })).count();
+    }
+    assert_eq!(read, 1, "counted read once");
+    assert!(h.kept("1").unwrap().read);
 }

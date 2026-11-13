@@ -282,16 +282,13 @@ struct DownloadsRow: View {
 /// Search on iPhone and iPad: recent searches, this season and the genres before anything is
 /// typed, the titles found after, with the search field the tab bar gives it.
 struct PhoneSearch: View {
-    @Environment(AppStore.self) private var store
-    @Environment(Navigator.self) private var navigator
-
     var body: some View {
-        if ReadSearchScope.active(store: store, navigator: navigator) {
-            ReadSearchScreen()
-        } else {
-            SearchScreen(compact: true)
-                .toolbar { ToolbarItem(placement: .topBarTrailing) { SurpriseButton() } }
-        }
+        // One screen for both scopes: reading's Search is drawn inside it, and Surprise me
+        // picks from the scope shown.
+        SearchScreen(compact: true)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) { SurpriseButton() }
+            }
     }
 }
 #endif

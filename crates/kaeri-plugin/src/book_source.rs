@@ -22,7 +22,7 @@ use kaeri_core::{
 use crate::{
     books::{self, LoadedBookPlugin, SourceError},
     engine::PluginError,
-    host,
+    host::{self, Capabilities, Reach},
 };
 
 /// Wraps a loaded book component as a [`BookSource`].
@@ -80,8 +80,20 @@ impl WasmBookSource {
         made: &MadePage,
         url: &str,
     ) -> Result<Option<Vec<u8>>, PageError> {
-        flatten(self.plugin.page_bytes(&made.series, &made.chapter, url).await)
-            .map_err(PageError::Failed)
+        let (lent, reach) = self.lend();
+        flatten(
+            self.plugin.page_bytes_with(lent, &made.series, &made.chapter, url).await,
+            &reach,
+        )
+        .map_err(PageError::Failed)
+    }
+
+    /// Fresh capabilities for one call, and the handle that tells afterwards whether any of its
+    /// requests got out.
+    fn lend(&self) -> (Capabilities, Reach) {
+        let lent = self.plugin.capabilities();
+        let reach = lent.reach();
+        (lent, reach)
     }
 }
 
@@ -96,12 +108,16 @@ impl BookSource for WasmBookSource {
         query: &str,
         hints: &BookHints,
     ) -> Result<Vec<SeriesHit>, ProviderError> {
-        let hits = flatten(self.plugin.search(query, &hints_to(hints)).await)?;
+        let (lent, reach) = self.lend();
+        let hits =
+            flatten(self.plugin.search_with(lent, query, &hints_to(hints)).await, &reach)?;
         Ok(hits.into_iter().map(hit_from).collect())
     }
 
     async fn series(&self, id: &str, hints: &BookHints) -> Result<SeriesDetail, ProviderError> {
-        flatten(self.plugin.series(id, &hints_to(hints)).await).map(detail_from)
+        let (lent, reach) = self.lend();
+        flatten(self.plugin.series_with(lent, id, &hints_to(hints)).await, &reach)
+            .map(detail_from)
     }
 
     async fn chapters(
@@ -109,7 +125,9 @@ impl BookSource for WasmBookSource {
         id: &str,
         hints: &BookHints,
     ) -> Result<Vec<SourceChapter>, ProviderError> {
-        let chapters = flatten(self.plugin.list_chapters(id, &hints_to(hints)).await)?;
+        let (lent, reach) = self.lend();
+        let chapters =
+            flatten(self.plugin.list_chapters_with(lent, id, &hints_to(hints)).await, &reach)?;
         Ok(chapters.into_iter().map(chapter_from).collect())
     }
 
@@ -118,7 +136,9 @@ impl BookSource for WasmBookSource {
         series: &str,
         chapter: &str,
     ) -> Result<ChapterContent, ProviderError> {
-        let content = flatten(self.plugin.chapter_content(series, chapter).await)?;
+        let (lent, reach) = self.lend();
+        let content =
+            flatten(self.plugin.chapter_content_with(lent, series, chapter).await, &reach)?;
         // Only a plugin built for `book-plugin-with-pages` is asked for its pages.
         let made = self.plugin.makes_pages().then(|| MadePage::new(series, chapter));
         Ok(content_from(content, made))
@@ -158,9 +178,18 @@ fn from_guest(error: SourceError) -> ProviderError {
     }
 }
 
-fn flatten<T>(result: Result<Result<T, SourceError>, PluginError>) -> Result<T, ProviderError> {
+/// The plugin's answer in the provider vocabulary. When none of the call's requests reached a
+/// server, the network failed, whatever the plugin made of it: a plugin sees only a failed fetch
+/// and most answer that with `other`, which would read as the source being down.
+fn flatten<T>(
+    result: Result<Result<T, SourceError>, PluginError>,
+    reach: &Reach,
+) -> Result<T, ProviderError> {
     match result {
         Ok(Ok(value)) => Ok(value),
+        Ok(Err(_)) if reach.never_reached() => {
+            Err(ProviderError::Transport("no request reached the source".into()))
+        }
         Ok(Err(guest)) => Err(from_guest(guest)),
         Err(host) => Err(host.as_provider_error()),
     }
@@ -267,6 +296,50 @@ mod tests {
         assert!(from_guest(SourceError::Parse("changed".into())).should_failover());
     }
 
+    /// Offline, a plugin sees only failed fetches and answers `other`; the host knows no request
+    /// got out, so the answer reads as the network, never as the source being down.
+    #[tokio::test]
+    async fn a_call_no_request_got_out_of_is_the_network() {
+        let lent = host::Capabilities::new(
+            "quiet-books",
+            vec!["books.example".into()],
+            crate::sandbox::Limits::default(),
+            None,
+        );
+        let reach = lent.reach();
+        let request = |url: &str| host::Request {
+            method: "GET".into(),
+            url: url.into(),
+            headers: Vec::new(),
+            body: None,
+        };
+        let failed = lent.fetch(request("https://books.example/list")).await;
+        assert!(matches!(failed, Err(host::HostError::Transport(_))), "{failed:?}");
+        let answer: Result<Result<(), SourceError>, PluginError> =
+            Ok(Err(SourceError::Other("fetch failed".into())));
+        assert!(matches!(flatten(answer, &reach), Err(ProviderError::Transport(_))));
+
+        // A denied request is the plugin's doing, not the network's: its answer stands.
+        let denied = Capabilities::new(
+            "quiet-books",
+            vec!["books.example".into()],
+            crate::sandbox::Limits::default(),
+            None,
+        );
+        let refused = denied.reach();
+        let _ = denied.fetch(request("https://elsewhere.example/")).await;
+        let answer: Result<Result<(), SourceError>, PluginError> =
+            Ok(Err(SourceError::Other("denied".into())));
+        assert_eq!(flatten(answer, &refused), Err(ProviderError::Other("denied".into())));
+        // With no request asked, the plugin's own answer stands too.
+        let answer: Result<Result<(), SourceError>, PluginError> =
+            Ok(Err(SourceError::Other("broken".into())));
+        assert_eq!(
+            flatten(answer, &Reach::default()),
+            Err(ProviderError::Other("broken".into()))
+        );
+    }
+
     #[test]
     fn a_trapped_or_stopped_plugin_fails_over() {
         let stopped: Result<Result<(), SourceError>, PluginError> =
@@ -274,7 +347,7 @@ mod tests {
                 plugin: "p".into(),
                 limit: std::time::Duration::from_secs(1),
             });
-        assert!(flatten(stopped).unwrap_err().should_failover());
+        assert!(flatten(stopped, &Reach::default()).unwrap_err().should_failover());
     }
 
     #[test]

@@ -42,6 +42,10 @@ pub enum Internal {
     Reader { session: u64, wake: ReaderWake },
     /// Reading arrived from another device: the open reader may move on.
     ReadingSynced,
+    /// A book source joined, was updated, left, or was switched on, off or moved, or a folder's
+    /// or a server's series came in: what reading shows is brought up to date, as
+    /// [`crate::read_catalog::changed`] says.
+    BookSourcesChanged,
 }
 
 /// What woke the reader session.
@@ -58,6 +62,9 @@ pub enum ReaderWake {
     Prepared(u64),
     /// A source listed the work's chapters for an open waiting on them.
     Listed,
+    /// Every page of a source's chapter landed, and they lay out otherwise than the layout of
+    /// this generation guessed before they had.
+    Relay(u64),
 }
 
 /// One item of the engine side's inbox, in the order it was sent.

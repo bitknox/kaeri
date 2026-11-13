@@ -179,6 +179,18 @@ public final class ReadingModel {
         send?(.reading(.searchMore(query: search.query, page: search.page + 1)))
     }
 
+    /// The tile a series was opened from, or any tile of it on screen lately: its title and
+    /// cover show on the series page at once, before the engine's header has them.
+    public func knownTile(_ work: String) -> WorkTile? {
+        var all: [WorkTile] = []
+        if let home {
+            all += [home.spotlight].compactMap { $0 } + home.continueReading + home.thisWeek + home.upNext
+            all += home.releasing + home.because + home.genreShelf + home.rows.flatMap(\.tiles)
+        }
+        all += search.tiles + (search.sources?.groups.flatMap(\.tiles) ?? []) + lists.values.flatMap { $0 }
+        return all.first { $0.work == work && !$0.title.isEmpty }
+    }
+
     public func loadSeries(_ work: String) {
         failures[.series] = nil
         send?(.reading(.loadSeries(work: work)))
@@ -202,6 +214,25 @@ public final class ReadingModel {
     public func chooseEdition(_ work: String, _ edition: BookEditionRow) {
         send?(.reading(.chooseEdition(
             work: work, sourceId: edition.sourceId, versionLabel: edition.versionLabel, language: edition.language)))
+    }
+
+    /// Whose version of each chapter the series lists, inside the source in use. `nil` goes back
+    /// to the group with the most chapters. The engine answers with the series and its chapters.
+    public func chooseGroup(_ work: String, group: String?) {
+        #if FIXTURES
+        // The shot's made-up groups are the app's own: the pick lands here, as the engine's would.
+        if Self.groupsShot, var view = series[work], var edition = view.edition {
+            let pick = group ?? edition.groups.max { $0.chapters < $1.chapters }?.label
+            edition.groups = edition.groups.map {
+                GroupChoice(label: $0.label, chapters: $0.chapters, inUse: $0.label == pick, language: $0.language)
+            }
+            edition.groupChosen = group != nil
+            view.edition = edition
+            series[work] = view
+            return
+        }
+        #endif
+        send?(.reading(.chooseGroup(work: work, group: group)))
     }
 
     /// Marks, then the series and its chapters again, as the engine sends nothing for a mark.
@@ -294,7 +325,7 @@ public final class ReadingModel {
     public func loadDownloads() { send?(.reading(.loadDownloads)) }
 
     private func refreshSeries(_ work: String) {
-        if series[work] != nil {
+        if series[work] != nil || chapters[work] != nil {
             send?(.reading(.loadSeries(work: work)))
             send?(.reading(.loadChapters(work: work, edition: chapters[work]?.edition?.sourceId)))
         }
@@ -304,13 +335,34 @@ public final class ReadingModel {
 
     // MARK: Hearing
 
+    /// The book the reader has open, so its page is asked for again once the reader closes.
+    @ObservationIgnored private var readerWork: String?
+
     func observe(_ event: Event) {
         if case .reader(.settings(let view)) = event, view.work == nil {
             readerDefaults[view.medium] = view
         }
+        if case .reader(let reader) = event { heard(reader) }
         guard case .reading(let event) = event else { return }
         sending.apply(event)
         apply(event)
+    }
+
+    /// The engine sends nothing for a read or a place kept by the reader: the series page under
+    /// it asks again, so its main button offers the next chapter or the place left at, not the
+    /// chapter just read.
+    private func heard(_ event: ReaderEvent) {
+        switch event {
+        case .opened(let view):
+            readerWork = view.work
+        case .chapterRead(let work, _, _):
+            refreshSeries(work)
+        case .closed:
+            if let work = readerWork { refreshSeries(work) }
+            readerWork = nil
+        default:
+            break
+        }
     }
 
     /// Ask for the manga and novel defaults, for Settings.
@@ -370,9 +422,9 @@ public final class ReadingModel {
                 break
             }
         case .series(let view):
-            series[view.work] = view
+            series[view.work] = Self.shot(view)
         case .chapters(let work, let edition, let volumes, let failure):
-            chapters[work] = ReadChapters(edition: edition, volumes: volumes, failure: failure)
+            chapters[work] = Self.shot(ReadChapters(edition: edition, volumes: volumes, failure: failure))
         case .versions(_, let chapter, let list):
             versions[chapter] = list
         case .tracking(let work, let rows):
@@ -604,19 +656,26 @@ public final class BookSourcesModel {
         #endif
     }
 
-    /// For shots: Read from with a made-up source that had no series of the work's name, once
-    /// the work's editions are in. Does nothing outside the fixtures.
-    public func stageMissShot(work: String) async {
+    /// For shots: Read from with a made-up source that had no series of the work's name and
+    /// one with another edition of it, drawn with `cover`, once the work's editions are in. Does
+    /// nothing outside the fixtures.
+    public func stageMissShot(work: String, cover: String? = nil) async {
         #if FIXTURES
         let miss = EditionMiss(sourceId: "fixture-comics", sourceName: "Comics server", // i18n-skip: made up
                                reason: .reading(.readingMissNoSeries))
+        // Another edition of it, offered as a possible match. i18n-skip: made up
+        let colour = SourceSeriesChoice(seriesRef: "ferry-colour", title: "The Lantern Ferry - Full Color", // i18n-skip
+                                        cover: cover, year: 2019, language: "en", confidence: 70) // i18n-skip
+        let possible = EditionMiss(sourceId: "fixture-northwind", sourceName: "Northwind", // i18n-skip: made up
+                                   reason: .reading(.readingMissPossible), possible: colour)
+        let misses = [miss, possible]
         // Kept, so the engine's later answers for the work carry it too.
-        stagedMisses[work] = [miss]
+        stagedMisses[work] = misses
         for _ in 0..<30 where forWork[work] == nil {
             try? await Task.sleep(for: .milliseconds(100))
         }
         guard let found = forWork[work] else { return }
-        showcase(.forWork(work: work, editions: found.editions, asking: found.asking, missing: [miss]))
+        showcase(.forWork(work: work, editions: found.editions, asking: found.asking, missing: misses))
         #endif
     }
 
@@ -624,3 +683,87 @@ public final class BookSourcesModel {
     @ObservationIgnored private var stagedMisses: [String: [EditionMiss]] = [:]
     #endif
 }
+
+extension ReadingModel {
+    /// `-KaeriGroupPicker` in the Fixtures app: the series page opens its group picker.
+    public static var groupPickerShot: Bool {
+        #if FIXTURES
+        ProcessInfo.processInfo.arguments.contains("-KaeriGroupPicker")
+        #else
+        false
+        #endif
+    }
+
+    /// The series as the engine sent it, or shaped for a shot in the Fixtures app.
+    static func shot(_ view: SeriesView) -> SeriesView {
+        #if FIXTURES
+        guard groupsShot else { return view }
+        var view = view
+        view.edition = view.edition.map(withGroups)
+        return view
+        #else
+        view
+        #endif
+    }
+
+    static func shot(_ list: ReadChapters) -> ReadChapters {
+        #if FIXTURES
+        guard groupsShot else { return list }
+        return ReadChapters(edition: list.edition.map(withGroups), volumes: withParts(list.volumes), failure: list.failure)
+        #else
+        list
+        #endif
+    }
+}
+
+#if FIXTURES
+extension ReadingModel {
+    /// `-KaeriGroups`: the series scene's source lists three groups, and its rows show a chapter
+    /// in parts and chapters from other groups, for the shots of the group picker and parts.
+    static var groupsShot: Bool { ProcessInfo.processInfo.arguments.contains("-KaeriGroups") }
+
+    static func withGroups(_ edition: BookEditionRow) -> BookEditionRow {
+        var edition = edition
+        let total = max(edition.chapters, 20)
+        edition.versionLabel = "Lanternlight Scans" // i18n-skip
+        edition.groups = [
+            GroupChoice(label: "Lanternlight Scans", chapters: total - 2, inUse: true, language: "en"), // i18n-skip
+            GroupChoice(label: "Saltmarsh Team", chapters: total * 3 / 5, inUse: false, language: "en"), // i18n-skip
+            GroupChoice(label: "Bluefinch Group", chapters: total / 4, inUse: false, language: "es"), // i18n-skip
+        ]
+        edition.groupChosen = false
+        return edition
+    }
+
+    /// The newest chapter from another group, one read in two parts, and one with a part from
+    /// a group in another language.
+    static func withParts(_ volumes: [VolumeGroup]) -> [VolumeGroup] {
+        var volumes = volumes
+        var seen = 0
+        for v in volumes.indices {
+            for c in volumes[v].chapters.indices {
+                var row = volumes[v].chapters[c]
+                switch seen {
+                case 0:
+                    row.otherGroup = true
+                    row.versionLabel = "Saltmarsh Team" // i18n-skip
+                    row.line.append(.reading(.readingRowFromGroup(group: "Saltmarsh Team"))) // i18n-skip
+                case 2:
+                    row.parts = 2
+                    row.line.append(.reading(.readingRowParts(n: 2)))
+                case 4:
+                    row.parts = 2
+                    row.partGroups = [PartGroup(part: 2, group: "Bluefinch Group", language: "es")] // i18n-skip
+                    row.line.append(.reading(.readingRowParts(n: 2)))
+                    row.line.append(.reading(.readingRowPartFromGroupIn(part: 2, group: "Bluefinch Group", language: "Spanish"))) // i18n-skip
+                default:
+                    break
+                }
+                volumes[v].chapters[c] = row
+                seen += 1
+            }
+        }
+        return volumes
+    }
+}
+#endif

@@ -221,7 +221,12 @@ impl Renderer {
 
     /// Decodes a page and checks it: colour, spread, crop box.
     pub fn open(&self, bytes: &[u8]) -> Result<SourcePage, Error> {
-        let room = (self.target.width, self.target.height);
+        self.open_for(bytes, (self.target.width, self.target.height))
+    }
+
+    /// As [`Self::open`], for a page drawn in a box of `room` pixels rather than the screen:
+    /// a strip image drawn at the screen's width is far taller than the screen.
+    pub fn open_for(&self, bytes: &[u8], room: (u32, u32)) -> Result<SourcePage, Error> {
         let bitmap = decode_for(bytes, self.limits, Some(room))?;
         let format = SourceFormat::sniff(bytes).ok_or(Error::UnknownFormat)?;
         self.analyse(bitmap, format)

@@ -31,6 +31,10 @@ reader-text-label = Aa
 # @arg total: plain
 reader-group-line = { $chapter } · page { $page } of { $total }
 
+# The control group's line on the end page, after the chapter's last page.
+# @arg chapter: text
+reader-group-line-end = { $chapter } · end of chapter
+
 # The control group's line when a spread shows two pages.
 # @arg chapter: text
 # @arg first: plain
@@ -269,7 +273,10 @@ reader-chapter-new = new
 
 # Chapters sheet: a chapter's length.
 # @arg pages: int
-reader-chapter-pages = { $pages } pages
+reader-chapter-pages = { $pages ->
+    [one] 1 page
+   *[other] { $pages } pages
+}
 
 # Chapters sheet: the offline line.
 reader-offline-line = Offline. Downloaded chapters still open.
@@ -306,11 +313,6 @@ reader-key-step-screen = Screen
 
 # Gap between a strip's images.
 reader-strip-gap = Gap between images
-
-# Accessibility value of the pointer hint on the first chapter's tap zones.
-reader-zone-back = Back
-reader-zone-forward = Forward
-reader-zone-menu = Menu
 
 # A jump button above the page grid in the chapters sheet, for a band of pages.
 # @arg from: int

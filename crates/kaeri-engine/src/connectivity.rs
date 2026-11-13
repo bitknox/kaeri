@@ -10,12 +10,13 @@
 //! back failed, are noted, the latest of each kind; when the path comes back each is asked for
 //! once more, so every screen refreshes once without its front end asking.
 
-use std::mem::discriminant;
+use std::mem::{Discriminant, discriminant};
 
 use kaeri_model::{
     catalog::{ContentFor, ContentList},
     command::Command,
     event::Event,
+    reading::ReadingCommand,
 };
 
 use crate::outbox::Outbox;
@@ -36,8 +37,8 @@ impl Missed {
         if !refreshes(command) {
             return;
         }
-        let kind = discriminant(command);
-        self.noted.retain(|noted| discriminant(noted) != kind);
+        let kind = kind(command);
+        self.noted.retain(|noted| self::kind(noted) != kind);
         self.noted.push(command.clone());
     }
 
@@ -91,7 +92,25 @@ fn refreshes(command: &Command) -> bool {
             | Command::LoadSources { .. }
             | Command::LoadSourceOptions(_)
             | Command::LoadStores
+            | Command::Reading(
+                ReadingCommand::LoadHome { .. }
+                    | ReadingCommand::LoadUpdates
+                    | ReadingCommand::LoadLibrary { .. }
+                    | ReadingCommand::Search { .. }
+                    | ReadingCommand::LoadSeries { .. }
+                    | ReadingCommand::LoadChapters { .. }
+            )
     )
+}
+
+/// Which screen's load `command` is: a reading load by its own kind, the screens it fills
+/// being as many as the shows'.
+fn kind(command: &Command) -> (Discriminant<Command>, Option<Discriminant<ReadingCommand>>) {
+    let inner = match command {
+        Command::Reading(reading) => Some(discriminant(reading)),
+        _ => None,
+    };
+    (discriminant(command), inner)
 }
 
 /// The load that fills `view`.
@@ -160,6 +179,38 @@ mod tests {
         assert_eq!(missed.take_due(), [Command::LoadSeasonal, title(2)]);
         // Once.
         assert_eq!(missed.take_due(), []);
+    }
+
+    /// Reading's screens load again once back as the shows' do: Read home's offline line and
+    /// a series page listing only what is downloaded refresh by themselves.
+    #[test]
+    fn reading_loads_are_asked_for_again_once_back_each_kind_apart() {
+        let (tx, _rx) = outbox();
+        let mut missed = Missed::default();
+        moved(false, true, &mut missed, &tx);
+        let reading = Command::Reading;
+        let series = |id: &str| {
+            reading(ReadingCommand::LoadSeries { work: kaeri_core::books::WorkId::new(id) })
+        };
+        for command in [
+            reading(ReadingCommand::LoadHome { refresh: false }),
+            series("a:1"),
+            // A write is not asked for again.
+            reading(ReadingCommand::DownloadNew),
+            series("a:2"),
+            Command::LoadSeasonal,
+        ] {
+            missed.note(&command);
+        }
+        moved(true, false, &mut missed, &tx);
+        assert_eq!(
+            missed.take_due(),
+            [
+                reading(ReadingCommand::LoadHome { refresh: false }),
+                series("a:2"),
+                Command::LoadSeasonal
+            ]
+        );
     }
 
     #[test]

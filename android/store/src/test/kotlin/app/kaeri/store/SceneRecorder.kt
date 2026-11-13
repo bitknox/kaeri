@@ -132,7 +132,7 @@ class SceneRecorder {
         // Home's scenes are named as one word after their prefix (home-oneleft); the rest keep the
         // enum's underscores (link_opened), as their shots ask for them.
         val name = scene.name.lowercase()
-        val answered = settledNotices(events.toList(), ends)
+        val answered = jobsEndLast(settledNotices(events.toList(), ends), ends)
         Scene(if (prefix.isEmpty()) name else prefix + name.replace("_", ""), recordedAt, collapsed(answered))
     }
 
@@ -246,6 +246,36 @@ class SceneRecorder {
                 }.toSet()
                 out += part.filterIndexed { i, _ -> i !in notices }
                 out += part.filterIndexed { i, _ -> i in notices }
+                start = maxOf(start, end)
+            }
+            return out
+        }
+
+        /**
+         * [events] with each job's end said after the rest of its question's events, up to the
+         * next job's start or note, [ends] being where each question's events end. A job can leave
+         * work running when it ends, such as the episode names looked up after a listing or a
+         * franchise's cards after a title's page, and that work's events land before or after
+         * the job's end by how the engine's tasks were scheduled. A replay applies the same
+         * events either way: the end only takes the job's activity line away.
+         */
+        private fun jobsEndLast(events: List<Event>, ends: List<Int>): List<Event> {
+            val out = ArrayList<Event>(events.size)
+            var start = 0
+            for (end in ends + events.size) {
+                val done = ArrayList<Event>()
+                for (event in events.subList(start, maxOf(start, end))) {
+                    when (event) {
+                        is Event.JobDone -> done += event
+                        is Event.JobStarted, is Event.JobNote -> {
+                            out += done
+                            done.clear()
+                            out += event
+                        }
+                        else -> out += event
+                    }
+                }
+                out += done
                 start = maxOf(start, end)
             }
             return out

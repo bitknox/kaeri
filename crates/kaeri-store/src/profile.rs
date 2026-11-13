@@ -62,6 +62,7 @@ pub const PERSONAL_TABLES: &[&str] = &[
     "read_note",
     "book_source_match",
     "book_edition_pref",
+    "book_credit_keep",
 ];
 
 /// Tables that belong to the device and are shared by every profile.
@@ -94,6 +95,7 @@ pub const DEVICE_TABLES: &[&str] = &[
     "book_download",
     "book_progress_outbox",
     "book_progress_state",
+    "book_page_print",
 ];
 
 const FILE: &str = "profiles.json";

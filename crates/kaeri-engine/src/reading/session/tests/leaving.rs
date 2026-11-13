@@ -89,11 +89,12 @@ async fn leave_while_finding(named: bool) {
     });
     let wait = h
         .until(|e| match e {
-            ReaderEvent::Opening { wait, .. } => Some(*wait),
+            ReaderEvent::Opening { wait, .. } => Some(wait.clone()),
             _ => None,
         })
         .await;
-    assert_eq!(wait, Some(ReaderWait::FindingSource));
+    // The source is known by then: the line names it and what it is asked for.
+    assert_eq!(wait, Some(ReaderWait::ChapterList { source: "Slow".into() }));
     let pending = h.reader.listing.as_ref().map(|l| l.id).expect("the open waits");
     let session = if named { pending } else { 0 };
     h.send(ReaderCommand::Close { session });
@@ -116,4 +117,53 @@ async fn leave_while_finding(named: bool) {
     assert!(opened.is_err(), "the reader opened session {opened:?} after the person left");
     assert!(h.reader.session.is_none(), "no session is held");
     assert!(h.reader.listing.is_none(), "no open waits");
+}
+
+/// An open of a series only a slow source holds says what it waits on, in order: the chapter
+/// list from the source, then the chapter's pages from it, each naming the source as the
+/// person knows it.
+#[tokio::test(start_paused = true)]
+async fn an_open_names_each_stage_it_waits_on() {
+    let mut h = harness_of(Store::open_in_memory().unwrap(), "manga", |_| Vec::new());
+    let source = Arc::new(Slow {
+        manifest: BookSourceManifest {
+            id: "slow-books".into(),
+            name: "Slow Books".into(),
+            version: "1".into(),
+            kind: BookSourceKind::Plugin,
+            media: vec![Medium::Manga],
+            languages: vec!["en".into()],
+            allowed_hosts: Vec::new(),
+            capabilities: Vec::new(),
+        },
+        slow: Duration::from_secs(8),
+    });
+    h.services.book_sources.registry.put(source);
+    h.services
+        .store
+        .set_book_match("slow-books", "series-1", SLOW_WORK, 90, true, false, 1)
+        .unwrap();
+    h.send(ReaderCommand::Open {
+        work: WorkId::new(SLOW_WORK),
+        chapter: None,
+        at: OpenAt::Start,
+        surface: surface(),
+    });
+    let mut stages = Vec::new();
+    while stages.len() < 2 {
+        let wait = h
+            .until(|e| match e {
+                ReaderEvent::Opening { wait, .. } => Some(wait.clone()),
+                _ => None,
+            })
+            .await;
+        stages.push(wait);
+    }
+    assert_eq!(
+        stages,
+        [
+            Some(ReaderWait::ChapterList { source: "Slow Books".into() }),
+            Some(ReaderWait::ChapterPages { chapter: "1".into(), source: "Slow Books".into() }),
+        ]
+    );
 }

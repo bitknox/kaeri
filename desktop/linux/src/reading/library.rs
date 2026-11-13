@@ -119,6 +119,19 @@ fn sort_menu(on_change: impl Fn(Sort) + 'static) -> (gtk::MenuButton, Rc<Cell<So
     (button, current)
 }
 
+/// The row over the covers: the medium, then the list menu, which goes under it when a narrow
+/// window or large text leaves no room beside it.
+fn bar(scope: &impl IsA<gtk::Widget>, menu: &impl IsA<gtk::Widget>) -> adw::WrapBox {
+    let bar = adw::WrapBox::builder().child_spacing(12).line_spacing(8).build();
+    bar.set_margin_top(12);
+    bar.set_margin_bottom(6);
+    bar.set_margin_start(18);
+    bar.set_margin_end(18);
+    bar.append(scope);
+    bar.append(menu);
+    bar
+}
+
 /// The list menu: "Reading 14" with a chevron, opening every list with its count.
 struct ListMenu {
     button: gtk::MenuButton,
@@ -269,13 +282,7 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     });
     menu.replace(Some(Rc::clone(&list_menu)));
 
-    let bar = gtk::Box::new(gtk::Orientation::Horizontal, 12);
-    bar.set_margin_top(12);
-    bar.set_margin_bottom(6);
-    bar.set_margin_start(18);
-    bar.set_margin_end(18);
-    bar.append(&scope(ctx, Dest::Library, true));
-    bar.append(&list_menu.button);
+    let bar = bar(&scope(ctx, Dest::Library, true), &list_menu.button);
     let body = gtk::Box::new(gtk::Orientation::Vertical, 0);
     body.append(&bar);
     states.widget.set_vexpand(true);
@@ -284,7 +291,7 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     let header = adw::HeaderBar::new();
     header.pack_start(&widgets::sidebar_button(&ctx.split));
     header.pack_end(&order);
-    let page = widgets::content_page(&t::nav_library(), &header, &body);
+    let page = widgets::read_content_page(&t::nav_library(), &header, &body);
     states.on_retry({
         let ask_all = ask_all.clone();
         move || ask_all()
@@ -348,4 +355,46 @@ fn find_list(widget: &gtk::Widget) -> Option<gtk::MenuButton> {
         child = next.next_sibling();
     }
     None
+}
+
+#[cfg(test)]
+mod tests {
+    use adw::prelude::*;
+    use kaeri_i18n::t;
+
+    use super::{ListMenu, bar};
+    use crate::gtk_test::{pump, run};
+
+    /// The bar in the smallest window, 350 px inside: the list menu goes under the medium
+    /// when both don't fit beside each other, at twice the text size too.
+    #[test]
+    fn the_bar_fits_a_narrow_window_at_any_text_size() {
+        run(|| {
+            let toggles = adw::ToggleGroup::new();
+            for (name, label) in
+                [("shows", t::library_scope_shows()), ("reading", t::library_scope_reading())]
+            {
+                toggles.add(adw::Toggle::builder().name(name).label(label).build());
+            }
+            toggles.add_css_class("round");
+            let menu = ListMenu::new(|_| {});
+            menu.count.set_label("1240");
+            let bar = bar(&toggles, &menu.button);
+            let window = gtk::Window::builder().default_width(1280).default_height(800).build();
+            window.set_child(Some(&bar));
+            window.present();
+            pump(100);
+            let normal = bar.measure(gtk::Orientation::Horizontal, -1).0;
+            let settings = gtk::Settings::default().expect("a display");
+            let dpi = settings.gtk_xft_dpi();
+            settings.set_gtk_xft_dpi(2 * 96 * 1024);
+            pump(150);
+            let large = bar.measure(gtk::Orientation::Horizontal, -1).0;
+            settings.set_gtk_xft_dpi(dpi);
+            window.destroy();
+
+            assert!(normal <= 350, "the bar needs {normal} px at the normal text size");
+            assert!(large <= 350, "the bar needs {large} px at twice the size");
+        });
+    }
 }

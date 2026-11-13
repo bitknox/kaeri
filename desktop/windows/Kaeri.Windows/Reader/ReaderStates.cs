@@ -26,24 +26,34 @@ static class ReaderText
 /// <summary>
 /// Opening a chapter: the page plate holds the page's place from the first frame, with the
 /// chapter on it, and the page fades in over it when it comes; there is no spinner and no blank
-/// page. From 4 s a line under the chapter says it is opening, or counts the wait while a source
-/// is found. Narrator hears "Opening Chapter N" once.
+/// page. From 3 s a line under the chapter says what the open waits on and counts the wait; from
+/// <see cref="LongWait"/> it offers another source and Go back. Narrator hears each stage once.
 /// </summary>
 sealed class OpeningView : Grid
 {
+    /// <summary>How long a stage goes on before the opening offers another way, as the player's start does.</summary>
+    public const int LongWait = 15;
+
     readonly PagePlate plate;
     readonly DispatcherQueueTimer tick;
     readonly DateTimeOffset since = DateTimeOffset.UtcNow;
-    readonly ReaderSession reader;
+    readonly ReaderOverlay owner;
+    readonly ReaderPalette palette;
+    readonly string chapter;
+    string? said;
+    bool offered;
 
-    public OpeningView(ReaderSession reader, ReaderPalette palette, string chapter)
+    public OpeningView(ReaderOverlay owner, ReaderPalette palette, string chapter)
     {
-        this.reader = reader;
+        this.owner = owner;
+        this.palette = palette;
+        this.chapter = chapter;
         Background = new SolidColorBrush(palette.Page);
-        var words = string.IsNullOrEmpty(chapter) ? "" : T.WindowsReaderOpening(chapter);
+        var words = Stage(owner.Reader.Opening?.Wait, chapter);
         plate = new PagePlate(chapter, words, palette, atOnce: true);
         AutomationProperties.SetAccessibilityView(plate, AccessibilityView.Raw);
         Children.Add(plate);
+        said = words;
         AutomationProperties.SetName(this, words);
         AutomationProperties.SetLiveSetting(this, AutomationLiveSetting.Polite);
         tick = Timers.Weak(this, TimeSpan.FromSeconds(1), true, o => o.Tick());
@@ -56,12 +66,48 @@ sealed class OpeningView : Grid
         Unloaded += (_, _) => tick.Stop();
     }
 
+    /// <summary>What the open waits on, in words: the stage the engine named, else the chapter.</summary>
+    public static string Stage(ReaderWait? wait, string chapter) => wait switch
+    {
+        ReaderWait.ChapterList list => T.ReaderWaitChapterList(list.Source),
+        ReaderWait.ChapterPages pages => T.ReaderWaitChapterPages(pages.Chapter, pages.Source),
+        _ => string.IsNullOrEmpty(chapter) ? "" : T.WindowsReaderOpening(chapter),
+    };
+
     void Tick()
     {
         var seconds = (int)(DateTimeOffset.UtcNow - since).TotalSeconds;
-        if (seconds < 4 || reader.Opening?.Wait != ReaderWait.FindingSource)
+        var stage = Stage(owner.Reader.Opening?.Wait, chapter);
+        if (stage.Length == 0)
             return;
-        plate.Loading(T.WindowsReaderOpeningSlow(seconds));
+        if (stage != said)
+        {
+            // A new stage is said aloud, as the first one was.
+            said = stage;
+            AutomationProperties.SetName(this, stage);
+            ReaderSpeech.Raise(this);
+        }
+        plate.Loading(seconds < 3 ? stage : T.ReaderWaitSeconds(stage, seconds));
+        if (seconds >= LongWait && !offered)
+            Offer();
+    }
+
+    /// <summary>A stage that goes on offers the way on, as a failed open does.</summary>
+    void Offer()
+    {
+        offered = true;
+        var stack = new StackPanel { Spacing = 10, MaxWidth = 440, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(28, 28, 28, 40) };
+        stack.Children.Add(ReaderText.Line(T.ReaderWaitLong, 15, palette.Haze));
+        var quiet = new Grid { ColumnSpacing = 8 };
+        quiet.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        quiet.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        var choose = ReaderButtons.Plain(T.WindowsReaderChooseSource, palette, (_, _) => owner.ChooseSource());
+        var back = ReaderButtons.Plain(T.WindowsReaderGoBack, palette, (_, _) => owner.Close());
+        SetColumn(back, 1);
+        quiet.Children.Add(choose);
+        quiet.Children.Add(back);
+        stack.Children.Add(quiet);
+        Children.Add(stack);
     }
 }
 
@@ -124,7 +170,7 @@ sealed class EndPageView : Grid
         var view = reader.View;
         var finished = view?.Chapter;
         var chapter = finished?.Number is { Length: > 0 } number ? T.ReaderEndOfChapterNumber(number) : T.WindowsReaderEndOfChapter(finished?.Label ?? "");
-        var next = reader.End?.Next ?? view?.Next;
+        var next = reader.EndNext;
         var demo = view?.DemoCredit;
         var novel = reader.Medium == Medium.Novel;
 
@@ -151,7 +197,21 @@ sealed class EndPageView : Grid
         words.Children.Add(read);
         words.Children.Add(owner.ServerLine.Take());
 
-        if (next is not null)
+        if (next is not null && reader.FlowFailed is { } failed && failed.Chapter.Id == next.Id)
+        {
+            // A strip flowing on could not open the next chapter: it says so here, at the join,
+            // and tries that chapter again.
+            var block = new StackPanel { Spacing = 6, Margin = new Thickness(0, 22, 0, 0) };
+            block.Children.Add(ReaderText.Line(T.ReaderEndNext, 13, palette.Haze, strong: true));
+            var label = next.Number is { Length: > 0 } n ? T.ReaderChapterLine(n) : next.Label;
+            block.Children.Add(ReaderText.Line(T.WindowsReaderChapterFailed(label), 20, palette.Silk, strong: true));
+            block.Children.Add(ReaderText.Line(failed.Failure.Words(), 15, palette.Haze));
+            words.Children.Add(block);
+            var again = ReaderButtons.Amber(T.ReaderTryAgain, palette, (_, _) => reader.RetryFlow());
+            again.Margin = new Thickness(0, 32, 0, 0);
+            words.Children.Add(again);
+        }
+        else if (next is not null)
         {
             var block = new StackPanel { Spacing = 4, Margin = new Thickness(0, 22, 0, 0) };
             block.Children.Add(ReaderText.Line(T.ReaderEndNext, 13, palette.Haze, strong: true));
@@ -165,6 +225,15 @@ sealed class EndPageView : Grid
             ToolTipService.SetToolTip(go, T.TooltipWithKey(T.WindowsReaderContinue, "Space"));
             go.Margin = new Thickness(0, 32, 0, 0);
             words.Children.Add(go);
+            // Past the extras: Skip to chapter 17, between Continue and Back to the series.
+            if (reader.End?.SkipTo is { } skip)
+            {
+                var past = ReaderButtons.Pill(T.ReaderEndSkipTo(skip.Number ?? skip.Label), palette, (_, _) => reader.OpenChapter(skip.Id));
+                AutomationProperties.SetHelpText(past, reader.End?.SkipHint ?? "");
+                past.Margin = new Thickness(0, 12, 0, 0);
+                past.HorizontalAlignment = HorizontalAlignment.Stretch;
+                words.Children.Add(past);
+            }
             // On a touch screen, one more swipe goes on, as on a phone.
             if (owner.TouchInput && !owner.StripShown)
             {
@@ -191,7 +260,7 @@ sealed class EndPageView : Grid
         }
         else if (reader.End?.Why is { } why)
         {
-            var label = finished?.Label ?? "";
+            var label = Following(view);
             var block = new StackPanel { Spacing = 6, Margin = new Thickness(0, 22, 0, 0) };
             var title = why switch
             {
@@ -227,6 +296,20 @@ sealed class EndPageView : Grid
             HorizontalScrollMode = ScrollMode.Disabled,
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
         });
+    }
+
+    /// <summary>
+    /// The chapter a heading with no next chapter names: the next one listed, which offline is
+    /// one only a source has; past the last one listed, the next whole number.
+    /// </summary>
+    internal static string Following(ReaderView? view)
+    {
+        if (view?.Next is { } next)
+            return next.Number is { Length: > 0 } n ? T.ReaderChapterLine(n) : next.Label;
+        if (view?.Chapter.Number is { } number
+            && double.TryParse(number, global::System.Globalization.NumberStyles.Float, global::System.Globalization.CultureInfo.InvariantCulture, out var at))
+            return T.ReaderChapterLine(((long)Math.Floor(at) + 1).ToString(global::System.Globalization.CultureInfo.InvariantCulture));
+        return "";
     }
 
     /// <summary>

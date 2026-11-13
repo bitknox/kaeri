@@ -1,8 +1,9 @@
 //! A tracker's token pair as it is held while the tracker runs: renewed before it runs out, and
 //! kept in step with the other processes signed in with it.
 //!
-//! MyAnimeList, Kitsu and Simkl each issue a pair that runs out (in a month, a month, a week),
-//! and each is renewed with its refresh token a day early. The terminal and the Mac app keep one
+//! MyAnimeList, Kitsu, Simkl and Trakt each issue a pair that runs out, and each is renewed with
+//! its refresh token before then: a day early, or an hour early for Trakt, whose access token can
+//! last only a day. The terminal and the Mac app keep one
 //! sign-in in one [`TokenStore`], and a renewal by either ends the access token the other holds.
 //! Simkl ends it at once; MyAnimeList and Kitsu replace the refresh token too, so the other's
 //! renewal would fail as well. Two rules keep the processes in step:
@@ -23,13 +24,14 @@ use crate::secret::{SecretError, TokenPair, TokenStore};
 /// How early a pair is renewed: a day before it runs out.
 pub(crate) const MARGIN_SECS: i64 = 24 * 3_600;
 
-/// How a tracker renews its pair, at its own token endpoint.
+/// How a tracker renews its pair, at its own token endpoint. A renewal the service refused is
+/// [`kaeri_core::Error::Auth`]; one that never reached it is any other error, tried again later.
 pub(crate) trait Renews: Sync {
     fn renew(
         &self,
         refresh: &str,
         now: i64,
-    ) -> impl Future<Output = Result<TokenPair, String>> + Send;
+    ) -> impl Future<Output = Result<TokenPair, kaeri_core::Error>> + Send;
 }
 
 /// One tracker's pair.
@@ -43,6 +45,8 @@ pub(crate) struct Held {
     pending_save: RwLock<Option<TokenPair>>,
     /// The store this pair is kept in, shared with the other processes signed in with it.
     store: Option<TokenStore>,
+    /// How long before it runs out the pair is renewed: [`MARGIN_SECS`] unless set.
+    margin: i64,
 }
 
 /// What the store holds now, against the pair held here.
@@ -57,7 +61,22 @@ enum Stored {
 
 impl Held {
     pub(crate) fn new(id: &'static str, name: &'static str, pair: Option<TokenPair>) -> Self {
-        Self { id, name, pair: RwLock::new(pair), pending_save: RwLock::new(None), store: None }
+        Self {
+            id,
+            name,
+            pair: RwLock::new(pair),
+            pending_save: RwLock::new(None),
+            store: None,
+            margin: MARGIN_SECS,
+        }
+    }
+
+    /// Renewed `secs` before it runs out instead of a day: for a pair that lasts about a day,
+    /// which a day's margin would renew on every call.
+    #[must_use]
+    pub(crate) fn with_margin(mut self, secs: i64) -> Self {
+        self.margin = secs;
+        self
     }
 
     /// Kept in step with the other processes signed in through `store`.
@@ -96,7 +115,7 @@ impl Held {
         {
             let held = self.pair.read().await;
             let pair = held.as_ref().ok_or_else(|| self.not_signed_in())?;
-            if !pair.needs_refresh(now, MARGIN_SECS) && !pair.is_expired(now) {
+            if !pair.needs_refresh(now, self.margin) && !pair.is_expired(now) {
                 return Ok(pair.access.clone());
             }
         }
@@ -157,7 +176,7 @@ impl Held {
 
         let pair = held.as_ref().ok_or_else(|| self.not_signed_in())?;
         let rejected = rejected.is_some_and(|rejected| pair.access == rejected);
-        if !rejected && !pair.needs_refresh(now, MARGIN_SECS) {
+        if !rejected && !pair.needs_refresh(now, self.margin) {
             // `needs_refresh` is false for a pair with nothing to renew it with.
             return if pair.is_expired(now) {
                 Err(self.ran_out())
@@ -170,7 +189,7 @@ impl Held {
         };
 
         tracing::info!("refreshing the {} token", self.name);
-        let renewed = renews.renew(&refresh, now).await.map_err(kaeri_core::Error::Auth)?;
+        let renewed = renews.renew(&refresh, now).await?;
         let access = renewed.access.clone();
         self.save(&renewed).await;
         *held = Some(renewed);
@@ -256,7 +275,7 @@ mod tests {
     }
 
     impl Renews for Endpoint {
-        async fn renew(&self, refresh: &str, now: i64) -> Result<TokenPair, String> {
+        async fn renew(&self, refresh: &str, now: i64) -> Result<TokenPair, kaeri_core::Error> {
             let n = self.renewals.fetch_add(1, Ordering::SeqCst) + 1;
             Ok(TokenPair {
                 access: format!("renewed-{n}"),

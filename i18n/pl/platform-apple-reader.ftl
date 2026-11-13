@@ -94,7 +94,12 @@ reader-volume = Tom { $volume }
 reader-chapter-in-progress = Strona { $page } z { $total }
 reader-chapter-read = Przeczytany
 reader-chapter-new = nowy
-reader-chapter-pages = Stron: { $pages }
+reader-chapter-pages = { $pages ->
+    [one] 1 strona
+    [few] { $pages } strony
+    [many] { $pages } stron
+   *[other] { $pages } strony
+ }
 reader-offline-line = Offline. Pobrane rozdziały nadal się otwierają.
 reader-menu-go = Idź
 reader-menu-next-page = Następna strona
@@ -116,8 +121,5 @@ reader-key-step = Krok klawiatury
 reader-key-step-panel = Kadr
 reader-key-step-screen = Ekran
 reader-strip-gap = Odstęp między obrazami
-reader-zone-back = Wstecz
-reader-zone-forward = Do przodu
-reader-zone-menu = Menu
 reader-pages-range = { $from }–{ $to }
 send-failed-offline = Spróbuj ponownie, gdy będziesz online.

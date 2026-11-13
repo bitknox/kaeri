@@ -32,7 +32,13 @@ struct NovelReader: View {
                 pagesLeft
             }
             if shown.end {
-                ReaderEndPage(model: model, theme: theme, size: size).transition(.opacity)
+                ReaderEndPage(model: model, theme: theme, size: size)
+                    .contentShape(.rect)
+                    // The end page takes the page's taps and swipes: forward goes on into the next
+                    // chapter, back to the chapter's last page. Its buttons keep their own taps.
+                    .gesture(endSwipe(controller))
+                    .onTapGesture(coordinateSpace: .local) { at in controller.tapped(at.x / max(size.width, 1)) }
+                    .transition(.opacity)
             }
             if let note = shown.note {
                 VStack {
@@ -56,14 +62,19 @@ struct NovelReader: View {
         }
         .onChange(of: theme.page, initial: true) { _, page in controller.pageColor = page }
         .onChange(of: paper, initial: true) { _, paper in controller.paper = paper }
+        // A chapter of its own, or the same book opened again in a new session, whose
+        // addresses are new: the old ones are no longer served.
         .onChange(of: model.novel?.chapter) { _, _ in open() }
+        .onChange(of: model.novel?.session) { _, _ in open() }
         .onChange(of: model.novelStyle) { _, style in controller.configure(style) }
         .onChange(of: model.jump?.tick) { _, _ in
             if let index = model.jump?.index { controller.goTo(index) }
         }
+        .onChange(of: model.novelGoTo?.tick) { _, _ in
+            if let pos = model.novelGoTo?.pos { controller.goTo(pos) }
+        }
         .onChange(of: model.turnRequest) { _, request in
             guard let request else { return }
-            if shown.end, !request.forward { shown.end = false; return }
             controller.turn(forward: request.forward, how: "key")
         }
         .onChange(of: model.choice(.mode)) { _, mode in controller.scrolled(mode == "scrolled") }
@@ -90,6 +101,17 @@ struct NovelReader: View {
         .opacity(model.chromeShown ? 0 : 1)
         .transition(.opacity)
         .accessibilityHidden(true)
+    }
+
+    /// A sideways swipe on the end page, towards the side the book reads to for forward.
+    private func endSwipe(_ controller: NovelWebController) -> some Gesture {
+        DragGesture(minimumDistance: 14).onEnded { value in
+            let x = value.translation.width
+            guard abs(x) > abs(value.translation.height) else { return }
+            let flick = abs(value.velocity.width) > 450 && value.velocity.width * x > 0
+            guard abs(x) > size.width * 0.25 || flick else { return }
+            controller.turn(forward: (x < 0) != rtl, how: "swipe")
+        }
     }
 
     private func open() {
@@ -151,7 +173,9 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
     private weak var model: ReaderModel?
     private var onTap: (Double) -> Void = { _ in }
     private var book: NovelOpenView?
-    private var openedChapter: String?
+    /// The session and chapter shown: the book's addresses hold the session, so a book opened
+    /// again in a new session is loaded again even when its chapter is the same.
+    private var opened: (session: UInt64, chapter: String)?
     /// The place the page last said, to open again at after WebKit ended the page's process.
     private var lastPlace: (spine: Int, pos: NovelPos)?
     /// What the page last heard of input(): sent again with each new document.
@@ -165,6 +189,9 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
     /// The page being dragged away, over the one the turn showed under it.
     private var carried: UIView?
     private var carriedForward = true
+    /// A drag past the document's first or last page, which nothing follows: letting go far
+    /// enough turns on to the end page or the document beside it, and short of that nothing.
+    private var edgeForward: Bool?
     #endif
 
     override init() {
@@ -231,11 +258,11 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
     }
 
     func open(_ book: NovelOpenView, scrolled: Bool) {
-        guard openedChapter != book.chapter else { return }
+        if let opened, opened.session == book.session, opened.chapter == book.chapter { return }
         // A view that showed another chapter stays hidden until the new one is laid out, so
         // the last page of the old one never shows under the new one.
-        if openedChapter != nil { setHidden(true) }
-        openedChapter = book.chapter
+        if opened != nil { setHidden(true) }
+        opened = (book.session, book.chapter)
         self.book = book
         lastPlace = nil
         shown.end = false
@@ -277,10 +304,28 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
     }
 
     func turn(forward: Bool, how: String) {
+        // On the end page a turn forward goes on into the next chapter, as the comic reader's
+        // does, and a turn back puts the end page away.
+        if shown.end {
+            if forward { goOn() } else { shown.end = false }
+            return
+        }
         call("window.kaeriReader && window.kaeriReader.\(forward ? "next" : "prev")('\(how)')")
     }
 
     func goTo(_ page: Int) { call("window.kaeriReader && window.kaeriReader.goTo(\(max(page, 0)), 'jump')") }
+
+    /// A place the engine chose: Back to page, Start over, another device's. The page says it
+    /// back as placed, never as the person's jump.
+    func goTo(_ pos: NovelPos) {
+        guard let book, book.spine.indices.contains(Int(pos.spine)) else { return }
+        readyHow = nil
+        if Int(pos.spine) == currentSpine {
+            call("window.kaeriReader && window.kaeriReader.goToPos('\(Self.text(pos))', 'placed')")
+        } else {
+            load(book.spine[Int(pos.spine)].url, fragment: "kaeri:pos=" + Self.text(pos))
+        }
+    }
 
     /// Which taps and keys the page turns on by itself, so a turn is one message from the page:
     /// the tap setting's sides, forward on the side the book reads towards, and none while the
@@ -311,9 +356,14 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
         let rtl = book?.progression == .rightToLeft
         switch gesture.state {
         case .began, .changed:
-            if carried == nil {
+            if carried == nil, edgeForward == nil {
                 guard abs(dx) > 6 else { return }
                 let forward = (dx < 0) != rtl
+                let (index, count) = model?.position ?? (0, 1)
+                if forward ? index >= count - 1 : index <= 0 {
+                    edgeForward = forward
+                    return
+                }
                 if paper {
                     // Paper mode turns at once; the rest of this drag is dropped.
                     gesture.isEnabled = false
@@ -336,6 +386,13 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
             let away: CGFloat = (carriedForward != rtl) ? -1 : 1
             carried?.transform = CGAffineTransform(translationX: away * max(dx * away, 0), y: 0)
         case .ended, .cancelled, .failed:
+            if let forward = edgeForward {
+                edgeForward = nil
+                let along = dx * ((forward != rtl) ? -1 : 1)
+                let velocity = gesture.velocity(in: webView).x * ((forward != rtl) ? -1 : 1)
+                if gesture.state == .ended, along > width * 0.25 || velocity > 450 { turn(forward: forward, how: "swipe") }
+                return
+            }
             guard let page = carried else { return }
             let away: CGFloat = (carriedForward != rtl) ? -1 : 1
             let velocity = gesture.velocity(in: webView).x * away
@@ -382,9 +439,26 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
             sentInput = nil
             sendInput()
             setHidden(false)
-            page(json, ready: true)
+            switch shownDocument(json) {
+            case .spine:
+                recovering = false
+                page(json, ready: true)
+            case .other:
+                // A note or another file of the book, reached by a link: it shows and turns, and
+                // keeps no reading place. A turn past its edges goes back to the place.
+                recovering = false
+                readyHow = nil
+                pageCount(json)
+            case .notServed:
+                notServed()
+            }
         case "failed": setHidden(false)
-        case "page": page(json, ready: false)
+        case "page":
+            switch shownDocument(json) {
+            case .spine: page(json, ready: false)
+            case .other: pageCount(json)
+            case .notServed: break
+            }
         case "layout":
             if let page = json["page"] as? Int, let pages = json["pages"] as? Int { model?.position = (page, max(pages, 1)) }
         case "end": next()
@@ -404,23 +478,32 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
             spine: UInt32(pos["spine"] as? Int ?? 0), path: (pos["path"] as? [Int] ?? []).map(UInt32.init),
             offset: UInt32(pos["offset"] as? Int ?? 0))
         if let spine = currentSpine { lastPlace = (spine, place) }
-        model?.novelAt(place, page: page, pages: pages, how: Self.how(json["how"] as? String))
+        let word = json["how"] as? String
+        let how = ready && word == nil ? (readyHow ?? .placed) : Self.how(word)
+        if ready { readyHow = nil }
+        model?.novelAt(place, page: page, pages: pages, how: how)
     }
 
+    /// How the document loading now came: a turn past a document's edge, or a link the person
+    /// followed. Anything else the host loads is placed.
+    private var readyHow: TurnHow?
+
+    /// The page's word for a turn. A first layout says none, and a document the host loaded
+    /// is its own move: neither is the person's jump.
     static func how(_ text: String?) -> TurnHow {
         switch text {
         case "swipe": .swipe
         case "key": .key
         case "scroll": .scroll
         case "turn": .turn
-        default: .jump
+        case "jump": .jump
+        default: .placed
         }
     }
 
     /// A tap the page did not turn on: while the end page or the chrome is up, in the middle,
     /// or before the page heard which taps to turn on.
-    private func tapped(_ x: Double) {
-        if shown.end { shown.end = false; return }
+    func tapped(_ x: Double) {
         guard let model else { return }
         let layout = model.choice(.tapLayout) ?? "edges"
         if model.chromeShown || layout == "off" { onTap(x); return }
@@ -432,28 +515,94 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
         }
     }
 
-    /// Past the last page of a document: the next one, or the end page.
+    /// Past the last page of a document: the next one, or the end page. Past the end page:
+    /// the next chapter.
     private func next() {
-        guard let book, let current = currentSpine else { return }
+        guard let book else { return }
+        guard let current = currentSpine else {
+            reopen()
+            return
+        }
         if let index = book.spine.indices.dropFirst(current + 1).first(where: { book.spine[$0].linear }) {
+            readyHow = .turn
             load(book.spine[index].url, fragment: nil)
+        } else if shown.end {
+            goOn()
         } else {
             shown.end = true
+            model?.novelEnded()
         }
     }
 
+    /// The next chapter, from the end page, once the reader knows which it is. With none the
+    /// end page stays: it says why.
+    private func goOn() {
+        guard let model, let next = model.endNext else { return }
+        model.hideChrome()
+        model.openChapter(next.id)
+    }
+
     private func previous() {
-        guard let book, let current = currentSpine else { return }
+        guard let book else { return }
+        guard let current = currentSpine else {
+            reopen()
+            return
+        }
         if let index = book.spine.indices.prefix(current).last(where: { book.spine[$0].linear }) {
+            readyHow = .turn
             load(book.spine[index].url, fragment: "kaeri:end")
         }
     }
 
     private var currentSpine: Int? {
-        guard let book, let url = webView.url else { return nil }
-        let path = url.absoluteString.split(separator: "#").first.map(String.init) ?? ""
-        return book.spine.firstIndex { $0.url == path }
+        guard let url = webView.url else { return nil }
+        return spineIndex(of: url.absoluteString)
     }
+
+    /// The spine document at `address`, whatever its fragment, and with its escapes read the
+    /// same way WebKit and the engine may write them.
+    private func spineIndex(of address: String) -> Int? {
+        guard let book else { return nil }
+        let path = Self.document(address)
+        return book.spine.firstIndex { Self.document($0.url) == path }
+    }
+
+    nonisolated static func document(_ address: String) -> String {
+        let path = address.split(separator: "#", maxSplits: 1, omittingEmptySubsequences: false).first.map(String.init) ?? ""
+        return path.removingPercentEncoding ?? path
+    }
+
+    private enum Shown { case spine, other, notServed }
+
+    /// What a report comes from. A spine document of the book, whose spine index the engine
+    /// told it; another file of the book, such as a note outside the spine; or a page the
+    /// engine did not serve as the book's, such as an error's empty answer, which has none of
+    /// the book's settings and says the first index.
+    private func shownDocument(_ json: [String: Any]) -> Shown {
+        guard let url = webView.url?.absoluteString else { return .notServed }
+        if let status = handler.status(of: url), !(200..<300).contains(status) { return .notServed }
+        guard let current = currentSpine else { return book == nil ? .notServed : .other }
+        return (json["spine"] as? Int ?? 0) == current ? .spine : .notServed
+    }
+
+    /// The pages of a document that keeps no place, for the reader's count.
+    private func pageCount(_ json: [String: Any]) {
+        if let page = json["page"] as? Int, let pages = json["pages"] as? Int { model?.position = (page, max(pages, 1)) }
+    }
+
+    /// The document shown is not the book's: its place is never kept, and the page goes back to
+    /// the last place the book showed, or the chapter's start. Once: a book that fails again
+    /// stays as it is rather than loading for good.
+    private func notServed() {
+        readyHow = nil
+        guard !recovering else { return }
+        recovering = true
+        setHidden(true)
+        reopen()
+    }
+
+    /// Going back to a known place after a document that failed, until the book shows again.
+    private var recovering = false
 
     private func load(_ url: String, fragment: String?) {
         guard var parts = URLComponents(string: url) else { return }
@@ -463,8 +612,10 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
 
     private func link(_ json: [String: Any]) {
         if let note = json["note"] as? String, !note.isEmpty { shown.note = note; return }
-        // Only links inside the book are followed; everything else stays where it is.
+        // Only links inside the book are followed; everything else stays where it is. A file
+        // the book does not have is answered with an error, which never replaces the page.
         if json["internal"] as? Bool == true, let href = json["href"] as? String, let target = URL(string: href) {
+            readyHow = .jump
             webView.load(URLRequest(url: target))
         }
     }
@@ -472,14 +623,6 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
     /// A key the page did not turn on, while the chrome or the end page is up.
     private func key(_ key: String) {
         let rtl = book?.progression == .rightToLeft
-        let forward: Bool? = switch key {
-        case "ArrowRight": !rtl
-        case "ArrowLeft": rtl
-        case "ArrowDown", "PageDown", " ": true
-        case "ArrowUp", "PageUp": false
-        default: nil
-        }
-        if shown.end, forward == false { shown.end = false; return }
         switch key {
         case "ArrowRight": turn(forward: !rtl, how: "key")
         case "ArrowLeft": turn(forward: rtl, how: "key")
@@ -500,6 +643,37 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
     ) {
         let ok = action.request.url?.scheme == "kaeri-book" || action.request.url?.absoluteString == "about:blank"
         Task { @MainActor in decisionHandler(ok ? .allow : .cancel) }
+    }
+
+    /// A document the engine refused or no longer serves never replaces the page shown: the
+    /// turn stays where it was, with its keys, instead of an empty page.
+    nonisolated func webView(
+        _ webView: WKWebView, decidePolicyFor response: WKNavigationResponse,
+        decisionHandler: @escaping @MainActor @Sendable (WKNavigationResponsePolicy) -> Void
+    ) {
+        let status = (response.response as? HTTPURLResponse)?.statusCode ?? 200
+        let ok = !response.isForMainFrame || (200..<300).contains(status)
+        Task { @MainActor in decisionHandler(ok ? .allow : .cancel) }
+    }
+
+    nonisolated func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: any Error) {
+        let error = error as NSError
+        // A load stopped for another, or by the reader going, is not a failure.
+        guard !(error.domain == NSURLErrorDomain && error.code == NSURLErrorCancelled) else { return }
+        Task { @MainActor in self.loadFailed() }
+    }
+
+    /// A load that never came: the page still shown stays and turns, and one that was hidden for
+    /// a new chapter shows again. With no document of the book shown, the chapter opens again,
+    /// once.
+    private func loadFailed() {
+        readyHow = nil
+        if book != nil, currentSpine == nil, !webView.isLoading, !recovering {
+            recovering = true
+            reopen()
+            return
+        }
+        setHidden(false)
     }
 
     /// WebKit ended the page's process, for memory or a crash: the page comes back where it was.
@@ -544,20 +718,35 @@ private final class ScriptProxy: NSObject, WKScriptMessageHandler {
 final class BookSchemeHandler: NSObject, WKURLSchemeHandler, @unchecked Sendable {
     var resource: (@Sendable (String) -> BookResource?)?
     private let lock = NSLock()
-    private var stopped = Set<ObjectIdentifier>()
+    /// The tasks started and not yet answered or stopped. A stopped task is never answered,
+    /// and a stop that comes after the answer leaves nothing behind for a later task to meet.
+    private var live = Set<ObjectIdentifier>()
+    /// The status of each address answered lately, without its fragment: the page asks it of
+    /// the document it shows. Main thread only.
+    private var statuses: [String: Int] = [:]
+
+    @MainActor func status(of address: String) -> Int? {
+        statuses[NovelWebController.document(address)]
+    }
 
     func webView(_ webView: WKWebView, start task: any WKURLSchemeTask) {
-        guard let url = task.request.url else { return }
+        guard let url = task.request.url else {
+            task.didFailWithError(URLError(.badURL))
+            return
+        }
         let box = TaskBox(task: task)
         let id = ObjectIdentifier(task as AnyObject)
+        lock.lock()
+        live.insert(id)
+        lock.unlock()
         let lookup = resource
         DispatchQueue.global(qos: .userInitiated).async { [self] in
             let answer = lookup?(url.absoluteString)
             DispatchQueue.main.async {
                 self.lock.lock()
-                let gone = self.stopped.remove(id) != nil
+                let open = self.live.remove(id) != nil
                 self.lock.unlock()
-                if gone { return }
+                guard open else { return }
                 self.respond(box.task, url: url, answer: answer)
             }
         }
@@ -565,11 +754,13 @@ final class BookSchemeHandler: NSObject, WKURLSchemeHandler, @unchecked Sendable
 
     func webView(_ webView: WKWebView, stop task: any WKURLSchemeTask) {
         lock.lock()
-        stopped.insert(ObjectIdentifier(task as AnyObject))
+        live.remove(ObjectIdentifier(task as AnyObject))
         lock.unlock()
     }
 
     private func respond(_ task: any WKURLSchemeTask, url: URL, answer: BookResource?) {
+        if statuses.count >= 64 { statuses.removeAll() }
+        statuses[NovelWebController.document(url.absoluteString)] = answer.map { Int($0.status) } ?? 404
         guard let answer else {
             task.didFailWithError(URLError(.fileDoesNotExist))
             return

@@ -17,8 +17,10 @@
 //   page      {spine, page, pages, pos, how, last}         a turn; forward as NovelAt
 //   layout    {spine, page, pages}                         laid out again (settings, resize);
 //                                                          the place is unchanged, nothing to forward
-//   end       {spine}                                      a turn past the last page
-//   start     {spine}                                      a turn before the first page
+//   end       {spine}                                      a turn past the last page, or past a
+//                                                          scrolled document's foot
+//   start     {spine}                                      a turn before the first page, or a
+//                                                          scrolled document's top
 //   link      {href, internal, note}                       a link was tapped; nothing was followed
 //   tap       {x, y}                                       a tap off any link, as fractions of the view,
 //                                                          that the page did not turn on (see input)
@@ -50,7 +52,7 @@
   var DEFAULTS = {
     spine: 0, last: false,
     look: { name: 'light', bg: '#F7F5F0', fg: '#1E2033', link: '#1E2033', ink: false },
-    font: '"Literata", "Iowan Old Style", Charter, Georgia, serif',
+    font: '"Literata", "Iowan Old Style", Charter, Georgia, "Kaeri Serif CJK", serif',
     size: 19, line: 1.5, margin: 28, top: 40, bottom: 48,
     justify: true, hyphens: true, mode: 'paged', columns: 'auto', column: 720,
     measure: [65, 75], eink: false, legacy: false, fixed: false
@@ -224,9 +226,11 @@
     state.nodes = null;
     void (state.axis === 'y' ? scroller().scrollHeight : scroller().scrollWidth); // lay out now
     state.pages = count();
-    // The last page is scrolled to like the others: room past it to the view's far edge, which
-    // the columns alone leave short of a capped page's outer margin.
-    set('--k-reach', state.width ? (state.pages * state.width + side - 1) + 'px' : '0px');
+    // The last page is scrolled to like the others: room past it to the view's far edge. The
+    // scroll stops where the content ends, and the columns end short of that edge by the end
+    // padding, by an empty column where the last spread has one, and by a capped page's outer
+    // margin.
+    set('--k-reach', !state.scrolled && !S.fixed ? (state.pages * pitch() + side - 1) + 'px' : '0px');
   }
 
   // A margin above the first thing in the text (a chapter title's) is kept at the top of the
@@ -442,15 +446,19 @@
 
   function goTo(p, how) { show(p); return turned(how || 'jump'); }
 
+  // A scrolled document's foot and top: a turn there goes on past it, as a page turn does.
+  function atFoot() { return window.scrollY + vh() >= scroller().scrollHeight - 2; }
+  function atTop() { return window.scrollY <= 1; }
+
   function next(how) {
-    if (state.scrolled) { window.scrollBy(0, Math.round(vh() * 0.9)); return settle(how || 'key'); }
-    if (state.page + 1 >= state.pages) { post({ type: 'end', spine: S.spine }); return null; }
+    if (state.scrolled && !atFoot()) { window.scrollBy(0, Math.round(vh() * 0.9)); return settle(how || 'key'); }
+    if (state.scrolled || state.page + 1 >= state.pages) { post({ type: 'end', spine: S.spine }); return null; }
     return goTo(state.page + 1, how || 'turn');
   }
 
   function prev(how) {
-    if (state.scrolled) { window.scrollBy(0, -Math.round(vh() * 0.9)); return settle(how || 'key'); }
-    if (state.page <= 0) { post({ type: 'start', spine: S.spine }); return null; }
+    if (state.scrolled && !atTop()) { window.scrollBy(0, -Math.round(vh() * 0.9)); return settle(how || 'key'); }
+    if (state.scrolled || state.page <= 0) { post({ type: 'start', spine: S.spine }); return null; }
     return goTo(state.page - 1, how || 'turn');
   }
 
@@ -495,6 +503,7 @@
   function relayout(changes) {
     var anchor = state.anchor || here();
     if (changes) S = merge(S, typeof changes === 'string' ? JSON.parse(changes) : changes);
+    redrawFailed();
     apply();
     var t = resolve(anchor);
     show(pageOfTarget(t));
@@ -533,13 +542,18 @@
   }
 
   document.addEventListener('click', function (e) {
+    var pic = e.target && e.target.closest ? e.target.closest('img[data-k-picture="failed"]') : null;
+    if (pic) { e.preventDefault(); e.stopPropagation(); retryPicture(pic); return; }
     var a = e.target && e.target.closest ? e.target.closest('a') : null;
     var href = a ? hrefOf(a) : null;
     if (a && href) {
       e.preventDefault(); e.stopPropagation();
       var url = new URL(href), self = new URL(location.href);
-      var internal = url.origin === self.origin && url.protocol === self.protocol &&
-        url.pathname.split('/').slice(0, 3).join('/') === self.pathname.split('/').slice(0, 3).join('/');
+      // The same book: on kaeri-book the session is the host; on Android's asset address it
+      // is the path's second part.
+      var internal = url.protocol === self.protocol && url.host === self.host &&
+        (url.protocol === 'kaeri-book:' ||
+          url.pathname.split('/').slice(0, 3).join('/') === self.pathname.split('/').slice(0, 3).join('/'));
       var msg = { type: 'link', href: href, internal: internal };
       var sameDoc = internal && url.pathname === self.pathname;
       var type = (a.getAttributeNS('http://www.idpf.org/2007/ops', 'type') || a.getAttribute('epub:type') || '');
@@ -614,6 +628,93 @@
   });
   window.addEventListener('hashchange', function () { if (state.ready) post(start('jump')); });
 
+  // ---- Pictures -----------------------------------------------------------------------
+  //
+  // A source's text chapter can open before all its pictures came. setup.pictures has the
+  // ones not in yet: {waiting: [path], failed, again}, the last two the failed state's words.
+  // Each keeps a box of a fixed size (data-k-picture, see reader.css), so nothing moves when it
+  // fills. Its address answers 503 while it is coming; `?state` loads once it failed, and
+  // `?retry` fetches it again. A failed one shows the failed state in its box; a tap retries.
+
+  var BLANK = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 3"/>');
+  var pictures = [];
+
+  function esc(t) {
+    return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; });
+  }
+
+  function failedArt() {
+    var p = S.pictures || {}, fg = esc((S.look && S.look.fg) || '#1E2033');
+    var font = ' font-family="system-ui, -apple-system, Segoe UI, sans-serif" text-anchor="middle" fill="' + fg + '"';
+    var again = String(p.again || ''), w = Math.min(360, Math.max(132, again.length * 10 + 48));
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">' +
+      '<g fill="none" stroke="' + fg + '" stroke-width="3" stroke-linejoin="round" opacity="0.5">' +
+      '<rect x="174" y="66" width="52" height="40" rx="6"/><path d="M178 100l14-15 10 10 8-8 12 13"/></g>' +
+      '<text x="200" y="152" font-size="20" font-weight="600"' + font + '>' + esc(p.failed || '') + '</text>' +
+      '<rect x="' + (200 - w / 2) + '" y="176" width="' + w + '" height="42" rx="21" fill="none" stroke="' + fg + '" stroke-width="1.5" opacity="0.6"/>' +
+      '<text x="200" y="203" font-size="17"' + font + '>' + esc(again) + '</text></svg>';
+    return 'data:image/svg+xml,' + encodeURIComponent(svg);
+  }
+
+  function showPicture(entry, how, src) {
+    entry.imgs.forEach(function (img) { img.setAttribute('data-k-picture', how); img.src = src; });
+  }
+
+  // Asks after one picture: in, failed, or still coming (asked again a little later).
+  function poll(entry) {
+    var n = ++entry.tries;
+    var picture = new Image();
+    picture.onload = function () { showPicture(entry, 'in', picture.src); };
+    picture.onerror = function () {
+      var failed = new Image();
+      failed.onload = function () { showPicture(entry, 'failed', failedArt()); };
+      failed.onerror = function () { entry.timer = setTimeout(function () { poll(entry); }, Math.min(4000, 500 * n)); };
+      failed.src = entry.url + '?state&n=' + n;
+    };
+    picture.src = entry.url + '?n=' + n;
+  }
+
+  // A failed picture's box is drawn in the look's colours: drawn again when the look changes.
+  function redrawFailed() {
+    pictures.forEach(function (e) {
+      if (e.imgs[0] && e.imgs[0].getAttribute('data-k-picture') === 'failed') showPicture(e, 'failed', failedArt());
+    });
+  }
+
+  function retryPicture(img) {
+    var entry = null;
+    pictures.forEach(function (e) { if (e.imgs.indexOf(img) >= 0) entry = e; });
+    if (!entry) return;
+    clearTimeout(entry.timer);
+    showPicture(entry, 'waiting', BLANK);
+    var ask = new Image(), n = ++entry.tries;
+    ask.onload = ask.onerror = function () { entry.timer = setTimeout(function () { poll(entry); }, 500); };
+    ask.src = entry.url + '?retry&n=' + n;
+  }
+
+  function waitPictures() {
+    var p = S.pictures;
+    if (!p || !p.waiting || !p.waiting.length || !document.body) return;
+    var byUrl = {};
+    p.waiting.forEach(function (path) {
+      var url = new URL(path, location.href).href;
+      byUrl[url] = { url: url, imgs: [], tries: 0, timer: 0 };
+    });
+    var imgs = document.body.querySelectorAll('img');
+    for (var i = 0; i < imgs.length; i++) {
+      var src = imgs[i].getAttribute('src');
+      var entry = src ? byUrl[new URL(src, location.href).href] : null;
+      if (entry) entry.imgs.push(imgs[i]);
+    }
+    Object.keys(byUrl).forEach(function (url) {
+      var entry = byUrl[url];
+      if (!entry.imgs.length) return;
+      pictures.push(entry);
+      showPicture(entry, 'waiting', BLANK);
+      poll(entry);
+    });
+  }
+
   // ---- Start --------------------------------------------------------------------------
 
   function start(how) {
@@ -638,6 +739,7 @@
 
   function begin() {
     S = setup();
+    waitPictures();
     var failed = document.body ? document.body.getAttribute('data-kaeri-failed') : null;
     if (failed) post({ type: 'failed', spine: S.spine, why: failed });
     apply();

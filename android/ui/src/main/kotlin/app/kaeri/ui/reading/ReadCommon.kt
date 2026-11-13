@@ -161,6 +161,8 @@ internal fun ReadTile(
     spoken: String? = null,
     /** A one-column list's row rather than a cover over its words: grids at the largest text. */
     list: Boolean = false,
+    /** Lines the title may take, where it is not one (two from font scale 1.3): Search's two, as the shows' posters. */
+    titleMax: Int? = null,
 ) {
     val navigator = LocalNavigator.current
     val store = app.kaeri.ui.LocalAppStore.current
@@ -201,7 +203,7 @@ internal fun ReadTile(
             style = ShowTitle.caption,
             // Two lines from font scale 1.3, as Watch's shelves, so large text keeps more than a word;
             // a list row has the width for three.
-            maxLines = if (list) 3 else titleLines,
+            maxLines = if (list) 3 else titleMax?.coerceAtLeast(titleLines) ?: titleLines,
             minLines = if (reserveLine && !list) titleLines else 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(top = if (list) 0.dp else if (track) 6.dp else 8.dp).clearAndSetSemantics {},
@@ -391,10 +393,14 @@ internal fun titleLines(): Int = if (androidx.compose.ui.platform.LocalDensity.c
 internal fun listInsteadOfGrid(): Boolean = androidx.compose.ui.platform.LocalDensity.current.fontScale >= 2f
 
 /** A tile as a screen reader says it: "Iron Kite Brigade. Manga, Japan, releasing. In Home library." */
-internal fun spokenTile(context: Context, title: String, line: String?, extra: String?): String = when {
-    line == null -> Strings.readTileSpokenTitle(context, title)
-    extra == null -> Strings.readTileSpoken(context, title, line)
-    else -> Strings.readTileSpokenIn(context, title, line, extra)
+internal fun spokenTile(context: Context, title: String, line: String?, extra: String?): String {
+    // A title that ends in a full stop takes no second one.
+    val said = title.trimEnd().removeSuffix(".")
+    return when {
+        line == null -> Strings.readTileSpokenTitle(context, said)
+        extra == null -> Strings.readTileSpoken(context, said, line)
+        else -> Strings.readTileSpokenIn(context, said, line, extra)
+    }
 }
 
 /** What a discovery row's caption is made of: the row picks two of them. */
@@ -461,10 +467,24 @@ internal fun WorkTile.hitLine(context: Context): String = amount?.text(context).
 /** The facts of a series as one line: "Manga · Japan · Releasing". */
 internal fun WorkTile.factsLine(context: Context): String = facts.joinToString(" · ") { it.text(context) } // i18n-skip
 
+/**
+ * The label is a chapter's number, "12", "10.5" or "12-13", which the words put "chapter" or "part"
+ * before; anything else is the chapter's own title.
+ */
+internal fun numbered(label: String): Boolean =
+    label.firstOrNull()?.let { it in '0'..'9' } == true && label.all { it in '0'..'9' || it == '.' || it == '-' }
+
 /** A main action's words, in the unit the series reads in, or `null` where there is nothing to read. */
 internal fun actionWords(context: Context, action: SeriesAction?): String? = when (action) {
-    is SeriesAction.Read -> Strings.actionReadChapter(context, action.label)
-    is SeriesAction.Continue -> Strings.actionContinueChapter(context, action.label, action.page.toInt())
+    // "Read chapter 12", but a chapter with no number goes by its own title: "Read Oneshot".
+    is SeriesAction.Read ->
+        if (numbered(action.label)) Strings.actionReadChapter(context, action.label) else Strings.actionReadNamed(context, action.label)
+    is SeriesAction.Continue ->
+        if (numbered(action.label)) {
+            Strings.actionContinueChapter(context, action.label, action.page.toInt())
+        } else {
+            Strings.actionContinueNamedPage(context, action.label, action.page.toInt())
+        }
     // A part goes by the source's own name for it where it has one, as its row does.
     is SeriesAction.ContinuePart -> {
         val percent = action.percent?.takeIf { it > 0u }?.toInt()
@@ -477,8 +497,11 @@ internal fun actionWords(context: Context, action: SeriesAction?): String? = whe
             unit?.first == NamedUnit.PART -> Strings.actionContinuePartPlain(context, unit.second)
             named != null && percent != null -> Strings.actionContinueNamed(context, named, percent)
             named != null -> Strings.actionContinueNamedPlain(context, named)
-            percent != null -> Strings.actionContinuePart(context, action.label, percent)
-            else -> Strings.actionContinuePartPlain(context, action.label)
+            !numbered(action.label) && percent != null -> Strings.actionContinueNamed(context, action.label, percent)
+            !numbered(action.label) -> Strings.actionContinueNamedPlain(context, action.label)
+            // A bare number is a chapter, as its row and the reader call it.
+            percent != null -> Strings.actionContinueChapterPercent(context, action.label, percent)
+            else -> Strings.actionContinueChapterPlain(context, action.label)
         }
     }
     is SeriesAction.ReadPart -> {
@@ -488,7 +511,8 @@ internal fun actionWords(context: Context, action: SeriesAction?): String? = whe
             unit?.first == NamedUnit.CHAPTER -> Strings.actionReadChapter(context, unit.second)
             unit?.first == NamedUnit.PART -> Strings.actionReadPart(context, unit.second)
             named != null -> Strings.actionReadNamed(context, named)
-            else -> Strings.actionReadPart(context, action.label)
+            !numbered(action.label) -> Strings.actionReadNamed(context, action.label)
+            else -> Strings.actionReadChapter(context, action.label)
         }
     }
     SeriesAction.ReadAgain -> Strings.actionReadAgain(context)
@@ -542,7 +566,9 @@ internal fun agoWords(context: Context, unix: Long): String =
 internal fun failureWords(context: Context, failure: ReadingFailure): String = when (failure) {
     is ReadingFailure.Offline -> ReadingMsg.ReadingFailedOffline
     is ReadingFailure.SourceDown -> ReadingMsg.ReadingFailedSourceDown(failure.source)
+    is ReadingFailure.SourceOff -> ReadingMsg.ReadingFailedSourceOff(failure.source)
     is ReadingFailure.NotFound -> ReadingMsg.ReadingFailedNotFound
+    is ReadingFailure.NoSource -> ReadingMsg.ReadingFailedNoSource
     is ReadingFailure.Blocked -> ReadingMsg.ReadingFailedBlocked(failure.source, failure.reason)
     is ReadingFailure.Parse -> ReadingMsg.ReadingFailedParse(failure.source)
     is ReadingFailure.PageFetch -> ReadingMsg.ReadingFailedPage(failure.status.toLong())
@@ -556,7 +582,8 @@ internal fun failureWords(context: Context, failure: ReadingFailure): String = w
     is ReadingFailure.NeedsNewerKaeri -> ReadingMsg.ReadingFailedNeedsNewer(failure.world)
     is ReadingFailure.ReadingOff -> ReadingMsg.ReadingFailedOff
     is ReadingFailure.Other -> ReadingMsg.ReadingFailedOther(failure.reason)
-    is ReadingFailure.SendTooLarge, is ReadingFailure.SendCheck -> readingFailureMsg(failure)
+    is ReadingFailure.SendTooLarge, is ReadingFailure.SendCheck, is ReadingFailure.CannotWrite ->
+        readingFailureMsg(failure)
 }.text(context)
 
 // Between places

@@ -1,9 +1,13 @@
 reader-page-loading = Caricamento pagina { $page }
+reader-page-plate = Pagina { $page }
+reader-image-plate = Immagine { $image }
+reader-image-loading = Caricamento immagine { $image }
 reader-page-failed = Pagina { $page } non caricata
 reader-try-again = Riprova
 reader-close = Chiudi
 reader-end-read = Contato come letto
 reader-end-tracker = Contato come letto · aggiornamento inviato a { $trackers }
+reader-end-tracker-offline = Contato come letto · { $tracker } si aggiorna quando torni online
 reader-end-next = { -up-next-cap }
 reader-mode-rtl = Da destra a sinistra
 reader-mode-ltr = Da sinistra a destra
@@ -58,3 +62,6 @@ reader-divider-images = { $count ->
    *[other] { $count } immagini
  }
 reader-chapter-line-titled = Capitolo { $chapter } · { $title }
+reader-zone-next = Pagina successiva
+reader-zone-previous = Pagina precedente
+reader-zone-controls = Controlli

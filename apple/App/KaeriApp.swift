@@ -31,7 +31,8 @@ struct KaeriApp: App {
                 // not see what `content` sets inside.
                 .environment(delegate.store)
                 .environment(delegate.navigator)
-                .focusedSceneValue(\.playerInFront, delegate.player.inMainWindow)
+                // A book open over the player takes the keys.
+                .focusedSceneValue(\.playerInFront, delegate.player.inMainWindow && delegate.store.reader.request == nil)
         }
         // The Fixtures app keeps the exact 1280 by 800 the shot scripts rely on. The real app opens
         // at 80% of the display's usable area, centred; a remembered frame still wins over this.
@@ -61,18 +62,9 @@ struct KaeriApp: App {
             } playerWindowItems: {
                 PictureInPictureMenuItem(model: delegate.player)
             }
+            // The reader's Go menu: the reader takes the main window over.
+            ReaderMenu(model: delegate.store.reader)
         }
-        // The reader: one window, one book at a time, with its own Go menu.
-        Window(L.readerWindow, id: ReaderWindow.id) {
-            ReaderWindowView(model: delegate.store.reader)
-                .environment(delegate.store)
-                .environment(delegate.navigator)
-        }
-        .windowStyle(.hiddenTitleBar)
-        .defaultSize(width: 760, height: 1000)
-        .restorationBehavior(.disabled)
-        .defaultLaunchBehavior(.suppressed)
-        .commands { ReaderMenu() }
         // Play trailer: the trailer watched properly, in a window of its own.
         WindowGroup(L.titlePlayTrailer, id: TrailerRequest.windowId, for: TrailerRequest.self) { $request in
             if let request {
@@ -113,7 +105,7 @@ struct KaeriApp: App {
                 EmptyView()
             }
             // The reader's keys, with a hardware keyboard on iPad and iPhone.
-            ReaderMenu()
+            ReaderMenu(model: delegate.store.reader)
         }
         #endif
     }

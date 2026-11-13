@@ -13,7 +13,9 @@ import app.kaeri.store.text
 fun ReadingFailure.msg(): ReadingMsg = when (this) {
     is ReadingFailure.Offline -> ReadingMsg.ReadingFailedOffline
     is ReadingFailure.SourceDown -> ReadingMsg.ReadingFailedSourceDown(source)
+    is ReadingFailure.SourceOff -> ReadingMsg.ReadingFailedSourceOff(source)
     is ReadingFailure.NotFound -> ReadingMsg.ReadingFailedNotFound
+    is ReadingFailure.NoSource -> ReadingMsg.ReadingFailedNoSource
     is ReadingFailure.Blocked -> ReadingMsg.ReadingFailedBlocked(source, reason)
     is ReadingFailure.Parse -> ReadingMsg.ReadingFailedParse(source)
     is ReadingFailure.PageFetch -> ReadingMsg.ReadingFailedPage(status.toLong())
@@ -27,8 +29,9 @@ fun ReadingFailure.msg(): ReadingMsg = when (this) {
     is ReadingFailure.NeedsNewerKaeri -> ReadingMsg.ReadingFailedNeedsNewer(world)
     is ReadingFailure.ReadingOff -> ReadingMsg.ReadingFailedOff
     is ReadingFailure.Other -> ReadingMsg.ReadingFailedOther(reason)
-    // The send checks carry sizes, which the engine puts at human scale.
-    is ReadingFailure.SendTooLarge, is ReadingFailure.SendCheck -> readingFailureMsg(this)
+    // The engine words these: sizes at human scale, a message per write problem.
+    is ReadingFailure.SendTooLarge, is ReadingFailure.SendCheck, is ReadingFailure.CannotWrite ->
+        readingFailureMsg(this)
 }
 
 /** This failure in the person's language. A reason that came with it is said alone, without "Something went wrong" first. */
@@ -39,6 +42,7 @@ fun ReadingFailure.text(context: Context): String =
 val ReadingFailure.source: String?
     get() = when (this) {
         is ReadingFailure.SourceDown -> source
+        is ReadingFailure.SourceOff -> source
         is ReadingFailure.Blocked -> source
         is ReadingFailure.Parse -> source
         else -> null

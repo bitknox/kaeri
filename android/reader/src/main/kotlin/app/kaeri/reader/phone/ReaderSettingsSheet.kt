@@ -1,14 +1,16 @@
 // The reader's settings sheet: this series' reading mode (manga and strips only), the medium's
 // other choices (a novel's size, font, look as five swatches, spacing, margins and pages), Paper
-// mode and its parts on a page of their own, and the rest on one searchable page. The engine
+// mode and its parts on a page of their own, the tap zones on theirs, and the rest on one
+// searchable page. The engine
 // keeps every value; a change goes out as a command and the sheet draws the settings the engine
 // sends back. Every choice and row has a written name; one without a name is not drawn, and the
 // unit test fails on it.
 
 package app.kaeri.reader.phone
 
-import androidx.activity.compose.BackHandler
 import android.content.Context
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.selection.selectable
@@ -55,6 +57,7 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -81,10 +84,12 @@ import app.kaeri.engine.model.SettingScope
 import app.kaeri.i18n.Strings
 import app.kaeri.reader.ReaderSession
 import app.kaeri.reader.ReaderState
+import app.kaeri.reader.layoutName
+import app.kaeri.reader.zoneLayout
 import kotlin.math.abs
 
 /** The sheet's pages; the configuration of the Quiet rule opens it on Paper. */
-enum class SettingsPane { Main, Mode, More, Paper, Font }
+enum class SettingsPane { Main, Mode, More, Paper, Font, TapZones }
 
 private typealias Pane = SettingsPane
 
@@ -92,7 +97,7 @@ private typealias Pane = SettingsPane
 internal val phoneKeys = listOf(
     Key.MODE, Key.DIRECTION, Key.COLOUR, Key.FIT, Key.BACKGROUND, Key.CROP_BORDERS, Key.PAGE_LAYOUT, Key.SPREADS,
     Key.LOOK, Key.FONT, Key.TEXT_SIZE, Key.MARGINS, Key.LINE_SPACING, Key.JUSTIFY,
-    Key.TAP_LAYOUT, Key.VOLUME_KEYS_TURN, Key.PAPER_MODE, Key.GREYSCALE_PAGES, Key.QUIET_PHONE, Key.FOOT_VALUE, Key.FOLIO,
+    Key.TAP_PAGED, Key.TAP_SCROLL, Key.TAP_SIZE, Key.TAP_FLIP_SIDES, Key.TAP_FLIP_ENDS, Key.VOLUME_KEYS_TURN, Key.PAPER_MODE, Key.GREYSCALE_PAGES, Key.QUIET_PHONE, Key.FOOT_VALUE, Key.FOLIO,
     Key.STRIP_GAP, Key.PAPER_INSTANT, Key.PAPER_LOOK, Key.PAPER_DIM, Key.PAPER_VOLUME,
 )
 
@@ -109,6 +114,8 @@ fun ReaderSettingsSheet(
     start: SettingsPane = SettingsPane.Main,
     /** Do Not Disturb access was refused the last time Quiet asked for it. */
     quietDenied: Boolean = false,
+    /** Show zones on the Tap zones page: the sheet closes and the guide shows. */
+    onShowZones: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val view = state.view ?: return
@@ -119,9 +126,21 @@ fun ReaderSettingsSheet(
     val rows = settings?.rows.orEmpty().filter { it.key in phoneKeys }
     val novel = view.medium == Medium.NOVEL
     val strip = view.mode == ReaderMode.STRIP || view.mode == ReaderMode.VERTICAL
-    ReaderSheet(instant = instant, onDismiss = onDismiss) {
-        // Back from a page of the sheet goes to the page it came from, not out of the sheet.
-        BackHandler(enabled = pane != Pane.Main) { pane = if (pane == Pane.Paper) paperBack else Pane.Main }
+    // The Tap zones page runs past a half-open sheet: it opens the sheet all the way.
+    // Back from a page of the sheet goes to the page it came from, not out of the sheet.
+    ReaderSheet(
+        instant = instant,
+        onDismiss = onDismiss,
+        expanded = pane == Pane.TapZones,
+        firstPage = pane == Pane.Main,
+        pageBack = {
+            pane = when (pane) {
+                Pane.Paper -> paperBack
+                Pane.TapZones -> Pane.More
+                else -> Pane.Main
+            }
+        },
+    ) {
         Column(Modifier.verticalScroll(rememberScrollState()).navigationBarsPadding().padding(horizontal = 20.dp, vertical = 4.dp)) {
             when (pane) {
                 Pane.Main -> Main(
@@ -129,7 +148,8 @@ fun ReaderSettingsSheet(
                     onMode = { pane = Pane.Mode }, onPaper = { paperBack = Pane.Main; pane = Pane.Paper }, onMore = { pane = Pane.More }, onFont = { pane = Pane.Font },
                 )
                 Pane.Mode -> ModePicker(context, session, rows, view.title) { pane = Pane.Main }
-                Pane.More -> More(context, session, rows, novel, toggle, onPaper = { paperBack = Pane.More; pane = Pane.Paper }) { pane = Pane.Main }
+                Pane.More -> More(context, session, state, rows, novel, toggle, onPaper = { paperBack = Pane.More; pane = Pane.Paper }, onTapZones = { pane = Pane.TapZones }) { pane = Pane.Main }
+                Pane.TapZones -> TapZonesPage(context, session, state, rows, toggle, onShowZones) { pane = Pane.More }
                 Pane.Paper -> PaperPage(context, session, rows, novel, toggle, quietDenied) { pane = paperBack }
                 Pane.Font -> FontPicker(context, session, rows) { pane = Pane.Main }
             }
@@ -144,7 +164,7 @@ private fun Heading(text: String) {
 }
 
 @Composable
-private fun BackRow(title: String, context: Context, onBack: () -> Unit) {
+internal fun BackRow(title: String, context: Context, onBack: () -> Unit) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onBack) {
             GlyphIcon(Glyph.Back, Chrome.text, mirror = androidx.compose.ui.platform.LocalLayoutDirection.current == androidx.compose.ui.unit.LayoutDirection.Rtl)
@@ -153,11 +173,11 @@ private fun BackRow(title: String, context: Context, onBack: () -> Unit) {
     }
 }
 
-/** A row 46 dp tall with a value and a chevron. */
+/** A row at least 48 dp tall with a value and a chevron. */
 @Composable
 private fun NavRow(title: String, value: String?, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 46.dp).clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick),
+        Modifier.fillMaxWidth().heightIn(min = 48.dp).clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(title, color = Chrome.text, fontSize = 16.sp, modifier = Modifier.weight(1f))
@@ -215,10 +235,7 @@ private fun Main(
 private fun SizeSlider(context: Context, session: ReaderSession, row: ReaderSettingRow) {
     val value = row.value as? ReaderValue.Amount ?: return
     Row(Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            "A", color = Chrome.faint, fontSize = 14.sp, fontFamily = FontFamily.Serif, fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.semantics { contentDescription = Strings.readerSizeSmall(context) },
-        )
+        SizeStep(14.sp, Strings.readerSizeSmall(context), value.value > sizeRange.start + 0.05) { stepSize(session, row, value, -1) }
         Slider(
             value = value.value.toFloat().coerceIn(sizeRange),
             onValueChange = { session.setSetting(row.key, row.scope, ReaderValue.Amount(((it * 10).toInt() / 10.0))) },
@@ -236,21 +253,44 @@ private fun SizeSlider(context: Context, session: ReaderSession, row: ReaderSett
                 stateDescription = "%.1f".format(value.value)
             },
         )
-        Text(
-            "A", color = Chrome.faint, fontSize = 24.sp, fontFamily = FontFamily.Serif, fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.semantics { contentDescription = Strings.readerSizeLarge(context) },
-        )
+        SizeStep(24.sp, Strings.readerSizeLarge(context), value.value < sizeRange.endInclusive - 0.05) { stepSize(session, row, value, 1) }
     }
     UseDefaultNote(context, null, row.overridden) { session.useDefault(row.key) }
 }
 
+/** The small or large A beside the size slider: a button that steps the size by a tenth. */
+@Composable
+private fun SizeStep(size: androidx.compose.ui.unit.TextUnit, description: String, enabled: Boolean, onClick: () -> Unit) {
+    Box(
+        Modifier
+            .size(48.dp)
+            .clip(CircleShape)
+            .clickable(enabled = enabled, role = Role.Button, onClickLabel = description, onClick = onClick)
+            .semantics { contentDescription = description },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text("A", color = if (enabled) Chrome.text else Chrome.faint, fontSize = size, fontFamily = FontFamily.Serif, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+private fun stepSize(session: ReaderSession, row: ReaderSettingRow, value: ReaderValue.Amount, by: Int) {
+    val next = (Math.round(value.value * 10) + by) / 10.0
+    session.setSetting(row.key, row.scope, ReaderValue.Amount(next.coerceIn(sizeRange.start.toDouble(), sizeRange.endInclusive.toDouble())))
+}
+
 /** The five looks as round "Aa" swatches in their own paper and ink, the chosen one ringed in silk. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun LookSwatches(context: Context, session: ReaderSession, row: ReaderSettingRow) {
     val chosen = (row.value as? ReaderValue.Choice)?.name
     val order = listOf("paper", "light", "sepia", "dark", "system")
     val looks = order.filter { name -> row.choices.any { (it as? ReaderValue.Choice)?.name == name } }
-    Row(Modifier.fillMaxWidth().padding(top = 6.dp, bottom = 10.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+    // The five in one row; at the largest text sizes the last ones go to a second row whole.
+    FlowRow(
+        Modifier.fillMaxWidth().padding(top = 6.dp, bottom = 10.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
         looks.forEach { name ->
             val selected = name == chosen
             val label = choiceLabel(context, Key.LOOK, ReaderValue.Choice(name)).orEmpty()
@@ -478,41 +518,47 @@ private fun PaperPage(
 private fun More(
     context: Context,
     session: ReaderSession,
+    state: ReaderState,
     rows: List<ReaderSettingRow>,
     novel: Boolean,
     toggle: (Key, Boolean) -> Unit,
     onPaper: () -> Unit,
+    onTapZones: () -> Unit,
     onBack: () -> Unit,
 ) {
     BackRow(Strings.readerSheetMore(context), context, onBack)
     var query by remember { mutableStateOf("") }
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 44.dp).clip(RoundedCornerShape(22.dp)).background(Chrome.selected).padding(horizontal = 14.dp),
+        Modifier.fillMaxWidth().heightIn(min = 48.dp).clip(RoundedCornerShape(24.dp)).background(Chrome.selected).padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         GlyphIcon(Glyph.Search, Chrome.faint, size = 20.dp)
         Spacer(Modifier.padding(start = 10.dp))
-        Box(Modifier.weight(1f)) {
-            if (query.isEmpty()) Text(Strings.readerSettingsSearch(context), color = Chrome.faint, fontSize = 15.sp)
-            BasicTextField(
-                value = query,
-                onValueChange = { query = it },
-                singleLine = true,
-                textStyle = TextStyle(color = Chrome.text, fontSize = 15.sp),
-                cursorBrush = SolidColor(Chrome.text),
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
+        // The field takes the row's whole height, so a touch anywhere on it starts typing.
+        BasicTextField(
+            value = query,
+            onValueChange = { query = it },
+            singleLine = true,
+            textStyle = TextStyle(color = Chrome.text, fontSize = 15.sp),
+            cursorBrush = SolidColor(Chrome.text),
+            modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+            decorationBox = { field ->
+                Box(Modifier.heightIn(min = 48.dp), contentAlignment = Alignment.CenterStart) {
+                    if (query.isEmpty()) Text(Strings.readerSettingsSearch(context), color = Chrome.faint, fontSize = 15.sp)
+                    field()
+                }
+            },
+        )
     }
     val groups = if (novel) {
         listOf(
             Strings.readerMoreHeadingText(context) to listOf(Key.LOOK, Key.FONT, Key.TEXT_SIZE, Key.LINE_SPACING, Key.MARGINS, Key.JUSTIFY, Key.MODE),
-            Strings.readerMoreHeadingNavigation(context) to listOf(Key.TAP_LAYOUT, Key.VOLUME_KEYS_TURN, Key.FOOT_VALUE, Key.FOLIO),
+            Strings.readerMoreHeadingNavigation(context) to listOf(Key.TAP_PAGED, Key.VOLUME_KEYS_TURN, Key.FOOT_VALUE, Key.FOLIO),
         )
     } else {
         listOf(
             Strings.readerMoreHeadingLayout(context) to listOf(Key.FIT, Key.BACKGROUND, Key.STRIP_GAP, Key.PAGE_LAYOUT, Key.SPREADS),
-            Strings.readerMoreHeadingNavigation(context) to listOf(Key.TAP_LAYOUT, Key.VOLUME_KEYS_TURN, Key.FOOT_VALUE, Key.FOLIO),
+            Strings.readerMoreHeadingNavigation(context) to listOf(Key.TAP_PAGED, Key.VOLUME_KEYS_TURN, Key.FOOT_VALUE, Key.FOLIO),
             Strings.readerMoreHeadingImages(context) to listOf(Key.COLOUR, Key.CROP_BORDERS),
         )
     }
@@ -521,7 +567,14 @@ private fun More(
             .filter { query.isBlank() || rowTitle(context, it.key)?.contains(query.trim(), ignoreCase = true) == true }
         if (shown.isNotEmpty()) {
             Heading(heading)
-            shown.forEach { SettingLine(context, session, it, toggle) }
+            shown.forEach { row ->
+                // The tap zones have a page of their own, as seven drawn choices do not fit a row.
+                if (row.key == Key.TAP_PAGED) {
+                    NavRow(Strings.readerRowTap(context), tapZonesValue(context, state), onTapZones)
+                } else {
+                    SettingLine(context, session, row, toggle)
+                }
+            }
         }
     }
     // Paper mode and its parts have their own page.
@@ -548,7 +601,13 @@ private fun SettingLine(context: Context, session: ReaderSession, row: ReaderSet
             row.key == Key.FOOT_VALUE && value is ReaderValue.Choice -> SwitchLine(title, null, value.name == "pages_left") {
                 session.setSetting(row.key, row.scope, ReaderValue.Choice(if (it) "pages_left" else "none"))
             }
-            value is ReaderValue.Toggle -> SwitchLine(title, extra(context, row.key), value.on) { toggle(row.key, it) }
+            value is ReaderValue.Toggle -> {
+                SwitchLine(title, extra(context, row.key), value.on) { toggle(row.key, it) }
+                // Which key goes forward, under the switch that lets them turn pages.
+                if (value.on && (row.key == Key.VOLUME_KEYS_TURN || row.key == Key.PAPER_VOLUME)) {
+                    SwitchLine(Strings.readerRowVolumeSwap(context), null, ReaderLook.volumeSwapped(context)) { ReaderLook.swapVolume(context, it) }
+                }
+            }
             row.key == Key.LINE_SPACING || row.key == Key.MARGINS -> if (value is ReaderValue.Amount) {
                 val presets = if (row.key == Key.LINE_SPACING) spacingPresets else marginPresets
                 val labels = if (row.key == Key.LINE_SPACING) {
@@ -568,7 +627,8 @@ private fun SettingLine(context: Context, session: ReaderSession, row: ReaderSet
                 if (labelled.size <= 4) {
                     Segments(labelled.map { it.second }, labelled.indexOfFirst { it.first == value }) { session.setSetting(row.key, scope, labelled[it].first) }
                 } else {
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    // Each choice takes a 48 dp touch around its pill, so the rows sit closer.
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         labelled.forEach { (choice, label) ->
                             val selected = choice == value
                             Text(
@@ -577,6 +637,7 @@ private fun SettingLine(context: Context, session: ReaderSession, row: ReaderSet
                                 fontSize = 14.sp,
                                 fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
                                 modifier = Modifier
+                                    .minimumInteractiveComponentSize()
                                     .clip(RoundedCornerShape(50))
                                     .background(if (selected) Chrome.selected else Color.Transparent)
                                     .clickable { session.setSetting(row.key, scope, choice) }
@@ -607,7 +668,7 @@ private fun SettingLine(context: Context, session: ReaderSession, row: ReaderSet
             value is ReaderValue.Amount && row.key == Key.TEXT_SIZE -> {
                 Text(title, color = Chrome.text, fontSize = 16.sp)
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("A", color = Chrome.faint, fontSize = 13.sp, modifier = Modifier.semantics { contentDescription = Strings.readerSizeSmall(context) })
+                    SizeStep(13.sp, Strings.readerSizeSmall(context), value.value > sizeRange.start + 0.05) { stepSize(session, row, value, -1) }
                     Slider(
                         value = value.value.toFloat().coerceIn(sizeRange),
                         onValueChange = { session.setSetting(row.key, row.scope, ReaderValue.Amount(((it * 10).toInt() / 10.0))) },
@@ -622,7 +683,7 @@ private fun SettingLine(context: Context, session: ReaderSession, row: ReaderSet
                         ),
                         modifier = Modifier.weight(1f).padding(horizontal = 8.dp).semantics { stateDescription = "%.1f".format(value.value) },
                     )
-                    Text("A", color = Chrome.text, fontSize = 22.sp, modifier = Modifier.semantics { contentDescription = Strings.readerSizeLarge(context) })
+                    SizeStep(22.sp, Strings.readerSizeLarge(context), value.value < sizeRange.endInclusive - 0.05) { stepSize(session, row, value, 1) }
                 }
             }
         }
@@ -637,8 +698,8 @@ private val marginPresets = listOf(0.6, 1.0, 1.5)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun Segments(labels: List<String>, selected: Int, onSelect: (Int) -> Unit) {
-    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+internal fun Segments(labels: List<String>, selected: Int, modifier: Modifier = Modifier.fillMaxWidth(), onSelect: (Int) -> Unit) {
+    SingleChoiceSegmentedButtonRow(modifier) {
         labels.forEachIndexed { index, label ->
             SegmentedButton(
                 selected = index == selected,
@@ -653,15 +714,24 @@ internal fun Segments(labels: List<String>, selected: Int, onSelect: (Int) -> Un
                     inactiveBorderColor = Chrome.rule,
                 ),
                 icon = {},
-            ) { Text(label, fontSize = 14.sp, maxLines = 1) }
+            ) {
+                // At the largest text sizes a label shrinks to fit its segment, and is cut with an
+                // ellipsis only past that.
+                Text(
+                    label,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    autoSize = TextAutoSize.StepBased(minFontSize = 9.sp, maxFontSize = 14.sp),
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun SwitchLine(title: String, line: String?, checked: Boolean, big: Boolean = false, onChange: (Boolean) -> Unit) {
+internal fun SwitchLine(title: String, line: String?, checked: Boolean, big: Boolean = false, onChange: (Boolean) -> Unit) {
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 46.dp).toggleable(value = checked, role = Role.Switch, onValueChange = onChange),
+        Modifier.fillMaxWidth().heightIn(min = 48.dp).toggleable(value = checked, role = Role.Switch, onValueChange = onChange),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
@@ -691,7 +761,7 @@ private fun extra(context: Context, key: Key): String? = when (key) {
 }
 
 /** The row's written name, or null for a key that has none (the unit test fails on it). */
-internal fun rowTitle(context: Context, key: Key): String? = when (key) {
+fun rowTitle(context: Context, key: Key): String? = when (key) {
     Key.MODE -> Strings.readerRowReadingMode(context)
     Key.DIRECTION -> Strings.readerRowDirection(context)
     Key.COLOUR -> Strings.readerRowColour(context)
@@ -706,7 +776,11 @@ internal fun rowTitle(context: Context, key: Key): String? = when (key) {
     Key.MARGINS -> Strings.readerRowMargins(context)
     Key.LINE_SPACING -> Strings.readerRowLineSpacing(context)
     Key.JUSTIFY -> Strings.readerRowJustify(context)
-    Key.TAP_LAYOUT -> Strings.readerRowTap(context)
+    Key.TAP_PAGED, Key.TAP_SCROLL -> Strings.readerRowTap(context)
+    Key.TAP_SIZE -> Strings.readerTapSize(context)
+    Key.TAP_FLIP_SIDES -> Strings.readerTapFlipSides(context)
+    Key.TAP_FLIP_ENDS -> Strings.readerTapFlipEnds(context)
+    Key.SWIPE_TURNS -> Strings.einkSwipeTurns(context)
     Key.VOLUME_KEYS_TURN -> Strings.readerRowVolume(context)
     Key.STRIP_WIDTH -> Strings.readerRowStripWidth(context)
     Key.PAPER_MODE -> Strings.readerRowPaper(context)
@@ -723,8 +797,9 @@ internal fun rowTitle(context: Context, key: Key): String? = when (key) {
 }
 
 /** The choice's written name, or null for a choice that has none (the unit test fails on it). */
-internal fun choiceLabel(context: Context, key: Key, value: ReaderValue): String? {
+fun choiceLabel(context: Context, key: Key, value: ReaderValue): String? {
     val name = (value as? ReaderValue.Choice)?.name ?: return null
+    if (key == Key.TAP_PAGED || key == Key.TAP_SCROLL) return zoneLayout(name)?.let { layoutName(context, it) }
     return when (key to name) {
         Key.MODE to "paged" -> Strings.readerPagesPaged(context)
         Key.MODE to "scrolled" -> Strings.readerPagesScroll(context)
@@ -754,9 +829,8 @@ internal fun choiceLabel(context: Context, key: Key, value: ReaderValue): String
         Key.SPREADS to "split" -> Strings.readerSpreadsSplit(context)
         Key.SPREADS to "rotate" -> Strings.readerSpreadsRotate(context)
         Key.SPREADS to "whole" -> Strings.readerSpreadsWhole(context)
-        Key.TAP_LAYOUT to "edges" -> Strings.readerTapEdges(context)
-        Key.TAP_LAYOUT to "sides" -> Strings.readerTapSides(context)
-        Key.TAP_LAYOUT to "off" -> Strings.readerTapOff(context)
+        Key.TAP_SIZE to "standard" -> Strings.readerTapStandard(context)
+        Key.TAP_SIZE to "small" -> Strings.readerTapSmall(context)
         Key.FOOT_VALUE to "pages_left" -> Strings.readerRowFoot(context)
         Key.STRIP_GAP to "none" -> Strings.readerGapNone(context)
         Key.STRIP_GAP to "small" -> Strings.readerGapSmall(context)

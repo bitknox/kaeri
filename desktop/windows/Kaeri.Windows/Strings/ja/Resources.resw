@@ -5849,6 +5849,15 @@
   <data name="ReaderPageLoading" xml:space="preserve">
     <value>{page}ページを読み込み中</value>
   </data>
+  <data name="ReaderPagePlate" xml:space="preserve">
+    <value>{page}ページ</value>
+  </data>
+  <data name="ReaderImagePlate" xml:space="preserve">
+    <value>画像 {image}</value>
+  </data>
+  <data name="ReaderImageLoading" xml:space="preserve">
+    <value>画像 {image} を読み込み中</value>
+  </data>
   <data name="ReaderPageFailed" xml:space="preserve">
     <value>{page}ページを読み込めませんでした</value>
   </data>
@@ -5863,6 +5872,9 @@
   </data>
   <data name="ReaderEndTracker" xml:space="preserve">
     <value>既読になりました · {trackers}を更新しました</value>
+  </data>
+  <data name="ReaderEndTrackerOffline" xml:space="preserve">
+    <value>既読になりました · {tracker}はオンラインに戻ると更新されます</value>
   </data>
   <data name="ReaderEndNext" xml:space="preserve">
     <value>次の章</value>
@@ -5927,11 +5939,17 @@
   <data name="ReaderTapEdges" xml:space="preserve">
     <value>端</value>
   </data>
-  <data name="ReaderTapSides" xml:space="preserve">
-    <value>左右半分</value>
-  </data>
   <data name="ReaderTapOff" xml:space="preserve">
     <value>オフ</value>
+  </data>
+  <data name="ReaderZoneNext" xml:space="preserve">
+    <value>次のページ</value>
+  </data>
+  <data name="ReaderZonePrevious" xml:space="preserve">
+    <value>前のページ</value>
+  </data>
+  <data name="ReaderZoneControls" xml:space="preserve">
+    <value>操作パネル</value>
   </data>
   <data name="ReaderChapters" xml:space="preserve">
     <value>章一覧</value>
@@ -6724,9 +6742,6 @@
   </data>
   <data name="ReadSearchClearFilters" xml:space="preserve">
     <value>条件をクリア</value>
-  </data>
-  <data name="ReadSortPopular" xml:space="preserve">
-    <value>人気順</value>
   </data>
   <data name="ReadSortTrending" xml:space="preserve">
     <value>急上昇</value>
@@ -10438,9 +10453,6 @@
   </data>
   <data name="TitleMoreAbout" xml:space="preserve">
     <value>詳細を見る</value>
-  </data>
-  <data name="TitleSynopsisHint" xml:space="preserve">
-    <value>あらすじ全文を表示します</value>
   </data>
   <data name="TitleDubbedTo" xml:space="preserve">
     <value>第{episode}話まで吹替版</value>

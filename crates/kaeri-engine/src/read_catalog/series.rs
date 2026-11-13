@@ -11,16 +11,17 @@ use kaeri_meta::{KeptBook, anilist::books::Book};
 use kaeri_model::{
     Msg, ReadingMsg,
     reading::{
-        BookEditionRow, ChapterReadState, ChapterVersion, CrossMediumRow, LibrarySegmentRead,
-        ReadingEvent, SentChapters, SeriesView, VolumeGroup, WorkTitles,
+        BookEditionRow, ChapterRow, ChapterVersion, CrossMediumRow, LibrarySegmentRead,
+        ReadingEvent, ReadingFailure, SentChapters, SeriesView, VolumeGroup, WorkTitles,
     },
 };
 
-use super::{Ask, Kit, chapters, send, tiles};
+use super::{Ask, Kit, chapters, editions, send, tiles};
 use crate::outbox::Outbox;
 
 /// The page: the header at once, then AniList's page and the chapters.
 pub fn load(kit: &Kit, ask: Ask, work: WorkId, tx: &Outbox) {
+    super::changed::page(kit, &work);
     let id = tiles::anilist(work.as_str());
     let kept = id.and_then(|id| kit.meta.kept_book(id));
     let wants_page = id.is_some() && kept.as_ref().is_none_or(|k| !k.detail_fresh(ask.now));
@@ -52,37 +53,7 @@ pub fn load(kit: &Kit, ask: Ask, work: WorkId, tx: &Outbox) {
                 }
             }
         };
-        let listed = async {
-            kit.sources.adopt_plugins(&kit.plugins);
-            if kit.sources.edition_of(&work, None).is_none() {
-                return;
-            }
-            let event = match kit.sources.chapters(&work, None, ask.now).await {
-                Ok((edition, mut volumes)) => {
-                    finish(&kit, &work, &mut volumes, ask.now);
-                    ReadingEvent::Chapters {
-                        work: work.clone(),
-                        edition,
-                        volumes,
-                        failure: None,
-                    }
-                }
-                // The source did not answer: the list it gave last, with why.
-                Err(failure) => {
-                    let (edition, mut volumes) = kept_volumes(&kit, &work);
-                    finish(&kit, &work, &mut volumes, ask.now);
-                    ReadingEvent::Chapters {
-                        work: work.clone(),
-                        edition,
-                        volumes,
-                        failure: Some(failure),
-                    }
-                }
-            };
-            send(&tx, event);
-            // The main button follows the list that came.
-            send(&tx, ReadingEvent::Series(Box::new(view(&kit, ask, &work, false))));
-        };
+        let listed = chapters(&kit, ask, &work, None, &tx);
         // With nothing kept of the book, its medium is not known until the page lands, and
         // the rows' words depend on it: a novel's part says a percent, a chapter its page.
         if kept.is_none() && wants_page {
@@ -92,6 +63,162 @@ pub fn load(kit: &Kit, ask: Ask, work: WorkId, tx: &Outbox) {
             tokio::join!(page, listed);
         }
     });
+}
+
+/// A page's chapter list, sent once the engine knows it: from the edition, from the files on
+/// this device, or why there is none. Nothing is sent while the answer is still on its way, so
+/// a page never shows a failure the engine has not settled on:
+///
+/// - Book plugins still compiling are waited for, as a series one of them holds is not found
+///   without them.
+/// - A series no source is matched to yet is searched for by name first (see
+///   [`editions::check`]), and found there it is read from that source.
+/// - An edition in use that lists no chapters has the work's other editions asked first, so
+///   the edition picked can move to one that has them.
+///
+/// A list kept from before is sent first, as it stands, and the source's answer after it.
+///
+/// A second ask for the same list while one is on its way sends nothing more: the first one's
+/// answer reaches the page.
+pub(crate) async fn chapters(
+    kit: &Kit,
+    ask: Ask,
+    work: &WorkId,
+    edition: Option<String>,
+    tx: &Outbox,
+) {
+    let key = (work.as_str().to_owned(), edition.clone());
+    let Some(_turn) = Turn::take(kit, key) else { return };
+    let now = ask.now;
+    kit.plugins.arrived(editions::PLUGINS_WAIT).await;
+    kit.sources.adopt_plugins(&kit.plugins);
+    if kit.sources.edition_of(work, edition.as_deref()).is_none() {
+        // The files on this device, when there are any, are the list.
+        let list = chapters::of_work(&kit.sources, &kit.store, work);
+        let volumes = crate::reading::shelf::volumes(
+            &kit.store,
+            work.as_str(),
+            list.as_ref().map(|(_, _, l)| l.as_slice()),
+            medium_of(kit, work),
+            (now, &kit.clock.zone()),
+            kit.sources.show_volumes(),
+        );
+        if volumes.is_empty()
+            && let Some(check) = editions::check(kit, ask, work, tx)
+        {
+            editions::ended(check).await;
+        }
+        if volumes.is_empty() && kit.sources.edition_of(work, edition.as_deref()).is_some() {
+            // Found by name: read from there, below.
+        } else {
+            // A source switched off still holds it: the page says so by the source's name.
+            let failure = volumes.is_empty().then(|| {
+                kit.sources
+                    .switched_off_holder(work)
+                    .map_or(ReadingFailure::NoSource, |source| ReadingFailure::SourceOff {
+                        source,
+                    })
+            });
+            send(
+                tx,
+                ReadingEvent::Chapters { work: work.clone(), edition: None, volumes, failure },
+            );
+            send(tx, ReadingEvent::Series(Box::new(view(kit, ask, work, false))));
+            return;
+        }
+    }
+    // The list kept from before shows at once while the source is asked: a source slow to
+    // answer, or not answering at all, never leaves a known list empty. Its answer replaces it.
+    let asking = kit.sources.edition_of(work, edition.as_deref()).map(|(source, _)| source);
+    let (kept_edition, mut kept) = kept_volumes(kit, work);
+    if !kept.is_empty() && kept_edition.as_ref().map(|e| &e.source_id) == asking.as_ref() {
+        finish(kit, work, kept_edition.as_ref(), &mut kept, now);
+        send(
+            tx,
+            ReadingEvent::Chapters {
+                work: work.clone(),
+                edition: kept_edition,
+                volumes: kept,
+                failure: None,
+            },
+        );
+    }
+    let mut asked = kit.sources.chapters(work, edition.as_deref(), now).await;
+    if edition.is_none()
+        && matches!(&asked, Ok((_, volumes)) if volumes.is_empty())
+        && editions::list_others(kit, work, now, tx).await
+    {
+        asked = kit.sources.chapters(work, None, now).await;
+    }
+    let event = match asked {
+        Ok((edition, mut volumes)) => {
+            finish(kit, work, edition.as_ref(), &mut volumes, now);
+            ReadingEvent::Chapters { work: work.clone(), edition, volumes, failure: None }
+        }
+        // The source did not answer: the list it gave last, with why.
+        Err(failure) => {
+            let (edition, mut volumes) = kept_volumes(kit, work);
+            finish(kit, work, edition.as_ref(), &mut volumes, now);
+            ReadingEvent::Chapters {
+                work: work.clone(),
+                edition,
+                volumes,
+                failure: Some(failure),
+            }
+        }
+    };
+    send(tx, event);
+    // The main button follows the list that came.
+    send(tx, ReadingEvent::Series(Box::new(view(kit, ask, work, false))));
+}
+
+/// A page's chapter list sent again as kept, grouped as the person now shows volumes. A list
+/// not kept yet is on its way from the source, and comes grouped the new way by itself.
+pub(crate) fn regroup(kit: &Kit, ask: Ask, work: &WorkId, tx: &Outbox) {
+    let now = ask.now;
+    let (edition, volumes) = if kit.sources.edition_of(work, None).is_some() {
+        let Some((edition, mut volumes)) = kit.sources.kept_listing(work, now, i64::MAX) else {
+            return;
+        };
+        finish(kit, work, edition.as_ref(), &mut volumes, now);
+        (edition, volumes)
+    } else {
+        // The files on this device are the list.
+        let list = chapters::of_work(&kit.sources, &kit.store, work);
+        let volumes = crate::reading::shelf::volumes(
+            &kit.store,
+            work.as_str(),
+            list.as_ref().map(|(_, _, l)| l.as_slice()),
+            medium_of(kit, work),
+            (now, &kit.clock.zone()),
+            kit.sources.show_volumes(),
+        );
+        (None, volumes)
+    };
+    if volumes.is_empty() {
+        return;
+    }
+    send(tx, ReadingEvent::Chapters { work: work.clone(), edition, volumes, failure: None });
+}
+
+/// One chapter-list ask on its way, by work and edition: let go when it is dropped.
+struct Turn {
+    loads: super::ChapterLoads,
+    key: (String, Option<String>),
+}
+
+impl Turn {
+    fn take(kit: &Kit, key: (String, Option<String>)) -> Option<Self> {
+        let loads = kit.sources.catalog.chapter_loads.clone();
+        let fresh = loads.lock().unwrap_or_else(|e| e.into_inner()).insert(key.clone());
+        fresh.then_some(Self { loads, key })
+    }
+}
+
+impl Drop for Turn {
+    fn drop(&mut self) {
+        self.loads.lock().unwrap_or_else(|e| e.into_inner()).remove(&self.key);
+    }
 }
 
 /// The header again, after a change to the list or the score.
@@ -107,7 +234,12 @@ pub fn versions(kit: &Kit, work: WorkId, chapter: ChapterId, tx: &Outbox) {
     for (source, series) in refs {
         let Some(edition) = editions.iter().find(|e| e.source_id == source) else { continue };
         let Some((list, _)) = chapters::kept(&kit.store, &source, &series) else { continue };
-        for found in list.iter().filter(|c| c.id == chapter.as_str()) {
+        // One version per group: a chapter in parts is one version, from its first part.
+        let mut groups = HashSet::new();
+        for found in list
+            .iter()
+            .filter(|c| c.id == chapter.as_str() && groups.insert(c.version_label.clone()))
+        {
             let mut row = edition.clone();
             row.version_label = found.version_label.clone().or(row.version_label);
             row.language = found.language.clone().or(row.language);
@@ -121,59 +253,109 @@ pub fn versions(kit: &Kit, work: WorkId, chapter: ChapterId, tx: &Outbox) {
     send(tx, ReadingEvent::Versions { work, chapter, versions });
 }
 
-/// The edition's chapters as last kept, grouped by volume.
+/// One row per chapter of a source's kept list, as every screen lists it: its parts as one,
+/// from the preferred group, or another where that one lacks it. Each with the index in `list`
+/// of its first entry.
+pub(crate) fn kept_rows(
+    kit: &Kit,
+    work: &WorkId,
+    source: &str,
+    list: &[chapters::Kept],
+    read: &chapters::Read,
+) -> Vec<(usize, ChapterRow)> {
+    let entries: Vec<_> = list.iter().map(chapters::Kept::source_chapter).collect();
+    let chosen = chapters::chosen_group(&kit.store, work.as_str(), source);
+    let language = kit.sources.language();
+    let numbering = chapters::numbering(&kit.store, work.as_str(), None);
+    let arranged = super::arrange::arrange_in(
+        &entries,
+        chosen.as_deref(),
+        language.as_deref(),
+        &numbering,
+    );
+    arranged
+        .rows
+        .iter()
+        .map(|arranged_row| {
+            let first = arranged_row.parts[0];
+            let mut row = super::updates::row_of(&list[first], read);
+            row.new_chapter = false;
+            arranged.fill(arranged_row, language.as_deref(), &mut row);
+            if super::arrange::Arranged::in_parts(arranged_row) {
+                row.label = super::arrange::merged_label(&entries[first], &row.id);
+                row.pages =
+                    chapters::pages_of_parts(arranged_row.parts.iter().map(|&i| list[i].pages));
+                row.number =
+                    row.id.key().and_then(|k| k.range()).map(|r| r.to_string()).or(row.number);
+                let title = super::arrange::merged_title(&entries[first]);
+                row.title =
+                    chapters::own_title(title.as_deref(), &row.label, row.number.as_deref())
+                        .map(str::to_owned);
+            }
+            (first, row)
+        })
+        .collect()
+}
+
+/// The edition's chapters as last kept, grouped by volume when the person shows volumes, built
+/// as the source's answer is: each row with its download, bookmark and when it was read, the
+/// chapters downloaded here that the list no longer has, and those listed from other sources.
+/// With no list kept, the chapters on this device. This is what the page shows while the source
+/// is asked, and after it failed: a relaunch offline still lists the downloaded chapters, which
+/// open.
 pub(crate) fn kept_volumes(
     kit: &Kit,
     work: &WorkId,
 ) -> (Option<BookEditionRow>, Vec<VolumeGroup>) {
-    let Some((source, _, list)) = chapters::of_work(&kit.sources, &kit.store, work) else {
+    let Some((source, _)) = kit.sources.edition_of(work, None) else {
         return (None, Vec::new());
     };
-    let read = chapters::Read::of(&kit.store, work.as_str());
-    let mut groups: Vec<VolumeGroup> = Vec::new();
-    let mut listed = HashSet::new();
-    let mut group_of: HashMap<Option<String>, usize> = HashMap::new();
-    // One row per chapter, as the source's answer gives: the first version listed.
-    for chapter in list.iter().filter(|c| listed.insert(c.id.as_str())) {
-        let mut row = super::updates::row_of(chapter, &read);
-        row.new_chapter = false;
-        let at = *group_of.entry(chapter.volume.clone()).or_insert_with(|| {
-            groups.push(VolumeGroup {
-                volume: chapter.volume.clone(),
-                title: None,
-                chapters: Vec::new(),
-                all_read: false,
-            });
-            groups.len() - 1
-        });
-        groups[at].chapters.push(row);
-    }
-    for group in &mut groups {
-        group.all_read =
-            group.chapters.iter().all(|c| matches!(c.state, ChapterReadState::Read));
-    }
     let edition = kit.sources.editions(work).into_iter().find(|e| e.source_id == source);
+    let now = kit.clock.now();
+    let groups = match kit.sources.kept_listing(work, now, i64::MAX) {
+        Some((_, groups)) => groups,
+        None => crate::reading::shelf::volumes(
+            &kit.store,
+            work.as_str(),
+            None,
+            medium_of(kit, work),
+            (now, &kit.clock.zone()),
+            kit.sources.show_volumes(),
+        ),
+    };
     (edition, groups)
 }
 
 /// The rows as every screen shows them: how many versions each has, the new ones, and the
 /// words on their second line.
-pub(crate) fn finish(kit: &Kit, work: &WorkId, volumes: &mut [VolumeGroup], now: i64) {
+pub(crate) fn finish(
+    kit: &Kit,
+    work: &WorkId,
+    edition: Option<&BookEditionRow>,
+    volumes: &mut [VolumeGroup],
+    now: i64,
+) {
     count_versions(kit, work, volumes);
     mark_new(kit, work, volumes);
     let medium = medium_of(kit, work);
-    super::rows::fill(volumes, super::rows::Kept::Source, medium, now, &kit.clock.zone());
+    // The person's folders list files already on this device: nothing to download there.
+    let kept = super::rows::kept_by(edition.map(|e| e.source_id.as_str()));
+    super::rows::fill(volumes, kept, medium, now, &kit.clock.zone());
 }
 
 /// How many versions each chapter has across the person's editions.
 fn count_versions(kit: &Kit, work: &WorkId, volumes: &mut [VolumeGroup]) {
     let refs = kit.store.book_refs_for_work(work.as_str()).unwrap_or_default();
+    // A version is a chapter as one group in one source has it, its parts and all.
+    let mut seen: HashSet<(String, String, Option<String>)> = HashSet::new();
     let mut counts: HashMap<String, usize> = HashMap::new();
     for (source, series) in &refs {
         for chapter in
             chapters::kept(&kit.store, source, series).map(|k| k.0).unwrap_or_default()
         {
-            *counts.entry(chapter.id).or_default() += 1;
+            if seen.insert((source.clone(), chapter.id.clone(), chapter.version_label)) {
+                *counts.entry(chapter.id).or_default() += 1;
+            }
         }
     }
     for row in volumes.iter_mut().flat_map(|v| v.chapters.iter_mut()) {
@@ -189,10 +371,13 @@ fn mark_new(kit: &Kit, work: &WorkId, volumes: &mut [VolumeGroup]) {
     if !read.any() {
         return;
     }
+    // A chapter one of whose parts was out before is not new for a part that joined it.
+    let older: HashSet<&str> =
+        list.iter().filter(|c| c.seen_at.is_none()).map(|c| c.id.as_str()).collect();
     let new: HashSet<&str> = read
         .unread(&list)
         .into_iter()
-        .filter(|c| c.seen_at.is_some())
+        .filter(|c| c.seen_at.is_some() && !older.contains(c.id.as_str()))
         .map(|c| c.id.as_str())
         .collect();
     for row in volumes.iter_mut().flat_map(|v| v.chapters.iter_mut()) {
@@ -228,7 +413,7 @@ pub(crate) fn view(kit: &Kit, ask: Ask, work: &WorkId, partial: bool) -> SeriesV
         (None, Some(demo)) => demo.medium(),
         (None, None) => local_medium(kit, work),
     };
-    let action = tiles::action(&kit.store, &kit.sources, work, medium);
+    let action = tiles::action(&kit.store, &kit.sources, work, medium, &kit.plugins);
     let mut view = SeriesView {
         work: work.clone(),
         medium,

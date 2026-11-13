@@ -27,17 +27,19 @@ public struct PlaybackMenu: View {
 
     public var body: some View {
         let playing = model.isPresented
-        // Keys with no modifier only while the player is in front.
+        // Keys with no modifier only while the player is in front. Out of it they are not bound
+        // at all, not only dimmed: AppKit stops at the first menu item with a key, enabled or
+        // not, so a dimmed Space or arrow here would swallow the reader's and the main window's.
         let keys = playing && inFront == true
         Button(model.paused ? L.actionPlay : L.actionPause) { model.togglePause() }
-            .keyboardShortcut(.space, modifiers: [])
+            .plainKey(.space, when: keys)
             .disabled(!keys)
         Divider()
         Button(L.menuSkipForward) { model.seek(by: 10) }
-            .keyboardShortcut(.rightArrow, modifiers: [])
+            .plainKey(.rightArrow, when: keys)
             .disabled(!keys)
         Button(L.menuSkipBack) { model.seek(by: -10) }
-            .keyboardShortcut(.leftArrow, modifiers: [])
+            .plainKey(.leftArrow, when: keys)
             .disabled(!keys)
         Divider()
         Button(L.menuNextEpisode) { model.step(1) }
@@ -47,7 +49,7 @@ public struct PlaybackMenu: View {
             .keyboardShortcut(.leftArrow, modifiers: .command)
             .disabled(!playing)
         Button(model.skip.map { $0.kind == .ending ? L.menuSkipEnding : $0.kind == .recap ? L.menuSkipRecap : L.menuSkipOpening } ?? L.menuSkipOpening) { model.takeSkip() }
-            .keyboardShortcut("s", modifiers: [])
+            .plainKey("s", when: keys)
             .disabled(!keys || model.skip == nil)
         Button(L.menuSaySomething) { model.requestChat() }
             .disabled(!playing || !model.inParty)
@@ -77,10 +79,10 @@ public struct PlaybackMenu: View {
         Divider()
         Menu(L.playerSpeed) {
             Button(L.playerSlower) { model.setSpeed(Self.step(model.speed, by: -1)) }
-                .keyboardShortcut("[", modifiers: [])
+                .plainKey("[", when: keys)
                 .disabled(!keys || model.speed <= Self.speeds.first!)
             Button(L.playerFaster) { model.setSpeed(Self.step(model.speed, by: 1)) }
-                .keyboardShortcut("]", modifiers: [])
+                .plainKey("]", when: keys)
                 .disabled(!keys || model.speed >= Self.speeds.last!)
             Divider()
             ForEach(Self.speeds, id: \.self) { speed in
@@ -88,7 +90,7 @@ public struct PlaybackMenu: View {
                     get: { abs(model.speed - speed) < 0.01 },
                     set: { _ in model.setSpeed(speed) }
                 ))
-                .keyboardShortcut(speed == 1 ? KeyboardShortcut(.delete, modifiers: []) : nil)
+                .keyboardShortcut(speed == 1 && keys ? KeyboardShortcut(.delete, modifiers: []) : nil)
             }
         }
         .disabled(!playing)
@@ -123,20 +125,20 @@ public struct PlaybackMenu: View {
         .disabled(!playing)
         Divider()
         Button(L.menuVolumeUp) { model.stepVolume(by: 5) }
-            .keyboardShortcut(.upArrow, modifiers: [])
+            .plainKey(.upArrow, when: keys)
             .disabled(!keys)
         Button(L.menuVolumeDown) { model.stepVolume(by: -5) }
-            .keyboardShortcut(.downArrow, modifiers: [])
+            .plainKey(.downArrow, when: keys)
             .disabled(!keys)
         Button(model.muted ? L.menuUnmute : L.menuMute) { model.toggleMute() }
-            .keyboardShortcut("m", modifiers: [])
+            .plainKey("m", when: keys)
             .disabled(!keys)
         Divider()
         Button(model.fullScreen ? L.menuExitFullScreen : L.menuEnterFullScreen) { model.fullScreen.toggle() }
             .keyboardShortcut("f", modifiers: [.command, .control])
             .disabled(!playing)
         Toggle(L.menuStatsForNerds, isOn: Binding(get: { model.statsShown }, set: { model.showStats($0) }))
-            .keyboardShortcut("i", modifiers: [])
+            .plainKey("i", when: keys)
             .disabled(!keys)
         Divider()
         // Dimmed in place when discussions are off, the episode is not far enough on, or nothing plays.
@@ -176,5 +178,12 @@ L.menuPictureInPicture,
         )
         .keyboardShortcut("p", modifiers: [.command, .option])
         .disabled(!model.pictureInPictureAvailable && model.pictureInPicturePhase == .inline)
+    }
+}
+
+extension View {
+    /// A key with no modifier, bound only `when` it should act; see `PlaybackMenu.body`.
+    func plainKey(_ key: KeyEquivalent, when on: Bool) -> some View {
+        keyboardShortcut(on ? KeyboardShortcut(key, modifiers: []) : nil)
     }
 }

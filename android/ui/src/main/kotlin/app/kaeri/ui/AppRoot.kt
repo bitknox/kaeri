@@ -81,7 +81,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavType
-import androidx.navigation.compose.DefaultNavTransitions
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -156,11 +155,15 @@ internal fun barOwner(destination: Destination, answer: KaeriIsFor): Destination
 internal fun Destination.labelFor(answer: KaeriIsFor): Int =
     if (this == Destination.Home && answer == KaeriIsFor.BOTH) R.string.nav_watch else label
 
-/** What Kaeri is for on this device, as the screens read it: Watch until the engine says. */
+/**
+ * What Kaeri is for on this device, as the screens read it: until the engine says, the answer kept
+ * from the last launch, or Watch.
+ */
 @Composable
 internal fun kaeriIsFor(): KaeriIsFor {
-    val view by LocalAppStore.current.medium.view.collectAsStateWithLifecycle()
-    return view?.answer ?: KaeriIsFor.WATCH
+    val medium = LocalAppStore.current.medium
+    val view by medium.view.collectAsStateWithLifecycle()
+    return view?.answer ?: medium.kept ?: KaeriIsFor.WATCH
 }
 
 /** What the screens' actions open, which later phases fill in. */
@@ -191,8 +194,11 @@ data class AppActions(
      * [from] the cover's place on screen when the reader grows out of it.
      */
     val openReader: (work: WorkId, chapter: ChapterId?, cover: String?, from: String?) -> Unit = { _, _, _, _ -> },
-    /** Hand prepared files to the share sheet, for Send to e-reader; then is called once it is up. */
-    val shareFiles: (files: List<app.kaeri.engine.model.ExportFile>, then: () -> Unit) -> Unit = { _, then -> then() },
+    /**
+     * Hand prepared files to the share sheet, for Send to e-reader: true once it is up, false when
+     * a file is gone ([app.kaeri.ui.reading.ExportShare.gone]) and nothing was offered.
+     */
+    val shareFiles: (files: List<app.kaeri.engine.model.ExportFile>) -> Boolean = { true },
 )
 
 /** The app's side of the Notifications pane, and of a show's own New episodes switch. */
@@ -279,13 +285,32 @@ private fun readPageAway(to: Int): ExitTransition =
 /*
  * The same axis while a back swipe seeks it, linear so the pages follow the finger: the page
  * underneath stays whole and the leaving page fades over it across the whole swipe, so a swipe
- * held part way shows both and letting go finishes the crossfade.
+ * held part way shows both and letting go finishes the crossfade. Every page that does not fly
+ * back into what it was opened from leaves this way on a swipe.
  */
-private fun readPageBackUncovered(from: Int): EnterTransition =
+private fun pageBackUncovered(from: Int): EnterTransition =
     slideInHorizontally(tween(300, easing = LinearEasing)) { from }
 
-private fun readPageBackAway(to: Int): ExitTransition =
+private fun pageBackAway(to: Int): ExitTransition =
     slideOutHorizontally(tween(300, easing = LinearEasing)) { to } + fadeOut(tween(300, easing = LinearEasing))
+
+/** With Remove animations on, a swipe moves nothing: the leaving page fades over the one underneath. */
+private fun pageBackFaded(): ExitTransition = fadeOut(tween(300, easing = LinearEasing))
+
+/**
+ * Whether the entry flies back into what it was opened from as it leaves: a title page into its
+ * cover, a series page into its cover, the player into its banner. Its shared elements do the
+ * moving, over the page underneath, which stays whole; one opened from nowhere they can fly to
+ * fades over it instead (the page's flight bounds, unmatched, fade out).
+ */
+private fun NavBackStackEntry.fliesBack(player: PlayerSlot?): Boolean {
+    val route = destination.route ?: return false
+    if (route == PLAYER_ROUTE) return player?.title != null
+    return route.endsWith("/title/{id}") || route.endsWith("/series/{work}") // i18n-skip
+}
+
+/** The way a back swipe from [edge] moves a page: away from the edge the finger came from. */
+private fun swipeSign(edge: Int): Int = if (edge == androidx.activity.BackEventCompat.EDGE_RIGHT) -1 else 1
 
 /**
  * The frame. A switch between destinations fades the page through on the quick spring (T6); a
@@ -402,7 +427,9 @@ private fun AppRootFrame(
     val wide = wideWindow() && !eink
     val einkReader = eink && einkReaderShape()
     val mediumView by store.medium.view.collectAsStateWithLifecycle()
-    val answer = mediumView?.answer ?: KaeriIsFor.WATCH
+    val answer = mediumView?.answer ?: store.medium.kept ?: KaeriIsFor.WATCH
+    // Settings on a 10 inch e-reader keeps the bar, with More marked.
+    val settingsTab = if (eink && fullWindow) einkSettingsTab(answer, einkReader, app.kaeri.ui.reading.largePanel()) else null
 
     CompositionLocalProvider(
         LocalAppStore provides store,
@@ -506,9 +533,9 @@ private fun AppRootFrame(
                     if (!onPlayer) CastNowPlayingBar()
                     // Watch together's bar, above the navigation bar while a party is on.
                     if (!onPlayer) PartyBar(hidden = entry?.destination?.route == LOBBY_ROUTE)
-                    if (!wide && !onPage && !onPlayer && !sheets.barHidden) {
+                    if (!wide && (!onPage || settingsTab != null) && !onPlayer && !sheets.barHidden) {
                         // On an e-ink panel the bar is words on paper, as the e-ink boards draw it.
-                        if (eink) EinkTabBar(current ?: start, answer, einkReader, navigator::go) else PhoneBar(current ?: start, answer, navigator::go)
+                        if (eink) EinkTabBar(settingsTab ?: current ?: start, answer, einkReader, navigator::go) else PhoneBar(current ?: start, answer, navigator::go)
                     }
                 }
             },
@@ -559,15 +586,23 @@ private fun AppRootFrame(
                                     else -> ExitTransition.KeepUntilTransitionsFinished
                                 }
                             },
-                            // Navigation's own back swipe scales the page to 0.7 and drops it at the end;
-                            // a reading page keeps its axis instead. Other pages keep Navigation's.
+                            // A back swipe seeks the app's own Back, never Navigation's default, which
+                            // scales the page to 0.7 and drops it at the end. A page that flew in flies
+                            // back as far as the finger goes (its shared elements seek); any other page
+                            // slides along the axis and fades over the page underneath, which stays whole.
                             predictivePopEnterTransition = { edge ->
-                                if (initialState.isReadPage && !eink) readPageBackUncovered(-axis)
-                                else DefaultNavTransitions.predictivePopEnterTransition(this, edge)
+                                when {
+                                    eink || removed || initialState.fliesBack(player) -> EnterTransition.None
+                                    else -> pageBackUncovered(-axis * swipeSign(edge))
+                                }
                             },
                             predictivePopExitTransition = { edge ->
-                                if (initialState.isReadPage && !eink) readPageBackAway(axis)
-                                else DefaultNavTransitions.predictivePopExitTransition(this, edge)
+                                when {
+                                    eink -> ExitTransition.None
+                                    initialState.fliesBack(player) -> ExitTransition.KeepUntilTransitionsFinished
+                                    removed -> pageBackFaded()
+                                    else -> pageBackAway(axis * swipeSign(edge))
+                                }
                             },
                         ) {
                             if (player != null) {

@@ -13,6 +13,7 @@ doctest = false
 kaeri-core.workspace = true
 kaeri-books.workspace = true
 async-trait.workspace = true
+futures.workspace = true
 reqwest.workspace = true
 roxmltree.workspace = true
 serde.workspace = true

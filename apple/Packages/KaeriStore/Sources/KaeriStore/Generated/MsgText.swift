@@ -341,21 +341,33 @@ extension ReadingMsg {
         case .readerBackToPage(let page): L.readerBackToPage(page: Int(page))
         case .readerMoved(let chapter, let page, let device): L.readerMoved(chapter: chapter, page: Int(page), device: device)
         case .readerMovedNumber(let chapter, let page, let device): L.readerMovedNumber(chapter: chapter, page: Int(page), device: device)
+        case .readerMovedElsewhere(let chapter, let page): L.readerMovedElsewhere(chapter: chapter, page: Int(page))
+        case .readerMovedNumberElsewhere(let chapter, let page): L.readerMovedNumberElsewhere(chapter: chapter, page: Int(page))
+        case .readerMovedImage(let chapter, let image, let device): L.readerMovedImage(chapter: chapter, image: Int(image), device: device)
+        case .readerMovedNumberImage(let chapter, let image, let device): L.readerMovedNumberImage(chapter: chapter, image: Int(image), device: device)
+        case .readerMovedElsewhereImage(let chapter, let image): L.readerMovedElsewhereImage(chapter: chapter, image: Int(image))
+        case .readerMovedNumberElsewhereImage(let chapter, let image): L.readerMovedNumberElsewhereImage(chapter: chapter, image: Int(image))
         case .readerDetectedRightToLeft: L.readerDetectedRightToLeft
         case .readerDetectedLeftToRight: L.readerDetectedLeftToRight
         case .readerDetectedStrip: L.readerDetectedStrip
         case .readingFailedOffline: L.readingFailedOffline
         case .readingFailedSourceDown(let source): L.readingFailedSourceDown(source: source)
+        case .readingFailedSourceOff(let source): L.readingFailedSourceOff(source: source)
         case .readingFailedNotFound: L.readingFailedNotFound
+        case .readingFailedNoSource: L.readingFailedNoSource
         case .readingFailedBlocked(let source, let reason): L.readingFailedBlocked(source: source, reason: reason)
         case .readingFailedParse(let source): L.readingFailedParse(source: source)
         case .readingFailedPage(let status): L.readingFailedPage(status: Int(status))
+        case .readingPictureFailed: L.readingPictureFailed
         case .readingFailedSignIn(let what): L.readingFailedSignIn(what: what)
         case .readingFailedFileMissing(let path): L.readingFailedFileMissing(path: path)
         case .readingFailedUnreadable(let path, let format): L.readingFailedUnreadable(path: path, format: format)
         case .readingFailedUnsupported(let kind): L.readingFailedUnsupported(kind: kind)
         case .readingFailedProtected: L.readingFailedProtected
         case .readingFailedDiskFull: L.readingFailedDiskFull
+        case .readingFailedWriteName(let path): L.readingFailedWriteName(path: path)
+        case .readingFailedWriteDenied(let path): L.readingFailedWriteDenied(path: path)
+        case .readingFailedWrite(let path): L.readingFailedWrite(path: path)
         case .readingFailedWebview(let version): L.readingFailedWebview(version: Int(version))
         case .readingFailedNeedsNewer(let world): L.readingFailedNeedsNewer(world: world)
         case .readingFailedOff: L.readingFailedOff
@@ -423,6 +435,7 @@ extension ReadingMsg {
         case .readingRowQueued: L.readingRowQueued
         case .readingRowWaitsWifi: L.readingRowWaitsWifi
         case .readingRowDownloading(let done, let total): L.readingRowDownloading(done: Int(done), total: Int(total))
+        case .readingRowDownloadingPlain: L.readingRowDownloadingPlain
         case .readingRowFailed: L.readingRowFailed
         case .readingRowPageOf(let page, let of): L.readingRowPageOf(page: Int(page), of: Int(of))
         case .readingRowPage(let page): L.readingRowPage(page: Int(page))
@@ -431,6 +444,15 @@ extension ReadingMsg {
         case .readingRowBookmarked: L.readingRowBookmarked
         case .readingRowPages(let n): L.readingRowPages(n: Int(n))
         case .readingRowVersions(let n): L.readingRowVersions(n: Int(n))
+        case .readingRowParts(let n): L.readingRowParts(n: Int(n))
+        case .readingRowFromGroup(let group): L.readingRowFromGroup(group: group)
+        case .readingRowFromGroupIn(let group, let language): L.readingRowFromGroupIn(group: group, language: language)
+        case .readingRowPartsOf(let have, let n): L.readingRowPartsOf(have: Int(have), n: Int(n))
+        case .readingRowPartMissing(let count, let part): L.readingRowPartMissing(count: Int(count), part: Int(part))
+        case .readingRowPartFromGroup(let part, let group): L.readingRowPartFromGroup(part: Int(part), group: group)
+        case .readingRowPartFromGroupIn(let part, let group, let language): L.readingRowPartFromGroupIn(part: Int(part), group: group, language: language)
+        case .readingRowFromSource(let source): L.readingRowFromSource(source: source)
+        case .readerCreditPagesSkipped(let count): L.readerCreditPagesSkipped(count: Int(count))
         case .readingAgoNow: L.readingAgoNow
         case .readingAgoMinutes(let minutes): L.readingAgoMinutes(minutes: Int(minutes))
         case .readingAgoToday: L.readingAgoToday
@@ -447,6 +469,7 @@ extension ReadingMsg {
         case .readingMissNoSeries: L.readingMissNoSeries
         case .readingMissDownSince(let time): L.readingMissDownSince(time: time)
         case .readingMissDown: L.readingMissDown
+        case .readingMissPossible: L.readingMissPossible
         case .readingDlParts(let count): L.readingDlParts(count: Int(count))
         case .readingDlSize(let size): L.readingDlSize(size: sizeText(size))
         case .readingDlRead(let count): L.readingDlRead(count: Int(count))

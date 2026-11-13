@@ -123,6 +123,12 @@ pub struct LeafPart {
     /// strip sizes each image with it, so nothing moves when the files land.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub ratio: Option<f32>,
+    /// For a strip cut on e-ink, where in the strip the cut starts: the image, by its page in
+    /// the chapter, and the offset inside it. A place the engine sends (the start, Go to, a
+    /// place another device reached) names images, so the front end finds the cut with this:
+    /// the last one starting at or above the place, as the engine does.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub strip: Option<StripPos>,
 }
 
 /// Which half of a split spread a part shows, as it lies on the page.
@@ -261,13 +267,17 @@ pub enum ReaderSettingKey {
     Margins,
     LineSpacing,
     Justify,
+    /// The one tap zones setting before there were layouts: Edges, Halves or Off, per medium.
+    /// No longer offered or shown; [`Self::TapPaged`] reads it when it has no value of its own.
     TapLayout,
     VolumeKeysTurn,
     StripWidth,
     RefreshImage,
     RefreshText,
     RefreshList,
-    GallerySpeed,
+    /// How the e-ink panel updates pages: the device's setting or one of its modes, or Gallery 3's
+    /// colour speed.
+    ScreenMode,
     RainbowFilter,
     Saturation,
     Contrast,
@@ -285,6 +295,22 @@ pub enum ReaderSettingKey {
     PaperLook,
     PaperDim,
     PaperVolume,
+    /// Skip the credit pages a series repeats at the start or end of its chapters. On by
+    /// default.
+    SkipCreditPages,
+    /// Tap zones for paged reading (paged manga, vertical paging, paged novels): one of
+    /// [`crate::tap_zones::ZoneLayout`]'s names. On e-ink, the one layout for all reading.
+    TapPaged,
+    /// Tap zones for strips and scrolled novels. Not shown on e-ink.
+    TapScroll,
+    /// The outer bands a third (`standard`) or a quarter (`small`) of the screen.
+    TapSize,
+    /// Flip left and right: the columns mirror after the reading direction is applied.
+    TapFlipSides,
+    /// Flip top and bottom: the rows mirror.
+    TapFlipEnds,
+    /// E-ink only: swipes turn pages. On by default.
+    SwipeTurns,
 }
 
 /// Where a setting's value is kept.
@@ -328,13 +354,18 @@ impl ReaderSettingKey {
         Self::Margins,
         Self::LineSpacing,
         Self::Justify,
-        Self::TapLayout,
+        Self::TapPaged,
+        Self::TapScroll,
+        Self::TapSize,
+        Self::TapFlipSides,
+        Self::TapFlipEnds,
+        Self::SwipeTurns,
         Self::VolumeKeysTurn,
         Self::StripWidth,
         Self::RefreshImage,
         Self::RefreshText,
         Self::RefreshList,
-        Self::GallerySpeed,
+        Self::ScreenMode,
         Self::RainbowFilter,
         Self::Saturation,
         Self::Contrast,
@@ -348,6 +379,7 @@ impl ReaderSettingKey {
         Self::PaperLook,
         Self::PaperDim,
         Self::PaperVolume,
+        Self::SkipCreditPages,
     ];
 
     /// The setting's name in the store, the config and the `read_series` register.
@@ -373,7 +405,7 @@ impl ReaderSettingKey {
             Self::RefreshImage => "refresh_image",
             Self::RefreshText => "refresh_text",
             Self::RefreshList => "refresh_list",
-            Self::GallerySpeed => "gallery_speed",
+            Self::ScreenMode => "screen_mode",
             Self::RainbowFilter => "rainbow_filter",
             Self::Saturation => "saturation",
             Self::Contrast => "contrast",
@@ -387,11 +419,20 @@ impl ReaderSettingKey {
             Self::PaperLook => "paper_look",
             Self::PaperDim => "paper_dim",
             Self::PaperVolume => "paper_volume",
+            Self::SkipCreditPages => "skip_credit_pages",
+            Self::TapPaged => "tap_paged",
+            Self::TapScroll => "tap_scroll",
+            Self::TapSize => "tap_size",
+            Self::TapFlipSides => "tap_flip_sides",
+            Self::TapFlipEnds => "tap_flip_ends",
+            Self::SwipeTurns => "swipe_turns",
         }
     }
 
+    /// The key a name in the store or the config is kept under. [`Self::TapLayout`], no longer
+    /// in [`Self::ALL`], is found too.
     pub fn from_name(name: &str) -> Option<Self> {
-        Self::ALL.iter().copied().find(|key| key.name() == name)
+        Self::ALL.iter().copied().chain([Self::TapLayout]).find(|key| key.name() == name)
     }
 
     /// Whether the setting is offered for `medium` at all.
@@ -408,7 +449,8 @@ impl ReaderSettingKey {
             | Self::PageLayout
             | Self::Spreads
             | Self::StripWidth
-            | Self::StripGap => matches!(medium, Medium::Manga),
+            | Self::StripGap
+            | Self::SkipCreditPages => matches!(medium, Medium::Manga),
             Self::Font | Self::TextSize | Self::Margins | Self::LineSpacing | Self::Justify => {
                 matches!(medium, Medium::Novel)
             }
@@ -435,9 +477,17 @@ impl ReaderSettingKey {
     }
 
     /// Whether the medium's value follows the person to their other devices: the choices (mode,
-    /// direction, colour, look, font). Layout stays on each device.
+    /// direction, colour, look, font, skipping credit pages). Layout stays on each device.
     pub const fn syncs(self) -> bool {
-        matches!(self, Self::Mode | Self::Direction | Self::Colour | Self::Look | Self::Font)
+        matches!(
+            self,
+            Self::Mode
+                | Self::Direction
+                | Self::Colour
+                | Self::Look
+                | Self::Font
+                | Self::SkipCreditPages
+        )
     }
 }
 
@@ -497,6 +547,10 @@ pub struct ReaderSettingsView {
     pub work: Option<WorkId>,
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub rows: Vec<ReaderSettingRow>,
+    /// The tap zone settings worked out from the rows, with the guides seen: hand them to
+    /// `tap_action`, `tap_map` and `tap_guide_due`. `None` for anime.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub tap_zones: Option<crate::tap_zones::TapZoneSettings>,
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -551,10 +605,15 @@ pub enum OpenAt {
 pub enum TurnHow {
     Turn,
     Swipe,
-    /// The scrubber, the page grid or Go to page.
+    /// The person's own jump: the scrubber, the page grid, contents or Go to page. More than
+    /// two pages from where they were, it offers [`ReaderEvent::BackToPage`].
     Jump,
     Scroll,
     Key,
+    /// The app moved the reader itself: the first layout, a resume, Back to page, Start over,
+    /// another device's place, or a new layout after a resize or a settings change. It neither
+    /// offers Back to page nor takes it away.
+    Placed,
 }
 
 /// The screen a session draws on.
@@ -569,7 +628,7 @@ pub struct ReaderSurface {
     /// Room for two pages side by side.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub two_pages: bool,
-    /// The look is dark: on e-ink a full refresh comes every fourth text page.
+    /// The look is dark: on e-ink a text refresh the person turned on comes sooner.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub dark: bool,
 }
@@ -619,7 +678,7 @@ pub enum WritingMode {
 pub struct NovelOpenView {
     pub session: u64,
     pub chapter: ChapterId,
-    /// The scheme URL of the first document: `kaeri-book://<session>/<path>`, or Android's
+    /// The scheme URL of the first document: `kaeri-book://s<session>/<path>`, or Android's
     /// asset-loader address.
     pub entry: String,
     pub writing_mode: WritingMode,
@@ -738,12 +797,17 @@ pub struct NovelAssets {
     pub csp: String,
 }
 
-/// What an open waits on, for the opening screen's slow line.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+/// What an open waits on, for the opening screen's line. Each names the source asked, by the
+/// name the person knows it by.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
 pub enum ReaderWait {
-    /// A source is asked for the series' chapters.
+    /// Kept for apps built before the stages below; the engine no longer sends it.
     FindingSource,
+    /// The source is asked for the series' chapter list.
+    ChapterList { source: String },
+    /// The source is asked for the chapter's pages, or its text.
+    ChapterPages { chapter: String, source: String },
 }
 
 /// Why the end page names no next chapter.
@@ -762,12 +826,11 @@ pub enum NoNext {
 #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
 pub enum ReaderAction {
     StartOver,
-    BackTo,
     GoBack,
     ChangeMode,
 }
 
-/// A line over the page for a while: resumed, back to page, moved, mode detected.
+/// A line over the page for a while: resumed, moved, mode detected.
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Record))]
 pub struct ReaderNotice {
@@ -821,7 +884,8 @@ pub enum ReaderCommand {
         session: u64,
         surface: ReaderSurface,
     },
-    /// A leaf was painted. Drives prefetch, the read rule and Back to page.
+    /// A leaf was painted. Drives prefetch, the read rule and Back to page. A strip reports
+    /// the person's jump this way too, once it has landed, besides its `StripAt`.
     Shown {
         session: u64,
         chapter: ChapterId,
@@ -859,13 +923,17 @@ pub enum ReaderCommand {
         page: u32,
         path: String,
     },
-    /// A pinned page file is missing: it is made again.
+    /// A pinned page file is missing, or its page never came: it is made again. `chapter` is
+    /// the open chapter, or in a strip the chapter it flowed on from and keeps above, whose
+    /// pages stay asked for by its id until another chapter opens; its [`ReaderEvent::PageReady`]
+    /// and [`ReaderEvent::PageFailed`] name that chapter.
     NeedPage {
         session: u64,
         chapter: ChapterId,
         page: u32,
     },
-    /// Try a failed page, or a failed chapter with no page, again.
+    /// Try a failed page, or a failed chapter with no page, again. A page's `chapter` may be
+    /// the one a strip keeps above, as for [`ReaderCommand::NeedPage`].
     Retry {
         session: u64,
         chapter: ChapterId,
@@ -875,7 +943,7 @@ pub enum ReaderCommand {
         session: u64,
         chapter: ChapterId,
     },
-    /// "Back to page 8".
+    /// "Back to page 8", from the control [`ReaderEvent::BackToPage`] offers.
     BackTo {
         session: u64,
     },
@@ -914,6 +982,19 @@ pub enum ReaderCommand {
         #[cfg_attr(feature = "ffi", uniffi(default))]
         session: u64,
     },
+    /// The person said a skipped page is not a credit page: the work never skips a page with
+    /// this fingerprint again, and the open chapter is laid out again with it in its place.
+    NotACreditPage {
+        session: u64,
+        /// From [`CreditPage::fingerprint`].
+        fingerprint: u64,
+    },
+    /// The tap zone guide was seen: its first touch cleared it. `guide` is
+    /// [`crate::tap_zones::TapMap::guide`]; the guide shows again only once that changes.
+    /// Not sent while a screen reader runs, so the guide still shows once without it.
+    TapGuideSeen {
+        guide: String,
+    },
 }
 
 impl ReaderCommand {
@@ -926,6 +1007,8 @@ impl ReaderCommand {
     }
 }
 
+// The end page carries two chapter rows. Not boxed: the bindings carry records by value.
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
 pub enum ReaderEvent {
@@ -939,7 +1022,8 @@ pub enum ReaderEvent {
         leaves: Vec<Leaf>,
     },
     /// A page landed in the cache: the current one first, then the next once the current is
-    /// painted.
+    /// painted. `chapter` is the open chapter's, or the one a strip keeps above when the app
+    /// asked for its page again.
     PageReady {
         session: u64,
         chapter: ChapterId,
@@ -994,6 +1078,16 @@ pub enum ReaderEvent {
         /// folder.
         #[cfg_attr(feature = "ffi", uniffi(default))]
         next_source: Option<String>,
+        /// When `next` is an extra (16.5 beside 16 and 17, or one with no number): the first
+        /// chapter after it that is not one, for "Skip to chapter 17" beside Continue. `None`
+        /// for a next chapter that is not an extra. Skipped extras stay unread.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        skip_to: Option<ChapterRow>,
+        /// How many extras the skip passes over, from `next` on: 0 with no skip. With more than
+        /// one, or an extra with no number, the hint says the extras stay unread rather than
+        /// naming the chapter.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        extras: u32,
     },
     /// The next chapter's first page, made while this chapter is read, for the end page and a
     /// strip's divider.
@@ -1015,10 +1109,20 @@ pub enum ReaderEvent {
     Moved {
         session: u64,
         to: ReadPlace,
+        /// The device's name, empty when it is not known.
         from_device: String,
         back: ReadPlace,
     },
     Settings(ReaderSettingsView),
+    /// Back to page `page`, counted from 1, is offered in the slider bar while the controls
+    /// are up; `None` takes it away. It comes after the person's own jump of more than two
+    /// pages, or screens of a novel, and goes at the next turn, once used, or with the chapter:
+    /// [`ReaderEvent::Opened`] starts without it.
+    BackToPage {
+        session: u64,
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        page: Option<u32>,
+    },
     /// Show this place in the open chapter: Back to page, Start over, Go back, or a place
     /// another device reached. A place in another chapter comes as [`ReaderEvent::Opened`]
     /// instead.
@@ -1030,6 +1134,60 @@ pub enum ReaderEvent {
     Closed {
         session: u64,
     },
+    /// Pages of the open chapter left out as credit pages: the leaves hold the rest, and page
+    /// totals and progress count without them. The quiet line says `msg` ("1 credit page
+    /// skipped") and shows the pages when tapped, each with Not a credit page. Sent after
+    /// [`ReaderEvent::Leaves`] whenever a layout skipped any.
+    CreditPages {
+        session: u64,
+        chapter: ChapterId,
+        pages: Vec<CreditPage>,
+        msg: Msg,
+    },
+    /// The open chapter is read in parts: one count of pages with a tick on the track where
+    /// each later part starts, and the scrub preview naming the part. `parts` names each part
+    /// there is, in order; `total` is the parts in all and `missing` those no group lists,
+    /// which the reader marks where they would be. Sent after [`ReaderEvent::Leaves`] (and
+    /// [`ReaderEvent::CreditPages`]) for a chapter of pictures in parts.
+    ChapterParts {
+        session: u64,
+        chapter: ChapterId,
+        parts: Vec<ChapterPart>,
+        total: u32,
+        missing: Vec<u32>,
+    },
+}
+
+/// One part of the open chapter.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct ChapterPart {
+    /// Its number, from 1.
+    pub number: u32,
+    /// Its first page, from 1, as the reader counts pages: skipped credit pages left out.
+    pub first_page: u32,
+    /// The group it is read from, as the source names it.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub group: Option<String>,
+    /// From another group than the chapter's first part, which lacks it: the reader names the
+    /// group.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub other_group: bool,
+}
+
+/// A page skipped as a credit page.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct CreditPage {
+    /// Where it was in the chapter, from 0, counting every page the source has.
+    pub page: u32,
+    /// At the chapter's (or a part's) end rather than its start.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub at_end: bool,
+    /// The page as the book had it, to show when the line is tapped.
+    pub file: PageFile,
+    /// What `NotACreditPage` sends back.
+    pub fingerprint: u64,
 }
 
 #[cfg(test)]
@@ -1050,17 +1208,25 @@ mod tests {
     #[test]
     fn choices_sync_and_layout_stays_on_the_device() {
         use ReaderSettingKey as K;
-        for key in [K::Mode, K::Direction, K::Colour, K::Look, K::Font] {
+        for key in [K::Mode, K::Direction, K::Colour, K::Look, K::Font, K::SkipCreditPages] {
             assert!(key.syncs(), "{key:?}");
             assert_eq!(key.home_scope(), SettingScope::Medium);
         }
-        for key in
-            [K::TextSize, K::Margins, K::TapLayout, K::PageLayout, K::Fit, K::CropBorders]
+        for key in [K::TextSize, K::Margins, K::TapPaged, K::PageLayout, K::Fit, K::CropBorders]
         {
             assert!(!key.syncs(), "{key:?}");
             assert_eq!(key.home_scope(), SettingScope::Device);
         }
-        for key in [K::RefreshText, K::VolumeKeysTurn, K::PaperMode] {
+        for key in [
+            K::RefreshText,
+            K::VolumeKeysTurn,
+            K::PaperMode,
+            K::TapScroll,
+            K::TapSize,
+            K::TapFlipSides,
+            K::TapFlipEnds,
+            K::SwipeTurns,
+        ] {
             assert!(!key.syncs(), "{key:?}");
         }
         assert_eq!(K::Mode.series_scope(), Some(SettingScope::Series));
@@ -1071,6 +1237,8 @@ mod tests {
         for key in K::ALL {
             assert_eq!(K::from_name(key.name()), Some(*key));
         }
+        assert!(!K::ALL.contains(&K::TapLayout), "the earlier tap setting is not offered");
+        assert_eq!(K::from_name("tap_layout"), Some(K::TapLayout));
     }
 
     #[test]

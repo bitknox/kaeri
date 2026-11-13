@@ -170,8 +170,8 @@ struct SendSheet: View {
         }
         .onChange(of: send?.phase) { _, phase in
             #if os(iOS)
-            if case .ready(let files)? = phase, let id = sendId {
-                sharing = SharedFiles(id: id, urls: files.map { URL(fileURLWithPath: $0.path) })
+            if case .ready? = phase, let id = sendId, let urls = store.reading.sending.shareable(id) {
+                sharing = SharedFiles(id: id, urls: urls)
             }
             #endif
         }
@@ -407,9 +407,9 @@ struct SendSheet: View {
     }
 
     private func share(_ send: EReaderSend) {
-        guard case .ready(let files) = send.phase else { return }
         #if os(iOS)
-        sharing = SharedFiles(id: send.id, urls: files.map { URL(fileURLWithPath: $0.path) })
+        guard let urls = store.reading.sending.shareable(send.id) else { return }
+        sharing = SharedFiles(id: send.id, urls: urls)
         #endif
     }
 }
@@ -460,11 +460,15 @@ struct SendProgress: View {
                 }
                 .buttonStyle(PrimaryCapsuleStyle(height: 50, fontSize: 17))
                 #else
-                MacShareButton(files: files, shared: shared)
+                MacShareButton(id: send.id, shared: shared)
                 #endif
             case .failed(let words):
                 FailedLine(words)
                 Button(L.actionTryAgain, action: retry)
+                    .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 28 : 44, raisedSurface: true, fontSize: Device.isMac ? 13 : 17))
+            case .gone:
+                FailedLine(L.sendFilesGone)
+                Button(L.sendAgain, action: retry)
                     .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 28 : 44, raisedSurface: true, fontSize: Device.isMac ? 13 : 17))
             }
         }
@@ -582,7 +586,7 @@ private struct SendStatusRow: View {
                     Button(L.sendWaitingCancel) { store.reading.sending.cancel(send.id) }
                         .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 24 : 30, raisedSurface: true, fontSize: Device.isMac ? 12 : 15))
                         .fixedSize()
-                case .ready(let files):
+                case .ready:
                     HStack(spacing: 12) {
                         Button(L.actionDone) { store.reading.sending.dismiss(send.id) }
                             .buttonStyle(.plain)
@@ -590,12 +594,27 @@ private struct SendStatusRow: View {
                             .foregroundStyle(.haze)
                             .pointerHover()
                         #if os(iOS)
-                        Button(L.actionShare) { sharing = SharedFiles(id: send.id, urls: files.map { URL(fileURLWithPath: $0.path) }) }
-                            .buttonStyle(SecondaryCapsuleStyle(height: 30, raisedSurface: true, fontSize: 15))
-                            .fixedSize()
+                        Button(L.actionShare) {
+                            if let urls = store.reading.sending.shareable(send.id) { sharing = SharedFiles(id: send.id, urls: urls) }
+                        }
+                        .buttonStyle(SecondaryCapsuleStyle(height: 30, raisedSurface: true, fontSize: 15))
+                        .fixedSize()
                         #else
-                        MacShareButton(files: files) { store.reading.sending.shared(send.id) }
+                        MacShareButton(id: send.id) { store.reading.sending.shared(send.id) }
                         #endif
+                    }
+                case .gone:
+                    HStack(spacing: 12) {
+                        Button(L.actionDone) { store.reading.sending.dismiss(send.id) }
+                            .buttonStyle(.plain)
+                            .font(.plat(mac: 12, touch: 15, weight: .semibold))
+                            .foregroundStyle(.haze)
+                            .pointerHover()
+                        if send.canSendAgain {
+                            Button(L.sendAgain) { store.reading.sending.sendAgain(send.id) }
+                                .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 24 : 30, raisedSurface: true, fontSize: Device.isMac ? 12 : 15))
+                                .fixedSize()
+                        }
                     }
                 case .failed:
                     Button(L.actionDone) { store.reading.sending.dismiss(send.id) }
@@ -613,6 +632,8 @@ private struct SendStatusRow: View {
                     .fixedSize(horizontal: false, vertical: true)
             case .failed(let words):
                 FailedLine(words)
+            case .gone:
+                FailedLine(L.sendFilesGone)
             case .ready(let files):
                 Text(L.sendReady(n: files.count)).font(.plat(mac: 12, touch: 15)).foregroundStyle(.haze)
             case .preparing:
@@ -782,13 +803,16 @@ import AppKit
 
 /// Share…, which opens the Mac's share menu for the prepared files, from the button itself.
 struct MacShareButton: View {
-    let files: [ExportFile]
+    @Environment(AppStore.self) private var store
+    /// The send whose files it shares, when they are all still there.
+    let id: Int
     let shared: () -> Void
     @State private var anchor = ShareAnchor()
 
     var body: some View {
         Button(L.actionShare) {
-            anchor.show(files.map { URL(fileURLWithPath: $0.path) }, shared: shared)
+            guard let urls = store.reading.sending.shareable(id) else { return }
+            anchor.show(urls, shared: shared)
         }
         .buttonStyle(PrimaryCapsuleStyle(height: 30, fontSize: 13))
         .background(ShareAnchorView(anchor: anchor))

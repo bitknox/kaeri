@@ -210,6 +210,62 @@ pub struct BookEditionRow {
     /// The series reads from this one now: the person's choice, else the one picked for them.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub in_use: bool,
+    /// Where its chapter list stands. `None` when it was never asked for and is not being
+    /// asked: `chapters` is then 0 and says nothing, so the apps show the line as pending.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub listing: Option<EditionListing>,
+    /// The groups whose releases it lists, the most chapters first: what the group picker
+    /// offers. `version_label` is the one the chapters are listed from. Empty when the source
+    /// names no group.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub groups: Vec<GroupChoice>,
+    /// The person picked the group (`ChooseGroup`); otherwise it is the one with the most
+    /// chapters.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub group_chosen: bool,
+}
+
+/// Where an edition's chapter list stands.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum EditionListing {
+    /// The list kept last, which `chapters` and `latest` describe.
+    Listed,
+    /// The source is being asked for it now.
+    Asking,
+    /// The source answered with no chapters.
+    Empty,
+    /// The source did not answer.
+    Failed { failure: ReadingFailure },
+}
+
+/// One group an edition lists releases from, for the series' group picker.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct GroupChoice {
+    /// As the source names it.
+    pub label: String,
+    /// How many chapters it has released in this edition.
+    pub chapters: u32,
+    /// The chapters are listed from it.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub in_use: bool,
+    /// The language most of its chapters are in, as the source tags it ("es", "pt-BR").
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub language: Option<String>,
+}
+
+/// A part of a chapter read from another group than the rest of the chapter, which lacks it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct PartGroup {
+    /// The part, from 1.
+    pub part: u32,
+    /// The group it is read from, as the source names it.
+    pub group: String,
+    /// That group's language as the source tags it, when it is not the app's.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub language: Option<String>,
 }
 
 /// A volume's chapters, or the chapters in no volume.
@@ -225,6 +281,11 @@ pub struct VolumeGroup {
     /// Every chapter in it is read: folded into one line.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub all_read: bool,
+    /// The whole list as one, in reading order, drawn with no heading: Show volumes is off,
+    /// or too few of the chapters have a volume to group them by. The only group when set.
+    /// Each chapter still says its volume.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub flat: bool,
 }
 
 /// One chapter in a list.
@@ -270,6 +331,33 @@ pub struct ChapterRow {
     /// Downloaded here, and the source no longer lists it. It still opens from the file.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub gone_from_source: bool,
+    /// How many parts the chapter has in all, read as one chapter: "Chapter 1, 2 parts". 0 or 1
+    /// is a chapter listed whole. It counts parts no group lists, which `missing_parts` names.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub parts: u32,
+    /// Parts of the chapter no group lists, from 1: "2 of 3 parts, part 2 missing". The chapter
+    /// still opens, with the rest.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub missing_parts: Vec<u32>,
+    /// Parts read from another group than `version_label`, which lacks them.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub part_groups: Vec<PartGroup>,
+    /// The group the series is listed from lacks this chapter, so it is listed from
+    /// `version_label`, another group.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub other_group: bool,
+    /// For a chapter from another group: that group's language as the source tags it, when it
+    /// is not the app's language.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub group_language: Option<String>,
+    /// The edition in use lacks this chapter and another of the person's sources lists it: that
+    /// source's name. It opens from there.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub other_source: Option<String>,
+    /// A file on this device that is not a download, such as one in the person's folders: it
+    /// opens from there, and there is nothing to download, so no Download is offered for it.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub on_device: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -748,9 +836,25 @@ pub struct ReadSearchQuery {
     /// Ask only the person's sources, not AniList: the filter bar's "Your sources only".
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub sources_only: bool,
+    /// The ids of the only sources a search with words asks: the large e-ink panel's Search in.
+    /// `None` asks every source that is on. A source outside it never gets the words, nor a
+    /// source that joins while the search shows, nor AniList: a scope is the only place asked.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub source_scope: Option<Vec<String>>,
 }
 
 impl ReadSearchQuery {
+    /// Whether the search asks AniList: neither "Your sources only" nor a scope is set.
+    pub fn asks_anilist(&self) -> bool {
+        !self.sources_only && self.source_scope.is_none()
+    }
+
+    /// Whether a search with words may ask the source `id`: it is in [`Self::source_scope`],
+    /// or there is none.
+    pub fn asks_source(&self, id: &str) -> bool {
+        self.source_scope.as_ref().is_none_or(|scope| scope.iter().any(|s| s == id))
+    }
+
     /// [`Self::formats`] as the filter reads them: a saved `one-shot` is `manga`, each once,
     /// in the order chosen.
     pub fn format_keys(&self) -> Vec<&str> {
@@ -777,7 +881,7 @@ pub enum ReadAnilistState {
     Answered,
     /// AniList could not be reached; the sources were still asked.
     Failed,
-    /// "Your sources only" is on.
+    /// "Your sources only" is on, or the search is scoped to sources.
     Skipped,
 }
 
@@ -871,6 +975,8 @@ pub enum DownloadPick {
     Chapters { ids: Vec<ChapterId> },
 }
 
+/// A chapter's download. While it downloads, `total` is 0 until the page count is known, and
+/// stays 0 for a novel's chapter, which has no pages to count: it says it downloads, uncounted.
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
 pub enum ChapterDownloadState {
@@ -959,13 +1065,16 @@ pub struct DownloadEstimate {
     pub pick: DownloadPick,
     /// The chosen chapters not downloaded yet.
     pub chapters: u32,
+    /// What they will take, or 0 when that is not known: an estimate needs past downloads of
+    /// the work or its source to go by.
     pub bytes: u64,
     /// "About 214 MB · over Wi-Fi", as parts the app joins with " · ". Empty when nothing is
-    /// left to download.
+    /// left to download, or when the size is not known.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub line: Vec<Msg>,
     /// Every chosen chapter, the ones on this device by what they take here and the rest as
-    /// estimated: what a send to an e-reader of the same choice comes to.
+    /// estimated: what a send to an e-reader of the same choice comes to. 0 when any of them
+    /// is not known.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub all_bytes: u64,
 }
@@ -1169,8 +1278,15 @@ pub enum ReadingFailure {
     SourceDown {
         source: String,
     },
+    /// The source the series reads from is switched off in Your sources. `source` is its name.
+    SourceOff {
+        source: String,
+    },
     /// The source no longer has it.
     NotFound,
+    /// None of the person's sources holds the series, and none was picked for it: there is no
+    /// source to try again. A page shows it as an empty state that leads to Read from.
+    NoSource,
     Blocked {
         source: String,
         reason: String,
@@ -1227,6 +1343,25 @@ pub enum ReadingFailure {
         part: String,
         problem: SendProblem,
     },
+    /// A file or folder Kaeri makes, for a download or a send, could not be written, for a
+    /// reason other than a full disk. `path` is the file's or the folder's.
+    CannotWrite {
+        path: String,
+        problem: WriteProblem,
+    },
+}
+
+/// Why a file or folder could not be written.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum WriteProblem {
+    /// The storage does not take the name: it is too long, or has characters the storage does
+    /// not allow.
+    Name,
+    /// The storage is read-only, or Kaeri may not write there.
+    Denied,
+    /// Any other error the system gave.
+    Other,
 }
 
 /// What the check before a send found wrong with a part of the file.
@@ -1253,7 +1388,11 @@ impl ReadingFailure {
             Self::SourceDown { source } => {
                 ReadingMsg::ReadingFailedSourceDown { source: source.clone() }
             }
+            Self::SourceOff { source } => {
+                ReadingMsg::ReadingFailedSourceOff { source: source.clone() }
+            }
             Self::NotFound => ReadingMsg::ReadingFailedNotFound,
+            Self::NoSource => ReadingMsg::ReadingFailedNoSource,
             Self::Blocked { source, reason } => ReadingMsg::ReadingFailedBlocked {
                 source: source.clone(),
                 reason: reason.clone(),
@@ -1306,6 +1445,13 @@ impl ReadingFailure {
                     file: file.clone(),
                     part: part.clone(),
                 },
+            },
+            Self::CannotWrite { path, problem } => match problem {
+                WriteProblem::Name => ReadingMsg::ReadingFailedWriteName { path: path.clone() },
+                WriteProblem::Denied => {
+                    ReadingMsg::ReadingFailedWriteDenied { path: path.clone() }
+                }
+                WriteProblem::Other => ReadingMsg::ReadingFailedWrite { path: path.clone() },
             },
         }
     }
@@ -1595,6 +1741,14 @@ pub enum ReadingCommand {
         version_label: Option<String>,
         language: Option<String>,
     },
+    /// List the series' chapters from this group of the edition in use, falling back to
+    /// another group for a chapter it lacks; `None` goes back to the group with the most
+    /// chapters. Read marks stay: they hang on the chapter, whichever group released it. Answered
+    /// with the chapters and the series header again.
+    ChooseGroup {
+        work: WorkId,
+        group: Option<String>,
+    },
     MarkRead {
         work: WorkId,
         chapters: Vec<ChapterId>,
@@ -1738,6 +1892,7 @@ impl ReadingCommand {
             }
             Self::LoadSeries { .. }
             | Self::ChooseEdition { .. }
+            | Self::ChooseGroup { .. }
             | Self::ReadAgain { .. }
             | Self::UndoReadAgain { .. }
             | Self::SetStatus { .. }
@@ -1870,12 +2025,16 @@ pub enum ReadingEvent {
     /// goes on by itself once the network allows, and the next [`Self::ExportProgress`] says
     /// so; `CancelPrepare` drops it. A send left waiting when the engine stopped is started
     /// again at the next launch as a job of its own, so `job` may be one the screen never sent.
-    /// `line` says why, in words.
+    /// `line` says why, in words. `chapters` are the chapters the send holds, in reading
+    /// order, so a screen that never asked for it can still offer Set my place once it is
+    /// ready.
     ExportWaiting {
         job: JobId,
         work: WorkId,
         target: String,
         line: Msg,
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        chapters: Vec<ChapterId>,
     },
     Feed(FeedView),
     Eink(EinkProfile),
@@ -1931,7 +2090,9 @@ mod tests {
         let failures = [
             ReadingFailure::Offline,
             ReadingFailure::SourceDown { source: "Shelf".into() },
+            ReadingFailure::SourceOff { source: "Shelf".into() },
             ReadingFailure::NotFound,
+            ReadingFailure::NoSource,
             ReadingFailure::Blocked {
                 source: "Shelf".into(),
                 reason: "Too many requests.".into(),
@@ -1948,6 +2109,18 @@ mod tests {
             ReadingFailure::NeedsNewerKaeri { world: "kaeri:books@0.2".into() },
             ReadingFailure::ReadingOff,
             ReadingFailure::Other { reason: "It broke.".into() },
+            ReadingFailure::CannotWrite {
+                path: "/d/a.cbz".into(),
+                problem: WriteProblem::Name,
+            },
+            ReadingFailure::CannotWrite {
+                path: "/d/a.cbz".into(),
+                problem: WriteProblem::Denied,
+            },
+            ReadingFailure::CannotWrite {
+                path: "/d/a.cbz".into(),
+                problem: WriteProblem::Other,
+            },
         ];
         for failure in failures {
             let text = failure.msg().english();

@@ -94,7 +94,10 @@ reader-volume = Cilt { $volume }
 reader-chapter-in-progress = Sayfa { $page } / { $total }
 reader-chapter-read = Okundu
 reader-chapter-new = yeni
-reader-chapter-pages = { $pages } sayfa
+reader-chapter-pages = { $pages ->
+    [one] 1 sayfa
+   *[other] { $pages } sayfa
+ }
 reader-offline-line = Çevrimdışı. İndirilen bölümler yine de açılır.
 reader-menu-go = Git
 reader-menu-next-page = Sonraki sayfa
@@ -116,8 +119,5 @@ reader-key-step = Klavye adımı
 reader-key-step-panel = Kare
 reader-key-step-screen = Ekran
 reader-strip-gap = Görseller arası boşluk
-reader-zone-back = Geri
-reader-zone-forward = İleri
-reader-zone-menu = Menü
 reader-pages-range = { $from }–{ $to }
 send-failed-offline = Çevrimiçi olduğunuzda yeniden deneyin.

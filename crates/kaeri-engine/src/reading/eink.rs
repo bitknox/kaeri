@@ -71,6 +71,14 @@ const fn hook_name(family: VendorFamily) -> Option<&'static str> {
     }
 }
 
+/// The hook that sets the family's own update modes for a view, where one is known.
+const fn modes_hook_name(family: VendorFamily) -> Option<&'static str> {
+    match family {
+        VendorFamily::Onyx => Some("onyx-modes"),
+        VendorFamily::Rockchip | VendorFamily::Ntx | VendorFamily::Other => None,
+    }
+}
+
 /// Makes the profile from what Android said, the person's answers and the Refresh settings.
 pub fn detect(
     facts: &ScreenFacts,
@@ -127,14 +135,18 @@ pub fn detect(
             colour_sure = true;
         }
     }
-    let refresh_hook = eink != EinkMatch::No
-        && hook_name(family).is_some_and(|h| facts.hooks.iter().any(|x| x == h));
+    let resolved = |name: Option<&str>| {
+        eink != EinkMatch::No && name.is_some_and(|h| facts.hooks.iter().any(|x| x == h))
+    };
+    let refresh_hook = resolved(hook_name(family));
+    let panel_modes = resolved(modes_hook_name(family));
     EinkProfile {
         eink,
         panel,
         ppi: facts.dpi,
         family,
         refresh_hook,
+        panel_modes,
         page_buttons: facts.page_keys,
         colour_sure,
         novels: facts.webview.map_or(NovelSupport::Full, NovelSupport::of_webview),
@@ -142,7 +154,8 @@ pub fn detect(
     }
 }
 
-/// The refresh rule for `panel` with this device's Refresh settings over the board's defaults.
+/// The refresh rule for `panel` with this device's Refresh settings over the defaults, which ask
+/// for no full refresh.
 pub fn policy(panel: EinkPanel, device: &BTreeMap<String, toml::Value>) -> EinkPolicy {
     let mut policy = EinkPolicy::defaults(panel);
     let number = |key: ReaderSettingKey| {
@@ -157,16 +170,17 @@ pub fn policy(panel: EinkPanel, device: &BTreeMap<String, toml::Value>) -> EinkP
     }
     if let Some(every) = number(ReaderSettingKey::RefreshText) {
         policy.text_every = every.clamp(0, 50) as u8;
-        // Dark pages ghost sooner: two thirds of the cadence, as the defaults' six and four.
+        // Dark pages ghost sooner: two thirds of the cadence, six pages becoming four.
         policy.text_every_dark = (every.clamp(0, 50) as u8).saturating_mul(2).div_ceil(3);
     }
     if let Some(every) = number(ReaderSettingKey::RefreshList) {
         policy.list_every = every.clamp(0, 50) as u8;
     }
+    // On Gallery 3, Screen mode is its colour speed.
     policy.gallery_speed =
-        match device.get(ReaderSettingKey::GallerySpeed.name()).and_then(toml::Value::as_str) {
-            Some("fast") => GallerySpeed::Fast,
-            Some("best") => GallerySpeed::Best,
+        match device.get(ReaderSettingKey::ScreenMode.name()).and_then(toml::Value::as_str) {
+            Some("fast") if panel == EinkPanel::Gallery3 => GallerySpeed::Fast,
+            Some("best") if panel == EinkPanel::Gallery3 => GallerySpeed::Best,
             _ => GallerySpeed::Standard,
         };
     policy
@@ -221,15 +235,23 @@ mod tests {
             (EinkMatch::Sure, EinkPanel::Grey, VendorFamily::Onyx)
         );
         assert!(p.refresh_hook && p.page_buttons && p.colour_sure);
+        assert!(!p.panel_modes, "the mode calls did not resolve");
         assert_eq!(p.policy, Some(EinkPolicy::defaults(EinkPanel::Grey)));
+        boox.hooks.push("onyx-modes".into());
+        assert!(detect(&boox, EinkAnswers::default(), &none).panel_modes);
         boox.wide_colour_gamut = true;
         assert_eq!(detect(&boox, EinkAnswers::default(), &none).panel, EinkPanel::Kaleido3);
 
-        // The NTX call resolving says nothing about the family.
+        // The NTX call resolving says nothing about the family, nor do the Onyx mode calls.
         let mut other = facts("Example", "Pad");
-        other.hooks = vec!["ntx".into()];
+        other.hooks = vec!["ntx".into(), "onyx-modes".into()];
         let p = detect(&other, EinkAnswers::default(), &none);
         assert_eq!((p.eink, p.panel, p.policy), (EinkMatch::No, EinkPanel::Lcd, None));
+        assert!(!p.panel_modes);
+        let mut ntx = facts("Tolino", "Vision");
+        ntx.hooks = vec!["ntx".into(), "onyx-modes".into()];
+        let p = detect(&ntx, EinkAnswers::default(), &none);
+        assert!(p.refresh_hook && !p.panel_modes);
 
         let galy = detect(&facts("Bigme", "Galy"), EinkAnswers::default(), &none);
         assert_eq!((galy.panel, galy.family), (EinkPanel::Gallery3, VendorFamily::Rockchip));
@@ -264,10 +286,20 @@ mod tests {
         let mut device = BTreeMap::new();
         device.insert("refresh_text".to_owned(), toml::Value::Integer(9));
         device.insert("refresh_image".to_owned(), toml::Value::Boolean(false));
-        device.insert("gallery_speed".to_owned(), toml::Value::String("fast".into()));
+        device.insert("screen_mode".to_owned(), toml::Value::String("fast".into()));
         let p = policy(EinkPanel::Gallery3, &device);
         assert_eq!((p.text_every, p.text_every_dark, p.image_full), (9, 6, false));
         assert_eq!(p.gallery_speed, GallerySpeed::Fast);
+        // Settings a person saved keep their values: a full on picture pages and lists.
+        let mut saved = BTreeMap::new();
+        saved.insert("refresh_image".to_owned(), toml::Value::Boolean(true));
+        saved.insert("refresh_list".to_owned(), toml::Value::Integer(3));
+        saved.insert("screen_mode".to_owned(), toml::Value::String("regal".into()));
+        let p = policy(EinkPanel::Kaleido3, &saved);
+        assert_eq!((p.image_full, p.text_every, p.list_every), (true, 0, 3));
+        assert_eq!(p.gallery_speed, GallerySpeed::Standard);
+        // Nothing saved: no full refresh at all.
+        assert!(!policy(EinkPanel::Kaleido3, &BTreeMap::new()).any_full());
         let mut cfg = BTreeMap::new();
         cfg.insert("mode".to_owned(), toml::Value::String("on".into()));
         assert_eq!(

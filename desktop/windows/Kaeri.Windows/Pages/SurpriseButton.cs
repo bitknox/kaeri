@@ -7,7 +7,8 @@ using Microsoft.UI.Xaml.Controls;
 namespace Kaeri.Windows.Pages;
 
 /// <summary>
-/// Surprise me: asks the engine for a random title from the pool the page names and opens it.
+/// Surprise me: asks the engine for a random title from the pool the page names and opens it,
+/// a book from reading's filters as a series, with no Another.
 /// A pick that takes over 0.6 s shows a ring where the dice glyph was; a second press while one
 /// is out does nothing. The engine words the empty, offline and failed notices itself.
 /// </summary>
@@ -65,7 +66,12 @@ sealed class SurpriseButton : Button
             slow.Stop();
             ring.Visibility = Visibility.Collapsed;
             glyph.Visibility = Visibility.Visible;
-            if (answer.Outcome is SurpriseOutcome.Picked picked)
+            if (answer.Outcome is SurpriseOutcome.Picked book && answer.Pool is SurprisePool.Reading)
+            {
+                ctx.Pick = null;
+                ctx.Window.OpenSeries($"a:{book.Id}");
+            }
+            else if (answer.Outcome is SurpriseOutcome.Picked picked)
             {
                 ctx.Pick = new Pick(picked.Id, answer.Pool, picked.More);
                 ctx.OpenTitle(picked.Id);

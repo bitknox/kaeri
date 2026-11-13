@@ -2,7 +2,6 @@
 
 package app.kaeri.reader
 
-import app.kaeri.engine.model.NovelAssets
 import app.kaeri.engine.model.NovelPos
 import app.kaeri.engine.model.TurnHow
 import org.junit.Assert.assertEquals
@@ -10,8 +9,6 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
-import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
@@ -48,23 +45,5 @@ class NovelMessageTest {
         assertEquals("3/0.4.1/120", NovelPos(3u, listOf(0u, 4u, 1u), 120u).text())
         assertEquals("0//0", NovelPos(0u, emptyList(), 0u).text())
         assertEquals("swipe", NovelMessage.word(TurnHow.SWIPE))
-    }
-
-    @Test
-    fun the_page_is_told_once_which_side_taps_turn() {
-        val host = NovelWebHost(RuntimeEnvironment.getApplication(), NovelAssets("", "", ""), { null }) {}
-        val web = shadowOf(host.view)
-        host.tapsTurn(1f / 3f, rtl = false)
-        val sent = web.lastEvaluatedJavascript
-        assertEquals(
-            """window.kaeriReader && window.kaeriReader.input({edge: 0.33333334, forward: "right", keys: false, hold: false})""",
-            sent,
-        )
-        host.view.evaluateJavascript("0", null)
-        host.tapsTurn(1f / 3f, rtl = false)
-        assertEquals("the same again is not sent", "0", web.lastEvaluatedJavascript)
-        host.tapsTurn(1f / 3f, rtl = true)
-        assertEquals(true, web.lastEvaluatedJavascript.contains("forward: \"left\""))
-        host.destroy()
     }
 }

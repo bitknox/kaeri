@@ -14,7 +14,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.kaeri.engine.core.Medium
+import app.kaeri.engine.model.Command
 import app.kaeri.engine.model.KaeriIsFor
+import app.kaeri.engine.model.ReadingCommand
 import app.kaeri.engine.model.ReaderSettingKey
 import app.kaeri.engine.model.ReaderSettingsView
 import app.kaeri.engine.model.ReaderValue
@@ -31,6 +33,7 @@ import app.kaeri.ui.Pane
 import app.kaeri.ui.Place
 import app.kaeri.ui.SettingSwitch
 import app.kaeri.ui.SettingsGroup
+import app.kaeri.ui.SwitchRow
 import app.kaeri.ui.kindWord
 import app.kaeri.ui.sentence
 
@@ -199,6 +202,23 @@ private fun CountsAsReadRow(place: Place) {
     )
 }
 
+/** Skip credit pages, on unless turned off: a reader default for manga, which comics and strips share. */
+@Composable
+private fun SkipCreditsRow(place: Place) {
+    val store = LocalAppStore.current
+    val context = LocalContext.current
+    val defaults by store.reading.readerDefaults.collectAsStateWithLifecycle()
+    val view = defaults[Medium.MANGA]
+    val on = (view?.rows?.firstOrNull { it.key == ReaderSettingKey.SKIP_CREDIT_PAGES }?.value as? ReaderValue.Toggle)?.on ?: true
+    SwitchRow(
+        place,
+        Strings.settingsSkipCredits(context),
+        checked = on,
+        note = Strings.settingsSkipCreditsNote(context),
+        enabled = view != null,
+    ) { store.reading.setReaderDefault(Medium.MANGA, ReaderSettingKey.SKIP_CREDIT_PAGES, ReaderValue.Toggle(it)) }
+}
+
 // The pane
 
 /**
@@ -218,8 +238,10 @@ internal fun ReadingPane() {
                 { place -> ReadingSettingMenu(place, SettingKey.WEBTOON_MODE, stringResource(R.string.settings_reader_webtoons)) },
                 { place -> NovelDefaultRow(place) },
                 { place -> CountsAsReadRow(place) },
+                { place -> SkipCreditsRow(place) },
             ),
         )
+        ScreenGroup()
         SettingsGroup(
             title = stringResource(R.string.settings_follow_group),
             footer = Strings.settingsFollowFooter(LocalContext.current, kindWord()),
@@ -229,6 +251,35 @@ internal fun ReadingPane() {
             ),
         )
     }
+}
+
+/**
+ * Screen: the e-ink layout on or off, and with it on whether the panel shows colour. The engine
+ * keeps each answer, as the e-ink questions do, so a wrong one is undone here.
+ */
+@Composable
+private fun ScreenGroup() {
+    val store = LocalAppStore.current
+    val look = LocalEinkLayout.current
+    fun answer(eink: Boolean, colour: Boolean?) = store.send(Command.Reading(ReadingCommand.AnswerEink(eink, colour)))
+    SettingsGroup(
+        title = stringResource(R.string.settings_screen_group),
+        rows = listOfNotNull<@Composable (Place) -> Unit>(
+            { place ->
+                SwitchRow(place, stringResource(R.string.settings_eink_layout), checked = look != null, note = stringResource(R.string.settings_eink_layout_note)) {
+                    // Turned on, the colour question is asked again in the reader.
+                    answer(it, null)
+                }
+            },
+            look?.let {
+                { place ->
+                    SwitchRow(place, stringResource(R.string.settings_eink_colour), checked = look.colour, note = stringResource(R.string.settings_eink_colour_note)) {
+                        answer(true, it)
+                    }
+                }
+            },
+        ),
+    )
 }
 
 /** What the Settings list says under Reading: "Pages, right to left · After the last page". */
@@ -246,7 +297,7 @@ internal fun readingSummary(): String? {
 
 // Downloads
 
-/** Downloads' reading rows: chapters over mobile data, which new chapters download, and deleting after reading. */
+/** Downloads' reading rows: chapters over mobile data, which new chapters download, deleting after reading, and showing volumes. */
 internal fun readingDownloadRows(): List<@Composable (Place) -> Unit> = listOf(
     { place -> SettingSwitch(place, SettingKey.CHAPTER_DOWNLOADS_ON_CELLULAR, stringResource(R.string.settings_chapter_downloads_cellular)) },
     { place ->
@@ -259,6 +310,7 @@ internal fun readingDownloadRows(): List<@Composable (Place) -> Unit> = listOf(
         )
     },
     { place -> SettingSwitch(place, SettingKey.DELETE_AFTER_READING, stringResource(R.string.settings_delete_after_reading), note = stringResource(R.string.settings_delete_after_reading_note)) },
+    { place -> SettingSwitch(place, SettingKey.SHOW_VOLUMES, stringResource(R.string.settings_show_volumes), note = stringResource(R.string.settings_show_volumes_note)) },
 )
 
 // Notifications

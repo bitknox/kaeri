@@ -304,6 +304,8 @@ pub mod kinds {
     pub const READ_HIDE: &str = "read_hide";
     pub const READ_BOOKMARK: &str = "read_bookmark";
     pub const READ_TRACK_MAP: &str = "read_track_map";
+    /// A page the person said is not a credit page. Key `<work>/<fingerprint in hex>`.
+    pub const READ_CREDIT_KEEP: &str = "read_credit_keep";
     pub const BOOK_MATCH: &str = "book_match";
     /// Engine kinds, returned as [`super::Effect`]s.
     pub const SETTING: &str = "setting";

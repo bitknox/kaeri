@@ -251,6 +251,9 @@ impl StoreTaskContext {
                 self.book_sources.unload(&plugin);
                 // Titles on screen were listed with it: the engine lists them again.
                 let _ = self.tx.internal(crate::outbox::Internal::SourcesReordered);
+                if self.books.is_some() {
+                    let _ = self.tx.internal(crate::outbox::Internal::BookSourcesChanged);
+                }
                 self.send(Event::Providers(data::provider_rows(&self.registry, &self.stores)));
                 self.rows();
                 self.toast(Notice::info(Msg::Store(StoreMsg::PluginRemoved { plugin })));
@@ -432,6 +435,8 @@ impl StoreTaskContext {
             Ok(sources::LoadedPlugin::Books(source)) => {
                 if let Some(books) = &self.books {
                     books.put(source);
+                    // Series looked for without it are looked for again.
+                    let _ = self.tx.internal(crate::outbox::Internal::BookSourcesChanged);
                 }
                 self.toast(Notice::info(Msg::Store(StoreMsg::PluginInstalled {
                     plugin: name.to_owned(),

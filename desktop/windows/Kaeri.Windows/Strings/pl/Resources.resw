@@ -6452,6 +6452,15 @@
   <data name="ReaderPageLoading" xml:space="preserve">
     <value>Wczytywanie strony {page}</value>
   </data>
+  <data name="ReaderPagePlate" xml:space="preserve">
+    <value>Strona {page}</value>
+  </data>
+  <data name="ReaderImagePlate" xml:space="preserve">
+    <value>Obraz {image}</value>
+  </data>
+  <data name="ReaderImageLoading" xml:space="preserve">
+    <value>Wczytywanie obrazu {image}</value>
+  </data>
   <data name="ReaderPageFailed" xml:space="preserve">
     <value>Nie udało się wczytać strony {page}</value>
   </data>
@@ -6466,6 +6475,9 @@
   </data>
   <data name="ReaderEndTracker" xml:space="preserve">
     <value>Zaliczono jako przeczytany · zaktualizowano: {trackers}</value>
+  </data>
+  <data name="ReaderEndTrackerOffline" xml:space="preserve">
+    <value>Zaliczono jako przeczytany · {tracker} zaktualizuje się po powrocie online</value>
   </data>
   <data name="ReaderEndNext" xml:space="preserve">
     <value>Kolejny</value>
@@ -6530,11 +6542,17 @@
   <data name="ReaderTapEdges" xml:space="preserve">
     <value>Krawędzie</value>
   </data>
-  <data name="ReaderTapSides" xml:space="preserve">
-    <value>Połowy</value>
-  </data>
   <data name="ReaderTapOff" xml:space="preserve">
     <value>Wyłączone</value>
+  </data>
+  <data name="ReaderZoneNext" xml:space="preserve">
+    <value>Następna strona</value>
+  </data>
+  <data name="ReaderZonePrevious" xml:space="preserve">
+    <value>Poprzednia strona</value>
+  </data>
+  <data name="ReaderZoneControls" xml:space="preserve">
+    <value>Sterowanie</value>
   </data>
   <data name="ReaderChapters" xml:space="preserve">
     <value>Rozdziały</value>
@@ -7525,9 +7543,6 @@
   </data>
   <data name="ReadSearchClearFilters" xml:space="preserve">
     <value>Wyczyść filtry</value>
-  </data>
-  <data name="ReadSortPopular" xml:space="preserve">
-    <value>Popularne</value>
   </data>
   <data name="ReadSortTrending" xml:space="preserve">
     <value>Na topie</value>
@@ -11644,9 +11659,6 @@
   </data>
   <data name="TitleMoreAbout" xml:space="preserve">
     <value>Więcej o tytule</value>
-  </data>
-  <data name="TitleSynopsisHint" xml:space="preserve">
-    <value>Pokazuje cały opis</value>
   </data>
   <data name="TitleDubbedTo" xml:space="preserve">
     <value>Z dubbingiem do odcinka {episode}</value>

@@ -443,6 +443,13 @@ pub fn spoken_duration(seconds: f64) -> String {
     }
 }
 
+/// Engine words that lead a line or a sentence, with their first letter in capitals: "from
+/// Group B" becomes "From Group B".
+pub fn capitalized(text: &str) -> String {
+    let mut chars = text.chars();
+    chars.next().map(|c| c.to_uppercase().chain(chars).collect()).unwrap_or_default()
+}
+
 /// How long a notice stays, in seconds: 4 for information, 8 for an alert, and a second more for
 /// every ten words past twelve, twice that while a screen reader runs. One with a button stays
 /// until it is dismissed or acted on, which libadwaita spells as 0.

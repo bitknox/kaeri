@@ -765,6 +765,30 @@ object Strings {
     fun readerMovedNumber(context: Context, chapter: String, page: Int, device: String): String =
         context.getString(R.string.reader_moved_number, chapter, page, device)
 
+    /** The notice when another device read further and its name is not known: a device removed from sync, or this one before a reinstall. */
+    fun readerMovedElsewhere(context: Context, chapter: String, page: Int): String =
+        context.getString(R.string.reader_moved_elsewhere, chapter, page)
+
+    /** The same notice for a chapter known only by its number, such as 14 or 14.5. */
+    fun readerMovedNumberElsewhere(context: Context, chapter: String, page: Int): String =
+        context.getString(R.string.reader_moved_number_elsewhere, chapter, page)
+
+    /** The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its whole label, such as The Long Night. */
+    fun readerMovedImage(context: Context, chapter: String, image: Int, device: String): String =
+        context.getString(R.string.reader_moved_image, chapter, image, device)
+
+    /** The same notice in a strip for a chapter known only by its number, such as 14 or 14.5. */
+    fun readerMovedNumberImage(context: Context, chapter: String, image: Int, device: String): String =
+        context.getString(R.string.reader_moved_number_image, chapter, image, device)
+
+    /** The notice in a strip when another device read further and its name is not known. */
+    fun readerMovedElsewhereImage(context: Context, chapter: String, image: Int): String =
+        context.getString(R.string.reader_moved_elsewhere_image, chapter, image)
+
+    /** The same notice in a strip for a chapter known only by its number, such as 14 or 14.5. */
+    fun readerMovedNumberElsewhereImage(context: Context, chapter: String, image: Int): String =
+        context.getString(R.string.reader_moved_number_elsewhere_image, chapter, image)
+
     /** A notice the first time a series opens with its reading direction guessed. It offers Change. */
     fun readerDetectedRightToLeft(context: Context): String =
         context.getString(R.string.reader_detected_right_to_left)
@@ -785,9 +809,17 @@ object Strings {
     fun readingFailedSourceDown(context: Context, source: String): String =
         context.getString(R.string.reading_failed_source_down, source)
 
+    /** Why something could not load: the source the series reads from is switched off in Your sources. */
+    fun readingFailedSourceOff(context: Context, source: String): String =
+        context.getString(R.string.reading_failed_source_off, source)
+
     /** Why a chapter could not load: the source no longer has it. */
     fun readingFailedNotFound(context: Context): String =
         context.getString(R.string.reading_failed_not_found)
+
+    /** Why a series has no chapters: none of the person's sources holds it, and none was ever picked. */
+    fun readingFailedNoSource(context: Context): String =
+        context.getString(R.string.reading_failed_no_source)
 
     /** Why a chapter or a list could not load: the source refused. The reason comes from the source. */
     fun readingFailedBlocked(context: Context, source: String, reason: String): String =
@@ -800,6 +832,10 @@ object Strings {
     /** Why one page did not load. The status is the server's HTTP status code, such as 404. */
     fun readingFailedPage(context: Context, status: Int): String =
         context.getString(R.string.reading_failed_page, status)
+
+    /** In the reader, in a novel's text, in the box where a picture from the source did not load. Try again sits under it. */
+    fun readingPictureFailed(context: Context): String =
+        context.getString(R.string.reading_picture_failed)
 
     /** Why something could not load: a sign-in is needed. What is a server's or a tracker's name. */
     fun readingFailedSignIn(context: Context, what: String): String =
@@ -824,6 +860,18 @@ object Strings {
     /** Why a chapter could not be saved: the disk is full. */
     fun readingFailedDiskFull(context: Context): String =
         context.getString(R.string.reading_failed_disk_full)
+
+    /** Why a chapter or a file for an e-reader could not be saved: the storage refused the name, because it is too long or has characters the storage doesn't allow. The path is the file's or the folder's. */
+    fun readingFailedWriteName(context: Context, path: String): String =
+        context.getString(R.string.reading_failed_write_name, path)
+
+    /** Why a chapter or a file for an e-reader could not be saved: the storage is read-only, or Kaeri isn't allowed to write there. The path is the file's or the folder's. */
+    fun readingFailedWriteDenied(context: Context, path: String): String =
+        context.getString(R.string.reading_failed_write_denied, path)
+
+    /** Why a chapter or a file for an e-reader could not be saved, for another reason the system gave. The path is the file's or the folder's. */
+    fun readingFailedWrite(context: Context, path: String): String =
+        context.getString(R.string.reading_failed_write, path)
 
     /** Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80. */
     fun readingFailedWebview(context: Context, version: Int): String =
@@ -1093,6 +1141,10 @@ object Strings {
     fun readingRowDownloading(context: Context, done: Int, total: Int): String =
         context.getString(R.string.reading_row_downloading, done, total)
 
+    /** A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count. */
+    fun readingRowDownloadingPlain(context: Context): String =
+        context.getString(R.string.reading_row_downloading_plain)
+
     /** A chapter row's state: the download failed. The reason follows as the next part. */
     fun readingRowFailed(context: Context): String =
         context.getString(R.string.reading_row_failed)
@@ -1124,6 +1176,42 @@ object Strings {
     /** A chapter row: how many versions the person's sources have of it. The row's menu lists them. */
     fun readingRowVersions(context: Context, n: Int): String =
         context.resources.getQuantityString(R.plurals.reading_row_versions, n, n)
+
+    /** A chapter row: the source lists this chapter in parts, and the reader runs through them as one chapter. Shown beside the chapter's name: "Chapter 1, 2 parts". */
+    fun readingRowParts(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_row_parts, n, n)
+
+    /** A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it. Lower case, as the line's other words; an app that starts a line with it capitalises the first letter. */
+    fun readingRowFromGroup(context: Context, group: String): String =
+        context.getString(R.string.reading_row_from_group, group)
+
+    /** A chapter row: the same, for a group in another language than the app's, named after the group. "from Saltmarsh Team, Spanish". */
+    fun readingRowFromGroupIn(context: Context, group: String, language: String): String =
+        context.getString(R.string.reading_row_from_group_in, group, language)
+
+    /** A chapter row: a chapter in parts that is missing some, as no group has released them. The reader runs through the parts there are. Followed by the missing part: "2 of 3 parts". */
+    fun readingRowPartsOf(context: Context, have: Int, n: Int): String =
+        context.getString(R.string.reading_row_parts_of, have, n)
+
+    /** A chapter row, after the parts count: the part no group has released. With several, how many. */
+    fun readingRowPartMissing(context: Context, count: Int, part: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_row_part_missing, count, count, part)
+
+    /** A chapter row: one part of a chapter in parts comes from another group, as the group the series is read from lacks it. "part 2 from Saltmarsh Team". */
+    fun readingRowPartFromGroup(context: Context, part: Int, group: String): String =
+        context.getString(R.string.reading_row_part_from_group, part, group)
+
+    /** The same, for a group in another language than the app's. "part 2 from Saltmarsh Team, Spanish". */
+    fun readingRowPartFromGroupIn(context: Context, part: Int, group: String, language: String): String =
+        context.getString(R.string.reading_row_part_from_group_in, part, group, language)
+
+    /** A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there. Lower case, as the line's other words. */
+    fun readingRowFromSource(context: Context, source: String): String =
+        context.getString(R.string.reading_row_from_source, source)
+
+    /** A quiet line in the reader: pages a series repeats at the start or end of its chapters (a group's credits or notices) were left out of this chapter. Tapping it shows them. */
+    fun readerCreditPagesSkipped(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.reader_credit_pages_skipped, count, count)
 
     /** A chapter row: when it was read or came out, under a minute ago. */
     fun readingAgoNow(context: Context): String =
@@ -1188,6 +1276,10 @@ object Strings {
     /** The source has failed every ask, since a time on another day or not known. */
     fun readingMissDown(context: Context): String =
         context.getString(R.string.reading_miss_down)
+
+    /** The source has no series by the series' names, but has one that may be it in another edition, as a full-colour release. That series is shown under this line, and choosing it confirms it. */
+    fun readingMissPossible(context: Context): String =
+        context.getString(R.string.reading_miss_possible)
 
     /** How many parts of a light novel are downloaded. */
     fun readingDlParts(context: Context, count: Int): String =
@@ -2257,6 +2349,82 @@ object Strings {
     fun einkZoneTap(context: Context): String =
         context.getString(R.string.eink_zone_tap)
 
+    /** E-ink tap zones page: switch for whether a swipe turns the page. Off, only taps, the page buttons and keys turn. */
+    fun einkSwipeTurns(context: Context): String =
+        context.getString(R.string.eink_swipe_turns)
+
+    /** At the foot of the e-ink tap zone guide, which the first touch on the page clears. */
+    fun einkZoneGuideNote(context: Context): String =
+        context.getString(R.string.eink_zone_guide_note)
+
+    /** E-ink tap zones page: the line under the layout Auto. */
+    fun einkTapAutoNote(context: Context): String =
+        context.getString(R.string.eink_tap_auto_note)
+
+    /** E-ink tap zones page: the line under the layout Sides, as drawn for the open book at the standard size, where Next is wider than the other two zones and on the left. */
+    fun einkTapSidesWideLeftNote(context: Context): String =
+        context.getString(R.string.eink_tap_sides_wide_left_note)
+
+    /** E-ink tap zones page: the line under the layout Sides, as drawn for the open book at the standard size, where Next is wider than the other two zones and on the right. */
+    fun einkTapSidesWideRightNote(context: Context): String =
+        context.getString(R.string.eink_tap_sides_wide_right_note)
+
+    /** E-ink tap zones page: the line under the layout Sides, as drawn for the open book at the small size, with Next on the left. */
+    fun einkTapSidesLeftNote(context: Context): String =
+        context.getString(R.string.eink_tap_sides_left_note)
+
+    /** E-ink tap zones page: the line under the layout Sides, as drawn for the open book at the small size, with Next on the right. */
+    fun einkTapSidesRightNote(context: Context): String =
+        context.getString(R.string.eink_tap_sides_right_note)
+
+    /** E-ink tap zones page: the line under the layout L shape, as drawn for the open book, with Next along the bottom edge and up the right side. */
+    fun einkTapLShapeBottomRightNote(context: Context): String =
+        context.getString(R.string.eink_tap_l_shape_bottom_right_note)
+
+    /** E-ink tap zones page: the line under the layout L shape, as drawn for the open book, with Next along the bottom edge and up the left side. */
+    fun einkTapLShapeBottomLeftNote(context: Context): String =
+        context.getString(R.string.eink_tap_l_shape_bottom_left_note)
+
+    /** E-ink tap zones page: the line under the layout L shape, as drawn for the open book with Flip top and bottom on: Next along the top edge and down the right side. */
+    fun einkTapLShapeTopRightNote(context: Context): String =
+        context.getString(R.string.eink_tap_l_shape_top_right_note)
+
+    /** E-ink tap zones page: the line under the layout L shape, as drawn for the open book with Flip top and bottom on: Next along the top edge and down the left side. */
+    fun einkTapLShapeTopLeftNote(context: Context): String =
+        context.getString(R.string.eink_tap_l_shape_top_left_note)
+
+    /** E-ink tap zones page: the line under the layout Wide next. */
+    fun einkTapWideNextNote(context: Context): String =
+        context.getString(R.string.eink_tap_wide_next_note)
+
+    /** E-ink tap zones page: the line under the layout Wide next with Flip top and bottom on, so the controls band is at the bottom. */
+    fun einkTapWideNextFlippedNote(context: Context): String =
+        context.getString(R.string.eink_tap_wide_next_flipped_note)
+
+    /** E-ink tap zones page: the line under the layout Top and bottom. */
+    fun einkTapTopBottomNote(context: Context): String =
+        context.getString(R.string.eink_tap_top_bottom_note)
+
+    /** E-ink tap zones page: the line under the layout Top and bottom with Flip top and bottom on. */
+    fun einkTapTopBottomFlippedNote(context: Context): String =
+        context.getString(R.string.eink_tap_top_bottom_flipped_note)
+
+    /** E-ink tap zones page: the line under the layout Next on both sides. */
+    fun einkTapBothNextNote(context: Context): String =
+        context.getString(R.string.eink_tap_both_next_note)
+
+    /** E-ink tap zones page: the line under the layout Next on both sides with Flip top and bottom on. */
+    fun einkTapBothNextFlippedNote(context: Context): String =
+        context.getString(R.string.eink_tap_both_next_flipped_note)
+
+    /** E-ink tap zones page: the line under the layout Off. */
+    fun einkTapOffNote(context: Context): String =
+        context.getString(R.string.eink_tap_off_note)
+
+    /** E-ink tap zones page: the line under the layout Off while Swipes turn pages is off too, so nothing on the page turns it. */
+    fun einkTapOffKeysNote(context: Context): String =
+        context.getString(R.string.eink_tap_off_keys_note)
+
     /** The page number in the page's margin on an e-ink screen. */
     fun einkFolioOne(context: Context, page: Int, pages: Int): String =
         context.getString(R.string.eink_folio_one, page, pages)
@@ -2276,6 +2444,18 @@ object Strings {
     /** Button in the e-ink reader's top bar that lists the chapters. */
     fun einkContents(context: Context): String =
         context.getString(R.string.eink_contents)
+
+    /** Button in the e-ink reader's top bar on a large panel that downloads the open chapter. */
+    fun einkDownload(context: Context): String =
+        context.getString(R.string.eink_download)
+
+    /** In the e-ink reader's top bar on a large panel once the open chapter is downloading. */
+    fun einkDownloadRunning(context: Context): String =
+        context.getString(R.string.eink_download_running)
+
+    /** In the e-ink reader's top bar on a large panel when the open chapter is on the device. */
+    fun einkDownloadDone(context: Context): String =
+        context.getString(R.string.eink_download_done)
 
     /** Button that goes back out of the reader. */
     fun einkBack(context: Context): String =
@@ -2328,6 +2508,54 @@ object Strings {
     /** The next chapter is downloaded, on the page between chapters. */
     fun einkOnDevice(context: Context): String =
         context.getString(R.string.eink_on_device)
+
+    /** After the pages left in the e-ink reader's bottom bar on a large panel, when the next chapter is downloaded: "16 pages left in chapter · chapter 13 is on this device". */
+    fun einkNextOnDevice(context: Context, chapter: String): String =
+        context.getString(R.string.eink_next_on_device, chapter)
+
+    /** Choice in the e-ink reader's bottom bar on a large panel: one page at a time. */
+    fun einkLayoutOne(context: Context): String =
+        context.getString(R.string.eink_layout_one)
+
+    /** Choice in the e-ink reader's bottom bar on a large panel: two pages side by side. */
+    fun einkLayoutTwo(context: Context): String =
+        context.getString(R.string.eink_layout_two)
+
+    /** Choice in the e-ink reader's bottom bar on a large panel: the page's white borders stay. */
+    fun einkCropOff(context: Context): String =
+        context.getString(R.string.eink_crop_off)
+
+    /** Choice in the e-ink reader's bottom bar on a large panel: the page's white borders are cut. */
+    fun einkCropOn(context: Context): String =
+        context.getString(R.string.eink_crop_on)
+
+    /** Caption under the next chapter's first page, beside the end of a chapter on a large panel. */
+    fun einkEndPreview(context: Context, chapter: String): String =
+        context.getString(R.string.eink_end_preview, chapter)
+
+    /** Heading over the next chapters, under the end of a chapter on a large panel. */
+    fun einkComingUp(context: Context): String =
+        context.getString(R.string.eink_coming_up)
+
+    /** Kicker over a chapter that is slow to open: the series and its volume. */
+    fun einkSlowKicker(context: Context, title: String, volume: String): String =
+        context.getString(R.string.eink_slow_kicker, title, volume)
+
+    /** A chapter still opening after 10 seconds, when other sources of the series can be asked. */
+    fun einkSlowLine(context: Context, source: String): String =
+        context.getString(R.string.eink_slow_line, source)
+
+    /** A chapter still opening after 10 seconds, when no other source of the series has it. */
+    fun einkSlowLineAlone(context: Context, source: String): String =
+        context.getString(R.string.eink_slow_line_alone, source)
+
+    /** A chapter still opening after 10 seconds, before the engine has named the source it asked. */
+    fun einkSlowLineUnnamed(context: Context): String =
+        context.getString(R.string.eink_slow_line_unnamed)
+
+    /** Button on a chapter that is slow to open: lists the series' other sources. */
+    fun einkSlowAnother(context: Context): String =
+        context.getString(R.string.eink_slow_another)
 
     /** The main button on the page between chapters. */
     fun einkContinueTo(context: Context, chapter: String): String =
@@ -2461,13 +2689,13 @@ object Strings {
     fun readerNovelLineScroll(context: Context, chapter: String): String =
         context.getString(R.string.reader_novel_line_scroll, chapter)
 
+    /** Under the novel's title in the reader's controls, while it scrolls, when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own. */
+    fun readerNovelLineScrollNamed(context: Context, name: String): String =
+        context.getString(R.string.reader_novel_line_scroll_named, name)
+
     /** At the end of a scrolling novel's scrubber: the time left in the chapter at the person's pace. */
     fun readerMinutesLeft(context: Context, minutes: Int): String =
         context.getString(R.string.reader_minutes_left, minutes)
-
-    /** Name of the tap zone on the reading side, shown once on the first chapter. */
-    fun readerZoneNext(context: Context): String =
-        context.getString(R.string.reader_zone_next)
 
     /** Heading of the page grid. */
     fun readerGridTitle(context: Context): String =
@@ -2713,10 +2941,6 @@ object Strings {
     fun readerFailedNovel(context: Context): String =
         context.getString(R.string.reader_failed_novel)
 
-    /** Under the end of chapter line when the phone is offline. */
-    fun readerEndTrackerOffline(context: Context, tracker: String): String =
-        context.getString(R.string.reader_end_tracker_offline, tracker)
-
     /** Title of the end page when no source has the next chapter. */
     fun readerEndNone(context: Context, chapter: String): String =
         context.getString(R.string.reader_end_none, chapter)
@@ -2781,18 +3005,6 @@ object Strings {
     fun readerVolumeNone(context: Context): String =
         context.getString(R.string.reader_volume_none)
 
-    /** On the plate of a page that is still loading. */
-    fun readerPagePlate(context: Context, page: Int): String =
-        context.getString(R.string.reader_page_plate, page)
-
-    /** On the plate of a strip image that is still loading. */
-    fun readerImagePlate(context: Context, image: Int): String =
-        context.getString(R.string.reader_image_plate, image)
-
-    /** On a strip image's plate in place of its number after four seconds. */
-    fun readerImageLoading(context: Context, image: Int): String =
-        context.getString(R.string.reader_image_loading, image)
-
     /** Under Opening chapter when it takes more than three seconds. */
     fun readerOpeningFinding(context: Context): String =
         context.getString(R.string.reader_opening_finding)
@@ -2808,14 +3020,6 @@ object Strings {
     /** Paper mode part. */
     fun readerPaperTurn(context: Context): String =
         context.getString(R.string.reader_paper_turn)
-
-    /** Label on the previous page tap zone. */
-    fun readerZonePrevious(context: Context): String =
-        context.getString(R.string.reader_zone_previous)
-
-    /** Label on the middle tap zone. */
-    fun readerZoneControls(context: Context): String =
-        context.getString(R.string.reader_zone_controls)
 
     /** Description of the small A at the start of the text size slider. */
     fun readerSizeSmall(context: Context): String =
@@ -2913,6 +3117,238 @@ object Strings {
     fun einkKeepReadyOff(context: Context): String =
         context.getString(R.string.eink_keep_ready_off)
 
+    /** The underlined link beside the title of the e-reader's Library that opens the View sheet: how the covers are shown, which medium, the order and what is downloaded. */
+    fun einkLibraryView(context: Context): String =
+        context.getString(R.string.eink_library_view)
+
+    /** A side of the medium control on the e-reader's Library and in its View sheet: every series. */
+    fun einkLibraryMediumAll(context: Context): String =
+        context.getString(R.string.eink_library_medium_all)
+
+    /** A side of the medium control on the e-reader's Library: manga, manhwa and webtoons. */
+    fun einkLibraryMediumManga(context: Context): String =
+        context.getString(R.string.eink_library_medium_manga)
+
+    /** A side of the medium control on the e-reader's Library: light novels. */
+    fun einkLibraryMediumNovels(context: Context): String =
+        context.getString(R.string.eink_library_medium_novels)
+
+    /** On a 6 or 7 inch e-reader's Library: the button naming the list shown and how many series it holds, such as "Reading · 23". It opens the lists to choose another. */
+    fun einkLibraryListButton(context: Context, list: String, count: Int): String =
+        context.getString(R.string.eink_library_list_button, list, count)
+
+    /** Title of the sheet on a 6 or 7 inch e-reader's Library that chooses which list to show. */
+    fun einkLibraryListsTitle(context: Context): String =
+        context.getString(R.string.eink_library_lists_title)
+
+    /** A row label in the e-reader Library's View sheet: covers in a grid or rows in a list. */
+    fun einkLibraryShow(context: Context): String =
+        context.getString(R.string.eink_library_show)
+
+    /** A side of Show in the View sheet: the covers in a grid. */
+    fun einkLibraryShowCovers(context: Context): String =
+        context.getString(R.string.eink_library_show_covers)
+
+    /** A side of Show in the View sheet: rows with a small cover. */
+    fun einkLibraryShowList(context: Context): String =
+        context.getString(R.string.eink_library_show_list)
+
+    /** A row label in the View sheet: whether manga, novels or both show. */
+    fun einkLibraryMedium(context: Context): String =
+        context.getString(R.string.eink_library_medium)
+
+    /** A row label in the View sheet: the order of the series. */
+    fun einkLibrarySort(context: Context): String =
+        context.getString(R.string.eink_library_sort)
+
+    /** A side of Sort in the View sheet: the series read most recently first. */
+    fun einkLibrarySortRecent(context: Context): String =
+        context.getString(R.string.eink_library_sort_recent)
+
+    /** A side of Sort in the View sheet: by title, alphabetically. */
+    fun einkLibrarySortTitle(context: Context): String =
+        context.getString(R.string.eink_library_sort_title)
+
+    /** A side of Sort in the View sheet: series with a new chapter first. */
+    fun einkLibrarySortNew(context: Context): String =
+        context.getString(R.string.eink_library_sort_new)
+
+    /** A row label in the View sheet: every series, or only those with chapters downloaded. */
+    fun einkLibraryDownloaded(context: Context): String =
+        context.getString(R.string.eink_library_downloaded)
+
+    /** A side of Downloaded in the View sheet: every series on the list. */
+    fun einkLibraryDownloadedAll(context: Context): String =
+        context.getString(R.string.eink_library_downloaded_all)
+
+    /** A side of Downloaded in the View sheet: only series with chapters on this device. */
+    fun einkLibraryDownloadedHere(context: Context): String =
+        context.getString(R.string.eink_library_downloaded_here)
+
+    /** The note at the foot of the View sheet. The count is how many covers fit a page on this screen. */
+    fun einkLibraryViewNote(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.eink_library_view_note, count, count)
+
+    /** The note at the foot of the View sheet before the covers have been laid out. */
+    fun einkLibraryViewNoteShort(context: Context): String =
+        context.getString(R.string.eink_library_view_note_short)
+
+    /** On the e-reader's Library when the list has series but none match the choices in View. */
+    fun einkLibraryNoneMatch(context: Context, list: String): String =
+        context.getString(R.string.eink_library_none_match, list)
+
+    /** The line under it. */
+    fun einkLibraryNoneMatchLine(context: Context): String =
+        context.getString(R.string.eink_library_none_match_line)
+
+    /** Text button at the end of Keep next chapters ready on a 10 inch e-reader's Downloads. It opens the downloads settings. */
+    fun einkKeepReadyChange(context: Context): String =
+        context.getString(R.string.eink_keep_ready_change)
+
+    /** Text button beside the series in progress on a 10 inch e-reader's Home, next to Continue. It opens the series' page. */
+    fun einkHomeSeriesPage(context: Context): String =
+        context.getString(R.string.eink_home_series_page)
+
+    /** The link at the end of the New chapters heading on a 10 inch e-reader's Home. It opens Updates. */
+    fun einkHomeAllNewChapters(context: Context): String =
+        context.getString(R.string.eink_home_all_new_chapters)
+
+    /** The link at the end of the Browse heading on a 10 inch e-reader's Home, over the discovery rows as chips. It opens the list of every row. */
+    fun einkHomeAllRows(context: Context): String =
+        context.getString(R.string.eink_home_all_rows)
+
+    /** Beside the Genres heading at the foot of Browse on a 10 inch e-reader: where the genres come from. */
+    fun einkBrowseGenresFrom(context: Context): String =
+        context.getString(R.string.eink_browse_genres_from)
+
+    /** Heading on a 10 inch e-reader's Downloads over the chapters downloading or waiting, with how many there are. */
+    fun einkDownloadsDownloadingCount(context: Context, count: Int): String =
+        context.getString(R.string.eink_downloads_downloading_count, count)
+
+    /** Text button at the end of the Downloading heading on a 10 inch e-reader's Downloads. It stops every chapter still to come. */
+    fun einkDownloadsStopAll(context: Context): String =
+        context.getString(R.string.eink_downloads_stop_all)
+
+    /** Heading on a 10 inch e-reader's Downloads over the series with chapters kept here, with how many series. */
+    fun einkDownloadsHereCount(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.eink_downloads_here_count, count, count)
+
+    /** Heading over the first column of rows on a 10 inch e-reader's More: sources, trackers, sync and reader settings. */
+    fun einkMoreYourReading(context: Context): String =
+        context.getString(R.string.eink_more_your_reading)
+
+    /** Heading over the second column of rows on a 10 inch e-reader's More: settings and About. */
+    fun einkMoreThisDevice(context: Context): String =
+        context.getString(R.string.eink_more_this_device)
+
+    /** Heading on a 10 inch e-reader's More over the newest notices and errors, each with its time. */
+    fun einkMoreMessages(context: Context): String =
+        context.getString(R.string.eink_more_messages)
+
+    /** Under Recent messages on a 10 inch e-reader's More while there are none since the app started. */
+    fun einkMoreMessagesNone(context: Context): String =
+        context.getString(R.string.eink_more_messages_none)
+
+    /** Switch under Volume keys turn pages in the phone reader's settings: volume up turns forward instead of volume down. */
+    fun readerRowVolumeSwap(context: Context): String =
+        context.getString(R.string.reader_row_volume_swap)
+
+    /** Heading of the e-ink reader's settings sheet over the rows for the e-ink screen itself. */
+    fun einkSheetScreen(context: Context): String =
+        context.getString(R.string.eink_sheet_screen)
+
+    /** Row in the e-ink reader's settings: a full refresh on every page with a picture. Off by default, so the device's own settings decide how the screen clears. */
+    fun einkRowRefreshImage(context: Context): String =
+        context.getString(R.string.eink_row_refresh_image)
+
+    /** Row in the e-ink reader's settings: how often text pages get a full refresh, or Off, the default. */
+    fun einkRowRefreshText(context: Context): String =
+        context.getString(R.string.eink_row_refresh_text)
+
+    /** Row in the e-ink reader's settings: how often lists get a full refresh as they page, or Off, the default. */
+    fun einkRowRefreshList(context: Context): String =
+        context.getString(R.string.eink_row_refresh_list)
+
+    /** Value of a full refresh row in the e-ink reader's settings: once every so many pages. */
+    fun einkRefreshEvery(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.eink_refresh_every, count, count)
+
+    /** Row in the e-ink reader's settings: which of the screen's own update modes pages are drawn in, shown only where the app can set them. Its choices are the device's setting and the modes below, or Standard, Fast and Best quality on a colour screen with speed modes. */
+    fun einkRowScreenMode(context: Context): String =
+        context.getString(R.string.eink_row_screen_mode)
+
+    /** Choice of Screen mode, and its default: the app leaves the update mode to the device's own settings for this app. */
+    fun einkModeDevice(context: Context): String =
+        context.getString(R.string.eink_mode_device)
+
+    /** Choice of Screen mode: the screen's sharpest grey mode. HD is the name e-readers give this mode. */
+    fun einkModeHd(context: Context): String =
+        context.getString(R.string.eink_mode_hd)
+
+    /** Choice of Screen mode: the screen's mode with the least ghosting on text pages. Regal is the name e-readers give this mode; keep it as the device shows it. */
+    fun einkModeRegal(context: Context): String =
+        context.getString(R.string.eink_mode_regal)
+
+    /** Choice of Screen mode: quicker updates in fewer greys, with a little ghosting. */
+    fun einkModeBalanced(context: Context): String =
+        context.getString(R.string.eink_mode_balanced)
+
+    /** Choice of Screen mode on a colour screen with speed modes: the screen's usual mode. */
+    fun einkSpeedStandard(context: Context): String =
+        context.getString(R.string.eink_speed_standard)
+
+    /** Choice of Screen mode: quicker updates with more ghosting. */
+    fun einkSpeedFast(context: Context): String =
+        context.getString(R.string.eink_speed_fast)
+
+    /** Choice of Screen mode on a colour screen with speed modes: the slowest and cleanest updates. */
+    fun einkSpeedBest(context: Context): String =
+        context.getString(R.string.eink_speed_best)
+
+    /** Row in the e-ink reader's settings on a colour screen: softens the rainbow pattern in colour pictures. */
+    fun einkRowRainbow(context: Context): String =
+        context.getString(R.string.eink_row_rainbow)
+
+    /** Row in the e-ink reader's settings on a colour screen: how strong colours are drawn. */
+    fun einkRowSaturation(context: Context): String =
+        context.getString(R.string.eink_row_saturation)
+
+    /** Row in the e-ink reader's settings on a colour screen: the pictures' contrast. */
+    fun einkRowContrast(context: Context): String =
+        context.getString(R.string.eink_row_contrast)
+
+    /** Value of an amount row in the e-ink reader's settings, such as Text size or Contrast. */
+    fun einkPercent(context: Context, percent: Int): String =
+        context.getString(R.string.eink_percent, percent)
+
+    /** Button that makes a setting in the e-ink reader's settings smaller. */
+    fun einkStepDown(context: Context): String =
+        context.getString(R.string.eink_step_down)
+
+    /** Button that makes a setting in the e-ink reader's settings bigger. */
+    fun einkStepUp(context: Context): String =
+        context.getString(R.string.eink_step_up)
+
+    /** Button before a list setting's value in the e-ink reader's settings, such as Screen mode: picks the choice before. Read out by screen readers. */
+    fun einkStepPrevious(context: Context): String =
+        context.getString(R.string.eink_step_previous)
+
+    /** Button after a list setting's value in the e-ink reader's settings, such as Screen mode: picks the choice after. Read out by screen readers. */
+    fun einkStepNext(context: Context): String =
+        context.getString(R.string.eink_step_next)
+
+    /** Marks the chapter open in the reader on the e-ink contents page. */
+    fun einkContentsReading(context: Context): String =
+        context.getString(R.string.eink_contents_reading)
+
+    /** What TalkBack says the line of skipped credit pages does, after "Double-tap to": an imperative, as Android's click labels are. */
+    fun readerCreditShowAction(context: Context): String =
+        context.getString(R.string.reader_credit_show_action)
+
+    /** What TalkBack says for one layout among the tap zone choices: the layout's name, then where its zones are for the open book ("Sides, Next page on the right side, previous page on the left side, controls in the middle"). The choice's own state, Selected or Not selected, follows it. */
+    fun readerTapLayoutSpoken(context: Context, layout: String, about: String): String =
+        context.getString(R.string.reader_tap_layout_spoken, layout, about)
+
     /** Line under "You're offline" on reading's Home when it has never loaded, so nothing is kept to show. It has an Open Downloads button. */
     fun readHomeOfflineLine(context: Context): String =
         context.getString(R.string.read_home_offline_line)
@@ -2952,6 +3388,46 @@ object Strings {
     /** Screen readers: a reading cover, its title, the line under it and where the person has it. */
     fun readTileSpokenIn(context: Context, title: String, line: String, where: String): String =
         context.getString(R.string.read_tile_spoken_in, title, line, where)
+
+    /** E-ink Search on a large panel, before anything is typed: the heading over the chips that pick which of the person's own sources to search. */
+    fun readSearchIn(context: Context): String =
+        context.getString(R.string.read_search_in)
+
+    /** E-ink Search start: the first chip under Search in, every source the person added. */
+    fun readSearchInAll(context: Context): String =
+        context.getString(R.string.read_search_in_all)
+
+    /** E-ink Search start: the plain note at the end of the Genres heading, where the genres come from. */
+    fun readSearchGenresFrom(context: Context): String =
+        context.getString(R.string.read_search_genres_from)
+
+    /** E-ink Search start: the heading over the format chips. */
+    fun readSearchFormats(context: Context): String =
+        context.getString(R.string.read_search_formats)
+
+    /** E-ink Search start: the line at its foot. A genre or format chip opens Search with that filter and no words. */
+    fun readSearchStartNote(context: Context): String =
+        context.getString(R.string.read_search_start_note)
+
+    /** E-ink Search start with Your sources only ticked: the line at its foot, where AniList is not asked. */
+    fun readSearchStartNoteOwn(context: Context): String =
+        context.getString(R.string.read_search_start_note_own)
+
+    /** E-ink Search results on a large panel: the heading over the results already in the person's library. */
+    fun readSearchGroupLibrary(context: Context): String =
+        context.getString(R.string.read_search_group_library)
+
+    /** E-ink Search results: the heading over AniList's results. */
+    fun readSearchGroupAnilist(context: Context): String =
+        context.getString(R.string.read_search_group_anilist)
+
+    /** E-ink Search results: the heading over one source's results. The source is its name. */
+    fun readSearchGroupSource(context: Context, source: String): String =
+        context.getString(R.string.read_search_group_source, source)
+
+    /** E-ink Search results: the count at the end of a group's heading. */
+    fun readSearchGroupCount(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.read_search_group_count, n, n)
 
     /** Name of the notification channel for new chapters, shown in the system's settings. */
     fun channelChaptersName(context: Context): String =
@@ -3000,6 +3476,34 @@ object Strings {
     /** Downloads' empty line for a person who watches and reads, under "No downloads". */
     fun readDownloadsEmptyBoth(context: Context): String =
         context.getString(R.string.read_downloads_empty_both)
+
+    /** The head of the group menu on a large screen, over its choices: the source the groups are in. */
+    fun groupMenuIn(context: Context, source: String): String =
+        context.getString(R.string.group_menu_in, source)
+
+    /** What TalkBack says the Group row does, after "Double-tap to": an imperative, as Android's click labels are. */
+    fun seriesGroupAction(context: Context): String =
+        context.getString(R.string.series_group_action)
+
+    /** E-ink series page on a large panel: the text button beside the chapter order that starts choosing chapters. */
+    fun seriesSelect(context: Context): String =
+        context.getString(R.string.series_select)
+
+    /** E-ink series page on a large panel: the label over the person's own score, shown as "8 / 10". */
+    fun seriesFactScore(context: Context): String =
+        context.getString(R.string.series_fact_score)
+
+    /** E-ink series page on a large panel: the label over the series' status, "Releasing". */
+    fun seriesFactStatus(context: Context): String =
+        context.getString(R.string.series_fact_status)
+
+    /** E-ink series page on a large panel: the label over how often chapters come out, "Usually Fridays". */
+    fun seriesFactReleases(context: Context): String =
+        context.getString(R.string.series_fact_releases)
+
+    /** E-ink series page on a large panel: the state at the end of an unread chapter row that is downloaded here. */
+    fun seriesRowOnDevice(context: Context): String =
+        context.getString(R.string.series_row_on_device)
 
     /** Line under Notifications in the Settings list: chapter notifications are on. */
     fun settingsSummaryChaptersOn(context: Context): String =
@@ -3920,6 +4424,10 @@ object Strings {
     /** Settings, Downloads: the count of downloaded episodes. */
     fun settingsDownloadsCount(context: Context, count: Int): String =
         context.resources.getQuantityString(R.plurals.settings_downloads_count, count, count)
+
+    /** Settings, Downloads: the count of downloaded chapters of manga, webtoons and books. */
+    fun settingsDownloadsChapters(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.settings_downloads_chapters, count, count)
 
     /** Settings, Accounts: the group about the main tracker. */
     fun settingsAnilistFooter(context: Context): String =
@@ -8778,6 +9286,22 @@ object Strings {
     fun readerPageLoading(context: Context, page: Int): String =
         context.getString(R.string.reader_page_loading, page)
 
+    /** On the plate of a page that is still loading. */
+    fun readerPagePlate(context: Context, page: Int): String =
+        context.getString(R.string.reader_page_plate, page)
+
+    /** On the plate of a strip image that is still loading. */
+    fun readerImagePlate(context: Context, image: Int): String =
+        context.getString(R.string.reader_image_plate, image)
+
+    /** Under a strip image's number after four seconds. */
+    fun readerImageLoading(context: Context, image: Int): String =
+        context.getString(R.string.reader_image_loading, image)
+
+    /** Under a strip image's number (Image 4) when it couldn't be loaded, above Try again. */
+    fun readerImageFailed(context: Context): String =
+        context.getString(R.string.reader_image_failed)
+
     /** Heading where a page could not be loaded. */
     fun readerPageFailed(context: Context, page: Int): String =
         context.getString(R.string.reader_page_failed, page)
@@ -8797,6 +9321,10 @@ object Strings {
     /** Under the end of chapter line, naming the trackers the read went to. */
     fun readerEndTracker(context: Context, trackers: String): String =
         context.getString(R.string.reader_end_tracker, trackers)
+
+    /** Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online. */
+    fun readerEndTrackerOffline(context: Context, tracker: String): String =
+        context.getString(R.string.reader_end_tracker_offline, tracker)
 
     /** Small heading above the next chapter on the page between chapters. */
     fun readerEndNext(context: Context): String =
@@ -8878,17 +9406,221 @@ object Strings {
     fun readerSpreadsWhole(context: Context): String =
         context.getString(R.string.reader_spreads_whole)
 
-    /** A choice for the reader's tap zones: taps near the left and right edges turn the page. */
+    /** A choice for the reader's tap zones: taps near the left and right edges turn the page. Replaced by Sides; kept until every app has the new tap zones page. */
     fun readerTapEdges(context: Context): String =
         context.getString(R.string.reader_tap_edges)
 
-    /** A choice for the reader's tap zones: the left and right halves turn the page. */
+    /** Tap zone layout: Sides when pages turn sideways, L shape when they move downwards. The name under its tile. */
+    fun readerTapAuto(context: Context): String =
+        context.getString(R.string.reader_tap_auto)
+
+    /** Tap zone layout: previous page on one side, next page on the other, controls in the middle. */
     fun readerTapSides(context: Context): String =
         context.getString(R.string.reader_tap_sides)
 
-    /** A choice for the reader's tap zones: taps do not turn the page. */
+    /** Tap zone layout: previous page along the top and down one side, next page along the bottom and down the other side, in the shape of the letter L. */
+    fun readerTapLShape(context: Context): String =
+        context.getString(R.string.reader_tap_l_shape)
+
+    /** Tap zone layout: controls along the top, a narrow column for previous page, and the rest of the page for next page. */
+    fun readerTapWideNext(context: Context): String =
+        context.getString(R.string.reader_tap_wide_next)
+
+    /** Tap zone layout: previous page across the top, next page across the bottom. */
+    fun readerTapTopBottom(context: Context): String =
+        context.getString(R.string.reader_tap_top_bottom)
+
+    /** Tap zone layout: next page down both the left and the right side, previous page in the bottom middle. */
+    fun readerTapBothNext(context: Context): String =
+        context.getString(R.string.reader_tap_both_next)
+
+    /** Tap zone layout: taps only show and hide the controls, and never turn the page. */
     fun readerTapOff(context: Context): String =
         context.getString(R.string.reader_tap_off)
+
+    /** Tap zones page: the choice for paged reading (pages that turn), one of two at the top. */
+    fun readerTapPaged(context: Context): String =
+        context.getString(R.string.reader_tap_paged)
+
+    /** Tap zones page: the choice for strips and scrolled novels, one of two at the top. */
+    fun readerTapScrolling(context: Context): String =
+        context.getString(R.string.reader_tap_scrolling)
+
+    /** Tap zones page: row that sets how wide the zones at the edges are. */
+    fun readerTapSize(context: Context): String =
+        context.getString(R.string.reader_tap_size)
+
+    /** Choice of Zone size: the edge zones are a third of the screen. */
+    fun readerTapStandard(context: Context): String =
+        context.getString(R.string.reader_tap_standard)
+
+    /** Choice of Zone size: the edge zones are a quarter of the screen. */
+    fun readerTapSmall(context: Context): String =
+        context.getString(R.string.reader_tap_small)
+
+    /** Tap zones page: switch that swaps the left and right zones, for the left hand. */
+    fun readerTapFlipSides(context: Context): String =
+        context.getString(R.string.reader_tap_flip_sides)
+
+    /** Tap zones page: switch that swaps the top and bottom zones. */
+    fun readerTapFlipEnds(context: Context): String =
+        context.getString(R.string.reader_tap_flip_ends)
+
+    /** Tap zones page: button that shows the zones over the page. */
+    fun readerTapShow(context: Context): String =
+        context.getString(R.string.reader_tap_show)
+
+    /** Tap zones page, beside Show zones: the setting is not synced. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”. */
+    fun readerTapHere(context: Context, kind: String): String =
+        context.getString(R.string.reader_tap_here, kind)
+
+    /** The reader's settings on a Mac, Windows or Linux: the row that opens the tap zones page, which is about clicks there. */
+    fun readerClickZones(context: Context): String =
+        context.getString(R.string.reader_click_zones)
+
+    /** Name of the tap zone that turns to the next page, in the guide over the page and as a screen reader action. */
+    fun readerZoneNext(context: Context): String =
+        context.getString(R.string.reader_zone_next)
+
+    /** Name of the tap zone that turns to the previous page, in the guide and as a screen reader action. */
+    fun readerZonePrevious(context: Context): String =
+        context.getString(R.string.reader_zone_previous)
+
+    /** Name of the tap zone that shows and hides the reader's controls, in the guide. */
+    fun readerZoneControls(context: Context): String =
+        context.getString(R.string.reader_zone_controls)
+
+    /** Screen reader action on the page that shows the reader's controls. */
+    fun readerZoneShowControls(context: Context): String =
+        context.getString(R.string.reader_zone_show_controls)
+
+    /** Name of the tap zone that scrolls a strip or a scrolled novel down, in the guide. */
+    fun readerZoneScrollDown(context: Context): String =
+        context.getString(R.string.reader_zone_scroll_down)
+
+    /** Name of the tap zone that scrolls a strip or a scrolled novel up, in the guide. */
+    fun readerZoneScrollUp(context: Context): String =
+        context.getString(R.string.reader_zone_scroll_up)
+
+    /** Under Controls in the tap zone guide: where the zones are changed. */
+    fun readerZoneChange(context: Context): String =
+        context.getString(R.string.reader_zone_change)
+
+    /** Tap zone layout Off in words, the accessibility value of its tile. */
+    fun readerTapOffAbout(context: Context): String =
+        context.getString(R.string.reader_tap_off_about)
+
+    /** Tap zone layout in words, the accessibility value of its tile: Sides, next page on the right. */
+    fun readerTapSidesRightAbout(context: Context): String =
+        context.getString(R.string.reader_tap_sides_right_about)
+
+    /** Tap zone layout in words, the accessibility value of its tile: Sides, next page on the left. */
+    fun readerTapSidesLeftAbout(context: Context): String =
+        context.getString(R.string.reader_tap_sides_left_about)
+
+    /** Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the right. */
+    fun readerTapLShapeBottomRightAbout(context: Context): String =
+        context.getString(R.string.reader_tap_l_shape_bottom_right_about)
+
+    /** Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the left. */
+    fun readerTapLShapeBottomLeftAbout(context: Context): String =
+        context.getString(R.string.reader_tap_l_shape_bottom_left_about)
+
+    /** Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right. */
+    fun readerTapLShapeTopRightAbout(context: Context): String =
+        context.getString(R.string.reader_tap_l_shape_top_right_about)
+
+    /** Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left. */
+    fun readerTapLShapeTopLeftAbout(context: Context): String =
+        context.getString(R.string.reader_tap_l_shape_top_left_about)
+
+    /** Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the left. */
+    fun readerTapWideNextTopLeftAbout(context: Context): String =
+        context.getString(R.string.reader_tap_wide_next_top_left_about)
+
+    /** Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the right. */
+    fun readerTapWideNextTopRightAbout(context: Context): String =
+        context.getString(R.string.reader_tap_wide_next_top_right_about)
+
+    /** Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left. */
+    fun readerTapWideNextBottomLeftAbout(context: Context): String =
+        context.getString(R.string.reader_tap_wide_next_bottom_left_about)
+
+    /** Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right. */
+    fun readerTapWideNextBottomRightAbout(context: Context): String =
+        context.getString(R.string.reader_tap_wide_next_bottom_right_about)
+
+    /** Tap zone layout in words, the accessibility value of its tile: Top and bottom. */
+    fun readerTapTopBottomAbout(context: Context): String =
+        context.getString(R.string.reader_tap_top_bottom_about)
+
+    /** Tap zone layout in words, the accessibility value of its tile: Top and bottom flipped. */
+    fun readerTapTopBottomFlippedAbout(context: Context): String =
+        context.getString(R.string.reader_tap_top_bottom_flipped_about)
+
+    /** Tap zone layout in words, the accessibility value of its tile: Next on both sides. */
+    fun readerTapBothNextAbout(context: Context): String =
+        context.getString(R.string.reader_tap_both_next_about)
+
+    /** Tap zone layout in words, the accessibility value of its tile: Next on both sides flipped top and bottom. */
+    fun readerTapBothNextFlippedAbout(context: Context): String =
+        context.getString(R.string.reader_tap_both_next_flipped_about)
+
+    /** Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the right. */
+    fun readerTapSidesRightScrollAbout(context: Context): String =
+        context.getString(R.string.reader_tap_sides_right_scroll_about)
+
+    /** Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the left. */
+    fun readerTapSidesLeftScrollAbout(context: Context): String =
+        context.getString(R.string.reader_tap_sides_left_scroll_about)
+
+    /** Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the right. */
+    fun readerTapLShapeBottomRightScrollAbout(context: Context): String =
+        context.getString(R.string.reader_tap_l_shape_bottom_right_scroll_about)
+
+    /** Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the left. */
+    fun readerTapLShapeBottomLeftScrollAbout(context: Context): String =
+        context.getString(R.string.reader_tap_l_shape_bottom_left_scroll_about)
+
+    /** Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right. */
+    fun readerTapLShapeTopRightScrollAbout(context: Context): String =
+        context.getString(R.string.reader_tap_l_shape_top_right_scroll_about)
+
+    /** Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left. */
+    fun readerTapLShapeTopLeftScrollAbout(context: Context): String =
+        context.getString(R.string.reader_tap_l_shape_top_left_scroll_about)
+
+    /** Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the left. */
+    fun readerTapWideNextTopLeftScrollAbout(context: Context): String =
+        context.getString(R.string.reader_tap_wide_next_top_left_scroll_about)
+
+    /** Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the right. */
+    fun readerTapWideNextTopRightScrollAbout(context: Context): String =
+        context.getString(R.string.reader_tap_wide_next_top_right_scroll_about)
+
+    /** Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left. */
+    fun readerTapWideNextBottomLeftScrollAbout(context: Context): String =
+        context.getString(R.string.reader_tap_wide_next_bottom_left_scroll_about)
+
+    /** Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right. */
+    fun readerTapWideNextBottomRightScrollAbout(context: Context): String =
+        context.getString(R.string.reader_tap_wide_next_bottom_right_scroll_about)
+
+    /** Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom. */
+    fun readerTapTopBottomScrollAbout(context: Context): String =
+        context.getString(R.string.reader_tap_top_bottom_scroll_about)
+
+    /** Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom flipped. */
+    fun readerTapTopBottomFlippedScrollAbout(context: Context): String =
+        context.getString(R.string.reader_tap_top_bottom_flipped_scroll_about)
+
+    /** Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides. */
+    fun readerTapBothNextScrollAbout(context: Context): String =
+        context.getString(R.string.reader_tap_both_next_scroll_about)
+
+    /** Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides flipped top and bottom. */
+    fun readerTapBothNextFlippedScrollAbout(context: Context): String =
+        context.getString(R.string.reader_tap_both_next_flipped_scroll_about)
 
     /** Button in the reader's controls that opens the chapters and the page grid. */
     fun readerChapters(context: Context): String =
@@ -8934,6 +9666,10 @@ object Strings {
     fun readerEndOfChapterNumber(context: Context, chapter: String): String =
         context.getString(R.string.reader_end_of_chapter_number, chapter)
 
+    /** Top line of the page between chapters when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own, such as Rooftop Lantern. */
+    fun readerEndOfNamed(context: Context, name: String): String =
+        context.getString(R.string.reader_end_of_named, name)
+
     /** The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written. */
     fun readerEndFacts(context: Context, chapter: String, facts: String): String =
         context.getString(R.string.reader_end_facts, chapter, facts)
@@ -8958,6 +9694,18 @@ object Strings {
     fun readerEndSwipe(context: Context): String =
         context.getString(R.string.reader_end_swipe)
 
+    /** Button beside Continue on the page between chapters, shown only when the next chapter is an extra (such as 16.5 between 16 and 17). It opens the chapter named, passing over the extras before it. The chapter is its number, such as 17. */
+    fun readerEndSkipTo(context: Context, chapter: String): String =
+        context.getString(R.string.reader_end_skip_to, chapter)
+
+    /** What a screen reader adds after "Skip to chapter 17": the extra it passes over stays unread in the chapter list. The chapter is the extra's number, such as 16.5. */
+    fun readerEndSkipHint(context: Context, chapter: String): String =
+        context.getString(R.string.reader_end_skip_hint, chapter)
+
+    /** What a screen reader adds after "Skip to chapter 17" when it passes over more than one extra, or an extra with no number (such as an omake): those chapters stay unread in the chapter list. */
+    fun readerEndSkipHintExtras(context: Context): String =
+        context.getString(R.string.reader_end_skip_hint_extras)
+
     /** The next episode's length on the divider inside a strip. */
     fun readerDividerImages(context: Context, count: Int): String =
         context.resources.getQuantityString(R.plurals.reader_divider_images, count, count)
@@ -8965,6 +9713,74 @@ object Strings {
     /** Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12. */
     fun readerChapterLineTitled(context: Context, chapter: String, title: String): String =
         context.getString(R.string.reader_chapter_line_titled, chapter, title)
+
+    /** The reader's opening line while the series' source sends its chapter list. */
+    fun readerWaitChapterList(context: Context, source: String): String =
+        context.getString(R.string.reader_wait_chapter_list, source)
+
+    /** The reader's opening line while the source sends the chapter's pages or text. */
+    fun readerWaitChapterPages(context: Context, chapter: String, source: String): String =
+        context.getString(R.string.reader_wait_chapter_pages, chapter, source)
+
+    /** The opening line after a few seconds, with how long it has waited so far. */
+    fun readerWaitSeconds(context: Context, line: String, seconds: Int): String =
+        context.getString(R.string.reader_wait_seconds, line, seconds)
+
+    /** Under the opening line once the wait has gone on for a long time, above Read from another source and Go back. */
+    fun readerWaitLong(context: Context): String =
+        context.getString(R.string.reader_wait_long)
+
+    /** Beside the line that says how many credit pages were skipped, on the end page and in a long strip. Tapping it shows them. */
+    fun readerCreditShow(context: Context): String =
+        context.getString(R.string.reader_credit_show)
+
+    /** Spoken hint of the line that says how many credit pages were skipped. */
+    fun readerCreditShowHint(context: Context): String =
+        context.getString(R.string.reader_credit_show_hint)
+
+    /** Notice over a credit page shown again, and the caption above it in a long strip. */
+    fun readerCreditShown(context: Context): String =
+        context.getString(R.string.reader_credit_shown)
+
+    /** The notice's action on a shown credit page: show this page from now on. */
+    fun readerCreditNot(context: Context): String =
+        context.getString(R.string.reader_credit_not)
+
+    /** Notice after Not a credit page, with Undo. */
+    fun readerCreditKept(context: Context): String =
+        context.getString(R.string.reader_credit_kept)
+
+    /** In the reader's line in place of a page number, while a credit page shows: "Chapter 87 · credit page". */
+    fun readerCreditPage(context: Context): String =
+        context.getString(R.string.reader_credit_page)
+
+    /** The same, when more than one credit page is shown: "credit page 1 of 2". */
+    fun readerCreditPageOf(context: Context, n: Int, total: Int): String =
+        context.getString(R.string.reader_credit_page_of, n, total)
+
+    /** The reader's line under the title while a credit page shows: the chapter, then "credit page" or "credit page 1 of 2". */
+    fun readerGroupLinePlace(context: Context, chapter: String, place: String): String =
+        context.getString(R.string.reader_group_line_place, chapter, place)
+
+    /** Spoken name of a credit page shown again. */
+    fun readerCreditPageLabel(context: Context): String =
+        context.getString(R.string.reader_credit_page_label)
+
+    /** Notice when a skipped credit page's picture can't be read, so it can't be shown. */
+    fun readerCreditFailed(context: Context): String =
+        context.getString(R.string.reader_credit_failed)
+
+    /** The scrubber's preview on the first page of a chapter's later part. */
+    fun readerPartPreview(context: Context, page: Int, part: Int): String =
+        context.getString(R.string.reader_part_preview, page, part)
+
+    /** The same, when the part before it is missing from every group: "Page 14 · part 4 · part 3 missing". */
+    fun readerPartPreviewMissing(context: Context, page: Int, part: Int, missing: Int): String =
+        context.getString(R.string.reader_part_preview_missing, page, part, missing)
+
+    /** Spoken value of the scrubber on the first page of a chapter's later part. */
+    fun readerPartStarts(context: Context, part: Int, page: Int): String =
+        context.getString(R.string.reader_part_starts, part, page)
 
     /** Button in the first run that opens the reading demo. */
     fun onboardingReadDemo(context: Context): String =
@@ -9274,7 +10090,11 @@ object Strings {
     fun actionContinueNamedPlain(context: Context, label: String): String =
         context.getString(R.string.action_continue_named_plain, label)
 
-    /** The main action for a light novel part not opened yet, named in the source's own words. */
+    /** The main action for a chapter part read that has no number, named by its own title ("Oneshot", "Extra"). */
+    fun actionContinueNamedPage(context: Context, label: String, page: Int): String =
+        context.getString(R.string.action_continue_named_page, label, page)
+
+    /** The main action for a light novel part not opened yet, named in the source's own words, and for a chapter with no number, named by its own title ("Read Oneshot"). */
     fun actionReadNamed(context: Context, label: String): String =
         context.getString(R.string.action_read_named, label)
 
@@ -9302,6 +10122,42 @@ object Strings {
     fun seriesPreferredGroup(context: Context): String =
         context.getString(R.string.series_preferred_group)
 
+    /** Label of the series page's row for the group whose version of each chapter the series lists, inside the source in use. Its value is the group's name. */
+    fun seriesGroup(context: Context): String =
+        context.getString(R.string.series_group)
+
+    /** After the group's name on the Group row: it is in use because it has the most chapters. */
+    fun seriesGroupMost(context: Context): String =
+        context.getString(R.string.series_group_most)
+
+    /** After the group's name on the Group row: the person picked it. */
+    fun seriesGroupPicked(context: Context): String =
+        context.getString(R.string.series_group_picked)
+
+    /** Spoken hint of the Group row's Change button. */
+    fun seriesGroupHint(context: Context): String =
+        context.getString(R.string.series_group_hint)
+
+    /** Under the group picker's title: the source the groups are in. */
+    fun groupPickerIn(context: Context, source: String): String =
+        context.getString(R.string.group_picker_in, source)
+
+    /** The group picker's first choice: the group with the most chapters, whichever that is. */
+    fun groupPickerMost(context: Context): String =
+        context.getString(R.string.group_picker_most)
+
+    /** Under Most chapters: the group that means today. */
+    fun groupPickerMostNow(context: Context, group: String): String =
+        context.getString(R.string.group_picker_most_now, group)
+
+    /** A group in the picker: how many of the series' chapters it has released. Its language follows, after a middle dot. */
+    fun groupPickerCount(context: Context, have: Int, total: Int): String =
+        context.resources.getQuantityString(R.plurals.group_picker_count, total, have, total)
+
+    /** Under the group picker's choices. */
+    fun groupPickerFallback(context: Context): String =
+        context.getString(R.string.group_picker_fallback)
+
     /** A tracker's progress in chapters, with the total. */
     fun seriesTrackerChaptersOf(context: Context, n: Int, total: Int): String =
         context.resources.getQuantityString(R.plurals.series_tracker_chapters_of, total, n, total)
@@ -9309,6 +10165,10 @@ object Strings {
     /** A tracker's progress in chapters, total unknown. */
     fun seriesTrackerChapters(context: Context, n: Int): String =
         context.resources.getQuantityString(R.plurals.series_tracker_chapters, n, n)
+
+    /** A tracker's progress when the person has read none of the series yet, in place of "0 chapters". */
+    fun seriesTrackerNotStarted(context: Context): String =
+        context.getString(R.string.series_tracker_not_started)
 
     /** A tracker's progress in chapters, then the volume. */
     fun seriesTrackerWithVolume(context: Context, chapters: String, volume: Int): String =
@@ -9438,6 +10298,18 @@ object Strings {
     fun seriesNoChaptersLine(context: Context): String =
         context.getString(R.string.series_no_chapters_line)
 
+    /** The chapter list when none of the person's sources holds the series and none was picked: an empty state, not a failure. Its button opens Read from. */
+    fun seriesNoSourceTitle(context: Context): String =
+        context.getString(R.string.series_no_source_title)
+
+    /** Line under it. */
+    fun seriesNoSourceLine(context: Context): String =
+        context.getString(R.string.series_no_source_line)
+
+    /** Its button: opens Read from, where each source can be searched by another name. */
+    fun seriesNoSourceSearch(context: Context): String =
+        context.getString(R.string.series_no_source_search)
+
     /** The chapter list when the source failed. Downloaded chapters are listed under it. */
     fun seriesChaptersFailed(context: Context, source: String): String =
         context.getString(R.string.series_chapters_failed, source)
@@ -9510,6 +10382,10 @@ object Strings {
     fun chapterStateDownloading(context: Context, done: Int, total: Int): String =
         context.getString(R.string.chapter_state_downloading, done, total)
 
+    /** A chapter downloading before its page count is known, and throughout for a novel's chapter. */
+    fun chapterStateDownloadingPlain(context: Context): String =
+        context.getString(R.string.chapter_state_downloading_plain)
+
     /** A chapter that failed to download, with the reason. */
     fun chapterStateFailed(context: Context, reason: String): String =
         context.getString(R.string.chapter_state_failed, reason)
@@ -9549,6 +10425,10 @@ object Strings {
     /** Download menu item. */
     fun downloadUnread(context: Context): String =
         context.getString(R.string.download_unread)
+
+    /** Short note after Next 5 or Next 10 unread when those chapters are all on this device already. */
+    fun downloadAlready(context: Context): String =
+        context.getString(R.string.download_already)
 
     /** Download menu item: a volume's chapters not yet downloaded. */
     fun downloadVolumeCount(context: Context, volume: String, n: Int): String =
@@ -9605,6 +10485,22 @@ object Strings {
     /** A source's chapters, after its kind on the line. */
     fun seriesReadFromChaptersLater(context: Context, latest: String): String =
         context.getString(R.string.series_read_from_chapters_later, latest)
+
+    /** A source's line while it is asked for its chapter list, first on its line. */
+    fun seriesReadFromChecking(context: Context): String =
+        context.getString(R.string.series_read_from_checking)
+
+    /** The same, after its kind on the line. */
+    fun seriesReadFromCheckingLater(context: Context): String =
+        context.getString(R.string.series_read_from_checking_later)
+
+    /** A source that answered with no chapters for this series, first on its line. */
+    fun seriesReadFromEmpty(context: Context): String =
+        context.getString(R.string.series_read_from_empty)
+
+    /** The same, after its kind on the line. */
+    fun seriesReadFromEmptyLater(context: Context): String =
+        context.getString(R.string.series_read_from_empty_later)
 
     /** After a folder's chapters. */
     fun seriesReadFromOnDevice(context: Context, device: String): String =
@@ -9947,10 +10843,6 @@ object Strings {
         context.getString(R.string.read_search_clear_filters)
 
     /** A sort of reading's Search, AniList's. */
-    fun readSortPopular(context: Context): String =
-        context.getString(R.string.read_sort_popular)
-
-    /** A sort of reading's Search, AniList's. */
     fun readSortTrending(context: Context): String =
         context.getString(R.string.read_sort_trending)
 
@@ -9969,6 +10861,10 @@ object Strings {
     /** A filter. */
     fun readFilterOrigin(context: Context): String =
         context.getString(R.string.read_filter_origin)
+
+    /** The first choice of the Origin filter's menu in reading's Search once an origin is set: it takes them all off. */
+    fun readFilterAnyOrigin(context: Context): String =
+        context.getString(R.string.read_filter_any_origin)
 
     /** A filter. */
     fun readFilterStatus(context: Context): String =
@@ -10492,9 +11388,37 @@ object Strings {
     fun settingsCountsReadMarked(context: Context): String =
         context.getString(R.string.settings_counts_read_marked)
 
+    /** Reader default for manga: pages a group repeats at the start or end of its chapters are left out. */
+    fun settingsSkipCredits(context: Context): String =
+        context.getString(R.string.settings_skip_credits)
+
+    /** Line under Skip credit pages. */
+    fun settingsSkipCreditsNote(context: Context): String =
+        context.getString(R.string.settings_skip_credits_note)
+
     /** Line under Counts as read when it is When you mark it. */
     fun settingsCountsReadMarkedNote(context: Context): String =
         context.getString(R.string.settings_counts_read_marked_note)
+
+    /** Group in the Reading pane: how this device's screen is drawn. */
+    fun settingsScreenGroup(context: Context): String =
+        context.getString(R.string.settings_screen_group)
+
+    /** Row in Screen: the e-ink layout, on or off. */
+    fun settingsEinkLayout(context: Context): String =
+        context.getString(R.string.settings_eink_layout)
+
+    /** Line under E-ink layout. */
+    fun settingsEinkLayoutNote(context: Context): String =
+        context.getString(R.string.settings_eink_layout_note)
+
+    /** Row in Screen, with the e-ink layout on: the panel shows colour. */
+    fun settingsEinkColour(context: Context): String =
+        context.getString(R.string.settings_eink_colour)
+
+    /** Line under Colour screen. */
+    fun settingsEinkColourNote(context: Context): String =
+        context.getString(R.string.settings_eink_colour_note)
 
     /** Group: series settings that follow you to your other devices. */
     fun settingsFollowGroup(context: Context): String =
@@ -10556,6 +11480,10 @@ object Strings {
     fun settingsDeleteAfterReadingNote(context: Context): String =
         context.getString(R.string.settings_delete_after_reading_note)
 
+    /** Line under Show volumes: the list is grouped only when most chapters have a volume. */
+    fun settingsShowVolumesNote(context: Context): String =
+        context.getString(R.string.settings_show_volumes_note)
+
     /** Line under New chapters. */
     fun settingsChapterNotificationsNote(context: Context): String =
         context.getString(R.string.settings_chapter_notifications_note)
@@ -10595,6 +11523,10 @@ object Strings {
     /** A series' line in Downloads when a chapter failed, with the reason. */
     fun readDownloadsFailed(context: Context, chapter: String, reason: String): String =
         context.getString(R.string.read_downloads_failed, chapter, reason)
+
+    /** Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows. */
+    fun readDownloadNotStarted(context: Context, reason: String): String =
+        context.getString(R.string.read_download_not_started, reason)
 
     /** A series' line in Downloads: how many chapters are kept. */
     fun readDownloadsKept(context: Context, n: Int): String =
@@ -10703,6 +11635,14 @@ object Strings {
     /** Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing. */
     fun sendShareAgain(context: Context): String =
         context.getString(R.string.send_share_again)
+
+    /** A ready send whose files were cleared before they were shared or saved, in the Send to e-reader sheet and in the send's row. Prepared files are kept for a day. */
+    fun sendFilesGone(context: Context): String =
+        context.getString(R.string.send_files_gone)
+
+    /** Button on a send whose files are gone: prepares the same chapters for the same e-reader again. */
+    fun sendAgain(context: Context): String =
+        context.getString(R.string.send_again)
 
     /** A send in a list or banner that is under way, with a ring beside it. The device is the e-reader. */
     fun sendBanner(context: Context, device: String): String =
@@ -11884,6 +12824,10 @@ object Strings {
     fun settingsAdultDetail(context: Context, tracker: String): String =
         context.getString(R.string.settings_adult_detail, tracker)
 
+    /** Line under it when the app is for reading alone. */
+    fun settingsAdultDetailRead(context: Context, tracker: String): String =
+        context.getString(R.string.settings_adult_detail_read, tracker)
+
     /** Row: quality. */
     fun settingsQuality(context: Context): String =
         context.getString(R.string.settings_quality)
@@ -12035,6 +12979,10 @@ object Strings {
     /** Row: delete a downloaded chapter once it is read. Bookmarked chapters stay. */
     fun settingsDeleteAfterReading(context: Context): String =
         context.getString(R.string.settings_delete_after_reading)
+
+    /** Row: group a series' chapters under volume headings. Off by default. */
+    fun settingsShowVolumes(context: Context): String =
+        context.getString(R.string.settings_show_volumes)
 
     /** Row: whether a series' reader mode, direction and colour follow you to your other devices. */
     fun settingsSeriesChoicesFollow(context: Context): String =
@@ -12315,6 +13263,10 @@ object Strings {
     /** Line under a signed-in account while changes wait to be sent. */
     fun accountsChangesWaiting(context: Context, count: Int): String =
         context.resources.getQuantityString(R.plurals.accounts_changes_waiting, count, count)
+
+    /** Line under a signed-in account when nothing else waits but some changes can't go out yet: the { -tracker } has no match for those titles. They go out by themselves once it has one. */
+    fun accountsChangesHeld(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.accounts_changes_held, count, count)
 
     /** Choice for the download quality: larger files with more detail. */
     fun settingsQualityHigher(context: Context): String =
@@ -12743,6 +13695,22 @@ object Strings {
     /** Primary action after an empty folder. */
     fun bookFolderChooseOther(context: Context): String =
         context.getString(R.string.book_folder_choose_other)
+
+    /** Folder result title when the picked folder is already a source. It was scanned again. */
+    fun bookFolderAlready(context: Context, folder: String): String =
+        context.getString(R.string.book_folder_already, folder)
+
+    /** Line under it: what the new scan found. Closing the sheet keeps the folder. */
+    fun bookFolderAlreadyLine(context: Context, series: Int): String =
+        context.resources.getQuantityString(R.plurals.book_folder_already_line, series, series)
+
+    /** Title when a folder could not be read: the look through it could not start, or stopped. */
+    fun bookFolderUnreadable(context: Context, folder: String): String =
+        context.getString(R.string.book_folder_unreadable, folder)
+
+    /** Line under it. */
+    fun bookFolderUnreadableLine(context: Context): String =
+        context.getString(R.string.book_folder_unreadable_line)
 
     /** Title of the Join a plugin store sheet. */
     fun storeJoinTitle(context: Context): String =
@@ -14023,6 +14991,10 @@ object Strings {
     fun storesOffersPlugins(context: Context, count: Int): String =
         context.resources.getQuantityString(R.plurals.stores_offers_plugins, count, count)
 
+    /** Heading over the store's plugins in the join dialog on a large e-ink panel. The count sits beside it. */
+    fun storesPreviewPlugins(context: Context): String =
+        context.getString(R.string.stores_preview_plugins)
+
     /** Button of a notice that opens the plugin stores page. */
     fun noticeOpenStores(context: Context): String =
         context.getString(R.string.notice_open_stores)
@@ -14848,6 +15820,9 @@ object Strings {
     fun deviceKindTv(context: Context): String =
         context.getString(R.string.device_kind_tv)
 
+    fun deviceKindOther(context: Context): String =
+        context.getString(R.string.device_kind_other)
+
     /** TV welcome, text button. */
     fun firstSetupPhone(context: Context): String =
         context.getString(R.string.first_setup_phone)
@@ -15008,9 +15983,9 @@ object Strings {
     fun titleMoreAbout(context: Context): String =
         context.getString(R.string.title_more_about)
 
-    /** Accessibility hint of the button that expands a synopsis. */
-    fun titleSynopsisHint(context: Context): String =
-        context.getString(R.string.title_synopsis_hint)
+    /** Accessible name of the More at the end of a cut synopsis, which shows the rest of it. The page's menu of extra actions is called More too, so this one says what it does. */
+    fun titleSynopsisMore(context: Context): String =
+        context.getString(R.string.title_synopsis_more)
 
     /** Label under a season: which episodes are dubbed so far. */
     fun titleDubbedTo(context: Context, episode: Int): String =

@@ -5849,6 +5849,15 @@
   <data name="ReaderPageLoading" xml:space="preserve">
     <value>Đang tải trang {page}</value>
   </data>
+  <data name="ReaderPagePlate" xml:space="preserve">
+    <value>Trang {page}</value>
+  </data>
+  <data name="ReaderImagePlate" xml:space="preserve">
+    <value>Ảnh {image}</value>
+  </data>
+  <data name="ReaderImageLoading" xml:space="preserve">
+    <value>Đang tải ảnh {image}</value>
+  </data>
   <data name="ReaderPageFailed" xml:space="preserve">
     <value>Không tải được trang {page}</value>
   </data>
@@ -5863,6 +5872,9 @@
   </data>
   <data name="ReaderEndTracker" xml:space="preserve">
     <value>Đã tính là đã đọc · đã cập nhật {trackers}</value>
+  </data>
+  <data name="ReaderEndTrackerOffline" xml:space="preserve">
+    <value>Đã tính là đã đọc · {tracker} sẽ cập nhật khi bạn có mạng lại</value>
   </data>
   <data name="ReaderEndNext" xml:space="preserve">
     <value>Kế tiếp</value>
@@ -5927,11 +5939,17 @@
   <data name="ReaderTapEdges" xml:space="preserve">
     <value>Hai mép</value>
   </data>
-  <data name="ReaderTapSides" xml:space="preserve">
-    <value>Hai nửa</value>
-  </data>
   <data name="ReaderTapOff" xml:space="preserve">
     <value>Tắt</value>
+  </data>
+  <data name="ReaderZoneNext" xml:space="preserve">
+    <value>Trang sau</value>
+  </data>
+  <data name="ReaderZonePrevious" xml:space="preserve">
+    <value>Trang trước</value>
+  </data>
+  <data name="ReaderZoneControls" xml:space="preserve">
+    <value>Điều khiển</value>
   </data>
   <data name="ReaderChapters" xml:space="preserve">
     <value>Các chương</value>
@@ -6724,9 +6742,6 @@
   </data>
   <data name="ReadSearchClearFilters" xml:space="preserve">
     <value>Xóa bộ lọc</value>
-  </data>
-  <data name="ReadSortPopular" xml:space="preserve">
-    <value>Phổ biến</value>
   </data>
   <data name="ReadSortTrending" xml:space="preserve">
     <value>Thịnh hành</value>
@@ -10438,9 +10453,6 @@
   </data>
   <data name="TitleMoreAbout" xml:space="preserve">
     <value>Xem thêm về tác phẩm này</value>
-  </data>
-  <data name="TitleSynopsisHint" xml:space="preserve">
-    <value>Hiển thị toàn bộ tóm tắt</value>
   </data>
   <data name="TitleDubbedTo" xml:space="preserve">
     <value>Lồng tiếng đến tập {episode}</value>

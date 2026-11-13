@@ -38,6 +38,8 @@ use super::{Ask, Kit, home, search, tiles};
 use crate::{outbox::Outbox, read_sources::BookSources};
 
 mod lists;
+mod new_source;
+mod series_open;
 
 const DAY: i64 = 86_400;
 // Noon UTC on 14 November 2023, read in UTC.
@@ -231,6 +233,62 @@ async fn a_cold_home_asks_four_times_and_a_warm_one_not_at_all() {
     let warm = whole_home(&mut rx).await;
     assert_eq!(books_asked(&fake), 4, "a warm Home asks for nothing");
     assert_eq!(warm.rows, cold.rows);
+}
+
+/// Home is offline while the path is gone and online again once it is back, though every row is
+/// still fresh and nothing is asked: the path coming back says Home again without the app asking.
+#[tokio::test]
+async fn home_is_online_again_once_the_path_is_back() {
+    let fake = FakeAniList::start().await;
+    fake.add_books(popular("MANGA", 911_000));
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(Some(&fake), dir.path());
+    let (tx, mut rx) = outbox();
+    home::load(&kit, ask(), false, &tx);
+    assert!(!whole_home(&mut rx).await.offline);
+    loaded(&kit, &mut rx).await;
+    let asked = books_asked(&fake);
+
+    kit.offline.store(true, Ordering::Relaxed);
+    home::path_moved(&kit, ask(), &tx);
+    assert!(whole_home(&mut rx).await.offline, "said offline at once");
+    home::load(&kit, ask(), false, &tx);
+    assert!(whole_home(&mut rx).await.offline, "offline while the path is gone");
+    loaded(&kit, &mut rx).await;
+
+    // Back: the engine says Home again by itself, and Home opened again says the same.
+    kit.offline.store(false, Ordering::Relaxed);
+    home::path_moved(&kit, ask(), &tx);
+    let back = whole_home(&mut rx).await;
+    assert!(!back.offline, "online once the path is back: {:?}", back.offline_since);
+    loaded(&kit, &mut rx).await;
+    home::load(&kit, ask(), false, &tx);
+    assert!(!whole_home(&mut rx).await.offline);
+    assert_eq!(books_asked(&fake), asked, "every row is fresh: nothing is asked");
+}
+
+/// Waits for Home's load to end, then drops what it said, so the next view read is the next
+/// step's. The load's last view is sent with no wait after it is marked done.
+async fn loaded(kit: &Kit, rx: &mut mpsc::UnboundedReceiver<Event>) {
+    let running = || kit.sources.catalog.home.lock().unwrap().running;
+    tokio::time::timeout(PATIENCE, async {
+        while running() {
+            tokio::time::sleep(std::time::Duration::from_millis(5)).await;
+        }
+    })
+    .await
+    .expect("the load ends");
+    while rx.try_recv().is_ok() {}
+}
+
+/// A Home never opened is not loaded by the path changing.
+#[tokio::test]
+async fn the_path_changing_loads_no_home_never_opened() {
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(None, dir.path());
+    let (tx, mut rx) = outbox();
+    home::path_moved(&kit, ask(), &tx);
+    assert!(rx.try_recv().is_err(), "nothing said");
 }
 
 #[tokio::test]
@@ -696,6 +754,167 @@ async fn your_sources_only_leaves_anilist_out() {
     while let Ok(event) = rx.try_recv() {
         assert!(!matches!(event, Event::Reading(ReadingEvent::Search { .. })), "{event:?}");
     }
+}
+
+/// Search in one source: the words go to that source alone. The others get no request, not
+/// even when a source joins while the search shows, and their groups are not drawn.
+#[tokio::test]
+async fn a_scoped_search_asks_only_the_sources_in_its_scope() {
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(None, dir.path());
+    let wren = vec![hit("w-1", "Wren and the Iron Bridge", None)];
+    let near = Shelf::put(&kit, "near", "Near shelf", Answer::Now(Vec::new()));
+    let picked = Shelf::put(&kit, "picked", "Picked shelf", Answer::Now(wren));
+    let far = Shelf::put(&kit, "far", "Far shelf", Answer::Now(Vec::new()));
+    let scoped = ReadSearchQuery {
+        sources_only: true,
+        source_scope: Some(vec!["picked".into()]),
+        ..query("wren")
+    };
+    let (tx, mut rx) = outbox();
+    search::search(&kit, ask(), scoped.clone(), 0, &tx);
+    let done = part_until(&mut rx, |p| p.done).await;
+    let ids: Vec<&str> = done.groups.iter().map(|g| g.source_id.as_str()).collect();
+    assert_eq!(ids, ["picked"], "{done:?}");
+    assert_eq!(*state(&done, "picked"), ReadSourceState::Hits);
+
+    // A source that joins while the scoped search shows is not asked either.
+    let late = Shelf::put(&kit, "late", "Late shelf", Answer::Now(Vec::new()));
+    super::changed::sources_changed(&kit, ask(), &tx);
+    // Try again naming a source outside the scope asks nothing.
+    search::retry_source(&kit, ask(), scoped, "far".into(), &tx);
+    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    let asked = |s: &Shelf| s.asked.load(Ordering::SeqCst);
+    assert_eq!([asked(&near), asked(&picked), asked(&far), asked(&late)], [0, 1, 0, 0]);
+}
+
+/// A source picked under Search in is the only place asked: AniList gets no request either,
+/// with "Your sources only" off. With no source picked, AniList is asked as before.
+#[tokio::test]
+async fn a_scoped_search_leaves_anilist_out() {
+    let fake = FakeAniList::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(Some(&fake), dir.path());
+    let lantern = vec![hit("s-1", "The Lantern Ferry", Some(ReadingFormat::Manga))];
+    let picked = Shelf::put(&kit, "picked", "Picked shelf", Answer::Now(lantern));
+    let other = Shelf::put(&kit, "other", "Other shelf", Answer::Now(Vec::new()));
+    let scoped =
+        ReadSearchQuery { source_scope: Some(vec!["picked".into()]), ..query("lantern") };
+    let (tx, mut rx) = outbox();
+    search::search(&kit, ask(), scoped.clone(), 0, &tx);
+    let done = part_until(&mut rx, |p| p.done).await;
+    assert_eq!(done.anilist, ReadAnilistState::Skipped);
+    assert_eq!(done.groups.iter().find(|g| g.source_id == "picked").unwrap().tiles.len(), 1);
+    // A later page asks nobody either.
+    search::search(&kit, ask(), scoped, 1, &tx);
+    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    assert_eq!(books_asked(&fake), 0, "{:#?}", fake.requests_for(Operation::Books));
+    while let Ok(event) = rx.try_recv() {
+        if let Event::Reading(ReadingEvent::Search { tiles, .. }) = event {
+            assert!(tiles.is_empty(), "{tiles:?}");
+        }
+    }
+    let asked = |s: &Shelf| s.asked.load(Ordering::SeqCst);
+    assert_eq!([asked(&picked), asked(&other)], [1, 0]);
+
+    // No source picked: AniList and every source are asked.
+    search::search(&kit, ask(), query("lantern"), 0, &tx);
+    let done = part_until(&mut rx, |p| p.done && p.anilist != ReadAnilistState::Asking).await;
+    assert_eq!(done.anilist, ReadAnilistState::Answered);
+    assert!(books_asked(&fake) > 0);
+    assert_eq!([asked(&picked), asked(&other)], [2, 1]);
+}
+
+/// A search sent while the plugins load, at launch: the sources already in answer, but the
+/// search is not done until the plugins have joined, and then they are asked too.
+#[tokio::test]
+async fn a_search_sent_while_plugins_load_asks_them_once_they_land() {
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(None, dir.path());
+    let near = Shelf::put(&kit, "near", "Near shelf", Answer::Now(Vec::new()));
+    kit.plugins.expect_arrivals();
+    let (tx, mut rx) = outbox();
+    search::search(&kit, ask(), query("wren"), 0, &tx);
+    let answered = |p: &ReadSourceSearch| {
+        p.anilist != ReadAnilistState::Asking
+            && p.groups.iter().all(|g| g.state != ReadSourceState::Asking)
+    };
+    let first = part_until(&mut rx, answered).await;
+    assert!(!first.done, "done before the plugins came: {first:?}");
+    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    while let Ok(event) = rx.try_recv() {
+        if let Event::Reading(ReadingEvent::SourceSearch(part)) = event {
+            assert!(!part.done, "done before the plugins came: {part:?}");
+        }
+    }
+
+    let wren = vec![hit("w-1", "Wren and the Iron Bridge", None)];
+    let late = Shelf::put(&kit, "late", "Late shelf", Answer::Now(wren));
+    kit.plugins.arrivals_done();
+    let done = part_until(&mut rx, |p| p.done).await;
+    let mut ids: Vec<&str> = done.groups.iter().map(|g| g.source_id.as_str()).collect();
+    ids.sort_unstable();
+    // Folders is a built-in source, so it answered before the plugins came.
+    assert_eq!(ids, ["folders", "late", "near"], "{done:?}");
+    assert_eq!(*state(&done, "late"), ReadSourceState::Hits);
+    let asked = |s: &Shelf| s.asked.load(Ordering::SeqCst);
+    assert_eq!([asked(&near), asked(&late)], [1, 1]);
+}
+
+/// A search in one source sent before that source's plugin has loaded waits for it, rather
+/// than ending at once with nothing, and nothing is said until it can be asked.
+#[tokio::test]
+async fn a_scoped_search_waits_for_its_plugin_to_load() {
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(None, dir.path());
+    kit.plugins.expect_arrivals();
+    let scoped = ReadSearchQuery {
+        sources_only: true,
+        source_scope: Some(vec!["late".into()]),
+        ..query("wren")
+    };
+    let (tx, mut rx) = outbox();
+    search::search(&kit, ask(), scoped, 0, &tx);
+    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    while let Ok(event) = rx.try_recv() {
+        if let Event::Reading(ReadingEvent::SourceSearch(part)) = event {
+            panic!("said before its source could be asked: {part:?}");
+        }
+    }
+
+    let wren = vec![hit("w-1", "Wren and the Iron Bridge", None)];
+    let late = Shelf::put(&kit, "late", "Late shelf", Answer::Now(wren));
+    kit.plugins.arrivals_done();
+    let done = part_until(&mut rx, |p| p.done).await;
+    let ids: Vec<&str> = done.groups.iter().map(|g| g.source_id.as_str()).collect();
+    assert_eq!(ids, ["late"], "{done:?}");
+    assert_eq!(done.groups[0].tiles.len(), 1);
+    assert_eq!(late.asked.load(Ordering::SeqCst), 1);
+}
+
+/// A search waiting on plugins that never come ends once the wait runs out, with what the
+/// sources already in found.
+#[tokio::test(start_paused = true)]
+async fn a_search_waiting_on_plugins_ends_when_the_wait_runs_out() {
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(None, dir.path());
+    Shelf::put(&kit, "near", "Near shelf", Answer::Now(Vec::new()));
+    kit.plugins.expect_arrivals();
+    let (tx, mut rx) = outbox();
+    search::search(&kit, ask(), query("wren"), 0, &tx);
+    let wait = super::editions::PLUGINS_WAIT + std::time::Duration::from_secs(5);
+    let done = tokio::time::timeout(wait, async {
+        loop {
+            if let Some(Event::Reading(ReadingEvent::SourceSearch(part))) = rx.recv().await
+                && part.done
+            {
+                return *part;
+            }
+        }
+    })
+    .await
+    .expect("done once the wait ran out");
+    assert_eq!(*state(&done, "near"), ReadSourceState::Nothing);
 }
 
 /// Browse with only "Your sources only" on: no words for the sources, and AniList is never

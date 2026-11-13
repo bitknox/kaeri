@@ -94,7 +94,11 @@ reader-volume = Tome { $volume }
 reader-chapter-in-progress = Page { $page } sur { $total }
 reader-chapter-read = Lu
 reader-chapter-new = nouveau
-reader-chapter-pages = { $pages } pages
+reader-chapter-pages = { $pages ->
+    [one] 1 page
+    [many] { $pages } de pages
+   *[other] { $pages } pages
+ }
 reader-offline-line = Hors ligne. Les chapitres téléchargés restent lisibles.
 reader-menu-go = Aller
 reader-menu-next-page = Page suivante
@@ -116,8 +120,5 @@ reader-key-step = Pas du clavier
 reader-key-step-panel = Case
 reader-key-step-screen = Écran
 reader-strip-gap = Espace entre images
-reader-zone-back = Retour
-reader-zone-forward = Avancer
-reader-zone-menu = Menu
 reader-pages-range = { $from }–{ $to }
 send-failed-offline = Réessayez une fois en ligne.

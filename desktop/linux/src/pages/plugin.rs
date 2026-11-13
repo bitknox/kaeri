@@ -167,7 +167,7 @@ fn fill(ctx: &Rc<Ctx>, column: &gtk::Box, info: &Info) {
     if let Some(row) = &info.row {
         let line = match Standing::of(row) {
             Standing::Failing => Some(match &row.last_error {
-                Some(error) => t::sources_detail_not_answering(&capitalized(error)),
+                Some(error) => t::sources_detail_not_answering(&crate::say::capitalized(error)),
                 None => t::sources_detail_not_answering_plain(),
             }),
             Standing::HeldBack if row.held_back_for == Some(HoldReason::TorrentsOff) => {
@@ -296,11 +296,6 @@ fn fill(ctx: &Rc<Ctx>, column: &gtk::Box, info: &Info) {
     column.append(&note);
 }
 
-fn capitalized(text: &str) -> String {
-    let mut chars = text.chars();
-    chars.next().map(|c| c.to_uppercase().chain(chars).collect()).unwrap_or_default()
-}
-
 /// Switch the plugin `id` off, or back on.
 pub fn toggle(ctx: &Rc<Ctx>, id: &str) {
     let disabled = ctx.hub.known.borrow().providers.iter().any(|r| r.id == id && r.disabled);
@@ -410,6 +405,9 @@ mod tests {
         );
         assert_eq!(new_hosts_line(&[]), None);
         assert_eq!(contacts_line(&three), "Contacts a.example and 2 more");
-        assert_eq!(capitalized("the source did not answer."), "The source did not answer.");
+        assert_eq!(
+            crate::say::capitalized("the source did not answer."),
+            "The source did not answer."
+        );
     }
 }

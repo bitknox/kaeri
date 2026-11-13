@@ -1,9 +1,13 @@
 reader-page-loading = Laddar sida { $page }
+reader-page-plate = Sida { $page }
+reader-image-plate = Bild { $image }
+reader-image-loading = Laddar bild { $image }
 reader-page-failed = Kunde inte ladda sida { $page }
 reader-try-again = Försök igen
 reader-close = Stäng
 reader-end-read = Räknas som läst
 reader-end-tracker = Räknas som läst · uppdaterat på { $trackers }
+reader-end-tracker-offline = Räknas som läst · { $tracker } uppdateras när du är online igen
 reader-end-next = { -up-next-cap }
 reader-mode-rtl = Höger till vänster
 reader-mode-ltr = Vänster till höger
@@ -55,3 +59,6 @@ reader-divider-images = { $count ->
    *[other] { $count } bilder
  }
 reader-chapter-line-titled = Kapitel { $chapter } · { $title }
+reader-zone-next = { -up-next-cap } sida
+reader-zone-previous = Föregående sida
+reader-zone-controls = Kontroller

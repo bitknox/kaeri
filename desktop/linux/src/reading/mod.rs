@@ -17,6 +17,7 @@ pub mod novel;
 pub mod reader;
 pub mod search;
 pub mod series;
+pub mod series_chapters;
 pub mod series_extra;
 pub mod server_progress;
 pub mod sources;
@@ -53,6 +54,62 @@ pub fn send(hub: &Hub, command: ReadingCommand) {
     hub.send(Command::Reading(command));
 }
 
+/// Settings, Reading, Reader defaults: Skip credit pages, on by default, a manga setting that
+/// syncs. The switch follows the engine's settings for manga, and a flip sets them.
+pub fn reader_defaults_group(ctx: &Rc<Ctx>) -> adw::PreferencesGroup {
+    use kaeri_model::reader::{ReaderCommand, ReaderEvent, ReaderSettingKey, ReaderValue};
+    let group = adw::PreferencesGroup::builder().title(t::settings_reader_defaults()).build();
+    let row = adw::SwitchRow::builder()
+        .title(glib::markup_escape_text(&t::settings_skip_credits()))
+        .subtitle(glib::markup_escape_text(&t::settings_skip_credits_note()))
+        .active(true)
+        .build();
+    group.add(&row);
+    let key = ReaderSettingKey::SkipCreditPages;
+    // The engine's word is what the switch shows; a flip it sends back is not sent again.
+    let answering = Rc::new(Cell::new(false));
+    listen(ctx, &row, {
+        let (row, answering) = (row.downgrade(), Rc::clone(&answering));
+        move |event| {
+            if let kaeri_model::event::Event::Reader(ReaderEvent::Settings(view)) = event
+                && view.medium == kaeri_core::media::Medium::Manga
+                && view.work.is_none()
+                && let Some(found) = view.rows.iter().find(|r| r.key == key)
+                && let ReaderValue::Toggle { on } = found.value
+                && let Some(row) = row.upgrade()
+                && row.is_active() != on
+            {
+                answering.set(true);
+                row.set_active(on);
+                answering.set(false);
+            }
+        }
+    });
+    row.connect_active_notify({
+        let hub = Rc::downgrade(&ctx.hub);
+        move |row| {
+            if answering.get() {
+                return;
+            }
+            if let Some(hub) = hub.upgrade() {
+                hub.send(Command::Reader(ReaderCommand::SetSetting {
+                    session: None,
+                    medium: kaeri_core::media::Medium::Manga,
+                    work: None,
+                    key,
+                    scope: key.home_scope(),
+                    value: ReaderValue::Toggle { on: row.is_active() },
+                }));
+            }
+        }
+    });
+    ctx.hub.send(Command::Reader(ReaderCommand::LoadSettings {
+        medium: kaeri_core::media::Medium::Manga,
+        work: None,
+    }));
+    group
+}
+
 /// Whether reading shows anywhere on this device.
 pub fn reads(hub: &Hub) -> bool {
     hub.known.borrow().medium.as_ref().is_some_and(|m| m.reads())
@@ -73,6 +130,46 @@ pub fn answer(hub: &Hub) -> KaeriIsFor {
 /// Engine messages joined with a middle dot, in the language in use.
 pub fn dotted(parts: &[Msg]) -> String {
     parts.iter().map(say::msg).filter(|s| !s.is_empty()).collect::<Vec<_>>().join(" \u{b7} ")
+}
+
+/// A chapter row's line in the engine's words, with a group's language named in the app's
+/// language from its tag ("from Group B, Spanish"), not the engine's English name.
+pub fn row_line(chapter: &kaeri_model::reading::ChapterRow) -> String {
+    use kaeri_model::ReadingMsg as R;
+    let named = |tag: Option<&str>, english: &str| {
+        tag.map_or_else(
+            || english.to_owned(),
+            |tag| say::language(tag.split(['-', '_']).next().unwrap_or(tag)),
+        )
+    };
+    let line: Vec<Msg> = chapter
+        .line
+        .iter()
+        .map(|msg| match msg {
+            Msg::Reading(R::ReadingRowFromGroupIn { group, language }) => {
+                Msg::Reading(R::ReadingRowFromGroupIn {
+                    group: group.clone(),
+                    language: named(chapter.group_language.as_deref(), language),
+                })
+            }
+            Msg::Reading(R::ReadingRowPartFromGroupIn { part, group, language }) => {
+                let tag = chapter
+                    .part_groups
+                    .iter()
+                    .find(|p| i64::from(p.part) == *part)
+                    .and_then(|p| p.language.as_deref());
+                Msg::Reading(R::ReadingRowPartFromGroupIn {
+                    part: *part,
+                    group: group.clone(),
+                    language: named(tag, language),
+                })
+            }
+            other => other.clone(),
+        })
+        .collect();
+    // The engine's words start in lower case, "from Group B, Spanish"; the row's line starts
+    // with a capital.
+    say::capitalized(&dotted(&line))
 }
 
 /// What failed, in plain words.
@@ -383,7 +480,7 @@ pub fn place(
         widgets::column_page(&column, 820)
     };
     let states = States::new(&ctx.hub, &scroll, shape, empty, failed);
-    let page = widgets::content_page(title, &header, &states.widget);
+    let page = widgets::read_content_page(title, &header, &states.widget);
     Place { page, header, states, column }
 }
 
@@ -412,8 +509,15 @@ pub fn listen(
 /// The chapter and the words a series' main action opens, when it opens one.
 pub fn action_chapter(action: &SeriesAction) -> Option<(ChapterId, String)> {
     match action {
+        // "Read chapter 12", but a chapter with no number goes by its own title: "Read Oneshot".
+        SeriesAction::Read { chapter, label } if !numbered(label) => {
+            Some((chapter.clone(), t::action_read_named(label)))
+        }
         SeriesAction::Read { chapter, label } => {
             Some((chapter.clone(), t::action_read_chapter(label)))
+        }
+        SeriesAction::Continue { chapter, label, page } if !numbered(label) => {
+            Some((chapter.clone(), t::action_continue_named_page(label, i64::from(*page))))
         }
         SeriesAction::Continue { chapter, label, page } => {
             Some((chapter.clone(), t::action_continue_chapter(label, i64::from(*page))))
@@ -422,17 +526,31 @@ pub fn action_chapter(action: &SeriesAction) -> Option<(ChapterId, String)> {
         SeriesAction::ContinuePart { chapter, named: Some(named), .. } => {
             Some((chapter.clone(), t::action_continue_named_plain(named)))
         }
+        SeriesAction::ContinuePart { chapter, label, named: None, .. } if !numbered(label) => {
+            Some((chapter.clone(), t::action_continue_named_plain(label)))
+        }
         SeriesAction::ContinuePart { chapter, label, named: None, .. } => {
-            Some((chapter.clone(), t::action_continue_part_plain(label)))
+            // A bare number is a chapter, as its row and the reader call it.
+            Some((chapter.clone(), t::action_continue_chapter_plain(label)))
         }
         SeriesAction::ReadPart { chapter, named: Some(named), .. } => {
             Some((chapter.clone(), t::action_read_named(named)))
         }
+        SeriesAction::ReadPart { chapter, label, named: None } if !numbered(label) => {
+            Some((chapter.clone(), t::action_read_named(label)))
+        }
         SeriesAction::ReadPart { chapter, label, named: None } => {
-            Some((chapter.clone(), t::action_read_part(label)))
+            Some((chapter.clone(), t::action_read_chapter(label)))
         }
         SeriesAction::ReadAgain | SeriesAction::NoSource => None,
     }
+}
+
+/// The label is a chapter's number, "12", "10.5" or "12-13", which the words put "chapter" or
+/// "part" before; anything else is the chapter's own title.
+fn numbered(label: &str) -> bool {
+    label.starts_with(|c: char| c.is_ascii_digit())
+        && label.chars().all(|c| c.is_ascii_digit() || c == '.' || c == '-')
 }
 
 /// Open the reader on a chapter of a work: `win.read` takes the work and the chapter.
@@ -443,6 +561,12 @@ pub fn read_target(work: &WorkId, chapter: Option<&ChapterId>) -> glib::Variant 
 /// A button that opens a chapter in the reader.
 pub fn read_button(label: &str, work: &WorkId, chapter: &ChapterId) -> gtk::Button {
     let button = gtk::Button::with_label(label);
+    // "Continue chapter 13 · page 10" in large text is wider than a narrow window: it wraps.
+    if let Some(words) = button.child().and_downcast::<gtk::Label>() {
+        words.set_wrap(true);
+        words.set_wrap_mode(gtk::pango::WrapMode::WordChar);
+        words.set_justify(gtk::Justification::Center);
+    }
     button.add_css_class("pill");
     button.add_css_class("suggested-action");
     button.set_action_target_value(Some(&read_target(work, Some(chapter))));
@@ -465,4 +589,20 @@ pub fn is_blank(view: &kaeri_model::reading::ReadingHomeView) -> bool {
         && view.because.is_empty()
         && view.genre_shelf.is_empty()
         && view.rows.is_empty()
+}
+
+#[cfg(test)]
+mod label_tests {
+    use super::numbered;
+
+    /// The series button puts "chapter" before a number, never before a chapter's own title.
+    #[test]
+    fn only_a_number_takes_the_word_chapter() {
+        for label in ["12", "10.5", "12-13"] {
+            assert!(numbered(label), "{label}");
+        }
+        for label in ["Oneshot", "The Lantern Festival", "1st Anniversary Extra", ""] {
+            assert!(!numbered(label), "{label}");
+        }
+    }
 }

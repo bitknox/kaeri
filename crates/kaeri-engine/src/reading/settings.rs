@@ -4,7 +4,9 @@
 //! what its source and the catalogue say of how it reads (the mode and direction of a comic),
 //! then the reader's guess, then the medium's value in `config.toml` (`[reading.manga]`,
 //! `[reading.novel]`; the choices among them sync as shared keys), then the default. The e-ink
-//! refresh settings are the device's, in `[reading.eink]`, whatever the medium.
+//! refresh settings and Screen mode are the device's, in `[reading.eink]`, whatever the medium,
+//! and so are the tap zones, in `[reading.taps]`. Each full refresh is off until the person turns
+//! it on, and Screen mode starts at the device's own setting.
 
 use std::collections::BTreeMap;
 
@@ -12,8 +14,9 @@ use kaeri_core::{
     books::ReadingHint, config::ReadingConfig, media::Medium, settings::SettingValue,
 };
 use kaeri_model::{
-    eink::{EinkMatch, EinkPanel, EinkProfile},
+    eink::{EinkMatch, EinkPanel, EinkProfile, GALLERY_SPEEDS, PANEL_MODES},
     reader::{ReaderSettingKey as Key, ReaderSettingRow, ReaderValue, SettingScope},
+    tap_zones::{GuideKind, TapZoneSettings, ZoneLayout, ZoneSize},
 };
 use kaeri_store::{Store, reading::SeriesSetting};
 
@@ -24,6 +27,8 @@ pub struct Screen {
     pub eink: Option<EinkPanel>,
     /// The family's refresh hook resolved: the Refresh rows show.
     pub refresh_hook: bool,
+    /// The family's own update modes can be set: Screen mode shows them.
+    pub panel_modes: bool,
     /// A phone or a tablet.
     pub handheld: bool,
     /// A phone, not a tablet.
@@ -36,6 +41,7 @@ impl Screen {
         Self {
             eink: profile.map(|p| p.panel),
             refresh_hook: profile.is_some_and(|p| p.refresh_hook),
+            panel_modes: profile.is_some_and(|p| p.panel_modes),
             handheld,
             phone,
         }
@@ -54,8 +60,8 @@ fn choices(names: &[&str]) -> Vec<ReaderValue> {
     names.iter().map(|n| choice(n)).collect()
 }
 
-/// The choices a setting offers; empty for amounts and toggles.
-pub fn choices_for(key: Key, medium: Medium) -> Vec<ReaderValue> {
+/// The choices a setting offers on `screen`; empty for amounts and toggles.
+pub fn choices_for(key: Key, medium: Medium, screen: Screen) -> Vec<ReaderValue> {
     match key {
         Key::Mode if medium == Medium::Novel => choices(&["paged", "scrolled"]),
         Key::Mode => choices(&["paged", "vertical", "strip"]),
@@ -68,7 +74,11 @@ pub fn choices_for(key: Key, medium: Medium) -> Vec<ReaderValue> {
         Key::PageLayout => choices(&["auto", "single", "double"]),
         Key::Spreads => choices(&["split", "rotate", "whole"]),
         Key::TapLayout => choices(&["edges", "sides", "off"]),
-        Key::GallerySpeed => choices(&["standard", "fast", "best"]),
+        Key::ScreenMode if screen.eink == Some(EinkPanel::Gallery3) => choices(GALLERY_SPEEDS),
+        Key::ScreenMode => choices(PANEL_MODES),
+        Key::TapPaged => ZoneLayout::PAGED.iter().map(|l| choice(l.name())).collect(),
+        Key::TapScroll => ZoneLayout::SCROLLING.iter().map(|l| choice(l.name())).collect(),
+        Key::TapSize => choices(&[ZoneSize::Standard.name(), ZoneSize::Small.name()]),
         Key::FootValue => choices(&["pages_left", "none"]),
         Key::StripGap => choices(&["none", "small"]),
         _ => Vec::new(),
@@ -96,14 +106,23 @@ pub fn default_for(key: Key, medium: Medium, screen: Screen) -> ReaderValue {
         }
         Key::Justify => on(medium == Medium::Novel && (screen.eink.is_some() || !screen.phone)),
         Key::TapLayout => choice("edges"),
+        // E-ink and the desktop start on Sides; a phone or a tablet on Auto, so vertical paging
+        // gets zones that point down.
+        Key::TapPaged if screen.eink.is_some() || !screen.handheld => {
+            choice(ZoneLayout::Sides.name())
+        }
+        Key::TapPaged => choice(ZoneLayout::Auto.name()),
+        Key::TapScroll => choice(ZoneLayout::Off.name()),
+        Key::TapSize => choice(ZoneSize::Standard.name()),
+        Key::TapFlipSides | Key::TapFlipEnds => on(false),
+        Key::SwipeTurns => on(true),
         Key::VolumeKeysTurn => on(screen.eink.is_some()),
         Key::StripWidth => amount(0.6),
-        Key::RefreshImage => on(true),
-        Key::RefreshText => amount(6.0),
-        Key::RefreshList => {
-            amount(if screen.eink == Some(EinkPanel::Kaleido3) { 3.0 } else { 5.0 })
-        }
-        Key::GallerySpeed => choice("standard"),
+        // The device decides: no full refresh until the person asks for one.
+        Key::RefreshImage => on(false),
+        Key::RefreshText | Key::RefreshList => amount(0.0),
+        Key::ScreenMode if screen.eink == Some(EinkPanel::Gallery3) => choice("standard"),
+        Key::ScreenMode => choice("device"),
         Key::RainbowFilter | Key::PaperMode | Key::GreyscalePages | Key::QuietPhone => {
             on(false)
         }
@@ -111,7 +130,7 @@ pub fn default_for(key: Key, medium: Medium, screen: Screen) -> ReaderValue {
             amount(if screen.eink == Some(EinkPanel::Kaleido3) { 1.2 } else { 1.0 })
         }
         Key::FootValue => choice("pages_left"),
-        Key::Folio => on(true),
+        Key::Folio | Key::SkipCreditPages => on(true),
         Key::StripGap => choice("none"),
         // Paper mode's parts, on by default inside it; the page's white dimmed a little.
         Key::PaperInstant | Key::PaperLook | Key::PaperVolume => on(true),
@@ -126,7 +145,7 @@ pub fn shown(key: Key, medium: Medium, screen: Screen) -> bool {
     }
     match key {
         Key::RefreshImage | Key::RefreshText | Key::RefreshList => screen.refresh_hook,
-        Key::GallerySpeed => screen.eink == Some(EinkPanel::Gallery3),
+        Key::ScreenMode => screen.eink == Some(EinkPanel::Gallery3) || screen.panel_modes,
         Key::RainbowFilter => screen.eink == Some(EinkPanel::Kaleido3),
         Key::Saturation | Key::Contrast => screen.colour_eink(),
         Key::PaperMode
@@ -141,16 +160,29 @@ pub fn shown(key: Key, medium: Medium, screen: Screen) -> bool {
         Key::Background => screen.eink.is_none(),
         Key::StripWidth => !screen.handheld,
         Key::VolumeKeysTurn => screen.handheld || screen.eink.is_some(),
+        // E-ink has one tap zone choice for all reading, and only e-ink has the swipe switch.
+        Key::TapScroll => screen.eink.is_none(),
+        Key::SwipeTurns => screen.eink.is_some(),
+        Key::TapLayout => false,
         _ => true,
     }
 }
 
+/// The config table of the tap zones and their guides.
+pub const TAPS: [&str; 2] = ["reading", "taps"];
+
 /// The config table a setting's medium value is kept in.
 pub fn table(key: Key, medium: Medium) -> [&'static str; 2] {
     match key {
-        Key::RefreshImage | Key::RefreshText | Key::RefreshList | Key::GallerySpeed => {
+        Key::RefreshImage | Key::RefreshText | Key::RefreshList | Key::ScreenMode => {
             ["reading", "eink"]
         }
+        Key::TapPaged
+        | Key::TapScroll
+        | Key::TapSize
+        | Key::TapFlipSides
+        | Key::TapFlipEnds
+        | Key::SwipeTurns => TAPS,
         _ if medium == Medium::Novel => ["reading", "novel"],
         _ => ["reading", "manga"],
     }
@@ -159,6 +191,7 @@ pub fn table(key: Key, medium: Medium) -> [&'static str; 2] {
 fn map(config: &ReadingConfig, key: Key, medium: Medium) -> &BTreeMap<String, toml::Value> {
     match table(key, medium)[1] {
         "eink" => &config.eink,
+        "taps" => &config.taps,
         "novel" => &config.novel,
         _ => &config.manga,
     }
@@ -191,6 +224,23 @@ pub struct SourceWord {
     /// The catalogue counts the series a webtoon: tagged a long strip, or from Korea, China or
     /// Taiwan.
     pub webtoon: bool,
+}
+
+impl SourceWord {
+    /// What the series' source and the catalogue say of how `work` reads, as last kept.
+    pub(crate) fn of(
+        services: &crate::services::Services,
+        work: &kaeri_core::books::WorkId,
+    ) -> Self {
+        let kind = services.store.book_work_kind(work.as_str()).ok().flatten();
+        // A demo work says it itself: opened before its page was ever loaded, its source was
+        // never asked.
+        let demo = kaeri_core::reading_demo::WORKS.iter().find(|w| w.work_id() == *work);
+        Self {
+            hint: services.book_sources.hint_of(work).or_else(|| demo?.reading),
+            webtoon: kind.as_ref().is_some_and(kaeri_store::shelf::BookWorkKind::webtoon),
+        }
+    }
 }
 
 /// Everything the layers say, read once for a sheet or a session.
@@ -262,7 +312,7 @@ impl Layers {
             .series_scope()
             .and_then(|_| self.series.iter().find(|s| s.setting == key.name()));
         let chosen = series.filter(|s| s.scope != "auto");
-        let medium = map(&self.config, key, self.medium).get(key.name()).and_then(from_toml);
+        let medium = self.kept(key);
         let source = if chosen.is_none() { self.source_value(key) } else { None };
         let (value, scope, detected, overridden) = match (chosen, source, series, medium) {
             (Some(s), ..) => {
@@ -289,7 +339,65 @@ impl Layers {
             scope,
             detected,
             overridden,
-            choices: choices_for(key, self.medium),
+            choices: choices_for(key, self.medium, self.screen),
+        }
+    }
+
+    /// The device's or the medium's value of `key` in the config, unset as `None`. A tap
+    /// layout reads as its current name, Edges and Halves as Sides, and an unknown one as
+    /// unset; unset, the paged layout takes the earlier `tap_layout` of the open medium, then
+    /// of the other one.
+    fn kept(&self, key: Key) -> Option<ReaderValue> {
+        let value = map(&self.config, key, self.medium).get(key.name()).and_then(from_toml);
+        match key {
+            Key::TapPaged | Key::TapScroll => {
+                let layout = |v: ReaderValue| match v {
+                    ReaderValue::Choice { name } => ZoneLayout::parse(&name),
+                    _ => None,
+                };
+                let kept = value.and_then(layout).filter(|l| {
+                    key == Key::TapPaged || ZoneLayout::SCROLLING.contains(l)
+                });
+                let earlier = || {
+                    let (first, second) = match self.medium {
+                        Medium::Novel => (&self.config.novel, &self.config.manga),
+                        _ => (&self.config.manga, &self.config.novel),
+                    };
+                    let name = Key::TapLayout.name();
+                    let old = first.get(name).or_else(|| second.get(name))?;
+                    Some(ZoneLayout::from_earlier(old.as_str().unwrap_or_default()))
+                };
+                let kept = if key == Key::TapPaged { kept.or_else(earlier) } else { kept };
+                kept.map(|l| choice(l.name()))
+            }
+            Key::TapSize => value.filter(|v| {
+                matches!(v, ReaderValue::Choice { name } if ZoneSize::parse(name).is_some())
+            }),
+            _ => value,
+        }
+    }
+
+    /// The tap zone settings in effect on this screen, with the guides seen.
+    pub fn tap_zones(&self) -> TapZoneSettings {
+        let layout = |key| ZoneLayout::parse(&self.word(key)).unwrap_or_default();
+        let seen = |kind: GuideKind| {
+            self.config
+                .taps
+                .get(guide_key(kind))
+                .and_then(toml::Value::as_str)
+                .unwrap_or_default()
+                .to_owned()
+        };
+        TapZoneSettings {
+            paged: layout(Key::TapPaged),
+            scrolling: layout(Key::TapScroll),
+            size: ZoneSize::parse(&self.word(Key::TapSize)).unwrap_or_default(),
+            flip_sides: self.on(Key::TapFlipSides),
+            flip_ends: self.on(Key::TapFlipEnds),
+            eink: self.screen.eink.is_some(),
+            swipes_turn: self.on(Key::SwipeTurns),
+            guide_seen_paged: seen(GuideKind::Paged),
+            guide_seen_scrolling: seen(GuideKind::Scrolling),
         }
     }
 
@@ -395,6 +503,28 @@ pub fn follows(reading: &ReadingConfig, key: Key) -> bool {
     }
 }
 
+/// The config key under [`TAPS`] that keeps the guide last seen of `kind`.
+pub const fn guide_key(kind: GuideKind) -> &'static str {
+    match kind {
+        GuideKind::Paged => "guide_paged",
+        GuideKind::Scrolling => "guide_scrolling",
+    }
+}
+
+/// Keep the tap zone guide `guide` as seen, so it shows again only once the zones change. A
+/// value that names no kind is dropped.
+pub fn guide_seen(
+    config: &mut crate::config::ConfigState,
+    paths: &kaeri_core::config::Paths,
+    guide: &str,
+) -> Result<(), SetError> {
+    let Some(kind) = GuideKind::of(guide) else { return Ok(()) };
+    config.write(paths, &TAPS, guide_key(kind), SettingValue::Str(guide.to_owned()))?;
+    let reading = config.saved().reading.clone();
+    config.effective_mut().reading = reading;
+    Ok(())
+}
+
 /// Drop the series' own value, so the medium's applies again.
 pub fn use_default(store: &Store, work: &str, key: Key, at: i64) -> Result<(), SetError> {
     store.set_series_setting(work, key.name(), None, false, at)?;
@@ -418,6 +548,7 @@ pub const fn relays(key: Key) -> bool {
             | Key::Saturation
             | Key::Contrast
             | Key::GreyscalePages
+            | Key::SkipCreditPages
     )
 }
 
@@ -570,17 +701,165 @@ mod tests {
         let kaleido = Screen {
             eink: Some(EinkPanel::Kaleido3),
             refresh_hook: true,
+            panel_modes: false,
             handheld: true,
             phone: true,
         };
         let rows = keys(Medium::Manga, kaleido);
         assert!(rows.contains(&Key::RainbowFilter) && rows.contains(&Key::RefreshText));
-        assert!(!rows.contains(&Key::PaperMode) && !rows.contains(&Key::GallerySpeed));
+        assert!(!rows.contains(&Key::PaperMode) && !rows.contains(&Key::ScreenMode));
         let layers = Layers::read(&store, &config, Medium::Manga, None, kaleido);
-        assert_eq!(layers.amount(Key::RefreshList), 3.0);
+        // Every full refresh starts off: the device decides.
+        assert_eq!(layers.amount(Key::RefreshList), 0.0);
+        assert_eq!(layers.amount(Key::RefreshText), 0.0);
+        assert!(!layers.on(Key::RefreshImage));
         assert_eq!(layers.word(Key::Look), "paper");
+        // Where the mode calls resolved, Screen mode starts at the device's own setting.
+        let modes = Screen { panel_modes: true, ..kaleido };
+        let layers = Layers::read(&store, &config, Medium::Manga, None, modes);
+        let row = layers.row(Key::ScreenMode);
+        assert_eq!(layers.word(Key::ScreenMode), "device");
+        let names: Vec<String> = row
+            .choices
+            .iter()
+            .map(|c| match c {
+                ReaderValue::Choice { name } => name.clone(),
+                other => other.encode(),
+            })
+            .collect();
+        assert_eq!(names, PANEL_MODES);
+        let gallery = Screen { eink: Some(EinkPanel::Gallery3), ..kaleido };
+        assert!(keys(Medium::Manga, gallery).contains(&Key::ScreenMode));
+        let layers = Layers::read(&store, &config, Medium::Manga, None, gallery);
+        assert_eq!(layers.word(Key::ScreenMode), "standard");
         let grey = Screen { eink: Some(EinkPanel::Grey), ..kaleido };
         assert!(!keys(Medium::Manga, grey).contains(&Key::Colour));
+    }
+
+    #[test]
+    fn tap_zones_start_where_the_board_says_and_show_where_they_apply() {
+        let store = Store::open_in_memory().unwrap();
+        let config = ReadingConfig::default();
+        let zones = |medium, screen| Layers::read(&store, &config, medium, None, screen);
+        let phone = Screen { handheld: true, phone: true, ..Screen::default() };
+        let desktop = Screen::default();
+        let eink = Screen { eink: Some(EinkPanel::Grey), ..phone };
+
+        let on_phone = zones(Medium::Manga, phone).tap_zones();
+        assert_eq!((on_phone.paged, on_phone.scrolling), (ZoneLayout::Auto, ZoneLayout::Off));
+        assert_eq!(on_phone.size, ZoneSize::Standard);
+        assert!(!on_phone.flip_sides && !on_phone.flip_ends && !on_phone.eink);
+        assert!(
+            on_phone.guide_seen_paged.is_empty() && on_phone.guide_seen_scrolling.is_empty()
+        );
+        assert_eq!(zones(Medium::Novel, desktop).tap_zones().paged, ZoneLayout::Sides);
+        let on_eink = zones(Medium::Manga, eink).tap_zones();
+        assert_eq!(on_eink.paged, ZoneLayout::Sides);
+        assert!(on_eink.eink && on_eink.swipes_turn);
+
+        let keys = |screen| -> Vec<Key> {
+            zones(Medium::Manga, screen).rows().iter().map(|r| r.key).collect()
+        };
+        let rows = keys(phone);
+        for key in
+            [Key::TapPaged, Key::TapScroll, Key::TapSize, Key::TapFlipSides, Key::TapFlipEnds]
+        {
+            assert!(rows.contains(&key), "{key:?}");
+            assert_eq!(table(key, Medium::Novel), TAPS, "one value whatever the medium");
+        }
+        assert!(!rows.contains(&Key::SwipeTurns) && !rows.contains(&Key::TapLayout));
+        let rows = keys(eink);
+        assert!(rows.contains(&Key::SwipeTurns) && rows.contains(&Key::TapPaged));
+        assert!(!rows.contains(&Key::TapScroll), "e-ink has one choice for all reading");
+        let row = zones(Medium::Manga, phone).row(Key::TapPaged);
+        assert_eq!(row.scope, SettingScope::Device);
+        assert_eq!(row.choices.len(), 7);
+        assert_eq!(zones(Medium::Manga, phone).row(Key::TapScroll).choices.len(), 6);
+    }
+
+    /// The setting before tap zones was one per medium, Edges, Halves (kept as `sides`) or
+    /// Off. Unset, the paged layout reads it: Off stays Off and the rest is Sides.
+    #[test]
+    fn the_earlier_tap_setting_carries_over_as_sides_or_off() {
+        let store = Store::open_in_memory().unwrap();
+        let phone = Screen { handheld: true, phone: true, ..Screen::default() };
+        let read = |config: &ReadingConfig, medium| {
+            Layers::read(&store, config, medium, None, phone).tap_zones()
+        };
+        let text = |s: &str| toml::Value::String(s.to_owned());
+        for (earlier, now) in [
+            ("edges", ZoneLayout::Sides),
+            ("sides", ZoneLayout::Sides),
+            ("off", ZoneLayout::Off),
+        ] {
+            let mut config = ReadingConfig::default();
+            config.manga.insert("tap_layout".into(), text(earlier));
+            assert_eq!(read(&config, Medium::Manga).paged, now, "{earlier}");
+            assert_eq!(read(&config, Medium::Novel).paged, now, "the other medium's, unset");
+            assert_eq!(read(&config, Medium::Manga).scrolling, ZoneLayout::Off);
+            let row =
+                Layers::read(&store, &config, Medium::Manga, None, phone).row(Key::TapPaged);
+            assert_eq!(row.value, choice(now.name()), "the row says the new name");
+        }
+        // Each medium keeps its own until the person chooses.
+        let mut config = ReadingConfig::default();
+        config.manga.insert("tap_layout".into(), text("edges"));
+        config.novel.insert("tap_layout".into(), text("off"));
+        assert_eq!(read(&config, Medium::Manga).paged, ZoneLayout::Sides);
+        assert_eq!(read(&config, Medium::Novel).paged, ZoneLayout::Off);
+        // A choice of the new setting wins, and is the same for both media.
+        config.taps.insert("tap_paged".into(), text("l_shape"));
+        assert_eq!(read(&config, Medium::Manga).paged, ZoneLayout::LShape);
+        assert_eq!(read(&config, Medium::Novel).paged, ZoneLayout::LShape);
+        // A hand-written old name reads as Sides, and an unknown one as the default.
+        config.taps.insert("tap_paged".into(), text("halves"));
+        assert_eq!(read(&config, Medium::Manga).paged, ZoneLayout::Sides);
+        config.taps.insert("tap_paged".into(), text("diagonal"));
+        assert_eq!(read(&config, Medium::Manga).paged, ZoneLayout::Sides, "the earlier value");
+        let mut config = ReadingConfig::default();
+        config.taps.insert("tap_paged".into(), text("diagonal"));
+        config.taps.insert("tap_scroll".into(), text("auto"));
+        config.taps.insert("tap_size".into(), text("tiny"));
+        let zones = read(&config, Medium::Manga);
+        assert_eq!((zones.paged, zones.scrolling), (ZoneLayout::Auto, ZoneLayout::Off));
+        assert_eq!(zones.size, ZoneSize::Standard);
+    }
+
+    #[test]
+    fn tap_settings_and_seen_guides_are_kept_in_the_devices_taps_table() {
+        let dir = tempfile::tempdir().unwrap();
+        let paths = kaeri_core::config::Paths {
+            config_file: dir.path().join("config.toml"),
+            data_dir: dir.path().join("data"),
+            cache_dir: dir.path().join("cache"),
+        };
+        let mut config = crate::config::ConfigState::new(
+            kaeri_core::config::Config::default(),
+            None,
+            &paths,
+        );
+        let store = Store::open_in_memory().unwrap();
+        let put = |config: &mut crate::config::ConfigState, key: Key, value: ReaderValue| {
+            let scope = key.home_scope();
+            set(config, &paths, &store, Medium::Novel, None, key, scope, &value, 1).unwrap();
+        };
+        put(&mut config, Key::TapScroll, choice("top_bottom"));
+        put(&mut config, Key::TapSize, choice("small"));
+        put(&mut config, Key::TapFlipSides, ReaderValue::Toggle { on: true });
+        guide_seen(&mut config, &paths, "paged:sides:small:sides:rtl").unwrap();
+        guide_seen(&mut config, &paths, "nothing").unwrap();
+
+        let reading = &config.effective().reading;
+        assert!(reading.novel.is_empty() && reading.manga.is_empty());
+        let zones =
+            Layers::read(&store, reading, Medium::Manga, None, Screen::default()).tap_zones();
+        assert_eq!(zones.scrolling, ZoneLayout::TopBottom);
+        assert_eq!(zones.size, ZoneSize::Small);
+        assert!(zones.flip_sides && !zones.flip_ends);
+        assert_eq!(zones.guide_seen_paged, "paged:sides:small:sides:rtl");
+        assert!(zones.guide_seen_scrolling.is_empty());
+        let text = std::fs::read_to_string(&paths.config_file).unwrap();
+        assert!(text.contains("[reading.taps]"), "{text}");
     }
 
     #[test]

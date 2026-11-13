@@ -242,7 +242,6 @@ read-search-nothing-browse = Bu filtrelere uyan bir şey yok
 read-search-nothing-line = Başka sözcükler ya da başka dilde bir başlık deneyin.
 read-search-nothing-filters-line = Daha az filtre daha çok sonuç verebilir.
 read-search-clear-filters = Filtreleri temizle
-read-sort-popular = Popüler
 read-sort-trending = Trend
 read-sort-score = Puan
 read-sort-newest = En yeni
