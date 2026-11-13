@@ -302,6 +302,30 @@ fn qa_path(var: &str, file: &str) -> Result<String, std::env::VarError> {
     })
 }
 
+/// QA ONLY, never merged (r6 iPad hunt): the same gate for the engine's own artwork fetches,
+/// keyed by host, with the same net rule ("offline" fails) and fetch log. False means fail.
+#[cfg(feature = "fetch")]
+pub async fn qa_art_gate(url: &str) -> bool {
+    let host = url.split('/').nth(2).unwrap_or("-").to_owned();
+    tokio::time::sleep_until(qa_gate(&format!("art:{host}"))).await;
+    if let Ok(path) = qa_path("KAERI_QA_NET", "qa-net")
+        && std::fs::read_to_string(path).unwrap_or_default().trim_start().starts_with("offline")
+    {
+        return false;
+    }
+    if let Ok(path) = qa_path("KAERI_QA_FETCH_LOG", "qa-fetch.log") {
+        use std::io::Write as _;
+        let ms = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_millis())
+            .unwrap_or(0);
+        if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+            let _ = writeln!(f, "{ms} art {host}");
+        }
+    }
+    true
+}
+
 /// QA ONLY, never merged: when a plugin's next request may start, 4 s after its last one.
 #[cfg(feature = "fetch")]
 fn qa_gate(plugin: &str) -> tokio::time::Instant {

@@ -314,6 +314,9 @@ async fn write_cached(path: &PathBuf, bytes: &[u8]) {
 }
 
 async fn download(http: &HttpClient, url: &str) -> Result<Vec<u8>, Failure> {
+    if !kaeri_plugin::host::qa_art_gate(url).await {
+        return Err(Failure::Offline);
+    }
     // Kaeri's own request, so the client that follows redirects.
     let response = http.plain().get(url).send().await.map_err(|e| {
         tracing::debug!(%url, error = %e, "artwork fetch failed");

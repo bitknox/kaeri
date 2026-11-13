@@ -366,13 +366,10 @@ targets:
     templates: [App]
     settings:
       base:
-        PRODUCT_NAME: Kaeri
-        PRODUCT_BUNDLE_IDENTIFIER: app.kaeri.app
-        INFOPLIST_KEY_CFBundleDisplayName: Kaeri
-        # The kaeri:// links the app opens, the background refresh and the widgets' App Group
-        # (KAERI_APP_GROUP, Config/Base.xcconfig).
-        INFOPLIST_FILE: App/Info.plist
-        CODE_SIGN_ENTITLEMENTS: App/Kaeri.entitlements
+        PRODUCT_NAME: Kaeri QA
+        PRODUCT_BUNDLE_IDENTIFIER: app.kaeri.qa
+        INFOPLIST_KEY_CFBundleDisplayName: Kaeri QA
+        INFOPLIST_FILE: App/QA-Info.plist
         # The downloads' Live Activity on iPhone, which the widget extension draws.
         INFOPLIST_KEY_NSSupportsLiveActivities: true
     dependencies:
@@ -384,7 +381,6 @@ targets:
       - target: KaeriPlayerUI
       - target: KaeriUI
       - target: KaeriWidgetData
-      - target: KaeriWidgets
       - package: Sparkle
         product: Sparkle
         destinationFilters: [macOS]

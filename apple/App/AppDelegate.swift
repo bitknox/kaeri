@@ -197,7 +197,7 @@ final class AppDelegate: NSObject {
         #if FIXTURES
         return nil
         #else
-        return (EngineLaunch.app(platform: platform), AppHost(secrets: KeychainSecrets(), open: open))
+        return nil // QA hunt
         #endif
     }
 
@@ -231,13 +231,15 @@ final class AppDelegate: NSObject {
         let secrets: any SecretBackend = MemorySecrets()
         #else
         var launch = EngineLaunch.app(platform: Self.platform)
+        // QA hunt: never the real data folder, on any platform.
+        guard ProcessInfo.processInfo.environment["KAERI_HOME_OVERRIDE"]?.contains("/hunt-r6-ipad/") == true else { fatalError("QA hunt needs KAERI_HOME_OVERRIDE") }
         // The profile a switch chose, used once; after it the engine remembers the last in use.
         launch.profile = UserDefaults.standard.string(forKey: "profileToEnter")
         UserDefaults.standard.removeObject(forKey: "profileToEnter")
-        let secrets: any SecretBackend = KeychainSecrets()
+        let secrets: any SecretBackend = MemorySecrets() // QA hunt
         #endif
         await store.start(launch, host: AppHost(secrets: secrets, open: Self.open))
-        if store.phase == .running {
+        if store.phase == .running, false {
             // The Fixtures app's titles go under its own domain, and its shelf in its own home.
             let spotlight = SpotlightIndexer(store: store, file: Shelf.file(in: launch.home))
             // The titles "Open … in Kaeri" is offered for follow the shelf.
@@ -338,6 +340,7 @@ final class AppDelegate: NSObject {
             print("KAERI_READY")
             fflush(stdout)
         }
+        Task { @MainActor [store, navigator, phases] in await HuntDriver.run(store: store, navigator: navigator, phases: phases) } // QA hunt
         #if FIXTURES
         // `-KaeriSkipPauseFlip`: Low Power Mode on at 0.8 s and off at 3.8 s, from 1.5 s after the
         // scene is ready, for the recording of the paused line (motion E).

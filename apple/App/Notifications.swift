@@ -61,7 +61,7 @@ final class AppNotifications: NSObject {
         real = false
         #endif
         #else
-        real = true
+        real = false // QA hunt
         #endif
         centre = real ? SystemNoticeCentre() : QuietNoticeCentre()
         super.init()

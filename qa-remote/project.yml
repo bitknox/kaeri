@@ -1,0 +1,41 @@
+name: HuntRemote
+options:
+  deploymentTarget:
+    iOS: "26.0"
+settings:
+  base:
+    CODE_SIGNING_ALLOWED: NO
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: minimal
+targets:
+  HuntHost:
+    type: application
+    platform: iOS
+    sources: [Host]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.kaeri.qa.remotehost
+        GENERATE_INFOPLIST_FILE: true
+        INFOPLIST_KEY_UILaunchScreen_Generation: true
+        TARGETED_DEVICE_FAMILY: "1,2"
+  HuntRemote:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [Remote]
+    dependencies:
+      - target: HuntHost
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.kaeri.qa.remote
+        GENERATE_INFOPLIST_FILE: true
+        TEST_TARGET_NAME: HuntHost
+        TARGETED_DEVICE_FAMILY: "1,2"
+schemes:
+  HuntRemote:
+    build:
+      targets:
+        HuntHost: all
+        HuntRemote: [test]
+    test:
+      config: Debug
+      targets: [HuntRemote]
