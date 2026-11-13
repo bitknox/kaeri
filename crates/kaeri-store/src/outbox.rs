@@ -761,15 +761,75 @@ mod tests {
         store.enqueue("anilist", &progress(7), 0).unwrap();
         let id = store.claim_ready("anilist", 0, 10).unwrap()[0].id;
 
-        for attempt in 0..MAX_ATTEMPTS {
-            store.fail(id, "gone", i64::from(attempt) * 10_000).unwrap();
+        for attempt in 1..MAX_ATTEMPTS {
+            assert!(!store.fail(id, "gone", i64::from(attempt) * 10_000).unwrap());
         }
+        assert!(store.fail(id, "Not Found.", 1_000_000).unwrap(), "the last refusal gives up");
 
         assert_eq!(
             store.outbox_depth(Some("anilist")).unwrap(),
             0,
             "the queue should not carry an operation forever"
         );
+        let kept = store.dropped_track_ops().unwrap();
+        assert_eq!(
+            kept,
+            [DroppedOp {
+                tracker_id: "anilist".into(),
+                op: progress(7),
+                error: "Not Found.".into(),
+                at: 1_000_000,
+            }],
+            "the change given up is kept, with the tracker's last word on it"
+        );
+    }
+
+    #[test]
+    fn a_reading_op_given_up_is_kept_and_the_record_stays_bounded() {
+        let store = Store::open_in_memory().unwrap();
+        for n in 0..(DROPPED_KEPT as u32 + 5) {
+            let op = TrackOp::SetReadProgress {
+                anilist_id: AnilistId::new(990_000 + n),
+                chapter: 1,
+                volume: None,
+            };
+            let id = store.enqueue("mal", &op, 0).unwrap().unwrap();
+            let given_up = (0..MAX_ATTEMPTS)
+                .map(|attempt| store.fail_read(id, "refused", i64::from(attempt)).unwrap())
+                .collect::<Vec<_>>();
+            assert_eq!(given_up.iter().filter(|g| **g).count(), 1);
+            assert!(given_up[MAX_ATTEMPTS as usize - 1]);
+        }
+        assert_eq!(store.read_outbox_depth(Some("mal")).unwrap(), 0);
+        let kept = store.dropped_track_ops().unwrap();
+        assert_eq!(kept.len(), DROPPED_KEPT, "only the latest are kept");
+        assert_eq!(kept[0].op.anilist_id(), AnilistId::new(990_005), "the oldest went first");
+    }
+
+    #[test]
+    fn a_newer_op_for_a_title_waits_behind_an_older_one_backing_off() {
+        let store = Store::open_in_memory().unwrap();
+        let status = |status, at| TrackOp::SetStatus { anilist_id: HOSHIKUZU, status, at };
+        let older = store.enqueue("anilist", &status(WatchStatus::Current, 1), 0).unwrap();
+        store.fail(older.unwrap(), "refused", 0).unwrap();
+        store.enqueue("anilist", &status(WatchStatus::Completed, 2), 5).unwrap();
+        let other = TrackOp::SetStatus {
+            anilist_id: AnilistId::new(990_001),
+            status: WatchStatus::Completed,
+            at: 2,
+        };
+        store.enqueue("anilist", &other, 5).unwrap();
+
+        let ready = store.claim_ready("anilist", 10, 10).unwrap();
+        assert_eq!(
+            ready.iter().map(|e| e.op.clone()).collect::<Vec<_>>(),
+            [other],
+            "the newer status waits; another title does not"
+        );
+        let later = store.claim_ready("anilist", backoff_secs(1) + 1, 10).unwrap();
+        assert_eq!(later.len(), 3, "once the older one may go, both go, in order");
+        assert_eq!(later[0].op, status(WatchStatus::Current, 1));
+        assert_eq!(later[1].op, status(WatchStatus::Completed, 2));
     }
 
     #[test]
