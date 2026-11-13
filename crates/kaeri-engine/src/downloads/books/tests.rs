@@ -1090,6 +1090,58 @@ async fn download_on_a_book_in_a_folder_says_it_needs_none() {
     assert_eq!(std::fs::read(&path).unwrap(), b"made-up book", "the book is left as it was");
 }
 
+/// R7E-4. A book server's series no catalogue lists (Komga, Kavita or OPDS alike) is named as
+/// its source names it on Downloads and in what a send calls its file and its ComicInfo, which
+/// take the same name; never by the work's id. One with no name at all is an untitled series.
+#[tokio::test]
+async fn a_work_no_catalogue_lists_is_named_on_downloads_and_sends() {
+    let kit = kit(&["1"]);
+    let form = kaeri_store::shelf::TitleForm::English;
+    let mut named = Vec::new();
+    for (source, series, title) in [
+        ("srv-komga", "k-1", "The Paper Lantern"),
+        ("srv-kavita", "v-1", "Harbour Signal Club"),
+        ("srv-opds", "o-1", "A Ferry at Dawn"),
+    ] {
+        let hit = SeriesHit::new(series, title);
+        let tile = kit.lent.sources.hit_tile(source, hit, Some(Medium::Manga), &[], 1).unwrap();
+        assert!(tile.work.as_str().starts_with("l:"), "{tile:?}");
+        let wanted = Wanted { chapter: ChapterId::new("1"), version_label: None };
+        kit.setup(Setup { hold: true, ..Setup::default() });
+        assert_eq!(kit.queue.queue(kit.store(), &tile.work, "shelf", &[wanted], false, 1), 1);
+        let send = crate::read_catalog::tiles::title_of(kit.store(), tile.work.as_str(), form);
+        assert_eq!(send, title, "the send's file and ComicInfo are named by this");
+        named.push(title.to_owned());
+    }
+    let unnamed = WorkId::new("l:m:9f0e1d2c");
+    let wanted = Wanted { chapter: ChapterId::new("1"), version_label: None };
+    assert_eq!(kit.queue.queue(kit.store(), &unnamed, "shelf", &[wanted], false, 1), 1);
+    named.push("Untitled series".to_owned());
+
+    let view = kit.queue.view(kit.store());
+    let mut rows: Vec<String> = view.rows.iter().map(|r| r.title.clone()).collect();
+    let mut series: Vec<String> = view.series.iter().map(|s| s.title.clone()).collect();
+    named.sort();
+    rows.sort();
+    series.sort();
+    assert_eq!((rows, series), (named.clone(), named));
+}
+
+/// R7E-4. At launch a work no catalogue lists that was read before names were kept is named by
+/// asking its source once.
+#[tokio::test]
+async fn a_work_read_before_names_were_kept_is_named_by_its_source() {
+    let kit = kit(&["1"]);
+    let work = "l:m:5a6b7c8d";
+    kit.store().set_book_match("shelf", "s-7", work, 50, false, false, 1).unwrap();
+    kit.store().set_read_status(work, Some("reading"), 1).unwrap();
+    assert_eq!(kit.lent.sources.name_unnamed(2).await, 1);
+    let form = kaeri_store::shelf::TitleForm::English;
+    let title = crate::read_catalog::tiles::title_of(kit.store(), work, form);
+    assert_eq!(title, "The Lantern Ferry");
+    assert_eq!(kit.lent.sources.name_unnamed(3).await, 0, "asked once");
+}
+
 /// R6-M3. A download of a folder series AniList does not list is named by the folder's name,
 /// in its row and its series line, never by the work's id.
 #[tokio::test]
@@ -1307,16 +1359,127 @@ async fn the_estimate_takes_a_file_in_a_folder_as_it_is_here() {
         source: None,
     };
     kit.store().put_local_file("books:ferry", &file, 1, 1).unwrap();
+    // R6W-1. Chapter 8 is a folder of pages: it takes what its pages do.
+    let pages = pages_folder(&books.join("Chapter 8"), &[("1.png", 10), ("2.png", 20)]);
+    let folder = kaeri_store::shelf::ShelfFile {
+        path: books.join("Chapter 8").display().to_string(),
+        label: "Chapter 8".into(),
+        number_milli: Some(8000),
+        format: "folder".into(),
+        ..file
+    };
+    kit.store().put_local_file("books:ferry", &folder, 1, 1).unwrap();
     kit.setup(Setup { mobile: true, ..Setup::default() });
 
     let work = WorkId::new(WORK);
-    let rows = [listed("7", None)];
-    let pick = DownloadPick::Chapters { ids: ids(&["7"]) };
+    let rows = [listed("7", None), listed("8", None)];
+    let pick = DownloadPick::Chapters { ids: ids(&["7", "8"]) };
     let folders = Some(crate::read_sources::FOLDERS);
     let estimate = kit.queue.estimate(kit.store(), &work, pick, &rows, folders);
     assert_eq!((estimate.chapters, estimate.bytes), (0, 0));
     assert!(estimate.line.is_empty(), "nothing to download: {:?}", estimate.line);
-    assert_eq!(estimate.all_bytes, std::fs::metadata(&path).unwrap().len());
+    assert_eq!(estimate.all_bytes, std::fs::metadata(&path).unwrap().len() + pages);
+}
+
+/// A folder of made-up pages, each `(name, shade)`; says what the pages take.
+fn pages_folder(dir: &Path, pages: &[(&str, u8)]) -> u64 {
+    std::fs::create_dir_all(dir).unwrap();
+    pages
+        .iter()
+        .map(|(name, shade)| {
+            let path = dir.join(name);
+            image::GrayImage::from_pixel(4, 6, image::Luma([*shade])).save(&path).unwrap();
+            std::fs::metadata(&path).unwrap().len()
+        })
+        .sum()
+}
+
+/// A folder the platform opens that treats folders as Windows does: a folder's own size is 0,
+/// and opening one as a file is refused as if Kaeri could not write there.
+struct WindowsLike {
+    scheme: String,
+    root: PathBuf,
+}
+
+impl WindowsLike {
+    fn path_of(&self, reference: &str) -> std::io::Result<PathBuf> {
+        let rest = reference
+            .strip_prefix(&self.scheme)
+            .ok_or_else(|| std::io::Error::from(std::io::ErrorKind::NotFound))?;
+        Ok(self.root.join(rest))
+    }
+
+    fn describe(&self, path: &Path) -> std::io::Result<kaeri_books::tree::TreeEntry> {
+        let meta = std::fs::metadata(path)?;
+        let rest = path.strip_prefix(&self.root).unwrap_or(path).to_string_lossy();
+        Ok(kaeri_books::tree::TreeEntry {
+            reference: format!("{}{rest}", self.scheme),
+            name: path.file_name().unwrap_or_default().to_string_lossy().into_owned(),
+            folder: meta.is_dir(),
+            size: if meta.is_dir() { 0 } else { meta.len() },
+            modified: 0,
+        })
+    }
+}
+
+impl kaeri_books::tree::Tree for WindowsLike {
+    fn claims(&self, reference: &str) -> bool {
+        reference.starts_with(&self.scheme)
+    }
+
+    fn entries(&self, reference: &str) -> std::io::Result<Vec<kaeri_books::tree::TreeEntry>> {
+        let mut out = Vec::new();
+        for entry in std::fs::read_dir(self.path_of(reference)?)? {
+            out.push(self.describe(&entry?.path())?);
+        }
+        Ok(out)
+    }
+
+    fn entry(&self, reference: &str) -> std::io::Result<kaeri_books::tree::TreeEntry> {
+        self.describe(&self.path_of(reference)?)
+    }
+
+    fn open(&self, reference: &str) -> std::io::Result<Box<dyn kaeri_books::Source>> {
+        let path = self.path_of(reference)?;
+        if path.is_dir() {
+            return Err(std::io::Error::from(std::io::ErrorKind::PermissionDenied));
+        }
+        Ok(Box::new(File::open(path)?))
+    }
+}
+
+/// R6W-1. A chapter that is a folder of pages is packed as a CBZ, its pages in their natural
+/// order, and never opened as a file, which Windows refuses as if Kaeri could not write. Its
+/// size is what its pages take, as the folder's own size is 0 there.
+#[test]
+fn a_folder_of_pages_is_packed_and_sized_by_its_pages() {
+    let dir = tempfile::tempdir().unwrap();
+    let chapter = dir.path().join("Chapter 01");
+    let pages = pages_folder(&chapter, &[("10.png", 30), ("2.png", 20), ("1.png", 10)]);
+    let tree = Arc::new(WindowsLike {
+        scheme: format!("winlike-{}://", std::process::id()),
+        root: dir.path().to_owned(),
+    });
+    let _held = kaeri_books::tree::register(tree.clone());
+    let reference = PathBuf::from(format!("{}Chapter 01", tree.scheme));
+    assert_eq!(kaeri_books::tree::stat(&reference).unwrap().size, 0);
+    let refused = kaeri_books::tree::open_file(&reference).err().map(|e| e.kind());
+    assert_eq!(refused, Some(std::io::ErrorKind::PermissionDenied));
+
+    for from in [chapter, reference.clone()] {
+        let packed = dir.path().join("packed.cbz");
+        assert!(keep_book(&from, &packed).unwrap(), "{} was copied", from.display());
+        let book = kaeri_books::open(&packed, &kaeri_books::Limits::default()).unwrap();
+        let kaeri_books::Book::Comic(mut comic) = book else { panic!("not a comic") };
+        let shades: Vec<u8> = (0..comic.pages().len())
+            .map(|i| {
+                let bytes = comic.read_page(i).unwrap();
+                image::load_from_memory(&bytes).unwrap().to_luma8().get_pixel(0, 0)[0]
+            })
+            .collect();
+        assert_eq!(shades, [10, 20, 30], "in natural order");
+    }
+    assert_eq!(Here::Folder { path: reference }.bytes(), Some(pages));
 }
 
 #[tokio::test]

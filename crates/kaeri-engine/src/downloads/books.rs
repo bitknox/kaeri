@@ -1295,12 +1295,15 @@ impl BookDownloads {
                 finish(&part, &stem.with_extension("epub"), None)
             }
             ChapterContent::Book(book) => {
-                let extension = book
-                    .path
-                    .extension()
-                    .and_then(|e| e.to_str())
-                    .map_or_else(|| "cbz".to_owned(), str::to_ascii_lowercase);
-                copy_book(&book.path, &part)?;
+                // A folder of pages is packed as a CBZ; a book file is copied as it is.
+                let extension = if keep_book(&book.path, &part)? {
+                    "cbz".to_owned()
+                } else {
+                    book.path
+                        .extension()
+                        .and_then(|e| e.to_str())
+                        .map_or_else(|| "cbz".to_owned(), str::to_ascii_lowercase)
+                };
                 if book.temporary {
                     let _ = std::fs::remove_file(&book.path);
                 }
@@ -1412,6 +1415,43 @@ pub(crate) fn io_failure(e: &std::io::Error, path: &Path) -> ReadingFailure {
 /// A failure that says the source was not reached, which a lost network also gives.
 fn unreached(failure: &ReadingFailure) -> bool {
     matches!(failure, ReadingFailure::SourceDown { .. } | ReadingFailure::Offline)
+}
+
+/// A book kept as `to`: a folder of pages packed as a CBZ, which says `true`, and a book file
+/// copied as it is. A folder is known by what it is, never by a failed open, which a folder
+/// answers differently on each system (on Windows as a refusal to write).
+fn keep_book(from: &Path, to: &Path) -> Result<bool, Stop> {
+    match kaeri_books::tree::stat(from) {
+        Ok(stat) if stat.folder => pack_pages(from, to).map(|()| true),
+        _ => copy_book(from, to).map(|()| false),
+    }
+}
+
+/// A folder of pages, on a plain path or in a folder the platform opens, packed as a CBZ with
+/// its pages in their natural order (2 before 10). A failure names the folder when it can't be
+/// read and the CBZ when it can't be written.
+fn pack_pages(from: &Path, to: &Path) -> Result<(), Stop> {
+    let unreadable = |e: &kaeri_books::BookError| match e {
+        kaeri_books::BookError::Io(io) => Stop::Failed(io_failure(io, from)),
+        _ => Stop::Failed(ReadingFailure::Unreadable {
+            path: from.display().to_string(),
+            format: "folder".into(),
+        }),
+    };
+    let unwritable = |e: &kaeri_books::BookError| match e {
+        kaeri_books::BookError::Io(io) => Stop::Failed(io_failure(io, to)),
+        _ => Stop::Failed(io_failure(&std::io::Error::other(e.to_string()), to)),
+    };
+    let mut comic = kaeri_books::Comic::open_folder(from, &kaeri_books::Limits::default())
+        .map_err(|e| unreadable(&e))?;
+    let out = BufWriter::new(File::create(to).map_err(|e| Stop::Failed(io_failure(&e, to)))?);
+    let mut cbz = kaeri_books::write::CbzWriter::new(out, None).map_err(|e| unwritable(&e))?;
+    for index in 0..comic.pages().len() {
+        let bytes = comic.read_page(index).map_err(|e| unreadable(&e))?;
+        cbz.add_page(&bytes).map_err(|e| unreadable(&e))?;
+    }
+    let mut out = cbz.finish().map_err(|e| unwritable(&e))?;
+    out.flush().map_err(|e| Stop::Failed(io_failure(&e, to)))
 }
 
 /// A whole book file copied as it is, from a plain path or a folder the platform opens. A

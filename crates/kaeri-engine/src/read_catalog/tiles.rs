@@ -142,16 +142,26 @@ pub fn demo(
     Some(tile)
 }
 
-/// A work's name as the person knows it: the catalogue's title in their title language, else the
-/// name of the folder series that carries it, else the work's id.
+/// A work's name as the person knows it: the catalogue's title in their title language, or the
+/// name its source or folder gave a work of its own on this device. A work's id is never shown:
+/// one with no name at all is an untitled series.
 pub fn title_of(store: &Store, work: &str, form: kaeri_store::shelf::TitleForm) -> String {
+    name_of(store, work, form).unwrap_or_else(kaeri_i18n::t::reading_untitled_series)
+}
+
+/// [`title_of`], or `None` when the work has no name at all.
+pub fn name_of(
+    store: &Store,
+    work: &str,
+    form: kaeri_store::shelf::TitleForm,
+) -> Option<String> {
     store
         .book_work_kind(work)
         .ok()
         .flatten()
         .and_then(|kind| kind.title_in(form))
+        .filter(|title| !title.trim().is_empty())
         .or_else(|| local_name(store, work))
-        .unwrap_or_else(|| work.to_owned())
 }
 
 /// The name of the folder series that carries `work`, for a work AniList does not list.

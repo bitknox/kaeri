@@ -575,7 +575,9 @@ impl Home {
             .filter_map(|work| {
                 match kept.iter().find(|k| tiles::work_of(k.book.id).as_str() == work) {
                     Some(kept) => Some(self.tile(kept)),
-                    None => self.known(work).or_else(|| self.local(work)),
+                    // A folder's series is shown as Library shows it; any other work by what
+                    // the store keeps of it.
+                    None => self.local(work).or_else(|| self.known(work)),
                 }
             })
             .collect()
@@ -601,7 +603,11 @@ impl Home {
             work: kaeri_core::books::WorkId::new(work.to_owned()),
             title,
             medium,
-            cover: None,
+            // A work of its own on this device keeps its source's cover with its name.
+            cover: tiles::anilist(work)
+                .is_none()
+                .then(|| self.store.book_work(work).ok().flatten().and_then(|w| w.cover))
+                .flatten(),
             format_label: None,
             progress: None,
             next: None,

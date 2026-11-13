@@ -1115,6 +1115,17 @@ const MIGRATIONS: &[(&str, &str)] = &[
      WHERE path LIKE '_:\%' AND instr(path, '\book-downloads\') > 0;
     "#,
     ),
+    (
+        "0035_local_work_names",
+        r#"
+    -- A work of its own on this device (`l:`) is named in book_work, where every screen, download
+    -- and send reads a work's name. Folder series carry their own name, so the ones kept before
+    -- this release are named from it; a book server's are named again from the server.
+    INSERT OR IGNORE INTO book_work (work, medium, titles, fetched_at)
+        SELECT work, MIN(medium), json_array(MIN(name)), 0 FROM book_local_series
+         WHERE work LIKE 'l:%' GROUP BY work;
+    "#,
+    ),
 ];
 
 /// Apply any migrations the database has not yet seen.
@@ -1315,6 +1326,38 @@ mod tests {
                 Some("/elsewhere/3.cbz".to_owned()),
                 None,
             ]
+        );
+    }
+
+    /// R7E-4. Folder series kept before names were kept for local works are named by their
+    /// folder's name; a work the catalogue already describes is left as it is.
+    #[test]
+    fn folder_works_kept_before_are_named_by_their_folder() {
+        let conn = Connection::open_in_memory().unwrap();
+        migrate_until(&conn, Some("0035_local_work_names")).unwrap();
+        for (id, name, work) in [
+            ("f:1", "The Long Ferry", Some("l:m:the long ferry")),
+            ("f:2", "Rooftop Paper Club", Some("a:900301")),
+            ("f:3", "Unmatched", None),
+        ] {
+            conn.execute(
+                "INSERT INTO book_local_series (id, folder, name, medium, work, state)
+                 VALUES (?1, 'f', ?2, 'manga', ?3, 'unmatched')",
+                rusqlite::params![id, name, work],
+            )
+            .unwrap();
+        }
+        migrate(&conn).unwrap();
+        let mut stmt =
+            conn.prepare("SELECT work, titles FROM book_work ORDER BY work").unwrap();
+        let rows: Vec<(String, String)> = stmt
+            .query_map([], |r| Ok((r.get(0)?, r.get(1)?)))
+            .unwrap()
+            .map(Result::unwrap)
+            .collect();
+        assert_eq!(
+            rows,
+            [("l:m:the long ferry".to_owned(), r#"["The Long Ferry"]"#.to_owned())]
         );
     }
 

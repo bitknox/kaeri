@@ -43,12 +43,19 @@ impl Here {
         }
     }
 
-    /// What the file takes on this device, or `None` when that cannot be told.
+    /// What the file takes on this device, or `None` when that cannot be told. A folder of
+    /// pages takes what its pages do, as a folder's own size says nothing (0 on Windows).
     pub(crate) fn bytes(&self) -> Option<u64> {
-        match self {
-            Self::Downloaded { bytes: Some(bytes), .. } => Some(*bytes),
-            _ => kaeri_books::tree::stat(self.path()).ok().map(|s| s.size),
+        if let Self::Downloaded { bytes: Some(bytes), .. } = self {
+            return Some(*bytes);
         }
+        let stat = kaeri_books::tree::stat(self.path()).ok()?;
+        if !stat.folder {
+            return Some(stat.size);
+        }
+        let limits = kaeri_books::Limits::default();
+        let comic = kaeri_books::Comic::open_folder(self.path(), &limits).ok()?;
+        Some(comic.pages().iter().map(|page| page.size).sum())
     }
 
     pub(crate) fn is_folder(&self) -> bool {

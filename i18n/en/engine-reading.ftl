@@ -835,6 +835,11 @@ reading-estimate-waits-wifi = waits for Wi-Fi
 # where they are, so nothing is downloaded.
 reading-download-on-device = These are files on this { -device } already. They read offline without a download.
 
+# A series' name where neither the catalogue nor its source gave one: on Downloads, in a sent
+# file's name and in the e-reader's library.
+# @max 32
+reading-untitled-series = Untitled series
+
 ## Downloads finished
 ## The notification a native app shows when the chapters it was downloading are all done, when
 ## the person turned it on.

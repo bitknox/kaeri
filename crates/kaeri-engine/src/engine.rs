@@ -4707,7 +4707,9 @@ mod tests {
             store.put_local_series(&series).unwrap();
             for (name, number) in files {
                 let path = books.join(name);
-                let format = path.extension().unwrap().to_string_lossy().into_owned();
+                let format = path
+                    .extension()
+                    .map_or_else(|| "folder".to_owned(), |e| e.to_string_lossy().into_owned());
                 let file = kaeri_store::shelf::ShelfFile {
                     path: path.display().to_string(),
                     chapter: None,
@@ -4726,8 +4728,9 @@ mod tests {
             store.set_book_match(folders, "books:ferry", WORK, 100, true, false, 1).unwrap();
         }
 
-        /// R6-7. Files in the person's folders are on this device: on cellular a send of a
-        /// folder's CBZ, or of its EPUB, goes at once, fetches nothing and never waits.
+        /// R6-7 and R6W-1. Files in the person's folders are on this device: on cellular a
+        /// send of a folder's CBZ, or of its EPUB, goes at once, fetches nothing and never
+        /// waits, and offline a chapter that is a folder of pages goes as well.
         #[tokio::test]
         async fn on_cellular_a_send_of_files_in_folders_goes_at_once() {
             let dir = tempfile::tempdir().unwrap();
@@ -4737,7 +4740,18 @@ mod tests {
             std::fs::create_dir_all(&books).unwrap();
             comic_file(&books.join("Chapter 7.cbz"), 3);
             novel_file(&books.join("Chapter 8.epub"));
-            read_from_folders(&store, &books, &[("Chapter 7.cbz", 7), ("Chapter 8.epub", 8)]);
+            // R6W-1. Chapter 9 is a folder of pages.
+            let pages = books.join("Chapter 9");
+            std::fs::create_dir_all(&pages).unwrap();
+            for n in 1..=2u8 {
+                let page = image::GrayImage::from_pixel(200, 300, image::Luma([n * 40]));
+                page.save(pages.join(format!("{n}.png"))).unwrap();
+            }
+            read_from_folders(
+                &store,
+                &books,
+                &[("Chapter 7.cbz", 7), ("Chapter 8.epub", 8), ("Chapter 9", 9)],
+            );
             engine.send(network(true, false));
 
             engine.send(send_of(&["7"]));
@@ -4759,6 +4773,12 @@ mod tests {
             });
             let files = files.unwrap_or_else(|| panic!("the EPUB was not sent: {seen:?}"));
             assert!(files.len() == 1 && files[0].name.ends_with(".epub"), "{files:?}");
+
+            // A folder of pages goes too, and needs no network at all.
+            engine.send(network(false, true));
+            engine.send(send_of(&["9"]));
+            let seen = seen_until(&mut events, send_ended).await;
+            assert_eq!(pages_sent(&seen).map(|(_, pages)| pages), Some(2), "{seen:?}");
             assert_eq!(source.fetched(), 0, "nothing was asked of the source");
             assert!(!kept_waiting(&store));
             engine.shutdown().await;

@@ -65,6 +65,8 @@ const HINT_KEPT: i64 = 7 * 24 * 3600;
 const HINT_RETRY: i64 = 3600;
 /// How long the source has to say how a series reads, asked in the background.
 const HINT_WAIT: std::time::Duration = std::time::Duration::from_secs(20);
+/// The rest between two series asked for their names at launch, so no source is asked often.
+const NAME_PACE: std::time::Duration = std::time::Duration::from_secs(4);
 /// How long the reader's open waits for that answer, when none is kept and one is coming.
 const HINT_OPEN_WAIT: std::time::Duration = std::time::Duration::from_millis(1500);
 
@@ -711,9 +713,12 @@ impl BookSources {
                 if let Err(e) = self.store.replace_book_scan(&folder.id, &rows, now) {
                     tracing::warn!(error = %e, "the scan was not kept");
                 }
-                // Each series is findable by its work, so chapters and editions can be asked.
+                // Each series is findable by its work, so chapters and editions can be asked,
+                // and one of its own on this device is named by its folder.
                 for (series, _) in &rows {
                     if let Some(work) = &series.work {
+                        let medium = Medium::parse(&series.medium).unwrap_or(Medium::Manga);
+                        self.name_local(work, medium, &series.name, None, now);
                         let keep = matches!(
                             self.store.book_match_state(FOLDERS, &series.id),
                             Ok(Some((_, true)))
@@ -1186,8 +1191,9 @@ fn recheck(
     });
 }
 
-/// Every [`RECHECK`] once launch is over, look again at the servers that showed no series.
-/// Runs in AniList's paced background queue, after Home's first screen.
+/// Once launch is over, name the works of their own on this device that have no name yet
+/// ([`BookSources::name_unnamed`]); then every [`RECHECK`], look again at the servers that
+/// showed no series. Runs in AniList's paced background queue, after Home's first screen.
 pub fn spawn_rechecks(
     this: BookSources,
     anilist: kaeri_meta::AniList,
@@ -1196,6 +1202,11 @@ pub fn spawn_rechecks(
 ) {
     tokio::spawn(async move {
         anilist.launch_over().await;
+        // Works of their own on this device read before their names were kept are named first.
+        let named = kaeri_meta::in_background(this.name_unnamed(clock())).await;
+        if named > 0 {
+            changed(&tx);
+        }
         let mut every = tokio::time::interval(RECHECK);
         every.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
         loop {
@@ -1783,6 +1794,7 @@ impl BookSources {
                 work
             }
         };
+        self.name_local(&work, medium, &hit.title, hit.cover.as_deref(), now);
         Some(WorkTile {
             work: WorkId::new(work),
             title: hit.title,
@@ -2037,6 +2049,72 @@ impl BookSources {
         });
     }
 
+    /// Keep `title` as the name of `work` when it is a work of its own on this device, one no
+    /// catalogue lists, so every screen, download and send names it as its source or folder
+    /// does. A catalogue's work is left to the catalogue.
+    pub(crate) fn name_local(
+        &self,
+        work: &str,
+        medium: Medium,
+        title: &str,
+        cover: Option<&str>,
+        now: i64,
+    ) {
+        let title = title.trim();
+        if crate::read_catalog::tiles::anilist(work).is_some() || title.is_empty() {
+            return;
+        }
+        if let Err(error) = self.store.name_local_work(work, medium.as_str(), title, cover, now)
+        {
+            tracing::warn!(%error, "a work's name was not kept");
+        }
+    }
+
+    /// Name the work `source`'s `series` is matched to from what the source said of it.
+    fn name_from(&self, source: &str, series: &str, detail: &SeriesDetail, now: i64) {
+        let Ok(Some(work)) = self.store.book_match(source, series) else { return };
+        let medium = self
+            .store
+            .book_work_kind(&work)
+            .ok()
+            .flatten()
+            .and_then(|kind| Medium::parse(&kind.medium))
+            .unwrap_or_else(|| self.hit_medium(source, &SeriesHit::new(series, ""), None, &[]));
+        self.name_local(&work, medium, &detail.title, detail.cover.as_deref(), now);
+    }
+
+    /// Name the works of their own on this device that were read or downloaded before their
+    /// names were kept, asking each one's source once, a few seconds apart, and none whose
+    /// source can't be asked. Answers how many were named.
+    pub(crate) async fn name_unnamed(&self, now: i64) -> usize {
+        let mut named = 0;
+        let mut done: HashSet<String> = HashSet::new();
+        let unnamed = self.store.unnamed_local_works().unwrap_or_default();
+        for (work, source, series) in unnamed {
+            if done.contains(&work) || source == FOLDERS || !self.is_available(&source) {
+                continue;
+            }
+            if named > 0 {
+                tokio::time::sleep(NAME_PACE).await;
+            }
+            let hints = BookHints::default();
+            let asked = self.registry.series(&source, &series, &hints, now);
+            match tokio::time::timeout(HINT_WAIT, asked).await {
+                Ok(Ok(detail)) => {
+                    self.name_from(&source, &series, &detail, now);
+                    done.insert(work);
+                    named += 1;
+                }
+                outcome => {
+                    if let Ok(Err(error)) = outcome {
+                        tracing::debug!(source, %error, "a work's name was not asked");
+                    }
+                }
+            }
+        }
+        named
+    }
+
     /// Ask the source how a series reads and keep the answer.
     async fn learn_hint(
         &self,
@@ -2048,7 +2126,10 @@ impl BookSources {
         let hints = BookHints::default();
         let asked = self.registry.series(source, series, &hints, now);
         let (hint, at) = match tokio::time::timeout(HINT_WAIT, asked).await {
-            Ok(Ok(detail)) => (detail.reading_hint.map(ReadingHint::as_str), now),
+            Ok(Ok(detail)) => {
+                self.name_from(source, series, &detail, now);
+                (detail.reading_hint.map(ReadingHint::as_str), now)
+            }
             // Asked again within the hour, keeping what it said before.
             outcome => {
                 if let Ok(Err(error)) = outcome {

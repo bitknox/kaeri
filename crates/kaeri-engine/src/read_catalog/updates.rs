@@ -144,7 +144,8 @@ fn tile_of(kit: &Kit, work: &str) -> Option<WorkTile> {
     if let Some(tile) = tiles::demo(work, &kit.store, &kit.sources) {
         return Some(tile);
     }
-    // Nothing kept of it yet: its folder's name, or its key until the catalogue answers.
+    // Nothing of AniList's kept for it: the name and cover kept of it, or its folder's name.
+    let form = crate::data::title_form(kit.meta.titles());
     let local = kit.store.local_book_series().unwrap_or_default();
     let series = local.iter().find(|s| s.work.as_deref() == Some(work));
     let medium = series
@@ -152,9 +153,9 @@ fn tile_of(kit: &Kit, work: &str) -> Option<WorkTile> {
         .unwrap_or(kaeri_core::media::Medium::Manga);
     let mut tile = WorkTile {
         work: WorkId::new(work.to_owned()),
-        title: series.map_or_else(|| work.to_owned(), |s| s.name.clone()),
+        title: tiles::title_of(&kit.store, work, form),
         medium,
-        cover: None,
+        cover: kit.store.book_work(work).ok().flatten().and_then(|w| w.cover),
         format_label: None,
         progress: None,
         next: None,
@@ -169,6 +170,11 @@ fn tile_of(kit: &Kit, work: &str) -> Option<WorkTile> {
     };
     tiles::mark(&mut tile, &kit.store, &kit.sources);
     Some(tile)
+}
+
+/// A work's name where no tile was made of it: never its id.
+fn untitled(kit: &Kit, work: &str) -> String {
+    tiles::title_of(&kit.store, work, crate::data::title_form(kit.meta.titles()))
 }
 
 fn source_name(sources: &BookSources, source: &str) -> String {
@@ -282,7 +288,8 @@ pub(crate) async fn run(kit: &Kit, ask: Ask) -> Checked {
             // no such series. Its list stays as kept.
             if let Some(source) = edition.map(|(s, _)| s).or_else(|| away(sources, &id)) {
                 held_back = true;
-                let title = tile_of(kit, &work).map_or_else(|| work.clone(), |t| t.title);
+                let title =
+                    tile_of(kit, &work).map_or_else(|| untitled(kit, &work), |t| t.title);
                 let name = source_name(sources, &source);
                 let failure = if sources.registry.is_off(&source) {
                     ReadingFailure::SourceOff { source: name.clone() }
@@ -304,7 +311,8 @@ pub(crate) async fn run(kit: &Kit, ask: Ask) -> Checked {
             Ok(listed) => listed,
             Err(e) => {
                 tracing::info!(error = %e, "a followed series' source did not answer");
-                let title = tile_of(kit, &work).map_or_else(|| work.clone(), |t| t.title);
+                let title =
+                    tile_of(kit, &work).map_or_else(|| untitled(kit, &work), |t| t.title);
                 failures.push(UpdateFailure {
                     work: id,
                     title,
