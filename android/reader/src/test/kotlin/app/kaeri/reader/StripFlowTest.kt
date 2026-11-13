@@ -11,12 +11,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.unit.dp
 import app.kaeri.engine.model.ReaderMode
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -33,15 +36,25 @@ class StripFlowTest {
     @get:Rule
     val compose = createAndroidComposeRule<ComponentActivity>()
 
+    private val dir = kotlin.io.path.createTempDirectory("strip-flow").toFile()
+    private val list = LazyListState()
+    private lateinit var scope: CoroutineScope
+
+    /** A scroll by [px], held over a few frames as a finger's is, then let go. */
+    private fun drag(px: Float) {
+        compose.runOnIdle { scope.launch { list.scroll { scrollBy(px); repeat(4) { withFrameNanos { } } } } }
+        compose.waitForIdle()
+    }
+
     @Test
     fun the_images_of_the_chapter_flowed_into_take_the_room_under_its_divider() {
         val into = ReaderFixtures.chapter("local:lantern-stair/13", "13", "Lanterns Out", 4u)
         val after = ReaderFixtures.chapter("local:lantern-stair/14", "14", null, 4u)
-        val first = ReaderState(view = ReaderFixtures.view(mode = ReaderMode.STRIP, next = into), leaves = ReaderFixtures.leaves(4))
+        val first = ReaderState(view = ReaderFixtures.view(mode = ReaderMode.STRIP, next = into), leaves = ReaderFixtures.leaves(4) { ReaderFixtures.grey(dir, "12-$it", 400, 300) })
         var state by mutableStateOf(first)
         val flows = mutableListOf<String>()
-        val list = LazyListState()
         compose.setContent {
+            scope = rememberCoroutineScope()
             StripReader(
                 state = state,
                 images = PageImages(),
@@ -60,11 +73,10 @@ class StripFlowTest {
         compose.waitForIdle()
         // Four images, the divider into chapter 13, then the room under it.
         assertEquals(6, list.layoutInfo.totalItemsCount)
-        // Flung past the divider, which flows on, to the end: the room fills the screen.
-        compose.runOnIdle { runBlocking { list.scrollToItem(4) } }
-        compose.waitForIdle()
-        compose.runOnIdle { runBlocking { list.scrollToItem(5) } }
-        compose.waitForIdle()
+        // Scrolled onto the divider with chapter 12's images in, which flows on, then on to the end:
+        // the room fills the screen.
+        repeat(40) { if (flows.isEmpty()) drag(300f) }
+        drag(100_000f)
         assertEquals(listOf(into.id), flows)
 
         // Chapter 13 opens with the one left kept above it, and then its images come.
@@ -72,7 +84,7 @@ class StripFlowTest {
         compose.runOnIdle { state = opened }
         compose.waitForIdle()
         assertEquals(5, list.firstVisibleItemIndex)
-        compose.runOnIdle { state = opened.copy(leaves = ReaderFixtures.leaves(4)) }
+        compose.runOnIdle { state = opened.copy(leaves = ReaderFixtures.leaves(4) { ReaderFixtures.grey(dir, "13-$it", 400, 300) }) }
         compose.waitForIdle()
 
         // The scroll is where chapter 13 starts, under its divider, and nothing flowed on to 14.
