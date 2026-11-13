@@ -349,8 +349,12 @@ final class ReaderStuckTests: XCTestCase {
             XCTAssertTrue(field.exists, "Command-L took the sheet away")
             // The book's pages leave the accessibility tree while a sheet is over them, so the
             // page is read once the sheet is cancelled.
+            // The reader keeps a go-to-page field of its own, so the sheet's going is told by its
+            // own button, not by a text field.
+            let choose = app.buttons["Choose a torrent file"].firstMatch
+            XCTAssertTrue(choose.exists, "the sheet has no Choose a torrent file")
             app.buttons["Cancel"].firstMatch.tap()
-            XCTAssertTrue(field.waitForNonExistence(timeout: 5), "Cancel left the sheet up")
+            XCTAssertTrue(choose.waitForNonExistence(timeout: 5), "Cancel left the sheet up")
             XCTAssertEqual(page(app), start, "the arrows turned the book behind the sheet")
         } else {
             key(app, .leftArrow)
