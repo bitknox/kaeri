@@ -818,6 +818,9 @@
   <data name="ExportWaitsForWifi_other" xml:space="preserve">
     <value>{n} chương chưa được tải, nên lượt gửi này sẽ chờ Wi-Fi rồi tự chạy tiếp.</value>
   </data>
+  <data name="ExportPagesLeftOut_other" xml:space="preserve">
+    <value>{n} trang của {chapter} không đọc được và không có trong tệp.</value>
+  </data>
   <data name="ReadingChapterTitled" xml:space="preserve">
     <value>Chương {chapter} · {title}</value>
   </data>

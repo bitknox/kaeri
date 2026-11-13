@@ -299,6 +299,10 @@
         <item quantity="one">Ett kapitel är inte nedladdat än, så den här sändningen väntar på Wi-Fi och fortsätter av sig själv.</item>
         <item quantity="other">%1$,d kapitel är inte nedladdade än, så den här sändningen väntar på Wi-Fi och fortsätter av sig själv.</item>
     </plurals>
+    <plurals name="export_pages_left_out">
+        <item quantity="one">En sida i %2$s gick inte att läsa och finns inte med i filerna.</item>
+        <item quantity="other">%1$,d sidor i %2$s gick inte att läsa och finns inte med i filerna.</item>
+    </plurals>
     <string name="reading_chapter_titled">Kapitel %1$s · %2$s</string>
     <string name="reading_row_read">Läst</string>
     <string name="reading_row_new">Ny</string>

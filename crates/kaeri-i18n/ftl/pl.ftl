@@ -855,6 +855,15 @@ export-waits-for-wifi =
        *[other] Do pobrania zostało { $n } rozdziału, więc wysyłanie poczeka na Wi-Fi i ruszy samo.
     }
 
+# Send to e-reader, under the ready files: pages of one chapter that couldn't be read, as the reader shows them broken, so the files go without them. The chapter is its name as the series shows it, such as Chapter 12 or Volume 1. n is how many pages were left out.
+export-pages-left-out =
+    { $n ->
+        [one] Jednej strony z { $chapter } nie udało się odczytać i nie ma jej w plikach.
+        [few] { $n } strony z { $chapter } nie udało się odczytać i nie ma ich w plikach.
+        [many] { $n } stron z { $chapter } nie udało się odczytać i nie ma ich w plikach.
+       *[other] { $n } strony z { $chapter } nie udało się odczytać i nie ma ich w plikach.
+    }
+
 # Under a This week cell: the chapter that came out that day, with its own title.
 reading-chapter-titled = Rozdział { $chapter } · { $title }
 

@@ -107,6 +107,12 @@ export-waits-for-wifi = { $n ->
     [many] Do pobrania zostało { $n } rozdziałów, więc wysyłanie poczeka na Wi-Fi i ruszy samo.
    *[other] Do pobrania zostało { $n } rozdziału, więc wysyłanie poczeka na Wi-Fi i ruszy samo.
  }
+export-pages-left-out = { $n ->
+    [one] Jednej strony z { $chapter } nie udało się odczytać i nie ma jej w plikach.
+    [few] { $n } strony z { $chapter } nie udało się odczytać i nie ma ich w plikach.
+    [many] { $n } stron z { $chapter } nie udało się odczytać i nie ma ich w plikach.
+   *[other] { $n } strony z { $chapter } nie udało się odczytać i nie ma ich w plikach.
+ }
 reading-chapter-titled = Rozdział { $chapter } · { $title }
 reading-row-read = Przeczytany
 reading-row-new = Nowy

@@ -299,6 +299,10 @@
         <item quantity="one">Bir bölüm henüz indirilmedi, bu yüzden gönderim Wi-Fi\'yi bekler ve sonra kendiliğinden sürer.</item>
         <item quantity="other">%1$,d bölüm henüz indirilmedi, bu yüzden gönderim Wi-Fi\'yi bekler ve sonra kendiliğinden sürer.</item>
     </plurals>
+    <plurals name="export_pages_left_out">
+        <item quantity="one">%2$s içindeki bir sayfa okunamadı ve dosyalarda yok.</item>
+        <item quantity="other">%2$s içindeki %1$,d sayfa okunamadı ve dosyalarda yok.</item>
+    </plurals>
     <string name="reading_chapter_titled">Bölüm %1$s · %2$s</string>
     <string name="reading_row_read">Okundu</string>
     <string name="reading_row_new">Yeni</string>

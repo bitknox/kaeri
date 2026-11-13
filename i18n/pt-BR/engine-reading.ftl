@@ -103,6 +103,11 @@ export-waits-for-wifi = { $n ->
     [many] { $n } de capítulos ainda não foram baixados, então este envio espera o Wi-Fi e continua sozinho.
    *[other] { $n } capítulos ainda não foram baixados, então este envio espera o Wi-Fi e continua sozinho.
  }
+export-pages-left-out = { $n ->
+    [one] Uma página de { $chapter } não pôde ser lida e não está nos arquivos.
+    [many] { $n } de páginas de { $chapter } não puderam ser lidas e não estão nos arquivos.
+   *[other] { $n } páginas de { $chapter } não puderam ser lidas e não estão nos arquivos.
+ }
 reading-chapter-titled = Capítulo { $chapter } · { $title }
 reading-row-read = Lido
 reading-row-new = Novo

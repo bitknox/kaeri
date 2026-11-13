@@ -287,6 +287,9 @@
     <plurals name="export_waits_for_wifi">
         <item quantity="other">%1$,d chương chưa được tải, nên lượt gửi này sẽ chờ Wi-Fi rồi tự chạy tiếp.</item>
     </plurals>
+    <plurals name="export_pages_left_out">
+        <item quantity="other">%1$,d trang của %2$s không đọc được và không có trong tệp.</item>
+    </plurals>
     <string name="reading_chapter_titled">Chương %1$s · %2$s</string>
     <string name="reading_row_read">Đã đọc</string>
     <string name="reading_row_new">Mới</string>

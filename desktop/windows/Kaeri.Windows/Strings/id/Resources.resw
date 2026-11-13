@@ -818,6 +818,9 @@
   <data name="ExportWaitsForWifi_other" xml:space="preserve">
     <value>{n} bab belum diunduh, jadi pengiriman ini menunggu Wi-Fi dan lanjut sendiri.</value>
   </data>
+  <data name="ExportPagesLeftOut_other" xml:space="preserve">
+    <value>{n} halaman dari {chapter} tidak bisa dibaca dan tidak ada di file.</value>
+  </data>
   <data name="ReadingChapterTitled" xml:space="preserve">
     <value>Bab {chapter} · {title}</value>
   </data>

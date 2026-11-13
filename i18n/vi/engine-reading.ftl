@@ -95,6 +95,9 @@ export-chapter = Chương { $chapter }
 export-waits-for-wifi = { $n ->
    *[other] { $n } chương chưa được tải, nên lượt gửi này sẽ chờ Wi-Fi rồi tự chạy tiếp.
  }
+export-pages-left-out = { $n ->
+   *[other] { $n } trang của { $chapter } không đọc được và không có trong tệp.
+ }
 reading-chapter-titled = Chương { $chapter } · { $title }
 reading-row-read = Đã đọc
 reading-row-new = Mới

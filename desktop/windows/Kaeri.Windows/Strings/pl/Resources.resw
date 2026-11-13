@@ -926,6 +926,18 @@
   <data name="ExportWaitsForWifi_other" xml:space="preserve">
     <value>Do pobrania zostało {n} rozdziału, więc wysyłanie poczeka na Wi-Fi i ruszy samo.</value>
   </data>
+  <data name="ExportPagesLeftOut_one" xml:space="preserve">
+    <value>Jednej strony z {chapter} nie udało się odczytać i nie ma jej w plikach.</value>
+  </data>
+  <data name="ExportPagesLeftOut_few" xml:space="preserve">
+    <value>{n} strony z {chapter} nie udało się odczytać i nie ma ich w plikach.</value>
+  </data>
+  <data name="ExportPagesLeftOut_many" xml:space="preserve">
+    <value>{n} stron z {chapter} nie udało się odczytać i nie ma ich w plikach.</value>
+  </data>
+  <data name="ExportPagesLeftOut_other" xml:space="preserve">
+    <value>{n} strony z {chapter} nie udało się odczytać i nie ma ich w plikach.</value>
+  </data>
   <data name="ReadingChapterTitled" xml:space="preserve">
     <value>Rozdział {chapter} · {title}</value>
   </data>

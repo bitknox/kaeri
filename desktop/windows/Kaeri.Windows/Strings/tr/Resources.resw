@@ -854,6 +854,12 @@
   <data name="ExportWaitsForWifi_other" xml:space="preserve">
     <value>{n} bölüm henüz indirilmedi, bu yüzden gönderim Wi-Fi'yi bekler ve sonra kendiliğinden sürer.</value>
   </data>
+  <data name="ExportPagesLeftOut_one" xml:space="preserve">
+    <value>{chapter} içindeki bir sayfa okunamadı ve dosyalarda yok.</value>
+  </data>
+  <data name="ExportPagesLeftOut_other" xml:space="preserve">
+    <value>{chapter} içindeki {n} sayfa okunamadı ve dosyalarda yok.</value>
+  </data>
   <data name="ReadingChapterTitled" xml:space="preserve">
     <value>Bölüm {chapter} · {title}</value>
   </data>

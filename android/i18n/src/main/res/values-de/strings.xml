@@ -299,6 +299,10 @@
         <item quantity="one">Ein Kapitel ist noch nicht heruntergeladen. Dieser Versand wartet daher auf Wi-Fi und läuft dann von selbst an.</item>
         <item quantity="other">%1$,d Kapitel sind noch nicht heruntergeladen. Dieser Versand wartet daher auf Wi-Fi und läuft dann von selbst an.</item>
     </plurals>
+    <plurals name="export_pages_left_out">
+        <item quantity="one">Eine Seite von %2$s ließ sich nicht lesen und fehlt in den Dateien.</item>
+        <item quantity="other">%1$,d Seiten von %2$s ließen sich nicht lesen und fehlen in den Dateien.</item>
+    </plurals>
     <string name="reading_chapter_titled">Kapitel %1$s · %2$s</string>
     <string name="reading_row_read">Gelesen</string>
     <string name="reading_row_new">Neu</string>

@@ -287,6 +287,9 @@
     <plurals name="export_waits_for_wifi">
         <item quantity="other">%1$,d bab belum diunduh, jadi pengiriman ini menunggu Wi-Fi dan lanjut sendiri.</item>
     </plurals>
+    <plurals name="export_pages_left_out">
+        <item quantity="other">%1$,d halaman dari %2$s tidak bisa dibaca dan tidak ada di file.</item>
+    </plurals>
     <string name="reading_chapter_titled">Bab %1$s · %2$s</string>
     <string name="reading_row_read">Dibaca</string>
     <string name="reading_row_new">Baru</string>
