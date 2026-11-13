@@ -4675,6 +4675,133 @@ mod tests {
             engine.shutdown().await;
         }
 
+        /// A made-up one-chapter novel.
+        fn novel_file(path: &std::path::Path) {
+            use kaeri_books::write::{BookMeta, EpubFlavor, EpubWriter};
+            let meta = BookMeta {
+                title: "The Lantern Ferry".into(),
+                language: "en".into(),
+                ..BookMeta::default()
+            };
+            let out = std::io::BufWriter::new(std::fs::File::create(path).unwrap());
+            let mut w = EpubWriter::new(out, meta, EpubFlavor::Epub, None).unwrap();
+            w.add_chapter("Eight", "<p>The tide came in under the pier.</p>").unwrap();
+            w.finish().unwrap();
+        }
+
+        /// Puts `files` (each a file name in `books` and its chapter number) in a folder
+        /// series of the work, and reads the work from there.
+        fn read_from_folders(
+            store: &kaeri_store::Store,
+            books: &std::path::Path,
+            files: &[(&str, u32)],
+        ) {
+            let series = kaeri_store::shelf::LocalSeries {
+                id: "books:ferry".into(),
+                folder: books.display().to_string(),
+                name: "The Lantern Ferry".into(),
+                medium: "manga".into(),
+                work: Some(WORK.into()),
+                state: "matched".into(),
+            };
+            store.put_local_series(&series).unwrap();
+            for (name, number) in files {
+                let path = books.join(name);
+                let format = path.extension().unwrap().to_string_lossy().into_owned();
+                let file = kaeri_store::shelf::ShelfFile {
+                    path: path.display().to_string(),
+                    chapter: None,
+                    label: format!("Chapter {number}"),
+                    volume: None,
+                    number_milli: Some(i64::from(*number) * 1000),
+                    format,
+                    pages: None,
+                    comicinfo: None,
+                    source: None,
+                };
+                store.put_local_file("books:ferry", &file, 1, 1).unwrap();
+            }
+            store.set_book_match("shelf", "s-1", WORK, 0, false, false, 1).unwrap();
+            let folders = crate::read_sources::FOLDERS;
+            store.set_book_match(folders, "books:ferry", WORK, 100, true, false, 1).unwrap();
+        }
+
+        /// R6-7. Files in the person's folders are on this device: on cellular a send of a
+        /// folder's CBZ, or of its EPUB, goes at once, fetches nothing and never waits.
+        #[tokio::test]
+        async fn on_cellular_a_send_of_files_in_folders_goes_at_once() {
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, store, source) = launch_engine(dir.path(), None).await;
+            events.launch().await;
+            let books = dir.path().join("books");
+            std::fs::create_dir_all(&books).unwrap();
+            comic_file(&books.join("Chapter 7.cbz"), 3);
+            novel_file(&books.join("Chapter 8.epub"));
+            read_from_folders(&store, &books, &[("Chapter 7.cbz", 7), ("Chapter 8.epub", 8)]);
+            engine.send(network(true, false));
+
+            engine.send(send_of(&["7"]));
+            let seen = seen_until(&mut events, send_ended).await;
+            assert_eq!(pages_sent(&seen).map(|(_, pages)| pages), Some(3), "{seen:?}");
+            assert!(!seen.iter().any(said_waiting), "{seen:?}");
+
+            engine.send(Command::Reading(ReadingCommand::Prepare {
+                work: WorkId::new(WORK),
+                pick: DownloadPick::Chapters { ids: vec![ChapterId::new("8")] },
+                target: "kobo".into(),
+                format: kaeri_model::reading::ExportFormat::Epub,
+            }));
+            let seen = seen_until(&mut events, send_ended).await;
+            assert!(!seen.iter().any(said_waiting), "{seen:?}");
+            let files = seen.iter().find_map(|e| match e {
+                Event::Reading(ReadingEvent::ExportReady { files, .. }) => Some(files.clone()),
+                _ => None,
+            });
+            let files = files.unwrap_or_else(|| panic!("the EPUB was not sent: {seen:?}"));
+            assert!(files.len() == 1 && files[0].name.ends_with(".epub"), "{files:?}");
+            assert_eq!(source.fetched(), 0, "nothing was asked of the source");
+            assert!(!kept_waiting(&store));
+            engine.shutdown().await;
+        }
+
+        /// R6-7. A send of a folder's file, a downloaded chapter and one to fetch waits for
+        /// Wi-Fi for the one it fetches alone, then sends all three.
+        #[tokio::test]
+        async fn a_mixed_send_waits_only_for_the_chapter_it_fetches() {
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, store, source) = launch_engine(dir.path(), None).await;
+            events.launch().await;
+            // Downloading chapter 2 keeps the source's list, so the folder series lists the
+            // source's chapters beside its own file.
+            engine.send(network(false, false));
+            engine.send(Command::Reading(ReadingCommand::Download {
+                work: WorkId::new(WORK),
+                pick: DownloadPick::Chapters { ids: vec![ChapterId::new("2")] },
+            }));
+            downloads_until(&engine, &mut events, |v| done_ids(v) == ["1", "2"]).await;
+            let books = dir.path().join("books");
+            std::fs::create_dir_all(&books).unwrap();
+            comic_file(&books.join("Chapter 7.cbz"), 3);
+            read_from_folders(&store, &books, &[("Chapter 7.cbz", 7)]);
+            engine.send(network(true, false));
+            let fetched = source.fetched();
+
+            engine.send(send_of(&["1", "3", "7"]));
+            let seen = seen_until(&mut events, |e| send_ended(e) || said_waiting(e)).await;
+            let line = seen.iter().find_map(|e| match e {
+                Event::Reading(ReadingEvent::ExportWaiting { line, .. }) => Some(line.clone()),
+                _ => None,
+            });
+            let one = Msg::Reading(kaeri_model::ReadingMsg::ExportWaitsForWifi { n: 1 });
+            assert_eq!(line, Some(one), "only chapter 3 is to fetch: {seen:?}");
+            assert_eq!(source.fetched(), fetched);
+
+            engine.send(network(false, false));
+            let seen = seen_until(&mut events, send_ended).await;
+            assert_eq!(pages_sent(&seen).map(|(_, pages)| pages), Some(2 + 2 + 3), "{seen:?}");
+            engine.shutdown().await;
+        }
+
         #[tokio::test]
         async fn a_send_waiting_for_wifi_is_cancelled_and_leaves_nothing() {
             let dir = tempfile::tempdir().unwrap();

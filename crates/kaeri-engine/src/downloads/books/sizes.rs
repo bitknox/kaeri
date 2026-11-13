@@ -13,7 +13,7 @@ use kaeri_store::{
     book_downloads::{BookDownload, BookDownloadState},
 };
 
-use super::{BookDownloads, Setup, decode};
+use super::{BookDownloads, OnDevice, Setup, decode};
 
 /// Pages in a chapter when neither the source nor a past download says.
 const PAGES: u32 = 20;
@@ -263,12 +263,19 @@ impl BookDownloads {
             })
             .map(|d| d.chapter.as_str())
             .collect();
+        // The chosen chapters already on this device, downloaded or in the person's folders,
+        // by what they take there.
+        let here = OnDevice::of(store, work.as_str());
+        let file = |row: &ChapterRow| here.file(row.id.as_str());
         let picked = Self::to_fetch(&pick, rows);
         let chosen: Vec<&ChapterRow> =
             rows.iter().filter(|row| picked.iter().any(|w| w.chapter == row.id)).collect();
-        let wanted: Vec<&ChapterRow> =
-            chosen.iter().copied().filter(|row| !have.contains(row.id.as_str())).collect();
-        // The chosen chapters already on this device, by what they take there.
+        let wanted: Vec<&ChapterRow> = chosen
+            .iter()
+            .copied()
+            .filter(|row| !have.contains(row.id.as_str()) && file(row).is_none())
+            .collect();
+        // A finished download whose file is gone still says what it took.
         let done: HashMap<&str, u64> = all
             .iter()
             .filter(|d| d.work == work.as_str() && d.state == BookDownloadState::Done)
@@ -290,7 +297,12 @@ impl BookDownloads {
         let bytes: Option<u64> = wanted.iter().map(guess).sum();
         let all_bytes: Option<u64> = chosen
             .iter()
-            .map(|row| done.get(row.id.as_str()).copied().or_else(|| guess(row)))
+            .map(|row| {
+                file(row)
+                    .and_then(|f| f.bytes())
+                    .or_else(|| done.get(row.id.as_str()).copied())
+                    .or_else(|| guess(row))
+            })
             .sum();
         let mut line = Vec::new();
         if let Some(bytes) = bytes.filter(|_| !wanted.is_empty()) {

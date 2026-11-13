@@ -1277,6 +1277,48 @@ async fn the_estimate_counts_pages_at_the_size_past_pages_took_and_names_the_net
     assert_eq!(nothing.all_bytes, done.bytes, "a downloaded chapter still has its size");
 }
 
+/// R6-7. The estimate takes a file in the person's folders as on this device: nothing of it
+/// downloads, and a send of it comes to what the file takes, rather than a size never known.
+#[tokio::test]
+async fn the_estimate_takes_a_file_in_a_folder_as_it_is_here() {
+    let kit = kit(&[]);
+    let books = kit._dir.path().join("books");
+    std::fs::create_dir_all(&books).unwrap();
+    let path = books.join("Chapter 7.cbz");
+    std::fs::write(&path, b"a made-up comic of a few bytes").unwrap();
+    let series = kaeri_store::shelf::LocalSeries {
+        id: "books:ferry".into(),
+        folder: books.display().to_string(),
+        name: "The Long Ferry".into(),
+        medium: "manga".into(),
+        work: Some(WORK.into()),
+        state: "matched".into(),
+    };
+    kit.store().put_local_series(&series).unwrap();
+    let file = kaeri_store::shelf::ShelfFile {
+        path: path.display().to_string(),
+        chapter: None,
+        label: "Chapter 7".into(),
+        volume: None,
+        number_milli: Some(7000),
+        format: "cbz".into(),
+        pages: None,
+        comicinfo: None,
+        source: None,
+    };
+    kit.store().put_local_file("books:ferry", &file, 1, 1).unwrap();
+    kit.setup(Setup { mobile: true, ..Setup::default() });
+
+    let work = WorkId::new(WORK);
+    let rows = [listed("7", None)];
+    let pick = DownloadPick::Chapters { ids: ids(&["7"]) };
+    let folders = Some(crate::read_sources::FOLDERS);
+    let estimate = kit.queue.estimate(kit.store(), &work, pick, &rows, folders);
+    assert_eq!((estimate.chapters, estimate.bytes), (0, 0));
+    assert!(estimate.line.is_empty(), "nothing to download: {:?}", estimate.line);
+    assert_eq!(estimate.all_bytes, std::fs::metadata(&path).unwrap().len());
+}
+
 #[tokio::test]
 async fn a_downloaded_chapter_the_source_dropped_stays_listed_and_opens() {
     let kit = kit(&["1", "2", "3", "4"]);

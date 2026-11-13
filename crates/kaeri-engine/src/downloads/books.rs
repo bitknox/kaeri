@@ -576,11 +576,8 @@ impl BookDownloads {
         let listers = Listers::of(&lent.sources, &work, &source);
         // A file in the person's folders opens from where it is: nothing of it is fetched, and
         // asking for only such files says so.
-        let on_device = |w: &Wanted| {
-            let row = rows.iter().find(|r| r.id == w.chapter);
-            row.map_or(Some(listers.edition.as_str()), |row| listers.of_row(row))
-                == Some(crate::read_sources::FOLDERS)
-        };
+        let here = OnDevice::of(store, work.as_str());
+        let on_device = |w: &Wanted| here.file(w.chapter.as_str()).is_some_and(Here::is_folder);
         if !wanted.is_empty() && wanted.iter().all(on_device) {
             let notice = Notice::info(Msg::Reading(ReadingMsg::ReadingDownloadOnDevice));
             let _ = lent.tx.send(Event::Toast(notice));
@@ -1718,11 +1715,13 @@ pub fn launched(engine: &crate::state::EngineState, services: &Services, tx: &Ou
     resume(engine, services, tx);
 }
 
+mod here;
 mod kept;
 mod shared;
 mod sizes;
 #[cfg(test)]
 mod tests;
 
+pub(crate) use here::{Here, OnDevice, in_folders};
 use kept::{KeptPages, pages_of};
 pub(crate) use shared::SharedPages;

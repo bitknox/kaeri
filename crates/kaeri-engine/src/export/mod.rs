@@ -3,14 +3,14 @@
 //!
 //! **Send to e-reader** prepares chapters for one target profile and hands back a
 //! list of files for the app's share sheet: [`prepare`] writes them, [`profiles`] says what a
-//! target is. A chapter that is not downloaded is fetched through the download pipeline for the
-//! send and removed once its files are written; downloaded ones are used as they are. The job
-//! is announced like any other, told as `ExportProgress` and ended with `ExportReady`; it stops
-//! on `CancelPrepare` and leaves no files behind. A send with chapters to fetch waits while the
-//! downloads do, and goes on by itself: for Wi-Fi it says so with `ExportWaiting`, and one left
-//! waiting when the engine stops starts again at the next launch ([`held`]). Until the front end
-//! first says the network it waits too, without a word, as the network may be cellular. With no
-//! network at all it fails as offline. Once the files are shared, the series page asks
+//! target is. A chapter that is not on this device is fetched through the download pipeline for
+//! the send and removed once its files are written; downloaded ones and files in the person's
+//! folders are used as they are. The job is announced like any other, told as `ExportProgress`
+//! and ended with `ExportReady`; it stops on `CancelPrepare` and leaves no files behind. A send
+//! with chapters to fetch waits while the downloads do, and goes on by itself: for Wi-Fi it says
+//! so with `ExportWaiting`, and one left waiting when the engine stops starts again at the next
+//! launch ([`held`]). Until the front end first says the network it waits too, without a word,
+//! as the network may be cellular. With no network at all it fails as offline. Once the files are shared, the series page asks
 //! where you stopped, and the answer is a `ReadAdopt` op.
 //!
 //! **The OPDS feed** is in [`feed`], behind the `opds-feed` feature the desktop builds turn on.
@@ -46,7 +46,8 @@ use kaeri_store::{Store, book_downloads::BookDownloadState};
 
 use crate::{
     downloads::books::{
-        BookDownloads, Fetching, Lent, Stop as FetchStop, Wanted, chapter_row, flatten,
+        BookDownloads, Fetching, Here, Lent, OnDevice, Stop as FetchStop, Wanted, chapter_row,
+        flatten,
     },
     jobs::JobGuard,
     outbox::Outbox,
@@ -317,20 +318,6 @@ fn series_header(engine: &EngineState, services: &Services, work: &WorkId, tx: &
 // ---------------------------------------------------------------------------------------------
 // Send to e-reader
 
-/// The chapters the person has downloaded, by chapter id, with the file each is.
-fn chosen_downloads(store: &Store, work: &str) -> HashMap<String, PathBuf> {
-    store
-        .book_downloads(Some(work))
-        .unwrap_or_default()
-        .into_iter()
-        .filter(|d| d.state == BookDownloadState::Done)
-        .filter_map(|d| {
-            let path = PathBuf::from(d.path?);
-            path.is_file().then_some((d.chapter, path))
-        })
-        .collect()
-}
-
 /// The downloaded chapters `pick` names, in reading order, with the file each is.
 pub fn chosen(store: &Store, work: &str, pick: &DownloadPick) -> Vec<prepare::Chapter> {
     let marks = store.read_marks(work).unwrap_or_default();
@@ -586,10 +573,13 @@ impl OneSend {
     /// were fetched.
     async fn gather(&self, temp: &Path) -> Result<(Vec<prepare::Chapter>, u32), prepare::Stop> {
         let store = self.lent.sources.store();
-        let downloaded = chosen_downloads(store, self.work.as_str());
+        let here = OnDevice::of(store, self.work.as_str());
         let asked_all_downloaded = match &self.pick {
             DownloadPick::Chapters { ids } => {
-                !ids.is_empty() && ids.iter().all(|c| downloaded.contains_key(c.as_str()))
+                !ids.is_empty()
+                    && ids
+                        .iter()
+                        .all(|c| matches!(here.file(c.as_str()), Some(Here::Downloaded { .. })))
             }
             _ => false,
         };
@@ -619,8 +609,10 @@ impl OneSend {
         if wanted.is_empty() {
             return Err(ReadingFailure::NotFound.into());
         }
-        let to_fetch =
-            wanted.iter().filter(|w| !downloaded.contains_key(w.chapter.as_str())).count();
+        // A chapter on this device, downloaded or in the person's folders, is sent from its
+        // file; only the rest are fetched, and only they wait for the network.
+        let file_of = |want: &Wanted| here.file(want.chapter.as_str());
+        let to_fetch = wanted.iter().filter(|w| file_of(w).is_none()).count();
         let fetch_count = u32::try_from(to_fetch).unwrap_or(u32::MAX);
         let total = fetch_count.saturating_mul(2 * FETCH_WEIGHT);
         let mut chapters = Vec::with_capacity(wanted.len());
@@ -632,8 +624,8 @@ impl OneSend {
             }
             let Some(row) = rows.iter().find(|r| r.id == want.chapter) else { continue };
             let label = row.number.clone().unwrap_or_else(|| row.label.clone());
-            if let Some(path) = downloaded.get(want.chapter.as_str()) {
-                chapters.push(prepare::Chapter { label, path: path.clone() });
+            if let Some(file) = file_of(want) {
+                chapters.push(prepare::Chapter { label, path: file.path().to_owned() });
                 self.told.gathered.fetch_add(1, Ordering::Relaxed);
                 continue;
             }

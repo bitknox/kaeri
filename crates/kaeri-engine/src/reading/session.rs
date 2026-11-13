@@ -46,6 +46,7 @@ use super::{
 };
 use crate::{
     config::ConfigState,
+    downloads::books::Here,
     outbox::{Internal, Outbox, ReaderWake},
     services::Services,
 };
@@ -863,7 +864,7 @@ fn downloading(cx: &Cx<'_>, work: &WorkId, chapter: &ChapterId) -> bool {
 
 /// Whether `chapter` opens with no network: downloaded, or a file on this device.
 fn on_device(chapter: &ShelfChapter) -> bool {
-    chapter.format != novel::SOURCE && !chapter.path.as_os_str().is_empty()
+    Here::of_shelf(chapter).is_some()
 }
 
 /// A chapter's row for the end page, which says when a downloaded one is here.
@@ -872,8 +873,13 @@ fn end_row(
     marks: &kaeri_store::reading::ReadMarks,
 ) -> kaeri_model::reading::ChapterRow {
     let mut row = chapter.row(marks);
-    if chapter.source.is_some() && on_device(chapter) {
-        row.download = Some(kaeri_model::reading::ChapterDownloadState::Done);
+    match Here::of_shelf(chapter) {
+        Some(Here::Downloaded { .. }) => {
+            row.download = Some(kaeri_model::reading::ChapterDownloadState::Done);
+        }
+        // A file in the person's folders: nothing of it downloads, so no Download is offered.
+        Some(Here::Folder { .. }) => row.on_device = true,
+        None => {}
     }
     row
 }
