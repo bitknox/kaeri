@@ -202,6 +202,13 @@ private struct BookHealthLabel: LabelStyle {
 struct BookSourcesToolbar: View {
     @Environment(Navigator.self) private var navigator
 
+    /// Whether the toolbar offers Add a source: once a source is listed. With none, the empty
+    /// state's own button is the one Add a source, and while the list is on its way there is
+    /// nothing to add to yet.
+    @MainActor static func shows(_ store: AppStore) -> Bool {
+        store.medium.answer != .watch && !store.bookSources.isEmpty
+    }
+
     var body: some View {
         Button {
             navigator.addBookSource = .choose
@@ -541,8 +548,10 @@ struct PhoneYourSourcesPage: View {
     private var books: some View {
         BookSourcesScreen()
             .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button(L.sourcesAddTitle, systemImage: "plus") { navigator.addBookSource = .choose }
+                if BookSourcesToolbar.shows(store) {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button(L.sourcesAddTitle, systemImage: "plus") { navigator.addBookSource = .choose }
+                    }
                 }
             }
     }
