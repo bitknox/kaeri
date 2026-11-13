@@ -1,6 +1,7 @@
 // A strip opens where the engine's start place says: its strip spot, or its page when it names
 // none, as a place kept in paged reading does. The first scroll says a place from there, never
-// from the top.
+// from the top. A place the engine moves the strip to (another device's) holds through a new
+// layout, as a fold or a resized window brings, before any scroll.
 
 package app.kaeri.reader
 
@@ -58,10 +59,12 @@ class StripStartTest {
     /** Twelve images of a chapter, each a page of its own, and the end page. */
     private val leaves = List(12) { Leaf(it.toUInt(), listOf(ReaderFixtures.part(it.toUInt()).copy(ratio = 0.5f)), false) } + Leaf(12u, emptyList(), true)
 
-    private fun openAt(start: ReadPlace) {
+    /** Open at [start]; with [goTo], the engine moves the reader there before the strip draws. */
+    private fun openAt(start: ReadPlace, goTo: ReadPlace? = null) {
         session.open(WORK, ReaderFixtures.surface)
         session.apply(ReaderEvent.Opened(ReaderFixtures.view(mode = ReaderMode.STRIP).copy(start = start)))
         session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, leaves))
+        if (goTo != null) session.apply(ReaderEvent.GoTo(SESSION, goTo))
         compose.setContent {
             scope = rememberCoroutineScope()
             val state by session.state.collectAsState()
@@ -114,6 +117,35 @@ class StripStartTest {
         assertEquals(9, list.firstVisibleItemIndex)
         val size = list.layoutInfo.visibleItemsInfo.first { it.index == 9 }.size
         assertEquals(size / 2f, list.firstVisibleItemScrollOffset.toFloat(), size * 0.02f)
+    }
+
+    /** The device folds or the window is resized: the engine lays the chapter out again. */
+    private fun laidOutAgain() {
+        compose.runOnIdle { session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, leaves)) }
+        compose.waitForIdle()
+    }
+
+    @Test
+    fun a_place_gone_to_after_the_start_holds_through_a_new_layout() {
+        // The strip opens at its start, then another device's place moves it before any scroll.
+        openAt(ReadPlace(WORK, CHAPTER, 9u, StripPos(9u, 0f), null))
+        assertEquals(9, list.firstVisibleItemIndex)
+        compose.runOnIdle { session.apply(ReaderEvent.GoTo(SESSION, ReadPlace(WORK, CHAPTER, 3u, null, null))) }
+        compose.waitForIdle()
+        assertEquals(3, list.firstVisibleItemIndex)
+        laidOutAgain()
+        assertEquals(3, list.firstVisibleItemIndex)
+        firstScrollSays(3u)
+    }
+
+    @Test
+    fun a_place_gone_to_before_the_start_was_shown_holds_through_a_new_layout() {
+        // The move comes before the strip showed its start, which it replaces.
+        openAt(ReadPlace(WORK, CHAPTER, 9u, StripPos(9u, 0f), null), goTo = ReadPlace(WORK, CHAPTER, 3u, null, null))
+        assertEquals(3, list.firstVisibleItemIndex)
+        laidOutAgain()
+        assertEquals(3, list.firstVisibleItemIndex)
+        firstScrollSays(3u)
     }
 
     @Test
