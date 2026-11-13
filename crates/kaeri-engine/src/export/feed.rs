@@ -1105,22 +1105,28 @@ fn folder_name(store: &Store, series: &str) -> String {
         .map_or_else(|| series.to_owned(), |s| s.name)
 }
 
+/// A folder series' books in reading order. Each is keyed by its file, not its place, so a
+/// book added before it later leaves its links, its id and a reader's place in it as they were.
 fn folder_books(store: &Store, series: &str) -> Vec<Shelved> {
     let name = folder_name(store, series);
     let mut files = store.local_book_files(series).unwrap_or_default();
     files.sort_by(|a, b| kaeri_books::natural::compare(&a.path, &b.path));
     files
         .into_iter()
-        .enumerate()
-        .map(|(n, f)| Shelved {
+        .map(|f| Shelved {
             title: named(&name, &f.label),
+            key: folder_key(series, &f.path),
             path: PathBuf::from(&f.path),
             format: f.format.clone(),
             pages: f.pages,
             updated: f.mtime,
-            key: format!("f/{}/{n}", encode(series)),
         })
         .collect()
+}
+
+/// The key of a folder series' book: the series and a hash of the book's file.
+fn folder_key(series: &str, path: &str) -> String {
+    format!("f/{}/{}", encode(series), kaeri_core::hash::stable_hash(path))
 }
 
 /// A book by the segments of its address.
@@ -1143,8 +1149,8 @@ fn find_book(
         // The segments come decoded once, as the route has them: a folder named with a `%`
         // sequence such as `%20` keeps it.
         "f" => {
-            let n: usize = second?.parse().ok()?;
-            folder_books(store, first).into_iter().nth(n)
+            let key = format!("f/{}/{}", encode(first), second?);
+            folder_books(store, first).into_iter().find(|b| b.key == key)
         }
         _ => None,
     }
@@ -1935,6 +1941,88 @@ mod tests {
                 let reply = get(s.port, &path, Some(PASSWORD), "GET").await;
                 assert_eq!(reply.status, 200, "{name}: {} {path}", link.rel);
             }
+        }
+    }
+
+    /// R8E-3. Folder books were keyed by their place in the folder, so a book added before
+    /// others moved every later link and id onto another chapter. Each now keeps its links and
+    /// id when one is added before it. R8E-4: the folder's feed is titled with the series' name,
+    /// and a book whose label already names the series is not named twice.
+    #[tokio::test]
+    async fn a_book_added_to_a_folder_leaves_the_others_links_as_they_were() {
+        let s = shelf();
+        let folder = kaeri_store::book_sources::Folder {
+            id: "f1".into(),
+            path: Some(s._dir.path().display().to_string()),
+            added_at: 1,
+            available: true,
+            ..Default::default()
+        };
+        s.store.put_book_folder(&folder).unwrap();
+        let id = "ae309a963341:Glass Shift";
+        let series = kaeri_store::book_sources::LocalSeries {
+            id: id.into(),
+            folder: "f1".into(),
+            name: "Glass Shift".into(),
+            medium: "manga".into(),
+            work: None,
+            state: "unmatched".into(),
+            confidence: 0,
+            reason: None,
+        };
+        // Each chapter a file of its own, with a page count of its own to tell them apart.
+        let file = |name: &str, label: &str, pages: u8| {
+            let path = s._dir.path().join(name);
+            let mut w = CbzWriter::new(std::fs::File::create(&path).unwrap(), None).unwrap();
+            for n in 0..pages {
+                w.add_page(&page(n)).unwrap();
+            }
+            w.finish().unwrap();
+            kaeri_store::book_sources::LocalFile {
+                path: path.display().to_string(),
+                series: id.into(),
+                volume: None,
+                label: label.into(),
+                number_milli: None,
+                format: "cbz".into(),
+                pages: Some(u32::from(pages)),
+                size: 100,
+                mtime: 50,
+                comicinfo: None,
+            }
+        };
+        let one = file("c01.cbz", "Glass Shift Ch. 1", 1);
+        let two = file("c02.cbz", "Glass Shift Ch. 2", 2);
+        s.store
+            .replace_book_scan("f1", &[(series.clone(), vec![one.clone(), two.clone()])], 2)
+            .unwrap();
+        let books_at = format!("/opds/folders/{}", encode(id));
+        let before = feed_at(&s, &books_at).await;
+        assert_eq!(before.title, "Glass Shift");
+        let titles: Vec<&str> = before.entries.iter().map(|e| e.title.as_str()).collect();
+        assert_eq!(titles, ["Glass Shift Ch. 1", "Glass Shift Ch. 2"]);
+        let file_of = |e: &kaeri_books::opds::Entry| {
+            let link = e.links.iter().find(|l| l.rel.starts_with(REL_ACQUISITION)).unwrap();
+            path_of(&s, &link.href)
+        };
+        let kept: Vec<(String, String, String)> = before
+            .entries
+            .iter()
+            .map(|e| (e.id.clone(), e.title.clone(), file_of(e)))
+            .collect();
+
+        let half = file("c00.5.cbz", "Glass Shift Ch. 0.5", 3);
+        s.store
+            .replace_book_scan("f1", &[(series, vec![half, one.clone(), two.clone()])], 3)
+            .unwrap();
+        let after = feed_at(&s, &books_at).await;
+        assert_eq!(after.entries.len(), 3);
+        for ((id, title, link), wanted) in kept.iter().zip([&one, &two]) {
+            let now = after.entries.iter().find(|e| e.title == *title).unwrap();
+            assert_eq!((&now.id, &file_of(now)), (id, link), "{title} kept its id and link");
+            let reply = get(s.port, link, Some(PASSWORD), "GET").await;
+            assert_eq!(reply.status, 200, "{link}");
+            assert_eq!(reply.body, std::fs::read(&wanted.path).unwrap(), "{title}");
         }
     }
 
