@@ -2048,7 +2048,8 @@ impl BookSources {
 
     /// Keep `title` as the name of `work` when it is a work of its own on this device, one no
     /// catalogue lists, so every screen, download and send names it as its source or folder
-    /// does. A catalogue's work is left to the catalogue.
+    /// does. A catalogue's work is left to the catalogue, and a demo work to the demo, whatever
+    /// source its series is matched to.
     pub(crate) fn name_local(
         &self,
         work: &str,
@@ -2058,7 +2059,8 @@ impl BookSources {
         now: i64,
     ) {
         let title = title.trim();
-        if crate::read_catalog::tiles::anilist(work).is_some() || title.is_empty() {
+        let demo = kaeri_core::reading_demo::WORKS.iter().any(|w| w.work_id().as_str() == work);
+        if crate::read_catalog::tiles::anilist(work).is_some() || demo || title.is_empty() {
             return;
         }
         if let Err(error) = self.store.name_local_work(work, medium.as_str(), title, cover, now)
