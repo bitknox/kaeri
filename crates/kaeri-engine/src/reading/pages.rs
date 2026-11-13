@@ -517,14 +517,19 @@ impl Worker {
                 }
             }
             Job::Close { session } => {
-                if self.open.as_ref().is_some_and(|c| c.session == session) {
+                let open = self.open.as_ref().is_some_and(|c| c.session == session);
+                if open {
                     self.open = None;
-                    // The pages' working memory, kept for the next page while the reader was
-                    // open, goes back to the system with it.
-                    kaeri_alloc::release();
                 }
-                if self.kept.as_ref().is_some_and(|c| c.session == session) {
+                let kept = self.kept.as_ref().is_some_and(|c| c.session == session);
+                if kept {
                     self.kept = None;
+                }
+                if open || kept {
+                    // The pages' working memory, kept for the next page while the reader was
+                    // open, goes back to the system with it, once the chapter flowed on from
+                    // has let go of its pages as well.
+                    kaeri_alloc::release();
                 }
             }
             Job::Peek(job) => {
