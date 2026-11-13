@@ -147,6 +147,8 @@ extension ReaderModel {
             case "pill": chromeShown = true; backToPage = 9
             case "opening": hold(.opening)
             case "error": hold(.failed(.offline))
+            // The chapter failing with the group up, as Continue on an end page can leave it.
+            case "errorchrome": chromeShown = true; hold(.failed(.offline))
             default: break
             }
             try? await Task.sleep(for: .milliseconds(900))

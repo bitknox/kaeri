@@ -17,7 +17,7 @@
 # that day, for one with broadcasts, mine=1 the calendar on My list,
 # together=<state>, Watch together in a state TogetherScene (KaeriUI/TogetherShots.swift) lists, on
 # the together scene for its recent rooms (together:together=lobby-filling),
-# reader=<chrome|settings|chapters|ask|end|endskip|scrub|pill|plate|opening|error> on a reader scene (reader-manga-rtl, reader-strip, reader-novel,
+# reader=<chrome|settings|chapters|ask|end|endskip|scrub|pill|plate|opening|error|errorchrome> on a reader scene (reader-manga-rtl, reader-strip, reader-novel,
 # reader-moved, reader-long: the manga at chapter 60 of 120), the reader open with its chrome or a sheet up,
 # medium=<read|watch|both> on a reading scene, what Kaeri is for chosen at launch as Settings would,
 # work=<id> a series' page by its work id (work=a:900301), reading=1 the Library and Search on their reading side (with filters=set, reading's Fantasy, Manga, Japan and Releasing),
