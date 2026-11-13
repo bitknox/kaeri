@@ -251,6 +251,9 @@ private fun ReadSearchState.failedWith(failure: ReadingFailure): ReadSearchState
     if (stale) copy(loading = false, failure = failure, tiles = emptyList(), total = null, firstPage = 0, otherScope = null, stale = false)
     else copy(loading = false, failure = failure)
 
+/** A download asked for that could not start: what was asked, to ask again, and why. */
+data class DownloadNotStarted(val pick: DownloadPick, val failure: ReadingFailure)
+
 /** A finished download batch, said as a notification while Downloads finished is on. */
 data class DownloadsDone(val work: WorkId?, val title: Msg, val body: Msg)
 
@@ -318,6 +321,17 @@ class ReadingModel(private val send: (Command) -> Unit) {
 
     /** New chapters a check found, for the app's notifications. */
     val newChapters: SharedFlow<List<NewChapter>> = _newChapters.asSharedFlow()
+
+    private val _notStarted = MutableStateFlow<Map<WorkId, DownloadNotStarted>>(emptyMap())
+
+    /**
+     * Each series' download that could not start, such as when its source fails and no chapter list
+     * is kept, until a notice has said so: a download is never left looking queued.
+     */
+    val notStarted: StateFlow<Map<WorkId, DownloadNotStarted>> = _notStarted.asStateFlow()
+
+    /** [work]'s download that could not start has been said, or is no longer news. */
+    fun notStartedSeen(work: WorkId) = _notStarted.update { it - work }
 
     private val _downloadsDone = MutableSharedFlow<DownloadsDone>(extraBufferCapacity = 4)
 
@@ -493,6 +507,7 @@ class ReadingModel(private val send: (Command) -> Unit) {
         reading(ReadingCommand.ConnectMangaUpdates(username, password))
 
     fun download(work: WorkId, pick: DownloadPick) {
+        _notStarted.update { it - work }
         reading(ReadingCommand.Download(work, pick))
         reloadChapters(work)
     }

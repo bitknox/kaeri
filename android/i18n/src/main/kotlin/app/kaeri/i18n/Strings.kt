@@ -10430,6 +10430,10 @@ object Strings {
     fun downloadAlready(context: Context): String =
         context.getString(R.string.download_already)
 
+    /** Short note on a series page when a download it asked for couldn't start, such as when the source isn't answering and no chapter list is kept. The reason is a full sentence. */
+    fun downloadNotStarted(context: Context, reason: String): String =
+        context.getString(R.string.download_not_started, reason)
+
     /** Download menu item: a volume's chapters not yet downloaded. */
     fun downloadVolumeCount(context: Context, volume: String, n: Int): String =
         context.resources.getQuantityString(R.plurals.download_volume_count, n, volume, n)

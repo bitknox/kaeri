@@ -632,7 +632,7 @@ private fun SeriesActions(
 ) {
     val context = LocalContext.current
     val words = SeriesWords.action(context, series.action)
-    val failed = chapters?.let { it.failure != null && !series.action.opensDownloaded(it.volumes) } == true
+    val failed = chapters?.leadsElsewhere(series.action) == true
     // No source is known to have it yet, but the engine is still asking: the chapters have not
     // come. The main button holds its place, quiet, rather than say there is nothing to read.
     val asking = series.action is SeriesAction.NoSource && chapters == null
@@ -931,13 +931,17 @@ private fun SeriesAction.opensDownloaded(volumes: List<VolumeGroup>): Boolean {
 }
 
 /** With the source failed, what is downloaded still opens: only those chapters, under no volume. */
-private fun ReadChapters.listedGroups(): List<VolumeGroup> = if (failure != null) {
+internal fun ReadChapters.listedGroups(): List<VolumeGroup> = if (failure != null) {
     listOfNotNull(
         volumes.downloaded().takeIf { it.isNotEmpty() }?.let { VolumeGroup(volume = null, title = null, chapters = it, allRead = false) },
     )
 } else {
     volumes
 }
+
+/** Whether the main button leads to another source in place of [action]: the source failed and it opens nothing downloaded. */
+internal fun ReadChapters.leadsElsewhere(action: SeriesAction): Boolean =
+    failure != null && !action.opensDownloaded(volumes)
 
 /**
  * Whether the chapters are one run with no volume rows: the downloaded ones after a failure, a list

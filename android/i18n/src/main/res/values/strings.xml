@@ -5528,6 +5528,8 @@
     <string name="download_unread">Every unread chapter</string>
     <!-- Short note after Next 5 or Next 10 unread when those chapters are all on this device already. -->
     <string name="download_already">Already downloaded</string>
+    <!-- Short note on a series page when a download it asked for couldn't start, such as when the source isn't answering and no chapter list is kept. The reason is a full sentence. -->
+    <string name="download_not_started">Couldn\'t start the download. %1$s</string>
     <!-- Download menu item: a volume's chapters not yet downloaded. -->
     <plurals name="download_volume_count">
         <item quantity="one">%1$s · 1 chapter</item>

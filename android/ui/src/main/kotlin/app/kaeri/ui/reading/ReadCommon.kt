@@ -30,6 +30,7 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -73,12 +74,15 @@ import app.kaeri.store.Wording
 import app.kaeri.store.text
 import app.kaeri.ui.ArtworkImage
 import app.kaeri.ui.Icons
+import app.kaeri.ui.LocalAppStore
 import app.kaeri.ui.LocalNavigator
+import app.kaeri.ui.LocalSnackbars
 import app.kaeri.ui.Shared
 import app.kaeri.ui.SilkMeter
 import app.kaeri.ui.WaterDot
 import app.kaeri.ui.pixels
 import app.kaeri.ui.sharedWork
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 
@@ -670,5 +674,24 @@ internal fun ReadTileMenu(tile: WorkTile, expanded: Boolean, current: LibrarySeg
                 },
             )
         }
+    }
+}
+
+/**
+ * A download asked for anywhere that could not start, such as when the source fails and no chapter
+ * list is kept, says so with Try again, rather than leave the ask looking queued.
+ */
+@Composable
+internal fun DownloadNotStartedNotice() {
+    val store = LocalAppStore.current
+    val snackbars = LocalSnackbars.current
+    val context = LocalContext.current
+    val notStarted by store.reading.notStarted.collectAsStateWithLifecycle()
+    val (work, said) = notStarted.entries.firstOrNull() ?: return
+    LaunchedEffect(work, said) {
+        snackbars.show(Strings.downloadNotStarted(context, failureWords(context, said.failure)), Strings.actionTryAgain(context)) {
+            store.reading.download(work, said.pick)
+        }
+        store.reading.notStartedSeen(work)
     }
 }

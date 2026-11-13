@@ -443,6 +443,7 @@ private fun AppRootFrame(
         SourcePinNotice()
         StoreJoinNotices()
         LicensedReturnNotice()
+        app.kaeri.ui.reading.DownloadNotStartedNotice()
         CrashNoticeAndReport()
         UpdatePrompts()
         AccountSheets()

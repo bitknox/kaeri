@@ -472,6 +472,12 @@ download-unread = Every unread chapter
 # @max 40
 download-already = Already downloaded
 
+# Short note on a series page when a download it asked for couldn't start, such as when the
+# source isn't answering and no chapter list is kept. The reason is a full sentence.
+# @only android
+# @arg reason: text
+download-not-started = Couldn't start the download. { $reason }
+
 # Download menu item: a volume's chapters not yet downloaded.
 # @arg volume: text
 # @arg n: int
