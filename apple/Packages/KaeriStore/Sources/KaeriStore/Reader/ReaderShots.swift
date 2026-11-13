@@ -61,6 +61,7 @@ extension ReaderModel {
                 switch parts[0] {
                 case "look": set(.look, .choice(name: parts[1]))
                 case "layout": set(.pageLayout, .choice(name: parts[1]))
+                case "mode": set(.mode, .choice(name: parts[1]), scope: .series)
                 case "paper": set(.paperMode, .toggle(on: parts[1] == "on"))
                 case "at" where parts[1] == "first": requestJump(0)
                 default: continue
