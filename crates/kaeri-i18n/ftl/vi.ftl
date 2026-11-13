@@ -9606,6 +9606,9 @@ read-search-source-kind-plugin = Plugin
 # The button of a source group with more than five hits.
 read-search-source-more = Hiện thêm { $n }
 
+# Screen readers: a custom action on a reading cover that puts the series on one of the lists, one action for each list the cover's menu offers under Add to list. The list is its name as the menu shows it, such as "Completed".
+read-tile-add-to = Thêm vào { $list }
+
 # Over a first-run page's title: which page of how many.
 onboarding-step = { $step }/{ $total }
 

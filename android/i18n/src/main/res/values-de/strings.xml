@@ -2835,6 +2835,7 @@
     <string name="read_search_source_kind_folder">Ordner</string>
     <string name="read_search_source_kind_plugin">Plugin</string>
     <string name="read_search_source_more">%1$,d weitere anzeigen</string>
+    <string name="read_tile_add_to">Zu %1$s hinzufügen</string>
     <string name="onboarding_step">%1$,d von %2$,d</string>
     <string name="onboarding_welcome_line">Behalte im Blick, was du schaust und liest, aus deinen eigenen Quellen.</string>
     <string name="onboarding_welcome_note">Deine Listen und dein Fortschritt bleiben auf deinen Geräte. Tracker und Quellen fügst du selbst hinzu.</string>

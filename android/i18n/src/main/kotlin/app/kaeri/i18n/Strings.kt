@@ -11096,6 +11096,10 @@ object Strings {
     fun readTileAddPlanning(context: Context): String =
         context.getString(R.string.read_tile_add_planning)
 
+    /** Screen readers: a custom action on a reading cover that puts the series on one of the lists, one action for each list the cover's menu offers under Add to list. The list is its name as the menu shows it, such as "Completed". */
+    fun readTileAddTo(context: Context, list: String): String =
+        context.getString(R.string.read_tile_add_to, list)
+
     /** Said once by screen readers when Your sources only turns on. */
     fun readSearchAnilistHidden(context: Context): String =
         context.getString(R.string.read_search_anilist_hidden)

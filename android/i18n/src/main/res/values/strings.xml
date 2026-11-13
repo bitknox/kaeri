@@ -5890,6 +5890,8 @@
     <string name="read_home_row_loading">%1$s, loading</string>
     <!-- Screen readers: the custom action on a discovery cover that puts the series on Planning. -->
     <string name="read_tile_add_planning">Add to Planning</string>
+    <!-- Screen readers: a custom action on a reading cover that puts the series on one of the lists, one action for each list the cover's menu offers under Add to list. The list is its name as the menu shows it, such as "Completed". -->
+    <string name="read_tile_add_to">Add to %1$s</string>
     <!-- Said once by screen readers when Your sources only turns on. -->
     <string name="read_search_anilist_hidden">AniList\'s results are hidden.</string>
     <!-- Said once by screen readers when every part of a search has answered: how many series AniList found. The sources' count and any source that didn't answer follow. -->

@@ -3051,6 +3051,7 @@
     <string name="read_search_source_kind_folder">Folder</string>
     <string name="read_search_source_kind_plugin">Wtyczka</string>
     <string name="read_search_source_more">Pokaż jeszcze %1$,d</string>
+    <string name="read_tile_add_to">Dodaj do: %1$s</string>
     <string name="onboarding_step">%1$,d z %2$,d</string>
     <string name="onboarding_welcome_line">Śledź to, co oglądasz i czytasz. Dostarczają to twoje źródła.</string>
     <string name="onboarding_welcome_note">Twoje listy i postęp zostają przy tobie. Trackery i źródła dodajesz sam.</string>

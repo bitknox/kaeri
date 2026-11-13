@@ -10364,6 +10364,9 @@ read-home-row-loading = { $row }, loading
 # Screen readers: the custom action on a discovery cover that puts the series on Planning.
 read-tile-add-planning = Add to Planning
 
+# Screen readers: a custom action on a reading cover that puts the series on one of the lists, one action for each list the cover's menu offers under Add to list. The list is its name as the menu shows it, such as "Completed".
+read-tile-add-to = Add to { $list }
+
 # Said once by screen readers when Your sources only turns on.
 read-search-anilist-hidden = AniList's results are hidden.
 

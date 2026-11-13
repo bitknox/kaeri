@@ -9979,6 +9979,11 @@ public enum L {
     /// Screen readers: the custom action on a discovery cover that puts the series on Planning.
     public static var readTileAddPlanning: String { string("read-tile-add-planning", fallback: "Add to Planning") }
 
+    /// Screen readers: a custom action on a reading cover that puts the series on one of the lists, one action for each list the cover's menu offers under Add to list. The list is its name as the menu shows it, such as "Completed".
+    public static func readTileAddTo(list: String) -> String {
+        Self.format("read-tile-add-to", fallback: "Add to %1$@", list)
+    }
+
     /// Said once by screen readers when Your sources only turns on.
     public static var readSearchAnilistHidden: String { string("read-search-anilist-hidden", fallback: "AniList's results are hidden.") }
 

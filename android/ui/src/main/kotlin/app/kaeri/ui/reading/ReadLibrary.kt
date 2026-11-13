@@ -215,7 +215,7 @@ private fun ListChips(segment: LibrarySegmentRead, lists: Map<LibrarySegmentRead
 private fun LibraryCell(tile: WorkTile, segment: LibrarySegmentRead) {
     var menu by remember { mutableStateOf(false) }
     BoxWithConstraints {
-        ReadTile(tile, maxWidth, from = "read-library", lines = if (wideWindow()) 1 else 2, onLongClick = { menu = true })
+        ReadTile(tile, maxWidth, from = "read-library", lines = if (wideWindow()) 1 else 2, onLongClick = { menu = true }, actions = readTileActions(tile, current = segment))
         ReadTileMenu(tile, menu, current = segment) { menu = false }
     }
 }

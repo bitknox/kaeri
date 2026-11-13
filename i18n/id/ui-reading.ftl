@@ -270,6 +270,7 @@ read-search-source-kind-server = Server
 read-search-source-kind-folder = Folder
 read-search-source-kind-plugin = { -plugin-cap }
 read-search-source-more = Tampilkan { $n } lagi
+read-tile-add-to = Tambahkan ke { $list }
 onboarding-step = { $step } dari { $total }
 onboarding-welcome-line = Catat yang Anda tonton dan baca, dari { -source-pl } Anda sendiri.
 onboarding-welcome-note = Daftar dan kemajuan Anda tetap ada di { -device-pl } Anda. Anda sendiri yang menambahkan { -tracker-cap-pl } dan { -source-pl }.

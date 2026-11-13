@@ -285,6 +285,7 @@ read-search-source-kind-server = Sunucu
 read-search-source-kind-folder = Klasör
 read-search-source-kind-plugin = { -plugin-cap }
 read-search-source-more = { $n } tane daha göster
+read-tile-add-to = { $list } listesine ekle
 onboarding-step = { $step } / { $total }
 onboarding-welcome-line = Kendi { -source-pl }ınızdan izlediklerinizi ve okuduklarınızı takip edin.
 onboarding-welcome-note = Listeleriniz ve ilerlemeniz { -device-pl }ınızda kalır. { -tracker-cap-pl } ve { -source-pl } eklemek size kalmış.

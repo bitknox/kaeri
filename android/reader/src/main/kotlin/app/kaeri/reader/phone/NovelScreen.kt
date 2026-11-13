@@ -214,7 +214,7 @@ fun NovelScreen(
     // With a screen reader every tap is the chrome's, so the page turns and the controls are actions.
     val next = if (scrolled) Strings.readerZoneScrollDown(context) else Strings.readerZoneNext(context)
     val previous = if (scrolled) Strings.readerZoneScrollUp(context) else Strings.readerZonePrevious(context)
-    val showControls = Strings.readerActionControls(context)
+    val showControls = Strings.readerZoneShowControls(context)
     // Words a screen reader can rest on, so the moves come up as its actions: the page, or the chapter
     // while the paginator counts and when the text scrolls.
     val where = if (!scrolled && place.pages > 0) Strings.readerPageOf(context, place.page + 1, place.pages) else state.view?.let { chapterWords(context, it.chapter) }.orEmpty()

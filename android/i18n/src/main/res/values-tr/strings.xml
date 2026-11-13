@@ -2835,6 +2835,7 @@
     <string name="read_search_source_kind_folder">Klasör</string>
     <string name="read_search_source_kind_plugin">Eklenti</string>
     <string name="read_search_source_more">%1$,d tane daha göster</string>
+    <string name="read_tile_add_to">%1$s listesine ekle</string>
     <string name="onboarding_step">%1$,d / %2$,d</string>
     <string name="onboarding_welcome_line">Kendi kaynaklarınızdan izlediklerinizi ve okuduklarınızı takip edin.</string>
     <string name="onboarding_welcome_note">Listeleriniz ve ilerlemeniz cihazlarınızda kalır. Takip hizmetleri ve kaynaklar eklemek size kalmış.</string>

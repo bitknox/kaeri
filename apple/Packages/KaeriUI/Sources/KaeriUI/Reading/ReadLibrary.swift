@@ -218,8 +218,8 @@ struct ReadGrid: View {
             // The largest text sizes read better as one column of rows than as covers.
             LazyVStack(alignment: .leading, spacing: 0) {
                 ForEach(tiles, id: \.work) { tile in
-                    ReadTileListRow(tile: tile, note: note(tile), planAction: twoLines, caption: caption)
-                        .contextMenu { ReadTileMenu(tile: tile, kind: twoLines ? .plan : .lists) }
+                    ReadTileListRow(tile: tile, note: note(tile), caption: caption)
+                        .readTileMenu(tile, kind: twoLines ? .plan : .lists)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -239,8 +239,8 @@ struct ReadGrid: View {
             spacing: columns != nil || Device.isMac ? 24 : 20
         ) {
             ForEach(tiles, id: \.work) { tile in
-                ReadTileCard(tile: tile, width: cellWidth, twoLines: twoLines, note: note(tile), planAction: twoLines, caption: caption)
-                    .contextMenu { ReadTileMenu(tile: tile, kind: twoLines ? .plan : .lists) }
+                ReadTileCard(tile: tile, width: cellWidth, twoLines: twoLines, note: note(tile), caption: caption)
+                    .readTileMenu(tile, kind: twoLines ? .plan : .lists)
                     // A cover and its lines move as one when the columns change.
                     .geometryGroup()
             }
@@ -277,6 +277,9 @@ struct ReadTileMenu: View {
     @Environment(Navigator.self) private var navigator
     let tile: WorkTile
     var kind = Kind.lists
+    /// The items as a screen reader's actions, which have no submenus: Add to list's lists are an
+    /// action each, "Add to Completed", leaving out the list on screen.
+    var actions = false
 
     /// What the menu offers past Details: every list in Library, Add to Planning on a discovery
     /// row's or AniList's cover, and nothing more on Up next, This week and a source's hits.
@@ -285,6 +288,10 @@ struct ReadTileMenu: View {
     var body: some View {
         Button(L.homeDetails) { navigator.openSeries(tile.work) }
         switch kind {
+        case .lists where actions:
+            ForEach(ReadWords.statuses.filter { $0 != navigator.readingSegment }, id: \.self) { list in
+                Button(L.readTileAddTo(list: ReadWords.list(list))) { store.reading.setStatus(tile.work, list) }
+            }
         case .lists:
             Menu(L.seriesAddToList) {
                 ForEach(ReadWords.statuses, id: \.self) { list in
@@ -313,5 +320,14 @@ private struct ReadGridPlaceholder: View {
             }
         }
         .accessibilityHidden(true)
+    }
+}
+
+extension View {
+    /// A reading cover's menu on a long press or secondary click, and its items as the cover's
+    /// screen reader actions, as a Watch cover has its own (`titleElement`).
+    func readTileMenu(_ tile: WorkTile, kind: ReadTileMenu.Kind) -> some View {
+        accessibilityActions { ReadTileMenu(tile: tile, kind: kind, actions: true) }
+            .contextMenu { ReadTileMenu(tile: tile, kind: kind) }
     }
 }

@@ -87,6 +87,11 @@ struct PagedReader: View {
             turn(forward: request.forward, how: .key)
         }
         .accessibilityScrollAction { edge in turn(forward: edge == .trailing || edge == .bottom, how: .turn) }
+        // A screen reader has no zones and no guide: the page turns and shows the controls by its
+        // actions instead.
+        .accessibilityAction(named: L.readerZoneNext) { turn(forward: true, how: .turn) }
+        .accessibilityAction(named: L.readerZonePrevious) { turn(forward: false, how: .turn) }
+        .accessibilityAction(named: L.readerZoneShowControls) { ReaderScreen.showControls(model) }
         // The chapter's credit pages are decoded ahead, so Show draws one on its first frame.
         .task(id: model.openCredits.map(\.page)) {
             for credit in model.openCredits {

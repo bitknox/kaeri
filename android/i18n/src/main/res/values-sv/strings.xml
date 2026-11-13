@@ -2835,6 +2835,7 @@
     <string name="read_search_source_kind_folder">Mapp</string>
     <string name="read_search_source_kind_plugin">Tillägg</string>
     <string name="read_search_source_more">Visa %1$,d till</string>
+    <string name="read_tile_add_to">Lägg till i %1$s</string>
     <string name="onboarding_step">%1$,d av %2$,d</string>
     <string name="onboarding_welcome_line">Håll koll på vad du tittar på och läser, från dina egna källor.</string>
     <string name="onboarding_welcome_note">Dina listor och ditt förlopp stannar på dina enheter. Trackers och källor lägger du till själv.</string>

@@ -6854,6 +6854,9 @@
   <data name="ReadSearchSourceMore" xml:space="preserve">
     <value>さらに{n}件を表示</value>
   </data>
+  <data name="ReadTileAddTo" xml:space="preserve">
+    <value>{list}に追加</value>
+  </data>
   <data name="OnboardingStep" xml:space="preserve">
     <value>{step}/{total}</value>
   </data>

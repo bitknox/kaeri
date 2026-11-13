@@ -16495,6 +16495,11 @@ pub fn read_tile_add_planning() -> String {
     text("read-tile-add-planning", &[])
 }
 
+/// Screen readers: a custom action on a reading cover that puts the series on one of the lists, one action for each list the cover's menu offers under Add to list. The list is its name as the menu shows it, such as "Completed".
+pub fn read_tile_add_to(list: &str) -> String {
+    text("read-tile-add-to", &[("list", Arg::Text(list))])
+}
+
 /// Said once by screen readers when Your sources only turns on.
 pub fn read_search_anilist_hidden() -> String {
     text("read-search-anilist-hidden", &[])

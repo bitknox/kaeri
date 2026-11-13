@@ -206,6 +206,9 @@ private struct ReadHomeContent: View {
                     // Up next keeps two title lines as the discovery rows under it do, so the
                     // page has one rhythm; Continue's cards have the track and keep one.
                     ReadTileCard(tile: tile, track: track, twoLines: !track)
+                        .accessibilityActions {
+                            if track { ReadContinueMenu(tile: tile) } else { ReadTileMenu(tile: tile, kind: .details, actions: true) }
+                        }
                         .contextMenu {
                             if track { ReadContinueMenu(tile: tile) } else { ReadTileMenu(tile: tile, kind: .details) }
                         }
@@ -628,8 +631,8 @@ private struct ReadWeekCell: View {
         }
         .buttonStyle(.plain)
         .pointerHover()
-        .contextMenu { ReadTileMenu(tile: tile, kind: .details) }
         .accessibilityElement(children: .combine)
+        .readTileMenu(tile, kind: .details)
     }
 }
 

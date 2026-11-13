@@ -204,6 +204,13 @@ public struct ReaderScreen: View {
         if model.chromeShown { model.hideChrome() } else if x > 0.33 && x < 0.67 { model.chromeShown = true }
     }
 
+    /// Show controls, the page's screen reader action: the controls come up, and the screen
+    /// reader moves to them.
+    static func showControls(_ model: ReaderModel) {
+        model.chromeShown = true
+        AccessibilityNotification.ScreenChanged().post()
+    }
+
     #if os(macOS)
     private func pointerMoved() {
         model.chromeShown = true

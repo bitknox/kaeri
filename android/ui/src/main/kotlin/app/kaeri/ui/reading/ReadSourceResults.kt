@@ -285,7 +285,7 @@ private fun ResultCell(tile: WorkTile, joins: List<ReadSourceJoin>?, grid: ReadG
             onLongClick = { menu = true },
             extra = extra,
             list = grid.list,
-            planning = true,
+            actions = readTileActions(tile, current = null),
             titleMax = 2,
         )
         ReadTileMenu(tile, menu, current = null) { menu = false }

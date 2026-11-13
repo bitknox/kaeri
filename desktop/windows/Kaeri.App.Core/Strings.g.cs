@@ -7271,6 +7271,9 @@ public static partial class T
     /// <summary>Screen readers: the custom action on a discovery cover that puts the series on Planning.</summary>
     public static string ReadTileAddPlanning => Get("ReadTileAddPlanning");
 
+    /// <summary>Screen readers: a custom action on a reading cover that puts the series on one of the lists, one action for each list the cover's menu offers under Add to list. The list is its name as the menu shows it, such as "Completed".</summary>
+    public static string ReadTileAddTo(string list) => Fill(Get("ReadTileAddTo"), ("list", list));
+
     /// <summary>Said once by screen readers when Your sources only turns on.</summary>
     public static string ReadSearchAnilistHidden => Get("ReadSearchAnilistHidden");
 
@@ -14542,6 +14545,7 @@ public static partial class T
         ["ReadSearchDone"] = "{anilist} from AniList, {sources} from your sources.",
         ["ReadHomeRowLoading"] = "{row}, loading",
         ["ReadTileAddPlanning"] = "Add to Planning",
+        ["ReadTileAddTo"] = "Add to {list}",
         ["ReadSearchAnilistHidden"] = "AniList's results are hidden.",
         ["ReadSearchSaidAnilist_one"] = "1 from AniList",
         ["ReadSearchSaidAnilist_other"] = "{n} from AniList",

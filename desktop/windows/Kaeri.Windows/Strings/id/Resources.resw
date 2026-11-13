@@ -6854,6 +6854,9 @@
   <data name="ReadSearchSourceMore" xml:space="preserve">
     <value>Tampilkan {n} lagi</value>
   </data>
+  <data name="ReadTileAddTo" xml:space="preserve">
+    <value>Tambahkan ke {list}</value>
+  </data>
   <data name="OnboardingStep" xml:space="preserve">
     <value>{step} dari {total}</value>
   </data>

@@ -300,6 +300,7 @@ read-search-source-kind-server = Server
 read-search-source-kind-folder = Cartella
 read-search-source-kind-plugin = { -plugin-cap }
 read-search-source-more = Mostra altri { $n }
+read-tile-add-to = Aggiungi a { $list }
 onboarding-step = { $step } di { $total }
 onboarding-welcome-line = Tieni traccia di ciò che guardi e leggi, dalle tue { -source-pl }.
 onboarding-welcome-note = Le tue liste e i tuoi progressi restano sui tuoi { -device-pl }. { -tracker-cap-pl } e { -source-pl } sono tue da aggiungere.

@@ -285,6 +285,7 @@ read-search-source-kind-server = Server
 read-search-source-kind-folder = Ordner
 read-search-source-kind-plugin = { -plugin-cap }
 read-search-source-more = { $n } weitere anzeigen
+read-tile-add-to = Zu { $list } hinzufügen
 onboarding-step = { $step } von { $total }
 onboarding-welcome-line = Behalte im Blick, was du schaust und liest, aus deinen eigenen { -source-pl }.
 onboarding-welcome-note = Deine Listen und dein Fortschritt bleiben auf deinen { -device-pl }. { -tracker-cap-pl } und { -source-pl } fügst du selbst hinzu.

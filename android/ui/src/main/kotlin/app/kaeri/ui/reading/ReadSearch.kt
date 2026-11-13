@@ -298,7 +298,7 @@ private fun ReadSearchStart(
                                     var menu by remember { mutableStateOf(false) }
                                     Box {
                                         ReadTile(
-                                            tile, RAIL_COVER, from = "read-search-${row.id}", lines = 1, reserveLine = true, planning = true,
+                                            tile, RAIL_COVER, from = "read-search-${row.id}", lines = 1, reserveLine = true, actions = readTileActions(tile, current = null),
                                             caption = caption.shown, spoken = caption.spoken, onLongClick = { menu = true }, titleMax = 2,
                                         )
                                         ReadTileMenu(tile, menu, current = null) { menu = false }

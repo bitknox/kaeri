@@ -3051,6 +3051,7 @@
     <string name="read_search_source_kind_folder">Папка</string>
     <string name="read_search_source_kind_plugin">Плагин</string>
     <string name="read_search_source_more">Показать ещё %1$,d</string>
+    <string name="read_tile_add_to">Добавить в «%1$s»</string>
     <string name="onboarding_step">%1$,d из %2$,d</string>
     <string name="onboarding_welcome_line">Следите за тем, что смотрите и читаете. Источники вы добавляете сами.</string>
     <string name="onboarding_welcome_note">Ваши списки и прогресс остаются при вас. Трекеры и источники вы добавляете сами.</string>

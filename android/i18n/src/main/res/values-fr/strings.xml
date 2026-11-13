@@ -2943,6 +2943,7 @@
     <string name="read_search_source_kind_folder">Dossier</string>
     <string name="read_search_source_kind_plugin">Plugin</string>
     <string name="read_search_source_more">Afficher %1$,d de plus</string>
+    <string name="read_tile_add_to">Ajouter à la liste %1$s</string>
     <string name="onboarding_step">%1$,d sur %2$,d</string>
     <string name="onboarding_welcome_line">Suivez ce que vous regardez et lisez, depuis vos propres sources.</string>
     <string name="onboarding_welcome_note">Vos listes et votre progression restent sur vos appareils. Les Services de suivi et les sources sont à vous d\'ajouter.</string>

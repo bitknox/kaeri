@@ -293,6 +293,19 @@ struct StripReader: View {
         .simultaneousGesture(SpatialTapGesture().onEnded { _ in onTap() })
         #endif
         .frame(width: size.width, height: size.height)
+        // A screen reader has no zones and no guide, and the images are no elements of their own:
+        // the strip is one element behind its markers, which scrolls and shows the controls by its
+        // actions.
+        .background {
+            Color.clear
+                .accessibilityElement()
+                .accessibilityLabel(ReaderChrome.line(model: model, index: model.position.index)
+                    .replacingOccurrences(of: " · ", with: ", ")) // i18n-skip: a separator
+                .accessibilityScrollAction { edge in model.requestTurn(forward: edge == .bottom || edge == .trailing) }
+                .accessibilityAction(named: L.readerZoneScrollDown) { model.requestTurn(forward: true) }
+                .accessibilityAction(named: L.readerZoneScrollUp) { model.requestTurn(forward: false) }
+                .accessibilityAction(named: L.readerZoneShowControls) { ReaderScreen.showControls(model) }
+        }
         .onAppear {
             model.position = (0, max(parts.count, 1))
             keepLead()

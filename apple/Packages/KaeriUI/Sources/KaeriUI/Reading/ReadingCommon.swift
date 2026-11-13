@@ -292,7 +292,6 @@ extension PlainEmpty where Action == EmptyView {
 
 /// A series to open: its cover, the title and one line under it.
 struct ReadTileCard: View {
-    @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
     @Environment(\.homeLayout) private var layout
     let tile: WorkTile
@@ -304,8 +303,6 @@ struct ReadTileCard: View {
     var twoLines = false
     /// A silk line under the facts, which wraps: "In Home library" on a joined AniList result.
     var note: String?
-    /// Add to Planning as a screen reader's action, for a series not on a list yet.
-    var planAction = false
     /// What the line under the cover says.
     var caption = ReadCaption.plain
 
@@ -372,11 +369,6 @@ struct ReadTileCard: View {
         // The source a joined result is in comes last.
         .accessibilityValue(Text([ReadWords.spoken(tile, caption), note].compactMap { $0 }.joined(separator: ", "))) // i18n-skip
         .accessibilityAddTraits(.isButton)
-        .accessibilityActions {
-            if planAction {
-                Button(L.libraryAddPlanning) { store.reading.setStatus(tile.work, .planning) }
-            }
-        }
     }
 }
 

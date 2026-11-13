@@ -62,6 +62,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -642,6 +643,11 @@ private fun ContinueShelf(tiles: List<WorkTile>, actions: AppActions, hide: (Wor
                         lines = 2,
                         cover = Modifier.readerZoomSource(key),
                         onLongClick = { menu = true },
+                        actions = listOf(
+                            CustomAccessibilityAction(Strings.seriesReadChapterMenu(context)) { actions.openReader(tile.work, null, tile.cover, key); true },
+                            CustomAccessibilityAction(Strings.homeDetails(context)) { navigator.openSeries(tile.work, "read-continue"); true },
+                            CustomAccessibilityAction(Strings.homeRemoveContinue(context)) { hide(tile.work); true },
+                        ),
                     )
                     Menu(expanded = menu, onDismissRequest = { menu = false }) {
                         DropdownMenuItem(
@@ -677,7 +683,7 @@ private fun TileShelf(title: String, tiles: List<WorkTile>, from: String, link: 
                 // A long press offers Details alone: these are the person's own, already on a list.
                 var menu by remember { mutableStateOf(false) }
                 Box(itemMotion()) {
-                    ReadTile(tile, posterWidth(), from = from, lines = 2, onLongClick = { menu = true })
+                    ReadTile(tile, posterWidth(), from = from, lines = 2, onLongClick = { menu = true }, actions = readTileActions(tile, current = null, lists = false))
                     ReadTileMenu(tile, menu, current = null, lists = false) { menu = false }
                 }
             }

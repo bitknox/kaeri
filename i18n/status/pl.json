@@ -18907,6 +18907,16 @@
     "by": "agent",
     "at": "2026-11-08"
   },
+  "read-tile-add-to": {
+    "source": "9751af99d6e1",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-13",
+    "flags": [
+      "new string from fix/read-r7-a11y: a screen reader action on a reading cover, needs Johan's review"
+    ],
+    "back": "Add to { $list }"
+  },
   "reader-action-controls": {
     "source": "83cd32b685cc",
     "state": "draft",

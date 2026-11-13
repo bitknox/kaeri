@@ -10108,6 +10108,10 @@
     <value>Add to Planning</value>
     <comment>Screen readers: the custom action on a discovery cover that puts the series on Planning.</comment>
   </data>
+  <data name="ReadTileAddTo" xml:space="preserve">
+    <value>Add to {list}</value>
+    <comment>Screen readers: a custom action on a reading cover that puts the series on one of the lists, one action for each list the cover's menu offers under Add to list. The list is its name as the menu shows it, such as "Completed".</comment>
+  </data>
   <data name="ReadSearchAnilistHidden" xml:space="preserve">
     <value>AniList's results are hidden.</value>
     <comment>Said once by screen readers when Your sources only turns on.</comment>

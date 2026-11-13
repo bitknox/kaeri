@@ -7127,6 +7127,9 @@
   <data name="ReadSearchSourceMore" xml:space="preserve">
     <value>Visa {n} till</value>
   </data>
+  <data name="ReadTileAddTo" xml:space="preserve">
+    <value>Lägg till i {list}</value>
+  </data>
   <data name="OnboardingStep" xml:space="preserve">
     <value>{step} av {total}</value>
   </data>

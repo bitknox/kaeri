@@ -270,6 +270,7 @@ read-search-source-kind-server = Máy chủ
 read-search-source-kind-folder = Thư mục
 read-search-source-kind-plugin = { -plugin-cap }
 read-search-source-more = Hiện thêm { $n }
+read-tile-add-to = Thêm vào { $list }
 onboarding-step = { $step }/{ $total }
 onboarding-welcome-line = Theo dõi những gì bạn xem và đọc, từ { -source-pl } của riêng bạn.
 onboarding-welcome-note = Danh sách và tiến độ của bạn nằm trên { -device-pl } của bạn. Bạn tự thêm { -tracker-pl } và { -source-pl }.

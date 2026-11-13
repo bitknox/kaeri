@@ -423,7 +423,7 @@ fun PagedReader(
                     customActions = listOf(
                         CustomAccessibilityAction(Strings.readerActionNext(context)) { pager.forward() },
                         CustomAccessibilityAction(Strings.readerActionPrevious(context)) { pager.back() },
-                        CustomAccessibilityAction(Strings.readerActionControls(context)) { onControls(); true },
+                        CustomAccessibilityAction(Strings.readerZoneShowControls(context)) { onControls(); true },
                     )
                 }
                 .pointerInput(pager.zoomed) {

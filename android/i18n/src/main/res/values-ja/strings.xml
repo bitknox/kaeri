@@ -2727,6 +2727,7 @@
     <string name="read_search_source_kind_folder">フォルダ</string>
     <string name="read_search_source_kind_plugin">プラグイン</string>
     <string name="read_search_source_more">さらに%1$,d件を表示</string>
+    <string name="read_tile_add_to">%1$sに追加</string>
     <string name="onboarding_step">%1$,d/%2$,d</string>
     <string name="onboarding_welcome_line">自分のソースで、視聴も読書も記録できます。</string>
     <string name="onboarding_welcome_note">リストと進捗はあなたのデバイスに残ります。連携サービスとソースは、ご自分で追加します。</string>

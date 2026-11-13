@@ -315,6 +315,7 @@ read-search-source-kind-server = Serwer
 read-search-source-kind-folder = Folder
 read-search-source-kind-plugin = { -plugin-cap }
 read-search-source-more = Pokaż jeszcze { $n }
+read-tile-add-to = Dodaj do: { $list }
 onboarding-step = { $step } z { $total }
 onboarding-welcome-line = Śledź to, co oglądasz i czytasz. Dostarczają to twoje { -source-pl }.
 onboarding-welcome-note = Twoje listy i postęp zostają przy tobie. { -tracker-cap-pl } i { -source-pl } dodajesz sam.

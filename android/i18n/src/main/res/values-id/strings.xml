@@ -2727,6 +2727,7 @@
     <string name="read_search_source_kind_folder">Folder</string>
     <string name="read_search_source_kind_plugin">Plugin</string>
     <string name="read_search_source_more">Tampilkan %1$,d lagi</string>
+    <string name="read_tile_add_to">Tambahkan ke %1$s</string>
     <string name="onboarding_step">%1$,d dari %2$,d</string>
     <string name="onboarding_welcome_line">Catat yang Anda tonton dan baca, dari sumber-sumber Anda sendiri.</string>
     <string name="onboarding_welcome_note">Daftar dan kemajuan Anda tetap ada di perangkat Anda. Anda sendiri yang menambahkan Pelacak-pelacak dan sumber-sumber.</string>

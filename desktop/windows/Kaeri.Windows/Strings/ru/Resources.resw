@@ -7673,6 +7673,9 @@
   <data name="ReadSearchSourceMore" xml:space="preserve">
     <value>Показать ещё {n}</value>
   </data>
+  <data name="ReadTileAddTo" xml:space="preserve">
+    <value>Добавить в «{list}»</value>
+  </data>
   <data name="OnboardingStep" xml:space="preserve">
     <value>{step} из {total}</value>
   </data>

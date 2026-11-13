@@ -7400,6 +7400,9 @@
   <data name="ReadSearchSourceMore" xml:space="preserve">
     <value>Mostrar {n} más</value>
   </data>
+  <data name="ReadTileAddTo" xml:space="preserve">
+    <value>Añadir a {list}</value>
+  </data>
   <data name="OnboardingStep" xml:space="preserve">
     <value>{step} de {total}</value>
   </data>

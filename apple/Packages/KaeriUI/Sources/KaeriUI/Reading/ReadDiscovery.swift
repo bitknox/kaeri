@@ -139,8 +139,8 @@ struct ReadHomeRowView: View {
             ReadWaitSlot(waiting: waiting) {
                 HomeShelf(spacing: layout.cardGap) {
                     ForEach(row.tiles, id: \.work) { tile in
-                        ReadTileCard(tile: tile, twoLines: true, planAction: true, caption: caption)
-                            .contextMenu { ReadTileMenu(tile: tile, kind: .plan) }
+                        ReadTileCard(tile: tile, twoLines: true, caption: caption)
+                            .readTileMenu(tile, kind: .plan)
                             .transition(.opacity)
                     }
                 }
@@ -167,11 +167,9 @@ extension ReadHomeRow {
 /// A cover as a row, for a grid at the largest text sizes: the small cover, then the title and
 /// its lines at full width, wrapping as far as they need.
 struct ReadTileListRow: View {
-    @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
     let tile: WorkTile
     var note: String?
-    var planAction = false
     var caption = ReadCaption.plain
 
     var body: some View {
@@ -204,11 +202,6 @@ struct ReadTileListRow: View {
         .accessibilityLabel(Text(tile.title))
         .accessibilityValue(Text([ReadWords.spoken(tile, caption), note].compactMap { $0 }.joined(separator: ", "))) // i18n-skip
         .accessibilityAddTraits(.isButton)
-        .accessibilityActions {
-            if planAction {
-                Button(L.libraryAddPlanning) { store.reading.setStatus(tile.work, .planning) }
-            }
-        }
     }
 }
 

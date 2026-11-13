@@ -2727,6 +2727,7 @@
     <string name="read_search_source_kind_folder">Thư mục</string>
     <string name="read_search_source_kind_plugin">Plugin</string>
     <string name="read_search_source_more">Hiện thêm %1$,d</string>
+    <string name="read_tile_add_to">Thêm vào %1$s</string>
     <string name="onboarding_step">%1$,d/%2$,d</string>
     <string name="onboarding_welcome_line">Theo dõi những gì bạn xem và đọc, từ các nguồn của riêng bạn.</string>
     <string name="onboarding_welcome_note">Danh sách và tiến độ của bạn nằm trên các thiết bị của bạn. Bạn tự thêm các dịch vụ theo dõi và các nguồn.</string>

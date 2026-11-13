@@ -2943,6 +2943,7 @@
     <string name="read_search_source_kind_folder">Carpeta</string>
     <string name="read_search_source_kind_plugin">Complemento</string>
     <string name="read_search_source_more">Mostrar %1$,d más</string>
+    <string name="read_tile_add_to">Añadir a %1$s</string>
     <string name="onboarding_step">%1$,d de %2$,d</string>
     <string name="onboarding_welcome_line">Lleva el registro de lo que ves y lees, desde tus propias fuentes.</string>
     <string name="onboarding_welcome_note">Tus listas y tu progreso se quedan en tus dispositivos. Agregar servicios de seguimiento y fuentes depende de ti.</string>

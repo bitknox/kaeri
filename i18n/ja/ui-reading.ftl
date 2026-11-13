@@ -270,6 +270,7 @@ read-search-source-kind-server = サーバー
 read-search-source-kind-folder = フォルダ
 read-search-source-kind-plugin = { -plugin-cap }
 read-search-source-more = さらに{ $n }件を表示
+read-tile-add-to = { $list }に追加
 onboarding-step = { $step }/{ $total }
 onboarding-welcome-line = 自分の{ -source-pl }で、視聴も読書も記録できます。
 onboarding-welcome-note = リストと進捗はあなたの{ -device-pl }に残ります。{ -tracker-cap-pl }と{ -source-pl }は、ご自分で追加します。

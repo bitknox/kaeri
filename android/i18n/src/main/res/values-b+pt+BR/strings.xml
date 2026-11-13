@@ -2943,6 +2943,7 @@
     <string name="read_search_source_kind_folder">Pasta</string>
     <string name="read_search_source_kind_plugin">Plugin</string>
     <string name="read_search_source_more">Mostrar mais %1$,d</string>
+    <string name="read_tile_add_to">Adicionar a %1$s</string>
     <string name="onboarding_step">%1$,d de %2$,d</string>
     <string name="onboarding_welcome_line">Acompanhe o que você assiste e lê, a partir das suas próprias fontes.</string>
     <string name="onboarding_welcome_note">Suas listas e seu progresso ficam nos seus dispositivos. Serviços de acompanhamento e fontes ficam por sua conta.</string>

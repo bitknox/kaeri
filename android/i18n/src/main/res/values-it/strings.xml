@@ -2943,6 +2943,7 @@
     <string name="read_search_source_kind_folder">Cartella</string>
     <string name="read_search_source_kind_plugin">Plugin</string>
     <string name="read_search_source_more">Mostra altri %1$,d</string>
+    <string name="read_tile_add_to">Aggiungi a %1$s</string>
     <string name="onboarding_step">%1$,d di %2$,d</string>
     <string name="onboarding_welcome_line">Tieni traccia di ciò che guardi e leggi, dalle tue fonti.</string>
     <string name="onboarding_welcome_note">Le tue liste e i tuoi progressi restano sui tuoi dispositivi. Tracker e fonti sono tue da aggiungere.</string>
