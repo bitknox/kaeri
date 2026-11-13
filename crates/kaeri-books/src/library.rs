@@ -144,6 +144,11 @@ impl Known for Nothing {
     }
 }
 
+/// What a scan that was told to stop ends with.
+fn stopped() -> std::io::Error {
+    std::io::Error::new(std::io::ErrorKind::Interrupted, "the scan was stopped")
+}
+
 fn mtime_of(meta: &fs::Metadata) -> i64 {
     meta.modified()
         .ok()
@@ -266,6 +271,18 @@ pub fn scan(
     limits: &Limits,
     found: &mut dyn FnMut(u32),
 ) -> std::io::Result<Scan> {
+    scan_until(root, known, limits, found, &|| false)
+}
+
+/// [`scan`], asking `stop` before each thing it looks at: once it says yes, the scan ends with
+/// an [`std::io::ErrorKind::Interrupted`] error and keeps nothing.
+pub fn scan_until(
+    root: &Path,
+    known: &dyn Known,
+    limits: &Limits,
+    found: &mut dyn FnMut(u32),
+    stop: &dyn Fn() -> bool,
+) -> std::io::Result<Scan> {
     let tree = crate::tree::claiming(root);
     let (place, top) = match &tree {
         Some(tree) => {
@@ -318,6 +335,7 @@ pub fn scan(
         0,
         known,
         limits,
+        stop,
         &mut |group, file, name| {
             count += 1;
             found(count);
@@ -332,6 +350,10 @@ pub fn scan(
         &mut out,
         &top.path,
     )?;
+    // A stop met in a subfolder ends only that folder's walk: the scan as a whole ends here.
+    if stop() {
+        return Err(stopped());
+    }
     for (key, files) in groups {
         out.series.push(series_of(key, files));
     }
@@ -355,10 +377,14 @@ fn walk(
     depth: usize,
     known: &dyn Known,
     limits: &Limits,
+    stop: &dyn Fn() -> bool,
     emit: &mut dyn FnMut(String, ScannedFile, String),
     out: &mut Scan,
     root: &Path,
 ) -> std::io::Result<()> {
+    if stop() {
+        return Err(stopped());
+    }
     let entries = place.list(dir)?;
     let has = |kinds: &[&str]| {
         entries
@@ -379,6 +405,9 @@ fn walk(
         return Ok(());
     }
     for entry in entries {
+        if stop() {
+            return Err(stopped());
+        }
         let name = entry.name();
         if hidden(&name) || entry.link {
             continue;
@@ -386,7 +415,7 @@ fn walk(
         if entry.dir {
             if depth < MAX_DEPTH {
                 // An unreadable subfolder is skipped, not fatal to the rest.
-                let _ = walk(place, &entry, depth + 1, known, limits, emit, out, root);
+                let _ = walk(place, &entry, depth + 1, known, limits, stop, emit, out, root);
             }
         } else if extension(&entry.path)
             .is_some_and(|x| naming::BOOK_EXTENSIONS.contains(&x.as_str()))
@@ -758,6 +787,23 @@ mod tests {
                 (None, None) => f.label.clone(),
             })
             .collect()
+    }
+
+    #[test]
+    fn a_scan_told_to_stop_ends_without_a_result() {
+        let dir = tempfile::tempdir().unwrap();
+        for s in ["Reed Lamp", "Salt Kite", "Moss Bell"] {
+            for c in 1..=3 {
+                cbz(&dir.path().join(format!("{s}/{s} Ch. {c}.cbz")), 1, None);
+            }
+        }
+        let seen = std::cell::Cell::new(0u32);
+        let stop = || seen.get() >= 4;
+        let ended =
+            scan_until(dir.path(), &Nothing, &Limits::default(), &mut |n| seen.set(n), &stop);
+        assert_eq!(ended.unwrap_err().kind(), std::io::ErrorKind::Interrupted);
+        assert_eq!(seen.get(), 4, "nothing is looked at once it is told to stop");
+        assert_eq!(scan_dir(dir.path()).series.len(), 3);
     }
 
     /// A backslash is part of a name outside Windows: the book is kept by its real path.

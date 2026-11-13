@@ -1,6 +1,7 @@
 //! A big folder scans quickly the first time and again: 10 000 made-up books in 200 series,
 //! added and then scanned once more, say their progress a few times a second rather than once
-//! a book, and the second scan costs about what the first did.
+//! a book, and the second scan costs about what the first did. Removed while it is scanned, the
+//! folder stops and says nothing, until an undo scans it again.
 
 use std::time::{Duration, Instant};
 
@@ -11,6 +12,7 @@ use kaeri_engine::{
 };
 use kaeri_model::{
     book_sources::{BookFolderScan, BookSourceCommand, BookSourceEvent, FolderRef},
+    came_in::CameIn,
     event::Event,
 };
 use kaeri_store::Store;
@@ -43,16 +45,35 @@ fn tree(root: &std::path::Path) {
     }
 }
 
-/// Run `command`, and take the views it says until the folder was scanned at `at` and a
-/// view says it is done: how many views came, counting any just after, and how long it took.
-async fn scanned(
+/// Made-up books, the store and the sources over it, and the command that adds the books.
+fn shelf() -> (tempfile::TempDir, Store, BookSources, BookSourceCommand) {
+    let dir = tempfile::tempdir().unwrap();
+    tree(dir.path());
+    let paths = Paths {
+        config_file: dir.path().join("config.toml"),
+        data_dir: dir.path().join("data"),
+        cache_dir: dir.path().join("cache"),
+    };
+    let store = Store::open_in_memory().unwrap();
+    let sources = BookSources::new(
+        store.clone(),
+        TokenStore::new(dir.path().join("tokens")),
+        reqwest::Client::new(),
+        &paths,
+    );
+    let shelf = dir.path().join("shelf").to_string_lossy().into_owned();
+    let add = BookSourceCommand::AddFolder {
+        folder: FolderRef { path: Some(shelf), ..FolderRef::default() },
+    };
+    (dir, store, sources, add)
+}
+
+fn send(
     sources: &BookSources,
-    store: &Store,
     command: BookSourceCommand,
     at: i64,
-) -> (usize, Duration) {
-    let (tx, mut rx) = mpsc::unbounded_channel();
-    let started = Instant::now();
+) -> mpsc::UnboundedReceiver<Event> {
+    let (tx, rx) = mpsc::unbounded_channel();
     kaeri_engine::read_sources::command(
         sources,
         &BookPlugins::default(),
@@ -61,12 +82,29 @@ async fn scanned(
         at,
         &tx.into(),
     );
+    rx
+}
+
+async fn next(rx: &mut mpsc::UnboundedReceiver<Event>) -> Event {
+    tokio::time::timeout(Duration::from_secs(120), rx.recv())
+        .await
+        .expect("an event within two minutes")
+        .expect("open")
+}
+
+/// Run `command`, and take the views it says until the folder was scanned at `at` and a
+/// view says it is done: how many views came, counting any just after, and how long it took.
+async fn scanned(
+    sources: &BookSources,
+    store: &Store,
+    command: BookSourceCommand,
+    at: i64,
+) -> (usize, Duration) {
+    let started = Instant::now();
+    let mut rx = send(sources, command, at);
     let mut views = 0;
     loop {
-        let event = tokio::time::timeout(Duration::from_secs(120), rx.recv())
-            .await
-            .expect("the scan to end within two minutes")
-            .expect("open");
+        let event = next(&mut rx).await;
         let Event::BookSources(BookSourceEvent::View(view)) = event else { continue };
         views += 1;
         let kept = store.book_folders().unwrap().first().and_then(|f| f.last_scan);
@@ -86,24 +124,7 @@ async fn scanned(
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_big_folder_is_scanned_again_as_quickly_with_a_few_updates_a_second() {
-    let dir = tempfile::tempdir().unwrap();
-    tree(dir.path());
-    let paths = Paths {
-        config_file: dir.path().join("config.toml"),
-        data_dir: dir.path().join("data"),
-        cache_dir: dir.path().join("cache"),
-    };
-    let store = Store::open_in_memory().unwrap();
-    let sources = BookSources::new(
-        store.clone(),
-        TokenStore::new(dir.path().join("tokens")),
-        reqwest::Client::new(),
-        &paths,
-    );
-    let shelf = dir.path().join("shelf").to_string_lossy().into_owned();
-    let add = BookSourceCommand::AddFolder {
-        folder: FolderRef { path: Some(shelf), ..FolderRef::default() },
-    };
+    let (_dir, store, sources, add) = shelf();
 
     let (first_views, first) = scanned(&sources, &store, add, 1).await;
     let view = sources.view(&BookPlugins::default(), |_| None);
@@ -121,4 +142,56 @@ async fn a_big_folder_is_scanned_again_as_quickly_with_a_few_updates_a_second() 
     // the whole view from the store.
     assert!(again < Duration::from_secs(60), "the second scan took {again:?}");
     assert!(again < first * 5 + Duration::from_secs(5), "{first:?}, then {again:?}");
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn a_folder_removed_while_it_is_scanned_stops_and_says_nothing_until_it_is_brought_back() {
+    let (_dir, store, sources, add) = shelf();
+    let mut adding = send(&sources, add, 1);
+    let id = loop {
+        match next(&mut adding).await {
+            Event::BookSources(BookSourceEvent::View(view)) => {
+                if let Some(folder) = view.folders.first()
+                    && matches!(folder.scan, BookFolderScan::Scanning { found } if found > 0)
+                {
+                    break folder.id.clone();
+                }
+            }
+            Event::CameIn(came) => panic!("the scan ended before it could be removed: {came:?}"),
+            _ => {}
+        }
+    };
+
+    let removed = Instant::now();
+    let _ = send(&sources, BookSourceCommand::RemoveFolder { id: id.clone() }, 1);
+    loop {
+        match next(&mut adding).await {
+            Event::BookSources(BookSourceEvent::View(view))
+                if view.folders.first().is_some_and(|f| f.scan == BookFolderScan::Done) =>
+            {
+                break;
+            }
+            Event::CameIn(came) => panic!("a removed folder came in: {came:?}"),
+            _ => {}
+        }
+    }
+    assert!(removed.elapsed() < Duration::from_secs(5), "stopped in {:?}", removed.elapsed());
+    while let Ok(Some(event)) =
+        tokio::time::timeout(Duration::from_millis(800), adding.recv()).await
+    {
+        assert!(!matches!(event, Event::CameIn(_)), "a removed folder came in: {event:?}");
+    }
+    assert!(store.local_book_series().unwrap().is_empty(), "nothing of it is kept");
+
+    // Brought back within the undo: scanned again, and said as the add would have said it.
+    let mut back = send(&sources, BookSourceCommand::RestoreFolder { id }, 1);
+    let came = loop {
+        if let Event::CameIn(came) = next(&mut back).await {
+            break came;
+        }
+    };
+    let CameIn::Folder(report) = came else { panic!("{came:?}") };
+    assert_eq!((report.series, report.books), (SERIES as u32, (SERIES * CHAPTERS) as u32));
+    assert!(!report.already_added);
+    assert_eq!(store.local_book_series().unwrap().len(), SERIES);
 }

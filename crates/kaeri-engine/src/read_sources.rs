@@ -301,6 +301,9 @@ pub struct BookSources {
     scanning: Arc<Mutex<HashMap<String, Arc<AtomicU32>>>>,
     /// The view as last built: a scan's progress is said on it, with only its counts changed.
     shown: Arc<Mutex<Option<BookSourcesView>>>,
+    /// Folders whose scan stopped as they were removed, with whether that scan was to say what
+    /// came in: an undo scans them again.
+    stopped: Arc<Mutex<HashMap<String, Option<bool>>>>,
     removed: Arc<RwLock<HashSet<String>>>,
     undo: Arc<Mutex<HashMap<String, tokio::task::AbortHandle>>>,
     /// Servers signed in to and not added yet, with their sign-ins: in memory only.
@@ -360,6 +363,7 @@ impl BookSources {
             flags: Arc::default(),
             scanning: Arc::default(),
             shown: Arc::default(),
+            stopped: Arc::default(),
             removed: Arc::default(),
             undo: Arc::default(),
             pending: Arc::default(),
@@ -735,22 +739,28 @@ impl BookSources {
             available: usable,
         };
         self.store.put_book_folder(&row).ok()?;
+        self.stopped.lock().unwrap_or_else(|e| e.into_inner()).remove(&id);
         self.removed.write().unwrap_or_else(|e| e.into_inner()).remove(&id);
         Some((id, before.is_some() && !leaving))
     }
 
+    fn is_removed(&self, id: &str) -> bool {
+        self.removed.read().unwrap_or_else(|e| e.into_inner()).contains(id)
+    }
+
     /// Scan one folder on a blocking thread. While it runs, `progress` is told when more has
-    /// been found, at most every [`PROGRESS_EVERY`] and never on the scan's own thread.
+    /// been found, at most every [`PROGRESS_EVERY`] and never on the scan's own thread. A folder
+    /// removed meanwhile stops its scan, and nothing of it is kept.
     pub async fn scan_folder(
         &self,
         folder: Folder,
         now: i64,
         progress: impl Fn() + Send + 'static,
-    ) -> Option<kaeri_model::came_in::FolderReport> {
+    ) -> ScanEnd {
         let Some(path) = reach(folder.path.as_deref(), folder.tree_uri.as_deref()) else {
             tracing::info!("a book folder has no path and nothing opens it");
             let _ = self.store.set_book_folder_available(&folder.id, false);
-            return None;
+            return ScanEnd::Unread;
         };
         let found = Arc::new(AtomicU32::new(0));
         self.scanning
@@ -775,10 +785,16 @@ impl BookSources {
             })
         };
         let counter = found.clone();
+        let (removed, id) = (self.removed.clone(), folder.id.clone());
         let scanned = tokio::task::spawn_blocking(move || {
-            library::scan(&path, &Nothing, &Limits::default(), &mut |n| {
-                counter.store(n, Ordering::Relaxed);
-            })
+            let stop = || removed.read().unwrap_or_else(|e| e.into_inner()).contains(&id);
+            library::scan_until(
+                &path,
+                &Nothing,
+                &Limits::default(),
+                &mut |n| counter.store(n, Ordering::Relaxed),
+                &stop,
+            )
         })
         .await;
         // Stopped for good before the scan is said done, so no late count follows it.
@@ -786,6 +802,8 @@ impl BookSources {
         let _ = ticker.await;
         self.scanning.lock().unwrap_or_else(|e| e.into_inner()).remove(&folder.id);
         match scanned {
+            Ok(Err(e)) if e.kind() == std::io::ErrorKind::Interrupted => ScanEnd::Stopped,
+            Ok(Ok(_)) if self.is_removed(&folder.id) => ScanEnd::Stopped,
             Ok(Ok(scan)) => {
                 let report = added::folder_report(&folder, &scan);
                 self.keep_folder_meta(&report);
@@ -813,16 +831,16 @@ impl BookSources {
                         }
                     }
                 }
-                Some(report)
+                ScanEnd::Read(report)
             }
             Ok(Err(e)) => {
                 tracing::info!(error = %e, "a book folder could not be read");
                 let _ = self.store.set_book_folder_available(&folder.id, false);
-                None
+                ScanEnd::Unread
             }
             Err(e) => {
                 tracing::warn!(error = %e, "the folder scan stopped");
-                None
+                ScanEnd::Unread
             }
         }
     }
@@ -917,6 +935,17 @@ pub(crate) fn demo_tile(work: &kaeri_core::reading_demo::DemoWork) -> WorkTile {
         amount: None,
         started: None,
     }
+}
+
+/// How a folder's scan ended.
+#[derive(Debug)]
+pub enum ScanEnd {
+    /// What came in from it.
+    Read(kaeri_model::came_in::FolderReport),
+    /// It could not be read.
+    Unread,
+    /// It was removed while it was scanned: nothing of it was kept.
+    Stopped,
 }
 
 /// A scanned series as the store keeps it.
@@ -1056,6 +1085,7 @@ pub fn command(
                     keeper.removed.write().unwrap_or_else(|e| e.into_inner()).remove(&forget);
                 if gone {
                     let _ = keeper.store.remove_book_folder(&forget);
+                    keeper.stopped.lock().unwrap_or_else(|e| e.into_inner()).remove(&forget);
                     changed(&tx);
                 }
                 keeper.undo.lock().unwrap_or_else(|e| e.into_inner()).remove(&forget);
@@ -1071,8 +1101,17 @@ pub fn command(
             {
                 timer.abort();
             }
-            this.removed.write().unwrap_or_else(|e| e.into_inner()).remove(&id);
+            // Taken out of the removed under the lock a stopping scan holds as it looks, so a
+            // scan that stopped for the removal is either kept here or scans again by itself.
+            let stopped = {
+                let mut stopped = this.stopped.lock().unwrap_or_else(|e| e.into_inner());
+                this.removed.write().unwrap_or_else(|e| e.into_inner()).remove(&id);
+                stopped.remove(&id)
+            };
             publish();
+            if let Some(answer) = stopped {
+                rescan(this, Some(id), now, publish, tx, answer);
+            }
         }
         BookSourceCommand::FindMatch { group, query } => {
             // Matching needs the manga catalogue, which is not on this device yet.
@@ -1222,7 +1261,25 @@ fn rescan(
             // What is said when the scan can't start or stops: the folder, and nothing found.
             let mut unread =
                 added::folder_report(&folder, &kaeri_books::library::Scan::default());
-            let found = this.scan_folder(folder, now, tick).await;
+            let found = loop {
+                match this.scan_folder(folder.clone(), now, tick.clone()).await {
+                    ScanEnd::Read(report) => break Some(Some(report)),
+                    ScanEnd::Unread => break Some(None),
+                    ScanEnd::Stopped => {
+                        let mut stopped = this.stopped.lock().unwrap_or_else(|e| e.into_inner());
+                        if this.is_removed(&folder.id) {
+                            // Nothing is said of a folder that was removed; an undo scans it.
+                            stopped.insert(folder.id.clone(), answer);
+                            break None;
+                        }
+                        // Brought back as the scan stopped: it is scanned again.
+                    }
+                }
+            };
+            let Some(found) = found else {
+                publish();
+                continue;
+            };
             if let Some(already) = answer {
                 let came = match found {
                     Some(mut found) => {
