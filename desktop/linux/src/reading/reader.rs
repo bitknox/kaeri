@@ -4258,9 +4258,11 @@ fn next_stop(
 }
 
 /// Tab and Shift+Tab, without Ctrl or Alt, for the reader's own walk: `walk` gets whether the
-/// walk goes back and says whether it moved the focus.
+/// walk goes back and says whether it moved the focus. They are heard before the page's content,
+/// as a novel's web view would keep them, walking its own document and the text view inside it.
 fn tab_keys(walk: impl Fn(bool) -> bool + 'static) -> gtk::EventControllerKey {
     let tabs = gtk::EventControllerKey::new();
+    tabs.set_propagation_phase(gtk::PropagationPhase::Capture);
     tabs.connect_key_pressed(move |_, key, _, modifiers| {
         use gdk::Key as K;
         let tab = matches!(key, K::Tab | K::KP_Tab | K::ISO_Left_Tab);
@@ -4466,7 +4468,7 @@ mod strip_tests {
 mod tab_tests {
     use adw::prelude::*;
 
-    use super::{next_stop, tab_stops};
+    use super::{next_stop, tab_keys, tab_stops};
     use crate::gtk_test::{pump, run};
 
     /// The reader's shape: a page with the head and the group over it, the group's last row
@@ -4587,6 +4589,16 @@ mod tab_tests {
             );
             go_to.unparent();
             window.destroy();
+        });
+    }
+
+    /// A novel's web view keeps every key that reaches it, so the reader hears Tab on its way
+    /// down to the page's content, before the view does.
+    #[test]
+    fn tab_is_heard_before_the_pages_content() {
+        run(|| {
+            let tabs = tab_keys(|_| true);
+            assert_eq!(tabs.propagation_phase(), gtk::PropagationPhase::Capture);
         });
     }
 }
