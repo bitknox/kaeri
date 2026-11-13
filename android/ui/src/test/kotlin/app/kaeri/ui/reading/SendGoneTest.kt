@@ -86,7 +86,7 @@ class SendGoneTest {
         compose.onNodeWithText("Share").performClick()
         compose.waitForIdle()
         assertEquals("no share sheet", 0, offered.size)
-        compose.onNodeWithText("The files are gone. Send them again.").assertExists()
+        compose.onNodeWithText("These files are gone. Prepared files are kept for a day.").assertExists()
         compose.onNodeWithText("Share").assertDoesNotExist()
         assertFalse(store.export.wasShared(7uL))
     }
@@ -97,7 +97,7 @@ class SendGoneTest {
         compose.onNodeWithText("Share").performClick()
         compose.waitForIdle()
         assertEquals(1, offered.size)
-        compose.onNodeWithText("The files are gone. Send them again.").assertDoesNotExist()
+        compose.onNodeWithText("These files are gone. Prepared files are kept for a day.").assertDoesNotExist()
         assertTrue(store.export.wasShared(7uL))
     }
 
