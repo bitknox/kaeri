@@ -97,6 +97,12 @@ extension ReadingModel {
         guard let home, home.offline, let since = home.offlineSince else { return nil }
         return L.homeOffline(time: AirTime.clock(Date(timeIntervalSince1970: TimeInterval(since))))
     }
+
+    /// Whether Up next's View all leads anywhere: to Planning, which only the row's Planning
+    /// series are on. A row of suggestions alone has no list to show.
+    static func upNextLinksPlanning(_ tiles: [WorkTile]) -> Bool {
+        tiles.contains { $0.facts.contains(.reading(.readingOnPlanning)) }
+    }
 }
 
 private struct ReadHomeContent: View {
@@ -165,7 +171,8 @@ private struct ReadHomeContent: View {
             HomeWait(active: true, activity: "loading home") { HomeShelfPlaceholder(posters: true) } // i18n-skip
         }
         if !home.upNext.isEmpty {
-            shelf(L.homeUpNext, tiles: home.upNext, link: L.homeViewAll) { navigator.readingList(.planning) }
+            let planning = ReadingModel.upNextLinksPlanning(home.upNext)
+            shelf(L.homeUpNext, tiles: home.upNext, link: planning ? L.homeViewAll : nil) { navigator.readingList(.planning) }
         }
         // AniList's rows, the demo's first run included: they show what there is to read once a
         // source is added.
