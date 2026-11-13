@@ -5,6 +5,7 @@
 import KaeriKit
 import Testing
 
+@MainActor
 struct SendSizeTests {
     @Test func anEstimateOfZeroIsUnknown() {
         #expect(SendWords.size(held: 0, of: 3, kept: nil, toFetch: 0) == nil)
