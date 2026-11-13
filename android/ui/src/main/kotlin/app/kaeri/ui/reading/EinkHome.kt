@@ -383,8 +383,7 @@ private fun LargeContinue(tiles: List<WorkTile>) {
     val navigator = LocalNavigator.current
     Spacer(Modifier.height(18.dp))
     PaperHeading(Strings.homeReadContinue(context), Strings.einkHomeAll(context), flush = true) {
-        ReadPlaces.showList(LibrarySegmentRead.READING)
-        navigator.go(Destination.Library)
+        ReadPlaces.openList(navigator, LibrarySegmentRead.READING)
     }
     BoxWithConstraints(Modifier.fillMaxWidth().padding(top = 4.dp)) {
         // The grid rule's columns upright: as many of at least 200 dp as the width holds.
@@ -751,8 +750,7 @@ private fun PaperContinue(tiles: List<WorkTile>, reader: Boolean) {
     val context = LocalContext.current
     val navigator = LocalNavigator.current
     PaperHeading(Strings.homeReadContinue(context), Strings.einkHomeAll(context), flush = true) {
-        ReadPlaces.showList(LibrarySegmentRead.READING)
-        navigator.go(Destination.Library)
+        ReadPlaces.openList(navigator, LibrarySegmentRead.READING)
     }
     val width = continueCover(reader)
     // A 6 inch panel has no room for a second line under its covers, so the place takes its short
