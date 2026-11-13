@@ -218,10 +218,10 @@ public final class SendModel {
         case .exportTargets(let list):
             targets = list
             if let kept = list.first(where: \.chosen) { chosenTarget = kept.id }
-        case .exportProgress(let job, let done, let total, let chaptersDone, let chapters):
+        case .exportProgress(let job, let done, let total, let chaptersDone, let chapters, _, _, _):
             let fraction = total > 0 ? min(1, max(0, Double(done) / Double(total))) : nil
             update(job: job) { $0.phase = .preparing(fraction: fraction, done: Int(chaptersDone), total: Int(chapters)) }
-        case .exportFailed(let job, let chapter, let failure):
+        case .exportFailed(let job, let chapter, let failure, _, _):
             let words = chapter.map { L.sendFailedChapter(chapter: $0, cause: failure.sendWords) } ?? L.sendFailed(cause: failure.sendWords)
             update(job: job) { $0.phase = .failed(words) }
         case .exportWaiting(let job, let work, let target, let line, _):
