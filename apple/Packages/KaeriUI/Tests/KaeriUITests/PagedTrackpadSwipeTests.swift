@@ -1,6 +1,6 @@
 // The Mac's paged reader under a two-finger sideways swipe, as the trackpad sends it: scroll
-// events with phases, posted to the app as the window server would. The page turns, and a swipe
-// up and down turns nothing.
+// events with phases, sent through the app as the window server would send them. The page
+// turns, and a swipe up and down turns nothing.
 
 #if os(macOS)
 import AppKit
@@ -49,13 +49,10 @@ struct PagedTrackpadSwipeTests {
     }
 
     private static func turn() {
-        while let event = NSApp.nextEvent(matching: .any, until: Date(), inMode: .default, dequeue: true) {
-            NSApp.sendEvent(event)
-        }
         RunLoop.main.run(until: Date().addingTimeInterval(0.005))
     }
 
-    /// The run loop turned, with the events posted to the app taken as the app takes them.
+    /// The run loop turned.
     private func spin(_ seconds: Double) async {
         let end = Date().addingTimeInterval(seconds)
         while Date() < end {
@@ -100,8 +97,9 @@ struct PagedTrackpadSwipeTests {
         events += [scroll(window, phase: 0, momentum: 1, dx: dx, dy: dy), scroll(window, phase: 0, momentum: 3, dx: 0)]
         for event in events {
             let event = try #require(event)
-            #expect(event.window === window, "the event is the window's: \(event.windowNumber), at \(event.locationInWindow)")
-            NSApp.postEvent(event, atStart: false)
+            #expect(TrackpadSwipe.place(of: event, in: window) != nil, "the event falls in the window: \(event.locationInWindow)")
+            // Through the app's dispatch, where its local monitors see each event.
+            NSApp.sendEvent(event)
             await spin(0.016)
         }
     }
@@ -113,7 +111,7 @@ struct PagedTrackpadSwipeTests {
         let window = window(model)
         defer {
             window.contentView = nil
-            window.close()
+            window.orderOut(nil)
         }
         await spin(0.3)
         #expect(model.current == 0)
@@ -129,7 +127,7 @@ struct PagedTrackpadSwipeTests {
         let window = window(model)
         defer {
             window.contentView = nil
-            window.close()
+            window.orderOut(nil)
         }
         await spin(0.3)
         try await swipe(window, dx: 2, dy: 40)

@@ -107,8 +107,8 @@ struct TrackpadSwipe: NSViewRepresentable {
         coordinator.handle = handle
         coordinator.monitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { [weak view] event in
             let taken = MainActor.assumeIsolated { () -> Bool in
-                guard let view, let window = view.window, event.window === window else { return false }
-                return coordinator.scrolled(event, over: view)
+                guard let view, let window = view.window, let at = Self.place(of: event, in: window) else { return false }
+                return coordinator.scrolled(event, at: at, over: view)
             }
             return taken ? nil : event
         }
@@ -120,6 +120,15 @@ struct TrackpadSwipe: NSViewRepresentable {
         context.coordinator.handle = handle
     }
 
+    /// Where the event is in `window`, in its coordinates: the window's own events, and events
+    /// made in the app, which name no window and give the place on the screen, when they fall
+    /// in the window.
+    static func place(of event: NSEvent, in window: NSWindow) -> CGPoint? {
+        if event.window === window { return event.locationInWindow }
+        guard event.window == nil, window.frame.contains(event.locationInWindow) else { return nil }
+        return window.convertPoint(fromScreen: event.locationInWindow)
+    }
+
     static func dismantleNSView(_ view: NSView, coordinator: Coordinator) {
         if let monitor = coordinator.monitor { NSEvent.removeMonitor(monitor) }
         coordinator.monitor = nil
@@ -127,7 +136,7 @@ struct TrackpadSwipe: NSViewRepresentable {
 }
 
 extension TrackpadSwipe.Coordinator {
-    func scrolled(_ event: NSEvent, over view: NSView) -> Bool {
+    func scrolled(_ event: NSEvent, at place: CGPoint, over view: NSView) -> Bool {
         let phase: SwipeScroll.Phase = switch event.phase {
         case .began, .mayBegin: .began
         case .changed, .stationary: .changed
@@ -136,7 +145,7 @@ extension TrackpadSwipe.Coordinator {
         default: .wheel
         }
         let momentum = !event.momentumPhase.isEmpty
-        let inside = view.bounds.contains(view.convert(event.locationInWindow, from: nil))
+        let inside = view.bounds.contains(view.convert(place, from: nil))
         if phase == .began, !momentum {
             tracking = active && inside
             // A gesture that began off the page is none of the page's, its momentum included.
