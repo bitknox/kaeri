@@ -8,6 +8,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
@@ -17,6 +18,11 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -82,12 +88,65 @@ internal fun PosterGrid(
 ) {
     LazyVerticalGrid(
         state = state,
-        columns = if (wideWindow()) GridCells.Adaptive(140.dp) else GridCells.Fixed(3),
+        columns = if (wideWindow()) GridCells.Adaptive(POSTER_CELL_MIN) else GridCells.Fixed(POSTER_COLUMNS),
         contentPadding = padding,
-        horizontalArrangement = Arrangement.spacedBy(13.dp),
+        horizontalArrangement = Arrangement.spacedBy(POSTER_GAP),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         content = content,
     )
+}
+
+/** A phone's [PosterGrid]: three across. */
+private const val POSTER_COLUMNS = 3
+
+/** A wide window's [PosterGrid] cells: at least this wide, as many as fit. */
+private val POSTER_CELL_MIN = 140.dp
+
+/** The gap between a [PosterGrid]'s columns. */
+private val POSTER_GAP = 13.dp
+
+/** The widths of a [PosterGrid]'s columns, from the first. */
+@Immutable
+internal class PosterCells(private val widths: List<Dp>) {
+    /** The width of the [index]th of a run of cells that starts a row. */
+    fun width(index: Int): Dp = widths[index % widths.size]
+}
+
+/**
+ * A [PosterGrid] that tells its content each column's width, measured once for the whole grid,
+ * where a cell measuring its own would be a second composition in each.
+ */
+@Composable
+internal fun SizedPosterGrid(
+    padding: PaddingValues,
+    state: androidx.compose.foundation.lazy.grid.LazyGridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState(),
+    content: androidx.compose.foundation.lazy.grid.LazyGridScope.(PosterCells) -> Unit,
+) {
+    BoxWithConstraints {
+        val cells = posterCells(constraints.maxWidth, padding)
+        PosterGrid(padding, state) { content(cells) }
+    }
+}
+
+/**
+ * The columns of a [PosterGrid] [width] pixels wide with [padding] about it, worked out as the
+ * grid works them out: its columns in whole pixels, the first ones a pixel wider where the width
+ * doesn't divide.
+ */
+@Composable
+private fun posterCells(width: Int, padding: PaddingValues): PosterCells {
+    val density = LocalDensity.current
+    val direction = LocalLayoutDirection.current
+    val wide = wideWindow()
+    return remember(width, padding, density, direction, wide) {
+        with(density) {
+            val gap = POSTER_GAP.roundToPx()
+            val inside = width - padding.calculateStartPadding(direction).roundToPx() - padding.calculateEndPadding(direction).roundToPx()
+            val columns = if (wide) maxOf((inside + gap) / (POSTER_CELL_MIN.roundToPx() + gap), 1) else POSTER_COLUMNS
+            val cells = inside - gap * (columns - 1)
+            PosterCells(List(columns) { (cells / columns + if (it < cells % columns) 1 else 0).toDp() })
+        }
+    }
 }
 
 /**
