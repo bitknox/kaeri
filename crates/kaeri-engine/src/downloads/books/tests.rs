@@ -244,7 +244,12 @@ fn kit_of(chapters: &[&str], hosts: &[&str]) -> Kit {
         cache_dir: dir.path().join("cache"),
     };
     let tokens = kaeri_track::TokenStore::new(dir.path().join("tokens"));
-    let sources = BookSources::new(store.clone(), tokens, reqwest::Client::new(), &paths);
+    let sources = BookSources::new(
+        store.clone(),
+        tokens,
+        &kaeri_net::HttpClient::new(&Default::default()).unwrap(),
+        &paths,
+    );
     let manifest = BookSourceManifest {
         id: "shelf".into(),
         name: "Shelf".into(),

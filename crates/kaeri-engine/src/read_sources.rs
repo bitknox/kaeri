@@ -265,7 +265,11 @@ pub struct BookSources {
     pub registry: BookRegistry,
     store: Store,
     tokens: TokenStore,
+    /// Kaeri's own client, for page addresses a source hands back to be fetched.
     client: reqwest::Client,
+    /// The client book servers are asked through: it follows no redirects, so the server's
+    /// own requests follow them a hop at a time and keep its sign-in on its origin.
+    servers: reqwest::Client,
     keep: PathBuf,
     flags: Arc<Mutex<HashMap<String, Arc<AtomicBool>>>>,
     scanning: Arc<Mutex<HashMap<String, Arc<AtomicU32>>>>,
@@ -316,14 +320,15 @@ impl BookSources {
     pub fn new(
         store: Store,
         tokens: TokenStore,
-        client: reqwest::Client,
+        http: &kaeri_net::HttpClient,
         paths: &kaeri_core::config::Paths,
     ) -> Self {
         let this = Self {
             registry: BookRegistry::new(),
             store,
             tokens,
-            client,
+            client: http.plain().clone(),
+            servers: http.sources().clone(),
             keep: paths.cache_dir.join("books"),
             flags: Arc::default(),
             scanning: Arc::default(),
@@ -472,7 +477,7 @@ impl BookSources {
         flag.store(server.signed_out, Ordering::Relaxed);
         let libraries = self.server_meta(&server.id).libraries;
         let built = kaeri_bookserver::source_with(
-            &self.client,
+            &self.servers,
             &Server {
                 id: &server.id,
                 name: &server.name,
@@ -1023,7 +1028,7 @@ pub fn command(
             let address = link.as_ref().map_or(address, |l| l.root.clone());
             tokio::spawn(async move {
                 let checked =
-                    kaeri_bookserver::check(&this.client, &address).await.map(|mut c| {
+                    kaeri_bookserver::check(&this.servers, &address).await.map(|mut c| {
                         if link.is_some() {
                             c.kind = Some(Kind::Kavita);
                         }
@@ -1224,12 +1229,12 @@ async fn sign_in(
         step,
         failure: server_failure(error, address),
     };
-    let found = match kaeri_bookserver::check(&this.client, address).await {
+    let found = match kaeri_bookserver::check(&this.servers, address).await {
         Ok(found) => found,
         Err(e) => return failed(ServerStep::Address, &e),
     };
     let done = match kaeri_bookserver::sign_in(
-        &this.client,
+        &this.servers,
         &found.address,
         found.kind,
         user,

@@ -121,12 +121,12 @@ async fn detect(client: &reqwest::Client, address: &str) -> Result<Option<Kind>>
         return Ok(Some(Kind::Komga));
     }
     // An OPDS catalogue, or something that wants a sign-in before it says.
-    let response = client
-        .get(http.url(address_path(address, &root)))
-        .timeout(std::time::Duration::from_secs(20))
-        .send()
-        .await
-        .map_err(|e| ServerError::Unreachable(describe_transport(&e)))?;
+    let response = http
+        .fetch(
+            http.request(reqwest::Method::GET, address_path(address, &root))
+                .timeout(std::time::Duration::from_secs(20)),
+        )
+        .await?;
     let status = response.status().as_u16();
     if status == 401 || status == 403 {
         return Ok(None);
@@ -338,12 +338,16 @@ pub(crate) async fn fetch_with(
 ) -> std::result::Result<Vec<u8>, PageError> {
     let mut request = http.request(reqwest::Method::GET, &page.url);
     for (name, value) in &page.headers {
+        // The sign-in is the server's own to add, and only on its origin.
+        if http.auth().header().is_some_and(|(own, _)| own.eq_ignore_ascii_case(name)) {
+            continue;
+        }
         request = request.header(name, value);
     }
-    let response = request
-        .send()
-        .await
-        .map_err(|e| PageError::Failed(ProviderError::Transport(describe_transport(&e))))?;
+    let response = http.fetch(request).await.map_err(|e| match e {
+        ServerError::Unreachable(why) => PageError::Failed(ProviderError::Transport(why)),
+        other => PageError::Failed(other.into()),
+    })?;
     let status = response.status().as_u16();
     if !(200..300).contains(&status) {
         return Err(PageError::Status(status));

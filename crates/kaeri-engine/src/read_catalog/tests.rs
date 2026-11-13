@@ -53,7 +53,12 @@ fn kit(fake: Option<&FakeAniList>, dir: &std::path::Path) -> Kit {
         cache_dir: dir.join("cache"),
     };
     let tokens = kaeri_track::TokenStore::new(dir.join("tokens"));
-    let sources = BookSources::new(store.clone(), tokens, reqwest::Client::new(), &paths);
+    let sources = BookSources::new(
+        store.clone(),
+        tokens,
+        &kaeri_net::HttpClient::new(&Default::default()).unwrap(),
+        &paths,
+    );
     let meta = match fake {
         Some(fake) => fake.meta(&store),
         None => {

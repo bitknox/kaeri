@@ -491,15 +491,19 @@ impl OpdsSource {
             let header: Vec<(String, String)> = self.http.auth().header().into_iter().collect();
             return Ok(Some(ChapterContent::Images(
                 (0..count)
-                    .map(|n| PageRef {
-                        url: stream
+                    .map(|n| {
+                        let url = stream
                             .href
                             .replace("{pageNumber}", &n.to_string())
-                            .replace("{maxWidth}", "2000"),
-                        headers: header.clone(),
-                        made: None,
-                        width: None,
-                        height: None,
+                            .replace("{maxWidth}", "2000");
+                        // A stream on another host, or over plain http from an https server,
+                        // is asked without the sign-in.
+                        let headers = if self.http.same_origin(&url) {
+                            header.clone()
+                        } else {
+                            Vec::new()
+                        };
+                        PageRef { url, headers, made: None, width: None, height: None }
                     })
                     .collect(),
             )));

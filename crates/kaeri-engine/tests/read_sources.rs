@@ -30,7 +30,15 @@ fn sources(dir: &std::path::Path) -> (BookSources, Store) {
         cache_dir: dir.join("cache"),
     };
     let tokens = TokenStore::new(dir.join("tokens"));
-    (BookSources::new(store.clone(), tokens, reqwest::Client::new(), &paths), store)
+    (
+        BookSources::new(
+            store.clone(),
+            tokens,
+            &kaeri_net::HttpClient::new(&Default::default()).unwrap(),
+            &paths,
+        ),
+        store,
+    )
 }
 
 fn run(sources: &BookSources, command: BookSourceCommand) -> mpsc::UnboundedReceiver<Event> {
@@ -72,7 +80,12 @@ async fn the_order_and_the_off_switches_are_kept_and_follow_another_device() {
         data_dir: dir.path().join("d"),
         cache_dir: dir.path().join("cache"),
     };
-    let again = BookSources::new(store, tokens, reqwest::Client::new(), &paths);
+    let again = BookSources::new(
+        store,
+        tokens,
+        &kaeri_net::HttpClient::new(&Default::default()).unwrap(),
+        &paths,
+    );
     assert!(again.registry.is_off("folders"));
     // Another device switches it on and sets an order.
     again.apply_effect(kinds::BOOK_SOURCE_OFF, "folders", None);
@@ -200,7 +213,7 @@ async fn the_demo_works_are_matched_before_any_search_and_stay_matched() {
         BookSources::new(
             store,
             TokenStore::new(dir.path().join("tokens")),
-            reqwest::Client::new(),
+            &kaeri_net::HttpClient::new(&Default::default()).unwrap(),
             &paths,
         )
     };

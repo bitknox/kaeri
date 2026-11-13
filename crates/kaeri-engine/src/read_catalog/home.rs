@@ -1166,7 +1166,12 @@ mod tests {
             cache_dir: dir.join("cache"),
         };
         let tokens = kaeri_track::TokenStore::new(dir.join("tokens"));
-        let sources = BookSources::new(store.clone(), tokens, reqwest::Client::new(), &paths);
+        let sources = BookSources::new(
+            store.clone(),
+            tokens,
+            &kaeri_net::HttpClient::new(&Default::default()).unwrap(),
+            &paths,
+        );
         let http = kaeri_net::HttpClient::offline(&Default::default()).unwrap();
         let meta =
             kaeri_meta::Meta::new(kaeri_meta::AniList::new(http, 30), None, store.clone());

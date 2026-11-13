@@ -229,7 +229,7 @@ impl BookSources {
         if let Some(link) = kaeri_bookserver::kavita_link(address) {
             return self.probe_key(&link).await;
         }
-        let found = match kaeri_bookserver::check(&self.client, address).await {
+        let found = match kaeri_bookserver::check(&self.servers, address).await {
             Ok(found) => found,
             Err(e) => {
                 return CameIn::Empty(nothing_for(&e, address, Kind::Opds, false));
@@ -237,7 +237,7 @@ impl BookSources {
         };
         let user = user.unwrap_or_default();
         let done = match kaeri_bookserver::sign_in(
-            &self.client,
+            &self.servers,
             &found.address,
             found.kind,
             user,
@@ -256,7 +256,7 @@ impl BookSources {
     }
 
     async fn probe_key(&self, link: &KavitaLink) -> CameIn {
-        match kaeri_bookserver::sign_in_with_key(&self.client, link).await {
+        match kaeri_bookserver::sign_in_with_key(&self.servers, link).await {
             Ok(done) => {
                 let last4 = kaeri_bookserver::last_four(&link.key);
                 self.hold(link.root.clone(), None, done, Some(last4)).await
@@ -274,7 +274,7 @@ impl BookSources {
         key_last4: Option<String>,
     ) -> CameIn {
         let libraries =
-            kaeri_bookserver::libraries(&self.client, &address, done.kind, &done.credential)
+            kaeri_bookserver::libraries(&self.servers, &address, done.kind, &done.credential)
                 .await
                 .unwrap_or_else(|e| {
                     tracing::debug!(error = %e, "the server's libraries were not listed");
@@ -414,7 +414,7 @@ impl BookSources {
             let Some(kind) = Kind::parse(&server.kind) else { continue };
             let Ok(credential) = self.tokens.get(&secret_key(&server.id)) else { continue };
             let counted = kaeri_bookserver::count_series(
-                &self.client,
+                &self.servers,
                 &server.address,
                 kind,
                 &credential,

@@ -472,7 +472,12 @@ mod tests {
             cache_dir: dir.join("cache"),
         };
         let tokens = kaeri_track::TokenStore::new(dir.join("tokens"));
-        let sources = BookSources::new(store.clone(), tokens, reqwest::Client::new(), &paths);
+        let sources = BookSources::new(
+            store.clone(),
+            tokens,
+            &kaeri_net::HttpClient::new(&Default::default()).unwrap(),
+            &paths,
+        );
         sources.registry.put(shelf);
         let http =
             kaeri_net::HttpClient::new(&kaeri_core::config::NetworkConfig::default()).unwrap();

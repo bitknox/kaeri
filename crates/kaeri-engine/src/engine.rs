@@ -302,7 +302,7 @@ impl Engine {
                 let book_sources = crate::read_sources::BookSources::new(
                     store.clone(),
                     kaeri_track::TokenStore::over(crate::host::file_secrets(&paths)),
-                    http.plain().clone(),
+                    &http,
                     &paths,
                 );
                 Services {
