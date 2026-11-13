@@ -44,6 +44,7 @@ use kaeri_model::{
     command::AppState,
     event::Event,
     medium::AppEdition,
+    notice::Notice,
     reading::{
         BookDownloadRow, BookDownloadsView, ChapterDownloadState, ChapterReadState, ChapterRow,
         DownloadPick, ReadingEvent, ReadingFailure, StorageMeter, VolumeGroup, WriteProblem,
@@ -83,6 +84,11 @@ const PROGRESS_EVERY: Duration =
 /// The rest between chapters.
 const PACE: Duration =
     if cfg!(test) { Duration::from_millis(2) } else { Duration::from_millis(400) };
+
+/// How long a fetch that could not reach its source waits to hear the network went, before it
+/// fails: the device often notices a lost network a moment after the fetch does.
+const NETWORK_GRACE: Duration =
+    if cfg!(test) { Duration::from_millis(300) } else { Duration::from_secs(6) };
 
 /// What the engine lends a download: the sources, the clock and the way to speak.
 #[derive(Clone)]
@@ -258,6 +264,7 @@ pub struct Wanted {
 }
 
 /// Why a fetch ended without a file.
+#[derive(Debug)]
 pub(crate) enum Stop {
     Failed(ReadingFailure),
     /// The person took it out of the queue.
@@ -430,8 +437,7 @@ impl BookDownloads {
                 .as_ref()
                 .and_then(|kind| kaeri_core::media::Medium::parse(&kind.medium))
                 .unwrap_or(kaeri_core::media::Medium::Manga);
-            let title =
-                kind.and_then(|kind| kind.title_in(form)).unwrap_or_else(|| d.work.clone());
+            let title = crate::read_catalog::tiles::title_of(store, &d.work, form);
             let state = state_of(d, wifi);
             let mut chapter = chapter_row(d, read, bookmarked);
             // A download row carries no dates, so the clock plays no part in its words.
@@ -569,6 +575,16 @@ impl BookDownloads {
         let wanted = Self::to_fetch(&pick, &rows);
         let store = lent.sources.store();
         let listers = Listers::of(&lent.sources, &work, &source);
+        // A file in the person's folders opens from where it is: nothing of it is fetched, and
+        // asking for only such files says so.
+        let here = OnDevice::of(store, work.as_str());
+        let on_device = |w: &Wanted| here.file(w.chapter.as_str()).is_some_and(Here::is_folder);
+        if !wanted.is_empty() && wanted.iter().all(on_device) {
+            let notice = Notice::info(Msg::Reading(ReadingMsg::ReadingDownloadOnDevice));
+            let _ = lent.tx.send(Event::Toast(notice));
+            return;
+        }
+        let wanted: Vec<Wanted> = wanted.into_iter().filter(|w| !on_device(w)).collect();
         let (added, unlisted) =
             self.queue_listed(store, &work, (&listers, &rows), &wanted, false, now);
         // A chapter the series page listed from a source that no longer has it.
@@ -989,6 +1005,14 @@ impl BookDownloads {
                     reason: "the chapter could not be downloaded".into(),
                 }))
             });
+        // A source not reached as the network went is waited for, as a fetch the network
+        // change stopped is: it goes back in the queue and resumes once the network is back.
+        let fetched = match fetched {
+            Err(Stop::Failed(failure)) if unreached(&failure) && self.network_went().await => {
+                Err(Stop::Held)
+            }
+            other => other,
+        };
         match fetched {
             Ok(done) => {
                 let path = done.path.to_string_lossy().into_owned();
@@ -1027,6 +1051,13 @@ impl BookDownloads {
                 (!full, false)
             }
         }
+    }
+
+    /// Whether the queue is held now, or is within [`NETWORK_GRACE`].
+    async fn network_went(&self) -> bool {
+        let mut changes = self.changes();
+        let held = changes.wait_for(|setup| setup.hold);
+        matches!(tokio::time::timeout(NETWORK_GRACE, held).await, Ok(Ok(_)))
     }
 
     /// The first page of a chapter being fetched, once it has landed and been kept: for the
@@ -1239,8 +1270,13 @@ impl BookDownloads {
                 let file =
                     File::create(&part).map_err(|e| Stop::Failed(io_failure(&e, &part)))?;
                 let label = job.chapter.as_str().to_owned();
+                // The writer needs a title with something in it; a chapter id of only control
+                // characters gives way to the work's.
+                let title = Some(kaeri_books::write::plain_text(&label))
+                    .filter(|t| !t.is_empty())
+                    .unwrap_or_else(|| job.work.as_str().to_owned());
                 let meta = kaeri_books::write::BookMeta {
-                    title: label.clone(),
+                    title,
                     language: language.unwrap_or_else(|| "und".to_owned()),
                     ..Default::default()
                 };
@@ -1265,13 +1301,15 @@ impl BookDownloads {
                 finish(&part, &stem.with_extension("epub"), None)
             }
             ChapterContent::Book(book) => {
-                let extension = book
-                    .path
-                    .extension()
-                    .and_then(|e| e.to_str())
-                    .map_or_else(|| "cbz".to_owned(), str::to_ascii_lowercase);
-                std::fs::copy(&book.path, &part)
-                    .map_err(|e| Stop::Failed(io_failure(&e, &part)))?;
+                // A folder of pages is packed as a CBZ; a book file is copied as it is.
+                let extension = if keep_book(&book.path, &part)? {
+                    "cbz".to_owned()
+                } else {
+                    book.path
+                        .extension()
+                        .and_then(|e| e.to_str())
+                        .map_or_else(|| "cbz".to_owned(), str::to_ascii_lowercase)
+                };
                 if book.temporary {
                     let _ = std::fs::remove_file(&book.path);
                 }
@@ -1378,6 +1416,69 @@ pub(crate) fn io_failure(e: &std::io::Error, path: &Path) -> ReadingFailure {
         _ => WriteProblem::Other,
     };
     ReadingFailure::CannotWrite { path, problem }
+}
+
+/// A failure that says the source was not reached, which a lost network also gives.
+fn unreached(failure: &ReadingFailure) -> bool {
+    matches!(failure, ReadingFailure::SourceDown { .. } | ReadingFailure::Offline)
+}
+
+/// A book kept as `to`: a folder of pages packed as a CBZ, which says `true`, and a book file
+/// copied as it is. A folder is known by what it is, never by a failed open, which a folder
+/// answers differently on each system (on Windows as a refusal to write).
+fn keep_book(from: &Path, to: &Path) -> Result<bool, Stop> {
+    match kaeri_books::tree::stat(from) {
+        Ok(stat) if stat.folder => pack_pages(from, to).map(|()| true),
+        _ => copy_book(from, to).map(|()| false),
+    }
+}
+
+/// A folder of pages, on a plain path or in a folder the platform opens, packed as a CBZ with
+/// its pages in their natural order (2 before 10). A failure names the folder when it can't be
+/// read and the CBZ when it can't be written.
+fn pack_pages(from: &Path, to: &Path) -> Result<(), Stop> {
+    let unreadable = |e: &kaeri_books::BookError| match e {
+        kaeri_books::BookError::Io(io) => Stop::Failed(io_failure(io, from)),
+        _ => Stop::Failed(ReadingFailure::Unreadable {
+            path: from.display().to_string(),
+            format: "folder".into(),
+        }),
+    };
+    let unwritable = |e: &kaeri_books::BookError| match e {
+        kaeri_books::BookError::Io(io) => Stop::Failed(io_failure(io, to)),
+        _ => Stop::Failed(io_failure(&std::io::Error::other(e.to_string()), to)),
+    };
+    let mut comic = kaeri_books::Comic::open_folder(from, &kaeri_books::Limits::default())
+        .map_err(|e| unreadable(&e))?;
+    let out = BufWriter::new(File::create(to).map_err(|e| Stop::Failed(io_failure(&e, to)))?);
+    let mut cbz = kaeri_books::write::CbzWriter::new(out, None).map_err(|e| unwritable(&e))?;
+    for index in 0..comic.pages().len() {
+        let bytes = comic.read_page(index).map_err(|e| unreadable(&e))?;
+        cbz.add_page(&bytes).map_err(|e| unreadable(&e))?;
+    }
+    let mut out = cbz.finish().map_err(|e| unwritable(&e))?;
+    out.flush().map_err(|e| Stop::Failed(io_failure(&e, to)))
+}
+
+/// A whole book file copied as it is, from a plain path or a folder the platform opens. A
+/// failure names the file it is about: the book when it can't be read, the copy when it can't be
+/// written.
+fn copy_book(from: &Path, to: &Path) -> Result<(), Stop> {
+    let mut source =
+        kaeri_books::tree::open_file(from).map_err(|e| Stop::Failed(io_failure(&e, from)))?;
+    let mut out =
+        BufWriter::new(File::create(to).map_err(|e| Stop::Failed(io_failure(&e, to)))?);
+    let mut buffer = vec![0; 64 * 1024];
+    loop {
+        let read = match std::io::Read::read(&mut source, &mut buffer) {
+            Ok(0) => break,
+            Ok(read) => read,
+            Err(e) if e.kind() == std::io::ErrorKind::Interrupted => continue,
+            Err(e) => return Err(Stop::Failed(io_failure(&e, from))),
+        };
+        out.write_all(&buffer[..read]).map_err(|e| Stop::Failed(io_failure(&e, to)))?;
+    }
+    out.flush().map_err(|e| Stop::Failed(io_failure(&e, to)))
 }
 
 fn book_failure(e: &kaeri_books::BookError, path: &Path, source: &str) -> ReadingFailure {
@@ -1507,7 +1608,7 @@ fn done_notice(
         [(work, n)] => {
             let kind = store.book_work_kind(work).ok().flatten();
             let novel = kind.as_ref().is_some_and(|k| k.medium == "novel");
-            let name = kind.and_then(|k| k.title_in(form)).unwrap_or_else(|| work.clone());
+            let name = crate::read_catalog::tiles::title_of(store, work, form);
             let body = if novel {
                 ReadingMsg::ReadingDownloadsDoneParts { title: name, count: count(*n) }
             } else {
@@ -1660,11 +1761,13 @@ pub fn launched(engine: &crate::state::EngineState, services: &Services, tx: &Ou
     resume(engine, services, tx);
 }
 
+mod here;
 mod kept;
 mod shared;
 mod sizes;
 #[cfg(test)]
 mod tests;
 
+pub(crate) use here::{Here, OnDevice, in_folders};
 use kept::{KeptPages, pages_of};
 pub(crate) use shared::SharedPages;

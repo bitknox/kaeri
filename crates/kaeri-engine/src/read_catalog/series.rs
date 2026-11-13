@@ -418,7 +418,14 @@ pub(crate) fn view(kit: &Kit, ask: Ask, work: &WorkId, partial: bool) -> SeriesV
         work: work.clone(),
         medium,
         titles: WorkTitles {
-            display: local_name(kit, work).unwrap_or_default(),
+            // A work AniList does not list is named as its source or folder names it, and is
+            // never shown by its id.
+            display: match tiles::anilist(work.as_str()) {
+                Some(_) => String::new(),
+                None => {
+                    local_name(kit, work).unwrap_or_else(kaeri_i18n::t::reading_untitled_series)
+                }
+            },
             romaji: None,
             english: None,
             native: None,
@@ -516,14 +523,13 @@ fn fill(kit: &Kit, ask: Ask, view: &mut SeriesView, kept: &KeptBook) {
     }
 }
 
-/// A work AniList does not list: its folder's name.
+/// A work AniList does not list: the name its source or its folder gave it.
 pub(crate) fn local_name(kit: &Kit, work: &WorkId) -> Option<String> {
-    kit.store
-        .local_book_series()
-        .ok()?
-        .into_iter()
-        .find(|s| s.work.as_deref() == Some(work.as_str()))
-        .map(|s| s.name)
+    if tiles::anilist(work.as_str()).is_some() {
+        return None;
+    }
+    let form = crate::data::title_form(kit.meta.titles());
+    tiles::name_of(&kit.store, work.as_str(), form)
 }
 
 /// The series' medium: the catalogue's, else its folder's.

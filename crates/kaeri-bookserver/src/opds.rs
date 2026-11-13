@@ -196,11 +196,49 @@ fn link_with<'a>(links: &'a [Link], rel: &str) -> Option<&'a Link> {
     links.iter().find(|l| l.rel == rel)
 }
 
-/// A root entry that leads to the catalogue's feed of series.
-fn is_series_index(entry: &Entry) -> bool {
-    let title = entry.title.to_lowercase();
-    (title.contains("series") || title.contains("serie"))
-        && subsection(entry).is_some_and(|l| l.media_type.contains("kind=navigation"))
+/// The root entry that leads to the catalogue's feed of all its series, when it has one.
+///
+/// Told first by what a server does not translate: its link's path ends in `series` (as
+/// `/opds/v1.2/series`, not `/opds/v1.2/series/latest`), or its id names all series
+/// (`allSeries`). Only then by an English title, for a catalogue that says nothing else. The
+/// link leads to a navigation feed either way.
+fn series_index(root: &Feed) -> Option<&Entry> {
+    series_index_with(root, true)
+}
+
+/// [`series_index`], told by its title too only when `by_title`.
+fn series_index_with(root: &Feed, by_title: bool) -> Option<&Entry> {
+    let leads_on =
+        |e: &&Entry| subsection(e).is_some_and(|l| l.media_type.contains("kind=navigation"));
+    let named_by_address = |e: &&Entry| {
+        let href = subsection(e).map_or("", |l| l.href.as_str());
+        let path = href.split(['?', '#']).next().unwrap_or_default().trim_end_matches('/');
+        let last = path.rsplit('/').next().unwrap_or_default().to_ascii_lowercase();
+        let id: String =
+            e.id.rsplit([':', '/', '#'])
+                .next()
+                .unwrap_or_default()
+                .chars()
+                .filter(char::is_ascii_alphanumeric)
+                .flat_map(|c| c.to_lowercase())
+                .collect();
+        last == "series" || id == "series" || id == "allseries"
+    };
+    let named_in_english = |e: &&Entry| e.title.to_lowercase().contains("serie");
+    let entries = || root.entries.iter().filter(leads_on);
+    entries()
+        .find(named_by_address)
+        .or_else(|| entries().filter(|_| by_title).find(named_in_english))
+}
+
+/// Whether an entry leads to a feed of books rather than being a book: a link onward and no
+/// file to take.
+fn leads_to_books(entry: &Entry) -> bool {
+    let onward =
+        subsection(entry).is_some_and(|l| l.media_type.contains("profile=opds-catalog"));
+    let book =
+        entry.links.iter().any(|l| l.rel.starts_with(kaeri_books::opds::REL_ACQUISITION));
+    onward && !book
 }
 
 fn subsection(entry: &Entry) -> Option<&Link> {
@@ -352,18 +390,11 @@ impl OpdsSource {
         Ok(entries)
     }
 
-    /// The navigation feed of series the catalogue offers from its root, if it offers one.
-    async fn series_index(&self, root: &Feed) -> Result<Option<Vec<Entry>>> {
-        let entry = root.entries.iter().find(|e| is_series_index(e));
-        let Some(link) = entry.and_then(subsection) else { return Ok(None) };
-        Ok(Some(self.feed_all(&link.href).await?))
-    }
-
     /// How many series the catalogue's series feed lists: the total its first page states,
     /// else the entries of a walk that reached the last page. `None` when it has no series
     /// feed, or the walk stopped short.
     async fn count_series_index(&self, root: &Feed) -> Option<u32> {
-        let entry = root.entries.iter().find(|e| is_series_index(e))?;
+        let entry = series_index(root)?;
         let mut next = Some(subsection(entry)?.href.clone());
         let mut count = 0usize;
         for _ in 0..MAX_PAGES {
@@ -413,34 +444,105 @@ impl OpdsSource {
         }
     }
 
+    /// The address of the catalogue's search for `term`. The root's search link is either the
+    /// template itself or an OpenSearch description that holds it, which is read for it.
+    async fn search_address(&self, root: &Feed, term: &str) -> Result<String> {
+        let link = link_with(&root.links, "search").ok_or(ServerError::NotFound)?;
+        let described = link.media_type.contains("opensearchdescription")
+            || !link.href.contains("{searchTerms}");
+        let template = if described {
+            let text = self.http.text(&link.href).await?;
+            match opensearch_template(&text, &self.http.url(&link.href)) {
+                Some(template) => template,
+                // Not a description after all: the link is the search itself.
+                None if link.href.contains("{searchTerms}") => link.href.clone(),
+                None => return Err(ServerError::Parse("no search template".into())),
+            }
+        } else {
+            link.href.clone()
+        };
+        Ok(fill_search(&template, term))
+    }
+
     /// The books the catalogue's own search finds.
     async fn search_entries(&self, term: &str) -> Result<Vec<Entry>> {
         let root = self.feed("").await?;
-        let template = link_with(&root.links, "search")
-            .map(|l| l.href.clone())
-            .ok_or(ServerError::NotFound)?;
-        let address = template.replace("{searchTerms}", &encode(term));
+        let address = self.search_address(&root, term).await?;
         self.feed_all(&address).await
+    }
+
+    /// A hit that opens the feed an entry leads to, when it leads to one.
+    fn feed_hit(&self, entry: &Entry) -> Option<SeriesHit> {
+        let link = subsection(entry)?;
+        Some(self.hit(entry, &format!("feed|{}", link.href)))
+    }
+
+    /// The entries the root's sections list that lead to books, one level down: the series of
+    /// a catalogue that offers neither a feed of all its series nor a search, as a Kaeri feed
+    /// before its search did.
+    async fn walk_sections(&self, root: &Feed) -> Result<Vec<Entry>> {
+        let mut found: Vec<Entry> = Vec::new();
+        let sections = root
+            .entries
+            .iter()
+            .filter_map(subsection)
+            .filter(|l| l.media_type.contains("kind=navigation"));
+        for link in sections {
+            for entry in self.feed_all(&link.href).await? {
+                let href = subsection(&entry).map(|l| l.href.clone());
+                let seen =
+                    found.iter().any(|f| subsection(f).map(|l| &l.href) == href.as_ref());
+                if leads_to_books(&entry) && !seen {
+                    found.push(entry);
+                }
+            }
+        }
+        Ok(found)
     }
 
     async fn search_inner(&self, query: &str) -> Result<Vec<SeriesHit>> {
         let root = self.feed("").await?;
-        let wanted = query.trim().to_lowercase();
-        if let Some(index) = self.series_index(&root).await? {
-            return Ok(index
-                .iter()
-                .filter(|e| wanted.is_empty() || e.title.to_lowercase().contains(&wanted))
-                .filter_map(|e| {
-                    let link = subsection(e)?;
-                    Some(self.hit(e, &format!("feed|{}", link.href)))
-                })
-                .collect());
+        let searchable = link_with(&root.links, "search").is_some();
+        let named = |e: &&Entry| kaeri_core::books::name_holds(&e.title, query);
+        // A feed of all series, told by its address; by an English title only for a catalogue
+        // without a search, as a title can name anything.
+        if let Some(link) = series_index_with(&root, !searchable).and_then(subsection) {
+            let index = self.feed_all(&link.href).await?;
+            return Ok(index.iter().filter(named).filter_map(|e| self.feed_hit(e)).collect());
         }
-        // No series listing: the catalogue's search, with books grouped by category.
-        let entries = self.search_entries(query).await?;
+        if !searchable {
+            // Neither: the series its sections list and the books on its first page, by name.
+            let series = self.walk_sections(&root).await?;
+            let is_book = |e: &&Entry| {
+                e.links.iter().any(|l| l.rel.starts_with(kaeri_books::opds::REL_ACQUISITION))
+            };
+            let books: Vec<&Entry> = root.entries.iter().filter(is_book).collect();
+            if series.is_empty() && books.is_empty() && !root.entries.is_empty() {
+                // Nothing in it can be found by name: say so rather than that nothing matched.
+                return Err(ServerError::Parse("the catalogue offers no search".into()));
+            }
+            let at = self.http.url("");
+            let mut hits: Vec<SeriesHit> =
+                series.iter().filter(named).filter_map(|e| self.feed_hit(e)).collect();
+            hits.extend(
+                books
+                    .into_iter()
+                    .filter(named)
+                    .map(|e| self.hit(e, &format!("book|{at}|{}", e.id))),
+            );
+            return Ok(hits);
+        }
+        // The catalogue's search. A series it finds opens to its books; books are grouped by
+        // category.
+        let search = self.search_address(&root, query).await?;
+        let entries = self.feed_all(&search).await?;
         let mut seen: Vec<String> = Vec::new();
         let mut hits = Vec::new();
         for entry in &entries {
+            if leads_to_books(entry) {
+                hits.extend(self.feed_hit(entry));
+                continue;
+            }
             match entry.categories.first() {
                 Some(label) if !seen.contains(label) => {
                     seen.push(label.clone());
@@ -450,9 +552,6 @@ impl OpdsSource {
                 }
                 Some(_) => {}
                 None => {
-                    let search = link_with(&root.links, "search")
-                        .map(|l| l.href.replace("{searchTerms}", &encode(query)))
-                        .unwrap_or_default();
                     hits.push(self.hit(entry, &format!("book|{search}|{}", entry.id)));
                 }
             }
@@ -495,15 +594,19 @@ impl OpdsSource {
             let header: Vec<(String, String)> = self.http.auth().header().into_iter().collect();
             return Ok(Some(ChapterContent::Images(
                 (0..count)
-                    .map(|n| PageRef {
-                        url: stream
+                    .map(|n| {
+                        let url = stream
                             .href
                             .replace("{pageNumber}", &n.to_string())
-                            .replace("{maxWidth}", "2000"),
-                        headers: header.clone(),
-                        made: None,
-                        width: None,
-                        height: None,
+                            .replace("{maxWidth}", "2000");
+                        // A stream on another host, or over plain http from an https server,
+                        // is asked without the sign-in.
+                        let headers = if self.http.same_origin(&url) {
+                            header.clone()
+                        } else {
+                            Vec::new()
+                        };
+                        PageRef { url, headers, made: None, width: None, height: None }
                     })
                     .collect(),
             )));
@@ -528,6 +631,58 @@ impl OpdsSource {
         self.http.download(&link.href, &to, 8 * 1024 * 1024 * 1024).await?;
         Ok(Some(ChapterContent::Book(BookFile { path: to, temporary: true })))
     }
+}
+
+/// The search template an OpenSearch description at `base` holds: its `Url` for an Atom feed,
+/// else its first, made absolute. `None` when `text` is no description or holds no template.
+fn opensearch_template(text: &str, base: &str) -> Option<String> {
+    if text.len() > MAX_FEED_BYTES || too_deep(text, MAX_DEPTH) {
+        return None;
+    }
+    let doc = roxmltree::Document::parse(text).ok()?;
+    let root = doc.root_element();
+    if local(root) != "OpenSearchDescription" {
+        return None;
+    }
+    let urls: Vec<_> = root
+        .children()
+        .filter(|n| n.is_element() && local(*n) == "Url")
+        .filter_map(|n| {
+            Some((n.attribute("type").unwrap_or_default(), n.attribute("template")?))
+        })
+        .filter(|(_, template)| template.contains("{searchTerms}"))
+        .collect();
+    let (_, template) = urls
+        .iter()
+        .find(|(kind, _)| kind.contains("atom") || kind.contains("opds"))
+        .or_else(|| urls.first())?;
+    match url::Url::parse(base) {
+        Ok(base) if !template.starts_with("http://") && !template.starts_with("https://") => {
+            Some(join_keeping_braces(&base, template))
+        }
+        _ => Some((*template).to_owned()),
+    }
+}
+
+/// A search template with `term` in it. Of its other parameters, the optional ones
+/// (`{count?}`) are left empty and a start page or index is the first.
+fn fill_search(template: &str, term: &str) -> String {
+    let mut out = String::with_capacity(template.len() + term.len());
+    let mut rest = template;
+    while let Some(open) = rest.find('{') {
+        let Some(close) = rest[open..].find('}').map(|n| open + n) else { break };
+        out.push_str(&rest[..open]);
+        let name = &rest[open + 1..close];
+        let local = name.rsplit(':').next().unwrap_or(name);
+        match local {
+            "searchTerms" => out.push_str(&encode(term)),
+            "startPage" | "startIndex" => out.push('1'),
+            _ => {}
+        }
+        rest = &rest[close + 1..];
+    }
+    out.push_str(rest);
+    out
 }
 
 fn extension_for(media_type: &str) -> &'static str {
@@ -804,5 +959,65 @@ mod tests {
         let bare = parse(BOOKS, &format!("{address}/opds")).unwrap();
         let none = count_series(&reqwest::Client::new(), &address, &Auth::None, &bare).await;
         assert_eq!(none, None);
+    }
+
+    /// R6E-4. The series feed was found only by an English title: a catalogue in another
+    /// language, or worded otherwise, went to search.
+    #[test]
+    fn the_series_feed_is_found_by_its_address_in_any_language() {
+        let nav = "application/atom+xml;profile=opds-catalog;kind=navigation";
+        let root = |entries: &str| {
+            let feed = format!(
+                r#"<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"><id>r</id><title>Regal</title>{entries}</feed>"#
+            );
+            parse(&feed, "http://shelf.example/opds/v1.2/catalog").unwrap()
+        };
+        let entry = |id: &str, title: &str, href: &str| {
+            format!(
+                r#"<entry><id>{id}</id><title>{title}</title><link rel="subsection" href="{href}" type="{nav}"/></entry>"#
+            )
+        };
+        let picked = |feed: &Feed| series_index(feed).map(|e| e.title.clone());
+
+        // German titles; the newest series come first and are not the index.
+        let german = root(&format!(
+            "{}{}{}",
+            entry("latestSeries", "Neueste Reihen", "/opds/v1.2/series/latest"),
+            entry("allLibraries", "Bibliotheken", "/opds/v1.2/libraries"),
+            entry("allSeries", "Alle Reihen", "/opds/v1.2/series"),
+        ));
+        assert_eq!(picked(&german).as_deref(), Some("Alle Reihen"));
+        // By its id alone, with an address that says nothing.
+        let by_id = root(&entry("urn:shelf:all-series", "Tout", "/opds/x7"));
+        assert_eq!(picked(&by_id).as_deref(), Some("Tout"));
+        // An English title, when nothing else says.
+        let english = root(&entry("a1", "All series", "/opds/a1"));
+        assert_eq!(picked(&english).as_deref(), Some("All series"));
+        // A catalogue without one.
+        let none = root(&entry("lib", "Bibliothek", "/opds/lib"));
+        assert_eq!(picked(&none), None);
+    }
+
+    /// R6E-4. A search link to an OpenSearch description was read as the search itself.
+    #[test]
+    fn an_opensearch_description_gives_the_search_template() {
+        let osd = r#"<?xml version="1.0"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+ <ShortName>Made-up Books</ShortName>
+ <Url type="text/html" template="/web/search?q={searchTerms}"/>
+ <Url type="application/atom+xml;profile=opds-catalog;kind=acquisition" template="/opds/search?q={searchTerms}&amp;page={startPage?}&amp;n={count}"/>
+</OpenSearchDescription>"#;
+        let template = opensearch_template(osd, "http://shelf.example/opds/osd").unwrap();
+        assert_eq!(
+            template,
+            "http://shelf.example/opds/search?q={searchTerms}&page={startPage?}&n={count}"
+        );
+        assert_eq!(
+            fill_search(&template, "Lantern & Moth"),
+            "http://shelf.example/opds/search?q=Lantern+%26+Moth&page=&n="
+        );
+        assert_eq!(fill_search("/s?q={searchTerms}&p={os:startPage}", "a"), "/s?q=a&p=1");
+        assert_eq!(opensearch_template(ROOT, "http://shelf.example/opds"), None);
+        assert_eq!(opensearch_template("not xml", "http://shelf.example/opds"), None);
     }
 }

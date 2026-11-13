@@ -18,7 +18,7 @@ use kaeri_books::{
     epub::Direction as BookDirection,
     write::{
         BookMeta, CbzWriter, EpubFlavor, EpubWriter, FixedLayout, KINDLE_PART_BYTES,
-        ProblemKind, check_epub, split_parts,
+        ProblemKind, check_epub, plain_text, split_parts,
     },
 };
 use kaeri_model::reading::{ExportFile, ExportFormat, ReadingFailure, SendProblem};
@@ -100,9 +100,41 @@ fn write_failed(e: &std::io::Error, path: &Path) -> Stop {
     Stop::Failed(crate::downloads::books::io_failure(e, path))
 }
 
+/// A book could not be read or written: a full disk says so, as anything else is the book's.
 fn book(e: &BookError, path: &Path) -> Stop {
     tracing::debug!(error = %e, "a chapter was not prepared");
+    if let BookError::Io(io) = e
+        && let failure @ ReadingFailure::DiskFull =
+            crate::downloads::books::io_failure(io, path)
+    {
+        return Stop::Failed(failure);
+    }
     unreadable(path, "book")
+}
+
+/// A finished book's last buffered bytes reach the file, so a disk that fills at the end
+/// fails the send instead of leaving a cut-off file.
+fn flushed(out: BufWriter<File>, path: &Path) -> Result<(), Stop> {
+    let file = out.into_inner().map_err(|e| write_failed(e.error(), path))?;
+    file.sync_all().map_err(|e| write_failed(&e, path))
+}
+
+/// `req` with its title and chapter labels as plain text, as a book's metadata, contents and
+/// file names carry them. A title with nothing left is an untitled series, as a work with no
+/// name is; a label with nothing left is the chapter's place in the send.
+fn named(req: &Request) -> Request {
+    let mut req = req.clone();
+    req.title = plain_text(&req.title);
+    if req.title.is_empty() {
+        req.title = kaeri_i18n::t::reading_untitled_series();
+    }
+    for (n, chapter) in req.chapters.iter_mut().enumerate() {
+        chapter.label = plain_text(&chapter.label);
+        if chapter.label.is_empty() {
+            chapter.label = (n + 1).to_string();
+        }
+    }
+    req
 }
 
 /// Whether the chapters are text (EPUB) or pages.
@@ -122,6 +154,7 @@ pub fn run(
     if req.chapters.is_empty() {
         return Err(ReadingFailure::NotFound.into());
     }
+    let req = &named(req);
     let text = is_text(&req.chapters);
     if !req.profile.accepts(text).contains(&req.format) {
         return Err(unsupported(req.format));
@@ -371,8 +404,7 @@ fn write_cbz(
         let bytes = fs::read(&item.file).map_err(|e| io(&e, &item.file))?;
         cbz.add_page(&bytes).map_err(|e| book(&e, path))?;
     }
-    cbz.finish().map_err(|e| book(&e, path))?;
-    Ok(())
+    flushed(cbz.finish().map_err(|e| book(&e, path))?, path)
 }
 
 fn write_fixed(
@@ -406,8 +438,7 @@ fn write_fixed(
         last_chapter = Some(item.chapter);
         epub.add_image_page(&bytes, None, title.as_deref()).map_err(|e| book(&e, path))?;
     }
-    epub.finish().map_err(|e| book(&e, path))?;
-    Ok(())
+    flushed(epub.finish().map_err(|e| book(&e, path))?, path)
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -539,8 +570,7 @@ fn novel(
             done += 1;
             progress(done, total);
         }
-        let bytes = writer.finish().map_err(|e| book(&e, &path))?;
-        drop(bytes);
+        flushed(writer.finish().map_err(|e| book(&e, &path))?, &path)?;
         files.push(done_file(path, name, (count > 1).then_some(n as u32 + 1))?);
     }
     Ok(files)
@@ -644,6 +674,39 @@ mod tests {
         let written = dir.path().join(&name);
         File::create(&written).unwrap();
         assert!(written.exists());
+    }
+
+    /// R6E-6. A send that filled the disk as it wrote said the book was unreadable.
+    #[test]
+    fn a_full_disk_while_writing_says_so() {
+        let full = |e: std::io::Error| match book(&BookError::Io(e), Path::new("/out/a.cbz")) {
+            Stop::Failed(failure) => failure,
+            Stop::Cancelled => panic!("cancelled"),
+        };
+        assert_eq!(full(std::io::ErrorKind::StorageFull.into()), ReadingFailure::DiskFull);
+        assert_eq!(full(std::io::ErrorKind::QuotaExceeded.into()), ReadingFailure::DiskFull);
+        assert_eq!(full(std::io::Error::from_raw_os_error(28)), ReadingFailure::DiskFull);
+        assert!(matches!(
+            full(std::io::ErrorKind::InvalidData.into()),
+            ReadingFailure::Unreadable { .. }
+        ));
+    }
+
+    /// R6E-6 through a whole send: the book is written into a device that is always full.
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn a_send_that_fills_the_disk_fails_as_disk_full() {
+        if !Path::new("/dev/full").exists() {
+            return;
+        }
+        let dir = tempfile::tempdir().unwrap();
+        let req = request(dir.path(), chapters(dir.path(), 3, 4), "kobo", ExportFormat::Kepub);
+        fs::create_dir_all(&req.out).unwrap();
+        std::os::unix::fs::symlink("/dev/full", req.out.join(file_name(&req, None))).unwrap();
+        match go(&req) {
+            Err(Stop::Failed(failure)) => assert_eq!(failure, ReadingFailure::DiskFull),
+            other => panic!("{other:?}"),
+        }
     }
 
     #[test]
@@ -886,6 +949,56 @@ mod tests {
             }
         }
         out
+    }
+
+    /// R7E-15, from the title parts of the novel fuzz's crash inputs. A work title and a
+    /// chapter label made only of control characters, which the writer's escaping empties,
+    /// still make a book that passes its own check: an untitled series, its chapter named by
+    /// its place in the send, in the metadata, the contents and the file name.
+    #[test]
+    fn a_title_of_only_control_characters_still_makes_a_book() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("n.epub");
+        text_epub(&path, "Ferry Notes", 5);
+        let nul = |n: usize| "\0".repeat(n);
+        let names = [
+            "\u{15}".to_owned(),
+            "\u{1e}".to_owned(),
+            format!("{}\u{15}", nul(3)),
+            format!("\u{11}{}\u{b}", nul(7)),
+            format!("\u{15}{}", nul(18)),
+            format!("\u{15}{}", nul(83)),
+        ];
+        let untitled = kaeri_i18n::t::reading_untitled_series();
+        let chapter = chapter_title("1");
+        for (n, name) in names.iter().enumerate() {
+            for (format, profile) in [
+                (ExportFormat::Epub, "kindle"),
+                (ExportFormat::Kepub, "kobo"),
+                (ExportFormat::FixedEpub, "kindle"),
+            ] {
+                let mut chapters = if format == ExportFormat::FixedEpub {
+                    chapters(dir.path(), 1, 1)
+                } else {
+                    vec![Chapter { label: String::new(), path: path.clone() }]
+                };
+                chapters[0].label = name.clone();
+                let mut req = request(dir.path(), chapters, profile, format);
+                req.title = name.clone();
+                req.out = dir.path().join(format!("out-{n}-{format:?}"));
+                let files = go(&req).unwrap_or_else(|e| panic!("{name:?} {format:?}: {e:?}"));
+                let at = Path::new(&files[0].path);
+                check_epub(at, &Limits::default()).unwrap();
+                assert!(files[0].name.starts_with(&untitled), "{}", files[0].name);
+                let Ok(Book::Epub(epub)) = kaeri_books::open(at, &Limits::default()) else {
+                    panic!("not an EPUB");
+                };
+                assert_eq!(epub.metadata().titles, [format!("{untitled} 1")]);
+                let nav = documents(at).into_iter().find(|(n, _)| n.ends_with("nav.xhtml"));
+                let (_, nav) = nav.expect("a nav document");
+                assert!(nav.contains(&format!(">{chapter}</a>")), "{format:?}: {nav}");
+            }
+        }
     }
 
     #[test]

@@ -146,3 +146,16 @@ async fn the_parts_of_a_split_chapter_are_never_skipped() {
     let (next, skip_to, extras) = end_page_extras(&mut h).await;
     assert_eq!((id(next), id(skip_to), extras), (Some("21.5".into()), Some("22".into()), 1));
 }
+
+/// R6-7. The end page offers no Download of the next chapter when it is a file in the person's
+/// folders: it is on this device already, as the series page says.
+#[tokio::test(start_paused = true)]
+async fn the_end_page_offers_no_download_of_a_file_in_a_folder() {
+    let mut h = harness(Store::open_in_memory().unwrap());
+    h.open(OpenAt::Start).await;
+    let (next, _) = end_page(&mut h).await;
+    let next = next.expect("a next chapter");
+    assert_eq!(next.id.as_str(), "2");
+    assert!(next.on_device, "{next:?}");
+    assert_eq!(next.download, None, "a folder's file is no download");
+}

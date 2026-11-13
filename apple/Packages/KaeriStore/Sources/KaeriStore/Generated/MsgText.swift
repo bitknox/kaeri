@@ -484,6 +484,8 @@ extension ReadingMsg {
         case .readingEstimateWifi: L.readingEstimateWifi
         case .readingEstimateMobile: L.readingEstimateMobile
         case .readingEstimateWaitsWifi: L.readingEstimateWaitsWifi
+        case .readingDownloadOnDevice: L.readingDownloadOnDevice
+        case .readingUntitledSeries: L.readingUntitledSeries
         case .readingDownloadsDoneTitle: L.readingDownloadsDoneTitle
         case .readingDownloadsDoneChapters(let title, let count): L.readingDownloadsDoneChapters(title: title, count: Int(count))
         case .readingDownloadsDoneParts(let title, let count): L.readingDownloadsDoneParts(title: title, count: Int(count))

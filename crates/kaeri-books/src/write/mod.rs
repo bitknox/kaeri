@@ -64,6 +64,22 @@ pub fn escape_attr(s: &str) -> String {
     escape(s, true)
 }
 
+/// Text as a title, name or label carries it: control characters dropped, line breaks and tabs
+/// as spaces, and trimmed. What is left is never emptied again by escaping, so a title that
+/// is only control characters comes back empty for the caller to name otherwise.
+pub fn plain_text(s: &str) -> String {
+    let kept: String = s
+        .chars()
+        .filter_map(|c| match c {
+            c if c.is_control() && c.is_whitespace() => Some(' '),
+            c if c.is_control() => None,
+            '\u{FFFE}' | '\u{FFFF}' => None,
+            c => Some(c),
+        })
+        .collect();
+    kept.trim().to_owned()
+}
+
 fn escape(s: &str, attr: bool) -> String {
     let mut out = String::with_capacity(s.len());
     for c in s.chars() {

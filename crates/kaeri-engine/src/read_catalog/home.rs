@@ -575,10 +575,20 @@ impl Home {
             .filter_map(|work| {
                 match kept.iter().find(|k| tiles::work_of(k.book.id).as_str() == work) {
                     Some(kept) => Some(self.tile(kept)),
-                    None => self.known(work),
+                    // A folder's series is shown as Library shows it; any other work by what
+                    // the store keeps of it.
+                    None => self.local(work).or_else(|| self.known(work)),
                 }
             })
             .collect()
+    }
+
+    /// A series in the person's folders that AniList has never given a book for, as Library
+    /// shows it.
+    fn local(&self, work: &str) -> Option<WorkTile> {
+        let local = self.store.local_book_series().ok()?;
+        let series = local.iter().find(|s| s.work.as_deref() == Some(work))?;
+        Some(super::search::local_tile(&self.store, &self.sources, work, series))
     }
 
     /// A work's cover from what the store holds of it, without AniList's: its title, medium
@@ -593,7 +603,11 @@ impl Home {
             work: kaeri_core::books::WorkId::new(work.to_owned()),
             title,
             medium,
-            cover: None,
+            // A work of its own on this device keeps its source's cover with its name.
+            cover: tiles::anilist(work)
+                .is_none()
+                .then(|| self.store.book_work(work).ok().flatten().and_then(|w| w.cover))
+                .flatten(),
             format_label: None,
             progress: None,
             next: None,
@@ -1166,7 +1180,12 @@ mod tests {
             cache_dir: dir.join("cache"),
         };
         let tokens = kaeri_track::TokenStore::new(dir.join("tokens"));
-        let sources = BookSources::new(store.clone(), tokens, reqwest::Client::new(), &paths);
+        let sources = BookSources::new(
+            store.clone(),
+            tokens,
+            &kaeri_net::HttpClient::new(&Default::default()).unwrap(),
+            &paths,
+        );
         let http = kaeri_net::HttpClient::offline(&Default::default()).unwrap();
         let meta =
             kaeri_meta::Meta::new(kaeri_meta::AniList::new(http, 30), None, store.clone());

@@ -124,10 +124,14 @@ pub struct Pruned {
     pub logs: usize,
     pub images: usize,
     pub scratch: usize,
+    /// Sends' folders an earlier launch left: ready files no Share can hand over any more,
+    /// and the pages of sends killed mid-fetch.
+    pub sends: usize,
 }
 
 /// Sweep what the app accumulates besides the torrent cache: old daily logs, cover art past its
-/// cache life, and the player's leftovers in the runtime directory.
+/// cache life, the player's leftovers in the runtime directory, and what earlier launches'
+/// sends to e-readers left.
 ///
 /// Blocking; run it on a blocking thread. Every failure is skipped: this is housekeeping, and a
 /// file that cannot be removed today can be tried at the next launch.
@@ -142,12 +146,14 @@ pub fn sweep_at_launch(paths: &kaeri_core::config::Paths) -> Pruned {
             |name| name.ends_with(".img"),
         ),
         scratch: prune_runtime(&paths.runtime_dir(), now),
+        sends: crate::export::sweep(&crate::export::dir_of(paths)),
     };
     if pruned != Pruned::default() {
         tracing::info!(
             logs = pruned.logs,
             images = pruned.images,
             scratch = pruned.scratch,
+            sends = pruned.sends,
             "pruned old files"
         );
     }
@@ -248,6 +254,40 @@ mod tests {
         std::fs::write(path, bytes).unwrap();
         let at = std::time::SystemTime::now() - Duration::from_secs(days * 86_400);
         std::fs::File::options().write(true).open(path).unwrap().set_modified(at).unwrap();
+    }
+
+    /// R6E-7. Ready sends and the pages of sends killed mid-fetch stayed in `data/exports`
+    /// after a quit or a crash, as nothing but the next send cleaned it.
+    #[test]
+    fn a_launch_removes_what_earlier_launches_sends_left_and_keeps_this_one_s() {
+        let dir = tempfile::tempdir().unwrap();
+        let paths = kaeri_core::config::Paths {
+            config_file: dir.path().join("config.toml"),
+            data_dir: dir.path().join("data"),
+            cache_dir: dir.path().join("cache"),
+        };
+        let sends = crate::export::dir_of(&paths);
+        // Named as sends were before marks, and as one of a process that has ended.
+        aged(&sends.join("1").join("Made-up Series 1.kepub.epub"), b"pk", 0);
+        aged(&sends.join("1-fetch").join("3.pages").join("count"), b"13", 0);
+        let ended = format!("{}.1a2b-4", std::process::id().wrapping_add(1));
+        aged(&sends.join(&ended).join("Made-up Series 2.cbz"), b"pk", 0);
+        aged(&sends.join(format!("{ended}-fetch")).join("1.pages").join("count"), b"4", 0);
+        // A send of this launch, started before the sweep came round.
+        let this = format!("{}.9f-1", std::process::id());
+        aged(&sends.join(&this).join("Made-up Series 3.cbz"), b"pk", 0);
+
+        let pruned = sweep_at_launch(&paths);
+        assert_eq!(pruned.sends, 4);
+        let left: Vec<String> = std::fs::read_dir(&sends)
+            .unwrap()
+            .flatten()
+            .map(|e| e.file_name().to_string_lossy().into_owned())
+            .collect();
+        assert_eq!(left, [this]);
+        // Nothing to sweep is no failure.
+        let empty = tempfile::tempdir().unwrap();
+        assert_eq!(crate::export::sweep(&empty.path().join("exports")), 0);
     }
 
     #[test]

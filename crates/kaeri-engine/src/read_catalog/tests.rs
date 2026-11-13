@@ -53,7 +53,12 @@ fn kit(fake: Option<&FakeAniList>, dir: &std::path::Path) -> Kit {
         cache_dir: dir.join("cache"),
     };
     let tokens = kaeri_track::TokenStore::new(dir.join("tokens"));
-    let sources = BookSources::new(store.clone(), tokens, reqwest::Client::new(), &paths);
+    let sources = BookSources::new(
+        store.clone(),
+        tokens,
+        &kaeri_net::HttpClient::new(&Default::default()).unwrap(),
+        &paths,
+    );
     let meta = match fake {
         Some(fake) => fake.meta(&store),
         None => {
@@ -384,6 +389,85 @@ async fn continue_and_the_sources_stay_when_anilist_fails() {
     assert!(home.failed, "and say they failed");
     assert!(!home.no_sources, "the folder is a source");
     assert_eq!(home.end, Some(kaeri_model::reading::ReadHomeEnd::Everything));
+}
+
+/// R6K-6. A series in the person's own folder that AniList does not list, read partway, is on
+/// Continue by its folder's name, as Library's Reading list shows it.
+#[tokio::test]
+async fn a_folder_series_anilist_does_not_list_is_on_continue() {
+    let fake = FakeAniList::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(Some(&fake), dir.path());
+    let folder = dir.path().join("books").display().to_string();
+    let added = kaeri_store::book_sources::Folder {
+        id: "books".into(),
+        path: Some(folder.clone()),
+        tree_uri: None,
+        bookmark: None,
+        name: None,
+        added_at: NOW,
+        last_scan: Some(NOW),
+        available: true,
+    };
+    kit.store.put_book_folder(&added).unwrap();
+    let work =
+        kaeri_core::books::WorkKey::local(Medium::Manga, "Rooftop Paper Club").to_string();
+    let series = kaeri_store::shelf::LocalSeries {
+        id: "books:rooftop".into(),
+        folder,
+        name: "Rooftop Paper Club".into(),
+        medium: "manga".into(),
+        work: Some(work.clone()),
+        state: "unmatched".into(),
+    };
+    kit.store.put_local_series(&series).unwrap();
+    let place =
+        ReadEvent { page: Some(2), of_pages: Some(20), ..ReadEvent::new(&work, "2", NOW) };
+    kit.store.record_read(&place, Vec::new()).unwrap();
+
+    let (tx, mut rx) = outbox();
+    home::load(&kit, ask(), false, &tx);
+    let home = whole_home(&mut rx).await;
+    let titles: Vec<(&str, &str)> =
+        home.continue_reading.iter().map(|t| (t.work.as_str(), t.title.as_str())).collect();
+    assert_eq!(titles, [(work.as_str(), "Rooftop Paper Club")]);
+}
+
+/// R7E-4. A book server's series no catalogue lists (Komga, Kavita or OPDS alike), read
+/// partway, is on Continue by the name and cover its source gave, never by its id.
+#[tokio::test]
+async fn a_server_series_anilist_does_not_list_is_on_continue_by_its_name() {
+    let fake = FakeAniList::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(Some(&fake), dir.path());
+    let mut expected = Vec::new();
+    for (source, title) in [
+        ("srv-komga", "The Paper Lantern"),
+        ("srv-kavita", "Harbour Signal Club"),
+        ("srv-opds", "A Ferry at Dawn"),
+    ] {
+        let cover = format!("https://{source}.example/cover/s-1");
+        let mut hit = SeriesHit::new("s-1", title);
+        hit.cover = Some(cover.clone());
+        let tile = kit.sources.hit_tile(source, hit, Some(Medium::Manga), &[], NOW).unwrap();
+        let work = tile.work.as_str().to_owned();
+        let place =
+            ReadEvent { page: Some(2), of_pages: Some(20), ..ReadEvent::new(&work, "2", NOW) };
+        kit.store.record_read(&place, Vec::new()).unwrap();
+        expected.push((work, title.to_owned(), Some(cover)));
+    }
+
+    let (tx, mut rx) = outbox();
+    home::load(&kit, ask(), false, &tx);
+    let home = whole_home(&mut rx).await;
+    let mut shown: Vec<(String, String, Option<String>)> = home
+        .continue_reading
+        .iter()
+        .map(|t| (t.work.as_str().to_owned(), t.title.clone(), t.cover.clone()))
+        .collect();
+    shown.sort();
+    expected.sort();
+    assert_eq!(shown, expected);
 }
 
 // ---------------------------------------------------------------------------------------------

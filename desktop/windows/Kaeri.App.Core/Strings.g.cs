@@ -1011,6 +1011,12 @@ public static partial class T
     /// <summary>The device is on mobile data and the chapters wait until it's on Wi-Fi.</summary>
     public static string ReadingEstimateWaitsWifi => Get("ReadingEstimateWaitsWifi");
 
+    /// <summary>Notice after Download on chapters that are files in the person's own folders: they open from where they are, so nothing is downloaded.</summary>
+    public static string ReadingDownloadOnDevice => Get("ReadingDownloadOnDevice");
+
+    /// <summary>A series' name where neither the catalogue nor its source gave one: on Downloads, in a sent file's name and in the e-reader's library.</summary>
+    public static string ReadingUntitledSeries => Get("ReadingUntitledSeries");
+
     /// <summary>The notification's title.</summary>
     public static string ReadingDownloadsDoneTitle => Get("ReadingDownloadsDoneTitle");
 
@@ -12376,6 +12382,8 @@ public static partial class T
         ["ReadingEstimateWifi"] = "over Wi-Fi",
         ["ReadingEstimateMobile"] = "over mobile data",
         ["ReadingEstimateWaitsWifi"] = "waits for Wi-Fi",
+        ["ReadingDownloadOnDevice"] = "These are files on this device already. They read offline without a download.",
+        ["ReadingUntitledSeries"] = "Untitled series",
         ["ReadingDownloadsDoneTitle"] = "Downloads finished",
         ["ReadingDownloadsDoneChapters_one"] = "A chapter of {title} is ready to read offline.",
         ["ReadingDownloadsDoneChapters_other"] = "{count} chapters of {title} are ready to read offline.",

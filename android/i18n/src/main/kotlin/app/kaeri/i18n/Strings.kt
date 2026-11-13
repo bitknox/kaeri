@@ -1337,6 +1337,14 @@ object Strings {
     fun readingEstimateWaitsWifi(context: Context): String =
         context.getString(R.string.reading_estimate_waits_wifi)
 
+    /** Notice after Download on chapters that are files in the person's own folders: they open from where they are, so nothing is downloaded. */
+    fun readingDownloadOnDevice(context: Context): String =
+        context.getString(R.string.reading_download_on_device)
+
+    /** A series' name where neither the catalogue nor its source gave one: on Downloads, in a sent file's name and in the e-reader's library. */
+    fun readingUntitledSeries(context: Context): String =
+        context.getString(R.string.reading_untitled_series)
+
     /** The notification's title. */
     fun readingDownloadsDoneTitle(context: Context): String =
         context.getString(R.string.reading_downloads_done_title)

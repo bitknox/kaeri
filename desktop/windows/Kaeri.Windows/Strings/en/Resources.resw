@@ -1451,6 +1451,14 @@
     <value>waits for Wi-Fi</value>
     <comment>The device is on mobile data and the chapters wait until it's on Wi-Fi.</comment>
   </data>
+  <data name="ReadingDownloadOnDevice" xml:space="preserve">
+    <value>These are files on this device already. They read offline without a download.</value>
+    <comment>Notice after Download on chapters that are files in the person's own folders: they open from where they are, so nothing is downloaded.</comment>
+  </data>
+  <data name="ReadingUntitledSeries" xml:space="preserve">
+    <value>Untitled series</value>
+    <comment>A series' name where neither the catalogue nor its source gave one: on Downloads, in a sent file's name and in the e-reader's library.</comment>
+  </data>
   <data name="ReadingDownloadsDoneTitle" xml:space="preserve">
     <value>Downloads finished</value>
     <comment>The notification's title.</comment>

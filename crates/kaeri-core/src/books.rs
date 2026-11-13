@@ -165,6 +165,24 @@ pub fn normalise_name(name: &str) -> String {
     out
 }
 
+/// A name as a search of names compares it: lowercase, with accents and compatibility forms
+/// (full-width letters, ligatures) folded away, so "Café", "CAFE" and "ｃａｆｅ" are one name.
+/// Kana keep their voicing marks, and other CJK text stays as it is.
+pub fn search_fold(text: &str) -> String {
+    use unicode_normalization::{UnicodeNormalization, char::is_combining_mark};
+    const KANA_MARKS: [char; 2] = ['\u{3099}', '\u{309A}'];
+    text.nfkd()
+        .filter(|c| !is_combining_mark(*c) || KANA_MARKS.contains(c))
+        .flat_map(char::to_lowercase)
+        .collect()
+}
+
+/// Whether `name` holds `term` once both are folded by [`search_fold`]. An empty term is in
+/// every name.
+pub fn name_holds(name: &str, term: &str) -> bool {
+    search_fold(name).contains(search_fold(term).trim())
+}
+
 /// 32 hex characters that stay the same from one release to the next: two FNV-1a passes, as
 /// [`crate::hash::stable_hash`] makes one. Not cryptographic; a key, not a secret.
 fn hash128(input: &str) -> String {
@@ -886,6 +904,20 @@ mod tests {
 
     fn n(text: &str) -> ChapterNumber {
         ChapterNumber::parse(text).unwrap()
+    }
+
+    /// R7E-12. Names match a search whatever their case, accents or letter width, and CJK
+    /// names match as they are written.
+    #[test]
+    fn names_match_a_search_without_case_accents_or_width() {
+        assert!(name_holds("Café Lantern", "cafe"));
+        assert!(name_holds("CAFE LANTERN", "café"));
+        assert!(name_holds("Ｆｅｒｒｙ Ｎｏｔｅｓ", "ferry"));
+        assert!(name_holds("灯台の本", "灯台"));
+        assert!(name_holds("ガラスの灯台", "ガラス"));
+        assert!(!name_holds("カラスの灯台", "ガラス"), "voicing marks stay");
+        assert!(name_holds("Ferry Notes", "  "));
+        assert!(!name_holds("Ferry Notes", "harbour"));
     }
 
     #[test]

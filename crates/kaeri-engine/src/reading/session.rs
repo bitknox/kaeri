@@ -46,6 +46,7 @@ use super::{
 };
 use crate::{
     config::ConfigState,
+    downloads::books::Here,
     outbox::{Internal, Outbox, ReaderWake},
     services::Services,
 };
@@ -212,6 +213,9 @@ pub struct Session {
     ended: bool,
     /// The next chapter's first page was asked of the worker.
     peeked: bool,
+    /// The person moved in the open chapter: turned, scrolled or jumped. A chapter on this
+    /// device asks a source for nothing until they do.
+    moved: bool,
     /// The next chapter from a source, being fetched while this one is read.
     ahead: Option<novel::Ahead>,
     /// The next chapter's first page for the end page, followed from the download queue's fetch
@@ -673,6 +677,7 @@ impl Reader {
             resumed: resumed.then_some(page),
             kept_of: of,
             peeked: false,
+            moved: false,
             ahead: None,
             first_page: None,
             back_to: None,
@@ -859,7 +864,7 @@ fn downloading(cx: &Cx<'_>, work: &WorkId, chapter: &ChapterId) -> bool {
 
 /// Whether `chapter` opens with no network: downloaded, or a file on this device.
 fn on_device(chapter: &ShelfChapter) -> bool {
-    chapter.format != novel::SOURCE && !chapter.path.as_os_str().is_empty()
+    Here::of_shelf(chapter).is_some()
 }
 
 /// A chapter's row for the end page, which says when a downloaded one is here.
@@ -868,8 +873,13 @@ fn end_row(
     marks: &kaeri_store::reading::ReadMarks,
 ) -> kaeri_model::reading::ChapterRow {
     let mut row = chapter.row(marks);
-    if chapter.source.is_some() && on_device(chapter) {
-        row.download = Some(kaeri_model::reading::ChapterDownloadState::Done);
+    match Here::of_shelf(chapter) {
+        Some(Here::Downloaded { .. }) => {
+            row.download = Some(kaeri_model::reading::ChapterDownloadState::Done);
+        }
+        // A file in the person's folders: nothing of it downloads, so no Download is offered.
+        Some(Here::Folder { .. }) => row.on_device = true,
+        None => {}
     }
     row
 }
@@ -1370,6 +1380,9 @@ impl Session {
                 if self.page() != Some(at.image) {
                     self.drop_back(cx);
                 }
+                if self.start.page.is_some_and(|p| p != at.image) {
+                    self.moved = true;
+                }
                 let mut here = place(&self.work, &chapter, Some(at.image));
                 here.strip = Some(at);
                 self.place = Some(here);
@@ -1487,6 +1500,9 @@ impl Session {
         if !matches!(how, TurnHow::Jump | TurnHow::Placed) {
             self.drop_back(cx);
         }
+        if how != TurnHow::Placed {
+            self.moved = true;
+        }
         let story = self.leaves.len() as u32;
         if leaf >= story {
             // The end page, in the flow: read at once. A jump lands here without passing the
@@ -1527,6 +1543,9 @@ impl Session {
     fn read_ahead(&mut self, cx: &Cx<'_>, pages: &Pages) {
         let index = self.at + 1;
         self.follow_download(cx, index);
+        if !self.may_ask_sources(cx) {
+            return;
+        }
         let Some(next) = self.chapters.get(index).filter(|c| c.format == novel::SOURCE) else {
             return;
         };
@@ -1549,6 +1568,16 @@ impl Session {
             &gone,
         );
         self.ahead = Some(ahead);
+    }
+
+    /// Whether the next chapter may be asked of its source now. A chapter read from this device,
+    /// downloaded or in a folder, opens and is read with no request: the next one is fetched
+    /// ahead only once the person moves in it, and never offline.
+    fn may_ask_sources(&self, cx: &Cx<'_>) -> bool {
+        if cx.services.offline.load(std::sync::atomic::Ordering::Relaxed) {
+            return false;
+        }
+        self.moved || !on_device(self.chapter())
     }
 
     /// A chapter as the downloads have it now, not as they had it when the session opened: one
@@ -1614,13 +1643,24 @@ impl Session {
     /// it lands; one the download queue has is followed, and its first page made from the
     /// download as it lands.
     fn peek(&mut self, cx: &Cx<'_>, pages: &Pages) {
-        if std::mem::replace(&mut self.peeked, true) {
+        if self.peeked {
             return;
         }
         let offline = cx.services.offline.load(std::sync::atomic::Ordering::Relaxed);
-        let Some(index) = self.end_next(offline) else { return };
+        let Some(index) = self.end_next(offline) else {
+            self.peeked = true;
+            return;
+        };
         self.follow_download(cx, index);
-        let Some(next) = self.chapters.get(index) else { return };
+        let Some(next) = self.chapters.get(index) else {
+            self.peeked = true;
+            return;
+        };
+        // Asked again once the person moves in a chapter on this device.
+        if next.format == novel::SOURCE && !self.may_ask_sources(cx) {
+            return;
+        }
+        self.peeked = true;
         if next.format == novel::SOURCE {
             let fetching = self.ahead.as_ref().is_some_and(|a| a.chapter == next.id);
             if !fetching && downloading(cx, &self.work, &next.id) {
@@ -1923,6 +1963,7 @@ impl Session {
         self.read_wait = None;
         self.end_page_said = false;
         self.peeked = false;
+        self.moved = false;
         self.back_to = None;
         self.place = None;
         self.kept_of = None;

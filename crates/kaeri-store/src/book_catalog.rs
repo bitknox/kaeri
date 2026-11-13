@@ -6,6 +6,8 @@
 //! `read_notice` is personal, as `episode_notice` is, so a profile is never told twice of one
 //! chapter.
 
+use std::collections::HashSet;
+
 use rusqlite::{OptionalExtension, params};
 
 use crate::{Result, Store};
@@ -91,6 +93,76 @@ impl Store {
             )?;
             Ok(())
         })
+    }
+
+    /// Keep `title` as the name of a work of its own on this device (`l:`: a folder's series, or
+    /// a book server's that no catalogue lists), and `cover` as its cover when one is given.
+    /// Screens, downloads and sends read a work's name here. A work the catalogue describes keeps
+    /// the catalogue's row. Says whether anything changed.
+    pub fn name_local_work(
+        &self,
+        work: &str,
+        medium: &str,
+        title: &str,
+        cover: Option<&str>,
+        now: i64,
+    ) -> Result<bool> {
+        let titles = serde_json::to_string(&[title]).unwrap_or_else(|_| "[]".to_owned());
+        self.with_conn(|c| {
+            let changed = c.execute(
+                "INSERT INTO book_work (work, medium, titles, cover, fetched_at)
+                 VALUES (?1, ?2, ?3, ?4, ?5)
+                 ON CONFLICT(work) DO UPDATE SET titles = excluded.titles,
+                    cover = COALESCE(excluded.cover, book_work.cover),
+                    fetched_at = excluded.fetched_at
+                  WHERE book_work.anilist_id IS NULL
+                    AND (book_work.titles IS NOT excluded.titles
+                         OR (excluded.cover IS NOT NULL
+                             AND book_work.cover IS NOT excluded.cover))",
+                params![work, medium, titles, cover, now],
+            )?;
+            Ok(changed > 0)
+        })
+    }
+
+    /// The works of their own on this device (`l:`) that have no name kept yet and were read,
+    /// are being read or were downloaded, each with a source's series matched to it: the most
+    /// sure match first.
+    pub fn unnamed_local_works(&self) -> Result<Vec<(String, String, String)>> {
+        // Names and downloads are the device's; matches and reading are the person's.
+        let (named, downloaded) = self.with_conn(|c| {
+            let works = |sql: &str| -> Result<HashSet<String>> {
+                let mut stmt = c.prepare(sql)?;
+                let rows = stmt.query_map([], |r| r.get(0))?;
+                Ok(rows.collect::<rusqlite::Result<_>>()?)
+            };
+            Ok((
+                works("SELECT work FROM book_work WHERE work LIKE 'l:%'")?,
+                works("SELECT DISTINCT work FROM book_download WHERE work LIKE 'l:%'")?,
+            ))
+        })?;
+        let matched: Vec<(String, String, String, bool)> = self.with_personal(|c| {
+            let mut stmt = c.prepare(
+                "SELECT m.work, m.source_id, m.series_ref,
+                        EXISTS (SELECT 1 FROM read_work r WHERE r.work = m.work)
+                     OR EXISTS (SELECT 1 FROM read_chapter r WHERE r.work = m.work)
+                     OR EXISTS (SELECT 1 FROM read_status r WHERE r.work = m.work)
+                   FROM book_source_match m
+                  WHERE m.work LIKE 'l:%'
+                  ORDER BY m.work, m.confirmed DESC, m.confidence DESC, m.updated_at DESC",
+            )?;
+            let rows = stmt
+                .query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?)))?
+                .collect::<rusqlite::Result<_>>()?;
+            Ok(rows)
+        })?;
+        Ok(matched
+            .into_iter()
+            .filter(|(work, _, _, read)| {
+                !named.contains(work) && (*read || downloaded.contains(work))
+            })
+            .map(|(work, source, series, _)| (work, source, series))
+            .collect())
     }
 
     pub fn book_work(&self, work: &str) -> Result<Option<BookWork>> {
@@ -282,6 +354,67 @@ impl Store {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::shelf::TitleForm;
+
+    /// R7E-4. A work of its own on this device is named as its source names it, renamed when
+    /// the source does, and never over the catalogue's row.
+    #[test]
+    fn a_local_work_is_named_and_the_catalogue_row_is_left_alone() {
+        let store = Store::open_in_memory().unwrap();
+        let title = |work: &str| {
+            store.book_work_kind(work).unwrap().and_then(|k| k.title_in(TitleForm::English))
+        };
+        assert!(
+            store.name_local_work("l:m:ferry", "manga", "The Long Ferry", None, 1).unwrap()
+        );
+        assert_eq!(title("l:m:ferry").as_deref(), Some("The Long Ferry"));
+        assert!(
+            !store.name_local_work("l:m:ferry", "manga", "The Long Ferry", None, 2).unwrap()
+        );
+        let cover = Some("https://books.example/cover/1");
+        assert!(
+            store.name_local_work("l:m:ferry", "manga", "The Long Ferry", cover, 3).unwrap()
+        );
+        assert!(store.name_local_work("l:m:ferry", "manga", "Long Ferry", None, 4).unwrap());
+        let kept = store.book_work("l:m:ferry").unwrap().unwrap();
+        assert_eq!(
+            (kept.cover.as_deref(), title("l:m:ferry").as_deref()),
+            (cover, Some("Long Ferry"))
+        );
+
+        let anilist = BookWork {
+            work: "a:900301".into(),
+            anilist_id: Some(900_301),
+            medium: "manga".into(),
+            titles: r#"{"display":"The Lantern Ferry"}"#.into(),
+            fetched_at: 10,
+            ..BookWork::default()
+        };
+        store.put_book_work(&anilist).unwrap();
+        assert!(
+            !store.name_local_work("a:900301", "manga", "Something Else", None, 11).unwrap()
+        );
+        assert_eq!(store.book_work("a:900301").unwrap(), Some(anilist));
+    }
+
+    /// R7E-4. The works to name again at launch: read or downloaded, with no name kept.
+    #[test]
+    fn unnamed_local_works_are_the_read_and_downloaded_ones() {
+        let store = Store::open_in_memory().unwrap();
+        for (series, work) in [("s-1", "l:m:read"), ("s-2", "l:m:named"), ("s-3", "l:m:never")]
+        {
+            store.set_book_match("srv-1", series, work, 50, false, false, 1).unwrap();
+        }
+        store.set_book_match("srv-1", "s-4", "a:7", 100, true, false, 1).unwrap();
+        for work in ["l:m:read", "l:m:named", "a:7"] {
+            store.set_read_status(work, Some("reading"), 1).unwrap();
+        }
+        store.name_local_work("l:m:named", "manga", "Named", None, 1).unwrap();
+        assert_eq!(
+            store.unnamed_local_works().unwrap(),
+            [("l:m:read".to_owned(), "srv-1".to_owned(), "s-1".to_owned())]
+        );
+    }
 
     #[test]
     fn works_rhythms_chapter_lists_and_notices_are_kept() {

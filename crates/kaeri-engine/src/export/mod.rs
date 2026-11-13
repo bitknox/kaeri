@@ -3,19 +3,21 @@
 //!
 //! **Send to e-reader** prepares chapters for one target profile and hands back a
 //! list of files for the app's share sheet: [`prepare`] writes them, [`profiles`] says what a
-//! target is. A chapter that is not downloaded is fetched through the download pipeline for the
-//! send and removed once its files are written; downloaded ones are used as they are. The job
-//! is announced like any other, told as `ExportProgress` and ended with `ExportReady`; it stops
-//! on `CancelPrepare` and leaves no files behind. A send with chapters to fetch waits while the
-//! downloads do, and goes on by itself: for Wi-Fi it says so with `ExportWaiting`, and one left
-//! waiting when the engine stops starts again at the next launch ([`held`]). Until the front end
-//! first says the network it waits too, without a word, as the network may be cellular. With no
-//! network at all it fails as offline. Once the files are shared, the series page asks
+//! target is. A chapter that is not on this device is fetched through the download pipeline for
+//! the send and removed once its files are written; downloaded ones and files in the person's
+//! folders are used as they are. The job is announced like any other, told as `ExportProgress`
+//! and ended with `ExportReady`; it stops on `CancelPrepare` and leaves no files behind. A send
+//! with chapters to fetch waits while the downloads do, and goes on by itself: for Wi-Fi it says
+//! so with `ExportWaiting`, and one left waiting when the engine stops starts again at the next
+//! launch ([`held`]). A ready send is kept beside its files, so one ready when the app stopped is
+//! offered again at the next launch with `ExportKept` ([`kept`]). Until the front end first says the network it waits too, without a word,
+//! as the network may be cellular. With no network at all it fails as offline. Once the files are shared, the series page asks
 //! where you stopped, and the answer is a `ReadAdopt` op.
 //!
 //! **The OPDS feed** is in [`feed`], behind the `opds-feed` feature the desktop builds turn on.
 
 pub(crate) mod held;
+pub(crate) mod kept;
 pub mod prepare;
 pub mod profiles;
 
@@ -46,7 +48,8 @@ use kaeri_store::{Store, book_downloads::BookDownloadState};
 
 use crate::{
     downloads::books::{
-        BookDownloads, Fetching, Lent, Stop as FetchStop, Wanted, chapter_row, flatten,
+        BookDownloads, Fetching, Here, Lent, OnDevice, Stop as FetchStop, Wanted, chapter_row,
+        flatten,
     },
     jobs::JobGuard,
     outbox::Outbox,
@@ -60,17 +63,136 @@ const READY_KEPT: i64 = 24 * 60 * 60;
 
 /// The sends under way, so one can be stopped, the ready ones whose files wait for the share
 /// sheet, and where their files go.
+///
+/// Job ids start over at every launch, so a send's folders are named by this engine's own mark
+/// as well as its job: `<mark>-<job>` for its files and `<mark>-<job>-fetch` for the pages it
+/// fetches. A folder an earlier launch left is never taken for one of this launch's: [`sweep`]
+/// removes it at launch (a send killed mid-fetch, a ready send no longer kept), except a ready
+/// send still kept, which the launch offers again ([`kept`]).
 #[derive(Clone, Debug)]
 pub struct Exports {
     dir: PathBuf,
+    /// This engine's mark: see [`mark`].
+    mark: Arc<str>,
     running: Arc<Mutex<HashMap<u64, Arc<AtomicBool>>>>,
-    /// Ready sends by job, with when each became ready on the engine's clock.
-    ready: Arc<Mutex<HashMap<u64, i64>>>,
+    /// Ready sends by job, with when each became ready on the engine's clock and the name of
+    /// its folder: its own, or for a send kept from an earlier launch, the one that launch made.
+    /// Sends that joined one share its folder.
+    ready: Arc<Mutex<HashMap<u64, (i64, String)>>>,
+    /// The sends running by what they send (work, chapters, target and format), each with the
+    /// jobs of the identical sends asked for while it ran, which join it rather than fetch the
+    /// same chapters again.
+    joins: Arc<Mutex<Joins>>,
+}
+
+/// The sends running by what they send, each with its own job and the jobs that joined it.
+type Joins = HashMap<String, (u64, Arc<Joined>)>;
+
+/// The jobs that joined a running send: each is told what it is told, and ends when it ends.
+/// When its own job is put away while others joined it, it runs on for them alone.
+#[derive(Default)]
+struct Joined {
+    jobs: Mutex<Vec<(JobId, Option<JobGuard>)>>,
+    /// Its own job was put away; set only with `jobs` locked.
+    lead_gone: AtomicBool,
+}
+
+impl std::fmt::Debug for Joined {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let jobs: Vec<u64> = self.lock().iter().map(|(job, _)| job.get()).collect();
+        f.debug_tuple("Joined").field(&jobs).finish()
+    }
+}
+
+impl Joined {
+    fn lock(&self) -> std::sync::MutexGuard<'_, Vec<(JobId, Option<JobGuard>)>> {
+        self.jobs.lock().unwrap_or_else(|e| e.into_inner())
+    }
+
+    fn lead_gone(&self) -> bool {
+        self.lead_gone.load(Ordering::Relaxed)
+    }
+
+    fn jobs(&self) -> Vec<JobId> {
+        self.lock().iter().map(|(job, _)| *job).collect()
+    }
+}
+
+/// What a send sends, so two identical ones are told apart from the rest.
+fn identity(work: &WorkId, pick: &DownloadPick, target: &str, format: ExportFormat) -> String {
+    format!("{}\u{1f}{pick:?}\u{1f}{target}\u{1f}{format:?}", work.as_str())
+}
+
+/// A mark no other engine has: the process id, then when it was made and a count, as
+/// `<pid>.<hex>`. The process id comes first so the launch sweep can tell a folder of this
+/// process (an engine still running) from one of a process that has ended.
+fn mark() -> String {
+    static MADE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+    let nanos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_nanos());
+    let count = MADE.fetch_add(1, Ordering::Relaxed);
+    format!("{}.{nanos:x}{count:x}", std::process::id())
+}
+
+/// Whether an entry of the sends' folder belongs to an engine of this process. Any other (a
+/// send of a process that has ended, or a folder named before marks) is a leftover.
+fn of_this_process(name: &str) -> bool {
+    name.split_once('.').is_some_and(|(pid, _)| pid == std::process::id().to_string())
+}
+
+/// Where sends write their files and fetch their pages.
+pub fn dir_of(paths: &kaeri_core::config::Paths) -> PathBuf {
+    paths.data_dir.join("exports")
+}
+
+/// Remove what sends of earlier launches left in `dir`, the sends' folder: ready files no
+/// launch offers any more (put away, past [`READY_KEPT`] or missing a file) and the pages of
+/// sends killed mid-fetch. Folders of this process's engines stay, and so do kept ready sends,
+/// which the launch offers again. Blocking. Returns how many entries went.
+pub fn sweep(dir: &Path) -> usize {
+    let Ok(entries) = std::fs::read_dir(dir) else { return 0 };
+    let now = kept::wall_now();
+    let mut removed = 0;
+    for entry in entries.flatten() {
+        if of_this_process(&entry.file_name().to_string_lossy()) {
+            continue;
+        }
+        let path = entry.path();
+        if kept::KeptSend::read(&path, now).is_some() {
+            continue;
+        }
+        let gone = match std::fs::symlink_metadata(&path) {
+            Ok(meta) if meta.is_dir() => std::fs::remove_dir_all(&path),
+            Ok(_) => std::fs::remove_file(&path),
+            Err(e) => Err(e),
+        };
+        if gone.is_ok() {
+            removed += 1;
+        }
+    }
+    removed
 }
 
 impl Exports {
     pub fn new(dir: PathBuf) -> Self {
-        Self { dir, running: Arc::default(), ready: Arc::default() }
+        Self {
+            dir,
+            mark: mark().into(),
+            running: Arc::default(),
+            ready: Arc::default(),
+            joins: Arc::default(),
+        }
+    }
+
+    /// The name of `job`'s folder: this engine's mark and the job.
+    fn name(&self, job: JobId) -> String {
+        format!("{}-{}", self.mark, job.get())
+    }
+
+    /// Where `job` keeps the pages it fetches, removed once its files are written.
+    fn scratch(&self, job: JobId) -> PathBuf {
+        self.dir.join(format!("{}-fetch", self.name(job)))
     }
 
     fn begin(&self, job: JobId) -> Arc<AtomicBool> {
@@ -81,7 +203,41 @@ impl Exports {
 
     /// A send's files are written: they are kept for its Share, see [`Self::folder`].
     fn ready(&self, job: JobId, now: i64) {
-        self.ready.lock().unwrap_or_else(|e| e.into_inner()).insert(job.get(), now);
+        let name = self.name(job);
+        self.ready.lock().unwrap_or_else(|e| e.into_inner()).insert(job.get(), (now, name));
+    }
+
+    /// The ready sends earlier launches kept in the sends' folder and no job of this engine has
+    /// taken yet, with their folders' names, oldest first.
+    fn kept(&self) -> Vec<(String, kept::KeptSend)> {
+        let Ok(entries) = std::fs::read_dir(&self.dir) else { return Vec::new() };
+        let taken: Vec<String> = self
+            .ready
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .values()
+            .map(|(_, name)| name.clone())
+            .collect();
+        let now = kept::wall_now();
+        let mut found: Vec<(String, kept::KeptSend)> = entries
+            .flatten()
+            .filter_map(|entry| {
+                let name = entry.file_name().to_string_lossy().into_owned();
+                let ours = name.starts_with(&format!("{}-", self.mark));
+                if ours || taken.contains(&name) {
+                    return None;
+                }
+                Some((name, kept::KeptSend::read(&entry.path(), now)?))
+            })
+            .collect();
+        found.sort_by_key(|(_, send)| send.at);
+        found
+    }
+
+    /// `job` of this launch is the ready send kept in the folder `name`, ready since `at` on
+    /// the engine's clock.
+    fn adopt(&self, job: JobId, name: String, at: i64) {
+        self.ready.lock().unwrap_or_else(|e| e.into_inner()).insert(job.get(), (at, name));
     }
 
     fn end(&self, job: JobId) {
@@ -91,17 +247,87 @@ impl Exports {
     /// Stops a send; false when it is not running. A ready send is put away instead: its
     /// files are removed, as the screen that asked has dropped it.
     pub fn cancel(&self, job: JobId) -> bool {
-        let running = self.running.lock().unwrap_or_else(|e| e.into_inner());
-        if let Some(flag) = running.get(&job.get()) {
+        let flag =
+            self.running.lock().unwrap_or_else(|e| e.into_inner()).get(&job.get()).cloned();
+        if let Some(flag) = flag {
+            // A send others joined runs on for them; only its own job leaves.
+            let followed = self
+                .joins
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .values()
+                .find(|(lead, _)| *lead == job.get())
+                .map(|(_, joined)| joined.clone());
+            if let Some(joined) = followed {
+                let jobs = joined.lock();
+                if !jobs.is_empty() {
+                    joined.lead_gone.store(true, Ordering::Relaxed);
+                    return true;
+                }
+            }
             flag.store(true, Ordering::Relaxed);
             return true;
         }
-        drop(running);
-        let put_away = self.ready.lock().unwrap_or_else(|e| e.into_inner()).remove(&job.get());
-        if put_away.is_some() {
-            let _ = std::fs::remove_dir_all(self.dir.join(job.get().to_string()));
+        // A send that joined another leaves it; the other goes on, unless no one is left.
+        let mut left = None;
+        for (lead, joined) in self.joins.lock().unwrap_or_else(|e| e.into_inner()).values() {
+            let mut jobs = joined.lock();
+            if let Some(at) = jobs.iter().position(|(j, _)| *j == job) {
+                jobs.remove(at);
+                left = Some((*lead, jobs.is_empty() && joined.lead_gone()));
+                break;
+            }
+        }
+        if let Some((lead, last)) = left {
+            let running = self.running.lock().unwrap_or_else(|e| e.into_inner());
+            if last && let Some(flag) = running.get(&lead) {
+                flag.store(true, Ordering::Relaxed);
+            }
+            return true;
+        }
+        let mut ready = self.ready.lock().unwrap_or_else(|e| e.into_inner());
+        if let Some((_, name)) = ready.remove(&job.get()) {
+            // The files go once no send that joined it still offers them.
+            if !ready.values().any(|(_, other)| *other == name) {
+                let _ = std::fs::remove_dir_all(self.dir.join(name));
+            }
         }
         false
+    }
+
+    /// Join the running send identical to the one `job` asks for, when there is one: `job` is
+    /// then told what that send is told and ends with it, and `Ok` says so. Otherwise the guard
+    /// comes back for a send of its own.
+    fn join(&self, identity: &str, job: Option<JobGuard>) -> Result<(), Option<JobGuard>> {
+        let joins = self.joins.lock().unwrap_or_else(|e| e.into_inner());
+        let (Some((_, joined)), Some(id)) = (joins.get(identity), job.as_ref().map(|j| j.id))
+        else {
+            return Err(job);
+        };
+        joined.lock().push((id, job));
+        Ok(())
+    }
+
+    /// `job` runs the send `identity` names, which identical ones join while it runs.
+    fn lead(&self, identity: &str, job: JobId) -> Arc<Joined> {
+        let joined = Arc::new(Joined::default());
+        let mut joins = self.joins.lock().unwrap_or_else(|e| e.into_inner());
+        joins.insert(identity.to_owned(), (job.get(), joined.clone()));
+        joined
+    }
+
+    /// The send `identity` names has ended: none joins it any more.
+    fn unlead(&self, identity: &str, job: JobId) {
+        let mut joins = self.joins.lock().unwrap_or_else(|e| e.into_inner());
+        if joins.get(identity).is_some_and(|(lead, _)| *lead == job.get()) {
+            joins.remove(identity);
+        }
+    }
+
+    /// `job` joined a send that is ready now: it offers the same files.
+    fn ready_as(&self, job: JobId, lead: JobId, now: i64) {
+        let name = self.name(lead);
+        self.ready.lock().unwrap_or_else(|e| e.into_inner()).insert(job.get(), (now, name));
     }
 
     /// The folder one send writes to. The folder's other entries are removed, except those of
@@ -114,17 +340,17 @@ impl Exports {
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .keys()
-            .map(|k| k.to_string())
+            .map(|k| self.name(JobId::new(*k)))
             .collect();
         {
             let mut ready = self.ready.lock().unwrap_or_else(|e| e.into_inner());
-            ready.retain(|_, at| now.saturating_sub(*at) < READY_KEPT);
-            keep.extend(ready.keys().map(|k| k.to_string()));
+            ready.retain(|_, (at, _)| now.saturating_sub(*at) < READY_KEPT);
+            keep.extend(ready.values().map(|(_, name)| name.clone()));
         }
         if let Ok(entries) = std::fs::read_dir(&self.dir) {
             for entry in entries.flatten() {
                 let name = entry.file_name().to_string_lossy().into_owned();
-                // A send's scratch folder is its id and `-fetch`.
+                // A send's scratch folder is its name and `-fetch`.
                 let kept = keep
                     .iter()
                     .any(|b| name == *b || name.strip_suffix("-fetch") == Some(b.as_str()));
@@ -133,7 +359,7 @@ impl Exports {
                 }
             }
         }
-        self.dir.join(job.get().to_string())
+        self.dir.join(self.name(job))
     }
 }
 
@@ -254,20 +480,6 @@ fn series_header(engine: &EngineState, services: &Services, work: &WorkId, tx: &
 // ---------------------------------------------------------------------------------------------
 // Send to e-reader
 
-/// The chapters the person has downloaded, by chapter id, with the file each is.
-fn chosen_downloads(store: &Store, work: &str) -> HashMap<String, PathBuf> {
-    store
-        .book_downloads(Some(work))
-        .unwrap_or_default()
-        .into_iter()
-        .filter(|d| d.state == BookDownloadState::Done)
-        .filter_map(|d| {
-            let path = PathBuf::from(d.path?);
-            path.is_file().then_some((d.chapter, path))
-        })
-        .collect()
-}
-
 /// The downloaded chapters `pick` names, in reading order, with the file each is.
 pub fn chosen(store: &Store, work: &str, pick: &DownloadPick) -> Vec<prepare::Chapter> {
     let marks = store.read_marks(work).unwrap_or_default();
@@ -318,15 +530,18 @@ fn prepare_files(
         return fail(about, ReadingFailure::NotFound, tx);
     };
     let store = services.book_sources.store();
-    let title = store
-        .book_work_kind(work.as_str())
-        .ok()
-        .flatten()
-        .and_then(|kind| kind.title_in(crate::data::title_form(services.meta.titles())))
-        .unwrap_or_else(|| work.as_str().to_owned());
+    let form = crate::data::title_form(services.meta.titles());
+    let title = crate::read_catalog::tiles::title_of(store, work.as_str(), form);
     let direction = page_direction(engine, services, &work);
     let id = job.as_ref().map_or(JobId::new(0), |j| j.id);
     let exports = services.book_sources.exports.clone();
+    // An identical send already running is joined, so its chapters are fetched once.
+    let identity = identity(&work, &pick, target, format);
+    let job = match exports.join(&identity, job) {
+        Ok(()) => return,
+        Err(job) => job,
+    };
+    let joined = exports.lead(&identity, id);
     let cancel = exports.begin(id);
     let out = exports.folder(id, services.clock.now());
     let clock = services.clock.clone();
@@ -336,7 +551,7 @@ fn prepare_files(
         lent: Lent::of(services, tx),
         downloads: services.book_sources.downloads.clone(),
         exports,
-        told: Told::new(tx.clone(), id),
+        told: Told::new(tx.clone(), id, joined.clone()),
         cancel,
         id,
         work,
@@ -346,30 +561,48 @@ fn prepare_files(
         format,
         out,
         direction,
+        sent: Mutex::default(),
     };
     tokio::spawn(async move {
         let _job = job;
         let tx = send.lent.tx.clone();
         let result = send.run().await;
-        if result.is_ok() {
-            send.exports.ready(send.id, clock.now());
+        // No send joins this one from here on; those that did end with it.
+        send.exports.unlead(&identity, send.id);
+        let (also, gone) = {
+            let mut jobs = joined.lock();
+            (std::mem::take(&mut *jobs), joined.lead_gone())
+        };
+        let jobs: Vec<JobId> = (!gone)
+            .then_some(send.id)
+            .into_iter()
+            .chain(also.iter().map(|(job, _)| *job))
+            .collect();
+        if let Ok(files) = &result {
+            let now = clock.now();
+            if !gone {
+                send.exports.ready(send.id, now);
+            }
+            for (job, _) in &also {
+                send.exports.ready_as(*job, send.id, now);
+            }
+            send.keep_ready(files);
         }
         send.exports.end(send.id);
         let chapter = send.told.failing_chapter();
-        match result {
-            Ok(files) => {
-                let _ =
-                    tx.send(Event::Reading(ReadingEvent::ExportReady { job: send.id, files }));
-            }
-            Err(prepare::Stop::Cancelled) => {}
-            Err(prepare::Stop::Failed(failure)) => {
-                let _ = tx.send(Event::Reading(ReadingEvent::ExportFailed {
-                    job: send.id,
-                    chapter,
-                    failure,
-                }));
-            }
+        for job in jobs {
+            let said = match &result {
+                Ok(files) => ReadingEvent::ExportReady { job, files: files.clone() },
+                Err(prepare::Stop::Cancelled) => continue,
+                Err(prepare::Stop::Failed(failure)) => ReadingEvent::ExportFailed {
+                    job,
+                    chapter: chapter.clone(),
+                    failure: failure.clone(),
+                },
+            };
+            let _ = tx.send(Event::Reading(said));
         }
+        drop(also);
     });
 }
 
@@ -408,18 +641,27 @@ struct Told {
     of: AtomicU32,
     /// The chapter being fetched, for a failure to name.
     current: Mutex<Option<String>>,
+    /// The identical sends that joined this one, told the same.
+    joined: Arc<Joined>,
 }
 
 impl Told {
-    fn new(tx: Outbox, job: JobId) -> Arc<Self> {
+    fn new(tx: Outbox, job: JobId, joined: Arc<Joined>) -> Arc<Self> {
         Arc::new(Self {
             tx,
             job,
+            joined,
             last: Mutex::new(Instant::now() - Duration::from_secs(1)),
             gathered: AtomicU32::new(0),
             of: AtomicU32::new(0),
             current: Mutex::new(None),
         })
+    }
+
+    /// This send's job, unless it was put away, and those of the sends that joined it.
+    fn jobs(&self) -> Vec<JobId> {
+        let own = (!self.joined.lead_gone()).then_some(self.job);
+        own.into_iter().chain(self.joined.jobs()).collect()
     }
 
     fn chapter(&self, label: Option<String>) {
@@ -436,13 +678,15 @@ impl Told {
             return;
         }
         *last = Instant::now();
-        let _ = self.tx.send(Event::Reading(ReadingEvent::ExportProgress {
-            job: self.job,
-            done,
-            total,
-            chapters_done: self.gathered.load(Ordering::Relaxed),
-            chapters: self.of.load(Ordering::Relaxed),
-        }));
+        for job in self.jobs() {
+            let _ = self.tx.send(Event::Reading(ReadingEvent::ExportProgress {
+                job,
+                done,
+                total,
+                chapters_done: self.gathered.load(Ordering::Relaxed),
+                chapters: self.of.load(Ordering::Relaxed),
+            }));
+        }
     }
 }
 
@@ -468,11 +712,13 @@ struct OneSend {
     format: ExportFormat,
     out: PathBuf,
     direction: prepare::PageDirection,
+    /// The chapters gathered, in reading order, for the record a ready send keeps.
+    sent: Mutex<Vec<kaeri_core::books::ChapterId>>,
 }
 
 impl OneSend {
     async fn run(&self) -> Result<Vec<kaeri_model::reading::ExportFile>, prepare::Stop> {
-        let temp = self.exports.dir.join(format!("{}-fetch", self.id.get()));
+        let temp = self.exports.scratch(self.id);
         let gathered = self.gather(&temp).await;
         let result = match gathered {
             Ok((chapters, fetched)) => self.write(chapters, fetched).await,
@@ -527,15 +773,21 @@ impl OneSend {
     /// were fetched.
     async fn gather(&self, temp: &Path) -> Result<(Vec<prepare::Chapter>, u32), prepare::Stop> {
         let store = self.lent.sources.store();
-        let downloaded = chosen_downloads(store, self.work.as_str());
+        let here = OnDevice::of(store, self.work.as_str());
         let asked_all_downloaded = match &self.pick {
             DownloadPick::Chapters { ids } => {
-                !ids.is_empty() && ids.iter().all(|c| downloaded.contains_key(c.as_str()))
+                !ids.is_empty()
+                    && ids
+                        .iter()
+                        .all(|c| matches!(here.file(c.as_str()), Some(Here::Downloaded { .. })))
             }
             _ => false,
         };
         if asked_all_downloaded {
             // Nothing to fetch, so nothing to ask a source.
+            if let DownloadPick::Chapters { ids } = &self.pick {
+                *self.sent.lock().unwrap_or_else(|e| e.into_inner()) = ids.clone();
+            }
             let chapters = chosen(store, self.work.as_str(), &self.pick);
             let n = u32::try_from(chapters.len()).unwrap_or(u32::MAX);
             self.told.of.store(n, Ordering::Relaxed);
@@ -560,8 +812,12 @@ impl OneSend {
         if wanted.is_empty() {
             return Err(ReadingFailure::NotFound.into());
         }
-        let to_fetch =
-            wanted.iter().filter(|w| !downloaded.contains_key(w.chapter.as_str())).count();
+        *self.sent.lock().unwrap_or_else(|e| e.into_inner()) =
+            wanted.iter().map(|w| w.chapter.clone()).collect();
+        // A chapter on this device, downloaded or in the person's folders, is sent from its
+        // file; only the rest are fetched, and only they wait for the network.
+        let file_of = |want: &Wanted| here.file(want.chapter.as_str());
+        let to_fetch = wanted.iter().filter(|w| file_of(w).is_none()).count();
         let fetch_count = u32::try_from(to_fetch).unwrap_or(u32::MAX);
         let total = fetch_count.saturating_mul(2 * FETCH_WEIGHT);
         let mut chapters = Vec::with_capacity(wanted.len());
@@ -573,12 +829,21 @@ impl OneSend {
             }
             let Some(row) = rows.iter().find(|r| r.id == want.chapter) else { continue };
             let label = row.number.clone().unwrap_or_else(|| row.label.clone());
-            if let Some(path) = downloaded.get(want.chapter.as_str()) {
-                chapters.push(prepare::Chapter { label, path: path.clone() });
+            if let Some(file) = file_of(want) {
+                chapters.push(prepare::Chapter { label, path: file.path().to_owned() });
                 self.told.gathered.fetch_add(1, Ordering::Relaxed);
                 continue;
             }
             self.told.chapter(Some(label.clone()));
+            // A download of the chapter already under way is waited for and its file taken,
+            // so the source is asked for its pages once.
+            if let Some(path) = self.joined(want).await? {
+                chapters.push(prepare::Chapter { label, path });
+                self.told.gathered.fetch_add(1, Ordering::Relaxed);
+                self.told.chapter(None);
+                fetched += 1;
+                continue;
+            }
             let missing = u32::try_from(to_fetch).unwrap_or(u32::MAX).saturating_sub(fetched);
             self.may_fetch(missing, &wanted).await?;
             std::fs::create_dir_all(temp).map_err(|e| {
@@ -619,6 +884,30 @@ impl OneSend {
         Ok((chapters, fetch_count))
     }
 
+    /// The file of a download of `want` that is fetching, once it is done, or one that has
+    /// finished since the send began. `None` when no download of it is fetching, or the one
+    /// that was stops without the file (it failed, was cancelled or waits again): the send
+    /// then fetches the chapter itself.
+    async fn joined(&self, want: &Wanted) -> Result<Option<PathBuf>, prepare::Stop> {
+        let store = self.lent.sources.store();
+        let (work, chapter) = (self.work.as_str(), want.chapter.as_str());
+        loop {
+            if self.cancel.load(Ordering::Relaxed) {
+                return Err(prepare::Stop::Cancelled);
+            }
+            let state = store.book_download(work, chapter).ok().flatten().map(|d| d.state);
+            match state {
+                Some(BookDownloadState::Downloading) => {}
+                Some(BookDownloadState::Done) => {
+                    let here = OnDevice::of(store, work);
+                    return Ok(here.file(chapter).map(|file| file.path().to_owned()));
+                }
+                _ => return Ok(None),
+            }
+            tokio::time::sleep(LOOK_AGAIN).await;
+        }
+    }
+
     /// Wait until chapters may be fetched, `missing` of them still to come. A send waits while
     /// the downloads do: for Wi-Fi it says so, naming the chapters it holds (`wanted`), and it
     /// is kept in the store meanwhile. With no network at all it fails as offline; cancelled,
@@ -647,13 +936,15 @@ impl OneSend {
                 said = true;
                 let line =
                     Msg::Reading(ReadingMsg::ExportWaitsForWifi { n: i64::from(missing) });
-                let _ = self.lent.tx.send(Event::Reading(ReadingEvent::ExportWaiting {
-                    job: self.id,
-                    work: self.work.clone(),
-                    target: self.target.clone(),
-                    line,
-                    chapters: wanted.iter().map(|w| w.chapter.clone()).collect(),
-                }));
+                for job in self.told.jobs() {
+                    let _ = self.lent.tx.send(Event::Reading(ReadingEvent::ExportWaiting {
+                        job,
+                        work: self.work.clone(),
+                        target: self.target.clone(),
+                        line: line.clone(),
+                        chapters: wanted.iter().map(|w| w.chapter.clone()).collect(),
+                    }));
+                }
             }
             // A change to the network or the setting, or a look at whether it was cancelled.
             let _ = tokio::time::timeout(LOOK_AGAIN, changes.changed()).await;
@@ -662,6 +953,16 @@ impl OneSend {
             held::forget(store, &self.key);
         }
         result
+    }
+
+    /// Keep this ready send beside its files, for a launch after the app stops to offer again.
+    fn keep_ready(&self, files: &[kaeri_model::reading::ExportFile]) {
+        let sent = self.sent.lock().unwrap_or_else(|e| e.into_inner()).clone();
+        if let Some(record) =
+            kept::KeptSend::new(&self.work, &self.target, &sent, &self.out, files)
+        {
+            record.write(&self.out);
+        }
     }
 
     /// This send as the list of those waiting keeps it.
@@ -678,6 +979,35 @@ impl OneSend {
 
 /// How often a waiting send looks whether it was cancelled.
 const LOOK_AGAIN: Duration = Duration::from_millis(200);
+
+/// The ready sends earlier launches kept, each offered again as `job` of this launch, which
+/// `next_job` gives: told as `ExportKept`, kept for its Share and put away by `CancelPrepare`
+/// as a ready send of this launch is.
+pub(crate) fn offer_kept(
+    engine: &EngineState,
+    services: &Services,
+    mut next_job: impl FnMut() -> JobId,
+    tx: &Outbox,
+) {
+    if !engine.reading.available {
+        return;
+    }
+    let exports = &services.book_sources.exports;
+    let now = services.clock.now();
+    let wall = kept::wall_now();
+    for (name, send) in exports.kept() {
+        let job = next_job();
+        let files = send.files_in(&exports.dir.join(&name));
+        exports.adopt(job, name, now.saturating_sub(wall.saturating_sub(send.at)));
+        let _ = tx.send(Event::Reading(ReadingEvent::ExportKept {
+            job,
+            work: WorkId::new(send.work),
+            target: send.target,
+            chapters: send.chapters.iter().map(kaeri_core::books::ChapterId::new).collect(),
+            files,
+        }));
+    }
+}
 
 /// The sends left waiting when the engine last stopped, asked for again: each starts as a job
 /// of its own and waits again while it must.
@@ -889,6 +1219,29 @@ mod ready_tests {
         assert!(!first.exists(), "a ready send a day old kept its file");
     }
 
+    /// R6E-5. Job ids start over at each launch: a send of a new launch must never take the
+    /// folders a killed send of an earlier one left under the same job id.
+    #[test]
+    fn a_send_never_takes_the_folders_an_earlier_launch_left_under_its_job_id() {
+        let dir = tempfile::tempdir().unwrap();
+        let before = Exports::new(dir.path().to_owned());
+        let job = JobId::new(1);
+        before.begin(job);
+        let old_out = before.folder(job, NOW);
+        let old_scratch = before.scratch(job);
+        std::fs::create_dir_all(old_scratch.join("3.pages")).unwrap();
+        std::fs::write(old_scratch.join("3.pages").join("count"), "13").unwrap();
+        // Killed here: the next launch is a new engine, whose first send is job 1 again.
+        let after = Exports::new(dir.path().to_owned());
+        after.begin(job);
+        let new_out = after.folder(job, NOW + 60);
+        let new_scratch = after.scratch(job);
+        assert_ne!(new_out, old_out);
+        assert_ne!(new_scratch, old_scratch);
+        assert!(!new_scratch.exists(), "the new send starts with no pages");
+        assert!(!old_scratch.exists(), "the dead send's pages were left");
+    }
+
     #[test]
     fn putting_a_ready_send_away_removes_its_files() {
         let dir = tempfile::tempdir().unwrap();
@@ -900,5 +1253,55 @@ mod ready_tests {
         let running = JobId::new(2);
         let flag = exports.begin(running);
         assert!(exports.cancel(running) && flag.load(Ordering::Relaxed));
+    }
+
+    /// Android R7-2. A ready send kept beside its files outlives the process that made it: the
+    /// launch sweep leaves it while it is kept, the next engine offers it once, a new send
+    /// keeps it, and putting it away removes it. One past a day, or never kept, goes.
+    #[test]
+    fn a_ready_send_kept_beside_its_files_outlives_the_process() {
+        use kaeri_core::books::ChapterId;
+        use kaeri_model::reading::ExportFile;
+        let dir = tempfile::tempdir().unwrap();
+        let wall = kept::wall_now();
+        let book = "Made-up Series 1.kepub.epub";
+        // As a process that has ended left them; no process has the id 0.
+        let folder = |name: &str| {
+            let folder = dir.path().join(name);
+            std::fs::create_dir_all(&folder).unwrap();
+            std::fs::write(folder.join(book), b"pk").unwrap();
+            folder
+        };
+        let keep = |folder: &Path, at: i64| {
+            let path = folder.join(book).display().to_string();
+            let file = ExportFile { path, name: book.into(), bytes: 2, part: None };
+            let work = WorkId::new("a:900601");
+            let chapters = [ChapterId::new("1")];
+            let mut send =
+                kept::KeptSend::new(&work, "kobo", &chapters, folder, &[file]).unwrap();
+            send.at = at;
+            send.write(folder);
+        };
+        let live = folder("0.dead-1");
+        keep(&live, wall - 60);
+        let old = folder("0.dead-2");
+        keep(&old, wall - READY_KEPT - 1);
+        let bare = folder("0.dead-3");
+        assert_eq!(sweep(dir.path()), 2);
+        assert!(live.exists() && !old.exists() && !bare.exists());
+
+        let exports = Exports::new(dir.path().to_owned());
+        let found = exports.kept();
+        assert_eq!(found.len(), 1);
+        let (name, send) = found[0].clone();
+        assert_eq!((name.as_str(), send.target.as_str()), ("0.dead-1", "kobo"));
+        assert_eq!(send.chapters, ["1"]);
+        assert_eq!(send.files_in(&live)[0].path, live.join(book).display().to_string());
+        exports.adopt(JobId::new(4), name, NOW);
+        assert!(exports.kept().is_empty(), "offered once");
+        exports.folder(JobId::new(5), NOW + 60);
+        assert!(live.join(book).exists(), "a new send keeps it");
+        assert!(!exports.cancel(JobId::new(4)));
+        assert!(!live.exists(), "put away");
     }
 }

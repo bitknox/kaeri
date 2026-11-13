@@ -65,6 +65,8 @@ const HINT_KEPT: i64 = 7 * 24 * 3600;
 const HINT_RETRY: i64 = 3600;
 /// How long the source has to say how a series reads, asked in the background.
 const HINT_WAIT: std::time::Duration = std::time::Duration::from_secs(20);
+/// The rest between two series asked for their names at launch, so no source is asked often.
+const NAME_PACE: std::time::Duration = std::time::Duration::from_secs(4);
 /// How long the reader's open waits for that answer, when none is kept and one is coming.
 const HINT_OPEN_WAIT: std::time::Duration = std::time::Duration::from_millis(1500);
 
@@ -265,7 +267,9 @@ pub struct BookSources {
     pub registry: BookRegistry,
     store: Store,
     tokens: TokenStore,
-    client: reqwest::Client,
+    /// The client book servers are asked through: it follows no redirects, so the server's
+    /// own requests follow them a hop at a time and keep its sign-in on its origin.
+    servers: reqwest::Client,
     keep: PathBuf,
     flags: Arc<Mutex<HashMap<String, Arc<AtomicBool>>>>,
     scanning: Arc<Mutex<HashMap<String, Arc<AtomicU32>>>>,
@@ -316,14 +320,14 @@ impl BookSources {
     pub fn new(
         store: Store,
         tokens: TokenStore,
-        client: reqwest::Client,
+        http: &kaeri_net::HttpClient,
         paths: &kaeri_core::config::Paths,
     ) -> Self {
         let this = Self {
             registry: BookRegistry::new(),
             store,
             tokens,
-            client,
+            servers: http.sources().clone(),
             keep: paths.cache_dir.join("books"),
             flags: Arc::default(),
             scanning: Arc::default(),
@@ -341,7 +345,7 @@ impl BookSources {
             downloads: crate::downloads::books::BookDownloads::new(
                 paths.data_dir.join("book-downloads"),
             ),
-            exports: crate::export::Exports::new(paths.data_dir.join("exports")),
+            exports: crate::export::Exports::new(crate::export::dir_of(paths)),
             #[cfg(feature = "opds-feed")]
             feed: crate::export::feed::Feed::default(),
             write_back: crate::write_back::WriteBack::default(),
@@ -472,7 +476,7 @@ impl BookSources {
         flag.store(server.signed_out, Ordering::Relaxed);
         let libraries = self.server_meta(&server.id).libraries;
         let built = kaeri_bookserver::source_with(
-            &self.client,
+            &self.servers,
             &Server {
                 id: &server.id,
                 name: &server.name,
@@ -706,9 +710,12 @@ impl BookSources {
                 if let Err(e) = self.store.replace_book_scan(&folder.id, &rows, now) {
                     tracing::warn!(error = %e, "the scan was not kept");
                 }
-                // Each series is findable by its work, so chapters and editions can be asked.
+                // Each series is findable by its work, so chapters and editions can be asked,
+                // and one of its own on this device is named by its folder.
                 for (series, _) in &rows {
                     if let Some(work) = &series.work {
+                        let medium = Medium::parse(&series.medium).unwrap_or(Medium::Manga);
+                        self.name_local(work, medium, &series.name, None, now);
                         let keep = matches!(
                             self.store.book_match_state(FOLDERS, &series.id),
                             Ok(Some((_, true)))
@@ -1023,7 +1030,7 @@ pub fn command(
             let address = link.as_ref().map_or(address, |l| l.root.clone());
             tokio::spawn(async move {
                 let checked =
-                    kaeri_bookserver::check(&this.client, &address).await.map(|mut c| {
+                    kaeri_bookserver::check(&this.servers, &address).await.map(|mut c| {
                         if link.is_some() {
                             c.kind = Some(Kind::Kavita);
                         }
@@ -1181,8 +1188,9 @@ fn recheck(
     });
 }
 
-/// Every [`RECHECK`] once launch is over, look again at the servers that showed no series.
-/// Runs in AniList's paced background queue, after Home's first screen.
+/// Once launch is over, name the works of their own on this device that have no name yet
+/// ([`BookSources::name_unnamed`]); then every [`RECHECK`], look again at the servers that
+/// showed no series. Runs in AniList's paced background queue, after Home's first screen.
 pub fn spawn_rechecks(
     this: BookSources,
     anilist: kaeri_meta::AniList,
@@ -1191,6 +1199,11 @@ pub fn spawn_rechecks(
 ) {
     tokio::spawn(async move {
         anilist.launch_over().await;
+        // Works of their own on this device read before their names were kept are named first.
+        let named = kaeri_meta::in_background(this.name_unnamed(clock())).await;
+        if named > 0 {
+            changed(&tx);
+        }
         let mut every = tokio::time::interval(RECHECK);
         every.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
         loop {
@@ -1224,12 +1237,12 @@ async fn sign_in(
         step,
         failure: server_failure(error, address),
     };
-    let found = match kaeri_bookserver::check(&this.client, address).await {
+    let found = match kaeri_bookserver::check(&this.servers, address).await {
         Ok(found) => found,
         Err(e) => return failed(ServerStep::Address, &e),
     };
     let done = match kaeri_bookserver::sign_in(
-        &this.client,
+        &this.servers,
         &found.address,
         found.kind,
         user,
@@ -1778,6 +1791,7 @@ impl BookSources {
                 work
             }
         };
+        self.name_local(&work, medium, &hit.title, hit.cover.as_deref(), now);
         Some(WorkTile {
             work: WorkId::new(work),
             title: hit.title,
@@ -2032,6 +2046,75 @@ impl BookSources {
         });
     }
 
+    /// Keep `title` as the name of `work` when it is a work of its own on this device, one no
+    /// catalogue lists, so every screen, download and send names it as its source or folder
+    /// does. A catalogue's work is left to the catalogue, and a demo work to the demo, whatever
+    /// source its series is matched to.
+    pub(crate) fn name_local(
+        &self,
+        work: &str,
+        medium: Medium,
+        title: &str,
+        cover: Option<&str>,
+        now: i64,
+    ) {
+        let title = title.trim();
+        let demo = kaeri_core::reading_demo::WORKS.iter().any(|w| w.work_id().as_str() == work);
+        if crate::read_catalog::tiles::anilist(work).is_some() || demo || title.is_empty() {
+            return;
+        }
+        if let Err(error) = self.store.name_local_work(work, medium.as_str(), title, cover, now)
+        {
+            tracing::warn!(%error, "a work's name was not kept");
+        }
+    }
+
+    /// Name the work `source`'s `series` is matched to from what the source said of it.
+    fn name_from(&self, source: &str, series: &str, detail: &SeriesDetail, now: i64) {
+        let Ok(Some(work)) = self.store.book_match(source, series) else { return };
+        let medium = self
+            .store
+            .book_work_kind(&work)
+            .ok()
+            .flatten()
+            .and_then(|kind| Medium::parse(&kind.medium))
+            .unwrap_or_else(|| self.hit_medium(source, &SeriesHit::new(series, ""), None, &[]));
+        self.name_local(&work, medium, &detail.title, detail.cover.as_deref(), now);
+    }
+
+    /// Name the works of their own on this device that were read or downloaded before their
+    /// names were kept, asking each one's source once, a few seconds apart, and none whose
+    /// source can't be asked. Answers how many were named.
+    pub(crate) async fn name_unnamed(&self, now: i64) -> usize {
+        let (mut named, mut asked_any) = (0, false);
+        let mut done: HashSet<String> = HashSet::new();
+        let unnamed = self.store.unnamed_local_works().unwrap_or_default();
+        for (work, source, series) in unnamed {
+            if done.contains(&work) || source == FOLDERS || !self.is_available(&source) {
+                continue;
+            }
+            if asked_any {
+                tokio::time::sleep(NAME_PACE).await;
+            }
+            asked_any = true;
+            let hints = BookHints::default();
+            let asked = self.registry.series(&source, &series, &hints, now);
+            match tokio::time::timeout(HINT_WAIT, asked).await {
+                Ok(Ok(detail)) => {
+                    self.name_from(&source, &series, &detail, now);
+                    done.insert(work);
+                    named += 1;
+                }
+                outcome => {
+                    if let Ok(Err(error)) = outcome {
+                        tracing::debug!(source, %error, "a work's name was not asked");
+                    }
+                }
+            }
+        }
+        named
+    }
+
     /// Ask the source how a series reads and keep the answer.
     async fn learn_hint(
         &self,
@@ -2043,7 +2126,10 @@ impl BookSources {
         let hints = BookHints::default();
         let asked = self.registry.series(source, series, &hints, now);
         let (hint, at) = match tokio::time::timeout(HINT_WAIT, asked).await {
-            Ok(Ok(detail)) => (detail.reading_hint.map(ReadingHint::as_str), now),
+            Ok(Ok(detail)) => {
+                self.name_from(source, series, &detail, now);
+                (detail.reading_hint.map(ReadingHint::as_str), now)
+            }
             // Asked again within the hour, keeping what it said before.
             outcome => {
                 if let Ok(Err(error)) = outcome {
@@ -2537,7 +2623,7 @@ impl BookSources {
         };
         self.registry
             .fetch_page(&at, pages, index, now, |page: PageRef| {
-                let client = self.client.clone();
+                let client = self.servers.clone();
                 async move { plain_fetch(&client, &page).await }
             })
             .await
@@ -2753,18 +2839,41 @@ fn one_shot(row: &ChapterRow) -> bool {
 }
 
 /// A page fetched with the engine's own client, for a source that does not fetch its own.
+///
+/// `client` follows no redirects: they are followed here, and a header of the page's that may
+/// carry a sign-in goes only to the page's own origin (scheme, host and port). The rest, such
+/// as a referrer, go along.
 async fn plain_fetch(
     client: &reqwest::Client,
     page: &PageRef,
 ) -> Result<Vec<u8>, kaeri_core::traits::PageError> {
     use kaeri_core::traits::PageError;
-    let mut request = client.get(&page.url).timeout(std::time::Duration::from_secs(30));
-    for (name, value) in &page.headers {
-        request = request.header(name, value);
-    }
-    let response = request.send().await.map_err(|_| {
-        PageError::Failed(ProviderError::Transport("the request failed".into()))
-    })?;
+    let failed = || PageError::Failed(ProviderError::Transport("the request failed".into()));
+    let origin = reqwest::Url::parse(&page.url).map_err(|_| failed())?.origin();
+    let mut at = page.url.clone();
+    let mut hops = 0;
+    let response = loop {
+        let mut request = client.get(&at).timeout(std::time::Duration::from_secs(30));
+        let home = reqwest::Url::parse(&at).is_ok_and(|u| u.origin() == origin);
+        for (name, value) in &page.headers {
+            if home || !kaeri_bookserver::signs_in(name) {
+                request = request.header(name, value);
+            }
+        }
+        let response = request.send().await.map_err(|_| failed())?;
+        let next = response.status().is_redirection().then(|| {
+            let to = response.headers().get(reqwest::header::LOCATION)?.to_str().ok()?;
+            let to = reqwest::Url::parse(&at).ok()?.join(to).ok()?;
+            matches!(to.scheme(), "http" | "https").then(|| to.to_string())
+        });
+        match next.flatten() {
+            Some(to) if hops < 10 => {
+                hops += 1;
+                at = to;
+            }
+            _ => break response,
+        }
+    };
     let status = response.status().as_u16();
     if !(200..300).contains(&status) {
         return Err(PageError::Status(status));
