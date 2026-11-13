@@ -42,6 +42,21 @@ class ExportModelTest {
     }
 
     @Test
+    fun a_send_held_across_a_restart_knows_its_chapters_when_ready() {
+        // The engine started it again at launch: this model never asked for job 41.
+        val job = 41uL
+        model.apply(ReadingEvent.ExportWaiting(job, WORK, "kobo", Msg.Verbatim("Waiting for Wi-Fi"), listOf("c3", "c4")))
+        assertTrue(model.jobs.value[job] is ExportJob.Waiting)
+        model.apply(ReadingEvent.ExportReady(job, listOf(ExportFile("/x/b.kepub.epub", "b.kepub.epub", 10u, null))))
+        val ready = model.jobs.value[job] as ExportJob.Ready
+        assertEquals(listOf("c3", "c4"), ready.chapters)
+
+        // Sharing it tells the engine which chapters went, for Set my place.
+        model.shared(job)
+        assertTrue(sent.any { (it as? Command.Reading)?.v1 == ReadingCommand.Shared(WORK, listOf("c3", "c4"), "kobo") })
+    }
+
+    @Test
     fun cancel_send_stops_a_held_send() {
         val job = requireNotNull(model.prepare(WORK, listOf("c1"), "kindle", ExportFormat.FIXED_EPUB))
         model.apply(ReadingEvent.ExportWaiting(job, WORK, "kindle", Msg.Verbatim("Waiting for Wi-Fi")))
