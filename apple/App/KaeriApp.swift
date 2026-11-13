@@ -72,12 +72,16 @@ struct KaeriApp: App {
                     .environment(delegate.store)
                     .preferredColorScheme(.dark)
                     .frame(minWidth: 480, minHeight: 270)
+            } else {
+                AuxiliaryWindowEmpty()
             }
         }
         .defaultSize(width: 960, height: 540)
         .windowResizability(.contentMinSize)
         .restorationBehavior(.disabled)
         .defaultLaunchBehavior(.suppressed)
+        // Opened only by Play trailer, never from the menu bar.
+        .commandsRemoved()
         // An episode's discussion: one window beside the player, which another episode swaps.
         Window(L.discussionOpen, id: DiscussionKey.windowId) {
             DiscussionWindowHost()
@@ -87,6 +91,9 @@ struct KaeriApp: App {
         .defaultSize(width: 480, height: 720)
         .restorationBehavior(.disabled)
         .defaultLaunchBehavior(.suppressed)
+        // Opened only from an episode's discussion, never from the Window menu, which would open it
+        // with no discussion in it.
+        .commandsRemoved()
         #else
         WindowGroup {
             content
