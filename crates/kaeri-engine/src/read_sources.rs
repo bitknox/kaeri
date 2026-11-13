@@ -58,6 +58,8 @@ pub use added::RECHECK;
 
 /// The id the folders answer to in the registry.
 pub const FOLDERS: &str = "folders";
+/// How often at most a folder scan says how far it has got: four times a second.
+pub const PROGRESS_EVERY: std::time::Duration = std::time::Duration::from_millis(250);
 const META_ORDER: &str = "reading.book_order";
 /// How long a source's word on how a series reads is kept before it is asked again.
 const HINT_KEPT: i64 = 7 * 24 * 3600;
@@ -297,6 +299,8 @@ pub struct BookSources {
     keep: PathBuf,
     flags: Arc<Mutex<HashMap<String, Arc<AtomicBool>>>>,
     scanning: Arc<Mutex<HashMap<String, Arc<AtomicU32>>>>,
+    /// The view as last built: a scan's progress is said on it, with only its counts changed.
+    shown: Arc<Mutex<Option<BookSourcesView>>>,
     removed: Arc<RwLock<HashSet<String>>>,
     undo: Arc<Mutex<HashMap<String, tokio::task::AbortHandle>>>,
     /// Servers signed in to and not added yet, with their sign-ins: in memory only.
@@ -355,6 +359,7 @@ impl BookSources {
             keep: paths.cache_dir.join("books"),
             flags: Arc::default(),
             scanning: Arc::default(),
+            shown: Arc::default(),
             removed: Arc::default(),
             undo: Arc::default(),
             pending: Arc::default(),
@@ -594,6 +599,7 @@ impl BookSources {
         let removed = self.removed.read().unwrap_or_else(|e| e.into_inner()).clone();
         let scanning = self.scanning.lock().unwrap_or_else(|e| e.into_inner()).clone();
         let series = self.store.local_book_series().unwrap_or_default();
+        let files = self.store.local_book_file_counts().unwrap_or_default();
         let folders = self
             .store
             .book_folders()
@@ -631,8 +637,7 @@ impl BookSources {
                 medium: Medium::parse(&s.medium).unwrap_or(Medium::Manga),
                 work: s.work.clone().map(kaeri_core::books::WorkId::new),
                 matched_title: None,
-                files: u32::try_from(self.store.local_book_files(&s.id).map_or(0, |f| f.len()))
-                    .unwrap_or(u32::MAX),
+                files: files.get(&s.id).copied().unwrap_or(0),
                 kept: s.state == "kept",
             })
             .collect();
@@ -671,13 +676,28 @@ impl BookSources {
         for row in &mut plugin_rows {
             row.off = self.registry.is_off(&row.id);
         }
-        BookSourcesView {
+        let view = BookSourcesView {
             folders,
             groups,
             servers,
             plugins: plugin_rows,
             order: self.registry.ids(),
+        };
+        *self.shown.lock().unwrap_or_else(|e| e.into_inner()) = Some(view.clone());
+        view
+    }
+
+    /// The view as last built, with each folder being scanned showing what it has found so far:
+    /// what a scan's progress says, without building the view again. `None` before any view.
+    pub fn scan_progress(&self) -> Option<BookSourcesView> {
+        let mut view = self.shown.lock().unwrap_or_else(|e| e.into_inner()).clone()?;
+        let scanning = self.scanning.lock().unwrap_or_else(|e| e.into_inner());
+        for row in &mut view.folders {
+            if let Some(found) = scanning.get(&row.id) {
+                row.scan = BookFolderScan::Scanning { found: found.load(Ordering::Relaxed) };
+            }
         }
+        Some(view)
     }
 
     // -----------------------------------------------------------------------------------------
@@ -719,7 +739,8 @@ impl BookSources {
         Some((id, before.is_some() && !leaving))
     }
 
-    /// Scan one folder on a blocking thread, telling `progress` what it has found.
+    /// Scan one folder on a blocking thread. While it runs, `progress` is told when more has
+    /// been found, at most every [`PROGRESS_EVERY`] and never on the scan's own thread.
     pub async fn scan_folder(
         &self,
         folder: Folder,
@@ -736,14 +757,33 @@ impl BookSources {
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .insert(folder.id.clone(), found.clone());
+        let ticker = {
+            let found = found.clone();
+            tokio::spawn(async move {
+                let mut every = tokio::time::interval(PROGRESS_EVERY);
+                every.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
+                every.tick().await;
+                let mut said = 0;
+                loop {
+                    every.tick().await;
+                    let now = found.load(Ordering::Relaxed);
+                    if now != said {
+                        said = now;
+                        progress();
+                    }
+                }
+            })
+        };
         let counter = found.clone();
         let scanned = tokio::task::spawn_blocking(move || {
             library::scan(&path, &Nothing, &Limits::default(), &mut |n| {
                 counter.store(n, Ordering::Relaxed);
-                progress();
             })
         })
         .await;
+        // Stopped for good before the scan is said done, so no late count follows it.
+        ticker.abort();
+        let _ = ticker.await;
         self.scanning.lock().unwrap_or_else(|e| e.into_inner()).remove(&folder.id);
         match scanned {
             Ok(Ok(scan)) => {
@@ -1170,7 +1210,15 @@ fn rescan(
             .collect();
         let scanned = !folders.is_empty();
         for folder in folders {
-            let tick = publish.clone();
+            let tick = {
+                let (this, tx, publish) = (this.clone(), tx.clone(), publish.clone());
+                move || match this.scan_progress() {
+                    Some(view) => {
+                        let _ = tx.send(Event::BookSources(BookSourceEvent::View(view)));
+                    }
+                    None => publish(),
+                }
+            };
             // What is said when the scan can't start or stops: the folder, and nothing found.
             let mut unread =
                 added::folder_report(&folder, &kaeri_books::library::Scan::default());

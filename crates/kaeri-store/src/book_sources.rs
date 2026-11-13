@@ -229,6 +229,16 @@ impl Store {
         })
     }
 
+    /// How many files each scanned series holds, by series id, in one look.
+    pub fn local_book_file_counts(&self) -> Result<std::collections::HashMap<String, u32>> {
+        self.with_conn(|c| {
+            let mut stmt =
+                c.prepare("SELECT series, COUNT(*) FROM book_local_file GROUP BY series")?;
+            let rows = stmt.query_map([], |r| Ok((r.get::<_, String>(0)?, r.get::<_, u32>(1)?)))?;
+            Ok(rows.collect::<std::result::Result<_, _>>()?)
+        })
+    }
+
     pub fn local_book_files(&self, series: &str) -> Result<Vec<LocalFile>> {
         self.with_conn(|c| {
             let mut stmt = c.prepare(
@@ -433,6 +443,7 @@ mod tests {
         assert_eq!(all.len(), 1);
         assert_eq!((all[0].work.as_deref(), all[0].state.as_str()), (Some("a:1"), "matched"));
         assert_eq!(store.local_book_files("a").unwrap().len(), 1);
+        assert_eq!(store.local_book_file_counts().unwrap(), [("a".to_owned(), 1)].into());
         assert_eq!(store.book_folders().unwrap()[0].last_scan, Some(20));
         store.remove_book_folder("f").unwrap();
         assert!(store.local_book_series().unwrap().is_empty());
