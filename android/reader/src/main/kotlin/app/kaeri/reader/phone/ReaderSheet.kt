@@ -186,13 +186,9 @@ private fun PagedSheet(
                 scope.launch { shrink.animateTo(0f) }
                 throw e
             }
-            if (sheet.currentValue == SheetValue.Expanded && sheet.hasPartiallyExpandedState) {
-                scope.launch { sheet.partialExpand() }
-                scope.launch { shrink.animateTo(0f) }
-            } else {
-                // The shrink stays on as the sheet slides away.
-                scope.launch { sheet.hide() }.invokeOnCompletion { if (!sheet.isVisible) dismiss() }
-            }
+            // Back closes the sheet from its first page, expanded or not, so the Back after a
+            // page's Back closes it. The shrink stays on as the sheet slides away.
+            scope.launch { sheet.hide() }.invokeOnCompletion { if (!sheet.isVisible) dismiss() }
         }
         Column(
             Modifier.fillMaxWidth()

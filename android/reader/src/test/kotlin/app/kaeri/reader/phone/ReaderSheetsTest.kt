@@ -24,6 +24,8 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.width
 import app.kaeri.design.ObiSilk
@@ -106,6 +108,25 @@ class ReaderSheetsTest {
         more.performClick()
         compose.waitForIdle()
         more.assertDoesNotExist()
+
+        back()
+        more.assertExists()
+
+        back()
+        compose.onNode(hasText("More reader settings")).assertDoesNotExist()
+    }
+
+    @Test
+    fun the_back_after_more_settings_closes_a_sheet_dragged_open() {
+        reader()
+        compose.onNode(hasContentDescription("Reader settings") and hasClickAction()).performClick()
+        compose.waitForIdle()
+        // Dragged up to full height, as on a phone where the row sits below the fold.
+        compose.onNode(hasText("Reading mode")).performTouchInput { swipeUp() }
+        compose.waitForIdle()
+        val more = compose.onNode(hasText("More reader settings") and hasClickAction())
+        more.performClick()
+        compose.waitForIdle()
 
         back()
         more.assertExists()
