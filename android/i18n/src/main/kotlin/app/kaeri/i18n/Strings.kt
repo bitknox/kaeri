@@ -1101,6 +1101,10 @@ object Strings {
     fun exportWaitsForWifi(context: Context, n: Int): String =
         context.resources.getQuantityString(R.plurals.export_waits_for_wifi, n, n)
 
+    /** Send to e-reader, under the ready files: pages of one chapter that couldn't be read, as the reader shows them broken, so the files go without them. The chapter is its name as the series shows it, such as Chapter 12 or Volume 1. n is how many pages were left out. */
+    fun exportPagesLeftOut(context: Context, n: Int, chapter: String): String =
+        context.resources.getQuantityString(R.plurals.export_pages_left_out, n, n, chapter)
+
     /** Under a This week cell: the chapter that came out that day, with its own title. */
     fun readingChapterTitled(context: Context, chapter: String, title: String): String =
         context.getString(R.string.reading_chapter_titled, chapter, title)
@@ -1336,6 +1340,14 @@ object Strings {
     /** The device is on mobile data and the chapters wait until it's on Wi-Fi. */
     fun readingEstimateWaitsWifi(context: Context): String =
         context.getString(R.string.reading_estimate_waits_wifi)
+
+    /** Notice after Download on chapters that are files in the person's own folders: they open from where they are, so nothing is downloaded. */
+    fun readingDownloadOnDevice(context: Context): String =
+        context.getString(R.string.reading_download_on_device)
+
+    /** A series' name where neither the catalogue nor its source gave one: on Downloads, in a sent file's name and in the e-reader's library. */
+    fun readingUntitledSeries(context: Context): String =
+        context.getString(R.string.reading_untitled_series)
 
     /** The notification's title. */
     fun readingDownloadsDoneTitle(context: Context): String =

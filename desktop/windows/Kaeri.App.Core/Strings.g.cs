@@ -834,6 +834,9 @@ public static partial class T
     /// <summary>Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch.</summary>
     public static string ExportWaitsForWifi(long n) => Fill(GetPlural("ExportWaitsForWifi", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>Send to e-reader, under the ready files: pages of one chapter that couldn't be read, as the reader shows them broken, so the files go without them. The chapter is its name as the series shows it, such as Chapter 12 or Volume 1. n is how many pages were left out.</summary>
+    public static string ExportPagesLeftOut(long n, string chapter) => Fill(GetPlural("ExportPagesLeftOut", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("chapter", chapter));
+
     /// <summary>Under a This week cell: the chapter that came out that day, with its own title.</summary>
     public static string ReadingChapterTitled(string chapter, string title) => Fill(Get("ReadingChapterTitled"), ("chapter", chapter), ("title", title));
 
@@ -1010,6 +1013,12 @@ public static partial class T
 
     /// <summary>The device is on mobile data and the chapters wait until it's on Wi-Fi.</summary>
     public static string ReadingEstimateWaitsWifi => Get("ReadingEstimateWaitsWifi");
+
+    /// <summary>Notice after Download on chapters that are files in the person's own folders: they open from where they are, so nothing is downloaded.</summary>
+    public static string ReadingDownloadOnDevice => Get("ReadingDownloadOnDevice");
+
+    /// <summary>A series' name where neither the catalogue nor its source gave one: on Downloads, in a sent file's name and in the e-reader's library.</summary>
+    public static string ReadingUntitledSeries => Get("ReadingUntitledSeries");
 
     /// <summary>The notification's title.</summary>
     public static string ReadingDownloadsDoneTitle => Get("ReadingDownloadsDoneTitle");
@@ -12301,6 +12310,8 @@ public static partial class T
         ["ExportChapter"] = "Chapter {chapter}",
         ["ExportWaitsForWifi_one"] = "One chapter isn't downloaded yet, so this send waits for Wi-Fi and goes on by itself.",
         ["ExportWaitsForWifi_other"] = "{n} chapters aren't downloaded yet, so this send waits for Wi-Fi and goes on by itself.",
+        ["ExportPagesLeftOut_one"] = "One page of {chapter} couldn't be read and isn't in the files.",
+        ["ExportPagesLeftOut_other"] = "{n} pages of {chapter} couldn't be read and aren't in the files.",
         ["ReadingChapterTitled"] = "Chapter {chapter} · {title}",
         ["ReadingRowRead"] = "Read",
         ["ReadingRowNew"] = "New",
@@ -12370,6 +12381,8 @@ public static partial class T
         ["ReadingEstimateWifi"] = "over Wi-Fi",
         ["ReadingEstimateMobile"] = "over mobile data",
         ["ReadingEstimateWaitsWifi"] = "waits for Wi-Fi",
+        ["ReadingDownloadOnDevice"] = "These are files on this device already. They read offline without a download.",
+        ["ReadingUntitledSeries"] = "Untitled series",
         ["ReadingDownloadsDoneTitle"] = "Downloads finished",
         ["ReadingDownloadsDoneChapters_one"] = "A chapter of {title} is ready to read offline.",
         ["ReadingDownloadsDoneChapters_other"] = "{count} chapters of {title} are ready to read offline.",

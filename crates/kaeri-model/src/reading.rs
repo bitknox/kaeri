@@ -1190,6 +1190,17 @@ pub struct ExportFile {
     pub part: Option<u32>,
 }
 
+/// Pages of one chapter a send left out: they could not be read, as the reader shows them broken,
+/// and the rest of the chapter went. `chapter` is its name as the person knows it ("Chapter 12",
+/// "Volume 1"), `pages` how many were left out, and `line` says so in words.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct ExportSkipped {
+    pub chapter: String,
+    pub pages: u32,
+    pub line: Msg,
+}
+
 /// The local OPDS feed, on desktop builds.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Record))]
@@ -2011,15 +2022,20 @@ pub enum ReadingEvent {
         chapters_done: u32,
         chapters: u32,
     },
-    /// A send failed. `chapter` is the chapter it could not prepare, when it was one.
+    /// A send failed. `chapter` is the chapter it could not fetch, when it was one; a chapter it
+    /// could not read is named in `failure`.
     ExportFailed {
         job: JobId,
         chapter: Option<String>,
         failure: ReadingFailure,
     },
+    /// A send's files are ready. `skipped` names each chapter that went without some of its
+    /// pages, in reading order; the screen shows their lines under the ready files.
     ExportReady {
         job: JobId,
         files: Vec<ExportFile>,
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        skipped: Vec<ExportSkipped>,
     },
     /// A send waits for Wi-Fi: it has chapters to fetch and downloads are kept to Wi-Fi. It
     /// goes on by itself once the network allows, and the next [`Self::ExportProgress`] says

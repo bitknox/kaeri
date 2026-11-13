@@ -1175,6 +1175,14 @@
     <value>{n} chapters aren't downloaded yet, so this send waits for Wi-Fi and goes on by itself.</value>
     <comment>Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch.</comment>
   </data>
+  <data name="ExportPagesLeftOut_one" xml:space="preserve">
+    <value>One page of {chapter} couldn't be read and isn't in the files.</value>
+    <comment>Send to e-reader, under the ready files: pages of one chapter that couldn't be read, as the reader shows them broken, so the files go without them. The chapter is its name as the series shows it, such as Chapter 12 or Volume 1. n is how many pages were left out.</comment>
+  </data>
+  <data name="ExportPagesLeftOut_other" xml:space="preserve">
+    <value>{n} pages of {chapter} couldn't be read and aren't in the files.</value>
+    <comment>Send to e-reader, under the ready files: pages of one chapter that couldn't be read, as the reader shows them broken, so the files go without them. The chapter is its name as the series shows it, such as Chapter 12 or Volume 1. n is how many pages were left out.</comment>
+  </data>
   <data name="ReadingChapterTitled" xml:space="preserve">
     <value>Chapter {chapter} · {title}</value>
     <comment>Under a This week cell: the chapter that came out that day, with its own title.</comment>
@@ -1450,6 +1458,14 @@
   <data name="ReadingEstimateWaitsWifi" xml:space="preserve">
     <value>waits for Wi-Fi</value>
     <comment>The device is on mobile data and the chapters wait until it's on Wi-Fi.</comment>
+  </data>
+  <data name="ReadingDownloadOnDevice" xml:space="preserve">
+    <value>These are files on this device already. They read offline without a download.</value>
+    <comment>Notice after Download on chapters that are files in the person's own folders: they open from where they are, so nothing is downloaded.</comment>
+  </data>
+  <data name="ReadingUntitledSeries" xml:space="preserve">
+    <value>Untitled series</value>
+    <comment>A series' name where neither the catalogue nor its source gave one: on Downloads, in a sent file's name and in the e-reader's library.</comment>
   </data>
   <data name="ReadingDownloadsDoneTitle" xml:space="preserve">
     <value>Downloads finished</value>

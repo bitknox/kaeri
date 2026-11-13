@@ -4545,7 +4545,7 @@ mod tests {
         /// How many pages the files of a finished send hold, by its job.
         fn pages_sent(seen: &[Event]) -> Option<(JobId, usize)> {
             seen.iter().find_map(|e| match e {
-                Event::Reading(ReadingEvent::ExportReady { job, files }) => {
+                Event::Reading(ReadingEvent::ExportReady { job, files, .. }) => {
                     let book = kaeri_books::open(
                         std::path::Path::new(&files[0].path),
                         &kaeri_books::Limits::default(),
@@ -4844,7 +4844,7 @@ mod tests {
             let ready = |seen: &[Event]| {
                 seen.iter()
                     .filter_map(|e| match e {
-                        Event::Reading(ReadingEvent::ExportReady { job, files }) => {
+                        Event::Reading(ReadingEvent::ExportReady { job, files, .. }) => {
                             Some((*job, files.clone()))
                         }
                         _ => None,
@@ -4902,7 +4902,7 @@ mod tests {
             let (job, path) = seen
                 .iter()
                 .find_map(|e| match e {
-                    Event::Reading(ReadingEvent::ExportReady { job, files }) => {
+                    Event::Reading(ReadingEvent::ExportReady { job, files, .. }) => {
                         Some((*job, files[0].path.clone()))
                     }
                     _ => None,
@@ -4970,6 +4970,7 @@ mod tests {
                 pages_sent(&[Event::Reading(ReadingEvent::ExportReady {
                     job,
                     files: again.clone(),
+                    skipped: Vec::new(),
                 })])
                 .map(|(_, pages)| pages),
                 Some(2)

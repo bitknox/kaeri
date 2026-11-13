@@ -867,6 +867,13 @@ export-waits-for-wifi =
        *[other] { $n } chapters aren't downloaded yet, so this send waits for Wi-Fi and goes on by itself.
     }
 
+# Send to e-reader, under the ready files: pages of one chapter that couldn't be read, as the reader shows them broken, so the files go without them. The chapter is its name as the series shows it, such as Chapter 12 or Volume 1. n is how many pages were left out.
+export-pages-left-out =
+    { $n ->
+        [one] One page of { $chapter } couldn't be read and isn't in the files.
+       *[other] { $n } pages of { $chapter } couldn't be read and aren't in the files.
+    }
+
 # Under a This week cell: the chapter that came out that day, with its own title.
 reading-chapter-titled = Chapter { $chapter } · { $title }
 
@@ -1083,6 +1090,12 @@ reading-estimate-mobile = over mobile data
 
 # The device is on mobile data and the chapters wait until it's on Wi-Fi.
 reading-estimate-waits-wifi = waits for Wi-Fi
+
+# Notice after Download on chapters that are files in the person's own folders: they open from where they are, so nothing is downloaded.
+reading-download-on-device = These are files on this device already. They read offline without a download.
+
+# A series' name where neither the catalogue nor its source gave one: on Downloads, in a sent file's name and in the e-reader's library.
+reading-untitled-series = Untitled series
 
 # The notification's title.
 reading-downloads-done-title = Downloads finished

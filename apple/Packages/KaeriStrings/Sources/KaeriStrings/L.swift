@@ -1106,6 +1106,11 @@ public enum L {
         Self.format("export-waits-for-wifi", fallback: "%1$lld chapters aren't downloaded yet, so this send waits for Wi-Fi and goes on by itself.", n)
     }
 
+    /// Send to e-reader, under the ready files: pages of one chapter that couldn't be read, as the reader shows them broken, so the files go without them. The chapter is its name as the series shows it, such as Chapter 12 or Volume 1. n is how many pages were left out.
+    public static func exportPagesLeftOut(n: Int, chapter: String) -> String {
+        Self.format("export-pages-left-out", fallback: "%1$lld pages of %2$@ couldn't be read and aren't in the files.", n, chapter)
+    }
+
     /// Under a This week cell: the chapter that came out that day, with its own title.
     public static func readingChapterTitled(chapter: String, title: String) -> String {
         Self.format("reading-chapter-titled", fallback: "Chapter %1$@ · %2$@", chapter, title)
@@ -1354,6 +1359,12 @@ public enum L {
 
     /// The device is on mobile data and the chapters wait until it's on Wi-Fi.
     public static var readingEstimateWaitsWifi: String { string("reading-estimate-waits-wifi", fallback: "waits for Wi-Fi") }
+
+    /// Notice after Download on chapters that are files in the person's own folders: they open from where they are, so nothing is downloaded.
+    public static var readingDownloadOnDevice: String { string("reading-download-on-device", fallback: "These are files on this device already. They read offline without a download.") }
+
+    /// A series' name where neither the catalogue nor its source gave one: on Downloads, in a sent file's name and in the e-reader's library.
+    public static var readingUntitledSeries: String { string("reading-untitled-series", fallback: "Untitled series") }
 
     /// The notification's title.
     public static var readingDownloadsDoneTitle: String { string("reading-downloads-done-title", fallback: "Downloads finished") }

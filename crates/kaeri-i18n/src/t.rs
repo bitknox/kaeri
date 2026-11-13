@@ -1370,6 +1370,11 @@ pub fn export_waits_for_wifi(n: i64) -> String {
     text("export-waits-for-wifi", &[("n", Arg::Int(n))])
 }
 
+/// Send to e-reader, under the ready files: pages of one chapter that couldn't be read, as the reader shows them broken, so the files go without them. The chapter is its name as the series shows it, such as Chapter 12 or Volume 1. n is how many pages were left out.
+pub fn export_pages_left_out(n: i64, chapter: &str) -> String {
+    text("export-pages-left-out", &[("n", Arg::Int(n)), ("chapter", Arg::Text(chapter))])
+}
+
 /// Under a This week cell: the chapter that came out that day, with its own title.
 pub fn reading_chapter_titled(chapter: &str, title: &str) -> String {
     text("reading-chapter-titled", &[("chapter", Arg::Text(chapter)), ("title", Arg::Text(title))])
@@ -1663,6 +1668,16 @@ pub fn reading_estimate_mobile() -> String {
 /// The device is on mobile data and the chapters wait until it's on Wi-Fi.
 pub fn reading_estimate_waits_wifi() -> String {
     text("reading-estimate-waits-wifi", &[])
+}
+
+/// Notice after Download on chapters that are files in the person's own folders: they open from where they are, so nothing is downloaded.
+pub fn reading_download_on_device() -> String {
+    text("reading-download-on-device", &[])
+}
+
+/// A series' name where neither the catalogue nor its source gave one: on Downloads, in a sent file's name and in the e-reader's library.
+pub fn reading_untitled_series() -> String {
+    text("reading-untitled-series", &[])
 }
 
 /// The notification's title.

@@ -575,7 +575,7 @@ fn prepare_files(
             .into_iter()
             .chain(also.iter().map(|(job, _)| *job))
             .collect();
-        if let Ok(files) = &result {
+        if let Ok(prepare::Written { files, .. }) = &result {
             let now = clock.now();
             if !gone {
                 send.exports.ready(send.id, now);
@@ -589,7 +589,11 @@ fn prepare_files(
         let chapter = send.told.failing_chapter();
         for job in jobs {
             let said = match &result {
-                Ok(files) => ReadingEvent::ExportReady { job, files: files.clone() },
+                Ok(written) => ReadingEvent::ExportReady {
+                    job,
+                    files: written.files.clone(),
+                    skipped: written.skipped.clone(),
+                },
                 Err(prepare::Stop::Cancelled) => continue,
                 Err(prepare::Stop::Failed(failure)) => ReadingEvent::ExportFailed {
                     job,
@@ -714,7 +718,7 @@ struct OneSend {
 }
 
 impl OneSend {
-    async fn run(&self) -> Result<Vec<kaeri_model::reading::ExportFile>, prepare::Stop> {
+    async fn run(&self) -> Result<prepare::Written, prepare::Stop> {
         let temp = self.exports.scratch(self.id);
         let gathered = self.gather(&temp).await;
         let result = match gathered {
@@ -733,7 +737,7 @@ impl OneSend {
         &self,
         chapters: Vec<prepare::Chapter>,
         fetched: u32,
-    ) -> Result<Vec<kaeri_model::reading::ExportFile>, prepare::Stop> {
+    ) -> Result<prepare::Written, prepare::Stop> {
         let first = chapters.first().map(|c| c.label.clone()).unwrap_or_default();
         let last = chapters.last().map(|c| c.label.clone()).unwrap_or_default();
         let request = prepare::Request {
