@@ -72,9 +72,12 @@ final class TapWindow {
     func close() { window.close() }
 
     private func turn(_ seconds: Double) async throws {
-        RunLoop.main.run(until: Date().addingTimeInterval(seconds))
+        Self.spin(seconds)
         try await Task.sleep(for: .milliseconds(1))
     }
+
+    /// The run loop for a while, out of the async context it cannot be run from.
+    private static func spin(_ seconds: Double) { RunLoop.main.run(until: Date().addingTimeInterval(seconds)) }
 }
 
 @MainActor
