@@ -2808,6 +2808,7 @@ name = "kaeri-desktop"
 version = "0.0.0"
 dependencies = [
  "async-channel",
+ "async-trait",
  "gdk4-wayland",
  "gdk4-wayland-sys",
  "gdk4-x11",
