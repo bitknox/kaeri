@@ -33,6 +33,22 @@ pub use crate::{
     http::{Auth, Http, basic},
 };
 
+/// The most pages one book from a server may have: as many as an archive may hold entries
+/// (`kaeri_books::Limits::max_entries`). A server states a book's page count and every page
+/// becomes a [`PageRef`], so a count past this is a broken or hostile answer, not a book.
+pub const MOST_PAGES: u32 = 20_000;
+
+/// A page count a server stated, kept only when a book could have it: at least one page and at
+/// most [`MOST_PAGES`].
+pub(crate) fn pages_stated(count: impl Into<u64>) -> Option<u32> {
+    u32::try_from(count.into()).ok().filter(|n| (1..=MOST_PAGES).contains(n))
+}
+
+/// A server's book of more pages than any book has.
+pub(crate) fn too_many_pages(count: impl std::fmt::Display) -> ServerError {
+    ServerError::Parse(format!("a book of {count} pages, more than {MOST_PAGES}"))
+}
+
 /// The kinds of book server.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Kind {
@@ -369,5 +385,16 @@ mod tests {
         };
         assert!(matches!(answered(step).await, Err(ServerError::Parse(_))));
         assert_eq!(answered(async { Ok::<_, ServerError>(7) }).await, Ok(7));
+    }
+
+    #[test]
+    fn a_stated_page_count_is_kept_only_when_a_book_could_have_it() {
+        assert_eq!(MOST_PAGES as usize, kaeri_books::Limits::default().max_entries);
+        assert_eq!(pages_stated(0u32), None);
+        assert_eq!(pages_stated(1u32), Some(1));
+        assert_eq!(pages_stated(MOST_PAGES), Some(MOST_PAGES));
+        assert_eq!(pages_stated(MOST_PAGES + 1), None);
+        assert_eq!(pages_stated(u32::MAX), None);
+        assert_eq!(pages_stated(u64::MAX), None);
     }
 }
