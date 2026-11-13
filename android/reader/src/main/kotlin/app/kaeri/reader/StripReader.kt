@@ -236,6 +236,33 @@ fun StripReader(
         if (into > 0) list.scrollToItem(index, into)
         onJumped(jump.id)
     }
+    // The image at the top changes only by a scroll or a jump. The list keeps its top row and the
+    // pixels into it, so a new width (a fold, a smaller window) would leave the strip higher or
+    // lower in that image, or run on past it once it is shorter than those pixels; a layout that
+    // makes it shorter does the same. The image and the spot in it come back instead, and are
+    // kept again from there.
+    LaunchedEffect(list, first, state.chapter) {
+        var kept: StripKept? = null
+        snapshotFlow { StripSeen(list.stripPos(first, placed.first.size), list.layoutInfo.viewportSize.width, list.isScrollInProgress || now.jump != null) }
+            .collect { seen ->
+                val images = placed.first
+                val at = seen.at
+                val image = at?.let { images.getOrNull(it.image.toInt())?.parts?.firstOrNull()?.page }
+                val held = kept
+                val row = held?.let { images.indexOfFirst { leaf -> leaf.parts.any { it.page == held.page } } } ?: -1
+                when {
+                    at == null || image == null || seen.moving -> kept = null
+                    held == null || row < 0 || held.page == image && held.width == seen.width -> kept = StripKept(image, at.offset, seen.width)
+                    else -> {
+                        kept = null
+                        list.scrollToItem(first + row)
+                        val size = list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == first + row }?.size ?: 0
+                        val into = (held.offset * size).toInt()
+                        if (into > 0) list.scrollToItem(first + row, into)
+                    }
+                }
+            }
+    }
     // The place, each time a scroll comes to rest once the jump to the start place is done, short
     // scrolls included; again with each layout, which a chapter opened again from above it gets
     // after the place was said. At rest with only the chapter kept above on screen, the divider
@@ -368,6 +395,12 @@ fun StripReader(
         }
     }
 }
+
+/** What the strip shows at a layout: its place, its width, and whether a scroll or a jump moves it. */
+private data class StripSeen(val at: StripPos?, val width: Int, val moving: Boolean)
+
+/** The page at the top of a strip standing still, how far into it, and at what width. */
+private data class StripKept(val page: UInt, val offset: Float, val width: Int)
 
 /**
  * The strip item at [index] as an image: whether it is in the chapter kept above ([aboveCount]
