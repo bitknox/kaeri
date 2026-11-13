@@ -259,6 +259,31 @@ impl BookSource for FolderSource {
 /// that said so.
 type EmptyList = (std::time::Instant, Option<u64>);
 
+/// A source's answer to a chapter-list ask, once it has come.
+type ListAnswer =
+    tokio::sync::watch::Receiver<Option<Result<Vec<SourceChapter>, ProviderError>>>;
+
+/// The chapter lists being asked for now, by source and series, each with the
+/// [`BookSources::source_mark`] of the source asked: see [`BookSources::ask_list`].
+type ListsAsked = Arc<Mutex<HashMap<(String, String), (Option<u64>, ListAnswer)>>>;
+
+/// One chapter-list ask on its way: it leaves [`ListsAsked`] when it ends or is dropped, unless
+/// a newer ask has taken its place.
+struct ListTurn {
+    asked: ListsAsked,
+    key: (String, String),
+    mine: ListAnswer,
+}
+
+impl Drop for ListTurn {
+    fn drop(&mut self) {
+        let mut asked = self.asked.lock().unwrap_or_else(|e| e.into_inner());
+        if asked.get(&self.key).is_some_and(|(_, answer)| answer.same_channel(&self.mine)) {
+            asked.remove(&self.key);
+        }
+    }
+}
+
 /// Everything the Sources screen and the reading commands share. Cheap to clone.
 #[derive(Clone)]
 pub struct BookSources {
@@ -277,6 +302,8 @@ pub struct BookSources {
     pub demo: kaeri_providers::reading_demo::ReadingDemo,
     /// The series whose sources are being asked how they read, by source and series.
     hint_lookups: Arc<Mutex<HashMap<(String, String), HintLookup>>>,
+    /// The chapter lists on their way from the sources: an ask of one meanwhile joins it.
+    lists_asked: ListsAsked,
     /// The series whose chapter list came back empty lately, by source and series, with the
     /// [`BookSources::source_mark`] of the source that said so: an empty answer is not kept, so
     /// this is what keeps a work from being read from it meanwhile.
@@ -331,6 +358,7 @@ impl BookSources {
             undo: Arc::default(),
             pending: Arc::default(),
             hint_lookups: Arc::default(),
+            lists_asked: Arc::default(),
             empty: Arc::default(),
             language: Arc::default(),
             show_volumes: Arc::default(),
@@ -2124,9 +2152,7 @@ impl BookSources {
             })
             .collect();
         let fetches = unknown.iter().map(|(source, series)| async move {
-            if let Ok(list) =
-                self.registry.chapters(source, series, &BookHints::default(), now).await
-            {
+            if let Ok(list) = self.ask_list(source, series, now).await {
                 self.note_list(source, series, &list);
                 crate::read_catalog::chapters::keep(&self.store, source, series, &list, now);
             }
@@ -2203,6 +2229,52 @@ impl BookSources {
         Some((row, groups))
     }
 
+    /// Ask `source` for a series' whole chapter list. While an ask of the same list is on its
+    /// way, from the source as it stands, this one waits for that answer rather than asking
+    /// again: a page opening lists a series once, whichever of its parts asks first. One that
+    /// goes without an answer (its task dropped) leaves the next ask to the source.
+    pub(crate) async fn ask_list(
+        &self,
+        source: &str,
+        series: &str,
+        now: i64,
+    ) -> Result<Vec<SourceChapter>, ProviderError> {
+        let key = (source.to_owned(), series.to_owned());
+        loop {
+            let mark = self.source_mark(source);
+            let turn = {
+                let mut asked = self.lists_asked.lock().unwrap_or_else(|e| e.into_inner());
+                match asked.get(&key) {
+                    Some((said_by, answer)) if *said_by == mark => Err(answer.clone()),
+                    _ => {
+                        let (tell, answer) = tokio::sync::watch::channel(None);
+                        asked.insert(key.clone(), (mark, answer.clone()));
+                        Ok((tell, answer))
+                    }
+                }
+            };
+            match turn {
+                Ok((tell, mine)) => {
+                    let _turn =
+                        ListTurn { asked: self.lists_asked.clone(), key: key.clone(), mine };
+                    let answer = self
+                        .registry
+                        .chapters(source, series, &BookHints::default(), now)
+                        .await;
+                    tell.send_replace(Some(answer.clone()));
+                    return answer;
+                }
+                Err(mut answer) => {
+                    let came =
+                        answer.wait_for(Option::is_some).await.ok().and_then(|a| a.clone());
+                    if let Some(came) = came {
+                        return came;
+                    }
+                }
+            }
+        }
+    }
+
     /// Ask the source for a series' whole list, put it in reading order and keep it.
     async fn fetch_list(
         &self,
@@ -2211,7 +2283,7 @@ impl BookSources {
         now: i64,
     ) -> Result<Vec<SourceChapter>, ReadingFailure> {
         self.note_listing(source, series, Some(Asked::Asking), now);
-        let asked = self.registry.chapters(source, series, &BookHints::default(), now).await;
+        let asked = self.ask_list(source, series, now).await;
         let mut chapters = match asked {
             Ok(chapters) => chapters,
             Err(e) => {

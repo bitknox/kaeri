@@ -628,3 +628,78 @@ async fn a_kept_list_keeps_downloads_and_bookmarks_when_the_source_fails() {
         }
     }
 }
+
+/// A source that lists a series slowly and counts each time it is asked for the list.
+struct Counted {
+    manifest: BookSourceManifest,
+    listed: AtomicU32,
+}
+
+impl Counted {
+    fn put(kit: &Kit) -> Arc<Self> {
+        let manifest = BookSourceManifest {
+            id: "counted".into(),
+            name: "Counted Books".into(),
+            version: "1".into(),
+            kind: BookSourceKind::Native,
+            media: vec![Medium::Novel],
+            languages: vec!["en".into()],
+            allowed_hosts: Vec::new(),
+            capabilities: Vec::new(),
+        };
+        let shelf = Arc::new(Self { manifest, listed: AtomicU32::new(0) });
+        kit.sources.registry.put(shelf.clone());
+        shelf
+    }
+}
+
+#[async_trait]
+impl BookSource for Counted {
+    fn manifest(&self) -> &BookSourceManifest {
+        &self.manifest
+    }
+
+    async fn search(&self, _: &str, _: &BookHints) -> Result<Vec<SeriesHit>, ProviderError> {
+        Ok(Vec::new())
+    }
+
+    async fn series(&self, id: &str, _: &BookHints) -> Result<SeriesDetail, ProviderError> {
+        Ok(SeriesDetail::new(id, TITLE))
+    }
+
+    async fn chapters(
+        &self,
+        _: &str,
+        _: &BookHints,
+    ) -> Result<Vec<SourceChapter>, ProviderError> {
+        self.listed.fetch_add(1, Ordering::SeqCst);
+        tokio::time::sleep(Duration::from_millis(200)).await;
+        Ok((1..=3).map(|n| SourceChapter::new(format!("c-{n}"), n.to_string())).collect())
+    }
+
+    async fn content(&self, _: &str, _: &str) -> Result<ChapterContent, ProviderError> {
+        Err(ProviderError::NotFound)
+    }
+}
+
+/// A page opening asks for its chapters from several places at once: the page itself, its
+/// chapter list, Read from, and the edition in use asked for by name. While one ask of the list
+/// is on its way, the others hear its answer, so the source is asked for the list once.
+#[tokio::test]
+async fn a_list_asked_for_from_several_places_at_once_is_asked_of_the_source_once() {
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(None, dir.path());
+    let shelf = Counted::put(&kit);
+    let work = kaeri_core::books::WorkKey::local(Medium::Novel, TITLE).id();
+    kit.store.set_book_match("counted", "ferry", work.as_str(), 100, true, false, NOW).unwrap();
+    let (tx, mut rx) = outbox();
+
+    series::load(&kit, ask(), work.clone(), &tx);
+    crate::reading::chapters_of(kit.clone(), ask(), work.clone(), None, &tx);
+    editions::load(&kit, ask(), work.clone(), &tx);
+    crate::reading::chapters_of(kit.clone(), ask(), work.clone(), Some("counted".into()), &tx);
+    let heard = drain(&mut rx, Duration::from_millis(800)).await;
+
+    assert!(heard.iter().any(|e| e == "chapters(3)"), "the list reaches the page: {heard:#?}");
+    assert_eq!(shelf.listed.load(Ordering::SeqCst), 1, "asked once: {heard:#?}");
+}

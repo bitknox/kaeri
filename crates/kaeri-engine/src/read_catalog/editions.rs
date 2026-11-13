@@ -232,7 +232,7 @@ async fn look(
     if !counts_chapters(&kit.sources, source) {
         facts.chapters = None;
     } else if facts.chapters.is_none()
-        && let Ok(list) = registry.chapters(source, &hit.id, &hints, now).await
+        && let Ok(list) = kit.sources.ask_list(source, &hit.id, now).await
     {
         facts.count(&list);
         chapters::keep(&kit.store, source, &hit.id, &list, now);
