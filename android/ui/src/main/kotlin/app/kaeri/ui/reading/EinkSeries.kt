@@ -681,8 +681,17 @@ private fun ChapterLine(
             number.orEmpty(),
             style = text.copy(fontFeatureSettings = "tnum"),
             maxLines = 1,
-            // Read out as the chapter's name when the number stands alone.
-            modifier = Modifier.width(ChapterNumber).then(if (title == null) Modifier.clearAndSetSemantics { this.text = AnnotatedString(name) } else Modifier),
+            // Read out as the chapter's name when the number stands alone, and before a title as
+            // "Chapter 32", never as a bare number.
+            modifier = Modifier.width(ChapterNumber).then(
+                if (title == null) {
+                    Modifier.clearAndSetSemantics { this.text = AnnotatedString(SeriesWords.spokenName(context, row)) }
+                } else if (number != null) {
+                    Modifier.clearAndSetSemantics { this.text = AnnotatedString(Strings.seriesChapterNumber(context, number)) }
+                } else {
+                    Modifier
+                },
+            ),
         )
         Text(title.orEmpty(), style = text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).padding(start = 12.dp))
         when {

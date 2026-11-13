@@ -41,12 +41,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -154,6 +156,15 @@ internal object SeriesWords {
 
     /** The source's own label for a chapter: "Chapter 12", "Part 5". */
     fun name(context: Context, row: ChapterRow): String = row.label.ifBlank { row.number?.let { Strings.seriesChapterNumber(context, it) } ?: row.label }
+
+    /**
+     * [name] as a screen reader says it: a label that is only a number, as some sources give
+     * ("32"), says "Chapter 32", which the row shows with no word beside it.
+     */
+    fun spokenName(context: Context, row: ChapterRow): String {
+        val name = name(context, row)
+        return if (numbered(name.trim())) Strings.seriesChapterNumber(context, name.trim()) else name
+    }
 
     /** The chapter's own title, when it says more than its label. */
     fun title(row: ChapterRow, name: String): String? = row.title?.takeIf { it.isNotBlank() && it != name && it != row.label }
@@ -272,6 +283,7 @@ internal fun ChapterRowItem(
     val read = row.state is ChapterReadState.Read
     val fresh = row.newChapter && !read
     val name = SeriesWords.name(context, row)
+    val spoken = SeriesWords.spokenName(context, row)
     val title = SeriesWords.title(row, name)
     val failed = row.download is ChapterDownloadState.Failed
     val line = SeriesWords.line(context, row)
@@ -312,6 +324,8 @@ internal fun ChapterRowItem(
                 },
                 style = MaterialTheme.typography.bodyLarge,
                 maxLines = 2,
+                // Read as words, not a description, so TalkBack still reads the state line after it.
+                modifier = if (spoken == name) Modifier else Modifier.clearAndSetSemantics { text = AnnotatedString(listOfNotNull(spoken, title).joinToString(" ")) }, // i18n-skip: a space
             )
             if (line.isNotEmpty()) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
