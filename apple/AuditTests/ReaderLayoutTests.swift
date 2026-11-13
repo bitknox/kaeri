@@ -131,6 +131,17 @@ final class ReaderLayoutTests: XCTestCase {
     }
 
     /// Drags the app window's lower right corner left until the window is `width` wide.
+    /// The window's corner dragged back out to the screen's edge.
+    private func widen(_ app: XCUIApplication) {
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let frame = app.windows.firstMatch.frame
+        let screen = springboard.windows.firstMatch.frame
+        let origin = springboard.coordinate(withNormalizedOffset: .zero)
+        let start = origin.withOffset(CGVector(dx: frame.maxX - 6, dy: frame.maxY - 6))
+        let end = origin.withOffset(CGVector(dx: screen.maxX - 2, dy: frame.maxY - 6))
+        start.press(forDuration: 0.6, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.4)
+    }
+
     private func narrow(_ app: XCUIApplication, to width: CGFloat) {
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         let frame = app.windows.firstMatch.frame
@@ -246,6 +257,11 @@ final class ReaderLayoutTests: XCTestCase {
             let bar = app.navigationBars[title].firstMatch
             mark("p11-narrow-\(section)", "window \(window) \(title) bar \(bar.exists ? "\(bar.frame)" : "none")")
             XCTAssertTrue(bar.exists, "\(title) is gone in a narrow window, another tab shows")
+            widen(app)
+            Thread.sleep(forTimeInterval: 1.5)
+            let wide = app.navigationBars[title].firstMatch
+            mark("p11-wide-\(section)", "window \(app.windows.firstMatch.frame) \(title) bar \(wide.exists ? "\(wide.frame)" : "none")")
+            XCTAssertTrue(wide.exists, "\(title) is gone when the window is made wide again")
             app.terminate()
         }
     }
