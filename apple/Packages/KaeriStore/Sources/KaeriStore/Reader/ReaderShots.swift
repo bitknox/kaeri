@@ -10,7 +10,7 @@ import KaeriStrings
 import UniformTypeIdentifiers
 
 extension ReaderModel {
-    /// `-KaeriReader chrome|settings|chapters|chapterlist|ask|end|endskip|scrub|plate|opening|error`, and with
+    /// `-KaeriReader chrome|settings|chapters|chapterlist|ask|end|endskip|scrub|plate|opening|openingnext|pagefailed|error`, and with
     /// `-KaeriCredits` `creditline|creditchrome|creditshown|creditshownchrome|creditkept|parts|partscrub|partmissingscrub`,
     /// after a reader scene.
     public static let argument = "-KaeriReader"
@@ -129,6 +129,25 @@ extension ReaderModel {
             case "settings": chromeShown = true; sheet = .settings
             case "chapters", "chapterlist": chromeShown = true; sheet = .chapters
             case "ask": chromeShown = true; askingPage = true
+            // The next chapter asked for and not opened yet, as a slow source holds it: the
+            // engine is not told, so the opening screen stays.
+            case "openingnext":
+                if let next = view?.next {
+                    let engine = send
+                    send = nil
+                    openChapter(next.id)
+                    send = engine
+                }
+            // The images on screen failing, as a source that drops them leaves them.
+            case "pagefailed":
+                if let chapter = view?.chapter.id {
+                    for leaf in leaves[min(current, leaves.count)..<min(current + 2, leaves.count)] {
+                        for part in leaf.parts {
+                            pages = pages.filter { $0.key.chapter != chapter || $0.key.page != part.page }
+                            failures[ReaderPageKey(chapter: chapter, page: part.page)] = .offline
+                        }
+                    }
+                }
             // The end page is reached by reading on, by which time the resume notice has gone.
             // A strip has no end page: it scrolls on past its last image to the marker into the
             // next chapter.
