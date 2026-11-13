@@ -7,6 +7,7 @@ import KaeriStrings
 @testable import KaeriUI
 import Testing
 
+@MainActor
 struct ChapterNameTests {
     private func row(_ label: String, number: String?, title: String? = nil, pages: UInt32? = 34) -> ChapterRow {
         ChapterRow(
