@@ -128,10 +128,16 @@ struct BookDownloadSeriesRow: View {
             }
         }
         .sheet(item: $sending) { SendSheet(request: $0) }
+        // A button that opens the series, as a tap does, with Send to e-reader once a chapter is
+        // kept.
         .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { navigator.openSeries(series.work) }
         .accessibilityAction(named: L.homeDetails) { navigator.openSeries(series.work) }
-        .accessibilityAction(named: L.sendTitle) {
-            if !kept.isEmpty { sending = SendRequest(work: series.work, chapters: kept) }
+        .accessibilityActions {
+            if !kept.isEmpty {
+                Button(L.sendTitle) { sending = SendRequest(work: series.work, chapters: kept) }
+            }
         }
     }
 
