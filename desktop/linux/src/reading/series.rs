@@ -67,6 +67,8 @@ pub fn page(ctx: &Rc<Ctx>, work: &WorkId) -> adw::NavigationPage {
     let status_button = menu_pill(&t::series_add_to_list());
     let download_button = menu_pill(&t::series_download());
     download_button.set_menu_model(Some(&download_menu(work, &[])));
+    // It rests until the chapters say there is something to download or delete.
+    download_button.set_sensitive(false);
     let shown: Rc<RefCell<Option<SeriesView>>> = Rc::default();
     let actions = page_actions(ctx, work, &shown);
     // The chapter order, newest first as on Apple; the menu beside the heading flips it and
@@ -184,6 +186,7 @@ pub fn page(ctx: &Rc<Ctx>, work: &WorkId) -> adw::NavigationPage {
                     if *work == wanted =>
                 {
                     download_button.set_menu_model(Some(&download_menu(work, volumes)));
+                    download_button.set_sensitive(has_downloads(volumes));
                     listed
                         .replace(Some((volumes.clone(), failure.as_ref().map(super::failure))));
                     redraw();
@@ -293,6 +296,21 @@ fn download_volumes(volumes: &[VolumeGroup]) -> Vec<VolumeGroup> {
     groups
 }
 
+/// Whether Download is offered for the chapter: not here or on its way, and not a file on this
+/// device, as a folder's chapters are.
+fn downloadable(chapter: &ChapterRow) -> bool {
+    chapter.download.is_none() && !chapter.on_device
+}
+
+/// Whether the Download button has anything to do: a chapter to download, or one downloaded. A
+/// folder's series has neither, and its button rests.
+fn has_downloads(volumes: &[VolumeGroup]) -> bool {
+    volumes
+        .iter()
+        .flat_map(|g| &g.chapters)
+        .any(|c| downloadable(c) || c.download.is_some())
+}
+
 /// The next 5 or 10 unread, every unread chapter, a volume, and deleting the downloads.
 fn download_menu(work: &WorkId, volumes: &[VolumeGroup]) -> gio::Menu {
     let pick = |name: &str| Some((work.0.clone(), name.to_owned()).to_variant());
@@ -311,7 +329,7 @@ fn download_menu(work: &WorkId, volumes: &[VolumeGroup]) -> gio::Menu {
     let by_volume = gio::Menu::new();
     for group in &download_volumes(volumes) {
         let Some(volume) = &group.volume else { continue };
-        let missing = group.chapters.iter().filter(|c| c.download.is_none()).count();
+        let missing = group.chapters.iter().filter(|c| downloadable(c)).count();
         if missing == 0 {
             continue;
         }
@@ -713,18 +731,22 @@ fn chapter_menu(work: &WorkId, chapter: &ChapterRow) -> gio::Menu {
     );
     menu.append_item(&up_to);
     let pair = (work.0.clone(), chapter.id.0.clone()).to_variant();
-    let (label, action) = match &chapter.download {
+    // A file on this device, as a folder's chapters are, has nothing to download.
+    let download = match &chapter.download {
+        None if chapter.on_device => None,
         None | Some(ChapterDownloadState::Failed { .. }) => {
-            (t::series_download(), "win.read-download")
+            Some((t::series_download(), "win.read-download"))
         }
         Some(ChapterDownloadState::Done) => {
-            (t::downloads_delete_one_title(), "win.read-download-delete-one")
+            Some((t::downloads_delete_one_title(), "win.read-download-delete-one"))
         }
-        Some(_) => (t::downloads_remove_from_queue(), "win.read-download-cancel"),
+        Some(_) => Some((t::downloads_remove_from_queue(), "win.read-download-cancel")),
     };
-    let download = gio::MenuItem::new(Some(&label), None);
-    download.set_action_and_target_value(Some(action), Some(&pair));
-    menu.append_item(&download);
+    if let Some((label, action)) = download {
+        let item = gio::MenuItem::new(Some(&label), None);
+        item.set_action_and_target_value(Some(action), Some(&pair));
+        menu.append_item(&item);
+    }
     let bookmark = gio::MenuItem::new(
         Some(&if chapter.bookmarked {
             t::series_remove_bookmark()
@@ -971,5 +993,89 @@ mod tests {
         assert_eq!(shape, [(Some("1".into()), 2, false), (Some("2".into()), 1, false)]);
         let grouped = VolumeGroup { flat: false, volume: Some("1".into()), ..flat };
         assert_eq!(super::download_volumes(std::slice::from_ref(&grouped)).len(), 1);
+    }
+
+    /// Every action a menu offers, its sections' included.
+    fn actions(menu: &gtk::gio::MenuModel) -> Vec<String> {
+        let mut found = Vec::new();
+        for i in 0..menu.n_items() {
+            if let Some(action) = menu
+                .item_attribute_value(i, "action", None)
+                .and_then(|v| v.get::<String>())
+            {
+                found.push(action);
+            }
+            if let Some(section) = menu.item_link(i, "section") {
+                found.extend(actions(&section));
+            }
+        }
+        found
+    }
+
+    /// A folder's chapters are files on this device: no row offers Download, Download by
+    /// volume lists none of them, and the series' Download button rests. A source's chapters
+    /// still do.
+    #[test]
+    fn a_folders_chapters_offer_no_download() {
+        use kaeri_model::reading::{ChapterDownloadState, ChapterReadState, ChapterRow, VolumeGroup};
+        let row = |n: u32, on_device: bool, download: Option<ChapterDownloadState>| ChapterRow {
+            id: ChapterId(n.to_string()),
+            label: format!("Chapter {n}"), // i18n-skip
+            state: ChapterReadState::Unread,
+            number: Some(n.to_string()),
+            title: None,
+            volume: Some("1".into()),
+            published: None,
+            pages: None,
+            new_chapter: false,
+            download,
+            versions: 1,
+            bookmarked: false,
+            version_label: None,
+            read_at: None,
+            line: Vec::new(),
+            gone_from_source: false,
+            parts: 1,
+            missing_parts: Vec::new(),
+            part_groups: Vec::new(),
+            other_group: false,
+            group_language: None,
+            other_source: None,
+            on_device,
+        };
+        let group = |rows: Vec<ChapterRow>| {
+            vec![VolumeGroup {
+                volume: Some("1".into()),
+                title: None,
+                chapters: rows,
+                all_read: false,
+                flat: false,
+            }]
+        };
+        let work = WorkId("local:shelf".into());
+        let folder = group((1..=3).map(|n| row(n, true, None)).collect());
+        assert!(!super::has_downloads(&folder), "the Download button rests");
+        let menu = super::download_menu(&work, &folder);
+        assert_eq!(
+            actions(menu.upcast_ref()).iter().filter(|a| *a == "win.read-download-pick").count(),
+            3,
+            "only the next and unread picks, no volume: {:?}",
+            actions(menu.upcast_ref())
+        );
+        let rows = super::chapter_menu(&work, &folder[0].chapters[0]);
+        assert!(!actions(rows.upcast_ref()).iter().any(|a| a.starts_with("win.read-download")));
+
+        let source = group((1..=3).map(|n| row(n, false, None)).collect());
+        assert!(super::has_downloads(&source));
+        let menu = super::download_menu(&work, &source);
+        assert_eq!(
+            actions(menu.upcast_ref()).iter().filter(|a| *a == "win.read-download-pick").count(),
+            4
+        );
+        let rows = super::chapter_menu(&work, &source[0].chapters[0]);
+        assert!(actions(rows.upcast_ref()).iter().any(|a| a == "win.read-download"));
+        // Every chapter downloaded: the button stays, for Delete.
+        let kept = group(vec![row(1, false, Some(ChapterDownloadState::Done))]);
+        assert!(super::has_downloads(&kept));
     }
 }
