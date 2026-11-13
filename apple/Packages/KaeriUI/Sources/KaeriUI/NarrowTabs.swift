@@ -20,19 +20,37 @@ enum NarrowTabs {
         return section == .updates ? .read : .home
     }
 
-    /// What a narrow window pushes onto a tab in place of a section of its own.
-    enum Pushed: Equatable { case downloads, place(AppSection) }
+    /// What a narrow window pushes onto a tab in place of a section of its own, or the account
+    /// sheet's page it opens.
+    enum Pushed: Equatable { case downloads, place(AppSection), settings(PhoneSettingsPage) }
+
+    /// The account sheet's page for a sidebar section the iPhone keeps in that sheet.
+    static func sheetPage(for section: AppSection) -> PhoneSettingsPage? {
+        switch section {
+        case .providers: .providers
+        case .pluginStores: .stores
+        case .settings: .root
+        default: nil
+        }
+    }
 
     /// Where `section` goes in a narrow window, when it has no tab there: Downloads under the
-    /// Library, as its first row pushes it, and Calendar, Seasonal and Updates onto their tab.
+    /// Library, as its first row pushes it, Calendar, Seasonal and Updates onto their tab, and
+    /// Sources, Plugin stores and Settings in the account sheet over the first tab, as the
+    /// iPhone has them.
     static func narrow(_ section: AppSection, _ answer: KaeriIsFor) -> (tab: AppSection, pushed: Pushed)? {
         if section == .downloads { return (.library, .downloads) }
+        if let page = sheetPage(for: section), let first = barTabs(answer).first { return (first, .settings(page)) }
         return parent(of: section, answer).map { ($0, .place(section)) }
     }
 
-    /// The section a wide window goes back to from what a narrow one pushed, if anything.
-    static func widen(_ section: AppSection, downloads: Bool, place: AppSection?, _ answer: KaeriIsFor) -> AppSection? {
+    /// The section a wide window goes back to from what a narrow one pushed or opened, if anything.
+    static func widen(_ section: AppSection, downloads: Bool, place: AppSection?, settings: PhoneSettingsPage? = nil,
+                      _ answer: KaeriIsFor) -> AppSection? {
         if section == .library, downloads { return .downloads }
+        if let settings, let wide = [AppSection.providers, .pluginStores, .settings].first(where: { sheetPage(for: $0) == settings }) {
+            return wide
+        }
         if let place, parent(of: place, answer) == section { return place }
         return nil
     }

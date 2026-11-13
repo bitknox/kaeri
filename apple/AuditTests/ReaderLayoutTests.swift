@@ -1,7 +1,8 @@
 // The iPad layout bugs of the round 5 hunt, checked in the Fixtures app: the Chapters popover in
 // landscape and in a narrow window, the opening screen's chapter, the series header at the
-// largest text size, a failed strip image's words and Choose chapters' Download in a narrow
-// window. Run with the Audit scheme on an iPad Simulator.
+// largest text size, a failed strip image's words, Choose chapters' Download in a narrow window,
+// and Downloads and Sources keeping their place when the window is made narrow. Run with the
+// Audit scheme on an iPad Simulator.
 //
 // With TEST_RUNNER_KAERI_TEST_MARKS set to a folder, each test leaves a screenshot there and a
 // line of the frames it measured, for before and after shots.
@@ -228,5 +229,24 @@ final class ReaderLayoutTests: XCTestCase {
         // about 130 at this width, so the label drops the count rather than being cut.
         XCTAssertEqual(button.label, "Download", "the count does not fit and is cut: \(button.label)")
         XCTAssertLessThanOrEqual(button.frame.maxX, window.maxX)
+    }
+
+    func testSidebarOnlySectionsKeepTheirPlaceInANarrowWindow() throws {
+        try requirePad()
+        for (section, title) in [("downloads", "Downloads"), ("providers", "Your sources")] {
+            let app = launch(["-KaeriScene", "watching", "-KaeriSection", section])
+            XCTAssertTrue(app.navigationBars[title].firstMatch.waitForExistence(timeout: 20), "no \(title) to start from")
+            narrow(app, to: 375)
+            let window = app.windows.firstMatch.frame
+            guard window.width <= 500 else {
+                app.terminate()
+                throw XCTSkip("the window did not get narrow: \(window)")
+            }
+            Thread.sleep(forTimeInterval: 1.5)
+            let bar = app.navigationBars[title].firstMatch
+            mark("p11-narrow-\(section)", "window \(window) \(title) bar \(bar.exists ? "\(bar.frame)" : "none")")
+            XCTAssertTrue(bar.exists, "\(title) is gone in a narrow window, another tab shows")
+            app.terminate()
+        }
     }
 }

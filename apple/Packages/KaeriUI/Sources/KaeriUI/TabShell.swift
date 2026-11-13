@@ -153,6 +153,7 @@ struct TabShell: View {
         switch to.pushed {
         case .downloads: navigator.downloadsPushed = true
         case .place(let place): navigator.placePushed = place
+        case .settings(let page): navigator.phoneSettings = page
         }
         navigator.section = to.tab
     }
@@ -162,9 +163,11 @@ struct TabShell: View {
     /// The place pushed for a narrow window is its own section again in a wide iPad window.
     private func widened() {
         guard Self.pad, let to = NarrowTabs.widen(navigator.section, downloads: navigator.downloadsPushed,
-                                  place: navigator.placePushed, store.medium.answer) else { return }
+                                  place: navigator.placePushed, settings: navigator.phoneSettings,
+                                  store.medium.answer) else { return }
         navigator.downloadsPushed = false
         navigator.placePushed = nil
+        if NarrowTabs.sheetPage(for: to) != nil { navigator.phoneSettings = nil }
         navigator.section = to
     }
 
