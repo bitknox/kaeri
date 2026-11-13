@@ -245,7 +245,9 @@ struct ReadGrid: View {
                     .geometryGroup()
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        // As narrow as it is given: the columns follow the width and never hold it, or a
+        // narrowing window keeps the old count of fixed columns and squeezes the sidebar.
+        .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
     }
 
