@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -1027,8 +1028,13 @@ private fun PaperDownLine(line: DownLine, rows: List<BookDownloadRow>) {
                         // Stop while anything is still to come, failures or not.
                         val going = rows.filter { it.work == series.work && it.state !is ChapterDownloadState.Done && it.state !is ChapterDownloadState.Failed }.map { it.chapter.id }
                         EinkTextButton(Strings.actionStop(context), { store.reading.cancelDownloads(series.work, going) })
-                    } else {
+                    }
+                }
+                // Failures alone: Retry, and Remove to take them off the list, on a line of their own.
+                if (series.queued == 0u) {
+                    Row(Modifier.offset(x = (-12).dp), verticalAlignment = Alignment.CenterVertically) {
                         EinkTextButton(stringResource(R.string.chapter_retry), retry)
+                        EinkTextButton(stringResource(R.string.action_remove), { store.reading.cancelDownloads(series.work, series.failed) })
                     }
                 }
                 // A failure beside chapters still to come: Retry on a line of its own, saying which
@@ -1186,46 +1192,63 @@ private fun LargeKeepReady() {
     }
 }
 
-/** A chapter still to come: the series and chapter, and at the end where it stands in words; Retry on a failure. */
+/**
+ * A chapter still to come: the series and chapter, and at the end where it stands in words, given
+ * at most two fifths of the row so the title always shows. A failure says why on lines of its own
+ * under the title, with Retry and Remove under that, so a long reason never pushes them off the
+ * row; Remove takes the failed chapter off the list.
+ */
 @Composable
 private fun QueueRow(row: BookDownloadRow, first: Boolean) {
     val store = LocalAppStore.current
     val context = LocalContext.current
     val state = row.state
-    Row(
+    val failed = state is ChapterDownloadState.Failed
+    val words = when (state) {
+        is ChapterDownloadState.Downloading -> Msg.Reading(ReadingMsg.ReadingDlPages(state.done.toLong(), state.total.toLong())).text(context)
+        is ChapterDownloadState.Failed -> Strings.chapterStateFailed(context, failureWords(context, state.failure))
+        ChapterDownloadState.WaitsForWifi -> stringResource(R.string.chapter_state_wifi)
+        else -> stringResource(R.string.chapter_state_queued)
+    }
+    val wordsStyle = EinkType.Secondary.copy(
+        color = EinkColours.Ink,
+        fontWeight = if (state is ChapterDownloadState.Downloading) androidx.compose.ui.text.font.FontWeight.Bold else EinkType.Secondary.fontWeight,
+        fontFeatureSettings = "tnum", // i18n-skip
+    )
+    BoxWithConstraints(
         Modifier
             .fillMaxWidth()
             .heightIn(min = 56.dp)
             .then(if (first) Modifier else Modifier.topHairline())
             .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
     ) {
-        val words = when (state) {
-            is ChapterDownloadState.Downloading -> Msg.Reading(ReadingMsg.ReadingDlPages(state.done.toLong(), state.total.toLong())).text(context)
-            is ChapterDownloadState.Failed -> Strings.chapterStateFailed(context, failureWords(context, state.failure))
-            ChapterDownloadState.WaitsForWifi -> stringResource(R.string.chapter_state_wifi)
-            else -> stringResource(R.string.chapter_state_queued)
-        }
-        Text(
-            listOf(row.title, chapterWords(context, row.chapter.label)).joinToString(" · "), // i18n-skip
-            style = LargeRowTitle,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f),
-        )
-        Text(
-            words,
-            style = EinkType.Secondary.copy(
-                color = EinkColours.Ink,
-                fontWeight = if (state is ChapterDownloadState.Downloading) androidx.compose.ui.text.font.FontWeight.Bold else EinkType.Secondary.fontWeight,
-                fontFeatureSettings = "tnum", // i18n-skip
-            ),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(start = 16.dp),
-        )
-        if (state is ChapterDownloadState.Failed) {
-            EinkTextButton(stringResource(R.string.chapter_retry), { store.reading.download(row.work, DownloadPick.Chapters(listOf(row.chapter.id))) }, FlushEnd, underline = true)
+        val side = maxWidth * 2 / 5
+        Column(Modifier.fillMaxWidth()) {
+            Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    listOf(row.title, chapterWords(context, row.chapter.label)).joinToString(" · "), // i18n-skip
+                    style = LargeRowTitle,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+                if (!failed) {
+                    Text(
+                        words,
+                        style = wordsStyle,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(start = 16.dp).widthIn(max = side),
+                    )
+                }
+            }
+            if (failed) {
+                Text(words, style = wordsStyle, maxLines = 3, overflow = TextOverflow.Ellipsis)
+                Row(Modifier.offset(x = (-12).dp), verticalAlignment = Alignment.CenterVertically) {
+                    EinkTextButton(stringResource(R.string.chapter_retry), { store.reading.download(row.work, DownloadPick.Chapters(listOf(row.chapter.id))) }, underline = true)
+                    EinkTextButton(stringResource(R.string.action_remove), { store.reading.cancelDownloads(row.work, listOf(row.chapter.id)) }, underline = true)
+                }
+            }
         }
     }
 }
