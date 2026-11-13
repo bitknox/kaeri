@@ -2048,6 +2048,15 @@ fn key_named(name: &str) -> Option<gtk::gdk::Key> {
 
 /// Every mapped widget whose own text (or a descendant's) contains `text`, deepest first.
 fn click_text(shell: &Rc<Shell>, text: &str, nth: usize) -> String {
+    act_on_text(shell, text, nth, false)
+}
+
+/// The keyboard on the widget `click_text` would click, as Tab would leave it there.
+fn focus_text(shell: &Rc<Shell>, text: &str, nth: usize) -> String {
+    act_on_text(shell, text, nth, true)
+}
+
+fn act_on_text(shell: &Rc<Shell>, text: &str, nth: usize, focus_only: bool) -> String {
     fn walk(w: &gtk::Widget, text: &str, out: &mut Vec<gtk::Widget>) {
         if !w.is_mapped() {
             return;
@@ -2087,6 +2096,11 @@ fn click_text(shell: &Rc<Shell>, text: &str, nth: usize) -> String {
         return format!("no widget with {text:?} (found {n})");
     };
     let what = describe(&w);
+    if focus_only {
+        shell.ctx.window.set_focus_visible(true);
+        let took = w.grab_focus();
+        return format!("focused {nth} of {n} ({took}): {what}");
+    }
     if let Some(b) = w.downcast_ref::<gtk::Button>() {
         b.emit_clicked();
     } else if let Some(c) = w.downcast_ref::<gtk::FlowBoxChild>() {
@@ -2216,6 +2230,11 @@ async fn do_steps(shell: &Rc<Shell>) {
                 let nth = arg(1).parse::<usize>().ok();
                 let text = if nth.is_some() { w[2..].join(" ") } else { w[1..].join(" ") };
                 tracing::info!("HUNT do click: {}", click_text(shell, &text, nth.unwrap_or(0)));
+            }
+            "focus" => {
+                let nth = arg(1).parse::<usize>().ok();
+                let text = if nth.is_some() { w[2..].join(" ") } else { w[1..].join(" ") };
+                tracing::info!("HUNT do focus: {}", focus_text(shell, &text, nth.unwrap_or(0)));
             }
             "chapters" => shell.reader.hunt_chapters(),
             "chapterstab" => shell.reader.hunt_chapters_tab(),
