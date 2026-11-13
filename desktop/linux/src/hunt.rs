@@ -2048,6 +2048,11 @@ async fn drive(shell: &Rc<Shell>, name: &str) {
 // ---------------------------------------------------------------------------------------------
 // Round 6: a drive read from HUNT_DO, steps split by ';', words by spaces.
 
+thread_local! {
+    /// r8: the last series whose chapter list came, and its chapter ids in order.
+    static LAST: std::cell::RefCell<(String, Vec<String>)> = std::cell::RefCell::default();
+}
+
 fn key_named(name: &str) -> Option<gtk::gdk::Key> {
     gtk::gdk::Key::from_name(name)
 }
@@ -2121,6 +2126,21 @@ fn listen_all(shell: &Rc<Shell>) {
         let line = match event {
             Event::BookSources(e) => format!("{e:?}"),
             Event::CameIn(e) => format!("{e:?}"),
+            Event::Reading(kaeri_model::reading::ReadingEvent::Chapters { work, volumes, failure, .. }) => {
+                let ids: Vec<String> =
+                    volumes.iter().flat_map(|v| v.chapters.iter().map(|c| c.id.0.clone())).collect();
+                let line = format!(
+                    "Chapters work={} n={} first={:?} last={:?} failure={failure:?}",
+                    work.0,
+                    ids.len(),
+                    ids.first(),
+                    ids.last()
+                );
+                if !ids.is_empty() {
+                    LAST.with(|l| *l.borrow_mut() = (work.0.clone(), ids));
+                }
+                line
+            }
             Event::Reading(kaeri_model::reading::ReadingEvent::Feed(f)) => format!(
                 "Feed on={} addresses={:?} port={} password_set={} serving={} shares={:?} \
                  clients={} pause={:?}",
@@ -2379,6 +2399,41 @@ async fn do_steps(shell: &Rc<Shell>) {
             // r8: the window's widgets: all, mapped, and mapped of a few kinds.
             "widgets" => widget_count(shell, arg(1)),
             "focus" => tracing::info!("HUNT focus {}: {}", arg(1), focus_line(shell)),
+            // r8: the series whose chapters came last: read its chapter at index n (or "end"),
+            // download n from it, or open its send dialog.
+            "readlast" | "dllast" | "sendlast" | "serieslast" => {
+                let (work, ids) = LAST.with(|l| l.borrow().clone());
+                if work.is_empty() {
+                    tracing::info!("HUNT do {}: no series yet", arg(0));
+                } else {
+                    match arg(0) {
+                        "readlast" => {
+                            let i = if arg(1) == "end" { ids.len() - 1 } else { num(1, 0) as usize };
+                            let ch = ids.get(i.min(ids.len() - 1)).cloned().unwrap_or_default();
+                            tracing::info!("HUNT do readlast {work} {ch}");
+                            read(shell, &work, &ch);
+                        }
+                        "dllast" => send(
+                            shell,
+                            kaeri_model::reading::ReadingCommand::Download {
+                                work: kaeri_core::books::WorkId::new(work.clone()),
+                                pick: kaeri_model::reading::DownloadPick::NextUnread {
+                                    n: num(1, 1) as u32,
+                                },
+                            },
+                        ),
+                        "sendlast" => {
+                            let _ = WidgetExt::activate_action(
+                                &shell.ctx.window,
+                                "win.read-send",
+                                Some(&work.to_variant()),
+                            );
+                        }
+                        _ => series(shell, &work),
+                    }
+                    tracing::info!("HUNT do {} on {work}", arg(0));
+                }
+            }
             // r8: activate the nth mapped grid cover (FlowBoxChild) or list row in the window.
             "tile" | "row" => {
                 let want_row = arg(0) == "row";
