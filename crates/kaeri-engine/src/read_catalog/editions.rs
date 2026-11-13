@@ -571,7 +571,7 @@ pub(crate) fn load(kit: &Kit, ask: Ask, work: WorkId, tx: &Outbox) {
         kept_misses(kit, &work, &wanted, now),
         tx,
     );
-    list_unlisted(kit, &work, now, tx);
+    list_unlisted(kit, ask, &work, tx);
     if !arriving && !recheck_older && to_ask.is_empty() {
         settled(kit, ask, &work, tx);
         return;
@@ -653,14 +653,10 @@ pub(crate) fn load(kit: &Kit, ask: Ask, work: WorkId, tx: &Outbox) {
         let waited = ended.receiver_count() > 0;
         // Its waiters hear the check end as the sender goes.
         drop(ended);
-        // A series that had nowhere to be read from now has, or a doubted match gave way to
-        // the series its source found: its page fills in again.
-        let after = kit.sources.edition_of(&work, None);
-        let moved = match &before {
-            None => after.is_some(),
-            Some(_) => !doubted.is_empty() && after != before,
-        };
-        if !waited && moved {
+        // A series that had nowhere to be read from now has, or reads from another edition
+        // since a source found it or a doubted match gave way: its page fills in again, so it
+        // names the edition its chapters are read from and lists that edition's chapters.
+        if !waited && kit.sources.edition_of(&work, None) != before {
             series::load(&kit, ask, work, &tx);
         }
     });
@@ -688,13 +684,23 @@ pub(crate) fn again(kit: &Kit, ask: Ask, work: WorkId, tx: &Outbox) {
 
 /// The editions whose chapter lists were never asked for, or not lately, so Read from can say
 /// what each holds: asked in the background, each line updated as its answer comes.
-fn list_unlisted(kit: &Kit, work: &WorkId, now: i64, tx: &Outbox) {
+///
+/// The lists that come can move the edition the work is read from to one that has more of its
+/// chapters: the page then follows, as after a search of the sources.
+fn list_unlisted(kit: &Kit, ask: Ask, work: &WorkId, tx: &Outbox) {
+    let now = ask.now;
     let due = unlisted(kit, work, now);
     if due.is_empty() {
         return;
     }
     let (kit, work, tx) = (kit.clone(), work.clone(), tx.clone());
-    tokio::spawn(async move { list_editions(&kit, &work, due, now, &tx).await });
+    tokio::spawn(async move {
+        let before = kit.sources.edition_of(&work, None);
+        list_editions(&kit, &work, due, now, &tx).await;
+        if before.is_some() && kit.sources.edition_of(&work, None) != before {
+            series::load(&kit, ask, work, &tx);
+        }
+    });
 }
 
 /// The editions of `work` with no list kept and none asked for within [`ASKED_FOR`].
