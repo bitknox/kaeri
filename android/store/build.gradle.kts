@@ -20,6 +20,9 @@ dependencies {
     api(project(":i18n"))
     api(libs.coroutines.android)
     implementation(libs.webkit)
+    // ContextCompat.registerReceiver with its exported flag, for the party fixture; webkit alone
+    // brings an older core without it.
+    "fixturesImplementation"(libs.core.ktx)
 
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)
