@@ -106,6 +106,12 @@ public sealed class ReadingStore
     public Dictionary<LibrarySegmentRead, WorkTile[]> Lists { get; } = [];
     public ReadSearchState Search { get; } = new();
     public Dictionary<string, SeriesView> Series { get; } = [];
+#if KAERI_TESTING
+    /// <summary>Shots: the editions as a source with several groups lists them, since the fixture editions name none.</summary>
+    public Func<BookEditionRow, BookEditionRow>? EditionShot { get; set; }
+    /// <summary>Shots: the chapter rows that go with <see cref="EditionShot"/>.</summary>
+    public Func<VolumeGroup[], VolumeGroup[]>? VolumesShot { get; set; }
+#endif
     public Dictionary<string, ReadChapters> Chapters { get; } = [];
     public Dictionary<string, ChapterVersion[]> Versions { get; } = [];
     public Dictionary<string, TrackerReadRow[]> Tracking { get; } = [];
@@ -387,11 +393,23 @@ public sealed class ReadingStore
                 Changed?.Invoke(ReadingPart.Search);
                 break;
             case ReadingEvent.Series series:
-                Series[series.V1.Work] = series.V1;
+                var seriesView = series.V1;
+#if KAERI_TESTING
+                if (EditionShot is { } staged && seriesView.Edition is { } shown)
+                    seriesView = seriesView with { Edition = staged(shown) };
+#endif
+                Series[seriesView.Work] = seriesView;
                 Changed?.Invoke(ReadingPart.Series);
                 break;
             case ReadingEvent.Chapters chapters:
-                Chapters[chapters.Work] = new ReadChapters(chapters.Edition, chapters.Volumes, chapters.Failure);
+                var listed = new ReadChapters(chapters.Edition, chapters.Volumes, chapters.Failure);
+#if KAERI_TESTING
+                if (EditionShot is { } stagedEdition && listed.Edition is { } edition)
+                    listed = listed with { Edition = stagedEdition(edition) };
+                if (VolumesShot is { } stagedVolumes)
+                    listed = listed with { Volumes = stagedVolumes(listed.Volumes) };
+#endif
+                Chapters[chapters.Work] = listed;
                 Changed?.Invoke(ReadingPart.Chapters);
                 break;
             case ReadingEvent.Versions versions:

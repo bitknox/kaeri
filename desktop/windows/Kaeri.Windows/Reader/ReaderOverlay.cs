@@ -201,7 +201,9 @@ public sealed partial class ReaderOverlay : UserControl
                 strip?.Ends(true);
                 novel?.ShotEnd();
                 break;
-            case "reader-credit-pill" or "reader-credit" or "reader-credit-kept" or "reader-parts" or "reader-credit-end" or "reader-strip-credits":
+            case "reader-credit-pill" or "reader-credit-line" or "reader-credit" or "reader-credit-two" or "reader-credit-failed"
+                or "reader-credit-chrome" or "reader-credit-kept" or "reader-parts" or "reader-parts-missing" or "reader-credit-end"
+                or "reader-strip-row" or "reader-strip-credits" or "reader-strip-end":
                 ShotCredits(what);
                 break;
         }

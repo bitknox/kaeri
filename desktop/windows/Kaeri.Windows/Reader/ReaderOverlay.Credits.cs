@@ -226,9 +226,15 @@ public sealed partial class ReaderOverlay
         var chapter = view.Chapter.Id;
         var start = await ShotCreditFile("start");
         var end = await ShotCreditFile("end");
-        Reader.Apply(new ReaderEvent.CreditPages(session, chapter,
-            [new CreditPage(0, start, 0x11), new CreditPage((uint)Reader.PageCount + 1, end, 0x22, true)],
-            new Msg.Reading(new ReadingMsg.ReaderCreditPagesSkipped(1))));
+        // reader-credit-two: two pages skipped at the start. reader-credit-failed: a page whose file is gone.
+        var pages = new List<CreditPage> { new(0, start, 0x11) };
+        if (what == "reader-credit-two")
+            pages.Add(new CreditPage(1, await ShotCreditFile("second"), 0x33));
+        if (what == "reader-credit-failed")
+            pages[0] = new CreditPage(0, start with { Path = start.Path + ".gone" }, 0x11);
+        pages.Add(new CreditPage((uint)Reader.PageCount + (uint)pages.Count, end, 0x22, true));
+        Reader.Apply(new ReaderEvent.CreditPages(session, chapter, [.. pages],
+            new Msg.Reading(new ReadingMsg.ReaderCreditPagesSkipped(pages.Count(p => !p.AtEnd)))));
         var total = (uint)Math.Max(Reader.PageCount, 1);
         Reader.Apply(new ReaderEvent.ChapterParts(session, chapter,
             [new ChapterPart(1, 1, "Lanternlight Scans", false), new ChapterPart(2, Math.Max(2, total * 2 / 5), "Lanternlight Scans", false),
@@ -240,24 +246,50 @@ public sealed partial class ReaderOverlay
                 paged?.Jump(0);
                 ShowChrome(stay: true);
                 break;
-            case "reader-credit":
+            case "reader-credit-line":
+                // Page 1 with the chrome down: the pill alone, in its first 4 s.
+                paged?.Jump(0);
+                HideChrome();
+                break;
+            case "reader-credit" or "reader-credit-two" or "reader-credit-failed":
+                paged?.Jump(0);
                 ShowCredits(false);
                 break;
+            case "reader-credit-chrome":
+                paged?.Jump(0);
+                ShowCredits(false);
+                ShowChrome(stay: true);
+                break;
             case "reader-credit-kept":
+                paged?.Jump(0);
                 ShowCredits(false);
                 Reader.ActLocal(ReaderLocal.NotACredit);
+                ShowChrome(stay: true);
                 break;
             case "reader-parts":
                 ShowChrome(stay: true);
                 chrome.ShotPreview(Math.Max(2, (int)total * 2 / 5));
+                break;
+            case "reader-parts-missing":
+                ShowChrome(stay: true);
+                chrome.ShotPreview(Math.Max(3, (int)total * 3 / 4));
                 break;
             case "reader-credit-end":
                 if (paged is not null)
                     paged.Jump(Math.Max(0, Reader.Leaves.Length - 1));
                 strip?.Ends(true);
                 break;
+            case "reader-strip-row":
+                strip?.Ends(false);
+                ShowChrome(stay: true);
+                break;
             case "reader-strip-credits":
+                strip?.Ends(false);
                 ShowCredits(false);
+                ShowChrome(stay: true);
+                break;
+            case "reader-strip-end":
+                ShowCredits(true);
                 break;
         }
     }
@@ -269,7 +301,8 @@ public sealed partial class ReaderOverlay
         if (!System.IO.File.Exists(path))
         {
             var lines = new Microsoft.UI.Xaml.Controls.StackPanel { Width = w, Height = h, Spacing = 18, Padding = new Thickness(80, 420, 80, 0), Background = new SolidColorBrush(Microsoft.UI.Colors.White) };
-            foreach (var (text, size) in new[] { ("Lanternlight Scans", 64.0), ("Tidebell Cartographer", 34.0), ("lanternlight.example", 28.0) })
+            var who = side == "second" ? "Saltmarsh Team" : "Lanternlight Scans"; // i18n-skip
+            foreach (var (text, size) in new[] { (who, 64.0), ("Tidebell Cartographer", 34.0), (side == "second" ? "saltmarsh.example" : "lanternlight.example", 28.0) })
                 lines.Children.Add(new Microsoft.UI.Xaml.Controls.TextBlock { Text = text, FontSize = size, HorizontalAlignment = HorizontalAlignment.Center, Foreground = new SolidColorBrush(Microsoft.UI.Colors.Black) });
             var host = new Microsoft.UI.Xaml.Controls.Canvas { Width = 1, Height = 1, Opacity = 0.01 };
             host.Children.Add(lines);

@@ -524,6 +524,12 @@ public sealed partial class MainWindow : Window
         if (options.Title is { } id)
             OpenTitle(id);
 #if KAERI_TESTING
+        // --show=series-group or series-group-picker: a source with several groups, its picker open for the second.
+        if (options.Show is "series-group" or "series-group-picker")
+        {
+            GroupsStage.Stage(ctx.Known.Reading);
+            SeriesPage.ShotGroupPicker = options.Show == "series-group-picker";
+        }
         // After the first page, so the series or reader opens over it rather than under it.
         if (options.Work is { } work)
             ui.TryEnqueue(DispatcherQueuePriority.Low, () => OpenSeries(work));
