@@ -675,6 +675,10 @@ mod tests {
         TrackOp::SetProgress { anilist_id: HOSHIKUZU, episode }
     }
 
+    fn progress_of(id: u32) -> TrackOp {
+        TrackOp::SetProgress { anilist_id: AnilistId::new(id), episode: 1 }
+    }
+
     #[test]
     fn a_title_with_its_own_id_is_never_queued_for_a_tracker() {
         let store = Store::open_in_memory().unwrap();
@@ -824,6 +828,28 @@ mod tests {
         let kept = store.dropped_track_ops().unwrap();
         assert_eq!(kept.len(), DROPPED_KEPT, "only the latest are kept");
         assert_eq!(kept[0].op.anilist_id(), AnilistId::new(990_005), "the oldest went first");
+    }
+
+    #[test]
+    fn a_retry_set_while_the_clock_ran_ahead_is_due_once_it_is_put_right() {
+        let store = Store::open_in_memory().unwrap();
+        let ahead = 365 * 86_400;
+        let id = store.enqueue("anilist", &progress(7), ahead).unwrap().unwrap();
+        store.fail(id, "refused", ahead).unwrap();
+        let newer =
+            TrackOp::SetStatus { anilist_id: HOSHIKUZU, status: WatchStatus::Completed, at: 2 };
+        store.enqueue("anilist", &newer, ahead + 1).unwrap();
+        assert!(
+            store.claim_ready("anilist", ahead + 1, 10).unwrap().is_empty(),
+            "still waiting"
+        );
+        // The clock put right: both are due, in the order they were made.
+        let due = store.claim_ready("anilist", 2_000, 10).unwrap();
+        assert_eq!(due.iter().map(|e| e.op.clone()).collect::<Vec<_>>(), [progress(7), newer]);
+        // A row held for a mapping stays held.
+        let held = store.enqueue("anilist", &progress_of(990_002), 2_000).unwrap().unwrap();
+        store.defer(held, "no id").unwrap();
+        assert_eq!(store.claim_ready("anilist", 2_000, 10).unwrap().len(), 2);
     }
 
     #[test]
