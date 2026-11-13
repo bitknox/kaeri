@@ -12,7 +12,8 @@
 //! - A refusal counts against a format part only when the TV asked the relay for media, counted
 //!   as the request arrives: a TV that never asked for the picture said nothing about its codec.
 //! - Nothing counts while the TV waits on the source behind the relay, or after that source was
-//!   slow or failed: a torrent that has only just started is not a codec the TV lacks. A stall
+//!   slow or failed: a torrent that has only just started is not a codec the TV lacks. Nor does
+//!   it count after the relay served media whose first bytes are no format a receiver plays. A stall
 //!   with the source served in good time blames a copied audio codec alone, never the picture
 //!   or the container.
 //! - Before a file whose picture this TV hasn't played, a capability clip is loaded
@@ -1253,12 +1254,17 @@ async fn stage(
     }
 }
 
+/// Whether what the TV did says anything about the format: it was served media, in good time,
+/// and that media started as a format it plays.
+fn fair(inner: &Inner) -> bool {
+    let source = inner.relay.source();
+    inner.relay.media_served() && !source.busy && !source.troubled && !source.unreadable
+}
+
 /// What a plan the TV didn't play teaches, by how it went.
 fn refused(inner: &Inner) -> Tried {
-    let source = inner.relay.source();
     // A TV that gave up while it waited on a slow source said nothing about the format.
-    let fair = inner.relay.media_served() && !source.busy && !source.troubled;
-    Tried::Refused(if fair { Blame::Format } else { Blame::Nothing })
+    Tried::Refused(if fair(inner) { Blame::Format } else { Blame::Nothing })
 }
 
 /// What a plan that never moved teaches: a stall says less than a refusal (see
@@ -1266,9 +1272,7 @@ fn refused(inner: &Inner) -> Tried {
 ///
 /// [`CastCaps::record_stall`]: crate::memory::CastCaps::record_stall
 fn stalled(inner: &Inner) -> Tried {
-    let source = inner.relay.source();
-    let fair = inner.relay.media_served() && !source.busy && !source.troubled;
-    Tried::Refused(if fair { Blame::Audio } else { Blame::Nothing })
+    Tried::Refused(if fair(inner) { Blame::Audio } else { Blame::Nothing })
 }
 
 /// Whether a plan that hasn't moved `waited` after its load has had its chance: the TV is

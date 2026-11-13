@@ -66,6 +66,9 @@ async fn serve_slowly(
                 };
                 let kind = if path.ends_with(".m3u8") {
                     "application/vnd.apple.mpegurl"
+                } else if path.ends_with(".jpg") {
+                    // A segment host that names its MPEG-TS as images.
+                    "image/jpeg"
                 } else {
                     "video/x-matroska"
                 };
@@ -513,6 +516,81 @@ async fn a_slow_first_segment_is_waited_for_and_teaches_nothing() {
         caps.formats
     );
     assert!(caps.played("hls-ts"));
+}
+
+/// An HLS stream of 1080-line H.264 whose two segments are `seg0.jpg` and `seg1.jpg` with
+/// `segment`'s bytes, behind a referer, and the load for it.
+async fn hls_with_jpg_segments(segment: Vec<u8>) -> CastLoad {
+    let master = "#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=900000,RESOLUTION=1920x1080,CODECS=\"avc1.640028,mp4a.40.2\"\nv/index.m3u8\n";
+    let media = "#EXTM3U\n#EXT-X-TARGETDURATION:4\n#EXTINF:4.0,\nseg0.jpg\n#EXTINF:4.0,\nseg1.jpg\n#EXT-X-ENDLIST\n";
+    let base = serve(HashMap::from([
+        ("/a/master.m3u8".to_owned(), master.as_bytes().to_vec()),
+        ("/a/v/index.m3u8".to_owned(), media.as_bytes().to_vec()),
+        ("/a/v/seg0.jpg".to_owned(), segment.clone()),
+        ("/a/v/seg1.jpg".to_owned(), segment),
+    ]))
+    .await;
+    let url = format!("{base}/a/master.m3u8");
+    CastLoad {
+        source: CastSource {
+            url: url.clone(),
+            kind: SourceKind::Hls,
+            headers: vec![("Referer".into(), "https://player.example/".into())],
+        },
+        ..torrent(url)
+    }
+}
+
+fn ts_segment() -> Vec<u8> {
+    let mut segment = vec![0xFFu8; 188 * 8];
+    for packet in segment.chunks_mut(188) {
+        packet[0] = 0x47;
+    }
+    segment
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn segments_named_as_images_reach_the_tv_as_the_media_they_are() {
+    let receiver = FakeReceiver::start(FakeOptions { speed: 4.0, ..FakeOptions::default() })
+        .await
+        .unwrap();
+    let memory = Arc::new(CastMemory::memory());
+    let (player, mut events) =
+        CastPlayer::connect(setup(&receiver, Arc::clone(&memory), Arc::new(NoEncoder)))
+            .await
+            .unwrap();
+    player.load(hls_with_jpg_segments(ts_segment()).await);
+    next(&mut events, |e| *e == PlaybackEvent::Loaded).await;
+    assert_eq!(receiver.heard("LOAD").len(), 1);
+    let caps = memory.caps("tv-1");
+    assert!(caps.played("h264/1080/hls"), "{:?}", caps.formats);
+    assert!(caps.formats.values().all(|answer| answer.played), "{:?}", caps.formats);
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_refusal_after_bytes_no_receiver_plays_blames_no_codec() {
+    // Each segment has an image's header before its MPEG-TS, which the TV can't read.
+    let mut segment = b"\x89PNG\r\n\x1a\n".to_vec();
+    segment.extend(ts_segment());
+    let receiver = FakeReceiver::start(FakeOptions {
+        refuse: Refuse {
+            bytes: vec![b"\x89PNG".to_vec()],
+            how: Some(Refusal::LoadFailed),
+            ..Refuse::default()
+        },
+        ..FakeOptions::default()
+    })
+    .await
+    .unwrap();
+    let memory = Arc::new(CastMemory::memory());
+    let (player, mut events) =
+        CastPlayer::connect(setup(&receiver, Arc::clone(&memory), Arc::new(NoEncoder)))
+            .await
+            .unwrap();
+    player.load(hls_with_jpg_segments(segment).await);
+    next(&mut events, |e| matches!(e, PlaybackEvent::Ended { complete: false })).await;
+    assert_eq!(player.failure(), Some(CastFailure::Refused), "not a codec the TV lacks");
+    assert!(memory.caps("tv-1").formats.is_empty(), "{:?}", memory.caps("tv-1").formats);
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]

@@ -2487,11 +2487,11 @@ dependencies = [
 
 [[package]]
 name = "kaeri-audio-tap"
-version = "0.3.5"
+version = "0.3.6"
 
 [[package]]
 name = "kaeri-cast"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "async-trait",
  "futures",
@@ -2508,7 +2508,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-core"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "async-trait",
  "directories",
@@ -2563,7 +2563,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-discord"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "serde_json",
  "tokio",
@@ -2572,7 +2572,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-engine"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "async-trait",
  "futures",
@@ -2610,7 +2610,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-i18n"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "fluent-bundle",
  "unic-langid",
@@ -2618,7 +2618,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-jellyfin"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "async-trait",
  "kaeri-core",
@@ -2637,7 +2637,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-meta"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "kaeri-core",
  "kaeri-net",
@@ -2652,7 +2652,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-model"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "kaeri-core",
  "kaeri-i18n",
@@ -2662,7 +2662,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-mpv-host"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "find-msvc-tools",
  "kaeri-audio-tap",
@@ -2675,7 +2675,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-net"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "kaeri-core",
  "reqwest 0.13.1",
@@ -2687,7 +2687,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-party"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "rustls",
  "serde",
@@ -2701,7 +2701,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-playback"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "kaeri-core",
  "rusty-chromaprint",
@@ -2711,7 +2711,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-plugin"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2730,7 +2730,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-plugin-store"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "async-trait",
  "bytes",
@@ -2756,7 +2756,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-providers"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "async-trait",
  "futures",
@@ -2774,7 +2774,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-remote"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "base64 0.23.1",
  "hex",
@@ -2793,7 +2793,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-store"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "kaeri-core",
  "rusqlite",
@@ -2805,7 +2805,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-store-core"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -2821,7 +2821,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-store-server"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "async-trait",
  "clap",
@@ -2836,7 +2836,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-sync"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -2858,7 +2858,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-testkit"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "jiff",
  "kaeri-core",
@@ -2872,7 +2872,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-track"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "async-trait",
  "kaeri-core",
@@ -3189,9 +3189,9 @@ dependencies = [
 
 [[package]]
 name = "libsqlite3-sys"
-version = "0.38.2"
+version = "0.39.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f1d20bef17f513b9b3004532233187769cd072d790971f4e4da0e346eb6401e8"
+checksum = "14a5f01b87b92705d07b433c06f96cbc764637d81a0bffb5734ce17cf0f9a2b3"
 dependencies = [
  "cc",
  "pkg-config",
@@ -4285,9 +4285,9 @@ dependencies = [
 
 [[package]]
 name = "rusqlite"
-version = "0.40.2"
+version = "0.41.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "23f2a97da3e3873c73cb2a2e71b35c40ff95e0b1eefa8d72d8499a6928c3b5b3"
+checksum = "da9bba6f3506135e120a6586df05be18b48d18896600646a4bec8f993d91a594"
 dependencies = [
  "bitflags 2.13.2",
  "chrono",

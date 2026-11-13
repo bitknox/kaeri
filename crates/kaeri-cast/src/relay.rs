@@ -17,7 +17,10 @@
 //! `Access-Control-Allow-Private-Network`.
 //!
 //! Bodies are streamed as they arrive. Playlists alone are read whole, to point their addresses
-//! back here.
+//! back here. A body's first bytes are read before its head is sent: a segment its host names as
+//! an image or text goes to the TV under the media type its bytes say, since the receiver's
+//! player believes the type and refuses the stream, and bytes that are no media a receiver
+//! plays are noted (see [`SourceHealth::unreadable`]).
 
 use std::{
     collections::{HashMap, HashSet},
@@ -40,7 +43,10 @@ use tokio::{
     task::{JoinHandle, JoinSet},
 };
 
-use crate::fetch::Upstream;
+use crate::{
+    fetch::Upstream,
+    probe::{media_type, names_media},
+};
 
 /// A resource made on request: its content type and body, or `None` for a `404`.
 pub type Made<'a> = Pin<Box<dyn Future<Output = Option<(String, Vec<u8>)>> + Send + 'a>>;
@@ -53,6 +59,12 @@ pub trait Dynamic: Send + Sync {
 
 /// The largest playlist relayed.
 const PLAYLIST_LIMIT: usize = 8 << 20;
+
+/// How much of a body is read before its head is sent, to say what it is.
+const SNIFFED: usize = 1024;
+
+/// The fewest first bytes that can tell media from something else: one MPEG-TS packet.
+const MIN_SNIFF: usize = 188;
 
 struct Shared {
     token: String,
@@ -82,6 +94,8 @@ struct Shared {
     source_trouble: AtomicBool,
     /// When the last wait on the source ended, or the reset, whichever came later.
     source_settled: Mutex<Instant>,
+    /// Since the reset, a body served as media started with bytes no receiver plays.
+    unreadable: AtomicBool,
     slow_source: Mutex<Duration>,
 }
 
@@ -122,6 +136,10 @@ pub struct SourceHealth {
     pub troubled: bool,
     /// Since the last wait on the source ended, or the reset.
     pub quiet: Duration,
+    /// The TV was served media whose first bytes are no format a receiver plays, such as a
+    /// segment with other bytes before its MPEG-TS. Its refusal is the stream's, not the
+    /// format's.
+    pub unreadable: bool,
 }
 
 /// A wait on the source this long is a slow source, unless the cast says otherwise.
@@ -172,6 +190,7 @@ impl Relay {
             source_waits: AtomicU64::new(0),
             source_trouble: AtomicBool::new(false),
             source_settled: Mutex::new(Instant::now()),
+            unreadable: AtomicBool::new(false),
             slow_source: Mutex::new(SLOW_SOURCE),
         });
         let task = {
@@ -271,6 +290,7 @@ impl Relay {
         self.shared.requests.store(0, Ordering::Relaxed);
         self.shared.media_requests.store(0, Ordering::Relaxed);
         self.shared.source_trouble.store(false, Ordering::Relaxed);
+        self.shared.unreadable.store(false, Ordering::Relaxed);
         *lock(&self.shared.source_settled) = Instant::now();
     }
 
@@ -283,6 +303,7 @@ impl Relay {
             busy: shared.source_waits.load(Ordering::Relaxed) > 0,
             troubled: shared.source_trouble.load(Ordering::Relaxed),
             quiet: lock(&shared.source_settled).elapsed(),
+            unreadable: shared.unreadable.load(Ordering::Relaxed),
         }
     }
 
@@ -493,14 +514,6 @@ async fn answer(
     Ok((404, true))
 }
 
-/// Whether a content type says nothing of what the body is, so a playlist may hide behind it.
-fn untyped(content_type: &str) -> bool {
-    let kind = content_type.to_ascii_lowercase();
-    kind.starts_with("application/octet-stream")
-        || kind.starts_with("binary/octet-stream")
-        || kind.starts_with("text/plain")
-}
-
 /// Whether bytes of this type are the picture and sound, not a playlist or subtitles.
 fn is_media(content_type: &str) -> bool {
     let kind = content_type.to_ascii_lowercase();
@@ -620,31 +633,32 @@ async fn upstream(
     // Where the answer came from after any redirect: a playlist's relative addresses are
     // relative to that.
     let base = response.url.clone().unwrap_or_else(|| url.to_owned());
-    let kind = response.header("content-type").map_or_else(
+    let mut kind = response.header("content-type").map_or_else(
         || content_type(url.split('?').next().unwrap_or(url)).to_owned(),
         str::to_owned,
     );
     let content_range = response.header("content-range").map(str::to_owned);
     let length: Option<u64> =
         response.header("content-length").and_then(|l| l.trim().parse().ok());
-    let mut extra = format!("{cors}Content-Type: {kind}\r\n");
-    if let Some(content_range) = content_range {
-        extra.push_str(&format!(
-            "Content-Range: bytes {}\r\n",
-            content_range.trim_start_matches("bytes ")
-        ));
-    }
-    if response.header("accept-ranges").is_some() || status == 206 {
-        extra.push_str("Accept-Ranges: bytes\r\n");
-    }
+    let ranges = response.header("accept-ranges").is_some() || status == 206;
+    let from_start = status == 200
+        || content_range
+            .as_deref()
+            .is_some_and(|r| r.trim_start_matches("bytes ").trim().starts_with("0-"));
 
     let mut playlist = kind.contains("mpegurl")
         || url.split('?').next().is_some_and(|p| p.to_ascii_lowercase().ends_with(".m3u8"));
-    // A tokenised playlist address may come as plain bytes or text: its first bytes say.
+    // The first bytes say what the body is: a tokenised playlist address may come as plain
+    // bytes or text, and a segment named as an image. A HEAD is answered from them too, since
+    // the receiver's player may choose a segment's type from a HEAD alone.
     let mut first = Vec::new();
-    if !playlist && untyped(&kind) && matches!(status, 200 | 206) && !head_only {
+    if !playlist
+        && matches!(status, 200 | 206)
+        && from_start
+        && (!head_only || !names_media(&kind))
+    {
         let wait = SourceWait::begin(shared);
-        while first.len() < 64 {
+        while first.len() < SNIFFED {
             match response.body.next().await {
                 Some(Ok(chunk)) => first.extend_from_slice(&chunk),
                 Some(Err(e)) => {
@@ -659,8 +673,36 @@ async fn upstream(
             }
         }
         drop(wait);
-        let text = String::from_utf8_lossy(&first);
-        playlist = text.trim_start_matches('\u{feff}').trim_start().starts_with("#EXTM3U");
+        let text = String::from_utf8_lossy(&first[..first.len().min(64)]).into_owned();
+        let text = text.trim_start_matches('\u{feff}').trim_start();
+        if !names_media(&kind) && text.starts_with("#EXTM3U") {
+            playlist = true;
+        } else if text.starts_with("WEBVTT") {
+            kind = "text/vtt".into();
+        } else {
+            match media_type(&first) {
+                Some(found) if !names_media(&kind) => {
+                    tracing::debug!(named = %kind, found, "relaying a segment as what it is");
+                    kind = found.to_owned();
+                }
+                Some(_) => {}
+                None if is_media(&kind) && first.len() >= MIN_SNIFF => {
+                    tracing::debug!(named = %kind, "relaying bytes no receiver plays");
+                    shared.unreadable.store(true, Ordering::Relaxed);
+                }
+                None => {}
+            }
+        }
+    }
+    let mut extra = format!("{cors}Content-Type: {kind}\r\n");
+    if let Some(content_range) = content_range {
+        extra.push_str(&format!(
+            "Content-Range: bytes {}\r\n",
+            content_range.trim_start_matches("bytes ")
+        ));
+    }
+    if ranges {
+        extra.push_str("Accept-Ranges: bytes\r\n");
     }
     let sniffed = playlist && !first.is_empty();
     if playlist && matches!(status, 200 | 206) {
@@ -949,6 +991,71 @@ mod tests {
         let response = get(&relay.upstream_url(&format!("{source}/v?token=abc")), None).await;
         assert_eq!(response.bytes(1 << 20).await.unwrap(), body);
         assert!(relay.media_served());
+    }
+
+    /// HEAD `url`, as the receiver's player does to learn a segment's type.
+    async fn head_of(url: &str) -> String {
+        let (authority, path) = url.trim_start_matches("http://").split_once('/').unwrap();
+        let mut socket = tokio::net::TcpStream::connect(authority).await.unwrap();
+        socket
+            .write_all(
+                format!("HEAD /{path} HTTP/1.1\r\nHost: tv\r\nConnection: close\r\n\r\n")
+                    .as_bytes(),
+            )
+            .await
+            .unwrap();
+        let mut answer = String::new();
+        socket.read_to_string(&mut answer).await.unwrap();
+        answer.to_ascii_lowercase()
+    }
+
+    #[tokio::test]
+    async fn a_segment_named_as_an_image_goes_to_the_tv_as_the_media_it_is() {
+        let mut segment = vec![0xFFu8; 188 * 40];
+        for packet in segment.chunks_mut(188) {
+            packet[0] = 0x47;
+        }
+        let source =
+            crate::fetch::tests::serve_typed(segment.clone(), true, Some("image/jpeg")).await;
+        let relay = Relay::start(
+            Ipv4Addr::LOCALHOST,
+            IpAddr::V4(Ipv4Addr::LOCALHOST),
+            Arc::new(PlainHttp),
+        )
+        .await
+        .unwrap();
+        let url = relay.upstream_url(&format!("{source}/seg-1.jpg"));
+
+        let head = head_of(&url).await;
+        assert!(head.contains("content-type: video/mp2t"), "{head}");
+        assert!(!relay.media_served(), "a HEAD is not the picture");
+
+        let response = get(&url, None).await;
+        assert_eq!(response.header("content-type"), Some("video/mp2t"));
+        assert_eq!(response.bytes(1 << 20).await.unwrap(), segment, "the bytes as they came");
+        assert!(relay.media_served());
+        assert!(!relay.source().unreadable);
+
+        // A range from the start is named the same; one from the middle can't be read, and is
+        // passed on as it was named.
+        let start = get(&url, Some("bytes=0-")).await;
+        assert_eq!((start.status, start.header("content-type")), (206, Some("video/mp2t")));
+        let middle = get(&url, Some("bytes=1000-1999")).await;
+        assert_eq!(middle.header("content-type"), Some("image/jpeg"));
+
+        // Bytes that are no media a receiver plays are noted, so a refusal blames nothing.
+        relay.reset_stats();
+        let mut junk = b"\x89PNG\r\n\x1a\n".to_vec();
+        junk.extend(&segment);
+        let source =
+            crate::fetch::tests::serve_typed(junk.clone(), false, Some("image/png")).await;
+        let response = get(&relay.upstream_url(&format!("{source}/seg-2.png")), None).await;
+        assert_eq!(response.header("content-type"), Some("image/png"));
+        assert_eq!(response.bytes(1 << 20).await.unwrap(), junk);
+        assert!(relay.media_served());
+        assert!(relay.source().unreadable);
+        relay.reset_stats();
+        assert!(!relay.source().unreadable);
     }
 
     /// An upstream that sends every request on to `edge`, as a CDN's redirect does, and says
