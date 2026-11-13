@@ -4825,6 +4825,53 @@ mod tests {
             engine.shutdown().await;
         }
 
+        /// R7I-2. A second send identical to one still preparing (same work, chapters, target
+        /// and format) joins it: the chapter is fetched once, both are told it is ready with the
+        /// same files, and putting one away leaves the files the other offers.
+        #[tokio::test]
+        async fn an_identical_send_joins_the_one_preparing() {
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, _, source) = launch_engine(dir.path(), None).await;
+            events.launch().await;
+            engine.send(network(false, false));
+            source.held.store(true, Ordering::SeqCst);
+            engine.send(send_of(&["2"]));
+            let pages = source.clone();
+            store_waits("the first send fetches", move || pages.fetched() == 2).await;
+            engine.send(send_of(&["2"]));
+            tokio::time::sleep(Duration::from_millis(300)).await;
+            source.held.store(false, Ordering::SeqCst);
+            let ready = |seen: &[Event]| {
+                seen.iter()
+                    .filter_map(|e| match e {
+                        Event::Reading(ReadingEvent::ExportReady { job, files }) => {
+                            Some((*job, files.clone()))
+                        }
+                        _ => None,
+                    })
+                    .collect::<Vec<_>>()
+            };
+            let is_ready =
+                |e: &Event| matches!(e, Event::Reading(ReadingEvent::ExportReady { .. }));
+            let mut seen = Vec::new();
+            while ready(&seen).len() < 2 {
+                seen.extend(seen_until(&mut events, is_ready).await);
+            }
+            let ready = ready(&seen);
+            assert_eq!(ready.len(), 2, "{seen:?}");
+            assert_ne!(ready[0].0, ready[1].0);
+            assert_eq!(ready[0].1, ready[1].1, "both offer the same files");
+            assert_eq!(source.fetched(), 2, "chapter 2 is fetched once");
+
+            engine.send(Command::Reading(ReadingCommand::CancelPrepare { job: ready[0].0 }));
+            tokio::time::sleep(Duration::from_millis(300)).await;
+            let path = ready[1].1[0].path.clone();
+            assert!(std::path::Path::new(&path).is_file(), "the other still offers them");
+            engine.send(Command::Reading(ReadingCommand::CancelPrepare { job: ready[1].0 }));
+            store_waits("put away", move || !std::path::Path::new(&path).exists()).await;
+            engine.shutdown().await;
+        }
+
         /// Android R7-2. A send that was ready but never shared when the app was killed is
         /// offered again at the next launch, with its chapters and its files, until it is put
         /// away.

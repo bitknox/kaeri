@@ -77,7 +77,38 @@ pub struct Exports {
     running: Arc<Mutex<HashMap<u64, Arc<AtomicBool>>>>,
     /// Ready sends by job, with when each became ready on the engine's clock and the name of
     /// its folder: its own, or for a send kept from an earlier launch, the one that launch made.
+    /// Sends that joined one share its folder.
     ready: Arc<Mutex<HashMap<u64, (i64, String)>>>,
+    /// The sends running by what they send (work, chapters, target and format), each with the
+    /// jobs of the identical sends asked for while it ran, which join it rather than fetch the
+    /// same chapters again.
+    joins: Arc<Mutex<HashMap<String, (u64, Arc<Joined>)>>>,
+}
+
+/// The jobs that joined a running send: each is told what it is told, and ends when it ends.
+#[derive(Default)]
+struct Joined(Mutex<Vec<(JobId, Option<JobGuard>)>>);
+
+impl std::fmt::Debug for Joined {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let jobs: Vec<u64> = self.lock().iter().map(|(job, _)| job.get()).collect();
+        f.debug_tuple("Joined").field(&jobs).finish()
+    }
+}
+
+impl Joined {
+    fn lock(&self) -> std::sync::MutexGuard<'_, Vec<(JobId, Option<JobGuard>)>> {
+        self.0.lock().unwrap_or_else(|e| e.into_inner())
+    }
+
+    fn jobs(&self) -> Vec<JobId> {
+        self.lock().iter().map(|(job, _)| *job).collect()
+    }
+}
+
+/// What a send sends, so two identical ones are told apart from the rest.
+fn identity(work: &WorkId, pick: &DownloadPick, target: &str, format: ExportFormat) -> String {
+    format!("{}\u{1f}{pick:?}\u{1f}{target}\u{1f}{format:?}", work.as_str())
 }
 
 /// A mark no other engine has: the process id, then when it was made and a count, as
@@ -133,7 +164,13 @@ pub fn sweep(dir: &Path) -> usize {
 
 impl Exports {
     pub fn new(dir: PathBuf) -> Self {
-        Self { dir, mark: mark().into(), running: Arc::default(), ready: Arc::default() }
+        Self {
+            dir,
+            mark: mark().into(),
+            running: Arc::default(),
+            ready: Arc::default(),
+            joins: Arc::default(),
+        }
     }
 
     /// The name of `job`'s folder: this engine's mark and the job.
@@ -204,11 +241,57 @@ impl Exports {
             return true;
         }
         drop(running);
-        let put_away = self.ready.lock().unwrap_or_else(|e| e.into_inner()).remove(&job.get());
-        if let Some((_, name)) = put_away {
-            let _ = std::fs::remove_dir_all(self.dir.join(name));
+        // A send that joined another leaves it; the other goes on.
+        for (_, joined) in self.joins.lock().unwrap_or_else(|e| e.into_inner()).values() {
+            let mut jobs = joined.lock();
+            if let Some(at) = jobs.iter().position(|(j, _)| *j == job) {
+                jobs.remove(at);
+                return true;
+            }
+        }
+        let mut ready = self.ready.lock().unwrap_or_else(|e| e.into_inner());
+        if let Some((_, name)) = ready.remove(&job.get()) {
+            // The files go once no send that joined it still offers them.
+            if !ready.values().any(|(_, other)| *other == name) {
+                let _ = std::fs::remove_dir_all(self.dir.join(name));
+            }
         }
         false
+    }
+
+    /// Join the running send identical to the one `job` asks for, when there is one: `job` is
+    /// then told what that send is told and ends with it, and `Ok` says so. Otherwise the guard
+    /// comes back for a send of its own.
+    fn join(&self, identity: &str, job: Option<JobGuard>) -> Result<(), Option<JobGuard>> {
+        let joins = self.joins.lock().unwrap_or_else(|e| e.into_inner());
+        let (Some((_, joined)), Some(id)) = (joins.get(identity), job.as_ref().map(|j| j.id))
+        else {
+            return Err(job);
+        };
+        joined.lock().push((id, job));
+        Ok(())
+    }
+
+    /// `job` runs the send `identity` names, which identical ones join while it runs.
+    fn lead(&self, identity: &str, job: JobId) -> Arc<Joined> {
+        let joined = Arc::new(Joined::default());
+        let mut joins = self.joins.lock().unwrap_or_else(|e| e.into_inner());
+        joins.insert(identity.to_owned(), (job.get(), joined.clone()));
+        joined
+    }
+
+    /// The send `identity` names has ended: none joins it any more.
+    fn unlead(&self, identity: &str, job: JobId) {
+        let mut joins = self.joins.lock().unwrap_or_else(|e| e.into_inner());
+        if joins.get(identity).is_some_and(|(lead, _)| *lead == job.get()) {
+            joins.remove(identity);
+        }
+    }
+
+    /// `job` joined a send that is ready now: it offers the same files.
+    fn ready_as(&self, job: JobId, lead: JobId, now: i64) {
+        let name = self.name(lead);
+        self.ready.lock().unwrap_or_else(|e| e.into_inner()).insert(job.get(), (now, name));
     }
 
     /// The folder one send writes to. The folder's other entries are removed, except those of
@@ -416,6 +499,13 @@ fn prepare_files(
     let direction = page_direction(engine, services, &work);
     let id = job.as_ref().map_or(JobId::new(0), |j| j.id);
     let exports = services.book_sources.exports.clone();
+    // An identical send already running is joined, so its chapters are fetched once.
+    let identity = identity(&work, &pick, target, format);
+    let job = match exports.join(&identity, job) {
+        Ok(()) => return,
+        Err(job) => job,
+    };
+    let joined = exports.lead(&identity, id);
     let cancel = exports.begin(id);
     let out = exports.folder(id, services.clock.now());
     let clock = services.clock.clone();
@@ -425,7 +515,7 @@ fn prepare_files(
         lent: Lent::of(services, tx),
         downloads: services.book_sources.downloads.clone(),
         exports,
-        told: Told::new(tx.clone(), id),
+        told: Told::new(tx.clone(), id, joined.clone()),
         cancel,
         id,
         work,
@@ -441,26 +531,34 @@ fn prepare_files(
         let _job = job;
         let tx = send.lent.tx.clone();
         let result = send.run().await;
+        // No send joins this one from here on; those that did end with it.
+        send.exports.unlead(&identity, send.id);
+        let also = std::mem::take(&mut *joined.lock());
+        let jobs: Vec<JobId> =
+            std::iter::once(send.id).chain(also.iter().map(|(job, _)| *job)).collect();
         if let Ok(files) = &result {
-            send.exports.ready(send.id, clock.now());
+            let now = clock.now();
+            send.exports.ready(send.id, now);
+            for job in &jobs[1..] {
+                send.exports.ready_as(*job, send.id, now);
+            }
             send.keep_ready(files);
         }
         send.exports.end(send.id);
         let chapter = send.told.failing_chapter();
-        match result {
-            Ok(files) => {
-                let _ =
-                    tx.send(Event::Reading(ReadingEvent::ExportReady { job: send.id, files }));
-            }
-            Err(prepare::Stop::Cancelled) => {}
-            Err(prepare::Stop::Failed(failure)) => {
-                let _ = tx.send(Event::Reading(ReadingEvent::ExportFailed {
-                    job: send.id,
-                    chapter,
-                    failure,
-                }));
-            }
+        for job in jobs {
+            let said = match &result {
+                Ok(files) => ReadingEvent::ExportReady { job, files: files.clone() },
+                Err(prepare::Stop::Cancelled) => continue,
+                Err(prepare::Stop::Failed(failure)) => ReadingEvent::ExportFailed {
+                    job,
+                    chapter: chapter.clone(),
+                    failure: failure.clone(),
+                },
+            };
+            let _ = tx.send(Event::Reading(said));
         }
+        drop(also);
     });
 }
 
@@ -499,18 +597,26 @@ struct Told {
     of: AtomicU32,
     /// The chapter being fetched, for a failure to name.
     current: Mutex<Option<String>>,
+    /// The identical sends that joined this one, told the same.
+    joined: Arc<Joined>,
 }
 
 impl Told {
-    fn new(tx: Outbox, job: JobId) -> Arc<Self> {
+    fn new(tx: Outbox, job: JobId, joined: Arc<Joined>) -> Arc<Self> {
         Arc::new(Self {
             tx,
             job,
+            joined,
             last: Mutex::new(Instant::now() - Duration::from_secs(1)),
             gathered: AtomicU32::new(0),
             of: AtomicU32::new(0),
             current: Mutex::new(None),
         })
+    }
+
+    /// This send's job and those of the sends that joined it.
+    fn jobs(&self) -> Vec<JobId> {
+        std::iter::once(self.job).chain(self.joined.jobs()).collect()
     }
 
     fn chapter(&self, label: Option<String>) {
@@ -527,13 +633,15 @@ impl Told {
             return;
         }
         *last = Instant::now();
-        let _ = self.tx.send(Event::Reading(ReadingEvent::ExportProgress {
-            job: self.job,
-            done,
-            total,
-            chapters_done: self.gathered.load(Ordering::Relaxed),
-            chapters: self.of.load(Ordering::Relaxed),
-        }));
+        for job in self.jobs() {
+            let _ = self.tx.send(Event::Reading(ReadingEvent::ExportProgress {
+                job,
+                done,
+                total,
+                chapters_done: self.gathered.load(Ordering::Relaxed),
+                chapters: self.of.load(Ordering::Relaxed),
+            }));
+        }
     }
 }
 
@@ -783,13 +891,15 @@ impl OneSend {
                 said = true;
                 let line =
                     Msg::Reading(ReadingMsg::ExportWaitsForWifi { n: i64::from(missing) });
-                let _ = self.lent.tx.send(Event::Reading(ReadingEvent::ExportWaiting {
-                    job: self.id,
-                    work: self.work.clone(),
-                    target: self.target.clone(),
-                    line,
-                    chapters: wanted.iter().map(|w| w.chapter.clone()).collect(),
-                }));
+                for job in self.told.jobs() {
+                    let _ = self.lent.tx.send(Event::Reading(ReadingEvent::ExportWaiting {
+                        job,
+                        work: self.work.clone(),
+                        target: self.target.clone(),
+                        line: line.clone(),
+                        chapters: wanted.iter().map(|w| w.chapter.clone()).collect(),
+                    }));
+                }
             }
             // A change to the network or the setting, or a look at whether it was cancelled.
             let _ = tokio::time::timeout(LOOK_AGAIN, changes.changed()).await;
