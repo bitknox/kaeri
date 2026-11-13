@@ -1851,20 +1851,23 @@ mod tests {
     /// its books and then answered 404 for every one of their links.
     #[tokio::test]
     async fn a_folder_series_named_with_a_percent_sequence_serves_its_books() {
-        let s = shelf();
-        let id = "f1:Paper%20Moth%20Garden";
-        folder_series(&s, id, "Paper%20Moth%20Garden", "Paper%20Moth%20Garden v01");
-        let folders = feed_at(&s, "/opds/folders").await;
-        let series =
-            folders.entries.iter().find(|e| e.title == "Paper%20Moth%20Garden").unwrap();
-        let books = feed_at(&s, &series.links[0].href).await;
-        assert_eq!(books.entries.len(), 1);
-        let book = &books.entries[0];
-        assert!(!book.links.is_empty());
-        for link in &book.links {
-            let path = path_of(&s, &link.href.replace("{pageNumber}", "1"));
-            let reply = get(s.port, &path, Some(PASSWORD), "GET").await;
-            assert_eq!(reply.status, 200, "{} {path}", link.rel);
+        // R7E-9 adds a name with every character a URL gives meaning to, and one whose `%`
+        // sequence is not valid percent encoding.
+        for name in ["Paper%20Moth%20Garden", "#hash ?query %25 & amp", "100%AB"] {
+            let s = shelf();
+            let id = format!("f1:{name}");
+            folder_series(&s, &id, name, &format!("{name} v01"));
+            let folders = feed_at(&s, "/opds/folders").await;
+            let series = folders.entries.iter().find(|e| e.title == name).unwrap();
+            let books = feed_at(&s, &series.links[0].href).await;
+            assert_eq!(books.entries.len(), 1, "{name}");
+            let book = &books.entries[0];
+            assert!(!book.links.is_empty(), "{name}");
+            for link in &book.links {
+                let path = path_of(&s, &link.href.replace("{pageNumber}", "1"));
+                let reply = get(s.port, &path, Some(PASSWORD), "GET").await;
+                assert_eq!(reply.status, 200, "{name}: {} {path}", link.rel);
+            }
         }
     }
 
