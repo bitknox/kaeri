@@ -1535,7 +1535,8 @@ fn source_row(
         number.as_deref(),
     )
     .map(str::to_owned);
-    let pages = parts.iter().map(|p| p.page_count).sum::<Option<u32>>();
+    let pages =
+        crate::read_catalog::chapters::pages_of_parts(parts.iter().map(|p| p.page_count));
     let mut row = ChapterRow {
         id,
         label,

@@ -84,6 +84,10 @@ pub struct Checked {
 /// Tell what runs at a typed address. Addresses without a scheme are tried as https and then
 /// http. A server that refuses everything without a sign-in comes back with no kind.
 pub async fn check(client: &reqwest::Client, typed: &str) -> Result<Checked> {
+    answered(check_each(client, typed)).await
+}
+
+async fn check_each(client: &reqwest::Client, typed: &str) -> Result<Checked> {
     let mut last = ServerError::NotABookServer;
     for address in candidates(typed) {
         match detect(client, &address).await {
@@ -163,22 +167,36 @@ pub async fn sign_in(
     password: &str,
 ) -> Result<SignedIn> {
     let root = root_of(address);
-    match kind {
-        Some(Kind::Komga) => komga::sign_in(client, &root, user, password).await,
-        Some(Kind::Kavita) => kavita::sign_in(client, &root, user, password).await,
-        Some(Kind::Opds) => opds::sign_in(client, address, user, password).await,
-        None => match komga::sign_in(client, &root, user, password).await {
-            Ok(done) => Ok(done),
-            Err(ServerError::Unauthorized) => Err(ServerError::Unauthorized),
-            Err(_) => opds::sign_in(client, address, user, password).await,
-        },
-    }
+    answered(async {
+        match kind {
+            Some(Kind::Komga) => komga::sign_in(client, &root, user, password).await,
+            Some(Kind::Kavita) => kavita::sign_in(client, &root, user, password).await,
+            Some(Kind::Opds) => opds::sign_in(client, address, user, password).await,
+            None => match komga::sign_in(client, &root, user, password).await {
+                Ok(done) => Ok(done),
+                Err(ServerError::Unauthorized) => Err(ServerError::Unauthorized),
+                Err(_) => opds::sign_in(client, address, user, password).await,
+            },
+        }
+    })
+    .await
 }
 
 /// Sign in to Kavita with the API key from an account's OPDS link: no user name or password.
 /// A key Kavita does not know is [`ServerError::Unauthorized`].
 pub async fn sign_in_with_key(client: &reqwest::Client, link: &KavitaLink) -> Result<SignedIn> {
-    kavita::sign_in_with_key(client, &link.root, &link.key).await
+    answered(kavita::sign_in_with_key(client, &link.root, &link.key)).await
+}
+
+/// Runs one of the steps a person waits on (a check, a sign-in) so that it always answers: a
+/// panic inside it, from an answer no one foresaw, comes back as an answer not understood
+/// instead of ending the task that would have told the screen.
+async fn answered<T>(step: impl std::future::Future<Output = Result<T>>) -> Result<T> {
+    use futures::FutureExt;
+    std::panic::AssertUnwindSafe(step).catch_unwind().await.unwrap_or_else(|_| {
+        tracing::warn!("a book server step panicked; answering that it was not understood");
+        Err(ServerError::Parse("the server's answer could not be read".into()))
+    })
 }
 
 /// One library on a server, with how many series this account sees in it.
@@ -335,4 +353,21 @@ pub(crate) async fn fetch_with(
         .await
         .map(|b| b.to_vec())
         .map_err(|e| PageError::Failed(ProviderError::Transport(describe_transport(&e))))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn a_step_that_panics_still_answers() {
+        let step = async {
+            let text = "\u{3042}";
+            // A byte index inside the letter, as a slicing mistake would make.
+            let cut = std::hint::black_box(1);
+            Ok::<_, ServerError>(text[..cut].len())
+        };
+        assert!(matches!(answered(step).await, Err(ServerError::Parse(_))));
+        assert_eq!(answered(async { Ok::<_, ServerError>(7) }).await, Ok(7));
+    }
 }

@@ -198,7 +198,7 @@ pub(crate) fn attr_qname(n: Node<'_, '_>, ns: Option<&str>, local: &str) -> Opti
 
 /// Event handlers, and links that run code when followed.
 fn is_active(name: &str, value: &str) -> bool {
-    if name.len() > 2 && name[..2].eq_ignore_ascii_case("on") {
+    if name.len() > 2 && name.as_bytes()[..2].eq_ignore_ascii_case(b"on") {
         return true;
     }
     if matches!(

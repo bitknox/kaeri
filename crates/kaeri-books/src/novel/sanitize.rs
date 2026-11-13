@@ -469,7 +469,7 @@ impl Walk<'_> {
         name: &str,
         value: &str,
     ) -> Option<String> {
-        if name.len() > 2 && name[..2].eq_ignore_ascii_case("on") {
+        if name.len() > 2 && name.as_bytes()[..2].eq_ignore_ascii_case(b"on") {
             return None;
         }
         if ns == Some(XML_NS) && name == "base" {

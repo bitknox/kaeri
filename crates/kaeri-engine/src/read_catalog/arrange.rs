@@ -573,7 +573,9 @@ impl PartWord {
 
 /// "part 2", "pt 2", "pt. 2", "Part2", "part 2/3", "part 2 of 3" in `text`.
 fn part_word(text: &str) -> Option<PartWord> {
-    let lower = text.to_lowercase();
+    // ASCII lowercase keeps every letter's bytes where they were, so the offsets found here
+    // cut `text` itself; the words and numbers looked for are all ASCII.
+    let lower = text.to_ascii_lowercase();
     let bytes = lower.as_bytes();
     for word in ["part", "pt"] {
         let mut from = 0;
@@ -672,6 +674,26 @@ mod tests {
 
     fn ids(arranged: &Arranged) -> Vec<(&str, usize)> {
         arranged.rows.iter().map(|r| (r.id.as_str(), r.parts.len())).collect()
+    }
+
+    /// R5E-5. Letters whose lowercase has another length (a dotted capital I, the Kelvin sign)
+    /// before the part word: the label is cut at the part word itself.
+    #[test]
+    fn part_labels_with_case_changing_letters_arrange() {
+        for (a, b, rest) in [
+            ("\u{130} 5 Part 1\u{8a71}", "\u{130} 5 Part 2\u{8a71}", "\u{130} 5 \u{8a71}"),
+            ("\u{212a}5 Part 1", "\u{212a}5 Part 2", "\u{212a}5"),
+            ("\u{130}\u{130} 7 pt. 1/2", "\u{130}\u{130} 7 pt. 2/2", "\u{130}\u{130} 7"),
+        ] {
+            let list =
+                [entry("ch-1", "1", None), entry("ch-5a", a, None), entry("ch-5b", b, None)];
+            let arranged = arrange(&list, None, None);
+            assert_eq!(arranged.parts.len(), 3, "{a}");
+            let mut titled = entry("ch-5c", "5", None);
+            titled.title = Some(a.to_owned());
+            assert_eq!(merged_title(&titled).as_deref(), Some(rest), "{a}");
+            assert_eq!(part_word(b).map(|p| p.n), Some(2), "{b}");
+        }
     }
 
     #[test]
