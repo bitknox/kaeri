@@ -314,11 +314,34 @@ async fn write_cached(path: &PathBuf, bytes: &[u8]) {
 }
 
 async fn download(http: &HttpClient, url: &str) -> Result<Vec<u8>, Failure> {
-    // Kaeri's own request, so the client that follows redirects.
-    let response = http.plain().get(url).send().await.map_err(|e| {
-        tracing::debug!(%url, error = %e, "artwork fetch failed");
-        Failure::Offline
-    })?;
+    // QA ONLY, never merged: artwork from a host a source declared waits in the QA gate, hop by
+    // hop, so the client that follows no redirects and the hops followed here.
+    let mut at = url.to_owned();
+    let mut hops = 0;
+    let response = loop {
+        let turn = kaeri_plugin::host::qa_gate_url(&at).await;
+        if turn.is_some() {
+            kaeri_plugin::host::qa_log("artwork", &at);
+        }
+        let sent = http.sources().get(&at).send().await;
+        drop(turn);
+        let response = sent.map_err(|e| {
+            tracing::debug!(%url, error = %e, "artwork fetch failed");
+            Failure::Offline
+        })?;
+        let next = response
+            .headers()
+            .get(reqwest::header::LOCATION)
+            .and_then(|value| value.to_str().ok())
+            .and_then(|location| response.url().join(location).ok());
+        match next {
+            Some(next) if response.status().is_redirection() && hops < 10 => {
+                at = next.to_string();
+                hops += 1;
+            }
+            _ => break response,
+        }
+    };
     let status = response.status();
     if !status.is_success() {
         tracing::debug!(%url, status = status.as_u16(), "artwork fetch failed");
