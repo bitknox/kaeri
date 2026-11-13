@@ -343,6 +343,20 @@ impl Store {
         })
     }
 
+    /// Fetches that failed for want of a network go back in the queue, now that there is one.
+    /// A failure kept with no words is one too, as [`Self::book_download_failed`]'s readers take
+    /// it. Returns how many.
+    pub fn book_downloads_retry_offline(&self, now: i64) -> Result<usize> {
+        self.with_conn(|c| {
+            Ok(c.execute(
+                "UPDATE book_download SET state = 'queued', error = NULL, pages_done = 0,
+                    updated_at = ?1
+                  WHERE state = 'failed' AND (error IS NULL OR error = 'offline')",
+                [now],
+            )?)
+        })
+    }
+
     /// Take a chapter waiting only to be kept ready out of the queue, in one step, as
     /// [`Self::remove_book_downloads`] would: true when it was taken. One the queue has started,
     /// or one the person asked for, stays.

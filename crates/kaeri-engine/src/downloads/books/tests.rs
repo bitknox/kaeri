@@ -539,6 +539,57 @@ async fn nothing_is_fetched_on_cellular_and_rows_wait_for_wifi_until_it_returns(
     assert!(kit.states().iter().all(|(_, s)| *s == ChapterDownloadState::Done));
 }
 
+/// The network going while a page is fetched holds the chapter rather than failing it: the
+/// page the source could not give for want of a network is fetched once the network is back.
+#[tokio::test]
+async fn a_page_that_fails_as_the_network_goes_holds_the_chapter_until_it_returns() {
+    let kit = kit(&["1"]);
+    let (asked, answer) =
+        (Arc::new(tokio::sync::Notify::new()), Arc::new(tokio::sync::Notify::new()));
+    let page = "https://pages.example/1/2".to_owned();
+    *kit.shelf.held.lock().unwrap() = Some((page.clone(), asked.clone(), answer.clone()));
+    kit.queue.download(&kit.lent, WorkId::new(WORK), DownloadPick::Unread).await;
+    asked.notified().await;
+    kit.setup(Setup { hold: true, offline: true, ..Setup::default() });
+    kit.shelf.broken.lock().unwrap().push(page);
+    answer.notify_one();
+    kit.settle().await;
+    assert_eq!(kit.states(), [("1".into(), ChapterDownloadState::Queued)]);
+
+    kit.shelf.broken.lock().unwrap().clear();
+    *kit.shelf.held.lock().unwrap() = None;
+    assert!(kit.queue.configure(Setup::default()));
+    kit.queue.start(&kit.lent);
+    kit.settle().await;
+    assert_eq!(kit.states(), [("1".into(), ChapterDownloadState::Done)]);
+}
+
+/// A chapter kept as failed offline goes back in the queue when the network returns, and one
+/// that failed for another reason stays failed.
+#[tokio::test]
+async fn chapters_that_failed_offline_go_on_once_the_network_is_back() {
+    let kit = kit(&["1", "2"]);
+    kit.setup(Setup { hold: true, offline: true, ..Setup::default() });
+    let work = WorkId::new(WORK);
+    kit.queue.download(&kit.lent, work.clone(), DownloadPick::Unread).await;
+    let rows = kit.store().book_downloads(Some(WORK)).unwrap();
+    let id = |chapter: &str| rows.iter().find(|r| r.chapter == chapter).unwrap().id;
+    kit.store().book_download_failed(id("1"), "offline", 10).unwrap();
+    kit.store().book_download_failed(id("2"), "not_found", 10).unwrap();
+    assert!(kit.queue.network_back(kit.store(), 20));
+    assert!(!kit.queue.network_back(kit.store(), 21), "only once");
+    assert!(kit.queue.configure(Setup::default()));
+    kit.queue.start(&kit.lent);
+    kit.settle().await;
+    assert_eq!(
+        kit.states(),
+        [
+            ("1".into(), ChapterDownloadState::Done),
+            ("2".into(), ChapterDownloadState::Failed { failure: ReadingFailure::NotFound }),
+        ]
+    );
+}
+
 #[test]
 fn setup_follows_the_network_the_config_and_the_edition() {
     let mut config = Config::default();
