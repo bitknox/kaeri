@@ -1588,11 +1588,11 @@ impl Shell {
     }
 
     /// Tell the engine where the network stands, now and as it changes: offline without a
-    /// route past the local network, or with one that does not reach the internet (a link up
-    /// with no route or no name server past it), and a metered connection as a constrained one.
-    /// Limited comes only from a connectivity check that ran and failed: with the system's check
-    /// turned off, as privacy setups do, GIO says full, and a failed request is left to the
-    /// engine to tell the network from the source.
+    /// route past the local network, and a metered connection as a constrained one.
+    /// Limited is never offline by itself: it comes from a connectivity check that ran and
+    /// failed, and a privacy DNS or firewall that blocks the check's host gives it while every
+    /// real fetch works. A request that fails is left to the engine to tell the network from
+    /// the source.
     fn watch_network(&self) {
         let monitor = gio::NetworkMonitor::default();
         let told: Rc<Cell<Option<(bool, bool)>>> = Rc::default();
@@ -1601,10 +1601,7 @@ impl Shell {
             move |monitor: &gio::NetworkMonitor| {
                 let Some(hub) = hub.upgrade() else { return };
                 let offline = !monitor.is_network_available()
-                    || matches!(
-                        monitor.connectivity(),
-                        gio::NetworkConnectivity::Local | gio::NetworkConnectivity::Limited
-                    );
+                    || monitor.connectivity() == gio::NetworkConnectivity::Local;
                 #[cfg(feature = "fixtures")]
                 let offline = offline
                     || crate::fixtures::OFFLINE_SCENE
