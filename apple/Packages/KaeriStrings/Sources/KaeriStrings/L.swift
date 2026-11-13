@@ -8639,6 +8639,11 @@ public enum L {
         Self.format("reader-end-of-chapter-number", fallback: "End of chapter %1$@", chapter)
     }
 
+    /// Top line of the page between chapters when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own, such as Rooftop Lantern.
+    public static func readerEndOfNamed(name: String) -> String {
+        Self.format("reader-end-of-named", fallback: "End of %1$@", name)
+    }
+
     /// The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.
     public static func readerEndFacts(chapter: String, facts: String) -> String {
         Self.format("reader-end-facts", fallback: "Chapter %1$@ · %2$@", chapter, facts)

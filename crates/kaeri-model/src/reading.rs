@@ -354,6 +354,10 @@ pub struct ChapterRow {
     /// source's name. It opens from there.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub other_source: Option<String>,
+    /// A file on this device that is not a download, such as one in the person's folders: it
+    /// opens from there, and there is nothing to download, so no Download is offered for it.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub on_device: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1061,13 +1065,16 @@ pub struct DownloadEstimate {
     pub pick: DownloadPick,
     /// The chosen chapters not downloaded yet.
     pub chapters: u32,
+    /// What they will take, or 0 when that is not known: an estimate needs past downloads of
+    /// the work or its source to go by.
     pub bytes: u64,
     /// "About 214 MB · over Wi-Fi", as parts the app joins with " · ". Empty when nothing is
-    /// left to download.
+    /// left to download, or when the size is not known.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub line: Vec<Msg>,
     /// Every chosen chapter, the ones on this device by what they take here and the rest as
-    /// estimated: what a send to an e-reader of the same choice comes to.
+    /// estimated: what a send to an e-reader of the same choice comes to. 0 when any of them
+    /// is not known.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub all_bytes: u64,
 }

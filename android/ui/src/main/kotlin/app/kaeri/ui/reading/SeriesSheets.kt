@@ -129,8 +129,10 @@ internal fun ChapterSheet(
                 SheetAction(Strings.seriesMarkReadUpTo(context)) { then { store.reading.markReadUpTo(work, row.id) } }
             }
             when (row.download) {
-                null -> SheetAction(Strings.seriesDownload(context)) {
-                    then { store.reading.download(work, DownloadPick.Chapters(listOf(row.id))) }
+                null -> if (row.downloadable) {
+                    SheetAction(Strings.seriesDownload(context)) {
+                        then { store.reading.download(work, DownloadPick.Chapters(listOf(row.id))) }
+                    }
                 }
                 is ChapterDownloadState.Failed -> SheetAction(Strings.chapterRetry(context)) {
                     then { store.reading.download(work, DownloadPick.Chapters(listOf(row.id))) }
@@ -728,11 +730,11 @@ internal fun DownloadMenu(
     val store = LocalAppStore.current
     val work = series.work
     val all = volumes.chapterRows()
-    val unread = all.filter { it.state !is ChapterReadState.Read && it.download == null }
+    val unread = all.filter { it.state !is ChapterReadState.Read && it.downloadable }
     val ahead = volumes.unreadAhead()
     val downloaded = volumes.downloaded()
     val any = all.filter { it.download != null }
-    val toFetch = volumes.downloadVolumes().filter { group -> group.chapters.any { it.state !is ChapterReadState.Read && it.download == null } }.take(3)
+    val toFetch = volumes.downloadVolumes().filter { group -> group.chapters.any { it.state !is ChapterReadState.Read && it.downloadable } }.take(3)
     val snackbars = app.kaeri.ui.LocalSnackbars.current
     fun pick(what: DownloadPick) {
         // The next unread are the engine's pick too, the next not here yet: with every one ahead
@@ -751,7 +753,7 @@ internal fun DownloadMenu(
         DropdownMenuItem(text = { Text(Strings.downloadUnread(context)) }, enabled = unread.isNotEmpty(), onClick = { pick(DownloadPick.Unread) })
         if (toFetch.isNotEmpty()) HorizontalDivider()
         toFetch.forEach { group ->
-            val missing = group.chapters.filter { it.state !is ChapterReadState.Read && it.download == null }
+            val missing = group.chapters.filter { it.state !is ChapterReadState.Read && it.downloadable }
             val name = SeriesWords.volume(context, group, novel = false).first
             DropdownMenuItem(
                 text = { Text(Strings.downloadVolumeCount(context, name, missing.size)) },

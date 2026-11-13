@@ -307,6 +307,9 @@ fun PhoneReader(
     }
     // The guide is drawn over the whole page, so the controls go when it comes, as Show zones has it.
     LaunchedEffect(guide.up) { if (guide.up) chrome = false }
+    // Turning past a novel's last page is a turn like any other: the controls go, so the end page's
+    // buttons are clear of them.
+    LaunchedEffect(place.ended) { if (place.ended) chrome = false }
 
     // A Fixtures shot's step, once the credit pages or parts it staged have come.
     val creditShot = CreditShot.step
@@ -580,7 +583,7 @@ fun PhoneReader(
                                 instant = instant,
                             )
                         }
-                        place.ended -> NovelEndPage(state, session, actions, images, direction, zones, reading, onBack = { place.ended = false }, cover = cover, onFirstPage = {
+                        place.ended -> NovelEndPage(state, session, actions, images, direction, zones, reading, onControls = { chrome = !chrome }, onBack = { place.ended = false }, cover = cover, onFirstPage = {
                             place.ended = false
                             place.go(0)
                         })
@@ -933,6 +936,10 @@ private fun SystemBars(context: Context, shown: Boolean, light: Boolean) {
 /** The chapter's number as the strings name it. */
 internal fun chapterNumber(row: ChapterRow): String = row.number ?: row.label
 
+/** "Chapter 12", or a chapter with no number by its own name: a book in one file is its title, never "Chapter <title>". */
+internal fun chapterName(context: Context, row: ChapterRow): String =
+    row.number?.let { Strings.readerChapterLine(context, it) } ?: row.label
+
 private fun actionWords(context: Context, notice: ShownNotice): String? = when (notice.notice.action) {
     null -> null
     NoticeAction.START_OVER -> Strings.readerNoticeStartOver(context)
@@ -1275,7 +1282,7 @@ private fun NovelScrubber(state: ReaderState, place: NovelPlace) {
 private fun novelLine(context: Context, state: ReaderState): String {
     val chapter = state.view?.chapter ?: return ""
     return if (state.choice(ReaderSettingKey.MODE) == "scrolled") {
-        Strings.readerNovelLineScroll(context, chapterNumber(chapter))
+        chapter.number?.let { Strings.readerNovelLineScroll(context, it) } ?: Strings.readerNovelLineScrollNamed(context, chapter.label)
     } else {
         chapterWords(context, chapter)
     }
@@ -1304,7 +1311,8 @@ private fun BoxScope.PagesLeft(state: ReaderState, place: NovelPlace) {
 
 /**
  * A novel's end page over its last page: the same page as manga's. A swipe back returns to the
- * text, a swipe on goes to the next chapter.
+ * text, a swipe on goes to the next chapter, and a tap in the Controls zone shows or hides the
+ * controls, as on any page.
  */
 @Composable
 private fun NovelEndPage(
@@ -1315,6 +1323,7 @@ private fun NovelEndPage(
     direction: ReadDirection,
     zones: TapZoneSettings,
     reading: TapReading?,
+    onControls: () -> Unit,
     onBack: () -> Unit,
     cover: (@Composable (Modifier) -> Unit)?,
     onFirstPage: () -> Unit,
@@ -1324,13 +1333,13 @@ private fun NovelEndPage(
     val next = state.endNext
     Box(
         Modifier.fillMaxSize().pointerInput(zones, reading) {
-            // A tap in a Next zone goes on, in a Previous zone returns to the text; the page's
-            // buttons take their own taps first.
+            // A tap in a Next zone goes on, in a Previous zone returns to the text, and in the
+            // Controls zone shows or hides the controls; the page's buttons take their own taps first.
             detectTapGestures { at ->
-                when (reading?.let { zones.actionAt(it, at.x / size.width, at.y / size.height) }) {
+                when (reading?.let { zones.actionAt(it, at.x / size.width, at.y / size.height) } ?: TapAction.CONTROLS) {
                     TapAction.NEXT -> session.crossOn()
                     TapAction.PREVIOUS -> onBack()
-                    else -> {}
+                    TapAction.CONTROLS -> onControls()
                 }
             }
         }.pointerInput(next?.id, direction) {

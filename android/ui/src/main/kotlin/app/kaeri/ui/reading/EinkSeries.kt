@@ -418,7 +418,7 @@ private fun SeriesButtons(
                 statusMenu()
             }
             Box {
-                EinkOutlinedButton(Strings.seriesDownload(context), { if (!choosing && chapters != null) onDownload() })
+                EinkOutlinedButton(Strings.seriesDownload(context), { if (!choosing && chapters?.volumes?.hasDownloads() == true) onDownload() })
                 downloadMenu()
             }
         }

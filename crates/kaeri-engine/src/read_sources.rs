@@ -1607,6 +1607,7 @@ fn source_row(
         other_group: false,
         group_language: None,
         other_source: None,
+        on_device: false,
     };
     all.fill(arranged, app, &mut row);
     row
@@ -2791,6 +2792,7 @@ mod filled_tests {
             other_group: false,
             group_language: None,
             other_source: from.map(str::to_owned),
+            on_device: false,
         }
     }
 

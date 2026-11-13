@@ -198,6 +198,16 @@ pub fn mark(tile: &mut WorkTile, store: &Store, sources: &crate::read_sources::B
             ));
         }
     }
+    no_title_again(tile);
+}
+
+/// A line that would only say the cover's title again says nothing, and goes: a book in one
+/// file, whose one part is named for the book, would otherwise read "Rooftop Lantern" twice.
+fn no_title_again(tile: &mut WorkTile) {
+    let same = |text: &str| text.trim().eq_ignore_ascii_case(tile.title.trim());
+    if matches!(&tile.next, Some(Msg::Verbatim { text }) if same(text)) {
+        tile.next = None;
+    }
 }
 
 /// A Library cover's line: the chapter the person is at and the newest there is, "Chapter 41
@@ -229,6 +239,7 @@ pub fn library_line(
             }
             (None, named) => {
                 tile.next = Some(words::part_place(&number, named.as_deref(), None));
+                no_title_again(tile);
                 return;
             }
         }
@@ -419,5 +430,39 @@ mod tests {
             Some("115.6")
         );
         assert_eq!(newest_number(&list(&[]), "1"), None);
+    }
+
+    /// A book in one file names its one part for the book: the cover says the title once.
+    #[test]
+    fn a_line_that_only_says_the_title_again_goes() {
+        let mut tile = WorkTile {
+            work: WorkId::new("l:00000000000000000000000000000001"),
+            title: "Rooftop Lantern".into(),
+            medium: Medium::Novel,
+            cover: None,
+            format_label: None,
+            progress: None,
+            next: Some(words::part_place("Rooftop Lantern", Some("rooftop lantern "), None)),
+            new_chapter: false,
+            adult: false,
+            facts: Vec::new(),
+            demo: false,
+            not_in_sources: false,
+            origin: None,
+            amount: None,
+            started: None,
+        };
+        no_title_again(&mut tile);
+        assert_eq!(tile.next, None);
+
+        // A part of its own name, or the title with how far in, still says something.
+        let named = words::part_place("3", Some("The Long Night"), None);
+        tile.next = Some(named.clone());
+        no_title_again(&mut tile);
+        assert_eq!(tile.next, Some(named));
+        let far = words::part_place("Rooftop Lantern", Some("Rooftop Lantern"), Some(40));
+        tile.next = Some(far.clone());
+        no_title_again(&mut tile);
+        assert_eq!(tile.next, Some(far));
     }
 }

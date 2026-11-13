@@ -110,7 +110,8 @@ private fun ShowsLibrary(actions: AppActions, scope: Boolean) {
 
     ScreenFrame(
         title = stringResource(R.string.nav_library),
-        account = profileAccount(user, actions.openSettings),
+        // On a wide window the rail has Accounts and settings at its foot, as on the other tabs.
+        account = if (wideWindow()) null else profileAccount(user, actions.openSettings),
         actions = {
             if (!signedOut) {
                 // Surprise me picks from Planning, beside Sort, on that list only.

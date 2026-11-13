@@ -1056,6 +1056,7 @@ fn listed(id: &str, pages: Option<u32>) -> ChapterRow {
         part_groups: Vec::new(),
         group_language: None,
         other_source: None,
+        on_device: false,
     }
 }
 
@@ -1066,16 +1067,12 @@ async fn the_estimate_counts_pages_at_the_size_past_pages_took_and_names_the_net
     let rows = [listed("1", Some(10)), listed("2", None), listed("3", Some(40))];
     let pick = DownloadPick::Chapters { ids: ids(&["1", "2", "3"]) };
 
-    // Nothing downloaded before: the usual page.
+    // Nothing downloaded before: no size to go by, so no number rather than a wrong one.
     kit.setup(Setup { wifi_only: true, ..Setup::default() });
     let first = kit.queue.estimate(kit.store(), &work, pick.clone(), &rows, Some("shelf"));
     assert_eq!(first.chapters, 3);
-    assert_eq!(
-        first.bytes,
-        (10 + 20 + 40) * 350_000,
-        "a chapter of unknown length is 20 pages"
-    );
-    assert_eq!(msg_ids(&first.line), ["reading-estimate-size", "reading-estimate-wifi"]);
+    assert_eq!((first.bytes, first.all_bytes), (0, 0));
+    assert!(first.line.is_empty(), "{:?}", first.line);
 
     // Chapter 1 downloaded, three pages: its pages set the size, and it costs nothing more.
     kit.queue
@@ -1091,6 +1088,13 @@ async fn the_estimate_counts_pages_at_the_size_past_pages_took_and_names_the_net
     assert_eq!(msg_ids(&next.line), ["reading-estimate-size", "reading-estimate-mobile"]);
     // A send of the same chapters takes chapter 1 as it is here, and the rest as estimated.
     assert_eq!(next.all_bytes, done.bytes + (3 + 40) * page);
+    // Another work from the same source goes by its pages; one from another source does not.
+    let other = WorkId::new("other");
+    let same = kit.queue.estimate(kit.store(), &other, pick.clone(), &rows, Some("shelf"));
+    assert_eq!(same.bytes, (10 + 3 + 40) * page);
+    let elsewhere =
+        kit.queue.estimate(kit.store(), &other, pick.clone(), &rows, Some("elsewhere"));
+    assert_eq!((elsewhere.bytes, elsewhere.line.len()), (0, 0), "pages differ by source");
 
     kit.setup(Setup { hold: true, wifi: true, wifi_only: true, ..Setup::default() });
     let waiting = kit.queue.estimate(kit.store(), &work, pick, &rows, Some("shelf"));

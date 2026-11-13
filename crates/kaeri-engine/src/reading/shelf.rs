@@ -60,6 +60,7 @@ impl ShelfChapter {
             part_groups: Vec::new(),
             group_language: None,
             other_source: None,
+            on_device: false,
         }
     }
 }

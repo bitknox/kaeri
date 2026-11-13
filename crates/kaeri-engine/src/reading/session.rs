@@ -1713,8 +1713,16 @@ impl Session {
     }
 
     /// Why the end page has no next chapter: the series ended with this one, which offers
-    /// Read again; the device is offline; or the person is caught up.
+    /// Read again; the device is offline; or the person is caught up. A book of the person's
+    /// own in one file, with no number and nothing to match it to, is a whole book: it ends
+    /// there, and no chapters come for it.
     fn why_no_next(&self, cx: &Cx<'_>) -> NoNext {
+        let whole_book = self.work.key().is_some_and(|k| k.is_local())
+            && self.chapters.len() == 1
+            && self.chapter().id.key().and_then(|k| k.range()).is_none();
+        if whole_book {
+            return NoNext::Finished;
+        }
         let store = &cx.services.store;
         let later = crate::read_catalog::chapters::of_work(
             &cx.services.book_sources,
@@ -2740,6 +2748,71 @@ mod tests {
             })
             .unwrap();
         assert_eq!(end_of_last(&mut h).await, Some(NoNext::Finished));
+    }
+
+    #[tokio::test]
+    async fn a_book_of_ones_own_in_one_file_ends_there_rather_than_waiting_for_chapters() {
+        let mut h = harness(Store::open_in_memory().unwrap());
+        let local = kaeri_core::books::WorkKey::local(Medium::Manga, "A Lantern in One File");
+        let local = local.id();
+        let folder = h._dir.path().join("one file");
+        std::fs::create_dir_all(&folder).unwrap();
+        let path = folder.join("A Lantern in One File.cbz");
+        cbz(&path, 3);
+        let store = &h.services.store;
+        store
+            .put_local_series(&LocalSeries {
+                id: "s2".into(),
+                folder: folder.display().to_string(),
+                name: "A Lantern in One File".into(),
+                medium: "manga".into(),
+                work: Some(local.as_str().into()),
+                state: "unmatched".into(),
+            })
+            .unwrap();
+        let file = ShelfFile {
+            path: path.display().to_string(),
+            chapter: None,
+            label: "A Lantern in One File".into(),
+            volume: None,
+            number_milli: None,
+            format: "cbz".into(),
+            pages: Some(3),
+            comicinfo: None,
+            source: None,
+        };
+        store.put_local_file("s2", &file, 1, 1).unwrap();
+        h.open_work(local, OpenAt::Start).await;
+        h.shown(2, TurnHow::Turn).await;
+        let why = h
+            .until(|e| match e {
+                ReaderEvent::EndPage { next: None, why_none, .. } => Some(*why_none),
+                _ => None,
+            })
+            .await;
+        assert_eq!(why, Some(NoNext::Finished), "the book ends, nothing is coming");
+
+        // A matched series' last chapter still waits for the next one.
+        let session = h.session();
+        h.send(ReaderCommand::Close { session });
+        let chapter = ChapterId::new("2");
+        let (work, at) = (WorkId::new(WORK), OpenAt::Resume);
+        h.send(ReaderCommand::Open {
+            work,
+            chapter: Some(chapter.clone()),
+            at,
+            surface: surface(),
+        });
+        h.until(|e| matches!(e, ReaderEvent::Leaves { .. }).then_some(())).await;
+        let session = h.session();
+        h.send(ReaderCommand::Shown { session, chapter, leaf: 2, how: TurnHow::Turn });
+        let why = h
+            .until(|e| match e {
+                ReaderEvent::EndPage { next: None, why_none, .. } => Some(*why_none),
+                _ => None,
+            })
+            .await;
+        assert_eq!(why, Some(NoNext::CaughtUp));
     }
 
     #[tokio::test(start_paused = true)]

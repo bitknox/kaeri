@@ -128,7 +128,7 @@ async fn rows(h: &Harness, source: &str) -> Vec<ChapterRow> {
     let (_, mut volumes) =
         h.services.book_sources.chapters(&work, Some(source), 1).await.unwrap();
     let kit = crate::read_catalog::Kit::of(&h.services);
-    crate::read_catalog::series::finish(&kit, &work, &mut volumes, 1);
+    crate::read_catalog::series::finish(&kit, &work, None, &mut volumes, 1);
     assert!(volumes.len() <= 1 && volumes.iter().all(|v| v.flat), "volumes are off: one list");
     volumes.into_iter().flat_map(|v| v.chapters).collect()
 }

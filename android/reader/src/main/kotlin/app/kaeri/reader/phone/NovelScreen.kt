@@ -7,6 +7,7 @@ package app.kaeri.reader.phone
 import android.annotation.SuppressLint
 import android.view.GestureDetector
 import android.view.MotionEvent
+import android.view.View
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Stable
@@ -38,6 +39,7 @@ import app.kaeri.reader.tapZones
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.semantics
 import app.kaeri.reader.NovelMessage
 import app.kaeri.reader.NovelWebHost
@@ -216,18 +218,36 @@ fun NovelScreen(
     // Words a screen reader can rest on, so the moves come up as its actions: the page, or the chapter
     // while the paginator counts and when the text scrolls.
     val where = if (!scrolled && place.pages > 0) Strings.readerPageOf(context, place.page + 1, place.pages) else state.view?.let { chapterWords(context, it.chapter) }.orEmpty()
+    // Under the end page or a failure the page is covered: its text and moves leave the screen
+    // reader's way, the web view's own nodes with them.
+    val covered = place.ended || place.failed != null
     Box(
-        modifier.fillMaxSize().semantics {
-            if (where.isNotEmpty()) contentDescription = where
-            customActions = listOf(
-                CustomAccessibilityAction(next) { turn(true, TurnHow.KEY); true },
-                CustomAccessibilityAction(previous) { turn(false, TurnHow.KEY); true },
-                CustomAccessibilityAction(showControls) { controls(); true },
-            )
-        },
+        modifier.fillMaxSize().then(
+            if (covered) {
+                Modifier.clearAndSetSemantics {}
+            } else {
+                Modifier.semantics {
+                    if (where.isNotEmpty()) contentDescription = where
+                    customActions = listOf(
+                        CustomAccessibilityAction(next) { turn(true, TurnHow.KEY); true },
+                        CustomAccessibilityAction(previous) { turn(false, TurnHow.KEY); true },
+                        CustomAccessibilityAction(showControls) { controls(); true },
+                    )
+                }
+            },
+        ),
     ) {
         // A new host brings a new view: the old one is not reused.
-        key(host) { AndroidView(factory = { host.view }, modifier = Modifier.fillMaxSize()) }
+        key(host) {
+            AndroidView(
+                factory = { host.view },
+                modifier = Modifier.fillMaxSize(),
+                update = { view ->
+                    view.importantForAccessibility =
+                        if (covered) View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS else View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
+                },
+            )
+        }
     }
 }
 

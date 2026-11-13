@@ -1456,6 +1456,8 @@
     <string name="reader_settings">Reader settings</string>
     <!-- Under the novel's title in the reader's controls, while it scrolls. The chapter is its number, such as 4. -->
     <string name="reader_novel_line_scroll">Chapter %1$s · scroll</string>
+    <!-- Under the novel's title in the reader's controls, while it scrolls, when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own. -->
+    <string name="reader_novel_line_scroll_named">%1$s · scroll</string>
     <!-- At the end of a scrolling novel's scrubber: the time left in the chapter at the person's pace. -->
     <string name="reader_minutes_left">%1$,d min</string>
     <!-- Heading of the page grid. -->
@@ -5097,6 +5099,8 @@
     <string name="reader_look_system">System</string>
     <!-- Top line of the page between chapters. The chapter is its number, such as 12. -->
     <string name="reader_end_of_chapter_number">End of chapter %1$s</string>
+    <!-- Top line of the page between chapters when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own, such as Rooftop Lantern. -->
+    <string name="reader_end_of_named">End of %1$s</string>
     <!-- The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written. -->
     <string name="reader_end_facts">Chapter %1$s · %2$s</string>
     <!-- The next chapter's length on the page between chapters. -->
