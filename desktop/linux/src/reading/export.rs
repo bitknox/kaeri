@@ -54,6 +54,69 @@ fn to_save(phase: &Phase) -> Result<Vec<ExportFile>, Phase> {
     }
 }
 
+/// Sends the engine started again by itself (held across a restart), as each last stood. The
+/// dialog follows only the jobs it asked for, and the engine names a held send once, at launch,
+/// before any dialog is open; the series' dialog takes its send up from here when it opens.
+#[derive(Default, Debug)]
+pub struct HeldSends(Vec<(JobId, Held)>);
+
+#[derive(Clone, Debug, PartialEq)]
+struct Held {
+    work: WorkId,
+    target: String,
+    chapters: Vec<ChapterId>,
+    phase: Phase,
+}
+
+impl HeldSends {
+    /// Follow the engine's word on sends: a send it names with its chapters is kept until it
+    /// fails or a dialog takes it up.
+    pub fn take(&mut self, event: &ReadingEvent) {
+        match event {
+            ReadingEvent::ExportWaiting { job, work, target, line, chapters }
+                if !chapters.is_empty() =>
+            {
+                let phase = Phase::Waiting(crate::say::msg(line));
+                match self.0.iter_mut().find(|(j, _)| j == job) {
+                    Some((_, held)) => held.phase = phase,
+                    None => self.0.push((
+                        *job,
+                        Held {
+                            work: work.clone(),
+                            target: target.clone(),
+                            chapters: chapters.clone(),
+                            phase,
+                        },
+                    )),
+                }
+            }
+            ReadingEvent::ExportProgress { job, done, total, .. } => {
+                if let Some((_, held)) = self.0.iter_mut().find(|(j, _)| j == job) {
+                    held.phase = Phase::Preparing { done: *done, total: *total };
+                }
+            }
+            ReadingEvent::ExportReady { job, files } => {
+                if let Some((_, held)) = self.0.iter_mut().find(|(j, _)| j == job) {
+                    held.phase = Phase::Ready(files.clone());
+                }
+            }
+            ReadingEvent::ExportFailed { job, .. } => self.forget(*job),
+            _ => {}
+        }
+    }
+
+    /// A job a dialog follows from now on, or one it stopped.
+    fn forget(&mut self, job: JobId) {
+        self.0.retain(|(j, _)| *j != job);
+    }
+
+    /// The held send for `work`, taken out for its dialog.
+    fn take_for(&mut self, work: &WorkId) -> Option<(JobId, Held)> {
+        let at = self.0.iter().position(|(_, held)| &held.work == work)?;
+        Some(self.0.remove(at))
+    }
+}
+
 struct Send {
     targets: Vec<ExportTarget>,
     chosen: Option<String>,
@@ -69,6 +132,16 @@ struct Send {
 }
 
 impl Send {
+    /// Follow a held send from where it stands: its job, its e-reader and the chapters it
+    /// holds, so saving its files sets the place on them.
+    fn take_up(&mut self, job: JobId, held: Held) {
+        self.job = Some(job);
+        self.asked = false;
+        self.chosen = Some(held.target);
+        self.sent = held.chapters;
+        self.phase = held.phase;
+    }
+
     fn target(&self) -> Option<&ExportTarget> {
         self.targets.iter().find(|t| Some(&t.id) == self.chosen.as_ref())
     }
@@ -356,6 +429,12 @@ pub fn open(ctx: &Rc<Ctx>, work: &WorkId) {
             phase: Phase::Choosing,
         }),
     });
+    // A send for this series the engine started again by itself: the dialog shows where it
+    // stands and follows it.
+    let held = ctx.hub.known.borrow_mut().held_sends.take_for(work);
+    if let Some((job, held)) = held {
+        parts.send.borrow_mut().take_up(job, held);
+    }
 
     scope.connect_selected_notify({
         let parts = Rc::downgrade(&parts);
@@ -462,26 +541,34 @@ pub fn open(ctx: &Rc<Ctx>, work: &WorkId) {
     });
 
     listen(ctx, &dialog, {
-        let (work, parts) = (work.clone(), Rc::clone(&parts));
+        let (work, parts, hub) = (work.clone(), Rc::clone(&parts), Rc::downgrade(&ctx.hub));
         move |event| {
             let Event::Reading(event) = event else { return };
-            // A job this dialog asked for: the first one seen after Prepare, then that one.
+            // A job this dialog asked for: the first one seen after Prepare, then that one. It is
+            // the dialog's to follow, never a held send for the next dialog to take up.
             let ours = |job: &JobId| {
                 let mut s = parts.send.borrow_mut();
                 if s.asked && s.job.is_none() {
                     s.job = Some(*job);
                 }
-                s.job.as_ref() == Some(job)
+                let ours = s.job.as_ref() == Some(job);
+                if ours && let Some(hub) = hub.upgrade() {
+                    hub.known.borrow_mut().held_sends.forget(*job);
+                }
+                ours
             };
             match event {
                 ReadingEvent::ExportTargets(found) => {
                     {
                         let mut s = parts.send.borrow_mut();
-                        s.chosen = found
-                            .iter()
-                            .find(|t| t.chosen)
-                            .or(found.first())
-                            .map(|t| t.id.clone());
+                        // A send under way keeps its own e-reader.
+                        if s.job.is_none() || s.chosen.is_none() {
+                            s.chosen = found
+                                .iter()
+                                .find(|t| t.chosen)
+                                .or(found.first())
+                                .map(|t| t.id.clone());
+                        }
                         s.targets = found.clone();
                     }
                     parts.draw_targets();
@@ -594,6 +681,67 @@ mod tests {
             bytes: 2,
             part: None,
         }
+    }
+
+    fn idle() -> Send {
+        Send {
+            targets: Vec::new(),
+            chosen: None,
+            medium: None,
+            volumes: Vec::new(),
+            scope: 0,
+            job: None,
+            asked: false,
+            sent: Vec::new(),
+            phase: Phase::Choosing,
+        }
+    }
+
+    /// A send held across a restart is named once, at launch, with the chapters it holds. The
+    /// series' dialog opened later takes it up where it stands, so saving its files sets the
+    /// place on those chapters and the e-reader it was for.
+    #[test]
+    fn a_send_held_across_a_restart_is_taken_up_with_its_chapters() {
+        use kaeri_model::{Msg, ReadingMsg};
+        let (work, other) = (WorkId::new("a:900302"), WorkId::new("a:900303"));
+        let chapters = vec![ChapterId::new("c3"), ChapterId::new("c4")];
+        let job = JobId::new(41);
+        let mut held = HeldSends::default();
+        held.take(&ReadingEvent::ExportWaiting {
+            job,
+            work: work.clone(),
+            target: "kobo".into(),
+            line: Msg::Reading(ReadingMsg::ExportWaitsForWifi { n: 2 }),
+            chapters: chapters.clone(),
+        });
+        let dir = tempfile::tempdir().unwrap();
+        let files = vec![file(dir.path(), "Made-up Series 3.kepub.epub")];
+        held.take(&ReadingEvent::ExportReady { job, files: files.clone() });
+
+        assert!(held.take_for(&other).is_none(), "another series' dialog leaves it");
+        let (taken, send) = held.take_for(&work).expect("held for its series");
+        let mut s = idle();
+        s.take_up(taken, send);
+        assert_eq!(s.job, Some(job));
+        assert_eq!(s.sent, chapters);
+        assert_eq!(s.chosen.as_deref(), Some("kobo"));
+        assert_eq!(s.phase, Phase::Ready(files));
+        assert!(held.take_for(&work).is_none(), "taken up once");
+
+        // A held send that fails is not kept for a dialog to take up.
+        held.take(&ReadingEvent::ExportWaiting {
+            job: JobId::new(42),
+            work: work.clone(),
+            target: "kobo".into(),
+            line: Msg::Reading(ReadingMsg::ExportWaitsForWifi { n: 1 }),
+            chapters,
+        });
+        held.take(&ReadingEvent::ExportFailed {
+            job: JobId::new(42),
+            chapter: None,
+            failure: kaeri_model::reading::ReadingFailure::Offline,
+        });
+        assert!(held.take_for(&work).is_none());
     }
 
     /// R5A-6. The engine keeps a ready send's files for a day; saving after they went says so,
