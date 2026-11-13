@@ -2172,7 +2172,11 @@ impl BookSources {
             Ok(chapters) => chapters,
             Err(e) => {
                 let failure = self.failure(source, &e);
-                self.note_listing(source, series, Some(Asked::Failed(failure.clone())), now);
+                // A list kept from before still stands: a refresh that failed never takes its
+                // place.
+                let kept = self.kept_source_list(source, series, now, i64::MAX).is_some();
+                let asked = (!kept).then(|| Asked::Failed(failure.clone()));
+                self.note_listing(source, series, asked, now);
                 return Err(failure);
             }
         };
@@ -2290,8 +2294,9 @@ impl BookSources {
         match self.open_found(&source, &series, found, now).await {
             Ok(opened) => Ok(opened),
             // The chapter as a kept list named it may have moved: the list is asked for again,
-            // once, unless the source could not be reached at all.
-            Err(e) if kept && !matches!(e, ProviderError::Transport(_)) => {
+            // once, when the source says it has no such chapter. A source that timed out or could
+            // not be reached is not asked for the whole series on top.
+            Err(e) if kept && matches!(e, ProviderError::NotFound) => {
                 tracing::debug!(error = %e, "a kept chapter did not open; listing again");
                 let (source, series, found, _) =
                     self.find_chapter(work, chapter, edition, now, false).await?;

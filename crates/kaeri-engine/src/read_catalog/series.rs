@@ -142,6 +142,13 @@ pub(crate) async fn chapters(
                 failure: None,
             },
         );
+        // A list the source gave within LIST_FRESH is the list: the page shown again, as it is
+        // once the reader closes, a chapter is marked or a download is asked for, does not ask
+        // the source for it again.
+        if kit.sources.kept_listing(work, now, crate::read_sources::LIST_FRESH).is_some() {
+            send(tx, ReadingEvent::Series(Box::new(view(kit, ask, work, false))));
+            return;
+        }
     }
     let mut asked = kit.sources.chapters(work, edition.as_deref(), now).await;
     if edition.is_none()

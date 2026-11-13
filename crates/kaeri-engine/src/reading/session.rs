@@ -2231,6 +2231,7 @@ mod tests {
     mod answers;
     mod back_to;
     mod cross_parts;
+    mod downloading;
     mod eink_strip;
     mod extras;
     mod groups;
