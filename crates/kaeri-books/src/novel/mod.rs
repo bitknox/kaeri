@@ -94,6 +94,32 @@ mod tests {
         assert!(s.contains("window.kaeriReader"));
     }
 
+    /// WebKit before September 2025 (WebKitGTK up to 2.50) makes no columns for a count of 1
+    /// with an auto width, so a one-column page never breaks: every rule that counts columns
+    /// also sets a width.
+    #[test]
+    fn every_column_count_comes_with_a_column_width() {
+        let mut rules = 0;
+        for rule in STYLESHEET.split('}') {
+            let Some((selector, body)) = rule.split_once('{') else { continue };
+            if !body.contains("column-count") {
+                continue;
+            }
+            rules += 1;
+            let width = body
+                .split(';')
+                .filter_map(|d| d.split_once(':'))
+                .find(|(name, _)| name.trim() == "column-width")
+                .map(|(_, value)| value.trim().to_owned());
+            assert!(
+                width.as_deref().is_some_and(|w| w.starts_with("1px")),
+                "{} sets column-count without a 1px column-width: {width:?}",
+                selector.trim()
+            );
+        }
+        assert!(rules >= 2, "the horizontal and vertical paged rules count columns");
+    }
+
     #[test]
     fn the_policy_blocks_scripts_and_names_both_origins() {
         let p = csp();
