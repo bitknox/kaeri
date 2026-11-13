@@ -718,6 +718,9 @@ impl PluginHost {
             .map_err(|e| fail(e.to_string()))?;
 
         self.check_id(path, &manifest.id, refuse_reserved)?;
+        // QA ONLY, never merged: the QA gate learns this source's hosts before any call.
+        #[cfg(feature = "fetch")]
+        crate::host::qa_register(&manifest.id, &manifest.allowed_hosts);
         tracing::info!(
             id = %manifest.id,
             version = %manifest.version,
