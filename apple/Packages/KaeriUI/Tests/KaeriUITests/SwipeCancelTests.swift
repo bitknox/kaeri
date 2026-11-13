@@ -74,8 +74,11 @@ extension WindowEventTests {
             #expect(model.current == 2)
             let rest = try #require(seen.frames.min { abs($0.midX - size.width / 2) < abs($1.midX - size.width / 2) }).midX
 
-            // A drag toward the page before, held.
-            let start = CGPoint(x: 300, y: 450)
+            // A drag toward the page before, held, from clear of the page's Try again: a press on
+            // the button is the button's, and the pages never see it.
+            let button = try #require(seen.frames.first { abs($0.midX - rest) < 1 })
+            let start = CGPoint(x: 300, y: 120)
+            #expect(!button.insetBy(dx: -30, dy: -30).contains(start))
             try await window.mouse(.leftMouseDown, at: start)
             for step in 1...8 {
                 try await window.mouse(.leftMouseDragged, at: CGPoint(x: start.x + CGFloat(step) * 10, y: start.y))
