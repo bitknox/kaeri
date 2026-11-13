@@ -1025,7 +1025,17 @@ class ReaderSession(private val send: (Command) -> Unit) {
                 if (!ours(event.session) || event.place.chapter != now.chapter) return
                 val pos = event.place.novel
                 if (pos != null && now.novel != null) return run { _state.value = now.copy(novelGoTo = NovelGoTo(pos, ++ids)) }
-                now.copy(jump = ReaderJump(now.leafOf(event.place), event.place.strip, ++ids))
+                val jump = ReaderJump(now.leafOf(event.place), event.place.strip, ++ids)
+                // The reader is at the place gone to now, as another device's place moves it while
+                // the chapter opens. A strip says its place only once a scroll comes to rest, so a
+                // new layout before then (a fold, a window resized) keeps this place, not the start
+                // or the spot shown before. Gone to before the start was shown, it is the start.
+                here = event.place
+                if (startAt != null) {
+                    startAt = event.place
+                    startJump = jump.id
+                }
+                now.copy(jump = jump)
             }
             is ReaderEvent.BackToPage -> if (ours(event.session)) now.copy(backTo = event.page) else return
             is ReaderEvent.Closed -> if (ours(event.session)) now.copy(closed = true) else return
