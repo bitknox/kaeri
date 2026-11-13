@@ -1091,19 +1091,25 @@ fun EinkEndPage(
                     Text(Strings.einkTurnToContinue(context), style = EinkType.Tertiary, modifier = Modifier.align(Alignment.CenterHorizontally))
                 }
             } else {
-                val why = end?.whyNone ?: NoNext.CAUGHT_UP
+                // The engine says why nothing follows as the chapter opens; until it has, the page
+                // claims no reason, never caught up.
+                val why = end?.whyNone
                 val nextNumber = view.chapter.number?.toDoubleOrNull()?.let { (it.toInt() + 1).toString() }
-                val (title, line) = when (why) {
+                val words = when (why) {
+                    null -> null
                     NoNext.NO_SOURCE_HAS_IT -> (nextNumber?.let { Strings.einkNextMissing(context, it) } ?: Strings.einkCaughtUp(context)) to Strings.einkChecksAgain(context)
                     NoNext.NOT_OUT_YET -> Strings.einkNextNotOut(context) to Strings.einkChecksAgain(context)
                     NoNext.CAUGHT_UP -> Strings.einkCaughtUp(context) to Strings.einkChecksAgain(context)
                     NoNext.FINISHED -> Strings.einkFinished(context) to Strings.einkFinishedLine(context)
                     NoNext.OFFLINE -> Strings.einkNextOffline(context) to Strings.einkNextOfflineLine(context)
                 }
-                Text(title, style = EinkType.PageTitle.copy(fontSize = EinkType.RowTitle.fontSize * (22f / 18f)))
-                Spacer(Modifier.height(10.dp))
-                Text(line, style = EinkType.Body.copy(color = EinkColours.Secondary))
-                Spacer(Modifier.height(36.dp))
+                if (words != null) {
+                    val (title, line) = words
+                    Text(title, style = EinkType.PageTitle.copy(fontSize = EinkType.RowTitle.fontSize * (22f / 18f)))
+                    Spacer(Modifier.height(10.dp))
+                    Text(line, style = EinkType.Body.copy(color = EinkColours.Secondary))
+                    Spacer(Modifier.height(36.dp))
+                }
                 if (why == NoNext.OFFLINE) {
                     EinkSolidButton(Strings.einkOpenDownloads(context), actions.onDownloads, Modifier.fillMaxWidth())
                     Spacer(Modifier.height(14.dp))

@@ -301,8 +301,10 @@ fun PhoneEndPage(
                         }
                     }
                 }
-            } else {
-                val why = end?.whyNone ?: NoNext.CAUGHT_UP
+            } else if (end?.whyNone != null) {
+                // The engine says why nothing follows as the chapter opens; until it has, the page
+                // claims no reason, never caught up.
+                val why = end.whyNone
                 // The chapter the end page would open: the next one listed, as offline that is one
                 // only a source has; past the last one listed, the next whole number.
                 val following = view.next?.let(::chapterNumber)
