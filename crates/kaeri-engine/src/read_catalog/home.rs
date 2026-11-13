@@ -14,7 +14,11 @@ use std::{
     sync::atomic::Ordering,
 };
 
-use kaeri_core::{books::ChapterId, ids::AnilistId, media::Medium};
+use kaeri_core::{
+    books::ChapterId,
+    ids::AnilistId,
+    media::{MediaStatus, Medium},
+};
 use kaeri_meta::{
     KeptBook, Meta,
     anilist::books::{Book, BookAsk},
@@ -803,7 +807,9 @@ impl Home {
     }
 
     /// This week, today first: each followed series on the day its chapters usually come
-    /// out, or on today when one came out today.
+    /// out, or on today when one came out today. A series whose rhythm no longer says when the
+    /// next comes ([`still_coming`]) is only on today, when one came out today; Library and its
+    /// page still say its rhythm.
     fn week(&self, followed: &[KeptBook]) -> Vec<ReadWeekDay> {
         let now = self.ask.now;
         let Some(today) = chapters::day_start(now, &self.zone) else { return Vec::new() };
@@ -829,8 +835,10 @@ impl Home {
             let out_today = newest.filter(|at| *at >= today && *at <= now);
             let due = match (out_today, rhythm) {
                 (Some(at), _) => Some((0usize, Some(at), false)),
-                (None, Some(r)) => self.due_day(&r, newest, &days).map(|i| (i, None, true)),
-                (None, None) => None,
+                (None, Some(r)) if still_coming(&r, newest, kept.book.status, now) => {
+                    self.due_day(&r, newest, &days).map(|i| (i, None, true))
+                }
+                (None, _) => None,
             };
             let Some((index, out_at, usually)) = due else { continue };
             if usually && let Some(words) = rhythm.as_ref().and_then(chapters::rhythm_words) {
@@ -1063,6 +1071,31 @@ impl Home {
         Some(tiles::action(&self.store, &self.sources, &work, book.medium(), &self.plugins))
             .filter(|a| !matches!(a, SeriesAction::NoSource | SeriesAction::ReadAgain))
     }
+}
+
+/// Whether a series' rhythm still says when its next chapter comes, for This week. The anime
+/// week lists only broadcasts still scheduled, so a show that ended or paused leaves it; here
+/// a work AniList calls finished, cancelled or on hiatus leaves once its newest chapter is two
+/// steps of its rhythm behind (a translation can trail a finished original by a step or so),
+/// and any work once it is four steps behind, at least two weeks: chapters that stopped coming.
+fn still_coming(
+    rhythm: &kaeri_store::book_catalog::BookRhythm,
+    newest: Option<i64>,
+    status: Option<MediaStatus>,
+    now: i64,
+) -> bool {
+    let every = match (rhythm.every_days, rhythm.weekday) {
+        (Some(days), _) => i64::from(days.max(1)),
+        (None, Some(_)) => 7,
+        (None, None) => return false,
+    };
+    let Some(newest) = newest else { return false };
+    let ended = matches!(
+        status,
+        Some(MediaStatus::Finished | MediaStatus::Cancelled | MediaStatus::Hiatus)
+    );
+    let steps = if ended { 2 } else { 4 };
+    now - newest <= (steps * every).max(14) * DAY
 }
 
 /// The source's name for a part not listed yet, numbered `number`, after the way it names the
@@ -1644,5 +1677,53 @@ mod tests {
             let week = week_in(zone, &mondays, "RELEASING", later);
             assert_eq!(week, usually("2026-11-02", "About every 2 weeks"), "{name}");
         }
+    }
+
+    /// A series whose chapters stopped coming leaves This week: ten weeks since the last
+    /// weekly one, whether AniList says it is on hiatus or still releasing, and ten weeks since
+    /// the last of a fortnightly one. One that missed a week or two stays.
+    #[test]
+    fn a_series_whose_chapters_stopped_leaves_this_week() {
+        let utc = jiff::tz::TimeZone::UTC;
+        // Tuesdays, the last ten weeks before Tuesday 2026-10-20.
+        let quiet = ["2026-07-21", "2026-07-28", "2026-08-04", "2026-08-11"];
+        for status in ["RELEASING", "HIATUS"] {
+            assert_eq!(week_in(utc.clone(), &quiet, status, FRIDAY_10_UTC), [], "{status}");
+        }
+        let fortnightly = ["2026-07-06", "2026-07-20", "2026-08-03", "2026-08-17"];
+        assert_eq!(week_in(utc.clone(), &fortnightly, "RELEASING", FRIDAY_10_UTC), []);
+        // Two weeks missed: still expected.
+        let missed = ["2026-09-08", "2026-09-15", "2026-09-22", "2026-09-29", "2026-10-06"];
+        assert_eq!(
+            week_in(utc.clone(), &missed, "RELEASING", FRIDAY_10_UTC),
+            usually("2026-10-27", "Usually Tuesdays")
+        );
+        let late = ["2026-08-17", "2026-08-31", "2026-09-14", "2026-09-28"];
+        assert_eq!(
+            week_in(utc, &late, "RELEASING", FRIDAY_10_UTC),
+            usually("2026-10-26", "About every 2 weeks")
+        );
+    }
+
+    /// A finished or cancelled work leaves This week once its newest chapter is two steps
+    /// behind; a translation still trailing it by a week stays.
+    #[test]
+    fn a_finished_series_leaves_this_week() {
+        let utc = jiff::tz::TimeZone::UTC;
+        // Mondays, the last nearly four weeks before Friday 2026-10-23.
+        let ended = ["2026-09-07", "2026-09-14", "2026-09-21", "2026-09-28"];
+        for status in ["FINISHED", "CANCELLED"] {
+            assert_eq!(week_in(utc.clone(), &ended, status, FRIDAY_10_UTC), [], "{status}");
+        }
+        // Still releasing, the same dates are three weeks missed, not yet stopped.
+        assert_eq!(
+            week_in(utc.clone(), &ended, "RELEASING", FRIDAY_10_UTC),
+            usually("2026-10-26", "Usually Mondays")
+        );
+        let trailing = ["2026-09-28", "2026-10-05", "2026-10-12", "2026-10-19"];
+        assert_eq!(
+            week_in(utc, &trailing, "FINISHED", FRIDAY_10_UTC),
+            usually("2026-10-26", "Usually Mondays")
+        );
     }
 }
