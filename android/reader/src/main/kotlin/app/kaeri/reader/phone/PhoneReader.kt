@@ -17,6 +17,8 @@ import androidx.compose.ui.semantics.customActions
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.expandVertically
@@ -481,6 +483,13 @@ fun PhoneReader(
         if (dim > 0f) ColorFilter.colorMatrix(ColorMatrix().apply { setToScale(scale, scale, scale - 0.02f, 1f) }) else null
     }
     val fades = !instant
+    // While the controls show, the end page's buttons sit above their group, moving with its fade;
+    // with the controls away they go back to the foot.
+    val endLift by animateDpAsState(
+        targetValue = if (shown) with(density) { scrub.groupHeight.toDp() } else 0.dp,
+        animationSpec = if (!fades) snap() else if (shown) Motion.fadeIn() else Motion.fadeOut(),
+        label = "end page lift",
+    )
 
     CompositionLocalProvider(LocalChrome provides colours, LocalPageTone provides tone) {
       Box(modifier.fillMaxSize().then(if (enabled) Modifier else Modifier.pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent(PointerEventPass.Initial).changes.forEach { it.consume() } } })) {
@@ -585,7 +594,7 @@ fun PhoneReader(
                                 instant = instant,
                             )
                         }
-                        place.ended -> NovelEndPage(state, session, actions, images, direction, zones, reading, onControls = { chrome = !chrome }, onBack = { place.ended = false }, cover = cover, onFirstPage = {
+                        place.ended -> NovelEndPage(state, session, actions, images, direction, zones, reading, onControls = { chrome = !chrome }, onBack = { place.ended = false }, cover = cover, controls = endLift, onFirstPage = {
                             place.ended = false
                             place.go(0)
                         })
@@ -628,7 +637,7 @@ fun PhoneReader(
                         onMissingAbove = session::needPageAbove,
                         onRetryAbove = { session.retryAbove(it.toUInt()) },
                         onJumped = session::jumped,
-                        footer = { PhoneEndPage(state, session, actions, images, onFirstPage = { session.startOver() }, cover = cover, pageGround = background, onShowCredits = { session.showEndCredits() }) },
+                        footer = { PhoneEndPage(state, session, actions, images, onFirstPage = { session.startOver() }, cover = cover, pageGround = background, onShowCredits = { session.showEndCredits() }, controls = endLift) },
                         divider = { next -> StripDivider(state, next, onShowCredits = { session.showEndCredits(it) }) },
                         credits = { chapter, pages -> StripCredits(state, session, images, chapter, pages, background) },
                         onFlow = { next -> session.flowInto(next.id) },
@@ -681,6 +690,7 @@ fun PhoneReader(
                             cover = cover,
                             pageGround = background,
                             onShowCredits = { session.showEndCredits()?.let { pager.show(it, TurnHow.TURN, session::showCredit, state.shownCredit) } },
+                            controls = endLift,
                         )
                     },
                     onPastEnd = session::crossOn,
@@ -1329,6 +1339,7 @@ private fun NovelEndPage(
     onControls: () -> Unit,
     onBack: () -> Unit,
     cover: (@Composable (Modifier) -> Unit)?,
+    controls: Dp,
     onFirstPage: () -> Unit,
 ) {
     val density = LocalDensity.current
@@ -1365,7 +1376,7 @@ private fun NovelEndPage(
             )
         },
     ) {
-        PhoneEndPage(state, session, actions, images, onFirstPage = onFirstPage, cover = cover)
+        PhoneEndPage(state, session, actions, images, onFirstPage = onFirstPage, cover = cover, controls = controls)
     }
 }
 
