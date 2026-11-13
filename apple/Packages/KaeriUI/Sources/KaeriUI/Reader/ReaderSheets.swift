@@ -496,7 +496,14 @@ struct ReaderChaptersSheet: View {
     @AccessibilityFocusState private var spoken: String?
     @FocusState private var keyed: String?
 
-    private var hasPages: Bool { model.medium == .manga }
+    /// Pages for a chapter open with its own: while a chapter opens, or would not open, the
+    /// leaves are still the chapter left, so only the chapters show.
+    private var hasPages: Bool { Self.hasPages(model) }
+
+    static func hasPages(_ model: ReaderModel) -> Bool {
+        guard model.medium == .manga, case .open = model.phase else { return false }
+        return true
+    }
     /// Pages a jump in the grid covers.
     private static let band = 20
 

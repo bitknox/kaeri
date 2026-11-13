@@ -1,6 +1,7 @@
-// A chapter that would not open has the screen to itself: the reader's group, left up from the
-// end page Continue was pressed on, stays away from Try again and Close, and so does its line,
-// scrubber and Go to page for the chapter that was left.
+// A chapter opening, or one that would not open, has the screen to itself: the reader's group,
+// left up from the end page Continue was pressed on, stays away from Try again and Close, and so
+// do its line, scrubber and Go to page for the chapter that was left, and the chapters sheet's
+// pages of that chapter.
 
 import KaeriKit
 @testable import KaeriStore
@@ -44,5 +45,22 @@ struct ReaderFailedChromeTests {
         model.pinChrome = true
         model.chromeShown = true
         #expect(!ReaderChrome.shows(model))
+    }
+
+    @Test func aChapterStillOpeningHasNoGroupOverIt() {
+        let model = open()
+        model.openChapter(ChapterId("18"))
+        #expect(!ReaderChrome.ready(model))
+        model.chromeShown = true
+        #expect(!ReaderChrome.shows(model), "the pointer or a tap does not bring it over the opening")
+    }
+
+    @Test func theChaptersSheetListsPagesOnlyForTheChapterOpen() {
+        let model = open()
+        #expect(ReaderChaptersSheet.hasPages(model))
+        model.openChapter(ChapterId("18"))
+        #expect(!ReaderChaptersSheet.hasPages(model), "the leaves are still chapter 23's")
+        model.observe(.reading(.failed(about: .reader, failure: .offline)))
+        #expect(!ReaderChaptersSheet.hasPages(model))
     }
 }

@@ -106,8 +106,9 @@ public struct ReaderScreen: View {
         }
         #endif
         .onChange(of: model.sheet) { _, sheet in if sheet != nil { model.chromeShown = true } }
-        // A chapter that would not open puts the group away, so Try again's open starts without it.
-        .onChange(of: ReaderChrome.failed(model)) { _, failed in if failed { model.hideChrome() } }
+        // A chapter starting to open, or one that would not open, puts the group away, so the
+        // chapter opened, or Try again's open, starts without it.
+        .onChange(of: ReaderChrome.ready(model)) { _, ready in if !ready { model.hideChrome() } }
         .onChange(of: model.held?.tick) { _, _ in heldShown = 1 }
         .onChange(of: model.held?.landed == true) { _, landed in if landed { letHeldGo() } }
         #if os(iOS)
@@ -208,6 +209,8 @@ public struct ReaderScreen: View {
 
     #if os(macOS)
     private func pointerMoved() {
+        // The group stays away from a chapter opening or failed, and so does the pointer's hiding.
+        guard ReaderChrome.ready(model) else { hideTask?.cancel(); return }
         model.chromeShown = true
         hideTask?.cancel()
         hideTask = Task {
