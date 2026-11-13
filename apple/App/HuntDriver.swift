@@ -191,6 +191,7 @@ enum HuntDriver {
         case "dldelete": store.reading.deleteDownloads(w[0], chapters: w[1].split(separator: ",").map(String.init)); say("delete sent")
         case "dlwatch":
             // dlwatch <work> <secs> <everyms>: the download states of the rows that have one, as they change
+            guard !w.isEmpty else { say("dlwatch needs a work"); break }
             let secs = ms(w, 1, 30), every = ms(w, 2, 500)
             var last = ""
             let start = ContinuousClock.now
@@ -600,6 +601,24 @@ enum HuntDriver {
                 try? await Task.sleep(for: .milliseconds(1500))
                 say("rset \(w) " + state(r, nav))
             } else { say("rset? \(w)") }
+        case "qpress":
+            // qpress <text…> [#n]: press from the run loop, so a modal panel it opens doesn't hold the driver (r7)
+            var words = w; var pick = 0
+            if let last = words.last, last.hasPrefix("#"), let k = Int(last.dropFirst()) { pick = k; words.removeLast() }
+            let needle = words.joined(separator: " ").lowercased()
+            var hits: [AnyObject] = []
+            func walk(_ o: AnyObject, _ d: Int) {
+                guard d < 60 else { return }
+                if (axLabel(o) + "|" + axTitle(o) + "|" + axValue(o)).lowercased().contains(needle) { hits.append(o) }
+                for c in (o.accessibilityChildren?() ?? nil) ?? [] { walk(c as AnyObject, d + 1) }
+            }
+            for win in NSApp.windows where win.isVisible { walk(win, 0) }
+            if hits.indices.contains(pick) {
+                let target = hits[pick]
+                say("qpress #\(pick) of \(hits.count) '\(axLabel(target))' t='\(axTitle(target))'")
+                RunLoop.main.perform { MainActor.assumeIsolated { _ = target.accessibilityPerformPress?() } }
+            } else { say("qpress: no match #\(pick) for '\(needle)'") }
+            try? await Task.sleep(for: .milliseconds(1500)); say(state(r, nav))
         case "rsettings":
             // rsettings: the reader's settings as the sheet shows them (r7)
             say("rsettings \(String(describing: r.settings))")
