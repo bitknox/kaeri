@@ -627,6 +627,9 @@ public static partial class T
     /// <summary>Why a chapter or a list could not load: the source refused. The reason comes from the source.</summary>
     public static string ReadingFailedBlocked(string source, string reason) => Fill(Get("ReadingFailedBlocked"), ("source", source), ("reason", reason));
 
+    /// <summary>Why a chapter or a list could not load: the source's plugin asked for a host its manifest doesn't list, so the request never left the device and the source refused nothing. An update to the plugin usually fixes it.</summary>
+    public static string ReadingFailedHostNotAllowed(string source) => Fill(Get("ReadingFailedHostNotAllowed"), ("source", source));
+
     /// <summary>Why a chapter or a list could not load: the source answered with something Kaeri could not read.</summary>
     public static string ReadingFailedParse(string source) => Fill(Get("ReadingFailedParse"), ("source", source));
 
@@ -12229,6 +12232,7 @@ public static partial class T
         ["ReadingFailedNotFound"] = "This source doesn't have it anymore. Try another source.",
         ["ReadingFailedNoSource"] = "None of your sources has this series yet. Search for it by another name in Read from, or add a source in Your sources.",
         ["ReadingFailedBlocked"] = "{source} refused the request. {reason}",
+        ["ReadingFailedHostNotAllowed"] = "The plugin for {source} asked for a host it isn't allowed to reach. An update to the plugin may fix it.",
         ["ReadingFailedParse"] = "Kaeri couldn't read what {source} sent. Its plugin may need an update.",
         ["ReadingFailedPage"] = "This page didn't load (error {status}). Try again.",
         ["ReadingPictureFailed"] = "Couldn't load picture",

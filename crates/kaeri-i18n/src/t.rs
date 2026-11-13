@@ -1025,6 +1025,11 @@ pub fn reading_failed_blocked(source: &str, reason: &str) -> String {
     text("reading-failed-blocked", &[("source", Arg::Text(source)), ("reason", Arg::Text(reason))])
 }
 
+/// Why a chapter or a list could not load: the source's plugin asked for a host its manifest doesn't list, so the request never left the device and the source refused nothing. An update to the plugin usually fixes it.
+pub fn reading_failed_host_not_allowed(source: &str) -> String {
+    text("reading-failed-host-not-allowed", &[("source", Arg::Text(source))])
+}
+
 /// Why a chapter or a list could not load: the source answered with something Kaeri could not read.
 pub fn reading_failed_parse(source: &str) -> String {
     text("reading-failed-parse", &[("source", Arg::Text(source))])

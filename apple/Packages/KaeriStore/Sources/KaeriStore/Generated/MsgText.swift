@@ -356,6 +356,7 @@ extension ReadingMsg {
         case .readingFailedNotFound: L.readingFailedNotFound
         case .readingFailedNoSource: L.readingFailedNoSource
         case .readingFailedBlocked(let source, let reason): L.readingFailedBlocked(source: source, reason: reason)
+        case .readingFailedHostNotAllowed(let source): L.readingFailedHostNotAllowed(source: source)
         case .readingFailedParse(let source): L.readingFailedParse(source: source)
         case .readingFailedPage(let status): L.readingFailedPage(status: Int(status))
         case .readingPictureFailed: L.readingPictureFailed

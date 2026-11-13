@@ -1323,6 +1323,8 @@ pub enum ReadingMsg {
     ReadingFailedNoSource,
     /// Why a chapter or a list could not load: the source refused. The reason comes from the source.
     ReadingFailedBlocked { source: String, reason: String },
+    /// Why a chapter or a list could not load: the source's plugin asked for a host its manifest doesn't list, so the request never left the device and the source refused nothing. An update to the plugin usually fixes it.
+    ReadingFailedHostNotAllowed { source: String },
     /// Why a chapter or a list could not load: the source answered with something Kaeri could not read.
     ReadingFailedParse { source: String },
     /// Why one page did not load. The status is the server's HTTP status code, such as 404.
@@ -1709,6 +1711,7 @@ impl ReadingMsg {
             Self::ReadingFailedNotFound => "reading-failed-not-found",
             Self::ReadingFailedNoSource => "reading-failed-no-source",
             Self::ReadingFailedBlocked { .. } => "reading-failed-blocked",
+            Self::ReadingFailedHostNotAllowed { .. } => "reading-failed-host-not-allowed",
             Self::ReadingFailedParse { .. } => "reading-failed-parse",
             Self::ReadingFailedPage { .. } => "reading-failed-page",
             Self::ReadingPictureFailed => "reading-picture-failed",
@@ -1921,6 +1924,7 @@ impl ReadingMsg {
             Self::ReadingFailedNotFound => Vec::new(),
             Self::ReadingFailedNoSource => Vec::new(),
             Self::ReadingFailedBlocked { source, reason } => vec![("source", Value::Text(source.clone())), ("reason", Value::Text(reason.clone()))],
+            Self::ReadingFailedHostNotAllowed { source } => vec![("source", Value::Text(source.clone()))],
             Self::ReadingFailedParse { source } => vec![("source", Value::Text(source.clone()))],
             Self::ReadingFailedPage { status } => vec![("status", Value::Plain(*status))],
             Self::ReadingPictureFailed => Vec::new(),

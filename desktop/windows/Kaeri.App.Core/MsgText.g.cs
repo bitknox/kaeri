@@ -354,6 +354,7 @@ public static class MsgText
         ReadingMsg.ReadingFailedNotFound => T.ReadingFailedNotFound,
         ReadingMsg.ReadingFailedNoSource => T.ReadingFailedNoSource,
         ReadingMsg.ReadingFailedBlocked x => T.ReadingFailedBlocked(x.Source, x.Reason),
+        ReadingMsg.ReadingFailedHostNotAllowed x => T.ReadingFailedHostNotAllowed(x.Source),
         ReadingMsg.ReadingFailedParse x => T.ReadingFailedParse(x.Source),
         ReadingMsg.ReadingFailedPage x => T.ReadingFailedPage(x.Status),
         ReadingMsg.ReadingPictureFailed => T.ReadingPictureFailed,

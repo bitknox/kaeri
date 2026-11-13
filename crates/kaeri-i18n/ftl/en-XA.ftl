@@ -648,6 +648,9 @@ reading-failed-no-source = [Ñöñé öƒ ýöüŕ šöüŕçéš ĥàš ţĥî�
 # Why a chapter or a list could not load: the source refused. The reason comes from the source.
 reading-failed-blocked = [{ $source } ŕéƒüšéð ţĥé ŕéƣüéšţ. { $reason }~~~~~~~~~]
 
+# Why a chapter or a list could not load: the source's plugin asked for a host its manifest doesn't list, so the request never left the device and the source refused nothing. An update to the plugin usually fixes it.
+reading-failed-host-not-allowed = [Ţĥé þļüĝîñ ƒöŕ { $source } àšķéð ƒöŕ à ĥöšţ îţ îšñ'ţ àļļöŵéð ţö ŕéàçĥ. Åñ üþðàţé ţö ţĥé þļüĝîñ ɱàý ƒîẋ îţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
 # Why a chapter or a list could not load: the source answered with something Kaeri could not read.
 reading-failed-parse = [Ķàéŕî çöüļðñ'ţ ŕéàð ŵĥàţ { $source } šéñţ. Îţš þļüĝîñ ɱàý ñééð àñ üþðàţé.~~~~~~~~~~~~~~~~~~~~]
 

@@ -821,6 +821,11 @@ public enum L {
         Self.format("reading-failed-blocked", fallback: "%1$@ refused the request. %2$@", source, reason)
     }
 
+    /// Why a chapter or a list could not load: the source's plugin asked for a host its manifest doesn't list, so the request never left the device and the source refused nothing. An update to the plugin usually fixes it.
+    public static func readingFailedHostNotAllowed(source: String) -> String {
+        Self.format("reading-failed-host-not-allowed", fallback: "The plugin for %1$@ asked for a host it isn't allowed to reach. An update to the plugin may fix it.", source)
+    }
+
     /// Why a chapter or a list could not load: the source answered with something Kaeri could not read.
     public static func readingFailedParse(source: String) -> String {
         Self.format("reading-failed-parse", fallback: "Kaeri couldn't read what %1$@ sent. Its plugin may need an update.", source)

@@ -2966,3 +2966,38 @@ mod filled_tests {
         assert_eq!(filled(&mut none), ["x/-/prologue", "0", "1", "7"]);
     }
 }
+
+#[cfg(test)]
+mod held_back_tests {
+    use kaeri_plugin::host::{Capabilities, HostError, Request};
+
+    use super::*;
+
+    /// A page on a host the plugin's manifest leaves out is held back on the device, so the
+    /// words say the plugin isn't allowed to reach it, never that the source refused it.
+    #[test]
+    fn a_host_the_plugin_may_not_reach_reads_as_not_allowed_rather_than_refused() {
+        let caps = Capabilities::new(
+            "inkwell",
+            vec!["inkwell.example".into()],
+            kaeri_plugin::Limits::default(),
+            None,
+        );
+        let page = Request {
+            method: "GET".into(),
+            url: "https://pages.example/1/1.jpg".into(),
+            headers: Vec::new(),
+            body: None,
+        };
+        let Err(HostError::Denied(reason)) = caps.authorise(&page) else {
+            panic!("an off-list host is denied");
+        };
+        let said = failure("Inkwell", &ProviderError::Blocked(reason)).msg().english();
+        assert!(said.contains("isn't allowed to reach"), "{said}");
+        assert!(!said.contains("refused"), "{said}");
+
+        let refused = ProviderError::Blocked("slow down".into());
+        let said = failure("Inkwell", &refused).msg().english();
+        assert!(said.contains("refused"), "a source's own refusal keeps its words: {said}");
+    }
+}
