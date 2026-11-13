@@ -20,39 +20,41 @@ private final class Seen {
     var frames: [CGRect] = []
 }
 
-@MainActor
-@Suite(.serialized)
-struct SwipeCancelTests {
-    private let size = CGSize(width: 700, height: 900)
-    private let work = "a:900301"
+extension WindowEventTests {
+    @MainActor
+    @Suite(.serialized)
+    struct SwipeCancelTests {
+        private let size = CGSize(width: 700, height: 900)
+        private let work = "a:900301"
 
-    /// A paged chapter of five pages, all failed so each shows its Try again, whose frame says
-    /// where its page is. The middle page is on screen.
-    private func chapter() -> ReaderModel {
-        let model = ReaderModel()
-        model.open(work: work, chapter: "c1")
-        model.surfaceChanged(ReaderSurface(widthPx: 1400, heightPx: 1800, scale: 2, eink: false, twoPages: false, dark: true))
-        let row = ChapterRow(
-            id: ChapterId("c1"), label: "Chapter 1", state: .unread, number: "1", title: nil, volume: nil,
-            published: nil, pages: 5, newChapter: false, download: nil, versions: 1, bookmarked: false)
-        model.apply(.opened(ReaderView(
-            session: 1, work: WorkId(work), title: "The Lantern Ferry", medium: .manga, chapter: row,
-            mode: .paged, direction: .leftToRight,
-            start: ReadPlace(work: WorkId(work), chapter: ChapterId("c1"), page: 0, strip: nil, novel: nil),
-            next: nil, previous: nil, settings: nil)))
-        var leaves = (0..<5).map { page in
-            Leaf(index: UInt32(page), parts: [
-                LeafPart(page: UInt32(page), kind: .story, file: nil, place: UnitRect(x: 0, y: 0, width: 1, height: 1), rotate: false, half: nil),
-            ], endPage: false)
+        /// A paged chapter of five pages, all failed so each shows its Try again, whose frame says
+        /// where its page is. The middle page is on screen.
+        private func chapter() -> ReaderModel {
+            let model = ReaderModel()
+            model.open(work: work, chapter: "c1")
+            model.surfaceChanged(ReaderSurface(widthPx: 1400, heightPx: 1800, scale: 2, eink: false, twoPages: false, dark: true))
+            let row = ChapterRow(
+                id: ChapterId("c1"), label: "Chapter 1", state: .unread, number: "1", title: nil, volume: nil,
+                published: nil, pages: 5, newChapter: false, download: nil, versions: 1, bookmarked: false)
+            model.apply(.opened(ReaderView(
+                session: 1, work: WorkId(work), title: "The Lantern Ferry", medium: .manga, chapter: row,
+                mode: .paged, direction: .leftToRight,
+                start: ReadPlace(work: WorkId(work), chapter: ChapterId("c1"), page: 0, strip: nil, novel: nil),
+                next: nil, previous: nil, settings: nil)))
+            var leaves = (0..<5).map { page in
+                Leaf(index: UInt32(page), parts: [
+                    LeafPart(page: UInt32(page), kind: .story, file: nil, place: UnitRect(x: 0, y: 0, width: 1, height: 1), rotate: false, half: nil),
+                ], endPage: false)
+            }
+            leaves.append(Leaf(index: 5, parts: [], endPage: true))
+            model.apply(.leaves(session: 1, chapter: ChapterId("c1"), leaves: leaves))
+            for page in 0..<5 {
+                model.apply(.pageFailed(session: 1, chapter: ChapterId("c1"), page: UInt32(page), failure: .offline))
+            }
+            model.shown(2, how: .turn)
+            return model
         }
-        leaves.append(Leaf(index: 5, parts: [], endPage: true))
-        model.apply(.leaves(session: 1, chapter: ChapterId("c1"), leaves: leaves))
-        for page in 0..<5 {
-            model.apply(.pageFailed(session: 1, chapter: ChapterId("c1"), page: UInt32(page), failure: .offline))
-        }
-        model.shown(2, how: .turn)
-        return model
-    }
+}
 
     /// How far the page nearest `rest` is from it.
     private func shift(_ seen: Seen, from rest: CGFloat) -> CGFloat {

@@ -23,24 +23,26 @@ private final class Sent {
     }
 }
 
-@MainActor
-@Suite(.serialized)
-struct ReadFromInUseTests {
-    private let size = CGSize(width: 520, height: 520)
-    private let work = "a:900306"
+extension WindowEventTests {
+    @MainActor
+    @Suite(.serialized)
+    struct ReadFromInUseTests {
+        private let size = CGSize(width: 520, height: 520)
+        private let work = "a:900306"
 
-    private func store(_ sent: Sent) -> AppStore {
-        let store = AppStore()
-        store.reading.send = { sent.commands.append($0) }
-        store.bookSources.observe(.bookSources(.forWork(
-            work: WorkId(work),
-            editions: [
-                BookEditionRow(sourceId: "harbour-shelf", sourceName: "Harbour Shelf", chapters: 1204, inUse: true),
-                BookEditionRow(sourceId: "lantern-pages", sourceName: "Lantern Pages", chapters: 1198),
-            ],
-            asking: false)))
-        return store
-    }
+        private func store(_ sent: Sent) -> AppStore {
+            let store = AppStore()
+            store.reading.send = { sent.commands.append($0) }
+            store.bookSources.observe(.bookSources(.forWork(
+                work: WorkId(work),
+                editions: [
+                    BookEditionRow(sourceId: "harbour-shelf", sourceName: "Harbour Shelf", chapters: 1204, inUse: true),
+                    BookEditionRow(sourceId: "lantern-pages", sourceName: "Lantern Pages", chapters: 1198),
+                ],
+                asking: false)))
+            return store
+        }
+}
 
     private func press(_ window: TapWindow, _ name: String) throws {
         let row = try #require(window.accessibilityElements().first { element in

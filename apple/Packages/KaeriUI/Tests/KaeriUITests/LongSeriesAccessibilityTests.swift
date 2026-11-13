@@ -11,26 +11,28 @@ import KaeriKit
 import SwiftUI
 import Testing
 
-@MainActor
-@Suite(.serialized)
-struct LongSeriesAccessibilityTests {
-    private let size = CGSize(width: 1000, height: 800)
-    private let work = "a:900307"
-    private let count = 3245
+extension WindowEventTests {
+    @MainActor
+    @Suite(.serialized)
+    struct LongSeriesAccessibilityTests {
+        private let size = CGSize(width: 1000, height: 800)
+        private let work = "a:900307"
+        private let count = 3245
 
-    private func store() -> AppStore {
-        let store = AppStore()
-        store.reading.send = { _ in }
-        store.reading.apply(.series(SeriesView(
-            work: WorkId(work), medium: .novel, titles: WorkTitles(display: "The Glass Orchard"),
-            action: .read(chapter: ChapterId("c1"), label: "Read chapter 1"))))
-        let rows = (1...count).map { n in
-            ChapterRow(id: ChapterId("c\(n)"), label: "Chapter \(n)", state: .unread, number: "\(n)", title: "The lamp at the stair \(n)")
+        private func store() -> AppStore {
+            let store = AppStore()
+            store.reading.send = { _ in }
+            store.reading.apply(.series(SeriesView(
+                work: WorkId(work), medium: .novel, titles: WorkTitles(display: "The Glass Orchard"),
+                action: .read(chapter: ChapterId("c1"), label: "Read chapter 1"))))
+            let rows = (1...count).map { n in
+                ChapterRow(id: ChapterId("c\(n)"), label: "Chapter \(n)", state: .unread, number: "\(n)", title: "The lamp at the stair \(n)")
+            }
+            store.reading.apply(.chapters(
+                work: WorkId(work), edition: nil, volumes: [VolumeGroup(chapters: rows, flat: true)], failure: nil))
+            return store
         }
-        store.reading.apply(.chapters(
-            work: WorkId(work), edition: nil, volumes: [VolumeGroup(chapters: rows, flat: true)], failure: nil))
-        return store
-    }
+}
 
     /// The app's physical footprint, in MB.
     private static func footprint() -> Double {

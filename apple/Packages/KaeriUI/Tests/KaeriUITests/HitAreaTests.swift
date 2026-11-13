@@ -71,40 +71,42 @@ private final class Taps { var count = 0 }
 
 /// One at a time: every test's window says it is key, and a click in one must not land between
 /// another's press and release.
-@MainActor
-@Suite(.serialized)
-struct HitAreaTests {
-    /// The header's Trailer and Play on TV, and the capsules like them: the padding around the
-    /// words takes the click, to the capsule's edge.
-    @Test(arguments: ["secondary", "primary"])
-    func capsuleTakesClicksToItsEdge(style: String) async throws {
-        let taps = Taps()
-        let button = Button("Trailer") { taps.count += 1 }
-        let view = Group {
-            if style == "primary" {
-                button.buttonStyle(PrimaryCapsuleStyle(height: 28))
-            } else {
-                button.buttonStyle(SecondaryCapsuleStyle(height: 28))
+extension WindowEventTests {
+    @MainActor
+    @Suite(.serialized)
+    struct HitAreaTests {
+        /// The header's Trailer and Play on TV, and the capsules like them: the padding around the
+        /// words takes the click, to the capsule's edge.
+        @Test(arguments: ["secondary", "primary"])
+        func capsuleTakesClicksToItsEdge(style: String) async throws {
+            let taps = Taps()
+            let button = Button("Trailer") { taps.count += 1 }
+            let view = Group {
+                if style == "primary" {
+                    button.buttonStyle(PrimaryCapsuleStyle(height: 28))
+                } else {
+                    button.buttonStyle(SecondaryCapsuleStyle(height: 28))
+                }
+            }
+            .fixedSize()
+            let size = NSHostingView(rootView: view).fittingSize
+            #expect(size.width > 60)
+            let window = ClickWindow(view, size: size)
+            defer { window.close() }
+            try await window.settle()
+            let points = [
+                CGPoint(x: 8, y: size.height / 2), // the padding before the word
+                CGPoint(x: size.width - 8, y: size.height / 2), // and after it
+                CGPoint(x: size.width / 2, y: 3), // above it
+                CGPoint(x: size.width / 2, y: size.height - 3), // below it
+            ]
+            for point in points {
+                let before = taps.count
+                try await window.click(point)
+                #expect(taps.count == before + 1, "no click at \(point) on a \(size) capsule")
             }
         }
-        .fixedSize()
-        let size = NSHostingView(rootView: view).fittingSize
-        #expect(size.width > 60)
-        let window = ClickWindow(view, size: size)
-        defer { window.close() }
-        try await window.settle()
-        let points = [
-            CGPoint(x: 8, y: size.height / 2), // the padding before the word
-            CGPoint(x: size.width - 8, y: size.height / 2), // and after it
-            CGPoint(x: size.width / 2, y: 3), // above it
-            CGPoint(x: size.width / 2, y: size.height - 3), // below it
-        ]
-        for point in points {
-            let before = taps.count
-            try await window.click(point)
-            #expect(taps.count == before + 1, "no click at \(point) on a \(size) capsule")
-        }
-    }
+}
 
     /// The episode list's All and Unwatched: the raised capsule around the word takes the click.
     @Test func segmentTakesClicksOnItsCapsule() async throws {

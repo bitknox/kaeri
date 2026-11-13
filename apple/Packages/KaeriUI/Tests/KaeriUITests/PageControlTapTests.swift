@@ -124,15 +124,17 @@ private final class Heard {
     var controls: [CGRect] = []
 }
 
-@MainActor
-@Suite(.serialized)
-struct PageControlTapTests {
-    private let size = CGSize(width: 700, height: 900)
+extension WindowEventTests {
+    @MainActor
+    @Suite(.serialized)
+    struct PageControlTapTests {
+        private let size = CGSize(width: 700, height: 900)
 
-    private func failed(_ heard: Heard) -> some View {
-        PageFailed(page: 9, failure: .offline, theme: .dark) { heard.retries += 1 }
-            .frame(width: size.width, height: size.height)
-    }
+        private func failed(_ heard: Heard) -> some View {
+            PageFailed(page: 9, failure: .offline, theme: .dark) { heard.retries += 1 }
+                .frame(width: size.width, height: size.height)
+        }
+}
 
     /// The pager: the page under the surface, as PagedReader lays a leaf out.
     private func pager(_ heard: Heard) -> some View {

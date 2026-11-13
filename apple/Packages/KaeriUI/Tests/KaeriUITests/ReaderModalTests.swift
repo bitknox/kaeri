@@ -9,22 +9,24 @@ import AppKit
 import SwiftUI
 import Testing
 
-@MainActor
-@Suite(.serialized)
-struct ReaderModalTests {
-    private let size = CGSize(width: 800, height: 600)
+extension WindowEventTests {
+    @MainActor
+    @Suite(.serialized)
+    struct ReaderModalTests {
+        private let size = CGSize(width: 800, height: 600)
 
-    /// A window's content as a series page would be, a row to press and a field, under the reader.
-    private func covered(_ model: ReaderModel) -> some View {
-        VStack {
-            Button("Covered series row") {}
-            TextField("Covered field", text: .constant(""))
+        /// A window's content as a series page would be, a row to press and a field, under the reader.
+        private func covered(_ model: ReaderModel) -> some View {
+            VStack {
+                Button("Covered series row") {}
+                TextField("Covered field", text: .constant(""))
+            }
+            .frame(width: size.width, height: size.height)
+            .hostsReader(model)
+            .environment(AppStore())
+            .environment(Navigator())
         }
-        .frame(width: size.width, height: size.height)
-        .hostsReader(model)
-        .environment(AppStore())
-        .environment(Navigator())
-    }
+}
 
     @Test func theOpenReaderTakesTheWindowsAccessibilityAndTab() async throws {
         let model = ReaderModel()

@@ -11,16 +11,18 @@ import KaeriStrings
 import SwiftUI
 import Testing
 
-@MainActor
-@Suite(.serialized)
-struct DownloadsRowAccessibilityTests {
-    private let size = CGSize(width: 600, height: 120)
-    private let work = "a:900305"
-    private let title = "The Glass Orchard"
+extension WindowEventTests {
+    @MainActor
+    @Suite(.serialized)
+    struct DownloadsRowAccessibilityTests {
+        private let size = CGSize(width: 600, height: 120)
+        private let work = "a:900305"
+        private let title = "The Glass Orchard"
 
-    private func series() -> BookDownloadSeries {
-        BookDownloadSeries(work: WorkId(work), title: title, chapters: 1, bytes: 5_300_000)
-    }
+        private func series() -> BookDownloadSeries {
+            BookDownloadSeries(work: WorkId(work), title: title, chapters: 1, bytes: 5_300_000)
+        }
+}
 
     private func row(_ store: AppStore, _ navigator: Navigator) -> some View {
         BookDownloadSeriesRow(series: series())
