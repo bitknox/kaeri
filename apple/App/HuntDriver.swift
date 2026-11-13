@@ -614,7 +614,7 @@ enum HuntDriver {
             }
             for win in NSApp.windows where win.isVisible { walk(win, 0) }
             if hits.indices.contains(pick) {
-                let target = hits[pick]
+                nonisolated(unsafe) let target = hits[pick]
                 say("qpress #\(pick) of \(hits.count) '\(axLabel(target))' t='\(axTitle(target))'")
                 RunLoop.main.perform { MainActor.assumeIsolated { _ = target.accessibilityPerformPress?() } }
             } else { say("qpress: no match #\(pick) for '\(needle)'") }
