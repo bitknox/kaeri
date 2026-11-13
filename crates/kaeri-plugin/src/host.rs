@@ -255,7 +255,10 @@ impl Capabilities {
                 .unwrap_or(0);
             if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path)
             {
-                let _ = writeln!(f, "{ms} {} {}", self.plugin_id, request.url.split('/').nth(2).unwrap_or("-"));
+                // r6b iPad: the path's last part too, so page images show their number.
+                let tail = request.url.split(['?', '#']).next().unwrap_or("").rsplit('/').next().unwrap_or("-");
+                let tail: String = tail.chars().rev().take(24).collect::<Vec<_>>().into_iter().rev().collect();
+                let _ = writeln!(f, "{ms} {} {} {tail}", self.plugin_id, request.url.split('/').nth(2).unwrap_or("-"));
             }
         }
 
