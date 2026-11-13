@@ -42,6 +42,8 @@ struct PageSource {
     gate: tokio::sync::Semaphore,
     /// Pages that fail, by their place in the chapter.
     failing: Mutex<HashSet<usize>>,
+    /// Pages whose fetch panics, by their place in the chapter.
+    panicking: Mutex<HashSet<usize>>,
     /// Pages printed as two, by their place in the chapter.
     wide: HashSet<usize>,
     /// The title every chapter is listed with.
@@ -68,6 +70,7 @@ impl PageSource {
             held_from: None,
             gate: tokio::sync::Semaphore::new(0),
             failing: Mutex::default(),
+            panicking: Mutex::default(),
             wide: HashSet::new(),
             title: None,
         }
@@ -137,6 +140,7 @@ impl kaeri_core::traits::BookSource for PageSource {
         if self.failing.lock().unwrap().contains(&index) {
             return Err(PageError::Status(404));
         }
+        assert!(!self.panicking.lock().unwrap().contains(&index), "a page no one foresaw");
         let (w, h) = if self.wide.contains(&index) { (640, 480) } else { (320, 480) };
         let picture = image::GrayImage::from_pixel(w, h, image::Luma([90]));
         let mut png = Vec::new();
@@ -351,6 +355,28 @@ async fn a_page_that_fails_has_its_own_retry() {
     assert_eq!(made, [(0, true), (1, false), (2, true)]);
 
     source.failing.lock().unwrap().clear();
+    let session = h.session();
+    h.send(ReaderCommand::Retry { session, chapter: ChapterId::new("1"), page: Some(1) });
+    let again = timeout(wait, h.pages_made(1)).await.expect("the retry answers");
+    assert_eq!(again, [(1, true)]);
+}
+
+/// A page whose fetch panics fails as that page, not coming for good: the other pages come and
+/// a retry fetches it again.
+#[tokio::test]
+async fn a_page_whose_fetch_panics_fails_and_has_its_own_retry() {
+    let source = Arc::new(PageSource::new(&["1"]));
+    source.panicking.lock().unwrap().insert(1);
+    let mut h = reading(source.clone());
+    h.failures = true;
+    h.open_read(None).await;
+    let wait = Duration::from_secs(20);
+    timeout(wait, h.leaves_of("1")).await.expect("the chapter opens");
+    h.shown(0, TurnHow::Turn).await;
+    let made = timeout(wait, h.pages_made(3)).await.expect("every page answers");
+    assert_eq!(made, [(0, true), (1, false), (2, true)]);
+
+    source.panicking.lock().unwrap().clear();
     let session = h.session();
     h.send(ReaderCommand::Retry { session, chapter: ChapterId::new("1"), page: Some(1) });
     let again = timeout(wait, h.pages_made(1)).await.expect("the retry answers");
@@ -664,4 +690,65 @@ async fn the_end_page_follows_the_connection_while_it_is_open() {
     // The same connection again says nothing new.
     h.network(true);
     assert!(!h.drain().iter().any(|e| matches!(e, ReaderEvent::EndPage { .. })));
+}
+
+/// A chapter says its end page as it opens: offline, a strip that flows into the next download
+/// knows at once that the chapter after it is only at the source, rather than from its last
+/// images on.
+#[tokio::test]
+async fn a_chapter_flowed_into_offline_says_its_end_page_as_it_opens() {
+    let source = Arc::new(PageSource::new(&["1", "2", "3", "4", "5"]));
+    let mut h = reading(source.clone());
+    let store = h.services.store.clone();
+    let now = h.services.clock.now();
+    h.services.book_sources.chapters(&WorkId::new(READ), None, now).await.unwrap();
+    store.set_series_setting(READ, "mode", Some("strip"), true, 1).unwrap();
+    let folders: Vec<_> = (0..2).map(|_| tempfile::tempdir().unwrap()).collect();
+    for (chapter, folder) in ["2", "3"].into_iter().zip(&folders) {
+        for n in 1..=20 {
+            let page = image::GrayImage::from_pixel(320, 480, image::Luma([60 + n]));
+            page.save(folder.path().join(format!("{n:03}.png"))).unwrap();
+        }
+        let ask = kaeri_store::book_downloads::BookDownloadAsk {
+            work: READ,
+            chapter,
+            source_id: SOURCE,
+            version_label: None,
+            keep_ready: true,
+        };
+        store.queue_book_download(&ask, 1).unwrap();
+        let id = store.book_download(READ, chapter).unwrap().unwrap().id;
+        store.book_download_done(id, folder.path().to_str().unwrap(), Some(20), 1, 1).unwrap();
+    }
+    h.services.offline.store(true, Ordering::Relaxed);
+    let wait = Duration::from_secs(20);
+
+    timeout(wait, h.open_read(Some("2"))).await.expect("chapter 2 opens");
+    timeout(wait, h.leaves_of("2")).await.expect("chapter 2 is laid out");
+    h.drain();
+
+    // The strip runs on into chapter 3, as its foot does.
+    let session = h.session();
+    h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("3") });
+    let opened = timeout(
+        wait,
+        h.until(|e| match e {
+            ReaderEvent::Opened(view) => Some(view.chapter.id.clone()),
+            _ => None,
+        }),
+    )
+    .await
+    .expect("chapter 3 opens");
+    assert_eq!(opened.as_str(), "3");
+    // No report from near its foot: the end page comes with the open.
+    let end = timeout(
+        wait,
+        h.until(|e| match e {
+            ReaderEvent::EndPage { next, why_none, .. } => Some((next.clone(), *why_none)),
+            _ => None,
+        }),
+    )
+    .await
+    .expect("the end page is said with the open");
+    assert_eq!(end, (None, Some(NoNext::Offline)), "4 is only at the source");
 }
