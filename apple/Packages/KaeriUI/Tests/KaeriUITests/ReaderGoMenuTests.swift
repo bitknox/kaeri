@@ -59,26 +59,19 @@ struct ReaderGoMenuTests {
         #expect(ReaderInFront.of(model)?.plain == false)
     }
 
-    @Test func pagesHaveTheZoomItemsDimmed() {
-        #expect(ReaderInFront.of(open())?.keys.zooms == false)
-    }
-
-    @Test func aStripAndANovelZoom() {
-        let model = ReaderModel()
-        model.send = { _ in }
-        model.open(work: "a:900301", chapter: "12")
-        let books: [(Medium, ReaderMode)] = [(.manga, .strip), (.novel, .paged)]
-        for (medium, mode) in books {
-            let chapter = ChapterRow(
-                id: ChapterId("12"), label: "12", state: .unread, number: "12", title: nil, volume: nil,
-                published: nil, pages: 3, newChapter: false, download: nil, versions: 1, bookmarked: false)
-            model.apply(.opened(ReaderView(
-                session: 1, work: WorkId("a:900301"), title: "The Lantern Ferry", medium: medium,
-                chapter: chapter, mode: mode, direction: .leftToRight,
-                start: ReadPlace(work: WorkId("a:900301"), chapter: ChapterId("12"), page: 0, strip: nil, novel: nil),
-                next: nil, previous: nil, settings: nil)))
-            #expect(ReaderInFront.of(model)?.keys.zooms == true, "\(medium) \(mode)")
-        }
+    /// Zoom In, Zoom Out and Fit to Window act on pages too: the page on screen is asked to zoom,
+    /// as a pinch would, and each ask is seen even when it repeats the last.
+    @Test func theZoomItemsZoomThePageOnScreen() {
+        let model = open()
+        let actions = ReaderActions(model: model) {}
+        actions.zoom(1)
+        #expect(model.pageZoomAsked?.step == 1)
+        let first = model.pageZoomAsked?.tick
+        actions.zoom(1)
+        #expect(model.pageZoomAsked?.step == 1)
+        #expect(model.pageZoomAsked?.tick != first)
+        actions.zoom(0)
+        #expect(model.pageZoomAsked?.step == 0)
     }
 
     @Test func closingTheBookTakesTheGoMenuAway() {

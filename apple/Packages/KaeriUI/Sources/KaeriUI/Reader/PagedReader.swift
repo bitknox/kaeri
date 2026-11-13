@@ -74,6 +74,11 @@ struct PagedReader: View {
             model.position = (current, max(model.leaves.count, 1))
             zoom.reset()
         }
+        // Zoom In, Zoom Out and Fit to Window, from the keys or the Go menu.
+        .onChange(of: model.pageZoomAsked) { _, asked in
+            guard let asked else { return }
+            zoom.step(asked.step, in: size, motion: !reduceMotion && !paper)
+        }
         // A place the app chose (Back to page, Start over, another device's, a change of mode) is
         // its own move, never the person's jump.
         .onChange(of: model.goTo?.tick) { _, _ in

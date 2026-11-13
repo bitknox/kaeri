@@ -353,10 +353,7 @@ extension ReaderActions {
     }
 
     @MainActor static func keys(_ model: ReaderModel) -> ReaderKeyContext {
-        var context = ReaderKeyContext(novel: model.novel != nil, mode: model.view?.mode, direction: model.view?.direction)
-        // What `zoom` changes, for a novel still opening too.
-        context.zooms = model.medium == .novel || model.view?.mode == .strip
-        return context
+        ReaderKeyContext(novel: model.novel != nil, mode: model.view?.mode, direction: model.view?.direction)
     }
 
     #if os(macOS)
@@ -399,6 +396,10 @@ extension ReaderActions {
             model.set(.stripWidth, .amount(value: next))
             // Fit undoes a pinch's zoom too, whatever cut the pinch off.
             if step == 0 { model.fitStrip() }
+        } else {
+            // Pages zoom the page on screen, as a pinch does: in and out about the middle of the
+            // screen, and Fit to Window back to fitted.
+            model.zoomPage(step)
         }
     }
 

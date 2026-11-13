@@ -381,13 +381,9 @@ private struct ReaderMenuItems: View {
             Button(L.readerMenuChapters) { reader.showChapters() }.key("l", .command, when: on)
             Button(L.readerMenuSettings) { reader.showSettings() }.key("t", .command, when: on)
             Divider()
-            // Dimmed on pages, which these do not zoom.
-            Group {
-                Button(L.readerMenuZoomIn) { reader.zoom(1) }.key("+", .command, when: on)
-                Button(L.readerMenuZoomOut) { reader.zoom(-1) }.key("-", .command, when: on)
-                Button(L.readerMenuZoomFit) { reader.zoom(0) }.key("0", .command, when: on)
-            }
-            .disabled(!keys.zooms)
+            Button(L.readerMenuZoomIn) { reader.zoom(1) }.key("+", .command, when: on)
+            Button(L.readerMenuZoomOut) { reader.zoom(-1) }.key("-", .command, when: on)
+            Button(L.readerMenuZoomFit) { reader.zoom(0) }.key("0", .command, when: on)
             #if os(iOS)
             // The Mac's reader takes Esc itself; on iPad it is an item of its own.
             Divider()

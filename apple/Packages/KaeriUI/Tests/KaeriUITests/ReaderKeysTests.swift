@@ -51,21 +51,11 @@ struct ReaderKeysTests {
     }
 
     @Test func commandEqualsZoomsInAsCommandPlusDoes() {
-        for context in [strip, novel] {
+        for context in [rightToLeft, strip, novel] {
             #expect(press("=", .command, in: context) == .zoom(step: 1))
             #expect(press("=", in: context) == nil)
             #expect(press("=", [.command, .shift], in: context) == nil)
         }
-    }
-
-    /// Pages zoom by pinch and double tap; the zoom keys change a novel's text and a strip's width.
-    @Test func pagesHaveNoZoomKeys() {
-        for context in [rightToLeft, leftToRight, vertical] {
-            #expect(!context.zooms)
-            #expect(press("=", .command, in: context) == nil)
-        }
-        #expect(strip.zooms)
-        #expect(novel.zooms)
     }
 
     @Test func aStripLeavesTheSidewaysArrowsAlone() {
