@@ -356,9 +356,11 @@ public final class ReadingModel {
         case .opened(let view):
             readerWork = view.work
         case .chapterRead(let work, _, _):
-            refreshSeries(work)
+            // Counted as read on the end page: the series page under it offers the next chapter.
+            readerMoved(work, home: false)
         case .closed:
-            if let work = readerWork { refreshSeries(work) }
+            // The last place is written by the time the engine says it closed.
+            if let work = readerWork { readerMoved(work, home: true) }
             readerWork = nil
         default:
             break

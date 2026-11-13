@@ -7670,6 +7670,12 @@ public static partial class T
     /// <summary>A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.</summary>
     public static string SendBanner(string device) => Fill(Get("SendBanner"), ("device", device));
 
+    /// <summary>The chapters a send holds, on its row under Sending to, when there are several: the first to the last, by their numbers or labels, such as 21 to 23.</summary>
+    public static string SendRowChapters(string first, string last) => Fill(Get("SendRowChapters"), ("first", first), ("last", last));
+
+    /// <summary>A send's row under Sending to: the series' title, then the chapters the send holds, such as "Chapter 23" or "Chapters 21 to 23". Shown on one line.</summary>
+    public static string SendRowLine(string title, string chapters) => Fill(Get("SendRowLine"), ("title", title), ("chapters", chapters));
+
     /// <summary>The format of the files an e-reader is sent: a manga as a fixed-layout EPUB.</summary>
     public static string SendFormatFixedEpub => Get("SendFormatFixedEpub");
 
@@ -14685,6 +14691,8 @@ public static partial class T
         ["SendFilesGone"] = "These files are gone. Prepared files are kept for a day.",
         ["SendAgain"] = "Send again",
         ["SendBanner"] = "Sending to {device}",
+        ["SendRowChapters"] = "Chapters {first} to {last}",
+        ["SendRowLine"] = "{title} · {chapters}",
         ["SendFormatFixedEpub"] = "Fixed-layout EPUB",
         ["SendFormatKepub"] = "KEPUB",
         ["SendFormatEpub"] = "EPUB",

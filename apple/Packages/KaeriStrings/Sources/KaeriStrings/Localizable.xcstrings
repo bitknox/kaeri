@@ -257515,6 +257515,30 @@
         }
       }
     },
+    "send-row-chapters" : {
+      "comment" : "The chapters a send holds, on its row under Sending to, when there are several: the first to the last, by their numbers or labels, such as 21 to 23. Argument 1: first (Text). Argument 2: last (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapters %1$@ to %2$@"
+          }
+        }
+      }
+    },
+    "send-row-line" : {
+      "comment" : "A send's row under Sending to: the series' title, then the chapters the send holds, such as \"Chapter 23\" or \"Chapters 21 to 23\". Shown on one line. Argument 1: title (Text). Argument 2: chapters (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
     "send-share-again" : {
       "comment" : "Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.",
       "extractionState" : "manual",
