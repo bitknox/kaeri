@@ -3,7 +3,7 @@ party-members = Участники
 party-choose-a-source = Выберите { -source }
 party-sources-none-listed = Ни один { -source } не содержит эпизод { $episode }. { -source-cap-pl } дают { -plugin-pl }, а их добавляют через { -plugin-store }.
 party-sources-found-line = { $count ->
-    [one] Один { -source } содержит эпизод. Выбранный { -source } запускает { -watch-party }.
+    [one] { $count } { -source } содержит эпизод. Выбранный { -source } запускает { -watch-party }.
     [few] { -source-cap-pl } с эпизодом: { $count }. Выбранный { -source } запускает { -watch-party }.
     [many] { -source-cap-pl } с эпизодом: { $count }. Выбранный { -source } запускает { -watch-party }.
    *[other] { -source-cap-pl } с эпизодом: { $count }. Выбранный { -source } запускает { -watch-party }.
@@ -20,7 +20,7 @@ player-time-ending = { $clock } · Эндинг
 player-channels-mono = Моно
 player-channels-stereo = Стерео
 player-channels = { $count ->
-    [one] Один канал
+    [one] { $count } канал
     [few] { $count } канала
     [many] { $count } каналов
    *[other] { $count } канала

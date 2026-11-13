@@ -94,7 +94,7 @@ stores-members-of = Membres de { $name }
 stores-members = Membres
 stores-owner-devices = Propriétaire · { $devices }
 stores-member-devices = { $count ->
-    [one] Son seul { -device }
+    [one] { $count } { -device }
     [many] Ses { $count } { -device-pl }
    *[other] Ses { $count } { -device-pl }
  }
@@ -134,7 +134,7 @@ stores-invite-owner-once = Les invitations de propriétaire sont valables une fo
 stores-invite-links = Liens d’invitation
 stores-invite-not-used = Pas encore utilisé
 stores-invite-used = { $used ->
-    [one] Utilisé une fois
+    [one] Utilisé { $used } fois
     [many] Utilisé { $used } fois
    *[other] Utilisé { $used } fois
  }
@@ -146,7 +146,7 @@ stores-invite-cancelled-on = Annulée : { $when }
 stores-invite-show-uses = Utilisations
 stores-invite-joined = { $name } · a rejoint : { $when }
 stores-cancel-invite-detail = { $count ->
-    [one] Personne d’autre ne pourra rejoindre avec ce lien. La personne qui l’a utilisé reste membre.
+    [one] Personne d’autre ne pourra rejoindre avec ce lien. { $count } personne qui l’a utilisé reste membre.
     [many] Personne d’autre ne pourra rejoindre avec ce lien. Les { $count } personnes qui l’ont utilisé restent membres.
    *[other] Personne d’autre ne pourra rejoindre avec ce lien. Les { $count } personnes qui l’ont utilisé restent membres.
  }
@@ -160,7 +160,7 @@ stores-who-can-join-title = Qui peut rejoindre { $name }
 stores-anyone-with-store-link = Toute personne ayant le lien de la { -plugin-store }
 stores-only-invited = Seules les personnes invitées
 stores-devices-joined = { $count ->
-    [one] Un { -device } a rejoint avec le lien
+    [one] { $count } { -device } a rejoint avec le lien
     [many] { $count } { -device-pl } ont rejoint avec le lien
    *[other] { $count } { -device-pl } ont rejoint avec le lien
  }
@@ -175,7 +175,7 @@ stores-plugin-name-version = { $name } { $version }
 stores-remove-all = Tout retirer
 stores-copy-link = Copier le lien
 stores-offers-plugins = { $count ->
-    [one] Un { -plugin }
+    [one] { $count } { -plugin }
     [many] { $count } { -plugin-pl }
    *[other] { $count } { -plugin-pl }
  }

@@ -4,18 +4,18 @@ sources-update-available-version = { $version } disponible
 stores-store-label = { -plugin-store-cap }
 stores-checked-at = Vérifiée { $when }
 stores-updates-available = { $count ->
-    [one] Une mise à jour
+    [one] { $count } mise à jour
     [many] { $count } mises à jour
    *[other] { $count } mises à jour
  }
 stores-installed-version = { $version } installée
 stores-plugins-count = { $count ->
-    [one] Un { -plugin }
+    [one] { $count } { -plugin }
     [many] { $count } { -plugin-pl }
    *[other] { $count } { -plugin-pl }
  }
 stores-devices-count = { $count ->
-    [one] Un { -device }
+    [one] { $count } { -device }
     [many] { $count } { -device-pl }
    *[other] { $count } { -device-pl }
  }

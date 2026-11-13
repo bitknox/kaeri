@@ -55,12 +55,12 @@ reading-status-hiatus = En pause
 reading-status-cancelled = Annulé
 reading-status-not-yet = Pas encore paru
 reading-chapters = { $count ->
-    [one] 1 chapitre
+    [one] { $count } chapitre
     [many] { $count } de chapitres
    *[other] { $count } chapitres
  }
 reading-volumes = { $count ->
-    [one] 1 volume
+    [one] { $count } volume
     [many] { $count } de volumes
    *[other] { $count } volumes
  }
@@ -99,7 +99,7 @@ export-device-colour-eink = E-ink couleur, 7 pouces
 export-device-tablet = Tablette
 export-chapter = Chapitre { $chapter }
 export-waits-for-wifi = { $n ->
-    [one] Un chapitre n'est pas encore téléchargé : l'envoi attend le Wi-Fi et reprendra tout seul.
+    [one] { $n } chapitre n'est pas encore téléchargé : l'envoi attend le Wi-Fi et reprendra tout seul.
     [many] { $n } chapitres ne sont pas encore téléchargés : l'envoi attend le Wi-Fi et reprendra tout seul.
    *[other] { $n } chapitres ne sont pas encore téléchargés : l'envoi attend le Wi-Fi et reprendra tout seul.
  }
@@ -120,12 +120,12 @@ reading-row-percent = { $percent } %
 reading-row-opened = Ouvert
 reading-row-bookmarked = Signet
 reading-row-pages = { $n ->
-    [one] 1 page
+    [one] { $n } page
     [many] { $n } de pages
    *[other] { $n } pages
  }
 reading-row-versions = { $n ->
-    [one] 1 version
+    [one] { $n } version
     [many] { $n } de versions
    *[other] { $n } versions
  }
@@ -134,22 +134,22 @@ reading-ago-minutes = il y a { $minutes } min
 reading-ago-today = aujourd'hui
 reading-ago-yesterday = hier
 reading-ago-days = { $days ->
-    [one] il y a 1 jour
+    [one] il y a { $days } jour
     [many] il y a { $days } de jours
    *[other] il y a { $days } jours
  }
 reading-ago-weeks = { $weeks ->
-    [one] il y a 1 sem.
+    [one] il y a { $weeks } sem.
     [many] il y a { $weeks } sem.
    *[other] il y a { $weeks } sem.
  }
 reading-ago-months = { $months ->
-    [one] il y a 1 mois
+    [one] il y a { $months } mois
     [many] il y a { $months } mois
    *[other] il y a { $months } mois
  }
 reading-ago-years = { $years ->
-    [one] il y a 1 an
+    [one] il y a { $years } an
     [many] il y a { $years } d'ans
    *[other] il y a { $years } ans
  }
@@ -162,7 +162,7 @@ reading-miss-no-series = Aucune série de ce nom
 reading-miss-down-since = Ne répond pas depuis { $time }
 reading-miss-down = Ne répond pas
 reading-dl-parts = { $count ->
-    [one] 1 partie
+    [one] { $count } partie
     [many] { $count } de parties
    *[other] { $count } parties
  }
@@ -181,12 +181,12 @@ reading-estimate-mobile = en données mobiles
 reading-estimate-waits-wifi = attend le Wi-Fi
 reading-downloads-done-title = Téléchargements terminés
 reading-downloads-done-chapters = { $count ->
-    [one] Un chapitre de { $title } est prêt à lire hors ligne.
+    [one] { $count } chapitre de { $title } est prêt à lire hors ligne.
     [many] { $count } chapitres de { $title } sont prêts à lire hors ligne.
    *[other] { $count } chapitres de { $title } sont prêts à lire hors ligne.
  }
 reading-downloads-done-parts = { $count ->
-    [one] Une partie de { $title } est prête à lire hors ligne.
+    [one] { $count } partie de { $title } est prête à lire hors ligne.
     [many] { $count } parties de { $title } sont prêtes à lire hors ligne.
    *[other] { $count } parties de { $title } sont prêtes à lire hors ligne.
  }
@@ -208,17 +208,17 @@ read-search-started-3-years = 3 dernières années
 read-hit-chapters = Chapitres 1 à { $last }
 read-hit-episodes = Épisodes 1 à { $last }
 read-hit-parts = { $count ->
-    [one] 1 partie
+    [one] { $count } partie
     [many] { $count } de parties
    *[other] { $count } parties
  }
 read-hit-files = { $count ->
-    [one] 1 fichier
+    [one] { $count } fichier
     [many] { $count } de fichiers
    *[other] { $count } fichiers
  }
 read-hit-files-format = { $count ->
-    [one] 1 fichier · { $format }
+    [one] { $count } fichier · { $format }
     [many] { $count } de fichiers · { $format }
    *[other] { $count } fichiers · { $format }
  }

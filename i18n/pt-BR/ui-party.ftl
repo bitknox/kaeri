@@ -70,7 +70,7 @@ party-nosource-missing-detail = { $why }. { $what } será reproduzido com a sala
 party-nosource-unaired = Suas { -source-pl } não terão o episódio { $episode } antes da estreia.
 party-nosource-unaired-plain = Suas { -source-pl } não o terão antes disso. Ele será reproduzido com a sala assim que uma delas tiver.
 party-sources-found = { $count ->
-    [one] Uma { -source } tem o episódio
+    [one] { $count } { -source } tem o episódio
     [many] { $count } { -source-pl } têm o episódio
    *[other] { $count } { -source-pl } têm o episódio
  }
@@ -106,7 +106,7 @@ together-nobody-here = Ninguém aqui agora
 together-servers = Servidores
 together-server-suggested = Sugerido · mantido por { $operator }
 together-server-used = { $count ->
-    [one] Usado em 1 sessão
+    [one] Usado em { $count } sessão
     [many] Usado em { $count } de sessões
    *[other] Usado em { $count } sessões
  }

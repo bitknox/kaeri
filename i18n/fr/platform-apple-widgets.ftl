@@ -30,7 +30,7 @@ widget-action-start = Lire { $episode }
 widget-a11y-episode = épisode { $episode }
 widget-a11y-episode-marked = { $episode }, { $mark }
 widget-a11y-resume = { $minutes ->
-    [one] { $episode }, il reste une minute
+    [one] { $episode }, il reste { $minutes } minute
     [many] { $episode }, il reste { $minutes } minutes
    *[other] { $episode }, il reste { $minutes } minutes
  }
@@ -48,7 +48,7 @@ widget-a11y-out-now = { $title }, épisode { $episode }, sorti maintenant
 widget-downloaded-line = Épisode { $episode } téléchargé
 widget-downloaded-ready = Prêt à regarder hors connexion
 widget-downloading-title = { $count ->
-    [one] Téléchargement d’un épisode
+    [one] Téléchargement de { $count } épisode
     [many] Téléchargement de { $count } épisodes
    *[other] Téléchargement de { $count } épisodes
  }
@@ -65,7 +65,7 @@ widget-a11y-downloading = { $title }, épisode { $episode }, { $percent }
 widget-a11y-then-paused = { $label }, en pause
 widget-a11y-then-time-left = { $label }, { $time } restantes
 widget-a11y-then-count = { $count ->
-    [one] { $label }, un épisode en cours de téléchargement
+    [one] { $label }, { $count } épisode en cours de téléchargement
     [many] { $label }, { $count } épisodes en cours de téléchargement
    *[other] { $label }, { $count } épisodes en cours de téléchargement
  }
@@ -75,12 +75,12 @@ widget-resume-downloads = { -continue-cap } les téléchargements
 widget-pause-downloads = Mettre les téléchargements en pause
 widget-paused-line = En pause · reste { $left }
 widget-a11y-playback-paused = { $minutes ->
-    [one] { $title }, épisode { $episode }, en pause, il reste une minute
+    [one] { $title }, épisode { $episode }, en pause, il reste { $minutes } minute
     [many] { $title }, épisode { $episode }, en pause, il reste { $minutes } minutes
    *[other] { $title }, épisode { $episode }, en pause, il reste { $minutes } minutes
  }
 widget-a11y-playback-playing = { $minutes ->
-    [one] { $title }, épisode { $episode }, en lecture, il reste une minute
+    [one] { $title }, épisode { $episode }, en lecture, il reste { $minutes } minute
     [many] { $title }, épisode { $episode }, en lecture, il reste { $minutes } minutes
    *[other] { $title }, épisode { $episode }, en lecture, il reste { $minutes } minutes
  }

@@ -80,7 +80,7 @@ linux-send-next = { $n ->
 linux-send-all-unread = Todos não lidos
 linux-send-none-unread = Todos os capítulos foram lidos
 linux-send-saved = { $n ->
-    [one] O arquivo foi salvo
+    [one] { $n } arquivo foi salvo
     [many] { $n } arquivos foram salvos
    *[other] { $n } arquivos foram salvos
  }

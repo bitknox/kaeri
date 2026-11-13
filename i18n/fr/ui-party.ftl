@@ -70,7 +70,7 @@ party-nosource-missing-detail = { $why }. { $what } sera partagé avec le salon 
 party-nosource-unaired = Vos { -source-pl } n'auront pas l'épisode { $episode } avant sa sortie.
 party-nosource-unaired-plain = Vos { -source-pl } ne l'auront pas avant. Il sera partagé avec le salon dès que l'une d'elles l'aura.
 party-sources-found = { $count ->
-    [one] Une { -source } le propose
+    [one] { $count } { -source } le propose
     [many] { $count } { -source-pl } le proposent
    *[other] { $count } { -source-pl } le proposent
  }
@@ -106,7 +106,7 @@ together-nobody-here = Personne pour l’instant
 together-servers = Serveurs
 together-server-suggested = Suggéré · géré par { $operator }
 together-server-used = { $count ->
-    [one] Utilisé pour 1 visionnage
+    [one] Utilisé pour { $count } visionnage
     [many] Utilisé pour { $count } visionnages
    *[other] Utilisé pour { $count } visionnages
  }
@@ -192,7 +192,7 @@ party-chat-send = Envoyer
 party-chat-title = Chat
 party-chat-wait = Attendez { $seconds } s
 party-chat-wait-spoken = { $seconds ->
-    [one] Attendez une seconde
+    [one] Attendez { $seconds } seconde
     [many] Attendez { $seconds } secondes
    *[other] Attendez { $seconds } secondes
  }

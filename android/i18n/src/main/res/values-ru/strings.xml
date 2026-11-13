@@ -318,7 +318,7 @@
     <string name="export_device_tablet">Планшет</string>
     <string name="export_chapter">Глава %1$s</string>
     <plurals name="export_waits_for_wifi">
-        <item quantity="one">Одна глава ещё не скачана, поэтому отправка дождётся Wi-Fi и продолжится сама.</item>
+        <item quantity="one">%1$,d глава ещё не скачана, поэтому отправка дождётся Wi-Fi и продолжится сама.</item>
         <item quantity="few">%1$,d главы ещё не скачаны, поэтому отправка дождётся Wi-Fi и продолжится сама.</item>
         <item quantity="many">%1$,d глав ещё не скачано, поэтому отправка дождётся Wi-Fi и продолжится сама.</item>
         <item quantity="other">%1$,d главы ещё не скачаны, поэтому отправка дождётся Wi-Fi и продолжится сама.</item>
@@ -408,13 +408,13 @@
     <string name="reading_estimate_waits_wifi">ждёт Wi-Fi</string>
     <string name="reading_downloads_done_title">Загрузки завершены</string>
     <plurals name="reading_downloads_done_chapters">
-        <item quantity="one">Глава «%1$s» готова для чтения офлайн.</item>
+        <item quantity="one">%2$,d глава «%1$s» готова для чтения офлайн.</item>
         <item quantity="few">%2$,d главы «%1$s» готовы для чтения офлайн.</item>
         <item quantity="many">%2$,d глав «%1$s» готовы для чтения офлайн.</item>
         <item quantity="other">%2$,d главы «%1$s» готовы для чтения офлайн.</item>
     </plurals>
     <plurals name="reading_downloads_done_parts">
-        <item quantity="one">Часть «%1$s» готова для чтения офлайн.</item>
+        <item quantity="one">%2$,d часть «%1$s» готова для чтения офлайн.</item>
         <item quantity="few">%2$,d части «%1$s» готовы для чтения офлайн.</item>
         <item quantity="many">%2$,d частей «%1$s» готовы для чтения офлайн.</item>
         <item quantity="other">%2$,d части «%1$s» готовы для чтения офлайн.</item>
@@ -474,7 +474,7 @@
     <string name="store_member_removed">Участник удалён. магазин плагинов больше не принимает его устройства.</string>
     <string name="store_invite_cancelled">Приглашение отменено. Ссылка больше не работает.</string>
     <plurals name="store_invite_cancelled_kept">
-        <item quantity="one">Приглашение отменено. Присоединившийся человек остаётся участником.</item>
+        <item quantity="one">Приглашение отменено. %1$,d присоединившийся человек остаётся участником.</item>
         <item quantity="few">Приглашение отменено. Присоединившиеся (%1$,d) остаются участниками.</item>
         <item quantity="many">Приглашение отменено. Присоединившиеся (%1$,d) остаются участниками.</item>
         <item quantity="other">Приглашение отменено. Присоединившиеся (%1$,d) остаются участниками.</item>
@@ -482,7 +482,7 @@
     <string name="store_open_join_on">магазин плагинов: подключиться по ссылке теперь может любой. Скопируйте её на экране участников.</string>
     <string name="store_open_join_off">Теперь подключиться могут только приглашённые.</string>
     <plurals name="store_open_join_off_devices">
-        <item quantity="one">Теперь подключиться могут только приглашённые. устройство по ссылке продолжает работать, пока вы его не удалите.</item>
+        <item quantity="one">Теперь подключиться могут только приглашённые. %1$,d устройство по ссылке продолжает работать, пока вы его не удалите.</item>
         <item quantity="few">Теперь подключиться могут только приглашённые. устройства (%1$,d), подключившиеся по ссылке, продолжают работать, пока вы их не удалите.</item>
         <item quantity="many">Теперь подключиться могут только приглашённые. устройства (%1$,d), подключившиеся по ссылке, продолжают работать, пока вы их не удалите.</item>
         <item quantity="other">Теперь подключиться могут только приглашённые. устройства (%1$,d), подключившиеся по ссылке, продолжают работать, пока вы их не удалите.</item>
@@ -591,7 +591,7 @@
     <string name="notice_client_id_missing">Сначала задайте %1$s в файле настроек.</string>
     <string name="notice_signed_out">Вы вышли из %1$s.</string>
     <plurals name="notice_signed_out_queue">
-        <item quantity="one">Вы вышли из %1$s. Одно изменение в очереди сохранено для следующего входа.</item>
+        <item quantity="one">Вы вышли из %1$s. %2$,d изменение в очереди сохранено для следующего входа.</item>
         <item quantity="few">Вы вышли из %1$s. %2$,d изменения в очереди сохранены для следующего входа.</item>
         <item quantity="many">Вы вышли из %1$s. %2$,d изменений в очереди сохранены для следующего входа.</item>
         <item quantity="other">Вы вышли из %1$s. %2$,d изменения в очереди сохранены для следующего входа.</item>
@@ -609,7 +609,7 @@
     <string name="notice_mapping_data_failed">Не удалось обновить данные сопоставления (%1$s). Повтор через %2$s. %3$s</string>
     <string name="notice_episode_aired">%1$s, серия %2$d, вышла, пока вас не было.</string>
     <plurals name="notice_episodes_aired">
-        <item quantity="one">Вышла новая серия тайтла, который вы смотрите. Она есть в календаре.</item>
+        <item quantity="one">Вышла %1$,d новая серия тайтлов, которые вы смотрите. Календарь уже обновлён.</item>
         <item quantity="few">Вышли %1$,d новые серии тайтлов, которые вы смотрите. Они есть в календаре.</item>
         <item quantity="many">Вышли %1$,d новых серий тайтлов, которые вы смотрите. Они есть в календаре.</item>
         <item quantity="other">Вышли %1$,d новые серии тайтлов, которые вы смотрите. Они есть в календаре.</item>
@@ -634,7 +634,7 @@
     <string name="start_failed_remote">Не удалось запустить пульт. %1$s</string>
     <string name="start_failed_player">Не удалось запустить плеер. %1$s</string>
     <plurals name="notice_episodes_queued">
-        <item quantity="one">В очередь добавлен один эпизод.</item>
+        <item quantity="one">В очередь добавлен %1$,d эпизод.</item>
         <item quantity="few">В очередь добавлены %1$,d эпизода.</item>
         <item quantity="many">В очередь добавлены %1$,d эпизодов.</item>
         <item quantity="other">В очередь добавлены %1$,d эпизодов.</item>
@@ -665,7 +665,7 @@
     <string name="discussion_image_host">Картинка · %1$s</string>
     <string name="discussion_video_host">Видео · %1$s</string>
     <plurals name="player_more_discussion_note">
-        <item quantity="one">Один комментарий · ставит на паузу</item>
+        <item quantity="one">%1$,d комментарий · ставит на паузу</item>
         <item quantity="few">%1$,d комментария · ставит на паузу</item>
         <item quantity="many">%1$,d комментариев · ставит на паузу</item>
         <item quantity="other">%1$,d комментария · ставит на паузу</item>
@@ -1635,13 +1635,13 @@
     <string name="discussion_open">Обсуждение</string>
     <string name="discussion_title_episode">Обсуждение эпизода %1$d</string>
     <plurals name="discussion_row">
-        <item quantity="one">Обсуждение · один комментарий</item>
+        <item quantity="one">Обсуждение · %1$,d комментарий</item>
         <item quantity="few">Обсуждение · %1$,d комментария</item>
         <item quantity="many">Обсуждение · %1$,d комментариев</item>
         <item quantity="other">Обсуждение · %1$,d комментария</item>
     </plurals>
     <plurals name="discussion_count">
-        <item quantity="one">Один комментарий</item>
+        <item quantity="one">%1$,d комментарий</item>
         <item quantity="few">%1$,d комментария</item>
         <item quantity="many">%1$,d комментариев</item>
         <item quantity="other">%1$,d комментария</item>
@@ -1649,7 +1649,7 @@
     <string name="discussion_like">Нравится</string>
     <string name="discussion_reply">Ответить</string>
     <plurals name="discussion_more_replies">
-        <item quantity="one">Ещё один ответ</item>
+        <item quantity="one">Ещё %1$,d ответ</item>
         <item quantity="few">Ещё %1$,d ответа</item>
         <item quantity="many">Ещё %1$,d ответов</item>
         <item quantity="other">Ещё %1$,d ответа</item>
@@ -1738,7 +1738,7 @@
     <string name="downloads_notice_done">Эпизод %1$d загружен</string>
     <string name="downloads_notice_done_detail">%1$s · можно смотреть без подключения</string>
     <plurals name="downloads_notice_running">
-        <item quantity="one">Загружается один эпизод</item>
+        <item quantity="one">Загружается %1$,d эпизод</item>
         <item quantity="few">Загружаются %1$,d эпизода</item>
         <item quantity="many">Загружаются %1$,d эпизодов</item>
         <item quantity="other">Загружаются %1$,d эпизодов</item>
@@ -2338,7 +2338,7 @@
     <string name="party_chat_title">Чат</string>
     <string name="party_chat_wait">Ждите %1$,d с</string>
     <plurals name="party_chat_wait_spoken">
-        <item quantity="one">Подождите одну секунду</item>
+        <item quantity="one">Подождите %1$,d секунду</item>
         <item quantity="few">Подождите %1$,d секунды</item>
         <item quantity="many">Подождите %1$,d секунд</item>
         <item quantity="other">Подождите %1$,d секунды</item>
@@ -2522,7 +2522,7 @@
     <string name="player_start_over">Начать сначала</string>
     <string name="player_still_watching">Вы ещё смотрите?</string>
     <plurals name="player_still_watching_detail">
-        <item quantity="one">Пауза после одного эпизода подряд.</item>
+        <item quantity="one">Пауза после %1$,d эпизода подряд.</item>
         <item quantity="few">Пауза после %1$,d эпизода подряд.</item>
         <item quantity="many">Пауза после %1$,d эпизодов подряд.</item>
         <item quantity="other">Пауза после %1$,d эпизода подряд.</item>
@@ -3366,7 +3366,7 @@
     <string name="search_available_services">В ваших сервисах</string>
     <string name="search_line_service">В %1$s</string>
     <plurals name="count_episodes">
-        <item quantity="one">Один эпизод</item>
+        <item quantity="one">%1$,d эпизод</item>
         <item quantity="few">%1$,d эпизода</item>
         <item quantity="many">%1$,d эпизодов</item>
         <item quantity="other">%1$,d эпизода</item>
@@ -3375,7 +3375,7 @@
     <string name="count_out_of">Вышло %1$,d из %2$,d</string>
     <string name="count_out_of_short">%1$,d из %2$,d</string>
     <plurals name="count_out">
-        <item quantity="one">Вышел один эпизод</item>
+        <item quantity="one">Вышел %1$,d эпизод</item>
         <item quantity="few">Вышло %1$,d эпизода</item>
         <item quantity="many">Вышло %1$,d эпизодов</item>
         <item quantity="other">Вышло %1$,d эпизода</item>
@@ -3387,14 +3387,14 @@
     <string name="count_dub">Дубляж</string>
     <string name="count_dub_through">Дубляж %1$d</string>
     <plurals name="count_spoken_episodes">
-        <item quantity="one">Один эпизод</item>
+        <item quantity="one">%1$,d эпизод</item>
         <item quantity="few">%1$,d эпизода</item>
         <item quantity="many">%1$,d эпизодов</item>
         <item quantity="other">%1$,d эпизода</item>
     </plurals>
     <string name="count_spoken_out_of">Вышло эпизодов: %1$,d из %2$,d</string>
     <plurals name="count_spoken_out">
-        <item quantity="one">Вышел один эпизод</item>
+        <item quantity="one">Вышел %1$,d эпизод</item>
         <item quantity="few">Вышло %1$,d эпизода</item>
         <item quantity="many">Вышло %1$,d эпизодов</item>
         <item quantity="other">Вышло %1$,d эпизода</item>
@@ -4174,7 +4174,7 @@
     <string name="stores_invite_show_uses">Кто вошёл</string>
     <string name="stores_invite_joined">%1$s · присоединился %2$s</string>
     <plurals name="stores_cancel_invite_detail">
-        <item quantity="one">Больше никто не сможет присоединиться. Присоединившийся остаётся участником.</item>
+        <item quantity="one">Больше никто не сможет присоединиться. %1$,d присоединившийся остаётся участником.</item>
         <item quantity="few">Больше никто не сможет присоединиться. Присоединившиеся (%1$,d) остаются участниками.</item>
         <item quantity="many">Больше никто не сможет присоединиться. Присоединившиеся (%1$,d) остаются участниками.</item>
         <item quantity="other">Больше никто не сможет присоединиться. Присоединившиеся (%1$,d) остаются участниками.</item>
@@ -4407,7 +4407,7 @@
     <string name="cloud_folder">Папка на этом устройстве (%1$s)</string>
     <string name="cloud_app_password_note">Создайте его в Nextcloud, в разделе «Настройки», «Безопасность». Он хранится на этом устройстве (%1$s).</string>
     <plurals name="devices_tvs_for_play">
-        <item quantity="one">Один телевизор для «Смотреть на ТВ»</item>
+        <item quantity="one">%1$,d телевизор для «Смотреть на ТВ»</item>
         <item quantity="few">%1$,d телевизора для «Смотреть на ТВ»</item>
         <item quantity="many">%1$,d телевизоров для «Смотреть на ТВ»</item>
         <item quantity="other">%1$,d телевизора для «Смотреть на ТВ»</item>
@@ -4496,7 +4496,7 @@
     <string name="episode_range">Серии с %1$d по %2$d</string>
     <string name="episode_range_label">Диапазон серий</string>
     <plurals name="episode_fold">
-        <item quantity="one">Одна просмотренная серия</item>
+        <item quantity="one">%1$,d просмотренная серия</item>
         <item quantity="few">%1$,d просмотренные серии</item>
         <item quantity="many">%1$,d просмотренных серий</item>
         <item quantity="other">%1$,d просмотренной серии</item>

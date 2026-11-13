@@ -2904,14 +2904,14 @@
   "close-body-downloading": {
     "source": "f1f0ff208dd0",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "close-body-seeding": {
     "source": "19c2b9f41ab6",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "close-dont-ask": {
     "source": "0d4cd0f7ec29",
@@ -3564,8 +3564,8 @@
   "continue-sync-waiting": {
     "source": "7f8ef4091683",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "continue-this-season": {
     "source": "f4ade059759c",
@@ -3631,7 +3631,7 @@
     "source": "50cf4c689ecd",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-05"
+    "at": "2026-11-13"
   },
   "count-episodes-short": {
     "source": "4df57c34cc0f",
@@ -3655,7 +3655,7 @@
     "source": "8319377d4cf7",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-05"
+    "at": "2026-11-13"
   },
   "count-out-of": {
     "source": "9e09659b8c02",
@@ -3691,7 +3691,7 @@
     "source": "50cf4c689ecd",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-05"
+    "at": "2026-11-13"
   },
   "count-spoken-next-of": {
     "source": "8ead4f837630",
@@ -3703,7 +3703,7 @@
     "source": "8319377d4cf7",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-05"
+    "at": "2026-11-13"
   },
   "count-spoken-out-of": {
     "source": "4e3437b67b71",
@@ -4261,7 +4261,7 @@
     "source": "93dcdf3caafc",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-05"
+    "at": "2026-11-13"
   },
   "devices-yours": {
     "source": "eabafc98aa87",
@@ -4440,8 +4440,8 @@
   "discussion-count": {
     "source": "8ebc8ed6cf7e",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "discussion-delete-body": {
     "source": "8fb4d1c7263f",
@@ -4506,8 +4506,8 @@
   "discussion-more-replies": {
     "source": "32d9356ad0dd",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "discussion-no-comments": {
     "source": "ffb4867aafe0",
@@ -4584,8 +4584,8 @@
   "discussion-row": {
     "source": "a1fed28e1801",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "discussion-sending": {
     "source": "6d8b12f6a54b",
@@ -4866,8 +4866,8 @@
   "downloads-continued-left": {
     "source": "0be88ccfee0b",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "downloads-continued-title": {
     "source": "0c296160a212",
@@ -5166,8 +5166,8 @@
   "downloads-notice-running": {
     "source": "7e14f7d4abd9",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "downloads-notice-starting": {
     "source": "4c60317e4731",
@@ -6051,11 +6051,7 @@
     "source": "337b0b7a033d",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-03",
-    "flags": [
-      "Plural wording; the \"many\" form only counts millions"
-    ],
-    "back": "One watched episode / {count} watched episodes"
+    "at": "2026-11-13"
   },
   "episode-go-to": {
     "source": "7d2a5e4c193a",
@@ -6783,7 +6779,7 @@
     "source": "5c75b5abd78d",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "feed-firewall-body-windows": {
     "source": "132a836a9009",
@@ -10487,12 +10483,8 @@
   "linux-send-next": {
     "source": "a16da4c81925",
     "state": "draft",
-    "by": "opus",
-    "at": "2026-11-08",
-    "flags": [
-      "'one' form has no number, but Russian 'one' also covers 21"
-    ],
-    "back": "The next unread / The next 5 unread"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "linux-send-none-unread": {
     "source": "5cb3dbfff0bd",
@@ -12739,8 +12731,8 @@
   "notice-episodes-aired": {
     "source": "22c3d7bea249",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "notice-episodes-failed": {
     "source": "6b0094b5c2d0",
@@ -12751,8 +12743,8 @@
   "notice-episodes-queued": {
     "source": "a3ac54bdf3f7",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "notice-episodes-queued-existing": {
     "source": "bfb2e177232d",
@@ -13135,8 +13127,8 @@
   "notice-signed-out-queue": {
     "source": "193d11fc4d6c",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "notice-skip-marks-cleared": {
     "source": "fd0a0ccf2922",
@@ -14788,7 +14780,7 @@
     "source": "076a8d81a1fc",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-05"
+    "at": "2026-11-13"
   },
   "party-chat-you": {
     "source": "cb6a9c1a1757",
@@ -15723,8 +15715,8 @@
   "party-sources-found-line": {
     "source": "07cb8e3aa15e",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "party-sources-label": {
     "source": "444a0b13c12b",
@@ -16125,8 +16117,8 @@
   "player-channels": {
     "source": "7ae48c0b7a79",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "player-channels-mono": {
     "source": "37edf2aec5ab",
@@ -16695,8 +16687,8 @@
   "player-more-discussion-note": {
     "source": "033aecce0eec",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "player-more-discussion-pauses": {
     "source": "8acfc18a4e4d",
@@ -17457,8 +17449,8 @@
   "player-still-watching-detail": {
     "source": "f3a0f89f2f88",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "player-subs-bg-box": {
     "source": "16564e19b102",
@@ -20830,13 +20822,13 @@
     "source": "7ab5f0dec3c7",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "reading-downloads-done-parts": {
     "source": "a3cac7cc72cd",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "reading-downloads-done-series": {
     "source": "ff4c23da1cd5",
@@ -25927,8 +25919,8 @@
   "settings-signed-in-waiting": {
     "source": "13ef62c1250d",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "settings-signed-out-code": {
     "source": "a430bef451ad",
@@ -27105,8 +27097,8 @@
   "shell-changes-waiting": {
     "source": "7f8ef4091683",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "shell-connect-tracker": {
     "source": "bb38597870e0",
@@ -27841,8 +27833,8 @@
   "source-picker-seeders": {
     "source": "1677647285b7",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "source-picker-seeders-linux": {
     "source": "1677647285b7",
@@ -27865,8 +27857,8 @@
   "source-release-seeders": {
     "source": "1677647285b7",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "source-row-folder": {
     "source": "d258ef89c014",
@@ -29240,7 +29232,7 @@
     "source": "a423c6de5d23",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-01"
+    "at": "2026-11-13"
   },
   "store-invite-chip": {
     "source": "05086cc42f95",
@@ -29383,8 +29375,8 @@
   "store-open-join-off-devices": {
     "source": "593f9ff24878",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "store-open-join-on": {
     "source": "a417c94ff8f2",
@@ -29670,7 +29662,7 @@
     "source": "fecdac75c83e",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-01"
+    "at": "2026-11-13"
   },
   "stores-cancel-invite-link": {
     "source": "8ce947ffea08",
@@ -29879,8 +29871,8 @@
   "stores-confirm-remove-devices": {
     "source": "12ed74225f13",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "stores-confirm-remove-member": {
     "source": "aa3005ebf3af",
@@ -29957,8 +29949,8 @@
   "stores-devices-count": {
     "source": "4366cc22a945",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "stores-devices-joined": {
     "source": "927dac0bfce2",
@@ -31313,8 +31305,8 @@
   "stores-plugins-count": {
     "source": "793ed90fca61",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "stores-preview-key-invite": {
     "source": "f91840f4493c",
@@ -31445,8 +31437,8 @@
   "stores-remove-devices": {
     "source": "a0962b3f2367",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "stores-remove-devices-detail": {
     "source": "0c2a71070ac9",
@@ -31475,8 +31467,8 @@
   "stores-remove-member-devices": {
     "source": "6992bb1a6297",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "stores-remove-member-plugins": {
     "source": "a5ab83b7ec3e",
@@ -31727,14 +31719,14 @@
   "stores-updates-available": {
     "source": "18870f5a304d",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "stores-updates-count": {
     "source": "a4bd142d2dc7",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "stores-updates-waiting": {
     "source": "18870f5a304d",
@@ -36341,20 +36333,20 @@
   "widget-a11y-playback-paused": {
     "source": "70d66e684764",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "widget-a11y-playback-playing": {
     "source": "8fa51d569cf4",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "widget-a11y-resume": {
     "source": "6cfc1e5f9a3d",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "widget-a11y-row": {
     "source": "64bda0676ccd",
@@ -36371,8 +36363,8 @@
   "widget-a11y-then-count": {
     "source": "174580122484",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "widget-a11y-then-list": {
     "source": "a6af563849ef",
@@ -36587,8 +36579,8 @@
   "widget-downloading-title": {
     "source": "7e14f7d4abd9",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "widget-downloads-episode": {
     "source": "b866ac6e9ff4",

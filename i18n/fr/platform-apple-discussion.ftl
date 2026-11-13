@@ -13,7 +13,7 @@ discussion-apple-spoiler-hint = Affiche le spoiler
 discussion-apple-close = Fermer la discussion
 discussion-apple-liked = Aimé
 discussion-apple-player-note = { $count ->
-    [one] Un commentaire · met en pause
+    [one] { $count } commentaire · met en pause
     [many] { $count } commentaires · met en pause
    *[other] { $count } commentaires · met en pause
  }

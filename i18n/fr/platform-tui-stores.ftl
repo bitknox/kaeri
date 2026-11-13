@@ -117,7 +117,7 @@ stores-anonymous-joined = Rejoint { $when }
 stores-anonymous-seen = Vu { $when }
 stores-anonymous-never-seen = Pas encore vu
 stores-remove-devices = { $count ->
-    [one] Le retirer
+    [one] Retirer { $count }
     [many] Retirer les { $count }
    *[other] Retirer les { $count }
  }
@@ -142,7 +142,7 @@ stores-confirm-open = Laisser toute personne ayant le lien rejoindre { $name } 
 stores-confirm-close = Ne laisser rejoindre { $name } que les personnes invitées ?
 stores-confirm-remove-device = Retirer cet { -device } ?
 stores-confirm-remove-devices = { $count ->
-    [one] Retirer l'{ -device } rejoint avec le lien ?
+    [one] Retirer { $count } { -device } rejoint avec le lien ?
     [many] Retirer les { $count } { -device-pl } rejoints avec le lien ?
    *[other] Retirer les { $count } { -device-pl } rejoints avec le lien ?
  }
@@ -160,7 +160,7 @@ stores-join-device-note = Le gérant de la { -store } voit ce nom. Saisissez pou
 stores-leave-plugins = Les { -plugin-pl } installés depuis cette { -store } restent sur cet { -device } et cessent de se mettre à jour.
 stores-leave-revoked = L'accès de cet { -device } à la { -store } est révoqué.
 stores-remove-member-devices = { $count ->
-    [one] Son { -device } cesse de fonctionner avec cette { -store } immédiatement.
+    [one] { $count } { -device } cesse de fonctionner avec cette { -store } immédiatement.
     [many] Ses { $count } { -device-pl } cessent de fonctionner avec cette { -store } immédiatement.
    *[other] Ses { $count } { -device-pl } cessent de fonctionner avec cette { -store } immédiatement.
  }

@@ -31,9 +31,12 @@ reader-spreads-whole = Inteira
 reader-tap-edges = Bordas
 reader-tap-sides = Metades
 reader-tap-off = Desligado
+reader-zone-next = Próxima página
+reader-zone-previous = Página anterior
+reader-zone-controls = Controles
 reader-chapters = Capítulos
 reader-pages-left = { $count ->
-    [one] Falta uma página neste capítulo
+    [one] Falta { $count } página neste capítulo
     [many] Faltam { $count } de páginas neste capítulo
    *[other] Faltam { $count } páginas neste capítulo
  }
@@ -48,7 +51,7 @@ reader-look-system = Sistema
 reader-end-of-chapter-number = Fim do capítulo { $chapter }
 reader-end-facts = Capítulo { $chapter } · { $facts }
 reader-end-pages = { $count ->
-    [one] Uma página
+    [one] { $count } página
     [many] { $count } de páginas
    *[other] { $count } páginas
  }
@@ -57,11 +60,8 @@ reader-chapter-line = Capítulo { $chapter }
 reader-divider-facts-source = { $facts } · de { $source }
 reader-end-swipe = Deslize para seguir lendo
 reader-divider-images = { $count ->
-    [one] Uma imagem
+    [one] { $count } imagem
     [many] { $count } de imagens
    *[other] { $count } imagens
  }
 reader-chapter-line-titled = Capítulo { $chapter } · { $title }
-reader-zone-next = Próxima página
-reader-zone-previous = Página anterior
-reader-zone-controls = Controles

@@ -146,14 +146,14 @@
   "access-minutes": {
     "source": "126bd15d517e",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "access-minutes-left": {
     "source": "936cc0c71f2e",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "access-not-out": {
     "source": "4971fb38e219",
@@ -290,14 +290,14 @@
   "accounts-changes-waiting": {
     "source": "7f8ef4091683",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "accounts-changes-waiting-offline": {
     "source": "b2a8c0231a99",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "accounts-clash-detail": {
     "source": "67adc87faffe",
@@ -416,8 +416,8 @@
   "accounts-conflicts-found": {
     "source": "003d92eca01a",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "accounts-conflicts-none": {
     "source": "fdd8a15db8b2",
@@ -656,8 +656,8 @@
   "accounts-review-differences": {
     "source": "bef9bed3ffbd",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "accounts-row-connected": {
     "source": "82a4e28ab5b5",
@@ -674,8 +674,8 @@
   "accounts-row-queued": {
     "source": "cef31751888c",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "accounts-row-queued-held": {
     "source": "81f5ec667417",
@@ -830,8 +830,8 @@
   "accounts-state-signed-in-waiting": {
     "source": "73d875fccf49",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "accounts-state-signed-out": {
     "source": "08cf6c8f0b7a",
@@ -1496,8 +1496,8 @@
   "book-folder-empty-line": {
     "source": "0990532093bf",
     "state": "draft",
-    "by": "opus",
-    "at": "2026-11-07"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "book-folder-failed": {
     "source": "2acc9ed75338",
@@ -1509,7 +1509,7 @@
     "source": "ce1634675d9f",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "book-folder-found-line": {
     "source": "25691dd6dc4b",
@@ -1532,8 +1532,8 @@
   "book-folder-unsupported": {
     "source": "d4ed9a46a285",
     "state": "draft",
-    "by": "opus",
-    "at": "2026-11-07"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "book-folder-unsupported-line": {
     "source": "8f958636d00e",
@@ -1544,8 +1544,8 @@
   "book-matches-line": {
     "source": "12f52e0b0641",
     "state": "draft",
-    "by": "opus",
-    "at": "2026-11-08"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "book-server-address": {
     "source": "fcdd8e672c75",
@@ -1623,7 +1623,7 @@
     "source": "a7b8fdb3bc5b",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "book-server-kavita-key": {
     "source": "3acee6f74ed2",
@@ -1813,7 +1813,7 @@
     "source": "e177e9459174",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "book-sources-servers": {
     "source": "56e796506fb8",
@@ -2580,8 +2580,8 @@
   "cause-airs-in-days": {
     "source": "1af7b3127ef8",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "cause-airs-on-date": {
     "source": "b8c77028bc72",
@@ -2604,8 +2604,8 @@
   "cause-already-in-downloads": {
     "source": "a732f1f0bc5f",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "cause-no-connection": {
     "source": "efb4aeea0418",
@@ -2688,8 +2688,8 @@
   "cause-subtitles-merged": {
     "source": "abdad8af7edd",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "cause-title-no-match": {
     "source": "7083ce14ac67",
@@ -2845,7 +2845,7 @@
     "source": "0de2bd08c710",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "chapter-updates-yesterday": {
     "source": "5b4abc92ede5",
@@ -2904,14 +2904,14 @@
   "close-body-downloading": {
     "source": "f1f0ff208dd0",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "close-body-seeding": {
     "source": "19c2b9f41ab6",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "close-dont-ask": {
     "source": "0d4cd0f7ec29",
@@ -2922,8 +2922,8 @@
   "close-downloading": {
     "source": "762c07699431",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "close-keep-going": {
     "source": "5cb230a61279",
@@ -2934,8 +2934,8 @@
   "close-seeding": {
     "source": "5adab350f7c8",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "close-stop": {
     "source": "30e8e59e3f09",
@@ -3564,8 +3564,8 @@
   "continue-sync-waiting": {
     "source": "7f8ef4091683",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "continue-this-season": {
     "source": "f4ade059759c",
@@ -4009,7 +4009,7 @@
     "source": "e2df2533ab4c",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "demo-read-chapter": {
     "source": "93f292cc71e4",
@@ -4021,7 +4021,7 @@
     "source": "56fe5a5511ae",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "demo-story-row": {
     "source": "34a6e66a72a3",
@@ -4392,8 +4392,8 @@
   "discussion-apple-player-note": {
     "source": "033aecce0eec",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "discussion-apple-sending": {
     "source": "6d8b12f6a54b",
@@ -4440,8 +4440,8 @@
   "discussion-count": {
     "source": "8ebc8ed6cf7e",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "discussion-delete-body": {
     "source": "8fb4d1c7263f",
@@ -4495,7 +4495,7 @@
     "source": "47c857399490",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-01"
+    "at": "2026-11-13"
   },
   "discussion-media-line": {
     "source": "b3039083087c",
@@ -4506,8 +4506,8 @@
   "discussion-more-replies": {
     "source": "32d9356ad0dd",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "discussion-no-comments": {
     "source": "ffb4867aafe0",
@@ -4584,8 +4584,8 @@
   "discussion-row": {
     "source": "a1fed28e1801",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "discussion-sending": {
     "source": "6d8b12f6a54b",
@@ -4651,7 +4651,7 @@
     "source": "e65228277566",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "download-choose": {
     "source": "751efbdf4a92",
@@ -4711,7 +4711,7 @@
     "source": "7d2fe7f0b73f",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "downloads-ahead": {
     "source": "7ead8737ff5c",
@@ -4866,8 +4866,8 @@
   "downloads-continued-left": {
     "source": "0be88ccfee0b",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "downloads-continued-title": {
     "source": "0c296160a212",
@@ -5022,8 +5022,8 @@
   "downloads-group-summary": {
     "source": "2c21248beb5b",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "downloads-group-summary-apple": {
     "source": "70b26f927608",
@@ -5082,8 +5082,8 @@
   "downloads-live-paused": {
     "source": "c3c2e223942c",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "downloads-live-paused-one": {
     "source": "95bc8722b270",
@@ -5142,8 +5142,8 @@
   "downloads-notice-chapters": {
     "source": "197408df16bf",
     "state": "draft",
-    "by": "opus",
-    "at": "2026-11-08"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "downloads-notice-done": {
     "source": "d37ab1e45a97",
@@ -5166,8 +5166,8 @@
   "downloads-notice-running": {
     "source": "7e14f7d4abd9",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "downloads-notice-starting": {
     "source": "4c60317e4731",
@@ -5635,7 +5635,7 @@
     "source": "62523e893444",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "eink-finished": {
     "source": "15a6e8862eeb",
@@ -5731,7 +5731,7 @@
     "source": "90377a3adfc9",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "eink-previous-chapter": {
     "source": "7ac92381ab6c",
@@ -6051,11 +6051,7 @@
     "source": "337b0b7a033d",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-03",
-    "flags": [
-      "Plural wording; the \"many\" form only counts millions"
-    ],
-    "back": "One watched episode / {count} watched episodes"
+    "at": "2026-11-13"
   },
   "episode-go-to": {
     "source": "7d2a5e4c193a",
@@ -6783,7 +6779,7 @@
     "source": "5c75b5abd78d",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "feed-firewall-body-windows": {
     "source": "132a836a9009",
@@ -7634,7 +7630,7 @@
     "source": "d3c1c4596a42",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-01"
+    "at": "2026-11-13"
   },
   "home-day-more": {
     "source": "1a8c09c8079e",
@@ -9340,13 +9336,13 @@
     "source": "3e13abd1945d",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-01"
+    "at": "2026-11-13"
   },
   "library-files": {
     "source": "31e42ba495f5",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-01"
+    "at": "2026-11-13"
   },
   "library-fix-confidence": {
     "source": "56b54cc5c2df",
@@ -9364,7 +9360,7 @@
     "source": "ea37c388aef0",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-01"
+    "at": "2026-11-13"
   },
   "library-fix-hint": {
     "source": "de952520631a",
@@ -9652,7 +9648,7 @@
     "source": "9f624857e12b",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-01"
+    "at": "2026-11-13"
   },
   "library-row-matching": {
     "source": "dc39bfebdf7e",
@@ -9682,13 +9678,13 @@
     "source": "f46259c6ad56",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-01"
+    "at": "2026-11-13"
   },
   "library-row-series": {
     "source": "92da51600358",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-01"
+    "at": "2026-11-13"
   },
   "library-row-summary": {
     "source": "0ff76e189f1b",
@@ -9700,7 +9696,7 @@
     "source": "76e4aa909b94",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-01"
+    "at": "2026-11-13"
   },
   "library-row-waiting": {
     "source": "dba892400dfd",
@@ -9736,7 +9732,7 @@
     "source": "92da51600358",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-01"
+    "at": "2026-11-13"
   },
   "library-set-episode": {
     "source": "b21eadab43d0",
@@ -10535,8 +10531,8 @@
   "linux-send-saved": {
     "source": "61f97d552ed4",
     "state": "draft",
-    "by": "opus",
-    "at": "2026-11-08"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "linux-send-title": {
     "source": "683e9edb4504",
@@ -10967,8 +10963,8 @@
   "lists-progress-watched": {
     "source": "a75933b9e936",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "lists-remove-wrong-list": {
     "source": "249ceccd136d",
@@ -11304,7 +11300,7 @@
     "source": "602a8428d6ee",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-01"
+    "at": "2026-11-13"
   },
   "match-uncertain-none": {
     "source": "d3b4d6a47ff9",
@@ -12095,8 +12091,8 @@
   "more-show-spoiler-tags": {
     "source": "64b121ef1445",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "more-spoiler": {
     "source": "9290f6af0caf",
@@ -12701,8 +12697,8 @@
   "notice-downloads-cleared": {
     "source": "13106cde7226",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "notice-downloads-none-new": {
     "source": "6ff7169da8f2",
@@ -12743,8 +12739,8 @@
   "notice-episodes-aired": {
     "source": "22c3d7bea249",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "notice-episodes-failed": {
     "source": "6b0094b5c2d0",
@@ -12755,26 +12751,26 @@
   "notice-episodes-queued": {
     "source": "a3ac54bdf3f7",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "notice-episodes-queued-existing": {
     "source": "bfb2e177232d",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "notice-episodes-queued-existing-stopped": {
     "source": "2baa7b011416",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "notice-episodes-queued-stopped": {
     "source": "e189a5f1c005",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "notice-filler-skipped": {
     "source": "5b84ca7f31b4",
@@ -13139,14 +13135,14 @@
   "notice-signed-out-queue": {
     "source": "193d11fc4d6c",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "notice-skip-marks-cleared": {
     "source": "fd0a0ccf2922",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-01"
+    "at": "2026-11-13"
   },
   "notice-skip-marks-none": {
     "source": "7a6f614e3f58",
@@ -13293,8 +13289,8 @@
   "notif-chapters-new": {
     "source": "1aac55e62f21",
     "state": "draft",
-    "by": "opus",
-    "at": "2026-11-08"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "notif-episode-out": {
     "source": "95b3e382ea08",
@@ -13329,14 +13325,14 @@
   "notif-new-episodes": {
     "source": "8c4f22f91b0a",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "notify-downloaded": {
     "source": "22be9e953c6c",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "notify-downloaded-one": {
     "source": "845211fecd05",
@@ -13723,8 +13719,8 @@
   "opds-fetched-files": {
     "source": "d9b5e4eeb2b2",
     "state": "draft",
-    "by": "opus",
-    "at": "2026-11-08"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "opds-fetched-none": {
     "source": "13c846fb4b18",
@@ -13833,8 +13829,8 @@
   "opds-share-downloads-count": {
     "source": "0f5a576bb56c",
     "state": "draft",
-    "by": "opus",
-    "at": "2026-11-08"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "opds-share-manga": {
     "source": "c784a221f5ad",
@@ -13857,8 +13853,8 @@
   "opds-share-series-count": {
     "source": "4d47681a3b2e",
     "state": "draft",
-    "by": "opus",
-    "at": "2026-11-08"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "opds-shares": {
     "source": "3fe851357e0d",
@@ -14329,14 +14325,14 @@
   "pad-help-seek-back": {
     "source": "ca05fbebd029",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "pad-help-seek-forward": {
     "source": "516a4b0d3b00",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "pad-help-select": {
     "source": "fc63e31ac7c9",
@@ -15721,14 +15717,14 @@
   "party-sources-found": {
     "source": "2b4cffeef7c2",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "party-sources-found-line": {
     "source": "07cb8e3aa15e",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "party-sources-label": {
     "source": "444a0b13c12b",
@@ -16129,8 +16125,8 @@
   "player-channels": {
     "source": "7ae48c0b7a79",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "player-channels-mono": {
     "source": "37edf2aec5ab",
@@ -16699,8 +16695,8 @@
   "player-more-discussion-note": {
     "source": "033aecce0eec",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "player-more-discussion-pauses": {
     "source": "8acfc18a4e4d",
@@ -17461,8 +17457,8 @@
   "player-still-watching-detail": {
     "source": "f3a0f89f2f88",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "player-subs-bg-box": {
     "source": "16564e19b102",
@@ -17810,7 +17806,7 @@
     "source": "8a3531396d93",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-01"
+    "at": "2026-11-13"
   },
   "poster-grid-name": {
     "source": "c5528fac6cc0",
@@ -18061,8 +18057,8 @@
   "progress-row-failed": {
     "source": "070574d79f5b",
     "state": "draft",
-    "by": "opus",
-    "at": "2026-11-08"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "progress-row-off": {
     "source": "d2267a3b0779",
@@ -18073,14 +18069,14 @@
   "progress-row-offline": {
     "source": "bb5f8b43cc04",
     "state": "draft",
-    "by": "opus",
-    "at": "2026-11-08"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "progress-row-retrying": {
     "source": "721bf995f130",
     "state": "draft",
-    "by": "opus",
-    "at": "2026-11-08"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "progress-row-saved": {
     "source": "bccd520ea970",
@@ -18091,8 +18087,8 @@
   "progress-row-sending": {
     "source": "466c2ef51083",
     "state": "draft",
-    "by": "opus",
-    "at": "2026-11-08"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "progress-server-failed": {
     "source": "a53990030cbd",
@@ -18151,8 +18147,8 @@
   "queue-episodes-left": {
     "source": "61e16ff45719",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "ranking-all-time": {
     "source": "d409c8784db5",
@@ -18284,7 +18280,7 @@
     "source": "979c344aecbb",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "read-filter-included": {
     "source": "2929031238d4",
@@ -18387,23 +18383,20 @@
   "read-hit-files": {
     "source": "31e42ba495f5",
     "state": "draft",
-    "by": "opus",
-    "at": "2026-11-08",
-    "back": "one: 1 file | many: { $count } files (\"de\", as with millions) | other: { $count } files"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "read-hit-files-format": {
     "source": "770c7a09f6a7",
     "state": "draft",
-    "by": "opus",
-    "at": "2026-11-08",
-    "back": "one: 1 file · { $format } | many: { $count } files (\"de\", as with millions) · { $format } | other: { $count } files · { $format }"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "read-hit-parts": {
     "source": "ab5de0b28ab1",
     "state": "draft",
-    "by": "opus",
-    "at": "2026-11-08",
-    "back": "one: 1 part | many: { $count } parts (\"de\", as with millions) | other: { $count } parts"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "read-home-browse": {
     "source": "99fa943a22c1",
@@ -18574,7 +18567,7 @@
     "source": "64d690b16cec",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "read-list-completed": {
     "source": "5033dab8c17f",
@@ -18840,7 +18833,7 @@
     "source": "8ff253aea036",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "read-search-total-unknown": {
     "source": "03b29b695e0a",
@@ -18852,8 +18845,8 @@
   "read-series-downloaded-open": {
     "source": "8a151ce93ce9",
     "state": "draft",
-    "by": "opus",
-    "at": "2026-11-08"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "read-sort-last-read": {
     "source": "e63ad5b26290",
@@ -19009,7 +19002,7 @@
     "source": "6facfb38e6ae",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-11"
+    "at": "2026-11-13"
   },
   "reader-chapter-read": {
     "source": "740d542bbe69",
@@ -19135,7 +19128,7 @@
     "source": "a45c0f9430a6",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "reader-end-again": {
     "source": "d93eec285563",
@@ -19273,7 +19266,7 @@
     "source": "62523e893444",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "reader-end-read": {
     "source": "b46e4b0b2ed2",
@@ -20065,7 +20058,7 @@
     "source": "45c0e8687ff9",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "reader-pages-of": {
     "source": "8316b1188159",
@@ -20647,7 +20640,7 @@
     "source": "e1e02c7a37f9",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "reading-ago-minutes": {
     "source": "19d06baa2556",
@@ -20659,7 +20652,7 @@
     "source": "c9c56f0472ab",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "reading-ago-now": {
     "source": "84126fa92f00",
@@ -20677,13 +20670,13 @@
     "source": "5c31e689e30c",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "reading-ago-years": {
     "source": "890150270ebf",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "reading-ago-yesterday": {
     "source": "f945458585f6",
@@ -20737,7 +20730,7 @@
     "source": "fbe319cfb16b",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "reading-dl-chapter": {
     "source": "2d0f308d9cac",
@@ -20773,7 +20766,7 @@
     "source": "ab5de0b28ab1",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "reading-dl-queued": {
     "source": "b3594d06fbca",
@@ -20803,13 +20796,13 @@
     "source": "7ab5f0dec3c7",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "reading-downloads-done-parts": {
     "source": "a3cac7cc72cd",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "reading-downloads-done-series": {
     "source": "ff4c23da1cd5",
@@ -21265,7 +21258,7 @@
     "source": "57446cc53bd6",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "reading-row-percent": {
     "source": "177259baefed",
@@ -21289,7 +21282,7 @@
     "source": "0de2bd08c710",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "reading-row-waits-wifi": {
     "source": "40f4bef74ccf",
@@ -21487,7 +21480,7 @@
     "source": "b0f666ed938f",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "reason-busy-anilist": {
     "source": "fcf4a3b3d59d",
@@ -21672,8 +21665,8 @@
   "release-seeders": {
     "source": "1677647285b7",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "report-copied": {
     "source": "c6ce6a2e1ba9",
@@ -22060,8 +22053,8 @@
   "search-formats-picked": {
     "source": "0b5f6d4b69ce",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "search-genre-left-out": {
     "source": "7b64f01aec2e",
@@ -22084,8 +22077,8 @@
   "search-genres-picked": {
     "source": "76fa8ccc7189",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "search-include": {
     "source": "f1f4b1821a06",
@@ -22211,7 +22204,7 @@
     "source": "63034dcfcc48",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "search-paused-rate-limit": {
     "source": "b8f0dbd256fb",
@@ -22420,8 +22413,8 @@
   "search-statuses-picked": {
     "source": "c02227915ad9",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "search-suggest-filter": {
     "source": "9969d1d5c397",
@@ -22704,8 +22697,8 @@
   "send-preparing": {
     "source": "d6980429dde0",
     "state": "draft",
-    "by": "opus",
-    "at": "2026-11-08"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "send-progress-spoken": {
     "source": "938879fb967b",
@@ -22716,8 +22709,8 @@
   "send-ready": {
     "source": "1431881db356",
     "state": "draft",
-    "by": "opus",
-    "at": "2026-11-08"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "send-save-failed-windows": {
     "source": "36709deb1a85",
@@ -22736,12 +22729,8 @@
   "send-saved-windows": {
     "source": "3a6e5e0af28e",
     "state": "draft",
-    "by": "opus",
-    "at": "2026-11-08",
-    "flags": [
-      "drafter: Rendered as a past participle (\"Arquivo salvo\") rather than \"Salvei\" to avoid first person."
-    ],
-    "back": "one: File saved | many: { $n } files (\"de\", as with millions) saved | other: { $n } files saved"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "send-share-again": {
     "source": "25a5e97e7ab4",
@@ -22855,7 +22844,7 @@
     "source": "d87bcbeb4b08",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "series-collapsed": {
     "source": "447b471f5276",
@@ -23072,7 +23061,7 @@
     "source": "a6d9684ab23c",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "series-tracker-ahead": {
     "source": "3d516693d515",
@@ -23096,7 +23085,7 @@
     "source": "d87bcbeb4b08",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "series-tracker-chapters-of": {
     "source": "9ea16e2c37ce",
@@ -23174,7 +23163,7 @@
     "source": "0de2bd08c710",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "series-versions-loading": {
     "source": "477bd68eeabe",
@@ -23474,7 +23463,7 @@
     "source": "99048572680b",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-01"
+    "at": "2026-11-13"
   },
   "servers-row-matching": {
     "source": "dc39bfebdf7e",
@@ -23498,7 +23487,7 @@
     "source": "92da51600358",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-01"
+    "at": "2026-11-13"
   },
   "servers-row-signed-out": {
     "source": "a1df34fb3b85",
@@ -23516,13 +23505,13 @@
     "source": "532a1187fa47",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-01"
+    "at": "2026-11-13"
   },
   "servers-row-summary-apple": {
     "source": "397f940b2c49",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-01"
+    "at": "2026-11-13"
   },
   "servers-sign-in": {
     "source": "5e27738a2e8e",
@@ -23839,8 +23828,8 @@
   "settings-changes-waiting": {
     "source": "7f8ef4091683",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "settings-chapter-downloads-cellular": {
     "source": "77f13065a9cf",
@@ -23947,8 +23936,8 @@
   "settings-conflicts": {
     "source": "387b5cf6fc7f",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "settings-controller-device": {
     "source": "96785479b0f4",
@@ -24121,14 +24110,14 @@
   "settings-delete-watched-title": {
     "source": "fd87b8534893",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "settings-differences": {
     "source": "387b5cf6fc7f",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "settings-differences-review": {
     "source": "fc53e352afbc",
@@ -24223,8 +24212,8 @@
   "settings-downloads-count": {
     "source": "50cf4c689ecd",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "settings-downloads-finished": {
     "source": "32342a48ead9",
@@ -25447,8 +25436,8 @@
   "settings-overridden": {
     "source": "166fb627911c",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "settings-panes-label": {
     "source": "e1c0f456b343",
@@ -25783,8 +25772,8 @@
   "settings-review-differences": {
     "source": "bef9bed3ffbd",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "settings-search": {
     "source": "b901449675b4",
@@ -25897,8 +25886,8 @@
   "settings-signed-in-waiting": {
     "source": "13ef62c1250d",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "settings-signed-out-code": {
     "source": "a430bef451ad",
@@ -25951,8 +25940,8 @@
   "settings-source-count": {
     "source": "13d1f12fc6b9",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "settings-source-order": {
     "source": "8e0f54ba4807",
@@ -26309,20 +26298,20 @@
   "settings-summary-book-folders": {
     "source": "92ca0217c75d",
     "state": "draft",
-    "by": "opus",
-    "at": "2026-11-08"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "settings-summary-book-plugins": {
     "source": "5e91ab8a15bb",
     "state": "draft",
-    "by": "opus",
-    "at": "2026-11-08"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "settings-summary-book-servers": {
     "source": "d3166d0cbea4",
     "state": "draft",
-    "by": "opus",
-    "at": "2026-11-08"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "settings-summary-chapters-off": {
     "source": "432ef19d954d",
@@ -26357,8 +26346,8 @@
   "settings-summary-sources": {
     "source": "13d1f12fc6b9",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "settings-summary-torrents-off": {
     "source": "ab6fd0871835",
@@ -27071,8 +27060,8 @@
   "shell-changes-waiting": {
     "source": "7f8ef4091683",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "shell-connect-tracker": {
     "source": "bb38597870e0",
@@ -27724,7 +27713,7 @@
     "source": "6e08746b082e",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "source-note-ambiguous": {
     "source": "13ce2b037219",
@@ -27807,14 +27796,14 @@
   "source-picker-seeders": {
     "source": "1677647285b7",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "source-picker-seeders-linux": {
     "source": "1677647285b7",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "source-picker-title": {
     "source": "665ead04f6eb",
@@ -27831,14 +27820,14 @@
   "source-release-seeders": {
     "source": "1677647285b7",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "source-row-folder": {
     "source": "d258ef89c014",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "source-row-plugin": {
     "source": "4a19406f0855",
@@ -27963,8 +27952,8 @@
   "sources-contacts-line": {
     "source": "60d4034fbdb4",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "sources-contacts-none": {
     "source": "d73924836e8b",
@@ -28192,7 +28181,7 @@
     "source": "9b803ff4e075",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "sources-kind-licensed": {
     "source": "2e107b63b73b",
@@ -28749,8 +28738,8 @@
   "sources-update-contacts": {
     "source": "ca5908c0ef4e",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "sources-update-contacts-one": {
     "source": "ebcbf1197ee3",
@@ -29187,8 +29176,8 @@
   "store-installed": {
     "source": "00f90ffa8438",
     "state": "draft",
-    "by": "opus",
-    "at": "2026-11-07"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "store-installed-row": {
     "source": "10e80d4c01c3",
@@ -29206,7 +29195,7 @@
     "source": "a423c6de5d23",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-01"
+    "at": "2026-11-13"
   },
   "store-invite-chip": {
     "source": "05086cc42f95",
@@ -29278,7 +29267,7 @@
     "source": "0e858f2af316",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "store-joined-title": {
     "source": "2af92d23fdd5",
@@ -29349,8 +29338,8 @@
   "store-open-join-off-devices": {
     "source": "593f9ff24878",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "store-open-join-on": {
     "source": "a417c94ff8f2",
@@ -29386,7 +29375,7 @@
     "source": "9122c25ab5f0",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-13"
   },
   "store-plugin-changed": {
     "source": "31b9a57f0588",
@@ -29445,8 +29434,8 @@
   "store-tv-reading-only": {
     "source": "0f18eb65f7eb",
     "state": "draft",
-    "by": "opus",
-    "at": "2026-11-07"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "store-unreachable": {
     "source": "18d0c5ef8e1d",
@@ -29632,7 +29621,7 @@
     "source": "fecdac75c83e",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-01"
+    "at": "2026-11-13"
   },
   "stores-cancel-invite-link": {
     "source": "8ce947ffea08",
@@ -29841,8 +29830,8 @@
   "stores-confirm-remove-devices": {
     "source": "12ed74225f13",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "stores-confirm-remove-member": {
     "source": "aa3005ebf3af",
@@ -29919,14 +29908,14 @@
   "stores-devices-count": {
     "source": "4366cc22a945",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "stores-devices-joined": {
     "source": "927dac0bfce2",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "stores-dialog-title": {
     "source": "bc339bf9b1f9",
@@ -30310,7 +30299,7 @@
     "source": "4ae0da403aeb",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-01"
+    "at": "2026-11-13"
   },
   "stores-invite-used-of": {
     "source": "164cee125874",
@@ -30771,8 +30760,8 @@
   "stores-member-devices": {
     "source": "ad4dfaac966e",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "stores-member-you": {
     "source": "519630126a35",
@@ -30933,8 +30922,8 @@
   "stores-offers-plugins": {
     "source": "793ed90fca61",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "stores-offline-keep-working": {
     "source": "fa2b9dd9dca9",
@@ -31275,8 +31264,8 @@
   "stores-plugins-count": {
     "source": "793ed90fca61",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "stores-preview-key-invite": {
     "source": "f91840f4493c",
@@ -31407,8 +31396,8 @@
   "stores-remove-devices": {
     "source": "a0962b3f2367",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "stores-remove-devices-detail": {
     "source": "0c2a71070ac9",
@@ -31437,8 +31426,8 @@
   "stores-remove-member-devices": {
     "source": "6992bb1a6297",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "stores-remove-member-plugins": {
     "source": "a5ab83b7ec3e",
@@ -31689,20 +31678,20 @@
   "stores-updates-available": {
     "source": "18870f5a304d",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "stores-updates-count": {
     "source": "a4bd142d2dc7",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "stores-updates-waiting": {
     "source": "18870f5a304d",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "stores-what-is": {
     "source": "a20ec9baba18",
@@ -32229,8 +32218,8 @@
   "title-also-on-more": {
     "source": "3c1d839d78b6",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "title-also-on-more-apple": {
     "source": "813e510660b9",
@@ -33184,7 +33173,7 @@
     "source": "1c007b1b647e",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-01"
+    "at": "2026-11-13"
   },
   "together-servers": {
     "source": "56e796506fb8",
@@ -34095,8 +34084,8 @@
   "tv-discussion-count-read-only": {
     "source": "b6369bed1b89",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "tv-discussion-footer": {
     "source": "983663ad621e",
@@ -34107,8 +34096,8 @@
   "tv-discussion-likes": {
     "source": "f6270d352259",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "tv-discussion-select-spoiler": {
     "source": "e8c76a2bfe58",
@@ -36303,20 +36292,20 @@
   "widget-a11y-playback-paused": {
     "source": "70d66e684764",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "widget-a11y-playback-playing": {
     "source": "8fa51d569cf4",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "widget-a11y-resume": {
     "source": "6cfc1e5f9a3d",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "widget-a11y-row": {
     "source": "64bda0676ccd",
@@ -36333,8 +36322,8 @@
   "widget-a11y-then-count": {
     "source": "174580122484",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "widget-a11y-then-list": {
     "source": "a6af563849ef",
@@ -36549,8 +36538,8 @@
   "widget-downloading-title": {
     "source": "7e14f7d4abd9",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "widget-downloads-episode": {
     "source": "b866ac6e9ff4",
@@ -36858,9 +36847,8 @@
   "windows-reader-chapter-pages": {
     "source": "6facfb38e6ae",
     "state": "draft",
-    "by": "opus",
-    "at": "2026-11-08",
-    "back": "one: 1 page | many: { $pages } pages (\"de\", as with millions) | other: { $pages } pages"
+    "by": "agent",
+    "at": "2026-11-13"
   },
   "windows-reader-chapters-tab": {
     "source": "15733d7d0f6d",

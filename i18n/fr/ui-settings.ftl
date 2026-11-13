@@ -61,7 +61,7 @@ settings-audio-detail = Chaque série garde son propre audio et ses sous-titres.
 settings-system-captions = Suivre le style de sous-titres du système
 settings-system-captions-detail = Les sous-titres simples utilisent vos préférences de sous-titrage de l’Accessibilité. Les sous-titres stylisés gardent leur propre aspect.
 settings-overridden = { $count ->
-    [one] Modifié pour une série
+    [one] Modifié pour { $count } série
     [many] Modifié pour { $count } séries
    *[other] Modifié pour { $count } séries
  }
@@ -146,7 +146,7 @@ widget-resume-label = { -continue-cap } l’épisode { $episode } de { $title }
 widget-start-label = Lire l’épisode { $episode } de { $title }
 widget-resume-dubbed-label = { -continue-cap } l’épisode { $episode }, { -dubbed }, de { $title }
 accounts-changes-waiting = { $count ->
-    [one] Un changement en attente de synchronisation
+    [one] { $count } changement en attente de synchronisation
     [many] { $count } changements en attente de synchronisation
    *[other] { $count } changements en attente de synchronisation
  }

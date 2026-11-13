@@ -58,7 +58,7 @@ downloads-quality = Qualidade do download
 downloads-notice-done = Episódio { $episode } baixado
 downloads-notice-done-detail = { $title } · pronto para assistir offline
 downloads-notice-running = { $count ->
-    [one] Baixando um episódio
+    [one] Baixando { $count } episódio
     [many] Baixando { $count } episódios
    *[other] Baixando { $count } episódios
  }

@@ -931,6 +931,14 @@ jobs:
         run: ./gradlew --console=plain assembleFixturesDebug testFixturesDebugUnitTest -Proborazzi.test.record=true
         env:
           KAERI_PLAYER_NATIVE: "off"
+      # Android lint's errors in every module, such as a call the oldest supported Android lacks
+      # (NewApi), which the JVM tests cannot see: their JDK has every method.
+      - name: Lint
+        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
+        working-directory: android
+        run: ./gradlew --console=plain --continue lintFixturesDebug :i18n:lintDebug :design:lintDebug
+        env:
+          KAERI_PLAYER_NATIVE: "off"
       # What the shot tests' semantics check (testkit's A11yShots) found: reported here, and it
       # fails a test only once KAERI_A11Y_STRICT=1 is set on the step above.
       - name: Compose semantics findings

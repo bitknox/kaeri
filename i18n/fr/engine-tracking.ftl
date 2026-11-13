@@ -23,7 +23,7 @@ notice-mal-no-refresh-token = MyAnimeList n'a pas fourni de jeton de renouvellem
 notice-client-id-missing = Réglez d'abord { $setting } dans le fichier de configuration.
 notice-signed-out = Déconnecté de { $tracker }.
 notice-signed-out-queue = { $count ->
-    [one] Déconnecté de { $tracker }. Une modification en attente est conservée pour la prochaine connexion.
+    [one] Déconnecté de { $tracker }. { $count } modification en attente est conservée pour la prochaine connexion.
     [many] Déconnecté de { $tracker }. { $count } modifications en attente sont conservées pour la prochaine connexion.
    *[other] Déconnecté de { $tracker }. { $count } modifications en attente sont conservées pour la prochaine connexion.
  }
@@ -40,7 +40,7 @@ notice-mapping-data-refreshed = Données de correspondance actualisées.
 notice-mapping-data-failed = Impossible d'actualiser les données de correspondance ({ $datasets }). Nouvelle tentative dans { $wait }. { $cause }
 notice-episode-aired = { $title }, épisode { $episode }, a été diffusé pendant votre absence.
 notice-episodes-aired = { $count ->
-    [one] Un nouvel épisode d'une série que vous suivez a été diffusé. Le calendrier l'affiche.
+    [one] { $count } nouvel épisode d'une série que vous suivez a été diffusé. Le calendrier l'affiche.
     [many] { $count } nouveaux épisodes de séries que vous suivez ont été diffusés. Le calendrier les affiche.
    *[other] { $count } nouveaux épisodes de séries que vous suivez ont été diffusés. Le calendrier les affiche.
  }

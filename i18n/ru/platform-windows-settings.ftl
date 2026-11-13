@@ -29,7 +29,7 @@ settings-trackers = { -tracker-cap-pl }
 settings-sync = Синхронизация
 settings-sync-detail = Отправляет изменения отсюда и загружает изменения, сделанные в других местах.
 settings-signed-in-waiting = { $count ->
-    [one] Вход выполнен · одно изменение ждёт
+    [one] Вход выполнен · { $count } изменение ждёт
     [few] Вход выполнен · { $count } изменения ждут
     [many] Вход выполнен · { $count } изменений ждут
    *[other] Вход выполнен · { $count } изменений ждут

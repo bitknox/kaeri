@@ -16,7 +16,7 @@ updates-view-version = Ver a { -release }
 updates-progress-label = Progresso da atualização
 accounts-sync-detail = O progresso e as mudanças de lista são sincronizados com { $tracker }. A { -library-cap } e a Minha lista do Calendário mostram suas listas de { $tracker }.
 accounts-changes-waiting-offline = { $count ->
-    [one] Uma mudança aguardando você ficar online
+    [one] { $count } mudança aguardando você ficar online
     [many] { $count } mudanças aguardando você ficar online
    *[other] { $count } mudanças aguardando você ficar online
  }

@@ -2,12 +2,12 @@ access-caught-up-airs = Em dia, episódio { $episode } vai ao ar { $when }
 access-caught-up-unaired = Em dia, episódio { $episode } ainda não foi ao ar
 access-stopped-at = parou em { $time }
 access-minutes-left = { $minutes ->
-    [one] falta um minuto
+    [one] falta { $minutes } minuto
     [many] faltam { $minutes } minutos
    *[other] faltam { $minutes } minutos
  }
 access-minutes = { $minutes ->
-    [one] um minuto
+    [one] { $minutes } minuto
     [many] { $minutes } minutos
    *[other] { $minutes } minutos
  }

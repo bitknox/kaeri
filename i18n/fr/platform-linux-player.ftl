@@ -3,7 +3,7 @@ party-members = Membres
 party-choose-a-source = Choisir une { -source }
 party-sources-none-listed = Aucune { -source } n’a l’épisode { $episode }. Les { -source-pl } viennent des { -plugin-pl }, que vous ajoutez via une { -plugin-store }.
 party-sources-found-line = { $count ->
-    [one] Une { -source } l’a. Celle que vous choisissez se lit avec le { -watch-party }.
+    [one] { $count } { -source } l’a. Celle que vous choisissez se lit avec le { -watch-party }.
     [many] { $count } { -source-pl } l’ont. Celle que vous choisissez se lit avec le { -watch-party }.
    *[other] { $count } { -source-pl } l’ont. Celle que vous choisissez se lit avec le { -watch-party }.
  }
@@ -19,7 +19,7 @@ player-time-ending = { $clock } · Générique
 player-channels-mono = Mono
 player-channels-stereo = Stéréo
 player-channels = { $count ->
-    [one] Un canal
+    [one] { $count } canal
     [many] { $count } canaux
    *[other] { $count } canaux
  }
@@ -30,7 +30,7 @@ player-announce-up-next-waiting = { -up-next-cap }, { $title }. Appuyez sur Entr
 player-announce-skip = { $label }. Appuyez sur S.
 player-announce-undo = { $line }. Appuyez sur U pour annuler.
 discussion-like-named = { $count ->
-    [one] J’aime, un J’aime
+    [one] J’aime, { $count } J’aime
     [many] J’aime, { $count } J’aime
    *[other] J’aime, { $count } J’aime
  }

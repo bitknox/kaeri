@@ -17,7 +17,7 @@ discussion-waiting = Ожидание AniList · { $time }
 discussion-image-host = Картинка · { $host }
 discussion-video-host = Видео · { $host }
 player-more-discussion-note = { $count ->
-    [one] Один комментарий · ставит на паузу
+    [one] { $count } комментарий · ставит на паузу
     [few] { $count } комментария · ставит на паузу
     [many] { $count } комментариев · ставит на паузу
    *[other] { $count } комментария · ставит на паузу

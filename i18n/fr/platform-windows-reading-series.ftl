@@ -1,7 +1,7 @@
 series-read-again-done-windows = Relecture de { $title } depuis le début
 send-save-files-windows = Enregistrer les fichiers
 send-saved-windows = { $n ->
-    [one] Fichier enregistré
+    [one] { $n } fichier enregistré
     [many] { $n } de fichiers enregistrés
    *[other] { $n } fichiers enregistrés
  }

@@ -14,7 +14,7 @@ start-failed = O { -app-name } não conseguiu iniciar. Saia e abra de novo. { $r
 start-failed-remote = O controle remoto não conseguiu iniciar. { $reason }
 start-failed-player = O player não conseguiu iniciar. { $reason }
 notice-episodes-queued = { $count ->
-    [one] Um episódio adicionado à fila.
+    [one] { $count } episódio adicionado à fila.
     [many] { $count } episódios adicionados à fila.
    *[other] { $count } episódios adicionados à fila.
  }

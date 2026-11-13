@@ -1,7 +1,7 @@
 episode-short-dubbed = E{ $episode } · { -dubbed-cap }
 episode-long-dubbed = Episódio { $episode } · { -dubbed-cap }
 downloads-live-paused = { $count ->
-    [one] Um episódio pausado
+    [one] { $count } episódio pausado
     [many] { $count } episódios pausados
    *[other] { $count } episódios pausados
  }
@@ -29,7 +29,7 @@ title-facts-airing = Em exibição desde { $date }
 title-facts-airs = Estreia em { $date }
 media-dates-range = { $from } a { $to }
 title-also-on-more = { $more ->
-    [one] { $first } e mais um
+    [one] { $first } e mais { $more }
     [many] { $first } e mais { $more }
    *[other] { $first } e mais { $more }
  }
@@ -41,7 +41,7 @@ downloads-rate = { $size }/s
 downloads-uploaded = { $size } enviados
 downloads-ratio-of = { $ratio } de { $goal }
 downloads-group-summary = { $count ->
-    [one] Um episódio · { $size }
+    [one] { $count } episódio · { $size }
     [many] { $count } episódios · { $size }
    *[other] { $count } episódios · { $size }
  }
@@ -60,17 +60,17 @@ updates-closes-as-installs = { -app-name } fecha enquanto instala
 updates-open-release = Abrir página
 country-korea = Coreia do Sul
 search-genres-picked = { $count ->
-    [one] Um gênero
+    [one] { $count } gênero
     [many] { $count } gêneros
    *[other] { $count } gêneros
  }
 search-formats-picked = { $count ->
-    [one] Um formato
+    [one] { $count } formato
     [many] { $count } formatos
    *[other] { $count } formatos
  }
 search-statuses-picked = { $count ->
-    [one] Um status
+    [one] { $count } status
     [many] { $count } status
    *[other] { $count } status
  }
@@ -99,7 +99,7 @@ reason-source-turned-away = Recusou o pedido.
 reason-source-no-address = Não foi possível encontrar o endereço dela.
 reason-source-unreachable = Não foi possível conectar-se a ela.
 stores-updates-waiting = { $count ->
-    [one] Uma atualização
+    [one] { $count } atualização
     [many] { $count } atualizações
    *[other] { $count } atualizações
  }
@@ -119,7 +119,7 @@ accounts-signed-in-plain = Conectado
 settings-summary-notify-on = Novos episódios ativados
 settings-summary-notify-off = Novos episódios desativados
 settings-summary-sources = { $count ->
-    [one] Uma { -source }
+    [one] { $count } { -source }
     [many] { $count } { -source-pl }
    *[other] { $count } { -source-pl }
  }
@@ -149,14 +149,14 @@ settings-titles-note-romaji = Títulos japoneses em letras latinas, como o AniLi
 settings-stores-with-updates = { $stores } · { $updates }
 settings-seeding-best-effort = Este { -device } só compartilha enquanto o { -app-name } estiver aberto.
 settings-downloads-count = { $count ->
-    [one] Um episódio
+    [one] { $count } episódio
     [many] { $count } episódios
    *[other] { $count } episódios
  }
 settings-anilist-footer = O progresso e as mudanças na lista são sincronizados com o AniList. { -library-cap } mostra suas listas do AniList.
 accounts-sign-in-again-button = Entrar de novo
 accounts-review-differences = { $count ->
-    [one] Revisar uma diferença
+    [one] Revisar { $count } diferença
     [many] Revisar { $count } diferenças
    *[other] Revisar { $count } diferenças
  }
@@ -220,7 +220,7 @@ player-sheet-none = Nenhuma { -source } encontrada para este episódio.
 player-sheet-episodes-loading = A lista de episódios está a caminho.
 player-dual-audio = { -subbed-cap } e { -dubbed }
 notif-new-episodes = { $count ->
-    [one] Um episódio novo
+    [one] { $count } episódio novo
     [many] { $count } episódios novos
    *[other] { $count } episódios novos
  }

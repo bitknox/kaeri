@@ -23,7 +23,7 @@ notice-mal-no-refresh-token = O MyAnimeList não emitiu um token de atualizaçã
 notice-client-id-missing = Defina { $setting } no arquivo de configuração primeiro.
 notice-signed-out = Desconectado do { $tracker }.
 notice-signed-out-queue = { $count ->
-    [one] Desconectado do { $tracker }. Uma alteração na fila foi mantida para a próxima conexão.
+    [one] Desconectado do { $tracker }. { $count } alteração na fila foi mantida para a próxima conexão.
     [many] Desconectado do { $tracker }. { $count } alterações na fila foram mantidas para a próxima conexão.
    *[other] Desconectado do { $tracker }. { $count } alterações na fila foram mantidas para a próxima conexão.
  }
@@ -40,7 +40,7 @@ notice-mapping-data-refreshed = Dados de mapeamento atualizados.
 notice-mapping-data-failed = Não foi possível atualizar os dados de mapeamento ({ $datasets }). Nova tentativa em { $wait }. { $cause }
 notice-episode-aired = { $title }, episódio { $episode }, foi ao ar enquanto você estava fora.
 notice-episodes-aired = { $count ->
-    [one] Um novo episódio de uma série que você acompanha foi ao ar. Ele está no calendário.
+    [one] { $count } novo episódio de uma série que você acompanha foi ao ar. Ele está no calendário.
     [many] { $count } novos episódios de séries que você acompanha foram ao ar. Eles estão no calendário.
    *[other] { $count } novos episódios de séries que você acompanha foram ao ar. Eles estão no calendário.
  }
