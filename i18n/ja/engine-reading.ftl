@@ -152,11 +152,10 @@ reading-dl-pages = { $done }/{ $total }ページ
 reading-dl-more-queued = ほか{ $count }件が待機中
 reading-dl-queued = { $count }件が待機中
 reading-dl-waits-wifi = Wi-Fi待ち
-reading-dl-waits-room = 空き容量待ち
 reading-dl-failed = 第{ $chapter }話をダウンロードできませんでした
 reading-dl-offline = オフライン
 reading-dl-no-room = { $count ->
-   *[other] 空き容量がありません。容量が空くと、これとあと{ $count }件がダウンロードされます。
+   *[other] 空き容量がありません。容量が空くとダウンロードされます。
  }
 reading-estimate-size = 約{ $size }
 reading-estimate-wifi = Wi-Fi経由

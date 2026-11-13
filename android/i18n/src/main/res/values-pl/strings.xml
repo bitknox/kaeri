@@ -401,14 +401,13 @@
     <string name="reading_dl_more_queued">Jeszcze %1$,d w kolejce</string>
     <string name="reading_dl_queued">%1$,d w kolejce</string>
     <string name="reading_dl_waits_wifi">czeka na Wi-Fi</string>
-    <string name="reading_dl_waits_room">czeka na wolne miejsce</string>
     <string name="reading_dl_failed">Nie udało się pobrać rozdziału %1$s</string>
     <string name="reading_dl_offline">Offline</string>
     <plurals name="reading_dl_no_room">
-        <item quantity="one">Brak miejsca. Ten i jeszcze jeden pobiorą się, gdy zwolni się miejsce.</item>
-        <item quantity="few">Brak miejsca. Ten i jeszcze %1$,d pobiorą się, gdy zwolni się miejsce.</item>
-        <item quantity="many">Brak miejsca. Ten i jeszcze %1$,d pobiorą się, gdy zwolni się miejsce.</item>
-        <item quantity="other">Brak miejsca. Ten i jeszcze %1$,d pobiorą się, gdy zwolni się miejsce.</item>
+        <item quantity="one">Brak miejsca. Pobierze się, gdy zwolni się miejsce.</item>
+        <item quantity="few">Brak miejsca. Pobiorą się, gdy zwolni się miejsce.</item>
+        <item quantity="many">Brak miejsca. Pobiorą się, gdy zwolni się miejsce.</item>
+        <item quantity="other">Brak miejsca. Pobiorą się, gdy zwolni się miejsce.</item>
     </plurals>
     <string name="reading_estimate_size">Około %1$s</string>
     <string name="reading_estimate_wifi">przez Wi-Fi</string>

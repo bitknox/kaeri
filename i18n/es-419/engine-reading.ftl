@@ -174,13 +174,12 @@ reading-dl-pages = { $done } de { $total } páginas
 reading-dl-more-queued = { $count } más en cola
 reading-dl-queued = { $count } en cola
 reading-dl-waits-wifi = espera Wi-Fi
-reading-dl-waits-room = espera espacio libre
 reading-dl-failed = No se pudo descargar el capítulo { $chapter }
 reading-dl-offline = Sin conexión
 reading-dl-no-room = { $count ->
-    [one] No queda espacio. Este y uno más se descargan cuando haya espacio libre.
-    [many] No queda espacio. Este y { $count } más se descargan cuando haya espacio libre.
-   *[other] No queda espacio. Este y { $count } más se descargan cuando haya espacio libre.
+    [one] No queda espacio. Se descarga cuando haya espacio libre.
+    [many] No queda espacio. Se descargan cuando haya espacio libre.
+   *[other] No queda espacio. Se descargan cuando haya espacio libre.
  }
 reading-estimate-size = Aprox. { $size }
 reading-estimate-wifi = por Wi-Fi

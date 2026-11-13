@@ -861,7 +861,7 @@ public static partial class T
     /// <summary>A chapter row's state: it waits to download until the device is on Wi-Fi.</summary>
     public static string ReadingRowWaitsWifi => Get("ReadingRowWaitsWifi");
 
-    /// <summary>A chapter row's state: it waits to download until the device has free space again. A full device stopped the downloads; they go on by themselves once there is room.</summary>
+    /// <summary>A chapter row's state: it waits to download until the device has free space again. A full device paused the downloads; they go on by themselves once there is room.</summary>
     public static string ReadingRowWaitsRoom => Get("ReadingRowWaitsRoom");
 
     /// <summary>A chapter row's state while it downloads.</summary>
@@ -996,16 +996,13 @@ public static partial class T
     /// <summary>Chapters that wait for Wi-Fi to download.</summary>
     public static string ReadingDlWaitsWifi => Get("ReadingDlWaitsWifi");
 
-    /// <summary>Chapters that wait for free space to download: a full device stopped the downloads, and they go on by themselves once there is room.</summary>
-    public static string ReadingDlWaitsRoom => Get("ReadingDlWaitsRoom");
-
     /// <summary>A chapter that failed. The reason follows as the next part.</summary>
     public static string ReadingDlFailed(string chapter) => Fill(Get("ReadingDlFailed"), ("chapter", chapter));
 
     /// <summary>After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.</summary>
     public static string ReadingDlOffline => Get("ReadingDlOffline");
 
-    /// <summary>After "Chapter 2 couldn't download" when the device is full and more chapters were queued after it. Downloads go on by themselves, with this chapter first, once some space is free.</summary>
+    /// <summary>After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on by themselves once some space is free; the count is the queued chapters.</summary>
     public static string ReadingDlNoRoom(long count) => Fill(GetPlural("ReadingDlNoRoom", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>How much the chosen chapters will take, from their pages and the size of pages downloaded before.</summary>
@@ -12374,11 +12371,10 @@ public static partial class T
         ["ReadingDlMoreQueued"] = "{count} more queued",
         ["ReadingDlQueued"] = "{count} queued",
         ["ReadingDlWaitsWifi"] = "waits for Wi-Fi",
-        ["ReadingDlWaitsRoom"] = "waits for free space",
         ["ReadingDlFailed"] = "Chapter {chapter} couldn't download",
         ["ReadingDlOffline"] = "Offline",
-        ["ReadingDlNoRoom_one"] = "No room left. This one and one more download once some space is free.",
-        ["ReadingDlNoRoom_other"] = "No room left. This one and {count} more download once some space is free.",
+        ["ReadingDlNoRoom_one"] = "No room left. It downloads once some space is free.",
+        ["ReadingDlNoRoom_other"] = "No room left. They download once some space is free.",
         ["ReadingEstimateSize"] = "About {size}",
         ["ReadingEstimateWifi"] = "over Wi-Fi",
         ["ReadingEstimateMobile"] = "over mobile data",

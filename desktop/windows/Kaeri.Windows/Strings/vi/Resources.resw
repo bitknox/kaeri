@@ -947,9 +947,6 @@
   <data name="ReadingDlWaitsWifi" xml:space="preserve">
     <value>chờ Wi-Fi</value>
   </data>
-  <data name="ReadingDlWaitsRoom" xml:space="preserve">
-    <value>chờ dung lượng trống</value>
-  </data>
   <data name="ReadingDlFailed" xml:space="preserve">
     <value>Chương {chapter} không tải được</value>
   </data>
@@ -957,7 +954,7 @@
     <value>Ngoại tuyến</value>
   </data>
   <data name="ReadingDlNoRoom_other" xml:space="preserve">
-    <value>Hết dung lượng. Mục này và {count} mục nữa sẽ tải khi có dung lượng trống.</value>
+    <value>Hết dung lượng. Sẽ tải khi có dung lượng trống.</value>
   </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>Khoảng {size}</value>

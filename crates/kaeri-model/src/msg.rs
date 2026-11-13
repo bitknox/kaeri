@@ -1479,7 +1479,7 @@ pub enum ReadingMsg {
     ReadingRowQueued,
     /// A chapter row's state: it waits to download until the device is on Wi-Fi.
     ReadingRowWaitsWifi,
-    /// A chapter row's state: it waits to download until the device has free space again. A full device stopped the downloads; they go on by themselves once there is room.
+    /// A chapter row's state: it waits to download until the device has free space again. A full device paused the downloads; they go on by themselves once there is room.
     ReadingRowWaitsRoom,
     /// A chapter row's state while it downloads.
     ReadingRowDownloading { done: i64, total: i64 },
@@ -1569,13 +1569,11 @@ pub enum ReadingMsg {
     ReadingDlQueued { count: i64 },
     /// Chapters that wait for Wi-Fi to download.
     ReadingDlWaitsWifi,
-    /// Chapters that wait for free space to download: a full device stopped the downloads, and they go on by themselves once there is room.
-    ReadingDlWaitsRoom,
     /// A chapter that failed. The reason follows as the next part.
     ReadingDlFailed { chapter: String },
     /// After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
     ReadingDlOffline,
-    /// After "Chapter 2 couldn't download" when the device is full and more chapters were queued after it. Downloads go on by themselves, with this chapter first, once some space is free.
+    /// After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on by themselves once some space is free; the count is the queued chapters.
     ReadingDlNoRoom { count: i64 },
     /// How much the chosen chapters will take, from their pages and the size of pages downloaded before.
     ReadingEstimateSize { size: Size },
@@ -1838,7 +1836,6 @@ impl ReadingMsg {
             Self::ReadingDlMoreQueued { .. } => "reading-dl-more-queued",
             Self::ReadingDlQueued { .. } => "reading-dl-queued",
             Self::ReadingDlWaitsWifi => "reading-dl-waits-wifi",
-            Self::ReadingDlWaitsRoom => "reading-dl-waits-room",
             Self::ReadingDlFailed { .. } => "reading-dl-failed",
             Self::ReadingDlOffline => "reading-dl-offline",
             Self::ReadingDlNoRoom { .. } => "reading-dl-no-room",
@@ -2053,7 +2050,6 @@ impl ReadingMsg {
             Self::ReadingDlMoreQueued { count } => vec![("count", Value::Int(*count))],
             Self::ReadingDlQueued { count } => vec![("count", Value::Int(*count))],
             Self::ReadingDlWaitsWifi => Vec::new(),
-            Self::ReadingDlWaitsRoom => Vec::new(),
             Self::ReadingDlFailed { chapter } => vec![("chapter", Value::Text(chapter.clone()))],
             Self::ReadingDlOffline => Vec::new(),
             Self::ReadingDlNoRoom { count } => vec![("count", Value::Int(*count))],

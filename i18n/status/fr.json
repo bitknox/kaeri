@@ -20775,7 +20775,7 @@
     "at": "2026-11-07"
   },
   "reading-dl-no-room": {
-    "source": "3e9d7117dcf1",
+    "source": "366364609f28",
     "state": "draft",
     "by": "agent (R7-1, for Johan's review)",
     "at": "2026-11-13",
@@ -20818,15 +20818,6 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
-  },
-  "reading-dl-waits-room": {
-    "source": "1b9da7cc8cfe",
-    "state": "draft",
-    "by": "agent (R7-1, for Johan's review)",
-    "at": "2026-11-13",
-    "flags": [
-      "new copy for R7-1, needs Johan review"
-    ]
   },
   "reading-dl-waits-wifi": {
     "source": "9d3930bc9ffe",

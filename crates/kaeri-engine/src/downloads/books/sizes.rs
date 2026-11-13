@@ -151,11 +151,6 @@ pub(crate) fn series(
             let failure = first.error.as_deref().map_or(ReadingFailure::Offline, decode);
             line.push(match failure {
                 ReadingFailure::Offline => r(ReadingMsg::ReadingDlOffline),
-                // The queue stopped with it: it and the rest go on once there is room, and the
-                // row says so.
-                ReadingFailure::DiskFull if room && waiting > 0 => {
-                    r(ReadingMsg::ReadingDlNoRoom { count: count(waiting) })
-                }
                 other => other.msg(),
             });
         } else {
@@ -167,7 +162,8 @@ pub(crate) fn series(
                 if wifi {
                     line.push(r(ReadingMsg::ReadingDlWaitsWifi));
                 } else if room {
-                    line.push(r(ReadingMsg::ReadingDlWaitsRoom));
+                    // Paused for a full device: they go on once there is room.
+                    line.push(r(ReadingMsg::ReadingDlNoRoom { count: count(waiting) }));
                 }
             }
         }

@@ -174,13 +174,12 @@ reading-dl-pages = { $done } di { $total } pagine
 reading-dl-more-queued = altri { $count } in coda
 reading-dl-queued = { $count } in coda
 reading-dl-waits-wifi = attende il Wi-Fi
-reading-dl-waits-room = attende spazio libero
 reading-dl-failed = Download del capitolo { $chapter } non riuscito
 reading-dl-offline = Offline
 reading-dl-no-room = { $count ->
-    [one] Spazio esaurito. Questo e un altro si scaricano appena c'è spazio libero.
-    [many] Spazio esaurito. Questo e altri { $count } si scaricano appena c'è spazio libero.
-   *[other] Spazio esaurito. Questo e altri { $count } si scaricano appena c'è spazio libero.
+    [one] Spazio esaurito. Si scarica appena c'è spazio libero.
+    [many] Spazio esaurito. Si scaricano appena c'è spazio libero.
+   *[other] Spazio esaurito. Si scaricano appena c'è spazio libero.
  }
 reading-estimate-size = Circa { $size }
 reading-estimate-wifi = via Wi-Fi

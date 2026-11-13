@@ -344,11 +344,10 @@
     <string name="reading_dl_more_queued">ほか%1$,d件が待機中</string>
     <string name="reading_dl_queued">%1$,d件が待機中</string>
     <string name="reading_dl_waits_wifi">Wi-Fi待ち</string>
-    <string name="reading_dl_waits_room">空き容量待ち</string>
     <string name="reading_dl_failed">第%1$s話をダウンロードできませんでした</string>
     <string name="reading_dl_offline">オフライン</string>
     <plurals name="reading_dl_no_room">
-        <item quantity="other">空き容量がありません。容量が空くと、これとあと%1$,d件がダウンロードされます。</item>
+        <item quantity="other">空き容量がありません。容量が空くとダウンロードされます。</item>
     </plurals>
     <string name="reading_estimate_size">約%1$s</string>
     <string name="reading_estimate_wifi">Wi-Fi経由</string>

@@ -163,12 +163,11 @@ reading-dl-pages = { $done } / { $total } sayfa
 reading-dl-more-queued = { $count } tane daha sırada
 reading-dl-queued = { $count } sırada
 reading-dl-waits-wifi = Wi-Fi bekliyor
-reading-dl-waits-room = boş alan bekliyor
 reading-dl-failed = Bölüm { $chapter } indirilemedi
 reading-dl-offline = Çevrimdışı
 reading-dl-no-room = { $count ->
-    [one] Yer kalmadı. Boş alan açılınca bu ve bir tane daha indirilir.
-   *[other] Yer kalmadı. Boş alan açılınca bu ve { $count } tane daha indirilir.
+    [one] Yer kalmadı. Boş alan açılınca indirilir.
+   *[other] Yer kalmadı. Boş alan açılınca indirilirler.
  }
 reading-estimate-size = Yaklaşık { $size }
 reading-estimate-wifi = Wi-Fi ile

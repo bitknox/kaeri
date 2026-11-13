@@ -102,24 +102,23 @@ class DownloadNotifier(private val context: Context, private val sdk: Int = Buil
         .build()
 
     /**
-     * Chapter downloads stopped because the device is full: "There's no room left on this
-     * device. Free some space and try again." It can be swiped away, and opens Downloads, where
-     * Retry is.
+     * Chapter downloads paused because the device is full: "No room left. They download once some
+     * space is free.", for the [waiting] chapters. It can be swiped away, and opens Downloads.
      */
-    fun full(): Notification = NotificationCompat.Builder(context, CHANNEL)
+    fun full(waiting: Int): Notification = NotificationCompat.Builder(context, CHANNEL)
         .setSmallIcon(R.drawable.ic_launcher_monochrome)
         .setColor(WATER)
         .setContentTitle(context.getString(R.string.downloads_channel))
-        .setContentText(Strings.readingFailedDiskFull(context))
-        .setStyle(NotificationCompat.BigTextStyle().bigText(Strings.readingFailedDiskFull(context)))
+        .setContentText(Strings.readingDlNoRoom(context, waiting))
+        .setStyle(NotificationCompat.BigTextStyle().bigText(Strings.readingDlNoRoom(context, waiting)))
         .setCategory(NotificationCompat.CATEGORY_STATUS)
         .setAutoCancel(true)
         .setContentIntent(open(AppLink.Downloads))
         .build()
 
     /** Post the no room notification, which stays once the job's own goes. */
-    fun postFull() {
-        manager.notify(FULL_TAG, FINISHED_ID, full())
+    fun postFull(waiting: Int) {
+        manager.notify(FULL_TAG, FINISHED_ID, full(waiting))
     }
 
     /** Take the no room notification away: the chapters move again. */

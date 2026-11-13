@@ -477,7 +477,6 @@ public static class MsgText
         ReadingMsg.ReadingDlMoreQueued x => T.ReadingDlMoreQueued(x.Count),
         ReadingMsg.ReadingDlQueued x => T.ReadingDlQueued(x.Count),
         ReadingMsg.ReadingDlWaitsWifi => T.ReadingDlWaitsWifi,
-        ReadingMsg.ReadingDlWaitsRoom => T.ReadingDlWaitsRoom,
         ReadingMsg.ReadingDlFailed x => T.ReadingDlFailed(x.Chapter),
         ReadingMsg.ReadingDlOffline => T.ReadingDlOffline,
         ReadingMsg.ReadingDlNoRoom x => T.ReadingDlNoRoom(x.Count),

@@ -480,7 +480,6 @@ fun ReadingMsg.text(context: Context): String =
         is ReadingMsg.ReadingDlMoreQueued -> Strings.readingDlMoreQueued(context, this.count.toInt())
         is ReadingMsg.ReadingDlQueued -> Strings.readingDlQueued(context, this.count.toInt())
         is ReadingMsg.ReadingDlWaitsWifi -> Strings.readingDlWaitsWifi(context)
-        is ReadingMsg.ReadingDlWaitsRoom -> Strings.readingDlWaitsRoom(context)
         is ReadingMsg.ReadingDlFailed -> Strings.readingDlFailed(context, this.chapter)
         is ReadingMsg.ReadingDlOffline -> Strings.readingDlOffline(context)
         is ReadingMsg.ReadingDlNoRoom -> Strings.readingDlNoRoom(context, this.count.toInt())

@@ -152,11 +152,10 @@ reading-dl-pages = { $done }/{ $total } trang
 reading-dl-more-queued = { $count } đang chờ nữa
 reading-dl-queued = { $count } đang chờ
 reading-dl-waits-wifi = chờ Wi-Fi
-reading-dl-waits-room = chờ dung lượng trống
 reading-dl-failed = Chương { $chapter } không tải được
 reading-dl-offline = Ngoại tuyến
 reading-dl-no-room = { $count ->
-   *[other] Hết dung lượng. Mục này và { $count } mục nữa sẽ tải khi có dung lượng trống.
+   *[other] Hết dung lượng. Sẽ tải khi có dung lượng trống.
  }
 reading-estimate-size = Khoảng { $size }
 reading-estimate-wifi = qua Wi-Fi

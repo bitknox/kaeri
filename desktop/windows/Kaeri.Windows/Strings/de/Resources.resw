@@ -1004,9 +1004,6 @@
   <data name="ReadingDlWaitsWifi" xml:space="preserve">
     <value>wartet auf Wi-Fi</value>
   </data>
-  <data name="ReadingDlWaitsRoom" xml:space="preserve">
-    <value>wartet auf freien Speicher</value>
-  </data>
   <data name="ReadingDlFailed" xml:space="preserve">
     <value>Download von Kapitel {chapter} fehlgeschlagen</value>
   </data>
@@ -1014,10 +1011,10 @@
     <value>Offline</value>
   </data>
   <data name="ReadingDlNoRoom_one" xml:space="preserve">
-    <value>Kein Platz mehr. Dieses und ein weiteres laden, sobald Speicher frei ist.</value>
+    <value>Kein Platz mehr. Es lädt, sobald Speicher frei ist.</value>
   </data>
   <data name="ReadingDlNoRoom_other" xml:space="preserve">
-    <value>Kein Platz mehr. Dieses und {count} weitere laden, sobald Speicher frei ist.</value>
+    <value>Kein Platz mehr. Sie laden, sobald Speicher frei ist.</value>
   </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>Etwa {size}</value>

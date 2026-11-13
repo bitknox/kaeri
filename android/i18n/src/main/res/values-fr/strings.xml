@@ -382,13 +382,12 @@
     <string name="reading_dl_more_queued">%1$,d autres en attente</string>
     <string name="reading_dl_queued">%1$,d en attente</string>
     <string name="reading_dl_waits_wifi">attend le Wi-Fi</string>
-    <string name="reading_dl_waits_room">attend de l\'espace libre</string>
     <string name="reading_dl_failed">Le chapitre %1$s n\'a pas pu être téléchargé</string>
     <string name="reading_dl_offline">Hors ligne</string>
     <plurals name="reading_dl_no_room">
-        <item quantity="one">Plus d\'espace. Celui-ci et un autre se téléchargent dès qu\'il y a de l\'espace libre.</item>
-        <item quantity="many">Plus d\'espace. Celui-ci et %1$,d autres se téléchargent dès qu\'il y a de l\'espace libre.</item>
-        <item quantity="other">Plus d\'espace. Celui-ci et %1$,d autres se téléchargent dès qu\'il y a de l\'espace libre.</item>
+        <item quantity="one">Plus d\'espace. Il se télécharge dès qu\'il y a de l\'espace libre.</item>
+        <item quantity="many">Plus d\'espace. Ils se téléchargent dès qu\'il y a de l\'espace libre.</item>
+        <item quantity="other">Plus d\'espace. Ils se téléchargent dès qu\'il y a de l\'espace libre.</item>
     </plurals>
     <string name="reading_estimate_size">Environ %1$s</string>
     <string name="reading_estimate_wifi">en Wi-Fi</string>

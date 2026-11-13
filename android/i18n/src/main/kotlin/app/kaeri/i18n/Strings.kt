@@ -1137,7 +1137,7 @@ object Strings {
     fun readingRowWaitsWifi(context: Context): String =
         context.getString(R.string.reading_row_waits_wifi)
 
-    /** A chapter row's state: it waits to download until the device has free space again. A full device stopped the downloads; they go on by themselves once there is room. */
+    /** A chapter row's state: it waits to download until the device has free space again. A full device paused the downloads; they go on by themselves once there is room. */
     fun readingRowWaitsRoom(context: Context): String =
         context.getString(R.string.reading_row_waits_room)
 
@@ -1317,10 +1317,6 @@ object Strings {
     fun readingDlWaitsWifi(context: Context): String =
         context.getString(R.string.reading_dl_waits_wifi)
 
-    /** Chapters that wait for free space to download: a full device stopped the downloads, and they go on by themselves once there is room. */
-    fun readingDlWaitsRoom(context: Context): String =
-        context.getString(R.string.reading_dl_waits_room)
-
     /** A chapter that failed. The reason follows as the next part. */
     fun readingDlFailed(context: Context, chapter: String): String =
         context.getString(R.string.reading_dl_failed, chapter)
@@ -1329,7 +1325,7 @@ object Strings {
     fun readingDlOffline(context: Context): String =
         context.getString(R.string.reading_dl_offline)
 
-    /** After "Chapter 2 couldn't download" when the device is full and more chapters were queued after it. Downloads go on by themselves, with this chapter first, once some space is free. */
+    /** After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on by themselves once some space is free; the count is the queued chapters. */
     fun readingDlNoRoom(context: Context, count: Int): String =
         context.resources.getQuantityString(R.plurals.reading_dl_no_room, count, count)
 

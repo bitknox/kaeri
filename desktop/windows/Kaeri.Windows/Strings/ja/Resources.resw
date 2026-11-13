@@ -947,9 +947,6 @@
   <data name="ReadingDlWaitsWifi" xml:space="preserve">
     <value>Wi-Fi待ち</value>
   </data>
-  <data name="ReadingDlWaitsRoom" xml:space="preserve">
-    <value>空き容量待ち</value>
-  </data>
   <data name="ReadingDlFailed" xml:space="preserve">
     <value>第{chapter}話をダウンロードできませんでした</value>
   </data>
@@ -957,7 +954,7 @@
     <value>オフライン</value>
   </data>
   <data name="ReadingDlNoRoom_other" xml:space="preserve">
-    <value>空き容量がありません。容量が空くと、これとあと{count}件がダウンロードされます。</value>
+    <value>空き容量がありません。容量が空くとダウンロードされます。</value>
   </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>約{size}</value>

@@ -344,11 +344,10 @@
     <string name="reading_dl_more_queued">%1$,d lagi antre</string>
     <string name="reading_dl_queued">%1$,d antre</string>
     <string name="reading_dl_waits_wifi">menunggu Wi-Fi</string>
-    <string name="reading_dl_waits_room">menunggu ruang kosong</string>
     <string name="reading_dl_failed">Bab %1$s gagal diunduh</string>
     <string name="reading_dl_offline">Offline</string>
     <plurals name="reading_dl_no_room">
-        <item quantity="other">Ruang penuh. Ini dan %1$,d lagi diunduh begitu ada ruang kosong.</item>
+        <item quantity="other">Ruang penuh. Diunduh begitu ada ruang kosong.</item>
     </plurals>
     <string name="reading_estimate_size">Sekitar %1$s</string>
     <string name="reading_estimate_wifi">lewat Wi-Fi</string>

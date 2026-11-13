@@ -35,6 +35,7 @@ import app.kaeri.store.AppLanguage
 import app.kaeri.store.AppStore
 import app.kaeri.store.chaptersBusy
 import kotlinx.coroutines.launch
+import app.kaeri.engine.model.ChapterDownloadState
 import app.kaeri.engine.model.BookDownloadsView
 import app.kaeri.engine.model.DownloadRow
 import app.kaeri.engine.model.ReadingAbout
@@ -113,7 +114,7 @@ internal class DownloadRun(
                 session.saw(queue.rows).forEach(notifier::postFinished)
                 val live = LiveDownloads.of(service, queue.rows, queue.rates, session.finished)
                 val step = RunStep.of(live, chaptersBusy(queue.books), queue.chaptersLoaded, full = queue.books?.stoppedFull == true)
-                // Chapters move again (Retry, or another download): the no room notice is over.
+                // Chapters move again (room came back, or another download): the no room notice is over.
                 if (queue.books?.stoppedFull == false && !cleared) {
                     cleared = true
                     notifier.clearFull()
@@ -127,7 +128,7 @@ internal class DownloadRun(
                     RunStep.End -> end()
                     RunStep.Full -> {
                         // The ongoing notification goes with the run; the one left can be swiped away.
-                        notifier.postFull()
+                        notifier.postFull(queue.books?.rows?.count { it.state is ChapterDownloadState.Queued || it.state is ChapterDownloadState.WaitsForWifi } ?: 0)
                         end()
                     }
                     is RunStep.Chapters -> manager.notify(Downloads.NOTIFICATION, notifier.chapters(step.left))

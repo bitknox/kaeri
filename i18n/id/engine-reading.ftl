@@ -152,11 +152,10 @@ reading-dl-pages = { $done } dari { $total } hal.
 reading-dl-more-queued = { $count } lagi antre
 reading-dl-queued = { $count } antre
 reading-dl-waits-wifi = menunggu Wi-Fi
-reading-dl-waits-room = menunggu ruang kosong
 reading-dl-failed = Bab { $chapter } gagal diunduh
 reading-dl-offline = Offline
 reading-dl-no-room = { $count ->
-   *[other] Ruang penuh. Ini dan { $count } lagi diunduh begitu ada ruang kosong.
+   *[other] Ruang penuh. Diunduh begitu ada ruang kosong.
  }
 reading-estimate-size = Sekitar { $size }
 reading-estimate-wifi = lewat Wi-Fi

@@ -382,13 +382,12 @@
     <string name="reading_dl_more_queued">altri %1$,d in coda</string>
     <string name="reading_dl_queued">%1$,d in coda</string>
     <string name="reading_dl_waits_wifi">attende il Wi-Fi</string>
-    <string name="reading_dl_waits_room">attende spazio libero</string>
     <string name="reading_dl_failed">Download del capitolo %1$s non riuscito</string>
     <string name="reading_dl_offline">Offline</string>
     <plurals name="reading_dl_no_room">
-        <item quantity="one">Spazio esaurito. Questo e un altro si scaricano appena c\'è spazio libero.</item>
-        <item quantity="many">Spazio esaurito. Questo e altri %1$,d si scaricano appena c\'è spazio libero.</item>
-        <item quantity="other">Spazio esaurito. Questo e altri %1$,d si scaricano appena c\'è spazio libero.</item>
+        <item quantity="one">Spazio esaurito. Si scarica appena c\'è spazio libero.</item>
+        <item quantity="many">Spazio esaurito. Si scaricano appena c\'è spazio libero.</item>
+        <item quantity="other">Spazio esaurito. Si scaricano appena c\'è spazio libero.</item>
     </plurals>
     <string name="reading_estimate_size">Circa %1$s</string>
     <string name="reading_estimate_wifi">via Wi-Fi</string>

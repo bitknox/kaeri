@@ -1118,9 +1118,6 @@
   <data name="ReadingDlWaitsWifi" xml:space="preserve">
     <value>ждёт Wi-Fi</value>
   </data>
-  <data name="ReadingDlWaitsRoom" xml:space="preserve">
-    <value>ждёт свободного места</value>
-  </data>
   <data name="ReadingDlFailed" xml:space="preserve">
     <value>Не удалось скачать главу {chapter}</value>
   </data>
@@ -1128,16 +1125,16 @@
     <value>Нет сети</value>
   </data>
   <data name="ReadingDlNoRoom_one" xml:space="preserve">
-    <value>Нет места. Эта глава и ещё {count} загрузятся, когда освободится место.</value>
+    <value>Нет места. Загрузка начнётся, когда освободится место.</value>
   </data>
   <data name="ReadingDlNoRoom_few" xml:space="preserve">
-    <value>Нет места. Эта глава и ещё {count} загрузятся, когда освободится место.</value>
+    <value>Нет места. Загрузка начнётся, когда освободится место.</value>
   </data>
   <data name="ReadingDlNoRoom_many" xml:space="preserve">
-    <value>Нет места. Эта глава и ещё {count} загрузятся, когда освободится место.</value>
+    <value>Нет места. Загрузка начнётся, когда освободится место.</value>
   </data>
   <data name="ReadingDlNoRoom_other" xml:space="preserve">
-    <value>Нет места. Эта глава и ещё {count} загрузятся, когда освободится место.</value>
+    <value>Нет места. Загрузка начнётся, когда освободится место.</value>
   </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>Около {size}</value>

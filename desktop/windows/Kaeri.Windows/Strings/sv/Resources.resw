@@ -1004,9 +1004,6 @@
   <data name="ReadingDlWaitsWifi" xml:space="preserve">
     <value>väntar på Wi-Fi</value>
   </data>
-  <data name="ReadingDlWaitsRoom" xml:space="preserve">
-    <value>väntar på ledigt utrymme</value>
-  </data>
   <data name="ReadingDlFailed" xml:space="preserve">
     <value>Kapitel {chapter} kunde inte laddas ner</value>
   </data>
@@ -1014,10 +1011,10 @@
     <value>Offline</value>
   </data>
   <data name="ReadingDlNoRoom_one" xml:space="preserve">
-    <value>Inget utrymme kvar. Det här och ett till laddas ner när det finns ledigt utrymme.</value>
+    <value>Inget utrymme kvar. Den laddas ner när det finns ledigt utrymme.</value>
   </data>
   <data name="ReadingDlNoRoom_other" xml:space="preserve">
-    <value>Inget utrymme kvar. Det här och {count} till laddas ner när det finns ledigt utrymme.</value>
+    <value>Inget utrymme kvar. De laddas ner när det finns ledigt utrymme.</value>
   </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>Cirka {size}</value>

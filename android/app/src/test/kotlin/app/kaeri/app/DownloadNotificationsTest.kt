@@ -84,10 +84,11 @@ class DownloadNotificationsTest {
     @Test
     @Config(sdk = [36])
     fun the_no_room_notice_can_be_swiped_away_and_opens_downloads() {
-        val notification = DownloadNotifier(context, sdk = 36).full()
+        val notification = DownloadNotifier(context, sdk = 36).full(waiting = 3)
         assertEquals(0, notification.flags and Notification.FLAG_ONGOING_EVENT)
         assertTrue(notification.flags and Notification.FLAG_AUTO_CANCEL != 0)
-        assertEquals(app.kaeri.i18n.Strings.readingFailedDiskFull(context), notification.extras.getCharSequence(Notification.EXTRA_TEXT).toString())
+        // It says the chapters go on by themselves once there is room.
+        assertEquals(app.kaeri.i18n.Strings.readingDlNoRoom(context, 3), notification.extras.getCharSequence(Notification.EXTRA_TEXT).toString())
         assertTrue(notification.actions.isNullOrEmpty())
         assertEquals(AppLink.Downloads, shadowOf(notification.contentIntent).savedIntent.appLink())
     }

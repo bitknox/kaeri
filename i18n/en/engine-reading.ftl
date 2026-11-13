@@ -552,7 +552,7 @@ reading-row-queued = Queued
 reading-row-waits-wifi = Queued · waits for Wi-Fi
 
 # A chapter row's state: it waits to download until the device has free space again. A full
-# device stopped the downloads; they go on by themselves once there is room.
+# device paused the downloads; they go on by themselves once there is room.
 # @max 32
 reading-row-waits-room = Queued · waits for room
 
@@ -811,10 +811,6 @@ reading-dl-queued = { $count } queued
 # Chapters that wait for Wi-Fi to download.
 reading-dl-waits-wifi = waits for Wi-Fi
 
-# Chapters that wait for free space to download: a full device stopped the downloads, and they go
-# on by themselves once there is room.
-reading-dl-waits-room = waits for free space
-
 # A chapter that failed. The reason follows as the next part.
 # @arg chapter: text
 reading-dl-failed = Chapter { $chapter } couldn't download
@@ -823,12 +819,12 @@ reading-dl-failed = Chapter { $chapter } couldn't download
 # @max 20
 reading-dl-offline = Offline
 
-# After "Chapter 2 couldn't download" when the device is full and more chapters were queued after
-# it. Downloads go on by themselves, with this chapter first, once some space is free.
+# After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on
+# by themselves once some space is free; the count is the queued chapters.
 # @arg count: int
 reading-dl-no-room = { $count ->
-    [one] No room left. This one and one more download once some space is free.
-   *[other] No room left. This one and { $count } more download once some space is free.
+    [one] No room left. It downloads once some space is free.
+   *[other] No room left. They download once some space is free.
  }
 
 ## Download estimate

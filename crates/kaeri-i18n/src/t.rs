@@ -1415,7 +1415,7 @@ pub fn reading_row_waits_wifi() -> String {
     text("reading-row-waits-wifi", &[])
 }
 
-/// A chapter row's state: it waits to download until the device has free space again. A full device stopped the downloads; they go on by themselves once there is room.
+/// A chapter row's state: it waits to download until the device has free space again. A full device paused the downloads; they go on by themselves once there is room.
 pub fn reading_row_waits_room() -> String {
     text("reading-row-waits-room", &[])
 }
@@ -1640,11 +1640,6 @@ pub fn reading_dl_waits_wifi() -> String {
     text("reading-dl-waits-wifi", &[])
 }
 
-/// Chapters that wait for free space to download: a full device stopped the downloads, and they go on by themselves once there is room.
-pub fn reading_dl_waits_room() -> String {
-    text("reading-dl-waits-room", &[])
-}
-
 /// A chapter that failed. The reason follows as the next part.
 pub fn reading_dl_failed(chapter: &str) -> String {
     text("reading-dl-failed", &[("chapter", Arg::Text(chapter))])
@@ -1655,7 +1650,7 @@ pub fn reading_dl_offline() -> String {
     text("reading-dl-offline", &[])
 }
 
-/// After "Chapter 2 couldn't download" when the device is full and more chapters were queued after it. Downloads go on by themselves, with this chapter first, once some space is free.
+/// After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on by themselves once some space is free; the count is the queued chapters.
 pub fn reading_dl_no_room(count: i64) -> String {
     text("reading-dl-no-room", &[("count", Arg::Int(count))])
 }

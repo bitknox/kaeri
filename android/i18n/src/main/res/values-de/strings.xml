@@ -363,12 +363,11 @@
     <string name="reading_dl_more_queued">%1$,d weitere eingereiht</string>
     <string name="reading_dl_queued">%1$,d eingereiht</string>
     <string name="reading_dl_waits_wifi">wartet auf Wi-Fi</string>
-    <string name="reading_dl_waits_room">wartet auf freien Speicher</string>
     <string name="reading_dl_failed">Download von Kapitel %1$s fehlgeschlagen</string>
     <string name="reading_dl_offline">Offline</string>
     <plurals name="reading_dl_no_room">
-        <item quantity="one">Kein Platz mehr. Dieses und ein weiteres laden, sobald Speicher frei ist.</item>
-        <item quantity="other">Kein Platz mehr. Dieses und %1$,d weitere laden, sobald Speicher frei ist.</item>
+        <item quantity="one">Kein Platz mehr. Es lädt, sobald Speicher frei ist.</item>
+        <item quantity="other">Kein Platz mehr. Sie laden, sobald Speicher frei ist.</item>
     </plurals>
     <string name="reading_estimate_size">Etwa %1$s</string>
     <string name="reading_estimate_wifi">über Wi-Fi</string>

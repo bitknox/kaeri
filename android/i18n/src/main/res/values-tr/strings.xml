@@ -363,12 +363,11 @@
     <string name="reading_dl_more_queued">%1$,d tane daha sırada</string>
     <string name="reading_dl_queued">%1$,d sırada</string>
     <string name="reading_dl_waits_wifi">Wi-Fi bekliyor</string>
-    <string name="reading_dl_waits_room">boş alan bekliyor</string>
     <string name="reading_dl_failed">Bölüm %1$s indirilemedi</string>
     <string name="reading_dl_offline">Çevrimdışı</string>
     <plurals name="reading_dl_no_room">
-        <item quantity="one">Yer kalmadı. Boş alan açılınca bu ve bir tane daha indirilir.</item>
-        <item quantity="other">Yer kalmadı. Boş alan açılınca bu ve %1$,d tane daha indirilir.</item>
+        <item quantity="one">Yer kalmadı. Boş alan açılınca indirilir.</item>
+        <item quantity="other">Yer kalmadı. Boş alan açılınca indirilirler.</item>
     </plurals>
     <string name="reading_estimate_size">Yaklaşık %1$s</string>
     <string name="reading_estimate_wifi">Wi-Fi ile</string>

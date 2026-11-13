@@ -363,12 +363,11 @@
     <string name="reading_dl_more_queued">%1$,d till i kö</string>
     <string name="reading_dl_queued">%1$,d i kö</string>
     <string name="reading_dl_waits_wifi">väntar på Wi-Fi</string>
-    <string name="reading_dl_waits_room">väntar på ledigt utrymme</string>
     <string name="reading_dl_failed">Kapitel %1$s kunde inte laddas ner</string>
     <string name="reading_dl_offline">Offline</string>
     <plurals name="reading_dl_no_room">
-        <item quantity="one">Inget utrymme kvar. Det här och ett till laddas ner när det finns ledigt utrymme.</item>
-        <item quantity="other">Inget utrymme kvar. Det här och %1$,d till laddas ner när det finns ledigt utrymme.</item>
+        <item quantity="one">Inget utrymme kvar. Den laddas ner när det finns ledigt utrymme.</item>
+        <item quantity="other">Inget utrymme kvar. De laddas ner när det finns ledigt utrymme.</item>
     </plurals>
     <string name="reading_estimate_size">Cirka %1$s</string>
     <string name="reading_estimate_wifi">via Wi-Fi</string>

@@ -947,9 +947,6 @@
   <data name="ReadingDlWaitsWifi" xml:space="preserve">
     <value>menunggu Wi-Fi</value>
   </data>
-  <data name="ReadingDlWaitsRoom" xml:space="preserve">
-    <value>menunggu ruang kosong</value>
-  </data>
   <data name="ReadingDlFailed" xml:space="preserve">
     <value>Bab {chapter} gagal diunduh</value>
   </data>
@@ -957,7 +954,7 @@
     <value>Offline</value>
   </data>
   <data name="ReadingDlNoRoom_other" xml:space="preserve">
-    <value>Ruang penuh. Ini dan {count} lagi diunduh begitu ada ruang kosong.</value>
+    <value>Ruang penuh. Diunduh begitu ada ruang kosong.</value>
   </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>Sekitar {size}</value>

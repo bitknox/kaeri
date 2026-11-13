@@ -174,13 +174,12 @@ reading-dl-pages = { $done } sur { $total } pages
 reading-dl-more-queued = { $count } autres en attente
 reading-dl-queued = { $count } en attente
 reading-dl-waits-wifi = attend le Wi-Fi
-reading-dl-waits-room = attend de l'espace libre
 reading-dl-failed = Le chapitre { $chapter } n'a pas pu être téléchargé
 reading-dl-offline = Hors ligne
 reading-dl-no-room = { $count ->
-    [one] Plus d'espace. Celui-ci et un autre se téléchargent dès qu'il y a de l'espace libre.
-    [many] Plus d'espace. Celui-ci et { $count } autres se téléchargent dès qu'il y a de l'espace libre.
-   *[other] Plus d'espace. Celui-ci et { $count } autres se téléchargent dès qu'il y a de l'espace libre.
+    [one] Plus d'espace. Il se télécharge dès qu'il y a de l'espace libre.
+    [many] Plus d'espace. Ils se téléchargent dès qu'il y a de l'espace libre.
+   *[other] Plus d'espace. Ils se téléchargent dès qu'il y a de l'espace libre.
  }
 reading-estimate-size = Environ { $size }
 reading-estimate-wifi = en Wi-Fi

@@ -1061,9 +1061,6 @@
   <data name="ReadingDlWaitsWifi" xml:space="preserve">
     <value>espera Wi-Fi</value>
   </data>
-  <data name="ReadingDlWaitsRoom" xml:space="preserve">
-    <value>espera espacio libre</value>
-  </data>
   <data name="ReadingDlFailed" xml:space="preserve">
     <value>No se pudo descargar el capítulo {chapter}</value>
   </data>
@@ -1071,13 +1068,13 @@
     <value>Sin conexión</value>
   </data>
   <data name="ReadingDlNoRoom_one" xml:space="preserve">
-    <value>No queda espacio. Este y uno más se descargan cuando haya espacio libre.</value>
+    <value>No queda espacio. Se descarga cuando haya espacio libre.</value>
   </data>
   <data name="ReadingDlNoRoom_many" xml:space="preserve">
-    <value>No queda espacio. Este y {count} más se descargan cuando haya espacio libre.</value>
+    <value>No queda espacio. Se descargan cuando haya espacio libre.</value>
   </data>
   <data name="ReadingDlNoRoom_other" xml:space="preserve">
-    <value>No queda espacio. Este y {count} más se descargan cuando haya espacio libre.</value>
+    <value>No queda espacio. Se descargan cuando haya espacio libre.</value>
   </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>Aprox. {size}</value>

@@ -163,12 +163,11 @@ reading-dl-pages = { $done } av { $total } sidor
 reading-dl-more-queued = { $count } till i kö
 reading-dl-queued = { $count } i kö
 reading-dl-waits-wifi = väntar på Wi-Fi
-reading-dl-waits-room = väntar på ledigt utrymme
 reading-dl-failed = Kapitel { $chapter } kunde inte laddas ner
 reading-dl-offline = Offline
 reading-dl-no-room = { $count ->
-    [one] Inget utrymme kvar. Det här och ett till laddas ner när det finns ledigt utrymme.
-   *[other] Inget utrymme kvar. Det här och { $count } till laddas ner när det finns ledigt utrymme.
+    [one] Inget utrymme kvar. Den laddas ner när det finns ledigt utrymme.
+   *[other] Inget utrymme kvar. De laddas ner när det finns ledigt utrymme.
  }
 reading-estimate-size = Cirka { $size }
 reading-estimate-wifi = via Wi-Fi

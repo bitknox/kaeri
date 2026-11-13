@@ -163,12 +163,11 @@ reading-dl-pages = { $done } von { $total } Seiten
 reading-dl-more-queued = { $count } weitere eingereiht
 reading-dl-queued = { $count } eingereiht
 reading-dl-waits-wifi = wartet auf Wi-Fi
-reading-dl-waits-room = wartet auf freien Speicher
 reading-dl-failed = Download von Kapitel { $chapter } fehlgeschlagen
 reading-dl-offline = Offline
 reading-dl-no-room = { $count ->
-    [one] Kein Platz mehr. Dieses und ein weiteres laden, sobald Speicher frei ist.
-   *[other] Kein Platz mehr. Dieses und { $count } weitere laden, sobald Speicher frei ist.
+    [one] Kein Platz mehr. Es lädt, sobald Speicher frei ist.
+   *[other] Kein Platz mehr. Sie laden, sobald Speicher frei ist.
  }
 reading-estimate-size = Etwa { $size }
 reading-estimate-wifi = über Wi-Fi

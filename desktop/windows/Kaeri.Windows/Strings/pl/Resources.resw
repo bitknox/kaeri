@@ -1118,9 +1118,6 @@
   <data name="ReadingDlWaitsWifi" xml:space="preserve">
     <value>czeka na Wi-Fi</value>
   </data>
-  <data name="ReadingDlWaitsRoom" xml:space="preserve">
-    <value>czeka na wolne miejsce</value>
-  </data>
   <data name="ReadingDlFailed" xml:space="preserve">
     <value>Nie udało się pobrać rozdziału {chapter}</value>
   </data>
@@ -1128,16 +1125,16 @@
     <value>Offline</value>
   </data>
   <data name="ReadingDlNoRoom_one" xml:space="preserve">
-    <value>Brak miejsca. Ten i jeszcze jeden pobiorą się, gdy zwolni się miejsce.</value>
+    <value>Brak miejsca. Pobierze się, gdy zwolni się miejsce.</value>
   </data>
   <data name="ReadingDlNoRoom_few" xml:space="preserve">
-    <value>Brak miejsca. Ten i jeszcze {count} pobiorą się, gdy zwolni się miejsce.</value>
+    <value>Brak miejsca. Pobiorą się, gdy zwolni się miejsce.</value>
   </data>
   <data name="ReadingDlNoRoom_many" xml:space="preserve">
-    <value>Brak miejsca. Ten i jeszcze {count} pobiorą się, gdy zwolni się miejsce.</value>
+    <value>Brak miejsca. Pobiorą się, gdy zwolni się miejsce.</value>
   </data>
   <data name="ReadingDlNoRoom_other" xml:space="preserve">
-    <value>Brak miejsca. Ten i jeszcze {count} pobiorą się, gdy zwolni się miejsce.</value>
+    <value>Brak miejsca. Pobiorą się, gdy zwolni się miejsce.</value>
   </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>Około {size}</value>
