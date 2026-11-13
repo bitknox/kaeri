@@ -624,6 +624,26 @@ async fn a_full_device_stops_the_queue_with_the_chapter_that_met_it() {
     assert_eq!(*kit.shelf.fetched.lock().unwrap(), 0);
 }
 
+/// The queue a full device stopped says so, as chapter 2 still shows as queued with nothing
+/// fetching it, and asking again for the chapter that met it starts the queue once more.
+#[tokio::test]
+async fn a_queue_stopped_by_a_full_device_says_so_until_it_starts_again() {
+    let kit = kit(&["1", "2"]);
+    assert!(!kit.queue.view(kit.store()).stopped_full);
+    *kit.queue.0.free.lock().unwrap() = Some(KEEP_FREE - 1);
+    kit.queue.download(&kit.lent, WorkId::new(WORK), DownloadPick::Unread).await;
+    kit.settle().await;
+    assert!(kit.queue.view(kit.store()).stopped_full);
+
+    *kit.queue.0.free.lock().unwrap() = Some(KEEP_FREE * 4);
+    kit.queue
+        .download(&kit.lent, WorkId::new(WORK), DownloadPick::Chapters { ids: ids(&["1"]) })
+        .await;
+    kit.settle().await;
+    assert!(!kit.queue.view(kit.store()).stopped_full);
+    assert!(kit.states().iter().all(|(_, s)| *s == ChapterDownloadState::Done));
+}
+
 #[tokio::test]
 async fn a_pick_names_unread_chapters_a_volume_or_the_ones_asked_for() {
     let kit = kit(&["1", "2", "3", "4"]);

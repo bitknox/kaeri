@@ -216,6 +216,9 @@ struct Inner {
     dir: PathBuf,
     pace: Duration,
     running: Mutex<bool>,
+    /// The queue stopped for a full device: what it still holds waits until something starts it
+    /// again, a Retry or another download.
+    full: Mutex<bool>,
     setup: Mutex<Setup>,
     /// Told each time the setup changes, for a send that waits on it.
     changed: tokio::sync::watch::Sender<Setup>,
@@ -267,6 +270,7 @@ impl BookDownloads {
             dir,
             pace,
             running: Mutex::new(false),
+            full: Mutex::new(false),
             setup: Mutex::new(Setup::UNSAID),
             changed: tokio::sync::watch::channel(Setup::UNSAID).0,
             free: Mutex::new(None),
@@ -442,6 +446,7 @@ impl BookDownloads {
             meter: StorageMeter { used, free, chapters, read_bytes },
             series,
             total: sizes::total(kept, used),
+            stopped_full: *self.0.full.lock().unwrap_or_else(|e| e.into_inner()),
         }
     }
 
@@ -879,6 +884,7 @@ impl BookDownloads {
             }
             *running = true;
         }
+        *self.0.full.lock().unwrap_or_else(|e| e.into_inner()) = false;
         let (this, lent) = (self.clone(), lent.clone());
         tokio::spawn(async move { this.run(lent).await });
     }
@@ -921,6 +927,7 @@ impl BookDownloads {
             }
             if !go_on {
                 *self.0.running.lock().unwrap_or_else(|e| e.into_inner()) = false;
+                *self.0.full.lock().unwrap_or_else(|e| e.into_inner()) = true;
                 stopped = true;
                 break;
             }
