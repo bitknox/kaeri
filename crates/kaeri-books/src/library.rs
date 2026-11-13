@@ -606,6 +606,9 @@ fn open_into(file: &mut ScannedFile, path: &Path, limits: &Limits) {
         Err(error) => {
             file.locked = matches!(error, crate::BookError::Protected);
             file.broken = Some(error.to_string());
+            // A book that does not open is still the kind its name says, so it is filed and
+            // opened as one and says it can't be read there.
+            file.novel = file.format == "epub";
         }
     }
 }
@@ -787,6 +790,21 @@ mod tests {
                 (None, None) => f.label.clone(),
             })
             .collect()
+    }
+
+    /// An EPUB cut short is still a novel: filed on its own, not with the comics beside it.
+    #[test]
+    fn an_epub_that_does_not_open_is_filed_as_a_novel() {
+        let dir = tempfile::tempdir().unwrap();
+        cbz(&dir.path().join("Shelf/Shelf Ch. 1.cbz"), 1, None);
+        fs::write(dir.path().join("Shelf/Broken Bell.epub"), b"PK\x03\x04 cut short").unwrap();
+        let scan = scan_dir(dir.path());
+        let novel = scan.series.iter().find(|s| s.key.starts_with("novel:")).expect("a novel");
+        assert_eq!(novel.key, "novel:Broken Bell");
+        assert!(novel.novel && novel.files[0].novel);
+        assert!(novel.files[0].broken.is_some());
+        assert!(!series(&scan, "Shelf").novel);
+        assert_eq!(series(&scan, "Shelf").files.len(), 1);
     }
 
     #[test]

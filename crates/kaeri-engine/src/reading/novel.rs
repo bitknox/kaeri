@@ -619,7 +619,7 @@ pub(crate) fn open_epub(path: &Path, opening: Opening) -> Result<Opened, Reading
     let spine: Vec<(String, bool)> =
         epub.spine().map(|(s, item)| (item.path.clone(), s.linear)).collect();
     if spine.is_empty() {
-        return Err(ReadingFailure::Unreadable { path: shown, format });
+        return Err(ReadingFailure::Unreadable { path: super::pages::book_name(path), format });
     }
     let mut toc = Vec::new();
     flatten_toc(epub.toc(), &spine, 0, &mut toc);
