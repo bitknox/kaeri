@@ -15,6 +15,7 @@ import app.kaeri.store.AppStore
 import app.kaeri.ui.LocalAppStore
 
 private const val KEY_READING = "reading" // i18n-skip
+private const val KEY_QUERY = "query" // i18n-skip
 private const val KEY_TEXT = "text" // i18n-skip
 private const val KEY_MEDIUM = "medium" // i18n-skip
 private const val KEY_FORMATS = "formats" // i18n-skip
@@ -65,10 +66,10 @@ private fun keptSaver(store: AppStore) = Saver<KeptReadSearch, Bundle>(
     save = {
         Bundle().apply {
             putBoolean(KEY_READING, ReadPlaces.searchReading)
-            putBundle(KEY_TEXT, store.reading.search.value.query.toBundle())
+            putBundle(KEY_QUERY, store.reading.search.value.query.toBundle())
         }
     },
-    restore = { saved -> KeptReadSearch(saved.getBoolean(KEY_READING), saved.getBundle(KEY_TEXT)?.readSearchQuery()) },
+    restore = { saved -> KeptReadSearch(saved.getBoolean(KEY_READING), saved.getBundle(KEY_QUERY)?.readSearchQuery()) },
 )
 
 /**
