@@ -116,6 +116,7 @@ reading-row-not-downloaded = Niepobrany
 reading-row-on-device = To { -device }
 reading-row-queued = W kolejce
 reading-row-waits-wifi = W kolejce · czeka na Wi-Fi
+reading-row-waits-room = W kolejce · czeka na miejsce
 reading-row-downloading = Pobieranie · { $done } z { $total } stron
 reading-row-failed = Nie udało się pobrać
 reading-row-page-of = Strona { $page } z { $of }
@@ -184,8 +185,15 @@ reading-dl-pages = { $done } z { $total } stron
 reading-dl-more-queued = Jeszcze { $count } w kolejce
 reading-dl-queued = { $count } w kolejce
 reading-dl-waits-wifi = czeka na Wi-Fi
+reading-dl-waits-room = czeka na wolne miejsce
 reading-dl-failed = Nie udało się pobrać rozdziału { $chapter }
 reading-dl-offline = Offline
+reading-dl-no-room = { $count ->
+    [one] Brak miejsca. Ten i jeszcze jeden pobiorą się, gdy zwolni się miejsce.
+    [few] Brak miejsca. Ten i jeszcze { $count } pobiorą się, gdy zwolni się miejsce.
+    [many] Brak miejsca. Ten i jeszcze { $count } pobiorą się, gdy zwolni się miejsce.
+   *[other] Brak miejsca. Ten i jeszcze { $count } pobiorą się, gdy zwolni się miejsce.
+ }
 reading-estimate-size = Około { $size }
 reading-estimate-wifi = przez Wi-Fi
 reading-estimate-mobile = przez dane komórkowe

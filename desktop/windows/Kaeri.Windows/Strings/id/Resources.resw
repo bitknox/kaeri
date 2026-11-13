@@ -845,6 +845,9 @@
   <data name="ReadingRowWaitsWifi" xml:space="preserve">
     <value>Antre · tunggu Wi-Fi</value>
   </data>
+  <data name="ReadingRowWaitsRoom" xml:space="preserve">
+    <value>Antre · tunggu ruang kosong</value>
+  </data>
   <data name="ReadingRowDownloading" xml:space="preserve">
     <value>Mengunduh · {done} dari {total} hal.</value>
   </data>
@@ -944,11 +947,17 @@
   <data name="ReadingDlWaitsWifi" xml:space="preserve">
     <value>menunggu Wi-Fi</value>
   </data>
+  <data name="ReadingDlWaitsRoom" xml:space="preserve">
+    <value>menunggu ruang kosong</value>
+  </data>
   <data name="ReadingDlFailed" xml:space="preserve">
     <value>Bab {chapter} gagal diunduh</value>
   </data>
   <data name="ReadingDlOffline" xml:space="preserve">
     <value>Offline</value>
+  </data>
+  <data name="ReadingDlNoRoom_other" xml:space="preserve">
+    <value>Ruang penuh. Ini dan {count} lagi diunduh begitu ada ruang kosong.</value>
   </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>Sekitar {size}</value>

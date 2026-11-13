@@ -296,6 +296,7 @@
     <string name="reading_row_on_device">Trên thiết bị này</string>
     <string name="reading_row_queued">Đang chờ</string>
     <string name="reading_row_waits_wifi">Đang chờ · cần Wi-Fi</string>
+    <string name="reading_row_waits_room">Đang chờ · cần dung lượng trống</string>
     <string name="reading_row_downloading">Đang tải · %1$,d/%2$,d trang</string>
     <string name="reading_row_failed">Không tải được</string>
     <string name="reading_row_page_of">Trang %1$d/%2$d</string>
@@ -343,8 +344,12 @@
     <string name="reading_dl_more_queued">%1$,d đang chờ nữa</string>
     <string name="reading_dl_queued">%1$,d đang chờ</string>
     <string name="reading_dl_waits_wifi">chờ Wi-Fi</string>
+    <string name="reading_dl_waits_room">chờ dung lượng trống</string>
     <string name="reading_dl_failed">Chương %1$s không tải được</string>
     <string name="reading_dl_offline">Ngoại tuyến</string>
+    <plurals name="reading_dl_no_room">
+        <item quantity="other">Hết dung lượng. Mục này và %1$,d mục nữa sẽ tải khi có dung lượng trống.</item>
+    </plurals>
     <string name="reading_estimate_size">Khoảng %1$s</string>
     <string name="reading_estimate_wifi">qua Wi-Fi</string>
     <string name="reading_estimate_mobile">qua dữ liệu di động</string>

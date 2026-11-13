@@ -894,6 +894,9 @@ reading-row-queued = [Ǫüéüéð~~]
 # A chapter row's state: it waits to download until the device is on Wi-Fi.
 reading-row-waits-wifi = [Ǫüéüéð · ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~~~~]
 
+# A chapter row's state: it waits to download until the device has free space again. A full device stopped the downloads; they go on by themselves once there is room.
+reading-row-waits-room = [Ǫüéüéð · ŵàîţš ƒöŕ ŕööɱ~~~~~~~]
+
 # A chapter row's state while it downloads.
 reading-row-downloading = [Ðöŵñļöàðîñĝ · { $done } öƒ { $total } þàĝéš~~~~~~~~~]
 
@@ -1066,17 +1069,20 @@ reading-dl-queued = [{ $count } ƣüéüéð~~~]
 # Chapters that wait for Wi-Fi to download.
 reading-dl-waits-wifi = [ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~]
 
+# Chapters that wait for free space to download: a full device stopped the downloads, and they go on by themselves once there is room.
+reading-dl-waits-room = [ŵàîţš ƒöŕ ƒŕéé šþàçé~~~~~~]
+
 # A chapter that failed. The reason follows as the next part.
 reading-dl-failed = [Çĥàþţéŕ { $chapter } çöüļðñ'ţ ðöŵñļöàð~~~~~~~~~]
 
 # After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
 reading-dl-offline = [Öƒƒļîñé~~~]
 
-# After "Chapter 2 couldn't download" when the device is full and more chapters were queued after it. They wait until Retry, which downloads the failed chapter and goes on with them. Retry is the button beside the row (chapter-retry).
+# After "Chapter 2 couldn't download" when the device is full and more chapters were queued after it. Downloads go on by themselves, with this chapter first, once some space is free.
 reading-dl-no-room =
     { $count ->
-        [one] [Ñö ŕööɱ ļéƒţ. Ƒŕéé šöɱé šþàçé, ţĥéñ Ŕéţŕý ƒöŕ îţ àñð öñé ɱöŕé.~~~~~~~~~~~~~~~~~~~]
-       *[other] [Ñö ŕööɱ ļéƒţ. Ƒŕéé šöɱé šþàçé, ţĥéñ Ŕéţŕý ƒöŕ îţ àñð { $count } ɱöŕé.~~~~~~~~~~~~~~~~~~~]
+        [one] [Ñö ŕööɱ ļéƒţ. Ţĥîš öñé àñð öñé ɱöŕé ðöŵñļöàð öñçé šöɱé šþàçé îš ƒŕéé.~~~~~~~~~~~~~~~~~~~~~]
+       *[other] [Ñö ŕööɱ ļéƒţ. Ţĥîš öñé àñð { $count } ɱöŕé ðöŵñļöàð öñçé šöɱé šþàçé îš ƒŕéé.~~~~~~~~~~~~~~~~~~~~~]
     }
 
 # How much the chosen chapters will take, from their pages and the size of pages downloaded before.

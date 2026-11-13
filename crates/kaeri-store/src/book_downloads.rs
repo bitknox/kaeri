@@ -332,6 +332,19 @@ impl Store {
         })
     }
 
+    /// Fetches that failed for `error` go back in the queue, in their places, as when what
+    /// stopped them is gone. Returns how many.
+    pub fn book_downloads_requeue_failed(&self, error: &str, now: i64) -> Result<usize> {
+        self.with_conn(|c| {
+            Ok(c.execute(
+                "UPDATE book_download SET state = 'queued', pages_done = 0, error = NULL,
+                        updated_at = ?2
+                  WHERE state = 'failed' AND error = ?1",
+                params![error, now],
+            )?)
+        })
+    }
+
     /// Fetches the last run left half done go back in the queue. Returns how many.
     pub fn book_downloads_recover(&self, now: i64) -> Result<usize> {
         self.with_conn(|c| {

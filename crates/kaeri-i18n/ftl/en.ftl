@@ -894,6 +894,9 @@ reading-row-queued = Queued
 # A chapter row's state: it waits to download until the device is on Wi-Fi.
 reading-row-waits-wifi = Queued · waits for Wi-Fi
 
+# A chapter row's state: it waits to download until the device has free space again. A full device stopped the downloads; they go on by themselves once there is room.
+reading-row-waits-room = Queued · waits for room
+
 # A chapter row's state while it downloads.
 reading-row-downloading = Downloading · { $done } of { $total } pages
 
@@ -1066,17 +1069,20 @@ reading-dl-queued = { $count } queued
 # Chapters that wait for Wi-Fi to download.
 reading-dl-waits-wifi = waits for Wi-Fi
 
+# Chapters that wait for free space to download: a full device stopped the downloads, and they go on by themselves once there is room.
+reading-dl-waits-room = waits for free space
+
 # A chapter that failed. The reason follows as the next part.
 reading-dl-failed = Chapter { $chapter } couldn't download
 
 # After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
 reading-dl-offline = Offline
 
-# After "Chapter 2 couldn't download" when the device is full and more chapters were queued after it. They wait until Retry, which downloads the failed chapter and goes on with them. Retry is the button beside the row (chapter-retry).
+# After "Chapter 2 couldn't download" when the device is full and more chapters were queued after it. Downloads go on by themselves, with this chapter first, once some space is free.
 reading-dl-no-room =
     { $count ->
-        [one] No room left. Free some space, then Retry for it and one more.
-       *[other] No room left. Free some space, then Retry for it and { $count } more.
+        [one] No room left. This one and one more download once some space is free.
+       *[other] No room left. This one and { $count } more download once some space is free.
     }
 
 # How much the chosen chapters will take, from their pages and the size of pages downloaded before.

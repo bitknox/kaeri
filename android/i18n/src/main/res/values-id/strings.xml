@@ -296,6 +296,7 @@
     <string name="reading_row_on_device">Di perangkat ini</string>
     <string name="reading_row_queued">Antre</string>
     <string name="reading_row_waits_wifi">Antre · tunggu Wi-Fi</string>
+    <string name="reading_row_waits_room">Antre · tunggu ruang kosong</string>
     <string name="reading_row_downloading">Mengunduh · %1$,d dari %2$,d hal.</string>
     <string name="reading_row_failed">Gagal diunduh</string>
     <string name="reading_row_page_of">Hal. %1$d dari %2$d</string>
@@ -343,8 +344,12 @@
     <string name="reading_dl_more_queued">%1$,d lagi antre</string>
     <string name="reading_dl_queued">%1$,d antre</string>
     <string name="reading_dl_waits_wifi">menunggu Wi-Fi</string>
+    <string name="reading_dl_waits_room">menunggu ruang kosong</string>
     <string name="reading_dl_failed">Bab %1$s gagal diunduh</string>
     <string name="reading_dl_offline">Offline</string>
+    <plurals name="reading_dl_no_room">
+        <item quantity="other">Ruang penuh. Ini dan %1$,d lagi diunduh begitu ada ruang kosong.</item>
+    </plurals>
     <string name="reading_estimate_size">Sekitar %1$s</string>
     <string name="reading_estimate_wifi">lewat Wi-Fi</string>
     <string name="reading_estimate_mobile">lewat data seluler</string>

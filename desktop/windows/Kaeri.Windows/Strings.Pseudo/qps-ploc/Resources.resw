@@ -1211,6 +1211,10 @@
     <value>[Ǫüéüéð · ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~~~~]</value>
     <comment>A chapter row's state: it waits to download until the device is on Wi-Fi.</comment>
   </data>
+  <data name="ReadingRowWaitsRoom" xml:space="preserve">
+    <value>[Ǫüéüéð · ŵàîţš ƒöŕ ŕööɱ~~~~~~~]</value>
+    <comment>A chapter row's state: it waits to download until the device has free space again. A full device stopped the downloads; they go on by themselves once there is room.</comment>
+  </data>
   <data name="ReadingRowDownloading" xml:space="preserve">
     <value>[Ðöŵñļöàðîñĝ · {done} öƒ {total} þàĝéš~~~~~~~~~]</value>
     <comment>A chapter row's state while it downloads.</comment>
@@ -1427,6 +1431,10 @@
     <value>[ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~]</value>
     <comment>Chapters that wait for Wi-Fi to download.</comment>
   </data>
+  <data name="ReadingDlWaitsRoom" xml:space="preserve">
+    <value>[ŵàîţš ƒöŕ ƒŕéé šþàçé~~~~~~]</value>
+    <comment>Chapters that wait for free space to download: a full device stopped the downloads, and they go on by themselves once there is room.</comment>
+  </data>
   <data name="ReadingDlFailed" xml:space="preserve">
     <value>[Çĥàþţéŕ {chapter} çöüļðñ'ţ ðöŵñļöàð~~~~~~~~~]</value>
     <comment>A chapter that failed. The reason follows as the next part.</comment>
@@ -1436,12 +1444,12 @@
     <comment>After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.</comment>
   </data>
   <data name="ReadingDlNoRoom_one" xml:space="preserve">
-    <value>[Ñö ŕööɱ ļéƒţ. Ƒŕéé šöɱé šþàçé, ţĥéñ Ŕéţŕý ƒöŕ îţ àñð öñé ɱöŕé.~~~~~~~~~~~~~~~~~~~]</value>
-    <comment>After "Chapter 2 couldn't download" when the device is full and more chapters were queued after it. They wait until Retry, which downloads the failed chapter and goes on with them. Retry is the button beside the row (chapter-retry).</comment>
+    <value>[Ñö ŕööɱ ļéƒţ. Ţĥîš öñé àñð öñé ɱöŕé ðöŵñļöàð öñçé šöɱé šþàçé îš ƒŕéé.~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>After "Chapter 2 couldn't download" when the device is full and more chapters were queued after it. Downloads go on by themselves, with this chapter first, once some space is free.</comment>
   </data>
   <data name="ReadingDlNoRoom_other" xml:space="preserve">
-    <value>[Ñö ŕööɱ ļéƒţ. Ƒŕéé šöɱé šþàçé, ţĥéñ Ŕéţŕý ƒöŕ îţ àñð {count} ɱöŕé.~~~~~~~~~~~~~~~~~~~]</value>
-    <comment>After "Chapter 2 couldn't download" when the device is full and more chapters were queued after it. They wait until Retry, which downloads the failed chapter and goes on with them. Retry is the button beside the row (chapter-retry).</comment>
+    <value>[Ñö ŕööɱ ļéƒţ. Ţĥîš öñé àñð {count} ɱöŕé ðöŵñļöàð öñçé šöɱé šþàçé îš ƒŕéé.~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>After "Chapter 2 couldn't download" when the device is full and more chapters were queued after it. Downloads go on by themselves, with this chapter first, once some space is free.</comment>
   </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>[Åƀöüţ {size}~~~]</value>

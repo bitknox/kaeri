@@ -635,7 +635,7 @@ async fn a_queue_stopped_by_a_full_device_says_so_until_it_starts_again() {
     kit.settle().await;
     let stopped = kit.queue.view(kit.store());
     assert!(stopped.stopped_full);
-    // The series' row says what to do, and that Retry takes the queued chapter on with it.
+    // The series' row says the chapter and the one queued after it go on once there is room.
     assert!(
         stopped.series[0]
             .line
@@ -651,6 +651,71 @@ async fn a_queue_stopped_by_a_full_device_says_so_until_it_starts_again() {
     kit.settle().await;
     assert!(!kit.queue.view(kit.store()).stopped_full);
     assert!(kit.states().iter().all(|(_, s)| *s == ChapterDownloadState::Done));
+}
+
+/// The queue a full device stopped goes on by itself once the device has room, with the chapter
+/// that met the full device first, and until then its queued rows say they wait for room. A
+/// Retry while the device is still full leaves the chapter queued and waiting, not failed again.
+#[tokio::test]
+async fn a_queue_stopped_by_a_full_device_goes_on_by_itself_once_there_is_room() {
+    let kit = kit(&["1", "2", "3"]);
+    *kit.queue.0.free.lock().unwrap() = Some(KEEP_FREE - 1);
+    kit.queue.download(&kit.lent, WorkId::new(WORK), DownloadPick::Unread).await;
+    kit.settle().await;
+    let stopped = kit.queue.view(kit.store());
+    assert!(stopped.stopped_full);
+    let line = |id: &str, view: &BookDownloadsView| {
+        let row = view.rows.iter().find(|r| r.chapter.id.as_str() == id).unwrap();
+        msg_ids(&row.chapter.line)
+    };
+    assert_eq!(line("2", &stopped), ["reading-row-waits-room"]);
+    assert_eq!(line("3", &stopped), ["reading-row-waits-room"]);
+
+    // Still full: Retry queues the chapter, and it waits with the rest.
+    kit.queue
+        .download(&kit.lent, WorkId::new(WORK), DownloadPick::Chapters { ids: ids(&["1"]) })
+        .await;
+    tokio::time::sleep(ROOM_CHECK * 4).await;
+    let waiting = kit.queue.view(kit.store());
+    assert!(waiting.stopped_full);
+    assert_eq!(line("1", &waiting), ["reading-row-waits-room"]);
+    assert!(kit.states().iter().all(|(_, s)| *s == ChapterDownloadState::Queued));
+
+    // Room again, and nothing asked: the queue goes on and every chapter downloads.
+    *kit.queue.0.free.lock().unwrap() = Some(KEEP_FREE * 4);
+    for _ in 0..500 {
+        if kit.states().iter().all(|(_, s)| *s == ChapterDownloadState::Done) {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(10)).await;
+    }
+    assert!(
+        kit.states().iter().all(|(_, s)| *s == ChapterDownloadState::Done),
+        "{:?}",
+        kit.states()
+    );
+    let view = kit.queue.view(kit.store());
+    assert!(!view.stopped_full);
+    assert_eq!(line("2", &view), ["reading-row-downloaded"]);
+}
+
+/// A chapter that met the full device goes back in the queue by itself once there is room, when
+/// nothing was queued after it.
+#[tokio::test]
+async fn a_chapter_a_full_device_stopped_downloads_by_itself_once_there_is_room() {
+    let kit = kit(&["1"]);
+    *kit.queue.0.free.lock().unwrap() = Some(KEEP_FREE - 1);
+    kit.queue.download(&kit.lent, WorkId::new(WORK), DownloadPick::Unread).await;
+    kit.settle().await;
+    assert!(matches!(kit.states()[0].1, ChapterDownloadState::Failed { .. }));
+    *kit.queue.0.free.lock().unwrap() = Some(KEEP_FREE * 4);
+    for _ in 0..500 {
+        if kit.states()[0].1 == ChapterDownloadState::Done {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(10)).await;
+    }
+    assert_eq!(kit.states(), [("1".into(), ChapterDownloadState::Done)]);
 }
 
 #[tokio::test]

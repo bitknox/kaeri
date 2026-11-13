@@ -332,6 +332,7 @@
     <string name="reading_row_on_device">Хранится здесь</string>
     <string name="reading_row_queued">В очереди</string>
     <string name="reading_row_waits_wifi">В очереди · ждёт Wi-Fi</string>
+    <string name="reading_row_waits_room">В очереди · ждёт места</string>
     <string name="reading_row_downloading">Скачивание · %1$,d из %2$,d стр.</string>
     <string name="reading_row_failed">Не удалось скачать</string>
     <string name="reading_row_page_of">Стр. %1$d из %2$d</string>
@@ -400,8 +401,15 @@
     <string name="reading_dl_more_queued">Ещё в очереди: %1$,d</string>
     <string name="reading_dl_queued">В очереди: %1$,d</string>
     <string name="reading_dl_waits_wifi">ждёт Wi-Fi</string>
+    <string name="reading_dl_waits_room">ждёт свободного места</string>
     <string name="reading_dl_failed">Не удалось скачать главу %1$s</string>
     <string name="reading_dl_offline">Нет сети</string>
+    <plurals name="reading_dl_no_room">
+        <item quantity="one">Нет места. Эта глава и ещё %1$,d загрузятся, когда освободится место.</item>
+        <item quantity="few">Нет места. Эта глава и ещё %1$,d загрузятся, когда освободится место.</item>
+        <item quantity="many">Нет места. Эта глава и ещё %1$,d загрузятся, когда освободится место.</item>
+        <item quantity="other">Нет места. Эта глава и ещё %1$,d загрузятся, когда освободится место.</item>
+    </plurals>
     <string name="reading_estimate_size">Около %1$s</string>
     <string name="reading_estimate_wifi">по Wi-Fi</string>
     <string name="reading_estimate_mobile">по мобильной сети</string>

@@ -108,6 +108,7 @@ reading-row-not-downloaded = İndirilmedi
 reading-row-on-device = Bu { -device }da
 reading-row-queued = Sırada
 reading-row-waits-wifi = Sırada · Wi-Fi bekliyor
+reading-row-waits-room = Sırada · boş alan bekliyor
 reading-row-downloading = İndiriliyor · { $done } / { $total } sayfa
 reading-row-failed = İndirilemedi
 reading-row-page-of = Sayfa { $page } / { $of }
@@ -162,8 +163,13 @@ reading-dl-pages = { $done } / { $total } sayfa
 reading-dl-more-queued = { $count } tane daha sırada
 reading-dl-queued = { $count } sırada
 reading-dl-waits-wifi = Wi-Fi bekliyor
+reading-dl-waits-room = boş alan bekliyor
 reading-dl-failed = Bölüm { $chapter } indirilemedi
 reading-dl-offline = Çevrimdışı
+reading-dl-no-room = { $count ->
+    [one] Yer kalmadı. Boş alan açılınca bu ve bir tane daha indirilir.
+   *[other] Yer kalmadı. Boş alan açılınca bu ve { $count } tane daha indirilir.
+ }
 reading-estimate-size = Yaklaşık { $size }
 reading-estimate-wifi = Wi-Fi ile
 reading-estimate-mobile = mobil veriyle

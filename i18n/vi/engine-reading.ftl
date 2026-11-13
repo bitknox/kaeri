@@ -104,6 +104,7 @@ reading-row-not-downloaded = Chưa tải
 reading-row-on-device = Trên { -device } này
 reading-row-queued = Đang chờ
 reading-row-waits-wifi = Đang chờ · cần Wi-Fi
+reading-row-waits-room = Đang chờ · cần dung lượng trống
 reading-row-downloading = Đang tải · { $done }/{ $total } trang
 reading-row-failed = Không tải được
 reading-row-page-of = Trang { $page }/{ $of }
@@ -151,8 +152,12 @@ reading-dl-pages = { $done }/{ $total } trang
 reading-dl-more-queued = { $count } đang chờ nữa
 reading-dl-queued = { $count } đang chờ
 reading-dl-waits-wifi = chờ Wi-Fi
+reading-dl-waits-room = chờ dung lượng trống
 reading-dl-failed = Chương { $chapter } không tải được
 reading-dl-offline = Ngoại tuyến
+reading-dl-no-room = { $count ->
+   *[other] Hết dung lượng. Mục này và { $count } mục nữa sẽ tải khi có dung lượng trống.
+ }
 reading-estimate-size = Khoảng { $size }
 reading-estimate-wifi = qua Wi-Fi
 reading-estimate-mobile = qua dữ liệu di động

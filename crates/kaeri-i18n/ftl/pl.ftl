@@ -882,6 +882,9 @@ reading-row-queued = W kolejce
 # A chapter row's state: it waits to download until the device is on Wi-Fi.
 reading-row-waits-wifi = W kolejce · czeka na Wi-Fi
 
+# A chapter row's state: it waits to download until the device has free space again. A full device stopped the downloads; they go on by themselves once there is room.
+reading-row-waits-room = W kolejce · czeka na miejsce
+
 # A chapter row's state while it downloads.
 reading-row-downloading = Pobieranie · { $done } z { $total } stron
 
@@ -1023,11 +1026,23 @@ reading-dl-queued = { $count } w kolejce
 # Chapters that wait for Wi-Fi to download.
 reading-dl-waits-wifi = czeka na Wi-Fi
 
+# Chapters that wait for free space to download: a full device stopped the downloads, and they go on by themselves once there is room.
+reading-dl-waits-room = czeka na wolne miejsce
+
 # A chapter that failed. The reason follows as the next part.
 reading-dl-failed = Nie udało się pobrać rozdziału { $chapter }
 
 # After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
 reading-dl-offline = Offline
+
+# After "Chapter 2 couldn't download" when the device is full and more chapters were queued after it. Downloads go on by themselves, with this chapter first, once some space is free.
+reading-dl-no-room =
+    { $count ->
+        [one] Brak miejsca. Ten i jeszcze jeden pobiorą się, gdy zwolni się miejsce.
+        [few] Brak miejsca. Ten i jeszcze { $count } pobiorą się, gdy zwolni się miejsce.
+        [many] Brak miejsca. Ten i jeszcze { $count } pobiorą się, gdy zwolni się miejsce.
+       *[other] Brak miejsca. Ten i jeszcze { $count } pobiorą się, gdy zwolni się miejsce.
+    }
 
 # How much the chosen chapters will take, from their pages and the size of pages downloaded before.
 reading-estimate-size = Około { $size }

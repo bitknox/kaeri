@@ -20748,6 +20748,15 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "reading-dl-no-room": {
+    "source": "3e9d7117dcf1",
+    "state": "draft",
+    "by": "agent (R7-1, for Johan's review)",
+    "at": "2026-11-13",
+    "flags": [
+      "new copy for R7-1, needs Johan review"
+    ]
+  },
   "reading-dl-offline": {
     "source": "cde3342a428a",
     "state": "draft",
@@ -20783,6 +20792,15 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
+  },
+  "reading-dl-waits-room": {
+    "source": "1b9da7cc8cfe",
+    "state": "draft",
+    "by": "agent (R7-1, for Johan's review)",
+    "at": "2026-11-13",
+    "flags": [
+      "new copy for R7-1, needs Johan review"
+    ]
   },
   "reading-dl-waits-wifi": {
     "source": "9d3930bc9ffe",
@@ -21293,6 +21311,15 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
+  },
+  "reading-row-waits-room": {
+    "source": "6d15f80e16af",
+    "state": "draft",
+    "by": "agent (R7-1, for Johan's review)",
+    "at": "2026-11-13",
+    "flags": [
+      "new copy for R7-1, needs Johan review"
+    ]
   },
   "reading-row-waits-wifi": {
     "source": "40f4bef74ccf",

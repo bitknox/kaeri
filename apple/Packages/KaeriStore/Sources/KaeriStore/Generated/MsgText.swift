@@ -434,6 +434,7 @@ extension ReadingMsg {
         case .readingRowOnDevice: L.readingRowOnDevice
         case .readingRowQueued: L.readingRowQueued
         case .readingRowWaitsWifi: L.readingRowWaitsWifi
+        case .readingRowWaitsRoom: L.readingRowWaitsRoom
         case .readingRowDownloading(let done, let total): L.readingRowDownloading(done: Int(done), total: Int(total))
         case .readingRowDownloadingPlain: L.readingRowDownloadingPlain
         case .readingRowFailed: L.readingRowFailed
@@ -478,6 +479,7 @@ extension ReadingMsg {
         case .readingDlMoreQueued(let count): L.readingDlMoreQueued(count: Int(count))
         case .readingDlQueued(let count): L.readingDlQueued(count: Int(count))
         case .readingDlWaitsWifi: L.readingDlWaitsWifi
+        case .readingDlWaitsRoom: L.readingDlWaitsRoom
         case .readingDlFailed(let chapter): L.readingDlFailed(chapter: chapter)
         case .readingDlOffline: L.readingDlOffline
         case .readingDlNoRoom(let count): L.readingDlNoRoom(count: Int(count))

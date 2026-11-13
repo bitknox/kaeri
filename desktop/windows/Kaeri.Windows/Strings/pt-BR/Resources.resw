@@ -917,6 +917,9 @@
   <data name="ReadingRowWaitsWifi" xml:space="preserve">
     <value>Na fila · espera o Wi-Fi</value>
   </data>
+  <data name="ReadingRowWaitsRoom" xml:space="preserve">
+    <value>Na fila · espera espaço livre</value>
+  </data>
   <data name="ReadingRowDownloading" xml:space="preserve">
     <value>Baixando · {done} de {total} páginas</value>
   </data>
@@ -1058,11 +1061,23 @@
   <data name="ReadingDlWaitsWifi" xml:space="preserve">
     <value>espera o Wi-Fi</value>
   </data>
+  <data name="ReadingDlWaitsRoom" xml:space="preserve">
+    <value>espera espaço livre</value>
+  </data>
   <data name="ReadingDlFailed" xml:space="preserve">
     <value>Não foi possível baixar o capítulo {chapter}</value>
   </data>
   <data name="ReadingDlOffline" xml:space="preserve">
     <value>Offline</value>
+  </data>
+  <data name="ReadingDlNoRoom_one" xml:space="preserve">
+    <value>Sem espaço. Este e mais um são baixados quando houver espaço livre.</value>
+  </data>
+  <data name="ReadingDlNoRoom_many" xml:space="preserve">
+    <value>Sem espaço. Este e mais {count} são baixados quando houver espaço livre.</value>
+  </data>
+  <data name="ReadingDlNoRoom_other" xml:space="preserve">
+    <value>Sem espaço. Este e mais {count} são baixados quando houver espaço livre.</value>
   </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>Cerca de {size}</value>

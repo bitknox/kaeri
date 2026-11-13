@@ -78,7 +78,7 @@ pub(crate) struct Kept {
 pub(crate) fn series(
     store: &Store,
     rows: &[BookDownload],
-    wifi: bool,
+    (wifi, room): (bool, bool),
     form: kaeri_store::shelf::TitleForm,
 ) -> (Vec<BookDownloadSeries>, u64, Kept) {
     let mut kept_all = Kept::default();
@@ -151,8 +151,9 @@ pub(crate) fn series(
             let failure = first.error.as_deref().map_or(ReadingFailure::Offline, decode);
             line.push(match failure {
                 ReadingFailure::Offline => r(ReadingMsg::ReadingDlOffline),
-                // The queue stopped with it: the rest wait for Retry, and the row says so.
-                ReadingFailure::DiskFull if waiting > 0 => {
+                // The queue stopped with it: it and the rest go on once there is room, and the
+                // row says so.
+                ReadingFailure::DiskFull if room && waiting > 0 => {
                     r(ReadingMsg::ReadingDlNoRoom { count: count(waiting) })
                 }
                 other => other.msg(),
@@ -165,6 +166,8 @@ pub(crate) fn series(
                 line.push(r(ReadingMsg::ReadingDlQueued { count: count(waiting) }));
                 if wifi {
                     line.push(r(ReadingMsg::ReadingDlWaitsWifi));
+                } else if room {
+                    line.push(r(ReadingMsg::ReadingDlWaitsRoom));
                 }
             }
         }

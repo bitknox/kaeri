@@ -882,6 +882,9 @@ reading-row-queued = В очереди
 # A chapter row's state: it waits to download until the device is on Wi-Fi.
 reading-row-waits-wifi = В очереди · ждёт Wi-Fi
 
+# A chapter row's state: it waits to download until the device has free space again. A full device stopped the downloads; they go on by themselves once there is room.
+reading-row-waits-room = В очереди · ждёт места
+
 # A chapter row's state while it downloads.
 reading-row-downloading = Скачивание · { $done } из { $total } стр.
 
@@ -1023,11 +1026,23 @@ reading-dl-queued = В очереди: { $count }
 # Chapters that wait for Wi-Fi to download.
 reading-dl-waits-wifi = ждёт Wi-Fi
 
+# Chapters that wait for free space to download: a full device stopped the downloads, and they go on by themselves once there is room.
+reading-dl-waits-room = ждёт свободного места
+
 # A chapter that failed. The reason follows as the next part.
 reading-dl-failed = Не удалось скачать главу { $chapter }
 
 # After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
 reading-dl-offline = Нет сети
+
+# After "Chapter 2 couldn't download" when the device is full and more chapters were queued after it. Downloads go on by themselves, with this chapter first, once some space is free.
+reading-dl-no-room =
+    { $count ->
+        [one] Нет места. Эта глава и ещё { $count } загрузятся, когда освободится место.
+        [few] Нет места. Эта глава и ещё { $count } загрузятся, когда освободится место.
+        [many] Нет места. Эта глава и ещё { $count } загрузятся, когда освободится место.
+       *[other] Нет места. Эта глава и ещё { $count } загрузятся, когда освободится место.
+    }
 
 # How much the chosen chapters will take, from their pages and the size of pages downloaded before.
 reading-estimate-size = Около { $size }

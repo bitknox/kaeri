@@ -602,6 +602,8 @@
     <string name="reading_row_queued">Queued</string>
     <!-- A chapter row's state: it waits to download until the device is on Wi-Fi. -->
     <string name="reading_row_waits_wifi">Queued · waits for Wi-Fi</string>
+    <!-- A chapter row's state: it waits to download until the device has free space again. A full device stopped the downloads; they go on by themselves once there is room. -->
+    <string name="reading_row_waits_room">Queued · waits for room</string>
     <!-- A chapter row's state while it downloads. -->
     <string name="reading_row_downloading">Downloading · %1$,d of %2$,d pages</string>
     <!-- A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count. -->
@@ -720,14 +722,16 @@
     <string name="reading_dl_queued">%1$,d queued</string>
     <!-- Chapters that wait for Wi-Fi to download. -->
     <string name="reading_dl_waits_wifi">waits for Wi-Fi</string>
+    <!-- Chapters that wait for free space to download: a full device stopped the downloads, and they go on by themselves once there is room. -->
+    <string name="reading_dl_waits_room">waits for free space</string>
     <!-- A chapter that failed. The reason follows as the next part. -->
     <string name="reading_dl_failed">Chapter %1$s couldn\'t download</string>
     <!-- After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest. -->
     <string name="reading_dl_offline">Offline</string>
-    <!-- After "Chapter 2 couldn't download" when the device is full and more chapters were queued after it. They wait until Retry, which downloads the failed chapter and goes on with them. Retry is the button beside the row (chapter-retry). -->
+    <!-- After "Chapter 2 couldn't download" when the device is full and more chapters were queued after it. Downloads go on by themselves, with this chapter first, once some space is free. -->
     <plurals name="reading_dl_no_room">
-        <item quantity="one">No room left. Free some space, then Retry for it and one more.</item>
-        <item quantity="other">No room left. Free some space, then Retry for it and %1$,d more.</item>
+        <item quantity="one">No room left. This one and one more download once some space is free.</item>
+        <item quantity="other">No room left. This one and %1$,d more download once some space is free.</item>
     </plurals>
     <!-- How much the chosen chapters will take, from their pages and the size of pages downloaded before. -->
     <string name="reading_estimate_size">About %1$s</string>

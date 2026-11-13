@@ -320,6 +320,7 @@
     <string name="reading_row_on_device">Neste dispositivo</string>
     <string name="reading_row_queued">Na fila</string>
     <string name="reading_row_waits_wifi">Na fila · espera o Wi-Fi</string>
+    <string name="reading_row_waits_room">Na fila · espera espaço livre</string>
     <string name="reading_row_downloading">Baixando · %1$,d de %2$,d páginas</string>
     <string name="reading_row_failed">Não foi possível baixar</string>
     <string name="reading_row_page_of">Página %1$d de %2$d</string>
@@ -381,8 +382,14 @@
     <string name="reading_dl_more_queued">mais %1$,d na fila</string>
     <string name="reading_dl_queued">%1$,d na fila</string>
     <string name="reading_dl_waits_wifi">espera o Wi-Fi</string>
+    <string name="reading_dl_waits_room">espera espaço livre</string>
     <string name="reading_dl_failed">Não foi possível baixar o capítulo %1$s</string>
     <string name="reading_dl_offline">Offline</string>
+    <plurals name="reading_dl_no_room">
+        <item quantity="one">Sem espaço. Este e mais um são baixados quando houver espaço livre.</item>
+        <item quantity="many">Sem espaço. Este e mais %1$,d são baixados quando houver espaço livre.</item>
+        <item quantity="other">Sem espaço. Este e mais %1$,d são baixados quando houver espaço livre.</item>
+    </plurals>
     <string name="reading_estimate_size">Cerca de %1$s</string>
     <string name="reading_estimate_wifi">por Wi-Fi</string>
     <string name="reading_estimate_mobile">por dados móveis</string>

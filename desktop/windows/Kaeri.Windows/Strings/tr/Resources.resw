@@ -881,6 +881,9 @@
   <data name="ReadingRowWaitsWifi" xml:space="preserve">
     <value>Sırada · Wi-Fi bekliyor</value>
   </data>
+  <data name="ReadingRowWaitsRoom" xml:space="preserve">
+    <value>Sırada · boş alan bekliyor</value>
+  </data>
   <data name="ReadingRowDownloading" xml:space="preserve">
     <value>İndiriliyor · {done} / {total} sayfa</value>
   </data>
@@ -1001,11 +1004,20 @@
   <data name="ReadingDlWaitsWifi" xml:space="preserve">
     <value>Wi-Fi bekliyor</value>
   </data>
+  <data name="ReadingDlWaitsRoom" xml:space="preserve">
+    <value>boş alan bekliyor</value>
+  </data>
   <data name="ReadingDlFailed" xml:space="preserve">
     <value>Bölüm {chapter} indirilemedi</value>
   </data>
   <data name="ReadingDlOffline" xml:space="preserve">
     <value>Çevrimdışı</value>
+  </data>
+  <data name="ReadingDlNoRoom_one" xml:space="preserve">
+    <value>Yer kalmadı. Boş alan açılınca bu ve bir tane daha indirilir.</value>
+  </data>
+  <data name="ReadingDlNoRoom_other" xml:space="preserve">
+    <value>Yer kalmadı. Boş alan açılınca bu ve {count} tane daha indirilir.</value>
   </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>Yaklaşık {size}</value>
