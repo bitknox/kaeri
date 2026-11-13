@@ -492,7 +492,7 @@ impl LoadedBookPlugin {
             self.http.clone(),
         );
         capabilities
-            .fetch(host::Request {
+            .qa_fetch_page(host::Request {
                 method: "GET".into(),
                 url: url.to_owned(),
                 headers: headers.to_vec(),

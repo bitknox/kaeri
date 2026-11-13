@@ -189,6 +189,12 @@ impl Capabilities {
         Ok(())
     }
 
+    /// QA ONLY, never merged: [`Self::fetch`] for a page image, which waits in the QA gate
+    /// behind the plugin's own calls.
+    pub(crate) async fn qa_fetch_page(&self, request: Request) -> Result<Response, HostError> {
+        QA_PAGE.scope((), self.fetch(request)).await
+    }
+
     /// Perform a request on the guest's behalf.
     pub async fn fetch(&self, request: Request) -> Result<Response, HostError> {
         self.authorise(&request)?;
@@ -219,8 +225,9 @@ impl Capabilities {
         request: Request,
     ) -> Result<Response, HostError> {
         tracing::debug!(plugin = %self.plugin_id, url = %request.url, "plugin fetch");
-        // QA ONLY, never merged: at most one request per 4 s per plugin.
-        tokio::time::sleep_until(qa_gate(&self.plugin_id)).await;
+        // QA ONLY, never merged: at most one request per 4 s per plugin (KAERI_QA_GATE_MS),
+        // plugin calls ahead of page images.
+        qa_gate(&self.plugin_id, qa_gap(), QA_PAGE.try_with(|_| ()).is_ok()).await;
         // QA ONLY: a poor network for plugin fetches, from the file KAERI_QA_NET names:
         // "offline" fails at once, "hang" waits out the deadline, "delay <ms>" adds a wait,
         // "drop <percent>" fails that share of requests.
@@ -302,36 +309,263 @@ fn qa_path(var: &str, file: &str) -> Result<String, std::env::VarError> {
     })
 }
 
-/// QA ONLY, never merged: when a plugin's next request may start, 4 s after its last one.
+/// QA ONLY, never merged: the gap between two requests of one plugin, 4 s unless
+/// KAERI_QA_GATE_MS sets it in milliseconds.
 #[cfg(feature = "fetch")]
-fn qa_gate(plugin: &str) -> tokio::time::Instant {
-    static NEXT: std::sync::LazyLock<
-        std::sync::Mutex<std::collections::HashMap<String, tokio::time::Instant>>,
+fn qa_gap() -> std::time::Duration {
+    std::env::var("KAERI_QA_GATE_MS")
+        .ok()
+        .and_then(|v| v.trim().parse::<u64>().ok())
+        .map_or(std::time::Duration::from_secs(4), std::time::Duration::from_millis)
+}
+
+tokio::task_local! {
+    /// QA ONLY, never merged: set while a page image is fetched.
+    static QA_PAGE: ();
+}
+
+/// QA ONLY, never merged: one plugin's turn: when its last request went out, and who waits.
+#[cfg(feature = "fetch")]
+#[derive(Default)]
+struct QaTurn {
+    queue: std::sync::Mutex<QaQueue>,
+    moved: tokio::sync::Notify,
+}
+
+#[cfg(feature = "fetch")]
+#[derive(Default)]
+struct QaQueue {
+    last: Option<tokio::time::Instant>,
+    /// Waiters in turn order: plugin calls (`false`) ahead of page images, each in arrival order.
+    waiting: std::collections::BTreeSet<(bool, u64)>,
+    tickets: u64,
+}
+
+#[cfg(feature = "fetch")]
+impl QaTurn {
+    fn queue(&self) -> std::sync::MutexGuard<'_, QaQueue> {
+        self.queue.lock().unwrap_or_else(|e| e.into_inner())
+    }
+}
+
+/// QA ONLY, never merged: the turn for a plugin, the same one for every call with its id.
+#[cfg(feature = "fetch")]
+fn qa_turn(plugin: &str) -> std::sync::Arc<QaTurn> {
+    static TURNS: std::sync::LazyLock<
+        std::sync::Mutex<std::collections::HashMap<String, std::sync::Arc<QaTurn>>>,
     > = std::sync::LazyLock::new(Default::default);
-    let mut next = NEXT.lock().unwrap_or_else(|e| e.into_inner());
-    let now = tokio::time::Instant::now();
-    let at = next.get(plugin).copied().filter(|t| *t > now).unwrap_or(now);
-    next.insert(plugin.to_owned(), at + std::time::Duration::from_secs(4));
-    at
+    let mut turns = TURNS.lock().unwrap_or_else(|e| e.into_inner());
+    turns.entry(plugin.to_owned()).or_default().clone()
+}
+
+/// QA ONLY, never merged: a place in the queue, given up when the waiter is dropped.
+#[cfg(feature = "fetch")]
+struct QaPlace<'a> {
+    turn: &'a QaTurn,
+    key: (bool, u64),
+}
+
+#[cfg(feature = "fetch")]
+impl Drop for QaPlace<'_> {
+    fn drop(&mut self) {
+        self.turn.queue().waiting.remove(&self.key);
+        self.turn.moved.notify_waiters();
+    }
+}
+
+/// QA ONLY, never merged: waits for the first place in the plugin's queue and `gap` after its
+/// last request that went out, then marks this one as sent. Plugin calls go ahead of page
+/// images, so an open or a Try again is next whatever a strip has queued. Only a waiter that
+/// gets through marks a send: one dropped or cancelled while it waits gives up its place and
+/// the next waiter starts on time.
+#[cfg(feature = "fetch")]
+async fn qa_gate(plugin: &str, gap: std::time::Duration, page: bool) {
+    let turn = qa_turn(plugin);
+    let key = {
+        let mut queue = turn.queue();
+        queue.tickets += 1;
+        let key = (page, queue.tickets);
+        queue.waiting.insert(key);
+        key
+    };
+    let _place = QaPlace { turn: &turn, key };
+    loop {
+        let moved = turn.moved.notified();
+        tokio::pin!(moved);
+        moved.as_mut().enable();
+        let wake = {
+            let mut queue = turn.queue();
+            if queue.waiting.first() != Some(&key) {
+                None
+            } else {
+                let now = tokio::time::Instant::now();
+                match queue.last.map(|sent| sent + gap).filter(|at| *at > now) {
+                    Some(at) => Some(at),
+                    None => {
+                        queue.last = Some(now);
+                        drop(queue);
+                        // Dropping the place takes it out of the queue and wakes the next.
+                        return;
+                    }
+                }
+            }
+        };
+        match wake {
+            Some(at) => tokio::select! {
+                () = tokio::time::sleep_until(at) => {}
+                () = &mut moved => {}
+            },
+            None => moved.await,
+        }
+    }
 }
 
 #[cfg(all(test, feature = "fetch"))]
 mod qa_gate_tests {
+    use std::sync::{Arc, Mutex};
+    use std::time::Duration;
+    use tokio::time::Instant;
+
+    const GAP: Duration = Duration::from_secs(4);
+    /// How long the reader gives a page try, as kaeri-engine's `PAGE_WAIT`.
+    const PAGE_WAIT: Duration = Duration::from_secs(15);
+
+    fn ms(from: Instant, to: Instant) -> u64 {
+        (to - from).as_millis() as u64
+    }
+
+    async fn call(plugin: &str) {
+        super::qa_gate(plugin, GAP, false).await;
+    }
+
+    async fn page(plugin: &str) {
+        super::qa_gate(plugin, GAP, true).await;
+    }
+
+    /// `n` waiters spawned now, each with `deadline`, recording when they went out.
+    fn burst(
+        plugin: &'static str,
+        n: usize,
+        is_page: bool,
+        deadline: Duration,
+        start: Instant,
+        sent: &Arc<Mutex<Vec<u64>>>,
+    ) -> Vec<tokio::task::JoinHandle<()>> {
+        (0..n)
+            .map(|_| {
+                let sent = sent.clone();
+                tokio::spawn(async move {
+                    let gate = super::qa_gate(plugin, GAP, is_page);
+                    if tokio::time::timeout(deadline, gate).await.is_ok() {
+                        sent.lock().unwrap().push(ms(start, Instant::now()));
+                    }
+                })
+            })
+            .collect()
+    }
+
     #[tokio::test(start_paused = true)]
-    async fn requests_of_one_plugin_start_two_seconds_apart() {
-        let start = tokio::time::Instant::now();
-        let gaps: Vec<u64> =
-            (0..3).map(|_| (super::qa_gate("qa-a") - start).as_millis() as u64).collect();
-        assert_eq!(gaps, [0, 4000, 8000]);
-        assert_eq!(
-            (super::qa_gate("qa-b") - start).as_millis(),
-            0,
-            "another plugin waits for none"
-        );
-        tokio::time::sleep(std::time::Duration::from_secs(10)).await;
-        let later = tokio::time::Instant::now();
-        assert_eq!(super::qa_gate("qa-a"), later, "a quiet plugin starts at once");
-        assert_eq!(super::qa_gate("qa-a") - later, std::time::Duration::from_secs(4));
+    async fn requests_of_one_plugin_go_out_a_gap_apart_and_other_plugins_wait_for_none() {
+        let start = Instant::now();
+        let mut at = Vec::new();
+        for _ in 0..3 {
+            call("qa-spacing-a").await;
+            at.push(ms(start, Instant::now()));
+        }
+        assert_eq!(at, [0, 4000, 8000]);
+        call("qa-spacing-b").await;
+        assert_eq!(ms(start, Instant::now()), 8000, "another plugin waits for none");
+        tokio::time::sleep(Duration::from_secs(10)).await;
+        let later = Instant::now();
+        page("qa-spacing-a").await;
+        assert_eq!(Instant::now(), later, "a quiet plugin starts at once");
+        super::qa_gate("qa-spacing-a", Duration::from_secs(8), false).await;
+        assert_eq!(ms(later, Instant::now()), 8000, "the gap is the caller's");
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_waiter_dropped_by_its_deadline_does_not_delay_the_next_request() {
+        let start = Instant::now();
+        call("qa-dropped").await;
+        // Its turn would come at 4 s, but its deadline drops it at 1 s.
+        let dropped = tokio::time::timeout(Duration::from_secs(1), call("qa-dropped")).await;
+        assert!(dropped.is_err());
+        tokio::time::sleep_until(start + Duration::from_secs(5)).await;
+        call("qa-dropped").await;
+        assert_eq!(ms(start, Instant::now()), 5000, "goes at once, 4 s after the last sent");
+        call("qa-dropped").await;
+        assert_eq!(ms(start, Instant::now()), 9000);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_burst_of_25_goes_out_4_s_apart_and_dropped_ones_free_their_turns() {
+        let start = Instant::now();
+        let sent = Arc::new(Mutex::new(Vec::new()));
+        for task in burst("qa-burst", 25, true, Duration::MAX, start, &sent) {
+            task.await.unwrap();
+        }
+        let went = std::mem::take(&mut *sent.lock().unwrap());
+        assert_eq!(went, (0..25).map(|i| i * 4000).collect::<Vec<u64>>());
+
+        // A chapter's pages with a 30 s deadline each: eight go out, the rest give up, and a
+        // retry after them goes out one gap after the last one sent, not minutes later.
+        tokio::time::sleep(Duration::from_secs(10)).await;
+        let start = Instant::now();
+        for task in burst("qa-burst", 25, true, Duration::from_secs(30), start, &sent) {
+            task.await.unwrap();
+        }
+        let went = std::mem::take(&mut *sent.lock().unwrap());
+        assert_eq!(went, (0..8).map(|i| i * 4000).collect::<Vec<u64>>());
+        assert_eq!(ms(start, Instant::now()), 30_000);
+        page("qa-burst").await;
+        assert_eq!(ms(start, Instant::now()), 32_000, "the retry waits only for the gap");
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_waiter_cancelled_mid_sleep_frees_its_turn() {
+        let start = Instant::now();
+        call("qa-cancel").await;
+        let sleeper = tokio::spawn(async move {
+            call("qa-cancel").await;
+            ms(start, Instant::now())
+        });
+        tokio::time::sleep(Duration::from_secs(1)).await;
+        let behind = tokio::spawn(async move {
+            call("qa-cancel").await;
+            ms(start, Instant::now())
+        });
+        tokio::time::sleep(Duration::from_secs(1)).await;
+        // The first waiter is next and sleeps until 4 s; cancel it halfway.
+        sleeper.abort();
+        assert!(sleeper.await.unwrap_err().is_cancelled());
+        assert_eq!(behind.await.unwrap(), 4000, "the one behind takes the freed turn on time");
+        call("qa-cancel").await;
+        assert_eq!(ms(start, Instant::now()), 8000);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn an_open_and_a_try_again_go_out_next_while_a_strip_waits() {
+        // A strip queues 28 pages, each given two tries of PAGE_WAIT as the reader does.
+        let start = Instant::now();
+        let sent = Arc::new(Mutex::new(Vec::new()));
+        let strip = burst("qa-strip", 28, true, PAGE_WAIT * 2, start, &sent);
+        tokio::time::sleep(Duration::from_secs(1)).await;
+        // Opening the next chapter is a plugin call: it goes at the next turn, 4 s, not
+        // after the strip.
+        tokio::time::timeout(PAGE_WAIT, call("qa-strip")).await.expect("the open went out");
+        assert_eq!(ms(start, Instant::now()), 4000);
+        tokio::time::sleep_until(start + Duration::from_secs(9)).await;
+        tokio::time::timeout(PAGE_WAIT, call("qa-strip")).await.expect("a Try again went out");
+        assert_eq!(ms(start, Instant::now()), 12_000);
+        for task in strip {
+            task.await.unwrap();
+        }
+        let went = std::mem::take(&mut *sent.lock().unwrap());
+        assert_eq!(went, [0, 8000, 16_000, 20_000, 24_000, 28_000], "pages between them");
+        // The pages that gave up held nothing: a page's Try again goes out at once.
+        tokio::time::sleep_until(start + Duration::from_secs(40)).await;
+        tokio::time::timeout(PAGE_WAIT, page("qa-strip")).await.expect("the page went out");
+        assert_eq!(ms(start, Instant::now()), 40_000);
     }
 }
 
