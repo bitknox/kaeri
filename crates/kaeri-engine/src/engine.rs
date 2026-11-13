@@ -4822,6 +4822,78 @@ mod tests {
             engine.shutdown().await;
         }
 
+        /// R7E-4. A send of a downloaded chapter from a book server's series no catalogue lists
+        /// (Komga, Kavita or OPDS alike) names its file and its ComicInfo Title and Series by
+        /// the series' own name, and one with no name at all as an untitled series; never by
+        /// the work's id.
+        #[tokio::test]
+        async fn a_send_of_a_series_no_catalogue_lists_is_named_by_its_source() {
+            let dir = tempfile::tempdir().unwrap();
+            let store = kaeri_store::Store::open_in_memory().unwrap();
+            let now = kaeri_store::now();
+            let works = [
+                ("l:m:4b1c2d3e", "srv-komga", Some("The Paper Lantern")),
+                ("l:m:5c2d3e4f", "srv-kavita", Some("Harbour Signal Club")),
+                ("l:m:6d3e4f5a", "srv-opds", Some("A Ferry at Dawn")),
+                ("l:m:7e4f5a6b", "srv-opds", None),
+            ];
+            for (n, (work, source, title)) in works.iter().enumerate() {
+                if let Some(title) = title {
+                    store.name_local_work(work, "manga", title, None, now).unwrap();
+                }
+                let series = format!("s-{n}");
+                store.set_book_match(source, &series, work, 100, true, false, 1).unwrap();
+                let path = dir.path().join(format!("kept-{n}.cbz"));
+                comic_file(&path, 2);
+                let ask = kaeri_store::book_downloads::BookDownloadAsk {
+                    work,
+                    chapter: "1",
+                    source_id: source,
+                    version_label: None,
+                    keep_ready: false,
+                };
+                store.queue_book_download(&ask, now).unwrap();
+                let id = store.book_downloads(Some(work)).unwrap()[0].id;
+                let kept = path.display().to_string();
+                store.book_download_done(id, &kept, Some(2), 10, now).unwrap();
+            }
+            let (engine, mut events, _, _) = launch_engine(dir.path(), Some(store)).await;
+            events.launch().await;
+            engine.send(network(false, true));
+
+            for (work, _, title) in works {
+                let name = title.unwrap_or("Untitled series");
+                engine.send(Command::Reading(ReadingCommand::Prepare {
+                    work: WorkId::new(work),
+                    pick: DownloadPick::Chapters { ids: vec![ChapterId::new("1")] },
+                    target: "kobo".into(),
+                    format: kaeri_model::reading::ExportFormat::Cbz,
+                }));
+                let seen = seen_until(&mut events, send_ended).await;
+                let files = seen.iter().find_map(|e| match e {
+                    Event::Reading(ReadingEvent::ExportReady { files, .. }) => {
+                        Some(files.clone())
+                    }
+                    _ => None,
+                });
+                let files = files.unwrap_or_else(|| panic!("{work} was not sent: {seen:?}"));
+                let id = work.trim_start_matches("l:m:");
+                assert!(files[0].name.starts_with(name), "{files:?}");
+                assert!(!files[0].name.contains(id), "{files:?}");
+                let book = kaeri_books::open(
+                    std::path::Path::new(&files[0].path),
+                    &kaeri_books::Limits::default(),
+                )
+                .unwrap();
+                let kaeri_books::Book::Comic(comic) = book else { panic!("not a comic") };
+                let info = comic.info().unwrap_or_else(|| panic!("no ComicInfo for {work}"));
+                assert_eq!(info.series.as_deref(), Some(name), "{work}");
+                let title = info.title.clone().unwrap_or_default();
+                assert!(title.starts_with(name) && !title.contains(id), "{title}");
+            }
+            engine.shutdown().await;
+        }
+
         #[tokio::test]
         async fn a_send_waiting_for_wifi_is_cancelled_and_leaves_nothing() {
             let dir = tempfile::tempdir().unwrap();
