@@ -47,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.heading
@@ -161,7 +162,7 @@ internal fun DemoHomeSpotlight(actions: AppActions, modifier: Modifier = Modifie
     val navigator = LocalNavigator.current
     val comic = readingDemo.comic ?: return
     val work = comic.workId
-    val wide = LocalContext.current.resources.configuration.screenWidthDp >= 700
+    val wide = LocalConfiguration.current.screenWidthDp >= 700
     val key = work?.let { readerCoverKey("spotlight", it) }
     BoxWithConstraints(
         modifier
@@ -353,7 +354,7 @@ internal fun DemoSeriesBody(series: SeriesView, demo: DemoWorkInfo, actions: App
 internal fun DemoSeriesScreen(series: SeriesView, demo: DemoWorkInfo, actions: AppActions) {
     val context = LocalContext.current
     val navigator = LocalNavigator.current
-    val wide = LocalContext.current.resources.configuration.screenWidthDp >= 700
+    val wide = LocalConfiguration.current.screenWidthDp >= 700
     Scaffold(
         // The page grows out of the tile it was opened from and shrinks back into it, as a show's does.
         modifier = Modifier.fillMaxSize().sharedWork(Shared.Page, series.work, ground = MaterialTheme.colorScheme.surface),

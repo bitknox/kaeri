@@ -489,9 +489,10 @@ private fun AppRootFrame(
             if (drivenTv != null && store.party.view.value == null) tvChoice = target else navigator.open(LOBBY_ROUTE)
         }
         tvChoice?.let { target ->
+            val tvCard by store.tv.card.collectAsStateWithLifecycle()
             PartyTvChoiceSheet(
                 target,
-                tvName = store.tv.card.value?.card?.tvName.orEmpty(),
+                tvName = tvCard?.card?.tvName.orEmpty(),
                 onTv = {
                     store.tv.send(app.kaeri.engine.ffi.FfiTvCommand.PartyJoin(target.server, target.room))
                     store.closePartyLobby()
