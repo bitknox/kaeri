@@ -4694,6 +4694,8 @@ mod plate_tests {
 
 #[cfg(test)]
 mod page_name_tests {
+    use adw::prelude::*;
+
     use crate::gtk_test::run;
 
     /// Orca hears the page by its place and its keys, the stand-ins for the page's actions.

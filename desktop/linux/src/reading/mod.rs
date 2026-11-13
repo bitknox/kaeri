@@ -616,10 +616,7 @@ mod label_tests {
 
 #[cfg(test)]
 mod grid_tests {
-    use std::{
-        cell::RefCell,
-        rc::{Rc, Weak},
-    };
+    use std::{cell::RefCell, rc::Rc, sync::Weak};
 
     use adw::prelude::*;
     use gtk::{gio, glib};
