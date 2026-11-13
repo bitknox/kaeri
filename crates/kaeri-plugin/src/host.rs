@@ -393,7 +393,16 @@ fn qa_rank(gate: &QaGate, (page, ticket): (bool, u64), keys: &[String]) -> (bool
 /// QA ONLY, never merged: the turns a request to `url` takes, sorted.
 #[cfg(feature = "fetch")]
 fn qa_keys(gate: &QaGate, plugin: Option<&str>, url: &str) -> Vec<String> {
-    let mut keys: Vec<String> = plugin.into_iter().map(str::to_owned).collect();
+    let mut keys: Vec<String> = match plugin {
+        Some(plugin) => vec![plugin.to_owned()],
+        // Kaeri's own request (artwork): its host's turn as well, as the r6 art gate had. Not
+        // for a loopback or private host, which is no third party.
+        None => sandbox::host_of(url)
+            .filter(|host| sandbox::is_allowed(url, std::slice::from_ref(host)))
+            .map(|host| format!("art:{host}"))
+            .into_iter()
+            .collect(),
+    };
     keys.extend(
         gate.hosts
             .iter()
@@ -451,8 +460,8 @@ impl Drop for QaSending {
 
 /// QA ONLY, never merged: waits until this request's turns are free, first in their queues
 /// and `gap` past their last finished request, then holds them until the returned
-/// [`QaSending`] is dropped. `None` when the request is no source's (no plugin, and no
-/// plugin's allowed-hosts cover its host). Plugin calls go ahead of page images, so an open
+/// [`QaSending`] is dropped. `None` for Kaeri's own request to a loopback or private host
+/// no source declared. Plugin calls go ahead of page images, so an open
 /// or a Try again is next whatever a strip has queued. A waiter dropped or cancelled while it
 /// waits gives up its place and records nothing.
 #[cfg(feature = "fetch")]
@@ -532,14 +541,25 @@ pub async fn qa_gate(
 }
 
 /// QA ONLY, never merged: [`qa_gate`] for a request Kaeri makes itself (artwork), with the
-/// gap from KAERI_QA_GATE_MS.
+/// gap from KAERI_QA_GATE_MS. It replaces the r6 iPad hunt's `qa_art_gate`, whose turn was
+/// the host alone, so a cover from a source's host could go out right beside a plugin call.
 #[cfg(feature = "fetch")]
 pub async fn qa_gate_url(url: &str) -> Option<QaSending> {
     qa_gate(None, url, qa_gap(), true).await
 }
 
+/// QA ONLY, never merged: whether the QA net rule (KAERI_QA_NET) says "offline", for
+/// Kaeri's own requests.
+#[cfg(feature = "fetch")]
+pub fn qa_offline() -> bool {
+    qa_path("KAERI_QA_NET", "qa-net").is_ok_and(|path| {
+        std::fs::read_to_string(path).unwrap_or_default().trim_start().starts_with("offline")
+    })
+}
+
 /// QA ONLY, never merged: a line in the QA fetch log (KAERI_QA_FETCH_LOG), written just
-/// before a request goes out: epoch ms, who asked, the host.
+/// before a request goes out: epoch ms, who asked, the host, and the path's last part (at
+/// most 24 characters) so page images show their number.
 #[cfg(feature = "fetch")]
 pub fn qa_log(who: &str, url: &str) {
     use std::io::Write as _;
@@ -549,7 +569,10 @@ pub fn qa_log(who: &str, url: &str) {
         .map(|d| d.as_millis())
         .unwrap_or(0);
     if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
-        let _ = writeln!(f, "{ms} {who} {}", url.split('/').nth(2).unwrap_or("-"));
+        let tail = url.split(['?', '#']).next().unwrap_or("").rsplit('/').next().unwrap_or("-");
+        let tail: String =
+            tail.chars().rev().take(24).collect::<Vec<_>>().into_iter().rev().collect();
+        let _ = writeln!(f, "{ms} {who} {} {tail}", url.split('/').nth(2).unwrap_or("-"));
     }
 }
 
@@ -662,11 +685,11 @@ mod qa_gate_tests {
                 .await;
         assert_eq!(ms(start, Instant::now()), 8000);
         drop(other);
-        assert!(
-            super::qa_gate(None, "https://elsewhere.example/e", GAP, true).await.is_none(),
-            "Kaeri's requests to hosts no source declared are not gated"
-        );
-        assert_eq!(ms(start, Instant::now()), 8000);
+        // Artwork from a host no source declared paces by its host alone.
+        drop(super::qa_gate(None, "https://elsewhere.example/e", GAP, true).await);
+        assert_eq!(ms(start, Instant::now()), 8000, "another host waits for none");
+        drop(super::qa_gate(None, "https://elsewhere.example/f", GAP, true).await);
+        assert_eq!(ms(start, Instant::now()), 12_000, "the same host waits its gap");
     }
 
     #[tokio::test(start_paused = true)]

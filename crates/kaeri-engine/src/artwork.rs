@@ -314,15 +314,17 @@ async fn write_cached(path: &PathBuf, bytes: &[u8]) {
 }
 
 async fn download(http: &HttpClient, url: &str) -> Result<Vec<u8>, Failure> {
-    // QA ONLY, never merged: artwork from a host a source declared waits in the QA gate, hop by
-    // hop, so the client that follows no redirects and the hops followed here.
+    // QA ONLY, never merged: artwork waits in the QA gate, hop by hop, so the client that
+    // follows no redirects and the hops followed here. From a host a source declared it takes
+    // that source's turn too. The net rule's "offline" fails it, as the r6 art gate did.
     let mut at = url.to_owned();
     let mut hops = 0;
     let response = loop {
         let turn = kaeri_plugin::host::qa_gate_url(&at).await;
-        if turn.is_some() {
-            kaeri_plugin::host::qa_log("artwork", &at);
+        if kaeri_plugin::host::qa_offline() {
+            return Err(Failure::Offline);
         }
+        kaeri_plugin::host::qa_log("art", &at);
         let sent = http.sources().get(&at).send().await;
         drop(turn);
         let response = sent.map_err(|e| {
