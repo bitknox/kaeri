@@ -240,18 +240,21 @@ final class ReaderStuckTests: XCTestCase {
         let marks = try XCTUnwrap(env["KAERI_TEST_MARKS"].map { URL(filePath: $0) }, "needs the script's hand")
         let app = launch("readerstrip")
         Thread.sleep(forTimeInterval: 3)
-        let images = app.images.matching(NSPredicate(format: "label BEGINSWITH 'Page '"))
-        let width = { images.allElementsBoundByIndex.first(where: \.isHittable)?.frame.width ?? 0 }
-        let fitted = width()
-        XCTAssertGreaterThan(fitted, 0, "no image on screen")
+        // The Fixtures app says the strip's zoom on an element of its own: the images are none.
+        let probe = app.descendants(matching: .any)["strip-zoom"]
+        XCTAssertTrue(probe.waitForExistence(timeout: 10), "no strip zoom from the Fixtures app")
+        let zoom = { Double(probe.value as? String ?? "") ?? 0 }
+        XCTAssertEqual(zoom(), 1, accuracy: 0.01, "the strip did not open fitted")
         try "go".write(to: marks.appending(path: "pinching"), atomically: true, encoding: .utf8)
-        try XCTUnwrap(images.allElementsBoundByIndex.first(where: \.isHittable), "no image to pinch")
-            .pinch(withScale: 2.5, velocity: 0.15)
+        app.pinch(withScale: 2.5, velocity: 0.15)
         app.activate()
         XCTAssertTrue(app.wait(for: .runningForeground, timeout: 10))
         Thread.sleep(forTimeInterval: 1)
+        let left = zoom()
+        try? "\(left)".write(to: marks.appending(path: "strip-zoom-left.txt"), atomically: true, encoding: .utf8)
+        XCTAssertGreaterThan(left, 1.05, "the cut-off pinch left no zoom to fit")
         key(app, "0", .command)
         Thread.sleep(forTimeInterval: 1)
-        XCTAssertEqual(width(), fitted, accuracy: 2, "Command-0 left the strip magnified")
+        XCTAssertEqual(zoom(), 1, accuracy: 0.01, "Command-0 left the strip magnified")
     }
 }

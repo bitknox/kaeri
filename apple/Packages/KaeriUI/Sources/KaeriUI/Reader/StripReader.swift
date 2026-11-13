@@ -269,6 +269,9 @@ struct StripReader: View {
             self.phase = phase
             if phase == .interacting { restoring = false; model.hideChrome() }
         }
+        #if FIXTURES
+        .overlay(alignment: .topLeading) { StripZoomProbe(zoom: zoom * pinch) }
+        #endif
         #if os(iOS)
         .scaleEffect(pinch, anchor: UnitPoint(x: pinchAt.x / max(size.width, 1), y: pinchAt.y / max(size.height, 1)))
         .simultaneousGesture(
@@ -686,6 +689,22 @@ private final class Ahead {
 }
 
 /// One image of the strip: the plate holds its place until the image has faded in over it.
+#if FIXTURES
+/// The strip's zoom for the Audit tests, in the Fixtures app only: the strip's images are no
+/// elements of their own to a screen reader, so nothing else tells a test how wide they are.
+private struct StripZoomProbe: View {
+    let zoom: CGFloat
+
+    var body: some View {
+        Color.clear
+            .frame(width: 1, height: 1)
+            .accessibilityElement()
+            .accessibilityIdentifier("strip-zoom")
+            .accessibilityValue(String(format: "%.2f", zoom))
+    }
+}
+#endif
+
 private struct StripImage: View {
     let model: ReaderModel
     let chapter: String
