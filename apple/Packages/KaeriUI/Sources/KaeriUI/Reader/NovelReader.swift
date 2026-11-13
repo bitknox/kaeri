@@ -308,7 +308,7 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
         NSAnimationContext.runAnimationGroup { context in
             context.duration = duration
             context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-            webView.animator().alphaValue = alpha
+            self.webView.animator().alphaValue = alpha
         }
     }
     #endif

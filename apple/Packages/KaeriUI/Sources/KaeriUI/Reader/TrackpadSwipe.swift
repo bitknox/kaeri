@@ -7,7 +7,7 @@ import Foundation
 
 /// The scroll events of one gesture, as a drag. Cross-platform, so its tests run anywhere.
 struct SwipeScroll {
-    enum Phase: Equatable { case began, changed, ended, cancelled, none }
+    enum Phase: Equatable { case began, changed, ended, cancelled, wheel }
 
     enum Out: Equatable {
         /// Not a sideways swipe: the event goes on to whatever else scrolls.
@@ -39,7 +39,7 @@ struct SwipeScroll {
     mutating func feed(phase: Phase, momentum: Bool, dx: CGFloat, dy: CGFloat, at: TimeInterval) -> Out {
         if momentum { return swiped ? .take : .pass }
         switch phase {
-        case .none:
+        case .wheel:
             // A mouse wheel: no gesture, a notch at a time.
             guard abs(dx) > abs(dy), dx != 0 else { return .pass }
             return .step(dx)
@@ -58,7 +58,7 @@ struct SwipeScroll {
             swiped = true
             let window = recent.filter { at - $0.at < 0.1 }
             let span = (window.last?.at ?? at) - (window.first?.at ?? at)
-            let speed = span > 0 ? window.dropFirst().map(\.dx).reduce(0, +) / CGFloat(span) : 0
+            let speed = span > 0 ? window.dropFirst().reduce(0) { $0 + $1.dx } / CGFloat(span) : 0
             return .letGo(phase == .cancelled ? 0 : x, velocity: phase == .cancelled ? 0 : speed)
         }
     }
@@ -133,7 +133,7 @@ extension TrackpadSwipe.Coordinator {
         case .changed, .stationary: .changed
         case .ended: .ended
         case .cancelled: .cancelled
-        default: .none
+        default: .wheel
         }
         let momentum = !event.momentumPhase.isEmpty
         let inside = view.bounds.contains(view.convert(event.locationInWindow, from: nil))
@@ -144,7 +144,7 @@ extension TrackpadSwipe.Coordinator {
         }
         // The momentum after a swipe is the swipe's; a wheel's notch counts only over the page;
         // the rest of a gesture only if it began there.
-        if !momentum, phase == .none ? !(active && inside) : !tracking { return false }
+        if !momentum, phase == .wheel ? !(active && inside) : !tracking { return false }
         // The fingers' way: with natural scrolling the deltas follow them, otherwise they run
         // against them. A wheel's deltas are the page's way, as the system scrolls it.
         let flip: CGFloat = !event.hasPreciseScrollingDeltas || event.isDirectionInvertedFromDevice ? 1 : -1

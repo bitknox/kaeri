@@ -37,7 +37,7 @@ struct SwipeScrollTests {
         var swipe = SwipeScroll()
         _ = moves(&swipe, steps: 6, dx: 10)
         _ = swipe.feed(phase: .ended, momentum: false, dx: 0, dy: 0, at: 0.1)
-        #expect(swipe.feed(phase: .none, momentum: true, dx: 8, dy: 0, at: 0.12) == .take)
+        #expect(swipe.feed(phase: .wheel, momentum: true, dx: 8, dy: 0, at: 0.12) == .take)
     }
 
     @Test func upAndDownIsNotThePages() {
@@ -45,7 +45,7 @@ struct SwipeScrollTests {
         let out = moves(&swipe, steps: 6, dx: 1, dy: -10)
         #expect(out.last == .pass)
         #expect(swipe.feed(phase: .ended, momentum: false, dx: 0, dy: 0, at: 0.1) == .pass)
-        #expect(swipe.feed(phase: .none, momentum: true, dx: 0, dy: -8, at: 0.12) == .pass)
+        #expect(swipe.feed(phase: .wheel, momentum: true, dx: 0, dy: -8, at: 0.12) == .pass)
     }
 
     @Test func aSmallMoveWaitsForAWay() {
@@ -62,7 +62,7 @@ struct SwipeScrollTests {
 
     @Test func aWheelsNotchSidewaysIsAStep() {
         var swipe = SwipeScroll()
-        #expect(swipe.feed(phase: .none, momentum: false, dx: -3, dy: 0, at: 0) == .step(-3))
-        #expect(swipe.feed(phase: .none, momentum: false, dx: 0, dy: -3, at: 0.1) == .pass)
+        #expect(swipe.feed(phase: .wheel, momentum: false, dx: -3, dy: 0, at: 0) == .step(-3))
+        #expect(swipe.feed(phase: .wheel, momentum: false, dx: 0, dy: -3, at: 0.1) == .pass)
     }
 }
