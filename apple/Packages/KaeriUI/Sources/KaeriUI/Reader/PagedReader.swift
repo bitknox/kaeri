@@ -505,7 +505,7 @@ struct ReaderEndPage: View {
     private func column(_ next: ChapterRow?, phone: Bool) -> some View {
         let chapter = view?.chapter
         VStack(alignment: .leading, spacing: 0) {
-            Text(L.readerEndOfChapterNumber(chapter: chapter.map { $0.number ?? $0.label } ?? ""))
+            Text(Self.ending(chapter))
                 .font(.ui(15)).foregroundStyle(theme.haze)
             Text(readLine).font(.ui(13)).foregroundStyle(theme.haze)
                 .padding(.top, 4)
@@ -674,6 +674,15 @@ struct ReaderEndPage: View {
 
     /// The chapter the heading names: the next one listed, which offline is one only a source
     /// has; past the last one listed, the next whole number.
+    /// The end page's top line: "End of chapter 12", or the chapter's own name when it has no
+    /// number, as a book in one file has the book's title: "End of Snow Station Letters".
+    static func ending(_ chapter: ChapterRow?) -> String {
+        if let number = chapter?.number { return L.readerEndOfChapterNumber(chapter: number) }
+        let label = chapter?.label ?? ""
+        if ReadFromSheet.isNumber(label) { return L.readerEndOfChapterNumber(chapter: label) }
+        return L.readerEndOfNamed(name: label)
+    }
+
     static func following(_ view: ReaderView?) -> String {
         if let next = view?.next { return ReaderChrome.chapterName(next.label) }
         guard let number = view?.chapter.number.flatMap(Double.init) else { return "" }
