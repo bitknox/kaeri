@@ -21,14 +21,14 @@ struct StripFitTests {
 
     @Test func fitAsksTheStripToUndoItsZoom() {
         let model = model(.strip)
-        ReaderScreen.zoom(model, 0)
+        ReaderActions.zoom(model, 0)
         #expect(model.stripFitAsked == 1)
     }
 
     @Test func zoomingInOrOutLeavesThePinchAlone() {
         let model = model(.strip)
-        ReaderScreen.zoom(model, 1)
-        ReaderScreen.zoom(model, -1)
+        ReaderActions.zoom(model, 1)
+        ReaderActions.zoom(model, -1)
         #expect(model.stripFitAsked == 0)
     }
 }

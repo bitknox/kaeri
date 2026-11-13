@@ -65,6 +65,26 @@ enum SendWords {
         return L.sendChaptersRange(first: label(first), last: label(last))
     }
 
+    /// The chapters a send's row names: "Chapter 23", a chapter's own name when it has no number,
+    /// or "Chapters 21 to 23". Nil while the chapters aren't known.
+    @MainActor
+    static func rowChapters(_ rows: [ChapterRow]) -> String? {
+        guard let first = rows.first, let last = rows.last else { return nil }
+        if rows.count == 1 { return first.number.map { L.seriesChapterNumber(n: $0) } ?? first.label }
+        return L.sendRowChapters(first: label(first), last: label(last))
+    }
+
+    /// A send's row under Sending to: the series and the chapters, as much of them as is known.
+    @MainActor
+    static func rowLine(title: String?, chapters: String?) -> String? {
+        switch (title, chapters) {
+        case let (title?, chapters?): L.sendRowLine(title: title, chapters: chapters)
+        case let (title?, nil): title
+        case let (nil, chapters?): chapters
+        case (nil, nil): nil
+        }
+    }
+
     /// What the files will take, from what is on this device: the downloaded chapters' share of
     /// the series' bytes, and what the engine will fetch for the rest. A guess until they are made.
     @MainActor
@@ -118,9 +138,14 @@ struct SendSheet: View {
     private var novel: Bool { store.reading.series[request.work]?.medium == .novel }
     private var targets: [ExportTarget] { store.reading.sending.targets }
     private var target: ExportTarget? {
-        targets.first { $0.id == chosen } ?? store.reading.sending.defaultTarget
+        targets.first { $0.id == (chosen ?? send?.target) } ?? store.reading.sending.defaultTarget
     }
-    private var send: EReaderSend? { sendId.flatMap { store.reading.sending.send($0) } }
+    /// This sheet's send, or one already under way for the same chapters, from an earlier
+    /// opening: the sheet shows it and never starts a second.
+    private var send: EReaderSend? {
+        sendId.flatMap { store.reading.sending.send($0) }
+            ?? store.reading.sending.running(work: request.work, chapters: ids)
+    }
 
     /// The board's three e-readers; every other screen the engine knows sits under Other e-reader.
     private static let listed = ["kobo", "kindle"]
@@ -164,6 +189,10 @@ struct SendSheet: View {
             }
         }
         .task {
+            if sendId == nil, let under = store.reading.sending.running(work: request.work, chapters: ids) {
+                sendId = under.id
+                chosen = under.target
+            }
             store.reading.sending.loadTargets()
             if store.reading.chapters[request.work] == nil { store.reading.loadChapters(request.work) }
             await stageIfAsked()
@@ -411,7 +440,8 @@ struct SendSheet: View {
 
     private func start() {
         guard let target else { return }
-        if let sendId { store.reading.sending.dismiss(sendId) }
+        // The same chapters under way for this e-reader are that send: begin hands it back.
+        if let sendId, store.reading.sending.send(sendId)?.isRunning != true { store.reading.sending.dismiss(sendId) }
         sendId = store.reading.sending.begin(work: request.work, chapters: ids, target: target, novel: novel)
     }
 
@@ -664,7 +694,8 @@ private struct SendStatusRow: View {
     }
 
     private var title: String? {
-        store.reading.series[send.work]?.titles.display
+        let chapters = SendWords.rowChapters(SendWords.rows(send.chapters, work: send.work, store))
+        return SendWords.rowLine(title: store.reading.series[send.work]?.titles.display, chapters: chapters)
     }
 }
 

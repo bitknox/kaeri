@@ -224,13 +224,20 @@ struct PadTitleToolbar: ToolbarContent {
     }
 }
 
-/// Sources' toolbar on iPad: check the stores for plugin updates.
+/// Sources' toolbar on iPad: check the stores for plugin updates, and Add a source with reading on.
 struct IPadProvidersToolbar: ToolbarContent {
     @Environment(AppStore.self) private var store
 
     var body: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
-            Button(L.settingsCheckUpdates) { store.loadStores() }
+        // As on the Mac: the stores' check with shows, Add a source with reading on, so a
+        // second book source can be added once the list has one.
+        if store.medium.answer != .read {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(L.settingsCheckUpdates) { store.loadStores() }
+            }
+        }
+        if store.medium.answer != .watch {
+            ToolbarItem(placement: .topBarTrailing) { BookSourcesToolbar() }
         }
     }
 }

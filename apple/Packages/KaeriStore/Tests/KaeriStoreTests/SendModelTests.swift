@@ -94,6 +94,30 @@ struct SendModelTests {
         #expect(shared == [["c3", "c4"]])
     }
 
+    /// The Send sheet opened again on the same chapters finds the send under way, and Prepare
+    /// there starts no second one. Other chapters, or the same ones once the first has ended,
+    /// are a send of their own.
+    @Test func theSameChaptersUnderWayAreOneSend() {
+        let model = SendModel()
+        var sent: [Command] = []
+        model.command = { sent.append($0) }
+        let prepares = { sent.filter { if case .reading(.prepare) = $0 { true } else { false } }.count }
+        let first = model.begin(work: "w", chapters: ["23"], target: kobo(), novel: false)
+        model.apply(.exportProgress(job: 9, done: 1, total: 25, chaptersDone: 0, chapters: 1))
+        #expect(model.running(work: "w", chapters: ["23"])?.id == first)
+
+        #expect(model.begin(work: "w", chapters: ["23"], target: kobo(), novel: false) == first)
+        #expect(model.sends.count == 1)
+        #expect(prepares() == 1)
+
+        #expect(model.running(work: "w", chapters: ["24"]) == nil)
+        #expect(model.running(work: "w", chapters: ["23"], target: "kindle") == nil)
+        model.apply(.exportFailed(job: 9, chapter: nil, failure: .offline))
+        #expect(model.running(work: "w", chapters: ["23"]) == nil)
+        #expect(model.begin(work: "w", chapters: ["23"], target: kobo(), novel: false) != first)
+        #expect(prepares() == 2)
+    }
+
     /// A send this screen asked for keeps the chapters it asked for.
     @Test func aSendAskedForKeepsItsOwnChapters() {
         let model = SendModel()
