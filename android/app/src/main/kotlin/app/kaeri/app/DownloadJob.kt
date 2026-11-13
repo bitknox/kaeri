@@ -89,6 +89,7 @@ internal class DownloadRun(
         show(notifier.starting())
         val session = DownloadSession()
         var grace: Job? = null
+        var cleared = false
         val end = {
             Log.i(KaeriApp.TAG, "downloads done, the job ends")
             finish()
@@ -111,7 +112,12 @@ internal class DownloadRun(
                 if (!queue.episodesLoaded) return@collect
                 session.saw(queue.rows).forEach(notifier::postFinished)
                 val live = LiveDownloads.of(service, queue.rows, queue.rates, session.finished)
-                val step = RunStep.of(live, chaptersBusy(queue.books), queue.chaptersLoaded)
+                val step = RunStep.of(live, chaptersBusy(queue.books), queue.chaptersLoaded, full = queue.books?.stoppedFull == true)
+                // Chapters move again (Retry, or another download): the no room notice is over.
+                if (queue.books?.stoppedFull == false && !cleared) {
+                    cleared = true
+                    notifier.clearFull()
+                }
                 if (step !is RunStep.Episodes || !step.grace) {
                     grace?.cancel()
                     grace = null
@@ -119,6 +125,11 @@ internal class DownloadRun(
                 when (step) {
                     RunStep.Wait -> {}
                     RunStep.End -> end()
+                    RunStep.Full -> {
+                        // The ongoing notification goes with the run; the one left can be swiped away.
+                        notifier.postFull()
+                        end()
+                    }
                     is RunStep.Chapters -> manager.notify(Downloads.NOTIFICATION, notifier.chapters(step.left))
                     is RunStep.Episodes -> {
                         // Paused, nothing runs; the notification stays a while for Resume, then goes.
@@ -152,6 +163,12 @@ internal sealed interface RunStep {
     /** Nothing is left: the run ends. */
     data object End : RunStep
 
+    /**
+     * The device is full: the engine stopped the chapters' queue, and what it still holds waits
+     * for Retry. The run ends and says so in a notification that can be swiped away.
+     */
+    data object Full : RunStep
+
     /** Chapters alone keep it, saying how many are left. */
     data class Chapters(val left: Int) : RunStep
 
@@ -161,13 +178,15 @@ internal sealed interface RunStep {
     companion object {
         /**
          * [live] is the episodes' notification, `null` with none left; [chapters] how many
-         * chapters wait or download, which counts only once [chaptersLoaded].
+         * chapters wait or download, which counts only once [chaptersLoaded]; [full] when the
+         * engine stopped the chapters' queue for a full device.
          */
-        fun of(live: LiveDownloads?, chapters: Int, chaptersLoaded: Boolean): RunStep = when {
+        fun of(live: LiveDownloads?, chapters: Int, chaptersLoaded: Boolean, full: Boolean = false): RunStep = when {
             live != null -> Episodes(live, grace = live.paused && chaptersLoaded && chapters == 0)
             chapters > 0 -> Chapters(chapters)
             // The engine says when the chapters are all done (Downloads finished).
             !chaptersLoaded -> Wait
+            full -> Full
             else -> End
         }
     }

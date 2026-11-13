@@ -101,6 +101,32 @@ class DownloadNotifier(private val context: Context, private val sdk: Int = Buil
         .addAction(0, context.getString(R.string.download_play), open(AppLink.Download(row.id)))
         .build()
 
+    /**
+     * Chapter downloads stopped because the device is full: "There's no room left on this
+     * device. Free some space and try again." It can be swiped away, and opens Downloads, where
+     * Retry is.
+     */
+    fun full(): Notification = NotificationCompat.Builder(context, CHANNEL)
+        .setSmallIcon(R.drawable.ic_launcher_monochrome)
+        .setColor(WATER)
+        .setContentTitle(context.getString(R.string.downloads_channel))
+        .setContentText(Strings.readingFailedDiskFull(context))
+        .setStyle(NotificationCompat.BigTextStyle().bigText(Strings.readingFailedDiskFull(context)))
+        .setCategory(NotificationCompat.CATEGORY_STATUS)
+        .setAutoCancel(true)
+        .setContentIntent(open(AppLink.Downloads))
+        .build()
+
+    /** Post the no room notification, which stays once the job's own goes. */
+    fun postFull() {
+        manager.notify(FULL_TAG, FINISHED_ID, full())
+    }
+
+    /** Take the no room notification away: the chapters move again. */
+    fun clearFull() {
+        manager.cancel(FULL_TAG, FINISHED_ID)
+    }
+
     /** Post [row]'s finished notification, which stays once the job's own goes. */
     fun postFinished(row: DownloadRow) {
         manager.notify(finishedTag(row.id), FINISHED_ID, finished(row))
@@ -143,6 +169,9 @@ class DownloadNotifier(private val context: Context, private val sdk: Int = Buil
         const val ACTION_CANCEL = "app.kaeri.action.DOWNLOADS_CANCEL"
 
         fun finishedTag(id: Long) = "download/$id"
+
+        /** The no room notification's tag, one at a time. */
+        const val FULL_TAG = "download/full"
 
         /** Download progress is water, as everywhere in the app. */
         private val WATER = ObiSilk.Water.toArgb()
