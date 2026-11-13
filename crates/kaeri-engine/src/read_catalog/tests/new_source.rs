@@ -417,3 +417,70 @@ async fn the_sources_screen_tells_the_engine_when_the_sources_change() {
         assert_eq!(told, Ok(true), "{about}");
     }
 }
+
+/// A folder picked again while it is already a source says so, so the dialog never takes it
+/// back out; one waiting out its removal's undo comes back as new; and a folder that can't be
+/// read answers as one, so the dialog leaves its scan.
+#[tokio::test]
+async fn a_folder_picked_again_says_it_is_already_a_source() {
+    use kaeri_model::{
+        book_sources::{BookSourceCommand, FolderRef},
+        came_in::{CameIn, FolderReport, NothingCameIn},
+    };
+
+    use crate::outbox::Envelope;
+
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(None, dir.path());
+    let shelf = dir.path().join("Shelf");
+    std::fs::create_dir_all(&shelf).unwrap();
+    let add = |path: &std::path::Path| BookSourceCommand::AddFolder {
+        folder: FolderRef { path: Some(path.display().to_string()), ..FolderRef::default() },
+    };
+    // The folder's answer, and whether it says the folder couldn't be read.
+    let answer = async |command: BookSourceCommand| -> (FolderReport, bool) {
+        let (tx, mut inbox) = Outbox::inbox();
+        crate::read_sources::command(&kit.sources, &kit.plugins, |_| None, command, NOW, &tx);
+        tokio::time::timeout(PATIENCE, async {
+            while let Some(envelope) = inbox.recv().await {
+                match envelope {
+                    Envelope::Event(Event::CameIn(
+                        CameIn::Folder(report)
+                        | CameIn::Empty(
+                            NothingCameIn::EmptyFolder { folder: report }
+                            | NothingCameIn::UnsupportedFiles { folder: report },
+                        ),
+                    )) => return (report, false),
+                    Envelope::Event(Event::CameIn(CameIn::Empty(
+                        NothingCameIn::FolderUnreadable { folder: report },
+                    ))) => return (report, true),
+                    _ => {}
+                }
+            }
+            panic!("the inbox closed before the folder's answer");
+        })
+        .await
+        .expect("the folder answers")
+    };
+
+    let (first, unreadable) = answer(add(&shelf)).await;
+    assert!(!first.already_added && !unreadable, "{first:?}");
+    let (again, _) = answer(add(&shelf)).await;
+    assert_eq!(again.id, first.id);
+    assert!(again.already_added, "picked again: {again:?}");
+
+    let (tx, _inbox) = Outbox::inbox();
+    let remove = BookSourceCommand::RemoveFolder { id: first.id.clone() };
+    crate::read_sources::command(&kit.sources, &kit.plugins, |_| None, remove, NOW, &tx);
+    let (back, _) = answer(add(&shelf)).await;
+    assert!(!back.already_added, "it had left the list: {back:?}");
+
+    let (gone, unreadable) = answer(add(&dir.path().join("Gone"))).await;
+    assert!(unreadable && !gone.already_added, "{gone:?}");
+
+    // A source that can no longer be read, picked again, says so and is still a source: the
+    // dialog's Choose another folder must not take it out.
+    std::fs::remove_dir_all(&shelf).unwrap();
+    let (lost, unreadable) = answer(add(&shelf)).await;
+    assert!(unreadable && lost.already_added, "{lost:?}");
+}

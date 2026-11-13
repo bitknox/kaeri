@@ -98,6 +98,10 @@ pub struct FolderReport {
     /// The files behind `unsupported` and `locked`, for Show files. At most 200.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub listed: Vec<String>,
+    /// The folder was already in Your sources when it was picked again. It was scanned again,
+    /// and it stays when the dialog closes: Cancel and Change never take it back out.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub already_added: bool,
 }
 
 impl FolderReport {

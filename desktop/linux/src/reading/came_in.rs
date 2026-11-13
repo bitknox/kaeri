@@ -838,6 +838,14 @@ impl Server {
                 if let Some(toast) = toast {
                     self.ctx.toast(&toast);
                 }
+            } else if let CameIn::Empty(why) = came
+                && is_server_answer(came)
+            {
+                // Keeping it failed (the key store or the database): say so, and let it be
+                // tried again, which asks the server afresh.
+                self.adding.set(false);
+                self.step.replace(Step::Failed(why.clone()));
+                self.draw();
             }
             return;
         }
@@ -881,12 +889,15 @@ impl Server {
         match step {
             Step::Found(found) | Step::Empty(found) => {
                 let all: Vec<String> = found.libraries.iter().map(|l| l.id.clone()).collect();
-                let ticked = self.ticked.borrow();
-                // Every library ticked asks for all of them, those made later too.
-                let libraries = if all.iter().all(|id| ticked.contains(id)) {
-                    Vec::new()
-                } else {
-                    all.into_iter().filter(|id| ticked.contains(id)).collect()
+                // Every library ticked asks for all of them, those made later too. The borrow
+                // ends here, before set_sensitive below can run handlers.
+                let libraries = {
+                    let ticked = self.ticked.borrow();
+                    if all.iter().all(|id| ticked.contains(id)) {
+                        Vec::new()
+                    } else {
+                        all.into_iter().filter(|id| ticked.contains(id)).collect()
+                    }
                 };
                 self.adding.set(true);
                 self.primary.set_sensitive(false);
@@ -1053,7 +1064,8 @@ impl Server {
             let list = widgets::boxed_list();
             for library in &found.libraries {
                 let check = gtk::CheckButton::new();
-                check.set_active(self.ticked.borrow().contains(&library.id));
+                let ticked = self.ticked.borrow().contains(&library.id);
+                check.set_active(ticked);
                 let row = adw::ActionRow::builder()
                     .title(glib::markup_escape_text(&library.name))
                     .subtitle(t::book_server_library_line(i64::from(
@@ -1217,7 +1229,14 @@ fn folder_dialog(ctx: &Rc<Ctx>, name: String, path: Option<String>, answer: Opti
         let weak = Rc::downgrade(&state);
         move |_| {
             let Some(state) = weak.upgrade() else { return };
-            match state.report.borrow().clone() {
+            // A local, so no borrow of the report is held while the dialog closes.
+            let report = state.report.borrow().clone();
+            match report {
+                // Already a source: nothing to add, and closing leaves it as it is.
+                Some((report, _)) if report.already_added => {
+                    state.kept.set(true);
+                    state.dialog.close();
+                }
                 Some((report, true)) => {
                     state.kept.set(true);
                     let skipped: u32 =
@@ -1339,6 +1358,12 @@ impl Folder {
                 &t::book_folder_unreadable(&report.name),
                 Some(&t::book_folder_unreadable_line()),
             ));
+        } else if report.already_added {
+            column.append(&note(
+                Mark::Info,
+                &t::book_folder_already(&report.name),
+                Some(&t::book_folder_already_line(i64::from(report.series))),
+            ));
         } else if found {
             column.append(&note(
                 Mark::Found,
@@ -1361,7 +1386,9 @@ impl Folder {
         if !unreadable {
             column.append(&widgets::haze(&t::book_folder_opens(), "caption"));
         }
-        self.primary.set_label(&if found {
+        self.primary.set_label(&if report.already_added && !unreadable {
+            t::action_done()
+        } else if found {
             t::book_folder_add()
         } else {
             t::book_folder_choose_other()
@@ -1371,11 +1398,14 @@ impl Folder {
         self.report.replace(Some((report, found)));
     }
 
-    /// Take the folder back out: nothing was meant to be added yet.
+    /// Take the folder back out: nothing was meant to be added yet. A folder that was already
+    /// a source stays; this dialog didn't add it.
     fn take_back(&self) {
-        if let Some((report, _)) = self.report.borrow().as_ref() {
-            send(&self.ctx.hub, BookSourceCommand::RemoveFolder { id: report.id.clone() });
-        }
+        let id = match self.report.borrow().as_ref() {
+            Some((report, _)) if !report.already_added => report.id.clone(),
+            _ => return,
+        };
+        send(&self.ctx.hub, BookSourceCommand::RemoveFolder { id });
     }
 
     fn another(&self) {

@@ -2103,6 +2103,12 @@ linux-reader-end-offline-body = You're offline. It opens here once you're connec
 # Hint under a page's error: turning the page goes on past it.
 linux-reader-page-failed-hint = Turn the page to go on without it.
 
+# Why a page failed: its file came in, but no image decoder on this system could show it.
+linux-reader-page-undecodable = The image came in, but it couldn't be shown.
+
+# Why a light novel's chapter stopped showing: the view that draws its text closed or failed to load it.
+linux-reader-novel-stopped = The view that shows the text stopped.
+
 # Line while a chapter opens, once its number is known.
 linux-reader-opening-number = Opening chapter { $chapter }
 
@@ -8909,6 +8915,9 @@ reader-image-plate = Image { $image }
 # Under a strip image's number after four seconds.
 reader-image-loading = Loading image { $image }
 
+# Under a strip image's number (Image 4) when it couldn't be loaded, above Try again.
+reader-image-failed = Couldn't load
+
 # Heading where a page could not be loaded.
 reader-page-failed = Couldn't load page { $page }
 
@@ -10689,6 +10698,9 @@ read-downloads-queued =
 # A series' line in Downloads when a chapter failed, with the reason.
 read-downloads-failed = { $chapter } couldn't download. { $reason }
 
+# Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows.
+read-download-not-started = The download didn't start. { $reason }
+
 # A series' line in Downloads: how many chapters are kept.
 read-downloads-kept =
     { $n ->
@@ -12394,6 +12406,16 @@ book-folder-empty-line =
 
 # Primary action after an empty folder.
 book-folder-choose-other = Choose another folder
+
+# Folder result title when the picked folder is already a source. It was scanned again.
+book-folder-already = { $folder } is already in your sources
+
+# Line under it: what the new scan found. Closing the sheet keeps the folder.
+book-folder-already-line =
+    { $series ->
+        [one] Kaeri looked through it again and found one series. It stays as it is.
+       *[other] Kaeri looked through it again and found { $series } series. It stays as it is.
+    }
 
 # Title when a folder could not be read: the look through it could not start, or stopped.
 book-folder-unreadable = Couldn't read { $folder }

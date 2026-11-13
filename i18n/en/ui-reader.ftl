@@ -18,6 +18,10 @@ reader-image-plate = Image { $image }
 # @max 30
 reader-image-loading = Loading image { $image }
 
+# Under a strip image's number (Image 4) when it couldn't be loaded, above Try again.
+# @max 30
+reader-image-failed = Couldn't load
+
 # Heading where a page could not be loaded.
 # @arg page: plain
 # @max 40

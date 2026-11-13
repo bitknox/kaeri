@@ -14,7 +14,7 @@ use kaeri_model::{
 use crate::{pages::Dest, reading::reader::Reader, window::Shell};
 
 /// Every reading shot, in the order a run takes them.
-pub const NAMES: [&str; 46] = [
+pub const NAMES: [&str; 49] = [
     "read",
     "read-updates",
     "read-library",
@@ -34,12 +34,16 @@ pub const NAMES: [&str; 46] = [
     "read-paged-single",
     "read-paged-width",
     "read-paged-settings",
+    // Tab after the chrome has gone brings it, with the focus on its first control.
+    "read-paged-tab",
     "read-end",
     "read-end-none",
     "read-end-plate",
     "read-end-skip",
     "read-plate",
     "read-open-failed",
+    // Try again on a chapter that couldn't open opens it again.
+    "read-open-again",
     "read-mode",
     "read-turn-a",
     "read-turn-b",
@@ -63,6 +67,8 @@ pub const NAMES: [&str; 46] = [
     "read-novel",
     "read-novel-light",
     "read-novel-paper",
+    // A novel read to its end page counts as read, and Continue opens the next chapter.
+    "read-novel-end",
     "read-send",
 ];
 
@@ -218,6 +224,11 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
             read(shell, MANGA, "13");
             4.0
         }
+        "read-paged-tab" => {
+            read(shell, MANGA, "13");
+            later(shell, 4500, |reader| reader.shot_tab());
+            6.0
+        }
         "read-paged-settings" => {
             read(shell, MANGA, "13");
             let reader = Rc::clone(&shell.reader);
@@ -256,6 +267,11 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
             4.0
         }
         // A chapter that could not open: a series no source has.
+        "read-open-again" => {
+            read(shell, MANGA, "999");
+            later(shell, 3000, |reader| reader.shot_try_again());
+            5.0
+        }
         "read-open-failed" => {
             read(shell, "a:900399", "1");
             4.0
@@ -336,6 +352,11 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
             let chrome = shot == "read-novel-notice";
             later(shell, 3000, move |reader| reader.shot_notice(chrome));
             4.5
+        }
+        "read-novel-end" => {
+            read(shell, NOVEL, "3");
+            later(shell, 3000, |reader| reader.shot_novel_end());
+            30.0
         }
         "read-novel" => {
             shell.reader.shot_setting(ReaderSettingKey::Look, "system");

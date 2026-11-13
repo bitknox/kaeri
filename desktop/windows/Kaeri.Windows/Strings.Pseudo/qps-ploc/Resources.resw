@@ -8210,6 +8210,10 @@
     <value>[Ļöàðîñĝ îɱàĝé {image}~~~~~~]</value>
     <comment>Under a strip image's number after four seconds.</comment>
   </data>
+  <data name="ReaderImageFailed" xml:space="preserve">
+    <value>[Çöüļðñ'ţ ļöàð~~~~]</value>
+    <comment>Under a strip image's number (Image 4) when it couldn't be loaded, above Try again.</comment>
+  </data>
   <data name="ReaderPageFailed" xml:space="preserve">
     <value>[Çöüļðñ'ţ ļöàð þàĝé {page}~~~~~~~]</value>
     <comment>Heading where a page could not be loaded.</comment>
@@ -10540,6 +10544,10 @@
     <value>[{chapter} çöüļðñ'ţ ðöŵñļöàð. {reason}~~~~~~~~]</value>
     <comment>A series' line in Downloads when a chapter failed, with the reason.</comment>
   </data>
+  <data name="ReadDownloadNotStarted" xml:space="preserve">
+    <value>[Ţĥé ðöŵñļöàð ðîðñ'ţ šţàŕţ. {reason}~~~~~~~~~]</value>
+    <comment>Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows.</comment>
+  </data>
   <data name="ReadDownloadsKept_one" xml:space="preserve">
     <value>[{n} çĥàþţéŕ~~~~]</value>
     <comment>A series' line in Downloads: how many chapters are kept.</comment>
@@ -12787,6 +12795,18 @@
   <data name="BookFolderChooseOther" xml:space="preserve">
     <value>[Çĥööšé àñöţĥéŕ ƒöļðéŕ~~~~~~~]</value>
     <comment>Primary action after an empty folder.</comment>
+  </data>
+  <data name="BookFolderAlready" xml:space="preserve">
+    <value>[{folder} îš àļŕéàðý îñ ýöüŕ šöüŕçéš~~~~~~~~~]</value>
+    <comment>Folder result title when the picked folder is already a source. It was scanned again.</comment>
+  </data>
+  <data name="BookFolderAlreadyLine_one" xml:space="preserve">
+    <value>[Ķàéŕî ļööķéð ţĥŕöüĝĥ îţ àĝàîñ àñð ƒöüñð öñé šéŕîéš. Îţ šţàýš àš îţ îš.~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under it: what the new scan found. Closing the sheet keeps the folder.</comment>
+  </data>
+  <data name="BookFolderAlreadyLine_other" xml:space="preserve">
+    <value>[Ķàéŕî ļööķéð ţĥŕöüĝĥ îţ àĝàîñ àñð ƒöüñð {series} šéŕîéš. Îţ šţàýš àš îţ îš.~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under it: what the new scan found. Closing the sheet keeps the folder.</comment>
   </data>
   <data name="BookFolderUnreadable" xml:space="preserve">
     <value>[Çöüļðñ'ţ ŕéàð {folder}~~~~~~]</value>

@@ -10,7 +10,7 @@
 //! says so and the reader shows that the chapter cannot open here.
 
 use std::{
-    cell::Cell,
+    cell::{Cell, RefCell},
     ffi::{CStr, CString, c_char, c_int, c_void},
     rc::Rc,
     sync::OnceLock,
@@ -234,6 +234,9 @@ pub struct NovelView {
     /// How the document loading now came: a turn past a document's edge, or a link the
     /// person followed. Anything else loaded is placed.
     ready_how: Cell<Option<TurnHow>>,
+    /// The last place the page reported, with its document's page count: the end page is
+    /// reported from it.
+    last: RefCell<Option<(NovelPos, u32)>>,
 }
 
 /// What the novel tells the reader around it.
@@ -244,6 +247,9 @@ pub enum NovelSays {
     Middle,
     /// Past the last page of the last document.
     End,
+    /// The page can't show the text any more: its web process stopped, or the document
+    /// failed to load.
+    Failed,
 }
 
 impl NovelView {
@@ -314,6 +320,7 @@ impl NovelView {
             spine: open.spine.iter().map(|i| (i.url.clone(), i.linear)).collect(),
             tell,
             ready_how: Cell::new(None),
+            last: RefCell::new(None),
         });
         let read = api.value_string;
         content.connect_local("script-message-received::kaeri", false, {
@@ -341,6 +348,24 @@ impl NovelView {
             Some(decide_policy(values).to_value())
         });
         view.connect_local("context-menu", false, |_| Some(true.to_value()));
+        // A web process that stops leaves a blank page that turns go to: the reader says the
+        // chapter couldn't show, with Try again. Told after the signal, on the main loop.
+        view.connect_local("web-process-terminated", false, {
+            let tell = Rc::downgrade(&this.tell);
+            move |_| {
+                failed_later(&tell);
+                None
+            }
+        });
+        view.connect_local("load-failed", false, {
+            let tell = Rc::downgrade(&this.tell);
+            move |values| {
+                if values.get(3).is_some_and(load_really_failed) {
+                    failed_later(&tell);
+                }
+                Some(false.to_value())
+            }
+        });
         let mut url = open.entry.clone();
         if let Some(at) = &open.restore
             && let Some(item) = open.spine.get(at.spine as usize)
@@ -450,6 +475,7 @@ impl NovelView {
                 if json["type"].as_str() == Some("ready") {
                     self.ready_how.set(None);
                 }
+                self.last.replace(Some((place.clone(), pages.max(1) as u32)));
                 (self.send)(ReaderCommand::NovelAt {
                     session: self.session,
                     chapter: self.chapter.clone(),
@@ -499,7 +525,13 @@ impl NovelView {
                         self.ready_how.set(Some(TurnHow::Turn));
                         self.load(&self.spine[next].0.clone());
                     }
-                    None => (self.tell)(NovelSays::End),
+                    None => {
+                        let last = self.last.borrow().clone();
+                        if let Some(end) = end_at(self.session, &self.chapter, last.as_ref()) {
+                            (self.send)(end);
+                        }
+                        (self.tell)(NovelSays::End);
+                    }
                 }
             }
             Some("start") => {
@@ -540,6 +572,35 @@ impl NovelView {
         let uri = unsafe { (api.uri_of_view)(self.view.as_ptr()) };
         (!uri.is_null()).then(|| unsafe { CStr::from_ptr(uri) }.to_string_lossy().into_owned())
     }
+}
+
+/// Tell the reader the page failed, once the signal that said so has returned.
+fn failed_later(tell: &std::rc::Weak<dyn Fn(NovelSays)>) {
+    let tell = tell.clone();
+    glib::idle_add_local_once(move || {
+        if let Some(tell) = tell.upgrade() {
+            tell(NovelSays::Failed);
+        }
+    });
+}
+
+/// WebKitNetworkError's code for a load cancelled by the next one, as a quick second turn does.
+const NETWORK_CANCELLED: i32 = 302;
+
+/// Whether `load-failed`'s error is a real failure: not a load the next one replaced, and not
+/// one the page's own policy stopped.
+fn load_really_failed(error: &glib::Value) -> bool {
+    let Ok(error) = error.get::<glib::Error>() else { return false };
+    let code = {
+        let raw: *const glib::ffi::GError = error.to_glib_none().0;
+        // SAFETY: the error is alive for the call and owns its GError.
+        unsafe { (*raw).code }
+    };
+    let domain = error.domain();
+    let policy = domain == glib::Quark::from_str("WebKitPolicyError");
+    let cancelled =
+        domain == glib::Quark::from_str("WebKitNetworkError") && code == NETWORK_CANCELLED;
+    !(policy || cancelled)
 }
 
 /// WebKitPolicyDecisionType's navigation and new-window actions, which both carry a URI.
@@ -583,6 +644,25 @@ fn is_navigation(kind: i32) -> bool {
     matches!(kind, NAVIGATION_ACTION | NEW_WINDOW_ACTION)
 }
 
+/// The end page as the engine hears it: the last place the page reported, at the page after
+/// its last. The engine reads the chapter at once there, as "After the last page" asks. None
+/// before the page has reported a place.
+fn end_at(
+    session: u64,
+    chapter: &ChapterId,
+    last: Option<&(NovelPos, u32)>,
+) -> Option<ReaderCommand> {
+    let (pos, pages) = last?;
+    Some(ReaderCommand::NovelAt {
+        session,
+        chapter: chapter.clone(),
+        pos: pos.clone(),
+        page: *pages,
+        pages: *pages,
+        how: TurnHow::Turn,
+    })
+}
+
 /// Whether a navigation stays inside the book: its own scheme or the blank page. A navigation
 /// whose URI can't be read leaves.
 fn stays_in_book(uri: Option<&str>) -> bool {
@@ -592,6 +672,21 @@ fn stays_in_book(uri: Option<&str>) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_end_page_is_the_page_after_the_last() {
+        let chapter = ChapterId::new("7");
+        assert!(end_at(3, &chapter, None).is_none(), "nothing reported yet");
+        let pos = NovelPos { spine: 4, path: vec![2], offset: 0 };
+        let Some(ReaderCommand::NovelAt { session, chapter: at, pos: place, page, pages, how }) =
+            end_at(3, &chapter, Some(&(pos.clone(), 12)))
+        else {
+            panic!("the end page is a place");
+        };
+        assert_eq!((session, at, place), (3, chapter, pos));
+        // The engine reads the chapter at once at page == pages.
+        assert_eq!((page, pages, how), (12, 12, TurnHow::Turn));
+    }
 
     #[test]
     fn only_the_book_and_the_blank_page_stay() {

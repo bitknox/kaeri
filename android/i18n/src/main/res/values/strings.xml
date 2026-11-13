@@ -4914,6 +4914,8 @@
     <string name="reader_image_plate">Image %1$d</string>
     <!-- Under a strip image's number after four seconds. -->
     <string name="reader_image_loading">Loading image %1$d</string>
+    <!-- Under a strip image's number (Image 4) when it couldn't be loaded, above Try again. -->
+    <string name="reader_image_failed">Couldn\'t load</string>
     <!-- Heading where a page could not be loaded. -->
     <string name="reader_page_failed">Couldn\'t load page %1$d</string>
     <!-- Button that loads a failed page again. -->
@@ -6123,6 +6125,8 @@
     </plurals>
     <!-- A series' line in Downloads when a chapter failed, with the reason. -->
     <string name="read_downloads_failed">%1$s couldn\'t download. %2$s</string>
+    <!-- Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows. -->
+    <string name="read_download_not_started">The download didn\'t start. %1$s</string>
     <!-- A series' line in Downloads: how many chapters are kept. -->
     <plurals name="read_downloads_kept">
         <item quantity="one">%1$,d chapter</item>
@@ -7267,6 +7271,13 @@
     </plurals>
     <!-- Primary action after an empty folder. -->
     <string name="book_folder_choose_other">Choose another folder</string>
+    <!-- Folder result title when the picked folder is already a source. It was scanned again. -->
+    <string name="book_folder_already">%1$s is already in your sources</string>
+    <!-- Line under it: what the new scan found. Closing the sheet keeps the folder. -->
+    <plurals name="book_folder_already_line">
+        <item quantity="one">Kaeri looked through it again and found one series. It stays as it is.</item>
+        <item quantity="other">Kaeri looked through it again and found %1$,d series. It stays as it is.</item>
+    </plurals>
     <!-- Title when a folder could not be read: the look through it could not start, or stopped. -->
     <string name="book_folder_unreadable">Couldn\'t read %1$s</string>
     <!-- Line under it. -->
