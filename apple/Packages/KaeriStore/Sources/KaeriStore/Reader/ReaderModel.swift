@@ -137,6 +137,9 @@ public final class ReaderModel {
     /// Counts the open chapter's layouts after its first, so the strip puts the place back even
     /// when it has not moved since the last restore.
     public private(set) var stripRelaid = 0
+    /// Counts the asks to fit the strip back to its column (Cmd-0), which also undo a pinch's zoom.
+    public private(set) var stripFitAsked = 0
+    public func fitStrip() { stripFitAsked &+= 1 }
     /// The chapters of the work, once the engine has listed them.
     public private(set) var chapters: [VolumeGroup] = []
     public private(set) var chaptersLoaded = false

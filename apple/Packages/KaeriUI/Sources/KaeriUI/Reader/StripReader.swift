@@ -323,6 +323,12 @@ struct StripReader: View {
             position.scrollTo(y: 0)
         }
         .onChange(of: next.flatMap { model.previews[$0.id] }?.path) { _, _ in keepLead() }
+        // Cmd-0: back to the column, at once, keeping the place in the middle of the screen.
+        .onChange(of: model.stripFitAsked) { _, _ in
+            pinching = false
+            guard zoom != 1 || pinch != 1 else { return }
+            settle(to: 1, at: CGPoint(x: size.width / 2, y: size.height / 2))
+        }
         .onChange(of: model.stripRestore) { _, at in
             guard at != nil else { return }
             restoring = true
