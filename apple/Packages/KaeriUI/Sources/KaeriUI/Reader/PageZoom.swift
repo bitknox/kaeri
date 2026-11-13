@@ -28,14 +28,22 @@ final class PageZoom {
 
     var zoomed: Bool { scale > 1.01 }
 
-    /// Back to fitted at once, as a page turn leaves it.
+    /// Back to fitted at once, as a page turn leaves it. A pinch under way is let go too.
     func reset() {
+        pinchFrom = nil
+        panFrom = nil
+        if pinching { pinching = false }
         guard zoomed || pan != .zero else { return }
         scale = 1
         pan = .zero
         detail = 1
-        pinchFrom = nil
-        panFrom = nil
+    }
+
+    /// The pinch gesture is over, ended or cancelled by the system: a cancelled one never calls
+    /// `pinchEnded`, so this settles it the same way and swipes turn again.
+    func pinchGone(in size: CGSize, motion: Bool) {
+        guard pinching || pinchFrom != nil else { return }
+        pinchEnded(in: size, motion: motion)
     }
 
     /// A pinch moved: the point it started on stays under the fingers.
@@ -88,6 +96,10 @@ final class PageZoom {
 
     /// A double tap: in at the point, or back to fitted.
     func doubleTap(at point: CGPoint, in size: CGSize, motion: Bool) {
+        // Two taps never come mid-pinch: a pinch still marked is one the system cancelled.
+        pinchFrom = nil
+        panFrom = nil
+        if pinching { pinching = false }
         withAnimation(motion ? .standard : nil) {
             if zoomed {
                 scale = 1

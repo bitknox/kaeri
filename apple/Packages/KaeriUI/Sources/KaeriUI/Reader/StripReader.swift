@@ -41,6 +41,8 @@ struct StripReader: View {
     @State private var pinch: CGFloat = 1
     @State private var pinchAt: CGPoint = .zero
     @State private var pinching = false
+    /// The pinch gesture is live. It goes back to false however the gesture stops, cancelled too.
+    @GestureState private var magnifying = false
     @State private var offsetX: CGFloat = 0
     @State private var contentHeight: CGFloat = 0
     /// The row at the top of the screen, where it sat and how far into it the screen's top was.
@@ -265,6 +267,7 @@ struct StripReader: View {
         )
         .simultaneousGesture(
             MagnifyGesture()
+                .updating($magnifying) { _, live, _ in live = true }
                 .onChanged { value in
                     if !pinching {
                         pinching = true
@@ -278,6 +281,12 @@ struct StripReader: View {
                     settle(to: zoom * pinch, at: pinchAt)
                 }
         )
+        // A pinch the system cancels never ends: settle it here so the strip scrolls and zooms again.
+        .onChange(of: magnifying) { _, live in
+            guard !live, pinching else { return }
+            pinching = false
+            settle(to: zoom * pinch, at: pinchAt)
+        }
         #else
         .simultaneousGesture(SpatialTapGesture().onEnded { _ in onTap() })
         #endif

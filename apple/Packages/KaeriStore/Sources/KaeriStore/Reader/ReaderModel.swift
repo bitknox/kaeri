@@ -114,7 +114,11 @@ public final class ReaderModel {
     /// person's own jump of more than two pages, counted from 1.
     public internal(set) var backToPage: Int?
     /// The reader is out of sight: the app is inactive or in the background. Notices wait.
-    public var away = false
+    /// A page kept as not a credit page goes to the engine as the reader leaves sight: the app
+    /// may be ended in the background before its Undo runs out.
+    public var away = false {
+        didSet { if away, !oldValue { commitKeep() } }
+    }
     /// VoiceOver rests on the notice, or the pointer is over it. It waits.
     public var noticeHeld = false
     private var noticesPaused: Bool { away || noticeHeld }
@@ -295,6 +299,8 @@ public final class ReaderModel {
     @ObservationIgnored private var ticks = 0
     @ObservationIgnored private var lastStrip: ContinuousClock.Instant?
     @ObservationIgnored private var pendingStrip: Task<Void, Never>?
+    /// The strip report `pendingStrip` will send.
+    @ObservationIgnored private var heldStrip: (@MainActor () -> Void)?
     /// Whether the last strip report had the chapter's foot in sight.
     @ObservationIgnored private var lastFoot = false
     @ObservationIgnored private var rereadAfterClose: Request?
@@ -320,8 +326,11 @@ public final class ReaderModel {
     @ObservationIgnored var keepTask: Task<Void, Never>?
     /// A kept page's chapter is laid out again with it: the pages after it move up one.
     @ObservationIgnored var relayKeep: CreditKeep?
-    /// Closed after the open was sent and before the engine said it opened.
-    @ObservationIgnored private var closedOpening = false
+    /// Books closed after their open was sent and before the engine said they opened, whose
+    /// close the engine has not answered yet.
+    @ObservationIgnored private var staleOpens = 0
+    /// The chapter asked for in the open book, until it opens.
+    @ObservationIgnored private var asked: ChapterId?
 
     public init() {
         focusPaper = Self.defaults.bool(forKey: Self.focusKey)
@@ -357,8 +366,14 @@ public final class ReaderModel {
     /// its size with `surfaceChanged`, and the engine hears of the open then.
     public func open(work: String, chapter: String? = nil, at: OpenAt = .resume) {
         let next = Request(work: work, chapter: chapter, at: at, tick: bump())
+        if session == 0, opened, phase == .opening {
+            // A book still opening is dropped, as a close would drop it.
+            staleOpens += 1
+            send?(.reader(.close(session: 0)))
+        }
         if session != 0 {
             // One at a time: the first closes, then this opens.
+            flushStrip()
             send?(.reader(.close(session: session)))
             rereadAfterClose = next
             reset()
@@ -372,7 +387,6 @@ public final class ReaderModel {
 
     private func begin(_ next: Request) {
         reset()
-        closedOpening = false
         request = next
         phase = .opening
         openedAt = .now
@@ -449,11 +463,15 @@ public final class ReaderModel {
         rereadAfterClose = nil
         guard request != nil || session != 0 else { return }
         commitKeep()
+        // A strip place held back by the pacing is the place shown at the close.
+        flushStrip()
         if session != 0 {
             send?(.reader(.close(session: session)))
-        } else if opened {
-            // Asked for, not opened yet: the session the engine opens is closed as it comes.
-            closedOpening = true
+        } else if opened, phase == .opening {
+            // Asked for, not opened yet: the engine drops the open still waiting, and a session
+            // it opened before hearing so is closed as it comes, whatever opens next.
+            staleOpens += 1
+            send?(.reader(.close(session: 0)))
         }
         onClosed?()
         reset()
@@ -469,7 +487,7 @@ public final class ReaderModel {
         if leaf != 0 { endCreditLine() }
         if how == .jump, leaf != current, view?.mode != .strip { ring = current }
         // A strip's scroll report from before the jump would read as a turn after it.
-        if how == .jump { pendingStrip?.cancel() }
+        if how == .jump { dropHeldStrip() }
         if leaf != current { heldPage = nil }
         current = leaf
         if how == .turn || how == .swipe || how == .key { hideChrome() }
@@ -484,9 +502,10 @@ public final class ReaderModel {
         // starts no read.
         let footVisible = footVisible && stripEndIn
         stripHere = at
-        pendingStrip?.cancel()
+        dropHeldStrip()
         let now = ContinuousClock.now
-        let send = { [weak self] in
+        let session = session
+        let send: @MainActor () -> Void = { [weak self] in
             guard let self else { return }
             lastStrip = .now
             lastFoot = footVisible
@@ -495,14 +514,29 @@ public final class ReaderModel {
         // The foot coming into sight goes at once: it starts the read rule, and the strip may
         // flow into the next chapter before a held report would go.
         if let lastStrip, now - lastStrip < .milliseconds(500), footVisible == lastFoot {
+            heldStrip = send
             pendingStrip = Task { [weak self] in
                 try? await Task.sleep(for: .milliseconds(500) - (now - lastStrip))
-                guard !Task.isCancelled, self != nil else { return }
-                send()
+                guard !Task.isCancelled, let self else { return }
+                flushStrip()
             }
         } else {
             send()
         }
+    }
+
+    /// The strip report the pacing holds back goes now: before the reader closes or leaves the
+    /// chapter, so the engine keeps the place shown last.
+    private func flushStrip() {
+        guard let send = heldStrip else { return }
+        dropHeldStrip()
+        send()
+    }
+
+    private func dropHeldStrip() {
+        pendingStrip?.cancel()
+        pendingStrip = nil
+        heldStrip = nil
     }
 
     /// The paginator turned a page.
@@ -522,6 +556,8 @@ public final class ReaderModel {
     public func openChapter(_ id: ChapterId, atEnd: Bool = false) {
         guard session != 0 else { return }
         commitKeep()
+        flushStrip()
+        asked = id
         openAtEnd = atEnd ? id : nil
         holdEnd(to: id)
         end = nil
@@ -555,6 +591,7 @@ public final class ReaderModel {
     private func flow(into next: ChapterRow, _ command: Command) {
         guard let view else { return }
         commitKeep()
+        flushStrip()
         let chapter = view.chapter.id
         let parts = leaves.filter { !$0.endPage }.flatMap(\.parts).map { part in
             var part = part
@@ -815,6 +852,12 @@ public final class ReaderModel {
             // Try again and Close, rather than wait on an open that will not come. A strip that
             // was flowing on keeps the chapter read open and says it on that chapter's end page,
             // whatever the reason: the reader is never replaced by the chapter it could not open.
+            // The answer to a book closed while it opened belongs to that book, not this one.
+            // With reading off, the close is answered with a failure rather than `closed`.
+            if staleOpens > 0 {
+                if case .readingOff = failure { staleOpens -= 1 }
+                return
+            }
             guard request != nil else { return }
             if flowing != nil, phase == .open {
                 flowFailed(failure)
@@ -822,6 +865,13 @@ public final class ReaderModel {
             }
             phase = .failed(failure)
             clearNotices()
+            // The failure names the chapter that would not open, not the one it was left from:
+            // the engine sends no `opened` for it.
+            if let id = asked ?? flowing, view?.chapter.id != id, let row = chapterRow(id) {
+                view?.chapter = row
+            }
+            // A held end page goes, so the failure and its buttons show and take taps.
+            settleHeld()
         case .reading(.chapters(let work, _, let volumes, _)):
             guard work == view?.work || request.map({ WorkId($0.work) }) == work else { return }
             chapters = volumes
@@ -833,12 +883,14 @@ public final class ReaderModel {
     func apply(_ event: ReaderEvent) {
         switch event {
         case .opened(let opened):
-            // Closed while it opened: the engine's session goes too.
-            if closedOpening {
-                closedOpening = false
+            // Closed while it opened: the engine's session goes too. The engine answers the
+            // close of the open before anything of a book asked for after it, so whatever opens
+            // until then is the closed book's.
+            if staleOpens > 0 {
                 send?(.reader(.close(session: opened.session)))
                 return
             }
+            asked = nil
             // A strip that flowed on keeps the chapters above; any other open starts clean.
             if flowing != opened.chapter.id || opened.mode != .strip {
                 trail = StripTrail()
@@ -1001,7 +1053,13 @@ public final class ReaderModel {
             guard session == self.session, chapter == view?.chapter.id else { return }
             self.parts = ReaderParts(parts: parts, total: total, missing: missing)
         case .closed(let session):
-            guard session == self.session || self.session == 0 else { return }
+            // Session 0 answers a close sent while a book opened: its answers have all come.
+            if session == 0 {
+                staleOpens = max(staleOpens - 1, 0)
+                return
+            }
+            // A close of a closed book's session that opened late changes nothing here.
+            guard session == self.session else { return }
             self.session = 0
             opened = false
             if let next = rereadAfterClose {
@@ -1158,7 +1216,8 @@ public final class ReaderModel {
     private func reset() {
         dropHeld()
         noticeTask?.cancel()
-        pendingStrip?.cancel()
+        dropHeldStrip()
+        asked = nil
         view = nil
         leaves = []
         pages = [:]
@@ -1204,6 +1263,14 @@ public final class ReaderModel {
     }
 
     // MARK: Derived
+
+    /// The row of a chapter of the open book: a neighbour the view or end page names, or one
+    /// from the listed chapters.
+    private func chapterRow(_ id: ChapterId) -> ChapterRow? {
+        let near = [view?.next, view?.previous, end?.next, end?.skipTo, held?.end?.next, held?.end?.skipTo]
+        if let row = near.lazy.compactMap({ $0 }).first(where: { $0.id == id }) { return row }
+        return chapters.lazy.flatMap(\.chapters).first { $0.id == id }
+    }
 
     /// The pages of the chapter, as the leaves count them.
     public var pageCount: Int {
