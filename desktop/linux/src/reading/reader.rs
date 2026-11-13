@@ -3416,6 +3416,30 @@ impl Reader {
     }
 
     fn controls(self: &Rc<Self>) {
+        // Tab and Shift+Tab before the page's content hears them: a novel's web view would keep
+        // them, walking its own document and the text view inside it.
+        let tabs = gtk::EventControllerKey::new();
+        tabs.set_propagation_phase(gtk::PropagationPhase::Capture);
+        tabs.connect_key_pressed({
+            let this = Rc::downgrade(self);
+            move |_, key, _, modifiers| {
+                use gdk::Key as K;
+                let Some(this) = this.upgrade() else { return glib::Propagation::Proceed };
+                let tab = matches!(key, K::Tab | K::KP_Tab | K::ISO_Left_Tab);
+                let other = gdk::ModifierType::CONTROL_MASK | gdk::ModifierType::ALT_MASK;
+                if !tab || modifiers.intersects(other) {
+                    return glib::Propagation::Proceed;
+                }
+                let back =
+                    key == K::ISO_Left_Tab || modifiers.contains(gdk::ModifierType::SHIFT_MASK);
+                if this.tab_into_chrome(back) {
+                    glib::Propagation::Stop
+                } else {
+                    glib::Propagation::Proceed
+                }
+            }
+        });
+        self.widget.add_controller(tabs);
         let keys = gtk::EventControllerKey::new();
         keys.connect_key_pressed({
             let this = Rc::downgrade(self);
@@ -4532,6 +4556,19 @@ mod tab_tests {
             assert_eq!(
                 next_stop(&stops, page_w, None, false).as_ref(),
                 Some(scrub.upcast_ref())
+            );
+            // Focus inside the page's content, as in a novel's web view and the text view inside
+            // it, counts as on the page: Tab leaves it for the group, Shift+Tab for the head.
+            let inner = gtk::TextView::new();
+            page.add_overlay(&inner);
+            let inner_w = inner.upcast_ref::<gtk::Widget>();
+            assert_eq!(
+                next_stop(&stops, page_w, Some(inner_w), false).as_ref(),
+                Some(scrub.upcast_ref())
+            );
+            assert_eq!(
+                next_stop(&stops, page_w, Some(inner_w), true).as_ref(),
+                Some(close.upcast_ref())
             );
             go_to.unparent();
             window.destroy();
