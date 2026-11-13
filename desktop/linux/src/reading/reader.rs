@@ -2282,7 +2282,7 @@ impl Reader {
                 .filter(|(id, _)| state.next.as_ref().is_some_and(|n| &n.id == id))
                 .map(|(_, texture)| texture.clone());
             end::EndFacts {
-                chapter: chapter.number.clone().unwrap_or_else(|| chapter.label.clone()),
+                heading: end::heading(chapter),
                 read: state.read.clone(),
                 next: state.next.clone(),
                 why: state.why_none,

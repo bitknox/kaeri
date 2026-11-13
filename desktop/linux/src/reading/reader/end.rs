@@ -20,8 +20,8 @@ const PREVIEW_WIDTH: i32 = 180;
 
 /// What the end page shows, from the reader's state.
 pub struct EndFacts {
-    /// The chapter just finished: its number, or its label when it has none.
-    pub chapter: String,
+    /// The top line for the chapter just finished: see [`heading`].
+    pub heading: String,
     /// `None` until the chapter counts as read; then the trackers it went to.
     pub read: Option<Vec<String>>,
     pub next: Option<ChapterRow>,
@@ -227,7 +227,7 @@ impl EndPage {
 
     /// Show `facts`. A change of the read line crossfades in place; the rest is set as it is.
     pub fn fill(&self, facts: &EndFacts) {
-        self.top.set_label(&t::reader_end_of_chapter_number(&facts.chapter));
+        self.top.set_label(&facts.heading);
         let read = read_line(facts.read.as_deref(), crate::widgets::is_offline());
         if self.read.label() != read {
             if self.read.label().is_empty() || !self.read.is_mapped() {
@@ -318,11 +318,20 @@ fn joined(names: &[&str]) -> String {
     }
 }
 
+/// "End of chapter 12", or a chapter with no number by its own name: a book in one file is
+/// named for the book, so "End of Rooftop Lantern", never "End of chapter Rooftop Lantern".
+pub fn heading(chapter: &ChapterRow) -> String {
+    match &chapter.number {
+        Some(number) => t::reader_end_of_chapter_number(number),
+        None => t::reader_end_of_named(&chapter.label),
+    }
+}
+
 /// "Chapter 13 · 34 pages · From books.example": the chapter's number when it has a title of
-/// its own, its length, and the source it came from.
+/// its own, its length, and the source it came from. A chapter with no number has only its
+/// name, which the heading says.
 fn next_facts(next: &ChapterRow, source: Option<&str>) -> String {
-    let chapter =
-        next.title.as_ref().map(|_| next.number.clone().unwrap_or(next.label.clone()));
+    let chapter = next.title.as_ref().and(next.number.clone());
     let pages = next.pages.filter(|p| *p > 0).map(|p| t::reader_end_pages(i64::from(p)));
     let facts = match (chapter, pages) {
         (Some(chapter), Some(pages)) => Some(t::reader_end_facts(&chapter, &pages)),
@@ -362,7 +371,7 @@ mod tests {
 
     use adw::prelude::*;
 
-    use super::{COLUMN, EndPage, joined, read_line};
+    use super::{COLUMN, EndPage, heading, joined, next_facts, read_line};
     use crate::gtk_test::{pump, run};
 
     /// The end page asks for no more width than its widest part: never the column's 440 px or
@@ -403,6 +412,45 @@ mod tests {
             );
             assert_eq!(wide, Some(COLUMN));
         });
+    }
+
+    /// A chapter with no number goes by its own name: a book in one file is named for the book,
+    /// so the end page never says "End of chapter <title>". Numbered chapters keep their words.
+    #[test]
+    fn a_chapter_with_no_number_ends_by_its_own_name() {
+        use kaeri_core::books::ChapterId;
+        use kaeri_model::reading::{ChapterReadState, ChapterRow};
+        let row = |label: &str, number: Option<&str>, title: Option<&str>| ChapterRow {
+            id: ChapterId(label.to_owned()),
+            label: label.to_owned(),
+            state: ChapterReadState::Unread,
+            number: number.map(str::to_owned),
+            title: title.map(str::to_owned),
+            volume: None,
+            published: None,
+            pages: None,
+            new_chapter: false,
+            download: None,
+            versions: 1,
+            bookmarked: false,
+            version_label: None,
+            read_at: None,
+            line: Vec::new(),
+            gone_from_source: false,
+            parts: 1,
+            missing_parts: Vec::new(),
+            part_groups: Vec::new(),
+            other_group: false,
+            group_language: None,
+            other_source: None,
+            on_device: true,
+        };
+        let book = row("Rooftop Lantern", None, Some("Rooftop Lantern"));
+        assert_eq!(heading(&book), kaeri_i18n::t::reader_end_of_named("Rooftop Lantern"));
+        assert_eq!(next_facts(&book, None), "");
+        let twelve = row("Chapter 12", Some("12"), Some("The Long Stair")); // i18n-skip
+        assert_eq!(heading(&twelve), kaeri_i18n::t::reader_end_of_chapter_number("12"));
+        assert_eq!(next_facts(&twelve, None), kaeri_i18n::t::reader_chapter_line("12"));
     }
 
     #[test]
