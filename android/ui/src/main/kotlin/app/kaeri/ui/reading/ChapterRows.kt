@@ -410,6 +410,12 @@ internal fun SeriesRule(modifier: Modifier = Modifier) {
 /** Every chapter of [groups] in reading order. */
 internal fun List<VolumeGroup>.chapterRows(): List<ChapterRow> = flatMap { it.chapters }
 
+/** Whether Download is offered for the chapter: not here or on its way, and not a file on this device, as a folder's chapters are. */
+internal val ChapterRow.downloadable: Boolean get() = download == null && !onDevice
+
+/** Whether the Download button has anything to do: a chapter to download, or one downloaded. A folder's series has neither, and its button rests. */
+internal fun List<VolumeGroup>.hasDownloads(): Boolean = chapterRows().any { it.downloadable || it.download != null }
+
 /** How many chapters Choose chapters starts with ticked. */
 internal const val CHOOSE_START_COUNT = 10
 
@@ -421,7 +427,7 @@ internal const val CHOOSE_START_COUNT = 10
 internal fun List<VolumeGroup>.chooseStart(): Set<String> {
     val rows = chapterRows()
     val from = rows.placeIndex() ?: 0
-    val wanted = { row: ChapterRow -> row.state !is ChapterReadState.Read && row.download == null }
+    val wanted = { row: ChapterRow -> row.state !is ChapterReadState.Read && row.downloadable }
     val next = rows.drop(from).filter(wanted).ifEmpty { rows.filter(wanted) }
     return next.take(CHOOSE_START_COUNT).map { it.id }.toSet()
 }
@@ -433,7 +439,7 @@ internal fun List<VolumeGroup>.chooseStart(): Set<String> {
  */
 internal fun List<VolumeGroup>.unreadAhead(): List<ChapterRow> {
     val rows = chapterRows().filter { it.otherSource == null }
-    return rows.drop(rows.placeIndex() ?: 0).filter { it.state !is ChapterReadState.Read }
+    return rows.drop(rows.placeIndex() ?: 0).filter { it.state !is ChapterReadState.Read && !it.onDevice }
 }
 
 /**

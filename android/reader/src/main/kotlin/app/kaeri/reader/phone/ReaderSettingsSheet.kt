@@ -8,7 +8,6 @@
 
 package app.kaeri.reader.phone
 
-import app.kaeri.reader.ReaderBackHandler
 import android.content.Context
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.text.TextAutoSize
@@ -128,15 +127,20 @@ fun ReaderSettingsSheet(
     val novel = view.medium == Medium.NOVEL
     val strip = view.mode == ReaderMode.STRIP || view.mode == ReaderMode.VERTICAL
     // The Tap zones page runs past a half-open sheet: it opens the sheet all the way.
-    ReaderSheet(instant = instant, onDismiss = onDismiss, expanded = pane == Pane.TapZones) {
-        // Back from a page of the sheet goes to the page it came from, not out of the sheet.
-        ReaderBackHandler(enabled = pane != Pane.Main) {
+    // Back from a page of the sheet goes to the page it came from, not out of the sheet.
+    ReaderSheet(
+        instant = instant,
+        onDismiss = onDismiss,
+        expanded = pane == Pane.TapZones,
+        firstPage = pane == Pane.Main,
+        pageBack = {
             pane = when (pane) {
                 Pane.Paper -> paperBack
                 Pane.TapZones -> Pane.More
                 else -> Pane.Main
             }
-        }
+        },
+    ) {
         Column(Modifier.verticalScroll(rememberScrollState()).navigationBarsPadding().padding(horizontal = 20.dp, vertical = 4.dp)) {
             when (pane) {
                 Pane.Main -> Main(

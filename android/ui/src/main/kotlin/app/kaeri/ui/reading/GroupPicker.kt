@@ -272,7 +272,7 @@ internal fun EinkGroupPage(work: WorkId, title: String, edition: BookEditionRow,
                                 .heightIn(min = 72.dp)
                                 .background(if (on) EinkColours.Selected else EinkColours.Paper, shape)
                                 .border(EinkSizes.Rule, EinkColours.Ink, shape)
-                                .einkClick(role = Role.RadioButton) { pick(group) }
+                                .einkClick(role = Role.RadioButton, shape = shape, inset = EinkSizes.FocusInsideBorder) { pick(group) }
                                 .clearAndSetSemantics { contentDescription = spoken; selected = on; role = Role.RadioButton; onClick { pick(group); true } }
                                 .padding(horizontal = 18.dp, vertical = 10.dp),
                             verticalAlignment = Alignment.CenterVertically,

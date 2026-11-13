@@ -20,6 +20,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     Book, ComicInfo, Format, Limits, naming,
+    tree::Tree,
     worker::{self, Budget},
 };
 
@@ -162,36 +163,164 @@ fn hidden(name: &str) -> bool {
     name.starts_with('.') || name == "__MACOSX"
 }
 
+/// Where a scan reads from: the device's files, or a folder a platform opens through a
+/// [`Tree`].
+#[derive(Clone, Copy)]
+enum Place<'a> {
+    Disk,
+    Tree(&'a dyn Tree),
+}
+
+/// A file or folder the walk met.
+struct Node {
+    /// What the walk names and groups it by: its path on disk, or for a tree the names from the
+    /// tree's top, `Series/ch1.cbz`.
+    path: PathBuf,
+    /// What a book is stored and opened as: the path on disk, or the tree's reference.
+    at: PathBuf,
+    dir: bool,
+    file: bool,
+    /// A link to a folder, which could lead back into this one.
+    link: bool,
+    size: u64,
+    mtime: i64,
+}
+
+impl Node {
+    fn name(&self) -> String {
+        self.path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default()
+    }
+}
+
+impl Place<'_> {
+    fn list(self, dir: &Node) -> std::io::Result<Vec<Node>> {
+        let mut nodes = match self {
+            Place::Disk => fs::read_dir(&dir.at)?
+                .filter_map(Result::ok)
+                .map(|entry| {
+                    let path = entry.path();
+                    let is_dir = path.is_dir();
+                    let link = entry.file_type().is_ok_and(|t| t.is_symlink()) && is_dir;
+                    let meta = fs::metadata(&path).ok();
+                    Node {
+                        at: path.clone(),
+                        dir: is_dir,
+                        file: meta.as_ref().is_some_and(fs::Metadata::is_file),
+                        link,
+                        size: meta.as_ref().map_or(0, fs::Metadata::len),
+                        mtime: meta.as_ref().map_or(0, mtime_of),
+                        path,
+                    }
+                })
+                .collect::<Vec<_>>(),
+            Place::Tree(tree) => tree
+                .entries(&dir.at.to_string_lossy())?
+                .into_iter()
+                // A name that is not one plain name could not be told apart from a path.
+                .filter(|e| {
+                    !e.name.is_empty()
+                        && e.name != "."
+                        && e.name != ".."
+                        && !e.name.contains(['/', '\\'])
+                })
+                .map(|e| Node {
+                    path: dir.path.join(&e.name),
+                    at: PathBuf::from(e.reference),
+                    dir: e.folder,
+                    file: !e.folder,
+                    link: false,
+                    size: e.size,
+                    mtime: e.modified,
+                })
+                .collect(),
+        };
+        nodes.sort_by_key(|n| n.path.file_name().map(std::ffi::OsStr::to_owned));
+        Ok(nodes)
+    }
+
+    /// What a book at `node` is stored as.
+    fn stored(self, node: &Node) -> String {
+        match self {
+            Place::Disk => slash(&node.at),
+            Place::Tree(_) => node.at.to_string_lossy().into_owned(),
+        }
+    }
+}
+
 /// Scan `root`. `found` is called with the number of books seen so far, so a screen can say
-/// "Scanning · 12 found".
+/// "Scanning · 12 found". A root a registered [`Tree`] claims is read through that tree, and
+/// its books are stored by the tree's references.
 pub fn scan(
     root: &Path,
     known: &dyn Known,
     limits: &Limits,
     found: &mut dyn FnMut(u32),
 ) -> std::io::Result<Scan> {
-    let meta = fs::metadata(root)?;
-    if !meta.is_dir() {
-        return Err(std::io::Error::new(std::io::ErrorKind::NotADirectory, "not a folder"));
-    }
+    let tree = crate::tree::claiming(root);
+    let (place, top) = match &tree {
+        Some(tree) => {
+            let entry = tree.entry(&root.to_string_lossy())?;
+            if !entry.folder {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::NotADirectory,
+                    "not a folder",
+                ));
+            }
+            let top = Node {
+                path: PathBuf::new(),
+                at: root.to_owned(),
+                dir: true,
+                file: false,
+                link: false,
+                size: 0,
+                mtime: entry.modified,
+            };
+            (Place::Tree(tree.as_ref()), top)
+        }
+        None => {
+            let meta = fs::metadata(root)?;
+            if !meta.is_dir() {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::NotADirectory,
+                    "not a folder",
+                ));
+            }
+            let top = Node {
+                path: root.to_owned(),
+                at: root.to_owned(),
+                dir: true,
+                file: false,
+                link: false,
+                size: 0,
+                mtime: mtime_of(&meta),
+            };
+            (Place::Disk, top)
+        }
+    };
     let mut out = Scan::default();
     let mut groups: Vec<(String, Vec<ScannedFile>)> = Vec::new();
+    // For a tree, what a locked book is listed as: its names, not the tree's reference.
+    let mut shown: HashMap<String, String> = HashMap::new();
     let mut count = 0u32;
     walk(
-        root,
-        root,
+        place,
+        &top,
         0,
         known,
         limits,
-        &mut |group, file| {
+        &mut |group, file, name| {
             count += 1;
             found(count);
+            if file.locked && matches!(place, Place::Tree(_)) {
+                shown.insert(file.path.clone(), name);
+            }
             match groups.iter_mut().find(|(key, _)| *key == group) {
                 Some((_, files)) => files.push(file),
                 None => groups.push((group, vec![file])),
             }
         },
         &mut out,
+        &top.path,
     )?;
     for (key, files) in groups {
         out.series.push(series_of(key, files));
@@ -202,7 +331,7 @@ pub fn scan(
     out.locked = out.series.iter().flat_map(|s| &s.files).filter(|f| f.locked).count() as u32;
     for file in out.series.iter().flat_map(|s| &s.files).filter(|f| f.locked) {
         if out.unsupported_files.len() < MAX_LISTED {
-            out.unsupported_files.push(file.path.clone());
+            out.unsupported_files.push(shown.get(&file.path).unwrap_or(&file.path).clone());
         }
     }
     out.unsupported.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
@@ -211,61 +340,49 @@ pub fn scan(
 
 #[allow(clippy::too_many_arguments)]
 fn walk(
-    root: &Path,
-    dir: &Path,
+    place: Place<'_>,
+    dir: &Node,
     depth: usize,
     known: &dyn Known,
     limits: &Limits,
-    emit: &mut dyn FnMut(String, ScannedFile),
+    emit: &mut dyn FnMut(String, ScannedFile, String),
     out: &mut Scan,
+    root: &Path,
 ) -> std::io::Result<()> {
-    let mut entries: Vec<_> = fs::read_dir(dir)?.filter_map(Result::ok).collect();
-    entries.sort_by_key(fs::DirEntry::file_name);
-    let images = entries
-        .iter()
-        .filter(|e| {
-            e.path().is_file()
-                && extension(&e.path())
-                    .is_some_and(|x| naming::IMAGE_EXTENSIONS.contains(&x.as_str()))
-        })
-        .count();
-    let books = entries
-        .iter()
-        .filter(|e| {
-            e.path().is_file()
-                && extension(&e.path())
-                    .is_some_and(|x| naming::BOOK_EXTENSIONS.contains(&x.as_str()))
-        })
-        .count();
+    let entries = place.list(dir)?;
+    let has = |kinds: &[&str]| {
+        entries
+            .iter()
+            .filter(|e| {
+                e.file && extension(&e.path).is_some_and(|x| kinds.contains(&x.as_str()))
+            })
+            .count()
+    };
+    let images = has(naming::IMAGE_EXTENSIONS);
+    let books = has(naming::BOOK_EXTENSIONS);
     // A folder of images and no books is a book: a chapter of its parent's series.
-    if dir != root && images > 0 && books == 0 {
-        let group = group_of(root, dir, true);
-        if let Some(file) = scan_file(dir, root, known, limits, true) {
-            emit(group, file);
+    if dir.path != root && images > 0 && books == 0 {
+        let group = group_of(root, &dir.path, true);
+        if let Some(file) = scan_file(place, dir, root, known, limits, true) {
+            emit(group, file, slash(&dir.path));
         }
         return Ok(());
     }
     for entry in entries {
-        let name = entry.file_name().to_string_lossy().into_owned();
-        if hidden(&name) {
+        let name = entry.name();
+        if hidden(&name) || entry.link {
             continue;
         }
-        let path = entry.path();
-        let Ok(kind) = entry.file_type() else { continue };
-        if kind.is_symlink() && path.is_dir() {
-            // A link to a folder could lead back into this one.
-            continue;
-        }
-        if path.is_dir() {
+        if entry.dir {
             if depth < MAX_DEPTH {
                 // An unreadable subfolder is skipped, not fatal to the rest.
-                let _ = walk(root, &path, depth + 1, known, limits, emit, out);
+                let _ = walk(place, &entry, depth + 1, known, limits, emit, out, root);
             }
-        } else if extension(&path)
+        } else if extension(&entry.path)
             .is_some_and(|x| naming::BOOK_EXTENSIONS.contains(&x.as_str()))
         {
             out.seen += 1;
-            match scan_file(&path, root, known, limits, false) {
+            match scan_file(place, &entry, root, known, limits, false) {
                 Some(file) => {
                     let group = if file.novel {
                         // A novel stands alone, or joins the series its own metadata names;
@@ -275,17 +392,17 @@ fn walk(
                             None => format!("novel:{}", naming::tidy(naming::stem(&name))),
                         }
                     } else {
-                        group_of(root, &path, false)
+                        group_of(root, &entry.path, false)
                     };
-                    emit(group, file);
+                    emit(group, file, slash(&entry.path));
                 }
                 None => out.ignored += 1,
             }
         } else if let Some(format) =
-            extension(&path).filter(|x| UNSUPPORTED_BOOKS.contains(&x.as_str()))
+            extension(&entry.path).filter(|x| UNSUPPORTED_BOOKS.contains(&x.as_str()))
         {
             out.seen += 1;
-            out.count_unsupported(&format, &path);
+            out.count_unsupported(&format, &entry.path);
         } else {
             out.seen += 1;
             out.ignored += 1;
@@ -314,19 +431,24 @@ fn group_of(root: &Path, path: &Path, is_dir: bool) -> String {
 }
 
 fn scan_file(
-    path: &Path,
+    place: Place<'_>,
+    node: &Node,
     root: &Path,
     known: &dyn Known,
     limits: &Limits,
     folder: bool,
 ) -> Option<ScannedFile> {
-    let meta = fs::metadata(path).ok()?;
-    let text = slash(path);
-    if !folder && meta.len() == 0 {
+    let path = &node.path;
+    if !folder && !node.file {
+        return None;
+    }
+    let text = place.stored(node);
+    if !folder && node.size == 0 {
         // An empty file is a download that never finished, not a book.
         return None;
     }
-    let (size, mtime) = if folder { folder_stamp(path) } else { (meta.len(), mtime_of(&meta)) };
+    let (size, mtime) =
+        if folder { folder_stamp(place, node) } else { (node.size, node.mtime) };
     if let Some(old) = known.file(&text)
         && old.size == size
         && old.mtime == mtime
@@ -361,19 +483,29 @@ fn scan_file(
         broken: None,
         locked: false,
     };
-    open_into(&mut file, path, limits);
+    open_into(&mut file, &node.at, limits);
     Some(file)
 }
 
 /// The summed size and newest modification time of a folder's images.
-fn folder_stamp(dir: &Path) -> (u64, i64) {
+fn folder_stamp(place: Place<'_>, dir: &Node) -> (u64, i64) {
     let mut size = 0;
     let mut newest = 0;
-    if let Ok(entries) = fs::read_dir(dir) {
-        for entry in entries.filter_map(Result::ok) {
-            if let Ok(meta) = entry.metadata() {
-                size += meta.len();
-                newest = newest.max(mtime_of(&meta));
+    match place {
+        Place::Disk => {
+            if let Ok(entries) = fs::read_dir(&dir.at) {
+                for entry in entries.filter_map(Result::ok) {
+                    if let Ok(meta) = entry.metadata() {
+                        size += meta.len();
+                        newest = newest.max(mtime_of(&meta));
+                    }
+                }
+            }
+        }
+        Place::Tree(_) => {
+            for entry in place.list(dir).unwrap_or_default() {
+                size += entry.size;
+                newest = newest.max(entry.mtime);
             }
         }
     }
@@ -679,6 +811,63 @@ mod tests {
         let s = series(&scan, "Series");
         assert!(s.restarts_per_volume);
         assert_eq!(numbers(s), ["v1c3", "v2c3"]);
+    }
+
+    #[test]
+    fn a_folder_the_platform_opens_is_read_through_its_tree() {
+        use std::sync::Arc;
+
+        use crate::tree::{self, fake::DiskTree};
+
+        let dir = tempfile::tempdir().unwrap();
+        cbz(&dir.path().join("Moon Harbour/Vol. 2/ch003.cbz"), 2, None);
+        cbz(&dir.path().join("Moon Harbour/Vol. 2/ch004.cbz"), 3, None);
+        let chapter = dir.path().join("Folded/ch001");
+        fs::create_dir_all(&chapter).unwrap();
+        for i in 1..=4 {
+            fs::write(chapter.join(format!("{i}.png")), tiny_png()).unwrap();
+        }
+        fs::write(dir.path().join("Lantern Notes.mobi"), b"not read").unwrap();
+        let tree = Arc::new(DiskTree::new("tree-scan", dir.path()));
+        let top = PathBuf::from(tree.top());
+        // Without the tree, the reference is no folder at all.
+        assert!(scan(&top, &Nothing, &Limits::default(), &mut |_| {}).is_err());
+
+        let registered = tree::register(tree.clone());
+        let first = scan_dir(&top);
+        let harbour = series(&first, "Moon Harbour");
+        assert_eq!(numbers(harbour), ["v2c3", "v2c4"]);
+        assert_eq!(harbour.files[1].pages, Some(3));
+        let folded = series(&first, "Folded");
+        assert_eq!(folded.files[0].format, "folder");
+        assert_eq!(folded.files[0].pages, Some(4));
+        // Books are kept by the tree's references, and open again through it.
+        for file in first.series.iter().flat_map(|s| &s.files) {
+            assert!(file.path.starts_with("tree-scan://"), "{}", file.path);
+            assert!(file.broken.is_none(), "{:?}", file.broken);
+            crate::open(&path_of(file), &Limits::default()).unwrap();
+        }
+        // What can't be read is listed by its names, not by the reference.
+        assert_eq!(first.unsupported, [("MOBI".to_owned(), 1)]);
+        assert_eq!(first.unsupported_files, ["Lantern Notes.mobi"]);
+
+        // A second scan meets the same references and opens nothing again.
+        let known: HashMap<String, ScannedFile> = first
+            .series
+            .iter()
+            .flat_map(|s| &s.files)
+            .map(|f| (f.path.clone(), f.clone()))
+            .collect();
+        tree.refused.lock().unwrap().insert(harbour.files[0].path.clone());
+        let again = scan(&top, &known, &Limits::default(), &mut |_| {}).unwrap();
+        assert_eq!(numbers(series(&again, "Moon Harbour")), ["v2c3", "v2c4"]);
+        assert!(series(&again, "Moon Harbour").files[0].broken.is_none());
+
+        // A tree the platform no longer opens to Kaeri is an error, not an empty folder.
+        tree.refused.lock().unwrap().insert(tree.top());
+        assert!(scan(&top, &known, &Limits::default(), &mut |_| {}).is_err());
+        drop(registered);
+        assert!(crate::tree::claiming(&top).is_none());
     }
 
     #[test]

@@ -586,6 +586,7 @@ async fn a_strip_writes_its_place_when_the_image_changes() {
     assert_eq!(offset(&h), 0.5, "the close keeps the place within the image");
 }
 
+mod kept_above;
 mod lifecycle;
 mod r5_audit;
 

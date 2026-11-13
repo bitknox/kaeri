@@ -2103,6 +2103,12 @@ linux-reader-end-offline-body = [Ýöü'ŕé öƒƒļîñé. Îţ öþéñš ĥ�
 # Hint under a page's error: turning the page goes on past it.
 linux-reader-page-failed-hint = [Ţüŕñ ţĥé þàĝé ţö ĝö öñ ŵîţĥöüţ îţ.~~~~~~~~~~~]
 
+# Why a page failed: its file came in, but no image decoder on this system could show it.
+linux-reader-page-undecodable = [Ţĥé îɱàĝé çàɱé îñ, ƀüţ îţ çöüļðñ'ţ ƀé šĥöŵñ.~~~~~~~~~~~~~~]
+
+# Why a light novel's chapter stopped showing: the view that draws its text closed or failed to load it.
+linux-reader-novel-stopped = [Ţĥé ṽîéŵ ţĥàţ šĥöŵš ţĥé ţéẋţ šţöþþéð.~~~~~~~~~~~~]
+
 # Line while a chapter opens, once its number is known.
 linux-reader-opening-number = [Öþéñîñĝ çĥàþţéŕ { $chapter }~~~~~~]
 
@@ -8909,6 +8915,9 @@ reader-image-plate = [Îɱàĝé { $image }~~~]
 # Under a strip image's number after four seconds.
 reader-image-loading = [Ļöàðîñĝ îɱàĝé { $image }~~~~~~]
 
+# Under a strip image's number (Image 4) when it couldn't be loaded, above Try again.
+reader-image-failed = [Çöüļðñ'ţ ļöàð~~~~]
+
 # Heading where a page could not be loaded.
 reader-page-failed = [Çöüļðñ'ţ ļöàð þàĝé { $page }~~~~~~~]
 
@@ -9185,6 +9194,9 @@ reader-look-system = [Šýšţéɱ~~]
 
 # Top line of the page between chapters. The chapter is its number, such as 12.
 reader-end-of-chapter-number = [Éñð öƒ çĥàþţéŕ { $chapter }~~~~~~]
+
+# Top line of the page between chapters when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own, such as Rooftop Lantern.
+reader-end-of-named = [Éñð öƒ { $name }~~~]
 
 # The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.
 reader-end-facts = [Çĥàþţéŕ { $chapter } · { $facts }~~~~~~]
@@ -10686,6 +10698,9 @@ read-downloads-queued =
 # A series' line in Downloads when a chapter failed, with the reason.
 read-downloads-failed = [{ $chapter } çöüļðñ'ţ ðöŵñļöàð. { $reason }~~~~~~~~]
 
+# Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows.
+read-download-not-started = [Ţĥé ðöŵñļöàð ðîðñ'ţ šţàŕţ. { $reason }~~~~~~~~~]
+
 # A series' line in Downloads: how many chapters are kept.
 read-downloads-kept =
     { $n ->
@@ -10778,6 +10793,12 @@ send-ready =
 
 # Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.
 send-share-again = [Šĥàŕé àĝàîñ~~~~]
+
+# A ready send whose files were cleared before they were shared or saved, in the Send to e-reader sheet and in the send's row. Prepared files are kept for a day.
+send-files-gone = [Ţĥéšé ƒîļéš àŕé ĝöñé. Þŕéþàŕéð ƒîļéš àŕé ķéþţ ƒöŕ à ðàý.~~~~~~~~~~~~~~~~~]
+
+# Button on a send whose files are gone: prepares the same chapters for the same e-reader again.
+send-again = [Šéñð àĝàîñ~~~]
 
 # A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
 send-banner = [Šéñðîñĝ ţö { $device }~~~~~]
@@ -12385,6 +12406,22 @@ book-folder-empty-line =
 
 # Primary action after an empty folder.
 book-folder-choose-other = [Çĥööšé àñöţĥéŕ ƒöļðéŕ~~~~~~~]
+
+# Folder result title when the picked folder is already a source. It was scanned again.
+book-folder-already = [{ $folder } îš àļŕéàðý îñ ýöüŕ šöüŕçéš~~~~~~~~~]
+
+# Line under it: what the new scan found. Closing the sheet keeps the folder.
+book-folder-already-line =
+    { $series ->
+        [one] [Ķàéŕî ļööķéð ţĥŕöüĝĥ îţ àĝàîñ àñð ƒöüñð öñé šéŕîéš. Îţ šţàýš àš îţ îš.~~~~~~~~~~~~~~~~~~~~~]
+       *[other] [Ķàéŕî ļööķéð ţĥŕöüĝĥ îţ àĝàîñ àñð ƒöüñð { $series } šéŕîéš. Îţ šţàýš àš îţ îš.~~~~~~~~~~~~~~~~~~~~~]
+    }
+
+# Title when a folder could not be read: the look through it could not start, or stopped.
+book-folder-unreadable = [Çöüļðñ'ţ ŕéàð { $folder }~~~~~~]
+
+# Line under it.
+book-folder-unreadable-line = [Îţ ɱàý ĥàṽé ɱöṽéð, öŕ Ķàéŕî ñö ļöñĝéŕ ĥàš àççéšš ţö îţ.~~~~~~~~~~~~~~~~~]
 
 # Title of the Join a plugin store sheet.
 store-join-title = [Ĵöîñ à þļüĝîñ šţöŕé~~~~~~]

@@ -234,6 +234,23 @@ async fn a_server_chapter_previews_the_next_one_from_its_first_page() {
     );
 }
 
+/// A jump straight onto the end page, past the pages that would have asked for it, still
+/// brings the next chapter's first page for the end page.
+#[tokio::test(start_paused = true)]
+async fn a_jump_onto_the_end_page_previews_the_next_chapter() {
+    let server = Arc::new(ShelfServer::new(vec!["c1", "c2"]));
+    let mut h = opened(server.clone()).await;
+    let next = h.next_chapter();
+    let session = h.session();
+    let chapter = h.reader.session.as_ref().unwrap().chapter().id.clone();
+    let story = h.reader.session.as_ref().unwrap().leaves.len() as u32;
+    h.send(ReaderCommand::Shown { session, chapter, leaf: story, how: TurnHow::Jump });
+    let (chapter, file) = h.preview().await;
+    assert_eq!(chapter, next);
+    assert!(Path::new(&file.path).exists());
+    assert_eq!(server.fetched_of("c2")[0], "https://books.example/c2/1?round=1");
+}
+
 /// The chapter fetched ahead opens from what was fetched: Continue asks the source for nothing
 /// more.
 #[tokio::test(start_paused = true)]

@@ -250,6 +250,9 @@ pub struct Session {
     source_open: Option<novel::SourceOpen>,
     /// The open chapter's pages from a source, landing as they are fetched.
     feed: Option<Arc<crate::reading::feed::Feed>>,
+    /// The chapter a strip flowed on from, which the app keeps above the open one: its pages
+    /// are still made when asked for by its id. Cleared by any other open.
+    flowed_from: Option<ChapterId>,
     /// "Resumed at page N" waits for a novel's first page.
     novel_resumed: bool,
     /// A work of the reading demo, whose credit the reader shows.
@@ -691,6 +694,7 @@ impl Reader {
             prepared: Arc::default(),
             source_open: None,
             feed: None,
+            flowed_from: None,
             novel_resumed: false,
             gone: crate::reading::feed::Gone::new(novel::streamed_dir(
                 &cx.services.paths.cache_dir,
@@ -1159,9 +1163,14 @@ impl Session {
         // Another chapter's pages that had not all landed are fetched again when it opens, and
         // so is one with credit pages or parts, which its folder alone does not tell.
         let left = self.feed.take_if(|f| f.chapter != chapter.id);
-        // The chapter left stops fetching, so its pages never hold up the one opening.
+        // The chapter left stops fetching, so its pages never hold up the one opening. One a
+        // strip flowed on from stays above it: the pages it never had are fetched when asked.
         if let Some(left) = &left {
-            left.leave();
+            if self.flowed_from.as_ref() == Some(&left.chapter) {
+                left.aside();
+            } else {
+                left.leave();
+            }
         }
         if let Some(left) = left
             && (!left.complete() || !left.credits.is_empty() || left.parts.is_some())
@@ -1187,6 +1196,7 @@ impl Session {
             feed: self.feed.clone(),
             // A feed left its credit pages out as it came.
             credits: self.credit_check(cx).filter(|_| self.feed.is_none()),
+            keep: self.flowed_from.clone(),
         });
     }
 
@@ -1394,8 +1404,11 @@ impl Session {
                 let page = self.page_now();
                 self.lay_out(cx, pages, page);
             }
-            C::NeedPage { page, .. } => pages.again(self.id, page, cx.tx),
-            C::Retry { page: Some(page), .. } => pages.again(self.id, page, cx.tx),
+            // The open chapter's page, or the kept one's a strip flowed on from.
+            C::NeedPage { chapter, page, .. } => pages.again(self.id, chapter, page, cx.tx),
+            C::Retry { chapter, page: Some(page), .. } => {
+                pages.again(self.id, chapter, page, cx.tx)
+            }
             C::Retry { page: None, .. } => {
                 let page = self.page_now();
                 self.lay_out(cx, pages, page);
@@ -1425,7 +1438,7 @@ impl Session {
                     .and_then(|k| k.last_page)
                     .unwrap_or(0);
                 let novel = novel::kept_novel(cx, &self.work, &chapter);
-                self.open_chapter(cx, pages, index, page, novel);
+                self.open_chapter(cx, pages, index, page, novel, flowing);
             }
             C::BackTo { .. } => {
                 if let Some(back) = self.back_to.clone() {
@@ -1476,9 +1489,11 @@ impl Session {
         }
         let story = self.leaves.len() as u32;
         if leaf >= story {
-            // The end page, in the flow: read at once.
+            // The end page, in the flow: read at once. A jump lands here without passing the
+            // pages before it, so its preview is asked for here too.
             self.chapter_read(cx, Reached::MovedOn);
             self.say_end_page(cx);
+            self.peek(cx, pages);
             return;
         }
         let (page, strip) = self.page_of_leaf(leaf);
@@ -1707,8 +1722,16 @@ impl Session {
     }
 
     /// Why the end page has no next chapter: the series ended with this one, which offers
-    /// Read again; the device is offline; or the person is caught up.
+    /// Read again; the device is offline; or the person is caught up. A book of the person's
+    /// own in one file, with no number and nothing to match it to, is a whole book: it ends
+    /// there, and no chapters come for it.
     fn why_no_next(&self, cx: &Cx<'_>) -> NoNext {
+        let whole_book = self.work.key().is_some_and(|k| k.is_local())
+            && self.chapters.len() == 1
+            && self.chapter().id.key().and_then(|k| k.range()).is_none();
+        if whole_book {
+            return NoNext::Finished;
+        }
         let store = &cx.services.store;
         let later = crate::read_catalog::chapters::of_work(
             &cx.services.book_sources,
@@ -1884,8 +1907,11 @@ impl Session {
         index: usize,
         page: u32,
         novel: Option<NovelPos>,
+        flowing: bool,
     ) {
         self.flush_leaving(cx);
+        // A strip flowing on keeps the chapter it leaves above the one opening.
+        self.flowed_from = flowing.then(|| self.chapter().id.clone());
         if self.novel.take().is_some() {
             cx.services.novels.remove(self.id);
         }
@@ -1912,7 +1938,7 @@ impl Session {
         if to.chapter == self.chapter().id {
             cx.send(ReaderEvent::GoTo { session: self.id, place: to });
         } else if let Some(index) = self.index_of(cx, &to.chapter) {
-            self.open_chapter(cx, pages, index, to.page.unwrap_or(0), to.novel.clone());
+            self.open_chapter(cx, pages, index, to.page.unwrap_or(0), to.novel.clone(), false);
         } else {
             self.not_found(cx);
         }
@@ -2731,6 +2757,71 @@ mod tests {
             })
             .unwrap();
         assert_eq!(end_of_last(&mut h).await, Some(NoNext::Finished));
+    }
+
+    #[tokio::test]
+    async fn a_book_of_ones_own_in_one_file_ends_there_rather_than_waiting_for_chapters() {
+        let mut h = harness(Store::open_in_memory().unwrap());
+        let local = kaeri_core::books::WorkKey::local(Medium::Manga, "A Lantern in One File");
+        let local = local.id();
+        let folder = h._dir.path().join("one file");
+        std::fs::create_dir_all(&folder).unwrap();
+        let path = folder.join("A Lantern in One File.cbz");
+        cbz(&path, 3);
+        let store = &h.services.store;
+        store
+            .put_local_series(&LocalSeries {
+                id: "s2".into(),
+                folder: folder.display().to_string(),
+                name: "A Lantern in One File".into(),
+                medium: "manga".into(),
+                work: Some(local.as_str().into()),
+                state: "unmatched".into(),
+            })
+            .unwrap();
+        let file = ShelfFile {
+            path: path.display().to_string(),
+            chapter: None,
+            label: "A Lantern in One File".into(),
+            volume: None,
+            number_milli: None,
+            format: "cbz".into(),
+            pages: Some(3),
+            comicinfo: None,
+            source: None,
+        };
+        store.put_local_file("s2", &file, 1, 1).unwrap();
+        h.open_work(local, OpenAt::Start).await;
+        h.shown(2, TurnHow::Turn).await;
+        let why = h
+            .until(|e| match e {
+                ReaderEvent::EndPage { next: None, why_none, .. } => Some(*why_none),
+                _ => None,
+            })
+            .await;
+        assert_eq!(why, Some(NoNext::Finished), "the book ends, nothing is coming");
+
+        // A matched series' last chapter still waits for the next one.
+        let session = h.session();
+        h.send(ReaderCommand::Close { session });
+        let chapter = ChapterId::new("2");
+        let (work, at) = (WorkId::new(WORK), OpenAt::Resume);
+        h.send(ReaderCommand::Open {
+            work,
+            chapter: Some(chapter.clone()),
+            at,
+            surface: surface(),
+        });
+        h.until(|e| matches!(e, ReaderEvent::Leaves { .. }).then_some(())).await;
+        let session = h.session();
+        h.send(ReaderCommand::Shown { session, chapter, leaf: 2, how: TurnHow::Turn });
+        let why = h
+            .until(|e| match e {
+                ReaderEvent::EndPage { next: None, why_none, .. } => Some(*why_none),
+                _ => None,
+            })
+            .await;
+        assert_eq!(why, Some(NoNext::CaughtUp));
     }
 
     #[tokio::test(start_paused = true)]

@@ -63,14 +63,17 @@ data class LiveDownloads(
             }
             val text = if (several) {
                 listOfNotNull(
-                    Strings.downloadsLiveLead(context, lead.title, lead.episode.toInt()),
+                    wholeEpisode(lead.episode)?.let { Strings.downloadsLiveLead(context, lead.title, it) }
+                        ?: listOf(lead.title, episodeName(context, lead.episode)).joinToString(" · "), // i18n-skip
                     if (known) Strings.downloadsLiveLeft(context, Wording.bytes(context, bytesLeft)) else null,
                 ).joinToString(" · ") // i18n-skip
             } else if (!paused && seconds != null) {
-                Strings.downloadsNoticeEpisodeLeft(context, lead.episode.toInt(), chipOf(context, seconds))
+                chipOf(context, seconds).let { left ->
+                    episodeLine(context, lead.episode, Strings.downloadsTimeLeft(context, left)) { Strings.downloadsNoticeEpisodeLeft(context, it, left) }
+                }
             } else {
                 listOfNotNull(
-                    Strings.episodeNumber(context, lead.episode.toInt()),
+                    episodeName(context, lead.episode),
                     when {
                         paused -> Strings.downloadsLivePausedOne(context)
                         lead.state == DownloadState.QUEUED -> Strings.downloadsLiveWaiting(context)

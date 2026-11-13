@@ -1456,6 +1456,8 @@
     <string name="reader_settings">Reader settings</string>
     <!-- Under the novel's title in the reader's controls, while it scrolls. The chapter is its number, such as 4. -->
     <string name="reader_novel_line_scroll">Chapter %1$s · scroll</string>
+    <!-- Under the novel's title in the reader's controls, while it scrolls, when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own. -->
+    <string name="reader_novel_line_scroll_named">%1$s · scroll</string>
     <!-- At the end of a scrolling novel's scrubber: the time left in the chapter at the person's pace. -->
     <string name="reader_minutes_left">%1$,d min</string>
     <!-- Heading of the page grid. -->
@@ -4912,6 +4914,8 @@
     <string name="reader_image_plate">Image %1$d</string>
     <!-- Under a strip image's number after four seconds. -->
     <string name="reader_image_loading">Loading image %1$d</string>
+    <!-- Under a strip image's number (Image 4) when it couldn't be loaded, above Try again. -->
+    <string name="reader_image_failed">Couldn\'t load</string>
     <!-- Heading where a page could not be loaded. -->
     <string name="reader_page_failed">Couldn\'t load page %1$d</string>
     <!-- Button that loads a failed page again. -->
@@ -5097,6 +5101,8 @@
     <string name="reader_look_system">System</string>
     <!-- Top line of the page between chapters. The chapter is its number, such as 12. -->
     <string name="reader_end_of_chapter_number">End of chapter %1$s</string>
+    <!-- Top line of the page between chapters when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own, such as Rooftop Lantern. -->
+    <string name="reader_end_of_named">End of %1$s</string>
     <!-- The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written. -->
     <string name="reader_end_facts">Chapter %1$s · %2$s</string>
     <!-- The next chapter's length on the page between chapters. -->
@@ -6119,6 +6125,8 @@
     </plurals>
     <!-- A series' line in Downloads when a chapter failed, with the reason. -->
     <string name="read_downloads_failed">%1$s couldn\'t download. %2$s</string>
+    <!-- Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows. -->
+    <string name="read_download_not_started">The download didn\'t start. %1$s</string>
     <!-- A series' line in Downloads: how many chapters are kept. -->
     <plurals name="read_downloads_kept">
         <item quantity="one">%1$,d chapter</item>
@@ -6182,6 +6190,10 @@
     </plurals>
     <!-- Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing. -->
     <string name="send_share_again">Share again</string>
+    <!-- A ready send whose files were cleared before they were shared or saved, in the Send to e-reader sheet and in the send's row. Prepared files are kept for a day. -->
+    <string name="send_files_gone">These files are gone. Prepared files are kept for a day.</string>
+    <!-- Button on a send whose files are gone: prepares the same chapters for the same e-reader again. -->
+    <string name="send_again">Send again</string>
     <!-- A send in a list or banner that is under way, with a ring beside it. The device is the e-reader. -->
     <string name="send_banner">Sending to %1$s</string>
     <!-- The format of the files an e-reader is sent: a manga as a fixed-layout EPUB. -->
@@ -7259,6 +7271,17 @@
     </plurals>
     <!-- Primary action after an empty folder. -->
     <string name="book_folder_choose_other">Choose another folder</string>
+    <!-- Folder result title when the picked folder is already a source. It was scanned again. -->
+    <string name="book_folder_already">%1$s is already in your sources</string>
+    <!-- Line under it: what the new scan found. Closing the sheet keeps the folder. -->
+    <plurals name="book_folder_already_line">
+        <item quantity="one">Kaeri looked through it again and found one series. It stays as it is.</item>
+        <item quantity="other">Kaeri looked through it again and found %1$,d series. It stays as it is.</item>
+    </plurals>
+    <!-- Title when a folder could not be read: the look through it could not start, or stopped. -->
+    <string name="book_folder_unreadable">Couldn\'t read %1$s</string>
+    <!-- Line under it. -->
+    <string name="book_folder_unreadable_line">It may have moved, or Kaeri no longer has access to it.</string>
     <!-- Title of the Join a plugin store sheet. -->
     <string name="store_join_title">Join a plugin store</string>
     <!-- Label of the invite field. -->

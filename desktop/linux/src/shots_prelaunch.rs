@@ -133,6 +133,7 @@ fn folder(readable: bool) -> FolderReport {
         ],
         locked: vec![FormatCount { format: "EPUB".into(), count: 3 }],
         listed: vec!["Harbor Lights 01.mobi".into(), "Harbor Lights 02.mobi".into()],
+        already_added: false,
     }
 }
 

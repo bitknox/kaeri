@@ -13,6 +13,9 @@ enum ReaderKey: Equatable {
     /// Home and End: the chapter's first page or image, or its last.
     case edge(first: Bool)
     case chapter(next: Bool)
+    /// ⌘= zooms in as ⌘+ does: the same key without Shift, which the Go menu's Zoom In,
+    /// bound to ⌘+, does not answer.
+    case zoom(step: Int)
 }
 
 /// How the reader on screen reads, for its keys.
@@ -36,6 +39,8 @@ enum ReaderKeys {
         switch key {
         case .space where pressed == .shift:
             return .page(forward: false)
+        case "=" where pressed == .command:
+            return .zoom(step: 1)
         case _ where !pressed.isEmpty:
             return nil
         case .space:

@@ -11,6 +11,7 @@ import app.kaeri.engine.ffi.FfiTvBrowser
 import app.kaeri.store.AppStore
 import app.kaeri.store.EngineHome
 import app.kaeri.store.EngineLaunch
+import app.kaeri.store.PickedFolders
 import app.kaeri.store.enginePlatform
 
 internal object Flavour {
@@ -21,7 +22,11 @@ internal object Flavour {
 
     fun launch(context: Context, intent: Intent): EngineLaunch =
         EngineLaunch.app(EngineHome.sandbox(files = context.filesDir, cache = context.cacheDir))
-            .copy(platform = enginePlatform(context), profile = ProfileChoice.saved(context))
+            .copy(
+                platform = enginePlatform(context),
+                profile = ProfileChoice.saved(context),
+                folderAccess = PickedFolders(context.contentResolver),
+            )
 
     /** What the e-ink detection is told of a wide colour gamut in place of the display's answer: nothing. */
     val wideColourGamut: Boolean? = null
@@ -32,6 +37,7 @@ internal object Flavour {
     /** The engine background work starts while the app is not running: the app's own files. */
     fun background(context: Context): EngineLaunch =
         EngineLaunch.app(EngineHome.sandbox(files = context.filesDir, cache = context.cacheDir))
+            .copy(folderAccess = PickedFolders(context.contentResolver))
 
     fun started(context: Context, store: AppStore, intent: Intent, notifier: EpisodeNotifier, player: app.kaeri.player.PlayerModel) {}
 

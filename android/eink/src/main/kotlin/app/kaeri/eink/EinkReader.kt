@@ -117,6 +117,8 @@ import app.kaeri.reader.text
 import app.kaeri.store.text
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.foundation.focusGroup
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.semantics.isTraversalGroup
@@ -258,6 +260,19 @@ fun EinkReader(
         }
     }
 
+    // The reader's own focus, for its keys. A control that held the focus goes when the bars or a
+    // sheet do, which would leave no focus and no keys, so each change moves the focus on: into a
+    // settings sheet that opens (its first control, where keys are in use), or else back to the
+    // reader, where Escape and the page keys still work. Contents puts the focus on its own row.
+    val readerFocus = remember { FocusRequester() }
+    val sheetFocus = remember { FocusRequester() }
+    val sheetHolds = remember { SheetFocus() }
+    LaunchedEffect(chrome, layer) {
+        if (layer == EinkLayer.Contents) return@LaunchedEffect
+        if (layer != EinkLayer.None) runCatching { sheetFocus.requestFocus() }
+        if (!sheetHolds.held) runCatching { readerFocus.requestFocus() }
+    }
+
     // A setting changed under the sheet: the page above it is painted again once it has changed.
     LaunchedEffect(state.settings, state.leaves) {
         if (layer == EinkLayer.Settings || layer == EinkLayer.More || layer == EinkLayer.TapZones) paint(EinkPaint.SheetChange)
@@ -383,7 +398,7 @@ fun EinkReader(
             modifier
                 .fillMaxSize()
                 .background(EinkColours.Paper)
-                .readerKeys(keyRules, ::act)
+                .readerKeys(keyRules, ::act, readerFocus)
                 // The first touch anywhere clears the guide, and still turns or opens what it touched.
                 .clearsTapGuide(guide, ::guideCleared),
         ) {
@@ -542,41 +557,49 @@ fun EinkReader(
                     session.dismissNotice(notice.id)
                 }, modifier = Modifier.align(Alignment.BottomCenter))
             }
-            when (layer) {
-                EinkLayer.Settings -> EinkSettingsSheet(session, state, onMore = { show(EinkLayer.More) }, onDone = { show(EinkLayer.None) })
-                EinkLayer.More -> EinkMoreSheet(session, state, onBack = { show(EinkLayer.Settings) }, onDone = { show(EinkLayer.None) }, onTapZones = { show(EinkLayer.TapZones) })
-                EinkLayer.TapZones -> EinkTapZonesSheet(
-                    session,
-                    state,
-                    onBack = { show(EinkLayer.More) },
-                    onDone = { show(EinkLayer.None) },
-                    onShowZones = {
-                        val map = reading?.let { tapMap(taps, it, null) }
-                        if (map == null) {
-                            show(EinkLayer.None)
-                        } else {
-                            // The sheet and the bars go under the guide, in the guide's one refresh.
-                            layer = EinkLayer.None
-                            chrome = false
-                            guide.show(map)
-                        }
-                    },
-                )
-                EinkLayer.Contents -> EinkContents(
-                    session = session,
-                    state = state,
-                    onBack = { show(EinkLayer.None) },
-                    // The row stays pressed over the list while its chapter opens, as the board draws it.
-                    onOpen = { chapter ->
-                        if (chapter == view?.chapter?.id || !session.openChapter(chapter)) show(EinkLayer.None)
-                    },
-                    onPage = { paint(EinkPaint.ListPage(false)) },
-                    keys = contentsKeys,
-                )
-                EinkLayer.None -> Unit
+            // The sheets, in one focus group the focus moves into as one opens.
+            Box(Modifier.fillMaxSize().focusRequester(sheetFocus).onFocusChanged { sheetHolds.held = it.hasFocus }.focusGroup()) {
+                when (layer) {
+                    EinkLayer.Settings -> EinkSettingsSheet(session, state, onMore = { show(EinkLayer.More) }, onDone = { show(EinkLayer.None) })
+                    EinkLayer.More -> EinkMoreSheet(session, state, onBack = { show(EinkLayer.Settings) }, onDone = { show(EinkLayer.None) }, onTapZones = { show(EinkLayer.TapZones) })
+                    EinkLayer.TapZones -> EinkTapZonesSheet(
+                        session,
+                        state,
+                        onBack = { show(EinkLayer.More) },
+                        onDone = { show(EinkLayer.None) },
+                        onShowZones = {
+                            val map = reading?.let { tapMap(taps, it, null) }
+                            if (map == null) {
+                                show(EinkLayer.None)
+                            } else {
+                                // The sheet and the bars go under the guide, in the guide's one refresh.
+                                layer = EinkLayer.None
+                                chrome = false
+                                guide.show(map)
+                            }
+                        },
+                    )
+                    EinkLayer.Contents -> EinkContents(
+                        session = session,
+                        state = state,
+                        onBack = { show(EinkLayer.None) },
+                        // The row stays pressed over the list while its chapter opens, as the board draws it.
+                        onOpen = { chapter ->
+                            if (chapter == view?.chapter?.id || !session.openChapter(chapter)) show(EinkLayer.None)
+                        },
+                        onPage = { paint(EinkPaint.ListPage(false)) },
+                        keys = contentsKeys,
+                    )
+                    EinkLayer.None -> Unit
+                }
             }
         }
     }
+}
+
+/** Whether a control in the open sheet holds the focus. */
+private class SheetFocus {
+    var held = false
 }
 
 /** Whether the quiet time has passed since [since], on [openingClock]; nothing asked counts from now. */

@@ -34,6 +34,7 @@ mod browsing;
 mod bug_report;
 mod crash;
 mod engine;
+mod folders;
 mod host;
 mod log;
 mod party;
@@ -56,6 +57,7 @@ mod words;
 
 pub use bug_report::bug_report_url;
 pub use engine::FfiEngine;
+pub use folders::{FfiFolderAccess, FfiFolderEntry, FfiOpenedFile};
 pub use host::{FfiDecodedImage, FfiHost, FfiPageDecoder};
 pub use log::{FfiLogLevel, log_line, start_log};
 #[cfg(all(feature = "party", feature = "testing"))]
@@ -494,6 +496,7 @@ mod tests {
             reading: true,
             edition: Some(kaeri_model::medium::AppEdition::ReadOnly),
             page_decoder: None,
+            folder_access: None,
         };
         assert_eq!(crossed(start.clone()), start);
         assert_eq!(start.edition(), kaeri_model::medium::AppEdition::ReadOnly);

@@ -504,13 +504,14 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
             goOn()
         } else {
             shown.end = true
+            model?.novelEnded()
         }
     }
 
     /// The next chapter, from the end page, once the reader knows which it is. With none the
     /// end page stays: it says why.
     private func goOn() {
-        guard let model, let next = model.end?.next ?? model.view?.next else { return }
+        guard let model, let next = model.endNext else { return }
         model.hideChrome()
         model.openChapter(next.id)
     }

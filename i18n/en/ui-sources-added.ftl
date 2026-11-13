@@ -140,6 +140,24 @@ book-folder-empty-line = { $files ->
 # Primary action after an empty folder.
 book-folder-choose-other = Choose another folder
 
+# Folder result title when the picked folder is already a source. It was scanned again.
+# @arg folder: text
+book-folder-already = { $folder } is already in your { -source-pl }
+
+# Line under it: what the new scan found. Closing the sheet keeps the folder.
+# @arg series: int
+book-folder-already-line = { $series ->
+    [one] { -app-name } looked through it again and found one series. It stays as it is.
+   *[other] { -app-name } looked through it again and found { $series } series. It stays as it is.
+ }
+
+# Title when a folder could not be read: the look through it could not start, or stopped.
+# @arg folder: text
+book-folder-unreadable = Couldn't read { $folder }
+
+# Line under it.
+book-folder-unreadable-line = It may have moved, or { -app-name } no longer has access to it.
+
 # Title of the Join a plugin store sheet.
 store-join-title = Join a { -plugin-store }
 

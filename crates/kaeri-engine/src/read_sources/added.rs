@@ -163,6 +163,7 @@ pub(crate) fn folder_report(folder: &Folder, scan: &Scan) -> FolderReport {
             .collect(),
         locked,
         listed: scan.unsupported_files.clone(),
+        already_added: false,
     }
 }
 

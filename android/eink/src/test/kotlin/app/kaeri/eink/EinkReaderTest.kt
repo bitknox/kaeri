@@ -2,8 +2,9 @@
 // the 40% forward zone and the upper page button, the folio in the margin, the bars on a middle
 // tap, the page between chapters in the flow, no full refresh until the person asks for one, Screen
 // mode set while the reader is open, and the reader's own settings and Contents, which Back closes
-// before it closes the reader. A chapter asked for keeps its control pressed, then names itself
-// loading, and is asked for once; the series title shows over a first chapter that is slow to open.
+// before it closes the reader, and which keys reach and leave without losing the reader. A chapter
+// asked for keeps its control pressed, then names itself loading, and is asked for once; the series
+// title shows over a first chapter that is slow to open.
 
 package app.kaeri.eink
 
@@ -13,6 +14,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.input.InputMode
+import androidx.compose.ui.input.InputModeManager
+import androidx.compose.ui.platform.LocalInputModeManager
+import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.isFocused
+import androidx.compose.ui.test.requestFocus
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.captureToImage
@@ -103,6 +111,7 @@ class EinkReaderTest {
         val actions = EinkReaderActions(onBack, {}, {})
         val images = PageImages()
         compose.setContent {
+            modes = LocalInputModeManager.current
             EinkTheme {
                 val state = session.state.collectAsState().value
                 if (readerOn) EinkReader(session, state, images, painter, actions, showZones = zones)
@@ -116,6 +125,7 @@ class EinkReaderTest {
     }
 
     private var readerOn by mutableStateOf(true)
+    private var modes: InputModeManager? = null
 
     private fun shown(): List<ReaderCommand.Shown> = sent.filterIsInstance<ReaderCommand.Shown>()
 
@@ -340,6 +350,46 @@ class EinkReaderTest {
         // With nothing over the page, Back closes the reader.
         back()
         assertEquals(1, closed)
+    }
+
+    @OptIn(ExperimentalComposeUiApi::class)
+    @Test
+    fun keys_reach_the_settings_sheet_and_never_lose_the_reader() {
+        open()
+        fun middle() {
+            compose.onRoot().performTouchInput { click(androidx.compose.ui.geometry.Offset(width * 0.55f, height * 0.5f)) }
+            compose.waitForIdle()
+        }
+        fun key(key: Key) {
+            compose.onRoot().performKeyInput { pressKey(key) }
+            compose.waitForIdle()
+        }
+        fun shows(words: String) = compose.onAllNodes(hasText(words)).fetchSemanticsNodes().isNotEmpty()
+
+        // A sheet opened by touch leaves the keys with the reader: Escape closes it and the bars.
+        middle()
+        compose.onNodeWithText("Settings").performClick()
+        compose.waitForIdle()
+        assertTrue(shows("Reader settings"))
+        key(Key.Escape)
+        assertTrue(!shows("Reader settings"))
+        assertTrue(!shows("Page 1 of 3"))
+
+        // With keys: Enter shows the bars, Enter on a focused Settings opens the sheet and the focus
+        // goes into it, and Escape still closes the sheet and the bars, leaving the keys with the reader.
+        key(Key.Enter)
+        assertTrue(shows("Page 1 of 3"))
+        compose.runOnIdle { modes!!.requestInputMode(InputMode.Keyboard) }
+        compose.onNodeWithText("Settings").requestFocus().assertIsFocused()
+        key(Key.Enter)
+        assertTrue(shows("Reader settings"))
+        assertTrue(compose.onAllNodes(isFocused()).fetchSemanticsNodes().isNotEmpty())
+        assertTrue(compose.onAllNodes(isFocused() and hasText("Settings")).fetchSemanticsNodes().isEmpty())
+        key(Key.Escape)
+        assertTrue(!shows("Reader settings"))
+        assertTrue(!shows("Page 1 of 3"))
+        key(Key.Enter)
+        assertTrue(shows("Page 1 of 3"))
     }
 
     @Test

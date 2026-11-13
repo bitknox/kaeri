@@ -2689,6 +2689,10 @@ object Strings {
     fun readerNovelLineScroll(context: Context, chapter: String): String =
         context.getString(R.string.reader_novel_line_scroll, chapter)
 
+    /** Under the novel's title in the reader's controls, while it scrolls, when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own. */
+    fun readerNovelLineScrollNamed(context: Context, name: String): String =
+        context.getString(R.string.reader_novel_line_scroll_named, name)
+
     /** At the end of a scrolling novel's scrubber: the time left in the chapter at the person's pace. */
     fun readerMinutesLeft(context: Context, minutes: Int): String =
         context.getString(R.string.reader_minutes_left, minutes)
@@ -9294,6 +9298,10 @@ object Strings {
     fun readerImageLoading(context: Context, image: Int): String =
         context.getString(R.string.reader_image_loading, image)
 
+    /** Under a strip image's number (Image 4) when it couldn't be loaded, above Try again. */
+    fun readerImageFailed(context: Context): String =
+        context.getString(R.string.reader_image_failed)
+
     /** Heading where a page could not be loaded. */
     fun readerPageFailed(context: Context, page: Int): String =
         context.getString(R.string.reader_page_failed, page)
@@ -9657,6 +9665,10 @@ object Strings {
     /** Top line of the page between chapters. The chapter is its number, such as 12. */
     fun readerEndOfChapterNumber(context: Context, chapter: String): String =
         context.getString(R.string.reader_end_of_chapter_number, chapter)
+
+    /** Top line of the page between chapters when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own, such as Rooftop Lantern. */
+    fun readerEndOfNamed(context: Context, name: String): String =
+        context.getString(R.string.reader_end_of_named, name)
 
     /** The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written. */
     fun readerEndFacts(context: Context, chapter: String, facts: String): String =
@@ -11512,6 +11524,10 @@ object Strings {
     fun readDownloadsFailed(context: Context, chapter: String, reason: String): String =
         context.getString(R.string.read_downloads_failed, chapter, reason)
 
+    /** Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows. */
+    fun readDownloadNotStarted(context: Context, reason: String): String =
+        context.getString(R.string.read_download_not_started, reason)
+
     /** A series' line in Downloads: how many chapters are kept. */
     fun readDownloadsKept(context: Context, n: Int): String =
         context.resources.getQuantityString(R.plurals.read_downloads_kept, n, n)
@@ -11619,6 +11635,14 @@ object Strings {
     /** Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing. */
     fun sendShareAgain(context: Context): String =
         context.getString(R.string.send_share_again)
+
+    /** A ready send whose files were cleared before they were shared or saved, in the Send to e-reader sheet and in the send's row. Prepared files are kept for a day. */
+    fun sendFilesGone(context: Context): String =
+        context.getString(R.string.send_files_gone)
+
+    /** Button on a send whose files are gone: prepares the same chapters for the same e-reader again. */
+    fun sendAgain(context: Context): String =
+        context.getString(R.string.send_again)
 
     /** A send in a list or banner that is under way, with a ring beside it. The device is the e-reader. */
     fun sendBanner(context: Context, device: String): String =
@@ -13671,6 +13695,22 @@ object Strings {
     /** Primary action after an empty folder. */
     fun bookFolderChooseOther(context: Context): String =
         context.getString(R.string.book_folder_choose_other)
+
+    /** Folder result title when the picked folder is already a source. It was scanned again. */
+    fun bookFolderAlready(context: Context, folder: String): String =
+        context.getString(R.string.book_folder_already, folder)
+
+    /** Line under it: what the new scan found. Closing the sheet keeps the folder. */
+    fun bookFolderAlreadyLine(context: Context, series: Int): String =
+        context.resources.getQuantityString(R.plurals.book_folder_already_line, series, series)
+
+    /** Title when a folder could not be read: the look through it could not start, or stopped. */
+    fun bookFolderUnreadable(context: Context, folder: String): String =
+        context.getString(R.string.book_folder_unreadable, folder)
+
+    /** Line under it. */
+    fun bookFolderUnreadableLine(context: Context): String =
+        context.getString(R.string.book_folder_unreadable_line)
 
     /** Title of the Join a plugin store sheet. */
     fun storeJoinTitle(context: Context): String =

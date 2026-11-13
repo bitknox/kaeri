@@ -2,7 +2,7 @@
 //! engines that need them, and the one paginator script and stylesheet every platform injects.
 //!
 //! The engine serves a book's files to the platform web view through a custom scheme
-//! (`kaeri-book://<session>/<path>`, or `https://appassets.androidplatform.net/book/...` on
+//! (`kaeri-book://s<session>/<path>`, or `https://appassets.androidplatform.net/book/...` on
 //! Android). Every document goes through [`document`] (or [`text_chapter`] for a source's text
 //! chapter), every stylesheet through [`stylesheet`], every SVG through [`svg`], and every
 //! response carries [`csp`]. A source's chapter opening with its title twice says it once

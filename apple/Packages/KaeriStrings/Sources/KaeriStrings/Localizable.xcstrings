@@ -16935,6 +16935,52 @@
         }
       }
     },
+    "book-folder-already" : {
+      "comment" : "Folder result title when the picked folder is already a source. It was scanned again. Argument 1: folder (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ is already in your sources"
+          }
+        }
+      }
+    },
+    "book-folder-already-line" : {
+      "comment" : "Line under it: what the new scan found. Closing the sheet keeps the folder. Argument 1: series (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@series@"
+          },
+          "substitutions" : {
+            "series" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Kaeri looked through it again and found one series. It stays as it is."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Kaeri looked through it again and found %1$lld series. It stays as it is."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "book-folder-change" : {
       "comment" : "Folder row action that picks another folder.",
       "extractionState" : "manual",
@@ -18319,6 +18365,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hiện tệp"
+          }
+        }
+      }
+    },
+    "book-folder-unreadable" : {
+      "comment" : "Title when a folder could not be read: the look through it could not start, or stopped. Argument 1: folder (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't read %1$@"
+          }
+        }
+      }
+    },
+    "book-folder-unreadable-line" : {
+      "comment" : "Line under it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It may have moved, or Kaeri no longer has access to it."
           }
         }
       }
@@ -197613,6 +197683,18 @@
         }
       }
     },
+    "read-download-not-started" : {
+      "comment" : "Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows. Argument 1: reason (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The download didn't start. %1$@"
+          }
+        }
+      }
+    },
     "read-downloads-active" : {
       "comment" : "A series' line in Downloads while a chapter downloads. Argument 1: chapter (Text). Argument 2: done (Int). Argument 3: total (Int).",
       "extractionState" : "manual",
@@ -214441,6 +214523,18 @@
         }
       }
     },
+    "reader-end-of-named" : {
+      "comment" : "Top line of the page between chapters when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own, such as Rooftop Lantern. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "End of %1$@"
+          }
+        }
+      }
+    },
     "reader-end-offline" : {
       "comment" : "End page heading when the next chapter is not downloaded and the device is offline. Argument 1: chapter (Text).",
       "extractionState" : "manual",
@@ -217837,6 +217931,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Văn bản"
+          }
+        }
+      }
+    },
+    "reader-image-failed" : {
+      "comment" : "Under a strip image's number (Image 4) when it couldn't be loaded, above Try again.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load"
           }
         }
       }
@@ -254905,6 +255011,18 @@
         }
       }
     },
+    "send-again" : {
+      "comment" : "Button on a send whose files are gone: prepares the same chapters for the same e-reader again.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send again"
+          }
+        }
+      }
+    },
     "send-banner" : {
       "comment" : "A send in a list or banner that is under way, with a ring beside it. The device is the e-reader. Argument 1: device (Text).",
       "extractionState" : "manual",
@@ -255741,6 +255859,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hãy thử lại khi bạn có mạng."
+          }
+        }
+      }
+    },
+    "send-files-gone" : {
+      "comment" : "A ready send whose files were cleared before they were shared or saved, in the Send to e-reader sheet and in the send's row. Prepared files are kept for a day.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "These files are gone. Prepared files are kept for a day."
           }
         }
       }

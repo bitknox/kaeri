@@ -71,6 +71,20 @@ public class ReadDiscoveryTests
     }
 
     [Fact]
+    public void AnOlderSearchsFailureGoesWhenTheNewerOnesResultsCome()
+    {
+        var store = Store(out _);
+        store.RunSearch(Words("lantern"));
+        store.RunSearch(Words("orchard"));
+        // The first query's failure comes late, naming no query.
+        store.Apply(new ReadingEvent.Failed(ReadingAbout.Search, new ReadingFailure.Offline()));
+        store.Apply(new ReadingEvent.Search(Query: Words("orchard"), Page: 0, Tiles: [Tile("a:900102")], HasMore: false, OtherScope: null, Total: 1));
+        Assert.Null(store.Search.Failure);
+        Assert.False(store.Failures.ContainsKey(ReadingAbout.Search));
+        Assert.Single(store.Search.Tiles);
+    }
+
+    [Fact]
     public void TryAgainAsksOneSourceForTheWordsInForce()
     {
         var store = Store(out var sent);

@@ -425,7 +425,8 @@ private struct ReadSpotlightView: View {
         }
     }
 
-    /// The amber action: read or go on, or Add to Planning for a series not checked yet.
+    /// The amber action: read or go on, or Add to Planning for a series not begun. A series in
+    /// Continue has no amber button while there is nothing to read it on from.
     @ViewBuilder
     private func main(stretch: Bool) -> some View {
         if let words = ReadSeriesWords.action(spot.action) {
@@ -440,7 +441,7 @@ private struct ReadSpotlightView: View {
             }
             .buttonStyle(PrimaryCapsuleStyle(height: layout.button.height, fontSize: layout.button.font))
             .pointerHover()
-        } else if !spot.planned {
+        } else if !spot.planned, spot.case == .upNext || spot.case == .popular {
             Button {
                 store.reading.setStatus(tile.work, .planning)
             } label: {

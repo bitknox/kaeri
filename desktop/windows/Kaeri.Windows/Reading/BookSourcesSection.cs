@@ -400,14 +400,14 @@ public sealed partial class BookSourcesSection : UserControl
     {
         var books = ctx.Known.Books;
         var on = new ToggleSwitch { IsOn = !plugin.Off, OnContent = "", OffContent = "", MinWidth = 0 };
-        AutomationProperties.SetName(on, T.BookSourcesUse);
+        AutomationProperties.SetName(on, T.WindowsReadSourcesUsePlugin);
         on.Toggled += (_, _) =>
         {
             if (on.IsOn == plugin.Off)
                 books.SetOff(plugin.Id, !on.IsOn);
         };
         var menu = new MenuFlyout();
-        var use = new ToggleMenuFlyoutItem { Text = T.BookSourcesUse, IsChecked = !plugin.Off };
+        var use = new ToggleMenuFlyoutItem { Text = T.WindowsReadSourcesUsePlugin, IsChecked = !plugin.Off };
         use.Click += (_, _) => books.SetOff(plugin.Id, !use.IsChecked);
         menu.Items.Add(use);
         if (order.Count > 1)
@@ -910,6 +910,9 @@ static class CameInDesk
                 case CameIn.Empty { V1: NothingCameIn.EmptyFolder f }:
                     _ = ShowFolder(ctx, f.Folder, true);
                     break;
+                case CameIn.Empty { V1: NothingCameIn.FolderUnreadable r }:
+                    _ = ShowFolder(ctx, r.Folder, true, unreadable: true);
+                    break;
                 case CameIn.Installed { V1: var done }:
                     if (store is { } open)
                         open.Take(came);
@@ -954,7 +957,7 @@ static class CameInDesk
     /// Cancel. The folder stays only on Add folder: Cancel or Esc takes it back out, as a form's
     /// cancel would.
     /// </summary>
-    static async Task ShowFolder(Ctx ctx, FolderReport report, bool nothing)
+    static async Task ShowFolder(Ctx ctx, FolderReport report, bool nothing, bool unreadable = false)
     {
         if (Root(ctx) is not { } root)
             return;
@@ -985,7 +988,9 @@ static class CameInDesk
         Grid.SetColumn(change, 2);
         where.Children.Add(change);
         body.Children.Add(where);
-        body.Children.Add(nothing
+        body.Children.Add(unreadable
+            ? BookWords.Note(T.BookFolderUnreadable(report.Name), T.BookFolderUnreadableLine, failed: true)
+            : nothing
             ? BookWords.Note(T.BookFolderEmpty(report.Name), T.BookFolderEmptyLine(report.Files))
             : BookWords.Note(T.BookFolderFound(report.Series, report.Files), T.BookFolderFoundLine(report.Path ?? report.Name, report.Matched), found: true));
         var skipped = BookWords.Skipped(report);
@@ -1025,7 +1030,8 @@ static class CameInDesk
             }
             body.Children.Add(Ui.Card(card, 12));
         }
-        body.Children.Add(Ui.Haze(T.BookFolderOpens));
+        if (!unreadable)
+            body.Children.Add(Ui.Haze(T.BookFolderOpens));
         var dialog = shown = new ContentDialog
         {
             XamlRoot = root,

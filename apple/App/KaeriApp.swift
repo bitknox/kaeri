@@ -63,7 +63,7 @@ struct KaeriApp: App {
                 PictureInPictureMenuItem(model: delegate.player)
             }
             // The reader's Go menu: the reader takes the main window over.
-            ReaderMenu()
+            ReaderMenu(model: delegate.store.reader)
         }
         // Play trailer: the trailer watched properly, in a window of its own.
         WindowGroup(L.titlePlayTrailer, id: TrailerRequest.windowId, for: TrailerRequest.self) { $request in
@@ -105,7 +105,7 @@ struct KaeriApp: App {
                 EmptyView()
             }
             // The reader's keys, with a hardware keyboard on iPad and iPhone.
-            ReaderMenu()
+            ReaderMenu(model: delegate.store.reader)
         }
         #endif
     }

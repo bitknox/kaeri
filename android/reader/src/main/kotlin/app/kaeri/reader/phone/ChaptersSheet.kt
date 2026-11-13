@@ -113,8 +113,9 @@ fun ChaptersSheet(
     }
 }
 
+/** "Chapter 12 · Its title", "Chapter 12", or a chapter with no number by its own name. */
 fun chapterWords(context: android.content.Context, chapter: ChapterRow): String {
-    val number = chapterNumber(chapter)
+    val number = chapter.number ?: return chapter.label
     return chapter.title?.let { Strings.readerChapterLineTitled(context, number, it) } ?: Strings.readerChapterLine(context, number)
 }
 

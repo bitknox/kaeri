@@ -20,8 +20,6 @@ struct ReaderChrome: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.readerPaper) private var paper
     @State private var scrub: Int?
-    @State private var goToText = ""
-    @FocusState private var fieldFocused: Bool
     #if os(macOS)
     @State private var fullScreen = false
     #endif
@@ -155,7 +153,7 @@ struct ReaderChrome: View {
         .accessibilityElement(children: .combine)
         .accessibilityHint(L.readerGoToPage)
         .accessibilitySortPriority(1)
-        .popover(isPresented: $model.askingPage) { goTo }
+        .popover(isPresented: $model.askingPage) { GoToPagePrompt(model: model, theme: theme) }
     }
 
     /// Changes when a credit page comes or goes, or is kept: the line crossfades then.
@@ -293,43 +291,63 @@ struct ReaderChrome: View {
             && words.allSatisfy { $0.isASCII && ($0.isNumber || $0 == ".") }
         return bare ? L.readerChapterLine(chapter: words) : label
     }
+}
 
-    private var goToTotal: Int { model.novel != nil || model.view?.mode == .strip ? max(model.position.count, 1) : max(model.pageCount, 1) }
+/// Go to page: the field and Go, which the number pad has no key for. A view of its own, so the
+/// field's focus lives in the popover that shows it.
+private struct GoToPagePrompt: View {
+    let model: ReaderModel
+    let theme: ReaderTheme
+    @State private var text = ""
+    @FocusState private var focused: Bool
+
+    private var total: Int { model.novel != nil || model.view?.mode == .strip ? max(model.position.count, 1) : max(model.pageCount, 1) }
 
     /// The number typed, when it is a page there is.
-    private var goToTarget: Int? {
-        guard let number = Int(goToText.trimmingCharacters(in: .whitespaces)), (1...goToTotal).contains(number) else { return nil }
+    private var target: Int? {
+        guard let number = Int(text.trimmingCharacters(in: .whitespaces)), (1...total).contains(number) else { return nil }
         return number
     }
 
-    /// Go to page: the field and Go, which the number pad has no key for.
-    private var goTo: some View {
+    var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(L.readerGoToPage).font(.ui(15, weight: .semibold)).foregroundStyle(theme.silk)
             HStack(spacing: 8) {
-                TextField(L.readerGoToPageField(total: goToTotal), text: $goToText)
+                #if os(iOS)
+                GoToPageField(text: $text, placeholder: L.readerGoToPageField(total: total), submit: submit) {
+                    model.askingPage = false
+                }
+                .frame(width: 140)
+                #else
+                TextField(L.readerGoToPageField(total: total), text: $text)
                     .textFieldStyle(.roundedBorder)
-                    #if os(iOS)
-                    .keyboardType(.numberPad)
-                    #endif
                     .frame(width: 140)
-                    .focused($fieldFocused)
+                    .focused($focused)
                     .onSubmit(submit)
+                #endif
                 Button(L.readerGoToPageSubmit, action: submit)
                     .buttonStyle(ReaderAmberStyle(theme: theme, height: 36).fixed())
-                    .disabled(goToTarget == nil)
-                    .opacity(goToTarget == nil ? 0.45 : 1)
+                    .disabled(target == nil)
+                    .opacity(target == nil ? 0.45 : 1)
             }
         }
         .padding(16)
         .presentationCompactAdaptation(.popover)
-        .onAppear { fieldFocused = true }
+        #if !os(iOS)
+        // The field takes the keys as the prompt shows. On iPad the field takes them itself.
+        .defaultFocus($focused, true)
+        .onAppear { focused = true }
+        // Esc closes the prompt from the field, which holds the keys while it is up.
+        .onKeyPress(.escape) {
+            model.askingPage = false
+            return .handled
+        }
+        #endif
     }
 
     private func submit() {
-        guard let page = goToTarget else { return }
+        guard let page = target else { return }
         model.askingPage = false
-        goToText = ""
         model.requestJump(model.novel != nil || model.view?.mode == .strip ? page - 1 : model.leaf(ofPage: page))
     }
 }

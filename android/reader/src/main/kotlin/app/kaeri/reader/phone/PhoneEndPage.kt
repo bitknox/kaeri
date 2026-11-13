@@ -98,6 +98,7 @@ import app.kaeri.reader.PageFileView
 import app.kaeri.reader.PageImages
 import app.kaeri.reader.ReaderSession
 import app.kaeri.reader.ReaderState
+import app.kaeri.reader.text
 import app.kaeri.reader.endSkipped
 import app.kaeri.reader.TextThenLink
 import app.kaeri.reader.rememberServerLine
@@ -131,8 +132,11 @@ fun PhoneEndPage(
     }
     val context = LocalContext.current
     val end = state.end
-    val next = state.endNext
-    val number = chapterNumber(view.chapter)
+    // A strip that could not flow into its next chapter ends here, naming that chapter, with Try again.
+    val failedFlow = state.flowFailed
+    val next = failedFlow?.row ?: state.endNext
+    val retryFlow = failedFlow != null && next?.id == failedFlow.chapter
+    val ending = view.chapter.number?.let { Strings.readerEndOfChapterNumber(context, it) } ?: Strings.readerEndOfNamed(context, view.chapter.label)
     val server = rememberServerLine(view.work, view.chapter.id)
     val read = view.chapter.id in state.read
     val continueFocus = remember { FocusRequester() }
@@ -156,7 +160,7 @@ fun PhoneEndPage(
         // on the iPad; a phone's buttons stay at the foot.
         val wide = maxWidth >= 600.dp
         val buttons: @Composable () -> Unit = {
-            if (next != null) {
+            if (next != null && !retryFlow) {
                 Text(
                     Strings.readerEndSwipe(context),
                     color = Chrome.faint,
@@ -167,7 +171,13 @@ fun PhoneEndPage(
                 Spacer(Modifier.height(12.dp))
             }
             Button(
-                onClick = { if (next != null) session.openChapter(next.id) else actions.onSeries() },
+                onClick = {
+                    when {
+                        retryFlow -> session.retryFlow()
+                        next != null -> session.openChapter(next.id)
+                        else -> actions.onSeries()
+                    }
+                },
                 shape = RoundedCornerShape(25.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Chrome.accent, contentColor = Chrome.onAccent),
                 contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
@@ -184,7 +194,11 @@ fun PhoneEndPage(
                     },
             ) {
                 Text(
-                    if (next != null) Strings.readerEndContinue(context) else Strings.readerEndSeries(context),
+                    when {
+                        retryFlow -> Strings.readerTryAgain(context)
+                        next != null -> Strings.readerEndContinue(context)
+                        else -> Strings.readerEndSeries(context)
+                    },
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center,
@@ -235,7 +249,7 @@ fun PhoneEndPage(
             }
         }
         val body: @Composable () -> Unit = {
-            Text(Strings.readerEndOfChapterNumber(context, number), color = Chrome.faint, fontSize = 15.sp, lineHeight = 20.sp)
+            Text(ending, color = Chrome.faint, fontSize = 15.sp, lineHeight = 20.sp)
             // With a server line coming, the tracker line's place is kept too, so nothing under it moves.
             if (read || server.held) {
                 Spacer(Modifier.height(4.dp))
@@ -267,7 +281,7 @@ fun PhoneEndPage(
                 Text(Strings.readerEndNext(context), color = Chrome.faint, fontSize = 13.sp)
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    next.title ?: Strings.readerChapterLine(context, chapterNumber(next)),
+                    next.title ?: chapterName(context, next),
                     color = Chrome.text,
                     fontFamily = robotoFlex(FontWeight.Bold, if (narrow) 26.sp else 30.sp),
                     fontSize = if (narrow) 26.sp else 30.sp,
@@ -276,6 +290,16 @@ fun PhoneEndPage(
                 Spacer(Modifier.height(4.dp))
                 val facts = endFacts(context, next, end?.source?.takeIf { end.next?.id == next.id })
                 if (facts.isNotEmpty()) Text(facts, color = Chrome.faint, fontSize = 14.sp, lineHeight = 20.sp)
+                if (retryFlow && failedFlow != null) {
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        failedFlow.failure.text(context),
+                        color = Chrome.text,
+                        fontSize = 14.sp,
+                        lineHeight = 20.sp,
+                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                    )
+                }
                 // The next chapter's first page, once the engine made it; its plate until then. A
                 // novel's chapter has no page to show.
                 if (view.medium != Medium.NOVEL) {
@@ -292,7 +316,7 @@ fun PhoneEndPage(
                         // With no preview the plate names the chapter, as the page plate names its page.
                         Box(Modifier.fillMaxSize().background(Chrome.plate)) {
                             Text(
-                                Strings.readerChapterLine(context, chapterNumber(next)),
+                                chapterName(context, next),
                                 color = Chrome.faint,
                                 fontSize = 15.sp,
                                 textAlign = TextAlign.Center,
@@ -526,8 +550,9 @@ private fun DemoEndCard(
 
 /** "Chapter 13 · 34 pages", with "· from" its source when it comes from one. */
 internal fun endFacts(context: Context, next: ChapterRow, source: String?): String {
-    // The heading already names an untitled chapter, and a novel's chapter has no page count.
-    val chapter = next.title?.let { chapterNumber(next) }
+    // The heading already names an untitled chapter, and a novel's chapter has no page count. A
+    // chapter with no number has only its name, which the heading says.
+    val chapter = next.title?.let { next.number }
     val pages = next.pages?.takeIf { it > 0u }?.let { Strings.readerEndPages(context, it.toInt()) }
     val facts = when {
         chapter != null && pages != null -> Strings.readerEndFacts(context, chapter, pages)

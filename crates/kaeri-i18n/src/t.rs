@@ -3240,6 +3240,16 @@ pub fn linux_reader_page_failed_hint() -> String {
     text("linux-reader-page-failed-hint", &[])
 }
 
+/// Why a page failed: its file came in, but no image decoder on this system could show it.
+pub fn linux_reader_page_undecodable() -> String {
+    text("linux-reader-page-undecodable", &[])
+}
+
+/// Why a light novel's chapter stopped showing: the view that draws its text closed or failed to load it.
+pub fn linux_reader_novel_stopped() -> String {
+    text("linux-reader-novel-stopped", &[])
+}
+
 /// Line while a chapter opens, once its number is known.
 pub fn linux_reader_opening_number(chapter: &str) -> String {
     text("linux-reader-opening-number", &[("chapter", Arg::Text(chapter))])
@@ -14242,6 +14252,11 @@ pub fn reader_image_loading(image: i64) -> String {
     text("reader-image-loading", &[("image", Arg::Plain(image))])
 }
 
+/// Under a strip image's number (Image 4) when it couldn't be loaded, above Try again.
+pub fn reader_image_failed() -> String {
+    text("reader-image-failed", &[])
+}
+
 /// Heading where a page could not be loaded.
 pub fn reader_page_failed(page: i64) -> String {
     text("reader-page-failed", &[("page", Arg::Plain(page))])
@@ -14695,6 +14710,11 @@ pub fn reader_look_system() -> String {
 /// Top line of the page between chapters. The chapter is its number, such as 12.
 pub fn reader_end_of_chapter_number(chapter: &str) -> String {
     text("reader-end-of-chapter-number", &[("chapter", Arg::Text(chapter))])
+}
+
+/// Top line of the page between chapters when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own, such as Rooftop Lantern.
+pub fn reader_end_of_named(name: &str) -> String {
+    text("reader-end-of-named", &[("name", Arg::Text(name))])
 }
 
 /// The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.
@@ -16985,6 +17005,11 @@ pub fn read_downloads_failed(chapter: &str, reason: &str) -> String {
     text("read-downloads-failed", &[("chapter", Arg::Text(chapter)), ("reason", Arg::Text(reason))])
 }
 
+/// Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows.
+pub fn read_download_not_started(reason: &str) -> String {
+    text("read-download-not-started", &[("reason", Arg::Text(reason))])
+}
+
 /// A series' line in Downloads: how many chapters are kept.
 pub fn read_downloads_kept(n: i64) -> String {
     text("read-downloads-kept", &[("n", Arg::Int(n))])
@@ -17118,6 +17143,16 @@ pub fn send_ready(n: i64) -> String {
 /// Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.
 pub fn send_share_again() -> String {
     text("send-share-again", &[])
+}
+
+/// A ready send whose files were cleared before they were shared or saved, in the Send to e-reader sheet and in the send's row. Prepared files are kept for a day.
+pub fn send_files_gone() -> String {
+    text("send-files-gone", &[])
+}
+
+/// Button on a send whose files are gone: prepares the same chapters for the same e-reader again.
+pub fn send_again() -> String {
+    text("send-again", &[])
 }
 
 /// A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
@@ -19683,6 +19718,26 @@ pub fn book_folder_empty_line(files: i64) -> String {
 /// Primary action after an empty folder.
 pub fn book_folder_choose_other() -> String {
     text("book-folder-choose-other", &[])
+}
+
+/// Folder result title when the picked folder is already a source. It was scanned again.
+pub fn book_folder_already(folder: &str) -> String {
+    text("book-folder-already", &[("folder", Arg::Text(folder))])
+}
+
+/// Line under it: what the new scan found. Closing the sheet keeps the folder.
+pub fn book_folder_already_line(series: i64) -> String {
+    text("book-folder-already-line", &[("series", Arg::Int(series))])
+}
+
+/// Title when a folder could not be read: the look through it could not start, or stopped.
+pub fn book_folder_unreadable(folder: &str) -> String {
+    text("book-folder-unreadable", &[("folder", Arg::Text(folder))])
+}
+
+/// Line under it.
+pub fn book_folder_unreadable_line() -> String {
+    text("book-folder-unreadable-line", &[])
 }
 
 /// Title of the Join a plugin store sheet.

@@ -375,10 +375,14 @@ fun PagedReader(
                     return
                 }
                 val end = if (drag > 0) width else -width
+                val from = latest.chapter
                 settling = scope.launch {
                     animate(drag, end, velocity, Motion.standard()) { v, _ -> drag = v }
-                    pager.creditSlid = true
-                    pager.show(step, TurnHow.SWIPE, creditNow, latest.shownCredit)
+                    // Another chapter opened under the swipe: its step names a page there no more.
+                    if (latest.chapter == from) {
+                        pager.creditSlid = true
+                        pager.show(step, TurnHow.SWIPE, creditNow, latest.shownCredit)
+                    }
                     pager.under = null
                     drag = 0f
                 }
@@ -394,9 +398,12 @@ fun PagedReader(
                     return
                 }
                 val end = if (drag > 0) width else -width
+                val from = latest.chapter
                 settling = scope.launch {
                     animate(drag, end, velocity, Motion.standard()) { v, _ -> drag = v }
-                    pager.go(target, TurnHow.SWIPE)
+                    // Another chapter opened under the swipe: its leaf number names another page
+                    // there, so the new chapter stays where it opened.
+                    if (latest.chapter == from) pager.go(target, TurnHow.SWIPE)
                     drag = 0f
                 }
             } else if (motion) {

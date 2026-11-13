@@ -68,6 +68,17 @@ object EinkSizes {
     val SheetRow: Dp = 60.dp
     val SheetLabel: Dp = 150.dp
     val NewDot: Dp = 10.dp
+
+    // The keyboard and D-pad focus mark: an ink ring following the control's shape, with a paper
+    // line inside it, so it shows on paper, on grey, on an ink button and on a cover.
+    val FocusRing: Dp = 3.dp
+    val FocusLine: Dp = 2.dp
+
+    /** Where the control draws its own 2 dp border: the ring sits inside it, 2 dp of paper apart. */
+    val FocusInsideBorder: Dp = 4.dp
+
+    /** Where a row's words or cover start at its very edge: the ring sits just outside the row. */
+    val FocusOutside: Dp = (-6).dp
 }
 
 /** The board's type: titles in Zen Kaku Gothic New, the rest in Roboto at 15 and up. */
