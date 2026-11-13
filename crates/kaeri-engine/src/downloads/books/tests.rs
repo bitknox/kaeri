@@ -633,7 +633,16 @@ async fn a_queue_stopped_by_a_full_device_says_so_until_it_starts_again() {
     *kit.queue.0.free.lock().unwrap() = Some(KEEP_FREE - 1);
     kit.queue.download(&kit.lent, WorkId::new(WORK), DownloadPick::Unread).await;
     kit.settle().await;
-    assert!(kit.queue.view(kit.store()).stopped_full);
+    let stopped = kit.queue.view(kit.store());
+    assert!(stopped.stopped_full);
+    // The series' row says what to do, and that Retry takes the queued chapter on with it.
+    assert!(
+        stopped.series[0]
+            .line
+            .contains(&Msg::Reading(ReadingMsg::ReadingDlNoRoom { count: 1 })),
+        "{:?}",
+        stopped.series[0].line
+    );
 
     *kit.queue.0.free.lock().unwrap() = Some(KEEP_FREE * 4);
     kit.queue

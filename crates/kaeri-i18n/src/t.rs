@@ -1645,6 +1645,11 @@ pub fn reading_dl_offline() -> String {
     text("reading-dl-offline", &[])
 }
 
+/// After "Chapter 2 couldn't download" when the device is full and more chapters were queued after it. They wait until Retry, which downloads the failed chapter and goes on with them. Retry is the button beside the row (chapter-retry).
+pub fn reading_dl_no_room(count: i64) -> String {
+    text("reading-dl-no-room", &[("count", Arg::Int(count))])
+}
+
 /// How much the chosen chapters will take, from their pages and the size of pages downloaded before.
 pub fn reading_estimate_size(size: &str) -> String {
     text("reading-estimate-size", &[("size", Arg::Text(size))])

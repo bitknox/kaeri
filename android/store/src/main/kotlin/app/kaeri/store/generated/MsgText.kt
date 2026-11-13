@@ -481,6 +481,7 @@ fun ReadingMsg.text(context: Context): String =
         is ReadingMsg.ReadingDlWaitsWifi -> Strings.readingDlWaitsWifi(context)
         is ReadingMsg.ReadingDlFailed -> Strings.readingDlFailed(context, this.chapter)
         is ReadingMsg.ReadingDlOffline -> Strings.readingDlOffline(context)
+        is ReadingMsg.ReadingDlNoRoom -> Strings.readingDlNoRoom(context, this.count.toInt())
         is ReadingMsg.ReadingEstimateSize -> Strings.readingEstimateSize(context, sizeText(context, this.size))
         is ReadingMsg.ReadingEstimateWifi -> Strings.readingEstimateWifi(context)
         is ReadingMsg.ReadingEstimateMobile -> Strings.readingEstimateMobile(context)

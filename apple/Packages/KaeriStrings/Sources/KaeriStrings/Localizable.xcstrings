@@ -231139,6 +231139,40 @@
         }
       }
     },
+    "reading-dl-no-room" : {
+      "comment" : "After \"Chapter 2 couldn't download\" when the device is full and more chapters were queued after it. They wait until Retry, which downloads the failed chapter and goes on with them. Retry is the button beside the row (chapter-retry). Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "No room left. Free some space, then Retry for it and one more."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "No room left. Free some space, then Retry for it and %1$lld more."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "reading-dl-offline" : {
       "comment" : "After \"Chapter 2 couldn't download\" when there was no network: the downloads banner says the rest.",
       "extractionState" : "manual",

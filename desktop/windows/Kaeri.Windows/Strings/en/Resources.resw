@@ -1435,6 +1435,14 @@
     <value>Offline</value>
     <comment>After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.</comment>
   </data>
+  <data name="ReadingDlNoRoom_one" xml:space="preserve">
+    <value>No room left. Free some space, then Retry for it and one more.</value>
+    <comment>After "Chapter 2 couldn't download" when the device is full and more chapters were queued after it. They wait until Retry, which downloads the failed chapter and goes on with them. Retry is the button beside the row (chapter-retry).</comment>
+  </data>
+  <data name="ReadingDlNoRoom_other" xml:space="preserve">
+    <value>No room left. Free some space, then Retry for it and {count} more.</value>
+    <comment>After "Chapter 2 couldn't download" when the device is full and more chapters were queued after it. They wait until Retry, which downloads the failed chapter and goes on with them. Retry is the button beside the row (chapter-retry).</comment>
+  </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>About {size}</value>
     <comment>How much the chosen chapters will take, from their pages and the size of pages downloaded before.</comment>

@@ -1571,6 +1571,8 @@ pub enum ReadingMsg {
     ReadingDlFailed { chapter: String },
     /// After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
     ReadingDlOffline,
+    /// After "Chapter 2 couldn't download" when the device is full and more chapters were queued after it. They wait until Retry, which downloads the failed chapter and goes on with them. Retry is the button beside the row (chapter-retry).
+    ReadingDlNoRoom { count: i64 },
     /// How much the chosen chapters will take, from their pages and the size of pages downloaded before.
     ReadingEstimateSize { size: Size },
     /// The chapters download only on Wi-Fi, as the settings say.
@@ -1833,6 +1835,7 @@ impl ReadingMsg {
             Self::ReadingDlWaitsWifi => "reading-dl-waits-wifi",
             Self::ReadingDlFailed { .. } => "reading-dl-failed",
             Self::ReadingDlOffline => "reading-dl-offline",
+            Self::ReadingDlNoRoom { .. } => "reading-dl-no-room",
             Self::ReadingEstimateSize { .. } => "reading-estimate-size",
             Self::ReadingEstimateWifi => "reading-estimate-wifi",
             Self::ReadingEstimateMobile => "reading-estimate-mobile",
@@ -2045,6 +2048,7 @@ impl ReadingMsg {
             Self::ReadingDlWaitsWifi => Vec::new(),
             Self::ReadingDlFailed { chapter } => vec![("chapter", Value::Text(chapter.clone()))],
             Self::ReadingDlOffline => Vec::new(),
+            Self::ReadingDlNoRoom { count } => vec![("count", Value::Int(*count))],
             Self::ReadingEstimateSize { size } => vec![("size", Value::Size(*size))],
             Self::ReadingEstimateWifi => Vec::new(),
             Self::ReadingEstimateMobile => Vec::new(),

@@ -814,6 +814,15 @@ reading-dl-failed = Chapter { $chapter } couldn't download
 # @max 20
 reading-dl-offline = Offline
 
+# After "Chapter 2 couldn't download" when the device is full and more chapters were queued after
+# it. They wait until Retry, which downloads the failed chapter and goes on with them. Retry is the
+# button beside the row (chapter-retry).
+# @arg count: int
+reading-dl-no-room = { $count ->
+    [one] No room left. Free some space, then Retry for it and one more.
+   *[other] No room left. Free some space, then Retry for it and { $count } more.
+ }
+
 ## Download estimate
 ## Above the Download button when choosing chapters: "About 62 MB · over Wi-Fi".
 

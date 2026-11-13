@@ -724,6 +724,11 @@
     <string name="reading_dl_failed">Chapter %1$s couldn\'t download</string>
     <!-- After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest. -->
     <string name="reading_dl_offline">Offline</string>
+    <!-- After "Chapter 2 couldn't download" when the device is full and more chapters were queued after it. They wait until Retry, which downloads the failed chapter and goes on with them. Retry is the button beside the row (chapter-retry). -->
+    <plurals name="reading_dl_no_room">
+        <item quantity="one">No room left. Free some space, then Retry for it and one more.</item>
+        <item quantity="other">No room left. Free some space, then Retry for it and %1$,d more.</item>
+    </plurals>
     <!-- How much the chosen chapters will take, from their pages and the size of pages downloaded before. -->
     <string name="reading_estimate_size">About %1$s</string>
     <!-- The chapters download only on Wi-Fi, as the settings say. -->

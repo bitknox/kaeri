@@ -1341,6 +1341,11 @@ public enum L {
     /// After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
     public static var readingDlOffline: String { string("reading-dl-offline", fallback: "Offline") }
 
+    /// After "Chapter 2 couldn't download" when the device is full and more chapters were queued after it. They wait until Retry, which downloads the failed chapter and goes on with them. Retry is the button beside the row (chapter-retry).
+    public static func readingDlNoRoom(count: Int) -> String {
+        Self.format("reading-dl-no-room", fallback: "No room left. Free some space, then Retry for it and %1$lld more.", count)
+    }
+
     /// How much the chosen chapters will take, from their pages and the size of pages downloaded before.
     public static func readingEstimateSize(size: String) -> String {
         Self.format("reading-estimate-size", fallback: "About %1$@", size)

@@ -1321,6 +1321,10 @@ object Strings {
     fun readingDlOffline(context: Context): String =
         context.getString(R.string.reading_dl_offline)
 
+    /** After "Chapter 2 couldn't download" when the device is full and more chapters were queued after it. They wait until Retry, which downloads the failed chapter and goes on with them. Retry is the button beside the row (chapter-retry). */
+    fun readingDlNoRoom(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_dl_no_room, count, count)
+
     /** How much the chosen chapters will take, from their pages and the size of pages downloaded before. */
     fun readingEstimateSize(context: Context, size: String): String =
         context.getString(R.string.reading_estimate_size, size)
