@@ -48,14 +48,18 @@ struct PagedTrackpadSwipeTests {
         return window
     }
 
+    private static func turn() {
+        while let event = NSApp.nextEvent(matching: .any, until: Date(), inMode: .default, dequeue: true) {
+            NSApp.sendEvent(event)
+        }
+        RunLoop.main.run(until: Date().addingTimeInterval(0.005))
+    }
+
     /// The run loop turned, with the events posted to the app taken as the app takes them.
     private func spin(_ seconds: Double) async {
         let end = Date().addingTimeInterval(seconds)
         while Date() < end {
-            while let event = NSApp.nextEvent(matching: .any, until: Date(), inMode: .default, dequeue: true) {
-                NSApp.sendEvent(event)
-            }
-            RunLoop.main.run(until: Date().addingTimeInterval(0.005))
+            Self.turn()
             try? await Task.sleep(for: .milliseconds(1))
         }
     }
