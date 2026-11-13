@@ -305,10 +305,7 @@ fn downloadable(chapter: &ChapterRow) -> bool {
 /// Whether the Download button has anything to do: a chapter to download, or one downloaded. A
 /// folder's series has neither, and its button rests.
 fn has_downloads(volumes: &[VolumeGroup]) -> bool {
-    volumes
-        .iter()
-        .flat_map(|g| &g.chapters)
-        .any(|c| downloadable(c) || c.download.is_some())
+    volumes.iter().flat_map(|g| &g.chapters).any(|c| downloadable(c) || c.download.is_some())
 }
 
 /// The next 5 or 10 unread, every unread chapter, a volume, and deleting the downloads.
@@ -999,9 +996,8 @@ mod tests {
     fn actions(menu: &gtk::gio::MenuModel) -> Vec<String> {
         let mut found = Vec::new();
         for i in 0..menu.n_items() {
-            if let Some(action) = menu
-                .item_attribute_value(i, "action", None)
-                .and_then(|v| v.get::<String>())
+            if let Some(action) =
+                menu.item_attribute_value(i, "action", None).and_then(|v| v.get::<String>())
             {
                 found.push(action);
             }
@@ -1017,32 +1013,35 @@ mod tests {
     /// still do.
     #[test]
     fn a_folders_chapters_offer_no_download() {
-        use kaeri_model::reading::{ChapterDownloadState, ChapterReadState, ChapterRow, VolumeGroup};
-        let row = |n: u32, on_device: bool, download: Option<ChapterDownloadState>| ChapterRow {
-            id: ChapterId(n.to_string()),
-            label: format!("Chapter {n}"), // i18n-skip
-            state: ChapterReadState::Unread,
-            number: Some(n.to_string()),
-            title: None,
-            volume: Some("1".into()),
-            published: None,
-            pages: None,
-            new_chapter: false,
-            download,
-            versions: 1,
-            bookmarked: false,
-            version_label: None,
-            read_at: None,
-            line: Vec::new(),
-            gone_from_source: false,
-            parts: 1,
-            missing_parts: Vec::new(),
-            part_groups: Vec::new(),
-            other_group: false,
-            group_language: None,
-            other_source: None,
-            on_device,
+        use kaeri_model::reading::{
+            ChapterDownloadState, ChapterReadState, ChapterRow, VolumeGroup,
         };
+        let row =
+            |n: u32, on_device: bool, download: Option<ChapterDownloadState>| ChapterRow {
+                id: ChapterId(n.to_string()),
+                label: format!("Chapter {n}"), // i18n-skip
+                state: ChapterReadState::Unread,
+                number: Some(n.to_string()),
+                title: None,
+                volume: Some("1".into()),
+                published: None,
+                pages: None,
+                new_chapter: false,
+                download,
+                versions: 1,
+                bookmarked: false,
+                version_label: None,
+                read_at: None,
+                line: Vec::new(),
+                gone_from_source: false,
+                parts: 1,
+                missing_parts: Vec::new(),
+                part_groups: Vec::new(),
+                other_group: false,
+                group_language: None,
+                other_source: None,
+                on_device,
+            };
         let group = |rows: Vec<ChapterRow>| {
             vec![VolumeGroup {
                 volume: Some("1".into()),
@@ -1057,7 +1056,10 @@ mod tests {
         assert!(!super::has_downloads(&folder), "the Download button rests");
         let menu = super::download_menu(&work, &folder);
         assert_eq!(
-            actions(menu.upcast_ref()).iter().filter(|a| *a == "win.read-download-pick").count(),
+            actions(menu.upcast_ref())
+                .iter()
+                .filter(|a| *a == "win.read-download-pick")
+                .count(),
             3,
             "only the next and unread picks, no volume: {:?}",
             actions(menu.upcast_ref())
@@ -1069,7 +1071,10 @@ mod tests {
         assert!(super::has_downloads(&source));
         let menu = super::download_menu(&work, &source);
         assert_eq!(
-            actions(menu.upcast_ref()).iter().filter(|a| *a == "win.read-download-pick").count(),
+            actions(menu.upcast_ref())
+                .iter()
+                .filter(|a| *a == "win.read-download-pick")
+                .count(),
             4
         );
         let rows = super::chapter_menu(&work, &source[0].chapters[0]);
