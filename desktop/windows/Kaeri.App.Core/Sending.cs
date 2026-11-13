@@ -228,7 +228,7 @@ public sealed class SendState
                     s.Line = waiting.Line.Text();
                     // A send this window never asked for (held across a restart) learns its
                     // chapters here, so sharing it later can set the place.
-                    if (s.Chapters.Length == 0 && waiting.Chapters is { Length: > 0 } held)
+                    if (s.Chapters.Length == 0 && waiting.ChaptersValue is { Length: > 0 } held)
                         s.Chapters = held;
                 });
                 return ReadingPart.Send;
