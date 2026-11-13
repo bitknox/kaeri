@@ -89,7 +89,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.material3.SearchBarValue
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.InputMode
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInputModeManager
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.semantics.contentDescription
@@ -334,8 +340,22 @@ private fun ShowsSearch(start: SearchQuery?, startFilters: Boolean, open: Boolea
         }
     }
 
+    // With a keyboard, Enter leaves the focus in the field, as reading's Search does: the docked
+    // field takes it once the full-screen one has gone, rather than the first control on screen.
+    // By touch the focus goes as before, since a focused docked field opens the search view again.
+    val dockedField = remember { FocusRequester() }
+    val inputMode = LocalInputModeManager.current
+    var refocus by remember { mutableStateOf(false) }
+    LaunchedEffect(refocus, bar.currentValue) {
+        if (!refocus || bar.currentValue != SearchBarValue.Collapsed) return@LaunchedEffect
+        withFrameNanos {}
+        refocus = false
+        dockedField.requestFocus()
+    }
+
     fun submit() {
         store.search(text.text.toString())
+        refocus = inputMode.inputMode == InputMode.Keyboard
         scope.launch { bar.animateToCollapsed() }
     }
 
@@ -383,7 +403,7 @@ private fun ShowsSearch(start: SearchQuery?, startFilters: Boolean, open: Boolea
     Column(Modifier.semantics { paneTitle = searchTitle }) {
         SearchTop(
             phone, scrolledUnder, both, reading = false,
-            field = { SearchBar(state = bar, inputField = input, colors = colors, modifier = SearchFieldPlace) },
+            field = { SearchBar(state = bar, inputField = input, colors = colors, modifier = SearchFieldPlace.focusRequester(dockedField)) },
             row = { FilterRow(status.query, phone, rowScroll, onFilters = { filtersShown = true }) },
         )
         // While the demo is the only source: other titles play once a plugin store is joined.
