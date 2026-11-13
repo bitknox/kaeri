@@ -343,8 +343,7 @@ pub fn build(ctx: &Rc<Ctx>) -> SearchPage {
 impl SearchPage {
     /// The search bar open with the caret in it, as Search in the sidebar and Ctrl+F leave it.
     pub fn focus(&self) {
-        self.inner.bar.set_search_mode(true);
-        self.inner.entry.grab_focus();
+        open_field(&self.inner.bar, &self.inner.entry);
     }
 
     /// Typing anywhere in the window opens the search: on while the library shows, off while the
@@ -625,6 +624,12 @@ impl Inner {
 
 /// The search field in its bar under the header, open, and the header's button that opens and
 /// closes it.
+/// A search field open with the caret in it, as Search in the sidebar leaves it on either side.
+pub fn open_field(bar: &gtk::SearchBar, entry: &gtk::SearchEntry) {
+    bar.set_search_mode(true);
+    entry.grab_focus();
+}
+
 pub fn field(placeholder: &str) -> (gtk::SearchBar, gtk::SearchEntry, gtk::ToggleButton) {
     let entry = gtk::SearchEntry::builder().placeholder_text(placeholder).hexpand(true).build();
     let clamp = adw::Clamp::builder().maximum_size(480).child(&entry).build();
@@ -694,4 +699,42 @@ pub fn section(title: &str, child: &impl IsA<gtk::Widget>) -> gtk::Box {
     column.append(&widgets::heading(title));
     column.append(child);
     column
+}
+
+#[cfg(test)]
+mod field_tests {
+    use adw::prelude::*;
+
+    use super::{field, open_field};
+    use crate::gtk_test::{pump, run};
+
+    /// R7L-4. Search on either side opens its field with the caret in it, from the Search toggle
+    /// too, where Return would otherwise hide the bar.
+    #[test]
+    fn opening_a_search_field_puts_the_caret_in_it() {
+        run(|| {
+            let (bar, entry, toggle) = field("Made-up placeholder");
+            let page = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            page.append(&toggle);
+            page.append(&bar);
+            let window = gtk::Window::new();
+            window.set_child(Some(&page));
+            window.present();
+            bar.set_search_mode(false);
+            toggle.grab_focus();
+            pump(100);
+            open_field(&bar, &entry);
+            pump(100);
+            assert!(bar.is_search_mode());
+            assert!(toggle.is_active(), "the toggle follows the bar");
+            let focus =
+                gtk::prelude::GtkWindowExt::focus(&window).expect("something has focus");
+            assert!(
+                focus == *entry.upcast_ref::<gtk::Widget>() || focus.is_ancestor(&entry),
+                "the caret is in the field, not on {}",
+                focus.type_().name()
+            );
+            window.destroy();
+        });
+    }
 }
