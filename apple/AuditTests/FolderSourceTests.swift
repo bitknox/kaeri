@@ -25,7 +25,10 @@ final class FolderSourceTests: XCTestCase {
     /// Add a source, then A folder: the Fixtures app reads the test's folder.
     private func addFolder(_ app: XCUIApplication) {
         let add = app.buttons["Add a source"].firstMatch
-        XCTAssertTrue(add.waitForExistence(timeout: 15), "no Add a source")
+        if !add.waitForExistence(timeout: 15), let marks = ProcessInfo.processInfo.environment["KAERI_TEST_MARKS"] {
+            try? app.debugDescription.write(to: URL(filePath: marks).appending(path: "folder-tree.txt"), atomically: true, encoding: .utf8)
+        }
+        XCTAssertTrue(add.exists, "no Add a source")
         add.tap()
         let folder = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'A folder'")).firstMatch
         XCTAssertTrue(folder.waitForExistence(timeout: 5), "no A folder in Add a source")
