@@ -353,7 +353,10 @@ extension ReaderActions {
     }
 
     @MainActor static func keys(_ model: ReaderModel) -> ReaderKeyContext {
-        ReaderKeyContext(novel: model.novel != nil, mode: model.view?.mode, direction: model.view?.direction)
+        var context = ReaderKeyContext(novel: model.novel != nil, mode: model.view?.mode, direction: model.view?.direction)
+        // What `zoom` changes, for a novel still opening too.
+        context.zooms = model.medium == .novel || model.view?.mode == .strip
+        return context
     }
 
     #if os(macOS)

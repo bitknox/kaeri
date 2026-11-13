@@ -59,6 +59,27 @@ struct ReaderGoMenuTests {
         #expect(ReaderInFront.of(model)?.plain == false)
     }
 
+    @Test func pagesHaveTheZoomItemsDimmed() {
+        #expect(ReaderInFront.of(open())?.keys.zooms == false)
+    }
+
+    @Test func aStripAndANovelZoom() {
+        let model = ReaderModel()
+        model.send = { _ in }
+        model.open(work: "a:900301", chapter: "12")
+        for (medium, mode) in [(Medium.manga, ReaderMode.strip), (.novel, .paged)] {
+            let chapter = ChapterRow(
+                id: ChapterId("12"), label: "12", state: .unread, number: "12", title: nil, volume: nil,
+                published: nil, pages: 3, newChapter: false, download: nil, versions: 1, bookmarked: false)
+            model.apply(.opened(ReaderView(
+                session: 1, work: WorkId("a:900301"), title: "The Lantern Ferry", medium: medium,
+                chapter: chapter, mode: mode, direction: .leftToRight,
+                start: ReadPlace(work: WorkId("a:900301"), chapter: ChapterId("12"), page: 0, strip: nil, novel: nil),
+                next: nil, previous: nil, settings: nil)))
+            #expect(ReaderInFront.of(model)?.keys.zooms == true, "\(medium) \(mode)")
+        }
+    }
+
     @Test func closingTheBookTakesTheGoMenuAway() {
         let model = open()
         model.close()

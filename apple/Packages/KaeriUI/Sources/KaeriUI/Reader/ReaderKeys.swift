@@ -22,12 +22,15 @@ enum ReaderKey: Equatable {
 struct ReaderKeyContext: Equatable {
     var strip: Bool
     var rtl: Bool
+    /// Zoom In, Zoom Out and Fit to Window have something to change: a novel's text size or a
+    /// strip's width. A page zooms by pinch and double tap, not by these keys.
+    var zooms = false
 }
 
 extension ReaderKeyContext {
     /// A novel turns its pages, whatever mode its chapter had; Vertical turns them too.
     init(novel: Bool, mode: ReaderMode?, direction: ReadDirection?) {
-        self.init(strip: !novel && mode == .strip, rtl: direction == .rightToLeft)
+        self.init(strip: !novel && mode == .strip, rtl: direction == .rightToLeft, zooms: novel || mode == .strip)
     }
 }
 
@@ -40,7 +43,7 @@ enum ReaderKeys {
         case .space where pressed == .shift:
             return .page(forward: false)
         case "=" where pressed == .command:
-            return .zoom(step: 1)
+            return context.zooms ? .zoom(step: 1) : nil
         case _ where !pressed.isEmpty:
             return nil
         case .space:
