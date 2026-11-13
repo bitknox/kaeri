@@ -362,14 +362,6 @@ pub fn stop_clock_at(at: i64) {
     STOPPED.store(at, std::sync::atomic::Ordering::Relaxed);
 }
 
-/// A transaction that takes the write lock as it begins, waiting [`schema::BUSY_WAIT`] for it.
-///
-/// A deferred one that reads first and writes after cannot wait: when another process wrote in
-/// between, SQLite fails the write at once rather than let it act on what it read before.
-pub(crate) fn write_tx(conn: &mut Connection) -> rusqlite::Result<rusqlite::Transaction<'_>> {
-    conn.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)
-}
-
 /// The moment a scene recording stopped the clock at ([`stop_clock_at`]), if one did.
 pub fn stopped() -> Option<i64> {
     let at = STOPPED.load(std::sync::atomic::Ordering::Relaxed);
