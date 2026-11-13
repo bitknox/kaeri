@@ -248,7 +248,7 @@ public sealed partial class SeriesPage : Page
 
     void DrawHead(SeriesView series)
     {
-        var print = Drawn.Fingerprint((wide, series.Titles, series.Cover, series.Facts, series.Synopsis, series.Action, series.List, series.Score, Volumes().Select(v => (v.Volume, v.Chapters.Count(c => c.Download is null))).ToList(), Downloaded().Count));
+        var print = Drawn.Fingerprint((wide, series.Titles, series.Cover, series.Facts, series.Synopsis, series.Action, series.List, series.Score, Volumes().Select(v => (v.Volume, v.Chapters.Count(c => c.Downloadable()))).ToList(), Downloaded().Count, Volumes().HasDownloads()));
         if (print == drawnHead)
             return;
         drawnHead = print;
@@ -372,7 +372,10 @@ public sealed partial class SeriesPage : Page
         mainAction = main;
         var status = series.List is { } list ? SeriesWords.List(list) : T.SeriesAddToList;
         row.Children.Add(Menu(status, StatusMenu(series), status));
-        row.Children.Add(Menu(T.SeriesDownload, DownloadMenu(), T.SeriesDownload));
+        // A folder's series has nothing to download or delete: its Download button rests.
+        var download = Menu(T.SeriesDownload, DownloadMenu(), T.SeriesDownload);
+        download.IsEnabled = Volumes().HasDownloads();
+        row.Children.Add(download);
         var more = new DropDownButton { Content = new FontIcon { Glyph = "\uE712", FontSize = 14 }, MinHeight = 40, Flyout = Named(MoreMenu(series), T.ActionMore) };
         AutomationProperties.SetName(more, T.ActionMore);
         ToolTipService.SetToolTip(more, T.ActionMore);
@@ -448,17 +451,17 @@ public sealed partial class SeriesPage : Page
     {
         var menu = new MenuFlyout();
         var volumes = Volumes();
-        var unread = volumes.SelectMany(v => v.Chapters).Any(c => c.State is not ChapterReadState.Read && c.Download is null);
+        var unread = volumes.SelectMany(v => v.Chapters).Any(c => c.State is not ChapterReadState.Read && c.Downloadable());
         menu.Items.Add(SeriesWords.Item(T.DownloadNext(5), () => ctx.Known.Reading.Download(work, new DownloadPick.NextUnread(5))));
         menu.Items.Add(SeriesWords.Item(T.DownloadNext(10), () => ctx.Known.Reading.Download(work, new DownloadPick.NextUnread(10))));
         menu.Items.Add(SeriesWords.Item(T.DownloadUnread, () => ctx.Known.Reading.Download(work, new DownloadPick.Unread()), enabled: unread));
-        var toFetch = SeriesWords.DownloadVolumes(volumes).Where(g => g.Chapters.Any(c => c.Download is null)).ToList();
+        var toFetch = SeriesWords.DownloadVolumes(volumes).Where(g => g.Chapters.Any(c => c.Downloadable())).ToList();
         if (toFetch.Count > 0)
             menu.Items.Add(new MenuFlyoutSeparator());
         var novel = Series?.Medium == Medium.Novel;
         foreach (var group in toFetch)
         {
-            var missing = group.Chapters.Where(c => c.Download is null).Select(c => c.Id).ToList();
+            var missing = group.Chapters.Where(c => c.Downloadable()).Select(c => c.Id).ToList();
             menu.Items.Add(SeriesWords.Item(T.DownloadVolumeCount(SeriesWords.Volume(group, novel).Name, missing.Count), () =>
             {
                 if (group.Volume is { Length: > 0 } volume)
@@ -846,6 +849,9 @@ public sealed partial class SeriesPage : Page
         menu.Items.Add(new MenuFlyoutSeparator());
         switch (row.Download)
         {
+            case null when row.OnDevice:
+                // A file on this device, as a folder's chapters are: nothing to download.
+                break;
             case null:
                 menu.Items.Add(SeriesWords.Item(T.SeriesDownload, () => reading.Download(work, new DownloadPick.Chapters([row.Id]))));
                 break;

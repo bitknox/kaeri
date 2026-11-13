@@ -719,9 +719,14 @@ sealed class BookServerDialog
         Motion.FadeIn(line);
     }
 
-    /// <summary>The answer to a look; only the last look's answer is drawn.</summary>
+    /// <summary>
+    /// The answer to a look; only the last look's answer is drawn. While adding, a failure (the
+    /// keyring or the library couldn't keep the server) ends the add and shows, so Try again works.
+    /// </summary>
     public async void Heard(CameIn came)
     {
+        if (adding && came is CameIn.Empty)
+            adding = false;
         if (asking > 0)
             asking--;
         if (asking > 0)
@@ -939,13 +944,8 @@ static class CameInDesk
             Add(ctx, path);
     }
 
-    /// <summary>Folders picked again while already in Your sources: Cancel on their report leaves them there.</summary>
-    static readonly HashSet<string> already = new(StringComparer.OrdinalIgnoreCase);
-
     static void Add(Ctx ctx, string path)
     {
-        if (ctx.Known.Books.View?.Folders.Any(f => string.Equals(f.Path, path, StringComparison.OrdinalIgnoreCase)) == true)
-            already.Add(path);
         var name = System.IO.Path.GetFileName(path.TrimEnd('\\', '/'));
         ctx.Known.Books.AddFolder(path, name.Length > 0 ? name : path);
     }
@@ -955,20 +955,22 @@ static class CameInDesk
     /// files or why nothing can be read, the files Kaeri can't open with Show files, and the
     /// formats it opens; then Add folder, or Choose another folder when nothing was found, and
     /// Cancel. The folder stays only on Add folder: Cancel or Esc takes it back out, as a form's
-    /// cancel would.
+    /// cancel would. A folder that was already a source says so, with Done, and stays whatever
+    /// closes the dialog, since this dialog didn't add it.
     /// </summary>
     static async Task ShowFolder(Ctx ctx, FolderReport report, bool nothing, bool unreadable = false)
     {
         if (Root(ctx) is not { } root)
             return;
-        var kept = report.Path is { } picked && already.Remove(picked);
+        var already = report.AlreadyAdded;
+        var kept = false;
         ContentDialog? shown = null;
         // Another folder in this one's place: picked over the dialog, which closes only once one is.
         async Task Change()
         {
             if (await ctx.Window.PickFolder() is not { Length: > 0 } path)
                 return;
-            ctx.Known.Books.RemoveFolder(report.Id);
+            ctx.Known.Books.TakeBack(report);
             // Already taken back out: closing must not remove it again.
             kept = true;
             shown?.Hide();
@@ -990,6 +992,8 @@ static class CameInDesk
         body.Children.Add(where);
         body.Children.Add(unreadable
             ? BookWords.Note(T.BookFolderUnreadable(report.Name), T.BookFolderUnreadableLine, failed: true)
+            : already
+            ? BookWords.Note(T.BookFolderAlready(report.Name), T.BookFolderAlreadyLine(report.Series))
             : nothing
             ? BookWords.Note(T.BookFolderEmpty(report.Name), T.BookFolderEmptyLine(report.Files))
             : BookWords.Note(T.BookFolderFound(report.Series, report.Files), T.BookFolderFoundLine(report.Path ?? report.Name, report.Matched), found: true));
@@ -1037,14 +1041,15 @@ static class CameInDesk
             XamlRoot = root,
             Title = T.SourcesAddFolderButton,
             Content = new ScrollViewer { Content = body, MaxHeight = 560, VerticalScrollBarVisibility = ScrollBarVisibility.Auto },
-            PrimaryButtonText = nothing ? T.BookFolderChooseOther : T.BookFolderAdd,
+            PrimaryButtonText = already && !unreadable ? T.ActionDone : nothing ? T.BookFolderChooseOther : T.BookFolderAdd,
             PrimaryButtonStyle = Ui.Res<Style>("AccentButtonStyle"),
             CloseButtonText = T.ActionCancel,
             DefaultButton = ContentDialogButton.Primary,
         };
         dialog.PrimaryButtonClick += async (_, e) =>
         {
-            if (!nothing)
+            // Already a source: nothing to add, and Done leaves it as it is.
+            if (!nothing || (already && !unreadable))
             {
                 kept = true;
                 return;
@@ -1057,7 +1062,7 @@ static class CameInDesk
         var opened = false;
         await Dialogs.Show(dialog, () => opened = true);
         if (opened && !kept)
-            ctx.Known.Books.RemoveFolder(report.Id);
+            ctx.Known.Books.TakeBack(report);
     }
 
     static async Task ShowStore(Ctx ctx, CameIn came)

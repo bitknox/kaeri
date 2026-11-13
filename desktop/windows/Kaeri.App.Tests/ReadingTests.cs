@@ -93,6 +93,48 @@ public class ReadingTests
         }
     }
 
+    static ChapterRow Row(int n, bool onDevice = false, ChapterDownloadState? download = null) =>
+        new(Id: $"c{n}", Label: $"Chapter {n}", State: new ChapterReadState.Unread(), Number: $"{n}", Volume: "1",
+            Download: download, Versions: 1, OnDevice: onDevice);
+
+    /// <summary>
+    /// A folder's chapters are files on this device: no row offers Download, and the series'
+    /// Download button rests with nothing to download or delete. A source's chapters still do.
+    /// </summary>
+    [Fact]
+    public void AFoldersChaptersOfferNoDownload()
+    {
+        VolumeGroup[] Group(params ChapterRow[] rows) => [new VolumeGroup(Volume: "1", Title: null, Chapters: rows, AllRead: false, Flat: false)];
+        var folder = Group(Row(1, onDevice: true), Row(2, onDevice: true));
+        Assert.DoesNotContain(folder[0].Chapters, c => c.Downloadable());
+        Assert.False(folder.HasDownloads());
+        var source = Group(Row(1), Row(2));
+        Assert.All(source[0].Chapters, c => Assert.True(c.Downloadable()));
+        Assert.True(source.HasDownloads());
+        // Every chapter downloaded: the button stays, for Delete.
+        Assert.True(Group(Row(1, download: new ChapterDownloadState.Done())).HasDownloads());
+    }
+
+    /// <summary>
+    /// The engine says 0 for a size it doesn't know. The send sheet leaves it unsaid rather than
+    /// counting it as nothing, and takes the engine's figure for every chosen chapter, downloaded
+    /// or not, only for the chapters chosen now.
+    /// </summary>
+    [Fact]
+    public void ASendsUnknownSizeIsNotCountedAsNothing()
+    {
+        DownloadEstimate Estimate(ulong bytes, ulong all, params string[] ids) =>
+            new(Work: "a:900301", Pick: new DownloadPick.Chapters(ids), Chapters: (uint)ids.Length, Bytes: bytes, AllBytes: all);
+        Assert.Null(ChapterDownloads.SendSize(Estimate(0, 0, "c1", "c2"), ["c1", "c2"]));
+        Assert.NotNull(ChapterDownloads.For(Estimate(0, 0, "c1", "c2"), ["c1", "c2"]));
+        // One here and one to download: the whole of both, not the download's part alone.
+        Assert.Equal(64_000_000UL, ChapterDownloads.SendSize(Estimate(30_000_000, 64_000_000, "c1", "c2"), ["c1", "c2"]));
+        // An answer for another choice is not this one's.
+        Assert.Null(ChapterDownloads.SendSize(Estimate(30_000_000, 64_000_000, "c1", "c2"), ["c1"]));
+        Assert.Null(ChapterDownloads.For(Estimate(30_000_000, 64_000_000, "c1", "c2"), ["c1"]));
+        Assert.Null(ChapterDownloads.SendSize(null, ["c1"]));
+    }
+
     [Fact]
     public void ASendStoppedBeforeItsJobIsNamedStopsWhenItIs()
     {
@@ -250,6 +292,73 @@ public class ReadingTests
         scene.Do(() => scene.Known.Reading.LoadChapters("a:900301"));
         var chapters = await scene.Until(k => k.Reading.Chapters.GetValueOrDefault("a:900301") is { Failure: null } c && c.All.Any() ? c : null);
         Assert.NotEmpty(chapters.All);
+    }
+
+    /// <summary>
+    /// A folder picked again while it is a source answers as already added, and the add dialog's
+    /// Cancel, Esc or Change, which take a newly picked folder back out, leave it and its series
+    /// in place. A folder picked for the first time still goes when its dialog is cancelled.
+    /// </summary>
+    [Fact]
+    public async Task AFolderPickedAgainStaysWhenItsDialogTakesItBack()
+    {
+        using var scene = new Scene(new FfiScene.ReadingHome(), "cs-folder-again");
+        var shelf = Path.Combine(scene.Root, "Shelf");
+        var other = Path.Combine(scene.Root, "Other");
+        Directory.CreateDirectory(shelf);
+        Directory.CreateDirectory(other);
+        var answers = new List<FolderReport>();
+        var views = 0;
+        scene.Session.Batch += batch =>
+        {
+            foreach (var e in batch)
+            {
+                if (e is Event.BookSources { V1: BookSourceEvent.View })
+                    views++;
+                if (e is Event.CameIn { V1: var came } && came switch
+                {
+                    CameIn.Folder f => f.V1,
+                    CameIn.Empty { V1: NothingCameIn.EmptyFolder f } => f.Folder,
+                    CameIn.Empty { V1: NothingCameIn.UnsupportedFiles f } => f.Folder,
+                    CameIn.Empty { V1: NothingCameIn.FolderUnreadable f } => f.Folder,
+                    _ => null,
+                } is { } report)
+                    answers.Add(report);
+            }
+        };
+        async Task<FolderReport> Pick(string path)
+        {
+            int before;
+            lock (scene.Gate)
+                before = answers.Count;
+            scene.Do(() => scene.Known.Books.AddFolder(path, Path.GetFileName(path)));
+            return await scene.Until(_ => answers.Count > before ? answers[before] : null);
+        }
+        // The folders as the engine has them once it took every command sent before.
+        async Task<BookFolderRow[]> Folders()
+        {
+            int before;
+            lock (scene.Gate)
+                before = views;
+            scene.Do(() => scene.Known.Books.Load());
+            return await scene.Until(k => views > before ? k.Books.View?.Folders : null);
+        }
+
+        var first = await Pick(shelf);
+        Assert.False(first.AlreadyAdded);
+        // Add folder: it stays. Then the same folder is picked again, and its dialog cancelled.
+        var again = await Pick(shelf);
+        Assert.Equal(first.Id, again.Id);
+        Assert.True(again.AlreadyAdded);
+        scene.Do(() => scene.Known.Books.TakeBack(again));
+        Assert.Contains(await Folders(), f => f.Id == first.Id && !f.Removed);
+
+        // A folder picked once, then cancelled: it goes.
+        var fresh = await Pick(other);
+        Assert.False(fresh.AlreadyAdded);
+        scene.Do(() => scene.Known.Books.TakeBack(fresh));
+        Assert.DoesNotContain(await Folders(), f => f.Id == fresh.Id && !f.Removed);
+        Assert.Contains(await Folders(), f => f.Id == first.Id && !f.Removed);
     }
 
     [Fact]

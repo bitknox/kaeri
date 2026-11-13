@@ -440,6 +440,38 @@ public sealed class ReadingStore
     static string? Started(string? key) => key is null or "any" ? null : key;
 }
 
+/// <summary>What a series' chapters offer to download, and what a send of them comes to.</summary>
+public static class ChapterDownloads
+{
+    /// <summary>
+    /// Whether Download is offered for the chapter: not here or on its way, and not a file on this
+    /// device, as a folder's chapters are.
+    /// </summary>
+    public static bool Downloadable(this ChapterRow row) => row.Download is null && !row.OnDevice;
+
+    /// <summary>
+    /// Whether the series' Download button has anything to do: a chapter to download, or one
+    /// downloaded. A folder's series has neither, and its button rests.
+    /// </summary>
+    public static bool HasDownloads(this IEnumerable<VolumeGroup> volumes) =>
+        volumes.SelectMany(v => v.Chapters).Any(c => c.Downloadable() || c.Download is not null);
+
+    /// <summary>
+    /// The engine's estimate for exactly <paramref name="chapters"/>, in reading order, once it
+    /// came: null while it is asked, or for another choice.
+    /// </summary>
+    public static DownloadEstimate? For(DownloadEstimate? estimate, IReadOnlyList<string> chapters) =>
+        estimate is { Pick: DownloadPick.Chapters picked } && picked.Ids.SequenceEqual(chapters) ? estimate : null;
+
+    /// <summary>
+    /// What a send of <paramref name="chapters"/> comes to: every chosen chapter, the ones here by
+    /// what they take and the rest as estimated. Null while the estimate is not in, and when the
+    /// engine doesn't know (0): an unknown size is never counted as nothing.
+    /// </summary>
+    public static ulong? SendSize(DownloadEstimate? estimate, IReadOnlyList<string> chapters) =>
+        For(estimate, chapters) is { AllBytes: > 0 } known ? known.AllBytes : null;
+}
+
 /// <summary>The sources that have a work, for Read from.</summary>
 public sealed record WorkEditions(BookEditionRow[] Editions, bool Asking, EditionMiss[] Missing);
 
@@ -474,6 +506,17 @@ public sealed class BookSourcesState
     public void Load() => Ask(new BookSourceCommand.Load());
     public void AddFolder(string path, string name) => Ask(new BookSourceCommand.AddFolder(new FolderRef(path, null, null, name)));
     public void RemoveFolder(string id) => Ask(new BookSourceCommand.RemoveFolder(id));
+
+    /// <summary>
+    /// Takes a folder picked in the add dialog back out, as its Cancel, Esc and Change do: nothing
+    /// was meant to be added yet. A folder that was a source before it was picked again stays,
+    /// with its series; that dialog didn't add it.
+    /// </summary>
+    public void TakeBack(FolderReport report)
+    {
+        if (!report.AlreadyAdded)
+            RemoveFolder(report.Id);
+    }
     public void RestoreFolder(string id) => Ask(new BookSourceCommand.RestoreFolder(id));
     public void Scan() => Ask(new BookSourceCommand.Scan());
     public void RemoveServer(string id) => Ask(new BookSourceCommand.RemoveServer(id));

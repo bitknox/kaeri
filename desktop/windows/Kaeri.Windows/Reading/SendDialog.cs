@@ -247,27 +247,10 @@ static class SendDialog
         List<ChapterRow> Rows() => [.. (reading.Chapters.GetValueOrDefault(work)?.All ?? []).Where(c => ids.Contains(c.Id))];
         List<string> Ordered() => [.. Rows().Select(r => r.Id)];
 
-        ulong? Size()
-        {
-            var rows = Rows();
-            if (rows.Count == 0)
-                return null;
-            var held = rows.Count(r => r.Download is ChapterDownloadState.Done);
-            ulong bytes = 0;
-            if (held > 0)
-            {
-                if (reading.Downloads?.Series.FirstOrDefault(s => s.Work == work) is not { Chapters: > 0 } kept)
-                    return null;
-                bytes += kept.Bytes / kept.Chapters * (ulong)held;
-            }
-            if (held < rows.Count)
-            {
-                if (!reading.Estimates.TryGetValue(work, out var estimate) || estimate.Pick is not DownloadPick.Chapters picked || !picked.Ids.SequenceEqual(Ordered()))
-                    return null;
-                bytes += estimate.Bytes;
-            }
-            return bytes;
-        }
+        // The engine's figure for every chosen chapter: those here by what they take, the rest as
+        // estimated. 0 is a size it doesn't know, which is left unsaid rather than added as nothing.
+        DownloadEstimate? Estimate() => ChapterDownloads.For(reading.Estimates.GetValueOrDefault(work), Ordered());
+        ulong? Size() => ChapterDownloads.SendSize(reading.Estimates.GetValueOrDefault(work), Ordered());
 
         string ChaptersWords()
         {
@@ -303,7 +286,8 @@ static class SendDialog
             AutomationProperties.SetName(chaptersButton, $"{T.SendChapters}, {chaptersValue.Text}, {(picking ? T.SendChaptersOpen : T.SendChaptersClosed)}");
             chaptersButton.IsEnabled = running?.IsRunning != true;
             var size = Size();
-            sizeValue.Text = size is { } bytes ? T.SendSizeAbout(Wording.Bytes(bytes)) : waited ? T.SendSizeWorking : "";
+            // Working it out only while the estimate is on its way; an answer with no size says none.
+            sizeValue.Text = size is { } bytes ? T.SendSizeAbout(Wording.Bytes(bytes)) : waited && Estimate() is null && ids.Count > 0 ? T.SendSizeWorking : "";
             notes.Children.Clear();
             if (size is { } total && target is { Split: true } && !novel && total > PartsOver)
                 notes.Children.Add(Ui.Text(T.SendInParts(Wording.Bytes(PartsOver)), "HazeCaptionStyle"));
