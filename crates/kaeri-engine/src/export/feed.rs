@@ -1078,7 +1078,7 @@ fn download_books(store: &Store, work: &str, form: TitleForm, words: &Words) -> 
     rows.sort_by(|a, b| kaeri_books::natural::compare(&a.chapter, &b.chapter));
     rows.into_iter()
         .map(|d| {
-            let path = PathBuf::from(d.path.unwrap_or_default());
+            let path = PathBuf::from(d.path.clone().unwrap_or_default());
             let format = path
                 .extension()
                 .and_then(|e| e.to_str())
@@ -1943,7 +1943,7 @@ mod tests {
     /// or letter width, CJK included, and each hit opens to its books.
     #[tokio::test]
     async fn another_kaeri_finds_this_feeds_series_by_searching() {
-        use kaeri_core::{books::BookHints, traits::BookSource};
+        use kaeri_core::books::BookHints;
         let s = shelf();
         let folder = kaeri_store::book_sources::Folder {
             id: "f1".into(),

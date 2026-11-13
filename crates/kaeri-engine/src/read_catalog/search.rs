@@ -771,7 +771,7 @@ fn list(kit: &Kit, ask: Ask, segment: LibrarySegmentRead) -> Vec<WorkTile> {
                 Some(k) if !ask.adult && k.book.adult() => return None,
                 Some(k) => tiles::reading(&kit.meta, &kit.store, &kit.sources, &k.book),
                 None => match local.iter().find(|s| s.work.as_deref() == Some(work.as_str())) {
-                    Some(series) => local_tile(&kit.store, &kit.sources, work, &series),
+                    Some(series) => local_tile(&kit.store, &kit.sources, work, series),
                     None => tiles::demo(work, &kit.store, &kit.sources)?,
                 },
             };

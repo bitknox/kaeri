@@ -264,6 +264,7 @@ pub struct Wanted {
 }
 
 /// Why a fetch ended without a file.
+#[derive(Debug)]
 pub(crate) enum Stop {
     Failed(ReadingFailure),
     /// The person took it out of the queue.

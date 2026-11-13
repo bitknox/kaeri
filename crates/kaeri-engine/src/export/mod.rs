@@ -82,8 +82,11 @@ pub struct Exports {
     /// The sends running by what they send (work, chapters, target and format), each with the
     /// jobs of the identical sends asked for while it ran, which join it rather than fetch the
     /// same chapters again.
-    joins: Arc<Mutex<HashMap<String, (u64, Arc<Joined>)>>>,
+    joins: Arc<Mutex<Joins>>,
 }
+
+/// The sends running by what they send, each with its own job and the jobs that joined it.
+type Joins = HashMap<String, (u64, Arc<Joined>)>;
 
 /// The jobs that joined a running send: each is told what it is told, and ends when it ends.
 /// When its own job is put away while others joined it, it runs on for them alone.

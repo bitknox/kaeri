@@ -16,10 +16,7 @@
 use std::sync::{Arc, Mutex, atomic::AtomicBool};
 
 use kaeri_bookserver::{Auth, Http, Kind, Server, basic, source};
-use kaeri_core::{
-    books::{BookHints, ChapterContent},
-    traits::BookSource,
-};
+use kaeri_core::books::{BookHints, ChapterContent};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::TcpListener,
@@ -53,7 +50,12 @@ async fn serve(listener: TcpListener, routes: Vec<(String, Vec<u8>)>) -> Seen {
                 while n < buf.len() {
                     let read = stream.read(&mut buf[n..]).await.unwrap_or(0);
                     n += read;
-                    if read == 0 || buf[..n].windows(4).any(|w| w == b"\r\n\r\n") {
+                    // Bytes that can't start a request, such as a TLS hello, are answered at
+                    // once: waiting on them for a blank line would hold the client to its
+                    // timeout, and the request would be seen only after it gave up.
+                    let unreadable = n > 0 && !buf[0].is_ascii_uppercase();
+                    if read == 0 || unreadable || buf[..n].windows(4).any(|w| w == b"\r\n\r\n")
+                    {
                         break;
                     }
                 }
