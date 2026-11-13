@@ -72,6 +72,16 @@ impl Drop for NotRunningOnPanic<'_> {
     }
 }
 
+/// A fetch's heartbeat: it stops when the fetch ends, however it ends, so a chapter is never
+/// held for an engine that no longer fetches it.
+struct Heartbeat(tokio::task::JoinHandle<()>);
+
+impl Drop for Heartbeat {
+    fn drop(&mut self) {
+        self.0.abort();
+    }
+}
+
 /// How many unread chapters after the one being read are kept ready.
 pub const KEEP_AHEAD: usize = 3;
 /// What a device keeps free of downloads: below this the queue stops with
@@ -1019,15 +1029,15 @@ impl BookDownloads {
         // Other engines on the data folder hear that this fetch goes on between its pages too.
         let beat = {
             let (store, clock, id) = (store.clone(), lent.clock.clone(), row.id);
-            tokio::spawn(async move {
+            Heartbeat(tokio::spawn(async move {
                 loop {
                     tokio::time::sleep(HEARTBEAT).await;
                     let _ = store.book_download_heartbeat(id, clock.now());
                 }
-            })
+            }))
         };
         let outcome = self.ended(lent, store, &row, now).await;
-        beat.abort();
+        drop(beat);
         // The series page hears each chapter land, not the whole run at its end.
         self.relist_kept(lent, &row.work);
         outcome
