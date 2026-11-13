@@ -462,9 +462,9 @@ impl KavitaSource {
     /// What `chapter` is made of. A whole file is downloaded only with `files`; without, such a
     /// chapter is `None`.
     async fn content_of(&self, chapter: &str, files: bool) -> Result<Option<ChapterContent>> {
-        let path = format!("api/Reader/chapter-info?chapterId={}", encode(chapter));
+        let path = &format!("api/Reader/chapter-info?chapterId={}", encode(chapter));
         let info: serde_json::Value =
-            self.signed(|http| async move { http.json(&path).await }).await?;
+            self.signed(|http| async move { http.json(path).await }).await?;
         let pages = info.get("pages").and_then(serde_json::Value::as_u64).unwrap_or(0);
         let is_book = info.get("isEpub").and_then(serde_json::Value::as_bool).unwrap_or(false)
             || info.get("fileFormat").and_then(serde_json::Value::as_u64) == Some(3);
@@ -479,10 +479,10 @@ impl KavitaSource {
                 chapter,
                 if is_pdf { "book.pdf" } else { "book.epub" },
             );
-            let path = format!("api/Download/chapter?chapterId={}", encode(chapter));
+            let path = &format!("api/Download/chapter?chapterId={}", encode(chapter));
             let to = &to;
             self.signed(|http| async move {
-                http.download(&path, to, 8 * 1024 * 1024 * 1024).await
+                http.download(path, to, 8 * 1024 * 1024 * 1024).await
             })
             .await?;
             return Ok(Some(ChapterContent::Book(BookFile { path: to, temporary: true })));
@@ -515,9 +515,9 @@ impl BookSource for KavitaSource {
         query: &str,
         _hints: &BookHints,
     ) -> std::result::Result<Vec<SeriesHit>, ProviderError> {
-        let path = format!("api/Search/search?queryString={}", encode(query));
+        let path = &format!("api/Search/search?queryString={}", encode(query));
         let found: Search = self
-            .signed(|http| async move { http.json(&path).await })
+            .signed(|http| async move { http.json(path).await })
             .await
             .map_err(|e| self.aim(e))?;
         let key = encode(&self.api_key());
@@ -550,17 +550,17 @@ impl BookSource for KavitaSource {
         id: &str,
         _hints: &BookHints,
     ) -> std::result::Result<SeriesDetail, ProviderError> {
-        let path = format!("api/Series/{}", encode(id));
+        let path = &format!("api/Series/{}", encode(id));
         let row: serde_json::Value = self
-            .signed(|http| async move { http.json(&path).await })
+            .signed(|http| async move { http.json(path).await })
             .await
             .map_err(|e| self.aim(e))?;
         let name = row.get("name").and_then(|v| v.as_str()).unwrap_or(id);
         // Kavita keeps no reading direction of a series' own, so it gives no hint.
         let mut detail = SeriesDetail::new(id, name);
-        let path = format!("api/Series/metadata?seriesId={}", encode(id));
+        let path = &format!("api/Series/metadata?seriesId={}", encode(id));
         if let Ok(meta) =
-            self.signed(|http| async move { http.json::<serde_json::Value>(&path).await }).await
+            self.signed(|http| async move { http.json::<serde_json::Value>(path).await }).await
         {
             detail.description = meta
                 .get("summary")
@@ -589,9 +589,9 @@ impl BookSource for KavitaSource {
         id: &str,
         _hints: &BookHints,
     ) -> std::result::Result<Vec<SourceChapter>, ProviderError> {
-        let path = format!("api/Series/series-detail?seriesId={}", encode(id));
+        let path = &format!("api/Series/series-detail?seriesId={}", encode(id));
         let detail: Detail = self
-            .signed(|http| async move { http.json(&path).await })
+            .signed(|http| async move { http.json(path).await })
             .await
             .map_err(|e| self.aim(e))?;
         Ok(Self::chapters_of(detail)
