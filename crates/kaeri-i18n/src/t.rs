@@ -17160,6 +17160,16 @@ pub fn send_banner(device: &str) -> String {
     text("send-banner", &[("device", Arg::Text(device))])
 }
 
+/// The chapters a send holds, on its row under Sending to, when there are several: the first to the last, by their numbers or labels, such as 21 to 23.
+pub fn send_row_chapters(first: &str, last: &str) -> String {
+    text("send-row-chapters", &[("first", Arg::Text(first)), ("last", Arg::Text(last))])
+}
+
+/// A send's row under Sending to: the series' title, then the chapters the send holds, such as "Chapter 23" or "Chapters 21 to 23". Shown on one line.
+pub fn send_row_line(title: &str, chapters: &str) -> String {
+    text("send-row-line", &[("title", Arg::Text(title)), ("chapters", Arg::Text(chapters))])
+}
+
 /// The format of the files an e-reader is sent: a manga as a fixed-layout EPUB.
 pub fn send_format_fixed_epub() -> String {
     text("send-format-fixed-epub", &[])

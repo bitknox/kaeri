@@ -107,9 +107,11 @@ public final class SendModel {
     // MARK: Sending
 
     /// Asks for files of `chapters` for `target`. The send is the one returned, so a sheet can
-    /// follow it.
+    /// follow it. The same chapters already under way for the same e-reader are that send, and
+    /// nothing is asked again.
     @discardableResult
     public func begin(work: String, chapters: [String], target: ExportTarget, novel: Bool) -> Int? {
+        if let under = running(work: work, chapters: chapters, target: target.id) { return under.id }
         guard let format = Self.format(of: target, novel: novel) else { return nil }
         lastId += 1
         var send = EReaderSend(
@@ -186,6 +188,16 @@ public final class SendModel {
     /// The send a series has under way, for its page.
     public func running(work: String) -> EReaderSend? {
         sends.first { $0.work == work && $0.isRunning }
+    }
+
+    /// The send under way for these same chapters of a series, to `target` or to any e-reader:
+    /// a Send sheet opened again shows it and starts no second one.
+    public func running(work: String, chapters: [String], target: String? = nil) -> EReaderSend? {
+        guard !chapters.isEmpty else { return nil }
+        let asked = Set(chapters)
+        return sends.first {
+            $0.work == work && $0.isRunning && Set($0.chapters) == asked && (target == nil || $0.target == target)
+        }
     }
 
     // MARK: The answer to where you stopped
