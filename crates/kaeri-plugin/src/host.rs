@@ -219,6 +219,45 @@ impl Capabilities {
         request: Request,
     ) -> Result<Response, HostError> {
         tracing::debug!(plugin = %self.plugin_id, url = %request.url, "plugin fetch");
+        // QA ONLY, never merged: at most one request per 4 s per plugin.
+        tokio::time::sleep_until(qa_gate(&self.plugin_id)).await;
+        // QA ONLY: a poor network for plugin fetches, from the file KAERI_QA_NET names:
+        // "offline" fails at once, "hang" waits out the deadline, "delay <ms>" adds a wait,
+        // "drop <percent>" fails that share of requests.
+        if let Ok(path) = qa_path("KAERI_QA_NET", "qa-net") {
+            let rule = std::fs::read_to_string(path).unwrap_or_default();
+            let mut words = rule.split_whitespace();
+            let arg = |w: Option<&str>| w.and_then(|v| v.parse::<u64>().ok()).unwrap_or(0);
+            match words.next() {
+                Some("offline") => return Err(HostError::Transport("qa offline".into())),
+                Some("hang") => {
+                    tokio::time::sleep(self.limits.deadline).await;
+                    return Err(HostError::Timeout);
+                }
+                Some("delay") => tokio::time::sleep(std::time::Duration::from_millis(arg(words.next()))).await,
+                Some("drop") => {
+                    let ns = std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .map(|d| d.subsec_nanos() as u64)
+                        .unwrap_or(0);
+                    if ns % 100 < arg(words.next()) {
+                        return Err(HostError::Transport("qa drop".into()));
+                    }
+                }
+                _ => {}
+            }
+        }
+        if let Ok(path) = qa_path("KAERI_QA_FETCH_LOG", "qa-fetch.log") {
+            use std::io::Write as _;
+            let ms = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_millis())
+                .unwrap_or(0);
+            if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path)
+            {
+                let _ = writeln!(f, "{ms} {} {}", self.plugin_id, request.url.split('/').nth(2).unwrap_or("-"));
+            }
+        }
 
         // The same client the native sources use, so one place owns the connection settings.
         let mut builder = match request.method.to_ascii_uppercase().as_str() {
@@ -248,6 +287,51 @@ impl Capabilities {
 
         let body = read_capped(response, self.limits.max_response_bytes).await?;
         Ok(Response { status, headers, body })
+    }
+}
+
+/// QA ONLY, never merged: the env path, or on Android a file in the QA app's own folder.
+#[cfg(feature = "fetch")]
+fn qa_path(var: &str, file: &str) -> Result<String, std::env::VarError> {
+    std::env::var(var).or_else(|e| {
+        if cfg!(target_os = "android") {
+            Ok(format!("/data/user/0/app.kaeri.app.qa/files/{file}"))
+        } else {
+            Err(e)
+        }
+    })
+}
+
+/// QA ONLY, never merged: when a plugin's next request may start, 4 s after its last one.
+#[cfg(feature = "fetch")]
+fn qa_gate(plugin: &str) -> tokio::time::Instant {
+    static NEXT: std::sync::LazyLock<
+        std::sync::Mutex<std::collections::HashMap<String, tokio::time::Instant>>,
+    > = std::sync::LazyLock::new(Default::default);
+    let mut next = NEXT.lock().unwrap_or_else(|e| e.into_inner());
+    let now = tokio::time::Instant::now();
+    let at = next.get(plugin).copied().filter(|t| *t > now).unwrap_or(now);
+    next.insert(plugin.to_owned(), at + std::time::Duration::from_secs(4));
+    at
+}
+
+#[cfg(all(test, feature = "fetch"))]
+mod qa_gate_tests {
+    #[tokio::test(start_paused = true)]
+    async fn requests_of_one_plugin_start_two_seconds_apart() {
+        let start = tokio::time::Instant::now();
+        let gaps: Vec<u64> =
+            (0..3).map(|_| (super::qa_gate("qa-a") - start).as_millis() as u64).collect();
+        assert_eq!(gaps, [0, 4000, 8000]);
+        assert_eq!(
+            (super::qa_gate("qa-b") - start).as_millis(),
+            0,
+            "another plugin waits for none"
+        );
+        tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+        let later = tokio::time::Instant::now();
+        assert_eq!(super::qa_gate("qa-a"), later, "a quiet plugin starts at once");
+        assert_eq!(super::qa_gate("qa-a") - later, std::time::Duration::from_secs(4));
     }
 }
 
