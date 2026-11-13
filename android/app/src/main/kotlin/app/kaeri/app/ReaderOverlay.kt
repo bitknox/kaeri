@@ -8,6 +8,12 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.Animatable
+import androidx.compose.foundation.focusGroup
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.width
@@ -102,13 +108,40 @@ fun ReaderHost(store: AppStore, eink: EinkModel, app: @Composable () -> Unit) {
             LocalReaderTransitionsView provides view,
             LocalReaderZoomOpen provides zoomed,
         ) {
-            app()
+            // Covered by the reader, the app is out of reach of the keys and of a screen reader.
+            val open by ReaderLauncher.request.collectAsState()
+            Box(Modifier.underReader(open != null)) { app() }
         }
         // The cover it grows out of loads as the app's covers do.
         CompositionLocalProvider(LocalAppStore provides store, LocalServerLines provides store.serverLines) {
             ReaderOverlay(store, eink, this, zoomed) { zoomed = it }
         }
     }
+}
+
+/**
+ * The app under an open reader: while [open] nothing in it takes the focus, so Tab and the arrows
+ * stay in the reader and Enter never acts on a page no one sees, and a screen reader does not find
+ * it. The control that held the focus as the reader opened has it again once the reader closes.
+ */
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+internal fun Modifier.underReader(open: Boolean): Modifier {
+    val group = remember { FocusRequester() }
+    val held = remember { booleanArrayOf(false) }
+    LaunchedEffect(open) {
+        if (open) {
+            held[0] = group.saveFocusedChild()
+        } else if (held[0]) {
+            held[0] = false
+            group.restoreFocusedChild()
+        }
+    }
+    return this
+        .focusRequester(group)
+        .focusProperties { onEnter = { if (open) cancelFocusChange() } }
+        .focusGroup()
+        .then(if (open) Modifier.clearAndSetSemantics {} else Modifier)
 }
 
 /**

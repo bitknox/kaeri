@@ -39,6 +39,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.derivedStateOf
@@ -86,6 +87,13 @@ class StripStep {
     private var job: Job? = null
     private var left = 0f
     private var caught = 0f
+
+    /** Ends a step still moving, with nothing of it kept, for a jump that takes the strip elsewhere. */
+    fun stop() {
+        job?.cancel()
+        left = 0f
+        caught = 0f
+    }
 
     /** At a touch's landing: true when a step moves the strip, keeping what is left of it for the touch. */
     fun catch(): Boolean {
@@ -196,6 +204,8 @@ fun StripReader(
      * sat before, and after the last image once those at the end are shown.
      */
     credits: (@Composable (chapter: ChapterId, pages: List<CreditPage>) -> Unit)? = null,
+    /** Kept up to date with where the chapter's images sit, for Home and End. */
+    keys: StripKeys? = null,
 ) {
     val story = state.leaves.filter { !it.endPage }
     val end = state.leaves.lastOrNull()?.takeIf { it.endPage }
@@ -207,6 +217,10 @@ fun StripReader(
     // The chapter kept above and the divider into this one come first.
     val first = if (previous != null) above.size + 1 else 0
     val last = first + story.size - 1
+    SideEffect {
+        keys?.first = first
+        keys?.last = last
+    }
     // A chapter counts as passed only with its images in: one still loading is short, so its
     // divider or foot could come into view with nothing read. Its foot is the end only once the
     // last image is there, and it flows on only while every image of it on screen landed or failed.
