@@ -142,6 +142,24 @@ pub fn demo(
     Some(tile)
 }
 
+/// A work's name as the person knows it: the catalogue's title in their title language, else the
+/// name of the folder series that carries it, else the work's id.
+pub fn title_of(store: &Store, work: &str, form: kaeri_store::shelf::TitleForm) -> String {
+    store
+        .book_work_kind(work)
+        .ok()
+        .flatten()
+        .and_then(|kind| kind.title_in(form))
+        .or_else(|| local_name(store, work))
+        .unwrap_or_else(|| work.to_owned())
+}
+
+/// The name of the folder series that carries `work`, for a work AniList does not list.
+pub fn local_name(store: &Store, work: &str) -> Option<String> {
+    let local = store.local_book_series().ok()?;
+    local.into_iter().find(|s| s.work.as_deref() == Some(work)).map(|s| s.name)
+}
+
 /// A book's cover with where the person is in it: the page they stopped on, or the next
 /// chapter, and the dot when one came out that they have not read.
 pub fn reading(

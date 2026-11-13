@@ -381,12 +381,8 @@ fn prepare_files(
         return fail(about, ReadingFailure::NotFound, tx);
     };
     let store = services.book_sources.store();
-    let title = store
-        .book_work_kind(work.as_str())
-        .ok()
-        .flatten()
-        .and_then(|kind| kind.title_in(crate::data::title_form(services.meta.titles())))
-        .unwrap_or_else(|| work.as_str().to_owned());
+    let form = crate::data::title_form(services.meta.titles());
+    let title = crate::read_catalog::tiles::title_of(store, work.as_str(), form);
     let direction = page_direction(engine, services, &work);
     let id = job.as_ref().map_or(JobId::new(0), |j| j.id);
     let exports = services.book_sources.exports.clone();

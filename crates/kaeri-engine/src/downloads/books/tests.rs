@@ -34,6 +34,8 @@ struct Shelf {
     asked: Mutex<Vec<String>>,
     /// Pages at these addresses answer 404.
     broken: Mutex<Vec<String>>,
+    /// Pages at these addresses are not reached at all.
+    unreached: Mutex<Vec<String>>,
     /// The page at this address waits: see [`Held`].
     held: Mutex<Option<Held>>,
     /// The chapters whose pages were asked for, in order.
@@ -176,6 +178,9 @@ impl BookSource for Shelf {
         if self.broken.lock().unwrap().contains(&page_ref.url) {
             return Err(PageError::Status(404));
         }
+        if self.unreached.lock().unwrap().contains(&page_ref.url) {
+            return Err(PageError::Failed(ProviderError::Transport("not reached".into())));
+        }
         if page_ref.url.contains("/pictures/") {
             return Ok(crate::read_sources::pictures::ONE_PIXEL_PNG.to_vec());
         }
@@ -269,6 +274,7 @@ fn kit_of(chapters: &[&str], hosts: &[&str]) -> Kit {
         fetched: Mutex::new(0),
         asked: Mutex::default(),
         broken: Mutex::default(),
+        unreached: Mutex::default(),
         held: Mutex::default(),
         contents: Mutex::default(),
         gates: Mutex::default(),
@@ -711,6 +717,7 @@ async fn a_chapter_listed_from_another_source_downloads_from_there() {
         fetched: Mutex::new(0),
         asked: Mutex::default(),
         broken: Mutex::default(),
+        unreached: Mutex::default(),
         held: Mutex::default(),
         contents: Mutex::default(),
         gates: Mutex::default(),
@@ -1081,6 +1088,59 @@ async fn download_on_a_book_in_a_folder_says_it_needs_none() {
     }
     assert_eq!(said, ["reading-download-on-device"]);
     assert_eq!(std::fs::read(&path).unwrap(), b"made-up book", "the book is left as it was");
+}
+
+/// R6-M3. A download of a folder series AniList does not list is named by the folder's name,
+/// in its row and its series line, never by the work's id.
+#[tokio::test]
+async fn a_folder_series_download_is_named_by_its_folder() {
+    let kit = kit(&["1"]);
+    kit.setup(Setup { hold: true, ..Setup::default() });
+    let work =
+        kaeri_core::books::WorkKey::local(Medium::Manga, "Rooftop Paper Club").to_string();
+    let series = kaeri_store::shelf::LocalSeries {
+        id: "books:rooftop".into(),
+        folder: kit._dir.path().join("books").display().to_string(),
+        name: "Rooftop Paper Club".into(),
+        medium: "manga".into(),
+        work: Some(work.clone()),
+        state: "unmatched".into(),
+    };
+    kit.store().put_local_series(&series).unwrap();
+    let wanted = Wanted { chapter: ChapterId::new("1"), version_label: None };
+    let queued = kit.queue.queue(kit.store(), &WorkId::new(work), "shelf", &[wanted], false, 1);
+    assert_eq!(queued, 1);
+    let view = kit.queue.view(kit.store());
+    assert_eq!(view.rows[0].title, "Rooftop Paper Club");
+    assert_eq!(view.series[0].title, "Rooftop Paper Club");
+}
+
+/// R6-M6. A page fetch that fails as the network goes, before the app hears it went, goes back in
+/// the queue as a held fetch does and downloads once the network is back, never failing.
+#[tokio::test]
+async fn a_fetch_cut_off_as_the_network_goes_resumes_when_it_is_back() {
+    let kit = kit(&["1"]);
+    let page = "https://pages.example/1/1".to_owned();
+    kit.shelf.unreached.lock().unwrap().push(page.clone());
+    let (asked, answer) =
+        (Arc::new(tokio::sync::Notify::new()), Arc::new(tokio::sync::Notify::new()));
+    *kit.shelf.held.lock().unwrap() = Some((page, asked.clone(), answer.clone()));
+    kit.queue
+        .download(&kit.lent, WorkId::new(WORK), DownloadPick::Chapters { ids: ids(&["1"]) })
+        .await;
+    asked.notified().await;
+    answer.notify_one();
+    tokio::time::sleep(Duration::from_millis(20)).await;
+    kit.setup(Setup { hold: true, offline: true, ..Setup::default() });
+    kit.settle().await;
+    assert_eq!(kit.states(), [("1".into(), ChapterDownloadState::Queued)], "held, not failed");
+
+    kit.shelf.unreached.lock().unwrap().clear();
+    *kit.shelf.held.lock().unwrap() = None;
+    kit.setup(Setup::default());
+    kit.queue.start(&kit.lent);
+    kit.settle().await;
+    assert_eq!(kit.states(), [("1".into(), ChapterDownloadState::Done)]);
 }
 
 fn msg_ids(parts: &[kaeri_model::Msg]) -> Vec<&'static str> {

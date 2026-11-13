@@ -1011,12 +1011,7 @@ struct Shelved {
 }
 
 fn title_of(store: &Store, work: &str, form: TitleForm) -> String {
-    store
-        .book_work_kind(work)
-        .ok()
-        .flatten()
-        .and_then(|k| k.title_in(form))
-        .unwrap_or_else(|| work.to_owned())
+    crate::read_catalog::tiles::title_of(store, work, form)
 }
 
 /// `label` with the series' `name` before it, unless it already names the series, as a file

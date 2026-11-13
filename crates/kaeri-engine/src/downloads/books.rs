@@ -85,6 +85,11 @@ const PROGRESS_EVERY: Duration =
 const PACE: Duration =
     if cfg!(test) { Duration::from_millis(2) } else { Duration::from_millis(400) };
 
+/// How long a fetch that could not reach its source waits to hear the network went, before it
+/// fails: the device often notices a lost network a moment after the fetch does.
+const NETWORK_GRACE: Duration =
+    if cfg!(test) { Duration::from_millis(300) } else { Duration::from_secs(6) };
+
 /// What the engine lends a download: the sources, the clock and the way to speak.
 #[derive(Clone)]
 pub struct Lent {
@@ -431,8 +436,7 @@ impl BookDownloads {
                 .as_ref()
                 .and_then(|kind| kaeri_core::media::Medium::parse(&kind.medium))
                 .unwrap_or(kaeri_core::media::Medium::Manga);
-            let title =
-                kind.and_then(|kind| kind.title_in(form)).unwrap_or_else(|| d.work.clone());
+            let title = crate::read_catalog::tiles::title_of(store, &d.work, form);
             let state = state_of(d, wifi);
             let mut chapter = chapter_row(d, read, bookmarked);
             // A download row carries no dates, so the clock plays no part in its words.
@@ -1003,6 +1007,14 @@ impl BookDownloads {
                     reason: "the chapter could not be downloaded".into(),
                 }))
             });
+        // A source not reached as the network went is waited for, as a fetch the network
+        // change stopped is: it goes back in the queue and resumes once the network is back.
+        let fetched = match fetched {
+            Err(Stop::Failed(failure)) if unreached(&failure) && self.network_went().await => {
+                Err(Stop::Held)
+            }
+            other => other,
+        };
         match fetched {
             Ok(done) => {
                 let path = done.path.to_string_lossy().into_owned();
@@ -1041,6 +1053,13 @@ impl BookDownloads {
                 (!full, false)
             }
         }
+    }
+
+    /// Whether the queue is held now, or is within [`NETWORK_GRACE`].
+    async fn network_went(&self) -> bool {
+        let mut changes = self.changes();
+        let held = changes.wait_for(|setup| setup.hold);
+        matches!(tokio::time::timeout(NETWORK_GRACE, held).await, Ok(Ok(_)))
     }
 
     /// The first page of a chapter being fetched, once it has landed and been kept: for the
@@ -1393,6 +1412,11 @@ pub(crate) fn io_failure(e: &std::io::Error, path: &Path) -> ReadingFailure {
     ReadingFailure::CannotWrite { path, problem }
 }
 
+/// A failure that says the source was not reached, which a lost network also gives.
+fn unreached(failure: &ReadingFailure) -> bool {
+    matches!(failure, ReadingFailure::SourceDown { .. } | ReadingFailure::Offline)
+}
+
 /// A whole book file copied as it is, from a plain path or a folder the platform opens. A
 /// failure names the file it is about: the book when it can't be read, the copy when it can't be
 /// written.
@@ -1541,7 +1565,7 @@ fn done_notice(
         [(work, n)] => {
             let kind = store.book_work_kind(work).ok().flatten();
             let novel = kind.as_ref().is_some_and(|k| k.medium == "novel");
-            let name = kind.and_then(|k| k.title_in(form)).unwrap_or_else(|| work.clone());
+            let name = crate::read_catalog::tiles::title_of(store, work, form);
             let body = if novel {
                 ReadingMsg::ReadingDownloadsDoneParts { title: name, count: count(*n) }
             } else {

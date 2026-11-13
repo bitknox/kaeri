@@ -97,12 +97,7 @@ pub(crate) fn series(
             store.bookmarks(work).unwrap_or_default().into_iter().collect();
         let kept = store.book_work(work).ok().flatten();
         let novel = kept.as_ref().is_some_and(|w| w.medium == "novel");
-        let title = store
-            .book_work_kind(work)
-            .ok()
-            .flatten()
-            .and_then(|kind| kind.title_in(form))
-            .unwrap_or_else(|| work.to_owned());
+        let title = crate::read_catalog::tiles::title_of(store, work, form);
         let done: Vec<&&BookDownload> =
             list.iter().filter(|d| d.state == BookDownloadState::Done).collect();
         let read: Vec<&&&BookDownload> =
