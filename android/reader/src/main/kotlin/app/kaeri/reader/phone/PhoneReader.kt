@@ -628,6 +628,7 @@ fun PhoneReader(
                         credits = { chapter, pages -> StripCredits(state, session, images, chapter, pages, background) },
                         onFlow = { next -> session.flowInto(next.id) },
                         onShowing = { showingAbove = it },
+                        onBack = session::flowBack,
                         list = stripList,
                         stepping = stripStep::catch,
                         gap = gap,

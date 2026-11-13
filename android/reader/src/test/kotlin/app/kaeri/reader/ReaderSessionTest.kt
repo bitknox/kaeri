@@ -481,6 +481,56 @@ class ReaderSessionTest {
         assertEquals(4, session.state.value.pages)
     }
 
+    private fun flowFailsWith(failure: ReadingFailure) {
+        opened(start = 0u)
+        session.jumped(session.state.value.jump!!.id)
+        val next = "local:lantern-stair/13"
+        val before = session.state.value
+        sent.clear()
+        session.flowInto(next)
+        session.apply(Event.Reading(ReadingEvent.Failed(ReadingAbout.READER, failure)))
+        val state = session.state.value
+        // The chapter read stays, every image of it, and nothing is on its way any more.
+        assertNull(state.failure)
+        assertEquals(CHAPTER, state.chapter)
+        assertEquals(before.leaves, state.leaves)
+        assertEquals(SESSION, state.session)
+        assertNull(state.asking)
+        assertEquals(FlowFailure(next, ReaderFixtures.view().next, failure), state.flowFailed)
+        // Scrolling past the join again asks nothing; Try again flows on into the chapter.
+        session.flowInto(next)
+        assertEquals(listOf<ReaderCommand>(ReaderCommand.OpenChapter(SESSION, next)), sent)
+        session.retryFlow()
+        assertNull(session.state.value.flowFailed)
+        assertEquals(listOf<ReaderCommand>(ReaderCommand.OpenChapter(SESSION, next), ReaderCommand.OpenChapter(SESSION, next)), sent)
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view(start = 0u).copy(chapter = ReaderFixtures.chapter(next, "13"))))
+        assertEquals(CHAPTER, session.state.value.previous?.chapter)
+        assertNull(session.state.value.previous?.flowFailed)
+    }
+
+    @Test
+    fun a_strip_that_cannot_flow_on_offline_keeps_the_chapter_read() = flowFailsWith(ReadingFailure.Offline)
+
+    @Test
+    fun a_strip_whose_next_chapter_cannot_be_had_online_keeps_the_chapter_read() =
+        flowFailsWith(ReadingFailure.SourceDown("Lantern Archive"))
+
+    @Test
+    fun an_opened_left_behind_by_a_reader_that_went_is_not_kept() {
+        session.open(WORK, ReaderFixtures.surface)
+        // Another series' open, left behind by a reader that went, answers while this one opens.
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view().copy(session = SESSION - 1u, work = "local:another-stair")))
+        assertTrue(session.state.value.opening)
+        assertNull(session.state.value.view)
+        // One of this series from before is shown, until this reader's own, newer, comes.
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view().copy(session = SESSION - 1u)))
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view()))
+        assertEquals(SESSION, session.state.value.session)
+        // An older one coming late changes nothing.
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view().copy(session = SESSION - 2u)))
+        assertEquals(SESSION, session.state.value.session)
+    }
+
     @Test
     fun the_chapter_kept_above_a_flow_asks_and_takes_its_own_pages() {
         opened(start = 0u)

@@ -95,6 +95,9 @@ fun openingClock(): Long = System.nanoTime() / 1_000_000
 /** A chapter asked for from the one on screen: its row, when the session knows it. */
 data class ChapterAsk(val chapter: ChapterId, val row: ChapterRow?)
 
+/** A strip's flow into [chapter] that failed with [failure]; [row] when the session knows it. */
+data class FlowFailure(val chapter: ChapterId, val row: ChapterRow?, val failure: ReadingFailure)
+
 /** What the engine said of the open session. */
 data class ReaderState(
     /** Asked to open and not yet answered. */
@@ -149,6 +152,11 @@ data class ReaderState(
     val preview: NextPreview? = null,
     /** The chapter a strip flowed on from, drawn above this one in the same scroll. */
     val previous: ReaderState? = null,
+    /**
+     * The chapter a strip was flowing into and could not open: the chapter read stays, and the
+     * strip ends at the join on an end page with Try again for it.
+     */
+    val flowFailed: FlowFailure? = null,
     /** The other sources a failed chapter can be read from; null until the engine answers. */
     val sources: List<ChapterVersion>? = null,
     /**
@@ -258,6 +266,11 @@ class ReaderSession(private val send: (Command) -> Unit) {
     /** A strip flowing on: the chapter it flows into and the one it leaves, kept above. */
     private var flowTo: ChapterId? = null
     private var flowFrom: ReaderState? = null
+    /** A strip scrolled back into the chapter kept above: that chapter, and how it stood, until it opens again. */
+    private var backTo: ChapterId? = null
+    private var backFrom: ReaderState? = null
+    /** Opened again from the strip above: the scroll is already where it is, so its layout makes no jump. */
+    private var cameBack = false
     private var startAt: ReadPlace? = null
     /** The jump to [startAt]; once it was shown, the start place is done with. */
     private var startJump: Long? = null
@@ -312,6 +325,9 @@ class ReaderSession(private val send: (Command) -> Unit) {
         awaitingOpen = true
         flowTo = null
         flowFrom = null
+        backTo = null
+        backFrom = null
+        cameBack = false
         startAt = null
         startJump = null
         shownPage = null
@@ -462,7 +478,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
         val now = state.value
         val session = now.session ?: return false
         val view = now.view
-        awaiting = listOfNotNull(view?.next, view?.previous).firstOrNull { it.id == chapter }
+        awaiting = listOfNotNull(view?.next, view?.previous, now.end?.next, now.end?.skipTo).firstOrNull { it.id == chapter }
             ?: now.volumes.flatMap { it.chapters }.firstOrNull { it.id == chapter }
         awaitingOpen = true
         _state.value = now.copy(asking = ChapterAsk(chapter, awaiting), openingSince = openingClock())
@@ -488,9 +504,40 @@ class ReaderSession(private val send: (Command) -> Unit) {
      */
     fun flowInto(chapter: ChapterId) {
         if (flowTo == chapter) return
-        flowFrom = state.value.copy(previous = null)
+        val now = state.value
+        // A flow that failed into this chapter waits for Try again, rather than asking on every scroll past.
+        if (now.flowFailed?.chapter == chapter) return
+        flowFrom = now.copy(previous = null)
         flowTo = chapter
-        openChapter(chapter)
+        if (!openChapter(chapter)) {
+            flowTo = null
+            flowFrom = null
+        }
+    }
+
+    /**
+     * A strip came to rest scrolled back into the chapter kept above the divider: that chapter
+     * opens again in the same scroll, so the place kept, the chapter named and Go to page follow
+     * what is on screen. The chapter below goes, and flows on again from the divider.
+     */
+    fun flowBack() {
+        val now = state.value
+        val above = now.previous ?: return
+        val chapter = above.chapter ?: return
+        if (backTo == chapter || flowTo != null) return
+        backTo = chapter
+        backFrom = above
+        if (!openChapter(chapter)) {
+            backTo = null
+            backFrom = null
+        }
+    }
+
+    /** Try again on the end page a failed flow left at the join: the strip flows on into that chapter. */
+    fun retryFlow() {
+        val failed = state.value.flowFailed ?: return
+        _state.value = state.value.copy(flowFailed = null)
+        flowInto(failed.chapter)
     }
 
     /** Try the open again, from the start, when it failed before any chapter opened. */
@@ -770,8 +817,32 @@ class ReaderSession(private val send: (Command) -> Unit) {
                 if (failed.about != ReadingAbout.READER || !awaitingOpen) return
                 awaitingOpen = false
                 val now = state.value
+                val flowing = flowTo
+                val before = flowFrom
+                val back = backTo
                 flowTo = null
                 flowFrom = null
+                backTo = null
+                backFrom = null
+                // The chapter above failed to open again: the strip stays as it is, both chapters in it.
+                if (back != null && now.view != null) {
+                    awaiting = null
+                    _state.value = now.copy(asking = null)
+                    return
+                }
+                // A strip flowing on keeps the chapter read, scrolled as it was: the failure is said
+                // at the join, with Try again, for any reason the next chapter could not be had.
+                if (flowing != null && now.view != null) {
+                    val row = awaiting?.takeIf { it.id == flowing }
+                    awaiting = null
+                    _state.value = now.copy(
+                        asking = null,
+                        openingChapter = before?.openingChapter,
+                        openingWait = before?.openingWait,
+                        flowFailed = FlowFailure(flowing, row, failed.failure),
+                    )
+                    return
+                }
                 // A chapter asked for from another one: the reader shows that chapter's failure in its place.
                 val chapter = awaiting ?: now.openingChapter
                 awaiting = null
@@ -796,7 +867,14 @@ class ReaderSession(private val send: (Command) -> Unit) {
         _state.value = when (event) {
             // Each open and each chapter opened: a fresh chapter, its start place kept for the leaves.
             is ReaderEvent.Opened -> {
-                if (!now.opening && now.session != null && event.v1.session != now.session) return
+                // The engine keeps one session and numbers them upwards. While this reader opens, an
+                // Opened for another series answers an open left behind by a reader that went; one
+                // for this series with a newer number replaces the session held, as the engine
+                // closed that one when it opened the newer, even when the one held came from an open
+                // left behind.
+                val held = now.session
+                if (event.v1.work != work) return
+                if (!now.opening && held != null && event.v1.session != held && event.v1.session < held) return
                 awaitingOpen = false
                 engineSession = event.v1.session
                 awaiting = null
@@ -812,8 +890,14 @@ class ReaderSession(private val send: (Command) -> Unit) {
                     if (now.chapter == from.chapter) from.copy(files = now.files, held = now.held, failures = now.failures) else from
                 }
                 askedAbove.clear()
+                // Scrolled back into the chapter above, it keeps its images where they are on screen
+                // until its layout comes.
+                val back = backFrom?.takeIf { backTo == event.v1.chapter.id }
+                cameBack = back != null
                 flowTo = null
                 flowFrom = null
+                backTo = null
+                backFrom = null
                 shownLeaf = null
                 ReaderState(
                     view = event.v1,
@@ -823,10 +907,14 @@ class ReaderSession(private val send: (Command) -> Unit) {
                     volumes = now.volumes,
                     layout = now.layout + 1,
                     previous = previous,
-                    // A chapter opened again skips its credit pages again; a strip that flowed on
-                    // keeps those of the chapter above.
-                    credits = if (previous != null) now.credits else emptyMap(),
-                    revealed = if (previous != null) now.revealed else emptySet(),
+                    leaves = back?.leaves.orEmpty(),
+                    files = back?.files.orEmpty(),
+                    held = back?.held.orEmpty(),
+                    failures = back?.failures.orEmpty(),
+                    // A chapter opened again skips its credit pages again; a strip that flowed on,
+                    // either way, keeps those of the chapter above.
+                    credits = if (previous != null || back != null) now.credits else emptyMap(),
+                    revealed = if (previous != null || back != null) now.revealed else emptySet(),
                     // A novel's text comes after this; the wait it shows counts from the ask.
                     openingSince = now.openingSince,
                 )
@@ -860,9 +948,10 @@ class ReaderSession(private val send: (Command) -> Unit) {
                 // The start place holds until the jump to it was shown: a layout that comes before
                 // then, as when the phone turns while the reader opens, opens there too.
                 val start = startAt
-                // Flowed into from above: the scroll is already where the chapter starts.
-                if (start != null && now.previous != null) {
+                // Flowed into from above, or back into from below: the scroll is already where it is.
+                if (start != null && (now.previous != null || cameBack)) {
                     startAt = null
+                    cameBack = false
                     return run { _state.value = placed }
                 }
                 // Laid out again before any page was painted, as a long strip is once its images'
