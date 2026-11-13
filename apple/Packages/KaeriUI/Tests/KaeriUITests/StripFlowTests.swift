@@ -37,7 +37,7 @@ struct StripFlowTests {
             ("21#0", .image(chapter: "21", part: part(0)), 1200, 0),
             ("21#1", .image(chapter: "21", part: part(1)), 1200, 0),
             ("21>", .marker(next: chapter("22"), source: nil, chapter: "21"), 168, 0),
-            ("lead", .lead, 844, nil),
+            (StripReader.leadId("22"), .lead, 844, nil),
         ])
     }
 
@@ -52,7 +52,7 @@ struct StripFlowTests {
             rows.append(("22#\(page)", .image(chapter: "22", part: part(UInt32(page))), 585, nil))
         }
         rows.append(("22>", .marker(next: chapter("22.1"), source: nil, chapter: "22"), 168, nil))
-        rows.append(("lead", .lead, 844, nil))
+        rows.append((StripReader.leadId("22.1"), .lead, 844, nil))
         return stack(rows)
     }
 
@@ -67,6 +67,15 @@ struct StripFlowTests {
         #expect(after.id == "22#0")
     }
 
+    /// The room the strip waits in under 21's marker and the lead under 22's marker once 22's
+    /// images came are two rows: a place held in the room never follows it down past 22's images.
+    @Test func theRoomItWaitsInIsNotTheLeadAfterIt() {
+        #expect(StripReader.leadId("22") != StripReader.leadId("22.1"))
+        let room = flowing.last!
+        let held = StripReader.Anchor(id: room.id, top: room.top, into: 0.3)
+        #expect(StripReader.following(held, in: opened) == nil)
+    }
+
     /// Images above the place that land at another height move it, and the strip follows by the
     /// same amount, past the marker's foot as well.
     @Test func rowsAboveThePlaceStillMoveIt() throws {
@@ -76,7 +85,7 @@ struct StripFlowTests {
             ("21#0", .image(chapter: "21", part: part(0)), 1500, 0),
             ("21#1", .image(chapter: "21", part: part(1)), 1200, 0),
             ("21>", .marker(next: chapter("22"), source: nil, chapter: "21"), 168, 0),
-            ("lead", .lead, 844, nil),
+            (StripReader.leadId("22"), .lead, 844, nil),
         ])
         #expect(StripReader.following(anchor, in: taller) == y + 300)
     }

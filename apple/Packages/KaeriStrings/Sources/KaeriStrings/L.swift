@@ -10454,6 +10454,16 @@ public enum L {
         Self.format("send-banner", fallback: "Sending to %1$@", device)
     }
 
+    /// The chapters a send holds, on its row under Sending to, when there are several: the first to the last, by their numbers or labels, such as 21 to 23.
+    public static func sendRowChapters(first: String, last: String) -> String {
+        Self.format("send-row-chapters", fallback: "Chapters %1$@ to %2$@", first, last)
+    }
+
+    /// A send's row under Sending to: the series' title, then the chapters the send holds, such as "Chapter 23" or "Chapters 21 to 23". Shown on one line.
+    public static func sendRowLine(title: String, chapters: String) -> String {
+        Self.format("send-row-line", fallback: "%1$@ · %2$@", title, chapters)
+    }
+
     /// The format of the files an e-reader is sent: a manga as a fixed-layout EPUB.
     public static var sendFormatFixedEpub: String { string("send-format-fixed-epub", fallback: "Fixed-layout EPUB") }
 

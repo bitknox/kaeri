@@ -631,7 +631,7 @@ struct ReaderChaptersSheet: View {
 
     private var chapters: some View {
         ScrollViewReader { proxy in
-            chapterList.onAppear { place(proxy) }
+            chapterList.onAppear { model.loadChapters(); place(proxy) }
                 // Chapters listed after the sheet opened are placed as they come in.
                 .onChange(of: model.chaptersLoaded) { _, loaded in if loaded { place(proxy) } }
         }

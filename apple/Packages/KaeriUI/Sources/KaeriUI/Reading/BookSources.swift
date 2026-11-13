@@ -111,7 +111,7 @@ struct BookSourcesList: View {
         .onLaunchSheet("came-in", navigator) { // i18n-skip: a shot's sheet name
             guard let scene = PrelaunchScene.named() else { return }
             switch scene {
-            case .folder, .folderNothing:
+            case .folder, .folderNothing, .folderAlready, .folderUnreadable:
                 store.cameIn.stage(scene)
             case .inviteJoined, .pluginsInstalled, .storeOther, .storeEmpty, .storeUnreachable:
                 store.cameIn.stage(scene)
@@ -603,6 +603,14 @@ struct AddBookSourceSheet: View {
                         dismiss()
                     }
                     #else
+                    #if FIXTURES
+                    // The UI tests' folder, as the system's picker would hand it back.
+                    if let folder = BookFolders.fixture("KAERI_FIXTURE_FOLDER") {
+                        BookFolders.add(folder, to: store)
+                        dismiss()
+                        return
+                    }
+                    #endif
                     picking = true
                     #endif
                 }
@@ -662,6 +670,14 @@ enum BookFolders {
         store.bookSources.addFolder(FolderRef(path: url.path(percentEncoded: false), treeUri: nil,
                                               bookmark: bookmark, name: url.lastPathComponent))
     }
+
+    #if FIXTURES
+    /// A folder the UI tests name in the environment, in place of the system's picker.
+    static func fixture(_ name: String) -> URL? {
+        guard let path = ProcessInfo.processInfo.environment[name], !path.isEmpty else { return nil }
+        return URL(filePath: path, directoryHint: .isDirectory)
+    }
+    #endif
 }
 
 /// A pasted Kavita OPDS link: `https://host/api/opds/{key}`. The key signs in, so no password is
