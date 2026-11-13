@@ -205,7 +205,8 @@ internal fun SendToEreaderSheet(work: WorkId, chapters: List<ChapterId>, actions
     val now = job?.let { jobs[it.toULong()] }
     val rows = chapterMap[work]?.volumes?.chapterRows().orEmpty()
     val sent = rows.filter { it.id in chapters }
-    val bytes = estimates[work]?.takeIf { it.pick == DownloadPick.Chapters(chapters) }?.allBytes?.toLong()?.takeIf { it > 0 }
+    val estimate = estimates[work]?.takeIf { it.pick == DownloadPick.Chapters(chapters) }
+    val bytes = sendBytes(estimate)
     fun start() {
         val device = target ?: return
         val format = device.formatFor(medium) ?: return
@@ -253,8 +254,7 @@ internal fun SendToEreaderSheet(work: WorkId, chapters: List<ChapterId>, actions
                     ValueRow(Strings.sendChapters(context), chaptersWords(context, sent))
                     ValueRow(
                         Strings.sendSize(context),
-                        bytes?.let { Strings.sendSizeAbout(context, Wording.bytes(context, it)) }
-                            ?: Strings.sendSizeWorking(context).takeIf { waitedForSize },
+                        sendSizeWords(context, estimate, waitedForSize),
                     )
                     if (bytes != null && target?.split == true && medium != Medium.NOVEL && bytes > SEND_PARTS_OVER) {
                         SheetText(Strings.sendInParts(context, Wording.bytes(context, SEND_PARTS_OVER)), Modifier.padding(top = 8.dp))
@@ -674,3 +674,19 @@ internal fun WhereStopSheet(series: SeriesView, onDismiss: () -> Unit) {
         }
     }
 }
+
+/**
+ * What a send of the chosen chapters comes to, by the engine's estimate for exactly them: every
+ * chapter, those here by what they take and the rest as estimated. Null when the engine doesn't
+ * know (0), which is never counted as nothing.
+ */
+internal fun sendBytes(estimate: app.kaeri.engine.model.DownloadEstimate?): Long? = estimate?.allBytes?.toLong()?.takeIf { it > 0 }
+
+/**
+ * The Size row's value: "About 64 MB", "Working it out" while the estimate is on its way after a
+ * wait, and nothing once the engine answered without a size. [estimate] is the answer for the
+ * chapters chosen now, or null.
+ */
+internal fun sendSizeWords(context: Context, estimate: app.kaeri.engine.model.DownloadEstimate?, waited: Boolean): String? =
+    sendBytes(estimate)?.let { Strings.sendSizeAbout(context, Wording.bytes(context, it)) }
+        ?: Strings.sendSizeWorking(context).takeIf { waited && estimate == null }
