@@ -49,6 +49,9 @@ struct PagedReader: View {
         .clipped()
         .contentShape(.rect)
         .gesture(swipe)
+        #if os(macOS)
+        .background(trackpad)
+        #endif
         #if os(iOS)
         // A double tap zooms, so a single tap waits for it not to be one.
         .simultaneousGesture(
@@ -251,13 +254,7 @@ struct PagedReader: View {
                     zoom.drag(value.translation, in: size)
                     return
                 }
-                var x = value.translation.width
-                let forward = x * sign > 0
-                let target = current + (forward ? 1 : -1)
-                let endForward = forward && model.leaves.indices.contains(current) && model.leaves[current].endPage
-                if !model.leaves.indices.contains(target) || (endForward && model.endNext == nil) { x /= 4 }
-                if staysOnLeaf(forward: forward) != nil { x /= 4 }
-                drag = x
+                follow(value.translation.width)
             }
             .onEnded { value in
                 guard !settling else { return }
@@ -266,45 +263,80 @@ struct PagedReader: View {
                     withAnimation(paper ? nil : .standard) { drag = 0 }
                     return
                 }
-                let x = value.translation.width
-                let flick = abs(value.velocity.width) > 450 && value.velocity.width * x > 0
-                let commit = abs(x) > size.width * 0.25 || flick
-                let forward = x * sign > 0
-                let target = current + (forward ? 1 : -1)
-                let endForward = forward && model.leaves.indices.contains(current) && model.leaves[current].endPage
-                if let step = staysOnLeaf(forward: forward) {
-                    withAnimation(paper ? nil : .standard) { drag = 0 }
-                    if commit { creditTurn(step, how: .swipe) }
-                    return
-                }
-                if commit, endForward {
-                    drag = 0
-                    if let next = model.endNext { model.openChapter(next.id) }
-                    return
-                }
-                guard commit, model.leaves.indices.contains(target) else {
-                    withAnimation(paper ? nil : .standard) { drag = 0 }
-                    return
-                }
-                if paper {
-                    drag = 0
-                    model.shown(target, how: .swipe)
-                    return
-                }
-                settling = true
-                withAnimation(.standard, completionCriteria: .logicallyComplete) {
-                    drag = sign * (forward ? 1 : -1) * size.width
-                } completion: {
-                    var transaction = Transaction()
-                    transaction.disablesAnimations = true
-                    withTransaction(transaction) {
-                        model.shown(target, how: .swipe)
-                        drag = 0
-                        settling = false
-                    }
-                }
+                letGo(value.translation.width, velocity: value.velocity.width)
             }
     }
+
+    /// The page following a drag `x` points sideways, held back past the ends.
+    private func follow(_ x: CGFloat) {
+        var x = x
+        let forward = x * sign > 0
+        let target = current + (forward ? 1 : -1)
+        let endForward = forward && model.leaves.indices.contains(current) && model.leaves[current].endPage
+        if !model.leaves.indices.contains(target) || (endForward && model.endNext == nil) { x /= 4 }
+        if staysOnLeaf(forward: forward) != nil { x /= 4 }
+        drag = x
+    }
+
+    /// A drag let go `x` points sideways, moving at `velocity`: a turn past a quarter of the width
+    /// or with a flick, and back where it was short of both.
+    private func letGo(_ x: CGFloat, velocity: CGFloat) {
+        let flick = abs(velocity) > 450 && velocity * x > 0
+        let commit = abs(x) > size.width * 0.25 || flick
+        let forward = x * sign > 0
+        let target = current + (forward ? 1 : -1)
+        let endForward = forward && model.leaves.indices.contains(current) && model.leaves[current].endPage
+        if let step = staysOnLeaf(forward: forward) {
+            withAnimation(paper ? nil : .standard) { drag = 0 }
+            if commit { creditTurn(step, how: .swipe) }
+            return
+        }
+        if commit, endForward {
+            drag = 0
+            if let next = model.endNext { model.openChapter(next.id) }
+            return
+        }
+        guard commit, model.leaves.indices.contains(target) else {
+            withAnimation(paper ? nil : .standard) { drag = 0 }
+            return
+        }
+        if paper {
+            drag = 0
+            model.shown(target, how: .swipe)
+            return
+        }
+        settling = true
+        withAnimation(.standard, completionCriteria: .logicallyComplete) {
+            drag = sign * (forward ? 1 : -1) * size.width
+        } completion: {
+            var transaction = Transaction()
+            transaction.disablesAnimations = true
+            withTransaction(transaction) {
+                model.shown(target, how: .swipe)
+                drag = 0
+                settling = false
+            }
+        }
+    }
+
+    #if os(macOS)
+    /// A two-finger sideways swipe on the trackpad, as a drag: the page follows the fingers and
+    /// turns or goes back when they lift. A mouse's sideways wheel turns a page a step. A zoomed
+    /// page, an open sheet or a turn under way leaves the scroll to whatever else takes it.
+    private var trackpad: some View {
+        TrackpadSwipe(active: model.sheet == nil && !zoom.zoomed && !zoom.pinching) { out in
+            guard !settling else { return out != .pass }
+            switch out {
+            case .pass: return false
+            case .take: return true
+            case .follow(let x): follow(x)
+            case .letGo(let x, let velocity): letGo(x, velocity: velocity)
+            case .step(let x): turn(forward: x * sign > 0, how: .swipe)
+            }
+            return true
+        }
+    }
+    #endif
 }
 
 // MARK: End page
