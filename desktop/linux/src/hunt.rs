@@ -456,6 +456,14 @@ fn follow_focus(shell: &Rc<Shell>) {
             .unwrap_or_else(|| "none".into());
         tracing::info!("HUNT focus-> {what}");
     });
+    // Every key the window hears, before anything inside it, for the keyboard drives.
+    let keys = gtk::EventControllerKey::new();
+    keys.set_propagation_phase(gtk::PropagationPhase::Capture);
+    keys.connect_key_pressed(|_, key, code, modifiers| {
+        tracing::info!("HUNT keyin {:?} code={code} mods={modifiers:?}", key.name());
+        glib::Propagation::Proceed
+    });
+    window.add_controller(keys);
 }
 
 /// How wide the window's content needs to be, against how wide it is.
