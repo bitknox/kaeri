@@ -589,7 +589,16 @@ impl Reader {
         // A demo work says its own medium: opened from Home or the first run before its page was
         // ever loaded, the catalogue has not fetched it, and its chapters come from the demo.
         let demo_work = kaeri_core::reading_demo::WORKS.iter().find(|w| w.work_id() == work);
-        let medium = match (kind.as_ref().map(|k| k.medium.as_str()), chapters.first()) {
+        // A work only a source lists, with nothing kept of it: a medium other than manga that
+        // its sources carry.
+        let held = kind
+            .is_none()
+            .then(|| cx.services.book_sources.held_medium(&work))
+            .flatten()
+            .filter(|m| *m != Medium::Manga)
+            .map(Medium::as_str);
+        let kept = kind.as_ref().map(|k| k.medium.as_str()).or(held);
+        let medium = match (kept, chapters.first()) {
             _ if demo_work.is_some() => demo_work.map_or(Medium::Manga, |w| w.medium()),
             (Some("novel"), _) => Medium::Novel,
             (None, Some(c)) if c.is_text() => Medium::Novel,

@@ -1778,6 +1778,7 @@ impl BookSources {
                 work
             }
         };
+        self.keep_unlisted_work(source, &work, medium, &hit.title, now);
         Some(WorkTile {
             work: WorkId::new(work),
             title: hit.title,
@@ -1794,6 +1795,49 @@ impl BookSources {
             origin,
             amount,
             started: None,
+        })
+    }
+
+    /// A work of a source's own that no catalogue lists, kept with the medium and name its
+    /// source gave, unless something is kept of it already: its page, the reader, Downloads and
+    /// Home then call it by that name and read it as that medium. A folder's series keeps its
+    /// own.
+    fn keep_unlisted_work(
+        &self,
+        source: &str,
+        work: &str,
+        medium: Medium,
+        title: &str,
+        now: i64,
+    ) {
+        let unlisted = WorkId::new(work).key().is_some_and(|key| key.is_local());
+        if source == FOLDERS || !unlisted || title.trim().is_empty() {
+            return;
+        }
+        if matches!(self.store.book_work_kind(work), Ok(None))
+            && let Err(error) =
+                self.store.seed_book_work(work, medium.as_str(), None, None, title.trim(), now)
+        {
+            tracing::warn!(%error, "a source's work was not kept");
+        }
+    }
+
+    /// The reading medium of a work no catalogue lists, as the sources that hold it declare:
+    /// the one it is read from first, then the person's order, the first that carries only
+    /// one. `None` when each carries more.
+    pub(crate) fn held_medium(&self, work: &WorkId) -> Option<Medium> {
+        let refs = self.store.book_refs_for_work(work.as_str()).unwrap_or_default();
+        let in_use = self.edition_of(work, None).map(|(source, _)| source);
+        let order = self.registry.ids();
+        let mut sources: Vec<String> = refs.into_iter().map(|(source, _)| source).collect();
+        sources.sort_by_key(|source| {
+            (Some(source) != in_use.as_ref(), order.iter().position(|id| id == source))
+        });
+        sources.into_iter().filter(|source| source != FOLDERS).find_map(|source| {
+            let manifest = self.registry.manifest(&source)?;
+            let mut reading = manifest.media.iter().copied().filter(|m| m.is_reading());
+            let first = reading.next()?;
+            reading.all(|m| m == first).then_some(first)
         })
     }
 
