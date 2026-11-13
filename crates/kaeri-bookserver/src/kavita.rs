@@ -24,7 +24,7 @@ use crate::{
     error::{Result, ServerError},
     http::{Auth, Http},
     kept::keep_path,
-    komga::encode,
+    komga::{encode, segment},
     names::chapter_of,
 };
 
@@ -550,7 +550,7 @@ impl BookSource for KavitaSource {
         id: &str,
         _hints: &BookHints,
     ) -> std::result::Result<SeriesDetail, ProviderError> {
-        let path = &format!("api/Series/{}", encode(id));
+        let path = &format!("api/Series/{}", segment(id));
         let row: serde_json::Value = self
             .signed(|http| async move { http.json(path).await })
             .await

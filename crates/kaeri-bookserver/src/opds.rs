@@ -28,7 +28,7 @@ use crate::{
     error::{Result, ServerError},
     http::{Auth, Http, basic},
     kept::keep_path,
-    komga::encode,
+    komga::segment,
     names::chapter_of,
 };
 
@@ -419,7 +419,7 @@ impl OpdsSource {
         let template = link_with(&root.links, "search")
             .map(|l| l.href.clone())
             .ok_or(ServerError::NotFound)?;
-        let address = template.replace("{searchTerms}", &encode(term));
+        let address = template.replace("{searchTerms}", &segment(term));
         self.feed_all(&address).await
     }
 
@@ -451,7 +451,7 @@ impl OpdsSource {
                 Some(_) => {}
                 None => {
                     let search = link_with(&root.links, "search")
-                        .map(|l| l.href.replace("{searchTerms}", &encode(query)))
+                        .map(|l| l.href.replace("{searchTerms}", &segment(query)))
                         .unwrap_or_default();
                     hits.push(self.hit(entry, &format!("book|{search}|{}", entry.id)));
                 }
