@@ -392,7 +392,7 @@ enum SeriesChoosing {
     static func start(_ chapters: ReadChapters?) -> Set<String> {
         let rows = chapters?.volumes.flatMap(\.chapters) ?? []
         let at = at(rows) ?? 0
-        let wanted = { (row: ChapterRow) in row.state != .read && row.download == nil }
+        let wanted = { (row: ChapterRow) in row.state != .read && row.downloadable }
         let after = rows[min(at, rows.count)...].filter(wanted)
         let next = after.isEmpty ? rows.filter(wanted) : after
         return Set(next.prefix(ahead).map(\.id))
@@ -421,11 +421,23 @@ enum SeriesChoosing {
         WindowCrossfade.run { WindowCrossfade.still { choosing.wrappedValue = chosen } }
     }
 
+    /// Whether Download has anything to do: a chapter to download, or one downloaded. A folder's
+    /// series has neither, and its Download rests.
+    static func hasDownloads(_ chapters: ReadChapters?) -> Bool {
+        (chapters?.volumes ?? []).flatMap(\.chapters).contains { $0.downloadable || $0.download != nil }
+    }
+
     /// All unread, in the bar.
     static func unread(_ chapters: ReadChapters?) -> Set<String> {
         let rows = chapters?.volumes.flatMap(\.chapters) ?? []
         return Set(rows.filter { $0.state != .read }.map(\.id))
     }
+}
+
+extension ChapterRow {
+    /// Whether Download is offered for the chapter: not here or on its way, and not a file on
+    /// this device, as a folder's chapters are.
+    var downloadable: Bool { download == nil && !onDevice }
 }
 
 extension SeriesSheet {
@@ -721,7 +733,7 @@ private struct SeriesActions: View {
     /// The next 5 or 10 unread, every unread chapter, a volume, Choose chapters, and delete.
     private var downloadMenu: some View {
         let volumes = store.reading.chapters[series.work]?.volumes ?? []
-        let unread = volumes.flatMap(\.chapters).filter { $0.state != .read && $0.download == nil }
+        let unread = volumes.flatMap(\.chapters).filter { $0.state != .read && $0.downloadable }
         let downloaded = volumes.flatMap(\.chapters).filter { $0.download != nil }
         let byVolume = ReadSeriesWords.downloadVolumes(volumes)
         return Menu {
@@ -729,15 +741,15 @@ private struct SeriesActions: View {
             Button(L.downloadNext(n: 10)) { store.reading.download(series.work, .nextUnread(n: 10)) }
             Button(L.downloadUnread) { store.reading.download(series.work, .unread) }
                 .disabled(unread.isEmpty)
-            let toFetch = byVolume.filter { group in group.chapters.contains { $0.download == nil } }
+            let toFetch = byVolume.filter { group in group.chapters.contains(where: \.downloadable) }
             if !toFetch.isEmpty { Divider() }
             ForEach(toFetch, id: \.volume) { group in
-                let count = group.chapters.filter { $0.download == nil }.count
+                let count = group.chapters.filter(\.downloadable).count
                 Button(L.downloadVolumeCount(volume: ReadSeriesWords.volume(group, novel: false).name, n: count)) {
                     if let volume = group.volume {
                         store.reading.download(series.work, .volume(volume: volume))
                     } else {
-                        store.reading.download(series.work, .chapters(ids: group.chapters.filter { $0.download == nil }.map(\.id)))
+                        store.reading.download(series.work, .chapters(ids: group.chapters.filter(\.downloadable).map(\.id)))
                     }
                 }
             }
@@ -755,6 +767,8 @@ private struct SeriesActions: View {
             menuLabel(L.seriesDownload)
         }
         .accessibilityLabel(L.seriesDownload)
+        // Rests with nothing to download and nothing downloaded, as a folder's series has.
+        .disabled(!SeriesChoosing.hasDownloads(store.reading.chapters[series.work]))
         .menuStyle(.button)
         .buttonStyle(SecondaryCapsuleStyle(height: secondaryHeight, fontSize: secondaryFont))
         .menuIndicator(.hidden)
@@ -1305,7 +1319,7 @@ private struct ChapterRowView: View {
                 store.reading.markRead(series.work, chapters: [row.id], read: row.state != .read)
             }
             .tint(Palette.raisedSelected)
-            if row.download == nil {
+            if row.downloadable {
                 Button(L.seriesDownload) { store.reading.download(series.work, .chapters(ids: [row.id])) }
                     .tint(Palette.raised)
             }
@@ -1332,7 +1346,10 @@ private struct ChapterMenu: View {
         Button(L.seriesMarkReadUpTo) { store.reading.markReadUpTo(series.work, chapter: row.id) }
         switch row.download {
         case .none:
-            Button(L.seriesDownload) { store.reading.download(series.work, .chapters(ids: [row.id])) }
+            // A file on this device, as a folder's chapters are, has nothing to download.
+            if !row.onDevice {
+                Button(L.seriesDownload) { store.reading.download(series.work, .chapters(ids: [row.id])) }
+            }
         case .done:
             Button(L.chapterDownloadDelete, role: .destructive) { store.reading.deleteDownloads(series.work, chapters: [row.id]) }
         case .failed:

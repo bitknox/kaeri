@@ -1626,6 +1626,18 @@ send-again = Send again
 # @arg device: text
 send-banner = Sending to { $device }
 
+# The chapters a send holds, on its row under Sending to, when there are several: the first to
+# the last, by their numbers or labels, such as 21 to 23.
+# @arg first: text
+# @arg last: text
+send-row-chapters = Chapters { $first } to { $last }
+
+# A send's row under Sending to: the series' title, then the chapters the send holds, such as
+# "Chapter 23" or "Chapters 21 to 23". Shown on one line.
+# @arg title: text
+# @arg chapters: text
+send-row-line = { $title } · { $chapters }
+
 # The format of the files an e-reader is sent: a manga as a fixed-layout EPUB.
 send-format-fixed-epub = Fixed-layout EPUB
 
