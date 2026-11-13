@@ -79,6 +79,8 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
 
     val store: AppStore by lazy {
         AppStore(scope).also { store ->
+            // The bar and rail draw for the last answer from the first frame.
+            store.medium.keepIn(app.kaeri.store.DevicePreferences.of(this))
             store.tv.openLink = { url -> open(url) }
             store.collectCrashes(this, scope)
             DeviceWatch(this, store::send).start()
@@ -356,8 +358,10 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
         connectivity.registerDefaultNetworkCallback(object : ConnectivityManager.NetworkCallback() {
             override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) = say(capabilities)
 
-            // Another network may already be the default; only none at all is offline.
-            override fun onLost(network: Network) = say(connectivity.activeNetwork?.let(connectivity::getNetworkCapabilities))
+            // Another network may already be the default; only none at all is offline. As this
+            // comes, the system can still name the lost network as the active one.
+            override fun onLost(network: Network) =
+                say(connectivity.activeNetwork?.takeIf { it != network }?.let(connectivity::getNetworkCapabilities))
         })
     }
 

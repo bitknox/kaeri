@@ -78,8 +78,22 @@ class MediumModel(private val send: (Command) -> Unit) {
     /** The question on screen: held from the engine's ask until it is answered. */
     val asking: StateFlow<MediumAsk?> = _asking.asStateFlow()
 
-    /** What Kaeri is for on this device: Watch until the engine says. */
-    val answer: KaeriIsFor get() = _view.value?.answer ?: KaeriIsFor.WATCH
+    /** What Kaeri is for on this device: the answer kept from before until the engine says, else Watch. */
+    val answer: KaeriIsFor get() = _view.value?.answer ?: kept ?: KaeriIsFor.WATCH
+
+    /**
+     * The engine's last answer, kept on the device so a launch draws its bar and rail for it from
+     * the first frame rather than Watch's until the engine has started.
+     */
+    var kept: KaeriIsFor? = null
+        private set
+    private var keeper: ((KaeriIsFor) -> Unit)? = null
+
+    /** Start from the answer kept in [prefs], and keep each new one there. */
+    fun keepIn(prefs: android.content.SharedPreferences) {
+        kept = prefs.getString(KEPT_ANSWER, null)?.let { name -> KaeriIsFor.entries.firstOrNull { it.name == name } }
+        keeper = { prefs.edit().putString(KEPT_ANSWER, it.name).apply() }
+    }
 
     /** Whether the person can choose: reading is in the build and the edition does not fix it. */
     val choosable: Boolean get() = _view.value?.let { it.readingAvailable && !it.fixed } ?: false
@@ -89,6 +103,10 @@ class MediumModel(private val send: (Command) -> Unit) {
 
     internal fun apply(view: MediumView) {
         _view.value = view
+        if (view.answer != kept) {
+            kept = view.answer
+            keeper?.invoke(view.answer)
+        }
         val ask = view.ask
         if (ask == null) _asking.value = null else if (_asking.value == null) _asking.value = ask
         launchChoice?.let { wanted ->
@@ -118,6 +136,9 @@ class MediumModel(private val send: (Command) -> Unit) {
     }
 }
 
+/** Where [MediumModel.keepIn] keeps the last answer. */
+private const val KEPT_ANSWER = "kaeriIsFor"
+
 /** Whether the answer reads. */
 val KaeriIsFor.reads: Boolean get() = this == KaeriIsFor.READ || this == KaeriIsFor.BOTH
 
@@ -130,6 +151,12 @@ data class ReadChapters(
     val volumes: List<VolumeGroup>,
     val failure: ReadingFailure?,
 )
+
+/**
+ * Whether the search leaves AniList out, as the engine does: Your sources only is on, or the
+ * search is scoped to the sources picked under e-ink's Search in.
+ */
+val ReadSearchQuery.skipsAnilist: Boolean get() = sourcesOnly || sourceScope != null
 
 /** Reading's Search: the query asked, the pages answered so far and how many there are. */
 data class ReadSearchState(
@@ -183,7 +210,7 @@ private fun ReadSearchState.answered(event: ReadingEvent.Search): ReadSearchStat
  */
 internal fun ReadSearchState.asking(query: ReadSearchQuery): ReadSearchState {
     val kept = sources?.takeIf { query.text.isNotBlank() }?.let {
-        it.copy(query = query, anilist = if (query.sourcesOnly) ReadAnilistState.SKIPPED else ReadAnilistState.ASKING, done = false)
+        it.copy(query = query, anilist = if (query.skipsAnilist) ReadAnilistState.SKIPPED else ReadAnilistState.ASKING, done = false)
     }
     return copy(
         query = query,
@@ -211,8 +238,8 @@ private fun ReadSearchState.sourcesIn(part: ReadSourceSearch): ReadSearchState {
     return copy(
         sources = part.copy(groups = groups),
         staleSources = staleSources intersect asking,
-        // With Your sources only, AniList is not asked: the groups are the whole answer.
-        loading = if (part.query.sourcesOnly) false else loading,
+        // With Your sources only, or a source picked, AniList is not asked: the groups are the whole answer.
+        loading = if (part.query.skipsAnilist) false else loading,
     )
 }
 
@@ -410,6 +437,12 @@ class ReadingModel(private val send: (Command) -> Unit) {
         refreshSeries(work)
     }
 
+    /**
+     * Whose version of each chapter the series lists, inside the source in use. Null goes back to
+     * the group with the most chapters. The engine answers with the series and its chapters.
+     */
+    fun chooseGroup(work: WorkId, group: String?) = reading(ReadingCommand.ChooseGroup(work, group))
+
     fun markRead(work: WorkId, chapters: List<ChapterId>, read: Boolean) {
         reading(ReadingCommand.MarkRead(work, chapters, read))
         refreshSeries(work)
@@ -570,8 +603,14 @@ class ReadingModel(private val send: (Command) -> Unit) {
                 val part = event.v1
                 _search.update { now -> if (part.query != now.query) now else now.sourcesIn(part) }
             }
-            is ReadingEvent.Series -> _series.update { it + (event.v1.work to event.v1) }
-            is ReadingEvent.Chapters -> _chapters.update { it + (event.work to ReadChapters(event.edition, event.volumes, event.failure)) }
+            is ReadingEvent.Series -> {
+                val view = seriesShot?.invoke(event.v1) ?: event.v1
+                _series.update { it + (view.work to view) }
+            }
+            is ReadingEvent.Chapters -> {
+                val list = ReadChapters(event.edition, event.volumes, event.failure)
+                _chapters.update { it + (event.work to (chaptersShot?.invoke(list) ?: list)) }
+            }
             is ReadingEvent.Versions -> _versions.update { it + (event.chapter to event.versions) }
             is ReadingEvent.Tracking -> _tracking.update { it + (event.work to event.rows) }
             is ReadingEvent.Downloads -> _downloads.value = event.v1
@@ -593,6 +632,20 @@ class ReadingModel(private val send: (Command) -> Unit) {
             else -> {}
         }
     }
+
+    /** A change a Fixtures shot makes to every series the engine sends: a source with several groups. */
+    internal var seriesShot: ((SeriesView) -> SeriesView)? = null
+        set(value) {
+            field = value
+            if (value != null) _series.update { all -> all.mapValues { value(it.value) } }
+        }
+
+    /** A change a Fixtures shot makes to every chapter list the engine sends: rows in parts and from other groups. */
+    internal var chaptersShot: ((ReadChapters) -> ReadChapters)? = null
+        set(value) {
+            field = value
+            if (value != null) _chapters.update { all -> all.mapValues { value(it.value) } }
+        }
 
     /** A change a Fixtures shot makes to every Home the engine sends: the new-chapter spotlight. */
     internal var stage: ((ReadingHomeView) -> ReadingHomeView)? = null
@@ -890,7 +943,9 @@ class ExportModel(private val send: (Command) -> ULong?) {
                 }
             }
             is ReadingEvent.ExportWaiting -> {
-                if (event.job !in asked) asked[event.job] = Triple(event.work, event.target, emptyList())
+                // A send this model did not ask for (one held across a restart) learns its
+                // chapters here, so its Ready state can offer Set my place.
+                if (event.job !in asked) asked[event.job] = Triple(event.work, event.target, event.chapters)
                 _jobs.update { it + (event.job to ExportJob.Waiting(event.job, event.work, event.target, event.line)) }
             }
             is ReadingEvent.ExportReady -> {

@@ -28,6 +28,11 @@ struct Groups {
     opening: Option<u32>,
     /// A chapter whose last page never comes.
     stuck: Option<&'static str>,
+    /// The page whose address ends so waits until let through.
+    held: std::sync::Mutex<Option<String>>,
+    let_through: tokio::sync::Notify,
+    /// Every page address asked for.
+    asked: std::sync::Mutex<Vec<String>>,
 }
 
 impl Groups {
@@ -49,7 +54,15 @@ impl Groups {
             allowed_hosts: Vec::new(),
             capabilities: Vec::new(),
         };
-        Arc::new(Self { manifest, credits, opening: None, stuck: None })
+        Arc::new(Self {
+            manifest,
+            credits,
+            opening: None,
+            stuck: None,
+            held: std::sync::Mutex::default(),
+            let_through: tokio::sync::Notify::new(),
+            asked: std::sync::Mutex::default(),
+        })
     }
 }
 
@@ -135,6 +148,17 @@ impl kaeri_core::traits::BookSource for Groups {
         &self,
         page: &PageRef,
     ) -> Result<Vec<u8>, kaeri_core::traits::PageError> {
+        self.asked.lock().unwrap().push(page.url.clone());
+        loop {
+            let through = self.let_through.notified();
+            tokio::pin!(through);
+            through.as_mut().enable();
+            let held = self.held.lock().unwrap().clone();
+            if !held.is_some_and(|h| page.url.ends_with(&h)) {
+                break;
+            }
+            through.await;
+        }
         // A flat grey of its own for each page, or blocks with the credit page last.
         let n = page.url.bytes().last().map_or(1, |b| u32::from(b - b'0'));
         let last = self.opening.unwrap_or(3);
@@ -178,7 +202,7 @@ async fn rows(h: &Harness) -> Vec<ChapterRow> {
     let work = WorkId::new(WORK);
     let (_, mut volumes) = h.services.book_sources.chapters(&work, None, 1).await.unwrap();
     let kit = crate::read_catalog::Kit::of(&h.services);
-    crate::read_catalog::series::finish(&kit, &work, &mut volumes, 1);
+    crate::read_catalog::series::finish(&kit, &work, None, &mut volumes, 1);
     volumes.into_iter().flat_map(|v| v.chapters).collect()
 }
 
@@ -452,6 +476,121 @@ async fn a_streamed_chapter_opens_without_its_credit_pages_at_both_ends() {
     assert_eq!(downloaded.len(), leaves.len(), "one count, streamed or downloaded");
 }
 
+/// A chapter opened while its download runs leaves its credit pages out as one read from the
+/// source does, and the source is asked for each of its pages once.
+#[tokio::test]
+async fn a_chapter_opened_while_its_download_runs_leaves_its_credit_pages_out() {
+    use kaeri_store::book_downloads::BookDownloadState as State;
+
+    use crate::downloads::books::{Lent, Setup};
+    // In process, so the plugins the download looks at leave it in place.
+    let mut source = Groups::both_ends();
+    source.manifest.kind = BookSourceKind::Native;
+    let source = Arc::new(source);
+    *source.held.lock().unwrap() = Some("/a3/3".into());
+    let mut h = harness_with(source.clone(), false);
+    rows(&h).await;
+    h.open(OpenAt::Start).await;
+    let session = h.session();
+    h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("2") });
+    leaves_of(&mut h, "2").await;
+    // Chapter 3 kept ready, its download waiting on its third page.
+    let downloads = h.services.book_sources.downloads.clone();
+    downloads.configure(Setup {
+        keep_ready: true,
+        new_chapters: kaeri_core::config::NewChapters::Reading,
+        ..Setup::default()
+    });
+    let lent = Lent::of(&h.services, &h.tx);
+    let ask = kaeri_store::book_downloads::BookDownloadAsk {
+        work: WORK,
+        chapter: "3",
+        source_id: "groups",
+        version_label: Some("Group A"),
+        keep_ready: true,
+    };
+    h.services.store.queue_book_download(&ask, 1).unwrap();
+    downloads.start(&lent);
+    let asked =
+        |path: &str| source.asked.lock().unwrap().iter().filter(|u| u.ends_with(path)).count();
+    let state =
+        |h: &Harness| h.services.store.book_download(WORK, "3").unwrap().map(|r| r.state);
+    let start = tokio::time::Instant::now();
+    while asked("/a3/3") == 0 && start.elapsed() < Duration::from_secs(20) {
+        tokio::time::sleep(Duration::from_millis(10)).await;
+    }
+    assert_eq!(state(&h), Some(State::Downloading));
+
+    h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("3") });
+    let leaves = tokio::time::timeout(Duration::from_secs(10), leaves_of(&mut h, "3"))
+        .await
+        .expect("laid out while the download runs");
+    assert_eq!(leaves.len(), 4, "five pages less the two credit pages, and the end page");
+    let credits = h
+        .until(|e| match e {
+            ReaderEvent::CreditPages { chapter, pages, .. } if chapter.as_str() == "3" => {
+                Some(pages.iter().map(|c| (c.page, c.at_end)).collect::<Vec<_>>())
+            }
+            _ => None,
+        })
+        .await;
+    assert_eq!(credits, vec![(0, false), (4, true)]);
+    assert_eq!(state(&h), Some(State::Downloading), "shown before the download was done");
+    *source.held.lock().unwrap() = None;
+    source.let_through.notify_waiters();
+    let start = tokio::time::Instant::now();
+    while state(&h) != Some(State::Done) && start.elapsed() < Duration::from_secs(20) {
+        tokio::time::sleep(Duration::from_millis(10)).await;
+    }
+    assert_eq!(state(&h), Some(State::Done));
+    for n in 1..=5 {
+        assert_eq!(asked(&format!("/a3/{n}")), 1, "page {n} asked again");
+    }
+}
+
+/// Credit pages learnt while a chapter is open, from the next chapter fetched ahead, leave it
+/// when it opens again. Its place is kept as it counts then, so its row and the reader agree on
+/// the page and the count, and the reader opens on the page read.
+#[tokio::test(start_paused = true)]
+async fn a_place_read_before_credit_pages_were_learnt_counts_as_the_reader_does() {
+    let mut h = harness_with(Arc::new(Groups::both_ends()), false);
+    rows(&h).await;
+    h.open(OpenAt::Start).await;
+    let session = h.session();
+    h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("2") });
+    let leaves = leaves_of(&mut h, "2").await;
+    assert_eq!(leaves.len(), 6, "two chapters teach no credit pages: five pages");
+    // The fourth page: near the end, the next chapter is fetched ahead and its edges teach
+    // both credit pages.
+    h.shown(3, TurnHow::Turn).await;
+    let learnt = |h: &Harness| {
+        let prints = h.services.store.page_prints(WORK).unwrap();
+        prints.iter().any(|p| p.chapter == "3")
+    };
+    let start = tokio::time::Instant::now();
+    while !learnt(&h) && start.elapsed() < std::time::Duration::from_secs(20) {
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        h.drain();
+    }
+    assert!(learnt(&h), "chapter 3 was not fetched ahead");
+    h.send(ReaderCommand::Close { session });
+    let kept = h.kept("2").unwrap();
+    assert_eq!((kept.last_page, kept.of_pages), (Some(2), Some(3)), "page 4 of 5 is 3 of 3");
+    let row = rows(&h).await.into_iter().find(|r| r.id.as_str() == "2").unwrap();
+    assert_eq!(row.state, ChapterReadState::InProgress { page: 3, of: Some(3) });
+
+    h.drain();
+    let (view, leaves, notices) = h.open(OpenAt::Resume).await;
+    assert_eq!(view.chapter.id.as_str(), "2");
+    assert_eq!(leaves.len(), 4, "both credit pages left out");
+    assert_eq!(view.start.page, Some(2), "the page read, as the row says");
+    let resumed = notices.iter().any(|e| {
+        matches!(e, ReaderEvent::Notice(n)
+            if n.msg == Msg::Reading(ReadingMsg::ReaderResumed { page: 3 }))
+    });
+    assert!(resumed, "{notices:?}");
+}
+
 /// An edge page that does not come is waited on for a few seconds at most: the chapter lays out
 /// without it, its end keeping every page, and the other end's credit page still left out.
 #[tokio::test(start_paused = true)]
@@ -584,7 +723,13 @@ async fn a_page_kept_at_the_start_comes_back_as_page_0_and_the_rest_move_one_on(
         })
         .await;
     assert_eq!(left.iter().map(|c| (c.page, c.at_end)).collect::<Vec<_>>(), vec![(4, true)]);
-    tokio::time::sleep(std::time::Duration::from_secs(5)).await;
-    let after = first(h.drain()).expect("page 0 sent again");
+    // Made again on the pages' own threads: waited for, not a paused clock's five seconds,
+    // which pass at once while those threads are still at work.
+    let after = h
+        .until(|e| match e {
+            ReaderEvent::PageReady { page: 0, file, .. } => Some(file.path.clone()),
+            _ => None,
+        })
+        .await;
     assert_ne!(after, before, "page 0 is another file now");
 }

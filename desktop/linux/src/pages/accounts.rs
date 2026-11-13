@@ -130,6 +130,8 @@ pub fn sync_words(state: &SyncState, syncing: bool, offline: bool) -> String {
         return t::accounts_sync_running();
     }
     match state.outbox {
+        // Held for a match: not waiting, and said apart, so the row is not stuck on a count.
+        0 if state.deferred > 0 => t::accounts_changes_held(i64::from(state.deferred)),
         0 => t::accounts_sync_done(),
         n if offline => t::accounts_changes_waiting_offline(i64::from(n)),
         n => t::accounts_changes_waiting(i64::from(n)),
@@ -591,6 +593,14 @@ mod tests {
         assert_eq!(sync_words(&state, true, false), "Not synced: the tracker timed out");
         state.needs_reauth = true;
         assert_eq!(sync_words(&state, false, false), "Sign in again to keep syncing");
+    }
+
+    #[test]
+    fn changes_held_for_a_match_are_not_waiting() {
+        let held = SyncState { connected: true, outbox: 0, deferred: 3, ..Default::default() };
+        assert_eq!(sync_words(&held, false, false), "3 changes can't sync yet");
+        let both = SyncState { outbox: 2, ..held.clone() };
+        assert_eq!(sync_words(&both, false, false), "2 changes waiting to sync");
     }
 
     #[test]

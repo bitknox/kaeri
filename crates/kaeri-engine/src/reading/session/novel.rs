@@ -2,11 +2,12 @@
 //! paginator's reports, and sources' chapters.
 //!
 //! An EPUB is opened on a thread of its own (the archive's limits bound the work, so there is
-//! no timeout); a source's chapter is fetched on the runtime. Either way the result lands in
-//! the session's slot, tagged with the layout's generation, and a [`ReaderWake::Prepared`]
-//! brings it to the actor. A book of pictures goes on to the page worker as manga does; a text
-//! book is put in [`NovelBooks`](crate::reading::novel::NovelBooks) and the app is sent
-//! `NovelOpen`.
+//! no timeout), and what it gives lands in the session's slot, tagged with the layout's
+//! generation. A source's chapter is fetched on the runtime by a [`SourceOpen`], which keeps
+//! what it gives for whichever layout of the chapter is current when it arrives. Either way a
+//! [`ReaderWake::Prepared`] brings it to the actor. A book of pictures goes on to the page
+//! worker as manga does; a text book is put in
+//! [`NovelBooks`](crate::reading::novel::NovelBooks) and the app is sent `NovelOpen`.
 
 use std::{
     path::{Path, PathBuf},
@@ -45,12 +46,37 @@ use crate::{
 /// What a chapter opened off the actor gave, by the layout's generation.
 pub(super) type Slot = Arc<Mutex<Option<(u64, Prepared)>>>;
 
+/// A source's chapter opening off the actor. It belongs to the chapter rather than to the layout
+/// that started it: a layout of the same chapter while it opens takes what it gives, so the
+/// source is asked for each page once. Dropped, as when another chapter opens, it stops.
+#[derive(Debug)]
+pub(super) struct SourceOpen {
+    pub chapter: ChapterId,
+    came: Arc<Mutex<Option<Prepared>>>,
+    task: tokio::task::JoinHandle<()>,
+}
+
+impl SourceOpen {
+    /// What it gave, once it has.
+    fn take(&self) -> Option<Prepared> {
+        self.came.lock().ok()?.take()
+    }
+}
+
+impl Drop for SourceOpen {
+    fn drop(&mut self) {
+        self.task.abort();
+    }
+}
+
 #[derive(Debug)]
 pub(super) enum Prepared {
     /// Pictures: read through the page worker from this file.
     Pages(PathBuf),
     /// A source's pictures, landing a page at a time in the feed's folder.
     Feed(Arc<crate::reading::feed::Feed>),
+    /// The download queue finished fetching the chapter: it opens from that file.
+    Downloaded,
     Novel(Box<NovelBook>),
     Failed(ReadingFailure),
 }
@@ -201,11 +227,11 @@ pub(super) fn fetch_ahead(
                 move |page, out: &Outbox| worker.landed(session, chapter.clone(), page, out)
             };
             let started = crate::reading::feed::start(
-                sources,
+                (sources, None),
                 opened,
                 (chapter.clone(), learning),
                 dir,
-                |_| 0,
+                |_, _| 0,
                 now,
                 out.clone(),
                 gone.clone(),
@@ -234,6 +260,165 @@ pub(super) fn fetch_ahead(
     Ahead { chapter: id, feed, task }
 }
 
+/// The next chapter's first page for the end page, while the download queue has the chapter.
+/// Dropped, it stops.
+#[derive(Debug)]
+pub(super) struct FirstPage {
+    task: tokio::task::JoinHandle<()>,
+}
+
+impl Drop for FirstPage {
+    fn drop(&mut self) {
+        self.task.abort();
+    }
+}
+
+/// How often the end page looks at the download it waits on.
+const FIRST_PAGE_LOOK: std::time::Duration = std::time::Duration::from_millis(300);
+/// How long a queued download may wait to start before the source is asked for the first page.
+const FIRST_PAGE_QUEUED: std::time::Duration = std::time::Duration::from_secs(5);
+
+/// Make the next chapter's first page for the end page from its download: from the page the
+/// download keeps first, as soon as it lands, or from the finished file. The source is not asked
+/// for the chapter a second time. Only a download still queued after [`FIRST_PAGE_QUEUED`], or
+/// one that failed, has the source asked for the first page alone.
+pub(super) fn follow_first_page(
+    cx: &Cx<'_>,
+    pages: &Pages,
+    session: u64,
+    work: &WorkId,
+    next: (usize, &ShelfChapter),
+    gone: &crate::reading::feed::Gone,
+) -> FirstPage {
+    use kaeri_store::book_downloads::BookDownloadState as State;
+    let (index, next) = next;
+    let sources = cx.services.book_sources.clone();
+    let store = cx.services.store.clone();
+    let clock = cx.services.clock.clone();
+    let (work, chapter) = (work.clone(), next.id.clone());
+    let peek_dir =
+        streamed_dir(&cx.services.paths.cache_dir, session).join(format!("first-{index}"));
+    let (worker, out, gone) = (pages.clone(), cx.tx.clone(), gone.clone());
+    let task = tokio::spawn(async move {
+        let peek = |path: PathBuf| {
+            if !gone.swept() {
+                worker.peek(PeekJob {
+                    session,
+                    chapter: chapter.clone(),
+                    path,
+                    out: out.clone(),
+                });
+            }
+        };
+        let started = tokio::time::Instant::now();
+        let bytes = loop {
+            let row = store.book_download(work.as_str(), chapter.as_str()).ok().flatten();
+            match row.as_ref().map(|r| r.state) {
+                Some(State::Done) => {
+                    if let Some(path) = row.and_then(|r| r.path).map(PathBuf::from)
+                        && path.exists()
+                    {
+                        peek(path);
+                        return;
+                    }
+                }
+                Some(State::Downloading) => {
+                    let kept =
+                        sources.downloads.first_kept_page(work.as_str(), chapter.as_str());
+                    if let Some(bytes) = kept.and_then(|p| std::fs::read(p).ok()) {
+                        break bytes;
+                    }
+                }
+                Some(State::Queued) | None if started.elapsed() < FIRST_PAGE_QUEUED => {}
+                // Waiting behind other downloads, or failed: the first page alone.
+                _ => match first_from_source(&sources, &work, &chapter, clock.now()).await {
+                    Some(bytes) => break bytes,
+                    None => return,
+                },
+            }
+            tokio::time::sleep(FIRST_PAGE_LOOK).await;
+        };
+        if gone.is() || tokio::fs::create_dir_all(&peek_dir).await.is_err() {
+            return;
+        }
+        let written = crate::reading::feed::write(&peek_dir, "00001", bytes, &gone).await;
+        if matches!(written, FeedPage::Landed(_)) {
+            peek(peek_dir);
+        }
+    });
+    FirstPage { task }
+}
+
+/// How often an open looks at the download it waits on.
+const DOWNLOAD_LOOK: Duration = Duration::from_millis(100);
+
+/// How an open of a chapter the download queue has goes.
+enum Joined {
+    /// The download is done: the chapter opens from its file.
+    File,
+    /// The download fetches the chapter's pictures, or a reader still holds the pages it
+    /// fetched: the open shares them.
+    Pages(Arc<crate::downloads::books::SharedPages>),
+    /// The queue is not fetching it: the open asks the source itself.
+    Not,
+}
+
+/// Join the download queue's fetch of a chapter being opened, so the source is asked for it
+/// once: its pages as soon as it fetches pictures, or its file once it is done. Not when the
+/// queue is not fetching it, and as soon as the download fails, is taken out of the queue or
+/// held. A queued one is waited on only while the queue is about to start it, for
+/// [`FIRST_PAGE_QUEUED`] at most: not one behind another download or in a queue that does not
+/// run. Until the download starts sharing its pages or ends, its row is looked at every
+/// [`DOWNLOAD_LOOK`]: the queue says nothing as it does.
+async fn joined(
+    sources: &crate::read_sources::BookSources,
+    work: &WorkId,
+    chapter: &ChapterId,
+) -> Joined {
+    use kaeri_store::book_downloads::BookDownloadState as State;
+    let started = Instant::now();
+    loop {
+        if let Some(pages) = sources.downloads.sharing(work.as_str(), chapter.as_str()) {
+            return Joined::Pages(pages);
+        }
+        let row = sources.store().book_download(work.as_str(), chapter.as_str()).ok().flatten();
+        // Queued, it is waited on only while the queue is about to start it.
+        let queued = started.elapsed() < FIRST_PAGE_QUEUED
+            && sources.downloads.starts_soon(sources.store(), work.as_str(), chapter.as_str());
+        match row.map(|r| (r.state, r.path)) {
+            Some((State::Done, Some(path))) if Path::new(&path).exists() => {
+                return Joined::File;
+            }
+            Some((State::Downloading, _)) => {}
+            Some((State::Queued, _)) if queued => {}
+            _ => return Joined::Not,
+        }
+        tokio::time::sleep(DOWNLOAD_LOOK).await;
+    }
+}
+
+/// Ask the source for a chapter's first page and nothing more.
+async fn first_from_source(
+    sources: &crate::read_sources::BookSources,
+    work: &WorkId,
+    chapter: &ChapterId,
+    now: i64,
+) -> Option<Vec<u8>> {
+    let fetched = async {
+        let Some(mut opened) = sources.pictures(work, chapter, now).await? else {
+            return Ok(None);
+        };
+        sources.page(&mut opened, 0, now).await.map(Some)
+    };
+    match fetched.await {
+        Ok(bytes) => bytes,
+        Err(failure) => {
+            tracing::debug!(?failure, "the next chapter's first page was not fetched");
+            None
+        }
+    }
+}
+
 /// The format of a chapter read from a source rather than a file on the shelf.
 pub(crate) const SOURCE: &str = "source";
 
@@ -249,6 +434,34 @@ fn wake(tx: &Outbox, session: u64, wake: ReaderWake) -> impl Fn() + Send + 'stat
     let tx = tx.clone();
     move || {
         let _ = tx.internal(Internal::Reader { session, wake });
+    }
+}
+
+/// Where an open off the actor puts what it came to, once. An open that ends without putting
+/// anything, by a panic on the way, puts a failure as it unwinds, so the reader shows the chapter
+/// failed instead of waiting on it.
+struct PutOnce<F: FnOnce(Prepared)>(Option<F>);
+
+impl<F: FnOnce(Prepared)> PutOnce<F> {
+    fn put(mut self, prepared: Prepared) {
+        if let Some(put) = self.0.take() {
+            put(prepared);
+        }
+    }
+
+    /// Nothing to put: the reader closed before the open began.
+    fn forget(mut self) {
+        self.0 = None;
+    }
+}
+
+impl<F: FnOnce(Prepared)> Drop for PutOnce<F> {
+    fn drop(&mut self) {
+        if let Some(put) = self.0.take() {
+            put(Prepared::Failed(ReadingFailure::Other {
+                reason: "the chapter stopped opening".into(),
+            }));
+        }
     }
 }
 
@@ -325,8 +538,10 @@ pub(super) fn source_chapters(groups: Vec<VolumeGroup>) -> Vec<ShelfChapter> {
 }
 
 /// One list of a work's chapters: the source's, in its order, with each chapter on the shelf
-/// (a download, or a file in a folder) read from its file. A file the source does not list
-/// goes in among the others by its number, or at the end without one.
+/// (a download, or a file in a folder) read from its file. A file in a folder the source does
+/// not list goes in among the others by its number, or at the end without one. A download the
+/// list does not have stays out: the series list already holds every download it shows, so the
+/// reader reads on through the chapters the series page lists and no others.
 pub(super) fn with_shelf(
     listed: Vec<ShelfChapter>,
     shelf: Vec<ShelfChapter>,
@@ -342,7 +557,7 @@ pub(super) fn with_shelf(
         })
         .collect();
     let range = |c: &ShelfChapter| c.id.key().and_then(|k| k.range());
-    for file in shelf.into_iter().flatten() {
+    for file in shelf.into_iter().flatten().filter(|f| f.source.is_none()) {
         let at = range(&file).map_or(out.len(), |mine| {
             out.iter().position(|c| range(c).is_some_and(|r| r > mine)).unwrap_or(out.len())
         });
@@ -483,20 +698,35 @@ impl Session {
         let slot = self.prepared.clone();
         let opening = self.opening(cx);
         let done = wake(cx.tx, self.id, ReaderWake::Prepared(generation));
-        // Opens can finish out of order: one for an older layout never replaces a newer one.
-        let put = move |p: Prepared| {
-            if let Ok(mut s) = slot.lock()
-                && s.as_ref().is_none_or(|(g, _)| *g < generation)
-            {
-                *s = Some((generation, p));
-            }
-            done();
-        };
         if chapter.format != SOURCE {
+            // Opens can finish out of order: one for an older layout never replaces a newer one.
+            let put = PutOnce(Some(move |p: Prepared| {
+                if let Ok(mut s) = slot.lock()
+                    && s.as_ref().is_none_or(|(g, _)| *g < generation)
+                {
+                    *s = Some((generation, p));
+                }
+                done();
+            }));
             let path = chapter.path.clone();
-            std::thread::spawn(move || put(open_file(&path, opening)));
+            std::thread::spawn(move || put.put(open_file(&path, opening)));
             return;
         }
+        // Laid out again while it opens: what the open under way gives is laid out at the place
+        // asked for by then.
+        if self.source_open.as_ref().is_some_and(|o| o.chapter == chapter.id) {
+            return;
+        }
+        let came = Arc::new(Mutex::new(None));
+        let put = {
+            let came = came.clone();
+            PutOnce(Some(move |p: Prepared| {
+                if let Ok(mut c) = came.lock() {
+                    *c = Some(p);
+                }
+                done();
+            }))
+        };
         let sources = cx.services.book_sources.clone();
         let work = self.work.clone();
         let id = chapter.id.clone();
@@ -511,27 +741,53 @@ impl Session {
         let learning = self.learning(cx);
         // The chapter fetched ahead opens from its feed, the pages still coming behind it.
         let ahead = self.ahead.take_if(|a| a.chapter == chapter.id);
-        tokio::spawn(async move {
+        let task = tokio::spawn(async move {
             // Closed before its turn came: the source is not asked for nothing.
             if gone.is() {
+                put.forget();
                 return;
             }
             if let Some(ahead) = ahead
                 && let Some(feed) = ahead.feed().await
             {
-                put(Prepared::Feed(feed));
+                put.put(Prepared::Feed(feed));
                 return;
             }
-            let prepared = match sources.open(&work, &id, None, now).await {
+            // The download queue is fetching it, as one kept ready or asked for: pictures open
+            // from the pages it has kept, the rest shared with it as they come, and a book
+            // waits for its file. The source is not asked for the chapter a second time.
+            let (kept, opened) = loop {
+                match joined(&sources, &work, &id).await {
+                    Joined::File => {
+                        put.put(Prepared::Downloaded);
+                        return;
+                    }
+                    Joined::Pages(kept) => {
+                        let opened = kept.opened();
+                        break (Some(kept), Ok(opened));
+                    }
+                    // Still queued only to be kept ready, it leaves the queue: this open
+                    // fetches it. One the queue started meanwhile is joined.
+                    Joined::Not => {
+                        let store = sources.store();
+                        if sources.downloads.reader_fetches(store, &out, (&work, &id), now) {
+                            break (None, sources.open(&work, &id, None, now).await);
+                        }
+                    }
+                }
+            };
+            let prepared = match opened {
                 Err(failure) => Prepared::Failed(failure),
                 // A source's pictures land a page at a time in a folder the page worker reads
                 // as a book, laid out once the page it opens at is there.
                 Ok(opened) if matches!(opened.content, ChapterContent::Images(_)) => {
                     // A place kept in another split of the chapter: its page comes first, as
                     // the pages are counted once the credit pages are left out.
-                    let first = move |total| {
+                    let first = move |total, skipped: &[u32]| {
                         kept_of
-                            .and_then(|of| super::rescaled(first, strip, of, total))
+                            .and_then(|of| {
+                                super::kept_past_credits(first, strip, of, (total, skipped))
+                            })
                             .map_or(first, |(page, _)| page) as usize
                     };
                     let chapter = id.clone();
@@ -539,7 +795,7 @@ impl Session {
                         worker.landed(session, chapter.clone(), page, out);
                     };
                     let fed = crate::reading::feed::start(
-                        sources,
+                        (sources, kept),
                         opened,
                         (id, learning),
                         streamed,
@@ -560,7 +816,13 @@ impl Session {
                         // few seconds at most: what comes later fills a box kept for it.
                         let pictures =
                             sources.reader_pictures(&opened.source_id, &mut xhtml).await;
-                        let title = opened.chapter.title.clone().unwrap_or(label);
+                        let xhtml = served::heading_once(&xhtml, &opened.chapter);
+                        let title = opened
+                            .chapter
+                            .title
+                            .as_deref()
+                            .map(|t| served::cleaned_title(&opened.chapter, t))
+                            .unwrap_or(label);
                         let identity = format!("{}/{}", opened.source_id, opened.chapter.id);
                         let lang = opened.chapter.language.clone();
                         Prepared::Novel(Box::new(served::open_text(
@@ -582,12 +844,20 @@ impl Session {
                     ChapterContent::Images(_) => Prepared::Failed(ReadingFailure::NotFound),
                 },
             };
-            put(prepared);
+            put.put(prepared);
         });
+        self.source_open = Some(SourceOpen { chapter: chapter.id.clone(), came, task });
     }
 
     /// What was opened off the actor arrived.
     pub(super) fn prepared_now(&mut self, cx: &mut Cx<'_>, pages: &Pages, generation: u64) {
+        // A source's chapter: what its open gave, whichever of the chapter's layouts asked.
+        let came = self.source_open.as_ref().and_then(SourceOpen::take);
+        if let Some(prepared) = came {
+            self.source_open = None;
+            self.take_prepared(cx, pages, prepared);
+            return;
+        }
         if generation != self.generation {
             return;
         }
@@ -595,6 +865,10 @@ impl Session {
         let taken =
             self.prepared.lock().ok().and_then(|mut s| s.take_if(|(g, _)| *g == generation));
         let Some((_, prepared)) = taken else { return };
+        self.take_prepared(cx, pages, prepared);
+    }
+
+    fn take_prepared(&mut self, cx: &mut Cx<'_>, pages: &Pages, prepared: Prepared) {
         match prepared {
             Prepared::Failed(failure) => failed(cx, failure),
             Prepared::Pages(path) => {
@@ -604,11 +878,17 @@ impl Session {
                 let page = self.start.page.unwrap_or(0);
                 self.lay_out(cx, pages, page);
             }
+            // Laid out again, the chapter follows its download to the file.
+            Prepared::Downloaded => {
+                let page = self.start.page.unwrap_or(0);
+                self.lay_out(cx, pages, page);
+            }
             Prepared::Feed(feed) => {
                 let chapter = &mut self.chapters[self.at];
                 chapter.path = feed.dir.clone();
                 chapter.format = "pages".into();
-                self.rescale_kept(feed.pages().len() as u32);
+                let skipped: Vec<u32> = feed.credits.iter().map(|c| c.page).collect();
+                self.rescale_kept(feed.count() as u32, &skipped);
                 self.feed = Some(feed);
                 let page = self.start.page.unwrap_or(0);
                 self.lay_out(cx, pages, page);
@@ -725,9 +1005,7 @@ impl Session {
         // The resumed notice waits for the first page, which says the page number.
         self.novel_resumed = restore.is_some() && self.resumed.take().is_some();
         if !self.opened {
-            self.opened = true;
-            cx.send(ReaderEvent::Opened(Box::new(self.view(cx))));
-            self.downloads_follow(cx, false);
+            self.say_opened(cx);
         }
         cx.send(ReaderEvent::NovelOpen(view));
     }

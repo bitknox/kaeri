@@ -4,6 +4,7 @@
 
 package app.kaeri.ui
 
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -19,6 +20,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import app.kaeri.design.LocalStillPanel
 import app.kaeri.eink.EinkColours
 import app.kaeri.eink.EinkLook
+import app.kaeri.eink.einkFocus
 import app.kaeri.engine.model.KaeriIsFor
 
 /**
@@ -39,6 +41,8 @@ fun EinkPaperTheme(look: EinkLook?, content: @Composable () -> Unit) {
     ) {
         CompositionLocalProvider(
             LocalRippleConfiguration provides if (look != null) null else LocalRippleConfiguration.current,
+            // Any other clickable on paper shows keyboard and D-pad focus with the e-ink focus mark.
+            LocalIndication provides if (look != null) einkFocus() else LocalIndication.current,
             LocalStillPanel provides (look != null),
             content = content,
         )
@@ -107,6 +111,13 @@ internal fun einkBarDestinations(answer: KaeriIsFor, reader: Boolean): List<Dest
     } else {
         barDestinations(answer)
     }
+
+/**
+ * The tab Settings keeps marked on a 10 inch e-reader ([large]), where the bar stays under it as
+ * the large panel board draws it: More, which opens Settings. Elsewhere Settings takes the window.
+ */
+internal fun einkSettingsTab(answer: KaeriIsFor, reader: Boolean, large: Boolean): Destination? =
+    Destination.More.takeIf { large && it in einkBarDestinations(answer, reader) }
 
 /** The e-ink tab that stands for [destination]: Updates sits under Home on an e-reader. */
 internal fun einkBarOwner(destination: Destination, answer: KaeriIsFor, reader: Boolean): Destination {

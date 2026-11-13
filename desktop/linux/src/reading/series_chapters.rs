@@ -357,6 +357,7 @@ mod tests {
             other_group: false,
             group_language: None,
             other_source: None,
+            on_device: false,
         }
     }
 
@@ -366,6 +367,7 @@ mod tests {
             title: None,
             chapters: (1..=count).map(chapter).collect(),
             all_read: false,
+            flat: true,
         }]
     }
 
@@ -394,7 +396,7 @@ mod tests {
         (window, scroll, column, list)
     }
 
-    const ORDER: Order = Order { newest: false, novel: false };
+    const ORDER: Order = Order { newest: false, by_volume: false };
 
     #[test]
     fn a_long_series_draws_a_chunk_and_more_near_the_end() {
@@ -438,7 +440,7 @@ mod tests {
             let volumes = one_volume(300);
             list.show(&volumes, None, ORDER);
             list.draw_to(CHUNK * 2);
-            list.show(&volumes, None, Order { newest: true, novel: false });
+            list.show(&volumes, None, Order { newest: true, by_volume: false });
             let drawn = rows(column.upcast_ref());
             assert_eq!(drawn.len(), CHUNK * 2);
             let first =
@@ -455,11 +457,13 @@ mod tests {
             let mut volumes = one_volume(30);
             volumes[0].all_read = true;
             volumes[0].volume = Some("1".into());
+            volumes[0].flat = false;
             volumes.push(VolumeGroup {
                 volume: Some("2".into()),
                 title: None,
                 chapters: (31..=40).map(chapter).collect(),
                 all_read: false,
+                flat: false,
             });
             list.show(&volumes, None, ORDER);
             assert_eq!(rows(column.upcast_ref()).len(), 10);
@@ -472,5 +476,16 @@ mod tests {
             assert_eq!(rows(column.upcast_ref()).len(), 40);
             window.destroy();
         });
+    }
+
+    /// Show volumes off: one flat run of chapters, all read, with no heading and no fold.
+    #[test]
+    fn a_flat_list_is_its_rows_alone() {
+        let mut volumes = one_volume(3);
+        volumes[0].all_read = true;
+        let steps = steps(&volumes);
+        assert!(matches!(steps[0], Step::List));
+        assert_eq!(steps.iter().filter(|s| matches!(s, Step::Row(..))).count(), 3);
+        assert!(!steps.iter().any(|s| matches!(s, Step::Heading(_) | Step::Fold(_))));
     }
 }

@@ -1,6 +1,7 @@
 using Medium = Kaeri.Engine.Core.Medium;
 using Microsoft.UI.Xaml.Automation.Peers;
 using Kaeri.App;
+using Kaeri.Engine.Ffi;
 using Kaeri.Engine.Model;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
@@ -162,6 +163,7 @@ sealed class PagedView : Grid
         mounted.Clear();
         chapter = Reader.View?.Chapter.Id;
         current = Reader.Leaves.Length == 0 ? -1 : Math.Clamp(Reader.Current, 0, Reader.Leaves.Length - 1);
+        Trace($"paged rebuild at {current} of {Reader.Leaves.Length}, {ActualWidth:0}x{ActualHeight:0}");
         zoom.ChangeView(0, 0, 1, true);
         Mount();
         SyncCredit();
@@ -300,7 +302,7 @@ sealed class PagedView : Grid
             return;
         if (forward && Reader.Leaves[current].EndPage)
         {
-            if ((Reader.End?.Next ?? Reader.View?.Next) is { } next)
+            if (Reader.EndNext is { } next)
                 Reader.OpenChapter(next.Id);
             return;
         }
@@ -437,6 +439,7 @@ sealed class PagedView : Grid
         var from = current;
         var forward = target > from;
         current = target;
+        Trace($"paged turn {from} to {target}, animate {animate}, mounted [{string.Join(",", mounted.Keys)}], width {ActualWidth:0}");
         if (zoom.ZoomFactor > 1.01f || zoom.VerticalOffset > 0 || zoom.HorizontalOffset > 0)
             zoom.ChangeView(0, 0, 1, true);
         if (!mounted.ContainsKey(from))
@@ -485,6 +488,7 @@ sealed class PagedView : Grid
         var board = turning!;
         board.Completed += (_, _) =>
         {
+            Trace($"paged turn to {target} done, current {current}, superseded {turning != board}");
             if (turning != board)
                 return;
             turning = null;
@@ -495,6 +499,9 @@ sealed class PagedView : Grid
         };
         board.Begin();
     }
+
+    /// <summary>Turn steps for the log, at debug level (KAERI_LOG=debug).</summary>
+    static void Trace(string line) => KaeriFfiMethods.LogLine(FfiLogLevel.Debug, "windows", line);
 
     static Storyboard Board(UIElement element, string property, double from, double to, KeySpline? spline, TimeSpan? time = null)
     {
@@ -530,8 +537,11 @@ sealed class PagedView : Grid
     /// <summary>Whether a drag that way has somewhere to go: a leaf, or the next chapter past the end page.</summary>
     bool CanGo(bool forward)
     {
+        // The leaves can be empty for a moment as a chapter opens under a drag.
+        if (current < 0 || current >= Reader.Leaves.Length)
+            return false;
         if (forward && Reader.Leaves[current].EndPage)
-            return (Reader.End?.Next ?? Reader.View?.Next) is not null;
+            return Reader.EndNext is not null;
         var target = current + (forward ? 1 : -1);
         return target >= 0 && target < Reader.Leaves.Length;
     }
@@ -712,11 +722,15 @@ sealed class PagedView : Grid
         Turn(down, TurnHow.Scroll);
     }
 
-    /// <summary>A tap or click, as a fraction of the width, from the overlay.</summary>
+    /// <summary>
+    /// A tap or click, as a fraction of the width, from the overlay. A finger's tap while the
+    /// chrome is up only puts it away; the mouse brings the chrome up as it moves, so a click on
+    /// an edge turns whether the chrome shows or not. While zoomed the zones are off.
+    /// </summary>
     public void Tap(double x)
     {
         var layout = owner.Reader.Choice(ReaderSettingKey.TapLayout) ?? "edges";
-        if (owner.ChromeShown || layout == "off")
+        if ((owner.ChromeShown && owner.TouchInput) || layout == "off" || Zoomed)
         {
             owner.ToggleChrome();
             return;

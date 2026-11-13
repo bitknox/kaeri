@@ -1,4 +1,7 @@
 reader-page-loading = Đang tải trang { $page }
+reader-page-plate = Trang { $page }
+reader-image-plate = Ảnh { $image }
+reader-image-loading = Đang tải ảnh { $image }
 reader-page-failed = Không tải được trang { $page }
 reader-try-again = Thử lại
 reader-close = Đóng
@@ -53,3 +56,6 @@ reader-divider-images = { $count ->
    *[other] { $count } ảnh
  }
 reader-chapter-line-titled = Chương { $chapter } · { $title }
+reader-zone-next = Trang sau
+reader-zone-previous = Trang trước
+reader-zone-controls = Điều khiển

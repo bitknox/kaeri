@@ -129,8 +129,10 @@ internal fun ChapterSheet(
                 SheetAction(Strings.seriesMarkReadUpTo(context)) { then { store.reading.markReadUpTo(work, row.id) } }
             }
             when (row.download) {
-                null -> SheetAction(Strings.seriesDownload(context)) {
-                    then { store.reading.download(work, DownloadPick.Chapters(listOf(row.id))) }
+                null -> if (row.downloadable) {
+                    SheetAction(Strings.seriesDownload(context)) {
+                        then { store.reading.download(work, DownloadPick.Chapters(listOf(row.id))) }
+                    }
                 }
                 is ChapterDownloadState.Failed -> SheetAction(Strings.chapterRetry(context)) {
                     then { store.reading.download(work, DownloadPick.Chapters(listOf(row.id))) }
@@ -728,15 +730,17 @@ internal fun DownloadMenu(
     val store = LocalAppStore.current
     val work = series.work
     val all = volumes.chapterRows()
-    val unread = all.filter { it.state !is ChapterReadState.Read && it.download == null }
+    val unread = all.filter { it.state !is ChapterReadState.Read && it.downloadable }
+    val ahead = volumes.unreadAhead()
     val downloaded = volumes.downloaded()
     val any = all.filter { it.download != null }
-    val toFetch = volumes.filter { group -> group.chapters.any { it.state !is ChapterReadState.Read && it.download == null } }.take(3)
+    val toFetch = volumes.downloadVolumes().filter { group -> group.chapters.any { it.state !is ChapterReadState.Read && it.downloadable } }.take(3)
     val snackbars = app.kaeri.ui.LocalSnackbars.current
     fun pick(what: DownloadPick) {
-        // The next unread are the engine's pick too: all of them here already queues nothing, so say so.
-        val next = (what as? DownloadPick.NextUnread)?.let { all.filter { it.state !is ChapterReadState.Read }.take(it.n.toInt()) }
-        if (next != null && next.isNotEmpty() && next.all { it.download is ChapterDownloadState.Done }) {
+        // The next unread are the engine's pick too, the next not here yet: with every one ahead
+        // here or on its way, it queues nothing, so say so.
+        val next = (what as? DownloadPick.NextUnread)?.let { volumes.nextToFetch(it.n.toInt()) }
+        if (next != null && next.isEmpty()) {
             snackbars.show(context.getString(app.kaeri.i18n.R.string.download_already))
         } else {
             store.reading.download(work, what)
@@ -744,12 +748,12 @@ internal fun DownloadMenu(
         onDismiss()
     }
     Menu(expanded = expanded, onDismissRequest = onDismiss) {
-        DropdownMenuItem(text = { Text(Strings.downloadNext(context, 5)) }, enabled = unread.isNotEmpty(), onClick = { pick(DownloadPick.NextUnread(5u)) })
-        DropdownMenuItem(text = { Text(Strings.downloadNext(context, 10)) }, enabled = unread.size > 5, onClick = { pick(DownloadPick.NextUnread(10u)) })
+        DropdownMenuItem(text = { Text(Strings.downloadNext(context, 5)) }, enabled = ahead.isNotEmpty(), onClick = { pick(DownloadPick.NextUnread(5u)) })
+        DropdownMenuItem(text = { Text(Strings.downloadNext(context, 10)) }, enabled = ahead.size > 5, onClick = { pick(DownloadPick.NextUnread(10u)) })
         DropdownMenuItem(text = { Text(Strings.downloadUnread(context)) }, enabled = unread.isNotEmpty(), onClick = { pick(DownloadPick.Unread) })
         if (toFetch.isNotEmpty()) HorizontalDivider()
         toFetch.forEach { group ->
-            val missing = group.chapters.filter { it.state !is ChapterReadState.Read && it.download == null }
+            val missing = group.chapters.filter { it.state !is ChapterReadState.Read && it.downloadable }
             val name = SeriesWords.volume(context, group, novel = false).first
             DropdownMenuItem(
                 text = { Text(Strings.downloadVolumeCount(context, name, missing.size)) },

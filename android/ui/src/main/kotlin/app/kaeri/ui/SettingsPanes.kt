@@ -209,7 +209,7 @@ internal fun NotificationsPane(actions: AppActions) {
                             stringResource(R.string.settings_notify_system_title),
                             stringResource(R.string.settings_notify_system_detail),
                             onClick = app.openSystemSettings,
-                            trailing = { Icon(Icons.External, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+                            trailing = { RowMark(Icons.External) },
                         )
                     },
                 ),
@@ -256,7 +256,7 @@ private fun ComingRow(place: Place, episode: UpcomingNotice, onClick: () -> Unit
                 modifier = Modifier.size(width = 40.dp, height = 60.dp).clip(RoundedCornerShape(6.dp)),
             )
         },
-        trailing = { Icon(Icons.Chevron, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+        trailing = { RowMark(Icons.Chevron) },
         modifier = Modifier.alpha(if (dimmed) 0.4f else 1f),
         // A show's title, so the show-title face, as everywhere a title is named.
         titleStyle = ShowTitle.row,
@@ -282,7 +282,7 @@ internal fun GeneralPane() {
             title = stringResource(R.string.settings_group_titles),
             rows = listOf(
                 { place -> TitleLanguageRow(place) },
-                { place -> SettingSwitch(place, SettingKey.ADULT_TITLES, stringResource(R.string.settings_adult), note = stringResource(R.string.settings_adult_detail, "AniList")) },
+                { place -> SettingSwitch(place, SettingKey.ADULT_TITLES, stringResource(R.string.settings_adult), note = stringResource(if (answer == app.kaeri.engine.model.KaeriIsFor.READ) R.string.settings_adult_detail_read else R.string.settings_adult_detail, "AniList")) },
             ),
         )
     }
@@ -955,7 +955,7 @@ internal fun AboutPane() {
                         stringResource(R.string.about_report_bug),
                         stringResource(R.string.settings_report_bug_value),
                         onClick = { openBugReport(context, store) },
-                        trailing = { Icon(Icons.External, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+                        trailing = { RowMark(Icons.External) },
                     )
                 },
             ),
@@ -969,7 +969,7 @@ internal fun AboutPane() {
                         stringResource(R.string.about_legal_link),
                         null,
                         onClick = { store.openExternal(LEGAL_URL) },
-                        trailing = { Icon(Icons.External, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+                        trailing = { RowMark(Icons.External) },
                     )
                 },
                 { place ->
@@ -978,7 +978,7 @@ internal fun AboutPane() {
                         stringResource(R.string.settings_privacy),
                         stringResource(R.string.settings_privacy_detail),
                         onClick = { store.openExternal(PRIVACY_URL) },
-                        trailing = { Icon(Icons.External, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+                        trailing = { RowMark(Icons.External) },
                     )
                 },
                 { place -> InfoRow(place, stringResource(R.string.settings_licence_title), stringResource(R.string.settings_licence_value)) },

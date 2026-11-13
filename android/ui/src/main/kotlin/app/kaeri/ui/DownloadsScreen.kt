@@ -437,7 +437,7 @@ private fun DownloadItem(row: DownloadRow, episode: EpisodeRow?) {
     var menu by remember { mutableStateOf(false) }
     // Deleting a download and its file asks first, from the menu or a swipe.
     var deleting by remember { mutableStateOf(false) }
-    val name = listOfNotNull(stringResource(R.string.downloads_episode_name, row.episode.toInt()), episode?.title?.takeIf { it.isNotBlank() }).joinToString(" · ")
+    val name = listOfNotNull(app.kaeri.store.episodeName(LocalContext.current, row.episode), episode?.title?.takeIf { it.isNotBlank() }).joinToString(" · ")
     val progress = row.state == DownloadState.ACTIVE || row.state == DownloadState.PAUSED
     val hasFile = row.state == DownloadState.DONE || row.path != null
     // A row with bytes behind it is deleted, which asks first, however it is taken off: its file
@@ -494,7 +494,7 @@ private fun DownloadItem(row: DownloadRow, episode: EpisodeRow?) {
             }
             Box(Modifier.heightIn(min = 48.dp).widthIn(min = 48.dp), contentAlignment = Alignment.Center) {
                 when (row.state) {
-                    DownloadState.DONE -> IconButton(onClick = { store.playDownload(row) }) { Icon(Icons.PlayRow, contentDescription = stringResource(R.string.downloads_play_episode, row.episode.toInt())) }
+                    DownloadState.DONE -> IconButton(onClick = { store.playDownload(row) }) { Icon(Icons.PlayRow, contentDescription = playEpisodeWords(row.episode)) }
                     DownloadState.ACTIVE -> IconButton(onClick = { store.toggleDownload(row.id) }) { Icon(Icons.Pause, contentDescription = stringResource(R.string.downloads_pause_one)) }
                     DownloadState.PAUSED -> IconButton(onClick = { store.toggleDownload(row.id) }) { Icon(Icons.Resume, contentDescription = stringResource(R.string.downloads_resume_one)) }
                     DownloadState.QUEUED -> Row(verticalAlignment = Alignment.CenterVertically) {
@@ -539,7 +539,7 @@ private fun DownloadItem(row: DownloadRow, episode: EpisodeRow?) {
         AlertDialog(
             onDismissRequest = { deleting = false },
             properties = AskingDialog,
-            title = { Text(stringResource(R.string.downloads_delete_title, stringResource(R.string.downloads_episode_name, row.episode.toInt()))) },
+            title = { Text(stringResource(R.string.downloads_delete_title, app.kaeri.store.episodeName(LocalContext.current, row.episode))) },
             text = { Text(stringResource(R.string.downloads_delete_detail)) },
             confirmButton = {
                 TextButton(
@@ -665,4 +665,12 @@ internal fun DownloadMenuItem(entry: Entry, episode: String, onDismiss: () -> Un
             store.downloadEpisode(entry.id, episode)
         },
     )
+}
+
+/** "Play episode 7", or "Play Episode 5.5" for a half episode, which the first takes no number for. */
+@Composable
+private fun playEpisodeWords(episode: String): String {
+    val whole = app.kaeri.store.wholeEpisode(episode)
+    return if (whole != null) stringResource(R.string.downloads_play_episode, whole)
+    else Strings.tvHeroStart(LocalContext.current, app.kaeri.store.episodeName(LocalContext.current, episode))
 }

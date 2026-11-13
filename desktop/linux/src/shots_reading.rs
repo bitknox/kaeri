@@ -14,7 +14,7 @@ use kaeri_model::{
 use crate::{pages::Dest, reading::reader::Reader, window::Shell};
 
 /// Every reading shot, in the order a run takes them.
-pub const NAMES: [&str; 43] = [
+pub const NAMES: [&str; 49] = [
     "read",
     "read-updates",
     "read-library",
@@ -34,15 +34,22 @@ pub const NAMES: [&str; 43] = [
     "read-paged-single",
     "read-paged-width",
     "read-paged-settings",
+    // Tab after the chrome has gone brings it, with the focus on its first control.
+    "read-paged-tab",
     "read-end",
     "read-end-none",
     "read-end-plate",
+    "read-end-skip",
     "read-plate",
     "read-open-failed",
+    // Try again on a chapter that couldn't open opens it again.
+    "read-open-again",
     "read-mode",
     "read-turn-a",
     "read-turn-b",
     "read-strip",
+    "read-strip-plate",
+    "read-strip-plate-slow",
     "read-strip-slide-a",
     "read-strip-slide-b",
     "read-strip-end",
@@ -60,6 +67,8 @@ pub const NAMES: [&str; 43] = [
     "read-novel",
     "read-novel-light",
     "read-novel-paper",
+    // A novel read to its end page counts as read, and Continue opens the next chapter.
+    "read-novel-end",
     "read-send",
 ];
 
@@ -215,6 +224,11 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
             read(shell, MANGA, "13");
             4.0
         }
+        "read-paged-tab" => {
+            read(shell, MANGA, "13");
+            later(shell, 4500, |reader| reader.shot_tab());
+            6.0
+        }
         "read-paged-settings" => {
             read(shell, MANGA, "13");
             let reader = Rc::clone(&shell.reader);
@@ -238,6 +252,14 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
             later(shell, 2500, |reader| reader.shot_end_plate());
             4.0
         }
+        // The next chapter an extra, 16.5, with Skip to chapter 17 beside Continue.
+        "read-end-skip" => {
+            read(shell, MANGA, "13");
+            later(shell, 2500, |reader| reader.shot_end());
+            // After the engine's own end page has come, which names no skip.
+            later(shell, 3500, |reader| reader.shot_end_skip());
+            5.0
+        }
         // A page still loading after 4 s: its plate, number and line.
         "read-plate" => {
             read(shell, MANGA, "13");
@@ -245,6 +267,11 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
             4.0
         }
         // A chapter that could not open: a series no source has.
+        "read-open-again" => {
+            read(shell, MANGA, "999");
+            later(shell, 3000, |reader| reader.shot_try_again());
+            5.0
+        }
         "read-open-failed" => {
             read(shell, "a:900399", "1");
             4.0
@@ -268,6 +295,14 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
         "read-strip" => {
             read(shell, STRIP, "2");
             4.0
+        }
+        // Strip images still loading: each plate with its number, and from 4 s the line under it.
+        "read-strip-plate" | "read-strip-plate-slow" => {
+            read(shell, STRIP, "2");
+            let line = shot == "read-strip-plate-slow";
+            later(shell, 2500, move |reader| reader.shot_strip_plate(line));
+            // Before the 4 s line of an image asked for at open fades in over the staged one.
+            3.5
         }
         // After the last chapter there is, the strip ends on the end page.
         "read-strip-end" => {
@@ -298,9 +333,10 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
             read(shell, STRIP, "2");
             4.0
         }
-        // Chapters over a manga page: the page grid, then the chapters by volume.
-        "read-chapters" | "read-chapters-list" => {
-            read(shell, MANGA, "13");
+        // Chapters over a manga page: the page grid, then the chapters by volume. The long one
+        // is the reading-long scene's chapter 60 of 120.
+        "read-chapters" | "read-chapters-list" | "read-chapters-long" => {
+            read(shell, MANGA, if shot == "read-chapters-long" { "60" } else { "13" });
             let reader = Rc::clone(&shell.reader);
             let tab = if shot == "read-chapters" { "pages" } else { "chapters" };
             gtk::glib::timeout_add_local_once(
@@ -316,6 +352,11 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
             let chrome = shot == "read-novel-notice";
             later(shell, 3000, move |reader| reader.shot_notice(chrome));
             4.5
+        }
+        "read-novel-end" => {
+            read(shell, NOVEL, "3");
+            later(shell, 3000, |reader| reader.shot_novel_end());
+            30.0
         }
         "read-novel" => {
             shell.reader.shot_setting(ReaderSettingKey::Look, "system");

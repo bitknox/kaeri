@@ -202,6 +202,23 @@ private fun CountsAsReadRow(place: Place) {
     )
 }
 
+/** Skip credit pages, on unless turned off: a reader default for manga, which comics and strips share. */
+@Composable
+private fun SkipCreditsRow(place: Place) {
+    val store = LocalAppStore.current
+    val context = LocalContext.current
+    val defaults by store.reading.readerDefaults.collectAsStateWithLifecycle()
+    val view = defaults[Medium.MANGA]
+    val on = (view?.rows?.firstOrNull { it.key == ReaderSettingKey.SKIP_CREDIT_PAGES }?.value as? ReaderValue.Toggle)?.on ?: true
+    SwitchRow(
+        place,
+        Strings.settingsSkipCredits(context),
+        checked = on,
+        note = Strings.settingsSkipCreditsNote(context),
+        enabled = view != null,
+    ) { store.reading.setReaderDefault(Medium.MANGA, ReaderSettingKey.SKIP_CREDIT_PAGES, ReaderValue.Toggle(it)) }
+}
+
 // The pane
 
 /**
@@ -221,6 +238,7 @@ internal fun ReadingPane() {
                 { place -> ReadingSettingMenu(place, SettingKey.WEBTOON_MODE, stringResource(R.string.settings_reader_webtoons)) },
                 { place -> NovelDefaultRow(place) },
                 { place -> CountsAsReadRow(place) },
+                { place -> SkipCreditsRow(place) },
             ),
         )
         ScreenGroup()
@@ -279,7 +297,7 @@ internal fun readingSummary(): String? {
 
 // Downloads
 
-/** Downloads' reading rows: chapters over mobile data, which new chapters download, and deleting after reading. */
+/** Downloads' reading rows: chapters over mobile data, which new chapters download, deleting after reading, and showing volumes. */
 internal fun readingDownloadRows(): List<@Composable (Place) -> Unit> = listOf(
     { place -> SettingSwitch(place, SettingKey.CHAPTER_DOWNLOADS_ON_CELLULAR, stringResource(R.string.settings_chapter_downloads_cellular)) },
     { place ->
@@ -292,6 +310,7 @@ internal fun readingDownloadRows(): List<@Composable (Place) -> Unit> = listOf(
         )
     },
     { place -> SettingSwitch(place, SettingKey.DELETE_AFTER_READING, stringResource(R.string.settings_delete_after_reading), note = stringResource(R.string.settings_delete_after_reading_note)) },
+    { place -> SettingSwitch(place, SettingKey.SHOW_VOLUMES, stringResource(R.string.settings_show_volumes), note = stringResource(R.string.settings_show_volumes_note)) },
 )
 
 // Notifications

@@ -2059,9 +2059,6 @@ linux-shortcuts-close-reader = Chiudi il lettore
 # Two names joined, or a list's last name joined to the rest, in the end page's tracker line: "AniList and MangaUpdates".
 linux-reader-names-and = { $first } e { $last }
 
-# On the plate that holds a page's place while it loads. The page is its number, such as 23.
-linux-reader-page-plate = Pagina { $page }
-
 # Heading when a chapter could not open. The chapter is its number, such as 13.
 linux-reader-open-failed = Impossibile aprire il capitolo { $chapter }
 
@@ -8716,6 +8713,15 @@ player-subs-more = Altro in Impostazioni…
 # Under a page that is still loading after four seconds.
 reader-page-loading = Caricamento pagina { $page }
 
+# On the plate of a page that is still loading.
+reader-page-plate = Pagina { $page }
+
+# On the plate of a strip image that is still loading.
+reader-image-plate = Immagine { $image }
+
+# Under a strip image's number after four seconds.
+reader-image-loading = Caricamento immagine { $image }
+
 # Heading where a page could not be loaded.
 reader-page-failed = Pagina { $page } non caricata
 
@@ -8794,14 +8800,20 @@ reader-spreads-rotate = Ruota
 # A choice for wide pages: shown whole.
 reader-spreads-whole = Intera
 
-# A choice for the reader's tap zones: taps near the left and right edges turn the page.
+# A choice for the reader's tap zones: taps near the left and right edges turn the page. Replaced by Sides; kept until every app has the new tap zones page.
 reader-tap-edges = Bordi
 
-# A choice for the reader's tap zones: the left and right halves turn the page.
-reader-tap-sides = Metà
-
-# A choice for the reader's tap zones: taps do not turn the page.
+# Tap zone layout: taps only show and hide the controls, and never turn the page.
 reader-tap-off = No
+
+# Name of the tap zone that turns to the next page, in the guide over the page and as a screen reader action.
+reader-zone-next = Pagina successiva
+
+# Name of the tap zone that turns to the previous page, in the guide and as a screen reader action.
+reader-zone-previous = Pagina precedente
+
+# Name of the tap zone that shows and hides the reader's controls, in the guide.
+reader-zone-controls = Controlli
 
 # Button in the reader's controls that opens the chapters and the page grid.
 reader-chapters = Capitoli
@@ -13630,9 +13642,6 @@ title-tags = Tag
 
 # Button that opens the full page of facts about a show.
 title-more-about = Altro su questo titolo
-
-# Accessibility hint of the button that expands a synopsis.
-title-synopsis-hint = Mostra la trama completa
 
 # Label under a season: which episodes are dubbed so far.
 title-dubbed-to = Doppiato fino all'episodio { $episode }

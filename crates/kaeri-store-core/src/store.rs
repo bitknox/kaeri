@@ -25,7 +25,8 @@ use crate::{
         DeviceRow, ENDED_INVITES_KEPT_SECS, EndReason, INVITE_LIFETIME_SECS, Index, IndexEntry,
         InviteEnded, InviteFacts, InviteKind, InviteUse, MAX_NAME_CHARS, MAX_PLUGIN_BYTES,
         Member, MemberRow, OPEN_DEVICES_LISTED, OpenState, PART_SIZE, PROTOCOL, PendingInvite,
-        RESERVED_IDS, Role, SignedIndex, StoreInfo, clean_name, is_valid_id, is_valid_version,
+        RESERVED_IDS, Role, SETUP_OWNER_NAME, SignedIndex, StoreInfo, clean_name, is_valid_id,
+        is_valid_version,
     },
     schema, sql,
 };
@@ -409,7 +410,8 @@ impl<D: Database, B: Blobs> Store<D, B> {
             now
         ))
         .await?;
-        let new = NewInvite::member("Owner", Role::Owner, None, Self::default_expiry(now));
+        let new =
+            NewInvite::member(SETUP_OWNER_NAME, Role::Owner, None, Self::default_expiry(now));
         let (_, invite) = self.create_invite(new, base, now).await?;
         Ok(Some(invite))
     }

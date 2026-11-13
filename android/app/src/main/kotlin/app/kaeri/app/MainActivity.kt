@@ -47,6 +47,7 @@ import app.kaeri.engine.model.MediaFormat
 import app.kaeri.engine.model.SearchQuery
 import app.kaeri.engine.model.Season
 import app.kaeri.engine.model.SettingKey
+import app.kaeri.engine.model.EinkPaint
 import app.kaeri.player.takeBackBeforeShown
 import app.kaeri.player.ui.PictureInPictureOnLeave
 import app.kaeri.player.ui.PlayerFrame
@@ -62,8 +63,11 @@ import app.kaeri.ui.AppRoot
 import app.kaeri.ui.NotificationActions
 import app.kaeri.ui.Destination
 import app.kaeri.ui.reading.LocalEinkLayout
+import app.kaeri.ui.reading.ExportShare
 import app.kaeri.eink.EinkAnswerPrefs
 import app.kaeri.eink.EinkLook
+import app.kaeri.eink.EinkPainter
+import app.kaeri.eink.RefreshControllers
 import app.kaeri.reader.phone.ReaderLauncher
 import app.kaeri.reader.phone.ReaderRequest
 import app.kaeri.reader.phone.SettingsPane
@@ -232,7 +236,7 @@ class MainActivity : ComponentActivity() {
             openReader = { work, chapter, cover, from ->
                 ReaderLauncher.open(ReaderRequest(work, chapter, eink = app.eink.state.value.eink, cover = cover, from = from))
             },
-            shareFiles = { files, then -> shareExport(files); then() },
+            shareFiles = ::shareExport,
         )
         // Play on TV from the player: the episode and where it is, which the TV starts from.
         val player = PlayerFrame(app.player) {
@@ -262,6 +266,20 @@ class MainActivity : ComponentActivity() {
                         isAppearanceLightNavigationBars = einkState.eink
                     }
                     paperSplash(einkState.eink, paper)
+                }
+                // The layout switched while the app is open: every pixel changes, so once the new
+                // one has drawn, the refresh policy decides as for the bars closing over a page: one
+                // full refresh when the person turned full refreshes on, else the device's own. A
+                // first frame needs none.
+                val shownLayout = androidx.compose.runtime.remember { booleanArrayOf(einkState.eink) }
+                androidx.compose.runtime.LaunchedEffect(einkState.eink) {
+                    if (shownLayout[0] == einkState.eink) return@LaunchedEffect
+                    shownLayout[0] = einkState.eink
+                    androidx.compose.runtime.withFrameNanos { }
+                    androidx.compose.runtime.withFrameNanos { }
+                    val profile = einkState.profile ?: return@LaunchedEffect
+                    EinkPainter.forProfile(profile) { RefreshControllers.of(it, this@MainActivity) }
+                        .paint(decor, EinkPaint.ChromeClose)
                 }
                 CompositionLocalProvider(LocalEinkLayout provides einkLayout) {
                 ReaderHost(app.store, app.eink) { AppRoot(
@@ -328,15 +346,18 @@ class MainActivity : ComponentActivity() {
 
     /**
      * Send to e-reader: hand the prepared files to the share sheet, where the person picks the app
-     * that carries them to the e-reader (Send to Kindle, a cloud folder, mail).
+     * that carries them to the e-reader (Send to Kindle, a cloud folder, mail). True once the sheet
+     * is up; false when a file is gone or can't be offered, so the send says its files are gone
+     * and nothing is marked shared.
      */
-    private fun shareExport(files: List<app.kaeri.engine.model.ExportFile>) {
+    private fun shareExport(files: List<app.kaeri.engine.model.ExportFile>): Boolean {
+        if (ExportShare.gone(files)) return false
         val uris = files.mapNotNull { file ->
             runCatching {
                 androidx.core.content.FileProvider.getUriForFile(this, "$packageName.exports", java.io.File(file.path), file.name)
             }.onFailure { Log.w(KaeriApp.TAG, "an export could not be shared", it) }.getOrNull()
         }
-        if (uris.isEmpty()) return
+        if (uris.size != files.size) return false
         val send = if (uris.size == 1) {
             Intent(Intent.ACTION_SEND).putExtra(Intent.EXTRA_STREAM, uris.first())
         } else {
@@ -346,6 +367,7 @@ class MainActivity : ComponentActivity() {
         send.clipData = android.content.ClipData.newRawUri(null, uris.first()).apply { uris.drop(1).forEach { addItem(android.content.ClipData.Item(it)) } }
         send.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         startActivity(Intent.createChooser(send, null))
+        return true
     }
 
     /**
@@ -452,18 +474,30 @@ class MainActivity : ComponentActivity() {
      * The volume keys move the TV's volume while its card is open, or while it is driven and
      * plays; the TV's media session takes them once the app is behind another.
      */
-    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        val step = when (event.keyCode) {
-            KeyEvent.KEYCODE_VOLUME_UP -> TvRemoteModel.VOLUME_STEP
-            KeyEvent.KEYCODE_VOLUME_DOWN -> -TvRemoteModel.VOLUME_STEP
-            else -> return super.dispatchKeyEvent(event)
-        }
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        val step = volumeStep(keyCode) ?: return super.onKeyDown(keyCode, event)
+        if (!drivingTv()) return super.onKeyDown(keyCode, event)
+        app.store.tv.send(FfiTvCommand.Volume(step))
+        return true
+    }
+
+    /** The key-up of a volume press [onKeyDown] took, so the system does not also act on it. */
+    override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
+        if (volumeStep(keyCode) == null || !drivingTv()) return super.onKeyUp(keyCode, event)
+        return true
+    }
+
+    private fun volumeStep(keyCode: Int): Double? = when (keyCode) {
+        KeyEvent.KEYCODE_VOLUME_UP -> TvRemoteModel.VOLUME_STEP
+        KeyEvent.KEYCODE_VOLUME_DOWN -> -TvRemoteModel.VOLUME_STEP
+        else -> null
+    }
+
+    private fun drivingTv(): Boolean {
         val tv = app.store.tv
         val driving = tv.connected.value != null &&
             (tv.sheet.value == TvRemoteModel.Sheet.Remote || tv.card.value?.card?.now != null)
-        if (!driving || app.player.isPresented) return super.dispatchKeyEvent(event)
-        if (event.action == KeyEvent.ACTION_DOWN) tv.send(FfiTvCommand.Volume(step))
-        return true
+        return driving && !app.player.isPresented
     }
 
     override fun onDestroy() {

@@ -425,8 +425,10 @@ fn search(services: &Services, query: ReadSearchQuery, page: u32, tx: &Outbox) {
     let (sources, tx, now) = (services.book_sources.clone(), tx.clone(), services.clock.now());
     let plugins = services.book_plugins.clone();
     tokio::spawn(async move {
+        sources.plugins_in(&plugins, None).await;
         sources.adopt_plugins(&plugins);
-        let tiles = sources.search(&query.text, query.medium, now).await;
+        let scope = query.source_scope.as_deref();
+        let tiles = sources.search_in(&query.text, query.medium, scope, now).await;
         let _ = tx.send(Event::Reading(ReadingEvent::Search {
             query,
             page: 0,
@@ -615,6 +617,10 @@ fn eink(engine: &mut EngineState, services: &Services, command: ReadingCommand, 
                     tracing::warn!(error = %e, "the e-ink answer was not written");
                 }
             }
+            // The profile below reads the config in effect, which a write leaves alone: the
+            // file's answers go in effect too, or the switch would only take on the next start.
+            let answers = engine.config.saved().reading.eink.clone();
+            engine.config.effective_mut().reading.eink = answers;
         }
         _ => return,
     }

@@ -14,7 +14,7 @@ use kaeri_model::{reader::NoNext, reading::ChapterRow};
 use crate::motion;
 
 /// The column's width on a desktop window.
-const COLUMN: i32 = 440;
+const COLUMN: i32 = 500;
 /// The next chapter's first page, at the board's 1:1.42.
 const PREVIEW_WIDTH: i32 = 180;
 
@@ -31,6 +31,10 @@ pub struct EndFacts {
     pub novel: bool,
     /// "1 credit page skipped", for credit pages skipped at the chapter's end and not shown.
     pub credits: Option<String>,
+    /// When `next` is an extra: the first whole chapter after it, for "Skip to chapter 17".
+    pub skip_to: Option<ChapterRow>,
+    /// How many extras the skip passes over.
+    pub extras: u32,
 }
 
 pub struct EndPage {
@@ -56,6 +60,8 @@ pub struct EndPage {
     none_title: gtk::Label,
     none_body: gtk::Label,
     pub continue_button: gtk::Button,
+    /// Past the extras, between Continue and Back to the series, when the next chapter is one.
+    skip: gtk::Button,
     back: gtk::Button,
 }
 
@@ -69,7 +75,7 @@ fn label(class: &str) -> gtk::Label {
 }
 
 impl EndPage {
-    pub fn new(go_on: Rc<dyn Fn()>, back: Rc<dyn Fn()>) -> Rc<Self> {
+    pub fn new(go_on: Rc<dyn Fn()>, skip: Rc<dyn Fn()>, back: Rc<dyn Fn()>) -> Rc<Self> {
         let top = label("reader-end-top");
         let read = label("reader-end-read");
         let read_veil = gtk::Overlay::new();
@@ -132,6 +138,10 @@ impl EndPage {
         continue_button.add_css_class("pill");
         continue_button.add_css_class("suggested-action");
         continue_button.connect_clicked(move |_| go_on());
+        let skip_button = gtk::Button::new();
+        skip_button.add_css_class("pill");
+        skip_button.set_visible(false);
+        skip_button.connect_clicked(move |_| skip());
         let back_button = gtk::Button::with_label(&t::linux_reader_back_to_series());
         back_button.add_css_class("pill");
         back_button.connect_clicked(move |_| back());
@@ -139,6 +149,7 @@ impl EndPage {
         buttons.set_margin_top(22);
         buttons.set_halign(gtk::Align::Start);
         buttons.append(&continue_button);
+        buttons.append(&skip_button);
         buttons.append(&back_button);
 
         let body = gtk::Box::new(gtk::Orientation::Vertical, 0);
@@ -188,6 +199,7 @@ impl EndPage {
             none_title,
             none_body,
             continue_button,
+            skip: skip_button,
             back: back_button,
         })
     }
@@ -248,17 +260,34 @@ impl EndPage {
                 );
                 self.plate.set_visible(facts.preview.is_none());
                 self.continue_button.set_visible(true);
+                self.skip.set_visible(facts.skip_to.is_some());
+                if let Some(skip) = &facts.skip_to {
+                    self.skip.set_label(&t::reader_end_skip_to(
+                        skip.number.as_deref().unwrap_or(&skip.label),
+                    ));
+                    // What stays behind: "Chapter 16.5 stays unread.", or for a run of extras or
+                    // one with no number, "The extras before it stay unread."
+                    let hint = match next.number.as_deref() {
+                        Some(extra) if facts.extras <= 1 => t::reader_end_skip_hint(extra),
+                        _ => t::reader_end_skip_hint_extras(),
+                    };
+                    self.skip.update_property(&[gtk::accessible::Property::Description(&hint)]);
+                }
                 self.back.remove_css_class("suggested-action");
             }
             None => {
                 self.next_box.set_visible(false);
-                let why = facts.why.unwrap_or(NoNext::CaughtUp);
-                self.none_title.set_label(&why_title(why));
-                let body = why_body(why);
-                self.none_body.set_label(body.as_deref().unwrap_or(""));
-                self.none_body.set_visible(body.is_some());
-                self.none_box.set_visible(true);
+                // The engine says why nothing follows as the chapter opens; until it has, the
+                // page claims no reason, never caught up.
+                if let Some(why) = facts.why {
+                    self.none_title.set_label(&why_title(why));
+                    let body = why_body(why);
+                    self.none_body.set_label(body.as_deref().unwrap_or(""));
+                    self.none_body.set_visible(body.is_some());
+                }
+                self.none_box.set_visible(facts.why.is_some());
                 self.continue_button.set_visible(false);
+                self.skip.set_visible(false);
                 self.back.add_css_class("suggested-action");
             }
         }
@@ -336,7 +365,10 @@ mod tests {
 
     use adw::prelude::*;
 
-    use super::{COLUMN, EndPage, joined, read_line};
+    use kaeri_i18n::t;
+    use kaeri_model::reader::NoNext;
+
+    use super::{COLUMN, EndFacts, EndPage, joined, read_line};
     use crate::gtk_test::{pump, run};
 
     /// The end page asks for no more width than its widest part: never the column's 440 px or
@@ -348,7 +380,7 @@ mod tests {
         run(|| {
             let min_width =
                 |widget: &gtk::Widget| widget.measure(gtk::Orientation::Horizontal, -1).0;
-            let end = EndPage::new(Rc::new(|| {}), Rc::new(|| {}));
+            let end = EndPage::new(Rc::new(|| {}), Rc::new(|| {}), Rc::new(|| {}));
             let window = gtk::Window::builder().default_width(1280).default_height(800).build();
             window.set_child(Some(&end.scroll));
             window.present();
@@ -376,6 +408,33 @@ mod tests {
                 "{large} px at twice the size, its widest part {widest}"
             );
             assert_eq!(wide, Some(COLUMN));
+        });
+    }
+
+    /// Before the engine says why no chapter follows, the page says no reason; once it has,
+    /// its reason.
+    #[test]
+    fn no_reason_shows_until_the_engine_gives_one() {
+        run(|| {
+            let end = EndPage::new(Rc::new(|| {}), Rc::new(|| {}), Rc::new(|| {}));
+            let mut facts = EndFacts {
+                chapter: "15".into(),
+                read: None,
+                next: None,
+                why: None,
+                source: None,
+                preview: None,
+                novel: false,
+                credits: None,
+                skip_to: None,
+                extras: 0,
+            };
+            end.fill(&facts);
+            assert!(!end.none_box.is_visible(), "no reason claimed yet");
+            facts.why = Some(NoNext::Offline);
+            end.fill(&facts);
+            assert!(end.none_box.is_visible());
+            assert_eq!(end.none_title.label(), t::linux_reader_end_offline());
         });
     }
 

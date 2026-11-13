@@ -32,7 +32,13 @@ struct NovelReader: View {
                 pagesLeft
             }
             if shown.end {
-                ReaderEndPage(model: model, theme: theme, size: size).transition(.opacity)
+                ReaderEndPage(model: model, theme: theme, size: size)
+                    .contentShape(.rect)
+                    // The end page takes the page's taps and swipes: forward goes on into the next
+                    // chapter, back to the chapter's last page. Its buttons keep their own taps.
+                    .gesture(endSwipe(controller))
+                    .onTapGesture(coordinateSpace: .local) { at in controller.tapped(at.x / max(size.width, 1)) }
+                    .transition(.opacity)
             }
             if let note = shown.note {
                 VStack {
@@ -66,7 +72,6 @@ struct NovelReader: View {
         }
         .onChange(of: model.turnRequest) { _, request in
             guard let request else { return }
-            if shown.end, !request.forward { shown.end = false; return }
             controller.turn(forward: request.forward, how: "key")
         }
         .onChange(of: model.choice(.mode)) { _, mode in controller.scrolled(mode == "scrolled") }
@@ -93,6 +98,17 @@ struct NovelReader: View {
         .opacity(model.chromeShown ? 0 : 1)
         .transition(.opacity)
         .accessibilityHidden(true)
+    }
+
+    /// A sideways swipe on the end page, towards the side the book reads to for forward.
+    private func endSwipe(_ controller: NovelWebController) -> some Gesture {
+        DragGesture(minimumDistance: 14).onEnded { value in
+            let x = value.translation.width
+            guard abs(x) > abs(value.translation.height) else { return }
+            let flick = abs(value.velocity.width) > 450 && value.velocity.width * x > 0
+            guard abs(x) > size.width * 0.25 || flick else { return }
+            controller.turn(forward: (x < 0) != rtl, how: "swipe")
+        }
     }
 
     private func open() {
@@ -168,6 +184,9 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
     /// The page being dragged away, over the one the turn showed under it.
     private var carried: UIView?
     private var carriedForward = true
+    /// A drag past the document's first or last page, which nothing follows: letting go far
+    /// enough turns on to the end page or the document beside it, and short of that nothing.
+    private var edgeForward: Bool?
     #endif
 
     override init() {
@@ -280,6 +299,12 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
     }
 
     func turn(forward: Bool, how: String) {
+        // On the end page a turn forward goes on into the next chapter, as the comic reader's
+        // does, and a turn back puts the end page away.
+        if shown.end {
+            if forward { goOn() } else { shown.end = false }
+            return
+        }
         call("window.kaeriReader && window.kaeriReader.\(forward ? "next" : "prev")('\(how)')")
     }
 
@@ -326,9 +351,14 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
         let rtl = book?.progression == .rightToLeft
         switch gesture.state {
         case .began, .changed:
-            if carried == nil {
+            if carried == nil, edgeForward == nil {
                 guard abs(dx) > 6 else { return }
                 let forward = (dx < 0) != rtl
+                let (index, count) = model?.position ?? (0, 1)
+                if forward ? index >= count - 1 : index <= 0 {
+                    edgeForward = forward
+                    return
+                }
                 if paper {
                     // Paper mode turns at once; the rest of this drag is dropped.
                     gesture.isEnabled = false
@@ -351,6 +381,13 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
             let away: CGFloat = (carriedForward != rtl) ? -1 : 1
             carried?.transform = CGAffineTransform(translationX: away * max(dx * away, 0), y: 0)
         case .ended, .cancelled, .failed:
+            if let forward = edgeForward {
+                edgeForward = nil
+                let along = dx * ((forward != rtl) ? -1 : 1)
+                let velocity = gesture.velocity(in: webView).x * ((forward != rtl) ? -1 : 1)
+                if gesture.state == .ended, along > width * 0.25 || velocity > 450 { turn(forward: forward, how: "swipe") }
+                return
+            }
             guard let page = carried else { return }
             let away: CGFloat = (carriedForward != rtl) ? -1 : 1
             let velocity = gesture.velocity(in: webView).x * away
@@ -444,8 +481,7 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
 
     /// A tap the page did not turn on: while the end page or the chrome is up, in the middle,
     /// or before the page heard which taps to turn on.
-    private func tapped(_ x: Double) {
-        if shown.end { shown.end = false; return }
+    func tapped(_ x: Double) {
         guard let model else { return }
         let layout = model.choice(.tapLayout) ?? "edges"
         if model.chromeShown || layout == "off" { onTap(x); return }
@@ -457,15 +493,27 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
         }
     }
 
-    /// Past the last page of a document: the next one, or the end page.
+    /// Past the last page of a document: the next one, or the end page. Past the end page:
+    /// the next chapter.
     private func next() {
         guard let book, let current = currentSpine else { return }
         if let index = book.spine.indices.dropFirst(current + 1).first(where: { book.spine[$0].linear }) {
             readyHow = .turn
             load(book.spine[index].url, fragment: nil)
+        } else if shown.end {
+            goOn()
         } else {
             shown.end = true
+            model?.novelEnded()
         }
+    }
+
+    /// The next chapter, from the end page, once the reader knows which it is. With none the
+    /// end page stays: it says why.
+    private func goOn() {
+        guard let model, let next = model.endNext else { return }
+        model.hideChrome()
+        model.openChapter(next.id)
     }
 
     private func previous() {
@@ -500,14 +548,6 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
     /// A key the page did not turn on, while the chrome or the end page is up.
     private func key(_ key: String) {
         let rtl = book?.progression == .rightToLeft
-        let forward: Bool? = switch key {
-        case "ArrowRight": !rtl
-        case "ArrowLeft": rtl
-        case "ArrowDown", "PageDown", " ": true
-        case "ArrowUp", "PageUp": false
-        default: nil
-        }
-        if shown.end, forward == false { shown.end = false; return }
         switch key {
         case "ArrowRight": turn(forward: !rtl, how: "key")
         case "ArrowLeft": turn(forward: rtl, how: "key")

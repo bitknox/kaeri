@@ -477,10 +477,20 @@ class BoardShots {
     @Config(qualifiers = TABLET, fontScale = 2.0f)
     fun tablet_home_large_text() = shoot("tablet-home-large-text", WATCHING)
 
-    /** Watching on a tablet is the same poster grid as the other lists. */
+    /**
+     * Watching on a tablet is the same poster grid as the other lists. Accounts and settings is on
+     * the rail alone, as on the other tabs, not again in the bar.
+     */
     @Test
     @Config(qualifiers = TABLET)
-    fun tablet_library() = shoot("tablet-library", WATCHING, start = Destination.Library)
+    fun tablet_library() {
+        shoot("tablet-library", WATCHING, start = Destination.Library)
+        val account = SemanticsMatcher("names accounts and settings") { node ->
+            node.config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.ContentDescription).orEmpty()
+                .any { it.contains("accounts and settings", ignoreCase = true) }
+        }
+        compose.onAllNodes(account, useUnmergedTree = true).assertCountEquals(1)
+    }
 
     @Test
     @Config(qualifiers = TABLET)

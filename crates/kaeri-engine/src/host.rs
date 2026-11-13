@@ -28,6 +28,12 @@ use kaeri_track::secret::LocalSecrets;
 
 pub use kaeri_track::secret::{BUNDLE, Backend, SecretError, SecretStore, Storage};
 
+/// A folder the platform opens for Kaeri, and what is in it: see [`Host::folder_access`].
+pub use kaeri_books::{
+    Source as BookFile,
+    tree::{Tree as FolderTree, TreeEntry as FolderEntry},
+};
+
 /// The machine the engine runs on, as the front end offers it.
 ///
 /// Called from the engine's tasks, on whichever thread runs them, so a host is shared and has
@@ -56,6 +62,14 @@ pub trait Host: Send + Sync {
     /// AVIF on an e-ink screen. `None`, the default, for a host with none: such a page then
     /// fails as unsupported.
     fn page_decoder(&self) -> Option<Arc<dyn PageDecoder>> {
+        None
+    }
+
+    /// The platform's way into book folders it opens for Kaeri rather than by path, such as a
+    /// folder picked in Android's system folder picker. `None`, the default, for a host whose
+    /// folders all have paths: a folder added with only the platform's reference then can't be
+    /// read, and says so.
+    fn folder_access(&self) -> Option<Arc<dyn FolderTree>> {
         None
     }
 }

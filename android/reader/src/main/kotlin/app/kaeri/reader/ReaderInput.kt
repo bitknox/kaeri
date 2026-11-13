@@ -1,6 +1,5 @@
-// Taps and keys to reader actions, apart from any view so both readers and their tests share them.
-// The boards' rules: thirds on a phone, mirrored for right to left; on e-ink the forward zone is
-// 40% wide at the reading side, controls 30% in the middle and back 30%. Page buttons arrive as
+// Keys to reader actions, apart from any view so both readers and their tests share them. Taps
+// are the engine's: see TapZones.kt. Page buttons arrive as
 // the volume keys: the upper one forward on e-ink, volume down forward on a phone (a switch swaps
 // them). Home and End go to the first and last page, Escape
 // hides the chrome then closes, and G shows the scrubber.
@@ -16,31 +15,6 @@ import app.kaeri.engine.model.ReadDirection
  * with the scrubber.
  */
 enum class ReaderAction { FORWARD, BACK, CONTROLS, CLEAN, FIRST, LAST, ESCAPE, GO_TO }
-
-/** The bands across the screen, from the left edge, as fractions of its width. */
-data class TapZones(val forward: ClosedFloatingPointRange<Float>, val controls: ClosedFloatingPointRange<Float>) {
-    /** The action a tap at [x] (from 0 at the left to 1 at the right) asks for. */
-    fun at(x: Float): ReaderAction = when (x.coerceIn(0f, 1f)) {
-        in forward -> ReaderAction.FORWARD
-        in controls -> ReaderAction.CONTROLS
-        else -> ReaderAction.BACK
-    }
-
-    companion object {
-        /** Thirds: forward on the reading side, controls in the middle, back on the other. */
-        fun phone(direction: ReadDirection): TapZones = zones(direction, forward = 1f / 3, controls = 1f / 3)
-
-        /** The e-ink reader's bands: forward 40%, controls 30%, back 30%. */
-        fun eink(direction: ReadDirection): TapZones = zones(direction, forward = 0.4f, controls = 0.3f)
-
-        private fun zones(direction: ReadDirection, forward: Float, controls: Float): TapZones =
-            if (direction.rightToLeft) {
-                TapZones(0f..forward, forward..forward + controls)
-            } else {
-                TapZones(1f - forward..1f, 1f - forward - controls..1f - forward)
-            }
-    }
-}
 
 /** Pages move leftwards to go on: forward is at the left of the screen. */
 val ReadDirection.rightToLeft: Boolean get() = this == ReadDirection.RIGHT_TO_LEFT

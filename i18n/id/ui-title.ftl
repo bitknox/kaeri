@@ -16,7 +16,6 @@ title-details = Rincian
 title-studio = Studio
 title-tags = Tag
 title-more-about = Info selengkapnya tentang tayangan ini
-title-synopsis-hint = Menampilkan seluruh sinopsis
 title-dubbed-to = { -dubbed-cap } sampai episode { $episode }
 title-no-episodes = Belum ada episode
 title-episodes-load-failed = Daftar episode tidak dapat dimuat.

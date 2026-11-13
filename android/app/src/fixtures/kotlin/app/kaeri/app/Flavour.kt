@@ -36,7 +36,19 @@
 //   medium    read, watch or both: what Kaeri is for, chosen as Settings would once the engine is up
 //             (the reading scenes); page=read/series/a%3A900301 opens a series' page over Read
 //   series    a sheet or menu the series' page opens once it has loaded: chapter, read-from,
-//             tracking, read-again, send, where-stop, choose, status or download
+//             group, tracking, read-again, send, where-stop, choose, status or download
+//   credits   start, end, both or parts: each layout of the chapter the reader opens comes with a
+//             credit page skipped at its start, its end or both, or in two parts (CreditsStage)
+//   creditshot what the reader shows once they have come: line, chrome, shown, shownchrome, kept,
+//             parts or end (CreditShot)
+//   groups    set: the series' source lists three groups, and its rows show a chapter in parts
+//             and chapters from other groups (GroupsStage)
+//   chapterwait ms a chapter opened from another waits before the engine hears of it, to see the
+//             reader's pressed and loading states on chapters that open at once here
+//   openwait  ms the reader's first open waits before the engine hears of it, to see the opening
+//             plate, which comes at 600 ms, on works that open at once here
+//   readerat  ms after the engine is up that a reader scene opens, so a recording of its opening
+//             starts on a settled app, past the splash screen
 //   party     a watch party on the testing engine's fake server, for the chat board (PartyShot):
 //             chatline, chatbusy, chatreact, chatfield, chatoff, chatfail, chatmute, chathidden,
 //             chatshort, chatloop, lobby or bar; with media=<path> the player plays that file.
@@ -120,6 +132,29 @@ internal object Flavour {
     /** The process's launch: the engine starts once, so a rebuilt activity keeps the files it runs on. */
     private var launched: EngineLaunch? = null
 
+    /** The `chapterwait` extra, in ms. */
+    private var chapterWait = 0L
+
+    /** The `openwait` extra, in ms. */
+    private var openWait = 0L
+
+    /**
+     * A reader command on its way to the engine: a chapter opened from another held back
+     * [chapterWait], and the reader's first open [openWait].
+     */
+    fun readerSend(command: app.kaeri.engine.model.Command, send: (app.kaeri.engine.model.Command) -> Unit) {
+        val wait = when ((command as? app.kaeri.engine.model.Command.Reader)?.v1) {
+            is app.kaeri.engine.model.ReaderCommand.OpenChapter -> chapterWait
+            is app.kaeri.engine.model.ReaderCommand.Open -> openWait
+            else -> 0L
+        }
+        if (wait > 0) {
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ send(command) }, wait)
+        } else {
+            send(command)
+        }
+    }
+
     fun launch(context: Context, intent: Intent): EngineLaunch {
         launched?.let { return it }
         appContext = context.applicationContext
@@ -137,6 +172,8 @@ internal object Flavour {
             android.system.Os.setenv("KAERI_FIXTURES_CATALOGUE", "1", true)
         }
         intent.getStringExtra("media")?.let { fixtureMedia = it }
+        chapterWait = intent.getStringExtra("chapterwait")?.toLongOrNull()?.coerceAtLeast(0) ?: 0L
+        openWait = intent.getStringExtra("openwait")?.toLongOrNull()?.coerceAtLeast(0) ?: 0L
         FixtureCasts.scene = CastScene.named(intent.getStringExtra("cast"))
         if (intent.getStringExtra("downloads") != null) fixtureDownloadClip = downloadClip(context)
         return EngineLaunch.fixtures(scene, context.cacheDir)
@@ -266,6 +303,8 @@ internal object Flavour {
         intent.getStringExtra("discovery")?.let { state ->
             if (!app.kaeri.store.ReadDiscoveryStage.stage(store, state)) Log.w(KaeriApp.TAG, "no discovery state named $state: ${app.kaeri.store.ReadDiscoveryStage.STATES.joinToString()}")
         }
+        // groups=set: the series' source lists three groups, and its rows show parts and other groups.
+        if (intent.getStringExtra("groups") == "set") app.kaeri.store.GroupsStage.stage(store)
         intent.getStringExtra("sync")?.let { state ->
             if (!app.kaeri.store.FixtureSync.stage(store, state)) Log.w(KaeriApp.TAG, "no sync state named $state: ${app.kaeri.store.FixtureSync.STATES.joinToString()}")
         }
@@ -366,10 +405,10 @@ internal object Flavour {
         }
         val scene = intent.getStringExtra("scene")?.let(FixtureScene::named) ?: return
         val (work, eink) = when (scene) {
-            FixtureScene.READER_MANGA_RTL, FixtureScene.READER_MOVED -> "a:900301" to false
+            FixtureScene.READER_MANGA_RTL, FixtureScene.READER_MOVED, FixtureScene.READER_LONG -> "a:900301" to false
             FixtureScene.READER_STRIP -> "a:900303" to false
             FixtureScene.READER_NOVEL -> "a:900302" to false
-            FixtureScene.EINK_GREY, FixtureScene.EINK_KALEIDO_UNSURE -> "a:900301" to true
+            FixtureScene.EINK_GREY, FixtureScene.EINK_KALEIDO_UNSURE, FixtureScene.EINK_LONG -> "a:900301" to true
             else -> return
         }
         // Left to the app's own screens when the launch asked for one.
@@ -384,7 +423,20 @@ internal object Flavour {
         StartReplay.from(context, store, player, intent)
         if (marked) return
         marked = true
-        openReaderScene(intent)
+        intent.getStringExtra("credits")?.let { what ->
+            val scene = intent.getStringExtra("scene")?.let(FixtureScene::named)
+            val grey = scene == FixtureScene.EINK_GREY || scene == FixtureScene.EINK_LONG || intent.getStringExtra("eink") == "1"
+            if (!app.kaeri.store.CreditsStage.stage(context, store, what, grey)) Log.w(KaeriApp.TAG, "credits takes ${app.kaeri.store.CreditsStage.STATES.joinToString()}, not $what")
+        }
+        app.kaeri.reader.CreditShot.step = intent.getStringExtra("creditshot")
+        // plate=hold: every page waits on its plate, for the plate's shots.
+        app.kaeri.reader.PlateShot.hold = intent.getStringExtra("plate") == "hold"
+        val readerAt = intent.getStringExtra("readerat")?.toLongOrNull()?.coerceAtLeast(0) ?: 0L
+        if (readerAt > 0) {
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ openReaderScene(intent) }, readerAt)
+        } else {
+            openReaderScene(intent)
+        }
         if (intent.getStringExtra("shell") == "eink") {
             // The panel's question answered as a person would: e-ink, in greys.
             val eink = (context.applicationContext as KaeriApp).eink

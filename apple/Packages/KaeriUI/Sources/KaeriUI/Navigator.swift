@@ -114,6 +114,8 @@ public final class Navigator {
     @ObservationIgnored var launchReadScroll: Int?
     /// Counts the asks to scroll the iPhone's pinned filter row to its end, for the motion audit.
     public var searchRowToEnd = 0
+    /// Counts the asks to open the cut synopsis on screen, as its More does, for the motion audit.
+    public var synopsisMoreAsked = 0
     /// Whether Downloads is pushed over the Library, as its first row does on iPhone.
     public var downloadsPushed = false
     /// Counts the viewer's own marks of an episode as watched, for the light impact on iPhone:

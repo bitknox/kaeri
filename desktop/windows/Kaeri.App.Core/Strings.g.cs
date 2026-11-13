@@ -588,6 +588,18 @@ public static partial class T
     /// <summary>The same notice for a chapter known only by its number, such as 14 or 14.5.</summary>
     public static string ReaderMovedNumberElsewhere(string chapter, long page) => Fill(Get("ReaderMovedNumberElsewhere"), ("chapter", chapter), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its whole label, such as The Long Night.</summary>
+    public static string ReaderMovedImage(string chapter, long image, string device) => Fill(Get("ReaderMovedImage"), ("chapter", chapter), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("device", device));
+
+    /// <summary>The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.</summary>
+    public static string ReaderMovedNumberImage(string chapter, long image, string device) => Fill(Get("ReaderMovedNumberImage"), ("chapter", chapter), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("device", device));
+
+    /// <summary>The notice in a strip when another device read further and its name is not known.</summary>
+    public static string ReaderMovedElsewhereImage(string chapter, long image) => Fill(Get("ReaderMovedElsewhereImage"), ("chapter", chapter), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.</summary>
+    public static string ReaderMovedNumberElsewhereImage(string chapter, long image) => Fill(Get("ReaderMovedNumberElsewhereImage"), ("chapter", chapter), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
     /// <summary>A notice the first time a series opens with its reading direction guessed. It offers Change.</summary>
     public static string ReaderDetectedRightToLeft => Get("ReaderDetectedRightToLeft");
 
@@ -641,6 +653,15 @@ public static partial class T
 
     /// <summary>Why a chapter could not be saved: the disk is full.</summary>
     public static string ReadingFailedDiskFull => Get("ReadingFailedDiskFull");
+
+    /// <summary>Why a chapter or a file for an e-reader could not be saved: the storage refused the name, because it is too long or has characters the storage doesn't allow. The path is the file's or the folder's.</summary>
+    public static string ReadingFailedWriteName(string path) => Fill(Get("ReadingFailedWriteName"), ("path", path));
+
+    /// <summary>Why a chapter or a file for an e-reader could not be saved: the storage is read-only, or Kaeri isn't allowed to write there. The path is the file's or the folder's.</summary>
+    public static string ReadingFailedWriteDenied(string path) => Fill(Get("ReadingFailedWriteDenied"), ("path", path));
+
+    /// <summary>Why a chapter or a file for an e-reader could not be saved, for another reason the system gave. The path is the file's or the folder's.</summary>
+    public static string ReadingFailedWrite(string path) => Fill(Get("ReadingFailedWrite"), ("path", path));
 
     /// <summary>Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.</summary>
     public static string ReadingFailedWebview(long version) => Fill(Get("ReadingFailedWebview"), ("version", version.ToString(System.Globalization.CultureInfo.CurrentCulture)));
@@ -842,6 +863,9 @@ public static partial class T
 
     /// <summary>A chapter row's state while it downloads.</summary>
     public static string ReadingRowDownloading(long done, long total) => Fill(Get("ReadingRowDownloading"), ("done", done.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count.</summary>
+    public static string ReadingRowDownloadingPlain => Get("ReadingRowDownloadingPlain");
 
     /// <summary>A chapter row's state: the download failed. The reason follows as the next part.</summary>
     public static string ReadingRowFailed => Get("ReadingRowFailed");
@@ -2042,6 +2066,9 @@ public static partial class T
 
     /// <summary>Narrator's help on Search's filters while Your sources only is on.</summary>
     public static string WindowsReadSearchFiltersDimmed => Get("WindowsReadSearchFiltersDimmed");
+
+    /// <summary>Name of the switch that turns a book plugin on or off in the book sources.</summary>
+    public static string WindowsReadSourcesUsePlugin => Get("WindowsReadSourcesUsePlugin");
 
     /// <summary>Notice after Read again from the start, with an Undo button beside it. The title is the series' name.</summary>
     public static string SeriesReadAgainDoneWindows(string title) => Fill(Get("SeriesReadAgainDoneWindows"), ("title", title));
@@ -5893,6 +5920,18 @@ public static partial class T
     /// <summary>Under a page that is still loading after four seconds.</summary>
     public static string ReaderPageLoading(long page) => Fill(Get("ReaderPageLoading"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>On the plate of a page that is still loading.</summary>
+    public static string ReaderPagePlate(long page) => Fill(Get("ReaderPagePlate"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>On the plate of a strip image that is still loading.</summary>
+    public static string ReaderImagePlate(long image) => Fill(Get("ReaderImagePlate"), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a strip image's number after four seconds.</summary>
+    public static string ReaderImageLoading(long image) => Fill(Get("ReaderImageLoading"), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a strip image's number (Image 4) when it couldn't be loaded, above Try again.</summary>
+    public static string ReaderImageFailed => Get("ReaderImageFailed");
+
     /// <summary>Heading where a page could not be loaded.</summary>
     public static string ReaderPageFailed(long page) => Fill(Get("ReaderPageFailed"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -5971,14 +6010,167 @@ public static partial class T
     /// <summary>A choice for wide pages: shown whole.</summary>
     public static string ReaderSpreadsWhole => Get("ReaderSpreadsWhole");
 
-    /// <summary>A choice for the reader's tap zones: taps near the left and right edges turn the page.</summary>
+    /// <summary>A choice for the reader's tap zones: taps near the left and right edges turn the page. Replaced by Sides; kept until every app has the new tap zones page.</summary>
     public static string ReaderTapEdges => Get("ReaderTapEdges");
 
-    /// <summary>A choice for the reader's tap zones: the left and right halves turn the page.</summary>
+    /// <summary>Tap zone layout: Sides when pages turn sideways, L shape when they move downwards. The name under its tile.</summary>
+    public static string ReaderTapAuto => Get("ReaderTapAuto");
+
+    /// <summary>Tap zone layout: previous page on one side, next page on the other, controls in the middle.</summary>
     public static string ReaderTapSides => Get("ReaderTapSides");
 
-    /// <summary>A choice for the reader's tap zones: taps do not turn the page.</summary>
+    /// <summary>Tap zone layout: previous page along the top and down one side, next page along the bottom and down the other side, in the shape of the letter L.</summary>
+    public static string ReaderTapLShape => Get("ReaderTapLShape");
+
+    /// <summary>Tap zone layout: controls along the top, a narrow column for previous page, and the rest of the page for next page.</summary>
+    public static string ReaderTapWideNext => Get("ReaderTapWideNext");
+
+    /// <summary>Tap zone layout: previous page across the top, next page across the bottom.</summary>
+    public static string ReaderTapTopBottom => Get("ReaderTapTopBottom");
+
+    /// <summary>Tap zone layout: next page down both the left and the right side, previous page in the bottom middle.</summary>
+    public static string ReaderTapBothNext => Get("ReaderTapBothNext");
+
+    /// <summary>Tap zone layout: taps only show and hide the controls, and never turn the page.</summary>
     public static string ReaderTapOff => Get("ReaderTapOff");
+
+    /// <summary>Tap zones page: the choice for paged reading (pages that turn), one of two at the top.</summary>
+    public static string ReaderTapPaged => Get("ReaderTapPaged");
+
+    /// <summary>Tap zones page: the choice for strips and scrolled novels, one of two at the top.</summary>
+    public static string ReaderTapScrolling => Get("ReaderTapScrolling");
+
+    /// <summary>Tap zones page: row that sets how wide the zones at the edges are.</summary>
+    public static string ReaderTapSize => Get("ReaderTapSize");
+
+    /// <summary>Choice of Zone size: the edge zones are a third of the screen.</summary>
+    public static string ReaderTapStandard => Get("ReaderTapStandard");
+
+    /// <summary>Choice of Zone size: the edge zones are a quarter of the screen.</summary>
+    public static string ReaderTapSmall => Get("ReaderTapSmall");
+
+    /// <summary>Tap zones page: switch that swaps the left and right zones, for the left hand.</summary>
+    public static string ReaderTapFlipSides => Get("ReaderTapFlipSides");
+
+    /// <summary>Tap zones page: switch that swaps the top and bottom zones.</summary>
+    public static string ReaderTapFlipEnds => Get("ReaderTapFlipEnds");
+
+    /// <summary>Tap zones page: button that shows the zones over the page.</summary>
+    public static string ReaderTapShow => Get("ReaderTapShow");
+
+    /// <summary>Tap zones page, beside Show zones: the setting is not synced. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.</summary>
+    public static string ReaderTapHere(string kind) => Fill(Get("ReaderTapHere"), ("kind", kind));
+
+    /// <summary>The reader's settings on a Mac, Windows or Linux: the row that opens the tap zones page, which is about clicks there.</summary>
+    public static string ReaderClickZones => Get("ReaderClickZones");
+
+    /// <summary>Name of the tap zone that turns to the next page, in the guide over the page and as a screen reader action.</summary>
+    public static string ReaderZoneNext => Get("ReaderZoneNext");
+
+    /// <summary>Name of the tap zone that turns to the previous page, in the guide and as a screen reader action.</summary>
+    public static string ReaderZonePrevious => Get("ReaderZonePrevious");
+
+    /// <summary>Name of the tap zone that shows and hides the reader's controls, in the guide.</summary>
+    public static string ReaderZoneControls => Get("ReaderZoneControls");
+
+    /// <summary>Screen reader action on the page that shows the reader's controls.</summary>
+    public static string ReaderZoneShowControls => Get("ReaderZoneShowControls");
+
+    /// <summary>Name of the tap zone that scrolls a strip or a scrolled novel down, in the guide.</summary>
+    public static string ReaderZoneScrollDown => Get("ReaderZoneScrollDown");
+
+    /// <summary>Name of the tap zone that scrolls a strip or a scrolled novel up, in the guide.</summary>
+    public static string ReaderZoneScrollUp => Get("ReaderZoneScrollUp");
+
+    /// <summary>Under Controls in the tap zone guide: where the zones are changed.</summary>
+    public static string ReaderZoneChange => Get("ReaderZoneChange");
+
+    /// <summary>Tap zone layout Off in words, the accessibility value of its tile.</summary>
+    public static string ReaderTapOffAbout => Get("ReaderTapOffAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: Sides, next page on the right.</summary>
+    public static string ReaderTapSidesRightAbout => Get("ReaderTapSidesRightAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: Sides, next page on the left.</summary>
+    public static string ReaderTapSidesLeftAbout => Get("ReaderTapSidesLeftAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the right.</summary>
+    public static string ReaderTapLShapeBottomRightAbout => Get("ReaderTapLShapeBottomRightAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the left.</summary>
+    public static string ReaderTapLShapeBottomLeftAbout => Get("ReaderTapLShapeBottomLeftAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right.</summary>
+    public static string ReaderTapLShapeTopRightAbout => Get("ReaderTapLShapeTopRightAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left.</summary>
+    public static string ReaderTapLShapeTopLeftAbout => Get("ReaderTapLShapeTopLeftAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the left.</summary>
+    public static string ReaderTapWideNextTopLeftAbout => Get("ReaderTapWideNextTopLeftAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the right.</summary>
+    public static string ReaderTapWideNextTopRightAbout => Get("ReaderTapWideNextTopRightAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left.</summary>
+    public static string ReaderTapWideNextBottomLeftAbout => Get("ReaderTapWideNextBottomLeftAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right.</summary>
+    public static string ReaderTapWideNextBottomRightAbout => Get("ReaderTapWideNextBottomRightAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: Top and bottom.</summary>
+    public static string ReaderTapTopBottomAbout => Get("ReaderTapTopBottomAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: Top and bottom flipped.</summary>
+    public static string ReaderTapTopBottomFlippedAbout => Get("ReaderTapTopBottomFlippedAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: Next on both sides.</summary>
+    public static string ReaderTapBothNextAbout => Get("ReaderTapBothNextAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: Next on both sides flipped top and bottom.</summary>
+    public static string ReaderTapBothNextFlippedAbout => Get("ReaderTapBothNextFlippedAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the right.</summary>
+    public static string ReaderTapSidesRightScrollAbout => Get("ReaderTapSidesRightScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the left.</summary>
+    public static string ReaderTapSidesLeftScrollAbout => Get("ReaderTapSidesLeftScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the right.</summary>
+    public static string ReaderTapLShapeBottomRightScrollAbout => Get("ReaderTapLShapeBottomRightScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the left.</summary>
+    public static string ReaderTapLShapeBottomLeftScrollAbout => Get("ReaderTapLShapeBottomLeftScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right.</summary>
+    public static string ReaderTapLShapeTopRightScrollAbout => Get("ReaderTapLShapeTopRightScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left.</summary>
+    public static string ReaderTapLShapeTopLeftScrollAbout => Get("ReaderTapLShapeTopLeftScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the left.</summary>
+    public static string ReaderTapWideNextTopLeftScrollAbout => Get("ReaderTapWideNextTopLeftScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the right.</summary>
+    public static string ReaderTapWideNextTopRightScrollAbout => Get("ReaderTapWideNextTopRightScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left.</summary>
+    public static string ReaderTapWideNextBottomLeftScrollAbout => Get("ReaderTapWideNextBottomLeftScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right.</summary>
+    public static string ReaderTapWideNextBottomRightScrollAbout => Get("ReaderTapWideNextBottomRightScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom.</summary>
+    public static string ReaderTapTopBottomScrollAbout => Get("ReaderTapTopBottomScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom flipped.</summary>
+    public static string ReaderTapTopBottomFlippedScrollAbout => Get("ReaderTapTopBottomFlippedScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides.</summary>
+    public static string ReaderTapBothNextScrollAbout => Get("ReaderTapBothNextScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides flipped top and bottom.</summary>
+    public static string ReaderTapBothNextFlippedScrollAbout => Get("ReaderTapBothNextFlippedScrollAbout");
 
     /// <summary>Button in the reader's controls that opens the chapters and the page grid.</summary>
     public static string ReaderChapters => Get("ReaderChapters");
@@ -6013,6 +6205,9 @@ public static partial class T
     /// <summary>Top line of the page between chapters. The chapter is its number, such as 12.</summary>
     public static string ReaderEndOfChapterNumber(string chapter) => Fill(Get("ReaderEndOfChapterNumber"), ("chapter", chapter));
 
+    /// <summary>Top line of the page between chapters when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own, such as Rooftop Lantern.</summary>
+    public static string ReaderEndOfNamed(string name) => Fill(Get("ReaderEndOfNamed"), ("name", name));
+
     /// <summary>The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.</summary>
     public static string ReaderEndFacts(string chapter, string facts) => Fill(Get("ReaderEndFacts"), ("chapter", chapter), ("facts", facts));
 
@@ -6030,6 +6225,15 @@ public static partial class T
 
     /// <summary>Line on the page between chapters, near its buttons: one more swipe opens the next chapter.</summary>
     public static string ReaderEndSwipe => Get("ReaderEndSwipe");
+
+    /// <summary>Button beside Continue on the page between chapters, shown only when the next chapter is an extra (such as 16.5 between 16 and 17). It opens the chapter named, passing over the extras before it. The chapter is its number, such as 17.</summary>
+    public static string ReaderEndSkipTo(string chapter) => Fill(Get("ReaderEndSkipTo"), ("chapter", chapter));
+
+    /// <summary>What a screen reader adds after "Skip to chapter 17": the extra it passes over stays unread in the chapter list. The chapter is the extra's number, such as 16.5.</summary>
+    public static string ReaderEndSkipHint(string chapter) => Fill(Get("ReaderEndSkipHint"), ("chapter", chapter));
+
+    /// <summary>What a screen reader adds after "Skip to chapter 17" when it passes over more than one extra, or an extra with no number (such as an omake): those chapters stay unread in the chapter list.</summary>
+    public static string ReaderEndSkipHintExtras => Get("ReaderEndSkipHintExtras");
 
     /// <summary>The next episode's length on the divider inside a strip.</summary>
     public static string ReaderDividerImages(long count) => Fill(GetPlural("ReaderDividerImages", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
@@ -6376,6 +6580,9 @@ public static partial class T
     /// <summary>A tracker's progress in chapters, total unknown.</summary>
     public static string SeriesTrackerChapters(long n) => Fill(GetPlural("SeriesTrackerChapters", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>A tracker's progress when the person has read none of the series yet, in place of "0 chapters".</summary>
+    public static string SeriesTrackerNotStarted => Get("SeriesTrackerNotStarted");
+
     /// <summary>A tracker's progress in chapters, then the volume.</summary>
     public static string SeriesTrackerWithVolume(string chapters, long volume) => Fill(Get("SeriesTrackerWithVolume"), ("chapters", chapters), ("volume", volume.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -6534,6 +6741,9 @@ public static partial class T
 
     /// <summary>A chapter downloading.</summary>
     public static string ChapterStateDownloading(long done, long total) => Fill(Get("ChapterStateDownloading"), ("done", done.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter downloading before its page count is known, and throughout for a novel's chapter.</summary>
+    public static string ChapterStateDownloadingPlain => Get("ChapterStateDownloadingPlain");
 
     /// <summary>A chapter that failed to download, with the reason.</summary>
     public static string ChapterStateFailed(string reason) => Fill(Get("ChapterStateFailed"), ("reason", reason));
@@ -7337,6 +7547,9 @@ public static partial class T
     /// <summary>Line under Delete chapters after reading.</summary>
     public static string SettingsDeleteAfterReadingNote => Get("SettingsDeleteAfterReadingNote");
 
+    /// <summary>Line under Show volumes: the list is grouped only when most chapters have a volume.</summary>
+    public static string SettingsShowVolumesNote => Get("SettingsShowVolumesNote");
+
     /// <summary>Line under New chapters.</summary>
     public static string SettingsChapterNotificationsNote => Get("SettingsChapterNotificationsNote");
 
@@ -7366,6 +7579,9 @@ public static partial class T
 
     /// <summary>A series' line in Downloads when a chapter failed, with the reason.</summary>
     public static string ReadDownloadsFailed(string chapter, string reason) => Fill(Get("ReadDownloadsFailed"), ("chapter", chapter), ("reason", reason));
+
+    /// <summary>Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows.</summary>
+    public static string ReadDownloadNotStarted(string reason) => Fill(Get("ReadDownloadNotStarted"), ("reason", reason));
 
     /// <summary>A series' line in Downloads: how many chapters are kept.</summary>
     public static string ReadDownloadsKept(long n) => Fill(GetPlural("ReadDownloadsKept", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
@@ -7447,6 +7663,12 @@ public static partial class T
 
     /// <summary>Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.</summary>
     public static string SendShareAgain => Get("SendShareAgain");
+
+    /// <summary>A ready send whose files were cleared before they were shared or saved, in the Send to e-reader sheet and in the send's row. Prepared files are kept for a day.</summary>
+    public static string SendFilesGone => Get("SendFilesGone");
+
+    /// <summary>Button on a send whose files are gone: prepares the same chapters for the same e-reader again.</summary>
+    public static string SendAgain => Get("SendAgain");
 
     /// <summary>A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.</summary>
     public static string SendBanner(string device) => Fill(Get("SendBanner"), ("device", device));
@@ -8333,6 +8555,9 @@ public static partial class T
     /// <summary>Line under it. The tracker is a name.</summary>
     public static string SettingsAdultDetail(string tracker) => Fill(Get("SettingsAdultDetail"), ("tracker", tracker));
 
+    /// <summary>Line under it when the app is for reading alone.</summary>
+    public static string SettingsAdultDetailRead(string tracker) => Fill(Get("SettingsAdultDetailRead"), ("tracker", tracker));
+
     /// <summary>Row: quality.</summary>
     public static string SettingsQuality => Get("SettingsQuality");
 
@@ -8446,6 +8671,9 @@ public static partial class T
 
     /// <summary>Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.</summary>
     public static string SettingsDeleteAfterReading => Get("SettingsDeleteAfterReading");
+
+    /// <summary>Row: group a series' chapters under volume headings. Off by default.</summary>
+    public static string SettingsShowVolumes => Get("SettingsShowVolumes");
 
     /// <summary>Row: whether a series' reader mode, direction and colour follow you to your other devices.</summary>
     public static string SettingsSeriesChoicesFollow => Get("SettingsSeriesChoicesFollow");
@@ -8656,6 +8884,9 @@ public static partial class T
 
     /// <summary>Line under a signed-in account while changes wait to be sent.</summary>
     public static string AccountsChangesWaiting(long count) => Fill(GetPlural("AccountsChangesWaiting", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Line under a signed-in account when nothing else waits but some changes can't go out yet: the { -tracker } has no match for those titles. They go out by themselves once it has one.</summary>
+    public static string AccountsChangesHeld(long count) => Fill(GetPlural("AccountsChangesHeld", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Choice for the download quality: larger files with more detail.</summary>
     public static string SettingsQualityHigher => Get("SettingsQualityHigher");
@@ -8977,6 +9208,18 @@ public static partial class T
 
     /// <summary>Primary action after an empty folder.</summary>
     public static string BookFolderChooseOther => Get("BookFolderChooseOther");
+
+    /// <summary>Folder result title when the picked folder is already a source. It was scanned again.</summary>
+    public static string BookFolderAlready(string folder) => Fill(Get("BookFolderAlready"), ("folder", folder));
+
+    /// <summary>Line under it: what the new scan found. Closing the sheet keeps the folder.</summary>
+    public static string BookFolderAlreadyLine(long series) => Fill(GetPlural("BookFolderAlreadyLine", series), ("series", series.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Title when a folder could not be read: the look through it could not start, or stopped.</summary>
+    public static string BookFolderUnreadable(string folder) => Fill(Get("BookFolderUnreadable"), ("folder", folder));
+
+    /// <summary>Line under it.</summary>
+    public static string BookFolderUnreadableLine => Get("BookFolderUnreadableLine");
 
     /// <summary>Title of the Join a plugin store sheet.</summary>
     public static string StoreJoinTitle => Get("StoreJoinTitle");
@@ -10551,6 +10794,8 @@ public static partial class T
 
     public static string DeviceKindTv => Get("DeviceKindTv");
 
+    public static string DeviceKindOther => Get("DeviceKindOther");
+
     /// <summary>TV welcome, text button.</summary>
     public static string FirstSetupPhone => Get("FirstSetupPhone");
 
@@ -10671,8 +10916,8 @@ public static partial class T
     /// <summary>Button that opens the full page of facts about a show.</summary>
     public static string TitleMoreAbout => Get("TitleMoreAbout");
 
-    /// <summary>Accessibility hint of the button that expands a synopsis.</summary>
-    public static string TitleSynopsisHint => Get("TitleSynopsisHint");
+    /// <summary>Accessible name of the More at the end of a cut synopsis, which shows the rest of it. The page's menu of extra actions is called More too, so this one says what it does.</summary>
+    public static string TitleSynopsisMore => Get("TitleSynopsisMore");
 
     /// <summary>Label under a season: which episodes are dubbed so far.</summary>
     public static string TitleDubbedTo(long episode) => Fill(Get("TitleDubbedTo"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
@@ -11974,6 +12219,10 @@ public static partial class T
         ["ReaderMovedNumber"] = "Moved to chapter {chapter}, page {page}, where {device} stopped",
         ["ReaderMovedElsewhere"] = "Moved to {chapter}, page {page}, where another device stopped",
         ["ReaderMovedNumberElsewhere"] = "Moved to chapter {chapter}, page {page}, where another device stopped",
+        ["ReaderMovedImage"] = "Moved to {chapter}, image {image}, where {device} stopped",
+        ["ReaderMovedNumberImage"] = "Moved to chapter {chapter}, image {image}, where {device} stopped",
+        ["ReaderMovedElsewhereImage"] = "Moved to {chapter}, image {image}, where another device stopped",
+        ["ReaderMovedNumberElsewhereImage"] = "Moved to chapter {chapter}, image {image}, where another device stopped",
         ["ReaderDetectedRightToLeft"] = "Looks like right to left",
         ["ReaderDetectedLeftToRight"] = "Looks like left to right",
         ["ReaderDetectedStrip"] = "Looks like a long strip",
@@ -11992,6 +12241,9 @@ public static partial class T
         ["ReadingFailedUnsupported"] = "Kaeri can't read {kind} files.",
         ["ReadingFailedProtected"] = "This book is copy-protected, so Kaeri can't open it.",
         ["ReadingFailedDiskFull"] = "There's no room left on this device. Free some space and try again.",
+        ["ReadingFailedWriteName"] = "The storage doesn't take the name {path}. It may be too long.",
+        ["ReadingFailedWriteDenied"] = "Kaeri isn't allowed to write {path}. Check that the storage isn't read-only, then try again.",
+        ["ReadingFailedWrite"] = "Kaeri couldn't write {path}. Try again.",
         ["ReadingFailedWebview"] = "Novels need a newer system WebView than version {version}. Update Android System WebView and try again.",
         ["ReadingFailedNeedsNewer"] = "This plugin needs a newer Kaeri ({world}). Update Kaeri to use it.",
         ["ReadingFailedOff"] = "Reading isn't available in this version of Kaeri.",
@@ -12062,6 +12314,7 @@ public static partial class T
         ["ReadingRowQueued"] = "Queued",
         ["ReadingRowWaitsWifi"] = "Queued · waits for Wi-Fi",
         ["ReadingRowDownloading"] = "Downloading · {done} of {total} pages",
+        ["ReadingRowDownloadingPlain"] = "Downloading",
         ["ReadingRowFailed"] = "Couldn't download",
         ["ReadingRowPageOf"] = "Page {page} of {of}",
         ["ReadingRowPage"] = "Page {page}",
@@ -12492,6 +12745,7 @@ public static partial class T
         ["WindowsReadSearchSourceTimeoutSaid_one"] = "No answer in {seconds} second.",
         ["WindowsReadSearchSourceTimeoutSaid_other"] = "No answer in {seconds} seconds.",
         ["WindowsReadSearchFiltersDimmed"] = "The filters apply to AniList's results only.",
+        ["WindowsReadSourcesUsePlugin"] = "Use this plugin",
         ["SeriesReadAgainDoneWindows"] = "Reading {title} again from the start",
         ["SendSaveFilesWindows"] = "Save files",
         ["SendSavedWindows_one"] = "Saved the file",
@@ -13814,6 +14068,10 @@ public static partial class T
         ["PlayerSubsBgBox"] = "Box",
         ["PlayerSubsMore"] = "More in Settings…",
         ["ReaderPageLoading"] = "Loading page {page}",
+        ["ReaderPagePlate"] = "Page {page}",
+        ["ReaderImagePlate"] = "Image {image}",
+        ["ReaderImageLoading"] = "Loading image {image}",
+        ["ReaderImageFailed"] = "Couldn't load",
         ["ReaderPageFailed"] = "Couldn't load page {page}",
         ["ReaderTryAgain"] = "Try again",
         ["ReaderClose"] = "Close",
@@ -13841,8 +14099,59 @@ public static partial class T
         ["ReaderSpreadsRotate"] = "Turn",
         ["ReaderSpreadsWhole"] = "Whole",
         ["ReaderTapEdges"] = "Edges",
-        ["ReaderTapSides"] = "Halves",
+        ["ReaderTapAuto"] = "Auto",
+        ["ReaderTapSides"] = "Sides",
+        ["ReaderTapLShape"] = "L shape",
+        ["ReaderTapWideNext"] = "Wide next",
+        ["ReaderTapTopBottom"] = "Top and bottom",
+        ["ReaderTapBothNext"] = "Next on both sides",
         ["ReaderTapOff"] = "Off",
+        ["ReaderTapPaged"] = "Paged",
+        ["ReaderTapScrolling"] = "Scrolling",
+        ["ReaderTapSize"] = "Zone size",
+        ["ReaderTapStandard"] = "Standard",
+        ["ReaderTapSmall"] = "Small",
+        ["ReaderTapFlipSides"] = "Flip left and right",
+        ["ReaderTapFlipEnds"] = "Flip top and bottom",
+        ["ReaderTapShow"] = "Show zones",
+        ["ReaderTapHere"] = "Stays on this {kind}",
+        ["ReaderClickZones"] = "Click zones",
+        ["ReaderZoneNext"] = "Next page",
+        ["ReaderZonePrevious"] = "Previous page",
+        ["ReaderZoneControls"] = "Controls",
+        ["ReaderZoneShowControls"] = "Show controls",
+        ["ReaderZoneScrollDown"] = "Scroll down",
+        ["ReaderZoneScrollUp"] = "Scroll up",
+        ["ReaderZoneChange"] = "Change in Reader settings",
+        ["ReaderTapOffAbout"] = "Taps show and hide the controls",
+        ["ReaderTapSidesRightAbout"] = "Next page on the right side, previous page on the left side, controls in the middle",
+        ["ReaderTapSidesLeftAbout"] = "Next page on the left side, previous page on the right side, controls in the middle",
+        ["ReaderTapLShapeBottomRightAbout"] = "Next page along the bottom and on the right, previous page along the top and on the left, controls in the middle",
+        ["ReaderTapLShapeBottomLeftAbout"] = "Next page along the bottom and on the left, previous page along the top and on the right, controls in the middle",
+        ["ReaderTapLShapeTopRightAbout"] = "Next page along the top and on the right, previous page along the bottom and on the left, controls in the middle",
+        ["ReaderTapLShapeTopLeftAbout"] = "Next page along the top and on the left, previous page along the bottom and on the right, controls in the middle",
+        ["ReaderTapWideNextTopLeftAbout"] = "Controls along the top, previous page in a narrow column on the left, next page everywhere else",
+        ["ReaderTapWideNextTopRightAbout"] = "Controls along the top, previous page in a narrow column on the right, next page everywhere else",
+        ["ReaderTapWideNextBottomLeftAbout"] = "Controls along the bottom, previous page in a narrow column on the left, next page everywhere else",
+        ["ReaderTapWideNextBottomRightAbout"] = "Controls along the bottom, previous page in a narrow column on the right, next page everywhere else",
+        ["ReaderTapTopBottomAbout"] = "Next page across the bottom, previous page across the top, controls in the middle",
+        ["ReaderTapTopBottomFlippedAbout"] = "Next page across the top, previous page across the bottom, controls in the middle",
+        ["ReaderTapBothNextAbout"] = "Next page down both sides, previous page at the bottom in the middle, controls above it",
+        ["ReaderTapBothNextFlippedAbout"] = "Next page down both sides, previous page at the top in the middle, controls below it",
+        ["ReaderTapSidesRightScrollAbout"] = "Scroll down on the right side, scroll up on the left side, controls in the middle",
+        ["ReaderTapSidesLeftScrollAbout"] = "Scroll down on the left side, scroll up on the right side, controls in the middle",
+        ["ReaderTapLShapeBottomRightScrollAbout"] = "Scroll down along the bottom and on the right, scroll up along the top and on the left, controls in the middle",
+        ["ReaderTapLShapeBottomLeftScrollAbout"] = "Scroll down along the bottom and on the left, scroll up along the top and on the right, controls in the middle",
+        ["ReaderTapLShapeTopRightScrollAbout"] = "Scroll down along the top and on the right, scroll up along the bottom and on the left, controls in the middle",
+        ["ReaderTapLShapeTopLeftScrollAbout"] = "Scroll down along the top and on the left, scroll up along the bottom and on the right, controls in the middle",
+        ["ReaderTapWideNextTopLeftScrollAbout"] = "Controls along the top, scroll up in a narrow column on the left, scroll down everywhere else",
+        ["ReaderTapWideNextTopRightScrollAbout"] = "Controls along the top, scroll up in a narrow column on the right, scroll down everywhere else",
+        ["ReaderTapWideNextBottomLeftScrollAbout"] = "Controls along the bottom, scroll up in a narrow column on the left, scroll down everywhere else",
+        ["ReaderTapWideNextBottomRightScrollAbout"] = "Controls along the bottom, scroll up in a narrow column on the right, scroll down everywhere else",
+        ["ReaderTapTopBottomScrollAbout"] = "Scroll down across the bottom, scroll up across the top, controls in the middle",
+        ["ReaderTapTopBottomFlippedScrollAbout"] = "Scroll down across the top, scroll up across the bottom, controls in the middle",
+        ["ReaderTapBothNextScrollAbout"] = "Scroll down on both sides, scroll up at the bottom in the middle, controls above it",
+        ["ReaderTapBothNextFlippedScrollAbout"] = "Scroll down on both sides, scroll up at the top in the middle, controls below it",
         ["ReaderChapters"] = "Chapters",
         ["ReaderPagesLeft_one"] = "One page left in this chapter",
         ["ReaderPagesLeft_other"] = "{count} pages left in this chapter",
@@ -13855,6 +14164,7 @@ public static partial class T
         ["ReaderGapSmall"] = "Small",
         ["ReaderLookSystem"] = "System",
         ["ReaderEndOfChapterNumber"] = "End of chapter {chapter}",
+        ["ReaderEndOfNamed"] = "End of {name}",
         ["ReaderEndFacts"] = "Chapter {chapter} · {facts}",
         ["ReaderEndPages_one"] = "One page",
         ["ReaderEndPages_other"] = "{count} pages",
@@ -13862,6 +14172,9 @@ public static partial class T
         ["ReaderChapterLine"] = "Chapter {chapter}",
         ["ReaderDividerFactsSource"] = "{facts} · from {source}",
         ["ReaderEndSwipe"] = "Swipe to keep reading",
+        ["ReaderEndSkipTo"] = "Skip to chapter {chapter}",
+        ["ReaderEndSkipHint"] = "Chapter {chapter} stays unread.",
+        ["ReaderEndSkipHintExtras"] = "The extras before it stay unread.",
         ["ReaderDividerImages_one"] = "One image",
         ["ReaderDividerImages_other"] = "{count} images",
         ["ReaderChapterLineTitled"] = "Chapter {chapter} · {title}",
@@ -13989,6 +14302,7 @@ public static partial class T
         ["SeriesTrackerChaptersOf_other"] = "{n} of {total} chapters",
         ["SeriesTrackerChapters_one"] = "1 chapter",
         ["SeriesTrackerChapters_other"] = "{n} chapters",
+        ["SeriesTrackerNotStarted"] = "Not started",
         ["SeriesTrackerWithVolume"] = "{chapters} · volume {volume}",
         ["SeriesTrackerVolumes"] = "Volume {volume} of {total}",
         ["SeriesReadFromAnother"] = "Read from another source",
@@ -14044,6 +14358,7 @@ public static partial class T
         ["ChapterStateQueued"] = "Queued",
         ["ChapterStateWifi"] = "Queued · waits for Wi-Fi",
         ["ChapterStateDownloading"] = "Downloading · {done} of {total} pages",
+        ["ChapterStateDownloadingPlain"] = "Downloading",
         ["ChapterStateFailed"] = "Couldn't download. {reason}",
         ["ChapterStatePageOf"] = "Page {page} of {of}",
         ["ChapterStatePage"] = "Page {page}",
@@ -14327,6 +14642,7 @@ public static partial class T
         ["SettingsDisagreeNote"] = "Status and score follow the latest change",
         ["SettingsKeepChaptersReadyNote"] = "The next chapters of series on your Reading list",
         ["SettingsDeleteAfterReadingNote"] = "Bookmarked chapters are kept",
+        ["SettingsShowVolumesNote"] = "Grouped when most chapters have a volume",
         ["SettingsChapterNotificationsNote"] = "Series on your Reading list",
         ["SettingsDownloadsFinishedNote"] = "When the chapters downloading are all done",
         ["SettingsChapterNotificationsFooter"] = "Chapters have their own system channel, so you can silence them and keep the rest.",
@@ -14339,6 +14655,7 @@ public static partial class T
         ["ReadDownloadsQueued_one"] = "{n} chapter queued",
         ["ReadDownloadsQueued_other"] = "{n} chapters queued",
         ["ReadDownloadsFailed"] = "{chapter} couldn't download. {reason}",
+        ["ReadDownloadNotStarted"] = "The download didn't start. {reason}",
         ["ReadDownloadsKept_one"] = "{n} chapter",
         ["ReadDownloadsKept_other"] = "{n} chapters",
         ["ReadDownloadsRead"] = "{n} read",
@@ -14369,6 +14686,8 @@ public static partial class T
         ["SendReady_one"] = "One file is ready.",
         ["SendReady_other"] = "{n} files are ready.",
         ["SendShareAgain"] = "Share again",
+        ["SendFilesGone"] = "These files are gone. Prepared files are kept for a day.",
+        ["SendAgain"] = "Send again",
         ["SendBanner"] = "Sending to {device}",
         ["SendFormatFixedEpub"] = "Fixed-layout EPUB",
         ["SendFormatKepub"] = "KEPUB",
@@ -14674,6 +14993,7 @@ public static partial class T
         ["SettingsTitleNative"] = "Native",
         ["SettingsAdult"] = "Show adult titles",
         ["SettingsAdultDetail"] = "Titles {tracker} marks adult, in Search and Seasonal",
+        ["SettingsAdultDetailRead"] = "Titles {tracker} marks adult, in Search and Browse",
         ["SettingsQuality"] = "Quality",
         ["SettingsAutoPlay"] = "Auto-play next",
         ["SettingsUpNextCountdown"] = "Up next countdown",
@@ -14713,6 +15033,7 @@ public static partial class T
         ["SettingsChapterDownloadsCellular"] = "Chapter downloads on mobile data",
         ["SettingsKeepChaptersReady"] = "Keep next chapters ready",
         ["SettingsDeleteAfterReading"] = "Delete chapters after reading",
+        ["SettingsShowVolumes"] = "Show volumes",
         ["SettingsSeriesChoicesFollow"] = "Series settings follow you",
         ["SettingsNewChaptersDownload"] = "New chapters",
         ["SettingsModeFollows"] = "Mode and direction",
@@ -14784,6 +15105,8 @@ public static partial class T
         ["WidgetResumeDubbedLabel"] = "Resume episode {episode}, dubbed, of {title}",
         ["AccountsChangesWaiting_one"] = "One change waiting to sync",
         ["AccountsChangesWaiting_other"] = "{count} changes waiting to sync",
+        ["AccountsChangesHeld_one"] = "One change can't sync yet",
+        ["AccountsChangesHeld_other"] = "{count} changes can't sync yet",
         ["SettingsQualityHigher"] = "Higher",
         ["SettingsQualityStandard"] = "Standard",
         ["SettingsUploadUnlimited"] = "Unlimited",
@@ -14895,6 +15218,11 @@ public static partial class T
         ["BookFolderEmptyLine_one"] = "It holds one file, which isn't CBZ, CBR, EPUB, PDF or an image.",
         ["BookFolderEmptyLine_other"] = "It holds {files} files, none of them CBZ, CBR, EPUB, PDF or images.",
         ["BookFolderChooseOther"] = "Choose another folder",
+        ["BookFolderAlready"] = "{folder} is already in your sources",
+        ["BookFolderAlreadyLine_one"] = "Kaeri looked through it again and found one series. It stays as it is.",
+        ["BookFolderAlreadyLine_other"] = "Kaeri looked through it again and found {series} series. It stays as it is.",
+        ["BookFolderUnreadable"] = "Couldn't read {folder}",
+        ["BookFolderUnreadableLine"] = "It may have moved, or Kaeri no longer has access to it.",
         ["StoreJoinTitle"] = "Join a plugin store",
         ["StoreInviteField"] = "Invite",
         ["StoreJoinedTitle"] = "Joined {store}",
@@ -15441,6 +15769,7 @@ public static partial class T
         ["DeviceKindPhone"] = "phone",
         ["DeviceKindTablet"] = "tablet",
         ["DeviceKindTv"] = "TV",
+        ["DeviceKindOther"] = "device",
         ["FirstSetupPhone"] = "Set up from your phone",
         ["DevicesOtherDevice"] = "the other device",
         ["CloudSheetLine"] = "{service}’s page is open. Allow access there, and Kaeri carries on by itself.",
@@ -15481,7 +15810,7 @@ public static partial class T
         ["TitleStudio"] = "Studio",
         ["TitleTags"] = "Tags",
         ["TitleMoreAbout"] = "More about this show",
-        ["TitleSynopsisHint"] = "Shows the whole synopsis",
+        ["TitleSynopsisMore"] = "Show the whole synopsis",
         ["TitleDubbedTo"] = "Dubbed to episode {episode}",
         ["TitleNoEpisodes"] = "No episodes yet",
         ["TitleEpisodesLoadFailed"] = "Couldn't list episodes",

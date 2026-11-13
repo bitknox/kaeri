@@ -72,7 +72,7 @@ shift
 shots=("$@")
 (( ${#shots[@]} )) || shots=(watching)
 for shot in "${shots[@]}"; do
-  case "${shot%%:*}" in watching | sourceless | fresh | unsure | suggested | oneleft | continuefull | notfound | slow | failed | offline | syncon | syncnearby | synccloud | syncphone | profiles | reading-first-run | reading-demo | reading-update-sheet | reading-join-ask | reading-home | reading-series | reading-downloads | reader-manga-rtl | reader-strip | reader-novel | reader-moved | reading-dark | eink-grey | eink-kaleido-unsure | app) ;; *) usage ;; esac
+  case "${shot%%:*}" in watching | sourceless | fresh | unsure | suggested | oneleft | continuefull | notfound | slow | failed | offline | syncon | syncnearby | synccloud | syncphone | profiles | reading-first-run | reading-demo | reading-update-sheet | reading-join-ask | reading-home | reading-series | reading-downloads | reader-manga-rtl | reader-strip | reader-novel | reader-moved | reader-long | reading-dark | eink-grey | eink-kaleido-unsure | eink-long | app) ;; *) usage ;; esac
 done
 
 android="$(cd "$(dirname "$0")/.." && pwd)"

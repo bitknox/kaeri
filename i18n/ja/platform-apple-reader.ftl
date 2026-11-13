@@ -94,7 +94,9 @@ reader-volume = { $volume }巻
 reader-chapter-in-progress = { $page }/{ $total }ページ
 reader-chapter-read = 既読
 reader-chapter-new = 新着
-reader-chapter-pages = { $pages }ページ
+reader-chapter-pages = { $pages ->
+   *[other] { $pages }ページ
+ }
 reader-offline-line = オフラインです。ダウンロード済みの章は開けます。
 reader-menu-go = 移動
 reader-menu-next-page = 次のページ
@@ -116,8 +118,5 @@ reader-key-step = キーボードの移動量
 reader-key-step-panel = コマ
 reader-key-step-screen = 画面
 reader-strip-gap = 画像の間隔
-reader-zone-back = 戻る
-reader-zone-forward = 進む
-reader-zone-menu = メニュー
 reader-pages-range = { $from }〜{ $to }
 send-failed-offline = オンラインになってから、もう一度お試しください。

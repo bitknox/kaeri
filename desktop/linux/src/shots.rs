@@ -2063,6 +2063,7 @@ async fn painted(shell: &Rc<Shell>, path: &std::path::Path, shot: &str) -> Resul
                 | "read-strip-mode"
                 | "read-chapters"
                 | "read-chapters-list"
+                | "read-chapters-long"
                 | "read-novel-paper" => open_popover(&window),
                 #[cfg(feature = "fixtures")]
                 "read-disc-poster-menu" | "read-disc-poster-menu-own" => context_menu(&window),

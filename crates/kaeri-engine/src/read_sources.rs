@@ -140,6 +140,13 @@ impl FolderSource {
     }
 }
 
+/// Where a book folder is read from: its path, or the platform's reference for a folder the
+/// host opens for Kaeri. `None` when it has neither that can be read.
+fn reach(path: Option<&str>, tree_uri: Option<&str>) -> Option<PathBuf> {
+    path.map(PathBuf::from)
+        .or_else(|| tree_uri.map(PathBuf::from).filter(|p| kaeri_books::tree::is_tree(p)))
+}
+
 /// `10500` as `10.5`.
 fn milli_label(milli: i64) -> String {
     let (whole, part) = (milli / 1000, milli % 1000);
@@ -237,7 +244,8 @@ impl BookSource for FolderSource {
         chapter: &str,
     ) -> Result<ChapterContent, ProviderError> {
         let path = PathBuf::from(chapter);
-        if !path.exists() {
+        // A file in a folder the platform opens is there when the platform says so.
+        if kaeri_books::tree::stat(&path).is_err() {
             return Err(ProviderError::NotFound);
         }
         Ok(ChapterContent::Book(BookFile { path, temporary: false }))
@@ -246,6 +254,10 @@ impl BookSource for FolderSource {
 
 // ---------------------------------------------------------------------------------------------
 // The holder
+
+/// When a chapter list came back empty, and the [`BookSources::source_mark`] of the source
+/// that said so.
+type EmptyList = (std::time::Instant, Option<u64>);
 
 /// Everything the Sources screen and the reading commands share. Cheap to clone.
 #[derive(Clone)]
@@ -265,13 +277,17 @@ pub struct BookSources {
     pub demo: kaeri_providers::reading_demo::ReadingDemo,
     /// The series whose sources are being asked how they read, by source and series.
     hint_lookups: Arc<Mutex<HashMap<(String, String), HintLookup>>>,
-    /// The series whose chapter list came back empty lately, by source and series: an empty
-    /// answer is not kept, so this is what keeps a work from being read from it meanwhile.
-    empty: Arc<Mutex<HashMap<(String, String), std::time::Instant>>>,
+    /// The series whose chapter list came back empty lately, by source and series, with the
+    /// [`BookSources::source_mark`] of the source that said so: an empty answer is not kept, so
+    /// this is what keeps a work from being read from it meanwhile.
+    empty: Arc<Mutex<HashMap<(String, String), EmptyList>>>,
     /// The language the app speaks, as [`BookSources::set_language`] last gave it: the language
     /// a work's chapters are counted in when its editions are compared, and the group a series
     /// is read from is one in it when the person picked none.
     language: Arc<RwLock<Option<String>>>,
+    /// Chapter lists are grouped by volume: the Show volumes setting, as
+    /// [`BookSources::set_show_volumes`] last gave it.
+    show_volumes: Arc<std::sync::atomic::AtomicBool>,
     /// What reading's catalogue keeps between commands: see [`crate::read_catalog::Memory`].
     pub catalog: crate::read_catalog::Memory,
     /// The chapters downloaded for reading and the queue that fetches them.
@@ -283,6 +299,11 @@ pub struct BookSources {
     pub feed: crate::export::feed::Feed,
     /// Reading progress waiting for book servers: see [`crate::write_back`].
     pub write_back: crate::write_back::WriteBack,
+    /// The host's way into folders the platform opens rather than by path, while one is
+    /// offered: see [`BookSources::open_folders_through`].
+    folder_access: Arc<Mutex<Option<kaeri_books::tree::Registered>>>,
+    /// The book plugins as last taken in, asked whether a load is still under way.
+    plugins: Arc<RwLock<Option<BookPlugins>>>,
 }
 
 impl std::fmt::Debug for BookSources {
@@ -312,6 +333,7 @@ impl BookSources {
             hint_lookups: Arc::default(),
             empty: Arc::default(),
             language: Arc::default(),
+            show_volumes: Arc::default(),
             demo: kaeri_providers::reading_demo::ReadingDemo::new(Some(
                 paths.cache_dir.join("reading-demo"),
             )),
@@ -323,6 +345,8 @@ impl BookSources {
             #[cfg(feature = "opds-feed")]
             feed: crate::export::feed::Feed::default(),
             write_back: crate::write_back::WriteBack::default(),
+            folder_access: Arc::default(),
+            plugins: Arc::default(),
         };
         this.registry.put(Arc::new(FolderSource::new(this.store.clone())));
         this.restore();
@@ -376,6 +400,9 @@ impl BookSources {
     /// Put plugins that have loaded into the registry, leaving the rest as it is; the ids of
     /// the plugins loaded.
     pub(crate) fn take_in_plugins(&self, plugins: &BookPlugins) -> HashSet<String> {
+        if let Ok(mut seen) = self.plugins.write() {
+            seen.get_or_insert_with(|| plugins.clone());
+        }
         let here: HashSet<String> = plugins.ids().into_iter().collect();
         for id in &here {
             if let Some(plugin) = plugins.get(id) {
@@ -609,28 +636,40 @@ impl BookSources {
     // -----------------------------------------------------------------------------------------
     // Folders
 
-    fn add_folder(&self, folder: &FolderRef, now: i64) -> Option<String> {
+    /// Read the folders the platform opens for Kaeri, rather than by path, through `access`:
+    /// the host's, offered at launch. `None` leaves such folders unread, marked not found.
+    pub fn open_folders_through(&self, access: Option<Arc<dyn kaeri_books::tree::Tree>>) {
+        *self.folder_access.lock().unwrap_or_else(|e| e.into_inner()) =
+            access.map(kaeri_books::tree::register);
+    }
+
+    /// Add a picked folder, or take a folder already in Your sources as it is: its id, and
+    /// whether it was there already. A folder waiting out its removal's undo comes back as new,
+    /// since it had already left the list.
+    fn add_folder(&self, folder: &FolderRef, now: i64) -> Option<(String, bool)> {
         let basis = folder.path.as_deref().or(folder.tree_uri.as_deref())?;
         let id = short_id(basis);
+        let leaving = self.removed.read().unwrap_or_else(|e| e.into_inner()).contains(&id);
+        let before = self.store.book_folders().ok()?.into_iter().find(|f| f.id == id);
         let name = folder.name.clone().or_else(|| {
             folder.path.as_deref().and_then(|p| {
                 std::path::Path::new(p).file_name().map(|n| n.to_string_lossy().into_owned())
             })
         });
-        let usable = folder.path.is_some();
+        let usable = reach(folder.path.as_deref(), folder.tree_uri.as_deref()).is_some();
         let row = Folder {
             id: id.clone(),
             path: folder.path.clone(),
             tree_uri: folder.tree_uri.clone(),
-            bookmark: folder.bookmark.clone(),
-            name,
-            added_at: now,
-            last_scan: None,
+            bookmark: folder.bookmark.clone().or_else(|| before.as_ref()?.bookmark.clone()),
+            name: name.or_else(|| before.as_ref()?.name.clone()),
+            added_at: before.as_ref().map_or(now, |f| f.added_at),
+            last_scan: before.as_ref().and_then(|f| f.last_scan),
             available: usable,
         };
         self.store.put_book_folder(&row).ok()?;
         self.removed.write().unwrap_or_else(|e| e.into_inner()).remove(&id);
-        Some(id)
+        Some((id, before.is_some() && !leaving))
     }
 
     /// Scan one folder on a blocking thread, telling `progress` what it has found.
@@ -640,7 +679,8 @@ impl BookSources {
         now: i64,
         progress: impl Fn() + Send + 'static,
     ) -> Option<kaeri_model::came_in::FolderReport> {
-        let Some(path) = folder.path.clone().map(PathBuf::from) else {
+        let Some(path) = reach(folder.path.as_deref(), folder.tree_uri.as_deref()) else {
+            tracing::info!("a book folder has no path and nothing opens it");
             let _ = self.store.set_book_folder_available(&folder.id, false);
             return None;
         };
@@ -865,12 +905,29 @@ pub fn command(
     match command {
         BookSourceCommand::Load => publish(),
         BookSourceCommand::AddFolder { folder } => {
-            let Some(id) = this.add_folder(&folder, now) else { return publish() };
+            let Some((id, already)) = this.add_folder(&folder, now) else {
+                // Nothing to keep it by, or it was not kept: said at once, so nothing waits.
+                let row = Folder {
+                    id: String::new(),
+                    path: folder.path.clone(),
+                    tree_uri: folder.tree_uri.clone(),
+                    bookmark: None,
+                    name: folder.name.clone(),
+                    added_at: now,
+                    last_scan: None,
+                    available: false,
+                };
+                let unread = added::folder_report(&row, &kaeri_books::library::Scan::default());
+                let _ = tx.send(Event::CameIn(kaeri_model::came_in::CameIn::Empty(
+                    kaeri_model::came_in::NothingCameIn::FolderUnreadable { folder: unread },
+                )));
+                return publish();
+            };
             publish();
-            rescan(this, Some(id), now, publish, Some(tx));
+            rescan(this, Some(id), now, publish, tx, Some(already));
         }
         BookSourceCommand::Scan => {
-            rescan(this.clone(), None, now, publish.clone(), None);
+            rescan(this.clone(), None, now, publish.clone(), tx.clone(), None);
             recheck(this, now, true, publish, tx);
         }
         BookSourceCommand::Recheck => recheck(this, now, true, publish, tx),
@@ -886,6 +943,7 @@ pub fn command(
             match this.add_found(&pending, libraries, report_progress, now) {
                 Some(came) => {
                     let _ = tx.send(Event::CameIn(came));
+                    changed(&tx);
                 }
                 None => tracing::debug!("a server was added that is no longer held"),
             }
@@ -904,12 +962,14 @@ pub fn command(
             this.removed.write().unwrap_or_else(|e| e.into_inner()).insert(id.clone());
             publish();
             let (keeper, forget) = (this.clone(), id.clone());
+            let tx = tx.clone();
             let handle = tokio::spawn(async move {
                 tokio::time::sleep(std::time::Duration::from_secs(UNDO_SECONDS)).await;
                 let gone =
                     keeper.removed.write().unwrap_or_else(|e| e.into_inner()).remove(&forget);
                 if gone {
                     let _ = keeper.store.remove_book_folder(&forget);
+                    changed(&tx);
                 }
                 keeper.undo.lock().unwrap_or_else(|e| e.into_inner()).remove(&forget);
                 publish();
@@ -942,6 +1002,7 @@ pub fn command(
                 this.store.set_local_series_match(&group, Some(&work), "matched", 100, None);
             let _ = this.store.set_book_match(FOLDERS, &group, &work, 100, true, false, now);
             publish();
+            changed(&tx);
         }
         BookSourceCommand::Keep { group } => {
             let series = this.store.local_book_series().unwrap_or_default();
@@ -988,7 +1049,11 @@ pub fn command(
         BookSourceCommand::SignIn { address, user, password } => {
             tokio::spawn(async move {
                 let event = sign_in(&this, &address, &user, &password.0, now).await;
+                let added = matches!(event, BookSourceEvent::ServerAdded { .. });
                 let _ = tx.send(Event::BookSources(event));
+                if added {
+                    changed(&tx);
+                }
                 publish();
             });
         }
@@ -998,6 +1063,7 @@ pub fn command(
             let _ = this.store.remove_book_server(&id);
             this.forget_server_meta(&id);
             publish();
+            changed(&tx);
         }
         BookSourceCommand::SetReportProgress { id, on } => {
             if let Ok(Some(server)) = this.store.book_server(&id) {
@@ -1016,10 +1082,12 @@ pub fn command(
         BookSourceCommand::SetOrder { ids } => {
             this.set_order(ids);
             publish();
+            changed(&tx);
         }
         BookSourceCommand::SetOff { id, off } => {
             this.set_off(&id, off);
             publish();
+            changed(&tx);
         }
         // The catalogue answers these: see `read_catalog::editions`.
         BookSourceCommand::LoadForWork { .. }
@@ -1028,13 +1096,22 @@ pub fn command(
     }
 }
 
+/// The book sources changed: what reading shows is brought up to date.
+fn changed(tx: &Outbox) {
+    let _ = tx.internal(crate::outbox::Internal::BookSourcesChanged);
+}
+
 /// Scan the folders, or only `only`. With `report`, what came in from each folder is said.
+/// Reading is brought up to date once they are scanned.
 fn rescan(
     this: BookSources,
     only: Option<String>,
     now: i64,
     publish: impl Fn() + Clone + Send + 'static,
-    report: Option<Outbox>,
+    tx: Outbox,
+    // For a folder just picked, whether it was already a source: its report then comes in,
+    // and a folder that can't be read comes in as one, so the dialog never waits on it.
+    answer: Option<bool>,
 ) {
     tokio::spawn(async move {
         let folders: Vec<_> = this
@@ -1044,13 +1121,35 @@ fn rescan(
             .into_iter()
             .filter(|f| only.as_ref().is_none_or(|id| *id == f.id))
             .collect();
+        let scanned = !folders.is_empty();
         for folder in folders {
             let tick = publish.clone();
+            // What is said when the scan can't start or stops: the folder, and nothing found.
+            let mut unread =
+                added::folder_report(&folder, &kaeri_books::library::Scan::default());
             let found = this.scan_folder(folder, now, tick).await;
-            if let (Some(tx), Some(found)) = (&report, found) {
-                let _ = tx.send(Event::CameIn(added::folder_came_in(found)));
+            if let Some(already) = answer {
+                let came = match found {
+                    Some(mut found) => {
+                        found.already_added = already;
+                        added::folder_came_in(found)
+                    }
+                    None => {
+                        // A source picked again that can't be read stays a source.
+                        unread.already_added = already;
+                        kaeri_model::came_in::CameIn::Empty(
+                            kaeri_model::came_in::NothingCameIn::FolderUnreadable {
+                                folder: unread,
+                            },
+                        )
+                    }
+                };
+                let _ = tx.send(Event::CameIn(came));
             }
             publish();
+        }
+        if scanned {
+            changed(&tx);
         }
     });
 }
@@ -1071,6 +1170,9 @@ fn recheck(
                 // Asked again with what it now holds.
                 this.put_server(&stored);
             }
+        }
+        if !filled.is_empty() {
+            changed(&tx);
         }
         for server in filled {
             let _ = tx.send(Event::CameIn(kaeri_model::came_in::CameIn::ServerAdded(server)));
@@ -1099,6 +1201,9 @@ pub fn spawn_rechecks(
                 if let Some(stored) = this.store.book_server(&server.id).ok().flatten() {
                     this.put_server(&stored);
                 }
+            }
+            if !filled.is_empty() {
+                changed(&tx);
             }
             for server in filled {
                 let _ =
@@ -1174,6 +1279,16 @@ impl BookSources {
         self.feed.use_language(tag);
     }
 
+    /// Group chapter lists by volume or not, from here on: see [`crate::read_catalog::volumes`].
+    pub fn set_show_volumes(&self, show: bool) {
+        self.show_volumes.store(show, std::sync::atomic::Ordering::Relaxed);
+    }
+
+    /// Whether chapter lists are grouped by volume.
+    pub fn show_volumes(&self) -> bool {
+        self.show_volumes.load(std::sync::atomic::Ordering::Relaxed)
+    }
+
     /// The language the app speaks, once set.
     pub fn language(&self) -> Option<String> {
         self.language.read().ok().and_then(|l| l.clone())
@@ -1182,6 +1297,36 @@ impl BookSources {
     /// A source's name as its manifest gives it, or its id when it is no longer loaded.
     pub fn source_name(&self, id: &str) -> String {
         self.registry.manifest(id).map_or_else(|| id.to_owned(), |m| m.name)
+    }
+
+    /// A mark of source `id` as it stands: its version and which join of it is in the chain.
+    /// What the source said is good only while the mark holds: an update, or a server put again
+    /// with what it now holds, makes another. `None` when it is not in the chain.
+    pub(crate) fn source_mark(&self, id: &str) -> Option<u64> {
+        use std::hash::{Hash, Hasher};
+        let manifest = self.registry.manifest(id)?;
+        let joined = self.registry.joined(id)?;
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        (id, manifest.version.as_str(), joined).hash(&mut hasher);
+        Some(hasher.finish())
+    }
+
+    /// A mark of the sources searched by name, the ones on beside the folders, each at its
+    /// [`Self::source_mark`], in no order: a work none of them had may be had once it changes.
+    /// Moving a source leaves it as it was, since a miss is every source saying no.
+    pub(crate) fn sources_mark(&self) -> u64 {
+        use std::hash::{Hash, Hasher};
+        let mut marks: Vec<u64> = self
+            .registry
+            .ids()
+            .into_iter()
+            .filter(|id| id != FOLDERS && !self.registry.is_off(id))
+            .filter_map(|id| self.source_mark(&id))
+            .collect();
+        marks.sort_unstable();
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        marks.hash(&mut hasher);
+        hasher.finish()
     }
 
     /// The editions a work has: every source holding a series matched to it.
@@ -1452,7 +1597,8 @@ fn source_row(
         number.as_deref(),
     )
     .map(str::to_owned);
-    let pages = parts.iter().map(|p| p.page_count).sum::<Option<u32>>();
+    let pages =
+        crate::read_catalog::chapters::pages_of_parts(parts.iter().map(|p| p.page_count));
     let mut row = ChapterRow {
         id,
         label,
@@ -1476,6 +1622,7 @@ fn source_row(
         other_group: false,
         group_language: None,
         other_source: None,
+        on_device: false,
     };
     all.fill(arranged, app, &mut row);
     row
@@ -1555,7 +1702,19 @@ impl BookSources {
     /// Search every source and give the works found as tiles. A series no match has been made
     /// for gets a work of its own on this device, so it can be opened.
     pub async fn search(&self, text: &str, medium: Option<Medium>, now: i64) -> Vec<WorkTile> {
-        let found = self.registry.search(text, &BookHints::default(), medium, now).await;
+        self.search_in(text, medium, None, now).await
+    }
+
+    /// [`Self::search`] asking only the sources in `scope`; `None` asks every source.
+    pub async fn search_in(
+        &self,
+        text: &str,
+        medium: Option<Medium>,
+        scope: Option<&[String]>,
+        now: i64,
+    ) -> Vec<WorkTile> {
+        let hints = BookHints::default();
+        let found = self.registry.search_in(text, &hints, medium, scope, now).await;
         let local = self.store.local_book_series().unwrap_or_default();
         let mut seen = HashSet::new();
         let mut tiles = Vec::new();
@@ -1667,23 +1826,31 @@ impl BookSources {
         asked: Option<Asked>,
         now: i64,
     ) {
+        let mark = self.source_mark(source);
         let mut kept = self.catalog.listings.lock().unwrap_or_else(|e| e.into_inner());
         let key = (source.to_owned(), series.to_owned());
         match asked {
-            Some(asked) => kept.insert(key, (now, asked)),
+            Some(asked) => kept.insert(key, (now, asked, mark)),
             None => kept.remove(&key),
         };
     }
 
-    /// Where an edition's chapter list stands, for Read from's line.
-    pub(crate) fn listing_of(&self, source: &str, series: &str) -> Option<EditionListing> {
-        let asked = self
-            .catalog
+    /// The last ask of an edition's chapter list that left no list kept, with when, unless the
+    /// source joined anew since: what an update says is asked again.
+    fn last_listing(&self, source: &str, series: &str) -> Option<(i64, Asked)> {
+        let mark = self.source_mark(source);
+        self.catalog
             .listings
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .get(&(source.to_owned(), series.to_owned()))
-            .map(|(_, asked)| asked.clone());
+            .filter(|(_, _, asked_of)| *asked_of == mark)
+            .map(|(at, asked, _)| (*at, asked.clone()))
+    }
+
+    /// Where an edition's chapter list stands, for Read from's line.
+    pub(crate) fn listing_of(&self, source: &str, series: &str) -> Option<EditionListing> {
+        let asked = self.last_listing(source, series).map(|(_, asked)| asked);
         match asked {
             Some(Asked::Asking) => Some(EditionListing::Asking),
             Some(Asked::Empty) => Some(EditionListing::Empty),
@@ -1696,12 +1863,7 @@ impl BookSources {
 
     /// When an edition's list was last asked for, if that ask left no list kept.
     pub(crate) fn listing_asked_at(&self, source: &str, series: &str) -> Option<i64> {
-        self.catalog
-            .listings
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .get(&(source.to_owned(), series.to_owned()))
-            .map(|(at, _)| *at)
+        self.last_listing(source, series).map(|(at, _)| at)
     }
 
     /// Which source and series reference a work is read from: the chosen edition or the
@@ -1720,7 +1882,14 @@ impl BookSources {
         let order = self.registry.ids();
         let mut held = refs;
         match wanted {
-            Some(wanted) if held.iter().any(|(source, _)| *source == wanted) => {
+            // The person's pick waits while its source is not installed or is switched off:
+            // the work reads from another edition until the source is back, and the pick is
+            // kept for then. While plugins are loading it holds, as its plugin may be on the
+            // way. An edition asked for by name is read from as it is.
+            Some(wanted)
+                if (edition.is_some() || self.may_be_available(&wanted))
+                    && held.iter().any(|(source, _)| *source == wanted) =>
+            {
                 held.retain(|(source, _)| *source == wanted);
             }
             // Never a source switched off, nor one whose chapter list came back empty: with
@@ -1752,12 +1921,43 @@ impl BookSources {
             .map(|(held, _)| held)
     }
 
+    /// Whether `source` can be asked: installed, and not switched off.
+    pub(crate) fn is_available(&self, source: &str) -> bool {
+        self.registry.get(source).is_some() && !self.registry.is_off(source)
+    }
+
+    /// Whether `source` may yet be asked: available, or not switched off while plugins are
+    /// still loading, when it may be one of them.
+    fn may_be_available(&self, source: &str) -> bool {
+        let arriving = self
+            .plugins
+            .read()
+            .ok()
+            .and_then(|p| p.as_ref().map(BookPlugins::is_arriving))
+            .unwrap_or(false);
+        self.is_available(source) || (arriving && !self.registry.is_off(source))
+    }
+
+    /// While plugins are still loading: the edition a work is held in from a source not in
+    /// yet, the person's preference first. Not one switched off.
+    pub(crate) fn edition_not_in_yet(&self, work: &WorkId) -> Option<(String, String)> {
+        let order = self.registry.ids();
+        let mut held = self.store.book_refs_for_work(work.as_str()).unwrap_or_default();
+        held.retain(|(source, _)| !order.contains(source) && !self.registry.is_off(source));
+        let pref = self.store.edition_pref(work.as_str()).ok().flatten();
+        let first = pref
+            .and_then(|p| held.iter().position(|(source, _)| *source == p.source_id))
+            .unwrap_or(0);
+        (first < held.len()).then(|| held.swap_remove(first))
+    }
+
     /// Note what a source's chapter list came back as: empty, or with chapters again.
     fn note_list(&self, source: &str, series: &str, chapters: &[SourceChapter]) {
+        let mark = self.source_mark(source);
         let mut empty = self.empty.lock().unwrap_or_else(|e| e.into_inner());
         let key = (source.to_owned(), series.to_owned());
         if chapters.is_empty() {
-            empty.insert(key, std::time::Instant::now());
+            empty.insert(key, (std::time::Instant::now(), mark));
         } else {
             empty.remove(&key);
         }
@@ -1775,14 +1975,15 @@ impl BookSources {
             .map(|id| self.source_name(&id))
     }
 
-    /// The series' chapter list came back empty within the last quarter hour, or was kept
-    /// empty before.
+    /// The series' chapter list came back empty within the last quarter hour from the source
+    /// as it stands, or was kept empty before.
     fn came_back_empty(&self, source: &str, series: &str) -> bool {
         const EMPTY_FOR: std::time::Duration = std::time::Duration::from_secs(15 * 60);
+        let mark = self.source_mark(source);
         let noted = self.empty.lock().unwrap_or_else(|e| e.into_inner());
         noted
             .get(&(source.to_owned(), series.to_owned()))
-            .is_some_and(|at| at.elapsed() < EMPTY_FOR)
+            .is_some_and(|(at, said_by)| at.elapsed() < EMPTY_FOR && *said_by == mark)
             || crate::read_catalog::chapters::kept(&self.store, source, series)
                 .is_some_and(|(list, _)| list.is_empty())
     }
@@ -2018,44 +2219,31 @@ impl BookSources {
         let chosen =
             crate::read_catalog::chapters::chosen_group(&self.store, work.as_str(), source);
         let language = self.language();
-        let arranged = crate::read_catalog::arrange::arrange(
+        let numbering =
+            crate::read_catalog::chapters::numbering(&self.store, work.as_str(), None);
+        let arranged = crate::read_catalog::arrange::arrange_in(
             chapters,
             chosen.as_deref(),
             language.as_deref(),
+            &numbering,
         );
-        let read: HashMap<String, kaeri_store::reading::ReadChapter> = self
-            .store
-            .read_chapters(work.as_str())
-            .unwrap_or_default()
-            .into_iter()
-            .map(|c| (c.chapter.clone(), c))
-            .collect();
-        // Read as Mark read up to here and sync count it, under a watermark, as well as one by one.
-        let marks = self.store.read_marks(work.as_str()).unwrap_or_default();
+        // Read as Mark read up to here and sync count it, under a watermark, as well as one by
+        // one, and parts read under their own numbers as their whole chapter.
+        let (marks, places) =
+            crate::read_catalog::chapters::read_state(&self.store, work.as_str());
+        let read: HashMap<String, kaeri_store::reading::ReadChapter> =
+            places.into_iter().map(|c| (c.chapter.clone(), c)).collect();
         let downloads = self.downloads.states(&self.store, work.as_str());
         let bookmarks: HashSet<String> =
             self.store.bookmarks(work.as_str()).unwrap_or_default().into_iter().collect();
-        let mut groups: Vec<VolumeGroup> = Vec::new();
-        let mut group_of: HashMap<Option<String>, usize> = HashMap::new();
+        let mut rows: Vec<ChapterRow> = Vec::with_capacity(arranged.rows.len());
         // One row per chapter: its parts read as one, from the preferred group, or another
         // group where that one lacks it. Its row counts the other groups as versions.
         for arranged_row in &arranged.rows {
             let parts: Vec<&SourceChapter> =
                 arranged_row.parts.iter().map(|&i| &chapters[i]).collect();
-            let chapter = parts[0];
             let id = arranged_row.id.clone();
-            let state = match read.get(id.as_str()) {
-                _ if marks.is_read(id.as_str()) => ChapterReadState::Read,
-                Some(r) if r.read => ChapterReadState::Read,
-                Some(r) => match r.last_page {
-                    Some(page) => ChapterReadState::InProgress {
-                        page: kaeri_model::reading::shown_page(page),
-                        of: r.of_pages,
-                    },
-                    None => ChapterReadState::Unread,
-                },
-                None => ChapterReadState::Unread,
-            };
+            let state = state_of(&marks, read.get(id.as_str()), id.as_str());
             let read_at = read.get(id.as_str()).and_then(|r| r.read_at);
             let download = downloads.get(id.as_str()).cloned();
             let bookmarked = bookmarks.contains(id.as_str());
@@ -2068,24 +2256,24 @@ impl BookSources {
                 bookmarked,
                 (&arranged, arranged_row, language.as_deref()),
             );
-            let at = *group_of.entry(chapter.volume.clone()).or_insert_with(|| {
-                groups.push(VolumeGroup {
-                    volume: chapter.volume.clone(),
-                    title: None,
-                    chapters: Vec::new(),
-                    all_read: false,
-                });
-                groups.len() - 1
-            });
-            groups[at].chapters.push(row);
+            rows.push(row);
         }
-        keep_dropped(&self.store, work, &read, &marks, &bookmarks, &mut groups);
-        self.fill_from_others(work, source, &read, &mut groups);
-        for group in &mut groups {
-            group.all_read =
-                group.chapters.iter().all(|c| matches!(c.state, ChapterReadState::Read));
-        }
-        groups
+        // Another source's chapters that what follows a chapter here stands for stay out, and
+        // still say which volume the rows beside them are in.
+        let mut held = Vec::new();
+        keep_dropped(
+            &self.store,
+            (work, source),
+            &read,
+            &marks,
+            &bookmarks,
+            &mut rows,
+            &mut held,
+        );
+        self.fill_from_others(work, source, (&read, &marks), &numbering, &mut rows, &mut held);
+        tidy_filled(&mut rows);
+        let known = crate::read_catalog::volumes::Known::of_work(&self.store, work.as_str());
+        crate::read_catalog::volumes::group_beside(rows, held, &known, self.show_volumes())
     }
 
     /// Open a chapter: its content from the edition, with the source named so the reader can
@@ -2192,13 +2380,16 @@ impl BookSources {
         let (source, series) =
             self.edition_of(work, edition).ok_or(ReadingFailure::NotFound)?;
         let language = self.language();
+        let numbering =
+            crate::read_catalog::chapters::numbering(&self.store, work.as_str(), None);
         let find = |source: &str, chapters: Vec<SourceChapter>| {
             let chosen =
                 crate::read_catalog::chapters::chosen_group(&self.store, work.as_str(), source);
-            let arranged = crate::read_catalog::arrange::arrange(
+            let arranged = crate::read_catalog::arrange::arrange_in(
                 &chapters,
                 chosen.as_deref(),
                 language.as_deref(),
+                &numbering,
             );
             let row = arranged.row(chapter)?;
             Some(Found {
@@ -2225,7 +2416,7 @@ impl BookSources {
         for (other, other_series) in
             self.store.book_refs_for_work(work.as_str()).unwrap_or_default()
         {
-            if other == source {
+            if other == source || !self.is_available(&other) {
                 continue;
             }
             let Some((list, _)) =
@@ -2357,56 +2548,61 @@ impl BookSources {
 impl BookSources {
     /// Chapters the edition does not list that the person's other sources for the work do, as
     /// last asked: listed in their place, marked with the source they come from, so the list
-    /// never hides a chapter another source has. Opening one reads it from that source.
+    /// never hides a chapter another source has. Opening one reads it from that source. What
+    /// follows a chapter here stands for what follows it there, as
+    /// [`crate::read_catalog::extras`] says: those rows go to `held` instead.
     fn fill_from_others(
         &self,
         work: &WorkId,
         source: &str,
-        read: &HashMap<String, kaeri_store::reading::ReadChapter>,
-        groups: &mut Vec<VolumeGroup>,
+        (read, marks): (
+            &HashMap<String, kaeri_store::reading::ReadChapter>,
+            &kaeri_store::reading::ReadMarks,
+        ),
+        numbering: &crate::read_catalog::arrange::Numbering,
+        rows: &mut Vec<ChapterRow>,
+        held: &mut Vec<ChapterRow>,
     ) {
-        let mut listed: HashSet<String> = groups
-            .iter()
-            .flat_map(|g| g.chapters.iter().map(|c| c.id.as_str().to_owned()))
-            .collect();
+        use crate::read_catalog::extras;
+        let mut listed: HashSet<String> =
+            rows.iter().map(|c| c.id.as_str().to_owned()).collect();
+        let mut here = extras::Following::of(rows.iter().map(|c| (&c.id, c.title.as_deref())));
         let refs = self.store.book_refs_for_work(work.as_str()).unwrap_or_default();
-        for (other, series) in refs.into_iter().filter(|(s, _)| s != source) {
+        // A source not installed or switched off can't open what it listed, so its rows stay
+        // out.
+        let others = refs.into_iter().filter(|(s, _)| s != source && self.is_available(s));
+        for (other, series) in others {
             let Some((list, _)) =
                 crate::read_catalog::chapters::kept(&self.store, &other, &series)
             else {
                 continue;
             };
-            if list.iter().all(|k| listed.contains(&k.id)) {
-                continue;
-            }
             let entries: Vec<SourceChapter> = list.iter().map(|k| k.source_chapter()).collect();
             let chosen =
                 crate::read_catalog::chapters::chosen_group(&self.store, work.as_str(), &other);
             let language = self.language();
-            let arranged = crate::read_catalog::arrange::arrange(
+            // Compared after parts merge, with the work's numbering: "7.1" and "7.2" there are
+            // the 7 listed here, never a chapter of their own beside it.
+            let arranged = crate::read_catalog::arrange::arrange_in(
                 &entries,
                 chosen.as_deref(),
                 language.as_deref(),
+                numbering,
             );
             let name = self.source_name(&other);
-            let missing: Vec<_> =
-                arranged.rows.iter().filter(|r| !listed.contains(r.id.as_str())).collect();
-            for row in missing {
+            let after = extras::follows(arranged.rows.iter().map(|r| &r.id));
+            let titles = extras::titles_chapters(
+                arranged.rows.iter().map(|r| (&r.id, entries[r.parts[0]].title.as_deref())),
+            );
+            for (row, after) in arranged.rows.iter().zip(after) {
+                if listed.contains(row.id.as_str()) {
+                    continue;
+                }
                 // The kept list's ids are the ones its source lists; arranged again they match.
                 let parts: Vec<&SourceChapter> =
                     row.parts.iter().map(|&i| &entries[i]).collect();
                 let was = read.get(row.id.as_str());
-                let state = match was {
-                    Some(r) if r.read => ChapterReadState::Read,
-                    Some(r) => match r.last_page {
-                        Some(page) => ChapterReadState::InProgress {
-                            page: kaeri_model::reading::shown_page(page),
-                            of: r.of_pages,
-                        },
-                        None => ChapterReadState::Unread,
-                    },
-                    None => ChapterReadState::Unread,
-                };
+                let state = state_of(marks, was, row.id.as_str());
                 let mut chapter_row = source_row(
                     &parts,
                     row.id.clone(),
@@ -2419,66 +2615,67 @@ impl BookSources {
                 chapter_row.other_group = false;
                 chapter_row.group_language = None;
                 chapter_row.other_source = Some(name.clone());
-                listed.insert(row.id.as_str().to_owned());
-                let group = match groups.iter().position(|g| g.volume == chapter_row.volume) {
-                    Some(at) => &mut groups[at],
-                    None => {
-                        let at = groups
-                            .iter()
-                            .position(|g| {
-                                volume_after(g.volume.as_deref(), chapter_row.volume.as_deref())
-                            })
-                            .unwrap_or(groups.len());
-                        groups.insert(
-                            at,
-                            VolumeGroup {
-                                volume: chapter_row.volume.clone(),
-                                title: None,
-                                chapters: Vec::new(),
-                                all_read: false,
-                            },
-                        );
-                        &mut groups[at]
+                let title = chapter_row.title.as_deref();
+                if let Some(after) = after {
+                    if here.stands_for(&after, title, titles) {
+                        held.push(chapter_row);
+                        continue;
                     }
-                };
-                let at = place_of(&group.chapters, &chapter_row);
-                group.chapters.insert(at, chapter_row);
+                    here.add(after, title);
+                }
+                listed.insert(row.id.as_str().to_owned());
+                let at = place_of(rows, &chapter_row);
+                rows.insert(at, chapter_row);
             }
         }
     }
 }
 
-/// Whether volume `a` comes after volume `b` in a list rising by volume; a volume without a
-/// number goes last.
-fn volume_after(a: Option<&str>, b: Option<&str>) -> bool {
-    let number = |v: Option<&str>| v.and_then(|v| v.trim().parse::<f64>().ok());
-    match (number(a), number(b)) {
-        (Some(a), Some(b)) => a > b,
-        (None, Some(_)) => true,
-        _ => false,
+/// A chapter row's read state from the marks and its kept place.
+fn state_of(
+    marks: &kaeri_store::reading::ReadMarks,
+    place: Option<&kaeri_store::reading::ReadChapter>,
+    id: &str,
+) -> ChapterReadState {
+    match place {
+        _ if marks.is_read(id) => ChapterReadState::Read,
+        Some(r) if r.read => ChapterReadState::Read,
+        Some(r) => match r.last_page {
+            Some(page) => ChapterReadState::InProgress {
+                page: kaeri_model::reading::shown_page(page),
+                of: r.of_pages,
+            },
+            None => ChapterReadState::Unread,
+        },
+        None => ChapterReadState::Unread,
     }
 }
 
 /// Chapters downloaded here that the source no longer lists stay on the series page, marked as
 /// gone from the source, in their place among the others: the file is still on the device and
-/// still opens.
+/// still opens. One downloaded from another source that what follows a chapter here stands for,
+/// as [`crate::read_catalog::extras`] says, goes to `held` instead.
 fn keep_dropped(
     store: &Store,
-    work: &WorkId,
+    (work, source): (&WorkId, &str),
     read: &HashMap<String, kaeri_store::reading::ReadChapter>,
     marks: &kaeri_store::reading::ReadMarks,
     bookmarks: &HashSet<String>,
-    groups: &mut Vec<VolumeGroup>,
+    rows: &mut Vec<ChapterRow>,
+    held: &mut Vec<ChapterRow>,
 ) {
-    let listed: HashSet<String> = groups
-        .iter()
-        .flat_map(|g| g.chapters.iter().map(|c| c.id.as_str().to_owned()))
-        .collect();
+    use crate::read_catalog::extras;
+    let listed: HashSet<String> = rows.iter().map(|c| c.id.as_str().to_owned()).collect();
+    let here = extras::Following::of(rows.iter().map(|c| (&c.id, c.title.as_deref())));
+    // A download of a part now read as its whole chapter ("7.1" before "7.2" came) is that
+    // chapter's: the list has it already.
+    let folds = crate::read_catalog::chapters::Folds::of_work(store, work.as_str());
     let downloads = store.book_downloads(Some(work.as_str())).unwrap_or_default();
     for d in downloads.iter().filter(|d| {
         d.state == kaeri_store::book_downloads::BookDownloadState::Done
             && d.path.as_deref().is_some_and(|p| std::path::Path::new(p).exists())
             && !listed.contains(&d.chapter)
+            && !folds.is_part(&d.chapter)
     }) {
         let was = read.get(&d.chapter);
         let done = marks.is_read(&d.chapter);
@@ -2494,20 +2691,13 @@ fn keep_dropped(
             }
         }
         row.gone_from_source = true;
-        let group = match groups.iter().position(|g| g.volume == row.volume) {
-            Some(at) => &mut groups[at],
-            None => {
-                groups.push(VolumeGroup {
-                    volume: row.volume.clone(),
-                    title: None,
-                    chapters: Vec::new(),
-                    all_read: false,
-                });
-                groups.last_mut().expect("just pushed")
-            }
-        };
-        let at = place_of(&group.chapters, &row);
-        group.chapters.insert(at, row);
+        let after = extras::follows([&row.id]).pop().flatten();
+        if d.source_id != source && after.is_some_and(|a| here.stands_for(&a, None, false)) {
+            held.push(row);
+            continue;
+        }
+        let at = place_of(rows, &row);
+        rows.insert(at, row);
     }
 }
 
@@ -2525,6 +2715,41 @@ fn place_of(rows: &[ChapterRow], row: &ChapterRow) -> usize {
             range(r).is_some_and(|theirs| if falling { theirs < mine } else { theirs > mine })
         })
         .unwrap_or(rows.len())
+}
+
+/// The rows filled in from other sources, made to read as the list in use: a numbered row is
+/// labelled by its number, not the other source's own words for it ("Ferry 21.5" reads
+/// "21.5"), and a one-shot the list in use has without a number is not listed a second time
+/// from another source. Only another source's row named a one-shot with no number or number 0
+/// goes; a numbered chapter that happens to carry the name stays.
+fn tidy_filled(rows: &mut Vec<ChapterRow>) {
+    let one_shot_here =
+        rows.iter().any(|r| r.other_source.is_none() && r.number.is_none() && one_shot(r));
+    if one_shot_here {
+        rows.retain(|r| {
+            r.other_source.is_none()
+                || !one_shot(r)
+                || r.number
+                    .as_deref()
+                    .is_some_and(|n| !n.parse::<f64>().is_ok_and(|n| n == 0.0))
+        });
+    }
+    for row in rows.iter_mut().filter(|r| r.other_source.is_some()) {
+        if let Some(number) = &row.number
+            && row.label.chars().any(char::is_alphabetic)
+        {
+            row.label = number.clone();
+        }
+    }
+}
+
+/// Whether a row's label or title names it a one-shot, written in any of the usual ways.
+fn one_shot(row: &ChapterRow) -> bool {
+    [Some(row.label.as_str()), row.title.as_deref()].into_iter().flatten().any(|text| {
+        let folded: String =
+            text.chars().filter(|c| c.is_alphanumeric()).flat_map(char::to_lowercase).collect();
+        folded == "oneshot"
+    })
 }
 
 /// A page fetched with the engine's own client, for a source that does not fetch its own.
@@ -2549,4 +2774,79 @@ async fn plain_fetch(
         .await
         .map(|b| b.to_vec())
         .map_err(|_| PageError::Failed(ProviderError::Transport("the request failed".into())))
+}
+
+#[cfg(test)]
+mod filled_tests {
+    use kaeri_model::reading::ChapterReadState;
+
+    use super::*;
+
+    fn row(id: &str, label: &str, title: Option<&str>, from: Option<&str>) -> ChapterRow {
+        let number = ChapterId::new(id).key().and_then(|k| k.range()).map(|r| r.to_string());
+        ChapterRow {
+            id: ChapterId::new(id),
+            label: label.into(),
+            state: ChapterReadState::Unread,
+            number,
+            title: title.map(str::to_owned),
+            volume: None,
+            published: None,
+            pages: None,
+            new_chapter: false,
+            download: None,
+            versions: 1,
+            bookmarked: false,
+            version_label: None,
+            read_at: None,
+            line: Vec::new(),
+            gone_from_source: false,
+            parts: 1,
+            missing_parts: Vec::new(),
+            part_groups: Vec::new(),
+            other_group: false,
+            group_language: None,
+            other_source: from.map(str::to_owned),
+            on_device: false,
+        }
+    }
+
+    fn labels(rows: &[ChapterRow]) -> Vec<(&str, &str)> {
+        rows.iter().map(|r| (r.id.as_str(), r.label.as_str())).collect()
+    }
+
+    /// A row from another source reads by its number, as the list's own rows do; its title
+    /// and the list's own words stay as they are.
+    #[test]
+    fn a_row_from_another_source_is_labelled_by_its_number() {
+        let mut rows = vec![
+            row("21", "21", None, None),
+            row("21.5", "Ferry 21.5", None, Some("Other shelf")),
+            row("22", "Ch. 22", Some("The Pier"), None),
+            row("x/-/extra", "Extra", None, Some("Other shelf")),
+        ];
+        tidy_filled(&mut rows);
+        assert_eq!(
+            labels(&rows),
+            [("21", "21"), ("21.5", "21.5"), ("22", "Ch. 22"), ("x/-/extra", "Extra")]
+        );
+    }
+
+    /// A one-shot listed here without a number is the other source's chapter 0 named a
+    /// one-shot: it shows once. A numbered chapter of that name stays, and without a one-shot
+    /// here, the other source's stays.
+    #[test]
+    fn a_one_shot_listed_here_is_not_listed_again_from_another_source() {
+        let filled = |rows: &mut Vec<ChapterRow>| {
+            rows.push(row("0", "0", Some("One shot"), Some("Other shelf")));
+            rows.push(row("1", "1", Some("A Quiet Harbour"), Some("Other shelf")));
+            rows.push(row("7", "7", Some("Oneshot"), Some("Other shelf")));
+            tidy_filled(rows);
+            rows.iter().map(|r| r.id.as_str().to_owned()).collect::<Vec<_>>()
+        };
+        let mut here = vec![row("x/-/oneshot", "Oneshot", None, None)];
+        assert_eq!(filled(&mut here), ["x/-/oneshot", "1", "7"]);
+        let mut none = vec![row("x/-/prologue", "Prologue", None, None)];
+        assert_eq!(filled(&mut none), ["x/-/prologue", "0", "1", "7"]);
+    }
 }

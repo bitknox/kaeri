@@ -725,4 +725,19 @@ sealed class ReaderChrome
                 return true;
         return false;
     }
+
+    /// <summary>Keyboard focus goes to the chrome's first control (Back), or its last. False while none can take it yet.</summary>
+    public bool FocusEdge(bool last)
+    {
+        UIElement[] order = last ? [Group, Top] : [Top, Group];
+        foreach (var scope in order)
+        {
+            if (scope.Visibility != Visibility.Visible)
+                continue;
+            var found = last ? FocusManager.FindLastFocusableElement(scope) : FocusManager.FindFirstFocusableElement(scope);
+            if (found is UIElement element && element.Focus(FocusState.Keyboard))
+                return true;
+        }
+        return false;
+    }
 }

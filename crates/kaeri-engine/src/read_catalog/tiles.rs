@@ -198,6 +198,16 @@ pub fn mark(tile: &mut WorkTile, store: &Store, sources: &crate::read_sources::B
             ));
         }
     }
+    no_title_again(tile);
+}
+
+/// A line that would only say the cover's title again says nothing, and goes: a book in one
+/// file, whose one part is named for the book, would otherwise read "Rooftop Lantern" twice.
+fn no_title_again(tile: &mut WorkTile) {
+    let same = |text: &str| text.trim().eq_ignore_ascii_case(tile.title.trim());
+    if matches!(&tile.next, Some(Msg::Verbatim { text }) if same(text)) {
+        tile.next = None;
+    }
 }
 
 /// A Library cover's line: the chapter the person is at and the newest there is, "Chapter 41
@@ -229,11 +239,12 @@ pub fn library_line(
             }
             (None, named) => {
                 tile.next = Some(words::part_place(&number, named.as_deref(), None));
+                no_title_again(tile);
                 return;
             }
         }
     } else {
-        match newest_number(&list) {
+        match newest_number(&list, &number) {
             Some(of) => ReadingMsg::ReadingChapterOf { chapter: number, of },
             None => return,
         }
@@ -241,15 +252,24 @@ pub fn library_line(
     tile.next = Some(Msg::Reading(line));
 }
 
-/// The newest chapter's number as people read it: the highest of the numbered ones.
-fn newest_number(list: &[chapters::Kept]) -> Option<String> {
-    list.iter()
+/// The newest chapter's number as people read it: the highest of the numbered ones, an extra
+/// after it, 115.6, counted as its chapter, 115. Whole when `at`, the chapter the person is at,
+/// is not past it.
+fn newest_number(list: &[chapters::Kept], at: &str) -> Option<String> {
+    let (value, number) = list
+        .iter()
         .filter_map(|c| {
             let number = c.number.as_deref()?;
             Some((number.parse::<f64>().ok()?, number))
         })
-        .max_by(|a, b| a.0.total_cmp(&b.0))
-        .map(|(_, n)| n.to_owned())
+        .max_by(|a, b| a.0.total_cmp(&b.0))?;
+    let whole = value.trunc();
+    let past = at.parse::<f64>().is_ok_and(|at| at > whole);
+    if whole == value || past || !(0.0..=f64::from(u32::MAX)).contains(&whole) {
+        return Some(number.to_owned());
+    }
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+    Some((whole as u32).to_string())
 }
 
 /// The source's own name for a light novel's part, when it says more than the number: what its
@@ -267,18 +287,24 @@ pub fn number_of(list: Option<&[chapters::Kept]>, chapter: &str) -> String {
 }
 
 /// The series page's main button: the chapter in progress, the next one, Read again once
-/// everything is read, and No source when none of the person's sources has it.
+/// everything is read, and No source when none of the person's sources has it. While plugins
+/// are still `arriving`, a series held in a source not in yet goes on from its kept list rather
+/// than being said to be in none.
 pub fn action(
     store: &Store,
     sources: &crate::read_sources::BookSources,
     work: &WorkId,
     medium: kaeri_core::media::Medium,
+    plugins: &crate::book_plugins::BookPlugins,
 ) -> SeriesAction {
-    let Some((source, series)) = sources.edition_of(work, None) else {
+    let edition = sources
+        .edition_of(work, None)
+        .or_else(|| plugins.lean_on_arrivals(|| sources.edition_not_in_yet(work)));
+    let Some((source, series)) = edition else {
         return SeriesAction::NoSource;
     };
     let read = Read::of(store, work.as_str());
-    let list = chapters::of_work(sources, store, work).map(|(_, _, l)| l);
+    let list = chapters::kept(store, &source, &series).map(|(l, _)| l);
     if let Some((chapter, page, of)) = read.in_progress.clone() {
         let label = number_of(list.as_deref(), &chapter);
         let named = named_in(list.as_deref(), &chapter);
@@ -374,4 +400,69 @@ pub fn missing(meta: &Meta, works: &[String], now: i64) -> Vec<AnilistId> {
     ids.into_iter()
         .filter(|id| !kept.iter().any(|k| k.book.id == *id && k.fresh(now)))
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn list(numbers: &[&str]) -> Vec<chapters::Kept> {
+        numbers
+            .iter()
+            .map(|n| {
+                serde_json::from_value(serde_json::json!({
+                    "id": n, "source_ref": format!("c-{n}"), "label": format!("Chapter {n}"),
+                    "number": n,
+                }))
+                .unwrap()
+            })
+            .collect()
+    }
+
+    /// A Library cover counts to the newest chapter, an extra after it counted as its chapter.
+    #[test]
+    fn the_newest_chapter_counts_an_extra_as_its_chapter() {
+        assert_eq!(newest_number(&list(&["1", "2", "115"]), "5").as_deref(), Some("115"));
+        assert_eq!(newest_number(&list(&["1", "115", "115.6"]), "5").as_deref(), Some("115"));
+        // A chapter read past the whole number keeps the extra, never "115.6 of 115".
+        assert_eq!(
+            newest_number(&list(&["1", "115", "115.6"]), "115.6").as_deref(),
+            Some("115.6")
+        );
+        assert_eq!(newest_number(&list(&[]), "1"), None);
+    }
+
+    /// A book in one file names its one part for the book: the cover says the title once.
+    #[test]
+    fn a_line_that_only_says_the_title_again_goes() {
+        let mut tile = WorkTile {
+            work: WorkId::new("l:00000000000000000000000000000001"),
+            title: "Rooftop Lantern".into(),
+            medium: Medium::Novel,
+            cover: None,
+            format_label: None,
+            progress: None,
+            next: Some(words::part_place("Rooftop Lantern", Some("rooftop lantern "), None)),
+            new_chapter: false,
+            adult: false,
+            facts: Vec::new(),
+            demo: false,
+            not_in_sources: false,
+            origin: None,
+            amount: None,
+            started: None,
+        };
+        no_title_again(&mut tile);
+        assert_eq!(tile.next, None);
+
+        // A part of its own name, or the title with how far in, still says something.
+        let named = words::part_place("3", Some("The Long Night"), None);
+        tile.next = Some(named.clone());
+        no_title_again(&mut tile);
+        assert_eq!(tile.next, Some(named));
+        let far = words::part_place("Rooftop Lantern", Some("Rooftop Lantern"), Some(40));
+        tile.next = Some(far.clone());
+        no_title_again(&mut tile);
+        assert_eq!(tile.next, Some(far));
+    }
 }

@@ -6,7 +6,8 @@ use kaeri_core::config::{Config, Paths};
 #[cfg(test)]
 use kaeri_engine::host::BUNDLE;
 use kaeri_engine::host::{
-    Backend, DecodedImage, Host, PageDecoder, SecretError, SecretStore, Storage, shared_secrets,
+    Backend, DecodedImage, FolderTree, Host, PageDecoder, SecretError, SecretStore, Storage,
+    shared_secrets,
 };
 
 use crate::start::SecretsMode;
@@ -92,6 +93,7 @@ pub(crate) struct Adapter {
     app: Arc<dyn FfiHost>,
     secrets: Arc<dyn SecretStore>,
     decoder: Option<Arc<dyn PageDecoder>>,
+    folders: Option<Arc<dyn FolderTree>>,
 }
 
 impl Adapter {
@@ -105,7 +107,7 @@ impl Adapter {
     ) -> Self {
         let env = std::env::var(Backend::ENV).ok();
         let secrets = mode.secrets(app.clone(), config, paths, env.as_deref());
-        Self { app, secrets, decoder: None }
+        Self { app, secrets, decoder: None, folders: None }
     }
 
     /// With the app's image decoder, when it gave one.
@@ -114,6 +116,16 @@ impl Adapter {
         decoder: Option<Arc<dyn FfiPageDecoder>>,
     ) -> Self {
         self.decoder = decoder.map(|d| Arc::new(Decoding(d)) as Arc<dyn PageDecoder>);
+        self
+    }
+
+    /// With the app's way into the book folders it opens, when it gave one.
+    pub(crate) fn with_folder_access(
+        mut self,
+        access: Option<Arc<dyn crate::folders::FfiFolderAccess>>,
+    ) -> Self {
+        self.folders =
+            access.map(|a| Arc::new(crate::folders::Folders(a)) as Arc<dyn FolderTree>);
         self
     }
 }
@@ -190,6 +202,10 @@ impl Host for Adapter {
     fn page_decoder(&self) -> Option<Arc<dyn PageDecoder>> {
         self.decoder.clone()
     }
+
+    fn folder_access(&self) -> Option<Arc<dyn FolderTree>> {
+        self.folders.clone()
+    }
 }
 
 #[cfg(test)]
@@ -260,7 +276,7 @@ mod tests {
             &paths(root.path()),
             None,
         );
-        Adapter { app, secrets, decoder: None }
+        Adapter { app, secrets, decoder: None, folders: None }
     }
 
     /// The token file the terminal app keeps `id` in under `root`'s data directory.

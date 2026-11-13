@@ -46,6 +46,8 @@ public sealed partial class ReaderSession
     CancellationTokenSource? wantedTimer;
     /// <summary>The chapter another is opening over: a layout of it that comes late is not the new one's.</summary>
     string? leaving;
+    /// <summary>The credit pages and parts of the chapter a strip flowed out of, until the next one opens.</summary>
+    (CreditPage[] Credits, ReaderParts? Parts, bool ShownStart, bool ShownEnd)? left;
 
     /// <summary>A page kept with Not a credit page, while Undo is still offered.</summary>
     public bool Held(ulong fingerprint) => keeping?.Fingerprint == fingerprint;
@@ -278,8 +280,30 @@ public sealed partial class ReaderSession
     /// <summary>The chapter goes for another: a held keep is sent, and its credit pages and parts go with it.</summary>
     void LeaveChapter()
     {
+        var kept = keeping?.Fingerprint;
+        left = (Credits.Where(c => c.Fingerprint != kept).ToArray(), Parts, ShownStart, ShownEnd);
         ForgetCredits();
         leaving = View?.Chapter.Id;
+    }
+
+    /// <summary>
+    /// The chapter a strip flowed out of stays, as when the next would not open: its layouts count
+    /// again, and its credit pages and parts come back, less a page kept on the way out.
+    /// </summary>
+    void StayInChapter()
+    {
+        leaving = null;
+        if (left is not { } was)
+            return;
+        left = null;
+        Credits = was.Credits;
+        Parts = was.Parts;
+        ShownStart = was.ShownStart && Credits.Any(c => !c.AtEnd);
+        ShownEnd = was.ShownEnd && Credits.Any(c => c.AtEnd);
+        CreditLineDone = true;
+        Changed?.Invoke(ReaderChange.Credits);
+        if (Parts is not null)
+            Changed?.Invoke(ReaderChange.Parts);
     }
 
     /// <summary>The chapter closed or another opened: its credit pages and parts go with it.</summary>

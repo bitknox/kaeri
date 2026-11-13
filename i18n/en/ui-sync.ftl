@@ -578,10 +578,12 @@ profiles-avatar-desc = { $name }, switch profile
 # Heading over the pairing code the other device shows, over the field.
 pair-code-field = Pairing code
 
-## Words the sentences above take for this device: "this phone", "this tablet", "this TV".
+## Words the sentences above take for this device: "this phone", "this tablet", "this TV", and
+## "this device" on an e-reader, which is neither.
 device-kind-phone = phone
 device-kind-tablet = tablet
 device-kind-tv = TV
+device-kind-other = { -device }
 
 # TV welcome, text button.
 first-setup-phone = Set up from your phone

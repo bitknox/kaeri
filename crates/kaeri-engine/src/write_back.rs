@@ -452,7 +452,17 @@ impl BookSources {
             }
         };
         // A chapter the server lists in parts is marked part by part, all of them.
-        let arranged = crate::read_catalog::arrange::arrange(&listed, None, None);
+        let numbering = self
+            .store()
+            .book_match_state(server, series)
+            .ok()
+            .flatten()
+            .map(|(work, _)| {
+                crate::read_catalog::chapters::numbering(self.store(), &work, None)
+            })
+            .unwrap_or_default();
+        let arranged =
+            crate::read_catalog::arrange::arrange_in(&listed, None, None, &numbering);
         for (i, item) in items.iter().enumerate() {
             let Some(row) =
                 arranged.row(&kaeri_core::books::ChapterId::new(item.chapter.clone()))

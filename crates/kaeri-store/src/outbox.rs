@@ -40,9 +40,10 @@ const MAX_ATTEMPTS: u32 = 50;
 /// `next_retry` for an op held until the id mappings change.
 ///
 /// A sentinel rather than a column: `claim_ready` already skips anything not yet due, so a
-/// deferred row stays out of every batch with no change to the query, keeps its place in
-/// the oldest-first order, and still counts in the depth the `⇅` badge shows — it has not
-/// gone anywhere yet.
+/// deferred row stays out of every batch with no change to the query and keeps its place in
+/// the oldest-first order. It counts in [`Store::outbox_depth`], since it has not gone
+/// anywhere, but not in [`Store::outbox_waiting`]: nothing will send it until a mapping
+/// arrives, so the badge says it apart from what is on its way.
 const DEFERRED: i64 = i64::MAX;
 
 /// A queued operation.
@@ -513,7 +514,19 @@ impl Store {
         })
     }
 
-    /// Number of pending operations, for the `⇅` badge in the status line.
+    /// Ops that will go out once their tracker can be reached: the queue less what is held for
+    /// a mapping. The number the `⇅` badge and the apps' sync status show as waiting.
+    pub fn outbox_waiting(&self, tracker_id: &str) -> Result<u32> {
+        self.with_personal(|c| {
+            Ok(c.query_row(
+                "SELECT COUNT(*) FROM sync_outbox WHERE tracker_id = ?1 AND next_retry <> ?2",
+                rusqlite::params![tracker_id, DEFERRED],
+                |r| r.get(0),
+            )?)
+        })
+    }
+
+    /// Every queued op, held ones included: what a drain reports as remaining.
     pub fn outbox_depth(&self, tracker_id: Option<&str>) -> Result<u32> {
         self.with_personal(|c| {
             let depth = match tracker_id {
@@ -729,6 +742,7 @@ mod tests {
         assert_eq!(ready[0].op, other);
         assert_eq!(store.outbox_depth(Some("mal")).unwrap(), 2, "and it is still queued");
         assert_eq!(store.outbox_deferred("mal").unwrap(), 1);
+        assert_eq!(store.outbox_waiting("mal").unwrap(), 1, "the held op is not on its way");
 
         // Watching on coalesces into the held row rather than queueing a second one.
         store.enqueue("mal", &progress(5), 2_000).unwrap();
@@ -738,6 +752,7 @@ mod tests {
         let ready = store.claim_ready("mal", 2_000, 10).unwrap();
         assert!(ready.iter().any(|e| e.op == progress(5) && e.attempts == 0));
         assert_eq!(store.outbox_deferred("mal").unwrap(), 0);
+        assert_eq!(store.outbox_waiting("mal").unwrap(), 2, "woken, it is on its way again");
     }
 
     #[test]

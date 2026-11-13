@@ -27,10 +27,13 @@ use std::{
     collections::{HashMap, HashSet},
     fs::File,
     io::{BufWriter, Write},
+    panic::AssertUnwindSafe,
     path::{Path, PathBuf},
     sync::{Arc, Mutex},
     time::{Duration, Instant},
 };
+
+use futures::FutureExt;
 
 use kaeri_core::{
     books::{ChapterContent, ChapterId, WorkId},
@@ -43,7 +46,7 @@ use kaeri_model::{
     medium::AppEdition,
     reading::{
         BookDownloadRow, BookDownloadsView, ChapterDownloadState, ChapterReadState, ChapterRow,
-        DownloadPick, ReadingEvent, ReadingFailure, StorageMeter, VolumeGroup,
+        DownloadPick, ReadingEvent, ReadingFailure, StorageMeter, VolumeGroup, WriteProblem,
     },
 };
 use kaeri_store::{
@@ -56,13 +59,27 @@ use crate::{
     read_sources::BookSources, services::Services,
 };
 
+/// Clears the queue's running mark when a run ends in a panic outside a chapter's fetch, so the
+/// next start runs the queue again. A run that ends as it should clears the mark itself, under
+/// the lock that decides it is done.
+struct NotRunningOnPanic<'a>(&'a Mutex<bool>);
+
+impl Drop for NotRunningOnPanic<'_> {
+    fn drop(&mut self) {
+        if std::thread::panicking() {
+            *self.0.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = false;
+        }
+    }
+}
+
 /// How many unread chapters after the one being read are kept ready.
 pub const KEEP_AHEAD: usize = 3;
 /// What a device keeps free of downloads: below this the queue stops with
 /// [`ReadingFailure::DiskFull`].
 pub const KEEP_FREE: u64 = 512 * 1_000_000;
 /// Progress is told at most this often; a chapter starting, finishing or failing is told at once.
-const PROGRESS_EVERY: Duration = Duration::from_secs(2);
+const PROGRESS_EVERY: Duration =
+    if cfg!(test) { Duration::ZERO } else { Duration::from_secs(2) };
 /// The rest between chapters.
 const PACE: Duration =
     if cfg!(test) { Duration::from_millis(2) } else { Duration::from_millis(400) };
@@ -74,6 +91,9 @@ pub struct Lent {
     pub plugins: BookPlugins,
     pub clock: Clock,
     pub tx: Outbox,
+    /// What a chapter list is finished with, as the series page has it.
+    pub meta: kaeri_meta::Meta,
+    pub offline: Arc<std::sync::atomic::AtomicBool>,
 }
 
 impl Lent {
@@ -83,7 +103,49 @@ impl Lent {
             plugins: services.book_plugins.clone(),
             clock: services.clock.clone(),
             tx: tx.clone(),
+            meta: services.meta.clone(),
+            offline: services.offline.clone(),
         }
+    }
+
+    pub(crate) fn of_kit(kit: &crate::read_catalog::Kit, tx: &Outbox) -> Self {
+        Self {
+            sources: kit.sources.clone(),
+            plugins: kit.plugins.clone(),
+            clock: kit.clock.clone(),
+            tx: tx.clone(),
+            meta: kit.meta.clone(),
+            offline: kit.offline.clone(),
+        }
+    }
+
+    fn kit(&self) -> crate::read_catalog::Kit {
+        crate::read_catalog::Kit {
+            meta: self.meta.clone(),
+            store: self.sources.store().clone(),
+            sources: self.sources.clone(),
+            plugins: self.plugins.clone(),
+            clock: self.clock.clone(),
+            offline: self.offline.clone(),
+        }
+    }
+
+    /// A work's chapters as the series page lists them, each row with its words.
+    fn chapters_event(
+        &self,
+        work: WorkId,
+        listed: (Option<kaeri_model::reading::BookEditionRow>, Vec<VolumeGroup>),
+    ) -> ReadingEvent {
+        let (edition, mut volumes) = listed;
+        let now = self.clock.now();
+        crate::read_catalog::series::finish(
+            &self.kit(),
+            &work,
+            edition.as_ref(),
+            &mut volumes,
+            now,
+        );
+        ReadingEvent::Chapters { work, edition, volumes, failure: None }
     }
 }
 
@@ -178,6 +240,8 @@ struct Inner {
     told: Mutex<Option<Instant>>,
     /// The title language setting, for the series' names; English first until it is given.
     titles: std::sync::OnceLock<kaeri_meta::titles::Titles>,
+    /// The pages of the chapters being fetched, for a reader that opens one meanwhile.
+    shares: shared::Shares,
 }
 
 impl std::fmt::Debug for BookDownloads {
@@ -224,6 +288,7 @@ impl BookDownloads {
             free: Mutex::new(None),
             told: Mutex::new(None),
             titles: std::sync::OnceLock::new(),
+            shares: shared::Shares::default(),
         }))
     }
 
@@ -266,6 +331,7 @@ impl BookDownloads {
             Err(e) => tracing::warn!(error = %e, "downloads cut short were not queued again"),
         }
         let Ok(rows) = store.book_downloads(None) else { return };
+        self.move_legacy_pages(&rows);
         let to_fetch: HashSet<PathBuf> = rows
             .iter()
             .filter(|r| {
@@ -284,6 +350,45 @@ impl BookDownloads {
                 } else if ext == "pages" && !to_fetch.contains(&path) {
                     KeptPages::remove(&path);
                 }
+            }
+        }
+    }
+
+    /// Pages an earlier version kept under its old names move to the names this one uses, so a
+    /// fetch it cut short goes on from them. Its finished files stay where they are: each row
+    /// keeps its file's path. Only an old name no other row shares, where case is ignored,
+    /// moves; pages under a shared one stay and are fetched again. Each move is one rename, so
+    /// a launch cut short leaves the pages either moved or where they were, for the next one.
+    fn move_legacy_pages(&self, rows: &[BookDownload]) {
+        let legacy = |r: &BookDownload| {
+            let name = kaeri_core::file_name::legacy;
+            self.0.dir.join(name(&r.work)).join(name(&r.chapter))
+        };
+        let key = |path: &Path| path.to_string_lossy().to_lowercase();
+        let mut owners: HashMap<String, usize> = HashMap::new();
+        for row in rows {
+            *owners.entry(key(&legacy(row))).or_default() += 1;
+        }
+        let current: HashSet<String> = rows.iter().map(|r| key(&self.file_stem(r))).collect();
+        for row in rows {
+            if !matches!(row.state, BookDownloadState::Queued | BookDownloadState::Failed) {
+                continue;
+            }
+            let (old, new) = (legacy(row), self.file_stem(row));
+            let old_key = key(&old);
+            if old == new || owners.get(&old_key) != Some(&1) || current.contains(&old_key) {
+                continue;
+            }
+            let (from, to) = (pages_of(&old), pages_of(&new));
+            if !from.is_dir() || to.exists() {
+                continue;
+            }
+            let moved = to
+                .parent()
+                .map_or(Ok(()), std::fs::create_dir_all)
+                .and_then(|()| std::fs::rename(&from, &to));
+            if let Err(e) = moved {
+                tracing::warn!(error = %e, "pages kept under an old name were not moved");
             }
         }
     }
@@ -317,7 +422,7 @@ impl BookDownloads {
         for d in &rows {
             let read = marks
                 .entry(d.work.clone())
-                .or_insert_with(|| store.read_marks(&d.work).unwrap_or_default())
+                .or_insert_with(|| crate::read_catalog::chapters::read_marks(store, &d.work))
                 .is_read(&d.chapter);
             let bookmarked = store.bookmarks(&d.work).unwrap_or_default().contains(&d.chapter);
             let kind = store.book_work_kind(&d.work).ok().flatten();
@@ -361,14 +466,16 @@ impl BookDownloads {
         let _ = tx.send(Event::Reading(ReadingEvent::Downloads(self.view(store))));
     }
 
-    fn publish_progress(&self, store: &Store, tx: &Outbox) {
+    /// Tell how downloads stand unless that was told a moment ago. Says whether it told.
+    fn publish_progress(&self, store: &Store, tx: &Outbox) -> bool {
         let mut told = self.0.told.lock().unwrap_or_else(|e| e.into_inner());
         if told.is_some_and(|at| at.elapsed() < PROGRESS_EVERY) {
-            return;
+            return false;
         }
         *told = Some(Instant::now());
         drop(told);
         self.publish(store, tx);
+        true
     }
 
     // -----------------------------------------------------------------------------------------
@@ -424,6 +531,26 @@ impl BookDownloads {
             .collect()
     }
 
+    /// The chapters asking for `pick` fetches. Next unread counts from the reader's place, the
+    /// chapter in progress or the one after the last read, and passes over chapters already on
+    /// this device or on their way: a second Next 5 unread fetches the five after the first.
+    /// Unread chapters behind the place, the person passed over, are left out. Every other pick
+    /// is [`Self::picked`].
+    pub fn to_fetch(pick: &DownloadPick, rows: &[ChapterRow]) -> Vec<Wanted> {
+        let DownloadPick::NextUnread { n } = pick else { return Self::picked(pick, rows) };
+        let fetched = |r: &ChapterRow| {
+            r.download
+                .as_ref()
+                .is_some_and(|d| !matches!(d, ChapterDownloadState::Failed { .. }))
+        };
+        rows[place(rows)..]
+            .iter()
+            .filter(|r| !matches!(r.state, ChapterReadState::Read) && !fetched(r))
+            .take(*n as usize)
+            .map(|r| Wanted { chapter: r.id.clone(), version_label: r.version_label.clone() })
+            .collect()
+    }
+
     /// Ask for the chapters `pick` names. Lists the work's chapters first, so this answers
     /// after the source does; a source that cannot be asked ends in `Failed` for the screen
     /// that asked.
@@ -439,12 +566,52 @@ impl BookDownloads {
                 return;
             }
         };
-        let wanted = Self::picked(&pick, &rows);
+        let wanted = Self::to_fetch(&pick, &rows);
         let store = lent.sources.store();
-        if self.queue(store, &work, &source, &wanted, false, now) > 0 || !wanted.is_empty() {
+        let listers = Listers::of(&lent.sources, &work, &source);
+        let (added, unlisted) =
+            self.queue_listed(store, &work, (&listers, &rows), &wanted, false, now);
+        // A chapter the series page listed from a source that no longer has it.
+        if unlisted > 0 {
+            let about = kaeri_model::reading::ReadingAbout::Downloads;
+            let failure = ReadingFailure::NotFound;
+            let _ = lent.tx.send(Event::Reading(ReadingEvent::Failed { about, failure }));
+        }
+        if added > 0 || wanted.len() > unlisted {
             self.publish(store, &lent.tx);
             self.start(lent);
         }
+    }
+
+    /// Queue `wanted`, in their order, each from the source `listers` gives its row in `rows`.
+    /// Says how many were newly queued, and how many no source lists any more.
+    fn queue_listed(
+        &self,
+        store: &Store,
+        work: &WorkId,
+        (listers, rows): (&Listers, &[ChapterRow]),
+        wanted: &[Wanted],
+        keep_ready: bool,
+        now: i64,
+    ) -> (usize, usize) {
+        let (mut added, mut unlisted) = (0, 0);
+        for want in wanted {
+            let row = rows.iter().find(|r| r.id == want.chapter);
+            match row.map_or(Some(listers.edition.as_str()), |row| listers.of_row(row)) {
+                Some(source) => {
+                    added += self.queue(
+                        store,
+                        work,
+                        source,
+                        std::slice::from_ref(want),
+                        keep_ready,
+                        now,
+                    )
+                }
+                None => unlisted += 1,
+            }
+        }
+        (added, unlisted)
     }
 
     /// Queue every unread chapter Updates lists.
@@ -518,7 +685,7 @@ impl BookDownloads {
     /// the settings say.
     pub fn delete_read(&self, lent: &Lent, work: &WorkId) -> usize {
         let store = lent.sources.store();
-        let marks = store.read_marks(work.as_str()).unwrap_or_default();
+        let marks = crate::read_catalog::chapters::read_marks(store, work.as_str());
         let bookmarks: HashSet<String> =
             store.bookmarks(work.as_str()).unwrap_or_default().into_iter().collect();
         let read: Vec<String> = store
@@ -591,6 +758,25 @@ impl BookDownloads {
         tokio::spawn(async move { this.keep_ready(&lent, &work, &chapter).await });
     }
 
+    /// The reader fetches `chapter` itself, as the queue had not started it: a chapter waiting
+    /// only to be kept ready leaves the queue in the same step, so the source is not asked for
+    /// it again. One the person asked for stays. False when the queue started it meanwhile: the
+    /// reader joins that fetch instead.
+    pub(crate) fn reader_fetches(
+        &self,
+        store: &Store,
+        tx: &Outbox,
+        (work, chapter): (&WorkId, &ChapterId),
+        now: i64,
+    ) -> bool {
+        if store.unqueue_kept_ready(work.as_str(), chapter.as_str(), now).unwrap_or(false) {
+            self.publish(store, tx);
+            return true;
+        }
+        let row = store.book_download(work.as_str(), chapter.as_str()).ok().flatten();
+        !row.is_some_and(|r| r.state == BookDownloadState::Downloading)
+    }
+
     /// Let go of the downloads of read chapters, of one work or all: every one kept ready on
     /// its own, and every one with delete after reading on, bookmarked chapters spared.
     pub fn sweep(&self, lent: &Lent, work: Option<&str>) -> usize {
@@ -602,7 +788,7 @@ impl BookDownloads {
         };
         let mut gone = 0;
         for work in works {
-            let marks = store.read_marks(&work).unwrap_or_default();
+            let marks = crate::read_catalog::chapters::read_marks(store, &work);
             let bookmarks: HashSet<String> =
                 store.bookmarks(&work).unwrap_or_default().into_iter().collect();
             for row in store.book_downloads(Some(&work)).unwrap_or_default() {
@@ -629,6 +815,7 @@ impl BookDownloads {
             return;
         }
         let now = lent.clock.now();
+        lent.sources.plugins_in(&lent.plugins, None).await;
         lent.sources.adopt_plugins(&lent.plugins);
         // The list the reader opened from serves while it is fresh: a chapter read is no reason
         // to ask the source for the whole list again.
@@ -648,10 +835,22 @@ impl BookDownloads {
             &rows[at + 1..],
         );
         let store = lent.sources.store();
-        if self.queue(store, work, &source, &ahead, true, now) > 0 {
+        let listers = Listers::of(&lent.sources, work, &source);
+        if self.queue_listed(store, work, (&listers, &rows), &ahead, true, now).0 > 0 {
             self.publish(store, &lent.tx);
             self.start(lent);
         }
+    }
+
+    /// Tell the series page how a work's chapters stand while its downloads run, from the list
+    /// as kept: a run never asks the source again only to say how far it got. Sent from the run
+    /// itself, so one told later never lands before one told earlier.
+    fn relist_kept(&self, lent: &Lent, work: &str) {
+        let work = WorkId::new(work);
+        let Some(listed) = lent.sources.kept_listing(&work, lent.clock.now(), i64::MAX) else {
+            return;
+        };
+        let _ = lent.tx.send(Event::Reading(lent.chapters_event(work, listed)));
     }
 
     /// Tell the screen which of a work's chapters stand how, as the list itself says it.
@@ -659,6 +858,7 @@ impl BookDownloads {
         let lent = lent.clone();
         tokio::spawn(async move {
             let now = lent.clock.now();
+            lent.sources.plugins_in(&lent.plugins, None).await;
             lent.sources.adopt_plugins(&lent.plugins);
             // Only the downloads changed: the list as kept says the rest.
             let listed = match lent.sources.kept_listing(&work, now, i64::MAX) {
@@ -666,9 +866,7 @@ impl BookDownloads {
                 None => lent.sources.chapters(&work, None, now).await,
             };
             let event = match listed {
-                Ok((edition, volumes)) => {
-                    ReadingEvent::Chapters { work, edition, volumes, failure: None }
-                }
+                Ok(listed) => lent.chapters_event(work, listed),
                 Err(failure) => ReadingEvent::Chapters {
                     work,
                     edition: None,
@@ -702,6 +900,7 @@ impl BookDownloads {
     }
 
     async fn run(&self, lent: Lent) {
+        let _unwinding = NotRunningOnPanic(&self.0.running);
         let store = lent.sources.store().clone();
         let mut touched: Vec<WorkId> = Vec::new();
         // The chapters the person asked for that finished in this run, by series.
@@ -764,7 +963,33 @@ impl BookDownloads {
             tracing::warn!(error = %e, "a download was not started");
         }
         self.publish(store, &lent.tx);
-        match self.fetch(lent, store, &row).await {
+        self.relist_kept(lent, &row.work);
+        let outcome = self.ended(lent, store, &row, now).await;
+        // The series page hears each chapter land, not the whole run at its end.
+        self.relist_kept(lent, &row.work);
+        outcome
+    }
+
+    /// Fetch the chapter and keep how that ended, as [`Self::one`] says it.
+    async fn ended(
+        &self,
+        lent: &Lent,
+        store: &Store,
+        row: &BookDownload,
+        now: i64,
+    ) -> (bool, bool) {
+        // A panic in one chapter's fetch, from content no one foresaw, fails that chapter: the
+        // queue goes on to the next instead of ending with its task, still marked running.
+        let fetched = AssertUnwindSafe(self.fetch(lent, store, row))
+            .catch_unwind()
+            .await
+            .unwrap_or_else(|_| {
+                tracing::warn!(chapter = %row.chapter, "a download panicked; it fails");
+                Err(Stop::Failed(ReadingFailure::Other {
+                    reason: "the chapter could not be downloaded".into(),
+                }))
+            });
+        match fetched {
             Ok(done) => {
                 let path = done.path.to_string_lossy().into_owned();
                 let kept =
@@ -782,18 +1007,18 @@ impl BookDownloads {
                 (true, kept)
             }
             Err(Stop::Cancelled) => {
-                let _ = std::fs::remove_file(part_of(&self.file_stem(&row)));
+                let _ = std::fs::remove_file(part_of(&self.file_stem(row)));
                 self.publish(store, &lent.tx);
                 (true, false)
             }
             Err(Stop::Held) => {
-                let _ = std::fs::remove_file(part_of(&self.file_stem(&row)));
+                let _ = std::fs::remove_file(part_of(&self.file_stem(row)));
                 let _ = store.book_download_requeue(row.id, now);
                 self.publish(store, &lent.tx);
                 (true, false)
             }
             Err(Stop::Failed(failure)) => {
-                let _ = std::fs::remove_file(part_of(&self.file_stem(&row)));
+                let _ = std::fs::remove_file(part_of(&self.file_stem(row)));
                 let full = failure == ReadingFailure::DiskFull;
                 if let Err(e) = store.book_download_failed(row.id, &encode(&failure), now) {
                     tracing::warn!(error = %e, "a failed download was not kept");
@@ -802,6 +1027,41 @@ impl BookDownloads {
                 (!full, false)
             }
         }
+    }
+
+    /// The first page of a chapter being fetched, once it has landed and been kept: for the
+    /// reader's end page, which shows it before the chapter is done.
+    pub(crate) fn first_kept_page(&self, work: &str, chapter: &str) -> Option<PathBuf> {
+        let dir = pages_of(&self.0.dir.join(safe(work)).join(safe(chapter)));
+        std::fs::read_dir(dir).ok()?.flatten().map(|entry| entry.path()).find(|path| {
+            path.file_name()
+                .and_then(|n| n.to_str())
+                .is_some_and(|n| n.starts_with("00000-") && n.ends_with(".page"))
+        })
+    }
+
+    /// The pages of a chapter of pictures being fetched now, for the reader to share: it takes
+    /// the pages kept and those still to come from them, and fetches any other only once.
+    pub(crate) fn sharing(&self, work: &str, chapter: &str) -> Option<Arc<SharedPages>> {
+        self.0.shares.of(&pages_of(&self.0.dir.join(safe(work)).join(safe(chapter))))
+    }
+
+    /// Whether the queue is about to fetch `chapter`: it runs, fetches nothing now, and takes
+    /// this chapter next. One waiting behind another download, or in a queue that does not run,
+    /// is not.
+    pub(crate) fn starts_soon(&self, store: &Store, work: &str, chapter: &str) -> bool {
+        if self.setup().hold || !*self.0.running.lock().unwrap_or_else(|e| e.into_inner()) {
+            return false;
+        }
+        let rows = store.book_downloads(None).unwrap_or_default();
+        if rows.iter().any(|r| r.state == BookDownloadState::Downloading) {
+            return false;
+        }
+        store
+            .next_book_download()
+            .ok()
+            .flatten()
+            .is_some_and(|next| next.work == work && next.chapter == chapter)
     }
 
     fn file_stem(&self, row: &BookDownload) -> PathBuf {
@@ -826,7 +1086,10 @@ impl BookDownloads {
         let wanted = || Self::wanted(store, row);
         let progress = |done: u32, total: u32| {
             let _ = store.book_download_progress(row.id, done, Some(total), lent.clock.now());
-            self.publish_progress(store, &lent.tx);
+            // The series page counts the pages with Downloads, as often as Downloads does.
+            if self.publish_progress(store, &lent.tx) {
+                self.relist_kept(lent, &row.work);
+            }
         };
         let job = Fetching {
             work: WorkId::new(row.work.clone()),
@@ -853,6 +1116,11 @@ impl BookDownloads {
         }
         lent.sources.plugins_in(&lent.plugins, Some(&job.source_id)).await;
         let (work, chapter) = (&job.work, &job.chapter);
+        // Taken out of the queue as it started, by a reader fetching it itself: the source is
+        // not asked for it.
+        if !(job.wanted)() {
+            return Err(Stop::Cancelled);
+        }
         let mut opened = lent
             .sources
             .open(work, chapter, Some(&job.source_id), now)
@@ -886,34 +1154,36 @@ impl BookDownloads {
                 // Each page is kept as it lands, so a fetch cut short fetches only the pages it
                 // lacks next time.
                 let dir = pages_of(&stem);
-                let mut kept = KeptPages::open(&dir, total)
+                // A reader opening the chapter meanwhile shares the pages: each is fetched once,
+                // by whichever asks first. One still holding them from before is shared again.
+                let kept = self
+                    .0
+                    .shares
+                    .open(&dir, total, opened.clone())
                     .map_err(|e| Stop::Failed(io_failure(&e, &dir)))?;
-                if kept.len() > 0 {
-                    tracing::info!(
-                        kept = kept.len(),
-                        total,
-                        "a chapter fetch picks up its pages"
-                    );
-                }
                 for index in 0..total {
                     if self.setup().hold {
                         return Err(Stop::Held);
                     }
                     if !(job.wanted)() {
-                        KeptPages::remove(&dir);
+                        kept.let_go();
                         return Err(Stop::Cancelled);
                     }
                     if !kept.has(index) {
                         if self.free().is_some_and(|free| free < KEEP_FREE) {
                             return Err(ReadingFailure::DiskFull.into());
                         }
-                        let bytes = lent
-                            .sources
-                            .page(&mut opened, index as usize, lent.clock.now())
+                        let now = lent.clock.now();
+                        kept.page(&lent.sources, index, now, false)
                             .await
                             .map_err(Stop::Failed)?;
-                        kept.put(index, &bytes)
-                            .map_err(|e| Stop::Failed(io_failure(&e, &dir)))?;
+                        if !kept.has(index) {
+                            let failure = kept.unkept(index).unwrap_or_else(|| {
+                                let reason = format!("page {index} was not kept");
+                                ReadingFailure::Other { reason }
+                            });
+                            return Err(Stop::Failed(failure));
+                        }
                     }
                     (job.progress)(index + 1, total);
                 }
@@ -929,8 +1199,10 @@ impl BookDownloads {
                 // The edge pages are fingerprinted on the way, for the series' credit pages.
                 let mut prints = crate::reading::credits::Recorder::new(&opened.spans());
                 for index in 0..total {
-                    let bytes =
-                        kept.read(index).map_err(|e| Stop::Failed(io_failure(&e, &dir)))?;
+                    let bytes = kept.read(index).map_err(|_| {
+                        let path = dir.to_string_lossy().into_owned();
+                        Stop::Failed(ReadingFailure::FileMissing { path })
+                    })?;
                     prints.page(index, &bytes).await;
                     cbz.add_page(&bytes)
                         .map_err(|e| Stop::Failed(book_failure(&e, &part, &source)))?;
@@ -955,11 +1227,13 @@ impl BookDownloads {
                 drop(out);
                 let done = finish(&part, &stem.with_extension("cbz"), Some(total));
                 if done.is_ok() {
-                    KeptPages::remove(&dir);
+                    kept.let_go();
                 }
                 done
             }
-            ChapterContent::Text(mut body) => {
+            ChapterContent::Text(body) => {
+                // Its title said once, as the reader shows it from the source.
+                let mut body = crate::reading::novel::heading_once(&body, &opened.chapter);
                 // Its pictures go inside the book, so it reads with no network.
                 let pictures = lent.sources.pictures_in(&source, &mut body).await;
                 let file =
@@ -1071,17 +1345,10 @@ fn part_of(stem: &Path) -> PathBuf {
     stem.with_file_name(name)
 }
 
-/// A name that is safe in any file system and tells different ids apart.
+/// The file or folder name for a work's id or a chapter's key: short enough for any file
+/// system, and never another id's ([`kaeri_core::file_name::of_id`]).
 pub(crate) fn safe(id: &str) -> String {
-    let mut out = String::with_capacity(id.len());
-    for ch in id.chars() {
-        if ch.is_ascii_alphanumeric() || ch == '-' || ch == '_' {
-            out.push(ch);
-        } else {
-            out.push_str(&format!("~{:x}", u32::from(ch)));
-        }
-    }
-    out
+    kaeri_core::file_name::of_id(id)
 }
 
 /// Take a downloaded file away. True when it is gone, or was never there.
@@ -1097,13 +1364,20 @@ fn forget_file(row: &BookDownload) -> bool {
     }
 }
 
-fn io_failure(e: &std::io::Error, path: &Path) -> ReadingFailure {
-    // Out of room is the one the person can act on; the rest are the file's.
-    if e.raw_os_error() == Some(28) || e.kind() == std::io::ErrorKind::StorageFull {
-        ReadingFailure::DiskFull
-    } else {
-        ReadingFailure::FileMissing { path: path.to_string_lossy().into_owned() }
-    }
+/// Why writing `path` failed, in the reader's terms: out of room, a folder that is gone, a name
+/// the storage does not take, storage that may not be written, or another error.
+pub(crate) fn io_failure(e: &std::io::Error, path: &Path) -> ReadingFailure {
+    use std::io::ErrorKind as K;
+    let path = path.to_string_lossy().into_owned();
+    let problem = match e.kind() {
+        _ if e.raw_os_error() == Some(28) => return ReadingFailure::DiskFull,
+        K::StorageFull | K::QuotaExceeded => return ReadingFailure::DiskFull,
+        K::NotFound => return ReadingFailure::FileMissing { path },
+        K::InvalidFilename => WriteProblem::Name,
+        K::PermissionDenied | K::ReadOnlyFilesystem => WriteProblem::Denied,
+        _ => WriteProblem::Other,
+    };
+    ReadingFailure::CannotWrite { path, problem }
 }
 
 fn book_failure(e: &kaeri_books::BookError, path: &Path, source: &str) -> ReadingFailure {
@@ -1160,6 +1434,7 @@ pub(crate) fn chapter_row(d: &BookDownload, read: bool, bookmarked: bool) -> Cha
         part_groups: Vec::new(),
         group_language: None,
         other_source: None,
+        on_device: false,
     }
 }
 
@@ -1177,6 +1452,14 @@ fn encode(failure: &ReadingFailure) -> String {
         ReadingFailure::SignInNeeded { what } => format!("sign_in:{what}"),
         ReadingFailure::Blocked { source, reason } => format!("blocked:{source}:{reason}"),
         ReadingFailure::FileMissing { path } => format!("file:{path}"),
+        ReadingFailure::CannotWrite { path, problem } => {
+            let problem = match problem {
+                WriteProblem::Name => "name",
+                WriteProblem::Denied => "denied",
+                WriteProblem::Other => "other",
+            };
+            format!("write:{problem}:{path}")
+        }
         _ => "other".into(),
     }
 }
@@ -1197,6 +1480,15 @@ fn decode(text: &str) -> ReadingFailure {
             ReadingFailure::Blocked { source: source.to_owned(), reason: reason.to_owned() }
         }
         "file" => ReadingFailure::FileMissing { path: rest.to_owned() },
+        "write" => {
+            let (problem, path) = rest.split_once(':').unwrap_or(("other", rest));
+            let problem = match problem {
+                "name" => WriteProblem::Name,
+                "denied" => WriteProblem::Denied,
+                _ => WriteProblem::Other,
+            };
+            ReadingFailure::CannotWrite { path: path.to_owned(), problem }
+        }
         _ => ReadingFailure::SourceDown { source: rest.to_owned() },
     }
 }
@@ -1247,9 +1539,57 @@ pub(crate) async fn ordered_chapters(
         .map(|e| e.source_id)
         .or_else(|| sources.edition_of(work, None).map(|(source, _)| source))
         .ok_or(ReadingFailure::NotFound)?;
-    // Downloads come from the edition: a chapter listed from another source is read there.
-    let rows = flatten(groups).into_iter().filter(|r| r.other_source.is_none()).collect();
-    Ok((source, rows))
+    // A chapter listed from another source is downloaded from there: see [`Listers`].
+    Ok((source, flatten(groups)))
+}
+
+/// Where each chapter of a work is downloaded from: the edition's source, or for a chapter the
+/// series page lists from another source, the first other source whose kept list has it, as
+/// the series page fills it in and the reader opens it.
+pub(crate) struct Listers {
+    edition: String,
+    /// Each other source with the chapter ids its kept list has, in the work's order.
+    others: Vec<(String, HashSet<String>)>,
+}
+
+impl Listers {
+    pub(crate) fn of(sources: &BookSources, work: &WorkId, edition: &str) -> Self {
+        let store = sources.store();
+        let others = store
+            .book_refs_for_work(work.as_str())
+            .unwrap_or_default()
+            .into_iter()
+            .filter(|(other, _)| other != edition && sources.is_available(other))
+            .filter_map(|(other, series)| {
+                let (list, _) = crate::read_catalog::chapters::kept(store, &other, &series)?;
+                Some((other, list.into_iter().map(|k| k.id).collect()))
+            })
+            .collect();
+        Self { edition: edition.to_owned(), others }
+    }
+
+    /// The source `row` is downloaded from. `None` for a chapter listed from another source
+    /// that no source's kept list has any more.
+    pub(crate) fn of_row(&self, row: &ChapterRow) -> Option<&str> {
+        if row.other_source.is_none() {
+            return Some(&self.edition);
+        }
+        self.others
+            .iter()
+            .find(|(_, ids)| ids.contains(row.id.as_str()))
+            .map(|(s, _)| s.as_str())
+    }
+}
+
+/// The reader's place in `rows`, in reading order: the last chapter in progress, or the one
+/// after the last read, and the start when nothing was read. Choose chapters starts there too.
+fn place(rows: &[ChapterRow]) -> usize {
+    if let Some(at) =
+        rows.iter().rposition(|r| matches!(r.state, ChapterReadState::InProgress { .. }))
+    {
+        return at;
+    }
+    rows.iter().rposition(|r| matches!(r.state, ChapterReadState::Read)).map_or(0, |at| at + 1)
 }
 
 /// The chapters of every volume, ordered by volume then number; chapters with no number last,
@@ -1321,8 +1661,10 @@ pub fn launched(engine: &crate::state::EngineState, services: &Services, tx: &Ou
 }
 
 mod kept;
+mod shared;
 mod sizes;
 #[cfg(test)]
 mod tests;
 
 use kept::{KeptPages, pages_of};
+pub(crate) use shared::SharedPages;

@@ -2021,9 +2021,6 @@ linux-shortcuts-close-reader = Stäng läsaren
 # Two names joined, or a list's last name joined to the rest, in the end page's tracker line: "AniList and MangaUpdates".
 linux-reader-names-and = { $first } och { $last }
 
-# On the plate that holds a page's place while it loads. The page is its number, such as 23.
-linux-reader-page-plate = Sida { $page }
-
 # Heading when a chapter could not open. The chapter is its number, such as 13.
 linux-reader-open-failed = Kunde inte öppna kapitel { $chapter }
 
@@ -8625,6 +8622,15 @@ player-subs-more = Mer i Inställningar…
 # Under a page that is still loading after four seconds.
 reader-page-loading = Laddar sida { $page }
 
+# On the plate of a page that is still loading.
+reader-page-plate = Sida { $page }
+
+# On the plate of a strip image that is still loading.
+reader-image-plate = Bild { $image }
+
+# Under a strip image's number after four seconds.
+reader-image-loading = Laddar bild { $image }
+
 # Heading where a page could not be loaded.
 reader-page-failed = Kunde inte ladda sida { $page }
 
@@ -8703,14 +8709,20 @@ reader-spreads-rotate = Vrid
 # A choice for wide pages: shown whole.
 reader-spreads-whole = Hel
 
-# A choice for the reader's tap zones: taps near the left and right edges turn the page.
+# A choice for the reader's tap zones: taps near the left and right edges turn the page. Replaced by Sides; kept until every app has the new tap zones page.
 reader-tap-edges = Kanter
 
-# A choice for the reader's tap zones: the left and right halves turn the page.
-reader-tap-sides = Halvor
-
-# A choice for the reader's tap zones: taps do not turn the page.
+# Tap zone layout: taps only show and hide the controls, and never turn the page.
 reader-tap-off = Av
+
+# Name of the tap zone that turns to the next page, in the guide over the page and as a screen reader action.
+reader-zone-next = Nästa sida
+
+# Name of the tap zone that turns to the previous page, in the guide and as a screen reader action.
+reader-zone-previous = Föregående sida
+
+# Name of the tap zone that shows and hides the reader's controls, in the guide.
+reader-zone-controls = Kontroller
 
 # Button in the reader's controls that opens the chapters and the page grid.
 reader-chapters = Kapitel
@@ -13472,9 +13484,6 @@ title-tags = Taggar
 
 # Button that opens the full page of facts about a show.
 title-more-about = Mer om den här titeln
-
-# Accessibility hint of the button that expands a synopsis.
-title-synopsis-hint = Visar hela synopsen
 
 # Label under a season: which episodes are dubbed so far.
 title-dubbed-to = Dubbat till avsnitt { $episode }

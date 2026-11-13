@@ -102,6 +102,29 @@ reader-moved-elsewhere = Moved to { $chapter }, page { $page }, where another { 
 # @arg page: plain
 reader-moved-number-elsewhere = Moved to chapter { $chapter }, page { $page }, where another { -device } stopped
 
+# The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its
+# whole label, such as The Long Night.
+# @arg chapter: text
+# @arg image: plain
+# @arg device: text
+reader-moved-image = Moved to { $chapter }, image { $image }, where { $device } stopped
+
+# The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+# @arg chapter: text
+# @arg image: plain
+# @arg device: text
+reader-moved-number-image = Moved to chapter { $chapter }, image { $image }, where { $device } stopped
+
+# The notice in a strip when another device read further and its name is not known.
+# @arg chapter: text
+# @arg image: plain
+reader-moved-elsewhere-image = Moved to { $chapter }, image { $image }, where another { -device } stopped
+
+# The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+# @arg chapter: text
+# @arg image: plain
+reader-moved-number-elsewhere-image = Moved to chapter { $chapter }, image { $image }, where another { -device } stopped
+
 # A notice the first time a series opens with its reading direction guessed. It offers Change.
 # @max 32
 reader-detected-right-to-left = Looks like right to left
@@ -174,6 +197,22 @@ reading-failed-protected = This book is copy-protected, so { -app-name } can't o
 
 # Why a chapter could not be saved: the disk is full.
 reading-failed-disk-full = There's no room left on this { -device }. Free some space and try again.
+
+# Why a chapter or a file for an e-reader could not be saved: the storage refused the name,
+# because it is too long or has characters the storage doesn't allow. The path is the file's
+# or the folder's.
+# @arg path: text
+reading-failed-write-name = The storage doesn't take the name { $path }. It may be too long.
+
+# Why a chapter or a file for an e-reader could not be saved: the storage is read-only, or
+# Kaeri isn't allowed to write there. The path is the file's or the folder's.
+# @arg path: text
+reading-failed-write-denied = { -app-name } isn't allowed to write { $path }. Check that the storage isn't read-only, then try again.
+
+# Why a chapter or a file for an e-reader could not be saved, for another reason the system
+# gave. The path is the file's or the folder's.
+# @arg path: text
+reading-failed-write = { -app-name } couldn't write { $path }. Try again.
 
 # Why a novel could not open: the system's web view is too old. The version is its major version
 # number, such as 80.
@@ -517,6 +556,11 @@ reading-row-waits-wifi = Queued · waits for Wi-Fi
 # @arg total: int
 # @max 44
 reading-row-downloading = Downloading · { $done } of { $total } pages
+
+# A chapter row's state while it downloads, before its page count is known, and throughout for
+# a novel's chapter, which has no pages to count.
+# @max 24
+reading-row-downloading-plain = Downloading
 
 # A chapter row's state: the download failed. The reason follows as the next part.
 # @max 24

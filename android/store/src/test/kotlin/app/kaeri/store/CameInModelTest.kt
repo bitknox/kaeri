@@ -209,6 +209,10 @@ class CameInModelTest {
         assertEquals(CameInSteps.FolderStep.Found(folder(64)), CameInSteps.folder(CameIn.Folder(folder(64))))
         val none = CameIn.Empty(NothingCameIn.EmptyFolder(folder(0)))
         assertEquals(CameInSteps.FolderStep.Nothing(folder(0)), CameInSteps.folder(none))
+        // A folder that could not be read ends the wait on its own state, in the folder form.
+        val unread = CameIn.Empty(NothingCameIn.FolderUnreadable(folder(0)))
+        assertEquals(CameInSteps.FolderStep.Unreadable(folder(0)), CameInSteps.folder(unread))
+        assertEquals(Adding.FOLDER, CameInModel.formFor(unread))
 
         val joined = CameInSteps.store(CameIn.Store(store()))
         assertEquals(CameInSteps.StoreAction.INSTALL_ALL, CameInSteps.storeAction(joined))

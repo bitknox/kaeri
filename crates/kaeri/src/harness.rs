@@ -692,7 +692,9 @@ impl Harness {
             // What it leads to, it says: keep next's rows on the queue.
             Internal::SourcesChanged | Internal::LetGo | Internal::SyncEffects => {}
             // The TUI does not read: the reader's wakes come to nothing here.
-            Internal::Reader { .. } | Internal::ReadingSynced => {}
+            Internal::Reader { .. }
+            | Internal::ReadingSynced
+            | Internal::BookSourcesChanged => {}
         }
     }
 

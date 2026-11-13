@@ -94,7 +94,11 @@ reader-volume = Volume { $volume }
 reader-chapter-in-progress = Página { $page } de { $total }
 reader-chapter-read = Lido
 reader-chapter-new = novo
-reader-chapter-pages = { $pages } páginas
+reader-chapter-pages = { $pages ->
+    [one] 1 página
+    [many] { $pages } de páginas
+   *[other] { $pages } páginas
+ }
 reader-offline-line = Offline. Os capítulos baixados ainda abrem.
 reader-menu-go = Ir
 reader-menu-next-page = Página seguinte
@@ -116,8 +120,5 @@ reader-key-step = Passo do teclado
 reader-key-step-panel = Quadro
 reader-key-step-screen = Tela
 reader-strip-gap = Espaço entre imagens
-reader-zone-back = Voltar
-reader-zone-forward = Avançar
-reader-zone-menu = Menu
 reader-pages-range = { $from }–{ $to }
 send-failed-offline = Tente de novo quando estiver online.

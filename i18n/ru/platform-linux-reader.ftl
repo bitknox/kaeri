@@ -70,7 +70,6 @@ linux-shortcuts-text-size = Крупнее, мельче или исходный
 linux-shortcuts-reader-back = Назад к странице до перехода
 linux-shortcuts-close-reader = Закрыть читалку
 linux-reader-names-and = { $first } и { $last }
-linux-reader-page-plate = Страница { $page }
 linux-reader-open-failed = Не удалось открыть главу { $chapter }
 linux-reader-open-failed-plain = Не удалось открыть эту главу
 linux-send-next = { $n ->

@@ -113,7 +113,7 @@
                        TextTrimming="WordEllipsis" MaxWidth="720" HorizontalAlignment="Left"
                        IsTextTrimmedChanged="OnSynopsisTrimmed" />
             <HyperlinkButton x:Name="SynopsisMore" Style="{StaticResource SilkLinkLeadingStyle}" Visibility="Collapsed" Click="OnSynopsisMore"
-                             Content="{x:Bind s:T.ActionMore}" />
+                             Content="{x:Bind s:T.ActionMore}" AutomationProperties.Name="{x:Bind s:T.TitleSynopsisMore}" />
             <!-- The demo's credit block, wherever the work shows as a title. -->
             <ContentControl x:Name="DemoCredit" HorizontalContentAlignment="Left" Visibility="Collapsed" />
           </StackPanel>

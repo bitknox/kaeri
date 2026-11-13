@@ -101,21 +101,25 @@ struct ReaderAlwaysClosesTests {
         #expect(sent.opens == 2, "the book waiting on the close is dropped with it")
     }
 
-    /// A strip that fails to flow into the next chapter says so, and Try again asks for that
-    /// chapter, not the one above it.
+    /// A strip that fails to flow into the next chapter says so at the join, with the chapter
+    /// read still open above it, and Try again asks for the next chapter, not the one read.
     @Test func aStripThatFailsToFlowOnSaysSoAndRetriesTheNextChapter() {
         let sent = Sent()
         let model = opening(sent)
         model.apply(.opened(view("1", session: 1, next: "2", mode: .strip)))
         model.apply(.leaves(session: 1, chapter: ChapterId("1"), leaves: [
             Leaf(index: 0, parts: [
-                LeafPart(page: 0, kind: .story, file: nil, place: UnitRect(x: 0, y: 0, width: 1, height: 1), rotate: false, half: nil),
+                LeafPart(page: 0, kind: .story, file: nil, place: UnitRect(x: 0, y: 0, width: 1, height: 1), rotate: false,
+                         half: nil, ratio: 0.7),
             ], endPage: false),
         ]))
         model.flowOn()
         model.observe(.reading(.failed(about: .reader, failure: .pageFetch(status: 503))))
-        #expect(model.phase == .failed(.pageFetch(status: 503)))
+        #expect(model.phase == .open, "the chapter read stays open")
+        #expect(model.view?.chapter.id == ChapterId("1"))
+        #expect(model.flowFailure?.failure == .pageFetch(status: 503))
         model.retry(page: nil)
         #expect(sent.all.contains { if case .reader(.retry(1, ChapterId("2"), nil)) = $0 { true } else { false } })
+        #expect(model.phase == .open)
     }
 }

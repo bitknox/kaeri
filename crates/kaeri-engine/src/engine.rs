@@ -370,6 +370,8 @@ impl Engine {
             book_plugins,
             ..services
         };
+        // Folders the platform opens for reading, before anything scans them.
+        services.book_sources.open_folders_through(services.host.folder_access());
         #[cfg(feature = "testing")]
         if let Some(source) = book_source {
             services.book_sources.registry.put(source);
@@ -421,6 +423,7 @@ impl Engine {
         // The terminal sets the process's language and passes none.
         let tag = language.clone().unwrap_or_else(|| kaeri_i18n::language().to_owned());
         services.book_sources.set_language(&tag);
+        services.book_sources.set_show_volumes(state.config.effective().reading.show_volumes);
         #[cfg(feature = "cast")]
         {
             casts.set_language(language);
@@ -483,8 +486,10 @@ impl Engine {
         if background.digest {
             // The airing digest: what aired for shows you watch since the last launch. Same
             // philosophy as the update check — one line, only when there is something to say.
+            // A device kept for reading alone has no calendar to point at, so it hears nothing.
             digest::spawn(
-                state.config.effective().notifications.airing_digest,
+                state.config.effective().notifications.airing_digest
+                    && state.reading.answer().watches(),
                 state.config.effective().notifications.desktop,
                 services.store.clone(),
                 services.meta.clone(),
@@ -495,7 +500,7 @@ impl Engine {
             );
         }
         if let Some(loading) = plugins_loading {
-            say_plugin_load(loading, inbox.sender());
+            say_plugin_load(loading, services.book_plugins.clone(), inbox.sender());
         }
         if background.store_refresh && joined {
             refresh_joined(services.stores.clone(), inbox.sender());
@@ -775,9 +780,17 @@ impl Engine {
 
 /// Say whatever the background plugin load concluded, once. A plugin that failed to load must
 /// not be silent: the Providers screen is where a missing source gets explained.
-fn say_plugin_load(loading: JoinHandle<Option<Msg>>, tx: Outbox) {
+fn say_plugin_load(
+    loading: JoinHandle<Option<Msg>>,
+    books: crate::book_plugins::BookPlugins,
+    tx: Outbox,
+) {
     tokio::spawn(async move {
         if let Ok(outcome) = loading.await {
+            // Reading's screens are drawn again when book plugins came, so a series held in one
+            // reads on at once, or when one was drawn from a plugin on its way that may not have
+            // come. Otherwise nothing on them changed.
+            let books_came = !books.is_empty() || books.take_leaned();
             match outcome {
                 Some(note) => {
                     // Plugins skipped for an old ABI are said, but the rest did arrive.
@@ -786,6 +799,9 @@ fn say_plugin_load(loading: JoinHandle<Option<Msg>>, tx: Outbox) {
                     let _ = tx.send(Event::ProviderNote(note));
                     if arrived {
                         let _ = tx.internal(Internal::SourcesReordered);
+                        if books_came {
+                            let _ = tx.internal(Internal::BookSourcesChanged);
+                        }
                     }
                 }
                 // Ranked again by the order as it stands now, since the user may have moved a
@@ -793,6 +809,9 @@ fn say_plugin_load(loading: JoinHandle<Option<Msg>>, tx: Outbox) {
                 // arrivals actually appear on it.
                 None => {
                     let _ = tx.internal(Internal::SourcesReordered);
+                    if books_came {
+                        let _ = tx.internal(Internal::BookSourcesChanged);
+                    }
                 }
             }
         }
@@ -2108,13 +2127,15 @@ mod tests {
     }
 
     /// [`until`], for an event anywhere in what comes, not only last in its batch: what a
-    /// party says comes in bursts. The wait is long because Windows takes about two seconds to
-    /// refuse a connection to a closed local port.
+    /// party says comes in bursts. The wait between batches only guards against an engine that
+    /// stopped, so it is long: Windows takes about two seconds to refuse a connection to a
+    /// closed local port, and a send's last page and its file take over ten seconds on a loaded
+    /// machine.
     #[cfg(any(feature = "party", feature = "cast"))]
     async fn seen_until(events: &mut EventStream, done: impl Fn(&Event) -> bool) -> Vec<Event> {
         let mut seen = Vec::new();
         while !seen.iter().any(&done) {
-            match tokio::time::timeout(Duration::from_secs(10), events.next_events()).await {
+            match tokio::time::timeout(Duration::from_secs(60), events.next_events()).await {
                 Ok(batch) if !batch.is_empty() => seen.extend(batch),
                 _ => panic!("nothing more, having seen {seen:?}"),
             }
@@ -3336,11 +3357,14 @@ mod tests {
 
         const WORK: &str = "a:900601";
 
-        /// A source whose second chapter waits for the test before its pages arrive.
+        /// A source whose pages with `holds` in their address wait for the test.
         struct Gated {
             manifest: BookSourceManifest,
             published: i64,
             held: AtomicBool,
+            holds: &'static str,
+            /// Its chapters name their volumes: two to a volume.
+            volumes: bool,
         }
 
         #[async_trait]
@@ -3370,10 +3394,13 @@ mod tests {
                 _: &str,
                 _: &BookHints,
             ) -> Result<Vec<SourceChapter>, ProviderError> {
-                Ok((1..=5)
+                Ok((1_u32..=5)
                     .map(|n| {
                         let mut chapter = SourceChapter::new(n.to_string(), n.to_string());
                         chapter.published = Some(self.published);
+                        if self.volumes {
+                            chapter.volume = Some(n.div_ceil(2).to_string());
+                        }
                         chapter
                     })
                     .collect())
@@ -3392,7 +3419,7 @@ mod tests {
             }
 
             async fn fetch_page(&self, page: &PageRef) -> Result<Vec<u8>, PageError> {
-                while self.held.load(Ordering::SeqCst) && page.url.contains("/2/") {
+                while self.held.load(Ordering::SeqCst) && page.url.contains(self.holds) {
                     tokio::time::sleep(Duration::from_millis(10)).await;
                 }
                 let mut bytes = vec![0x89, b'P', b'N', b'G', 0x0d, 0x0a, 0x1a, 0x0a];
@@ -3583,6 +3610,9 @@ mod tests {
                 },
                 published: kaeri_store::now() - 3_600,
                 held: AtomicBool::new(true),
+                // The second chapter waits on its pages.
+                holds: "/2/",
+                volumes: false,
             });
             let held = Arc::clone(&source);
             let (engine, mut events) = engine_with(dir.path(), host, |o| {
@@ -3654,6 +3684,191 @@ mod tests {
             engine.send(Command::Reading(ReadingCommand::DownloadNew));
             let view = downloads_until(&engine, &mut events, |v| done_ids(v).len() == 5).await;
             assert_eq!(view.meter.chapters, 5);
+            engine.shutdown().await;
+        }
+
+        /// The download state of each chapter a list event shows, by chapter.
+        fn listed(event: &Event) -> Option<Vec<(String, Option<ChapterDownloadState>)>> {
+            match event {
+                Event::Reading(ReadingEvent::Chapters { volumes, .. }) => Some(
+                    volumes
+                        .iter()
+                        .flat_map(|v| &v.chapters)
+                        .map(|c| (c.id.as_str().to_owned(), c.download.clone()))
+                        .collect(),
+                ),
+                _ => None,
+            }
+        }
+
+        fn chapters_done(rows: &[(String, Option<ChapterDownloadState>)]) -> usize {
+            rows.iter().filter(|(_, s)| *s == Some(ChapterDownloadState::Done)).count()
+        }
+
+        /// Show volumes turned on or off regroups the series page already open, from the list
+        /// as kept, without asking the source again.
+        #[tokio::test]
+        async fn show_volumes_regroups_the_open_series_page() {
+            use kaeri_model::settings::SettingKey;
+            let dir = tempfile::tempdir().unwrap();
+            let host = Arc::new(QuietHost::in_dir(&dir.path().join("tokens")));
+            let source = Arc::new(Gated {
+                manifest: BookSourceManifest {
+                    id: "shelf".into(),
+                    name: "Shelf".into(),
+                    version: "1".into(),
+                    kind: BookSourceKind::Native,
+                    media: vec![Medium::Manga],
+                    languages: vec!["en".into()],
+                    allowed_hosts: Vec::new(),
+                    capabilities: Vec::new(),
+                },
+                published: kaeri_store::now() - 3_600,
+                held: AtomicBool::new(false),
+                holds: "",
+                volumes: true,
+            });
+            let (engine, mut events) = engine_with(dir.path(), host, |o| {
+                o.reading = true;
+                o.store.set_book_match("shelf", "s-1", WORK, 100, true, false, 1).unwrap();
+                o.store
+                    .seed_book_work(WORK, "manga", None, None, "The Lantern Ferry", 1)
+                    .unwrap();
+                o.book_source = Some(source);
+            })
+            .await;
+            events.launch().await;
+            let work = WorkId::new(WORK);
+            let grouped = |e: &Event| match e {
+                Event::Reading(ReadingEvent::Chapters { work: w, volumes, .. })
+                    if *w == work =>
+                {
+                    Some(volumes.iter().map(|v| (v.chapters.len(), v.flat)).collect::<Vec<_>>())
+                }
+                _ => None,
+            };
+            engine.send(Command::Reading(ReadingCommand::LoadSeries { work: work.clone() }));
+            let seen = seen_until(&mut events, |e| grouped(e).is_some()).await;
+            assert_eq!(seen.iter().rev().find_map(grouped), Some(vec![(5, true)]), "off: flat");
+
+            engine.send(Command::SetSetting {
+                key: SettingKey::ShowVolumes,
+                value: kaeri_core::settings::SettingValue::Bool(true),
+            });
+            let seen = seen_until(&mut events, |e| grouped(e).is_some()).await;
+            assert_eq!(
+                seen.iter().rev().find_map(grouped),
+                Some(vec![(2, false), (2, false), (1, false)]),
+                "on: by volume"
+            );
+
+            engine.send(Command::SetSetting {
+                key: SettingKey::ShowVolumes,
+                value: kaeri_core::settings::SettingValue::Bool(false),
+            });
+            let seen = seen_until(&mut events, |e| grouped(e).is_some()).await;
+            assert_eq!(seen.iter().rev().find_map(grouped), Some(vec![(5, true)]), "off again");
+        }
+
+        /// The series page follows a download of five chapters as it runs: each chapter as it
+        /// starts and lands, and the pages of the one downloading, not all five at the end.
+        #[tokio::test]
+        async fn a_download_tells_the_series_page_each_chapter_and_page_as_it_goes() {
+            let dir = tempfile::tempdir().unwrap();
+            let host = Arc::new(QuietHost::in_dir(&dir.path().join("tokens")));
+            let source = Arc::new(Gated {
+                manifest: BookSourceManifest {
+                    id: "shelf".into(),
+                    name: "Shelf".into(),
+                    version: "1".into(),
+                    kind: BookSourceKind::Native,
+                    media: vec![Medium::Manga],
+                    languages: vec!["en".into()],
+                    allowed_hosts: Vec::new(),
+                    capabilities: Vec::new(),
+                },
+                published: kaeri_store::now() - 3_600,
+                held: AtomicBool::new(true),
+                // The second chapter's second page waits for the test.
+                holds: "/2/2",
+                volumes: false,
+            });
+            let held = Arc::clone(&source);
+            let (engine, mut events) = engine_with(dir.path(), host, |o| {
+                let now = kaeri_store::now();
+                o.reading = true;
+                o.store.set_book_match("shelf", "s-1", WORK, 100, true, false, 1).unwrap();
+                o.store
+                    .seed_book_work(WORK, "manga", None, None, "The Lantern Ferry", 1)
+                    .unwrap();
+                o.store.set_read_status(WORK, Some("reading"), now).unwrap();
+                o.book_source = Some(source);
+            })
+            .await;
+            events.launch().await;
+            engine.send(network(false, false));
+            let work = WorkId::new(WORK);
+            engine.send(Command::Reading(ReadingCommand::LoadChapters {
+                work: work.clone(),
+                edition: None,
+            }));
+            seen_until(&mut events, |e| listed(e).is_some()).await;
+
+            engine.send(Command::Reading(ReadingCommand::Download {
+                work: work.clone(),
+                pick: DownloadPick::Chapters {
+                    ids: (1..=5).map(|n| ChapterId::new(n.to_string())).collect(),
+                },
+            }));
+            // While the second chapter waits on its last page, the list already shows the
+            // first downloaded, the second one page in and the rest queued.
+            let seen = seen_until(&mut events, |e| {
+                listed(e).is_some_and(|rows| {
+                    rows.iter().any(|(id, s)| {
+                        id == "2"
+                            && *s
+                                == Some(ChapterDownloadState::Downloading { done: 1, total: 2 })
+                    })
+                })
+            })
+            .await;
+            let rows = seen.iter().rev().find_map(listed).unwrap();
+            let state = |id: &str| rows.iter().find(|(c, _)| c == id).unwrap().1.clone();
+            assert_eq!(state("1"), Some(ChapterDownloadState::Done));
+            for id in ["3", "4", "5"] {
+                assert_eq!(state(id), Some(ChapterDownloadState::Queued), "chapter {id}");
+            }
+            // Each row says how it stands, as the list the page loaded does.
+            let words = seen
+                .iter()
+                .rev()
+                .find_map(|e| match e {
+                    Event::Reading(ReadingEvent::Chapters { volumes, .. }) => Some(
+                        volumes
+                            .iter()
+                            .flat_map(|v| &v.chapters)
+                            .map(|c| c.line.len())
+                            .collect::<Vec<_>>(),
+                    ),
+                    _ => None,
+                })
+                .unwrap();
+            assert!(words.iter().all(|n| *n > 0), "a row without words in {words:?}");
+
+            // Let the rest through: the list counts up one chapter at a time.
+            held.held.store(false, Ordering::SeqCst);
+            let seen = seen_until(&mut events, |e| {
+                listed(e).is_some_and(|rows| chapters_done(&rows) == 5)
+            })
+            .await;
+            let counts: Vec<usize> =
+                seen.iter().filter_map(listed).map(|rows| chapters_done(&rows)).collect();
+            for n in 2..=4 {
+                assert!(
+                    counts.contains(&n),
+                    "{n} downloaded is told on its way, in {counts:?}"
+                );
+            }
             engine.shutdown().await;
         }
 
@@ -4302,8 +4517,17 @@ mod tests {
             })
             .await;
             let job = seen.iter().find_map(|e| match e {
-                Event::Reading(ReadingEvent::ExportWaiting { job, work, target, line }) => {
+                Event::Reading(ReadingEvent::ExportWaiting {
+                    job,
+                    work,
+                    target,
+                    line,
+                    chapters,
+                }) => {
                     assert_eq!((work.as_str(), target.as_str()), (WORK, "kobo"));
+                    // Every send that waits here holds chapters 1 and 2: a screen that never
+                    // asked for it learns them from this.
+                    assert_eq!(chapters, &[ChapterId::new("1"), ChapterId::new("2")]);
                     assert_eq!(
                         *line,
                         Msg::Reading(kaeri_model::ReadingMsg::ExportWaitsForWifi { n: 1 })
@@ -4536,6 +4760,10 @@ mod tests {
             assert!(!seen.iter().any(send_ended), "{seen:?}");
             assert_eq!(source.fetched(), 0);
             assert!(kept_waiting(&store));
+            // On cellular it says it waits, as the job the screen never sent, with its chapters.
+            engine.send(network(true, false));
+            let (waited, _) = waiting(&mut events).await;
+            assert_eq!(Some(waited), started);
             engine.send(network(false, false));
             let seen = seen_until(&mut events, send_ended).await;
             let (job, pages) = pages_sent(&seen).unwrap_or_else(|| panic!("{seen:?}"));

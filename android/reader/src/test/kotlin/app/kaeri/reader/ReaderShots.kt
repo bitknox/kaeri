@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -36,6 +37,15 @@ import app.kaeri.reader.phone.StripDivider
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.captureScreenRoboImage
 import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -175,6 +185,50 @@ class ReaderShots {
         captureScreenRoboImage(file("end-page-waiting"))
     }
 
+    /** Chapter 12.5, an extra, with chapter 13 after it: the end page offers the skip. */
+    private fun skipState(to: String = "13"): Pair<ReaderState, PageImages> {
+        val dir = kotlin.io.path.createTempDirectory("reader-shots").toFile()
+        val extra = ReaderFixtures.chapter("local:lantern-stair/12.5", "12.5", "Volume 1 extras", 6u)
+        val whole = ReaderFixtures.chapter("local:lantern-stair/$to", to, "Lanterns Out", 34u)
+        val first = ReaderFixtures.grey(dir, "p0", 352, 500)
+        val state = ReaderState(
+            view = ReaderFixtures.view(next = extra),
+            leaves = ReaderFixtures.leaves(3),
+            end = EndPageView(extra, null, "Lantern Archive", whole),
+            preview = NextPreview(extra.id, first),
+        )
+        return state to PageImages().also { it.load(first) }
+    }
+
+    @Test
+    fun the_end_page_offers_the_skip_past_extras_under_continue() {
+        val (state, images) = skipState()
+        compose.setContent { PhoneEndPage(state, session, actions, images) }
+        compose.waitForIdle()
+        captureScreenRoboImage(file("end-page-skip"))
+    }
+
+    @Test
+    fun the_skip_past_extras_in_the_light_look() {
+        val (state, images) = skipState()
+        compose.setContent {
+            CompositionLocalProvider(app.kaeri.reader.phone.LocalChrome provides app.kaeri.reader.phone.LightChrome) {
+                PhoneEndPage(state, session, actions, images)
+            }
+        }
+        compose.waitForIdle()
+        captureScreenRoboImage(file("end-page-skip-light"))
+    }
+
+    @Test
+    @Config(qualifiers = "w320dp-h712dp-port-420dpi")
+    fun the_skip_past_extras_at_320_dp_with_a_four_digit_chapter() {
+        val (state, images) = skipState(to = "1024")
+        compose.setContent { PhoneEndPage(state, session, actions, images) }
+        compose.waitForIdle()
+        captureScreenRoboImage(file("end-page-skip-narrow"))
+    }
+
     @Test
     fun the_demo_card_follows_a_white_page() {
         val demo = DemoWorkInfo(
@@ -204,9 +258,9 @@ class ReaderShots {
     }
 
     @Test
-    fun a_strip_image_waits_with_its_number_then_one_line() {
+    fun a_strip_image_waits_with_its_number_then_a_line_under_it() {
         compose.setContent {
-            androidx.compose.foundation.layout.Column {
+            Column {
                 for (long in listOf(false, true)) {
                     Box(Modifier.fillMaxWidth().height(240.dp).background(Chrome.ground)) { ImageWaiting(7, long) }
                 }
@@ -214,6 +268,23 @@ class ReaderShots {
         }
         compose.waitForIdle()
         compose.onRoot().captureRoboImage(file("strip-waiting"))
+    }
+
+    @Test
+    fun a_tall_strip_image_keeps_its_words_in_the_middle_of_the_part_on_screen() {
+        compose.setContent {
+            val into = with(LocalDensity.current) { 1000.dp.roundToPx() }
+            Box(Modifier.fillMaxWidth().height(400.dp).testTag("window")) {
+                Column(Modifier.verticalScroll(rememberScrollState(into))) {
+                    Box(Modifier.fillMaxWidth().height(2400.dp)) { ImageWaiting(7, false) }
+                }
+            }
+        }
+        compose.waitForIdle()
+        val window = compose.onNodeWithTag("window").getBoundsInRoot()
+        val words = compose.onNodeWithText("Image 8").getBoundsInRoot()
+        val middle = (words.top + words.bottom) / 2 - window.top
+        assertEquals(200f, middle.value, 2f)
     }
 
     @Test

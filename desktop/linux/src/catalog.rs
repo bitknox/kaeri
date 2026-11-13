@@ -81,6 +81,7 @@ pub fn label(key: SettingKey) -> String {
         K::ChapterDownloadsOnCellular => t::settings_chapter_downloads_cellular(),
         K::KeepChaptersReady => t::settings_keep_chapters_ready(),
         K::DeleteAfterReading => t::settings_delete_after_reading(),
+        K::ShowVolumes => t::settings_show_volumes(),
         K::OpdsFeed => t::settings_opds_feed(),
         K::OpdsPassword => t::settings_opds_password(),
         K::OpdsPort => t::settings_opds_port(),
@@ -185,6 +186,7 @@ pub fn is_switch(key: SettingKey) -> bool {
             | K::ChapterDownloadsOnCellular
             | K::KeepChaptersReady
             | K::DeleteAfterReading
+            | K::ShowVolumes
             | K::OpdsFeed
             | K::SeriesChoicesFollow
             | K::LookFollows

@@ -493,3 +493,138 @@ async fn a_source_with_no_chapters_offers_no_chapter_to_read() {
     });
     assert_eq!(action, Some(kaeri_model::reading::SeriesAction::NoSource), "{events:?}");
 }
+
+/// A source that lists its chapters at once until `down` is set, then refuses, as a host the
+/// network no longer reaches.
+struct RefusingShelf {
+    manifest: BookSourceManifest,
+    down: std::sync::atomic::AtomicBool,
+}
+
+#[async_trait]
+impl BookSource for RefusingShelf {
+    fn manifest(&self) -> &BookSourceManifest {
+        &self.manifest
+    }
+
+    async fn search(&self, _: &str, _: &BookHints) -> Result<Vec<SeriesHit>, ProviderError> {
+        Ok(Vec::new())
+    }
+
+    async fn series(&self, id: &str, _: &BookHints) -> Result<SeriesDetail, ProviderError> {
+        Ok(SeriesDetail::new(id, TITLE))
+    }
+
+    async fn chapters(
+        &self,
+        _: &str,
+        _: &BookHints,
+    ) -> Result<Vec<SourceChapter>, ProviderError> {
+        if self.down.load(Ordering::SeqCst) {
+            return Err(ProviderError::Transport("connection refused".into()));
+        }
+        Ok((1..=4).map(|n| SourceChapter::new(format!("c-{n}"), n.to_string())).collect())
+    }
+
+    async fn content(&self, _: &str, _: &str) -> Result<ChapterContent, ProviderError> {
+        Err(ProviderError::NotFound)
+    }
+}
+
+/// The kept list a page shows while the source is asked, and after it failed, says what the
+/// source's answer says of each chapter: downloaded, bookmarked, read and when. A downloaded
+/// chapter never reads as not downloaded because the source is down.
+#[tokio::test]
+async fn a_kept_list_keeps_downloads_and_bookmarks_when_the_source_fails() {
+    use kaeri_model::{
+        ReadingMsg,
+        reading::{ChapterDownloadState, ChapterRow},
+    };
+
+    let fake = FakeAniList::start().await;
+    fake.add_books([book(WORK_ID, TITLE, "MANGA", (2020, 500), &[], &[])]);
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(Some(&fake), dir.path());
+    kit.meta.book(kaeri_core::AnilistId(WORK_ID)).await.unwrap();
+    let manifest = BookSourceManifest {
+        id: "refusing-shelf".into(),
+        name: "Refusing Shelf".into(),
+        version: "1".into(),
+        kind: BookSourceKind::Native,
+        media: vec![Medium::Manga],
+        languages: vec!["en".into()],
+        allowed_hosts: Vec::new(),
+        capabilities: Vec::new(),
+    };
+    let shelf = Arc::new(RefusingShelf { manifest, down: false.into() });
+    kit.sources.registry.put(shelf.clone());
+    let work = WorkId::new(format!("a:{WORK_ID}"));
+    kit.store
+        .set_book_match("refusing-shelf", "ferry", work.as_str(), 90, false, false, NOW)
+        .unwrap();
+    let read = ReadEvent { completed: true, ..ReadEvent::new(work.as_str(), "1", NOW - DAY) };
+    kit.store.record_read(&read, Vec::new()).unwrap();
+    let ask_for = kaeri_store::book_downloads::BookDownloadAsk {
+        work: work.as_str(),
+        chapter: "2",
+        source_id: "refusing-shelf",
+        version_label: None,
+        keep_ready: false,
+    };
+    kit.store.queue_book_download(&ask_for, NOW).unwrap();
+    let id = kit.store.book_download(work.as_str(), "2").unwrap().unwrap().id;
+    kit.store
+        .book_download_done(id, "book-downloads/ferry/2.cbz", Some(12), 4096, NOW)
+        .unwrap();
+    kit.store.set_bookmark(work.as_str(), "3", true, NOW).unwrap();
+    let (tx, mut rx) = outbox();
+
+    // Listed once, and so kept.
+    crate::reading::chapters_of(kit.clone(), ask(), work.clone(), None, &tx);
+    let listed = all(&mut rx, Duration::from_millis(200)).await;
+
+    shelf.down.store(true, Ordering::SeqCst);
+    crate::reading::chapters_of(kit.clone(), ask(), work, None, &tx);
+    let failed = all(&mut rx, Duration::from_millis(300)).await;
+
+    let lists = |events: &[Event]| -> Vec<(bool, Vec<ChapterRow>)> {
+        events
+            .iter()
+            .filter_map(|event| match event {
+                Event::Reading(ReadingEvent::Chapters { volumes, failure, .. }) => Some((
+                    failure.is_some(),
+                    volumes.iter().flat_map(|v| v.chapters.iter().cloned()).collect(),
+                )),
+                _ => None,
+            })
+            .collect()
+    };
+    let answered = lists(&listed).pop().expect("the source's list").1;
+    let after = lists(&failed);
+    assert_eq!(
+        after.iter().map(|(failed, _)| *failed).collect::<Vec<_>>(),
+        [false, true],
+        "the kept list at once, then the failure with it: {failed:?}"
+    );
+    let row = |rows: &[ChapterRow], id: &str| {
+        rows.iter().find(|r| r.id.as_str() == id).cloned().expect("the chapter's row")
+    };
+    for (_, rows) in &after {
+        let downloaded = row(rows, "2");
+        assert_eq!(downloaded.download, Some(ChapterDownloadState::Done));
+        assert!(
+            downloaded.line.iter().any(|m| matches!(
+                m,
+                kaeri_model::Msg::Reading(ReadingMsg::ReadingRowDownloaded)
+            )),
+            "{:?}",
+            downloaded.line
+        );
+        assert!(row(rows, "3").bookmarked);
+        assert!(row(rows, "1").read_at.is_some());
+        // Every row as the source's answer gave it.
+        for id in ["1", "2", "3", "4"] {
+            assert_eq!(row(rows, id).line, row(&answered, id).line, "chapter {id}");
+        }
+    }
+}

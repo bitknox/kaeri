@@ -847,11 +847,47 @@ async fn write_within(stream: &mut impl Conn, bytes: &[u8]) -> std::io::Result<(
     Ok(())
 }
 
+/// A book's file being sent as it is: from the device, or through the folder the platform
+/// opens it from. Read a chunk at a time on a blocking thread.
+struct Sending(Option<Box<dyn kaeri_books::Source>>);
+
+impl Sending {
+    /// The file at `path` and its length.
+    async fn open(path: PathBuf) -> std::io::Result<(u64, Self)> {
+        tokio::task::spawn_blocking(move || {
+            let size = kaeri_books::tree::stat(&path)?.size;
+            Ok((size, Self(Some(kaeri_books::tree::open_file(&path)?))))
+        })
+        .await
+        .map_err(std::io::Error::other)?
+    }
+
+    /// The next bytes, empty at the end.
+    async fn next(&mut self) -> std::io::Result<Vec<u8>> {
+        let Some(mut file) = self.0.take() else { return Ok(Vec::new()) };
+        let (file, chunk) = tokio::task::spawn_blocking(move || {
+            let mut chunk = vec![0u8; 64 * 1024];
+            let read = std::io::Read::read(&mut file, &mut chunk);
+            (
+                file,
+                read.map(|n| {
+                    chunk.truncate(n);
+                    chunk
+                }),
+            )
+        })
+        .await
+        .map_err(std::io::Error::other)?;
+        self.0 = Some(file);
+        chunk
+    }
+}
+
 async fn send(stream: &mut impl Conn, response: Response, head: bool) -> std::io::Result<()> {
     let (length, file) = match &response.body {
         Body::Bytes(b) => (b.len() as u64, None),
-        Body::File(path) => match tokio::fs::File::open(path).await {
-            Ok(f) => (f.metadata().await?.len(), Some(f)),
+        Body::File(path) => match Sending::open(path.clone()).await {
+            Ok((size, f)) => (size, Some(f)),
             Err(_) => {
                 let body = b"Not found";
                 let h = format!(
@@ -879,13 +915,16 @@ async fn send(stream: &mut impl Conn, response: Response, head: bool) -> std::io
         match (response.body, file) {
             (Body::Bytes(b), _) => write_within(stream, &b).await?,
             (Body::File(_), Some(mut f)) => {
-                let mut chunk = vec![0u8; 64 * 1024];
-                loop {
-                    let n = f.read(&mut chunk).await?;
-                    if n == 0 {
+                // Never more than the length said: a file that grew since is cut there.
+                let mut left = length;
+                while left > 0 {
+                    let chunk = f.next().await?;
+                    if chunk.is_empty() {
                         break;
                     }
+                    let n = chunk.len().min(usize::try_from(left).unwrap_or(usize::MAX));
                     write_within(stream, &chunk[..n]).await?;
+                    left -= n as u64;
                 }
             }
             _ => {}
@@ -1282,7 +1321,7 @@ fn acquisition(id: &str, title: &str, href: &str, books: &[Shelved]) -> Document
 /// One page image of a book, for page streaming.
 async fn page(book: Shelved, index: usize, unpacked: Unpacked) -> Response {
     let read = tokio::task::spawn_blocking(move || {
-        let changed = std::fs::metadata(&book.path).and_then(|m| m.modified()).ok();
+        let changed = kaeri_books::tree::stat(&book.path).ok().and_then(|m| m.modified);
         let held = |u: &Option<Unpacking>| {
             u.as_ref()
                 .filter(|u| u.path == book.path && u.changed == changed)

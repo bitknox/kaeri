@@ -100,6 +100,7 @@ fn key_of(row: Planned) -> String {
 
 /// Load Home: at once from what was kept, then again as each part lands.
 pub fn load(kit: &Kit, ask: Ask, refresh: bool, tx: &Outbox) {
+    super::changed::home(kit);
     let generation = begin(&kit.sources.catalog.home, refresh);
     let home = Home { generation: generation.unwrap_or(0), ..Home::of(kit, ask) };
     home.send(tx);
@@ -127,6 +128,21 @@ fn begin(memory: &std::sync::Mutex<Loading>, refresh: bool) -> Option<u64> {
     Some(loading.generation)
 }
 
+/// The network path came or went: an opened Home says so at once, and coming back loads it
+/// again, asking only for what is stale, so it stops saying offline without the app asking.
+pub fn path_moved(kit: &Kit, ask: Ask, tx: &Outbox) {
+    let opened =
+        kit.sources.catalog.home.lock().unwrap_or_else(|e| e.into_inner()).generation > 0;
+    if !opened {
+        return;
+    }
+    if kit.offline.load(Ordering::Relaxed) {
+        resend(kit, ask, tx);
+    } else {
+        load(kit, ask, false, tx);
+    }
+}
+
 /// Home as it stands, asking for nothing: for a change that shows on it, such as a series found
 /// in no source.
 pub fn resend(kit: &Kit, ask: Ask, tx: &Outbox) {
@@ -143,12 +159,16 @@ struct Home {
     zone: jiff::tz::TimeZone,
     offline: std::sync::Arc<std::sync::atomic::AtomicBool>,
     no_sources: bool,
+    /// Plugins, asked whether a load is still under way.
+    plugins: crate::book_plugins::BookPlugins,
     /// The load this is, as [`begin`] gave it; 0 for a view alone.
     generation: u64,
 }
 
 impl Home {
     fn of(kit: &Kit, ask: Ask) -> Self {
+        // Book plugins that have loaded are read from before Home is drawn from them.
+        kit.sources.take_in_plugins(&kit.plugins);
         Self {
             meta: kit.meta.clone(),
             store: kit.store.clone(),
@@ -157,6 +177,7 @@ impl Home {
             zone: kit.clock.zone(),
             offline: kit.offline.clone(),
             no_sources: kit.no_sources(),
+            plugins: kit.plugins.clone(),
             generation: 0,
         }
     }
@@ -290,6 +311,11 @@ impl Home {
             .collect();
         let asks: Vec<BookAsk> = missing.chunks(50).map(|c| BookAsk::Ids(c.to_vec())).collect();
         if asks.is_empty() && stale.is_empty() {
+            // Online with all of it kept: an earlier offline pass no longer stands.
+            let mut memory = self.memory();
+            memory.offline_since = None;
+            memory.failed = false;
+            drop(memory);
             self.landed(ReadHomePart::Yours);
             self.send(tx);
             return;
@@ -589,12 +615,15 @@ impl Home {
     }
 
     /// A row's titles as kept, however old, with when they were asked; adult ones left out
-    /// unless they are on. Each says so when it was opened and no source had it since.
+    /// unless they are on. Each says so when it was opened and no source had it since: asked of
+    /// the sources as they stand, and with no series of a source that is on matched to it since,
+    /// as a folder's scan matches one.
     fn shelf(&self, row: Planned, name: Option<&str>) -> Option<(Vec<WorkTile>, i64)> {
         let shelf =
             Shelf::of(&self.store, &key_of(row)).filter(|s| s.name.as_deref() == name)?;
         let not_found =
             self.sources.catalog.not_found.lock().unwrap_or_else(|e| e.into_inner()).clone();
+        let mark = (!not_found.is_empty()).then(|| self.sources.sources_mark());
         let tiles = self
             .meta
             .kept_books(&shelf.ids())
@@ -602,8 +631,10 @@ impl Home {
             .filter(|k| self.shown(&k.book))
             .map(|k| {
                 let mut tile = tiles::plain(&self.meta, &k.book);
-                tile.not_in_sources =
-                    not_found.get(tile.work.as_str()).is_some_and(|at| *at >= shelf.at);
+                tile.not_in_sources = not_found
+                    .get(tile.work.as_str())
+                    .is_some_and(|(at, asked)| *at >= shelf.at && Some(*asked) == mark)
+                    && self.sources.edition_of(&tile.work, None).is_none();
                 // A New row's caption says when each series started: "Japan · since March".
                 if matches!(row, Planned::New(_)) {
                     tile.started = tiles::started(&k.book);
@@ -1022,7 +1053,7 @@ impl Home {
     /// Where Continue opens a series: the chapter in progress, or the next one.
     fn continue_action(&self, book: &Book) -> Option<SeriesAction> {
         let work = tiles::work_of(book.id);
-        Some(tiles::action(&self.store, &self.sources, &work, book.medium()))
+        Some(tiles::action(&self.store, &self.sources, &work, book.medium(), &self.plugins))
             .filter(|a| !matches!(a, SeriesAction::NoSource | SeriesAction::ReadAgain))
     }
 }
@@ -1149,8 +1180,66 @@ mod tests {
         }
     }
 
+    /// The source [`followed`] reads from, as [`install_shelf`] installs it: it is never asked.
+    struct Here(kaeri_core::books::BookSourceManifest);
+
+    #[async_trait::async_trait]
+    impl kaeri_core::traits::BookSource for Here {
+        fn manifest(&self) -> &kaeri_core::books::BookSourceManifest {
+            &self.0
+        }
+
+        async fn search(
+            &self,
+            _: &str,
+            _: &kaeri_core::books::BookHints,
+        ) -> Result<Vec<kaeri_core::books::SeriesHit>, kaeri_core::ProviderError> {
+            Ok(Vec::new())
+        }
+
+        async fn series(
+            &self,
+            id: &str,
+            _: &kaeri_core::books::BookHints,
+        ) -> Result<kaeri_core::books::SeriesDetail, kaeri_core::ProviderError> {
+            Ok(kaeri_core::books::SeriesDetail::new(id, id))
+        }
+
+        async fn chapters(
+            &self,
+            _: &str,
+            _: &kaeri_core::books::BookHints,
+        ) -> Result<Vec<SourceChapter>, kaeri_core::ProviderError> {
+            Err(kaeri_core::ProviderError::NotFound)
+        }
+
+        async fn content(
+            &self,
+            _: &str,
+            _: &str,
+        ) -> Result<kaeri_core::books::ChapterContent, kaeri_core::ProviderError> {
+            Err(kaeri_core::ProviderError::NotFound)
+        }
+    }
+
+    /// Installs the source [`followed`] reads from, so the person's pick of it holds once the
+    /// plugin load is over.
+    fn install_shelf(kit: &Kit) {
+        let manifest = kaeri_core::books::BookSourceManifest {
+            id: "shelf".into(),
+            name: "Shelf".into(),
+            version: "1".into(),
+            kind: kaeri_core::books::BookSourceKind::Native,
+            media: vec![kaeri_core::media::Medium::Manga],
+            languages: vec!["en".into()],
+            allowed_hosts: Vec::new(),
+            capabilities: Vec::new(),
+        };
+        kit.sources.registry.put(Arc::new(Here(manifest)));
+    }
+
     /// A series on Reading whose source listed chapters 1 to 12 a week ago, and chapter 13,
-    /// "The Far Shore", an hour ago.
+    /// "The Far Shore", an hour ago. The source itself is not installed; see [`install_shelf`].
     fn followed(kit: &Kit) {
         let store = &kit.store;
         let meta = r#"{"book":{"id":900301,"title":{"romaji":"The Lantern Ferry"}}}"#;
@@ -1190,6 +1279,31 @@ mod tests {
         Some(Msg::Reading(msg))
     }
 
+    /// Home loaded offline says so; loaded again once the connection is back, with every row
+    /// it shows first still fresh, it no longer does.
+    #[tokio::test]
+    async fn the_offline_line_goes_when_a_load_runs_online() {
+        let dir = tempfile::tempdir().unwrap();
+        let kit = kit(dir.path());
+        for format in ReadRowFormat::ALL {
+            Shelf { at: NOW, ids: Vec::new(), name: None }
+                .keep(&kit.store, &key_of(Planned::Trending(format)));
+        }
+        let ask =
+            Ask { answer: KaeriIsFor::Both, adult: false, chapter_notices: false, now: NOW };
+        let (tx, _rx) = Outbox::inbox();
+        kit.offline.store(true, Ordering::Relaxed);
+        Home::of(&kit, ask).run(false, &tx).await;
+        let view = home(&kit);
+        assert!(view.offline && view.offline_since == Some(NOW));
+
+        kit.offline.store(false, Ordering::Relaxed);
+        Home::of(&kit, ask).run(false, &tx).await;
+        let view = home(&kit);
+        assert!(!view.offline, "back online");
+        assert_eq!(view.offline_since, None);
+    }
+
     /// A refresh sent while the first load runs starts its own; the first one ending leaves
     /// the refresh's parts on their way and the load running, so Home does not say it is done
     /// before the refresh's rows land.
@@ -1223,6 +1337,7 @@ mod tests {
     fn someone_caught_up_is_offered_the_new_chapter_with_its_words() {
         let dir = tempfile::tempdir().unwrap();
         let kit = kit(dir.path());
+        install_shelf(&kit);
         followed(&kit);
         kit.store.adopt_read(WORK, "12", None, NOW - 2 * DAY).unwrap();
 
@@ -1285,5 +1400,36 @@ mod tests {
         assert!(!tile.new_chapter, "no dot on a place");
         assert_eq!(tile.progress, Some(0.4));
         assert_eq!(tile.next, spot.line);
+    }
+
+    /// At launch, before the plugin a series is held in has loaded, the spotlight already
+    /// continues it, rather than having no button to read on with until the plugin is in.
+    #[test]
+    fn a_series_in_progress_continues_while_its_plugin_still_loads() {
+        let dir = tempfile::tempdir().unwrap();
+        let kit = kit(dir.path());
+        followed(&kit);
+        kit.store.set_edition_pref(WORK, None).unwrap();
+        kit.store.adopt_read(WORK, "10", None, NOW - 3 * DAY).unwrap();
+        let mut place = ReadEvent::new(WORK, "11", NOW - 2 * DAY);
+        place.page = Some(8);
+        place.of_pages = Some(20);
+        kit.store.record_read(&place, Vec::new()).unwrap();
+        let continuing = Some(SeriesAction::Continue {
+            chapter: ChapterId::new("11"),
+            label: "11".into(),
+            page: 9,
+        });
+
+        kit.plugins.expect_arrivals();
+        let spot = home(&kit).spot.unwrap();
+        assert_eq!(spot.case, ReadSpotlightCase::Continuing);
+        assert_eq!(spot.action, continuing, "the chapter in progress, from the kept list");
+        assert!(kit.plugins.take_leaned(), "the load's end draws Home again");
+
+        // The load ended without the plugin: it is in no source the person has.
+        kit.plugins.arrivals_done();
+        assert_eq!(home(&kit).spot.unwrap().action, None);
+        assert!(!kit.plugins.take_leaned());
     }
 }

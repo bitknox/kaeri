@@ -224,6 +224,11 @@ fn epub(path: &Path, chapter: usize, title: &str) {
     );
     for i in 0..parts {
         let mut body = format!("<h2>{title}</h2>");
+        // A chapter kept from a source opens with its title twice, the source's own heading
+        // after the one its plugin gives: the reader says it once.
+        if i == 0 {
+            body.push_str(&format!("<p><strong>{title}</strong></p>"));
+        }
         for n in 0..14 {
             // Two spans, so a saved place such as 0.4.1 names an element that is there.
             body.push_str(&format!(

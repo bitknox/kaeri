@@ -1,4 +1,7 @@
 reader-page-loading = Загрузка страницы { $page }
+reader-page-plate = Страница { $page }
+reader-image-plate = Картинка { $image }
+reader-image-loading = Загрузка картинки { $image }
 reader-page-failed = Не удалось загрузить страницу { $page }
 reader-try-again = Повторить
 reader-close = Закрыть
@@ -62,3 +65,6 @@ reader-divider-images = { $count ->
    *[other] { $count } картинки
  }
 reader-chapter-line-titled = Глава { $chapter } · { $title }
+reader-zone-next = Следующая страница
+reader-zone-previous = Предыдущая страница
+reader-zone-controls = Управление

@@ -70,7 +70,6 @@ linux-shortcuts-text-size = 文字を大きく・小さく・標準に
 linux-shortcuts-reader-back = 移動する前のページに戻る
 linux-shortcuts-close-reader = リーダーを閉じる
 linux-reader-names-and = { $first }と{ $last }
-linux-reader-page-plate = { $page }ページ
 linux-reader-open-failed = 第{ $chapter }話を開けませんでした
 linux-reader-open-failed-plain = この章を開けませんでした
 linux-send-next = { $n ->

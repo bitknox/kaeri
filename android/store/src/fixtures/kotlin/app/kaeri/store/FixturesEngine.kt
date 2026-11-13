@@ -71,8 +71,10 @@ private fun FixtureScene.ffi(): FfiScene = when (this) {
     FixtureScene.READER_STRIP -> FfiScene.ReaderStrip
     FixtureScene.READER_NOVEL -> FfiScene.ReaderNovel
     FixtureScene.READER_MOVED -> FfiScene.ReaderMoved
+    FixtureScene.READER_LONG -> FfiScene.ReaderLong
     FixtureScene.EINK_GREY -> FfiScene.EinkGrey
     FixtureScene.EINK_KALEIDO_UNSURE -> FfiScene.EinkKaleidoUnsure
+    FixtureScene.EINK_LONG -> FfiScene.EinkLong
     FixtureScene.READING_DARK -> FfiScene.ReadingDark
 }
 

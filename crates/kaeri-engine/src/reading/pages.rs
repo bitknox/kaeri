@@ -42,14 +42,37 @@ use crate::{
 };
 
 /// How long a book may take to open before the chapter fails.
-pub const OPEN_BUDGET: Duration = Duration::from_secs(8);
+pub const OPEN_BUDGET: Duration = wall_budget(8);
 /// How long one PDF page may take to render. The PDF reader cannot be stopped, so a page over
 /// this fails the chapter and the render is left to finish on its own thread.
-pub const PDF_PAGE_BUDGET: Duration = Duration::from_secs(2);
+pub const PDF_PAGE_BUDGET: Duration = wall_budget(2);
+
+/// A wall-clock budget for work the engine cannot stop. Tests get a minute instead: a debug
+/// build's render on a loaded machine takes over two seconds with nothing wrong, and no test
+/// times these two budgets.
+const fn wall_budget(secs: u64) -> Duration {
+    if cfg!(test) { Duration::from_secs(60) } else { Duration::from_secs(secs) }
+}
 /// How long the platform's decoder may take over one page it was asked to decode. It cannot be
 /// stopped, so a page over this fails and the call is left to finish on its own thread, which
 /// holds the decoder until it ends.
 pub const HOST_DECODE_BUDGET: Duration = Duration::from_secs(2);
+
+/// The most one page sent to the screen may take once decoded, in bytes at four a pixel, as
+/// the platforms decode it. Android refuses to draw a bitmap over 100 MB, and a long strip
+/// image can pass that whole: one 720 by 40,000 pixels is 115 MB.
+pub const PAGE_BYTES: u64 = 64 * 1024 * 1024;
+
+/// `(w, h)` shrunk evenly, if need be, to fit [`PAGE_BYTES`].
+fn within_page_bytes((w, h): (u32, u32)) -> (u32, u32) {
+    let bytes = u64::from(w) * u64::from(h) * 4;
+    if bytes <= PAGE_BYTES {
+        return (w, h);
+    }
+    let scale = (PAGE_BYTES as f64 / bytes as f64).sqrt();
+    let shrink = |side: u32| ((f64::from(side) * scale) as u32).max(1);
+    (shrink(w), shrink(h))
+}
 
 /// What the session decided before the book is open; the rest is decided from the book.
 #[derive(Debug, Clone)]
@@ -110,6 +133,9 @@ pub struct OpenJob {
     pub feed: Option<Arc<Feed>>,
     /// Find and leave out the series' credit pages, when the person has that on.
     pub credits: Option<super::credits::CreditCheck>,
+    /// A strip flowed on from this chapter of the same session, which the app keeps above the
+    /// one opening: the worker keeps it too and makes its pages when asked by its id.
+    pub keep: Option<ChapterId>,
 }
 
 #[derive(Debug)]
@@ -122,9 +148,10 @@ enum Job {
         leaves: Vec<u32>,
         out: Outbox,
     },
-    /// Make this page again: its file went missing.
+    /// Make this page of `chapter` again: its file went missing, or it failed.
     Again {
         session: u64,
+        chapter: ChapterId,
         page: u32,
         out: Outbox,
     },
@@ -178,8 +205,11 @@ impl Pages {
         let _ = self.jobs.send(Job::Want { session, generation, leaves, out: out.clone() });
     }
 
-    pub fn again(&self, session: u64, page: u32, out: &Outbox) {
-        let _ = self.jobs.send(Job::Again { session, page, out: out.clone() });
+    /// Make `page` of `chapter` again: the open chapter's, or the kept one's a strip flowed on
+    /// from (see [`OpenJob::keep`]). A chapter that is neither asks the open one, as before
+    /// chapters were named.
+    pub fn again(&self, session: u64, chapter: ChapterId, page: u32, out: &Outbox) {
+        let _ = self.jobs.send(Job::Again { session, chapter, page, out: out.clone() });
     }
 
     pub fn close(&self, session: u64) {
@@ -295,8 +325,10 @@ struct Original {
 /// A strip scaled to the screen's width, for cutting into screens on e-ink.
 #[derive(Debug)]
 struct Strip {
-    /// Each image's scaled file, its height and where it starts in the strip.
-    images: Vec<(PathBuf, u32, u32)>,
+    /// Each image's original, its height at the screen's width and where it starts in the strip.
+    images: Vec<(Original, u32, u32)>,
+    /// Each image's page in the chapter: an image that could not be read is left out.
+    pages: Vec<u32>,
     width: u32,
     format: kaeri_pages::PixelFormat,
     cuts: Vec<StripCut>,
@@ -314,6 +346,9 @@ struct Chapter {
     /// Each leaf's parts as the layout made them, with their source rectangles.
     leaves: Vec<Vec<layout::LeafPart>>,
     strip: Option<Strip>,
+    /// The strip images the last cut was made from, at the screen's width, by their place in
+    /// [`Strip::images`]: the next cut mostly starts in the last one.
+    strip_scaled: Vec<(usize, Bitmap)>,
     /// Parts already sent, by page and half.
     sent: HashSet<(u32, Option<PageHalf>)>,
     queue: VecDeque<u32>,
@@ -338,9 +373,9 @@ struct Fed {
     /// What the layout took, to lay the pages out again once their shapes are all known.
     kinds: Vec<layout::PageKind>,
     options: Option<LayoutOptions>,
-    /// Some pages' shapes were guessed from the first: the layout is checked once all land.
+    /// Some pages' shapes were guessed: the layout is checked once none is on its way.
     guessed: bool,
-    /// An e-ink strip, shown image by image until every image is there to cut.
+    /// An e-ink strip waiting, laid out as nothing, until no image is on its way to cut it.
     eink_strip: bool,
 }
 
@@ -350,6 +385,9 @@ struct Worker {
     /// an engine with nothing outstanding can go idle.
     out: Option<Outbox>,
     open: Option<Chapter>,
+    /// The chapter a strip flowed on from, kept above the open one: its pages are made when
+    /// asked for again, after the open chapter's.
+    kept: Option<Chapter>,
     /// One book opens at a time; a stuck open keeps this until it finishes.
     opening: Arc<AtomicBool>,
     decoder: HostDecoder,
@@ -361,6 +399,7 @@ impl Worker {
             cache,
             out: None,
             open: None,
+            kept: None,
             opening: Arc::new(AtomicBool::new(false)),
             decoder,
         }
@@ -381,7 +420,7 @@ impl Worker {
     fn run(mut self, rx: mpsc::Receiver<Job>) {
         loop {
             // Take every job waiting before making the next leaf, so the newest wish wins.
-            let first = if self.open.as_ref().is_some_and(|c| !c.queue.is_empty()) {
+            let first = if self.queued() {
                 match rx.try_recv() {
                     Ok(job) => Some(job),
                     Err(mpsc::TryRecvError::Empty) => None,
@@ -400,16 +439,29 @@ impl Worker {
                 }
             }
             self.make_next();
-            if self.open.as_ref().is_none_or(|c| c.queue.is_empty()) {
+            if !self.queued() {
                 self.out = None;
             }
         }
+    }
+
+    /// Leaves to make, of the open chapter or the kept one.
+    fn queued(&self) -> bool {
+        [&self.open, &self.kept].into_iter().flatten().any(|c| !c.queue.is_empty())
     }
 
     fn take(&mut self, job: Job) {
         match job {
             Job::Open(job) => {
                 self.out = Some(job.out.clone());
+                // The chapter flowed on from is the one open, or kept already when the chapter
+                // flowed into is laid out again.
+                self.kept = job.keep.as_ref().and_then(|keep| {
+                    [self.open.take(), self.kept.take()]
+                        .into_iter()
+                        .flatten()
+                        .find(|c| c.session == job.session && &c.chapter == keep)
+                });
                 self.open_chapter(*job)
             }
             Job::Want { session, generation, leaves, out } => {
@@ -427,11 +479,14 @@ impl Worker {
                     self.send(event);
                 }
             }
-            Job::Again { session, page, out } => {
-                if let Some(c) = self.open.as_mut().filter(|c| c.session == session) {
-                    // A page from a source that failed is fetched again, and made once it lands.
+            Job::Again { session, chapter, page, out } => {
+                let kept =
+                    self.kept.as_mut().filter(|c| c.session == session && c.chapter == chapter);
+                if let Some(c) = kept.or(self.open.as_mut().filter(|c| c.session == session)) {
+                    // A page from a source that failed, or that a chapter left behind never
+                    // fetched, is fetched now, and made once it lands.
                     if let Some(fed) = &c.feed {
-                        fed.feed.retry(page as usize, &out);
+                        fed.feed.ask(page as usize, &out);
                     }
                     c.sent.retain(|(p, _)| *p != page);
                     if let Some(leaf) =
@@ -454,10 +509,19 @@ impl Worker {
                 {
                     self.relay(session);
                 }
+                // The kept chapter's layout stays as the app has it: no relay.
+                if let Some(c) =
+                    self.kept.as_mut().filter(|c| c.session == session && c.chapter == chapter)
+                {
+                    c.landed(page);
+                }
             }
             Job::Close { session } => {
                 if self.open.as_ref().is_some_and(|c| c.session == session) {
                     self.open = None;
+                }
+                if self.kept.as_ref().is_some_and(|c| c.session == session) {
+                    self.kept = None;
                 }
             }
             Job::Peek(job) => {
@@ -506,7 +570,8 @@ impl Worker {
         page_file(&keep_original(&dir, 0, &bytes)?)
     }
 
-    /// Every page of the open chapter's feed landed, and they lay out otherwise than guessed.
+    /// Every page of the open chapter's feed landed or failed, and they lay out otherwise than
+    /// guessed.
     fn relay(&self, session: u64) {
         let Some(generation) = self.open.as_ref().map(|c| c.generation) else { return };
         if let Some(out) = &self.out {
@@ -674,15 +739,14 @@ impl Worker {
                 }
             }
         }
-        // A feed's pages not landed yet are laid out in the shape of the first that has: the
-        // pages of one chapter mostly share one. Their parts have no ratio until they land.
+        // A feed's pages not landed yet are laid out in a guessed shape. Their parts have no
+        // ratio until they land.
         let fed = job.feed.as_ref().is_some_and(|f| !f.complete());
-        let guess = originals
-            .iter()
-            .flatten()
-            .next()
-            .filter(|_| fed)
-            .map_or((1000, 1400), |o| (o.width, o.height));
+        let guess = if fed {
+            guessed_shape(originals.iter().flatten().map(|o| (o.width, o.height)))
+        } else {
+            UNKNOWN_SHAPE
+        };
         let shapes: Vec<(u32, u32)> = originals
             .iter()
             .map(|o| o.as_ref().map_or(guess, |o| (o.width, o.height)))
@@ -727,6 +791,7 @@ impl Worker {
             originals,
             leaves: Vec::new(),
             strip: None,
+            strip_scaled: Vec::new(),
             sent: HashSet::new(),
             queue: VecDeque::new(),
             asked: HashSet::new(),
@@ -736,29 +801,34 @@ impl Worker {
             by_width: !eink && (mode.flows() || plan.fit_width),
         };
         let mut options_used = None;
-        let (leaves, cuts) = if mode == ReaderMode::Strip && eink && !fed {
+        // On e-ink a strip is cut into screens at the panel's width, and the cuts are planned
+        // over the whole strip: one whose images are still landing waits for them all, on the
+        // opening line, instead of showing each image shrunk into the screen.
+        let landing = job.feed.as_ref().is_some_and(|f| !f.settled());
+        let strip_waits = mode == ReaderMode::Strip && eink && landing;
+        let (leaves, cuts) = if strip_waits {
+            (Vec::new(), Vec::new())
+        } else if mode == ReaderMode::Strip && eink {
             chapter.strip = cut_strip(&chapter, plan.target);
             let strip = chapter.strip.as_ref();
-            let leaves: Vec<Leaf> = strip
-                .map(|s| {
-                    (0..s.cuts.len() as u32)
-                        .map(|i| Leaf {
-                            index: i,
-                            parts: vec![LeafPart {
-                                page: i,
-                                kind: PageKind::StripCut,
-                                file: None,
-                                place: UnitRect::WHOLE,
-                                rotate: false,
-                                half: None,
-                                ratio: None,
-                            }],
-                            end_page: false,
-                        })
-                        .collect()
-                })
-                .unwrap_or_default();
             let cuts = strip.map(strip_places).unwrap_or_default();
+            let leaves: Vec<Leaf> = (0..)
+                .zip(&cuts)
+                .map(|(i, at)| Leaf {
+                    index: i,
+                    parts: vec![LeafPart {
+                        page: i,
+                        kind: PageKind::StripCut,
+                        file: None,
+                        place: UnitRect::WHOLE,
+                        rotate: false,
+                        half: None,
+                        ratio: None,
+                        strip: Some(*at),
+                    }],
+                    end_page: false,
+                })
+                .collect();
             (leaves, cuts)
         } else {
             let pixels = known;
@@ -796,24 +866,35 @@ impl Worker {
                 Vec::new(),
             )
         };
+        // A start past the last page is the last leaf, as the session clamps it.
         let start_leaf = if chapter.strip.is_some() {
-            cuts.iter().position(|c| c.image >= job.start_page).unwrap_or(0)
+            cuts.iter()
+                .position(|c| c.image >= job.start_page)
+                .unwrap_or(cuts.len().saturating_sub(1))
         } else {
             chapter
                 .leaves
                 .iter()
                 .position(|l| l.iter().any(|p| p.page >= job.start_page))
-                .unwrap_or(0)
+                .unwrap_or(chapter.leaves.len().saturating_sub(1))
         };
-        chapter.queue = [start_leaf, start_leaf + 1].into_iter().map(|l| l as u32).collect();
+        if !strip_waits {
+            chapter.queue =
+                [start_leaf, start_leaf + 1].into_iter().map(|l| l as u32).collect();
+        }
         chapter.feed = job.feed.clone().map(|feed| Fed {
             feed,
             waiting: HashSet::new(),
             kinds,
             options: options_used,
             guessed: fed,
-            eink_strip: fed && mode == ReaderMode::Strip && eink,
+            eink_strip: strip_waits,
         });
+        if strip_waits {
+            // Nothing is laid out yet: the session hears once the strip is cut.
+            self.open = Some(chapter);
+            return;
+        }
         if let Ok(mut laid) = job.shared.lock() {
             *laid = Laid {
                 generation: job.generation,
@@ -834,7 +915,14 @@ impl Worker {
     }
 
     fn make_next(&mut self) {
-        let Some(chapter) = self.open.as_mut() else { return };
+        // The open chapter's leaves first, then the kept one's.
+        let Some(chapter) = [self.open.as_mut(), self.kept.as_mut()]
+            .into_iter()
+            .flatten()
+            .find(|c| !c.queue.is_empty())
+        else {
+            return;
+        };
         let Some(leaf) = chapter.queue.pop_front() else { return };
         chapter.asked.remove(&leaf);
         let events = chapter.make_leaf(leaf);
@@ -967,6 +1055,24 @@ pub(crate) fn failure_of(
     }
 }
 
+/// The shape a page is laid out in when nothing tells it.
+const UNKNOWN_SHAPE: (u32, u32) = (1000, 1400);
+
+/// The shape a feed's pages not landed yet are laid out in, from the shapes of those landed:
+/// the middle one of the single pages by width to height, as the pages of one chapter mostly
+/// share one and the odd ones are wider. Many chapters open on a square colour page, a wide
+/// one or a banner. Every page to come laid out in a square shape shows shrunk until all have
+/// landed, and one taken for a spread is split in halves on a one-page screen, so a spread is
+/// no guess at all.
+fn guessed_shape(landed: impl IntoIterator<Item = (u32, u32)>) -> (u32, u32) {
+    let mut single: Vec<(u32, u32)> = landed
+        .into_iter()
+        .filter(|&(w, h)| w > 0 && h > 0 && !layout::is_spread(w, h))
+        .collect();
+    single.sort_by(|a, b| (a.0 as f32 / a.1 as f32).total_cmp(&(b.0 as f32 / b.1 as f32)));
+    single.get(single.len().saturating_sub(1) / 2).copied().unwrap_or(UNKNOWN_SHAPE)
+}
+
 /// Whether the pages are a vertical strip: most of them far taller than wide.
 pub fn is_strip(shapes: &[(u32, u32)]) -> bool {
     let tall = shapes.iter().filter(|(w, h)| *h as f32 > *w as f32 * 2.2).count();
@@ -1008,6 +1114,7 @@ fn model_leaf(index: u32, leaf: &layout::Leaf, shapes: &[(u32, u32)]) -> Leaf {
                 rotate: p.rotate,
                 half: half_of(p),
                 ratio: ratio_of(p, shapes),
+                strip: None,
             })
             .collect(),
         end_page: false,
@@ -1086,8 +1193,8 @@ impl Chapter {
         events
     }
 
-    /// A page of the feed landed or failed: the leaves waiting on it are made. `true` when it
-    /// was the last to land and the pages lay out otherwise than guessed before they had.
+    /// A page of the feed landed or failed: the leaves waiting on it are made. `true` when no
+    /// other page is on its way and the pages lay out otherwise than guessed before they had.
     fn landed(&mut self, page: u32) -> bool {
         let Some(fed) = self.feed.as_mut() else { return false };
         let leaves = &self.leaves;
@@ -1104,10 +1211,13 @@ impl Chapter {
             self.queue.push_front(leaf);
             self.asked.insert(leaf);
         }
-        if !fed.guessed || !fed.feed.complete() {
+        // Once no page is on its way the layout is checked, a failed page not waited for: it
+        // keeps its guess, and is checked again if it lands on a retry.
+        if !fed.guessed || !fed.feed.settled() {
             return false;
         }
-        fed.guessed = false;
+        let complete = fed.feed.complete();
+        fed.guessed = !complete;
         for (at, page) in fed.feed.pages().into_iter().enumerate() {
             if let FeedPage::Landed(file) = page
                 && self.originals.get(at).is_some_and(Option::is_none)
@@ -1117,15 +1227,17 @@ impl Chapter {
             }
         }
         if fed.eink_strip {
+            // An e-ink strip is cut once no image is on its way; one that failed is left out.
             return true;
         }
         let Some(options) = fed.options else { return false };
+        let guess = guessed_shape(self.originals.iter().flatten().map(|o| (o.width, o.height)));
         let shapes: Vec<PageShape> = self
             .originals
             .iter()
             .zip(&fed.kinds)
             .map(|(o, &kind)| {
-                let (width, height) = o.as_ref().map_or((1000, 1400), |o| (o.width, o.height));
+                let (width, height) = o.as_ref().map_or(guess, |o| (o.width, o.height));
                 PageShape { width, height, kind }
             })
             .collect();
@@ -1183,18 +1295,35 @@ impl Chapter {
             .source
             .unwrap_or(kaeri_pages::PixelRect::full(original.width, original.height));
         let format = original.format.ok_or_else(|| self.unreadable())?;
+        // Nothing goes out larger than a platform can draw: a page whose box would pass the
+        // budget is made smaller, and an original that would is never sent as it is.
+        let (w, h) = within_page_bytes((w, h));
+        let original_fits =
+            u64::from(original.width) * u64::from(original.height) * 4 <= PAGE_BYTES;
         let fitted = Target { width: w, height: h, ..target };
-        if kaeri_pages::delivery(format, (region.width, region.height), &fitted)
-            == Delivery::Original
-            && !self.renderer.look().crop
+        // What the page is decoded for: the screen, or the box it is drawn in by width, which
+        // is taller than the screen.
+        let room = if self.by_width { (w, h) } else { (target.width, target.height) };
+        if original_fits
+            && kaeri_pages::delivery(format, (region.width, region.height), &fitted)
+                == Delivery::Original
         {
+            // Crop borders only changes which part of the file shows, so the original still
+            // goes, with the content box as its crop. Made here, the page would come out at the
+            // size it is drawn: on a wide window a strip image 720 pixels wide would become
+            // 2560 wide and over 100 MB.
+            let crop = match part.source {
+                Some(source) => Some(source),
+                None if self.renderer.look().crop => self.content_box(&original, format, room),
+                None => None,
+            };
             let bytes = std::fs::metadata(&original.path).map(|m| m.len()).unwrap_or(0);
             return Ok(PageFile {
                 path: original.path.display().to_string(),
                 encoding: PageEncoding::Original { mime: format.mime().to_owned() },
                 width: original.width,
                 height: original.height,
-                crop: part.source.map(|s| PixelRect {
+                crop: crop.map(|s| PixelRect {
                     x: s.x,
                     y: s.y,
                     width: s.width,
@@ -1204,33 +1333,7 @@ impl Chapter {
                 bytes,
             });
         }
-        let bytes = std::fs::read(&original.path).map_err(|_| self.unreadable())?;
-        // What the page is decoded for: the screen, or the box it is drawn in by width, which
-        // is taller than the screen.
-        let room = if self.by_width { (w, h) } else { (target.width, target.height) };
-        let page = if format.decodes() {
-            self.renderer.open_for(&bytes, room).map_err(|e| {
-                tracing::warn!(error = %e, "a page did not decode");
-                self.unreadable()
-            })?
-        } else {
-            // A format the engine cannot read: the platform decodes it, small if it can.
-            let room = decode_room(original.width, original.height, room);
-            match self.decoder.bitmap(bytes, format, room) {
-                Hosted::Image(bitmap) => {
-                    self.renderer.open_bitmap(bitmap, format).map_err(|e| {
-                        tracing::warn!(error = %e, "a page did not decode");
-                        self.unreadable()
-                    })?
-                }
-                Hosted::Unsupported => {
-                    return Err(ReadingFailure::Unsupported {
-                        extension: extension_of(format).into(),
-                    });
-                }
-                Hosted::Unreadable => return Err(self.unreadable()),
-            }
-        };
+        let page = self.open_page(&original, format, room)?;
         // The layout's rectangles are in the file's pixels; a large scan may decode smaller.
         let region = part.source.map(|s| scale_rect(s, original.width, page.bitmap.width()));
         let raw = self.renderer.render(&page, region, w, h).map_err(|e| {
@@ -1246,6 +1349,52 @@ impl Chapter {
             look_key(self.renderer.look())
         );
         self.write_raw(&name, raw.bytes(), raw.width(), raw.height(), raw.format(), raw.colour)
+    }
+
+    /// Decodes a page for a box of `room` pixels: in the engine, or by the platform for a
+    /// format the engine cannot read.
+    fn open_page(
+        &mut self,
+        original: &Original,
+        format: SourceFormat,
+        room: (u32, u32),
+    ) -> Result<kaeri_pages::SourcePage, ReadingFailure> {
+        let bytes = std::fs::read(&original.path).map_err(|_| self.unreadable())?;
+        if format.decodes() {
+            return self.renderer.open_for(&bytes, room).map_err(|e| {
+                tracing::warn!(error = %e, "a page did not decode");
+                self.unreadable()
+            });
+        }
+        // A format the engine cannot read: the platform decodes it, small if it can.
+        let room = decode_room(original.width, original.height, room);
+        match self.decoder.bitmap(bytes, format, room) {
+            Hosted::Image(bitmap) => self.renderer.open_bitmap(bitmap, format).map_err(|e| {
+                tracing::warn!(error = %e, "a page did not decode");
+                self.unreadable()
+            }),
+            Hosted::Unsupported => {
+                Err(ReadingFailure::Unsupported { extension: extension_of(format).into() })
+            }
+            Hosted::Unreadable => Err(self.unreadable()),
+        }
+    }
+
+    /// A page's content box with crop borders on, in the file's pixels. `None` when nothing
+    /// is cropped, or when the page does not decode here, so the app shows it whole.
+    fn content_box(
+        &mut self,
+        original: &Original,
+        format: SourceFormat,
+        room: (u32, u32),
+    ) -> Option<kaeri_pages::PixelRect> {
+        let page = self.open_page(original, format, room).ok()?;
+        if page.content == page.bitmap.bounds() {
+            return None;
+        }
+        let r = scale_rect(page.content, page.bitmap.width(), original.width);
+        let height = r.height.min(original.height.saturating_sub(r.y)).max(1);
+        Some(kaeri_pages::PixelRect::new(r.x, r.y, r.width, height))
     }
 
     fn write_raw(
@@ -1286,25 +1435,46 @@ impl Chapter {
         if !self.sent.insert((index, None)) {
             return None;
         }
-        let result = (|| {
-            let first =
-                strip.images.iter().rposition(|(_, _, top)| *top <= cut.top).unwrap_or(0);
-            let last =
-                strip.images.iter().rposition(|(_, _, top)| *top < cut.bottom).unwrap_or(first);
-            let mut images = Vec::new();
-            for (path, height, _) in &strip.images[first..=last] {
-                let data = std::fs::read(path).ok()?;
-                images.push(Bitmap::new(strip.width, *height, strip.format, data).ok()?);
-            }
-            let offset = strip.images[first].2;
-            let shifted = StripCut {
-                top: cut.top - offset,
-                bottom: cut.bottom - offset,
-                overlap: cut.overlap,
+        // Each image the cut spans, decoded and scaled to the screen's width now: the images
+        // of the last cut are kept for this one.
+        let first = strip.images.iter().rposition(|(_, _, top)| *top <= cut.top).unwrap_or(0);
+        let last =
+            strip.images.iter().rposition(|(_, _, top)| *top < cut.bottom).unwrap_or(first);
+        let mut kept = std::mem::take(&mut self.strip_scaled);
+        let mut scaled = Vec::new();
+        for at in first..=last {
+            let image = match kept.iter().position(|(i, _)| *i == at) {
+                Some(i) => Some(kept.swap_remove(i).1),
+                None => {
+                    let (original, height, _) = &strip.images[at];
+                    scale_strip_image(
+                        &self.decoder,
+                        original,
+                        strip.width,
+                        *height,
+                        strip.format,
+                    )
+                }
             };
-            let refs: Vec<&Bitmap> = images.iter().collect();
-            kaeri_pages::strip::extract(&refs, shifted).ok()
-        })();
+            match image {
+                Some(image) => scaled.push((at, image)),
+                None => break,
+            }
+        }
+        let result = (scaled.len() == last - first + 1)
+            .then(|| {
+                let offset = strip.images[first].2;
+                let shifted = StripCut {
+                    top: cut.top - offset,
+                    bottom: cut.bottom - offset,
+                    overlap: cut.overlap,
+                };
+                let refs: Vec<&Bitmap> = scaled.iter().map(|(_, b)| b).collect();
+                kaeri_pages::strip::extract(&refs, shifted).ok()
+            })
+            .flatten();
+        self.strip_scaled = scaled;
+        let strip = self.strip.as_ref()?;
         let colour = strip.format != kaeri_pages::PixelFormat::Gray8;
         let made = result
             .and_then(|bitmap| self.renderer.finish(bitmap, colour).ok())
@@ -1345,51 +1515,27 @@ impl Chapter {
     }
 }
 
-/// Scales every image of a strip to the screen's width, keeps them in the cache, and plans the
-/// screens it is cut into, at gaps between panels where there are any.
+/// Plans the screens a strip is cut into at the screen's width, at gaps between panels where
+/// there are any. Each image's height and flat rows at that width are kept beside its original,
+/// so the strip opened again plans at once; the pixels are scaled only for the cuts made.
 fn cut_strip(chapter: &Chapter, target: Target) -> Option<Strip> {
+    let started = Instant::now();
     let width = target.width;
     let colour = target.panel.shows_colour();
     let format =
         if colour { kaeri_pages::PixelFormat::Rgba8 } else { kaeri_pages::PixelFormat::Gray8 };
+    let marks = strip_marks(chapter, width);
     let mut images = Vec::new();
+    let mut pages = Vec::new();
     let mut gaps = Vec::new();
     let mut top = 0u32;
-    for (i, original) in chapter.originals.iter().enumerate() {
-        let Some(original) = original else { continue };
-        let Ok(bytes) = std::fs::read(&original.path) else { continue };
-        let hosted = original.format.filter(|f| !f.decodes());
-        let decoded = match hosted {
-            Some(format) => {
-                // A strip is drawn at the screen's width: ask for twice that at most.
-                let scale = (2.0 * width as f64 / original.width.max(1) as f64).min(1.0);
-                let room = (
-                    (original.width as f64 * scale).ceil() as u32,
-                    (original.height as f64 * scale).ceil() as u32,
-                );
-                match chapter.decoder.bitmap(bytes, format, room) {
-                    Hosted::Image(bitmap) => Some(bitmap),
-                    _ => None,
-                }
-            }
-            None => kaeri_pages::decode_for(
-                &bytes,
-                kaeri_pages::DecodeLimits::default(),
-                Some((width, target.height)),
-            )
-            .ok(),
-        };
-        let Some(bitmap) = decoded else { continue };
-        let (w, h) = Fit::Width(width).size(bitmap.width(), bitmap.height());
-        let Ok(scaled) = resize(&bitmap, bitmap.bounds(), w, h) else { continue };
-        let scaled = if colour { scaled.into_rgba() } else { scaled.into_gray() };
-        gaps.extend(kaeri_pages::strip::gap_rows(&scaled));
-        let path = chapter.dir.join(format!("s{i}-{width}.px"));
-        if write_whole(&path, scaled.data()).is_err() {
-            continue;
-        }
-        images.push((path, h, top));
-        top += h;
+    for (i, (original, rows)) in chapter.originals.iter().zip(marks).enumerate() {
+        let (Some(original), Some(rows)) = (original, rows) else { continue };
+        let height = rows.len() as u32;
+        gaps.extend(rows);
+        images.push((original.clone(), height, top));
+        pages.push(i as u32);
+        top += height;
     }
     if images.is_empty() {
         return None;
@@ -1398,10 +1544,164 @@ fn cut_strip(chapter: &Chapter, target: Target) -> Option<Strip> {
         &gaps,
         StripOptions::for_screen(target.height, target.height / 12),
     );
-    Some(Strip { images, width, format, cuts })
+    tracing::info!(
+        images = images.len(),
+        cuts = cuts.len(),
+        ms = started.elapsed().as_millis() as u64,
+        "an e-ink strip was planned"
+    );
+    Some(Strip { images, pages, width, format, cuts })
 }
 
-/// Where each cut starts: the image and the offset inside it.
+/// Each original's flat rows at the screen's `width`, one mark a row, from its kept file or
+/// worked out now. Images the engine decodes itself are worked on side by side; the host's
+/// decoder takes one at a time.
+fn strip_marks(chapter: &Chapter, width: u32) -> Vec<Option<Vec<bool>>> {
+    let originals = &chapter.originals;
+    let mut marks: Vec<Option<Vec<bool>>> = originals
+        .iter()
+        .enumerate()
+        .map(|(i, o)| o.as_ref().and_then(|o| read_marks(&chapter.dir, i, o, width)))
+        .collect();
+    let hosted = |o: &Original| o.format.is_some_and(|f| !f.decodes());
+    let todo: Vec<usize> = (0..originals.len())
+        .filter(|&i| marks[i].is_none() && originals[i].as_ref().is_some_and(|o| !hosted(o)))
+        .collect();
+    let next = std::sync::atomic::AtomicUsize::new(0);
+    let threads = std::thread::available_parallelism().map_or(2, |n| n.get()).clamp(1, 4);
+    let found: Mutex<Vec<(usize, Vec<bool>)>> = Mutex::new(Vec::new());
+    std::thread::scope(|scope| {
+        for _ in 0..threads.min(todo.len()) {
+            scope.spawn(|| {
+                loop {
+                    let n = next.fetch_add(1, Ordering::Relaxed);
+                    let Some(&i) = todo.get(n) else { break };
+                    let Some(original) = originals[i].as_ref() else { continue };
+                    if let Some(rows) = work_marks(&chapter.decoder, original, width) {
+                        keep_marks(&chapter.dir, i, original, width, &rows);
+                        if let Ok(mut found) = found.lock() {
+                            found.push((i, rows));
+                        }
+                    }
+                }
+            });
+        }
+    });
+    for (i, rows) in found.into_inner().unwrap_or_default() {
+        marks[i] = Some(rows);
+    }
+    for (i, original) in originals.iter().enumerate() {
+        if let Some(original) = original
+            && marks[i].is_none()
+            && hosted(original)
+            && let Some(rows) = work_marks(&chapter.decoder, original, width)
+        {
+            keep_marks(&chapter.dir, i, original, width, &rows);
+            marks[i] = Some(rows);
+        }
+    }
+    marks
+}
+
+/// A strip image decoded near its own size: the engine's formats whole, the host's at twice
+/// the screen's width at most.
+fn decode_strip_image(
+    decoder: &HostDecoder,
+    original: &Original,
+    width: u32,
+) -> Option<Bitmap> {
+    let bytes = std::fs::read(&original.path).ok()?;
+    match original.format.filter(|f| !f.decodes()) {
+        Some(format) => {
+            let scale = (2.0 * width as f64 / original.width.max(1) as f64).min(1.0);
+            let room = (
+                (original.width as f64 * scale).ceil() as u32,
+                (original.height as f64 * scale).ceil() as u32,
+            );
+            match decoder.bitmap(bytes, format, room) {
+                Hosted::Image(bitmap) => Some(bitmap),
+                _ => None,
+            }
+        }
+        // Drawn at the screen's width however tall: the room is only as wide as the screen.
+        None => kaeri_pages::decode_for(
+            &bytes,
+            kaeri_pages::DecodeLimits::default(),
+            Some((width, u32::MAX)),
+        )
+        .ok(),
+    }
+}
+
+/// A strip image at the screen's width, `height` rows tall, in the strip's format.
+fn scale_strip_image(
+    decoder: &HostDecoder,
+    original: &Original,
+    width: u32,
+    height: u32,
+    format: kaeri_pages::PixelFormat,
+) -> Option<Bitmap> {
+    let bitmap = decode_strip_image(decoder, original, width)?;
+    let scaled = resize(&bitmap, bitmap.bounds(), width, height).ok()?;
+    Some(if format == kaeri_pages::PixelFormat::Gray8 {
+        scaled.into_gray()
+    } else {
+        scaled.into_rgba()
+    })
+}
+
+/// An image's flat rows at the screen's `width`, worked out on the image as decoded: a run of
+/// flat rows shorter than a gap there is no gap, and each row at the screen's width takes the
+/// mark of the row it is scaled from.
+fn work_marks(decoder: &HostDecoder, original: &Original, width: u32) -> Option<Vec<bool>> {
+    let bitmap = decode_strip_image(decoder, original, width)?;
+    let (_, height) = Fit::Width(width).size(bitmap.width(), bitmap.height());
+    let mut own = kaeri_pages::strip::gap_rows(&bitmap);
+    let mut y = 0;
+    while y < own.len() {
+        let run = own[y..].iter().take_while(|&&flat| flat).count();
+        if run > 0 && run < kaeri_pages::strip::MIN_GAP {
+            own[y..y + run].iter_mut().for_each(|flat| *flat = false);
+        }
+        y += run.max(1);
+    }
+    let rows = own.len().max(1) as u64;
+    Some(
+        (0..height as u64)
+            .map(|r| own[((r * rows) / height.max(1) as u64).min(rows - 1) as usize])
+            .collect(),
+    )
+}
+
+/// Where an image's marks at `width` are kept: beside its original, named for the width.
+fn marks_path(dir: &Path, page: usize, width: u32) -> PathBuf {
+    dir.join(format!("g{page}-{width}.gaps"))
+}
+
+/// The marks kept for an image, when they were worked out from this same original.
+fn read_marks(dir: &Path, page: usize, original: &Original, width: u32) -> Option<Vec<bool>> {
+    let bytes = std::fs::read(marks_path(dir, page, width)).ok()?;
+    let (head, rows) = bytes.split_at_checked(16)?;
+    let word = |at: usize| u64::from_le_bytes(head[at..at + 8].try_into().unwrap_or_default());
+    let size = std::fs::metadata(&original.path).ok()?.len();
+    (word(0) == size && word(8) == rows.len() as u64)
+        .then(|| rows.iter().map(|&r| r != 0).collect())
+}
+
+/// Keeps an image's marks at `width`, named for its original's size so another file of the same
+/// page is never read with them.
+fn keep_marks(dir: &Path, page: usize, original: &Original, width: u32, rows: &[bool]) {
+    let Ok(size) = std::fs::metadata(&original.path).map(|m| m.len()) else { return };
+    let mut bytes = Vec::with_capacity(16 + rows.len());
+    bytes.extend_from_slice(&size.to_le_bytes());
+    bytes.extend_from_slice(&(rows.len() as u64).to_le_bytes());
+    bytes.extend(rows.iter().map(|&r| r as u8));
+    if let Err(e) = write_whole(&marks_path(dir, page, width), &bytes) {
+        tracing::warn!(error = %e, "a strip image's marks were not kept");
+    }
+}
+
+/// Where each cut starts: the image, by its page in the chapter, and the offset inside it.
 fn strip_places(strip: &Strip) -> Vec<StripPos> {
     strip
         .cuts
@@ -1409,7 +1709,10 @@ fn strip_places(strip: &Strip) -> Vec<StripPos> {
         .map(|cut| {
             let i = strip.images.iter().rposition(|(_, _, top)| *top <= cut.top).unwrap_or(0);
             let (_, height, top) = strip.images[i];
-            StripPos { image: i as u32, offset: (cut.top - top) as f32 / height.max(1) as f32 }
+            StripPos {
+                image: strip.pages.get(i).copied().unwrap_or(i as u32),
+                offset: (cut.top - top) as f32 / height.max(1) as f32,
+            }
         })
         .collect()
 }
@@ -1451,9 +1754,9 @@ fn look_key(look: &Look) -> u64 {
 fn book_key(path: &Path) -> String {
     let mut h = DefaultHasher::new();
     path.hash(&mut h);
-    if let Ok(meta) = std::fs::metadata(path) {
-        meta.len().hash(&mut h);
-        meta.modified().ok().hash(&mut h);
+    if let Ok(meta) = kaeri_books::tree::stat(path) {
+        meta.size.hash(&mut h);
+        meta.modified.hash(&mut h);
     }
     format!("{:016x}", h.finish())
 }
@@ -1569,11 +1872,71 @@ pub fn cache_dir(cache: &Path) -> PathBuf {
 mod tests {
     use super::*;
 
+    /// A 300 by 1800 strip image: art with a flat band at rows 900..960 and a lone flat row
+    /// at 300, kept as a PNG in `dir`.
+    fn banded(dir: &Path) -> Original {
+        let image = image::GrayImage::from_fn(300, 1800, |x, y| {
+            let flat = (900..960).contains(&y) || y == 300;
+            image::Luma([if flat { 250 } else { (x * 7 % 200) as u8 }])
+        });
+        let mut png = Vec::new();
+        image.write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png).unwrap();
+        keep_original(dir, 0, &png).unwrap()
+    }
+
+    #[test]
+    fn a_strip_images_marks_are_worked_out_at_its_own_size_and_kept() {
+        let dir = tempfile::tempdir().unwrap();
+        let original = banded(dir.path());
+        let decoder = HostDecoder::new(None);
+        let marks = work_marks(&decoder, &original, 600).unwrap();
+        // Twice as wide, twice as tall: the band is a gap at the screen's width, the lone row
+        // is no gap at all.
+        assert_eq!(marks.len(), 3600);
+        assert!(marks[1800..1920].iter().all(|&m| m));
+        assert!(!marks[1795] && !marks[1925]);
+        assert!(marks[590..610].iter().all(|&m| !m));
+        keep_marks(dir.path(), 0, &original, 600, &marks);
+        assert_eq!(read_marks(dir.path(), 0, &original, 600), Some(marks));
+        // Another width, or another file of the page, is worked out afresh.
+        assert_eq!(read_marks(dir.path(), 0, &original, 700), None);
+        std::fs::write(&original.path, b"another file").unwrap();
+        assert_eq!(read_marks(dir.path(), 0, &original, 600), None);
+    }
+
     #[test]
     fn tall_pages_are_a_strip() {
         assert!(is_strip(&[(800, 4000), (800, 3800), (800, 1200)]));
         assert!(!is_strip(&[(1000, 1400), (1000, 1400), (2000, 1400)]));
         assert!(!is_strip(&[(800, 4000)]));
+    }
+
+    #[test]
+    fn a_chapter_opening_on_a_spread_lays_its_pages_to_come_out_whole() {
+        // A source's chapter opens on a two-page colour spread; the pages after it are single
+        // and have not landed when it is laid out.
+        let guess = guessed_shape([(2000, 1400), (1000, 1420)]);
+        assert_eq!(guess, (1000, 1420));
+        assert_eq!(guessed_shape([(2000, 1400)]), UNKNOWN_SHAPE);
+        // A strip's tall pages are still the guess.
+        assert_eq!(guessed_shape([(800, 4000)]), (800, 4000));
+        // On a one-page screen a page laid out in that shape is not split into halves.
+        let shapes = [(2000, 1400), guess, guess].map(|(width, height)| layout::PageShape {
+            width,
+            height,
+            kind: layout::PageKind::Story,
+        });
+        let leaves = layout::lay_out(
+            &shapes,
+            layout::LayoutOptions {
+                screen: layout::Screen::Single,
+                direction: layout::Direction::RightToLeft,
+                spread_on_single: layout::SpreadOnSingle::Split,
+                first_is_cover: false,
+            },
+        );
+        assert_eq!(leaves.len(), 4);
+        assert!(leaves[2..].iter().all(|l| l.parts[0].source.is_none()));
     }
 
     #[test]
@@ -1594,6 +1957,79 @@ mod tests {
         // The wish comes first; 9 was asked for and is kept, 4 was only wished before.
         assert_eq!(wished(vec![5, 6, 7], &queue, &asked), VecDeque::from([5, 6, 7, 9]));
         assert_eq!(wished(vec![1], &VecDeque::new(), &HashSet::new()), VecDeque::from([1]));
+    }
+
+    #[test]
+    fn a_chapter_opening_on_a_square_page_guesses_the_shape_its_other_pages_share() {
+        // A source's chapter opens on a square colour page; the next page and the last ones
+        // are the chapter's own portrait pages.
+        assert_eq!(guessed_shape([(1300, 1300), (1131, 1608)]), (1131, 1608));
+        assert_eq!(
+            guessed_shape([(1300, 1300), (1131, 1608), (1131, 1608), (1131, 1608)]),
+            (1131, 1608)
+        );
+        // A strip's tall images stay the guess past a short last one.
+        assert_eq!(guessed_shape([(800, 4000), (800, 4000), (800, 900)]), (800, 4000));
+    }
+
+    #[test]
+    fn a_page_that_failed_leaves_the_rest_laid_out_in_their_own_shapes() {
+        // A source's chapter of three pages: the first has landed when it opens, the second
+        // lands later as a two-page spread, and the third fails.
+        let dir = tempfile::tempdir().unwrap();
+        let fed = dir.path().join("feed");
+        std::fs::create_dir_all(&fed).unwrap();
+        let land = |page: usize, (w, h): (u32, u32)| {
+            let file = fed.join(format!("{page:05}.jpg"));
+            std::fs::write(&file, stripes_jpeg(w, h)).unwrap();
+            FeedPage::Landed(file)
+        };
+        let chapter = ChapterId::new("1");
+        let pages = vec![land(0, (500, 700)), FeedPage::Coming, FeedPage::Coming];
+        let feed = Arc::new(Feed::standing(chapter.clone(), fed.clone(), pages));
+        let worker = Pages::start(dir.path().join("cache"), None);
+        let (out, mut inbox) = Outbox::inbox();
+        worker.open(OpenJob {
+            session: 1,
+            generation: 1,
+            chapter: chapter.clone(),
+            path: fed.clone(),
+            plan: Plan {
+                target: Target { panel: kaeri_pages::Panel::Lcd, width: 1080, height: 2400 },
+                look: Look::default(),
+                two_pages: false,
+                spreads: SpreadOnSingle::Split,
+                mode: ReaderMode::Paged,
+                direction: ReadDirection::RightToLeft,
+                guess_mode: false,
+                guess_direction: false,
+                fit_width: false,
+            },
+            start_page: 0,
+            shared: Shared::default(),
+            out: out.clone(),
+            feed: Some(feed.clone()),
+            credits: None,
+            keep: None,
+        });
+        feed.put(1, land(1, (1000, 700)));
+        worker.landed(1, chapter.clone(), 1, &out);
+        feed.put(2, FeedPage::Failed(ReadingFailure::NotFound));
+        worker.landed(1, chapter, 2, &out);
+        // Every page that could land has: the chapter is laid out again with the spread's
+        // shape, rather than waiting for a page that may never come.
+        let until = Instant::now() + Duration::from_secs(20);
+        loop {
+            assert!(Instant::now() < until, "the chapter was laid out again");
+            match inbox.try_recv() {
+                Ok(crate::outbox::Envelope::Internal(Internal::Reader {
+                    wake: ReaderWake::Relay(1),
+                    ..
+                })) => break,
+                Ok(_) => {}
+                Err(_) => std::thread::sleep(Duration::from_millis(10)),
+            }
+        }
     }
 
     /// A made-up strip image: fine colour stripes a pixel wide, as lettering would be.
@@ -1620,12 +2056,27 @@ mod tests {
         mode: ReaderMode,
         fit_width: bool,
     ) -> Vec<PageFile> {
+        let files: Vec<_> = pages
+            .iter()
+            .enumerate()
+            .map(|(i, (w, h))| (format!("{:05}.jpg", i + 1), stripes_jpeg(*w, *h)))
+            .collect();
+        made_files(&files, screen, mode, fit_width, Look::default())
+    }
+
+    /// As [`made_pages`], for page files of any kind and a look of their own.
+    fn made_files(
+        pages: &[(String, Vec<u8>)],
+        screen: (u32, u32),
+        mode: ReaderMode,
+        fit_width: bool,
+        look: Look,
+    ) -> Vec<PageFile> {
         let dir = tempfile::tempdir().unwrap();
         let book = dir.path().join("1-pages");
         std::fs::create_dir_all(&book).unwrap();
-        for (i, (w, h)) in pages.iter().enumerate() {
-            std::fs::write(book.join(format!("{:05}.jpg", i + 1)), stripes_jpeg(*w, *h))
-                .unwrap();
+        for (name, bytes) in pages {
+            std::fs::write(book.join(name), bytes).unwrap();
         }
         let worker = Pages::start(dir.path().join("cache"), None);
         let (out, mut inbox) = Outbox::inbox();
@@ -1641,7 +2092,7 @@ mod tests {
                     width: screen.0,
                     height: screen.1,
                 },
-                look: Look::default(),
+                look,
                 two_pages: false,
                 spreads: SpreadOnSingle::Split,
                 mode,
@@ -1655,6 +2106,7 @@ mod tests {
             out: out.clone(),
             feed: None,
             credits: None,
+            keep: None,
         });
         worker.want(1, 1, (0..pages.len() as u32).collect(), &out);
         let mut made = vec![None; pages.len()];
@@ -1696,6 +2148,45 @@ mod tests {
         }
     }
 
+    /// A made-up page: stripes inside a white border `margin` pixels wide, as a PNG so the
+    /// border stays blank.
+    fn framed_png(width: u32, height: u32, margin: u32) -> Vec<u8> {
+        let image = image::RgbImage::from_fn(width, height, |x, y| {
+            let inside =
+                x >= margin && x < width - margin && y >= margin && y < height - margin;
+            match (inside, (x + y / 7) % 2 == 0) {
+                (false, _) => image::Rgb([255, 255, 255]),
+                (true, true) => image::Rgb([200, 40, 30]),
+                (true, false) => image::Rgb([20, 30, 160]),
+            }
+        });
+        let mut out = Vec::new();
+        image::DynamicImage::ImageRgb8(image)
+            .write_to(&mut std::io::Cursor::new(&mut out), image::ImageFormat::Png)
+            .unwrap();
+        out
+    }
+
+    #[test]
+    fn a_cropped_page_goes_as_its_original_with_the_content_box() {
+        // On a window far wider than the strip image the engine would have made the cropped
+        // page at the window's width: over three times the original's pixels.
+        let look = Look { crop: true, ..Look::default() };
+        let pages = [
+            ("00001.png".to_owned(), framed_png(720, 4000, 40)),
+            ("00002.png".to_owned(), stripes_jpeg(720, 4000)),
+        ];
+        let made = made_files(&pages, (2560, 1600), ReaderMode::Strip, false, look);
+        for file in &made {
+            assert!(matches!(file.encoding, PageEncoding::Original { .. }), "{file:?}");
+            assert_eq!((file.width, file.height), (720, 4000), "{file:?}");
+        }
+        let crop = made[0].crop.as_ref().expect("the border is cropped");
+        assert_eq!((crop.x, crop.y, crop.width, crop.height), (40, 40, 640, 3920));
+        // Nothing blank to crop: the page shows whole.
+        assert!(made[1].crop.is_none(), "{:?}", made[1]);
+    }
+
     #[test]
     fn a_strip_image_far_wider_than_the_screen_is_made_at_the_screens_width() {
         // Shrunk past twice, so the engine makes it, at the width the strip draws it.
@@ -1732,5 +2223,36 @@ mod tests {
     fn rectangles_follow_a_smaller_decode() {
         let r = kaeri_pages::PixelRect::new(2000, 0, 2000, 2800);
         assert_eq!(scale_rect(r, 4000, 2000), kaeri_pages::PixelRect::new(1000, 0, 1000, 1400));
+    }
+
+    #[test]
+    fn a_strip_image_too_big_to_draw_whole_goes_out_within_the_budget() {
+        // 720 by 40,000: narrower than the screen, but 115 MB decoded, past what Android
+        // draws.
+        let picture = image::GrayImage::from_fn(720, 40_000, |x, y| {
+            image::Luma([if (x / 9 + y / 13) % 2 == 0 { 40 } else { 210 }])
+        });
+        let mut png = Vec::new();
+        image::DynamicImage::ImageLuma8(picture)
+            .write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
+            .unwrap();
+        let pages = [("00001.png".to_owned(), png)];
+        let made = made_files(&pages, (1080, 2400), ReaderMode::Strip, false, Look::default());
+        let file = &made[0];
+        assert!(matches!(file.encoding, PageEncoding::Raw { .. }), "{file:?}");
+        let decoded = u64::from(file.width) * u64::from(file.height) * 4;
+        assert!(decoded <= PAGE_BYTES, "{decoded} bytes: {file:?}");
+        // Its shape stays the page's.
+        let (aspect, made_aspect) =
+            (40_000.0 / 720.0, f64::from(file.height) / f64::from(file.width));
+        assert!((aspect - made_aspect).abs() < 0.2, "{file:?}");
+    }
+
+    #[test]
+    fn a_box_past_the_budget_shrinks_evenly() {
+        assert_eq!(within_page_bytes((720, 4000)), (720, 4000));
+        let (w, h) = within_page_bytes((1080, 60_000));
+        assert!(u64::from(w) * u64::from(h) * 4 <= PAGE_BYTES);
+        assert!(w > 500 && h > 30_000, "{w}x{h}");
     }
 }

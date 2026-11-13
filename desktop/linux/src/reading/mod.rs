@@ -530,7 +530,8 @@ pub fn action_chapter(action: &SeriesAction) -> Option<(ChapterId, String)> {
             Some((chapter.clone(), t::action_continue_named_plain(label)))
         }
         SeriesAction::ContinuePart { chapter, label, named: None, .. } => {
-            Some((chapter.clone(), t::action_continue_part_plain(label)))
+            // A bare number is a chapter, as its row and the reader call it.
+            Some((chapter.clone(), t::action_continue_chapter_plain(label)))
         }
         SeriesAction::ReadPart { chapter, named: Some(named), .. } => {
             Some((chapter.clone(), t::action_read_named(named)))
@@ -539,7 +540,7 @@ pub fn action_chapter(action: &SeriesAction) -> Option<(ChapterId, String)> {
             Some((chapter.clone(), t::action_read_named(label)))
         }
         SeriesAction::ReadPart { chapter, label, named: None } => {
-            Some((chapter.clone(), t::action_read_part(label)))
+            Some((chapter.clone(), t::action_read_chapter(label)))
         }
         SeriesAction::ReadAgain | SeriesAction::NoSource => None,
     }

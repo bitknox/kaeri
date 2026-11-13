@@ -94,7 +94,7 @@ class DownloadNotifier(private val context: Context, private val sdk: Int = Buil
         .setSmallIcon(R.drawable.ic_launcher_monochrome)
         // Amber is only for Play once an episode is down.
         .setColor(AMBER)
-        .setContentTitle(Strings.downloadsNoticeDone(context, row.episode.toInt()))
+        .setContentTitle(app.kaeri.store.wholeEpisode(row.episode)?.let { Strings.downloadsNoticeDone(context, it) } ?: app.kaeri.store.episodeName(context, row.episode))
         .setContentText(Strings.downloadsNoticeDoneDetail(context, row.title))
         .setAutoCancel(true)
         .setContentIntent(open(AppLink.Downloads))

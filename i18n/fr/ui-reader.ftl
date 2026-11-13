@@ -1,4 +1,7 @@
 reader-page-loading = Chargement de la page { $page }
+reader-page-plate = Page { $page }
+reader-image-plate = Image { $image }
+reader-image-loading = Chargement de l'image { $image }
 reader-page-failed = Impossible de charger la page { $page }
 reader-try-again = Réessayer
 reader-close = Fermer
@@ -59,3 +62,6 @@ reader-divider-images = { $count ->
     [many] { $count } images
    *[other] { $count } images
  }
+reader-zone-next = Page suivante
+reader-zone-previous = Page précédente
+reader-zone-controls = Commandes

@@ -17,10 +17,6 @@ use super::{BookDownloads, Setup, decode};
 
 /// Pages in a chapter when neither the source nor a past download says.
 const PAGES: u32 = 20;
-/// A page's bytes when no page was downloaded before: a manga page as sources commonly give it.
-const PAGE_BYTES: u64 = 350_000;
-/// A text chapter's bytes when none was downloaded before.
-const TEXT_CHAPTER_BYTES: u64 = 40_000;
 
 fn r(msg: ReadingMsg) -> Msg {
     Msg::Reading(msg)
@@ -190,21 +186,18 @@ pub(crate) fn series(
     (out.into_iter().map(|(_, _, s)| s).collect(), read_bytes, kept_all)
 }
 
-/// Bytes per page and pages per chapter learnt from finished downloads: the source's first,
-/// then any.
+/// Bytes per page and pages per chapter learnt from finished downloads: the work's own first,
+/// then the source's. Pages differ too much between sources (a webtoon's tall strips against a
+/// manga's pages) for one source's downloads to say what another's take.
 struct Learnt {
     page_bytes: Option<u64>,
     pages: Option<u32>,
     text_chapter: Option<u64>,
 }
 
-fn learn(store: &Store, rows: &[BookDownload], source: Option<&str>) -> Learnt {
+fn learn(store: &Store, rows: &[BookDownload], work: &str, source: Option<&str>) -> Learnt {
     let done = |d: &&BookDownload| d.state == BookDownloadState::Done && d.bytes > 0;
     let paged = |d: &&BookDownload| d.pages_total.is_some_and(|p| p > 0);
-    let mut novels: HashMap<String, bool> = HashMap::new();
-    let mut novel = |work: &str| -> bool {
-        *novels.entry(work.to_owned()).or_insert_with(|| is_novel(store, work))
-    };
     let pick = |from: &dyn Fn(&&BookDownload) -> bool| -> (Option<u64>, Option<u32>) {
         let images: Vec<&BookDownload> =
             rows.iter().filter(done).filter(paged).filter(|d| from(d)).collect();
@@ -216,17 +209,21 @@ fn learn(store: &Store, rows: &[BookDownload], source: Option<&str>) -> Learnt {
             (n > 0).then(|| u32::try_from(pages / n).unwrap_or(PAGES)),
         )
     };
-    let (mut page_bytes, mut pages) = (None, None);
+    let text = |from: &dyn Fn(&&BookDownload) -> bool| -> Option<u64> {
+        let texts: Vec<u64> =
+            rows.iter().filter(done).filter(|d| from(d)).map(|d| d.bytes).collect();
+        (!texts.is_empty()).then(|| texts.iter().sum::<u64>() / texts.len() as u64)
+    };
+    let (mut page_bytes, mut pages) = pick(&|d| d.work == work);
+    let mut text_chapter = text(&|d| d.work == work);
     if let Some(source) = source {
-        (page_bytes, pages) = pick(&|d| d.source_id == source);
+        let (source_bytes, source_pages) = pick(&|d| d.source_id == source);
+        page_bytes = page_bytes.or(source_bytes);
+        pages = pages.or(source_pages);
+        // A light novel's chapters from the source, never a manga's images.
+        text_chapter = text_chapter
+            .or_else(|| text(&|d| d.source_id == source && is_novel(store, &d.work)));
     }
-    let (any_bytes, any_pages) = pick(&|_| true);
-    page_bytes = page_bytes.or(any_bytes);
-    pages = pages.or(any_pages);
-    let texts: Vec<u64> =
-        rows.iter().filter(done).filter(|d| novel(&d.work)).map(|d| d.bytes).collect();
-    let text_chapter =
-        (!texts.is_empty()).then(|| texts.iter().sum::<u64>() / texts.len() as u64);
     Learnt { page_bytes, pages, text_chapter }
 }
 
@@ -246,7 +243,9 @@ fn network(setup: &Setup) -> Option<Msg> {
 
 impl BookDownloads {
     /// What downloading `pick` of `rows` from `source` will take: the chapters not downloaded
-    /// yet, each its pages (or the usual count) times the bytes a page usually takes.
+    /// yet, each its pages (or the usual count) times the bytes a page of this work or source
+    /// took before. With nothing downloaded to go by, the size is not known: no number is
+    /// better than a wrong one, so the line is empty and the bytes are 0.
     pub(crate) fn estimate(
         &self,
         store: &Store,
@@ -269,7 +268,7 @@ impl BookDownloads {
             })
             .map(|d| d.chapter.as_str())
             .collect();
-        let picked = Self::picked(&pick, rows);
+        let picked = Self::to_fetch(&pick, rows);
         let chosen: Vec<&ChapterRow> =
             rows.iter().filter(|row| picked.iter().any(|w| w.chapter == row.id)).collect();
         let wanted: Vec<&ChapterRow> =
@@ -280,27 +279,30 @@ impl BookDownloads {
             .filter(|d| d.work == work.as_str() && d.state == BookDownloadState::Done)
             .map(|d| (d.chapter.as_str(), d.bytes))
             .collect();
-        let learnt = learn(store, &all, source);
+        let learnt = learn(store, &all, work.as_str(), source);
         let novel = is_novel(store, work.as_str());
-        let page = learnt.page_bytes.unwrap_or(PAGE_BYTES);
-        let guess = |row: &&ChapterRow| -> u64 {
+        let guess = |row: &&ChapterRow| -> Option<u64> {
             if novel {
-                learnt.text_chapter.unwrap_or(TEXT_CHAPTER_BYTES)
+                learnt.text_chapter
             } else {
-                let pages = row.pages.filter(|p| *p > 0).or(learnt.pages).unwrap_or(PAGES);
-                u64::from(pages) * page
+                let pages = crate::read_catalog::chapters::plausible_pages(row.pages)
+                    .filter(|p| *p > 0)
+                    .or(learnt.pages)
+                    .unwrap_or(PAGES);
+                learnt.page_bytes.map(|page| u64::from(pages) * page)
             }
         };
-        let bytes: u64 = wanted.iter().map(guess).sum();
-        let all_bytes: u64 = chosen
+        let bytes: Option<u64> = wanted.iter().map(guess).sum();
+        let all_bytes: Option<u64> = chosen
             .iter()
-            .map(|row| done.get(row.id.as_str()).copied().unwrap_or_else(|| guess(row)))
+            .map(|row| done.get(row.id.as_str()).copied().or_else(|| guess(row)))
             .sum();
         let mut line = Vec::new();
-        if !wanted.is_empty() {
+        if let Some(bytes) = bytes.filter(|_| !wanted.is_empty()) {
             line.push(r(ReadingMsg::ReadingEstimateSize { size: Size::of(bytes) }));
             line.extend(network(&self.setup()));
         }
+        let (bytes, all_bytes) = (bytes.unwrap_or(0), all_bytes.unwrap_or(0));
         DownloadEstimate {
             work: work.clone(),
             pick,
