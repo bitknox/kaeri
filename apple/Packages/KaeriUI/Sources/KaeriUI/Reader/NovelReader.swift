@@ -62,7 +62,10 @@ struct NovelReader: View {
         }
         .onChange(of: theme.page, initial: true) { _, page in controller.pageColor = page }
         .onChange(of: paper, initial: true) { _, paper in controller.paper = paper }
+        // A chapter of its own, or the same book opened again in a new session, whose
+        // addresses are new: the old ones are no longer served.
         .onChange(of: model.novel?.chapter) { _, _ in open() }
+        .onChange(of: model.novel?.session) { _, _ in open() }
         .onChange(of: model.novelStyle) { _, style in controller.configure(style) }
         .onChange(of: model.jump?.tick) { _, _ in
             if let index = model.jump?.index { controller.goTo(index) }
@@ -170,7 +173,9 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
     private weak var model: ReaderModel?
     private var onTap: (Double) -> Void = { _ in }
     private var book: NovelOpenView?
-    private var openedChapter: String?
+    /// The session and chapter shown: the book's addresses hold the session, so a book opened
+    /// again in a new session is loaded again even when its chapter is the same.
+    private var opened: (session: UInt64, chapter: String)?
     /// The place the page last said, to open again at after WebKit ended the page's process.
     private var lastPlace: (spine: Int, pos: NovelPos)?
     /// What the page last heard of input(): sent again with each new document.
@@ -253,11 +258,11 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
     }
 
     func open(_ book: NovelOpenView, scrolled: Bool) {
-        guard openedChapter != book.chapter else { return }
+        if let opened, opened.session == book.session, opened.chapter == book.chapter { return }
         // A view that showed another chapter stays hidden until the new one is laid out, so
         // the last page of the old one never shows under the new one.
-        if openedChapter != nil { setHidden(true) }
-        openedChapter = book.chapter
+        if opened != nil { setHidden(true) }
+        opened = (book.session, book.chapter)
         self.book = book
         lastPlace = nil
         shown.end = false
@@ -434,9 +439,14 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
             sentInput = nil
             sendInput()
             setHidden(false)
+            guard ofTheBook(json) else {
+                notServed()
+                return
+            }
+            recovering = false
             page(json, ready: true)
         case "failed": setHidden(false)
-        case "page": page(json, ready: false)
+        case "page": if ofTheBook(json) { page(json, ready: false) }
         case "layout":
             if let page = json["page"] as? Int, let pages = json["pages"] as? Int { model?.position = (page, max(pages, 1)) }
         case "end": next()
@@ -496,7 +506,11 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
     /// Past the last page of a document: the next one, or the end page. Past the end page:
     /// the next chapter.
     private func next() {
-        guard let book, let current = currentSpine else { return }
+        guard let book else { return }
+        guard let current = currentSpine ?? lastPlace?.spine else {
+            reopen()
+            return
+        }
         if let index = book.spine.indices.dropFirst(current + 1).first(where: { book.spine[$0].linear }) {
             readyHow = .turn
             load(book.spine[index].url, fragment: nil)
@@ -517,7 +531,11 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
     }
 
     private func previous() {
-        guard let book, let current = currentSpine else { return }
+        guard let book else { return }
+        guard let current = currentSpine ?? lastPlace?.spine else {
+            reopen()
+            return
+        }
         if let index = book.spine.indices.prefix(current).last(where: { book.spine[$0].linear }) {
             readyHow = .turn
             load(book.spine[index].url, fragment: "kaeri:end")
@@ -525,10 +543,44 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
     }
 
     private var currentSpine: Int? {
-        guard let book, let url = webView.url else { return nil }
-        let path = url.absoluteString.split(separator: "#").first.map(String.init) ?? ""
-        return book.spine.firstIndex { $0.url == path }
+        guard let url = webView.url else { return nil }
+        return spineIndex(of: url.absoluteString)
     }
+
+    /// The spine document at `address`, whatever its fragment, and with its escapes read the
+    /// same way WebKit and the engine may write them.
+    private func spineIndex(of address: String) -> Int? {
+        guard let book else { return nil }
+        let path = Self.document(address)
+        return book.spine.firstIndex { Self.document($0.url) == path }
+    }
+
+    nonisolated static func document(_ address: String) -> String {
+        let path = address.split(separator: "#", maxSplits: 1, omittingEmptySubsequences: false).first.map(String.init) ?? ""
+        return path.removingPercentEncoding ?? path
+    }
+
+    /// Whether a report comes from the book's document at the address shown. The engine tells
+    /// each document its spine index; a page the engine did not serve as the book's, such as an
+    /// error's empty answer, has none of its settings and says the first.
+    private func ofTheBook(_ json: [String: Any]) -> Bool {
+        guard let current = currentSpine else { return false }
+        return (json["spine"] as? Int ?? 0) == current
+    }
+
+    /// The document shown is not the book's: its place is never kept, and the page goes back to
+    /// the last place the book showed, or the chapter's start. Once: a book that fails again
+    /// stays as it is rather than loading for good.
+    private func notServed() {
+        readyHow = nil
+        guard !recovering else { return }
+        recovering = true
+        setHidden(true)
+        reopen()
+    }
+
+    /// Going back to a known place after a document that failed, until the book shows again.
+    private var recovering = false
 
     private func load(_ url: String, fragment: String?) {
         guard var parts = URLComponents(string: url) else { return }
@@ -538,11 +590,13 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
 
     private func link(_ json: [String: Any]) {
         if let note = json["note"] as? String, !note.isEmpty { shown.note = note; return }
-        // Only links inside the book are followed; everything else stays where it is.
-        if json["internal"] as? Bool == true, let href = json["href"] as? String, let target = URL(string: href) {
-            readyHow = .jump
-            webView.load(URLRequest(url: target))
-        }
+        // Only links to the book's own documents are followed; everything else stays where it
+        // is, as a document outside the reading order has no place to turn on from.
+        guard json["internal"] as? Bool == true, let href = json["href"] as? String, let target = URL(string: href),
+              spineIndex(of: href) != nil
+        else { return }
+        readyHow = .jump
+        webView.load(URLRequest(url: target))
     }
 
     /// A key the page did not turn on, while the chrome or the end page is up.
@@ -568,6 +622,37 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
     ) {
         let ok = action.request.url?.scheme == "kaeri-book" || action.request.url?.absoluteString == "about:blank"
         Task { @MainActor in decisionHandler(ok ? .allow : .cancel) }
+    }
+
+    /// A document the engine refused or no longer serves never replaces the page shown: the
+    /// turn stays where it was, with its keys, instead of an empty page.
+    nonisolated func webView(
+        _ webView: WKWebView, decidePolicyFor response: WKNavigationResponse,
+        decisionHandler: @escaping @MainActor @Sendable (WKNavigationResponsePolicy) -> Void
+    ) {
+        let status = (response.response as? HTTPURLResponse)?.statusCode ?? 200
+        let ok = !response.isForMainFrame || (200..<300).contains(status)
+        Task { @MainActor in decisionHandler(ok ? .allow : .cancel) }
+    }
+
+    nonisolated func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: any Error) {
+        let error = error as NSError
+        // A load stopped for another, or by the reader going, is not a failure.
+        guard !(error.domain == NSURLErrorDomain && error.code == NSURLErrorCancelled) else { return }
+        Task { @MainActor in self.loadFailed() }
+    }
+
+    /// A load that never came: the page still shown stays and turns, and one that was hidden for
+    /// a new chapter shows again. With no document of the book shown, the chapter opens again,
+    /// once.
+    private func loadFailed() {
+        readyHow = nil
+        if book != nil, currentSpine == nil, !webView.isLoading, !recovering {
+            recovering = true
+            reopen()
+            return
+        }
+        setHidden(false)
     }
 
     /// WebKit ended the page's process, for memory or a crash: the page comes back where it was.
@@ -612,20 +697,28 @@ private final class ScriptProxy: NSObject, WKScriptMessageHandler {
 final class BookSchemeHandler: NSObject, WKURLSchemeHandler, @unchecked Sendable {
     var resource: (@Sendable (String) -> BookResource?)?
     private let lock = NSLock()
-    private var stopped = Set<ObjectIdentifier>()
+    /// The tasks started and not yet answered or stopped. A stopped task is never answered,
+    /// and a stop that comes after the answer leaves nothing behind for a later task to meet.
+    private var live = Set<ObjectIdentifier>()
 
     func webView(_ webView: WKWebView, start task: any WKURLSchemeTask) {
-        guard let url = task.request.url else { return }
+        guard let url = task.request.url else {
+            task.didFailWithError(URLError(.badURL))
+            return
+        }
         let box = TaskBox(task: task)
         let id = ObjectIdentifier(task as AnyObject)
+        lock.lock()
+        live.insert(id)
+        lock.unlock()
         let lookup = resource
         DispatchQueue.global(qos: .userInitiated).async { [self] in
             let answer = lookup?(url.absoluteString)
             DispatchQueue.main.async {
                 self.lock.lock()
-                let gone = self.stopped.remove(id) != nil
+                let open = self.live.remove(id) != nil
                 self.lock.unlock()
-                if gone { return }
+                guard open else { return }
                 self.respond(box.task, url: url, answer: answer)
             }
         }
@@ -633,7 +726,7 @@ final class BookSchemeHandler: NSObject, WKURLSchemeHandler, @unchecked Sendable
 
     func webView(_ webView: WKWebView, stop task: any WKURLSchemeTask) {
         lock.lock()
-        stopped.insert(ObjectIdentifier(task as AnyObject))
+        live.remove(ObjectIdentifier(task as AnyObject))
         lock.unlock()
     }
 
