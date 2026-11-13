@@ -267,8 +267,6 @@ pub struct BookSources {
     pub registry: BookRegistry,
     store: Store,
     tokens: TokenStore,
-    /// Kaeri's own client, for page addresses a source hands back to be fetched.
-    client: reqwest::Client,
     /// The client book servers are asked through: it follows no redirects, so the server's
     /// own requests follow them a hop at a time and keep its sign-in on its origin.
     servers: reqwest::Client,
@@ -329,7 +327,6 @@ impl BookSources {
             registry: BookRegistry::new(),
             store,
             tokens,
-            client: http.plain().clone(),
             servers: http.sources().clone(),
             keep: paths.cache_dir.join("books"),
             flags: Arc::default(),

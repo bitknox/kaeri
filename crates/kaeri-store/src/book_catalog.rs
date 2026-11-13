@@ -6,6 +6,8 @@
 //! `read_notice` is personal, as `episode_notice` is, so a profile is never told twice of one
 //! chapter.
 
+use std::collections::HashSet;
+
 use rusqlite::{OptionalExtension, params};
 
 use crate::{Result, Store};
@@ -127,22 +129,40 @@ impl Store {
     /// are being read or were downloaded, each with a source's series matched to it: the most
     /// sure match first.
     pub fn unnamed_local_works(&self) -> Result<Vec<(String, String, String)>> {
-        self.with_conn(|c| {
+        // Names and downloads are the device's; matches and reading are the person's.
+        let (named, downloaded) = self.with_conn(|c| {
+            let works = |sql: &str| -> Result<HashSet<String>> {
+                let mut stmt = c.prepare(sql)?;
+                let rows = stmt.query_map([], |r| r.get(0))?;
+                Ok(rows.collect::<rusqlite::Result<_>>()?)
+            };
+            Ok((
+                works("SELECT work FROM book_work WHERE work LIKE 'l:%'")?,
+                works("SELECT DISTINCT work FROM book_download WHERE work LIKE 'l:%'")?,
+            ))
+        })?;
+        let matched: Vec<(String, String, String, bool)> = self.with_personal(|c| {
             let mut stmt = c.prepare(
-                "SELECT m.work, m.source_id, m.series_ref FROM book_source_match m
+                "SELECT m.work, m.source_id, m.series_ref,
+                        EXISTS (SELECT 1 FROM read_work r WHERE r.work = m.work)
+                     OR EXISTS (SELECT 1 FROM read_chapter r WHERE r.work = m.work)
+                     OR EXISTS (SELECT 1 FROM read_status r WHERE r.work = m.work)
+                   FROM book_source_match m
                   WHERE m.work LIKE 'l:%'
-                    AND NOT EXISTS (SELECT 1 FROM book_work w WHERE w.work = m.work)
-                    AND (EXISTS (SELECT 1 FROM book_download d WHERE d.work = m.work)
-                         OR EXISTS (SELECT 1 FROM read_work r WHERE r.work = m.work)
-                         OR EXISTS (SELECT 1 FROM read_chapter r WHERE r.work = m.work)
-                         OR EXISTS (SELECT 1 FROM read_status r WHERE r.work = m.work))
                   ORDER BY m.work, m.confirmed DESC, m.confidence DESC, m.updated_at DESC",
             )?;
             let rows = stmt
-                .query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))?
+                .query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?)))?
                 .collect::<rusqlite::Result<_>>()?;
             Ok(rows)
-        })
+        })?;
+        Ok(matched
+            .into_iter()
+            .filter(|(work, _, _, read)| {
+                !named.contains(work) && (*read || downloaded.contains(work))
+            })
+            .map(|(work, source, series, _)| (work, source, series))
+            .collect())
     }
 
     pub fn book_work(&self, work: &str) -> Result<Option<BookWork>> {
