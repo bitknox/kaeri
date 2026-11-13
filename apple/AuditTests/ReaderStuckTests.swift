@@ -104,6 +104,10 @@ final class ReaderStuckTests: XCTestCase {
         try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "hardware keys are an iPad check")
         let app = launch("readermangartl")
         _ = try XCTUnwrap(page(app), "no page on screen")
+        // The chapter, from the line under the title: what goes before its " · ".
+        let chapter = { (line: String) in line.components(separatedBy: " · ").first ?? line }
+        let before = chapter(line(app, containing: " · "))
+        XCTAssertFalse(before.isEmpty, "no line under the title")
         key(app, "g")
         let field = app.textFields.firstMatch
         XCTAssertTrue(field.waitForExistence(timeout: 5), "Go to page did not open")
@@ -119,6 +123,8 @@ final class ReaderStuckTests: XCTestCase {
         app.buttons["Go"].tap()
         XCTAssertTrue(field.waitForNonExistence(timeout: 3), "Go did not close Go to page")
         XCTAssertEqual(page(app), 5, "Go to page did not go")
+        // `]` with the prompt up went to the field: the chapter is the one it was.
+        XCTAssertEqual(chapter(line(app, containing: " · ")), before, "a reader key changed the chapter under the prompt")
         // Closing it gave the keys back: the arrows turn again.
         key(app, .leftArrow)
         XCTAssertEqual(page(app), 6, "Left after Go to page")
