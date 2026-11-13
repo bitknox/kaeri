@@ -947,6 +947,9 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     // moves neither.
     let (bar, entry, toggle) = crate::pages::search::field(&t::read_search_placeholder());
     bar.set_search_mode(true);
+    // Typing anywhere on this side goes to its field, as on the shows' side. The capture only
+    // acts while the bar is on screen, so the shows' field and the player keep their keys.
+    bar.set_key_capture_widget(Some(&ctx.window));
     ctx.read_search_focus.replace(Some(Rc::new({
         let (bar, entry) = (bar.downgrade(), entry.downgrade());
         move || {
