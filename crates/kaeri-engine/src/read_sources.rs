@@ -2087,16 +2087,17 @@ impl BookSources {
     /// names were kept, asking each one's source once, a few seconds apart, and none whose
     /// source can't be asked. Answers how many were named.
     pub(crate) async fn name_unnamed(&self, now: i64) -> usize {
-        let mut named = 0;
+        let (mut named, mut asked_any) = (0, false);
         let mut done: HashSet<String> = HashSet::new();
         let unnamed = self.store.unnamed_local_works().unwrap_or_default();
         for (work, source, series) in unnamed {
             if done.contains(&work) || source == FOLDERS || !self.is_available(&source) {
                 continue;
             }
-            if named > 0 {
+            if asked_any {
                 tokio::time::sleep(NAME_PACE).await;
             }
+            asked_any = true;
             let hints = BookHints::default();
             let asked = self.registry.series(&source, &series, &hints, now);
             match tokio::time::timeout(HINT_WAIT, asked).await {
