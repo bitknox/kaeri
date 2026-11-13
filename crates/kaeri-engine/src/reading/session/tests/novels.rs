@@ -336,6 +336,8 @@ async fn the_last_page_of_the_last_document_reads_after_it_holds_and_the_end_pag
     let mut h = novel_harness();
     let (_, novel) = h.open_novel(OpenAt::Resume).await;
     let last = novel.spine.iter().rposition(|s| s.linear).unwrap() as u32;
+    // The end page is said as the book opens, so it is there before its last page shows.
+    h.until(|e| matches!(e, ReaderEvent::EndPage { .. }).then_some(())).await;
     // The last page of an earlier document is not the end.
     h.at(pos(0, &[0], 0), 2, 3, TurnHow::Turn);
     tokio::time::advance(READ_AFTER * 2).await;
@@ -343,7 +345,6 @@ async fn the_last_page_of_the_last_document_reads_after_it_holds_and_the_end_pag
 
     h.at(pos(last, &[2], 0), 1, 2, TurnHow::Turn);
     let before = Instant::now();
-    h.until(|e| matches!(e, ReaderEvent::EndPage { .. }).then_some(())).await;
     h.until(|e| matches!(e, ReaderEvent::ChapterRead { .. }).then_some(())).await;
     assert!(before.elapsed() >= READ_AFTER - Duration::from_millis(10));
     assert!(h.kept("1").unwrap().read);
