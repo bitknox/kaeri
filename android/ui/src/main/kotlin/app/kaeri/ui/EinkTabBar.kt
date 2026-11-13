@@ -41,11 +41,12 @@ import app.kaeri.engine.model.KaeriIsFor
 
 /**
  * The e-ink bar: [current]'s destination selected, a tap goes there at once. On an e-reader
- * ([reader]) with Read alone, the board's five tabs with Downloads and More.
+ * ([reader]) with Read alone, the board's five tabs with Downloads and More. Until the answer
+ * comes, the rule over an empty row of the same height: the tabs then come in one refresh.
  */
 @Composable
-internal fun EinkTabBar(current: Destination, answer: KaeriIsFor, reader: Boolean, go: (Destination) -> Unit) {
-    val owner = einkBarOwner(current, answer, reader)
+internal fun EinkTabBar(current: Destination, answer: KaeriIsFor?, reader: Boolean, go: (Destination) -> Unit) {
+    val owner = answer?.let { einkBarOwner(current, it, reader) }
     Column(
         Modifier
             .fillMaxWidth()

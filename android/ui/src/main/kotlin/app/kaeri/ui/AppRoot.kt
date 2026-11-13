@@ -66,6 +66,7 @@ import androidx.compose.ui.Modifier
 import app.kaeri.design.stillFade
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.semantics.contentDescription
@@ -134,12 +135,15 @@ enum class Destination(val route: String, @StringRes val label: Int, val icon: I
 /**
  * The destinations the bar and rail show for what Kaeri is for: Watch alone keeps its five, Read
  * alone has Home, Updates, Library and Search, and Both has Watch, Read, Library and Search, with
- * Calendar, Seasonal and Updates opened from the headings on each Home.
+ * Calendar, Seasonal and Updates opened from the headings on each Home. Until anything says what
+ * Kaeri is for, none: every setup puts something else in the first slots, so the bar and rail
+ * stand with only what all of them share.
  */
-fun barDestinations(answer: KaeriIsFor): List<Destination> = when (answer) {
+fun barDestinations(answer: KaeriIsFor?): List<Destination> = when (answer) {
     KaeriIsFor.WATCH -> listOf(Destination.Home, Destination.Calendar, Destination.Seasonal, Destination.Library, Destination.Search)
     KaeriIsFor.READ -> listOf(Destination.Home, Destination.Updates, Destination.Library, Destination.Search)
     KaeriIsFor.BOTH -> listOf(Destination.Home, Destination.Read, Destination.Library, Destination.Search)
+    null -> emptyList()
 }
 
 /** The bar item that stands for [destination] when it has none of its own: Watch's or Read's. */
@@ -152,19 +156,27 @@ internal fun barOwner(destination: Destination, answer: KaeriIsFor): Destination
 
 /** The label [destination] has for [answer]: Home is Watch beside Read. */
 @StringRes
-internal fun Destination.labelFor(answer: KaeriIsFor): Int =
+internal fun Destination.labelFor(answer: KaeriIsFor?): Int =
     if (this == Destination.Home && answer == KaeriIsFor.BOTH) R.string.nav_watch else label
 
 /**
- * What Kaeri is for on this device, as the screens read it: until the engine says, the answer kept
- * from the last launch, or Watch.
+ * What Kaeri is for on this device, as the frame reads it: the engine's answer, else the one kept
+ * from the last launch, else `null` while the engine starts with nothing kept. The bar, the rail
+ * and Home wait on it.
  */
 @Composable
-internal fun kaeriIsFor(): KaeriIsFor {
+internal fun knownKaeriIsFor(): KaeriIsFor? {
     val medium = LocalAppStore.current.medium
     val view by medium.view.collectAsStateWithLifecycle()
-    return view?.answer ?: medium.kept ?: KaeriIsFor.WATCH
+    return view?.answer ?: medium.kept
 }
+
+/**
+ * What Kaeri is for, as the pages beyond the frame read it: [knownKaeriIsFor], or Watch's while
+ * nothing is known. Only the drawer's pages open before then.
+ */
+@Composable
+internal fun kaeriIsFor(): KaeriIsFor = knownKaeriIsFor() ?: KaeriIsFor.WATCH
 
 /** What the screens' actions open, which later phases fill in. */
 data class AppActions(
@@ -427,7 +439,9 @@ private fun AppRootFrame(
     val wide = wideWindow() && !eink
     val einkReader = eink && einkReaderShape()
     val mediumView by store.medium.view.collectAsStateWithLifecycle()
-    val answer = mediumView?.answer ?: store.medium.kept ?: KaeriIsFor.WATCH
+    // Unknown until the engine says, with nothing kept: the bar and rail stand without destinations.
+    val answer = mediumView?.answer ?: store.medium.kept
+    val arrival = rememberArrival(answer, animate = !eink)
     // Settings on a 10 inch e-reader keeps the bar, with More marked.
     val settingsTab = if (eink && fullWindow) einkSettingsTab(answer, einkReader, app.kaeri.ui.reading.largePanel()) else null
 
@@ -535,13 +549,13 @@ private fun AppRootFrame(
                     if (!onPlayer) PartyBar(hidden = entry?.destination?.route == LOBBY_ROUTE)
                     if (!wide && (!onPage || settingsTab != null) && !onPlayer && !sheets.barHidden) {
                         // On an e-ink panel the bar is words on paper, as the e-ink boards draw it.
-                        if (eink) EinkTabBar(settingsTab ?: current ?: start, answer, einkReader, navigator::go) else PhoneBar(current ?: start, answer, navigator::go)
+                        if (eink) EinkTabBar(settingsTab ?: current ?: start, answer, einkReader, navigator::go) else PhoneBar(current ?: start, answer, arrival, navigator::go)
                     }
                 }
             },
         ) { padding ->
             Row(Modifier.padding(padding).consumeWindowInsets(padding)) {
-                if (wide && !fullWindow && !onPlayer) Rail(current, answer, entry?.destination?.route, navigator, routed)
+                if (wide && !fullWindow && !onPlayer) Rail(current, answer, arrival, entry?.destination?.route, navigator, routed)
                 SharedTransitionLayout(if (removed) Modifier.stillFade(pageFade) else Modifier) {
                     CompositionLocalProvider(
                         LocalSharedTransitions provides this,
@@ -689,7 +703,7 @@ private fun DestinationScreen(
     val navigator = LocalNavigator.current
     val answer = kaeriIsFor()
     when (destination) {
-        Destination.Home -> if (answer == KaeriIsFor.READ) app.kaeri.ui.reading.ReadHomeScreen(actions) else HomeScreen(actions)
+        Destination.Home -> HomeDestination(actions)
         Destination.Read -> app.kaeri.ui.reading.ReadHomeScreen(actions)
         Destination.Updates -> app.kaeri.ui.reading.UpdatesScreen(actions)
         // The e-reader's own tabs, on paper; elsewhere Downloads is the app's own page.
@@ -772,21 +786,42 @@ internal fun BarLabel(text: String) {
 private data class BarLabelPlan(val size: androidx.compose.ui.unit.TextUnit, val wraps: Boolean)
 
 /**
+ * How far the bar's and rail's destinations have come in: 1 when the answer was there from the
+ * first frame, and from 0 on the standard spring when it comes after the frame stood without
+ * one. A later change in Settings swaps them as before. On e-ink nothing fades: one refresh.
+ */
+@Composable
+private fun rememberArrival(answer: KaeriIsFor?, animate: Boolean): () -> Float {
+    val shown = remember { androidx.compose.animation.core.Animatable(if (answer == null) 0f else 1f) }
+    val known = answer != null
+    androidx.compose.runtime.LaunchedEffect(known, animate) {
+        if (known && shown.value < 1f) {
+            if (animate) shown.animateTo(1f, Motion.standard()) else shown.snapTo(1f)
+        }
+    }
+    return remember(animate) { if (animate) ({ shown.value }) else ({ 1f }) }
+}
+
+/**
  * The phone's navigation bar: the Expressive short bar on surfaceContainer, the selected
  * destination in a primaryContainer pill with an amber label. It never moves and never takes part
  * in a transition.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun PhoneBar(current: Destination, answer: KaeriIsFor, go: (Destination) -> Unit) {
+private fun PhoneBar(current: Destination, answer: KaeriIsFor?, arrival: () -> Float, go: (Destination) -> Unit) {
     val colors = MaterialTheme.colorScheme
-    val owner = barOwner(current, answer)
+    // Until the answer comes the bar stands at its full height with no items, so the page above
+    // it never moves; then the setup's items fade in where they belong.
     ShortNavigationBar(containerColor = colors.surfaceContainer) {
+        if (answer == null) return@ShortNavigationBar
+        val owner = barOwner(current, answer)
         for (destination in barDestinations(answer)) {
             val selected = destination == owner
             ShortNavigationBarItem(
                 selected = selected,
                 onClick = { go(destination) },
+                modifier = Modifier.graphicsLayer { alpha = arrival() },
                 icon = { DestinationIcon(destination, selected, answer) },
                 // Five labels share the width: each shrinks to fit one line, then breaks at a
                 // space and the bar grows.
@@ -822,7 +857,7 @@ internal enum class DrawerPage(@StringRes val label: Int, val icon: ImageVector,
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun Rail(current: Destination?, answer: KaeriIsFor, route: String?, navigator: Navigator, actions: AppActions) {
+private fun Rail(current: Destination?, answer: KaeriIsFor?, arrival: () -> Float, route: String?, navigator: Navigator, actions: AppActions) {
     val colors = MaterialTheme.colorScheme
     val store = LocalAppStore.current
     val trackers by store.accounts.trackers.collectAsStateWithLifecycle()
@@ -859,8 +894,10 @@ private fun Rail(current: Destination?, answer: KaeriIsFor, route: String?, navi
                 }
             },
         ) {
-            val owner = current?.let { barOwner(it, answer) }
-            for (destination in barDestinations(answer)) {
+            // Until the answer comes, only the menu and Accounts and settings: what every setup has
+            // in the same place. Then the setup's destinations fade in where they belong.
+            val owner = if (answer != null) current?.let { barOwner(it, answer) } else null
+            if (answer != null) for (destination in barDestinations(answer)) {
                 val selected = destination == owner
                 WideNavigationRailItem(
                     selected = selected,
@@ -868,6 +905,7 @@ private fun Rail(current: Destination?, answer: KaeriIsFor, route: String?, navi
                         close()
                         navigator.go(destination)
                     },
+                    modifier = Modifier.graphicsLayer { alpha = arrival() },
                     icon = { DestinationIcon(destination, selected, answer) },
                     label = { Text(stringResource(destination.labelFor(answer))) },
                     railExpanded = expanded,

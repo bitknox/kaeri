@@ -78,7 +78,7 @@ import app.kaeri.i18n.Strings
 import app.kaeri.store.without
 
 /** How long a pending part holds the activity line back: AniList's slow answers are 4 s. */
-private const val ACTIVITY_AFTER_MILLIS = 4_000L
+private const val ACTIVITY_AFTER_MILLIS = HOME_ACTIVITY_AFTER
 
 /** What a card or the spotlight can ask of Home: play, hide a title, leave Continue. */
 internal class HomeHandlers(
@@ -118,7 +118,11 @@ fun HomeScreen(actions: AppActions) {
     val handlers = HomeHandlers(actions, rememberDismiss(gone), rememberLeaveContinue(gone))
 
     val pending = view?.pending.orEmpty()
-    val slow = pendingForLong(pending.isNotEmpty())
+    // Taking over from Home's wait before the answer: its placeholders and activity line stay, and
+    // Watch together's button comes in with the rail.
+    val handover = homeHandover()
+    // Home with no view yet waits as much as one with parts pending, as reading's Home does.
+    val slow = pendingForLong(view == null || pending.isNotEmpty(), already = handover.activity)
     val offlineSince = view?.offlineSince
     val line = when {
         view?.offline == true && offlineSince != null -> FrameLine.OfflineFrom(Strings.homeOffline(context, clock(offlineSince)))
@@ -133,7 +137,7 @@ fun HomeScreen(actions: AppActions) {
         title = stringResource(R.string.home_title),
         // Wide windows have the account at the foot of the rail already.
         account = if (wideWindow()) null else profileAccount(user, actions.openSettings),
-        actions = { PeopleAction() },
+        actions = { Arriving(handover.arriving && app.kaeri.ui.reading.LocalEinkLayout.current == null) { PeopleAction() } },
         // Home's line is the only one: the engine's job for Home would say the same again.
         line = line,
         ownLine = true,
@@ -144,7 +148,7 @@ fun HomeScreen(actions: AppActions) {
             val home = view
             when {
                 home == null -> LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = top, bottom = 24.dp)) {
-                    item(key = "loading") { AfterWait { HomePlaceholders(listOf(HomePart.SEASON, HomePart.SUGGESTIONS), spotlight = true) } }
+                    item(key = "loading") { AfterWait(already = handover.placeholders) { HomeLoadingColumn() } }
                 }
                 // Offline with nothing kept: the existing state, with the way to what plays.
                 home.offline && home.offlineSince == null && home.spotlight == null && home.sections.isEmpty() ->
@@ -188,11 +192,15 @@ private fun heldPlaceholders(pending: List<HomePart>): List<HomePart> {
 
 private const val PLACEHOLDERS_HELD = 300L
 
-/** Whether something has been pending for four seconds: the activity line's cue. */
+/**
+ * Whether something has been pending for four seconds: the activity line's cue. With [already],
+ * the four seconds passed in Home's wait before the answer, and the line stays while it pends.
+ */
 @Composable
-private fun pendingForLong(pending: Boolean): Boolean {
-    var past by remember { mutableStateOf(false) }
+private fun pendingForLong(pending: Boolean, already: Boolean = false): Boolean {
+    var past by remember { mutableStateOf(already && pending) }
     LaunchedEffect(pending) {
+        if (pending && past) return@LaunchedEffect
         past = false
         if (pending) {
             delay(ACTIVITY_AFTER_MILLIS)

@@ -160,6 +160,7 @@ internal fun EinkHomeScreen(actions: AppActions) {
     // Large text keeps the Browse list to what fits no longer: it scrolls rather than clip.
     val large = LocalDensity.current.fontScale > 1.3f
     val title = if (kaeriIsFor() == KaeriIsFor.READ) Strings.homeTitle(context) else Strings.navRead(context)
+    val handover = app.kaeri.ui.homeHandover()
     // Offline, the line under the title says what time the Home shown is from, as the colour Home's.
     val since = home?.offlineSince?.takeIf { home?.offline == true }
     PaperPage(back = null, title = title, line = since?.let { Strings.homeOffline(context, clockWords(it)) }) {
@@ -172,7 +173,8 @@ internal fun EinkHomeScreen(actions: AppActions) {
                 Strings.homeTryAgain(context),
             ) { store.reading.loadHome(refresh = true) }
             // Loading with no motion: after 600 ms one word, then the page in one refresh.
-            view == null -> PaperWaiting { Text(Strings.stateLoading(context), style = EinkType.Body, modifier = Modifier.padding(top = 16.dp)) }
+            // Taking over from Home's wait before the answer, a Loading line already there stays.
+            view == null -> PaperWaiting(already = handover.placeholders) { Text(Strings.stateLoading(context), style = EinkType.Body, modifier = Modifier.padding(top = 16.dp)) }
             else -> {
                 val tile = view.spotlight
                 val spot = view.spot

@@ -103,9 +103,9 @@ internal fun einkReaderShape(): Boolean {
 
 /**
  * The e-ink bar's tabs: on an e-reader with Read alone, Home, Library, Search, Downloads and More,
- * with Updates opened from Home; else the phone's own.
+ * with Updates opened from Home; else the phone's own, none while the answer is unknown.
  */
-internal fun einkBarDestinations(answer: KaeriIsFor, reader: Boolean): List<Destination> =
+internal fun einkBarDestinations(answer: KaeriIsFor?, reader: Boolean): List<Destination> =
     if (reader && answer == KaeriIsFor.READ) {
         listOf(Destination.Home, Destination.Library, Destination.Search, Destination.Downloads, Destination.More)
     } else {
@@ -116,7 +116,7 @@ internal fun einkBarDestinations(answer: KaeriIsFor, reader: Boolean): List<Dest
  * The tab Settings keeps marked on a 10 inch e-reader ([large]), where the bar stays under it as
  * the large panel board draws it: More, which opens Settings. Elsewhere Settings takes the window.
  */
-internal fun einkSettingsTab(answer: KaeriIsFor, reader: Boolean, large: Boolean): Destination? =
+internal fun einkSettingsTab(answer: KaeriIsFor?, reader: Boolean, large: Boolean): Destination? =
     Destination.More.takeIf { large && it in einkBarDestinations(answer, reader) }
 
 /** The e-ink tab that stands for [destination]: Updates sits under Home on an e-reader. */

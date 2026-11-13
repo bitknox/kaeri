@@ -79,7 +79,13 @@ class MediumModel(private val send: (Command) -> Unit) {
     val asking: StateFlow<MediumAsk?> = _asking.asStateFlow()
 
     /** What Kaeri is for on this device: the answer kept from before until the engine says, else Watch. */
-    val answer: KaeriIsFor get() = _view.value?.answer ?: kept ?: KaeriIsFor.WATCH
+    val answer: KaeriIsFor get() = known ?: KaeriIsFor.WATCH
+
+    /**
+     * What Kaeri is for as far as anything says yet: the engine's view, else the answer kept from
+     * before, else `null` until the engine has started. The bar and rail wait on it.
+     */
+    val known: KaeriIsFor? get() = _view.value?.answer ?: kept
 
     /**
      * The engine's last answer, kept on the device so a launch draws its bar and rail for it from

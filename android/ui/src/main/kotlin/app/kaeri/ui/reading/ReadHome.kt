@@ -102,6 +102,9 @@ import app.kaeri.store.AppClock
 import app.kaeri.store.ReadingModel
 import app.kaeri.store.text
 import app.kaeri.ui.AfterWait
+import app.kaeri.ui.HomeLoadingColumn
+import app.kaeri.ui.ShelfPlaceholder
+import app.kaeri.ui.homeHandover
 import app.kaeri.ui.AppActions
 import app.kaeri.ui.ArtworkImage
 import app.kaeri.ui.DOWNLOADS_ROUTE
@@ -114,13 +117,10 @@ import app.kaeri.ui.LocalSnackbars
 import app.kaeri.ui.Menu
 import app.kaeri.ui.PLACEHOLDERS_AFTER
 import app.kaeri.ui.PROVIDERS_ROUTE
-import app.kaeri.ui.PosterPlaceholder
 import app.kaeri.ui.Refreshable
 import app.kaeri.ui.ScreenFrame
 import app.kaeri.ui.Shared
-import app.kaeri.ui.SpotlightPlaceholder
 import app.kaeri.ui.StateBlock
-import app.kaeri.ui.TextPlaceholder
 import app.kaeri.ui.WaterDot
 import app.kaeri.ui.cardGap
 import app.kaeri.ui.itemMotion
@@ -137,7 +137,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /** How long a part waits before the activity line says it in words, as the Watch Home's does. */
-private const val ACTIVITY_AFTER = 4_000L
+private const val ACTIVITY_AFTER = app.kaeri.ui.HOME_ACTIVITY_AFTER
 
 @Composable
 internal fun ReadHomeScreen(actions: AppActions) {
@@ -169,7 +169,9 @@ internal fun ReadHomeScreen(actions: AppActions) {
     // Series taken off Continue, gone at once while their Undo stands.
     val gone = remember { mutableStateListOf<WorkId>() }
     val waiting = (view == null && failure == null) || view?.pending.orEmpty().isNotEmpty()
-    val slow = pendingForLong(waiting)
+    // Taking over from Home's wait before the answer: its placeholders and activity line stay.
+    val handover = homeHandover()
+    val slow = pendingForLong(waiting, already = handover.activity)
     val since = view?.offlineSince
     val line = when {
         view?.offline == true && since != null -> FrameLine.OfflineFrom(Strings.homeOffline(context, clockWords(since)))
@@ -205,7 +207,7 @@ internal fun ReadHomeScreen(actions: AppActions) {
                         item(key = "offline") { ReadOfflineHome() }
                     }
                 view == null -> LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = top, bottom = 24.dp), userScrollEnabled = false) {
-                    item(key = "loading") { AfterWait { Column { SpotlightPlaceholder(); ShelfPlaceholder() } } }
+                    item(key = "loading") { AfterWait(already = handover.placeholders) { HomeLoadingColumn() } }
                 }
                 else -> ReadHomeColumn(view, actions, gone, top)
             }
@@ -226,11 +228,15 @@ private fun ReadOfflineHome() {
     }
 }
 
-/** Whether something has been pending for four seconds: the activity line's cue. */
+/**
+ * Whether something has been pending for four seconds: the activity line's cue. With [already],
+ * the four seconds passed in Home's wait before the answer, and the line stays while it pends.
+ */
 @Composable
-private fun pendingForLong(pending: Boolean): Boolean {
-    var past by remember { mutableStateOf(false) }
+private fun pendingForLong(pending: Boolean, already: Boolean = false): Boolean {
+    var past by remember { mutableStateOf(already && pending) }
     LaunchedEffect(pending) {
+        if (pending && past) return@LaunchedEffect
         past = false
         if (pending) {
             delay(ACTIVITY_AFTER)
@@ -681,21 +687,6 @@ private fun TileShelf(title: String, tiles: List<WorkTile>, from: String, link: 
                     ReadTileMenu(tile, menu, current = null, lists = false) { menu = false }
                 }
             }
-        }
-    }
-}
-
-/** A shelf before it arrives: its heading's bar and four covers' plates. */
-@Composable
-private fun ShelfPlaceholder() {
-    Column(Modifier.padding(top = shelfTop())) {
-        TextPlaceholder(0.3f, 48.dp, Modifier.padding(start = 16.dp))
-        LazyRow(
-            userScrollEnabled = false,
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(cardGap()),
-        ) {
-            items(4) { Box(Modifier.width(posterWidth())) { PosterPlaceholder() } }
         }
     }
 }

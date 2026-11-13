@@ -518,16 +518,20 @@ const val PAPER_QUIET_MS = 600L
 
 /**
  * A waiting line on paper: nothing for [PAPER_QUIET_MS], then [content], painted once. A load that
- * ends first costs the panel no update at all.
+ * ends first costs the panel no update at all. With [already], the quiet time was spent before
+ * this page took over, and [content] is there from its first picture; [onShown] hears when it is.
  */
 @Composable
-fun PaperWaiting(content: @Composable () -> Unit) {
-    var shown by remember { mutableStateOf(false) }
+fun PaperWaiting(already: Boolean = false, onShown: () -> Unit = {}, content: @Composable () -> Unit) {
+    var shown by remember { mutableStateOf(already) }
     val paint by androidx.compose.runtime.rememberUpdatedState(LocalEinkPaint.current)
     LaunchedEffect(Unit) {
-        delay(PAPER_QUIET_MS)
-        shown = true
-        paint(EinkPaint.Waiting)
+        if (!shown) {
+            delay(PAPER_QUIET_MS)
+            shown = true
+            paint(EinkPaint.Waiting)
+        }
+        onShown()
     }
     if (shown) content()
 }
