@@ -189,6 +189,10 @@ public struct KaeriCommands<Playback: View, PlayerWindowItems: View>: Commands {
             Button(L.episodeGoTo) { navigator.goToAsked += 1 }
                 .keyboardShortcut(reading ? nil : KeyboardShortcut("l", modifiers: .command))
                 .disabled(navigator.goToShown == nil || covered)
+            #if os(macOS)
+            Divider()
+            WindowFullScreenItem()
+            #endif
         }
 
         CommandGroup(after: .windowArrangement) {
@@ -261,6 +265,57 @@ struct MainWindowButton: View {
         Button(L.menuMainWindow) { openWindow(id: "main") }
             .keyboardShortcut("0", modifiers: .command)
     }
+}
+
+/// View › Enter Full Screen (⌃⌘F), the system's item for the window in front, everywhere:
+/// browsing, a book, and the player, which follows its window into and out of full screen. The
+/// app delegate turns off AppKit's own copy of it, so the menu has one.
+struct WindowFullScreenItem: View {
+    @State private var watch = WindowFullScreen.shared
+
+    var body: some View {
+        Button(watch.on ? L.menuExitFullScreen : L.menuEnterFullScreen) { WindowFullScreen.toggle() }
+            .keyboardShortcut("f", modifiers: [.command, .control])
+            .disabled(!watch.can)
+    }
+}
+
+/// Whether the window in front is full screen, and whether it can be: the trailer's window cannot.
+@MainActor @Observable
+final class WindowFullScreen {
+    static let shared = WindowFullScreen()
+
+    private(set) var on = false
+    private(set) var can = false
+    @ObservationIgnored private var watching: [NSObjectProtocol] = []
+
+    private init() {
+        let names: [Notification.Name] = [
+            NSWindow.didEnterFullScreenNotification, NSWindow.didExitFullScreenNotification,
+            NSWindow.didBecomeKeyNotification, NSWindow.didResignKeyNotification,
+        ]
+        watching = names.map { name in
+            NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { _ in
+                MainActor.assumeIsolated { WindowFullScreen.shared.refresh() }
+            }
+        }
+        refresh()
+    }
+
+    static func front() -> NSWindow? { NSApplication.shared.keyWindow ?? NSApplication.shared.mainWindow }
+
+    static func canFill(_ window: NSWindow) -> Bool {
+        !window.collectionBehavior.contains(.fullScreenNone)
+            && (window.styleMask.contains(.resizable) || window.collectionBehavior.contains(.fullScreenPrimary))
+    }
+
+    func refresh() {
+        let window = Self.front()
+        on = window?.styleMask.contains(.fullScreen) ?? false
+        can = window.map(Self.canFill) ?? false
+    }
+
+    static func toggle() { front()?.toggleFullScreen(nil) }
 }
 #endif
 
