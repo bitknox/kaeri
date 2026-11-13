@@ -990,6 +990,7 @@ public final class AppStore {
         if case .profileSwitch(let id) = event { onProfileSwitch?(id) }
         answers.deliver([event])
         if case .downloads(let rows) = event { continued.update(rows) }
+        if case .reading(.downloads(let view)) = event { continued.update(chapters: view.rows) }
         if wantsWeek, NotificationsModel.reschedules(after: event) { refreshNotices() }
         if case .upcomingNotices(let week) = event { airingActivity.weekChanged(week, titles: titles, artwork: artwork) }
         if tv.cast.active, Self.playsHere(event) {

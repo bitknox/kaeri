@@ -23,6 +23,7 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.plus
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
@@ -119,7 +120,7 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
             store.onPlayback = player::apply
             store.onPlayAsked = player::asked
             PlayerConnection(this, player, scope)
-            SystemPhases(store, player, scope).start()
+            SystemPhases(store, player, scope, downloadRunning).start()
             captions = CaptionStyleWatch(this, player, scope, store.settings.view.map { it?.subtitleStyle })
         }
     }
@@ -137,6 +138,9 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
     }
 
     val notifier: Notifier by lazy { Notifier(this) }
+
+    /** Whether the download job or service runs: the engine is told the downloads go on in the background. */
+    val downloadRunning = MutableStateFlow(false)
 
     /**
      * The e-ink profile the engine makes from this device's facts, and the questions it leaves,

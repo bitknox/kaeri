@@ -89,8 +89,12 @@ internal class DownloadRun(
         show(notifier.starting())
         val session = DownloadSession()
         var grace: Job? = null
+        // While it runs, the background is one where the downloads go on: the engine runs the
+        // chapter queue and the torrents as it runs the episodes over HTTP.
+        app.downloadRunning.value = true
         val end = {
             Log.i(KaeriApp.TAG, "downloads done, the job ends")
+            app.downloadRunning.value = false
             finish()
             scope.cancel()
         }
@@ -131,7 +135,10 @@ internal class DownloadRun(
     }
 
     /** The system took it back: the engine keeps the queue for the next time. */
-    fun cancel() = scope.cancel()
+    fun cancel() {
+        app.downloadRunning.value = false
+        scope.cancel()
+    }
 }
 
 /** The queue as the run sees it: the episodes, and the chapters once the engine answered. */
