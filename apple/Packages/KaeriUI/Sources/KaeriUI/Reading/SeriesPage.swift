@@ -1433,9 +1433,13 @@ private struct ChooseChaptersBar: View {
                     store.reading.download(series.work, .chapters(ids: Array(chosen)))
                     done()
                 } label: {
-                    Text(L.downloadChapters(n: chosen.count))
-                        .lineLimit(1)
-                        .frame(maxWidth: Device.isMac ? nil : .infinity)
+                    // A narrow window drops the count, which the title already shows ("4 chosen").
+                    ViewThatFits(in: .horizontal) {
+                        Text(L.downloadChapters(n: chosen.count))
+                        Text(L.seriesDownload)
+                    }
+                    .lineLimit(1)
+                    .frame(maxWidth: Device.isMac ? nil : .infinity)
                 }
                 .buttonStyle(PrimaryCapsuleStyle(height: height, fontSize: Device.isMac ? 13 : 17))
                 .disabled(chosen.isEmpty)
