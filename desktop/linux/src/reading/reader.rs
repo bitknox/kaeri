@@ -4500,7 +4500,11 @@ mod tab_tests {
                 pump(10);
                 at = gtk::prelude::GtkWindowExt::focus(&window);
                 let focus = at.as_ref().expect("the focus");
-                seen.push(stops.iter().position(|s| focus == s || (s != page_w && focus.is_ancestor(s))));
+                seen.push(
+                    stops
+                        .iter()
+                        .position(|s| focus == s || (s != page_w && focus.is_ancestor(s))),
+                );
             }
             assert_eq!(seen, [Some(2), Some(3), Some(4), Some(5), Some(0), Some(1)]);
 
@@ -4514,7 +4518,10 @@ mod tab_tests {
             let after_close = next_stop(&stops, page_w, Some(close.upcast_ref()), false);
             assert_eq!(after_close.as_ref(), Some(page_w));
             // Focus nowhere counts as on the page.
-            assert_eq!(next_stop(&stops, page_w, None, false).as_ref(), Some(scrub.upcast_ref()));
+            assert_eq!(
+                next_stop(&stops, page_w, None, false).as_ref(),
+                Some(scrub.upcast_ref())
+            );
             go_to.unparent();
             window.destroy();
         });
