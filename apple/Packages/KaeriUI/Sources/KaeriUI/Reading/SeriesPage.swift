@@ -1071,9 +1071,11 @@ private struct SeriesChapters: View {
         }
     }
 
+    /// Lazy, so a series of thousands of chapters builds only the rows in view, for the screen
+    /// and for VoiceOver alike.
     @ViewBuilder
     private func list(_ chapters: ReadChapters) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
+        LazyVStack(alignment: .leading, spacing: 0) {
                 if chapters.failure == .noSource {
                     // Nothing was ever read from a source, so nothing failed: an empty state that
                     // leads to Read from.
