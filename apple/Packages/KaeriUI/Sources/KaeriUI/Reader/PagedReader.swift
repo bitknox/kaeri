@@ -47,6 +47,9 @@ struct PagedReader: View {
         }
         .frame(width: size.width, height: size.height)
         .clipped()
+        #if FIXTURES
+        .overlay(alignment: .topLeading) { PageZoomProbe(zoom: zoom.scale) }
+        #endif
         .contentShape(.rect)
         .gesture(swipe)
         #if os(iOS)
@@ -859,3 +862,19 @@ struct ReaderSkippedLine: View {
         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
     }
 }
+
+#if FIXTURES
+/// The page's zoom for the Audit tests, in the Fixtures app only: the page's image says its place,
+/// not how far it is zoomed.
+private struct PageZoomProbe: View {
+    let zoom: CGFloat
+
+    var body: some View {
+        Color.clear
+            .frame(width: 1, height: 1)
+            .accessibilityElement()
+            .accessibilityIdentifier("page-zoom")
+            .accessibilityValue(String(format: "%.2f", zoom))
+    }
+}
+#endif

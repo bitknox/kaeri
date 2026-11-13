@@ -257,4 +257,35 @@ final class ReaderStuckTests: XCTestCase {
         Thread.sleep(forTimeInterval: 1)
         XCTAssertEqual(zoom(), 1, accuracy: 0.01, "Command-0 left the strip magnified")
     }
+
+    /// Zoom In, Zoom Out and Fit to Window zoom a page from the keyboard: a pinched page is fitted
+    /// by Command-0, and Command-equals and Command-minus step it about the middle.
+    func testTheZoomKeysZoomAPage() throws {
+        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "the keys are an iPad check")
+        let app = launch("readermangartl")
+        let start = try XCTUnwrap(page(app), "no page on screen")
+        let probe = app.descendants(matching: .any)["page-zoom"]
+        XCTAssertTrue(probe.waitForExistence(timeout: 10), "no page zoom from the Fixtures app")
+        let zoom = { () -> Double in
+            Thread.sleep(forTimeInterval: 0.8)
+            return Double(probe.value as? String ?? "") ?? 0
+        }
+        XCTAssertEqual(zoom(), 1, accuracy: 0.01, "the page did not open fitted")
+        let shown = app.images.matching(NSPredicate(format: "label BEGINSWITH 'Page '")).allElementsBoundByIndex
+        try XCTUnwrap(shown.first(where: \.isHittable), "no page to pinch").pinch(withScale: 2.5, velocity: 1)
+        XCTAssertGreaterThan(zoom(), 1.05, "the pinch did not zoom")
+        key(app, "0", .command)
+        XCTAssertEqual(zoom(), 1, accuracy: 0.01, "Command-0 left the page zoomed")
+        key(app, "=", .command)
+        XCTAssertEqual(zoom(), 1.25, accuracy: 0.01, "Command-equals did not zoom in")
+        key(app, "=", .command)
+        XCTAssertEqual(zoom(), 1.56, accuracy: 0.01, "a second Command-equals did not zoom in again")
+        key(app, "-", .command)
+        XCTAssertEqual(zoom(), 1.25, accuracy: 0.01, "Command-minus did not zoom out")
+        key(app, "0", .command)
+        XCTAssertEqual(zoom(), 1, accuracy: 0.01, "Command-0 did not fit the page")
+        XCTAssertEqual(page(app), start, "zooming moved the place")
+        app.swipeRight()
+        XCTAssertNotEqual(page(app), start, "the swipe did not turn after the zoom keys")
+    }
 }
