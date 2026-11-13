@@ -821,7 +821,7 @@ private fun StartChip(text: String, chosen: Boolean, height: Dp, wide: Boolean =
             .clip(RoundedCornerShape(EinkSizes.SegmentRadius))
             .background(if (chosen) EinkColours.Selected else EinkColours.Paper)
             .border(EinkSizes.Rule, EinkColours.Ink, RoundedCornerShape(EinkSizes.SegmentRadius))
-            .einkClick(onClick = onClick)
+            .einkClick(shape = RoundedCornerShape(EinkSizes.SegmentRadius), inset = EinkSizes.FocusInsideBorder, onClick = onClick)
             .semantics { selected = chosen }
             .padding(horizontal = if (wide) 18.dp else 18.dp),
         contentAlignment = if (wide) Alignment.CenterStart else Alignment.Center,

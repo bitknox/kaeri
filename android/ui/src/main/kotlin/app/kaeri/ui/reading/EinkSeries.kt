@@ -82,6 +82,7 @@ import app.kaeri.eink.EinkTheme
 import app.kaeri.eink.EinkType
 import app.kaeri.eink.PaperWaiting
 import app.kaeri.eink.einkClick
+import app.kaeri.eink.einkFocus
 import app.kaeri.engine.core.ChapterId
 import app.kaeri.engine.core.Medium
 import app.kaeri.engine.model.ChapterDownloadState
@@ -660,7 +661,8 @@ private fun ChapterLine(
             .topHairline(!first)
             .combinedClickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null,
+                // The number starts at the row's edge: the mark goes round the row, not over it.
+                indication = einkFocus(inset = EinkSizes.FocusOutside),
                 role = Role.Button,
                 onLongClickLabel = stringResource(R.string.action_more),
                 onLongClick = if (chosen == null) ({ onLong(row) }) else null,

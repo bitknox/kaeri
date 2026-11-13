@@ -106,6 +106,12 @@ enum class EinkLayer { None, Settings, More, TapZones, Contents }
 private val mangaFirst = listOf(Key.FIT, Key.CROP_BORDERS, Key.REFRESH_IMAGE, Key.VOLUME_KEYS_TURN)
 private val novelFirst = listOf(Key.TEXT_SIZE, Key.FONT, Key.LINE_SPACING, Key.MARGINS, Key.LOOK, Key.REFRESH_TEXT)
 
+/**
+ * The rows manga and webtoons leave out on e-ink. Look is a novel's: the e-ink board draws manga on
+ * paper only, and its manga sheet has no Look, where the novel's sheet has Paper and Dark.
+ */
+private val mangaLeftOut = setOf(Key.LOOK)
+
 /** The rows the Tap zones page holds, which More leaves out. */
 private val tapKeys = setOf(Key.TAP_LAYOUT, Key.TAP_PAGED, Key.TAP_SCROLL, Key.TAP_SIZE, Key.TAP_FLIP_SIDES, Key.TAP_FLIP_ENDS, Key.SWIPE_TURNS)
 
@@ -150,6 +156,7 @@ fun BoxScope.EinkMoreSheet(session: ReaderSession, state: ReaderState, onBack: (
     val rows = state.settings?.rows.orEmpty()
     val novel = view.medium == Medium.NOVEL
     val first = if (novel) novelFirst else mangaFirst + Key.MODE + Key.DIRECTION
+    val leftOut = if (novel) emptySet() else mangaLeftOut
     SheetFrame(Strings.readerSheetMore(context), onDone, Modifier.align(Alignment.BottomCenter), onBack = onBack) {
         if (rows.any { it.key == Key.TAP_PAGED }) {
             val value = tapZonesValue(context, state, eink = true)
@@ -159,7 +166,7 @@ fun BoxScope.EinkMoreSheet(session: ReaderSession, state: ReaderState, onBack: (
                 Text("›", style = EinkType.Button)
             }
         }
-        val rest = rows.filter { it.key !in first && it.key !in screenKeys && it.key !in tapKeys && einkRowTitle(context, it.key) != null }
+        val rest = rows.filter { it.key !in first && it.key !in leftOut && it.key !in screenKeys && it.key !in tapKeys && einkRowTitle(context, it.key) != null }
         rest.forEach { EinkSettingLine(context, session, it) }
         val screen = rows.filter { it.key in screenKeys && it.key !in first }
         if (screen.isNotEmpty()) {
@@ -192,7 +199,7 @@ fun BoxScope.EinkTapZonesSheet(session: ReaderSession, state: ReaderState, onBac
                         .fillMaxWidth()
                         .heightIn(min = 54.dp)
                         .background(if (on) EinkColours.Selected else EinkColours.Paper)
-                        .selectable(selected = on, interactionSource = remember { MutableInteractionSource() }, indication = null, role = Role.RadioButton) {
+                        .selectable(selected = on, interactionSource = remember { MutableInteractionSource() }, indication = einkFocus(), role = Role.RadioButton) {
                             session.setSetting(Key.TAP_PAGED, scope, ReaderValue.Choice(layout.configName))
                         }
                         // The layout and where its zones are; the radio's own state is read after it.
@@ -292,7 +299,7 @@ private fun EinkSwitchLine(title: String, on: Boolean, onChange: (Boolean) -> Un
         Modifier
             .fillMaxWidth()
             .heightIn(min = 48.dp)
-            .toggleable(value = on, interactionSource = remember { MutableInteractionSource() }, indication = null, role = Role.Switch, onValueChange = onChange)
+            .toggleable(value = on, interactionSource = remember { MutableInteractionSource() }, indication = einkFocus(), role = Role.Switch, onValueChange = onChange)
             .hairline(EinkColours.Ink)
             .padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -563,7 +570,7 @@ private fun StepButton(glyph: String, description: String, enabled: Boolean, val
             .einkInverted(press.inverted)
             .border(EinkSizes.Rule, ink, shape)
             .semantics { contentDescription = description }
-            .einkPress(press, enabled = enabled, onClick = onClick),
+            .einkPress(press, enabled = enabled, shape = shape, inset = EinkSizes.FocusInsideBorder, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Text(glyph, style = EinkType.Button.copy(color = ink))

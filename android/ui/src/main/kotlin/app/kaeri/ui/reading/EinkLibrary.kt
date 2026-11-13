@@ -88,6 +88,7 @@ import app.kaeri.eink.EinkTheme
 import app.kaeri.eink.EinkType
 import app.kaeri.eink.PaperWaiting
 import app.kaeri.eink.einkClick
+import app.kaeri.eink.einkFocus
 import app.kaeri.engine.core.Medium
 import app.kaeri.engine.model.KaeriIsFor
 import app.kaeri.engine.model.LibrarySegmentRead
@@ -330,7 +331,7 @@ private fun ListChip(name: String, count: Int?, chosen: Boolean, onClick: () -> 
             .heightIn(min = EinkSizes.SegmentHeight)
             .background(if (chosen) EinkColours.Selected else EinkColours.Paper, shape)
             .border(EinkSizes.Rule, EinkColours.Ink, shape)
-            .einkClick(role = Role.Tab, onClick = onClick)
+            .einkClick(role = Role.Tab, shape = shape, inset = EinkSizes.FocusInsideBorder, onClick = onClick)
             .semantics(mergeDescendants = true) { selected = chosen }
             .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -452,7 +453,8 @@ private fun LibraryRow(tile: WorkTile, segment: LibrarySegmentRead, first: Boole
                 }
                 .combinedClickable(
                     interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
+                    // The cover starts at the row's edge: the mark goes round the row, not over it.
+                    indication = einkFocus(inset = EinkSizes.FocusOutside),
                     onLongClick = { menu = true },
                     onClick = { navigator.openSeries(tile.work, "eink-library") },
                 )

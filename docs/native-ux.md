@@ -391,6 +391,10 @@ Decided 10 November 2026. A chapter list that opens on its own opens with the cu
 - VoiceOver, TalkBack and the keyboard on Mac, Windows and Linux start on the current chapter's row.
 - Mark read up to is an action on a chapter's row, and a volume on the series page opens in place, so neither opens a list of its own.
 
+### Look on e-ink
+
+Manga and webtoons on e-ink are drawn on paper only, as the e-ink board draws them, so their reader settings offer no Look. Novels on e-ink offer Paper and an opt-in Dark.
+
 ### Tap zones
 
 Decided 10 November 2026, with the Android review on 11 November. Where a tap lands on the page decides whether it turns forward, turns back or shows the controls. The engine owns the zones and the hit test (`tap_action` and `tap_map` in `kaeri-model`), and every front end asks it rather than keeping fractions of its own.
@@ -570,6 +574,13 @@ On the ground (`#161A2E`): silk 13.0:1, water 9.1:1, amber 8.5:1 (and ground on 
 - With Full Keyboard Access every control is reachable, custom cover cells included (`focusable()`). The focus ring is the system's in the accent colour, never hidden.
 - Tab moves between sidebar, list and title page; arrows move inside them; Return opens; Space plays. In the player any key shows the controls, Tab walks them, and they do not hide while one has focus.
 - Every sheet has a default button on Return and a cancel button on Esc (`keyboardShortcut(.defaultAction)`, `.cancelAction`).
+
+### Keyboard and D-pad on e-ink
+
+- While keys move the focus, the focused control shows a 3 dp ink ring along its own shape with a 2 dp paper line inside it, so the mark shows on paper, on grey, on the ink button and on a cover. A control with its own 2 dp border keeps 2 dp of paper between that border and the ring.
+- The mark is one still paint with no motion, drawn in the panel's fast update. It never shows on touch, and the first touch after keys takes it away.
+- Enter acts on the focused control, which inverts as it does under a finger. A row whose cover or words start at its very edge, such as a library row or a chapter line, gets the ring just outside it.
+- In the reader, Tab reaches the controls in the bars and Enter acts on the focused one. The arrows, Space and the page keys still turn the page. A sheet opened with keys takes the focus to its first control. When a sheet or the bars close, or a sheet opens by touch, the focus goes back to the reader, so Escape and the page keys always work and Enter shows the controls again.
 
 ### Game controllers
 

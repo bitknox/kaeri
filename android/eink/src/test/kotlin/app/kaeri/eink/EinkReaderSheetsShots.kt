@@ -1,5 +1,6 @@
 // The e-ink reader's own sheets, drawn on the JVM from made-up records: Settings over the page,
-// its More level with the screen's rows, and Contents. Written to android/.shots/roborazzi/eink-*.
+// its More level with the screen's rows and no Look for manga, and Contents. Written to
+// android/.shots/roborazzi/eink-*.
 
 package app.kaeri.eink
 
@@ -7,6 +8,7 @@ import android.content.ComponentName
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.test.click
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -112,6 +114,22 @@ class EinkReaderSheetsShots {
         compose.onNodeWithText("More reader settings").performClick()
         compose.waitForIdle()
         shot("settings-more")
+    }
+
+    @Test
+    fun manga_on_paper_offers_no_look() {
+        open()
+        // The engine serves Look to manga; the e-ink manga reader is drawn on paper only.
+        val look = row(Key.LOOK, ReaderValue.Choice("dark"), choices("paper", "dark", "system"), SettingScope.DEVICE)
+        session.apply(ReaderEvent.Settings(ReaderSettingsView(Medium.MANGA, EinkFixtures.WORK, rows + look)))
+        compose.onNodeWithText("Settings").performClick()
+        compose.waitForIdle()
+        assertTrue(compose.onAllNodes(hasText("Look")).fetchSemanticsNodes().isEmpty())
+        compose.onNodeWithText("More reader settings").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("Contrast").assertExists()
+        assertTrue(compose.onAllNodes(hasText("Look")).fetchSemanticsNodes().isEmpty())
+        assertTrue(compose.onAllNodes(hasText("Dark")).fetchSemanticsNodes().isEmpty())
     }
 
     @Test
