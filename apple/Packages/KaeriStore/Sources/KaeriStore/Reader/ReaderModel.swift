@@ -827,7 +827,9 @@ public final class ReaderModel {
     /// Change a setting for the medium's default, or for the series with `.series`.
     public func set(_ key: ReaderSettingKey, _ value: ReaderValue, scope: SettingScope? = nil) {
         let scope = scope ?? Self.homeScope(key)
-        let work = (scope == .series || scope == .seriesHere) ? view.map { $0.work } : nil
+        // The open series goes with every change, a shared one too: the engine keeps a shared
+        // setting for everyone and answers with this series' settings, its own reading mode in.
+        let work = view.map { $0.work }
         send?(.reader(.setSetting(
             session: session == 0 ? nil : session, medium: medium, work: work, key: key, scope: scope, value: value)))
     }
@@ -1056,8 +1058,9 @@ public final class ReaderModel {
             guard session == self.session else { return }
             // The notice that comes with it says where, and offers the way back.
         case .settings(let view):
-            // Settings' Reading pane asks for each medium's defaults: an open book keeps its own.
-            if let open = self.view, view.medium != open.medium { return }
+            // Settings' Reading pane asks for each medium's defaults: an open book keeps its own,
+            // which name its series.
+            if let open = self.view, view.medium != open.medium || view.work != open.work { return }
             settings = view
             // A mode or direction changed in the reader lays the chapter out again without
             // opening it anew: the view follows, so the tap zones and the slider turn with it.

@@ -146,6 +146,43 @@ struct ReaderModelTests {
         #expect(set.contains { $0.0 == .mode && $0.1 == .series })
     }
 
+    /// A setting kept for everyone, changed in an open book, still names the book: the engine
+    /// answers with that series' settings, so the sheet keeps the series' own reading mode and
+    /// its Use default line instead of showing Auto.
+    @Test func aSharedSettingChangedInABookNamesTheBook() {
+        let (model, box) = model()
+        model.open(work: "a:900301")
+        model.surfaceChanged(surface)
+        opened(model, session: 1)
+        model.set(.paperMode, .toggle(on: true))
+        let sent = box.commands.compactMap { command -> (WorkId?, ReaderSettingKey, SettingScope)? in
+            if case .reader(.setSetting(_, _, let work, let key, let scope, _)) = command { (work, key, scope) } else { nil }
+        }
+        #expect(sent.count == 1)
+        #expect(sent.first?.1 == .paperMode)
+        #expect(sent.first?.2 == .device)
+        #expect(sent.first?.0 == WorkId("a:900301"))
+    }
+
+    /// Settings for no series, as Settings' Reading pane asks for them, leave an open book's
+    /// settings as they are: its reading mode stays the series' own.
+    @Test func defaultsForNoSeriesLeaveTheOpenBooksSettings() {
+        let (model, _) = model()
+        model.open(work: "a:900301")
+        model.surfaceChanged(surface)
+        opened(model, session: 1)
+        func settings(_ work: WorkId?, overridden: Bool) -> ReaderSettingsView {
+            ReaderSettingsView(medium: .manga, work: work, rows: [
+                ReaderSettingRow(key: .mode, value: .choice(name: "paged"), scope: .series,
+                                 detected: false, overridden: overridden, choices: []),
+            ])
+        }
+        model.apply(.settings(settings(WorkId("a:900301"), overridden: true)))
+        #expect(model.modeOverridden)
+        model.apply(.settings(settings(nil, overridden: false)))
+        #expect(model.modeOverridden)
+    }
+
     @Test func aFirstPageThatFailsFailsTheChapter() {
         let (model, _) = model()
         model.open(work: "a:900301")
