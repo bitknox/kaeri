@@ -14,7 +14,7 @@ final class FolderSourceTests: XCTestCase {
 
     private func launch() -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-KaeriScene", "watching", "-KaeriSection", "providers", "-KaeriMedium", "read"]
+        app.launchArguments = ["-KaeriScene", "readinghome", "-KaeriSection", "providers", "-KaeriMedium", "read"]
         for (name, value) in ProcessInfo.processInfo.environment where name.hasPrefix("KAERI_APP_") {
             app.launchEnvironment["KAERI_" + name.dropFirst("KAERI_APP_".count)] = value
         }
