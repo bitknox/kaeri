@@ -40,6 +40,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -120,6 +121,7 @@ import app.kaeri.reader.text
 import app.kaeri.store.text
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.semantics.isTraversalGroup
@@ -420,13 +422,28 @@ fun EinkReader(
         }
     }
 
+    fun intoControls(keyCode: Int): Boolean =
+        keyRoute(keyCode, readerHolds = true, controlsShown) == KeyRoute.INTO_CONTROLS || (controlsShown && keyCode == android.view.KeyEvent.KEYCODE_TAB)
+
+    // A control that held the focus can go with nothing changing in the bars or the sheets, as Try
+    // again does when the chapter it asked for opens. Whenever nothing in the reader holds the
+    // focus, the reader takes it back after the frame, so its keys always reach it.
+    val readerHolds = remember { HeldFocus() }
+    var keysLost by remember { mutableIntStateOf(0) }
+    LaunchedEffect(keysLost) {
+        if (keysLost == 0) return@LaunchedEffect
+        withFrameNanos { }
+        if (!readerHolds.held) runCatching { readerFocus.requestFocus() }
+    }
+
     val keyRules = ReaderKeyRules(direction, volumeTurns = state.settings?.rows?.firstOrNull { it.key == ReaderSettingKey.VOLUME_KEYS_TURN }?.let { (it.value as? ReaderValue.Toggle)?.on } ?: true, volumeDownForward = !ReaderLook.volumeSwapped(LocalContext.current), holdCleans = painter.controller.available)
     // A novel's web view hears keys first and hands the reader's own over.
     SideEffect {
         place.keys = { event ->
             when (event.action) {
-                // The web view is the reader itself: an arrow while the controls show goes to them.
-                android.view.KeyEvent.ACTION_DOWN -> if (keyRoute(event.keyCode, readerHolds = true, controlsShown) == KeyRoute.INTO_CONTROLS) {
+                // The web view is the reader itself: an arrow or Tab while the controls show goes
+                // to them, where Tab would otherwise only move inside the page.
+                android.view.KeyEvent.ACTION_DOWN -> if (intoControls(event.keyCode)) {
                     enterControls()
                     true
                 } else {
@@ -435,7 +452,7 @@ fun EinkReader(
                         true
                     } ?: false
                 }
-                android.view.KeyEvent.ACTION_UP -> keyRoute(event.keyCode, readerHolds = true, controlsShown) == KeyRoute.INTO_CONTROLS || keyRules.takesKeyUp(event.keyCode)
+                android.view.KeyEvent.ACTION_UP -> intoControls(event.keyCode) || keyRules.takesKeyUp(event.keyCode)
                 else -> false
             }
         }
@@ -448,6 +465,10 @@ fun EinkReader(
             modifier
                 .fillMaxSize()
                 .background(EinkColours.Paper)
+                .onFocusChanged {
+                    readerHolds.held = it.hasFocus
+                    if (!it.hasFocus) keysLost++
+                }
                 .readerKeys(keyRules, ::act, readerFocus, ReaderControlKeys(controlsShown, ::enterControls))
                 // The first touch anywhere clears the guide, and still turns or opens what it touched.
                 .clearsTapGuide(guide, ::guideCleared),
@@ -649,6 +670,11 @@ fun EinkReader(
             }
         }
     }
+}
+
+/** Whether the reader or anything in it holds the focus. */
+private class HeldFocus {
+    var held = false
 }
 
 /** The control the focus goes to at the next change of the bars or the sheets, once. */

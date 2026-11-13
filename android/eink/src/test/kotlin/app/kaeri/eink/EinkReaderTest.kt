@@ -4,7 +4,8 @@
 // mode set while the reader is open, and the reader's own settings and Contents, which Back closes
 // before it closes the reader, one step at a time, and which keys reach and leave without losing the
 // reader; with the bars up the D-pad moves between their controls and stays in them and in the
-// sheets, and the focus comes back to the control that opened a sheet. A chapter
+// sheets, and the focus comes back to the control that opened a sheet. Tab from a novel's page
+// reaches the bars, and a chapter opened by Try again by key takes the keys. A chapter
 // asked for keeps its control pressed, then names itself loading, and is asked for once; the series
 // title shows over a first chapter that is slow to open.
 
@@ -13,6 +14,9 @@ package app.kaeri.eink
 import android.content.ComponentName
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.collectAsState
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.input.key.Key
@@ -625,6 +629,77 @@ class EinkReaderTest {
         compose.waitForIdle()
         val again = sent.filterIsInstance<ReaderCommand.Open>().single()
         assertEquals("local:lantern-stair/13", again.chapter)
+    }
+
+    @Test
+    fun after_try_again_by_key_the_chapter_it_opens_takes_the_keys() {
+        open(zones = false)
+        toEndPage()
+        compose.onNodeWithText("Continue to chapter 13").performClick()
+        compose.waitForIdle()
+        session.apply(Event.Reading(ReadingEvent.Failed(ReadingAbout.READER, ReadingFailure.Offline)))
+        compose.waitForIdle()
+        // Try again by key: the focus is on it when the chapter opens and the button goes.
+        keyboard()
+        compose.onNodeWithText("Try again").requestFocus().assertIsFocused()
+        sent.clear()
+        key(Key.Enter)
+        assertEquals(1, sent.filterIsInstance<ReaderCommand.Open>().size)
+        session.apply(ReaderEvent.Opened(EinkFixtures.view(start = 0u)))
+        session.apply(ReaderEvent.Leaves(EinkFixtures.SESSION, EinkFixtures.CHAPTER, EinkFixtures.leaves(3) { EinkFixtures.grey(dir.root, "again-$it.gray", 80, 80) }))
+        compose.waitForIdle()
+        assertTrue(!shows("Try again"))
+        // The reader has the keys again, with no touch to the bars.
+        sent.clear()
+        key(Key.PageDown)
+        assertEquals(1u, shown().last().leaf)
+    }
+
+    @Test
+    fun in_a_novel_tab_from_the_page_reaches_the_bars() {
+        session.open(EinkFixtures.WORK, EinkFixtures.surface.copy(eink = true))
+        session.apply(ReaderEvent.Opened(EinkFixtures.view(start = 0u, medium = Medium.NOVEL)))
+        val painter = EinkPainter.defaults(EinkPanel.GREY, fake)
+        var page: android.view.View? = null
+        var controls: (() -> Unit)? = null
+        compose.setContent {
+            modes = LocalInputModeManager.current
+            EinkTheme {
+                val state = session.state.collectAsState().value
+                // A stand-in for the web view: it holds the focus and hands its keys to the reader.
+                EinkReader(session, state, PageImages(), painter, EinkReaderActions({}, {}, {}), novel = { place, onControls ->
+                    controls = onControls
+                    AndroidView(
+                        factory = { context ->
+                            android.view.View(context).apply {
+                                isFocusable = true
+                                isFocusableInTouchMode = true
+                                setOnKeyListener { _, _, event -> place.keys?.invoke(event) == true }
+                                page = this
+                            }
+                        },
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                })
+            }
+        }
+        compose.waitForIdle()
+        keyboard()
+        compose.runOnUiThread { page!!.requestFocus() }
+        compose.waitForIdle()
+        // The bars shown by a middle tap on the page leave the focus in it.
+        compose.runOnUiThread { controls!!() }
+        compose.waitForIdle()
+        assertTrue(shows("Contents"))
+        assertTrue(page!!.isFocused)
+        assertTrue(!focusedOn("Contents"))
+        // Tab goes to the bars, not around the page.
+        compose.runOnUiThread {
+            page!!.dispatchKeyEvent(android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_TAB))
+            page!!.dispatchKeyEvent(android.view.KeyEvent(android.view.KeyEvent.ACTION_UP, android.view.KeyEvent.KEYCODE_TAB))
+        }
+        compose.waitForIdle()
+        assertTrue(focusedOn("Contents"))
     }
 
     @Test
