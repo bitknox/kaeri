@@ -220,6 +220,12 @@ impl EndPage {
         }
     }
 
+    /// The heading as shown, for the shots' log.
+    #[cfg(feature = "fixtures")]
+    pub fn heading_shown(&self) -> String {
+        self.top.label().to_string()
+    }
+
     /// Let go of the next chapter's preview, as the reader closes.
     pub fn forget(&self) {
         self.preview.set_paintable(gdk::Paintable::NONE);

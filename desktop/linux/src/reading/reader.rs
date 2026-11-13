@@ -1173,6 +1173,18 @@ impl Reader {
         self.fill_end();
     }
 
+    /// The end of a book in one file: its one chapter has no number and is named for the book,
+    /// so the heading says the name. Logs the heading for the shot's run.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_end_named(self: &Rc<Self>) {
+        if let Some(chapter) = self.state.borrow_mut().chapter.as_mut() {
+            chapter.number = None;
+            chapter.label = "Rooftop Lantern".into(); // i18n-skip: a shot's book title
+        }
+        self.fill_end();
+        eprintln!("reader end: {}", self.end.heading_shown()); // i18n-skip
+    }
+
     /// Every strip image as if its file were still coming: its plate with its number, and with
     /// `line` the line under it as from 4 s.
     #[cfg(feature = "fixtures")]
