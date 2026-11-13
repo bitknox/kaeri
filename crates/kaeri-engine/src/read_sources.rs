@@ -148,6 +148,20 @@ fn reach(path: Option<&str>, tree_uri: Option<&str>) -> Option<PathBuf> {
 }
 
 /// `10500` as `10.5`.
+/// A book file in a folder as a chapter. The series page's list and the shelf both make their
+/// chapter, and so its id, here: a place or a read mark made from either is the same chapter's
+/// in the other. A whole volume with no number of its own is "Volume 1", keyed by that, whatever
+/// the book calls itself.
+pub(crate) fn folder_chapter(
+    path: &str,
+    volume: Option<&str>,
+    number_milli: Option<i64>,
+    label: &str,
+) -> SourceChapter {
+    let number = number_milli.map(milli_label);
+    SourceChapter::of(path, volume, number.as_deref(), Some(label), label)
+}
+
 fn milli_label(milli: i64) -> String {
     let (whole, part) = (milli / 1000, milli % 1000);
     if part == 0 {
@@ -224,14 +238,8 @@ impl BookSource for FolderSource {
         Ok(files
             .into_iter()
             .map(|f| {
-                let number = f.number_milli.map(milli_label);
-                let mut chapter = SourceChapter::of(
-                    &f.path,
-                    f.volume.as_deref(),
-                    number.as_deref(),
-                    Some(&f.label),
-                    &f.label,
-                );
+                let mut chapter =
+                    folder_chapter(&f.path, f.volume.as_deref(), f.number_milli, &f.label);
                 chapter.page_count = f.pages;
                 chapter
             })

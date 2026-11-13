@@ -4,7 +4,7 @@
 
 use std::path::PathBuf;
 
-use kaeri_core::books::{ChapterId, ChapterKey, ChapterRange};
+use kaeri_core::books::{ChapterId, ChapterRange};
 use kaeri_model::reading::{ChapterReadState, ChapterRow, VolumeGroup};
 use kaeri_store::{Store, reading::ReadMarks, shelf::ShelfFile};
 
@@ -156,7 +156,16 @@ fn order(files: Vec<ShelfFile>) -> Vec<ShelfChapter> {
     for file in files {
         let id = match &file.chapter {
             Some(chapter) => ChapterId::new(chapter.clone()),
-            None => ChapterKey::of(&file.label, file.volume.as_deref(), restarts).id(),
+            // Keyed as the series page's list keys the same file, so the place kept from
+            // here finds its row there.
+            None => crate::read_sources::folder_chapter(
+                &file.path,
+                file.volume.as_deref(),
+                file.number_milli,
+                &file.label,
+            )
+            .key(restarts)
+            .id(),
         };
         if sorted.iter().any(|(_, _, c)| c.id == id) {
             // A chapter both in a folder and downloaded: the folder's file is read.
@@ -197,7 +206,8 @@ mod tests {
             chapter: None,
             label: label.into(),
             volume: volume.map(str::to_owned),
-            number_milli: None,
+            // As the folder scan reads it from the file's name.
+            number_milli: ChapterRange::parse(label).map(|r| r.last().milli()),
             format: "cbz".into(),
             pages: None,
             comicinfo: None,
@@ -220,6 +230,28 @@ mod tests {
             ]),
             ["v1/1", "v2/1", "v2/2"]
         );
+    }
+
+    /// A whole volume from a folder, a book that names itself and gives no number: the shelf
+    /// keys it as the series page's list does, so the place kept from one finds its row in the
+    /// other.
+    #[test]
+    fn a_volume_from_a_folder_has_the_id_its_row_on_the_series_page_has() {
+        let book = ShelfFile {
+            path: "/books/Harbor Lights/Harbor Lights v01.epub".into(),
+            format: "epub".into(),
+            ..file("Harbor Lights, Volume 1", Some("1"))
+        };
+        let listed = crate::read_sources::folder_chapter(
+            &book.path,
+            book.volume.as_deref(),
+            book.number_milli,
+            &book.label,
+        );
+        let chapters = order(vec![book]);
+        assert_eq!(chapters[0].id, listed.key(false).id());
+        assert_eq!(chapters[0].id.as_str(), "x/1/volume 1");
+        assert_eq!(listed.label, "Volume 1");
     }
 
     #[test]
