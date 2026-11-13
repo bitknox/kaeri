@@ -29,11 +29,13 @@ struct ReadGridWidthTests {
             demo: false, notInSources: false, origin: nil, amount: nil, started: nil)
     }
 
+    private static func turn() { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
+
     private func settle(_ window: NSWindow) async throws {
         for _ in 0..<30 {
             window.layoutIfNeeded()
             window.displayIfNeeded()
-            RunLoop.main.run(until: Date().addingTimeInterval(0.01))
+            Self.turn()
             try await Task.sleep(for: .milliseconds(1))
         }
     }
