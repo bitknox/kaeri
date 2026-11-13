@@ -224,13 +224,12 @@ struct FolderCameInSheet: View {
         #if os(iOS)
         .fileImporter(isPresented: $picking, allowedContentTypes: [.folder]) { result in
             guard case .success(let url) = result else { return }
-            takeBack()
+            Self.leave(report, kept: false) { store.bookSources.removeFolder($0) }
             BookFolders.add(url, to: store)
         }
         #endif
         .onDisappear {
-            // Closed without Add folder: the folder goes back out, as a form's cancel would.
-            if !kept { takeBack() }
+            Self.leave(report, kept: kept) { store.bookSources.removeFolder($0) }
             store.cameIn.reset()
         }
     }
@@ -248,21 +247,29 @@ struct FolderCameInSheet: View {
     private func change() {
         #if os(macOS)
         FolderPicker.choose { path in
-            takeBack()
+            Self.leave(report, kept: false) { store.bookSources.removeFolder($0) }
             BookFolders.add(URL(filePath: path), to: store)
         }
         #else
+        #if FIXTURES
+        // The UI tests' other folder, as the system's picker would hand it back.
+        if let other = BookFolders.fixture("KAERI_FIXTURE_OTHER_FOLDER") {
+            Self.leave(report, kept: false) { store.bookSources.removeFolder($0) }
+            BookFolders.add(other, to: store)
+            return
+        }
+        #endif
         picking = true
         #endif
     }
 
-    /// The folder this sheet added goes back out. One that was a source before stays.
-    private func takeBack() {
-        if Self.takesBack(report) { store.bookSources.removeFolder(report.id) }
+    /// The sheet is left, closed or for another folder. Without Add folder the folder goes back
+    /// out, as a form's cancel would, but only when this pick added it: a folder that was a
+    /// source before stays, with its series.
+    static func leave(_ report: FolderReport, kept: Bool, remove: (String) -> Void) {
+        guard !kept, !report.alreadyAdded else { return }
+        remove(report.id)
     }
-
-    /// Whether closing or Change takes the folder back out: only when this pick added it.
-    static func takesBack(_ report: FolderReport) -> Bool { !report.alreadyAdded }
 }
 
 extension View {
