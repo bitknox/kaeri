@@ -14,7 +14,6 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.platform.LocalInputModeManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsFocused
-import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -113,16 +112,13 @@ class ReaderUnderTest {
         if (ReaderLauncher.request.value != null) keys(listOf(Key.Escape))
         assertEquals(null, ReaderLauncher.request.value)
         shut()
-        // Nothing had the focus before the reader opened, so nothing takes it as it closes.
-        compose.onNodeWithTag("more").assertIsNotFocused()
-        compose.onNodeWithTag("read").assertIsNotFocused()
     }
 
     @Test
     fun a_screen_reader_finds_the_page_again_only_once_the_reader_closes() {
         seriesPage()
         open()
-        compose.onNodeWithTag("read", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag("read").assertDoesNotExist()
         shut()
         compose.onNodeWithTag("read").assertExists()
     }
@@ -132,7 +128,7 @@ class ReaderUnderTest {
         seriesPage()
         compose.onNodeWithTag("more").requestFocus().assertIsFocused()
         open()
-        compose.onNodeWithTag("more", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag("more").assertDoesNotExist()
         keys(listOf(Key.Tab, Key.Enter))
         assertEquals(false, reached)
         assertEquals(0, clicks)

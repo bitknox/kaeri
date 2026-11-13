@@ -192,6 +192,8 @@ class ReaderSheetsTest {
         reader()
         compose.onNode(hasContentDescription("Chapters") and hasClickAction()).performClick()
         compose.waitForIdle()
+        compose.onNode(hasText("Chapters") and hasClickAction()).performClick()
+        compose.waitForIdle()
         row(12).assertExists()
         escape(row(12))
         row(12).assertDoesNotExist()

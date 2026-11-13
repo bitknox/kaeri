@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.os.Parcel
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import app.kaeri.engine.core.Medium
@@ -70,10 +71,18 @@ class ReadSearchKeptTest {
 
     @Test
     fun the_reading_scope_words_and_filters_come_back_in_a_new_process() {
-        var store = newStore()
+        val old = newStore()
+        val fresh = newStore()
+        var compositions = 0
         val seen = mutableListOf<Boolean>()
         val tester = StateRestorationTester(compose)
         tester.setContent {
+            // The first composition is the process that saved; the restored one is a new process,
+            // with a store that asked nothing and Search on Shows.
+            val store = remember {
+                compositions++
+                if (compositions == 1) old else fresh.also { ReadPlaces.searchReading = false }
+            }
             CompositionLocalProvider(LocalAppStore provides store) {
                 KeepReadSearch()
                 seen += ReadPlaces.searchReading
@@ -81,18 +90,17 @@ class ReadSearchKeptTest {
         }
         compose.runOnIdle {
             ReadPlaces.searchReading = true
-            store.reading.runSearch(query)
+            old.reading.runSearch(query)
         }
-        // The process goes away: a new store with nothing asked, and Search on Shows.
-        store = newStore()
-        ReadPlaces.searchReading = false
+        compose.waitForIdle()
         seen.clear()
         tester.emulateSavedInstanceStateRestore()
         compose.waitForIdle()
+        assertEquals(2, compositions)
         assertEquals("the restored screen draws on reading's side from its first frame", true, seen.first())
         assertTrue(ReadPlaces.searchReading)
-        assertEquals(query, store.reading.search.value.query)
-        assertTrue("the search is asked again", store.waiting.contains(Command.Reading(ReadingCommand.Search(query))))
+        assertEquals(query, fresh.reading.search.value.query)
+        assertTrue("the search is asked again", fresh.waiting.contains(Command.Reading(ReadingCommand.Search(query))))
     }
 
     @Test
