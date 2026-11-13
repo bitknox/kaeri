@@ -17,8 +17,7 @@ use kaeri_model::{
     jobs::JobId,
     reading::{
         ChapterReadState, DownloadPick, ExportFile, ExportFormat, ExportSkipped, ExportTarget,
-        ReadingAbout,
-        ReadingCommand, ReadingEvent, VolumeGroup,
+        ReadingAbout, ReadingCommand, ReadingEvent, VolumeGroup,
     },
 };
 
