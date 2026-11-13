@@ -23,6 +23,7 @@ import app.kaeri.engine.model.EditionMiss
 import app.kaeri.engine.model.Event
 import app.kaeri.engine.model.ExportFile
 import app.kaeri.engine.model.ExportFormat
+import app.kaeri.engine.model.ExportSkipped
 import app.kaeri.engine.model.ExportTarget
 import app.kaeri.engine.model.FolderRef
 import app.kaeri.engine.model.KaeriIsFor
@@ -841,7 +842,15 @@ sealed interface ExportJob {
 
     /** Held for Wi-Fi: goes on by itself once the network allows; [line] says why. */
     data class Waiting(override val job: ULong, override val work: WorkId, override val target: String, val line: Msg) : ExportJob
-    data class Ready(override val job: ULong, override val work: WorkId, override val target: String, val chapters: List<ChapterId>, val files: List<ExportFile>) : ExportJob
+    /** [skipped] are the chapters that went without some of their pages, each with its line. */
+    data class Ready(
+        override val job: ULong,
+        override val work: WorkId,
+        override val target: String,
+        val chapters: List<ChapterId>,
+        val files: List<ExportFile>,
+        val skipped: List<ExportSkipped> = emptyList(),
+    ) : ExportJob
 
     /** [chapter] is the one it could not prepare, when it was one. */
     data class Failed(
@@ -950,7 +959,7 @@ class ExportModel(private val send: (Command) -> ULong?) {
             }
             is ReadingEvent.ExportReady -> {
                 val (work, target, chapters) = asked[event.job] ?: return
-                _jobs.update { it + (event.job to ExportJob.Ready(event.job, work, target, chapters, event.files)) }
+                _jobs.update { it + (event.job to ExportJob.Ready(event.job, work, target, chapters, event.files, event.skipped)) }
             }
             is ReadingEvent.ExportFailed -> {
                 val (work, target) = asked[event.job] ?: return

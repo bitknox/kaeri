@@ -3,10 +3,12 @@ package app.kaeri.store
 import app.kaeri.engine.model.Command
 import app.kaeri.engine.model.ExportFile
 import app.kaeri.engine.model.ExportFormat
+import app.kaeri.engine.model.ExportSkipped
 import app.kaeri.engine.model.Msg
 import app.kaeri.engine.model.ReadingCommand
 import app.kaeri.engine.model.ReadingEvent
 import app.kaeri.engine.model.ReadingFailure
+import app.kaeri.engine.model.ReadingMsg
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -72,6 +74,14 @@ class ExportModelTest {
         assertTrue(sent.any { (it as? Command.Reading)?.v1 == ReadingCommand.SetSendTarget("kindle") })
         model.apply(ReadingEvent.ExportFailed(job, "12", ReadingFailure.Offline))
         assertEquals(ExportJob.Failed(job, WORK, "kindle", ReadingFailure.Offline, "12"), model.jobs.value[job])
+    }
+
+    @Test
+    fun a_ready_send_keeps_the_pages_it_left_out() {
+        val job = requireNotNull(model.prepare(WORK, listOf("v1", "v2"), "kobo", ExportFormat.CBZ))
+        val skipped = ExportSkipped("Volume 1", 1u, Msg.Reading(ReadingMsg.ExportPagesLeftOut(1L, "Volume 1")))
+        model.apply(ReadingEvent.ExportReady(job, listOf(ExportFile("/x/a.cbz", "a.cbz", 10u, null)), listOf(skipped)))
+        assertEquals(listOf(skipped), (model.jobs.value[job] as ExportJob.Ready).skipped)
     }
 
     private companion object {

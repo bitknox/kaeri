@@ -38,6 +38,9 @@ public struct EReaderSend: Identifiable, Equatable, Sendable {
     var format: ExportFormat?
     /// Stopped before the engine named its job: stopped as soon as it does.
     var cancelOnBind = false
+    /// Once ready, a line for each chapter that went without some of its pages, in the engine's
+    /// words: "One page of Volume 1 couldn't be read and isn't in the files."
+    public internal(set) var leftOut: [String] = []
 
     /// Which phase it is in, whatever it carries: for animating between them.
     public var kind: Int {
@@ -226,8 +229,11 @@ public final class SendModel {
             update(job: job) { $0.phase = .failed(words) }
         case .exportWaiting(let job, let work, let target, let line, _):
             update(job: job, work: work, target: target) { $0.phase = .waiting(line: line.text) }
-        case .exportReady(let job, let files):
-            update(job: job) { $0.phase = .ready(files) }
+        case .exportReady(let job, let files, let skipped):
+            update(job: job) {
+                $0.phase = .ready(files)
+                $0.leftOut = skipped.map(\.line.text)
+            }
         case .feed(let view):
             if !feedStaged { feed = view }
         case .failed(.export, let failure):

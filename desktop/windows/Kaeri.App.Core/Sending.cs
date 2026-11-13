@@ -28,7 +28,10 @@ public sealed record EReaderSend
     public double? Fraction { get; set; }
     public int Done { get; set; }
     public int Total { get; set; }
-    /// <summary>Why it waits, or why it failed, in words.</summary>
+    /// <summary>
+    /// Why it waits, or why it failed, in words. Once ready, the chapters it went without some
+    /// pages of, a line each.
+    /// </summary>
     public string Line { get; set; } = "";
     public ExportFile[] Files { get; set; } = [];
     /// <summary>A ready send whose files went before they were shared or saved: it fails, for Send again.</summary>
@@ -222,7 +225,12 @@ public sealed class SendState
                 Update(waiting.Job, waiting.Work, waiting.Target, s => { s.Phase = SendPhase.Waiting; s.Line = waiting.Line.Text(); });
                 return ReadingPart.Send;
             case ReadingEvent.ExportReady ready:
-                Update(ready.Job, null, null, s => { s.Phase = SendPhase.Ready; s.Files = ready.Files; });
+                Update(ready.Job, null, null, s =>
+                {
+                    s.Phase = SendPhase.Ready;
+                    s.Files = ready.Files;
+                    s.Line = string.Join("\n", ready.Skipped.Select(skipped => skipped.Line.Text()));
+                });
                 return ReadingPart.Send;
             case ReadingEvent.Feed feed:
                 if (!feedStaged)

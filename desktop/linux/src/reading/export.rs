@@ -16,7 +16,8 @@ use kaeri_model::{
     event::Event,
     jobs::JobId,
     reading::{
-        ChapterReadState, DownloadPick, ExportFile, ExportFormat, ExportTarget, ReadingAbout,
+        ChapterReadState, DownloadPick, ExportFile, ExportFormat, ExportSkipped, ExportTarget,
+        ReadingAbout,
         ReadingCommand, ReadingEvent, VolumeGroup,
     },
 };
@@ -61,6 +62,8 @@ struct Send {
     volumes: Vec<VolumeGroup>,
     /// The next unread (0) or every unread chapter (1).
     scope: u32,
+    /// Once ready, the chapters the send went without some pages of, a line each.
+    left_out: String,
     job: Option<JobId>,
     /// Prepare was asked and its job is not known yet.
     asked: bool,
@@ -188,7 +191,7 @@ impl Parts {
             Phase::Waiting(line) => (line.clone(), String::new()),
             Phase::Failed(why) => (why.clone(), String::new()),
             Phase::Gone => (t::send_files_gone(), String::new()),
-            Phase::Ready(files) => (t::send_ready(files.len() as i64), String::new()),
+            Phase::Ready(files) => (t::send_ready(files.len() as i64), s.left_out.clone()),
         };
         self.state.set_label(&words);
         self.state_line.set_visible(!words.is_empty());
@@ -350,6 +353,7 @@ pub fn open(ctx: &Rc<Ctx>, work: &WorkId) {
             medium: None,
             volumes: Vec::new(),
             scope: 0,
+            left_out: String::new(),
             job: None,
             asked: false,
             sent: Vec::new(),
@@ -526,9 +530,10 @@ pub fn open(ctx: &Rc<Ctx>, work: &WorkId) {
                     s.phase = Phase::Failed(t::send_failed(&super::failure(failure)));
                     s.asked = false;
                 }
-                ReadingEvent::ExportReady { job, files } if ours(job) => {
+                ReadingEvent::ExportReady { job, files, skipped } if ours(job) => {
                     let mut s = parts.send.borrow_mut();
                     s.phase = Phase::Ready(files.clone());
+                    s.left_out = left_out(skipped);
                     s.asked = false;
                 }
                 _ => return,
@@ -541,6 +546,11 @@ pub fn open(ctx: &Rc<Ctx>, work: &WorkId) {
     send(&ctx.hub, ReadingCommand::LoadChapters { work: work.clone(), edition: None });
     parts.draw();
     dialog.present(Some(&ctx.window));
+}
+
+/// The chapters a ready send went without some pages of, a line each in the engine's words.
+fn left_out(skipped: &[ExportSkipped]) -> String {
+    skipped.iter().map(|s| crate::say::msg(&s.line)).collect::<Vec<_>>().join("\n")
 }
 
 /// Copy the files into `folder` without holding the window, then say so with Show in Files,
@@ -617,5 +627,24 @@ mod tests {
 
         // Nothing ready, nothing to save, and the phase stays as it is.
         assert_eq!(to_save(&Phase::Choosing), Err(Phase::Choosing));
+    }
+    /// R7L-5. A send that went without broken pages says how many, and of which chapters.
+    #[test]
+    fn a_ready_send_says_which_pages_it_left_out() {
+        use kaeri_model::{Msg, ReadingMsg};
+        let skipped = |chapter: &str, n: u32| ExportSkipped {
+            chapter: chapter.to_owned(),
+            pages: n,
+            line: Msg::Reading(ReadingMsg::ExportPagesLeftOut {
+                n: i64::from(n),
+                chapter: chapter.to_owned(),
+            }),
+        };
+        assert_eq!(left_out(&[]), "");
+        assert_eq!(
+            left_out(&[skipped("Volume 1", 1), skipped("Chapter 12", 3)]),
+            "One page of Volume 1 couldn't be read and isn't in the files.\n\
+             3 pages of Chapter 12 couldn't be read and aren't in the files."
+        );
     }
 }

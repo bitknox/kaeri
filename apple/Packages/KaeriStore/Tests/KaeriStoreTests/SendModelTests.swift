@@ -72,6 +72,20 @@ struct SendModelTests {
         #expect(target == "kobo")
     }
 
+    /// R7L-5. A send that left pages out says, once ready, how many and of which volume.
+    @Test func aReadySendSaysWhichPagesItLeftOut() {
+        let model = SendModel()
+        let id = model.begin(work: "w", chapters: ["v1", "v2"], target: kobo(), novel: false)!
+        model.apply(.exportProgress(job: 5, done: 0, total: 10, chaptersDone: 0, chapters: 2))
+        let file = ExportFile(path: "/sends/one.cbz", name: "one.cbz", bytes: 10, part: nil)
+        let skipped = ExportSkipped(
+            chapter: "Volume 1", pages: 1,
+            line: .reading(.exportPagesLeftOut(n: 1, chapter: "Volume 1")))
+        model.apply(.exportReady(job: 5, files: [file], skipped: [skipped]))
+        #expect(model.send(id)?.phase == .ready([file]))
+        #expect(model.send(id)?.leftOut == ["One page of Volume 1 couldn't be read and isn't in the files."])
+    }
+
     @Test func theEngineKeepsTheDefaultEReader() {
         let model = SendModel()
         var sent: [Command] = []
