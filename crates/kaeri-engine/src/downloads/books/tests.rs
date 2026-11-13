@@ -170,8 +170,9 @@ impl BookSource for Shelf {
                 return Err(PageError::Status(404));
             }
         }
-        let held = self.held.lock().unwrap().clone();
-        if let Some((_, asked, answer)) = held.filter(|(url, ..)| *url == page_ref.url) {
+        // Only the first fetch waits: a retry of the held page goes on as any other fetch does.
+        let held = self.held.lock().unwrap().take_if(|(url, ..)| *url == page_ref.url);
+        if let Some((_, asked, answer)) = held {
             asked.notify_one();
             answer.notified().await;
         }
@@ -205,14 +206,14 @@ impl Kit {
         self.queue.configure(setup);
     }
 
+    /// Waits until the queue stops running. The deadline is far beyond any loaded test lane, so
+    /// only a queue that never stops reaches it.
     async fn settle(&self) {
-        for _ in 0..500 {
-            if !*self.queue.0.running.lock().unwrap() {
-                return;
-            }
+        let deadline = std::time::Instant::now() + Duration::from_secs(60);
+        while *self.queue.0.running.lock().unwrap() {
+            assert!(std::time::Instant::now() < deadline, "the queue did not settle");
             tokio::time::sleep(Duration::from_millis(10)).await;
         }
-        panic!("the queue did not settle");
     }
 
     fn states(&self) -> Vec<(String, ChapterDownloadState)> {
