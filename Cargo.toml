@@ -199,6 +199,23 @@ opt-level = 3
 opt-level = 3
 [profile.dev.package.realfft]
 opt-level = 3
+# The pipeline's own filters and the encoders behind a prepared page. The reader audit pushes 840
+# odd sizes through every panel into every screen: about 330 s on the PC's WSL unoptimised, 34 s
+# with these.
+[profile.dev.package.kaeri-pages]
+opt-level = 3
+[profile.dev.package.image]
+opt-level = 3
+[profile.dev.package.png]
+opt-level = 3
+[profile.dev.package.fdeflate]
+opt-level = 3
+[profile.dev.package.miniz_oxide]
+opt-level = 3
+[profile.dev.package.flate2]
+opt-level = 3
+[profile.dev.package.crc32fast]
+opt-level = 3
 
 # The engine as the Apple app links it while it is developed: apple/scripts/engine.sh builds every
 # slice with this. Full debug info for every dependency makes the static library large and slow for

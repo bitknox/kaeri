@@ -277,12 +277,15 @@ impl EndPage {
             }
             None => {
                 self.next_box.set_visible(false);
-                let why = facts.why.unwrap_or(NoNext::CaughtUp);
-                self.none_title.set_label(&why_title(why));
-                let body = why_body(why);
-                self.none_body.set_label(body.as_deref().unwrap_or(""));
-                self.none_body.set_visible(body.is_some());
-                self.none_box.set_visible(true);
+                // The engine says why nothing follows as the chapter opens; until it has, the
+                // page claims no reason, never caught up.
+                if let Some(why) = facts.why {
+                    self.none_title.set_label(&why_title(why));
+                    let body = why_body(why);
+                    self.none_body.set_label(body.as_deref().unwrap_or(""));
+                    self.none_body.set_visible(body.is_some());
+                }
+                self.none_box.set_visible(facts.why.is_some());
                 self.continue_button.set_visible(false);
                 self.skip.set_visible(false);
                 self.back.add_css_class("suggested-action");
@@ -362,7 +365,10 @@ mod tests {
 
     use adw::prelude::*;
 
-    use super::{COLUMN, EndPage, joined, read_line};
+    use kaeri_i18n::t;
+    use kaeri_model::reader::NoNext;
+
+    use super::{COLUMN, EndFacts, EndPage, joined, read_line};
     use crate::gtk_test::{pump, run};
 
     /// The end page asks for no more width than its widest part: never the column's 440 px or
@@ -402,6 +408,33 @@ mod tests {
                 "{large} px at twice the size, its widest part {widest}"
             );
             assert_eq!(wide, Some(COLUMN));
+        });
+    }
+
+    /// Before the engine says why no chapter follows, the page says no reason; once it has,
+    /// its reason.
+    #[test]
+    fn no_reason_shows_until_the_engine_gives_one() {
+        run(|| {
+            let end = EndPage::new(Rc::new(|| {}), Rc::new(|| {}), Rc::new(|| {}));
+            let mut facts = EndFacts {
+                chapter: "15".into(),
+                read: None,
+                next: None,
+                why: None,
+                source: None,
+                preview: None,
+                novel: false,
+                credits: None,
+                skip_to: None,
+                extras: 0,
+            };
+            end.fill(&facts);
+            assert!(!end.none_box.is_visible(), "no reason claimed yet");
+            facts.why = Some(NoNext::Offline);
+            end.fill(&facts);
+            assert!(end.none_box.is_visible());
+            assert_eq!(end.none_title.label(), t::linux_reader_end_offline());
         });
     }
 

@@ -1303,9 +1303,7 @@ impl Session {
                 cx.layers_with(self.medium, Some(self.work.as_str()), Some(self.source));
         }
         if !self.opened {
-            self.opened = true;
-            cx.send(ReaderEvent::Opened(Box::new(self.view(cx))));
-            self.downloads_follow(cx, false);
+            self.say_opened(cx);
         }
         let mut leaves = self.leaves.clone();
         leaves.push(Leaf { index: leaves.len() as u32, parts: Vec::new(), end_page: true });
@@ -1387,8 +1385,9 @@ impl Session {
                     want.push(before);
                 }
                 pages.want(self.id, self.generation, want, cx.tx);
-                // Near the foot, the divider names the next chapter and shows its first page;
-                // from half way, a chapter from a source is fetched ahead.
+                // Near the foot, the divider shows the next chapter's first page (the end page
+                // was said with the open); from half way, a chapter from a source is fetched
+                // ahead.
                 if at.image + 3 >= self.pages_total {
                     self.say_end_page(cx);
                     self.peek(cx, pages);
@@ -1652,6 +1651,16 @@ impl Session {
             path: next.path.clone(),
             out: cx.tx.clone(),
         });
+    }
+
+    /// Say the chapter opened, with its end page: what follows the chapter, or why nothing
+    /// does, is known from the open, so a strip's foot or the page between chapters never
+    /// waits for the last images to say it.
+    pub(super) fn say_opened(&mut self, cx: &Cx<'_>) {
+        self.opened = true;
+        cx.send(ReaderEvent::Opened(Box::new(self.view(cx))));
+        self.say_end_page(cx);
+        self.downloads_follow(cx, false);
     }
 
     fn say_end_page(&mut self, cx: &Cx<'_>) {

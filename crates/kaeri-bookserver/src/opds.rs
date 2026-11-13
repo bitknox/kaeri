@@ -464,7 +464,8 @@ impl OpdsSource {
         let mut chapter = chapter_of(&entry.id, &entry.title, None);
         chapter.language.clone_from(&entry.language);
         chapter.published = crate::names::date(&entry.updated);
-        chapter.page_count = entry.links.iter().find_map(|l| l.pse_count).filter(|n| *n > 0);
+        chapter.page_count =
+            entry.links.iter().find_map(|l| l.pse_count).and_then(crate::pages_stated);
         chapter
     }
 
@@ -484,9 +485,12 @@ impl OpdsSource {
                 && (l.media_type.contains("epub") || l.media_type.contains("pdf"))
         });
         let stream = entry.links.iter().find(|l| l.rel == kaeri_books::opds::REL_PAGE_STREAM);
+        // A stream's page count is the server's word: past what a book holds, the stream is not
+        // read, as each page would become a page ref.
+        let stated = stream.and_then(|s| s.pse_count);
         if file.is_none()
             && let Some(stream) = stream
-            && let Some(count) = stream.pse_count.filter(|n| *n > 0)
+            && let Some(count) = stated.and_then(crate::pages_stated)
         {
             let header: Vec<(String, String)> = self.http.auth().header().into_iter().collect();
             return Ok(Some(ChapterContent::Images(
@@ -514,7 +518,10 @@ impl OpdsSource {
                     .iter()
                     .find(|l| l.rel.starts_with("http://opds-spec.org/acquisition"))
             })
-            .ok_or(ServerError::NotFound)?;
+            .ok_or_else(|| match stated {
+                Some(count) if count > crate::MOST_PAGES => crate::too_many_pages(count),
+                _ => ServerError::NotFound,
+            })?;
         let extension = extension_for(&link.media_type);
         let to =
             keep_path(&self.keep, &self.manifest.id, &entry.id, &format!("book.{extension}"));
