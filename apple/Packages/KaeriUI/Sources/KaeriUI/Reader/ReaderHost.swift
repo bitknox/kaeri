@@ -122,7 +122,7 @@ struct MenuKeys: NSViewRepresentable {
         var refresh: @MainActor () -> Void = { MenuKeys.update() }
         /// Runs its work once the change that called it is drawn: the menus are not touched in
         /// the middle of SwiftUI's update.
-        var later: (@escaping @MainActor () -> Void) -> Void = { work in Task { @MainActor in work() } }
+        var later: @MainActor (@escaping @MainActor () -> Void) -> Void = { work in Task { @MainActor in work() } }
 
         /// The keys as the window has them now: the menus follow once the change is drawn.
         func follow(_ keys: Keys) {
