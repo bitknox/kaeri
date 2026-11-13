@@ -619,6 +619,61 @@ enum HuntDriver {
                 RunLoop.main.perform { MainActor.assumeIsolated { _ = target.accessibilityPerformPress?() } }
             } else { say("qpress: no match #\(pick) for '\(needle)'") }
             try? await Task.sleep(for: .milliseconds(1500)); say(state(r, nav))
+        case "addfolder":
+            // addfolder <path…>: add a book folder as the add sheet does after its picker (r7)
+            let path = w.joined(separator: " ")
+            store.bookSources.addFolder(FolderRef(path: path, treeUri: nil, bookmark: nil, name: nil))
+            try? await Task.sleep(for: .milliseconds(2500))
+            store.bookSources.load()
+            try? await Task.sleep(for: .milliseconds(1500))
+            say("book sources \(String(describing: store.bookSources.view).prefix(1500))")
+        case "qclick":
+            // qclick <x> <y> [n]: a click into the key window from the run loop, so a modal panel it opens doesn't hold the driver (r7)
+            if let win = NSApp.keyWindow ?? mainWindow() {
+                let p = CGPoint(x: Double(w[0]) ?? 0, y: win.frame.height - (Double(w[1]) ?? 0))
+                let n = ms(w, 2, 1)
+                let num = win.windowNumber
+                say("qclick '\(win.title)' at \(p)")
+                RunLoop.main.perform {
+                    MainActor.assumeIsolated {
+                        for type in [NSEvent.EventType.leftMouseDown, .leftMouseUp] {
+                            if let e = NSEvent.mouseEvent(with: type, location: p, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
+                                                          windowNumber: num, context: nil, eventNumber: 0, clickCount: n, pressure: 1) { NSApp.sendEvent(e) }
+                        }
+                    }
+                }
+            }
+            try? await Task.sleep(for: .milliseconds(1500)); say(state(r, nav))
+        case "axhit":
+            // axhit [step] [title prefix]: accessibility hit tests on a grid over a window, for the SwiftUI
+            // elements the child walk misses; frames are from the window's top left (r7)
+            let step = CGFloat(ms(w, 0, 24))
+            var target: NSWindow? = NSApp.keyWindow ?? mainWindow()
+            if w.count > 1 {
+                let t = w[1...].joined(separator: " ")
+                target = NSApp.windows.first(where: { $0.title.hasPrefix(t) && $0.isVisible })
+            }
+            if let win = target {
+                var seen = Set<ObjectIdentifier>()
+                var y = win.frame.maxY - step / 2
+                while y > win.frame.minY {
+                    var x = win.frame.minX + step / 2
+                    while x < win.frame.maxX {
+                        if let hit = win.accessibilityHitTest(CGPoint(x: x, y: y)) {
+                            let o = hit as AnyObject
+                            if seen.insert(ObjectIdentifier(o)).inserted {
+                                let role = (o.accessibilityRole?() ?? nil)?.rawValue ?? "?"
+                                let f = o.accessibilityFrame?() ?? .zero
+                                let at = "\(Int(f.minX - win.frame.minX)),\(Int(win.frame.maxY - f.maxY)) \(Int(f.width))x\(Int(f.height))"
+                                say("hit \(role) '\(axLabel(o))' t='\(axTitle(o))' v='\(axValue(o))' \(at)")
+                            }
+                        }
+                        x += step
+                    }
+                    y -= step
+                }
+                say("axhit \(seen.count) elements in '\(win.title)'")
+            } else { say("axhit: no window") }
         case "rsettings":
             // rsettings: the reader's settings as the sheet shows them (r7)
             say("rsettings \(String(describing: r.settings))")
