@@ -86,7 +86,7 @@ struct FolderCameIn: View {
             if report.alreadyAdded {
                 CameInNote(kind: .info, title: L.bookFolderAlready(folder: report.name),
                            line: L.bookFolderAlreadyLine(series: Int(report.series)))
-            } else if unreadable || report.unreadable {
+            } else if unreadable {
                 CameInNote(kind: .failed, title: L.bookFolderUnreadable(folder: report.name),
                            line: L.bookFolderUnreadableLine)
             } else if nothing {
@@ -279,8 +279,7 @@ private struct FolderCameInPresenter: ViewModifier {
         let folder: (FolderReport, Bool, Bool)? = {
             switch outcome {
             case .folder(let report)?: (report, false, false)
-            // An unreadable folder comes as an empty one with `unreadable` set.
-            case .empty(.unsupportedFiles(let report))?, .empty(.emptyFolder(let report))?: (report, true, report.unreadable)
+            case .empty(.unsupportedFiles(let report))?, .empty(.emptyFolder(let report))?: (report, true, false)
             case .empty(.folderUnreadable(let report))?: (report, true, true)
             default: nil
             }

@@ -114,10 +114,10 @@ extension CameInModel {
             report.alreadyAdded = true
             stage(.folder(report))
         case .folderUnreadable:
-            // As the engine sends it: an empty folder marked unreadable, its counts zero.
-            stage(.empty(.emptyFolder(folder: FolderReport(
+            // As the engine sends it: the folder with its counts zero.
+            stage(.empty(.folderUnreadable(folder: FolderReport(
                 id: "f1", name: "Manga", path: PrelaunchFixtures.path, series: 0, books: 0, files: 0, matched: 0,
-                unsupported: [], locked: [], listed: [], unreadable: true))))
+                unsupported: [], locked: [], listed: []))))
         case .inviteJoined: stage(.store(PrelaunchFixtures.store(reading: 2, watching: 1)))
         case .pluginsInstalled:
             stage(.installed(PluginsInstalled(store: "shelf.kim.example", name: "Kim’s shelf", installed: 2, failed: [])))
