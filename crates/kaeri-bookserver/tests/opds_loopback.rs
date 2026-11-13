@@ -9,6 +9,9 @@
 //!
 //! R6E-4: a catalogue whose search link is an OpenSearch description is searched through the
 //! template the description holds.
+//!
+//! R7E-12: a catalogue with neither a feed of all series nor a search, as a Kaeri feed before
+//! its search, is searched through the series its sections list.
 
 use std::sync::{Arc, Mutex, atomic::AtomicBool};
 
@@ -327,6 +330,87 @@ async fn a_catalogue_searched_through_an_opensearch_description_finds_its_books(
     assert_eq!(chapters.len(), 2);
     let asked: Vec<String> = seen.lock().unwrap().iter().map(|a| a.path.clone()).collect();
     assert!(asked.iter().any(|p| p == "/opds/search?q=Lantern"), "{asked:?}");
+}
+
+/// R7E-12. A catalogue with neither a feed of all series nor a search, whose sections are not
+/// named in English, finds its series by name through its sections, whatever the case,
+/// accents or letter width.
+#[tokio::test]
+async fn a_catalogue_without_a_search_is_searched_through_its_sections() {
+    let (listener, address) = listener().await;
+    let section = |id: &str, title: &str, href: &str, kind: &str| {
+        format!(
+            r#" <entry><id>{id}</id><title>{title}</title><updated>2026-01-01T00:00:00Z</updated>
+  <link rel="subsection" href="{href}" type="application/atom+xml;profile=opds-catalog;kind={kind}"/></entry>
+"#
+        )
+    };
+    let feed = |id: &str, entries: &str| {
+        format!(
+            r#"<?xml version="1.0"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+ <id>{id}</id><title>Kaeri</title><updated>2026-01-01T00:00:00Z</updated>
+{entries}</feed>"#
+        )
+    };
+    let root = feed(
+        "urn:x:root",
+        &(section("urn:x:d", "Téléchargements", "/opds/downloads", "navigation")
+            + &section("urn:x:f", "Dossiers", "/opds/folders", "navigation")),
+    );
+    let downloads =
+        feed("urn:x:d", &section("urn:x:d1", "Café Lantern", "/opds/d/1", "acquisition"));
+    let folders = feed(
+        "urn:x:f",
+        &(section("urn:x:f1", "Ferry Notes", "/opds/f/1", "acquisition")
+            + &section("urn:x:f2", "灯台の本", "/opds/f/2", "acquisition")),
+    );
+    let books = feed(
+        "urn:x:books",
+        r#" <entry><id>urn:x:b1</id><title>Ferry Notes v01</title><updated>2026-01-02T00:00:00Z</updated>
+  <link rel="http://opds-spec.org/acquisition" href="/files/b1.epub" type="application/epub+zip"/></entry>
+"#,
+    );
+    serve(
+        listener,
+        vec![
+            ("/opds".into(), ok(ATOM, root.as_bytes())),
+            ("/opds/downloads".into(), ok(ATOM, downloads.as_bytes())),
+            ("/opds/folders".into(), ok(ATOM, folders.as_bytes())),
+            ("/opds/f/1".into(), ok(ATOM, books.as_bytes())),
+        ],
+    )
+    .await;
+    let keep = tempfile::tempdir().unwrap();
+    let credential = format!("basic:{}", basic("reader", "made-up-pass"));
+    let source = source(
+        &client(),
+        &Server {
+            id: "a",
+            name: "Kaeri",
+            kind: Kind::Opds,
+            address: &format!("{address}/opds"),
+            credential: &credential,
+        },
+        keep.path().to_owned(),
+        Arc::new(AtomicBool::new(false)),
+    )
+    .unwrap();
+    let hints = BookHints::default();
+    for (term, want) in [
+        ("ferry", "Ferry Notes"),
+        ("ＦＥＲＲＹ", "Ferry Notes"),
+        ("cafe", "Café Lantern"),
+        ("灯台", "灯台の本"),
+    ] {
+        let hits = source.search(term, &hints).await.expect("the search answers");
+        let titles: Vec<&str> = hits.iter().map(|h| h.title.as_str()).collect();
+        assert_eq!(titles, [want], "{term}");
+    }
+    assert!(source.search("harbour", &hints).await.unwrap().is_empty());
+    let hits = source.search("Ferry", &hints).await.unwrap();
+    let chapters = source.chapters(&hits[0].id, &hints).await.unwrap();
+    assert_eq!(chapters.len(), 1, "the hit opens to its books");
 }
 
 /// Every credentialed server kind, with what its sign-in was kept as and the secret that must

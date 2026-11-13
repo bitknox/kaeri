@@ -203,6 +203,11 @@ fn link_with<'a>(links: &'a [Link], rel: &str) -> Option<&'a Link> {
 /// (`allSeries`). Only then by an English title, for a catalogue that says nothing else. The
 /// link leads to a navigation feed either way.
 fn series_index(root: &Feed) -> Option<&Entry> {
+    series_index_with(root, true)
+}
+
+/// [`series_index`], told by its title too only when `by_title`.
+fn series_index_with(root: &Feed, by_title: bool) -> Option<&Entry> {
     let leads_on =
         |e: &&Entry| subsection(e).is_some_and(|l| l.media_type.contains("kind=navigation"));
     let named_by_address = |e: &&Entry| {
@@ -221,7 +226,19 @@ fn series_index(root: &Feed) -> Option<&Entry> {
     };
     let named_in_english = |e: &&Entry| e.title.to_lowercase().contains("serie");
     let entries = || root.entries.iter().filter(leads_on);
-    entries().find(named_by_address).or_else(|| entries().find(named_in_english))
+    entries()
+        .find(named_by_address)
+        .or_else(|| entries().filter(|_| by_title).find(named_in_english))
+}
+
+/// Whether an entry leads to a feed of books rather than being a book: a link onward and no
+/// file to take.
+fn leads_to_books(entry: &Entry) -> bool {
+    let onward =
+        subsection(entry).is_some_and(|l| l.media_type.contains("profile=opds-catalog"));
+    let book =
+        entry.links.iter().any(|l| l.rel.starts_with(kaeri_books::opds::REL_ACQUISITION));
+    onward && !book
 }
 
 fn subsection(entry: &Entry) -> Option<&Link> {
@@ -373,12 +390,6 @@ impl OpdsSource {
         Ok(entries)
     }
 
-    /// The navigation feed of series the catalogue offers from its root, if it offers one.
-    async fn series_index(&self, root: &Feed) -> Result<Option<Vec<Entry>>> {
-        let Some(link) = series_index(root).and_then(subsection) else { return Ok(None) };
-        Ok(Some(self.feed_all(&link.href).await?))
-    }
-
     /// How many series the catalogue's series feed lists: the total its first page states,
     /// else the entries of a walk that reached the last page. `None` when it has no series
     /// feed, or the walk stopped short.
@@ -460,25 +471,78 @@ impl OpdsSource {
         self.feed_all(&address).await
     }
 
+    /// A hit that opens the feed an entry leads to, when it leads to one.
+    fn feed_hit(&self, entry: &Entry) -> Option<SeriesHit> {
+        let link = subsection(entry)?;
+        Some(self.hit(entry, &format!("feed|{}", link.href)))
+    }
+
+    /// The entries the root's sections list that lead to books, one level down: the series of
+    /// a catalogue that offers neither a feed of all its series nor a search, as a Kaeri feed
+    /// before its search did.
+    async fn walk_sections(&self, root: &Feed) -> Result<Vec<Entry>> {
+        let mut found: Vec<Entry> = Vec::new();
+        let sections = root
+            .entries
+            .iter()
+            .filter_map(subsection)
+            .filter(|l| l.media_type.contains("kind=navigation"));
+        for link in sections {
+            for entry in self.feed_all(&link.href).await? {
+                let href = subsection(&entry).map(|l| l.href.clone());
+                let seen =
+                    found.iter().any(|f| subsection(f).map(|l| &l.href) == href.as_ref());
+                if leads_to_books(&entry) && !seen {
+                    found.push(entry);
+                }
+            }
+        }
+        Ok(found)
+    }
+
     async fn search_inner(&self, query: &str) -> Result<Vec<SeriesHit>> {
         let root = self.feed("").await?;
-        let wanted = query.trim().to_lowercase();
-        if let Some(index) = self.series_index(&root).await? {
-            return Ok(index
-                .iter()
-                .filter(|e| wanted.is_empty() || e.title.to_lowercase().contains(&wanted))
-                .filter_map(|e| {
-                    let link = subsection(e)?;
-                    Some(self.hit(e, &format!("feed|{}", link.href)))
-                })
-                .collect());
+        let searchable = link_with(&root.links, "search").is_some();
+        let named = |e: &&Entry| kaeri_core::books::name_holds(&e.title, query);
+        // A feed of all series, told by its address; by an English title only for a catalogue
+        // without a search, as a title can name anything.
+        if let Some(link) = series_index_with(&root, !searchable).and_then(subsection) {
+            let index = self.feed_all(&link.href).await?;
+            return Ok(index.iter().filter(named).filter_map(|e| self.feed_hit(e)).collect());
         }
-        // No series listing: the catalogue's search, with books grouped by category.
+        if !searchable {
+            // Neither: the series its sections list and the books on its first page, by name.
+            let series = self.walk_sections(&root).await?;
+            let is_book = |e: &&Entry| {
+                e.links.iter().any(|l| l.rel.starts_with(kaeri_books::opds::REL_ACQUISITION))
+            };
+            let books: Vec<&Entry> = root.entries.iter().filter(is_book).collect();
+            if series.is_empty() && books.is_empty() && !root.entries.is_empty() {
+                // Nothing in it can be found by name: say so rather than that nothing matched.
+                return Err(ServerError::Parse("the catalogue offers no search".into()));
+            }
+            let at = self.http.url("");
+            let mut hits: Vec<SeriesHit> =
+                series.iter().filter(named).filter_map(|e| self.feed_hit(e)).collect();
+            hits.extend(
+                books
+                    .into_iter()
+                    .filter(named)
+                    .map(|e| self.hit(e, &format!("book|{at}|{}", e.id))),
+            );
+            return Ok(hits);
+        }
+        // The catalogue's search. A series it finds opens to its books; books are grouped by
+        // category.
         let search = self.search_address(&root, query).await?;
         let entries = self.feed_all(&search).await?;
         let mut seen: Vec<String> = Vec::new();
         let mut hits = Vec::new();
         for entry in &entries {
+            if leads_to_books(entry) {
+                hits.extend(self.feed_hit(entry));
+                continue;
+            }
             match entry.categories.first() {
                 Some(label) if !seen.contains(label) => {
                     seen.push(label.clone());

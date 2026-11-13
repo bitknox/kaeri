@@ -21,8 +21,8 @@ use base64::{Engine as _, engine::general_purpose::STANDARD};
 use kaeri_books::{
     Book, Limits,
     opds::{
-        Entry, Feed as Document, FeedKind, Link, REL_ACQUISITION, REL_IMAGE, REL_SUBSECTION,
-        REL_THUMBNAIL,
+        Entry, Feed as Document, FeedKind, Link, OPENSEARCH_TYPE, REL_ACQUISITION, REL_IMAGE,
+        REL_SUBSECTION, REL_THUMBNAIL, opensearch_description,
     },
 };
 use kaeri_core::{books::ChapterId, config::FeedConfig};
@@ -682,6 +682,8 @@ fn shelf_counts(store: &Store) -> (u32, u32, u32) {
 struct Request {
     head: bool,
     path: String,
+    /// What follows the `?`, as sent.
+    query: String,
     authorization: Option<String>,
     agent: Option<String>,
 }
@@ -723,8 +725,10 @@ async fn read_head(stream: &mut impl Conn) -> Option<Request> {
         .filter_map(|l| l.split_once(':'))
         .find(|(k, _)| k.trim().eq_ignore_ascii_case("user-agent"))
         .map(|(_, v)| v.trim().to_owned());
-    let path = target.split(['?', '#']).next().unwrap_or("").to_owned();
-    Some(Request { head: method == "HEAD", path, authorization, agent })
+    let target = target.split('#').next().unwrap_or("");
+    let (path, query) = target.split_once('?').unwrap_or((target, ""));
+    let (path, query) = (path.to_owned(), query.to_owned());
+    Some(Request { head: method == "HEAD", path, query, authorization, agent })
 }
 
 /// Whether the request carries the password, in Basic authorization with any user name.
@@ -809,6 +813,7 @@ async fn handle(
         let words = feed.words();
         let routed = route(
             &request.path,
+            &request.query,
             store,
             feed.shares(),
             feed.title_form(),
@@ -1228,6 +1233,7 @@ impl Words {
 
 async fn route(
     path: &str,
+    query: &str,
     store: Store,
     shares: Shares,
     form: TitleForm,
@@ -1247,6 +1253,18 @@ async fn route(
     }
     match parts.as_slice() {
         ["opds"] => Response::document(&root(&store, shares, words)),
+        ["opds", "opensearch"] => Response {
+            status: "200 OK",
+            content_type: format!("{OPENSEARCH_TYPE}; charset=utf-8"),
+            body: Body::Bytes(
+                opensearch_description("Kaeri", "Kaeri", SEARCH_TEMPLATE).into_bytes(),
+            ),
+            challenge: false,
+        },
+        ["opds", "search"] => {
+            let term = search_term(query);
+            Response::document(&search(&store, shares, form, words, &term))
+        }
         ["opds", "downloads"] => Response::document(&downloads(&store, form, words)),
         ["opds", "downloads", work] => Response::document(&acquisition(
             &format!("urn:kaeri:downloads:{work}"),
@@ -1302,6 +1320,7 @@ fn folder_shared(store: &Store, series: &str, shares: Shares) -> bool {
 
 fn root(store: &Store, shares: Shares, words: &Words) -> Document {
     let mut feed = base_feed("urn:kaeri:opds", "Kaeri", FeedKind::Navigation, "/opds");
+    feed.links.push(Link::new("search", "/opds/opensearch", OPENSEARCH_TYPE));
     let down = store.book_download_works().unwrap_or_default().len();
     let folders = store
         .local_book_series()
@@ -1337,40 +1356,88 @@ fn downloads(store: &Store, form: TitleForm, words: &Words) -> Document {
         FeedKind::Navigation,
         "/opds/downloads",
     );
+    feed.entries = download_entries(store, form, words);
+    feed
+}
+
+/// One entry for each downloaded series with a book, leading to its books.
+fn download_entries(store: &Store, form: TitleForm, words: &Words) -> Vec<Entry> {
     let mut works = store.book_download_works().unwrap_or_default();
     works.sort();
-    for work in works {
-        if download_books(store, &work, form, words).is_empty() {
-            continue;
-        }
-        feed.entries.push(section(
-            &format!("urn:kaeri:downloads:{work}"),
-            &title_of(store, &work, form),
-            &format!("/opds/downloads/{}", encode(&work)),
-            FeedKind::Acquisition,
-            None,
-        ));
-    }
-    feed
+    works
+        .into_iter()
+        .filter(|work| !download_books(store, work, form, words).is_empty())
+        .map(|work| {
+            section(
+                &format!("urn:kaeri:downloads:{work}"),
+                &title_of(store, &work, form),
+                &format!("/opds/downloads/{}", encode(&work)),
+                FeedKind::Acquisition,
+                None,
+            )
+        })
+        .collect()
 }
 
 fn folders(store: &Store, shares: Shares, words: &Words) -> Document {
     let mut feed =
         base_feed("urn:kaeri:folders", &words.folders, FeedKind::Navigation, "/opds/folders");
-    for series in store
+    feed.entries = folder_entries(store, shares);
+    feed
+}
+
+/// One entry for each folder series on a shared shelf, leading to its books.
+fn folder_entries(store: &Store, shares: Shares) -> Vec<Entry> {
+    store
         .local_book_series()
         .unwrap_or_default()
         .into_iter()
         .filter(|s| if is_novel(&s.medium) { shares.novels } else { shares.manga })
-    {
-        feed.entries.push(section(
-            &format!("urn:kaeri:folders:{}", series.id),
-            &series.name,
-            &format!("/opds/folders/{}", encode(&series.id)),
-            FeedKind::Acquisition,
-            None,
-        ));
+        .map(|series| {
+            section(
+                &format!("urn:kaeri:folders:{}", series.id),
+                &series.name,
+                &format!("/opds/folders/{}", encode(&series.id)),
+                FeedKind::Acquisition,
+                None,
+            )
+        })
+        .collect()
+}
+
+/// Where the feed's search answers: `{searchTerms}` is what a reader looks for.
+const SEARCH_TEMPLATE: &str = "/opds/search?q={searchTerms}";
+
+/// The `q` of a search's query, decoded as a form sends it (`+` for a space).
+fn search_term(query: &str) -> String {
+    query
+        .split('&')
+        .filter_map(|pair| pair.split_once('='))
+        .find(|(key, _)| *key == "q")
+        .map(|(_, value)| decode(&value.replace('+', " ")))
+        .unwrap_or_default()
+}
+
+/// The series on the shared shelves whose names hold `term`, whatever its case, accents or
+/// letter width, each leading to its books.
+fn search(
+    store: &Store,
+    shares: Shares,
+    form: TitleForm,
+    words: &Words,
+    term: &str,
+) -> Document {
+    let selfref = format!("/opds/search?q={}", encode(term));
+    let mut feed = base_feed("urn:kaeri:search", "Kaeri", FeedKind::Navigation, &selfref);
+    let mut found = Vec::new();
+    if shares.downloads {
+        found.extend(download_entries(store, form, words));
     }
+    if shares.manga || shares.novels {
+        found.extend(folder_entries(store, shares));
+    }
+    feed.entries =
+        found.into_iter().filter(|e| kaeri_core::books::name_holds(&e.title, term)).collect();
     feed
 }
 
@@ -1869,6 +1936,86 @@ mod tests {
                 assert_eq!(reply.status, 200, "{name}: {} {path}", link.rel);
             }
         }
+    }
+
+    /// R7E-12. This feed added as a book server in another Kaeri answered every search with
+    /// nothing: it served no search. Its search finds series by name, whatever the case, accents
+    /// or letter width, CJK included, and each hit opens to its books.
+    #[tokio::test]
+    async fn another_kaeri_finds_this_feeds_series_by_searching() {
+        use kaeri_core::{books::BookHints, traits::BookSource};
+        let s = shelf();
+        let folder = kaeri_store::book_sources::Folder {
+            id: "f1".into(),
+            path: Some(s._dir.path().display().to_string()),
+            added_at: 1,
+            available: true,
+            ..Default::default()
+        };
+        s.store.put_book_folder(&folder).unwrap();
+        let mut scan = Vec::new();
+        for (n, name) in ["Café Lantern", "Ferry Notes", "灯台の本"].into_iter().enumerate()
+        {
+            let path = s._dir.path().join(format!("{n}.cbz"));
+            std::fs::copy(s._dir.path().join("one.cbz"), &path).unwrap();
+            let id = format!("f1:{name}");
+            let series = kaeri_store::book_sources::LocalSeries {
+                id: id.clone(),
+                folder: "f1".into(),
+                name: name.into(),
+                medium: "manga".into(),
+                work: None,
+                state: "unmatched".into(),
+                confidence: 0,
+                reason: None,
+            };
+            let file = kaeri_store::book_sources::LocalFile {
+                path: path.display().to_string(),
+                series: id,
+                volume: Some("1".into()),
+                label: format!("{name} v01"),
+                number_milli: None,
+                format: "cbz".into(),
+                pages: Some(3),
+                size: 100,
+                mtime: 50,
+                comicinfo: None,
+            };
+            scan.push((series, vec![file]));
+        }
+        s.store.replace_book_scan("f1", &scan, 2).unwrap();
+
+        // Another Kaeri adds the feed as it adds any catalogue.
+        let client = reqwest::Client::new();
+        let address = format!("http://127.0.0.1:{}/opds", s.port);
+        let kind = Some(kaeri_bookserver::Kind::Opds);
+        let signed = kaeri_bookserver::sign_in(&client, &address, kind, "reader", PASSWORD)
+            .await
+            .unwrap();
+        let server = kaeri_bookserver::Server {
+            id: "srv-kaeri",
+            name: &signed.name,
+            kind: kaeri_bookserver::Kind::Opds,
+            address: &address,
+            credential: &signed.credential,
+        };
+        let keep = s._dir.path().join("keep");
+        let flag = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let source = kaeri_bookserver::source(&client, &server, keep, flag).unwrap();
+        let hints = BookHints::default();
+        for (term, want) in [
+            ("ferry", "Ferry Notes"),
+            ("ＦＥＲＲＹ", "Ferry Notes"),
+            ("CAFE", "Café Lantern"),
+            ("灯台", "灯台の本"),
+        ] {
+            let hits = source.search(term, &hints).await.unwrap();
+            let titles: Vec<&str> = hits.iter().map(|h| h.title.as_str()).collect();
+            assert_eq!(titles, [want], "{term}");
+            let chapters = source.chapters(&hits[0].id, &hints).await.unwrap();
+            assert_eq!(chapters.len(), 1, "{term} opens to its book");
+        }
+        assert!(source.search("harbour", &hints).await.unwrap().is_empty());
     }
 
     /// R6E-3. The feed named a downloaded chapter by its id and a folder series' feed by its
