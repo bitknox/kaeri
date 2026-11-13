@@ -21,6 +21,8 @@ mod flags;
 #[cfg(test)]
 mod gtk_test;
 mod hub;
+#[cfg(feature = "fixtures")]
+mod hunt;
 mod matching;
 mod motion;
 mod mpris;

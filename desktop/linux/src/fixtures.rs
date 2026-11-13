@@ -332,6 +332,7 @@ pub async fn start(root: &Path, scene: &Scene, host: Arc<dyn Host>) -> Result<St
     if !scene.demo && scene.home.reading() {
         crate::fixtures_reading::keep_books(&store, &server.art_base(), now);
     }
+    crate::hunt::seed(&store, now);
     // Home's world: this season's titles, the rest in the browse, and their broadcasts.
     if let Some(world) = &world {
         let (season, rest): (Vec<_>, Vec<_>) = world
@@ -404,6 +405,10 @@ pub async fn start(root: &Path, scene: &Scene, host: Arc<dyn Host>) -> Result<St
     let (kept, providers) = (chain.clone(), chain.all());
     let rebuilt: Box<dyn Fn() + Send> = Box::new(move || kept.replace(providers.clone()));
     options.sources = Some(chain);
+    options.book_source = Some(crate::hunt::source());
+    if let Ok(free) = std::env::var("HUNT_FREE") {
+        options.free_space = free.parse().ok();
+    }
     options.parts =
         Some(Parts { meta, sync, stores, clock, fixture_route: true, windows: None });
     let (engine, events): (Engine, _) =

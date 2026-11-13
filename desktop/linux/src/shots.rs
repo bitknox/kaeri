@@ -365,6 +365,10 @@ pub fn run(shell: Rc<Shell>, dir: PathBuf, prefix: String, shots: Vec<String>) {
 /// Put the window in the state `shot` shows, and say how long to let it settle.
 fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
     #[cfg(feature = "fixtures")]
+    if let Some(settle) = crate::hunt::stage(shell, shot) {
+        return settle;
+    }
+    #[cfg(feature = "fixtures")]
     if let Some(settle) = crate::shots_reading::stage(shell, shot) {
         return settle;
     }
@@ -2032,7 +2036,11 @@ fn capture(
 
 /// The window drawn into `path` just after its next frame is painted, with the shot's popover
 /// on top; captured at once if no frame comes within a second.
-async fn painted(shell: &Rc<Shell>, path: &std::path::Path, shot: &str) -> Result<(), String> {
+pub(crate) async fn painted(
+    shell: &Rc<Shell>,
+    path: &std::path::Path,
+    shot: &str,
+) -> Result<(), String> {
     let window = shell.ctx.window.clone();
     let take = {
         let (player, window, path) =

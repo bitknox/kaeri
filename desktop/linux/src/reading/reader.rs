@@ -1211,6 +1211,96 @@ impl Reader {
         }
     }
 
+    /// Hunt only: the reader's state in one line.
+    #[cfg(feature = "fixtures")]
+    pub fn hunt_facts(&self) -> String {
+        let state = self.state.borrow();
+        let mut strip = 0;
+        let mut child = self.strip.first_child();
+        while let Some(c) = child {
+            strip += 1;
+            child = c.next_sibling();
+        }
+        format!(
+            "session={} work={:?} chapter={:?} visible={:?} novel={} textures={} files={} \
+             leaves={} index={} strip_children={} trail_empty={} picture={} mapped={} \
+             showing={} waiting={:?} failed={} line={:?} title={:?} mode={:?} dir={:?} strip_place={:?} scrub={}/{}",
+            state.session,
+            state.work.as_ref().map(|w| w.0.clone()),
+            state.chapter.as_ref().map(|c| c.id.as_str().to_owned()),
+            self.stack.visible_child_name(),
+            self.novel.borrow().is_some(),
+            state.textures.len(),
+            state.files.len(),
+            state.leaves.len(),
+            state.index,
+            strip,
+            self.trail.is_empty(),
+            self.picture.paintable().is_some(),
+            self.widget.is_mapped(),
+            self.showing.get(),
+            self.waiting.get(),
+            state.failed.len(),
+            self.line.label(),
+            self.title.label(),
+            state.mode,
+            state.direction,
+            self.strip_place().map(|p| p.image),
+            self.scrub_at.label(),
+            self.scrub_total.label(),
+        )
+    }
+
+    /// Hunt only: open the Chapters popover.
+    #[cfg(feature = "fixtures")]
+    pub fn hunt_chapters(&self) {
+        self.chapters_button.popup();
+    }
+
+    /// Hunt only: whether the Chapters popover shows.
+    #[cfg(feature = "fixtures")]
+    pub fn hunt_chapters_open(&self) -> bool {
+        self.chapters.popover.is_visible()
+    }
+
+    /// Hunt only: the Chapters popover, to search inside.
+    #[cfg(feature = "fixtures")]
+    pub fn hunt_chapters_popover(&self) -> gtk::Widget {
+        self.chapters.popover.clone().upcast()
+    }
+
+    /// Hunt only: the Chapters tab in the open popover.
+    #[cfg(feature = "fixtures")]
+    pub fn hunt_chapters_tab(&self) {
+        self.chapters.shot_tab("chapters");
+    }
+
+    /// Hunt only: press Try again on the failed plate. True when the plate was showing.
+    #[cfg(feature = "fixtures")]
+    pub fn hunt_try_again(&self) -> bool {
+        let shown = self.stack.visible_child_name().as_deref() == Some("failed");
+        self.failed_again.emit_clicked();
+        shown
+    }
+
+    /// Hunt only: a key as the reader takes it.
+    #[cfg(feature = "fixtures")]
+    pub fn hunt_key(self: &Rc<Self>, key: gdk::Key) {
+        self.take_key(key, gdk::ModifierType::empty());
+    }
+
+    /// Hunt only: pick a mode in the open reader's settings, as the sheet does.
+    #[cfg(feature = "fixtures")]
+    pub fn hunt_mode(&self, which: &str) {
+        let mode = match which {
+            "strip" => sheet::ModeChoice::Strip,
+            "ltr" => sheet::ModeChoice::LeftToRight,
+            "auto" => sheet::ModeChoice::Auto,
+            _ => sheet::ModeChoice::RightToLeft,
+        };
+        self.choose_mode(mode);
+    }
+
     /// Leave the reader; the engine saves the place as the session closes.
     pub fn close(&self) {
         let session = self.state.borrow().session;

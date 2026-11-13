@@ -237,6 +237,10 @@ impl Capabilities {
         // request's turn with it.
         let page = QA_PAGE.try_with(|_| ()).is_ok();
         let qa_turn = qa_gate(Some(&self.plugin_id), &request.url, qa_gap(), page).await;
+        // QA ONLY (r8 Linux harness): a refused source stops for the rest of the session.
+        if std::fs::metadata(format!("{}.stop", std::env::var("KAERI_QA_FETCH_LOG").unwrap_or_default())).is_ok() {
+            return Err(HostError::Transport("qa: stopped".into()));
+        }
         // QA ONLY: a poor network for plugin fetches, from the file KAERI_QA_NET names:
         // "offline" fails at once, "hang" waits out the deadline, "delay <ms>" adds a wait,
         // "drop <percent>" fails that share of requests.
@@ -298,6 +302,26 @@ impl Capabilities {
             .collect();
 
         let body = read_capped(response, self.limits.max_response_bytes).await?;
+        // QA ONLY (r8 Linux harness): log the answer, and stop the plugin after a refusal.
+        {
+            let head = String::from_utf8_lossy(&body[..body.len().min(4096)]).to_lowercase();
+            let refused = status == 429
+                || ((status == 403 || status == 503)
+                    && (head.contains("cf-chl") || head.contains("just a moment")));
+            if refused {
+                let _ = std::fs::write(format!("{}.stop", std::env::var("KAERI_QA_FETCH_LOG").unwrap_or_default()), "refused");
+            }
+            if let Ok(path) = std::env::var("KAERI_QA_FETCH_LOG") {
+                use std::io::Write as _;
+                let ms = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map(|d| d.as_millis())
+                    .unwrap_or(0);
+                if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+                    let _ = writeln!(f, "{ms} {} ANSWER {status} {}{}", self.plugin_id, body.len(), if refused { " REFUSED" } else { "" });
+                }
+            }
+        }
         Ok(Response { status, headers, body })
     }
 }

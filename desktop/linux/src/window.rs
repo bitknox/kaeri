@@ -304,7 +304,7 @@ pub struct Shell {
     pub ctx: Rc<Ctx>,
     pub player: Rc<PlayerView>,
     pub reader: Rc<crate::reading::reader::Reader>,
-    top: gtk::Stack,
+    pub top: gtk::Stack,
     sidebar: gtk::ListBox,
     foot: gtk::ListBox,
     settings: pages::settings::SettingsPage,
