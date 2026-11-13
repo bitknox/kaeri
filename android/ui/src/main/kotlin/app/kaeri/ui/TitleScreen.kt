@@ -876,7 +876,7 @@ private fun SeasonPage(
 /** [content] after 600 ms when [wait], else at once. */
 @Composable
 private fun WaitFor(wait: Boolean, content: @Composable () -> Unit) {
-    if (wait) AfterWait(content) else content()
+    if (wait) AfterWait(content = content) else content()
 }
 
 /** The actions' places while a season's title is on its way: the main button's, then the list's and the trailer's. */
