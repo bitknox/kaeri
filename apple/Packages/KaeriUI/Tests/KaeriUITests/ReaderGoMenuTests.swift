@@ -67,7 +67,8 @@ struct ReaderGoMenuTests {
         let model = ReaderModel()
         model.send = { _ in }
         model.open(work: "a:900301", chapter: "12")
-        for (medium, mode) in [(Medium.manga, ReaderMode.strip), (.novel, .paged)] {
+        let books: [(Medium, ReaderMode)] = [(.manga, .strip), (.novel, .paged)]
+        for (medium, mode) in books {
             let chapter = ChapterRow(
                 id: ChapterId("12"), label: "12", state: .unread, number: "12", title: nil, volume: nil,
                 published: nil, pages: 3, newChapter: false, download: nil, versions: 1, bookmarked: false)

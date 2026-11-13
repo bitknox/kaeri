@@ -5,6 +5,7 @@ import KaeriKit
 @testable import KaeriUI
 import Testing
 
+@MainActor
 struct UnnumberedChapterWordsTests {
     private func edition(chapters: UInt32, latest: String?) -> BookEditionRow {
         BookEditionRow(
