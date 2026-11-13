@@ -52,6 +52,17 @@ public struct KaeriCommands<Playback: View, PlayerWindowItems: View>: Commands {
     /// The items that change what the main window shows are dimmed while a book covers it.
     private var covered: Bool { BehindBook.covered(store) }
 
+    /// On iPhone and iPad the reader is a full-screen cover, and a sheet asked for from the window
+    /// under it puts the book away to come up. The Mac's reader draws in its window, so its sheets
+    /// come up over the book.
+    private var underCover: Bool {
+        #if os(iOS)
+        return covered
+        #else
+        return false
+        #endif
+    }
+
     public var body: some Commands {
         CommandGroup(replacing: .appSettings) {
             Button(L.menuSettings) { navigator.openSettings(navigator.settingsPane) }
@@ -63,9 +74,12 @@ public struct KaeriCommands<Playback: View, PlayerWindowItems: View>: Commands {
         CommandGroup(replacing: .newItem) {
             Button(L.openedOpen + "…") { navigator.openLinkShown = true } // i18n-skip
                 .keyboardShortcut("o", modifiers: .command)
+                .disabled(underCover)
             Button(L.menuJoinPluginStore) { navigator.invite = "" }
+                .disabled(underCover)
             // The invite link on the pasteboard, into the join sheet.
             Button(L.menuOpenInviteLink) { navigator.invite = Pasteboard.invite ?? "" }
+                .disabled(underCover)
             #if os(macOS)
             Divider()
             Button(L.menuShowInFinder) { DownloadFolder.show(store) }
