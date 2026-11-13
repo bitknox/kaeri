@@ -4,7 +4,7 @@ onboarding-demo-both-detail = Um episódio curto e um quadrinho curto, compartil
 home-demo-only-books = Só a demo está ativa. Adicione uma pasta, um servidor ou uma { -plugin-store } para ler seus próprios livros.
 home-spotlight-read = Ler
 demo-series-facts = { $pages ->
-    [one] Demo · Quadrinho · uma página
+    [one] Demo · Quadrinho · { $pages } página
     [many] Demo · Quadrinho · { $pages } de páginas
    *[other] Demo · Quadrinho · { $pages } páginas
  }
@@ -25,7 +25,7 @@ demo-chapters = Capítulos
 demo-also = Também na demo
 demo-credits = Créditos
 demo-pages = { $pages ->
-    [one] Uma página
+    [one] { $pages } página
     [many] { $pages } de páginas
    *[other] { $pages } páginas
  }

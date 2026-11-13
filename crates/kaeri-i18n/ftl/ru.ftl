@@ -849,7 +849,7 @@ export-chapter = Глава { $chapter }
 # Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch.
 export-waits-for-wifi =
     { $n ->
-        [one] Одна глава ещё не скачана, поэтому отправка дождётся Wi-Fi и продолжится сама.
+        [one] { $n } глава ещё не скачана, поэтому отправка дождётся Wi-Fi и продолжится сама.
         [few] { $n } главы ещё не скачаны, поэтому отправка дождётся Wi-Fi и продолжится сама.
         [many] { $n } глав ещё не скачано, поэтому отправка дождётся Wi-Fi и продолжится сама.
        *[other] { $n } главы ещё не скачаны, поэтому отправка дождётся Wi-Fi и продолжится сама.
@@ -1047,7 +1047,7 @@ reading-downloads-done-title = Загрузки завершены
 # The notification's text: one series' chapters are downloaded.
 reading-downloads-done-chapters =
     { $count ->
-        [one] Глава «{ $title }» готова для чтения офлайн.
+        [one] { $count } глава «{ $title }» готова для чтения офлайн.
         [few] { $count } главы «{ $title }» готовы для чтения офлайн.
         [many] { $count } глав «{ $title }» готовы для чтения офлайн.
        *[other] { $count } главы «{ $title }» готовы для чтения офлайн.
@@ -1056,7 +1056,7 @@ reading-downloads-done-chapters =
 # The notification's text: one light novel's parts are downloaded.
 reading-downloads-done-parts =
     { $count ->
-        [one] Часть «{ $title }» готова для чтения офлайн.
+        [one] { $count } часть «{ $title }» готова для чтения офлайн.
         [few] { $count } части «{ $title }» готовы для чтения офлайн.
         [many] { $count } частей «{ $title }» готовы для чтения офлайн.
        *[other] { $count } части «{ $title }» готовы для чтения офлайн.
@@ -1200,7 +1200,7 @@ store-invite-cancelled = Приглашение отменено. Ссылка �
 # Toast after cancelling an invite that people joined with.
 store-invite-cancelled-kept =
     { $count ->
-        [one] Приглашение отменено. Присоединившийся человек остаётся участником.
+        [one] Приглашение отменено. { $count } присоединившийся человек остаётся участником.
         [few] Приглашение отменено. Присоединившиеся ({ $count }) остаются участниками.
         [many] Приглашение отменено. Присоединившиеся ({ $count }) остаются участниками.
        *[other] Приглашение отменено. Присоединившиеся ({ $count }) остаются участниками.
@@ -1215,7 +1215,7 @@ store-open-join-off = Теперь подключиться могут толь�
 # Toast after a store owner turns off joining with the link, when some devices joined that way.
 store-open-join-off-devices =
     { $devices ->
-        [one] Теперь подключиться могут только приглашённые. устройство по ссылке продолжает работать, пока вы его не удалите.
+        [one] Теперь подключиться могут только приглашённые. { $devices } устройство по ссылке продолжает работать, пока вы его не удалите.
         [few] Теперь подключиться могут только приглашённые. устройства ({ $devices }), подключившиеся по ссылке, продолжают работать, пока вы их не удалите.
         [many] Теперь подключиться могут только приглашённые. устройства ({ $devices }), подключившиеся по ссылке, продолжают работать, пока вы их не удалите.
        *[other] Теперь подключиться могут только приглашённые. устройства ({ $devices }), подключившиеся по ссылке, продолжают работать, пока вы их не удалите.
@@ -1515,7 +1515,7 @@ notice-signed-out = Вы вышли из { $tracker }.
 # Toast after signing out of a tracker. The changes were not discarded: they are sent after the next sign-in.
 notice-signed-out-queue =
     { $count ->
-        [one] Вы вышли из { $tracker }. Одно изменение в очереди сохранено для следующего входа.
+        [one] Вы вышли из { $tracker }. { $count } изменение в очереди сохранено для следующего входа.
         [few] Вы вышли из { $tracker }. { $count } изменения в очереди сохранены для следующего входа.
         [many] Вы вышли из { $tracker }. { $count } изменений в очереди сохранены для следующего входа.
        *[other] Вы вышли из { $tracker }. { $count } изменения в очереди сохранены для следующего входа.
@@ -1560,7 +1560,7 @@ notice-episode-aired = { $title }, серия { $episode }, вышла, пока
 # Toast, and desktop notification, for several episodes that aired while the app was closed.
 notice-episodes-aired =
     { $count ->
-        [one] Вышла новая серия тайтла, который вы смотрите. Она есть в календаре.
+        [one] Вышла { $count } новая серия тайтлов, которые вы смотрите. Календарь уже обновлён.
         [few] Вышли { $count } новые серии тайтлов, которые вы смотрите. Они есть в календаре.
         [many] Вышли { $count } новых серий тайтлов, которые вы смотрите. Они есть в календаре.
        *[other] Вышли { $count } новые серии тайтлов, которые вы смотрите. Они есть в календаре.
@@ -1626,7 +1626,7 @@ start-failed-player = Не удалось запустить плеер. { $reas
 # Toast after episodes are added to the download queue.
 notice-episodes-queued =
     { $count ->
-        [one] В очередь добавлен один эпизод.
+        [one] В очередь добавлен { $count } эпизод.
         [few] В очередь добавлены { $count } эпизода.
         [many] В очередь добавлены { $count } эпизодов.
        *[other] В очередь добавлены { $count } эпизодов.
@@ -1788,7 +1788,7 @@ party-sources-none-listed = Ни один источник не содержит
 # Line above the list of sources that have the watch party's episode.
 party-sources-found-line =
     { $count ->
-        [one] Один источник содержит эпизод. Выбранный источник запускает совместный просмотр.
+        [one] { $count } источник содержит эпизод. Выбранный источник запускает совместный просмотр.
         [few] Источники с эпизодом: { $count }. Выбранный источник запускает совместный просмотр.
         [many] Источники с эпизодом: { $count }. Выбранный источник запускает совместный просмотр.
        *[other] Источники с эпизодом: { $count }. Выбранный источник запускает совместный просмотр.
@@ -1830,7 +1830,7 @@ player-channels-stereo = Стерео
 # Name of an audio track with some other number of channels.
 player-channels =
     { $count ->
-        [one] Один канал
+        [one] { $count } канал
         [few] { $count } канала
         [many] { $count } каналов
        *[other] { $count } канала
@@ -2106,7 +2106,7 @@ linux-reader-open-failed-plain = Не удалось открыть эту гл�
 # Choice in Send to e-reader's Chapters row: the next unread chapters, as many as the number.
 linux-send-next =
     { $n ->
-        [one] Следующая непрочитанная
+        [one] Следующая { $n } непрочитанная
         [few] Следующие { $n } непрочитанные
         [many] Следующие { $n } непрочитанных
        *[other] Следующие { $n } непрочитанных
@@ -2262,7 +2262,7 @@ shell-connect-tracker = Подключить { $tracker }
 # Sidebar line under the account when changes wait to be sent to the tracker.
 shell-changes-waiting =
     { $count ->
-        [one] Одно изменение ждёт синхронизации
+        [one] { $count } изменение ждёт синхронизации
         [few] { $count } изменения ждут синхронизации
         [many] { $count } изменений ждут синхронизации
        *[other] { $count } изменения ждут синхронизации
@@ -2325,7 +2325,7 @@ close-stop-and-close = Остановить и закрыть
 # Body of the close question when episodes download.
 close-body-downloading =
     { $count ->
-        [one] Одна серия загружается или ждёт очереди. Продолжить загрузку после закрытия окна или остановить?
+        [one] { $count } серия загружается или ждёт очереди. Продолжить загрузку после закрытия окна или остановить?
         [few] { $count } серии загружаются или ждут очереди. Продолжить загрузку после закрытия окна или остановить их?
         [many] { $count } серий загружаются или ждут очереди. Продолжить загрузку после закрытия окна или остановить их?
        *[other] { $count } серии загружаются или ждут очереди. Продолжить загрузку после закрытия окна или остановить их?
@@ -2334,7 +2334,7 @@ close-body-downloading =
 # Body of the close question when episodes seed.
 close-body-seeding =
     { $count ->
-        [one] Одна серия раздаётся. Продолжить раздачу после закрытия окна или остановить её?
+        [one] { $count } серия раздаётся. Продолжить раздачу после закрытия окна или остановить её?
         [few] { $count } серии раздаются. Продолжить раздачу после закрытия окна или остановить их?
         [many] { $count } серий раздаются. Продолжить раздачу после закрытия окна или остановить их?
        *[other] { $count } серии раздаются. Продолжить раздачу после закрытия окна или остановить их?
@@ -4960,7 +4960,7 @@ stores-anonymous-never-seen = Ещё не появлялось
 # Row on the members screen that removes the single device that joined with the store's link, or all of them.
 stores-remove-devices =
     { $count ->
-        [one] Удалить его
+        [one] Удалить { $count } устройство
         [few] Удалить все { $count }
         [many] Удалить все { $count }
        *[other] Удалить все { $count }
@@ -5029,7 +5029,7 @@ stores-confirm-remove-device = Удалить это устройство?
 # Question in the heading of the confirmation to remove devices that joined with the store's link.
 stores-confirm-remove-devices =
     { $count ->
-        [one] Удалить устройство, присоединившееся по ссылке?
+        [one] Удалить { $count } устройство, присоединившееся по ссылке?
         [few] Удалить все { $count } устройства, присоединившиеся по ссылке?
         [many] Удалить все { $count } устройств, присоединившиеся по ссылке?
        *[other] Удалить все { $count } устройства, присоединившиеся по ссылке?
@@ -5077,7 +5077,7 @@ stores-leave-revoked = Доступ этого устройствоа к маг�
 # Line of the remove member confirmation.
 stores-remove-member-devices =
     { $count ->
-        [one] Их устройство перестанет работать с этим магазином сразу.
+        [one] Их { $count } устройство перестанет работать с этим магазином сразу.
         [few] Их { $count } устройства перестанут работать с этим магазином сразу.
         [many] Их { $count } устройств перестанут работать с этим магазином сразу.
        *[other] Их { $count } устройства перестанут работать с этим магазином сразу.
@@ -6133,7 +6133,7 @@ discussion-title-episode = Обсуждение эпизода { $episode }
 # Quiet line under an episode that opens its discussion.
 discussion-row =
     { $count ->
-        [one] Обсуждение · один комментарий
+        [one] Обсуждение · { $count } комментарий
         [few] Обсуждение · { $count } комментария
         [many] Обсуждение · { $count } комментариев
        *[other] Обсуждение · { $count } комментария
@@ -6142,7 +6142,7 @@ discussion-row =
 # Count of comments in the header of the discussion.
 discussion-count =
     { $count ->
-        [one] Один комментарий
+        [one] { $count } комментарий
         [few] { $count } комментария
         [many] { $count } комментариев
        *[other] { $count } комментария
@@ -6157,7 +6157,7 @@ discussion-reply = Ответить
 # Line under a reply that has more replies folded in it. The line opens them.
 discussion-more-replies =
     { $count ->
-        [one] Ещё один ответ
+        [one] Ещё { $count } ответ
         [few] Ещё { $count } ответа
         [many] Ещё { $count } ответов
        *[other] Ещё { $count } ответа
@@ -6415,7 +6415,7 @@ downloads-notice-done-detail = { $title } · можно смотреть без 
 # Notification text while several episodes download.
 downloads-notice-running =
     { $count ->
-        [one] Загружается один эпизод
+        [one] Загружается { $count } эпизод
         [few] Загружаются { $count } эпизода
         [many] Загружаются { $count } эпизодов
        *[other] Загружаются { $count } эпизодов
@@ -8089,7 +8089,7 @@ party-chat-wait = Ждите { $seconds } с
 # Spoken once when sending waits, for screen readers.
 party-chat-wait-spoken =
     { $seconds ->
-        [one] Подождите одну секунду
+        [one] Подождите { $seconds } секунду
         [few] Подождите { $seconds } секунды
         [many] Подождите { $seconds } секунд
        *[other] Подождите { $seconds } секунды
@@ -8591,7 +8591,7 @@ player-still-watching = Вы ещё смотрите?
 # Line under the still-watching title.
 player-still-watching-detail =
     { $count ->
-        [one] Пауза после одного эпизода подряд.
+        [one] Пауза после { $count } эпизода подряд.
         [few] Пауза после { $count } эпизода подряд.
         [many] Пауза после { $count } эпизодов подряд.
        *[other] Пауза после { $count } эпизода подряд.
@@ -10797,7 +10797,7 @@ search-line-service = В { $service }
 # The count line under a title in a list or on a card: how many episodes a finished show has.
 count-episodes =
     { $count ->
-        [one] Один эпизод
+        [one] { $count } эпизод
         [few] { $count } эпизода
         [many] { $count } эпизодов
        *[other] { $count } эпизода
@@ -10815,7 +10815,7 @@ count-out-of-short = { $out } из { $total }
 # The count line of a show that is airing and has no known total: episodes out so far.
 count-out =
     { $count ->
-        [one] Вышел один эпизод
+        [one] Вышел { $count } эпизод
         [few] Вышло { $count } эпизода
         [many] Вышло { $count } эпизодов
        *[other] Вышло { $count } эпизода
@@ -10842,7 +10842,7 @@ count-dub-through = Дубляж { $through }
 # What a screen reader says for a count line: the long form of a finished show.
 count-spoken-episodes =
     { $count ->
-        [one] Один эпизод
+        [one] { $count } эпизод
         [few] { $count } эпизода
         [many] { $count } эпизодов
        *[other] { $count } эпизода
@@ -10854,7 +10854,7 @@ count-spoken-out-of = Вышло эпизодов: { $out } из { $total }
 # What a screen reader says for a show that is airing with no known total.
 count-spoken-out =
     { $count ->
-        [one] Вышел один эпизод
+        [one] Вышел { $count } эпизод
         [few] Вышло { $count } эпизода
         [many] Вышло { $count } эпизодов
        *[other] Вышло { $count } эпизода
@@ -12970,7 +12970,7 @@ stores-invite-joined = { $name } · присоединился { $when }
 # Detail of the confirmation that cancels an invite that was used.
 stores-cancel-invite-detail =
     { $count ->
-        [one] Больше никто не сможет присоединиться. Присоединившийся остаётся участником.
+        [one] Больше никто не сможет присоединиться. { $count } присоединившийся остаётся участником.
         [few] Больше никто не сможет присоединиться. Присоединившиеся ({ $count }) остаются участниками.
         [many] Больше никто не сможет присоединиться. Присоединившиеся ({ $count }) остаются участниками.
        *[other] Больше никто не сможет присоединиться. Присоединившиеся ({ $count }) остаются участниками.
@@ -13633,7 +13633,7 @@ cloud-app-password-note = Создайте его в Nextcloud, в раздел�
 # Devices row value while sync is off and TVs are paired for Play on TV. The row says "Sync off", then this.
 devices-tvs-for-play =
     { $count ->
-        [one] Один телевизор для «Смотреть на ТВ»
+        [one] { $count } телевизор для «Смотреть на ТВ»
         [few] { $count } телевизора для «Смотреть на ТВ»
         [many] { $count } телевизоров для «Смотреть на ТВ»
        *[other] { $count } телевизора для «Смотреть на ТВ»
@@ -13888,7 +13888,7 @@ episode-range-label = Диапазон серий
 # One line that stands for the watched episodes at the top of a range. Opening it shows them.
 episode-fold =
     { $count ->
-        [one] Одна просмотренная серия
+        [one] { $count } просмотренная серия
         [few] { $count } просмотренные серии
         [many] { $count } просмотренных серий
        *[other] { $count } просмотренной серии

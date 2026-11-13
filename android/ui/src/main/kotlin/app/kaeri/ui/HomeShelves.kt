@@ -43,6 +43,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
@@ -57,7 +58,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import java.time.LocalDate
 import java.time.format.TextStyle
-import java.util.Locale
 import app.kaeri.design.ArtShape
 import app.kaeri.design.ShowTitle
 import app.kaeri.design.tabular
@@ -190,6 +190,7 @@ private fun ContinueCard(item: HomeItem, width: Dp, h: HomeHandlers) {
     val store = LocalAppStore.current
     val navigator = LocalNavigator.current
     val context = LocalContext.current
+    val resources = LocalResources.current
     val haptics = LocalHapticFeedback.current
     val snackbars = LocalSnackbars.current
     val colors = MaterialTheme.colorScheme
@@ -206,7 +207,7 @@ private fun ContinueCard(item: HomeItem, width: Dp, h: HomeHandlers) {
         if (episode != null) {
             haptics.performHapticFeedback(HapticFeedbackType.ToggleOn)
             store.setWatched(id, listOf(episode.toString()))
-            snackbars.show(Strings.homeMarkedWatched(context, episode.toInt()), context.getString(R.string.action_undo)) {
+            snackbars.show(Strings.homeMarkedWatched(context, episode.toInt()), resources.getString(R.string.action_undo)) {
                 store.setWatched(id, listOf(episode.toString()), watched = false)
             }
         }
@@ -385,7 +386,7 @@ private fun DayCell(day: Int, items: List<HomeItem>, cap: Int) {
     val navigator = LocalNavigator.current
     val colors = MaterialTheme.colorScheme
     val date = remember(day) { LocalDate.now().plusDays(day.toLong()) }
-    val name = if (day == 0) Strings.homeToday(context) else date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
+    val name = if (day == 0) Strings.homeToday(context) else date.dayOfWeek.getDisplayName(TextStyle.FULL, LocalConfiguration.current.locales[0])
     Column(Modifier.fillMaxWidth()) {
         Text(name, style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant, modifier = Modifier.semantics { heading() })
         HorizontalDivider(Modifier.padding(vertical = 4.dp), color = colors.outlineVariant)

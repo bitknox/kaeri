@@ -246,7 +246,7 @@ cause-airs-tomorrow = amanhã às { $time }
 # Part of an air time: the broadcast is within the next week.
 cause-airs-in-days =
     { $days ->
-        [one] em um dia às { $time }
+        [one] em { $days } dia às { $time }
         [many] em { $days } dias às { $time }
        *[other] em { $days } dias às { $time }
     }
@@ -281,7 +281,7 @@ cause-no-source-could-list-show = Nenhuma fonte conseguiu listar esta série, en
 # Part of a finished download's toast: subtitle files were merged into the video.
 cause-subtitles-merged =
     { $tracks ->
-        [one] Uma faixa de legenda foi incorporada ao vídeo.
+        [one] { $tracks } faixa de legenda foi incorporada ao vídeo.
         [many] { $tracks } faixas de legenda foram incorporadas ao vídeo.
        *[other] { $tracks } faixas de legenda foram incorporadas ao vídeo.
     }
@@ -292,7 +292,7 @@ cause-subtitles-left-apart = As legendas ficam como arquivos separados. { $reaso
 # Part of a download toast: how many episodes of the range were in the queue already.
 cause-already-in-downloads =
     { $count ->
-        [one] Um episódio já está nos downloads.
+        [one] { $count } episódio já está nos downloads.
         [many] { $count } episódios já estão nos downloads.
        *[other] { $count } episódios já estão nos downloads.
     }
@@ -465,7 +465,7 @@ notice-download-removed = Download removido.
 # Toast after finished downloads were cleared from the list.
 notice-downloads-cleared =
     { $count ->
-        [one] Um download concluído foi removido da lista.
+        [one] { $count } download concluído foi removido da lista.
         [many] { $count } downloads concluídos foram removidos da lista.
        *[other] { $count } downloads concluídos foram removidos da lista.
     }
@@ -473,7 +473,7 @@ notice-downloads-cleared =
 # Toast after the skip times the viewer marked were cleared, from Settings.
 notice-skip-marks-cleared =
     { $count ->
-        [one] O tempo de pulo que você marcou foi apagado.
+        [one] { $count } tempo de pulo que você marcou foi apagado.
         [many] { $count } de tempos de pulo que você marcou foram apagados.
        *[other] { $count } tempos de pulo que você marcou foram apagados.
     }
@@ -508,7 +508,7 @@ notice-downloads-none-new-stopped = Nada novo foi adicionado à fila. { $existin
 # Toast after a range was asked for, some episodes were queued and some were there already. `existing` is the sentence of `cause-already-in-downloads`.
 notice-episodes-queued-existing =
     { $count ->
-        [one] Um episódio foi adicionado à fila. { $existing }
+        [one] { $count } episódio foi adicionado à fila. { $existing }
         [many] { $count } episódios foram adicionados à fila. { $existing }
        *[other] { $count } episódios foram adicionados à fila. { $existing }
     }
@@ -516,7 +516,7 @@ notice-episodes-queued-existing =
 # Toast as above, with the reason the range stopped.
 notice-episodes-queued-stopped =
     { $count ->
-        [one] Um episódio foi adicionado à fila, e então a busca parou. { $reason }
+        [one] { $count } episódio foi adicionado à fila, e então a busca parou. { $reason }
         [many] { $count } episódios foram adicionados à fila, e então a busca parou. { $reason }
        *[other] { $count } episódios foram adicionados à fila, e então a busca parou. { $reason }
     }
@@ -524,7 +524,7 @@ notice-episodes-queued-stopped =
 # Toast as above, with some episodes in the queue already and the reason the range stopped. `existing` is the sentence of `cause-already-in-downloads`; `reason` is a sentence saying why the range stopped.
 notice-episodes-queued-existing-stopped =
     { $count ->
-        [one] Um episódio foi adicionado à fila, e então a busca parou. { $existing } { $reason }
+        [one] { $count } episódio foi adicionado à fila, e então a busca parou. { $existing } { $reason }
         [many] { $count } episódios foram adicionados à fila, e então a busca parou. { $existing } { $reason }
        *[other] { $count } episódios foram adicionados à fila, e então a busca parou. { $existing } { $reason }
     }
@@ -583,7 +583,7 @@ reading-usually-sundays = Geralmente aos domingos
 # Under a cover or on a series page: how often new chapters come out, in weeks.
 reading-about-every-weeks =
     { $weeks ->
-        [one] Cerca de toda semana
+        [one] A cada { $weeks } semana, em média
         [many] A cada { $weeks } de semanas
        *[other] Cerca de a cada { $weeks } semanas
     }
@@ -720,7 +720,7 @@ reading-status-not-yet = Ainda não saiu
 # Under a cover or on a series page: how many chapters the series has.
 reading-chapters =
     { $count ->
-        [one] 1 capítulo
+        [one] { $count } capítulo
         [many] { $count } de capítulos
        *[other] { $count } capítulos
     }
@@ -728,7 +728,7 @@ reading-chapters =
 # Under a cover or on a series page: how many volumes the series has.
 reading-volumes =
     { $count ->
-        [one] 1 volume
+        [one] { $count } volume
         [many] { $count } de volumes
        *[other] { $count } volumes
     }
@@ -838,7 +838,7 @@ export-chapter = Capítulo { $chapter }
 # Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch.
 export-waits-for-wifi =
     { $n ->
-        [one] Um capítulo ainda não foi baixado, então este envio espera o Wi-Fi e continua sozinho.
+        [one] { $n } capítulo ainda não foi baixado, então este envio espera o Wi-Fi e continua sozinho.
         [many] { $n } de capítulos ainda não foram baixados, então este envio espera o Wi-Fi e continua sozinho.
        *[other] { $n } capítulos ainda não foram baixados, então este envio espera o Wi-Fi e continua sozinho.
     }
@@ -894,7 +894,7 @@ reading-row-bookmarked = Com marcador
 # A chapter row: how long its pages are, for a file on the device.
 reading-row-pages =
     { $n ->
-        [one] 1 página
+        [one] { $n } página
         [many] { $n } de páginas
        *[other] { $n } páginas
     }
@@ -902,7 +902,7 @@ reading-row-pages =
 # A chapter row: how many versions the person's sources have of it. The row's menu lists them.
 reading-row-versions =
     { $n ->
-        [one] 1 opção
+        [one] { $n } opção
         [many] { $n } de opções
        *[other] { $n } opções
     }
@@ -922,7 +922,7 @@ reading-ago-yesterday = ontem
 # A chapter row: when it was read or came out, in days, under a week.
 reading-ago-days =
     { $days ->
-        [one] há 1 dia
+        [one] há { $days } dia
         [many] há { $days } de dias
        *[other] há { $days } dias
     }
@@ -930,7 +930,7 @@ reading-ago-days =
 # A chapter row: when it was read or came out, in weeks, under two months.
 reading-ago-weeks =
     { $weeks ->
-        [one] há 1 semana
+        [one] há { $weeks } semana
         [many] há { $weeks } de semanas
        *[other] há { $weeks } semanas
     }
@@ -938,7 +938,7 @@ reading-ago-weeks =
 # A chapter row: when it was read or came out, in months, under a year.
 reading-ago-months =
     { $months ->
-        [one] há 1 mês
+        [one] há { $months } mês
         [many] há { $months } de meses
        *[other] há { $months } meses
     }
@@ -946,7 +946,7 @@ reading-ago-months =
 # A chapter row: when it was read or came out, in years.
 reading-ago-years =
     { $years ->
-        [one] há 1 ano
+        [one] há { $years } ano
         [many] há { $years } de anos
        *[other] há { $years } anos
     }
@@ -978,7 +978,7 @@ reading-miss-down = Sem responder
 # How many parts of a light novel are downloaded.
 reading-dl-parts =
     { $count ->
-        [one] 1 parte
+        [one] { $count } parte
         [many] { $count } de partes
        *[other] { $count } partes
     }
@@ -1028,7 +1028,7 @@ reading-downloads-done-title = Downloads concluídos
 # The notification's text: one series' chapters are downloaded.
 reading-downloads-done-chapters =
     { $count ->
-        [one] Um capítulo de { $title } está pronto para ler offline.
+        [one] { $count } capítulo de { $title } está pronto para ler offline.
         [many] { $count } de capítulos de { $title } estão prontos para ler offline.
        *[other] { $count } capítulos de { $title } estão prontos para ler offline.
     }
@@ -1036,7 +1036,7 @@ reading-downloads-done-chapters =
 # The notification's text: one light novel's parts are downloaded.
 reading-downloads-done-parts =
     { $count ->
-        [one] Uma parte de { $title } está pronta para ler offline.
+        [one] { $count } parte de { $title } está pronta para ler offline.
         [many] { $count } de partes de { $title } estão prontas para ler offline.
        *[other] { $count } partes de { $title } estão prontas para ler offline.
     }
@@ -1095,7 +1095,7 @@ read-hit-episodes = Episódios 1 a { $last }
 # Under a source's hit in Search: a light novel's parts it holds.
 read-hit-parts =
     { $count ->
-        [one] 1 parte
+        [one] { $count } parte
         [many] { $count } de partes
        *[other] { $count } partes
     }
@@ -1103,7 +1103,7 @@ read-hit-parts =
 # Under a source's hit in Search: the book files it holds.
 read-hit-files =
     { $count ->
-        [one] 1 arquivo
+        [one] { $count } arquivo
         [many] { $count } de arquivos
        *[other] { $count } arquivos
     }
@@ -1111,7 +1111,7 @@ read-hit-files =
 # Under a source's hit in Search: the book files it holds, all in one format ("CBZ").
 read-hit-files-format =
     { $count ->
-        [one] 1 arquivo · { $format }
+        [one] { $count } arquivo · { $format }
         [many] { $count } de arquivos · { $format }
        *[other] { $count } arquivos · { $format }
     }
@@ -1176,7 +1176,7 @@ store-invite-cancelled = Convite cancelado. O link não funciona mais.
 # Toast after cancelling an invite that people joined with.
 store-invite-cancelled-kept =
     { $count ->
-        [one] Convite cancelado. A pessoa que entrou continua como membro.
+        [one] Convite cancelado. { $count } pessoa que entrou continua como membro.
         [many] Convite cancelado. As { $count } de pessoas que entraram continuam como membros.
        *[other] Convite cancelado. As { $count } pessoas que entraram continuam como membros.
     }
@@ -1190,7 +1190,7 @@ store-open-join-off = Agora só entra quem você convidar.
 # Toast after a store owner turns off joining with the link, when some devices joined that way.
 store-open-join-off-devices =
     { $devices ->
-        [one] Agora só entra quem você convidar. O dispositivo que entrou pelo link continua funcionando até você removê-lo.
+        [one] Agora só entra quem você convidar. { $devices } dispositivo que entrou pelo link continua funcionando até você removê-lo.
         [many] Agora só entra quem você convidar. Os { $devices } dispositivos que entraram pelo link continuam funcionando até você removê-los.
        *[other] Agora só entra quem você convidar. Os { $devices } dispositivos que entraram pelo link continuam funcionando até você removê-los.
     }
@@ -1231,7 +1231,7 @@ plugin-installed-outdated = { $plugin } foi instalado, mas foi criado para uma v
 # Note on the sources screen when plugins were skipped because they were built for an older plugin interface.
 plugins-outdated =
     { $count ->
-        [one] Um plugin foi criado para uma versão mais antiga do Kaeri e precisa ser atualizado: { $names }.
+        [one] { $count } plugin foi criado para uma versão mais antiga do Kaeri e precisa ser atualizado: { $names }.
         [many] { $count } de plugins foram criados para uma versão mais antiga do Kaeri e precisam ser atualizados: { $names }.
        *[other] { $count } plugins foram criados para uma versão mais antiga do Kaeri e precisam ser atualizados: { $names }.
     }
@@ -1487,7 +1487,7 @@ notice-signed-out = Desconectado do { $tracker }.
 # Toast after signing out of a tracker. The changes were not discarded: they are sent after the next sign-in.
 notice-signed-out-queue =
     { $count ->
-        [one] Desconectado do { $tracker }. Uma alteração na fila foi mantida para a próxima conexão.
+        [one] Desconectado do { $tracker }. { $count } alteração na fila foi mantida para a próxima conexão.
         [many] Desconectado do { $tracker }. { $count } alterações na fila foram mantidas para a próxima conexão.
        *[other] Desconectado do { $tracker }. { $count } alterações na fila foram mantidas para a próxima conexão.
     }
@@ -1531,7 +1531,7 @@ notice-episode-aired = { $title }, episódio { $episode }, foi ao ar enquanto vo
 # Toast, and desktop notification, for several episodes that aired while the app was closed.
 notice-episodes-aired =
     { $count ->
-        [one] Um novo episódio de uma série que você acompanha foi ao ar. Ele está no calendário.
+        [one] { $count } novo episódio de uma série que você acompanha foi ao ar. Ele está no calendário.
         [many] { $count } novos episódios de séries que você acompanha foram ao ar. Eles estão no calendário.
        *[other] { $count } novos episódios de séries que você acompanha foram ao ar. Eles estão no calendário.
     }
@@ -1596,7 +1596,7 @@ start-failed-player = O player não conseguiu iniciar. { $reason }
 # Toast after episodes are added to the download queue.
 notice-episodes-queued =
     { $count ->
-        [one] Um episódio adicionado à fila.
+        [one] { $count } episódio adicionado à fila.
         [many] { $count } episódios adicionados à fila.
        *[other] { $count } episódios adicionados à fila.
     }
@@ -1754,7 +1754,7 @@ party-sources-none-listed = Nenhuma fonte lista o episódio { $episode }. As fon
 # Line above the list of sources that have the watch party's episode.
 party-sources-found-line =
     { $count ->
-        [one] Uma fonte tem o episódio. A que você escolher reproduz com a sessão em grupo.
+        [one] { $count } fonte tem o episódio. A que você escolher reproduz com a sessão em grupo.
         [many] { $count } fontes têm o episódio. A que você escolher reproduz com a sessão em grupo.
        *[other] { $count } fontes têm o episódio. A que você escolher reproduz com a sessão em grupo.
     }
@@ -1795,7 +1795,7 @@ player-channels-stereo = Estéreo
 # Name of an audio track with some other number of channels.
 player-channels =
     { $count ->
-        [one] Um canal
+        [one] { $count } canal
         [many] { $count } canais
        *[other] { $count } canais
     }
@@ -1821,7 +1821,7 @@ player-announce-undo = { $line }. Pressione U para desfazer.
 # Accessible name of a comment's like button: the word Like and how many likes it has.
 discussion-like-named =
     { $count ->
-        [one] Curtir, uma curtida
+        [one] Curtir, { $count } curtida
         [many] Curtir, { $count } de curtidas
        *[other] Curtir, { $count } curtidas
     }
@@ -2068,7 +2068,7 @@ linux-reader-open-failed-plain = Não foi possível abrir este capítulo
 # Choice in Send to e-reader's Chapters row: the next unread chapters, as many as the number.
 linux-send-next =
     { $n ->
-        [one] O capítulo seguinte não lido
+        [one] { $n } seguinte não lido
         [many] Os { $n } seguintes não lidos
        *[other] Os { $n } seguintes não lidos
     }
@@ -2082,7 +2082,7 @@ linux-send-none-unread = Todos os capítulos foram lidos
 # Toast after the prepared files were saved to a folder.
 linux-send-saved =
     { $n ->
-        [one] O arquivo foi salvo
+        [one] { $n } arquivo foi salvo
         [many] { $n } arquivos foram salvos
        *[other] { $n } arquivos foram salvos
     }
@@ -2147,7 +2147,7 @@ accounts-sync-detail = O progresso e as mudanças de lista são sincronizados co
 # Line under a signed-in account while changes wait for the connection.
 accounts-changes-waiting-offline =
     { $count ->
-        [one] Uma mudança aguardando você ficar online
+        [one] { $count } mudança aguardando você ficar online
         [many] { $count } mudanças aguardando você ficar online
        *[other] { $count } mudanças aguardando você ficar online
     }
@@ -2221,7 +2221,7 @@ shell-connect-tracker = Conectar { $tracker }
 # Sidebar line under the account when changes wait to be sent to the tracker.
 shell-changes-waiting =
     { $count ->
-        [one] 1 alteração para sincronizar
+        [one] { $count } alteração para sincronizar
         [many] { $count } alterações para sincronizar
        *[other] { $count } alterações para sincronizar
     }
@@ -2283,7 +2283,7 @@ close-stop-and-close = Parar e fechar
 # Body of the close question when episodes download.
 close-body-downloading =
     { $count ->
-        [one] Um episódio está sendo baixado ou aguardando. Manter o download depois que a janela fechar, ou parar?
+        [one] { $count } episódio está sendo baixado ou aguardando. Manter o download depois que a janela fechar, ou parar?
         [many] { $count } episódios estão sendo baixados ou aguardando. Manter os downloads depois que a janela fechar, ou parar?
        *[other] { $count } episódios estão sendo baixados ou aguardando. Manter os downloads depois que a janela fechar, ou parar?
     }
@@ -2291,7 +2291,7 @@ close-body-downloading =
 # Body of the close question when episodes seed.
 close-body-seeding =
     { $count ->
-        [one] Um episódio está semeando. Manter depois que a janela fechar, ou parar?
+        [one] { $count } episódio está semeando. Manter depois que a janela fechar, ou parar?
         [many] { $count } episódios estão sendo semeados. Manter depois que a janela fechar, ou parar?
        *[other] { $count } episódios estão sendo semeados. Manter depois que a janela fechar, ou parar?
     }
@@ -2448,7 +2448,7 @@ pair-done-action = Concluir
 # Under a release in the source picker: how many people share it right now.
 source-picker-seeders-linux =
     { $count ->
-        [one] Um semeador
+        [one] { $count } semeador
         [many] { $count } semeadores
        *[other] { $count } semeadores
     }
@@ -2582,7 +2582,7 @@ sources-empty-or = Ou
 # A folder's line once it is read.
 library-row-summary-linux =
     { $episodes ->
-        [one] 1 episódio de { $series } séries
+        [one] { $episodes } episódio de { $series } séries
         [many] { $episodes } de episódios de { $series } séries
        *[other] { $episodes } episódios de { $series } séries
     }
@@ -2602,7 +2602,7 @@ library-best-guess-linux = Melhor palpite: { $title }
 # Line on a result in the match picker whose episode count does not fit the folder's files.
 library-fix-count-mismatch-linux =
     { $episodes ->
-        [one] Tem 1 episódio, esta pasta tem { $files }
+        [one] Tem { $episodes } episódio, esta pasta tem { $files }
         [many] Tem { $episodes } de episódios, esta pasta tem { $files }
        *[other] Tem { $episodes } episódios, esta pasta tem { $files }
     }
@@ -3679,7 +3679,7 @@ accounts-needs-sign-in = Entre de novo em { $tracker }. Pressione { $key } para 
 # Toast when sync differences appear. The key opens the list of them, as the key map draws it.
 accounts-conflicts-found =
     { $count ->
-        [one] 1 diferença de sincronização encontrada. Pressione { $key } para revisar.
+        [one] { $count } diferença de sincronização encontrada. Pressione { $key } para revisar.
         [many] { $count } diferenças de sincronização encontradas. Pressione { $key } para revisá-las.
        *[other] { $count } diferenças de sincronização encontradas. Pressione { $key } para revisá-las.
     }
@@ -3777,7 +3777,7 @@ accounts-row-not-connected = Não conectado
 # Part of an account's overlay row: changes waiting to be sent.
 accounts-row-queued =
     { $count ->
-        [one] 1 alteração na fila
+        [one] { $count } alteração na fila
         [many] { $count } alterações na fila
        *[other] { $count } alterações na fila
     }
@@ -3973,7 +3973,7 @@ lists-progress-aired =
 # Beside the progress meter when there is nothing to count against.
 lists-progress-watched =
     { $count ->
-        [one] 1 episódio assistido
+        [one] { $count } episódio assistido
         [many] { $count } episódios assistidos
        *[other] { $count } episódios assistidos
     }
@@ -4895,7 +4895,7 @@ stores-anonymous-never-seen = Ainda não visto
 # Row on the members screen that removes the single device that joined with the store's link, or all of them.
 stores-remove-devices =
     { $count ->
-        [one] Remover
+        [one] Remover { $count }
         [many] Remover todos os { $count }
        *[other] Remover todos os { $count }
     }
@@ -4963,7 +4963,7 @@ stores-confirm-remove-device = Remover este dispositivo?
 # Question in the heading of the confirmation to remove devices that joined with the store's link.
 stores-confirm-remove-devices =
     { $count ->
-        [one] Remover o dispositivo que entrou pelo link?
+        [one] Remover { $count } dispositivo que entrou pelo link?
         [many] Remover todos os { $count } dispositivos que entraram pelo link?
        *[other] Remover todos os { $count } dispositivos que entraram pelo link?
     }
@@ -5010,7 +5010,7 @@ stores-leave-revoked = O acesso deste dispositivo à loja foi revogado.
 # Line of the remove member confirmation.
 stores-remove-member-devices =
     { $count ->
-        [one] O dispositivo desta pessoa para de funcionar com esta loja imediatamente.
+        [one] { $count } dispositivo desta pessoa para de funcionar com esta loja imediatamente.
         [many] Os { $count } dispositivos desta pessoa param de funcionar com esta loja imediatamente.
        *[other] Os { $count } dispositivos desta pessoa param de funcionar com esta loja imediatamente.
     }
@@ -5855,7 +5855,7 @@ pad-help-page-down = Descer uma página
 # Controller help: seeks back in the player.
 pad-help-seek-back =
     { $seconds ->
-        [one] Voltar um segundo
+        [one] Voltar { $seconds } segundo
         [many] Voltar { $seconds } segundos
        *[other] Voltar { $seconds } segundos
     }
@@ -5863,7 +5863,7 @@ pad-help-seek-back =
 # Controller help: seeks forward in the player.
 pad-help-seek-forward =
     { $seconds ->
-        [one] Avançar um segundo
+        [one] Avançar { $seconds } segundo
         [many] Avançar { $seconds } segundos
        *[other] Avançar { $seconds } segundos
     }
@@ -6063,7 +6063,7 @@ discussion-title-episode = Discussão do episódio { $episode }
 # Quiet line under an episode that opens its discussion.
 discussion-row =
     { $count ->
-        [one] Discussão · um comentário
+        [one] Discussão · { $count } comentário
         [many] Discussão · { $count } comentários
        *[other] Discussão · { $count } comentários
     }
@@ -6071,7 +6071,7 @@ discussion-row =
 # Count of comments in the header of the discussion.
 discussion-count =
     { $count ->
-        [one] Um comentário
+        [one] { $count } comentário
         [many] { $count } comentários
        *[other] { $count } comentários
     }
@@ -6085,7 +6085,7 @@ discussion-reply = Responder
 # Line under a reply that has more replies folded in it. The line opens them.
 discussion-more-replies =
     { $count ->
-        [one] Mais uma resposta
+        [one] Mais { $count } resposta
         [many] Mais { $count } respostas
        *[other] Mais { $count } respostas
     }
@@ -6342,7 +6342,7 @@ downloads-notice-done-detail = { $title } · pronto para assistir offline
 # Notification text while several episodes download.
 downloads-notice-running =
     { $count ->
-        [one] Baixando um episódio
+        [one] Baixando { $count } episódio
         [many] Baixando { $count } episódios
        *[other] Baixando { $count } episódios
     }
@@ -6461,7 +6461,7 @@ home-remove-continue = Remover de Continuar assistindo
 # Count beside the { -continue-cap } heading when there are more than twelve shows.
 home-continue-count =
     { $count ->
-        [one] 1 título
+        [one] { $count } título
         [many] { $count } de títulos
        *[other] { $count } títulos
     }
@@ -6553,7 +6553,7 @@ home-synced = AniList sincronizado
 # Continue row subtitle. The show's title is cut first when the row is short.
 queue-episodes-left =
     { $count ->
-        [one] Falta um episódio em { $title }
+        [one] Falta { $count } episódio em { $title }
         [many] Faltam { $count } episódios em { $title }
        *[other] Faltam { $count } episódios em { $title }
     }
@@ -6760,7 +6760,7 @@ up-next-out = saiu { $ago }
 # Line of a folder's row while it is scanned.
 library-row-scanning =
     { $files ->
-        [one] Verificando · 1 arquivo encontrado
+        [one] Verificando · { $files } arquivo encontrado
         [many] Verificando · { $files } de arquivos encontrados
        *[other] Verificando · { $files } arquivos encontrados
     }
@@ -6777,7 +6777,7 @@ library-row-summary = { $episodes } de { $series }
 # The episodes part of a folder's summary line.
 library-episodes =
     { $count ->
-        [one] 1 episódio
+        [one] { $count } episódio
         [many] { $count } de episódios
        *[other] { $count } episódios
     }
@@ -6785,7 +6785,7 @@ library-episodes =
 # The series part of a folder's summary line.
 library-series =
     { $count ->
-        [one] 1 série
+        [one] { $count } série
         [many] { $count } de séries
        *[other] { $count } séries
     }
@@ -6853,7 +6853,7 @@ library-matched-count = { $count } séries identificadas
 # The series count of that line.
 library-row-series =
     { $count ->
-        [one] 1 série
+        [one] { $count } série
         [many] { $count } de séries
        *[other] { $count } séries
     }
@@ -6861,7 +6861,7 @@ library-row-series =
 # Line of a folder's row once scanned.
 library-row-files =
     { $files ->
-        [one] 1 arquivo
+        [one] { $files } arquivo
         [many] { $files } de arquivos
        *[other] { $files } arquivos
     }
@@ -6875,7 +6875,7 @@ library-remove-line = Seus arquivos continuam onde estão.
 # Line of a file group: how many files it holds.
 library-files =
     { $count ->
-        [one] 1 arquivo
+        [one] { $count } arquivo
         [many] { $count } de arquivos
        *[other] { $count } arquivos
     }
@@ -7657,7 +7657,7 @@ party-nosource-unaired-plain = Suas fontes não o terão antes disso. Ele será 
 # Line over the list of sources that list the episode.
 party-sources-found =
     { $count ->
-        [one] Uma fonte tem o episódio
+        [one] { $count } fonte tem o episódio
         [many] { $count } fontes têm o episódio
        *[other] { $count } fontes têm o episódio
     }
@@ -7751,7 +7751,7 @@ together-server-suggested = Sugerido · mantido por { $operator }
 # Line under a server that parties were held on.
 together-server-used =
     { $count ->
-        [one] Usado em 1 sessão
+        [one] Usado em { $count } sessão
         [many] Usado em { $count } de sessões
        *[other] Usado em { $count } sessões
     }
@@ -8501,7 +8501,7 @@ player-still-watching = Ainda está assistindo?
 # Line under the still-watching title.
 player-still-watching-detail =
     { $count ->
-        [one] Pausado após um episódio seguido.
+        [one] Pausado após { $count } episódio seguido.
         [many] Pausado após { $count } episódios seguidos.
        *[other] Pausado após { $count } episódios seguidos.
     }
@@ -8821,7 +8821,7 @@ reader-chapters = Capítulos
 # Line in the margin of a novel's page.
 reader-pages-left =
     { $count ->
-        [one] Falta uma página neste capítulo
+        [one] Falta { $count } página neste capítulo
         [many] Faltam { $count } de páginas neste capítulo
        *[other] Faltam { $count } páginas neste capítulo
     }
@@ -8859,7 +8859,7 @@ reader-end-facts = Capítulo { $chapter } · { $facts }
 # The next chapter's length on the page between chapters.
 reader-end-pages =
     { $count ->
-        [one] Uma página
+        [one] { $count } página
         [many] { $count } de páginas
        *[other] { $count } páginas
     }
@@ -8879,7 +8879,7 @@ reader-end-swipe = Deslize para seguir lendo
 # The next episode's length on the divider inside a strip.
 reader-divider-images =
     { $count ->
-        [one] Uma imagem
+        [one] { $count } imagem
         [many] { $count } de imagens
        *[other] { $count } imagens
     }
@@ -8905,7 +8905,7 @@ home-spotlight-read = Ler
 # The demo comic's facts line on its series page.
 demo-series-facts =
     { $pages ->
-        [one] Demo · Quadrinho · uma página
+        [one] Demo · Quadrinho · { $pages } página
         [many] Demo · Quadrinho · { $pages } de páginas
        *[other] Demo · Quadrinho · { $pages } páginas
     }
@@ -8961,7 +8961,7 @@ demo-credits = Créditos
 # A chapter row's line on the demo's series page.
 demo-pages =
     { $pages ->
-        [one] Uma página
+        [one] { $pages } página
         [many] { $pages } de páginas
        *[other] { $pages } páginas
     }
@@ -9005,7 +9005,7 @@ progress-row-saved = Progresso salvo { $ago }
 # The server's row, after 600 ms without an answer.
 progress-row-sending =
     { $count ->
-        [one] Enviando 1 capítulo…
+        [one] Enviando { $count } capítulo…
         [many] Enviando { $count } capítulos…
        *[other] Enviando { $count } capítulos…
     }
@@ -9013,7 +9013,7 @@ progress-row-sending =
 # The server's row, offline.
 progress-row-offline =
     { $count ->
-        [one] 1 capítulo será enviado quando você voltar online
+        [one] { $count } capítulo será enviado quando você voltar online
         [many] { $count } capítulos serão enviados quando você voltar online
        *[other] { $count } capítulos serão enviados quando você voltar online
     }
@@ -9021,7 +9021,7 @@ progress-row-offline =
 # The server's row, the last try failed for a reason that can pass.
 progress-row-retrying =
     { $count ->
-        [one] 1 capítulo aguardando. O Kaeri vai tentar de novo.
+        [one] { $count } capítulo aguardando. O Kaeri vai tentar de novo.
         [many] { $count } capítulos aguardando. O Kaeri vai tentar de novo.
        *[other] { $count } capítulos aguardando. O Kaeri vai tentar de novo.
     }
@@ -9029,7 +9029,7 @@ progress-row-retrying =
 # The server's row, the server said no. Try again sits beside it.
 progress-row-failed =
     { $count ->
-        [one] 1 capítulo não salvo: { $reason }
+        [one] { $count } capítulo não salvo: { $reason }
         [many] { $count } capítulos não salvos: { $reason }
        *[other] { $count } capítulos não salvos: { $reason }
     }
@@ -9112,7 +9112,7 @@ chapter-updates-yesterday = Ontem
 # After a chapter on an Updates row, when several groups put it out.
 chapter-updates-versions =
     { $n ->
-        [one] 1 opção
+        [one] { $n } opção
         [many] { $n } de opções
        *[other] { $n } opções
     }
@@ -9168,7 +9168,7 @@ series-change = Mudar
 # After the source's name: how many other sources have the series.
 series-sources-more =
     { $n ->
-        [one] mais 1
+        [one] mais { $n }
         [many] mais { $n }
        *[other] mais { $n }
     }
@@ -9190,7 +9190,7 @@ series-tracker-chapters-of =
 # A tracker's progress in chapters, total unknown.
 series-tracker-chapters =
     { $n ->
-        [one] 1 capítulo
+        [one] { $n } capítulo
         [many] { $n } de capítulos
        *[other] { $n } capítulos
     }
@@ -9225,7 +9225,7 @@ series-removed-title = Suas listas
 # Title while choosing chapters on a phone: how many are chosen.
 series-chosen =
     { $n ->
-        [one] 1 capítulo
+        [one] { $n } capítulo
         [many] { $n } de capítulos
        *[other] { $n } capítulos
     }
@@ -9329,7 +9329,7 @@ series-remove-bookmark = Remover marcador
 # Menu of a chapter that several groups put out.
 series-versions =
     { $n ->
-        [one] 1 opção
+        [one] { $n } opção
         [many] { $n } de opções
        *[other] { $n } opções
     }
@@ -9388,7 +9388,7 @@ download-unread = Todos os capítulos não lidos
 # Download menu item: a volume's chapters not yet downloaded.
 download-volume-count =
     { $n ->
-        [one] { $volume } · 1 capítulo
+        [one] { $volume } · { $n } capítulo
         [many] { $volume } · { $n } de capítulos
        *[other] { $volume } · { $n } capítulos
     }
@@ -9402,7 +9402,7 @@ download-delete-series = Apagar downloads desta série
 # The amber button in the Choose chapters bar.
 download-chapters =
     { $n ->
-        [one] Baixar 1 capítulo
+        [one] Baixar { $n } capítulo
         [many] Baixar { $n } de capítulos
        *[other] Baixar { $n } capítulos
     }
@@ -9557,7 +9557,7 @@ sources-found-server = Servidor { $kind } encontrado
 # What the server held once signed in, when it said how many series it lists.
 sources-found-server-series =
     { $n ->
-        [one] Servidor { $kind } encontrado com 1 série
+        [one] Servidor { $kind } encontrado com { $n } série
         [many] Servidor { $kind } encontrado com { $n } de séries
        *[other] Servidor { $kind } encontrado com { $n } séries
     }
@@ -9583,7 +9583,7 @@ book-sources-plugins-footer = Os plugins vêm de lojas de plugins em que você e
 # How many series a folder or server holds.
 book-sources-series =
     { $n ->
-        [one] 1 série
+        [one] { $n } série
         [many] { $n } de séries
        *[other] { $n } séries
     }
@@ -9654,7 +9654,7 @@ read-sort-last-read = Lidos há pouco
 # Accessibility value of the list menu: the list and how many series are on it.
 read-library-list-value =
     { $n ->
-        [one] { $list }, 1 série
+        [one] { $list }, { $n } série
         [many] { $list }, { $n } de séries
        *[other] { $list }, { $n } séries
     }
@@ -9680,7 +9680,7 @@ read-search-placeholder = Buscar leitura
 # The last row of reading's results with both media on: matches in the other scope.
 search-other-scope =
     { $n ->
-        [one] 1 resultado em { $scope }
+        [one] { $n } resultado em { $scope }
         [many] { $n } de resultados em { $scope }
        *[other] { $n } resultados em { $scope }
     }
@@ -9694,7 +9694,7 @@ read-search-browse-line = { $what } · do AniList
 # Over reading's results once every result is listed: how many series AniList found.
 read-search-total =
     { $n ->
-        [one] 1 série do AniList
+        [one] { $n } série do AniList
         [many] { $n } de séries do AniList
        *[other] { $n } séries do AniList
     }
@@ -9759,7 +9759,7 @@ read-filter-not-genre = Sem { $genre }
 # How many genres are set.
 read-filter-genres-count =
     { $n ->
-        [one] 1 gênero
+        [one] { $n } gênero
         [many] { $n } de gêneros
        *[other] { $n } gêneros
     }
@@ -10196,7 +10196,7 @@ send-prepare = Preparar e compartilhar
 # While the files are made: which chapter of how many. The ring beside it shows how far along.
 send-preparing =
     { $total ->
-        [one] Preparando o capítulo
+        [one] Preparando { $done } de { $total } capítulo
         [many] Preparando { $done } de { $total } capítulos
        *[other] Preparando { $done } de { $total } capítulos
     }
@@ -10237,7 +10237,7 @@ send-waiting-cancel = Cancelar envio
 # When the files are ready, over the button that opens the share sheet. The count is how many files.
 send-ready =
     { $n ->
-        [one] Um arquivo está pronto.
+        [one] { $n } arquivo está pronto.
         [many] { $n } arquivos estão prontos.
        *[other] { $n } arquivos estão prontos.
     }
@@ -10338,7 +10338,7 @@ opds-share-downloads = Downloads
 # Line under that row.
 opds-share-downloads-count =
     { $n ->
-        [one] Um capítulo
+        [one] { $n } capítulo
         [many] { $n } capítulos
        *[other] { $n } capítulos
     }
@@ -10352,7 +10352,7 @@ opds-share-novels = Pasta de romances
 # Line under a folder row.
 opds-share-series-count =
     { $n ->
-        [one] Uma série
+        [one] { $n } série
         [many] { $n } séries
        *[other] { $n } séries
     }
@@ -10384,7 +10384,7 @@ opds-fetched-time = Último pedido: { $time }
 # Line under an e-reader in that list: how many files it took.
 opds-fetched-files =
     { $n ->
-        [one] Um arquivo
+        [one] { $n } arquivo
         [many] { $n } arquivos
        *[other] { $n } arquivos
     }
@@ -10952,7 +10952,7 @@ servers-row-matching = Identificando · { $done } de { $total } séries
 # A server's line once it is read.
 servers-row-summary =
     { $libraries ->
-        [one] 1 biblioteca · { $series } séries
+        [one] { $libraries } biblioteca · { $series } séries
         [many] { $libraries } de bibliotecas · { $series } séries
        *[other] { $libraries } bibliotecas · { $series } séries
     }
@@ -10960,7 +10960,7 @@ servers-row-summary =
 # First part of a server's row line: how many libraries it has.
 servers-row-libraries =
     { $count ->
-        [one] 1 biblioteca
+        [one] { $count } biblioteca
         [many] { $count } de bibliotecas
        *[other] { $count } bibliotecas
     }
@@ -10968,7 +10968,7 @@ servers-row-libraries =
 # Second part of a server's row line: how many series it holds.
 servers-row-series =
     { $count ->
-        [one] 1 série
+        [one] { $count } série
         [many] { $count } de séries
        *[other] { $count } séries
     }
@@ -11261,7 +11261,7 @@ settings-system-captions-detail = Legendas simples usam suas preferências de le
 # Line: how many shows override a setting.
 settings-overridden =
     { $count ->
-        [one] Alterado em uma série
+        [one] Alterado em { $count } série
         [many] Alterado em { $count } séries
        *[other] Alterado em { $count } séries
     }
@@ -11509,7 +11509,7 @@ widget-resume-dubbed-label = Continuar o episódio { $episode }, dublado, de { $
 # Line under a signed-in account while changes wait to be sent.
 accounts-changes-waiting =
     { $count ->
-        [one] Uma mudança aguardando sincronização
+        [one] { $count } mudança aguardando sincronização
         [many] { $count } mudanças aguardando sincronização
        *[other] { $count } mudanças aguardando sincronização
     }
@@ -11751,7 +11751,7 @@ book-server-key = Chave ••••{ $last }
 # Result title once the server signed in.
 book-server-found-title =
     { $libraries ->
-        [one] Foram encontradas { $series } séries
+        [one] Foram encontradas { $series } séries em { $libraries } biblioteca
         [many] Foram encontradas { $series } séries em { $libraries } de bibliotecas
        *[other] Foram encontradas { $series } séries em { $libraries } bibliotecas
     }
@@ -11807,7 +11807,7 @@ book-server-not-books-line = O Kaeri lê catálogos Komga, Kavita e OPDS.
 # Folder result title.
 book-folder-found =
     { $files ->
-        [one] Foram encontradas { $series } séries em um arquivo
+        [one] Foram encontradas { $series } séries em { $files } arquivo
         [many] Foram encontradas { $series } séries em { $files } de arquivos
        *[other] Foram encontradas { $series } séries em { $files } arquivos
     }
@@ -11818,7 +11818,7 @@ book-folder-found-line = { $path }. O Kaeri identificou { $matched } delas pelos
 # Row in the folder result: files that are books in formats Kaeri can't open.
 book-folder-unsupported =
     { $count ->
-        [one] Um arquivo que o Kaeri não consegue abrir
+        [one] { $count } arquivo que o Kaeri não consegue abrir
         [many] { $count } de arquivos que o Kaeri não consegue abrir
        *[other] { $count } arquivos que o Kaeri não consegue abrir
     }
@@ -11847,7 +11847,7 @@ book-folder-empty = Nada em { $folder } que o Kaeri consiga abrir
 # Line under it.
 book-folder-empty-line =
     { $files ->
-        [one] Há um arquivo, que não é CBZ, CBR, EPUB, PDF nem imagem.
+        [one] Há { $files } arquivo, que não é CBZ, CBR, EPUB, PDF nem imagem.
         [many] Há { $files } de arquivos, nenhum deles CBZ, CBR, EPUB, PDF ou imagens.
        *[other] Há { $files } arquivos, nenhum deles CBZ, CBR, EPUB, PDF ou imagens.
     }
@@ -11867,7 +11867,7 @@ store-joined-title = Você entrou em { $store }
 # Line under it. The owner is who runs the store.
 store-joined-line =
     { $count ->
-        [one] { $owner } oferece um plugin. Entrar não instala nada; instale aqui ou depois.
+        [one] { $owner } oferece { $count } plugin. Entrar não instala nada; instale aqui ou depois.
         [many] { $owner } oferece { $count } de plugins. Entrar não instala nada; escolha os que quiser aqui ou depois.
        *[other] { $owner } oferece { $count } plugins. Entrar não instala nada; escolha os que quiser aqui ou depois.
     }
@@ -11890,7 +11890,7 @@ store-install-all-reading = Instalar todos para ler
 # Result after installing.
 store-installed =
     { $count ->
-        [one] Um plugin instalado. Ele está em Suas fontes.
+        [one] { $count } plugin instalado. Ele está em Suas fontes.
         [many] { $count } de plugins instalados. Eles estão em Suas fontes.
        *[other] { $count } plugins instalados. Eles estão em Suas fontes.
     }
@@ -11919,7 +11919,7 @@ store-err-unreachable-line = O convite parece certo, mas a loja não está respo
 # Under the reading group: plugins for watching while watching is off here.
 store-other-medium-more =
     { $count ->
-        [one] Mais um é para assistir, o que está desativado neste dispositivo.
+        [one] Mais { $count } é para assistir, o que está desativado neste dispositivo.
         [many] Mais { $count } de são para assistir, o que está desativado neste dispositivo.
        *[other] Mais { $count } são para assistir, o que está desativado neste dispositivo.
     }
@@ -11927,7 +11927,7 @@ store-other-medium-more =
 # On a TV, under the list: plugins for reading, which a TV doesn't do.
 store-tv-reading-only =
     { $count ->
-        [one] Mais um é para leitura, o que esta TV não faz.
+        [one] Mais { $count } é para leitura, o que esta TV não faz.
         [many] Mais { $count } de plugins são para leitura, o que esta TV não faz.
        *[other] Mais { $count } são para leitura, o que esta TV não faz.
     }
@@ -11944,7 +11944,7 @@ source-added = Adicionado: { $name } · { $series } séries
 # Notice after Install all, for 4 seconds.
 source-added-plugins =
     { $count ->
-        [one] Um plugin instalado de { $store }
+        [one] { $count } plugin instalado de { $store }
         [many] { $count } de plugins instalados de { $store }
        *[other] { $count } plugins instalados de { $store }
     }
@@ -11971,7 +11971,7 @@ source-row-server-empty = { $kind } · ainda sem séries · confere de novo em 3
 # A folder's row in Your sources.
 source-row-folder =
     { $skipped ->
-        [one] { $path } · { $series } séries · um arquivo ignorado
+        [one] { $path } · { $series } séries · { $skipped } arquivo ignorado
         [many] { $path } · { $series } séries · { $skipped } de arquivos ignorados
        *[other] { $path } · { $series } séries · { $skipped } arquivos ignorados
     }
@@ -12143,7 +12143,7 @@ sources-contacts-one = Contata { $first }
 # Line: the plugin contacts several hosts. The count is the hosts after the first.
 sources-contacts-line =
     { $more ->
-        [one] Contata { $first } e mais um
+        [one] Contata { $first } e mais { $more }
         [many] Contata { $first } e mais { $more }
        *[other] Contata { $first } e mais { $more }
     }
@@ -12160,7 +12160,7 @@ sources-update-contacts-one = Esta atualização também contata { $first }.
 # Line: an update adds several hosts. The count is the hosts after the first.
 sources-update-contacts =
     { $more ->
-        [one] Esta atualização também contata { $first } e mais um.
+        [one] Esta atualização também contata { $first } e mais { $more }.
         [many] Esta atualização também contata { $first } e mais { $more }.
        *[other] Esta atualização também contata { $first } e mais { $more }.
     }
@@ -12204,7 +12204,7 @@ match-choose = Escolher correspondência
 # The line on the title page while the match is open, under its main action. The count leaves out titles that were ruled out.
 match-uncertain =
     { $count ->
-        [one] { $source } lista um título que pode ser este. Escolha-o para reproduzir os episódios.
+        [one] { $source } lista { $count } título que pode ser este. Escolha-o para reproduzir os episódios.
         [many] { $source } lista { $count } de títulos que podem ser este. Escolha um para reproduzir os episódios.
        *[other] { $source } lista { $count } títulos que podem ser este. Escolha um para reproduzir os episódios.
     }
@@ -12680,7 +12680,7 @@ stores-owner-devices = Dono · { $devices }
 # Line of a member: the number of devices.
 stores-member-devices =
     { $count ->
-        [one] Um dispositivo
+        [one] { $count } dispositivo
         [many] { $count } dispositivos
        *[other] { $count } dispositivos
     }
@@ -12788,7 +12788,7 @@ stores-invite-not-used = Ainda não usado
 # Uses of an invite that works any number of times.
 stores-invite-used =
     { $used ->
-        [one] Usado uma vez
+        [one] Usado { $used } vez
         [many] Usado { $used } de vezes
        *[other] Usado { $used } vezes
     }
@@ -12817,7 +12817,7 @@ stores-invite-joined = { $name } · entrou { $when }
 # Detail of the confirmation that cancels an invite that was used.
 stores-cancel-invite-detail =
     { $count ->
-        [one] Ninguém mais pode entrar com ele. A pessoa que entrou continua como membro.
+        [one] Ninguém mais pode entrar com ele. { $count } pessoa que entrou continua como membro.
         [many] Ninguém mais pode entrar com ele. As { $count } de pessoas que entraram continuam como membros.
        *[other] Ninguém mais pode entrar com ele. As { $count } pessoas que entraram continuam como membros.
     }
@@ -12852,7 +12852,7 @@ stores-only-invited = Somente pessoas que você convidar
 # Line over the list of devices that joined with the link.
 stores-devices-joined =
     { $count ->
-        [one] Um dispositivo entrou com o link
+        [one] { $count } dispositivo entrou com o link
         [many] { $count } dispositivos entraram com o link
        *[other] { $count } dispositivos entraram com o link
     }
@@ -12890,7 +12890,7 @@ stores-copy-link = Copiar link
 # Heading over the { -plugin-pl } a { -plugin-store } offers, in the join dialog.
 stores-offers-plugins =
     { $count ->
-        [one] Um plugin
+        [one] { $count } plugin
         [many] { $count } plugins
        *[other] { $count } plugins
     }
@@ -13730,7 +13730,7 @@ episode-range-label = Intervalo de episódios
 # One line that stands for the watched episodes at the top of a range. Opening it shows them.
 episode-fold =
     { $count ->
-        [one] Um episódio assistido
+        [one] { $count } episódio assistido
         [many] { $count } episódios assistidos
        *[other] { $count } episódios assistidos
     }
@@ -13846,7 +13846,7 @@ more-hide-spoiler-tags = Ocultar tags de spoiler
 # Button that shows the spoiler tags.
 more-show-spoiler-tags =
     { $count ->
-        [one] Mostrar uma tag de spoiler
+        [one] Mostrar { $count } tag de spoiler
         [many] Mostrar { $count } tags de spoiler
        *[other] Mostrar { $count } tags de spoiler
     }
@@ -14139,7 +14139,7 @@ accounts-state-signed-in = Conectado em { $tracker } como { $name }
 # Status: signed in, with changes waiting to be sent.
 accounts-state-signed-in-waiting =
     { $count ->
-        [one] Conectado em { $tracker } como { $name } · uma alteração pendente
+        [one] Conectado em { $tracker } como { $name } · { $count } alteração pendente
         [many] Conectado em { $tracker } como { $name } · { $count } alterações pendentes
        *[other] Conectado em { $tracker } como { $name } · { $count } alterações pendentes
     }

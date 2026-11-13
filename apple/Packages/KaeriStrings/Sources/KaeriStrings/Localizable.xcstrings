@@ -2131,7 +2131,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "une minute"
+                      "value" : "%1$lld minute"
                     }
                   },
                   "other" : {
@@ -2283,7 +2283,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "um minuto"
+                      "value" : "%1$lld minuto"
                     }
                   },
                   "other" : {
@@ -2531,7 +2531,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "il reste une minute"
+                      "value" : "il reste %1$lld minute"
                     }
                   },
                   "other" : {
@@ -2683,7 +2683,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "falta um minuto"
+                      "value" : "falta %1$lld minuto"
                     }
                   },
                   "other" : {
@@ -4141,7 +4141,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un changement en attente de synchronisation"
+                      "value" : "%1$lld changement en attente de synchronisation"
                     }
                   },
                   "other" : {
@@ -4293,7 +4293,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Uma mudança aguardando sincronização"
+                      "value" : "%1$lld mudança aguardando sincronização"
                     }
                   },
                   "other" : {
@@ -8825,7 +8825,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Connecté à %1$@ en tant que %2$@ · une modification en attente"
+                      "value" : "Connecté à %1$@ en tant que %2$@ · %3$lld modification en attente"
                     }
                   },
                   "other" : {
@@ -8977,7 +8977,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Conectado em %1$@ como %2$@ · uma alteração pendente"
+                      "value" : "Conectado em %1$@ como %2$@ · %3$lld alteração pendente"
                     }
                   },
                   "other" : {
@@ -17431,7 +17431,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Il contient un fichier, qui n’est ni CBZ, CBR, EPUB, PDF ni une image."
+                      "value" : "Il contient %1$lld fichier, qui n’est ni CBZ, CBR, EPUB, PDF ni une image."
                     }
                   },
                   "other" : {
@@ -17583,7 +17583,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Há um arquivo, que não é CBZ, CBR, EPUB, PDF nem imagem."
+                      "value" : "Há %1$lld arquivo, que não é CBZ, CBR, EPUB, PDF nem imagem."
                     }
                   },
                   "other" : {
@@ -17831,7 +17831,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Séries trouvées : %1$lld dans un fichier"
+                      "value" : "Séries trouvées : %1$lld dans %2$lld fichier"
                     }
                   },
                   "other" : {
@@ -17983,7 +17983,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Foram encontradas %1$lld séries em um arquivo"
+                      "value" : "Foram encontradas %1$lld séries em %2$lld arquivo"
                     }
                   },
                   "other" : {
@@ -18507,7 +18507,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un fichier que Kaeri ne peut pas ouvrir"
+                      "value" : "%1$lld fichier que Kaeri ne peut pas ouvrir"
                     }
                   },
                   "other" : {
@@ -18659,7 +18659,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Um arquivo que o Kaeri não consegue abrir"
+                      "value" : "%1$lld arquivo que o Kaeri não consegue abrir"
                     }
                   },
                   "other" : {
@@ -19999,7 +19999,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Séries trouvées : %1$lld"
+                      "value" : "Séries trouvées : %1$lld dans %2$lld bibliothèque"
                     }
                   },
                   "other" : {
@@ -20151,7 +20151,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Foram encontradas %1$lld séries"
+                      "value" : "Foram encontradas %1$lld séries em %2$lld biblioteca"
                     }
                   },
                   "other" : {
@@ -22751,7 +22751,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 série"
+                      "value" : "%1$lld série"
                     }
                   },
                   "other" : {
@@ -22903,7 +22903,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 série"
+                      "value" : "%1$lld série"
                     }
                   },
                   "other" : {
@@ -29283,7 +29283,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "dans un jour à %2$@"
+                      "value" : "dans %1$lld jour à %2$@"
                     }
                   },
                   "other" : {
@@ -29435,7 +29435,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "em um dia às %2$@"
+                      "value" : "em %1$lld dia às %2$@"
                     }
                   },
                   "other" : {
@@ -29935,7 +29935,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un épisode est déjà dans les téléchargements."
+                      "value" : "%1$lld épisode est déjà dans les téléchargements."
                     }
                   },
                   "other" : {
@@ -30087,7 +30087,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Um episódio já está nos downloads."
+                      "value" : "%1$lld episódio já está nos downloads."
                     }
                   },
                   "other" : {
@@ -31427,7 +31427,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Une piste de sous-titres a été intégrée."
+                      "value" : "%1$lld piste de sous-titres a été intégrée."
                     }
                   },
                   "other" : {
@@ -31579,7 +31579,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Uma faixa de legenda foi incorporada ao vídeo."
+                      "value" : "%1$lld faixa de legenda foi incorporada ao vídeo."
                     }
                   },
                   "other" : {
@@ -33519,7 +33519,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 version"
+                      "value" : "%1$lld version"
                     }
                   },
                   "other" : {
@@ -33671,7 +33671,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 opção"
+                      "value" : "%1$lld opção"
                     }
                   },
                   "other" : {
@@ -42151,7 +42151,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un épisode"
+                      "value" : "%1$lld épisode"
                     }
                   },
                   "other" : {
@@ -42343,7 +42343,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Один эпизод"
+                      "value" : "%1$lld эпизод"
                     }
                   },
                   "other" : {
@@ -42803,7 +42803,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un épisode sorti"
+                      "value" : "%1$lld épisode sorti"
                     }
                   },
                   "other" : {
@@ -42995,7 +42995,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Вышел один эпизод"
+                      "value" : "Вышел %1$lld эпизод"
                     }
                   },
                   "other" : {
@@ -43623,7 +43623,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un épisode"
+                      "value" : "%1$lld épisode"
                     }
                   },
                   "other" : {
@@ -43815,7 +43815,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Один эпизод"
+                      "value" : "%1$lld эпизод"
                     }
                   },
                   "other" : {
@@ -44107,7 +44107,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un épisode sorti"
+                      "value" : "%1$lld épisode sorti"
                     }
                   },
                   "other" : {
@@ -44299,7 +44299,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Вышел один эпизод"
+                      "value" : "Вышел %1$lld эпизод"
                     }
                   },
                   "other" : {
@@ -48623,7 +48623,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Une page"
+                      "value" : "%1$lld page"
                     }
                   },
                   "other" : {
@@ -48775,7 +48775,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Uma página"
+                      "value" : "%1$lld página"
                     }
                   },
                   "other" : {
@@ -49107,7 +49107,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Démo · Bande dessinée · une page"
+                      "value" : "Démo · Bande dessinée · %1$lld page"
                     }
                   },
                   "other" : {
@@ -49259,7 +49259,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Demo · Quadrinho · uma página"
+                      "value" : "Demo · Quadrinho · %1$lld página"
                     }
                   },
                   "other" : {
@@ -52375,7 +52375,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Une TV pour Lire sur la TV"
+                      "value" : "%1$lld TV pour Lire sur la TV"
                     }
                   },
                   "other" : {
@@ -52567,7 +52567,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Один телевизор для «Смотреть на ТВ»"
+                      "value" : "%1$lld телевизор для «Смотреть на ТВ»"
                     }
                   },
                   "other" : {
@@ -54455,7 +54455,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un commentaire · met en pause"
+                      "value" : "%1$lld commentaire · met en pause"
                     }
                   },
                   "other" : {
@@ -54607,7 +54607,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Um comentário · pausa"
+                      "value" : "%1$lld comentário · pausa"
                     }
                   },
                   "other" : {
@@ -55359,7 +55359,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un commentaire"
+                      "value" : "%1$lld commentaire"
                     }
                   },
                   "other" : {
@@ -55511,7 +55511,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Um comentário"
+                      "value" : "%1$lld comentário"
                     }
                   },
                   "other" : {
@@ -55551,7 +55551,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Один комментарий"
+                      "value" : "%1$lld комментарий"
                     }
                   },
                   "other" : {
@@ -56263,7 +56263,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Une réponse de plus"
+                      "value" : "%1$lld réponse de plus"
                     }
                   },
                   "other" : {
@@ -56415,7 +56415,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Mais uma resposta"
+                      "value" : "Mais %1$lld resposta"
                     }
                   },
                   "other" : {
@@ -56455,7 +56455,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Ещё один ответ"
+                      "value" : "Ещё %1$lld ответ"
                     }
                   },
                   "other" : {
@@ -57587,7 +57587,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Discussion · un commentaire"
+                      "value" : "Discussion · %1$lld commentaire"
                     }
                   },
                   "other" : {
@@ -57739,7 +57739,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Discussão · um comentário"
+                      "value" : "Discussão · %1$lld comentário"
                     }
                   },
                   "other" : {
@@ -57779,7 +57779,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Обсуждение · один комментарий"
+                      "value" : "Обсуждение · %1$lld комментарий"
                     }
                   },
                   "other" : {
@@ -58659,7 +58659,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Télécharger 1 chapitre"
+                      "value" : "Télécharger %1$lld chapitre"
                     }
                   },
                   "other" : {
@@ -58811,7 +58811,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Baixar 1 capítulo"
+                      "value" : "Baixar %1$lld capítulo"
                     }
                   },
                   "other" : {
@@ -59479,7 +59479,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@ · 1 chapitre"
+                      "value" : "%1$@ · %2$lld chapitre"
                     }
                   },
                   "other" : {
@@ -59631,7 +59631,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@ · 1 capítulo"
+                      "value" : "%1$@ · %2$lld capítulo"
                     }
                   },
                   "other" : {
@@ -61727,7 +61727,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un épisode restant"
+                      "value" : "%1$lld épisode restant"
                     }
                   },
                   "other" : {
@@ -61879,7 +61879,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Um episódio restante"
+                      "value" : "%1$lld episódio restante"
                     }
                   },
                   "other" : {
@@ -61919,7 +61919,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Осталась одна серия"
+                      "value" : "Осталась %1$lld серия"
                     }
                   },
                   "other" : {
@@ -63639,7 +63639,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Téléchargement d’un épisode"
+                      "value" : "Téléchargement de %1$lld épisode"
                     }
                   },
                   "other" : {
@@ -63791,7 +63791,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Baixando um episódio"
+                      "value" : "Baixando %1$lld episódio"
                     }
                   },
                   "other" : {
@@ -63831,7 +63831,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Загружается один эпизод"
+                      "value" : "Загружается %1$lld эпизод"
                     }
                   },
                   "other" : {
@@ -68323,7 +68323,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un épisode vu"
+                      "value" : "%1$lld épisode vu"
                     }
                   },
                   "other" : {
@@ -68475,7 +68475,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Um episódio assistido"
+                      "value" : "%1$lld episódio assistido"
                     }
                   },
                   "other" : {
@@ -68515,7 +68515,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Одна просмотренная серия"
+                      "value" : "%1$lld просмотренная серия"
                     }
                   },
                   "other" : {
@@ -73995,7 +73995,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un chapitre n'est pas encore téléchargé : l'envoi attend le Wi-Fi et reprendra tout seul."
+                      "value" : "%1$lld chapitre n'est pas encore téléchargé : l'envoi attend le Wi-Fi et reprendra tout seul."
                     }
                   },
                   "other" : {
@@ -74147,7 +74147,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Um capítulo ainda não foi baixado, então este envio espera o Wi-Fi e continua sozinho."
+                      "value" : "%1$lld capítulo ainda não foi baixado, então este envio espera o Wi-Fi e continua sozinho."
                     }
                   },
                   "other" : {
@@ -74187,7 +74187,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Одна глава ещё не скачана, поэтому отправка дождётся Wi-Fi и продолжится сама."
+                      "value" : "%1$lld глава ещё не скачана, поэтому отправка дождётся Wi-Fi и продолжится сама."
                     }
                   },
                   "other" : {
@@ -83717,7 +83717,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 série"
+                      "value" : "%1$lld série"
                     }
                   },
                   "other" : {
@@ -83869,7 +83869,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 título"
+                      "value" : "%1$lld título"
                     }
                   },
                   "other" : {
@@ -92349,7 +92349,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 épisode"
+                      "value" : "%1$lld épisode"
                     }
                   },
                   "other" : {
@@ -92501,7 +92501,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 episódio"
+                      "value" : "%1$lld episódio"
                     }
                   },
                   "other" : {
@@ -92749,7 +92749,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 fichier"
+                      "value" : "%1$lld fichier"
                     }
                   },
                   "other" : {
@@ -92901,7 +92901,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 arquivo"
+                      "value" : "%1$lld arquivo"
                     }
                   },
                   "other" : {
@@ -96761,7 +96761,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 fichier"
+                      "value" : "%1$lld fichier"
                     }
                   },
                   "other" : {
@@ -96913,7 +96913,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 arquivo"
+                      "value" : "%1$lld arquivo"
                     }
                   },
                   "other" : {
@@ -97497,7 +97497,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Analyse · 1 fichier trouvé"
+                      "value" : "Analyse · %1$lld fichier trouvé"
                     }
                   },
                   "other" : {
@@ -97649,7 +97649,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Verificando · 1 arquivo encontrado"
+                      "value" : "Verificando · %1$lld arquivo encontrado"
                     }
                   },
                   "other" : {
@@ -97897,7 +97897,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 série"
+                      "value" : "%1$lld série"
                     }
                   },
                   "other" : {
@@ -98049,7 +98049,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 série"
+                      "value" : "%1$lld série"
                     }
                   },
                   "other" : {
@@ -98801,7 +98801,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 série"
+                      "value" : "%1$lld série"
                     }
                   },
                   "other" : {
@@ -98953,7 +98953,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 série"
+                      "value" : "%1$lld série"
                     }
                   },
                   "other" : {
@@ -105417,7 +105417,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%2$@ liste un titre qui pourrait être celui-ci. Choisissez-le pour lire ses épisodes."
+                      "value" : "%2$@ liste %1$lld titre qui pourrait être celui-ci. Choisissez-le pour lire ses épisodes."
                     }
                   },
                   "other" : {
@@ -105569,7 +105569,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%2$@ lista um título que pode ser este. Escolha-o para reproduzir os episódios."
+                      "value" : "%2$@ lista %1$lld título que pode ser este. Escolha-o para reproduzir os episódios."
                     }
                   },
                   "other" : {
@@ -117433,7 +117433,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Afficher un mot-clé spoiler"
+                      "value" : "Afficher %1$lld mot-clé spoiler"
                     }
                   },
                   "other" : {
@@ -117585,7 +117585,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Mostrar uma tag de spoiler"
+                      "value" : "Mostrar %1$lld tag de spoiler"
                     }
                   },
                   "other" : {
@@ -123041,7 +123041,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un téléchargement terminé a été retiré de la liste."
+                      "value" : "%1$lld téléchargement terminé a été retiré de la liste."
                     }
                   },
                   "other" : {
@@ -123193,7 +123193,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Um download concluído foi removido da lista."
+                      "value" : "%1$lld download concluído foi removido da lista."
                     }
                   },
                   "other" : {
@@ -123945,7 +123945,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un nouvel épisode d'une série que vous suivez a été diffusé. Le calendrier l'affiche."
+                      "value" : "%1$lld nouvel épisode d'une série que vous suivez a été diffusé. Le calendrier l'affiche."
                     }
                   },
                   "other" : {
@@ -124097,7 +124097,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Um novo episódio de uma série que você acompanha foi ao ar. Ele está no calendário."
+                      "value" : "%1$lld novo episódio de uma série que você acompanha foi ao ar. Ele está no calendário."
                     }
                   },
                   "other" : {
@@ -124137,7 +124137,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Вышла новая серия тайтла, который вы смотрите. Она есть в календаре."
+                      "value" : "Вышла %1$lld новая серия тайтлов, которые вы смотрите. Календарь уже обновлён."
                     }
                   },
                   "other" : {
@@ -124429,7 +124429,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un épisode ajouté à la file."
+                      "value" : "%1$lld épisode ajouté à la file."
                     }
                   },
                   "other" : {
@@ -124581,7 +124581,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Um episódio adicionado à fila."
+                      "value" : "%1$lld episódio adicionado à fila."
                     }
                   },
                   "other" : {
@@ -124621,7 +124621,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "В очередь добавлен один эпизод."
+                      "value" : "В очередь добавлен %1$lld эпизод."
                     }
                   },
                   "other" : {
@@ -124829,7 +124829,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un épisode ajouté à la file. %2$@"
+                      "value" : "%1$lld épisode ajouté à la file. %2$@"
                     }
                   },
                   "other" : {
@@ -124981,7 +124981,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Um episódio foi adicionado à fila. %2$@"
+                      "value" : "%1$lld episódio foi adicionado à fila. %2$@"
                     }
                   },
                   "other" : {
@@ -125229,7 +125229,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un épisode ajouté à la file, puis l'ajout s'est arrêté. %2$@ %3$@"
+                      "value" : "%1$lld épisode ajouté à la file, puis l'ajout s'est arrêté. %2$@ %3$@"
                     }
                   },
                   "other" : {
@@ -125381,7 +125381,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Um episódio foi adicionado à fila, e então a busca parou. %2$@ %3$@"
+                      "value" : "%1$lld episódio foi adicionado à fila, e então a busca parou. %2$@ %3$@"
                     }
                   },
                   "other" : {
@@ -125629,7 +125629,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un épisode ajouté à la file, puis l'ajout s'est arrêté. %2$@"
+                      "value" : "%1$lld épisode ajouté à la file, puis l'ajout s'est arrêté. %2$@"
                     }
                   },
                   "other" : {
@@ -125781,7 +125781,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Um episódio foi adicionado à fila, e então a busca parou. %2$@"
+                      "value" : "%1$lld episódio foi adicionado à fila, e então a busca parou. %2$@"
                     }
                   },
                   "other" : {
@@ -131069,7 +131069,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Déconnecté de %1$@. Une modification en attente est conservée pour la prochaine connexion."
+                      "value" : "Déconnecté de %1$@. %2$lld modification en attente est conservée pour la prochaine connexion."
                     }
                   },
                   "other" : {
@@ -131221,7 +131221,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Desconectado do %1$@. Uma alteração na fila foi mantida para a próxima conexão."
+                      "value" : "Desconectado do %1$@. %2$lld alteração na fila foi mantida para a próxima conexão."
                     }
                   },
                   "other" : {
@@ -131261,7 +131261,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Вы вышли из %1$@. Одно изменение в очереди сохранено для следующего входа."
+                      "value" : "Вы вышли из %1$@. %2$lld изменение в очереди сохранено для следующего входа."
                     }
                   },
                   "other" : {
@@ -131469,7 +131469,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Le seul repère de saut que vous aviez marqué a été effacé."
+                      "value" : "%1$lld repère de saut que vous aviez marqué a été effacé."
                     }
                   },
                   "other" : {
@@ -131621,7 +131621,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "O tempo de pulo que você marcou foi apagado."
+                      "value" : "%1$lld tempo de pulo que você marcou foi apagado."
                     }
                   },
                   "other" : {
@@ -138421,7 +138421,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un fichier"
+                      "value" : "%1$lld fichier"
                     }
                   },
                   "other" : {
@@ -138573,7 +138573,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Um arquivo"
+                      "value" : "%1$lld arquivo"
                     }
                   },
                   "other" : {
@@ -140081,7 +140081,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un chapitre"
+                      "value" : "%1$lld chapitre"
                     }
                   },
                   "other" : {
@@ -140233,7 +140233,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Um capítulo"
+                      "value" : "%1$lld capítulo"
                     }
                   },
                   "other" : {
@@ -140733,7 +140733,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Une série"
+                      "value" : "%1$lld série"
                     }
                   },
                   "other" : {
@@ -140885,7 +140885,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Uma série"
+                      "value" : "%1$lld série"
                     }
                   },
                   "other" : {
@@ -145753,7 +145753,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Reculer d'une seconde"
+                      "value" : "Reculer de %1$lld seconde"
                     }
                   },
                   "other" : {
@@ -145905,7 +145905,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Voltar um segundo"
+                      "value" : "Voltar %1$lld segundo"
                     }
                   },
                   "other" : {
@@ -146153,7 +146153,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Avancer d'une seconde"
+                      "value" : "Avancer de %1$lld seconde"
                     }
                   },
                   "other" : {
@@ -146305,7 +146305,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Avançar um segundo"
+                      "value" : "Avançar %1$lld segundo"
                     }
                   },
                   "other" : {
@@ -153085,7 +153085,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Attendez une seconde"
+                      "value" : "Attendez %1$lld seconde"
                     }
                   },
                   "other" : {
@@ -153277,7 +153277,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Подождите одну секунду"
+                      "value" : "Подождите %1$lld секунду"
                     }
                   },
                   "other" : {
@@ -165833,7 +165833,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Une source le propose"
+                      "value" : "%1$lld source le propose"
                     }
                   },
                   "other" : {
@@ -165985,7 +165985,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Uma fonte tem o episódio"
+                      "value" : "%1$lld fonte tem o episódio"
                     }
                   },
                   "other" : {
@@ -182949,7 +182949,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un pair"
+                      "value" : "%1$lld pair"
                     }
                   },
                   "other" : {
@@ -186037,7 +186037,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "En pause après un épisode d’affilée."
+                      "value" : "En pause après %1$lld épisode d’affilée."
                     }
                   },
                   "other" : {
@@ -186189,7 +186189,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Pausado após um episódio seguido."
+                      "value" : "Pausado após %1$lld episódio seguido."
                     }
                   },
                   "other" : {
@@ -186229,7 +186229,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Пауза после одного эпизода подряд."
+                      "value" : "Пауза после %1$lld эпизода подряд."
                     }
                   },
                   "other" : {
@@ -190617,7 +190617,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un plugin a été conçu pour une version plus ancienne de Kaeri et doit être mis à jour : %2$@."
+                      "value" : "%1$lld plugin a été conçu pour une version plus ancienne de Kaeri et doit être mis à jour : %2$@."
                     }
                   },
                   "other" : {
@@ -190769,7 +190769,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Um plugin foi criado para uma versão mais antiga do Kaeri e precisa ser atualizado: %2$@."
+                      "value" : "%1$lld plugin foi criado para uma versão mais antiga do Kaeri e precisa ser atualizado: %2$@."
                     }
                   },
                   "other" : {
@@ -194273,7 +194273,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 chapitre non enregistré : %2$@"
+                      "value" : "%1$lld chapitre non enregistré : %2$@"
                     }
                   },
                   "other" : {
@@ -194425,7 +194425,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 capítulo não salvo: %2$@"
+                      "value" : "%1$lld capítulo não salvo: %2$@"
                     }
                   },
                   "other" : {
@@ -194757,7 +194757,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 chapitre sera envoyé une fois de retour en ligne"
+                      "value" : "%1$lld chapitre sera envoyé une fois de retour en ligne"
                     }
                   },
                   "other" : {
@@ -194909,7 +194909,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 capítulo será enviado quando você voltar online"
+                      "value" : "%1$lld capítulo será enviado quando você voltar online"
                     }
                   },
                   "other" : {
@@ -195157,7 +195157,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 chapitre en attente. Kaeri va réessayer."
+                      "value" : "%1$lld chapitre en attente. Kaeri va réessayer."
                     }
                   },
                   "other" : {
@@ -195309,7 +195309,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 capítulo aguardando. O Kaeri vai tentar de novo."
+                      "value" : "%1$lld capítulo aguardando. O Kaeri vai tentar de novo."
                     }
                   },
                   "other" : {
@@ -195641,7 +195641,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Envoi de 1 chapitre…"
+                      "value" : "Envoi de %1$lld chapitre…"
                     }
                   },
                   "other" : {
@@ -195793,7 +195793,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Enviando 1 capítulo…"
+                      "value" : "Enviando %1$lld capítulo…"
                     }
                   },
                   "other" : {
@@ -196797,7 +196797,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un épisode restant dans %2$@"
+                      "value" : "%1$lld épisode restant dans %2$@"
                     }
                   },
                   "other" : {
@@ -196949,7 +196949,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Falta um episódio em %2$@"
+                      "value" : "Falta %1$lld episódio em %2$@"
                     }
                   },
                   "other" : {
@@ -199705,7 +199705,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 genre"
+                      "value" : "%1$lld genre"
                     }
                   },
                   "other" : {
@@ -199857,7 +199857,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 gênero"
+                      "value" : "%1$lld gênero"
                     }
                   },
                   "other" : {
@@ -201473,7 +201473,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 fichier"
+                      "value" : "%1$lld fichier"
                     }
                   },
                   "other" : {
@@ -201625,7 +201625,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 arquivo"
+                      "value" : "%1$lld arquivo"
                     }
                   },
                   "other" : {
@@ -201873,7 +201873,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 fichier · %2$@"
+                      "value" : "%1$lld fichier · %2$@"
                     }
                   },
                   "other" : {
@@ -202025,7 +202025,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 arquivo · %2$@"
+                      "value" : "%1$lld arquivo · %2$@"
                     }
                   },
                   "other" : {
@@ -202273,7 +202273,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 partie"
+                      "value" : "%1$lld partie"
                     }
                   },
                   "other" : {
@@ -202425,7 +202425,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 parte"
+                      "value" : "%1$lld parte"
                     }
                   },
                   "other" : {
@@ -204533,7 +204533,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@, 1 série"
+                      "value" : "%1$@, %2$lld série"
                     }
                   },
                   "other" : {
@@ -204685,7 +204685,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@, 1 série"
+                      "value" : "%1$@, %2$lld série"
                     }
                   },
                   "other" : {
@@ -208783,7 +208783,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 série trouvée sur AniList"
+                      "value" : "%1$lld série trouvée sur AniList"
                     }
                   },
                   "other" : {
@@ -208935,7 +208935,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 série do AniList"
+                      "value" : "%1$lld série do AniList"
                     }
                   },
                   "other" : {
@@ -211247,7 +211247,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 page"
+                      "value" : "%1$lld page"
                     }
                   },
                   "other" : {
@@ -211399,7 +211399,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 página"
+                      "value" : "%1$lld página"
                     }
                   },
                   "other" : {
@@ -213229,7 +213229,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Une image"
+                      "value" : "%1$lld image"
                     }
                   },
                   "other" : {
@@ -213381,7 +213381,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Uma imagem"
+                      "value" : "%1$lld imagem"
                     }
                   },
                   "other" : {
@@ -214817,7 +214817,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Une page"
+                      "value" : "%1$lld page"
                     }
                   },
                   "other" : {
@@ -214969,7 +214969,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Uma página"
+                      "value" : "%1$lld página"
                     }
                   },
                   "other" : {
@@ -223677,7 +223677,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Il reste une page dans ce chapitre"
+                      "value" : "Il reste %1$lld page dans ce chapitre"
                     }
                   },
                   "other" : {
@@ -223829,7 +223829,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Falta uma página neste capítulo"
+                      "value" : "Falta %1$lld página neste capítulo"
                     }
                   },
                   "other" : {
@@ -227677,7 +227677,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Environ chaque semaine"
+                      "value" : "Environ %1$lld semaine d’écart"
                     }
                   },
                   "other" : {
@@ -227829,7 +227829,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Cerca de toda semana"
+                      "value" : "A cada %1$lld semana, em média"
                     }
                   },
                   "other" : {
@@ -228077,7 +228077,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "il y a 1 jour"
+                      "value" : "il y a %1$lld jour"
                     }
                   },
                   "other" : {
@@ -228229,7 +228229,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "há 1 dia"
+                      "value" : "há %1$lld dia"
                     }
                   },
                   "other" : {
@@ -228561,7 +228561,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "il y a 1 mois"
+                      "value" : "il y a %1$lld mois"
                     }
                   },
                   "other" : {
@@ -228713,7 +228713,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "há 1 mês"
+                      "value" : "há %1$lld mês"
                     }
                   },
                   "other" : {
@@ -229129,7 +229129,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "il y a 1 sem."
+                      "value" : "il y a %1$lld sem."
                     }
                   },
                   "other" : {
@@ -229281,7 +229281,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "há 1 semana"
+                      "value" : "há %1$lld semana"
                     }
                   },
                   "other" : {
@@ -229529,7 +229529,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "il y a 1 an"
+                      "value" : "il y a %1$lld an"
                     }
                   },
                   "other" : {
@@ -229681,7 +229681,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "há 1 ano"
+                      "value" : "há %1$lld ano"
                     }
                   },
                   "other" : {
@@ -230601,7 +230601,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 chapitre"
+                      "value" : "%1$lld chapitre"
                     }
                   },
                   "other" : {
@@ -230753,7 +230753,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 capítulo"
+                      "value" : "%1$lld capítulo"
                     }
                   },
                   "other" : {
@@ -231421,7 +231421,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 partie"
+                      "value" : "%1$lld partie"
                     }
                   },
                   "other" : {
@@ -231573,7 +231573,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 parte"
+                      "value" : "%1$lld parte"
                     }
                   },
                   "other" : {
@@ -232157,7 +232157,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un chapitre de %1$@ est prêt à lire hors ligne."
+                      "value" : "%2$lld chapitre de %1$@ est prêt à lire hors ligne."
                     }
                   },
                   "other" : {
@@ -232309,7 +232309,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Um capítulo de %1$@ está pronto para ler offline."
+                      "value" : "%2$lld capítulo de %1$@ está pronto para ler offline."
                     }
                   },
                   "other" : {
@@ -232349,7 +232349,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Глава «%1$@» готова для чтения офлайн."
+                      "value" : "%2$lld глава «%1$@» готова для чтения офлайн."
                     }
                   },
                   "other" : {
@@ -232557,7 +232557,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Une partie de %1$@ est prête à lire hors ligne."
+                      "value" : "%2$lld partie de %1$@ est prête à lire hors ligne."
                     }
                   },
                   "other" : {
@@ -232709,7 +232709,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Uma parte de %1$@ está pronta para ler offline."
+                      "value" : "%2$lld parte de %1$@ está pronta para ler offline."
                     }
                   },
                   "other" : {
@@ -232749,7 +232749,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Часть «%1$@» готова для чтения офлайн."
+                      "value" : "%2$lld часть «%1$@» готова для чтения офлайн."
                     }
                   },
                   "other" : {
@@ -239053,7 +239053,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 page"
+                      "value" : "%1$lld page"
                     }
                   },
                   "other" : {
@@ -239205,7 +239205,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 página"
+                      "value" : "%1$lld página"
                     }
                   },
                   "other" : {
@@ -239809,7 +239809,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 version"
+                      "value" : "%1$lld version"
                     }
                   },
                   "other" : {
@@ -239961,7 +239961,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 opção"
+                      "value" : "%1$lld opção"
                     }
                   },
                   "other" : {
@@ -242897,7 +242897,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 volume"
+                      "value" : "%1$lld volume"
                     }
                   },
                   "other" : {
@@ -243049,7 +243049,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 volume"
+                      "value" : "%1$lld volume"
                     }
                   },
                   "other" : {
@@ -251301,7 +251301,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 résultat dans %2$@"
+                      "value" : "%1$lld résultat dans %2$@"
                     }
                   },
                   "other" : {
@@ -251453,7 +251453,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 resultado em %2$@"
+                      "value" : "%1$lld resultado em %2$@"
                     }
                   },
                   "other" : {
@@ -256745,7 +256745,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Préparation du chapitre"
+                      "value" : "Préparation : %1$lld sur %2$lld chapitre"
                     }
                   },
                   "other" : {
@@ -256897,7 +256897,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Preparando o capítulo"
+                      "value" : "Preparando %1$lld de %2$lld capítulo"
                     }
                   },
                   "other" : {
@@ -257229,7 +257229,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un fichier est prêt."
+                      "value" : "%1$lld fichier est prêt."
                     }
                   },
                   "other" : {
@@ -257381,7 +257381,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Um arquivo está pronto."
+                      "value" : "%1$lld arquivo está pronto."
                     }
                   },
                   "other" : {
@@ -259165,7 +259165,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 chapitre"
+                      "value" : "%1$lld chapitre"
                     }
                   },
                   "other" : {
@@ -259317,7 +259317,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 capítulo"
+                      "value" : "%1$lld capítulo"
                     }
                   },
                   "other" : {
@@ -262553,7 +262553,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 de plus"
+                      "value" : "%1$lld de plus"
                     }
                   },
                   "other" : {
@@ -262705,7 +262705,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "mais 1"
+                      "value" : "mais %1$lld"
                     }
                   },
                   "other" : {
@@ -263205,7 +263205,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 chapitre"
+                      "value" : "%1$lld chapitre"
                     }
                   },
                   "other" : {
@@ -263357,7 +263357,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 capítulo"
+                      "value" : "%1$lld capítulo"
                     }
                   },
                   "other" : {
@@ -264941,7 +264941,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 version"
+                      "value" : "%1$lld version"
                     }
                   },
                   "other" : {
@@ -265093,7 +265093,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 opção"
+                      "value" : "%1$lld opção"
                     }
                   },
                   "other" : {
@@ -269457,7 +269457,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 bibliothèque"
+                      "value" : "%1$lld bibliothèque"
                     }
                   },
                   "other" : {
@@ -269609,7 +269609,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 biblioteca"
+                      "value" : "%1$lld biblioteca"
                     }
                   },
                   "other" : {
@@ -270109,7 +270109,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 série"
+                      "value" : "%1$lld série"
                     }
                   },
                   "other" : {
@@ -270261,7 +270261,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 série"
+                      "value" : "%1$lld série"
                     }
                   },
                   "other" : {
@@ -270677,7 +270677,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 bibliothèque · %2$lld séries"
+                      "value" : "%1$lld bibliothèque · %2$lld séries"
                     }
                   },
                   "other" : {
@@ -270829,7 +270829,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 biblioteca · %2$lld séries"
+                      "value" : "%1$lld biblioteca · %2$lld séries"
                     }
                   },
                   "other" : {
@@ -271229,7 +271229,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "1 série"
+                      "value" : "%1$lld série"
                     }
                   },
                   "other" : {
@@ -274261,7 +274261,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un changement en attente de synchronisation"
+                      "value" : "%1$lld changement en attente de synchronisation"
                     }
                   },
                   "other" : {
@@ -274413,7 +274413,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Uma mudança aguardando sincronização"
+                      "value" : "%1$lld mudança aguardando sincronização"
                     }
                   },
                   "other" : {
@@ -275585,7 +275585,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un titre diffère de %2$@"
+                      "value" : "%1$lld titre diffère de %2$@"
                     }
                   },
                   "other" : {
@@ -275737,7 +275737,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Um título difere de %2$@"
+                      "value" : "%1$lld título difere de %2$@"
                     }
                   },
                   "other" : {
@@ -278169,7 +278169,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Supprimer un téléchargement regardé ?"
+                      "value" : "Supprimer %1$lld téléchargement regardé ?"
                     }
                   },
                   "other" : {
@@ -278321,7 +278321,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Excluir um download assistido?"
+                      "value" : "Excluir %1$lld download assistido?"
                     }
                   },
                   "other" : {
@@ -287137,7 +287137,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Modifié pour une série"
+                      "value" : "Modifié pour %1$lld série"
                     }
                   },
                   "other" : {
@@ -287289,7 +287289,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Alterado em uma série"
+                      "value" : "Alterado em %1$lld série"
                     }
                   },
                   "other" : {
@@ -291149,7 +291149,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Examiner une différence"
+                      "value" : "Examiner %1$lld différence"
                     }
                   },
                   "other" : {
@@ -291301,7 +291301,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Revisar uma diferença"
+                      "value" : "Revisar %1$lld diferença"
                     }
                   },
                   "other" : {
@@ -293025,7 +293025,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Une source"
+                      "value" : "%1$lld source"
                     }
                   },
                   "other" : {
@@ -293177,7 +293177,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Uma fonte"
+                      "value" : "%1$lld fonte"
                     }
                   },
                   "other" : {
@@ -309095,7 +309095,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un plugin installé depuis %2$@"
+                      "value" : "%1$lld plugin installé depuis %2$@"
                     }
                   },
                   "other" : {
@@ -309247,7 +309247,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Um plugin instalado de %2$@"
+                      "value" : "%1$lld plugin instalado de %2$@"
                     }
                   },
                   "other" : {
@@ -311071,7 +311071,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un seeder"
+                      "value" : "%1$lld seeder"
                     }
                   },
                   "other" : {
@@ -311223,7 +311223,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Um semeador"
+                      "value" : "%1$lld semeador"
                     }
                   },
                   "other" : {
@@ -311263,7 +311263,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Один сид"
+                      "value" : "%1$lld сид"
                     }
                   },
                   "other" : {
@@ -311471,7 +311471,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@ · Séries : %2$lld · un fichier ignoré"
+                      "value" : "%1$@ · Séries : %2$lld · %3$lld fichier ignoré"
                     }
                   },
                   "other" : {
@@ -311623,7 +311623,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@ · %2$lld séries · um arquivo ignorado"
+                      "value" : "%1$@ · %2$lld séries · %3$lld arquivo ignorado"
                     }
                   },
                   "other" : {
@@ -313763,7 +313763,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Contacte %1$@ et un autre"
+                      "value" : "Contacte %1$@ et %2$lld autre"
                     }
                   },
                   "other" : {
@@ -313915,7 +313915,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Contata %1$@ e mais um"
+                      "value" : "Contata %1$@ e mais %2$lld"
                     }
                   },
                   "other" : {
@@ -317019,7 +317019,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Serveur %1$@ trouvé avec 1 série"
+                      "value" : "Serveur %1$@ trouvé avec %2$lld série"
                     }
                   },
                   "other" : {
@@ -317171,7 +317171,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Servidor %1$@ encontrado com 1 série"
+                      "value" : "Servidor %1$@ encontrado com %2$lld série"
                     }
                   },
                   "other" : {
@@ -321535,7 +321535,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Cette mise à jour contacte aussi %1$@ et un autre."
+                      "value" : "Cette mise à jour contacte aussi %1$@ et %2$lld autre."
                     }
                   },
                   "other" : {
@@ -321687,7 +321687,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Esta atualização também contata %1$@ e mais um."
+                      "value" : "Esta atualização também contata %1$@ e mais %2$lld."
                     }
                   },
                   "other" : {
@@ -326807,7 +326807,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un plugin installé. Il se trouve dans Vos sources."
+                      "value" : "%1$lld plugin installé. Il se trouve dans Vos sources."
                     }
                   },
                   "other" : {
@@ -326959,7 +326959,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Um plugin instalado. Ele está em Suas fontes."
+                      "value" : "%1$lld plugin instalado. Ele está em Suas fontes."
                     }
                   },
                   "other" : {
@@ -327375,7 +327375,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Invitation annulée. La personne qui l’a utilisée reste membre."
+                      "value" : "Invitation annulée. %1$lld personne qui l’a utilisée reste membre."
                     }
                   },
                   "other" : {
@@ -327527,7 +327527,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Convite cancelado. A pessoa que entrou continua como membro."
+                      "value" : "Convite cancelado. %1$lld pessoa que entrou continua como membro."
                     }
                   },
                   "other" : {
@@ -327567,7 +327567,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Приглашение отменено. Присоединившийся человек остаётся участником."
+                      "value" : "Приглашение отменено. %1$lld присоединившийся человек остаётся участником."
                     }
                   },
                   "other" : {
@@ -328615,7 +328615,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@ propose un plugin. Rejoindre n’installe rien : installez-le ici ou plus tard."
+                      "value" : "%1$@ propose %2$lld plugin. Rejoindre n’installe rien : installez-le ici ou plus tard."
                     }
                   },
                   "other" : {
@@ -328767,7 +328767,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@ oferece um plugin. Entrar não instala nada; instale aqui ou depois."
+                      "value" : "%1$@ oferece %2$lld plugin. Entrar não instala nada; instale aqui ou depois."
                     }
                   },
                   "other" : {
@@ -329939,7 +329939,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Seules les personnes que vous invitez peuvent désormais rejoindre. L’appareil qui a rejoint avec le lien reste actif jusqu’à ce que vous le retiriez."
+                      "value" : "Seules les personnes que vous invitez peuvent désormais rejoindre. %1$lld appareil qui a rejoint avec le lien reste actif jusqu’à ce que vous le retiriez."
                     }
                   },
                   "other" : {
@@ -330091,7 +330091,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Agora só entra quem você convidar. O dispositivo que entrou pelo link continua funcionando até você removê-lo."
+                      "value" : "Agora só entra quem você convidar. %1$lld dispositivo que entrou pelo link continua funcionando até você removê-lo."
                     }
                   },
                   "other" : {
@@ -330131,7 +330131,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Теперь подключиться могут только приглашённые. устройство по ссылке продолжает работать, пока вы его не удалите."
+                      "value" : "Теперь подключиться могут только приглашённые. %1$lld устройство по ссылке продолжает работать, пока вы его не удалите."
                     }
                   },
                   "other" : {
@@ -330759,7 +330759,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un autre est pour le visionnage, désactivé sur cet appareil."
+                      "value" : "%1$lld autre est pour le visionnage, désactivé sur cet appareil."
                     }
                   },
                   "other" : {
@@ -330911,7 +330911,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Mais um é para assistir, o que está desativado neste dispositivo."
+                      "value" : "Mais %1$lld é para assistir, o que está desativado neste dispositivo."
                     }
                   },
                   "other" : {
@@ -331831,7 +331831,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un autre est pour la lecture, que cette TV ne gère pas."
+                      "value" : "%1$lld autre est pour la lecture, que cette TV ne gère pas."
                     }
                   },
                   "other" : {
@@ -331983,7 +331983,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Mais um é para leitura, o que esta TV não faz."
+                      "value" : "Mais %1$lld é para leitura, o que esta TV não faz."
                     }
                   },
                   "other" : {
@@ -333323,7 +333323,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Personne d’autre ne pourra rejoindre avec ce lien. La personne qui l’a utilisé reste membre."
+                      "value" : "Personne d’autre ne pourra rejoindre avec ce lien. %1$lld personne qui l’a utilisé reste membre."
                     }
                   },
                   "other" : {
@@ -333475,7 +333475,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Ninguém mais pode entrar com ele. A pessoa que entrou continua como membro."
+                      "value" : "Ninguém mais pode entrar com ele. %1$lld pessoa que entrou continua como membro."
                     }
                   },
                   "other" : {
@@ -333515,7 +333515,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Больше никто не сможет присоединиться. Присоединившийся остаётся участником."
+                      "value" : "Больше никто не сможет присоединиться. %1$lld присоединившийся остаётся участником."
                     }
                   },
                   "other" : {
@@ -334815,7 +334815,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un appareil"
+                      "value" : "%1$lld appareil"
                     }
                   },
                   "other" : {
@@ -334967,7 +334967,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Um dispositivo"
+                      "value" : "%1$lld dispositivo"
                     }
                   },
                   "other" : {
@@ -335007,7 +335007,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Одно устройство"
+                      "value" : "%1$lld устройство"
                     }
                   },
                   "other" : {
@@ -335215,7 +335215,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un appareil a rejoint avec le lien"
+                      "value" : "%1$lld appareil a rejoint avec le lien"
                     }
                   },
                   "other" : {
@@ -335367,7 +335367,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Um dispositivo entrou com o link"
+                      "value" : "%1$lld dispositivo entrou com o link"
                     }
                   },
                   "other" : {
@@ -338219,7 +338219,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Utilisé une fois"
+                      "value" : "Utilisé %1$lld fois"
                     }
                   },
                   "other" : {
@@ -338371,7 +338371,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Usado uma vez"
+                      "value" : "Usado %1$lld vez"
                     }
                   },
                   "other" : {
@@ -342231,7 +342231,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Son seul appareil"
+                      "value" : "%1$lld appareil"
                     }
                   },
                   "other" : {
@@ -342383,7 +342383,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Um dispositivo"
+                      "value" : "%1$lld dispositivo"
                     }
                   },
                   "other" : {
@@ -343555,7 +343555,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un plugin"
+                      "value" : "%1$lld plugin"
                     }
                   },
                   "other" : {
@@ -343707,7 +343707,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Um plugin"
+                      "value" : "%1$lld plugin"
                     }
                   },
                   "other" : {
@@ -345971,7 +345971,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Un plugin"
+                      "value" : "%1$lld plugin"
                     }
                   },
                   "other" : {
@@ -346123,7 +346123,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Um plugin"
+                      "value" : "%1$lld plugin"
                     }
                   },
                   "other" : {
@@ -346163,7 +346163,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Один плагин"
+                      "value" : "%1$lld плагин"
                     }
                   },
                   "other" : {
@@ -349647,7 +349647,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Une mise à jour"
+                      "value" : "%1$lld mise à jour"
                     }
                   },
                   "other" : {
@@ -349799,7 +349799,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Uma atualização"
+                      "value" : "%1$lld atualização"
                     }
                   },
                   "other" : {
@@ -349839,7 +349839,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Одно обновление"
+                      "value" : "%1$lld обновление"
                     }
                   },
                   "other" : {
@@ -361463,7 +361463,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Utilisé pour 1 visionnage"
+                      "value" : "Utilisé pour %1$lld visionnage"
                     }
                   },
                   "other" : {
@@ -361615,7 +361615,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Usado em 1 sessão"
+                      "value" : "Usado em %1$lld sessão"
                     }
                   },
                   "other" : {
@@ -388723,7 +388723,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@, épisode %2$@, en pause, il reste une minute"
+                      "value" : "%1$@, épisode %2$@, en pause, il reste %3$lld minute"
                     }
                   },
                   "other" : {
@@ -388875,7 +388875,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@, episódio %2$@, pausado, falta um minuto"
+                      "value" : "%1$@, episódio %2$@, pausado, falta %3$lld minuto"
                     }
                   },
                   "other" : {
@@ -388915,7 +388915,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@, эпизод %2$@, на паузе, осталась одна минута"
+                      "value" : "%1$@, эпизод %2$@, на паузе, осталась %3$lld минута"
                     }
                   },
                   "other" : {
@@ -389123,7 +389123,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@, épisode %2$@, en lecture, il reste une minute"
+                      "value" : "%1$@, épisode %2$@, en lecture, il reste %3$lld minute"
                     }
                   },
                   "other" : {
@@ -389275,7 +389275,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@, episódio %2$@, reproduzindo, falta um minuto"
+                      "value" : "%1$@, episódio %2$@, reproduzindo, falta %3$lld minuto"
                     }
                   },
                   "other" : {
@@ -389315,7 +389315,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@, эпизод %2$@, воспроизводится, осталась одна минута"
+                      "value" : "%1$@, эпизод %2$@, воспроизводится, осталась %3$lld минута"
                     }
                   },
                   "other" : {
@@ -389523,7 +389523,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@, il reste une minute"
+                      "value" : "%1$@, il reste %2$lld minute"
                     }
                   },
                   "other" : {
@@ -389675,7 +389675,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@, falta um minuto"
+                      "value" : "%1$@, falta %2$lld minuto"
                     }
                   },
                   "other" : {
@@ -389715,7 +389715,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@, осталась одна минута"
+                      "value" : "%1$@, осталась %2$lld минута"
                     }
                   },
                   "other" : {
@@ -390091,7 +390091,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@, un épisode en cours de téléchargement"
+                      "value" : "%1$@, %2$lld épisode en cours de téléchargement"
                     }
                   },
                   "other" : {
@@ -390243,7 +390243,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@, um episódio baixando"
+                      "value" : "%1$@, %2$lld episódio baixando"
                     }
                   },
                   "other" : {
@@ -390283,7 +390283,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@, загружается один эпизод"
+                      "value" : "%1$@, загружается %2$lld эпизод"
                     }
                   },
                   "other" : {
@@ -393011,7 +393011,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Téléchargement d’un épisode"
+                      "value" : "Téléchargement de %1$lld épisode"
                     }
                   },
                   "other" : {
@@ -393163,7 +393163,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Baixando um episódio"
+                      "value" : "Baixando %1$lld episódio"
                     }
                   },
                   "other" : {
@@ -393203,7 +393203,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Загружается один эпизод"
+                      "value" : "Загружается %1$lld эпизод"
                     }
                   },
                   "other" : {

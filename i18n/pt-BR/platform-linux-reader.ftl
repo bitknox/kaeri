@@ -73,14 +73,14 @@ linux-reader-names-and = { $first } e { $last }
 linux-reader-open-failed = Não foi possível abrir o capítulo { $chapter }
 linux-reader-open-failed-plain = Não foi possível abrir este capítulo
 linux-send-next = { $n ->
-    [one] O capítulo seguinte não lido
+    [one] { $n } seguinte não lido
     [many] Os { $n } seguintes não lidos
    *[other] Os { $n } seguintes não lidos
  }
 linux-send-all-unread = Todos não lidos
 linux-send-none-unread = Todos os capítulos foram lidos
 linux-send-saved = { $n ->
-    [one] O arquivo foi salvo
+    [one] { $n } arquivo foi salvo
     [many] { $n } arquivos foram salvos
    *[other] { $n } arquivos foram salvos
  }

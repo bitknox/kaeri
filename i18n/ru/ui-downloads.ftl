@@ -58,7 +58,7 @@ downloads-quality = Качество загрузки
 downloads-notice-done = Эпизод { $episode } загружен
 downloads-notice-done-detail = { $title } · можно смотреть без подключения
 downloads-notice-running = { $count ->
-    [one] Загружается один эпизод
+    [one] Загружается { $count } эпизод
     [few] Загружаются { $count } эпизода
     [many] Загружаются { $count } эпизодов
    *[other] Загружаются { $count } эпизодов

@@ -5,6 +5,7 @@
 
 package app.kaeri.ui.reading
 
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -958,7 +959,10 @@ internal fun EinkDownloadsPage() {
     val store = LocalAppStore.current
     val context = LocalContext.current
     val paced = remember(store) { store.reading.downloads.pacedForPanel(DOWNLOADS_HOLD_MS, shape = ::downloadsShape) }
-    val view by paced.collectAsStateWithLifecycle(initialValue = store.reading.downloads.value)
+    // Only the first frame's value, as collecting the StateFlow itself starts from; the paced flow follows it.
+    @SuppressLint("StateFlowValueCalledInComposition")
+    val first = store.reading.downloads.value
+    val view by paced.collectAsStateWithLifecycle(initialValue = first)
     val settings by store.settings.view.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { store.reading.loadDownloads() }
     var page by rememberSaveable { mutableIntStateOf(0) }

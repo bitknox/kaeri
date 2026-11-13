@@ -1,19 +1,19 @@
 discussion-open = Discussão
 discussion-title-episode = Discussão do episódio { $episode }
 discussion-row = { $count ->
-    [one] Discussão · um comentário
+    [one] Discussão · { $count } comentário
     [many] Discussão · { $count } comentários
    *[other] Discussão · { $count } comentários
  }
 discussion-count = { $count ->
-    [one] Um comentário
+    [one] { $count } comentário
     [many] { $count } comentários
    *[other] { $count } comentários
  }
 discussion-like = Curtir
 discussion-reply = Responder
 discussion-more-replies = { $count ->
-    [one] Mais uma resposta
+    [one] Mais { $count } resposta
     [many] Mais { $count } respostas
    *[other] Mais { $count } respostas
  }

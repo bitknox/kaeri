@@ -4,7 +4,7 @@ onboarding-demo-both-detail = Un court épisode et une courte bande dessinée, p
 home-demo-only-books = Seule la démo est active. Ajoutez un dossier, un serveur ou une { -plugin-store } pour lire vos propres livres.
 home-spotlight-read = Lire
 demo-series-facts = { $pages ->
-    [one] Démo · Bande dessinée · une page
+    [one] Démo · Bande dessinée · { $pages } page
     [many] Démo · Bande dessinée · { $pages } pages
    *[other] Démo · Bande dessinée · { $pages } pages
  }
@@ -25,7 +25,7 @@ demo-chapters = Chapitres
 demo-also = Aussi dans la démo
 demo-credits = Crédits
 demo-pages = { $pages ->
-    [one] Une page
+    [one] { $pages } page
     [many] { $pages } pages
    *[other] { $pages } pages
  }

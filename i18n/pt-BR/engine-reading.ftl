@@ -7,7 +7,7 @@ reading-usually-fridays = Geralmente às sextas
 reading-usually-saturdays = Geralmente aos sábados
 reading-usually-sundays = Geralmente aos domingos
 reading-about-every-weeks = { $weeks ->
-    [one] Cerca de toda semana
+    [one] A cada { $weeks } semana, em média
     [many] A cada { $weeks } de semanas
    *[other] Cerca de a cada { $weeks } semanas
  }
@@ -55,12 +55,12 @@ reading-status-hiatus = Em hiato
 reading-status-cancelled = Cancelado
 reading-status-not-yet = Ainda não saiu
 reading-chapters = { $count ->
-    [one] 1 capítulo
+    [one] { $count } capítulo
     [many] { $count } de capítulos
    *[other] { $count } capítulos
  }
 reading-volumes = { $count ->
-    [one] 1 volume
+    [one] { $count } volume
     [many] { $count } de volumes
    *[other] { $count } volumes
  }
@@ -99,7 +99,7 @@ export-device-colour-eink = E-ink colorido, 7 pol.
 export-device-tablet = Tablet
 export-chapter = Capítulo { $chapter }
 export-waits-for-wifi = { $n ->
-    [one] Um capítulo ainda não foi baixado, então este envio espera o Wi-Fi e continua sozinho.
+    [one] { $n } capítulo ainda não foi baixado, então este envio espera o Wi-Fi e continua sozinho.
     [many] { $n } de capítulos ainda não foram baixados, então este envio espera o Wi-Fi e continua sozinho.
    *[other] { $n } capítulos ainda não foram baixados, então este envio espera o Wi-Fi e continua sozinho.
  }
@@ -120,12 +120,12 @@ reading-row-percent = { $percent }%
 reading-row-opened = Aberto
 reading-row-bookmarked = Com marcador
 reading-row-pages = { $n ->
-    [one] 1 página
+    [one] { $n } página
     [many] { $n } de páginas
    *[other] { $n } páginas
  }
 reading-row-versions = { $n ->
-    [one] 1 opção
+    [one] { $n } opção
     [many] { $n } de opções
    *[other] { $n } opções
  }
@@ -134,22 +134,22 @@ reading-ago-minutes = há { $minutes } min
 reading-ago-today = hoje
 reading-ago-yesterday = ontem
 reading-ago-days = { $days ->
-    [one] há 1 dia
+    [one] há { $days } dia
     [many] há { $days } de dias
    *[other] há { $days } dias
  }
 reading-ago-weeks = { $weeks ->
-    [one] há 1 semana
+    [one] há { $weeks } semana
     [many] há { $weeks } de semanas
    *[other] há { $weeks } semanas
  }
 reading-ago-months = { $months ->
-    [one] há 1 mês
+    [one] há { $months } mês
     [many] há { $months } de meses
    *[other] há { $months } meses
  }
 reading-ago-years = { $years ->
-    [one] há 1 ano
+    [one] há { $years } ano
     [many] há { $years } de anos
    *[other] há { $years } anos
  }
@@ -162,7 +162,7 @@ reading-miss-no-series = Nenhuma série com este nome
 reading-miss-down-since = Sem responder desde { $time }
 reading-miss-down = Sem responder
 reading-dl-parts = { $count ->
-    [one] 1 parte
+    [one] { $count } parte
     [many] { $count } de partes
    *[other] { $count } partes
  }
@@ -181,12 +181,12 @@ reading-estimate-mobile = por dados móveis
 reading-estimate-waits-wifi = espera o Wi-Fi
 reading-downloads-done-title = Downloads concluídos
 reading-downloads-done-chapters = { $count ->
-    [one] Um capítulo de { $title } está pronto para ler offline.
+    [one] { $count } capítulo de { $title } está pronto para ler offline.
     [many] { $count } de capítulos de { $title } estão prontos para ler offline.
    *[other] { $count } capítulos de { $title } estão prontos para ler offline.
  }
 reading-downloads-done-parts = { $count ->
-    [one] Uma parte de { $title } está pronta para ler offline.
+    [one] { $count } parte de { $title } está pronta para ler offline.
     [many] { $count } de partes de { $title } estão prontas para ler offline.
    *[other] { $count } partes de { $title } estão prontas para ler offline.
  }
@@ -208,17 +208,17 @@ read-search-started-3-years = Últimos 3 anos
 read-hit-chapters = Capítulos 1 a { $last }
 read-hit-episodes = Episódios 1 a { $last }
 read-hit-parts = { $count ->
-    [one] 1 parte
+    [one] { $count } parte
     [many] { $count } de partes
    *[other] { $count } partes
  }
 read-hit-files = { $count ->
-    [one] 1 arquivo
+    [one] { $count } arquivo
     [many] { $count } de arquivos
    *[other] { $count } arquivos
  }
 read-hit-files-format = { $count ->
-    [one] 1 arquivo · { $format }
+    [one] { $count } arquivo · { $format }
     [many] { $count } de arquivos · { $format }
    *[other] { $count } arquivos · { $format }
  }

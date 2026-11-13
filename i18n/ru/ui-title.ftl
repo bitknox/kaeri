@@ -45,7 +45,7 @@ episode-protection-line-short = Скрыто после серии { $episode }
 episode-range = Серии с { $from } по { $to }
 episode-range-label = Диапазон серий
 episode-fold = { $count ->
-    [one] Одна просмотренная серия
+    [one] { $count } просмотренная серия
     [few] { $count } просмотренные серии
     [many] { $count } просмотренных серий
    *[other] { $count } просмотренной серии

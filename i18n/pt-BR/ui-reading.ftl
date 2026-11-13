@@ -23,7 +23,7 @@ chapter-updates-empty-line = O { -app-name } verifica algumas vezes por dia as s
 chapter-updates-today = Hoje
 chapter-updates-yesterday = Ontem
 chapter-updates-versions = { $n ->
-    [one] 1 opção
+    [one] { $n } opção
     [many] { $n } de opções
    *[other] { $n } opções
  }
@@ -44,7 +44,7 @@ action-read-again = Ler de novo
 series-reading-from = Lendo de
 series-change = Mudar
 series-sources-more = { $n ->
-    [one] mais 1
+    [one] mais { $n }
     [many] mais { $n }
    *[other] mais { $n }
  }
@@ -56,7 +56,7 @@ series-tracker-chapters-of = { $total ->
    *[other] { $n } de { $total } capítulos
  }
 series-tracker-chapters = { $n ->
-    [one] 1 capítulo
+    [one] { $n } capítulo
     [many] { $n } de capítulos
    *[other] { $n } capítulos
  }
@@ -70,7 +70,7 @@ series-remove-from-lists-title = Remover { $title } das suas listas?
 series-remove-from-lists-line = Ela sai da sua lista em cada { -tracker } conectado. Seu ponto de leitura e os capítulos lidos ficam no { -app-name }.
 series-removed-title = Suas listas
 series-chosen = { $n ->
-    [one] 1 capítulo
+    [one] { $n } capítulo
     [many] { $n } de capítulos
    *[other] { $n } capítulos
  }
@@ -107,7 +107,7 @@ series-read-chapter-menu = Ler
 series-bookmark = Marcar
 series-remove-bookmark = Remover marcador
 series-versions = { $n ->
-    [one] 1 opção
+    [one] { $n } opção
     [many] { $n } de opções
    *[other] { $n } opções
  }
@@ -129,14 +129,14 @@ chapter-download-delete = Apagar download
 download-next = Os { $n } não lidos seguintes
 download-unread = Todos os capítulos não lidos
 download-volume-count = { $n ->
-    [one] { $volume } · 1 capítulo
+    [one] { $volume } · { $n } capítulo
     [many] { $volume } · { $n } de capítulos
    *[other] { $volume } · { $n } capítulos
  }
 download-choose = Escolher capítulos…
 download-delete-series = Apagar downloads desta série
 download-chapters = { $n ->
-    [one] Baixar 1 capítulo
+    [one] Baixar { $n } capítulo
     [many] Baixar { $n } de capítulos
    *[other] Baixar { $n } capítulos
  }
@@ -190,7 +190,7 @@ book-add-server-title = Adicionar um servidor
 book-add-server-button = Adicionar servidor
 sources-found-server = Servidor { $kind } encontrado
 sources-found-server-series = { $n ->
-    [one] Servidor { $kind } encontrado com 1 série
+    [one] Servidor { $kind } encontrado com { $n } série
     [many] Servidor { $kind } encontrado com { $n } de séries
    *[other] Servidor { $kind } encontrado com { $n } séries
  }
@@ -201,7 +201,7 @@ book-sources-servers = Servidores
 book-sources-plugins = { -plugin-cap-pl }
 book-sources-plugins-footer = Os { -plugin-pl } vêm de { -plugin-store-pl } em que você entra.
 book-sources-series = { $n ->
-    [one] 1 série
+    [one] { $n } série
     [many] { $n } de séries
    *[other] { $n } séries
  }
@@ -227,7 +227,7 @@ library-scope-shows = Séries
 library-scope-reading = Leitura
 read-sort-last-read = Lidos há pouco
 read-library-list-value = { $n ->
-    [one] { $list }, 1 série
+    [one] { $list }, { $n } série
     [many] { $list }, { $n } de séries
    *[other] { $list }, { $n } séries
  }
@@ -238,14 +238,14 @@ read-library-files-empty-line = As séries das suas pastas e servidores que não
 read-library-files-add = Adicionar pasta ou servidor
 read-search-placeholder = Buscar leitura
 search-other-scope = { $n ->
-    [one] 1 resultado em { $scope }
+    [one] { $n } resultado em { $scope }
     [many] { $n } de resultados em { $scope }
    *[other] { $n } resultados em { $scope }
  }
 search-show-them = Mostrar
 read-search-browse-line = { $what } · do AniList
 read-search-total = { $n ->
-    [one] 1 série do AniList
+    [one] { $n } série do AniList
     [many] { $n } de séries do AniList
    *[other] { $n } séries do AniList
  }
@@ -269,7 +269,7 @@ read-filter-set = { $name }:
 read-filter-many = { $first } e mais { $more }
 read-filter-not-genre = Sem { $genre }
 read-filter-genres-count = { $n ->
-    [one] 1 gênero
+    [one] { $n } gênero
     [many] { $n } de gêneros
    *[other] { $n } gêneros
  }
@@ -434,7 +434,7 @@ send-size-about = Cerca de { $size }
 send-no-place = O { -app-name } não consegue ver onde você está neste e-reader. Quando você voltar, a página da série pergunta onde você parou.
 send-prepare = Preparar e compartilhar
 send-preparing = { $total ->
-    [one] Preparando o capítulo
+    [one] Preparando { $done } de { $total } capítulo
     [many] Preparando { $done } de { $total } capítulos
    *[other] Preparando { $done } de { $total } capítulos
  }
@@ -450,7 +450,7 @@ send-chapter-action = Enviar para o e-reader
 send-parts-over = em partes acima de { $size }
 send-waiting-cancel = Cancelar envio
 send-ready = { $n ->
-    [one] Um arquivo está pronto.
+    [one] { $n } arquivo está pronto.
     [many] { $n } arquivos estão prontos.
    *[other] { $n } arquivos estão prontos.
  }
@@ -486,14 +486,14 @@ opds-port-moved = A porta { $wanted } estava ocupada, então o feed usa a { $por
 opds-shares = O que compartilha
 opds-share-downloads = Downloads
 opds-share-downloads-count = { $n ->
-    [one] Um capítulo
+    [one] { $n } capítulo
     [many] { $n } capítulos
    *[other] { $n } capítulos
  }
 opds-share-manga = Pasta de mangás
 opds-share-novels = Pasta de romances
 opds-share-series-count = { $n ->
-    [one] Uma série
+    [one] { $n } série
     [many] { $n } séries
    *[other] { $n } séries
  }
@@ -506,7 +506,7 @@ opds-new-password-title = Criar uma nova senha?
 opds-new-password-warning = Os e-readers que já usam o feed param de funcionar até você digitar a nova senha em cada um.
 opds-fetched-time = Último pedido: { $time }
 opds-fetched-files = { $n ->
-    [one] Um arquivo
+    [one] { $n } arquivo
     [many] { $n } arquivos
    *[other] { $n } arquivos
  }

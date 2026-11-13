@@ -73,7 +73,7 @@ linux-reader-names-and = { $first } и { $last }
 linux-reader-open-failed = Не удалось открыть главу { $chapter }
 linux-reader-open-failed-plain = Не удалось открыть эту главу
 linux-send-next = { $n ->
-    [one] Следующая непрочитанная
+    [one] Следующая { $n } непрочитанная
     [few] Следующие { $n } непрочитанные
     [many] Следующие { $n } непрочитанных
    *[other] Следующие { $n } непрочитанных

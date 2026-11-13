@@ -12,12 +12,12 @@ pad-help-next-section = Próxima seção
 pad-help-page-up = Subir uma página
 pad-help-page-down = Descer uma página
 pad-help-seek-back = { $seconds ->
-    [one] Voltar um segundo
+    [one] Voltar { $seconds } segundo
     [many] Voltar { $seconds } segundos
    *[other] Voltar { $seconds } segundos
  }
 pad-help-seek-forward = { $seconds ->
-    [one] Avançar um segundo
+    [one] Avançar { $seconds } segundo
     [many] Avançar { $seconds } segundos
    *[other] Avançar { $seconds } segundos
  }

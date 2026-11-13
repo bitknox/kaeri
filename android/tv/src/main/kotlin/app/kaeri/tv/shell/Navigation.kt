@@ -242,7 +242,7 @@ class TvNavigator(start: Destination = Destination.Home) {
      */
     fun replaceTitle(id: AnilistId) {
         val top = pages.lastOrNull() as? Page.Title ?: return openTitle(id)
-        pages.removeLast()
+        pages.removeAt(pages.lastIndex)
         forget(top.key)
         openTitle(id)
     }

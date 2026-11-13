@@ -1,6 +1,6 @@
 channel-downloads-name = Downloads
 release-seeders = { $count ->
-    [one] Um seeder
+    [one] { $count } seeder
     [many] { $count } seeders
    *[other] { $count } seeders
  }

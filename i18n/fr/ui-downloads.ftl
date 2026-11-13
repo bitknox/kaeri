@@ -58,7 +58,7 @@ downloads-quality = Qualité des téléchargements
 downloads-notice-done = Épisode { $episode } téléchargé
 downloads-notice-done-detail = { $title } · prêt à regarder hors ligne
 downloads-notice-running = { $count ->
-    [one] Téléchargement d’un épisode
+    [one] Téléchargement de { $count } épisode
     [many] Téléchargement de { $count } épisodes
    *[other] Téléchargement de { $count } épisodes
  }

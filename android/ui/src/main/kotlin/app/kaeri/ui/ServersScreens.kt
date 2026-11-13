@@ -62,6 +62,7 @@ import app.kaeri.engine.model.ServerStep
 import app.kaeri.i18n.R
 import app.kaeri.store.AddServerState
 import app.kaeri.store.AddServerStep
+import androidx.compose.ui.platform.LocalResources
 
 internal const val ADD_SERVER_ROUTE = "servers/add"
 
@@ -350,6 +351,7 @@ internal fun ServerScreen(id: String) {
     val rows by store.servers.rows.collectAsStateWithLifecycle()
     val row = rows.firstOrNull { it.id == id }
     val context = androidx.compose.ui.platform.LocalContext.current
+    val resources = LocalResources.current
     LaunchedEffect(Unit) { store.loadServers() }
     ScreenFrame(title = row?.name.orEmpty(), subtitle = row?.let { stringResource(R.string.servers_page_line, it.address.removePrefix("http://"), it.version, it.user) }, onBack = navigator::back) { padding ->
         if (row == null) return@ScreenFrame
@@ -387,7 +389,7 @@ internal fun ServerScreen(id: String) {
                     { place ->
                         LinkRow(place, stringResource(R.string.servers_remove), null, onClick = {
                             store.removeServer(row.id)
-                            snackbars.show(context.getString(R.string.servers_removed, row.name), context.getString(R.string.action_undo)) { store.restoreServer(row.id) }
+                            snackbars.show(resources.getString(R.string.servers_removed, row.name), resources.getString(R.string.action_undo)) { store.restoreServer(row.id) }
                             navigator.back()
                         })
                     },

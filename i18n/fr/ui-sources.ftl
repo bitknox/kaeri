@@ -55,7 +55,7 @@ sources-contacts-label = Serveurs contactés
 sources-listed-by-store = Listée par sa { -plugin-store }
 sources-contacts-one = Contacte { $first }
 sources-contacts-line = { $more ->
-    [one] Contacte { $first } et un autre
+    [one] Contacte { $first } et { $more } autre
     [many] Contacte { $first } et { $more } autres
    *[other] Contacte { $first } et { $more } autres
  }
@@ -63,7 +63,7 @@ sources-contacts-none = Ne liste aucun serveur à contacter
 sources-no-hosts = Aucun serveur
 sources-update-contacts-one = Cette mise à jour contacte aussi { $first }.
 sources-update-contacts = { $more ->
-    [one] Cette mise à jour contacte aussi { $first } et un autre.
+    [one] Cette mise à jour contacte aussi { $first } et { $more } autre.
     [many] Cette mise à jour contacte aussi { $first } et { $more } autres.
    *[other] Cette mise à jour contacte aussi { $first } et { $more } autres.
  }
@@ -80,7 +80,7 @@ sources-response-ms = { $ms } ms
 match-fix = Corriger cette association
 match-choose = Choisir l’association
 match-uncertain = { $count ->
-    [one] { $source } liste un titre qui pourrait être celui-ci. Choisissez-le pour lire ses épisodes.
+    [one] { $source } liste { $count } titre qui pourrait être celui-ci. Choisissez-le pour lire ses épisodes.
     [many] { $source } liste { $count } titres qui pourraient être celui-ci. Choisissez-en un pour lire ses épisodes.
    *[other] { $source } liste { $count } titres qui pourraient être celui-ci. Choisissez-en un pour lire ses épisodes.
  }

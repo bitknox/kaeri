@@ -84,7 +84,7 @@
     <string name="cause_airs_today">aujourd\'hui à %1$s</string>
     <string name="cause_airs_tomorrow">demain à %1$s</string>
     <plurals name="cause_airs_in_days">
-        <item quantity="one">dans un jour à %2$s</item>
+        <item quantity="one">dans %1$,d jour à %2$s</item>
         <item quantity="many">dans %1$,d jours à %2$s</item>
         <item quantity="other">dans %1$,d jours à %2$s</item>
     </plurals>
@@ -98,13 +98,13 @@
     <string name="cause_source_cannot_download">Cette source permet de regarder des épisodes, mais pas de les télécharger.</string>
     <string name="cause_no_source_could_list_show">Aucune source n\'a pu répertorier cette série, elle ne peut donc pas être téléchargée.</string>
     <plurals name="cause_subtitles_merged">
-        <item quantity="one">Une piste de sous-titres a été intégrée.</item>
+        <item quantity="one">%1$,d piste de sous-titres a été intégrée.</item>
         <item quantity="many">%1$,d pistes de sous-titres ont été intégrées.</item>
         <item quantity="other">%1$,d pistes de sous-titres ont été intégrées.</item>
     </plurals>
     <string name="cause_subtitles_left_apart">Les sous-titres restent dans des fichiers séparés. %1$s</string>
     <plurals name="cause_already_in_downloads">
-        <item quantity="one">Un épisode est déjà dans les téléchargements.</item>
+        <item quantity="one">%1$,d épisode est déjà dans les téléchargements.</item>
         <item quantity="many">%1$,d épisodes sont déjà dans les téléchargements.</item>
         <item quantity="other">%1$,d épisodes sont déjà dans les téléchargements.</item>
     </plurals>
@@ -164,12 +164,12 @@
     <string name="notice_download_removed_file_kept">Téléchargement retiré, mais son fichier n\'a pas pu être supprimé. %1$s</string>
     <string name="notice_download_removed">Téléchargement retiré.</string>
     <plurals name="notice_downloads_cleared">
-        <item quantity="one">Un téléchargement terminé a été retiré de la liste.</item>
+        <item quantity="one">%1$,d téléchargement terminé a été retiré de la liste.</item>
         <item quantity="many">%1$,d téléchargements terminés ont été retirés de la liste.</item>
         <item quantity="other">%1$,d téléchargements terminés ont été retirés de la liste.</item>
     </plurals>
     <plurals name="notice_skip_marks_cleared">
-        <item quantity="one">Le seul repère de saut que vous aviez marqué a été effacé.</item>
+        <item quantity="one">%1$,d repère de saut que vous aviez marqué a été effacé.</item>
         <item quantity="many">%1$,d repères de saut que vous aviez marqués ont été effacés.</item>
         <item quantity="other">%1$,d repères de saut que vous aviez marqués ont été effacés.</item>
     </plurals>
@@ -183,17 +183,17 @@
     <string name="notice_downloads_none_new">Rien de nouveau ajouté à la file. %1$s</string>
     <string name="notice_downloads_none_new_stopped">Rien de nouveau ajouté à la file. %1$s %2$s</string>
     <plurals name="notice_episodes_queued_existing">
-        <item quantity="one">Un épisode ajouté à la file. %2$s</item>
+        <item quantity="one">%1$,d épisode ajouté à la file. %2$s</item>
         <item quantity="many">%1$,d épisodes ajoutés à la file. %2$s</item>
         <item quantity="other">%1$,d épisodes ajoutés à la file. %2$s</item>
     </plurals>
     <plurals name="notice_episodes_queued_stopped">
-        <item quantity="one">Un épisode ajouté à la file, puis l\'ajout s\'est arrêté. %2$s</item>
+        <item quantity="one">%1$,d épisode ajouté à la file, puis l\'ajout s\'est arrêté. %2$s</item>
         <item quantity="many">%1$,d épisodes ajoutés à la file, puis l\'ajout s\'est arrêté. %2$s</item>
         <item quantity="other">%1$,d épisodes ajoutés à la file, puis l\'ajout s\'est arrêté. %2$s</item>
     </plurals>
     <plurals name="notice_episodes_queued_existing_stopped">
-        <item quantity="one">Un épisode ajouté à la file, puis l\'ajout s\'est arrêté. %2$s %3$s</item>
+        <item quantity="one">%1$,d épisode ajouté à la file, puis l\'ajout s\'est arrêté. %2$s %3$s</item>
         <item quantity="many">%1$,d épisodes ajoutés à la file, puis l\'ajout s\'est arrêté. %2$s %3$s</item>
         <item quantity="other">%1$,d épisodes ajoutés à la file, puis l\'ajout s\'est arrêté. %2$s %3$s</item>
     </plurals>
@@ -215,7 +215,7 @@
     <string name="reading_usually_saturdays">En général le samedi</string>
     <string name="reading_usually_sundays">En général le dimanche</string>
     <plurals name="reading_about_every_weeks">
-        <item quantity="one">Environ chaque semaine</item>
+        <item quantity="one">Environ %1$,d semaine d’écart</item>
         <item quantity="many">Environ toutes les %1$,d semaines</item>
         <item quantity="other">Environ toutes les %1$,d semaines</item>
     </plurals>
@@ -263,12 +263,12 @@
     <string name="reading_status_cancelled">Annulé</string>
     <string name="reading_status_not_yet">Pas encore paru</string>
     <plurals name="reading_chapters">
-        <item quantity="one">1 chapitre</item>
+        <item quantity="one">%1$,d chapitre</item>
         <item quantity="many">%1$,d de chapitres</item>
         <item quantity="other">%1$,d chapitres</item>
     </plurals>
     <plurals name="reading_volumes">
-        <item quantity="one">1 volume</item>
+        <item quantity="one">%1$,d volume</item>
         <item quantity="many">%1$,d de volumes</item>
         <item quantity="other">%1$,d volumes</item>
     </plurals>
@@ -307,7 +307,7 @@
     <string name="export_device_tablet">Tablette</string>
     <string name="export_chapter">Chapitre %1$s</string>
     <plurals name="export_waits_for_wifi">
-        <item quantity="one">Un chapitre n\'est pas encore téléchargé : l\'envoi attend le Wi-Fi et reprendra tout seul.</item>
+        <item quantity="one">%1$,d chapitre n\'est pas encore téléchargé : l\'envoi attend le Wi-Fi et reprendra tout seul.</item>
         <item quantity="many">%1$,d chapitres ne sont pas encore téléchargés : l\'envoi attend le Wi-Fi et reprendra tout seul.</item>
         <item quantity="other">%1$,d chapitres ne sont pas encore téléchargés : l\'envoi attend le Wi-Fi et reprendra tout seul.</item>
     </plurals>
@@ -328,12 +328,12 @@
     <string name="reading_row_opened">Ouvert</string>
     <string name="reading_row_bookmarked">Signet</string>
     <plurals name="reading_row_pages">
-        <item quantity="one">1 page</item>
+        <item quantity="one">%1$,d page</item>
         <item quantity="many">%1$,d de pages</item>
         <item quantity="other">%1$,d pages</item>
     </plurals>
     <plurals name="reading_row_versions">
-        <item quantity="one">1 version</item>
+        <item quantity="one">%1$,d version</item>
         <item quantity="many">%1$,d de versions</item>
         <item quantity="other">%1$,d versions</item>
     </plurals>
@@ -342,22 +342,22 @@
     <string name="reading_ago_today">aujourd\'hui</string>
     <string name="reading_ago_yesterday">hier</string>
     <plurals name="reading_ago_days">
-        <item quantity="one">il y a 1 jour</item>
+        <item quantity="one">il y a %1$,d jour</item>
         <item quantity="many">il y a %1$,d de jours</item>
         <item quantity="other">il y a %1$,d jours</item>
     </plurals>
     <plurals name="reading_ago_weeks">
-        <item quantity="one">il y a 1 sem.</item>
+        <item quantity="one">il y a %1$,d sem.</item>
         <item quantity="many">il y a %1$,d sem.</item>
         <item quantity="other">il y a %1$,d sem.</item>
     </plurals>
     <plurals name="reading_ago_months">
-        <item quantity="one">il y a 1 mois</item>
+        <item quantity="one">il y a %1$,d mois</item>
         <item quantity="many">il y a %1$,d mois</item>
         <item quantity="other">il y a %1$,d mois</item>
     </plurals>
     <plurals name="reading_ago_years">
-        <item quantity="one">il y a 1 an</item>
+        <item quantity="one">il y a %1$,d an</item>
         <item quantity="many">il y a %1$,d d\'ans</item>
         <item quantity="other">il y a %1$,d ans</item>
     </plurals>
@@ -370,7 +370,7 @@
     <string name="reading_miss_down_since">Ne répond pas depuis %1$s</string>
     <string name="reading_miss_down">Ne répond pas</string>
     <plurals name="reading_dl_parts">
-        <item quantity="one">1 partie</item>
+        <item quantity="one">%1$,d partie</item>
         <item quantity="many">%1$,d de parties</item>
         <item quantity="other">%1$,d parties</item>
     </plurals>
@@ -389,12 +389,12 @@
     <string name="reading_estimate_waits_wifi">attend le Wi-Fi</string>
     <string name="reading_downloads_done_title">Téléchargements terminés</string>
     <plurals name="reading_downloads_done_chapters">
-        <item quantity="one">Un chapitre de %1$s est prêt à lire hors ligne.</item>
+        <item quantity="one">%2$,d chapitre de %1$s est prêt à lire hors ligne.</item>
         <item quantity="many">%2$,d chapitres de %1$s sont prêts à lire hors ligne.</item>
         <item quantity="other">%2$,d chapitres de %1$s sont prêts à lire hors ligne.</item>
     </plurals>
     <plurals name="reading_downloads_done_parts">
-        <item quantity="one">Une partie de %1$s est prête à lire hors ligne.</item>
+        <item quantity="one">%2$,d partie de %1$s est prête à lire hors ligne.</item>
         <item quantity="many">%2$,d parties de %1$s sont prêtes à lire hors ligne.</item>
         <item quantity="other">%2$,d parties de %1$s sont prêtes à lire hors ligne.</item>
     </plurals>
@@ -416,17 +416,17 @@
     <string name="read_hit_chapters">Chapitres 1 à %1$d</string>
     <string name="read_hit_episodes">Épisodes 1 à %1$d</string>
     <plurals name="read_hit_parts">
-        <item quantity="one">1 partie</item>
+        <item quantity="one">%1$,d partie</item>
         <item quantity="many">%1$,d de parties</item>
         <item quantity="other">%1$,d parties</item>
     </plurals>
     <plurals name="read_hit_files">
-        <item quantity="one">1 fichier</item>
+        <item quantity="one">%1$,d fichier</item>
         <item quantity="many">%1$,d de fichiers</item>
         <item quantity="other">%1$,d fichiers</item>
     </plurals>
     <plurals name="read_hit_files_format">
-        <item quantity="one">1 fichier · %2$s</item>
+        <item quantity="one">%1$,d fichier · %2$s</item>
         <item quantity="many">%1$,d de fichiers · %2$s</item>
         <item quantity="other">%1$,d fichiers · %2$s</item>
     </plurals>
@@ -450,14 +450,14 @@
     <string name="store_member_removed">Membre retiré. Ses appareils ne fonctionnent plus avec cette boutique de plugins.</string>
     <string name="store_invite_cancelled">Invitation annulée. Le lien ne fonctionne plus.</string>
     <plurals name="store_invite_cancelled_kept">
-        <item quantity="one">Invitation annulée. La personne qui l’a utilisée reste membre.</item>
+        <item quantity="one">Invitation annulée. %1$,d personne qui l’a utilisée reste membre.</item>
         <item quantity="many">Invitation annulée. Les %1$,d personnes qui l’ont utilisée restent membres.</item>
         <item quantity="other">Invitation annulée. Les %1$,d personnes qui l’ont utilisée restent membres.</item>
     </plurals>
     <string name="store_open_join_on">Toute personne disposant du lien de la boutique de plugins peut désormais la rejoindre. Copiez-le depuis l’écran des membres.</string>
     <string name="store_open_join_off">Seules les personnes que vous invitez peuvent désormais rejoindre.</string>
     <plurals name="store_open_join_off_devices">
-        <item quantity="one">Seules les personnes que vous invitez peuvent désormais rejoindre. L’appareil qui a rejoint avec le lien reste actif jusqu’à ce que vous le retiriez.</item>
+        <item quantity="one">Seules les personnes que vous invitez peuvent désormais rejoindre. %1$,d appareil qui a rejoint avec le lien reste actif jusqu’à ce que vous le retiriez.</item>
         <item quantity="many">Seules les personnes que vous invitez peuvent désormais rejoindre. Les %1$,d appareils qui ont rejoint avec le lien restent actifs jusqu’à ce que vous les retiriez.</item>
         <item quantity="other">Seules les personnes que vous invitez peuvent désormais rejoindre. Les %1$,d appareils qui ont rejoint avec le lien restent actifs jusqu’à ce que vous les retiriez.</item>
     </plurals>
@@ -473,7 +473,7 @@
     <string name="plugin_installed_not_loaded">%1$s installé, mais il n’a pas pu se charger. %2$s</string>
     <string name="plugin_installed_outdated">%1$s est installé, mais il a été conçu pour une version plus ancienne de Kaeri et doit être mis à jour. Demandez une nouvelle version à son auteur.</string>
     <plurals name="plugins_outdated">
-        <item quantity="one">Un plugin a été conçu pour une version plus ancienne de Kaeri et doit être mis à jour : %2$s.</item>
+        <item quantity="one">%1$,d plugin a été conçu pour une version plus ancienne de Kaeri et doit être mis à jour : %2$s.</item>
         <item quantity="many">%1$,d plugins ont été conçus pour une version plus ancienne de Kaeri et doivent être mis à jour : %2$s.</item>
         <item quantity="other">%1$,d plugins ont été conçus pour une version plus ancienne de Kaeri et doivent être mis à jour : %2$s.</item>
     </plurals>
@@ -563,7 +563,7 @@
     <string name="notice_client_id_missing">Réglez d\'abord %1$s dans le fichier de configuration.</string>
     <string name="notice_signed_out">Déconnecté de %1$s.</string>
     <plurals name="notice_signed_out_queue">
-        <item quantity="one">Déconnecté de %1$s. Une modification en attente est conservée pour la prochaine connexion.</item>
+        <item quantity="one">Déconnecté de %1$s. %2$,d modification en attente est conservée pour la prochaine connexion.</item>
         <item quantity="many">Déconnecté de %1$s. %2$,d modifications en attente sont conservées pour la prochaine connexion.</item>
         <item quantity="other">Déconnecté de %1$s. %2$,d modifications en attente sont conservées pour la prochaine connexion.</item>
     </plurals>
@@ -580,7 +580,7 @@
     <string name="notice_mapping_data_failed">Impossible d\'actualiser les données de correspondance (%1$s). Nouvelle tentative dans %2$s. %3$s</string>
     <string name="notice_episode_aired">%1$s, épisode %2$d, a été diffusé pendant votre absence.</string>
     <plurals name="notice_episodes_aired">
-        <item quantity="one">Un nouvel épisode d\'une série que vous suivez a été diffusé. Le calendrier l\'affiche.</item>
+        <item quantity="one">%1$,d nouvel épisode d\'une série que vous suivez a été diffusé. Le calendrier l\'affiche.</item>
         <item quantity="many">%1$,d nouveaux épisodes de séries que vous suivez ont été diffusés. Le calendrier les affiche.</item>
         <item quantity="other">%1$,d nouveaux épisodes de séries que vous suivez ont été diffusés. Le calendrier les affiche.</item>
     </plurals>
@@ -604,7 +604,7 @@
     <string name="start_failed_remote">La télécommande n’a pas pu démarrer. %1$s</string>
     <string name="start_failed_player">Le lecteur n’a pas pu démarrer. %1$s</string>
     <plurals name="notice_episodes_queued">
-        <item quantity="one">Un épisode ajouté à la file.</item>
+        <item quantity="one">%1$,d épisode ajouté à la file.</item>
         <item quantity="many">%1$,d épisodes ajoutés à la file.</item>
         <item quantity="other">%1$,d épisodes ajoutés à la file.</item>
     </plurals>
@@ -634,7 +634,7 @@
     <string name="discussion_image_host">Image · %1$s</string>
     <string name="discussion_video_host">Vidéo · %1$s</string>
     <plurals name="player_more_discussion_note">
-        <item quantity="one">Un commentaire · met en pause</item>
+        <item quantity="one">%1$,d commentaire · met en pause</item>
         <item quantity="many">%1$,d commentaires · met en pause</item>
         <item quantity="other">%1$,d commentaires · met en pause</item>
     </plurals>
@@ -710,7 +710,7 @@
     <string name="eink_contents">Sommaire</string>
     <string name="eink_back">Retour</string>
     <plurals name="eink_pages_left">
-        <item quantity="one">Une page restante dans le chapitre</item>
+        <item quantity="one">%1$,d page restante dans le chapitre</item>
         <item quantity="many">%1$,d pages restantes dans le chapitre</item>
         <item quantity="other">%1$,d pages restantes dans le chapitre</item>
     </plurals>
@@ -721,7 +721,7 @@
     <string name="eink_end_of_chapter">Fin du chapitre %1$s</string>
     <string name="eink_end_next">Suivant</string>
     <plurals name="eink_end_pages">
-        <item quantity="one">Une page</item>
+        <item quantity="one">%1$,d page</item>
         <item quantity="many">%1$,d pages</item>
         <item quantity="other">%1$,d pages</item>
     </plurals>
@@ -860,19 +860,19 @@
     <string name="channel_downloads_finished_description">Quand les chapitres que vous avez choisi de télécharger sont tous prêts.</string>
     <string name="notif_chapter_new">%1$s vient de sortir.</string>
     <plurals name="notif_chapters_new">
-        <item quantity="one">Un nouveau chapitre</item>
+        <item quantity="one">%1$,d nouveau chapitre</item>
         <item quantity="many">%1$,d nouveaux chapitres</item>
         <item quantity="other">%1$,d nouveaux chapitres</item>
     </plurals>
     <string name="notif_chapter_hidden">Nouveau chapitre</string>
     <string name="notif_chapter_read">Lire</string>
     <plurals name="downloads_notice_chapters">
-        <item quantity="one">Téléchargement d’un chapitre</item>
+        <item quantity="one">Téléchargement de %1$,d chapitre</item>
         <item quantity="many">Téléchargement de %1$,d chapitres</item>
         <item quantity="other">Téléchargement de %1$,d chapitres</item>
     </plurals>
     <plurals name="read_series_downloaded_open">
-        <item quantity="one">Un chapitre téléchargé reste lisible.</item>
+        <item quantity="one">%1$,d chapitre téléchargé reste lisible.</item>
         <item quantity="many">%1$,d chapitres téléchargés restent lisibles.</item>
         <item quantity="other">%1$,d chapitres téléchargés restent lisibles.</item>
     </plurals>
@@ -881,23 +881,23 @@
     <string name="settings_summary_chapters_on">Nouveaux chapitres activés</string>
     <string name="settings_summary_chapters_off">Nouveaux chapitres désactivés</string>
     <plurals name="settings_summary_book_folders">
-        <item quantity="one">1 dossier</item>
+        <item quantity="one">%1$,d dossier</item>
         <item quantity="many">%1$,d dossiers</item>
         <item quantity="other">%1$,d dossiers</item>
     </plurals>
     <plurals name="settings_summary_book_servers">
-        <item quantity="one">1 serveur</item>
+        <item quantity="one">%1$,d serveur</item>
         <item quantity="many">%1$,d serveurs</item>
         <item quantity="other">%1$,d serveurs</item>
     </plurals>
     <plurals name="settings_summary_book_plugins">
-        <item quantity="one">1 plugin</item>
+        <item quantity="one">%1$,d plugin</item>
         <item quantity="many">%1$,d plugins</item>
         <item quantity="other">%1$,d plugins</item>
     </plurals>
     <string name="settings_book_sources">Sources de livres</string>
     <plurals name="book_matches_line">
-        <item quantity="one">Kaeri en a associé %1$,d d’après leurs détails. Celle-ci est à vérifier.</item>
+        <item quantity="one">Kaeri en a associé %1$,d d’après leurs détails. Il en reste %2$,d à vérifier.</item>
         <item quantity="many">Kaeri en a associé %1$,d d’après leurs détails. Ces %2$,d sont à vérifier.</item>
         <item quantity="other">Kaeri en a associé %1$,d d’après leurs détails. Ces %2$,d sont à vérifier.</item>
     </plurals>
@@ -1021,12 +1021,12 @@
     <string name="tv_card_progress_spoken">%1$s vu</string>
     <string name="tv_discussion_footer">Pour répondre, ouvrez la discussion sur votre téléphone.</string>
     <plurals name="tv_discussion_count_read_only">
-        <item quantity="one">Un commentaire · Lecture seule</item>
+        <item quantity="one">%1$,d commentaire · Lecture seule</item>
         <item quantity="many">%1$,d commentaires · Lecture seule</item>
         <item quantity="other">%1$,d commentaires · Lecture seule</item>
     </plurals>
     <plurals name="tv_discussion_likes">
-        <item quantity="one">Un j’aime</item>
+        <item quantity="one">%1$,d j’aime</item>
         <item quantity="many">%1$,d j’aime</item>
         <item quantity="other">%1$,d j’aime</item>
     </plurals>
@@ -1036,7 +1036,7 @@
     <string name="episode_short_dubbed">E%1$d · Doublé</string>
     <string name="episode_long_dubbed">Épisode %1$d · Doublé</string>
     <plurals name="downloads_live_paused">
-        <item quantity="one">Un épisode en pause</item>
+        <item quantity="one">%1$,d épisode en pause</item>
         <item quantity="many">%1$,d épisodes en pause</item>
         <item quantity="other">%1$,d épisodes en pause</item>
     </plurals>
@@ -1064,7 +1064,7 @@
     <string name="title_facts_airs">Diffusion à partir du %1$s</string>
     <string name="media_dates_range">du %1$s au %2$s</string>
     <plurals name="title_also_on_more">
-        <item quantity="one">%1$s et un autre</item>
+        <item quantity="one">%1$s et %2$,d autre</item>
         <item quantity="many">%1$s et %2$,d autres</item>
         <item quantity="other">%1$s et %2$,d autres</item>
     </plurals>
@@ -1076,7 +1076,7 @@
     <string name="downloads_uploaded">%1$s envoyés</string>
     <string name="downloads_ratio_of">%1$s sur %2$s</string>
     <plurals name="downloads_group_summary">
-        <item quantity="one">Un épisode · %2$s</item>
+        <item quantity="one">%1$,d épisode · %2$s</item>
         <item quantity="many">%1$,d épisodes · %2$s</item>
         <item quantity="other">%1$,d épisodes · %2$s</item>
     </plurals>
@@ -1095,17 +1095,17 @@
     <string name="updates_open_release">Ouvrir la page</string>
     <string name="country_korea">Corée du Sud</string>
     <plurals name="search_genres_picked">
-        <item quantity="one">Un genre</item>
+        <item quantity="one">%1$,d genre</item>
         <item quantity="many">%1$,d genres</item>
         <item quantity="other">%1$,d genres</item>
     </plurals>
     <plurals name="search_formats_picked">
-        <item quantity="one">Un format</item>
+        <item quantity="one">%1$,d format</item>
         <item quantity="many">%1$,d formats</item>
         <item quantity="other">%1$,d formats</item>
     </plurals>
     <plurals name="search_statuses_picked">
-        <item quantity="one">Un statut</item>
+        <item quantity="one">%1$,d statut</item>
         <item quantity="many">%1$,d statuts</item>
         <item quantity="other">%1$,d statuts</item>
     </plurals>
@@ -1134,7 +1134,7 @@
     <string name="reason_source_no_address">Son adresse est introuvable.</string>
     <string name="reason_source_unreachable">Impossible de la joindre.</string>
     <plurals name="stores_updates_waiting">
-        <item quantity="one">Une mise à jour</item>
+        <item quantity="one">%1$,d mise à jour</item>
         <item quantity="many">%1$,d mises à jour</item>
         <item quantity="other">%1$,d mises à jour</item>
     </plurals>
@@ -1154,7 +1154,7 @@
     <string name="settings_summary_notify_on">Nouveaux épisodes activés</string>
     <string name="settings_summary_notify_off">Nouveaux épisodes désactivés</string>
     <plurals name="settings_summary_sources">
-        <item quantity="one">Une source</item>
+        <item quantity="one">%1$,d source</item>
         <item quantity="many">%1$,d sources</item>
         <item quantity="other">%1$,d sources</item>
     </plurals>
@@ -1184,14 +1184,14 @@
     <string name="settings_stores_with_updates">%1$,d · %2$s</string>
     <string name="settings_seeding_best_effort">Cet appareil ne partage que lorsque Kaeri est ouvert.</string>
     <plurals name="settings_downloads_count">
-        <item quantity="one">Un épisode</item>
+        <item quantity="one">%1$,d épisode</item>
         <item quantity="many">%1$,d épisodes</item>
         <item quantity="other">%1$,d épisodes</item>
     </plurals>
     <string name="settings_anilist_footer">La progression et les changements de liste se synchronisent avec AniList. La bibliothèque affiche vos listes AniList.</string>
     <string name="accounts_sign_in_again_button">Se reconnecter</string>
     <plurals name="accounts_review_differences">
-        <item quantity="one">Vérifier une différence</item>
+        <item quantity="one">Vérifier %1$,d différence</item>
         <item quantity="many">Vérifier %1$,d différences</item>
         <item quantity="other">Vérifier %1$,d différences</item>
     </plurals>
@@ -1255,7 +1255,7 @@
     <string name="player_sheet_episodes_loading">La liste des épisodes arrive.</string>
     <string name="player_dual_audio">Sous-titré et doublé</string>
     <plurals name="notif_new_episodes">
-        <item quantity="one">Un nouvel épisode</item>
+        <item quantity="one">%1$,d nouvel épisode</item>
         <item quantity="many">%1$,d nouveaux épisodes</item>
         <item quantity="other">%1$,d nouveaux épisodes</item>
     </plurals>
@@ -1286,7 +1286,7 @@
     <string name="poster_new">Nouveau</string>
     <string name="channel_downloads_name">Téléchargements</string>
     <plurals name="release_seeders">
-        <item quantity="one">Un seeder</item>
+        <item quantity="one">%1$,d seeder</item>
         <item quantity="many">%1$,d seeders</item>
         <item quantity="other">%1$,d seeders</item>
     </plurals>
@@ -1498,12 +1498,12 @@
     <string name="pad_help_page_up">Page précédente</string>
     <string name="pad_help_page_down">Page suivante</string>
     <plurals name="pad_help_seek_back">
-        <item quantity="one">Reculer d\'une seconde</item>
+        <item quantity="one">Reculer de %1$,d seconde</item>
         <item quantity="many">Reculer de %1$,d secondes</item>
         <item quantity="other">Reculer de %1$,d secondes</item>
     </plurals>
     <plurals name="pad_help_seek_forward">
-        <item quantity="one">Avancer d\'une seconde</item>
+        <item quantity="one">Avancer de %1$,d seconde</item>
         <item quantity="many">Avancer de %1$,d secondes</item>
         <item quantity="other">Avancer de %1$,d secondes</item>
     </plurals>
@@ -1572,19 +1572,19 @@
     <string name="discussion_open">Discussion</string>
     <string name="discussion_title_episode">Discussion de l’épisode %1$d</string>
     <plurals name="discussion_row">
-        <item quantity="one">Discussion · un commentaire</item>
+        <item quantity="one">Discussion · %1$,d commentaire</item>
         <item quantity="many">Discussion · %1$,d commentaires</item>
         <item quantity="other">Discussion · %1$,d commentaires</item>
     </plurals>
     <plurals name="discussion_count">
-        <item quantity="one">Un commentaire</item>
+        <item quantity="one">%1$,d commentaire</item>
         <item quantity="many">%1$,d commentaires</item>
         <item quantity="other">%1$,d commentaires</item>
     </plurals>
     <string name="discussion_like">J’aime</string>
     <string name="discussion_reply">Répondre</string>
     <plurals name="discussion_more_replies">
-        <item quantity="one">Une réponse de plus</item>
+        <item quantity="one">%1$,d réponse de plus</item>
         <item quantity="many">%1$,d réponses de plus</item>
         <item quantity="other">%1$,d réponses de plus</item>
     </plurals>
@@ -1672,7 +1672,7 @@
     <string name="downloads_notice_done">Épisode %1$d téléchargé</string>
     <string name="downloads_notice_done_detail">%1$s · prêt à regarder hors ligne</string>
     <plurals name="downloads_notice_running">
-        <item quantity="one">Téléchargement d’un épisode</item>
+        <item quantity="one">Téléchargement de %1$,d épisode</item>
         <item quantity="many">Téléchargement de %1$,d épisodes</item>
         <item quantity="other">Téléchargement de %1$,d épisodes</item>
     </plurals>
@@ -1714,7 +1714,7 @@
     <string name="home_marked_watched">Épisode %1$d marqué comme vu</string>
     <string name="home_remove_continue">Retirer de Reprendre</string>
     <plurals name="home_continue_count">
-        <item quantity="one">1 série</item>
+        <item quantity="one">%1$,d série</item>
         <item quantity="many">%1$,d séries</item>
         <item quantity="other">%1$,d séries</item>
     </plurals>
@@ -1747,7 +1747,7 @@
     <string name="home_next">Suivant</string>
     <string name="home_synced">AniList synchronisé</string>
     <plurals name="queue_episodes_left">
-        <item quantity="one">Un épisode restant dans %2$s</item>
+        <item quantity="one">%1$,d épisode restant dans %2$s</item>
         <item quantity="many">%1$,d épisodes restants dans %2$s</item>
         <item quantity="other">%1$,d épisodes restants dans %2$s</item>
     </plurals>
@@ -1823,7 +1823,7 @@
     <string name="up_next_broadcast">Épisode %1$d · %2$s</string>
     <string name="up_next_out">sorti %1$s</string>
     <plurals name="library_row_scanning">
-        <item quantity="one">Analyse · 1 fichier trouvé</item>
+        <item quantity="one">Analyse · %1$,d fichier trouvé</item>
         <item quantity="many">Analyse · %1$,d fichiers trouvés</item>
         <item quantity="other">Analyse · %1$,d fichiers trouvés</item>
     </plurals>
@@ -1831,12 +1831,12 @@
     <string name="library_row_waiting">En attente d’AniList · %1$,d s</string>
     <string name="library_row_summary">%1$s sur %2$s</string>
     <plurals name="library_episodes">
-        <item quantity="one">1 épisode</item>
+        <item quantity="one">%1$,d épisode</item>
         <item quantity="many">%1$,d épisodes</item>
         <item quantity="other">%1$,d épisodes</item>
     </plurals>
     <plurals name="library_series">
-        <item quantity="one">1 série</item>
+        <item quantity="one">%1$,d série</item>
         <item quantity="many">%1$,d séries</item>
         <item quantity="other">%1$,d séries</item>
     </plurals>
@@ -1861,19 +1861,19 @@
     <string name="library_open_folder">Ouvrir le dossier</string>
     <string name="library_matched_count">%1$,d séries associées</string>
     <plurals name="library_row_series">
-        <item quantity="one">1 série</item>
+        <item quantity="one">%1$,d série</item>
         <item quantity="many">%1$,d séries</item>
         <item quantity="other">%1$,d séries</item>
     </plurals>
     <plurals name="library_row_files">
-        <item quantity="one">1 fichier</item>
+        <item quantity="one">%1$,d fichier</item>
         <item quantity="many">%1$,d fichiers</item>
         <item quantity="other">%1$,d fichiers</item>
     </plurals>
     <string name="library_show_finder">Afficher dans le Finder</string>
     <string name="library_remove_line">Vos fichiers restent où ils sont.</string>
     <plurals name="library_files">
-        <item quantity="one">1 fichier</item>
+        <item quantity="one">%1$,d fichier</item>
         <item quantity="many">%1$,d fichiers</item>
         <item quantity="other">%1$,d fichiers</item>
     </plurals>
@@ -2136,7 +2136,7 @@
     <string name="party_nosource_unaired">Vos sources n\'auront pas l\'épisode %1$d avant sa sortie.</string>
     <string name="party_nosource_unaired_plain">Vos sources ne l\'auront pas avant. Il sera partagé avec le salon dès que l\'une d\'elles l\'aura.</string>
     <plurals name="party_sources_found">
-        <item quantity="one">Une source le propose</item>
+        <item quantity="one">%1$,d source le propose</item>
         <item quantity="many">%1$,d sources le proposent</item>
         <item quantity="other">%1$,d sources le proposent</item>
     </plurals>
@@ -2172,7 +2172,7 @@
     <string name="together_servers">Serveurs</string>
     <string name="together_server_suggested">Suggéré · géré par %1$s</string>
     <plurals name="together_server_used">
-        <item quantity="one">Utilisé pour 1 visionnage</item>
+        <item quantity="one">Utilisé pour %1$,d visionnage</item>
         <item quantity="many">Utilisé pour %1$,d visionnages</item>
         <item quantity="other">Utilisé pour %1$,d visionnages</item>
     </plurals>
@@ -2258,7 +2258,7 @@
     <string name="party_chat_title">Chat</string>
     <string name="party_chat_wait">Attendez %1$,d s</string>
     <plurals name="party_chat_wait_spoken">
-        <item quantity="one">Attendez une seconde</item>
+        <item quantity="one">Attendez %1$,d seconde</item>
         <item quantity="many">Attendez %1$,d secondes</item>
         <item quantity="other">Attendez %1$,d secondes</item>
     </plurals>
@@ -2324,7 +2324,7 @@
     <string name="player_start_no_video">Le premier n\'affichait aucune vidéo</string>
     <string name="player_start_stream_place">Flux %1$,d sur %2$,d</string>
     <plurals name="player_start_peers">
-        <item quantity="one">Un pair</item>
+        <item quantity="one">%1$,d pair</item>
         <item quantity="many">%1$,d pairs</item>
         <item quantity="other">%1$,d pairs</item>
     </plurals>
@@ -2439,7 +2439,7 @@
     <string name="player_start_over">Recommencer</string>
     <string name="player_still_watching">Toujours là ?</string>
     <plurals name="player_still_watching_detail">
-        <item quantity="one">En pause après un épisode d’affilée.</item>
+        <item quantity="one">En pause après %1$,d épisode d’affilée.</item>
         <item quantity="many">En pause après %1$,d épisodes d’affilée.</item>
         <item quantity="other">En pause après %1$,d épisodes d’affilée.</item>
     </plurals>
@@ -2548,7 +2548,7 @@
     <string name="reader_zone_controls">Commandes</string>
     <string name="reader_chapters">Chapitres</string>
     <plurals name="reader_pages_left">
-        <item quantity="one">Il reste une page dans ce chapitre</item>
+        <item quantity="one">Il reste %1$,d page dans ce chapitre</item>
         <item quantity="many">Il reste %1$,d pages dans ce chapitre</item>
         <item quantity="other">Il reste %1$,d pages dans ce chapitre</item>
     </plurals>
@@ -2563,7 +2563,7 @@
     <string name="reader_end_of_chapter_number">Fin du chapitre %1$s</string>
     <string name="reader_end_facts">Chapitre %1$s · %2$s</string>
     <plurals name="reader_end_pages">
-        <item quantity="one">Une page</item>
+        <item quantity="one">%1$,d page</item>
         <item quantity="many">%1$,d pages</item>
         <item quantity="other">%1$,d pages</item>
     </plurals>
@@ -2572,7 +2572,7 @@
     <string name="reader_divider_facts_source">%1$s · de %2$s</string>
     <string name="reader_end_swipe">Balayez pour lire la suite</string>
     <plurals name="reader_divider_images">
-        <item quantity="one">Une image</item>
+        <item quantity="one">%1$,d image</item>
         <item quantity="many">%1$,d images</item>
         <item quantity="other">%1$,d images</item>
     </plurals>
@@ -2583,7 +2583,7 @@
     <string name="home_demo_only_books">Seule la démo est active. Ajoutez un dossier, un serveur ou une boutique de plugins pour lire vos propres livres.</string>
     <string name="home_spotlight_read">Lire</string>
     <plurals name="demo_series_facts">
-        <item quantity="one">Démo · Bande dessinée · une page</item>
+        <item quantity="one">Démo · Bande dessinée · %1$,d page</item>
         <item quantity="many">Démo · Bande dessinée · %1$,d pages</item>
         <item quantity="other">Démo · Bande dessinée · %1$,d pages</item>
     </plurals>
@@ -2604,7 +2604,7 @@
     <string name="demo_also">Aussi dans la démo</string>
     <string name="demo_credits">Crédits</string>
     <plurals name="demo_pages">
-        <item quantity="one">Une page</item>
+        <item quantity="one">%1$,d page</item>
         <item quantity="many">%1$,d pages</item>
         <item quantity="other">%1$,d pages</item>
     </plurals>
@@ -2621,22 +2621,22 @@
     <string name="progress_why_gave_up">aucune réponse pendant une journée</string>
     <string name="progress_row_saved">Progression enregistrée %1$s</string>
     <plurals name="progress_row_sending">
-        <item quantity="one">Envoi de 1 chapitre…</item>
+        <item quantity="one">Envoi de %1$,d chapitre…</item>
         <item quantity="many">Envoi de %1$,d chapitres…</item>
         <item quantity="other">Envoi de %1$,d chapitres…</item>
     </plurals>
     <plurals name="progress_row_offline">
-        <item quantity="one">1 chapitre sera envoyé une fois de retour en ligne</item>
+        <item quantity="one">%1$,d chapitre sera envoyé une fois de retour en ligne</item>
         <item quantity="many">%1$,d chapitres seront envoyés une fois de retour en ligne</item>
         <item quantity="other">%1$,d chapitres seront envoyés une fois de retour en ligne</item>
     </plurals>
     <plurals name="progress_row_retrying">
-        <item quantity="one">1 chapitre en attente. Kaeri va réessayer.</item>
+        <item quantity="one">%1$,d chapitre en attente. Kaeri va réessayer.</item>
         <item quantity="many">%1$,d chapitres en attente. Kaeri va réessayer.</item>
         <item quantity="other">%1$,d chapitres en attente. Kaeri va réessayer.</item>
     </plurals>
     <plurals name="progress_row_failed">
-        <item quantity="one">1 chapitre non enregistré : %2$s</item>
+        <item quantity="one">%1$,d chapitre non enregistré : %2$s</item>
         <item quantity="many">%1$,d chapitres non enregistrés : %2$s</item>
         <item quantity="other">%1$,d chapitres non enregistrés : %2$s</item>
     </plurals>
@@ -2666,7 +2666,7 @@
     <string name="chapter_updates_today">Aujourd\'hui</string>
     <string name="chapter_updates_yesterday">Hier</string>
     <plurals name="chapter_updates_versions">
-        <item quantity="one">1 version</item>
+        <item quantity="one">%1$,d version</item>
         <item quantity="many">%1$,d versions</item>
         <item quantity="other">%1$,d versions</item>
     </plurals>
@@ -2687,7 +2687,7 @@
     <string name="series_reading_from">Lecture depuis</string>
     <string name="series_change">Modifier</string>
     <plurals name="series_sources_more">
-        <item quantity="one">1 de plus</item>
+        <item quantity="one">%1$,d de plus</item>
         <item quantity="many">%1$,d de plus</item>
         <item quantity="other">%1$,d de plus</item>
     </plurals>
@@ -2699,7 +2699,7 @@
         <item quantity="other">%1$,d sur %2$,d chapitres</item>
     </plurals>
     <plurals name="series_tracker_chapters">
-        <item quantity="one">1 chapitre</item>
+        <item quantity="one">%1$,d chapitre</item>
         <item quantity="many">%1$,d chapitres</item>
         <item quantity="other">%1$,d chapitres</item>
     </plurals>
@@ -2713,7 +2713,7 @@
     <string name="series_remove_from_lists_line">Elle disparaît de votre liste sur chaque service de suivi connecté. Votre position et les chapitres lus restent dans Kaeri.</string>
     <string name="series_removed_title">Vos listes</string>
     <plurals name="series_chosen">
-        <item quantity="one">1 chapitre</item>
+        <item quantity="one">%1$,d chapitre</item>
         <item quantity="many">%1$,d chapitres</item>
         <item quantity="other">%1$,d chapitres</item>
     </plurals>
@@ -2750,7 +2750,7 @@
     <string name="series_bookmark">Ajouter un signet</string>
     <string name="series_remove_bookmark">Retirer le signet</string>
     <plurals name="series_versions">
-        <item quantity="one">1 version</item>
+        <item quantity="one">%1$,d version</item>
         <item quantity="many">%1$,d versions</item>
         <item quantity="other">%1$,d versions</item>
     </plurals>
@@ -2772,14 +2772,14 @@
     <string name="download_next">Les %1$,d prochains non lus</string>
     <string name="download_unread">Tous les chapitres non lus</string>
     <plurals name="download_volume_count">
-        <item quantity="one">%1$s · 1 chapitre</item>
+        <item quantity="one">%1$s · %2$,d chapitre</item>
         <item quantity="many">%1$s · %2$,d chapitres</item>
         <item quantity="other">%1$s · %2$,d chapitres</item>
     </plurals>
     <string name="download_choose">Choisir des chapitres…</string>
     <string name="download_delete_series">Supprimer les téléchargements de cette série</string>
     <plurals name="download_chapters">
-        <item quantity="one">Télécharger 1 chapitre</item>
+        <item quantity="one">Télécharger %1$,d chapitre</item>
         <item quantity="many">Télécharger %1$,d chapitres</item>
         <item quantity="other">Télécharger %1$,d chapitres</item>
     </plurals>
@@ -2833,7 +2833,7 @@
     <string name="book_add_server_button">Ajouter le serveur</string>
     <string name="sources_found_server">Serveur %1$s trouvé</string>
     <plurals name="sources_found_server_series">
-        <item quantity="one">Serveur %1$s trouvé avec 1 série</item>
+        <item quantity="one">Serveur %1$s trouvé avec %2$,d série</item>
         <item quantity="many">Serveur %1$s trouvé avec %2$,d séries</item>
         <item quantity="other">Serveur %1$s trouvé avec %2$,d séries</item>
     </plurals>
@@ -2844,7 +2844,7 @@
     <string name="book_sources_plugins">Plugins</string>
     <string name="book_sources_plugins_footer">Les plugins viennent des boutiques de plugins que vous rejoignez.</string>
     <plurals name="book_sources_series">
-        <item quantity="one">1 série</item>
+        <item quantity="one">%1$,d série</item>
         <item quantity="many">%1$,d séries</item>
         <item quantity="other">%1$,d séries</item>
     </plurals>
@@ -2870,7 +2870,7 @@
     <string name="library_scope_reading">Lecture</string>
     <string name="read_sort_last_read">Dernière lecture</string>
     <plurals name="read_library_list_value">
-        <item quantity="one">%1$s, 1 série</item>
+        <item quantity="one">%1$s, %2$,d série</item>
         <item quantity="many">%1$s, %2$,d séries</item>
         <item quantity="other">%1$s, %2$,d séries</item>
     </plurals>
@@ -2881,14 +2881,14 @@
     <string name="read_library_files_add">Ajouter un dossier ou un serveur</string>
     <string name="read_search_placeholder">Rechercher des lectures</string>
     <plurals name="search_other_scope">
-        <item quantity="one">1 résultat dans %2$s</item>
+        <item quantity="one">%1$,d résultat dans %2$s</item>
         <item quantity="many">%1$,d résultats dans %2$s</item>
         <item quantity="other">%1$,d résultats dans %2$s</item>
     </plurals>
     <string name="search_show_them">Les afficher</string>
     <string name="read_search_browse_line">%1$s · depuis AniList</string>
     <plurals name="read_search_total">
-        <item quantity="one">1 série trouvée sur AniList</item>
+        <item quantity="one">%1$,d série trouvée sur AniList</item>
         <item quantity="many">%1$,d séries trouvées sur AniList</item>
         <item quantity="other">%1$,d séries trouvées sur AniList</item>
     </plurals>
@@ -2912,7 +2912,7 @@
     <string name="read_filter_many">%1$s et %2$,d de plus</string>
     <string name="read_filter_not_genre">Pas %1$s</string>
     <plurals name="read_filter_genres_count">
-        <item quantity="one">1 genre</item>
+        <item quantity="one">%1$,d genre</item>
         <item quantity="many">%1$,d genres</item>
         <item quantity="other">%1$,d genres</item>
     </plurals>
@@ -3077,7 +3077,7 @@
     <string name="send_no_place">Kaeri ne voit pas votre position sur cette liseuse. À votre retour, la page de la série vous demande où vous vous êtes arrêté.</string>
     <string name="send_prepare">Préparer et partager</string>
     <plurals name="send_preparing">
-        <item quantity="one">Préparation du chapitre</item>
+        <item quantity="one">Préparation : %1$,d sur %2$,d chapitre</item>
         <item quantity="many">Préparation : %1$,d sur %2$,d chapitres</item>
         <item quantity="other">Préparation : %1$,d sur %2$,d chapitres</item>
     </plurals>
@@ -3093,7 +3093,7 @@
     <string name="send_parts_over">en plusieurs parties au-delà de %1$s</string>
     <string name="send_waiting_cancel">Annuler l\'envoi</string>
     <plurals name="send_ready">
-        <item quantity="one">Un fichier est prêt.</item>
+        <item quantity="one">%1$,d fichier est prêt.</item>
         <item quantity="many">%1$,d fichiers sont prêts.</item>
         <item quantity="other">%1$,d fichiers sont prêts.</item>
     </plurals>
@@ -3129,14 +3129,14 @@
     <string name="opds_shares">Contenu partagé</string>
     <string name="opds_share_downloads">Téléchargements</string>
     <plurals name="opds_share_downloads_count">
-        <item quantity="one">Un chapitre</item>
+        <item quantity="one">%1$,d chapitre</item>
         <item quantity="many">%1$,d chapitres</item>
         <item quantity="other">%1$,d chapitres</item>
     </plurals>
     <string name="opds_share_manga">Dossier de mangas</string>
     <string name="opds_share_novels">Dossier de light novels</string>
     <plurals name="opds_share_series_count">
-        <item quantity="one">Une série</item>
+        <item quantity="one">%1$,d série</item>
         <item quantity="many">%1$,d séries</item>
         <item quantity="other">%1$,d séries</item>
     </plurals>
@@ -3149,7 +3149,7 @@
     <string name="opds_new_password_warning">Les liseuses qui utilisent déjà le flux cessent de fonctionner jusqu\'à ce que vous saisissiez le nouveau mot de passe sur chacune.</string>
     <string name="opds_fetched_time">Dernière demande %1$s</string>
     <plurals name="opds_fetched_files">
-        <item quantity="one">Un fichier</item>
+        <item quantity="one">%1$,d fichier</item>
         <item quantity="many">%1$,d fichiers</item>
         <item quantity="other">%1$,d fichiers</item>
     </plurals>
@@ -3247,7 +3247,7 @@
     <string name="search_available_services">Sur vos services</string>
     <string name="search_line_service">Sur %1$s</string>
     <plurals name="count_episodes">
-        <item quantity="one">Un épisode</item>
+        <item quantity="one">%1$,d épisode</item>
         <item quantity="many">%1$,d épisodes</item>
         <item quantity="other">%1$,d épisodes</item>
     </plurals>
@@ -3255,7 +3255,7 @@
     <string name="count_out_of">%1$,d sur %2$,d sortis</string>
     <string name="count_out_of_short">%1$,d sur %2$,d</string>
     <plurals name="count_out">
-        <item quantity="one">Un épisode sorti</item>
+        <item quantity="one">%1$,d épisode sorti</item>
         <item quantity="many">%1$,d épisodes sortis</item>
         <item quantity="other">%1$,d épisodes sortis</item>
     </plurals>
@@ -3266,13 +3266,13 @@
     <string name="count_dub">VF</string>
     <string name="count_dub_through">VF %1$d</string>
     <plurals name="count_spoken_episodes">
-        <item quantity="one">Un épisode</item>
+        <item quantity="one">%1$,d épisode</item>
         <item quantity="many">%1$,d épisodes</item>
         <item quantity="other">%1$,d épisodes</item>
     </plurals>
     <string name="count_spoken_out_of">%1$,d épisodes sortis sur %2$,d</string>
     <plurals name="count_spoken_out">
-        <item quantity="one">Un épisode sorti</item>
+        <item quantity="one">%1$,d épisode sorti</item>
         <item quantity="many">%1$,d épisodes sortis</item>
         <item quantity="other">%1$,d épisodes sortis</item>
     </plurals>
@@ -3350,17 +3350,17 @@
     <string name="servers_add">Ajouter</string>
     <string name="servers_row_matching">Association · %1$,d sur %2$,d séries</string>
     <plurals name="servers_row_summary">
-        <item quantity="one">1 bibliothèque · %2$,d séries</item>
+        <item quantity="one">%1$,d bibliothèque · %2$,d séries</item>
         <item quantity="many">%1$,d bibliothèques · %2$,d séries</item>
         <item quantity="other">%1$,d bibliothèques · %2$,d séries</item>
     </plurals>
     <plurals name="servers_row_libraries">
-        <item quantity="one">1 bibliothèque</item>
+        <item quantity="one">%1$,d bibliothèque</item>
         <item quantity="many">%1$,d bibliothèques</item>
         <item quantity="other">%1$,d bibliothèques</item>
     </plurals>
     <plurals name="servers_row_series">
-        <item quantity="one">1 série</item>
+        <item quantity="one">%1$,d série</item>
         <item quantity="many">%1$,d séries</item>
         <item quantity="other">%1$,d séries</item>
     </plurals>
@@ -3460,7 +3460,7 @@
     <string name="settings_system_captions">Suivre le style de sous-titres du système</string>
     <string name="settings_system_captions_detail">Les sous-titres simples utilisent vos préférences de sous-titrage de l’Accessibilité. Les sous-titres stylisés gardent leur propre aspect.</string>
     <plurals name="settings_overridden">
-        <item quantity="one">Modifié pour une série</item>
+        <item quantity="one">Modifié pour %1$,d série</item>
         <item quantity="many">Modifié pour %1$,d séries</item>
         <item quantity="other">Modifié pour %1$,d séries</item>
     </plurals>
@@ -3545,7 +3545,7 @@
     <string name="widget_start_label">Lire l’épisode %1$d de %2$s</string>
     <string name="widget_resume_dubbed_label">Reprendre l’épisode %1$d, doublé, de %2$s</string>
     <plurals name="accounts_changes_waiting">
-        <item quantity="one">Un changement en attente de synchronisation</item>
+        <item quantity="one">%1$,d changement en attente de synchronisation</item>
         <item quantity="many">%1$,d changements en attente de synchronisation</item>
         <item quantity="other">%1$,d changements en attente de synchronisation</item>
     </plurals>
@@ -3628,7 +3628,7 @@
     <string name="book_server_key_kept">Kaeri garde la clé dans %1$s et n’affiche que ses quatre derniers caractères.</string>
     <string name="book_server_key">Clé ••••%1$s</string>
     <plurals name="book_server_found_title">
-        <item quantity="one">Séries trouvées : %1$,d</item>
+        <item quantity="one">Séries trouvées : %1$,d dans %2$,d bibliothèque</item>
         <item quantity="many">Séries trouvées : %1$,d dans %2$,d bibliothèques</item>
         <item quantity="other">Séries trouvées : %1$,d dans %2$,d bibliothèques</item>
     </plurals>
@@ -3649,13 +3649,13 @@
     <string name="book_server_empty_recheck">Vous pouvez l’ajouter maintenant. Kaeri vérifie de nouveau toutes les 30 minutes.</string>
     <string name="book_server_not_books_line">Kaeri lit les catalogues Komga, Kavita et OPDS.</string>
     <plurals name="book_folder_found">
-        <item quantity="one">Séries trouvées : %1$,d dans un fichier</item>
+        <item quantity="one">Séries trouvées : %1$,d dans %2$,d fichier</item>
         <item quantity="many">Séries trouvées : %1$,d dans %2$,d fichiers</item>
         <item quantity="other">Séries trouvées : %1$,d dans %2$,d fichiers</item>
     </plurals>
     <string name="book_folder_found_line">%1$s. Kaeri en a reconnu %2$,d d’après leurs détails.</string>
     <plurals name="book_folder_unsupported">
-        <item quantity="one">Un fichier que Kaeri ne peut pas ouvrir</item>
+        <item quantity="one">%1$,d fichier que Kaeri ne peut pas ouvrir</item>
         <item quantity="many">%1$,d fichiers que Kaeri ne peut pas ouvrir</item>
         <item quantity="other">%1$,d fichiers que Kaeri ne peut pas ouvrir</item>
     </plurals>
@@ -3667,7 +3667,7 @@
     <string name="book_folder_change">Modifier</string>
     <string name="book_folder_empty">Rien dans %1$s que Kaeri puisse ouvrir</string>
     <plurals name="book_folder_empty_line">
-        <item quantity="one">Il contient un fichier, qui n’est ni CBZ, CBR, EPUB, PDF ni une image.</item>
+        <item quantity="one">Il contient %1$,d fichier, qui n’est ni CBZ, CBR, EPUB, PDF ni une image.</item>
         <item quantity="many">Il contient %1$,d fichiers, dont aucun n’est CBZ, CBR, EPUB, PDF ou image.</item>
         <item quantity="other">Il contient %1$,d fichiers, dont aucun n’est CBZ, CBR, EPUB, PDF ou image.</item>
     </plurals>
@@ -3676,7 +3676,7 @@
     <string name="store_invite_field">Invitation</string>
     <string name="store_joined_title">Vous avez rejoint %1$s</string>
     <plurals name="store_joined_line">
-        <item quantity="one">%1$s propose un plugin. Rejoindre n’installe rien : installez-le ici ou plus tard.</item>
+        <item quantity="one">%1$s propose %2$,d plugin. Rejoindre n’installe rien : installez-le ici ou plus tard.</item>
         <item quantity="many">%1$s propose %2$,d plugins. Rejoindre n’installe rien : choisissez ceux que vous voulez ici ou plus tard.</item>
         <item quantity="other">%1$s propose %2$,d plugins. Rejoindre n’installe rien : choisissez ceux que vous voulez ici ou plus tard.</item>
     </plurals>
@@ -3686,7 +3686,7 @@
     <string name="store_installed_row">Installé</string>
     <string name="store_install_all_reading">Tout installer pour la lecture</string>
     <plurals name="store_installed">
-        <item quantity="one">Un plugin installé. Il se trouve dans Vos sources.</item>
+        <item quantity="one">%1$,d plugin installé. Il se trouve dans Vos sources.</item>
         <item quantity="many">%1$,d plugins installés. Ils se trouvent dans Vos sources.</item>
         <item quantity="other">%1$,d plugins installés. Ils se trouvent dans Vos sources.</item>
     </plurals>
@@ -3698,12 +3698,12 @@
     <string name="store_err_unreachable">Impossible de joindre %1$s</string>
     <string name="store_err_unreachable_line">L’invitation semble correcte, mais la boutique ne répond pas. Réessayez plus tard, ou demandez à %1$s si elle fonctionne.</string>
     <plurals name="store_other_medium_more">
-        <item quantity="one">Un autre est pour le visionnage, désactivé sur cet appareil.</item>
+        <item quantity="one">%1$,d autre est pour le visionnage, désactivé sur cet appareil.</item>
         <item quantity="many">%1$,d autres sont pour le visionnage, désactivé sur cet appareil.</item>
         <item quantity="other">%1$,d autres sont pour le visionnage, désactivé sur cet appareil.</item>
     </plurals>
     <plurals name="store_tv_reading_only">
-        <item quantity="one">Un autre est pour la lecture, que cette TV ne gère pas.</item>
+        <item quantity="one">%1$,d autre est pour la lecture, que cette TV ne gère pas.</item>
         <item quantity="many">%1$,d autres sont pour la lecture, que cette TV ne gère pas.</item>
         <item quantity="other">%1$,d autres sont pour la lecture, que cette TV ne gère pas.</item>
     </plurals>
@@ -3711,7 +3711,7 @@
     <string name="store_plugin_row">Version %1$s · peut contacter %2$s</string>
     <string name="source_added">%1$s ajouté · Séries : %2$,d</string>
     <plurals name="source_added_plugins">
-        <item quantity="one">Un plugin installé depuis %2$s</item>
+        <item quantity="one">%1$,d plugin installé depuis %2$s</item>
         <item quantity="many">%1$,d plugins installés depuis %2$s</item>
         <item quantity="other">%1$,d plugins installés depuis %2$s</item>
     </plurals>
@@ -3727,7 +3727,7 @@
     </plurals>
     <string name="source_row_server_empty">%1$s · aucune série pour l’instant · nouvelle vérification dans 30 minutes</string>
     <plurals name="source_row_folder">
-        <item quantity="one">%1$s · Séries : %2$,d · un fichier ignoré</item>
+        <item quantity="one">%1$s · Séries : %2$,d · %3$,d fichier ignoré</item>
         <item quantity="many">%1$s · Séries : %2$,d · %3$,d fichiers ignorés</item>
         <item quantity="other">%1$s · Séries : %2$,d · %3$,d fichiers ignorés</item>
     </plurals>
@@ -3789,7 +3789,7 @@
     <string name="sources_listed_by_store">Listée par sa boutique de plugins</string>
     <string name="sources_contacts_one">Contacte %1$s</string>
     <plurals name="sources_contacts_line">
-        <item quantity="one">Contacte %1$s et un autre</item>
+        <item quantity="one">Contacte %1$s et %2$,d autre</item>
         <item quantity="many">Contacte %1$s et %2$,d autres</item>
         <item quantity="other">Contacte %1$s et %2$,d autres</item>
     </plurals>
@@ -3797,7 +3797,7 @@
     <string name="sources_no_hosts">Aucun serveur</string>
     <string name="sources_update_contacts_one">Cette mise à jour contacte aussi %1$s.</string>
     <plurals name="sources_update_contacts">
-        <item quantity="one">Cette mise à jour contacte aussi %1$s et un autre.</item>
+        <item quantity="one">Cette mise à jour contacte aussi %1$s et %2$,d autre.</item>
         <item quantity="many">Cette mise à jour contacte aussi %1$s et %2$,d autres.</item>
         <item quantity="other">Cette mise à jour contacte aussi %1$s et %2$,d autres.</item>
     </plurals>
@@ -3814,7 +3814,7 @@
     <string name="match_fix">Corriger cette association</string>
     <string name="match_choose">Choisir l’association</string>
     <plurals name="match_uncertain">
-        <item quantity="one">%2$s liste un titre qui pourrait être celui-ci. Choisissez-le pour lire ses épisodes.</item>
+        <item quantity="one">%2$s liste %1$,d titre qui pourrait être celui-ci. Choisissez-le pour lire ses épisodes.</item>
         <item quantity="many">%2$s liste %1$,d titres qui pourraient être celui-ci. Choisissez-en un pour lire ses épisodes.</item>
         <item quantity="other">%2$s liste %1$,d titres qui pourraient être celui-ci. Choisissez-en un pour lire ses épisodes.</item>
     </plurals>
@@ -3976,7 +3976,7 @@
     <string name="stores_members">Membres</string>
     <string name="stores_owner_devices">Propriétaire · %1$s</string>
     <plurals name="stores_member_devices">
-        <item quantity="one">Son seul appareil</item>
+        <item quantity="one">%1$,d appareil</item>
         <item quantity="many">Ses %1$,d appareils</item>
         <item quantity="other">Ses %1$,d appareils</item>
     </plurals>
@@ -4016,7 +4016,7 @@
     <string name="stores_invite_links">Liens d’invitation</string>
     <string name="stores_invite_not_used">Pas encore utilisé</string>
     <plurals name="stores_invite_used">
-        <item quantity="one">Utilisé une fois</item>
+        <item quantity="one">Utilisé %1$,d fois</item>
         <item quantity="many">Utilisé %1$,d fois</item>
         <item quantity="other">Utilisé %1$,d fois</item>
     </plurals>
@@ -4028,7 +4028,7 @@
     <string name="stores_invite_show_uses">Utilisations</string>
     <string name="stores_invite_joined">%1$s · a rejoint : %2$s</string>
     <plurals name="stores_cancel_invite_detail">
-        <item quantity="one">Personne d’autre ne pourra rejoindre avec ce lien. La personne qui l’a utilisé reste membre.</item>
+        <item quantity="one">Personne d’autre ne pourra rejoindre avec ce lien. %1$,d personne qui l’a utilisé reste membre.</item>
         <item quantity="many">Personne d’autre ne pourra rejoindre avec ce lien. Les %1$,d personnes qui l’ont utilisé restent membres.</item>
         <item quantity="other">Personne d’autre ne pourra rejoindre avec ce lien. Les %1$,d personnes qui l’ont utilisé restent membres.</item>
     </plurals>
@@ -4042,7 +4042,7 @@
     <string name="stores_anyone_with_store_link">Toute personne ayant le lien de la boutique de plugins</string>
     <string name="stores_only_invited">Seules les personnes invitées</string>
     <plurals name="stores_devices_joined">
-        <item quantity="one">Un appareil a rejoint avec le lien</item>
+        <item quantity="one">%1$,d appareil a rejoint avec le lien</item>
         <item quantity="many">%1$,d appareils ont rejoint avec le lien</item>
         <item quantity="other">%1$,d appareils ont rejoint avec le lien</item>
     </plurals>
@@ -4057,7 +4057,7 @@
     <string name="stores_remove_all">Tout retirer</string>
     <string name="stores_copy_link">Copier le lien</string>
     <plurals name="stores_offers_plugins">
-        <item quantity="one">Un plugin</item>
+        <item quantity="one">%1$,d plugin</item>
         <item quantity="many">%1$,d plugins</item>
         <item quantity="other">%1$,d plugins</item>
     </plurals>
@@ -4257,7 +4257,7 @@
     <string name="cloud_folder">Un dossier sur cet %1$s</string>
     <string name="cloud_app_password_note">Créez-en un dans Nextcloud, sous Réglages, Sécurité. Il est gardé sur cet %1$s.</string>
     <plurals name="devices_tvs_for_play">
-        <item quantity="one">Une TV pour Lire sur la TV</item>
+        <item quantity="one">%1$,d TV pour Lire sur la TV</item>
         <item quantity="many">%1$,d TV pour Lire sur la TV</item>
         <item quantity="other">%1$,d TV pour Lire sur la TV</item>
     </plurals>
@@ -4345,7 +4345,7 @@
     <string name="episode_range">Épisodes %1$d à %2$d</string>
     <string name="episode_range_label">Plage d’épisodes</string>
     <plurals name="episode_fold">
-        <item quantity="one">Un épisode vu</item>
+        <item quantity="one">%1$,d épisode vu</item>
         <item quantity="many">%1$,d épisodes vus</item>
         <item quantity="other">%1$,d épisodes vus</item>
     </plurals>
@@ -4386,7 +4386,7 @@
     <string name="more_spoiler">Spoiler</string>
     <string name="more_hide_spoiler_tags">Masquer les mots-clés spoilers</string>
     <plurals name="more_show_spoiler_tags">
-        <item quantity="one">Afficher un mot-clé spoiler</item>
+        <item quantity="one">Afficher %1$,d mot-clé spoiler</item>
         <item quantity="many">Afficher %1$,d mots-clés spoilers</item>
         <item quantity="other">Afficher %1$,d mots-clés spoilers</item>
     </plurals>
@@ -4486,7 +4486,7 @@
     <string name="accounts_state_signed_out">Non connecté</string>
     <string name="accounts_state_signed_in">Connecté à %1$s en tant que %2$s</string>
     <plurals name="accounts_state_signed_in_waiting">
-        <item quantity="one">Connecté à %1$s en tant que %2$s · une modification en attente</item>
+        <item quantity="one">Connecté à %1$s en tant que %2$s · %3$,d modification en attente</item>
         <item quantity="many">Connecté à %1$s en tant que %2$s · %3$,d modifications en attente</item>
         <item quantity="other">Connecté à %1$s en tant que %2$s · %3$,d modifications en attente</item>
     </plurals>

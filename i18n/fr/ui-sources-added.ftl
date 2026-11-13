@@ -4,7 +4,7 @@ book-server-kavita-key = Ceci est un lien OPDS de Kavita. Sa clé vous connecte,
 book-server-key-kept = { -app-name } garde la clé dans { $store } et n’affiche que ses quatre derniers caractères.
 book-server-key = Clé ••••{ $last }
 book-server-found-title = { $libraries ->
-    [one] Séries trouvées : { $series }
+    [one] Séries trouvées : { $series } dans { $libraries } bibliothèque
     [many] Séries trouvées : { $series } dans { $libraries } bibliothèques
    *[other] Séries trouvées : { $series } dans { $libraries } bibliothèques
  }
@@ -25,13 +25,13 @@ book-server-empty-line = Le serveur vous laisse entrer, mais il est peut-être e
 book-server-empty-recheck = Vous pouvez l’ajouter maintenant. { -app-name } vérifie de nouveau toutes les 30 minutes.
 book-server-not-books-line = { -app-name } lit les catalogues Komga, Kavita et OPDS.
 book-folder-found = { $files ->
-    [one] Séries trouvées : { $series } dans un fichier
+    [one] Séries trouvées : { $series } dans { $files } fichier
     [many] Séries trouvées : { $series } dans { $files } fichiers
    *[other] Séries trouvées : { $series } dans { $files } fichiers
  }
 book-folder-found-line = { $path }. { -app-name } en a reconnu { $matched } d’après leurs détails.
 book-folder-unsupported = { $count ->
-    [one] Un fichier que { -app-name } ne peut pas ouvrir
+    [one] { $count } fichier que { -app-name } ne peut pas ouvrir
     [many] { $count } fichiers que { -app-name } ne peut pas ouvrir
    *[other] { $count } fichiers que { -app-name } ne peut pas ouvrir
  }
@@ -43,7 +43,7 @@ book-folder-add = Ajouter le dossier
 book-folder-change = Modifier
 book-folder-empty = Rien dans { $folder } que { -app-name } puisse ouvrir
 book-folder-empty-line = { $files ->
-    [one] Il contient un fichier, qui n’est ni CBZ, CBR, EPUB, PDF ni une image.
+    [one] Il contient { $files } fichier, qui n’est ni CBZ, CBR, EPUB, PDF ni une image.
     [many] Il contient { $files } fichiers, dont aucun n’est CBZ, CBR, EPUB, PDF ou image.
    *[other] Il contient { $files } fichiers, dont aucun n’est CBZ, CBR, EPUB, PDF ou image.
  }
@@ -52,7 +52,7 @@ store-join-title = Rejoindre une { -plugin-store }
 store-invite-field = Invitation
 store-joined-title = Vous avez rejoint { $store }
 store-joined-line = { $count ->
-    [one] { $owner } propose un { -plugin }. Rejoindre n’installe rien : installez-le ici ou plus tard.
+    [one] { $owner } propose { $count } { -plugin }. Rejoindre n’installe rien : installez-le ici ou plus tard.
     [many] { $owner } propose { $count } { -plugin-pl }. Rejoindre n’installe rien : choisissez ceux que vous voulez ici ou plus tard.
    *[other] { $owner } propose { $count } { -plugin-pl }. Rejoindre n’installe rien : choisissez ceux que vous voulez ici ou plus tard.
  }
@@ -62,7 +62,7 @@ store-install = Installer
 store-installed-row = Installé
 store-install-all-reading = Tout installer pour la lecture
 store-installed = { $count ->
-    [one] Un { -plugin } installé. Il se trouve dans Vos { -source-pl }.
+    [one] { $count } { -plugin } installé. Il se trouve dans Vos { -source-pl }.
     [many] { $count } { -plugin-pl } installés. Ils se trouvent dans Vos { -source-pl }.
    *[other] { $count } { -plugin-pl } installés. Ils se trouvent dans Vos { -source-pl }.
  }
@@ -74,12 +74,12 @@ store-empty-line = Vous êtes membre : les nouveaux { -plugin-pl } apparaissent 
 store-err-unreachable = Impossible de joindre { $host }
 store-err-unreachable-line = L’invitation semble correcte, mais la { -store } ne répond pas. Réessayez plus tard, ou demandez à { $owner } si elle fonctionne.
 store-other-medium-more = { $count ->
-    [one] Un autre est pour le visionnage, désactivé sur cet { -device }.
+    [one] { $count } autre est pour le visionnage, désactivé sur cet { -device }.
     [many] { $count } autres sont pour le visionnage, désactivé sur cet { -device }.
    *[other] { $count } autres sont pour le visionnage, désactivé sur cet { -device }.
  }
 store-tv-reading-only = { $count ->
-    [one] Un autre est pour la lecture, que cette TV ne gère pas.
+    [one] { $count } autre est pour la lecture, que cette TV ne gère pas.
     [many] { $count } autres sont pour la lecture, que cette TV ne gère pas.
    *[other] { $count } autres sont pour la lecture, que cette TV ne gère pas.
  }
@@ -87,7 +87,7 @@ store-tv-all-reading = Chaque { -plugin } de { $store } est pour la lecture, que
 store-plugin-row = Version { $version } · peut contacter { $hosts }
 source-added = { $name } ajouté · Séries : { $series }
 source-added-plugins = { $count ->
-    [one] Un { -plugin } installé depuis { $store }
+    [one] { $count } { -plugin } installé depuis { $store }
     [many] { $count } { -plugin-pl } installés depuis { $store }
    *[other] { $count } { -plugin-pl } installés depuis { $store }
  }
@@ -103,7 +103,7 @@ source-row-server-series = { $libraries ->
  }
 source-row-server-empty = { $kind } · aucune série pour l’instant · nouvelle vérification dans 30 minutes
 source-row-folder = { $skipped ->
-    [one] { $path } · Séries : { $series } · un fichier ignoré
+    [one] { $path } · Séries : { $series } · { $skipped } fichier ignoré
     [many] { $path } · Séries : { $series } · { $skipped } fichiers ignorés
    *[other] { $path } · Séries : { $series } · { $skipped } fichiers ignorés
  }

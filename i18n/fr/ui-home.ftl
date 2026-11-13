@@ -8,7 +8,7 @@ home-mark-watched = Marquer l’épisode { $episode } comme vu
 home-marked-watched = Épisode { $episode } marqué comme vu
 home-remove-continue = Retirer de { -continue-cap }
 home-continue-count = { $count ->
-    [one] 1 série
+    [one] { $count } série
     [many] { $count } séries
    *[other] { $count } séries
  }

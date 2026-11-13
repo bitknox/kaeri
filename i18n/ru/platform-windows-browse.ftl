@@ -1,6 +1,6 @@
 continue-menu-resume = { -continue-cap }
 continue-sync-waiting = { $count ->
-    [one] Одно изменение ждёт синхронизации
+    [one] { $count } изменение ждёт синхронизации
     [few] { $count } изменения ждут синхронизации
     [many] { $count } изменений ждут синхронизации
    *[other] { $count } изменения ждут синхронизации

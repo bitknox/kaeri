@@ -279,7 +279,7 @@
     <value>amanhã às {time}</value>
   </data>
   <data name="CauseAirsInDays_one" xml:space="preserve">
-    <value>em um dia às {time}</value>
+    <value>em {days} dia às {time}</value>
   </data>
   <data name="CauseAirsInDays_many" xml:space="preserve">
     <value>em {days} dias às {time}</value>
@@ -315,7 +315,7 @@
     <value>Nenhuma fonte conseguiu listar esta série, então ela não pode ser baixada.</value>
   </data>
   <data name="CauseSubtitlesMerged_one" xml:space="preserve">
-    <value>Uma faixa de legenda foi incorporada ao vídeo.</value>
+    <value>{tracks} faixa de legenda foi incorporada ao vídeo.</value>
   </data>
   <data name="CauseSubtitlesMerged_many" xml:space="preserve">
     <value>{tracks} faixas de legenda foram incorporadas ao vídeo.</value>
@@ -327,7 +327,7 @@
     <value>As legendas ficam como arquivos separados. {reason}</value>
   </data>
   <data name="CauseAlreadyInDownloads_one" xml:space="preserve">
-    <value>Um episódio já está nos downloads.</value>
+    <value>{count} episódio já está nos downloads.</value>
   </data>
   <data name="CauseAlreadyInDownloads_many" xml:space="preserve">
     <value>{count} episódios já estão nos downloads.</value>
@@ -501,7 +501,7 @@
     <value>Download removido.</value>
   </data>
   <data name="NoticeDownloadsCleared_one" xml:space="preserve">
-    <value>Um download concluído foi removido da lista.</value>
+    <value>{count} download concluído foi removido da lista.</value>
   </data>
   <data name="NoticeDownloadsCleared_many" xml:space="preserve">
     <value>{count} downloads concluídos foram removidos da lista.</value>
@@ -510,7 +510,7 @@
     <value>{count} downloads concluídos foram removidos da lista.</value>
   </data>
   <data name="NoticeSkipMarksCleared_one" xml:space="preserve">
-    <value>O tempo de pulo que você marcou foi apagado.</value>
+    <value>{count} tempo de pulo que você marcou foi apagado.</value>
   </data>
   <data name="NoticeSkipMarksCleared_many" xml:space="preserve">
     <value>{count} de tempos de pulo que você marcou foram apagados.</value>
@@ -546,7 +546,7 @@
     <value>Nada novo foi adicionado à fila. {existing} {reason}</value>
   </data>
   <data name="NoticeEpisodesQueuedExisting_one" xml:space="preserve">
-    <value>Um episódio foi adicionado à fila. {existing}</value>
+    <value>{count} episódio foi adicionado à fila. {existing}</value>
   </data>
   <data name="NoticeEpisodesQueuedExisting_many" xml:space="preserve">
     <value>{count} episódios foram adicionados à fila. {existing}</value>
@@ -555,7 +555,7 @@
     <value>{count} episódios foram adicionados à fila. {existing}</value>
   </data>
   <data name="NoticeEpisodesQueuedStopped_one" xml:space="preserve">
-    <value>Um episódio foi adicionado à fila, e então a busca parou. {reason}</value>
+    <value>{count} episódio foi adicionado à fila, e então a busca parou. {reason}</value>
   </data>
   <data name="NoticeEpisodesQueuedStopped_many" xml:space="preserve">
     <value>{count} episódios foram adicionados à fila, e então a busca parou. {reason}</value>
@@ -564,7 +564,7 @@
     <value>{count} episódios foram adicionados à fila, e então a busca parou. {reason}</value>
   </data>
   <data name="NoticeEpisodesQueuedExistingStopped_one" xml:space="preserve">
-    <value>Um episódio foi adicionado à fila, e então a busca parou. {existing} {reason}</value>
+    <value>{count} episódio foi adicionado à fila, e então a busca parou. {existing} {reason}</value>
   </data>
   <data name="NoticeEpisodesQueuedExistingStopped_many" xml:space="preserve">
     <value>{count} episódios foram adicionados à fila, e então a busca parou. {existing} {reason}</value>
@@ -624,7 +624,7 @@
     <value>Geralmente aos domingos</value>
   </data>
   <data name="ReadingAboutEveryWeeks_one" xml:space="preserve">
-    <value>Cerca de toda semana</value>
+    <value>A cada {weeks} semana, em média</value>
   </data>
   <data name="ReadingAboutEveryWeeks_many" xml:space="preserve">
     <value>A cada {weeks} de semanas</value>
@@ -762,7 +762,7 @@
     <value>Ainda não saiu</value>
   </data>
   <data name="ReadingChapters_one" xml:space="preserve">
-    <value>1 capítulo</value>
+    <value>{count} capítulo</value>
   </data>
   <data name="ReadingChapters_many" xml:space="preserve">
     <value>{count} de capítulos</value>
@@ -771,7 +771,7 @@
     <value>{count} capítulos</value>
   </data>
   <data name="ReadingVolumes_one" xml:space="preserve">
-    <value>1 volume</value>
+    <value>{count} volume</value>
   </data>
   <data name="ReadingVolumes_many" xml:space="preserve">
     <value>{count} de volumes</value>
@@ -882,7 +882,7 @@
     <value>Capítulo {chapter}</value>
   </data>
   <data name="ExportWaitsForWifi_one" xml:space="preserve">
-    <value>Um capítulo ainda não foi baixado, então este envio espera o Wi-Fi e continua sozinho.</value>
+    <value>{n} capítulo ainda não foi baixado, então este envio espera o Wi-Fi e continua sozinho.</value>
   </data>
   <data name="ExportWaitsForWifi_many" xml:space="preserve">
     <value>{n} de capítulos ainda não foram baixados, então este envio espera o Wi-Fi e continua sozinho.</value>
@@ -939,7 +939,7 @@
     <value>Com marcador</value>
   </data>
   <data name="ReadingRowPages_one" xml:space="preserve">
-    <value>1 página</value>
+    <value>{n} página</value>
   </data>
   <data name="ReadingRowPages_many" xml:space="preserve">
     <value>{n} de páginas</value>
@@ -948,7 +948,7 @@
     <value>{n} páginas</value>
   </data>
   <data name="ReadingRowVersions_one" xml:space="preserve">
-    <value>1 opção</value>
+    <value>{n} opção</value>
   </data>
   <data name="ReadingRowVersions_many" xml:space="preserve">
     <value>{n} de opções</value>
@@ -969,7 +969,7 @@
     <value>ontem</value>
   </data>
   <data name="ReadingAgoDays_one" xml:space="preserve">
-    <value>há 1 dia</value>
+    <value>há {days} dia</value>
   </data>
   <data name="ReadingAgoDays_many" xml:space="preserve">
     <value>há {days} de dias</value>
@@ -978,7 +978,7 @@
     <value>há {days} dias</value>
   </data>
   <data name="ReadingAgoWeeks_one" xml:space="preserve">
-    <value>há 1 semana</value>
+    <value>há {weeks} semana</value>
   </data>
   <data name="ReadingAgoWeeks_many" xml:space="preserve">
     <value>há {weeks} de semanas</value>
@@ -987,7 +987,7 @@
     <value>há {weeks} semanas</value>
   </data>
   <data name="ReadingAgoMonths_one" xml:space="preserve">
-    <value>há 1 mês</value>
+    <value>há {months} mês</value>
   </data>
   <data name="ReadingAgoMonths_many" xml:space="preserve">
     <value>há {months} de meses</value>
@@ -996,7 +996,7 @@
     <value>há {months} meses</value>
   </data>
   <data name="ReadingAgoYears_one" xml:space="preserve">
-    <value>há 1 ano</value>
+    <value>há {years} ano</value>
   </data>
   <data name="ReadingAgoYears_many" xml:space="preserve">
     <value>há {years} de anos</value>
@@ -1029,7 +1029,7 @@
     <value>Sem responder</value>
   </data>
   <data name="ReadingDlParts_one" xml:space="preserve">
-    <value>1 parte</value>
+    <value>{count} parte</value>
   </data>
   <data name="ReadingDlParts_many" xml:space="preserve">
     <value>{count} de partes</value>
@@ -1080,7 +1080,7 @@
     <value>Downloads concluídos</value>
   </data>
   <data name="ReadingDownloadsDoneChapters_one" xml:space="preserve">
-    <value>Um capítulo de {title} está pronto para ler offline.</value>
+    <value>{count} capítulo de {title} está pronto para ler offline.</value>
   </data>
   <data name="ReadingDownloadsDoneChapters_many" xml:space="preserve">
     <value>{count} de capítulos de {title} estão prontos para ler offline.</value>
@@ -1089,7 +1089,7 @@
     <value>{count} capítulos de {title} estão prontos para ler offline.</value>
   </data>
   <data name="ReadingDownloadsDoneParts_one" xml:space="preserve">
-    <value>Uma parte de {title} está pronta para ler offline.</value>
+    <value>{count} parte de {title} está pronta para ler offline.</value>
   </data>
   <data name="ReadingDownloadsDoneParts_many" xml:space="preserve">
     <value>{count} de partes de {title} estão prontas para ler offline.</value>
@@ -1149,7 +1149,7 @@
     <value>Episódios 1 a {last}</value>
   </data>
   <data name="ReadHitParts_one" xml:space="preserve">
-    <value>1 parte</value>
+    <value>{count} parte</value>
   </data>
   <data name="ReadHitParts_many" xml:space="preserve">
     <value>{count} de partes</value>
@@ -1158,7 +1158,7 @@
     <value>{count} partes</value>
   </data>
   <data name="ReadHitFiles_one" xml:space="preserve">
-    <value>1 arquivo</value>
+    <value>{count} arquivo</value>
   </data>
   <data name="ReadHitFiles_many" xml:space="preserve">
     <value>{count} de arquivos</value>
@@ -1167,7 +1167,7 @@
     <value>{count} arquivos</value>
   </data>
   <data name="ReadHitFilesFormat_one" xml:space="preserve">
-    <value>1 arquivo · {format}</value>
+    <value>{count} arquivo · {format}</value>
   </data>
   <data name="ReadHitFilesFormat_many" xml:space="preserve">
     <value>{count} de arquivos · {format}</value>
@@ -1233,7 +1233,7 @@
     <value>Convite cancelado. O link não funciona mais.</value>
   </data>
   <data name="StoreInviteCancelledKept_one" xml:space="preserve">
-    <value>Convite cancelado. A pessoa que entrou continua como membro.</value>
+    <value>Convite cancelado. {count} pessoa que entrou continua como membro.</value>
   </data>
   <data name="StoreInviteCancelledKept_many" xml:space="preserve">
     <value>Convite cancelado. As {count} de pessoas que entraram continuam como membros.</value>
@@ -1248,7 +1248,7 @@
     <value>Agora só entra quem você convidar.</value>
   </data>
   <data name="StoreOpenJoinOffDevices_one" xml:space="preserve">
-    <value>Agora só entra quem você convidar. O dispositivo que entrou pelo link continua funcionando até você removê-lo.</value>
+    <value>Agora só entra quem você convidar. {devices} dispositivo que entrou pelo link continua funcionando até você removê-lo.</value>
   </data>
   <data name="StoreOpenJoinOffDevices_many" xml:space="preserve">
     <value>Agora só entra quem você convidar. Os {devices} dispositivos que entraram pelo link continuam funcionando até você removê-los.</value>
@@ -1290,7 +1290,7 @@
     <value>{plugin} foi instalado, mas foi criado para uma versão mais antiga do Kaeri e precisa ser atualizado. Peça uma atualização ao autor.</value>
   </data>
   <data name="PluginsOutdated_one" xml:space="preserve">
-    <value>Um plugin foi criado para uma versão mais antiga do Kaeri e precisa ser atualizado: {names}.</value>
+    <value>{count} plugin foi criado para uma versão mais antiga do Kaeri e precisa ser atualizado: {names}.</value>
   </data>
   <data name="PluginsOutdated_many" xml:space="preserve">
     <value>{count} de plugins foram criados para uma versão mais antiga do Kaeri e precisam ser atualizados: {names}.</value>
@@ -1548,7 +1548,7 @@
     <value>Desconectado do {tracker}.</value>
   </data>
   <data name="NoticeSignedOutQueue_one" xml:space="preserve">
-    <value>Desconectado do {tracker}. Uma alteração na fila foi mantida para a próxima conexão.</value>
+    <value>Desconectado do {tracker}. {count} alteração na fila foi mantida para a próxima conexão.</value>
   </data>
   <data name="NoticeSignedOutQueue_many" xml:space="preserve">
     <value>Desconectado do {tracker}. {count} alterações na fila foram mantidas para a próxima conexão.</value>
@@ -1593,7 +1593,7 @@
     <value>{title}, episódio {episode}, foi ao ar enquanto você estava fora.</value>
   </data>
   <data name="NoticeEpisodesAired_one" xml:space="preserve">
-    <value>Um novo episódio de uma série que você acompanha foi ao ar. Ele está no calendário.</value>
+    <value>{count} novo episódio de uma série que você acompanha foi ao ar. Ele está no calendário.</value>
   </data>
   <data name="NoticeEpisodesAired_many" xml:space="preserve">
     <value>{count} novos episódios de séries que você acompanha foram ao ar. Eles estão no calendário.</value>
@@ -1659,7 +1659,7 @@
     <value>O player não conseguiu iniciar. {reason}</value>
   </data>
   <data name="NoticeEpisodesQueued_one" xml:space="preserve">
-    <value>Um episódio adicionado à fila.</value>
+    <value>{count} episódio adicionado à fila.</value>
   </data>
   <data name="NoticeEpisodesQueued_many" xml:space="preserve">
     <value>{count} episódios adicionados à fila.</value>
@@ -1692,7 +1692,7 @@
     <value>Continuar assistindo</value>
   </data>
   <data name="ContinueSyncWaiting_one" xml:space="preserve">
-    <value>Uma alteração esperando para sincronizar</value>
+    <value>{count} alteração esperando para sincronizar</value>
   </data>
   <data name="ContinueSyncWaiting_many" xml:space="preserve">
     <value>{count} alterações esperando para sincronizar</value>
@@ -2157,7 +2157,7 @@
     <value>Volume {volume}</value>
   </data>
   <data name="WindowsReaderChapterPages_one" xml:space="preserve">
-    <value>1 página</value>
+    <value>{pages} página</value>
   </data>
   <data name="WindowsReaderChapterPages_many" xml:space="preserve">
     <value>{pages} de páginas</value>
@@ -2202,7 +2202,7 @@
     <value>Salvar arquivos</value>
   </data>
   <data name="SendSavedWindows_one" xml:space="preserve">
-    <value>Arquivo salvo</value>
+    <value>{n} arquivo salvo</value>
   </data>
   <data name="SendSavedWindows_many" xml:space="preserve">
     <value>{n} de arquivos salvos</value>
@@ -2316,7 +2316,7 @@
     <value>Envia o que mudou aqui e busca o que mudou em outros lugares.</value>
   </data>
   <data name="SettingsSignedInWaiting_one" xml:space="preserve">
-    <value>Conectado · uma mudança aguardando</value>
+    <value>Conectado · {count} mudança aguardando</value>
   </data>
   <data name="SettingsSignedInWaiting_many" xml:space="preserve">
     <value>Conectado · {count} mudanças aguardando</value>
@@ -2370,7 +2370,7 @@
     <value>Reiniciar</value>
   </data>
   <data name="SettingsDifferences_one" xml:space="preserve">
-    <value>Um título difere de {tracker}</value>
+    <value>{count} título difere de {tracker}</value>
   </data>
   <data name="SettingsDifferences_many" xml:space="preserve">
     <value>{count} de títulos diferem de {tracker}</value>
@@ -2418,7 +2418,7 @@
     <value>Os downloads ainda estão em andamento</value>
   </data>
   <data name="CloseDownloading_one" xml:space="preserve">
-    <value>Um episódio está sendo baixado.</value>
+    <value>{count} episódio está sendo baixado.</value>
   </data>
   <data name="CloseDownloading_many" xml:space="preserve">
     <value>{count} episódios estão sendo baixados.</value>
@@ -2427,7 +2427,7 @@
     <value>{count} episódios estão sendo baixados.</value>
   </data>
   <data name="CloseSeeding_one" xml:space="preserve">
-    <value>Um episódio está compartilhando.</value>
+    <value>{count} episódio está compartilhando.</value>
   </data>
   <data name="CloseSeeding_many" xml:space="preserve">
     <value>{count} episódios estão compartilhando.</value>
@@ -2469,7 +2469,7 @@
     <value>Episódio {episode} baixado.</value>
   </data>
   <data name="NotifyDownloaded_one" xml:space="preserve">
-    <value>Um episódio baixado.</value>
+    <value>{count} episódio baixado.</value>
   </data>
   <data name="NotifyDownloaded_many" xml:space="preserve">
     <value>{count} episódios baixados.</value>
@@ -2652,7 +2652,7 @@
     <value>O Kaeri não vai mais usá-lo para buscar episódios. Você pode instalá-lo de novo pela loja de plugins de origem.</value>
   </data>
   <data name="StoresUpdatesCount_one" xml:space="preserve">
-    <value>1 atualização</value>
+    <value>{count} atualização</value>
   </data>
   <data name="StoresUpdatesCount_many" xml:space="preserve">
     <value>{count} atualizações</value>
@@ -2724,7 +2724,7 @@
     <value>Abrir {device}</value>
   </data>
   <data name="SourcePickerSeeders_one" xml:space="preserve">
-    <value>Um seeder</value>
+    <value>{count} seeder</value>
   </data>
   <data name="SourcePickerSeeders_many" xml:space="preserve">
     <value>{count} seeders</value>
@@ -3348,7 +3348,7 @@
     <value>Descer uma página</value>
   </data>
   <data name="PadHelpSeekBack_one" xml:space="preserve">
-    <value>Voltar um segundo</value>
+    <value>Voltar {seconds} segundo</value>
   </data>
   <data name="PadHelpSeekBack_many" xml:space="preserve">
     <value>Voltar {seconds} segundos</value>
@@ -3357,7 +3357,7 @@
     <value>Voltar {seconds} segundos</value>
   </data>
   <data name="PadHelpSeekForward_one" xml:space="preserve">
-    <value>Avançar um segundo</value>
+    <value>Avançar {seconds} segundo</value>
   </data>
   <data name="PadHelpSeekForward_many" xml:space="preserve">
     <value>Avançar {seconds} segundos</value>
@@ -3558,7 +3558,7 @@
     <value>Discussão do episódio {episode}</value>
   </data>
   <data name="DiscussionRow_one" xml:space="preserve">
-    <value>Discussão · um comentário</value>
+    <value>Discussão · {count} comentário</value>
   </data>
   <data name="DiscussionRow_many" xml:space="preserve">
     <value>Discussão · {count} comentários</value>
@@ -3567,7 +3567,7 @@
     <value>Discussão · {count} comentários</value>
   </data>
   <data name="DiscussionCount_one" xml:space="preserve">
-    <value>Um comentário</value>
+    <value>{count} comentário</value>
   </data>
   <data name="DiscussionCount_many" xml:space="preserve">
     <value>{count} comentários</value>
@@ -3582,7 +3582,7 @@
     <value>Responder</value>
   </data>
   <data name="DiscussionMoreReplies_one" xml:space="preserve">
-    <value>Mais uma resposta</value>
+    <value>Mais {count} resposta</value>
   </data>
   <data name="DiscussionMoreReplies_many" xml:space="preserve">
     <value>Mais {count} respostas</value>
@@ -3837,7 +3837,7 @@
     <value>{title} · pronto para assistir offline</value>
   </data>
   <data name="DownloadsNoticeRunning_one" xml:space="preserve">
-    <value>Baixando um episódio</value>
+    <value>Baixando {count} episódio</value>
   </data>
   <data name="DownloadsNoticeRunning_many" xml:space="preserve">
     <value>Baixando {count} episódios</value>
@@ -3957,7 +3957,7 @@
     <value>Remover de Continuar assistindo</value>
   </data>
   <data name="HomeContinueCount_one" xml:space="preserve">
-    <value>1 título</value>
+    <value>{count} título</value>
   </data>
   <data name="HomeContinueCount_many" xml:space="preserve">
     <value>{count} de títulos</value>
@@ -4050,7 +4050,7 @@
     <value>AniList sincronizado</value>
   </data>
   <data name="QueueEpisodesLeft_one" xml:space="preserve">
-    <value>Falta um episódio em {title}</value>
+    <value>Falta {count} episódio em {title}</value>
   </data>
   <data name="QueueEpisodesLeft_many" xml:space="preserve">
     <value>Faltam {count} episódios em {title}</value>
@@ -4260,7 +4260,7 @@
     <value>saiu {ago}</value>
   </data>
   <data name="LibraryRowScanning_one" xml:space="preserve">
-    <value>Verificando · 1 arquivo encontrado</value>
+    <value>Verificando · {files} arquivo encontrado</value>
   </data>
   <data name="LibraryRowScanning_many" xml:space="preserve">
     <value>Verificando · {files} de arquivos encontrados</value>
@@ -4278,7 +4278,7 @@
     <value>{episodes} de {series}</value>
   </data>
   <data name="LibraryEpisodes_one" xml:space="preserve">
-    <value>1 episódio</value>
+    <value>{count} episódio</value>
   </data>
   <data name="LibraryEpisodes_many" xml:space="preserve">
     <value>{count} de episódios</value>
@@ -4287,7 +4287,7 @@
     <value>{count} episódios</value>
   </data>
   <data name="LibrarySeries_one" xml:space="preserve">
-    <value>1 série</value>
+    <value>{count} série</value>
   </data>
   <data name="LibrarySeries_many" xml:space="preserve">
     <value>{count} de séries</value>
@@ -4356,7 +4356,7 @@
     <value>{count} séries identificadas</value>
   </data>
   <data name="LibraryRowSeries_one" xml:space="preserve">
-    <value>1 série</value>
+    <value>{count} série</value>
   </data>
   <data name="LibraryRowSeries_many" xml:space="preserve">
     <value>{count} de séries</value>
@@ -4365,7 +4365,7 @@
     <value>{count} séries</value>
   </data>
   <data name="LibraryRowFiles_one" xml:space="preserve">
-    <value>1 arquivo</value>
+    <value>{files} arquivo</value>
   </data>
   <data name="LibraryRowFiles_many" xml:space="preserve">
     <value>{files} de arquivos</value>
@@ -4380,7 +4380,7 @@
     <value>Seus arquivos continuam onde estão.</value>
   </data>
   <data name="LibraryFiles_one" xml:space="preserve">
-    <value>1 arquivo</value>
+    <value>{count} arquivo</value>
   </data>
   <data name="LibraryFiles_many" xml:space="preserve">
     <value>{count} de arquivos</value>
@@ -5163,7 +5163,7 @@
     <value>Suas fontes não o terão antes disso. Ele será reproduzido com a sala assim que uma delas tiver.</value>
   </data>
   <data name="PartySourcesFound_one" xml:space="preserve">
-    <value>Uma fonte tem o episódio</value>
+    <value>{count} fonte tem o episódio</value>
   </data>
   <data name="PartySourcesFound_many" xml:space="preserve">
     <value>{count} fontes têm o episódio</value>
@@ -5259,7 +5259,7 @@
     <value>Sugerido · mantido por {operator}</value>
   </data>
   <data name="TogetherServerUsed_one" xml:space="preserve">
-    <value>Usado em 1 sessão</value>
+    <value>Usado em {count} sessão</value>
   </data>
   <data name="TogetherServerUsed_many" xml:space="preserve">
     <value>Usado em {count} de sessões</value>
@@ -6036,7 +6036,7 @@
     <value>Ainda está assistindo?</value>
   </data>
   <data name="PlayerStillWatchingDetail_one" xml:space="preserve">
-    <value>Pausado após um episódio seguido.</value>
+    <value>Pausado após {count} episódio seguido.</value>
   </data>
   <data name="PlayerStillWatchingDetail_many" xml:space="preserve">
     <value>Pausado após {count} episódios seguidos.</value>
@@ -6357,7 +6357,7 @@
     <value>Capítulos</value>
   </data>
   <data name="ReaderPagesLeft_one" xml:space="preserve">
-    <value>Falta uma página neste capítulo</value>
+    <value>Falta {count} página neste capítulo</value>
   </data>
   <data name="ReaderPagesLeft_many" xml:space="preserve">
     <value>Faltam {count} de páginas neste capítulo</value>
@@ -6396,7 +6396,7 @@
     <value>Capítulo {chapter} · {facts}</value>
   </data>
   <data name="ReaderEndPages_one" xml:space="preserve">
-    <value>Uma página</value>
+    <value>{count} página</value>
   </data>
   <data name="ReaderEndPages_many" xml:space="preserve">
     <value>{count} de páginas</value>
@@ -6417,7 +6417,7 @@
     <value>Deslize para seguir lendo</value>
   </data>
   <data name="ReaderDividerImages_one" xml:space="preserve">
-    <value>Uma imagem</value>
+    <value>{count} imagem</value>
   </data>
   <data name="ReaderDividerImages_many" xml:space="preserve">
     <value>{count} de imagens</value>
@@ -6444,7 +6444,7 @@
     <value>Ler</value>
   </data>
   <data name="DemoSeriesFacts_one" xml:space="preserve">
-    <value>Demo · Quadrinho · uma página</value>
+    <value>Demo · Quadrinho · {pages} página</value>
   </data>
   <data name="DemoSeriesFacts_many" xml:space="preserve">
     <value>Demo · Quadrinho · {pages} de páginas</value>
@@ -6501,7 +6501,7 @@
     <value>Créditos</value>
   </data>
   <data name="DemoPages_one" xml:space="preserve">
-    <value>Uma página</value>
+    <value>{pages} página</value>
   </data>
   <data name="DemoPages_many" xml:space="preserve">
     <value>{pages} de páginas</value>
@@ -6546,7 +6546,7 @@
     <value>Progresso salvo {ago}</value>
   </data>
   <data name="ProgressRowSending_one" xml:space="preserve">
-    <value>Enviando 1 capítulo…</value>
+    <value>Enviando {count} capítulo…</value>
   </data>
   <data name="ProgressRowSending_many" xml:space="preserve">
     <value>Enviando {count} capítulos…</value>
@@ -6555,7 +6555,7 @@
     <value>Enviando {count} capítulos…</value>
   </data>
   <data name="ProgressRowOffline_one" xml:space="preserve">
-    <value>1 capítulo será enviado quando você voltar online</value>
+    <value>{count} capítulo será enviado quando você voltar online</value>
   </data>
   <data name="ProgressRowOffline_many" xml:space="preserve">
     <value>{count} capítulos serão enviados quando você voltar online</value>
@@ -6564,7 +6564,7 @@
     <value>{count} capítulos serão enviados quando você voltar online</value>
   </data>
   <data name="ProgressRowRetrying_one" xml:space="preserve">
-    <value>1 capítulo aguardando. O Kaeri vai tentar de novo.</value>
+    <value>{count} capítulo aguardando. O Kaeri vai tentar de novo.</value>
   </data>
   <data name="ProgressRowRetrying_many" xml:space="preserve">
     <value>{count} capítulos aguardando. O Kaeri vai tentar de novo.</value>
@@ -6573,7 +6573,7 @@
     <value>{count} capítulos aguardando. O Kaeri vai tentar de novo.</value>
   </data>
   <data name="ProgressRowFailed_one" xml:space="preserve">
-    <value>1 capítulo não salvo: {reason}</value>
+    <value>{count} capítulo não salvo: {reason}</value>
   </data>
   <data name="ProgressRowFailed_many" xml:space="preserve">
     <value>{count} capítulos não salvos: {reason}</value>
@@ -6657,7 +6657,7 @@
     <value>Ontem</value>
   </data>
   <data name="ChapterUpdatesVersions_one" xml:space="preserve">
-    <value>1 opção</value>
+    <value>{n} opção</value>
   </data>
   <data name="ChapterUpdatesVersions_many" xml:space="preserve">
     <value>{n} de opções</value>
@@ -6714,7 +6714,7 @@
     <value>Mudar</value>
   </data>
   <data name="SeriesSourcesMore_one" xml:space="preserve">
-    <value>mais 1</value>
+    <value>mais {n}</value>
   </data>
   <data name="SeriesSourcesMore_many" xml:space="preserve">
     <value>mais {n}</value>
@@ -6738,7 +6738,7 @@
     <value>{n} de {total} capítulos</value>
   </data>
   <data name="SeriesTrackerChapters_one" xml:space="preserve">
-    <value>1 capítulo</value>
+    <value>{n} capítulo</value>
   </data>
   <data name="SeriesTrackerChapters_many" xml:space="preserve">
     <value>{n} de capítulos</value>
@@ -6774,7 +6774,7 @@
     <value>Suas listas</value>
   </data>
   <data name="SeriesChosen_one" xml:space="preserve">
-    <value>1 capítulo</value>
+    <value>{n} capítulo</value>
   </data>
   <data name="SeriesChosen_many" xml:space="preserve">
     <value>{n} de capítulos</value>
@@ -6879,7 +6879,7 @@
     <value>Remover marcador</value>
   </data>
   <data name="SeriesVersions_one" xml:space="preserve">
-    <value>1 opção</value>
+    <value>{n} opção</value>
   </data>
   <data name="SeriesVersions_many" xml:space="preserve">
     <value>{n} de opções</value>
@@ -6939,7 +6939,7 @@
     <value>Todos os capítulos não lidos</value>
   </data>
   <data name="DownloadVolumeCount_one" xml:space="preserve">
-    <value>{volume} · 1 capítulo</value>
+    <value>{volume} · {n} capítulo</value>
   </data>
   <data name="DownloadVolumeCount_many" xml:space="preserve">
     <value>{volume} · {n} de capítulos</value>
@@ -6954,7 +6954,7 @@
     <value>Apagar downloads desta série</value>
   </data>
   <data name="DownloadChapters_one" xml:space="preserve">
-    <value>Baixar 1 capítulo</value>
+    <value>Baixar {n} capítulo</value>
   </data>
   <data name="DownloadChapters_many" xml:space="preserve">
     <value>Baixar {n} de capítulos</value>
@@ -7110,7 +7110,7 @@
     <value>Servidor {kind} encontrado</value>
   </data>
   <data name="SourcesFoundServerSeries_one" xml:space="preserve">
-    <value>Servidor {kind} encontrado com 1 série</value>
+    <value>Servidor {kind} encontrado com {n} série</value>
   </data>
   <data name="SourcesFoundServerSeries_many" xml:space="preserve">
     <value>Servidor {kind} encontrado com {n} de séries</value>
@@ -7137,7 +7137,7 @@
     <value>Os plugins vêm de lojas de plugins em que você entra.</value>
   </data>
   <data name="BookSourcesSeries_one" xml:space="preserve">
-    <value>1 série</value>
+    <value>{n} série</value>
   </data>
   <data name="BookSourcesSeries_many" xml:space="preserve">
     <value>{n} de séries</value>
@@ -7209,7 +7209,7 @@
     <value>Lidos há pouco</value>
   </data>
   <data name="ReadLibraryListValue_one" xml:space="preserve">
-    <value>{list}, 1 série</value>
+    <value>{list}, {n} série</value>
   </data>
   <data name="ReadLibraryListValue_many" xml:space="preserve">
     <value>{list}, {n} de séries</value>
@@ -7236,7 +7236,7 @@
     <value>Buscar leitura</value>
   </data>
   <data name="SearchOtherScope_one" xml:space="preserve">
-    <value>1 resultado em {scope}</value>
+    <value>{n} resultado em {scope}</value>
   </data>
   <data name="SearchOtherScope_many" xml:space="preserve">
     <value>{n} de resultados em {scope}</value>
@@ -7251,7 +7251,7 @@
     <value>{what} · do AniList</value>
   </data>
   <data name="ReadSearchTotal_one" xml:space="preserve">
-    <value>1 série do AniList</value>
+    <value>{n} série do AniList</value>
   </data>
   <data name="ReadSearchTotal_many" xml:space="preserve">
     <value>{n} de séries do AniList</value>
@@ -7317,7 +7317,7 @@
     <value>Sem {genre}</value>
   </data>
   <data name="ReadFilterGenresCount_one" xml:space="preserve">
-    <value>1 gênero</value>
+    <value>{n} gênero</value>
   </data>
   <data name="ReadFilterGenresCount_many" xml:space="preserve">
     <value>{n} de gêneros</value>
@@ -7764,7 +7764,7 @@
     <value>Preparar e compartilhar</value>
   </data>
   <data name="SendPreparing_one" xml:space="preserve">
-    <value>Preparando o capítulo</value>
+    <value>Preparando {done} de {total} capítulo</value>
   </data>
   <data name="SendPreparing_many" xml:space="preserve">
     <value>Preparando {done} de {total} capítulos</value>
@@ -7806,7 +7806,7 @@
     <value>Cancelar envio</value>
   </data>
   <data name="SendReady_one" xml:space="preserve">
-    <value>Um arquivo está pronto.</value>
+    <value>{n} arquivo está pronto.</value>
   </data>
   <data name="SendReady_many" xml:space="preserve">
     <value>{n} arquivos estão prontos.</value>
@@ -7908,7 +7908,7 @@
     <value>Downloads</value>
   </data>
   <data name="OpdsShareDownloadsCount_one" xml:space="preserve">
-    <value>Um capítulo</value>
+    <value>{n} capítulo</value>
   </data>
   <data name="OpdsShareDownloadsCount_many" xml:space="preserve">
     <value>{n} capítulos</value>
@@ -7923,7 +7923,7 @@
     <value>Pasta de romances</value>
   </data>
   <data name="OpdsShareSeriesCount_one" xml:space="preserve">
-    <value>Uma série</value>
+    <value>{n} série</value>
   </data>
   <data name="OpdsShareSeriesCount_many" xml:space="preserve">
     <value>{n} séries</value>
@@ -7956,7 +7956,7 @@
     <value>Último pedido: {time}</value>
   </data>
   <data name="OpdsFetchedFiles_one" xml:space="preserve">
-    <value>Um arquivo</value>
+    <value>{n} arquivo</value>
   </data>
   <data name="OpdsFetchedFiles_many" xml:space="preserve">
     <value>{n} arquivos</value>
@@ -8529,7 +8529,7 @@
     <value>Identificando · {done} de {total} séries</value>
   </data>
   <data name="ServersRowSummary_one" xml:space="preserve">
-    <value>1 biblioteca · {series} séries</value>
+    <value>{libraries} biblioteca · {series} séries</value>
   </data>
   <data name="ServersRowSummary_many" xml:space="preserve">
     <value>{libraries} de bibliotecas · {series} séries</value>
@@ -8538,7 +8538,7 @@
     <value>{libraries} bibliotecas · {series} séries</value>
   </data>
   <data name="ServersRowLibraries_one" xml:space="preserve">
-    <value>1 biblioteca</value>
+    <value>{count} biblioteca</value>
   </data>
   <data name="ServersRowLibraries_many" xml:space="preserve">
     <value>{count} de bibliotecas</value>
@@ -8547,7 +8547,7 @@
     <value>{count} bibliotecas</value>
   </data>
   <data name="ServersRowSeries_one" xml:space="preserve">
-    <value>1 série</value>
+    <value>{count} série</value>
   </data>
   <data name="ServersRowSeries_many" xml:space="preserve">
     <value>{count} de séries</value>
@@ -8841,7 +8841,7 @@
     <value>Legendas simples usam suas preferências de legenda em Acessibilidade. Legendas estilizadas mantêm o próprio visual.</value>
   </data>
   <data name="SettingsOverridden_one" xml:space="preserve">
-    <value>Alterado em uma série</value>
+    <value>Alterado em {count} série</value>
   </data>
   <data name="SettingsOverridden_many" xml:space="preserve">
     <value>Alterado em {count} séries</value>
@@ -9090,7 +9090,7 @@
     <value>Continuar o episódio {episode}, dublado, de {title}</value>
   </data>
   <data name="AccountsChangesWaiting_one" xml:space="preserve">
-    <value>Uma mudança aguardando sincronização</value>
+    <value>{count} mudança aguardando sincronização</value>
   </data>
   <data name="AccountsChangesWaiting_many" xml:space="preserve">
     <value>{count} mudanças aguardando sincronização</value>
@@ -9333,7 +9333,7 @@
     <value>Chave ••••{last}</value>
   </data>
   <data name="BookServerFoundTitle_one" xml:space="preserve">
-    <value>Foram encontradas {series} séries</value>
+    <value>Foram encontradas {series} séries em {libraries} biblioteca</value>
   </data>
   <data name="BookServerFoundTitle_many" xml:space="preserve">
     <value>Foram encontradas {series} séries em {libraries} de bibliotecas</value>
@@ -9390,7 +9390,7 @@
     <value>O Kaeri lê catálogos Komga, Kavita e OPDS.</value>
   </data>
   <data name="BookFolderFound_one" xml:space="preserve">
-    <value>Foram encontradas {series} séries em um arquivo</value>
+    <value>Foram encontradas {series} séries em {files} arquivo</value>
   </data>
   <data name="BookFolderFound_many" xml:space="preserve">
     <value>Foram encontradas {series} séries em {files} de arquivos</value>
@@ -9402,7 +9402,7 @@
     <value>{path}. O Kaeri identificou {matched} delas pelos dados.</value>
   </data>
   <data name="BookFolderUnsupported_one" xml:space="preserve">
-    <value>Um arquivo que o Kaeri não consegue abrir</value>
+    <value>{count} arquivo que o Kaeri não consegue abrir</value>
   </data>
   <data name="BookFolderUnsupported_many" xml:space="preserve">
     <value>{count} de arquivos que o Kaeri não consegue abrir</value>
@@ -9432,7 +9432,7 @@
     <value>Nada em {folder} que o Kaeri consiga abrir</value>
   </data>
   <data name="BookFolderEmptyLine_one" xml:space="preserve">
-    <value>Há um arquivo, que não é CBZ, CBR, EPUB, PDF nem imagem.</value>
+    <value>Há {files} arquivo, que não é CBZ, CBR, EPUB, PDF nem imagem.</value>
   </data>
   <data name="BookFolderEmptyLine_many" xml:space="preserve">
     <value>Há {files} de arquivos, nenhum deles CBZ, CBR, EPUB, PDF ou imagens.</value>
@@ -9453,7 +9453,7 @@
     <value>Você entrou em {store}</value>
   </data>
   <data name="StoreJoinedLine_one" xml:space="preserve">
-    <value>{owner} oferece um plugin. Entrar não instala nada; instale aqui ou depois.</value>
+    <value>{owner} oferece {count} plugin. Entrar não instala nada; instale aqui ou depois.</value>
   </data>
   <data name="StoreJoinedLine_many" xml:space="preserve">
     <value>{owner} oferece {count} de plugins. Entrar não instala nada; escolha os que quiser aqui ou depois.</value>
@@ -9477,7 +9477,7 @@
     <value>Instalar todos para ler</value>
   </data>
   <data name="StoreInstalled_one" xml:space="preserve">
-    <value>Um plugin instalado. Ele está em Suas fontes.</value>
+    <value>{count} plugin instalado. Ele está em Suas fontes.</value>
   </data>
   <data name="StoreInstalled_many" xml:space="preserve">
     <value>{count} de plugins instalados. Eles estão em Suas fontes.</value>
@@ -9507,7 +9507,7 @@
     <value>O convite parece certo, mas a loja não está respondendo. Tente de novo mais tarde ou pergunte a {owner} se ela está funcionando.</value>
   </data>
   <data name="StoreOtherMediumMore_one" xml:space="preserve">
-    <value>Mais um é para assistir, o que está desativado neste dispositivo.</value>
+    <value>Mais {count} é para assistir, o que está desativado neste dispositivo.</value>
   </data>
   <data name="StoreOtherMediumMore_many" xml:space="preserve">
     <value>Mais {count} de são para assistir, o que está desativado neste dispositivo.</value>
@@ -9516,7 +9516,7 @@
     <value>Mais {count} são para assistir, o que está desativado neste dispositivo.</value>
   </data>
   <data name="StoreTvReadingOnly_one" xml:space="preserve">
-    <value>Mais um é para leitura, o que esta TV não faz.</value>
+    <value>Mais {count} é para leitura, o que esta TV não faz.</value>
   </data>
   <data name="StoreTvReadingOnly_many" xml:space="preserve">
     <value>Mais {count} de plugins são para leitura, o que esta TV não faz.</value>
@@ -9534,7 +9534,7 @@
     <value>Adicionado: {name} · {series} séries</value>
   </data>
   <data name="SourceAddedPlugins_one" xml:space="preserve">
-    <value>Um plugin instalado de {store}</value>
+    <value>{count} plugin instalado de {store}</value>
   </data>
   <data name="SourceAddedPlugins_many" xml:space="preserve">
     <value>{count} de plugins instalados de {store}</value>
@@ -9564,7 +9564,7 @@
     <value>{kind} · ainda sem séries · confere de novo em 30 minutos</value>
   </data>
   <data name="SourceRowFolder_one" xml:space="preserve">
-    <value>{path} · {series} séries · um arquivo ignorado</value>
+    <value>{path} · {series} séries · {skipped} arquivo ignorado</value>
   </data>
   <data name="SourceRowFolder_many" xml:space="preserve">
     <value>{path} · {series} séries · {skipped} de arquivos ignorados</value>
@@ -9738,7 +9738,7 @@
     <value>Contata {first}</value>
   </data>
   <data name="SourcesContactsLine_one" xml:space="preserve">
-    <value>Contata {first} e mais um</value>
+    <value>Contata {first} e mais {more}</value>
   </data>
   <data name="SourcesContactsLine_many" xml:space="preserve">
     <value>Contata {first} e mais {more}</value>
@@ -9756,7 +9756,7 @@
     <value>Esta atualização também contata {first}.</value>
   </data>
   <data name="SourcesUpdateContacts_one" xml:space="preserve">
-    <value>Esta atualização também contata {first} e mais um.</value>
+    <value>Esta atualização também contata {first} e mais {more}.</value>
   </data>
   <data name="SourcesUpdateContacts_many" xml:space="preserve">
     <value>Esta atualização também contata {first} e mais {more}.</value>
@@ -9801,7 +9801,7 @@
     <value>Escolher correspondência</value>
   </data>
   <data name="MatchUncertain_one" xml:space="preserve">
-    <value>{source} lista um título que pode ser este. Escolha-o para reproduzir os episódios.</value>
+    <value>{source} lista {count} título que pode ser este. Escolha-o para reproduzir os episódios.</value>
   </data>
   <data name="MatchUncertain_many" xml:space="preserve">
     <value>{source} lista {count} de títulos que podem ser este. Escolha um para reproduzir os episódios.</value>
@@ -10278,7 +10278,7 @@
     <value>Dono · {devices}</value>
   </data>
   <data name="StoresMemberDevices_one" xml:space="preserve">
-    <value>Um dispositivo</value>
+    <value>{count} dispositivo</value>
   </data>
   <data name="StoresMemberDevices_many" xml:space="preserve">
     <value>{count} dispositivos</value>
@@ -10392,7 +10392,7 @@
     <value>Ainda não usado</value>
   </data>
   <data name="StoresInviteUsed_one" xml:space="preserve">
-    <value>Usado uma vez</value>
+    <value>Usado {used} vez</value>
   </data>
   <data name="StoresInviteUsed_many" xml:space="preserve">
     <value>Usado {used} de vezes</value>
@@ -10422,7 +10422,7 @@
     <value>{name} · entrou {when}</value>
   </data>
   <data name="StoresCancelInviteDetail_one" xml:space="preserve">
-    <value>Ninguém mais pode entrar com ele. A pessoa que entrou continua como membro.</value>
+    <value>Ninguém mais pode entrar com ele. {count} pessoa que entrou continua como membro.</value>
   </data>
   <data name="StoresCancelInviteDetail_many" xml:space="preserve">
     <value>Ninguém mais pode entrar com ele. As {count} de pessoas que entraram continuam como membros.</value>
@@ -10458,7 +10458,7 @@
     <value>Somente pessoas que você convidar</value>
   </data>
   <data name="StoresDevicesJoined_one" xml:space="preserve">
-    <value>Um dispositivo entrou com o link</value>
+    <value>{count} dispositivo entrou com o link</value>
   </data>
   <data name="StoresDevicesJoined_many" xml:space="preserve">
     <value>{count} dispositivos entraram com o link</value>
@@ -10497,7 +10497,7 @@
     <value>Copiar link</value>
   </data>
   <data name="StoresOffersPlugins_one" xml:space="preserve">
-    <value>Um plugin</value>
+    <value>{count} plugin</value>
   </data>
   <data name="StoresOffersPlugins_many" xml:space="preserve">
     <value>{count} plugins</value>
@@ -11343,7 +11343,7 @@
     <value>Intervalo de episódios</value>
   </data>
   <data name="EpisodeFold_one" xml:space="preserve">
-    <value>Um episódio assistido</value>
+    <value>{count} episódio assistido</value>
   </data>
   <data name="EpisodeFold_many" xml:space="preserve">
     <value>{count} episódios assistidos</value>
@@ -11460,7 +11460,7 @@
     <value>Ocultar tags de spoiler</value>
   </data>
   <data name="MoreShowSpoilerTags_one" xml:space="preserve">
-    <value>Mostrar uma tag de spoiler</value>
+    <value>Mostrar {count} tag de spoiler</value>
   </data>
   <data name="MoreShowSpoilerTags_many" xml:space="preserve">
     <value>Mostrar {count} tags de spoiler</value>
@@ -11754,7 +11754,7 @@
     <value>Conectado em {tracker} como {name}</value>
   </data>
   <data name="AccountsStateSignedInWaiting_one" xml:space="preserve">
-    <value>Conectado em {tracker} como {name} · uma alteração pendente</value>
+    <value>Conectado em {tracker} como {name} · {count} alteração pendente</value>
   </data>
   <data name="AccountsStateSignedInWaiting_many" xml:space="preserve">
     <value>Conectado em {tracker} como {name} · {count} alterações pendentes</value>

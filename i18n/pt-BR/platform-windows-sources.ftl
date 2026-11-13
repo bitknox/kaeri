@@ -24,7 +24,7 @@ sources-use-this = Usar esta { -source }
 sources-use-name = { $name } ativado
 sources-remove-detail = O { -app-name } não vai mais usá-lo para buscar episódios. Você pode instalá-lo de novo pela { -plugin-store } de origem.
 stores-updates-count = { $count ->
-    [one] 1 atualização
+    [one] { $count } atualização
     [many] { $count } atualizações
    *[other] { $count } atualizações
  }

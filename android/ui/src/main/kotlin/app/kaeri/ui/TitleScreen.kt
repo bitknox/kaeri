@@ -124,6 +124,7 @@ import app.kaeri.store.label
 import app.kaeri.store.line
 import app.kaeri.store.TvPlayRequest
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 
 /** What a page shows before its title has arrived. */
 private fun placeholderEntry(id: AnilistId) = Entry(
@@ -1581,9 +1582,9 @@ private fun rememberSeasonGeometry(count: Int, available: Dp): SeasonGeometry {
     val density = LocalDensity.current
     val measurer = rememberTextMeasurer()
     val style = MaterialTheme.typography.labelLarge
-    val context = LocalContext.current
-    fun seasonLabel(n: Int) = context.getString(R.string.season_number, n)
-    return remember(count, available, density, style, context.resources.configuration.locales) {
+    val resources = LocalResources.current
+    fun seasonLabel(n: Int) = resources.getString(R.string.season_number, n)
+    return remember(count, available, density, style, LocalConfiguration.current.locales) {
         with(density) {
             fun width(text: String, of: androidx.compose.ui.text.TextStyle = style) =
                 measurer.measure(text, of, maxLines = 1, softWrap = false).size.width.toFloat()
@@ -2447,12 +2448,13 @@ private fun TitleFacts(entry: Entry, modifier: Modifier = Modifier, onMore: () -
             Text(synopsis, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 4, overflow = TextOverflow.Ellipsis)
         }
         val context = LocalContext.current
+        val resources = LocalResources.current
         val airing = entry.airingState(context)
         val facts = listOfNotNull(
-            entry.studio?.let { context.getString(R.string.title_studio) to it },
-            entry.source?.label(context)?.let { context.getString(R.string.title_based_on) to it },
+            entry.studio?.let { resources.getString(R.string.title_studio) to it },
+            entry.source?.label(context)?.let { resources.getString(R.string.title_based_on) to it },
             airing?.let { it.label to it.value },
-            entry.alsoOn(context)?.let { context.getString(R.string.title_facts_also_on) to it },
+            entry.alsoOn(context)?.let { resources.getString(R.string.title_facts_also_on) to it },
         )
         if (facts.isNotEmpty()) {
             Column(Modifier.padding(top = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {

@@ -55,7 +55,7 @@ sources-contacts-label = Endereços contatados
 sources-listed-by-store = Listado pela { -plugin-store }
 sources-contacts-one = Contata { $first }
 sources-contacts-line = { $more ->
-    [one] Contata { $first } e mais um
+    [one] Contata { $first } e mais { $more }
     [many] Contata { $first } e mais { $more }
    *[other] Contata { $first } e mais { $more }
  }
@@ -63,7 +63,7 @@ sources-contacts-none = Não lista nenhum endereço para contatar
 sources-no-hosts = Nenhum endereço
 sources-update-contacts-one = Esta atualização também contata { $first }.
 sources-update-contacts = { $more ->
-    [one] Esta atualização também contata { $first } e mais um.
+    [one] Esta atualização também contata { $first } e mais { $more }.
     [many] Esta atualização também contata { $first } e mais { $more }.
    *[other] Esta atualização também contata { $first } e mais { $more }.
  }
@@ -80,7 +80,7 @@ sources-response-ms = { $ms } ms
 match-fix = Corrigir correspondência
 match-choose = Escolher correspondência
 match-uncertain = { $count ->
-    [one] { $source } lista um título que pode ser este. Escolha-o para reproduzir os episódios.
+    [one] { $source } lista { $count } título que pode ser este. Escolha-o para reproduzir os episódios.
     [many] { $source } lista { $count } de títulos que podem ser este. Escolha um para reproduzir os episódios.
    *[other] { $source } lista { $count } títulos que podem ser este. Escolha um para reproduzir os episódios.
  }

@@ -21,7 +21,7 @@ settings-watched-downloads = Téléchargements regardés
 settings-watched-one = { $episodes } de { $title } · { $size }
 settings-watched-many = { $episodes } · { $size }
 settings-delete-watched-title = { $count ->
-    [one] Supprimer un téléchargement regardé ?
+    [one] Supprimer { $count } téléchargement regardé ?
     [many] Supprimer { $count } téléchargements regardés ?
    *[other] Supprimer { $count } téléchargements regardés ?
  }
@@ -35,20 +35,20 @@ settings-storage-seen-both = Regardé ou lu
 settings-storage-used = { $size } dans les téléchargements.
 settings-storage-used-free = { $size } dans les téléchargements. { $free } libres sur cet { -device }.
 settings-source-count = { $count ->
-    [one] Une { -source }
+    [one] { $count } { -source }
     [many] { $count } { -source-pl }
    *[other] { $count } { -source-pl }
  }
 settings-accounts-sync-note = La progression et les changements de liste se synchronisent avec { $tracker }. { -library-cap } et la liste du calendrier affichent vos listes { $tracker }.
 settings-accounts-sync-note-read = La progression et les changements de listes sont synchronisés avec { $tracker }. { -library-cap } affiche vos listes { $tracker }.
 settings-conflicts = { $count ->
-    [one] Un titre diffère de { $tracker }
+    [one] { $count } titre diffère de { $tracker }
     [many] { $count } titres diffèrent de { $tracker }
    *[other] { $count } titres diffèrent de { $tracker }
  }
 settings-review = Examiner
 settings-changes-waiting = { $count ->
-    [one] Un changement en attente de synchronisation
+    [one] { $count } changement en attente de synchronisation
     [many] { $count } changements en attente de synchronisation
    *[other] { $count } changements en attente de synchronisation
  }
@@ -102,7 +102,7 @@ settings-torrents-value-on = Torrents activés
 settings-torrents-value-off = Torrents désactivés
 settings-seed-ratio-detail = Au mieux sur cet { -device } : seulement pendant que { -app-name } est ouvert
 settings-review-differences = { $count ->
-    [one] Examiner une différence
+    [one] Examiner { $count } différence
     [many] Examiner { $count } différences
    *[other] Examiner { $count } différences
  }

@@ -4,18 +4,18 @@ sources-update-available-version = { $version } disponível
 stores-store-label = { -plugin-store-cap }
 stores-checked-at = Verificado { $when }
 stores-updates-available = { $count ->
-    [one] Uma atualização
+    [one] { $count } atualização
     [many] { $count } atualizações
    *[other] { $count } atualizações
  }
 stores-installed-version = { $version } instalado
 stores-plugins-count = { $count ->
-    [one] Um { -plugin }
+    [one] { $count } { -plugin }
     [many] { $count } { -plugin-pl }
    *[other] { $count } { -plugin-pl }
  }
 stores-devices-count = { $count ->
-    [one] Um { -device }
+    [one] { $count } { -device }
     [many] { $count } { -device-pl }
    *[other] { $count } { -device-pl }
  }
@@ -61,7 +61,7 @@ sources-remove-title = Remover { $name }?
 sources-remove-detail-device = Ele é apagado deste { -device }. Você pode instalá-lo de novo a partir de uma { -plugin-store }.
 library-matched-apple = Identificados
 servers-row-summary-apple = { $series ->
-    [one] 1 série
+    [one] { $series } série
     [many] { $series } de séries
    *[other] { $series } séries
  }

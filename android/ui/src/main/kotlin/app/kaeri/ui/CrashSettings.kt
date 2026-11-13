@@ -40,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
@@ -242,13 +243,14 @@ internal fun CrashNoticeAndReport() {
     val store = LocalAppStore.current
     val snackbars = LocalSnackbars.current
     val context = LocalContext.current
+    val resources = LocalResources.current
     val view by store.settings.view.collectAsStateWithLifecycle()
     val saving = view != null && store.settings.isOn(SettingKey.SAVE_CRASH_REPORTS, view)
     LaunchedEffect(saving) {
         if (!saving) return@LaunchedEffect
         kotlinx.coroutines.delay(1_000)
         val crash = store.crashes.pendingNotice() ?: return@LaunchedEffect
-        snackbars.show(context.getString(R.string.crash_notice), context.getString(R.string.crash_notice_report)) {
+        snackbars.show(resources.getString(R.string.crash_notice), resources.getString(R.string.crash_notice_report)) {
             openBugReport(context, store, null, setOf(crash.id))
         }
     }

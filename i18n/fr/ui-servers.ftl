@@ -30,17 +30,17 @@ servers-report-line = Les points de reprise et les marques de visionnage suivent
 servers-add = Ajouter
 servers-row-matching = Association · { $done } sur { $total } séries
 servers-row-summary = { $libraries ->
-    [one] 1 { -library } · { $series } séries
+    [one] { $libraries } { -library } · { $series } séries
     [many] { $libraries } bibliothèques · { $series } séries
    *[other] { $libraries } bibliothèques · { $series } séries
  }
 servers-row-libraries = { $count ->
-    [one] 1 { -library }
+    [one] { $count } { -library }
     [many] { $count } bibliothèques
    *[other] { $count } bibliothèques
  }
 servers-row-series = { $count ->
-    [one] 1 série
+    [one] { $count } série
     [many] { $count } séries
    *[other] { $count } séries
  }

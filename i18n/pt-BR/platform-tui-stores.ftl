@@ -117,7 +117,7 @@ stores-anonymous-joined = Entrou { $when }
 stores-anonymous-seen = Visto { $when }
 stores-anonymous-never-seen = Ainda não visto
 stores-remove-devices = { $count ->
-    [one] Remover
+    [one] Remover { $count }
     [many] Remover todos os { $count }
    *[other] Remover todos os { $count }
  }
@@ -142,7 +142,7 @@ stores-confirm-open = Deixar qualquer pessoa com o link entrar em { $name }?
 stores-confirm-close = Deixar entrar só as pessoas convidadas em { $name }?
 stores-confirm-remove-device = Remover este { -device }?
 stores-confirm-remove-devices = { $count ->
-    [one] Remover o { -device } que entrou pelo link?
+    [one] Remover { $count } { -device } que entrou pelo link?
     [many] Remover todos os { $count } { -device-pl } que entraram pelo link?
    *[other] Remover todos os { $count } { -device-pl } que entraram pelo link?
  }
@@ -160,7 +160,7 @@ stores-join-device-note = O dono da { -store } vê este nome. Digite para altera
 stores-leave-plugins = { -plugin-cap-pl } instalados por ela continuam neste { -device } e param de atualizar.
 stores-leave-revoked = O acesso deste { -device } à { -store } foi revogado.
 stores-remove-member-devices = { $count ->
-    [one] O { -device } desta pessoa para de funcionar com esta { -store } imediatamente.
+    [one] { $count } { -device } desta pessoa para de funcionar com esta { -store } imediatamente.
     [many] Os { $count } { -device-pl } desta pessoa param de funcionar com esta { -store } imediatamente.
    *[other] Os { $count } { -device-pl } desta pessoa param de funcionar com esta { -store } imediatamente.
  }

@@ -4,20 +4,20 @@ sources-update-available-version = Доступна версия { $version }
 stores-store-label = { -plugin-store-cap }
 stores-checked-at = Проверено { $when }
 stores-updates-available = { $count ->
-    [one] Одно обновление
+    [one] { $count } обновление
     [few] Обновлений: { $count }
     [many] Обновлений: { $count }
    *[other] Обновлений: { $count }
  }
 stores-installed-version = Установлена версия { $version }
 stores-plugins-count = { $count ->
-    [one] Один { -plugin }
+    [one] { $count } { -plugin }
     [few] { -plugin-pl }: { $count }
     [many] { -plugin-pl }: { $count }
    *[other] { -plugin-pl }: { $count }
  }
 stores-devices-count = { $count ->
-    [one] Одно { -device }
+    [one] { $count } { -device }
     [few] { -device-pl }: { $count }
     [many] { -device-pl }: { $count }
    *[other] { -device-pl }: { $count }

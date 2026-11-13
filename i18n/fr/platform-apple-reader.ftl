@@ -95,7 +95,7 @@ reader-chapter-in-progress = Page { $page } sur { $total }
 reader-chapter-read = Lu
 reader-chapter-new = nouveau
 reader-chapter-pages = { $pages ->
-    [one] 1 page
+    [one] { $pages } page
     [many] { $pages } de pages
    *[other] { $pages } pages
  }

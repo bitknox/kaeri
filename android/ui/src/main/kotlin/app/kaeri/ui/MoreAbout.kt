@@ -6,6 +6,7 @@ package app.kaeri.ui
 
 import android.content.Context
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import app.kaeri.i18n.R
@@ -166,13 +167,14 @@ private fun About(entry: Entry, heading: Boolean) {
             )
         }
         val context = LocalContext.current
+        val resources = LocalResources.current
         val airing = entry.airingState(context)
         val facts = listOfNotNull(
-            entry.studio?.let { context.getString(R.string.title_studio) to it },
-            entry.source?.label(context)?.let { context.getString(R.string.title_based_on) to it },
-            entry.seasonWords(context)?.let { context.getString(R.string.filter_season) to it },
+            entry.studio?.let { resources.getString(R.string.title_studio) to it },
+            entry.source?.label(context)?.let { resources.getString(R.string.title_based_on) to it },
+            entry.seasonWords(context)?.let { resources.getString(R.string.filter_season) to it },
             airing?.let { it.label to it.value },
-            entry.alsoOn(context)?.let { context.getString(R.string.title_facts_also_on) to it },
+            entry.alsoOn(context)?.let { resources.getString(R.string.title_facts_also_on) to it },
         )
         if (facts.isNotEmpty()) {
             Column(Modifier.padding(top = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {

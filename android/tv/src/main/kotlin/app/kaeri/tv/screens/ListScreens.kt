@@ -66,6 +66,7 @@ import app.kaeri.tv.ui.planSheet
 import app.kaeri.tv.ui.remembered
 import app.kaeri.tv.ui.statusSheet
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 
 /** A season of a year, as Seasonal's tabs name it: "Fall 2026". */
 data class SeasonTab(val season: Season, val year: Int) {
@@ -126,6 +127,7 @@ fun seasonFilter(tab: SeasonTab, current: SeasonTab, sort: SeasonSort, format: M
 fun SeasonalScreen(nav: TvNavigator, memory: FocusMemory, onOpen: (AnilistId) -> Unit) {
     val store = LocalAppStore.current
     val context = LocalContext.current
+    val resources = LocalResources.current
     val actions = LocalActions.current
     val offline = isOffline()
     val today = AppClock.now().atZone(AppClock.zone).toLocalDate()
@@ -188,17 +190,17 @@ fun SeasonalScreen(nav: TvNavigator, memory: FocusMemory, onOpen: (AnilistId) ->
                     stringResource(format.second),
                     selected = format.first != null,
                     onSelect = {
-                        actions?.open(ActionSheet(Strings.filterFormat(context), SeasonFormats.mapIndexed { index, each -> CardAction(context.getString(each.second), selected = index == formatIndex) { formatIndex = index } }))
+                        actions?.open(ActionSheet(Strings.filterFormat(context), SeasonFormats.mapIndexed { index, each -> CardAction(resources.getString(each.second), selected = index == formatIndex) { formatIndex = index } }))
                     },
                     settle = null,
                     chip = true,
                     modifier = Modifier.remembered(memory, "chip/format"),
                 )
                 TvTab(
-                    Strings.sortButton(context, context.getString(sort.label)),
+                    Strings.sortButton(context, resources.getString(sort.label)),
                     selected = sort != SeasonSort.Popular,
                     onSelect = {
-                        actions?.open(ActionSheet(Strings.tvSortTitle(context), SeasonSort.entries.map { each -> CardAction(context.getString(each.label), selected = each == sort) { sortIndex = each.ordinal } }))
+                        actions?.open(ActionSheet(Strings.tvSortTitle(context), SeasonSort.entries.map { each -> CardAction(resources.getString(each.label), selected = each == sort) { sortIndex = each.ordinal } }))
                     },
                     settle = null,
                     chip = true,

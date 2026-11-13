@@ -5,14 +5,14 @@ plugin-removed = { $plugin } removido.
 store-member-removed = Removido. Os { -device-pl } desse membro deixaram de funcionar com esta { -plugin-store }.
 store-invite-cancelled = Convite cancelado. O link não funciona mais.
 store-invite-cancelled-kept = { $count ->
-    [one] Convite cancelado. A pessoa que entrou continua como membro.
+    [one] Convite cancelado. { $count } pessoa que entrou continua como membro.
     [many] Convite cancelado. As { $count } de pessoas que entraram continuam como membros.
    *[other] Convite cancelado. As { $count } pessoas que entraram continuam como membros.
  }
 store-open-join-on = Quem tiver o link da { -plugin-store } pode entrar agora. Copie o link na tela de membros.
 store-open-join-off = Agora só entra quem você convidar.
 store-open-join-off-devices = { $devices ->
-    [one] Agora só entra quem você convidar. O { -device } que entrou pelo link continua funcionando até você removê-lo.
+    [one] Agora só entra quem você convidar. { $devices } { -device } que entrou pelo link continua funcionando até você removê-lo.
     [many] Agora só entra quem você convidar. Os { $devices } { -device-pl } que entraram pelo link continuam funcionando até você removê-los.
    *[other] Agora só entra quem você convidar. Os { $devices } { -device-pl } que entraram pelo link continuam funcionando até você removê-los.
  }
@@ -28,7 +28,7 @@ plugin-installed = { $plugin } { $version } instalado. Pronto para usar.
 plugin-installed-not-loaded = { $plugin } instalado, mas não carregou. { $reason }
 plugin-installed-outdated = { $plugin } foi instalado, mas foi criado para uma versão mais antiga do { -app-name } e precisa ser atualizado. Peça uma atualização ao autor.
 plugins-outdated = { $count ->
-    [one] Um { -plugin } foi criado para uma versão mais antiga do { -app-name } e precisa ser atualizado: { $names }.
+    [one] { $count } { -plugin } foi criado para uma versão mais antiga do { -app-name } e precisa ser atualizado: { $names }.
     [many] { $count } de { -plugin-pl } foram criados para uma versão mais antiga do { -app-name } e precisam ser atualizados: { $names }.
    *[other] { $count } { -plugin-pl } foram criados para uma versão mais antiga do { -app-name } e precisam ser atualizados: { $names }.
  }

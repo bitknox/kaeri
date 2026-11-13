@@ -3,6 +3,7 @@
 
 package app.kaeri.ui
 
+import android.annotation.SuppressLint
 import android.view.View
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.BoundsTransform
@@ -297,6 +298,8 @@ private fun flightBounds(page: AnimatedVisibilityScope) = BoundsTransform { _, _
 }
 
 /** Whether a back swipe is seeking this transition or the NavHost's it belongs to. */
+// Compose keeps isSeeking to its own libraries and offers no public way to tell a seeked transition.
+@SuppressLint("RestrictedApi")
 private fun Transition<*>.seeking(): Boolean = isSeeking || parentTransition?.seeking() == true
 
 /** The shared elements' own spring, Compose's default for them. */

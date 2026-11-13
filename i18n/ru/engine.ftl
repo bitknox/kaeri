@@ -14,7 +14,7 @@ start-failed = Не удалось запустить { -app-name }. Закро�
 start-failed-remote = Не удалось запустить пульт. { $reason }
 start-failed-player = Не удалось запустить плеер. { $reason }
 notice-episodes-queued = { $count ->
-    [one] В очередь добавлен один эпизод.
+    [one] В очередь добавлен { $count } эпизод.
     [few] В очередь добавлены { $count } эпизода.
     [many] В очередь добавлены { $count } эпизодов.
    *[other] В очередь добавлены { $count } эпизодов.
