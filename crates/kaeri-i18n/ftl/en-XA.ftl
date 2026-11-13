@@ -1084,6 +1084,12 @@ reading-estimate-mobile = [öṽéŕ ɱöƀîļé ðàţà~~~~~]
 # The device is on mobile data and the chapters wait until it's on Wi-Fi.
 reading-estimate-waits-wifi = [ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~]
 
+# Notice after Download on chapters that are files in the person's own folders: they open from where they are, so nothing is downloaded.
+reading-download-on-device = [Ţĥéšé àŕé ƒîļéš öñ ţĥîš ðéṽîçé àļŕéàðý. Ţĥéý ŕéàð öƒƒļîñé ŵîţĥöüţ à ðöŵñļöàð.~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# A series' name where neither the catalogue nor its source gave one: on Downloads, in a sent file's name and in the e-reader's library.
+reading-untitled-series = [Ûñţîţļéð šéŕîéš~~~~~]
+
 # The notification's title.
 reading-downloads-done-title = [Ðöŵñļöàðš ƒîñîšĥéð~~~~~~]
 

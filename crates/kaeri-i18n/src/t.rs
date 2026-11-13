@@ -1665,6 +1665,16 @@ pub fn reading_estimate_waits_wifi() -> String {
     text("reading-estimate-waits-wifi", &[])
 }
 
+/// Notice after Download on chapters that are files in the person's own folders: they open from where they are, so nothing is downloaded.
+pub fn reading_download_on_device() -> String {
+    text("reading-download-on-device", &[])
+}
+
+/// A series' name where neither the catalogue nor its source gave one: on Downloads, in a sent file's name and in the e-reader's library.
+pub fn reading_untitled_series() -> String {
+    text("reading-untitled-series", &[])
+}
+
 /// The notification's title.
 pub fn reading_downloads_done_title() -> String {
     text("reading-downloads-done-title", &[])

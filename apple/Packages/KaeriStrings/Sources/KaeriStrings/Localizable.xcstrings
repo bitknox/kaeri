@@ -232043,6 +232043,18 @@
         }
       }
     },
+    "reading-download-on-device" : {
+      "comment" : "Notice after Download on chapters that are files in the person's own folders: they open from where they are, so nothing is downloaded.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "These are files on this device already. They read offline without a download."
+          }
+        }
+      }
+    },
     "reading-downloads-done-chapters" : {
       "comment" : "The notification's text: one series' chapters are downloaded. Argument 1: title (Text). Argument 2: count (Int).",
       "extractionState" : "manual",
@@ -242023,6 +242035,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đang ra"
+          }
+        }
+      }
+    },
+    "reading-untitled-series" : {
+      "comment" : "A series' name where neither the catalogue nor its source gave one: on Downloads, in a sent file's name and in the e-reader's library.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Untitled series"
           }
         }
       }

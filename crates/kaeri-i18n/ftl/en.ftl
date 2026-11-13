@@ -1084,6 +1084,12 @@ reading-estimate-mobile = over mobile data
 # The device is on mobile data and the chapters wait until it's on Wi-Fi.
 reading-estimate-waits-wifi = waits for Wi-Fi
 
+# Notice after Download on chapters that are files in the person's own folders: they open from where they are, so nothing is downloaded.
+reading-download-on-device = These are files on this device already. They read offline without a download.
+
+# A series' name where neither the catalogue nor its source gave one: on Downloads, in a sent file's name and in the e-reader's library.
+reading-untitled-series = Untitled series
+
 # The notification's title.
 reading-downloads-done-title = Downloads finished
 

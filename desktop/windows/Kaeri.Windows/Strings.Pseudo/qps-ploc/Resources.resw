@@ -1451,6 +1451,14 @@
     <value>[ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~]</value>
     <comment>The device is on mobile data and the chapters wait until it's on Wi-Fi.</comment>
   </data>
+  <data name="ReadingDownloadOnDevice" xml:space="preserve">
+    <value>[Ţĥéšé àŕé ƒîļéš öñ ţĥîš ðéṽîçé àļŕéàðý. Ţĥéý ŕéàð öƒƒļîñé ŵîţĥöüţ à ðöŵñļöàð.~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Notice after Download on chapters that are files in the person's own folders: they open from where they are, so nothing is downloaded.</comment>
+  </data>
+  <data name="ReadingUntitledSeries" xml:space="preserve">
+    <value>[Ûñţîţļéð šéŕîéš~~~~~]</value>
+    <comment>A series' name where neither the catalogue nor its source gave one: on Downloads, in a sent file's name and in the e-reader's library.</comment>
+  </data>
   <data name="ReadingDownloadsDoneTitle" xml:space="preserve">
     <value>[Ðöŵñļöàðš ƒîñîšĥéð~~~~~~]</value>
     <comment>The notification's title.</comment>
