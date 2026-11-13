@@ -3701,6 +3701,12 @@
   <data name="DownloadsEmptyDetail" xml:space="preserve">
     <value>Les épisodes téléchargés se lisent sans connexion.</value>
   </data>
+  <data name="ReadDownloadsEmptyDetail" xml:space="preserve">
+    <value>Les chapitres téléchargés se lisent sans connexion.</value>
+  </data>
+  <data name="ReadDownloadsEmptyBoth" xml:space="preserve">
+    <value>Les épisodes et chapitres téléchargés se lisent sans connexion.</value>
+  </data>
   <data name="DownloadsLoadFailed" xml:space="preserve">
     <value>Impossible de charger les téléchargements</value>
   </data>

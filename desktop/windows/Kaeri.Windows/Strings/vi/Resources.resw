@@ -3407,6 +3407,12 @@
   <data name="DownloadsEmptyDetail" xml:space="preserve">
     <value>Các tập đã tải xuống vẫn phát được khi không có mạng.</value>
   </data>
+  <data name="ReadDownloadsEmptyDetail" xml:space="preserve">
+    <value>Chương đã tải mở được khi không có kết nối.</value>
+  </data>
+  <data name="ReadDownloadsEmptyBoth" xml:space="preserve">
+    <value>Tập và chương đã tải mở được khi không có kết nối.</value>
+  </data>
   <data name="DownloadsLoadFailed" xml:space="preserve">
     <value>Không tải được danh sách tải xuống</value>
   </data>

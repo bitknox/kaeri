@@ -6058,6 +6058,12 @@ downloads-empty-title = Belum ada unduhan
 # Line under the empty title.
 downloads-empty-detail = Episode yang diunduh dapat diputar tanpa koneksi.
 
+# Downloads' empty line for a person who only reads, under "No downloads".
+read-downloads-empty-detail = Bab yang diunduh bisa dibuka tanpa koneksi.
+
+# Downloads' empty line for a person who watches and reads, under "No downloads".
+read-downloads-empty-both = Episode dan bab yang diunduh bisa dibuka tanpa koneksi.
+
 # Title when the list could not be read.
 downloads-load-failed = Unduhan tidak dapat dimuat
 

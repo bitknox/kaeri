@@ -6058,6 +6058,12 @@ downloads-empty-title = ダウンロードはありません
 # Line under the empty title.
 downloads-empty-detail = ダウンロードしたエピソードは、接続しなくても再生できます。
 
+# Downloads' empty line for a person who only reads, under "No downloads".
+read-downloads-empty-detail = ダウンロードした章は、接続なしで開けます。
+
+# Downloads' empty line for a person who watches and reads, under "No downloads".
+read-downloads-empty-both = ダウンロードしたエピソードと章は、接続なしで開けます。
+
 # Title when the list could not be read.
 downloads-load-failed = ダウンロードを読み込めませんでした
 

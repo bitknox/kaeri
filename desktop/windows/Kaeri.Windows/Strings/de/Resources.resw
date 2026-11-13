@@ -3554,6 +3554,12 @@
   <data name="DownloadsEmptyDetail" xml:space="preserve">
     <value>Heruntergeladene Folgen laufen ohne Verbindung.</value>
   </data>
+  <data name="ReadDownloadsEmptyDetail" xml:space="preserve">
+    <value>Heruntergeladene Kapitel öffnen sich ohne Verbindung.</value>
+  </data>
+  <data name="ReadDownloadsEmptyBoth" xml:space="preserve">
+    <value>Heruntergeladene Folgen und Kapitel öffnen sich ohne Verbindung.</value>
+  </data>
   <data name="DownloadsLoadFailed" xml:space="preserve">
     <value>Downloads konnten nicht geladen werden</value>
   </data>

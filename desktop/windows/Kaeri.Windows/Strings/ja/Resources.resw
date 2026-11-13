@@ -3407,6 +3407,12 @@
   <data name="DownloadsEmptyDetail" xml:space="preserve">
     <value>ダウンロードしたエピソードは、接続しなくても再生できます。</value>
   </data>
+  <data name="ReadDownloadsEmptyDetail" xml:space="preserve">
+    <value>ダウンロードした章は、接続なしで開けます。</value>
+  </data>
+  <data name="ReadDownloadsEmptyBoth" xml:space="preserve">
+    <value>ダウンロードしたエピソードと章は、接続なしで開けます。</value>
+  </data>
   <data name="DownloadsLoadFailed" xml:space="preserve">
     <value>ダウンロードを読み込めませんでした</value>
   </data>

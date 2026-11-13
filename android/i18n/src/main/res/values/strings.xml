@@ -1870,10 +1870,6 @@
         <item quantity="one">One downloaded chapter still opens.</item>
         <item quantity="other">%1$,d downloaded chapters still open.</item>
     </plurals>
-    <!-- Downloads' empty line for a person who only reads, under "No downloads". -->
-    <string name="read_downloads_empty_detail">Downloaded chapters open without a connection.</string>
-    <!-- Downloads' empty line for a person who watches and reads, under "No downloads". -->
-    <string name="read_downloads_empty_both">Downloaded episodes and chapters open without a connection.</string>
     <!-- The head of the group menu on a large screen, over its choices: the source the groups are in. -->
     <string name="group_menu_in">Group in %1$s</string>
     <!-- What TalkBack says the Group row does, after "Double-tap to": an imperative, as Android's click labels are. -->
@@ -3247,6 +3243,10 @@
     <string name="downloads_empty_title">No downloads</string>
     <!-- Line under the empty title. -->
     <string name="downloads_empty_detail">Downloaded episodes play without a connection.</string>
+    <!-- Downloads' empty line for a person who only reads, under "No downloads". -->
+    <string name="read_downloads_empty_detail">Downloaded chapters open without a connection.</string>
+    <!-- Downloads' empty line for a person who watches and reads, under "No downloads". -->
+    <string name="read_downloads_empty_both">Downloaded episodes and chapters open without a connection.</string>
     <!-- Title when the list could not be read. -->
     <string name="downloads_load_failed">Couldn\'t load downloads</string>
     <!-- Line when the folder could not be opened. Shown on desktop only. -->

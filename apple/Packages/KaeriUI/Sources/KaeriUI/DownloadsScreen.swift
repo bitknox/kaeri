@@ -90,10 +90,23 @@ extension DownloadsScreen {
     }
 }
 
-/// Downloads with nothing in it (the spec's empty states).
+/// Downloads with nothing in it (the spec's empty states), its line about what Kaeri is for:
+/// episodes, chapters, or both.
 struct NoDownloads: View {
+    @Environment(AppStore.self) private var store
+
     var body: some View {
-        EmptyState(title: L.downloadsEmptyTitle, line: L.downloadsEmptyDetail)
+        EmptyState(title: L.downloadsEmptyTitle, line: line)
+    }
+
+    private var line: String { Self.line(store.medium.answer) }
+
+    static func line(_ answer: KaeriIsFor) -> String {
+        switch answer {
+        case .read: L.readDownloadsEmptyDetail
+        case .both: L.readDownloadsEmptyBoth
+        case .watch: L.downloadsEmptyDetail
+        }
     }
 }
 

@@ -6131,6 +6131,12 @@ downloads-empty-title = Inga nedladdningar
 # Line under the empty title.
 downloads-empty-detail = Nedladdade avsnitt spelas upp utan anslutning.
 
+# Downloads' empty line for a person who only reads, under "No downloads".
+read-downloads-empty-detail = Nedladdade kapitel öppnas utan anslutning.
+
+# Downloads' empty line for a person who watches and reads, under "No downloads".
+read-downloads-empty-both = Nedladdade avsnitt och kapitel öppnas utan anslutning.
+
 # Title when the list could not be read.
 downloads-load-failed = Det gick inte att läsa nedladdningarna
 

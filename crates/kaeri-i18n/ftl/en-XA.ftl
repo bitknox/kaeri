@@ -6415,6 +6415,12 @@ downloads-empty-title = [Ñö ðöŵñļöàðš~~~~]
 # Line under the empty title.
 downloads-empty-detail = [Ðöŵñļöàðéð éþîšöðéš þļàý ŵîţĥöüţ à çöññéçţîöñ.~~~~~~~~~~~~~~]
 
+# Downloads' empty line for a person who only reads, under "No downloads".
+read-downloads-empty-detail = [Ðöŵñļöàðéð çĥàþţéŕš öþéñ ŵîţĥöüţ à çöññéçţîöñ.~~~~~~~~~~~~~~]
+
+# Downloads' empty line for a person who watches and reads, under "No downloads".
+read-downloads-empty-both = [Ðöŵñļöàðéð éþîšöðéš àñð çĥàþţéŕš öþéñ ŵîţĥöüţ à çöññéçţîöñ.~~~~~~~~~~~~~~~~~~]
+
 # Title when the list could not be read.
 downloads-load-failed = [Çöüļðñ'ţ ļöàð ðöŵñļöàðš~~~~~~~]
 

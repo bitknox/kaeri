@@ -6058,6 +6058,12 @@ downloads-empty-title = Chưa tải xuống gì
 # Line under the empty title.
 downloads-empty-detail = Các tập đã tải xuống vẫn phát được khi không có mạng.
 
+# Downloads' empty line for a person who only reads, under "No downloads".
+read-downloads-empty-detail = Chương đã tải mở được khi không có kết nối.
+
+# Downloads' empty line for a person who watches and reads, under "No downloads".
+read-downloads-empty-both = Tập và chương đã tải mở được khi không có kết nối.
+
 # Title when the list could not be read.
 downloads-load-failed = Không tải được danh sách tải xuống
 

@@ -3848,6 +3848,12 @@
   <data name="DownloadsEmptyDetail" xml:space="preserve">
     <value>Скачанные эпизоды воспроизводятся без подключения к сети.</value>
   </data>
+  <data name="ReadDownloadsEmptyDetail" xml:space="preserve">
+    <value>Скачанные главы открываются без подключения к сети.</value>
+  </data>
+  <data name="ReadDownloadsEmptyBoth" xml:space="preserve">
+    <value>Скачанные эпизоды и главы открываются без подключения к сети.</value>
+  </data>
   <data name="DownloadsLoadFailed" xml:space="preserve">
     <value>Не удалось открыть загрузки</value>
   </data>

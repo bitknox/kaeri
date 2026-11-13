@@ -10190,6 +10190,16 @@ pub fn downloads_empty_detail() -> String {
     text("downloads-empty-detail", &[])
 }
 
+/// Downloads' empty line for a person who only reads, under "No downloads".
+pub fn read_downloads_empty_detail() -> String {
+    text("read-downloads-empty-detail", &[])
+}
+
+/// Downloads' empty line for a person who watches and reads, under "No downloads".
+pub fn read_downloads_empty_both() -> String {
+    text("read-downloads-empty-both", &[])
+}
+
 /// Title when the list could not be read.
 pub fn downloads_load_failed() -> String {
     text("downloads-load-failed", &[])

@@ -6277,6 +6277,12 @@ downloads-empty-title = Нет загрузок
 # Line under the empty title.
 downloads-empty-detail = Скачанные эпизоды воспроизводятся без подключения к сети.
 
+# Downloads' empty line for a person who only reads, under "No downloads".
+read-downloads-empty-detail = Скачанные главы открываются без подключения к сети.
+
+# Downloads' empty line for a person who watches and reads, under "No downloads".
+read-downloads-empty-both = Скачанные эпизоды и главы открываются без подключения к сети.
+
 # Title when the list could not be read.
 downloads-load-failed = Не удалось открыть загрузки
 

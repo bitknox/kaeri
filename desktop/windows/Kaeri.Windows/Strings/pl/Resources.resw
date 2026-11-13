@@ -3848,6 +3848,12 @@
   <data name="DownloadsEmptyDetail" xml:space="preserve">
     <value>Pobrane odcinki odtwarzają się bez połączenia.</value>
   </data>
+  <data name="ReadDownloadsEmptyDetail" xml:space="preserve">
+    <value>Pobrane rozdziały otwierają się bez połączenia.</value>
+  </data>
+  <data name="ReadDownloadsEmptyBoth" xml:space="preserve">
+    <value>Pobrane odcinki i rozdziały otwierają się bez połączenia.</value>
+  </data>
   <data name="DownloadsLoadFailed" xml:space="preserve">
     <value>Nie udało się wczytać pobrań</value>
   </data>

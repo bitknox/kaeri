@@ -6204,6 +6204,12 @@ downloads-empty-title = Aucun téléchargement
 # Line under the empty title.
 downloads-empty-detail = Les épisodes téléchargés se lisent sans connexion.
 
+# Downloads' empty line for a person who only reads, under "No downloads".
+read-downloads-empty-detail = Les chapitres téléchargés se lisent sans connexion.
+
+# Downloads' empty line for a person who watches and reads, under "No downloads".
+read-downloads-empty-both = Les épisodes et chapitres téléchargés se lisent sans connexion.
+
 # Title when the list could not be read.
 downloads-load-failed = Impossible de charger les téléchargements
 

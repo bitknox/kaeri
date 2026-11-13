@@ -3554,6 +3554,12 @@
   <data name="DownloadsEmptyDetail" xml:space="preserve">
     <value>İndirilen bölümler bağlantı olmadan oynatılır.</value>
   </data>
+  <data name="ReadDownloadsEmptyDetail" xml:space="preserve">
+    <value>İndirilen bölümler bağlantı olmadan açılır.</value>
+  </data>
+  <data name="ReadDownloadsEmptyBoth" xml:space="preserve">
+    <value>İzlemek ve okumak için indirilen bölümler bağlantı olmadan açılır.</value>
+  </data>
   <data name="DownloadsLoadFailed" xml:space="preserve">
     <value>İndirmeler yüklenemedi</value>
   </data>
