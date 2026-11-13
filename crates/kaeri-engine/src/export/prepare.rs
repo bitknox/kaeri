@@ -100,9 +100,23 @@ fn write_failed(e: &std::io::Error, path: &Path) -> Stop {
     Stop::Failed(crate::downloads::books::io_failure(e, path))
 }
 
+/// A book could not be read or written: a full disk says so, as anything else is the book's.
 fn book(e: &BookError, path: &Path) -> Stop {
     tracing::debug!(error = %e, "a chapter was not prepared");
+    if let BookError::Io(io) = e
+        && let failure @ ReadingFailure::DiskFull =
+            crate::downloads::books::io_failure(io, path)
+    {
+        return Stop::Failed(failure);
+    }
     unreadable(path, "book")
+}
+
+/// A finished book's last buffered bytes reach the file, so a disk that fills at the end
+/// fails the send instead of leaving a cut-off file.
+fn flushed(out: BufWriter<File>, path: &Path) -> Result<(), Stop> {
+    let file = out.into_inner().map_err(|e| write_failed(e.error(), path))?;
+    file.sync_all().map_err(|e| write_failed(&e, path))
 }
 
 /// Whether the chapters are text (EPUB) or pages.
@@ -371,8 +385,7 @@ fn write_cbz(
         let bytes = fs::read(&item.file).map_err(|e| io(&e, &item.file))?;
         cbz.add_page(&bytes).map_err(|e| book(&e, path))?;
     }
-    cbz.finish().map_err(|e| book(&e, path))?;
-    Ok(())
+    flushed(cbz.finish().map_err(|e| book(&e, path))?, path)
 }
 
 fn write_fixed(
@@ -406,8 +419,7 @@ fn write_fixed(
         last_chapter = Some(item.chapter);
         epub.add_image_page(&bytes, None, title.as_deref()).map_err(|e| book(&e, path))?;
     }
-    epub.finish().map_err(|e| book(&e, path))?;
-    Ok(())
+    flushed(epub.finish().map_err(|e| book(&e, path))?, path)
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -539,8 +551,7 @@ fn novel(
             done += 1;
             progress(done, total);
         }
-        let bytes = writer.finish().map_err(|e| book(&e, &path))?;
-        drop(bytes);
+        flushed(writer.finish().map_err(|e| book(&e, &path))?, &path)?;
         files.push(done_file(path, name, (count > 1).then_some(n as u32 + 1))?);
     }
     Ok(files)
@@ -644,6 +655,39 @@ mod tests {
         let written = dir.path().join(&name);
         File::create(&written).unwrap();
         assert!(written.exists());
+    }
+
+    /// R6E-6. A send that filled the disk as it wrote said the book was unreadable.
+    #[test]
+    fn a_full_disk_while_writing_says_so() {
+        let full = |e: std::io::Error| match book(&BookError::Io(e), Path::new("/out/a.cbz")) {
+            Stop::Failed(failure) => failure,
+            Stop::Cancelled => panic!("cancelled"),
+        };
+        assert_eq!(full(std::io::ErrorKind::StorageFull.into()), ReadingFailure::DiskFull);
+        assert_eq!(full(std::io::ErrorKind::QuotaExceeded.into()), ReadingFailure::DiskFull);
+        assert_eq!(full(std::io::Error::from_raw_os_error(28)), ReadingFailure::DiskFull);
+        assert!(matches!(
+            full(std::io::ErrorKind::InvalidData.into()),
+            ReadingFailure::Unreadable { .. }
+        ));
+    }
+
+    /// R6E-6 through a whole send: the book is written into a device that is always full.
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn a_send_that_fills_the_disk_fails_as_disk_full() {
+        if !Path::new("/dev/full").exists() {
+            return;
+        }
+        let dir = tempfile::tempdir().unwrap();
+        let req = request(dir.path(), chapters(dir.path(), 3, 4), "kobo", ExportFormat::Kepub);
+        fs::create_dir_all(&req.out).unwrap();
+        std::os::unix::fs::symlink("/dev/full", req.out.join(file_name(&req, None))).unwrap();
+        match go(&req) {
+            Err(Stop::Failed(failure)) => assert_eq!(failure, ReadingFailure::DiskFull),
+            other => panic!("{other:?}"),
+        }
     }
 
     #[test]
