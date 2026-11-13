@@ -137,6 +137,9 @@ public final class ReaderModel {
     /// Counts the open chapter's layouts after its first, so the strip puts the place back even
     /// when it has not moved since the last restore.
     public private(set) var stripRelaid = 0
+    /// Counts the asks to fit the strip back to its column (Cmd-0), which also undo a pinch's zoom.
+    public private(set) var stripFitAsked = 0
+    public func fitStrip() { stripFitAsked &+= 1 }
     /// The chapters of the work, once the engine has listed them.
     public private(set) var chapters: [VolumeGroup] = []
     public private(set) var chaptersLoaded = false
@@ -406,7 +409,13 @@ public final class ReaderModel {
         send?(.reader(.open(
             work: WorkId(request.work), chapter: request.chapter.map { ChapterId($0) },
             at: request.at, surface: surface)))
-        send?(.reading(.loadChapters(work: WorkId(request.work), edition: nil)))
+    }
+
+    /// The chapter list, asked for when the Chapters sheet shows without one. Never on open: a
+    /// book opened and closed again asks its source for nothing beyond what the open needs.
+    public func loadChapters() {
+        guard !chaptersLoaded, let work = view?.work ?? request.map({ WorkId($0.work) }) else { return }
+        send?(.reading(.loadChapters(work: work, edition: nil)))
     }
 
     @ObservationIgnored private var opened = false

@@ -65,4 +65,51 @@ struct SeriesAfterReadingTests {
         model.observe(.reader(.closed(session: 1)))
         #expect(asks(box) == 0)
     }
+
+    private func chapterAsks(_ box: Box) -> [String?] {
+        box.commands.compactMap {
+            if case .reading(.loadChapters(let asked, let edition)) = $0, asked == WorkId(work) { edition } else { nil }
+        }
+    }
+
+    private func listed(_ model: ReadingModel, inUse: Bool) {
+        let edition = BookEditionRow(sourceId: "pages.example", sourceName: "Pages", inUse: inUse)
+        model.observe(.reading(.chapters(work: WorkId(work), edition: edition, volumes: [], failure: nil)))
+    }
+
+    /// Opening and closing a book asks its source for the list once, through the series: the
+    /// edition it reads from is listed with it. Every close asked twice before, and a book opened
+    /// and closed again and again left a queue of asks behind it.
+    @Test func closingAsksForTheEditionInUseOnlyThroughTheSeries() {
+        let (model, box) = reading()
+        listed(model, inUse: true)
+        model.observe(.reader(.opened(view())))
+        model.observe(.reader(.closed(session: 1)))
+        #expect(asks(box) == 1)
+        #expect(chapterAsks(box).isEmpty)
+    }
+
+    /// The page showing another edition than the one in use asks for that one as well.
+    @Test func closingOnAnotherEditionAsksForItToo() {
+        let (model, box) = reading()
+        listed(model, inUse: false)
+        model.observe(.reader(.opened(view())))
+        model.observe(.reader(.closed(session: 1)))
+        #expect(chapterAsks(box) == ["pages.example"])
+    }
+
+    /// The whole store follows the reader once: a close asks for the series once and for the list
+    /// of the edition in use not at all, and a chapter read asks once more.
+    @Test func theStoreAsksOnceForAClose() {
+        let store = AppStore()
+        let box = Box()
+        store.reading.send = { box.commands.append($0) }
+        store.apply(.reading(.chapters(work: WorkId(work), edition: nil, volumes: [], failure: nil)))
+        store.apply(.reader(.opened(view())))
+        store.apply(.reader(.closed(session: 1)))
+        #expect(asks(box) == 1)
+        #expect(chapterAsks(box).isEmpty)
+        store.apply(.reader(.chapterRead(work: WorkId(work), chapter: ChapterId("1"), trackers: [])))
+        #expect(asks(box) == 2)
+    }
 }

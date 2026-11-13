@@ -19,9 +19,12 @@
 
 use std::{
     collections::HashMap,
+    panic::AssertUnwindSafe,
     path::{Path, PathBuf},
     sync::{Arc, Mutex, MutexGuard, Weak},
 };
+
+use futures::FutureExt;
 
 use kaeri_model::reading::ReadingFailure;
 use tokio::sync::watch;
@@ -233,10 +236,7 @@ impl SharedPages {
                     match ended {
                         Some(Ok(bytes)) => return Ok(bytes),
                         Some(Err(failure)) if mine.is_some() => return Err(failure),
-                        None if mine.is_some() => {
-                            let reason = format!("page {index} was not fetched");
-                            return Err(ReadingFailure::Other { reason });
-                        }
+                        None if mine.is_some() => return Err(unfetched(index)),
                         _ => let_down = true,
                     }
                 }
@@ -265,7 +265,12 @@ impl SharedPages {
         let (pages, sources, this) = (Arc::clone(self), sources.clone(), ended.clone());
         let task = tokio::spawn(async move {
             let before = opened.clone();
-            let came = sources.page(&mut opened, index as usize, now).await;
+            // A fetch that panics is a page that did not come: its waiters hear so, and the
+            // next ask fetches it again.
+            let came = AssertUnwindSafe(sources.page(&mut opened, index as usize, now))
+                .catch_unwind()
+                .await
+                .unwrap_or_else(|_| Err(unfetched(index)));
             pages.landed(index, &this, &came, (&before, opened));
             let _ = tx.send(Some(came));
             pages.changed.notify_waiters();
@@ -348,6 +353,11 @@ fn before_removing(dir: &Path) {
     if let Some(hook) = hook {
         hook();
     }
+}
+
+/// Page `index` did not come, and no other reason is known.
+fn unfetched(index: u32) -> ReadingFailure {
+    ReadingFailure::Other { reason: format!("page {index} was not fetched") }
 }
 
 fn lock<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {

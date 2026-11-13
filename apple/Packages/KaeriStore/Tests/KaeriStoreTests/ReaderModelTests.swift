@@ -32,6 +32,24 @@ struct ReaderModelTests {
         #expect(model.phase == .opening)
     }
 
+    private func chapterAsks(_ commands: [Command]) -> Int {
+        commands.filter { if case .reading(.loadChapters) = $0 { true } else { false } }.count
+    }
+
+    /// The open asks for the chapter list of nothing: the Chapters sheet asks when it shows
+    /// without one, once.
+    @Test func openingAsksForNoChapterList() {
+        let (model, box) = model()
+        model.open(work: "a:900301")
+        model.surfaceChanged(surface)
+        #expect(chapterAsks(box.commands) == 0)
+        model.loadChapters()
+        #expect(chapterAsks(box.commands) == 1)
+        model.observe(.reading(.chapters(work: WorkId("a:900301"), edition: nil, volumes: [], failure: nil)))
+        model.loadChapters()
+        #expect(chapterAsks(box.commands) == 1)
+    }
+
     @Test func aSecondSizeOnlyTellsTheEngineAboutTheSurface() {
         let (model, box) = model()
         model.open(work: "a:900301")

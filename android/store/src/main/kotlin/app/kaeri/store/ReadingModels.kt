@@ -943,7 +943,9 @@ class ExportModel(private val send: (Command) -> ULong?) {
                 }
             }
             is ReadingEvent.ExportWaiting -> {
-                if (event.job !in asked) asked[event.job] = Triple(event.work, event.target, emptyList())
+                // A send this model did not ask for (one held across a restart) learns its
+                // chapters here, so its Ready state can offer Set my place.
+                if (event.job !in asked) asked[event.job] = Triple(event.work, event.target, event.chapters)
                 _jobs.update { it + (event.job to ExportJob.Waiting(event.job, event.work, event.target, event.line)) }
             }
             is ReadingEvent.ExportReady -> {

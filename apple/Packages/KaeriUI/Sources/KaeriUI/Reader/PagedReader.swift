@@ -505,7 +505,7 @@ struct ReaderEndPage: View {
     private func column(_ next: ChapterRow?, phone: Bool) -> some View {
         let chapter = view?.chapter
         VStack(alignment: .leading, spacing: 0) {
-            Text(Self.ending(chapter))
+            Text(chapter.map(Self.endOf) ?? "")
                 .font(.ui(15)).foregroundStyle(theme.haze)
             Text(readLine).font(.ui(13)).foregroundStyle(theme.haze)
                 .padding(.top, 4)
@@ -642,10 +642,17 @@ struct ReaderEndPage: View {
         .accessibilityHidden(true)
     }
 
+    /// "End of chapter 12", or a chapter with no number by its own name: a book in one file is
+    /// named for the book, never "End of chapter <title>".
+    static func endOf(_ chapter: ChapterRow) -> String {
+        chapter.number.map { L.readerEndOfChapterNumber(chapter: $0) } ?? L.readerEndOfNamed(name: chapter.label)
+    }
+
     /// "Chapter 13 · 34 pages · from books.home.example": the chapter's number when it has a
-    /// title of its own, its length, and the source it came from.
+    /// title of its own, its length, and the source it came from. A chapter with no number has
+    /// only its name, which the heading says.
     static func facts(_ next: ChapterRow, end: ReaderEnd?) -> String {
-        let chapter = next.title.map { _ in next.number ?? next.label }
+        let chapter = next.title.flatMap { _ in next.number }
         let pages = next.pages.flatMap { $0 > 0 ? L.readerEndPages(count: Int($0)) : nil }
         let facts: String? = switch (chapter, pages) {
         case (let chapter?, let pages?): L.readerEndFacts(chapter: chapter, facts: pages)
@@ -674,15 +681,6 @@ struct ReaderEndPage: View {
 
     /// The chapter the heading names: the next one listed, which offline is one only a source
     /// has; past the last one listed, the next whole number.
-    /// The end page's top line: "End of chapter 12", or the chapter's own name when it has no
-    /// number, as a book in one file has the book's title: "End of Snow Station Letters".
-    static func ending(_ chapter: ChapterRow?) -> String {
-        if let number = chapter?.number { return L.readerEndOfChapterNumber(chapter: number) }
-        let label = chapter?.label ?? ""
-        if ReadFromSheet.isNumber(label) { return L.readerEndOfChapterNumber(chapter: label) }
-        return L.readerEndOfNamed(name: label)
-    }
-
     static func following(_ view: ReaderView?) -> String {
         if let next = view?.next { return ReaderChrome.chapterName(next.label) }
         guard let number = view?.chapter.number.flatMap(Double.init) else { return "" }

@@ -72,6 +72,36 @@ struct SendModelTests {
         #expect(target == "kobo")
     }
 
+    /// A send the engine started again at launch is one this screen never asked for: it learns
+    /// its chapters from the waiting word, so once ready, sharing it says which chapters went.
+    @Test func aSendHeldAcrossARestartKnowsItsChapters() {
+        let model = SendModel()
+        var sent: [Command] = []
+        model.command = { sent.append($0) }
+        model.apply(.exportWaiting(job: 41, work: "w", target: "kobo", line: .verbatim(text: "Waiting for Wi-Fi"), chapters: ["c3", "c4"]))
+        guard let send = model.sends.first(where: { $0.job == 41 }) else {
+            Issue.record("the restarted send did not show")
+            return
+        }
+        #expect(send.chapters == ["c3", "c4"])
+        #expect(send.isWaiting)
+
+        model.apply(.exportReady(job: 41, files: [ExportFile(path: "/sends/b.kepub.epub", name: "b.kepub.epub", bytes: 10, part: nil)]))
+        model.shared(send.id)
+        let shared = sent.compactMap { command -> [String]? in
+            if case .reading(.shared(let work, let chapters, let target)) = command, work == "w", target == "kobo" { chapters } else { nil }
+        }
+        #expect(shared == [["c3", "c4"]])
+    }
+
+    /// A send this screen asked for keeps the chapters it asked for.
+    @Test func aSendAskedForKeepsItsOwnChapters() {
+        let model = SendModel()
+        let id = model.begin(work: "w", chapters: ["1", "2"], target: kobo(), novel: false)!
+        model.apply(.exportWaiting(job: 5, work: "w", target: "kobo", line: .verbatim(text: "Waiting for Wi-Fi"), chapters: ["2"]))
+        #expect(model.send(id)?.chapters == ["1", "2"])
+    }
+
     @Test func theEngineKeepsTheDefaultEReader() {
         let model = SendModel()
         var sent: [Command] = []

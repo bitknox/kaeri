@@ -388,7 +388,7 @@ extension ReaderActions {
         model.requestJump(first ? 0 : last)
     }
 
-    @MainActor private static func zoom(_ model: ReaderModel, _ step: Int) {
+    @MainActor static func zoom(_ model: ReaderModel, _ step: Int) {
         if model.medium == .novel {
             let now = model.amount(.textSize) ?? 1
             let next = step == 0 ? 1 : min(3, max(0.5, now + Double(step) * 0.1))
@@ -397,6 +397,8 @@ extension ReaderActions {
             let now = model.amount(.stripWidth) ?? 0.6
             let next = step == 0 ? 0.6 : min(1, max(0.3, now + Double(step) * 0.1))
             model.set(.stripWidth, .amount(value: next))
+            // Fit undoes a pinch's zoom too, whatever cut the pinch off.
+            if step == 0 { model.fitStrip() }
         }
     }
 

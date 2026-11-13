@@ -9,7 +9,7 @@ import Foundation
 /// The states `-KaeriPrelaunch` stages.
 ///
 ///     Piece 1  kavita-link, looking, found, unreachable, wrong-password, wrong-key, empty,
-///              not-book, folder, folder-nothing, invite-joined, plugins-installed, store-other,
+///              not-book, folder, folder-nothing, folder-already, folder-unreadable, invite-joined, plugins-installed, store-other,
 ///              store-empty, store-unreachable, afterwards
 ///     Piece 2  demo-first-read, demo-first-both, demo-home, demo-series, demo-reader, demo-end,
 ///              demo-about, demo-search
@@ -21,6 +21,7 @@ import Foundation
 public enum PrelaunchScene: String, Sendable, CaseIterable {
     case kavitaLink = "kavita-link", looking, found, unreachable, wrongPassword = "wrong-password"
     case wrongKey = "wrong-key", empty, notBook = "not-book", folder, folderNothing = "folder-nothing"
+    case folderAlready = "folder-already", folderUnreadable = "folder-unreadable"
     case inviteJoined = "invite-joined", pluginsInstalled = "plugins-installed", storeOther = "store-other"
     case storeEmpty = "store-empty", storeUnreachable = "store-unreachable", afterwards
     case demoFirstRead = "demo-first-read", demoFirstBoth = "demo-first-both", demoHome = "demo-home"
@@ -108,6 +109,15 @@ extension CameInModel {
         case .notBook: stage(.empty(.notABookServer(host: host)))
         case .folder: stage(.folder(PrelaunchFixtures.folder(readable: true)))
         case .folderNothing: stage(.empty(.unsupportedFiles(folder: PrelaunchFixtures.folder(readable: false))))
+        case .folderAlready:
+            var report = PrelaunchFixtures.folder(readable: true)
+            report.alreadyAdded = true
+            stage(.folder(report))
+        case .folderUnreadable:
+            // As the engine sends it: the folder with its counts zero.
+            stage(.empty(.folderUnreadable(folder: FolderReport(
+                id: "f1", name: "Manga", path: PrelaunchFixtures.path, series: 0, books: 0, files: 0, matched: 0,
+                unsupported: [], locked: [], listed: []))))
         case .inviteJoined: stage(.store(PrelaunchFixtures.store(reading: 2, watching: 1)))
         case .pluginsInstalled:
             stage(.installed(PluginsInstalled(store: "shelf.kim.example", name: "Kim’s shelf", installed: 2, failed: [])))

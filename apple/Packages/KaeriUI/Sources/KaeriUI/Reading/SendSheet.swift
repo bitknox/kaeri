@@ -72,14 +72,23 @@ enum SendWords {
         let rows = rows(ids, work: work, store)
         guard !rows.isEmpty else { return nil }
         let held = rows.filter { $0.download == .done }.count
+        let kept = store.reading.downloads?.series.first(where: { $0.work == work })
+        let estimate = store.reading.estimates[work].flatMap { $0.pick == .chapters(ids: ids) ? $0.bytes : nil }
+        return size(held: held, of: rows.count, kept: kept.map { ($0.bytes, UInt64($0.chapters)) }, toFetch: estimate)
+    }
+
+    /// The sum: the downloaded chapters' share of what the series' downloads take, and the
+    /// engine's estimate for the rest. Nil while a part is not known, and the engine says 0 for
+    /// a size it cannot tell yet, which is unknown rather than nothing to add.
+    static func size(held: Int, of count: Int, kept: (bytes: UInt64, chapters: UInt64)?, toFetch: UInt64?) -> UInt64? {
         var bytes: UInt64 = 0
         if held > 0 {
-            guard let kept = store.reading.downloads?.series.first(where: { $0.work == work }), kept.chapters > 0 else { return nil }
-            bytes += kept.bytes / UInt64(kept.chapters) * UInt64(held)
+            guard let kept, kept.chapters > 0 else { return nil }
+            bytes += kept.bytes / kept.chapters * UInt64(held)
         }
-        if held < rows.count {
-            guard let estimate = store.reading.estimates[work], estimate.pick == .chapters(ids: ids) else { return nil }
-            bytes += estimate.bytes
+        if held < count {
+            guard let toFetch, toFetch > 0 else { return nil }
+            bytes += toFetch
         }
         return bytes
     }
