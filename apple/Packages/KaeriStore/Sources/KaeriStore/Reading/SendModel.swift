@@ -183,7 +183,7 @@ public final class SendModel {
         case .exportFailed(let job, let chapter, let failure):
             let words = chapter.map { L.sendFailedChapter(chapter: $0, cause: failure.sendWords) } ?? L.sendFailed(cause: failure.sendWords)
             update(job: job) { $0.phase = .failed(words) }
-        case .exportWaiting(let job, let work, let target, let line):
+        case .exportWaiting(let job, let work, let target, let line, _):
             update(job: job, work: work, target: target) { $0.phase = .waiting(line: line.text) }
         case .exportReady(let job, let files):
             update(job: job) { $0.phase = .ready(files) }

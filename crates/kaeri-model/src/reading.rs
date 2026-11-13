@@ -2018,12 +2018,16 @@ pub enum ReadingEvent {
     /// goes on by itself once the network allows, and the next [`Self::ExportProgress`] says
     /// so; `CancelPrepare` drops it. A send left waiting when the engine stopped is started
     /// again at the next launch as a job of its own, so `job` may be one the screen never sent.
-    /// `line` says why, in words.
+    /// `line` says why, in words. `chapters` are the chapters the send holds, in reading
+    /// order, so a screen that never asked for it can still offer Set my place once it is
+    /// ready.
     ExportWaiting {
         job: JobId,
         work: WorkId,
         target: String,
         line: Msg,
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        chapters: Vec<ChapterId>,
     },
     Feed(FeedView),
     Eink(EinkProfile),
