@@ -7,7 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
-import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
 import app.kaeri.design.KaeriTheme
@@ -55,8 +55,9 @@ class ReadTileActionsTest {
         compose.waitForIdle()
     }
 
-    private fun actions() = compose.onNodeWithText("Lantern Ferry").fetchSemanticsNode() // i18n-skip
-        .config[SemanticsActions.CustomActions]
+    /** The cover's actions: its title is cleared under the cover's own words, so it is found by them. */
+    private fun actions() = compose.onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsActions.CustomActions))
+        .fetchSemanticsNodes().single().config[SemanticsActions.CustomActions]
 
     @Test
     fun aLibraryCoverOffersDetailsAndEveryOtherList() {

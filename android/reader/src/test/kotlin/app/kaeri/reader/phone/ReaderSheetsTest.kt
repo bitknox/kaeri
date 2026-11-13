@@ -55,7 +55,7 @@ class ReaderSheetsTest {
 
     /** The page's node, which carries the reader's moves as actions. */
     private val page = SemanticsMatcher("the page with its moves") { node ->
-        node.config.getOrNull(SemanticsActions.CustomActions).orEmpty().any { it.label == "Controls" }
+        node.config.getOrNull(SemanticsActions.CustomActions).orEmpty().any { it.label == "Show controls" }
     }
 
     /** The paged reader open at chapter 12 of 11 to 13, its controls up. */
@@ -73,7 +73,7 @@ class ReaderSheetsTest {
         }
         compose.waitForIdle()
         val node = compose.onNode(page, useUnmergedTree = true).fetchSemanticsNode()
-        compose.runOnUiThread { node.config[SemanticsActions.CustomActions].first { it.label == "Controls" }.action() }
+        compose.runOnUiThread { node.config[SemanticsActions.CustomActions].first { it.label == "Show controls" }.action() }
         compose.waitForIdle()
     }
 
