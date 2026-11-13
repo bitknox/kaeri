@@ -580,7 +580,7 @@ On the ground (`#161A2E`): silk 13.0:1, water 9.1:1, amber 8.5:1 (and ground on 
 - While keys move the focus, the focused control shows a 3 dp ink ring along its own shape with a 2 dp paper line inside it, so the mark shows on paper, on grey, on the ink button and on a cover. A control with its own 2 dp border keeps 2 dp of paper between that border and the ring.
 - The mark is one still paint with no motion, drawn in the panel's fast update. It never shows on touch, and the first touch after keys takes it away.
 - Enter acts on the focused control, which inverts as it does under a finger. A row whose cover or words start at its very edge, such as a library row or a chapter line, gets the ring just outside it.
-- In the reader, Tab reaches the controls in the bars and Enter acts on the focused one. The arrows, Space and the page keys still turn the page. When the bars or a sheet close, the reader takes the focus back, so Enter shows the controls again.
+- In the reader, Tab reaches the controls in the bars and Enter acts on the focused one. The arrows, Space and the page keys still turn the page. A sheet opened with keys takes the focus to its first control. When a sheet or the bars close, or a sheet opens by touch, the focus goes back to the reader, so Escape and the page keys always work and Enter shows the controls again.
 
 ### Game controllers
 
