@@ -702,6 +702,7 @@
     <string name="reader_end_again">最初から読み直す</string>
     <string name="reader_opening_chapter">第%1$s話を開いています</string>
     <string name="reader_failed_chapter">第%1$s話を開けませんでした</string>
+    <string name="reader_failed_chapter_plain">この話を開けませんでした</string>
     <string name="reader_sheet_series">この作品</string>
     <string name="reader_sheet_all_manga">すべてのマンガ</string>
     <string name="reader_sheet_all_webtoons">すべてのウェブトゥーン</string>

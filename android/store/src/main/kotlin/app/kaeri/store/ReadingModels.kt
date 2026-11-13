@@ -15,6 +15,7 @@ import app.kaeri.engine.model.BookServerRow
 import app.kaeri.engine.model.BookSourceCommand
 import app.kaeri.engine.model.BookSourceEvent
 import app.kaeri.engine.model.BookSourcesView
+import app.kaeri.engine.model.ChapterRow
 import app.kaeri.engine.model.ChapterVersion
 import app.kaeri.engine.model.Command
 import app.kaeri.engine.model.DownloadEstimate
@@ -551,6 +552,17 @@ class ReadingModel(private val send: (Command) -> Unit) {
 
     /** The reader closed on [work]: its page and lists show where reading got to. */
     fun readerClosed(work: WorkId) = refreshSeries(work)
+
+    /**
+     * [chapter] of [work] as a screen already lists it: its series' chapters, Updates or
+     * Downloads. The reader names it while it opens, and if it fails to, before the engine does.
+     */
+    fun chapterRow(work: WorkId, chapter: ChapterId?): ChapterRow? {
+        if (chapter == null) return null
+        _chapters.value[work]?.volumes?.firstNotNullOfOrNull { group -> group.chapters.firstOrNull { it.id == chapter } }?.let { return it }
+        _updates.value?.days?.firstNotNullOfOrNull { day -> day.rows.firstOrNull { it.tile.work == work && it.chapter.id == chapter } }?.let { return it.chapter }
+        return _downloads.value?.rows?.firstOrNull { it.work == work && it.chapter.id == chapter }?.chapter
+    }
 
     private fun refreshSeries(work: WorkId) {
         if (_series.value[work] != null || _chapters.value[work] != null) {

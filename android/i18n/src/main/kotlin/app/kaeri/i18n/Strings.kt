@@ -2733,6 +2733,10 @@ object Strings {
     fun readerFailedChapter(context: Context, chapter: String): String =
         context.getString(R.string.reader_failed_chapter, chapter)
 
+    /** Heading when a chapter could not open before the reader learned which chapter it was, as when Continue asked for the next chapter and the source did not answer. */
+    fun readerFailedChapterPlain(context: Context): String =
+        context.getString(R.string.reader_failed_chapter_plain)
+
     /** Heading in the reader's settings above the choices that belong to this series only. */
     fun readerSheetSeries(context: Context): String =
         context.getString(R.string.reader_sheet_series)

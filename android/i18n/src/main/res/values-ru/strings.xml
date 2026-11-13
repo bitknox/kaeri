@@ -810,6 +810,7 @@
     <string name="reader_end_again">Прочитать заново</string>
     <string name="reader_opening_chapter">Открывается глава %1$s</string>
     <string name="reader_failed_chapter">Не удалось открыть главу %1$s</string>
+    <string name="reader_failed_chapter_plain">Не удалось открыть главу</string>
     <string name="reader_sheet_series">Эта серия</string>
     <string name="reader_sheet_all_manga">Вся манга</string>
     <string name="reader_sheet_all_webtoons">Все вебтуны</string>

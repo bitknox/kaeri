@@ -738,6 +738,7 @@
     <string name="reader_end_again">Baştan yeniden oku</string>
     <string name="reader_opening_chapter">Bölüm %1$s açılıyor</string>
     <string name="reader_failed_chapter">Bölüm %1$s açılamadı</string>
+    <string name="reader_failed_chapter_plain">Bu bölüm açılamadı</string>
     <string name="reader_sheet_series">Bu seri</string>
     <string name="reader_sheet_all_manga">Tüm mangalar</string>
     <string name="reader_sheet_all_webtoons">Tüm webtoonlar</string>

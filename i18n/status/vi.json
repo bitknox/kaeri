@@ -19297,6 +19297,15 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "reader-failed-chapter-plain": {
+    "source": "3aa10beb5ec5",
+    "state": "draft",
+    "by": "agent (R8-1, for Johan's review)",
+    "at": "2026-11-13",
+    "flags": [
+      "new copy for R8-1, needs Johan review"
+    ]
+  },
   "reader-failed-choose": {
     "source": "2e134e8c7be9",
     "state": "draft",

@@ -319,7 +319,19 @@ class ReaderSession(private val send: (Command) -> Unit) {
 
     // What the screen sends.
 
-    fun open(work: WorkId, surface: ReaderSurface, chapter: ChapterId? = null, at: OpenAt = OpenAt.Resume, title: String? = null) {
+    /**
+     * Open [work] at [chapter], or where reading got to. [row] is the chapter as the screen that
+     * asked lists it: the reader names it while it opens, and if it fails to, before the engine
+     * says which chapter it is.
+     */
+    fun open(
+        work: WorkId,
+        surface: ReaderSurface,
+        chapter: ChapterId? = null,
+        at: OpenAt = OpenAt.Resume,
+        title: String? = null,
+        row: ChapterRow? = null,
+    ) {
         this.work = work
         this.asked = chapter to at
         // The engine closes the session it had as it opens the next.
@@ -343,7 +355,8 @@ class ReaderSession(private val send: (Command) -> Unit) {
         commitKeep()
         _state.value = ReaderState(
             opening = true,
-            openingChapter = state.value.openingChapter?.takeIf { it.id == chapter },
+            openingChapter = row?.takeIf { chapter != null && it.id == chapter }
+                ?: state.value.openingChapter?.takeIf { it.id == chapter },
             openingTitle = title,
             openingSince = openingClock(),
             offline = state.value.offline,

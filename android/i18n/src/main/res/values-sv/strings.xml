@@ -738,6 +738,7 @@
     <string name="reader_end_again">Läs igen från början</string>
     <string name="reader_opening_chapter">Öppnar kapitel %1$s</string>
     <string name="reader_failed_chapter">Kunde inte öppna kapitel %1$s</string>
+    <string name="reader_failed_chapter_plain">Kunde inte öppna kapitlet</string>
     <string name="reader_sheet_series">Den här serien</string>
     <string name="reader_sheet_all_manga">All manga</string>
     <string name="reader_sheet_all_webtoons">Alla webtoons</string>

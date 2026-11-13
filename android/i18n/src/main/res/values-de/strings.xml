@@ -738,6 +738,7 @@
     <string name="reader_end_again">Von vorn lesen</string>
     <string name="reader_opening_chapter">Kapitel %1$s wird geöffnet</string>
     <string name="reader_failed_chapter">Kapitel %1$s ließ sich nicht öffnen</string>
+    <string name="reader_failed_chapter_plain">Dieses Kapitel ließ sich nicht öffnen</string>
     <string name="reader_sheet_series">Diese Serie</string>
     <string name="reader_sheet_all_manga">Alle Manga</string>
     <string name="reader_sheet_all_webtoons">Alle Webtoons</string>

@@ -702,6 +702,7 @@
     <string name="reader_end_again">Đọc lại từ đầu</string>
     <string name="reader_opening_chapter">Đang mở chương %1$s</string>
     <string name="reader_failed_chapter">Không mở được chương %1$s</string>
+    <string name="reader_failed_chapter_plain">Không mở được chương này</string>
     <string name="reader_sheet_series">Bộ truyện này</string>
     <string name="reader_sheet_all_manga">Mọi manga</string>
     <string name="reader_sheet_all_webtoons">Mọi webtoon</string>

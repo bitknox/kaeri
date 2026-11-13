@@ -702,6 +702,7 @@
     <string name="reader_end_again">Baca ulang dari awal</string>
     <string name="reader_opening_chapter">Membuka bab %1$s</string>
     <string name="reader_failed_chapter">Bab %1$s tidak bisa dibuka</string>
+    <string name="reader_failed_chapter_plain">Bab ini tidak bisa dibuka</string>
     <string name="reader_sheet_series">Seri ini</string>
     <string name="reader_sheet_all_manga">Semua manga</string>
     <string name="reader_sheet_all_webtoons">Semua webtoon</string>

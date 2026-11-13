@@ -810,6 +810,7 @@
     <string name="reader_end_again">Czytaj od początku</string>
     <string name="reader_opening_chapter">Otwieranie rozdziału %1$s</string>
     <string name="reader_failed_chapter">Nie udało się otworzyć rozdziału %1$s</string>
+    <string name="reader_failed_chapter_plain">Nie udało się otworzyć tego rozdziału</string>
     <string name="reader_sheet_series">Ta seria</string>
     <string name="reader_sheet_all_manga">Cała manga</string>
     <string name="reader_sheet_all_webtoons">Wszystkie webtoony</string>

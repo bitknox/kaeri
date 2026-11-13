@@ -1481,6 +1481,8 @@
     <string name="reader_opening_chapter">Opening chapter %1$s</string>
     <!-- Heading when a chapter could not open. The chapter is its number, such as 13. -->
     <string name="reader_failed_chapter">Couldn\'t open chapter %1$s</string>
+    <!-- Heading when a chapter could not open before the reader learned which chapter it was, as when Continue asked for the next chapter and the source did not answer. -->
+    <string name="reader_failed_chapter_plain">Couldn\'t open this chapter</string>
     <!-- Heading in the reader's settings above the choices that belong to this series only. -->
     <string name="reader_sheet_series">This series</string>
     <!-- Heading in the reader's settings above the choices every manga shares. -->

@@ -551,9 +551,8 @@ fun PhoneReader(
             }
             when {
                 failure != null && state.leaves.isEmpty() && state.novel == null -> {
-                    val row = state.openingChapter ?: view?.chapter
                     ChapterFailed(
-                        title = Strings.readerFailedChapter(context, row?.let(::chapterNumber) ?: ""),
+                        title = failedChapterTitle(context, state.openingChapter ?: view?.chapter),
                         line = failure.text(context),
                         state = state,
                         session = session,
@@ -948,6 +947,13 @@ private fun SystemBars(context: Context, shown: Boolean, light: Boolean) {
 
 /** The chapter's number as the strings name it. */
 internal fun chapterNumber(row: ChapterRow): String = row.number ?: row.label
+
+/**
+ * The heading of a chapter that would not open: "Couldn't open chapter 12", or without a number
+ * when the reader never learned which chapter it was.
+ */
+fun failedChapterTitle(context: Context, row: ChapterRow?): String =
+    row?.let { Strings.readerFailedChapter(context, chapterNumber(it)) } ?: Strings.readerFailedChapterPlain(context)
 
 /** "Chapter 12", or a chapter with no number by its own name: a book in one file is its title, never "Chapter <title>". */
 internal fun chapterName(context: Context, row: ChapterRow): String =
