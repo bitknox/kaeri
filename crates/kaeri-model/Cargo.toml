@@ -32,4 +32,4 @@ ffi = ["dep:uniffi", "kaeri-core/ffi"]
 workspace = true
 
 [dev-dependencies]
-rqrr = "0.9"
+rqrr = "0.11"

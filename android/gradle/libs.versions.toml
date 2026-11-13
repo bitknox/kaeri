@@ -7,7 +7,7 @@ compose-bom = "2026.09.00"
 # Not the 1.4.0 the BOM picks: in that stable release the Expressive APIs the design is built on
 # (MaterialExpressiveTheme, MotionScheme, ShortNavigationBar, LargeFlexibleTopAppBar, ButtonGroup)
 # are internal. 1.5.0-beta01 is the newest release that has them, on the BOM's Compose 1.12.
-material3 = "1.5.0-beta01"
+material3 = "1.5.0-rc01"
 # ListDetailPaneScaffold, for the tablets' list and detail.
 adaptive = "1.3.0"
 activity = "1.13.0"
@@ -33,7 +33,7 @@ jna = "5.19.1"
 junit = "4.13.2"
 # The screens' JVM screenshot tests: Robolectric's native graphics, and Roborazzi to capture them.
 robolectric = "4.17"
-roborazzi = "1.76.0"
+roborazzi = "1.77.0"
 # The scenes the screenshot tests replay, recorded from the engine as JSON.
 kotlinx-serialization = "1.12.0"
 # The NDK the APK's native libraries are stripped with: the one android/scripts/engine.sh builds with.
@@ -43,7 +43,7 @@ cmake = "4.1.2"
 androidx-test-runner = "1.7.0"
 androidx-test-junit = "1.3.0"
 # The feature videos' flows (website/scripts/videos), driving the apps as a person does.
-androidx-test-uiautomator = "2.4.0"
+androidx-test-uiautomator = "2.4.1"
 # Compose for TV's components: the navigation drawer, cards, buttons, tabs, chips and lists the TV
 # app is built from. Its lazy layouts were removed; rows and grids are Compose foundation's.
 tv-material = "1.1.0"
