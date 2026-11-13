@@ -37,14 +37,13 @@ struct NarrowTabsTests {
         #expect(NarrowTabs.widen(.library, downloads: false, place: .calendar, .both) == nil)
     }
 
-    @Test func sidebarOnlySectionsOpenTheAccountSheetInANarrowWindow() throws {
+    @Test func sidebarOnlySectionsArePushedOntoTheFirstTab() throws {
         for answer in [KaeriIsFor.watch, .read, .both] {
             let first = try #require(NarrowTabs.barTabs(answer).first)
-            let pages: [(AppSection, PhoneSettingsPage)] = [(.providers, .providers), (.pluginStores, .stores), (.settings, .root)]
-            for (section, page) in pages {
+            for section in [AppSection.providers, .pluginStores, .settings] {
                 let to = try #require(NarrowTabs.narrow(section, answer), "\(section) has no place in a narrow window")
                 #expect(to.tab == first)
-                #expect(to.pushed == .settings(page))
+                #expect(to.pushed == .place(section))
             }
         }
     }
@@ -60,11 +59,62 @@ struct NarrowTabsTests {
         }
     }
 
-    @Test func aWideWindowGoesBackFromTheAccountSheet() {
-        #expect(NarrowTabs.widen(.home, downloads: false, place: nil, settings: .providers, .both) == .providers)
-        #expect(NarrowTabs.widen(.read, downloads: false, place: nil, settings: .stores, .read) == .pluginStores)
-        #expect(NarrowTabs.widen(.home, downloads: false, place: nil, settings: .root, .watch) == .settings)
-        // A page the sidebar has no section for stays in the sheet.
-        #expect(NarrowTabs.widen(.home, downloads: false, place: nil, settings: .accounts, .both) == nil)
+    @MainActor @Test func narrowThenWide() {
+        for answer in [KaeriIsFor.watch, .read, .both] {
+            for section in [AppSection.providers, .pluginStores, .settings, .downloads] {
+                let navigator = Navigator()
+                navigator.section = section
+                NarrowTabs.narrow(navigator, answer)
+                #expect(navigator.section != section, "\(section) kept as the selection with no tab for it")
+                #expect(navigator.phoneSettings == nil, "a resize opened a sheet")
+                NarrowTabs.widen(navigator, answer)
+                #expect(navigator.section == section)
+                #expect(navigator.placePushed == nil)
+                #expect(!navigator.downloadsPushed)
+            }
+        }
+    }
+
+    @MainActor @Test func wideThenNarrowThenWideAgain() {
+        let navigator = Navigator()
+        navigator.section = .settings
+        // Wide: nothing to undo.
+        NarrowTabs.widen(navigator, .both)
+        #expect(navigator.section == .settings)
+        NarrowTabs.narrow(navigator, .both)
+        #expect(navigator.section == .home)
+        #expect(navigator.placePushed == .settings)
+        NarrowTabs.widen(navigator, .both)
+        #expect(navigator.section == .settings)
+        // Narrow again, then Back pops it before the window widens: the first tab stays.
+        NarrowTabs.narrow(navigator, .both)
+        navigator.placePushed = nil
+        NarrowTabs.widen(navigator, .both)
+        #expect(navigator.section == .home)
+        // Narrow again, then another tab: widening leaves that tab selected.
+        navigator.section = .providers
+        NarrowTabs.narrow(navigator, .both)
+        navigator.section = .library
+        NarrowTabs.widen(navigator, .both)
+        #expect(navigator.section == .library)
+    }
+
+    @MainActor @Test func aSheetThePersonOpenedSurvivesWidening() {
+        for page in [PhoneSettingsPage.root, .providers, .stores, .accounts] {
+            let navigator = Navigator()
+            navigator.section = .home
+            navigator.phoneSettings = page
+            NarrowTabs.widen(navigator, .both)
+            #expect(navigator.phoneSettings == page, "widening closed the account sheet at \(page)")
+            #expect(navigator.section == .home)
+        }
+        // With a section pushed too, widening brings the section back and leaves the sheet.
+        let navigator = Navigator()
+        navigator.section = .providers
+        NarrowTabs.narrow(navigator, .watch)
+        navigator.phoneSettings = .root
+        NarrowTabs.widen(navigator, .watch)
+        #expect(navigator.section == .providers)
+        #expect(navigator.phoneSettings == .root)
     }
 }
