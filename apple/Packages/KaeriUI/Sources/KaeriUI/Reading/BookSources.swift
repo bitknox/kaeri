@@ -111,7 +111,7 @@ struct BookSourcesList: View {
         .onLaunchSheet("came-in", navigator) { // i18n-skip: a shot's sheet name
             guard let scene = PrelaunchScene.named() else { return }
             switch scene {
-            case .folder, .folderNothing:
+            case .folder, .folderNothing, .folderAlready, .folderUnreadable:
                 store.cameIn.stage(scene)
             case .inviteJoined, .pluginsInstalled, .storeOther, .storeEmpty, .storeUnreachable:
                 store.cameIn.stage(scene)

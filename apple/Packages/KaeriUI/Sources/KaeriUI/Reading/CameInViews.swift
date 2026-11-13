@@ -83,7 +83,10 @@ struct FolderCameIn: View {
                         .pointerHover()
                 }
             }
-            if unreadable {
+            if report.alreadyAdded {
+                CameInNote(kind: .info, title: L.bookFolderAlready(folder: report.name),
+                           line: L.bookFolderAlreadyLine(series: Int(report.series)))
+            } else if unreadable || report.unreadable {
                 CameInNote(kind: .failed, title: L.bookFolderUnreadable(folder: report.name),
                            line: L.bookFolderUnreadableLine)
             } else if nothing {
@@ -149,7 +152,8 @@ struct FolderCameIn: View {
 /// The folder report as a sheet of its own, over Your sources or first run, as the board lays
 /// it: the close button and the title, the folder with Change, what it holds, and Add folder
 /// across the width. The folder is read before the sheet shows; closing it takes the folder
-/// back out, and Add folder keeps it.
+/// back out, and Add folder keeps it. A folder that was already a source was not added by this
+/// sheet: it says so, its button is Done, and neither closing nor Change takes it out.
 struct FolderCameInSheet: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
@@ -188,7 +192,14 @@ struct FolderCameInSheet: View {
             // Across the sheet on iPhone and iPad; at the trailing end on the Mac, as its sheets
             // put their buttons.
             Group {
-                if nothing {
+                if report.alreadyAdded {
+                    Button {
+                        kept = true
+                        dismiss()
+                    } label: {
+                        primaryLabel(L.actionDone)
+                    }
+                } else if nothing {
                     Button(action: change) { primaryLabel(L.bookFolderChooseOther) }
                 } else {
                     Button {
@@ -213,13 +224,13 @@ struct FolderCameInSheet: View {
         #if os(iOS)
         .fileImporter(isPresented: $picking, allowedContentTypes: [.folder]) { result in
             guard case .success(let url) = result else { return }
-            store.bookSources.removeFolder(report.id)
+            takeBack()
             BookFolders.add(url, to: store)
         }
         #endif
         .onDisappear {
             // Closed without Add folder: the folder goes back out, as a form's cancel would.
-            if !kept { store.bookSources.removeFolder(report.id) }
+            if !kept { takeBack() }
             store.cameIn.reset()
         }
     }
@@ -237,13 +248,21 @@ struct FolderCameInSheet: View {
     private func change() {
         #if os(macOS)
         FolderPicker.choose { path in
-            store.bookSources.removeFolder(report.id)
+            takeBack()
             BookFolders.add(URL(filePath: path), to: store)
         }
         #else
         picking = true
         #endif
     }
+
+    /// The folder this sheet added goes back out. One that was a source before stays.
+    private func takeBack() {
+        if Self.takesBack(report) { store.bookSources.removeFolder(report.id) }
+    }
+
+    /// Whether closing or Change takes the folder back out: only when this pick added it.
+    static func takesBack(_ report: FolderReport) -> Bool { !report.alreadyAdded }
 }
 
 extension View {
@@ -260,7 +279,8 @@ private struct FolderCameInPresenter: ViewModifier {
         let folder: (FolderReport, Bool, Bool)? = {
             switch outcome {
             case .folder(let report)?: (report, false, false)
-            case .empty(.unsupportedFiles(let report))?, .empty(.emptyFolder(let report))?: (report, true, false)
+            // An unreadable folder comes as an empty one with `unreadable` set.
+            case .empty(.unsupportedFiles(let report))?, .empty(.emptyFolder(let report))?: (report, true, report.unreadable)
             case .empty(.folderUnreadable(let report))?: (report, true, true)
             default: nil
             }
