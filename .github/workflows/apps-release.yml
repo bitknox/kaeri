@@ -225,7 +225,7 @@ jobs:
       # read by no other run.
       - name: The engine's sources
         id: sources
-        run: echo "hash=$(android/scripts/engine.sh --sources-hash)" >> "$GITHUB_OUTPUT"
+        run: hash="$(android/scripts/engine.sh --sources-hash)" && echo "hash=$hash" >> "$GITHUB_OUTPUT"
       - name: Restore the engine
         id: engine
         uses: actions/cache/restore@v6
@@ -473,7 +473,7 @@ jobs:
       # is the one the Swift bindings are generated from.
       - name: The engine's sources
         id: sources
-        run: echo "hash=$(apple/scripts/engine.sh --sources-hash)" >> "$GITHUB_OUTPUT"
+        run: hash="$(apple/scripts/engine.sh --sources-hash)" && echo "hash=$hash" >> "$GITHUB_OUTPUT"
       - name: Restore the engine
         id: engine
         uses: actions/cache/restore@v6

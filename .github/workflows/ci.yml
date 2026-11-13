@@ -609,7 +609,7 @@ jobs:
       # What the engines are built from, as engine.sh hashes it: only the crates it compiles.
       - name: The engines' sources
         id: sources
-        run: echo "hash=$(apple/scripts/engine.sh --sources-hash)" >> "$GITHUB_OUTPUT"
+        run: hash="$(apple/scripts/engine.sh --sources-hash)" && echo "hash=$hash" >> "$GITHUB_OUTPUT"
       # engine.sh's own cache of each slice it built (~/.cache/kaeri-engine), by that hash.
       # Saved below, from main only, which only looks.
       - name: Restore the engines
@@ -851,7 +851,7 @@ jobs:
       # What the engine is built from, as engine.sh hashes it: only the crates it compiles.
       - name: The engine's sources
         id: sources
-        run: echo "hash=$(android/scripts/engine.sh --sources-hash)" >> "$GITHUB_OUTPUT"
+        run: hash="$(android/scripts/engine.sh --sources-hash)" && echo "hash=$hash" >> "$GITHUB_OUTPUT"
       # engine.sh's own cache of the testing engine (~/.cache/kaeri-engine), by that hash and
       # the NDK that built it. Saved below, from main only.
       - name: Restore the app's engine
