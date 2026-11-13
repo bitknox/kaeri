@@ -1,8 +1,8 @@
 #if os(macOS)
 // A swipe the system cancels, with no end, leaves the pages at rest, not where the drag had them
 // (iPad R7P-3: a window resized by its corner mid-swipe left a slice of the next page showing
-// until the next swipe). Real mouse events through a window; the drag stops by the pages leaving
-// hit testing mid-drag, which cancels it.
+// until the next swipe). Real mouse events through a window; the drag stops by the pages being
+// disabled mid-drag, which cancels it.
 
 @testable import KaeriStore
 @testable import KaeriUI
@@ -97,13 +97,14 @@ extension WindowEventTests {
     }
 }
 
-/// Holds the gate in the body, so turning it off redraws the pages without hit testing.
+/// Holds the gate in the body, so turning it off redraws the pages disabled and without hit
+/// testing, which cancels a drag under way: its `onEnded` never comes.
 private struct Wrapper<Content: View>: View {
     let gate: Gate
     @ViewBuilder let content: () -> Content
 
     var body: some View {
-        content().allowsHitTesting(gate.live)
+        content().allowsHitTesting(gate.live).disabled(!gate.live)
     }
 }
 #endif
