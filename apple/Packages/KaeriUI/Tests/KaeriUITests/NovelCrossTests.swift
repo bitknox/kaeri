@@ -119,10 +119,13 @@ struct NovelCrossTests {
     private func spin(_ seconds: Double) async {
         let end = Date().addingTimeInterval(seconds)
         while Date() < end {
-            RunLoop.main.run(until: Date().addingTimeInterval(0.01))
+            Self.pump()
             try? await Task.sleep(for: .milliseconds(1))
         }
     }
+
+    /// The main run loop turned for a moment, for the web view's callbacks.
+    private static func pump() { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
 
     private func until(_ seconds: Double, _ done: () -> Bool) async -> Bool {
         let end = Date().addingTimeInterval(seconds)
