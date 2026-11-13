@@ -232,7 +232,7 @@ final class AppDelegate: NSObject {
         #else
         var launch = EngineLaunch.app(platform: Self.platform)
         // QA hunt: never the real data folder, on any platform.
-        guard ProcessInfo.processInfo.environment["KAERI_HOME_OVERRIDE"]?.contains("/hunt-r7-mac/") == true else { fatalError("QA hunt needs KAERI_HOME_OVERRIDE") }
+        guard ProcessInfo.processInfo.environment["KAERI_HOME_OVERRIDE"]?.contains("/hunt-r8-mac/") == true else { fatalError("QA hunt needs KAERI_HOME_OVERRIDE") }
         // The profile a switch chose, used once; after it the engine remembers the last in use.
         launch.profile = UserDefaults.standard.string(forKey: "profileToEnter")
         UserDefaults.standard.removeObject(forKey: "profileToEnter")

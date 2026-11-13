@@ -720,7 +720,11 @@ enum HuntDriver {
             }
             try? await Task.sleep(for: .milliseconds(600)); say(state(r, nav))
         #endif
-        default: say("?? \(op)")
+        default:
+            #if os(macOS)
+            if await r8(op, w, store: store, nav: nav) { break }
+            #endif
+            say("?? \(op)")
         }
     }
 
