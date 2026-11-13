@@ -83,7 +83,9 @@ pub enum ProviderError {
     #[error("could not parse response: {0}")]
     Parse(String),
 
-    /// Transport-level failure: DNS, TLS, timeout, connection reset.
+    /// Transport-level failure: DNS, TLS, timeout, connection reset. One that says the device
+    /// has no network, rather than that the source did not answer, starts with
+    /// [`NO_NETWORK`]: see [`Self::no_network`].
     #[error("transport: {0}")]
     Transport(String),
 
@@ -97,7 +99,23 @@ pub enum ProviderError {
     Other(String),
 }
 
+/// How a [`ProviderError::Transport`] starts when the device has no network: no route past it,
+/// or no name server answering. Only the host writes it; a plugin's vocabulary has no transport
+/// failure.
+pub const NO_NETWORK: &str = "no network";
+
 impl ProviderError {
+    /// The device has no network: no request could leave it, whichever source asked.
+    pub fn no_network(detail: impl std::fmt::Display) -> Self {
+        Self::Transport(format!("{NO_NETWORK}: {detail}"))
+    }
+
+    /// Whether the failure says the device has no network, rather than that the source did not
+    /// answer.
+    pub fn is_no_network(&self) -> bool {
+        matches!(self, Self::Transport(detail) if detail.starts_with(NO_NETWORK))
+    }
+
     /// Whether this is a fault that the next provider might not have.
     ///
     /// `NotFound` is not one: the source answered correctly. The registry moves on past it all
@@ -174,6 +192,13 @@ mod tests {
         assert!(ProviderError::Blocked("cf challenge".into()).should_failover());
         assert!(ProviderError::Parse("no sourceUrl".into()).should_failover());
         assert!(ProviderError::Transport("timeout".into()).should_failover());
+    }
+
+    #[test]
+    fn only_a_failure_the_host_says_is_no_network_is_one() {
+        assert!(ProviderError::no_network("no route").is_no_network());
+        assert!(!ProviderError::Transport("timeout".into()).is_no_network());
+        assert!(!ProviderError::Other("no network: a plugin's words".into()).is_no_network());
     }
 
     #[test]

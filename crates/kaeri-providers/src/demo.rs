@@ -129,16 +129,12 @@ impl DemoProvider {
         if !self.endpoints.allows(&url) {
             return Err(ProviderError::Blocked("not a host the demo may reach".into()));
         }
-        let response = self
-            .client
-            .get(&url)
-            .send()
-            .await
-            .map_err(|e| ProviderError::Transport(e.to_string()))?;
+        let response =
+            self.client.get(&url).send().await.map_err(|e| kaeri_net::reach::transport(&e))?;
         if !response.status().is_success() {
             return Err(ProviderError::Blocked(format!("HTTP {}", response.status().as_u16())));
         }
-        response.text().await.map_err(|e| ProviderError::Transport(e.to_string()))
+        response.text().await.map_err(|e| kaeri_net::reach::transport(&e))
     }
 
     /// Commons' SHA-1 for the part's file, from its API.

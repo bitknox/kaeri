@@ -165,12 +165,17 @@ fn address_path<'a>(address: &'a str, root: &str) -> &'a str {
 }
 
 fn describe_transport(error: &reqwest::Error) -> String {
-    if error.is_timeout() {
-        "the request timed out".into()
+    let words = if error.is_timeout() {
+        "the request timed out"
     } else if error.is_connect() {
-        "the connection was refused".into()
+        "the connection was refused"
     } else {
-        "the request failed".into()
+        "the request failed"
+    };
+    if kaeri_net::reach::no_network(error) {
+        format!("{}: {words}", kaeri_core::error::NO_NETWORK)
+    } else {
+        words.into()
     }
 }
 
