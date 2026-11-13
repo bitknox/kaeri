@@ -3719,6 +3719,7 @@ dependencies = [
  "ratatui-image",
  "terminal-colorsaurus",
  "tracing",
+ "unicode-segmentation",
  "unicode-width",
 ]
 
