@@ -1180,7 +1180,7 @@ mod tests {
         }
     }
 
-    /// The source [`followed`] reads from, installed: it is never asked.
+    /// The source [`followed`] reads from, as [`install_shelf`] installs it: it is never asked.
     struct Here(kaeri_core::books::BookSourceManifest);
 
     #[async_trait::async_trait]
@@ -1222,9 +1222,9 @@ mod tests {
         }
     }
 
-    /// A series on Reading whose source listed chapters 1 to 12 a week ago, and chapter 13,
-    /// "The Far Shore", an hour ago.
-    fn followed(kit: &Kit) {
+    /// Installs the source [`followed`] reads from, so the person's pick of it holds once the
+    /// plugin load is over.
+    fn install_shelf(kit: &Kit) {
         let manifest = kaeri_core::books::BookSourceManifest {
             id: "shelf".into(),
             name: "Shelf".into(),
@@ -1236,6 +1236,11 @@ mod tests {
             capabilities: Vec::new(),
         };
         kit.sources.registry.put(Arc::new(Here(manifest)));
+    }
+
+    /// A series on Reading whose source listed chapters 1 to 12 a week ago, and chapter 13,
+    /// "The Far Shore", an hour ago. The source itself is not installed; see [`install_shelf`].
+    fn followed(kit: &Kit) {
         let store = &kit.store;
         let meta = r#"{"book":{"id":900301,"title":{"romaji":"The Lantern Ferry"}}}"#;
         let work = BookWork {
@@ -1332,6 +1337,7 @@ mod tests {
     fn someone_caught_up_is_offered_the_new_chapter_with_its_words() {
         let dir = tempfile::tempdir().unwrap();
         let kit = kit(dir.path());
+        install_shelf(&kit);
         followed(&kit);
         kit.store.adopt_read(WORK, "12", None, NOW - 2 * DAY).unwrap();
 
