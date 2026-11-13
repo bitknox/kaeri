@@ -308,12 +308,18 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
         call("window.kaeriReader && window.kaeriReader.\(forward ? "next" : "prev")('\(how)')")
     }
 
-    func goTo(_ page: Int) { call("window.kaeriReader && window.kaeriReader.goTo(\(max(page, 0)), 'jump')") }
+    /// A jump: Home, End, Go to page or the scrubber. It puts the end page away, as a turn back
+    /// does, so the page jumped to shows and turns.
+    func goTo(_ page: Int) {
+        shown.end = false
+        call("window.kaeriReader && window.kaeriReader.goTo(\(max(page, 0)), 'jump')")
+    }
 
     /// A place the engine chose: Back to page, Start over, another device's. The page says it
-    /// back as placed, never as the person's jump.
+    /// back as placed, never as the person's jump. It puts the end page away too.
     func goTo(_ pos: NovelPos) {
         guard let book, book.spine.indices.contains(Int(pos.spine)) else { return }
+        shown.end = false
         readyHow = nil
         if Int(pos.spine) == currentSpine {
             call("window.kaeriReader && window.kaeriReader.goToPos('\(Self.text(pos))', 'placed')")
