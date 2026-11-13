@@ -199,12 +199,9 @@ fn long_degenerate_chapters_stay_linear() {
     }
 }
 
-/// R5E-6. Finding a chapter's pictures looks for the end of each tag name from every `<` to the
-/// first space, `/` or `>` (`novel/images.rs:56`), so a chapter of `<` with none of those after
-/// them is quadratic: 400 KB took 1045 s in a debug build. The engine runs it inline when a
-/// source's text chapter opens (`read_sources/pictures.rs:259`).
+/// R5E-6. Finding a chapter's pictures looks for the end of each tag name after every `<`. A
+/// chapter of `<` with no space, `/` or `>` after them must still be read in one pass.
 #[test]
-#[ignore = "R5E-6: a chapter of bare < is quadratic in web_images"]
 fn a_chapter_of_bare_angle_brackets_stays_linear() {
     let html = "<".repeat(400_000);
     timed("web_images", "<", || novel::web_images(&html));
