@@ -365,6 +365,7 @@ impl KavitaSource {
                 .await?;
             return Ok(Some(ChapterContent::Book(BookFile { path: to, temporary: true })));
         }
+        let pages = crate::pages_stated(pages).ok_or_else(|| crate::too_many_pages(pages))?;
         Ok(Some(ChapterContent::Images(
             (0..pages)
                 .map(|n| {
@@ -481,7 +482,7 @@ impl BookSource for KavitaSource {
                 let number = (!c.is_special && c.range != "0" && !c.range.is_empty())
                     .then_some(c.range.as_str());
                 let mut chapter = chapter_of(&c.id.to_string(), &title, number);
-                chapter.page_count = (c.pages > 0).then_some(c.pages);
+                chapter.page_count = crate::pages_stated(c.pages);
                 chapter.published = c.release_date.as_deref().and_then(crate::names::date);
                 chapter
             })

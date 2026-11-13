@@ -1005,9 +1005,7 @@ impl Session {
         // The resumed notice waits for the first page, which says the page number.
         self.novel_resumed = restore.is_some() && self.resumed.take().is_some();
         if !self.opened {
-            self.opened = true;
-            cx.send(ReaderEvent::Opened(Box::new(self.view(cx))));
-            self.downloads_follow(cx, false);
+            self.say_opened(cx);
         }
         cx.send(ReaderEvent::NovelOpen(view));
     }
