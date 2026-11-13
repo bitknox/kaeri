@@ -2,7 +2,8 @@
 // serves the book at https://appassets.androidplatform.net/book/<session>/<path>; this host puts
 // the paginator in at document start, answers those requests from the engine on the web view's
 // own thread, refuses every other load and every navigation, and turns the paginator's messages
-// into calls a screen forwards to its ReaderSession.
+// into calls a screen forwards to its ReaderSession. A document the engine does not serve never
+// replaces the page shown, and only the book's own documents keep a place (NovelCross).
 
 package app.kaeri.reader
 
@@ -110,9 +111,14 @@ class NovelWebHost(
     private val onMessage: (NovelMessage) -> Unit,
 ) {
     val view: WebView = WebView(context)
-    private var spine: List<NovelSpineItem> = emptyList()
-    private var index = 0
+    private var cross = NovelCross(emptyList(), PREFIX, "")
     private var scriptByHand = false
+
+    /** The address being loaded, until its page is laid out or its load fails. */
+    private var pending: String? = null
+
+    /** The address of the book's document shown, or null while none is. */
+    private var shown: String? = null
 
     init {
         // A web view left at wrap-content gives vh and percentages no height, and the columns one line.
@@ -151,7 +157,7 @@ class NovelWebHost(
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean = true
 
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse =
-                answer(request.url)
+                answer(request.url, request.isForMainFrame)
 
             override fun onPageFinished(view: WebView, url: String) {
                 if (scriptByHand && url.startsWith(PREFIX)) view.evaluateJavascript(assets.script, null)
@@ -168,58 +174,94 @@ class NovelWebHost(
 
     private fun received(text: String) {
         val message = NovelMessage.parse(text) ?: return
-        // A new document's paginator starts with no taps of its own: tell it which.
-        if (message is NovelMessage.Page && message.how == null) taps?.let(::call)
         when (message) {
             // The next linear document on a turn past the end, the previous one before the start.
-            is NovelMessage.End -> nextDocument(+1)?.let { turnInto(it) } ?: onMessage(message)
-            is NovelMessage.Start -> nextDocument(-1)?.let { turnInto(it, "kaeri:end") } ?: onMessage(message)
-            // A document turned into is a page turn, not a jump that Back to page would undo.
-            is NovelMessage.Page -> {
-                val how = turnedInto?.takeIf { message.how == null }
-                turnedInto = null
-                onMessage(if (how != null) message.copy(how = how) else message)
+            is NovelMessage.End -> when (val step = cross.next(shown)) {
+                is NovelCross.Step.Load -> turnInto(step.url)
+                is NovelCross.Step.Back -> load(step.url)
+                NovelCross.Step.Edge -> onMessage(message)
             }
+            is NovelMessage.Start -> when (val step = cross.previous(shown)) {
+                is NovelCross.Step.Load -> turnInto(step.url)
+                is NovelCross.Step.Back -> load(step.url)
+                NovelCross.Step.Edge -> onMessage(message)
+            }
+            is NovelMessage.Page -> if (message.how == null) laidOut(message) else turned(message)
+            is NovelMessage.Link -> cross.link(message.href, message.internal)?.let(::load) ?: onMessage(message)
             else -> onMessage(message)
         }
+    }
+
+    /** A document's first layout: its place is kept only when it is the book's document at its address. */
+    private fun laidOut(message: NovelMessage.Page) {
+        val address = pending ?: shown
+        pending = null
+        // A new document's paginator starts with no taps of its own: tell it which.
+        taps?.let(::call)
+        val how = turnedInto
+        turnedInto = null
+        when (cross.shown(address, message.spine, message.pos)) {
+            // A document turned into is a page turn, not a jump that Back to page would undo.
+            NovelCross.Shown.BOOK -> {
+                shown = address
+                onMessage(if (how != null) message.copy(how = how) else message)
+            }
+            NovelCross.Shown.OUTSIDE -> {
+                shown = address
+                onMessage(NovelMessage.Layout(message.spine, message.page, message.pages))
+            }
+            NovelCross.Shown.NOT_SERVED -> {
+                shown = null
+                cross.recover()?.let(::load)
+            }
+        }
+    }
+
+    private fun turned(message: NovelMessage.Page) {
+        if (cross.keeps(shown, message.spine, message.pos)) {
+            onMessage(message)
+        } else {
+            onMessage(NovelMessage.Layout(message.spine, message.page, message.pages))
+        }
+    }
+
+    /** The engine refused the document asked for: the page shown stays, with its keys. */
+    private fun notServed(address: String) {
+        val asked = pending ?: return
+        if (NovelCross.document(asked) != NovelCross.document(address)) return
+        pending = null
+        turnedInto = null
+        cross.failed(shown)?.let(::load)
     }
 
     /** How the document being loaded was reached, when a turn crossed into it. */
     private var turnedInto: TurnHow? = null
 
-    private fun turnInto(document: Int, fragment: String? = null) {
+    private fun turnInto(url: String) {
+        load(url)
         turnedInto = TurnHow.TURN
-        load(document, fragment)
-    }
-
-    private fun nextDocument(step: Int): Int? {
-        var i = index + step
-        while (i in spine.indices) {
-            if (spine[i].linear) return i
-            i += step
-        }
-        return null
     }
 
     /** Open the book: its spine, and the place to start at (NovelPos text), or its first page. */
     fun open(spine: List<NovelSpineItem>, entry: String, restore: NovelPos?) {
-        this.spine = spine
         val at = restore?.spine?.toInt()?.takeIf { it in spine.indices }
-        index = at ?: spine.indexOfFirst { it.url == entry }.coerceAtLeast(0)
-        val url = spine.getOrNull(index)?.url ?: entry
-        view.loadUrl(if (restore != null) "$url#kaeri:pos=${restore.text()}" else url)
+        val url = at?.let { spine[it].url } ?: entry
+        val root = PREFIX + entry.removePrefix(PREFIX).substringBefore('/') + "/"
+        cross = NovelCross(spine, root, if (restore != null) "$url#kaeri:pos=${restore.text()}" else url)
+        shown = null
+        load(cross.opening)
     }
 
-    private fun load(document: Int, fragment: String? = null) {
-        index = document
-        val url = spine[document].url
-        view.loadUrl(if (fragment != null) "$url#$fragment" else url)
+    private fun load(url: String) {
+        pending = url.substringBefore('#')
+        turnedInto = null
+        view.loadUrl(url)
     }
 
     /** Go to a contents entry: its document, and the element its fragment names. */
+    @Suppress("UNUSED_PARAMETER")
     fun openEntry(spineIndex: Int, url: String) {
-        index = spineIndex.coerceIn(0, (spine.size - 1).coerceAtLeast(0))
-        view.loadUrl(url)
+        load(url)
     }
 
     /** The input call last sent, said again to each document as it is ready. */
@@ -244,9 +286,9 @@ class NovelWebHost(
     fun goTo(page: Int, how: TurnHow = TurnHow.JUMP) = call("goTo($page, ${quote(NovelMessage.word(how))})")
 
     fun goToPos(pos: NovelPos, how: TurnHow = TurnHow.JUMP) {
-        if (pos.spine.toInt() != index && pos.spine.toInt() in spine.indices) {
-            index = pos.spine.toInt()
-            view.loadUrl("${spine[index].url}#kaeri:pos=${pos.text()}")
+        val url = cross.url(pos.spine.toInt())
+        if (pos.spine.toInt() != cross.index(shown) && url != null) {
+            load("$url#kaeri:pos=${pos.text()}")
         } else {
             call("goToPos(${quote(pos.text())}, ${quote(NovelMessage.word(how))})")
         }
@@ -262,10 +304,20 @@ class NovelWebHost(
 
     private fun call(js: String) = view.evaluateJavascript("window.kaeriReader && window.kaeriReader.$js", null)
 
-    private fun answer(url: Uri): WebResourceResponse {
+    private fun answer(url: Uri, mainFrame: Boolean): WebResourceResponse {
         val text = url.toString().substringBefore('#')
         if (!text.startsWith(PREFIX)) return refused()
-        val found = runCatching { resource(text) }.getOrNull() ?: return notFound()
+        val found = runCatching { resource(text) }.getOrNull()
+        val status = found?.status?.toInt() ?: 404
+        val empty = (found?.body as? BookBody.Bytes)?.data?.isEmpty() == true
+        // A document that does not come, or comes empty, never replaces the page shown: a 204 ends
+        // the navigation with the page as it was, where an error's empty answer would lay out as a
+        // blank page at that address.
+        if (mainFrame && (found == null || status !in 200..299 || empty)) {
+            view.post { notServed(text) }
+            return unchanged()
+        }
+        if (found == null) return notFound()
         val body: InputStream = when (val b = found.body) {
             is BookBody.Bytes -> ByteArrayInputStream(b.data)
             is BookBody.File -> runCatching { FileInputStream(File(b.path)) }.getOrNull() ?: return notFound()
@@ -273,7 +325,6 @@ class NovelWebHost(
         val headers = found.headers.filterNot { it.name.equals("content-type", ignoreCase = true) }.associate { it.name to it.value }
         val mime = found.mime.substringBefore(';').trim()
         val charset = found.mime.substringAfter("charset=", "").trim().ifEmpty { if (mime.startsWith("text/") || mime.endsWith("xml") || mime.endsWith("javascript")) "utf-8" else "" }
-        val status = found.status.toInt()
         return WebResourceResponse(mime, charset.ifEmpty { null }, status, reason(status), headers, body)
     }
 
@@ -294,6 +345,8 @@ class NovelWebHost(
         }
 
         private fun refused() = WebResourceResponse("text/plain", "utf-8", 403, "Forbidden", emptyMap(), ByteArrayInputStream(ByteArray(0)))
+
+        private fun unchanged() = WebResourceResponse("text/plain", "utf-8", 204, "No Content", emptyMap(), ByteArrayInputStream(ByteArray(0)))
 
         private fun notFound() = WebResourceResponse("text/plain", "utf-8", 404, "Not Found", emptyMap(), ByteArrayInputStream(ByteArray(0)))
     }
