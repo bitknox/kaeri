@@ -121,6 +121,7 @@ impl BookSource for Shelf {
         if chapter.contains("gone") {
             return Err(ProviderError::NotFound);
         }
+        assert!(chapter != "panics", "content no one foresaw");
         if chapter.starts_with("text-") {
             return Ok(ChapterContent::Text("<p>The ferry left at dusk.</p>".into()));
         }
@@ -156,6 +157,7 @@ impl BookSource for Shelf {
         };
         self.asked.lock().unwrap().push(asked);
         self.knock.notify_waiters();
+        assert!(!page_ref.url.contains("/pages-panic/"), "a page no one foresaw");
         let gate =
             self.gates.lock().unwrap().get_mut(&page_ref.url).and_then(|g| g.pop_front());
         if let Some(gate) = gate {
@@ -618,6 +620,48 @@ async fn a_source_that_fails_marks_the_chapter_and_the_rest_go_on() {
         kit.states()[1].1,
         ChapterDownloadState::Failed { failure: ReadingFailure::NotFound }
     ));
+}
+
+/// A panic while a chapter downloads, from content or a page no one foresaw, fails that
+/// chapter as any failure does, and the queue goes on and runs again when asked.
+#[tokio::test]
+async fn a_chapter_whose_fetch_panics_fails_and_the_queue_goes_on() {
+    let mut kit = kit(&["1", "3"]);
+    {
+        let mut listed = kit.shelf.listed.lock().unwrap();
+        listed.push(SourceChapter::new("panics", "2"));
+        listed.push(SourceChapter::new("pages-panic", "4"));
+    }
+    kit.queue.download(&kit.lent, WorkId::new(WORK), DownloadPick::Unread).await;
+    kit.settle().await;
+    // A failure is kept in the row by kind, so the panic's reason is not read back.
+    let failed =
+        |state: &ChapterDownloadState| matches!(state, ChapterDownloadState::Failed { .. });
+    let states = kit.states();
+    assert_eq!(states[0], ("1".into(), ChapterDownloadState::Done));
+    assert!(failed(&states[1].1), "the chapter whose content panicked: {:?}", states[1]);
+    assert_eq!(states[2], ("3".into(), ChapterDownloadState::Done));
+    assert!(failed(&states[3].1), "the chapter whose pages panicked: {:?}", states[3]);
+    // The Downloads list heard each failure.
+    let told = kit.drain();
+    let failed_in_list = |chapter: &str| {
+        told.iter().any(|e| match e {
+            ReadingEvent::Downloads(view) => view.rows.iter().any(|r| {
+                r.chapter.id.as_str() == chapter
+                    && matches!(r.state, ChapterDownloadState::Failed { .. })
+            }),
+            _ => false,
+        })
+    };
+    assert!(failed_in_list("2") && failed_in_list("4"), "{told:?}");
+
+    // The queue still runs: a chapter asked for later downloads.
+    kit.shelf.listed.lock().unwrap().push(SourceChapter::new("5", "5"));
+    kit.queue
+        .download(&kit.lent, WorkId::new(WORK), DownloadPick::Chapters { ids: ids(&["5"]) })
+        .await;
+    kit.settle().await;
+    assert_eq!(kit.states()[4], ("5".into(), ChapterDownloadState::Done));
 }
 
 #[tokio::test]

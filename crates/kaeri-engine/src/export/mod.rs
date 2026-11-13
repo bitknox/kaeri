@@ -46,7 +46,7 @@ use kaeri_store::{Store, book_downloads::BookDownloadState};
 
 use crate::{
     downloads::books::{
-        BookDownloads, Fetching, Lent, Stop as FetchStop, chapter_row, flatten,
+        BookDownloads, Fetching, Lent, Stop as FetchStop, Wanted, chapter_row, flatten,
     },
     jobs::JobGuard,
     outbox::Outbox,
@@ -580,7 +580,7 @@ impl OneSend {
             }
             self.told.chapter(Some(label.clone()));
             let missing = u32::try_from(to_fetch).unwrap_or(u32::MAX).saturating_sub(fetched);
-            self.may_fetch(missing).await?;
+            self.may_fetch(missing, &wanted).await?;
             std::fs::create_dir_all(temp).map_err(|e| {
                 prepare::Stop::Failed(crate::downloads::books::io_failure(&e, temp))
             })?;
@@ -605,7 +605,7 @@ impl OneSend {
                     Ok(file) => break file,
                     Err(FetchStop::Cancelled) => return Err(prepare::Stop::Cancelled),
                     // The network changed under the fetch: wait, then fetch the chapter again.
-                    Err(FetchStop::Held) => self.may_fetch(missing).await?,
+                    Err(FetchStop::Held) => self.may_fetch(missing, &wanted).await?,
                     Err(FetchStop::Failed(failure)) => {
                         return Err(prepare::Stop::Failed(failure));
                     }
@@ -620,9 +620,10 @@ impl OneSend {
     }
 
     /// Wait until chapters may be fetched, `missing` of them still to come. A send waits while
-    /// the downloads do: for Wi-Fi it says so, and it is kept in the store meanwhile. With no
-    /// network at all it fails as offline; cancelled, it stops.
-    async fn may_fetch(&self, missing: u32) -> Result<(), prepare::Stop> {
+    /// the downloads do: for Wi-Fi it says so, naming the chapters it holds (`wanted`), and it
+    /// is kept in the store meanwhile. With no network at all it fails as offline; cancelled,
+    /// it stops.
+    async fn may_fetch(&self, missing: u32, wanted: &[Wanted]) -> Result<(), prepare::Stop> {
         let store = self.lent.sources.store();
         let mut changes = self.downloads.changes();
         let mut kept = false;
@@ -651,6 +652,7 @@ impl OneSend {
                     work: self.work.clone(),
                     target: self.target.clone(),
                     line,
+                    chapters: wanted.iter().map(|w| w.chapter.clone()).collect(),
                 }));
             }
             // A change to the network or the setting, or a look at whether it was cancelled.

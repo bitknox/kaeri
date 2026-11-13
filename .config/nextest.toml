@@ -22,6 +22,13 @@ binary(companion) | binary(binge)
 '''
 test-group = 'mpv'
 
+# The reader's audit pushes every odd page size through every panel into every screen size. With
+# the dev profile's optimised page crates it takes about half a minute; a slow report after a
+# minute and a stop after five keep a regression from holding the run.
+[[profile.default.overrides]]
+filter = 'binary(r5_audit) & test(=every_panel_renders_odd_sizes)'
+slow-timeout = { period = "60s", terminate-after = 5 }
+
 # CI runs every test rather than stopping at the first failure, so one run shows all of them.
 [profile.ci]
 fail-fast = false
