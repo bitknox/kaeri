@@ -5,6 +5,7 @@
 package app.kaeri.reader
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -45,6 +46,11 @@ import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -70,6 +76,9 @@ import kotlin.math.roundToInt
 object PageWaits {
     const val PLATE_MS = 600L
     const val WORDS_MS = 4_000L
+
+    /** A page on screen with no file sent for it is asked for after this. */
+    const val ASK_MS = 2_000L
 }
 
 /** What a waiting page shows: the page, and whether it has waited long enough to say so. */
@@ -92,6 +101,8 @@ fun LeafView(
     onRetry: (page: Int) -> Unit,
     modifier: Modifier = Modifier,
     instant: Boolean = false,
+    /** The leaf is the one on screen: a page of it that no file came for is asked for. */
+    ask: Boolean = false,
     onReady: () -> Unit = {},
     waiting: WaitingSlot = { page, long -> PageWaiting(page, long) },
     failed: FailedSlot = { page, failure, retry -> PageFailed(page, failure, retry) },
@@ -112,8 +123,10 @@ fun LeafView(
                     .offset { IntOffset(x, y) }
                     .size(with(density) { w.toDp() }, with(density) { h.toDp() }),
             ) {
-                // Each page, and each file of it, starts afresh: nothing of another page is kept.
-                key(part.page, part.half, state.file(part)?.path) {
+                // Each page starts afresh: nothing of another page is kept. A new file of the same
+                // page (made again for a new size or look) replaces the old picture once it is
+                // decoded, never through empty.
+                key(part.page, part.half) {
                     PartView(
                     part = part,
                     state = state,
@@ -121,6 +134,7 @@ fun LeafView(
                     instant = instant,
                     spine = spineOf(leaf, index),
                     onMissing = onMissing,
+                    ask = ask,
                     onReady = { ready[index] = true },
                     waiting = waiting,
                     failed = { page, failure, retry ->
@@ -150,6 +164,7 @@ private fun BoxScope.PartView(
     instant: Boolean,
     spine: Float,
     onMissing: (LeafPart) -> Unit,
+    ask: Boolean,
     onReady: () -> Unit,
     waiting: WaitingSlot,
     failed: FailedSlot,
@@ -157,21 +172,33 @@ private fun BoxScope.PartView(
 ) {
     val page = part.page.toInt()
     val failure = state.failures[part.page]
-    val file = state.file(part)
+    val file = state.file(part).takeUnless { PlateShot.hold }
     if (failure != null && file == null) {
         failed(page, failure) { onRetry(page) }
         return
     }
+    // On screen and nothing sent for it: whatever the engine missed, the page is asked for, so it
+    // never waits on its plate for good.
+    if (file == null && ask) LaunchedEffect(part.page, part.half, state.layout) {
+        delay(PageWaits.ASK_MS)
+        onMissing(part)
+    }
     val wasCached = remember(file?.path) { file?.let(images::cached) != null }
+    // Set once a picture of this page was drawn: a later file of it goes in at once.
+    val drewOnce = remember { booleanArrayOf(false) }
     val result by produceState(file?.let(images::cached)?.let { PageDecodeResult.Decoded(it) } as PageDecodeResult?, file) {
-        if (file != null && value == null) value = withContext(Dispatchers.IO) { images.load(file) }
+        if (file == null) return@produceState
+        val cached = images.cached(file)
+        // The picture there stays until the new file's is decoded.
+        value = if (cached != null) PageDecodeResult.Decoded(cached) else withContext(Dispatchers.IO) { images.load(file) }
     }
     val removed = rememberAnimationsRemoved()
     when (val now = result) {
         is PageDecodeResult.Decoded -> {
             // A page that was there at once goes in at once; one that came later fades over its plate,
             // on its own clock when Remove animations is on. It is ready once fully drawn.
-            val alpha = remember(file?.path) { Animatable(if (instant || wasCached) 1f else 0f) }
+            val alpha = remember(file?.path) { Animatable(if (instant || wasCached || drewOnce[0]) 1f else 0f) }
+            drewOnce[0] = true
             LaunchedEffect(now) {
                 when {
                     instant -> alpha.snapTo(1f)
@@ -190,6 +217,11 @@ private fun BoxScope.PartView(
         is PageDecodeResult.Unreadable -> failed(page, ReadingFailure.Other(now.reason)) { onRetry(page) }
         null -> Waited(page, waiting)
     }
+}
+
+/** Set by the fixtures build for the plate's shots: every page waits on its plate. */
+object PlateShot {
+    var hold by mutableStateOf(false)
 }
 
 /** Where a part's page sits in its box: the two pages of a spread against the spine between them. */
@@ -249,28 +281,106 @@ fun PageCanvas(page: PageBitmap, rotate: Boolean, modifier: Modifier = Modifier,
     }
 }
 
-/** The phone's waiting plate: it fills the page's place with the page's number, and its words at four seconds. */
+/**
+ * The phone's waiting plate: it fills the page's place with "Page N", and from four seconds a line
+ * under it. It fades in over what is under it as it comes, as Apple's and Windows' plates do.
+ */
 @Composable
 fun BoxScope.PageWaiting(page: Int, long: Boolean) {
     val context = LocalContext.current
-    Box(Modifier.fillMaxSize().background(ObiSilk.Raised)) {
-        Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(Strings.readerPagePlate(context, page + 1), color = ObiSilk.Haze, fontSize = 15.sp)
-            if (long) {
-                Spacer(Modifier.height(8.dp))
-                Text(Strings.readerPageLoading(context, page + 1), color = ObiSilk.Haze, fontSize = 15.sp)
+    val shown = rememberFadedIn()
+    Box(Modifier.fillMaxSize().graphicsLayer { alpha = shown.value }.background(ObiSilk.Raised)) {
+        PlateWords(Strings.readerPagePlate(context, page + 1), Strings.readerPageLoading(context, page + 1).takeIf { long }, Modifier.align(Alignment.Center))
+    }
+}
+
+/**
+ * The phone's plate for a strip image: "Image N", and from four seconds a line under it. The words
+ * sit in the middle of the part of the image on screen, so they stay in view however tall the image
+ * is and wherever the strip is scrolled to. It fades in as it comes, as the page's plate does.
+ */
+@Composable
+fun BoxScope.ImageWaiting(page: Int, long: Boolean) {
+    val context = LocalContext.current
+    val shown = rememberFadedIn()
+    // The part of the plate on screen, in its own pixels, read only while placing the words.
+    var seen by remember { mutableStateOf<ClosedFloatingPointRange<Float>?>(null) }
+    Box(
+        Modifier.fillMaxSize().graphicsLayer { alpha = shown.value }.background(ObiSilk.Raised).onGloballyPositioned { at ->
+            // The part inside every parent, the strip's list among them, back in the plate's own
+            // pixels through any zoom.
+            val shown = at.boundsInWindow()
+            seen = if (shown.height > 0f) at.windowToLocal(shown.topLeft).y..at.windowToLocal(shown.bottomLeft).y else null
+        },
+    ) {
+        Layout(
+            content = { PlateWords(Strings.readerImagePlate(context, page + 1), Strings.readerImageLoading(context, page + 1).takeIf { long }) },
+            modifier = Modifier.fillMaxSize(),
+        ) { measurables, constraints ->
+            val words = measurables.single().measure(constraints.copy(minWidth = 0, minHeight = 0))
+            layout(constraints.maxWidth, constraints.maxHeight) {
+                words.place((constraints.maxWidth - words.width) / 2, stripWordsTop(constraints.maxHeight, seen, words.height))
             }
         }
     }
 }
 
-/** The phone's plate for a strip image: its number, then from four seconds the one line that it is loading. */
+/**
+ * An opacity that fades from nothing to whole once, from when it is first composed, with the fade-in
+ * token. Remove animations keeps the fade on its own clock, as Apple keeps it under Reduce Motion: a
+ * fade is not movement.
+ */
 @Composable
-fun BoxScope.ImageWaiting(page: Int, long: Boolean) {
-    val context = LocalContext.current
-    Box(Modifier.fillMaxSize().background(ObiSilk.Raised)) {
-        val words = if (long) Strings.readerImageLoading(context, page + 1) else Strings.readerImagePlate(context, page + 1)
-        Text(words, color = ObiSilk.Haze, fontSize = 15.sp, modifier = Modifier.align(Alignment.Center))
+internal fun rememberFadedIn(): Animatable<Float, AnimationVector1D> {
+    val shown = remember { Animatable(0f) }
+    val removed = rememberAnimationsRemoved()
+    LaunchedEffect(Unit) {
+        if (removed) atFullSpeed { shown.animateTo(1f, Motion.fadeIn()) } else shown.animateTo(1f, Motion.fadeIn())
+    }
+    return shown
+}
+
+/**
+ * Where a strip plate's words start: centred on the part of the plate on screen, [seen] in the
+ * plate's own pixels, and kept inside the plate. With none of it on screen they sit in its middle.
+ */
+internal fun stripWordsTop(plate: Int, seen: ClosedFloatingPointRange<Float>?, words: Int): Int {
+    val middle = if (seen == null || seen.isEmpty()) plate / 2f else (seen.start + seen.endInclusive) / 2f
+    return (middle - words / 2f).roundToInt().coerceIn(0, maxOf(0, plate - words))
+}
+
+/**
+ * A plate's number, and the loading line added under it, never in its place. The line fades in as
+ * it is added and the number eases up to make room, on its own clock when Remove animations is on,
+ * as Apple's plate keeps its fade under Reduce Motion. A plate that starts with the line shows it
+ * at once.
+ */
+@Composable
+private fun PlateWords(number: String, line: String?, modifier: Modifier = Modifier) {
+    val shown = remember { Animatable(if (line != null) 1f else 0f) }
+    val removed = rememberAnimationsRemoved()
+    LaunchedEffect(line != null) {
+        if (line != null && shown.value < 1f) {
+            if (removed) atFullSpeed { shown.animateTo(1f, Motion.fadeIn()) } else shown.animateTo(1f, Motion.fadeIn())
+        }
+    }
+    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(number, color = ObiSilk.Haze, fontSize = 15.sp)
+        if (line != null) {
+            Column(
+                Modifier
+                    .layout { measurable, constraints ->
+                        // Grows into its full height with the fade, so the words stay centred.
+                        val placeable = measurable.measure(constraints)
+                        layout(placeable.width, (placeable.height * shown.value).roundToInt()) { placeable.place(0, 0) }
+                    }
+                    .graphicsLayer { alpha = shown.value },
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Spacer(Modifier.height(6.dp))
+                Text(line, color = ObiSilk.Haze, fontSize = 13.sp)
+            }
+        }
     }
 }
 

@@ -11,6 +11,8 @@ use gtk::gdk;
 use kaeri_i18n::t;
 use kaeri_model::reading::ChapterRow;
 
+use super::credits::CreditBlock;
+
 /// The marker's height (the reader board's divider).
 const MARKER: i32 = 168;
 
@@ -18,6 +20,9 @@ const MARKER: i32 = 168;
 struct Gone {
     /// Its chapter line, for the group while the window is on it.
     line: String,
+    /// Its credit pages above its first image and after its last, as they were.
+    lead: Option<CreditBlock>,
+    tail: Option<CreditBlock>,
     images: gtk::Box,
     frames: Vec<(gtk::Picture, f32)>,
     marker: gtk::Box,
@@ -76,10 +81,13 @@ impl Trail {
     /// Let go of every chapter above: another chapter opened, or the reader closed.
     pub fn clear(&self) {
         for gone in self.gone.borrow_mut().drain(..) {
+            for block in [&gone.lead, &gone.tail].into_iter().flatten() {
+                self.above.remove(&block.widget);
+            }
             self.above.remove(&gone.images);
             self.above.remove(&gone.marker);
         }
-        self.show_next(None, None);
+        self.show_next(None, None, None);
         self.set_lead(None);
     }
 
@@ -88,14 +96,20 @@ impl Trail {
     }
 
     /// The marker at the foot for `next`, or none: the open chapter is the last, or it is not a
-    /// strip, and the end page has the foot.
-    pub fn show_next(&self, next: Option<&ChapterRow>, source: Option<&str>) {
+    /// strip, and the end page has the foot. `credits` is the line naming the credit pages
+    /// skipped at the open chapter's end, with Show.
+    pub fn show_next(
+        &self,
+        next: Option<&ChapterRow>,
+        source: Option<&str>,
+        credits: Option<&gtk::Widget>,
+    ) {
         let old = self.marker.borrow_mut().take();
         if let Some(old) = old {
             self.foot.remove(&old);
         }
         if let Some(next) = next {
-            let marker = marker(next, source);
+            let marker = marker(next, source, credits);
             self.foot.prepend(&marker);
             self.marker.replace(Some(marker));
         }
@@ -113,7 +127,14 @@ impl Trail {
     /// The marker crossed the middle: the open chapter's images and its marker join the trail,
     /// in the place they had, and the foot keeps only the plate until the next chapter's images
     /// take its room.
-    pub fn take(&self, line: String, strip: &gtk::Box, frames: Vec<(gtk::Picture, f32)>) {
+    pub fn take(
+        &self,
+        line: String,
+        strip: &gtk::Box,
+        frames: Vec<(gtk::Picture, f32)>,
+        lead: Option<CreditBlock>,
+        tail: Option<CreditBlock>,
+    ) {
         let images = gtk::Box::new(gtk::Orientation::Vertical, strip.spacing());
         images.set_halign(gtk::Align::Center);
         while let Some(child) = strip.first_child() {
@@ -126,9 +147,15 @@ impl Trail {
         if marker.parent().is_some() {
             self.foot.remove(&marker);
         }
+        if let Some(lead) = &lead {
+            self.above.append(&lead.widget);
+        }
         self.above.append(&images);
+        if let Some(tail) = &tail {
+            self.above.append(&tail.widget);
+        }
         self.above.append(&marker);
-        self.gone.borrow_mut().push(Gone { line, images, frames, marker });
+        self.gone.borrow_mut().push(Gone { line, lead, tail, images, frames, marker });
     }
 
     /// Every image above at the column's width with the strip's gap, the markers and the plate
@@ -141,6 +168,9 @@ impl Trail {
                 picture.set_size_request(column, h);
             }
             gone.marker.set_size_request(column, MARKER);
+            for block in [&gone.lead, &gone.tail].into_iter().flatten() {
+                block.size(column);
+            }
         }
         if let Some(marker) = self.marker.borrow().as_ref() {
             marker.set_size_request(column, MARKER);
@@ -167,28 +197,32 @@ impl Trail {
         for gone in self.gone.borrow().iter() {
             let images = gone_height(gone);
             let marker = f64::from(tall(&gone.marker));
-            if middle < y + images + marker / 2.0 {
+            let lead = gone.lead.as_ref().map_or(0.0, CreditBlock::height);
+            let tail = gone.tail.as_ref().map_or(0.0, CreditBlock::height);
+            if middle < y + lead + images + tail + marker / 2.0 {
                 let heights: Vec<i32> =
                     gone.frames.iter().map(|(p, _)| p.height_request()).collect();
                 let (image, _) =
-                    super::strip_place_of(&heights, gone.images.spacing(), top - y);
+                    super::strip_place_of(&heights, gone.images.spacing(), top - y - lead);
                 return Over::Gone { line: gone.line.clone(), image, count: heights.len() };
             }
-            y += images + marker;
+            y += lead + images + tail + marker;
         }
         Over::Open
     }
 }
 
-/// A chapter's images with the gaps between them.
+/// A chapter's images with the gaps between them, and its credit pages.
 fn gone_height(gone: &Gone) -> f64 {
     let n = gone.frames.len() as i32;
     let images: i32 = gone.frames.iter().map(|(p, _)| p.height_request()).sum();
-    f64::from(images + gone.images.spacing() * (n - 1).max(0))
+    let credits =
+        [&gone.lead, &gone.tail].into_iter().flatten().map(CreditBlock::height).sum::<f64>();
+    f64::from(images + gone.images.spacing() * (n - 1).max(0)) + credits
 }
 
 /// A widget's height as it will be laid out at its width.
-fn tall(widget: &impl IsA<gtk::Widget>) -> i32 {
+pub(super) fn tall(widget: &impl IsA<gtk::Widget>) -> i32 {
     let width = widget.width_request();
     let (min, natural, _, _) = widget.measure(gtk::Orientation::Vertical, width);
     widget.height_request().max(min).max(natural)
@@ -196,7 +230,7 @@ fn tall(widget: &impl IsA<gtk::Widget>) -> i32 {
 
 /// The slim marker into the next chapter: Next, its title and its facts, on the ground. It
 /// scrolls past like an image.
-fn marker(next: &ChapterRow, source: Option<&str>) -> gtk::Box {
+fn marker(next: &ChapterRow, source: Option<&str>, credits: Option<&gtk::Widget>) -> gtk::Box {
     let over = gtk::Label::new(Some(&t::reader_end_next()));
     over.add_css_class("strip-marker-next");
     over.set_xalign(0.0);
@@ -228,6 +262,10 @@ fn marker(next: &ChapterRow, source: Option<&str>) -> gtk::Box {
         facts.set_wrap(true);
         facts.set_margin_top(2);
         column.append(&facts);
+    }
+    if let Some(credits) = credits {
+        credits.set_margin_top(6);
+        column.append(credits);
     }
     let marker = gtk::Box::builder()
         .orientation(gtk::Orientation::Vertical)

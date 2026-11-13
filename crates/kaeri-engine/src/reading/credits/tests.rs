@@ -183,3 +183,60 @@ fn only_chapters_from_the_same_group_count() {
     let unknown = [theirs("1", None), theirs("2", Some("Group B"))];
     assert_eq!(credit_pages(&unknown, &[], ("3", None), &mine), mine);
 }
+
+/// Chapter `chapter`'s edge prints for 13 pages, page 12 being the group's credit page.
+fn edge_prints(chapter: u64) -> Vec<PagePrint> {
+    let story = |page: u32| PagePrint {
+        page,
+        at_end: page > 1,
+        print: 0x0123_4567_89ab_cdef
+            ^ (chapter * 4 + u64::from(page)).wrapping_mul(0x9e37_79b9_7f4a_7c15),
+    };
+    let credit = PagePrint { page: 12, at_end: true, print: 0x5555_aaaa_5555_aaaa };
+    vec![story(0), story(1), story(11), credit]
+}
+
+#[test]
+fn a_chapter_opened_with_slow_edge_pages_keeps_its_credit_page_known() {
+    let store = Store::open_in_memory().unwrap();
+    let learning = Learning { store: store.clone(), work: WORK.into(), skip: true };
+    let edges = edges(&[(0, 13)]);
+    for chapter in 8..=10 {
+        let mine = edge_prints(chapter);
+        learning.keep_and_find((&chapter.to_string(), None), (&mine, &edges), 13, 1);
+    }
+    let credit =
+        |chapter: &str| learning.find(chapter, 13).iter().map(|p| p.page).collect::<Vec<_>>();
+    assert_eq!(credit("9"), vec![12]);
+    // Chapter 10 opens again with only its first page in time.
+    let first = [edge_prints(10)[0]];
+    learning.keep_and_find(("10", None), (&first, &edges), 13, 2);
+    let tens: Vec<u32> = store
+        .page_prints(WORK)
+        .unwrap()
+        .iter()
+        .filter(|p| p.chapter == "10")
+        .map(|p| p.page)
+        .collect();
+    assert_eq!(tens, vec![0, 1, 11, 12]);
+    assert_eq!(credit("9"), vec![12]);
+    assert_eq!(credit("10"), vec![12]);
+}
+
+#[test]
+fn a_print_kept_for_a_page_no_longer_at_an_edge_goes() {
+    let store = Store::open_in_memory().unwrap();
+    let learning = Learning { store: store.clone(), work: WORK.into(), skip: true };
+    learning.keep_and_find(("10", None), (&edge_prints(10), &edges(&[(0, 13)])), 13, 1);
+    // The chapter has 20 pages now, and only its first came in time.
+    let first = [edge_prints(10)[0]];
+    learning.keep_and_find(("10", None), (&first, &edges(&[(0, 20)])), 20, 2);
+    let tens: Vec<(u32, bool)> = store
+        .page_prints(WORK)
+        .unwrap()
+        .iter()
+        .filter(|p| p.chapter == "10")
+        .map(|p| (p.page, p.at_end))
+        .collect();
+    assert_eq!(tens, vec![(0, false), (1, false)]);
+}

@@ -1537,6 +1537,15 @@ impl Shell {
                         &format!("{}:{}", back.id.get(), back.episode), // i18n-skip
                     );
                 }
+                // A download that fails before it starts (the source can't list the chapters,
+                // or no longer has one) has no row to say so on: a notice says why.
+                Event::Reading(kaeri_model::reading::ReadingEvent::Failed {
+                    about: kaeri_model::reading::ReadingAbout::Downloads,
+                    failure,
+                }) => {
+                    let reason = crate::reading::failure(failure);
+                    shell.ctx.alert(&t::read_download_not_started(&reason));
+                }
                 Event::Authorize { url, .. } => shell.open_url(url),
                 Event::DeviceCode(prompt) => {
                     pages::accounts::device_code(&shell.ctx, prompt.as_ref())
@@ -2242,6 +2251,9 @@ fn account_row(ctx: &Rc<Ctx>) -> gtk::ListBoxRow {
                     let waiting = state.outbox;
                     status.set_label(&if known.syncing() {
                         t::accounts_sync_running()
+                    } else if state.needs_reauth {
+                        // Its queue goes nowhere until then, so it is not counted as waiting.
+                        t::accounts_state_expired_short()
                     } else if waiting > 0 {
                         t::shell_changes_waiting(i64::from(waiting))
                     } else if state.user.is_some() {

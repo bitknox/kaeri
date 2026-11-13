@@ -4,6 +4,10 @@
 //! The policy crosses once as data and [`eink_paint`] decides each paint on the app's thread, so a
 //! page turn or a list page never waits on a round trip through the engine. The app's refresh
 //! controller turns a [`Refresh`] into the vendor's call; with no hook it draws normally.
+//!
+//! Out of the box the device decides: the policy asks for no full refresh, so the panel follows
+//! its own configuration (the vendor's per-app mode, the firmware's defaults). Full refreshes are
+//! the person's choice in the Refresh rows, and Clean screen asks for one by hand.
 
 /// What Android says about the device and its screen, sent once at start. Named for its
 /// screen so the command that carries it keeps the name `DeviceFacts`.
@@ -30,7 +34,8 @@ pub struct ScreenFacts {
     /// `Display.isWideColorGamut()`: colour on the vendor's own devices.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub wide_colour_gamut: bool,
-    /// The refresh hooks that resolved: "onyx", "ntx", "rockchip".
+    /// The refresh hooks that resolved: "onyx", "ntx", "rockchip", and "onyx-modes" when the
+    /// Onyx calls that set a view's update mode resolved.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub hooks: Vec<String>,
     #[cfg_attr(feature = "ffi", uniffi(default))]
@@ -52,6 +57,9 @@ pub struct EinkProfile {
     /// The family's refresh hook resolved: the Refresh rows and Clean screen show.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub refresh_hook: bool,
+    /// The family's own update modes can be set for a view: Screen mode offers [`PANEL_MODES`].
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub panel_modes: bool,
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub page_buttons: bool,
     /// False: pictures stay in colour and the amber accent waits for a yes.
@@ -124,6 +132,13 @@ impl NovelSupport {
     }
 }
 
+/// Screen mode's choices where the vendor's update modes can be set: the device's own setting
+/// first, then the panel's modes from cleanest to quickest.
+pub const PANEL_MODES: &[&str] = &["device", "hd", "regal", "balanced", "fast"];
+
+/// Screen mode's choices on Gallery 3: its colour update speeds.
+pub const GALLERY_SPEEDS: &[&str] = &["standard", "fast", "best"];
+
 /// Gallery 3's colour update speed.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
@@ -134,18 +149,18 @@ pub enum GallerySpeed {
     Best,
 }
 
-/// The refresh settings, crossed once and again when one changes.
+/// The refresh settings, crossed once and again when one changes. Each full refresh is opt-in.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Record))]
 pub struct EinkPolicy {
     pub panel: EinkPanel,
-    /// A full refresh on every image page.
+    /// A full refresh on every image page. Off by default.
     pub image_full: bool,
-    /// A full refresh every this many text pages; 0 never.
+    /// A full refresh every this many text pages; 0 never, the default.
     pub text_every: u8,
     /// The same on the Dark look.
     pub text_every_dark: u8,
-    /// A full refresh every this many list pages; 0 never.
+    /// A full refresh every this many list pages; 0 never, the default.
     pub list_every: u8,
     pub gallery_speed: GallerySpeed,
     /// The look is dark.
@@ -154,18 +169,27 @@ pub struct EinkPolicy {
 }
 
 impl EinkPolicy {
-    /// The e-ink board's defaults for `panel`: full on every image page, a full every sixth text
-    /// page (fourth on Dark), every fifth list page (third on Kaleido).
+    /// The defaults for `panel`: no full refresh, so the device's own configuration decides how
+    /// the panel clears.
     pub const fn defaults(panel: EinkPanel) -> Self {
         Self {
             panel,
-            image_full: true,
-            text_every: 6,
-            text_every_dark: 4,
-            list_every: if matches!(panel, EinkPanel::Kaleido3) { 3 } else { 5 },
+            image_full: false,
+            text_every: 0,
+            text_every_dark: 0,
+            list_every: 0,
             gallery_speed: GallerySpeed::Standard,
             dark: false,
         }
+    }
+
+    /// The person turned on a full refresh for some kind of page. Only then does closing the
+    /// chrome or reaching a chapter's end clear the panel too.
+    pub const fn any_full(self) -> bool {
+        self.image_full
+            || self.text_every > 0
+            || self.text_every_dark > 0
+            || self.list_every > 0
     }
 }
 
@@ -249,7 +273,9 @@ pub fn eink_paint(policy: EinkPolicy, counter: EinkCounter, paint: EinkPaint) ->
         EinkPaint::ListPage { covers } => {
             every(policy.list_every, if covers { Refresh::Partial } else { Refresh::Fast })
         }
-        EinkPaint::ChromeClose | EinkPaint::EndPage | EinkPaint::Clean => full(),
+        EinkPaint::Clean => full(),
+        EinkPaint::ChromeClose | EinkPaint::EndPage if policy.any_full() => full(),
+        EinkPaint::ChromeClose | EinkPaint::EndPage => keep(Refresh::Partial),
         EinkPaint::SheetChange => keep(Refresh::Region),
         EinkPaint::ChromeOpen | EinkPaint::Press | EinkPaint::Waiting => keep(Refresh::Fast),
     }
@@ -271,10 +297,45 @@ mod tests {
             .collect()
     }
 
+    /// A person who turned every full refresh on: every image page, every sixth text page
+    /// (fourth on Dark), every third list page.
+    fn opted_in(panel: EinkPanel) -> EinkPolicy {
+        EinkPolicy {
+            image_full: true,
+            text_every: 6,
+            text_every_dark: 4,
+            list_every: 3,
+            ..EinkPolicy::defaults(panel)
+        }
+    }
+
     #[test]
-    fn text_pages_go_full_every_sixth_and_every_fourth_on_dark() {
+    fn out_of_the_box_the_device_decides_and_only_clean_screen_is_full() {
+        for panel in [EinkPanel::Grey, EinkPanel::Kaleido3, EinkPanel::UnknownColour] {
+            let policy = EinkPolicy::defaults(panel);
+            assert!(!policy.any_full());
+            let paints = [
+                EinkPaint::ImagePage { colour: true },
+                EinkPaint::TextPage,
+                EinkPaint::ListPage { covers: true },
+                EinkPaint::ListPage { covers: false },
+                EinkPaint::ChromeOpen,
+                EinkPaint::ChromeClose,
+                EinkPaint::EndPage,
+                EinkPaint::SheetChange,
+            ];
+            let many: Vec<EinkPaint> = paints.iter().copied().cycle().take(80).collect();
+            assert!(!run(policy, &many).contains(&Refresh::Full), "{panel:?}");
+            let dark = EinkPolicy { dark: true, ..policy };
+            assert!(!run(dark, &[EinkPaint::TextPage; 20]).contains(&Refresh::Full));
+            assert_eq!(run(policy, &[EinkPaint::Clean]), [Refresh::Full]);
+        }
+    }
+
+    #[test]
+    fn text_pages_go_full_every_sixth_and_every_fourth_on_dark_when_asked() {
         let text = [EinkPaint::TextPage; 12];
-        let grey = EinkPolicy::defaults(EinkPanel::Grey);
+        let grey = opted_in(EinkPanel::Grey);
         let fulls: Vec<usize> = run(grey, &text)
             .iter()
             .enumerate()
@@ -288,8 +349,8 @@ mod tests {
     }
 
     #[test]
-    fn images_chrome_and_lists_follow_the_board() {
-        let grey = EinkPolicy::defaults(EinkPanel::Grey);
+    fn images_chrome_and_lists_follow_the_rows_turned_on() {
+        let grey = opted_in(EinkPanel::Grey);
         assert_eq!(
             run(grey, &[EinkPaint::TextPage, EinkPaint::ImagePage { colour: false }]),
             [Refresh::Partial, Refresh::Full]
@@ -298,10 +359,15 @@ mod tests {
             run(grey, &[EinkPaint::ChromeOpen, EinkPaint::ChromeClose, EinkPaint::EndPage]),
             [Refresh::Fast, Refresh::Full, Refresh::Full]
         );
-        let kaleido = EinkPolicy::defaults(EinkPanel::Kaleido3);
-        let lists = run(kaleido, &[EinkPaint::ListPage { covers: true }; 3]);
+        let lists =
+            run(opted_in(EinkPanel::Kaleido3), &[EinkPaint::ListPage { covers: true }; 3]);
         assert_eq!(lists, [Refresh::Partial, Refresh::Partial, Refresh::Full]);
-        assert_eq!(EinkPolicy::defaults(EinkPanel::Grey).list_every, 5);
+        // Only lists turned on: closing the chrome clears too, picture pages stay partial.
+        let lists_only = EinkPolicy { list_every: 5, ..EinkPolicy::defaults(EinkPanel::Grey) };
+        assert_eq!(
+            run(lists_only, &[EinkPaint::ImagePage { colour: false }, EinkPaint::ChromeClose]),
+            [Refresh::Partial, Refresh::Full]
+        );
         let gallery = EinkPolicy::defaults(EinkPanel::Gallery3);
         assert_eq!(
             run(

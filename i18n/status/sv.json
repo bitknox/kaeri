@@ -6354,6 +6354,111 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "eink-tap-auto-note": {
+    "source": "831958758932",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-11",
+    "flags": [
+      "The layout names Sides and L shape must match reader-tap-sides and reader-tap-l-shape, which are not drafted yet"
+    ]
+  },
+  "eink-tap-both-next-flipped-note": {
+    "source": "b9e718ed2b65",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-11"
+  },
+  "eink-tap-both-next-note": {
+    "source": "c545a6a1d756",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-11"
+  },
+  "eink-tap-l-shape-bottom-left-note": {
+    "source": "b6b71621bc16",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-11"
+  },
+  "eink-tap-l-shape-bottom-right-note": {
+    "source": "03c29e6639f8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-11"
+  },
+  "eink-tap-l-shape-top-left-note": {
+    "source": "9e69975108ec",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-11"
+  },
+  "eink-tap-l-shape-top-right-note": {
+    "source": "3d7d76d57895",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-11"
+  },
+  "eink-tap-off-keys-note": {
+    "source": "1ddd5f486191",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-11"
+  },
+  "eink-tap-off-note": {
+    "source": "d7bc10b93016",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-11"
+  },
+  "eink-tap-sides-left-note": {
+    "source": "be4afd57d175",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-11"
+  },
+  "eink-tap-sides-right-note": {
+    "source": "aab758c61387",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-11"
+  },
+  "eink-tap-sides-wide-left-note": {
+    "source": "e6883942c41d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-11"
+  },
+  "eink-tap-sides-wide-right-note": {
+    "source": "c6ff0fad9827",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-11"
+  },
+  "eink-tap-top-bottom-flipped-note": {
+    "source": "bbf323539192",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-11"
+  },
+  "eink-tap-top-bottom-note": {
+    "source": "4fc906ef5cb8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-11"
+  },
+  "eink-tap-wide-next-flipped-note": {
+    "source": "c417ec8f05a8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-11"
+  },
+  "eink-tap-wide-next-note": {
+    "source": "ce93f1c42477",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-11"
+  },
   "eink-turn-to-continue": {
     "source": "c3d82ba03295",
     "state": "draft",
@@ -11289,12 +11394,6 @@
   },
   "linux-reader-page-of": {
     "source": "3a1e76c345ee",
-    "state": "draft",
-    "by": "opus",
-    "at": "2026-11-08"
-  },
-  "linux-reader-page-plate": {
-    "source": "2bd90a7c5733",
     "state": "draft",
     "by": "opus",
     "at": "2026-11-08"
@@ -20681,10 +20780,10 @@
     "at": "2026-11-07"
   },
   "reader-chapter-pages": {
-    "source": "47f9179a6d15",
+    "source": "6facfb38e6ae",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-11"
   },
   "reader-chapter-read": {
     "source": "740d542bbe69",
@@ -22192,6 +22291,12 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "reader-tap-layout-spoken": {
+    "source": "6b0350ef349b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-11"
+  },
   "reader-tap-off": {
     "source": "302cbb19bf9a",
     "state": "draft",
@@ -22288,26 +22393,8 @@
     "by": "agent",
     "at": "2026-11-07"
   },
-  "reader-zone-back": {
-    "source": "c16e00a7a8b2",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
-  },
   "reader-zone-controls": {
     "source": "83cd32b685cc",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
-  },
-  "reader-zone-forward": {
-    "source": "9fc3568ec862",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
-  },
-  "reader-zone-menu": {
-    "source": "6d8c02aee480",
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
@@ -35934,13 +36021,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Download"
-  },
-  "title-synopsis-hint": {
-    "source": "0a81680c290e",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Shows the whole synopsis"
   },
   "title-tags": {
     "source": "03aa3cfb08df",

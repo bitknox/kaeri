@@ -72,10 +72,11 @@ fn too_deep(text: &str, max: usize) -> bool {
     false
 }
 
-/// Whether `text` looks like an Atom feed.
+/// Whether `text` looks like an Atom feed: `<feed` within its first 2 KB. The window is
+/// counted in bytes, so it may end inside a letter; it is searched as bytes for that reason.
 pub fn is_feed(text: &str) -> bool {
-    let head = &text[..text.len().min(2048)];
-    head.contains("<feed")
+    let head = &text.as_bytes()[..text.len().min(2048)];
+    head.windows(b"<feed".len()).any(|w| w == b"<feed")
 }
 
 /// Read an Atom/OPDS document. Hrefs are made absolute against `base`.

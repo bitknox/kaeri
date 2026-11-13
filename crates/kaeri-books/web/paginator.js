@@ -17,8 +17,10 @@
 //   page      {spine, page, pages, pos, how, last}         a turn; forward as NovelAt
 //   layout    {spine, page, pages}                         laid out again (settings, resize);
 //                                                          the place is unchanged, nothing to forward
-//   end       {spine}                                      a turn past the last page
-//   start     {spine}                                      a turn before the first page
+//   end       {spine}                                      a turn past the last page, or past a
+//                                                          scrolled document's foot
+//   start     {spine}                                      a turn before the first page, or a
+//                                                          scrolled document's top
 //   link      {href, internal, note}                       a link was tapped; nothing was followed
 //   tap       {x, y}                                       a tap off any link, as fractions of the view,
 //                                                          that the page did not turn on (see input)
@@ -442,15 +444,19 @@
 
   function goTo(p, how) { show(p); return turned(how || 'jump'); }
 
+  // A scrolled document's foot and top: a turn there goes on past it, as a page turn does.
+  function atFoot() { return window.scrollY + vh() >= scroller().scrollHeight - 2; }
+  function atTop() { return window.scrollY <= 1; }
+
   function next(how) {
-    if (state.scrolled) { window.scrollBy(0, Math.round(vh() * 0.9)); return settle(how || 'key'); }
-    if (state.page + 1 >= state.pages) { post({ type: 'end', spine: S.spine }); return null; }
+    if (state.scrolled && !atFoot()) { window.scrollBy(0, Math.round(vh() * 0.9)); return settle(how || 'key'); }
+    if (state.scrolled || state.page + 1 >= state.pages) { post({ type: 'end', spine: S.spine }); return null; }
     return goTo(state.page + 1, how || 'turn');
   }
 
   function prev(how) {
-    if (state.scrolled) { window.scrollBy(0, -Math.round(vh() * 0.9)); return settle(how || 'key'); }
-    if (state.page <= 0) { post({ type: 'start', spine: S.spine }); return null; }
+    if (state.scrolled && !atTop()) { window.scrollBy(0, -Math.round(vh() * 0.9)); return settle(how || 'key'); }
+    if (state.scrolled || state.page <= 0) { post({ type: 'start', spine: S.spine }); return null; }
     return goTo(state.page - 1, how || 'turn');
   }
 

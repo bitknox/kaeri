@@ -94,7 +94,9 @@ reader-volume = Tập { $volume }
 reader-chapter-in-progress = Trang { $page }/{ $total }
 reader-chapter-read = Đã đọc
 reader-chapter-new = mới
-reader-chapter-pages = { $pages } trang
+reader-chapter-pages = { $pages ->
+   *[other] { $pages } trang
+ }
 reader-offline-line = Ngoại tuyến. Các chương đã tải vẫn mở được.
 reader-menu-go = Đi
 reader-menu-next-page = Trang sau
@@ -116,8 +118,5 @@ reader-key-step = Bước phím
 reader-key-step-panel = Khung tranh
 reader-key-step-screen = Màn hình
 reader-strip-gap = Khoảng cách giữa ảnh
-reader-zone-back = Lùi
-reader-zone-forward = Tiến
-reader-zone-menu = Menu
 reader-pages-range = { $from }–{ $to }
 send-failed-offline = Hãy thử lại khi bạn có mạng.

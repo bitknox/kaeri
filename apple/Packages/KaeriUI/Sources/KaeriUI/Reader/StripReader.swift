@@ -20,10 +20,13 @@ struct StripReader: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.readerPaper) private var paper
+    @Environment(\.dynamicTypeSize) private var typeSize
     @ScaledMetric(relativeTo: .title2) private var markerHeight: CGFloat = 168
     @State private var position = ScrollPosition()
     @State private var offsetY: CGFloat = 0
     @State private var restoring = true
+    /// Where the restore sent the scroll, so a scroll it did not make ends it.
+    @State private var restored = RestoreMark()
     /// A jump is scrolling: the places it passes are not reported, and where it lands goes to the
     /// engine as the person's jump.
     @State private var jumping = false
@@ -40,8 +43,31 @@ struct StripReader: View {
     @State private var pinch: CGFloat = 1
     @State private var pinchAt: CGPoint = .zero
     @State private var pinching = false
+    /// The pinch gesture is live. It goes back to false however the gesture stops, cancelled too.
+    @GestureState private var magnifying = false
     @State private var offsetX: CGFloat = 0
     @State private var contentHeight: CGFloat = 0
+    /// The row at the top of the screen, where it sat and how far into it the screen's top was.
+    /// Rows above it that change height, images landing taller or shorter than their guess, move
+    /// it, and the scroll follows it so what is on screen stays put.
+    @State private var anchor: Anchor?
+    @State private var phase: ScrollPhase = .idle
+    /// The person's own last move went down the strip: only that passes the open chapter's
+    /// marker. A scroll the strip makes itself, to follow rows that changed height, to restore a
+    /// place or to land a jump, never does.
+    @State private var goingOn = false
+    /// The screen's height step the top of the screen is in. Rows a screen above it to two
+    /// below are drawn; the rest is room of their height, so every row sits where `rows` puts it.
+    @State private var band = 0
+
+    struct Anchor: Equatable {
+        var id: String
+        var top: CGFloat
+        /// How far into the row, from 0 to 1.
+        var into: CGFloat
+        /// How far past the row's foot, in points: the row above the lead holds a place in it.
+        var past: CGFloat = 0
+    }
 
     private struct Metrics: Equatable {
         var x: CGFloat
@@ -55,10 +81,14 @@ struct StripReader: View {
 
     /// One row of the scroll, where it sits and how tall it is, so the place in it is worked out
     /// without measuring.
-    private struct Row: Identifiable {
+    struct Row: Identifiable {
         enum Kind {
             case image(chapter: String, part: LeafPart)
-            case marker(next: ChapterRow, source: String?)
+            /// Credit pages the engine skipped where they were: a 44 point line while skipped,
+            /// each image under its caption once brought back.
+            case credits(chapter: String, pages: [CreditPage])
+            /// Into `next`, after `chapter`, whose pages skipped at its end it names.
+            case marker(next: ChapterRow, source: String?, chapter: String)
             /// Under the marker until the next chapter's images come: its first image when the
             /// engine made it, over the page plate.
             case lead
@@ -74,11 +104,12 @@ struct StripReader: View {
 
         var isImage: Bool { if case .image = kind { true } else { false } }
         var isMarker: Bool { if case .marker = kind { true } else { false } }
+        var isLead: Bool { if case .lead = kind { true } else { false } }
     }
 
     private var parts: [LeafPart] { model.leaves.filter { !$0.endPage }.flatMap(\.parts) }
     private var chapter: String { model.view?.chapter.id ?? "" }
-    private var next: ChapterRow? { model.end?.next ?? model.view?.next }
+    private var next: ChapterRow? { model.endNext }
     /// The strip ran on and the next chapter's images are not here yet.
     private var waiting: Bool { model.flowing != nil || (!model.trail.chapters.isEmpty && parts.isEmpty) }
     /// Paper mode and Reduce Motion jump instead of scrolling.
@@ -122,22 +153,38 @@ struct StripReader: View {
             rows.append(Row(id: id, kind: kind, top: y, height: h, trail: trail))
             y += h
         }
-        for (n, past) in model.trail.chapters.enumerated() {
-            for part in past.parts {
-                add("\(past.id)#\(part.page)", .image(chapter: past.id, part: part), height(of: part, chapter: past.id) + spacing, n)
+        // A chapter's images with its credit pages where the engine took them out: a group
+        // before the image it sat before, and those at the end after the last image once shown.
+        func images(_ id: String, _ list: [LeafPart], _ trail: Int?) {
+            var groups = creditGroups(id, count: list.count)
+            for part in list {
+                for anchor in groups.keys.sorted() where anchor <= Int(part.page) {
+                    let pages = groups.removeValue(forKey: anchor) ?? []
+                    add("\(id)~\(anchor)", .credits(chapter: id, pages: pages), creditsHeight(pages, chapter: id), trail)
+                }
+                add("\(id)#\(part.page)", .image(chapter: id, part: part), height(of: part, chapter: id) + spacing, trail)
             }
-            add("\(past.id)>", .marker(next: past.next, source: past.nextSource), markerHeight, n)
+            let end = groups.values.flatMap { $0 }.filter { model.isRevealed($0, chapter: id) }.sorted { $0.page < $1.page }
+            if !end.isEmpty {
+                add("\(id)~end", .credits(chapter: id, pages: end), creditsHeight(end, chapter: id), trail) // i18n-skip: a row id
+            }
+        }
+        for (n, past) in model.trail.chapters.enumerated() {
+            images(past.id, past.parts, n)
+            add("\(past.id)>", .marker(next: past.next, source: past.nextSource, chapter: past.id), markerHeight(past.id), n)
         }
         if waiting {
             add("lead", .lead, leadHeight, nil) // i18n-skip: a row id
             return rows
         }
-        for part in parts {
-            add("\(chapter)#\(part.page)", .image(chapter: chapter, part: part), height(of: part, chapter: chapter) + spacing, nil)
-        }
         guard !parts.isEmpty else { return rows }
-        if let next {
-            add("\(chapter)>", .marker(next: next, source: model.end?.nextSource), markerHeight, nil)
+        images(chapter, parts, nil)
+        if model.flowFailure != nil {
+            // The next chapter would not open: the end page takes the marker's and the lead's
+            // room, so the strip keeps its length and nothing on screen moves.
+            add("\(chapter)!", .foot, max(size.height * 0.8, 420, markerHeight(chapter) + leadHeight), nil)
+        } else if let next {
+            add("\(chapter)>", .marker(next: next, source: model.end?.nextSource, chapter: chapter), markerHeight(chapter), nil)
             add("lead", .lead, leadHeight, nil) // i18n-skip: a row id
         } else {
             add("\(chapter)!", .foot, max(size.height * 0.8, 420), nil)
@@ -145,16 +192,60 @@ struct StripReader: View {
         return rows
     }
 
+    /// A chapter's credit pages by the image they sat before; those at the end under the count.
+    private func creditGroups(_ chapter: String, count: Int) -> [Int: [CreditPage]] {
+        var groups: [Int: [CreditPage]] = [:]
+        for credit in model.chapterCredits(chapter) {
+            let anchor = model.anchor(of: credit, in: chapter)
+            groups[credit.atEnd ? max(anchor, count) : anchor, default: []].append(credit)
+        }
+        return groups
+    }
+
+    /// The line while any of the group is skipped, and each page brought back under its caption.
+    /// A page kept loses its caption at once; it becomes an image of the chapter with the engine's
+    /// next layout.
+    private func creditsHeight(_ pages: [CreditPage], chapter: String) -> CGFloat {
+        var h: CGFloat = pages.contains { !model.isRevealed($0, chapter: chapter) } ? lineHeight : 0
+        for credit in pages where model.isRevealed(credit, chapter: chapter) {
+            h += (isKeeping(credit, chapter: chapter) ? 0 : lineHeight) + creditHeight(credit) + spacing
+        }
+        return h
+    }
+
+    /// The credit line and captions: 44 points, and room for two lines at accessibility sizes,
+    /// where they wrap (they stop growing at accessibility1).
+    private var lineHeight: CGFloat { typeSize.isAccessibilitySize ? 68 : 44 }
+
+    private func isKeeping(_ credit: CreditPage, chapter: String) -> Bool {
+        model.keeping.map { $0.chapter == chapter && $0.credit.page == credit.page } ?? false
+    }
+
+    private func creditHeight(_ credit: CreditPage) -> CGFloat {
+        let w = CGFloat(credit.file.crop?.width ?? credit.file.width)
+        let h = CGFloat(credit.file.crop?.height ?? credit.file.height)
+        return w > 0 ? (column * h / w).rounded() : (column * 1.5).rounded()
+    }
+
+    /// The marker, with room for the line naming the pages skipped at the end of the chapter before it.
+    private func markerHeight(_ chapter: String) -> CGFloat {
+        markerHeight + (model.endSkipped(chapter).isEmpty ? 0 : 32)
+    }
+
     var body: some View {
         let rows = self.rows
+        let shown = drawn(rows)
         ScrollView(mac ? Axis.Set.vertical : [.vertical, .horizontal], showsIndicators: false) {
-            LazyVStack(spacing: 0) {
-                ForEach(rows) { row in
+            // Not a lazy stack: it guesses the height of the rows it has not drawn, so a scroll to
+            // a place far down showed another image than the one the place names.
+            VStack(spacing: 0) {
+                Color.clear.frame(height: shown.first?.top ?? 0)
+                ForEach(shown) { row in
                     view(of: row).frame(height: row.height)
                 }
             }
             // As wide as the screen while fitted, so it only scrolls sideways once zoomed.
-            .frame(width: max(size.width, column))
+            .frame(width: max(size.width, column), height: rows.last.map { $0.top + $0.height } ?? 0, alignment: .top)
         }
         .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
         .scrollPosition($position)
@@ -167,6 +258,7 @@ struct StripReader: View {
             track(metrics)
         }
         .onScrollPhaseChange { _, phase in
+            self.phase = phase
             if phase == .interacting { restoring = false; model.hideChrome() }
         }
         #if os(iOS)
@@ -177,6 +269,7 @@ struct StripReader: View {
         )
         .simultaneousGesture(
             MagnifyGesture()
+                .updating($magnifying) { _, live, _ in live = true }
                 .onChanged { value in
                     if !pinching {
                         pinching = true
@@ -190,6 +283,12 @@ struct StripReader: View {
                     settle(to: zoom * pinch, at: pinchAt)
                 }
         )
+        // A pinch the system cancels never ends: settle it here so the strip scrolls and zooms again.
+        .onChange(of: magnifying) { _, live in
+            guard !live, pinching else { return }
+            pinching = false
+            settle(to: zoom * pinch, at: pinchAt)
+        }
         #else
         .simultaneousGesture(SpatialTapGesture().onEnded { _ in onTap() })
         #endif
@@ -212,6 +311,7 @@ struct StripReader: View {
             pinch = 1
             lead = nil
             restoring = true
+            restored.target = 0
             position.scrollTo(y: 0)
         }
         .onChange(of: next.flatMap { model.previews[$0.id] }?.path) { _, _ in keepLead() }
@@ -220,9 +320,23 @@ struct StripReader: View {
             restoring = true
             restore()
         }
+        // Scrolled past the marker of a chapter still landing: it flows on once its end is real.
+        .onChange(of: model.stripEndIn) { _, settled in
+            if settled, goingOn { flowIfPast(y: offsetY, height: size.height) }
+        }
         .onChange(of: model.stripRelaid) { _, _ in
             restoring = true
             restore()
+        }
+        // The line comes after the images; while the place is still being restored it moves with them.
+        .onChange(of: model.chapterCredits(chapter).count) { _, _ in if restoring { restore() } }
+        // Show from a marker or the end puts the pages back above it and scrolls to them.
+        .onChange(of: model.revealed) { old, new in
+            guard let key = new.subtracting(old).first,
+                  model.chapterCredits(key.chapter).contains(where: { $0.page == key.page && $0.atEnd }),
+                  let row = rows.first(where: { $0.id == "\(key.chapter)~end" }) else { return } // i18n-skip: a row id
+            restoring = false
+            withAnimation(instant ? nil : .standard) { position.scrollTo(y: row.top) }
         }
         .onChange(of: model.jump?.tick) { _, _ in
             guard let index = model.jump?.index else { return }
@@ -266,6 +380,8 @@ struct StripReader: View {
         restoring = false
         let before = rows
         let oldColumn = column
+        // The zoom keeps the place under the fingers, not the top row.
+        anchor = nil
         // The row under the point and how far into it, and how far across the column.
         let y = offsetY + point.y
         let x = offsetX + point.x - (max(size.width, oldColumn) - oldColumn) / 2
@@ -294,6 +410,7 @@ struct StripReader: View {
         let images = rows.filter { $0.isImage && $0.trail == trail }
         guard !images.isEmpty else { return }
         let image = min(max(index, 0), images.count - 1)
+        goingOn = false
         jumping = true
         landing = image
         withAnimation(instant ? nil : .standard) {
@@ -326,12 +443,21 @@ struct StripReader: View {
                 .onAppear {
                     if row.trail == nil, model.file(of: part, chapter: chapter) == nil { model.needPage(part.page) }
                 }
-        case .marker(let next, let source):
-            StripMarker(next: next, facts: Self.facts(next, source: source), theme: theme)
-                .frame(width: column)
+        case .credits(let chapter, let pages):
+            StripCredits(model: model, chapter: chapter, pages: pages, theme: theme, tone: tone, width: column,
+                         heights: pages.map(creditHeight), spacing: spacing, scale: scale, lineHeight: lineHeight,
+                         instant: instant)
+                .frame(width: column, height: row.height, alignment: .top)
+                .clipped()
+        case .marker(let next, let source, let chapter):
+            StripMarker(next: next, facts: Self.facts(next, source: source), theme: theme,
+                        skipped: model.endSkipped(chapter).count) {
+                withAnimation(instant ? nil : .standard) { model.showEndCredits(chapter) }
+            }
+            .frame(width: column)
         case .lead:
             ZStack(alignment: .top) {
-                PagePlate(page: 1, theme: theme, atOnce: true)
+                PagePlate(page: 1, theme: theme, atOnce: true, image: true)
                 if let lead {
                     PageImage(file: lead, longest: leadHeight * scale, tone: tone)
                         .frame(width: column, height: column * CGFloat(lead.height) / CGFloat(max(lead.width, 1)))
@@ -367,29 +493,103 @@ struct StripReader: View {
     }
 
     private func restore() {
-        let at = model.stripRestore ?? model.view?.start.strip
-        guard let at, restoring, !parts.isEmpty else { return }
+        guard let at = model.stripStart, restoring, !parts.isEmpty else { return }
         let images = rows.filter { $0.isImage && $0.trail == nil }
         guard !images.isEmpty else { return }
         let row = images[min(Int(at.image), images.count - 1)]
-        position.scrollTo(y: row.top + CGFloat(at.offset) * (row.height - spacing))
+        let y = row.top + CGFloat(at.offset) * (row.height - spacing)
+        restored.target = y
+        position.scrollTo(y: y)
     }
 
     /// The open chapter's marker is above the middle of the screen: the next chapter opens under
     /// it. True when it did.
     @discardableResult private func flowIfPast(y: CGFloat, height: CGFloat) -> Bool {
-        guard !restoring, let marker = rows.last(where: \.isMarker), marker.trail == nil,
-              y + height / 2 > marker.top + marker.height / 2 else { return false }
+        let rows = self.rows
+        guard !restoring, model.stripEndIn, let marker = rows.last(where: \.isMarker), marker.trail == nil,
+              y + height / 2 > marker.top + marker.height / 2,
+              Self.shownIn(rows, y: y, height: height, isIn: model.isIn) else { return false }
         model.flowOn()
+        guard model.flowing != nil else { return false }
+        // Into the next chapter: passing its marker takes a move of the person's own again.
+        goingOn = false
         return true
+    }
+
+    /// Every image of the open chapter on screen, from `y` down `height`, is in: none of them
+    /// is still a guess at its height.
+    static func shownIn(_ rows: [Row], y: CGFloat, height: CGFloat, isIn: (LeafPart, String) -> Bool) -> Bool {
+        rows.allSatisfy { row in
+            guard row.trail == nil, case .image(let chapter, let part) = row.kind,
+                  row.top + row.height > y, row.top < y + height else { return true }
+            return isIn(part, chapter)
+        }
+    }
+
+    /// The rows in the band around the screen, in order.
+    private func drawn(_ rows: [Row]) -> [Row] {
+        let screen = max(size.height, 1)
+        let from = CGFloat(band - 1) * screen, to = CGFloat(band + 3) * screen
+        return rows.filter { $0.top + $0.height >= from && $0.top <= to }
+    }
+
+    /// Rows above the one at the top of the screen changed height: the scroll moves with it, at
+    /// once, and the place is worked out again from there. A scroll under way, a restore or a
+    /// jump goes on as it was. True when it moved.
+    private func follow(_ rows: [Row], _ metrics: Metrics) -> Bool {
+        if let held = anchor, phase == .idle, !restoring, !jumping, landing == nil,
+           let to = Self.following(held, in: rows) {
+            anchor = Self.anchor(in: rows, at: to)
+            if abs(to - metrics.y) >= 1 {
+                position.scrollTo(y: to)
+                // The strip moved itself: the next report is not the person going on.
+                offsetY = to
+                return true
+            }
+        }
+        anchor = Self.anchor(in: rows, at: metrics.y)
+        return false
+    }
+
+    /// What holds the place at `y`: the row there and how far into it. Never the lead, which
+    /// stands in for the next chapter's first image and moves under that chapter's images once
+    /// they come: the row above it holds the place then, so the images take the lead's room
+    /// rather than the strip running on past them.
+    static func anchor(in rows: [Row], at y: CGFloat) -> Anchor? {
+        guard let row = rows.last(where: { $0.top <= y && !$0.isLead }) else { return nil }
+        let offset = y - row.top
+        if offset > row.height { return Anchor(id: row.id, top: row.top, into: 1, past: offset - row.height) }
+        return Anchor(id: row.id, top: row.top, into: offset / max(row.height, 1))
+    }
+
+    /// Where the strip scrolls to keep `anchor` in place in `rows`, when that row moved; nil
+    /// when it has not moved or is gone.
+    static func following(_ anchor: Anchor, in rows: [Row]) -> CGFloat? {
+        guard let row = rows.first(where: { $0.id == anchor.id }), row.top != anchor.top else { return nil }
+        return max(0, row.top + anchor.into * row.height + anchor.past)
     }
 
     /// Where the person is. The chapter whose rows hold the middle of the screen names the line,
     /// the image at the top is the place, and the open chapter's marker crossing the middle
     /// opens the next chapter under it.
     private func track(_ metrics: Metrics) {
+        let before = offsetY
         offsetY = metrics.y
+        // A scroll the restore did not make is the person's, whatever moved it: a finger, a
+        // pointer, the keyboard or an assistive scroll, which has no interacting phase. The place
+        // is theirs from here, and a late image no longer pulls the strip back.
+        if restored.moved(to: metrics.y, foot: metrics.content - metrics.height), restoring {
+            restoring = false
+        }
+        // Which way the person last went. The strip's own scrolls set `offsetY` where they land,
+        // so they show here as no move.
+        if !restoring, !jumping, landing == nil {
+            if metrics.y > before + 0.5 { goingOn = true } else if metrics.y < before - 0.5 { goingOn = false }
+        }
+        let step = Int((metrics.y / max(metrics.height, 1)).rounded(.down))
+        if step != band { band = step }
         let rows = self.rows
+        if follow(rows, metrics) { contentHeight = metrics.content; return }
         let middle = metrics.y + metrics.height / 2
         let markers = rows.filter(\.isMarker)
         let on = markers.first { middle < $0.top + $0.height / 2 }?.trail
@@ -403,7 +603,9 @@ struct StripReader: View {
             }
             if let landing, at == landing, !jumping { self.landing = nil }
             if on == nil, !restoring, !waiting, !jumping, landing == nil {
-                let foot = images[images.count - 1].top + images[images.count - 1].height <= metrics.y + metrics.height
+                // Only once the last image is in is the foot where the strip draws it.
+                let foot = model.stripEndIn
+                    && images[images.count - 1].top + images[images.count - 1].height <= metrics.y + metrics.height
                 // With the last image's foot in sight the chapter has been seen to its end: the
                 // place is that image, which is what counts it as read, though short credit
                 // pages above it may still hold the top of the screen.
@@ -414,7 +616,7 @@ struct StripReader: View {
             }
         }
         contentHeight = metrics.content
-        flowIfPast(y: metrics.y, height: metrics.height)
+        if goingOn { flowIfPast(y: metrics.y, height: metrics.height) }
         prepare(rows, from: metrics.y + metrics.height, to: metrics.y + metrics.height * 2)
     }
 
@@ -429,6 +631,25 @@ struct StripReader: View {
             }
             ahead.decode(file, longest: max(column, row.height - spacing) * scale)
         }
+    }
+}
+
+/// Where the strip's restore last sent the scroll and where the scroll was last seen. Not
+/// observed: it changes with every scroll and draws nothing.
+@MainActor
+final class RestoreMark {
+    var target: CGFloat?
+    private var seen: CGFloat?
+
+    /// The scroll is at `y`, with `foot` the furthest it goes. True when it moved somewhere the
+    /// restore did not send it: not to the target, and not held short of it at the foot while
+    /// the rows below are still shorter than their place needs.
+    func moved(to y: CGFloat, foot: CGFloat) -> Bool {
+        defer { seen = y }
+        guard let target, let seen, abs(y - seen) > 1 else { return false }
+        if abs(y - target) <= 2 { return false }
+        if y < target, y >= foot - 2 { return false }
+        return true
     }
 }
 
@@ -464,12 +685,12 @@ private struct StripImage: View {
     var body: some View {
         ZStack {
             if let file = model.file(of: part, chapter: chapter) {
-                if !painted { PagePlate(page: Int(part.page) + 1, theme: theme) }
+                if !painted { PagePlate(page: Int(part.page) + 1, theme: theme, image: true) }
                 PageImage(file: file, longest: longest, tone: tone) { painted = true }
             } else if let failure = model.failure(of: part, chapter: chapter) {
                 PageFailed(page: Int(part.page) + 1, failure: failure, theme: theme) { model.retry(page: part.page) }
             } else {
-                PagePlate(page: Int(part.page) + 1, theme: theme)
+                PagePlate(page: Int(part.page) + 1, theme: theme, image: true)
             }
         }
         .frame(width: width)
@@ -483,6 +704,9 @@ private struct StripMarker: View {
     let next: ChapterRow
     let facts: String
     let theme: ReaderTheme
+    /// Pages skipped at the end of the chapter before, named under the facts with Show.
+    var skipped = 0
+    var show: () -> Void = {}
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -494,10 +718,120 @@ private struct StripMarker: View {
             if !facts.isEmpty {
                 Text(facts).font(.ui(14)).foregroundStyle(theme.haze).padding(.top, 2)
             }
+            if skipped > 0 {
+                ReaderSkippedLine(count: skipped, theme: theme, show: show)
+                    .padding(.top, 14)
+            }
         }
         .padding(.horizontal, 24)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         .background(theme.ground)
-        .accessibilityElement(children: .combine)
+        // The facts read as one; the line keeps its own Show button.
+        .accessibilityElement(children: skipped > 0 ? .contain : .combine)
+    }
+}
+
+/// Credit pages in the flow of a strip. While skipped, one 44 point row on the ground names
+/// them, and the whole row is Show. Shown, each image sits under its caption, Skipped as a
+/// credit page with Not a credit page.
+private struct StripCredits: View {
+    let model: ReaderModel
+    let chapter: String
+    let pages: [CreditPage]
+    let theme: ReaderTheme
+    let tone: PageTone
+    let width: CGFloat
+    let heights: [CGFloat]
+    let spacing: CGFloat
+    let scale: CGFloat
+    let lineHeight: CGFloat
+    let instant: Bool
+
+    private var skipped: [CreditPage] { pages.filter { !model.isRevealed($0, chapter: chapter) } }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // The line and the first page's caption share one slot, so Show crossfades the line
+            // into the caption in place, with no jump.
+            ZStack {
+                if !skipped.isEmpty {
+                    line.transition(.opacity)
+                } else if let first = pages.first, model.isRevealed(first, chapter: chapter), !keeping(first) {
+                    caption(first).transition(.opacity)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: skipped.isEmpty && headless ? 0 : lineHeight)
+            ForEach(Array(pages.enumerated()), id: \.element.page) { n, credit in
+                if model.isRevealed(credit, chapter: chapter) {
+                    VStack(spacing: 0) {
+                        if n > 0, !keeping(credit) { caption(credit).transition(.opacity) }
+                        PageImage(file: credit.file, longest: max(width, heights[n]) * scale, tone: tone)
+                            .frame(width: width, height: heights[n])
+                            .clipped()
+                            .padding(.bottom, spacing)
+                            .accessibilityElement()
+                            .accessibilityLabel(L.readerCreditPageLabel)
+                            .accessibilityAddTraits(.isImage)
+                    }
+                    // The image fades in under the caption while the row grows.
+                    .transition(.opacity.animation(instant ? nil : .fadeIn))
+                }
+            }
+        }
+        // Past accessibility1 the rows would crowd the strip; they wrap up to there.
+        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+    }
+
+    /// The first page is being kept, so its caption has gone and the slot closes.
+    private var headless: Bool {
+        guard let first = pages.first else { return true }
+        return keeping(first)
+    }
+
+    /// "1 credit page skipped  Show", the whole row a button.
+    private var line: some View {
+        Button {
+            withAnimation(instant ? nil : .standard) { model.reveal(skipped, chapter: chapter) }
+        } label: {
+            (Text(L.readerCreditPagesSkipped(count: skipped.count)).font(.ui(13)).foregroundStyle(theme.haze)
+                + Text(verbatim: "  ") // i18n-skip
+                + Text(L.readerCreditShow).font(.ui(13, weight: .semibold)).foregroundStyle(theme.silk).underline())
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 16)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(theme.ground)
+                .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .pointerHover()
+        .accessibilityLabel(L.readerCreditPagesSkipped(count: skipped.count))
+        .accessibilityHint(L.readerCreditShowHint)
+    }
+
+    private func keeping(_ credit: CreditPage) -> Bool {
+        model.keeping.map { $0.chapter == chapter && $0.credit.page == credit.page } ?? false
+    }
+
+    private func caption(_ credit: CreditPage) -> some View {
+        let words = Text(L.readerCreditShown).font(.ui(13)).foregroundStyle(theme.haze)
+        let button = Button(L.readerCreditNot) {
+            withAnimation(instant ? nil : .standard) { model.keepCredit(credit, chapter: chapter) }
+        }
+        .font(.ui(13, weight: .semibold)).foregroundStyle(theme.silk)
+        .underline()
+        .buttonStyle(.plain)
+        .padding(.vertical, 12).contentShape(.rect).padding(.vertical, -12)
+        .pointerHover()
+        // On one line while it fits; at large sizes the button goes under the words.
+        return ViewThatFits(in: .horizontal) {
+            HStack(spacing: 6) { words.fixedSize(); button.fixedSize() }
+            VStack(spacing: 2) { words.multilineTextAlignment(.center); button }
+        }
+        .padding(.horizontal, 16)
+        .frame(maxWidth: .infinity)
+        .frame(height: lineHeight)
+        .background(theme.ground)
+        .accessibilityElement(children: .contain)
     }
 }

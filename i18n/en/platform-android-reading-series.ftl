@@ -28,3 +28,31 @@ group-menu-in = Group in { $source }
 # @only android
 # @max 24
 series-group-action = Pick a group
+
+# E-ink series page on a large panel: the text button beside the chapter order that starts
+# choosing chapters.
+# @only android
+# @max 16
+series-select = Select
+
+# E-ink series page on a large panel: the label over the person's own score, shown as "8 / 10".
+# @only android
+# @max 20
+series-fact-score = Your score
+
+# E-ink series page on a large panel: the label over the series' status, "Releasing".
+# @only android
+# @max 20
+series-fact-status = Status
+
+# E-ink series page on a large panel: the label over how often chapters come out, "Usually
+# Fridays".
+# @only android
+# @max 20
+series-fact-releases = New chapters
+
+# E-ink series page on a large panel: the state at the end of an unread chapter row that is
+# downloaded here.
+# @only android
+# @max 24
+series-row-on-device = On this { -device }

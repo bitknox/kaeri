@@ -21,7 +21,8 @@ pub enum Kept {
     Device,
 }
 
-/// Every row's line, for rows of a `medium` series read from `kept`.
+/// Every row's line, for rows of a `medium` series read from `kept`. A row read from a file on
+/// the device that no download made is marked so, as nothing of it can be downloaded.
 pub fn fill(
     volumes: &mut [VolumeGroup],
     kept: Kept,
@@ -31,7 +32,14 @@ pub fn fill(
 ) {
     for row in volumes.iter_mut().flat_map(|v| v.chapters.iter_mut()) {
         row.line = line(row, kept, medium, now, zone);
+        row.on_device = kept == Kept::Device && row.download.is_none();
     }
+}
+
+/// Where the rows of `source`'s edition are read from: the person's folders are files on this
+/// device, every other source is read from the source.
+pub fn kept_by(source: Option<&str>) -> Kept {
+    if source == Some(crate::read_sources::FOLDERS) { Kept::Device } else { Kept::Source }
 }
 
 /// A row's line: its reading state, when that happened, then what this device keeps of it. A
@@ -86,6 +94,10 @@ pub fn line(
         (Some(ChapterDownloadState::Queued), _) => parts.push(r(ReadingMsg::ReadingRowQueued)),
         (Some(ChapterDownloadState::WaitsForWifi), _) => {
             parts.push(r(ReadingMsg::ReadingRowWaitsWifi));
+        }
+        // No page count yet: the source has not answered, or a novel's chapter has none.
+        (Some(ChapterDownloadState::Downloading { total: 0, .. }), _) => {
+            parts.push(r(ReadingMsg::ReadingRowDownloadingPlain));
         }
         (Some(ChapterDownloadState::Downloading { done, total }), _) => {
             parts.push(r(ReadingMsg::ReadingRowDownloading {
@@ -234,6 +246,7 @@ mod tests {
             part_groups: Vec::new(),
             group_language: None,
             other_source: None,
+            on_device: false,
         }
     }
 
@@ -413,5 +426,54 @@ mod tests {
         let east = TimeZone::fixed(jiff::tz::offset(13));
         assert_eq!(since(NOW - 2 * 3_600), msg(ReadingMsg::ReadingAgoToday));
         assert_eq!(ago(NOW - 2 * 3_600, NOW, &east), msg(ReadingMsg::ReadingAgoYesterday));
+    }
+
+    /// A download whose page count isn't known yet, as while its source answers or for a novel's
+    /// chapter, says it downloads without counting pages.
+    #[test]
+    fn a_download_with_no_page_count_yet_counts_nothing() {
+        let utc = TimeZone::UTC;
+        let words = |row: &ChapterRow| ids(&line(row, Kept::Source, Medium::Manga, NOW, &utc));
+        let starting = ChapterRow {
+            download: Some(ChapterDownloadState::Downloading { done: 0, total: 0 }),
+            ..row(ChapterReadState::Unread)
+        };
+        assert_eq!(words(&starting), ["reading-row-downloading-plain"]);
+        let counting = ChapterRow {
+            download: Some(ChapterDownloadState::Downloading { done: 1, total: 27 }),
+            ..starting
+        };
+        assert_eq!(words(&counting), ["reading-row-downloading"]);
+    }
+
+    #[test]
+    fn a_folders_rows_are_files_on_the_device_with_nothing_to_download() {
+        assert_eq!(kept_by(Some(crate::read_sources::FOLDERS)), Kept::Device);
+        assert_eq!(kept_by(Some("plugin-example")), Kept::Source);
+        assert_eq!(kept_by(None), Kept::Source);
+
+        let utc = TimeZone::UTC;
+        let group = |rows: Vec<ChapterRow>| VolumeGroup {
+            volume: None,
+            title: None,
+            chapters: rows,
+            all_read: false,
+            flat: false,
+        };
+        let file = ChapterRow { pages: Some(19), ..row(ChapterReadState::Unread) };
+        let downloaded =
+            ChapterRow { download: Some(ChapterDownloadState::Done), ..file.clone() };
+
+        let mut folder = [group(vec![file.clone(), downloaded.clone()])];
+        fill(&mut folder, Kept::Device, Medium::Manga, NOW, &utc);
+        let rows = &folder[0].chapters;
+        assert_eq!(ids(&rows[0].line), ["reading-row-pages"], "never Not downloaded");
+        assert!(rows[0].on_device, "a folder's file offers no Download");
+        assert!(!rows[1].on_device, "a download is a download, which can be deleted");
+
+        let mut source = [group(vec![file])];
+        fill(&mut source, Kept::Source, Medium::Manga, NOW, &utc);
+        assert_eq!(ids(&source[0].chapters[0].line), ["reading-row-not-downloaded"]);
+        assert!(!source[0].chapters[0].on_device);
     }
 }

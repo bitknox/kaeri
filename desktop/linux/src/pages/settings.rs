@@ -146,7 +146,7 @@ const PANES: [Pane; 13] = [
         icon: "accessories-dictionary-symbolic", // i18n-skip
         groups: &[
             // The pane is Reading already, so its downloads group says what it is about.
-            (Group::Ahead, &[K::KeepChaptersReady, K::DeleteAfterReading]),
+            (Group::Ahead, &[K::KeepChaptersReady, K::DeleteAfterReading, K::ShowVolumes]),
             (Group::Feed, &[K::OpdsFeed, K::OpdsPort, K::OpdsPassword]),
         ],
     },
@@ -549,7 +549,10 @@ impl Inner {
                 page.add(&group);
             }
             "general" => page.add(&self.language_group()),
-            "reading" => page.add(&crate::reading::medium::settings_group(&self.ctx)),
+            "reading" => {
+                page.add(&crate::reading::medium::settings_group(&self.ctx));
+                page.add(&crate::reading::reader_defaults_group(&self.ctx));
+            }
             // The TVs paired for Play on TV moved to Devices; whether it lists TVs with
             // Chromecast built in stays with the integrations.
             "integrations" => {
@@ -811,6 +814,7 @@ impl Inner {
                 K::AskWasOpening => Some(t::settings_ask_was_opening_detail()),
                 K::ShareSkipTimes => Some(t::settings_share_skips_detail()),
                 K::CastTvs => Some(t::settings_note_cast_tvs_computer()),
+                K::ShowVolumes => Some(t::settings_show_volumes_note()),
                 K::TorrentsWhileCasting => {
                     Some(t::settings_note_torrents_while_casting_computer())
                 }

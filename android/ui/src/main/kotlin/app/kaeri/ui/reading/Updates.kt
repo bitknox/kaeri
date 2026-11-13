@@ -145,7 +145,9 @@ private fun androidx.compose.foundation.lazy.LazyListScope.updateItems(view: Upd
         item(key = "d-${day.day}", contentType = "day") {
             Box(itemMotion().readingColumn()) { DayHeading(day) }
         }
-        items(day.rows, key = { "r-${day.day}-${it.chapter.id}" }, contentType = { "row" }) { row ->
+        // A chapter's id is its key within its work: two series can both have a chapter "12" out
+        // on one day, so the work is in the row's key too.
+        items(day.rows, key = { "r-${day.day}-${it.tile.work}-${it.chapter.id}" }, contentType = { "row" }) { row ->
             Column(itemMotion().readingColumn()) {
                 HorizontalDivider(Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
                 UpdateRowView(row, actions)
@@ -184,7 +186,12 @@ private fun downloadWords(context: android.content.Context, state: ChapterDownlo
     ChapterDownloadState.Done -> context.getString(R.string.chapter_state_downloaded)
     ChapterDownloadState.Queued -> context.getString(R.string.chapter_state_queued)
     ChapterDownloadState.WaitsForWifi -> context.getString(R.string.chapter_state_wifi)
-    is ChapterDownloadState.Downloading -> Strings.chapterStateDownloading(context, state.done.toInt(), state.total.toInt())
+    // No page count yet, or a novel's chapter, which has none: nothing to count.
+    is ChapterDownloadState.Downloading -> if (state.total == 0u) {
+        context.getString(R.string.chapter_state_downloading_plain)
+    } else {
+        Strings.chapterStateDownloading(context, state.done.toInt(), state.total.toInt())
+    }
     is ChapterDownloadState.Failed -> Strings.chapterStateFailed(context, failureWords(context, state.failure))
 }
 

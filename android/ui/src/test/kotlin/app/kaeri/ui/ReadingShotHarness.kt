@@ -229,6 +229,9 @@ abstract class ReadingShotHarness {
         /** The 7 inch e-reader of the e-ink board: 674 × 896 dp. */
         const val EREADER_7 = "w674dp-h896dp-port-xhdpi"
 
+        /** A 10.3 inch e-reader at 300 dpi, as an Onyx Boox Note Air 4C: 992 × 1323 dp, the e-ink board's 10.3 inch. */
+        const val EREADER_10 = "w992dp-h1323dp-port-300dpi"
+
         /** The e-ink phone of the discovery board: 439 × 879 dp. */
         const val EINK_PHONE = "w439dp-h879dp-port-xxhdpi"
 

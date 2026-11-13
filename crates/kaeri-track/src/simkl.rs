@@ -126,7 +126,7 @@ impl SimklTracker {
 }
 
 impl Renews for SimklTracker {
-    async fn renew(&self, refresh: &str, now: i64) -> Result<TokenPair, String> {
+    async fn renew(&self, refresh: &str, now: i64) -> Result<TokenPair, kaeri_core::Error> {
         device::refresh_token(
             &self.http,
             &self.endpoints,
@@ -136,7 +136,7 @@ impl Renews for SimklTracker {
             now,
         )
         .await
-        .map_err(|e| e.to_string())
+        .map_err(|e| e.renewal("simkl"))
     }
 }
 
@@ -366,7 +366,7 @@ fn not_found(body: &serde_json::Value) -> Vec<u32> {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
 
     const HOSHIKUZU: AnilistId = AnilistId::new(154_587);
@@ -394,8 +394,8 @@ mod tests {
         serve_with(answers.into_iter().map(|answer| (200, answer)).collect()).await
     }
 
-    /// [`serve`], each answer with its own status.
-    async fn serve_with(
+    /// [`serve`], each answer with its own status. Trakt's tests serve from it too.
+    pub(crate) async fn serve_with(
         answers: Vec<(u16, &'static str)>,
     ) -> (String, tokio::task::JoinHandle<Vec<String>>) {
         use tokio::io::{AsyncReadExt, AsyncWriteExt};

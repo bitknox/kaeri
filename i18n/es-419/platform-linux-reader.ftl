@@ -70,7 +70,6 @@ linux-shortcuts-text-size = Texto más grande, más pequeño o predeterminado
 linux-shortcuts-reader-back = Volver a la página anterior a un salto
 linux-shortcuts-close-reader = Cerrar el lector
 linux-reader-names-and = { $first } y { $last }
-linux-reader-page-plate = Página { $page }
 linux-reader-open-failed = No se pudo abrir el capítulo { $chapter }
 linux-reader-open-failed-plain = No se pudo abrir este capítulo
 linux-send-next = { $n ->

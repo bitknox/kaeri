@@ -6050,6 +6050,15 @@
   <data name="ReaderPageLoading" xml:space="preserve">
     <value>Sayfa {page} yükleniyor</value>
   </data>
+  <data name="ReaderPagePlate" xml:space="preserve">
+    <value>Sayfa {page}</value>
+  </data>
+  <data name="ReaderImagePlate" xml:space="preserve">
+    <value>Görsel {image}</value>
+  </data>
+  <data name="ReaderImageLoading" xml:space="preserve">
+    <value>Görsel {image} yükleniyor</value>
+  </data>
   <data name="ReaderPageFailed" xml:space="preserve">
     <value>Sayfa {page} yüklenemedi</value>
   </data>
@@ -6131,11 +6140,17 @@
   <data name="ReaderTapEdges" xml:space="preserve">
     <value>Kenarlar</value>
   </data>
-  <data name="ReaderTapSides" xml:space="preserve">
-    <value>Yarılar</value>
-  </data>
   <data name="ReaderTapOff" xml:space="preserve">
     <value>Kapalı</value>
+  </data>
+  <data name="ReaderZoneNext" xml:space="preserve">
+    <value>Sonraki sayfa</value>
+  </data>
+  <data name="ReaderZonePrevious" xml:space="preserve">
+    <value>Önceki sayfa</value>
+  </data>
+  <data name="ReaderZoneControls" xml:space="preserve">
+    <value>Kontroller</value>
   </data>
   <data name="ReaderChapters" xml:space="preserve">
     <value>Bölümler</value>
@@ -10840,9 +10855,6 @@
   </data>
   <data name="TitleMoreAbout" xml:space="preserve">
     <value>Bu dizi hakkında daha fazla</value>
-  </data>
-  <data name="TitleSynopsisHint" xml:space="preserve">
-    <value>Özetin tamamını gösterir</value>
   </data>
   <data name="TitleDubbedTo" xml:space="preserve">
     <value>Dublajlı, {episode}. bölüme kadar</value>

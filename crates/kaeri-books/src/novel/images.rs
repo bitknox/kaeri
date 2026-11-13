@@ -53,8 +53,10 @@ fn img_sources(text: &str) -> Vec<(std::ops::Range<usize>, String)> {
     while let Some(at) = text[i..].find('<') {
         let start = i + at + 1;
         i = start;
+        // A name ends at the next `<` too, so a run of `<` with no `>` after it is read once,
+        // not once per `<`.
         let name_end = text[start..]
-            .find(|c: char| c.is_ascii_whitespace() || c == '/' || c == '>')
+            .find(|c: char| c.is_ascii_whitespace() || matches!(c, '/' | '>' | '<'))
             .map_or(text.len(), |n| start + n);
         if !text[start..name_end].eq_ignore_ascii_case("img") {
             continue;
@@ -208,5 +210,14 @@ mod tests {
         assert!(web_images("<img src=\"https://img.books.example/1.jpg").is_empty());
         assert!(web_images("<img").is_empty());
         assert_eq!(web_images("<img src=https://img.books.example/1.jpg>").len(), 1);
+    }
+
+    /// A run of `<` with no tag closed after it is read in one pass, and a picture after it is
+    /// still found.
+    #[test]
+    fn a_run_of_open_brackets_is_read_once() {
+        let text =
+            format!("{}<img src=\"https://img.books.example/1.jpg\">", "<".repeat(100_000));
+        assert_eq!(web_images(&text), ["https://img.books.example/1.jpg"]);
     }
 }

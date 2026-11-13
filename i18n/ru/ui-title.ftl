@@ -16,7 +16,6 @@ title-details = Подробности
 title-studio = Студия
 title-tags = Теги
 title-more-about = Подробнее о тайтле
-title-synopsis-hint = Показывает весь синопсис
 title-dubbed-to = { -dubbed-cap } до серии { $episode }
 title-no-episodes = Серий пока нет
 title-episodes-load-failed = Не удалось получить список серий

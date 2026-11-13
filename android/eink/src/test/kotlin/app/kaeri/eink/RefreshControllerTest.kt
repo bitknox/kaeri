@@ -69,6 +69,20 @@ class RefreshControllerTest {
     }
 
     @Test
+    fun a_blocked_ntx_call_leaves_the_onyx_refresh_working() {
+        // An Onyx framework denies NTX's hidden postInvalidateDelayed when hooks() probes it: that
+        // family's controller is then simply absent, and Onyx's own refreshScreen still runs.
+        val blocked = NtxRefresh(null)
+        assertFalse(blocked.available)
+        blocked.refresh(view, Refresh.FULL)
+        Vendor.calls.clear()
+        val onyx = OnyxRefresh(Vendor::class.java.getMethod("refreshScreen", *ints))
+        view.layout(0, 0, 600, 800)
+        onyx.refresh(view, Refresh.FULL)
+        assertEquals(listOf(listOf(0, 0, 600, 800, 34)), Vendor.calls)
+    }
+
+    @Test
     fun the_fake_logs_every_request() {
         val fake = FakeRefresh()
         view.layout(0, 0, 300, 400)

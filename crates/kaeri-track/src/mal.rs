@@ -292,10 +292,14 @@ impl MalTracker {
 }
 
 impl Renews for MalTracker {
-    async fn renew(&self, refresh_token: &str, now: i64) -> Result<TokenPair, String> {
+    async fn renew(
+        &self,
+        refresh_token: &str,
+        now: i64,
+    ) -> Result<TokenPair, kaeri_core::Error> {
         refresh(&self.http, &self.client_id, refresh_token, now)
             .await
-            .map_err(|e| e.to_string())
+            .map_err(|e| kaeri_core::Error::Auth(e.to_string()))
     }
 }
 

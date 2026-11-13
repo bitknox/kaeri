@@ -14,7 +14,7 @@ use kaeri_model::{reader::NoNext, reading::ChapterRow};
 use crate::motion;
 
 /// The column's width on a desktop window.
-const COLUMN: i32 = 440;
+const COLUMN: i32 = 500;
 /// The next chapter's first page, at the board's 1:1.42.
 const PREVIEW_WIDTH: i32 = 180;
 
@@ -29,6 +29,12 @@ pub struct EndFacts {
     pub source: Option<String>,
     pub preview: Option<gdk::Texture>,
     pub novel: bool,
+    /// "1 credit page skipped", for credit pages skipped at the chapter's end and not shown.
+    pub credits: Option<String>,
+    /// When `next` is an extra: the first whole chapter after it, for "Skip to chapter 17".
+    pub skip_to: Option<ChapterRow>,
+    /// How many extras the skip passes over.
+    pub extras: u32,
 }
 
 pub struct EndPage {
@@ -40,6 +46,10 @@ pub struct EndPage {
     top: gtk::Label,
     read_veil: gtk::Overlay,
     read: gtk::Label,
+    credit_row: gtk::Box,
+    credit_text: gtk::Label,
+    /// Show, beside the credit line: the reader connects it.
+    pub credit_show: gtk::Button,
     next_box: gtk::Box,
     next_title: gtk::Label,
     facts: gtk::Label,
@@ -50,6 +60,8 @@ pub struct EndPage {
     none_title: gtk::Label,
     none_body: gtk::Label,
     pub continue_button: gtk::Button,
+    /// Past the extras, between Continue and Back to the series, when the next chapter is one.
+    skip: gtk::Button,
     back: gtk::Button,
 }
 
@@ -63,12 +75,16 @@ fn label(class: &str) -> gtk::Label {
 }
 
 impl EndPage {
-    pub fn new(go_on: Rc<dyn Fn()>, back: Rc<dyn Fn()>) -> Rc<Self> {
+    pub fn new(go_on: Rc<dyn Fn()>, skip: Rc<dyn Fn()>, back: Rc<dyn Fn()>) -> Rc<Self> {
         let top = label("reader-end-top");
         let read = label("reader-end-read");
         let read_veil = gtk::Overlay::new();
         read_veil.set_child(Some(&read));
         read_veil.set_margin_top(4);
+        // Under what was updated: the credit pages skipped at the end, with Show beside them.
+        let (credit_row, credit_text, credit_show) = super::credits::show_line();
+        credit_row.set_margin_top(14);
+        credit_row.set_visible(false);
 
         let next_label = label("reader-end-read");
         next_label.set_label(&t::reader_end_next());
@@ -122,6 +138,10 @@ impl EndPage {
         continue_button.add_css_class("pill");
         continue_button.add_css_class("suggested-action");
         continue_button.connect_clicked(move |_| go_on());
+        let skip_button = gtk::Button::new();
+        skip_button.add_css_class("pill");
+        skip_button.set_visible(false);
+        skip_button.connect_clicked(move |_| skip());
         let back_button = gtk::Button::with_label(&t::linux_reader_back_to_series());
         back_button.add_css_class("pill");
         back_button.connect_clicked(move |_| back());
@@ -129,12 +149,14 @@ impl EndPage {
         buttons.set_margin_top(22);
         buttons.set_halign(gtk::Align::Start);
         buttons.append(&continue_button);
+        buttons.append(&skip_button);
         buttons.append(&back_button);
 
         let body = gtk::Box::new(gtk::Orientation::Vertical, 0);
         body.add_css_class("reader-end");
         body.append(&top);
         body.append(&read_veil);
+        body.append(&credit_row);
         body.append(&next_box);
         body.append(&none_box);
         body.append(&buttons);
@@ -164,6 +186,9 @@ impl EndPage {
             top,
             read_veil,
             read,
+            credit_row,
+            credit_text,
+            credit_show,
             next_box,
             next_title,
             facts,
@@ -174,6 +199,7 @@ impl EndPage {
             none_title,
             none_body,
             continue_button,
+            skip: skip_button,
             back: back_button,
         })
     }
@@ -213,6 +239,12 @@ impl EndPage {
                 });
             }
         }
+        self.credit_row.set_visible(facts.credits.is_some());
+        self.credit_text.set_label(facts.credits.as_deref().unwrap_or_default());
+        // Show is named by its line, so it says what it shows: "1 credit page skipped, button".
+        if let Some(words) = facts.credits.as_deref() {
+            self.credit_show.update_property(&[gtk::accessible::Property::Label(words)]);
+        }
         match &facts.next {
             Some(next) => {
                 self.next_box.set_visible(true);
@@ -228,6 +260,19 @@ impl EndPage {
                 );
                 self.plate.set_visible(facts.preview.is_none());
                 self.continue_button.set_visible(true);
+                self.skip.set_visible(facts.skip_to.is_some());
+                if let Some(skip) = &facts.skip_to {
+                    self.skip.set_label(&t::reader_end_skip_to(
+                        skip.number.as_deref().unwrap_or(&skip.label),
+                    ));
+                    // What stays behind: "Chapter 16.5 stays unread.", or for a run of extras or
+                    // one with no number, "The extras before it stay unread."
+                    let hint = match next.number.as_deref() {
+                        Some(extra) if facts.extras <= 1 => t::reader_end_skip_hint(extra),
+                        _ => t::reader_end_skip_hint_extras(),
+                    };
+                    self.skip.update_property(&[gtk::accessible::Property::Description(&hint)]);
+                }
                 self.back.remove_css_class("suggested-action");
             }
             None => {
@@ -239,6 +284,7 @@ impl EndPage {
                 self.none_body.set_visible(body.is_some());
                 self.none_box.set_visible(true);
                 self.continue_button.set_visible(false);
+                self.skip.set_visible(false);
                 self.back.add_css_class("suggested-action");
             }
         }
@@ -328,7 +374,7 @@ mod tests {
         run(|| {
             let min_width =
                 |widget: &gtk::Widget| widget.measure(gtk::Orientation::Horizontal, -1).0;
-            let end = EndPage::new(Rc::new(|| {}), Rc::new(|| {}));
+            let end = EndPage::new(Rc::new(|| {}), Rc::new(|| {}), Rc::new(|| {}));
             let window = gtk::Window::builder().default_width(1280).default_height(800).build();
             window.set_child(Some(&end.scroll));
             window.present();

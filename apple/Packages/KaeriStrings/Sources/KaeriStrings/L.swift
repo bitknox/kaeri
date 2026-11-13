@@ -768,6 +768,26 @@ public enum L {
         Self.format("reader-moved-number-elsewhere", fallback: "Moved to chapter %1$@, page %2$@, where another device stopped", chapter, String(page))
     }
 
+    /// The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its whole label, such as The Long Night.
+    public static func readerMovedImage(chapter: String, image: Int, device: String) -> String {
+        Self.format("reader-moved-image", fallback: "Moved to %1$@, image %2$@, where %3$@ stopped", chapter, String(image), device)
+    }
+
+    /// The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+    public static func readerMovedNumberImage(chapter: String, image: Int, device: String) -> String {
+        Self.format("reader-moved-number-image", fallback: "Moved to chapter %1$@, image %2$@, where %3$@ stopped", chapter, String(image), device)
+    }
+
+    /// The notice in a strip when another device read further and its name is not known.
+    public static func readerMovedElsewhereImage(chapter: String, image: Int) -> String {
+        Self.format("reader-moved-elsewhere-image", fallback: "Moved to %1$@, image %2$@, where another device stopped", chapter, String(image))
+    }
+
+    /// The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+    public static func readerMovedNumberElsewhereImage(chapter: String, image: Int) -> String {
+        Self.format("reader-moved-number-elsewhere-image", fallback: "Moved to chapter %1$@, image %2$@, where another device stopped", chapter, String(image))
+    }
+
     /// A notice the first time a series opens with its reading direction guessed. It offers Change.
     public static var readerDetectedRightToLeft: String { string("reader-detected-right-to-left", fallback: "Looks like right to left") }
 
@@ -839,6 +859,21 @@ public enum L {
 
     /// Why a chapter could not be saved: the disk is full.
     public static var readingFailedDiskFull: String { string("reading-failed-disk-full", fallback: "There's no room left on this device. Free some space and try again.") }
+
+    /// Why a chapter or a file for an e-reader could not be saved: the storage refused the name, because it is too long or has characters the storage doesn't allow. The path is the file's or the folder's.
+    public static func readingFailedWriteName(path: String) -> String {
+        Self.format("reading-failed-write-name", fallback: "The storage doesn't take the name %1$@. It may be too long.", path)
+    }
+
+    /// Why a chapter or a file for an e-reader could not be saved: the storage is read-only, or Kaeri isn't allowed to write there. The path is the file's or the folder's.
+    public static func readingFailedWriteDenied(path: String) -> String {
+        Self.format("reading-failed-write-denied", fallback: "Kaeri isn't allowed to write %1$@. Check that the storage isn't read-only, then try again.", path)
+    }
+
+    /// Why a chapter or a file for an e-reader could not be saved, for another reason the system gave. The path is the file's or the folder's.
+    public static func readingFailedWrite(path: String) -> String {
+        Self.format("reading-failed-write", fallback: "Kaeri couldn't write %1$@. Try again.", path)
+    }
 
     /// Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.
     public static func readingFailedWebview(version: Int) -> String {
@@ -1104,6 +1139,9 @@ public enum L {
     public static func readingRowDownloading(done: Int, total: Int) -> String {
         Self.format("reading-row-downloading", fallback: "Downloading · %1$lld of %2$lld pages", done, total)
     }
+
+    /// A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count.
+    public static var readingRowDownloadingPlain: String { string("reading-row-downloading-plain", fallback: "Downloading") }
 
     /// A chapter row's state: the download failed. The reason follows as the next part.
     public static var readingRowFailed: String { string("reading-row-failed", fallback: "Couldn't download") }
@@ -2991,13 +3029,6 @@ public enum L {
     /// Gap between a strip's images.
     public static var readerStripGap: String { string("reader-strip-gap", fallback: "Gap between images") }
 
-    /// Accessibility value of the pointer hint on the first chapter's tap zones.
-    public static var readerZoneBack: String { string("reader-zone-back", fallback: "Back") }
-
-    public static var readerZoneForward: String { string("reader-zone-forward", fallback: "Forward") }
-
-    public static var readerZoneMenu: String { string("reader-zone-menu", fallback: "Menu") }
-
     /// A jump button above the page grid in the chapters sheet, for a band of pages.
     public static func readerPagesRange(from: Int, to: Int) -> String {
         Self.format("reader-pages-range", fallback: "%1$lld–%2$lld", from, to)
@@ -3615,6 +3646,14 @@ public enum L {
 
     /// Line in the list of what the engine is doing, when it is doing nothing.
     public static var shellNothingRunning: String { string("shell-nothing-running", fallback: "Nothing is running.") }
+
+    /// Line in the sync status's popover: changes a { -tracker } can't take yet, because it has no match for those titles. They go out by themselves once it has one.
+    public static func shellSyncHeld(count: Int, tracker: String) -> String {
+        Self.format("shell-sync-held", fallback: "%1$lld changes can't sync to %2$@ yet", count, tracker)
+    }
+
+    /// Under the lines above in the sync status's popover: why those changes wait, and that nothing needs doing.
+    public static var shellSyncHeldDetail: String { string("shell-sync-held-detail", fallback: "No match for these titles yet. They sync once there is one.") }
 
     /// Placeholder of the search field while Settings is open.
     public static var shellSearchSettings: String { string("shell-search-settings", fallback: "Search settings") }
@@ -8300,6 +8339,24 @@ public enum L {
         Self.format("reader-page-loading", fallback: "Loading page %1$@", String(page))
     }
 
+    /// On the plate of a page that is still loading.
+    public static func readerPagePlate(page: Int) -> String {
+        Self.format("reader-page-plate", fallback: "Page %1$@", String(page))
+    }
+
+    /// On the plate of a strip image that is still loading.
+    public static func readerImagePlate(image: Int) -> String {
+        Self.format("reader-image-plate", fallback: "Image %1$@", String(image))
+    }
+
+    /// Under a strip image's number after four seconds.
+    public static func readerImageLoading(image: Int) -> String {
+        Self.format("reader-image-loading", fallback: "Loading image %1$@", String(image))
+    }
+
+    /// Under a strip image's number (Image 4) when it couldn't be loaded, above Try again.
+    public static var readerImageFailed: String { string("reader-image-failed", fallback: "Couldn't load") }
+
     /// Heading where a page could not be loaded.
     public static func readerPageFailed(page: Int) -> String {
         Self.format("reader-page-failed", fallback: "Couldn't load page %1$@", String(page))
@@ -8384,14 +8441,169 @@ public enum L {
     /// A choice for wide pages: shown whole.
     public static var readerSpreadsWhole: String { string("reader-spreads-whole", fallback: "Whole") }
 
-    /// A choice for the reader's tap zones: taps near the left and right edges turn the page.
+    /// A choice for the reader's tap zones: taps near the left and right edges turn the page. Replaced by Sides; kept until every app has the new tap zones page.
     public static var readerTapEdges: String { string("reader-tap-edges", fallback: "Edges") }
 
-    /// A choice for the reader's tap zones: the left and right halves turn the page.
-    public static var readerTapSides: String { string("reader-tap-sides", fallback: "Halves") }
+    /// Tap zone layout: Sides when pages turn sideways, L shape when they move downwards. The name under its tile.
+    public static var readerTapAuto: String { string("reader-tap-auto", fallback: "Auto") }
 
-    /// A choice for the reader's tap zones: taps do not turn the page.
+    /// Tap zone layout: previous page on one side, next page on the other, controls in the middle.
+    public static var readerTapSides: String { string("reader-tap-sides", fallback: "Sides") }
+
+    /// Tap zone layout: previous page along the top and down one side, next page along the bottom and down the other side, in the shape of the letter L.
+    public static var readerTapLShape: String { string("reader-tap-l-shape", fallback: "L shape") }
+
+    /// Tap zone layout: controls along the top, a narrow column for previous page, and the rest of the page for next page.
+    public static var readerTapWideNext: String { string("reader-tap-wide-next", fallback: "Wide next") }
+
+    /// Tap zone layout: previous page across the top, next page across the bottom.
+    public static var readerTapTopBottom: String { string("reader-tap-top-bottom", fallback: "Top and bottom") }
+
+    /// Tap zone layout: next page down both the left and the right side, previous page in the bottom middle.
+    public static var readerTapBothNext: String { string("reader-tap-both-next", fallback: "Next on both sides") }
+
+    /// Tap zone layout: taps only show and hide the controls, and never turn the page.
     public static var readerTapOff: String { string("reader-tap-off", fallback: "Off") }
+
+    /// Tap zones page: the choice for paged reading (pages that turn), one of two at the top.
+    public static var readerTapPaged: String { string("reader-tap-paged", fallback: "Paged") }
+
+    /// Tap zones page: the choice for strips and scrolled novels, one of two at the top.
+    public static var readerTapScrolling: String { string("reader-tap-scrolling", fallback: "Scrolling") }
+
+    /// Tap zones page: row that sets how wide the zones at the edges are.
+    public static var readerTapSize: String { string("reader-tap-size", fallback: "Zone size") }
+
+    /// Choice of Zone size: the edge zones are a third of the screen.
+    public static var readerTapStandard: String { string("reader-tap-standard", fallback: "Standard") }
+
+    /// Choice of Zone size: the edge zones are a quarter of the screen.
+    public static var readerTapSmall: String { string("reader-tap-small", fallback: "Small") }
+
+    /// Tap zones page: switch that swaps the left and right zones, for the left hand.
+    public static var readerTapFlipSides: String { string("reader-tap-flip-sides", fallback: "Flip left and right") }
+
+    /// Tap zones page: switch that swaps the top and bottom zones.
+    public static var readerTapFlipEnds: String { string("reader-tap-flip-ends", fallback: "Flip top and bottom") }
+
+    /// Tap zones page: button that shows the zones over the page.
+    public static var readerTapShow: String { string("reader-tap-show", fallback: "Show zones") }
+
+    /// Tap zones page, beside Show zones: the setting is not synced. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.
+    public static func readerTapHere(kind: String) -> String {
+        Self.format("reader-tap-here", fallback: "Stays on this %1$@", kind)
+    }
+
+    /// The reader's settings on a Mac, Windows or Linux: the row that opens the tap zones page, which is about clicks there.
+    public static var readerClickZones: String { string("reader-click-zones", fallback: "Click zones") }
+
+    /// Name of the tap zone that turns to the next page, in the guide over the page and as a screen reader action.
+    public static var readerZoneNext: String { string("reader-zone-next", fallback: "Next page") }
+
+    /// Name of the tap zone that turns to the previous page, in the guide and as a screen reader action.
+    public static var readerZonePrevious: String { string("reader-zone-previous", fallback: "Previous page") }
+
+    /// Name of the tap zone that shows and hides the reader's controls, in the guide.
+    public static var readerZoneControls: String { string("reader-zone-controls", fallback: "Controls") }
+
+    /// Screen reader action on the page that shows the reader's controls.
+    public static var readerZoneShowControls: String { string("reader-zone-show-controls", fallback: "Show controls") }
+
+    /// Name of the tap zone that scrolls a strip or a scrolled novel down, in the guide.
+    public static var readerZoneScrollDown: String { string("reader-zone-scroll-down", fallback: "Scroll down") }
+
+    /// Name of the tap zone that scrolls a strip or a scrolled novel up, in the guide.
+    public static var readerZoneScrollUp: String { string("reader-zone-scroll-up", fallback: "Scroll up") }
+
+    /// Under Controls in the tap zone guide: where the zones are changed.
+    public static var readerZoneChange: String { string("reader-zone-change", fallback: "Change in Reader settings") }
+
+    /// Tap zone layout Off in words, the accessibility value of its tile.
+    public static var readerTapOffAbout: String { string("reader-tap-off-about", fallback: "Taps show and hide the controls") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: Sides, next page on the right.
+    public static var readerTapSidesRightAbout: String { string("reader-tap-sides-right-about", fallback: "Next page on the right side, previous page on the left side, controls in the middle") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: Sides, next page on the left.
+    public static var readerTapSidesLeftAbout: String { string("reader-tap-sides-left-about", fallback: "Next page on the left side, previous page on the right side, controls in the middle") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the right.
+    public static var readerTapLShapeBottomRightAbout: String { string("reader-tap-l-shape-bottom-right-about", fallback: "Next page along the bottom and on the right, previous page along the top and on the left, controls in the middle") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the left.
+    public static var readerTapLShapeBottomLeftAbout: String { string("reader-tap-l-shape-bottom-left-about", fallback: "Next page along the bottom and on the left, previous page along the top and on the right, controls in the middle") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right.
+    public static var readerTapLShapeTopRightAbout: String { string("reader-tap-l-shape-top-right-about", fallback: "Next page along the top and on the right, previous page along the bottom and on the left, controls in the middle") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left.
+    public static var readerTapLShapeTopLeftAbout: String { string("reader-tap-l-shape-top-left-about", fallback: "Next page along the top and on the left, previous page along the bottom and on the right, controls in the middle") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the left.
+    public static var readerTapWideNextTopLeftAbout: String { string("reader-tap-wide-next-top-left-about", fallback: "Controls along the top, previous page in a narrow column on the left, next page everywhere else") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the right.
+    public static var readerTapWideNextTopRightAbout: String { string("reader-tap-wide-next-top-right-about", fallback: "Controls along the top, previous page in a narrow column on the right, next page everywhere else") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left.
+    public static var readerTapWideNextBottomLeftAbout: String { string("reader-tap-wide-next-bottom-left-about", fallback: "Controls along the bottom, previous page in a narrow column on the left, next page everywhere else") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right.
+    public static var readerTapWideNextBottomRightAbout: String { string("reader-tap-wide-next-bottom-right-about", fallback: "Controls along the bottom, previous page in a narrow column on the right, next page everywhere else") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: Top and bottom.
+    public static var readerTapTopBottomAbout: String { string("reader-tap-top-bottom-about", fallback: "Next page across the bottom, previous page across the top, controls in the middle") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: Top and bottom flipped.
+    public static var readerTapTopBottomFlippedAbout: String { string("reader-tap-top-bottom-flipped-about", fallback: "Next page across the top, previous page across the bottom, controls in the middle") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: Next on both sides.
+    public static var readerTapBothNextAbout: String { string("reader-tap-both-next-about", fallback: "Next page down both sides, previous page at the bottom in the middle, controls above it") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: Next on both sides flipped top and bottom.
+    public static var readerTapBothNextFlippedAbout: String { string("reader-tap-both-next-flipped-about", fallback: "Next page down both sides, previous page at the top in the middle, controls below it") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the right.
+    public static var readerTapSidesRightScrollAbout: String { string("reader-tap-sides-right-scroll-about", fallback: "Scroll down on the right side, scroll up on the left side, controls in the middle") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the left.
+    public static var readerTapSidesLeftScrollAbout: String { string("reader-tap-sides-left-scroll-about", fallback: "Scroll down on the left side, scroll up on the right side, controls in the middle") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the right.
+    public static var readerTapLShapeBottomRightScrollAbout: String { string("reader-tap-l-shape-bottom-right-scroll-about", fallback: "Scroll down along the bottom and on the right, scroll up along the top and on the left, controls in the middle") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the left.
+    public static var readerTapLShapeBottomLeftScrollAbout: String { string("reader-tap-l-shape-bottom-left-scroll-about", fallback: "Scroll down along the bottom and on the left, scroll up along the top and on the right, controls in the middle") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right.
+    public static var readerTapLShapeTopRightScrollAbout: String { string("reader-tap-l-shape-top-right-scroll-about", fallback: "Scroll down along the top and on the right, scroll up along the bottom and on the left, controls in the middle") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left.
+    public static var readerTapLShapeTopLeftScrollAbout: String { string("reader-tap-l-shape-top-left-scroll-about", fallback: "Scroll down along the top and on the left, scroll up along the bottom and on the right, controls in the middle") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the left.
+    public static var readerTapWideNextTopLeftScrollAbout: String { string("reader-tap-wide-next-top-left-scroll-about", fallback: "Controls along the top, scroll up in a narrow column on the left, scroll down everywhere else") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the right.
+    public static var readerTapWideNextTopRightScrollAbout: String { string("reader-tap-wide-next-top-right-scroll-about", fallback: "Controls along the top, scroll up in a narrow column on the right, scroll down everywhere else") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left.
+    public static var readerTapWideNextBottomLeftScrollAbout: String { string("reader-tap-wide-next-bottom-left-scroll-about", fallback: "Controls along the bottom, scroll up in a narrow column on the left, scroll down everywhere else") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right.
+    public static var readerTapWideNextBottomRightScrollAbout: String { string("reader-tap-wide-next-bottom-right-scroll-about", fallback: "Controls along the bottom, scroll up in a narrow column on the right, scroll down everywhere else") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom.
+    public static var readerTapTopBottomScrollAbout: String { string("reader-tap-top-bottom-scroll-about", fallback: "Scroll down across the bottom, scroll up across the top, controls in the middle") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom flipped.
+    public static var readerTapTopBottomFlippedScrollAbout: String { string("reader-tap-top-bottom-flipped-scroll-about", fallback: "Scroll down across the top, scroll up across the bottom, controls in the middle") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides.
+    public static var readerTapBothNextScrollAbout: String { string("reader-tap-both-next-scroll-about", fallback: "Scroll down on both sides, scroll up at the bottom in the middle, controls above it") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides flipped top and bottom.
+    public static var readerTapBothNextFlippedScrollAbout: String { string("reader-tap-both-next-flipped-scroll-about", fallback: "Scroll down on both sides, scroll up at the top in the middle, controls below it") }
 
     /// Button in the reader's controls that opens the chapters and the page grid.
     public static var readerChapters: String { string("reader-chapters", fallback: "Chapters") }
@@ -8430,6 +8642,11 @@ public enum L {
         Self.format("reader-end-of-chapter-number", fallback: "End of chapter %1$@", chapter)
     }
 
+    /// Top line of the page between chapters when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own, such as Rooftop Lantern.
+    public static func readerEndOfNamed(name: String) -> String {
+        Self.format("reader-end-of-named", fallback: "End of %1$@", name)
+    }
+
     /// The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.
     public static func readerEndFacts(chapter: String, facts: String) -> String {
         Self.format("reader-end-facts", fallback: "Chapter %1$@ · %2$@", chapter, facts)
@@ -8457,6 +8674,19 @@ public enum L {
 
     /// Line on the page between chapters, near its buttons: one more swipe opens the next chapter.
     public static var readerEndSwipe: String { string("reader-end-swipe", fallback: "Swipe to keep reading") }
+
+    /// Button beside Continue on the page between chapters, shown only when the next chapter is an extra (such as 16.5 between 16 and 17). It opens the chapter named, passing over the extras before it. The chapter is its number, such as 17.
+    public static func readerEndSkipTo(chapter: String) -> String {
+        Self.format("reader-end-skip-to", fallback: "Skip to chapter %1$@", chapter)
+    }
+
+    /// What a screen reader adds after "Skip to chapter 17": the extra it passes over stays unread in the chapter list. The chapter is the extra's number, such as 16.5.
+    public static func readerEndSkipHint(chapter: String) -> String {
+        Self.format("reader-end-skip-hint", fallback: "Chapter %1$@ stays unread.", chapter)
+    }
+
+    /// What a screen reader adds after "Skip to chapter 17" when it passes over more than one extra, or an extra with no number (such as an omake): those chapters stay unread in the chapter list.
+    public static var readerEndSkipHintExtras: String { string("reader-end-skip-hint-extras", fallback: "The extras before it stay unread.") }
 
     /// The next episode's length on the divider inside a strip.
     public static func readerDividerImages(count: Int) -> String {
@@ -8516,6 +8746,9 @@ public enum L {
 
     /// Spoken name of a credit page shown again.
     public static var readerCreditPageLabel: String { string("reader-credit-page-label", fallback: "Credit page") }
+
+    /// Notice when a skipped credit page's picture can't be read, so it can't be shown.
+    public static var readerCreditFailed: String { string("reader-credit-failed", fallback: "Couldn't load this credit page") }
 
     /// The scrubber's preview on the first page of a chapter's later part.
     public static func readerPartPreview(page: Int, part: Int) -> String {
@@ -8904,6 +9137,9 @@ public enum L {
         Self.format("series-tracker-chapters", fallback: "%1$lld chapters", n)
     }
 
+    /// A tracker's progress when the person has read none of the series yet, in place of "0 chapters".
+    public static var seriesTrackerNotStarted: String { string("series-tracker-not-started", fallback: "Not started") }
+
     /// A tracker's progress in chapters, then the volume.
     public static func seriesTrackerWithVolume(chapters: String, volume: Int) -> String {
         Self.format("series-tracker-with-volume", fallback: "%1$@ · volume %2$@", chapters, String(volume))
@@ -9088,6 +9324,9 @@ public enum L {
     public static func chapterStateDownloading(done: Int, total: Int) -> String {
         Self.format("chapter-state-downloading", fallback: "Downloading · %1$lld of %2$lld pages", done, total)
     }
+
+    /// A chapter downloading before its page count is known, and throughout for a novel's chapter.
+    public static var chapterStateDownloadingPlain: String { string("chapter-state-downloading-plain", fallback: "Downloading") }
 
     /// A chapter that failed to download, with the reason.
     public static func chapterStateFailed(reason: String) -> String {
@@ -10049,6 +10288,9 @@ public enum L {
     /// Line under Delete chapters after reading.
     public static var settingsDeleteAfterReadingNote: String { string("settings-delete-after-reading-note", fallback: "Bookmarked chapters are kept") }
 
+    /// Line under Show volumes: the list is grouped only when most chapters have a volume.
+    public static var settingsShowVolumesNote: String { string("settings-show-volumes-note", fallback: "Grouped when most chapters have a volume") }
+
     /// Line under New chapters.
     public static var settingsChapterNotificationsNote: String { string("settings-chapter-notifications-note", fallback: "Series on your Reading list") }
 
@@ -10087,6 +10329,11 @@ public enum L {
     /// A series' line in Downloads when a chapter failed, with the reason.
     public static func readDownloadsFailed(chapter: String, reason: String) -> String {
         Self.format("read-downloads-failed", fallback: "%1$@ couldn't download. %2$@", chapter, reason)
+    }
+
+    /// Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows.
+    public static func readDownloadNotStarted(reason: String) -> String {
+        Self.format("read-download-not-started", fallback: "The download didn't start. %1$@", reason)
     }
 
     /// A series' line in Downloads: how many chapters are kept.
@@ -10195,6 +10442,12 @@ public enum L {
 
     /// Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.
     public static var sendShareAgain: String { string("send-share-again", fallback: "Share again") }
+
+    /// A ready send whose files were cleared before they were shared or saved, in the Send to e-reader sheet and in the send's row. Prepared files are kept for a day.
+    public static var sendFilesGone: String { string("send-files-gone", fallback: "These files are gone. Prepared files are kept for a day.") }
+
+    /// Button on a send whose files are gone: prepares the same chapters for the same e-reader again.
+    public static var sendAgain: String { string("send-again", fallback: "Send again") }
 
     /// A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
     public static func sendBanner(device: String) -> String {
@@ -11209,6 +11462,11 @@ public enum L {
         Self.format("settings-adult-detail", fallback: "Titles %1$@ marks adult, in Search and Seasonal", tracker)
     }
 
+    /// Line under it when the app is for reading alone.
+    public static func settingsAdultDetailRead(tracker: String) -> String {
+        Self.format("settings-adult-detail-read", fallback: "Titles %1$@ marks adult, in Search and Browse", tracker)
+    }
+
     /// Row: quality.
     public static var settingsQuality: String { string("settings-quality", fallback: "Quality") }
 
@@ -11324,6 +11582,9 @@ public enum L {
 
     /// Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.
     public static var settingsDeleteAfterReading: String { string("settings-delete-after-reading", fallback: "Delete chapters after reading") }
+
+    /// Row: group a series' chapters under volume headings. Off by default.
+    public static var settingsShowVolumes: String { string("settings-show-volumes", fallback: "Show volumes") }
 
     /// Row: whether a series' reader mode, direction and colour follow you to your other devices.
     public static var settingsSeriesChoicesFollow: String { string("settings-series-choices-follow", fallback: "Series settings follow you") }
@@ -11547,6 +11808,11 @@ public enum L {
     /// Line under a signed-in account while changes wait to be sent.
     public static func accountsChangesWaiting(count: Int) -> String {
         Self.format("accounts-changes-waiting", fallback: "%1$lld changes waiting to sync", count)
+    }
+
+    /// Line under a signed-in account when nothing else waits but some changes can't go out yet: the { -tracker } has no match for those titles. They go out by themselves once it has one.
+    public static func accountsChangesHeld(count: Int) -> String {
+        Self.format("accounts-changes-held", fallback: "%1$lld changes can't sync yet", count)
     }
 
     /// Choice for the download quality: larger files with more detail.
@@ -11913,6 +12179,24 @@ public enum L {
 
     /// Primary action after an empty folder.
     public static var bookFolderChooseOther: String { string("book-folder-choose-other", fallback: "Choose another folder") }
+
+    /// Folder result title when the picked folder is already a source. It was scanned again.
+    public static func bookFolderAlready(folder: String) -> String {
+        Self.format("book-folder-already", fallback: "%1$@ is already in your sources", folder)
+    }
+
+    /// Line under it: what the new scan found. Closing the sheet keeps the folder.
+    public static func bookFolderAlreadyLine(series: Int) -> String {
+        Self.format("book-folder-already-line", fallback: "Kaeri looked through it again and found %1$lld series. It stays as it is.", series)
+    }
+
+    /// Title when a folder could not be read: the look through it could not start, or stopped.
+    public static func bookFolderUnreadable(folder: String) -> String {
+        Self.format("book-folder-unreadable", fallback: "Couldn't read %1$@", folder)
+    }
+
+    /// Line under it.
+    public static var bookFolderUnreadableLine: String { string("book-folder-unreadable-line", fallback: "It may have moved, or Kaeri no longer has access to it.") }
 
     /// Title of the Join a plugin store sheet.
     public static var storeJoinTitle: String { string("store-join-title", fallback: "Join a plugin store") }
@@ -13785,6 +14069,8 @@ public enum L {
 
     public static var deviceKindTv: String { string("device-kind-tv", fallback: "TV") }
 
+    public static var deviceKindOther: String { string("device-kind-other", fallback: "device") }
+
     /// TV welcome, text button.
     public static var firstSetupPhone: String { string("first-setup-phone", fallback: "Set up from your phone") }
 
@@ -13931,8 +14217,8 @@ public enum L {
     /// Button that opens the full page of facts about a show.
     public static var titleMoreAbout: String { string("title-more-about", fallback: "More about this show") }
 
-    /// Accessibility hint of the button that expands a synopsis.
-    public static var titleSynopsisHint: String { string("title-synopsis-hint", fallback: "Shows the whole synopsis") }
+    /// Accessible name of the More at the end of a cut synopsis, which shows the rest of it. The page's menu of extra actions is called More too, so this one says what it does.
+    public static var titleSynopsisMore: String { string("title-synopsis-more", fallback: "Show the whole synopsis") }
 
     /// Label under a season: which episodes are dubbed so far.
     public static func titleDubbedTo(episode: Int) -> String {

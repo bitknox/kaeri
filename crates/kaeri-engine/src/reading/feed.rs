@@ -29,10 +29,15 @@ use kaeri_store::book_credits::PagePrint;
 use tokio::{sync::mpsc, task::JoinSet};
 
 use crate::{
+    downloads::books::SharedPages,
     outbox::Outbox,
     read_sources::{BookSources, Opened},
     reading::credits::Learning,
 };
+
+/// The pages of a chapter its download fetches too: each page comes from them, or is fetched
+/// into them, so the source is asked for it once.
+pub(crate) type Kept = Option<Arc<SharedPages>>;
 
 /// The longest an edge page is waited on before the chapter is laid out without it, as long
 /// as a novel's pictures are.
@@ -184,6 +189,10 @@ pub struct Feed {
     again: mpsc::UnboundedSender<(usize, Outbox)>,
     /// Pages the reader waits on, for the fetcher to fetch before the rest.
     wanted: mpsc::UnboundedSender<usize>,
+    /// Set once the reader left the chapter for another: see [`Feed::leave`].
+    left: tokio::sync::watch::Sender<bool>,
+    /// Set once a strip flowed on from the chapter and keeps it above: see [`Feed::aside`].
+    aside: std::sync::atomic::AtomicBool,
 }
 
 /// What a feed's fetcher is lent: the source, its chapter, and who hears of each page. It holds
@@ -200,12 +209,20 @@ struct Fetcher<F> {
     again: mpsc::UnboundedReceiver<(usize, Outbox)>,
     wanted: mpsc::UnboundedReceiver<usize>,
     gone: Gone,
+    left: tokio::sync::watch::Receiver<bool>,
+    /// The download's pages, shared until every page has landed.
+    kept: Kept,
 }
 
 impl Feed {
     /// Every page of the feed as it stands.
     pub fn pages(&self) -> Vec<FeedPage> {
         self.pages.lock().map(|p| p.clone()).unwrap_or_default()
+    }
+
+    /// How many pages the reader counts: the source's, credit pages left out.
+    pub fn count(&self) -> usize {
+        self.pages.lock().map_or(0, |p| p.len())
     }
 
     pub fn page(&self, index: usize) -> Option<FeedPage> {
@@ -217,24 +234,44 @@ impl Feed {
         self.pages.lock().is_ok_and(|p| p.iter().all(|p| matches!(p, FeedPage::Landed(_))))
     }
 
-    /// Fetch a failed page again, answering on `out` once it lands. `false` when it had not
-    /// failed.
-    pub fn retry(&self, index: usize, out: &Outbox) -> bool {
-        let Ok(mut pages) = self.pages.lock() else { return false };
-        match pages.get_mut(index) {
-            Some(page @ FeedPage::Failed(_)) => {
-                *page = FeedPage::Coming;
-                drop(pages);
-                self.again.send((index, out.clone())).is_ok()
-            }
-            _ => false,
-        }
+    /// No page is still on its way: each landed or failed.
+    pub fn settled(&self) -> bool {
+        self.pages.lock().is_ok_and(|p| p.iter().all(|p| !matches!(p, FeedPage::Coming)))
     }
 
     /// The reader waits on page `index`: it is fetched next, if it is still to come.
     pub fn want(&self, index: usize) {
         if matches!(self.page(index), Some(FeedPage::Coming)) {
             let _ = self.wanted.send(index);
+        }
+    }
+
+    /// The reader left the chapter for another: no more of its pages are fetched, and those
+    /// on their way stop, so the chapter opening has the link to itself. The page worker may
+    /// hold the feed a while longer, until the other chapter reaches it.
+    pub fn leave(&self) {
+        self.left.send_replace(true);
+    }
+
+    /// A strip flowed on from the chapter and keeps it above the one opening: the pages not
+    /// fetched yet are no longer fetched in turn, so they never hold up the chapter opening,
+    /// but a page asked for with [`Feed::ask`] still is.
+    pub fn aside(&self) {
+        self.aside.store(true, std::sync::atomic::Ordering::Relaxed);
+    }
+
+    /// Page `index` is asked for again: one that failed, or one still to come that a chapter
+    /// set aside never fetched, is fetched now and told to `out` once it lands. False for a page
+    /// already landed.
+    pub fn ask(&self, index: usize, out: &Outbox) -> bool {
+        let Ok(mut pages) = self.pages.lock() else { return false };
+        match pages.get_mut(index) {
+            Some(page @ (FeedPage::Failed(_) | FeedPage::Coming)) => {
+                *page = FeedPage::Coming;
+                drop(pages);
+                self.again.send((index, out.clone())).is_ok()
+            }
+            _ => false,
         }
     }
 
@@ -247,19 +284,46 @@ impl Feed {
     }
 }
 
+#[cfg(test)]
+impl Feed {
+    /// A feed of `pages` as they stand, that nothing fetches: for tests.
+    pub(crate) fn standing(chapter: ChapterId, dir: PathBuf, pages: Vec<FeedPage>) -> Self {
+        let (again, _) = mpsc::unbounded_channel();
+        let (wanted, _) = mpsc::unbounded_channel();
+        Self {
+            chapter,
+            dir,
+            pages: Mutex::new(pages),
+            credits: Vec::new(),
+            parts: None,
+            again,
+            wanted,
+            left: tokio::sync::watch::Sender::new(false),
+            aside: std::sync::atomic::AtomicBool::new(false),
+        }
+    }
+
+    /// Page `index` landed or failed, as the fetcher would say.
+    pub(crate) fn put(&self, index: usize, page: FeedPage) {
+        self.set(index, page);
+    }
+}
+
 /// Start feeding `opened`'s pictures, the reader's `chapter`, into `dir`. The edge pages are
 /// fetched first and the credit pages among them left out, as `learning` says; then the page
 /// `first` gives for the pages left, fetched before this returns. The feed is `Err` when that
 /// page fails, as the chapter failing to open would be. The rest come behind it, `landed`
 /// called with each page's index, and `out` to answer on, once it has landed or failed. Once
-/// `gone` says the session closed, nothing more is fetched and what landed goes.
+/// `gone` says the session closed, nothing more is fetched and what landed goes. With `kept`,
+/// the chapter's download shares its pages: those it kept come at once, and the rest from
+/// whichever of the two asks first.
 #[allow(clippy::too_many_arguments)]
 pub(crate) async fn start(
-    sources: BookSources,
+    (sources, kept): (BookSources, Kept),
     mut opened: Opened,
     (chapter, learning): (ChapterId, Learning),
     dir: PathBuf,
-    first: impl FnOnce(u32) -> usize + Send,
+    first: impl FnOnce(u32, &[u32]) -> usize + Send,
     now: i64,
     out: Outbox,
     gone: Gone,
@@ -276,7 +340,7 @@ pub(crate) async fn start(
         .await
         .map_err(|e| ReadingFailure::Other { reason: e.to_string() })?;
     let spans = opened.spans();
-    let (edges, mut pending) = edge_pages(&sources, &mut opened, &spans, now).await;
+    let (edges, mut pending) = edge_pages((&sources, &kept), &mut opened, &spans, now).await;
     let mine: Vec<PagePrint> = edges
         .iter()
         .filter_map(|e| Some(PagePrint { page: e.page, at_end: e.at_end, print: e.print? }))
@@ -285,8 +349,9 @@ pub(crate) async fn start(
         let (learning, chapter, group) =
             (learning.clone(), chapter.as_str().to_owned(), opened.group.clone());
         let count = u32::try_from(total).unwrap_or(u32::MAX);
+        let wanted = crate::reading::credits::edges(&spans);
         tokio::task::spawn_blocking(move || {
-            learning.keep_and_find((&chapter, group.as_deref()), &mine, count, now)
+            learning.keep_and_find((&chapter, group.as_deref()), (&mine, &wanted), count, now)
         })
         .await
         .unwrap_or_default()
@@ -329,11 +394,11 @@ pub(crate) async fn start(
     let skipped: Vec<u32> = credits.iter().map(|c| c.page).collect();
     let parts = SourceParts::of(&opened).map(|p| p.counted(&skipped));
     let count = order.len();
-    let first = first(u32::try_from(count).unwrap_or(u32::MAX)).min(count - 1);
+    let first = first(u32::try_from(count).unwrap_or(u32::MAX), &skipped).min(count - 1);
     if !matches!(pages[first], FeedPage::Landed(_)) {
         let slow = pending.remove(&order[first]);
-        let page =
-            fetch(&sources, &mut opened, &dir, (first, order[first]), slow, now, &gone).await;
+        let at = (first, order[first]);
+        let page = fetch((&sources, &kept), &mut opened, &dir, at, slow, now, &gone).await;
         if let FeedPage::Failed(failure) = page {
             return Err(failure);
         }
@@ -350,7 +415,10 @@ pub(crate) async fn start(
     let (again, asked) = mpsc::unbounded_channel();
     let (wanted, waited) = mpsc::unbounded_channel();
     let pages = Mutex::new(pages);
-    let feed = Arc::new(Feed { chapter, dir, pages, credits, parts, again, wanted });
+    let (left, leaving) = tokio::sync::watch::channel(false);
+    let aside = std::sync::atomic::AtomicBool::new(false);
+    let feed =
+        Arc::new(Feed { chapter, dir, pages, credits, parts, again, wanted, left, aside });
     let fetcher = Fetcher {
         sources,
         opened,
@@ -361,6 +429,8 @@ pub(crate) async fn start(
         again: asked,
         wanted: waited,
         gone,
+        left: leaving,
+        kept,
     };
     tokio::spawn(fetcher.run(Arc::downgrade(&feed), rest, out));
     Ok(feed)
@@ -389,7 +459,7 @@ impl Drop for Pending {
 /// are asked for again once; the rest then come together. Those still coming are given back to
 /// be waited on in their turn.
 async fn edge_pages(
-    sources: &BookSources,
+    (sources, kept): (&BookSources, &Kept),
     opened: &mut Opened,
     spans: &[(u32, u32)],
     now: i64,
@@ -399,9 +469,11 @@ async fn edge_pages(
     let lead = wanted.next();
     let lead = match lead {
         Some((page, at_end)) => {
-            let got =
-                tokio::time::timeout_at(deadline, sources.page(opened, page as usize, now))
-                    .await;
+            let got = tokio::time::timeout_at(
+                deadline,
+                page_of((sources, kept), opened, page, now, false),
+            )
+            .await;
             Some((page, at_end, got.ok().and_then(Result::ok)))
         }
         None => None,
@@ -409,9 +481,9 @@ async fn edge_pages(
     let mut fetches: Vec<(u32, bool, Option<Pending>)> = wanted
         .map(|(page, at_end)| {
             let fetch = opened.pictures_copy().map(|mut own| {
-                let sources = sources.clone();
+                let (sources, kept) = (sources.clone(), kept.clone());
                 Pending(tokio::spawn(async move {
-                    sources.page(&mut own, page as usize, now).await
+                    page_of((&sources, &kept), &mut own, page, now, false).await
                 }))
             });
             (page, at_end, fetch)
@@ -475,8 +547,16 @@ impl<F: Fn(u32, &Outbox) + Send + 'static> Fetcher<F> {
         let mut asked: HashSet<usize> = HashSet::new();
         let mut open = true;
         loop {
-            if feed.strong_count() == 0 || self.gone.is() {
+            // Returning drops the fetches on their way.
+            if feed.strong_count() == 0 || self.gone.is() || *self.left.borrow() {
                 return;
+            }
+            // Set aside: only the pages asked for again are fetched.
+            if feed
+                .upgrade()
+                .is_some_and(|f| f.aside.load(std::sync::atomic::Ordering::Relaxed))
+            {
+                order.clear();
             }
             // A page waited on starts even with the others all under way.
             while running.len() < AT_ONCE + WAITED_ON
@@ -512,6 +592,11 @@ impl<F: Fn(u32, &Outbox) + Send + 'static> Fetcher<F> {
                     let Some(feed) = feed.upgrade() else { return };
                     feed.set(index, page);
                     asked.remove(&index);
+                    // Every page landed: nothing more is fetched from the download's pages, and
+                    // they go once it is done with them.
+                    if feed.complete() {
+                        self.kept = None;
+                    }
                     if let Some(told) = told {
                         (self.landed)(index as u32, &told);
                     }
@@ -526,12 +611,15 @@ impl<F: Fn(u32, &Outbox) + Send + 'static> Fetcher<F> {
                 },
                 again = self.again.recv(), if open => match again {
                     Some((index, told)) => {
+                        order.retain(|i| *i != index);
                         if asked.insert(index) {
                             self.spawn(&mut running, &feed, index, Some(told));
                         }
                     }
                     None => open = false,
                 },
+                // Seen at the top of the loop. An error means the feed is gone, also seen there.
+                _ = self.left.changed() => {}
                 else => return,
             }
         }
@@ -550,16 +638,17 @@ impl<F: Fn(u32, &Outbox) + Send + 'static> Fetcher<F> {
         let slow = self.pending.remove(&source);
         let (sources, mut opened, now, gone) =
             (self.sources.clone(), self.opened.clone(), self.now, self.gone.clone());
+        let kept = self.kept.clone();
         running.spawn(async move {
-            let page =
-                fetch(&sources, &mut opened, &dir, (index, source), slow, now, &gone).await;
+            let at = (index, source);
+            let page = fetch((&sources, &kept), &mut opened, &dir, at, slow, now, &gone).await;
             (index, page, opened, told)
         });
     }
 }
 
 /// Whether a fetch asked for `after`'s page addresses again, so they differ from `before`'s.
-fn moved(after: &Opened, before: &Opened) -> bool {
+pub(crate) fn moved(after: &Opened, before: &Opened) -> bool {
     after.content != before.content
         || after.parts.iter().zip(&before.parts).any(|(a, b)| a.pages != b.pages)
 }
@@ -569,7 +658,7 @@ fn moved(after: &Opened, before: &Opened) -> bool {
 /// A try not answered within [`PAGE_WAIT`] is made once more; a page that hangs then fails as
 /// its source not answering.
 async fn fetch(
-    sources: &BookSources,
+    (sources, kept): (&BookSources, &Kept),
     opened: &mut Opened,
     dir: &Path,
     (index, source): (usize, usize),
@@ -580,11 +669,11 @@ async fn fetch(
     let came = match slow {
         Some(mut slow) => match tokio::time::timeout(PAGE_WAIT, &mut slow.0).await {
             Ok(Ok(Ok(bytes))) => Ok(bytes),
-            Ok(_) => within(sources, opened, source, now, 2).await,
+            Ok(_) => within((sources, kept), opened, source, now, 0..2).await,
             // The edge fetch was its first try.
-            Err(_) => within(sources, opened, source, now, 1).await,
+            Err(_) => within((sources, kept), opened, source, now, 1..2).await,
         },
-        None => within(sources, opened, source, now, 2).await,
+        None => within((sources, kept), opened, source, now, 0..2).await,
     };
     match came {
         Ok(bytes) => write(dir, &format!("{:05}", index + 1), bytes, gone).await,
@@ -592,28 +681,45 @@ async fn fetch(
     }
 }
 
-/// The source's page `index`, with `tries` tries of [`PAGE_WAIT`] each.
+/// The source's page `index`, with `tries` tries of [`PAGE_WAIT`] each, counted from 0. A
+/// page the download fetches is waited on the same, and a try after the first asks the source
+/// once more rather than waiting on the fetch that did not come.
 async fn within(
-    sources: &BookSources,
+    (sources, kept): (&BookSources, &Kept),
     opened: &mut Opened,
     index: usize,
     now: i64,
-    tries: u32,
+    tries: std::ops::Range<u32>,
 ) -> Result<Vec<u8>, ReadingFailure> {
-    for _ in 0..tries {
-        if let Ok(came) =
-            tokio::time::timeout(PAGE_WAIT, sources.page(opened, index, now)).await
-        {
+    let page = u32::try_from(index).unwrap_or(u32::MAX);
+    for at in tries {
+        let came = page_of((sources, kept), opened, page, now, at > 0);
+        if let Ok(came) = tokio::time::timeout(PAGE_WAIT, came).await {
             return came;
         }
     }
     Err(ReadingFailure::SourceDown { source: sources.source_name(&opened.source_id) })
 }
 
+/// The source's page `index`: from the download's pages when it shares them, which fetch it
+/// only when neither has, or `again` asks for it once more.
+async fn page_of(
+    (sources, kept): (&BookSources, &Kept),
+    opened: &mut Opened,
+    index: u32,
+    now: i64,
+    again: bool,
+) -> Result<Vec<u8>, ReadingFailure> {
+    match kept {
+        Some(kept) => kept.page(sources, index, now, again).await,
+        None => sources.page(opened, index as usize, now).await,
+    }
+}
+
 /// Write a page's bytes into `dir` as `name`, with the type they are. The write runs to its
 /// end even when the fetch waiting on it stops, and a page written after the session closed
 /// goes with its folder.
-async fn write(dir: &Path, name: &str, bytes: Vec<u8>, gone: &Gone) -> FeedPage {
+pub(crate) async fn write(dir: &Path, name: &str, bytes: Vec<u8>, gone: &Gone) -> FeedPage {
     let Some(ext) = page_extension(&bytes) else {
         return FeedPage::Failed(ReadingFailure::Unsupported { extension: "page".into() });
     };

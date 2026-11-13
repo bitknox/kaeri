@@ -1,4 +1,7 @@
 reader-page-loading = { $page }ページを読み込み中
+reader-page-plate = { $page }ページ
+reader-image-plate = 画像 { $image }
+reader-image-loading = 画像 { $image } を読み込み中
 reader-page-failed = { $page }ページを読み込めませんでした
 reader-try-again = もう一度試す
 reader-close = 閉じる
@@ -53,3 +56,6 @@ reader-end-swipe = スワイプして読み進める
 reader-divider-images = { $count ->
    *[other] { $count }枚の画像
  }
+reader-zone-next = 次のページ
+reader-zone-previous = 前のページ
+reader-zone-controls = 操作パネル

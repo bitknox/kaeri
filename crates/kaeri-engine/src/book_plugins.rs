@@ -22,6 +22,9 @@ pub struct BookPlugins {
     /// Whether a load from the plugin directory is under way: a series a plugin holds is not
     /// "not found" while its plugin is still compiling.
     arriving: Arc<tokio::sync::watch::Sender<bool>>,
+    /// Whether a screen was drawn from a series held in a plugin still on its way, so the end of
+    /// the load has to draw it again however the load went.
+    leaned: Arc<std::sync::atomic::AtomicBool>,
 }
 
 impl Default for BookPlugins {
@@ -29,6 +32,7 @@ impl Default for BookPlugins {
         Self {
             loaded: Arc::default(),
             arriving: Arc::new(tokio::sync::watch::Sender::new(false)),
+            leaned: Arc::default(),
         }
     }
 }
@@ -61,6 +65,24 @@ impl BookPlugins {
     /// Whether a load from the plugin directory is under way.
     pub fn is_arriving(&self) -> bool {
         *self.arriving.borrow()
+    }
+
+    /// What `find` gives while a load is under way, noted when it gives something so the end of
+    /// the load draws again what was drawn from it. None when no load is under way.
+    pub fn lean_on_arrivals<T>(&self, find: impl FnOnce() -> Option<T>) -> Option<T> {
+        if !self.is_arriving() {
+            return None;
+        }
+        let found = find();
+        if found.is_some() {
+            self.leaned.store(true, std::sync::atomic::Ordering::Relaxed);
+        }
+        found
+    }
+
+    /// Whether something was drawn from a load under way since this was last asked.
+    pub fn take_leaned(&self) -> bool {
+        self.leaned.swap(false, std::sync::atomic::Ordering::Relaxed)
     }
 
     /// Wait for a load under way to end, for at most `limit`. Returns at once when none is.

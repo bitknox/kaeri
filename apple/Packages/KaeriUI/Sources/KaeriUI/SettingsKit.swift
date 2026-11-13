@@ -258,6 +258,7 @@ extension SettingKey {
         case .chapterDownloadsOnCellular: L.settingsChapterDownloadsCellular
         case .keepChaptersReady: L.settingsKeepChaptersReady
         case .deleteAfterReading: L.settingsDeleteAfterReading
+        case .showVolumes: L.settingsShowVolumes
         case .opdsFeed: L.settingsOpdsFeed
         case .opdsPassword: L.settingsOpdsPassword
         case .opdsPort: L.settingsOpdsPort

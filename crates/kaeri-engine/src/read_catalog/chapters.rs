@@ -6,7 +6,11 @@
 use std::collections::{HashMap, HashSet};
 
 use kaeri_core::books::{ChapterId, ChapterRange, SourceChapter};
-use kaeri_store::{Store, book_catalog::BookRhythm, reading::ReadWork};
+use kaeri_store::{
+    Store,
+    book_catalog::BookRhythm,
+    reading::{ReadChapter, ReadWork},
+};
 use serde::{Deserialize, Serialize};
 
 /// One chapter as a source listed it.
@@ -78,12 +82,24 @@ impl Kept {
 
 /// A chapter's title, unless it only names the chapter again: the label itself, the number, or
 /// the number beside one word, as "Chapter 15" or "Ch. 15" in a book's own details.
+///
+/// A title that starts by naming a chapter ("Chapter 15: The Far Shore", "Ch. 15 - The Far
+/// Shore") keeps only its words, as the row names the chapter already; and a number after a dash
+/// at its end ("The Far Shore - 15", any dash) goes when it only repeats that chapter's number or the
+/// row's. The row's number is the source's, which every place Kaeri names the chapter uses, so a
+/// title whose own number differs from it (a source that counts its extras as chapters) does not
+/// put a second number beside it. The row's number in brackets at the end, "The Far Shore (15)",
+/// goes too.
+///
+/// The novel reader gives a text chapter's opening heading this too (`kaeri_books::novel::
+/// heading_once`), so the chapter list, the series page and the page itself say the same.
 pub fn own_title<'a>(
     title: Option<&'a str>,
     label: &str,
     number: Option<&str>,
 ) -> Option<&'a str> {
     let title = title?.trim();
+    let title = number.map_or(title, |n| without_bracketed(title, n));
     let same = |other: &str| title.eq_ignore_ascii_case(other.trim());
     if title.is_empty() || same(label) || number.is_some_and(same) {
         return None;
@@ -95,7 +111,110 @@ pub fn own_title<'a>(
             return None;
         }
     }
-    Some(title)
+    let (named, rest) = match chapter_named(title) {
+        Some((named, rest)) => (Some(named), rest),
+        None => (None, title),
+    };
+    let repeats = |n: &str| {
+        let n = same_number(n);
+        n.is_some()
+            && (named.and_then(same_number) == n
+                || named.and_then(whole_part).and_then(same_number) == n
+                || number.and_then(same_number) == n
+                || same_number(label) == n)
+    };
+    let rest = match number_after_dash(rest) {
+        Some((words, n)) if repeats(n) => words,
+        // Only the number again, "Chapter 15 - 15": nothing of its own.
+        None if named.is_some() && repeats(rest) => "",
+        _ => rest,
+    };
+    (!rest.is_empty()).then_some(rest)
+}
+
+/// The words that name a chapter at the start of a title, longest first.
+/// Most pages a chapter is taken to have, as many as a ComicInfo lists. A source that says more
+/// is taken not to know.
+pub(crate) const MOST_PAGES: u32 = 100_000;
+
+/// The pages a source says a chapter has, unless the count is past belief.
+pub(crate) fn plausible_pages(said: Option<u32>) -> Option<u32> {
+    said.filter(|n| *n <= MOST_PAGES)
+}
+
+/// The pages of a chapter in parts: its parts' counts added up, unknown when any part's is or
+/// the sum is past belief.
+pub(crate) fn pages_of_parts(parts: impl IntoIterator<Item = Option<u32>>) -> Option<u32> {
+    let sum = parts.into_iter().try_fold(0u32, |sum, n| sum.checked_add(plausible_pages(n)?));
+    plausible_pages(sum)
+}
+
+const CHAPTER_WORDS: [&str; 5] = ["chapter", "chap.", "chap", "ch.", "ch"];
+
+/// A title that starts by naming a chapter, "Chapter 15: The Far Shore": the number, and the
+/// words after it with the separator gone ("" when there are none).
+fn chapter_named(title: &str) -> Option<(&str, &str)> {
+    let lower = title.to_ascii_lowercase();
+    let word = CHAPTER_WORDS.iter().find(|w| lower.starts_with(**w))?;
+    let after = title[word.len()..].trim_start_matches([' ', '.']);
+    let end = after.find(|c: char| !(c.is_ascii_digit() || c == '.')).unwrap_or(after.len());
+    let number = after[..end].trim_end_matches('.');
+    if !number.starts_with(|c: char| c.is_ascii_digit()) {
+        return None;
+    }
+    let rest = &after[number.len()..];
+    // The number ends the name: "Chapter 15th Night" is not chapter 15.
+    if rest.starts_with(char::is_alphanumeric) {
+        return None;
+    }
+    let rest = rest.trim_start_matches(|c: char| {
+        c.is_whitespace() || matches!(c, ':' | '-' | '\u{2013}' | '\u{2014}' | '.' | ',' | '|')
+    });
+    Some((number, rest.trim_end()))
+}
+
+/// Words ending in a dash and a number, "The Far Shore - 15": the words and the number.
+fn number_after_dash(title: &str) -> Option<(&str, &str)> {
+    let at = title.rfind(['-', '\u{2013}', '\u{2014}'])?;
+    let dash = title[at..].chars().next()?.len_utf8();
+    let (words, n) = (&title[..at], title[at + dash..].trim());
+    // A dash inside a word ("Re-15") is not a separator; one at the start is.
+    if !(words.is_empty() || words.ends_with(char::is_whitespace)) || n.is_empty() {
+        return None;
+    }
+    n.chars().all(|c| c.is_ascii_digit() || c == '.').then(|| (words.trim_end(), n))
+}
+
+/// A chapter number as a value to compare, so "05" and "5" are one number.
+fn same_number(text: &str) -> Option<u64> {
+    let value: f64 = text.trim().parse().ok()?;
+    (value.is_finite() && value >= 0.0).then(|| (value * 1000.0).round() as u64)
+}
+
+/// The whole chapter of a part's number: "196" of "196.1".
+fn whole_part(number: &str) -> Option<&str> {
+    number.split_once('.').map(|(whole, _)| whole)
+}
+
+/// `title` without `number` in brackets at its end: "The Far Shore (15)" in chapter 15 is "The
+/// Far Shore". Anything else comes back as it is; a number after a dash is [`own_title`]'s.
+fn without_bracketed<'a>(title: &'a str, number: &str) -> &'a str {
+    let number = number.trim();
+    if number.is_empty() {
+        return title;
+    }
+    let Some(inner) = title.strip_suffix(')').or_else(|| title.strip_suffix(']')) else {
+        return title;
+    };
+    let Some(before) = inner.trim_end().strip_suffix(number) else { return title };
+    if before.ends_with(|c: char| c.is_ascii_digit() || c == '.') {
+        return title;
+    }
+    let rest = before.trim_end();
+    match rest.strip_suffix('(').or_else(|| rest.strip_suffix('[')).map(str::trim_end) {
+        Some(rest) if rest.chars().any(char::is_alphanumeric) => rest,
+        _ => title,
+    }
 }
 
 /// A source's list as kept, oldest chapter first, and when it was asked.
@@ -116,6 +235,41 @@ fn left_key(source: &str, series: &str) -> String {
     format!("book_chapters_left:{source}/{series}")
 }
 
+/// The work a source's series is matched to.
+fn work_of(store: &Store, source: &str, series: &str) -> Option<String> {
+    store.book_match_state(source, series).ok().flatten().map(|(work, _)| work)
+}
+
+/// Every kept list of a work, with its source and series, oldest chapter first.
+pub fn lists_of(store: &Store, work: &str) -> Vec<(String, String, Vec<Kept>)> {
+    store
+        .book_refs_for_work(work)
+        .unwrap_or_default()
+        .into_iter()
+        .filter_map(|(source, series)| {
+            let (list, _) = kept(store, &source, &series)?;
+            Some((source, series, list))
+        })
+        .collect()
+}
+
+/// What a work's kept lists say of its numbering, but for the list of `leave_out`.
+pub fn numbering(
+    store: &Store,
+    work: &str,
+    leave_out: Option<(&str, &str)>,
+) -> super::arrange::Numbering {
+    let mut numbering = super::arrange::Numbering::default();
+    for (source, series, list) in lists_of(store, work) {
+        if leave_out == Some((source.as_str(), series.as_str())) {
+            continue;
+        }
+        let entries: Vec<SourceChapter> = list.iter().map(Kept::source_chapter).collect();
+        numbering.add(&entries);
+    }
+    numbering
+}
+
 /// Keep a source's answer, and give the chapters it lists that no answer listed before. The
 /// first answer for a series gives none: everything in it was out before.
 ///
@@ -124,6 +278,14 @@ fn left_key(source: &str, series: &str) -> String {
 /// list kept empty before counts as none. A short answer (a later page of the source's list
 /// that failed) is kept as the list, and the chapters it left out are remembered: back in a
 /// later answer, they are known, not new.
+///
+/// Each entry keeps the date it was first seen by the source's own id for it, so a part that
+/// joins a chapter ("7.2" beside a "7.1" listed before) leaves the chapter known: it is not
+/// new again. Entries are arranged with what the work's other lists say ([`numbering`]), and
+/// those lists are arranged again with this one, so every list of a work keys a chapter alike.
+/// A downloaded chapter that has gained a part since is fetched again, and one whose entry now
+/// reads as part of a whole chapter has that chapter queued in its place (see
+/// [`follow_downloads`]).
 pub fn keep(
     store: &Store,
     source: &str,
@@ -135,8 +297,11 @@ pub fn keep(
         return Vec::new();
     }
     let before = kept(store, source, series).map(|(list, _)| list).filter(|l| !l.is_empty());
-    // By id, so a long list is looked through once rather than once a chapter.
-    let before: Option<HashMap<&str, &Kept>> =
+    // By the source's own id and by chapter, so a long list is looked through once rather than
+    // once a chapter.
+    let by_ref: Option<HashMap<&str, &Kept>> =
+        before.as_ref().map(|list| list.iter().map(|k| (k.source_ref.as_str(), k)).collect());
+    let by_id: Option<HashMap<&str, &Kept>> =
         before.as_ref().map(|list| list.iter().map(|k| (k.id.as_str(), k)).collect());
     let key = left_key(source, series);
     let left: HashMap<String, Option<i64>> = store
@@ -145,49 +310,73 @@ pub fn keep(
         .flatten()
         .and_then(|text| serde_json::from_str(&text).ok())
         .unwrap_or_default();
+    let work = work_of(store, source, series);
+    let others = work
+        .as_deref()
+        .map(|w| numbering(store, w, Some((source, series))))
+        .unwrap_or_default();
     // Parts are kept under their whole chapter, so what is new is a chapter, not a part.
-    let arranged = super::arrange::arrange(chapters, None, None);
-    let mut fresh: Vec<Kept> = Vec::new();
-    let mut fresh_ids = HashSet::new();
-    let list: Vec<Kept> = chapters
-        .iter()
-        .enumerate()
-        .map(|(i, c)| {
-            let id = arranged.ids[i].as_str().to_owned();
-            // When an earlier answer first listed it, if one did.
-            let earlier = before.as_ref().map(|b| match b.get(id.as_str()) {
+    let arranged = super::arrange::arrange_in(chapters, None, None, &others);
+    // Each entry with when an earlier answer first listed it, if one did.
+    let mut list: Vec<Kept> = Vec::with_capacity(chapters.len());
+    let mut earliers: Vec<Option<Option<Option<i64>>>> = Vec::with_capacity(chapters.len());
+    for (i, c) in chapters.iter().enumerate() {
+        let id = arranged.ids[i].as_str().to_owned();
+        let earlier = by_ref.as_ref().map(|b| match b.get(c.id.as_str()) {
+            Some(k) => Some(k.seen_at),
+            None => match by_id.as_ref().and_then(|b| b.get(id.as_str())) {
                 Some(k) => Some(k.seen_at),
                 None => left.get(&id).copied(),
-            });
-            let seen_at = match earlier {
-                None => None,
-                Some(Some(seen_at)) => seen_at,
-                Some(None) => Some(now),
-            };
-            let kept = Kept {
-                id,
-                source_ref: c.id.clone(),
-                label: c.number_raw.clone(),
-                number: c.number.map(|n| n.to_string()),
-                volume: c.volume.clone(),
-                title: c.title.clone(),
-                version_label: c.version_label.clone(),
-                language: c.language.clone(),
-                published: c.published,
-                pages: c.page_count,
-                seen_at,
-                part: arranged.parts[i],
-            };
-            // Two versions of a new chapter are one chapter come out.
-            if matches!(earlier, Some(None)) && fresh_ids.insert(kept.id.clone()) {
-                fresh.push(kept.clone());
-            }
-            kept
-        })
+            },
+        });
+        let seen_at = match earlier {
+            None => None,
+            Some(Some(seen_at)) => seen_at,
+            Some(None) => Some(now),
+        };
+        list.push(Kept {
+            id,
+            source_ref: c.id.clone(),
+            label: c.number_raw.clone(),
+            number: c.number.map(|n| n.to_string()),
+            volume: c.volume.clone(),
+            title: c.title.clone(),
+            version_label: c.version_label.clone(),
+            language: c.language.clone(),
+            published: c.published,
+            pages: plausible_pages(c.page_count),
+            seen_at,
+            part: arranged.parts[i],
+        });
+        earliers.push(earlier);
+    }
+    // A chapter one of whose entries was listed before is not new, whatever joined it.
+    let known: HashSet<&str> = list
+        .iter()
+        .zip(&earliers)
+        .filter(|(_, e)| !matches!(e, Some(None)))
+        .map(|(k, _)| k.id.as_str())
         .collect();
+    let mut fresh: Vec<Kept> = Vec::new();
+    let mut fresh_ids = HashSet::new();
+    for (kept, earlier) in list.iter().zip(&earliers) {
+        // Two versions of a new chapter are one chapter come out.
+        if matches!(earlier, Some(None))
+            && !known.contains(kept.id.as_str())
+            && fresh_ids.insert(kept.id.clone())
+        {
+            fresh.push(kept.clone());
+        }
+    }
     let json = serde_json::to_string(&list).unwrap_or_else(|_| "[]".into());
     if let Err(e) = store.put_book_chapters(source, series, &json, now) {
         tracing::warn!(error = %e, "a chapter list was not kept");
+    }
+    if let Some(work) = work.as_deref() {
+        if let Some(before) = before.as_deref() {
+            follow_downloads(store, work, source, before, &list, now);
+        }
+        rearrange_others(store, work, (source, series));
     }
     // What this answer left out of what was listed before, or left out already.
     let listed: HashSet<&str> = list.iter().map(|k| k.id.as_str()).collect();
@@ -196,7 +385,7 @@ pub fn keep(
         .filter(|(id, _)| !listed.contains(id.as_str()))
         .map(|(id, seen)| (id.clone(), *seen))
         .collect();
-    for (id, k) in before.iter().flatten() {
+    for (id, k) in by_id.iter().flatten() {
         if !listed.contains(id) {
             still_left.insert((*id).to_owned(), k.seen_at);
         }
@@ -215,6 +404,281 @@ pub fn keep(
     fresh
 }
 
+/// Arrange the work's other kept lists again with `this` one's numbers, and keep those whose
+/// chapters now read otherwise: a lone "7.1" kept before another source named a whole 7 is
+/// part of 7 from here. Their dates stay as they were.
+fn rearrange_others(store: &Store, work: &str, this: (&str, &str)) {
+    let lists = lists_of(store, work);
+    if lists.len() < 2 {
+        return;
+    }
+    for (source, series, list) in &lists {
+        if (source.as_str(), series.as_str()) == this {
+            continue;
+        }
+        let others = numbering(store, work, Some((source, series)));
+        let entries: Vec<SourceChapter> = list.iter().map(Kept::source_chapter).collect();
+        let arranged = super::arrange::arrange_in(&entries, None, None, &others);
+        let moved = list
+            .iter()
+            .enumerate()
+            .any(|(i, k)| k.id != arranged.ids[i].as_str() || k.part != arranged.parts[i]);
+        if !moved {
+            continue;
+        }
+        let list: Vec<Kept> = list
+            .iter()
+            .enumerate()
+            .map(|(i, k)| Kept {
+                id: arranged.ids[i].as_str().to_owned(),
+                part: arranged.parts[i],
+                ..k.clone()
+            })
+            .collect();
+        let Ok(Some((_, at))) = store.book_chapters(source, series) else { continue };
+        let json = serde_json::to_string(&list).unwrap_or_else(|_| "[]".into());
+        if let Err(e) = store.put_book_chapters(source, series, &json, at) {
+            tracing::warn!(error = %e, "a chapter list arranged again was not kept");
+        }
+    }
+}
+
+/// Downloads that a new answer changed. A finished download of a chapter whose release has
+/// gained a part since holds only the parts it had, so it is fetched again whole. One whose
+/// entry now reads as part of a whole chapter ("7.1" joined by "7.2") stays where it is, and
+/// the whole chapter is queued as that download was; the old one lists under the whole
+/// chapter's read marks (see [`Folds`]) and goes with them.
+fn follow_downloads(
+    store: &Store,
+    work: &str,
+    source: &str,
+    before: &[Kept],
+    now: &[Kept],
+    at: i64,
+) {
+    use kaeri_store::book_downloads::{BookDownloadAsk, BookDownloadState};
+    let downloads: HashMap<String, kaeri_store::book_downloads::BookDownload> = store
+        .book_downloads(Some(work))
+        .unwrap_or_default()
+        .into_iter()
+        .filter(|d| d.state == BookDownloadState::Done && d.source_id == source)
+        .map(|d| (d.chapter.clone(), d))
+        .collect();
+    if downloads.is_empty() {
+        return;
+    }
+    // Each chapter's entries in one group, by the source's own ids.
+    let release = |list: &[Kept], id: &str, group: Option<&str>| -> HashSet<String> {
+        list.iter()
+            .filter(|k| k.id == id && k.version_label.as_deref() == group)
+            .map(|k| k.source_ref.clone())
+            .collect()
+    };
+    let was: HashMap<&str, &str> =
+        before.iter().map(|k| (k.source_ref.as_str(), k.id.as_str())).collect();
+    for (chapter, d) in &downloads {
+        let group = d.version_label.as_deref();
+        let then = release(before, chapter, group);
+        let gained = release(now, chapter, group);
+        if !then.is_empty() && gained.len() > then.len() && gained.is_superset(&then) {
+            if let Err(e) = store.book_download_refetch(work, chapter, at) {
+                tracing::warn!(error = %e, "a download that gained a part was not queued again");
+            }
+            continue;
+        }
+        // The entry this download was of now belongs to another chapter.
+        let moved = now.iter().find(|k| {
+            then.contains(&k.source_ref)
+                && was.get(k.source_ref.as_str()) != Some(&k.id.as_str())
+        });
+        if let Some(moved) = moved
+            && !downloads.contains_key(&moved.id)
+        {
+            let ask = BookDownloadAsk {
+                work,
+                chapter: &moved.id,
+                source_id: source,
+                version_label: group,
+                keep_ready: d.keep_ready,
+            };
+            if let Err(e) = store.queue_book_download(&ask, at) {
+                tracing::warn!(error = %e, "a chapter that took in a download was not queued");
+            }
+        }
+    }
+}
+
+/// One release of a chapter in parts: each part's own key, with its pages when listed.
+type Release = Vec<(String, Option<u32>)>;
+
+/// Read marks kept on a chapter's parts under their own numbers, folded into the chapter at
+/// read time. A lone "7.1" read before "7.2" came out keeps its marks on "7.1"; once the two
+/// read as chapter 7, those marks count for 7 rather than being lost, and nothing kept is
+/// rewritten:
+/// - a whole chapter counts as read when every part of one release of it is read, and each part
+///   counts as read when the whole chapter is;
+/// - a whole chapter with only its first parts read is in progress, at the start of the first
+///   part not read (at its own kept page when it has one), counted in pages where the list
+///   gives them.
+#[derive(Debug, Clone, Default)]
+pub struct Folds {
+    /// Each part's own key ("7.1"), with its whole chapter's id.
+    up: HashMap<String, String>,
+    /// Each whole chapter's releases in parts: their parts' own keys in order, with pages.
+    releases: HashMap<String, Vec<Release>>,
+}
+
+impl Folds {
+    /// From every kept list of a work.
+    pub fn of_work(store: &Store, work: &str) -> Self {
+        let lists: Vec<Vec<Kept>> = lists_of(store, work).into_iter().map(|l| l.2).collect();
+        Self::of(lists.iter().map(Vec::as_slice))
+    }
+
+    pub fn of<'a>(lists: impl IntoIterator<Item = &'a [Kept]>) -> Self {
+        let mut folds = Self::default();
+        for list in lists {
+            // Each release, by chapter and group, in part order.
+            type Parts = Vec<(u32, String, Option<u32>)>;
+            let mut releases: HashMap<(&str, Option<&str>), Parts> = HashMap::new();
+            for k in list {
+                let Some(part) = k.part else { continue };
+                // Only a numbered chapter's parts carry a number of their own.
+                if k.id.contains('/') {
+                    continue;
+                }
+                let Some(own) = k.number.as_deref().and_then(ChapterRange::parse) else {
+                    continue;
+                };
+                let own = kaeri_core::books::ChapterKey::numbered(own).as_str().to_owned();
+                if own != k.id {
+                    folds.up.insert(own.clone(), k.id.clone());
+                }
+                releases
+                    .entry((k.id.as_str(), k.version_label.as_deref()))
+                    .or_default()
+                    .push((part, own, k.pages));
+            }
+            for ((id, _), mut parts) in releases {
+                parts.sort_by_key(|(n, _, _)| *n);
+                let parts: Vec<(String, Option<u32>)> =
+                    parts.into_iter().map(|(_, key, pages)| (key, pages)).collect();
+                let held = folds.releases.entry(id.to_owned()).or_default();
+                if !held.contains(&parts) {
+                    held.push(parts);
+                }
+            }
+        }
+        folds
+    }
+
+    /// Whether a key is a part's own, kept under its whole chapter's.
+    pub fn is_part(&self, key: &str) -> bool {
+        self.up.contains_key(key)
+    }
+
+    /// The whole chapter a part's own key is kept under.
+    pub fn whole_of(&self, key: &str) -> Option<String> {
+        self.up.get(key).cloned()
+    }
+
+    /// The chapters to count as read beside those `is_read` says: whole chapters whose parts
+    /// are all read, and the parts of whole chapters read.
+    pub fn read(&self, is_read: impl Fn(&str) -> bool) -> Vec<String> {
+        let mut more = Vec::new();
+        for (whole, releases) in &self.releases {
+            if is_read(whole) {
+                for (part, _) in releases.iter().flatten() {
+                    if part != whole && !is_read(part) {
+                        more.push(part.clone());
+                    }
+                }
+            } else if releases.iter().any(|r| r.iter().all(|(part, _)| is_read(part))) {
+                more.push(whole.clone());
+            }
+        }
+        more
+    }
+
+    /// The store's marks with the folds counted.
+    pub fn marks(
+        &self,
+        mut marks: kaeri_store::reading::ReadMarks,
+    ) -> kaeri_store::reading::ReadMarks {
+        for chapter in self.read(|c| marks.is_read(c)) {
+            marks.count_read(chapter);
+        }
+        marks
+    }
+
+    /// The kept places with each whole chapter read in part under its parts' own numbers
+    /// given a place of its own, unless it has one.
+    pub fn places(
+        &self,
+        mut places: Vec<ReadChapter>,
+        marks: &kaeri_store::reading::ReadMarks,
+    ) -> Vec<ReadChapter> {
+        for (whole, releases) in &self.releases {
+            if marks.is_read(whole) || places.iter().any(|p| p.chapter == *whole) {
+                continue;
+            }
+            let found = releases.iter().find_map(|parts| {
+                let at = parts.iter().position(|(part, _)| !marks.is_read(part))?;
+                let own = places.iter().find(|p| p.chapter == parts[at].0 && !p.read);
+                if at == 0 && own.is_none_or(|p| p.last_page.is_none()) {
+                    return None;
+                }
+                // A part's pages as its source lists them, else as the reader counted them.
+                let pages_of = |(part, pages): &(String, Option<u32>)| {
+                    pages.or_else(|| {
+                        places.iter().find(|p| p.chapter == *part).and_then(|p| p.of_pages)
+                    })
+                };
+                let before: Option<u32> = parts[..at].iter().map(pages_of).sum();
+                let page = before.unwrap_or(0) + own.and_then(|p| p.last_page).unwrap_or(0);
+                let of: Option<u32> = parts.iter().map(pages_of).sum();
+                let stamp = places
+                    .iter()
+                    .filter(|p| parts.iter().any(|(part, _)| *part == p.chapter))
+                    .map(|p| p.stamp)
+                    .max()
+                    .unwrap_or(0);
+                Some(ReadChapter {
+                    chapter: whole.clone(),
+                    read: false,
+                    read_at: None,
+                    last_page: Some(page),
+                    of_pages: of,
+                    strip_image: None,
+                    strip_offset: None,
+                    novel_pos: None,
+                    stamp,
+                    device: None,
+                })
+            });
+            places.extend(found);
+        }
+        places
+    }
+}
+
+/// A work's read marks and kept places, with the folds of [`Folds`] counted: what every list of
+/// chapters reads them from.
+pub fn read_state(
+    store: &Store,
+    work: &str,
+) -> (kaeri_store::reading::ReadMarks, Vec<ReadChapter>) {
+    let folds = Folds::of_work(store, work);
+    let marks = folds.marks(store.read_marks(work).unwrap_or_default());
+    let places = folds.places(store.read_chapters(work).unwrap_or_default(), &marks);
+    (marks, places)
+}
+
+/// A work's read marks with the folds of [`Folds`] counted.
+pub fn read_marks(store: &Store, work: &str) -> kaeri_store::reading::ReadMarks {
+    Folds::of_work(store, work).marks(store.read_marks(work).unwrap_or_default())
+}
+
 /// What the person has read of a work: the chapters marked, and the watermark.
 #[derive(Debug, Clone, Default)]
 pub struct Read {
@@ -228,23 +692,43 @@ pub struct Read {
 
 impl Read {
     pub fn of(store: &Store, work: &str) -> Self {
-        let chapters = store.read_chapters(work).unwrap_or_default();
+        let folds = Folds::of_work(store, work);
+        let marks = folds.marks(store.read_marks(work).unwrap_or_default());
+        let chapters = folds.places(store.read_chapters(work).unwrap_or_default(), &marks);
         let work_row = store.read_work(work).ok().flatten();
-        let marked: HashSet<String> =
+        let mut marked: HashSet<String> =
             chapters.iter().filter(|c| c.read).map(|c| c.chapter.clone()).collect();
+        let adopted = |c: &str| work_row.as_ref().is_some_and(|w| w.adopted(c));
+        let more = folds.read(|c| marked.contains(c) || adopted(c));
+        marked.extend(more);
         let last = work_row.as_ref().and_then(|w| w.last_chapter.clone());
-        let in_progress = chapters
-            .iter()
-            .filter(|c| !c.read && (c.last_page.is_some() || c.novel_pos.is_some()))
-            .max_by_key(|c| (Some(&c.chapter) == last.as_ref(), c.stamp))
-            .map(|c| (c.chapter.clone(), c.last_page, c.of_pages));
+        // A part read under its own number points at its whole chapter's place.
+        let last = last.map(|l| folds.whole_of(&l).unwrap_or(l));
         let range = |id: &str| ChapterId::new(id).key().and_then(|k| k.range());
-        let mut furthest = marked.iter().filter_map(|id| range(id)).max();
+        // A part read alone says nothing of how far the chapter it belongs to was read.
+        let mut furthest =
+            marked.iter().filter(|id| !folds.is_part(id)).filter_map(|id| range(id)).max();
         if let Some(milli) = work_row.as_ref().and_then(|w| w.adopt_milli)
             && let Some(adopted) = ChapterRange::parse(&milli_label(milli))
         {
             furthest = furthest.max(Some(adopted));
         }
+        let behind = |id: &str| furthest.is_some_and(|f| range(id).is_some_and(|r| r <= f));
+        let extra = |id: &str| range(id).is_some_and(|r| r.end.is_none() && r.start.is_split());
+        let in_progress = chapters
+            .iter()
+            .filter(|c| !c.read && !marked.contains(&c.chapter))
+            .filter(|c| c.last_page.is_some() || c.novel_pos.is_some())
+            .filter(|c| !folds.is_part(&c.chapter))
+            // A chapter left part way and passed over: once a later chapter is read, Continue
+            // goes on from there, and the chapter stays unread in the list. A whole chapter keeps
+            // its place while it is the last one opened, as when the person goes back to it; an
+            // extra is passed over even then.
+            .filter(|c| {
+                !behind(&c.chapter) || (!extra(&c.chapter) && Some(&c.chapter) == last.as_ref())
+            })
+            .max_by_key(|c| (Some(&c.chapter) == last.as_ref(), c.stamp))
+            .map(|c| (c.chapter.clone(), c.last_page, c.of_pages));
         Self { marked, work: work_row, in_progress, furthest }
     }
 
@@ -256,14 +740,27 @@ impl Read {
         !self.marked.is_empty() || self.in_progress.is_some() || self.furthest.is_some()
     }
 
-    /// The first chapter of `list` after the furthest read that is not read.
+    /// The first chapter of `list` after the furthest read that is not read. Extras behind the
+    /// furthest read, the person passed over: a decimal one by its number, one with no number
+    /// when a later volume has been read.
     pub fn next<'a>(&self, list: &'a [Kept]) -> Option<&'a Kept> {
         list.iter().find(|c| {
             !self.is_read(&c.id)
                 && match (self.furthest, c.range()) {
                     (Some(furthest), Some(range)) => range > furthest,
-                    _ => true,
+                    (Some(furthest), None) => !self.passed_volume(c, list, furthest),
+                    (None, _) => true,
                 }
+        })
+    }
+
+    /// Whether `extra`, a chapter with no number in a volume, sits in a volume before one the
+    /// person has read a chapter of.
+    fn passed_volume(&self, extra: &Kept, list: &[Kept], furthest: ChapterRange) -> bool {
+        let Some(its) = extra.volume.as_deref().and_then(volume_number) else { return false };
+        list.iter().any(|c| {
+            c.range().is_some_and(|r| r <= furthest)
+                && c.volume.as_deref().and_then(volume_number).is_some_and(|v| v > its)
         })
     }
 
@@ -288,6 +785,13 @@ impl Read {
             })
             .collect()
     }
+}
+
+/// A volume's number as a source names it: "2", "Vol. 2", "Volume 2.5".
+fn volume_number(volume: &str) -> Option<kaeri_core::books::ChapterNumber> {
+    let digits = volume.trim_start_matches(|c: char| !c.is_ascii_digit());
+    let end = digits.find(|c: char| !c.is_ascii_digit() && c != '.').unwrap_or(digits.len());
+    kaeri_core::books::ChapterNumber::parse(digits[..end].trim_end_matches('.'))
 }
 
 /// A chapter number kept in thousandths, as the watermark keeps it, back in words: "12", "10.5".
@@ -353,7 +857,10 @@ pub fn summary(
         .max_by(|a, b| a.1.cmp(&b.1).then_with(|| b.0.cmp(a.0)))
         .map(|(v, _)| v.clone());
     let entries: Vec<SourceChapter> = list.iter().map(Kept::source_chapter).collect();
-    let arranged = super::arrange::arrange(&entries, chosen, app_language);
+    let numbering = work_of(store, source, series)
+        .map(|work| numbering(store, &work, None))
+        .unwrap_or_default();
+    let arranged = super::arrange::arrange_in(&entries, chosen, app_language, &numbering);
     Summary {
         // One per chapter: its parts and its groups' releases count once.
         chapters: u32::try_from(arranged.rows.len()).unwrap_or(u32::MAX),
@@ -439,6 +946,17 @@ mod tests {
     }
 
     #[test]
+    fn page_counts_past_belief_are_unknown_and_sums_never_overflow() {
+        assert_eq!(plausible_pages(Some(24)), Some(24));
+        assert_eq!(plausible_pages(Some(u32::MAX)), None);
+        assert_eq!(pages_of_parts([Some(20), Some(18)]), Some(38));
+        assert_eq!(pages_of_parts([Some(20), None]), None);
+        assert_eq!(pages_of_parts([Some(u32::MAX), Some(u32::MAX)]), None);
+        assert_eq!(pages_of_parts([Some(MOST_PAGES), Some(MOST_PAGES)]), None);
+        assert_eq!(pages_of_parts(std::iter::repeat_n(Some(MOST_PAGES), 50_000)), None);
+    }
+
+    #[test]
     fn a_later_answer_dates_what_is_new_and_the_first_dates_nothing() {
         let store = Store::open_in_memory().unwrap();
         let first: Vec<_> = (1..=3).map(|n| chapter(n, None)).collect();
@@ -476,11 +994,62 @@ mod tests {
         assert_eq!(titled("15", "Ch. 15").own_title(), None);
         assert_eq!(titled("15", "15").own_title(), None);
         assert_eq!(titled("15", "The Far Shore").own_title(), Some("The Far Shore"));
-        assert_eq!(
-            titled("15", "Chapter 15: The Far Shore").own_title(),
-            Some("Chapter 15: The Far Shore")
-        );
         assert_eq!(titled("15", "The 15th Lantern").own_title(), Some("The 15th Lantern"));
+        // The number said again at the end goes; another number stays.
+        assert_eq!(titled("15", "The Far Shore — 15").own_title(), Some("The Far Shore"));
+        assert_eq!(titled("15", "The Far Shore - 15").own_title(), Some("The Far Shore"));
+        assert_eq!(titled("15", "The Far Shore (15)").own_title(), Some("The Far Shore"));
+        assert_eq!(
+            titled("15", "Chapter 15: The Far Shore — 15").own_title(),
+            Some("The Far Shore")
+        );
+        assert_eq!(titled("15", "Chapter 15 — 15").own_title(), None);
+        assert_eq!(
+            titled("15", "The Far Shore — 115").own_title(),
+            Some("The Far Shore — 115")
+        );
+        assert_eq!(titled("15", "The Far Shore — 2").own_title(), Some("The Far Shore — 2"));
+        assert_eq!(titled("15", "Vol. 1-15").own_title(), Some("Vol. 1-15"));
+        assert_eq!(titled("15", "— 15").own_title(), None);
+    }
+
+    #[test]
+    fn a_title_keeps_its_words_without_the_chapter_it_names_again() {
+        let own = |number: &str, title: &str| {
+            own_title(Some(title), number, Some(number)).map(str::to_owned)
+        };
+        let far = Some("The Far Shore".to_owned());
+        assert_eq!(own("15", "Chapter 15: The Far Shore"), far);
+        assert_eq!(own("15", "Ch. 15 - The Far Shore"), far);
+        assert_eq!(own("15", "ch.15 \u{2013} The Far Shore"), far);
+        assert_eq!(own("15", "Chapter 15 The Far Shore"), far);
+        assert_eq!(own("15", "The Far Shore \u{2014} 15"), far);
+        assert_eq!(own("15", "Chapter 15: The Far Shore \u{2014} 15"), far);
+        // A source that counts its extras among its chapters runs ahead of the titles' own
+        // numbers: the row's number is the source's, and the title keeps only its words.
+        assert_eq!(own("19", "Chapter 15: The Far Shore \u{2014} 15"), far);
+        assert_eq!(
+            own("16", "Chapter 12.1: Lanterns \u{2014} 12"),
+            Some("Lanterns".to_owned())
+        );
+        assert_eq!(
+            own("17", "Chapter 12.2: A Ferryman Alone"),
+            Some("A Ferryman Alone".to_owned())
+        );
+        assert_eq!(own("15", "Chapter 15"), None);
+        assert_eq!(own("15", "Ch. 15."), None);
+        assert_eq!(own("15", "Chapter 15 \u{2014} 15"), None);
+        // Numbers that belong to the title stay.
+        for kept in [
+            "Chapter 15th Night",
+            "Chapterhouse 3",
+            "Changes in 15",
+            "The Far Shore \u{2014} 2",
+            "Countdown - 3",
+            "Re-15 and After",
+        ] {
+            assert_eq!(own("15", kept).as_deref(), Some(kept));
+        }
     }
 
     #[test]
@@ -528,5 +1097,106 @@ mod tests {
         let read = Read::of(&store, "a:900301");
         assert_eq!(read.next(&kept).map(|c| c.id.as_str()), Some("13"));
         assert_eq!(read.unread(&kept).len(), 3);
+    }
+
+    fn read(store: &Store, work: &str, chapter: &str, page: Option<u32>, at: i64) {
+        let mut event = kaeri_store::reading::ReadEvent::new(work, chapter, at);
+        event.completed = page.is_none();
+        event.page = page;
+        event.of_pages = Some(20);
+        store.record_read(&event, Vec::new()).unwrap();
+    }
+
+    #[test]
+    fn an_extra_skipped_for_the_next_whole_chapter_stays_unread_and_is_never_next_again() {
+        const WORK: &str = "a:900302";
+        let store = Store::open_in_memory().unwrap();
+        let list: Vec<_> = ["15", "16", "16.5", "17", "18"]
+            .into_iter()
+            .map(|n| SourceChapter::new(format!("c-{n}"), n))
+            .collect();
+        keep(&store, "shelf", "s", &list, 1);
+        let (kept, _) = kept(&store, "shelf", "s").unwrap();
+        let next = |store: &Store| {
+            let read = Read::of(store, WORK);
+            let at = read.in_progress.as_ref().map(|(id, _, _)| id.clone());
+            at.or_else(|| read.next(&kept).map(|c| c.id.clone()))
+        };
+        read(&store, WORK, "15", None, 10);
+        read(&store, WORK, "16", None, 20);
+        assert_eq!(next(&store).as_deref(), Some("16.5"), "the extra is next until skipped");
+        // A look into the extra, then the skip to 17: 17 is where the person is.
+        read(&store, WORK, "16.5", Some(2), 30);
+        read(&store, WORK, "17", Some(4), 40);
+        assert_eq!(next(&store).as_deref(), Some("17"));
+        // Once 17 is read, 18 is next, never 16.5 again, and 16.5 stays unread.
+        read(&store, WORK, "17", None, 50);
+        assert_eq!(next(&store).as_deref(), Some("18"));
+        let after = Read::of(&store, WORK);
+        assert!(!after.is_read("16.5"));
+        // Read later by choice, it counts as any chapter does.
+        read(&store, WORK, "16.5", None, 60);
+        assert!(Read::of(&store, WORK).is_read("16.5"));
+        assert_eq!(next(&store).as_deref(), Some("18"));
+    }
+
+    #[test]
+    fn a_chapter_left_part_way_is_passed_over_once_later_chapters_are_read() {
+        const WORK: &str = "a:900304";
+        let store = Store::open_in_memory().unwrap();
+        let list: Vec<_> = ["1", "2", "3", "3.5", "4", "4.5", "5"]
+            .into_iter()
+            .map(|n| SourceChapter::new(format!("c-{n}"), n))
+            .collect();
+        keep(&store, "shelf", "s", &list, 1);
+        let (kept, _) = kept(&store, "shelf", "s").unwrap();
+        let next = |store: &Store| {
+            let read = Read::of(store, WORK);
+            let at = read.in_progress.as_ref().map(|(id, page, _)| (id.clone(), *page));
+            at.or_else(|| read.next(&kept).map(|c| (c.id.clone(), None)))
+        };
+        read(&store, WORK, "1", Some(20), 10);
+        assert_eq!(next(&store), Some(("1".into(), Some(20))));
+        read(&store, WORK, "2", None, 20);
+        read(&store, WORK, "3", None, 30);
+        read(&store, WORK, "4", Some(2), 40);
+        assert_eq!(next(&store), Some(("4".into(), Some(2))), "the place in 4 wins");
+        // Once 4 is read to its end, Continue goes on past it, not back to page 20 of 1.
+        read(&store, WORK, "4", None, 50);
+        assert_eq!(next(&store), Some(("4.5".into(), None)));
+        assert!(!Read::of(&store, WORK).is_read("1"), "chapter 1 stays unread");
+        // Going back to chapter 1 by choice keeps its place while it is the last one opened.
+        read(&store, WORK, "1", Some(21), 60);
+        assert_eq!(next(&store), Some(("1".into(), Some(21))));
+    }
+
+    #[test]
+    fn an_extra_with_no_number_is_passed_over_once_a_later_volume_is_read() {
+        const WORK: &str = "a:900303";
+        let store = Store::open_in_memory().unwrap();
+        let entry = |id: &str, label: &str, volume: &str| {
+            let mut c = SourceChapter::new(id, label);
+            c.volume = Some(volume.into());
+            c
+        };
+        let list = vec![
+            entry("c-1", "1", "1"),
+            entry("c-2", "2", "1"),
+            entry("c-x", "Volume Extras", "Vol. 1"),
+            entry("c-3", "3", "2"),
+            entry("c-4", "4", "2"),
+            entry("c-y", "Afterword", "2"),
+        ];
+        keep(&store, "shelf", "s", &list, 1);
+        let (kept, _) = kept(&store, "shelf", "s").unwrap();
+        let next = |store: &Store| Read::of(store, WORK).next(&kept).map(|c| c.id.clone());
+        read(&store, WORK, "1", None, 10);
+        read(&store, WORK, "2", None, 20);
+        assert_eq!(next(&store).as_deref(), Some("3"));
+        read(&store, WORK, "3", None, 30);
+        read(&store, WORK, "4", None, 40);
+        // Volume 1's extras sit behind volume 2, read; volume 2's afterword is still ahead.
+        assert_eq!(next(&store).as_deref(), Some("x/2/afterword"));
+        assert!(!Read::of(&store, WORK).is_read("x/1/volume extras"));
     }
 }

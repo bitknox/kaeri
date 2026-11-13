@@ -9,8 +9,27 @@ namespace Kaeri.App;
 /// <summary>A page of a chapter as the engine names it. A split spread has a file for each half.</summary>
 public readonly record struct ReaderPageKey(string Chapter, uint Page, PageHalf? Half = null);
 
-/// <summary>What the end page says when there is nothing to continue to.</summary>
-public sealed record ReaderEnd(ChapterRow? Next, NoNext? Why, string? NextSource);
+/// <summary>
+/// What the end page says when there is nothing to continue to. <c>SkipTo</c>: when the next
+/// chapter is an extra, the first whole chapter after it, for "Skip to chapter 17";
+/// <c>Extras</c>: how many extras the skip passes over.
+/// </summary>
+public sealed record ReaderEnd(ChapterRow? Next, NoNext? Why, string? NextSource, ChapterRow? SkipTo = null, uint Extras = 0)
+{
+    /// <summary>
+    /// What a screen reader adds after the skip: the extra's number, or with a run of extras or
+    /// one with no number, that the extras stay unread.
+    /// </summary>
+    public string? SkipHint => SkipTo is null || Next is null ? null
+        : Extras > 1 || Next.Number is null ? T.ReaderEndSkipHintExtras
+        : T.ReaderEndSkipHint(Next.Number);
+
+    /// <summary>
+    /// The chapter an end page goes on to: the engine's word once it has one, the view's next
+    /// chapter until then. Offline the engine leaves out a next chapter that is not on the device.
+    /// </summary>
+    public static ChapterRow? NextOf(ReaderEnd? end, ReaderView? view) => end is not null ? end.Next : view?.Next;
+}
 
 /// <summary>The notice over the page, with the action it offers.</summary>
 public sealed record ReaderNoticeLine(int Id, string Text, ReaderAction? Action);
@@ -75,6 +94,25 @@ public sealed class ReaderSession
     public int? Ring { get; private set; }
     /// <summary>Where a strip is asked to scroll to once its images are in.</summary>
     public StripPos? StripRestore { get; private set; }
+    /// <summary>Where the strip opens: the place asked for, else the chapter's start.</summary>
+    public StripPos? StripStart => StripRestore ?? StripOf(View?.Start);
+
+    /// <summary>
+    /// A start's place in a strip. A page with none, as a place kept in paged mode, is the top of
+    /// that page's image: pages and a strip's images count the same way, one per image, so the
+    /// strip opens where the engine's "Resumed at" says.
+    /// </summary>
+    public static StripPos? StripOf(ReadPlace? start) =>
+        start?.Strip ?? (start is { Novel: null, Page: { } page } && page > 0 ? new StripPos(page, 0f) : null);
+    /// <summary>The chapter the end page goes on to.</summary>
+    public ChapterRow? EndNext => ReaderEnd.NextOf(End, View);
+    /// <summary>
+    /// The chapter a strip was flowing into and could not open: the chapter read stays in the
+    /// scroll, and the strip ends at the join on an end page with Try again for it.
+    /// </summary>
+    public StripFlowFailure? FlowFailed { get; private set; }
+    /// <summary>The novel's place as its view last told it: a web view made again after its process went opens there.</summary>
+    public NovelPos? NovelShown { get; private set; }
     /// <summary>The chapters of the work, once the engine has listed them.</summary>
     public VolumeGroup[] Chapters { get; private set; } = [];
     public bool ChaptersLoaded { get; private set; }
@@ -112,7 +150,13 @@ public sealed class ReaderSession
     ulong session;
     int ticks, noticeCount;
     bool opened;
+    /// <summary>The reader has moved off the chapter's start: a new layout keeps the page on screen.</summary>
+    bool moved;
+    /// <summary>Opens let go of before the engine named their session, until the engine says they went.</summary>
+    int dropped;
     int? pendingGoTo;
+    /// <summary>The page a layout kept, while the leaf that holds it stays on screen.</summary>
+    uint? heldPage;
     Request? afterClose;
     CancellationTokenSource? noticeTimer;
     DateTimeOffset lastStrip = DateTimeOffset.MinValue;
@@ -164,6 +208,8 @@ public sealed class ReaderSession
         if (Asked is not { } asked || surface is not { } at || Phase != ReaderPhase.Opening || session != 0 || opened)
             return;
         opened = true;
+        // The open carries the surface; a change before the engine names the session goes once it has.
+        sentSurface = at;
         Ask(new ReaderCommand.Open(asked.Work, asked.Chapter, asked.At, at));
         Send?.Invoke(new Command.Reading(new ReadingCommand.LoadChapters(asked.Work, null)));
     }
@@ -187,10 +233,19 @@ public sealed class ReaderSession
 
     public void Close()
     {
+        // A book waiting for this one to close doesn't open behind a reader that has gone.
+        afterClose = null;
         if (Asked is null && session == 0)
             return;
         if (session != 0)
             Ask(new ReaderCommand.Close(session));
+        else if (opened)
+        {
+            // The engine has the open but hasn't named its session: session 0 drops the open
+            // still waiting, so nothing more is fetched for a reader that has gone.
+            dropped++;
+            Ask(new ReaderCommand.Close(0));
+        }
         Reset();
         Asked = null;
         Phase = ReaderPhase.Closed;
@@ -204,7 +259,10 @@ public sealed class ReaderSession
             return;
         if (how == TurnHow.Jump && leaf != Current)
             Ring = Current;
+        if (leaf != Current)
+            heldPage = null;
         Current = leaf;
+        moved = true;
         Ask(new ReaderCommand.Shown(session, view.Chapter.Id, Leaves[leaf].Index, how));
     }
 
@@ -213,6 +271,8 @@ public sealed class ReaderSession
     {
         if (session == 0 || View is not { } view)
             return;
+        // The foot under images still coming is no end reached: nothing counts as read there.
+        footVisible = footVisible && StripLanded(at.Image);
         pendingStrip?.Cancel();
         var since = DateTimeOffset.UtcNow - lastStrip;
         if (since < TimeSpan.FromMilliseconds(500))
@@ -239,7 +299,24 @@ public sealed class ReaderSession
         if (session == 0 || View is not { } view)
             return;
         NovelPainted = true;
+        NovelShown = pos;
+        novelPages = Math.Max(pages, 0);
         Ask(new ReaderCommand.NovelAt(session, view.Chapter.Id, pos, (uint)Math.Max(page, 0), (uint)Math.Max(pages, 0), how));
+    }
+
+    /// <summary>The novel's page count as its view last told it, for its end page.</summary>
+    int novelPages;
+
+    /// <summary>
+    /// The novel's last page was turned past and the end page shows. The engine hears it as the
+    /// page after the last, which counts the chapter read at once, as a paged chapter's end page does.
+    /// </summary>
+    public void NovelEnded()
+    {
+        if (session == 0 || View is not { } view || NovelShown is not { } pos)
+            return;
+        var pages = (uint)Math.Max(novelPages, 1);
+        Ask(new ReaderCommand.NovelAt(session, view.Chapter.Id, pos, pages, pages, TurnHow.Turn));
     }
 
     /// <summary>The paginator counted the volume's pages under the style's key.</summary>
@@ -268,15 +345,82 @@ public sealed class ReaderSession
     /// under it in the same scroll, with no opening screen and no kept place. The engine opens a
     /// strip's next chapter at its first image and says nothing of where it was.
     /// </summary>
-    public void FlowOn()
+    public void FlowOn(uint from)
     {
-        if (session == 0 || Flowing || View?.Next is not { } next)
+        if (session == 0 || Flowing || EndNext is not { } next)
             return;
+        // Images still coming are no end reached: the chapter is not passed, so it is neither read
+        // nor flowed out of.
+        if (!StripLanded(from))
+            return;
+        // A flow that failed into this chapter waits for Try again, rather than asking on every scroll past.
+        if (FlowFailed?.Chapter.Id == next.Id)
+            return;
+        Flow(next);
+    }
+
+    /// <summary>Try again on the end page a failed flow left at the join: the strip flows on into that chapter.</summary>
+    public void RetryFlow()
+    {
+        if (session == 0 || Flowing || FlowFailed is not { } failed)
+            return;
+        FlowFailed = null;
+        // The end page goes back to the marker the chapter opens under.
+        Changed?.Invoke(ReaderChange.End);
+        Flow(failed.Chapter);
+    }
+
+    void Flow(ChapterRow next)
+    {
         Flowing = true;
+        flowingTo = next;
+        flowLeft = (End, Read);
         End = null;
         Read = false;
         ClearNotices();
         Ask(new ReaderCommand.OpenChapter(session, next.Id));
+    }
+
+    /// <summary>
+    /// Every image of the open chapter from <paramref name="from"/> on has landed. Under an image
+    /// still coming or failed the strip's foot is no end: the chapter isn't read there and the
+    /// strip doesn't flow on from it.
+    /// </summary>
+    public bool StripLanded(uint from)
+    {
+        if (View is not { } view)
+            return false;
+        var parts = Leaves.Where(l => !l.EndPage).SelectMany(l => l.Parts).Skip((int)from).ToList();
+        return parts.Count > 0 && parts.All(p => FileOf(p, view.Chapter.Id) is not null);
+    }
+
+    /// <summary>The chapter a strip is flowing into, and what the chapter read had at its end before.</summary>
+    ChapterRow? flowingTo;
+    (ReaderEnd? End, bool Read) flowLeft;
+
+    /// <summary>
+    /// The engine could not open a chapter. A strip flowing on keeps the chapter read, scrolled as
+    /// it was, and says so at the join; an open the reader waited on shows the failure in its place.
+    /// </summary>
+    void OpenFailed(ReadingFailure failure)
+    {
+        if (Flowing && flowingTo is { } to)
+        {
+            Flowing = false;
+            flowingTo = null;
+            // The chapter read counted as read on the way out stays so.
+            End ??= flowLeft.End;
+            Read |= flowLeft.Read;
+            FlowFailed = new StripFlowFailure(to, failure);
+            Changed?.Invoke(ReaderChange.End);
+            return;
+        }
+        if (Asked is null || Phase != ReaderPhase.Opening)
+            return;
+        ClearNotices();
+        Phase = ReaderPhase.Failed;
+        Failure = failure;
+        Changed?.Invoke(ReaderChange.Phase);
     }
 
     /// <summary>A strip is flowing into the next chapter: from <see cref="FlowOn"/> until the strip took its images.</summary>
@@ -431,6 +575,9 @@ public sealed class ReaderSession
             case Event.Reader reader:
                 Apply(reader.V1);
                 break;
+            case Event.Reading { V1: ReadingEvent.Failed { About: ReadingAbout.Reader } failed }:
+                OpenFailed(failed.Failure);
+                break;
             case Event.Reading { V1: ReadingEvent.Chapters chapters }:
                 if (chapters.Work != View?.Work && chapters.Work != Asked?.Work)
                     return;
@@ -447,15 +594,32 @@ public sealed class ReaderSession
         {
             case ReaderEvent.Opened opened:
                 var view = opened.V1;
+                if (dropped > 0 || Asked is null)
+                {
+                    // An open the person left before it came: the engine closes it too. The one
+                    // this reader is closing already heard.
+                    if (view.Session != session)
+                        Ask(new ReaderCommand.Close(view.Session));
+                    return;
+                }
+                var flowedFrom = Flowing ? View?.Chapter.Id : null;
+                flowingTo = null;
+                FlowFailed = null;
                 session = view.Session;
                 View = view;
                 Phase = ReaderPhase.Open;
                 Failure = null;
                 Leaves = [];
-                Pages.Clear();
+                moved = false;
+                // A strip flowing on keeps the files of the chapter it flows from: those images
+                // stay in its scroll, and the engine doesn't send them again.
+                foreach (var gone in Pages.Keys.Where(k => k.Chapter != flowedFrom).ToList())
+                    Pages.Remove(gone);
                 PageFailures.Clear();
                 Novel = null;
                 NovelPainted = false;
+                NovelShown = null;
+                novelPages = 0;
                 End = null;
                 Read = false;
                 ReadTrackers = [];
@@ -468,24 +632,32 @@ public sealed class ReaderSession
                 BackTo = null;
                 Notice = null;
                 Current = 0;
+                heldPage = null;
                 if (view.Settings is { } settings)
                     Settings = settings;
                 Ask(new ReaderCommand.LoadSettings(view.Medium, view.Work));
-                StripRestore = view.Mode == ReaderMode.Strip && !Flowing ? view.Start.Strip : null;
+                StripRestore = view.Mode == ReaderMode.Strip && !Flowing ? StripOf(view.Start) : null;
                 if (view.Mode != ReaderMode.Strip)
                     Flowing = false;
                 if (surface is { } now && sentSurface != now)
+                {
+                    // The window changed while the chapter opened: the engine lays out again for it.
                     sentSurface = now;
+                    Ask(new ReaderCommand.Surface(session, now));
+                }
                 Changed?.Invoke(ReaderChange.Phase);
                 Changed?.Invoke(ReaderChange.Settings);
                 break;
             case ReaderEvent.Leaves leaves:
                 if (leaves.Session != session)
                     return;
+                // Pages laid out again, as when the window widens into spreads or goes full
+                // screen: the page on screen stays, in whichever leaf holds it now.
+                var before = Leaves;
                 Leaves = leaves.LeavesValue;
                 Phase = ReaderPhase.Open;
                 if (Leaves.Length > 0)
-                    Current = Math.Clamp(Math.Max(Current, StartLeaf()), 0, Leaves.Length - 1);
+                    Current = Placed(before, Current);
                 Changed?.Invoke(ReaderChange.Leaves);
                 if (pendingGoTo is { } page && LeafOfPageIndex((uint)page) is { } at)
                     Show(at);
@@ -518,6 +690,8 @@ public sealed class ReaderSession
                 if (novelOpen.V1.Session != session)
                     return;
                 Novel = novelOpen.V1;
+                NovelShown = null;
+                novelPages = 0;
                 NovelStyle = novelOpen.V1.Style;
                 NovelCountKey = novelOpen.V1.CountKey;
                 NovelCounted = novelOpen.V1.Counted;
@@ -559,7 +733,7 @@ public sealed class ReaderSession
             case ReaderEvent.EndPage end:
                 if (end.Session != session)
                     return;
-                End = new ReaderEnd(end.Next, end.WhyNone, end.NextSource);
+                End = new ReaderEnd(end.Next, end.WhyNone, end.NextSource, end.SkipTo, end.Extras);
                 Changed?.Invoke(ReaderChange.End);
                 break;
             case ReaderEvent.NextPreview preview:
@@ -569,6 +743,9 @@ public sealed class ReaderSession
                 Changed?.Invoke(ReaderChange.Preview);
                 break;
             case ReaderEvent.Opening opening:
+                // An open the person left says nothing over the next one.
+                if (dropped > 0 || Asked is null)
+                    return;
                 Opening = (opening.Chapter, opening.Wait);
                 Changed?.Invoke(ReaderChange.Opening);
                 break;
@@ -599,7 +776,14 @@ public sealed class ReaderSession
                 GoToPlace(go.Place);
                 break;
             case ReaderEvent.Closed closed:
-                if (closed.Session != session && session != 0)
+                if (closed.Session == 0)
+                {
+                    // An open dropped before it had a session is gone: what follows is the next one's.
+                    if (dropped > 0)
+                        dropped--;
+                    return;
+                }
+                if (closed.Session != session)
                     return;
                 session = 0;
                 opened = false;
@@ -612,7 +796,41 @@ public sealed class ReaderSession
         }
     }
 
+    /// <summary>
+    /// The page a new layout keeps of a leaf: the one the last layout kept while that leaf still
+    /// holds it, as a spread holds a page shown alone before it; otherwise the leaf's first.
+    /// </summary>
+    uint? PageKept(Leaf[] leaves, int leaf)
+    {
+        if (leaf < 0 || leaf >= leaves.Length || leaves[leaf].Parts.Length == 0)
+            return null;
+        var parts = leaves[leaf].Parts;
+        if (heldPage is { } held && parts.Any(p => p.Page == held))
+            return held;
+        return parts.Min(p => p.Page);
+    }
+
     int StartLeaf() => View?.Start.Page is { } page && LeafOfPageIndex(page) is { } at ? at : 0;
+
+    /// <summary>
+    /// The leaf to show once the leaves came: the chapter's start until the person moves (the
+    /// leaves may still be coming in as an archive extracts), and after that the page that was
+    /// on screen, wherever the new layout (full screen, a resize, a setting) puts it. The page
+    /// is held while its leaf stays on screen, so a round trip through spreads comes back to it.
+    /// </summary>
+    int Placed(Leaf[] before, int was)
+    {
+        if (!moved || was < 0 || was >= before.Length)
+            return Math.Clamp(StartLeaf(), 0, Leaves.Length - 1);
+        if (before[was].EndPage)
+            return Array.FindLastIndex(Leaves, l => l.EndPage) is var end and >= 0 ? end : Leaves.Length - 1;
+        if (PageKept(before, was) is { } kept && LeafOfPageIndex(kept) is { } at)
+        {
+            heldPage = kept;
+            return at;
+        }
+        return Math.Clamp(was, 0, Leaves.Length - 1);
+    }
 
     /// <summary>The leaf that holds a page, counted from 0.</summary>
     int? LeafOfPageIndex(uint page)
@@ -649,7 +867,10 @@ public sealed class ReaderSession
     void Show(int leaf)
     {
         pendingGoTo = null;
+        if (leaf != Current)
+            heldPage = null;
         Current = leaf;
+        moved = true;
         GoTo = (leaf, Bump());
         Changed?.Invoke(ReaderChange.GoTo);
     }
@@ -771,9 +992,14 @@ public sealed class ReaderSession
         Notice = null;
         BackTo = null;
         Current = 0;
+        heldPage = null;
         Ring = null;
         StripRestore = null;
+        NovelShown = null;
+        novelPages = 0;
         Flowing = false;
+        flowingTo = null;
+        FlowFailed = null;
         GoTo = null;
         NovelGoTo = null;
         Read = false;
@@ -787,6 +1013,7 @@ public sealed class ReaderSession
         ChaptersLoaded = false;
         Failure = null;
         opened = false;
+        moved = false;
         pendingGoTo = null;
         lastStrip = DateTimeOffset.MinValue;
         sentSurface = null;
@@ -816,3 +1043,30 @@ public sealed class ReaderSession
     /// <summary>The leaves the person sees as pages: the end page's leaf is not one.</summary>
     public int ReadingLeaves => Leaves.Count(l => !l.EndPage);
 }
+
+/// <summary>Where a strip plate's words sit: in the middle of the part of the image on screen.</summary>
+public static class StripPlate
+{
+    /// <summary>
+    /// The margins above and below the words in an image <paramref name="height"/> tall, so they
+    /// centre on the part on screen (<paramref name="seen"/>, top and bottom in the image's own
+    /// units) while that part leaves them <paramref name="room"/>; a thinner part widens to the
+    /// room about its middle, inside the image. Off screen, none.
+    /// </summary>
+    public static (double Above, double Below) WordsMargins(double height, (double Top, double Bottom)? seen, double room)
+    {
+        if (seen is not { } part)
+            return (0, 0);
+        var top = Math.Max(part.Top, 0);
+        var bottom = Math.Min(part.Bottom, height);
+        if (bottom <= top)
+            return (0, 0);
+        if (bottom - top >= room)
+            return (top, height - bottom);
+        var above = Math.Clamp((top + bottom) / 2 - room / 2, 0, Math.Max(height - room, 0));
+        return (above, Math.Max(height - above - room, 0));
+    }
+}
+
+/// <summary>A strip's flow into <paramref name="Chapter"/> that failed with <paramref name="Failure"/>.</summary>
+public sealed record StripFlowFailure(ChapterRow Chapter, ReadingFailure Failure);

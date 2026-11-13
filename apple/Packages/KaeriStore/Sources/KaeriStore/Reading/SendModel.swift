@@ -19,6 +19,9 @@ public struct EReaderSend: Identifiable, Equatable, Sendable {
         case waiting(line: String)
         case ready([ExportFile])
         case failed(String)
+        /// Ready, but the files were cleared before they were shared: the engine keeps them for a
+        /// day. Send again makes them anew.
+        case gone
     }
 
     /// Ours, from 1, so a send is the same row before the engine has named its job.
@@ -30,6 +33,9 @@ public struct EReaderSend: Identifiable, Equatable, Sendable {
     /// The chapters asked for, in reading order; empty for a restarted send.
     public let chapters: [String]
     public internal(set) var phase: Phase
+    /// The format asked for, so a send whose files are gone can be asked for again; nil for a
+    /// restarted send.
+    var format: ExportFormat?
     /// Stopped before the engine named its job: stopped as soon as it does.
     var cancelOnBind = false
 
@@ -40,6 +46,7 @@ public struct EReaderSend: Identifiable, Equatable, Sendable {
         case .waiting: 1
         case .ready: 2
         case .failed: 3
+        case .gone: 4
         }
     }
 
@@ -51,9 +58,12 @@ public struct EReaderSend: Identifiable, Equatable, Sendable {
     public var isRunning: Bool {
         switch phase {
         case .preparing, .waiting: true
-        case .ready, .failed: false
+        case .ready, .failed, .gone: false
         }
     }
+
+    /// Whether Send again can ask for it once more: the engine said what it is.
+    public var canSendAgain: Bool { !work.isEmpty && !chapters.isEmpty && format != nil }
 }
 
 @Observable @MainActor
@@ -101,9 +111,11 @@ public final class SendModel {
     public func begin(work: String, chapters: [String], target: ExportTarget, novel: Bool) -> Int? {
         guard let format = Self.format(of: target, novel: novel) else { return nil }
         lastId += 1
-        sends.append(EReaderSend(
+        var send = EReaderSend(
             id: lastId, job: nil, work: work, target: target.id, chapters: chapters,
-            phase: .preparing(fraction: nil, done: 0, total: 0)))
+            phase: .preparing(fraction: nil, done: 0, total: 0))
+        send.format = format
+        sends.append(send)
         choose(target: target.id)
         command?(.reading(.prepare(work: work, pick: .chapters(ids: chapters), target: target.id, format: format)))
         return lastId
@@ -125,10 +137,39 @@ public final class SendModel {
         sends.remove(at: index)
     }
 
+    /// The files of a ready send, to hand the share sheet, when every one is still there. The
+    /// engine clears them a day after they were made: then the send says they are gone, and
+    /// nothing is shared or counted as sent.
+    public func shareable(_ id: Int, exists: (String) -> Bool = { FileManager.default.fileExists(atPath: $0) }) -> [URL]? {
+        guard let index = sends.firstIndex(where: { $0.id == id }),
+              case .ready(let files) = sends[index].phase else { return nil }
+        guard files.allSatisfy({ exists($0.path) }) else {
+            sends[index].phase = .gone
+            return nil
+        }
+        return files.map { URL(fileURLWithPath: $0.path) }
+    }
+
+    /// Asks again for the files of a send whose files are gone. The send is the one returned.
+    @discardableResult
+    public func sendAgain(_ id: Int) -> Int? {
+        guard let send = sends.first(where: { $0.id == id }), send.canSendAgain, let format = send.format else { return nil }
+        sends.removeAll { $0.id == id }
+        lastId += 1
+        var again = EReaderSend(
+            id: lastId, job: nil, work: send.work, target: send.target, chapters: send.chapters,
+            phase: .preparing(fraction: nil, done: 0, total: 0))
+        again.format = format
+        sends.append(again)
+        command?(.reading(.prepare(work: send.work, pick: .chapters(ids: send.chapters), target: send.target, format: format)))
+        return lastId
+    }
+
     /// The files went through the share sheet: the engine keeps that the chapters were sent, and
     /// the series page asks where you stopped.
     public func shared(_ id: Int) {
         guard let send = sends.first(where: { $0.id == id }) else { return }
+        if case .gone = send.phase { return }
         if !send.work.isEmpty {
             command?(.reading(.shared(work: send.work, chapters: send.chapters, target: send.target)))
         }

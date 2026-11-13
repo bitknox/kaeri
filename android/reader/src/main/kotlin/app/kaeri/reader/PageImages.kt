@@ -1,6 +1,9 @@
 // Page files to bitmaps. The engine writes each page to its cache whole, as the book had it or as
-// raw pixels ready to map (a grey e-ink page is Gray8), and names the crop to show. Decoding runs
-// off the main thread and the bitmaps are kept in a cache sized from the app's memory.
+// raw pixels ready to map (a grey e-ink page is Gray8), and names the crop to show. A picture too
+// big for a canvas to draw, such as a very tall strip image, is decoded smaller. Decoding runs
+// off the main thread and the bitmaps are kept in a cache sized from the app's memory. The pages
+// the reader has on screen, beside it and held over a turn are kept whatever that size: an e-ink
+// panel's raw pages are big enough that the cache may hold only one.
 
 package app.kaeri.reader
 
@@ -18,6 +21,9 @@ import java.io.FileNotFoundException
 import java.io.RandomAccessFile
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
+import kotlin.math.ceil
+import kotlin.math.floor
+import kotlin.math.sqrt
 
 /** A decoded page. [grey] pages are alpha-only: draw them white over black. */
 class PageBitmap(val bitmap: Bitmap, val grey: Boolean) {
@@ -36,17 +42,29 @@ sealed interface PageDecodeResult {
     data class Unreadable(val reason: String) : PageDecodeResult
 }
 
-/** Decodes page files, the engine's crop applied, and raw pixels mapped as they are. */
+/**
+ * Decodes page files, the engine's crop applied, and raw pixels mapped as they are. No bitmap comes
+ * out bigger than [budget] bytes: a hardware canvas refuses to draw one past [CANVAS_BYTES] and
+ * throws, so a picture that would pass it is decoded smaller, its shape kept.
+ */
 object PageDecoder {
-    fun decode(file: PageFile): PageDecodeResult = try {
+    /** The most a hardware canvas draws in one bitmap; past it, drawing throws. */
+    const val CANVAS_BYTES: Long = 100L * 1024 * 1024
+
+    fun decode(file: PageFile, budget: Long = CANVAS_BYTES): PageDecodeResult = try {
         val source = File(file.path)
         if (!source.isFile) {
             PageDecodeResult.Missing
         } else {
-            when (val encoding = file.encoding) {
-                is PageEncoding.Original -> PageDecodeResult.Decoded(PageBitmap(original(source, file), grey = false))
-                is PageEncoding.Raw -> PageDecodeResult.Decoded(raw(source, file, encoding))
+            // Settled before the first picture: the probe's one-pixel copy makes the first native
+            // buffer and file calls under the lazy's lock. The JVM test runtime sets those up for
+            // one first caller at a time, and pages beside the shown one decode alongside it.
+            val rgba = rgbaInMemory
+            val page = when (val encoding = file.encoding) {
+                is PageEncoding.Original -> PageBitmap(original(source, file, budget), grey = false)
+                is PageEncoding.Raw -> raw(source, file, encoding, rgba)
             }
+            PageDecodeResult.Decoded(PageBitmap(within(page.bitmap, budget), page.grey))
         }
     } catch (_: FileNotFoundException) {
         PageDecodeResult.Missing
@@ -56,13 +74,31 @@ object PageDecoder {
         PageDecodeResult.Unreadable(e.message ?: "out of memory")
     }
 
-    private fun original(source: File, file: PageFile): Bitmap {
+    private fun original(source: File, file: PageFile, budget: Long): Bitmap {
         val crop = file.crop?.let { Rect(it.x.toInt(), it.y.toInt(), (it.x + it.width).toInt(), (it.y + it.height).toInt()) }
         val decoded = runCatching {
-            ImageDecoder.decodeBitmap(ImageDecoder.createSource(source)) { decoder, _, _ ->
+            ImageDecoder.decodeBitmap(ImageDecoder.createSource(source)) { decoder, info, _ ->
                 // Software pixels: an e-ink panel and a screenshot both read them back.
                 decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
-                if (crop != null) decoder.crop = crop
+                val full = info.size
+                val scale = scaleWithin(crop?.width() ?: full.width, crop?.height() ?: full.height, ARGB_BYTES, budget)
+                if (scale < 1.0) {
+                    // Too big to draw: the decoder scales as it reads, and the crop is in scaled pixels.
+                    val width = scaled(full.width, scale)
+                    val height = scaled(full.height, scale)
+                    decoder.setTargetSize(width, height)
+                    if (crop != null) {
+                        val left = scaled(crop.left, scale, least = 0).coerceAtMost(width - 1)
+                        val top = scaled(crop.top, scale, least = 0).coerceAtMost(height - 1)
+                        decoder.crop = Rect(
+                            left, top,
+                            (left + scaled(crop.width(), scale)).coerceAtMost(width),
+                            (top + scaled(crop.height(), scale)).coerceAtMost(height),
+                        )
+                    }
+                } else if (crop != null) {
+                    decoder.crop = crop
+                }
             }
         }.getOrNull()
         if (decoded != null) return decoded
@@ -72,16 +108,60 @@ object PageDecoder {
             val region = BitmapRegionDecoder.newInstance(source.path, false)
             if (region != null) {
                 try {
-                    region.decodeRegion(crop, null)?.let { return it }
+                    val options = BitmapFactory.Options().apply { inSampleSize = sampleWithin(crop.width(), crop.height(), budget) }
+                    region.decodeRegion(crop, options)?.let { return it }
                 } finally {
                     region.recycle()
                 }
             }
         }
-        return BitmapFactory.decodeFile(source.path) ?: error("not a picture")
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeFile(source.path, bounds)
+        val usable = crop?.takeIf { !it.isEmpty && it.right <= bounds.outWidth && it.bottom <= bounds.outHeight }
+        val sample = sampleWithin(usable?.width() ?: bounds.outWidth, usable?.height() ?: bounds.outHeight, budget)
+        val whole = BitmapFactory.decodeFile(source.path, BitmapFactory.Options().apply { inSampleSize = sample })
+            ?: error("not a picture")
+        // The crop names the part to show; this path decodes the whole file, so cut it here.
+        if (usable != null) {
+            val cut = Rect(usable.left / sample, usable.top / sample, usable.right / sample, usable.bottom / sample)
+            cut.intersect(0, 0, whole.width, whole.height)
+            if (!cut.isEmpty) return Bitmap.createBitmap(whole, cut.left, cut.top, cut.width(), cut.height())
+        }
+        return whole
     }
 
-    private fun raw(source: File, file: PageFile, encoding: PageEncoding.Raw): PageBitmap {
+    /**
+     * [bitmap] as it is when a canvas draws it, or scaled down to [budget] bytes when it would not,
+     * whatever made it: raw pixels, and a decoder that gave more than it was asked for.
+     */
+    internal fun within(bitmap: Bitmap, budget: Long): Bitmap {
+        if (bitmap.byteCount.toLong() <= budget) return bitmap
+        val perPixel = (bitmap.byteCount.toLong() / (bitmap.width.toLong() * bitmap.height)).toInt().coerceAtLeast(1)
+        val scale = scaleWithin(bitmap.width, bitmap.height, perPixel, budget)
+        val smaller = Bitmap.createScaledBitmap(bitmap, scaled(bitmap.width, scale), scaled(bitmap.height, scale), true)
+        if (smaller !== bitmap) bitmap.recycle()
+        return smaller
+    }
+
+    /** The factor that brings a [width] by [height] picture to [budget] bytes, 1 when it fits already. */
+    internal fun scaleWithin(width: Int, height: Int, bytesPerPixel: Int, budget: Long): Double {
+        val bytes = width.toLong() * height * bytesPerPixel
+        return if (bytes <= budget || bytes <= 0) 1.0 else sqrt(budget.toDouble() / bytes)
+    }
+
+    /** The smallest power-of-two sample that brings a [width] by [height] picture to [budget] bytes. */
+    internal fun sampleWithin(width: Int, height: Int, budget: Long): Int {
+        var sample = 1
+        while (sample < MAX_SAMPLE && ceil(width / sample.toDouble()) * ceil(height / sample.toDouble()) * ARGB_BYTES > budget) sample *= 2
+        return sample
+    }
+
+    private fun scaled(length: Int, scale: Double, least: Int = 1): Int = floor(length * scale).toInt().coerceAtLeast(least)
+
+    private const val ARGB_BYTES = 4
+    private const val MAX_SAMPLE = 1 shl 16
+
+    private fun raw(source: File, file: PageFile, encoding: PageEncoding.Raw, rgba: Boolean): PageBitmap {
         val width = file.width.toInt()
         val height = file.height.toInt()
         val grey = encoding.format == PixelFormat.GRAY8
@@ -93,7 +173,7 @@ object PageDecoder {
             check(mapped.capacity().toLong() >= stride.toLong() * (height - 1) + width * pixel) { "the page file is short" }
             val rowBytes = bitmap.rowBytes
             // RGBA in memory is what ARGB_8888 holds on Android; a host whose order differs swaps.
-            val swap = !grey && !rgbaInMemory
+            val swap = !grey && !rgba
             val packed = if (!swap && stride == rowBytes && mapped.capacity() >= rowBytes * height) {
                 mapped.limit(rowBytes * height)
                 mapped
@@ -134,24 +214,47 @@ object PageDecoder {
 
 /**
  * The decoded pages kept in memory, by file and crop. Sized to an eighth of what the app may use,
- * so a 2 GB e-reader keeps working; the engine's own cache holds the files.
+ * so a 2 GB e-reader keeps working; the engine's own cache holds the files. The pages named by
+ * [keep] stay besides, whatever that size, until they are no longer named.
  */
 class PageImages(maxBytes: Int = defaultBytes()) {
     private val cache = object : LruCache<String, PageBitmap>(maxBytes.coerceAtLeast(1)) {
         override fun sizeOf(key: String, value: PageBitmap): Int = value.bitmap.allocationByteCount
     }
+    private val kept = java.util.concurrent.ConcurrentHashMap<String, PageBitmap>()
+    @Volatile private var keeping: Set<String> = emptySet()
 
-    fun cached(file: PageFile): PageBitmap? = cache.get(keyOf(file))
+    fun cached(file: PageFile): PageBitmap? = keyOf(file).let { kept[it] ?: cache.get(it) }
+
+    /**
+     * Keeps [files]' pictures, once decoded, whatever the cache's size: the page shown, the pages
+     * beside it and a page held on screen over a turn. Pages kept before and not named now go back
+     * to the cache alone.
+     */
+    fun keep(files: Collection<PageFile>) {
+        val keys = files.mapTo(HashSet(), ::keyOf)
+        if (keys == keeping) return
+        keeping = keys
+        kept.keys.retainAll(keys)
+        for (key in keys) if (!kept.containsKey(key)) cache.get(key)?.let { kept[key] = it }
+    }
 
     /** The page's bitmap, decoded now if it is not kept. Call it off the main thread. */
     fun load(file: PageFile): PageDecodeResult {
-        cache.get(keyOf(file))?.let { return PageDecodeResult.Decoded(it) }
+        val key = keyOf(file)
+        cached(file)?.let { return PageDecodeResult.Decoded(it) }
         val result = PageDecoder.decode(file)
-        if (result is PageDecodeResult.Decoded) cache.put(keyOf(file), result.page)
+        if (result is PageDecodeResult.Decoded) {
+            cache.put(key, result.page)
+            if (key in keeping) kept[key] = result.page
+        }
         return result
     }
 
-    fun clear() = cache.evictAll()
+    fun clear() {
+        kept.clear()
+        cache.evictAll()
+    }
 
     companion object {
         fun defaultBytes(): Int = (Runtime.getRuntime().maxMemory() / 8).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()

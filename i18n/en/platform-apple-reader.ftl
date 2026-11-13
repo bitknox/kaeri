@@ -273,7 +273,10 @@ reader-chapter-new = new
 
 # Chapters sheet: a chapter's length.
 # @arg pages: int
-reader-chapter-pages = { $pages } pages
+reader-chapter-pages = { $pages ->
+    [one] 1 page
+   *[other] { $pages } pages
+}
 
 # Chapters sheet: the offline line.
 reader-offline-line = Offline. Downloaded chapters still open.
@@ -310,11 +313,6 @@ reader-key-step-screen = Screen
 
 # Gap between a strip's images.
 reader-strip-gap = Gap between images
-
-# Accessibility value of the pointer hint on the first chapter's tap zones.
-reader-zone-back = Back
-reader-zone-forward = Forward
-reader-zone-menu = Menu
 
 # A jump button above the page grid in the chapters sheet, for a band of pages.
 # @arg from: int

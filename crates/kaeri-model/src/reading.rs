@@ -281,6 +281,11 @@ pub struct VolumeGroup {
     /// Every chapter in it is read: folded into one line.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub all_read: bool,
+    /// The whole list as one, in reading order, drawn with no heading: Show volumes is off,
+    /// or too few of the chapters have a volume to group them by. The only group when set.
+    /// Each chapter still says its volume.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub flat: bool,
 }
 
 /// One chapter in a list.
@@ -349,6 +354,10 @@ pub struct ChapterRow {
     /// source's name. It opens from there.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub other_source: Option<String>,
+    /// A file on this device that is not a download, such as one in the person's folders: it
+    /// opens from there, and there is nothing to download, so no Download is offered for it.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub on_device: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -827,9 +836,25 @@ pub struct ReadSearchQuery {
     /// Ask only the person's sources, not AniList: the filter bar's "Your sources only".
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub sources_only: bool,
+    /// The ids of the only sources a search with words asks: the large e-ink panel's Search in.
+    /// `None` asks every source that is on. A source outside it never gets the words, nor a
+    /// source that joins while the search shows, nor AniList: a scope is the only place asked.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub source_scope: Option<Vec<String>>,
 }
 
 impl ReadSearchQuery {
+    /// Whether the search asks AniList: neither "Your sources only" nor a scope is set.
+    pub fn asks_anilist(&self) -> bool {
+        !self.sources_only && self.source_scope.is_none()
+    }
+
+    /// Whether a search with words may ask the source `id`: it is in [`Self::source_scope`],
+    /// or there is none.
+    pub fn asks_source(&self, id: &str) -> bool {
+        self.source_scope.as_ref().is_none_or(|scope| scope.iter().any(|s| s == id))
+    }
+
     /// [`Self::formats`] as the filter reads them: a saved `one-shot` is `manga`, each once,
     /// in the order chosen.
     pub fn format_keys(&self) -> Vec<&str> {
@@ -856,7 +881,7 @@ pub enum ReadAnilistState {
     Answered,
     /// AniList could not be reached; the sources were still asked.
     Failed,
-    /// "Your sources only" is on.
+    /// "Your sources only" is on, or the search is scoped to sources.
     Skipped,
 }
 
@@ -950,6 +975,8 @@ pub enum DownloadPick {
     Chapters { ids: Vec<ChapterId> },
 }
 
+/// A chapter's download. While it downloads, `total` is 0 until the page count is known, and
+/// stays 0 for a novel's chapter, which has no pages to count: it says it downloads, uncounted.
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
 pub enum ChapterDownloadState {
@@ -1038,13 +1065,16 @@ pub struct DownloadEstimate {
     pub pick: DownloadPick,
     /// The chosen chapters not downloaded yet.
     pub chapters: u32,
+    /// What they will take, or 0 when that is not known: an estimate needs past downloads of
+    /// the work or its source to go by.
     pub bytes: u64,
     /// "About 214 MB · over Wi-Fi", as parts the app joins with " · ". Empty when nothing is
-    /// left to download.
+    /// left to download, or when the size is not known.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub line: Vec<Msg>,
     /// Every chosen chapter, the ones on this device by what they take here and the rest as
-    /// estimated: what a send to an e-reader of the same choice comes to.
+    /// estimated: what a send to an e-reader of the same choice comes to. 0 when any of them
+    /// is not known.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub all_bytes: u64,
 }
@@ -1313,6 +1343,25 @@ pub enum ReadingFailure {
         part: String,
         problem: SendProblem,
     },
+    /// A file or folder Kaeri makes, for a download or a send, could not be written, for a
+    /// reason other than a full disk. `path` is the file's or the folder's.
+    CannotWrite {
+        path: String,
+        problem: WriteProblem,
+    },
+}
+
+/// Why a file or folder could not be written.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum WriteProblem {
+    /// The storage does not take the name: it is too long, or has characters the storage does
+    /// not allow.
+    Name,
+    /// The storage is read-only, or Kaeri may not write there.
+    Denied,
+    /// Any other error the system gave.
+    Other,
 }
 
 /// What the check before a send found wrong with a part of the file.
@@ -1396,6 +1445,13 @@ impl ReadingFailure {
                     file: file.clone(),
                     part: part.clone(),
                 },
+            },
+            Self::CannotWrite { path, problem } => match problem {
+                WriteProblem::Name => ReadingMsg::ReadingFailedWriteName { path: path.clone() },
+                WriteProblem::Denied => {
+                    ReadingMsg::ReadingFailedWriteDenied { path: path.clone() }
+                }
+                WriteProblem::Other => ReadingMsg::ReadingFailedWrite { path: path.clone() },
             },
         }
     }
@@ -2049,6 +2105,18 @@ mod tests {
             ReadingFailure::NeedsNewerKaeri { world: "kaeri:books@0.2".into() },
             ReadingFailure::ReadingOff,
             ReadingFailure::Other { reason: "It broke.".into() },
+            ReadingFailure::CannotWrite {
+                path: "/d/a.cbz".into(),
+                problem: WriteProblem::Name,
+            },
+            ReadingFailure::CannotWrite {
+                path: "/d/a.cbz".into(),
+                problem: WriteProblem::Denied,
+            },
+            ReadingFailure::CannotWrite {
+                path: "/d/a.cbz".into(),
+                problem: WriteProblem::Other,
+            },
         ];
         for failure in failures {
             let text = failure.msg().english();

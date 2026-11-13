@@ -371,7 +371,7 @@ static class SendDialog
                     progressPart.Children.Add(Ui.Text(T.SendReady(running.Files.Length), "BodyTextBlockStyle"));
                     break;
                 case SendPhase.Failed:
-                    dialog.PrimaryButtonText = T.ActionTryAgain;
+                    dialog.PrimaryButtonText = running.FilesGone ? T.SendAgain : T.ActionTryAgain;
                     dialog.PrimaryButtonStyle = Ui.Res<Style>("AccentButtonStyle");
                     dialog.IsPrimaryButtonEnabled = target is not null;
                     dialog.SecondaryButtonText = "";
@@ -406,6 +406,8 @@ static class SendDialog
                 args.Cancel = true;
                 if (await SendFiles.Share(ctx, running, Title()))
                     dialog.Hide();
+                else if (running.Phase != SendPhase.Ready)
+                    Draw();
                 return;
             }
             args.Cancel = true;
@@ -418,6 +420,8 @@ static class SendDialog
             args.Cancel = true;
             if (await SendFiles.Save(ctx, running))
                 dialog.Hide();
+            else if (running.Phase != SendPhase.Ready)
+                Draw();
         };
 
         void Changed(ReadingPart part)
@@ -558,12 +562,12 @@ sealed partial class SendStatusRows : StackPanel
                 words.Children.Add(Ui.Text(T.SendReady(send.Files.Length), "HazeCaptionStyle", wrap: false));
                 buttons.Children.Add(Ui.Label(T.ActionShare, async (_, _) =>
                 {
-                    if (await SendFiles.Share(ctx, send, TitleOf(send)))
+                    if (await SendFiles.Share(ctx, send, TitleOf(send)) || send.Phase != SendPhase.Ready)
                         Draw();
                 }));
                 buttons.Children.Add(Ui.Label(T.SendSaveFilesWindows, async (_, _) =>
                 {
-                    if (await SendFiles.Save(ctx, send))
+                    if (await SendFiles.Save(ctx, send) || send.Phase != SendPhase.Ready)
                         Draw();
                 }));
                 buttons.Children.Add(Ui.Icon("", T.ActionClose, (_, _) =>
@@ -577,7 +581,7 @@ sealed partial class SendStatusRows : StackPanel
                 line.Children.Add(States.ErrorGlyph(14));
                 line.Children.Add(Ui.Text(send.Line, "HazeCaptionStyle"));
                 words.Children.Add(line);
-                buttons.Children.Add(Ui.Label(T.ActionTryAgain, (_, _) => Retry(send)));
+                buttons.Children.Add(Ui.Label(send.FilesGone ? T.SendAgain : T.ActionTryAgain, (_, _) => Retry(send)));
                 buttons.Children.Add(Ui.Icon("", T.ActionClose, (_, _) =>
                 {
                     sending.Dismiss(send.Id);
@@ -618,6 +622,9 @@ static class SendFiles
     /// <summary>The share sheet with the files; true once an app took them.</summary>
     public static async Task<bool> Share(Ctx ctx, EReaderSend send, string title)
     {
+        // Files gone since they were ready fail the send, for Send again.
+        if (!ctx.Known.Reading.Sending.FilesThere(send.Id))
+            return false;
         try
         {
             var files = new List<global::Windows.Storage.IStorageItem>();
@@ -656,7 +663,7 @@ static class SendFiles
     /// </summary>
     public static async Task<bool> Save(Ctx ctx, EReaderSend send)
     {
-        if (send.Files.Length == 0)
+        if (!ctx.Known.Reading.Sending.FilesThere(send.Id))
             return false;
         try
         {

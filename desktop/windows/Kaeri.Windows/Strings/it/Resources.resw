@@ -6251,6 +6251,15 @@
   <data name="ReaderPageLoading" xml:space="preserve">
     <value>Caricamento pagina {page}</value>
   </data>
+  <data name="ReaderPagePlate" xml:space="preserve">
+    <value>Pagina {page}</value>
+  </data>
+  <data name="ReaderImagePlate" xml:space="preserve">
+    <value>Immagine {image}</value>
+  </data>
+  <data name="ReaderImageLoading" xml:space="preserve">
+    <value>Caricamento immagine {image}</value>
+  </data>
   <data name="ReaderPageFailed" xml:space="preserve">
     <value>Pagina {page} non caricata</value>
   </data>
@@ -6332,11 +6341,17 @@
   <data name="ReaderTapEdges" xml:space="preserve">
     <value>Bordi</value>
   </data>
-  <data name="ReaderTapSides" xml:space="preserve">
-    <value>Metà</value>
-  </data>
   <data name="ReaderTapOff" xml:space="preserve">
     <value>No</value>
+  </data>
+  <data name="ReaderZoneNext" xml:space="preserve">
+    <value>Pagina successiva</value>
+  </data>
+  <data name="ReaderZonePrevious" xml:space="preserve">
+    <value>Pagina precedente</value>
+  </data>
+  <data name="ReaderZoneControls" xml:space="preserve">
+    <value>Controlli</value>
   </data>
   <data name="ReaderChapters" xml:space="preserve">
     <value>Capitoli</value>
@@ -11242,9 +11257,6 @@
   </data>
   <data name="TitleMoreAbout" xml:space="preserve">
     <value>Altro su questo titolo</value>
-  </data>
-  <data name="TitleSynopsisHint" xml:space="preserve">
-    <value>Mostra la trama completa</value>
   </data>
   <data name="TitleDubbedTo" xml:space="preserve">
     <value>Doppiato fino all'episodio {episode}</value>

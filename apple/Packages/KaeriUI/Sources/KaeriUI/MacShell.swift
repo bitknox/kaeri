@@ -117,7 +117,11 @@ struct MacShell: View {
                     }
                 }
             }
-            .toolbarBackgroundVisibility(navigator.titleOnMac == nil ? .automatic : .hidden, for: .windowToolbar)
+            // A page over the section clears the toolbar's own background. Left automatic, macOS
+            // draws the section's scroll into the title bar, over the page.
+            .toolbarBackgroundVisibility(
+                navigator.titleOnMac == nil && navigator.seriesOnMac == nil ? .automatic : .hidden,
+                for: .windowToolbar)
             .titleSearchField(
                 text: navigator.section == .settings ? $navigator.settingsQuery : $navigator.query,
                 titles: navigator.section != .settings && !ReadSearchScope.active(store: store, navigator: navigator),

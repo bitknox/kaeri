@@ -10,6 +10,9 @@
 //! [`open`] sniffs the file's first bytes and opens it as the right [`Book`]. The readers can
 //! also be used one by one: [`Archive`], [`Comic`], [`Epub`] and [`Pdf`].
 //!
+//! A folder the platform opens rather than one reached by path, such as a folder picked in
+//! Android's system picker, is read through a [`tree::Tree`] the platform registers.
+//!
 //! [`novel`] cleans EPUB and text chapters for the web view and carries the paginator.
 //!
 //! [`write`](mod@write) makes books for downloads and Send to e-reader (CBZ, EPUB, fixed-layout EPUB and
@@ -35,6 +38,7 @@ pub mod opds;
 pub mod path;
 #[cfg(feature = "pdf")]
 pub mod pdf;
+pub mod tree;
 pub mod worker;
 pub mod write;
 mod xml;
@@ -105,8 +109,22 @@ pub fn sniff(head: &[u8]) -> Option<Sniffed> {
     None
 }
 
-/// Opens a book file, or a folder of images.
+/// Opens a book file, or a folder of images. A reference a registered [`tree::Tree`] claims
+/// opens through that tree.
 pub fn open(path: &Path, limits: &Limits) -> Result<Book> {
+    if let Some(tree) = tree::claiming(path) {
+        let entry = tree.entry(&path.to_string_lossy())?;
+        if entry.folder {
+            return Comic::open_folder(path, limits).map(|c| Book::Comic(Box::new(c)));
+        }
+        if entry.size > limits.max_file_bytes {
+            return Err(BookError::TooLarge {
+                what: "file size",
+                limit: limits.max_file_bytes,
+            });
+        }
+        return open_source(tree.open(&entry.reference)?, Some(&entry.name), limits);
+    }
     let meta = path.metadata()?;
     if meta.is_dir() {
         return Comic::open_folder(path, limits).map(|c| Book::Comic(Box::new(c)));

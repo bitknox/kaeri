@@ -70,7 +70,6 @@ linux-shortcuts-text-size = Metni büyüt, küçült ya da varsayılana döndür
 linux-shortcuts-reader-back = Atlamadan önceki sayfaya dön
 linux-shortcuts-close-reader = Okuyucuyu kapat
 linux-reader-names-and = { $first } ve { $last }
-linux-reader-page-plate = Sayfa { $page }
 linux-reader-open-failed = Bölüm { $chapter } açılamadı
 linux-reader-open-failed-plain = Bu bölüm açılamadı
 linux-send-next = { $n ->

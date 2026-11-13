@@ -979,8 +979,6 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
             }
         });
     header.pack_end(&surprise);
-    // Shows or Reading leads the content bar, where Library has it.
-    filters.row.prepend(&scope(ctx, Dest::Search, true));
 
     // The start: Home's discovery rows, then the genres, as the shows' start.
     let start_rows = gtk::Box::new(gtk::Orientation::Vertical, 18);
@@ -1015,7 +1013,9 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
 
     let content = gtk::Box::new(gtk::Orientation::Vertical, 6);
     content.append(&bar);
-    content.append(&filters.row);
+    // Shows or Reading leads the content bar, where Library has it.
+    let scope = scope(ctx, Dest::Search, true);
+    content.append(&crate::pages::search_filters::with_scope(ctx, &filters.row, &scope));
     content.append(&filters.chips);
     content.append(&body_stack);
     let page = widgets::read_content_page(&t::nav_search(), &header, &content);

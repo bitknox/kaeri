@@ -71,7 +71,7 @@ async fn two_versions_of_a_chapter_are_one_row_with_both_counted() {
         .unwrap();
 
     let (_, mut volumes) = kit.sources.chapters(&work, None, NOW).await.unwrap();
-    super::super::series::finish(&kit, &work, &mut volumes, NOW);
+    super::super::series::finish(&kit, &work, None, &mut volumes, NOW);
     let shown: Vec<(&str, u32, Option<&str>)> = rows(&volumes)
         .iter()
         .map(|r| (r.id.as_str(), r.versions, r.version_label.as_deref()))
@@ -80,9 +80,49 @@ async fn two_versions_of_a_chapter_are_one_row_with_both_counted() {
 
     // The list as kept, shown when the source does not answer, is the same.
     let (_, mut kept) = super::super::series::kept_volumes(&kit, &work);
-    super::super::series::finish(&kit, &work, &mut kept, NOW);
+    super::super::series::finish(&kit, &work, None, &mut kept, NOW);
     let ids: Vec<&str> = rows(&kept).iter().map(|r| r.id.as_str()).collect();
     assert_eq!(ids, ["12", "13"]);
+}
+
+/// The list as kept, which the page shows when the source does not answer, carries each
+/// chapter's download: offline after a relaunch, the downloaded chapters still list and open.
+#[tokio::test]
+async fn the_kept_list_carries_the_downloads() {
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(None, dir.path());
+    let list: Vec<SourceChapter> =
+        (1..=3).map(|i| SourceChapter::new(format!("c{i}"), format!("Chapter {i}"))).collect();
+    Lister::put(&kit, "lister", list);
+    let work = WorkId::new("a:900557");
+    kit.store
+        .set_book_match("lister", "series-1", work.as_str(), 90, true, false, NOW)
+        .unwrap();
+    kit.sources.chapters(&work, None, NOW).await.unwrap();
+    let ask = kaeri_store::book_downloads::BookDownloadAsk {
+        work: work.as_str(),
+        chapter: "2",
+        source_id: "lister",
+        version_label: None,
+        keep_ready: false,
+    };
+    kit.store.queue_book_download(&ask, NOW).unwrap();
+    let id = kit.store.book_download(work.as_str(), "2").unwrap().unwrap().id;
+    let folder = tempfile::tempdir().unwrap();
+    kit.store.book_download_done(id, folder.path().to_str().unwrap(), Some(3), 1, NOW).unwrap();
+
+    let (_, mut kept) = super::super::series::kept_volumes(&kit, &work);
+    super::super::series::finish(&kit, &work, None, &mut kept, NOW);
+    let shown: Vec<(&str, bool)> = rows(&kept)
+        .iter()
+        .map(|r| {
+            (
+                r.id.as_str(),
+                matches!(r.download, Some(kaeri_model::reading::ChapterDownloadState::Done)),
+            )
+        })
+        .collect();
+    assert_eq!(shown, [("1", false), ("2", true), ("3", false)]);
 }
 
 /// How long a series page's list of `n` chapters takes: kept from a first answer, kept again
@@ -105,7 +145,7 @@ async fn time_to_list(n: u32) -> std::time::Duration {
         for round in 0..2 {
             let (_, mut volumes) =
                 kit.sources.chapters(&work, None, NOW + round).await.unwrap();
-            super::super::series::finish(&kit, &work, &mut volumes, NOW);
+            super::super::series::finish(&kit, &work, None, &mut volumes, NOW);
             assert_eq!(rows(&volumes).len(), n as usize);
         }
         quickest = quickest.min(started.elapsed());

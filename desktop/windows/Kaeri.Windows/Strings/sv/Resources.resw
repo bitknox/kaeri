@@ -6050,6 +6050,15 @@
   <data name="ReaderPageLoading" xml:space="preserve">
     <value>Laddar sida {page}</value>
   </data>
+  <data name="ReaderPagePlate" xml:space="preserve">
+    <value>Sida {page}</value>
+  </data>
+  <data name="ReaderImagePlate" xml:space="preserve">
+    <value>Bild {image}</value>
+  </data>
+  <data name="ReaderImageLoading" xml:space="preserve">
+    <value>Laddar bild {image}</value>
+  </data>
   <data name="ReaderPageFailed" xml:space="preserve">
     <value>Kunde inte ladda sida {page}</value>
   </data>
@@ -6131,11 +6140,17 @@
   <data name="ReaderTapEdges" xml:space="preserve">
     <value>Kanter</value>
   </data>
-  <data name="ReaderTapSides" xml:space="preserve">
-    <value>Halvor</value>
-  </data>
   <data name="ReaderTapOff" xml:space="preserve">
     <value>Av</value>
+  </data>
+  <data name="ReaderZoneNext" xml:space="preserve">
+    <value>Nästa sida</value>
+  </data>
+  <data name="ReaderZonePrevious" xml:space="preserve">
+    <value>Föregående sida</value>
+  </data>
+  <data name="ReaderZoneControls" xml:space="preserve">
+    <value>Kontroller</value>
   </data>
   <data name="ReaderChapters" xml:space="preserve">
     <value>Kapitel</value>
@@ -10840,9 +10855,6 @@
   </data>
   <data name="TitleMoreAbout" xml:space="preserve">
     <value>Mer om den här titeln</value>
-  </data>
-  <data name="TitleSynopsisHint" xml:space="preserve">
-    <value>Visar hela synopsen</value>
   </data>
   <data name="TitleDubbedTo" xml:space="preserve">
     <value>Dubbat till avsnitt {episode}</value>

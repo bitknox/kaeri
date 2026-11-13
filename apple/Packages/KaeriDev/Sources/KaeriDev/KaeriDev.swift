@@ -51,7 +51,7 @@ struct KaeriDev: App {
             } playerWindowItems: {
                 PictureInPictureMenuItem(model: delegate.player)
             }
-            ReaderMenu()
+            ReaderMenu(model: delegate.store.reader)
         }
     }
 }
@@ -92,7 +92,9 @@ final class Delegate: NSObject, NSApplicationDelegate {
         // key window. A snapshot stays out of the Dock; macOS does not let either take focus from
         // what you are doing, so a snapshot shows the window as it looks when it is not key.
         // Only an app in the Dock goes full screen, so `--full-screen` runs as one.
-        let regular = options.snapshot == nil || options.fullScreenCycles > 0
+        // KAERI_SHOT_ACTIVE=1 runs a snapshot as the app in front, for the window as it looks key.
+        let active = ProcessInfo.processInfo.environment["KAERI_SHOT_ACTIVE"] == "1"
+        let regular = options.snapshot == nil || options.fullScreenCycles > 0 || active
         NSApp.setActivationPolicy(regular ? .regular : .accessory)
         // Shots: KAERI_APPEARANCE=light|dark overrides the system appearance for this process only.
         switch ProcessInfo.processInfo.environment["KAERI_APPEARANCE"] {
@@ -182,6 +184,16 @@ final class Delegate: NSObject, NSApplicationDelegate {
             store.apply(.toast(Notice(kind: .alert, text: "could not reach the source list", hint: nil)))
             try? await Task.sleep(for: .milliseconds(300))
         }
+        if ProcessInfo.processInfo.environment["KAERI_SHOT_ACTIVE"] == "1", let window = Snapshot.window {
+            // Asked for outright: macOS's cooperative activation leaves a process started from a
+            // terminal behind the app in front.
+            NSApp.activate(ignoringOtherApps: true)
+            window.makeKeyAndOrderFront(nil)
+            try? await Task.sleep(for: .milliseconds(500))
+            if !window.isKeyWindow { KeyLook.force(window) }
+            print("KaeriDev: window key \(window.isKeyWindow)")
+        }
+        await stageSeriesShot()
         print(settled ? "KAERI_READY" : "KaeriDev: did not settle; going on")
         if let shot = options.playerShot {
             let there: Bool
@@ -223,6 +235,17 @@ final class Delegate: NSObject, NSApplicationDelegate {
         } else if options.artTrouble != nil || ReaderModel.demoAsked, !options.frames.isEmpty, let window = Snapshot.window {
             // The window left alone while the troubled art comes in, or the reader's demo plays.
             await frames(of: nil, in: window, to: url)
+        } else if !options.scrollPath.isEmpty, !options.frames.isEmpty, let window = Snapshot.window {
+            // The page scrolled as a wheel would, shot as it moves.
+            guard let scroll = ScrollClip.page(in: window) else {
+                FileHandle.standardError.write(Data("KaeriDev: no scroll view in the middle of the window\n".utf8))
+                exitAfterSnapshot()
+                return
+            }
+            let path = options.scrollPath
+            let moving = Task { await ScrollClip.run(scroll, path: path) }
+            await frames(of: nil, in: window, to: url)
+            await moving.value
         }
         if options.fullScreenCycles > 0, let window = Snapshot.window {
             await fullScreenCycles(window: window, url: url)
@@ -271,6 +294,81 @@ final class Delegate: NSObject, NSApplicationDelegate {
             try? await Task.sleep(for: .milliseconds(1500))
             navigator.openTitle(start)
             try? await Task.sleep(for: .milliseconds(1500))
+        }
+    }
+
+    /// Shots of a series' page: `-KaeriSeriesTitle <words>` gives the page's series that name,
+    /// and `-KaeriWaiting <count>` has that many changes waiting to sync in the toolbar.
+    private func stageSeriesShot() async {
+        let arguments = ProcessInfo.processInfo.arguments
+        func value(_ flag: String) -> String? {
+            arguments.firstIndex(of: flag).flatMap { arguments.indices.contains($0 + 1) ? arguments[$0 + 1] : nil }
+        }
+        if let count = value("-KaeriWaiting").flatMap(UInt32.init) {
+            // AniList signed in, with that many changes in its outbox.
+            store.apply(.sync(SyncState(tracker: "anilist", connected: true, user: "reader", outbox: count, deferred: 0)))
+        }
+        // `-KaeriReopenSeries 1`: the page closed and opened again over the section, as a click
+        // on a cover opens it, rather than there from the launch; `-KaeriReopenSeries <id>` opens
+        // that show's page and goes back from it first.
+        if let reopen = value("-KaeriReopenSeries"), let work = navigator.seriesOnMac {
+            navigator.closeSeries()
+            try? await Task.sleep(for: .milliseconds(800))
+            if let show = AnilistId(reopen), reopen != "1" {
+                navigator.openTitle(show)
+                try? await Task.sleep(for: .milliseconds(1500))
+                navigator.back()
+                try? await Task.sleep(for: .milliseconds(800))
+            }
+            navigator.openSeries(work)
+            try? await Task.sleep(for: .milliseconds(1200))
+        }
+        // `-KaeriReadAndBack 1`: the book opened from the page and closed again, as Continue
+        // and then Back do; `-KaeriReadAndBack open` leaves it open.
+        if let read = value("-KaeriReadAndBack"), let work = navigator.seriesOnMac {
+            store.reader.open(work: work)
+            try? await Task.sleep(for: .milliseconds(2500))
+            if read == "open" { return }
+            store.reader.close()
+            try? await Task.sleep(for: .milliseconds(1500))
+            if let window = Snapshot.window {
+                print("KaeriDev: after the reader, title bar transparent \(window.titlebarAppearsTransparent), title \(window.titleVisibility == .visible ? "visible" : "hidden"), toolbar \(window.toolbar?.isVisible == true ? "visible" : "hidden")")
+            }
+        }
+        if let title = value("-KaeriSeriesTitle"), let work = navigator.seriesOnMac {
+            let deadline = ContinuousClock.now + .seconds(5)
+            while store.reading.series[work] == nil, ContinuousClock.now < deadline {
+                try? await Task.sleep(for: .milliseconds(50))
+            }
+            if var view = store.reading.series[work] {
+                view.titles.display = title
+                store.apply(.reading(.series(view)))
+            }
+        }
+        // `-KaeriVolumes <count>`: that many volumes of five read chapters each under the
+        // chapters there, folded as read volumes are, for a page as long as a long series'.
+        if let count = value("-KaeriVolumes").flatMap(Int.init), let work = navigator.seriesOnMac {
+            let deadline = ContinuousClock.now + .seconds(5)
+            while store.reading.chapters[work] == nil, ContinuousClock.now < deadline {
+                try? await Task.sleep(for: .milliseconds(50))
+            }
+            if let list = store.reading.chapters[work], let row = list.volumes.first?.chapters.first {
+                let older = (1...max(count, 1)).reversed().map { volume in
+                    VolumeGroup(volume: String(volume), title: nil, chapters: (1...5).map { at in
+                        var chapter = row
+                        let number = (volume - 1) * 5 + at
+                        chapter.id = "\(row.id)-v\(number)"
+                        chapter.label = "Chapter \(number)" // i18n-skip: a shot's made-up row
+                        chapter.state = .read
+                        return chapter
+                    }, allRead: true)
+                }
+                store.apply(.reading(.chapters(work: work, edition: list.edition,
+                                               volumes: list.volumes + older, failure: list.failure)))
+            }
+        }
+        if value("-KaeriWaiting") != nil || value("-KaeriSeriesTitle") != nil || value("-KaeriVolumes") != nil {
+            try? await Task.sleep(for: .milliseconds(400))
         }
     }
 

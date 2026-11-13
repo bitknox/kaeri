@@ -1,8 +1,7 @@
 // Discovery on e-ink, as the discovery board draws it: one Browse row on Home opening the list of
-// the rows, each row a paged 3 × 3 grid whose Search link opens the same filter, and Search as a
-// paged list with Your sources only as a check box beside Filters. Paper and ink, no motion: a
-// page turn redraws the page. Pages are packed by measuring, so large text gets more pages
-// rather than clipped rows.
+// the rows, each row a paged 3 × 3 grid whose Search link opens the same filter. Search is in
+// EinkSearch.kt. Paper and ink, no motion: a page turn redraws the page. Pages are packed by
+// measuring, so large text gets more pages rather than clipped rows.
 
 package app.kaeri.ui.reading
 
@@ -24,74 +23,55 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.SubcomposeLayout
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.toggleableState
-import androidx.compose.ui.state.ToggleableState
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.kaeri.eink.EinkColours
 import app.kaeri.eink.EinkLook
 import app.kaeri.eink.EinkOutlinedButton
 import app.kaeri.eink.EinkPager
 import app.kaeri.eink.EinkSizes
-import app.kaeri.eink.EinkSolidButton
 import app.kaeri.eink.EinkTextButton
 import app.kaeri.eink.EinkTheme
 import app.kaeri.eink.EinkType
 import app.kaeri.eink.PaperWaiting
 import app.kaeri.eink.einkClick
 import app.kaeri.eink.hairline
-import app.kaeri.eink.topRule
-import app.kaeri.engine.model.ReadAnilistState
-import app.kaeri.engine.model.ReadFilterChoice
 import app.kaeri.engine.model.ReadHomeRow
-import app.kaeri.engine.model.ReadSearchQuery
-import app.kaeri.engine.model.ReadSourceGroup
-import app.kaeri.engine.model.ReadSourceState
 import app.kaeri.engine.model.WorkTile
 import app.kaeri.i18n.Strings
-import app.kaeri.store.ReadSearchState
 import app.kaeri.store.text
+import app.kaeri.ui.Destination
 import app.kaeri.ui.Icons
 import app.kaeri.ui.LocalAppStore
 import app.kaeri.ui.LocalNavigator
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.drop
 
 /**
  * The e-ink look while the panel is e-ink, else `null`: Home then shows one Browse row in place
@@ -99,30 +79,67 @@ import kotlinx.coroutines.flow.drop
  */
 val LocalEinkLayout = staticCompositionLocalOf<EinkLook?> { null }
 
-/** The gutter of the paper pages. */
-internal val Side = 28.dp
+/**
+ * The gutter of the paper pages: 28 dp, as the boards draw the 6 and 7 inch panels, and 40 on a
+ * panel 900 dp across and wider, as the e-ink board draws the 10.3 inch.
+ */
+internal val Side: Dp
+    @Composable @ReadOnlyComposable
+    get() = if (LocalConfiguration.current.screenWidthDp >= LARGE_PANEL_DP) 40.dp else 28.dp
 
-/** A cover in the e-ink grid at its largest, as the board draws it. */
-private val GridCover = 84.dp
+/** A panel this many dp across and wider takes the 10.3 inch board's gutter. */
+private const val LARGE_PANEL_DP = 900
+
+/** A paged cover grid's column is at least this wide; a panel holds as many as fit, three at least. */
+private val GridColumnLeast = 200.dp
+
+/** Between a grid's columns. */
+private val GridColumnGap = 24.dp
+
+/** What a grid row adds to its cover and its words: the gap above the title and the gap under the row. */
+private val GridGaps = 8.dp + 16.dp
 
 /** A grid cover at its smallest; below it a page holds fewer rows. */
 private val GridCoverLeast = 56.dp
 
-/** What a grid row adds to its cover: the gap above the title and the gap under the row. */
-private val GridGaps = 8.dp + 16.dp
+/** From this cover width a tile's title and line take the body size rather than the small one. */
+internal val GridLargeFrom = 140.dp
 
-/**
- * The grid's cover width that fits three rows a page in [room], the height under the title with
- * the pager in it, each row adding its [caption] (title and line) and its gaps; at most
- * [GridCover] and at least [GridCoverLeast].
- */
-internal fun gridCoverWidth(room: Dp, caption: Dp): Dp {
-    val row = (room - EinkSizes.PagerRow) / 3 - GridGaps - caption - 1.dp
-    return (row / 1.5f).coerceIn(GridCoverLeast, GridCover)
+/** How a paged cover grid fills its page: its columns and rows, and the cover's width. */
+@Immutable
+internal data class PaperGrid(val columns: Int, val rows: Int, val cover: Dp) {
+    val perPage: Int get() = columns * rows
+    /** The tile's words at the body size, under a large cover. */
+    val large: Boolean get() = cover >= GridLargeFrom
 }
 
-/** A cover in the e-ink lists. */
-private val ListCover = 40.dp
+/**
+ * The grid for a page [width] across with [height] under the title, the pager included. The
+ * columns come from the width: as many of at least [GridColumnLeast] as fit, three at least. The
+ * rows come from the height: as few as fill it with covers no wider than their column, three at
+ * least on an [upright] panel and two on its side, so a page is always full. The covers then take
+ * the size that fits; a row's words are [small] or, under a large cover, [large] tall.
+ */
+internal fun paperGrid(width: Dp, height: Dp, small: Dp, large: Dp, upright: Boolean = true): PaperGrid {
+    val columns = (((width + GridColumnGap) / (GridColumnLeast + GridColumnGap)).toInt()).coerceAtLeast(3)
+    val column = (width - GridColumnGap * (columns - 1)) / columns
+    val room = height - EinkSizes.PagerRow
+    val least = if (upright) 3 else 2
+    fun cover(rows: Int, words: Dp): Dp = minOf(column, ((room / rows) - GridGaps - words - 1.dp) / 1.5f)
+    var rows = maxOf(least, kotlin.math.ceil((room / (column * 1.5f + GridGaps + large)).toDouble()).toInt())
+    var words = large
+    var width0 = cover(rows, words)
+    if (width0 < GridLargeFrom) {
+        words = small
+        width0 = cover(rows, words)
+    }
+    // Never below the least cover: fewer rows instead.
+    while (width0 < GridCoverLeast && rows > 1) {
+        rows--
+        width0 = cover(rows, words)
+    }
+    return PaperGrid(columns, rows, width0.coerceAtLeast(GridCoverLeast))
+}
 
 // Home's Browse row
 
@@ -163,7 +180,7 @@ internal fun BrowseLine(row: ReadHomeRow, colourHome: Boolean = false, onClick: 
 }
 
 /** "Iron Kite Brigade, Saltwind Diary and 18 more", or the one or two there are. */
-private fun browseRowLine(context: android.content.Context, row: ReadHomeRow): String {
+internal fun browseRowLine(context: android.content.Context, row: ReadHomeRow): String {
     val tiles = row.tiles
     return when (tiles.size) {
         0 -> ""
@@ -208,6 +225,8 @@ internal fun PaperPage(
     title: String,
     link: String? = null,
     onLink: () -> Unit = {},
+    /** A line under the title, such as Home's offline line; null draws none. */
+    line: String? = null,
     content: @Composable () -> Unit,
 ) {
     val navigator = LocalNavigator.current
@@ -231,6 +250,7 @@ internal fun PaperPage(
                 Text(title, style = EinkType.PageTitle, modifier = Modifier.weight(1f).semantics { heading() })
                 if (link != null) EinkTextButton(link, onLink, underline = true, modifier = Modifier.padding(start = 8.dp))
             }
+            if (line != null) Text(line, style = EinkType.Secondary, modifier = Modifier.padding(bottom = 8.dp))
             content()
         }
     }
@@ -317,6 +337,9 @@ internal fun EinkBrowsePage() {
             if (view == null || view.rows.any { it.pending }) {
                 PaperWaiting { Text(Strings.stateLoading(context), style = EinkType.Body, modifier = Modifier.padding(top = 16.dp)) }
             }
+        } else if (largePanel()) {
+            // A 10 inch panel: each row as a tile with its first covers, AniList's genres at the foot.
+            LargeBrowse(rows, page) { page = it }
         } else {
             PagedItems(rows, page, { page = it }) { row ->
                 BrowseLine(row) { navigator.openReadPage(READ_PAGE_ROW + row.id) }
@@ -325,7 +348,7 @@ internal fun EinkBrowsePage() {
     }
 }
 
-/** A row from Browse: three by three, a page at a time; Search opens the same filter for more. */
+/** A row from Browse: a grid sized to the panel, a page at a time; Search opens the same filter for more. */
 @Composable
 internal fun EinkRowPage(id: String) {
     val store = LocalAppStore.current
@@ -342,23 +365,56 @@ internal fun EinkRowPage(id: String) {
         link = query?.let { Strings.homeSearch(context) },
         onLink = {
             if (query != null) {
+                // The Search tab itself at its start, so the bar marks Search rather than Home.
                 ReadPlaces.search(store.reading, query)
-                navigator.openReadPage(READ_PAGE_SEARCH)
+                navigator.goToStart(Destination.Search)
             }
         },
     ) {
-        // Three by three: the covers take the size that lets three rows fit the page.
-        val measurer = rememberTextMeasurer()
-        val density = LocalDensity.current
-        val caption = with(density) { (measurer.measure("Ag", TileTitle).size.height + measurer.measure("Ag", EinkType.Secondary).size.height).toDp() } // i18n-skip
-        BoxWithConstraints(Modifier.fillMaxSize().padding(top = 8.dp)) {
-            val cover = gridCoverWidth(maxHeight, caption)
-            PagedItems(row.tiles.chunked(3), page, { page = it }, most = 3) { three ->
-                Row(Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
-                    for (tile in three) Box(Modifier.weight(1f)) { PaperTile(tile, cover) }
-                    repeat(3 - three.size) { Spacer(Modifier.weight(1f)) }
+        PagedCovers(row.tiles, page, { page = it }, Modifier.padding(top = 8.dp)) { tile, grid ->
+            PaperTile(tile, grid) { navigator.openSeries(tile.work, "eink-row") }
+        }
+    }
+}
+
+/** The heights of a grid tile's two lines of words, small and large, at the text size in use. */
+@Composable
+private fun tileWords(): Pair<Dp, Dp> {
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    fun height(title: androidx.compose.ui.text.TextStyle, line: androidx.compose.ui.text.TextStyle) =
+        with(density) { (measurer.measure("Ag", title).size.height + measurer.measure("Ag", line).size.height).toDp() } // i18n-skip
+    return height(TileTitle, EinkType.Secondary) to height(TileTitleLarge, TileLineLarge)
+}
+
+/**
+ * Covers in a grid sized to the page ([paperGrid]), a page at a time with the pager under them.
+ * The page count follows from how many a page holds.
+ */
+@Composable
+internal fun <T> PagedCovers(
+    items: List<T>,
+    page: Int,
+    onPage: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    tile: @Composable (T, PaperGrid) -> Unit,
+) {
+    val (small, large) = tileWords()
+    BoxWithConstraints(modifier.fillMaxSize()) {
+        val upright = LocalConfiguration.current.let { it.screenHeightDp >= it.screenWidthDp }
+        val grid = paperGrid(maxWidth, maxHeight, small, large, upright)
+        val pages = items.chunked(grid.perPage)
+        val shown = page.coerceIn(0, (pages.size - 1).coerceAtLeast(0))
+        Column(Modifier.fillMaxSize()) {
+            Column(Modifier.weight(1f)) {
+                for (row in pages.getOrNull(shown).orEmpty().chunked(grid.columns)) {
+                    Row(Modifier.fillMaxWidth().padding(bottom = 16.dp), horizontalArrangement = Arrangement.spacedBy(GridColumnGap)) {
+                        for (each in row) Box(Modifier.weight(1f)) { tile(each, grid) }
+                        repeat(grid.columns - row.size) { Spacer(Modifier.weight(1f)) }
+                    }
                 }
             }
+            if (pages.size > 1) EinkPager(shown, pages.size, onPage)
         }
     }
 }
@@ -366,22 +422,42 @@ internal fun EinkRowPage(id: String) {
 /** A grid tile's title. */
 private val TileTitle = EinkType.Label.copy(fontSize = EinkType.Secondary.fontSize)
 
-/** A cover on paper with its edge, the title and its line under it. */
+/** A large grid tile's title and line: the body size, one step up the type scale. */
+private val TileTitleLarge = EinkType.Label
+private val TileLineLarge = EinkType.Body.copy(color = EinkColours.Secondary)
+
+/**
+ * A cover on paper with its edge at the grid's size, the title and its line under it, one line
+ * each and cut with an ellipsis, as the board draws them. Cover and words are centred in the
+ * column. A new chapter takes the line's place as the dot and "New", which TalkBack hears too.
+ */
 @Composable
-private fun PaperTile(tile: WorkTile, cover: Dp) {
-    val context = LocalContext.current
-    val navigator = LocalNavigator.current
-    Column(
-        Modifier
-            .padding(end = 12.dp)
-            .einkClick { navigator.openSeries(tile.work, "eink-row") }
-            .semantics(mergeDescendants = true) {},
-    ) {
-        ReadCover(tile.cover, cover, Modifier.border(EinkSizes.Hairline, EinkColours.Ink), shape = RoundedCornerShape(0.dp), title = tile.title)
-        // One line each, as the board draws them, so three rows fit a page.
-        Text(tile.title, style = TileTitle, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 8.dp))
-        val line = tile.line(context)
-        if (line.isNotEmpty()) Text(line, style = EinkType.Secondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+internal fun PaperTile(
+    tile: WorkTile,
+    grid: PaperGrid,
+    line: String = tile.line(LocalContext.current),
+    onClick: () -> Unit,
+) {
+    val newWord = Strings.einkNew(LocalContext.current)
+    val lineStyle = if (grid.large) TileLineLarge else EinkType.Secondary
+    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+        Column(
+            Modifier
+                .width(grid.cover)
+                .einkClick(onClick = onClick)
+                .semantics(mergeDescendants = true) { if (tile.newChapter) stateDescription = newWord },
+        ) {
+            ReadCover(tile.cover, grid.cover, Modifier.border(EinkSizes.Hairline, EinkColours.Ink), shape = RoundedCornerShape(0.dp), title = tile.title)
+            Text(tile.title, style = if (grid.large) TileTitleLarge else TileTitle, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 8.dp))
+            if (tile.newChapter) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(EinkSizes.NewDot).background(EinkColours.Ink, CircleShape))
+                    Text(newWord, style = lineStyle.copy(color = EinkColours.Ink), maxLines = 1, modifier = Modifier.padding(start = 7.dp))
+                }
+            } else if (line.isNotEmpty()) {
+                Text(line, style = lineStyle, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
     }
 }
 
@@ -395,301 +471,5 @@ internal fun PaperFailure(title: String, line: String?, action: String, onAction
             if (line != null) Text(line, style = EinkType.Secondary)
         }
         EinkOutlinedButton(action, onAction, Modifier.padding(start = 12.dp), height = 48.dp)
-    }
-}
-
-// Search on paper
-
-/** One line of e-ink Search's paged list. */
-private sealed interface Found {
-    data class Anilist(val tile: WorkTile, val joined: String?) : Found
-    data class Heading(val text: String) : Found
-    data class Source(val name: String) : Found
-    data class Hit(val tile: WorkTile) : Found
-    data class Asking(val name: String) : Found
-    data class Failed(val group: ReadSourceGroup, val reason: String) : Found
-    data class Note(val text: String, val ruled: Boolean = false) : Found
-    data class AnilistFailed(val query: ReadSearchQuery) : Found
-    data class More(val shown: Int, val total: UInt?) : Found
-    data class SourceMore(val sourceId: String, val n: Int) : Found
-    /** Headings with the line under them, so a page never ends on a heading. */
-    data class Together(val lines: List<Found>) : Found
-}
-
-/** Each run of headings joined to the line after it, as one item to page. */
-private fun keepHeadingsWithNext(lines: List<Found>): List<Found> {
-    val out = mutableListOf<Found>()
-    val heads = mutableListOf<Found>()
-    for (line in lines) {
-        if (line is Found.Heading || line is Found.Source) {
-            heads += line
-        } else if (heads.isNotEmpty()) {
-            out += Found.Together(heads + line)
-            heads.clear()
-        } else {
-            out += line
-        }
-    }
-    out += heads
-    return out
-}
-
-/** The search as lines, in the colour apps' order and states. */
-private fun foundLines(context: android.content.Context, search: ReadSearchState, opened: Set<String>): List<Found> = buildList {
-    val sources = search.sources
-    val query = search.query
-    val anilistFailed = !query.sourcesOnly && ((search.failure != null && search.tiles.isEmpty()) || sources?.anilist == ReadAnilistState.FAILED)
-    if (anilistFailed) add(Found.AnilistFailed(query))
-    if (!query.sourcesOnly) {
-        for (tile in search.tiles) {
-            val join = sources?.joins?.firstOrNull { it.work == tile.work }
-            add(
-                Found.Anilist(
-                    tile,
-                    join?.let { if (it.sourceNames.size == 1) Strings.readSearchInSource(context, it.sourceNames.first()) else Strings.readSearchInSources(context, it.sourceNames.size) },
-                ),
-            )
-        }
-        if (search.tiles.isEmpty() && !search.loading && !anilistFailed && query.text.isNotBlank()) {
-            add(Found.Note(Strings.readSearchAnilistNothing(context)))
-        }
-    }
-    val groups = sources?.groups.orEmpty()
-    val shown = groups.filter { it.state !is ReadSourceState.Nothing && !(it.state is ReadSourceState.Hits && it.tiles.isEmpty()) }
-    if (shown.isNotEmpty()) {
-        add(Found.Heading(Strings.readSearchFromSources(context)))
-        for (group in shown) {
-            add(Found.Source(group.sourceName))
-            when (val state = group.state) {
-                is ReadSourceState.Asking -> add(Found.Asking(group.sourceName))
-                is ReadSourceState.Failed -> add(Found.Failed(group, failureWords(context, state.failure)))
-                is ReadSourceState.TimedOut -> add(Found.Failed(group, Strings.readSearchSourceTimeout(context, state.seconds.toInt())))
-                else -> {
-                    // Five hits, then "Show N more" until it's pressed, as in the colour apps.
-                    val capped = group.sourceId !in opened && group.tiles.size > SOURCE_HITS_SHOWN
-                    (if (capped) group.tiles.take(SOURCE_HITS_SHOWN) else group.tiles).forEach { add(Found.Hit(it)) }
-                    if (capped) add(Found.SourceMore(group.sourceId, group.tiles.size - SOURCE_HITS_SHOWN))
-                }
-            }
-        }
-    }
-    val nothing = groups.filter { it.state is ReadSourceState.Nothing }
-    if (nothing.isNotEmpty()) add(Found.Note(Strings.readSearchSourceNothing(context, joinedNames(context, nothing.map { it.sourceName })), ruled = true))
-    if (!query.sourcesOnly && search.hasMore) add(Found.More(search.tiles.size, search.total))
-}.let(::keepHeadingsWithNext)
-
-/**
- * E-ink Search: the field, Your sources only as a check box beside Filters, and a paged list:
- * AniList's results, then From your sources with each source's hits under its name. No spinner:
- * a slow source reads Asking until it answers, and the page redraws once.
- */
-@OptIn(FlowPreview::class)
-@Composable
-internal fun EinkSearchPage(
-    /** The Search tab itself on an e-ink panel, rather than a page pushed over Home. */
-    tab: Boolean = false,
-) {
-    val store = LocalAppStore.current
-    val context = LocalContext.current
-    val search by store.reading.search.collectAsStateWithLifecycle()
-    val text = rememberTextFieldState(search.query.text)
-    var page by rememberSaveable { mutableIntStateOf(0) }
-    var filters by remember { mutableStateOf(false) }
-    var opened by remember(search.query) { mutableStateOf(emptySet<String>()) }
-    LaunchedEffect(text) {
-        snapshotFlow { text.text.toString() }.drop(1).debounce(TYPING_REST_EINK).collect { typed ->
-            val now = store.reading.search.value.query
-            if (typed.trim() != now.text) store.reading.runSearch(now.copy(text = typed.trim()))
-        }
-    }
-    LaunchedEffect(search.query.text) {
-        if (search.query.text != text.text.toString().trim()) text.setTextAndPlaceCursorAtEnd(search.query.text)
-    }
-    // A new search starts at its first page.
-    LaunchedEffect(search.query) { page = 0 }
-    PaperPage(back = if (tab) null else Strings.einkBack(context), title = Strings.navSearch(context)) {
-        BasicTextField(
-            state = text,
-            textStyle = EinkType.Body,
-            cursorBrush = SolidColor(EinkColours.Ink),
-            lineLimits = androidx.compose.foundation.text.input.TextFieldLineLimits.SingleLine,
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 52.dp)
-                .border(EinkSizes.Rule, EinkColours.Ink, RoundedCornerShape(EinkSizes.SegmentRadius))
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            decorator = { field ->
-                Box {
-                    if (text.text.isEmpty()) Text(Strings.readSearchPlaceholder(context), style = EinkType.Tertiary)
-                    field()
-                }
-            },
-        )
-        Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            PaperCheck(Strings.readSearchSourcesOnly(context), search.query.sourcesOnly, Modifier.weight(1f)) {
-                store.reading.runSearch(search.query.copy(sourcesOnly = !search.query.sourcesOnly))
-            }
-            EinkTextButton(Strings.readFilterTitle(context), { filters = true }, underline = true)
-        }
-        val lines = foundLines(context, search, opened)
-        when {
-            // After 600 ms one word; most searches answer first and cost the panel nothing.
-            (search.query.text.isBlank() && search.tiles.isEmpty() && search.loading) || (lines.isEmpty() && search.loading) ->
-                PaperWaiting { Text(Strings.stateLoading(context), style = EinkType.Body, modifier = Modifier.padding(top = 16.dp)) }
-            lines.isEmpty() -> Column(Modifier.padding(top = 16.dp)) {
-                Text(Strings.readSearchNothing(context, search.query.text), style = EinkType.Body)
-                Text(Strings.readSearchNothingLine(context), style = EinkType.Secondary)
-            }
-            else -> PagedItems(lines, page, { page = it }, Modifier.padding(top = 8.dp)) { line -> FoundLine(line) { opened = opened + it } }
-        }
-    }
-    if (filters) PaperFilters(search.query) { filters = false }
-}
-
-/** How long typing rests before e-ink Search asks: a little longer, as each refresh costs. */
-private const val TYPING_REST_EINK = 600L
-
-@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
-@Composable
-private fun FoundLine(line: Found, open: (String) -> Unit) {
-    val store = LocalAppStore.current
-    val context = LocalContext.current
-    when (line) {
-        is Found.Anilist -> PaperResult(line.tile, line.joined)
-        is Found.Hit -> PaperResult(line.tile, null, hit = true)
-        is Found.Heading -> Text(line.text, style = EinkType.RowTitle, modifier = Modifier.padding(top = 16.dp, bottom = 4.dp).semantics { heading() })
-        is Found.Source -> Text(line.name, style = EinkType.Label.copy(color = EinkColours.Secondary), modifier = Modifier.padding(top = 10.dp).semantics { heading() })
-        is Found.Asking -> Text(Strings.readSearchAsking(context, line.name), style = EinkType.Secondary, modifier = Modifier.padding(vertical = 8.dp))
-        is Found.Failed -> PaperFailure(
-            Strings.readSearchSourceFailed(context, line.group.sourceName),
-            line.reason,
-            Strings.actionTryAgain(context),
-        ) { store.reading.retrySource(line.group.sourceId) }
-        is Found.AnilistFailed -> PaperFailure(
-            Strings.readSearchAnilistFailed(context),
-            Strings.readSearchAnilistFailedLine(context),
-            Strings.actionTryAgain(context),
-        ) { store.reading.runSearch(line.query) }
-        is Found.Note -> Column(Modifier.padding(top = 8.dp)) {
-            if (line.ruled) Box(Modifier.fillMaxWidth().height(EinkSizes.Hairline).background(EinkColours.Tertiary))
-            Text(line.text, style = EinkType.Secondary, modifier = Modifier.padding(vertical = 8.dp))
-        }
-        // Wraps under the button at large text rather than squeezing the count.
-        is Found.More -> androidx.compose.foundation.layout.FlowRow(itemVerticalAlignment = Alignment.CenterVertically) {
-            EinkTextButton(Strings.readSearchMoreAnilist(context), { store.reading.searchMore() }, underline = true)
-            // "30 of 212 shown" once the count is exact, "30 shown" until then.
-            Text(
-                if (line.total != null) Strings.readSearchShown(context, line.shown, line.total.toInt()) else Strings.readSearchShownSome(context, line.shown),
-                style = EinkType.Secondary,
-                modifier = Modifier.padding(horizontal = 12.dp),
-            )
-        }
-        is Found.SourceMore -> EinkTextButton(Strings.readSearchSourceMore(context, line.n), { open(line.sourceId) }, underline = true)
-        is Found.Together -> Column { line.lines.forEach { FoundLine(it, open) } }
-    }
-}
-
-/** A result on paper: a small cover, the title, its facts, "In Home library" under them, a chevron. */
-@Composable
-private fun PaperResult(tile: WorkTile, joined: String?, hit: Boolean = false) {
-    val context = LocalContext.current
-    val navigator = LocalNavigator.current
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .heightIn(min = EinkSizes.Row)
-            .einkClick { navigator.openSeries(tile.work, "eink-search") }
-            .padding(vertical = 6.dp)
-            .semantics(mergeDescendants = true) {},
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        ReadCover(tile.cover, ListCover, Modifier.border(EinkSizes.Hairline, EinkColours.Ink), shape = RoundedCornerShape(0.dp), title = tile.title)
-        Column(Modifier.weight(1f).padding(start = 16.dp)) {
-            Text(tile.title, style = EinkType.Label, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            // AniList's "Webtoon · Korea"; a source's hit says how much it holds, or nothing.
-            val facts = if (hit) tile.hitLine(context) else tile.anilistLine(context)
-            if (facts.isNotEmpty()) Text(facts, style = EinkType.Secondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            if (joined != null) Text(joined, style = EinkType.Label.copy(fontSize = EinkType.Secondary.fontSize))
-        }
-        Text("›", style = EinkType.Button, modifier = Modifier.padding(start = 12.dp)) // i18n-skip
-    }
-}
-
-/** A check box on paper: a 24 dp square with a 2 dp border, ticked in ink. */
-@Composable
-private fun PaperCheck(label: String, checked: Boolean, modifier: Modifier = Modifier, onToggle: () -> Unit) {
-    Row(
-        modifier
-            .heightIn(min = 48.dp)
-            .einkClick(role = Role.Checkbox, onClick = onToggle)
-            .semantics(mergeDescendants = true) { toggleableState = ToggleableState(checked) },
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            Modifier.size(24.dp).border(EinkSizes.Rule, EinkColours.Ink, RoundedCornerShape(3.dp)).background(if (checked) EinkColours.Ink else EinkColours.Paper),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (checked) Icon(Icons.Check, contentDescription = null, tint = EinkColours.Paper, modifier = Modifier.size(18.dp))
-        }
-        Text(label, style = EinkType.Body, modifier = Modifier.padding(start = 12.dp))
-    }
-}
-
-/** One choice in the filters page: its words, ticked when chosen. */
-private data class FilterLine(val heading: String?, val choice: String?, val chosen: Boolean, val apply: (ReadSearchQuery) -> ReadSearchQuery)
-
-/**
- * Filters on paper: a whole page over Search with each filter's choices as rows, ticked when set,
- * paged as the lists are, and Done.
- */
-@Composable
-private fun PaperFilters(query: ReadSearchQuery, onDone: () -> Unit) {
-    val store = LocalAppStore.current
-    val context = LocalContext.current
-    val filters = store.reading.filters
-    var page by remember { mutableIntStateOf(0) }
-    var draft by remember { mutableStateOf(query) }
-    fun group(name: String, choices: List<ReadFilterChoice>, chosen: (ReadSearchQuery, String) -> Boolean, toggle: (ReadSearchQuery, String) -> ReadSearchQuery): List<FilterLine> =
-        listOf(FilterLine(name, null, false) { it }) + choices.map { c -> FilterLine(null, c.label.text(context), chosen(draft, c.key)) { q -> toggle(q, c.key) } }
-    val lines = buildList {
-        addAll(group(Strings.readFilterFormat(context), filters.formats, { q, k -> k in q.formats }) { q, k -> q.copy(formats = if (k in q.formats) q.formats - k else q.formats + k) })
-        addAll(group(Strings.readFilterOrigin(context), filters.origins, { q, k -> k in q.origins }) { q, k -> q.copy(origins = if (k in q.origins) q.origins - k else q.origins + k) })
-        addAll(group(Strings.readFilterStatus(context), filters.statuses, { q, k -> q.status == k }) { q, k -> q.copy(status = if (q.status == k) null else k) })
-        addAll(group(Strings.readSearchStarted(context), filters.started.filter { it.key != STARTED_ANY }, { q, k -> q.started == k }) { q, k -> q.copy(started = if (q.started == k) null else k) })
-        add(FilterLine(Strings.readFilterGenres(context), null, false) { it })
-        for (genre in filters.genres) add(FilterLine(null, genre, genre in draft.genres) { q -> q.copy(genres = if (genre in q.genres) q.genres - genre else q.genres + genre) })
-    }
-    Dialog(onDismissRequest = onDone, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        EinkTheme(LocalEinkLayout.current ?: EinkLook()) {
-            Column(Modifier.fillMaxSize().background(EinkColours.Paper).padding(horizontal = Side, vertical = 16.dp)) {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text(Strings.readFilterTitle(context), style = EinkType.PageTitle, modifier = Modifier.weight(1f).semantics { heading() })
-                    EinkSolidButton(Strings.actionDone(context), {
-                        if (draft != query) store.reading.runSearch(draft)
-                        onDone()
-                    })
-                }
-                Spacer(Modifier.height(12.dp).fillMaxWidth().topRule())
-                PagedItems(lines, page, { page = it }) { line ->
-                    val heading = line.heading
-                    if (heading != null) {
-                        Text(heading, style = EinkType.RowTitle, modifier = Modifier.padding(top = 14.dp, bottom = 4.dp).semantics { heading() })
-                    } else {
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 52.dp)
-                                .einkClick(role = Role.Checkbox) { draft = line.apply(draft) }
-                                .hairline()
-                                .semantics(mergeDescendants = true) { selected = line.chosen },
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(line.choice.orEmpty(), style = EinkType.Body.copy(fontWeight = if (line.chosen) androidx.compose.ui.text.font.FontWeight.Bold else androidx.compose.ui.text.font.FontWeight.Medium), modifier = Modifier.weight(1f))
-                            if (line.chosen) Icon(Icons.Check, contentDescription = null, tint = EinkColours.Ink, modifier = Modifier.size(22.dp))
-                        }
-                    }
-                }
-            }
-        }
     }
 }

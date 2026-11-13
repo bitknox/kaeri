@@ -239,6 +239,9 @@ series-tracker-chapters = { $n ->
    *[other] { $n } chapters
  }
 
+# A tracker's progress when the person has read none of the series yet, in place of "0 chapters".
+series-tracker-not-started = Not started
+
 # A tracker's progress in chapters, then the volume.
 # @arg chapters: text
 # @arg volume: plain
@@ -423,6 +426,9 @@ chapter-state-wifi = Queued · waits for Wi-Fi
 # @arg done: int
 # @arg total: int
 chapter-state-downloading = Downloading · { $done } of { $total } pages
+
+# A chapter downloading before its page count is known, and throughout for a novel's chapter.
+chapter-state-downloading-plain = Downloading
 
 # A chapter that failed to download, with the reason.
 # @arg reason: text
@@ -1447,6 +1453,9 @@ settings-keep-chapters-ready-note = The next chapters of series on your Reading 
 # Line under Delete chapters after reading.
 settings-delete-after-reading-note = Bookmarked chapters are kept
 
+# Line under Show volumes: the list is grouped only when most chapters have a volume.
+settings-show-volumes-note = Grouped when most chapters have a volume
+
 # Line under New chapters.
 settings-chapter-notifications-note = Series on your Reading list
 
@@ -1493,6 +1502,10 @@ read-downloads-queued = { $n ->
 # @arg chapter: text
 # @arg reason: text
 read-downloads-failed = { $chapter } couldn't download. { $reason }
+
+# Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows.
+# @arg reason: text
+read-download-not-started = The download didn't start. { $reason }
 
 # A series' line in Downloads: how many chapters are kept.
 # @arg n: int
@@ -1601,6 +1614,13 @@ send-ready = { $n ->
 
 # Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.
 send-share-again = Share again
+
+# A ready send whose files were cleared before they were shared or saved, in the Send to e-reader
+# sheet and in the send's row. Prepared files are kept for a day.
+send-files-gone = These files are gone. Prepared files are kept for a day.
+
+# Button on a send whose files are gone: prepares the same chapters for the same e-reader again.
+send-again = Send again
 
 # A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
 # @arg device: text

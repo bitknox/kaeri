@@ -6,6 +6,8 @@ using Medium = Kaeri.Engine.Core.Medium;
 namespace Kaeri.App.Tests;
 
 /// <summary>Reading's discovery: Search's From your sources as the store keeps it, and the words Home and Search show.</summary>
+/// <remarks>In the Strings collection, as it reads T while other tests swap T's resolver.</remarks>
+[Collection("Strings")]
 public class ReadDiscoveryTests
 {
     static WorkTile Tile(string work, string title = "Lantern Orchard") => new(Work: work, Title: title, Medium: Medium.Manga);
@@ -66,6 +68,20 @@ public class ReadDiscoveryTests
         store.RunSearch(Words("orchard", sourcesOnly: true));
         store.Apply(new ReadingEvent.SourceSearch(Found(Words("orchard", sourcesOnly: true), ReadAnilistState.Skipped, [Group("srv", "Home library", new ReadSourceState.Asking())])));
         Assert.Empty(store.Search.Tiles);
+    }
+
+    [Fact]
+    public void AnOlderSearchsFailureGoesWhenTheNewerOnesResultsCome()
+    {
+        var store = Store(out _);
+        store.RunSearch(Words("lantern"));
+        store.RunSearch(Words("orchard"));
+        // The first query's failure comes late, naming no query.
+        store.Apply(new ReadingEvent.Failed(ReadingAbout.Search, new ReadingFailure.Offline()));
+        store.Apply(new ReadingEvent.Search(Query: Words("orchard"), Page: 0, Tiles: [Tile("a:900102")], HasMore: false, OtherScope: null, Total: 1));
+        Assert.Null(store.Search.Failure);
+        Assert.False(store.Failures.ContainsKey(ReadingAbout.Search));
+        Assert.Single(store.Search.Tiles);
     }
 
     [Fact]

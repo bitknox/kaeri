@@ -28,7 +28,9 @@ class ReaderSettingNamesTest {
         Key.BACKGROUND to listOf("theme", "black", "white"),
         Key.PAGE_LAYOUT to listOf("auto", "single", "double"),
         Key.SPREADS to listOf("split", "rotate", "whole"),
-        Key.TAP_LAYOUT to listOf("edges", "sides", "off"),
+        Key.TAP_PAGED to listOf("auto", "sides", "l_shape", "wide_next", "top_bottom", "both_next", "off"),
+        Key.TAP_SCROLL to listOf("off", "sides", "l_shape", "wide_next", "top_bottom", "both_next"),
+        Key.TAP_SIZE to listOf("standard", "small"),
         Key.FOOT_VALUE to listOf("pages_left"),
         Key.STRIP_GAP to listOf("none", "small"),
     )

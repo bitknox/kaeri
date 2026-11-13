@@ -7,10 +7,17 @@
 package app.kaeri.ui.reading
 
 import androidx.activity.compose.BackHandler
+import app.kaeri.ui.synopsisCut
+import app.kaeri.ui.SynopsisCuts
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,6 +32,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.focusable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -74,6 +86,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.kaeri.design.Motion
+import app.kaeri.design.centredOffset
 import app.kaeri.design.ObiSilk
 import app.kaeri.design.ShowTitle
 import app.kaeri.design.SwapFade
@@ -105,6 +118,7 @@ import app.kaeri.ui.Shared
 import app.kaeri.ui.TextPlaceholder
 import app.kaeri.ui.itemMotion
 import app.kaeri.ui.kaeriIsFor
+import app.kaeri.ui.labelFor
 import app.kaeri.ui.sharedWork
 import app.kaeri.ui.wideWindow
 import kotlinx.coroutines.delay
@@ -157,6 +171,12 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
     }
     val volumes = chapters?.volumes.orEmpty()
     var chosen by remember { mutableStateOf<Set<ChapterId>?>(null) }
+    // The reader's place, which Choose chapters opens centred on.
+    var opening by remember { mutableStateOf<OpenFocus?>(null) }
+    fun startChoosing() {
+        chosen = volumes.chooseStart()
+        opening = volumes.readerPlace()?.let(::OpenFocus)
+    }
     var sheet by remember { mutableStateOf<SeriesSheet?>(null) }
     var statusOpen by remember { mutableStateOf(false) }
     var downloadOpen by remember { mutableStateOf(false) }
@@ -182,7 +202,7 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
             "read-again" -> sheet = SeriesSheet.ReadAgain
             "send" -> sheet = SeriesSheet.Send(volumes.downloaded().map { it.id }.ifEmpty { rows.takeLast(3).map { it.id } })
             "where-stop" -> sheet = SeriesSheet.WhereStop
-            "choose" -> chosen = volumes.chooseStart()
+            "choose" -> startChoosing()
             "status" -> statusOpen = true
             "remove" -> {
                 SeriesShots.removing = true
@@ -202,7 +222,34 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
     val failure = failures[ReadingAbout.SERIES]
     val coverKey = readerCoverKey("series", work)
 
+    // The series' menu: Tracking, Read from and Read again.
+    val overflow: @Composable () -> Unit = {
+        if (series != null) {
+            Box {
+                IconButton(onClick = { moreOpen = true }) { Icon(Icons.More, contentDescription = Strings.actionMore(context)) }
+                Menu(expanded = moreOpen, onDismissRequest = { moreOpen = false }) {
+                    DropdownMenuItem(text = { Text(Strings.seriesTracking(context)) }, onClick = {
+                        moreOpen = false
+                        sheet = SeriesSheet.Tracking
+                    })
+                    DropdownMenuItem(text = { Text(Strings.seriesReadFromMenu(context)) }, onClick = {
+                        moreOpen = false
+                        sheet = SeriesSheet.ReadFrom
+                    })
+                    if (volumes.chapterRows().any { it.state !is ChapterReadState.Unread }) {
+                        DropdownMenuItem(text = { Text(Strings.seriesReadAgainMenu(context)) }, onClick = {
+                            moreOpen = false
+                            sheet = SeriesSheet.ReadAgain
+                        })
+                    }
+                }
+            }
+        }
+    }
+
     Scaffold(
+        // The page grows out of the tile it was opened from and shrinks back into it, as a show's does.
+        modifier = Modifier.fillMaxSize().sharedWork(Shared.Page, work, ground = MaterialTheme.colorScheme.surface),
         containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
             val choosing = chosen
@@ -220,35 +267,23 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
                 )
+            } else if (einkLarge) {
+                // A large e-ink panel: where Back goes in words at the page's margin, as every
+                // pushed paper page has it; the menu keeps Tracking, Read from and Read again.
+                val under = navigator.under()
+                val answer = kaeriIsFor()
+                EinkSeriesBack(
+                    back = under?.let { androidx.compose.ui.res.stringResource(it.labelFor(answer)) } ?: Strings.einkBack(context),
+                    onBack = navigator::back,
+                    menu = overflow,
+                )
             } else {
                 TopAppBar(
                     title = {},
                     navigationIcon = {
                         IconButton(onClick = navigator::back) { Icon(Icons.Back, contentDescription = Strings.actionBack(context)) }
                     },
-                    actions = {
-                        if (series != null) {
-                            Box {
-                                IconButton(onClick = { moreOpen = true }) { Icon(Icons.More, contentDescription = Strings.actionMore(context)) }
-                                Menu(expanded = moreOpen, onDismissRequest = { moreOpen = false }) {
-                                    DropdownMenuItem(text = { Text(Strings.seriesTracking(context)) }, onClick = {
-                                        moreOpen = false
-                                        sheet = SeriesSheet.Tracking
-                                    })
-                                    DropdownMenuItem(text = { Text(Strings.seriesReadFromMenu(context)) }, onClick = {
-                                        moreOpen = false
-                                        sheet = SeriesSheet.ReadFrom
-                                    })
-                                    if (volumes.chapterRows().any { it.state !is ChapterReadState.Unread }) {
-                                        DropdownMenuItem(text = { Text(Strings.seriesReadAgainMenu(context)) }, onClick = {
-                                            moreOpen = false
-                                            sheet = SeriesSheet.ReadAgain
-                                        })
-                                    }
-                                }
-                            }
-                        }
-                    },
+                    actions = { overflow() },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
                 )
             }
@@ -286,6 +321,42 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
                 // What the tile tapped already showed, at once and where the header puts it.
                 Box(Modifier.padding(padding)) { KnownSeriesHeader(tile) }
             } ?: SeriesLoading(Modifier.padding(padding))
+            // A large e-ink panel: the board's page, chapters in columns a page at a time (EinkSeries.kt).
+            einkLarge -> EinkSeriesLarge(
+                series = series,
+                chapters = chapters,
+                late = lateChapters,
+                newestFirst = newestFirst,
+                onOrder = {
+                    newestFirst = it
+                    ChapterOrder.keep(context, it)
+                },
+                chosen = chosen,
+                onChosen = { chosen = it },
+                onCover = { actions.openReader(work, series.action.chapter, series.cover, null) },
+                onMain = { action ->
+                    if (action is SeriesAction.ReadAgain) sheet = SeriesSheet.ReadAgain else actions.openReader(work, action.chapter, series.cover, null)
+                },
+                onReadFrom = { sheet = SeriesSheet.ReadFrom },
+                onGroup = { groupOpen = true },
+                onStatus = { statusOpen = true },
+                onDownload = { downloadOpen = true },
+                onChoose = { chosen = volumes.chooseStart() },
+                onOpen = { row -> actions.openReader(work, row.id, series.cover, null) },
+                onLong = { row -> sheet = SeriesSheet.Chapter(row.id) },
+                onRetry = { store.reading.loadChapters(work, chapters?.edition?.sourceId) },
+                statusMenu = { StatusMenu(series, statusOpen) { statusOpen = false } },
+                downloadMenu = {
+                    DownloadMenu(series, volumes, downloadOpen, onDismiss = { downloadOpen = false }, onChoose = { chosen = volumes.chooseStart() }, onSend = { sheet = SeriesSheet.Send(it) })
+                },
+                notes = {
+                    if (series.askWhereStopped != null) {
+                        WhereStopNote(series, onAsk = { sheet = SeriesSheet.WhereStop }, modifier = Modifier.padding(top = 16.dp))
+                    }
+                    if (sheet !is SeriesSheet.Send) SendStatusRows(work, actions, Modifier.padding(top = 16.dp))
+                },
+                modifier = Modifier.padding(padding),
+            )
             else -> {
                 val top: @Composable () -> Unit = {
                     SeriesHeader(series, wide, coverKey, onCover = {
@@ -308,7 +379,7 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
                             }
                         },
                         onReadFrom = { sheet = SeriesSheet.ReadFrom },
-                        onChoose = { chosen = volumes.chooseStart() },
+                        onChoose = { startChoosing() },
                         onSend = { sheet = SeriesSheet.Send(it) },
                     )
                     Spacer(Modifier.height(12.dp))
@@ -341,6 +412,7 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
                         onChosen = { chosen = it },
                         onOpen = { row -> actions.openReader(work, row.id, series.cover, null) },
                         onLong = { row -> sheet = SeriesSheet.Chapter(row.id) },
+                        opening = opening.takeIf { chosen != null },
                         onRetry = { store.reading.loadChapters(work, chapters?.edition?.sourceId) },
                         onReadFrom = { sheet = SeriesSheet.ReadFrom },
                     )
@@ -348,6 +420,8 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
                         item(key = "recommended") { SeriesRecommended(series) }
                     }
                 }
+                val place = opening?.takeIf { chosen != null }
+                val choosingAt = if (place != null && chapters != null) chapters.choosingItem(newestFirst, folds, place.id) else -1
                 if (wide) {
                     Row(Modifier.padding(padding).fillMaxSize()) {
                         Column(
@@ -358,12 +432,10 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
                                 .padding(start = 24.dp, end = 24.dp, bottom = 24.dp),
                         ) { top() }
                         VerticalDivider(color = ObiSilk.FaintRule)
-                        val listed = rememberLazyListState()
-                        LazyColumn(Modifier.weight(1f).fillMaxHeight().panelPageKeys(listed), state = listed, contentPadding = PaddingValues(bottom = 24.dp)) { list() }
+                        ChapterColumn(Modifier.weight(1f).fillMaxHeight(), choosingAt) { list() }
                     }
                 } else {
-                    val listed = rememberLazyListState()
-                    LazyColumn(Modifier.padding(padding).fillMaxSize().panelPageKeys(listed), state = listed, contentPadding = PaddingValues(bottom = 24.dp)) {
+                    ChapterColumn(Modifier.padding(padding).fillMaxSize(), choosingAt) {
                         if (chosen == null) {
                             item(key = "top") { Column(Modifier.padding(horizontal = 16.dp)) { top() } }
                         }
@@ -479,23 +551,70 @@ private fun SeriesHeader(series: SeriesView, wide: Boolean, coverKey: String, on
         }
         val synopsis = series.synopsis?.replace(Regex("\\s*\\n+\\s*"), " ")
         if (wide && !synopsis.isNullOrBlank()) {
-            var open by rememberSaveable { mutableStateOf(false) }
-            Text(
-                synopsis,
-                style = MaterialTheme.typography.bodyMedium,
-                color = colors.onSurfaceVariant,
-                maxLines = if (open) Int.MAX_VALUE else 4,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 16.dp).clickable { open = !open },
-            )
+            SeriesSynopsis(synopsis, series.work, Modifier.padding(top = 16.dp))
         }
     }
 }
 
 /**
+ * The synopsis in four lines, ending "… More" where there is more, as on a show's page; a tap, or
+ * the screen reader's action, opens it in place and it stays open. The height grows with the text
+ * on the standard spring, so what sits under it moves with it instead of jumping, and a screen
+ * reader reads the whole text either way.
+ */
+@Composable
+private fun SeriesSynopsis(text: String, work: WorkId, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    var expanded by rememberSaveable(work) { mutableStateOf(false) }
+    val colors = MaterialTheme.colorScheme
+    val style = MaterialTheme.typography.bodyMedium
+    val measurer = rememberTextMeasurer()
+    val more = Strings.actionMore(context)
+    val eink = LocalEinkLayout.current != null
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+        val width = constraints.maxWidth
+        val density = LocalDensity.current
+        val cut = remember(text, width, style, density, more) {
+            SynopsisCuts.get(text, width, style, density, more, SERIES_SYNOPSIS_LINES) {
+                synopsisCut(text, width, style, measurer, more, SERIES_SYNOPSIS_LINES)
+            }
+        }
+        val open = expanded || cut == null
+        Text(
+            buildAnnotatedString {
+                if (open) {
+                    append(text)
+                } else {
+                    append(cut)
+                    append(" ")
+                    withStyle(SpanStyle(color = colors.onSurface, fontWeight = FontWeight.Medium)) { append(more) }
+                }
+            },
+            style = style,
+            color = colors.onSurfaceVariant,
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(if (eink) Modifier else Modifier.animateContentSize(Motion.standard()))
+                .then(
+                    if (open) {
+                        Modifier
+                    } else {
+                        Modifier.clickable(onClickLabel = Strings.titleSynopsisMore(context), role = Role.Button) { expanded = true }
+                    },
+                )
+                .semantics { contentDescription = text },
+        )
+    }
+}
+
+/** How many lines the series synopsis shows before "More". */
+private const val SERIES_SYNOPSIS_LINES = 4
+
+/**
  * The one main action, amber, 56 high, with Status and Download outlined side by side under it.
  * With no source, or a source that failed, Read from another source takes its place as a
- * secondary button, since reading from here is not possible.
+ * secondary button, since reading from here is not possible; a failed source keeps the main
+ * action when its chapter is downloaded, which still opens.
  */
 @Composable
 private fun SeriesActions(
@@ -513,7 +632,7 @@ private fun SeriesActions(
 ) {
     val context = LocalContext.current
     val words = SeriesWords.action(context, series.action)
-    val failed = chapters?.failure != null
+    val failed = chapters?.let { it.failure != null && !series.action.opensDownloaded(it.volumes) } == true
     // No source is known to have it yet, but the engine is still asking: the chapters have not
     // come. The main button holds its place, quiet, rather than say there is nothing to read.
     val asking = series.action is SeriesAction.NoSource && chapters == null
@@ -542,7 +661,7 @@ private fun SeriesActions(
                     StatusMenu(series, statusOpen) { onStatus(false) }
                 }
                 Box(Modifier.weight(1f)) {
-                    MenuButton(Strings.seriesDownload(context), enabled = !choosing && chapters != null) { onDownload(true) }
+                    MenuButton(Strings.seriesDownload(context), enabled = !choosing && chapters?.volumes?.hasDownloads() == true) { onDownload(true) }
                     DownloadMenu(series, chapters?.volumes.orEmpty(), downloadOpen, onDismiss = { onDownload(false) }, onChoose = onChoose, onSend = onSend)
                 }
             }
@@ -719,6 +838,7 @@ private fun LazyListScope.seriesChapters(
     onChosen: (Set<ChapterId>) -> Unit,
     onOpen: (ChapterRow) -> Unit,
     onLong: (ChapterRow) -> Unit,
+    opening: OpenFocus?,
     onRetry: () -> Unit,
     onReadFrom: () -> Unit,
 ) {
@@ -747,14 +867,7 @@ private fun LazyListScope.seriesChapters(
         return
     }
     val failure = chapters.failure
-    // With the source failed, what is downloaded still opens: only those chapters, under no volume.
-    val groups = if (failure != null) {
-        listOfNotNull(
-            chapters.volumes.downloaded().takeIf { it.isNotEmpty() }?.let { VolumeGroup(volume = null, title = null, chapters = it, allRead = false) },
-        )
-    } else {
-        chapters.volumes
-    }
+    val groups = chapters.listedGroups()
     if (failure is ReadingFailure.NoSource) {
         // Nothing was ever read from a source, so nothing failed: an empty state that leads to Read from.
         item(key = "chapters-no-source") {
@@ -784,7 +897,7 @@ private fun LazyListScope.seriesChapters(
         }
     }
     val ordered = if (newestFirst) groups.reversed() else groups
-    val single = failure != null || (ordered.size == 1 && ordered.first().volume == null)
+    val single = chapters.singleGroup(ordered)
     ordered.forEachIndexed { index, group ->
         val key = group.volume ?: "none-$index"
         val open = single || (folds[key] ?: !group.allRead)
@@ -800,10 +913,108 @@ private fun LazyListScope.seriesChapters(
         }
         if (open) {
             val rows = if (newestFirst) group.chapters.reversed() else group.chapters
-            items(rows, key = { "chapter-${it.id}" }) { row -> Box(itemMotion()) { ChapterItem(series, row, chosen, onChosen, onOpen, onLong) } }
+            items(rows, key = { "chapter-${it.id}" }) { row -> Box(itemMotion()) { ChapterItem(series, row, chosen, onChosen, onOpen, onLong, opening) } }
         }
     }
 }
+
+/** Whether the action opens a chapter that is downloaded, so it opens with the source failed. */
+private fun SeriesAction.opensDownloaded(volumes: List<VolumeGroup>): Boolean {
+    val chapter = when (this) {
+        is SeriesAction.Read -> chapter
+        is SeriesAction.Continue -> chapter
+        is SeriesAction.ContinuePart -> chapter
+        is SeriesAction.ReadPart -> chapter
+        else -> return false
+    }
+    return volumes.downloaded().any { it.id == chapter }
+}
+
+/** With the source failed, what is downloaded still opens: only those chapters, under no volume. */
+private fun ReadChapters.listedGroups(): List<VolumeGroup> = if (failure != null) {
+    listOfNotNull(
+        volumes.downloaded().takeIf { it.isNotEmpty() }?.let { VolumeGroup(volume = null, title = null, chapters = it, allRead = false) },
+    )
+} else {
+    volumes
+}
+
+/**
+ * Whether the chapters are one run with no volume rows: the downloaded ones after a failure, a list
+ * with no volumes, or a flat one (Show volumes off, or too few chapters with a volume).
+ */
+private fun ReadChapters.singleGroup(groups: List<VolumeGroup>): Boolean =
+    failure != null || (groups.size == 1 && (groups.first().flat || groups.first().volume == null))
+
+/**
+ * The item [seriesChapters] lists [id]'s row at while choosing, when the page has no header or
+ * heading above the chapters: -1 when the row is not listed, as in a volume folded away.
+ */
+private fun ReadChapters.choosingItem(newestFirst: Boolean, folds: Map<String, Boolean>, id: ChapterId): Int {
+    val groups = listedGroups()
+    // The failure's or the empty list's one item comes first.
+    var item = if (failure != null || groups.isEmpty()) 1 else 0
+    val ordered = if (newestFirst) groups.reversed() else groups
+    val single = singleGroup(ordered)
+    ordered.forEachIndexed { index, group ->
+        val key = group.volume ?: "none-$index"
+        if (!single) item += 1
+        if (single || (folds[key] ?: !group.allRead)) {
+            val rows = if (newestFirst) group.chapters.reversed() else group.chapters
+            val at = rows.indexOfFirst { it.id == id }
+            if (at >= 0) return item + at
+            item += rows.size
+        }
+    }
+    return -1
+}
+
+/** The row Choose chapters opens on, which TalkBack and the keyboard start on once. */
+internal class OpenFocus(val id: ChapterId) {
+    val requester = FocusRequester()
+    var asked = false
+}
+
+/**
+ * The chapters' list. Choose chapters opens it with the reader's place, item [choosingAt], as near
+ * the middle as the list's ends allow, placed before choosing's first frame so nothing scrolls, and
+ * leaving it puts the list back where it was.
+ */
+@Composable
+private fun ChapterColumn(modifier: Modifier, choosingAt: Int, content: LazyListScope.() -> Unit) {
+    BoxWithConstraints(modifier) {
+        val listed = rememberLazyListState()
+        val density = LocalDensity.current
+        val viewport = with(density) { (maxHeight - LIST_BOTTOM).roundToPx() }
+        val row = with(density) { CHAPTER_ROW.roundToPx() }
+        // Where the page was before choosing moved it: leaving Choose chapters goes back there.
+        val before = remember { intArrayOf(-1, 0) }
+        // Run as choosing starts and ends, in the frame that lays the list out for it.
+        DisposableEffect(choosingAt >= 0) {
+            if (choosingAt >= 0) {
+                before[0] = listed.firstVisibleItemIndex
+                before[1] = listed.firstVisibleItemScrollOffset
+                listed.requestScrollToItem(choosingAt, centredOffset(viewport, row))
+            } else if (before[0] >= 0) {
+                listed.requestScrollToItem(before[0], before[1])
+                before[0] = -1
+            }
+            onDispose {}
+        }
+        LazyColumn(
+            Modifier.fillMaxSize().panelPageKeys(listed),
+            state = listed,
+            contentPadding = PaddingValues(bottom = LIST_BOTTOM),
+            content = content,
+        )
+    }
+}
+
+/** The space under the chapters' list. */
+private val LIST_BOTTOM = 24.dp
+
+/** A chapter row's least height, which Choose chapters centres the reader's place by. */
+private val CHAPTER_ROW = 72.dp
 
 @Composable
 private fun ChapterItem(
@@ -813,14 +1024,25 @@ private fun ChapterItem(
     onChosen: (Set<ChapterId>) -> Unit,
     onOpen: (ChapterRow) -> Unit,
     onLong: (ChapterRow) -> Unit,
+    opening: OpenFocus?,
 ) {
     val store = LocalAppStore.current
     val context = LocalContext.current
     val work = series.work
     val read = row.state is ChapterReadState.Read
+    val place = opening?.takeIf { it.id == row.id }
+    if (place != null) {
+        LaunchedEffect(place) {
+            if (!place.asked) {
+                place.asked = true
+                runCatching { place.requester.requestFocus() }
+            }
+        }
+    }
     Column {
         SeriesRule()
         ChapterRowItem(
+            modifier = if (place != null) Modifier.focusRequester(place.requester).focusable() else Modifier,
             row = row,
             chosen = chosen?.contains(row.id),
             onClick = {

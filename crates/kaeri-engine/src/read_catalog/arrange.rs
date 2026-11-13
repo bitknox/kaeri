@@ -4,16 +4,34 @@
 //! **Parts.** Within one group, entries that are parts of one chapter become one chapter with
 //! the parts in order: "Chapter 1 part 1" and "Chapter 1 part 2", "1-1" and "1-2", "1.1" and
 //! "1.2". What says so, strongest first:
-//! - "part" or "pt" with a number in the label or the title (the WIT `chapter` has no part
-//!   field of its own, so a source says it in words), with the parts in all when it says
-//!   ("part 1/3", "part 1 of 3"). A volume's parts ("Volume 2 Part 3", a light novel's) stay
-//!   as they are;
+//! - "part" or "pt" with a number in the label, or in the titles of entries that share one
+//!   number (the WIT `chapter` has no part field of its own, so a source says it in words),
+//!   with the parts in all when it says ("part 1/3", "part 1 of 3"). A title's part word on a
+//!   number of its own names a story told over several numbered chapters, each a chapter. A
+//!   volume's parts ("Volume 2 Part 3", a light novel's) stay as they are;
 //! - `a-b` labels where the group lists `a-1` and at least one more of `a`'s parts (a lone
 //!   `12-13` is a run of two chapters, as [`ChapterRange::parse`] reads it);
 //! - decimals the series uses as parts: `n.1`, `n.2`, ... from .1 with no gap and no whole `n`
 //!   in the group. Once a group numbers one chapter that way, a lone `n.1` with no `n` is a
-//!   first part too. A decimal beside its whole number (`10` and `10.5`), or one that does not
-//!   start at .1 (`10.5` alone), is an extra chapter, not a part.
+//!   first part too;
+//! - a whole `n` with `n.2`, `n.3`, ... from .2 with no gap in one group: `n` is the first part
+//!   and the decimals the rest ("57", "57.2", "57.3").
+//!
+//! A decimal beside its whole number otherwise (`10` and `10.5`, or `10` and `10.1`), or one
+//! that does not start at .1 (`10.5` alone), is an extra chapter, not a part.
+//!
+//! **The work's other lists.** A group's own entries do not always say enough: a group that has
+//! released only `7.1` so far looks like an extra. What the work's other sources and groups list
+//! ([`Numbering`]) settles it, so every source of one work reads the same content as one
+//! chapter and its read marks are shared. A decimal run from .1 with no whole `n` in its group
+//! is a part of `n` when another list names `n` whole, or when the tenths every list names for
+//! `n` together run from .1 with at least two (one group has `7.1`, another `7.2`). It stays an
+//! extra when another list names the same decimal beside a whole `n` of its own. Read marks
+//! kept on the decimal before it merged count for the whole chapter at read time
+//! ([`super::chapters::Folds`]).
+//!
+//! A source that renumbers parts as whole chapters (its 7, 8, 9 being another's 7.1, 7.2, 7.3)
+//! is not detected: nothing in the numbers says so.
 //!
 //! A chapter whose parts have a gap ("part 1" and "part 3"), or fewer than the source said,
 //! still merges, with the missing parts named.
@@ -145,12 +163,25 @@ struct Held {
 }
 
 /// Arrange a source's list, with the person's group for the series when they picked one, and
-/// the app's language for the group to prefer when they did not.
+/// the app's language for the group to prefer when they did not, on its own numbers alone.
+#[cfg(test)]
 pub fn arrange(
     list: &[SourceChapter],
     chosen: Option<&str>,
     language: Option<&str>,
 ) -> Arranged {
+    arrange_in(list, chosen, language, &Numbering::default())
+}
+
+/// [`arrange`], with what the work's other lists say of its numbering.
+pub fn arrange_in(
+    list: &[SourceChapter],
+    chosen: Option<&str>,
+    language: Option<&str>,
+    others: &Numbering,
+) -> Arranged {
+    let mut numbering = others.clone();
+    numbering.add(list);
     let restarts = crate::read_sources::restarts_per_volume(list);
     // Each group's entries, by index, in the list's order.
     let mut by_group: Vec<(Option<&str>, Vec<usize>)> = Vec::new();
@@ -168,7 +199,7 @@ pub fn arrange(
     // Each group's chapters, by id.
     let mut group_rows: Vec<(Option<&str>, HashMap<ChapterId, Held>)> = Vec::new();
     for (group, entries) in &by_group {
-        let found = parts_in(list, entries);
+        let found = parts_in(list, entries, &numbering);
         let mut rows: HashMap<ChapterId, Held> = HashMap::new();
         for &i in entries {
             let c = &list[i];
@@ -320,12 +351,20 @@ fn key_of(base: ChapterRange, volume: Option<&str>, restarts: bool) -> ChapterKe
 fn parts_in(
     list: &[SourceChapter],
     entries: &[usize],
+    numbering: &Numbering,
 ) -> HashMap<usize, (ChapterRange, u32, u32)> {
     let mut found = HashMap::new();
     // Hyphenated and decimal candidates, by their whole chapter.
     let mut hyphens: HashMap<ChapterNumber, Vec<(u32, usize)>> = HashMap::new();
     let mut decimals: HashMap<u32, Vec<(u32, usize)>> = HashMap::new();
-    let mut wholes: BTreeSet<u32> = BTreeSet::new();
+    let mut wholes: HashMap<u32, usize> = HashMap::new();
+    // How many of the group's entries carry each number: parts named only in titles share one.
+    let mut sharing: HashMap<ChapterRange, usize> = HashMap::new();
+    for &i in entries {
+        if let Some(number) = list[i].number {
+            *sharing.entry(number).or_default() += 1;
+        }
+    }
     for &i in entries {
         let c = &list[i];
         if let Some(said) = part_word(&c.number_raw)
@@ -339,13 +378,24 @@ fn parts_in(
             && !said.of_volume()
             && let Some(number) = c.number
         {
-            // "1.2" titled "Part 2" is the second part of 1.
-            let base = match tenths(number) {
-                Some((whole, d)) if d == said.n => ChapterRange::single(whole_number(whole)),
-                _ => number,
-            };
-            found.insert(i, (base, said.n, said.total));
-            continue;
+            match tenths(number) {
+                // "1.2" titled "Part 2" is the second part of 1.
+                Some((whole, d)) if d == said.n => {
+                    found.insert(
+                        i,
+                        (ChapterRange::single(whole_number(whole)), said.n, said.total),
+                    );
+                    continue;
+                }
+                // Two entries numbered 4, titled "Pt. 1" and "Pt. 2", are 4 in parts. A title's
+                // part word on a number of its own names a story told over several numbered
+                // chapters ("287 The Tale Part 2" after 286 "Part 1"): each is a chapter.
+                _ if sharing.get(&number).is_some_and(|n| *n > 1) => {
+                    found.insert(i, (number, said.n, said.total));
+                    continue;
+                }
+                _ => {}
+            }
         }
         if let Some((a, b)) = hyphenated(&c.number_raw) {
             hyphens.entry(a).or_default().push((b, i));
@@ -355,17 +405,15 @@ fn parts_in(
             Some(number) if number.end.is_none() => match tenths(number) {
                 Some((whole, d)) => decimals.entry(whole).or_default().push((d, i)),
                 None if number.start.milli() % 1000 == 0 => {
-                    wholes.insert(number.start.whole());
+                    wholes.entry(number.start.whole()).or_insert(i);
                 }
                 None => {}
             },
             _ => {}
         }
     }
-    let from_one = |found: &[(u32, usize)]| {
-        let numbers: BTreeSet<u32> = found.iter().map(|(n, _)| *n).collect();
-        numbers.iter().copied().eq(1..=numbers.len() as u32)
-    };
+    let tenths_of =
+        |held: &[(u32, usize)]| held.iter().map(|(n, _)| *n).collect::<BTreeSet<u32>>();
     // Hyphenated parts may have a gap: "1-1" and "1-3" are a chapter missing its second part.
     for (a, held) in &hyphens {
         let numbers: BTreeSet<u32> = held.iter().map(|(n, _)| *n).collect();
@@ -379,19 +427,118 @@ fn parts_in(
         }
     }
     // The series numbers parts as decimals once one chapter has .1, .2 and no whole number.
-    let pattern = decimals
-        .iter()
-        .any(|(whole, held)| held.len() >= 2 && !wholes.contains(whole) && from_one(held));
-    if pattern {
-        for (whole, held) in &decimals {
-            if !wholes.contains(whole) && from_one(held) {
-                for &(d, i) in held {
-                    found.insert(i, (ChapterRange::single(whole_number(*whole)), d, 0));
+    let pattern = decimals.iter().any(|(whole, held)| {
+        let tenths = tenths_of(held);
+        tenths.len() >= 2 && !wholes.contains_key(whole) && runs_from(&tenths, 1)
+    });
+    for (whole, held) in &decimals {
+        let base = ChapterRange::single(whole_number(*whole));
+        let tenths = tenths_of(held);
+        match wholes.get(whole) {
+            // "57", "57.2", "57.3": the whole number is the first part.
+            Some(&first) if runs_from(&tenths, 2) => {
+                found.insert(first, (base, 1, 0));
+            }
+            // Beside its whole number: extras.
+            Some(_) => continue,
+            None => {
+                let own = runs_from(&tenths, 1) && (tenths.len() >= 2 || pattern);
+                if !own && !numbering.parts(*whole, &tenths) {
+                    continue;
                 }
             }
         }
+        for &(d, i) in held {
+            found.insert(i, (base, d, 0));
+        }
     }
     found
+}
+
+/// Whether `tenths` run from `from` with no gap.
+fn runs_from(tenths: &BTreeSet<u32>, from: u32) -> bool {
+    !tenths.is_empty() && tenths.iter().copied().eq(from..from + tenths.len() as u32)
+}
+
+/// What a work's lists say of how it numbers its chapters, every source and group together:
+/// which whole numbers are named whole, which decimals are named as parts, and which beside
+/// their whole number as extras. Built from plain numbers only; parts named in words and
+/// hyphenated parts say nothing here.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Numbering {
+    /// Whole numbers some group lists whole.
+    wholes: BTreeSet<u32>,
+    /// The tenths of each whole number some group lists without that whole number, or as the
+    /// later parts of it ("57.2" beside "57").
+    parts: HashMap<u32, BTreeSet<u32>>,
+    /// The tenths of each whole number some group lists beside that whole number, as extras.
+    extras: HashMap<u32, BTreeSet<u32>>,
+}
+
+impl Numbering {
+    /// Each list's numbers, as one.
+    #[cfg(test)]
+    pub fn of<'a>(lists: impl IntoIterator<Item = &'a [SourceChapter]>) -> Self {
+        let mut numbering = Self::default();
+        for list in lists {
+            numbering.add(list);
+        }
+        numbering
+    }
+
+    /// Add a list's numbers, group by group.
+    pub fn add(&mut self, list: &[SourceChapter]) {
+        // Per group: its whole numbers, and the tenths listed of each whole number.
+        type Held = (BTreeSet<u32>, HashMap<u32, BTreeSet<u32>>);
+        let mut groups: HashMap<Option<&str>, Held> = HashMap::new();
+        for c in list {
+            if part_word(&c.number_raw).is_some() || hyphenated(&c.number_raw).is_some() {
+                continue;
+            }
+            let Some(number) = c.number.filter(|n| n.end.is_none()) else { continue };
+            let (wholes, decimals) = groups.entry(c.version_label.as_deref()).or_default();
+            match tenths(number) {
+                Some((whole, d)) => {
+                    decimals.entry(whole).or_default().insert(d);
+                }
+                None if number.start.milli() % 1000 == 0 => {
+                    wholes.insert(number.start.whole());
+                }
+                None => {}
+            }
+        }
+        for (wholes, tenths) in groups.into_values() {
+            for (whole, held) in tenths {
+                let into = match wholes.contains(&whole) {
+                    true if runs_from(&held, 2) => &mut self.parts,
+                    true => &mut self.extras,
+                    false => &mut self.parts,
+                };
+                into.entry(whole).or_default().extend(held);
+            }
+            self.wholes.extend(wholes);
+        }
+    }
+
+    /// Whether a group's `tenths` of `whole`, listed without `whole`, are its parts by what the
+    /// other lists say: never when another list names one of them beside its whole number;
+    /// otherwise when they run from .1 and another list names `whole` whole, or when the tenths
+    /// every list names for it run from .1 with at least two.
+    fn parts(&self, whole: u32, tenths: &BTreeSet<u32>) -> bool {
+        if self.extras.get(&whole).is_some_and(|e| !e.is_disjoint(tenths)) {
+            return false;
+        }
+        if runs_from(tenths, 1) && self.wholes.contains(&whole) {
+            return true;
+        }
+        let mut all: BTreeSet<u32> = self.parts.get(&whole).cloned().unwrap_or_default();
+        // Named as later parts beside a whole number, that whole number is the first.
+        if self.wholes.contains(&whole) && runs_from(&all, 2) {
+            all.insert(1);
+        }
+        all.extend(tenths);
+        all.len() >= 2 && runs_from(&all, 1)
+    }
 }
 
 fn whole_number(n: u32) -> ChapterNumber {
@@ -426,7 +573,9 @@ impl PartWord {
 
 /// "part 2", "pt 2", "pt. 2", "Part2", "part 2/3", "part 2 of 3" in `text`.
 fn part_word(text: &str) -> Option<PartWord> {
-    let lower = text.to_lowercase();
+    // ASCII lowercase keeps every letter's bytes where they were, so the offsets found here
+    // cut `text` itself; the words and numbers looked for are all ASCII.
+    let lower = text.to_ascii_lowercase();
     let bytes = lower.as_bytes();
     for word in ["part", "pt"] {
         let mut from = 0;
@@ -527,6 +676,26 @@ mod tests {
         arranged.rows.iter().map(|r| (r.id.as_str(), r.parts.len())).collect()
     }
 
+    /// R5E-5. Letters whose lowercase has another length (a dotted capital I, the Kelvin sign)
+    /// before the part word: the label is cut at the part word itself.
+    #[test]
+    fn part_labels_with_case_changing_letters_arrange() {
+        for (a, b, rest) in [
+            ("\u{130} 5 Part 1\u{8a71}", "\u{130} 5 Part 2\u{8a71}", "\u{130} 5 \u{8a71}"),
+            ("\u{212a}5 Part 1", "\u{212a}5 Part 2", "\u{212a}5"),
+            ("\u{130}\u{130} 7 pt. 1/2", "\u{130}\u{130} 7 pt. 2/2", "\u{130}\u{130} 7"),
+        ] {
+            let list =
+                [entry("ch-1", "1", None), entry("ch-5a", a, None), entry("ch-5b", b, None)];
+            let arranged = arrange(&list, None, None);
+            assert_eq!(arranged.parts.len(), 3, "{a}");
+            let mut titled = entry("ch-5c", "5", None);
+            titled.title = Some(a.to_owned());
+            assert_eq!(merged_title(&titled).as_deref(), Some(rest), "{a}");
+            assert_eq!(part_word(b).map(|p| p.n), Some(2), "{b}");
+        }
+    }
+
     #[test]
     fn parts_in_words_hyphens_and_decimals_merge_into_one_chapter() {
         let words = [
@@ -571,6 +740,34 @@ mod tests {
         assert_eq!(trackers, vec![1, 2, 3]);
     }
 
+    /// A story told over several numbered chapters names its parts in the titles; each is a
+    /// chapter of its own, never part 4 of 289 with three parts missing.
+    #[test]
+    fn a_part_word_in_the_title_of_a_number_of_its_own_is_a_chapter() {
+        let mut list = [
+            entry("a", "285", None),
+            entry("b", "286", None),
+            entry("c", "287", None),
+            entry("d", "288", None),
+            entry("e", "289", None),
+        ];
+        list[1].title = Some("The Long Tale Part 1".into());
+        list[2].title = Some("The Long Tale Part 2".into());
+        list[3].title = Some("The Long Tale (Pt. 3)".into());
+        list[4].title = Some("The Long Tale Part 4".into());
+        let arranged = arrange(&list, None, None);
+        assert_eq!(
+            ids(&arranged),
+            vec![("285", 1), ("286", 1), ("287", 1), ("288", 1), ("289", 1)]
+        );
+        assert!(arranged.parts.iter().all(Option::is_none), "{:?}", arranged.parts);
+        assert!(arranged.rows.iter().all(|r| r.missing.is_empty() && r.numbers.is_empty()));
+        // A decimal whose title names the same part is still that part.
+        let mut decimal = [entry("a", "3.1", None), entry("b", "3.2", None)];
+        decimal[1].title = Some("Part 2".into());
+        assert_eq!(ids(&arrange(&decimal, None, None)), vec![("3", 2)]);
+    }
+
     #[test]
     fn a_decimal_beside_its_whole_chapter_is_an_extra_not_a_part() {
         // 10.5 beside 10, and alone: extras in a series that numbers nothing as parts.
@@ -600,6 +797,46 @@ mod tests {
         // A source whose labels say Part is believed whatever the number.
         let said = [entry("a", "10.5 Part 1", None), entry("b", "10.5 Part 2", None)];
         assert_eq!(ids(&arrange(&said, None, None)), vec![("10.5", 2)]);
+    }
+
+    #[test]
+    fn another_list_says_whether_a_lone_first_decimal_is_a_part_or_an_extra() {
+        let lone = [entry("a", "6", None), entry("b", "7.1", None), entry("c", "8", None)];
+        // Alone it reads as its own chapter, as a lone 10.5 does.
+        assert_eq!(ids(&arrange(&lone, None, None)), vec![("6", 1), ("7.1", 1), ("8", 1)]);
+        // Another source with a whole 7 makes it 7's first part.
+        let whole = [entry("x", "7", None), entry("y", "8", None)];
+        let arranged = arrange_in(&lone, None, None, &Numbering::of([&whole[..]]));
+        assert_eq!(ids(&arranged), vec![("6", 1), ("7", 1), ("8", 1)]);
+        assert_eq!(arranged.parts, vec![None, Some(1), None]);
+        // One with 7 and 7.1 beside it numbers 7.1 as an extra, and so does this one.
+        let extra = [entry("x", "7", None), entry("y", "7.1", None)];
+        let arranged = arrange_in(&lone, None, None, &Numbering::of([&extra[..]]));
+        assert_eq!(ids(&arranged), vec![("6", 1), ("7.1", 1), ("8", 1)]);
+        // A lone 10.5 stays an extra whatever the others list.
+        let half = [entry("a", "10", None), entry("b", "10.5", None)];
+        let others = [entry("x", "10", None)];
+        let arranged = arrange_in(&half, None, None, &Numbering::of([&others[..]]));
+        assert_eq!(ids(&arranged), vec![("10", 1), ("10.5", 1)]);
+    }
+
+    #[test]
+    fn a_whole_chapter_followed_by_its_second_and_third_parts_is_their_first() {
+        let list = [
+            entry("a", "56", None),
+            entry("b", "57", None),
+            entry("c", "57.2", None),
+            entry("d", "57.3", None),
+            entry("e", "58", None),
+        ];
+        let arranged = arrange(&list, None, None);
+        assert_eq!(ids(&arranged), vec![("56", 1), ("57", 3), ("58", 1)]);
+        assert_eq!(arranged.parts, vec![None, Some(1), Some(2), Some(3), None]);
+        // A source that lists 57.2 and 57.3 alone has 57's second and third parts.
+        let rest = [entry("a", "57.2", None), entry("b", "57.3", None)];
+        let arranged = arrange_in(&rest, None, None, &Numbering::of([&list[..]]));
+        assert_eq!(ids(&arranged), vec![("57", 2)]);
+        assert_eq!(arranged.parts, vec![Some(2), Some(3)]);
     }
 
     #[test]
