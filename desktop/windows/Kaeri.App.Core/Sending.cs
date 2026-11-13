@@ -21,8 +21,11 @@ public sealed record EReaderSend
     /// <summary>Empty for a send the engine started again after a restart, until it says which.</summary>
     public string Work { get; set; } = "";
     public string Target { get; set; } = "";
-    /// <summary>The chapters asked for, in reading order; empty for a restarted send.</summary>
-    public string[] Chapters { get; init; } = [];
+    /// <summary>
+    /// The chapters asked for, in reading order. A send the engine started again after a restart
+    /// learns them from its first waiting word.
+    /// </summary>
+    public string[] Chapters { get; set; } = [];
     public SendPhase Phase { get; set; } = SendPhase.Preparing;
     /// <summary>How far, when the engine has said.</summary>
     public double? Fraction { get; set; }
@@ -219,7 +222,15 @@ public sealed class SendState
                 Update(failed.Job, null, null, s => { s.Phase = SendPhase.Failed; s.Line = words; });
                 return ReadingPart.Send;
             case ReadingEvent.ExportWaiting waiting:
-                Update(waiting.Job, waiting.Work, waiting.Target, s => { s.Phase = SendPhase.Waiting; s.Line = waiting.Line.Text(); });
+                Update(waiting.Job, waiting.Work, waiting.Target, s =>
+                {
+                    s.Phase = SendPhase.Waiting;
+                    s.Line = waiting.Line.Text();
+                    // A send this window never asked for (held across a restart) learns its
+                    // chapters here, so sharing it later can set the place.
+                    if (s.Chapters.Length == 0 && waiting.Chapters is { Length: > 0 } held)
+                        s.Chapters = held;
+                });
                 return ReadingPart.Send;
             case ReadingEvent.ExportReady ready:
                 Update(ready.Job, null, null, s => { s.Phase = SendPhase.Ready; s.Files = ready.Files; });

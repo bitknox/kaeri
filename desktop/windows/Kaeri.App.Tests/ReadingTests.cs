@@ -193,6 +193,23 @@ public class ReadingTests
     }
 
     [Fact]
+    public void ASendHeldAcrossARestartKnowsItsChaptersWhenShared()
+    {
+        var asked = new List<ReadingCommand>();
+        var sending = new SendState { Send = c => { if (c is Command.Reading r) asked.Add(r.V1); } };
+        sending.Apply(new ReadingEvent.ExportWaiting(41, "a:900302", "kobo", new Msg.Reading(new ReadingMsg.ExportWaitsForWifi(2)), ["c3", "c4"]));
+        sending.Apply(new ReadingEvent.ExportReady(41, [new ExportFile("/x/b.kepub.epub", "b.kepub.epub", 10, null)]));
+        var send = Assert.Single(sending.Sends);
+        Assert.Equal(SendPhase.Ready, send.Phase);
+        Assert.Equal(new[] { "c3", "c4" }, send.Chapters);
+
+        // Sharing it tells the engine which chapters went, for the place.
+        sending.Shared(send.Id);
+        var shared = Assert.IsType<ReadingCommand.Shared>(Assert.Single(asked, c => c is ReadingCommand.Shared));
+        Assert.Equal(new[] { "c3", "c4" }, shared.Chapters);
+    }
+
+    [Fact]
     public void TheChosenTargetComesFromTheEngineAndATargetWithoutTheFormatIsRefused()
     {
         var sending = new SendState { Send = _ => { } };
