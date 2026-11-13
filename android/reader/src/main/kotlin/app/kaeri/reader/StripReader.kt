@@ -231,10 +231,10 @@ fun StripReader(
         if (into > 0) list.scrollToItem(index, into)
         onJumped(jump.id)
     }
-    // The place, once a scroll comes to rest, and no more often than every 500 ms; again with each
-    // layout, which a chapter opened again from above it gets after the place was said. At rest
-    // with only the chapter kept above on screen, the divider into this one gone below, that
-    // chapter is the one read again.
+    // The place, each time a scroll comes to rest once the jump to the start place is done, short
+    // scrolls included; again with each layout, which a chapter opened again from above it gets
+    // after the place was said. At rest with only the chapter kept above on screen, the divider
+    // into this one gone below, that chapter is the one read again.
     LaunchedEffect(list, story.size, first, state.layout) {
         snapshotFlow { list.isScrollInProgress }
             .distinctUntilChanged()
@@ -243,9 +243,8 @@ fun StripReader(
                     scrolled()
                 } else if (first > 0 && list.layoutInfo.visibleItemsInfo.let { items -> items.isNotEmpty() && items.all { it.index < first - 1 } }) {
                     back()
-                } else if (state.jump == null && story.isNotEmpty()) {
+                } else if (now.jump == null && story.isNotEmpty()) {
                     list.stripPos(first, story.size)?.let { at(it, lastLanded && list.footVisible(last)) }
-                    delay(500)
                 }
             }
     }

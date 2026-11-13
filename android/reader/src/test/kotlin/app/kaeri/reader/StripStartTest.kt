@@ -11,11 +11,10 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
-import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.swipeUp
 import app.kaeri.engine.model.Command
 import app.kaeri.engine.model.Leaf
 import app.kaeri.engine.model.ReadPlace
@@ -27,6 +26,8 @@ import app.kaeri.engine.model.TurnHow
 import app.kaeri.reader.ReaderFixtures.CHAPTER
 import app.kaeri.reader.ReaderFixtures.SESSION
 import app.kaeri.reader.ReaderFixtures.WORK
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -46,6 +47,13 @@ class StripStartTest {
     private val sent = mutableListOf<ReaderCommand>()
     private val session = ReaderSession { sent += (it as Command.Reader).v1 }
     private val list = LazyListState()
+    private lateinit var scope: CoroutineScope
+
+    /** A scroll by [px], held over a few frames as a finger's is, then let go. */
+    private fun drag(px: Float) {
+        compose.runOnIdle { scope.launch { list.scroll { scrollBy(px); repeat(4) { withFrameNanos { } } } } }
+        compose.waitForIdle()
+    }
 
     /** Twelve images of a chapter, each a page of its own, and the end page. */
     private val leaves = List(12) { Leaf(it.toUInt(), listOf(ReaderFixtures.part(it.toUInt()).copy(ratio = 0.5f)), false) } + Leaf(12u, emptyList(), true)
@@ -55,6 +63,7 @@ class StripStartTest {
         session.apply(ReaderEvent.Opened(ReaderFixtures.view(mode = ReaderMode.STRIP).copy(start = start)))
         session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, leaves))
         compose.setContent {
+            scope = rememberCoroutineScope()
             val state by session.state.collectAsState()
             Box(Modifier.fillMaxSize()) {
                 StripReader(
@@ -77,8 +86,7 @@ class StripStartTest {
 
     private fun firstScrollSays(image: UInt) {
         sent.clear()
-        compose.onRoot().performTouchInput { swipeUp(startY = centerY, endY = centerY - 60f) }
-        compose.waitForIdle()
+        drag(60f)
         val at = sent.filterIsInstance<ReaderCommand.StripAt>()
         assertTrue(at.isNotEmpty())
         assertTrue(at.all { it.chapter == CHAPTER && it.at.image == image })
@@ -119,6 +127,6 @@ class StripStartTest {
         session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, leaves))
         val jump = session.state.value.jump!!
         assertEquals(9, jump.leaf)
-        assertTrue(jump.strip == null || jump.strip!!.image == 9u)
+        assertTrue(jump.strip == null || jump.strip.image == 9u)
     }
 }
