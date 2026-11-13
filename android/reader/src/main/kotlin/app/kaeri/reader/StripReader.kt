@@ -315,7 +315,10 @@ fun StripReader(
                     Box(Modifier.widthIn(max = maxWidth).fillMaxWidth().height(StripDividerHeight)) { divider(into) }
                 }
                 // Room under the divider while this chapter's images come, so the scroll stays put.
-                if (story.isEmpty()) item(key = ROOM) { Box(Modifier.fillMaxWidth().height(screen)) }
+                // It is keyed by the chapter it waits for, as the room under that chapter's divider
+                // was before the flow, so once the images come they take its place: under one key
+                // with the room after them, a scroll resting in it would follow it to the end.
+                if (story.isEmpty()) item(key = roomKey(into)) { Box(Modifier.fillMaxWidth().height(screen)) }
             }
             images(state, story, images, onMissing, onRetry, maxWidth, waiting, failed, state, credits)
             when {
@@ -324,7 +327,7 @@ fun StripReader(
                     item(key = dividerKey(next)) {
                         Box(Modifier.widthIn(max = maxWidth).fillMaxWidth().height(StripDividerHeight)) { divider(next) }
                     }
-                    item(key = ROOM) { Box(Modifier.fillMaxWidth().height(screen)) }
+                    item(key = roomKey(next)) { Box(Modifier.fillMaxWidth().height(screen)) }
                 }
                 end != null -> item(key = "end") {
                     Box(Modifier.widthIn(max = maxWidth).fillMaxWidth().height(screen)) { footer(end) }
@@ -334,7 +337,8 @@ fun StripReader(
     }
 }
 
-private const val ROOM = "room"
+/** The room under the divider into [chapter]. */
+private fun roomKey(chapter: ChapterRow) = "room ${chapter.id}"
 
 private fun dividerKey(chapter: ChapterRow) = "divider ${chapter.id}"
 
