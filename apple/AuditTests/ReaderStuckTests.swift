@@ -327,45 +327,19 @@ final class ReaderStuckTests: XCTestCase {
         XCTAssertEqual(zoom(), 1, accuracy: 0.01, "Command-0 left the pinch")
     }
 
-    /// File › Open (Command-O) over a book on iPad: a sheet with a field of its own takes the
-    /// arrows and Command-L, and the book behind it does not turn. If no sheet comes up over the
-    /// reader's cover, the book keeps its keys.
-    func testCommandOOverABookTakesTheArrowsWhenItShows() throws {
+    /// File › Open (Command-O) over a book on iPad waits until the book is closed: the reader is a
+    /// full-screen cover, and the sheet coming up from the window under it put the book away. The
+    /// book stays, with no sheet, and keeps its keys.
+    func testCommandOOverABookLeavesTheBookOpen() throws {
         try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "an iPad check")
         let app = launch("readermangartl")
         let start = try XCTUnwrap(page(app), "no page on screen")
         key(app, "o", .command)
         Thread.sleep(forTimeInterval: 1.5)
-        let field = app.textFields.firstMatch
-        let shown = field.exists && field.isHittable
-        print("audit: Command-O over a book shows its sheet: \(shown)")
-        if shown {
-            field.tap()
-            field.typeText("abc")
-            key(app, .rightArrow)
-            key(app, .rightArrow)
-            key(app, "l", .command)
-            Thread.sleep(forTimeInterval: 1)
-            XCTAssertTrue(field.exists, "Command-L took the sheet away")
-            // The book's pages leave the accessibility tree while a sheet is over them, so the
-            // page is read once the sheet is cancelled.
-            // The reader keeps a go-to-page field of its own, so the sheet's going is told by its
-            // own button, not by a text field.
-            let choose = app.buttons["Choose a torrent file"].firstMatch
-            XCTAssertTrue(choose.exists, "the sheet has no Choose a torrent file")
-            app.buttons["Cancel"].firstMatch.tap()
-            XCTAssertTrue(choose.waitForNonExistence(timeout: 5), "Cancel left the sheet up")
-            // Command-L under the sheet must not have asked for the chapters, to come up once it goes.
-            let chapters = app.buttons["Chapters"].firstMatch
-            XCTAssertFalse(chapters.waitForExistence(timeout: 2), "Command-L opened the chapters behind the sheet")
-            let after = page(app)
-            if after == nil {
-                print("audit: no page after Cancel; images \(app.images.count), buttons \(app.buttons.allElementsBoundByIndex.prefix(12).map(\.label))")
-            }
-            XCTAssertEqual(after, start, "the arrows turned the book behind the sheet")
-        } else {
-            key(app, .leftArrow)
-            XCTAssertNotEqual(page(app), start, "with nothing over it the book did not turn")
-        }
+        XCTAssertFalse(app.buttons["Choose a torrent file"].exists, "Command-O brought up its sheet")
+        let after = page(app)
+        XCTAssertEqual(after, start, "the book is not where it was")
+        key(app, .leftArrow)
+        XCTAssertNotEqual(page(app), start, "the book did not turn after Command-O")
     }
 }
