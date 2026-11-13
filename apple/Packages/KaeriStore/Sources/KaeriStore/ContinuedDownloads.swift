@@ -1,9 +1,9 @@
 // Downloads that go on after the app leaves: iOS 26's continued-processing task, which the system
 // runs with its own progress line while the person is elsewhere. Episodes and chapters share one
 // window, which counts them together. The window is asked for when a download starts, or as the
-// app leaves with some queued; while it is open the engine lets the
-// downloads run in the background, with the connection check as on screen; and it closes when
-// nothing is left, when it runs out, or when the person stops it, and the torrents wait again.
+// app leaves with some queued; while it is open the engine lets the downloads run in the
+// background, with the connection check as on screen; and it closes when nothing is left, when it
+// runs out, or when the person stops it, and the torrents and the chapter queue wait again.
 // The Mac has no such window and never asks.
 
 import KaeriKit
