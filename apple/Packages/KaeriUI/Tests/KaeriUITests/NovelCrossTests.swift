@@ -172,6 +172,16 @@ extension NovelWebLifecycleTests {
             window.contentView.flatMap(Self.webView(in:))?.url?.absoluteString
         }
 
+        /// The document the page has laid out and its pages, read from the page itself.
+        private func laidOut(_ window: NSWindow) async -> (address: String, pages: Int)? {
+            guard let view = window.contentView.flatMap(Self.webView(in:)) else { return nil }
+            let value = try? await view.evaluateJavaScript(
+                "window.kaeriReader ? window.kaeriReader.count() + ' ' + location.href : ''")
+            guard let text = value as? String, let space = text.firstIndex(of: " "), let pages = Int(text[..<space])
+            else { return nil }
+            return (String(text[text.index(after: space)...]), pages)
+        }
+
         /// End, then a turn forward, as the Mac's keys ask.
         private func endThenRight(_ model: ReaderModel) async {
             model.requestJump(model.position.count - 1)
@@ -206,7 +216,19 @@ extension NovelWebLifecycleTests {
             await spin(0.2)
             model.position = (0, 1)
             opened(model, book, session: 2)
-            #expect(await until(10) { model.position.count > 2 }, "the book laid out again")
+            // The page itself says which document it laid out: until the new session's has, a
+            // count and a turn may still come from the old page.
+            let entry = book.url(0, session: 2)
+            var page = await laidOut(window)
+            let deadline = Date().addingTimeInterval(10)
+            while !(page?.address.hasPrefix(entry) == true && (page?.pages ?? 0) > 2), Date() < deadline {
+                await spin(0.05)
+                page = await laidOut(window)
+            }
+            #expect(page?.address.hasPrefix(entry) == true && (page?.pages ?? 0) > 2,
+                    "the book laid out again: \(String(describing: page))")
+            #expect(await until(5) { model.position.count > 2 }, "and its pages counted")
+            await spin(0.3)
 
             let before = Self.places(sent).count
             await endThenRight(model)
