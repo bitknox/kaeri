@@ -49,10 +49,14 @@ public struct KaeriCommands<Playback: View, PlayerWindowItems: View>: Commands {
     /// a key, enabled or not, and these come before the Go menu.
     private var reading: Bool { store.reader.request != nil }
 
+    /// The items that change what the main window shows are dimmed while a book covers it.
+    private var covered: Bool { BehindBook.covered(store) }
+
     public var body: some Commands {
         CommandGroup(replacing: .appSettings) {
             Button(L.menuSettings) { navigator.openSettings(navigator.settingsPane) }
                 .keyboardShortcut(",", modifiers: .command)
+                .disabled(covered)
         }
 
         // File.
@@ -78,14 +82,19 @@ public struct KaeriCommands<Playback: View, PlayerWindowItems: View>: Commands {
             Divider()
             Button(L.navSearch) { navigator.open(.search) }
                 .keyboardShortcut("f", modifiers: .command)
+                .disabled(covered)
             Button(L.menuSearchFilters) {
                 navigator.section = .search
                 navigator.searchFiltersShown.toggle()
             }
             .keyboardShortcut("f", modifiers: [.command, .option])
+            .disabled(covered)
             SurpriseMenuItem(store: store, navigator: navigator)
+                .disabled(covered)
+            // The palette is drawn in the window under the book, so it would take the keys unseen.
             Button(L.menuCommandPalette) { navigator.paletteShown.toggle() }
                 .keyboardShortcut("k", modifiers: .command)
+                .disabled(covered)
             Divider()
             Button(L.actionBack) {
                 if let playerBack, playerBack.isUp() {
@@ -146,7 +155,7 @@ public struct KaeriCommands<Playback: View, PlayerWindowItems: View>: Commands {
         CommandGroup(after: .toolbar) {
             let bounds = store.calendarBounds
             let week = navigator.calendarWeek
-            let here = navigator.section == .calendar && navigator.titleOnMac == nil
+            let here = navigator.section == .calendar && navigator.titleOnMac == nil && !covered
             Button(L.menuGoToToday) { navigator.showCalendarWeek(0) }
                 .keyboardShortcut(reading ? nil : KeyboardShortcut("t", modifiers: .command))
                 .disabled(!here || week == 0)
@@ -164,22 +173,22 @@ public struct KaeriCommands<Playback: View, PlayerWindowItems: View>: Commands {
             .disabled(!here || !bounds.touches(weekDays(offset: week + 1)))
             Divider()
             Button(L.calendarFilterAllTitle) { store.setSwitch(.calendarMine, on: false) }
-                .disabled(navigator.section != .calendar)
+                .disabled(navigator.section != .calendar || covered)
             Button(L.calendarFilterMineTitle) { store.setSwitch(.calendarMine, on: true) }
-                .disabled(navigator.section != .calendar)
+                .disabled(navigator.section != .calendar || covered)
             Divider()
             // A long series' ranges of 100 on the title page, beside Previous Week and Next Week:
             // ⇧⌘[ and ⇧⌘], since ⌘[ is Back. Go to episode is ⌘L.
             let ranges = navigator.episodeRangesShown
             Button(L.menuPreviousEpisodes) { navigator.stepEpisodeRange(by: -1) }
                 .keyboardShortcut("[", modifiers: [.command, .shift])
-                .disabled(ranges?.hasPrevious != true)
+                .disabled(ranges?.hasPrevious != true || covered)
             Button(L.menuNextEpisodes) { navigator.stepEpisodeRange(by: 1) }
                 .keyboardShortcut("]", modifiers: [.command, .shift])
-                .disabled(ranges?.hasNext != true)
+                .disabled(ranges?.hasNext != true || covered)
             Button(L.episodeGoTo) { navigator.goToAsked += 1 }
                 .keyboardShortcut(reading ? nil : KeyboardShortcut("l", modifiers: .command))
-                .disabled(navigator.goToShown == nil)
+                .disabled(navigator.goToShown == nil || covered)
         }
 
         CommandGroup(after: .windowArrangement) {
@@ -188,8 +197,10 @@ public struct KaeriCommands<Playback: View, PlayerWindowItems: View>: Commands {
             MainWindowButton()
             #endif
             playerWindowItems
+            // Messages is a card in the main window, under the book.
             Button(L.menuMessages) { navigator.messagesShown = true }
                 .keyboardShortcut("l", modifiers: [.command, .option])
+                .disabled(covered)
         }
 
         CommandGroup(replacing: .help) {
@@ -200,6 +211,7 @@ public struct KaeriCommands<Playback: View, PlayerWindowItems: View>: Commands {
     private func sectionButton(_ section: AppSection, _ key: Character) -> some View {
         Button(section == .pluginStores ? L.menuPluginStores : section.title) { navigator.open(section) }
             .keyboardShortcut(KeyEquivalent(key), modifiers: .command)
+            .disabled(covered)
     }
 
     private func withAnimationIfPossible(_ change: () -> Void) {
@@ -251,6 +263,15 @@ struct MainWindowButton: View {
     }
 }
 #endif
+
+/// A book open in the main window covers it: the sidebar and toolbar give way to the page, and
+/// Esc and Back return to exactly where the book was opened (`docs/native-ux.md`, Mac). So the
+/// items that change the window under it, a section, Search, the palette, Messages or Settings,
+/// are dimmed while it is open, rather than acting unseen and moving where closing it lands.
+@MainActor
+enum BehindBook {
+    static func covered(_ store: AppStore) -> Bool { store.reader.request != nil }
+}
 
 /// The Episode menu: the focused title's next episode, then the title.
 struct EpisodeCommands: View {
