@@ -15,6 +15,7 @@
 
 use std::{
     collections::{HashMap, HashSet, VecDeque},
+    panic::AssertUnwindSafe,
     path::{Path, PathBuf},
     sync::{
         Arc, Mutex, Weak,
@@ -23,6 +24,7 @@ use std::{
     time::Duration,
 };
 
+use futures::FutureExt;
 use kaeri_core::books::{ChapterContent, ChapterId};
 use kaeri_model::{reader::ChapterPart, reading::ReadingFailure};
 use kaeri_store::book_credits::PagePrint;
@@ -243,9 +245,14 @@ impl Feed {
         let Ok(mut pages) = self.pages.lock() else { return false };
         match pages.get_mut(index) {
             Some(page @ FeedPage::Failed(_)) => {
-                *page = FeedPage::Coming;
+                let failed = std::mem::replace(page, FeedPage::Coming);
                 drop(pages);
-                self.again.send((index, out.clone())).is_ok()
+                if self.again.send((index, out.clone())).is_ok() {
+                    return true;
+                }
+                // No fetcher is left to bring it: the page stays failed, not coming for good.
+                self.set(index, failed);
+                false
             }
             _ => false,
         }
@@ -620,7 +627,14 @@ impl<F: Fn(u32, &Outbox) + Send + 'static> Fetcher<F> {
         let kept = self.kept.clone();
         running.spawn(async move {
             let at = (index, source);
-            let page = fetch((&sources, &kept), &mut opened, &dir, at, slow, now, &gone).await;
+            let page = fetch((&sources, &kept), &mut opened, &dir, at, slow, now, &gone);
+            // A fetch that panics is that page's failure: the reader hears it, and a retry
+            // fetches the page again, as the index leaves the pages asked for.
+            let page = AssertUnwindSafe(page).catch_unwind().await.unwrap_or_else(|_| {
+                tracing::warn!(page = index, "a page fetch panicked; the page fails");
+                let reason = format!("page {} could not be fetched", index + 1);
+                FeedPage::Failed(ReadingFailure::Other { reason })
+            });
             (index, page, opened, told)
         });
     }

@@ -42,6 +42,8 @@ struct PageSource {
     gate: tokio::sync::Semaphore,
     /// Pages that fail, by their place in the chapter.
     failing: Mutex<HashSet<usize>>,
+    /// Pages whose fetch panics, by their place in the chapter.
+    panicking: Mutex<HashSet<usize>>,
     /// Pages printed as two, by their place in the chapter.
     wide: HashSet<usize>,
     /// The title every chapter is listed with.
@@ -68,6 +70,7 @@ impl PageSource {
             held_from: None,
             gate: tokio::sync::Semaphore::new(0),
             failing: Mutex::default(),
+            panicking: Mutex::default(),
             wide: HashSet::new(),
             title: None,
         }
@@ -137,6 +140,7 @@ impl kaeri_core::traits::BookSource for PageSource {
         if self.failing.lock().unwrap().contains(&index) {
             return Err(PageError::Status(404));
         }
+        assert!(!self.panicking.lock().unwrap().contains(&index), "a page no one foresaw");
         let (w, h) = if self.wide.contains(&index) { (640, 480) } else { (320, 480) };
         let picture = image::GrayImage::from_pixel(w, h, image::Luma([90]));
         let mut png = Vec::new();
@@ -351,6 +355,28 @@ async fn a_page_that_fails_has_its_own_retry() {
     assert_eq!(made, [(0, true), (1, false), (2, true)]);
 
     source.failing.lock().unwrap().clear();
+    let session = h.session();
+    h.send(ReaderCommand::Retry { session, chapter: ChapterId::new("1"), page: Some(1) });
+    let again = timeout(wait, h.pages_made(1)).await.expect("the retry answers");
+    assert_eq!(again, [(1, true)]);
+}
+
+/// A page whose fetch panics fails as that page, not coming for good: the other pages come and
+/// a retry fetches it again.
+#[tokio::test]
+async fn a_page_whose_fetch_panics_fails_and_has_its_own_retry() {
+    let source = Arc::new(PageSource::new(&["1"]));
+    source.panicking.lock().unwrap().insert(1);
+    let mut h = reading(source.clone());
+    h.failures = true;
+    h.open_read(None).await;
+    let wait = Duration::from_secs(20);
+    timeout(wait, h.leaves_of("1")).await.expect("the chapter opens");
+    h.shown(0, TurnHow::Turn).await;
+    let made = timeout(wait, h.pages_made(3)).await.expect("every page answers");
+    assert_eq!(made, [(0, true), (1, false), (2, true)]);
+
+    source.panicking.lock().unwrap().clear();
     let session = h.session();
     h.send(ReaderCommand::Retry { session, chapter: ChapterId::new("1"), page: Some(1) });
     let again = timeout(wait, h.pages_made(1)).await.expect("the retry answers");
