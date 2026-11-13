@@ -175,7 +175,7 @@ struct MenuKeys: NSViewRepresentable {
 /// trailer, a discussion) the Go menu binds none of the reader's keys and Space or an arrow stays
 /// with that window. The reader's own sheets and popovers, and the app in the background, keep
 /// the reader in front.
-private struct WindowFront: NSViewRepresentable {
+struct WindowFront: NSViewRepresentable {
     let model: ReaderModel
 
     @MainActor final class Coordinator {
@@ -188,21 +188,27 @@ private struct WindowFront: NSViewRepresentable {
         func follow() {
             DispatchQueue.main.async { [weak self] in
                 guard let self, let model, let window = view?.window else { return }
-                let front = WindowFront.inFront(key: NSApp.keyWindow, reader: window)
+                let front = WindowFront.inFront(
+                    key: NSApp.keyWindow, reader: window, readerOwns: model.sheet != nil || model.askingPage)
                 if model.windowInFront != front { model.windowInFront = front }
             }
         }
     }
 
-    /// The reader's window is in front unless another window of the app has the keys. A window
-    /// on the reader's, such as a sheet or a popover, counts as the reader's.
-    static func inFront(key: NSWindow?, reader: NSWindow) -> Bool {
-        var window = key
+    /// The reader's window is in front unless another window of the app has the keys. A sheet
+    /// or popover on the reader's window counts as the reader's only while the reader has one of
+    /// its own up (`readerOwns`: its settings, chapters or Go to page). Any other over the book,
+    /// File › Open (⌘O), Join Plugin Store or an invite link, is the app's, with a field of its
+    /// own, so the Go menu and its keys step aside for it.
+    static func inFront(key: NSWindow?, reader: NSWindow, readerOwns: Bool) -> Bool {
+        guard let key else { return true }
+        if key === reader { return true }
+        var window = key.sheetParent ?? key.parent
         while let current = window {
-            if current === reader { return true }
+            if current === reader { return readerOwns }
             window = current.sheetParent ?? current.parent
         }
-        return key == nil
+        return false
     }
 
     func makeCoordinator() -> Coordinator { Coordinator() }
