@@ -1851,6 +1851,11 @@ impl BookSources {
         self.offline_or(failure(&name, error))
     }
 
+    /// Whether the device has no network, as its front end last said, followed as it moves.
+    pub(crate) fn connection(&self) -> tokio::sync::watch::Receiver<bool> {
+        self.write_back.connection()
+    }
+
     /// A source that could not be reached while the network says there is none is offline,
     /// whatever words the source chose for it.
     pub(crate) fn offline_or(&self, failure: ReadingFailure) -> ReadingFailure {

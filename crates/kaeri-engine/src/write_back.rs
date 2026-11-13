@@ -81,7 +81,9 @@ pub struct WriteBack(Arc<Inner>);
 struct Inner {
     wake: tokio::sync::Notify,
     started: AtomicBool,
-    offline: AtomicBool,
+    /// True while the device has no network, as its front end last said: a watch, so a
+    /// source's pages held for the connection start again once it is back.
+    offline: tokio::sync::watch::Sender<bool>,
     sending: Mutex<HashSet<String>>,
     waiting: Mutex<HashMap<Key, Vec<Waiter>>>,
     publish: Mutex<Option<Arc<dyn Fn() + Send + Sync>>>,
@@ -91,7 +93,7 @@ impl std::fmt::Debug for WriteBack {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("WriteBack")
             .field("started", &self.0.started.load(Ordering::Relaxed))
-            .field("offline", &self.0.offline.load(Ordering::Relaxed))
+            .field("offline", &*self.0.offline.borrow())
             .finish_non_exhaustive()
     }
 }
@@ -102,7 +104,12 @@ impl WriteBack {
     }
 
     pub(crate) fn is_offline(&self) -> bool {
-        self.0.offline.load(Ordering::Relaxed)
+        *self.0.offline.borrow()
+    }
+
+    /// Whether the device has no network, followed as it moves.
+    pub(crate) fn connection(&self) -> tokio::sync::watch::Receiver<bool> {
+        self.0.offline.subscribe()
     }
 
     /// Whether a send to `server` is under way.
@@ -317,7 +324,7 @@ impl BookSources {
     /// The device went offline or came back. Back online, every mark waiting goes at once,
     /// oldest first.
     pub fn write_back_network(&self, offline: bool, now: i64) {
-        let was = self.write_back.0.offline.swap(offline, Ordering::Relaxed);
+        let was = self.write_back.0.offline.send_replace(offline);
         if was && !offline {
             if let Err(e) = self.store().book_progress_due_now(now) {
                 tracing::warn!(error = %e, "book progress not brought forward");

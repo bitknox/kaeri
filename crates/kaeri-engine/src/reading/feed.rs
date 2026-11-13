@@ -195,6 +195,8 @@ pub struct Feed {
     left: tokio::sync::watch::Sender<bool>,
     /// Set once a strip flowed on from the chapter and keeps it above: see [`Feed::aside`].
     aside: std::sync::atomic::AtomicBool,
+    /// True while the device has no network: see [`Feed::offline`].
+    connection: tokio::sync::watch::Receiver<bool>,
 }
 
 /// What a feed's fetcher is lent: the source, its chapter, and who hears of each page. It holds
@@ -212,6 +214,9 @@ struct Fetcher<F> {
     wanted: mpsc::UnboundedReceiver<usize>,
     gone: Gone,
     left: tokio::sync::watch::Receiver<bool>,
+    /// True while the device has no network: no page starts, and the pages that failed for
+    /// want of one are fetched again once it is back.
+    connection: tokio::sync::watch::Receiver<bool>,
     /// The download's pages, shared until every page has landed.
     kept: Kept,
 }
@@ -234,6 +239,32 @@ impl Feed {
     /// Every page landed.
     pub fn complete(&self) -> bool {
         self.pages.lock().is_ok_and(|p| p.iter().all(|p| matches!(p, FeedPage::Landed(_))))
+    }
+
+    /// The device has no network, as its front end last said: a page that failed for want of
+    /// one waits for it rather than failing again before it is back.
+    pub fn offline(&self) -> bool {
+        *self.connection.borrow()
+    }
+
+    /// Some page failed for want of a network, so is fetched again once one is back.
+    fn waits_for_network(&self) -> bool {
+        self.pages
+            .lock()
+            .is_ok_and(|p| p.iter().any(|p| *p == FeedPage::Failed(ReadingFailure::Offline)))
+    }
+
+    /// The network is back: every page that failed for want of it is to come again, in order.
+    fn back_online(&self) -> Vec<usize> {
+        let Ok(mut pages) = self.pages.lock() else { return Vec::new() };
+        let mut back = Vec::new();
+        for (index, page) in pages.iter_mut().enumerate() {
+            if *page == FeedPage::Failed(ReadingFailure::Offline) {
+                *page = FeedPage::Coming;
+                back.push(index);
+            }
+        }
+        back
     }
 
     /// No page is still on its way: each landed or failed.
@@ -307,6 +338,7 @@ impl Feed {
             wanted,
             left: tokio::sync::watch::Sender::new(false),
             aside: std::sync::atomic::AtomicBool::new(false),
+            connection: tokio::sync::watch::Sender::new(false).subscribe(),
         }
     }
 
@@ -424,8 +456,19 @@ pub(crate) async fn start(
     let pages = Mutex::new(pages);
     let (left, leaving) = tokio::sync::watch::channel(false);
     let aside = std::sync::atomic::AtomicBool::new(false);
-    let feed =
-        Arc::new(Feed { chapter, dir, pages, credits, parts, again, wanted, left, aside });
+    let connection = sources.connection();
+    let feed = Arc::new(Feed {
+        chapter,
+        dir,
+        pages,
+        credits,
+        parts,
+        again,
+        wanted,
+        left,
+        aside,
+        connection: connection.clone(),
+    });
     let fetcher = Fetcher {
         sources,
         opened,
@@ -437,6 +480,7 @@ pub(crate) async fn start(
         wanted: waited,
         gone,
         left: leaving,
+        connection,
         kept,
     };
     tokio::spawn(fetcher.run(Arc::downgrade(&feed), rest, out));
@@ -553,6 +597,7 @@ impl<F: Fn(u32, &Outbox) + Send + 'static> Fetcher<F> {
         let mut urgent: VecDeque<usize> = VecDeque::new();
         let mut asked: HashSet<usize> = HashSet::new();
         let mut open = true;
+        let mut following = true;
         loop {
             // Returning drops the fetches on their way.
             if feed.strong_count() == 0 || self.gone.is() || *self.left.borrow() {
@@ -565,8 +610,12 @@ impl<F: Fn(u32, &Outbox) + Send + 'static> Fetcher<F> {
             {
                 order.clear();
             }
+            // Without a network no page starts: each waits for it rather than failing with no
+            // request sent.
+            let offline = *self.connection.borrow_and_update();
             // A page waited on starts even with the others all under way.
-            while running.len() < AT_ONCE + WAITED_ON
+            while !offline
+                && running.len() < AT_ONCE + WAITED_ON
                 && let Some(index) = urgent.pop_front()
             {
                 if asked.insert(index) {
@@ -574,7 +623,8 @@ impl<F: Fn(u32, &Outbox) + Send + 'static> Fetcher<F> {
                     self.spawn(&mut running, &feed, index, out.clone());
                 }
             }
-            while running.len() < AT_ONCE
+            while !offline
+                && running.len() < AT_ONCE
                 && let Some(index) = order.pop_front()
             {
                 if asked.insert(index) {
@@ -582,8 +632,14 @@ impl<F: Fn(u32, &Outbox) + Send + 'static> Fetcher<F> {
                 }
             }
             // The first pass is all under way: only retries hold a way to answer from here, so
-            // an engine waiting on nothing can go idle.
-            if order.is_empty() && urgent.is_empty() {
+            // an engine waiting on nothing can go idle. A page that failed for want of a network
+            // waits for it, and is told once it lands.
+            if order.is_empty()
+                && urgent.is_empty()
+                && !feed.upgrade().is_some_and(|f| {
+                    !f.aside.load(std::sync::atomic::Ordering::Relaxed) && f.waits_for_network()
+                })
+            {
                 out = None;
             }
             if running.is_empty() && !open {
@@ -597,6 +653,9 @@ impl<F: Fn(u32, &Outbox) + Send + 'static> Fetcher<F> {
                         self.opened = opened;
                     }
                     let Some(feed) = feed.upgrade() else { return };
+                    if page == FeedPage::Failed(ReadingFailure::Offline) && out.is_none() {
+                        out.clone_from(&told);
+                    }
                     feed.set(index, page);
                     asked.remove(&index);
                     // Every page landed: nothing more is fetched from the download's pages, and
@@ -624,6 +683,22 @@ impl<F: Fn(u32, &Outbox) + Send + 'static> Fetcher<F> {
                         }
                     }
                     None => open = false,
+                },
+                // The network came back: the pages that failed for want of it come again, in
+                // order and at the usual pace, ahead of those not fetched yet. A chapter set aside
+                // keeps them until they are asked for.
+                moved = self.connection.changed(), if following => match moved {
+                    Ok(()) if !*self.connection.borrow() => {
+                        let Some(feed) = feed.upgrade() else { return };
+                        if !feed.aside.load(std::sync::atomic::Ordering::Relaxed) {
+                            for index in feed.back_online().into_iter().rev() {
+                                order.retain(|i| *i != index);
+                                order.push_front(index);
+                            }
+                        }
+                    }
+                    Ok(()) => {}
+                    Err(_) => following = false,
                 },
                 // Seen at the top of the loop. An error means the feed is gone, also seen there.
                 _ = self.left.changed() => {}
@@ -712,7 +787,9 @@ async fn within(
             return came;
         }
     }
-    Err(ReadingFailure::SourceDown { source: sources.source_name(&opened.source_id) })
+    Err(sources.offline_or(ReadingFailure::SourceDown {
+        source: sources.source_name(&opened.source_id),
+    }))
 }
 
 /// The source's page `index`: from the download's pages when it shares them, which fetch it
