@@ -583,7 +583,7 @@ reading-usually-sundays = En général le dimanche
 # Under a cover or on a series page: how often new chapters come out, in weeks.
 reading-about-every-weeks =
     { $weeks ->
-        [one] Environ chaque semaine
+        [one] Environ { $weeks } semaine d’écart
         [many] Environ toutes les { $weeks } semaines
        *[other] Environ toutes les { $weeks } semaines
     }

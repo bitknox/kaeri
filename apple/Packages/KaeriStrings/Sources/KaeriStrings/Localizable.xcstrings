@@ -227677,7 +227677,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Environ chaque semaine"
+                      "value" : "Environ %1$lld semaine d’écart"
                     }
                   },
                   "other" : {
@@ -227829,7 +227829,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Cerca de toda semana"
+                      "value" : "A cada %1$lld semana, em média"
                     }
                   },
                   "other" : {

@@ -215,7 +215,7 @@
     <string name="reading_usually_saturdays">Geralmente aos sábados</string>
     <string name="reading_usually_sundays">Geralmente aos domingos</string>
     <plurals name="reading_about_every_weeks">
-        <item quantity="one">Cerca de toda semana</item>
+        <item quantity="one">A cada %1$,d semana, em média</item>
         <item quantity="many">A cada %1$,d de semanas</item>
         <item quantity="other">Cerca de a cada %1$,d semanas</item>
     </plurals>

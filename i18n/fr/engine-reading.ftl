@@ -7,7 +7,7 @@ reading-usually-fridays = En général le vendredi
 reading-usually-saturdays = En général le samedi
 reading-usually-sundays = En général le dimanche
 reading-about-every-weeks = { $weeks ->
-    [one] Environ chaque semaine
+    [one] Environ { $weeks } semaine d’écart
     [many] Environ toutes les { $weeks } semaines
    *[other] Environ toutes les { $weeks } semaines
  }

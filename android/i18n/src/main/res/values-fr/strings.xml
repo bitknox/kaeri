@@ -215,7 +215,7 @@
     <string name="reading_usually_saturdays">En général le samedi</string>
     <string name="reading_usually_sundays">En général le dimanche</string>
     <plurals name="reading_about_every_weeks">
-        <item quantity="one">Environ chaque semaine</item>
+        <item quantity="one">Environ %1$,d semaine d’écart</item>
         <item quantity="many">Environ toutes les %1$,d semaines</item>
         <item quantity="other">Environ toutes les %1$,d semaines</item>
     </plurals>

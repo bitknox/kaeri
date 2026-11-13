@@ -624,7 +624,7 @@
     <value>Geralmente aos domingos</value>
   </data>
   <data name="ReadingAboutEveryWeeks_one" xml:space="preserve">
-    <value>Cerca de toda semana</value>
+    <value>A cada {weeks} semana, em média</value>
   </data>
   <data name="ReadingAboutEveryWeeks_many" xml:space="preserve">
     <value>A cada {weeks} de semanas</value>

@@ -7,7 +7,7 @@ reading-usually-fridays = Geralmente às sextas
 reading-usually-saturdays = Geralmente aos sábados
 reading-usually-sundays = Geralmente aos domingos
 reading-about-every-weeks = { $weeks ->
-    [one] Cerca de toda semana
+    [one] A cada { $weeks } semana, em média
     [many] A cada { $weeks } de semanas
    *[other] Cerca de a cada { $weeks } semanas
  }

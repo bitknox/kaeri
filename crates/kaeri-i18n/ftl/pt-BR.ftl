@@ -583,7 +583,7 @@ reading-usually-sundays = Geralmente aos domingos
 # Under a cover or on a series page: how often new chapters come out, in weeks.
 reading-about-every-weeks =
     { $weeks ->
-        [one] Cerca de toda semana
+        [one] A cada { $weeks } semana, em média
         [many] A cada { $weeks } de semanas
        *[other] Cerca de a cada { $weeks } semanas
     }
@@ -2068,7 +2068,7 @@ linux-reader-open-failed-plain = Não foi possível abrir este capítulo
 # Choice in Send to e-reader's Chapters row: the next unread chapters, as many as the number.
 linux-send-next =
     { $n ->
-        [one] O capítulo seguinte não lido
+        [one] { $n } seguinte não lido
         [many] Os { $n } seguintes não lidos
        *[other] Os { $n } seguintes não lidos
     }
