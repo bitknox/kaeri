@@ -349,6 +349,15 @@ class ReadingModel(private val send: (Command) -> Unit) {
         reading(ReadingCommand.Search(query))
     }
 
+    /**
+     * [query] back on Search with nothing asked yet, as the screen had it before the process went
+     * away; Search asks it as it shows. Only over a search that has not started.
+     */
+    fun restoreQuery(query: ReadSearchQuery) {
+        val now = _search.value
+        if (now.query == EMPTY_QUERY && now.tiles.isEmpty() && !now.loading) _search.value = ReadSearchState(query = query)
+    }
+
     /** Search back at its start, with nothing asked: no words, no filters and no order chosen. */
     fun searchStart() {
         _search.value = ReadSearchState()

@@ -698,10 +698,14 @@ private fun DestinationScreen(
         Destination.Calendar -> CalendarScreen()
         Destination.Seasonal -> SeasonalScreen()
         Destination.Library -> LibraryScreen(actions)
-        Destination.Search -> when {
-            // On an e-ink panel, reading's Search tab is the paper Search of the e-ink boards.
-            answer == KaeriIsFor.READ && app.kaeri.ui.reading.LocalEinkLayout.current != null -> app.kaeri.ui.reading.EinkSearchPage(tab = true)
-            else -> SearchScreen(startSearch, startFilters = startSheet == "filters", open = searchOpening, opened = searchOpened)
+        Destination.Search -> {
+            // Reading's scope and search come back with the screen after the process was gone.
+            app.kaeri.ui.reading.KeepReadSearch()
+            when {
+                // On an e-ink panel, reading's Search tab is the paper Search of the e-ink boards.
+                answer == KaeriIsFor.READ && app.kaeri.ui.reading.LocalEinkLayout.current != null -> app.kaeri.ui.reading.EinkSearchPage(tab = true)
+                else -> SearchScreen(startSearch, startFilters = startSheet == "filters", open = searchOpening, opened = searchOpened)
+            }
         }
     }
 }
