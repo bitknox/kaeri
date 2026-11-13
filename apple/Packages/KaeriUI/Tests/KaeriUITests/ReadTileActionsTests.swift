@@ -39,9 +39,15 @@ struct ReadTileActionsTests {
         RunLoop.main.run(until: Date().addingTimeInterval(0.2))
         var names: [String] = []
         func walk(_ node: Any, depth: Int) {
-            guard depth < 40, let node = node as? NSObject else { return }
-            names += (node.accessibilityCustomActions() ?? []).map(\.name)
-            for child in node.accessibilityChildren() ?? [] { walk(child, depth: depth + 1) }
+            // Read by name: the protocol's accessors are optional, and Swift can't pick between
+            // their overloads on an element of an unknown class.
+            func read(_ key: String) -> Any? {
+                guard let node = node as? NSObject, node.responds(to: Selector(key)) else { return nil }
+                return node.value(forKey: key)
+            }
+            guard depth < 40 else { return }
+            names += (read("accessibilityCustomActions") as? [NSAccessibilityCustomAction] ?? []).map(\.name)
+            for child in read("accessibilityChildren") as? [Any] ?? [] { walk(child, depth: depth + 1) }
         }
         walk(window.contentView as Any, depth: 0)
         return names
