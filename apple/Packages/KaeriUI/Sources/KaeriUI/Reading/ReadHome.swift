@@ -365,6 +365,13 @@ private struct ReadSpotlightView: View {
             }
             line.padding(.top, 16)
             actions.padding(.top, 18)
+            // A series none of the sources has: why there is nothing to read, as Watch says it.
+            if tile.notInSources {
+                Text(L.homeNotFound)
+                    .font(.ui(layout.secondary))
+                    .foregroundStyle(.haze)
+                    .padding(.top, 12)
+            }
         }
         .frame(maxWidth: beside ? layout.textWidth : .infinity, alignment: .leading)
         .accessibilityElement(children: .contain)
