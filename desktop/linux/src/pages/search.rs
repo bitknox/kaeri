@@ -623,6 +623,11 @@ impl Inner {
     }
 }
 
+/// A search field as Search in the sidebar leaves it: reading's as it was.
+pub fn open_field(bar: &gtk::SearchBar, entry: &gtk::SearchEntry) {
+    let _ = (bar, entry);
+}
+
 /// The search field in its bar under the header, open, and the header's button that opens and
 /// closes it.
 pub fn field(placeholder: &str) -> (gtk::SearchBar, gtk::SearchEntry, gtk::ToggleButton) {

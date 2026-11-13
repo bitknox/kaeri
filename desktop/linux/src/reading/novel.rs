@@ -415,11 +415,16 @@ impl NovelView {
         self.call(&format!("window.kaeriReader && window.kaeriReader.goTo({page}, 'jump')")); // i18n-skip
     }
 
-    /// Show the document's last page, from End.
-    pub fn go_to_end(&self) {
-        self.call(
-            "window.kaeriReader && window.kaeriReader.goTo(window.kaeriReader.count() - 1, 'jump')", // i18n-skip
-        );
+    /// Home and End: the chapter's first or last page, which may sit in another document of
+    /// the spine than the one showing.
+    pub fn go_to_edge(&self, last: bool) {
+        match edge_move(&self.spine, self.current(), last) {
+            EdgeMove::Here(script) => self.call(script),
+            EdgeMove::Load(url) => {
+                self.ready_how.set(Some(TurnHow::Jump));
+                self.load(&url);
+            }
+        }
     }
 
     /// Show a place the engine moved to: a resume, Back to page, another device's place. It
@@ -502,8 +507,8 @@ impl NovelView {
                 Some("ArrowLeft") => self.turn(rtl),   // i18n-skip
                 Some("ArrowDown" | "PageDown" | " ") => self.turn(true),
                 Some("ArrowUp" | "PageUp") => self.turn(false),
-                Some("Home") => self.go_to(0),   // i18n-skip
-                Some("End") => self.go_to_end(), // i18n-skip
+                Some("Home") => self.go_to_edge(false), // i18n-skip
+                Some("End") => self.go_to_edge(true),   // i18n-skip
                 _ => {}
             },
             Some("tap") => {
@@ -642,6 +647,25 @@ fn decide_policy(values: &[glib::Value]) -> bool {
 
 fn is_navigation(kind: i32) -> bool {
     matches!(kind, NAVIGATION_ACTION | NEW_WINDOW_ACTION)
+}
+
+/// Where Home or End goes: a page of the document showing, or another document to load.
+#[derive(Debug, PartialEq, Eq)]
+enum EdgeMove {
+    Here(&'static str),
+    Load(String),
+}
+
+/// Home goes to the first page of the document showing, End to its last.
+fn edge_move(spine: &[(String, bool)], current: Option<usize>, last: bool) -> EdgeMove {
+    let _ = (spine, current);
+    if last {
+        EdgeMove::Here(
+            "window.kaeriReader && window.kaeriReader.goTo(window.kaeriReader.count() - 1, 'jump')", // i18n-skip
+        )
+    } else {
+        EdgeMove::Here("window.kaeriReader && window.kaeriReader.goTo(0, 'jump')") // i18n-skip
+    }
 }
 
 /// The end page as the engine hears it: the last place the page reported, at the page after

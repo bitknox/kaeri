@@ -273,6 +273,8 @@ pub struct Reader {
     /// From `open` until `close`. A closed reader takes no more of the engine's events, and lets
     /// go of its pages and its novel view once it is off screen.
     showing: Cell<bool>,
+    /// The window's full screen before the reader first changed it, given back on close.
+    full_before: FullBefore,
 }
 
 impl Reader {
@@ -720,6 +722,7 @@ impl Reader {
                 strip_timer: RefCell::default(),
                 novel: RefCell::default(),
                 showing: Cell::new(false),
+                full_before: FullBefore::default(),
             }
         });
         close.connect_clicked({
@@ -937,7 +940,9 @@ impl Reader {
     fn toggle_fullscreen(&self) {
         if let Some(ctx) = self.ctx.upgrade() {
             let window = &ctx.window;
-            window.set_fullscreened(!window.is_fullscreen());
+            let now = window.is_fullscreen();
+            self.full_before.toggled(now);
+            window.set_fullscreened(!now);
         }
     }
 
@@ -1222,6 +1227,12 @@ impl Reader {
         self.quiet_credits();
         self.widget.set_cursor(None);
         let was_showing = self.showing.get();
+        // Full screen is the reader's alone: the rest of the window has no way out of it.
+        if let Some(ctx) = self.ctx.upgrade()
+            && let Some(full) = self.full_before.give_back(ctx.window.is_fullscreen())
+        {
+            ctx.window.set_fullscreened(full);
+        }
         (self.show)(false);
         if was_showing && let Some(ctx) = self.ctx.upgrade() {
             self.opener.give_back(&ctx.window, &self.widget);
@@ -3158,16 +3169,19 @@ impl Reader {
     /// window should move it.
     fn tab_into_chrome(self: &Rc<Self>, back: bool) -> bool {
         self.reveal_chrome();
-        if self.focus_in_chrome() {
+        let Some(window) = self.widget.root().and_downcast::<gtk::Window>() else {
+            return false;
+        };
+        let focus = gtk::prelude::GtkWindowExt::focus(&window);
+        if focus.as_ref().is_some_and(|f| f.ancestor(gtk::Popover::static_type()).is_some()) {
             return false;
         }
-        let (head, group) = (self.head.upcast_ref::<gtk::Widget>(), self.group.upcast_ref());
-        let (direction, order) = if back {
-            (gtk::DirectionType::TabBackward, [group, head])
-        } else {
-            (gtk::DirectionType::TabForward, [head, group])
-        };
-        order.iter().any(|part| part.child_focus(direction))
+        let page = self.widget.upcast_ref::<gtk::Widget>();
+        let stops = tab_stops(self.head.upcast_ref(), page, self.group.upcast_ref());
+        let Some(next) = next_stop(&stops, page, focus.as_ref(), back) else { return false };
+        window.set_focus_visible(true);
+        next.grab_focus();
+        true
     }
 
     /// Keep the chrome up for a shot, as the board draws it.
@@ -3401,6 +3415,10 @@ impl Reader {
     }
 
     fn controls(self: &Rc<Self>) {
+        self.widget.add_controller(tab_keys({
+            let this = Rc::downgrade(self);
+            move |back| this.upgrade().is_some_and(|this| this.tab_into_chrome(back))
+        }));
         let keys = gtk::EventControllerKey::new();
         keys.connect_key_pressed({
             let this = Rc::downgrade(self);
@@ -3647,11 +3665,7 @@ impl Reader {
             K::Home | K::End if self.state.borrow().medium == Some(Medium::Novel) => {
                 let novel = self.novel.borrow().clone();
                 if let Some(novel) = novel {
-                    if key == K::Home {
-                        novel.go_to(0);
-                    } else {
-                        novel.go_to_end();
-                    }
+                    novel.go_to_edge(key == K::End);
                 }
             }
             K::Home => self.jump_to(0),
@@ -4188,6 +4202,87 @@ fn followed(
         }
     };
     ((mode, direction) != now).then_some((mode, direction))
+}
+
+/// The stops Tab walks in the reader, in order: the head's controls, the page, the group's.
+/// Hidden, insensitive and unfocusable controls are passed over, and popovers walk their own.
+fn tab_stops(head: &gtk::Widget, page: &gtk::Widget, group: &gtk::Widget) -> Vec<gtk::Widget> {
+    fn walk(widget: &gtk::Widget, out: &mut Vec<gtk::Widget>) {
+        if !widget.is_visible()
+            || !widget.is_sensitive()
+            || !widget.can_focus()
+            || widget.is::<gtk::Popover>()
+        {
+            return;
+        }
+        if widget.is_focusable() {
+            out.push(widget.clone());
+            return;
+        }
+        let mut child = widget.first_child();
+        while let Some(c) = child {
+            walk(&c, out);
+            child = c.next_sibling();
+        }
+    }
+    let mut stops = Vec::new();
+    walk(head, &mut stops);
+    stops.push(page.clone());
+    walk(group, &mut stops);
+    stops
+}
+
+/// Where Tab, or Shift+Tab with `back`, goes from `focus`: from the page, the first control, or
+/// the last with `back`. None when a control holds the focus: the window moves it on.
+fn next_stop(
+    stops: &[gtk::Widget],
+    page: &gtk::Widget,
+    focus: Option<&gtk::Widget>,
+    back: bool,
+) -> Option<gtk::Widget> {
+    let held = |stop: &gtk::Widget| {
+        stop != page && focus.is_some_and(|f| f == stop || f.is_ancestor(stop))
+    };
+    if stops.iter().any(held) {
+        return None;
+    }
+    let mut controls = stops.iter().filter(|s| *s != page);
+    let next = if back { controls.last() } else { controls.next() };
+    next.cloned()
+}
+
+/// Tab and Shift+Tab, without Ctrl or Alt, for the reader's own walk: `walk` gets whether the
+/// walk goes back and says whether it moved the focus.
+fn tab_keys(walk: impl Fn(bool) -> bool + 'static) -> gtk::EventControllerKey {
+    let tabs = gtk::EventControllerKey::new();
+    tabs.connect_key_pressed(move |_, key, _, modifiers| {
+        use gdk::Key as K;
+        let tab = matches!(key, K::Tab | K::KP_Tab | K::ISO_Left_Tab);
+        let other = gdk::ModifierType::CONTROL_MASK | gdk::ModifierType::ALT_MASK;
+        if !tab || modifiers.intersects(other) {
+            return glib::Propagation::Proceed;
+        }
+        let back = key == K::ISO_Left_Tab || modifiers.contains(gdk::ModifierType::SHIFT_MASK);
+        if walk(back) { glib::Propagation::Stop } else { glib::Propagation::Proceed }
+    });
+    tabs
+}
+
+/// The window's full screen from before the reader first changed it, until the reader closes.
+#[derive(Default)]
+struct FullBefore(Cell<Option<bool>>);
+
+impl FullBefore {
+    /// The reader is about to change full screen, which is `now`.
+    fn toggled(&self, now: bool) {
+        let _ = now;
+    }
+
+    /// The reader closes with the window's full screen at `now`: what to set it to, if anything.
+    fn give_back(&self, now: bool) -> Option<bool> {
+        let _ = now;
+        self.0.take()
+    }
 }
 
 #[cfg(test)]

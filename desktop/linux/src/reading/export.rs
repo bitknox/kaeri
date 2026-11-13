@@ -101,6 +101,18 @@ fn format_name(format: ExportFormat) -> String {
     }
 }
 
+/// Whether the keyboard is in `area`.
+fn focus_within(area: &gtk::Widget) -> bool {
+    area.root()
+        .and_then(|root| root.focus())
+        .is_some_and(|focus| &focus == area || focus.is_ancestor(area))
+}
+
+/// The keyboard in `area` as its buttons change: GTK's own say.
+fn keep_focus(area: &gtk::Widget, next: &[&gtk::Button]) {
+    let _ = (area, next);
+}
+
 fn heading(text: &str) -> gtk::Label {
     let label = gtk::Label::new(Some(text));
     label.add_css_class("heading");
@@ -148,6 +160,17 @@ impl Parts {
 
     /// Show what the state says.
     fn draw(&self) {
+        let dialog = self.state_line.ancestor(adw::Dialog::static_type());
+        let had_keys = dialog.as_ref().is_some_and(focus_within);
+        self.draw_state();
+        // The keyboard stays in the dialog when what had it goes or greys, so Esc still closes
+        // it and Cancel send, Save to a folder or Try again is the next key's.
+        if had_keys && let Some(dialog) = dialog {
+            keep_focus(&dialog, &[&self.cancel, &self.save, &self.again, &self.prepare]);
+        }
+    }
+
+    fn draw_state(&self) {
         let s = self.send.borrow();
         let chapters = s.chapters();
         self.scope.set_subtitle(&match (chapters.first(), chapters.last()) {
@@ -252,6 +275,21 @@ impl Parts {
     }
 }
 
+/// The dialog's body under its header: the choices with the foot under them, which scroll.
+fn frame(column: &gtk::Box, foot: &gtk::Box) -> adw::ToolbarView {
+    column.append(foot);
+    let scroll = gtk::ScrolledWindow::builder()
+        .hscrollbar_policy(gtk::PolicyType::Never)
+        .propagate_natural_height(true)
+        .max_content_height(620)
+        .child(column)
+        .build();
+    let toolbar = adw::ToolbarView::new();
+    toolbar.add_top_bar(&adw::HeaderBar::new());
+    toolbar.set_content(Some(&scroll));
+    toolbar
+}
+
 pub fn open(ctx: &Rc<Ctx>, work: &WorkId) {
     let dialog = adw::Dialog::new();
     dialog.set_title(&t::send_title());
@@ -319,17 +357,7 @@ pub fn open(ctx: &Rc<Ctx>, work: &WorkId) {
     column.append(&heading(&t::send_what()));
     column.append(&what);
     column.append(&note);
-    column.append(&foot);
-    let scroll = gtk::ScrolledWindow::builder()
-        .hscrollbar_policy(gtk::PolicyType::Never)
-        .propagate_natural_height(true)
-        .max_content_height(620)
-        .child(&column)
-        .build();
-    let toolbar = adw::ToolbarView::new();
-    toolbar.add_top_bar(&adw::HeaderBar::new());
-    toolbar.set_content(Some(&scroll));
-    dialog.set_child(Some(&toolbar));
+    dialog.set_child(Some(&frame(&column, &foot)));
 
     let parts = Rc::new(Parts {
         targets,

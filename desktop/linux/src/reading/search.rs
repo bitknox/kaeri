@@ -947,6 +947,14 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     // moves neither.
     let (bar, entry, toggle) = crate::pages::search::field(&t::read_search_placeholder());
     bar.set_search_mode(true);
+    ctx.read_search_focus.replace(Some(Rc::new({
+        let (bar, entry) = (bar.downgrade(), entry.downgrade());
+        move || {
+            if let (Some(bar), Some(entry)) = (bar.upgrade(), entry.upgrade()) {
+                crate::pages::search::open_field(&bar, &entry);
+            }
+        }
+    })));
     let header = adw::HeaderBar::new();
     header.pack_start(&widgets::sidebar_button(&ctx.split));
     header.pack_start(&crate::window::tv_session_button(ctx));
