@@ -589,6 +589,62 @@ enum HuntDriver {
             // dquit: NSApp.terminate from the run loop, as the Quit menu item runs it
             RunLoop.main.perform { MainActor.assumeIsolated { NSApp.terminate(nil) } }
         case "lookkey": if let win = mainWindow() { pinned = win; lookKey(win) }; say("lookkey key=\(String(describing: NSApp.keyWindow?.title))")
+        case "rset":
+            // rset <key> <c|a|t> <value>: a reader setting, as the settings sheet sets it (r7)
+            let keys: [String: ReaderSettingKey] = ["look": .look, "font": .font, "textSize": .textSize, "margins": .margins,
+                "lineSpacing": .lineSpacing, "justify": .justify, "mode": .mode, "background": .background, "fit": .fit,
+                "direction": .direction, "pageLayout": .pageLayout, "footValue": .footValue]
+            if w.count >= 3, let k = keys[w[0]] {
+                let v: ReaderValue = switch w[1] { case "a": .amount(value: Double(w[2]) ?? 1); case "t": .toggle(on: w[2] == "on"); default: .choice(name: w[2]) }
+                r.set(k, v)
+                try? await Task.sleep(for: .milliseconds(1500))
+                say("rset \(w) " + state(r, nav))
+            } else { say("rset? \(w)") }
+        case "rsettings":
+            // rsettings: the reader's settings as the sheet shows them (r7)
+            say("rsettings \(String(describing: r.settings))")
+        case "wins":
+            // wins: every window with its tabs, level and class (r7)
+            for x in NSApp.windows {
+                say("win '\(x.title)' cls=\(type(of: x)) id=\(x.identifier?.rawValue ?? "-") vis=\(x.isVisible) key=\(x.isKeyWindow) main=\(x.isMainWindow) tabbing=\(x.tabbingMode.rawValue) tabs=\(x.tabbedWindows?.count ?? 0) sheet=\(x.isSheet) attached=\(x.attachedSheet.map { String(describing: type(of: $0)) } ?? "-") frame=\(x.frame) fr=\(x.firstResponder.map { String(describing: type(of: $0)) } ?? "nil")")
+            }
+        case "panel":
+            // panel [list|cancel|ok <dir>]: the open panel the app shows, if any (r7)
+            let panels = NSApp.windows.compactMap { $0 as? NSOpenPanel }
+            say("panels=\(panels.count) " + panels.map { "vis=\($0.isVisible) dir=\($0.directoryURL?.path ?? "-") dirs=\($0.canChooseDirectories) files=\($0.canChooseFiles) multi=\($0.allowsMultipleSelection)" }.joined(separator: "; "))
+            if let p = panels.first(where: { $0.isVisible }) {
+                switch w.first {
+                case "cancel": p.cancel(nil)
+                case "ok":
+                    if w.count > 1 { p.directoryURL = URL(filePath: w[1], directoryHint: .isDirectory) }
+                    try? await Task.sleep(for: .milliseconds(1200))
+                    p.ok(nil)
+                default: break
+                }
+                try? await Task.sleep(for: .milliseconds(1500))
+                say("panel after \(w.first ?? "list") " + state(r, nav))
+            }
+        case "axw":
+            // axw <title prefix> [depth]: the accessibility tree of another window (r7)
+            let t = w.first ?? ""
+            if let win = NSApp.windows.first(where: { $0.title.hasPrefix(t) && $0.isVisible }) { dumpAX(win, depth: 0, max: ms(w, 1, 40)) } else { say("no window '\(t)'") }
+        case "qch":
+            // qch <char> [mods]: any character as a key press through the event queue, for menu keys the code table lacks (r7)
+            if let c = w.first, let win = NSApp.keyWindow ?? mainWindow() {
+                var flags: NSEvent.ModifierFlags = []
+                for m in w.dropFirst() {
+                    switch m { case "cmd": flags.insert(.command); case "shift": flags.insert(.shift); case "opt": flags.insert(.option); case "ctrl": flags.insert(.control); default: break }
+                }
+                let chars = c == "SP" ? " " : c
+                for type in [NSEvent.EventType.keyDown, .keyUp] {
+                    if let e = NSEvent.keyEvent(with: type, location: .zero, modifierFlags: flags, timestamp: ProcessInfo.processInfo.systemUptime,
+                                                windowNumber: win.windowNumber, context: nil, characters: chars,
+                                                charactersIgnoringModifiers: chars, isARepeat: false, keyCode: codes[chars]?.0 ?? 0) {
+                        NSApp.postEvent(e, atStart: false)
+                    }
+                }
+            }
+            try? await Task.sleep(for: .milliseconds(600)); say(state(r, nav))
         #endif
         default: say("?? \(op)")
         }
@@ -758,7 +814,15 @@ enum HuntDriver {
     }
 
     static func menu(_ title: String) {
-        guard let main = NSApp.mainMenu, let (m, i) = find(title, in: main) else { say("no menu item '\(title)'"); return }
+        // r7: "Top>Item" looks only under that top menu.
+        var root = NSApp.mainMenu
+        var title = title
+        if let gt = title.firstIndex(of: ">") {
+            let top = String(title[..<gt]).trimmingCharacters(in: .whitespaces)
+            title = String(title[title.index(after: gt)...]).trimmingCharacters(in: .whitespaces)
+            root = NSApp.mainMenu?.items.first { $0.title == top }?.submenu
+        }
+        guard let main = root, let (m, i) = find(title, in: main) else { say("no menu item '\(title)'"); return }
         m.update()
         let item = m.items[i]
         say("menu '\(title)' enabled=\(item.isEnabled) key=\(item.keyEquivalent.debugDescription) mods=\(item.keyEquivalentModifierMask.rawValue)")
