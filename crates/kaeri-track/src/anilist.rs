@@ -7,7 +7,9 @@
 
 use kaeri_core::{
     ids::AnilistId,
-    traits::{ReadRemoval, TrackOp, TrackedEntry, TrackedReadEntry, Tracker, WatchStatus},
+    traits::{
+        Pushed, ReadRemoval, TrackOp, TrackedEntry, TrackedReadEntry, Tracker, WatchStatus,
+    },
 };
 use std::{
     sync::atomic::{AtomicU64, Ordering},
@@ -398,27 +400,36 @@ impl Tracker for AniListTracker {
     }
 
     async fn push(&self, ops: &[TrackOp]) -> Result<(), kaeri_core::Error> {
+        self.push_checked(ops).await?.into_result("anilist")
+    }
+
+    /// One `SaveMediaListEntry` per title, each with its own outcome: a title AniList refuses
+    /// fails alone, and the titles after it still go.
+    async fn push_checked(&self, ops: &[TrackOp]) -> Result<Pushed, kaeri_core::Error> {
         // Checked per push, not just at startup: the outbox drains on a timer, and a queued op must
         // not reach an account the user has signed out of.
         if !self.is_authenticated() {
             return Err(kaeri_core::Error::Auth("signed out".into()));
         }
-        // The list as last fetched is out of date once one of these may have reached it, so
-        // the next ask is a new one even if a save fails partway.
-        let pushed = async {
-            for entry in coalesce(ops) {
+        let mut titles = crate::Titles::default();
+        for entry in coalesce(ops) {
+            let result = if titles.go() {
                 self.client
                     .save_entry(entry.anilist_id, entry.progress, entry.status, entry.score)
                     .await
-                    .map_err(to_core)?;
-            }
-            Ok(())
+                    .map(drop)
+                    .map_err(to_core)
+            } else {
+                Ok(())
+            };
+            titles.record(entry.anilist_id, result);
         }
-        .await;
+        // The list as last fetched is out of date once one of these may have reached it, so
+        // the next ask is a new one even if a save failed partway.
         if !ops.is_empty() {
             self.changed();
         }
-        pushed
+        Ok(titles.finish())
     }
 
     fn serves_reading(&self) -> bool {
@@ -448,12 +459,13 @@ impl Tracker for AniListTracker {
         Ok(if removed? { ReadRemoval::Removed } else { ReadRemoval::NotOnList })
     }
 
-    async fn push_read(&self, ops: &[TrackOp]) -> Result<Vec<AnilistId>, kaeri_core::Error> {
+    async fn push_read(&self, ops: &[TrackOp]) -> Result<Pushed, kaeri_core::Error> {
         if !self.is_authenticated() {
             return Err(kaeri_core::Error::Auth("signed out".into()));
         }
-        let pushed = async {
-            for entry in coalesce_read(ops) {
+        let mut titles = crate::Titles::default();
+        for entry in coalesce_read(ops) {
+            let result = if titles.go() {
                 self.client
                     .save_read_entry(
                         entry.anilist_id,
@@ -463,15 +475,16 @@ impl Tracker for AniListTracker {
                         entry.score,
                     )
                     .await
-                    .map_err(to_core)?;
-            }
-            Ok(Vec::new())
+                    .map_err(to_core)
+            } else {
+                Ok(())
+            };
+            titles.record(entry.anilist_id, result);
         }
-        .await;
         if ops.iter().any(TrackOp::is_reading) {
             self.changed();
         }
-        pushed
+        Ok(titles.finish())
     }
 }
 
@@ -579,14 +592,28 @@ pub fn coalesce(ops: &[TrackOp]) -> Vec<Mutation> {
 
 /// Map an AniList failure onto the core error, preserving whether it is worth retrying.
 fn to_core(error: AniListError) -> kaeri_core::Error {
+    let tracker = || "anilist".to_owned();
     match error {
         // A bad or expired token will never succeed on retry, so it must not sit in the outbox
-        // burning backoff — the user has to re-authorise.
+        // burning backoff: the user has to re-authorise.
         AniListError::Unauthenticated => {
             kaeri_core::Error::Auth("anilist rejected the token".into())
         }
-        other => {
-            kaeri_core::Error::Tracker { tracker: "anilist".into(), message: other.to_string() }
+        // None of these is AniList's verdict on the change, so none may bring a queued change
+        // nearer its end: the network, a pause AniList asked for, its own trouble, and an
+        // answer that could not be read (a gateway's error page).
+        AniListError::Network(message) => kaeri_core::Error::Network(message),
+        AniListError::RateLimited { retry_in_secs } => kaeri_core::Error::RateLimited {
+            tracker: tracker(),
+            message: error.to_string(),
+            retry_in_secs: Some(retry_in_secs),
+        },
+        AniListError::Server { .. } | AniListError::Decode(_) => {
+            kaeri_core::Error::Unavailable { tracker: tracker(), message: error.to_string() }
+        }
+        // GraphQL's own refusal (a validation error, an entry that is not there).
+        other @ (AniListError::Api(_) | AniListError::NotFound) => {
+            kaeri_core::Error::Tracker { tracker: tracker(), message: other.to_string() }
         }
     }
 }
@@ -696,7 +723,26 @@ mod tests {
         assert!(matches!(to_core(AniListError::Unauthenticated), kaeri_core::Error::Auth(_)));
         assert!(matches!(
             to_core(AniListError::Network("timeout".into())),
-            kaeri_core::Error::Tracker { .. }
+            kaeri_core::Error::Network(_)
+        ));
+    }
+
+    #[test]
+    fn only_graphqls_own_refusal_counts_as_a_refusal() {
+        use kaeri_core::traits::PushFailure;
+        let class = |error| PushFailure::of(&to_core(error));
+        assert!(matches!(class(AniListError::Api("validation".into())), PushFailure::Refused(_)));
+        assert!(matches!(class(AniListError::NotFound), PushFailure::Refused(_)));
+        for waits in [
+            AniListError::Network("dns".into()),
+            AniListError::Decode("expected value".into()),
+            AniListError::Server { status: 500, message: "Internal Server Error".into() },
+        ] {
+            assert!(matches!(class(waits), PushFailure::Unavailable(_)));
+        }
+        assert!(matches!(
+            class(AniListError::RateLimited { retry_in_secs: 60 }),
+            PushFailure::RateLimited { retry_in_secs: Some(60), .. }
         ));
     }
 

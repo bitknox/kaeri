@@ -421,7 +421,10 @@ impl DeviceError {
     /// answer that could not be read, is tried again with the rest of the queue.
     pub(crate) fn renewal(self, tracker: &str) -> kaeri_core::Error {
         match self {
-            Self::Network { .. } | Self::Decode { .. } => kaeri_core::Error::Tracker {
+            // Never a refusal: the outbox waits these out rather than count them against
+            // the changes it holds.
+            Self::Network { .. } => kaeri_core::Error::Network(self.to_string()),
+            Self::Decode { .. } => kaeri_core::Error::Unavailable {
                 tracker: tracker.into(),
                 message: self.to_string(),
             },
@@ -788,7 +791,9 @@ mod tests {
             DeviceError::Refused { service: "Trakt", message: "no".into(), error: None };
         assert!(matches!(refused.renewal("trakt"), kaeri_core::Error::Auth(_)));
         let offline = DeviceError::Network { service: "Trakt", message: "down".into() };
-        assert!(matches!(offline.renewal("trakt"), kaeri_core::Error::Tracker { .. }));
+        assert!(matches!(offline.renewal("trakt"), kaeri_core::Error::Network(_)));
+        let garbled = DeviceError::Decode { service: "Trakt", message: "html".into() };
+        assert!(matches!(garbled.renewal("trakt"), kaeri_core::Error::Unavailable { .. }));
     }
 
     #[test]

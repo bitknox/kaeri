@@ -27,7 +27,7 @@ use std::{
 use kaeri_core::{
     ids::AnilistId,
     media::Medium,
-    traits::{ReadRemoval, TrackOp, TrackedReadEntry, Tracker, WatchStatus},
+    traits::{Pushed, ReadRemoval, TrackOp, TrackedReadEntry, Tracker, WatchStatus},
 };
 
 use crate::{
@@ -272,7 +272,7 @@ impl MangaUpdatesTracker {
         }
         let url = format!("{}/lists", self.api);
         let response = self.send(token, false, |t| self.http.get(&url).bearer_auth(t)).await?;
-        let body = crate::page_json(response, "mangaupdates", "MangaUpdates").await?;
+        let body = answer_json(response).await?;
         let mut lists: Vec<List> = body
             .as_array()
             .into_iter()
@@ -317,7 +317,7 @@ impl MangaUpdatesTracker {
             self.remember(series, None).await;
             return Ok(None);
         }
-        let body = crate::page_json(response, "mangaupdates", "MangaUpdates").await?;
+        let body = answer_json(response).await?;
         let entry = entry_from(&body);
         self.remember(series, entry.clone()).await;
         Ok(entry)
@@ -333,8 +333,22 @@ impl MangaUpdatesTracker {
         let url = format!("{}{path}", self.api);
         let response =
             self.send(token, true, |t| self.http.post(&url).bearer_auth(t).json(body)).await?;
-        crate::page_json(response, "mangaupdates", "MangaUpdates").await.map(|_| ())
+        answer_json(response).await.map(|_| ())
     }
+}
+
+/// MangaUpdates' answer as JSON, or the error it amounts to: [`crate::page_json`], with its 412
+/// read as the pause it is. MangaUpdates answers 412 to a write that came too soon after the
+/// last, so one that outlasts [`DELAY_RETRIES`] waits is a rate limit, never a refusal.
+async fn answer_json(response: reqwest::Response) -> Result<serde_json::Value, kaeri_core::Error> {
+    if response.status() == reqwest::StatusCode::PRECONDITION_FAILED {
+        return Err(kaeri_core::Error::RateLimited {
+            tracker: "mangaupdates".into(),
+            message: crate::said(response.status(), &response.text().await.unwrap_or_default()),
+            retry_in_secs: Some(WRITE_GAP.as_secs()),
+        });
+    }
+    crate::page_json(response, "mangaupdates", "MangaUpdates").await
 }
 
 /// An entry from a list answer: the record, or the answer when it is the record.
@@ -460,7 +474,7 @@ impl Tracker for MangaUpdatesTracker {
                         self.http.post(&url).bearer_auth(t).json(&body)
                     })
                     .await?;
-                let answer = crate::page_json(response, "mangaupdates", "MangaUpdates").await?;
+                let answer = answer_json(response).await?;
                 let results = answer["results"].as_array().cloned().unwrap_or_default();
                 for row in &results {
                     let record = &row["record"];
@@ -521,7 +535,9 @@ impl Tracker for MangaUpdatesTracker {
         Ok(ReadRemoval::Removed)
     }
 
-    async fn push_read(&self, ops: &[TrackOp]) -> Result<Vec<AnilistId>, kaeri_core::Error> {
+    /// The list writes take every series in one request, so a refusal is the batch's: the
+    /// drain then asks again work by work, and only the refused work's change fails.
+    async fn push_read(&self, ops: &[TrackOp]) -> Result<Pushed, kaeri_core::Error> {
         let mut token = self.held.access(self, crate::now_epoch()).await?;
         let lists = self.lists(&mut token).await?;
         let list_for = |status: WatchStatus| {
@@ -595,11 +611,11 @@ impl Tracker for MangaUpdatesTracker {
             let response = self
                 .send(&mut token, false, |t| self.http.put(&url).bearer_auth(t).json(&body))
                 .await?;
-            crate::page_json(response, "mangaupdates", "MangaUpdates").await?;
+            answer_json(response).await?;
         }
         for (series, entry) in written {
             self.remember(series, Some(entry)).await;
         }
-        Ok(ignored)
+        Ok(Pushed { ignored, failed: Vec::new() })
     }
 }

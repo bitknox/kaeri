@@ -28,14 +28,99 @@ const BACKOFF_BASE_SECS: i64 = 30;
 /// a recovered tracker waiting for days.
 const BACKOFF_MAX_SECS: i64 = 3_600;
 
-/// Failures after which an operation is abandoned.
+/// Refusals after which an operation is abandoned.
 ///
-/// Far away on purpose. Every discard loses a progress push the user earned by watching
-/// something, so this must mean "no amount of waiting will fix it" rather than "the network
-/// was down for a while" — at the capped hourly backoff, roughly two days of continuous
-/// failure. A laptop closed for a week never reaches it, because the clock that matters is
-/// attempts, not time.
+/// Far away on purpose. Every discard loses a change the person made, so this must mean "no
+/// amount of waiting will fix it" rather than "the network was down for a while". Only
+/// [`Store::fail`] and [`Store::fail_read`] count toward it, and the drain calls them only for
+/// a tracker's refusal of that one change: a network that is down, a tracker's own trouble, a
+/// pause it asked for or a rejected credential never count, however long they last. At the
+/// capped hourly backoff this is roughly two days of the tracker refusing the same change.
 const MAX_ATTEMPTS: u32 = 50;
+
+/// How many abandoned operations are remembered for the app to show.
+const DROPPED_KEPT: usize = 100;
+
+/// Where the abandoned operations are remembered, in `app_state`.
+const DROPPED_KEY: &str = "outbox_dropped";
+
+/// An operation the outbox gave up on: the change, and the tracker's last word on it.
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct DroppedOp {
+    pub tracker_id: String,
+    pub op: TrackOp,
+    /// The tracker's refusal, as it last said it.
+    pub error: String,
+    /// When it was given up, in seconds since the epoch.
+    pub at: i64,
+}
+
+/// The claim query for `table`: due rows, oldest first, leaving out any row with an older row
+/// for the same title still waiting. A later change to a title must never reach the tracker
+/// before an earlier one that is backing off, or the earlier one would land last and undo it.
+fn claim_sql(table: &str) -> String {
+    format!(
+        "SELECT id, tracker_id, op, attempts, created_at
+           FROM {table} o
+          WHERE tracker_id = ?1 AND next_retry <= ?2
+            AND NOT EXISTS (
+                SELECT 1 FROM {table} e
+                 WHERE e.tracker_id = o.tracker_id AND e.anilist_id = o.anilist_id
+                   AND e.next_retry > ?2
+                   AND (e.created_at < o.created_at
+                        OR (e.created_at = o.created_at AND e.id < o.id)))
+          ORDER BY created_at ASC, id ASC
+          LIMIT ?3"
+    )
+}
+
+/// Count a refusal of the op `id` in `table`, and schedule its retry, or give it up and
+/// remember it once it has had [`MAX_ATTEMPTS`]. True when it was given up.
+fn refuse_in(c: &rusqlite::Connection, table: &str, id: i64, error: &str, now: i64) -> Result<bool> {
+    let row: Option<(u32, String, String)> = c
+        .query_row(
+            &format!("SELECT attempts + 1, tracker_id, op FROM {table} WHERE id = ?1"),
+            [id],
+            |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
+        )
+        .optional()?;
+    let Some((attempts, tracker_id, op)) = row else { return Ok(false) };
+    if attempts < MAX_ATTEMPTS {
+        c.execute(
+            &format!(
+                "UPDATE {table} SET attempts = ?1, last_error = ?2, next_retry = ?3 + ?4
+                  WHERE id = ?5"
+            ),
+            rusqlite::params![attempts, error, now, backoff_secs(attempts), id],
+        )?;
+        return Ok(false);
+    }
+    tracing::error!(id, attempts, %error, table, "giving up on a change the tracker keeps refusing");
+    c.execute(&format!("DELETE FROM {table} WHERE id = ?1"), [id])?;
+    // Kept, so the change is not gone without a word: the app can say which change the
+    // tracker would not take, and why.
+    if let Ok(op) = serde_json::from_str::<TrackOp>(&op) {
+        let mut kept = dropped_in(c)?;
+        kept.push(DroppedOp { tracker_id, op, error: error.to_owned(), at: now });
+        let over = kept.len().saturating_sub(DROPPED_KEPT);
+        kept.drain(..over);
+        let json = serde_json::to_string(&kept)
+            .map_err(|source| StoreError::Encode { what: "dropped outbox ops", source })?;
+        c.execute(
+            "INSERT INTO app_state (key, value) VALUES (?1, ?2)
+             ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+            rusqlite::params![DROPPED_KEY, json],
+        )?;
+    }
+    Ok(true)
+}
+
+fn dropped_in(c: &rusqlite::Connection) -> Result<Vec<DroppedOp>> {
+    let json: Option<String> = c
+        .query_row("SELECT value FROM app_state WHERE key = ?1", [DROPPED_KEY], |r| r.get(0))
+        .optional()?;
+    Ok(json.and_then(|json| serde_json::from_str(&json).ok()).unwrap_or_default())
+}
 
 /// `next_retry` for an op held until the id mappings change.
 ///
@@ -265,13 +350,7 @@ impl Store {
         limit: u32,
     ) -> Result<Vec<OutboxEntry>> {
         self.with_personal(|c| {
-            let mut stmt = c.prepare(
-                "SELECT id, tracker_id, op, attempts, created_at
-                   FROM read_outbox
-                  WHERE tracker_id = ?1 AND next_retry <= ?2
-                  ORDER BY created_at ASC, id ASC
-                  LIMIT ?3",
-            )?;
+            let mut stmt = c.prepare(&claim_sql("read_outbox"))?;
             let rows = stmt.query_map(rusqlite::params![tracker_id, now, limit], |r| {
                 Ok((
                     r.get::<_, i64>(0)?,
@@ -309,27 +388,10 @@ impl Store {
         })
     }
 
-    /// Record a failure of a reading op and schedule a retry, as [`Self::fail`] does.
-    pub fn fail_read(&self, id: i64, error: &str, now: i64) -> Result<()> {
-        self.with_personal(|c| {
-            let attempts = c
-                .query_row("SELECT attempts + 1 FROM read_outbox WHERE id = ?1", [id], |r| {
-                    r.get::<_, u32>(0)
-                })
-                .unwrap_or(1);
-            if attempts >= MAX_ATTEMPTS {
-                tracing::error!(id, attempts, %error, "giving up on a reading outbox operation");
-                c.execute("DELETE FROM read_outbox WHERE id = ?1", [id])?;
-                return Ok(());
-            }
-            c.execute(
-                "UPDATE read_outbox
-                    SET attempts = ?1, last_error = ?2, next_retry = ?3 + ?4
-                  WHERE id = ?5",
-                rusqlite::params![attempts, error, now, backoff_secs(attempts), id],
-            )?;
-            Ok(())
-        })
+    /// Count the tracker's refusal of a reading op, as [`Self::fail`] does. True when it was
+    /// given up.
+    pub fn fail_read(&self, id: i64, error: &str, now: i64) -> Result<bool> {
+        self.with_personal(|c| refuse_in(c, "read_outbox", id, error, now))
     }
 
     /// Hold a reading op until it can be addressed or the tracker may be asked again at `until`.
@@ -383,13 +445,7 @@ impl Store {
         limit: u32,
     ) -> Result<Vec<OutboxEntry>> {
         self.with_personal(|c| {
-            let mut stmt = c.prepare(
-                "SELECT id, tracker_id, op, attempts, created_at
-                   FROM sync_outbox
-                  WHERE tracker_id = ?1 AND next_retry <= ?2
-                  ORDER BY created_at ASC, id ASC
-                  LIMIT ?3",
-            )?;
+            let mut stmt = c.prepare(&claim_sql("sync_outbox"))?;
             let rows = stmt.query_map(rusqlite::params![tracker_id, now, limit], |r| {
                 let json: String = r.get(2)?;
                 Ok((
@@ -438,44 +494,33 @@ impl Store {
         })
     }
 
-    /// Record a failure and schedule a retry, or give up on an operation that never will.
-    pub fn fail(&self, id: i64, error: &str, now: i64) -> Result<()> {
+    /// Count the tracker's refusal of an op and schedule a retry, or give up on one it keeps
+    /// refusing. True when it was given up, which [`Self::dropped_track_ops`] then remembers.
+    ///
+    /// Without a ceiling, an operation that could never succeed, such as a title the tracker
+    /// has deleted, would retry hourly for the life of the installation and hold the `⇅` badge
+    /// above zero for good. Only refusals reach here: a failure that is not the tracker's word
+    /// on this change waits through [`Self::postpone`] instead, and never counts.
+    pub fn fail(&self, id: i64, error: &str, now: i64) -> Result<bool> {
+        self.with_personal(|c| refuse_in(c, "sync_outbox", id, error, now))
+    }
+
+    /// Hold an op until `until` without counting anything against it: a failure that says
+    /// nothing about the change, such as the tracker's trouble with this one title.
+    pub fn postpone(&self, id: i64, reason: &str, until: i64) -> Result<()> {
         self.with_personal(|c| {
-            let attempts = c
-                .query_row("SELECT attempts + 1 FROM sync_outbox WHERE id = ?1", [id], |r| {
-                    r.get::<_, u32>(0)
-                })
-                .unwrap_or(1);
-
-            // Without a ceiling on `attempts`, an operation that could never succeed, such as a
-            // title the tracker has deleted, would retry hourly for the life of the installation
-            // and hold the `⇅` badge above zero for good.
-            //
-            // The ceiling is deliberately far away. Discarding this row loses a progress push
-            // the user earned by watching something, which is worse than a stuck badge, so it
-            // has to be unambiguous that no amount of waiting will help: at the capped hourly
-            // backoff this is roughly two days of continuous failure.
-            if attempts >= MAX_ATTEMPTS {
-                tracing::error!(
-                    id,
-                    attempts,
-                    %error,
-                    "giving up on an outbox operation after repeated failures"
-                );
-                c.execute("DELETE FROM sync_outbox WHERE id = ?1", [id])?;
-                return Ok(());
-            }
-
             c.execute(
-                "UPDATE sync_outbox
-                    SET attempts = ?1,
-                        last_error = ?2,
-                        next_retry = ?3 + ?4
-                  WHERE id = ?5",
-                rusqlite::params![attempts, error, now, backoff_secs(attempts), id],
+                "UPDATE sync_outbox SET next_retry = ?1, last_error = ?2 WHERE id = ?3",
+                rusqlite::params![until, reason, id],
             )?;
             Ok(())
         })
+    }
+
+    /// The operations the outbox gave up on, oldest first, the last hundred of them: changes
+    /// a tracker refused until the outbox stopped asking.
+    pub fn dropped_track_ops(&self) -> Result<Vec<DroppedOp>> {
+        self.with_personal(dropped_in)
     }
 
     /// Hold an op until the id mappings change.
