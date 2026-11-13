@@ -976,7 +976,7 @@ impl Home {
                 ReadSpotlightCase::Continuing,
                 ReadingMsg::ReadingSpotlightContinue,
                 tile.next.clone(),
-                Self::continuing(found.clone()),
+                Self::continue_button(found.clone()),
             );
             // No source has it: the spotlight says so under its buttons, as Watch's does.
             spot.0.not_in_sources = found == SeriesAction::NoSource;
@@ -1060,7 +1060,7 @@ impl Home {
     }
 
     /// The button a series in Continue gets: none with nothing to read it on, or nothing left.
-    fn continuing(action: SeriesAction) -> Option<SeriesAction> {
+    fn continue_button(action: SeriesAction) -> Option<SeriesAction> {
         Some(action).filter(|a| !matches!(a, SeriesAction::NoSource | SeriesAction::ReadAgain))
     }
 }
