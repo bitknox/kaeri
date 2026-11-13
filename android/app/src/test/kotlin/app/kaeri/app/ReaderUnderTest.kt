@@ -95,7 +95,8 @@ class ReaderUnderTest {
         compose.waitForIdle()
     }
 
-    private fun keys(vararg keys: Key) = keys.forEach { key ->
+    /** Presses each of [keys] in turn on whatever holds the focus. */
+    private fun keys(keys: List<Key>) = keys.forEach { key ->
         compose.onNode(isFocused()).performKeyInput { pressKey(key) }
         compose.waitForIdle()
     }
@@ -104,12 +105,12 @@ class ReaderUnderTest {
     fun tab_and_enter_never_reach_the_page_under_the_phone_reader() {
         seriesPage()
         open()
-        keys(Key.Tab, Key.Tab, Key.Enter)
+        keys(listOf(Key.Tab, Key.Tab, Key.Enter))
         assertEquals(false, reached)
         assertEquals(0, clicks)
         // The reader still has the keys: Escape hides its controls, and the next one closes it.
-        keys(Key.Escape)
-        if (ReaderLauncher.request.value != null) keys(Key.Escape)
+        keys(listOf(Key.Escape))
+        if (ReaderLauncher.request.value != null) keys(listOf(Key.Escape))
         assertEquals(null, ReaderLauncher.request.value)
         shut()
         // Nothing had the focus before the reader opened, so nothing takes it as it closes.
@@ -132,7 +133,7 @@ class ReaderUnderTest {
         compose.onNodeWithTag("more").requestFocus().assertIsFocused()
         open()
         compose.onNodeWithTag("more", useUnmergedTree = true).assertDoesNotExist()
-        keys(Key.Tab, Key.Enter)
+        keys(listOf(Key.Tab, Key.Enter))
         assertEquals(false, reached)
         assertEquals(0, clicks)
         shut()
