@@ -2758,6 +2758,7 @@ async fn plain_fetch(
     page: &PageRef,
 ) -> Result<Vec<u8>, kaeri_core::traits::PageError> {
     use kaeri_core::traits::PageError;
+    qa_img_pace(&page.url).await;
     let mut request = client.get(&page.url).timeout(std::time::Duration::from_secs(30));
     for (name, value) in &page.headers {
         request = request.header(name, value);
@@ -2766,6 +2767,12 @@ async fn plain_fetch(
         PageError::Failed(ProviderError::Transport("the request failed".into()))
     })?;
     let status = response.status().as_u16();
+    if let Ok(path) = std::env::var("KAERI_QA_FETCH_LOG")
+        && let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path)
+    {
+        use std::io::Write;
+        let _ = writeln!(f, "IMGSTATUS {status} {}", page.url);
+    }
     if !(200..300).contains(&status) {
         return Err(PageError::Status(status));
     }
@@ -2774,6 +2781,24 @@ async fn plain_fetch(
         .await
         .map(|b| b.to_vec())
         .map_err(|_| PageError::Failed(ProviderError::Transport("the request failed".into())))
+}
+
+// QA ONLY, never committed: pace page image fetches per host and log them.
+async fn qa_img_pace(url: &str) {
+    use std::{collections::HashMap, sync::{Arc, LazyLock, Mutex}};
+    type Slot = Arc<tokio::sync::Mutex<Option<tokio::time::Instant>>>;
+    static LAST: LazyLock<Mutex<HashMap<String, Slot>>> = LazyLock::new(Default::default);
+    let Some(gap) = std::env::var("KAERI_QA_IMG_PACE_MS").ok().and_then(|v| v.parse::<u64>().ok()) else { return };
+    let host = url.split('/').nth(2).unwrap_or("").to_owned();
+    let _ = (&LAST, gap);
+    // Paced by the plugin gate (kaeri-plugin host.rs qa_gate) for plugin pages.
+    if let Ok(path) = std::env::var("KAERI_QA_FETCH_LOG")
+        && let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path)
+    {
+        use std::io::Write;
+        let at = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis()).unwrap_or(0);
+        let _ = writeln!(f, "{at} IMG {host} {url}");
+    }
 }
 
 #[cfg(test)]

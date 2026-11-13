@@ -1293,6 +1293,8 @@ fn folder_dialog(ctx: &Rc<Ctx>, name: String, path: Option<String>, answer: Opti
         }
     });
     widgets::keep(&dialog.widget(), Rc::clone(&state));
+    #[cfg(feature = "fixtures")]
+    HUNT_FOLDER.with(|f| f.replace(Rc::downgrade(&state)));
     dialog.present(ctx);
     let weak = Rc::downgrade(&state);
     state.wait.start(move || {
@@ -1307,6 +1309,54 @@ fn folder_dialog(ctx: &Rc<Ctx>, name: String, path: Option<String>, answer: Opti
     if let Some(answer) = answer {
         state.heard(&answer);
     }
+}
+
+#[cfg(feature = "fixtures")]
+thread_local! {
+    static HUNT_FOLDER: RefCell<std::rc::Weak<Folder>> = RefCell::new(std::rc::Weak::new());
+}
+
+/// Hunt only: Add folder with `path` picked, as the file chooser's answer does.
+#[cfg(feature = "fixtures")]
+pub fn hunt_add_folder(ctx: &Rc<Ctx>, path: &str) {
+    let name = std::path::Path::new(path).file_name().map(|n| n.to_string_lossy().into_owned());
+    send(
+        &ctx.hub,
+        BookSourceCommand::AddFolder {
+            folder: FolderRef {
+                path: Some(path.to_owned()),
+                tree_uri: None,
+                bookmark: None,
+                name: name.clone(),
+            },
+        },
+    );
+    folder_dialog(ctx, name.unwrap_or_default(), Some(path.to_owned()), None);
+}
+
+/// Hunt only: the open folder dialog's answer, then Add (`keep`) or Cancel.
+#[cfg(feature = "fixtures")]
+pub fn hunt_folder(keep: bool) -> String {
+    let Some(state) = HUNT_FOLDER.with(|f| f.borrow().upgrade()) else {
+        return "no dialog".into();
+    };
+    let said = state
+        .report
+        .borrow()
+        .as_ref()
+        .map(|(r, found)| format!("id={} series={} found={found}", r.id, r.series));
+    if keep {
+        state.primary.emit_clicked();
+    } else {
+        state.dialog.close();
+    }
+    format!("{said:?} kept={}", state.kept.get())
+}
+
+/// Hunt only: send a book-sources command.
+#[cfg(feature = "fixtures")]
+pub fn hunt_send(ctx: &Rc<Ctx>, command: BookSourceCommand) {
+    send(&ctx.hub, command);
 }
 
 /// The folder dialog with its answer in, for the shots.

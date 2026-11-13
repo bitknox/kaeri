@@ -268,6 +268,12 @@ impl NovelView {
         // The header's room goes in before the paginator starts, which reads it with the page's
         // own setup: a configure sent with the page still loading finds no paginator yet.
         let setup = format!("window.kaeriSetup = {{top: {HEAD_ROOM}}};\n{}", assets.script); // i18n-skip
+        // QA: the probe runs before the paginator, so its first look is the bare page.
+        let setup = if std::env::var_os("KAERI_QA_NOVEL_PROBE").is_some() {
+            format!("{}\n{setup}", include_str!("novel_probe.js"))
+        } else {
+            setup
+        };
         let script = CString::new(setup).map_err(|e| e.to_string())?;
         // SAFETY: every returned GObject is taken full and released with its wrapper; strings
         // outlive their calls; the handler is the context's, freed with it.
@@ -450,6 +456,9 @@ impl NovelView {
     }
 
     fn receive(&self, text: &str, rtl: bool) {
+        if std::env::var_os("KAERI_QA_NOVEL_PROBE").is_some() {
+            tracing::info!("NOVELMSG {}", text.chars().take(1500).collect::<String>());
+        }
         let Ok(json) = serde_json::from_str::<serde_json::Value>(text) else { return };
         match json["type"].as_str() {
             Some("ready" | "page") => {
