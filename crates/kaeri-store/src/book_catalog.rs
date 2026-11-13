@@ -255,11 +255,14 @@ impl Store {
         })
     }
 
-    /// The works on one reading list, by the model's status name, newest change first.
+    /// The works on one reading list, by the model's status name, most recently read or put on
+    /// the list first: a chapter read moves its series up, as a change of list does.
     pub fn read_status_works(&self, status: &str) -> Result<Vec<String>> {
         self.with_personal(|c| {
             let mut stmt = c.prepare(
-                "SELECT work FROM read_status WHERE status = ?1 ORDER BY updated_at DESC, work",
+                "SELECT s.work FROM read_status s LEFT JOIN read_work w ON w.work = s.work
+                  WHERE s.status = ?1
+                  ORDER BY MAX(s.updated_at, COALESCE(w.updated_at, 0)) DESC, s.work",
             )?;
             Ok(stmt.query_map([status], |r| r.get(0))?.collect::<rusqlite::Result<_>>()?)
         })
@@ -334,5 +337,30 @@ mod tests {
         store.set_read_status("a:900303", Some("reading"), 2).unwrap();
         assert_eq!(store.read_status_works("planning").unwrap(), vec!["a:900302".to_owned()]);
         assert_eq!(store.read_statuses().unwrap().len(), 2);
+    }
+
+    /// A list's order is the order things were last read in: reading a chapter of a series put
+    /// on the list earlier brings it before one put on the list later and not read since.
+    #[test]
+    fn a_list_puts_the_series_read_last_first() {
+        use crate::reading::ReadEvent;
+        let store = Store::open_in_memory().unwrap();
+        store.set_read_status("a:900301", Some("reading"), 100).unwrap();
+        store.set_read_status("a:900302", Some("reading"), 200).unwrap();
+        store.set_read_status("a:900303", Some("reading"), 300).unwrap();
+        let order = || store.read_status_works("reading").unwrap();
+        assert_eq!(order(), ["a:900303", "a:900302", "a:900301"]);
+
+        let mut place = ReadEvent::new("a:900301", "4", 400);
+        place.page = Some(6);
+        place.of_pages = Some(20);
+        store.record_read(&place, Vec::new()).unwrap();
+        assert_eq!(order(), ["a:900301", "a:900303", "a:900302"]);
+
+        // A change of list counts too, and only the newer of the two decides.
+        store.set_read_status("a:900302", Some("reading"), 500).unwrap();
+        assert_eq!(order(), ["a:900302", "a:900301", "a:900303"]);
+        store.record_read(&ReadEvent::new("a:900303", "1", 450), Vec::new()).unwrap();
+        assert_eq!(order(), ["a:900302", "a:900303", "a:900301"]);
     }
 }

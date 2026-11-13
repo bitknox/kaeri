@@ -154,8 +154,12 @@ public final class ReadingModel {
     public func downloadNew() { send?(.reading(.downloadNew)) }
 
     public func loadList(_ segment: LibrarySegmentRead) {
+        if !listsAsked.contains(segment) { listsAsked.append(segment) }
         send?(.reading(.loadLibrary(segment: segment)))
     }
+
+    /// The reading lists asked for, in the order first asked, to ask again after reading.
+    @ObservationIgnored private var listsAsked: [LibrarySegmentRead] = []
 
     public func runSearch(_ query: ReadSearchQuery) {
         search.query = query
@@ -350,7 +354,8 @@ public final class ReadingModel {
 
     /// The engine sends nothing for a read or a place kept by the reader: the series page under
     /// it asks again, so its main button offers the next chapter or the place left at, not the
-    /// chapter just read.
+    /// chapter just read. Once the reader closes, the reading lists asked for so far are asked
+    /// again too, so Last read puts the series just read first and its cover says how far it is.
     private func heard(_ event: ReaderEvent) {
         switch event {
         case .opened(let view):
@@ -358,7 +363,10 @@ public final class ReadingModel {
         case .chapterRead(let work, _, _):
             refreshSeries(work)
         case .closed:
-            if let work = readerWork { refreshSeries(work) }
+            if let work = readerWork {
+                refreshSeries(work)
+                for list in listsAsked { send?(.reading(.loadLibrary(segment: list))) }
+            }
             readerWork = nil
         default:
             break

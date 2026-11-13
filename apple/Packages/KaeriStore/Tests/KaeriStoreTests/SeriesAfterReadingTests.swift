@@ -57,6 +57,26 @@ struct SeriesAfterReadingTests {
         #expect(asks(box) == 1)
     }
 
+    private func listAsks(_ box: Box) -> [LibrarySegmentRead] {
+        box.commands.compactMap {
+            if case .reading(.loadLibrary(let segment)) = $0 { segment } else { nil }
+        }
+    }
+
+    /// The Library's reading lists are in the order things were last read: closing the reader
+    /// asks again for the lists the Library asked for, so the series just read comes first.
+    @Test func closingTheReaderAsksForTheReadingListsAgain() {
+        let (model, box) = reading()
+        model.loadList(.reading)
+        model.loadList(.planning)
+        model.observe(.reading(.library(segment: .reading, tiles: [])))
+        model.observe(.reading(.library(segment: .planning, tiles: [])))
+        box.commands.removeAll()
+        model.observe(.reader(.opened(view())))
+        model.observe(.reader(.closed(session: 1)))
+        #expect(listAsks(box) == [.reading, .planning])
+    }
+
     @Test func aBookWithNoPageOpenAsksForNothing() {
         let model = ReadingModel()
         let box = Box()
