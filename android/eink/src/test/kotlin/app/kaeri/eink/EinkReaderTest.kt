@@ -690,12 +690,12 @@ class EinkReaderTest {
         }
         compose.waitForIdle()
         keyboard()
-        compose.runOnUiThread { page!!.requestFocus() }
-        compose.waitForIdle()
-        // The bars shown by a middle tap on the page leave the focus in it.
+        // The bars shown by a middle tap on the page, with the page's web view keeping the focus.
         compose.runOnUiThread { controls!!() }
         compose.waitForIdle()
         assertTrue(shows("Contents"))
+        compose.runOnUiThread { page!!.requestFocus() }
+        compose.waitForIdle()
         assertTrue(page!!.isFocused)
         assertTrue(!focusedOn("Contents"))
         // Tab goes to the bars, not around the page.

@@ -59,6 +59,8 @@ enum class KeyRoute {
  */
 fun keyRoute(keyCode: Int, readerHolds: Boolean, controlsTakeArrows: Boolean): KeyRoute = when {
     controlsTakeArrows && keyCode in arrows -> if (readerHolds) KeyRoute.INTO_CONTROLS else KeyRoute.MOVE_FOCUS
+    // Tab from the reader goes into the controls too; among them it moves on as Tab does.
+    controlsTakeArrows && readerHolds && keyCode == KeyEvent.KEYCODE_TAB -> KeyRoute.INTO_CONTROLS
     !readerHolds && keyCode in controlKeys -> KeyRoute.CONTROL
     else -> KeyRoute.READER
 }

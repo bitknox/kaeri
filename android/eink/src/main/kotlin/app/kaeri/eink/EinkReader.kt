@@ -423,7 +423,7 @@ fun EinkReader(
     }
 
     fun intoControls(keyCode: Int): Boolean =
-        keyRoute(keyCode, readerHolds = true, controlsShown) == KeyRoute.INTO_CONTROLS || (controlsShown && keyCode == android.view.KeyEvent.KEYCODE_TAB)
+        keyRoute(keyCode, readerHolds = true, controlsShown) == KeyRoute.INTO_CONTROLS
 
     // A control that held the focus can go with nothing changing in the bars or the sheets, as Try
     // again does when the chapter it asked for opens. Whenever nothing in the reader holds the

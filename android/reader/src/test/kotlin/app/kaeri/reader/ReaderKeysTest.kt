@@ -93,6 +93,10 @@ class ReaderKeysTest {
             assertEquals(KeyRoute.INTO_CONTROLS, keyRoute(key, readerHolds = true, controlsTakeArrows = true))
             assertEquals(KeyRoute.MOVE_FOCUS, keyRoute(key, readerHolds = false, controlsTakeArrows = true))
         }
+        // Tab goes into them from the reader too, and is the focused control's own after.
+        assertEquals(KeyRoute.INTO_CONTROLS, keyRoute(KeyEvent.KEYCODE_TAB, readerHolds = true, controlsTakeArrows = true))
+        assertEquals(KeyRoute.READER, keyRoute(KeyEvent.KEYCODE_TAB, readerHolds = false, controlsTakeArrows = true))
+        assertEquals(KeyRoute.READER, keyRoute(KeyEvent.KEYCODE_TAB, readerHolds = true, controlsTakeArrows = false))
     }
 
     @OptIn(ExperimentalComposeUiApi::class)
