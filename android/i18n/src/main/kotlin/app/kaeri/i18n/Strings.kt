@@ -3469,6 +3469,10 @@ object Strings {
     fun readSeriesDownloadedOpen(context: Context, n: Int): String =
         context.resources.getQuantityString(R.plurals.read_series_downloaded_open, n, n)
 
+    /** On a series page whose source failed because the device is offline, under the cause: one sentence that says so and how many chapters downloaded before still open. */
+    fun readSeriesOfflineDownloadedOpen(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.read_series_offline_downloaded_open, n, n)
+
     /** Downloads' empty line for a person who only reads, under "No downloads". */
     fun readDownloadsEmptyDetail(context: Context): String =
         context.getString(R.string.read_downloads_empty_detail)

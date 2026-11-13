@@ -1870,6 +1870,11 @@
         <item quantity="one">One downloaded chapter still opens.</item>
         <item quantity="other">%1$,d downloaded chapters still open.</item>
     </plurals>
+    <!-- On a series page whose source failed because the device is offline, under the cause: one sentence that says so and how many chapters downloaded before still open. -->
+    <plurals name="read_series_offline_downloaded_open">
+        <item quantity="one">You\'re offline. One downloaded chapter still opens.</item>
+        <item quantity="other">You\'re offline. %1$,d downloaded chapters still open.</item>
+    </plurals>
     <!-- Downloads' empty line for a person who only reads, under "No downloads". -->
     <string name="read_downloads_empty_detail">Downloaded chapters open without a connection.</string>
     <!-- Downloads' empty line for a person who watches and reads, under "No downloads". -->
