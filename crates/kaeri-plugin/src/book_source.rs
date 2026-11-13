@@ -244,15 +244,17 @@ fn detail_from(detail: books::SeriesDetail) -> SeriesDetail {
 }
 
 fn chapter_from(chapter: books::Chapter) -> SourceChapter {
-    SourceChapter {
+    let mut out = SourceChapter {
         volume: some(chapter.volume),
         title: some(chapter.title),
         version_label: some(chapter.version_label),
         language: some(chapter.language),
-        published: chapter.published.as_deref().and_then(published),
         page_count: chapter.page_count,
         ..SourceChapter::new(chapter.id, chapter.number)
-    }
+    };
+    // RFC 3339, a date and time, or a bare date, which stays that day wherever the person is.
+    out.dated(chapter.published.as_deref());
+    out
 }
 
 fn content_from(content: books::Content, made: Option<MadePage>) -> ChapterContent {
@@ -271,17 +273,6 @@ fn content_from(content: books::Content, made: Option<MadePage>) -> ChapterConte
         ),
         books::Content::Text(text) => ChapterContent::Text(text),
     }
-}
-
-/// When a chapter came out, in Unix seconds: RFC 3339, or a bare date read as midnight UTC.
-/// Anything else is no date.
-fn published(text: &str) -> Option<i64> {
-    let text = text.trim();
-    if let Ok(at) = text.parse::<jiff::Timestamp>() {
-        return Some(at.as_second());
-    }
-    let date = text.parse::<jiff::civil::Date>().ok()?;
-    Some(date.to_zoned(jiff::tz::TimeZone::UTC).ok()?.timestamp().as_second())
 }
 
 #[cfg(test)]
@@ -351,11 +342,27 @@ mod tests {
     }
 
     #[test]
-    fn a_chapter_date_is_a_date_or_a_moment() {
-        assert_eq!(published("2026-01-02"), Some(1_767_312_000));
-        assert_eq!(published("2026-01-02T00:00:00Z"), Some(1_767_312_000));
-        assert_eq!(published("2026-01-02T01:00:00+01:00"), Some(1_767_312_000));
-        assert_eq!(published("last tuesday"), None);
+    fn a_chapter_date_is_a_day_or_a_moment() {
+        let dated = |text: &str| {
+            let chapter = chapter_from(books::Chapter {
+                id: "c-1".into(),
+                number: "1".into(),
+                volume: None,
+                title: None,
+                version_label: None,
+                language: None,
+                published: Some(text.into()),
+                page_count: None,
+            });
+            (chapter.published, chapter.published_day)
+        };
+        let day = Some(jiff::civil::date(2026, 1, 2));
+        // A bare date is that day wherever the person is, not the evening before west of UTC.
+        assert_eq!(dated("2026-01-02"), (Some(1_767_312_000), day));
+        assert_eq!(dated("2026-01-02T00:00:00Z"), (Some(1_767_312_000), day));
+        // A moment is only a moment, read where the person is.
+        assert_eq!(dated("2026-01-02T01:00:00+01:00"), (Some(1_767_312_000), None));
+        assert_eq!(dated("last tuesday"), (None, None));
     }
 
     #[test]

@@ -463,7 +463,7 @@ impl OpdsSource {
     fn chapter(entry: &Entry) -> SourceChapter {
         let mut chapter = chapter_of(&entry.id, &entry.title, None);
         chapter.language.clone_from(&entry.language);
-        chapter.published = crate::names::date(&entry.updated);
+        chapter.dated(Some(&entry.updated));
         chapter.page_count =
             entry.links.iter().find_map(|l| l.pse_count).and_then(crate::pages_stated);
         chapter

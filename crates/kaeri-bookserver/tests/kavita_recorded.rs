@@ -84,6 +84,8 @@ async fn kavita_signs_in_lists_opens_and_writes_progress_back() {
     assert_eq!(ids, ["901", "902", "903"]);
     assert_eq!(chapters[0].page_count, Some(3));
     assert!(chapters[0].published.is_some());
+    // Kavita keeps a release date as midnight with no offset: that day, wherever the person is.
+    assert_eq!(chapters[0].published_day.map(|d| d.to_string()).as_deref(), Some("2025-02-03"));
 
     let ChapterContent::Images(pages) = source.content("7", "901").await.unwrap() else {
         panic!("images");

@@ -33,6 +33,10 @@ pub struct Kept {
     pub language: Option<String>,
     #[serde(default)]
     pub published: Option<i64>,
+    /// The day it came out, when the source wrote a day rather than a moment; see
+    /// [`kaeri_core::books::Published`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub published_day: Option<jiff::civil::Date>,
     #[serde(default)]
     pub pages: Option<u32>,
     /// When a later answer first listed it. `None` for what the first answer listed.
@@ -48,6 +52,16 @@ impl Kept {
     /// When it came out, or when it was first seen.
     pub fn out_at(&self) -> Option<i64> {
         self.published.or(self.seen_at)
+    }
+
+    /// When it came out where the person is, for the calendar: a chapter dated by its day
+    /// starts that day in `zone`, as the day the source wrote is that day everywhere; one dated
+    /// by a moment, or first seen, is that moment.
+    pub fn out_at_in(&self, zone: &jiff::tz::TimeZone) -> Option<i64> {
+        match self.published_day {
+            Some(day) => day.to_zoned(zone.clone()).ok().map(|z| z.timestamp().as_second()),
+            None => self.out_at(),
+        }
     }
 
     pub fn range(&self) -> Option<ChapterRange> {
@@ -70,6 +84,7 @@ impl Kept {
             version_label: self.version_label.clone(),
             language: self.language.clone(),
             published: self.published,
+            published_day: self.published_day,
             page_count: self.pages,
         }
     }
@@ -344,6 +359,7 @@ pub fn keep(
             version_label: c.version_label.clone(),
             language: c.language.clone(),
             published: c.published,
+            published_day: c.published_day,
             pages: plausible_pages(c.page_count),
             seen_at,
             part: arranged.parts[i],
@@ -884,9 +900,10 @@ pub fn chosen_group(store: &Store, work: &str, source: &str) -> Option<String> {
 }
 
 /// How a series comes out, learnt from the dates of its newest chapters: a weekday when most of
-/// them came out on one day about a week apart, and the usual days between two chapters.
+/// them came out on one day about a week apart, and the usual days between two chapters. A
+/// chapter dated by its day counts on that day wherever the person is ([`Kept::out_at_in`]).
 pub fn rhythm(list: &[Kept], zone: &jiff::tz::TimeZone, now: i64) -> Option<BookRhythm> {
-    let mut dates: Vec<i64> = list.iter().filter_map(Kept::out_at).collect();
+    let mut dates: Vec<i64> = list.iter().filter_map(|c| c.out_at_in(zone)).collect();
     dates.sort_unstable();
     dates.dedup_by(|a, b| (*a - *b).abs() < 6 * 3_600);
     let newest: Vec<i64> = dates.iter().rev().take(8).copied().collect();
@@ -985,6 +1002,7 @@ mod tests {
             version_label: None,
             language: None,
             published: None,
+            published_day: None,
             pages: None,
             seen_at: None,
             part: None,
@@ -1067,6 +1085,7 @@ mod tests {
                 version_label: None,
                 language: None,
                 published: Some(FRIDAY - (4 - n) * 7 * DAY),
+                published_day: None,
                 pages: None,
                 seen_at: None,
                 part: None,
