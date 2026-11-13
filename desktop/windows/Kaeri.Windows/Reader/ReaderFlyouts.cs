@@ -197,7 +197,7 @@ static class SettingsFlyout
         {
             stack.Children.Add(Heading(T.WindowsReaderThisSeries, palette, first: true));
             var value = reader.ModeOverridden ? ModeName(reader.ChosenMode) : T.WindowsReaderModeAuto(Guessed(reader));
-            modeRow = PushRow(T.WindowsReaderReadingMode, value, palette);
+            modeRow = PushRow(T.WindowsReaderReadingMode, value, palette, width * 0.55);
             modeRow.Click += (_, _) => PushModes(owner, host, main, modeRow, width, height);
             stack.Children.Add(modeRow);
             if (ModePicked)
@@ -331,14 +331,15 @@ static class SettingsFlyout
     };
 
     /// <summary>A row that names a setting and its value, with a chevron: it pushes a picker.</summary>
-    static Button PushRow(string label, string value, ReaderPalette palette)
+    static Button PushRow(string label, string value, ReaderPalette palette, double valueWidth)
     {
         var grid = new Grid { ColumnSpacing = 8 };
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         grid.Children.Add(new TextBlock { Text = label, FontSize = 14, Foreground = new SolidColorBrush(palette.Silk), VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.WrapWholeWords });
-        var shown = new TextBlock { Text = value, FontSize = 14, Foreground = new SolidColorBrush(palette.Haze), VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.WrapWholeWords, TextAlignment = TextAlignment.Right };
+        // The value wraps within its share of the row, so a long one never pushes past the edge.
+        var shown = new TextBlock { Text = value, FontSize = 14, Foreground = new SolidColorBrush(palette.Haze), VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.WrapWholeWords, TextAlignment = TextAlignment.Right, MaxWidth = valueWidth };
         Grid.SetColumn(shown, 1);
         grid.Children.Add(shown);
         var chevron = new FontIcon { Glyph = "\uE76C", FontSize = 12, Foreground = new SolidColorBrush(palette.Haze) };

@@ -481,6 +481,91 @@ class ReaderSessionTest {
         assertEquals(4, session.state.value.pages)
     }
 
+    private fun flowFailsWith(failure: ReadingFailure) {
+        opened(start = 0u)
+        session.jumped(session.state.value.jump!!.id)
+        val next = "local:lantern-stair/13"
+        val before = session.state.value
+        sent.clear()
+        session.flowInto(next)
+        session.apply(Event.Reading(ReadingEvent.Failed(ReadingAbout.READER, failure)))
+        val state = session.state.value
+        // The chapter read stays, every image of it, and nothing is on its way any more.
+        assertNull(state.failure)
+        assertEquals(CHAPTER, state.chapter)
+        assertEquals(before.leaves, state.leaves)
+        assertEquals(SESSION, state.session)
+        assertNull(state.asking)
+        assertEquals(FlowFailure(next, ReaderFixtures.view().next, failure), state.flowFailed)
+        // Scrolling past the join again asks nothing; Try again flows on into the chapter.
+        session.flowInto(next)
+        assertEquals(listOf<ReaderCommand>(ReaderCommand.OpenChapter(SESSION, next)), sent)
+        session.retryFlow()
+        assertNull(session.state.value.flowFailed)
+        assertEquals(listOf<ReaderCommand>(ReaderCommand.OpenChapter(SESSION, next), ReaderCommand.OpenChapter(SESSION, next)), sent)
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view(start = 0u).copy(chapter = ReaderFixtures.chapter(next, "13"))))
+        assertEquals(CHAPTER, session.state.value.previous?.chapter)
+        assertNull(session.state.value.previous?.flowFailed)
+    }
+
+    @Test
+    fun a_strip_that_cannot_flow_on_offline_keeps_the_chapter_read() = flowFailsWith(ReadingFailure.Offline)
+
+    @Test
+    fun a_strip_whose_next_chapter_cannot_be_had_online_keeps_the_chapter_read() =
+        flowFailsWith(ReadingFailure.SourceDown("Lantern Archive"))
+
+    @Test
+    fun an_opened_left_behind_by_a_reader_that_went_is_not_kept() {
+        session.open(WORK, ReaderFixtures.surface)
+        // Another series' open, left behind by a reader that went, answers while this one opens.
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view().copy(session = SESSION - 1u, work = "local:another-stair")))
+        assertTrue(session.state.value.opening)
+        assertNull(session.state.value.view)
+        // One of this series from before is shown, until this reader's own, newer, comes.
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view().copy(session = SESSION - 1u)))
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view()))
+        assertEquals(SESSION, session.state.value.session)
+        // An older one coming late changes nothing.
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view().copy(session = SESSION - 2u)))
+        assertEquals(SESSION, session.state.value.session)
+    }
+
+    @Test
+    fun the_chapter_kept_above_a_flow_asks_and_takes_its_own_pages() {
+        opened(start = 0u)
+        session.jumped(session.state.value.jump!!.id)
+        val first = PageFile("/cache/0.jpg", app.kaeri.engine.model.PageEncoding.Original("image/jpeg"), 800u, 1200u, null, false, 1u)
+        session.apply(ReaderEvent.PageReady(SESSION, CHAPTER, 0u, null, first))
+        val next = "local:lantern-stair/13"
+        session.flowInto(next)
+        // An image of the chapter left lands while the next one opens: it stays with that chapter.
+        val second = first.copy(path = "/cache/1.jpg")
+        session.apply(ReaderEvent.PageReady(SESSION, CHAPTER, 1u, null, second))
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view(start = 0u).copy(chapter = ReaderFixtures.chapter(next, "13"))))
+        session.apply(ReaderEvent.Leaves(SESSION, next, ReaderFixtures.leaves(4)))
+        val above = session.state.value.previous!!
+        assertEquals(first, above.landed(ReaderFixtures.part(0u)))
+        assertEquals(second, above.landed(ReaderFixtures.part(1u)))
+        // A row above with no image asks for it by the kept chapter's id, once.
+        sent.clear()
+        session.needPageAbove(ReaderFixtures.part(4u))
+        session.needPageAbove(ReaderFixtures.part(4u))
+        assertEquals(listOf<ReaderCommand>(ReaderCommand.NeedPage(SESSION, CHAPTER, 4u)), sent)
+        val fourth = first.copy(path = "/cache/4.jpg")
+        session.apply(ReaderEvent.PageReady(SESSION, CHAPTER, 4u, null, fourth))
+        assertEquals(fourth, session.state.value.previous?.landed(ReaderFixtures.part(4u)))
+        assertNull(session.state.value.landed(ReaderFixtures.part(4u)))
+        // A failure above shows above, and its retry names that chapter.
+        session.apply(ReaderEvent.PageFailed(SESSION, CHAPTER, 5u, ReadingFailure.PageFetch(404u)))
+        assertEquals(ReadingFailure.PageFetch(404u), session.state.value.previous?.failures?.get(5u))
+        assertNull(session.state.value.failures[5u])
+        sent.clear()
+        session.retryAbove(5u)
+        assertEquals(listOf<ReaderCommand>(ReaderCommand.Retry(SESSION, CHAPTER, 5u)), sent)
+        assertNull(session.state.value.previous?.failures?.get(5u))
+    }
+
     @Test
     fun a_chapter_opened_by_hand_does_not_keep_the_one_before() {
         opened()
@@ -614,5 +699,24 @@ class ReaderSessionTest {
 
         session.reshow(null)
         assertEquals(3, session.state.value.jump?.leaf)
+    }
+
+    @Test
+    fun a_novels_end_page_is_told_to_the_engine_as_the_page_after_the_last() {
+        // The end page counts the chapter read at once, as a paged chapter's does.
+        opened()
+        val last = app.kaeri.engine.model.NovelPos(spine = 2u, path = listOf(0u, 4u), offset = 120u)
+        session.novelAt(last, 2u, 3u, TurnHow.TURN)
+        sent.clear()
+        session.novelEnded()
+        assertEquals(listOf<ReaderCommand>(ReaderCommand.NovelAt(SESSION, CHAPTER, last, 3u, 3u, TurnHow.TURN)), sent)
+    }
+
+    @Test
+    fun a_novels_end_before_any_page_was_reported_tells_nothing() {
+        opened()
+        sent.clear()
+        session.novelEnded()
+        assertTrue("sent: $sent", sent.none { it is ReaderCommand.NovelAt })
     }
 }

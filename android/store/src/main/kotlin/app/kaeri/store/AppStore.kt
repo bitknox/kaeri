@@ -431,11 +431,12 @@ class AppStore(
         )
         this.client = client
         _phase.value = Phase.Running
+        // What Kaeri is for decides the places, so it is asked first, ahead of the commands that
+        // waited for the engine: with no answer kept from before, the bar and rail are Watch's
+        // until it comes. Reading's Updates count and its sources follow once it reads.
+        medium.load()
         for (command in early) client.send(command)
         early.clear()
-        // What Kaeri is for decides the places, so it is asked first; reading's Updates count and
-        // its sources follow once it reads.
-        medium.load()
     }
 
     /**

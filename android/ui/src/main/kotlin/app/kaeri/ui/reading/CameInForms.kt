@@ -276,6 +276,7 @@ internal fun folderForm(state: CameInState, pickAgain: () -> Unit, onClose: () -
     val report: FolderReport? = when (step) {
         is CameInSteps.FolderStep.Found -> step.report
         is CameInSteps.FolderStep.Nothing -> step.report
+        is CameInSteps.FolderStep.Unreadable -> step.report
         CameInSteps.FolderStep.Scanning -> null
     }
     val name = report?.name ?: state.folder.orEmpty()
@@ -289,7 +290,7 @@ internal fun folderForm(state: CameInState, pickAgain: () -> Unit, onClose: () -
         title = stringResource(R.string.sources_add_folder_button),
         primary = when {
             found -> CameInAction(stringResource(R.string.book_folder_add)) { onClose() }
-            step is CameInSteps.FolderStep.Nothing || step is CameInSteps.FolderStep.Found -> CameInAction(stringResource(R.string.book_folder_choose_other), onClick = another)
+            step !is CameInSteps.FolderStep.Scanning -> CameInAction(stringResource(R.string.book_folder_choose_other), onClick = another)
             else -> CameInAction(stringResource(R.string.book_folder_add), enabled = false) {}
         },
         secondary = null,
@@ -308,6 +309,11 @@ internal fun folderForm(state: CameInState, pickAgain: () -> Unit, onClose: () -
                     }
                     is CameInSteps.FolderStep.Found -> FolderFound(shown.report)
                     is CameInSteps.FolderStep.Nothing -> FolderNothing(shown.report)
+                    is CameInSteps.FolderStep.Unreadable -> CameInNote(
+                        NoteKind.FAILED,
+                        Strings.bookFolderUnreadable(context, shown.report.name),
+                        stringResource(R.string.book_folder_unreadable_line),
+                    )
                 }
             }
         }

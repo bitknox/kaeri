@@ -675,6 +675,15 @@ reading-failed-protected = This book is copy-protected, so Kaeri can't open it.
 # Why a chapter could not be saved: the disk is full.
 reading-failed-disk-full = There's no room left on this device. Free some space and try again.
 
+# Why a chapter or a file for an e-reader could not be saved: the storage refused the name, because it is too long or has characters the storage doesn't allow. The path is the file's or the folder's.
+reading-failed-write-name = The storage doesn't take the name { $path }. It may be too long.
+
+# Why a chapter or a file for an e-reader could not be saved: the storage is read-only, or Kaeri isn't allowed to write there. The path is the file's or the folder's.
+reading-failed-write-denied = Kaeri isn't allowed to write { $path }. Check that the storage isn't read-only, then try again.
+
+# Why a chapter or a file for an e-reader could not be saved, for another reason the system gave. The path is the file's or the folder's.
+reading-failed-write = Kaeri couldn't write { $path }. Try again.
+
 # Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.
 reading-failed-webview = Novels need a newer system WebView than version { $version }. Update Android System WebView and try again.
 
@@ -2093,6 +2102,12 @@ linux-reader-end-offline-body = You're offline. It opens here once you're connec
 
 # Hint under a page's error: turning the page goes on past it.
 linux-reader-page-failed-hint = Turn the page to go on without it.
+
+# Why a page failed: its file came in, but no image decoder on this system could show it.
+linux-reader-page-undecodable = The image came in, but it couldn't be shown.
+
+# Why a light novel's chapter stopped showing: the view that draws its text closed or failed to load it.
+linux-reader-novel-stopped = The view that shows the text stopped.
 
 # Line while a chapter opens, once its number is known.
 linux-reader-opening-number = Opening chapter { $chapter }
@@ -8900,6 +8915,9 @@ reader-image-plate = Image { $image }
 # Under a strip image's number after four seconds.
 reader-image-loading = Loading image { $image }
 
+# Under a strip image's number (Image 4) when it couldn't be loaded, above Try again.
+reader-image-failed = Couldn't load
+
 # Heading where a page could not be loaded.
 reader-page-failed = Couldn't load page { $page }
 
@@ -9176,6 +9194,9 @@ reader-look-system = System
 
 # Top line of the page between chapters. The chapter is its number, such as 12.
 reader-end-of-chapter-number = End of chapter { $chapter }
+
+# Top line of the page between chapters when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own, such as Rooftop Lantern.
+reader-end-of-named = End of { $name }
 
 # The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.
 reader-end-facts = Chapter { $chapter } · { $facts }
@@ -10677,6 +10698,9 @@ read-downloads-queued =
 # A series' line in Downloads when a chapter failed, with the reason.
 read-downloads-failed = { $chapter } couldn't download. { $reason }
 
+# Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows.
+read-download-not-started = The download didn't start. { $reason }
+
 # A series' line in Downloads: how many chapters are kept.
 read-downloads-kept =
     { $n ->
@@ -10769,6 +10793,12 @@ send-ready =
 
 # Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.
 send-share-again = Share again
+
+# A ready send whose files were cleared before they were shared or saved, in the Send to e-reader sheet and in the send's row. Prepared files are kept for a day.
+send-files-gone = These files are gone. Prepared files are kept for a day.
+
+# Button on a send whose files are gone: prepares the same chapters for the same e-reader again.
+send-again = Send again
 
 # A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
 send-banner = Sending to { $device }
@@ -12376,6 +12406,22 @@ book-folder-empty-line =
 
 # Primary action after an empty folder.
 book-folder-choose-other = Choose another folder
+
+# Folder result title when the picked folder is already a source. It was scanned again.
+book-folder-already = { $folder } is already in your sources
+
+# Line under it: what the new scan found. Closing the sheet keeps the folder.
+book-folder-already-line =
+    { $series ->
+        [one] Kaeri looked through it again and found one series. It stays as it is.
+       *[other] Kaeri looked through it again and found { $series } series. It stays as it is.
+    }
+
+# Title when a folder could not be read: the look through it could not start, or stopped.
+book-folder-unreadable = Couldn't read { $folder }
+
+# Line under it.
+book-folder-unreadable-line = It may have moved, or Kaeri no longer has access to it.
 
 # Title of the Join a plugin store sheet.
 store-join-title = Join a plugin store

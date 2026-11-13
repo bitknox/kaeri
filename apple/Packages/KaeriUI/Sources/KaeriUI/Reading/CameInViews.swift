@@ -56,6 +56,8 @@ struct CameInCard<Content: View>: View {
 struct FolderCameIn: View {
     let report: FolderReport
     let nothing: Bool
+    /// The folder could not be read at all: gone, or no longer open to the app.
+    var unreadable = false
     /// Change on the folder's row, where the sheet can pick another.
     var change: (() -> Void)?
     private var skippedCount: UInt32 { (report.unsupported + report.locked).reduce(0) { $0 + $1.count } }
@@ -81,7 +83,10 @@ struct FolderCameIn: View {
                         .pointerHover()
                 }
             }
-            if nothing {
+            if unreadable {
+                CameInNote(kind: .failed, title: L.bookFolderUnreadable(folder: report.name),
+                           line: L.bookFolderUnreadableLine)
+            } else if nothing {
                 CameInNote(kind: .info, title: L.bookFolderEmpty(folder: report.name),
                            line: L.bookFolderEmptyLine(files: Int(report.files)))
             } else {
@@ -150,6 +155,7 @@ struct FolderCameInSheet: View {
     @Environment(\.dismiss) private var dismiss
     let report: FolderReport
     let nothing: Bool
+    var unreadable = false
     @State private var picking = false
     @State private var kept = false
 
@@ -175,7 +181,7 @@ struct FolderCameInSheet: View {
             }
             .padding(.bottom, 14)
             ScrollView {
-                FolderCameIn(report: report, nothing: nothing, change: change)
+                FolderCameIn(report: report, nothing: nothing, unreadable: unreadable, change: change)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .scrollBounceBehavior(.basedOnSize)
@@ -251,16 +257,17 @@ private struct FolderCameInPresenter: ViewModifier {
     let store: AppStore
     func body(content: Content) -> some View {
         let outcome = store.cameIn.outcome
-        let folder: (FolderReport, Bool)? = {
+        let folder: (FolderReport, Bool, Bool)? = {
             switch outcome {
-            case .folder(let report)?: (report, false)
-            case .empty(.unsupportedFiles(let report))?, .empty(.emptyFolder(let report))?: (report, true)
+            case .folder(let report)?: (report, false, false)
+            case .empty(.unsupportedFiles(let report))?, .empty(.emptyFolder(let report))?: (report, true, false)
+            case .empty(.folderUnreadable(let report))?: (report, true, true)
             default: nil
             }
         }()
         content.sheet(isPresented: Binding(get: { folder != nil }, set: { if !$0 { store.cameIn.reset() } })) {
-            if let (report, nothing) = folder {
-                FolderCameInSheet(report: report, nothing: nothing)
+            if let (report, nothing, unreadable) = folder {
+                FolderCameInSheet(report: report, nothing: nothing, unreadable: unreadable)
             }
         }
     }

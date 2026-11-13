@@ -370,6 +370,8 @@ impl Engine {
             book_plugins,
             ..services
         };
+        // Folders the platform opens for reading, before anything scans them.
+        services.book_sources.open_folders_through(services.host.folder_access());
         #[cfg(feature = "testing")]
         if let Some(source) = book_source {
             services.book_sources.registry.put(source);

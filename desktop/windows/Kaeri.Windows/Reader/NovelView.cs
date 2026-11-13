@@ -88,6 +88,9 @@ sealed class NovelView : Grid
 
     ReaderSession Reader => owner.Reader;
 
+    /// <summary>The web view didn't start or its process went: this view shows nothing more.</summary>
+    public bool Broken => failed;
+
     async Task Start()
     {
         try
@@ -142,7 +145,7 @@ sealed class NovelView : Grid
                 currentUrl = core.Source;
                 // A document that didn't load never says ready, and the reader would wait on it.
                 if (!e.IsSuccess && e.WebErrorStatus != CoreWebView2WebErrorStatus.OperationCanceled)
-                    Failed($"a book document didn't load: {e.WebErrorStatus}");
+                    Failed($"a book document didn't load: {e.WebErrorStatus} (host {HostOf(core.Source)})");
             };
             // Every request comes here: the book's from the engine, anything else refused.
             core.AddWebResourceRequestedFilter("*", CoreWebView2WebResourceContext.All);
@@ -209,7 +212,8 @@ sealed class NovelView : Grid
 
     /// <summary>
     /// What the reader itself needs from inside the page: the keys that leave or go full screen,
-    /// pointer movement for the group, and the wheel, which turns pages. The paginator handles
+    /// Tab, which brings the chrome up and goes into it, pointer movement for the group, and the
+    /// wheel, which turns pages. The paginator handles
     /// the turning keys.
     /// </summary>
     const string HostScript = """
@@ -219,7 +223,7 @@ sealed class NovelView : Grid
           var post = function (m) { try { window.chrome.webview.postMessage(JSON.stringify(m)); } catch (e) {} };
           document.addEventListener('keydown', function (e) {
             var k = e.key;
-            if (k === 'Escape' || k === 'F11' || (e.altKey && k === 'ArrowLeft') || (e.ctrlKey && (k === '+' || k === '-' || k === '=' || k === '0'))) {
+            if (k === 'Escape' || k === 'F11' || (k === 'Tab' && !e.ctrlKey && !e.altKey) || (e.altKey && k === 'ArrowLeft') || (e.ctrlKey && (k === '+' || k === '-' || k === '=' || k === '0'))) {
               e.preventDefault();
               post({ type: 'hostkey', key: k, alt: e.altKey, ctrl: e.ctrlKey, shift: e.shiftKey });
             }
@@ -264,6 +268,10 @@ sealed class NovelView : Grid
             });
             if (answer is null || closed)
             {
+                // The host alone: it names the session, and a changed one (a web view that
+                // rewrote it) is what leaves a book blank.
+                if (answer is null && !closed)
+                    KaeriFfiMethods.LogLine(FfiLogLevel.Info, "windows", $"no book resource for host {HostOf(uri)}");
                 body?.Dispose();
                 e.Response = env.CreateWebResourceResponse(null, 404, "Not Found", "");
                 return;
@@ -274,13 +282,23 @@ sealed class NovelView : Grid
         catch (Exception ex)
         {
             KaeriFfiMethods.LogLine(FfiLogLevel.Warn, "windows", $"a book resource failed: {ex.GetType().Name}");
-            e.Response = env.CreateWebResourceResponse(null, 500, "Internal Server Error", "");
+            if (!closed)
+                e.Response = env.CreateWebResourceResponse(null, 500, "Internal Server Error", "");
         }
         finally
         {
-            deferral.Complete();
+            try
+            {
+                deferral.Complete();
+            }
+            catch (Exception) when (closed)
+            {
+                // The web view went while the engine answered: nobody waits on the request.
+            }
         }
     }
+
+    static string HostOf(string uri) => Uri.TryCreate(uri, UriKind.Absolute, out var at) ? at.Host : "?";
 
     static Stream? OpenFile(string path)
     {
@@ -306,14 +324,17 @@ sealed class NovelView : Grid
 
     // Opening
 
-    /// <summary>The engine opened a book's chapter: load its entry, or the place it restores.</summary>
-    public void Open(NovelOpenView open)
+    /// <summary>
+    /// The engine opened a book's chapter: load its entry, or the place it restores. A view made
+    /// again after the last one's process went opens at <paramref name="shown"/>, where that one was.
+    /// </summary>
+    public void Open(NovelOpenView open, NovelPos? shown = null)
     {
         book = open;
         HideEnd();
         Page = 0;
         Pages = 1;
-        if (open.Restore is { } at && at.Spine < open.Spine.Length)
+        if ((shown ?? open.Restore) is { } at && at.Spine < open.Spine.Length)
             Load(open.Spine[(int)at.Spine].Url, "kaeri:pos=" + PosText(at));
         else
             Load(open.Entry, null);
@@ -433,7 +454,7 @@ sealed class NovelView : Grid
         {
             if (!forward)
                 HideEnd();
-            else if ((Reader.End?.Next ?? Reader.View?.Next) is { } next)
+            else if (Reader.EndNext is { } next)
                 Reader.OpenChapter(next.Id);
             return;
         }
@@ -627,6 +648,8 @@ sealed class NovelView : Grid
                 return;
             }
         }
+        // Past the last page: the engine counts the chapter read.
+        Reader.NovelEnded();
         ShowEnd();
     }
 

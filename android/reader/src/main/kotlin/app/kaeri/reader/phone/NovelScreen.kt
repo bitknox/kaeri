@@ -7,6 +7,7 @@ package app.kaeri.reader.phone
 import android.annotation.SuppressLint
 import android.view.GestureDetector
 import android.view.MotionEvent
+import android.view.View
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Stable
@@ -17,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
@@ -24,6 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import app.kaeri.engine.model.BookResource
 import app.kaeri.engine.model.NovelAssets
+import app.kaeri.engine.model.NovelPos
 import app.kaeri.engine.model.ReadDirection
 import app.kaeri.engine.model.ReaderSettingKey
 import app.kaeri.engine.model.TapAction
@@ -36,6 +39,7 @@ import app.kaeri.reader.tapZones
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.semantics
 import app.kaeri.reader.NovelMessage
 import app.kaeri.reader.NovelWebHost
@@ -112,7 +116,11 @@ fun NovelScreen(
     val reading by rememberUpdatedState(state.tapReading(screenReader = exploring))
     val controls by rememberUpdatedState(onControls)
     lateinit var turn: (forward: Boolean, how: TurnHow) -> Unit
-    val host = remember(session) {
+    // A renderer that went away leaves its view dead: a new host takes over and opens the
+    // chapter again where it was.
+    var lives by remember(session) { mutableIntStateOf(0) }
+    val last = remember(session) { LastPlace() }
+    val host = remember(session, lives) {
         NovelWebHost(context, assets, resource) { message ->
             when (message) {
                 // A tap off a link, in fractions of the view: the zone it falls in says what it does.
@@ -128,6 +136,7 @@ fun NovelScreen(
                     place.pages = message.pages
                     place.ended = false
                     message.pos?.let {
+                        last.pos = it
                         // A first layout says no how: the app's own move, never the person's jump.
                         session.novelAt(it, message.page.toUInt(), message.pages.toUInt(), message.how ?: TurnHow.PLACED)
                     }
@@ -138,8 +147,12 @@ fun NovelScreen(
                     place.pages = message.pages
                 }
                 // The last page of the last document turned past: the end page, as manga has.
-                is NovelMessage.End -> place.ended = true
+                is NovelMessage.End -> {
+                    place.ended = true
+                    session.novelEnded()
+                }
                 is NovelMessage.Failed -> place.failed = message.why
+                NovelMessage.Gone -> lives++
                 else -> {}
             }
         }
@@ -178,19 +191,24 @@ fun NovelScreen(
         }
     }
     val novel = state.novel
-    LaunchedEffect(novel?.session, novel?.chapter) {
+    LaunchedEffect(host, novel?.session, novel?.chapter) {
         place.failed = null
         place.ended = false
         place.ready = false
         if (novel != null) {
+            // A new host for the same chapter, after its renderer went: back to the last place shown.
+            val chapter = novel.session to novel.chapter
+            val restore = if (last.chapter == chapter) last.pos ?: novel.restore else novel.restore
+            if (last.chapter != chapter) last.pos = null
+            last.chapter = chapter
             place.reload = { host.open(novel.spine, novel.entry, novel.restore) }
-            host.open(novel.spine, novel.entry, novel.restore)
+            host.open(novel.spine, novel.entry, restore)
         }
     }
     LaunchedEffect(state.novelGoTo?.id) {
         state.novelGoTo?.let { host.goToPos(it.pos, TurnHow.PLACED) }
     }
-    LaunchedEffect(state.novelStyle?.style) {
+    LaunchedEffect(host, state.novelStyle?.style) {
         state.novelStyle?.let { host.configure(it.style) }
     }
     // With a screen reader every tap is the chrome's, so the page turns and the controls are actions.
@@ -200,16 +218,41 @@ fun NovelScreen(
     // Words a screen reader can rest on, so the moves come up as its actions: the page, or the chapter
     // while the paginator counts and when the text scrolls.
     val where = if (!scrolled && place.pages > 0) Strings.readerPageOf(context, place.page + 1, place.pages) else state.view?.let { chapterWords(context, it.chapter) }.orEmpty()
+    // Under the end page or a failure the page is covered: its text and moves leave the screen
+    // reader's way, the web view's own nodes with them.
+    val covered = place.ended || place.failed != null
     Box(
-        modifier.fillMaxSize().semantics {
-            if (where.isNotEmpty()) contentDescription = where
-            customActions = listOf(
-                CustomAccessibilityAction(next) { turn(true, TurnHow.KEY); true },
-                CustomAccessibilityAction(previous) { turn(false, TurnHow.KEY); true },
-                CustomAccessibilityAction(showControls) { controls(); true },
-            )
-        },
+        modifier.fillMaxSize().then(
+            if (covered) {
+                Modifier.clearAndSetSemantics {}
+            } else {
+                Modifier.semantics {
+                    if (where.isNotEmpty()) contentDescription = where
+                    customActions = listOf(
+                        CustomAccessibilityAction(next) { turn(true, TurnHow.KEY); true },
+                        CustomAccessibilityAction(previous) { turn(false, TurnHow.KEY); true },
+                        CustomAccessibilityAction(showControls) { controls(); true },
+                    )
+                }
+            },
+        ),
     ) {
-        AndroidView(factory = { host.view }, modifier = Modifier.fillMaxSize())
+        // A new host brings a new view: the old one is not reused.
+        key(host) {
+            AndroidView(
+                factory = { host.view },
+                modifier = Modifier.fillMaxSize(),
+                update = { view ->
+                    view.importantForAccessibility =
+                        if (covered) View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS else View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
+                },
+            )
+        }
     }
+}
+
+/** The chapter open and the last place its paginator reported, for a host that takes over. */
+private class LastPlace {
+    var chapter: Any? = null
+    var pos: NovelPos? = null
 }

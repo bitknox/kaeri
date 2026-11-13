@@ -29,8 +29,9 @@ fun ReadingFailure.msg(): ReadingMsg = when (this) {
     is ReadingFailure.NeedsNewerKaeri -> ReadingMsg.ReadingFailedNeedsNewer(world)
     is ReadingFailure.ReadingOff -> ReadingMsg.ReadingFailedOff
     is ReadingFailure.Other -> ReadingMsg.ReadingFailedOther(reason)
-    // The send checks carry sizes, which the engine puts at human scale.
-    is ReadingFailure.SendTooLarge, is ReadingFailure.SendCheck -> readingFailureMsg(this)
+    // The engine words these: sizes at human scale, a message per write problem.
+    is ReadingFailure.SendTooLarge, is ReadingFailure.SendCheck, is ReadingFailure.CannotWrite ->
+        readingFailureMsg(this)
 }
 
 /** This failure in the person's language. A reason that came with it is said alone, without "Something went wrong" first. */

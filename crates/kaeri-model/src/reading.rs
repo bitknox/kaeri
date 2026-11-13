@@ -354,6 +354,10 @@ pub struct ChapterRow {
     /// source's name. It opens from there.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub other_source: Option<String>,
+    /// A file on this device that is not a download, such as one in the person's folders: it
+    /// opens from there, and there is nothing to download, so no Download is offered for it.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub on_device: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1061,13 +1065,16 @@ pub struct DownloadEstimate {
     pub pick: DownloadPick,
     /// The chosen chapters not downloaded yet.
     pub chapters: u32,
+    /// What they will take, or 0 when that is not known: an estimate needs past downloads of
+    /// the work or its source to go by.
     pub bytes: u64,
     /// "About 214 MB · over Wi-Fi", as parts the app joins with " · ". Empty when nothing is
-    /// left to download.
+    /// left to download, or when the size is not known.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub line: Vec<Msg>,
     /// Every chosen chapter, the ones on this device by what they take here and the rest as
-    /// estimated: what a send to an e-reader of the same choice comes to.
+    /// estimated: what a send to an e-reader of the same choice comes to. 0 when any of them
+    /// is not known.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub all_bytes: u64,
 }
@@ -1336,6 +1343,25 @@ pub enum ReadingFailure {
         part: String,
         problem: SendProblem,
     },
+    /// A file or folder Kaeri makes, for a download or a send, could not be written, for a
+    /// reason other than a full disk. `path` is the file's or the folder's.
+    CannotWrite {
+        path: String,
+        problem: WriteProblem,
+    },
+}
+
+/// Why a file or folder could not be written.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum WriteProblem {
+    /// The storage does not take the name: it is too long, or has characters the storage does
+    /// not allow.
+    Name,
+    /// The storage is read-only, or Kaeri may not write there.
+    Denied,
+    /// Any other error the system gave.
+    Other,
 }
 
 /// What the check before a send found wrong with a part of the file.
@@ -1419,6 +1445,13 @@ impl ReadingFailure {
                     file: file.clone(),
                     part: part.clone(),
                 },
+            },
+            Self::CannotWrite { path, problem } => match problem {
+                WriteProblem::Name => ReadingMsg::ReadingFailedWriteName { path: path.clone() },
+                WriteProblem::Denied => {
+                    ReadingMsg::ReadingFailedWriteDenied { path: path.clone() }
+                }
+                WriteProblem::Other => ReadingMsg::ReadingFailedWrite { path: path.clone() },
             },
         }
     }
@@ -2072,6 +2105,18 @@ mod tests {
             ReadingFailure::NeedsNewerKaeri { world: "kaeri:books@0.2".into() },
             ReadingFailure::ReadingOff,
             ReadingFailure::Other { reason: "It broke.".into() },
+            ReadingFailure::CannotWrite {
+                path: "/d/a.cbz".into(),
+                problem: WriteProblem::Name,
+            },
+            ReadingFailure::CannotWrite {
+                path: "/d/a.cbz".into(),
+                problem: WriteProblem::Denied,
+            },
+            ReadingFailure::CannotWrite {
+                path: "/d/a.cbz".into(),
+                problem: WriteProblem::Other,
+            },
         ];
         for failure in failures {
             let text = failure.msg().english();

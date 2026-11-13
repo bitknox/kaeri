@@ -149,3 +149,52 @@ async fn resuming_three_times_keeps_the_place() {
         assert!(!kept.read, "round {round}");
     }
 }
+
+/// P18. A page kept in paged mode opens a long strip at the top of that page's image, even
+/// where each image is cut into several screens, so the first scroll keeps the place.
+#[tokio::test]
+async fn a_page_kept_in_paged_mode_opens_a_strip_at_its_image() {
+    let mut h = tall_strip(None);
+    h.services.store.set_series_setting(WORK, "mode", Some("paged"), true, 3).unwrap();
+    let (view, _) = h.open_eink(OpenAt::Start).await;
+    assert_eq!(view.mode, ReaderMode::Paged);
+    h.shown(2, TurnHow::Turn).await;
+    h.send(ReaderCommand::Close { session: h.session() });
+    let kept = h.kept("1").unwrap();
+    assert_eq!((kept.last_page, kept.strip_image), (Some(2), None));
+
+    h.services.store.set_series_setting(WORK, "mode", Some("strip"), true, 4).unwrap();
+    let (view, leaves) = h.open_eink(OpenAt::Resume).await;
+    assert_eq!(view.mode, ReaderMode::Strip);
+    // The first screen that starts in the third image, which is where the engine opens.
+    let first = starts(&leaves).iter().position(|c| c.image == 2).unwrap();
+    assert_eq!(view.start.page, Some(2));
+    assert_eq!(view.start.strip, Some(starts(&leaves)[first]));
+    let found = cut_of(&leaves, &view.start);
+    assert_eq!(found, first);
+    h.shown(found as u32, TurnHow::Placed).await;
+    h.send(ReaderCommand::Close { session: h.session() });
+    let kept = h.kept("1").unwrap();
+    assert_eq!((kept.last_page, kept.strip_image), (Some(2), Some(2)));
+}
+
+/// P18 the other way: an image kept partway down in a strip opens paged mode at that page.
+#[tokio::test]
+async fn an_image_kept_in_a_strip_opens_paged_mode_at_its_page() {
+    let mut h = tall_strip(None);
+    let (_, leaves) = h.open_eink(OpenAt::Start).await;
+    let leaf = starts(&leaves).iter().position(|c| c.image == 1 && c.offset > 0.0).unwrap();
+    h.shown(leaf as u32, TurnHow::Turn).await;
+    h.send(ReaderCommand::Close { session: h.session() });
+    let kept = h.kept("1").unwrap();
+    assert_eq!((kept.last_page, kept.strip_image), (Some(1), Some(1)));
+
+    h.services.store.set_series_setting(WORK, "mode", Some("paged"), true, 3).unwrap();
+    let (view, leaves) = h.open_eink(OpenAt::Resume).await;
+    assert_eq!(view.mode, ReaderMode::Paged);
+    assert_eq!(view.start.page, Some(1));
+    let shown = leaves.iter().position(|l| l.parts.iter().any(|p| p.page == 1)).unwrap();
+    h.shown(shown as u32, TurnHow::Placed).await;
+    h.send(ReaderCommand::Close { session: h.session() });
+    assert_eq!(h.kept("1").unwrap().last_page, Some(1));
+}

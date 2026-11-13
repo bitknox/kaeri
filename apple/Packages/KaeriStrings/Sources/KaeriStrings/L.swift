@@ -860,6 +860,21 @@ public enum L {
     /// Why a chapter could not be saved: the disk is full.
     public static var readingFailedDiskFull: String { string("reading-failed-disk-full", fallback: "There's no room left on this device. Free some space and try again.") }
 
+    /// Why a chapter or a file for an e-reader could not be saved: the storage refused the name, because it is too long or has characters the storage doesn't allow. The path is the file's or the folder's.
+    public static func readingFailedWriteName(path: String) -> String {
+        Self.format("reading-failed-write-name", fallback: "The storage doesn't take the name %1$@. It may be too long.", path)
+    }
+
+    /// Why a chapter or a file for an e-reader could not be saved: the storage is read-only, or Kaeri isn't allowed to write there. The path is the file's or the folder's.
+    public static func readingFailedWriteDenied(path: String) -> String {
+        Self.format("reading-failed-write-denied", fallback: "Kaeri isn't allowed to write %1$@. Check that the storage isn't read-only, then try again.", path)
+    }
+
+    /// Why a chapter or a file for an e-reader could not be saved, for another reason the system gave. The path is the file's or the folder's.
+    public static func readingFailedWrite(path: String) -> String {
+        Self.format("reading-failed-write", fallback: "Kaeri couldn't write %1$@. Try again.", path)
+    }
+
     /// Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.
     public static func readingFailedWebview(version: Int) -> String {
         Self.format("reading-failed-webview", fallback: "Novels need a newer system WebView than version %1$@. Update Android System WebView and try again.", String(version))
@@ -8339,6 +8354,9 @@ public enum L {
         Self.format("reader-image-loading", fallback: "Loading image %1$@", String(image))
     }
 
+    /// Under a strip image's number (Image 4) when it couldn't be loaded, above Try again.
+    public static var readerImageFailed: String { string("reader-image-failed", fallback: "Couldn't load") }
+
     /// Heading where a page could not be loaded.
     public static func readerPageFailed(page: Int) -> String {
         Self.format("reader-page-failed", fallback: "Couldn't load page %1$@", String(page))
@@ -8622,6 +8640,11 @@ public enum L {
     /// Top line of the page between chapters. The chapter is its number, such as 12.
     public static func readerEndOfChapterNumber(chapter: String) -> String {
         Self.format("reader-end-of-chapter-number", fallback: "End of chapter %1$@", chapter)
+    }
+
+    /// Top line of the page between chapters when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own, such as Rooftop Lantern.
+    public static func readerEndOfNamed(name: String) -> String {
+        Self.format("reader-end-of-named", fallback: "End of %1$@", name)
     }
 
     /// The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.
@@ -10308,6 +10331,11 @@ public enum L {
         Self.format("read-downloads-failed", fallback: "%1$@ couldn't download. %2$@", chapter, reason)
     }
 
+    /// Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows.
+    public static func readDownloadNotStarted(reason: String) -> String {
+        Self.format("read-download-not-started", fallback: "The download didn't start. %1$@", reason)
+    }
+
     /// A series' line in Downloads: how many chapters are kept.
     public static func readDownloadsKept(n: Int) -> String {
         Self.format("read-downloads-kept", fallback: "%1$lld chapters", n)
@@ -10414,6 +10442,12 @@ public enum L {
 
     /// Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.
     public static var sendShareAgain: String { string("send-share-again", fallback: "Share again") }
+
+    /// A ready send whose files were cleared before they were shared or saved, in the Send to e-reader sheet and in the send's row. Prepared files are kept for a day.
+    public static var sendFilesGone: String { string("send-files-gone", fallback: "These files are gone. Prepared files are kept for a day.") }
+
+    /// Button on a send whose files are gone: prepares the same chapters for the same e-reader again.
+    public static var sendAgain: String { string("send-again", fallback: "Send again") }
 
     /// A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
     public static func sendBanner(device: String) -> String {
@@ -12145,6 +12179,24 @@ public enum L {
 
     /// Primary action after an empty folder.
     public static var bookFolderChooseOther: String { string("book-folder-choose-other", fallback: "Choose another folder") }
+
+    /// Folder result title when the picked folder is already a source. It was scanned again.
+    public static func bookFolderAlready(folder: String) -> String {
+        Self.format("book-folder-already", fallback: "%1$@ is already in your sources", folder)
+    }
+
+    /// Line under it: what the new scan found. Closing the sheet keeps the folder.
+    public static func bookFolderAlreadyLine(series: Int) -> String {
+        Self.format("book-folder-already-line", fallback: "Kaeri looked through it again and found %1$lld series. It stays as it is.", series)
+    }
+
+    /// Title when a folder could not be read: the look through it could not start, or stopped.
+    public static func bookFolderUnreadable(folder: String) -> String {
+        Self.format("book-folder-unreadable", fallback: "Couldn't read %1$@", folder)
+    }
+
+    /// Line under it.
+    public static var bookFolderUnreadableLine: String { string("book-folder-unreadable-line", fallback: "It may have moved, or Kaeri no longer has access to it.") }
 
     /// Title of the Join a plugin store sheet.
     public static var storeJoinTitle: String { string("store-join-title", fallback: "Join a plugin store") }

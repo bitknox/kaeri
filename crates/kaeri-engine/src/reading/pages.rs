@@ -58,6 +58,22 @@ const fn wall_budget(secs: u64) -> Duration {
 /// holds the decoder until it ends.
 pub const HOST_DECODE_BUDGET: Duration = Duration::from_secs(2);
 
+/// The most one page sent to the screen may take once decoded, in bytes at four a pixel, as
+/// the platforms decode it. Android refuses to draw a bitmap over 100 MB, and a long strip
+/// image can pass that whole: one 720 by 40,000 pixels is 115 MB.
+pub const PAGE_BYTES: u64 = 64 * 1024 * 1024;
+
+/// `(w, h)` shrunk evenly, if need be, to fit [`PAGE_BYTES`].
+fn within_page_bytes((w, h): (u32, u32)) -> (u32, u32) {
+    let bytes = u64::from(w) * u64::from(h) * 4;
+    if bytes <= PAGE_BYTES {
+        return (w, h);
+    }
+    let scale = (PAGE_BYTES as f64 / bytes as f64).sqrt();
+    let shrink = |side: u32| ((f64::from(side) * scale) as u32).max(1);
+    (shrink(w), shrink(h))
+}
+
 /// What the session decided before the book is open; the rest is decided from the book.
 #[derive(Debug, Clone)]
 pub struct Plan {
@@ -117,6 +133,9 @@ pub struct OpenJob {
     pub feed: Option<Arc<Feed>>,
     /// Find and leave out the series' credit pages, when the person has that on.
     pub credits: Option<super::credits::CreditCheck>,
+    /// A strip flowed on from this chapter of the same session, which the app keeps above the
+    /// one opening: the worker keeps it too and makes its pages when asked by its id.
+    pub keep: Option<ChapterId>,
 }
 
 #[derive(Debug)]
@@ -129,9 +148,10 @@ enum Job {
         leaves: Vec<u32>,
         out: Outbox,
     },
-    /// Make this page again: its file went missing.
+    /// Make this page of `chapter` again: its file went missing, or it failed.
     Again {
         session: u64,
+        chapter: ChapterId,
         page: u32,
         out: Outbox,
     },
@@ -185,8 +205,11 @@ impl Pages {
         let _ = self.jobs.send(Job::Want { session, generation, leaves, out: out.clone() });
     }
 
-    pub fn again(&self, session: u64, page: u32, out: &Outbox) {
-        let _ = self.jobs.send(Job::Again { session, page, out: out.clone() });
+    /// Make `page` of `chapter` again: the open chapter's, or the kept one's a strip flowed on
+    /// from (see [`OpenJob::keep`]). A chapter that is neither asks the open one, as before
+    /// chapters were named.
+    pub fn again(&self, session: u64, chapter: ChapterId, page: u32, out: &Outbox) {
+        let _ = self.jobs.send(Job::Again { session, chapter, page, out: out.clone() });
     }
 
     pub fn close(&self, session: u64) {
@@ -362,6 +385,9 @@ struct Worker {
     /// an engine with nothing outstanding can go idle.
     out: Option<Outbox>,
     open: Option<Chapter>,
+    /// The chapter a strip flowed on from, kept above the open one: its pages are made when
+    /// asked for again, after the open chapter's.
+    kept: Option<Chapter>,
     /// One book opens at a time; a stuck open keeps this until it finishes.
     opening: Arc<AtomicBool>,
     decoder: HostDecoder,
@@ -373,6 +399,7 @@ impl Worker {
             cache,
             out: None,
             open: None,
+            kept: None,
             opening: Arc::new(AtomicBool::new(false)),
             decoder,
         }
@@ -393,7 +420,7 @@ impl Worker {
     fn run(mut self, rx: mpsc::Receiver<Job>) {
         loop {
             // Take every job waiting before making the next leaf, so the newest wish wins.
-            let first = if self.open.as_ref().is_some_and(|c| !c.queue.is_empty()) {
+            let first = if self.queued() {
                 match rx.try_recv() {
                     Ok(job) => Some(job),
                     Err(mpsc::TryRecvError::Empty) => None,
@@ -412,16 +439,29 @@ impl Worker {
                 }
             }
             self.make_next();
-            if self.open.as_ref().is_none_or(|c| c.queue.is_empty()) {
+            if !self.queued() {
                 self.out = None;
             }
         }
+    }
+
+    /// Leaves to make, of the open chapter or the kept one.
+    fn queued(&self) -> bool {
+        [&self.open, &self.kept].into_iter().flatten().any(|c| !c.queue.is_empty())
     }
 
     fn take(&mut self, job: Job) {
         match job {
             Job::Open(job) => {
                 self.out = Some(job.out.clone());
+                // The chapter flowed on from is the one open, or kept already when the chapter
+                // flowed into is laid out again.
+                self.kept = job.keep.as_ref().and_then(|keep| {
+                    [self.open.take(), self.kept.take()]
+                        .into_iter()
+                        .flatten()
+                        .find(|c| c.session == job.session && &c.chapter == keep)
+                });
                 self.open_chapter(*job)
             }
             Job::Want { session, generation, leaves, out } => {
@@ -439,11 +479,14 @@ impl Worker {
                     self.send(event);
                 }
             }
-            Job::Again { session, page, out } => {
-                if let Some(c) = self.open.as_mut().filter(|c| c.session == session) {
-                    // A page from a source that failed is fetched again, and made once it lands.
+            Job::Again { session, chapter, page, out } => {
+                let kept =
+                    self.kept.as_mut().filter(|c| c.session == session && c.chapter == chapter);
+                if let Some(c) = kept.or(self.open.as_mut().filter(|c| c.session == session)) {
+                    // A page from a source that failed, or that a chapter left behind never
+                    // fetched, is fetched now, and made once it lands.
                     if let Some(fed) = &c.feed {
-                        fed.feed.retry(page as usize, &out);
+                        fed.feed.ask(page as usize, &out);
                     }
                     c.sent.retain(|(p, _)| *p != page);
                     if let Some(leaf) =
@@ -466,10 +509,19 @@ impl Worker {
                 {
                     self.relay(session);
                 }
+                // The kept chapter's layout stays as the app has it: no relay.
+                if let Some(c) =
+                    self.kept.as_mut().filter(|c| c.session == session && c.chapter == chapter)
+                {
+                    c.landed(page);
+                }
             }
             Job::Close { session } => {
                 if self.open.as_ref().is_some_and(|c| c.session == session) {
                     self.open = None;
+                }
+                if self.kept.as_ref().is_some_and(|c| c.session == session) {
+                    self.kept = None;
                 }
             }
             Job::Peek(job) => {
@@ -863,7 +915,14 @@ impl Worker {
     }
 
     fn make_next(&mut self) {
-        let Some(chapter) = self.open.as_mut() else { return };
+        // The open chapter's leaves first, then the kept one's.
+        let Some(chapter) = [self.open.as_mut(), self.kept.as_mut()]
+            .into_iter()
+            .flatten()
+            .find(|c| !c.queue.is_empty())
+        else {
+            return;
+        };
         let Some(leaf) = chapter.queue.pop_front() else { return };
         chapter.asked.remove(&leaf);
         let events = chapter.make_leaf(leaf);
@@ -1236,12 +1295,18 @@ impl Chapter {
             .source
             .unwrap_or(kaeri_pages::PixelRect::full(original.width, original.height));
         let format = original.format.ok_or_else(|| self.unreadable())?;
+        // Nothing goes out larger than a platform can draw: a page whose box would pass the
+        // budget is made smaller, and an original that would is never sent as it is.
+        let (w, h) = within_page_bytes((w, h));
+        let original_fits =
+            u64::from(original.width) * u64::from(original.height) * 4 <= PAGE_BYTES;
         let fitted = Target { width: w, height: h, ..target };
         // What the page is decoded for: the screen, or the box it is drawn in by width, which
         // is taller than the screen.
         let room = if self.by_width { (w, h) } else { (target.width, target.height) };
-        if kaeri_pages::delivery(format, (region.width, region.height), &fitted)
-            == Delivery::Original
+        if original_fits
+            && kaeri_pages::delivery(format, (region.width, region.height), &fitted)
+                == Delivery::Original
         {
             // Crop borders only changes which part of the file shows, so the original still
             // goes, with the content box as its crop. Made here, the page would come out at the
@@ -1689,9 +1754,9 @@ fn look_key(look: &Look) -> u64 {
 fn book_key(path: &Path) -> String {
     let mut h = DefaultHasher::new();
     path.hash(&mut h);
-    if let Ok(meta) = std::fs::metadata(path) {
-        meta.len().hash(&mut h);
-        meta.modified().ok().hash(&mut h);
+    if let Ok(meta) = kaeri_books::tree::stat(path) {
+        meta.size.hash(&mut h);
+        meta.modified.hash(&mut h);
     }
     format!("{:016x}", h.finish())
 }
@@ -1945,6 +2010,7 @@ mod tests {
             out: out.clone(),
             feed: Some(feed.clone()),
             credits: None,
+            keep: None,
         });
         feed.put(1, land(1, (1000, 700)));
         worker.landed(1, chapter.clone(), 1, &out);
@@ -2040,6 +2106,7 @@ mod tests {
             out: out.clone(),
             feed: None,
             credits: None,
+            keep: None,
         });
         worker.want(1, 1, (0..pages.len() as u32).collect(), &out);
         let mut made = vec![None; pages.len()];
@@ -2156,5 +2223,36 @@ mod tests {
     fn rectangles_follow_a_smaller_decode() {
         let r = kaeri_pages::PixelRect::new(2000, 0, 2000, 2800);
         assert_eq!(scale_rect(r, 4000, 2000), kaeri_pages::PixelRect::new(1000, 0, 1000, 1400));
+    }
+
+    #[test]
+    fn a_strip_image_too_big_to_draw_whole_goes_out_within_the_budget() {
+        // 720 by 40,000: narrower than the screen, but 115 MB decoded, past what Android
+        // draws.
+        let picture = image::GrayImage::from_fn(720, 40_000, |x, y| {
+            image::Luma([if (x / 9 + y / 13) % 2 == 0 { 40 } else { 210 }])
+        });
+        let mut png = Vec::new();
+        image::DynamicImage::ImageLuma8(picture)
+            .write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
+            .unwrap();
+        let pages = [("00001.png".to_owned(), png)];
+        let made = made_files(&pages, (1080, 2400), ReaderMode::Strip, false, Look::default());
+        let file = &made[0];
+        assert!(matches!(file.encoding, PageEncoding::Raw { .. }), "{file:?}");
+        let decoded = u64::from(file.width) * u64::from(file.height) * 4;
+        assert!(decoded <= PAGE_BYTES, "{decoded} bytes: {file:?}");
+        // Its shape stays the page's.
+        let (aspect, made_aspect) =
+            (40_000.0 / 720.0, f64::from(file.height) / f64::from(file.width));
+        assert!((aspect - made_aspect).abs() < 0.2, "{file:?}");
+    }
+
+    #[test]
+    fn a_box_past_the_budget_shrinks_evenly() {
+        assert_eq!(within_page_bytes((720, 4000)), (720, 4000));
+        let (w, h) = within_page_bytes((1080, 60_000));
+        assert!(u64::from(w) * u64::from(h) * 4 <= PAGE_BYTES);
+        assert!(w > 500 && h > 30_000, "{w}x{h}");
     }
 }

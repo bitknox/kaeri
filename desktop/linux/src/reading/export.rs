@@ -31,10 +31,27 @@ const NEXT: usize = 10;
 #[derive(Clone, Debug, PartialEq)]
 enum Phase {
     Choosing,
-    Preparing { done: u32, total: u32 },
+    Preparing {
+        done: u32,
+        total: u32,
+    },
     Waiting(String),
     Failed(String),
     Ready(Vec<ExportFile>),
+    /// The send was ready and its files are gone: the engine keeps them for a day, and a send
+    /// put away loses them at once. Send again prepares them anew.
+    Gone,
+}
+
+/// The ready files to save, or [`Phase::Gone`] when any of them is no longer there, so
+/// nothing is copied in part and the failure says why.
+fn to_save(phase: &Phase) -> Result<Vec<ExportFile>, Phase> {
+    let Phase::Ready(files) = phase else { return Err(phase.clone()) };
+    if files.iter().all(|f| std::path::Path::new(&f.path).is_file()) {
+        Ok(files.clone())
+    } else {
+        Err(Phase::Gone)
+    }
 }
 
 struct Send {
@@ -109,6 +126,26 @@ struct Parts {
 }
 
 impl Parts {
+    /// Whether the ready files are all still there; when any has gone the dialog says so,
+    /// with Send again, and false.
+    fn still_ready(&self) -> bool {
+        let gone = {
+            let mut s = self.send.borrow_mut();
+            match to_save(&s.phase) {
+                Ok(_) => return true,
+                Err(Phase::Gone) => {
+                    s.phase = Phase::Gone;
+                    true
+                }
+                Err(_) => false,
+            }
+        };
+        if gone {
+            self.draw();
+        }
+        false
+    }
+
     /// Show what the state says.
     fn draw(&self) {
         let s = self.send.borrow();
@@ -119,14 +156,19 @@ impl Parts {
             (Some((_, first)), Some((_, last))) => t::send_chapters_range(first, last),
             _ => t::linux_send_none_unread(),
         });
-        let open = matches!(s.phase, Phase::Choosing | Phase::Failed(_));
+        let open = matches!(s.phase, Phase::Choosing | Phase::Failed(_) | Phase::Gone);
         self.targets.set_sensitive(open);
         self.what.set_sensitive(open);
         self.prepare.set_visible(s.phase == Phase::Choosing);
         self.prepare.set_sensitive(
             s.target().is_some_and(|t| s.format(t).is_some()) && !chapters.is_empty(),
         );
-        self.again.set_visible(matches!(s.phase, Phase::Failed(_)));
+        self.again.set_visible(matches!(s.phase, Phase::Failed(_) | Phase::Gone));
+        self.again.set_label(&if s.phase == Phase::Gone {
+            t::send_again()
+        } else {
+            t::reader_try_again()
+        });
         self.cancel.set_visible(matches!(s.phase, Phase::Preparing { .. } | Phase::Waiting(_)));
         self.save.set_visible(matches!(s.phase, Phase::Ready(_)));
         while let Some(child) = self.ring_slot.first_child() {
@@ -145,6 +187,7 @@ impl Parts {
             }
             Phase::Waiting(line) => (line.clone(), String::new()),
             Phase::Failed(why) => (why.clone(), String::new()),
+            Phase::Gone => (t::send_files_gone(), String::new()),
             Phase::Ready(files) => (t::send_ready(files.len() as i64), String::new()),
         };
         self.state.set_label(&words);
@@ -377,23 +420,26 @@ pub fn open(ctx: &Rc<Ctx>, work: &WorkId) {
         let (ctx, work, parts) = (Rc::downgrade(ctx), work.clone(), Rc::downgrade(&parts));
         move |_| {
             let (Some(ctx), Some(parts)) = (ctx.upgrade(), parts.upgrade()) else { return };
-            let (files, chapters, target) = {
-                let s = parts.send.borrow();
-                let Phase::Ready(files) = s.phase.clone() else { return };
-                (files, s.sent.clone(), s.chosen.clone().unwrap_or_default())
-            };
+            if !parts.still_ready() {
+                return;
+            }
             let chooser = gtk::FileDialog::new();
             let window = ctx.window.clone();
             let work = work.clone();
+            let parts = Rc::downgrade(&parts);
             chooser.select_folder(Some(&window), gio::Cancellable::NONE, move |result| {
                 let Ok(folder) = result else { return };
-                let (ctx, work, files, chapters, target) = (
-                    Rc::clone(&ctx),
-                    work.clone(),
-                    files.clone(),
-                    chapters.clone(),
-                    target.clone(),
-                );
+                let Some(parts) = parts.upgrade() else { return };
+                // The files may have gone while the folder was being picked.
+                if !parts.still_ready() {
+                    return;
+                }
+                let (files, chapters, target) = {
+                    let s = parts.send.borrow();
+                    let Phase::Ready(files) = s.phase.clone() else { return };
+                    (files, s.sent.clone(), s.chosen.clone().unwrap_or_default())
+                };
+                let (ctx, work) = (Rc::clone(&ctx), work.clone());
                 glib::spawn_future_local(save_files(
                     ctx, folder, files, work, chapters, target,
                 ));
@@ -534,5 +580,42 @@ async fn save_files(
             );
         }
         None => ctx.toast(&words),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn file(dir: &std::path::Path, name: &str) -> ExportFile {
+        ExportFile {
+            path: dir.join(name).to_string_lossy().into_owned(),
+            name: name.to_owned(),
+            bytes: 2,
+            part: None,
+        }
+    }
+
+    /// R5A-6. The engine keeps a ready send's files for a day; saving after they went says so,
+    /// with Send again, instead of copying some or none of them.
+    #[test]
+    fn saving_files_that_are_gone_says_they_are_gone() {
+        let dir = tempfile::tempdir().unwrap();
+        let (one, two) = (
+            file(dir.path(), "Made-up Series 1.cbz"),
+            file(dir.path(), "Made-up Series 2.cbz"),
+        );
+        std::fs::write(&one.path, b"pk").unwrap();
+        std::fs::write(&two.path, b"pk").unwrap();
+        let ready = Phase::Ready(vec![one.clone(), two.clone()]);
+        assert_eq!(to_save(&ready), Ok(vec![one.clone(), two.clone()]));
+
+        std::fs::remove_file(&two.path).unwrap();
+        assert_eq!(to_save(&ready), Err(Phase::Gone));
+        std::fs::remove_file(&one.path).unwrap();
+        assert_eq!(to_save(&ready), Err(Phase::Gone));
+
+        // Nothing ready, nothing to save, and the phase stays as it is.
+        assert_eq!(to_save(&Phase::Choosing), Err(Phase::Choosing));
     }
 }

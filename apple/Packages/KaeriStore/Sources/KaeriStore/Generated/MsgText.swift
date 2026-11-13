@@ -365,6 +365,9 @@ extension ReadingMsg {
         case .readingFailedUnsupported(let kind): L.readingFailedUnsupported(kind: kind)
         case .readingFailedProtected: L.readingFailedProtected
         case .readingFailedDiskFull: L.readingFailedDiskFull
+        case .readingFailedWriteName(let path): L.readingFailedWriteName(path: path)
+        case .readingFailedWriteDenied(let path): L.readingFailedWriteDenied(path: path)
+        case .readingFailedWrite(let path): L.readingFailedWrite(path: path)
         case .readingFailedWebview(let version): L.readingFailedWebview(version: Int(version))
         case .readingFailedNeedsNewer(let world): L.readingFailedNeedsNewer(world: world)
         case .readingFailedOff: L.readingFailedOff

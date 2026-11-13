@@ -1503,6 +1503,10 @@ read-downloads-queued = { $n ->
 # @arg reason: text
 read-downloads-failed = { $chapter } couldn't download. { $reason }
 
+# Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows.
+# @arg reason: text
+read-download-not-started = The download didn't start. { $reason }
+
 # A series' line in Downloads: how many chapters are kept.
 # @arg n: int
 read-downloads-kept = { $n ->
@@ -1610,6 +1614,13 @@ send-ready = { $n ->
 
 # Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.
 send-share-again = Share again
+
+# A ready send whose files were cleared before they were shared or saved, in the Send to e-reader
+# sheet and in the send's row. Prepared files are kept for a day.
+send-files-gone = These files are gone. Prepared files are kept for a day.
+
+# Button on a send whose files are gone: prepares the same chapters for the same e-reader again.
+send-again = Send again
 
 # A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
 # @arg device: text

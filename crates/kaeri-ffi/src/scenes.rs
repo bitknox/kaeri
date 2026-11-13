@@ -569,7 +569,8 @@ impl FfiEngine {
                 .map_err(|e| FfiError::engine(Msg::StartFailed { reason: e.to_string() }))?;
         }
         let host = Adapter::new(host, SecretsMode::Host, &opened.config, &opened.paths)
-            .with_page_decoder(start.page_decoder.clone());
+            .with_page_decoder(start.page_decoder.clone())
+            .with_folder_access(start.folder_access.clone());
         let home = RemoteHome::of(&host, &opened.paths);
         let runtime = runtime()?;
         let started = runtime.block_on(async {

@@ -148,6 +148,25 @@ enum ReadSeriesWords {
 
 // MARK: - The page
 
+#if os(macOS)
+/// The title bar's band over a series page on the Mac: opaque, with a hairline under it, from
+/// the window's top to the foot of the toolbar.
+private struct SeriesTitleBand: View {
+    var body: some View {
+        GeometryReader { proxy in
+            Rectangle()
+                .fill(Palette.glassOverGround)
+                .overlay(alignment: .bottom) { Divider() }
+                .frame(height: proxy.safeAreaInsets.top)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .ignoresSafeArea(edges: .top)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+#endif
+
 struct SeriesPage: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
@@ -251,6 +270,12 @@ struct SeriesPage: View {
         }
         }
         .scrollIndicators(.automatic)
+        #if os(macOS)
+        // The toolbar over a page has no background of its own (MacShell), and the chapters
+        // scroll under it: the page draws the title bar's band, so Back and the title stay
+        // readable. The show page has none, as its art runs under the toolbar.
+        .overlay(alignment: .top) { SeriesTitleBand() }
+        #endif
         .onScrollGeometryChange(for: Bool.self) { geometry in
             geometry.contentOffset.y + geometry.contentInsets.top > (wide ? 80 : 56)
         } action: { _, gone in

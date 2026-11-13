@@ -923,6 +923,18 @@
     <value>[Ţĥéŕé'š ñö ŕööɱ ļéƒţ öñ ţĥîš ðéṽîçé. Ƒŕéé šöɱé šþàçé àñð ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Why a chapter could not be saved: the disk is full.</comment>
   </data>
+  <data name="ReadingFailedWriteName" xml:space="preserve">
+    <value>[Ţĥé šţöŕàĝé ðöéšñ'ţ ţàķé ţĥé ñàɱé {path}. Îţ ɱàý ƀé ţöö ļöñĝ.~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Why a chapter or a file for an e-reader could not be saved: the storage refused the name, because it is too long or has characters the storage doesn't allow. The path is the file's or the folder's.</comment>
+  </data>
+  <data name="ReadingFailedWriteDenied" xml:space="preserve">
+    <value>[Ķàéŕî îšñ'ţ àļļöŵéð ţö ŵŕîţé {path}. Çĥéçķ ţĥàţ ţĥé šţöŕàĝé îšñ'ţ ŕéàð-öñļý, ţĥéñ ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Why a chapter or a file for an e-reader could not be saved: the storage is read-only, or Kaeri isn't allowed to write there. The path is the file's or the folder's.</comment>
+  </data>
+  <data name="ReadingFailedWrite" xml:space="preserve">
+    <value>[Ķàéŕî çöüļðñ'ţ ŵŕîţé {path}. Ţŕý àĝàîñ.~~~~~~~~~~~]</value>
+    <comment>Why a chapter or a file for an e-reader could not be saved, for another reason the system gave. The path is the file's or the folder's.</comment>
+  </data>
   <data name="ReadingFailedWebview" xml:space="preserve">
     <value>[Ñöṽéļš ñééð à ñéŵéŕ šýšţéɱ ŴéƀṼîéŵ ţĥàñ ṽéŕšîöñ {version}. Ûþðàţé Åñðŕöîð Šýšţéɱ ŴéƀṼîéŵ àñð ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.</comment>
@@ -2920,6 +2932,10 @@
   <data name="WindowsReadSearchFiltersDimmed" xml:space="preserve">
     <value>[Ţĥé ƒîļţéŕš àþþļý ţö ÅñîĻîšţ'š ŕéšüļţš öñļý.~~~~~~~~~~~~~~]</value>
     <comment>Narrator's help on Search's filters while Your sources only is on.</comment>
+  </data>
+  <data name="WindowsReadSourcesUsePlugin" xml:space="preserve">
+    <value>[Ûšé ţĥîš þļüĝîñ~~~~~]</value>
+    <comment>Name of the switch that turns a book plugin on or off in the book sources.</comment>
   </data>
   <data name="SeriesReadAgainDoneWindows" xml:space="preserve">
     <value>[Ŕéàðîñĝ {title} àĝàîñ ƒŕöɱ ţĥé šţàŕţ~~~~~~~~~~]</value>
@@ -8194,6 +8210,10 @@
     <value>[Ļöàðîñĝ îɱàĝé {image}~~~~~~]</value>
     <comment>Under a strip image's number after four seconds.</comment>
   </data>
+  <data name="ReaderImageFailed" xml:space="preserve">
+    <value>[Çöüļðñ'ţ ļöàð~~~~]</value>
+    <comment>Under a strip image's number (Image 4) when it couldn't be loaded, above Try again.</comment>
+  </data>
   <data name="ReaderPageFailed" xml:space="preserve">
     <value>[Çöüļðñ'ţ ļöàð þàĝé {page}~~~~~~~]</value>
     <comment>Heading where a page could not be loaded.</comment>
@@ -8561,6 +8581,10 @@
   <data name="ReaderEndOfChapterNumber" xml:space="preserve">
     <value>[Éñð öƒ çĥàþţéŕ {chapter}~~~~~~]</value>
     <comment>Top line of the page between chapters. The chapter is its number, such as 12.</comment>
+  </data>
+  <data name="ReaderEndOfNamed" xml:space="preserve">
+    <value>[Éñð öƒ {name}~~~]</value>
+    <comment>Top line of the page between chapters when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own, such as Rooftop Lantern.</comment>
   </data>
   <data name="ReaderEndFacts" xml:space="preserve">
     <value>[Çĥàþţéŕ {chapter} · {facts}~~~~~~]</value>
@@ -10520,6 +10544,10 @@
     <value>[{chapter} çöüļðñ'ţ ðöŵñļöàð. {reason}~~~~~~~~]</value>
     <comment>A series' line in Downloads when a chapter failed, with the reason.</comment>
   </data>
+  <data name="ReadDownloadNotStarted" xml:space="preserve">
+    <value>[Ţĥé ðöŵñļöàð ðîðñ'ţ šţàŕţ. {reason}~~~~~~~~~]</value>
+    <comment>Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows.</comment>
+  </data>
   <data name="ReadDownloadsKept_one" xml:space="preserve">
     <value>[{n} çĥàþţéŕ~~~~]</value>
     <comment>A series' line in Downloads: how many chapters are kept.</comment>
@@ -10639,6 +10667,14 @@
   <data name="SendShareAgain" xml:space="preserve">
     <value>[Šĥàŕé àĝàîñ~~~~]</value>
     <comment>Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.</comment>
+  </data>
+  <data name="SendFilesGone" xml:space="preserve">
+    <value>[Ţĥéšé ƒîļéš àŕé ĝöñé. Þŕéþàŕéð ƒîļéš àŕé ķéþţ ƒöŕ à ðàý.~~~~~~~~~~~~~~~~~]</value>
+    <comment>A ready send whose files were cleared before they were shared or saved, in the Send to e-reader sheet and in the send's row. Prepared files are kept for a day.</comment>
+  </data>
+  <data name="SendAgain" xml:space="preserve">
+    <value>[Šéñð àĝàîñ~~~]</value>
+    <comment>Button on a send whose files are gone: prepares the same chapters for the same e-reader again.</comment>
   </data>
   <data name="SendBanner" xml:space="preserve">
     <value>[Šéñðîñĝ ţö {device}~~~~~]</value>
@@ -12759,6 +12795,26 @@
   <data name="BookFolderChooseOther" xml:space="preserve">
     <value>[Çĥööšé àñöţĥéŕ ƒöļðéŕ~~~~~~~]</value>
     <comment>Primary action after an empty folder.</comment>
+  </data>
+  <data name="BookFolderAlready" xml:space="preserve">
+    <value>[{folder} îš àļŕéàðý îñ ýöüŕ šöüŕçéš~~~~~~~~~]</value>
+    <comment>Folder result title when the picked folder is already a source. It was scanned again.</comment>
+  </data>
+  <data name="BookFolderAlreadyLine_one" xml:space="preserve">
+    <value>[Ķàéŕî ļööķéð ţĥŕöüĝĥ îţ àĝàîñ àñð ƒöüñð öñé šéŕîéš. Îţ šţàýš àš îţ îš.~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under it: what the new scan found. Closing the sheet keeps the folder.</comment>
+  </data>
+  <data name="BookFolderAlreadyLine_other" xml:space="preserve">
+    <value>[Ķàéŕî ļööķéð ţĥŕöüĝĥ îţ àĝàîñ àñð ƒöüñð {series} šéŕîéš. Îţ šţàýš àš îţ îš.~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under it: what the new scan found. Closing the sheet keeps the folder.</comment>
+  </data>
+  <data name="BookFolderUnreadable" xml:space="preserve">
+    <value>[Çöüļðñ'ţ ŕéàð {folder}~~~~~~]</value>
+    <comment>Title when a folder could not be read: the look through it could not start, or stopped.</comment>
+  </data>
+  <data name="BookFolderUnreadableLine" xml:space="preserve">
+    <value>[Îţ ɱàý ĥàṽé ɱöṽéð, öŕ Ķàéŕî ñö ļöñĝéŕ ĥàš àççéšš ţö îţ.~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under it.</comment>
   </data>
   <data name="StoreJoinTitle" xml:space="preserve">
     <value>[Ĵöîñ à þļüĝîñ šţöŕé~~~~~~]</value>

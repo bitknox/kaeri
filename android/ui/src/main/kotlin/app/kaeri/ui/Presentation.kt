@@ -189,7 +189,7 @@ fun Entry.foldedEpisodes(rows: List<EpisodeRow>, columns: Int = 1): List<Episode
 
 /** The folded episodes' row: "Episodes 1 to 5 watched". */
 fun watchedRangeWords(context: Context, folded: List<EpisodeRow>): String =
-    Strings.titleWatchedRange(context, folded.first().number.toInt(), folded.last().number.toInt())
+    Strings.titleWatchedRange(context, app.kaeri.store.episodeFloor(folded.first().number), app.kaeri.store.episodeFloor(folded.last().number))
 
 /**
  * A title's seasons, and what else it has: films, OVAs and specials.

@@ -37,6 +37,41 @@ struct SendModelTests {
         #expect(model.send(first!)?.isRunning == true)
     }
 
+    /// The engine clears ready files after a day: Share then says they are gone, offers Send
+    /// again, and nothing is counted as sent.
+    @Test func shareChecksTheFilesAreStillThere() {
+        let model = SendModel()
+        var sent: [Command] = []
+        model.command = { sent.append($0) }
+        let id = model.begin(work: "w", chapters: ["1", "2"], target: kobo(), novel: false)!
+        model.apply(.exportProgress(job: 4, done: 0, total: 10, chaptersDone: 0, chapters: 2))
+        let files = [
+            ExportFile(path: "/sends/one.cbz", name: "one.cbz", bytes: 10, part: nil),
+            ExportFile(path: "/sends/two.cbz", name: "two.cbz", bytes: 10, part: nil),
+        ]
+        model.apply(.exportReady(job: 4, files: files))
+
+        #expect(model.shareable(id) { _ in true }?.map(\.path) == ["/sends/one.cbz", "/sends/two.cbz"])
+        #expect(model.shareable(id) { $0 != "/sends/two.cbz" } == nil)
+        #expect(model.send(id)?.phase == .gone)
+
+        let before = sent.count
+        model.shared(id)
+        #expect(sent.count == before, "files that are gone are never counted as sent")
+
+        let again = model.sendAgain(id)
+        #expect(again != nil)
+        #expect(model.send(id) == nil)
+        #expect(model.send(again!)?.isRunning == true)
+        guard case .reading(.prepare(let work, .chapters(let ids), let target, _))? = sent.last else {
+            Issue.record("Send again did not ask for the files")
+            return
+        }
+        #expect(work == "w")
+        #expect(ids == ["1", "2"])
+        #expect(target == "kobo")
+    }
+
     @Test func theEngineKeepsTheDefaultEReader() {
         let model = SendModel()
         var sent: [Command] = []

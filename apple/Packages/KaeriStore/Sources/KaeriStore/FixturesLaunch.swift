@@ -231,10 +231,12 @@ extension AppStore {
 
     /// The launch arguments that hold answers back, as a slow network gives them, for a motion
     /// check of what a screen does meanwhile: `-KaeriDetailDelay 600` for each title's page and
-    /// what the services say of it, `-KaeriEpisodesDelay 600` for each episode table. In
-    /// milliseconds; the dev harness's `--detail-delay` and `--episodes-delay`.
+    /// what the services say of it, `-KaeriEpisodesDelay 600` for each episode table,
+    /// `-KaeriListDelay 600` for Home, the calendar, Seasonal and the Library. In milliseconds;
+    /// the dev harness's `--detail-delay`, `--episodes-delay` and `--list-delay`.
     public static let detailDelayArgument = "-KaeriDetailDelay"
     public static let episodesDelayArgument = "-KaeriEpisodesDelay"
+    public static let listDelayArgument = "-KaeriListDelay"
 
     /// Hold back what `arguments` ask to.
     public func applyDelayArguments(_ arguments: [String] = ProcessInfo.processInfo.arguments) {
@@ -246,6 +248,7 @@ extension AppStore {
         }
         detailDelay = delay(Self.detailDelayArgument)
         episodesDelay = delay(Self.episodesDelayArgument)
+        listDelay = delay(Self.listDelayArgument)
     }
 }
 #endif

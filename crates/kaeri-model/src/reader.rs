@@ -678,7 +678,7 @@ pub enum WritingMode {
 pub struct NovelOpenView {
     pub session: u64,
     pub chapter: ChapterId,
-    /// The scheme URL of the first document: `kaeri-book://<session>/<path>`, or Android's
+    /// The scheme URL of the first document: `kaeri-book://s<session>/<path>`, or Android's
     /// asset-loader address.
     pub entry: String,
     pub writing_mode: WritingMode,
@@ -923,13 +923,17 @@ pub enum ReaderCommand {
         page: u32,
         path: String,
     },
-    /// A pinned page file is missing: it is made again.
+    /// A pinned page file is missing, or its page never came: it is made again. `chapter` is
+    /// the open chapter, or in a strip the chapter it flowed on from and keeps above, whose
+    /// pages stay asked for by its id until another chapter opens; its [`ReaderEvent::PageReady`]
+    /// and [`ReaderEvent::PageFailed`] name that chapter.
     NeedPage {
         session: u64,
         chapter: ChapterId,
         page: u32,
     },
-    /// Try a failed page, or a failed chapter with no page, again.
+    /// Try a failed page, or a failed chapter with no page, again. A page's `chapter` may be
+    /// the one a strip keeps above, as for [`ReaderCommand::NeedPage`].
     Retry {
         session: u64,
         chapter: ChapterId,
@@ -1018,7 +1022,8 @@ pub enum ReaderEvent {
         leaves: Vec<Leaf>,
     },
     /// A page landed in the cache: the current one first, then the next once the current is
-    /// painted.
+    /// painted. `chapter` is the open chapter's, or the one a strip keeps above when the app
+    /// asked for its page again.
     PageReady {
         session: u64,
         chapter: ChapterId,

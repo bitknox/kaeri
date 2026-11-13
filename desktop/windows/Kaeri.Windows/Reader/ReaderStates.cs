@@ -170,7 +170,7 @@ sealed class EndPageView : Grid
         var view = reader.View;
         var finished = view?.Chapter;
         var chapter = finished?.Number is { Length: > 0 } number ? T.ReaderEndOfChapterNumber(number) : T.WindowsReaderEndOfChapter(finished?.Label ?? "");
-        var next = reader.End?.Next ?? view?.Next;
+        var next = reader.EndNext;
         var demo = view?.DemoCredit;
         var novel = reader.Medium == Medium.Novel;
 
@@ -197,7 +197,21 @@ sealed class EndPageView : Grid
         words.Children.Add(read);
         words.Children.Add(owner.ServerLine.Take());
 
-        if (next is not null)
+        if (next is not null && reader.FlowFailed is { } failed && failed.Chapter.Id == next.Id)
+        {
+            // A strip flowing on could not open the next chapter: it says so here, at the join,
+            // and tries that chapter again.
+            var block = new StackPanel { Spacing = 6, Margin = new Thickness(0, 22, 0, 0) };
+            block.Children.Add(ReaderText.Line(T.ReaderEndNext, 13, palette.Haze, strong: true));
+            var label = next.Number is { Length: > 0 } n ? T.ReaderChapterLine(n) : next.Label;
+            block.Children.Add(ReaderText.Line(T.WindowsReaderChapterFailed(label), 20, palette.Silk, strong: true));
+            block.Children.Add(ReaderText.Line(failed.Failure.Words(), 15, palette.Haze));
+            words.Children.Add(block);
+            var again = ReaderButtons.Amber(T.ReaderTryAgain, palette, (_, _) => reader.RetryFlow());
+            again.Margin = new Thickness(0, 32, 0, 0);
+            words.Children.Add(again);
+        }
+        else if (next is not null)
         {
             var block = new StackPanel { Spacing = 4, Margin = new Thickness(0, 22, 0, 0) };
             block.Children.Add(ReaderText.Line(T.ReaderEndNext, 13, palette.Haze, strong: true));
@@ -246,7 +260,7 @@ sealed class EndPageView : Grid
         }
         else if (reader.End?.Why is { } why)
         {
-            var label = finished?.Label ?? "";
+            var label = Following(view);
             var block = new StackPanel { Spacing = 6, Margin = new Thickness(0, 22, 0, 0) };
             var title = why switch
             {
@@ -282,6 +296,20 @@ sealed class EndPageView : Grid
             HorizontalScrollMode = ScrollMode.Disabled,
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
         });
+    }
+
+    /// <summary>
+    /// The chapter a heading with no next chapter names: the next one listed, which offline is
+    /// one only a source has; past the last one listed, the next whole number.
+    /// </summary>
+    internal static string Following(ReaderView? view)
+    {
+        if (view?.Next is { } next)
+            return next.Number is { Length: > 0 } n ? T.ReaderChapterLine(n) : next.Label;
+        if (view?.Chapter.Number is { } number
+            && double.TryParse(number, global::System.Globalization.NumberStyles.Float, global::System.Globalization.CultureInfo.InvariantCulture, out var at))
+            return T.ReaderChapterLine(((long)Math.Floor(at) + 1).ToString(global::System.Globalization.CultureInfo.InvariantCulture));
+        return "";
     }
 
     /// <summary>

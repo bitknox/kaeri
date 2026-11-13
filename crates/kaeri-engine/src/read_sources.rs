@@ -140,6 +140,13 @@ impl FolderSource {
     }
 }
 
+/// Where a book folder is read from: its path, or the platform's reference for a folder the
+/// host opens for Kaeri. `None` when it has neither that can be read.
+fn reach(path: Option<&str>, tree_uri: Option<&str>) -> Option<PathBuf> {
+    path.map(PathBuf::from)
+        .or_else(|| tree_uri.map(PathBuf::from).filter(|p| kaeri_books::tree::is_tree(p)))
+}
+
 /// `10500` as `10.5`.
 fn milli_label(milli: i64) -> String {
     let (whole, part) = (milli / 1000, milli % 1000);
@@ -237,7 +244,8 @@ impl BookSource for FolderSource {
         chapter: &str,
     ) -> Result<ChapterContent, ProviderError> {
         let path = PathBuf::from(chapter);
-        if !path.exists() {
+        // A file in a folder the platform opens is there when the platform says so.
+        if kaeri_books::tree::stat(&path).is_err() {
             return Err(ProviderError::NotFound);
         }
         Ok(ChapterContent::Book(BookFile { path, temporary: false }))
@@ -291,6 +299,11 @@ pub struct BookSources {
     pub feed: crate::export::feed::Feed,
     /// Reading progress waiting for book servers: see [`crate::write_back`].
     pub write_back: crate::write_back::WriteBack,
+    /// The host's way into folders the platform opens rather than by path, while one is
+    /// offered: see [`BookSources::open_folders_through`].
+    folder_access: Arc<Mutex<Option<kaeri_books::tree::Registered>>>,
+    /// The book plugins as last taken in, asked whether a load is still under way.
+    plugins: Arc<RwLock<Option<BookPlugins>>>,
 }
 
 impl std::fmt::Debug for BookSources {
@@ -332,6 +345,8 @@ impl BookSources {
             #[cfg(feature = "opds-feed")]
             feed: crate::export::feed::Feed::default(),
             write_back: crate::write_back::WriteBack::default(),
+            folder_access: Arc::default(),
+            plugins: Arc::default(),
         };
         this.registry.put(Arc::new(FolderSource::new(this.store.clone())));
         this.restore();
@@ -385,6 +400,9 @@ impl BookSources {
     /// Put plugins that have loaded into the registry, leaving the rest as it is; the ids of
     /// the plugins loaded.
     pub(crate) fn take_in_plugins(&self, plugins: &BookPlugins) -> HashSet<String> {
+        if let Ok(mut seen) = self.plugins.write() {
+            seen.get_or_insert_with(|| plugins.clone());
+        }
         let here: HashSet<String> = plugins.ids().into_iter().collect();
         for id in &here {
             if let Some(plugin) = plugins.get(id) {
@@ -618,28 +636,40 @@ impl BookSources {
     // -----------------------------------------------------------------------------------------
     // Folders
 
-    fn add_folder(&self, folder: &FolderRef, now: i64) -> Option<String> {
+    /// Read the folders the platform opens for Kaeri, rather than by path, through `access`:
+    /// the host's, offered at launch. `None` leaves such folders unread, marked not found.
+    pub fn open_folders_through(&self, access: Option<Arc<dyn kaeri_books::tree::Tree>>) {
+        *self.folder_access.lock().unwrap_or_else(|e| e.into_inner()) =
+            access.map(kaeri_books::tree::register);
+    }
+
+    /// Add a picked folder, or take a folder already in Your sources as it is: its id, and
+    /// whether it was there already. A folder waiting out its removal's undo comes back as new,
+    /// since it had already left the list.
+    fn add_folder(&self, folder: &FolderRef, now: i64) -> Option<(String, bool)> {
         let basis = folder.path.as_deref().or(folder.tree_uri.as_deref())?;
         let id = short_id(basis);
+        let leaving = self.removed.read().unwrap_or_else(|e| e.into_inner()).contains(&id);
+        let before = self.store.book_folders().ok()?.into_iter().find(|f| f.id == id);
         let name = folder.name.clone().or_else(|| {
             folder.path.as_deref().and_then(|p| {
                 std::path::Path::new(p).file_name().map(|n| n.to_string_lossy().into_owned())
             })
         });
-        let usable = folder.path.is_some();
+        let usable = reach(folder.path.as_deref(), folder.tree_uri.as_deref()).is_some();
         let row = Folder {
             id: id.clone(),
             path: folder.path.clone(),
             tree_uri: folder.tree_uri.clone(),
-            bookmark: folder.bookmark.clone(),
-            name,
-            added_at: now,
-            last_scan: None,
+            bookmark: folder.bookmark.clone().or_else(|| before.as_ref()?.bookmark.clone()),
+            name: name.or_else(|| before.as_ref()?.name.clone()),
+            added_at: before.as_ref().map_or(now, |f| f.added_at),
+            last_scan: before.as_ref().and_then(|f| f.last_scan),
             available: usable,
         };
         self.store.put_book_folder(&row).ok()?;
         self.removed.write().unwrap_or_else(|e| e.into_inner()).remove(&id);
-        Some(id)
+        Some((id, before.is_some() && !leaving))
     }
 
     /// Scan one folder on a blocking thread, telling `progress` what it has found.
@@ -649,7 +679,8 @@ impl BookSources {
         now: i64,
         progress: impl Fn() + Send + 'static,
     ) -> Option<kaeri_model::came_in::FolderReport> {
-        let Some(path) = folder.path.clone().map(PathBuf::from) else {
+        let Some(path) = reach(folder.path.as_deref(), folder.tree_uri.as_deref()) else {
+            tracing::info!("a book folder has no path and nothing opens it");
             let _ = self.store.set_book_folder_available(&folder.id, false);
             return None;
         };
@@ -874,12 +905,29 @@ pub fn command(
     match command {
         BookSourceCommand::Load => publish(),
         BookSourceCommand::AddFolder { folder } => {
-            let Some(id) = this.add_folder(&folder, now) else { return publish() };
+            let Some((id, already)) = this.add_folder(&folder, now) else {
+                // Nothing to keep it by, or it was not kept: said at once, so nothing waits.
+                let row = Folder {
+                    id: String::new(),
+                    path: folder.path.clone(),
+                    tree_uri: folder.tree_uri.clone(),
+                    bookmark: None,
+                    name: folder.name.clone(),
+                    added_at: now,
+                    last_scan: None,
+                    available: false,
+                };
+                let unread = added::folder_report(&row, &kaeri_books::library::Scan::default());
+                let _ = tx.send(Event::CameIn(kaeri_model::came_in::CameIn::Empty(
+                    kaeri_model::came_in::NothingCameIn::FolderUnreadable { folder: unread },
+                )));
+                return publish();
+            };
             publish();
-            rescan(this, Some(id), now, publish, tx, true);
+            rescan(this, Some(id), now, publish, tx, Some(already));
         }
         BookSourceCommand::Scan => {
-            rescan(this.clone(), None, now, publish.clone(), tx.clone(), false);
+            rescan(this.clone(), None, now, publish.clone(), tx.clone(), None);
             recheck(this, now, true, publish, tx);
         }
         BookSourceCommand::Recheck => recheck(this, now, true, publish, tx),
@@ -1061,7 +1109,9 @@ fn rescan(
     now: i64,
     publish: impl Fn() + Clone + Send + 'static,
     tx: Outbox,
-    report: bool,
+    // For a folder just picked, whether it was already a source: its report then comes in,
+    // and a folder that can't be read comes in as one, so the dialog never waits on it.
+    answer: Option<bool>,
 ) {
     tokio::spawn(async move {
         let folders: Vec<_> = this
@@ -1074,9 +1124,27 @@ fn rescan(
         let scanned = !folders.is_empty();
         for folder in folders {
             let tick = publish.clone();
+            // What is said when the scan can't start or stops: the folder, and nothing found.
+            let mut unread =
+                added::folder_report(&folder, &kaeri_books::library::Scan::default());
             let found = this.scan_folder(folder, now, tick).await;
-            if let (true, Some(found)) = (report, found) {
-                let _ = tx.send(Event::CameIn(added::folder_came_in(found)));
+            if let Some(already) = answer {
+                let came = match found {
+                    Some(mut found) => {
+                        found.already_added = already;
+                        added::folder_came_in(found)
+                    }
+                    None => {
+                        // A source picked again that can't be read stays a source.
+                        unread.already_added = already;
+                        kaeri_model::came_in::CameIn::Empty(
+                            kaeri_model::came_in::NothingCameIn::FolderUnreadable {
+                                folder: unread,
+                            },
+                        )
+                    }
+                };
+                let _ = tx.send(Event::CameIn(came));
             }
             publish();
         }
@@ -1529,7 +1597,8 @@ fn source_row(
         number.as_deref(),
     )
     .map(str::to_owned);
-    let pages = parts.iter().map(|p| p.page_count).sum::<Option<u32>>();
+    let pages =
+        crate::read_catalog::chapters::pages_of_parts(parts.iter().map(|p| p.page_count));
     let mut row = ChapterRow {
         id,
         label,
@@ -1553,6 +1622,7 @@ fn source_row(
         other_group: false,
         group_language: None,
         other_source: None,
+        on_device: false,
     };
     all.fill(arranged, app, &mut row);
     row
@@ -1812,7 +1882,14 @@ impl BookSources {
         let order = self.registry.ids();
         let mut held = refs;
         match wanted {
-            Some(wanted) if held.iter().any(|(source, _)| *source == wanted) => {
+            // The person's pick waits while its source is not installed or is switched off:
+            // the work reads from another edition until the source is back, and the pick is
+            // kept for then. While plugins are loading it holds, as its plugin may be on the
+            // way. An edition asked for by name is read from as it is.
+            Some(wanted)
+                if (edition.is_some() || self.may_be_available(&wanted))
+                    && held.iter().any(|(source, _)| *source == wanted) =>
+            {
                 held.retain(|(source, _)| *source == wanted);
             }
             // Never a source switched off, nor one whose chapter list came back empty: with
@@ -1842,6 +1919,23 @@ impl BookSources {
                 (!confirmed, fit.0, fit.1, position(source))
             })
             .map(|(held, _)| held)
+    }
+
+    /// Whether `source` can be asked: installed, and not switched off.
+    pub(crate) fn is_available(&self, source: &str) -> bool {
+        self.registry.get(source).is_some() && !self.registry.is_off(source)
+    }
+
+    /// Whether `source` may yet be asked: available, or not switched off while plugins are
+    /// still loading, when it may be one of them.
+    fn may_be_available(&self, source: &str) -> bool {
+        let arriving = self
+            .plugins
+            .read()
+            .ok()
+            .and_then(|p| p.as_ref().map(BookPlugins::is_arriving))
+            .unwrap_or(false);
+        self.is_available(source) || (arriving && !self.registry.is_off(source))
     }
 
     /// While plugins are still loading: the edition a work is held in from a source not in
@@ -2322,7 +2416,7 @@ impl BookSources {
         for (other, other_series) in
             self.store.book_refs_for_work(work.as_str()).unwrap_or_default()
         {
-            if other == source {
+            if other == source || !self.is_available(&other) {
                 continue;
             }
             let Some((list, _)) =
@@ -2474,7 +2568,10 @@ impl BookSources {
             rows.iter().map(|c| c.id.as_str().to_owned()).collect();
         let mut here = extras::Following::of(rows.iter().map(|c| (&c.id, c.title.as_deref())));
         let refs = self.store.book_refs_for_work(work.as_str()).unwrap_or_default();
-        for (other, series) in refs.into_iter().filter(|(s, _)| s != source) {
+        // A source not installed or switched off can't open what it listed, so its rows stay
+        // out.
+        let others = refs.into_iter().filter(|(s, _)| s != source && self.is_available(s));
+        for (other, series) in others {
             let Some((list, _)) =
                 crate::read_catalog::chapters::kept(&self.store, &other, &series)
             else {
@@ -2710,6 +2807,7 @@ mod filled_tests {
             other_group: false,
             group_language: None,
             other_source: from.map(str::to_owned),
+            on_device: false,
         }
     }
 

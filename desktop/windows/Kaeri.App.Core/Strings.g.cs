@@ -654,6 +654,15 @@ public static partial class T
     /// <summary>Why a chapter could not be saved: the disk is full.</summary>
     public static string ReadingFailedDiskFull => Get("ReadingFailedDiskFull");
 
+    /// <summary>Why a chapter or a file for an e-reader could not be saved: the storage refused the name, because it is too long or has characters the storage doesn't allow. The path is the file's or the folder's.</summary>
+    public static string ReadingFailedWriteName(string path) => Fill(Get("ReadingFailedWriteName"), ("path", path));
+
+    /// <summary>Why a chapter or a file for an e-reader could not be saved: the storage is read-only, or Kaeri isn't allowed to write there. The path is the file's or the folder's.</summary>
+    public static string ReadingFailedWriteDenied(string path) => Fill(Get("ReadingFailedWriteDenied"), ("path", path));
+
+    /// <summary>Why a chapter or a file for an e-reader could not be saved, for another reason the system gave. The path is the file's or the folder's.</summary>
+    public static string ReadingFailedWrite(string path) => Fill(Get("ReadingFailedWrite"), ("path", path));
+
     /// <summary>Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.</summary>
     public static string ReadingFailedWebview(long version) => Fill(Get("ReadingFailedWebview"), ("version", version.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -2057,6 +2066,9 @@ public static partial class T
 
     /// <summary>Narrator's help on Search's filters while Your sources only is on.</summary>
     public static string WindowsReadSearchFiltersDimmed => Get("WindowsReadSearchFiltersDimmed");
+
+    /// <summary>Name of the switch that turns a book plugin on or off in the book sources.</summary>
+    public static string WindowsReadSourcesUsePlugin => Get("WindowsReadSourcesUsePlugin");
 
     /// <summary>Notice after Read again from the start, with an Undo button beside it. The title is the series' name.</summary>
     public static string SeriesReadAgainDoneWindows(string title) => Fill(Get("SeriesReadAgainDoneWindows"), ("title", title));
@@ -5914,6 +5926,9 @@ public static partial class T
     /// <summary>Under a strip image's number after four seconds.</summary>
     public static string ReaderImageLoading(long image) => Fill(Get("ReaderImageLoading"), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>Under a strip image's number (Image 4) when it couldn't be loaded, above Try again.</summary>
+    public static string ReaderImageFailed => Get("ReaderImageFailed");
+
     /// <summary>Heading where a page could not be loaded.</summary>
     public static string ReaderPageFailed(long page) => Fill(Get("ReaderPageFailed"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -6186,6 +6201,9 @@ public static partial class T
 
     /// <summary>Top line of the page between chapters. The chapter is its number, such as 12.</summary>
     public static string ReaderEndOfChapterNumber(string chapter) => Fill(Get("ReaderEndOfChapterNumber"), ("chapter", chapter));
+
+    /// <summary>Top line of the page between chapters when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own, such as Rooftop Lantern.</summary>
+    public static string ReaderEndOfNamed(string name) => Fill(Get("ReaderEndOfNamed"), ("name", name));
 
     /// <summary>The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.</summary>
     public static string ReaderEndFacts(string chapter, string facts) => Fill(Get("ReaderEndFacts"), ("chapter", chapter), ("facts", facts));
@@ -7559,6 +7577,9 @@ public static partial class T
     /// <summary>A series' line in Downloads when a chapter failed, with the reason.</summary>
     public static string ReadDownloadsFailed(string chapter, string reason) => Fill(Get("ReadDownloadsFailed"), ("chapter", chapter), ("reason", reason));
 
+    /// <summary>Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows.</summary>
+    public static string ReadDownloadNotStarted(string reason) => Fill(Get("ReadDownloadNotStarted"), ("reason", reason));
+
     /// <summary>A series' line in Downloads: how many chapters are kept.</summary>
     public static string ReadDownloadsKept(long n) => Fill(GetPlural("ReadDownloadsKept", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -7639,6 +7660,12 @@ public static partial class T
 
     /// <summary>Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.</summary>
     public static string SendShareAgain => Get("SendShareAgain");
+
+    /// <summary>A ready send whose files were cleared before they were shared or saved, in the Send to e-reader sheet and in the send's row. Prepared files are kept for a day.</summary>
+    public static string SendFilesGone => Get("SendFilesGone");
+
+    /// <summary>Button on a send whose files are gone: prepares the same chapters for the same e-reader again.</summary>
+    public static string SendAgain => Get("SendAgain");
 
     /// <summary>A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.</summary>
     public static string SendBanner(string device) => Fill(Get("SendBanner"), ("device", device));
@@ -9178,6 +9205,18 @@ public static partial class T
 
     /// <summary>Primary action after an empty folder.</summary>
     public static string BookFolderChooseOther => Get("BookFolderChooseOther");
+
+    /// <summary>Folder result title when the picked folder is already a source. It was scanned again.</summary>
+    public static string BookFolderAlready(string folder) => Fill(Get("BookFolderAlready"), ("folder", folder));
+
+    /// <summary>Line under it: what the new scan found. Closing the sheet keeps the folder.</summary>
+    public static string BookFolderAlreadyLine(long series) => Fill(GetPlural("BookFolderAlreadyLine", series), ("series", series.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Title when a folder could not be read: the look through it could not start, or stopped.</summary>
+    public static string BookFolderUnreadable(string folder) => Fill(Get("BookFolderUnreadable"), ("folder", folder));
+
+    /// <summary>Line under it.</summary>
+    public static string BookFolderUnreadableLine => Get("BookFolderUnreadableLine");
 
     /// <summary>Title of the Join a plugin store sheet.</summary>
     public static string StoreJoinTitle => Get("StoreJoinTitle");
@@ -12199,6 +12238,9 @@ public static partial class T
         ["ReadingFailedUnsupported"] = "Kaeri can't read {kind} files.",
         ["ReadingFailedProtected"] = "This book is copy-protected, so Kaeri can't open it.",
         ["ReadingFailedDiskFull"] = "There's no room left on this device. Free some space and try again.",
+        ["ReadingFailedWriteName"] = "The storage doesn't take the name {path}. It may be too long.",
+        ["ReadingFailedWriteDenied"] = "Kaeri isn't allowed to write {path}. Check that the storage isn't read-only, then try again.",
+        ["ReadingFailedWrite"] = "Kaeri couldn't write {path}. Try again.",
         ["ReadingFailedWebview"] = "Novels need a newer system WebView than version {version}. Update Android System WebView and try again.",
         ["ReadingFailedNeedsNewer"] = "This plugin needs a newer Kaeri ({world}). Update Kaeri to use it.",
         ["ReadingFailedOff"] = "Reading isn't available in this version of Kaeri.",
@@ -12700,6 +12742,7 @@ public static partial class T
         ["WindowsReadSearchSourceTimeoutSaid_one"] = "No answer in {seconds} second.",
         ["WindowsReadSearchSourceTimeoutSaid_other"] = "No answer in {seconds} seconds.",
         ["WindowsReadSearchFiltersDimmed"] = "The filters apply to AniList's results only.",
+        ["WindowsReadSourcesUsePlugin"] = "Use this plugin",
         ["SeriesReadAgainDoneWindows"] = "Reading {title} again from the start",
         ["SendSaveFilesWindows"] = "Save files",
         ["SendSavedWindows_one"] = "Saved the file",
@@ -14024,6 +14067,7 @@ public static partial class T
         ["ReaderPagePlate"] = "Page {page}",
         ["ReaderImagePlate"] = "Image {image}",
         ["ReaderImageLoading"] = "Loading image {image}",
+        ["ReaderImageFailed"] = "Couldn't load",
         ["ReaderPageFailed"] = "Couldn't load page {page}",
         ["ReaderTryAgain"] = "Try again",
         ["ReaderClose"] = "Close",
@@ -14116,6 +14160,7 @@ public static partial class T
         ["ReaderGapSmall"] = "Small",
         ["ReaderLookSystem"] = "System",
         ["ReaderEndOfChapterNumber"] = "End of chapter {chapter}",
+        ["ReaderEndOfNamed"] = "End of {name}",
         ["ReaderEndFacts"] = "Chapter {chapter} · {facts}",
         ["ReaderEndPages_one"] = "One page",
         ["ReaderEndPages_other"] = "{count} pages",
@@ -14606,6 +14651,7 @@ public static partial class T
         ["ReadDownloadsQueued_one"] = "{n} chapter queued",
         ["ReadDownloadsQueued_other"] = "{n} chapters queued",
         ["ReadDownloadsFailed"] = "{chapter} couldn't download. {reason}",
+        ["ReadDownloadNotStarted"] = "The download didn't start. {reason}",
         ["ReadDownloadsKept_one"] = "{n} chapter",
         ["ReadDownloadsKept_other"] = "{n} chapters",
         ["ReadDownloadsRead"] = "{n} read",
@@ -14636,6 +14682,8 @@ public static partial class T
         ["SendReady_one"] = "One file is ready.",
         ["SendReady_other"] = "{n} files are ready.",
         ["SendShareAgain"] = "Share again",
+        ["SendFilesGone"] = "These files are gone. Prepared files are kept for a day.",
+        ["SendAgain"] = "Send again",
         ["SendBanner"] = "Sending to {device}",
         ["SendFormatFixedEpub"] = "Fixed-layout EPUB",
         ["SendFormatKepub"] = "KEPUB",
@@ -15166,6 +15214,11 @@ public static partial class T
         ["BookFolderEmptyLine_one"] = "It holds one file, which isn't CBZ, CBR, EPUB, PDF or an image.",
         ["BookFolderEmptyLine_other"] = "It holds {files} files, none of them CBZ, CBR, EPUB, PDF or images.",
         ["BookFolderChooseOther"] = "Choose another folder",
+        ["BookFolderAlready"] = "{folder} is already in your sources",
+        ["BookFolderAlreadyLine_one"] = "Kaeri looked through it again and found one series. It stays as it is.",
+        ["BookFolderAlreadyLine_other"] = "Kaeri looked through it again and found {series} series. It stays as it is.",
+        ["BookFolderUnreadable"] = "Couldn't read {folder}",
+        ["BookFolderUnreadableLine"] = "It may have moved, or Kaeri no longer has access to it.",
         ["StoreJoinTitle"] = "Join a plugin store",
         ["StoreInviteField"] = "Invite",
         ["StoreJoinedTitle"] = "Joined {store}",

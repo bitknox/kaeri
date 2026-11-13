@@ -4,9 +4,11 @@
 use std::fs;
 use std::ops::ControlFlow;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use crate::archive::{Archive, read_capped};
 use crate::comicinfo::{self, ComicInfo, ComicPageType};
+use crate::tree::Tree;
 use crate::{BookError, Format, Limits, Result, mime, natural, path};
 
 /// One page of an image book.
@@ -237,10 +239,15 @@ struct Folder {
     dir: PathBuf,
     files: Vec<(String, u64)>,
     max_entry_bytes: u64,
+    /// For a folder in a platform's tree, the tree and each file's reference in it.
+    tree: Option<(Arc<dyn Tree>, Vec<String>)>,
 }
 
 impl Folder {
     fn scan(dir: &Path, limits: &Limits) -> Result<Self> {
+        if let Some(tree) = crate::tree::claiming(dir) {
+            return Self::scan_tree(dir, tree, limits);
+        }
         let mut files = Vec::new();
         for entry in fs::read_dir(dir)? {
             let entry = entry?;
@@ -265,7 +272,40 @@ impl Folder {
             }
             files.push((name, meta.len()));
         }
-        Ok(Self { dir: dir.to_owned(), files, max_entry_bytes: limits.max_entry_bytes })
+        Ok(Self {
+            dir: dir.to_owned(),
+            files,
+            max_entry_bytes: limits.max_entry_bytes,
+            tree: None,
+        })
+    }
+
+    fn scan_tree(dir: &Path, tree: Arc<dyn Tree>, limits: &Limits) -> Result<Self> {
+        let reference = dir.to_string_lossy();
+        let mut files = Vec::new();
+        let mut refs = Vec::new();
+        for entry in tree.entries(&reference)? {
+            if files.len() >= limits.max_entries {
+                return Err(BookError::TooLarge {
+                    what: "entry count",
+                    limit: limits.max_entries as u64,
+                });
+            }
+            if entry.folder
+                || path::entry_name(&entry.name, limits.max_name_bytes, 1).as_deref()
+                    != Some(entry.name.as_str())
+            {
+                continue;
+            }
+            files.push((entry.name, entry.size));
+            refs.push(entry.reference);
+        }
+        Ok(Self {
+            dir: dir.to_owned(),
+            files,
+            max_entry_bytes: limits.max_entry_bytes,
+            tree: Some((tree, refs)),
+        })
     }
 
     fn read(&self, index: usize, cap: u64) -> Result<Vec<u8>> {
@@ -273,6 +313,9 @@ impl Folder {
         let cap = cap.min(self.max_entry_bytes);
         if *size > cap {
             return Err(BookError::TooLarge { what: "entry size", limit: cap });
+        }
+        if let Some((tree, refs)) = &self.tree {
+            return read_capped(tree.open(&refs[index])?, *size, cap);
         }
         let path = self.dir.join(name);
         // Checked again at read time: the file could have been swapped for a link since the scan.

@@ -1180,8 +1180,66 @@ mod tests {
         }
     }
 
+    /// The source [`followed`] reads from, as [`install_shelf`] installs it: it is never asked.
+    struct Here(kaeri_core::books::BookSourceManifest);
+
+    #[async_trait::async_trait]
+    impl kaeri_core::traits::BookSource for Here {
+        fn manifest(&self) -> &kaeri_core::books::BookSourceManifest {
+            &self.0
+        }
+
+        async fn search(
+            &self,
+            _: &str,
+            _: &kaeri_core::books::BookHints,
+        ) -> Result<Vec<kaeri_core::books::SeriesHit>, kaeri_core::ProviderError> {
+            Ok(Vec::new())
+        }
+
+        async fn series(
+            &self,
+            id: &str,
+            _: &kaeri_core::books::BookHints,
+        ) -> Result<kaeri_core::books::SeriesDetail, kaeri_core::ProviderError> {
+            Ok(kaeri_core::books::SeriesDetail::new(id, id))
+        }
+
+        async fn chapters(
+            &self,
+            _: &str,
+            _: &kaeri_core::books::BookHints,
+        ) -> Result<Vec<SourceChapter>, kaeri_core::ProviderError> {
+            Err(kaeri_core::ProviderError::NotFound)
+        }
+
+        async fn content(
+            &self,
+            _: &str,
+            _: &str,
+        ) -> Result<kaeri_core::books::ChapterContent, kaeri_core::ProviderError> {
+            Err(kaeri_core::ProviderError::NotFound)
+        }
+    }
+
+    /// Installs the source [`followed`] reads from, so the person's pick of it holds once the
+    /// plugin load is over.
+    fn install_shelf(kit: &Kit) {
+        let manifest = kaeri_core::books::BookSourceManifest {
+            id: "shelf".into(),
+            name: "Shelf".into(),
+            version: "1".into(),
+            kind: kaeri_core::books::BookSourceKind::Native,
+            media: vec![kaeri_core::media::Medium::Manga],
+            languages: vec!["en".into()],
+            allowed_hosts: Vec::new(),
+            capabilities: Vec::new(),
+        };
+        kit.sources.registry.put(Arc::new(Here(manifest)));
+    }
+
     /// A series on Reading whose source listed chapters 1 to 12 a week ago, and chapter 13,
-    /// "The Far Shore", an hour ago.
+    /// "The Far Shore", an hour ago. The source itself is not installed; see [`install_shelf`].
     fn followed(kit: &Kit) {
         let store = &kit.store;
         let meta = r#"{"book":{"id":900301,"title":{"romaji":"The Lantern Ferry"}}}"#;
@@ -1279,6 +1337,7 @@ mod tests {
     fn someone_caught_up_is_offered_the_new_chapter_with_its_words() {
         let dir = tempfile::tempdir().unwrap();
         let kit = kit(dir.path());
+        install_shelf(&kit);
         followed(&kit);
         kit.store.adopt_read(WORK, "12", None, NOW - 2 * DAY).unwrap();
 

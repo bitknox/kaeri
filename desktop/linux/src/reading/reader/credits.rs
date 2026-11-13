@@ -423,7 +423,8 @@ impl Reader {
         });
         self.scroll_to_start();
         self.credit_fade.set(&self.credit_line, false);
-        if let Some((_, capsule)) = &self.state.borrow().demo {
+        let capsule = self.state.borrow().demo.as_ref().map(|(_, capsule)| capsule.clone());
+        if let Some(capsule) = capsule {
             capsule.set_visible(false);
         }
         self.credit_place(i);

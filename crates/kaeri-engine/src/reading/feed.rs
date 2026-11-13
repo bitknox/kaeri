@@ -191,6 +191,8 @@ pub struct Feed {
     wanted: mpsc::UnboundedSender<usize>,
     /// Set once the reader left the chapter for another: see [`Feed::leave`].
     left: tokio::sync::watch::Sender<bool>,
+    /// Set once a strip flowed on from the chapter and keeps it above: see [`Feed::aside`].
+    aside: std::sync::atomic::AtomicBool,
 }
 
 /// What a feed's fetcher is lent: the source, its chapter, and who hears of each page. It holds
@@ -237,20 +239,6 @@ impl Feed {
         self.pages.lock().is_ok_and(|p| p.iter().all(|p| !matches!(p, FeedPage::Coming)))
     }
 
-    /// Fetch a failed page again, answering on `out` once it lands. `false` when it had not
-    /// failed.
-    pub fn retry(&self, index: usize, out: &Outbox) -> bool {
-        let Ok(mut pages) = self.pages.lock() else { return false };
-        match pages.get_mut(index) {
-            Some(page @ FeedPage::Failed(_)) => {
-                *page = FeedPage::Coming;
-                drop(pages);
-                self.again.send((index, out.clone())).is_ok()
-            }
-            _ => false,
-        }
-    }
-
     /// The reader waits on page `index`: it is fetched next, if it is still to come.
     pub fn want(&self, index: usize) {
         if matches!(self.page(index), Some(FeedPage::Coming)) {
@@ -263,6 +251,28 @@ impl Feed {
     /// hold the feed a while longer, until the other chapter reaches it.
     pub fn leave(&self) {
         self.left.send_replace(true);
+    }
+
+    /// A strip flowed on from the chapter and keeps it above the one opening: the pages not
+    /// fetched yet are no longer fetched in turn, so they never hold up the chapter opening,
+    /// but a page asked for with [`Feed::ask`] still is.
+    pub fn aside(&self) {
+        self.aside.store(true, std::sync::atomic::Ordering::Relaxed);
+    }
+
+    /// Page `index` is asked for again: one that failed, or one still to come that a chapter
+    /// set aside never fetched, is fetched now and told to `out` once it lands. False for a page
+    /// already landed.
+    pub fn ask(&self, index: usize, out: &Outbox) -> bool {
+        let Ok(mut pages) = self.pages.lock() else { return false };
+        match pages.get_mut(index) {
+            Some(page @ (FeedPage::Failed(_) | FeedPage::Coming)) => {
+                *page = FeedPage::Coming;
+                drop(pages);
+                self.again.send((index, out.clone())).is_ok()
+            }
+            _ => false,
+        }
     }
 
     fn set(&self, index: usize, page: FeedPage) {
@@ -289,6 +299,7 @@ impl Feed {
             again,
             wanted,
             left: tokio::sync::watch::Sender::new(false),
+            aside: std::sync::atomic::AtomicBool::new(false),
         }
     }
 
@@ -405,7 +416,9 @@ pub(crate) async fn start(
     let (wanted, waited) = mpsc::unbounded_channel();
     let pages = Mutex::new(pages);
     let (left, leaving) = tokio::sync::watch::channel(false);
-    let feed = Arc::new(Feed { chapter, dir, pages, credits, parts, again, wanted, left });
+    let aside = std::sync::atomic::AtomicBool::new(false);
+    let feed =
+        Arc::new(Feed { chapter, dir, pages, credits, parts, again, wanted, left, aside });
     let fetcher = Fetcher {
         sources,
         opened,
@@ -538,6 +551,13 @@ impl<F: Fn(u32, &Outbox) + Send + 'static> Fetcher<F> {
             if feed.strong_count() == 0 || self.gone.is() || *self.left.borrow() {
                 return;
             }
+            // Set aside: only the pages asked for again are fetched.
+            if feed
+                .upgrade()
+                .is_some_and(|f| f.aside.load(std::sync::atomic::Ordering::Relaxed))
+            {
+                order.clear();
+            }
             // A page waited on starts even with the others all under way.
             while running.len() < AT_ONCE + WAITED_ON
                 && let Some(index) = urgent.pop_front()
@@ -591,6 +611,7 @@ impl<F: Fn(u32, &Outbox) + Send + 'static> Fetcher<F> {
                 },
                 again = self.again.recv(), if open => match again {
                     Some((index, told)) => {
+                        order.retain(|i| *i != index);
                         if asked.insert(index) {
                             self.spawn(&mut running, &feed, index, Some(told));
                         }

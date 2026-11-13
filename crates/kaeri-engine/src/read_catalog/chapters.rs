@@ -133,6 +133,22 @@ pub fn own_title<'a>(
 }
 
 /// The words that name a chapter at the start of a title, longest first.
+/// Most pages a chapter is taken to have, as many as a ComicInfo lists. A source that says more
+/// is taken not to know.
+pub(crate) const MOST_PAGES: u32 = 100_000;
+
+/// The pages a source says a chapter has, unless the count is past belief.
+pub(crate) fn plausible_pages(said: Option<u32>) -> Option<u32> {
+    said.filter(|n| *n <= MOST_PAGES)
+}
+
+/// The pages of a chapter in parts: its parts' counts added up, unknown when any part's is or
+/// the sum is past belief.
+pub(crate) fn pages_of_parts(parts: impl IntoIterator<Item = Option<u32>>) -> Option<u32> {
+    let sum = parts.into_iter().try_fold(0u32, |sum, n| sum.checked_add(plausible_pages(n)?));
+    plausible_pages(sum)
+}
+
 const CHAPTER_WORDS: [&str; 5] = ["chapter", "chap.", "chap", "ch.", "ch"];
 
 /// A title that starts by naming a chapter, "Chapter 15: The Far Shore": the number, and the
@@ -328,7 +344,7 @@ pub fn keep(
             version_label: c.version_label.clone(),
             language: c.language.clone(),
             published: c.published,
-            pages: c.page_count,
+            pages: plausible_pages(c.page_count),
             seen_at,
             part: arranged.parts[i],
         });
@@ -927,6 +943,17 @@ mod tests {
         let mut c = SourceChapter::new(format!("c-{n}"), n.to_string());
         c.published = published;
         c
+    }
+
+    #[test]
+    fn page_counts_past_belief_are_unknown_and_sums_never_overflow() {
+        assert_eq!(plausible_pages(Some(24)), Some(24));
+        assert_eq!(plausible_pages(Some(u32::MAX)), None);
+        assert_eq!(pages_of_parts([Some(20), Some(18)]), Some(38));
+        assert_eq!(pages_of_parts([Some(20), None]), None);
+        assert_eq!(pages_of_parts([Some(u32::MAX), Some(u32::MAX)]), None);
+        assert_eq!(pages_of_parts([Some(MOST_PAGES), Some(MOST_PAGES)]), None);
+        assert_eq!(pages_of_parts(std::iter::repeat_n(Some(MOST_PAGES), 50_000)), None);
     }
 
     #[test]

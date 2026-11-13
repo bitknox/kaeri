@@ -227,6 +227,11 @@ pub struct Session {
     unsent: Option<(ChapterId, i64)>,
     end_page_said: bool,
     read_timer: u64,
+    /// Where the read rule's wait was started: a report from there keeps it, and only a move
+    /// starts it again. `None` while it does not wait.
+    read_wait: Option<Spot>,
+    /// Where the report being handled puts the reader.
+    reporting: Option<Spot>,
     flush_timer: u64,
     flush_pending: bool,
     dirty: bool,
@@ -245,6 +250,9 @@ pub struct Session {
     source_open: Option<novel::SourceOpen>,
     /// The open chapter's pages from a source, landing as they are fetched.
     feed: Option<Arc<crate::reading::feed::Feed>>,
+    /// The chapter a strip flowed on from, which the app keeps above the open one: its pages
+    /// are still made when asked for by its id. Cleared by any other open.
+    flowed_from: Option<ChapterId>,
     /// "Resumed at page N" waits for a novel's first page.
     novel_resumed: bool,
     /// A work of the reading demo, whose credit the reader shows.
@@ -380,7 +388,11 @@ impl Reader {
                 let Some(s) =
                     self.session.as_mut().filter(|s| Some(s.id) == session_of(&other))
                 else {
-                    // Reports for a closed session are dropped.
+                    // Reports for a closed session are dropped. A command the app waits on
+                    // hears that the session is closed, so it never waits for good.
+                    if let Some(session) = session_of(&other).filter(|_| waits_on(&other)) {
+                        cx.send(ReaderEvent::Closed { session });
+                    }
                     return;
                 };
                 s.report(cx, &pages, other);
@@ -419,6 +431,7 @@ impl Reader {
         self.listing = None;
         if let Some(mut s) = self.session.take() {
             s.read_timer += 1;
+            s.read_wait = None;
             s.flush_leaving(cx);
             // Progress held for the close goes now: the furthest chapter read this time.
             if let Some((chapter, at)) = s.unsent.take()
@@ -477,14 +490,7 @@ impl Reader {
         surface: ReaderSurface,
     ) {
         cx.services.book_sources.take_in_plugins(&cx.services.book_plugins);
-        let mut chapters = shelf::chapters(&cx.services.store, work.as_str());
-        if let Some((_, _, list)) = crate::read_catalog::chapters::of_work(
-            &cx.services.book_sources,
-            &cx.services.store,
-            &work,
-        ) {
-            shelf::name_downloads(&mut chapters, &list);
-        }
+        let mut chapters = shelf_of(cx, &work);
         // A work from a source reads the source's whole list, the series page's, with what is
         // on the shelf read from its file. The list as kept serves when there is one to read;
         // with nothing on the shelf, the source is asked off the actor. A shelf with no list
@@ -675,6 +681,8 @@ impl Reader {
             unsent: None,
             end_page_said: false,
             read_timer: 0,
+            read_wait: None,
+            reporting: None,
             flush_timer: 0,
             flush_pending: false,
             dirty: false,
@@ -686,6 +694,7 @@ impl Reader {
             prepared: Arc::default(),
             source_open: None,
             feed: None,
+            flowed_from: None,
             novel_resumed: false,
             gone: crate::reading::feed::Gone::new(novel::streamed_dir(
                 &cx.services.paths.cache_dir,
@@ -729,6 +738,7 @@ impl Reader {
     pub fn background(&mut self, cx: &Cx<'_>) {
         if let Some(s) = self.session.as_mut() {
             s.read_timer += 1;
+            s.read_wait = None;
             s.flush_leaving(cx);
         }
     }
@@ -747,6 +757,31 @@ impl Reader {
         let pages = self.pages(cx);
         if let Some(s) = self.session.as_mut() {
             s.moved_on(cx, &pages);
+        }
+    }
+}
+
+/// Where a report puts the reader, as the read rule's wait tells places apart: a leaf, the
+/// foot of a strip image, or a page of a novel's document.
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum Spot {
+    Leaf(ChapterId, u32),
+    Foot(ChapterId, u32),
+    Novel(ChapterId, u32, u32),
+}
+
+impl Spot {
+    fn of(command: &ReaderCommand) -> Option<Self> {
+        use ReaderCommand as C;
+        match command {
+            C::Shown { chapter, leaf, .. } => Some(Self::Leaf(chapter.clone(), *leaf)),
+            C::StripAt { chapter, at, foot_visible: true, .. } => {
+                Some(Self::Foot(chapter.clone(), at.image))
+            }
+            C::NovelAt { chapter, pos, page, .. } => {
+                Some(Self::Novel(chapter.clone(), pos.spine, *page))
+            }
+            _ => None,
         }
     }
 }
@@ -774,6 +809,33 @@ fn session_of(command: &ReaderCommand) -> Option<u64> {
         | C::TapGuideSeen { .. }
         | C::LoadSettings { .. } => None,
     }
+}
+
+/// Whether the app waits on an answer to `command`: a chapter or a place it asked to open, or
+/// a chapter to lay out again.
+fn waits_on(command: &ReaderCommand) -> bool {
+    use ReaderCommand as C;
+    matches!(
+        command,
+        C::OpenChapter { .. }
+            | C::BackTo { .. }
+            | C::GoBack { .. }
+            | C::StartOver { .. }
+            | C::Retry { .. }
+    )
+}
+
+/// What is on the shelf of `work`, its downloads named as the work's list names them.
+fn shelf_of(cx: &Cx<'_>, work: &WorkId) -> Vec<ShelfChapter> {
+    let mut chapters = shelf::chapters(&cx.services.store, work.as_str());
+    if let Some((_, _, list)) = crate::read_catalog::chapters::of_work(
+        &cx.services.book_sources,
+        &cx.services.store,
+        work,
+    ) {
+        shelf::name_downloads(&mut chapters, &list);
+    }
+    chapters
 }
 
 /// Whether the download queue is fetching `chapter`, or will once its turn comes: queued, or
@@ -901,6 +963,23 @@ fn start_of(
 }
 
 impl Session {
+    /// Where the chapter opens, said for every mode. Pages and a strip's images count the
+    /// same way, one per image of the chapter however its pages are laid out (spreads, split
+    /// images), so a page with no place in a strip, as one kept in paged mode, opens a strip
+    /// at that page's image: at its top, or where a strip cut into screens opens for that page
+    /// (the first screen that starts in it). A place kept in a strip carries its page already.
+    fn start_in_every_mode(&self) -> ReadPlace {
+        let mut start = self.start.clone();
+        if start.strip.is_none()
+            && start.novel.is_none()
+            && let Some(page) = start.page.filter(|p| *p > 0)
+        {
+            let cut = self.cuts.iter().find(|c| c.image >= page).copied();
+            start.strip = Some(cut.unwrap_or(StripPos { image: page, offset: 0.0 }));
+        }
+        start
+    }
+
     /// What `Opened` says of the open chapter.
     fn view(&self, cx: &Cx<'_>) -> ReaderView {
         let marks =
@@ -913,7 +992,7 @@ impl Session {
             chapter: self.chapter().row(&marks),
             mode: self.mode,
             direction: self.direction,
-            start: self.start.clone(),
+            start: self.start_in_every_mode(),
             next: self.chapters.get(self.at + 1).map(|c| c.row(&marks)),
             previous: self
                 .at
@@ -1084,9 +1163,14 @@ impl Session {
         // Another chapter's pages that had not all landed are fetched again when it opens, and
         // so is one with credit pages or parts, which its folder alone does not tell.
         let left = self.feed.take_if(|f| f.chapter != chapter.id);
-        // The chapter left stops fetching, so its pages never hold up the one opening.
+        // The chapter left stops fetching, so its pages never hold up the one opening. One a
+        // strip flowed on from stays above it: the pages it never had are fetched when asked.
         if let Some(left) = &left {
-            left.leave();
+            if self.flowed_from.as_ref() == Some(&left.chapter) {
+                left.aside();
+            } else {
+                left.leave();
+            }
         }
         if let Some(left) = left
             && (!left.complete() || !left.credits.is_empty() || left.parts.is_some())
@@ -1112,6 +1196,7 @@ impl Session {
             feed: self.feed.clone(),
             // A feed left its credit pages out as it came.
             credits: self.credit_check(cx).filter(|_| self.feed.is_none()),
+            keep: self.flowed_from.clone(),
         });
     }
 
@@ -1269,8 +1354,15 @@ impl Session {
 
     fn report(&mut self, cx: &mut Cx<'_>, pages: &Pages, command: ReaderCommand) {
         use ReaderCommand as C;
-        // Any report stops the read rule's wait; the one that keeps it starts it again.
-        self.read_timer += 1;
+        // A report stops the read rule's wait, and the one that keeps it starts it again. One
+        // from where the wait started, such as a novel's scroll within its last page, keeps it
+        // going: reports every half second would otherwise never let it end.
+        let spot = Spot::of(&command);
+        self.reporting = spot.clone();
+        if spot.is_none() || spot != self.read_wait {
+            self.read_timer += 1;
+            self.read_wait = None;
+        }
         match command {
             C::Shown { chapter, leaf, how, .. } if chapter == self.chapter().id => {
                 self.shown(cx, pages, leaf, how)
@@ -1313,14 +1405,18 @@ impl Session {
                 let page = self.page_now();
                 self.lay_out(cx, pages, page);
             }
-            C::NeedPage { page, .. } => pages.again(self.id, page, cx.tx),
-            C::Retry { page: Some(page), .. } => pages.again(self.id, page, cx.tx),
+            // The open chapter's page, or the kept one's a strip flowed on from.
+            C::NeedPage { chapter, page, .. } => pages.again(self.id, chapter, page, cx.tx),
+            C::Retry { chapter, page: Some(page), .. } => {
+                pages.again(self.id, chapter, page, cx.tx)
+            }
             C::Retry { page: None, .. } => {
                 let page = self.page_now();
                 self.lay_out(cx, pages, page);
             }
             C::OpenChapter { chapter, .. } => {
-                let Some(index) = self.chapters.iter().position(|c| c.id == chapter) else {
+                let Some(index) = self.index_of(cx, &chapter) else {
+                    self.not_found(cx);
                     return;
                 };
                 // Skipping the extras moves on as Continue does; they stay unread. So does the
@@ -1343,7 +1439,7 @@ impl Session {
                     .and_then(|k| k.last_page)
                     .unwrap_or(0);
                 let novel = novel::kept_novel(cx, &self.work, &chapter);
-                self.open_chapter(cx, pages, index, page, novel);
+                self.open_chapter(cx, pages, index, page, novel, flowing);
             }
             C::BackTo { .. } => {
                 if let Some(back) = self.back_to.clone() {
@@ -1394,9 +1490,11 @@ impl Session {
         }
         let story = self.leaves.len() as u32;
         if leaf >= story {
-            // The end page, in the flow: read at once.
+            // The end page, in the flow: read at once. A jump lands here without passing the
+            // pages before it, so its preview is asked for here too.
             self.chapter_read(cx, Reached::MovedOn);
             self.say_end_page(cx);
+            self.peek(cx, pages);
             return;
         }
         let (page, strip) = self.page_of_leaf(leaf);
@@ -1615,8 +1713,16 @@ impl Session {
     }
 
     /// Why the end page has no next chapter: the series ended with this one, which offers
-    /// Read again; the device is offline; or the person is caught up.
+    /// Read again; the device is offline; or the person is caught up. A book of the person's
+    /// own in one file, with no number and nothing to match it to, is a whole book: it ends
+    /// there, and no chapters come for it.
     fn why_no_next(&self, cx: &Cx<'_>) -> NoNext {
+        let whole_book = self.work.key().is_some_and(|k| k.is_local())
+            && self.chapters.len() == 1
+            && self.chapter().id.key().and_then(|k| k.range()).is_none();
+        if whole_book {
+            return NoNext::Finished;
+        }
         let store = &cx.services.store;
         let later = crate::read_catalog::chapters::of_work(
             &cx.services.book_sources,
@@ -1637,7 +1743,12 @@ impl Session {
     }
 
     fn wait_to_read(&mut self, cx: &Cx<'_>) {
+        // Waiting already, from this spot.
+        if self.read_wait.is_some() && self.read_wait == self.reporting {
+            return;
+        }
         if !self.read_fired && counts(cx, Reached::Stayed) {
+            self.read_wait = self.reporting.clone();
             after(cx.tx, READ_AFTER, self.id, ReaderWake::ReadRule(self.read_timer));
         }
     }
@@ -1787,8 +1898,11 @@ impl Session {
         index: usize,
         page: u32,
         novel: Option<NovelPos>,
+        flowing: bool,
     ) {
         self.flush_leaving(cx);
+        // A strip flowing on keeps the chapter it leaves above the one opening.
+        self.flowed_from = flowing.then(|| self.chapter().id.clone());
         if self.novel.take().is_some() {
             cx.services.novels.remove(self.id);
         }
@@ -1797,6 +1911,7 @@ impl Session {
         self.at = index;
         self.opened = false;
         self.read_fired = false;
+        self.read_wait = None;
         self.end_page_said = false;
         self.peeked = false;
         self.back_to = None;
@@ -1813,9 +1928,41 @@ impl Session {
     fn go_to(&mut self, cx: &mut Cx<'_>, pages: &Pages, to: ReadPlace) {
         if to.chapter == self.chapter().id {
             cx.send(ReaderEvent::GoTo { session: self.id, place: to });
-        } else if let Some(index) = self.chapters.iter().position(|c| c.id == to.chapter) {
-            self.open_chapter(cx, pages, index, to.page.unwrap_or(0), to.novel.clone());
+        } else if let Some(index) = self.index_of(cx, &to.chapter) {
+            self.open_chapter(cx, pages, index, to.page.unwrap_or(0), to.novel.clone(), false);
+        } else {
+            self.not_found(cx);
         }
+    }
+
+    /// Where `chapter` is in the session's list. One the list does not name is looked for in
+    /// the work's chapters as this device has them now: a list loaded since the session
+    /// opened, such as the series page's fresh one, can name a chapter the session's own does
+    /// not. That list becomes the session's when it names both `chapter` and the open one.
+    fn index_of(&mut self, cx: &Cx<'_>, chapter: &ChapterId) -> Option<usize> {
+        if let Some(index) = self.chapters.iter().position(|c| c.id == *chapter) {
+            return Some(index);
+        }
+        let mut now = shelf_of(cx, &self.work);
+        if novel::sourced(cx, &self.work)
+            && let Some(listed) = novel::kept_list(cx, &self.work, &now)
+        {
+            now = listed;
+        }
+        let index = now.iter().position(|c| c.id == *chapter)?;
+        let at = now.iter().position(|c| c.id == self.chapter().id)?;
+        self.chapters = now;
+        self.at = at;
+        Some(index)
+    }
+
+    /// A chapter asked for is in no list this device has: the reader says so rather than
+    /// waiting on it.
+    fn not_found(&self, cx: &Cx<'_>) {
+        let _ = cx.tx.send(Event::Reading(ReadingEvent::Failed {
+            about: ReadingAbout::Reader,
+            failure: ReadingFailure::NotFound,
+        }));
     }
 
     /// A newer place from another device moves the reader only when it is further on.
@@ -2072,6 +2219,7 @@ mod tests {
     use super::*;
     use crate::{host::QuietHost, outbox::Envelope};
 
+    mod answers;
     mod back_to;
     mod cross_parts;
     mod eink_strip;
@@ -2602,6 +2750,71 @@ mod tests {
         assert_eq!(end_of_last(&mut h).await, Some(NoNext::Finished));
     }
 
+    #[tokio::test]
+    async fn a_book_of_ones_own_in_one_file_ends_there_rather_than_waiting_for_chapters() {
+        let mut h = harness(Store::open_in_memory().unwrap());
+        let local = kaeri_core::books::WorkKey::local(Medium::Manga, "A Lantern in One File");
+        let local = local.id();
+        let folder = h._dir.path().join("one file");
+        std::fs::create_dir_all(&folder).unwrap();
+        let path = folder.join("A Lantern in One File.cbz");
+        cbz(&path, 3);
+        let store = &h.services.store;
+        store
+            .put_local_series(&LocalSeries {
+                id: "s2".into(),
+                folder: folder.display().to_string(),
+                name: "A Lantern in One File".into(),
+                medium: "manga".into(),
+                work: Some(local.as_str().into()),
+                state: "unmatched".into(),
+            })
+            .unwrap();
+        let file = ShelfFile {
+            path: path.display().to_string(),
+            chapter: None,
+            label: "A Lantern in One File".into(),
+            volume: None,
+            number_milli: None,
+            format: "cbz".into(),
+            pages: Some(3),
+            comicinfo: None,
+            source: None,
+        };
+        store.put_local_file("s2", &file, 1, 1).unwrap();
+        h.open_work(local, OpenAt::Start).await;
+        h.shown(2, TurnHow::Turn).await;
+        let why = h
+            .until(|e| match e {
+                ReaderEvent::EndPage { next: None, why_none, .. } => Some(*why_none),
+                _ => None,
+            })
+            .await;
+        assert_eq!(why, Some(NoNext::Finished), "the book ends, nothing is coming");
+
+        // A matched series' last chapter still waits for the next one.
+        let session = h.session();
+        h.send(ReaderCommand::Close { session });
+        let chapter = ChapterId::new("2");
+        let (work, at) = (WorkId::new(WORK), OpenAt::Resume);
+        h.send(ReaderCommand::Open {
+            work,
+            chapter: Some(chapter.clone()),
+            at,
+            surface: surface(),
+        });
+        h.until(|e| matches!(e, ReaderEvent::Leaves { .. }).then_some(())).await;
+        let session = h.session();
+        h.send(ReaderCommand::Shown { session, chapter, leaf: 2, how: TurnHow::Turn });
+        let why = h
+            .until(|e| match e {
+                ReaderEvent::EndPage { next: None, why_none, .. } => Some(*why_none),
+                _ => None,
+            })
+            .await;
+        assert_eq!(why, Some(NoNext::CaughtUp));
+    }
+
     #[tokio::test(start_paused = true)]
     async fn turning_away_from_the_last_page_holds_the_read_rule_and_the_end_page_reads_at_once()
      {
@@ -2618,6 +2831,27 @@ mod tests {
         h.shown(3, TurnHow::Turn).await;
         let said = h.drain();
         assert!(said.iter().any(|e| matches!(e, ReaderEvent::ChapterRead { .. })), "at once");
+        assert!(h.kept("1").unwrap().read);
+    }
+
+    /// Reports from the last page that keep the reader there, every half second, let the read
+    /// rule's wait run out: only a move to another page starts it again.
+    #[tokio::test(start_paused = true)]
+    async fn reports_from_the_last_page_itself_let_the_read_rule_run_out() {
+        let mut h = harness(Store::open_in_memory().unwrap());
+        h.open(OpenAt::Resume).await;
+        h.shown(2, TurnHow::Turn).await;
+        let mut read = 0;
+        for _ in 0..10 {
+            tokio::time::sleep(Duration::from_millis(500)).await;
+            h.shown(2, TurnHow::Placed).await;
+            read += h
+                .drain()
+                .iter()
+                .filter(|e| matches!(e, ReaderEvent::ChapterRead { .. }))
+                .count();
+        }
+        assert_eq!(read, 1, "counted read once");
         assert!(h.kept("1").unwrap().read);
     }
 
