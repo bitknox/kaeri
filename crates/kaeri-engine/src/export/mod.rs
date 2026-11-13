@@ -9,13 +9,15 @@
 //! and ended with `ExportReady`; it stops on `CancelPrepare` and leaves no files behind. A send
 //! with chapters to fetch waits while the downloads do, and goes on by itself: for Wi-Fi it says
 //! so with `ExportWaiting`, and one left waiting when the engine stops starts again at the next
-//! launch ([`held`]). Until the front end first says the network it waits too, without a word,
+//! launch ([`held`]). A ready send is kept beside its files, so one ready when the app stopped is
+//! offered again at the next launch with `ExportKept` ([`kept`]). Until the front end first says the network it waits too, without a word,
 //! as the network may be cellular. With no network at all it fails as offline. Once the files are shared, the series page asks
 //! where you stopped, and the answer is a `ReadAdopt` op.
 //!
 //! **The OPDS feed** is in [`feed`], behind the `opds-feed` feature the desktop builds turn on.
 
 pub(crate) mod held;
+pub(crate) mod kept;
 pub mod prepare;
 pub mod profiles;
 
@@ -64,16 +66,18 @@ const READY_KEPT: i64 = 24 * 60 * 60;
 ///
 /// Job ids start over at every launch, so a send's folders are named by this engine's own mark
 /// as well as its job: `<mark>-<job>` for its files and `<mark>-<job>-fetch` for the pages it
-/// fetches. A folder an earlier launch left (a send killed mid-fetch, a ready send never put
-/// away) is never taken for one of this launch's, and [`sweep`] removes it at launch.
+/// fetches. A folder an earlier launch left is never taken for one of this launch's: [`sweep`]
+/// removes it at launch (a send killed mid-fetch, a ready send no longer kept), except a ready
+/// send still kept, which the launch offers again ([`kept`]).
 #[derive(Clone, Debug)]
 pub struct Exports {
     dir: PathBuf,
     /// This engine's mark: see [`mark`].
     mark: Arc<str>,
     running: Arc<Mutex<HashMap<u64, Arc<AtomicBool>>>>,
-    /// Ready sends by job, with when each became ready on the engine's clock.
-    ready: Arc<Mutex<HashMap<u64, i64>>>,
+    /// Ready sends by job, with when each became ready on the engine's clock and the name of
+    /// its folder: its own, or for a send kept from an earlier launch, the one that launch made.
+    ready: Arc<Mutex<HashMap<u64, (i64, String)>>>,
 }
 
 /// A mark no other engine has: the process id, then when it was made and a count, as
@@ -99,17 +103,22 @@ pub fn dir_of(paths: &kaeri_core::config::Paths) -> PathBuf {
     paths.data_dir.join("exports")
 }
 
-/// Remove what sends of earlier launches left in `dir`, the sends' folder: their ready files,
-/// which no Share can hand over any more, and the pages of sends killed mid-fetch. Folders of
-/// this process's engines stay. Blocking. Returns how many entries went.
+/// Remove what sends of earlier launches left in `dir`, the sends' folder: ready files no
+/// launch offers any more (put away, past [`READY_KEPT`] or missing a file) and the pages of
+/// sends killed mid-fetch. Folders of this process's engines stay, and so do kept ready sends,
+/// which the launch offers again. Blocking. Returns how many entries went.
 pub fn sweep(dir: &Path) -> usize {
     let Ok(entries) = std::fs::read_dir(dir) else { return 0 };
+    let now = kept::wall_now();
     let mut removed = 0;
     for entry in entries.flatten() {
         if of_this_process(&entry.file_name().to_string_lossy()) {
             continue;
         }
         let path = entry.path();
+        if kept::KeptSend::read(&path, now).is_some() {
+            continue;
+        }
         let gone = match std::fs::symlink_metadata(&path) {
             Ok(meta) if meta.is_dir() => std::fs::remove_dir_all(&path),
             Ok(_) => std::fs::remove_file(&path),
@@ -145,7 +154,41 @@ impl Exports {
 
     /// A send's files are written: they are kept for its Share, see [`Self::folder`].
     fn ready(&self, job: JobId, now: i64) {
-        self.ready.lock().unwrap_or_else(|e| e.into_inner()).insert(job.get(), now);
+        let name = self.name(job);
+        self.ready.lock().unwrap_or_else(|e| e.into_inner()).insert(job.get(), (now, name));
+    }
+
+    /// The ready sends earlier launches kept in the sends' folder and no job of this engine has
+    /// taken yet, with their folders' names, oldest first.
+    fn kept(&self) -> Vec<(String, kept::KeptSend)> {
+        let Ok(entries) = std::fs::read_dir(&self.dir) else { return Vec::new() };
+        let taken: Vec<String> = self
+            .ready
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .values()
+            .map(|(_, name)| name.clone())
+            .collect();
+        let now = kept::wall_now();
+        let mut found: Vec<(String, kept::KeptSend)> = entries
+            .flatten()
+            .filter_map(|entry| {
+                let name = entry.file_name().to_string_lossy().into_owned();
+                let ours = name.starts_with(&format!("{}-", self.mark));
+                if ours || taken.contains(&name) {
+                    return None;
+                }
+                Some((name, kept::KeptSend::read(&entry.path(), now)?))
+            })
+            .collect();
+        found.sort_by_key(|(_, send)| send.at);
+        found
+    }
+
+    /// `job` of this launch is the ready send kept in the folder `name`, ready since `at` on
+    /// the engine's clock.
+    fn adopt(&self, job: JobId, name: String, at: i64) {
+        self.ready.lock().unwrap_or_else(|e| e.into_inner()).insert(job.get(), (at, name));
     }
 
     fn end(&self, job: JobId) {
@@ -162,8 +205,8 @@ impl Exports {
         }
         drop(running);
         let put_away = self.ready.lock().unwrap_or_else(|e| e.into_inner()).remove(&job.get());
-        if put_away.is_some() {
-            let _ = std::fs::remove_dir_all(self.dir.join(self.name(job)));
+        if let Some((_, name)) = put_away {
+            let _ = std::fs::remove_dir_all(self.dir.join(name));
         }
         false
     }
@@ -182,8 +225,8 @@ impl Exports {
             .collect();
         {
             let mut ready = self.ready.lock().unwrap_or_else(|e| e.into_inner());
-            ready.retain(|_, at| now.saturating_sub(*at) < READY_KEPT);
-            keep.extend(ready.keys().map(|k| self.name(JobId::new(*k))));
+            ready.retain(|_, (at, _)| now.saturating_sub(*at) < READY_KEPT);
+            keep.extend(ready.values().map(|(_, name)| name.clone()));
         }
         if let Ok(entries) = std::fs::read_dir(&self.dir) {
             for entry in entries.flatten() {
@@ -392,13 +435,15 @@ fn prepare_files(
         format,
         out,
         direction,
+        sent: Mutex::default(),
     };
     tokio::spawn(async move {
         let _job = job;
         let tx = send.lent.tx.clone();
         let result = send.run().await;
-        if result.is_ok() {
+        if let Ok(files) = &result {
             send.exports.ready(send.id, clock.now());
+            send.keep_ready(files);
         }
         send.exports.end(send.id);
         let chapter = send.told.failing_chapter();
@@ -514,6 +559,8 @@ struct OneSend {
     format: ExportFormat,
     out: PathBuf,
     direction: prepare::PageDirection,
+    /// The chapters gathered, in reading order, for the record a ready send keeps.
+    sent: Mutex<Vec<kaeri_core::books::ChapterId>>,
 }
 
 impl OneSend {
@@ -585,6 +632,9 @@ impl OneSend {
         };
         if asked_all_downloaded {
             // Nothing to fetch, so nothing to ask a source.
+            if let DownloadPick::Chapters { ids } = &self.pick {
+                *self.sent.lock().unwrap_or_else(|e| e.into_inner()) = ids.clone();
+            }
             let chapters = chosen(store, self.work.as_str(), &self.pick);
             let n = u32::try_from(chapters.len()).unwrap_or(u32::MAX);
             self.told.of.store(n, Ordering::Relaxed);
@@ -609,6 +659,8 @@ impl OneSend {
         if wanted.is_empty() {
             return Err(ReadingFailure::NotFound.into());
         }
+        *self.sent.lock().unwrap_or_else(|e| e.into_inner()) =
+            wanted.iter().map(|w| w.chapter.clone()).collect();
         // A chapter on this device, downloaded or in the person's folders, is sent from its
         // file; only the rest are fetched, and only they wait for the network.
         let file_of = |want: &Wanted| here.file(want.chapter.as_str());
@@ -748,6 +800,16 @@ impl OneSend {
         result
     }
 
+    /// Keep this ready send beside its files, for a launch after the app stops to offer again.
+    fn keep_ready(&self, files: &[kaeri_model::reading::ExportFile]) {
+        let sent = self.sent.lock().unwrap_or_else(|e| e.into_inner()).clone();
+        if let Some(record) =
+            kept::KeptSend::new(&self.work, &self.target, &sent, &self.out, files)
+        {
+            record.write(&self.out);
+        }
+    }
+
     /// This send as the list of those waiting keeps it.
     fn held(&self) -> held::HeldSend {
         held::HeldSend {
@@ -762,6 +824,35 @@ impl OneSend {
 
 /// How often a waiting send looks whether it was cancelled.
 const LOOK_AGAIN: Duration = Duration::from_millis(200);
+
+/// The ready sends earlier launches kept, each offered again as `job` of this launch, which
+/// `next_job` gives: told as `ExportKept`, kept for its Share and put away by `CancelPrepare`
+/// as a ready send of this launch is.
+pub(crate) fn offer_kept(
+    engine: &EngineState,
+    services: &Services,
+    mut next_job: impl FnMut() -> JobId,
+    tx: &Outbox,
+) {
+    if !engine.reading.available {
+        return;
+    }
+    let exports = &services.book_sources.exports;
+    let now = services.clock.now();
+    let wall = kept::wall_now();
+    for (name, send) in exports.kept() {
+        let job = next_job();
+        let files = send.files_in(&exports.dir.join(&name));
+        exports.adopt(job, name, now.saturating_sub(wall.saturating_sub(send.at)));
+        let _ = tx.send(Event::Reading(ReadingEvent::ExportKept {
+            job,
+            work: WorkId::new(send.work),
+            target: send.target,
+            chapters: send.chapters.iter().map(kaeri_core::books::ChapterId::new).collect(),
+            files,
+        }));
+    }
+}
 
 /// The sends left waiting when the engine last stopped, asked for again: each starts as a job
 /// of its own and waits again while it must.
@@ -1007,5 +1098,55 @@ mod ready_tests {
         let running = JobId::new(2);
         let flag = exports.begin(running);
         assert!(exports.cancel(running) && flag.load(Ordering::Relaxed));
+    }
+
+    /// Android R7-2. A ready send kept beside its files outlives the process that made it: the
+    /// launch sweep leaves it while it is kept, the next engine offers it once, a new send
+    /// keeps it, and putting it away removes it. One past a day, or never kept, goes.
+    #[test]
+    fn a_ready_send_kept_beside_its_files_outlives_the_process() {
+        use kaeri_core::books::ChapterId;
+        use kaeri_model::reading::ExportFile;
+        let dir = tempfile::tempdir().unwrap();
+        let wall = kept::wall_now();
+        let book = "Made-up Series 1.kepub.epub";
+        // As a process that has ended left them; no process has the id 0.
+        let folder = |name: &str| {
+            let folder = dir.path().join(name);
+            std::fs::create_dir_all(&folder).unwrap();
+            std::fs::write(folder.join(book), b"pk").unwrap();
+            folder
+        };
+        let keep = |folder: &Path, at: i64| {
+            let path = folder.join(book).display().to_string();
+            let file = ExportFile { path, name: book.into(), bytes: 2, part: None };
+            let work = WorkId::new("a:900601");
+            let chapters = [ChapterId::new("1")];
+            let mut send =
+                kept::KeptSend::new(&work, "kobo", &chapters, folder, &[file]).unwrap();
+            send.at = at;
+            send.write(folder);
+        };
+        let live = folder("0.dead-1");
+        keep(&live, wall - 60);
+        let old = folder("0.dead-2");
+        keep(&old, wall - READY_KEPT - 1);
+        let bare = folder("0.dead-3");
+        assert_eq!(sweep(dir.path()), 2);
+        assert!(live.exists() && !old.exists() && !bare.exists());
+
+        let exports = Exports::new(dir.path().to_owned());
+        let found = exports.kept();
+        assert_eq!(found.len(), 1);
+        let (name, send) = found[0].clone();
+        assert_eq!((name.as_str(), send.target.as_str()), ("0.dead-1", "kobo"));
+        assert_eq!(send.chapters, ["1"]);
+        assert_eq!(send.files_in(&live)[0].path, live.join(book).display().to_string());
+        exports.adopt(JobId::new(4), name, NOW);
+        assert!(exports.kept().is_empty(), "offered once");
+        exports.folder(JobId::new(5), NOW + 60);
+        assert!(live.join(book).exists(), "a new send keeps it");
+        assert!(!exports.cancel(JobId::new(4)));
+        assert!(!live.exists(), "put away");
     }
 }

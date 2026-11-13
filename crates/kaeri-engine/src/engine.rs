@@ -1177,6 +1177,9 @@ impl Actor {
                         let job = again.activity().map(|activity| (self.jobs.next(), activity));
                         self.route(job, again);
                     }
+                    // Sends that were ready when the app stopped are offered again.
+                    let jobs = &self.jobs;
+                    crate::export::offer_kept(&self.state, &self.services, || jobs.next(), &tx);
                 }
                 #[cfg(feature = "testing")]
                 if self.trace {
@@ -4819,6 +4822,78 @@ mod tests {
             engine.send(network(false, false));
             let seen = seen_until(&mut events, send_ended).await;
             assert_eq!(pages_sent(&seen).map(|(_, pages)| pages), Some(2 + 2 + 3), "{seen:?}");
+            engine.shutdown().await;
+        }
+
+        /// Android R7-2. A send that was ready but never shared when the app was killed is
+        /// offered again at the next launch, with its chapters and its files, until it is put
+        /// away.
+        #[tokio::test]
+        async fn a_ready_send_is_offered_again_after_a_restart() {
+            let kept = |seen: &[Event]| {
+                seen.iter().find_map(|e| match e {
+                    Event::Reading(ReadingEvent::ExportKept {
+                        job,
+                        work,
+                        target,
+                        chapters,
+                        files,
+                    }) => Some((
+                        *job,
+                        work.as_str().to_owned(),
+                        target.clone(),
+                        chapters.clone(),
+                        files.clone(),
+                    )),
+                    _ => None,
+                })
+            };
+            let is_kept =
+                |e: &Event| matches!(e, Event::Reading(ReadingEvent::ExportKept { .. }));
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, store, _) = launch_engine(dir.path(), None).await;
+            events.launch().await;
+            engine.send(network(false, false));
+            engine.send(send_of(&["1"]));
+            let seen = seen_until(&mut events, send_ended).await;
+            let files = seen.iter().find_map(|e| match e {
+                Event::Reading(ReadingEvent::ExportReady { files, .. }) => Some(files.clone()),
+                _ => None,
+            });
+            let files = files.unwrap_or_else(|| panic!("not sent: {seen:?}"));
+            // The app is killed before the files are shared.
+            engine.shutdown().await;
+
+            let (engine, mut events, store, _) = launch_engine(dir.path(), Some(store)).await;
+            let mut seen = events.launch().await;
+            if !seen.iter().any(is_kept) {
+                seen.extend(seen_until(&mut events, is_kept).await);
+            }
+            let (job, work, target, chapters, again) = kept(&seen).unwrap();
+            assert_eq!((work.as_str(), target.as_str()), (WORK, "kobo"));
+            assert_eq!(chapters, [ChapterId::new("1")]);
+            assert_eq!(again, files);
+            assert!(std::path::Path::new(&again[0].path).is_file());
+            assert_eq!(
+                pages_sent(&[Event::Reading(ReadingEvent::ExportReady {
+                    job,
+                    files: again.clone(),
+                })])
+                .map(|(_, pages)| pages),
+                Some(2)
+            );
+
+            // Put away, its files go and the next launch offers nothing.
+            engine.send(Command::Reading(ReadingCommand::CancelPrepare { job }));
+            let path = again[0].path.clone();
+            store_waits("put away", move || !std::path::Path::new(&path).exists()).await;
+            engine.shutdown().await;
+            let (engine, mut events, _, _) = launch_engine(dir.path(), Some(store)).await;
+            let mut seen = events.launch().await;
+            engine.send(network(false, false));
+            engine.send(send_of(&["1"]));
+            seen.extend(seen_until(&mut events, send_ended).await);
+            assert!(kept(&seen).is_none(), "{seen:?}");
             engine.shutdown().await;
         }
 
