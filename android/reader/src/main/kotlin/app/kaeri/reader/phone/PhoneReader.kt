@@ -92,6 +92,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.IconButton
@@ -143,6 +144,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
@@ -632,6 +634,7 @@ fun PhoneReader(
                         onFlow = { next -> session.flowInto(next.id) },
                         onShowing = { showingAbove = it },
                         onBack = session::flowBack,
+                        room = { StripRoomWaiting(state) },
                         list = stripList,
                         stepping = stripStep::catch,
                         gap = gap,
@@ -1513,26 +1516,11 @@ private fun Opening(
     LaunchedEffect(long) { if (long) session.loadSources() }
     var choosing by remember { mutableStateOf(false) }
     BoxWithConstraints(Modifier.fillMaxSize().graphicsLayer { alpha = shown.value * faded.value }, contentAlignment = Alignment.Center) {
-        // The page's place: a page's shape, as wide as it fits.
-        val width = minOf(maxWidth, maxHeight * 0.703f)
-        Box(Modifier.width(width).aspectRatio(0.703f).background(Chrome.plate)) {
-            if (line != null && !done) {
-                Text(
-                    line,
-                    color = Chrome.faint,
-                    fontSize = 15.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(horizontal = 24.dp)
-                        .semantics { liveRegion = LiveRegionMode.Polite },
-                )
-            }
-        }
+        OpeningPlate(line.takeIf { !done }, maxWidth, maxHeight)
         if (long) {
             // A stage that goes on offers the way on, as a failed open does.
             Column(
-                Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 28.dp).padding(bottom = 30.dp),
+                Modifier.align(Alignment.BottomCenter).widthIn(max = BottomSheetDefaults.SheetMaxWidth).fillMaxWidth().padding(horizontal = 28.dp).padding(bottom = 30.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(Strings.readerWaitLong(context), color = Chrome.faint, fontSize = 15.sp, modifier = Modifier.padding(bottom = 12.dp))
@@ -1567,6 +1555,54 @@ private fun Opening(
     }
 }
 
+/** The page's place while a chapter opens: a page's shape, as wide as it fits, with what the wait is on. */
+@Composable
+private fun OpeningPlate(line: String?, maxWidth: Dp, maxHeight: Dp) {
+    val width = minOf(maxWidth, maxHeight * 0.703f)
+    Box(Modifier.width(width).aspectRatio(0.703f).background(Chrome.plate)) {
+        if (line != null) {
+            Text(
+                line,
+                color = Chrome.faint,
+                fontSize = 15.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(horizontal = 24.dp)
+                    .semantics { liveRegion = LiveRegionMode.Polite },
+            )
+        }
+    }
+}
+
+/**
+ * The room under a strip's divider while the chapter under it is on its way: the opening's plate
+ * and line, from 600 ms after the ask and with how long from 3 s, as a first open shows them. The
+ * ways on stay with the divider's own chapter, which Try again on the end page offers if it fails.
+ */
+@Composable
+internal fun StripRoomWaiting(state: ReaderState) {
+    val context = LocalContext.current
+    val since = state.openingSince.takeIf { it > 0 } ?: remember { openingClock() }
+    var waited by remember(since) { mutableIntStateOf((openingClock() - since).toInt()) }
+    LaunchedEffect(since) {
+        while (true) {
+            waited = (openingClock() - since).toInt()
+            delay(200)
+        }
+    }
+    if (waited < PageWaits.PLATE_MS) return
+    val faded = rememberFadedIn()
+    // The chapter on its way: the one asked for, or once it opened, the open one. What the first
+    // open waited on is that chapter's, so the line names the chapter alone.
+    val number = (state.asking?.row ?: state.view?.chapter.takeIf { state.asking == null })?.let(::chapterNumber)
+    val stage = openingStage(context, null, number)
+    val line = if (waited < 3000) stage else stage?.let { Strings.readerWaitSeconds(context, it, waited / 1000) }
+    BoxWithConstraints(Modifier.fillMaxSize().graphicsLayer { alpha = faded.value }, contentAlignment = Alignment.Center) {
+        OpeningPlate(line, maxWidth, maxHeight)
+    }
+}
+
 /**
  * A chapter that would not open: left aligned, the glyph beside the title at 22, the reason in
  * haze. Choose source is the amber pill when another source has the chapter, with the sources in a
@@ -1587,42 +1623,45 @@ private fun ChapterFailed(
     val sources = state.sources.orEmpty()
     var choosing by remember { mutableStateOf(false) }
     Box(Modifier.fillMaxSize()) {
-        Box(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
-            Column(Modifier.align(Alignment.CenterStart).padding(horizontal = 28.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    GlyphIcon(Glyph.Warning, Chrome.error)
-                    Text(title, color = Chrome.text, fontFamily = robotoFlex(FontWeight.SemiBold, 22.sp), fontSize = 22.sp, lineHeight = 28.sp)
-                }
-                Spacer(Modifier.height(8.dp))
-                Text(line, color = Chrome.faint, fontSize = 15.sp, lineHeight = 21.sp)
-            }
-            Column(
-                Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 28.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                val choose = sources.isNotEmpty()
-                Button(
-                    onClick = { if (choose) choosing = true else onRetry() },
-                    shape = RoundedCornerShape(25.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Chrome.accent, contentColor = Chrome.onAccent),
-                    modifier = Modifier.fillMaxWidth().height(50.dp),
-                ) {
-                    Text(
-                        if (choose) Strings.readerFailedChoose(context) else Strings.readerTryAgain(context),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
-                Spacer(Modifier.height(4.dp))
-                if (choose) {
-                    TextButton(onClick = onRetry, modifier = Modifier.heightIn(min = 38.dp)) {
-                        Text(Strings.readerTryAgain(context), color = Chrome.text, fontSize = 15.sp)
+        // On a wide screen the page is a column as wide as the reader's sheets, centred.
+        Box(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing), contentAlignment = Alignment.Center) {
+            Box(Modifier.widthIn(max = BottomSheetDefaults.SheetMaxWidth).fillMaxSize()) {
+                Column(Modifier.align(Alignment.CenterStart).padding(horizontal = 28.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        GlyphIcon(Glyph.Warning, Chrome.error)
+                        Text(title, color = Chrome.text, fontFamily = robotoFlex(FontWeight.SemiBold, 22.sp), fontSize = 22.sp, lineHeight = 28.sp)
                     }
+                    Spacer(Modifier.height(8.dp))
+                    Text(line, color = Chrome.faint, fontSize = 15.sp, lineHeight = 21.sp)
                 }
-                TextButton(onClick = onClose, modifier = Modifier.heightIn(min = 38.dp)) {
-                    Text(Strings.readerClose(context), color = Chrome.text, fontSize = 15.sp)
+                Column(
+                    Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 28.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    val choose = sources.isNotEmpty()
+                    Button(
+                        onClick = { if (choose) choosing = true else onRetry() },
+                        shape = RoundedCornerShape(25.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Chrome.accent, contentColor = Chrome.onAccent),
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
+                    ) {
+                        Text(
+                            if (choose) Strings.readerFailedChoose(context) else Strings.readerTryAgain(context),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                    Spacer(Modifier.height(4.dp))
+                    if (choose) {
+                        TextButton(onClick = onRetry, modifier = Modifier.heightIn(min = 38.dp)) {
+                            Text(Strings.readerTryAgain(context), color = Chrome.text, fontSize = 15.sp)
+                        }
+                    }
+                    TextButton(onClick = onClose, modifier = Modifier.heightIn(min = 38.dp)) {
+                        Text(Strings.readerClose(context), color = Chrome.text, fontSize = 15.sp)
+                    }
+                    Spacer(Modifier.height(30.dp))
                 }
-                Spacer(Modifier.height(30.dp))
             }
         }
         if (choosing) {
