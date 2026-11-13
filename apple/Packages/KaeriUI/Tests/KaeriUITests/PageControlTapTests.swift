@@ -9,9 +9,9 @@ import AppKit
 import SwiftUI
 import Testing
 
-/// Clicks a view through an offscreen window, as HitAreaTests does.
+/// Clicks a view through an offscreen window, as HitAreaTests does. SwipeCancelTests drags in it.
 @MainActor
-private final class TapWindow {
+final class TapWindow {
     private final class Window: NSWindow {
         override var canBecomeKey: Bool { true }
         override var isKeyWindow: Bool { true }
@@ -51,6 +51,22 @@ private final class TapWindow {
             try await turn(0.005)
         }
         for _ in 0..<10 { try await turn(0.01) }
+    }
+
+    /// A mouse button event at a point in the view's space.
+    func mouse(_ type: NSEvent.EventType, at point: CGPoint) async throws {
+        let event = NSEvent.mouseEvent(
+            with: type, location: NSPoint(x: point.x, y: size.height - point.y), modifierFlags: [],
+            timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: window.windowNumber, context: nil,
+            eventNumber: 0, clickCount: 1, pressure: type == .leftMouseUp ? 0 : 1)!
+        window.sendEvent(event)
+        try await turn(0.01)
+    }
+
+    /// Time for a gesture's change, or an animation, to land.
+    func wait(_ seconds: Double) async throws {
+        let end = Date().addingTimeInterval(seconds)
+        while Date() < end { try await turn(0.02) }
     }
 
     func close() { window.close() }

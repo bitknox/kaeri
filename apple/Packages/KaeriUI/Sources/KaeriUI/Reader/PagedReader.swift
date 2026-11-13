@@ -25,6 +25,9 @@ struct PagedReader: View {
     @State private var zoom = PageZoom()
     /// The pinch gesture is live. It goes back to false however the gesture stops, cancelled too.
     @GestureState private var magnifying = false
+    /// The swipe is live. It goes back to false however the swipe stops: a touch the system takes,
+    /// as when the window is resized by its corner, cancels the swipe with no `onEnded`.
+    @GestureState private var swiping = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var rtl: Bool { model.view?.direction == .rightToLeft }
@@ -49,6 +52,7 @@ struct PagedReader: View {
         .clipped()
         .contentShape(.rect)
         .gesture(swipe)
+        .onChange(of: swiping) { _, live in if !live { swipeGone() } }
         #if os(iOS)
         // A double tap zooms, so a single tap waits for it not to be one. A tap on a control in
         // the page, a failed page's Try again, is the control's alone.
@@ -243,8 +247,18 @@ struct PagedReader: View {
         }
     }
 
+    /// The swipe stopped. Every `onEnded` leaves the pages at rest or settling; one cancelled
+    /// left them where the finger had them, a slice of the next page showing, and a pan's start
+    /// kept for the next pan. They spring back as a swipe let go short does.
+    private func swipeGone() {
+        zoom.dragEnded()
+        guard !settling, drag != 0 else { return }
+        withAnimation(paper ? nil : .standard) { drag = 0 }
+    }
+
     private var swipe: some Gesture {
         DragGesture(minimumDistance: 14)
+            .updating($swiping) { _, live, _ in live = true }
             .onChanged { value in
                 guard !settling else { return }
                 // A zoomed page pans and never turns; a pinch's fingers do neither.
