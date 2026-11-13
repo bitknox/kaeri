@@ -955,9 +955,11 @@ impl BookDownloads {
             }
             *watching = true;
         }
+        // The figure the view had as the look began, read now: the task may first run after the
+        // person already freed some.
+        let mut told = self.free();
         let (this, lent) = (self.clone(), lent.clone());
         tokio::spawn(async move {
-            let mut told = this.free();
             loop {
                 tokio::time::sleep(ROOM_CHECK).await;
                 let free = this.free();
