@@ -330,7 +330,7 @@ async fn a_page_the_source_never_brings_ends_the_fetch_after_a_few_asks() {
 
     let down = ReadingFailure::SourceDown { source: "Shelf".into() };
     assert_eq!(kit.states(), [("1".into(), ChapterDownloadState::Failed { failure: down })]);
-    assert_eq!(kit.shelf.times(lost), 1 + ASK_AGAIN.len(), "asked again, a few times only");
+    assert_eq!(kit.shelf.times(lost), 4, "asked three times again, then no more");
 }
 
 #[tokio::test]
