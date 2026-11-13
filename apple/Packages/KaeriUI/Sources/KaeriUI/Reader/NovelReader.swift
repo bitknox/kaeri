@@ -504,6 +504,7 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
             goOn()
         } else {
             shown.end = true
+            model?.novelEnded()
         }
     }
 
