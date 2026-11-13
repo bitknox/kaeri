@@ -103,6 +103,7 @@ public struct KaeriCommands<Playback: View, PlayerWindowItems: View>: Commands {
             Button(L.menuPauseAllDownloads) { store.pauseAllDownloads() }
                 .disabled(!store.downloads.rows.contains { $0.state == .active || $0.state == .queued })
             Button(L.menuClearFinishedDownloads) { store.clearCompletedDownloads() }
+                .disabled(!store.downloads.hasFinished)
         }
 
         CommandMenu(L.menuPlayback) {

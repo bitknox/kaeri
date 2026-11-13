@@ -46,6 +46,9 @@ public final class DownloadsModel {
         seeding = rows
     }
 
+    /// A finished download is on the list: Clear Finished Downloads has something to clear.
+    public var hasFinished: Bool { rows.contains { $0.state == .done } }
+
     /// The queue by title, each title where its first row is.
     public var groups: [DownloadGroup] {
         var order: [AnilistId] = []
