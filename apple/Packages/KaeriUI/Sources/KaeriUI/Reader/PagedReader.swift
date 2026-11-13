@@ -169,7 +169,7 @@ struct PagedReader: View {
             return
         }
         if forward, model.leaves[current].endPage {
-            if let next = model.view?.next { model.openChapter(next.id) }
+            if let next = model.endNext { model.openChapter(next.id) }
             return
         }
         let target = current + (forward ? 1 : -1)
@@ -249,7 +249,7 @@ struct PagedReader: View {
                 let forward = x * sign > 0
                 let target = current + (forward ? 1 : -1)
                 let endForward = forward && model.leaves.indices.contains(current) && model.leaves[current].endPage
-                if !model.leaves.indices.contains(target) || (endForward && model.view?.next == nil) { x /= 4 }
+                if !model.leaves.indices.contains(target) || (endForward && model.endNext == nil) { x /= 4 }
                 if staysOnLeaf(forward: forward) != nil { x /= 4 }
                 drag = x
             }
@@ -273,7 +273,7 @@ struct PagedReader: View {
                 }
                 if commit, endForward {
                     drag = 0
-                    if let next = model.view?.next { model.openChapter(next.id) }
+                    if let next = model.endNext { model.openChapter(next.id) }
                     return
                 }
                 guard commit, model.leaves.indices.contains(target) else {
@@ -325,6 +325,11 @@ struct ReaderEndPage: View {
     private var read: Bool { held?.read ?? model.read }
     private var readTrackers: [String] { held?.readTrackers ?? model.readTrackers }
     private var medium: Medium { view?.medium ?? .manga }
+    /// A strip that could not flow into its next chapter ends here: that chapter, why, and Try
+    /// again in place of Continue. Turned to pages, Continue opens it as any chapter opens.
+    private var flowFailure: ReaderModel.FlowFailure? {
+        held == nil && model.view?.mode == .strip ? model.flowFailure : nil
+    }
 
     private func previewFile(_ id: ChapterId) -> PageFile? {
         if let held { return held.previews[id] }
@@ -418,7 +423,7 @@ struct ReaderEndPage: View {
     /// next chapter with its facts and its first page, and Continue. On a phone the buttons are
     /// pinned at the foot; wider, the column is centred with the buttons under it.
     private var standard: some View {
-        let next = end?.next ?? view?.next
+        let next = flowFailure?.next ?? ReaderEnd.next(end, view: view)
         let phone = size.width < 600
         // At the largest sizes nothing is pinned: the buttons follow the column in the scroll.
         let pinned = phone && !type.isAccessibilitySize
@@ -465,8 +470,13 @@ struct ReaderEndPage: View {
                         .frame(maxWidth: .infinity)
                         .padding(.bottom, 10)
                 }
-                Button { model.openChapter(next.id) } label: { continueLabel(next.id) }
-                    .buttonStyle(ReaderAmberStyle(theme: theme))
+                if flowFailure != nil {
+                    Button(L.readerTryAgain) { model.retryFlow() }
+                        .buttonStyle(ReaderAmberStyle(theme: theme))
+                } else {
+                    Button { model.openChapter(next.id) } label: { continueLabel(next.id) }
+                        .buttonStyle(ReaderAmberStyle(theme: theme))
+                }
                 if end?.skipTo != nil {
                     skipButton(next, height: 50, wide: true)
                         .padding(.top, 10)
@@ -524,6 +534,18 @@ struct ReaderEndPage: View {
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.top, 4)
                 }
+                // Why the strip could not go on into it, over Try again.
+                if let failure = flowFailure?.failure {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(theme.vermilion)
+                            .accessibilityHidden(true)
+                        Text(failure.words).foregroundStyle(theme.silk)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .font(.ui(15))
+                    .padding(.top, 10)
+                    .accessibilityElement(children: .combine)
+                }
                 // The next chapter's first page once the engine made it, its plate until then. A
                 // novel's chapter has no page to show.
                 if medium != .novel {
@@ -532,7 +554,7 @@ struct ReaderEndPage: View {
                 }
             } else if let why = end?.why {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(title(why, chapter?.label ?? ""))
+                    Text(title(why, Self.following(view)))
                         .font(.showTitle(size: 22, relativeTo: .title2)).fontWeight(.semibold)
                         .foregroundStyle(theme.silk)
                     if let body = body(why) { Text(body).font(.ui(15)).foregroundStyle(theme.haze) }
@@ -578,10 +600,17 @@ struct ReaderEndPage: View {
     private func wideButtons(_ next: ChapterRow?, stacked: Bool) -> some View {
         let height: CGFloat = Device.isMac ? 28 : 44
         if let next {
-            Button { model.openChapter(next.id) } label: {
-                continueLabel(next.id).padding(.horizontal, 18)
+            if flowFailure != nil {
+                Button { model.retryFlow() } label: {
+                    Text(L.readerTryAgain).padding(.horizontal, 18)
+                }
+                .buttonStyle(ReaderAmberStyle(theme: theme, height: height))
+            } else {
+                Button { model.openChapter(next.id) } label: {
+                    continueLabel(next.id).padding(.horizontal, 18)
+                }
+                .buttonStyle(ReaderAmberStyle(theme: theme, height: height))
             }
-            .buttonStyle(ReaderAmberStyle(theme: theme, height: height))
             skipButton(next, height: height, wide: stacked)
         }
         Button(L.readerBackToSeries) { closeReader() }
@@ -635,6 +664,14 @@ struct ReaderEndPage: View {
         guard !trackers.isEmpty else { return L.readerEndRead }
         let names = trackers.formatted(.list(type: .and).locale(AirTime.locale))
         return offline ? L.readerEndTrackerOffline(tracker: names) : L.readerEndTracker(trackers: names)
+    }
+
+    /// The chapter the heading names: the next one listed, which offline is one only a source
+    /// has; past the last one listed, the next whole number.
+    static func following(_ view: ReaderView?) -> String {
+        if let next = view?.next { return ReaderChrome.chapterName(next.label) }
+        guard let number = view?.chapter.number.flatMap(Double.init) else { return "" }
+        return L.readerChapterLine(chapter: String(Int(number) + 1))
     }
 
     private func title(_ why: NoNext, _ chapter: String) -> String {

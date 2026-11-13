@@ -25,6 +25,8 @@ struct PhoneCalendar: View {
     @State private var pending: Date?
     /// The day at the top when earlier days were asked for, to stay on once they arrive.
     @State private var holding: Date?
+    /// Scrolls back to the day held since the last days came in above it.
+    @State private var holdTries = 0
     @State private var opened = false
 
     private static func monday(of day: Date) -> Date {
@@ -101,6 +103,8 @@ struct PhoneCalendar: View {
             .padding(.bottom, 24)
         }
         .scrollPosition($position, anchor: .top)
+        // A scroll by hand lets go of a day held.
+        .onScrollPhaseChange { _, phase in if phase == .interacting { holding = nil } }
         .onScrollTargetVisibilityChange(idType: Date.self, threshold: 0.1) { ids in
             let wasShown = todayShown
             // Today's button fades in (0.2 s) once today has left, and out (0.3 s) as it returns.
@@ -108,6 +112,7 @@ struct PhoneCalendar: View {
                 visible = Set(ids)
             }
             topDay = ids.min()
+            hold(ids: ids, days: days)
             prefetch(ids: ids, days: days, bounds: bounds)
         }
         .safeAreaInset(edge: .top, spacing: 0) {
@@ -347,11 +352,21 @@ struct PhoneCalendar: View {
             navigator.calendarOpensOn = 0
         }
         position.scrollTo(id: target, anchor: .top)
+        // Held like a day that earlier days came in above: the agenda guesses the height of the
+        // days it has not drawn, so the first jump can land days short of the target.
+        holding = target
+        holdTries = 0
         // A jump without animation can land before the visibility callback reports the new days,
         // which leaves the strip on the agenda's first week; the strip follows the target now.
         topDay = target
         opened = true
-        if target != today { return }
+        // The visibility callback runs only when the days on screen change, and a jump that lands
+        // short can stay put; scroll to the day again until it is let go.
+        for _ in 0..<4 {
+            try? await Task.sleep(for: .milliseconds(150))
+            guard !Task.isCancelled, holding == target else { return }
+            position.scrollTo(id: target, anchor: .top)
+        }
     }
 
     /// Scrolls to a day that arrived after it was asked for, and stays where the person was when
@@ -361,7 +376,21 @@ struct PhoneCalendar: View {
             self.pending = nil
             withAnimation(reduceMotion ? nil : .standard) { position.scrollTo(id: pending, anchor: .top) }
         } else if let holding, days.contains(holding) {
+            holdTries = 0
+            position.scrollTo(id: holding, anchor: .top)
+        }
+    }
+
+    /// Lets go of the day held once it is back at the top. A scroll to it, on opening or right
+    /// after days came in above, can land short of it, among days whose height the agenda guessed;
+    /// those days would ask for more past and one of them would be held, and the agenda would run
+    /// back to the first day it can show. So it scrolls to the day again, a few times at most.
+    private func hold(ids: [Date], days: [Date]) {
+        guard let holding, days.contains(holding), !store.calendar.loadingPast else { return }
+        if ids.min() == holding || holdTries >= 4 {
             self.holding = nil
+        } else {
+            holdTries += 1
             position.scrollTo(id: holding, anchor: .top)
         }
     }
@@ -372,7 +401,9 @@ struct PhoneCalendar: View {
         guard opened, !days.isEmpty else { return }
         let near = Set(days.prefix(3))
         let far = Set(days.suffix(3))
-        if model.morePast, !model.pastFailed, !model.loadingPast, !near.isDisjoint(with: ids) {
+        // While the day held is not back at the top, the earlier days that just came in sit on
+        // screen above it: they ask for nothing more, and the day held stays the one held.
+        if holding == nil, model.morePast, !model.pastFailed, !model.loadingPast, !near.isDisjoint(with: ids) {
             holding = ids.min()
             store.loadCalendarPast()
         }
@@ -383,6 +414,7 @@ struct PhoneCalendar: View {
 
     /// A tap in the strip: scrolls to the day, asking for it first when it is not loaded.
     private func go(to day: Date) {
+        holding = nil
         let model = store.calendar
         let calendar = Calendar.current
         let anchor = TimeInterval(model.anchor ?? 0)
@@ -403,6 +435,7 @@ struct PhoneCalendar: View {
 
     /// Today, from wherever: a jump to a screen short of it, then the last screen scrolled.
     private func returnToToday() {
+        holding = nil
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: .now)
         guard !reduceMotion else {

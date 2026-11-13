@@ -1477,9 +1477,11 @@ impl Session {
         }
         let story = self.leaves.len() as u32;
         if leaf >= story {
-            // The end page, in the flow: read at once.
+            // The end page, in the flow: read at once. A jump lands here without passing the
+            // pages before it, so its preview is asked for here too.
             self.chapter_read(cx, Reached::MovedOn);
             self.say_end_page(cx);
+            self.peek(cx, pages);
             return;
         }
         let (page, strip) = self.page_of_leaf(leaf);

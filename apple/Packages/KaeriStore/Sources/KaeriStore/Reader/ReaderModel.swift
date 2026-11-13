@@ -30,6 +30,12 @@ public struct ReaderEnd: Equatable, Sendable {
     /// How many extras the skip passes over.
     public var extras: UInt32 = 0
 
+    /// The chapter an end page goes on to: the engine's word once it has one, the view's next
+    /// chapter until then. Offline the engine leaves out a next chapter that is not on the device.
+    public static func next(_ end: ReaderEnd?, view: ReaderView?) -> ChapterRow? {
+        end != nil ? end?.next : view?.next
+    }
+
     /// What a screen reader adds after the skip: the extra's number, or with a run of extras or
     /// one with no number, that the extras stay unread.
     public var skipHint: String? {
@@ -98,6 +104,8 @@ public final class ReaderModel {
     public private(set) var novel: NovelOpenView?
     public private(set) var novelStyle = ""
     public private(set) var end: ReaderEnd?
+    /// The chapter the end page goes on to.
+    public var endNext: ChapterRow? { ReaderEnd.next(end, view: view) }
     /// The next chapter's first page, made while this one is read, for the page between chapters.
     public private(set) var previews: [ChapterId: PageFile] = [:]
     public private(set) var settings: ReaderSettingsView?
@@ -472,6 +480,9 @@ public final class ReaderModel {
     /// A strip settled: the image and how far down it, at most every 500 ms.
     public func stripAt(_ at: StripPos, footVisible: Bool) {
         guard session != 0, let chapter = view?.chapter.id else { return }
+        // The foot of a chapter whose last image has not landed is only where a guess put it: it
+        // starts no read.
+        let footVisible = footVisible && stripEndIn
         stripHere = at
         pendingStrip?.cancel()
         let now = ContinuousClock.now
@@ -519,6 +530,8 @@ public final class ReaderModel {
         trail = StripTrail()
         inTrail = nil
         flowing = nil
+        flowFrom = nil
+        flowFailure = nil
         clearNotices()
         send?(.reader(.openChapter(session: session, chapter: id)))
         phase = .opening
@@ -529,9 +542,18 @@ public final class ReaderModel {
 
     /// A strip's marker into the next chapter crossed the middle of the screen: that chapter
     /// opens in the same scroll, under the marker, with no opening screen. The images read so
-    /// far stay above it.
+    /// far stay above it. Only once the chapter's end is where the strip draws it: a chapter whose
+    /// last image has not landed is never passed, since opening the next chapter counts this one
+    /// as read.
     public func flowOn() {
-        guard session != 0, flowing == nil, let view, view.mode == .strip, let next = end?.next ?? view.next else { return }
+        guard session != 0, flowing == nil, flowFailure == nil, view?.mode == .strip, stripEndIn,
+              let next = endNext else { return }
+        flow(into: next, .reader(.openChapter(session: session, chapter: next.id)))
+    }
+
+    /// The chapter read goes into the trail and `next` opens under it with `command`.
+    private func flow(into next: ChapterRow, _ command: Command) {
+        guard let view else { return }
         commitKeep()
         let chapter = view.chapter.id
         let parts = leaves.filter { !$0.endPage }.flatMap(\.parts).map { part in
@@ -541,15 +563,95 @@ public final class ReaderModel {
         }
         trail.chapters.append(StripTrail.Chapter(
             id: chapter, label: view.chapter.label, parts: parts, next: next, nextSource: end?.nextSource))
+        flowFrom = FlowFrom(next: next, end: end, read: read, readTrackers: readTrackers)
         flowing = next.id
         end = nil
         read = false
         readTrackers = []
-        send?(.reader(.openChapter(session: session, chapter: next.id)))
+        send?(command)
     }
 
     /// The chapter a strip is flowing into, until it has opened.
     public private(set) var flowing: ChapterId?
+
+    /// A chapter a strip could not flow into, and why.
+    public struct FlowFailure: Equatable, Sendable {
+        public let next: ChapterRow
+        public let failure: ReadingFailure
+    }
+
+    /// The chapter the strip could not flow into. The chapter read stays open, and the strip
+    /// ends under it on its end page, which names that chapter and why, with Try again.
+    public private(set) var flowFailure: FlowFailure?
+
+    /// What the chapter read had when the strip flowed on from it, put back when the flow fails.
+    private struct FlowFrom {
+        let next: ChapterRow
+        let end: ReaderEnd?
+        let read: Bool
+        let readTrackers: [String]
+    }
+
+    @ObservationIgnored private var flowFrom: FlowFrom?
+
+    /// The chapter the strip was flowing into would not open: the chapter read comes back out of
+    /// the trail as the open one, its rows where they were, and its end page says why.
+    private func flowFailed(_ failure: ReadingFailure) {
+        guard flowing != nil else { return }
+        let from = flowFrom
+        var next = from?.next
+        if let chapter = view?.chapter.id, let last = trail.chapters.last, last.id == chapter {
+            next = next ?? last.next
+            trail.chapters.removeLast()
+            if inTrail?.id == chapter { inTrail = nil }
+        }
+        self.flowing = nil
+        flowFrom = nil
+        end = end ?? from?.end
+        // The engine may have said the chapter read was read as the flow began.
+        read = read || from?.read == true
+        if readTrackers.isEmpty { readTrackers = from?.readTrackers ?? [] }
+        // With no next chapter known, the end page is the plain one.
+        if let next = next ?? endNext { flowFailure = FlowFailure(next: next, failure: failure) }
+    }
+
+    /// Try again on the end page of a strip that could not flow on: the strip flows into that
+    /// chapter again. The engine's session is on it already, so it is asked for again there.
+    public func retryFlow() {
+        guard session != 0, flowing == nil, view?.mode == .strip, let failed = flowFailure else { return }
+        flowFailure = nil
+        flow(into: failed.next, .reader(.retry(session: session, chapter: failed.next.id, page: nil)))
+    }
+
+    /// Where the strip puts the place once its images are in: where it was asked to go, or else
+    /// where the chapter opened. A place kept only as a page, as when the chapter was last read
+    /// page by page, is the top of the image that holds that page, the one the Resumed notice
+    /// names.
+    public var stripStart: StripPos? {
+        if let stripRestore { return stripRestore }
+        guard let start = view?.start else { return nil }
+        if let strip = start.strip { return strip }
+        guard let page = start.page else { return nil }
+        let parts = leaves.filter { !$0.endPage }.flatMap(\.parts)
+        guard !parts.isEmpty else { return nil }
+        let image = parts.firstIndex { $0.page >= page } ?? parts.count - 1
+        return StripPos(image: UInt32(image), offset: 0)
+    }
+
+    /// An image of `chapter` is in: its shape known from the book, its file landed, or its
+    /// failure said. Until then its height in a strip is a guess.
+    public func isIn(_ part: LeafPart, chapter: String) -> Bool {
+        (part.ratio ?? 0) > 0 || file(of: part, chapter: chapter) != nil
+            || failure(of: part, chapter: chapter) != nil
+    }
+
+    /// The open chapter's last image is in. Until then its foot is only where a guess put it:
+    /// the chapter is not passed, and its foot is not seen.
+    public var stripEndIn: Bool {
+        guard let chapter = view?.chapter.id,
+              let last = leaves.last(where: { !$0.endPage && !$0.parts.isEmpty })?.parts.last else { return false }
+        return isIn(last, chapter: chapter)
+    }
 
     public func retry(page: UInt32?) {
         // An open that failed before the engine named a session is asked for again whole.
@@ -557,7 +659,11 @@ public final class ReaderModel {
             begin(Request(work: request.work, chapter: request.chapter, at: request.at, tick: bump()))
             return
         }
-        // A strip that failed to flow on tries the chapter it was flowing into.
+        // A strip that could not flow on tries the chapter it was flowing into, under the one read.
+        if page == nil, flowFailure != nil {
+            retryFlow()
+            return
+        }
         guard session != 0, let chapter = flowing ?? view?.chapter.id else { return }
         if let page { failures = failures.filter { $0.key.page != page } }
         send?(.reader(.retry(session: session, chapter: chapter, page: page)))
@@ -707,8 +813,13 @@ public final class ReaderModel {
         case .reading(.failed(.reader, let failure)):
             // The open failed: the chapter, the source or the book. The reader says so, with
             // Try again and Close, rather than wait on an open that will not come. A strip that
-            // was flowing on, with the chapter before still on screen, says it the same way.
+            // was flowing on keeps the chapter read open and says it on that chapter's end page,
+            // whatever the reason: the reader is never replaced by the chapter it could not open.
             guard request != nil else { return }
+            if flowing != nil, phase == .open {
+                flowFailed(failure)
+                return
+            }
             phase = .failed(failure)
             clearNotices()
         case .reading(.chapters(let work, _, let volumes, _)):
@@ -741,6 +852,8 @@ public final class ReaderModel {
             endCreditLine()
             creditLineFor = nil
             flowing = nil
+            flowFrom = nil
+            flowFailure = nil
             session = opened.session
             view = opened
             phase = .open
@@ -982,6 +1095,14 @@ public final class ReaderModel {
             return
         }
         guard let page = place.page else { return }
+        // A place by page alone, in a strip: the top of the image that holds the page.
+        if view?.mode == .strip, novel == nil {
+            let parts = leaves.filter { !$0.endPage }.flatMap(\.parts)
+            let image = parts.firstIndex { $0.page >= page } ?? Int(page)
+            stripRestore = StripPos(image: UInt32(image), offset: 0)
+            self.goTo = (image, bump(), .placed)
+            return
+        }
         if let index = leaves.firstIndex(where: { $0.parts.contains { $0.page >= page } }) {
             show(index)
         } else {
@@ -1077,6 +1198,8 @@ public final class ReaderModel {
         trail = StripTrail()
         inTrail = nil
         flowing = nil
+        flowFrom = nil
+        flowFailure = nil
         phase = .closed
     }
 
