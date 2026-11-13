@@ -2121,6 +2121,18 @@ fn listen_all(shell: &Rc<Shell>) {
         let line = match event {
             Event::BookSources(e) => format!("{e:?}"),
             Event::CameIn(e) => format!("{e:?}"),
+            Event::Reading(kaeri_model::reading::ReadingEvent::Feed(f)) => format!(
+                "Feed on={} addresses={:?} port={} password_set={} serving={} shares={:?} \
+                 clients={} pause={:?}",
+                f.on,
+                f.addresses,
+                f.port,
+                f.password_set,
+                f.serving,
+                f.shares,
+                f.clients.len(),
+                f.pause
+            ),
             Event::Reading(e) => {
                 let s = format!("{e:?}");
                 if s.starts_with("Failed") || s.starts_with("Download") || s.starts_with("Notice") {
@@ -2159,7 +2171,7 @@ async fn do_steps(shell: &Rc<Shell>) {
                 "search" => Dest::ReadSearch,
                 "updates" => Dest::Updates,
                 "settings" => Dest::Settings,
-                _ => Dest::Read,
+                other => Dest::named(other).unwrap_or(Dest::Read),
             }),
             "series" => series(shell, arg(1)),
             "read" => read(shell, arg(1), arg(2)),
@@ -2314,6 +2326,91 @@ async fn do_steps(shell: &Rc<Shell>) {
                     }
                 }
             }
+            // r8: every key the window hears, before anything else does, and full screen changes.
+            "keylog" => keylog(shell),
+            // r8: a reader setting on its medium's value: look dark, textsize 3, mode scrolled.
+            "setting" => {
+                use kaeri_model::reader::ReaderSettingKey as K;
+                let key = match arg(1) {
+                    "look" => Some(K::Look),
+                    "font" => Some(K::Font),
+                    "textsize" => Some(K::TextSize),
+                    "spacing" => Some(K::LineSpacing),
+                    "margins" => Some(K::Margins),
+                    "justify" => Some(K::Justify),
+                    "fit" => Some(K::Fit),
+                    "background" => Some(K::Background),
+                    "layout" => Some(K::PageLayout),
+                    _ => None,
+                };
+                match key {
+                    Some(k) => shell.reader.shot_setting(k, arg(2)),
+                    None if arg(1) == "novelmode" => shell.reader.shot_setting_for(
+                        kaeri_core::media::Medium::Novel,
+                        K::Mode,
+                        arg(2),
+                    ),
+                    None => tracing::warn!("HUNT do setting: unknown {}", arg(1)),
+                }
+                tracing::info!("HUNT do setting {} {}", arg(1), arg(2));
+            }
+            // r8: the OPDS feed on with a made-up password, or off.
+            "feed" => {
+                let on = arg(1) == "on";
+                let password = (on && !arg(2).is_empty())
+                    .then(|| kaeri_model::stores::Secret(arg(2).to_owned()));
+                send(shell, kaeri_model::reading::ReadingCommand::SetFeed { on, password });
+                send(shell, kaeri_model::reading::ReadingCommand::LoadFeed);
+            }
+            "feedshare" => {
+                use kaeri_model::reading::FeedShelf;
+                let shelf = match arg(1) {
+                    "manga" => FeedShelf::MangaFolders,
+                    "novels" => FeedShelf::NovelFolders,
+                    _ => FeedShelf::Downloads,
+                };
+                send(
+                    shell,
+                    kaeri_model::reading::ReadingCommand::SetFeedShare { shelf, on: arg(2) != "off" },
+                );
+            }
+            // r8: point an open GTK folder chooser at a folder (in-process, no typing).
+            "choosefolder" => tracing::info!("HUNT do choosefolder: {}", choose_folder(&w[1..].join(" "))),
+            // r8: the window's widgets: all, mapped, and mapped of a few kinds.
+            "widgets" => widget_count(shell, arg(1)),
+            "focus" => tracing::info!("HUNT focus {}: {}", arg(1), focus_line(shell)),
+            // r8: activate the nth mapped grid cover (FlowBoxChild) or list row in the window.
+            "tile" | "row" => {
+                let want_row = arg(0) == "row";
+                let mut all = Vec::new();
+                fn walk(w: &gtk::Widget, row: bool, out: &mut Vec<gtk::Widget>) {
+                    if !w.is_mapped() {
+                        return;
+                    }
+                    if (!row && w.is::<gtk::FlowBoxChild>()) || (row && w.is::<gtk::ListBoxRow>()) {
+                        out.push(w.clone());
+                    }
+                    let mut c = w.first_child();
+                    while let Some(x) = c {
+                        walk(&x, row, out);
+                        c = x.next_sibling();
+                    }
+                }
+                walk(shell.ctx.window.upcast_ref(), want_row, &mut all);
+                let n = num(1, 0) as usize;
+                match all.get(n) {
+                    Some(w) => {
+                        let what = describe(w);
+                        if let Some(c) = w.downcast_ref::<gtk::FlowBoxChild>() {
+                            c.activate();
+                        } else if let Some(r) = w.downcast_ref::<gtk::ListBoxRow>() {
+                            r.activate();
+                        }
+                        tracing::info!("HUNT do {} {n} of {}: {what}", arg(0), all.len());
+                    }
+                    None => tracing::info!("HUNT do {} {n}: none of {}", arg(0), all.len()),
+                }
+            }
             "abort" => {
                 tracing::info!("HUNT do aborting now");
                 std::process::abort();
@@ -2328,4 +2425,162 @@ async fn do_steps(shell: &Rc<Shell>) {
         i += 1;
     }
     tracing::info!("HUNT do done");
+}
+
+
+// ---------------------------------------------------------------------------------------------
+// Round 8 additions.
+
+/// Log every key press the window gets in the capture phase (before any widget), with where the
+/// focus is, and every change of full screen.
+fn keylog(shell: &Rc<Shell>) {
+    let window = shell.ctx.window.clone();
+    let keys = gtk::EventControllerKey::new();
+    keys.set_propagation_phase(gtk::PropagationPhase::Capture);
+    keys.connect_key_pressed({
+        let window = window.downgrade();
+        move |_, key, code, mods| {
+            let focus = window
+                .upgrade()
+                .and_then(|w| gtk::prelude::GtkWindowExt::focus(&w))
+                .map(|f| describe(&f))
+                .unwrap_or_else(|| "none".into());
+            tracing::info!(
+                "HUNT key {:?} code={code} mods={mods:?} focus={focus}",
+                key.name().map(|n| n.to_string())
+            );
+            glib::Propagation::Proceed
+        }
+    });
+    window.add_controller(keys);
+    window.connect_fullscreened_notify(|w| {
+        tracing::info!("HUNT fullscreen-> {} size={}x{}", w.is_fullscreen(), w.width(), w.height())
+    });
+    tracing::info!("HUNT keylog on");
+}
+
+/// Point the first open folder chooser at `path`.
+#[allow(deprecated)]
+fn choose_folder(path: &str) -> String {
+    use gtk::prelude::FileChooserExt;
+    for top in gtk::Window::list_toplevels() {
+        if let Some(chooser) = find::<gtk::FileChooserWidget>(&top, &|_| true) {
+            let file = gtk::gio::File::for_path(path);
+            return match chooser.set_current_folder(Some(&file)) {
+                Ok(_) => format!("set to {path} in {}", top.type_().name()),
+                Err(e) => format!("failed: {e}"),
+            };
+        }
+    }
+    format!("no chooser among {} windows", gtk::Window::list_toplevels().len())
+}
+
+fn widget_count(shell: &Rc<Shell>, tag: &str) {
+    fn walk(w: &gtk::Widget, n: &mut [usize; 5]) {
+        n[0] += 1;
+        if w.is_mapped() {
+            n[1] += 1;
+            if w.is::<gtk::FlowBoxChild>() {
+                n[2] += 1;
+            }
+            if w.is::<gtk::Picture>() || w.is::<gtk::Image>() {
+                n[3] += 1;
+            }
+        }
+        if w.is::<gtk::FlowBoxChild>() || w.is::<gtk::ListBoxRow>() || w.is::<gtk::GridView>() {
+            n[4] += 1;
+        }
+        let mut c = w.first_child();
+        while let Some(x) = c {
+            walk(&x, n);
+            c = x.next_sibling();
+        }
+    }
+    let mut n = [0usize; 5];
+    walk(shell.ctx.window.upcast_ref(), &mut n);
+    tracing::info!(
+        "HUNT widgets {tag}: all={} mapped={} mapped_flowchildren={} mapped_pictures={} rows_any={} | {}",
+        n[0],
+        n[1],
+        n[2],
+        n[3],
+        n[4],
+        proc_facts()
+    );
+}
+
+/// A made-up library of `HUNT_BIGLIB` series (default none), kept as AniList-shaped book works
+/// from the fixture template with new ids and invented titles, spread over the reading lists,
+/// with a place in every seventh.
+pub fn biglib(store: &kaeri_store::Store, art: &str, now: i64) {
+    let Some(n) = std::env::var("HUNT_BIGLIB").ok().and_then(|v| v.parse::<u32>().ok()) else {
+        return;
+    };
+    let templates = kaeri_testkit::fixtures::books();
+    let words = [
+        "Lantern", "Harbor", "Willow", "Copper", "Meadow", "Quiet", "Ember", "Salt", "Paper",
+        "Tide", "Glass", "Moss", "Cinder", "Hollow", "Silver", "Kite",
+    ];
+    let lists = ["reading", "planning", "completed", "paused", "dropped", "rereading"];
+    let t0 = std::time::Instant::now();
+    for i in 0..n {
+        let template = &templates[(i as usize) % templates.len()];
+        let mut v = template.clone();
+        let id = 9_100_000 + i as i64;
+        let name = format!(
+            "{} {} of the {} {}",
+            words[(i % 16) as usize],
+            words[((i / 16) % 16) as usize],
+            words[((i / 256) % 16) as usize],
+            i
+        );
+        v["id"] = serde_json::json!(id);
+        v["idMal"] = serde_json::Value::Null;
+        v["title"] = serde_json::json!({ "romaji": name, "english": name, "native": null });
+        v["synonyms"] = serde_json::json!([]);
+        let json = v.to_string().replace(kaeri_testkit::fixtures::ART_HOST, art);
+        let Ok(book) = serde_json::from_str::<kaeri_meta::anilist::books::Book>(&json) else {
+            tracing::warn!("HUNT biglib {i}: the template did not decode");
+            continue;
+        };
+        let work = format!("a:{id}");
+        let titles = serde_json::json!({
+            "romaji": book.title.romaji, "english": book.title.english,
+            "native": book.title.native, "synonyms": book.synonyms,
+        });
+        let row = kaeri_store::book_catalog::BookWork {
+            work: work.clone(),
+            anilist_id: Some(book.id.get()),
+            medium: book.medium().as_str().to_owned(),
+            format: Some(book.reading_format().as_str().to_owned()),
+            origin: book.origin().map(|o| o.code().to_owned()),
+            titles: titles.to_string(),
+            cover: book.cover_image.best().map(str::to_owned),
+            status: book
+                .status
+                .and_then(|s| serde_json::to_value(s).ok())
+                .and_then(|v| v.as_str().map(str::to_owned)),
+            chapters_total: book.chapters,
+            volumes_total: book.volumes,
+            meta: Some(serde_json::json!({ "book": book, "detail_at": null }).to_string()),
+            fetched_at: now,
+        };
+        if let Err(e) = store.put_book_work(&row) {
+            tracing::warn!("HUNT biglib put {i}: {e}");
+            continue;
+        }
+        let list = lists[(i as usize * 7 + i as usize / 3) % lists.len()];
+        if let Err(e) = store.set_read_status(&work, Some(list), now - i64::from(i)) {
+            tracing::warn!("HUNT biglib status {i}: {e}");
+        }
+        if i % 7 == 0 {
+            let mut ev = kaeri_store::reading::ReadEvent::new(&work, format!("{}", 1 + i % 40), now - i64::from(i) * 60);
+            ev.page = Some(3);
+            ev.of_pages = Some(20);
+            if let Err(e) = store.record_read(&ev, Vec::new()) {
+                tracing::warn!("HUNT biglib read {i}: {e}");
+            }
+        }
+    }
+    tracing::info!("HUNT biglib kept {n} series in {}ms", t0.elapsed().as_millis());
 }

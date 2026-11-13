@@ -333,6 +333,7 @@ pub async fn start(root: &Path, scene: &Scene, host: Arc<dyn Host>) -> Result<St
         crate::fixtures_reading::keep_books(&store, &server.art_base(), now);
     }
     crate::hunt::seed(&store, now);
+    crate::hunt::biglib(&store, &server.art_base(), now);
     // Home's world: this season's titles, the rest in the browse, and their broadcasts.
     if let Some(world) = &world {
         let (season, rest): (Vec<_>, Vec<_>) = world
