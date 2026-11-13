@@ -252,6 +252,26 @@ impl Parts {
     }
 }
 
+/// The dialog's body under its header: the choices scroll, and the foot with the state and the
+/// buttons stays at the bottom, so Prepare files and Save to a folder show in any window.
+fn frame(column: &gtk::Box, foot: &gtk::Box) -> adw::ToolbarView {
+    let scroll = gtk::ScrolledWindow::builder()
+        .hscrollbar_policy(gtk::PolicyType::Never)
+        .propagate_natural_height(true)
+        .max_content_height(620)
+        .child(column)
+        .build();
+    foot.set_margin_top(10);
+    foot.set_margin_bottom(18);
+    foot.set_margin_start(18);
+    foot.set_margin_end(18);
+    let toolbar = adw::ToolbarView::new();
+    toolbar.add_top_bar(&adw::HeaderBar::new());
+    toolbar.set_content(Some(&scroll));
+    toolbar.add_bottom_bar(foot);
+    toolbar
+}
+
 pub fn open(ctx: &Rc<Ctx>, work: &WorkId) {
     let dialog = adw::Dialog::new();
     dialog.set_title(&t::send_title());
@@ -303,7 +323,6 @@ pub fn open(ctx: &Rc<Ctx>, work: &WorkId) {
         buttons.append(button);
     }
     let foot = gtk::Box::new(gtk::Orientation::Vertical, 8);
-    foot.set_margin_top(10);
     foot.append(&state_line);
     foot.append(&under);
     foot.append(&buttons);
@@ -311,7 +330,7 @@ pub fn open(ctx: &Rc<Ctx>, work: &WorkId) {
     let column = gtk::Box::new(gtk::Orientation::Vertical, 10);
     column.set_width_request(460 - 2 * 18);
     column.set_margin_top(6);
-    column.set_margin_bottom(18);
+    column.set_margin_bottom(8);
     column.set_margin_start(18);
     column.set_margin_end(18);
     column.append(&heading(&t::send_for()));
@@ -319,17 +338,7 @@ pub fn open(ctx: &Rc<Ctx>, work: &WorkId) {
     column.append(&heading(&t::send_what()));
     column.append(&what);
     column.append(&note);
-    column.append(&foot);
-    let scroll = gtk::ScrolledWindow::builder()
-        .hscrollbar_policy(gtk::PolicyType::Never)
-        .propagate_natural_height(true)
-        .max_content_height(620)
-        .child(&column)
-        .build();
-    let toolbar = adw::ToolbarView::new();
-    toolbar.add_top_bar(&adw::HeaderBar::new());
-    toolbar.set_content(Some(&scroll));
-    dialog.set_child(Some(&toolbar));
+    dialog.set_child(Some(&frame(&column, &foot)));
 
     let parts = Rc::new(Parts {
         targets,
@@ -580,6 +589,46 @@ async fn save_files(
             );
         }
         None => ctx.toast(&words),
+    }
+}
+
+#[cfg(test)]
+mod frame_tests {
+    use adw::prelude::*;
+
+    use super::frame;
+    use crate::gtk_test::{pump, run};
+
+    /// R7L-2. Seven targets in a short window: the choices scroll and the buttons stay in it.
+    #[test]
+    fn the_buttons_show_however_short_the_window() {
+        run(|| {
+            let column = gtk::Box::new(gtk::Orientation::Vertical, 10);
+            for n in 0..7 {
+                let row = gtk::Label::new(Some(&format!("Made-up Reader {n}")));
+                row.set_height_request(64);
+                column.append(&row);
+            }
+            let save = gtk::Button::with_label("Save to a folder");
+            let foot = gtk::Box::new(gtk::Orientation::Vertical, 8);
+            foot.append(&gtk::Label::new(Some("One file is ready.")));
+            foot.append(&save);
+            let window = gtk::Window::new();
+            window.set_default_size(460, 360);
+            window.set_child(Some(&frame(&column, &foot)));
+            window.present();
+            pump(300);
+            let height = window.height() as f32;
+            let bounds = save.compute_bounds(&window).expect("the button is laid out");
+            assert!(save.is_child_visible() && bounds.height() > 0.0);
+            assert!(
+                bounds.y() + bounds.height() <= height,
+                "Save to a folder ends at {} in a window {height} high",
+                bounds.y() + bounds.height()
+            );
+            assert!(save.ancestor(gtk::ScrolledWindow::static_type()).is_none());
+            window.destroy();
+        });
     }
 }
 
