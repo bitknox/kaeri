@@ -95,6 +95,10 @@ const PROT_WRITE: c_int = 0x02;
 const MAP_PRIVATE: c_int = 0x0002;
 const MAP_ANON: c_int = 0x1000;
 const MAP_FAILED: *mut c_void = !0 as *mut c_void;
+/// Darwin's madvise advice: the pages may be taken back by the system and no longer count toward
+/// the process's footprint, until `MADV_FREE_REUSE` says they are in use again.
+const MADV_FREE_REUSABLE: c_int = 7;
+const MADV_FREE_REUSE: c_int = 8;
 
 unsafe extern "C" {
     fn mmap(
@@ -106,6 +110,7 @@ unsafe extern "C" {
         offset: i64,
     ) -> *mut c_void;
     fn munmap(addr: *mut c_void, len: usize) -> c_int;
+    fn madvise(addr: *mut c_void, len: usize, advice: c_int) -> c_int;
 }
 
 /// Fresh zeroed pages from the system, or null.
@@ -128,6 +133,28 @@ unsafe fn unmap(addr: *mut u8, len: usize) {
     unsafe { munmap(addr.cast(), len) };
 }
 
+/// Marks a freed block's pages as the system's to take back while it is kept, so a kept block
+/// does not count toward the app's memory. Its contents are lost.
+///
+/// # Safety
+///
+/// `addr` and `len` are a whole block [`map`] returned, which nothing uses any more.
+unsafe fn set_aside(addr: *mut u8, len: usize) {
+    // SAFETY: the caller hands over a whole mapping nothing uses, whose contents may go.
+    unsafe { madvise(addr.cast(), len, MADV_FREE_REUSABLE) };
+}
+
+/// Takes a kept block's pages back into use, after [`set_aside`]. Their contents are undefined.
+///
+/// # Safety
+///
+/// `addr` and `len` are a whole block [`map`] returned, just taken out of the kept ones.
+unsafe fn take_back(addr: *mut u8, len: usize) -> *mut u8 {
+    // SAFETY: a whole mapping, now this caller's alone.
+    unsafe { madvise(addr.cast(), len, MADV_FREE_REUSE) };
+    addr
+}
+
 /// Gives every kept block back to the system.
 pub(crate) fn release() {
     for (addr, len) in KEPT.take_all() {
@@ -148,7 +175,13 @@ unsafe impl GlobalAlloc for Blocks {
             return unsafe { System.alloc(layout) };
         }
         let len = mapped_len(layout.size());
-        KEPT.take(len).unwrap_or_else(|| map(len))
+        match KEPT.take(len) {
+            Some(addr) => {
+                // SAFETY: a kept block of `len` bytes, now this caller's alone.
+                unsafe { take_back(addr, len) }
+            }
+            None => map(len),
+        }
     }
 
     unsafe fn alloc_zeroed(&self, layout: Layout) -> *mut u8 {
@@ -159,8 +192,12 @@ unsafe impl GlobalAlloc for Blocks {
         let len = mapped_len(layout.size());
         match KEPT.take(len) {
             Some(addr) => {
-                // SAFETY: a kept block of `len` bytes, now this caller's alone.
-                unsafe { addr.write_bytes(0, layout.size()) };
+                // SAFETY: a kept block of `len` bytes, now this caller's alone, its contents
+                // undefined until written.
+                unsafe {
+                    take_back(addr, len);
+                    addr.write_bytes(0, layout.size());
+                }
                 addr
             }
             None => map(len),
@@ -173,6 +210,8 @@ unsafe impl GlobalAlloc for Blocks {
             return unsafe { System.dealloc(ptr, layout) };
         }
         let len = mapped_len(layout.size());
+        // SAFETY: the caller frees the whole block, so nothing uses it or its contents.
+        unsafe { set_aside(ptr, len) };
         if !KEPT.keep(ptr, len) {
             // SAFETY: the caller frees the whole block, so nothing uses it.
             unsafe { unmap(ptr, len) };
@@ -254,7 +293,60 @@ mod tests {
 
             release();
             assert_eq!(kept(), 0);
+
+            // While kept, a block's pages are the system's, not the app's.
+            let big = Layout::from_size_align(64 * LARGE, 16).unwrap();
+            let block = blocks.alloc(big);
+            assert!(!block.is_null());
+            block.write_bytes(1, big.size());
+            let in_use = footprint();
+            blocks.dealloc(block, big);
+            assert_eq!(kept(), 1);
+            let set_aside = footprint();
+            assert!(
+                in_use.saturating_sub(set_aside) > 48 * LARGE as u64,
+                "footprint {in_use} in use, {set_aside} once kept"
+            );
+            // Taken again, it is the app's again, and holds what is written to it.
+            let again = blocks.alloc(big);
+            assert_eq!(again, block);
+            again.write_bytes(2, big.size());
+            assert!(std::slice::from_raw_parts(again, big.size()).iter().all(|b| *b == 2));
+            blocks.dealloc(again, big);
+
+            release();
+            assert_eq!(kept(), 0);
         }
+    }
+
+    /// The process's physical footprint, as the system counts an app's memory, in bytes.
+    fn footprint() -> u64 {
+        /// `rusage_info_v0` from <sys/resource.h>; only the footprint is read here.
+        #[allow(dead_code)]
+        #[repr(C)]
+        #[derive(Default)]
+        struct RusageInfo {
+            uuid: [u8; 16],
+            user_time: u64,
+            system_time: u64,
+            pkg_idle_wkups: u64,
+            interrupt_wkups: u64,
+            pageins: u64,
+            wired_size: u64,
+            resident_size: u64,
+            phys_footprint: u64,
+            proc_start_abstime: u64,
+            proc_exit_abstime: u64,
+        }
+        unsafe extern "C" {
+            fn proc_pid_rusage(pid: c_int, flavor: c_int, buffer: *mut c_void) -> c_int;
+        }
+        let mut info = RusageInfo::default();
+        // SAFETY: RUSAGE_INFO_V0 (0) fills a `rusage_info_v0`, which `info` is laid out as.
+        let rc =
+            unsafe { proc_pid_rusage(std::process::id() as c_int, 0, (&raw mut info).cast()) };
+        assert_eq!(rc, 0);
+        info.phys_footprint
     }
 
     #[test]

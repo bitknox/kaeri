@@ -4,9 +4,10 @@
 //! ones it asks for, and nothing public asks it to give them back. The reader works through
 //! pages tens of megabytes each, so after it closed hundreds of megabytes stayed with the app.
 //! [`Blocks`] takes blocks of [`LARGE`] bytes and over from the system's pages itself. It keeps
-//! the ones freed for the next pages the same way, and [`release`] gives every one it keeps back
-//! to the system, which the engine does as the reader closes. Smaller blocks go to the system
-//! allocator as they would without it.
+//! the ones freed for the next pages the same way, with their pages marked as the system's to take
+//! back meanwhile, so a kept block counts toward the app's memory only once it is in use again.
+//! [`release`] gives every one it keeps back to the system, which the engine does as the reader
+//! closes. Smaller blocks go to the system allocator as they would without it.
 //!
 //! `kaeri-ffi` installs it as the global allocator on Apple platforms only. Elsewhere [`release`]
 //! has nothing to give back.
