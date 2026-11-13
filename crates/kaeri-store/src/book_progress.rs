@@ -41,6 +41,11 @@ pub struct BookProgressState {
     pub problem_at: Option<i64>,
 }
 
+/// The longest a mark waits between tries. A wait set further off than this was set by a clock
+/// that ran ahead, and is over; a mark stamped further than this after a newer change's own time
+/// was made by such a clock, and the newer change wins.
+pub const LONGEST_WAIT: i64 = 3_600;
+
 const COLUMNS: &str = "server, series, chapter, read, at, attempts, first_failed_at, held";
 
 fn item(r: &rusqlite::Row<'_>) -> rusqlite::Result<BookProgressItem> {
@@ -58,8 +63,10 @@ fn item(r: &rusqlite::Row<'_>) -> rusqlite::Result<BookProgressItem> {
 
 impl Store {
     /// Queue `read` for `chapter` of `series` on `server`, marked at `at`, to go at `due_at`. An
-    /// older mark for the chapter is replaced; a newer one stays. A row that waits for Try
-    /// again keeps waiting, with the new mark.
+    /// older mark for the chapter is replaced; a newer one stays, unless it is stamped more than
+    /// [`LONGEST_WAIT`] after this one, which only a clock that ran ahead does: the person's
+    /// latest change is what the server is told. A row that waits for Try again keeps waiting,
+    /// with the new mark.
     pub fn queue_book_progress(
         &self,
         server: &str,
@@ -75,8 +82,9 @@ impl Store {
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6)
                  ON CONFLICT (server, series, chapter) DO UPDATE SET
                     read = excluded.read, at = excluded.at
-                  WHERE excluded.at >= book_progress_outbox.at",
-                params![server, series, chapter, read, at, due_at],
+                  WHERE excluded.at >= book_progress_outbox.at
+                     OR book_progress_outbox.at - excluded.at > ?7",
+                params![server, series, chapter, read, at, due_at, LONGEST_WAIT],
             )?;
             Ok(())
         })
@@ -102,25 +110,29 @@ impl Store {
         })
     }
 
-    /// Up to `limit` marks due at `now`, the oldest mark first, none that waits for Try again.
+    /// Up to `limit` marks due at `now`, the oldest mark first, none that waits for Try again. A
+    /// wait set further off than [`LONGEST_WAIT`] is due.
     pub fn due_book_progress(&self, now: i64, limit: u32) -> Result<Vec<BookProgressItem>> {
         self.with_conn(|c| {
             let mut statement = c.prepare(&format!(
                 "SELECT {COLUMNS} FROM book_progress_outbox
-                  WHERE held IS NULL AND due_at <= ?1 ORDER BY at, server, series, chapter
+                  WHERE held IS NULL AND (due_at <= ?1 OR due_at > ?1 + ?3)
+                  ORDER BY at, server, series, chapter
                   LIMIT ?2"
             ))?;
-            let rows = statement.query_map(params![now, limit], item)?;
+            let rows = statement.query_map(params![now, limit, LONGEST_WAIT], item)?;
             Ok(rows.collect::<rusqlite::Result<Vec<_>>>()?)
         })
     }
 
-    /// When the next mark is due, if one waits that is not held.
-    pub fn next_book_progress_due(&self) -> Result<Option<i64>> {
+    /// When the next mark is due as seen at `now`, if one waits that is not held: `now` for one
+    /// whose wait is further off than [`LONGEST_WAIT`].
+    pub fn next_book_progress_due(&self, now: i64) -> Result<Option<i64>> {
         self.with_conn(|c| {
             Ok(c.query_row(
-                "SELECT MIN(due_at) FROM book_progress_outbox WHERE held IS NULL",
-                [],
+                "SELECT MIN(CASE WHEN due_at > ?1 + ?2 THEN ?1 ELSE due_at END)
+                   FROM book_progress_outbox WHERE held IS NULL",
+                params![now, LONGEST_WAIT],
                 |r| r.get(0),
             )?)
         })
@@ -279,7 +291,7 @@ mod tests {
         let again = store.due_book_progress(230, 10).unwrap();
         assert_eq!(again.len(), 1);
         assert_eq!((again[0].attempts, again[0].first_failed_at), (1, Some(200)));
-        assert_eq!(store.next_book_progress_due().unwrap(), Some(230));
+        assert_eq!(store.next_book_progress_due(200).unwrap(), Some(230));
         let state = store.book_progress_state("k").unwrap();
         assert_eq!((state.pending, state.held), (2, 1));
         assert_eq!(state.problem.as_deref(), Some("refused-key"));
@@ -303,5 +315,31 @@ mod tests {
         assert_eq!(store.due_book_progress(200, 10).unwrap().len(), 1);
         store.forget_book_progress("k").unwrap();
         assert_eq!(store.book_progress_state("k").unwrap(), BookProgressState::default());
+    }
+    #[test]
+    fn a_wait_set_while_the_clock_ran_ahead_is_due_once_it_is_put_right() {
+        let store = store();
+        let ahead = 100 + 365 * 86_400;
+        store.queue_book_progress("k", "s1", "c1", true, ahead, ahead).unwrap();
+        let due = store.due_book_progress(ahead, 10).unwrap();
+        store.book_progress_failed(&due[0], "no-answer", false, ahead + 30, ahead).unwrap();
+        // The clock put right.
+        assert_eq!(store.next_book_progress_due(2_000).unwrap(), Some(2_000));
+        assert_eq!(store.due_book_progress(2_000, 10).unwrap().len(), 1);
+        // A wait set at the right time still waits.
+        store.book_progress_failed(&due[0], "no-answer", false, 2_030, 2_000).unwrap();
+        assert!(store.due_book_progress(2_000, 10).unwrap().is_empty());
+    }
+
+    #[test]
+    fn a_change_after_a_mark_made_while_the_clock_ran_ahead_wins() {
+        let store = store();
+        let ahead = 100 + 365 * 86_400;
+        store.queue_book_progress("k", "s1", "c1", true, ahead, ahead).unwrap();
+        // The clock put right, the chapter taken back.
+        store.queue_book_progress("k", "s1", "c1", false, 2_000, 2_000).unwrap();
+        let due = store.due_book_progress(2_000, 10).unwrap();
+        assert_eq!(due.len(), 1);
+        assert_eq!((due[0].read, due[0].at), (false, 2_000), "the latest change goes");
     }
 }

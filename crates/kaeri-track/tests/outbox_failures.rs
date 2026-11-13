@@ -493,3 +493,58 @@ async fn progress_made_during_an_outage_still_collapses() {
         assert_eq!(tracker.sent(), [media.progress(990_001, 6)], "{case}");
     }
 }
+
+/// What became of a change while the clock ran ahead.
+#[derive(Debug, Clone, Copy)]
+enum Ahead {
+    /// Only queued.
+    Queued,
+    /// The tracker refused it, that once.
+    Refused,
+    /// Its push failed this way.
+    Failed(Mode),
+}
+
+/// A change whose push failed while the computer's clock ran a year ahead (a dead clock
+/// battery, a wrong manual date), then the clock put right: it goes within the hour, whatever
+/// the failure was, rather than wait for the clock to catch up with the wait it was given. The
+/// same for a change only queued while the clock was ahead.
+#[tokio::test]
+async fn a_change_that_failed_while_the_clock_ran_ahead_still_goes_out() {
+    let ahead = 1_000 + 365 * DAY;
+    let fates = [
+        Ahead::Queued,
+        Ahead::Refused,
+        Ahead::Failed(Mode::Offline),
+        Ahead::Failed(Mode::Down),
+        Ahead::Failed(Mode::Paused(600)),
+        Ahead::Failed(Mode::SignedOut),
+    ];
+    for (media, batched) in cases() {
+        for fate in fates {
+            let case = format!("{fate:?} {media:?} batched {batched}");
+            let store = Store::open_in_memory().unwrap();
+            store.enqueue(ID, &media.progress(990_001, 42), ahead).unwrap();
+            let tracker = Fake::new(batched);
+            match fate {
+                Ahead::Queued => {}
+                Ahead::Refused => tracker.refuse(990_001),
+                Ahead::Failed(mode) => tracker.set(mode),
+            }
+            if !matches!(fate, Ahead::Queued) {
+                let report = media.drain(&store, &tracker, ahead).await;
+                assert_eq!(report.sent, 0, "{case}");
+            }
+
+            tracker.set(Mode::Up);
+            tracker.refused.lock().unwrap().clear();
+            let (sent, dropped) = tick(media, &store, &tracker, 2_000, 2_000 + 3_600).await;
+            assert_eq!(
+                (sent, dropped),
+                (1, 0),
+                "{case}: the change goes once the clock is right"
+            );
+            assert_eq!(media.depth(&store), 0, "{case}");
+        }
+    }
+}

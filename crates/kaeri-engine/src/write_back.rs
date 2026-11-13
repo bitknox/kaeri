@@ -42,7 +42,7 @@ const PACE: Duration = Duration::from_millis(150);
 
 /// The waits after the first, second and third failure, in seconds; hourly after that.
 const RETRIES: [i64; 3] = [30, 120, 600];
-const HOURLY: i64 = 3_600;
+const HOURLY: i64 = kaeri_store::book_progress::LONGEST_WAIT;
 
 /// How long Kaeri keeps trying a server that does not answer before it waits for Try again.
 const A_DAY: i64 = 86_400;
@@ -294,7 +294,7 @@ impl BookSources {
                     tracing::debug!(?pass, "book progress pass");
                 }
                 let now = clock.now();
-                let next = this.store().next_book_progress_due().ok().flatten();
+                let next = this.store().next_book_progress_due(now).ok().flatten();
                 let wait = match next {
                     _ if this.write_back.is_offline() => NAP,
                     Some(at) => (at - now).clamp(0, NAP),

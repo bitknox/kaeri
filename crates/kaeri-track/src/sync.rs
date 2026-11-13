@@ -161,7 +161,10 @@ pub fn clear_reauth_hold(
 
 /// How long a title waits after the tracker's own trouble with it alone, while the tracker
 /// answered for other titles in the same pass: its backoff's ceiling. Not counted against it.
-const TITLE_TROUBLE_SECS: i64 = 3_600;
+const TITLE_TROUBLE_SECS: i64 = kaeri_store::outbox::BACKOFF_MAX_SECS;
+
+/// The longest an outage hold lasts: a pause a tracker asks for is honoured up to a day.
+const OUTAGE_HOLD_MAX_SECS: i64 = 86_400;
 
 /// Where a tracker's outage hold is remembered: until when its queues wait, after the network
 /// or the tracker failed, or the tracker asked for a pause.
@@ -310,6 +313,13 @@ pub async fn drain_read(
     drain_queue(store, tracker, now, Queue::Reading).await
 }
 
+/// Whether a hold set to last until `until`, and never set longer than `longest`, still holds
+/// at `now`. One further off than it could have been set was set by a clock that ran ahead, and
+/// is over: the queue would otherwise wait for the clock to catch up.
+fn holds(until: i64, longest: i64, now: i64) -> bool {
+    now < until && until - now <= longest
+}
+
 async fn drain_queue(
     store: &Store,
     tracker: &dyn Tracker,
@@ -325,7 +335,7 @@ async fn drain_queue(
     // rejection below records a hold, and until it lapses the queue waits rather than
     // re-presenting the same dead credential every minute for months.
     if let Some(until) = store.get_meta_i64(&reauth_hold_key(id))?
-        && now < until
+        && holds(until, REAUTH_HOLD_SECS, now)
     {
         report.needs_reauth = true;
         report.remaining = queue.depth(store, id)?;
@@ -334,7 +344,7 @@ async fn drain_queue(
     // The network or the tracker was down at the last pass, or it asked for a pause: both
     // queues wait the hold out, quietly, and nothing in them is counted for it.
     if let Some(until) = store.get_meta_i64(&outage_hold_key(id))?
-        && now < until
+        && holds(until, OUTAGE_HOLD_MAX_SECS, now)
     {
         report.remaining = queue.depth(store, id)?;
         return Ok(report);
@@ -530,7 +540,8 @@ fn settle(
         // grows while it stays down, and no op is counted for it.
         let streak = store.get_meta_i64(&outage_streak_key(id))?.unwrap_or(0).max(0) + 1;
         let backoff = kaeri_store::outbox::backoff_secs((streak - 1) as u32);
-        let asked = pause.flatten().map_or(0, |secs| secs.min(i64::MAX as u64) as i64);
+        let asked =
+            pause.flatten().map_or(0, |secs| secs.min(OUTAGE_HOLD_MAX_SECS as u64) as i64);
         store.set_meta_i64(&outage_streak_key(id), streak)?;
         store.set_meta_i64(&outage_hold_key(id), now + backoff.max(asked))?;
         tracing::warn!(

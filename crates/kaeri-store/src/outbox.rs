@@ -26,7 +26,10 @@ const BACKOFF_BASE_SECS: i64 = 30;
 
 /// Ceiling on the backoff. An hour is long enough to ride out an outage without leaving
 /// a recovered tracker waiting for days.
-const BACKOFF_MAX_SECS: i64 = 3_600;
+///
+/// Also the longest any wait in the queue may be: one set further off than this was set by a
+/// clock that ran ahead, and is due at once.
+pub const BACKOFF_MAX_SECS: i64 = 3_600;
 
 /// Refusals after which an operation is abandoned.
 ///
@@ -59,18 +62,29 @@ pub struct DroppedOp {
 /// for the same title still waiting. A later change to a title must never reach the tracker
 /// before an earlier one that is backing off, or the earlier one would land last and undo it.
 fn claim_sql(table: &str) -> String {
+    // Due: its time has come, or it is further off than any wait the queue sets, which only a
+    // clock that ran ahead when the wait was set leaves behind. Without that, a change whose push
+    // failed while the clock read a year ahead waited that year after the clock was put right.
+    let due = |row: &str| {
+        format!(
+            "({row}.next_retry <= ?2
+              OR ({row}.next_retry > ?2 + {BACKOFF_MAX_SECS} AND {row}.next_retry <> {DEFERRED}))"
+        )
+    };
     format!(
         "SELECT id, tracker_id, op, attempts, created_at
            FROM {table} o
-          WHERE tracker_id = ?1 AND next_retry <= ?2
+          WHERE tracker_id = ?1 AND {o_due}
             AND NOT EXISTS (
                 SELECT 1 FROM {table} e
                  WHERE e.tracker_id = o.tracker_id AND e.anilist_id = o.anilist_id
-                   AND e.next_retry > ?2
+                   AND NOT {e_due}
                    AND (e.created_at < o.created_at
                         OR (e.created_at = o.created_at AND e.id < o.id)))
           ORDER BY created_at ASC, id ASC
-          LIMIT ?3"
+          LIMIT ?3",
+        o_due = due("o"),
+        e_due = due("e"),
     )
 }
 
