@@ -69,7 +69,7 @@ struct AddSourceMenu: View {
     var body: some View {
         Menu {
             if devicePicksFolders {
-                Button(L.sourcesAddFolder) { FolderPicker.choose { store.addFolder($0) } }
+                Button(L.sourcesAddFolder) { FolderPicker.choose(message: L.libraryPickerMessage) { store.addFolder($0) } }
             }
             Button(L.sourcesAddServer) { navigator.addServerShown = true }
             Button(L.sourcesAddStore) { navigator.invite = "" }
@@ -86,17 +86,18 @@ struct AddSourceMenu: View {
     }
 }
 
-/// The system folder picker, for the Mac. The prompt and message are from the catalogue.
+/// The system folder picker, for the Mac. The prompt and message are from the catalogue: a folder
+/// of books unless the caller asks for a folder of episodes.
 enum FolderPicker {
     @MainActor
-    static func choose(_ picked: @escaping (String) -> Void) {
+    static func choose(message: String = L.bookPickerMessage, _ picked: @escaping (String) -> Void) {
         #if os(macOS)
         let panel = NSOpenPanel()
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
         panel.prompt = L.libraryPickerPrompt
-        panel.message = L.libraryPickerMessage
+        panel.message = message
         if panel.runModal() == .OK, let url = panel.url { picked(url.path(percentEncoded: false)) }
         #endif
     }

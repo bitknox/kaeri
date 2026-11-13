@@ -69,3 +69,4 @@ servers-row-summary-apple = { $series ->
     [many] { $series } сериалов
    *[other] { $series } сериала
  }
+book-picker-message = Выберите папку с вашими книгами.

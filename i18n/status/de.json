@@ -1551,6 +1551,16 @@
     ],
     "back": "Kaeri matched { $matched } by their details. This one still needs checking."
   },
+  "book-picker-message": {
+    "source": "4d3eda59d6ad",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-13",
+    "flags": [
+      "review: new line, drafted to match library-picker-message with books in place of episodes"
+    ],
+    "back": "Choose a folder with your books."
+  },
   "book-server-address": {
     "source": "fcdd8e672c75",
     "state": "draft",
