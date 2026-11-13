@@ -290,32 +290,40 @@ final class ReaderStuckTests: XCTestCase {
     }
 
     /// Command-0 fits a finished pinch in every way of reading: one page, a spread, pages one
-    /// under another and the long strip.
-    func testCommandZeroFitsAFinishedPinchInEveryMode() throws {
+    /// under another and the long strip. One test each, so a mode that fails names itself and
+    /// the others still run.
+    func testCommandZeroFitsAPinchedPage() throws {
+        try fitsAfterPinch("readermangartl", probe: "page-zoom")
+    }
+
+    func testCommandZeroFitsAPinchedSpread() throws {
+        try fitsAfterPinch("readermangartl", probe: "page-zoom", wide: true)
+    }
+
+    func testCommandZeroFitsPinchedPagesOneUnderAnother() throws {
+        try fitsAfterPinch("readermangartl", ["-KaeriReaderSet", "mode=vertical"], probe: "page-zoom")
+    }
+
+    func testCommandZeroFitsAPinchedStrip() throws {
+        try fitsAfterPinch("readerstrip", probe: "strip-zoom")
+    }
+
+    private func fitsAfterPinch(_ scene: String, _ extra: [String] = [], probe name: String, wide: Bool = false) throws {
         try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "Command-0 is an iPad check")
-        let modes: [(name: String, scene: String, extra: [String], probe: String, wide: Bool)] = [
-            ("paged", "readermangartl", [], "page-zoom", false),
-            ("spread", "readermangartl", [], "page-zoom", true),
-            ("vertical", "readermangartl", ["-KaeriReaderSet", "mode=vertical"], "page-zoom", false),
-            ("strip", "readerstrip", [], "strip-zoom", false),
-        ]
+        XCUIDevice.shared.orientation = wide ? .landscapeLeft : .portrait
         defer { XCUIDevice.shared.orientation = .portrait }
-        for mode in modes {
-            XCUIDevice.shared.orientation = mode.wide ? .landscapeLeft : .portrait
-            let app = launch(mode.scene, mode.extra)
-            Thread.sleep(forTimeInterval: 3)
-            let probe = app.descendants(matching: .any)[mode.probe]
-            XCTAssertTrue(probe.waitForExistence(timeout: 10), "\(mode.name): no zoom from the Fixtures app")
-            let zoom = { () -> Double in
-                Thread.sleep(forTimeInterval: 0.8)
-                return Double(probe.value as? String ?? "") ?? 0
-            }
-            XCTAssertEqual(zoom(), 1, accuracy: 0.01, "\(mode.name): did not open fitted")
-            app.pinch(withScale: 2.5, velocity: 1)
-            XCTAssertGreaterThan(zoom(), 1.05, "\(mode.name): the pinch did not zoom")
-            key(app, "0", .command)
-            XCTAssertEqual(zoom(), 1, accuracy: 0.01, "\(mode.name): Command-0 left the pinch")
-            app.terminate()
+        let app = launch(scene, extra)
+        Thread.sleep(forTimeInterval: 3)
+        let probe = app.descendants(matching: .any)[name]
+        XCTAssertTrue(probe.waitForExistence(timeout: 10), "no zoom from the Fixtures app")
+        let zoom = { () -> Double in
+            Thread.sleep(forTimeInterval: 0.8)
+            return Double(probe.value as? String ?? "") ?? 0
         }
+        XCTAssertEqual(zoom(), 1, accuracy: 0.01, "did not open fitted")
+        app.pinch(withScale: 2.5, velocity: 1)
+        XCTAssertGreaterThan(zoom(), 1.05, "the pinch did not zoom")
+        key(app, "0", .command)
+        XCTAssertEqual(zoom(), 1, accuracy: 0.01, "Command-0 left the pinch")
     }
 }
