@@ -9,14 +9,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material3.Text
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
-import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.swipeUp
 import app.kaeri.engine.model.Leaf
 import app.kaeri.engine.model.PageFile
 import app.kaeri.engine.model.ReaderMode
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -37,12 +38,21 @@ class StripFlowGateTest {
     private val dir = kotlin.io.path.createTempDirectory("strip-flow-gate").toFile()
     private val flowed = mutableListOf<String>()
     private val feet = mutableListOf<Boolean>()
+    private val list = LazyListState()
+    private lateinit var scope: CoroutineScope
+
+    /** A scroll by [px], held over a few frames as a finger's is, then let go. */
+    private fun drag(px: Float) {
+        compose.runOnIdle { scope.launch { list.scroll { scrollBy(px); repeat(4) { withFrameNanos { } } } } }
+        compose.waitForIdle()
+    }
 
     /** A chapter of one image, short enough that the divider under it is on screen at once. */
     private fun strip(file: PageFile?) {
         val leaves = listOf(Leaf(0u, listOf(ReaderFixtures.part(0u, file)), false), Leaf(1u, emptyList(), true))
         val state = ReaderState(view = ReaderFixtures.view(start = 0u, mode = ReaderMode.STRIP), leaves = leaves)
         compose.setContent {
+            scope = rememberCoroutineScope()
             Box(Modifier.fillMaxSize()) {
                 StripReader(
                     state = state,
@@ -56,7 +66,7 @@ class StripFlowGateTest {
                     footer = {},
                     divider = { Text(it.label) },
                     onFlow = { flowed += it.id },
-                    list = LazyListState(),
+                    list = list,
                 )
             }
         }
@@ -66,8 +76,7 @@ class StripFlowGateTest {
     @Test
     fun a_chapter_still_loading_its_images_neither_flows_on_nor_reaches_its_foot_by_itself() {
         strip(file = null)
-        compose.onRoot().performTouchInput { swipeUp(startY = centerY, endY = centerY - 40f) }
-        compose.waitForIdle()
+        drag(40f)
         assertEquals(emptyList<String>(), flowed)
         assertFalse(feet.any { it })
     }
@@ -81,8 +90,7 @@ class StripFlowGateTest {
     @Test
     fun a_scroll_onto_the_divider_with_the_images_in_flows_on() {
         strip(file = ReaderFixtures.grey(dir, "p0", 400, 300))
-        compose.onRoot().performTouchInput { swipeUp(startY = centerY, endY = centerY - 40f) }
-        compose.waitForIdle()
+        drag(40f)
         assertEquals(listOf("local:lantern-stair/13"), flowed)
         assertTrue(feet.any { it })
     }

@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import app.kaeri.engine.model.Command
@@ -90,7 +91,7 @@ class StripScrollBackTest {
         sent.clear()
 
         // Back up, until only chapter 12 is on screen.
-        compose.runOnIdle { scope.launch { list.animateScrollToItem(0) } }
+        compose.runOnIdle { scope.launch { list.scroll { scrollBy(-100_000f); repeat(4) { withFrameNanos { } } } } }
         compose.waitForIdle()
         assertEquals(listOf(ReaderCommand.OpenChapter(SESSION, CHAPTER)), sent.filterIsInstance<ReaderCommand.OpenChapter>())
         val view = ReaderFixtures.view(start = 0u, mode = ReaderMode.STRIP)
