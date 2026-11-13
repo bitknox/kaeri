@@ -229,7 +229,9 @@ public sealed class SendState
                 {
                     s.Phase = SendPhase.Ready;
                     s.Files = ready.Files;
-                    s.Line = string.Join("\n", ready.Skipped.Select(skipped => skipped.Line.Text()));
+                    // The binding's default for a send that left nothing out is null.
+                    var left = ready.Skipped ?? [];
+                    s.Line = string.Join("\n", left.Select(skipped => skipped.Line.Text()));
                 });
                 return ReadingPart.Send;
             case ReadingEvent.Feed feed:
