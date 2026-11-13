@@ -266,14 +266,14 @@ pub fn work_menu(
 }
 
 /// One work on a shelf or in a grid: the cover, its title, and what the engine says under it.
-pub fn work_card(hub: &Hub, tile: &WorkTile, width: i32) -> gtk::Box {
+/// A button, so Tab and the arrows reach it and Return and Space open the series.
+pub fn work_card(hub: &Hub, tile: &WorkTile, width: i32) -> gtk::Button {
     let column = gtk::Box::new(gtk::Orientation::Vertical, 6);
     // The card is the cover's width whatever its words: titles wrap to two lines and end in an
     // ellipsis, and the track keeps its height with no progress so the rows line up.
     column.set_size_request(width, -1);
     column.set_hexpand(false);
     column.set_halign(gtk::Align::Start);
-    column.add_css_class("read-card");
     column.append(&cover(hub, tile.cover.as_deref(), &tile.title, width));
     let bar = track(tile.progress.unwrap_or(0.0), width);
     if tile.progress.is_none() {
@@ -317,10 +317,18 @@ pub fn work_card(hub: &Hub, tile: &WorkTile, width: i32) -> gtk::Box {
         column.append(&label);
         said.push(line);
     }
-    column.update_property(&[gtk::accessible::Property::Label(&said.join(", "))]);
-    opens_series(&column, &tile.work);
-    work_menu(&column, &tile.work, None);
-    column
+    let card = gtk::Button::new();
+    card.set_child(Some(&column));
+    card.add_css_class("flat");
+    card.add_css_class("read-card");
+    card.set_halign(gtk::Align::Start);
+    card.set_valign(gtk::Align::Start);
+    card.set_hexpand(false);
+    card.set_action_name(Some("win.open-series"));
+    card.set_action_target_value(Some(&tile.work.0.to_variant()));
+    card.update_property(&[gtk::accessible::Property::Label(&said.join(", "))]);
+    work_menu(&card, &tile.work, None);
+    card
 }
 
 /// The gap between cards in a grid, both ways, as the board draws it.
@@ -351,8 +359,7 @@ impl WorkGrid {
         }
         for tile in tiles {
             let card = work_card(&self.hub, tile, COVER_WIDTH);
-            card.set_accessible_role(gtk::AccessibleRole::ListItem);
-            self.widget.append(&card);
+            self.widget.append(&discovery::item(&card));
         }
     }
 }
@@ -604,5 +611,90 @@ mod label_tests {
         for label in ["Oneshot", "The Lantern Festival", "1st Anniversary Extra", ""] {
             assert!(!numbered(label), "{label}");
         }
+    }
+}
+
+#[cfg(test)]
+mod grid_tests {
+    use std::{
+        cell::RefCell,
+        rc::{Rc, Weak},
+    };
+
+    use adw::prelude::*;
+    use gtk::{gio, glib};
+    use kaeri_core::books::WorkId;
+    use kaeri_model::reading::WorkTile;
+
+    use super::WorkGrid;
+    use crate::{
+        gtk_test::{pump, run},
+        hub::Hub,
+    };
+
+    fn tile(work: &str, title: &str) -> WorkTile {
+        WorkTile {
+            work: WorkId(work.into()),
+            title: title.into(),
+            medium: kaeri_core::media::Medium::Manga,
+            cover: None,
+            format_label: None,
+            progress: None,
+            next: None,
+            new_chapter: false,
+            adult: false,
+            facts: Vec::new(),
+            demo: false,
+            not_in_sources: false,
+            origin: None,
+            amount: None,
+            started: None,
+        }
+    }
+
+    /// Library's covers take the keyboard: Tab reaches the first, the arrows move along the row,
+    /// and Return opens the series of the cover in focus.
+    #[test]
+    fn the_keyboard_reaches_and_opens_every_card() {
+        run(|| {
+            let hub = Hub::new(Weak::new());
+            let grid = WorkGrid::new(&hub);
+            grid.set(&[tile("a:1", "Lantern Ferry"), tile("a:2", "Paper Kite")]); // i18n-skip
+            let opened = Rc::new(RefCell::new(Vec::<String>::new()));
+            let open = gio::SimpleAction::new("open-series", Some(glib::VariantTy::STRING));
+            open.connect_activate({
+                let opened = Rc::clone(&opened);
+                move |_, work| opened.borrow_mut().extend(work.and_then(|w| w.get::<String>()))
+            });
+            let actions = gio::SimpleActionGroup::new();
+            actions.add_action(&open);
+            let window = gtk::Window::new();
+            window.set_default_size(800, 600);
+            window.insert_action_group("win", Some(&actions));
+            window.set_child(Some(&grid.widget));
+            window.present();
+            pump(100);
+
+            let cards: Vec<gtk::Widget> = {
+                let mut cards = Vec::new();
+                let mut item = grid.widget.first_child();
+                while let Some(at) = item {
+                    cards.push(at.first_child().expect("an item holds its card"));
+                    item = at.next_sibling();
+                }
+                cards
+            };
+            assert_eq!(cards.len(), 2);
+            assert!(window.child_focus(gtk::DirectionType::TabForward));
+            pump(20);
+            assert!(cards[0].has_focus(), "Tab lands on the first card");
+            assert!(window.child_focus(gtk::DirectionType::Right));
+            pump(20);
+            assert!(cards[1].has_focus(), "Right moves to the next card");
+            assert!(cards[1].activate(), "Return activates the card");
+            pump(20);
+            assert_eq!(*opened.borrow(), vec!["a:2".to_owned()]);
+            window.destroy();
+        });
     }
 }
