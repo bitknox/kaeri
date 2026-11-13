@@ -3164,9 +3164,10 @@ impl Reader {
             && self.focus_in_chrome()
     }
 
-    /// Tab brings the chrome. From the page it goes to the chrome's first control, or its last
-    /// with Shift; inside the chrome the window moves the focus as usual. False when the
-    /// window should move it.
+    /// Tab brings the chrome and walks it: the head's controls, the page, then the group's,
+    /// and round again, Shift+Tab the other way. The reader walks it itself, as GTK's own
+    /// chain from the head runs back into the page behind it and never reaches the group.
+    /// False when the window should move the focus: inside a popover, which walks its own.
     fn tab_into_chrome(self: &Rc<Self>, back: bool) -> bool {
         self.reveal_chrome();
         let Some(window) = self.widget.root().and_downcast::<gtk::Window>() else {
@@ -4239,8 +4240,8 @@ fn tab_stops(head: &gtk::Widget, page: &gtk::Widget, group: &gtk::Widget) -> Vec
     stops
 }
 
-/// Where Tab, or Shift+Tab with `back`, goes from `focus`: from the page, the first control, or
-/// the last with `back`. None when a control holds the focus: the window moves it on.
+/// Where Tab, or Shift+Tab with `back`, goes from `focus`: the stop after (or before) the one
+/// that holds it, round the ends. Focus on none of the controls is on the page.
 fn next_stop(
     stops: &[gtk::Widget],
     page: &gtk::Widget,
@@ -4250,12 +4251,10 @@ fn next_stop(
     let held = |stop: &gtk::Widget| {
         stop != page && focus.is_some_and(|f| f == stop || f.is_ancestor(stop))
     };
-    if stops.iter().any(held) {
-        return None;
-    }
-    let mut controls = stops.iter().filter(|s| *s != page);
-    let next = if back { controls.last() } else { controls.next() };
-    next.cloned()
+    let at = stops.iter().position(held).or_else(|| stops.iter().position(|s| s == page))?;
+    let n = stops.len();
+    let next = if back { (at + n - 1) % n } else { (at + 1) % n };
+    stops.get(next).cloned()
 }
 
 /// Tab and Shift+Tab, without Ctrl or Alt, for the reader's own walk: `walk` gets whether the
@@ -4459,6 +4458,135 @@ mod strip_tests {
         let (image, offset) = strip_place_of(&heights, 8, target);
         assert_eq!(image, 1);
         assert!((offset - 0.25).abs() < 1e-3);
+    }
+}
+
+#[cfg(test)]
+mod tab_tests {
+    use adw::prelude::*;
+
+    use super::{next_stop, tab_stops};
+    use crate::gtk_test::{pump, run};
+
+    /// The reader's shape: a page with the head and the group over it, the group's last row
+    /// holding Chapters, the names, Aa and Full screen, and Go to page in a popover.
+    #[test]
+    fn tab_walks_the_head_the_page_and_the_whole_group_both_ways() {
+        run(|| {
+            let close = gtk::Button::with_label("Close");
+            let head = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+            head.append(&close);
+            head.append(&gtk::Label::new(Some("Chapter 3")));
+            let scrub = gtk::Scale::with_range(gtk::Orientation::Horizontal, 1.0, 9.0, 1.0);
+            let field = gtk::SpinButton::with_range(1.0, 9.0, 1.0);
+            let go_to = gtk::Popover::new();
+            go_to.set_child(Some(&field));
+            go_to.set_parent(&scrub);
+            let back_to = gtk::Button::with_label("Back to page 4");
+            back_to.set_visible(false);
+            let chapters = gtk::MenuButton::new();
+            // A menu button is only sensitive with something to open, as the reader's is.
+            chapters.set_popover(Some(&gtk::Popover::new()));
+            let aa = gtk::Button::with_label("Aa");
+            let full = gtk::Button::with_label("Full screen");
+            let off = gtk::Button::with_label("Off");
+            off.set_sensitive(false);
+            let ends = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+            ends.append(&aa);
+            ends.append(&full);
+            ends.append(&off);
+            let row = gtk::CenterBox::new();
+            row.set_start_widget(Some(&chapters));
+            row.set_center_widget(Some(&gtk::Label::new(Some("A Made-up Title"))));
+            row.set_end_widget(Some(&ends));
+            let group = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            group.append(&back_to);
+            group.append(&scrub);
+            group.append(&row);
+            group.set_valign(gtk::Align::End);
+            head.set_valign(gtk::Align::Start);
+            let page = gtk::Overlay::new();
+            page.set_child(Some(&gtk::Label::new(Some("page 1"))));
+            page.add_overlay(&head);
+            page.add_overlay(&group);
+            page.set_focusable(true);
+            let window = gtk::Window::builder().default_width(600).default_height(400).build();
+            window.set_child(Some(&page));
+            window.present();
+            pump(100);
+
+            let page_w = page.upcast_ref::<gtk::Widget>();
+            let stops = tab_stops(head.upcast_ref(), page_w, group.upcast_ref());
+            let known: [(&gtk::Widget, &str); 6] = [
+                (close.upcast_ref(), "Close"),
+                (page_w, "page"),
+                (scrub.upcast_ref(), "scrubber"),
+                (chapters.upcast_ref(), "Chapters"),
+                (aa.upcast_ref(), "Aa"),
+                (full.upcast_ref(), "Full screen"),
+            ];
+            let names: Vec<&str> = stops
+                .iter()
+                .map(|w| {
+                    known
+                        .iter()
+                        .find(|(k, _)| w == *k || (*k != page_w && w.is_ancestor(*k)))
+                        .map_or("other", |(_, name)| *name)
+                })
+                .collect();
+            assert_eq!(
+                names,
+                ["Close", "page", "scrubber", "Chapters", "Aa", "Full screen"],
+                "the hidden, the insensitive and the popover's field are passed over"
+            );
+
+            // Forward from the page, all the way round.
+            let mut at: Option<gtk::Widget> = Some(page_w.clone());
+            let mut seen = Vec::new();
+            for _ in 0..stops.len() {
+                let next = next_stop(&stops, page_w, at.as_ref(), false).expect("a stop");
+                next.grab_focus();
+                pump(10);
+                at = gtk::prelude::GtkWindowExt::focus(&window);
+                let focus = at.as_ref().expect("the focus");
+                seen.push(
+                    stops
+                        .iter()
+                        .position(|s| focus == s || (s != page_w && focus.is_ancestor(s))),
+                );
+            }
+            assert_eq!(seen, [Some(2), Some(3), Some(4), Some(5), Some(0), Some(1)]);
+
+            // Back from Close: round past the start to Full screen.
+            let back = next_stop(&stops, page_w, Some(close.upcast_ref()), true);
+            assert_eq!(back.as_ref(), Some(full.upcast_ref()));
+            // From Full screen on: Close, never stuck between Chapters and Aa.
+            let on = next_stop(&stops, page_w, Some(full.upcast_ref()), false);
+            assert_eq!(on.as_ref(), Some(close.upcast_ref()));
+            // From the head to the page, from the page to the group.
+            let after_close = next_stop(&stops, page_w, Some(close.upcast_ref()), false);
+            assert_eq!(after_close.as_ref(), Some(page_w));
+            // Focus nowhere counts as on the page.
+            assert_eq!(
+                next_stop(&stops, page_w, None, false).as_ref(),
+                Some(scrub.upcast_ref())
+            );
+            // Focus inside the page's content, as in a novel's web view and the text view inside
+            // it, counts as on the page: Tab leaves it for the group, Shift+Tab for the head.
+            let inner = gtk::TextView::new();
+            page.add_overlay(&inner);
+            let inner_w = inner.upcast_ref::<gtk::Widget>();
+            assert_eq!(
+                next_stop(&stops, page_w, Some(inner_w), false).as_ref(),
+                Some(scrub.upcast_ref())
+            );
+            assert_eq!(
+                next_stop(&stops, page_w, Some(inner_w), true).as_ref(),
+                Some(close.upcast_ref())
+            );
+            go_to.unparent();
+            window.destroy();
+        });
     }
 }
 
