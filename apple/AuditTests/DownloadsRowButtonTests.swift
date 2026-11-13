@@ -15,7 +15,9 @@ final class DownloadsRowButtonTests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-KaeriScene", "readingdownloads", "-KaeriMedium", "read", "-KaeriSection", "downloads"]
         app.launch()
-        let title = NSPredicate(format: "label CONTAINS %@", "The Lantern Ferry")
+        // The novel's row has no button of its own (no ring, Retry or Delete read), so only the
+        // row itself can make it one.
+        let title = NSPredicate(format: "label CONTAINS %@", "The Glass Orchard")
         let any = app.descendants(matching: .any).matching(title).firstMatch
         XCTAssertTrue(any.waitForExistence(timeout: 20), "the series is not on Downloads")
         let button = app.buttons.matching(title).firstMatch
