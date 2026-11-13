@@ -1489,6 +1489,7 @@ internal const val OPENING_LONG_MS = 15_000
  * another source and Go back. Try again counts the wait from the start. Once the first page is
  * [done] and drawn over it, the plate fades out.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Opening(
     state: ReaderState,
@@ -1625,6 +1626,7 @@ internal fun StripRoomWaiting(state: ReaderState) {
  * haze. Choose source is the amber pill when another source has the chapter, with the sources in a
  * sheet; otherwise Try again is. Close is text below.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ChapterFailed(
     title: String,
