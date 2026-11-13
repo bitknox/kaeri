@@ -1196,8 +1196,6 @@ private struct SeriesChapters: View {
     }
 }
 
-/// One chapter: "Chapter 88" in silk with its title in haze, and its state in words under it.
-/// The ring shows only while bytes move, and stops the download when pressed.
 #if DEBUG
 /// How many chapter rows have appeared, for the test that a long series builds only the rows in
 /// view. Debug builds only.
@@ -1207,6 +1205,8 @@ enum ChapterRowsShown {
 }
 #endif
 
+/// One chapter: "Chapter 88" in silk with its title in haze, and its state in words under it.
+/// The ring shows only while bytes move, and stops the download when pressed.
 private struct ChapterRowView: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator

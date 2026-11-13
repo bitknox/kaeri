@@ -5,6 +5,7 @@
 @testable import KaeriStore
 @testable import KaeriUI
 import KaeriKit
+import SwiftUI
 import Testing
 
 @MainActor
@@ -46,6 +47,13 @@ struct ReaderChapterAimTests {
             work: WorkId(work), edition: nil, volumes: [VolumeGroup(chapters: (1...9).map(row))], failure: nil)))
     }
 
+    /// The chapter the opening plate names, as its body draws it. The failure names the same.
+    private func named(_ model: ReaderModel) -> String? {
+        OpeningNamed.chapter = nil
+        _ = ReaderOpening(model: model, theme: .dark, size: CGSize(width: 800, height: 1000), chooseSource: {}, close: {}).body
+        return OpeningNamed.chapter
+    }
+
     private func failOffline(_ model: ReaderModel) {
         model.observe(.reading(.failed(about: .reader, failure: .offline)))
     }
@@ -57,7 +65,7 @@ struct ReaderChapterAimTests {
         actions.chapter(true)
         #expect(sent.opens == [ChapterId("c7")])
         #expect(model.phase == .opening)
-        #expect(ReaderOpening.label(model) == "7", "the plate names the chapter opening, not chapter 6")
+        #expect(named(model) == "7", "the plate names the chapter opening, not chapter 6")
     }
 
     @Test func afterTheNextChapterFailsPreviousGoesBackToTheChapterLeft() {
@@ -65,10 +73,10 @@ struct ReaderChapterAimTests {
         let model = onSix(sent)
         ReaderActions(model: model, close: {}).chapter(true)
         failOffline(model)
-        #expect(ReaderOpening.label(model) == "7", "the failure names chapter 7")
+        #expect(named(model) == "7", "the failure names chapter 7")
         ReaderActions(model: model, close: {}).chapter(false)
         #expect(sent.opens == [ChapterId("c7"), ChapterId("c6")], "[ on the failed chapter 7 opens 6, not 5")
-        #expect(ReaderOpening.label(model) == "6", "and the plate names 6")
+        #expect(named(model) == "6", "and the plate names 6")
     }
 
     @Test func afterTheNextChapterFailsNextGoesOnFromIt() {
@@ -95,7 +103,7 @@ struct ReaderChapterAimTests {
         let model = onSix(sent)
         listed(model)
         ReaderActions(model: model, close: {}).chapter(false)
-        #expect(ReaderOpening.label(model) == "5")
+        #expect(named(model) == "5")
         failOffline(model)
         ReaderActions(model: model, close: {}).chapter(true)
         #expect(sent.opens == [ChapterId("c5"), ChapterId("c6")])
@@ -110,7 +118,7 @@ struct ReaderChapterAimTests {
         ReaderActions(model: model, close: {}).chapter(true)
         ReaderActions(model: model, close: {}).chapter(true)
         #expect(sent.opens == [ChapterId("c7"), ChapterId("c8")])
-        #expect(ReaderOpening.label(model) == "8")
+        #expect(named(model) == "8")
     }
 
     @Test func onceTheChapterOpensItsOwnNeighboursCount() {
@@ -122,7 +130,7 @@ struct ReaderChapterAimTests {
             mode: .paged, direction: .rightToLeft,
             start: ReadPlace(work: WorkId(work), chapter: ChapterId("c7"), page: 0, strip: nil, novel: nil),
             next: row(8), previous: row(6), settings: nil)))
-        #expect(ReaderOpening.label(model) == "7")
+        #expect(named(model) == "7")
         ReaderActions(model: model, close: {}).chapter(true)
         #expect(sent.opens == [ChapterId("c7"), ChapterId("c8")])
     }

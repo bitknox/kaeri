@@ -417,6 +417,15 @@ extension ReaderActions {
 
 // MARK: Opening and failing
 
+#if DEBUG
+/// The chapter the opening plate last named, for the tests of which chapter the reader is on.
+/// Debug builds only.
+@MainActor
+enum OpeningNamed {
+    static var chapter: String?
+}
+#endif
+
 struct ReaderOpening: View {
     let model: ReaderModel
     let theme: ReaderTheme
@@ -440,7 +449,10 @@ struct ReaderOpening: View {
 
     /// What the open waits on, in words: the stage the engine named, else the chapter.
     static func stage(_ wait: ReaderWait?, chapter label: String) -> String {
-        switch wait {
+        #if DEBUG
+        OpeningNamed.chapter = label
+        #endif
+        return switch wait {
         case .chapterList(let source)?: L.readerWaitChapterList(source: source)
         case .chapterPages(let chapter, let source)?: L.readerWaitChapterPages(chapter: chapter, source: source)
         case .findingSource?, nil: L.readerOpening(chapter: label)
