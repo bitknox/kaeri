@@ -54,7 +54,7 @@ class CameInModelTest {
         installAll = installAll,
     )
 
-    private fun folder(series: Int) = FolderReport(
+    private fun folder(series: Int, alreadyAdded: Boolean = false) = FolderReport(
         id = "f1",
         name = "Manga",
         path = "Manga",
@@ -65,6 +65,7 @@ class CameInModelTest {
         unsupported = listOf(FormatCount("MOBI", 14u)),
         locked = emptyList(),
         listed = emptyList(),
+        alreadyAdded = alreadyAdded,
     )
 
     private class Sent : (Command) -> Unit {
@@ -222,6 +223,40 @@ class CameInModelTest {
         val gone = CameInSteps.store(CameIn.Empty(NothingCameIn.StoreUnreachable("shelf.kim.example")))
         assertEquals(CameInSteps.StoreAction.TRY_AGAIN, CameInSteps.storeAction(gone))
         assertEquals(CameInSteps.StoreStep.Preview, CameInSteps.store(null))
+    }
+
+    /**
+     * A folder picked again while it is a source says so, and nothing the form does on closing
+     * (Cancel, Change, Choose another folder) takes it back out with its series. A folder picked
+     * for the first time is still taken back when the form closes without Add folder.
+     */
+    @Test
+    fun a_folder_picked_again_is_never_taken_back() = runTest {
+        for (series in listOf(64, 0)) {
+            val again = folder(series, alreadyAdded = true)
+            val came = if (series > 0) CameIn.Folder(again) else CameIn.Empty(NothingCameIn.EmptyFolder(again))
+            val step = CameInSteps.folder(came)
+            assertEquals(CameInSteps.FolderStep.Already(again), step)
+            assertNull(CameInSteps.takeBack(step))
+        }
+        // A source that can't be read now, picked again: it says so, and stays.
+        val lost = CameInSteps.folder(CameIn.Empty(NothingCameIn.FolderUnreadable(folder(0, alreadyAdded = true))))
+        assertTrue(lost is CameInSteps.FolderStep.Unreadable)
+        assertNull(CameInSteps.takeBack(lost))
+        // Picked for the first time: Cancel and Change take it back out.
+        assertEquals("f1", CameInSteps.takeBack(CameInSteps.folder(CameIn.Folder(folder(64)))))
+        assertEquals("f1", CameInSteps.takeBack(CameInSteps.folder(CameIn.Empty(NothingCameIn.EmptyFolder(folder(0))))))
+        assertEquals("f1", CameInSteps.takeBack(CameInSteps.folder(CameIn.Empty(NothingCameIn.FolderUnreadable(folder(0))))))
+        assertNull(CameInSteps.takeBack(CameInSteps.FolderStep.Scanning))
+
+        // Closing on it says nothing was added, and its row doesn't land as new.
+        val model = model()
+        model.open(Adding.FOLDER)
+        model.apply(CameIn.Folder(folder(64, alreadyAdded = true)))
+        runCurrent()
+        model.close()
+        assertNull(model.notice.value)
+        assertEquals(emptySet<String>(), model.justAdded.value)
     }
 
     // What a closing form leaves.

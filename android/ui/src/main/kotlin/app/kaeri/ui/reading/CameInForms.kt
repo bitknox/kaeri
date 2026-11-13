@@ -265,6 +265,7 @@ private fun FoundServer(found: ServerFound, ticked: Set<String>, tick: (Set<Stri
 /**
  * The folder form for [state]: the folder with Change, the scan's waiting line, then what it
  * found. Closing before Add folder takes the folder back out: nothing was meant to be added yet.
+ * A folder that was already a source says so, with Done, and stays however the form closes.
  */
 @Composable
 internal fun folderForm(state: CameInState, pickAgain: () -> Unit, onClose: () -> Unit): CameInForm {
@@ -277,10 +278,12 @@ internal fun folderForm(state: CameInState, pickAgain: () -> Unit, onClose: () -
         is CameInSteps.FolderStep.Found -> step.report
         is CameInSteps.FolderStep.Nothing -> step.report
         is CameInSteps.FolderStep.Unreadable -> step.report
+        is CameInSteps.FolderStep.Already -> step.report
         CameInSteps.FolderStep.Scanning -> null
     }
     val name = report?.name ?: state.folder.orEmpty()
-    val takeBack = { report?.let { store.bookSources.removeFolder(it.id) } }
+    // Never a folder that was a source before it was picked again: this form didn't add it.
+    val takeBack = { CameInSteps.takeBack(step)?.let { store.bookSources.removeFolder(it) } }
     val another = {
         takeBack()
         pickAgain()
@@ -290,6 +293,7 @@ internal fun folderForm(state: CameInState, pickAgain: () -> Unit, onClose: () -
         title = stringResource(R.string.sources_add_folder_button),
         primary = when {
             found -> CameInAction(stringResource(R.string.book_folder_add)) { onClose() }
+            step is CameInSteps.FolderStep.Already -> CameInAction(stringResource(R.string.action_done)) { onClose() }
             step !is CameInSteps.FolderStep.Scanning -> CameInAction(stringResource(R.string.book_folder_choose_other), onClick = another)
             else -> CameInAction(stringResource(R.string.book_folder_add), enabled = false) {}
         },
@@ -309,6 +313,7 @@ internal fun folderForm(state: CameInState, pickAgain: () -> Unit, onClose: () -
                     }
                     is CameInSteps.FolderStep.Found -> FolderFound(shown.report)
                     is CameInSteps.FolderStep.Nothing -> FolderNothing(shown.report)
+                    is CameInSteps.FolderStep.Already -> FolderAlready(shown.report)
                     is CameInSteps.FolderStep.Unreadable -> CameInNote(
                         NoteKind.FAILED,
                         Strings.bookFolderUnreadable(context, shown.report.name),
@@ -328,6 +333,21 @@ private fun FolderFound(report: FolderReport) {
         NoteKind.FOUND,
         Strings.bookFolderFound(context, report.series.toInt(), report.files.toInt()),
         Strings.bookFolderFoundLine(context, report.path ?: report.name, report.matched.toInt()),
+    )
+    if (skipped(report) > 0) {
+        UnsupportedFiles(report, Modifier.padding(top = 16.dp))
+        CameInFootnote(stringResource(R.string.book_folder_opens))
+    }
+}
+
+/** Already a source: it was looked through again, and stays as it is. */
+@Composable
+private fun FolderAlready(report: FolderReport) {
+    val context = LocalContext.current
+    CameInNote(
+        NoteKind.INFO,
+        Strings.bookFolderAlready(context, report.name),
+        Strings.bookFolderAlreadyLine(context, report.series.toInt()),
     )
     if (skipped(report) > 0) {
         UnsupportedFiles(report, Modifier.padding(top = 16.dp))

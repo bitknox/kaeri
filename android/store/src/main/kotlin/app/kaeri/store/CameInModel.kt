@@ -226,7 +226,8 @@ class CameInModel(scope: CoroutineScope, private val send: (Command) -> Unit) {
                 _notice.value = Notice.Added(answer.v1.name, answer.v1.series?.toInt() ?: 0)
                 return
             }
-            is CameIn.Folder -> _justAdded.value += answer.v1.id
+            // A folder picked again while it is a source was not added now: its row doesn't land.
+            is CameIn.Folder -> if (!answer.v1.alreadyAdded) _justAdded.value += answer.v1.id
             else -> {}
         }
         if (_open.value != formFor(answer)) {
@@ -311,7 +312,7 @@ class CameInModel(scope: CoroutineScope, private val send: (Command) -> Unit) {
 
         /** What a form says once it closes on [answer]: what came in, or nothing to say. */
         fun closingNotice(answer: CameIn?, installedOneByOne: Int): Notice? = when (answer) {
-            is CameIn.Folder -> answer.v1.takeIf { it.series > 0u }?.let { Notice.Added(it.name, it.series.toInt()) }
+            is CameIn.Folder -> answer.v1.takeIf { it.series > 0u && !it.alreadyAdded }?.let { Notice.Added(it.name, it.series.toInt()) }
             is CameIn.Installed -> answer.v1.takeIf { it.installed > 0u }?.let { Notice.Plugins(it.installed.toInt(), it.name) }
             is CameIn.Store, is CameIn.Empty ->
                 (answer as? CameIn.Store)?.v1?.name?.takeIf { installedOneByOne > 0 }?.let { Notice.Plugins(installedOneByOne, it) }
@@ -399,17 +400,38 @@ object CameInSteps {
 
         /** The folder could not be read at all: gone, or no longer open to the app. */
         data class Unreadable(val report: FolderReport) : FolderStep
+
+        /** The folder was already a source, picked again: scanned again, and it stays as it is. */
+        data class Already(val report: FolderReport) : FolderStep
     }
 
-    fun folder(outcome: CameIn?): FolderStep = when (outcome) {
-        is CameIn.Folder -> FolderStep.Found(outcome.v1)
-        is CameIn.Empty -> when (val why = outcome.v1) {
-            is NothingCameIn.UnsupportedFiles -> FolderStep.Nothing(why.folder)
-            is NothingCameIn.EmptyFolder -> FolderStep.Nothing(why.folder)
-            is NothingCameIn.FolderUnreadable -> FolderStep.Unreadable(why.folder)
+    fun folder(outcome: CameIn?): FolderStep {
+        val step = when (outcome) {
+            is CameIn.Folder -> FolderStep.Found(outcome.v1)
+            is CameIn.Empty -> when (val why = outcome.v1) {
+                is NothingCameIn.UnsupportedFiles -> FolderStep.Nothing(why.folder)
+                is NothingCameIn.EmptyFolder -> FolderStep.Nothing(why.folder)
+                // One that was a source and can't be read now says so; it stays a source all the same.
+                is NothingCameIn.FolderUnreadable -> return FolderStep.Unreadable(why.folder)
+                else -> FolderStep.Scanning
+            }
             else -> FolderStep.Scanning
         }
-        else -> FolderStep.Scanning
+        val report = (step as? FolderStep.Found)?.report ?: (step as? FolderStep.Nothing)?.report
+        return if (report?.alreadyAdded == true) FolderStep.Already(report) else step
+    }
+
+    /**
+     * The folder the form takes back out when it closes without Add folder, by Cancel, Change or
+     * Choose another folder: nothing was meant to be added yet. Never one that was already a
+     * source when it was picked; this form didn't add it. Null while it scans.
+     */
+    fun takeBack(step: FolderStep): String? = when (step) {
+        FolderStep.Scanning -> null
+        is FolderStep.Already -> null
+        is FolderStep.Found -> step.report.takeUnless { it.alreadyAdded }?.id
+        is FolderStep.Nothing -> step.report.takeUnless { it.alreadyAdded }?.id
+        is FolderStep.Unreadable -> step.report.takeUnless { it.alreadyAdded }?.id
     }
 
     /** Where the store form stands after Join. */
