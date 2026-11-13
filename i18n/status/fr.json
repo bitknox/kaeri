@@ -147,13 +147,21 @@
     "source": "126bd15d517e",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $minutes } minute | many: { $minutes } minutes | other: { $minutes } minutes"
   },
   "access-minutes-left": {
     "source": "936cc0c71f2e",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: there remains { $minutes } minute | many: there remain { $minutes } minutes | other: there remain { $minutes } minutes"
   },
   "access-not-out": {
     "source": "4971fb38e219",
@@ -291,13 +299,21 @@
     "source": "7f8ef4091683",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } change waiting for synchronization | many: { $count } changes waiting for synchronization | other: { $count } changes waiting for synchronization"
   },
   "accounts-changes-waiting-offline": {
     "source": "b2a8c0231a99",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } change waiting for connection | many: { $count } changes waiting for connection | other: { $count } changes waiting for connection"
   },
   "accounts-clash-detail": {
     "source": "67adc87faffe",
@@ -417,7 +433,11 @@
     "source": "003d92eca01a",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } synchronization difference found. Press { $key } to view it. | many: { $count } synchronization differences found. Press { $key } to view them. | other: { $count } synchronization differences found. Press { $key } to view them."
   },
   "accounts-conflicts-none": {
     "source": "fdd8a15db8b2",
@@ -657,7 +677,11 @@
     "source": "bef9bed3ffbd",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Check { $count } difference | many: Check { $count } differences | other: Check { $count } differences"
   },
   "accounts-row-connected": {
     "source": "82a4e28ab5b5",
@@ -831,7 +855,11 @@
     "source": "73d875fccf49",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Connected to { $tracker } as { $name } · { $count } modification waiting | many: Connected to { $tracker } as { $name } · { $count } modifications waiting | other: Connected to { $tracker } as { $name } · { $count } modifications waiting"
   },
   "accounts-state-signed-out": {
     "source": "08cf6c8f0b7a",
@@ -1497,7 +1525,11 @@
     "source": "0990532093bf",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: It contains { $files } file, which is neither CBZ, CBR, EPUB, PDF nor an image. | many: It contains { $files } files, of which none is CBZ, CBR, EPUB, PDF or image. | other: It contains { $files } files, of which none is CBZ, CBR, EPUB, PDF or image."
   },
   "book-folder-failed": {
     "source": "2acc9ed75338",
@@ -1509,7 +1541,11 @@
     "source": "ce1634675d9f",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Series found: { $series } in { $files } file | many: Series found: { $series } in { $files } files | other: Series found: { $series } in { $files } files"
   },
   "book-folder-found-line": {
     "source": "25691dd6dc4b",
@@ -1533,7 +1569,11 @@
     "source": "d4ed9a46a285",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } file that { -app-name } cannot open | many: { $count } files that { -app-name } cannot open | other: { $count } files that { -app-name } cannot open"
   },
   "book-folder-unsupported-line": {
     "source": "8f958636d00e",
@@ -1545,7 +1585,12 @@
     "source": "12f52e0b0641",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "no noun after $matched, as in English; 'celle-ci' assumes série",
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { -app-name } matched { $matched } of them based on their details. { $n } of them remain to check. | many: { -app-name } matched { $matched } of them based on their details. These { $n } are to be checked. | other: { -app-name } matched { $matched } of them based on their details. These { $n } are to be checked."
   },
   "book-server-address": {
     "source": "fcdd8e672c75",
@@ -1623,7 +1668,11 @@
     "source": "a7b8fdb3bc5b",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Series found: { $series } in { $libraries } library | many: Series found: { $series } in { $libraries } libraries | other: Series found: { $series } in { $libraries } libraries"
   },
   "book-server-kavita-key": {
     "source": "3acee6f74ed2",
@@ -1809,7 +1858,11 @@
     "source": "e177e9459174",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $n } series | many: { $n } series | other: { $n } series"
   },
   "book-sources-servers": {
     "source": "56e796506fb8",
@@ -2577,7 +2630,11 @@
     "source": "1af7b3127ef8",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: in { $days } day at { $time } | many: in { $days } days at { $time } | other: in { $days } days at { $time }"
   },
   "cause-airs-on-date": {
     "source": "b8c77028bc72",
@@ -2601,7 +2658,11 @@
     "source": "a732f1f0bc5f",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } episode is already in the downloads. | many: { $count } episodes are already in the downloads. | other: { $count } episodes are already in the downloads."
   },
   "cause-no-connection": {
     "source": "efb4aeea0418",
@@ -2685,7 +2746,11 @@
     "source": "abdad8af7edd",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } subtitle track was integrated. | many: { $count } subtitle tracks were integrated. | other: { $count } subtitle tracks were integrated."
   },
   "cause-title-no-match": {
     "source": "7083ce14ac67",
@@ -2841,7 +2906,11 @@
     "source": "0de2bd08c710",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $n } version | many: { $n } versions | other: { $n } versions"
   },
   "chapter-updates-yesterday": {
     "source": "5b4abc92ede5",
@@ -2901,13 +2970,21 @@
     "source": "f1f0ff208dd0",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } episode is downloading or waiting. Let it continue after the window closes, or stop it? | many: { $count } episodes are downloading or waiting. Let them continue after the window closes, or stop them? | other: { $count } episodes are downloading or waiting. Let them continue after the window closes, or stop them?"
   },
   "close-body-seeding": {
     "source": "19c2b9f41ab6",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } episode is being shared. Let it continue after the window closes, or stop it? | many: { $count } episodes are being shared. Let them continue after the window closes, or stop them? | other: { $count } episodes are being shared. Let them continue after the window closes, or stop them?"
   },
   "close-dont-ask": {
     "source": "0d4cd0f7ec29",
@@ -2919,7 +2996,11 @@
     "source": "762c07699431",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } episode is downloading. | many: { $count } episodes are downloading. | other: { $count } episodes are downloading."
   },
   "close-keep-going": {
     "source": "5cb230a61279",
@@ -2931,7 +3012,11 @@
     "source": "5adab350f7c8",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } episode is being shared. | many: { $count } episodes are being shared. | other: { $count } episodes are being shared."
   },
   "close-stop": {
     "source": "30e8e59e3f09",
@@ -3561,7 +3646,11 @@
     "source": "7f8ef4091683",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } modification waiting for synchronization | many: { $count } modifications waiting for synchronization | other: { $count } modifications waiting for synchronization"
   },
   "continue-this-season": {
     "source": "f4ade059759c",
@@ -3627,7 +3716,11 @@
     "source": "50cf4c689ecd",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } episode | many: { $count } episodes | other: { $count } episodes"
   },
   "count-episodes-short": {
     "source": "4df57c34cc0f",
@@ -3651,7 +3744,11 @@
     "source": "8319377d4cf7",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } episode released | many: { $count } episodes released | other: { $count } episodes released"
   },
   "count-out-of": {
     "source": "9e09659b8c02",
@@ -3687,7 +3784,11 @@
     "source": "50cf4c689ecd",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } episode | many: { $count } episodes | other: { $count } episodes"
   },
   "count-spoken-next-of": {
     "source": "8ead4f837630",
@@ -3699,7 +3800,11 @@
     "source": "8319377d4cf7",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } episode released | many: { $count } episodes released | other: { $count } episodes released"
   },
   "count-spoken-out-of": {
     "source": "4e3437b67b71",
@@ -4005,7 +4110,11 @@
     "source": "e2df2533ab4c",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $pages } page | many: { $pages } pages | other: { $pages } pages"
   },
   "demo-read-chapter": {
     "source": "93f292cc71e4",
@@ -4017,7 +4126,11 @@
     "source": "56fe5a5511ae",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Demo · Comic strip · { $pages } page | many: Demo · Comic strip · { $pages } pages | other: Demo · Comic strip · { $pages } pages"
   },
   "demo-story-row": {
     "source": "34a6e66a72a3",
@@ -4257,7 +4370,11 @@
     "source": "93dcdf3caafc",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } TV for Play on the TV | many: { $count } TV(s) for Play on the TV | other: { $count } TV(s) for Play on the TV"
   },
   "devices-yours": {
     "source": "eabafc98aa87",
@@ -4389,7 +4506,11 @@
     "source": "033aecce0eec",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } comment · pauses | many: { $count } comments · pauses | other: { $count } comments · pauses"
   },
   "discussion-apple-sending": {
     "source": "6d8b12f6a54b",
@@ -4437,7 +4558,11 @@
     "source": "8ebc8ed6cf7e",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } comment | many: { $count } comments | other: { $count } comments"
   },
   "discussion-delete-body": {
     "source": "8fb4d1c7263f",
@@ -4491,7 +4616,11 @@
     "source": "47c857399490",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: I like (Like), { $count } I like | many: I like (Like), { $count } I like (Likes) | other: I like (Like), { $count } I like (Likes)"
   },
   "discussion-media-line": {
     "source": "b3039083087c",
@@ -4503,7 +4632,11 @@
     "source": "32d9356ad0dd",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } reply more | many: { $count } replies more | other: { $count } replies more"
   },
   "discussion-no-comments": {
     "source": "ffb4867aafe0",
@@ -4581,7 +4714,11 @@
     "source": "a1fed28e1801",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Discussion · { $count } comment | many: Discussion · { $count } comments | other: Discussion · { $count } comments"
   },
   "discussion-sending": {
     "source": "6d8b12f6a54b",
@@ -4647,7 +4784,11 @@
     "source": "e65228277566",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Download { $n } chapter | many: Download { $n } chapters | other: Download { $n } chapters"
   },
   "download-choose": {
     "source": "751efbdf4a92",
@@ -4707,7 +4848,11 @@
     "source": "7d2fe7f0b73f",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $volume } · { $n } chapter | many: { $volume } · { $n } chapters | other: { $volume } · { $n } chapters"
   },
   "downloads-ahead": {
     "source": "7ead8737ff5c",
@@ -4863,7 +5008,11 @@
     "source": "0be88ccfee0b",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } episode remaining | many: { $count } episodes remaining | other: { $count } episodes remaining"
   },
   "downloads-continued-title": {
     "source": "0c296160a212",
@@ -5019,7 +5168,11 @@
     "source": "2c21248beb5b",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } episode · { $size } | many: { $count } episodes · { $size } | other: { $count } episodes · { $size }"
   },
   "downloads-group-summary-apple": {
     "source": "70b26f927608",
@@ -5079,7 +5232,11 @@
     "source": "c3c2e223942c",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } episode paused | many: { $count } episodes paused | other: { $count } episodes paused"
   },
   "downloads-live-paused-one": {
     "source": "95bc8722b270",
@@ -5139,7 +5296,11 @@
     "source": "197408df16bf",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Downloading of { $count } chapter | many: Downloading of { $count } chapters | other: Downloading of { $count } chapters"
   },
   "downloads-notice-done": {
     "source": "d37ab1e45a97",
@@ -5163,7 +5324,11 @@
     "source": "7e14f7d4abd9",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Downloading of { $count } episode | many: Downloading of { $count } episodes | other: Downloading of { $count } episodes"
   },
   "downloads-notice-starting": {
     "source": "4c60317e4731",
@@ -5631,7 +5796,11 @@
     "source": "62523e893444",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } page | many: { $count } pages | other: { $count } pages"
   },
   "eink-finished": {
     "source": "15a6e8862eeb",
@@ -5727,7 +5896,11 @@
     "source": "90377a3adfc9",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } page remaining in the chapter | many: { $count } pages remaining in the chapter | other: { $count } pages remaining in the chapter"
   },
   "eink-previous-chapter": {
     "source": "7ac92381ab6c",
@@ -6047,7 +6220,12 @@
     "source": "337b0b7a033d",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Plural wording; the \"many\" form only counts millions",
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } episode seen | many: { $count } episodes seen | other: { $count } episodes seen"
   },
   "episode-go-to": {
     "source": "7d2a5e4c193a",
@@ -6775,7 +6953,11 @@
     "source": "5c75b5abd78d",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $n } chapter is not yet downloaded: the sending waits for Wi-Fi and will resume by itself. | many: { $n } chapters are not yet downloaded: the sending waits for Wi-Fi and will resume by itself. | other: { $n } chapters are not yet downloaded: the sending waits for Wi-Fi and will resume by itself."
   },
   "feed-firewall-body-windows": {
     "source": "132a836a9009",
@@ -7629,7 +7811,11 @@
     "source": "d3c1c4596a42",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } series | many: { $count } series | other: { $count } series"
   },
   "home-day-more": {
     "source": "1a8c09c8079e",
@@ -9323,13 +9509,21 @@
     "source": "3e13abd1945d",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } episode | many: { $count } episodes | other: { $count } episodes"
   },
   "library-files": {
     "source": "31e42ba495f5",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } file | many: { $count } files | other: { $count } files"
   },
   "library-fix-confidence": {
     "source": "56b54cc5c2df",
@@ -9347,7 +9541,12 @@
     "source": "ea37c388aef0",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed.",
+      "back-translation: adds 'ce dossier en a { $files }', which the English lacks."
+    ],
+    "back": "one: Has { $episodes } episode, this folder has { $files } of them | many: Has { $episodes } episodes, this folder has { $files } of them | other: Has { $episodes } episodes, this folder has { $files } of them"
   },
   "library-fix-hint": {
     "source": "de952520631a",
@@ -9635,7 +9834,11 @@
     "source": "9f624857e12b",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $files } file | many: { $files } files | other: { $files } files"
   },
   "library-row-matching": {
     "source": "dc39bfebdf7e",
@@ -9665,13 +9868,21 @@
     "source": "f46259c6ad56",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Analysis · { $files } file found | many: Analysis · { $files } files found | other: Analysis · { $files } files found"
   },
   "library-row-series": {
     "source": "92da51600358",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } series | many: { $count } series | other: { $count } series"
   },
   "library-row-summary": {
     "source": "0ff76e189f1b",
@@ -9719,7 +9930,11 @@
     "source": "92da51600358",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } series | many: { $count } series | other: { $count } series"
   },
   "library-set-episode": {
     "source": "b21eadab43d0",
@@ -10483,7 +10698,11 @@
     "source": "a16da4c81925",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $n } next unread chapter | many: The { $n } next unread (ones) | other: The { $n } next unread (ones)"
   },
   "linux-send-none-unread": {
     "source": "5cb3dbfff0bd",
@@ -10523,7 +10742,11 @@
     "source": "61f97d552ed4",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $n } file is saved | many: { $n } files are saved | other: { $n } files are saved"
   },
   "linux-send-title": {
     "source": "683e9edb4504",
@@ -10959,7 +11182,11 @@
     "source": "a75933b9e936",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } episode viewed | many: { $count } episodes viewed | other: { $count } episodes viewed"
   },
   "lists-remove-wrong-list": {
     "source": "249ceccd136d",
@@ -11295,7 +11522,11 @@
     "source": "602a8428d6ee",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $source } lists { $count } title that could be this one. Choose it to play its episodes. | many: { $source } lists { $count } titles that could be this one. Choose one of them to play its episodes. | other: { $source } lists { $count } titles that could be this one. Choose one of them to play its episodes."
   },
   "match-uncertain-none": {
     "source": "d3b4d6a47ff9",
@@ -12087,7 +12318,11 @@
     "source": "64b121ef1445",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Show { $count } spoiler keyword | many: Show { $count } spoiler keywords | other: Show { $count } spoiler keywords"
   },
   "more-spoiler": {
     "source": "9290f6af0caf",
@@ -12693,7 +12928,11 @@
     "source": "13106cde7226",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } finished download was removed from the list. | many: { $count } finished downloads were removed from the list. | other: { $count } finished downloads were removed from the list."
   },
   "notice-downloads-none-new": {
     "source": "6ff7169da8f2",
@@ -12735,7 +12974,11 @@
     "source": "22c3d7bea249",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } new episode of a series you follow was broadcast. The calendar shows it. | many: { $count } new episodes of series you follow were broadcast. The calendar shows them. | other: { $count } new episodes of series you follow were broadcast. The calendar shows them."
   },
   "notice-episodes-failed": {
     "source": "6b0094b5c2d0",
@@ -12747,25 +12990,41 @@
     "source": "a3ac54bdf3f7",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } episode added to the queue. | many: { $count } episodes added to the queue. | other: { $count } episodes added to the queue."
   },
   "notice-episodes-queued-existing": {
     "source": "bfb2e177232d",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } episode added to the queue. { $existing } | many: { $count } episodes added to the queue. { $existing } | other: { $count } episodes added to the queue. { $existing }"
   },
   "notice-episodes-queued-existing-stopped": {
     "source": "2baa7b011416",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } episode added to the queue, then the adding stopped. { $existing } { $reason } | many: { $count } episodes added to the queue, then the adding stopped. { $existing } { $reason } | other: { $count } episodes added to the queue, then the adding stopped. { $existing } { $reason }"
   },
   "notice-episodes-queued-stopped": {
     "source": "e189a5f1c005",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } episode added to the queue, then the adding stopped. { $reason } | many: { $count } episodes added to the queue, then the adding stopped. { $reason } | other: { $count } episodes added to the queue, then the adding stopped. { $reason }"
   },
   "notice-filler-skipped": {
     "source": "5b84ca7f31b4",
@@ -13131,13 +13390,21 @@
     "source": "193d11fc4d6c",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Disconnected from { $tracker }. { $count } pending modification is kept for the next connection. | many: Disconnected from { $tracker }. { $count } pending modifications are kept for the next connection. | other: Disconnected from { $tracker }. { $count } pending modifications are kept for the next connection."
   },
   "notice-skip-marks-cleared": {
     "source": "fd0a0ccf2922",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } skip marker that you had marked was erased. | many: { $count } skip markers that you had marked were erased. | other: { $count } skip markers that you had marked were erased."
   },
   "notice-skip-marks-none": {
     "source": "7a6f614e3f58",
@@ -13285,7 +13552,11 @@
     "source": "1aac55e62f21",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } new chapter | many: { $count } new chapters | other: { $count } new chapters"
   },
   "notif-episode-out": {
     "source": "95b3e382ea08",
@@ -13321,13 +13592,21 @@
     "source": "8c4f22f91b0a",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } new episode | many: { $count } new episodes | other: { $count } new episodes"
   },
   "notify-downloaded": {
     "source": "22be9e953c6c",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } episode has been downloaded. | many: { $count } episodes have been downloaded. | other: { $count } episodes have been downloaded."
   },
   "notify-downloaded-one": {
     "source": "845211fecd05",
@@ -13711,7 +13990,11 @@
     "source": "d9b5e4eeb2b2",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $n } file | many: { $n } files | other: { $n } files"
   },
   "opds-fetched-none": {
     "source": "13c846fb4b18",
@@ -13825,7 +14108,11 @@
     "source": "0f5a576bb56c",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $n } chapter | many: { $n } chapters | other: { $n } chapters"
   },
   "opds-share-manga": {
     "source": "c784a221f5ad",
@@ -13849,7 +14136,11 @@
     "source": "4d47681a3b2e",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $n } series | many: { $n } series | other: { $n } series"
   },
   "opds-shares": {
     "source": "3fe851357e0d",
@@ -14321,13 +14612,21 @@
     "source": "ca05fbebd029",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Go back by { $seconds } second | many: Go back by { $seconds } seconds | other: Go back by { $seconds } seconds"
   },
   "pad-help-seek-forward": {
     "source": "516a4b0d3b00",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Go forward by { $seconds } second | many: Go forward by { $seconds } seconds | other: Go forward by { $seconds } seconds"
   },
   "pad-help-select": {
     "source": "fc63e31ac7c9",
@@ -14783,7 +15082,11 @@
     "source": "076a8d81a1fc",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Wait { $seconds } second | many: Wait { $seconds } seconds | other: Wait { $seconds } seconds"
   },
   "party-chat-you": {
     "source": "cb6a9c1a1757",
@@ -15713,13 +16016,22 @@
     "source": "2b4cffeef7c2",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } { -source } offers it | many: { $count } { -source-pl } offer it | other: { $count } { -source-pl } offer it"
   },
   "party-sources-found-line": {
     "source": "07cb8e3aa15e",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed.",
+      "back-translation: 'Celle' is feminine; check it against the term's gender."
+    ],
+    "back": "one: { $count } { -source } has it. The one (feminine) you choose plays with the (masculine) { -watch-party }. | many: { $count } { -source-pl } have it. The one (feminine) you choose plays with the (masculine) { -watch-party }. | other: { $count } { -source-pl } have it. The one (feminine) you choose plays with the (masculine) { -watch-party }."
   },
   "party-sources-label": {
     "source": "444a0b13c12b",
@@ -16121,7 +16433,11 @@
     "source": "7ae48c0b7a79",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } channel | many: { $count } channels | other: { $count } channels"
   },
   "player-channels-mono": {
     "source": "37edf2aec5ab",
@@ -16691,7 +17007,11 @@
     "source": "033aecce0eec",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } comment · pauses | many: { $count } comments · pauses | other: { $count } comments · pauses"
   },
   "player-more-discussion-pauses": {
     "source": "8acfc18a4e4d",
@@ -17237,7 +17557,11 @@
     "source": "2d46665a0477",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } peer | many: { $count } peers | other: { $count } peers"
   },
   "player-start-pin-missed": {
     "source": "7007050f7b4a",
@@ -17453,7 +17777,11 @@
     "source": "f3a0f89f2f88",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Paused after { $count } episode in a row. | many: Paused after { $count } episodes in a row. | other: Paused after { $count } episodes in a row."
   },
   "player-subs-bg-box": {
     "source": "16564e19b102",
@@ -17801,7 +18129,11 @@
     "source": "8a3531396d93",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } { -plugin } was designed for an older version of { -app-name } and must be updated: { $names }. | many: { $count } { -plugin-pl } were designed for an older version of { -app-name } and must be updated: { $names }. | other: { $count } { -plugin-pl } were designed for an older version of { -app-name } and must be updated: { $names }."
   },
   "poster-grid-name": {
     "source": "c5528fac6cc0",
@@ -18053,7 +18385,11 @@
     "source": "070574d79f5b",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } chapter not saved: { $reason } | many: { $count } chapters not saved: { $reason } | other: { $count } chapters not saved: { $reason }"
   },
   "progress-row-off": {
     "source": "d2267a3b0779",
@@ -18069,13 +18405,21 @@
     "source": "bb5f8b43cc04",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } chapter will be sent once back online | many: { $count } chapters will be sent once back online | other: { $count } chapters will be sent once back online"
   },
   "progress-row-retrying": {
     "source": "721bf995f130",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } chapter waiting. { -app-name } is going to try again. | many: { $count } chapters waiting. { -app-name } is going to try again. | other: { $count } chapters waiting. { -app-name } is going to try again."
   },
   "progress-row-saved": {
     "source": "bccd520ea970",
@@ -18087,7 +18431,11 @@
     "source": "466c2ef51083",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Sending of { $count } chapter… | many: Sending of { $count } chapters… | other: Sending of { $count } chapters…"
   },
   "progress-server-failed": {
     "source": "a53990030cbd",
@@ -18147,7 +18495,11 @@
     "source": "61e16ff45719",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } episode remaining in { $title } | many: { $count } episodes remaining in { $title } | other: { $count } episodes remaining in { $title }"
   },
   "ranking-all-time": {
     "source": "d409c8784db5",
@@ -18279,7 +18631,11 @@
     "source": "979c344aecbb",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $n } genre | many: { $n } genres | other: { $n } genres"
   },
   "read-filter-included": {
     "source": "2929031238d4",
@@ -18383,19 +18739,32 @@
     "source": "31e42ba495f5",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } file | many: { $count } (of) files | other: { $count } files"
   },
   "read-hit-files-format": {
     "source": "770c7a09f6a7",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } file · { $format } | many: { $count } (of) files · { $format } | other: { $count } files · { $format }"
   },
   "read-hit-parts": {
     "source": "ab5de0b28ab1",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "drafter: many form uses \"de\" (\"{ $count } de parties\"), matching reading-dl-parts; other reader plurals omit it.",
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } part | many: { $count } (of) parts | other: { $count } parts"
   },
   "read-home-browse": {
     "source": "99fa943a22c1",
@@ -18565,7 +18934,11 @@
     "source": "64d690b16cec",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $list }, { $n } series | many: { $list }, { $n } series | other: { $list }, { $n } series"
   },
   "read-list-completed": {
     "source": "5033dab8c17f",
@@ -18834,7 +19207,11 @@
     "source": "8ff253aea036",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $n } series found on AniList | many: { $n } series found on AniList | other: { $n } series found on AniList"
   },
   "read-search-total-unknown": {
     "source": "03b29b695e0a",
@@ -18847,7 +19224,11 @@
     "source": "8a151ce93ce9",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $n } downloaded chapter remains readable. | many: { $n } downloaded chapters remain readable. | other: { $n } downloaded chapters remain readable."
   },
   "read-sort-last-read": {
     "source": "e63ad5b26290",
@@ -19003,7 +19384,11 @@
     "source": "6facfb38e6ae",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $pages } page | many: { $pages } (of) pages | other: { $pages } pages"
   },
   "reader-chapter-read": {
     "source": "740d542bbe69",
@@ -19129,7 +19514,11 @@
     "source": "a45c0f9430a6",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } image | many: { $count } images | other: { $count } images"
   },
   "reader-end-again": {
     "source": "d93eec285563",
@@ -19267,7 +19656,11 @@
     "source": "62523e893444",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } page | many: { $count } pages | other: { $count } pages"
   },
   "reader-end-read": {
     "source": "b46e4b0b2ed2",
@@ -20059,7 +20452,11 @@
     "source": "45c0e8687ff9",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: There remains { $count } page in this chapter | many: There remain { $count } pages in this chapter | other: There remain { $count } pages in this chapter"
   },
   "reader-pages-of": {
     "source": "8316b1188159",
@@ -20635,13 +21032,22 @@
     "source": "0d734b4135bd",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed.",
+      "back-translation: [one] is worded unlike the other forms and reads oddly for 0."
+    ],
+    "back": "one: About { $weeks } week apart | many: About every { $weeks } weeks | other: About every { $weeks } weeks"
   },
   "reading-ago-days": {
     "source": "e1e02c7a37f9",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $days } day ago | many: { $days } (of) days ago | other: { $days } days ago"
   },
   "reading-ago-minutes": {
     "source": "19d06baa2556",
@@ -20653,7 +21059,11 @@
     "source": "c9c56f0472ab",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $months } month ago | many: { $months } months ago | other: { $months } months ago"
   },
   "reading-ago-now": {
     "source": "84126fa92f00",
@@ -20671,13 +21081,22 @@
     "source": "5c31e689e30c",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $weeks } wk. ago | many: { $weeks } wk. ago | other: { $weeks } wk. ago"
   },
   "reading-ago-years": {
     "source": "890150270ebf",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed.",
+      "back-translation: [many] 'd'ans' is ungrammatical; 'd'années' was meant."
+    ],
+    "back": "one: { $years } year ago | many: { $years } (of) years ago | other: { $years } years ago"
   },
   "reading-ago-yesterday": {
     "source": "f945458585f6",
@@ -20731,7 +21150,11 @@
     "source": "fbe319cfb16b",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } chapter | many: { $count } (of) chapters | other: { $count } chapters"
   },
   "reading-dl-chapter": {
     "source": "2d0f308d9cac",
@@ -20767,7 +21190,11 @@
     "source": "ab5de0b28ab1",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } part | many: { $count } (of) parts | other: { $count } parts"
   },
   "reading-dl-queued": {
     "source": "b3594d06fbca",
@@ -20797,13 +21224,21 @@
     "source": "7ab5f0dec3c7",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } chapter of { $title } is ready to read offline. | many: { $count } chapters of { $title } are ready to read offline. | other: { $count } chapters of { $title } are ready to read offline."
   },
   "reading-downloads-done-parts": {
     "source": "a3cac7cc72cd",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } part of { $title } is ready to read offline. | many: { $count } parts of { $title } are ready to read offline. | other: { $count } parts of { $title } are ready to read offline."
   },
   "reading-downloads-done-series": {
     "source": "ff4c23da1cd5",
@@ -21263,7 +21698,11 @@
     "source": "57446cc53bd6",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $n } page | many: { $n } (of) pages | other: { $n } pages"
   },
   "reading-row-percent": {
     "source": "177259baefed",
@@ -21287,7 +21726,11 @@
     "source": "0de2bd08c710",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $n } version | many: { $n } (of) versions | other: { $n } versions"
   },
   "reading-row-waits-wifi": {
     "source": "40f4bef74ccf",
@@ -21485,7 +21928,11 @@
     "source": "b0f666ed938f",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } volume | many: { $count } (of) volumes | other: { $count } volumes"
   },
   "reason-busy-anilist": {
     "source": "fcf4a3b3d59d",
@@ -21671,7 +22118,11 @@
     "source": "1677647285b7",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } seeder | many: { $count } seeders | other: { $count } seeders"
   },
   "report-copied": {
     "source": "c6ce6a2e1ba9",
@@ -22055,7 +22506,11 @@
     "source": "0b5f6d4b69ce",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } format | many: { $count } formats | other: { $count } formats"
   },
   "search-genre-left-out": {
     "source": "7b64f01aec2e",
@@ -22079,7 +22534,11 @@
     "source": "76fa8ccc7189",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } genre | many: { $count } genres | other: { $count } genres"
   },
   "search-include": {
     "source": "f1f4b1821a06",
@@ -22205,7 +22664,11 @@
     "source": "63034dcfcc48",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $n } result in { $scope } | many: { $n } results in { $scope } | other: { $n } results in { $scope }"
   },
   "search-paused-rate-limit": {
     "source": "b8f0dbd256fb",
@@ -22415,7 +22878,11 @@
     "source": "c02227915ad9",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } status | many: { $count } statuses | other: { $count } statuses"
   },
   "search-suggest-filter": {
     "source": "9969d1d5c397",
@@ -22691,7 +23158,11 @@
     "source": "d6980429dde0",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Preparation: { $done } of { $total } chapter | many: Preparation: { $done } of { $total } chapters | other: Preparation: { $done } of { $total } chapters"
   },
   "send-progress-spoken": {
     "source": "938879fb967b",
@@ -22703,7 +23174,11 @@
     "source": "1431881db356",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $n } file is ready. | many: { $n } files are ready. | other: { $n } files are ready."
   },
   "send-save-failed-windows": {
     "source": "36709deb1a85",
@@ -22726,7 +23201,11 @@
     "source": "3a6e5e0af28e",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $n } file saved | many: { $n } (of) files saved | other: { $n } files saved"
   },
   "send-share-again": {
     "source": "25a5e97e7ab4",
@@ -22844,7 +23323,11 @@
     "source": "d87bcbeb4b08",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $n } chapter | many: { $n } chapters | other: { $n } chapters"
   },
   "series-collapsed": {
     "source": "447b471f5276",
@@ -23061,7 +23544,11 @@
     "source": "a6d9684ab23c",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $n } more | many: { $n } more | other: { $n } more"
   },
   "series-tracker-ahead": {
     "source": "3d516693d515",
@@ -23085,7 +23572,11 @@
     "source": "d87bcbeb4b08",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $n } chapter | many: { $n } chapters | other: { $n } chapters"
   },
   "series-tracker-chapters-of": {
     "source": "9ea16e2c37ce",
@@ -23163,7 +23654,11 @@
     "source": "0de2bd08c710",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $n } version | many: { $n } versions | other: { $n } versions"
   },
   "series-versions-loading": {
     "source": "477bd68eeabe",
@@ -23463,7 +23958,11 @@
     "source": "99048572680b",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } { -library } | many: { $count } libraries | other: { $count } libraries"
   },
   "servers-row-matching": {
     "source": "dc39bfebdf7e",
@@ -23487,7 +23986,11 @@
     "source": "92da51600358",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } series | many: { $count } series | other: { $count } series"
   },
   "servers-row-signed-out": {
     "source": "a1df34fb3b85",
@@ -23505,7 +24008,12 @@
     "source": "532a1187fa47",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed.",
+      "back-translation: adds '{ $series } séries', always plural, which the English lacks."
+    ],
+    "back": "one: { $libraries } { -library } · { $series } series (plural form) | many: { $libraries } libraries · { $series } series (plural form) | other: { $libraries } libraries · { $series } series (plural form)"
   },
   "servers-row-summary-apple": {
     "source": "397f940b2c49",
@@ -23829,7 +24337,11 @@
     "source": "7f8ef4091683",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } change waiting for synchronization | many: { $count } changes waiting for synchronization | other: { $count } changes waiting for synchronization"
   },
   "settings-chapter-downloads-cellular": {
     "source": "77f13065a9cf",
@@ -23937,7 +24449,11 @@
     "source": "387b5cf6fc7f",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } title differs from { $tracker } | many: { $count } titles differ from { $tracker } | other: { $count } titles differ from { $tracker }"
   },
   "settings-controller-device": {
     "source": "96785479b0f4",
@@ -24111,13 +24627,21 @@
     "source": "fd87b8534893",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Delete { $count } watched download? | many: Delete { $count } watched downloads? | other: Delete { $count } watched downloads?"
   },
   "settings-differences": {
     "source": "387b5cf6fc7f",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } title differs from { $tracker } | many: { $count } titles differ from { $tracker } | other: { $count } titles differ from { $tracker }"
   },
   "settings-differences-review": {
     "source": "fc53e352afbc",
@@ -24213,7 +24737,11 @@
     "source": "50cf4c689ecd",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } episode | many: { $count } episodes | other: { $count } episodes"
   },
   "settings-downloads-finished": {
     "source": "32342a48ead9",
@@ -25437,7 +25965,11 @@
     "source": "166fb627911c",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Changed for { $count } series | many: Changed for { $count } series | other: Changed for { $count } series"
   },
   "settings-panes-label": {
     "source": "e1c0f456b343",
@@ -25773,7 +26305,11 @@
     "source": "bef9bed3ffbd",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Examine { $count } difference | many: Examine { $count } differences | other: Examine { $count } differences"
   },
   "settings-search": {
     "source": "b901449675b4",
@@ -25887,7 +26423,11 @@
     "source": "13ef62c1250d",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Connected · { $count } change waiting | many: Connected · { $count } changes waiting | other: Connected · { $count } changes waiting"
   },
   "settings-signed-out-code": {
     "source": "a430bef451ad",
@@ -25941,7 +26481,11 @@
     "source": "13d1f12fc6b9",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } { -source } | many: { $count } { -source-pl } | other: { $count } { -source-pl }"
   },
   "settings-source-order": {
     "source": "8e0f54ba4807",
@@ -26299,19 +26843,31 @@
     "source": "92ca0217c75d",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $n } folder | many: { $n } folders | other: { $n } folders"
   },
   "settings-summary-book-plugins": {
     "source": "5e91ab8a15bb",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $n } { -plugin } | many: { $n } { -plugin-pl } | other: { $n } { -plugin-pl }"
   },
   "settings-summary-book-servers": {
     "source": "d3166d0cbea4",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $n } server | many: { $n } servers | other: { $n } servers"
   },
   "settings-summary-chapters-off": {
     "source": "432ef19d954d",
@@ -26347,7 +26903,11 @@
     "source": "13d1f12fc6b9",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } { -source } | many: { $count } { -source-pl } | other: { $count } { -source-pl }"
   },
   "settings-summary-torrents-off": {
     "source": "ab6fd0871835",
@@ -27061,7 +27621,11 @@
     "source": "7f8ef4091683",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } modification to synchronize | many: { $count } modifications to synchronize | other: { $count } modifications to synchronize"
   },
   "shell-connect-tracker": {
     "source": "bb38597870e0",
@@ -27713,7 +28277,11 @@
     "source": "6e08746b082e",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } { -plugin } installed from { $store } | many: { $count } { -plugin-pl } installed from { $store } | other: { $count } { -plugin-pl } installed from { $store }"
   },
   "source-note-ambiguous": {
     "source": "13ce2b037219",
@@ -27797,13 +28365,21 @@
     "source": "1677647285b7",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } seeder | many: { $count } seeders | other: { $count } seeders"
   },
   "source-picker-seeders-linux": {
     "source": "1677647285b7",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } sharer | many: { $count } sharers | other: { $count } sharers"
   },
   "source-picker-title": {
     "source": "665ead04f6eb",
@@ -27821,13 +28397,21 @@
     "source": "1677647285b7",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } seeder | many: { $count } seeders | other: { $count } seeders"
   },
   "source-row-folder": {
     "source": "d258ef89c014",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $path } · Series: { $series } · { $skipped } file ignored | many: { $path } · Series: { $series } · { $skipped } files ignored | other: { $path } · Series: { $series } · { $skipped } files ignored"
   },
   "source-row-plugin": {
     "source": "4a19406f0855",
@@ -27953,7 +28537,11 @@
     "source": "60d4034fbdb4",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Contacts { $first } and { $more } other | many: Contacts { $first } and { $more } others | other: Contacts { $first } and { $more } others"
   },
   "sources-contacts-none": {
     "source": "d73924836e8b",
@@ -28181,7 +28769,11 @@
     "source": "9b803ff4e075",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $kind } server found with { $n } series | many: { $kind } server found with { $n } series | other: { $kind } server found with { $n } series"
   },
   "sources-kind-licensed": {
     "source": "2e107b63b73b",
@@ -28739,7 +29331,11 @@
     "source": "ca5908c0ef4e",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: This update also contacts { $first } and { $more } other. | many: This update also contacts { $first } and { $more } others. | other: This update also contacts { $first } and { $more } others."
   },
   "sources-update-contacts-one": {
     "source": "ebcbf1197ee3",
@@ -29177,7 +29773,11 @@
     "source": "00f90ffa8438",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } { -plugin } installed. It is located in Your { -source-pl }. | many: { $count } { -plugin-pl } installed. They are located in Your { -source-pl }. | other: { $count } { -plugin-pl } installed. They are located in Your { -source-pl }."
   },
   "store-installed-row": {
     "source": "10e80d4c01c3",
@@ -29195,7 +29795,11 @@
     "source": "a423c6de5d23",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Invitation cancelled. { $count } person who used it stays a member. | many: Invitation cancelled. The { $count } people who used it stay members. | other: Invitation cancelled. The { $count } people who used it stay members."
   },
   "store-invite-chip": {
     "source": "05086cc42f95",
@@ -29267,7 +29871,11 @@
     "source": "0e858f2af316",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $owner } offers { $count } { -plugin }. Joining installs nothing: install it here or later. | many: { $owner } offers { $count } { -plugin-pl }. Joining installs nothing: choose the ones you want here or later. | other: { $owner } offers { $count } { -plugin-pl }. Joining installs nothing: choose the ones you want here or later."
   },
   "store-joined-title": {
     "source": "2af92d23fdd5",
@@ -29339,7 +29947,11 @@
     "source": "593f9ff24878",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Only the people you invite can join from now on. { $devices } { -device } that joined with the link stays active until you remove it. | many: Only the people you invite can join from now on. The { $devices } { -device-pl } that joined with the link stay active until you remove them. | other: Only the people you invite can join from now on. The { $devices } { -device-pl } that joined with the link stay active until you remove them."
   },
   "store-open-join-on": {
     "source": "a417c94ff8f2",
@@ -29375,7 +29987,11 @@
     "source": "9122c25ab5f0",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } other is for viewing, turned off on this { -device }. | many: { $count } others are for viewing, turned off on this { -device }. | other: { $count } others are for viewing, turned off on this { -device }."
   },
   "store-plugin-changed": {
     "source": "31b9a57f0588",
@@ -29435,7 +30051,11 @@
     "source": "0f18eb65f7eb",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } other is for reading, which this TV does not handle. | many: { $count } others are for reading, which this TV does not handle. | other: { $count } others are for reading, which this TV does not handle."
   },
   "store-unreachable": {
     "source": "18d0c5ef8e1d",
@@ -29621,7 +30241,11 @@
     "source": "fecdac75c83e",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Nobody else will be able to join with this link. { $count } person who used it stays a member. | many: Nobody else will be able to join with this link. The { $count } people who used it stay members. | other: Nobody else will be able to join with this link. The { $count } people who used it stay members."
   },
   "stores-cancel-invite-link": {
     "source": "8ce947ffea08",
@@ -29831,7 +30455,12 @@
     "source": "12ed74225f13",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed.",
+      "back-translation: 'rejoint avec le lien' reads awkwardly."
+    ],
+    "back": "one: Remove { $count } { -device } joined with the link? | many: Remove the { $count } { -device-pl } joined with the link? | other: Remove the { $count } { -device-pl } joined with the link?"
   },
   "stores-confirm-remove-member": {
     "source": "aa3005ebf3af",
@@ -29909,13 +30538,21 @@
     "source": "4366cc22a945",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } { -device } | many: { $count } { -device-pl } | other: { $count } { -device-pl }"
   },
   "stores-devices-joined": {
     "source": "927dac0bfce2",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } { -device } joined with the link | many: { $count } { -device-pl } joined with the link | other: { $count } { -device-pl } joined with the link"
   },
   "stores-dialog-title": {
     "source": "bc339bf9b1f9",
@@ -30299,7 +30936,11 @@
     "source": "4ae0da403aeb",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Used { $used } time | many: Used { $used } times | other: Used { $used } times"
   },
   "stores-invite-used-of": {
     "source": "164cee125874",
@@ -30761,7 +31402,11 @@
     "source": "ad4dfaac966e",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } { -device } | many: His/her { $count } { -device-pl } | other: His/her { $count } { -device-pl }"
   },
   "stores-member-you": {
     "source": "519630126a35",
@@ -30923,7 +31568,11 @@
     "source": "793ed90fca61",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } { -plugin } | many: { $count } { -plugin-pl } | other: { $count } { -plugin-pl }"
   },
   "stores-offline-keep-working": {
     "source": "fa2b9dd9dca9",
@@ -31265,7 +31914,11 @@
     "source": "793ed90fca61",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } { -plugin } | many: { $count } { -plugin-pl } | other: { $count } { -plugin-pl }"
   },
   "stores-preview-key-invite": {
     "source": "f91840f4493c",
@@ -31397,7 +32050,11 @@
     "source": "a0962b3f2367",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Remove { $count } | many: Remove the { $count } | other: Remove the { $count }"
   },
   "stores-remove-devices-detail": {
     "source": "0c2a71070ac9",
@@ -31427,7 +32084,11 @@
     "source": "6992bb1a6297",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } { -device } stops working with this (feminine) { -store } immediately. | many: His/her { $count } { -device-pl } stop working with this (feminine) { -store } immediately. | other: His/her { $count } { -device-pl } stop working with this (feminine) { -store } immediately."
   },
   "stores-remove-member-plugins": {
     "source": "a5ab83b7ec3e",
@@ -31679,19 +32340,31 @@
     "source": "18870f5a304d",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } update | many: { $count } updates | other: { $count } updates"
   },
   "stores-updates-count": {
     "source": "a4bd142d2dc7",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } to update | many: { $count } to update | other: { $count } to update"
   },
   "stores-updates-waiting": {
     "source": "18870f5a304d",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } update | many: { $count } updates | other: { $count } updates"
   },
   "stores-what-is": {
     "source": "a20ec9baba18",
@@ -32219,7 +32892,11 @@
     "source": "3c1d839d78b6",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $first } and { $more } other | many: { $first } and { $more } others | other: { $first } and { $more } others"
   },
   "title-also-on-more-apple": {
     "source": "813e510660b9",
@@ -33173,7 +33850,11 @@
     "source": "1c007b1b647e",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Used for { $count } viewing | many: Used for { $count } viewings | other: Used for { $count } viewings"
   },
   "together-servers": {
     "source": "56e796506fb8",
@@ -34085,7 +34766,11 @@
     "source": "b6369bed1b89",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } comment · Read only | many: { $count } comments · Read only | other: { $count } comments · Read only"
   },
   "tv-discussion-footer": {
     "source": "983663ad621e",
@@ -34097,7 +34782,11 @@
     "source": "f6270d352259",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } I like (like) | many: { $count } I like (likes) | other: { $count } I like (likes)"
   },
   "tv-discussion-select-spoiler": {
     "source": "e8c76a2bfe58",
@@ -36293,19 +36982,31 @@
     "source": "70d66e684764",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $title }, episode { $episode }, paused, there remains { $minutes } minute | many: { $title }, episode { $episode }, paused, there remain { $minutes } minutes | other: { $title }, episode { $episode }, paused, there remain { $minutes } minutes"
   },
   "widget-a11y-playback-playing": {
     "source": "8fa51d569cf4",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $title }, episode { $episode }, playing, there remains { $minutes } minute | many: { $title }, episode { $episode }, playing, there remain { $minutes } minutes | other: { $title }, episode { $episode }, playing, there remain { $minutes } minutes"
   },
   "widget-a11y-resume": {
     "source": "6cfc1e5f9a3d",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $episode }, there remains { $minutes } minute | many: { $episode }, there remain { $minutes } minutes | other: { $episode }, there remain { $minutes } minutes"
   },
   "widget-a11y-row": {
     "source": "64bda0676ccd",
@@ -36323,7 +37024,11 @@
     "source": "174580122484",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $label }, { $count } episode downloading | many: { $label }, { $count } episodes downloading | other: { $label }, { $count } episodes downloading"
   },
   "widget-a11y-then-list": {
     "source": "a6af563849ef",
@@ -36539,7 +37244,11 @@
     "source": "7e14f7d4abd9",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Downloading of { $count } episode | many: Downloading of { $count } episodes | other: Downloading of { $count } episodes"
   },
   "widget-downloads-episode": {
     "source": "b866ac6e9ff4",
@@ -36848,7 +37557,11 @@
     "source": "6facfb38e6ae",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $pages } page | many: { $pages } (of) pages | other: { $pages } pages"
   },
   "windows-reader-chapters-tab": {
     "source": "15733d7d0f6d",

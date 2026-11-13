@@ -2905,13 +2905,21 @@
     "source": "f1f0ff208dd0",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } episode is downloading or waiting its turn. Continue the download after the window closes, or stop? (no object) | few: { $count } episodes are downloading or waiting their turn. Continue the download after the window closes, or stop them? | many: { $count } episodes (genitive plural) are downloading or waiting their turn. Continue the download after the window closes, or stop them? | other: { $count } episodes (genitive singular) are downloading or waiting their turn. Continue the download after the window closes, or stop them?"
   },
   "close-body-seeding": {
     "source": "19c2b9f41ab6",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } episode is being seeded. Continue seeding after the window closes, or stop it? | few: { $count } episodes are being seeded. Continue seeding after the window closes, or stop them? | many: { $count } episodes (genitive plural) are being seeded. Continue seeding after the window closes, or stop them? | other: { $count } episodes (genitive singular) are being seeded. Continue seeding after the window closes, or stop them?"
   },
   "close-dont-ask": {
     "source": "0d4cd0f7ec29",
@@ -3565,7 +3573,11 @@
     "source": "7f8ef4091683",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } change is waiting for sync | few: { $count } changes are waiting for sync | many: { $count } changes (genitive plural) are waiting for sync | other: { $count } changes (genitive singular) are waiting for sync"
   },
   "continue-this-season": {
     "source": "f4ade059759c",
@@ -3631,7 +3643,11 @@
     "source": "50cf4c689ecd",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } episode | few: { $count } episodes (genitive singular) | many: { $count } episodes (genitive plural) | other: { $count } episodes (genitive singular)"
   },
   "count-episodes-short": {
     "source": "4df57c34cc0f",
@@ -3655,7 +3671,11 @@
     "source": "8319377d4cf7",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Came out: { $count } episode | few: Came out: { $count } episodes (genitive singular) | many: Came out: { $count } episodes (genitive plural) | other: Came out: { $count } episodes (genitive singular)"
   },
   "count-out-of": {
     "source": "9e09659b8c02",
@@ -3691,7 +3711,11 @@
     "source": "50cf4c689ecd",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } episode | few: { $count } episodes (genitive singular) | many: { $count } episodes (genitive plural) | other: { $count } episodes (genitive singular)"
   },
   "count-spoken-next-of": {
     "source": "8ead4f837630",
@@ -3703,7 +3727,11 @@
     "source": "8319377d4cf7",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Came out: { $count } episode | few: Came out: { $count } episodes (genitive singular) | many: Came out: { $count } episodes (genitive plural) | other: Came out: { $count } episodes (genitive singular)"
   },
   "count-spoken-out-of": {
     "source": "4e3437b67b71",
@@ -4261,7 +4289,11 @@
     "source": "93dcdf3caafc",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } TV set for «Watch on TV» | few: { $count } TV sets (genitive singular) for «Watch on TV» | many: { $count } TV sets (genitive plural) for «Watch on TV» | other: { $count } TV sets (genitive singular) for «Watch on TV»"
   },
   "devices-yours": {
     "source": "eabafc98aa87",
@@ -4441,7 +4473,11 @@
     "source": "8ebc8ed6cf7e",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } comment | few: { $count } comments (genitive singular) | many: { $count } comments (genitive plural) | other: { $count } comments (genitive singular)"
   },
   "discussion-delete-body": {
     "source": "8fb4d1c7263f",
@@ -4507,7 +4543,11 @@
     "source": "32d9356ad0dd",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } more reply | few: { $count } more replies (genitive singular) | many: { $count } more replies (genitive plural) | other: { $count } more replies (genitive singular)"
   },
   "discussion-no-comments": {
     "source": "ffb4867aafe0",
@@ -4585,7 +4625,11 @@
     "source": "a1fed28e1801",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Discussion · { $count } comment | few: Discussion · { $count } comments (genitive singular) | many: Discussion · { $count } comments (genitive plural) | other: Discussion · { $count } comments (genitive singular)"
   },
   "discussion-sending": {
     "source": "6d8b12f6a54b",
@@ -4867,7 +4911,11 @@
     "source": "0be88ccfee0b",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } episode remains | few: { $count } episodes (genitive singular) remain | many: { $count } episodes (genitive plural) remain | other: { $count } episodes (genitive singular) remain"
   },
   "downloads-continued-title": {
     "source": "0c296160a212",
@@ -5167,7 +5215,11 @@
     "source": "7e14f7d4abd9",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } episode is downloading | few: { $count } episodes (genitive singular) are downloading | many: { $count } episodes (genitive plural) are downloading | other: { $count } episodes (genitive plural; fractions take genitive singular) are downloading"
   },
   "downloads-notice-starting": {
     "source": "4c60317e4731",
@@ -6051,7 +6103,12 @@
     "source": "337b0b7a033d",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Plural wording; the \"many\" form only counts millions",
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } watched episode | few: { $count } watched episodes | many: { $count } watched episodes (genitive plural) | other: { $count } watched episodes (genitive singular)"
   },
   "episode-go-to": {
     "source": "7d2a5e4c193a",
@@ -6779,7 +6836,11 @@
     "source": "5c75b5abd78d",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $n } chapter is not downloaded yet, so the sending will wait for Wi-Fi and continue by itself. | few: { $n } chapters are not downloaded yet, so the sending will wait for Wi-Fi and continue by itself. | many: { $n } chapters (genitive plural) are not downloaded yet, so the sending will wait for Wi-Fi and continue by itself. | other: { $n } chapters (genitive singular) are not downloaded yet, so the sending will wait for Wi-Fi and continue by itself."
   },
   "feed-firewall-body-windows": {
     "source": "132a836a9009",
@@ -10484,7 +10545,12 @@
     "source": "a16da4c81925",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "'one' form has no number, but Russian 'one' also covers 21",
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Next { $n } unread (feminine, implies chapter) | few: Next { $n } unread (plural) | many: Next { $n } unread (genitive plural) | other: Next { $n } unread (genitive plural)"
   },
   "linux-send-none-unread": {
     "source": "5cb3dbfff0bd",
@@ -12732,7 +12798,12 @@
     "source": "22c3d7bea249",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed.",
+      "back-translation: [one] says the calendar is updated, the other forms that they are in the calendar."
+    ],
+    "back": "one: { $count } new episode of titles you watch has come out. The calendar is already updated. | few: { $count } new episodes of titles you watch have come out. They are in the calendar. | many: { $count } new episodes (genitive plural) of titles you watch have come out. They are in the calendar. | other: { $count } new episodes (nominative plural) of titles you watch have come out. They are in the calendar."
   },
   "notice-episodes-failed": {
     "source": "6b0094b5c2d0",
@@ -12744,7 +12815,11 @@
     "source": "a3ac54bdf3f7",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } episode was added to the queue. | few: { $count } episodes (genitive singular) were added to the queue. | many: { $count } episodes (genitive plural) were added to the queue. | other: { $count } episodes (genitive plural) were added to the queue."
   },
   "notice-episodes-queued-existing": {
     "source": "bfb2e177232d",
@@ -13128,7 +13203,11 @@
     "source": "193d11fc4d6c",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: You signed out of { $tracker }. { $count } change in the queue is saved for the next sign-in. | few: You signed out of { $tracker }. { $count } changes in the queue are saved for the next sign-in. | many: You signed out of { $tracker }. { $count } changes (genitive plural) in the queue are saved for the next sign-in. | other: You signed out of { $tracker }. { $count } changes (genitive singular) in the queue are saved for the next sign-in."
   },
   "notice-skip-marks-cleared": {
     "source": "fd0a0ccf2922",
@@ -14780,7 +14859,11 @@
     "source": "076a8d81a1fc",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Please wait { $seconds } second | few: Please wait { $seconds } seconds (genitive singular) | many: Please wait { $seconds } seconds (genitive plural) | other: Please wait { $seconds } seconds (genitive singular)"
   },
   "party-chat-you": {
     "source": "cb6a9c1a1757",
@@ -15716,7 +15799,12 @@
     "source": "07cb8e3aa15e",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed.",
+      "back-translation: 'запускает' means starts, where the English says plays with."
+    ],
+    "back": "one: { $count } { -source } contains the episode. The chosen { -source } starts the { -watch-party }. | few: { -source-cap-pl } with the episode: { $count }. The chosen { -source } starts the { -watch-party }. | many: { -source-cap-pl } with the episode: { $count }. The chosen { -source } starts the { -watch-party }. | other: { -source-cap-pl } with the episode: { $count }. The chosen { -source } starts the { -watch-party }."
   },
   "party-sources-label": {
     "source": "444a0b13c12b",
@@ -16118,7 +16206,11 @@
     "source": "7ae48c0b7a79",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } channel | few: { $count } channels (genitive singular) | many: { $count } channels (genitive plural) | other: { $count } channels (genitive singular)"
   },
   "player-channels-mono": {
     "source": "37edf2aec5ab",
@@ -16688,7 +16780,11 @@
     "source": "033aecce0eec",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } comment · puts on pause | few: { $count } comments (genitive singular) · puts on pause | many: { $count } comments (genitive plural) · puts on pause | other: { $count } comments (genitive singular) · puts on pause"
   },
   "player-more-discussion-pauses": {
     "source": "8acfc18a4e4d",
@@ -17450,7 +17546,12 @@
     "source": "f3a0f89f2f88",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed.",
+      "back-translation: [few] after 'после' needs genitive plural 'эпизодов'."
+    ],
+    "back": "one: Pause after { $count } episode in a row. | few: Pause after { $count } episode (genitive singular; should be genitive plural after 2-4) in a row. | many: Pause after { $count } episodes (genitive plural) in a row. | other: Pause after { $count } episode (genitive singular) in a row."
   },
   "player-subs-bg-box": {
     "source": "16564e19b102",
@@ -20822,13 +20923,21 @@
     "source": "7ab5f0dec3c7",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } chapter «{ $title }» is ready for reading offline. | few: { $count } chapters «{ $title }» are ready for reading offline. | many: { $count } chapters (genitive plural) «{ $title }» are ready for reading offline. | other: { $count } chapters (genitive singular) «{ $title }» are ready for reading offline."
   },
   "reading-downloads-done-parts": {
     "source": "a3cac7cc72cd",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } part «{ $title }» is ready for reading offline. | few: { $count } parts «{ $title }» are ready for reading offline. | many: { $count } parts (genitive plural) «{ $title }» are ready for reading offline. | other: { $count } parts (genitive singular) «{ $title }» are ready for reading offline."
   },
   "reading-downloads-done-series": {
     "source": "ff4c23da1cd5",
@@ -25920,7 +26029,11 @@
     "source": "13ef62c1250d",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Sign-in done · { $count } change is waiting | few: Sign-in done · { $count } changes are waiting | many: Sign-in done · { $count } changes (genitive plural) are waiting | other: Sign-in done · { $count } changes (genitive plural) are waiting"
   },
   "settings-signed-out-code": {
     "source": "a430bef451ad",
@@ -27098,7 +27211,11 @@
     "source": "7f8ef4091683",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } change is waiting for sync | few: { $count } changes are waiting for sync | many: { $count } changes (genitive plural) are waiting for sync | other: { $count } changes (genitive singular) are waiting for sync"
   },
   "shell-connect-tracker": {
     "source": "bb38597870e0",
@@ -27834,7 +27951,11 @@
     "source": "1677647285b7",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } seeder | few: { $count } seeders (genitive singular) | many: { $count } seeders (genitive plural) | other: { $count } seeders (genitive singular)"
   },
   "source-picker-seeders-linux": {
     "source": "1677647285b7",
@@ -27858,7 +27979,11 @@
     "source": "1677647285b7",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } seed | few: { $count } seeds (genitive singular) | many: { $count } seeds (genitive plural) | other: { $count } seeds (genitive plural)"
   },
   "source-row-folder": {
     "source": "d258ef89c014",
@@ -29232,7 +29357,11 @@
     "source": "a423c6de5d23",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Invitation cancelled. { $count } joined person remains a member. | few: Invitation cancelled. Those who joined ({ $count }) remain members. | many: Invitation cancelled. Those who joined ({ $count }) remain members. | other: Invitation cancelled. Those who joined ({ $count }) remain members."
   },
   "store-invite-chip": {
     "source": "05086cc42f95",
@@ -29376,7 +29505,11 @@
     "source": "593f9ff24878",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Now only invited people can connect. { $devices } { -device } via the link keeps working until you remove it. | few: Now only invited people can connect. { -device-pl } ({ $devices }) that connected via the link keep working until you remove them. | many: Now only invited people can connect. { -device-pl } ({ $devices }) that connected via the link keep working until you remove them. | other: Now only invited people can connect. { -device-pl } ({ $devices }) that connected via the link keep working until you remove them."
   },
   "store-open-join-on": {
     "source": "a417c94ff8f2",
@@ -29662,7 +29795,11 @@
     "source": "fecdac75c83e",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Nobody else will be able to join. { $count } person who joined remains a member. | few: Nobody else will be able to join. Those who joined ({ $count }) remain members. | many: Nobody else will be able to join. Those who joined ({ $count }) remain members. | other: Nobody else will be able to join. Those who joined ({ $count }) remain members."
   },
   "stores-cancel-invite-link": {
     "source": "8ce947ffea08",
@@ -29872,7 +30009,12 @@
     "source": "12ed74225f13",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed.",
+      "back-translation: [many] uses plain 'устройств' instead of the term."
+    ],
+    "back": "one: Delete { $count } { -device } that joined via the link? | few: Delete all { $count } { -device-pl } that joined via the link? | many: Delete all { $count } devices (hard-coded word, genitive plural, not the term) that joined via the link? | other: Delete all { $count } { -device-pl } that joined via the link?"
   },
   "stores-confirm-remove-member": {
     "source": "aa3005ebf3af",
@@ -29950,7 +30092,11 @@
     "source": "4366cc22a945",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } { -device } | few: { -device-pl }: { $count } | many: { -device-pl }: { $count } | other: { -device-pl }: { $count }"
   },
   "stores-devices-joined": {
     "source": "927dac0bfce2",
@@ -31306,7 +31452,11 @@
     "source": "793ed90fca61",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } { -plugin } | few: { -plugin-pl }: { $count } | many: { -plugin-pl }: { $count } | other: { -plugin-pl }: { $count }"
   },
   "stores-preview-key-invite": {
     "source": "f91840f4493c",
@@ -31438,7 +31588,11 @@
     "source": "a0962b3f2367",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: Delete { $count } { -device } | few: Delete all { $count } | many: Delete all { $count } | other: Delete all { $count }"
   },
   "stores-remove-devices-detail": {
     "source": "0c2a71070ac9",
@@ -31468,7 +31622,12 @@
     "source": "6992bb1a6297",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed.",
+      "back-translation: '{ -store }ом' glues a case ending to the term; [many] uses plain 'устройств'."
+    ],
+    "back": "one: Their { $count } { -device } will stop working with this { -store } (instrumental made by gluing \"-om\" onto the term) right away. | few: Their { $count } { -device-pl } will stop working with this { -store }-om right away. | many: Their { $count } devices (hard-coded word, not the term) will stop working with this { -store }-om right away. | other: Their { $count } { -device-pl } will stop working with this { -store }-om right away."
   },
   "stores-remove-member-plugins": {
     "source": "a5ab83b7ec3e",
@@ -31720,13 +31879,22 @@
     "source": "18870f5a304d",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } update | few: Updates: { $count } | many: Updates: { $count } | other: Updates: { $count }"
   },
   "stores-updates-count": {
     "source": "a4bd142d2dc7",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed.",
+      "back-translation: [one] drops 'to update'."
+    ],
+    "back": "one: { $count } update | few: { $count } for updating | many: { $count } for updating | other: { $count } for updating"
   },
   "stores-updates-waiting": {
     "source": "18870f5a304d",
@@ -36334,19 +36502,31 @@
     "source": "70d66e684764",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $title }, episode { $episode }, paused, { $minutes } minute left | few: { $title }, episode { $episode }, paused, { $minutes } minutes (genitive singular) left | many: { $title }, episode { $episode }, paused, { $minutes } minutes (genitive plural) left | other: { $title }, episode { $episode }, paused, { $minutes } minutes (genitive singular) left"
   },
   "widget-a11y-playback-playing": {
     "source": "8fa51d569cf4",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $title }, episode { $episode }, is playing, { $minutes } minute left | few: { $title }, episode { $episode }, is playing, { $minutes } minutes (genitive singular) left | many: { $title }, episode { $episode }, is playing, { $minutes } minutes (genitive plural) left | other: { $title }, episode { $episode }, is playing, { $minutes } minutes (genitive singular) left"
   },
   "widget-a11y-resume": {
     "source": "6cfc1e5f9a3d",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $episode }, { $minutes } minute left | few: { $episode }, { $minutes } minutes (genitive singular) left | many: { $episode }, { $minutes } minutes (genitive plural) left | other: { $episode }, { $minutes } minutes (genitive singular) left"
   },
   "widget-a11y-row": {
     "source": "64bda0676ccd",
@@ -36364,7 +36544,11 @@
     "source": "174580122484",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $label }, { $count } episode is downloading | few: { $label }, { $count } episodes (genitive singular) are downloading | many: { $label }, { $count } episodes (genitive plural) are downloading | other: { $label }, { $count } episodes (genitive singular) are downloading"
   },
   "widget-a11y-then-list": {
     "source": "a6af563849ef",
@@ -36580,7 +36764,11 @@
     "source": "7e14f7d4abd9",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-13"
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "one: { $count } episode is downloading | few: { $count } episodes (genitive singular) are downloading | many: { $count } episodes (genitive plural) are downloading | other: { $count } episodes (genitive singular) are downloading"
   },
   "widget-downloads-episode": {
     "source": "b866ac6e9ff4",
