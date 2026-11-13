@@ -10,6 +10,10 @@
 // The narrow window needs windowed apps on in the Simulator (SpringBoard's
 // SBChamoisWindowingEnabled); the test drags the window's corner through SpringBoard and is
 // skipped when the window does not get narrow.
+//
+// The iPad Simulator's hierarchy has no Window element on iOS 27: its frame reads as zero and
+// XCUITest finds no hit point for a tap. The window is measured from the app's own elements, and a
+// button that cannot be hit is tapped at its middle.
 
 import UIKit
 import XCTest
@@ -51,6 +55,41 @@ final class ReaderLayoutTests: XCTestCase {
         return app
     }
 
+    /// The screen in the current orientation, in points.
+    private func screen() -> CGRect {
+        let shot = XCUIScreen.main.screenshot().image
+        // The runner is on the same device, so its screen's scale is the device's.
+        let scale = shot.scale > 1 ? 1 : UITraitCollection.current.displayScale
+        return CGRect(x: 0, y: 0, width: shot.size.width / scale, height: shot.size.height / scale)
+    }
+
+    /// The app's window: the Window element's frame when there is one, otherwise what the app's
+    /// top elements cover, and the screen when they cover nothing.
+    private func windowFrame(_ app: XCUIApplication) -> CGRect {
+        let window = app.windows.firstMatch
+        if window.exists, !window.frame.isEmpty { return window.frame }
+        let tops = app.children(matching: .any).allElementsBoundByIndex.map(\.frame).filter { !$0.isEmpty }
+        if let first = tops.first {
+            return tops.dropFirst().reduce(first) { $0.union($1) }.intersection(screen())
+        }
+        return app.frame.isEmpty ? screen() : app.frame
+    }
+
+    /// A point on the screen, for taps and drags by place.
+    private func point(_ app: XCUIApplication, _ x: CGFloat, _ y: CGFloat) -> XCUICoordinate {
+        app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: x - app.frame.minX, dy: y - app.frame.minY))
+    }
+
+    /// Taps an element, at its middle when XCUITest cannot find a hit point for it.
+    private func tap(_ element: XCUIElement, in app: XCUIApplication) {
+        if element.isHittable {
+            element.tap()
+        } else {
+            let frame = element.frame
+            point(app, frame.midX, frame.midY).tap()
+        }
+    }
+
     private func requirePad() throws {
         try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "an iPad check")
     }
@@ -65,13 +104,14 @@ final class ReaderLayoutTests: XCTestCase {
     private func openChapters(_ app: XCUIApplication) {
         let button = app.buttons["Chapters"].firstMatch
         XCTAssertTrue(button.waitForExistence(timeout: 20), "no Chapters button")
-        button.tap()
+        tap(button, in: app)
     }
 
     private func closeChapters(_ app: XCUIApplication) {
         app.typeKey(XCUIKeyboardKey.escape, modifierFlags: [])
         if pagesSegment(app).exists {
-            app.coordinate(withNormalizedOffset: CGVector(dx: 0.08, dy: 0.5)).tap()
+            let window = windowFrame(app)
+            point(app, window.minX + window.width * 0.08, window.midY).tap()
         }
         _ = pagesSegment(app).waitForNonExistence(timeout: 5)
     }
@@ -81,7 +121,7 @@ final class ReaderLayoutTests: XCTestCase {
         let segment = pagesSegment(app)
         XCTAssertTrue(segment.waitForExistence(timeout: 10), "\(name): the Chapters panel did not open")
         Thread.sleep(forTimeInterval: 1)
-        let window = app.windows.firstMatch.frame
+        let window = windowFrame(app)
         let pages = segment.frame
         let chapters = app.buttons.matching(NSPredicate(format: "label == 'Chapters'")).allElementsBoundByIndex
             .map(\.frame).filter { abs($0.midY - pages.midY) < 4 }.first ?? .null
@@ -115,18 +155,21 @@ final class ReaderLayoutTests: XCTestCase {
         let app = launch(["-KaeriScene", "readermangartl", "-KaeriReader", "chrome"])
         XCTAssertTrue(app.buttons["Chapters"].firstMatch.waitForExistence(timeout: 20))
         narrow(app, to: 375)
-        let width = app.windows.firstMatch.frame.width
+        let width = windowFrame(app).width
         try XCTSkipIf(width > 500, "the window stayed \(width) pt wide: windowed apps are off or the drag missed")
-        if !app.buttons["Chapters"].firstMatch.isHittable {
-            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        // The reader's bar may have hidden itself: a tap in the middle brings it back.
+        let chapters = app.buttons["Chapters"].firstMatch
+        let window = windowFrame(app)
+        if !(chapters.exists && window.contains(CGPoint(x: chapters.frame.midX, y: chapters.frame.midY))) {
+            point(app, window.midX, window.midY).tap()
         }
         openChapters(app)
         assertSwitchInside(app, "p6-narrow")
-        let window = app.windows.firstMatch.frame
+        let narrowWindow = windowFrame(app)
         // Every page of the grid's first row is inside the window.
         let thumbs = app.staticTexts.allElementsBoundByIndex.filter { Int($0.label) != nil && $0.frame.minY > pagesSegment(app).frame.maxY }
         for thumb in thumbs.prefix(5) {
-            XCTAssertTrue(window.contains(CGPoint(x: thumb.frame.midX, y: thumb.frame.midY)), "page \(thumb.label) is outside the window")
+            XCTAssertTrue(narrowWindow.contains(CGPoint(x: thumb.frame.midX, y: thumb.frame.midY)), "page \(thumb.label) is outside the window")
         }
     }
 
@@ -134,27 +177,28 @@ final class ReaderLayoutTests: XCTestCase {
     /// The window's corner dragged back out to the screen's edge.
     private func widen(_ app: XCUIApplication) {
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
-        let frame = app.windows.firstMatch.frame
-        let screen = springboard.windows.firstMatch.frame
+        let frame = windowFrame(app)
+        let screen = screen()
         let origin = springboard.coordinate(withNormalizedOffset: .zero)
-        let start = origin.withOffset(CGVector(dx: frame.maxX - 6, dy: frame.maxY - 6))
-        let end = origin.withOffset(CGVector(dx: screen.maxX - 2, dy: frame.maxY - 6))
+        let start = origin.withOffset(CGVector(dx: frame.maxX - 6 - springboard.frame.minX, dy: frame.maxY - 6 - springboard.frame.minY))
+        let end = origin.withOffset(CGVector(dx: screen.maxX - 2 - springboard.frame.minX, dy: frame.maxY - 6 - springboard.frame.minY))
         start.press(forDuration: 0.6, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.4)
     }
 
     private func narrow(_ app: XCUIApplication, to width: CGFloat) {
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
-        let frame = app.windows.firstMatch.frame
+        let frame = windowFrame(app)
         guard frame.width > width + 20 else { return }
         let origin = springboard.coordinate(withNormalizedOffset: .zero)
+        let board = springboard.frame
         for inset in [CGFloat(6), 12, 2] {
-            let start = origin.withOffset(CGVector(dx: frame.maxX - inset, dy: frame.maxY - inset))
-            let end = origin.withOffset(CGVector(dx: frame.minX + width, dy: frame.maxY - inset))
+            let start = origin.withOffset(CGVector(dx: frame.maxX - inset - board.minX, dy: frame.maxY - inset - board.minY))
+            let end = origin.withOffset(CGVector(dx: frame.minX + width - board.minX, dy: frame.maxY - inset - board.minY))
             start.press(forDuration: 0.6, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.4)
             Thread.sleep(forTimeInterval: 1.5)
-            if app.windows.firstMatch.frame.width < frame.width - 50 { break }
+            if windowFrame(app).width < frame.width - 50 { break }
         }
-        mark("p6-window", "before \(frame) after \(app.windows.firstMatch.frame)")
+        mark("p6-window", "before \(frame) after \(windowFrame(app))")
     }
 
     // MARK: P8, the opening screen's chapter
@@ -194,7 +238,7 @@ final class ReaderLayoutTests: XCTestCase {
         let download = app.buttons["Download"].firstMatch
         XCTAssertTrue(download.waitForExistence(timeout: 20), "no Download menu")
         Thread.sleep(forTimeInterval: 1.5)
-        let window = app.windows.firstMatch.frame
+        let window = windowFrame(app)
         let more = app.buttons.matching(NSPredicate(format: "label == 'More'")).allElementsBoundByIndex.map(\.frame)
         let main = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Read ' OR label BEGINSWITH 'Continue '"))
             .firstMatch
@@ -226,10 +270,10 @@ final class ReaderLayoutTests: XCTestCase {
         XCTAssertTrue(app.buttons["Mark read"].firstMatch.waitForExistence(timeout: 20), "no Choose chapters bar")
         if UIDevice.current.userInterfaceIdiom == .pad {
             let bar = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Download '")).firstMatch
-            mark("p17-choose-wide", "window \(app.windows.firstMatch.frame) download \(bar.label) \(bar.frame)")
+            mark("p17-choose-wide", "window \(windowFrame(app)) download \(bar.label) \(bar.frame)")
             narrow(app, to: 375)
         }
-        let window = app.windows.firstMatch.frame
+        let window = windowFrame(app)
         try XCTSkipIf(window.width > 430, "the window did not get narrow: \(window)")
         Thread.sleep(forTimeInterval: 1)
         let download = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Download'"))
@@ -248,7 +292,7 @@ final class ReaderLayoutTests: XCTestCase {
             let app = launch(["-KaeriScene", "watching", "-KaeriSection", section])
             XCTAssertTrue(app.navigationBars[title].firstMatch.waitForExistence(timeout: 20), "no \(title) to start from")
             narrow(app, to: 375)
-            let window = app.windows.firstMatch.frame
+            let window = windowFrame(app)
             guard window.width <= 500 else {
                 app.terminate()
                 throw XCTSkip("the window did not get narrow: \(window)")
@@ -260,7 +304,7 @@ final class ReaderLayoutTests: XCTestCase {
             widen(app)
             Thread.sleep(forTimeInterval: 1.5)
             let wide = app.navigationBars[title].firstMatch
-            mark("p11-wide-\(section)", "window \(app.windows.firstMatch.frame) \(title) bar \(wide.exists ? "\(wide.frame)" : "none")")
+            mark("p11-wide-\(section)", "window \(windowFrame(app)) \(title) bar \(wide.exists ? "\(wide.frame)" : "none")")
             XCTAssertTrue(wide.exists, "\(title) is gone when the window is made wide again")
             app.terminate()
         }
