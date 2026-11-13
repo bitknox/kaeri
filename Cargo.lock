@@ -3717,6 +3717,7 @@ dependencies = [
  "kaeri-model",
  "ratatui",
  "ratatui-image",
+ "rustix 1.1.5",
  "terminal-colorsaurus",
  "tracing",
  "unicode-width",

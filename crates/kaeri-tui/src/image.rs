@@ -21,15 +21,15 @@ use std::{
 use ratatui::layout::Rect;
 use ratatui_image::{picker::Picker, protocol::StatefulProtocol};
 
-/// Whether the terminal answers a cursor position report. crossterm waits for the answer for
-/// at most two seconds without leaving a read behind, and keeps keys pressed meanwhile for the
-/// app's own event loop. On Windows the position comes from the console itself, so this says
-/// nothing there and the query runs as before.
-fn answers_queries() -> bool {
-    if cfg!(windows) {
-        return true;
+/// The cell size from the window's size in pixels, for a terminal that answers the graphics
+/// query but not the cell size one, as `ratatui-image` falls back to it.
+#[cfg(unix)]
+fn cell_from_window() -> Option<(u16, u16)> {
+    let size = rustix::termios::tcgetwinsize(std::io::stdout()).ok()?;
+    if size.ws_xpixel == 0 || size.ws_ypixel == 0 || size.ws_col == 0 || size.ws_row == 0 {
+        return None;
     }
-    crossterm::cursor::position().is_ok()
+    Some((size.ws_xpixel / size.ws_col, size.ws_ypixel / size.ws_row))
 }
 
 /// What the terminal can actually do.
@@ -73,24 +73,70 @@ impl ImageEngine {
     /// Detection can fail — a pipe, a CI runner, a terminal that ignores the query — and
     /// that is not an error. It degrades to halfblocks, which work anywhere.
     pub fn detect(enabled: bool) -> Self {
-        Self::detect_with(enabled, answers_queries)
-    }
-
-    /// [`Self::detect`], with `answers` telling whether the terminal answers queries at all.
-    ///
-    /// The graphics query reads its reply from stdin on a thread of its own. When no reply
-    /// comes, the query gives up but the thread stays blocked on that read, and the first key
-    /// pressed after start-up goes to it instead of the app. So the full query runs only in
-    /// a terminal that answered a cursor position report in time; it ends on a status report
-    /// any such terminal answers, so it never leaves a read behind.
-    fn detect_with(enabled: bool, answers: impl FnOnce() -> bool) -> Self {
         if !enabled {
             return Self::disabled();
         }
-        if !answers() {
-            tracing::info!("the terminal answers no queries; using halfblocks");
-            return Self::halfblocks_with_default_cells();
+        let answers =
+            crate::probe::ask(crate::probe::Ask { background: false, graphics: true });
+        Self::with_answers(enabled, &answers)
+    }
+
+    /// An engine for what the terminal answered when it was asked at start-up
+    /// ([`crate::probe::ask`]), so nothing is asked twice and no key typed meanwhile is lost.
+    pub fn with_answers(enabled: bool, answers: &crate::probe::Answers) -> Self {
+        if !enabled {
+            return Self::disabled();
         }
+        #[cfg(unix)]
+        {
+            Self::from_graphics(answers.graphics)
+        }
+        #[cfg(not(unix))]
+        {
+            let _ = answers;
+            Self::queried()
+        }
+    }
+
+    /// The engine for a terminal's answer about graphics: Kitty before Sixel, as
+    /// `ratatui-image` picks, and otherwise what the environment says (tmux, iTerm2) once the
+    /// cell size is known. No answer is halfblocks.
+    #[cfg(unix)]
+    fn from_graphics(answer: Option<crate::probe::GraphicsAnswer>) -> Self {
+        use ratatui_image::picker::ProtocolType;
+        let Some(answer) = answer else {
+            tracing::info!("the terminal did not answer the graphics query; using halfblocks");
+            return Self::halfblocks_with_default_cells();
+        };
+        let Some((width, height)) = answer.cell.or_else(cell_from_window) else {
+            tracing::info!("the terminal did not say its cell size; using halfblocks");
+            return Self::halfblocks_with_default_cells();
+        };
+        // Deprecated for the query it leaves out, which has been asked here already.
+        #[allow(deprecated)]
+        let mut picker = Picker::from_fontsize(ratatui_image::FontSize::new(width, height));
+        if answer.kitty {
+            picker.set_protocol_type(ProtocolType::Kitty);
+        } else if answer.sixel {
+            picker.set_protocol_type(ProtocolType::Sixel);
+        }
+        let graphics = if picker.protocol_type() == ProtocolType::Halfblocks {
+            Graphics::Halfblocks
+        } else {
+            Graphics::Native
+        };
+        tracing::info!(?graphics, protocol = ?picker.protocol_type(), font_size = ?(width, height), "terminal graphics");
+        Self {
+            picker: Some(picker),
+            graphics,
+            cache_dir: PathBuf::new(),
+            font_size: (width, height),
+        }
+    }
+
+    /// `ratatui-image`'s own query, where the start-up reader does not run.
+    #[cfg(not(unix))]
+    fn queried() -> Self {
         match Picker::from_query_stdio() {
             Ok(picker) => {
                 let fs = picker.font_size();
@@ -488,19 +534,19 @@ mod tests {
     }
 
     #[test]
-    fn a_terminal_that_answers_nothing_gets_halfblocks_without_a_query() {
-        // The graphics query is never started, so no read of stdin is left waiting for a
-        // reply that will not come and the first key pressed reaches the app.
-        let engine = ImageEngine::detect_with(true, || false);
-        assert_eq!(engine.graphics(), Graphics::Halfblocks);
-        assert!(engine.is_enabled());
-        let mut asked = false;
-        let off = ImageEngine::detect_with(false, || {
-            asked = true;
-            true
-        });
+    #[cfg(unix)]
+    fn the_graphics_answer_picks_the_protocol() {
+        use crate::probe::GraphicsAnswer;
+        // No answer, or no cell size, is halfblocks.
+        assert_eq!(ImageEngine::from_graphics(None).graphics(), Graphics::Halfblocks);
+        let kitty = GraphicsAnswer { kitty: true, sixel: true, cell: Some((9, 18)) };
+        let engine = ImageEngine::from_graphics(Some(kitty));
+        assert_eq!(engine.graphics(), Graphics::Native);
+        assert_eq!(engine.font_size(), (9, 18));
+        let sixel = GraphicsAnswer { kitty: false, sixel: true, cell: Some((9, 18)) };
+        assert_eq!(ImageEngine::from_graphics(Some(sixel)).graphics(), Graphics::Native);
+        let off = ImageEngine::with_answers(false, &crate::probe::Answers::default());
         assert_eq!(off.graphics(), Graphics::Disabled);
-        assert!(!asked, "images off asks the terminal nothing");
     }
 
     #[test]
