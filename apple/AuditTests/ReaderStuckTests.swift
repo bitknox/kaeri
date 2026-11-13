@@ -326,4 +326,31 @@ final class ReaderStuckTests: XCTestCase {
         key(app, "0", .command)
         XCTAssertEqual(zoom(), 1, accuracy: 0.01, "Command-0 left the pinch")
     }
+
+    /// File › Open (Command-O) over a book on iPad: a sheet with a field of its own takes the
+    /// arrows and Command-L, and the book behind it does not turn. If no sheet comes up over the
+    /// reader's cover, the book keeps its keys.
+    func testCommandOOverABookTakesTheArrowsWhenItShows() throws {
+        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "an iPad check")
+        let app = launch("readermangartl")
+        let start = try XCTUnwrap(page(app), "no page on screen")
+        key(app, "o", .command)
+        Thread.sleep(forTimeInterval: 1.5)
+        let field = app.textFields.firstMatch
+        let shown = field.exists && field.isHittable
+        print("audit: Command-O over a book shows its sheet: \(shown)")
+        if shown {
+            field.tap()
+            field.typeText("abc")
+            key(app, .rightArrow)
+            key(app, .leftArrow)
+            XCTAssertEqual(page(app), start, "the arrows turned the book behind the sheet")
+            key(app, "l", .command)
+            Thread.sleep(forTimeInterval: 1)
+            XCTAssertTrue(field.exists, "Command-L took the sheet away")
+        } else {
+            key(app, .leftArrow)
+            XCTAssertNotEqual(page(app), start, "with nothing over it the book did not turn")
+        }
+    }
 }
