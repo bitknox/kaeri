@@ -30,7 +30,7 @@ use kaeri_core::{
 pub use crate::{
     address::{KavitaLink, candidates, host_of, kavita_link, last_four, root_of},
     error::{Result, ServerError},
-    http::{Auth, Http, basic},
+    http::{Auth, Http, basic, signs_in},
 };
 
 /// The most pages one book from a server may have: as many as an archive may hold entries

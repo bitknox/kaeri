@@ -2542,7 +2542,7 @@ impl BookSources {
         };
         self.registry
             .fetch_page(&at, pages, index, now, |page: PageRef| {
-                let client = self.client.clone();
+                let client = self.servers.clone();
                 async move { plain_fetch(&client, &page).await }
             })
             .await
@@ -2758,18 +2758,41 @@ fn one_shot(row: &ChapterRow) -> bool {
 }
 
 /// A page fetched with the engine's own client, for a source that does not fetch its own.
+///
+/// `client` follows no redirects: they are followed here, and a header of the page's that may
+/// carry a sign-in goes only to the page's own origin (scheme, host and port). The rest, such
+/// as a referrer, go along.
 async fn plain_fetch(
     client: &reqwest::Client,
     page: &PageRef,
 ) -> Result<Vec<u8>, kaeri_core::traits::PageError> {
     use kaeri_core::traits::PageError;
-    let mut request = client.get(&page.url).timeout(std::time::Duration::from_secs(30));
-    for (name, value) in &page.headers {
-        request = request.header(name, value);
-    }
-    let response = request.send().await.map_err(|_| {
-        PageError::Failed(ProviderError::Transport("the request failed".into()))
-    })?;
+    let failed = || PageError::Failed(ProviderError::Transport("the request failed".into()));
+    let origin = reqwest::Url::parse(&page.url).map_err(|_| failed())?.origin();
+    let mut at = page.url.clone();
+    let mut hops = 0;
+    let response = loop {
+        let mut request = client.get(&at).timeout(std::time::Duration::from_secs(30));
+        let home = reqwest::Url::parse(&at).is_ok_and(|u| u.origin() == origin);
+        for (name, value) in &page.headers {
+            if home || !kaeri_bookserver::signs_in(name) {
+                request = request.header(name, value);
+            }
+        }
+        let response = request.send().await.map_err(|_| failed())?;
+        let next = response.status().is_redirection().then(|| {
+            let to = response.headers().get(reqwest::header::LOCATION)?.to_str().ok()?;
+            let to = reqwest::Url::parse(&at).ok()?.join(to).ok()?;
+            matches!(to.scheme(), "http" | "https").then(|| to.to_string())
+        });
+        match next.flatten() {
+            Some(to) if hops < 10 => {
+                hops += 1;
+                at = to;
+            }
+            _ => break response,
+        }
+    };
     let status = response.status().as_u16();
     if !(200..300).contains(&status) {
         return Err(PageError::Status(status));

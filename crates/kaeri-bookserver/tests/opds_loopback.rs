@@ -1,4 +1,7 @@
-//! OPDS catalogues on loopback.
+//! Book servers on loopback.
+//!
+//! R7E-1: no server kind's sign-in, whatever header carries it, follows a 301, 302, 307 or 308
+//! to another host, port or scheme, on a page, a file or any other request.
 //!
 //! R6E-1: a book server's sign-in goes only to its own origin (scheme, host and port), never
 //! to another host its feed names, and never along a redirect that leaves the origin. Two fake
@@ -25,6 +28,7 @@ struct Asked {
     path: String,
     authorization: Option<String>,
     token: Option<String>,
+    api_key: Option<String>,
 }
 
 type Seen = Arc<Mutex<Vec<Asked>>>;
@@ -62,6 +66,7 @@ async fn serve(listener: TcpListener, routes: Vec<(String, Vec<u8>)>) -> Seen {
                     path: path.clone(),
                     authorization: header("authorization"),
                     token: header("x-auth-token"),
+                    api_key: header("x-api-key"),
                 });
                 let answer = routes
                     .iter()
@@ -89,6 +94,13 @@ fn ok(content_type: &str, body: &[u8]) -> Vec<u8> {
     .into_bytes();
     answer.extend_from_slice(body);
     answer
+}
+
+fn redirect(status: &str, to: &str) -> Vec<u8> {
+    format!(
+        "HTTP/1.1 {status}\r\nLocation: {to}\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+    )
+    .into_bytes()
 }
 
 fn moved(to: &str) -> Vec<u8> {
@@ -147,7 +159,10 @@ fn client() -> reqwest::Client {
 }
 
 fn signed(asked: &[Asked]) -> Vec<&Asked> {
-    asked.iter().filter(|a| a.authorization.is_some() || a.token.is_some()).collect()
+    asked
+        .iter()
+        .filter(|a| a.authorization.is_some() || a.token.is_some() || a.api_key.is_some())
+        .collect()
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
@@ -312,4 +327,96 @@ async fn a_catalogue_searched_through_an_opensearch_description_finds_its_books(
     assert_eq!(chapters.len(), 2);
     let asked: Vec<String> = seen.lock().unwrap().iter().map(|a| a.path.clone()).collect();
     assert!(asked.iter().any(|p| p == "/opds/search?q=Lantern"), "{asked:?}");
+}
+
+/// Every credentialed server kind, with what its sign-in was kept as and the secret that must
+/// stay home.
+fn kinds() -> Vec<(Kind, String, &'static str)> {
+    vec![
+        (Kind::Komga, "token:made-up-token".into(), "made-up-token"),
+        (Kind::Komga, format!("basic:{}", basic("reader", "made-up-pass")), "Basic "),
+        (
+            Kind::Kavita,
+            r#"kavita:{"token":"made-up-jwt","refreshToken":"r","apiKey":"k"}"#.into(),
+            "made-up-jwt",
+        ),
+        (Kind::Opds, format!("basic:{}", basic("reader", "made-up-pass")), "Basic "),
+    ]
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn no_server_kind_s_sign_in_follows_a_redirect_to_another_host_port_or_scheme() {
+    let (a_listener, a) = listener().await;
+    let (b_listener, b) = listener().await;
+    let port_a = a.rsplit(':').next().unwrap().to_owned();
+    let port_b = b.rsplit(':').next().unwrap().to_owned();
+    // Another port, another host name for the other server, and https on this very host and
+    // port, which the plain server here can only see as bytes it can't read.
+    let targets = [
+        ("port", format!("{b}/landing")),
+        ("host", format!("http://localhost:{port_b}/landing")),
+        ("scheme", format!("https://127.0.0.1:{port_a}/landing")),
+    ];
+    let statuses = [
+        "301 Moved Permanently",
+        "302 Found",
+        "307 Temporary Redirect",
+        "308 Permanent Redirect",
+    ];
+    let mut routes = Vec::new();
+    for status in statuses {
+        for (name, to) in &targets {
+            let code = &status[..3];
+            routes.push((format!("/p/{code}/{name}"), redirect(status, to)));
+        }
+    }
+    let home = serve(a_listener, routes).await;
+    let away =
+        serve(b_listener, vec![("/landing".into(), ok("image/png", b"made-up page"))]).await;
+
+    for (kind, credential, secret) in kinds() {
+        let keep = tempfile::tempdir().unwrap();
+        let source = source(
+            &client(),
+            &Server {
+                id: "a",
+                name: "Made-up Books",
+                kind,
+                address: &a,
+                credential: &credential,
+            },
+            keep.path().to_owned(),
+            Arc::new(AtomicBool::new(false)),
+        )
+        .unwrap();
+        for status in statuses {
+            for (name, _) in &targets {
+                home.lock().unwrap().clear();
+                away.lock().unwrap().clear();
+                let code = &status[..3];
+                // A page as a server's reference names it, with a sign-in header of its own
+                // the server's fetch must not carry along either.
+                let mut page = kaeri_core::books::PageRef::new(format!("{a}/p/{code}/{name}"));
+                page.headers = vec![
+                    ("X-Auth-Token".into(), "made-up-token".into()),
+                    ("X-Api-Key".into(), "made-up-token".into()),
+                ];
+                let fetched = source.fetch_page(&page).await;
+                let home = home.lock().unwrap().clone();
+                let away = away.lock().unwrap().clone();
+                let what = format!("{kind:?} {status} to another {name}");
+                assert!(!home.is_empty() && signed(&home[..1]).len() == 1, "{what}: {home:?}");
+                if *name == "scheme" {
+                    // The https hop can't be answered here; whatever reached the server after
+                    // the first request is no readable sign-in.
+                    assert!(fetched.is_err(), "{what}");
+                    assert!(signed(&home[1..]).is_empty(), "{what}: {home:?}");
+                } else {
+                    assert_eq!(fetched.unwrap(), b"made-up page", "{what}");
+                    assert_eq!(away.len(), 1, "{what}: {away:?}");
+                    assert!(signed(&away).is_empty(), "{what} carried {secret}: {away:?}");
+                }
+            }
+        }
+    }
 }

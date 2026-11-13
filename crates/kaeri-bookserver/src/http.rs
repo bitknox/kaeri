@@ -45,6 +45,15 @@ impl Auth {
     }
 }
 
+/// Whether a header may carry a sign-in, whatever a server named it.
+pub fn signs_in(name: &str) -> bool {
+    let name = name.to_ascii_lowercase();
+    matches!(name.as_str(), "authorization" | "proxy-authorization" | "cookie")
+        || ["auth", "token", "key", "secret", "session", "password"]
+            .iter()
+            .any(|w| name.contains(w))
+}
+
 /// `user:password` as Basic wants it.
 pub fn basic(user: &str, password: &str) -> String {
     base64(format!("{user}:{password}").as_bytes())
@@ -182,9 +191,18 @@ impl Http {
             headers.remove(reqwest::header::CONTENT_TYPE);
             headers.remove(reqwest::header::CONTENT_LENGTH);
         }
+        let away = !self.same_origin(target.as_str());
         let headers = request.headers_mut();
         for name in self.auth.names() {
             headers.remove(name);
+        }
+        // Any other header that may carry a sign-in stays on the origin it was given for.
+        if away {
+            let named: Vec<_> =
+                headers.keys().filter(|name| signs_in(name.as_str())).cloned().collect();
+            for name in named {
+                headers.remove(name);
+            }
         }
         if let Some((name, value)) = self.auth_for(target.as_str())
             && let (Ok(name), Ok(value)) = (
