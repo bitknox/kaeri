@@ -453,9 +453,11 @@ mod reader_scenes;
 use reader_scenes::{
     reader_blocks_after_resumed, reader_chapter_failed, reader_end_caught_up,
     reader_end_extras, reader_end_finished, reader_end_not_out, reader_end_offline,
-    reader_end_page, reader_fit_width, reader_help, reader_images_off, reader_one_page,
-    reader_opening, reader_page_failed, reader_page_loading, reader_spread_bare, reader_strip,
-    reader_two_pages, reader_two_pages_blocks, reader_two_pages_wide, reader_zoom,
+    reader_end_page, reader_fit_width, reader_help, reader_images_off, reader_manga_settings,
+    reader_novel, reader_novel_help, reader_novel_settings, reader_novel_small,
+    reader_one_page, reader_opening, reader_page_failed, reader_page_loading,
+    reader_spread_bare, reader_strip, reader_two_pages, reader_two_pages_blocks,
+    reader_two_pages_wide, reader_zoom,
 };
 
 macro_rules! scenarios {
@@ -637,6 +639,11 @@ scenarios! {
     reader_strip,
     reader_two_pages_wide,
     reader_spread_bare,
+    reader_novel,
+    reader_novel_small,
+    reader_novel_settings,
+    reader_novel_help,
+    reader_manga_settings,
 }
 
 /// The reader's scenes at the size the board draws them, where that is neither of the two.

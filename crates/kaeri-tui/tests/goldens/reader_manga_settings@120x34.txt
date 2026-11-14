@@ -1,0 +1,93 @@
+Kaeri   Harbor Light Recipes · Chapter 14 · Tide Tables                                      sources ● 3  ·  anilist ⇅ 2
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+▌ Reader settings
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  This series  ─────────────────────────────────────────────
+    Mode                Paged  ·  Strip
+▌   Direction           Right to left  ·  Left to right
+
+  Manga on this computer  ──────────────────────────────────
+    Fit                 Screen  ·  Width
+    Page layout         Auto  ·  One  ·  Two
+    Spreads             Split  ·  Turn  ·  Whole
+    Crop borders        Off
+    Strip width         ‹ 48 columns ›
+
+  All manga  ───────────────────────────────────────────────
+    Skip credit pages   On
+
+  Not in the terminal  ─────────────────────────────────────
+    Look, colour and background follow the terminal's
+    own settings. Tap zones are for touch screens.
+
+
+
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Changes apply at once. The page in view stays.                         ‹ › change   j k move   d use default   esc close
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r00 c08-27 fg=text
+r00 c28-54 fg=text-dim
+r00 c93-103 fg=state
+r00 c104-105 fg=text-dim
+r00 c106-106 fg=rule
+r00 c107-108 fg=text-dim
+r00 c109-119 fg=state
+r01 c00-119 fg=rule
+r02 c00-119 fg=rule
+r03 c00-00 fg=obi
+r03 c02-16 fg=text mod=BOLD
+r04 c00-119 fg=rule
+r06 c02-12 fg=text-dim
+r06 c15-59 fg=rule
+r07 c04-07 fg=text-dim
+r07 c24-28 fg=text mod=BOLD
+r07 c29-38 fg=text-dim
+r08 c00-00 fg=obi
+r08 c04-12 fg=text
+r08 c24-36 fg=text mod=BOLD
+r08 c37-54 fg=text-dim
+r10 c02-23 fg=text-dim
+r10 c26-59 fg=rule
+r11 c04-06 fg=text-dim
+r11 c24-29 fg=text mod=BOLD
+r11 c30-39 fg=text-dim
+r12 c04-14 fg=text-dim
+r12 c24-27 fg=text mod=BOLD
+r12 c28-43 fg=text-dim
+r13 c04-10 fg=text-dim
+r13 c24-28 fg=text mod=BOLD
+r13 c29-47 fg=text-dim
+r14 c04-15 fg=text-dim
+r14 c24-26 fg=text mod=BOLD
+r15 c04-14 fg=text-dim
+r15 c24-25 fg=text-dim
+r15 c26-35 fg=text mod=BOLD
+r15 c36-37 fg=text-dim
+r17 c02-10 fg=text-dim
+r17 c13-59 fg=rule
+r18 c04-20 fg=text-dim
+r18 c24-25 fg=text mod=BOLD
+r20 c02-20 fg=text-dim
+r20 c23-59 fg=rule
+r21 c04-52 fg=text-dim
+r22 c04-49 fg=text-dim
+r32 c00-119 fg=rule
+r33 c00-45 fg=text-dim
+r33 c71-73 fg=text
+r33 c74-83 fg=text-dim
+r33 c84-86 fg=text
+r33 c87-94 fg=text-dim
+r33 c95-95 fg=text
+r33 c96-110 fg=text-dim
+r33 c111-113 fg=text
+r33 c114-119 fg=text-dim

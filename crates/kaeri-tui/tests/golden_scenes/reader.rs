@@ -16,10 +16,14 @@ use kaeri_core::{
 use kaeri_model::{
     Msg, ReadingMsg,
     book_sources::WriteBackResult,
+    eink::NovelSupport,
     event::Event,
     reader::{
-        Leaf, LeafPart, NoNext, PageEncoding, PageFile, PageKind, ReadDirection, ReadPlace,
-        ReaderAction, ReaderEvent, ReaderMode, ReaderNotice, ReaderView, ReaderWait, UnitRect,
+        Leaf, LeafPart, NoNext, NovelOpenView, NovelPos, NovelSpineItem, NovelTextDoc,
+        NovelTocEntry, PageEncoding, PageFile, PageKind, ReadDirection, ReadPlace,
+        ReaderAction, ReaderEvent, ReaderMode, ReaderNotice, ReaderSettingKey,
+        ReaderSettingRow, ReaderSettingsView, ReaderValue, ReaderView, ReaderWait,
+        SettingScope, TextBlock, TextBlockKind, TextRun, UnitRect, WritingMode,
     },
     reading::{
         ChapterDownloadState, ChapterReadState, ChapterRow, ReadingAbout, ReadingEvent,
@@ -622,6 +626,215 @@ pub(super) fn reader_strip(s: &mut Screen) {
     s.press(&["k", "k", "k", "k"]);
 }
 
+/// The light novel's series.
+const NOVEL_TITLE: &str = "Lantern Street Notes";
+
+/// The board's paragraphs, with its emphasis between stars, then more of the same evening.
+const NOVEL_TEXT: &[&str] = &[
+    "The lamp room sat at the top of the stairs, past the door that stuck in wet weather. \
+     Mio had learned to lift the handle before she turned it, the way her aunt did, and the \
+     door gave with a sigh that sounded almost polite.",
+    "Inside, the shelves held every lantern the street had ever sent back for repair. Some \
+     were labelled in her aunt's narrow hand. Others had only a date and a house number, as \
+     if the lamp itself would explain the rest once it was lit.",
+    "\"You don't have to fix them all tonight,\" her aunt said from the doorway.",
+    "\"I know.\" Mio set the first one on the bench. Its glass was clouded, and a crack ran \
+     from the base to the hook like a river on a map. \"I want to see which ones still \
+     *remember* how.\"",
+    "Her aunt laughed, then stopped, because Mio had not meant it as a joke. Outside, the \
+     rain kept time on the gutter. Down the street someone was singing the closing song from \
+     the market, a little behind the beat, and every so often a window answered with light.",
+    "She worked until the candle in the first lantern stood straight. Then she wrote the \
+     house number on a card, and under it, in her own hand, the word *ready*.",
+    "The second lantern was older. Its hinge had been mended with wire, and someone had \
+     scratched a small star into the brass where the thumb rests. Mio turned it over twice \
+     before she found the date, faint as breath on a window.",
+    "By the time the rain eased, there were four cards on the bench and the room smelled of \
+     wax and wet wool. Her aunt brought tea and did not ask how many were left.",
+    "They drank it standing at the window, watching the street below take its lamps back one \
+     by one, each house a little brighter than the last.",
+];
+
+/// A paragraph's runs, its words between stars in italics, with their offsets in the text.
+fn novel_runs(path: u32, text: &str) -> Vec<TextRun> {
+    let mut runs = Vec::new();
+    let mut offset = 0;
+    for (i, part) in text.split('*').enumerate() {
+        if part.is_empty() {
+            continue;
+        }
+        runs.push(TextRun {
+            text: part.into(),
+            offset,
+            path: vec![path],
+            emphasis: i % 2 == 1,
+            strong: false,
+            ruby: false,
+        });
+        offset += part.encode_utf16().count() as u32;
+    }
+    runs
+}
+
+fn novel_block(kind: TextBlockKind, spine: u32, path: u32, text: &str) -> TextBlock {
+    TextBlock {
+        kind,
+        at: NovelPos { spine, path: vec![path], offset: 0 },
+        runs: novel_runs(path, text),
+    }
+}
+
+fn novel_setting(key: ReaderSettingKey, value: ReaderValue) -> ReaderSettingRow {
+    let scope = if key.syncs() { SettingScope::Medium } else { SettingScope::Device };
+    ReaderSettingRow {
+        key,
+        value,
+        scope,
+        detected: false,
+        overridden: false,
+        choices: Vec::new(),
+    }
+}
+
+/// The settings a terminal novel opens with: paged, 66 columns, tight and ragged.
+fn novel_settings(work: &WorkId) -> ReaderSettingsView {
+    ReaderSettingsView {
+        medium: Medium::Novel,
+        work: Some(work.clone()),
+        rows: vec![
+            novel_setting(ReaderSettingKey::Mode, ReaderValue::Choice { name: "paged".into() }),
+            novel_setting(ReaderSettingKey::TextWidth, ReaderValue::Amount { value: 66.0 }),
+            novel_setting(ReaderSettingKey::LineSpacing, ReaderValue::Amount { value: 1.4 }),
+            novel_setting(ReaderSettingKey::Justify, ReaderValue::Toggle { on: false }),
+        ],
+        tap_zones: None,
+    }
+}
+
+/// The novel open on its chapter "The Lamp Room", at `restore`: the heading, the board's
+/// paragraphs, then a second part of the chapter.
+fn novel(s: &mut Screen, restore: Option<NovelPos>) {
+    let work = open(s, ImageEngine::drawn_as_blocks(), 0);
+    let mut chapter = row("3", 1, true);
+    chapter.label = "Part 3".into();
+    chapter.title = Some("The Lamp Room".into());
+    let view = ReaderView {
+        session: SESSION,
+        work: work.clone(),
+        title: NOVEL_TITLE.into(),
+        medium: Medium::Novel,
+        chapter,
+        mode: ReaderMode::Paged,
+        direction: ReadDirection::LeftToRight,
+        start: ReadPlace {
+            work: work.clone(),
+            chapter: ChapterId("c3".into()),
+            page: None,
+            strip: None,
+            novel: restore.clone(),
+        },
+        next: Some(row("4", 1, true)),
+        previous: None,
+        settings: Some(novel_settings(&work)),
+        demo_credit: None,
+        progress_host: None,
+    };
+    s.apply(Event::Reader(ReaderEvent::Opened(Box::new(view))));
+    let mut first =
+        vec![novel_block(TextBlockKind::Heading { level: 2 }, 0, 0, "The Lamp Room")];
+    first.extend(
+        NOVEL_TEXT
+            .iter()
+            .enumerate()
+            .map(|(i, text)| novel_block(TextBlockKind::Paragraph, 0, i as u32 + 1, text)),
+    );
+    let second = NOVEL_TEXT
+        .iter()
+        .enumerate()
+        .map(|(i, text)| novel_block(TextBlockKind::Paragraph, 1, i as u32, text))
+        .collect();
+    let spine = |n: u32| NovelSpineItem {
+        url: format!("kaeri-book://s1/text/{n}.xhtml"),
+        linear: true,
+        words: 2000,
+    };
+    let entry = |label: &str, depth: u32| NovelTocEntry {
+        label: label.into(),
+        url: "kaeri-book://s1/text/0.xhtml".into(),
+        spine: 0,
+        depth,
+    };
+    s.apply(Event::Reader(ReaderEvent::NovelOpen(NovelOpenView {
+        session: SESSION,
+        chapter: ChapterId("c3".into()),
+        entry: "kaeri-book://s1/text/0.xhtml".into(),
+        writing_mode: WritingMode::Horizontal,
+        progression: ReadDirection::LeftToRight,
+        restore,
+        fixed_layout: false,
+        support: NovelSupport::Full,
+        spine: vec![spine(0), spine(1)],
+        toc: vec![entry("Part 3", 0), entry("The Lamp Room", 1)],
+        style: String::new(),
+        count_key: String::new(),
+        counted: Vec::new(),
+        render_dir: None,
+        words_per_minute: 230,
+        text: vec![
+            NovelTextDoc { spine: 0, blocks: first },
+            NovelTextDoc { spine: 1, blocks: second },
+        ],
+    })));
+}
+
+/// A light novel from the top of its chapter, in a column 66 wide.
+pub(super) fn reader_novel(s: &mut Screen) {
+    novel(s, None);
+}
+
+/// A small window: the column takes the stage less two each side, from the first paragraph.
+pub(super) fn reader_novel_small(s: &mut Screen) {
+    novel(s, Some(NovelPos { spine: 0, path: vec![1], offset: 0 }));
+}
+
+/// `,` and the text narrowed to 50 columns from the overlay, with the preview beside it.
+pub(super) fn reader_novel_settings(s: &mut Screen) {
+    novel(s, None);
+    s.press(&[",", "j", "left", "left", "left", "left"]);
+}
+
+/// The key reference over a novel: the width keys, and no zoom.
+pub(super) fn reader_novel_help(s: &mut Screen) {
+    novel(s, None);
+    s.press(&["?"]);
+}
+
+/// Manga's settings: its own rows, a series' own reading direction on the cursor.
+pub(super) fn reader_manga_settings(s: &mut Screen) {
+    let work = reading_one(s);
+    let choice = |name: &str| ReaderValue::Choice { name: name.into() };
+    let mut rows = vec![
+        novel_setting(ReaderSettingKey::Mode, choice("paged")),
+        novel_setting(ReaderSettingKey::Direction, choice("rtl")),
+        novel_setting(ReaderSettingKey::Fit, choice("screen")),
+        novel_setting(ReaderSettingKey::PageLayout, choice("auto")),
+        novel_setting(ReaderSettingKey::Spreads, choice("split")),
+        novel_setting(ReaderSettingKey::CropBorders, ReaderValue::Toggle { on: false }),
+        novel_setting(ReaderSettingKey::StripWidth, ReaderValue::Amount { value: 0.6 }),
+        novel_setting(ReaderSettingKey::SkipCreditPages, ReaderValue::Toggle { on: true }),
+    ];
+    rows[1].scope = SettingScope::Series;
+    rows[1].overridden = true;
+    s.press(&[","]);
+    s.apply(Event::Reader(ReaderEvent::Settings(ReaderSettingsView {
+        medium: Medium::Manga,
+        work: Some(work),
+        rows,
+        tap_zones: None,
+    })));
+    s.press(&["j"]);
+}
+
 /// A scene, by name, at a size of its own.
 pub(super) type BoardScene = (&'static str, fn(&mut Screen), (u16, u16));
 
@@ -636,4 +849,5 @@ pub(super) const BOARD: &[BoardScene] = &[
     ("reader_too_small", reader_too_small, (36, 10)),
     ("reader_two_pages_wide", reader_two_pages_wide, (200, 50)),
     ("reader_spread_bare", reader_spread_bare, (200, 50)),
+    ("reader_novel_small", reader_novel_small, (60, 20)),
 ];
