@@ -3,7 +3,7 @@
 .prose-wrap {
 	max-width: 1040px;
 	margin: 0 auto;
-	padding: 72px 32px 120px;
+	padding: clamp(32px, 4vw, 72px) var(--gutter) var(--space-section);
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) 220px;
 	gap: 48px 72px;
@@ -15,39 +15,39 @@
 }
 
 .k-body .prose h1 {
-	font-size: clamp(34px, 3vw + 16px, 48px);
-	line-height: 1.1;
+	font-size: var(--fs-h2);
 }
 
 .k-body .prose h1 + p {
 	margin-top: 20px;
-	font-size: 21px;
+	font-size: var(--fs-lede);
 	line-height: 1.5;
 	font-weight: 600;
 }
 
 .k-body .prose h2 {
-	margin-top: 56px;
-	font-size: 26px;
+	margin-top: clamp(40px, 3vw + 24px, 64px);
+	font-size: var(--fs-h2s);
 	line-height: 1.2;
+	letter-spacing: -0.01em;
 	scroll-margin-top: 80px;
 }
 
 .k-body .prose p {
 	margin: 14px 0 0;
-	font-size: 17px;
+	font-size: var(--fs-body);
 	line-height: 1.65;
 }
 
 .k-body .prose-aside {
 	position: sticky;
 	top: 88px;
-	font-size: 15px;
+	font-size: var(--fs-small);
 }
 
 .k-body .prose-aside h2 {
 	margin: 0;
-	font-size: 15px;
+	font-size: var(--fs-small);
 	font-weight: 600;
 	color: var(--ani-dim);
 }
@@ -85,7 +85,6 @@
 @media (max-width: 820px) {
 	.prose-wrap {
 		grid-template-columns: minmax(0, 1fr);
-		padding: 32px 16px 72px;
 	}
 
 	.k-body .prose-aside {

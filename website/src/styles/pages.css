@@ -4,7 +4,7 @@
 /* ── Bands ────────────────────────────────────────────────────────────── */
 
 .band {
-	padding: 120px 32px;
+	padding: var(--space-section) var(--gutter);
 }
 
 .band-green {
@@ -34,7 +34,7 @@
 
 .band-rule {
 	border-top: 1px solid var(--ani-rule);
-	padding-top: 40px;
+	padding-top: clamp(28px, 2vw + 16px, 44px);
 }
 
 .band-rule-violet {
@@ -54,7 +54,8 @@
 
 .band-head p {
 	margin: 0;
-	font-size: 19px;
+	max-width: 36em;
+	font-size: var(--fs-lede);
 	line-height: 1.55;
 	color: var(--ani-dim);
 }
@@ -65,13 +66,13 @@
 }
 
 .band figure {
-	margin: 48px 0 0;
+	margin: var(--space-head) 0 0;
 }
 
 .band figcaption,
 .devices figcaption {
 	margin-top: 14px;
-	font-size: 14px;
+	font-size: var(--fs-caption);
 	line-height: 1.5;
 	color: var(--ani-dim);
 }
@@ -119,7 +120,7 @@
 }
 
 .fx-grid {
-	margin-top: 48px;
+	margin-top: var(--space-head);
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
 	gap: 24px;
@@ -139,7 +140,7 @@
 
 .fx-grid figcaption {
 	margin-top: 12px;
-	font-size: 15px;
+	font-size: var(--fs-small);
 	color: var(--ani-text);
 }
 
@@ -151,7 +152,7 @@
 .k-body .dl-card .dl-name {
 	margin: 0;
 	font-family: inherit;
-	font-size: 20px;
+	font-size: var(--fs-h3);
 	font-weight: 600;
 	line-height: inherit;
 	letter-spacing: normal;
@@ -160,13 +161,19 @@
 /* ── The hero ─────────────────────────────────────────────────────────── */
 
 .hero {
-	padding: 72px 32px 104px;
+	padding: clamp(28px, 4vw, 72px) var(--gutter) var(--space-section);
 }
 
 .hero-copy {
 	max-width: 760px;
 	margin: 0 auto;
 	text-align: center;
+}
+
+.k-body .hero h1 {
+	font-size: var(--fs-hero);
+	line-height: 1;
+	letter-spacing: -0.03em;
 }
 
 .hero-copy .k-lede {
@@ -186,7 +193,7 @@
 
 .hero-note {
 	margin: 14px 0 0;
-	font-size: 14px;
+	font-size: var(--fs-caption);
 	color: var(--ani-dim);
 }
 
@@ -250,7 +257,7 @@
 /* ── Download cards ───────────────────────────────────────────────────── */
 
 .dl-sect {
-	padding: 136px 32px 0;
+	padding: var(--space-section) var(--gutter) 0;
 }
 
 .dl-in {
@@ -260,14 +267,12 @@
 
 .k-body .dl-title {
 	text-align: center;
-	font-size: clamp(36px, 4vw + 14px, 56px);
-	line-height: 1.1;
 }
 
 .dl-version {
 	margin: 16px 0 0;
 	text-align: center;
-	font-size: 19px;
+	font-size: var(--fs-lede);
 	color: var(--ani-dim);
 }
 
@@ -276,7 +281,7 @@
 }
 
 .dl-grid {
-	margin-top: 72px;
+	margin-top: var(--space-head);
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
 	gap: 40px 32px;
@@ -292,7 +297,7 @@
 
 .dl-needs {
 	margin: 8px 0 0;
-	font-size: 15px;
+	font-size: var(--fs-small);
 	line-height: 1.5;
 	color: var(--ani-dim);
 }
@@ -308,7 +313,7 @@
 
 .dl-suggested {
 	margin: 10px 0 0;
-	font-size: 14px;
+	font-size: var(--fs-caption);
 	color: var(--ani-dim);
 }
 
@@ -327,7 +332,7 @@
 	padding: 16px;
 	border-radius: 10px;
 	background: var(--ani-raised);
-	font-size: 15px;
+	font-size: var(--fs-small);
 	line-height: 1.5;
 }
 
@@ -378,7 +383,7 @@
 }
 
 .dl-more {
-	margin-top: 64px;
+	margin-top: var(--space-head);
 	display: flex;
 	justify-content: center;
 	gap: 12px 32px;
@@ -389,18 +394,12 @@
 /* ── The FAQ ──────────────────────────────────────────────────────────── */
 
 .faq-sect {
-	padding: 120px 32px 136px;
+	padding: var(--space-section) var(--gutter);
 }
 
 .faq {
 	max-width: 800px;
 	margin: 0 auto;
-}
-
-.k-body .faq-title {
-	font-size: clamp(30px, 2vw + 18px, 40px);
-	line-height: 1.1;
-	letter-spacing: -0.01em;
 }
 
 .faq-list {
@@ -412,7 +411,7 @@
 
 .oss {
 	background: var(--ani-band);
-	padding: 128px 32px;
+	padding: var(--space-section) var(--gutter);
 }
 
 .oss-in {
@@ -432,16 +431,13 @@
 
 .k-body .oss-in h2 {
 	margin-top: 28px;
-	font-size: clamp(32px, 3vw + 12px, 48px);
-	line-height: 1.1;
 }
 
 .oss-in p {
 	margin: 18px 0 0;
-	font-size: 19px;
+	font-size: var(--fs-lede);
 	line-height: 1.55;
 	color: var(--ani-dim);
-	text-wrap: pretty;
 }
 
 .oss-actions {
@@ -455,21 +451,6 @@
 /* ── Phones ───────────────────────────────────────────────────────────── */
 
 @media (max-width: 700px) {
-	.band {
-		padding: 72px 16px;
-	}
-
-	.band figure {
-		margin-top: 32px;
-	}
-
-	.band-head p {
-		font-size: 17px;
-	}
-
-	.hero {
-		padding: 28px 16px 56px;
-	}
 
 	.hero-actions {
 		flex-direction: column;
@@ -528,23 +509,4 @@
 		border-radius: 22px;
 	}
 
-	.dl-sect {
-		padding: 80px 16px 0;
-	}
-
-	.dl-grid {
-		margin-top: 40px;
-	}
-
-	.faq-sect {
-		padding: 72px 16px 80px;
-	}
-
-	.oss {
-		padding: 80px 16px;
-	}
-
-	.site-footer {
-		padding-inline: 16px;
-	}
 }
