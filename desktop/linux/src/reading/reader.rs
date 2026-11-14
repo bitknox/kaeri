@@ -4298,14 +4298,30 @@ fn go_on_return(field: &gtk::SpinButton, go: impl Fn(usize) + 'static) {
     }
 }
 
-/// Shows a novel's web view in the reader's stack, as the page named "novel".
-fn show_novel(stack: &gtk::Stack, view: &gtk::Widget) {
-    stack.add_named(view, Some("novel"));
+/// The reader stack's page for novels, made on the first open and kept from then on. GTK
+/// drops a removed stack page's accessible without telling AT-SPI, and a screen reader that
+/// walked that page then aborts the app on its next walk, so the web view comes and goes
+/// inside this place instead.
+fn novel_place(stack: &gtk::Stack) -> adw::Bin {
+    if let Some(place) = stack.child_by_name("novel").and_downcast::<adw::Bin>() {
+        return place;
+    }
+    let place = adw::Bin::new();
+    stack.add_named(&place, Some("novel"));
+    place
 }
 
-/// Takes a closed novel's web view out of the reader's stack.
+/// Shows a novel's web view in the reader's stack, as the page named "novel".
+fn show_novel(stack: &gtk::Stack, view: &gtk::Widget) {
+    novel_place(stack).set_child(Some(view));
+}
+
+/// Takes a closed novel's web view out of the reader's stack, which keeps its pages.
 fn drop_novel(stack: &gtk::Stack, view: &gtk::Widget) {
-    stack.remove(view);
+    let place = novel_place(stack);
+    if place.child().as_ref() == Some(view) {
+        place.set_child(gtk::Widget::NONE);
+    }
 }
 
 /// The window's full screen from before the reader first changed it, until the reader closes.
@@ -5028,5 +5044,49 @@ mod plate_tests {
         assert_eq!(popover_middle(20.0, 300.0, 360.0), 8.0 + 150.0);
         // Wider than the window: in its middle.
         assert_eq!(popover_middle(300.0, 400.0, 360.0), 180.0);
+    }
+}
+
+#[cfg(test)]
+mod novel_place_tests {
+    use adw::prelude::*;
+    use gtk::glib;
+
+    use super::{drop_novel, show_novel};
+    use crate::gtk_test::{pump, run};
+
+    /// Opening and closing novels keeps every page of the reader's stack, since a removed
+    /// page's accessible stays in AT-SPI's cache and the next screen reader walk aborts.
+    #[test]
+    fn closing_a_novel_keeps_the_stack_pages() {
+        run(|| {
+            let window = gtk::Window::new();
+            let stack = gtk::Stack::new();
+            stack.add_named(&gtk::Box::default(), Some("status"));
+            window.set_child(Some(&stack));
+            window.present();
+            let first = gtk::Box::default().upcast::<gtk::Widget>();
+            show_novel(&stack, &first);
+            stack.set_visible_child_name("novel");
+            pump(50);
+            let pages = stack.pages().n_items();
+            let page: glib::WeakRef<gtk::StackPage> = stack
+                .child_by_name("novel")
+                .map(|child| stack.page(&child).downgrade())
+                .expect("the novel shows as the page named novel");
+            drop_novel(&stack, &first);
+            stack.set_visible_child_name("status");
+            pump(50);
+            assert!(first.parent().is_none(), "a closed novel's view leaves the window");
+            assert_eq!(stack.pages().n_items(), pages, "closing a novel keeps the pages");
+            assert!(page.upgrade().is_some(), "the novel's page outlives the novel");
+            let second = gtk::Box::default().upcast::<gtk::Widget>();
+            show_novel(&stack, &second);
+            stack.set_visible_child_name("novel");
+            pump(50);
+            assert!(second.is_mapped(), "the next novel shows in the same place");
+            assert_eq!(stack.pages().n_items(), pages);
+            window.destroy();
+        });
     }
 }
