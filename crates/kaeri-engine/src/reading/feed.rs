@@ -249,9 +249,7 @@ impl Feed {
 
     /// Some page failed for want of a network, so is fetched again once one is back.
     fn waits_for_network(&self) -> bool {
-        self.pages
-            .lock()
-            .is_ok_and(|p| p.iter().any(|p| *p == FeedPage::Failed(ReadingFailure::Offline)))
+        self.pages.lock().is_ok_and(|p| p.contains(&FeedPage::Failed(ReadingFailure::Offline)))
     }
 
     /// The network is back: every page that failed for want of it is to come again, in order.
@@ -319,32 +317,6 @@ impl Feed {
         {
             *slot = page;
         }
-    }
-}
-
-#[cfg(test)]
-impl Feed {
-    /// A feed of `pages` as they stand, that nothing fetches: for tests.
-    pub(crate) fn standing(chapter: ChapterId, dir: PathBuf, pages: Vec<FeedPage>) -> Self {
-        let (again, _) = mpsc::unbounded_channel();
-        let (wanted, _) = mpsc::unbounded_channel();
-        Self {
-            chapter,
-            dir,
-            pages: Mutex::new(pages),
-            credits: Vec::new(),
-            parts: None,
-            again,
-            wanted,
-            left: tokio::sync::watch::Sender::new(false),
-            aside: std::sync::atomic::AtomicBool::new(false),
-            connection: tokio::sync::watch::Sender::new(false).subscribe(),
-        }
-    }
-
-    /// Page `index` landed or failed, as the fetcher would say.
-    pub(crate) fn put(&self, index: usize, page: FeedPage) {
-        self.set(index, page);
     }
 }
 
@@ -837,4 +809,30 @@ pub(crate) async fn write(dir: &Path, name: &str, bytes: Vec<u8>, gone: &Gone) -
 pub(crate) fn page_extension(bytes: &[u8]) -> Option<&'static str> {
     let ext = kaeri_books::mime::sniff_image(bytes)?.strip_prefix("image/")?;
     Some(if ext == "jpeg" { "jpg" } else { ext })
+}
+
+#[cfg(test)]
+impl Feed {
+    /// A feed of `pages` as they stand, that nothing fetches: for tests.
+    pub(crate) fn standing(chapter: ChapterId, dir: PathBuf, pages: Vec<FeedPage>) -> Self {
+        let (again, _) = mpsc::unbounded_channel();
+        let (wanted, _) = mpsc::unbounded_channel();
+        Self {
+            chapter,
+            dir,
+            pages: Mutex::new(pages),
+            credits: Vec::new(),
+            parts: None,
+            again,
+            wanted,
+            left: tokio::sync::watch::Sender::new(false),
+            aside: std::sync::atomic::AtomicBool::new(false),
+            connection: tokio::sync::watch::Sender::new(false).subscribe(),
+        }
+    }
+
+    /// Page `index` landed or failed, as the fetcher would say.
+    pub(crate) fn put(&self, index: usize, page: FeedPage) {
+        self.set(index, page);
+    }
 }
