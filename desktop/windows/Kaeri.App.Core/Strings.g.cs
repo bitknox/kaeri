@@ -2100,6 +2100,9 @@ public static partial class T
     /// <summary>Body of that dialog. "Private networks" and "public networks" are the names Windows' own question uses.</summary>
     public static string FeedFirewallBodyWindows => Get("FeedFirewallBodyWindows");
 
+    /// <summary>Header of the group picker that opens from the Group row's Change on a series page. The source is a site or server name, such as "books.home.example".</summary>
+    public static string WindowsGroupPickerIn(string source) => Fill(Get("WindowsGroupPickerIn"), ("source", source));
+
     /// <summary>Busy line while Settings waits for the engine's values.</summary>
     public static string SettingsLoading => Get("SettingsLoading");
 
@@ -12772,6 +12775,7 @@ public static partial class T
         ["OpdsPausedVpnWindows"] = "Paused. This PC is only connected through a VPN.",
         ["FeedFirewallTitleWindows"] = "Windows will ask about the network",
         ["FeedFirewallBodyWindows"] = "To let e-readers at home reach the feed, allow Kaeri on private networks only. Leave public networks unticked.",
+        ["WindowsGroupPickerIn"] = "Group in {source}",
         ["SettingsLoading"] = "Loading settings",
         ["SettingsGroupMpv"] = "mpv",
         ["SettingsCardState"] = "{title}, {state}",

@@ -2981,6 +2981,10 @@
     <value>[Ţö ļéţ é-ŕéàðéŕš àţ ĥöɱé ŕéàçĥ ţĥé ƒééð, àļļöŵ Ķàéŕî öñ þŕîṽàţé ñéţŵöŕķš öñļý. Ļéàṽé þüƀļîç ñéţŵöŕķš üñţîçķéð.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Body of that dialog. "Private networks" and "public networks" are the names Windows' own question uses.</comment>
   </data>
+  <data name="WindowsGroupPickerIn" xml:space="preserve">
+    <value>[Ĝŕöüþ îñ {source}~~~~]</value>
+    <comment>Header of the group picker that opens from the Group row's Change on a series page. The source is a site or server name, such as "books.home.example".</comment>
+  </data>
   <data name="SettingsLoading" xml:space="preserve">
     <value>[Ļöàðîñĝ šéţţîñĝš~~~~~]</value>
     <comment>Busy line while Settings waits for the engine's values.</comment>
