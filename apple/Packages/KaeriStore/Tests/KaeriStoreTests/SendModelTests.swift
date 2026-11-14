@@ -135,4 +135,44 @@ struct SendModelTests {
         model.choose(target: "kindle")
         #expect(sent.count == 1)
     }
+
+    /// A send held across a restart starts again as a job the app never asked for (iPhone R8I-2):
+    /// it shows on its series page with its device, and Share counts its chapters as sent.
+    @Test func aResumedSendIsPlacedAndCountedWhenShared() throws {
+        let model = SendModel()
+        var sent: [Command] = []
+        model.command = { sent.append($0) }
+        model.apply(.exportProgress(
+            job: 31, done: 2, total: 8, chaptersDone: 0, chapters: 2,
+            work: "a:900311", target: "kobo", sendChapters: ["c4", "c5"]))
+        let send = try #require(model.running(work: "a:900311"), "the series page shows the send")
+        #expect(send.target == "kobo", "with its device")
+        #expect(send.chapters == ["c4", "c5"])
+
+        model.apply(.exportReady(job: 31, files: [ExportFile(path: "/sends/four.cbz", name: "four.cbz", bytes: 10, part: nil)]))
+        model.shared(send.id)
+        let shared = sent.compactMap { command -> [String]? in
+            if case .reading(.shared(let work, let chapters, let target)) = command, work == "a:900311", target == "kobo" { chapters } else { nil }
+        }
+        #expect(shared == [["c4", "c5"]], "Share records the chapters as sent")
+    }
+
+    /// A send just asked for of one series never takes the place of another's resumed send.
+    @Test func aResumedSendKeepsItsOwnSeries() {
+        let model = SendModel()
+        let mine = model.begin(work: "a:900312", chapters: ["c1"], target: kobo(), novel: false)
+        model.apply(.exportProgress(
+            job: 32, done: 0, total: 8, chaptersDone: 0, chapters: 1,
+            work: "a:900311", target: "kobo", sendChapters: ["c4"]))
+        #expect(model.send(mine!)?.job == nil, "the new send still waits for its own job")
+        #expect(model.running(work: "a:900311")?.job == 32)
+    }
+
+    @Test func aResumedSendThatFailsIsPlaced() {
+        let model = SendModel()
+        model.apply(.exportFailed(job: 33, chapter: nil, failure: .offline, work: "a:900311", target: "kobo"))
+        let send = model.sends.first { $0.job == 33 }
+        #expect(send?.work == "a:900311")
+        #expect(send?.target == "kobo")
+    }
 }

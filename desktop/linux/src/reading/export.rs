@@ -495,7 +495,7 @@ pub fn open(ctx: &Rc<Ctx>, work: &WorkId) {
                 ReadingEvent::Chapters { work: w, volumes, .. } if *w == work => {
                     parts.send.borrow_mut().volumes = volumes.clone();
                 }
-                ReadingEvent::ExportProgress { job, done, total, chapters_done, chapters }
+                ReadingEvent::ExportProgress { job, done, total, chapters_done, chapters, .. }
                     if ours(job) =>
                 {
                     let (done, total) = if *chapters > 0 {
@@ -508,7 +508,7 @@ pub fn open(ctx: &Rc<Ctx>, work: &WorkId) {
                 ReadingEvent::ExportWaiting { job, line, .. } if ours(job) => {
                     parts.send.borrow_mut().phase = Phase::Waiting(crate::say::msg(line));
                 }
-                ReadingEvent::ExportFailed { job, chapter, failure } if ours(job) => {
+                ReadingEvent::ExportFailed { job, chapter, failure, .. } if ours(job) => {
                     let cause = super::failure(failure);
                     let words = match chapter {
                         Some(chapter) => t::send_failed_chapter(chapter, &cause),

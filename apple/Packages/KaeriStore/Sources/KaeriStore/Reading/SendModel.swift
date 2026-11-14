@@ -231,12 +231,18 @@ public final class SendModel {
         case .exportTargets(let list):
             targets = list
             if let kept = list.first(where: \.chosen) { chosenTarget = kept.id }
-        case .exportProgress(let job, let done, let total, let chaptersDone, let chapters):
+        case .exportProgress(
+            job: let job, done: let done, total: let total, chaptersDone: let chaptersDone, chapters: let chapters,
+            work: let work, target: let target, sendChapters: let sendChapters):
             let fraction = total > 0 ? min(1, max(0, Double(done) / Double(total))) : nil
-            update(job: job) { $0.phase = .preparing(fraction: fraction, done: Int(chaptersDone), total: Int(chapters)) }
-        case .exportFailed(let job, let chapter, let failure):
+            // A send held across a restart is placed by these: its series page, its device, and
+            // the chapters Shared reports as sent.
+            update(job: job, work: work, target: target, chapters: sendChapters) {
+                $0.phase = .preparing(fraction: fraction, done: Int(chaptersDone), total: Int(chapters))
+            }
+        case .exportFailed(job: let job, chapter: let chapter, failure: let failure, work: let work, target: let target):
             let words = chapter.map { L.sendFailedChapter(chapter: $0, cause: failure.sendWords) } ?? L.sendFailed(cause: failure.sendWords)
-            update(job: job) { $0.phase = .failed(words) }
+            update(job: job, work: work, target: target) { $0.phase = .failed(words) }
         case .exportWaiting(let job, let work, let target, let line, let chapters):
             update(job: job, work: work, target: target, chapters: chapters) { $0.phase = .waiting(line: line.text) }
         case .exportReady(let job, let files):
@@ -265,7 +271,11 @@ public final class SendModel {
         let index: Int
         if let found = sends.firstIndex(where: { $0.job == job }) {
             index = found
-        } else if let unbound = sends.firstIndex(where: { $0.job == nil && $0.isRunning }) {
+        } else if let unbound = sends.firstIndex(where: {
+            // A send held across a restart names its series, so it never takes the place of one
+            // just asked for of another series.
+            $0.job == nil && $0.isRunning && (work == nil || $0.work.isEmpty || $0.work == work)
+        }) {
             sends[unbound].job = job
             index = unbound
         } else {

@@ -1169,10 +1169,18 @@ impl Actor {
                 let tx = self.inbox.sender();
                 let said = handle_internal(message, &mut self.state, &self.services, &tx).await;
                 said.into_iter().for_each(|said| self.pass_on(said));
-                // Sends left waiting for Wi-Fi when the engine last stopped start again, each
-                // as a job of its own, as queued chapter downloads do.
+                // Sends left under way when the engine last stopped, waiting for Wi-Fi or cut
+                // off while they prepared, start again, each as a job of its own, as queued
+                // chapter downloads do.
                 if message == Internal::LetGo {
-                    for again in crate::export::held_sends(&self.state, &self.services) {
+                    let jobs = &self.jobs;
+                    let held = crate::export::held_sends(
+                        &self.state,
+                        &self.services,
+                        || jobs.next(),
+                        &tx,
+                    );
+                    for again in held {
                         let again = Command::Reading(again);
                         let job = again.activity().map(|activity| (self.jobs.next(), activity));
                         self.route(job, again);
@@ -5161,6 +5169,7 @@ mod tests {
                             job,
                             chapter: Some(_),
                             failure: ReadingFailure::Offline,
+                            ..
                         }) if job.get() != 0
                     )
                 })
@@ -5214,6 +5223,105 @@ mod tests {
             let seen = seen_until(&mut events, send_ended).await;
             let (job, pages) = pages_sent(&seen).unwrap_or_else(|| panic!("{seen:?}"));
             assert_eq!((Some(job), pages), (started, 4));
+            assert!(!kept_waiting(&store));
+            engine.shutdown().await;
+        }
+
+        /// What a send's progress said about it, as text: a send no screen sent is placed by
+        /// its series and target there.
+        fn progress_said(seen: &[Event]) -> Vec<String> {
+            seen.iter()
+                .filter(|e| matches!(e, Event::Reading(ReadingEvent::ExportProgress { .. })))
+                .map(|e| format!("{e:?}"))
+                .collect()
+        }
+
+        /// The first job the engine started in `seen`.
+        fn started(seen: &[Event]) -> Option<JobId> {
+            seen.iter().find_map(|e| match e {
+                Event::JobStarted { job, .. } => Some(*job),
+                _ => None,
+            })
+        }
+
+        /// R8I-2. A send held across a restart says its series and target as it goes, so a
+        /// screen that never sent it can place it.
+        #[tokio::test]
+        async fn a_send_started_again_at_launch_says_its_series_and_target_as_it_goes() {
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, store) = send_engine(dir.path(), None).await;
+            events.launch().await;
+            engine.send(network(true, false));
+            engine.send(send_of(&["1", "2"]));
+            waiting(&mut events).await;
+            engine.shutdown().await;
+
+            let (engine, mut events, _, _) = launch_engine(dir.path(), Some(store)).await;
+            let seen = seen_until(&mut events, |e| matches!(e, Event::JobStarted { .. })).await;
+            let job = started(&seen);
+            engine.send(network(false, false));
+            let seen = seen_until(&mut events, send_ended).await;
+            assert_eq!(pages_sent(&seen).map(|(job, _)| job), job, "{seen:?}");
+            let said = progress_said(&seen);
+            assert!(!said.is_empty(), "{seen:?}");
+            for line in &said {
+                assert!(line.contains(WORK) && line.contains("\"kobo\""), "{line}");
+            }
+            engine.shutdown().await;
+        }
+
+        /// R7-2. A send cut off by the app closing while it fetched starts again at the next
+        /// launch, as one left waiting does. Cut off once more, it ends as failed, placed by its
+        /// series and target, and is not started again.
+        #[tokio::test]
+        async fn a_send_cut_off_while_it_fetched_starts_again_once_then_ends_as_failed() {
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, store, source) = launch_engine(dir.path(), None).await;
+            events.launch().await;
+
+            // On Wi-Fi it fetches chapter 2, and holds on its second page as the app closes.
+            engine.send(network(false, false));
+            source.held.store(true, Ordering::SeqCst);
+            engine.send(send_of(&["1", "2"]));
+            let pages = source.clone();
+            store_waits("the held page asked", move || pages.fetched() == 2).await;
+            engine.shutdown().await;
+            assert!(kept_waiting(&store), "kept, as it was under way when the engine stopped");
+
+            // The next launch starts it again as a job of its own, and it is cut off again.
+            let (engine, mut events, store, source) =
+                launch_engine(dir.path(), Some(store)).await;
+            let seen = seen_until(&mut events, |e| matches!(e, Event::JobStarted { .. })).await;
+            let again = started(&seen);
+            source.held.store(true, Ordering::SeqCst);
+            engine.send(network(false, false));
+            let pages = source.clone();
+            store_waits("the held page asked again", move || pages.fetched() == 2).await;
+            let seen = said_so_far(&engine, &mut events).await;
+            let said = progress_said(&seen);
+            assert!(!said.is_empty(), "{seen:?}");
+            for line in &said {
+                assert!(line.contains(&format!("{:?}", again.unwrap())), "{line}");
+                assert!(line.contains(WORK) && line.contains("\"kobo\""), "{line}");
+            }
+            engine.shutdown().await;
+            assert!(kept_waiting(&store));
+
+            // Cut off twice, it fails where the screen shows it rather than starting again.
+            let (engine, mut events, store, source) =
+                launch_engine(dir.path(), Some(store)).await;
+            let seen = seen_until(&mut events, send_ended).await;
+            let failed: Vec<String> = seen
+                .iter()
+                .filter(|e| matches!(e, Event::Reading(ReadingEvent::ExportFailed { .. })))
+                .map(|e| format!("{e:?}"))
+                .collect();
+            assert_eq!(failed.len(), 1, "{seen:?}");
+            assert!(failed[0].contains(WORK) && failed[0].contains("\"kobo\""), "{failed:?}");
+            engine.send(network(false, false));
+            let seen = said_so_far(&engine, &mut events).await;
+            assert!(started(&seen).is_none(), "{seen:?}");
+            assert_eq!(source.fetched(), 0);
             assert!(!kept_waiting(&store));
             engine.shutdown().await;
         }
