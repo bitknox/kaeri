@@ -1,16 +1,17 @@
 name: Slot
 
-# The GitHub lane of slot, the job runner the maintainer's machines share: a Rust, Android or
-# Linux app build and test job that would wait too long on those machines runs here instead. Only
+# The GitHub lane of slot, the job runner the maintainer's machines share: a Rust, Android, Linux
+# app or Apple build and test job that would wait too long on those machines runs here instead. Only
 # a push to a slot/ branch starts it. slot pushes one commit on top of the job's commit, which
 # GitHub already has, holding the job in .slot/ (job.sh, job.env, artifacts, in/), and names the
-# kind in the commit message ("Slot-Kind: rust", "android" or "linux"). This workflow runs the job
+# kind in the commit message ("Slot-Kind: rust", "android", "linux", "swift" or "apple"). This workflow runs the job
 # on that commit's parent and uploads its log and any files it names; slot fetches them and
 # deletes the branch.
 #
 # Everything here is public: the commit, the job and its log. The job gets no secrets and no
 # token beyond the read-only default, and it saves no cache, so it cannot change what main's runs
-# restore. The setup is ci.yml's linux, android and desktop-linux jobs', under the same job ids,
+# restore. The setup is ci.yml's linux, android, desktop-linux and apple jobs', under the same job ids
+# (apple's is macos here),
 # so the caches main saves for those are the ones restored here. The history is fetched whole, as
 # fixcheck's jobs read files at the train's base commit.
 on:
@@ -391,3 +392,110 @@ jobs:
           if-no-files-found: ignore
           retention-days: 2
 
+  # A swift or apple job, set up as ci.yml's apple job: its runner and Xcode, the toolchain, and
+  # the engines, Rust and libmpv caches main saves, restored only. XcodeGen and ffmpeg are
+  # installed when the job uses them. Build and test only: slot refuses signing, the Simulator,
+  # GUI and XCUITest work for this lane, and Release builds of the app stay on the Mac.
+  macos:
+    if: "contains(github.event.head_commit.message, 'Slot-Kind: swift') || contains(github.event.head_commit.message, 'Slot-Kind: apple')"
+    runs-on: xcode-27
+    timeout-minutes: 150
+    env:
+      XCODE: "27.1"
+      DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: The job's commit
+        id: needs
+        run: |
+          case "$GITHUB_REF_NAME" in slot/[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9]-[0-9a-z]*) ;; *) echo "not a slot job branch: $GITHUB_REF_NAME"; exit 1 ;; esac
+          mkdir -p "$RUNNER_TEMP/slot"
+          cp -R .slot "$RUNNER_TEMP/slot/job"
+          git checkout -q --detach HEAD^1
+          git log -1 --format='The job runs %H'
+          j=$RUNNER_TEMP/slot/job/job.sh
+          if grep -qE 'xcodegen' "$j"; then echo "xcodegen=1" >> "$GITHUB_OUTPUT"; fi
+          if grep -qE 'KaeriPlayer|KaeriDev|player-media|apple/scripts/test\.sh *($|[;&|)])' "$j"; then echo "ffmpeg=1" >> "$GITHUB_OUTPUT"; fi
+      - run: tools/ci-toolchain.sh
+      - name: The engines' sources
+        id: sources
+        run: echo "hash=$(apple/scripts/engine.sh --sources-hash)" >> "$GITHUB_OUTPUT"
+      - name: Restore the engines
+        id: engine
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/.cache/kaeri-engine/apple
+          key: ci-apple-engines-xcode${{ env.XCODE }}-${{ steps.sources.outputs.hash }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: apple
+          save-if: false
+      - run: xcodebuild -version
+      - name: libmpv's pin
+        run: echo "MPV_PIN=$(sed -n 's/^mpvkit=//p' apple/scripts/mpv.sh)" >> "$GITHUB_ENV"
+      - name: Restore libmpv
+        uses: actions/cache/restore@v6
+        with:
+          path: apple/.mpv/${{ env.MPV_PIN }}
+          key: ci-apple-mpv-macos-ios-xcode${{ env.XCODE }}-${{ hashFiles('apple/scripts/mpv.sh', 'apple/patches/**', 'android/mpv/patches/mpv/**') }}
+      - name: Tools the job uses
+        run: |
+          tools="coreutils"
+          if [ "${{ steps.needs.outputs.xcodegen }}" = 1 ]; then tools="$tools xcodegen"; fi
+          if [ "${{ steps.needs.outputs.ffmpeg }}" = 1 ]; then tools="$tools ffmpeg"; fi
+          brew install $tools
+      - name: The job
+        id: job
+        run: |
+          set +e -u
+          s=$RUNNER_TEMP/slot j=$RUNNER_TEMP/slot/job
+          mkdir -p "$s/log" "$s/out" "$s/homes"
+          log=$s/log/job.log job=${GITHUB_REF_NAME#slot/} real=$HOME
+          echo "artifacts=0" >> "$GITHUB_OUTPUT"
+          export CARGO_HOME=${CARGO_HOME:-$real/.cargo} RUSTUP_HOME=${RUSTUP_HOME:-$real/.rustup}
+          export GRADLE_USER_HOME=${GRADLE_USER_HOME:-$real/.gradle} KAERI_ENGINE_CACHE=$real/.cache/kaeri-engine
+          guard=$(mktemp -d "$s/homes/$job.XXXXXX")
+          export XDG_CONFIG_HOME=$guard/.config XDG_DATA_HOME=$guard/.local/share
+          export XDG_CACHE_HOME=$guard/.cache XDG_STATE_HOME=$guard/.local/state
+          export CARGO_TARGET_DIR=$GITHUB_WORKSPACE/target CARGO_TERM_COLOR=never
+          export KAERI_DERIVED_DATA=$GITHUB_WORKSPACE/target/derived MACOSX_DEPLOYMENT_TARGET=26.0
+          export HOME=$guard KAERI_TOKEN_STORAGE=file KAERI_PLAYER_NATIVE=off SLOT_JOB=$job SLOT_HOST=gh
+          if [ -d "$j/in" ]; then mkdir -p slot-in && cp -p "$j"/in/* slot-in/ && cp -p "$j"/in/.slot-inputs.sha256 slot-in/ 2>/dev/null || true; fi
+          while IFS= read -r line; do
+            case "${line%%=*}" in "" | *[!A-Za-z0-9_]* | [0-9]*) continue ;; esac
+            case "$line" in *=*) export "$line" ;; esac
+          done < "$j/job.env"
+          mins=${SLOT_TIMEOUT_MIN:-105}
+          case "$mins" in off) mins=140 ;; "" | *[!0-9]*) mins=105 ;; esac
+          { echo "slot: job $job, commit $(git rev-parse HEAD), started $(date '+%F %T') on gh"
+            if [ -f slot-in/.slot-inputs.sha256 ]; then sed 's/^/slot: input sha256 /' slot-in/.slot-inputs.sha256; fi
+          } > "$log"
+          gtimeout -k 30 "${mins}m" bash "$j/job.sh" < /dev/null 2>&1 | tee -a "$log"
+          rc=${PIPESTATUS[0]}
+          if [ "$rc" = 124 ]; then echo "slot: timed out after $mins min; stopping job $job" | tee -a "$log"; rc=125; fi
+          echo "$rc" > "$s/log/rc"
+          n=0
+          while IFS= read -r g; do
+            [ -n "$g" ] || continue
+            case "$g" in @target/*) g="$CARGO_TARGET_DIR/${g#@target/}" ;; esac
+            for f in $g; do if [ -f "$f" ]; then cp "$f" "$s/out/" && n=$((n + 1)); fi; done
+          done < "$j/artifacts"
+          echo "artifacts=$n" >> "$GITHUB_OUTPUT"
+          exit "$rc"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: slot-log
+          path: ${{ runner.temp }}/slot/log/
+          if-no-files-found: warn
+          retention-days: 2
+      - uses: actions/upload-artifact@v7
+        if: always() && steps.job.outputs.artifacts != '0'
+        with:
+          name: slot-artifacts
+          path: ${{ runner.temp }}/slot/out/
+          if-no-files-found: ignore
+          retention-days: 2
