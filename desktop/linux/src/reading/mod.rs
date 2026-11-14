@@ -337,6 +337,8 @@ pub struct WorkGrid {
     /// The list on screen, and how many of its cards are built.
     tiles: RefCell<Vec<WorkTile>>,
     built: Cell<usize>,
+    /// Whether a look at the view is already waiting for the main loop.
+    asked: Cell<bool>,
 }
 
 impl WorkGrid {
@@ -348,7 +350,42 @@ impl WorkGrid {
         widget.set_valign(gtk::Align::Start);
         widget.set_accessible_role(gtk::AccessibleRole::List);
         widget.update_property(&[gtk::accessible::Property::Label(&t::poster_grid_name())]);
-        Self { widget, hub: Rc::clone(hub), tiles: RefCell::default(), built: Cell::new(0) }
+        Self {
+            widget,
+            hub: Rc::clone(hub),
+            tiles: RefCell::default(),
+            built: Cell::new(0),
+            asked: Cell::new(false),
+        }
+    }
+
+    /// Builds more cards as `scroll`, which holds the grid, nears the last one built: a long
+    /// list opens with its first cards and adds the rest as they come near, not all at once.
+    /// The keyboard reaches them too, as the view follows the focus.
+    pub fn follow(self: &Rc<Self>, scroll: &gtk::ScrolledWindow) {
+        let ask = {
+            let grid = Rc::downgrade(self);
+            move |adjustment: &gtk::Adjustment| {
+                let Some(grid) = grid.upgrade() else { return };
+                if grid.asked.replace(true) {
+                    return;
+                }
+                // After the layout that moved the view, never inside it.
+                let (grid, adjustment) = (Rc::downgrade(&grid), adjustment.clone());
+                glib::idle_add_local_once(move || {
+                    let Some(grid) = grid.upgrade() else { return };
+                    grid.asked.set(false);
+                    grid.build(Some(View {
+                        top: adjustment.value(),
+                        height: adjustment.page_size(),
+                        whole: adjustment.upper(),
+                    }));
+                });
+            }
+        };
+        let adjustment = scroll.vadjustment();
+        adjustment.connect_value_changed(ask.clone());
+        adjustment.connect_changed(ask);
     }
 
     pub fn set(&self, tiles: &[WorkTile]) {
@@ -382,10 +419,16 @@ struct View {
     whole: f64,
 }
 
-/// How many cards a grid builds next, with `built` of `total` built and the view at `view`.
+/// How many cards a grid builds next, with `built` of `total` built and the view at `view`: a
+/// first batch, then another whenever the view comes within two of its heights of the end.
 fn cards_to_build(built: usize, total: usize, view: Option<View>) -> usize {
-    let _ = view;
-    total.saturating_sub(built)
+    const BATCH: usize = 48;
+    let wanted = match view {
+        _ if built == 0 => BATCH,
+        Some(v) if v.height > 0.0 && v.top + v.height * 3.0 >= v.whole => BATCH,
+        _ => 0,
+    };
+    wanted.min(total.saturating_sub(built))
 }
 
 /// A day as the updates and the week say it: Today, Yesterday, or the day's name and date.
@@ -635,5 +678,27 @@ mod label_tests {
         for label in ["Oneshot", "The Lantern Festival", "1st Anniversary Extra", ""] {
             assert!(!numbered(label), "{label}");
         }
+    }
+}
+
+#[cfg(test)]
+mod build_tests {
+    use super::{View, cards_to_build};
+
+    /// A long list opens with a few screens of cards, not all of them, and adds a batch as the
+    /// view comes near the end of what is built, never past the list.
+    #[test]
+    fn a_long_list_builds_its_cards_as_the_view_comes_near_them() {
+        let view = |top: f64| Some(View { top, height: 600.0, whole: 6000.0 });
+        let first = cards_to_build(0, 2000, None);
+        assert!(first > 0 && first < 100, "{first} cards first");
+        assert_eq!(cards_to_build(0, 12, None), 12);
+        assert_eq!(cards_to_build(first, 2000, view(0.0)), 0);
+        assert!(cards_to_build(first, 2000, view(4500.0)) > 0);
+        assert_eq!(cards_to_build(1990, 2000, view(5400.0)), 10);
+        assert_eq!(cards_to_build(2000, 2000, view(5400.0)), 0);
+        // A view not laid out yet asks for nothing.
+        let unlaid = Some(View { top: 0.0, height: 0.0, whole: 0.0 });
+        assert_eq!(cards_to_build(first, 2000, unlaid), 0);
     }
 }
