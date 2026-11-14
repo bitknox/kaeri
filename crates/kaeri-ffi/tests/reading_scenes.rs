@@ -490,12 +490,12 @@ fn the_e_ink_layout_switch_takes_at_once_off_and_on_again() {
     engine.shutdown();
 }
 
-/// The series scene's send, as the Android sheet starts it on a phone network: its downloaded
-/// chapters, or else its last three, wait for Wi-Fi when one of them is to fetch.
+/// The series scene on a phone network, as the Android shots send from it: chapters in the
+/// manga's folder are on the device and go at once, while chapters to fetch wait for Wi-Fi.
 #[test]
-fn the_series_scene_send_on_a_phone_network_waits_for_wifi() {
+fn the_series_scene_sends_its_folder_chapters_at_once_and_waits_to_fetch_the_rest() {
     use kaeri_core::books::WorkId;
-    use kaeri_model::reading::{ChapterDownloadState, DownloadPick, ExportFormat};
+    use kaeri_model::reading::{DownloadPick, ExportFormat};
     let (_root, engine) = start(FfiScene::ReadingSeries);
     let work = WorkId::new("a:900301");
     engine.send(Command::Reading(ReadingCommand::LoadChapters {
@@ -513,37 +513,42 @@ fn the_series_scene_send_on_a_phone_network_waits_for_wifi() {
         })
         .expect("the chapters");
     let rows: Vec<_> = volumes.iter().flat_map(|v| v.chapters.iter()).collect();
-    let done: Vec<_> = rows
-        .iter()
-        .filter(|r| matches!(r.download, Some(ChapterDownloadState::Done)))
-        .map(|r| r.id.clone())
-        .collect();
-    let pick = if done.is_empty() {
-        rows.iter().rev().take(3).rev().map(|r| r.id.clone()).collect()
-    } else {
-        done
+    let (here, to_fetch): (Vec<_>, Vec<_>) = rows.iter().partition(|r| r.on_device);
+    let ids = |rows: &[&&kaeri_model::reading::ChapterRow]| -> Vec<_> {
+        rows.iter().take(3).map(|r| r.id.clone()).collect()
     };
-    let rows: Vec<_> = rows.iter().map(|r| (r.id.as_str(), r.download.clone())).collect();
+    let (here, to_fetch) = (ids(&here), ids(&to_fetch));
+    assert_eq!(here.len(), 3, "the folder holds chapters 12 to 15: {rows:?}");
+    assert_eq!(to_fetch.len(), 3, "chapters 1 to 11 are to fetch: {rows:?}");
     engine.send(Command::NetworkPath { cellular: true, constrained: false, offline: false });
-    engine.send(Command::Reading(ReadingCommand::Prepare {
-        work,
-        pick: DownloadPick::Chapters { ids: pick.clone() },
-        target: "kobo".into(),
-        format: ExportFormat::Cbz,
-    }));
-    let read = read_until(&engine, |event| {
-        matches!(
-            event,
-            Event::Reading(
-                ReadingEvent::ExportWaiting { .. }
-                    | ReadingEvent::ExportReady { .. }
-                    | ReadingEvent::ExportFailed { .. }
-                    | ReadingEvent::Failed { .. }
+    let send = |ids: Vec<_>| {
+        engine.send(Command::Reading(ReadingCommand::Prepare {
+            work: work.clone(),
+            pick: DownloadPick::Chapters { ids },
+            target: "kobo".into(),
+            format: ExportFormat::Cbz,
+        }));
+        read_until(&engine, |event| {
+            matches!(
+                event,
+                Event::Reading(
+                    ReadingEvent::ExportWaiting { .. }
+                        | ReadingEvent::ExportReady { .. }
+                        | ReadingEvent::ExportFailed { .. }
+                        | ReadingEvent::Failed { .. }
+                )
             )
-        )
-    });
-    let waits =
-        read.iter().any(|e| matches!(e, Event::Reading(ReadingEvent::ExportWaiting { .. })));
-    assert!(waits, "the send of {pick:?} did not wait (rows {rows:?}): {read:?}");
+        })
+    };
+    let waits = |read: &[Event]| {
+        read.iter().any(|e| matches!(e, Event::Reading(ReadingEvent::ExportWaiting { .. })))
+    };
+    let ready = |read: &[Event]| {
+        read.iter().any(|e| matches!(e, Event::Reading(ReadingEvent::ExportReady { .. })))
+    };
+    let read = send(here.clone());
+    assert!(ready(&read) && !waits(&read), "{here:?} go at once: {read:?}");
+    let read = send(to_fetch.clone());
+    assert!(waits(&read), "{to_fetch:?} wait for Wi-Fi: {read:?}");
     engine.shutdown();
 }
