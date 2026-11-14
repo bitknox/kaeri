@@ -598,7 +598,8 @@ impl Worker {
         }
         touch(&dir);
         evict(&self.cache, &dir);
-        let path = job.path.display().to_string();
+        // A failure names the book by its file, never by its full path.
+        let path = book_name(&job.path);
         // A feed's pages are the ones landed so far; a book is opened.
         let book = match &job.feed {
             Some(_) => None,
@@ -670,7 +671,6 @@ impl Worker {
                             .and_then(|e| e.to_str())
                             .unwrap_or("")
                             .to_ascii_uppercase();
-                        let path = book_name(&job.path);
                         return self.fail(&job, ReadingFailure::Unreadable { path, format });
                     }
                 }
@@ -709,7 +709,6 @@ impl Worker {
                     Ok(pages) => pages,
                     Err(()) => {
                         let format = "PDF".to_owned();
-                        let path = book_name(&job.path);
                         return self.fail(&job, ReadingFailure::Unreadable { path, format });
                     }
                 };
