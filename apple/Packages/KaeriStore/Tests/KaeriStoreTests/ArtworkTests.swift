@@ -28,7 +28,7 @@ func png(width: Int, height: Int) -> Data {
 struct ArtworkTests {
     @Test func aURLIsAskedForOnceWhileItIsOnItsWayAndOnceItIsHere() async throws {
         var asked: [String] = []
-        let artwork = ArtworkStore { url in asked.append(url); return true }
+        let artwork = ArtworkStore(cache: KeptCache()) { url in asked.append(url); return true }
         let url = "https://img.example/cover/900001.jpg"
         artwork.request(url, maxPixelSize: 108)
         artwork.request(url, maxPixelSize: 108)
@@ -43,7 +43,7 @@ struct ArtworkTests {
     }
 
     @Test func artIsDownsampledToTheLargestSizeAsked() async throws {
-        let artwork = ArtworkStore { _ in true }
+        let artwork = ArtworkStore(cache: KeptCache()) { _ in true }
         let url = "https://img.example/banner/900001.jpg"
         artwork.request(url, maxPixelSize: 300)
         artwork.request(url, maxPixelSize: 600)
@@ -58,7 +58,7 @@ struct ArtworkTests {
         // A blurry banner: a list row decoded a cover at 108 pixels, and the preview's
         // banner, the same URL for a title with no banner, stretched that decode.
         let asked = Box(0)
-        let artwork = ArtworkStore { _ in asked.value += 1; return true }
+        let artwork = ArtworkStore(cache: KeptCache()) { _ in asked.value += 1; return true }
         let url = "https://img.example/cover/900005-xl.jpg"
         let bytes = png(width: 460, height: 690)
         artwork.request(url, maxPixelSize: 108)
@@ -78,7 +78,7 @@ struct ArtworkTests {
 
     @Test func aSmallerAskUsesTheLargerDecode() async throws {
         let asked = Box(0)
-        let artwork = ArtworkStore { _ in asked.value += 1; return true }
+        let artwork = ArtworkStore(cache: KeptCache()) { _ in asked.value += 1; return true }
         let url = "https://img.example/banner/900001.jpg"
         artwork.request(url, maxPixelSize: 600)
         artwork.ready(url: url, bytes: png(width: 1600, height: 900))
@@ -90,7 +90,7 @@ struct ArtworkTests {
 
     @Test func anAskThatGrowsWhileTheBytesDecodeIsAskedAgain() async throws {
         let asked = Box(0)
-        let artwork = ArtworkStore { _ in asked.value += 1; return true }
+        let artwork = ArtworkStore(cache: KeptCache()) { _ in asked.value += 1; return true }
         let url = "https://img.example/cover/900002-xl.jpg"
         let bytes = png(width: 460, height: 690)
         artwork.request(url, maxPixelSize: 108)
@@ -106,7 +106,7 @@ struct ArtworkTests {
     @Test func aURLThatFailedWaitsBeforeItIsAskedForAgain() {
         let clock = SteppedClock()
         var asked = 0
-        let artwork = ArtworkStore(now: { clock.now }) { _ in asked += 1; return true }
+        let artwork = ArtworkStore(now: { clock.now }, cache: KeptCache()) { _ in asked += 1; return true }
         let url = "https://img.example/cover/900005.jpg"
         artwork.request(url, maxPixelSize: 108)
         artwork.failed(url: url)
@@ -127,7 +127,7 @@ struct ArtworkTests {
     @Test func anAskWithNoEngineYetIsMadeAgainLater() {
         let engine = Box(false)
         let asked = Box(0)
-        let artwork = ArtworkStore { _ in asked.value += 1; return engine.value }
+        let artwork = ArtworkStore(cache: KeptCache()) { _ in asked.value += 1; return engine.value }
         artwork.request("https://img.example/cover/900002.jpg", maxPixelSize: 108)
         engine.value = true
         artwork.request("https://img.example/cover/900002.jpg", maxPixelSize: 108)
@@ -138,7 +138,7 @@ struct ArtworkTests {
         // A cover already on screen asks once, from its task: it never asks again by itself.
         let engine = Box(false)
         var sent: [String] = []
-        let artwork = ArtworkStore { url in
+        let artwork = ArtworkStore(cache: KeptCache()) { url in
             guard engine.value else { return false }
             sent.append(url)
             return true
@@ -163,7 +163,8 @@ struct ArtworkTests {
         let asked = Box(0)
         let artwork = ArtworkStore(
             now: { ContinuousClock.now },
-            sleep: { wait in slept.add(wait); try await Task.sleep(for: .milliseconds(1)) }
+            sleep: { wait in slept.add(wait); try await Task.sleep(for: .milliseconds(1)) },
+            cache: KeptCache()
         ) { _ in asked.value += 1; return true }
         let url = "https://img.example/cover/900004.jpg"
         let shown = Task { await artwork.show(url, maxPixelSize: 108) }
@@ -185,7 +186,8 @@ struct ArtworkTests {
         let slept = Slept()
         let asked = Box(0)
         let artwork = ArtworkStore(
-            sleep: { wait in slept.add(wait); try await Task.sleep(for: .milliseconds(1)) }
+            sleep: { wait in slept.add(wait); try await Task.sleep(for: .milliseconds(1)) },
+            cache: KeptCache()
         ) { _ in asked.value += 1; return true }
         let url = "https://img.example/cover/900004.jpg"
         let shown = Task { await artwork.show(url, maxPixelSize: 108) }
@@ -200,7 +202,7 @@ struct ArtworkTests {
 
     @Test func aRetryWaitingIsDroppedWhenTheScreenGoes() async throws {
         let asked = Box(0)
-        let artwork = ArtworkStore(sleep: { _ in try await Task.sleep(for: .milliseconds(100)) }) { _ in
+        let artwork = ArtworkStore(sleep: { _ in try await Task.sleep(for: .milliseconds(100)) }, cache: KeptCache()) { _ in
             asked.value += 1
             return true
         }
@@ -220,7 +222,8 @@ struct ArtworkTests {
         let asked = Box(0)
         let artwork = ArtworkStore(
             now: { clock.now },
-            sleep: { wait in slept.add(wait); try await Task.sleep(for: .milliseconds(1)) }
+            sleep: { wait in slept.add(wait); try await Task.sleep(for: .milliseconds(1)) },
+            cache: KeptCache()
         ) { _ in asked.value += 1; return true }
         let url = "https://img.example/cover/900006.jpg"
         // Failed for the widgets, with no screen showing it.
@@ -234,7 +237,7 @@ struct ArtworkTests {
     }
 
     @Test func artLandingIsSeenOnceEachTime() async throws {
-        let artwork = ArtworkStore { _ in true }
+        let artwork = ArtworkStore(cache: KeptCache()) { _ in true }
         let url = "https://img.example/cover/900001.jpg"
         let bytes = png(width: 460, height: 690)
         artwork.request(url, maxPixelSize: 108)
@@ -250,7 +253,7 @@ struct ArtworkTests {
 
     @Test func artGoneOffScreenIsTheCachesAgain() async throws {
         let asked = Box(0)
-        let artwork = ArtworkStore { _ in asked.value += 1; return true }
+        let artwork = ArtworkStore(cache: KeptCache()) { _ in asked.value += 1; return true }
         let url = "https://img.example/cover/900001.jpg"
         let shown = Task { await artwork.show(url, maxPixelSize: 108) }
         try await waitFor { asked.value == 1 }
@@ -264,7 +267,7 @@ struct ArtworkTests {
 
     @Test func artTheCacheLetGoOffScreenWaitsToBeShownAgain() async throws {
         let asked = Box(0)
-        let artwork = ArtworkStore { _ in asked.value += 1; return true }
+        let artwork = ArtworkStore(cache: KeptCache()) { _ in asked.value += 1; return true }
         let url = "https://img.example/cover/900001.jpg"
         artwork.request(url, maxPixelSize: 108)
         artwork.ready(url: url, bytes: png(width: 460, height: 690))
@@ -280,7 +283,7 @@ struct ArtworkTests {
         // cache let go of art still on screen, as NSCache may whenever memory is wanted, and the
         // view found nothing the next time it read it.
         let asked = Box(0)
-        let artwork = ArtworkStore { _ in asked.value += 1; return true }
+        let artwork = ArtworkStore(cache: KeptCache()) { _ in asked.value += 1; return true }
         let url = "https://img.example/cover/920001.jpg"
         let shown = Task { await artwork.show(url, maxPixelSize: 460) }
         defer { shown.cancel() }
@@ -298,7 +301,7 @@ struct ArtworkTests {
         // What turned one eviction into every image at once: each arrival changed what every
         // view reading art observes, so all of them read their art again on any arrival, a season
         // switch's burst of them among it.
-        let artwork = ArtworkStore { _ in true }
+        let artwork = ArtworkStore(cache: KeptCache()) { _ in true }
         let shownURL = "https://img.example/cover/920001.jpg"
         let other = "https://img.example/banner/920002.jpg"
         artwork.request(shownURL, maxPixelSize: 460)
@@ -324,7 +327,7 @@ struct ArtworkTests {
         // cache asks, decodes and is turned away again.
         let asked = Box(0)
         let cover = png(width: 460, height: 690)
-        let artwork = ArtworkStore(costLimit: 1) { _ in asked.value += 1; return true }
+        let artwork = ArtworkStore(costLimit: 1, cache: KeptCache()) { _ in asked.value += 1; return true }
         let url = "https://img.example/cover/920003.jpg"
         artwork.request(url, maxPixelSize: 460)
         artwork.ready(url: url, bytes: cover)
@@ -337,7 +340,7 @@ struct ArtworkTests {
         // Calendar's week, scrolled through: each card on screen a moment, ten at a time, while
         // the engine answers late, newest first, and every fifth cover fails the first time.
         var asked: [String] = []
-        let artwork = ArtworkStore(sleep: { _ in try await Task.sleep(for: .milliseconds(1)) }) { url in
+        let artwork = ArtworkStore(sleep: { _ in try await Task.sleep(for: .milliseconds(1)) }, cache: KeptCache()) { url in
             asked.append(url)
             return true
         }
@@ -370,7 +373,7 @@ struct ArtworkTests {
         let cover = png(width: 46, height: 69)
         let decoded = try #require(ArtworkStore.decode(cover, maxPixelSize: 108))
         let limit = decoded.bytesPerRow * decoded.height * 8
-        let artwork = ArtworkStore(costLimit: limit) { _ in true }
+        let artwork = ArtworkStore(costLimit: limit, cache: KeptCache()) { _ in true }
         let urls = (0..<40).map { "https://img.example/cover/95\($0).jpg" }
         for url in urls {
             let shown = Task { await artwork.show(url, maxPixelSize: 108) }
@@ -387,6 +390,33 @@ struct ArtworkTests {
 
     @Test func bytesThatAreNoImageDecodeToNothing() {
         #expect(ArtworkStore.decode(Data([0xFF, 0xD8, 0x00, 0x7F]), maxPixelSize: 100) == nil)
+    }
+}
+
+/// A cache for the tests' art that lets go only past its cost limit, oldest first, as NSCache may,
+/// and never because the system wants memory. A plain NSCache lets go of everything when it does,
+/// and a test reading back art no screen shows then finds nothing: on a machine short of memory
+/// eleven tests failed that way at once. Only the store reaches it, on the main actor.
+final class KeptCache: NSCache<NSString, Artwork>, @unchecked Sendable {
+    private var kept: [NSString: (art: Artwork, cost: Int)] = [:]
+    private var order: [NSString] = []
+
+    override func object(forKey key: NSString) -> Artwork? {
+        kept[key]?.art
+    }
+
+    override func setObject(_ art: Artwork, forKey key: NSString, cost: Int) {
+        removeObject(forKey: key)
+        kept[key] = (art, cost)
+        order.append(key)
+        while totalCostLimit > 0, kept.values.reduce(0, { $0 + $1.cost }) > totalCostLimit, let oldest = order.first {
+            removeObject(forKey: oldest)
+        }
+    }
+
+    override func removeObject(forKey key: NSString) {
+        kept[key] = nil
+        order.removeAll { $0 == key }
     }
 }
 

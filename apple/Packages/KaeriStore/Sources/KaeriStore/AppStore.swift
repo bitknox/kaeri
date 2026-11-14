@@ -158,14 +158,17 @@ public final class AppStore {
     /// playback around them (KaeriPlayerUI's `PlayerModel.apply(_:)`).
     @ObservationIgnored public var onPlayback: (@MainActor (Event) -> Void)?
 
-    /// - Parameter artworkCostLimit: how many bytes of decoded art the cache keeps beside what is
-    ///   on screen; smaller in the dev harness, to see the page with the cache full.
+    /// - Parameters:
+    ///   - artworkCostLimit: how many bytes of decoded art the cache keeps beside what is on
+    ///     screen; smaller in the dev harness, to see the page with the cache full.
+    ///   - artworkCache: where that art is kept (`ArtworkStore.init`'s `cache`).
     public init(
         jobs: JobsModel = JobsModel(), notices: NoticesModel = NoticesModel(), widgets: WidgetFeed = WidgetFeed(),
         downloadsActivity: DownloadsActivityFeed = DownloadsActivityFeed(),
         playbackActivity: PlaybackActivityFeed = PlaybackActivityFeed(),
         airingActivity: AiringActivityFeed = AiringActivityFeed(),
-        artworkCostLimit: Int = ArtworkStore.costLimit
+        artworkCostLimit: Int = ArtworkStore.costLimit,
+        artworkCache: NSCache<NSString, Artwork> = NSCache()
     ) {
         self.jobs = jobs
         self.notices = notices
@@ -173,7 +176,7 @@ public final class AppStore {
         self.downloadsActivity = downloadsActivity
         self.playbackActivity = playbackActivity
         self.airingActivity = airingActivity
-        artwork = ArtworkStore(costLimit: artworkCostLimit) { [weak self] url in
+        artwork = ArtworkStore(costLimit: artworkCostLimit, cache: artworkCache) { [weak self] url in
             guard let client = self?.client else { return false }
             client.send(.fetchArtwork(url: url))
             return true

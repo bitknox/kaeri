@@ -573,6 +573,8 @@ schemes:
         - KaeriUITests
 
   # xcodebuild -scheme "Kaeri Audit" -destination "platform=iOS Simulator,name=kaeri iPhone" test
+  # The reader's checks (ReaderStuckTests) run with apple/scripts/audit-reader.sh instead: its Go
+  # to page touch test needs an iPad Simulator of its own, made fresh and settled.
   Kaeri Audit:
     build:
       targets:

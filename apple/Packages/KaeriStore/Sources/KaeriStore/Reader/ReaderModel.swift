@@ -279,6 +279,30 @@ public final class ReaderModel {
 
     /// Go to page is open.
     public var askingPage = false
+
+    /// The pages Go to page counts: the novel's pages and the strip's images as the reader
+    /// places them, and the chapter's pages otherwise.
+    public var goToPageTotal: Int {
+        novel != nil || view?.mode == .strip ? max(position.count, 1) : max(pageCount, 1)
+    }
+
+    /// The page typed into Go to page, when it is one there is.
+    public func goToPageTarget(_ typed: String) -> Int? {
+        guard let number = Int(typed.trimmingCharacters(in: .whitespaces)), (1...goToPageTotal).contains(number) else {
+            return nil
+        }
+        return number
+    }
+
+    /// Go to page submits what was typed: a page there is closes the prompt and jumps to it,
+    /// anything else leaves the prompt open. Return in the field and Go both come here.
+    @discardableResult
+    public func goToPage(typed: String) -> Bool {
+        guard let page = goToPageTarget(typed) else { return false }
+        askingPage = false
+        requestJump(novel != nil || view?.mode == .strip ? page - 1 : leaf(ofPage: page))
+        return true
+    }
     /// The window the book is open in has the keys, or no window of the app does. Another of the
     /// app's windows in front keeps its own keys: the Go menu binds the reader's only while this
     /// holds. The Mac's reader follows its window; on iPad and iPhone it stays true.
