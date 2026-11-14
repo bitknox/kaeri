@@ -4528,6 +4528,395 @@ settings-note-upload-limit = Tüm torrent yüklemesini sınırlar, böylece payl
 # Note under the token storage row. The option is a command-line flag and is not translated.
 settings-note-token-storage = Var olan bir belirteci taşımak için --token-to-file kullanın.
 
+# Under a series' title on the terminal's series page: the source its chapters are read from.
+tui-read-series-from = { $source } üzerinden okunuyor
+
+# After the source on the series page: the list the series is on and the trackers that keep that list, such as "Reading on AniList". The list is its name, such as "Reading" or "Planning"; the trackers are already joined.
+tui-read-series-list-on = { $trackers } üzerinde { $list }
+
+# After the source on the series page, when no tracker keeps the list: "On your Reading list".
+tui-read-series-list = { $list } listenizde
+
+# Beside the progress meter on the series page: how many of the chapters listed are read.
+tui-read-series-read =
+    { $total ->
+        [one] { $read } / { $total } bölüm okundu
+       *[other] { $read } / { $total } bölüm okundu
+    }
+
+# At the top of the series page while the computer is offline: the chapters listed are the ones kept from before, and only the downloaded ones open.
+tui-read-series-offline = Çevrimdışı. İndirilen bölümler yine de açılır.
+
+# Left of the status line on the series page while the computer is offline.
+tui-read-status-offline = Okuma · çevrimdışı
+
+# Header chip on the series page while the computer is offline, in place of how many sources are on. The mark is a cross. Lower case, as the header's other chips are.
+tui-read-header-offline = kaynaklar { $mark }
+
+# Hint in the status line on the series page: the key that marks the chapter under the cursor read, or unread when it is read. Shown in lower case. Also a row of the key reference.
+tui-read-read-unread = Okundu ya da değil
+
+# Hint in the status line on the series page: the key that picks the list the series is on. Shown in lower case.
+tui-read-hint-status = Durum
+
+# Hint in the status line on reading's Home, on a series in Continue: the key that opens the chapter where reading stopped. Shown in lower case.
+tui-read-hint-continue = Sürdür
+
+# Heading of the series page's keys in the key reference.
+tui-read-keys-series = Seri
+
+# A row of the key reference: open the chapter under the cursor on the series page.
+tui-read-keys-read = Bölümü oku
+
+# A row of the key reference: download the chapter under the cursor on the series page.
+tui-read-keys-download = Bu bölümü indir
+
+# A row of the key reference: pick the list the series is on, such as Reading or Planning.
+tui-read-keys-status = Liste durumunu ayarla
+
+# A row of the key reference on reading's Home: open a series' page with its chapters, from a series in Continue, where Enter opens the chapter itself.
+tui-read-keys-chapters = Seri sayfasını aç
+
+# Left of the status line while a chapter opens in the terminal's reader. The chapter is its number, such as 14.
+tui-reader-opening = Bölüm { $chapter } açılıyor
+
+# The reader's opening line while no source has been picked for the series yet.
+tui-reader-finding = Bir kaynak aranıyor
+
+# Left of the reader's status line: the page in view and how many the chapter has.
+tui-reader-page-of = Sayfa { $page } / { $pages }
+
+# Left of the reader's status line while two pages show side by side.
+tui-reader-pages-of = Sayfa { $first } ve { $second } / { $pages }
+
+# After the page count in the reader's status line, when the terminal draws pages as coloured blocks because it has no image protocol.
+tui-reader-blocks = Bloklar
+
+# Said once a run on the reader's status rule, the first time a chapter opens in a terminal with no image protocol: the pages show as coloured blocks.
+tui-reader-blocks-notice = Burada görüntü protokolü yok. Sayfalar blok olarak gösterilir.
+
+# Hint after "Resumed at page 8" on the reader's status rule: the key that starts the chapter from its first page. Shown in lower case.
+tui-reader-start-over = Baştan başla
+
+# Hint after the notice that the chapter moved to where another device read to: the key that goes back to the page this computer was on. Shown in lower case.
+tui-reader-go-back = Geri dön
+
+# Hint after the notice that the reader guessed how this series reads: the key that opens the reader settings to change it. Shown in lower case.
+tui-reader-change = Değiştir
+
+# Middle of the reader when the terminal was started with images turned off, and a chapter of manga or webtoon pages opens. The option is typed as it is on the command line.
+tui-reader-images-off = Sayfalar görsellerden oluşuyor ve Kaeri --no-images ile başlatıldı.
+
+# Under that line.
+tui-reader-images-off-how = Mangaları ve webtoonları burada okumak için bu seçenek olmadan başlatın.
+
+# Under that line.
+tui-reader-images-off-novels = Hafif romanlar her durumda metin olarak açılır.
+
+# Heading in the reader when a chapter couldn't open. The chapter is its number, such as 16.
+tui-reader-chapter-failed = Bölüm { $chapter } açılamadı
+
+# Top line of the page after the last chapter of a finished series.
+tui-reader-end-series = Serinin sonu
+
+# Under that line.
+tui-reader-end-no-more = Başka bölüm yok.
+
+# Under "You're caught up" on the page after the last chapter there is.
+tui-reader-end-caught-up-line = Yeni bölümler kaynaklarınızda çıktığında Ana sayfada görünür.
+
+# On the page after the last chapter there is, when the series goes on. The chapter is the next one's number, such as 18.
+tui-reader-end-not-out = Bölüm { $chapter } henüz çıkmadı
+
+# The same, when the next chapter's number isn't known.
+tui-reader-end-not-out-next = Sonraki bölüm henüz çıkmadı
+
+# Under either of those lines.
+tui-reader-end-not-out-line = Kaeri yeni bölümleri arka planda kontrol eder. Yeni olanlar Ana sayfada görünür.
+
+# On the page between chapters when no source has the next chapter. The chapter is its number, such as 18.
+tui-reader-end-no-source = Kaynaklarınızda henüz bölüm { $chapter } yok
+
+# The same, when the next chapter's number isn't known.
+tui-reader-end-no-source-next = Kaynaklarınızda henüz sonraki bölüm yok
+
+# On the page between chapters while offline, and as a toast when a chapter that isn't on this computer is opened offline. The chapter is its number, such as 16.
+tui-reader-end-offline = Bölüm { $chapter } indirilmedi
+
+# The same, when the chapter's number isn't known.
+tui-reader-end-offline-next = Sonraki bölüm indirilmedi
+
+# Under that line on the page between chapters.
+tui-reader-end-offline-line = Çevrimdışısınız. Bağlandığınızda burada açılır.
+
+# Under the next chapter on the page between chapters when it is an extra, such as 16.5 between 16 and 17: skipping to the next numbered chapter leaves the extra unread. The chapter is the extra's number.
+tui-reader-end-skip-unread = Atlanırsa bölüm { $chapter } okunmamış kalır.
+
+# Under the next chapter's first page on the page between chapters. The chapter is its number.
+tui-reader-end-first-page = Bölüm { $chapter } · ilk sayfa
+
+# The reader's heading when the terminal is too small to show a page.
+tui-reader-too-small = Terminal çok küçük
+
+# Under that heading: the smallest size the reader shows pages at, in columns and rows.
+tui-reader-too-small-line = En az { $columns } sütun, { $rows } satır
+
+# Hint in the reader's status line: the key that turns to the next page. Shown in lower case.
+tui-reader-hint-next = İleri
+
+# Hint in the reader's status line: the key that turns back a page. Shown in lower case.
+tui-reader-hint-back = Geri
+
+# Hint in the reader's status line while a chapter opens: the key that stops it and goes back. Shown in lower case.
+tui-reader-hint-stop = Durdur
+
+# Hint in the reader's status line: the key that opens the reader settings. Shown in lower case.
+tui-reader-hint-settings = Ayarlar
+
+# Hint in the reader's status line on a page that couldn't load: the turn key goes on to the next page without it. Shown in lower case.
+tui-reader-hint-without = Onsuz ilerle
+
+# Hint in the reader's status line on the page between chapters. Shown in lower case.
+tui-reader-hint-next-chapter = Sonraki bölüm
+
+# Hint in the reader's status line: the key that leaves the reader for the series page it was opened from. Shown in lower case.
+tui-reader-hint-series = Seriye dön
+
+# Hint in the reader's status line after the last chapter of a finished series: the key that opens its first chapter. Shown in lower case.
+tui-reader-hint-again = Baştan yeniden oku
+
+# Heading of the reader's keys in the key reference.
+tui-reader-keys-reader = Okuyucu
+
+# Heading of the keys that change how the reader shows pages, in the key reference.
+tui-reader-keys-view = Okuyucu görünümü
+
+# Beside the reader's keys in the key reference.
+tui-reader-keys-rtl = Sağdan sola okunan mangada, sayfanın kaydığı yöne uygun olarak ← ileri, → geri çevirir. Space her zaman ileri çevirir.
+
+# Beside the reader's keys in the key reference, under that.
+tui-reader-keys-left-out = Açık bölümde işe yaramayan tuşlar listelenmez: hafif romanda yakınlaştırma, mangada genişlik yoktur.
+
+# Ends the toast that says a command does nothing on this screen, as "on the Downloads screen" does: the command works in the reader.
+tui-reader-where = okuyucuda
+
+# A row of the key reference and the command palette: turn to the next page.
+tui-reader-action-next = Sonraki sayfa
+
+# A row of the key reference and the command palette: turn back a page.
+tui-reader-action-previous = Önceki sayfa
+
+# A row of the key reference: turn to the page on the left, which is the next one in right-to-left manga.
+tui-reader-action-left = Soldaki sayfa
+
+# A row of the key reference: turn to the page on the right.
+tui-reader-action-right = Sağdaki sayfa
+
+# A row of the key reference: go to the chapter's first page.
+tui-reader-action-first = İlk sayfa
+
+# A row of the key reference: go to the chapter's last page.
+tui-reader-action-last = Son sayfa
+
+# A row of the key reference: open the next chapter.
+tui-reader-action-next-chapter = Sonraki bölüm
+
+# A row of the key reference: open the chapter before this one.
+tui-reader-action-previous-chapter = Önceki bölüm
+
+# A row of the key reference: go back to the page read before a jump.
+tui-reader-action-back-to-page = Sayfaya geri dön
+
+# A row of the key reference: hide the header and status line for a bare page, or show them.
+tui-reader-action-bare = Yalın sayfa
+
+# A row of the key reference: show one page or two side by side.
+tui-reader-action-pages = Tek ya da iki sayfa
+
+# A row of the key reference: open the reader settings.
+tui-reader-action-settings = Okuyucu ayarları
+
+# A row of the key reference: leave the reader for the screen it was opened from.
+tui-reader-action-leave = Okuyucudan çık
+
+# A row of the key reference: on the page between chapters, open the next numbered chapter past the extras.
+tui-reader-action-skip = Ek bölümleri atla
+
+# A row of the key reference: scroll a page shown at fit width, a zoomed page or a strip down.
+tui-reader-action-scroll-down = Aşağı kaydır
+
+# A row of the key reference: scroll up.
+tui-reader-action-scroll-up = Yukarı kaydır
+
+# A row of the key reference: read the series as pages that turn, or as one long strip.
+tui-reader-action-mode = Sayfalı ya da şerit
+
+# A row of the key reference: fit the page to the window, or to its width and scroll it.
+tui-reader-action-fit = Ekrana ya da genişliğe sığdır
+
+# A row of the key reference: zoom in on the page, or leave the zoom.
+tui-reader-action-zoom = Yakınlaştırma
+
+# A row of the key reference: zoom in a step.
+tui-reader-action-zoom-in = Yakınlaştır
+
+# A row of the key reference: zoom out a step.
+tui-reader-action-zoom-out = Uzaklaştır
+
+# Hint in the reader's status line: the keys that scroll the page or the strip. Shown in lower case.
+tui-reader-hint-scroll = Kaydır
+
+# Hint in the reader's status line at fit width: the key that fits the page to the window again. Shown in lower case.
+tui-reader-hint-fit-screen = Ekrana sığdır
+
+# Hint in the reader's status line while zoomed: the keys that move the view about the page. Shown in lower case.
+tui-reader-hint-move = Gezin
+
+# Hint in the reader's status line while zoomed: the keys that zoom in and out. Shown in lower case.
+tui-reader-hint-zoom = Yakınlaştır
+
+# Hint in the reader's status line while zoomed: the key that leaves the zoom. Shown in lower case.
+tui-reader-hint-leave-zoom = Normal boyut
+
+# Hint in the reader's status line in a strip: the key that scrolls on by most of a screen. Shown in lower case.
+tui-reader-hint-next-screen = Sonraki ekran
+
+# Hint in the reader's status line in a wide window with two pages side by side: the key that shows one page at a time. Shown in lower case.
+tui-reader-hint-one-page = Tek sayfa
+
+# Hint in the reader's status line in a wide window with one page: the key that shows two side by side. Shown in lower case.
+tui-reader-hint-two-pages = İki sayfa
+
+# After the page count in the reader's status line while the page fits the window's width and scrolls.
+tui-reader-fit-width = Tam genişlik
+
+# Left of the reader's status line while zoomed in, before the page count: "Zoom 300%".
+tui-reader-zoom = Büyütme %{ $percent }
+
+# Under the small map of the page at the right while zoomed in: which page it is.
+tui-reader-zoom-page = Sayfa { $page }
+
+# Left of the reader's status line in a webtoon strip: the chapter, and the image at the top of the window out of the chapter's images. The chapter is its number, such as 15.
+tui-reader-strip-at = Bölüm { $chapter } · görsel { $image } / { $images }
+
+# On the reader's status rule in a strip, once the chapter it ran on from counted as read. The chapter is its number, such as 14.
+tui-reader-strip-read = Bölüm { $chapter } okundu sayıldı
+
+# On the reader's status rule in a strip, once the chapter counted as read and the trackers were updated. The trackers are already joined, such as "AniList".
+tui-reader-strip-read-tracker = Bölüm { $chapter } okundu sayıldı · { $trackers } güncellendi
+
+# On the reader's status rule in a strip, once the chapter counted as read while the computer is offline: the trackers are told once it is back online.
+tui-reader-strip-read-offline = Bölüm { $chapter } okundu sayıldı · { $trackers } yeniden çevrimiçi olunca güncellenir
+
+# A row of the key reference: make a light novel's text column narrower.
+tui-reader-action-narrower = Metni daralt
+
+# A row of the key reference: make a light novel's text column wider.
+tui-reader-action-wider = Metni genişlet
+
+# A row of the key reference in a light novel: switch between turning screens and scrolling lines.
+tui-reader-action-mode-novel = Sayfalı ya da kaydırmalı
+
+# Hint in the reader's status line in a light novel: the keys that change the text's width. Shown in lower case.
+tui-reader-hint-width = Genişlik
+
+# Hint in the settings over the reader: the keys that change the setting in the row. Shown in lower case.
+tui-reader-hint-change = Değiştir
+
+# A light novel's picture, on a line of its own in the text: the picture's description.
+tui-reader-novel-picture = Görsel: { $alt }
+
+# A light novel's picture with no description, on a line of its own in the text.
+tui-reader-novel-picture-plain = Görsel
+
+# In the reader's status line in a light novel, after the part's name: how far through the part the text in view reaches, such as "34%".
+tui-reader-novel-through = %{ $percent }
+
+# Heading in the reader settings over what this series keeps for itself.
+tui-reader-settings-series = Bu seri
+
+# Heading in the reader settings over what applies to every light novel on this computer.
+tui-reader-settings-novels-here = Bu bilgisayardaki hafif romanlar
+
+# Heading in the reader settings over what applies to every light novel, on every device.
+tui-reader-settings-novels-all = Tüm hafif romanlar
+
+# Heading in the reader settings over what applies to every manga and webtoon on this computer.
+tui-reader-settings-manga-here = Bu bilgisayardaki mangalar
+
+# Heading in the reader settings over what applies to every manga and webtoon, on every device.
+tui-reader-settings-manga-all = Tüm mangalar
+
+# Heading in the reader settings over the settings the apps have and the terminal leaves to itself.
+tui-reader-settings-not-here = Terminalde olmayanlar
+
+# Under that heading in a light novel's reader settings.
+tui-reader-settings-novel-note = Yazı tipi, yazı boyutu ve görünüm terminalin kendi ayarlarını izler. Kenar boşlukları metin genişliğinden gelir.
+
+# Under that heading in a manga's reader settings.
+tui-reader-settings-manga-note = Görünüm, renk ve arka plan terminalin kendi ayarlarını izler. Dokunma bölgeleri dokunmatik ekranlar içindir.
+
+# Heading over the sample of the text at the width being set, beside a light novel's reader settings.
+tui-reader-settings-preview = Önizleme
+
+# At the foot of a light novel's reader settings.
+tui-reader-settings-novel-foot = Değişiklikler hemen uygulanır. Metindeki yeriniz korunur.
+
+# At the foot of a manga's reader settings.
+tui-reader-settings-manga-foot = Değişiklikler hemen uygulanır. Görünen sayfa korunur.
+
+# A row of the reader settings: paged or scrolled, or paged or a strip.
+tui-reader-setting-mode = Mod
+
+# A row of the reader settings: right to left or left to right.
+tui-reader-setting-direction = Yön
+
+# A row of the reader settings: a page fitted to the screen or to its width.
+tui-reader-setting-fit = Sığdır
+
+# A row of the reader settings: one page at a time, two, or as the window allows.
+tui-reader-setting-page-layout = Sayfa düzeni
+
+# A row of the reader settings: what a page printed across two pages does on a one-page screen.
+tui-reader-setting-spreads = Geniş sayfalar
+
+# A row of the reader settings: white borders cut from the pages.
+tui-reader-setting-crop = Kenarları kırp
+
+# A row of the reader settings: how wide a webtoon strip runs.
+tui-reader-setting-strip-width = Şerit genişliği
+
+# A row of the reader settings: how many columns a light novel's lines run to.
+tui-reader-setting-text-width = Metin genişliği
+
+# A row of the reader settings: a blank line between paragraphs or none.
+tui-reader-setting-line-spacing = Satır aralığı
+
+# A row of the reader settings: lines spaced out to end together at the text width.
+tui-reader-setting-justify = İki yana yasla
+
+# A reading mode: a screen of text or pages at a time.
+tui-reader-value-paged = Sayfalı
+
+# A reading mode for light novels: the text scrolls a line at a time.
+tui-reader-value-scrolled = Kaydırmalı
+
+# A reading mode for manga: whole pages one under another.
+tui-reader-value-vertical = Dikey
+
+# A line spacing in the terminal: a blank line between paragraphs.
+tui-reader-value-open = Geniş
+
+# A line spacing in the terminal: no line between paragraphs.
+tui-reader-value-tight = Sıkı
+
+# A width in the reader settings, in the terminal's columns, such as "66 columns".
+tui-reader-value-columns =
+    { $columns ->
+        [one] { $columns } sütun
+       *[other] { $columns } sütun
+    }
+
 # Heading of the { -plugin-store } screens when the terminal is too small to draw them.
 stores-needs-larger-terminal = Daha büyük bir terminal gerekiyor
 
