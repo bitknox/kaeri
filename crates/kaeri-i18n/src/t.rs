@@ -7820,6 +7820,116 @@ pub fn tui_reader_action_skip() -> String {
     text("tui-reader-action-skip", &[])
 }
 
+/// A row of the key reference: scroll a page shown at fit width, a zoomed page or a strip down.
+pub fn tui_reader_action_scroll_down() -> String {
+    text("tui-reader-action-scroll-down", &[])
+}
+
+/// A row of the key reference: scroll up.
+pub fn tui_reader_action_scroll_up() -> String {
+    text("tui-reader-action-scroll-up", &[])
+}
+
+/// A row of the key reference: read the series as pages that turn, or as one long strip.
+pub fn tui_reader_action_mode() -> String {
+    text("tui-reader-action-mode", &[])
+}
+
+/// A row of the key reference: fit the page to the window, or to its width and scroll it.
+pub fn tui_reader_action_fit() -> String {
+    text("tui-reader-action-fit", &[])
+}
+
+/// A row of the key reference: zoom in on the page, or leave the zoom.
+pub fn tui_reader_action_zoom() -> String {
+    text("tui-reader-action-zoom", &[])
+}
+
+/// A row of the key reference: zoom in a step.
+pub fn tui_reader_action_zoom_in() -> String {
+    text("tui-reader-action-zoom-in", &[])
+}
+
+/// A row of the key reference: zoom out a step.
+pub fn tui_reader_action_zoom_out() -> String {
+    text("tui-reader-action-zoom-out", &[])
+}
+
+/// Hint in the reader's status line: the keys that scroll the page or the strip. Shown in lower case.
+pub fn tui_reader_hint_scroll() -> String {
+    text("tui-reader-hint-scroll", &[])
+}
+
+/// Hint in the reader's status line at fit width: the key that fits the page to the window again. Shown in lower case.
+pub fn tui_reader_hint_fit_screen() -> String {
+    text("tui-reader-hint-fit-screen", &[])
+}
+
+/// Hint in the reader's status line while zoomed: the keys that move the view about the page. Shown in lower case.
+pub fn tui_reader_hint_move() -> String {
+    text("tui-reader-hint-move", &[])
+}
+
+/// Hint in the reader's status line while zoomed: the keys that zoom in and out. Shown in lower case.
+pub fn tui_reader_hint_zoom() -> String {
+    text("tui-reader-hint-zoom", &[])
+}
+
+/// Hint in the reader's status line while zoomed: the key that leaves the zoom. Shown in lower case.
+pub fn tui_reader_hint_leave_zoom() -> String {
+    text("tui-reader-hint-leave-zoom", &[])
+}
+
+/// Hint in the reader's status line in a strip: the key that scrolls on by most of a screen. Shown in lower case.
+pub fn tui_reader_hint_next_screen() -> String {
+    text("tui-reader-hint-next-screen", &[])
+}
+
+/// Hint in the reader's status line in a wide window with two pages side by side: the key that shows one page at a time. Shown in lower case.
+pub fn tui_reader_hint_one_page() -> String {
+    text("tui-reader-hint-one-page", &[])
+}
+
+/// Hint in the reader's status line in a wide window with one page: the key that shows two side by side. Shown in lower case.
+pub fn tui_reader_hint_two_pages() -> String {
+    text("tui-reader-hint-two-pages", &[])
+}
+
+/// After the page count in the reader's status line while the page fits the window's width and scrolls.
+pub fn tui_reader_fit_width() -> String {
+    text("tui-reader-fit-width", &[])
+}
+
+/// Left of the reader's status line while zoomed in, before the page count: "Zoom 300%".
+pub fn tui_reader_zoom(percent: i64) -> String {
+    text("tui-reader-zoom", &[("percent", Arg::Plain(percent))])
+}
+
+/// Under the small map of the page at the right while zoomed in: which page it is.
+pub fn tui_reader_zoom_page(page: i64) -> String {
+    text("tui-reader-zoom-page", &[("page", Arg::Plain(page))])
+}
+
+/// Left of the reader's status line in a webtoon strip: the chapter, and the image at the top of the window out of the chapter's images. The chapter is its number, such as 15.
+pub fn tui_reader_strip_at(chapter: &str, image: i64, images: i64) -> String {
+    text("tui-reader-strip-at", &[("chapter", Arg::Text(chapter)), ("image", Arg::Plain(image)), ("images", Arg::Plain(images))])
+}
+
+/// On the reader's status rule in a strip, once the chapter it ran on from counted as read. The chapter is its number, such as 14.
+pub fn tui_reader_strip_read(chapter: &str) -> String {
+    text("tui-reader-strip-read", &[("chapter", Arg::Text(chapter))])
+}
+
+/// On the reader's status rule in a strip, once the chapter counted as read and the trackers were updated. The trackers are already joined, such as "AniList".
+pub fn tui_reader_strip_read_tracker(chapter: &str, trackers: &str) -> String {
+    text("tui-reader-strip-read-tracker", &[("chapter", Arg::Text(chapter)), ("trackers", Arg::Text(trackers))])
+}
+
+/// On the reader's status rule in a strip, once the chapter counted as read while the computer is offline: the trackers are told once it is back online.
+pub fn tui_reader_strip_read_offline(chapter: &str, trackers: &str) -> String {
+    text("tui-reader-strip-read-offline", &[("chapter", Arg::Text(chapter)), ("trackers", Arg::Text(trackers))])
+}
+
 /// AniList's name, in the line that says it is still being asked.
 pub fn tui_read_anilist() -> String {
     text("tui-read-anilist", &[])

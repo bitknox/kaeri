@@ -4949,6 +4949,72 @@ tui-reader-action-leave = [Ļéàṽé ţĥé ŕéàðéŕ~~~~~]
 # A row of the key reference: on the page between chapters, open the next numbered chapter past the extras.
 tui-reader-action-skip = [Šķîþ ţĥé éẋţŕàš~~~~~]
 
+# A row of the key reference: scroll a page shown at fit width, a zoomed page or a strip down.
+tui-reader-action-scroll-down = [Šçŕöļļ ðöŵñ~~~~]
+
+# A row of the key reference: scroll up.
+tui-reader-action-scroll-up = [Šçŕöļļ üþ~~~]
+
+# A row of the key reference: read the series as pages that turn, or as one long strip.
+tui-reader-action-mode = [Þàĝéð öŕ šţŕîþ~~~~~]
+
+# A row of the key reference: fit the page to the window, or to its width and scroll it.
+tui-reader-action-fit = [Ƒîţ šçŕééñ öŕ ŵîðţĥ~~~~~~]
+
+# A row of the key reference: zoom in on the page, or leave the zoom.
+tui-reader-action-zoom = [Žööɱ~~]
+
+# A row of the key reference: zoom in a step.
+tui-reader-action-zoom-in = [Žööɱ îñ~~~]
+
+# A row of the key reference: zoom out a step.
+tui-reader-action-zoom-out = [Žööɱ öüţ~~~]
+
+# Hint in the reader's status line: the keys that scroll the page or the strip. Shown in lower case.
+tui-reader-hint-scroll = [Šçŕöļļ~~]
+
+# Hint in the reader's status line at fit width: the key that fits the page to the window again. Shown in lower case.
+tui-reader-hint-fit-screen = [Ƒîţ šçŕééñ~~~]
+
+# Hint in the reader's status line while zoomed: the keys that move the view about the page. Shown in lower case.
+tui-reader-hint-move = [Ṁöṽé~~]
+
+# Hint in the reader's status line while zoomed: the keys that zoom in and out. Shown in lower case.
+tui-reader-hint-zoom = [Žööɱ~~]
+
+# Hint in the reader's status line while zoomed: the key that leaves the zoom. Shown in lower case.
+tui-reader-hint-leave-zoom = [Ļéàṽé žööɱ~~~]
+
+# Hint in the reader's status line in a strip: the key that scrolls on by most of a screen. Shown in lower case.
+tui-reader-hint-next-screen = [Ñéẋţ šçŕééñ~~~~]
+
+# Hint in the reader's status line in a wide window with two pages side by side: the key that shows one page at a time. Shown in lower case.
+tui-reader-hint-one-page = [Öñé þàĝé~~~]
+
+# Hint in the reader's status line in a wide window with one page: the key that shows two side by side. Shown in lower case.
+tui-reader-hint-two-pages = [Ţŵö þàĝéš~~~]
+
+# After the page count in the reader's status line while the page fits the window's width and scrolls.
+tui-reader-fit-width = [Ƒîţ ŵîðţĥ~~~]
+
+# Left of the reader's status line while zoomed in, before the page count: "Zoom 300%".
+tui-reader-zoom = [Žööɱ { $percent }%~~~]
+
+# Under the small map of the page at the right while zoomed in: which page it is.
+tui-reader-zoom-page = [Þàĝé { $page }~~~]
+
+# Left of the reader's status line in a webtoon strip: the chapter, and the image at the top of the window out of the chapter's images. The chapter is its number, such as 15.
+tui-reader-strip-at = [Çĥàþţéŕ { $chapter } · îɱàĝé { $image } öƒ { $images }~~~~~~~~~]
+
+# On the reader's status rule in a strip, once the chapter it ran on from counted as read. The chapter is its number, such as 14.
+tui-reader-strip-read = [Çĥàþţéŕ { $chapter } çöüñţéð àš ŕéàð~~~~~~~~~]
+
+# On the reader's status rule in a strip, once the chapter counted as read and the trackers were updated. The trackers are already joined, such as "AniList".
+tui-reader-strip-read-tracker = [Çĥàþţéŕ { $chapter } çöüñţéð àš ŕéàð · { $trackers } üþðàţéð~~~~~~~~~~~~~]
+
+# On the reader's status rule in a strip, once the chapter counted as read while the computer is offline: the trackers are told once it is back online.
+tui-reader-strip-read-offline = [Çĥàþţéŕ { $chapter } çöüñţéð àš ŕéàð · { $trackers } üþðàţéš ŵĥéñ ýöü'ŕé ƀàçķ öñļîñé~~~~~~~~~~~~~~~~~~~~]
+
 # AniList's name, in the line that says it is still being asked.
 tui-read-anilist = [ÅñîĻîšţ~~~]
 

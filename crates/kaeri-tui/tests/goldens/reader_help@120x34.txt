@@ -4,21 +4,21 @@ Kaeri                                                                           
 ▌ Keys
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
   Reader                                      Reader view                                 │ In right-to-left manga, ←
-    Next page                 space / pgdn      One or two pages                     v    │ turns forward and → turns
-    Previous page         backspace / pgup      Reader settings                      ,    │ back, as the page moves.
-    Page to the left                 ← / h                                                │ Space always turns forward.
-    Page to the right                → / l    Global                                      │
-    First page                           g      Show keys                            ?    │ Keys that do nothing in the
-    Last page                            G      Run a command               : / ctrl+k    │ open chapter are left out:
-    Next chapter                         n      Leave the reader               q / esc    │ no zoom in a novel, no
-    Previous chapter                     N      Quit                        Q / ctrl+c    │ width in manga.
-    Chapters                             e      Recent messages                      !    │
-    Back to page                         b                                                │
-    Read or unread                       u                                                │
-    Download this chapter                d                                                │
+    Next page                 space / pgdn      Paged or strip                       m    │ turns forward and → turns
+    Previous page         backspace / pgup      Fit screen or width                  f    │ back, as the page moves.
+    Page to the left                 ← / h      Zoom                                 z    │ Space always turns forward.
+    Page to the right                → / l      Zoom in                              +    │
+    Scroll down                      j / ↓      Zoom out                             -    │ Keys that do nothing in the
+    Scroll up                        k / ↑      One or two pages                     v    │ open chapter are left out:
+    First page                           g      Reader settings                      ,    │ no zoom in a novel, no
+    Last page                            G                                                │ width in manga.
+    Next chapter                         n    Global                                      │
+    Previous chapter                     N      Show keys                            ?    │
+    Chapters                             e      Run a command               : / ctrl+k    │
+    Back to page                         b      Leave the reader               q / esc    │
+    Read or unread                       u      Quit                        Q / ctrl+c    │
+    Download this chapter                d      Recent messages                      !    │
     Bare page                            ↵                                                │
-                                                                                          │
-                                                                                          │
                                                                                           │
                                                                                           │
                                                                                           │
@@ -49,66 +49,80 @@ r05 c90-90 fg=rule
 r05 c92-116 fg=text-dim
 r06 c04-12 fg=text
 r06 c30-41 fg=text
-r06 c48-63 fg=text
+r06 c48-61 fg=text
 r06 c85-85 fg=text
 r06 c90-90 fg=rule
 r06 c92-116 fg=text-dim
 r07 c04-16 fg=text
 r07 c26-41 fg=text
-r07 c48-62 fg=text
+r07 c48-66 fg=text
 r07 c85-85 fg=text
 r07 c90-90 fg=rule
 r07 c92-115 fg=text-dim
 r08 c04-19 fg=text
 r08 c37-41 fg=text
+r08 c48-51 fg=text
+r08 c85-85 fg=text
 r08 c90-90 fg=rule
 r08 c92-118 fg=text-dim
 r09 c04-20 fg=text
 r09 c37-41 fg=text
-r09 c46-51 fg=text-dim
+r09 c48-54 fg=text
+r09 c85-85 fg=text
 r09 c90-90 fg=rule
-r10 c04-13 fg=text
-r10 c41-41 fg=text
-r10 c48-56 fg=text
+r10 c04-14 fg=text
+r10 c37-41 fg=text
+r10 c48-55 fg=text
 r10 c85-85 fg=text
 r10 c90-90 fg=rule
 r10 c92-118 fg=text-dim
 r11 c04-12 fg=text
-r11 c41-41 fg=text
-r11 c48-60 fg=text
-r11 c76-85 fg=text
+r11 c37-41 fg=text
+r11 c48-63 fg=text
+r11 c85-85 fg=text
 r11 c90-90 fg=rule
 r11 c92-117 fg=text-dim
-r12 c04-15 fg=text
+r12 c04-13 fg=text
 r12 c41-41 fg=text
-r12 c48-63 fg=text
-r12 c79-85 fg=text
+r12 c48-62 fg=text
+r12 c85-85 fg=text
 r12 c90-90 fg=rule
 r12 c92-113 fg=text-dim
-r13 c04-19 fg=text
+r13 c04-12 fg=text
 r13 c41-41 fg=text
-r13 c48-51 fg=text
-r13 c76-85 fg=text
 r13 c90-90 fg=rule
 r13 c92-106 fg=text-dim
-r14 c04-11 fg=text
+r14 c04-15 fg=text
 r14 c41-41 fg=text
-r14 c48-62 fg=text
-r14 c85-85 fg=text
+r14 c46-51 fg=text-dim
 r14 c90-90 fg=rule
-r15 c04-15 fg=text
+r15 c04-19 fg=text
 r15 c41-41 fg=text
+r15 c48-56 fg=text
+r15 c85-85 fg=text
 r15 c90-90 fg=rule
-r16 c04-17 fg=text
+r16 c04-11 fg=text
 r16 c41-41 fg=text
+r16 c48-60 fg=text
+r16 c76-85 fg=text
 r16 c90-90 fg=rule
-r17 c04-24 fg=text
+r17 c04-15 fg=text
 r17 c41-41 fg=text
+r17 c48-63 fg=text
+r17 c79-85 fg=text
 r17 c90-90 fg=rule
-r18 c04-12 fg=text
+r18 c04-17 fg=text
 r18 c41-41 fg=text
+r18 c48-51 fg=text
+r18 c76-85 fg=text
 r18 c90-90 fg=rule
+r19 c04-24 fg=text
+r19 c41-41 fg=text
+r19 c48-62 fg=text
+r19 c85-85 fg=text
 r19 c90-90 fg=rule
+r20 c04-12 fg=text
+r20 c41-41 fg=text
 r20 c90-90 fg=rule
 r21 c90-90 fg=rule
 r22 c90-90 fg=rule

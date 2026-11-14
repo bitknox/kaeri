@@ -80,6 +80,8 @@ const READER_ROWS: &[Action] = &[
     Action::ReaderPrevious,
     Action::ReaderLeft,
     Action::ReaderRight,
+    Action::ReaderScrollDown,
+    Action::ReaderScrollUp,
     Action::ReaderFirst,
     Action::ReaderLast,
     Action::ReaderNextChapter,
@@ -91,7 +93,15 @@ const READER_ROWS: &[Action] = &[
     Action::ReaderBare,
 ];
 
-const READER_VIEW_ROWS: &[Action] = &[Action::ReaderPages, Action::ReaderSettings];
+const READER_VIEW_ROWS: &[Action] = &[
+    Action::ReaderMode,
+    Action::ReaderFit,
+    Action::ReaderZoom,
+    Action::ReaderZoomIn,
+    Action::ReaderZoomOut,
+    Action::ReaderPages,
+    Action::ReaderSettings,
+];
 
 const READER_GLOBAL_ROWS: &[Action] = &[
     Action::Help,
@@ -115,7 +125,13 @@ impl Keymap {
                         return None;
                     }
                     keys.sort();
-                    // The arrow is the turn key; its letter is the vim alias.
+                    // The arrow is the turn key; its letter is the vim alias. Scrolling is the
+                    // other way round: j and k first, as the board lists them.
+                    if matches!(action, Action::ReaderScrollDown | Action::ReaderScrollUp) {
+                        keys.sort_by_key(|b| {
+                            !matches!(b.code, crossterm::event::KeyCode::Char(_))
+                        });
+                    }
                     if matches!(action, Action::ReaderLeft | Action::ReaderRight) {
                         keys.sort_by_key(|b| {
                             !matches!(

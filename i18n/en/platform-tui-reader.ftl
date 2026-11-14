@@ -367,3 +367,131 @@ tui-reader-action-leave = Leave the reader
 # the extras.
 # @only tui
 tui-reader-action-skip = Skip the extras
+
+## Fit width, zoom and strips
+
+# A row of the key reference: scroll a page shown at fit width, a zoomed page or a strip down.
+# @only tui
+tui-reader-action-scroll-down = Scroll down
+
+# A row of the key reference: scroll up.
+# @only tui
+tui-reader-action-scroll-up = Scroll up
+
+# A row of the key reference: read the series as pages that turn, or as one long strip.
+# @only tui
+tui-reader-action-mode = Paged or strip
+
+# A row of the key reference: fit the page to the window, or to its width and scroll it.
+# @only tui
+tui-reader-action-fit = Fit screen or width
+
+# A row of the key reference: zoom in on the page, or leave the zoom.
+# @only tui
+tui-reader-action-zoom = Zoom
+
+# A row of the key reference: zoom in a step.
+# @only tui
+tui-reader-action-zoom-in = Zoom in
+
+# A row of the key reference: zoom out a step.
+# @only tui
+tui-reader-action-zoom-out = Zoom out
+
+# Hint in the reader's status line: the keys that scroll the page or the strip. Shown in lower
+# case.
+# @max 12
+# @only tui
+tui-reader-hint-scroll = Scroll
+
+# Hint in the reader's status line at fit width: the key that fits the page to the window
+# again. Shown in lower case.
+# @max 16
+# @only tui
+tui-reader-hint-fit-screen = Fit screen
+
+# Hint in the reader's status line while zoomed: the keys that move the view about the page.
+# Shown in lower case.
+# @max 12
+# @only tui
+tui-reader-hint-move = Move
+
+# Hint in the reader's status line while zoomed: the keys that zoom in and out. Shown in lower
+# case.
+# @max 12
+# @only tui
+tui-reader-hint-zoom = Zoom
+
+# Hint in the reader's status line while zoomed: the key that leaves the zoom. Shown in lower
+# case.
+# @max 16
+# @only tui
+tui-reader-hint-leave-zoom = Leave zoom
+
+# Hint in the reader's status line in a strip: the key that scrolls on by most of a screen.
+# Shown in lower case.
+# @max 16
+# @only tui
+tui-reader-hint-next-screen = Next screen
+
+# Hint in the reader's status line in a wide window with two pages side by side: the key that
+# shows one page at a time. Shown in lower case.
+# @max 16
+# @only tui
+tui-reader-hint-one-page = One page
+
+# Hint in the reader's status line in a wide window with one page: the key that shows two side
+# by side. Shown in lower case.
+# @max 16
+# @only tui
+tui-reader-hint-two-pages = Two pages
+
+# After the page count in the reader's status line while the page fits the window's width and
+# scrolls.
+# @max 16
+# @only tui
+tui-reader-fit-width = Fit width
+
+# Left of the reader's status line while zoomed in, before the page count: "Zoom 300%".
+# @arg percent: plain
+# @max 16
+# @only tui
+tui-reader-zoom = Zoom { $percent }%
+
+# Under the small map of the page at the right while zoomed in: which page it is.
+# @arg page: plain
+# @max 12
+# @only tui
+tui-reader-zoom-page = Page { $page }
+
+# Left of the reader's status line in a webtoon strip: the chapter, and the image at the top of
+# the window out of the chapter's images. The chapter is its number, such as 15.
+# @arg chapter: text
+# @arg image: plain
+# @arg images: plain
+# @max 48
+# @only tui
+tui-reader-strip-at = Chapter { $chapter } · image { $image } of { $images }
+
+# On the reader's status rule in a strip, once the chapter it ran on from counted as read. The
+# chapter is its number, such as 14.
+# @arg chapter: text
+# @max 60
+# @only tui
+tui-reader-strip-read = Chapter { $chapter } counted as read
+
+# On the reader's status rule in a strip, once the chapter counted as read and the trackers
+# were updated. The trackers are already joined, such as "AniList".
+# @arg chapter: text
+# @arg trackers: text
+# @max 80
+# @only tui
+tui-reader-strip-read-tracker = Chapter { $chapter } counted as read · { $trackers } updated
+
+# On the reader's status rule in a strip, once the chapter counted as read while the computer
+# is offline: the trackers are told once it is back online.
+# @arg chapter: text
+# @arg trackers: text
+# @max 90
+# @only tui
+tui-reader-strip-read-offline = Chapter { $chapter } counted as read · { $trackers } updates when you're back online

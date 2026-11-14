@@ -171,6 +171,10 @@ impl Keymap {
             bind(Binding::plain(Char('h')), A::ReaderLeft);
             bind(Binding::plain(Right), A::ReaderRight);
             bind(Binding::plain(Char('l')), A::ReaderRight);
+            bind(Binding::plain(Char('j')), A::ReaderScrollDown);
+            bind(Binding::plain(Down), A::ReaderScrollDown);
+            bind(Binding::plain(Char('k')), A::ReaderScrollUp);
+            bind(Binding::plain(Up), A::ReaderScrollUp);
             bind(Binding::plain(Char('g')), A::ReaderFirst);
             bind(Binding::plain(Char('G')), A::ReaderLast);
             bind(Binding::plain(Char('n')), A::ReaderNextChapter);
@@ -181,6 +185,11 @@ impl Keymap {
             bind(Binding::plain(Char('u')), A::ReaderMarkRead);
             bind(Binding::plain(Char('d')), A::ReaderDownload);
             bind(Binding::plain(Enter), A::ReaderBare);
+            bind(Binding::plain(Char('m')), A::ReaderMode);
+            bind(Binding::plain(Char('f')), A::ReaderFit);
+            bind(Binding::plain(Char('z')), A::ReaderZoom);
+            bind(Binding::plain(Char('+')), A::ReaderZoomIn);
+            bind(Binding::plain(Char('-')), A::ReaderZoomOut);
             bind(Binding::plain(Char('v')), A::ReaderPages);
             bind(Binding::plain(Char(',')), A::ReaderSettings);
             bind(Binding::plain(Char('q')), A::ReaderLeave);

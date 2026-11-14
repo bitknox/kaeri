@@ -139,6 +139,9 @@ pub enum Action {
     /// The page to the left: forward in a right-to-left book, as the page moves.
     ReaderLeft,
     ReaderRight,
+    /// A page at fit width, a zoomed page or a strip, three rows on or back.
+    ReaderScrollDown,
+    ReaderScrollUp,
     ReaderFirst,
     ReaderLast,
     ReaderNextChapter,
@@ -151,6 +154,14 @@ pub enum Action {
     ReaderDownload,
     /// Hide the header and status line for a bare page, or show them; Continue on the end page.
     ReaderBare,
+    /// Paged or strip, for the series, as the engine keeps the choice.
+    ReaderMode,
+    /// Fit screen or fit width, kept on this computer.
+    ReaderFit,
+    /// Zoom in to 200%, or leave the zoom.
+    ReaderZoom,
+    ReaderZoomIn,
+    ReaderZoomOut,
     /// One page or two side by side, kept on this computer.
     ReaderPages,
     ReaderSettings,
@@ -262,6 +273,8 @@ impl Action {
         Self::ReaderPrevious,
         Self::ReaderLeft,
         Self::ReaderRight,
+        Self::ReaderScrollDown,
+        Self::ReaderScrollUp,
         Self::ReaderFirst,
         Self::ReaderLast,
         Self::ReaderNextChapter,
@@ -271,6 +284,11 @@ impl Action {
         Self::ReaderMarkRead,
         Self::ReaderDownload,
         Self::ReaderBare,
+        Self::ReaderMode,
+        Self::ReaderFit,
+        Self::ReaderZoom,
+        Self::ReaderZoomIn,
+        Self::ReaderZoomOut,
         Self::ReaderPages,
         Self::ReaderSettings,
         Self::ReaderLeave,
@@ -376,6 +394,8 @@ impl Action {
             Self::ReaderPrevious => t::tui_reader_action_previous(),
             Self::ReaderLeft => t::tui_reader_action_left(),
             Self::ReaderRight => t::tui_reader_action_right(),
+            Self::ReaderScrollDown => t::tui_reader_action_scroll_down(),
+            Self::ReaderScrollUp => t::tui_reader_action_scroll_up(),
             Self::ReaderFirst => t::tui_reader_action_first(),
             Self::ReaderLast => t::tui_reader_action_last(),
             Self::ReaderNextChapter => t::tui_reader_action_next_chapter(),
@@ -385,6 +405,11 @@ impl Action {
             Self::ReaderMarkRead => t::tui_read_read_unread(),
             Self::ReaderDownload => t::tui_read_keys_download(),
             Self::ReaderBare => t::tui_reader_action_bare(),
+            Self::ReaderMode => t::tui_reader_action_mode(),
+            Self::ReaderFit => t::tui_reader_action_fit(),
+            Self::ReaderZoom => t::tui_reader_action_zoom(),
+            Self::ReaderZoomIn => t::tui_reader_action_zoom_in(),
+            Self::ReaderZoomOut => t::tui_reader_action_zoom_out(),
             Self::ReaderPages => t::tui_reader_action_pages(),
             Self::ReaderSettings => t::tui_reader_action_settings(),
             Self::ReaderLeave => t::tui_reader_action_leave(),
@@ -495,11 +520,19 @@ impl Action {
                 Scope::Providers
             }
 
-            Self::ReaderPages | Self::ReaderSettings => Scope::ReaderView,
+            Self::ReaderMode
+            | Self::ReaderFit
+            | Self::ReaderZoom
+            | Self::ReaderZoomIn
+            | Self::ReaderZoomOut
+            | Self::ReaderPages
+            | Self::ReaderSettings => Scope::ReaderView,
             Self::ReaderNext
             | Self::ReaderPrevious
             | Self::ReaderLeft
             | Self::ReaderRight
+            | Self::ReaderScrollDown
+            | Self::ReaderScrollUp
             | Self::ReaderFirst
             | Self::ReaderLast
             | Self::ReaderNextChapter
