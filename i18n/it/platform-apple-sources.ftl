@@ -65,3 +65,4 @@ servers-row-summary-apple = { $series ->
     [many] { $series } serie
    *[other] { $series } serie
  }
+book-picker-message = Scegli una cartella con i tuoi libri.

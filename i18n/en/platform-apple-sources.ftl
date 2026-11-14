@@ -207,3 +207,9 @@ servers-row-summary-apple = { $series ->
     [one] 1 series
    *[other] { $series } series
  }
+
+## Book folders
+
+# Heading of the Mac's folder chooser for a folder of books: Reading's Add a source, the first
+# launch's books step and a folder's Choose another.
+book-picker-message = Choose a folder with your books.

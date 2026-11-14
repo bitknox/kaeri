@@ -174,8 +174,22 @@ struct SeriesPage: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     #endif
     let work: String
-    @State private var choosing: Set<String>?
-    @State private var newestFirst = true
+    /// The chapters chosen while chapters are being chosen, and the list's order. Navigator
+    /// holds them for the page's visit, so an iPad window made narrow or wide keeps them.
+    private var choosing: Set<String>? {
+        get { navigator.seriesPages[work]?.choosing }
+        nonmutating set { navigator.seriesPages[work, default: SeriesPageState()].choosing = newValue }
+    }
+    private var newestFirst: Bool {
+        get { navigator.seriesPages[work]?.newestFirst ?? true }
+        nonmutating set { navigator.seriesPages[work, default: SeriesPageState()].newestFirst = newValue }
+    }
+    private var choosingBinding: Binding<Set<String>?> {
+        Binding(get: { choosing }, set: { choosing = $0 })
+    }
+    private var newestFirstBinding: Binding<Bool> {
+        Binding(get: { newestFirst }, set: { newestFirst = $0 })
+    }
     /// The heading has scrolled under the bar: the bar takes the title, as the title page does.
     @State private var headingGone = false
     /// The reader's place, which VoiceOver and the keyboard start on as Choose chapters opens.
@@ -205,9 +219,9 @@ struct SeriesPage: View {
             VStack(alignment: .leading, spacing: 0) {
                 if let series {
                     if wide {
-                        WideSeriesHeader(series: series, choosing: $choosing)
+                        WideSeriesHeader(series: series, choosing: choosingBinding)
                     } else {
-                        PhoneSeriesHeader(series: series, choosing: $choosing)
+                        PhoneSeriesHeader(series: series, choosing: choosingBinding)
                     }
                     if case .send? = navigator.seriesSheet {} else { SendStatusRows(work: work) }
                     if let demo = series.demo {
@@ -216,7 +230,7 @@ struct SeriesPage: View {
                             .padding(.top, wide ? 32 : 24)
                     } else {
                         SeriesChapters(series: series, chapters: store.reading.chapters[work],
-                                       choosing: $choosing, newestFirst: $newestFirst,
+                                       choosing: choosingBinding, newestFirst: newestFirstBinding,
                                        spoken: $spokenRow, keyed: $keyedRow)
                             .padding(.top, wide ? 32 : 24)
                     }
@@ -324,7 +338,7 @@ struct SeriesPage: View {
             for _ in 0..<30 where store.reading.chapters[work] == nil {
                 try? await Task.sleep(for: .milliseconds(100))
             }
-            SeriesChoosing.enter($choosing, store.reading.chapters[work])
+            SeriesChoosing.enter(choosingBinding, store.reading.chapters[work])
             // Taken once the bar is up, so the snapshot waits for it.
             try? await Task.sleep(for: .milliseconds(500))
             navigator.launchSheet = nil
@@ -372,7 +386,7 @@ struct SeriesPage: View {
             } else if !wide {
                 // A wide page has More in its action row.
                 ToolbarItem(placement: .topBarTrailing) {
-                    if let series { SeriesMoreMenu(series: series, choosing: $choosing) }
+                    if let series { SeriesMoreMenu(series: series, choosing: choosingBinding) }
                 }
             }
         }

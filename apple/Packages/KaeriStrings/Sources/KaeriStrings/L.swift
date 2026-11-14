@@ -3922,6 +3922,9 @@ public enum L {
         Self.format("servers-row-summary-apple", fallback: "%1$lld series", series)
     }
 
+    /// Heading of the Mac's folder chooser for a folder of books: Reading's Add a source, the first launch's books step and a folder's Choose another.
+    public static var bookPickerMessage: String { string("book-picker-message", fallback: "Choose a folder with your books.") }
+
     /// Button on the recovery key sheet that opens the Files save panel on iPhone and iPad.
     public static var rkeySaveFiles: String { string("rkey-save-files", fallback: "Save to Files") }
 
