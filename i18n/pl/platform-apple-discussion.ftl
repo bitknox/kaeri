@@ -19,7 +19,7 @@ discussion-apple-player-note = { $count ->
    *[other] { $count } komentarza · wstrzymuje wideo
  }
 settings-apple-discussions = Dyskusje o odcinkach
-settings-apple-discussions-note = Czyta komentarze z wątku na forum AniList dla odcinków, które obejrzano.
+settings-apple-discussions-note = Komentarze pochodzą z wątku na forum AniList, gdy już obejrzysz odcinek.
 settings-apple-comment-images = Wczytuj obrazy w komentarzach
 settings-apple-comment-images-note = Każdy obraz wczytuje się z serwisu, który go hostuje. Ten serwis widzi adres IP.
 discussion-apple-key-hint = ⌘Return wysyła. Return dodaje nową linię.

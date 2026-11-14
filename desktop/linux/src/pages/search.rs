@@ -76,23 +76,7 @@ struct Inner {
 }
 
 pub fn build(ctx: &Rc<Ctx>) -> SearchPage {
-    let entry = gtk::SearchEntry::builder()
-        .placeholder_text(t::search_linux_placeholder())
-        .hexpand(true)
-        .build();
-    let clamp = adw::Clamp::builder().maximum_size(480).child(&entry).build();
-    let bar = gtk::SearchBar::builder().child(&clamp).show_close_button(false).build();
-    bar.connect_entry(&entry);
-
-    let toggle = gtk::ToggleButton::builder()
-        .icon_name("system-search-symbolic")
-        .tooltip_text(t::nav_search())
-        .build();
-    toggle
-        .bind_property("active", &bar, "search-mode-enabled")
-        .sync_create()
-        .bidirectional()
-        .build();
+    let (bar, entry, toggle) = field(&t::search_linux_placeholder());
     let header = adw::HeaderBar::new();
     header.pack_start(&widgets::sidebar_button(&ctx.split));
     header.pack_start(&crate::window::tv_session_button(ctx));
@@ -133,23 +117,15 @@ pub fn build(ctx: &Rc<Ctx>) -> SearchPage {
     }
     let season = PosterGrid::new(&ctx.hub);
     season.widget.set_vexpand(false);
-    let genres = gtk::FlowBox::builder()
-        .selection_mode(gtk::SelectionMode::None)
-        .min_children_per_line(2)
-        .max_children_per_line(8)
-        .column_spacing(8)
-        .row_spacing(8)
-        .homogeneous(true)
-        .build();
-    for genre in filters.genres() {
-        // A longer translation is cut at the end, so two tiles still fit a narrow window.
-        let name = gtk::Label::new(Some(&crate::say::genre(&genre)));
-        name.set_ellipsize(gtk::pango::EllipsizeMode::End);
-        let tile = gtk::Button::builder().child(&name).build();
-        tile.add_css_class("genre-tile");
-        tile.set_widget_name(&genre);
-        genres.append(&tile);
-    }
+    let genres = genre_tiles(&filters.genres(), {
+        let filters = Rc::downgrade(&filters);
+        move |genre| {
+            if let Some(filters) = filters.upgrade() {
+                // A genre's titles, as its filter alone.
+                filters.set(&SearchQuery { genres: vec![genre], ..SearchQuery::default() });
+            }
+        }
+    });
     let before = gtk::Box::new(gtk::Orientation::Vertical, 18);
     before.set_margin_top(12);
     before.set_margin_bottom(24);
@@ -224,7 +200,9 @@ pub fn build(ctx: &Rc<Ctx>) -> SearchPage {
 
     let column = gtk::Box::new(gtk::Orientation::Vertical, 6);
     column.append(&bar);
-    column.append(&filters.row);
+    // Shows or Reading leads the content bar, where Library has it.
+    let scope = crate::reading::scope(ctx, super::Dest::Search, false);
+    column.append(&super::search_filters::with_scope(ctx, &filters.row, &scope));
     column.append(&filters.chips);
     let demo_line = widgets::haze(&t::search_demo_only(), "caption");
     demo_line.set_margin_start(18);
@@ -329,25 +307,6 @@ pub fn build(ctx: &Rc<Ctx>) -> SearchPage {
             }
         }
     });
-    let mut tile = genres.first_child();
-    while let Some(child) = tile {
-        if let Some(button) = child.first_child().and_downcast::<gtk::Button>() {
-            button.connect_clicked({
-                let inner = Rc::downgrade(&inner);
-                move |button| {
-                    if let Some(inner) = inner.upgrade() {
-                        // A genre's titles, as its filter alone.
-                        let genre = button.widget_name().to_string();
-                        inner.filters.set(&SearchQuery {
-                            genres: vec![genre],
-                            ..SearchQuery::default()
-                        });
-                    }
-                }
-            });
-        }
-        tile = child.next_sibling();
-    }
     inner.settings.connect_row_activated(|list, row| {
         let pane = row.widget_name();
         let _ = list.activate_action("win.settings-pane", Some(&pane.to_variant()));
@@ -384,8 +343,7 @@ pub fn build(ctx: &Rc<Ctx>) -> SearchPage {
 impl SearchPage {
     /// The search bar open with the caret in it, as Search in the sidebar and Ctrl+F leave it.
     pub fn focus(&self) {
-        self.inner.bar.set_search_mode(true);
-        self.inner.entry.grab_focus();
+        open_field(&self.inner.bar, &self.inner.entry);
     }
 
     /// Typing anywhere in the window opens the search: on while the library shows, off while the
@@ -664,7 +622,58 @@ impl Inner {
     }
 }
 
-/// A heading over a block of the page, at the page's margins.
+/// A search field open with the caret in it, as Search in the sidebar leaves it on either side.
+pub fn open_field(bar: &gtk::SearchBar, entry: &gtk::SearchEntry) {
+    bar.set_search_mode(true);
+    entry.grab_focus();
+}
+
+/// The search field in its bar under the header, open, and the header's button that opens and
+/// closes it.
+pub fn field(placeholder: &str) -> (gtk::SearchBar, gtk::SearchEntry, gtk::ToggleButton) {
+    let entry = gtk::SearchEntry::builder().placeholder_text(placeholder).hexpand(true).build();
+    // Screen readers name the field by its prompt, which a placeholder alone does not give it.
+    entry.update_property(&[gtk::accessible::Property::Label(placeholder)]);
+    let clamp = adw::Clamp::builder().maximum_size(480).child(&entry).build();
+    let bar = gtk::SearchBar::builder().child(&clamp).show_close_button(false).build();
+    bar.connect_entry(&entry);
+    let toggle = gtk::ToggleButton::builder()
+        .icon_name("system-search-symbolic")
+        .tooltip_text(t::nav_search())
+        .build();
+    toggle
+        .bind_property("active", &bar, "search-mode-enabled")
+        .sync_create()
+        .bidirectional()
+        .build();
+    (bar, entry, toggle)
+}
+
+/// The start's genre tiles: `pick` gets the genre's own name when one is clicked.
+pub fn genre_tiles(genres: &[String], pick: impl Fn(String) + 'static) -> gtk::FlowBox {
+    let tiles = gtk::FlowBox::builder()
+        .selection_mode(gtk::SelectionMode::None)
+        .min_children_per_line(2)
+        .max_children_per_line(8)
+        .column_spacing(8)
+        .row_spacing(8)
+        .homogeneous(true)
+        .build();
+    let pick = Rc::new(pick);
+    for genre in genres {
+        // A longer translation is cut at the end, so two tiles still fit a narrow window.
+        let name = gtk::Label::new(Some(&crate::say::genre(genre)));
+        name.set_ellipsize(gtk::pango::EllipsizeMode::End);
+        let tile = gtk::Button::builder().child(&name).build();
+        tile.add_css_class("genre-tile");
+        tile.set_widget_name(genre);
+        let pick = Rc::clone(&pick);
+        tile.connect_clicked(move |tile| pick(tile.widget_name().to_string()));
+        tiles.append(&tile);
+    }
+    tiles
+}
+
 /// The faint line while a search runs.
 fn searching(query: &SearchQuery) -> String {
     if query.is_browse() {
@@ -684,11 +693,59 @@ fn nothing_found(query: &SearchQuery) -> String {
     }
 }
 
-fn section(title: &str, child: &impl IsA<gtk::Widget>) -> gtk::Box {
+/// A heading over a block of the page, at the page's margins.
+pub fn section(title: &str, child: &impl IsA<gtk::Widget>) -> gtk::Box {
     let column = gtk::Box::new(gtk::Orientation::Vertical, 8);
     column.set_margin_start(18);
     column.set_margin_end(18);
     column.append(&widgets::heading(title));
     column.append(child);
     column
+}
+
+#[cfg(test)]
+mod field_tests {
+    use adw::prelude::*;
+
+    use super::{field, open_field};
+    use crate::gtk_test::{pump, run};
+
+    /// R7L-4. Search on either side opens its field with the caret in it, from the Search toggle
+    /// too, where Return would otherwise hide the bar.
+    #[test]
+    fn opening_a_search_field_puts_the_caret_in_it() {
+        run(|| {
+            let (bar, entry, toggle) = field("Made-up placeholder");
+            let page = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            page.append(&toggle);
+            page.append(&bar);
+            let window = gtk::Window::new();
+            window.set_child(Some(&page));
+            window.present();
+            bar.set_search_mode(false);
+            toggle.grab_focus();
+            pump(100);
+            open_field(&bar, &entry);
+            pump(100);
+            assert!(bar.is_search_mode());
+            assert!(toggle.is_active(), "the toggle follows the bar");
+            let focus =
+                gtk::prelude::GtkWindowExt::focus(&window).expect("something has focus");
+            assert!(
+                focus == *entry.upcast_ref::<gtk::Widget>() || focus.is_ancestor(&entry),
+                "the caret is in the field, not on {}",
+                focus.type_().name()
+            );
+            window.destroy();
+        });
+    }
+
+    /// The field has a name for screen readers, its prompt, not only a placeholder.
+    #[test]
+    fn the_search_field_is_named() {
+        run(|| {
+            let (_, entry, _) = field("Made-up placeholder");
+            assert!(gtk::test_accessible_has_property(&entry, gtk::AccessibleProperty::Label));
+        });
+    }
 }

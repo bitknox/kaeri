@@ -95,6 +95,8 @@ mod tests {
             sha256: crypto::sha256_hex(bytes),
             size: bytes.len() as u64,
             published_at: 0,
+            kind: None,
+            media: Vec::new(),
         }
     }
 

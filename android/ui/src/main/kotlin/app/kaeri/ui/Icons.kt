@@ -54,6 +54,32 @@ internal object Icons {
     val Calendar = stroked("Calendar", CALENDAR_BODY, "M4 10 H20 M8.5 3 V6.5 M15.5 3 V6.5")
     val CalendarSelected = filled("CalendarSelected", CALENDAR_BODY, listOf("M4 10 H20"), markStroke = 2f)
 
+    private const val BOOK_LEFT = "M3 5 H8.5 A3.5 3.5 0 0 1 12 8.5 V20 A2.5 2.5 0 0 0 9.5 17.5 H3 Z"
+    private const val BOOK_RIGHT = "M21 5 H15.5 A3.5 3.5 0 0 0 12 8.5 V20 A2.5 2.5 0 0 1 14.5 17.5 H21 Z"
+
+    /** Read: an open book. */
+    val Read = stroked("Read", BOOK_LEFT, BOOK_RIGHT)
+    val ReadSelected = filled("ReadSelected", "$BOOK_LEFT $BOOK_RIGHT", listOf("M12 8.5 V20"), markStroke = 1.5f)
+
+    private const val BELL = "M6 16.5 V11 A6 6 0 0 1 18 11 V16.5 L19.5 18.5 H4.5 Z"
+
+    /** Updates: a bell. */
+    val Updates = stroked("Updates", BELL, "M10 21.5 H14")
+    val UpdatesSelected = filled("UpdatesSelected", "$BELL M9.5 20.5 H14.5 A2.5 2.5 0 0 1 9.5 20.5 Z", emptyList())
+
+    private const val HOUSE = "M3.75 10.8 L12 4.2 L20.25 10.8 V20.25 H3.75 Z"
+    private const val DOOR = "M9.75 20.25 V14.7 H14.25 V20.25"
+
+    /** Home with Read alone: a house, as the board draws it, since the play mark is the Watch's. */
+    val House = stroked("House", HOUSE, DOOR)
+    val HouseSelected = filled("HouseSelected", HOUSE, listOf(DOOR), markStroke = 2f)
+
+    private const val SCREEN = "M5 4.5 H19 A2 2 0 0 1 21 6.5 V14.5 A2 2 0 0 1 19 16.5 H5 A2 2 0 0 1 3 14.5 V6.5 A2 2 0 0 1 5 4.5 Z"
+
+    /** Watch, beside Read: a screen on its stand. */
+    val Watch = stroked("Watch", SCREEN, "M8 20.5 H16 M12 16.5 V20.5")
+    val WatchSelected = filled("WatchSelected", SCREEN, listOf("M8 20.5 H16 M12 16.5 V20.5"), markStroke = 2f)
+
     private const val LEAF = "M5 19 C5 11 11 5 19 5 C19 13 13 19 5 19 Z"
     val Seasonal = stroked("Seasonal", LEAF, "M5 19 L12.5 11.5")
     val SeasonalSelected = filled("SeasonalSelected", LEAF, listOf("M5 19 L12.5 11.5"), markStroke = 2f)
@@ -89,8 +115,31 @@ internal object Icons {
         "M4 3 L20 21",
     )
 
+    /** Wi-Fi: the signal's arcs, whole. A send held until the network allows. */
+    val Wifi = stroked(
+        "Wifi",
+        "M2.5 8.5 C8 3.8 16 3.8 21.5 8.5",
+        "M5.5 12 C9.2 8.9 14.8 8.9 18.5 12",
+        "M8.8 15.5 C10.6 14.2 13.4 14.2 15.2 15.5",
+        "M12 19 V19.01",
+    )
+
     /** Something failed: the warning triangle, in vermilion where it is used. */
     val Problem = stroked("Problem", "M10.3 4.4 A2 2 0 0 1 13.7 4.4 L21 17.5 A2 2 0 0 1 19.3 20.5 H4.7 A2 2 0 0 1 3 17.5 Z", "M12 9.5 V13.5 M12 16.8 V16.81")
+
+    /** The problem glyph filled, its mark cut out, as the discovery board draws a failure: tinted by its icon. */
+    val ProblemFilled = ImageVector.Builder(
+        name = "ProblemFilled", defaultWidth = 24.dp, defaultHeight = 24.dp, viewportWidth = 24f, viewportHeight = 24f,
+    ).apply {
+        addPath(
+            pathData = addPathNodes(
+                "M10.3 4.4 A2 2 0 0 1 13.7 4.4 L21 17.5 A2 2 0 0 1 19.3 20.5 H4.7 A2 2 0 0 1 3 17.5 Z " +
+                    "M11 9 H13 V14 H11 Z M12 15.6 A1.2 1.2 0 1 1 11.99 15.6 Z",
+            ),
+            fill = SolidColor(Color.Black),
+            pathFillType = androidx.compose.ui.graphics.PathFillType.EvenOdd,
+        )
+    }.build()
 
     /** The play glyph on the amber action, filled in the action's text colour. */
     val Play = ImageVector.Builder(

@@ -21,16 +21,20 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
+import app.kaeri.store.chaptersBusy
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import app.kaeri.app.tv.CastService
@@ -43,10 +47,13 @@ import app.kaeri.engine.model.MediaFormat
 import app.kaeri.engine.model.SearchQuery
 import app.kaeri.engine.model.Season
 import app.kaeri.engine.model.SettingKey
+import app.kaeri.engine.model.EinkPaint
 import app.kaeri.player.takeBackBeforeShown
+import app.kaeri.player.ui.PictureInPictureOnLeave
 import app.kaeri.player.ui.PlayerFrame
 import app.kaeri.store.DownloadsModel
 import app.kaeri.store.InviteLinks
+import app.kaeri.store.readAtMost
 import app.kaeri.store.TvPlayRequest
 import app.kaeri.store.TvRemoteModel
 import app.kaeri.store.traced
@@ -55,6 +62,15 @@ import app.kaeri.ui.AppLink
 import app.kaeri.ui.AppRoot
 import app.kaeri.ui.NotificationActions
 import app.kaeri.ui.Destination
+import app.kaeri.ui.reading.LocalEinkLayout
+import app.kaeri.ui.reading.ExportShare
+import app.kaeri.eink.EinkAnswerPrefs
+import app.kaeri.eink.EinkLook
+import app.kaeri.eink.EinkPainter
+import app.kaeri.eink.RefreshControllers
+import app.kaeri.reader.phone.ReaderLauncher
+import app.kaeri.reader.phone.ReaderRequest
+import app.kaeri.reader.phone.SettingsPane
 import app.kaeri.store.AppLanguage
 
 class MainActivity : ComponentActivity() {
@@ -110,12 +126,12 @@ class MainActivity : ComponentActivity() {
      * not at all, with the system's settings open instead.
      */
     private fun permitNotifications(then: () -> Unit) {
-        val granted = ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        val granted = NotificationPermission.granted(this)
         when (EpisodeAlerts.Turn.of(true, app.episodeNotifier.canPost, granted)) {
             EpisodeAlerts.Turn.On -> then()
-            EpisodeAlerts.Turn.Ask -> {
+            EpisodeAlerts.Turn.Ask -> if (NotificationPermission.askable) {
                 permitted = then
-                askForShow.launch(Manifest.permission.POST_NOTIFICATIONS)
+                askForShow.launch(NotificationPermission.name)
             }
             EpisodeAlerts.Turn.SystemSettings -> openNotificationSettings()
             EpisodeAlerts.Turn.Off -> {}
@@ -124,11 +140,11 @@ class MainActivity : ComponentActivity() {
 
     /** New-episode notifications, on Settings' switch: on only once they can show. */
     private fun setEpisodeNotifications(on: Boolean) {
-        val permitted = ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        val permitted = NotificationPermission.granted(this)
         when (EpisodeAlerts.Turn.of(on, app.episodeNotifier.canPost, permitted)) {
             EpisodeAlerts.Turn.Off -> app.episodeAlerts.set(false)
             EpisodeAlerts.Turn.On -> app.episodeAlerts.set(true)
-            EpisodeAlerts.Turn.Ask -> askForEpisodes.launch(Manifest.permission.POST_NOTIFICATIONS)
+            EpisodeAlerts.Turn.Ask -> if (NotificationPermission.askable) askForEpisodes.launch(NotificationPermission.name)
             EpisodeAlerts.Turn.SystemSettings -> {
                 app.episodeAlerts.refuse()
                 openNotificationSettings()
@@ -161,11 +177,14 @@ class MainActivity : ComponentActivity() {
     private val linkFlow = links.receiveAsFlow()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Light icons on the dark ground, over bars the app draws itself.
-        enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
-        )
+        // Out of the launch theme, whose window draws Android 11's splash screen. On a panel the
+        // last run found to be e-ink, the window is paper from the start, so a cold start never
+        // paints the dark ground before the paper shell; the engine's answer then confirms it.
+        val paper = EinkAnswerPrefs(this).load()?.eink == true
+        setTheme(if (paper) R.style.Theme_Kaeri_Paper else R.style.Theme_Kaeri)
+        // Light icons on the dark ground and dark ones on paper, over bars the app draws itself.
+        val bars = if (paper) SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT) else SystemBarStyle.dark(Color.TRANSPARENT)
+        enableEdgeToEdge(statusBarStyle = bars, navigationBarStyle = bars)
         super.onCreate(savedInstanceState)
         app.player.hostStarted()
         // Back a moment after Play, before the player's screen is there to take it.
@@ -214,6 +233,10 @@ class MainActivity : ComponentActivity() {
                 permit = ::permitNotifications,
                 openSystemSettings = ::openNotificationSettings,
             ),
+            openReader = { work, chapter, cover, from ->
+                ReaderLauncher.open(ReaderRequest(work, chapter, eink = app.eink.state.value.eink, cover = cover, from = from))
+            },
+            shareFiles = ::shareExport,
         )
         // Play on TV from the player: the episode and where it is, which the TV starts from.
         val player = PlayerFrame(app.player) {
@@ -227,9 +250,39 @@ class MainActivity : ComponentActivity() {
                 { tv.offer(TvPlayRequest(id, model.showTitle, episode, model.position, fromPlayer = true)) }
             }
         }
+        // The window's recomposer, so an e-ink panel can stop every animation in it.
+        val motion = PanelMotion(contentResolver).also { it.install(this) }
         traced("setContent") { setContent {
             KaeriTheme {
-                AppRoot(
+                // On an e-ink panel the app draws the e-ink shell: paper, ink and nothing moving.
+                val einkState by app.eink.state.collectAsState()
+                val einkLayout = if (einkState.eink) EinkLook(colour = einkState.amber) else null
+                androidx.compose.runtime.SideEffect { motion.still = einkState.eink }
+                // Dark icons on paper; light ones on the dark ground.
+                val decor = androidx.compose.ui.platform.LocalView.current
+                androidx.compose.runtime.LaunchedEffect(einkState.eink) {
+                    androidx.core.view.WindowCompat.getInsetsController(window, decor).run {
+                        isAppearanceLightStatusBars = einkState.eink
+                        isAppearanceLightNavigationBars = einkState.eink
+                    }
+                    paperSplash(einkState.eink, paper)
+                }
+                // The layout switched while the app is open: every pixel changes, so once the new
+                // one has drawn, the refresh policy decides as for the bars closing over a page: one
+                // full refresh when the person turned full refreshes on, else the device's own. A
+                // first frame needs none.
+                val shownLayout = androidx.compose.runtime.remember { booleanArrayOf(einkState.eink) }
+                androidx.compose.runtime.LaunchedEffect(einkState.eink) {
+                    if (shownLayout[0] == einkState.eink) return@LaunchedEffect
+                    shownLayout[0] = einkState.eink
+                    androidx.compose.runtime.withFrameNanos { }
+                    androidx.compose.runtime.withFrameNanos { }
+                    val profile = einkState.profile ?: return@LaunchedEffect
+                    EinkPainter.forProfile(profile) { RefreshControllers.of(it, this@MainActivity) }
+                        .paint(decor, EinkPaint.ChromeClose)
+                }
+                CompositionLocalProvider(LocalEinkLayout provides einkLayout) {
+                ReaderHost(app.store, app.eink) { AppRoot(
                     app.store,
                     if (search != null) Destination.Search else start,
                     actions = actions,
@@ -241,7 +294,8 @@ class MainActivity : ComponentActivity() {
                     links = linkFlow,
                     onSection = { section -> app.appUpdates?.section = section },
                     firstLaunch = firstLaunch,
-                )
+                ) }
+                }
             }
         } }
         if (Flavour.FIXTURES || debuggable) announceReady()
@@ -252,6 +306,23 @@ class MainActivity : ComponentActivity() {
         if (!signIn.handle(intent) && !(fresh && follow(intent)) && !invite(intent) && !party(intent) && !opened(intent)) remote(intent)
         keepDownloadsRunning()
         startUpdateActivities()
+    }
+
+    /** Whether the system's splash screen was last set to paper, from [paperSplash]. */
+    private var splashPaper: Boolean? = null
+
+    /**
+     * The system's own splash screen in paper once the panel is known to be e-ink, and back to the
+     * ground when it no longer is (Android 13 and up, where the system keeps the choice for the
+     * next launch). Asked only when the answer differs from the one this launch started with.
+     */
+    private fun paperSplash(eink: Boolean, atLaunch: Boolean) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        val was = splashPaper ?: atLaunch
+        splashPaper = eink
+        if (eink == was) return
+        runCatching { splashScreen.setSplashScreenTheme(if (eink) R.style.Theme_Kaeri_Paper else android.content.res.Resources.ID_NULL) }
+            .onFailure { Log.w(KaeriApp.TAG, "the splash screen kept its theme", it) }
     }
 
     /**
@@ -274,16 +345,43 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * While the app is in front, ask for the download job whenever an episode waits or runs: a
+     * Send to e-reader: hand the prepared files to the share sheet, where the person picks the app
+     * that carries them to the e-reader (Send to Kindle, a cloud folder, mail). True once the sheet
+     * is up; false when a file is gone or can't be offered, so the send says its files are gone
+     * and nothing is marked shared.
+     */
+    private fun shareExport(files: List<app.kaeri.engine.model.ExportFile>): Boolean {
+        if (ExportShare.gone(files)) return false
+        val uris = files.mapNotNull { file ->
+            runCatching {
+                androidx.core.content.FileProvider.getUriForFile(this, "$packageName.exports", java.io.File(file.path), file.name)
+            }.onFailure { Log.w(KaeriApp.TAG, "an export could not be shared", it) }.getOrNull()
+        }
+        if (uris.size != files.size) return false
+        val send = if (uris.size == 1) {
+            Intent(Intent.ACTION_SEND).putExtra(Intent.EXTRA_STREAM, uris.first())
+        } else {
+            Intent(Intent.ACTION_SEND_MULTIPLE).putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(uris))
+        }
+        send.type = if (files.all { it.name.endsWith(".cbz") }) "application/vnd.comicbook+zip" else "application/epub+zip"
+        send.clipData = android.content.ClipData.newRawUri(null, uris.first()).apply { uris.drop(1).forEach { addItem(android.content.ClipData.Item(it)) } }
+        send.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        startActivity(Intent.createChooser(send, null))
+        return true
+    }
+
+    /**
+     * While the app is in front, ask for the download job whenever an episode or a chapter waits or runs: a
      * user-initiated job is asked for from a screen the person is using.
      */
     private fun keepDownloadsRunning() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                app.store.downloads.rows.collect { rows ->
+                combine(app.store.downloads.rows, app.store.reading.downloads, ::Pair).collect { (rows, books) ->
                     val wifiOnly = !app.store.settings.isOn(SettingKey.DOWNLOADS_ON_CELLULAR)
-                    if (DownloadsModel.busy(rows)) app.notifier.wantPermission()
-                    DownloadJob.ensure(this@MainActivity, rows, wifiOnly)
+                    val chapters = chaptersBusy(books)
+                    if (DownloadsModel.busy(rows) || chapters > 0) app.notifier.wantPermission()
+                    Downloads.ensure(this@MainActivity, rows, wifiOnly, chapters)
                 }
             }
         }
@@ -299,7 +397,9 @@ class MainActivity : ComponentActivity() {
         intent.action = null
         links.trySend(link)
         // A notification's action leaves its notification up; following it takes it away.
-        intent?.getStringExtra(EpisodeNotifier.EXTRA_NOTIFICATION)?.let(app.episodeNotifier::dismiss)
+        intent?.getStringExtra(EpisodeNotifier.EXTRA_NOTIFICATION)?.let { tag ->
+            if (ReadingNotifier.isChapters(tag)) app.readingNotifier.dismiss(tag) else app.episodeNotifier.dismiss(tag)
+        }
         ContinueShortcut.shortcutOf(link)?.let { ShortcutManagerCompat.reportShortcutUsed(this, it) }
         return true
     }
@@ -333,7 +433,7 @@ class MainActivity : ComponentActivity() {
             uri.scheme.equals("magnet", ignoreCase = true) -> app.store.openLink(uri.toString())
             uri.scheme == "content" || uri.scheme == "file" -> lifecycleScope.launch {
                 val bytes = withContext(Dispatchers.IO) {
-                    runCatching { contentResolver.openInputStream(uri)?.use { it.readNBytes(MAX_TORRENT_BYTES + 1) } }.getOrNull()
+                    runCatching { contentResolver.openInputStream(uri)?.use { it.readAtMost(MAX_TORRENT_BYTES + 1) } }.getOrNull()
                 }
                 if (bytes != null && bytes.size <= MAX_TORRENT_BYTES) {
                     app.store.openTorrentFile(bytes)
@@ -374,18 +474,30 @@ class MainActivity : ComponentActivity() {
      * The volume keys move the TV's volume while its card is open, or while it is driven and
      * plays; the TV's media session takes them once the app is behind another.
      */
-    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        val step = when (event.keyCode) {
-            KeyEvent.KEYCODE_VOLUME_UP -> TvRemoteModel.VOLUME_STEP
-            KeyEvent.KEYCODE_VOLUME_DOWN -> -TvRemoteModel.VOLUME_STEP
-            else -> return super.dispatchKeyEvent(event)
-        }
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        val step = volumeStep(keyCode) ?: return super.onKeyDown(keyCode, event)
+        if (!drivingTv()) return super.onKeyDown(keyCode, event)
+        app.store.tv.send(FfiTvCommand.Volume(step))
+        return true
+    }
+
+    /** The key-up of a volume press [onKeyDown] took, so the system does not also act on it. */
+    override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
+        if (volumeStep(keyCode) == null || !drivingTv()) return super.onKeyUp(keyCode, event)
+        return true
+    }
+
+    private fun volumeStep(keyCode: Int): Double? = when (keyCode) {
+        KeyEvent.KEYCODE_VOLUME_UP -> TvRemoteModel.VOLUME_STEP
+        KeyEvent.KEYCODE_VOLUME_DOWN -> -TvRemoteModel.VOLUME_STEP
+        else -> null
+    }
+
+    private fun drivingTv(): Boolean {
         val tv = app.store.tv
         val driving = tv.connected.value != null &&
             (tv.sheet.value == TvRemoteModel.Sheet.Remote || tv.card.value?.card?.now != null)
-        if (!driving || app.player.isPresented) return super.dispatchKeyEvent(event)
-        if (event.action == KeyEvent.ACTION_DOWN) tv.send(FfiTvCommand.Volume(step))
-        return true
+        return driving && !app.player.isPresented
     }
 
     override fun onDestroy() {
@@ -427,16 +539,29 @@ class MainActivity : ComponentActivity() {
         if (lifecycle.currentState == Lifecycle.State.CREATED) player.viewerClosed() else player.poke()
     }
 
-    /** On the way into the window the overlays go at once, before the system moves the video. */
+    /**
+     * On the way into the window the overlays go at once, before the system moves the video:
+     * Android 15 says when that starts. Android 12 to 14 say only once it is in.
+     */
     override fun onPictureInPictureUiStateChanged(pipState: PictureInPictureUiState) {
         super.onPictureInPictureUiStateChanged(pipState)
-        if (pipState.isTransitioningToPip) app.player.inPip = true
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM && pipState.isTransitioningToPip) app.player.inPip = true
+    }
+
+    /**
+     * Android 11 has no auto-enter: going home while a video plays opens the window here, the
+     * overlays gone first as Android 15's transition has them.
+     */
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        PictureInPictureOnLeave.enter(this) { app.player.inPip = it }
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        // The player asks for landscape on a phone while it is up, and for portrait as it closes.
-        if (!app.player.isPresented) holdPortraitOnPhones(newConfig)
+        // The player asks for landscape on a phone while it is up, and the reader follows the
+        // sensor while it is open; each asks for portrait again as it closes.
+        if (!app.player.isPresented && ReaderLauncher.request.value == null) holdPortraitOnPhones(newConfig)
     }
 
     /**
@@ -471,9 +596,9 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 app.notifier.wantsPermission.collect { wants ->
-                    if (wants && !preferences.getBoolean(NOTIFICATIONS_ASKED, false)) {
+                    if (wants && NotificationPermission.askable && !preferences.getBoolean(NOTIFICATIONS_ASKED, false)) {
                         preferences.edit().putBoolean(NOTIFICATIONS_ASKED, true).apply()
-                        askNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        askNotifications.launch(NotificationPermission.name)
                     }
                 }
             }
@@ -484,8 +609,18 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         // The redirect a sign-in comes back with is the engine's, and is not kept as the
         // activity's intent.
-        if (signIn.handle(intent) || follow(intent) || invite(intent) || party(intent) || opened(intent) || remote(intent)) return
+        if (signIn.handle(intent) || quietRule(intent) || follow(intent) || invite(intent) || party(intent) || opened(intent) || remote(intent)) return
         setIntent(intent)
+    }
+
+    /**
+     * The reader's Do Not Disturb rule names this activity as its settings: from the system's
+     * Do Not Disturb page it opens the reader's Paper mode page, where Quiet is turned off.
+     */
+    private fun quietRule(intent: Intent): Boolean {
+        if (intent.getStringExtra(android.app.NotificationManager.EXTRA_AUTOMATIC_RULE_ID) == null) return false
+        ReaderLauncher.showSettings(SettingsPane.Paper)
+        return true
     }
 
     companion object {

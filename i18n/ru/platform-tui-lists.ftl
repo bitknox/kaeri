@@ -4,7 +4,7 @@ downloads-column-title = Название
 downloads-column-state = Состояние
 downloads-column-progress = Прогресс
 downloads-empty-heading = Очередь пуста
-downloads-empty-hint = Нажмите { $key } на тайтл или серию, чтобы поставить их в очередь на загрузку.
+downloads-empty-hint = Нажмите { $key } на тайтле или эпизоде, чтобы загрузить его.
 downloads-row-episode = Серия { $episode }
 downloads-row-episode-ahead = Серия { $episode } · заранее
 downloads-note-sizes = { $downloaded } из { $total }
@@ -72,10 +72,10 @@ accounts-row-queued = { $count ->
     [many] { $count } в очереди
    *[other] { $count } в очереди
  }
-accounts-row-queued-held = { $queued } в очереди, { $held } ждут привязки к id трекера
-accounts-conflict-keep-mine = Оставить моё
-accounts-conflict-keep-theirs = Взять из трекера
-accounts-conflict-row = { $title }  ·  { $field }: у меня { $local } / у трекера { $remote }
+accounts-row-queued-held = { $queued } в очереди, { $held } ждут сопоставления
+accounts-conflict-keep-mine = Локальное
+accounts-conflict-keep-theirs = { -tracker-cap }
+accounts-conflict-row = { $title }  ·  { $field }: локально { $local } / { -tracker } { $remote }
 lists-library-title = { -library-cap }
 lists-remove-wrong-list = Скрывать тайтлы можно только в списке «{ -continue-cap }».
 lists-continue-removed = { $title } скрыт из списка «{ -continue-cap }». Если смотреть его снова, он вернётся.
@@ -86,7 +86,7 @@ lists-loading = Загрузка…
 lists-empty-press-enter = Нажмите ↵, чтобы искать
 lists-empty-type-to-search = Введите запрос для поиска
 lists-empty-browse-filtered = Нажмите ↵, чтобы просмотреть с этими фильтрами.
-lists-empty-browse-popular = Нажмите ↵, чтобы посмотреть самые популярные.
+lists-empty-browse-popular = Нажмите ↵, чтобы посмотреть самые популярные тайтлы.
 lists-empty-no-matches = Ничего не найдено
 lists-empty-fewer-filters = Попробуйте меньше фильтров.
 lists-empty-shorter-query = Попробуйте более короткий запрос или название в ромадзи.

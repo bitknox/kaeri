@@ -10,6 +10,10 @@
 use async_trait::async_trait;
 
 use crate::{
+    books::{
+        BookHints, BookIds, BookSourceManifest, ChapterContent, PageRef, SeriesDetail,
+        SeriesHit, SourceChapter,
+    },
     error::ProviderError,
     ids::{AnilistId, ExternalIds, ProviderKey},
     media::{Episode, SearchHit, TitleHints, Translation},
@@ -220,6 +224,123 @@ pub trait Provider: Send + Sync {
     }
 }
 
+/// A source of books: folders, Komga, Kavita and OPDS servers, and `kaeri:books` plugins.
+///
+/// The same shape as the `source` interface in `wit/kaeri-books.wit`, as [`Provider`] mirrors
+/// `kaeri:provider`, so a plugin is indistinguishable from a built-in source here. The book
+/// registry ranks them with the same health and failover rules as shows.
+#[async_trait]
+pub trait BookSource: Send + Sync {
+    fn manifest(&self) -> &BookSourceManifest;
+
+    /// Find series. For a plugin this is how a work is found at all: its ids are its own.
+    async fn search(
+        &self,
+        query: &str,
+        hints: &BookHints,
+    ) -> Result<Vec<SeriesHit>, ProviderError>;
+
+    /// One series, described.
+    async fn series(&self, id: &str, hints: &BookHints) -> Result<SeriesDetail, ProviderError>;
+
+    /// A series' chapters, in any order: every version and language the source lists.
+    async fn chapters(
+        &self,
+        id: &str,
+        hints: &BookHints,
+    ) -> Result<Vec<SourceChapter>, ProviderError>;
+
+    /// What chapter `chapter` of series `series` is made of: page images to fetch, text, or a
+    /// whole book file.
+    async fn content(
+        &self,
+        series: &str,
+        chapter: &str,
+    ) -> Result<ChapterContent, ProviderError>;
+
+    /// The page images chapter `chapter` of series `series` is made of, found without fetching
+    /// a whole book file: `None` for text, or for a chapter only a download would open. The
+    /// reader's preview of the next chapter asks this. The default asks [`Self::content`], which
+    /// fetches no file for a source that names pages or text; a source that downloads in
+    /// `content` answers on its own.
+    async fn chapter_pages(
+        &self,
+        series: &str,
+        chapter: &str,
+    ) -> Result<Option<Vec<PageRef>>, ProviderError> {
+        Ok(match self.content(series, chapter).await? {
+            ChapterContent::Images(pages) => Some(pages),
+            ChapterContent::Text(_) | ChapterContent::Book(_) => None,
+        })
+    }
+
+    /// Find a series by the ids other services know it by, with no fuzzy matching. A source
+    /// with its own index (a server, a folder) answers from it; the default answers `None`, so
+    /// the caller falls back to [`Self::search`].
+    async fn lookup(&self, _ids: &BookIds) -> Result<Option<SeriesHit>, ProviderError> {
+        Ok(None)
+    }
+
+    /// Tell the source a chapter was read, or read no more: Komga's and Kavita's progress
+    /// write-back. Plain OPDS and plugins keep the default, which does nothing.
+    async fn report_progress(
+        &self,
+        _series: &str,
+        _chapter: &str,
+        _read: bool,
+    ) -> Result<(), ProviderError> {
+        Ok(())
+    }
+
+    /// Cheap liveness probe. The default says it is answering.
+    async fn health_check(&self) -> Result<(), ProviderError> {
+        Ok(())
+    }
+
+    /// Whether local policy lets this source be asked right now: a drive that is not
+    /// connected, a server signed out here. Not a health event, as for [`Provider`]; the reason
+    /// is shown where the source is listed.
+    fn is_available(&self) -> Result<(), ProviderError> {
+        Ok(())
+    }
+
+    /// Fetch one page image this source named, with the headers it carries. A source that
+    /// names pages the host can fetch plainly (a server's, with its sign-in header) keeps the
+    /// default, which the engine's own client answers; a plugin's goes through its allowlist,
+    /// and a page a plugin makes itself ([`PageRef::made`]) comes from the plugin. The status is
+    /// told as it came, so the registry can ask for fresh addresses on a 403 or 410.
+    async fn fetch_page(&self, _page: &PageRef) -> Result<Vec<u8>, PageError> {
+        Err(PageError::Unsupported)
+    }
+}
+
+/// Why a page image could not be fetched.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum PageError {
+    /// This source does not fetch its own pages: the engine's client does.
+    Unsupported,
+    /// The address answered with this status. 403 and 410 mean the address has expired.
+    Status(u16),
+    Failed(ProviderError),
+}
+
+impl PageError {
+    /// Whether asking the source for fresh addresses may help.
+    pub const fn expired(&self) -> bool {
+        matches!(self, Self::Status(403 | 410))
+    }
+
+    /// Whether the failure was on the way rather than the server's answer, so the same address
+    /// may work a moment later: a dropped connection, a timeout, a busy or failing server.
+    pub fn transient(&self) -> bool {
+        match self {
+            Self::Status(status) => matches!(status, 408 | 425 | 429 | 500..=599),
+            Self::Failed(ProviderError::Transport(_)) => true,
+            _ => false,
+        }
+    }
+}
+
 /// Something that can play a [`Stream`].
 ///
 /// mpv over JSON IPC is the reference implementation, but the trait is what lets the
@@ -280,17 +401,17 @@ pub trait Tracker: Send + Sync {
     /// Apply a batch of operations. Must be safe to call twice with the same input.
     async fn push(&self, ops: &[TrackOp]) -> Result<(), crate::Error>;
 
-    /// [`Self::push`], also naming the titles the tracker answered for without applying
-    /// anything.
+    /// [`Self::push`], saying what became of each title: applied, answered for without applying
+    /// anything, or failed and why.
     ///
     /// Some services answer a write with success and a list of what they could not match, so
     /// the status alone says nothing about whether the list changed. The drain reports those
-    /// titles instead of counting them as sent. Default: `push`, trusting its success.
-    async fn push_checked(
-        &self,
-        ops: &[TrackOp],
-    ) -> Result<Vec<crate::ids::AnilistId>, crate::Error> {
-        self.push(ops).await.map(|()| Vec::new())
+    /// titles instead of counting them as sent. A tracker that writes title by title reports a
+    /// failure against its title and goes on with the rest. An `Err` is about the whole batch:
+    /// the drain then asks again title by title when it was a refusal, so one bad change cannot
+    /// sink the others. Default: `push`, trusting its success.
+    async fn push_checked(&self, ops: &[TrackOp]) -> Result<Pushed, crate::Error> {
+        self.push(ops).await.map(|()| Pushed::default())
     }
 
     /// Whether this tracker can name the title an op is about, with the id mappings as they
@@ -302,6 +423,39 @@ pub trait Tracker: Send + Sync {
     /// `true` for trackers keyed on AniList ids, which can name every title.
     fn can_address(&self, _op: &TrackOp) -> bool {
         true
+    }
+
+    /// Whether this tracker keeps manga and novel lists.
+    fn serves_reading(&self) -> bool {
+        false
+    }
+
+    /// Whether this tracker keeps anime lists.
+    fn serves_watching(&self) -> bool {
+        true
+    }
+
+    /// The manga and novel list, as far as it syncs. Trackers without one answer empty.
+    async fn pull_read_library(&self) -> Result<Vec<TrackedReadEntry>, crate::Error> {
+        Ok(Vec::new())
+    }
+
+    /// Apply a batch of reading operations, saying what became of each work, as
+    /// [`Self::push_checked`] does. Safe to call twice with the same input.
+    async fn push_read(&self, _ops: &[TrackOp]) -> Result<Pushed, crate::Error> {
+        Ok(Pushed::default())
+    }
+
+    /// Take a manga or novel off this tracker's list. Only the person asks for this: sync never
+    /// removes anything. Trackers without a reading list refuse.
+    async fn remove_read(
+        &self,
+        _anilist_id: crate::ids::AnilistId,
+    ) -> Result<ReadRemoval, crate::Error> {
+        Err(crate::Error::Tracker {
+            tracker: self.id().to_owned(),
+            message: "this tracker keeps no reading list".into(),
+        })
     }
 
     /// Drop any in-memory credential.
@@ -361,6 +515,26 @@ pub enum TrackOp {
         score: f32,
         at: i64,
     },
+    /// Chapters read, and volumes where the tracker has a field for them. Monotonic like
+    /// `SetProgress`, run once for each.
+    SetReadProgress {
+        anilist_id: crate::ids::AnilistId,
+        chapter: u32,
+        volume: Option<u32>,
+    },
+    /// A reading list's status. `rereading` is Read again: MyAnimeList's `is_rereading`,
+    /// Kitsu's `reconsuming`, AniList's `REPEATING`.
+    SetReadStatus {
+        anilist_id: crate::ids::AnilistId,
+        status: WatchStatus,
+        rereading: bool,
+        at: i64,
+    },
+    SetReadScore {
+        anilist_id: crate::ids::AnilistId,
+        score: f32,
+        at: i64,
+    },
 }
 
 impl TrackOp {
@@ -368,9 +542,135 @@ impl TrackOp {
         match self {
             Self::SetProgress { anilist_id, .. }
             | Self::SetStatus { anilist_id, .. }
-            | Self::SetScore { anilist_id, .. } => *anilist_id,
+            | Self::SetScore { anilist_id, .. }
+            | Self::SetReadProgress { anilist_id, .. }
+            | Self::SetReadStatus { anilist_id, .. }
+            | Self::SetReadScore { anilist_id, .. } => *anilist_id,
         }
     }
+
+    /// Whether this is about reading. Those wait in an outbox of their own, which an older
+    /// version never opens, and the watching queue never carries them.
+    pub const fn is_reading(&self) -> bool {
+        matches!(
+            self,
+            Self::SetReadProgress { .. }
+                | Self::SetReadStatus { .. }
+                | Self::SetReadScore { .. }
+        )
+    }
+}
+
+/// Why a tracker did not apply one title's changes, in the terms the outbox acts on.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum PushFailure {
+    /// The tracker refused this title's change for good: an entry removed or merged, a value
+    /// it does not accept. The only failure that counts toward the outbox's limit, and it is
+    /// the title's alone: the rest of the batch still goes.
+    Refused(String),
+    /// The credential was rejected. Everything waits for a sign-in; nothing is dropped.
+    Auth(String),
+    /// The tracker asked for a pause. Waits, and is never counted.
+    RateLimited { message: String, retry_in_secs: Option<u64> },
+    /// The network, or the tracker's server, is down. Waits, is never counted and never
+    /// dropped.
+    Unavailable(String),
+}
+
+impl PushFailure {
+    /// What an error from a tracker call means for the change it carried.
+    ///
+    /// Only [`crate::Error::Tracker`] is a refusal. Anything else, errors that are not the
+    /// tracker's at all included (the local store, the configuration), says nothing about the
+    /// change, so it waits rather than counting toward its end.
+    pub fn of(error: &crate::Error) -> Self {
+        match error {
+            crate::Error::Tracker { message, .. } => Self::Refused(message.clone()),
+            crate::Error::Auth(message) => Self::Auth(message.clone()),
+            crate::Error::RateLimited { message, retry_in_secs, .. } => {
+                Self::RateLimited { message: message.clone(), retry_in_secs: *retry_in_secs }
+            }
+            other => Self::Unavailable(other.to_string()),
+        }
+    }
+
+    /// Whether this counts toward the outbox's limit on attempts.
+    pub const fn counts(&self) -> bool {
+        matches!(self, Self::Refused(_))
+    }
+
+    pub fn message(&self) -> &str {
+        match self {
+            Self::Refused(message)
+            | Self::Auth(message)
+            | Self::RateLimited { message, .. }
+            | Self::Unavailable(message) => message,
+        }
+    }
+
+    /// The error this is, for a caller that wants one, as [`Tracker::push`] does over a
+    /// checked push.
+    pub fn into_error(self, tracker: &str) -> crate::Error {
+        let tracker = tracker.to_owned();
+        match self {
+            Self::Refused(message) => crate::Error::Tracker { tracker, message },
+            Self::Auth(message) => crate::Error::Auth(message),
+            Self::RateLimited { message, retry_in_secs } => {
+                crate::Error::RateLimited { tracker, message, retry_in_secs }
+            }
+            Self::Unavailable(message) => crate::Error::Unavailable { tracker, message },
+        }
+    }
+}
+
+/// What a tracker did with each title in a push.
+///
+/// Every title the batch named that this does not list was applied. A failure is per title, so
+/// one change the tracker refuses never takes the others down with it.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct Pushed {
+    /// Titles the tracker answered for without applying anything: a title it could not match.
+    pub ignored: Vec<crate::ids::AnilistId>,
+    /// Titles it did not apply, each with why.
+    pub failed: Vec<(crate::ids::AnilistId, PushFailure)>,
+}
+
+impl Pushed {
+    /// Why `id` was not applied, if it was not.
+    pub fn failure_for(&self, id: crate::ids::AnilistId) -> Option<&PushFailure> {
+        self.failed.iter().find(|(failed, _)| *failed == id).map(|(_, failure)| failure)
+    }
+
+    /// The push as a plain result: the first failure, if any, as its error.
+    pub fn into_result(self, tracker: &str) -> Result<(), crate::Error> {
+        match self.failed.into_iter().next() {
+            Some((_, failure)) => Err(failure.into_error(tracker)),
+            None => Ok(()),
+        }
+    }
+}
+
+/// What taking a title off a tracker's reading list did.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ReadRemoval {
+    Removed,
+    /// The list did not hold it.
+    NotOnList,
+    /// Which of the tracker's entries this is was never learned, so nothing was asked.
+    Unmatched,
+}
+
+/// One manga's or novel's state on a tracker.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TrackedReadEntry {
+    pub anilist_id: crate::ids::AnilistId,
+    pub medium: crate::media::Medium,
+    pub chapters: u32,
+    /// `None` where the tracker has no volume field (Kitsu).
+    pub volumes: Option<u32>,
+    pub status: WatchStatus,
+    pub rereading: bool,
+    pub score: Option<f32>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
@@ -395,10 +695,21 @@ mod tests {
             TrackOp::SetProgress { anilist_id: id, episode: 12 },
             TrackOp::SetStatus { anilist_id: id, status: WatchStatus::Current, at: 0 },
             TrackOp::SetScore { anilist_id: id, score: 9.0, at: 0 },
+            TrackOp::SetReadProgress { anilist_id: id, chapter: 40, volume: Some(4) },
+            TrackOp::SetReadStatus {
+                anilist_id: id,
+                status: WatchStatus::Current,
+                rereading: true,
+                at: 0,
+            },
+            TrackOp::SetReadScore { anilist_id: id, score: 8.0, at: 0 },
         ];
         for op in &ops {
             assert_eq!(op.anilist_id(), id);
         }
+        assert_eq!(ops.iter().filter(|op| op.is_reading()).count(), 3);
+        let json = serde_json::to_string(&ops[3]).unwrap();
+        assert!(json.contains(r#""op":"set_read_progress""#), "{json}");
     }
 
     #[test]

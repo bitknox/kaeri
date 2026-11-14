@@ -16,7 +16,6 @@ title-details = Detalhes
 title-studio = Estúdio
 title-tags = Tags
 title-more-about = Mais sobre esta série
-title-synopsis-hint = Mostra a sinopse completa
 title-dubbed-to = { -dubbed-cap } até o episódio { $episode }
 title-no-episodes = Nenhum episódio ainda
 title-episodes-load-failed = Não foi possível listar os episódios
@@ -46,7 +45,7 @@ episode-protection-line-short = Oculto após o episódio { $episode }
 episode-range = Episódios { $from } a { $to }
 episode-range-label = Intervalo de episódios
 episode-fold = { $count ->
-    [one] Um episódio assistido
+    [one] { $count } episódio assistido
     [many] { $count } episódios assistidos
    *[other] { $count } episódios assistidos
  }
@@ -87,7 +86,7 @@ more-empty = A AniList ainda não tem elenco, equipe nem recomendações para es
 more-spoiler = Spoiler
 more-hide-spoiler-tags = Ocultar tags de spoiler
 more-show-spoiler-tags = { $count ->
-    [one] Mostrar uma tag de spoiler
+    [one] Mostrar { $count } tag de spoiler
     [many] Mostrar { $count } tags de spoiler
    *[other] Mostrar { $count } tags de spoiler
  }

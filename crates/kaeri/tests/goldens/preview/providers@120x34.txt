@@ -9,7 +9,7 @@ Kaeri                                                                           
 ▌ ◇  Sources                │
   ◎  Accounts               │    About the demo
   ≡  Settings               │    こ う し す ！  · CC BY 4.0 · from Wikimedia Commons
-  ⇄  Together               │    Reaches Wikimedia Commons only: upload.wikimedia.org and commons.wikimedia.org.
+  ⇄  Together               │    The demo reaches only Wikimedia Commons: upload.wikimedia.org and commons.wikimedi…
                             │    The demo never signs in anywhere and never writes to AniList.
                             │    B  Play the demo   Y  Remove demo
                             │

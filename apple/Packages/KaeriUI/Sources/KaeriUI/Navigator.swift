@@ -14,7 +14,11 @@ public final class Navigator {
         didSet {
             if section != oldValue {
                 titleOnMac = nil
+                seriesOnMac = nil
+                bookSourcePage = nil
                 pageGone()
+                // Search's Back to Home lasts while Search does.
+                if section != .search { readSearchBack = nil }
             }
         }
     }
@@ -23,6 +27,48 @@ public final class Navigator {
     public internal(set) var titleOnMac: AnilistId? {
         didSet { if titleOnMac != oldValue { endClosedEpisodeVisits() } }
     }
+    /// The series page open over the section on the Mac, by work id. On iPhone and iPad it is
+    /// pushed on the tab's stack.
+    public var seriesOnMac: String? {
+        didSet { if seriesOnMac != oldValue { endClosedSeriesVisits() } }
+    }
+    /// A book source's page open in place of Your sources' list on the Mac. On iPhone and iPad it
+    /// is pushed on the stack.
+    var bookSourcePage: BookSourcePage?
+    /// Whether the Library shows reading rather than shows, with both media on. Each screen
+    /// keeps its own.
+    public var libraryReading = false
+    /// Whether Search looks for reading rather than shows, with both media on.
+    public var searchReading = false
+    /// The scope just chosen in Search's control while the screen keeps the one it shows until
+    /// the chosen one has its start (`ReadSearchScope.choose`); nil once they agree.
+    public var searchReadingChosen: Bool?
+    /// A genre to browse in reading's Search, from Home's genre shelf.
+    public var readingGenre: String?
+    /// The section a discovery row's View all opened reading's Search from, on the Mac and a wide
+    /// iPad: Search's Back returns there, to the same scroll.
+    public var readSearchBack: AppSection?
+    /// On iPhone and in a narrow window, the row whose View all pushed its results onto Home.
+    public var readViewAll: ReadViewAll?
+    /// The line a row's View all puts over its results in the Search place ("Manga, trending"),
+    /// for as long as Search still has exactly the row's query.
+    var readViewAllLine: (query: ReadSearchQuery, line: String)?
+    /// How far reading's Home was scrolled when it was left, for coming back to the same place.
+    @ObservationIgnored var readHomeOffset: CGFloat = 0
+    /// The Library's reading list on screen.
+    public var readingSegment: LibrarySegmentRead = .reading
+    /// The series whose sheet is up, and which: change source, tracking, choose chapters.
+    public var seriesSheet: SeriesSheet?
+    /// Whether the Add a source sheet is up, and the Add a server step of it.
+    public var addBookSource: AddBookSourceStep?
+    /// Whether first launch has decided: shown and gone, or not due. Until then the medium
+    /// question of a first run waits for its page.
+    public var firstLaunchSettled = false
+    /// A shot's first-launch page and the medium answer before it, taken as the pages appear.
+    var firstLaunchStart: (FirstLaunch.Page, KaeriIsFor?)?
+    /// On iPhone and in a narrow window, a place with no tab of its own (Calendar, Seasonal or
+    /// Updates when both media are on), pushed onto the tab that leads to it.
+    var placePushed: AppSection?
     /// The element the Mac's title page was opened from, which its art flies back to on Back.
     public internal(set) var openedFrom: TitleSource?
     /// The art on its way between that element and the page, on the Mac (M3).
@@ -44,7 +90,12 @@ public final class Navigator {
     @ObservationIgnored var shownLandings: [TitleLandingID: Int] = [:]
     /// Each tab's pushed title pages, on iPhone and iPad, each with the element it zooms from.
     public var paths: [AppSection: [TitleRoute]] = [:] {
-        didSet { if paths != oldValue { endClosedEpisodeVisits() } }
+        didSet {
+            if paths != oldValue {
+                endClosedEpisodeVisits()
+                endClosedSeriesVisits()
+            }
+        }
     }
     /// The title the menus' Episode items and the palette's commands act on: the one selected
     /// in a list, or the page that is open.
@@ -61,10 +112,17 @@ public final class Navigator {
     public var searchFiltersShown = false
     /// The search the launch arguments ask for, for a screenshot, until Search runs it.
     public var launchSearch: SearchQuery?
+    /// Reading's Search as the launch arguments set it, for a screenshot.
+    public var launchReadSearch: ReadSearchQuery?
     /// Points to scroll Search's results at launch, for shots.
     public var launchScroll: Int?
+    /// The same points for Reading's Home, which the shows' Search, drawn first while Reading
+    /// loads, would otherwise take. Reading's Search scrolls by `launchScroll`, as the shows' does.
+    @ObservationIgnored var launchReadScroll: Int?
     /// Counts the asks to scroll the iPhone's pinned filter row to its end, for the motion audit.
     public var searchRowToEnd = 0
+    /// Counts the asks to open the cut synopsis on screen, as its More does, for the motion audit.
+    public var synopsisMoreAsked = 0
     /// Whether Downloads is pushed over the Library, as its first row does on iPhone.
     public var downloadsPushed = false
     /// Counts the viewer's own marks of an episode as watched, for the light impact on iPhone:
@@ -129,6 +187,9 @@ public final class Navigator {
     var synopsisAllShown: Set<AnilistId> = []
     /// The range of a long series' episodes the viewer picked, per title, for the visit.
     var episodeRange: [AnilistId: Int] = [:]
+    /// What an open series page holds, per work, for the visit: here rather than in the page, so
+    /// an iPad window made narrow or wide, which makes the tab view again, keeps it.
+    var seriesPages: [String: SeriesPageState] = [:]
     /// The pick the title page on screen was opened by, while it is: Another asks the same pool
     /// again. Gone once the page is, or another title is opened from it.
     var pickVisit: SearchModel.Pick?
@@ -177,7 +238,18 @@ public final class Navigator {
                 text: route.query ?? "", genres: ["Fantasy"], formats: [.tv], season: .spring, years: Bounds(min: 2024, max: 2024),
                 minScore: 70, licensedOnly: true)
         }
+        if route.filters == "set", route.reading {
+            // Reading's row set as Android's shots set it.
+            var query = ReadingModel.emptyQuery
+            query.text = route.query ?? ""
+            query.genres = ["Fantasy"]
+            query.formats = ["manga", "one-shot"] // i18n-skip: format keys
+            query.origins = ["JP"] // i18n-skip
+            query.status = "releasing" // i18n-skip
+            launchReadSearch = query
+        }
         launchScroll = route.scroll
+        launchReadScroll = route.scroll
         if let genre = route.genre { launchSearch = SearchQuery(text: route.query ?? "", genres: [genre]) }
         if route.sheet == "join" { invite = "https://plugins.hotaru.example/join/fixture#key" }
         if route.sheet == "show" { showSettings = route.title }
@@ -190,6 +262,20 @@ public final class Navigator {
         if route.sheet == "server" { addServerShown = true }
         if route.sheet == "certificate" { addServerShown = true; certificateLaunch = true }
         launchSourceKey = route.source
+        libraryReading = route.reading
+        searchReading = route.reading
+        if var work = route.work {
+            // Shots: the reading demo's works by name, since their ids are hashes.
+            if work == "demo-comic" || work == "demo-story",
+               let demo = readingDemoInfo().works.first(where: { $0.novel == (work == "demo-story") }) {
+                work = demo.work
+            }
+            #if os(macOS)
+            seriesOnMac = work
+            #else
+            paths[route.section] = [TitleRoute(work: work)]
+            #endif
+        }
         if route.fold == "open", let title = route.title { watchedOpen.insert(title) }
         launchCalendarMine = route.calendarMine
         if let day = route.day {
@@ -211,6 +297,70 @@ public final class Navigator {
     /// Open a section, as the sidebar, a tab or ⌘1 to ⌘7 does.
     public func open(_ section: AppSection) {
         self.section = section
+    }
+
+    /// A series' page: over the section on the Mac, pushed on the tab's stack elsewhere.
+    public func openSeries(_ work: String) {
+        #if os(macOS)
+        titleOnMac = nil
+        withAnimation(.standard) { seriesOnMac = work }
+        #else
+        paths[section, default: []].append(TitleRoute(work: work))
+        #endif
+    }
+
+    /// The series' version and source picker, over its page: the reader's Choose source. The
+    /// page opens first when it is not the one on top.
+    public func chooseSource(for work: String) {
+        #if os(macOS)
+        if seriesOnMac != work { openSeries(work) }
+        #else
+        if paths[section]?.last?.work != work { openSeries(work) }
+        #endif
+        seriesSheet = .source(work)
+    }
+
+    /// A reading list in the Library.
+    public func readingList(_ segment: LibrarySegmentRead) {
+        libraryReading = true
+        readingSegment = segment
+        open(.library)
+    }
+
+    /// Reading's Search, browsing `genre` when one is given.
+    public func openReadingSearch(genre: String? = nil) {
+        searchReading = true
+        readingGenre = genre
+        open(.search)
+    }
+
+    /// A discovery row's View all: Search with exactly the row's filter and sort, whose first
+    /// results are the row's titles. Wide, the Search place opens with Back to Home; narrow, the
+    /// results push onto Home with the row's name as their title.
+    public func openReadViewAll(_ query: ReadSearchQuery, title: String, line: String? = nil, wide: Bool, store: AppStore) {
+        store.reading.runSearch(query)
+        // The field says what the search has, so typing starts from it, and nothing more is asked.
+        self.query = query.text
+        if wide {
+            let from = section
+            searchReading = true
+            section = .search
+            readSearchBack = from
+            readViewAllLine = line.map { (query, $0) }
+        } else {
+            readViewAll = ReadViewAll(title: title, query: query, line: line)
+        }
+    }
+
+    /// Search's Back to the Home a View all came from.
+    public func closeReadSearch() {
+        guard let back = readSearchBack else { return }
+        section = back
+    }
+
+    /// Back from a series' page on the Mac.
+    public func closeSeries() {
+        withAnimation(.standard) { seriesOnMac = nil }
     }
 
     /// Providers, where a source is added: its section on the Mac and iPad, its page of the
@@ -294,5 +444,35 @@ public final class Navigator {
         var query = store.search.query
         query.text = text
         search(query, in: store)
+    }
+}
+
+/// A discovery row's results pushed onto Home: the row's name and its search.
+public struct ReadViewAll: Hashable, Identifiable {
+    public let title: String
+    public let query: ReadSearchQuery
+    /// The line over the results, from the row ("Manga, trending").
+    public var line: String?
+    public var id: Self { self }
+}
+
+/// A series page's chapters being chosen and its list's order.
+struct SeriesPageState: Equatable {
+    /// The chapters chosen, while chapters are being chosen.
+    var choosing: Set<String>?
+    var newestFirst = true
+}
+
+extension Navigator {
+    /// The works whose series pages are open: the Mac's, and on iPhone and iPad every tab's
+    /// pushed pages.
+    var openWorks: Set<String> {
+        Set(paths.values.flatMap { $0.compactMap(\.work) }).union(seriesOnMac.map { [$0] } ?? [])
+    }
+
+    /// Forgets what the series pages that closed held, so a page opened again starts afresh.
+    func endClosedSeriesVisits() {
+        let open = openWorks
+        for work in seriesPages.keys where !open.contains(work) { seriesPages[work] = nil }
     }
 }

@@ -41,7 +41,7 @@ tv-section-this-tv = Cette TV
 tv-info-from = Provenance
 tv-info-state = État
 tv-store-revoked = N’autorise plus cette TV.
-tv-seeding-note = Partage au mieux sur cette TV : le partage ne tourne que lorsque { -app-name } est ouvert.
+tv-seeding-note = Cette TV ne partage que lorsque { -app-name } est ouvert.
 tv-sign-out-title = Se déconnecter de { $name } ?
 tv-account-not-signed-in = Non connecté
 tv-account-signed-in-as = Connecté en tant que { $name }
@@ -116,12 +116,12 @@ tv-show-back-to-defaults = Rétablir les valeurs par défaut
 tv-card-progress-spoken = { $percent } vu
 tv-discussion-footer = Pour répondre, ouvrez la discussion sur votre téléphone.
 tv-discussion-count-read-only = { $count ->
-    [one] Un commentaire · Lecture seule
+    [one] { $count } commentaire · Lecture seule
     [many] { $count } commentaires · Lecture seule
    *[other] { $count } commentaires · Lecture seule
  }
 tv-discussion-likes = { $count ->
-    [one] Un j’aime
+    [one] { $count } j’aime
     [many] { $count } j’aime
    *[other] { $count } j’aime
  }

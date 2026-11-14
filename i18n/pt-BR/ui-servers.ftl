@@ -30,17 +30,17 @@ servers-report-line = Pontos de retomada e marcas de assistido acompanham o que 
 servers-add = Adicionar
 servers-row-matching = Identificando · { $done } de { $total } séries
 servers-row-summary = { $libraries ->
-    [one] 1 { -library } · { $series } séries
+    [one] { $libraries } { -library } · { $series } séries
     [many] { $libraries } de bibliotecas · { $series } séries
    *[other] { $libraries } bibliotecas · { $series } séries
  }
 servers-row-libraries = { $count ->
-    [one] 1 { -library }
+    [one] { $count } { -library }
     [many] { $count } de bibliotecas
    *[other] { $count } bibliotecas
  }
 servers-row-series = { $count ->
-    [one] 1 série
+    [one] { $count } série
     [many] { $count } de séries
    *[other] { $count } séries
  }
@@ -76,4 +76,4 @@ servers-needs-look = { $count } não identificadas no AniList
 servers-kind-films = Filmes
 servers-error-certificate = { $host } usa um certificado em que este { -device } não confia. Use um endereço https:// com um certificado em que ele confie.
 servers-row-signed-out-here = Desconectado
-servers-sign-out-line = Encerra o acesso deste { -device } ao servidor. O servidor e seus downloads continuam como estão.
+servers-sign-out-line = Sair encerra a sessão deste { -device } no servidor. O servidor e seus downloads continuam como estão.

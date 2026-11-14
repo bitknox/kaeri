@@ -176,6 +176,18 @@ pub enum SyncCommand {
     /// Answered per store with `Event::SyncStoreJoined` or `Event::SyncStoreJoinFailed`, then
     /// `Event::SyncStatus`.
     JoinStoresFrom { device: Option<String>, stores: Vec<String>, address: Option<String> },
+    /// "Already use Kaeri on another device?": ask `device` (or, with `None`, the next device to
+    /// pair, in the pairing itself) for its setup. It hands over an invite to every plugin store
+    /// it is a member of, each book server with its sign-in, its answer to Watch, read, or both,
+    /// and what it is signed in to, all sealed for this device inside the paired link. Nothing
+    /// is joined or added until the person says: `JoinStoresFrom` and `AddBookServersFrom`.
+    /// Answered with `Event::SetupFrom`, then `Event::SyncStatus`.
+    AskSetupFrom { device: Option<String>, address: Option<String> },
+    /// Add book servers `device` handed over (`SyncStatus::book_servers_to_add`), their sign-ins
+    /// going to this device's secure store. `servers` are offer ids; empty adds every one held
+    /// from `device`. Answered per server with `Event::CameIn`, then the book sources view and
+    /// `Event::SyncStatus`.
+    AddBookServersFrom { device: String, servers: Vec<String> },
 }
 
 /// Why a plugin store could not be joined through a paired device.
@@ -261,6 +273,81 @@ pub struct SyncStatus {
     /// When this device's recovery key was made, in Unix seconds.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub recovery_key_made: Option<i64>,
+    /// Book servers a paired device handed over with their sign-ins, not yet added here: one
+    /// switch each, on, for `SyncCommand::AddBookServersFrom`. Held in memory only.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub book_servers_to_add: Vec<SyncBookServerOffer>,
+}
+
+/// A book server a paired device signed in to, handed over with its sign-in over the paired
+/// link. The sign-in itself never leaves the engine: adding it puts it in this device's secure
+/// store.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct SyncBookServerOffer {
+    /// The paired device it came from.
+    pub from: String,
+    /// What `SyncCommand::AddBookServersFrom` names it by.
+    pub id: String,
+    pub kind: crate::book_sources::BookServerKind,
+    pub name: String,
+    /// "Add books.home.example".
+    pub host: String,
+    pub address: String,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub user: Option<String>,
+    /// It signs in with a Kavita key, of which only these four characters show.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub key_last4: Option<String>,
+    /// The libraries the other device asks, by id; empty for all of them.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub libraries: Vec<String>,
+    /// It already is one of this device's servers.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub added: bool,
+}
+
+/// A page of the first run another device's setup can answer. Answered pages are skipped.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum FirstRunPage {
+    /// Watch, read, or both.
+    Medium,
+    /// Lists: the trackers.
+    Lists,
+    /// Sources: plugin stores, book servers and folders.
+    Sources,
+}
+
+/// What joining through a paired device brings, for the first run's "From { $device }" group:
+/// every plugin store it is a member of (each device still gets its own invite), each book server
+/// with its sign-in, and its answer to Watch, read, or both. Folders stay on the device they are
+/// on, and are only counted.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct JoinedSetup {
+    /// The paired device's id.
+    pub device: String,
+    /// Its name: "From Desk".
+    pub device_name: String,
+    /// Its answer to Watch, read, or both: "Reading, as on Desk".
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub medium: Option<crate::medium::KaeriIsFor>,
+    /// Its plugin stores this device has not joined, each with an invite held for it.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub stores: Vec<SyncStoreOffer>,
+    /// Its book servers, each with its sign-in held.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub servers: Vec<SyncBookServerOffer>,
+    /// Its trackers signed in, by id: "AniList and MangaUpdates".
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub signed_in: Vec<String>,
+    /// Its folders, which can't sync: "Folders stay on Desk".
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub folders: u32,
+    /// The first-run pages this answers, which the first run skips.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub answered: Vec<FirstRunPage>,
 }
 
 /// How a cloud drive is signed in to on this device.

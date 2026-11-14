@@ -10,14 +10,14 @@ calendar-later-failed-line = Não foi possível carregar transmissões seguintes
 calendar-show-all-airing = Mostrar todas as séries no ar
 calendar-now-label = Agora, { $time }
 settings-discussions-label = Discussões dos episódios
-settings-discussions-note = Lê os comentários do tópico do AniList sobre os episódios que você já assistiu.
+settings-discussions-note = Você pode ler os comentários do tópico do fórum do AniList sobre os episódios que já assistiu.
 settings-discussion-images-label = Carregar imagens nos comentários
 settings-discussion-images-note = Cada imagem é carregada do site que a hospeda, e esse site vê o seu endereço IP.
 discussion-waiting = Aguardando o AniList · { $time }
 discussion-image-host = Imagem · { $host }
 discussion-video-host = Vídeo · { $host }
 player-more-discussion-note = { $count ->
-    [one] Um comentário · pausa o vídeo
+    [one] { $count } comentário · pausa o vídeo
     [many] { $count } comentários · pausa o vídeo
    *[other] { $count } comentários · pausa o vídeo
  }

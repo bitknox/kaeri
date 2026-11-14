@@ -5,7 +5,10 @@ use std::sync::Arc;
 use kaeri_core::config::{Config, Paths};
 #[cfg(test)]
 use kaeri_engine::host::BUNDLE;
-use kaeri_engine::host::{Backend, Host, SecretError, SecretStore, Storage, shared_secrets};
+use kaeri_engine::host::{
+    Backend, DecodedImage, FolderTree, Host, PageDecoder, SecretError, SecretStore, Storage,
+    shared_secrets,
+};
 
 use crate::start::SecretsMode;
 
@@ -40,11 +43,57 @@ pub trait FfiHost: Send + Sync {
     fn secret_delete(&self, id: String) -> bool;
 }
 
+/// The platform's image decoder for page formats the engine cannot read, implemented by the app
+/// that has one: Android's, for AVIF pages on an e-ink screen. Optional: an app that has none
+/// passes nothing in [`crate::FfiStart::page_decoder`] and such a page fails as unsupported.
+///
+/// Called on the page worker's thread, never the engine's or the app's main thread. The engine
+/// gives up on a call after two seconds.
+#[uniffi::export(with_foreign)]
+pub trait FfiPageDecoder: Send + Sync {
+    /// Decode `bytes`, a file of the MIME type `format` such as `image/avif`, to RGBA8. Shrink
+    /// it while decoding to fit inside `max_width` by `max_height`, keeping its aspect ratio and
+    /// never enlarging it, so a big scan costs little memory. `None` when it cannot be read.
+    fn decode(
+        &self,
+        bytes: Vec<u8>,
+        format: String,
+        max_width: u32,
+        max_height: u32,
+    ) -> Option<FfiDecodedImage>;
+}
+
+/// A page the platform decoded: `rgba` is `width * height * 4` bytes, rows packed.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct FfiDecodedImage {
+    pub width: u32,
+    pub height: u32,
+    pub rgba: Vec<u8>,
+}
+
+/// An [`FfiPageDecoder`], as the engine's [`PageDecoder`].
+struct Decoding(Arc<dyn FfiPageDecoder>);
+
+impl PageDecoder for Decoding {
+    fn decode(
+        &self,
+        bytes: Vec<u8>,
+        format: String,
+        max_width: u32,
+        max_height: u32,
+    ) -> Option<DecodedImage> {
+        let image = self.0.decode(bytes, format, max_width, max_height)?;
+        Some(DecodedImage { width: image.width, height: image.height, rgba: image.rgba })
+    }
+}
+
 /// An [`FfiHost`], as the engine's [`Host`], with tokens wherever the app's [`SecretsMode`] puts
 /// them.
 pub(crate) struct Adapter {
     app: Arc<dyn FfiHost>,
     secrets: Arc<dyn SecretStore>,
+    decoder: Option<Arc<dyn PageDecoder>>,
+    folders: Option<Arc<dyn FolderTree>>,
 }
 
 impl Adapter {
@@ -58,7 +107,26 @@ impl Adapter {
     ) -> Self {
         let env = std::env::var(Backend::ENV).ok();
         let secrets = mode.secrets(app.clone(), config, paths, env.as_deref());
-        Self { app, secrets }
+        Self { app, secrets, decoder: None, folders: None }
+    }
+
+    /// With the app's image decoder, when it gave one.
+    pub(crate) fn with_page_decoder(
+        mut self,
+        decoder: Option<Arc<dyn FfiPageDecoder>>,
+    ) -> Self {
+        self.decoder = decoder.map(|d| Arc::new(Decoding(d)) as Arc<dyn PageDecoder>);
+        self
+    }
+
+    /// With the app's way into the book folders it opens, when it gave one.
+    pub(crate) fn with_folder_access(
+        mut self,
+        access: Option<Arc<dyn crate::folders::FfiFolderAccess>>,
+    ) -> Self {
+        self.folders =
+            access.map(|a| Arc::new(crate::folders::Folders(a)) as Arc<dyn FolderTree>);
+        self
     }
 }
 
@@ -130,6 +198,14 @@ impl Host for Adapter {
     fn secrets(&self) -> Option<Arc<dyn SecretStore>> {
         Some(self.secrets.clone())
     }
+
+    fn page_decoder(&self) -> Option<Arc<dyn PageDecoder>> {
+        self.decoder.clone()
+    }
+
+    fn folder_access(&self) -> Option<Arc<dyn FolderTree>> {
+        self.folders.clone()
+    }
 }
 
 #[cfg(test)]
@@ -200,7 +276,7 @@ mod tests {
             &paths(root.path()),
             None,
         );
-        Adapter { app, secrets }
+        Adapter { app, secrets, decoder: None, folders: None }
     }
 
     /// The token file the terminal app keeps `id` in under `root`'s data directory.

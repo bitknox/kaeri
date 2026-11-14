@@ -1,0 +1,70 @@
+reader-page-loading = Загрузка страницы { $page }
+reader-page-plate = Страница { $page }
+reader-image-plate = Картинка { $image }
+reader-image-loading = Загрузка картинки { $image }
+reader-page-failed = Не удалось загрузить страницу { $page }
+reader-try-again = Повторить
+reader-close = Закрыть
+reader-end-read = Засчитано как прочитанная
+reader-end-tracker = Засчитано как прочитанная · обновлено: { $trackers }
+reader-end-tracker-offline = Засчитано как прочитанная · { $tracker } обновится, когда вы вернётесь в сеть
+reader-end-next = Следующая
+reader-mode-rtl = Справа налево
+reader-mode-ltr = Слева направо
+reader-mode-strip = Лента
+reader-fit-screen = По экрану
+reader-fit-width = По ширине
+reader-font-serif = С засечками
+reader-font-sans = Без засечек
+reader-look-paper = Бумага
+reader-look-light = Светлая
+reader-look-sepia = Сепия
+reader-look-dark = Тёмная
+reader-margins-narrow = Узкие
+reader-margins-wide = Широкие
+reader-layout-auto = Авто
+reader-layout-single = Одна
+reader-layout-double = Две
+reader-spreads-split = Разделить
+reader-spreads-rotate = Повернуть
+reader-spreads-whole = Целиком
+reader-tap-edges = Края
+reader-tap-sides = Половины
+reader-tap-off = Выкл.
+reader-chapters = Главы
+reader-pages-left = { $count ->
+    [one] В этой главе осталась { $count } страница
+    [few] В этой главе остались { $count } страницы
+    [many] В этой главе осталось { $count } страниц
+   *[other] В этой главе остались { $count } страницы
+ }
+reader-chapters-loading = Загрузка глав
+reader-background-theme = Тема
+reader-background-black = Чёрный
+reader-background-white = Белый
+reader-end-caught-up = Вы всё прочитали
+reader-gap-none = Нет
+reader-gap-small = Малый
+reader-look-system = Как в системе
+reader-end-of-chapter-number = Конец главы { $chapter }
+reader-end-facts = Глава { $chapter } · { $facts }
+reader-end-pages = { $count ->
+    [one] { $count } страница
+    [few] { $count } страницы
+    [many] { $count } страниц
+   *[other] { $count } страницы
+ }
+reader-end-from = Из { $source }
+reader-chapter-line = Глава { $chapter }
+reader-divider-facts-source = { $facts } · из { $source }
+reader-end-swipe = Смахните, чтобы { -continue-reading }
+reader-divider-images = { $count ->
+    [one] { $count } картинка
+    [few] { $count } картинки
+    [many] { $count } картинок
+   *[other] { $count } картинки
+ }
+reader-chapter-line-titled = Глава { $chapter } · { $title }
+reader-zone-next = Следующая страница
+reader-zone-previous = Предыдущая страница
+reader-zone-controls = Управление

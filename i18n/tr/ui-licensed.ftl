@@ -1,7 +1,7 @@
 licensed-title = Lisanslı hizmetler
 licensed-body = { -app-name }, ücretini ödediğiniz yayın hizmetlerindeki başlıkları açabilir. Kendisi hiçbirini oynatmaz. Bağlantılar AniList'ten gelir.
 licensed-region = Bölge
-licensed-region-line = AniList'in başka ülkeler için işaretlediği bağlantıları gizler. Çoğu bağlantı bir ülke belirtmez, bu yüzden hizmetlerinizi de seçin.
+licensed-region-line = AniList'in başka ülkeler için işaretlediği bağlantılar gizlenir. Çoğu bağlantı bir ülke belirtmez, bu yüzden hizmetlerinizi de seçin.
 licensed-yours = Hizmetleriniz
 licensed-show-all = Tümünü göster ({ $count })
 licensed-region-system = Bu { -device } ile aynı olsun

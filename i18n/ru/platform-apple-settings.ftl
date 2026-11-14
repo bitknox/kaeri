@@ -13,7 +13,7 @@ settings-advanced-none = Дополнительных настроек нет. �
 settings-aside-check-title = Проверка прокси
 settings-aside-sources-apple = { -source-cap-pl } проверяются по порядку, сверху вниз. У сериала может быть свой { -source }, который выбирается на его странице.
 settings-aside-advanced = Настройка здесь может отменить параметр воспроизведения, например апскейлинг или ночной режим. Большинству эта панель не нужна.
-settings-quality-detail = Высокое качество выбирает лучшую версию, которую предлагает { -source }, и занимает больше места.
+settings-quality-detail = Высокое качество выбирает лучшую версию, которую даёт { -source }. Это занимает больше места.
 settings-merge-subtitles-detail = Субтитры остаются с серией, куда бы ни переместился файл.
 settings-keep-seeding-detail-mac = Загрузка, которая продолжает раздачу, хранится в кеше { -app-name }, а не в папке загрузок.
 settings-keep-seeding-detail = Загрузка, которая продолжает раздачу, хранится в кеше { -app-name }.
@@ -29,6 +29,10 @@ settings-delete-watched-title = { $count ->
 settings-delete-watched-detail = Файлы удаляются здесь. Серии, которые ещё не просмотрены, остаются.
 settings-folder-default = Хранится в кеше торрентов
 settings-storage-unwatched = Ещё не просмотрено
+settings-storage-unread = Ещё не прочитано
+settings-storage-read = Прочитано
+settings-storage-unseen-both = Ещё не просмотрено и не прочитано
+settings-storage-seen-both = Просмотрено или прочитано
 settings-storage-used = Загрузки занимают { $size }.
 settings-storage-used-free = Загрузки занимают { $size }. Свободно на диске: { $free }.
 settings-source-count = { $count ->
@@ -38,6 +42,7 @@ settings-source-count = { $count ->
    *[other] { $count } { -source }ов
  }
 settings-accounts-sync-note = Прогресс и изменения списков синхронизируются с { $tracker }. { -library-cap } и «Мой список» в календаре показывают ваши списки { $tracker }.
+settings-accounts-sync-note-read = Прогресс и изменения списков синхронизируются с { $tracker }. В разделе «{ -library-cap }» видны ваши списки { $tracker }.
 settings-conflicts = { $count ->
     [one] { $count } название отличается от { $tracker }
     [few] { $count } названия отличаются от { $tracker }
@@ -55,7 +60,7 @@ settings-synced-just-now = Синхронизировано только что
 settings-synced-ago = Синхронизировано { $ago }
 settings-privacy-note = Что отправляет { -app-name } и что хранится только здесь
 settings-read-online = Читать онлайн
-settings-presence-note = Расширенный статус показывает обложку, полосу прогресса и ссылку на сериал на { $tracker }. Discord сам загружает обложку с { $tracker }. Для этого нужно показывать название.
+settings-presence-note = Расширенный статус показывает обложку, полосу прогресса и ссылку на тайтл на { $tracker }. Работает, только пока название показывается. Discord сам загружает обложку с { $tracker }.
 settings-presence-cover = Обложка
 settings-presence-button = Открыть на { $tracker }
 settings-presence-nothing = Смотрю аниме
@@ -79,7 +84,7 @@ settings-when-tomorrow = Завтра { $time }
 settings-when-day = { $day } { $time }
 settings-week-row-label = { $title }, серия { $episode }, { $when }
 settings-week-row-hint = Открывает настройки этого сериала
-settings-notify-explain-on = Одно уведомление, когда выходит новая серия сериала из списка «Смотрю». Время выхода берётся из { $tracker }. Сначала действует настройка самого сериала.
+settings-notify-explain-on = Вы получаете одно уведомление, когда выходит эпизод тайтла из списка «Смотрю», в то время, которое указывает { $tracker }. Настройка самого тайтла важнее.
 settings-notify-explain-off = Выключено. Уведомляют только сериалы, включённые в их собственных настройках.
 settings-preview-show = Сериал, который вы смотрите
 settings-preview-words = Серия 9 вышла.

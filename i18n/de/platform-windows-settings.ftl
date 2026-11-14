@@ -3,10 +3,12 @@ settings-group-mpv = mpv
 settings-card-state = { $title }, { $state }
 settings-card-check = { $title }, { $word }, { $note }
 settings-closing-detail = Downloads weiterlaufen lassen hält { -app-name } im Benachrichtigungsbereich, bis sie fertig sind.
-settings-presence-rich-detail = Das Cover, ein Fortschrittsbalken und ein Link zur Serie auf { $tracker }. Setzt voraus, dass der Titel angezeigt wird.
+settings-presence-rich-detail = Das Cover, ein Fortschrittsbalken und ein Link zur Serie auf { $tracker }. Das funktioniert nur, wenn der Titel angezeigt wird.
 settings-another-tv = Weiterer Fernseher
 settings-theme = Design
 settings-motion = Animationen
+settings-smooth-scrolling = Sanftes Scrollen
+settings-smooth-scrolling-detail = Jede Drehung am Mausrad lässt die Seite sanft an ihren Platz gleiten. Touchpads und Touchscreens scrollen wie bisher.
 settings-start-fullscreen = Im Vollbild starten
 settings-player-interface = Oberfläche des Players
 settings-token-storage = Speicherort der Anmeldetoken
@@ -43,4 +45,17 @@ settings-download-higher = Höher
 torrents-dialog-edit-proxy = Proxy bearbeiten
 settings-note-trailers-windows = Trailer werden stumm von YouTube abgespielt, das deine IP-Adresse sieht. Sie werden nicht abgespielt bei getakteter Verbindung, bei ausgeschalteten Animationen, im Energiesparmodus oder wenn Narrator läuft.
 settings-note-cast-tvs-pc = Sie erscheinen unter Chromecast. Dieser PC sendet ihnen die Folge.
-settings-note-torrents-while-casting-pc = Lässt einen Fernseher mit eingebautem Chromecast Torrents abspielen. Dieser PC sendet die Folge, solange sie läuft.
+settings-note-torrents-while-casting-pc = Ein Fernseher mit eingebautem Chromecast kann dann Torrents abspielen. Dieser PC sendet die Folge, solange sie läuft.
+settings-language-restart = Neu starten
+settings-differences = { $count ->
+    [one] Ein Titel weicht von { $tracker } ab
+   *[other] { $count } Titel weichen von { $tracker } ab
+ }
+settings-differences-review = Prüfen
+settings-search = Einstellungen durchsuchen
+settings-quality-detail-windows = Höher wählt die beste Version, die eine { -source } hat. Sie braucht mehr Speicher.
+settings-merge-subtitles-detail-windows = Untertitel bleiben bei der Folge, wohin die Datei auch geht.
+settings-keep-seeding-detail-windows = Ein Download, der weiter seedet, bleibt im Cache von { -app-name }, nicht im Download-Ordner.
+settings-discussions-note-windows = Die Kommentare stammen aus dem Forum-Thread auf AniList, sobald du die Folge gesehen hast.
+settings-comment-images-note-windows = Jedes Bild wird von der Seite geladen, die es hostet. Sie sieht deine IP-Adresse.
+settings-folder-browse = Durchsuchen…

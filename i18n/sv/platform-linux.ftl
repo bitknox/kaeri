@@ -53,7 +53,7 @@ library-row-summary-linux = { $episodes ->
    *[other] { $episodes } avsnitt från { $series } serier
  }
 library-page-watching-linux = Bevakas för ändringar
-library-page-no-watch-linux = Kontrolleras igen när { -app-name } startar
+library-page-no-watch-linux = Kontrolleras efter ändringar när { -app-name } startar
 library-matched-linux = Matchade
 library-best-guess-linux = Bästa gissning: { $title }
 library-fix-count-mismatch-linux = { $episodes ->

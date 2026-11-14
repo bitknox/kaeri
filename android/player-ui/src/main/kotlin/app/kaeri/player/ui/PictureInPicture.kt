@@ -1,9 +1,12 @@
 // Picture in Picture, as motion-android.md has it: the system's window and its motion, and ours
-// only the parameters, set again whenever one of them changes, and the three actions.
+// only the parameters, set again whenever one of them changes, and the three actions. Android 12
+// enters the window by itself on the way home (auto-enter); on Android 11 the activity enters it
+// as the person leaves (PictureInPictureOnLeave), with the same parameters.
 
 package app.kaeri.player.ui
 
 import app.kaeri.i18n.Strings
+import android.app.Activity
 import android.app.PendingIntent
 import android.app.PictureInPictureParams
 import android.app.RemoteAction
@@ -13,6 +16,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Rect
 import android.graphics.drawable.Icon
+import android.os.Build
 import android.util.Rational
 import kotlin.math.roundToInt
 import androidx.activity.compose.LocalActivity
@@ -47,14 +51,15 @@ internal fun PictureInPicture(model: PlayerModel, videoBounds: Rect?) {
         ContextCompat.registerReceiver(context, receiver, IntentFilter(ACTION), ContextCompat.RECEIVER_NOT_EXPORTED)
         onDispose {
             context.unregisterReceiver(receiver)
-            activity.setPictureInPictureParams(PictureInPictureParams.Builder().setAutoEnterEnabled(false).build())
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                activity.setPictureInPictureParams(PictureInPictureParams.Builder().setAutoEnterEnabled(false).build())
+            }
+            PictureInPictureOnLeave.wanted = false
         }
     }
     LaunchedEffect(videoBounds, playing, model.aspect) {
         val params = PictureInPictureParams.Builder()
             .setAspectRatio(pipAspectRatio(model.aspect))
-            .setAutoEnterEnabled(playing)
-            .setSeamlessResizeEnabled(true)
             .setActions(
                 listOf(
                     action(context, R.drawable.pip_back, Strings.playerBack10(context), BACK, 1),
@@ -64,8 +69,37 @@ internal fun PictureInPicture(model: PlayerModel, videoBounds: Rect?) {
                 ),
             )
         videoBounds?.takeIf { !it.isEmpty }?.let(params::setSourceRectHint)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            params.setAutoEnterEnabled(playing).setSeamlessResizeEnabled(true)
+        }
         activity.setPictureInPictureParams(params.build())
+        PictureInPictureOnLeave.wanted = playing
     }
+}
+
+/**
+ * Auto-enter where Android has none, Android 11: the activity calls [enter] from
+ * `onUserLeaveHint`, as the person goes home or to another app, and the window opens while a
+ * video plays, with the parameters the player last set. From Android 12 the system does this.
+ */
+object PictureInPictureOnLeave {
+    /** Whether the player is up and playing, which is when leaving opens the window. */
+    @Volatile
+    internal var wanted = false
+
+    /**
+     * Enter the window as the person leaves [activity], where the system would not: [inPip] is
+     * told true just before, so the overlays go first, and false again if the window did not open.
+     */
+    fun enter(activity: Activity, inPip: (Boolean) -> Unit) {
+        if (!shouldEnter(Build.VERSION.SDK_INT, wanted)) return
+        inPip(true)
+        // Entering adds nothing to the parameters set last, which the window takes.
+        val entered = runCatching { activity.enterPictureInPictureMode(PictureInPictureParams.Builder().build()) }.getOrDefault(false)
+        if (!entered) inPip(false)
+    }
+
+    internal fun shouldEnter(sdk: Int, wanted: Boolean): Boolean = sdk < Build.VERSION_CODES.S && wanted
 }
 
 private fun action(context: Context, icon: Int, title: String, what: String, code: Int): RemoteAction {

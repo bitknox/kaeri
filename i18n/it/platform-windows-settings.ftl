@@ -3,10 +3,12 @@ settings-group-mpv = mpv
 settings-card-state = { $title }, { $state }
 settings-card-check = { $title }, { $word }, { $note }
 settings-closing-detail = Con Continua a scaricare, { -app-name } resta nell'area di notifica finché i download non finiscono.
-settings-presence-rich-detail = La copertina, una barra di avanzamento e un link al titolo su { $tracker }. Richiede che il titolo sia visibile.
+settings-presence-rich-detail = La copertina, una barra di avanzamento e un link alla serie su { $tracker }. Funziona solo se il titolo è visibile.
 settings-another-tv = Un altro TV
 settings-theme = Tema
 settings-motion = Animazioni
+settings-smooth-scrolling = Scorrimento fluido
+settings-smooth-scrolling-detail = Ogni scatto della rotellina fa scivolare la pagina al suo posto. Touchpad e touch scorrono come prima.
 settings-start-fullscreen = Avvia a schermo intero
 settings-player-interface = Interfaccia del player
 settings-token-storage = Archiviazione dei token
@@ -44,4 +46,18 @@ settings-download-higher = Più alta
 torrents-dialog-edit-proxy = Modifica proxy
 settings-note-trailers-windows = I trailer si riproducono senza audio da YouTube, che vede il tuo indirizzo IP. Non si riproducono con connessione a consumo, con le animazioni disattivate, in modalità risparmio energia o con Narratore attivo.
 settings-note-cast-tvs-pc = Compaiono sotto Chromecast in Riproduci sulla TV. Questo PC invia loro l'episodio.
-settings-note-torrents-while-casting-pc = Permette a una TV con Chromecast integrato di riprodurre i torrent. Questo PC invia l'episodio finché è in riproduzione.
+settings-note-torrents-while-casting-pc = Così una TV con Chromecast integrato può riprodurre i torrent. Questo PC invia l'episodio finché è in riproduzione.
+settings-language-restart = Riavvia
+settings-differences = { $count ->
+    [one] Un titolo è diverso da { $tracker }
+    [many] { $count } titoli sono diversi da { $tracker }
+   *[other] { $count } titoli sono diversi da { $tracker }
+ }
+settings-differences-review = Controlla
+settings-search = Cerca nelle impostazioni
+settings-quality-detail-windows = Alta sceglie la { -release } migliore che ha una { -source }. Occupa più spazio.
+settings-merge-subtitles-detail-windows = I sottotitoli restano con l'episodio ovunque vada il file.
+settings-keep-seeding-detail-windows = Un download che continua il seeding resta nella cache di { -app-name }, non nella cartella dei download.
+settings-discussions-note-windows = I commenti arrivano dal thread del forum di AniList, dopo che hai guardato l'episodio.
+settings-comment-images-note-windows = Ogni immagine si carica dal sito che la ospita, che vede il tuo indirizzo IP.
+settings-folder-browse = Sfoglia…

@@ -8,7 +8,7 @@ home-mark-watched = Marquer l’épisode { $episode } comme vu
 home-marked-watched = Épisode { $episode } marqué comme vu
 home-remove-continue = Retirer de { -continue-cap }
 home-continue-count = { $count ->
-    [one] 1 série
+    [one] { $count } série
     [many] { $count } séries
    *[other] { $count } séries
  }
@@ -22,7 +22,7 @@ home-search = Recherche
 home-end = C’est tout pour l’instant. Cette saison et Calendrier ont les listes complètes.
 home-end-signed-out = Connectez-vous à AniList pour importer votre liste et votre Planning.
 home-sign-in = Se connecter à AniList
-home-end-no-sources = Ajoutez une { -source } pour lire depuis l’accueil. Les { -plugin-store-pl } en proposent.
+home-end-no-sources = Ajoutez une { -source } pour lire depuis l’accueil. Les { -plugin-pl } viennent des { -plugin-store-cap-pl }.
 home-not-found = Introuvable dans vos { -source-pl }
 home-failed = Impossible de charger les suggestions
 home-try-again = Réessayer

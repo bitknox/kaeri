@@ -16,7 +16,6 @@ title-details = Подробности
 title-studio = Студия
 title-tags = Теги
 title-more-about = Подробнее о тайтле
-title-synopsis-hint = Показывает весь синопсис
 title-dubbed-to = { -dubbed-cap } до серии { $episode }
 title-no-episodes = Серий пока нет
 title-episodes-load-failed = Не удалось получить список серий
@@ -46,7 +45,7 @@ episode-protection-line-short = Скрыто после серии { $episode }
 episode-range = Серии с { $from } по { $to }
 episode-range-label = Диапазон серий
 episode-fold = { $count ->
-    [one] Одна просмотренная серия
+    [one] { $count } просмотренная серия
     [few] { $count } просмотренные серии
     [many] { $count } просмотренных серий
    *[other] { $count } просмотренной серии

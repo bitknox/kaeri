@@ -69,11 +69,19 @@ import androidx.compose.ui.res.stringResource
 import app.kaeri.i18n.Strings
 import app.kaeri.store.loadSync
 import android.content.Context
+import app.kaeri.engine.model.KaeriIsFor
+import app.kaeri.store.reads
+import app.kaeri.store.watches
+import app.kaeri.ui.reading.bookSourcePages
 
 /** The panes of Settings, in the list's order. */
 enum class SettingsPane(val route: String, val titleRes: Int) {
+    /** What Kaeri is for on this device, where the build can read and the answer can change. */
+    Medium("medium", R.string.settings_kaeri_is_for),
     General("general", R.string.settings_group_general),
     Playback("playback", R.string.settings_group_playback),
+    /** Reading's own pane, with reading on. */
+    Reading("reading", R.string.settings_group_reading),
     Notifications("notifications", R.string.settings_group_notifications),
     Downloads("downloads", R.string.downloads_title),
     Sources("sources", R.string.sources_title),
@@ -105,6 +113,7 @@ internal fun NavGraphBuilder.settingsPages(actions: AppActions) {
         val pane = SettingsPane.named(entry.arguments?.getString("pane"))
         CompositionLocalProvider(LocalPageAnimation provides this) { SettingsScreen(pane, actions) }
     }
+    bookSourcePages()
 }
 
 /** Settings at [pane], or at its list: one page at a time on a phone, list and pane on a tablet. */
@@ -116,8 +125,28 @@ fun SettingsScreen(pane: SettingsPane?, actions: AppActions) {
         store.loadDownloads()
         store.loadTitleLanguage()
     }
-    if (wideWindow()) {
-        TabletSettings(pane ?: SettingsPane.Playback, actions)
+    val answer = kaeriIsFor()
+    LaunchedEffect(answer.reads) {
+        // Reading's lines: the chapters' share of the storage, and the reader defaults.
+        if (answer.reads) {
+            store.reading.loadDownloads()
+            store.bookSources.load()
+        }
+    }
+    // The pane open on a tablet, which stays open as the e-ink layout is turned on or off.
+    val start = pane ?: if (answer.watches) SettingsPane.Playback else SettingsPane.General
+    var open by rememberSaveable(start) { mutableStateOf(start) }
+    if (einkSettings && wideWindow()) {
+        EinkTabletSettings(open, { open = it }, actions)
+    } else if (einkSettings) {
+        if (pane == null) {
+            val navigator = LocalNavigator.current
+            EinkPhoneSettings(stringResource(R.string.nav_settings)) { SettingsList(selected = null) { navigator.openSettings(it) } }
+        } else {
+            EinkPhoneSettings(stringResource(pane.titleRes)) { PaneContent(pane, actions) }
+        }
+    } else if (wideWindow()) {
+        TabletSettings(open, { open = it }, actions)
     } else if (pane == null) {
         PhoneSettingsList(actions)
     } else {
@@ -148,14 +177,17 @@ private fun PhoneSettingsList(actions: AppActions) {
 private fun PhonePane(pane: SettingsPane, actions: AppActions) {
     val navigator = LocalNavigator.current
     ScreenFrame(title = stringResource(pane.titleRes), onBack = navigator::back) { padding ->
-        Column(
-            Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(top = padding.calculateTopPadding(), bottom = 48.dp)
-                .padding(horizontal = 16.dp),
-        ) {
-            PaneContent(pane, actions)
+        // Your sources: pulling down looks again at servers that showed no series.
+        app.kaeri.ui.reading.BookSourcesRefresh(pane == SettingsPane.Sources, Modifier.padding(top = padding.calculateTopPadding())) {
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(bottom = 48.dp)
+                    .padding(horizontal = 16.dp),
+            ) {
+                PaneContent(pane, actions)
+            }
         }
     }
 }
@@ -179,19 +211,61 @@ internal fun SettingsList(selected: SettingsPane?, open: (SettingsPane) -> Unit)
     val update by store.updates.state.collectAsStateWithLifecycle()
     val syncStatus by store.sync.status.collectAsStateWithLifecycle()
     val profileList by store.sync.profiles.collectAsStateWithLifecycle()
+    val medium by store.medium.view.collectAsStateWithLifecycle()
+    val chapters by store.reading.downloads.collectAsStateWithLifecycle()
+    val books by store.bookSources.view.collectAsStateWithLifecycle()
     androidx.compose.runtime.LaunchedEffect(Unit) { store.loadSync() }
-    AccountCard(trackers["anilist"], AccountWords.status(trackers["anilist"], syncedAt, working)) { open(SettingsPane.Accounts) }
-    val panes = listOf(
-        SettingsPane.General to generalSummary(LocalContext.current, view),
-        SettingsPane.Playback to playbackSummary(LocalContext.current, view),
-        SettingsPane.Notifications to notificationsSummary(LocalContext.current, view),
-        SettingsPane.Downloads to storageLine(LocalContext.current, store.downloads.bytes(downloads)),
-        SettingsPane.Sources to sourcesSummary(LocalContext.current, view, providers.size.takeIf { providersLoaded }),
-        SettingsPane.Accounts to AccountWords.connected(LocalContext.current, trackers),
-        SettingsPane.Devices to devicesSummary(LocalContext.current, syncStatus),
-        SettingsPane.Profiles to profilesSummary(LocalContext.current, profileList.profiles),
-        SettingsPane.Hidden to null,
+    val context = LocalContext.current
+    val answer = medium?.answer ?: KaeriIsFor.WATCH
+    val watches = answer.watches
+    val reads = answer.reads
+    // Kaeri is for, alone at the top, where the build can read and the answer is not fixed.
+    if (store.medium.choosable && !einkSettings) {
+        SettingsGroup(
+            rows = listOf({ place ->
+                LinkRow(
+                    place,
+                    stringResource(SettingsPane.Medium.titleRes),
+                    app.kaeri.ui.reading.mediumAnswerWords(context, answer),
+                    if (reads && !watches) Icons.Read else Icons.Watch,
+                    selected = selected == SettingsPane.Medium,
+                ) { open(SettingsPane.Medium) }
+            }),
+        )
+    }
+    if (!einkSettings) AccountCard(trackers["anilist"], AccountWords.status(trackers["anilist"], syncedAt, working)) { open(SettingsPane.Accounts) }
+    val chapterBytes = if (reads) chapters?.meter?.used?.toLong() ?: 0L else 0L
+    val episodeBytes = if (watches) store.downloads.bytes(downloads) else 0L
+    val panes = listOfNotNull(
+        SettingsPane.General to generalSummary(context, view),
+        if (watches) SettingsPane.Playback to playbackSummary(context, view) else null,
+        if (reads) SettingsPane.Reading to app.kaeri.ui.reading.readingSummary() else null,
+        SettingsPane.Downloads to storageLine(context, episodeBytes + chapterBytes),
+        SettingsPane.Notifications to listOfNotNull(
+            if (watches) notificationsSummary(context, view) else null,
+            if (reads) app.kaeri.ui.reading.chapterNoticesSummary(context, store, view) else null,
+        ).joinToString(" · ").ifEmpty { null }, // i18n-skip
+        SettingsPane.Sources to if (watches) sourcesSummary(context, view, providers.size.takeIf { providersLoaded }) else app.kaeri.ui.reading.bookSourcesSummary(context, books),
+        SettingsPane.Accounts to AccountWords.connected(context, trackers, answer),
+        SettingsPane.Devices to devicesSummary(context, syncStatus),
+        // Profiles and hidden titles are about shows: with reading alone they are gone.
+        if (watches) SettingsPane.Profiles to profilesSummary(context, profileList.profiles) else null,
+        if (watches) SettingsPane.Hidden to null else null,
     )
+    val version = listOfNotNull(stringResource(R.string.about_version, appVersion()), update.offer?.let { stringResource(R.string.updates_version_out, it.version) }).joinToString(" · ") // i18n-skip
+    if (einkSettings) {
+        // On paper the list is one run of rows with hairlines between, the account among them.
+        val rows = buildList<@Composable (Place) -> Unit> {
+            if (store.medium.choosable) {
+                add(@Composable { place: Place -> LinkRow(place, stringResource(SettingsPane.Medium.titleRes), app.kaeri.ui.reading.mediumAnswerWords(context, answer), selected = selected == SettingsPane.Medium) { open(SettingsPane.Medium) } })
+            }
+            add(@Composable { place: Place -> EinkAccount(place, trackers["anilist"], AccountWords.status(trackers["anilist"], syncedAt, working), selected == SettingsPane.Accounts) { open(SettingsPane.Accounts) } })
+            for ((pane, line) in panes) add(@Composable { place: Place -> LinkRow(place, stringResource(pane.titleRes), line, selected = pane == selected) { open(pane) } })
+            add(@Composable { place: Place -> LinkRow(place, stringResource(SettingsPane.About.titleRes), version, selected = selected == SettingsPane.About) { open(SettingsPane.About) } })
+        }
+        rows.forEachIndexed { index, row -> row(Place.of(index, rows.size)) }
+        return
+    }
     SettingsGroup(
         rows = panes.map { (pane, line) ->
             @Composable { place: Place -> LinkRow(place, stringResource(pane.titleRes), line, pane.icon, selected = pane == selected) { open(pane) } }
@@ -199,7 +273,6 @@ internal fun SettingsList(selected: SettingsPane?, open: (SettingsPane) -> Unit)
     )
     SettingsGroup(
         rows = listOf({ place ->
-            val version = listOfNotNull(stringResource(R.string.about_version, appVersion()), update.offer?.let { stringResource(R.string.updates_version_out, it.version) }).joinToString(" · ") // i18n-skip
             LinkRow(place, stringResource(SettingsPane.About.titleRes), version, SettingsPane.About.icon, selected = selected == SettingsPane.About) {
                 open(SettingsPane.About)
             }
@@ -209,8 +282,10 @@ internal fun SettingsList(selected: SettingsPane?, open: (SettingsPane) -> Unit)
 
 private val SettingsPane.icon
     get() = when (this) {
+        SettingsPane.Medium -> Icons.Watch
         SettingsPane.General -> Icons.Settings
         SettingsPane.Playback -> Icons.PlaybackPage
+        SettingsPane.Reading -> Icons.Read
         SettingsPane.Notifications -> Icons.NotificationsPage
         SettingsPane.Downloads -> Icons.DownloadsPage
         SettingsPane.Sources -> Icons.SourcesPage
@@ -286,6 +361,16 @@ private fun AccountCard(anilist: SyncState?, status: AccountStatus, onOpen: () -
     }
 }
 
+/** The account on paper: who is signed in and how it last synced, as a row of the list, no avatar. */
+@Composable
+private fun EinkAccount(place: Place, anilist: SyncState?, status: AccountStatus, selected: Boolean, onOpen: () -> Unit) {
+    val context = LocalContext.current
+    val signedIn = anilist?.connected == true
+    val name = if (signedIn) anilist?.user ?: stringResource(R.string.accounts_signed_in_plain) else stringResource(R.string.accounts_state_signed_out)
+    val line = if (signedIn) Strings.accountsCardLine(context, AccountsModel.name("anilist"), status.text.replaceFirstChar { it.lowercase() }) else Strings.accountsLibraryNeeds(context, AccountsModel.name("anilist"))
+    LinkRow(place, name, line, selected = selected, onClick = onOpen)
+}
+
 /** The signed-in user's initial on a raised circle, or the account glyph signed out. */
 @Composable
 internal fun Avatar(name: String?, size: Int) {
@@ -322,9 +407,8 @@ internal fun appVersion(): String {
  * tapped, 320 wide. Picking another pane crossfades the middle on fade-in; the list stays.
  */
 @Composable
-private fun TabletSettings(start: SettingsPane, actions: AppActions) {
+private fun TabletSettings(pane: SettingsPane, onPane: (SettingsPane) -> Unit, actions: AppActions) {
     val navigator = LocalNavigator.current
-    var pane by rememberSaveable(start) { mutableStateOf(start) }
     val colors = MaterialTheme.colorScheme
     BoxWithConstraints(
         Modifier
@@ -345,7 +429,7 @@ private fun TabletSettings(start: SettingsPane, actions: AppActions) {
                         .padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 24.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
-                    SettingsList(selected = pane) { pane = it }
+                    SettingsList(selected = pane) { onPane(it) }
                 }
             }
             AnimatedContent(
@@ -356,19 +440,23 @@ private fun TabletSettings(start: SettingsPane, actions: AppActions) {
                 label = "pane", // i18n-skip
             ) { shown ->
                 val focus = remember(shown) { RowFocus(shown.defaultFocus) }
-                CompositionLocalProvider(LocalRowFocus provides focus) {
+                // A row is filled as the one the column beside the pane is about; with no room for
+                // that column, as on a tablet held upright, no row is, as on a phone.
+                CompositionLocalProvider(LocalRowFocus provides if (aside) focus else null) {
                     Row(Modifier.fillMaxSize()) {
                         Column(Modifier.weight(1f).fillMaxHeight()) {
                             Box(Modifier.height(64.dp).padding(horizontal = 16.dp), contentAlignment = Alignment.CenterStart) {
                                 Text(stringResource(shown.titleRes), style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
                             }
-                            Column(
-                                Modifier
-                                    .fillMaxSize()
-                                    .verticalScroll(rememberScrollState())
-                                    .padding(top = 8.dp, bottom = 52.dp),
-                            ) {
-                                PaneContent(shown, actions)
+                            app.kaeri.ui.reading.BookSourcesRefresh(shown == SettingsPane.Sources) {
+                                Column(
+                                    Modifier
+                                        .fillMaxSize()
+                                        .verticalScroll(rememberScrollState())
+                                        .padding(top = 8.dp, bottom = 52.dp),
+                                ) {
+                                    PaneContent(shown, actions)
+                                }
                             }
                         }
                         if (aside) {
@@ -398,8 +486,10 @@ private val SettingsPane.defaultFocus: String?
 @Composable
 internal fun PaneContent(pane: SettingsPane, actions: AppActions) {
     when (pane) {
+        SettingsPane.Medium -> app.kaeri.ui.reading.MediumPane()
         SettingsPane.General -> GeneralPane()
         SettingsPane.Playback -> PlaybackPane()
+        SettingsPane.Reading -> app.kaeri.ui.reading.ReadingPane()
         SettingsPane.Notifications -> NotificationsPane(actions)
         SettingsPane.Downloads -> DownloadsPane(actions)
         SettingsPane.Sources -> SourcesPane(actions)
@@ -416,7 +506,7 @@ data class AccountStatus(val text: String, val dot: androidx.compose.ui.graphics
 
 /** What the account rows say of a tracker. */
 internal object AccountWords {
-    /** "Synced 2 min ago", "2 changes waiting to sync", "Sign in again to keep syncing". */
+    /** "Synced 2 min ago", "2 changes waiting to sync", "3 changes can't sync yet", "Sign in again to keep syncing". */
     @Composable
     fun status(state: SyncState?, syncedAt: Map<String, Long>, working: Map<app.kaeri.engine.model.JobId, String>): AccountStatus {
         val colors = MaterialTheme.colorScheme
@@ -427,6 +517,8 @@ internal object AccountWords {
         state.pullError?.let { return AccountStatus(Strings.accountsSyncFailed(context, plainReason(context, it.reason)), colors.error) }
         if ("sync" in working.values) return AccountStatus(Strings.accountsSyncRunning(context), colors.onSurfaceVariant)
         if (state.outbox > 0u) return AccountStatus(context.resources.getQuantityString(R.plurals.accounts_changes_waiting, state.outbox.toInt(), state.outbox.toInt()), colors.onSurfaceVariant)
+        // Held for a match: not waiting, and said apart, so the row is not stuck on a count.
+        if (state.deferred > 0u) return AccountStatus(Strings.accountsChangesHeld(context, state.deferred.toInt()), colors.onSurfaceVariant)
         val at = syncedAt[state.tracker]
         if (at != null) {
             val seconds = (System.currentTimeMillis() - at) / 1000
@@ -435,7 +527,11 @@ internal object AccountWords {
         return AccountStatus(Strings.accountsSyncDone(context), colors.secondary)
     }
 
-    /** The signed-in trackers by name, "AniList, Kitsu", or "None". */
-    fun connected(context: Context, trackers: Map<String, SyncState>): String =
-        Wording.list(AccountsModel.order.filter { trackers[it]?.connected == true }.map { AccountsModel.name(it) }).ifEmpty { Strings.valueNone(context) }
+    /** The signed-in trackers that serve what Kaeri is for, by name, "AniList, Kitsu", or "None". */
+    fun connected(context: Context, trackers: Map<String, SyncState>, answer: KaeriIsFor = KaeriIsFor.WATCH): String =
+        Wording.list(
+            (listOf("anilist") + app.kaeri.ui.reading.otherTrackers(answer))
+                .filter { trackers[it]?.connected == true }
+                .map { app.kaeri.ui.reading.trackerName(it) },
+        ).ifEmpty { Strings.valueNone(context) }
 }

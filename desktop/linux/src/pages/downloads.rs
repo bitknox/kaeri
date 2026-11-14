@@ -195,6 +195,11 @@ struct Page {
     shown: Cell<bool>,
     /// When the storage meter last asked the disk, and the shape it asked for.
     meter_at: Cell<Option<Instant>>,
+    /// With Both, Reading's chapters as a section of their own, and Shows' heading.
+    reading: Rc<crate::reading::downloads::Section>,
+    sections: gtk::Box,
+    shows_head: gtk::Box,
+    shows_total: gtk::Label,
 }
 
 pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
@@ -236,13 +241,31 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
         .build();
     seeding.set_visible(false);
 
+    // With Both, one section a medium, each with its heading and total: Reading, then Shows.
+    let reading = crate::reading::downloads::Section::new(ctx, true);
+    let shows_title = gtk::Label::new(Some(&t::library_scope_shows()));
+    shows_title.add_css_class("heading");
+    shows_title.set_xalign(0.0);
+    let shows_total = widgets::haze("", "caption");
+    shows_total.set_xalign(0.0);
+    let shows_head = gtk::Box::new(gtk::Orientation::Horizontal, 10);
+    shows_head.append(&shows_title);
+    shows_head.append(&shows_total);
+    shows_head.set_visible(false);
+    let shows = gtk::Box::new(gtk::Orientation::Vertical, 8);
+    shows.append(&shows_head);
+    shows.append(&titles);
+    let sections = gtk::Box::new(gtk::Orientation::Vertical, 24);
+    sections.append(&reading.widget);
+    sections.append(&shows);
+
     let column = gtk::Box::new(gtk::Orientation::Vertical, 18);
     column.set_margin_top(18);
     column.set_margin_bottom(24);
     column.set_margin_start(12);
     column.set_margin_end(12);
     column.append(&meter_list);
-    column.append(&titles);
+    column.append(&sections);
     column.append(&seeding);
     let scroll = gtk::ScrolledWindow::builder()
         .hscrollbar_policy(gtk::PolicyType::Never)
@@ -280,6 +303,19 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
         open: RefCell::default(),
         shown: Cell::new(false),
         meter_at: Cell::new(None),
+        reading: Rc::clone(&reading),
+        sections,
+        shows_head,
+        shows_total,
+    });
+    reading.on_change({
+        let weak = Rc::downgrade(&page);
+        move || {
+            if let Some(page) = weak.upgrade() {
+                page.meter(true);
+                page.show();
+            }
+        }
     });
     page.actions(&navigation);
     pause_all.connect_clicked({
@@ -486,6 +522,8 @@ impl Page {
             .filter(|r| r.state == DownloadState::Done)
             .map(|r| r.total.max(r.downloaded))
             .sum();
+        // The bar shows what downloads take against what is left, never the disk's own fill.
+        let taken = taken + self.reading.used();
         let mut dir = self.folder();
         while !dir.exists() && dir.pop() {}
         let (meter, level) = (self.meter.clone(), self.level.clone());
@@ -504,7 +542,7 @@ impl Page {
                             &size(total),
                             &size(taken),
                         ));
-                        level.set_value(1.0 - free as f64 / total as f64);
+                        level.set_value(taken as f64 / (taken + free).max(1) as f64);
                         level.set_visible(true);
                     }
                     _ => {
@@ -553,7 +591,11 @@ impl Page {
         if !self.answered.get() {
             return;
         }
-        if rows.is_empty() && seeds.is_empty() {
+        let both =
+            crate::reading::answer(&self.ctx.hub) == kaeri_model::medium::KaeriIsFor::Both;
+        let reading = both && self.reading.has_any();
+        self.reading.widget.set_visible(reading);
+        if rows.is_empty() && seeds.is_empty() && !reading {
             for line in self.drawn.borrow_mut().seeds.drain(..) {
                 self.seeding.remove(&line.row);
             }
@@ -562,6 +604,24 @@ impl Page {
             return;
         }
         self.body.content();
+        // Shows gets its heading beside Reading's; the medium last read in comes first.
+        self.shows_head.set_visible(reading && !rows.is_empty());
+        self.titles.set_visible(!rows.is_empty());
+        let bytes: u64 = rows.iter().map(|r| r.total.max(r.downloaded)).sum();
+        let count = t::episodes_count(rows.len() as i64);
+        self.shows_total.set_label(&if bytes == 0 {
+            count
+        } else {
+            format!("{count} \u{b7} {}", size(bytes)) // i18n-skip
+        });
+        let reading_first = self.ctx.prefs.scope_reading(super::Dest::Downloads.name());
+        let first_is_reading =
+            self.sections.first_child().as_ref() == Some(self.reading.widget.upcast_ref());
+        if reading_first != first_is_reading
+            && let Some(last) = self.sections.last_child()
+        {
+            self.sections.reorder_child_after(&last, gtk::Widget::NONE);
+        }
         let narrow = self.ctx.size() == Size::Narrow;
         let shape = shape(&rows, &seeds, narrow);
         let same = self.drawn.borrow().shape.as_ref() == Some(&shape);
@@ -737,16 +797,16 @@ fn episode_row(row: &DownloadRow, narrow: bool) -> EpisodeRow {
         button.set_tooltip_text(Some(tip));
         button.add_css_class("flat");
         button.set_valign(gtk::Align::Center);
-        button.set_action_name(Some(action));
         button.set_action_target_value(Some(&target));
+        button.set_action_name(Some(action));
         button
     };
     let text_button = |label: &str, action: &str| {
         let button = gtk::Button::with_label(label);
         button.add_css_class("flat");
         button.set_valign(gtk::Align::Center);
-        button.set_action_name(Some(action));
         button.set_action_target_value(Some(&target));
+        button.set_action_name(Some(action));
         button
     };
     // The one action that fits the state: an icon where one says it, words where none does.

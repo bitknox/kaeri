@@ -5,12 +5,12 @@ party-start = Démarrer
 party-join = Rejoindre
 party-leave = Quitter
 party-leaving = Sortie en cours…
-party-ready-action = Je suis prêt
+party-ready-action = Prêt à regarder
 party-copy-invite = Copier le lien d'invitation
 party-stay = Rester
 party-leave-and-close = Quitter et fermer
 party-not-now = Pas maintenant
-party-getting-ready = Préparation…
+party-getting-ready = Chargement des suggestions…
 party-server = Serveur
 party-server-hint = hôte:port
 party-recent-servers = Serveurs récents
@@ -21,13 +21,14 @@ party-room = Salon
 party-your-name = Votre nom dans le salon
 party-server-public = Un serveur public géré par { $operator }, et non par { -app-name }.
 party-server-suggest = Pas de serveur à vous ? { $server } est un serveur public, géré par { $operator }.
-party-server-invited = Un serveur choisi par la personne qui vous a invité. { -app-name } ne le gère pas.
+party-server-invited = La personne qui vous a invité a choisi ce serveur. { -app-name } ne le gère pas.
 party-server-shape = Indiquez le serveur sous la forme d'un hôte et d'un port, par exemple party.example:8999.
 party-privacy = Le serveur voit votre nom, le salon, et quand quelqu'un lit, met en pause ou avance dans l'épisode. Chacun lit l'épisode depuis ses propres { -source-pl }.
 party-room-hint = Toute personne qui connaît le nom du salon peut le rejoindre. Le lien d'invitation le contient, personne n'a donc besoin de le lire à voix haute.
 party-invite-room = Salon { $room } sur { $server }
 party-joining = Connexion au salon { $room } sur { $server }…
 party-form-nothing = Ce qui est en cours de lecture sera partagé avec le salon.
+party-form-pick-later = Une fois dans le salon, appuyez sur Lecture sur n'importe quel épisode pour le regarder avec lui.
 party-form-episode-of = Épisode { $episode } de { $title }
 party-form-episode = Épisode { $episode }
 party-ended-early = Le { -watch-party } s'est terminé avant de commencer.
@@ -69,7 +70,7 @@ party-nosource-missing-detail = { $why }. { $what } sera partagé avec le salon 
 party-nosource-unaired = Vos { -source-pl } n'auront pas l'épisode { $episode } avant sa sortie.
 party-nosource-unaired-plain = Vos { -source-pl } ne l'auront pas avant. Il sera partagé avec le salon dès que l'une d'elles l'aura.
 party-sources-found = { $count ->
-    [one] Une { -source } le propose
+    [one] { $count } { -source } le propose
     [many] { $count } { -source-pl } le proposent
    *[other] { $count } { -source-pl } le proposent
  }
@@ -81,7 +82,7 @@ together-title = { -watch-together-cap }
 together-line = Chacun lit l’épisode depuis ses propres { -source-pl }. Le serveur ne fait que vous garder synchronisés.
 together-people-button = { -watch-together-cap }
 together-start = Lancer un visionnage
-together-start-line = Choisissez ce que vous regardez, puis invitez vos amis avec un lien ou un code.
+together-start-line = Ouvrez un salon et invitez des amis avec un lien ou un code, puis appuyez sur Lecture sur ce que vous voulez regarder.
 together-join = Rejoindre un visionnage
 together-join-line = Collez le lien d’invitation d’un ami, ou saisissez le code qu’il vous donne.
 together-join-field = Lien ou code
@@ -93,7 +94,7 @@ together-open-lobby = Ouvrir le salon
 together-open-player = Ouvrir le lecteur
 together-recent = Salons récents
 together-recent-row = Épisode { $episode } · avec { $names } · { $when }
-together-recent-empty = Les salons que vous rejoignez apparaissent ici, les dix derniers.
+together-recent-empty = Les dix derniers salons que vous rejoignez apparaissent ici.
 together-rejoin = Revenir
 together-forget-room = Retirer des salons récents
 together-someone-here = { $count ->
@@ -105,7 +106,7 @@ together-nobody-here = Personne pour l’instant
 together-servers = Serveurs
 together-server-suggested = Suggéré · géré par { $operator }
 together-server-used = { $count ->
-    [one] Utilisé pour 1 visionnage
+    [one] Utilisé pour { $count } visionnage
     [many] Utilisé pour { $count } visionnages
    *[other] Utilisé pour { $count } visionnages
  }
@@ -157,6 +158,7 @@ party-code-other-server = Les codes fonctionnent sur { $server }. Pour un autre 
 party-bar-title = { $title } · Épisode { $episode }
 party-bar-line = { $count } dans le salon · { $ready } prêts
 party-bar-idle = Dans le salon · rien en lecture pour vous
+party-bar-pick = Appuyez sur Lecture sur n'importe quel épisode pour le regarder avec le salon
 party-paused-by = Mis en pause par { $name }
 party-played-by = Lecture lancée par { $name }
 party-seeked-by = { $name } est passé à { $time }
@@ -190,7 +192,7 @@ party-chat-send = Envoyer
 party-chat-title = Chat
 party-chat-wait = Attendez { $seconds } s
 party-chat-wait-spoken = { $seconds ->
-    [one] Attendez une seconde
+    [one] Attendez { $seconds } seconde
     [many] Attendez { $seconds } secondes
    *[other] Attendez { $seconds } secondes
  }
@@ -201,7 +203,7 @@ party-chat-hidden = Le chat est masqué
 party-chat-hidden-line = Masquer le chat est activé dans Réglages, sous Lecture.
 party-chat-show = Afficher le chat
 settings-hide-chat = Masquer le chat dans les { -watch-party-pl }
-settings-hide-chat-line = Les messages, les réactions et leurs repères sur la barre de lecture restent hors de la vidéo, et le champ disparaît. La liste des personnes indique toujours qui est dans le salon.
+settings-hide-chat-line = Les messages du chat, les réactions et leurs repères sur la barre de lecture restent hors de la vidéo, et le champ du chat disparaît. La liste des personnes indique toujours qui est dans le salon.
 party-mute = Rendre { $name } muet
 party-unmute = Réactiver { $name }
 party-unmute-short = Réactiver

@@ -61,7 +61,7 @@ settings-audio-detail = Chaque série garde son propre audio et ses sous-titres.
 settings-system-captions = Suivre le style de sous-titres du système
 settings-system-captions-detail = Les sous-titres simples utilisent vos préférences de sous-titrage de l’Accessibilité. Les sous-titres stylisés gardent leur propre aspect.
 settings-overridden = { $count ->
-    [one] Modifié pour une série
+    [one] Modifié pour { $count } série
     [many] Modifié pour { $count } séries
    *[other] Modifié pour { $count } séries
  }
@@ -73,6 +73,18 @@ settings-keep-seeding = Continuer le partage
 settings-wifi-only = Wi-Fi uniquement
 settings-wifi-only-detail = Les téléchargements attendent le Wi-Fi
 settings-torrents-cellular = Torrents en données mobiles
+settings-chapter-downloads-cellular = Téléchargements de chapitres en données mobiles
+settings-keep-chapters-ready = Garder les prochains chapitres prêts
+settings-delete-after-reading = Supprimer les chapitres après lecture
+settings-series-choices-follow = Les réglages de série vous suivent
+settings-new-chapters-download = Nouveaux chapitres
+settings-mode-follows = Mode et sens de lecture
+settings-look-follows = Apparence
+settings-send-progress-after = Envoyer la progression après
+settings-when-trackers-disagree = Quand les { -tracker-pl } ne sont pas d'accord
+settings-chapter-notifications = Nouveaux chapitres
+settings-downloads-finished = Téléchargements terminés
+settings-open-at = Ouvrir sur
 settings-seed-after = Partager après le visionnage
 settings-seed-for = Partager pendant au plus
 settings-upload-limit = Limite d’envoi
@@ -93,12 +105,12 @@ settings-notices = Mentions légales
 settings-artwork = Illustrations sous licence CC BY-NC
 settings-artwork-detail = Attribution dans les mentions de l’application
 settings-new-episodes = Nouveaux épisodes
-settings-new-episodes-detail = Pour les séries de votre liste En cours
-settings-notify-detail = Une notification quand un épisode d’une série que vous suivez sort : la série et le numéro de l’épisode, jamais le titre de l’épisode. Une série peut désactiver ses propres notifications dans ses réglages.
+settings-new-episodes-detail = Apparaît dans votre liste En cours
+settings-notify-detail = Vous recevez une notification quand un épisode d’une série que vous suivez sort. Elle indique la série et le numéro de l’épisode, jamais le titre de l’épisode. Une série peut désactiver ses propres notifications dans ses réglages.
 settings-coming-up = À venir · 7 prochains jours
 settings-system-notifications = Réglages des notifications
 settings-system-notifications-detail = Son, vibration et écran verrouillé
-settings-system-notifications-apple = Ouvre Réglages Système, où se règlent le style des bannières, le son et les pastilles.
+settings-system-notifications-apple = Ouvre Réglages Système, où vous réglez le style des bannières, le son et les pastilles.
 settings-notifications-blocked = Désactivé : le système n’autorise pas les notifications de { -app-name }
 settings-notifications-show-on = Activé dans les réglages de cette série
 settings-notify-show = Quand un épisode de cette série sort
@@ -112,7 +124,7 @@ show-settings-spoiler-detail = Floute les images et résumés après l’épisod
 show-settings-always = Toujours
 show-settings-never = Jamais
 show-settings-subs-remembered = Mémorisés depuis votre dernier épisode.
-show-settings-subs-follow = Choix fait dans le lecteur. Suit Réglages › Lecture.
+show-settings-subs-follow = Choix fait dans le lecteur. En attendant, Réglages › Lecture s’applique.
 show-settings-source = { -source-cap }
 show-settings-source-detail = Automatique essaie vos { -source-pl } dans l’ordre.
 show-settings-reset = Rétablir les valeurs par défaut
@@ -134,7 +146,7 @@ widget-resume-label = { -continue-cap } l’épisode { $episode } de { $title }
 widget-start-label = Lire l’épisode { $episode } de { $title }
 widget-resume-dubbed-label = { -continue-cap } l’épisode { $episode }, { -dubbed }, de { $title }
 accounts-changes-waiting = { $count ->
-    [one] Un changement en attente de synchronisation
+    [one] { $count } changement en attente de synchronisation
     [many] { $count } changements en attente de synchronisation
    *[other] { $count } changements en attente de synchronisation
  }
@@ -143,7 +155,7 @@ settings-quality-standard = Standard
 settings-upload-unlimited = Illimité
 settings-upscaling-natural = Naturel · ArtCNN
 settings-label-hover-cards = Agrandir les jaquettes au survol
-settings-hover-cards-note = Affiche une carte plus grande avec la bande-annonce quand le pointeur reste sur une jaquette.
+settings-hover-cards-note = Laisser le pointeur sur une jaquette ouvre une carte plus grande avec sa bande-annonce.
 settings-upscaling-note-natural = Traits et texture fidèles, rien n’est restylé.
 settings-upscaling-note-sharp = Traits plus nets et contours plus marqués, au prix d’un peu de texture.
 settings-after-download = Après chaque téléchargement
@@ -154,6 +166,8 @@ settings-presence-title = La présence affiche le titre
 settings-signed-in = Connecté
 settings-upscaling-sharp = Net · Anime4K
 settings-aside-accounts = { -app-name } fonctionne sans compte. Votre historique de visionnage reste sur cet { -device } quand vous vous déconnectez.
+settings-aside-accounts-read = { -app-name } fonctionne sans compte. Votre historique de lecture reste sur cet { -device } quand vous vous déconnectez.
+settings-aside-accounts-both = { -app-name } fonctionne sans compte. Votre historique de visionnage et de lecture reste sur cet { -device } quand vous vous déconnectez.
 widget-day-today = aujourd’hui
 widget-day-yesterday = hier
 widget-line-start = Lire { $episode }
@@ -206,3 +220,6 @@ settings-subs-styled-restyle-detail = Votre police, couleur, bord et arrière-pl
 settings-subs-styled-strip = Retirer tout style
 settings-subs-styled-strip-detail = Chaque ligne s’affiche en dialogue simple en bas, dans votre style. Les panneaux perdent leur place, et le karaoké et les effets disparaissent.
 settings-subs-reset = Réinitialiser le style des sous-titres
+settings-opds-feed = Partager sur ce réseau
+settings-opds-password = Mot de passe du flux
+settings-opds-port = Port du flux

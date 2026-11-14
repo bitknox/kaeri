@@ -33,6 +33,24 @@
 //   expires   seconds the `code` sheet's code has left, 0 for one already expired
 //   day       days after today the calendar opens on, for a day with broadcasts: the fixtures'
 //             own day has none
+//   medium    read, watch or both: what Kaeri is for, chosen as Settings would once the engine is up
+//             (the reading scenes); page=read/series/a%3A900301 opens a series' page over Read
+//   series    a sheet or menu the series' page opens once it has loaded: chapter, read-from,
+//             group, tracking, read-again, send, where-stop, choose, status or download
+//   credits   start, end, both, two, parts, missing or broken: each layout of the chapter the
+//             reader opens comes with a credit page skipped at its start, its end or both, two at
+//             its start, two parts, a missing part, or a page that cannot be read (CreditsStage)
+//   creditshot what the reader shows once they have come: line, chrome, shown, shownchrome, kept,
+//             parts or end (CreditShot)
+//   groups    set: the series' source lists three groups, and its rows show a chapter in parts
+//             and chapters from other groups (GroupsStage); downloaded: the same, with the
+//             chapter in parts downloaded
+//   chapterwait ms a chapter opened from another waits before the engine hears of it, to see the
+//             reader's pressed and loading states on chapters that open at once here
+//   openwait  ms the reader's first open waits before the engine hears of it, to see the opening
+//             plate, which comes at 600 ms, on works that open at once here
+//   readerat  ms after the engine is up that a reader scene opens, so a recording of its opening
+//             starts on a settled app, past the splash screen
 //   party     a watch party on the testing engine's fake server, for the chat board (PartyShot):
 //             chatline, chatbusy, chatreact, chatfield, chatoff, chatfail, chatmute, chathidden,
 //             chatshort, chatloop, lobby or bar; with media=<path> the player plays that file.
@@ -57,6 +75,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import app.kaeri.engine.model.DeviceCodePrompt
+import app.kaeri.engine.model.KaeriIsFor
+import app.kaeri.store.reads
 import app.kaeri.engine.model.DiscussionState
 import app.kaeri.engine.model.Event
 import app.kaeri.store.EngineEpisodeCheck
@@ -99,21 +119,70 @@ internal object Flavour {
     /** The application, for what the casting scenes' made-up TVs say. */
     private var appContext: Context? = null
 
+    /**
+     * What the e-ink detection is told of a wide colour gamut in place of the display's answer.
+     * An emulator has none, so the colour question's scene says it has one, as an unknown colour
+     * panel would.
+     */
+    var wideColourGamut: Boolean? = null
+        private set
+
+    /** What the e-ink detection is told of the system's e-ink flag: the colour question's scene says yes. */
+    var einkSupport: String? = null
+        private set
+
+    /** The process's launch: the engine starts once, so a rebuilt activity keeps the files it runs on. */
+    private var launched: EngineLaunch? = null
+
+    /** The `chapterwait` extra, in ms. */
+    private var chapterWait = 0L
+
+    /** The `openwait` extra, in ms. */
+    private var openWait = 0L
+
+    /**
+     * A reader command on its way to the engine: a chapter opened from another held back
+     * [chapterWait], and the reader's first open [openWait].
+     */
+    fun readerSend(command: app.kaeri.engine.model.Command, send: (app.kaeri.engine.model.Command) -> Unit) {
+        val wait = when ((command as? app.kaeri.engine.model.Command.Reader)?.v1) {
+            is app.kaeri.engine.model.ReaderCommand.OpenChapter -> chapterWait
+            is app.kaeri.engine.model.ReaderCommand.Open -> openWait
+            else -> 0L
+        }
+        if (wait > 0) {
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ send(command) }, wait)
+        } else {
+            send(command)
+        }
+    }
+
     fun launch(context: Context, intent: Intent): EngineLaunch {
+        launched?.let { return it }
         appContext = context.applicationContext
         val named = intent.getStringExtra("scene")
         val scene = named?.let(FixtureScene::named) ?: FixtureScene.WATCHING
+        // shell=eink: any scene on a grey e-ink panel, answered at start, for the e-ink shell's shots.
+        val einkShell = intent.getStringExtra("shell") == "eink"
+        wideColourGamut = if (scene == FixtureScene.EINK_KALEIDO_UNSURE) true else if (einkShell) false else null
+        einkSupport = if (scene == FixtureScene.EINK_KALEIDO_UNSURE || einkShell) "1" else null
         if (named != null && FixtureScene.named(named) == null) Log.w(KaeriApp.TAG, "no scene named $named")
         // Home's world: invented titles dated by the scene's clock, for Home's shots.
         if (intent.getStringExtra("world") == "1") android.system.Os.setenv("KAERI_FIXTURES_HOME_WORLD", "1", true)
+        // A change AniList kept refusing until it stopped being sent, for the one-time notice's shots.
+        if (intent.getStringExtra("dropped") == "1") android.system.Os.setenv("KAERI_FIXTURES_DROPPED", "1", true)
         // The fuller catalogue, which Search's filters=set route needs for titles that match.
         if (intent.getStringExtra("catalogue") == "1" || intent.getStringExtra(MainActivity.FILTERS) != null) {
             android.system.Os.setenv("KAERI_FIXTURES_CATALOGUE", "1", true)
         }
         intent.getStringExtra("media")?.let { fixtureMedia = it }
+        chapterWait = intent.getStringExtra("chapterwait")?.toLongOrNull()?.coerceAtLeast(0) ?: 0L
+        openWait = intent.getStringExtra("openwait")?.toLongOrNull()?.coerceAtLeast(0) ?: 0L
         FixtureCasts.scene = CastScene.named(intent.getStringExtra("cast"))
         if (intent.getStringExtra("downloads") != null) fixtureDownloadClip = downloadClip(context)
-        return EngineLaunch.fixtures(scene, context.cacheDir).copy(platform = enginePlatform(context), profile = intent.getStringExtra("profile") ?: ProfileChoice.saved(context))
+        return EngineLaunch.fixtures(scene, context.cacheDir)
+            .copy(platform = enginePlatform(context), profile = intent.getStringExtra("profile") ?: ProfileChoice.saved(context))
+            .also { launched = it }
     }
 
     /**
@@ -215,6 +284,7 @@ internal object Flavour {
      * screen: what announceReady waits on besides the store. True with no scene asked for.
      */
     suspend fun reachedTv(intent: Intent, store: AppStore): Boolean {
+        if (!reachedReading(intent, store)) return false
         PartyShot.named(intent.getStringExtra("party"))?.let { shot ->
             val app = appContext as? KaeriApp ?: return false
             FixtureParty.listen(app)
@@ -231,6 +301,18 @@ internal object Flavour {
             }
         }
         CastScene.named(intent.getStringExtra("cast"))?.let { return reachedCast(intent, store, it) }
+        intent.getStringExtra("prelaunch")?.let { state ->
+            if (!app.kaeri.store.Prelaunch.stage(store, state)) Log.w(KaeriApp.TAG, "no prelaunch state named $state: ${app.kaeri.store.Prelaunch.STATES.joinToString()}")
+        }
+        intent.getStringExtra("discovery")?.let { state ->
+            if (!app.kaeri.store.ReadDiscoveryStage.stage(store, state)) Log.w(KaeriApp.TAG, "no discovery state named $state: ${app.kaeri.store.ReadDiscoveryStage.STATES.joinToString()}")
+        }
+        // groups=set: the series' source lists three groups, and its rows show parts and other
+        // groups; downloaded has the chapter in parts downloaded.
+        when (intent.getStringExtra("groups")) {
+            "set" -> app.kaeri.store.GroupsStage.stage(store)
+            "downloaded" -> app.kaeri.store.GroupsStage.stage(store, downloaded = true)
+        }
         intent.getStringExtra("sync")?.let { state ->
             if (!app.kaeri.store.FixtureSync.stage(store, state)) Log.w(KaeriApp.TAG, "no sync state named $state: ${app.kaeri.store.FixtureSync.STATES.joinToString()}")
         }
@@ -246,6 +328,39 @@ internal object Flavour {
             while (!store.tv.reached(scene)) delay(50)
             // The sheet's own animation in.
             delay(700)
+            true
+        } ?: false
+    }
+
+    /**
+     * The reading extras done: the medium asked for chosen, a series' page asked for loaded, and
+     * reading's Home or Updates there when they are on screen. True with none asked for.
+     */
+    private suspend fun reachedReading(intent: Intent, store: AppStore): Boolean {
+        val medium = intent.getStringExtra("medium")?.let { named -> KaeriIsFor.entries.firstOrNull { it.name.equals(named, ignoreCase = true) } }
+        val work = intent.getStringExtra(MainActivity.PAGE)?.substringAfter("/series/", "")?.takeIf { it.isNotEmpty() }?.let(android.net.Uri::decode)
+        val reading = intent.getStringExtra("scene")?.let(FixtureScene::named)?.name?.startsWith("READING") == true
+        if (medium == null && work == null && !reading) return true
+        return withTimeoutOrNull(60_000) {
+            if (medium != null) store.medium.view.first { it?.answer == medium }
+            if (work != null) {
+                store.reading.series.first { it[work] != null }
+                store.reading.chapters.first { it[work] != null }
+            } else if (store.medium.answer.reads) {
+                // What the reading screen on show loads first: Home, Updates or the library.
+                // Search and Settings load nothing of reading's until asked.
+                withTimeoutOrNull(8_000) {
+                    kotlinx.coroutines.flow.combine(store.reading.home, store.reading.updates, store.reading.lists) { home, updates, lists ->
+                        home != null || updates != null || lists.isNotEmpty()
+                    }.first { it }
+                }
+            }
+            // Reading's Search asked for: its answer in, the sources' with it.
+            if (intent.getStringExtra("scope") == "reading") {
+                withTimeoutOrNull(15_000) { store.reading.search.first { !it.loading && (it.sources == null || it.sources?.done == true) } }
+            }
+            // The sheet a shot asked for, opening.
+            delay(if (intent.getStringExtra("series") != null) 1_200 else 300)
             true
         } ?: false
     }
@@ -287,11 +402,66 @@ internal object Flavour {
         delay(1_200)
     }
 
+    /** The reading scenes open their book in the reader, as the Read switch will. Reading-dark is the build with reading off: no reader to open. */
+    private fun openReaderScene(intent: Intent) {
+        // Any work in any scene, such as the demo's story: read=<work>, eink=1 for the e-ink reader.
+        intent.getStringExtra("read")?.let { work ->
+            app.kaeri.reader.phone.ReaderLauncher.open(
+                app.kaeri.reader.phone.ReaderRequest(work, eink = intent.getStringExtra("eink") == "1"),
+            )
+            return
+        }
+        val scene = intent.getStringExtra("scene")?.let(FixtureScene::named) ?: return
+        val (work, eink) = when (scene) {
+            FixtureScene.READER_MANGA_RTL, FixtureScene.READER_MOVED, FixtureScene.READER_LONG -> "a:900301" to false
+            FixtureScene.READER_STRIP -> "a:900303" to false
+            FixtureScene.READER_NOVEL -> "a:900302" to false
+            FixtureScene.EINK_GREY, FixtureScene.EINK_KALEIDO_UNSURE, FixtureScene.EINK_LONG -> "a:900301" to true
+            else -> return
+        }
+        // Left to the app's own screens when the launch asked for one.
+        if (intent.getStringExtra("reader") == "off") return
+        app.kaeri.reader.phone.ReaderLauncher.open(
+            app.kaeri.reader.phone.ReaderRequest(work, eink = eink),
+        )
+    }
+
     /** What the extras ask of the engine once it is up, once per process. */
     fun started(context: Context, store: AppStore, intent: Intent, notifier: EpisodeNotifier, player: app.kaeri.player.PlayerModel) {
         StartReplay.from(context, store, player, intent)
         if (marked) return
         marked = true
+        intent.getStringExtra("credits")?.let { what ->
+            val scene = intent.getStringExtra("scene")?.let(FixtureScene::named)
+            val grey = scene == FixtureScene.EINK_GREY || scene == FixtureScene.EINK_LONG || intent.getStringExtra("eink") == "1"
+            if (!app.kaeri.store.CreditsStage.stage(context, store, what, grey)) Log.w(KaeriApp.TAG, "credits takes ${app.kaeri.store.CreditsStage.STATES.joinToString()}, not $what")
+        }
+        app.kaeri.reader.CreditShot.step = intent.getStringExtra("creditshot")
+        // plate=hold: every page waits on its plate, for the plate's shots.
+        app.kaeri.reader.PlateShot.hold = intent.getStringExtra("plate") == "hold"
+        val readerAt = intent.getStringExtra("readerat")?.toLongOrNull()?.coerceAtLeast(0) ?: 0L
+        if (readerAt > 0) {
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ openReaderScene(intent) }, readerAt)
+        } else {
+            openReaderScene(intent)
+        }
+        if (intent.getStringExtra("shell") == "eink") {
+            // The panel's question answered as a person would: e-ink, in greys.
+            val eink = (context.applicationContext as KaeriApp).eink
+            MainScope().launch {
+                eink.state.first { it.profile != null }
+                eink.answerColour(false)
+            }
+        }
+        intent.getStringExtra("medium")?.let { named ->
+            KaeriIsFor.entries.firstOrNull { it.name.equals(named, ignoreCase = true) }?.let(store.medium::chooseAtLaunch)
+                ?: Log.w(KaeriApp.TAG, "medium takes read, watch or both, not $named")
+        }
+        intent.getStringExtra("series")?.let { app.kaeri.ui.reading.SeriesShots.open = it }
+        // scope=reading: Search on reading's side, with the query's words and readfilters=set.
+        if (intent.getStringExtra("scope") == "reading") {
+            app.kaeri.ui.reading.showReadingSearch(store, intent.getStringExtra(MainActivity.QUERY), intent.getStringExtra("readfilters") == "set")
+        }
         if (intent.getStringExtra("notify") != null) notifyFixtures(store, notifier)
         intent.getStringExtra("widgets")?.let { pinWidgets(context, it) }
         intent.getStringExtra("check")?.toLongOrNull()?.let { delay ->

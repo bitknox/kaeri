@@ -7,8 +7,8 @@ notice-sign-in-failed = Oturum açılamadı: { $tracker }. Yeniden deneyin. { $r
 notice-sign-in-stopped = Oturum açma tamamlanmadan durdu: { $tracker }. Yeniden deneyin. { $reason }
 notice-token-exchange-failed = Jeton alınamadı: { $tracker }. Yeniden oturum açmayı deneyin. { $reason }
 notice-browser-not-opened = Oturum açma için tarayıcı açılamadı. Bir tarayıcının kurulu olup olmadığını denetleyin ve yeniden deneyin. { $reason }
-notice-sign-in-not-waiting = Bunu bekleyen bir oturum açma işlemi yok ({ $tracker }). Oturum açmayı yeniden başlatın.
-notice-sign-in-wrong-request = Bu oturum açma ({ $tracker }) bu istekten dönmedi. Oturum açmayı yeniden başlatın.
+notice-sign-in-not-waiting = { $tracker } hizmetinden bir oturum açma yanıtı geldi, ama onu bekleyen bir oturum açma yoktu. Oturum açmayı yeniden başlatın.
+notice-sign-in-wrong-request = { $tracker } hizmetinden gelen oturum açma yanıtı istekle eşleşmiyor. Oturum açmayı yeniden başlatın.
 notice-sign-in-no-token = Oturum açma ({ $tracker }) jetonsuz döndü. Yeniden deneyin.
 notice-mal-client-missing-build = MyAnimeList oturumu tamamlanamadı: bu derlemede bunun için bir istemci yok.
 notice-kitsu-signs-in-on-accounts = Kitsu oturumu Hesaplar ekranından açılır.
@@ -44,5 +44,5 @@ notice-episodes-aired = { $count ->
  }
 notice-update-available = { $tag } çıktı. Kurmak için kaeri --update komutunu çalıştırın.
 cause-proxy-needs-address = Vekil sunucu için bir ana makine ve bir bağlantı noktası gerekir.
-cause-proxy-address-unusable = Vekil sunucunun adresi denetim için kullanılamıyor.
+cause-proxy-address-unusable = Vekil sunucu denetimi bu adresi kullanamıyor.
 cause-server-unreachable = Sunucuya ulaşılamadı.

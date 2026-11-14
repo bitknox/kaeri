@@ -62,7 +62,8 @@ class ContinueWidget(private val hostOf: (Context) -> WidgetHost? = ::widgetHost
         // The record as it is, not followed: a preview's composition runs once and waits for
         // every effect in it to end, and following the record never would.
         val host = hostOf(context)
-        provideContent { Drawn(context, host, host?.widgetRecord?.value) }
+        val data = host?.widgetRecord?.value
+        provideContent { Drawn(context, host, data) }
     }
 
     @Composable
@@ -150,7 +151,8 @@ private fun Small(show: ContinueView.Show, updated: String?, drawing: Drawing) {
     val width = LocalSize.current.width
     Box(root(drawing.open(AppLink.Title(show.id)))) {
         Column(GlanceModifier.fillMaxSize()) {
-            Art(drawing, show.wideUrl, show.plate, width, 84.dp, 0.dp)
+            // Across the top, under the widget's corners: its own there, where nothing clips it.
+            Art(drawing, show.wideUrl, show.plate, width, 84.dp, SystemStyle.unclipped, topOnly = true)
             Column(GlanceModifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, top = 12.dp)) {
                 Text(show.title, style = words(15.sp, weight = FontWeight.Medium), maxLines = 1)
                 Text(show.line, style = words(13.sp, Palette.haze), maxLines = 1)

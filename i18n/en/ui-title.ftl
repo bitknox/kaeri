@@ -37,7 +37,7 @@ title-open = Open title
 title-seasons = Seasons
 
 # Name of one season of a show, such as "Season 2".
-# @arg number: int
+# @arg number: plain
 season-number = Season { $number }
 
 # Heading of the list of episodes.
@@ -58,11 +58,13 @@ title-tags = Tags
 # Button that opens the full page of facts about a show.
 title-more-about = More about this show
 
-# Accessibility hint of the button that expands a synopsis.
-title-synopsis-hint = Shows the whole synopsis
+# Accessible name of the More at the end of a cut synopsis, which shows the rest of it. The
+# page's menu of extra actions is called More too, so this one says what it does.
+# @max 32
+title-synopsis-more = Show the whole synopsis
 
 # Label under a season: which episodes are dubbed so far.
-# @arg episode: int
+# @arg episode: plain
 title-dubbed-to = { -dubbed-cap } to episode { $episode }
 
 # State of a title with no episodes listed yet.
@@ -87,28 +89,28 @@ state-expanded = Expanded
 state-collapsed = Collapsed
 
 # Row that stands for several watched episodes in a row, such as "Episodes 1 to 5 watched".
-# @arg first: int
-# @arg last: int
+# @arg first: plain
+# @arg last: plain
 title-watched-range = Episodes { $first } to { $last } watched
 
 ## Episodes
 
 # Name of an episode, such as "Episode 7".
-# @arg number: int
+# @arg number: plain
 episode-number = Episode { $number }
 
 # Short name of an episode, for tight spaces.
-# @arg number: int
+# @arg number: plain
 # @max 12
 episode-number-short = E{ $number }
 
 # An episode and its name.
-# @arg number: int
+# @arg number: plain
 # @arg title: text
 episode-with-title = Episode { $number } · { $title }
 
 # An episode, dubbed, and its name.
-# @arg number: int
+# @arg number: plain
 # @arg title: text
 episode-with-title-dubbed = Episode { $number } · { -dubbed-cap } · { $title }
 
@@ -151,17 +153,17 @@ episode-facts-length = { $minutes } min
 episode-facts-left = { $minutes } min left
 
 # One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden.
-# @arg episode: int
+# @arg episode: plain
 episode-protection-line = Spoiler protection hides what comes after episode { $episode }.
 
 # The same line on phones.
-# @arg episode: int
+# @arg episode: plain
 # @max 40
 episode-protection-line-short = Hidden after episode { $episode }
 
 # Label of an episode range of a long series, in the range menu.
-# @arg from: int
-# @arg to: int
+# @arg from: plain
+# @arg to: plain
 episode-range = Episodes { $from } to { $to }
 
 # Label of the control that picks an episode range.
@@ -175,7 +177,7 @@ episode-fold = { $count ->
  }
 
 # An episode's number in a facts line on phones and in narrow desktop windows.
-# @arg episode: int
+# @arg episode: plain
 episode-short = E{ $episode }
 
 # Part of an episode's facts line: when it aired. The date is already formatted.
@@ -196,11 +198,11 @@ episode-protection-show = Show
 episode-protection-hide = Hide
 
 # The line where spoiler protection starts, once the rows after it are shown.
-# @arg episode: int
+# @arg episode: plain
 episode-protection-shown = Showing what comes after episode { $episode }.
 
 # The same line on phones.
-# @arg episode: int
+# @arg episode: plain
 # @max 40
 episode-protection-shown-short = Showing after episode { $episode }
 
@@ -227,26 +229,26 @@ episode-mark-unwatched = Mark unwatched
 episode-mark-previous-watched = Mark all previous watched
 
 # Menu item that marks every episode up to a given one as watched.
-# @arg episode: int
+# @arg episode: plain
 episode-mark-up-to = Mark watched up to episode { $episode }
 
 # Menu item that marks one numbered episode as watched.
-# @arg episode: int
+# @arg episode: plain
 episode-mark-n-watched = Mark episode { $episode } watched
 
 # Menu item that marks one numbered episode as not watched.
-# @arg episode: int
+# @arg episode: plain
 episode-mark-n-unwatched = Mark episode { $episode } unwatched
 
 # Notice after an episode was marked watched.
-# @arg episode: int
+# @arg episode: plain
 episode-marked-watched = Marked episode { $episode } watched.
 
 # Menu item that starts an episode from the beginning.
 episode-play-from-beginning = Play from the beginning
 
 # Menu item that downloads one numbered episode.
-# @arg episode: int
+# @arg episode: plain
 episode-download-n = Download episode { $episode }
 
 # Menu item that downloads every episode not yet watched.
@@ -318,12 +320,12 @@ episode-line-dubbed = { $line } · { -dubbed-cap }
 
 
 # Main button of the title page for a dubbed episode that has not been started.
-# @arg episode: int
+# @arg episode: plain
 # @max 40
 title-button-play-dubbed = Play episode { $episode } · { -dubbed-cap }
 
 # Main button of the title page when a dubbed episode is part-watched. The time is where it stopped, already formatted.
-# @arg episode: int
+# @arg episode: plain
 # @arg time: text
 # @max 46
 # @allow proceed
@@ -346,7 +348,7 @@ title-fact-released = Released
 title-fact-range = { $from } to { $to }
 
 # Value of the fact on a cancelled show: the last episode that aired.
-# @arg episode: int
+# @arg episode: plain
 title-fact-after = After episode { $episode }
 
 # Value of the fact on a show that is airing and has no known start.
@@ -377,21 +379,21 @@ episode-go-to-title = Go to episode
 episode-go-to-go = Go
 
 # Placeholder of the Go to episode field: the first and last episode of the show.
-# @arg first: int
-# @arg last: int
+# @arg first: plain
+# @arg last: plain
 episode-go-to-hint = { $first } to { $last }
 
 # Accessibility label of the Go to episode field.
-# @arg first: int
-# @arg last: int
+# @arg first: plain
+# @arg last: plain
 episode-go-to-label = Episode, { $first } to { $last }
 
 # Shown when the number typed is not an episode of the show.
-# @arg number: int
-# @arg last: int
+# @arg number: plain
+# @arg last: plain
 episode-go-to-none = No episode { $number }. This show has { $last }.
 
 # Shown when the number typed is an episode with no date that has not come out.
-# @arg number: int
-# @arg latest: int
+# @arg number: plain
+# @arg latest: plain
 episode-go-to-not-out = Episode { $number } isn't out yet. The latest is { $latest }.

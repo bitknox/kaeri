@@ -136,6 +136,12 @@ internal data class ProviderInfo(val row: ProviderRow, val context: Context, val
 
 @Composable
 internal fun ProvidersScreen() {
+    val answer = kaeriIsFor()
+    // Reading alone: the sources are the books' own, under the same title.
+    if (answer == app.kaeri.engine.model.KaeriIsFor.READ) {
+        app.kaeri.ui.reading.BookSourcesScreen(stringResource(R.string.sources_title))
+        return
+    }
     val store = LocalAppStore.current
     val navigator = LocalNavigator.current
     val view by store.settings.view.collectAsStateWithLifecycle()
@@ -219,6 +225,23 @@ internal fun ProvidersScreen() {
                 .padding(horizontal = 16.dp)
                 .readingWidth(),
         ) {
+            // With both media on, the books' sources are a page of their own, first.
+            if (answer == app.kaeri.engine.model.KaeriIsFor.BOTH) {
+                val books by store.bookSources.view.collectAsStateWithLifecycle()
+                LaunchedEffect(Unit) { store.bookSources.load() }
+                SettingsGroup(
+                    modifier = Modifier.padding(bottom = 16.dp),
+                    rows = listOf({ place ->
+                        InfoRow(
+                            place,
+                            stringResource(R.string.settings_book_sources),
+                            app.kaeri.ui.reading.bookSourcesSummary(LocalContext.current, books),
+                            onClick = { navigator.open(app.kaeri.ui.reading.BOOK_SOURCES_ROUTE) },
+                            trailing = { RowMark(Icons.Chevron) },
+                        )
+                    }),
+                )
+            }
             when {
                 !loaded -> PlaceholderRows()
                 else -> {
@@ -589,8 +612,9 @@ internal fun ProviderScreen(id: String, actions: AppActions) {
     var updating by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val info = row?.let { ProviderInfo(it, context) }
-    if (info?.isDemo == true) {
-        DemoAbout(info.name)
+    // The demo's page also with Read alone, where the demo is a book source and no provider row.
+    if (info?.isDemo == true || id == "demo") { // i18n-skip
+        DemoAbout(info?.name ?: stringResource(R.string.sources_demo_name))
         return
     }
     ScreenFrame(title = info?.name ?: stringResource(R.string.sources_fallback_title), subtitle = info?.let { if (it.isPlugin && it.row.origin is ProviderOrigin.Store) stringResource(R.string.sources_origin_from, it.origin) else it.origin }, onBack = navigator::back) { padding ->

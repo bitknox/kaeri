@@ -26,6 +26,9 @@ pub use anilist::{
 pub use dataset::{MAPPING_DATASETS, RefreshOutcome, refresh_all};
 pub use episode_text::EpisodeText;
 pub use kaeri_net::ratelimit::{Pacing, Priority};
-pub use source::{Found, Meta, Suggested};
+pub use source::{
+    Found, Meta, Suggested,
+    books::{BOOK_KEPT_FOR, KeptBook},
+};
 pub use tenrai::Tenrai;
 pub use title::{CONFIDENCE_FLOOR, MatchTarget, Scored, normalise, rank, similarity};

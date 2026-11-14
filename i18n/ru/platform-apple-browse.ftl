@@ -6,7 +6,7 @@ continue-widget-resume = Смотреть серию { $episode }
 continue-widget-resume-dubbed = Смотреть С{ $episode } { -dubbed }
 downloads-continued-title = Загрузка серий
 downloads-continued-left = { $count ->
-    [one] Осталась одна серия
+    [one] Осталась { $count } серия
     [few] Осталось { $count } серии
     [many] Осталось { $count } серий
    *[other] Осталось { $count } серии

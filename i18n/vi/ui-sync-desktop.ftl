@@ -1,5 +1,6 @@
 cloud-browser-line = Trình duyệt của bạn đã mở trang của { $service }. Hãy cho phép truy cập ở đó, rồi { -app-name } sẽ tự làm tiếp.
 cloud-browser-title = Đăng nhập { $service } trong trình duyệt
+cloud-close-carries-on = Bạn có thể đóng cửa sổ này. { -app-name } vẫn chạy tiếp và tự mở bước kế tiếp khi sẵn sàng.
 device-kind-computer = máy tính
 devices-enter-code = Nhập mã
 devices-show-key = Hiện

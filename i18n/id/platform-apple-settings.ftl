@@ -13,7 +13,7 @@ settings-advanced-none = Tidak ada opsi tambahan. Pemutar memakai pengaturan { -
 settings-aside-check-title = Pemeriksaan proxy
 settings-aside-sources-apple = { -source-cap-pl } dicoba berurutan, dari atas ke bawah. Sebuah tayangan dapat menyimpan { -source } sendiri, yang dipilih dari halaman judulnya.
 settings-aside-advanced = Opsi di sini dapat membatalkan pengaturan Pemutaran, seperti peningkatan skala gambar atau mode malam. Kebanyakan orang tidak pernah memerlukan panel ini.
-settings-quality-detail = Lebih tinggi memilih versi terbaik yang ditawarkan { -source }, dan memakan lebih banyak ruang.
+settings-quality-detail = Lebih tinggi memilih versi terbaik yang dimiliki { -source }. Ini memakan lebih banyak ruang.
 settings-merge-subtitles-detail = Subtitel tetap bersama episode di mana pun berkasnya disimpan.
 settings-keep-seeding-detail-mac = Unduhan yang tetap dibagikan disimpan di cache { -app-name }, bukan di folder unduhan.
 settings-keep-seeding-detail = Unduhan yang tetap dibagikan disimpan di cache { -app-name }.
@@ -26,12 +26,17 @@ settings-delete-watched-title = { $count ->
 settings-delete-watched-detail = Berkas dihapus dari { -device } ini. Episode yang belum ditonton tetap disimpan.
 settings-folder-default = Disimpan bersama cache torrent
 settings-storage-unwatched = Belum ditonton
+settings-storage-unread = Belum dibaca
+settings-storage-read = Dibaca
+settings-storage-unseen-both = Belum ditonton atau dibaca
+settings-storage-seen-both = Ditonton atau dibaca
 settings-storage-used = { $size } untuk unduhan.
 settings-storage-used-free = { $size } untuk unduhan. { $free } tersedia di { -device } ini.
 settings-source-count = { $count ->
    *[other] { $count } { -source }
  }
 settings-accounts-sync-note = Kemajuan dan perubahan daftar disinkronkan ke { $tracker }. { -library-cap } dan Daftar Saya di Kalender menampilkan daftar { $tracker } Anda.
+settings-accounts-sync-note-read = Kemajuan dan perubahan daftar disinkronkan ke { $tracker }. { -library-cap } menampilkan daftar { $tracker } Anda.
 settings-conflicts = { $count ->
    *[other] { $count } judul berbeda dari { $tracker }
  }
@@ -43,7 +48,7 @@ settings-synced-just-now = Baru saja disinkronkan
 settings-synced-ago = Disinkronkan { $ago }
 settings-privacy-note = Yang dikirim { -app-name }, dan yang tetap ada di { -device } ini
 settings-read-online = Baca daring
-settings-presence-note = Kehadiran kaya menampilkan sampul, bilah kemajuan, dan tautan ke tayangan di { $tracker }. Discord mengambil sampul dari { $tracker } sendiri. Judul harus ditampilkan.
+settings-presence-note = Kehadiran kaya menampilkan sampul, bilah kemajuan, dan tautan ke tayangan di { $tracker }. Ini hanya berfungsi jika judul ditampilkan. Discord memuat sampul langsung dari { $tracker }.
 settings-presence-cover = Sampul
 settings-presence-button = Lihat di { $tracker }
 settings-presence-nothing = Menonton anime
@@ -67,7 +72,7 @@ settings-when-tomorrow = Besok { $time }
 settings-when-day = { $day } { $time }
 settings-week-row-label = { $title }, episode { $episode }, { $when }
 settings-week-row-hint = Membuka pengaturan tayangan ini
-settings-notify-explain-on = Satu pemberitahuan saat episode dari tayangan dalam daftar Menonton Anda tayang, pada jam yang diberikan { $tracker }. Pengaturan tayangan itu didahulukan.
+settings-notify-explain-on = Anda mendapat satu pemberitahuan saat episode dari tayangan dalam daftar Menonton Anda keluar, pada jam yang tercantum di { $tracker }. Pengaturan tayangan itu sendiri didahulukan.
 settings-notify-explain-off = Nonaktif. Hanya tayangan yang diaktifkan di pengaturannya sendiri yang memberi tahu.
 settings-preview-show = Tayangan yang Anda tonton
 settings-preview-words = Episode 9 sudah tayang.

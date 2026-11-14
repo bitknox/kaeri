@@ -45,13 +45,22 @@ pub struct Gate {
     pub refusal: Option<String>,
 }
 
-/// What the torrent session is told for the app at `phase` on `network`, by what `config` lets
-/// run on cellular.
-pub fn gate_for(phase: AppState, network: Network, config: &Config) -> Gate {
-    let torrents_wait = network.cellular && !config.providers.torrent.on_cellular;
-    let downloads_wait =
-        network.constrained || (network.cellular && !config.downloads.on_cellular);
-    let seeding_wait = network.constrained || torrents_wait;
+/// Whether work kept to Wi-Fi waits on `network`, as the front end last said it, or `None`
+/// before it has said one: the network may be cellular then, so the work waits. Said, it waits
+/// in Low Data Mode, and on cellular unless `on_cellular` lets it run there. The one rule for
+/// episode downloads, seeding and chapter downloads.
+pub fn waits_for_wifi(network: Option<Network>, on_cellular: bool) -> bool {
+    network.is_none_or(|n| n.constrained || (n.cellular && !on_cellular))
+}
+
+/// What the torrent session is told for the app at `phase` on `network`, `None` before the
+/// front end has said one, by what `config` lets run on cellular. Downloads and seeding wait
+/// until the network is said; what plays was asked for, and goes on.
+pub fn gate_for(phase: AppState, network: Option<Network>, config: &Config) -> Gate {
+    let said = network.unwrap_or_default();
+    let torrents_wait = said.cellular && !config.providers.torrent.on_cellular;
+    let downloads_wait = waits_for_wifi(network, config.downloads.on_cellular);
+    let seeding_wait = waits_for_wifi(network, config.providers.torrent.on_cellular);
     let hold = match phase {
         AppState::Background { playing: false } => Hold::EVERYTHING,
         AppState::Background { playing: true } => {
@@ -92,6 +101,7 @@ pub fn app_phase(phase: AppState, engine: &mut EngineState) {
 pub fn network_path(network: Network, engine: &mut EngineState, tx: &Outbox) {
     let was = engine.network;
     engine.network = network;
+    engine.network_said = true;
     crate::connectivity::moved(was.offline, network.offline, &mut engine.missed, tx);
     crate::autoplay::changed(engine, tx);
     reapply(engine);
@@ -102,7 +112,7 @@ pub fn settings_saved(engine: &mut EngineState, tx: &Outbox) {
     crate::crash::rearm(engine.config.effective());
     // And whether trailers play may be another answer.
     crate::autoplay::changed(engine, tx);
-    let gate = gate_for(engine.phase, engine.network, engine.config.effective());
+    let gate = gate_for(engine.phase, engine.said_network(), engine.config.effective());
     if engine.gated.as_ref() != Some(&gate) {
         reapply(engine);
     }
@@ -118,7 +128,7 @@ fn reapply(engine: &mut EngineState) {
 /// What the torrent session is told now, for one that has just come up too; remembered as what
 /// it was last told.
 pub fn gate_now(engine: &mut EngineState) -> Gate {
-    let gate = gate_for(engine.phase, engine.network, engine.config.effective());
+    let gate = gate_for(engine.phase, engine.said_network(), engine.config.effective());
     engine.gated = Some(gate.clone());
     gate
 }
@@ -166,7 +176,8 @@ mod tests {
     #[test]
     fn what_waits_follows_where_the_app_is_and_the_network() {
         let background = |playing| AppState::Background { playing };
-        let hold = |phase, network| gate_for(phase, network, &on_cellular(true, true)).hold;
+        let hold =
+            |phase, network| gate_for(phase, Some(network), &on_cellular(true, true)).hold;
         assert_eq!(hold(AppState::Foreground, WIFI), Hold::NOTHING);
         assert_eq!(hold(AppState::Foreground, LOW_DATA), Hold::ALL_BUT_STREAMING);
         assert_eq!(hold(background(true), WIFI), Hold::ALL_BUT_STREAMING);
@@ -180,7 +191,7 @@ mod tests {
     #[test]
     fn on_cellular_torrents_and_downloads_run_only_as_their_settings_say() {
         let foreground =
-            |network, config: &Config| gate_for(AppState::Foreground, network, config);
+            |network, config: &Config| gate_for(AppState::Foreground, Some(network), config);
 
         // The defaults: neither runs on cellular, and torrent playback is not asked there.
         let off = foreground(CELL, &Config::default());
@@ -208,12 +219,31 @@ mod tests {
 
         // In the background with an episode playing, on cellular with torrents off, that
         // episode's torrent waits too.
-        let away = gate_for(AppState::Background { playing: true }, CELL, &Config::default());
+        let away =
+            gate_for(AppState::Background { playing: true }, Some(CELL), &Config::default());
         assert_eq!(away.hold, Hold::EVERYTHING);
         // And in a downloads window the queue runs on cellular only as its setting says.
         let window =
-            |config: &Config| gate_for(AppState::BackgroundDownloads, CELL, config).hold;
+            |config: &Config| gate_for(AppState::BackgroundDownloads, Some(CELL), config).hold;
         assert_eq!(window(&on_cellular(true, false)), Hold::ALL_BUT_STREAMING);
         assert_eq!(window(&on_cellular(true, true)), Hold::ALL_BUT_DOWNLOADS);
+    }
+
+    #[test]
+    fn before_the_network_is_said_downloads_and_seeding_wait_and_what_plays_goes_on() {
+        // At launch the network may be cellular: what is kept to Wi-Fi waits for the front
+        // end to say it, whatever the settings let run on cellular.
+        for config in [Config::default(), on_cellular(true, true)] {
+            let unsaid = gate_for(AppState::Foreground, None, &config);
+            assert_eq!(unsaid.hold, Hold::ALL_BUT_STREAMING);
+            assert_eq!(unsaid.refusal, None);
+            let window = gate_for(AppState::BackgroundDownloads, None, &config);
+            assert_eq!(window.hold, Hold::ALL_BUT_STREAMING);
+        }
+        assert!(waits_for_wifi(None, true));
+        assert!(waits_for_wifi(Some(CELL), false));
+        assert!(!waits_for_wifi(Some(CELL), true));
+        assert!(waits_for_wifi(Some(LOW_DATA), true));
+        assert!(!waits_for_wifi(Some(WIFI), false));
     }
 }

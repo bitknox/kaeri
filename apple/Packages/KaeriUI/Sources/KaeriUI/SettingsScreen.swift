@@ -9,7 +9,7 @@ import SwiftUI
 
 /// Settings' panes. Integrations stays out of v1.
 public enum SettingsPane: String, CaseIterable, Identifiable, Hashable, Sendable {
-    case general, playback, downloads, notifications, sources, accounts, devices, profiles, integrations, advanced
+    case general, playback, reading, downloads, notifications, sources, accounts, devices, profiles, integrations, advanced
 
     public var id: String { rawValue }
 
@@ -17,6 +17,7 @@ public enum SettingsPane: String, CaseIterable, Identifiable, Hashable, Sendable
         switch self {
         case .general: L.settingsGroupGeneral
         case .playback: L.settingsGroupPlayback
+        case .reading: L.settingsGroupReading
         case .downloads: L.navDownloads
         case .notifications: L.settingsGroupNotifications
         case .sources: L.sourcesTitle
@@ -37,11 +38,26 @@ public enum SettingsPane: String, CaseIterable, Identifiable, Hashable, Sendable
         allCases.filter { $0 != .integrations }
         #endif
     }
+
+    /// The panes for what Kaeri is for: Reading only with reading on, Playback only with
+    /// watching on.
+    @MainActor
+    static func shown(for answer: KaeriIsFor) -> [SettingsPane] {
+        shown.filter { pane in
+            switch pane {
+            case .reading: answer != .watch
+            case .playback: answer != .read
+            default: true
+            }
+        }
+    }
 }
 
 /// A page of the iPhone's Settings sheet.
 public enum PhoneSettingsPage: Hashable, Sendable {
     case root, general, playback, downloads, notifications, sources, accounts, providers, stores, about, acknowledgements
+    /// What Kaeri is for, and reading's settings.
+    case medium, reading
     /// The TVs paired for Play on TV.
     case tvs
     /// Sync with the devices in the group, and profiles.
@@ -61,6 +77,8 @@ public enum PhoneSettingsPage: Hashable, Sendable {
         switch name {
         case "general", "titles": .general
         case "playback": .playback
+        case "reading": .reading
+        case "medium": .medium
         case "downloads": .downloads
         case "notifications": .notifications
         case "sources": .sources
@@ -119,6 +137,7 @@ struct SettingsScreen: View {
                 switch navigator.settingsPane {
             case .general: GeneralPane()
             case .playback: PlaybackPane()
+            case .reading: ReadingPane()
             case .downloads: DownloadsPane()
             case .notifications: NotificationsPane()
             case .sources: SourcesPane()
@@ -215,8 +234,11 @@ struct SettingsResults: View {
     let query: String
 
     /// Each row's name, and its pane.
-    static let index: [(title: String, pane: SettingsPane)] = [
+    static let index: [(title: String, pane: SettingsPane)] = ([
+        (L.settingsKaeriIsFor, .general), (L.settingsOpenAt, .general),
         (L.settingsTitleLanguage, .general), (L.settingsLanguageApp, .general), (L.settingsAdult, .general),
+        (L.settingsReaderDefaults, .reading), (L.settingsFollowGroup, .reading), (L.ereadersGroup, .reading), (L.ereadersSendRow, .reading),
+        (L.settingsChapterNotifications, .notifications),
         (L.settingsAudio, .playback), (L.playerSubtitles, .playback), (L.settingsQuality, .playback),
         (L.settingsAutoPlay, .playback), (L.settingsUpNextCountdown, .playback),
         (L.settingsSkipOpening, .playback), (L.settingsSkipRecap, .playback), (L.settingsAskWasOpening, .playback),
@@ -238,7 +260,16 @@ struct SettingsResults: View {
         (L.profilesTitle, .profiles), (L.profilesAdd, .profiles),
         (L.settingsCheckUpdates, updatesPane),
         (L.settingsMpvOptions, .advanced),
-    ].filter { SettingsPane.shown.contains($0.pane) }
+    ] + feedEntries).filter { SettingsPane.shown.contains($0.pane) }
+
+    /// The Mac's feed has rows of its own to find.
+    private static var feedEntries: [(title: String, pane: SettingsPane)] {
+        #if os(macOS)
+        [(L.ereadersFeedRow, .reading), (L.settingsOpdsFeed, .reading), (L.opdsPassword, .reading)]
+        #else
+        []
+        #endif
+    }
 
     /// The rows about Discord, which only an engine with a presence has.
     static let presenceRows: [(title: String, pane: SettingsPane)] = [
@@ -288,6 +319,7 @@ struct SettingsResults: View {
 
 /// The panes, as a row of tabs: the one on screen in amber on the tint.
 struct SettingsTabs: View {
+    @Environment(AppStore.self) private var store
     @Binding var selection: SettingsPane
 
     var body: some View {
@@ -308,7 +340,7 @@ struct SettingsTabs: View {
 
     private var tabs: some View {
         HStack(spacing: 4) {
-            ForEach(SettingsPane.shown) { pane in
+            ForEach(SettingsPane.shown(for: store.medium.answer)) { pane in
                 let selected = pane == selection
                 Button {
                     selection = pane
@@ -346,6 +378,8 @@ struct SettingsAside: View {
                 TitleLanguagePreview()
             case .playback:
                 UpscalingPreview()
+            case .reading:
+                aside(L.settingsGroupReading, L.settingsAsideReading)
             case .downloads:
                 StorageAside()
             case .notifications:
@@ -357,7 +391,8 @@ struct SettingsAside: View {
                     aside(L.sourcesTitle, L.settingsAsideSourcesApple)
                 }
             case .accounts:
-                aside(L.navAccounts, L.settingsAsideAccounts)
+                aside(L.navAccounts, store.medium.answer == .read ? L.settingsAsideAccountsRead
+                      : store.medium.both ? L.settingsAsideAccountsBoth : L.settingsAsideAccounts)
             case .devices:
                 aside(L.devicesTitle, L.devicesAside(kind: Device.name))
             case .profiles:
@@ -387,6 +422,14 @@ struct SettingsAside: View {
 
 /// What the device is called in a sentence: "this Mac", "this iPad", "this iPhone".
 enum Device {
+    static var isMac: Bool {
+        #if os(macOS)
+        true
+        #else
+        false
+        #endif
+    }
+
     static var isPad: Bool {
         #if os(iOS)
         UIDevice.current.userInterfaceIdiom == .pad
@@ -408,7 +451,19 @@ enum Device {
 
 /// How titles read and which are listed: nothing here is about playing an episode.
 struct GeneralPane: View {
+    @Environment(AppStore.self) private var store
+
     var body: some View {
+        if store.medium.choosable {
+            MediumSettingsRow()
+        }
+        if store.medium.both {
+            SettingsGroup {
+                SettingsRow(title: SettingKey.openAt.title, note: L.settingsOpenAtNote) {
+                    SettingMenu(key: .openAt)
+                }
+            }
+        }
         SettingsGroup(title: L.settingsGroupTitles) {
             TitleLanguageRow()
             SettingsRow(title: SettingKey.trailers.title, note: L.settingsTrailersNoteApple) {

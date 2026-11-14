@@ -445,6 +445,8 @@ private fun change(store: AppStore, key: SettingKey, change: SettingChange?, swi
 
 private fun LazyListScope.sources(nav: TvNavigator, store: AppStore, view: SettingsView?, memory: FocusMemory, first: Modifier) {
     item(key = "sources", contentType = "list") {
+        // What a store form left: "Installed 1 plugin from …", once it has closed.
+        app.kaeri.tv.signin.CameInTvNotices()
         val rows by store.providers.rows.collectAsStateWithLifecycle()
         val servers by store.servers.rows.collectAsStateWithLifecycle()
         val licensed by store.licensed.view.collectAsStateWithLifecycle()

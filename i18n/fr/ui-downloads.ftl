@@ -11,6 +11,8 @@ downloads-in-downloads = { $size } de téléchargements
 downloads-space-label = Espace occupé par les téléchargements
 downloads-empty-title = Aucun téléchargement
 downloads-empty-detail = Les épisodes téléchargés se lisent sans connexion.
+read-downloads-empty-detail = Les chapitres téléchargés se lisent sans connexion.
+read-downloads-empty-both = Les épisodes et chapitres téléchargés se lisent sans connexion.
 downloads-load-failed = Impossible de charger les téléchargements
 downloads-folder-failed = Impossible d’ouvrir le dossier. Vérifiez qu’il existe toujours.
 downloads-episode-name = Épisode { $episode }
@@ -38,11 +40,11 @@ downloads-play-episode = Lire l’épisode { $episode }
 downloads-delete-title = Supprimer { $name } ?
 downloads-delete-detail = Le fichier est supprimé de cet { -device }.
 downloads-delete-one-title = Supprimer le téléchargement
-downloads-delete-one-detail = Il ne se relira qu’avec une connexion, ou après un nouveau téléchargement.
+downloads-delete-one-detail = Après cela, l’épisode a besoin d’une connexion pour être lu, sauf si vous le téléchargez à nouveau.
 downloads-delete-watched = Supprimer les téléchargements vus
 downloads-seeding-title = Partage
 downloads-seeding-after-watching = Partage après visionnage
-downloads-seeding-note = Les épisodes vus sont partagés pendant que { -app-name } est ouvert, jusqu’à ce que le ratio ou la durée limite réglée dans les réglages, sous { -source-cap-pl }, soit atteint.
+downloads-seeding-note = Les épisodes vus sont partagés pendant que { -app-name } est ouvert. Le partage s’arrête au ratio ou à la durée limite que vous réglez dans les réglages, sous { -source-cap-pl }.
 downloads-seeding-open-only = Le partage ne fonctionne que lorsque { -app-name } est ouvert.
 downloads-background-title = Quand la fenêtre se ferme pendant des téléchargements
 downloads-background-keep = Continuer les téléchargements
@@ -58,7 +60,7 @@ downloads-quality = Qualité des téléchargements
 downloads-notice-done = Épisode { $episode } téléchargé
 downloads-notice-done-detail = { $title } · prêt à regarder hors ligne
 downloads-notice-running = { $count ->
-    [one] Téléchargement d’un épisode
+    [one] Téléchargement de { $count } épisode
     [many] Téléchargement de { $count } épisodes
    *[other] Téléchargement de { $count } épisodes
  }

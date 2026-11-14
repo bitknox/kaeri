@@ -3,27 +3,29 @@
    releases. */
 
 .dl-top {
-	padding-top: 72px;
+	padding-top: clamp(28px, 4vw, 72px);
+}
+
+.dl-top > .dl-in {
+	padding-top: 0;
+	border-top: 0;
 }
 
 .ds {
-	padding: 120px 0 0;
+	padding: var(--space-section) var(--gutter) 0;
 }
 
 .ds-in {
 	max-width: 1200px;
 	margin: 0 auto;
-	padding: 0 32px;
-	box-sizing: content-box;
 }
 
 .ds-lede {
 	margin: 16px 0 0;
 	max-width: 720px;
-	font-size: 19px;
+	font-size: var(--fs-lede);
 	line-height: 1.55;
 	color: var(--ani-dim);
-	text-wrap: pretty;
 }
 
 .ds-grid {
@@ -33,29 +35,33 @@
 	gap: 40px 64px;
 }
 
-/* One band per system, with ground showing between them. */
+/* One section per system on the page's one surface, each opening on a hairline. */
 .ds-item {
-	margin-top: 64px;
-	padding: 96px 0;
-	background: var(--ani-band);
-	scroll-margin-top: 64px;
+	margin-top: var(--space-head);
+	scroll-margin-top: 24px;
+}
+
+.ds-item > .ds-in,
+.ds-pair > .ds-in {
+	padding-top: clamp(28px, 2vw + 16px, 44px);
+	border-top: 1px solid var(--ani-rule);
 }
 
 .ds-item + .ds-item {
-	margin-top: 56px;
+	margin-top: var(--space-section);
 }
 
 .k-body .ds-item h3 {
 	font-family: var(--ani-font-display);
 	font-weight: 500;
-	font-size: 40px;
-	line-height: 1.1;
+	font-size: var(--fs-h2s);
+	line-height: 1.2;
 	letter-spacing: -0.01em;
 }
 
 .ds-needs {
 	margin: 8px 0 0;
-	font-size: 17px;
+	font-size: var(--fs-body);
 	color: var(--ani-dim);
 }
 
@@ -74,7 +80,7 @@
 	gap: 6px 20px;
 	padding: 12px 0;
 	border-bottom: 1px solid var(--ani-rule);
-	font-size: 15px;
+	font-size: var(--fs-small);
 }
 
 .ds-files code {
@@ -95,15 +101,17 @@
 	color: var(--ani-dim);
 }
 
-.ds-files a:hover {
-	color: var(--ani-text);
-	text-decoration-thickness: 2px;
+@media (hover: hover) and (pointer: fine) {
+	.ds-files a:hover {
+		color: var(--ani-text);
+		text-decoration-thickness: 2px;
+	}
 }
 
 .ds-arch,
 .ds-note {
 	margin: 16px 0 0;
-	font-size: 15px;
+	font-size: var(--fs-small);
 	line-height: 1.55;
 	color: var(--ani-dim);
 }
@@ -114,7 +122,7 @@
 	display: flex;
 	flex-direction: column;
 	gap: 10px;
-	font-size: 17px;
+	font-size: var(--fs-body);
 	line-height: 1.55;
 }
 
@@ -127,7 +135,7 @@
 	padding: 14px 16px;
 	overflow-x: auto;
 	border-radius: 8px;
-	background: var(--ani-ground);
+	background: var(--ani-raised);
 	font-size: 14px;
 	line-height: 1.6;
 }
@@ -148,7 +156,7 @@
 
 /* Checksums and older releases: the heading on the left, what you need on the right. */
 .ds-checks h3 {
-	font-size: 15px;
+	font-size: var(--fs-small);
 }
 
 .ds-checks h3 + .ds-code {
@@ -175,7 +183,7 @@
 	display: inline-flex;
 	align-items: center;
 	gap: 4px;
-	font-size: 17px;
+	font-size: var(--fs-body);
 	color: var(--ani-text);
 	text-underline-offset: 3px;
 }
@@ -199,31 +207,6 @@
 }
 
 @media (max-width: 700px) {
-	.dl-top {
-		padding-top: 28px;
-	}
-
-	.ds {
-		padding-top: 72px;
-	}
-
-	.ds-in {
-		padding: 0 16px;
-	}
-
-	.ds-item {
-		margin-top: 40px;
-		padding: 56px 0;
-	}
-
-	.ds-item + .ds-item {
-		margin-top: 32px;
-	}
-
-	.k-body .ds-item h3 {
-		font-size: 32px;
-	}
-
 	.ds-phone img {
 		width: 220px;
 	}

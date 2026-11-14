@@ -124,6 +124,7 @@ import app.kaeri.store.label
 import app.kaeri.store.line
 import app.kaeri.store.TvPlayRequest
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 
 /** What a page shows before its title has arrived. */
 private fun placeholderEntry(id: AnilistId) = Entry(
@@ -984,10 +985,24 @@ private const val DECODED_AHEAD = 6
 /** The pixels the page's cover is decoded to. */
 private const val COVER_PIXELS = 300
 
+/**
+ * Whether the plate for title [id]'s wide art has shown for [HeroArt.WAIT_MS], from the first time
+ * the page asked: past it the page shows what there is without a still.
+ */
+@Composable
+private fun artWaited(id: UInt): Boolean {
+    var waited by remember(id) { mutableStateOf(false) }
+    LaunchedEffect(id) {
+        kotlinx.coroutines.delay(HeroArt.WAIT_MS)
+        waited = true
+    }
+    return waited
+}
+
 /** The banner, the poster, the title and its other forms and metadata: the page's head. */
 @Composable
 private fun TitleHead(entry: Entry, episodes: List<EpisodeRow>?, list: LazyListState, inset: Dp, shared: Boolean) {
-    val art = HeroArt.of(entry, episodes)
+    val art = HeroArt.of(entry, episodes, artWaited(entry.id))
     Box {
         if (art != HeroArt.Compact) {
             ArtworkImage(
@@ -1410,7 +1425,7 @@ internal fun CaughtUp(action: TitleAction, modifier: Modifier = Modifier) {
  * the text out again. The most recent few, on the main thread.
  */
 internal object SynopsisCuts {
-    private data class Key(val text: String, val width: Int, val style: androidx.compose.ui.text.TextStyle, val density: Float, val fontScale: Float, val more: String)
+    private data class Key(val text: String, val width: Int, val style: androidx.compose.ui.text.TextStyle, val density: Float, val fontScale: Float, val more: String, val lines: Int)
 
     /** A cut, or that the whole text fits. */
     private class Cut(val text: String?)
@@ -1419,23 +1434,23 @@ internal object SynopsisCuts {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Key, Cut>?) = size > 48
     }
 
-    fun get(text: String, width: Int, style: androidx.compose.ui.text.TextStyle, density: androidx.compose.ui.unit.Density, more: String = "", cut: () -> String?): String? = // i18n-skip
-        cuts.getOrPut(Key(text, width, style, density.density, density.fontScale, more)) { Cut(cut()) }.text
+    fun get(text: String, width: Int, style: androidx.compose.ui.text.TextStyle, density: androidx.compose.ui.unit.Density, more: String = "", lines: Int = 2, cut: () -> String?): String? = // i18n-skip
+        cuts.getOrPut(Key(text, width, style, density.density, density.fontScale, more, lines)) { Cut(cut()) }.text
 }
 
 /** What a cut synopsis ends with to be measured: the ellipsis and "More", set a little wider. */
 private fun synopsisEnding(more: String) = "\u2026 $more "
 
 /**
- * The longest start of [text] that leaves room on its two lines at [width] for "… More", with the
+ * The longest start of [text] that leaves room on its [lines] lines at [width] for "… More", with the
  * ellipsis; `null` when the whole text fits. The answer a search over every length would give: it
  * is estimated from one layout of the whole text, where the ending would start on its second line,
  * then confirmed against the next length, widening the step only when the estimate is off. A few
  * layouts in all, where the search took one for every halving of the text's length.
  */
-internal fun synopsisCut(text: String, width: Int, style: androidx.compose.ui.text.TextStyle, measurer: androidx.compose.ui.text.TextMeasurer, more: String = "More"): String? { // i18n-skip
+internal fun synopsisCut(text: String, width: Int, style: androidx.compose.ui.text.TextStyle, measurer: androidx.compose.ui.text.TextMeasurer, more: String = "More", lines: Int = 2): String? { // i18n-skip
     val synopsisEnding = synopsisEnding(more)
-    fun layout(candidate: String) = measurer.measure(candidate, style, maxLines = 2, constraints = Constraints(maxWidth = width))
+    fun layout(candidate: String) = measurer.measure(candidate, style, maxLines = lines, constraints = Constraints(maxWidth = width))
     fun fits(length: Int) = !layout(text.take(length).trimEnd() + synopsisEnding).hasVisualOverflow
     val whole = layout(text)
     if (!whole.hasVisualOverflow) return null
@@ -1567,9 +1582,9 @@ private fun rememberSeasonGeometry(count: Int, available: Dp): SeasonGeometry {
     val density = LocalDensity.current
     val measurer = rememberTextMeasurer()
     val style = MaterialTheme.typography.labelLarge
-    val context = LocalContext.current
-    fun seasonLabel(n: Int) = context.getString(R.string.season_number, n)
-    return remember(count, available, density, style, context.resources.configuration.locales) {
+    val resources = LocalResources.current
+    fun seasonLabel(n: Int) = resources.getString(R.string.season_number, n)
+    return remember(count, available, density, style, LocalConfiguration.current.locales) {
         with(density) {
             fun width(text: String, of: androidx.compose.ui.text.TextStyle = style) =
                 measurer.measure(text, of, maxLines = 1, softWrap = false).size.width.toFloat()
@@ -2183,7 +2198,7 @@ private fun TabletTitle(
             ) {
                 fullWidth("head") {
                   SeasonFade(entry) { entry ->
-                    val art = HeroArt.of(entry, allEpisodes[entry.id])
+                    val art = HeroArt.of(entry, allEpisodes[entry.id], artWaited(entry.id))
                     Box {
                         if (art != HeroArt.Compact) {
                             ArtworkImage(
@@ -2433,12 +2448,13 @@ private fun TitleFacts(entry: Entry, modifier: Modifier = Modifier, onMore: () -
             Text(synopsis, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 4, overflow = TextOverflow.Ellipsis)
         }
         val context = LocalContext.current
+        val resources = LocalResources.current
         val airing = entry.airingState(context)
         val facts = listOfNotNull(
-            entry.studio?.let { context.getString(R.string.title_studio) to it },
-            entry.source?.label(context)?.let { context.getString(R.string.title_based_on) to it },
+            entry.studio?.let { resources.getString(R.string.title_studio) to it },
+            entry.source?.label(context)?.let { resources.getString(R.string.title_based_on) to it },
             airing?.let { it.label to it.value },
-            entry.alsoOn(context)?.let { context.getString(R.string.title_facts_also_on) to it },
+            entry.alsoOn(context)?.let { resources.getString(R.string.title_facts_also_on) to it },
         )
         if (facts.isNotEmpty()) {
             Column(Modifier.padding(top = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {

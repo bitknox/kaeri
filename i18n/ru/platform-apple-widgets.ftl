@@ -30,7 +30,7 @@ widget-action-start = Смотреть { $episode }
 widget-a11y-episode = эпизод { $episode }
 widget-a11y-episode-marked = { $episode }, { $mark }
 widget-a11y-resume = { $minutes ->
-    [one] { $episode }, осталась одна минута
+    [one] { $episode }, осталась { $minutes } минута
     [few] { $episode }, осталось { $minutes } минуты
     [many] { $episode }, осталось { $minutes } минут
    *[other] { $episode }, осталось { $minutes } минуты
@@ -49,7 +49,7 @@ widget-a11y-out-now = { $title }, эпизод { $episode }, уже вышел
 widget-downloaded-line = Эпизод { $episode } загружен
 widget-downloaded-ready = Можно смотреть без интернета
 widget-downloading-title = { $count ->
-    [one] Загружается один эпизод
+    [one] Загружается { $count } эпизод
     [few] Загружаются { $count } эпизода
     [many] Загружаются { $count } эпизодов
    *[other] Загружаются { $count } эпизода
@@ -67,7 +67,7 @@ widget-a11y-downloading = { $title }, эпизод { $episode }, { $percent }
 widget-a11y-then-paused = { $label }, на паузе
 widget-a11y-then-time-left = { $label }, осталось { $time }
 widget-a11y-then-count = { $count ->
-    [one] { $label }, загружается один эпизод
+    [one] { $label }, загружается { $count } эпизод
     [few] { $label }, загружаются { $count } эпизода
     [many] { $label }, загружаются { $count } эпизодов
    *[other] { $label }, загружаются { $count } эпизода
@@ -78,13 +78,13 @@ widget-resume-downloads = Возобновить загрузки
 widget-pause-downloads = Приостановить загрузки
 widget-paused-line = На паузе · осталось { $left }
 widget-a11y-playback-paused = { $minutes ->
-    [one] { $title }, эпизод { $episode }, на паузе, осталась одна минута
+    [one] { $title }, эпизод { $episode }, на паузе, осталась { $minutes } минута
     [few] { $title }, эпизод { $episode }, на паузе, осталось { $minutes } минуты
     [many] { $title }, эпизод { $episode }, на паузе, осталось { $minutes } минут
    *[other] { $title }, эпизод { $episode }, на паузе, осталось { $minutes } минуты
  }
 widget-a11y-playback-playing = { $minutes ->
-    [one] { $title }, эпизод { $episode }, воспроизводится, осталась одна минута
+    [one] { $title }, эпизод { $episode }, воспроизводится, осталась { $minutes } минута
     [few] { $title }, эпизод { $episode }, воспроизводится, осталось { $minutes } минуты
     [many] { $title }, эпизод { $episode }, воспроизводится, осталось { $minutes } минут
    *[other] { $title }, эпизод { $episode }, воспроизводится, осталось { $minutes } минуты

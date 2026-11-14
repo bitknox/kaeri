@@ -55,7 +55,7 @@ sources-contacts-label = Serveurs contactés
 sources-listed-by-store = Listée par sa { -plugin-store }
 sources-contacts-one = Contacte { $first }
 sources-contacts-line = { $more ->
-    [one] Contacte { $first } et un autre
+    [one] Contacte { $first } et { $more } autre
     [many] Contacte { $first } et { $more } autres
    *[other] Contacte { $first } et { $more } autres
  }
@@ -63,7 +63,7 @@ sources-contacts-none = Ne liste aucun serveur à contacter
 sources-no-hosts = Aucun serveur
 sources-update-contacts-one = Cette mise à jour contacte aussi { $first }.
 sources-update-contacts = { $more ->
-    [one] Cette mise à jour contacte aussi { $first } et un autre.
+    [one] Cette mise à jour contacte aussi { $first } et { $more } autre.
     [many] Cette mise à jour contacte aussi { $first } et { $more } autres.
    *[other] Cette mise à jour contacte aussi { $first } et { $more } autres.
  }
@@ -75,12 +75,12 @@ sources-open-settings = Ouvrir les réglages de la { -source }
 sources-torrent-source = Lecture de torrents
 sources-source-order-row = Ordre des { -source-pl }
 sources-torrents-note = Les torrents font partie de { -app-name }, pas d’un { -plugin }. Le proxy et le partage se règlent dans Réglages, sous { -source-cap-pl }.
-sources-rebuilding = Les { -source-cap-pl } sont en cours de reconfiguration.
+sources-rebuilding = Reconfiguration des { -source-pl }
 sources-response-ms = { $ms } ms
 match-fix = Corriger cette association
 match-choose = Choisir l’association
 match-uncertain = { $count ->
-    [one] { $source } liste un titre qui pourrait être celui-ci. Choisissez-le pour lire ses épisodes.
+    [one] { $source } liste { $count } titre qui pourrait être celui-ci. Choisissez-le pour lire ses épisodes.
     [many] { $source } liste { $count } titres qui pourraient être celui-ci. Choisissez-en un pour lire ses épisodes.
    *[other] { $source } liste { $count } titres qui pourraient être celui-ci. Choisissez-en un pour lire ses épisodes.
  }
@@ -115,7 +115,7 @@ sources-add = Ajouter
 sources-add-folder = Dossier…
 sources-add-server = Serveur multimédia…
 sources-add-store = Rejoindre une { -plugin-store }…
-sources-empty-body = Les { -source-pl } sont les endroits d’où viennent les épisodes : des dossiers sur cet { -device }, votre serveur multimédia et des { -plugin-pl } issus des boutiques que vous rejoignez.
+sources-empty-body = Les { -source-pl } sont les endroits d’où viennent les épisodes : des dossiers sur cet { -device }, votre serveur multimédia et des { -plugin-pl } issus des { -plugin-store-pl } que vous rejoignez.
 sources-empty-more = Ou { $join }.
 sources-empty-join-link = rejoindre une { -plugin-store }
 sources-add-folder-button = Ajouter un dossier
@@ -129,7 +129,7 @@ sources-demo-credit = こうしす！ par les contributeurs d’OPAP-JP. Sous li
 sources-demo-link-licence = Licence
 sources-demo-link-commons = Wikimedia Commons
 sources-demo-link-maker = OPAP-JP
-sources-demo-hosts = Ne contacte que Wikimedia Commons : upload.wikimedia.org et commons.wikimedia.org.
+sources-demo-hosts = La démo ne contacte que Wikimedia Commons : upload.wikimedia.org et commons.wikimedia.org.
 sources-demo-private = La démo ne se connecte jamais nulle part et n’écrit jamais sur AniList.
 sources-demo-remove = Retirer la démo
 sources-demo-add = Ajouter la démo

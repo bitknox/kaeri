@@ -3,6 +3,8 @@
 package app.kaeri.app
 
 import app.kaeri.i18n.Strings
+import app.kaeri.eink.EinkAnswerPrefs
+import app.kaeri.eink.EinkModel
 import android.app.Application
 import android.content.ActivityNotFoundException
 import android.content.Intent
@@ -22,6 +24,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.plus
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import app.kaeri.engine.core.SettingValue
@@ -42,6 +45,11 @@ import app.kaeri.player.PlayerModel
 import app.kaeri.store.AppHost
 import app.kaeri.store.BackgroundEngine
 import app.kaeri.store.EngineEpisodeCheck
+import app.kaeri.store.ChapterCheck
+import app.kaeri.store.EngineChapterCheck
+import app.kaeri.store.NewChapterNote
+import app.kaeri.store.covers
+import app.kaeri.store.text
 import app.kaeri.store.EpisodeCheck
 import app.kaeri.app.tv.CastKeeper
 import app.kaeri.app.tv.TvConnection
@@ -59,6 +67,10 @@ import app.kaeri.widgets.WidgetHost
 import app.kaeri.widgets.Widgets
 
 class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
+    // Below Android 13 the chosen language is the app's own to apply: notifications, widgets and
+    // the engine's words read it from here.
+    override fun attachBaseContext(base: android.content.Context) = super.attachBaseContext(app.kaeri.store.AppLanguage.wrap(base))
+
     /** Where the store's work runs: the main thread, for as long as the process. */
     private val scope = MainScope() + kotlinx.coroutines.CoroutineExceptionHandler { _, e ->
         // A coroutine that fails in the store is logged; it does not take the process with it.
@@ -67,6 +79,8 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
 
     val store: AppStore by lazy {
         AppStore(scope).also { store ->
+            // The bar and rail draw for the last answer from the first frame.
+            store.medium.keepIn(app.kaeri.store.DevicePreferences.of(this))
             store.tv.openLink = { url -> open(url) }
             store.collectCrashes(this, scope)
             DeviceWatch(this, store::send).start()
@@ -124,7 +138,18 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
 
     val notifier: Notifier by lazy { Notifier(this) }
 
+    /**
+     * The e-ink profile the engine makes from this device's facts, and the questions it leaves,
+     * starting from the last run's answer.
+     */
+    val eink: EinkModel by lazy { EinkModel(EinkAnswerPrefs(this), store::send).also { it.bind(store) } }
+
     override val episodeNotifier: EpisodeNotifier by lazy { EpisodeNotifier(this) }
+
+    override val readingNotifier: ReadingNotifier by lazy { ReadingNotifier(this) }
+
+    /** The check for new chapters, on the engine. */
+    override val chapterCheck: ChapterCheck by lazy { EngineChapterCheck(background) }
 
     /** What the home-screen widgets show, as the engine last made it. */
     val widgets: WidgetRecord by lazy { WidgetRecord.of(filesDir) }
@@ -166,6 +191,8 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
         super.onCreate()
         // Every process draws the widgets again when a record lands: the app's, and one started
         // for the background check alone.
+        // Do Not Disturb a reader left on when its process died goes at every start.
+        app.kaeri.reader.phone.QuietPhone(this).clearStale()
         widgetKeeper.follow(scope)
         scope.launch { Widgets.publishPreviews(this@KaeriApp) }
         // Whether a widget is placed, which keeps the background check, as the app starts.
@@ -187,6 +214,27 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
             launch = { Flavour.background(this) },
             host = ::host,
         )
+    }
+
+    /**
+     * New chapters a check found while the app runs, and the chapters asked for all downloaded:
+     * posted as the engine says them, which it does only while their setting is on. Where they
+     * cannot show for want of the permission, the activity asks for it.
+     */
+    private fun followReadingNotices() {
+        scope.launch {
+            store.reading.newChapters.collect { found ->
+                if (!readingNotifier.canPost(ReadingNotifier.CHAPTERS)) return@collect notifier.wantPermission()
+                val art = store.covers(found.flatMap { listOfNotNull(it.cover, it.banner) }.distinct(), EngineEpisodeCheck.COVER_SIZE, EngineEpisodeCheck.COVERS_MILLIS)
+                readingNotifier.chapters(found.map { NewChapterNote.of(it, art) })
+            }
+        }
+        scope.launch {
+            store.reading.downloadsDone.collect { done ->
+                if (!readingNotifier.canPost(ReadingNotifier.DOWNLOADS_FINISHED)) return@collect notifier.wantPermission()
+                readingNotifier.downloadsDone(done.work, done.title.text(this@KaeriApp), done.body.text(this@KaeriApp))
+            }
+        }
     }
 
     override suspend fun markWatched(id: AnilistId, episode: UInt) {
@@ -214,9 +262,14 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
         } else {
             store.start(launch, host(), prepare)
         }
+        // The screen's facts before the first screen, and again for each engine started since.
+        scope.launch {
+            store.phase.filter { it == AppStore.Phase.Running }.collect { eink.sendFacts(this@KaeriApp, Flavour.wideColourGamut, Flavour.einkSupport) }
+        }
         // A profile switched to: remembered, and the engine started again on it.
         store.onProfileSwitch = { id -> ProfileChoice.switchTo(this, id) }
         episodeAlerts.follow(scope)
+        followReadingNotices()
         ContinueShortcut(this).follow(store, scope)
         widgetKeeper.followFillIns(store, scope)
         recordWidgetsOnLeaving()
@@ -294,6 +347,10 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
         val say = { capabilities: NetworkCapabilities? ->
             val cellular = capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true
             val constrained = connectivity.restrictBackgroundStatus == ConnectivityManager.RESTRICT_BACKGROUND_STATUS_ENABLED
+            // Offline only without a network that offers the internet. Validated is not asked
+            // for: privacy setups turn the system's connectivity check off, or fail it with
+            // their own DNS, and a network that works would then read as none. When a request
+            // fails on an unvalidated one, the engine tells from the error which it was.
             val offline = capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) != true
             val now = Triple(cellular, constrained, offline)
             if (now != said) {
@@ -305,8 +362,10 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
         connectivity.registerDefaultNetworkCallback(object : ConnectivityManager.NetworkCallback() {
             override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) = say(capabilities)
 
-            // Another network may already be the default; only none at all is offline.
-            override fun onLost(network: Network) = say(connectivity.activeNetwork?.let(connectivity::getNetworkCapabilities))
+            // Another network may already be the default; only none at all is offline. As this
+            // comes, the system can still name the lost network as the active one.
+            override fun onLost(network: Network) =
+                say(connectivity.activeNetwork?.takeIf { it != network }?.let(connectivity::getNetworkCapabilities))
         })
     }
 

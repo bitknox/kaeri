@@ -110,32 +110,8 @@ fn dismiss_in_order(shown: &[adw::Toast]) {
 
 #[cfg(test)]
 mod tests {
-    use std::time::{Duration, Instant};
-
     use super::*;
-
-    /// Fills memory with a pattern as it is freed, so a read of a freed toast crashes every
-    /// time rather than now and then.
-    fn poison_freed_memory() {
-        #[cfg(target_env = "gnu")]
-        {
-            unsafe extern "C" {
-                fn mallopt(param: std::ffi::c_int, value: std::ffi::c_int) -> std::ffi::c_int;
-            }
-            const M_PERTURB: std::ffi::c_int = -6;
-            // SAFETY: glibc's own tuning call, made before any GTK object exists.
-            unsafe { mallopt(M_PERTURB, 0xa5) };
-        }
-    }
-
-    fn pump(for_ms: u64) {
-        let until = Instant::now() + Duration::from_millis(for_ms);
-        let main = glib::MainContext::default();
-        while Instant::now() < until {
-            main.iteration(false);
-            std::thread::sleep(Duration::from_millis(2));
-        }
-    }
+    use crate::gtk_test::pump;
 
     fn toast(notices: &Notices, text: &str, alert: bool) -> adw::Toast {
         let toast = adw::Toast::new(text);
@@ -147,16 +123,14 @@ mod tests {
     }
 
     /// Two orders that free a toast while one of its animations still runs, which segfaults on
-    /// the next frame. Every toast must be let go once the animations end. One test, as GTK
-    /// is started on one thread only.
+    /// the next frame. Every toast must be let go once the animations end. Freed memory is
+    /// poisoned on the GTK thread, so a read of a freed toast crashes every time.
     #[test]
     fn dismissing_around_an_alert_frees_each_toast_once() {
-        poison_freed_memory();
-        if gtk::init().is_err() || adw::init().is_err() {
-            // CI runs these under xvfb-run; a desktop has a display.
-            eprintln!("no display: the notices test needs one");
-            return;
-        }
+        crate::gtk_test::run(dismissing_around_an_alert);
+    }
+
+    fn dismissing_around_an_alert() {
         let overlay = adw::ToastOverlay::new();
         overlay.set_child(Some(&gtk::Label::new(Some("page"))));
         let window = gtk::Window::builder().default_width(640).default_height(480).build();

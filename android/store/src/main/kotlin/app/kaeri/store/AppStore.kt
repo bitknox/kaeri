@@ -24,7 +24,12 @@ import app.kaeri.engine.core.AnilistId
 import app.kaeri.engine.core.SettingValue
 import app.kaeri.engine.core.SubtitleBackground
 import app.kaeri.engine.core.SubtitleEdge
+import app.kaeri.engine.core.WorkId
 import app.kaeri.engine.model.DemoState
+import app.kaeri.engine.model.ReadingAbout
+import app.kaeri.engine.model.ReadingEvent
+import app.kaeri.engine.model.ReaderEvent
+import app.kaeri.engine.model.ReadingFailure
 import app.kaeri.engine.model.SubtitleStyle
 import app.kaeri.engine.model.SyncSignInStep
 import app.kaeri.engine.model.SurprisePool
@@ -143,6 +148,33 @@ class AppStore(
     val downloads = DownloadsModel()
     val settings = SettingsModel()
 
+    /** Watch, read or both: what Kaeri is for on this device. */
+    val medium = MediumModel { send(it) }
+
+    /** Reading's places: Home, Updates, the lists, Search, series, chapters and downloads. */
+    val reading = ReadingModel { send(it) }
+
+    /** The book sources and Read from's editions. */
+    val bookSources = BookSourcesModel { send(it) }
+
+    /** What came in after a source was added, or why nothing did. */
+    val cameIn = CameInModel(scope) { send(it) }
+
+    /** Did my server get it: the line on the page between chapters, and each server's row. */
+    val serverLines = ServerLines(scope, send = { send(it) }, hostFor = ::progressHost, quiet = ::progressOnClose)
+    val rowLines = RowLines(scope) { send(it) }.also { lines ->
+        bookSources.onServers = { rows ->
+            lines.update(rows)
+            serverLines.rows(rows)
+        }
+    }
+
+    /** Send to e-reader. */
+    val export = ExportModel { send(it) }
+
+    /** The last export failure, for the job that ends after it. */
+    private var exportFailure: ReadingFailure? = null
+
     /** Sync between devices, the cloud folder's sign-in, and the profiles. */
     val sync = SyncModel()
 
@@ -230,6 +262,38 @@ class AppStore(
 
     /** The playback's events, for the player the app hosts: its ops and interface. */
     var onPlayback: ((Event) -> Unit)? = null
+
+    private val readers = java.util.concurrent.CopyOnWriteArrayList<(Event) -> Unit>()
+
+    /**
+     * Hear the reader's events and the e-ink profile, as they are applied, on the main thread:
+     * for the reader surface and the e-ink detection, which keep their own state. Every page
+     * landing comes through here, so a listener only notes it. Call what is returned to stop.
+     */
+    fun listenToReading(listener: (Event) -> Unit): () -> Unit {
+        readers += listener
+        return { readers -= listener }
+    }
+
+    /** An event a Fixtures shot says to the reader as though the engine had: credit pages, parts. */
+    internal fun stageReaderEvent(event: Event) = readers.forEach { it(event) }
+
+    /**
+     * For a Fixtures shot: reader commands the fixture engine has no answer for, taken here
+     * first. True when the shot answered it and the engine never hears it. Null in the app.
+     */
+    @Volatile
+    internal var readerAnswer: ((app.kaeri.engine.model.ReaderCommand) -> Boolean)? = null
+
+    /** For a Fixtures shot: the engine's reader events as the shot's answers move them. Null in the app. */
+    @Volatile
+    internal var readerDress: ((Event) -> Event)? = null
+
+    /** The engine's server for a novel's files: called on the web view's request thread. */
+    fun bookResource(url: String): app.kaeri.engine.model.BookResource? = client?.engine?.bookResource(url)
+
+    /** The paginator script and stylesheet a novel's web view runs with. */
+    fun novelAssets(): app.kaeri.engine.model.NovelAssets = app.kaeri.engine.ffi.novelAssets()
 
     /** The engine named another profile to run: the app starts it again as that one. */
     var onProfileSwitch: ((String) -> Unit)? = null
@@ -378,6 +442,10 @@ class AppStore(
         )
         this.client = client
         _phase.value = Phase.Running
+        // What Kaeri is for decides the places, so it is asked first, ahead of the commands that
+        // waited for the engine: with no answer kept from before, the bar and rail are Watch's
+        // until it comes. Reading's Updates count and its sources follow once it reads.
+        medium.load()
         for (command in early) client.send(command)
         early.clear()
     }
@@ -387,6 +455,7 @@ class AppStore(
      * while it starts, the command waits and is sent once it has.
      */
     fun send(command: Command): JobId? {
+        if (command is Command.Reader && readerAnswer?.invoke(command.v1) == true) return null
         if (command is Command.Play || command is Command.PlaySource || command is Command.PlayLocal || command is Command.PlayParty) {
             onPlayAsked?.invoke()
         }
@@ -1324,6 +1393,8 @@ class AppStore(
                 accounts.done(event.v1)
                 stores.done(event.v1)
                 detailDone(event.v1)
+                export.ended(event.v1, exportFailure)
+                exportFailure = null
             }
 
             is Event.Content -> content(event.content, event.view)
@@ -1375,6 +1446,7 @@ class AppStore(
             is Event.Sync -> accounts.apply(event.v1)
             is Event.SyncStatus -> sync.status(event.v1)
             is Event.SyncInvite -> sync.invite(event.code, event.port.toInt(), event.seconds.toInt())
+            is Event.SetupFrom -> sync.setup(event.v1)
             is Event.SyncRecoveryKey -> sync.recoveryKey(event.v1)
             is Event.SyncSignIn -> syncSignIn(event.service, event.step)
             is Event.SyncProblem -> {
@@ -1415,6 +1487,7 @@ class AppStore(
             Event.SourcesChanged -> providers.sourcesChanged()
             is Event.TorrentProxy -> providers.proxySaid(event.v1)
             is Event.Demo -> _demo.value = event.v1
+            is Event.CameIn -> cameIn.apply(event.v1)
             is Event.ProxyChecked -> providers.trialSaid(event.v1)?.let { send(Command.CheckTorrentProxy(it.proxy)) }
             is Event.ProviderPreference -> providers.preference(event.v1)
             is Event.SourceOptions -> sourceChoices.apply(event.id, event.options)
@@ -1433,6 +1506,47 @@ class AppStore(
             is Event.UpcomingNotices -> coming.apply(event.v1)
             is Event.Update -> updates.apply(event.v1)
             is Event.Remote -> onRemote?.invoke(event.v1)
+
+            // The reader's own, and a reading load that failed where the reader or the e-ink
+            // profile shows it.
+            is Event.Reader -> {
+                val dressed = readerDress?.invoke(event) ?: event
+                when (val said = (dressed as? Event.Reader ?: event).v1) {
+                    is ReaderEvent.ProgressSent -> serverLines.sent(said.chapter, said.server, said.host, said.result)
+                    is ReaderEvent.ChapterRead -> serverLines.chapterRead(said.work, said.chapter)
+                    is ReaderEvent.Closed -> serverLines.clear()
+                    is ReaderEvent.Opened -> readerHosts[said.v1.work] = said.v1.progressHost
+                    else -> {}
+                }
+                readers.forEach { it(dressed) }
+                reading.observe(dressed)
+            }
+            is Event.Reading -> when (val said = event.v1) {
+                is ReadingEvent.Eink -> readers.forEach { it(event) }
+                // The reader's Chapters tab and its failed screen wait for these as well.
+                is ReadingEvent.Chapters, is ReadingEvent.Versions -> {
+                    readers.forEach { it(event) }
+                    reading.apply(said)
+                }
+                is ReadingEvent.Failed -> when (said.about) {
+                    ReadingAbout.READER, ReadingAbout.EINK -> readers.forEach { it(event) }
+                    ReadingAbout.EXPORT -> exportFailure = said.failure
+                    else -> reading.apply(said)
+                }
+                is ReadingEvent.ExportTargets, is ReadingEvent.ExportProgress, is ReadingEvent.ExportReady,
+                is ReadingEvent.ExportWaiting, is ReadingEvent.ExportFailed -> export.apply(said)
+                else -> reading.apply(said)
+            }
+            is Event.Medium -> {
+                val before = medium.view.value
+                medium.apply(event.v1)
+                val reads = event.v1.readingAvailable && event.v1.answer.reads
+                if (reads && (before == null || !before.answer.reads || !before.readingAvailable)) {
+                    bookSources.load()
+                    reading.loadUpdates()
+                }
+            }
+            is Event.BookSources -> bookSources.apply(event.v1)
 
             is Event.ArtworkReady -> artwork.ready(event.url, event.bytes)
             is Event.ImageFailed -> artwork.failed(event.url)
@@ -1603,6 +1717,31 @@ class AppStore(
         notices.post(EngineNotice(kind = NoticeKind.INFO, text = "", hint = null), Strings::matchCleared)
         send(Command.ClearMatch(id))
     }
+
+    /**
+     * The host [work]'s progress goes to: the book server its edition in use reads from, when that
+     * server is on and takes progress. Null otherwise, and then the page shows no Sending.
+     */
+    /** Each opened work's progress host, as the engine said when the reader opened it. */
+    private val readerHosts = java.util.concurrent.ConcurrentHashMap<WorkId, java.util.Optional<String>>()
+
+    private operator fun MutableMap<WorkId, java.util.Optional<String>>.set(work: WorkId, host: String?) {
+        put(work, java.util.Optional.ofNullable(host))
+    }
+
+    /**
+     * The host progress for [work] goes to: what the engine said when the reader opened it, or
+     * else the server of the edition the series page showed.
+     */
+    private fun progressHost(work: WorkId): String? {
+        readerHosts[work]?.let { return it.orElse(null) }
+        val source = reading.series.value[work]?.edition?.sourceId ?: return null
+        val server = bookSources.view.value?.servers?.firstOrNull { it.id == source && it.reportProgress && !it.off } ?: return null
+        return runCatching { java.net.URI(server.address).host }.getOrNull() ?: server.address
+    }
+
+    /** Progress is sent once the reader closes: the page between chapters has no server line. */
+    private fun progressOnClose(): Boolean = settings.row(SettingKey.SEND_PROGRESS_AFTER)?.value == "close"
 
     private fun applyMatch(event: Event) {
         when (event) {

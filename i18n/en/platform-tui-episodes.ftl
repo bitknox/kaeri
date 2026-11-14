@@ -42,7 +42,7 @@ title-pin-off-page = Open the title's page to pick a { -source } for it.
 
 # Toast when the { -source } picker is asked for and no { -source } is registered. They register a moment after launch.
 # @only tui
-title-no-sources-yet = No { -source-pl } are registered yet. Try again in a moment.
+title-no-sources-yet = The { -source-pl } are still loading. Try again in a moment.
 
 # Toast when a list status or rating is asked for and no { -tracker } is signed in. The command is typed as it is.
 # @only tui
@@ -129,7 +129,7 @@ title-rating-2 = Awful
 title-rating-1 = Appalling
 
 # Place of a title in the watch order: the nth season of its franchise. Sits in a narrow column.
-# @arg number: int
+# @arg number: plain
 # @max 16
 # @only tui
 title-season = Season { $number }
@@ -168,7 +168,7 @@ title-release-first = Whichever { -release } the { -source } ranks first
 title-available-on = Available on { $services }
 
 # Beside the progress meter on the title page: the episode that follows what has been watched.
-# @arg next: int
+# @arg next: plain
 # @only tui
 title-up-next = { -up-next-cap }: episode { $next }
 
@@ -260,7 +260,7 @@ episodes-showing-unwatched = Showing unwatched episodes.
 episodes-showing-no-filler = Showing episodes without filler.
 
 # Top right of the episode table: how far the dub goes, for a dub that stops short of what has aired.
-# @arg through: int
+# @arg through: plain
 # @only tui
 episodes-dub-through = Dub to episode { $through }
 
@@ -291,7 +291,7 @@ episodes-empty-no-source-hint = AniList lists no episodes for this title yet, an
 episodes-empty-unaired = Nothing has aired yet
 
 # Under the heading when the title has not aired yet. The span is short, such as 2d 3h.
-# @arg episode: int
+# @arg episode: plain
 # @arg span: text
 # @only tui
 episodes-empty-unaired-hint = Episode { $episode } airs in { $span }.
@@ -308,7 +308,7 @@ episodes-empty-none-listed-hint = The { -source } listed no episodes for this ti
 
 # Toast when an episode has no { -release } to pick from.
 # @only tui
-episodes-no-releases = No { -release-pl } are available to pick from for this episode.
+episodes-no-releases = This episode has no { -release-pl } to pick from.
 
 # Toast when a download is asked for from a table listed from AniList alone. The key opens the { -source-pl } screen.
 # @arg key: text

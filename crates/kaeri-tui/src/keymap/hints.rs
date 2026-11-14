@@ -194,7 +194,7 @@ pub(crate) fn status_hints_paged(
         let enter = if app.search_opens_on_enter() { hint_open() } else { hint_search() };
         let mut hints = vec![("↵".to_string(), enter)];
         // ↓ is how the keyboard gets from the field into the results; with none it does nothing.
-        if !app.content.is_empty() {
+        if app.search_has_results() {
             hints.push(("↓".to_string(), hint_results()));
         }
         if let Some(key) = app.keymap.keys_for(Action::FilterSearch).first() {
@@ -462,6 +462,75 @@ pub(crate) fn status_hints_paged(
     with_help(keymap, hints)
 }
 
+/// The status line's hints on reading's Home and Search with the stage focused, `None`
+/// elsewhere. `wide` picks the longer words, and the filters' key, which a narrow line leaves out
+/// as it leaves out the filter line.
+pub(crate) fn reading_hints(
+    app: &crate::app::App,
+    wide: bool,
+) -> Option<Vec<(String, &'static str)>> {
+    if !app.reading_here()
+        || app.nav.has_overlay()
+        || app.is_typing()
+        || app.nav.focus() != crate::nav::Focus::Stage
+    {
+        return None;
+    }
+    let keymap = &app.keymap;
+    let key = |action: Action| keymap.keys_for(action).first().map(Binding::render);
+    let items = app.read_items();
+    let search = app.nav.section() == Section::Search;
+    let mut wanted: Vec<(Action, &'static str)> = Vec::new();
+    if !items.is_empty() {
+        wanted.push((Action::Open, hint_open()));
+        let parts = items.windows(2).any(|pair| pair[0].part() != pair[1].part());
+        if parts {
+            wanted.push((
+                Action::ToggleRail,
+                if wide {
+                    said(t::tui_read_hint_next_section())
+                } else {
+                    said(t::tui_read_hint_section())
+                },
+            ));
+        }
+    }
+    if wide
+        && matches!(
+            app.read_selected(),
+            Some(crate::app::ReadLine::Work { plannable: true, .. })
+        )
+    {
+        wanted.push((Action::SetListStatus, said(t::tui_read_hint_planning())));
+    }
+    if app.both() {
+        wanted.push((Action::SwitchMedium, said(t::tui_read_hint_to_shows())));
+    }
+    // Your sources only is offered once words are typed: with none, only AniList browses.
+    let words = !app.text(crate::app::Field::Search).trim().is_empty();
+    if search && wide {
+        wanted.push((Action::Filter, said(t::keys_hint_filters())));
+    }
+    if search && words {
+        wanted.push((
+            Action::ShowSources,
+            if wide {
+                said(t::tui_read_hint_sources_only())
+            } else {
+                said(t::tui_read_hint_sources_only_short())
+            },
+        ));
+    }
+    let hints =
+        wanted.into_iter().filter_map(|(action, label)| Some((key(action)?, label))).collect();
+    Some(with_help(keymap, hints))
+}
+
+/// The hint for the key that turns Home and Search to reading's, while Kaeri is for both.
+pub(crate) fn hint_to_reading() -> &'static str {
+    said(t::tui_read_hint_to_reading())
+}
+
 /// `? keys` last, so it is the hint a narrow status line keeps.
 fn with_help(
     keymap: &Keymap,
@@ -493,6 +562,17 @@ fn overlay_hints(
             hint("i", super::said(kaeri_i18n::t::onboarding_invite_heading())),
             hint("s", super::said(kaeri_i18n::t::onboarding_skip())),
         ],
+        O::Medium
+            if app.medium_question() == Some(&kaeri_model::medium::MediumAsk::FirstRun) =>
+        {
+            vec![hint("↑↓", hint_move()), hint("↵", hint_choose())]
+        }
+        O::Medium => {
+            vec![hint("↑↓", hint_move()), hint("↵", hint_choose()), hint(ESC, hint_close())]
+        }
+        O::MediumOff => {
+            vec![hint("↑↓", hint_move()), hint("↵", hint_choose()), hint(ESC, hint_cancel())]
+        }
         O::BugReport => vec![
             hint("↑↓", hint_move()),
             hint("↵", super::said(kaeri_i18n::t::report_open_github())),

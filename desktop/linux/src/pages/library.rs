@@ -133,6 +133,10 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     bar.set_margin_bottom(6);
     bar.set_margin_start(18);
     bar.set_margin_end(18);
+    // The medium first, where the Reading side has it, so it stays put on a switch.
+    let scope = crate::reading::scope(ctx, super::Dest::Library, false);
+    scope.set_margin_end(12);
+    bar.append(&scope);
     bar.append(&switcher);
     bar.append(&picker);
     switcher.set_hexpand(true);
@@ -152,8 +156,8 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     connect.add_css_class("pill");
     connect.add_css_class("suggested-action");
     connect.set_halign(gtk::Align::Center);
-    connect.set_action_name(Some("win.connect"));
     connect.set_action_target_value(Some(&"anilist".to_variant()));
+    connect.set_action_name(Some("win.connect"));
     let signed_out = nagare::status_page(
         &t::library_signed_out_title(),
         &t::library_signed_out_detail(),

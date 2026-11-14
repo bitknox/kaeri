@@ -55,10 +55,10 @@ stores-devices-count = { $count ->
 stores-replace-by-hand-detail = Version { $version } from { $store } replaces the copy added by hand.
 
 # Line under the switch of the who-can-join sheet while anyone with the link can join.
-stores-open-join-on-detail = They join without a name. Turning this off stops the link; turning it on again makes a new one.
+stores-open-join-on-detail = People join without a name. Turn this off and the link stops working. Turn it on again for a new link.
 
 # Line under the switch of the who-can-join sheet while only invited people can join.
-stores-open-join-off-detail = Only people you invite can join. Turned on, anyone with the link joins, without a name.
+stores-open-join-off-detail = Only people you invite can join. Turn this on and anyone with the link can join, without a name.
 
 # Line under the count of devices that joined with the link, while the link is open.
 stores-open-join-no-names = No names are kept.
@@ -72,11 +72,11 @@ stores-open-join-keep-working = They keep working until you remove them.
 stores-device-seen-at = Seen { $when }
 
 # Line of a device that joined with the link and was never seen again.
-stores-device-not-seen = Not seen since
+stores-device-not-seen = Not seen since joining
 
 # Line of a plugin in the publish sheet: the version the plugin store offers.
 # @arg version: text
-stores-publish-offered = The { -plugin-store } offers { $version }
+stores-publish-offered = The { -plugin-store } has { $version }
 
 # Line of a plugin in the publish sheet that the plugin store does not have yet.
 stores-publish-not-yet = Not in the { -plugin-store } yet
@@ -196,7 +196,7 @@ stores-link-send-once-anyone = Send this link to the person it is for. It works 
 sources-remove-title = Remove { $name }?
 
 # Detail of the confirmation that removes a plugin.
-sources-remove-detail-device = It is deleted from this { -device }. A { -plugin-store } can install it again.
+sources-remove-detail-device = It's deleted from this { -device }. You can install it again from a { -plugin-store }.
 
 # Heading of the list of matched file groups in a folder of Your media.
 library-matched-apple = Matched
@@ -207,3 +207,9 @@ servers-row-summary-apple = { $series ->
     [one] 1 series
    *[other] { $series } series
  }
+
+## Book folders
+
+# Heading of the Mac's folder chooser for a folder of books: Reading's Add a source, the first
+# launch's books step and a folder's Choose another.
+book-picker-message = Choose a folder with your books.

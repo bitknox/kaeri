@@ -1,9 +1,9 @@
 party-status = Estado da { -watch-party }
 party-members = Membros
 party-choose-a-source = Escolha uma { -source }
-party-sources-none-listed = Nenhuma { -source } lista o episódio { $episode }. As { -source-cap-pl } vêm de { -plugin-pl }, que uma { -plugin-store } adiciona.
+party-sources-none-listed = Nenhuma { -source } lista o episódio { $episode }. As { -source-pl } vêm de { -plugin-pl }, que você adiciona de uma { -plugin-store }.
 party-sources-found-line = { $count ->
-    [one] Uma { -source } tem o episódio. A que você escolher reproduz com a { -watch-party }.
+    [one] { $count } { -source } tem o episódio. A que você escolher reproduz com a { -watch-party }.
     [many] { $count } { -source-pl } têm o episódio. A que você escolher reproduz com a { -watch-party }.
    *[other] { $count } { -source-pl } têm o episódio. A que você escolher reproduz com a { -watch-party }.
  }
@@ -19,7 +19,7 @@ player-time-ending = { $clock } · Encerramento
 player-channels-mono = Mono
 player-channels-stereo = Estéreo
 player-channels = { $count ->
-    [one] Um canal
+    [one] { $count } canal
     [many] { $count } canais
    *[other] { $count } canais
  }
@@ -30,7 +30,7 @@ player-announce-up-next-waiting = { -up-next-cap }, { $title }. Pressione Enter 
 player-announce-skip = { $label }. Pressione S.
 player-announce-undo = { $line }. Pressione U para desfazer.
 discussion-like-named = { $count ->
-    [one] Curtir, uma curtida
+    [one] Curtir, { $count } curtida
     [many] Curtir, { $count } de curtidas
    *[other] Curtir, { $count } curtidas
  }

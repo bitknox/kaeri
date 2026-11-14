@@ -25,7 +25,7 @@ settings-coming-up-switched-off = { $count ->
     [many] Уведомления для { $names } выключены в собственных настройках.
    *[other] Уведомления для { $names } выключены в собственных настройках.
  }
-settings-coming-up-opens = Открывает настройки тайтла.
+settings-coming-up-opens = Нажмите на тайтл, чтобы открыть его настройки.
 torrents-proxy-as = как { $user }
 title-facts-aired = Вышло { $dates }
 title-facts-airing = Выходит с { $date }
@@ -157,7 +157,7 @@ settings-titles-note-english-missing = У { $title } нет английског
 settings-titles-note-english = Английские названия, как их указывает AniList, а там, где их нет, ромадзи.
 settings-titles-note-romaji = Японские названия латиницей, как их указывает AniList.
 settings-stores-with-updates = { $stores } · { $updates }
-settings-seeding-best-effort = По возможности: раздача идёт, только пока открыт { -app-name }.
+settings-seeding-best-effort = Это { -device } раздаёт, только пока открыт { -app-name }.
 settings-downloads-count = { $count ->
     [one] { $count } эпизод
     [few] { $count } эпизода
@@ -178,7 +178,7 @@ settings-typefaces-value = Roboto Flex и Zen Kaku Gothic New, по лиценз
 settings-libraries-value = JNA и AndroidX, по лицензии Apache License 2.0
 settings-report-bug-value = Открывает GitHub в браузере
 downloads-storage-share-description = Загрузки занимают { $size }
-settings-aside-notifications = Одно уведомление, когда выходит новый эпизод отслеживаемого тайтла: название тайтла и номер эпизода, но не название эпизода. Тайтл можно отключить в его собственных настройках.
+settings-aside-notifications = Одно уведомление, когда выходит эпизод тайтла, за которым вы следите: тайтл и номер эпизода, но не его название. Уведомления тайтла можно выключить в его настройках.
 settings-aside-downloads = Загрузки хранятся в собственном хранилище { -app-name }, которое другие приложения не читают. Удаление приложения удаляет и загрузки.
 settings-aside-sources = { -source-cap-pl } проверяются по порядку, сверху вниз. Тайтл может иметь свой { -source }, который выбирается на его странице.
 settings-upscaling-description = Один и тот же кадр: слева оригинал 480p, справа с { $mode }

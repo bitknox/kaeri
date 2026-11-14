@@ -29,17 +29,18 @@ fn name(button: PadButton) -> String {
     }
 }
 
-/// The rows for one context. The four D-pad directions that all move focus read as one row.
+/// The rows for one context. The four D-pad directions that all do the same read as one row.
 fn rows(context: &PadContext) -> Vec<(String, String)> {
     let help = pad_help(context);
-    let moves = t::pad_help_move();
-    let all_move =
+    let dpad_words: Vec<&String> =
         [PadButton::DpadUp, PadButton::DpadDown, PadButton::DpadLeft, PadButton::DpadRight]
             .iter()
-            .all(|b| help.iter().any(|(button, words)| button == b && *words == moves));
+            .filter_map(|b| help.iter().find(|(button, _)| button == b).map(|(_, w)| w))
+            .collect();
+    let all_move = dpad_words.len() == 4 && dpad_words.iter().all(|w| *w == dpad_words[0]);
     let mut rows = Vec::new();
     if all_move {
-        rows.push((t::pad_button_dpad(), moves.clone()));
+        rows.push((t::pad_button_dpad(), dpad_words[0].clone()));
     }
     for (button, words) in help {
         let dpad = matches!(
@@ -63,15 +64,26 @@ fn rows(context: &PadContext) -> Vec<(String, String)> {
 /// Show the help for the window as it is now.
 pub fn show(ctx: &Ctx, context: &PadContext) {
     let page = adw::PreferencesPage::new();
-    let groups: [(String, PadContext); 2] = match context {
-        PadContext::Browse => [
-            (t::settings_group_general(), PadContext::Browse),
-            (
-                t::settings_group_player(),
-                PadContext::Player { controls_shown: false, card: None },
-            ),
-        ],
-        PadContext::Player { .. } => [
+    let reader = (t::pad_help_reader(), PadContext::Reader { settings_open: false });
+    let answer = crate::pages::answer();
+    let groups: Vec<(String, PadContext)> = match context {
+        PadContext::Browse => {
+            let mut groups = vec![(t::settings_group_general(), PadContext::Browse)];
+            if answer.watches() {
+                groups.push((
+                    t::settings_group_player(),
+                    PadContext::Player { controls_shown: false, card: None },
+                ));
+            }
+            if answer.reads() {
+                groups.push(reader);
+            }
+            groups
+        }
+        PadContext::Reader { .. } => {
+            vec![reader, (t::settings_group_general(), PadContext::Browse)]
+        }
+        PadContext::Player { .. } => vec![
             (
                 t::settings_group_player(),
                 PadContext::Player { controls_shown: false, card: None },

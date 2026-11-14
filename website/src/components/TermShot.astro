@@ -1,0 +1,29 @@
+---
+// One of the terminal app's screens, drawn from its golden screens by scripts/terminal-shots.ts:
+// the 120-column screen, and on a phone the 80-column one, where the app folds its rail.
+interface Props {
+	name: 'home' | 'episodes' | 'player' | 'reading' | 'read-search';
+	alt: string;
+	eager?: boolean;
+}
+const { name, alt, eager = false } = Astro.props;
+---
+
+<picture class="term-shot">
+	<source media="(max-width: 700px)" srcset={`/terminal/${name}-80.svg`} width="756" height="468" />
+	<img src={`/terminal/${name}-120.svg`} width="1116" height="648" alt={alt} loading={eager ? 'eager' : 'lazy'} decoding="async" />
+</picture>
+
+<style>
+	.term-shot,
+	.term-shot img {
+		display: block;
+		width: 100%;
+		height: auto;
+	}
+
+	.term-shot img {
+		border-radius: 10px;
+		border: 1px solid var(--ani-bezel-edge);
+	}
+</style>

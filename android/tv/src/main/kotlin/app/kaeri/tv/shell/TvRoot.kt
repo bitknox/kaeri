@@ -89,6 +89,7 @@ import app.kaeri.tv.ui.LocalKeyRepeat
 import app.kaeri.i18n.R
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import app.kaeri.i18n.Strings
 
 /** The rail's scrim over the content: black at 32 %. */
@@ -166,6 +167,7 @@ fun TvRoot(
 private fun BoxScope.Notices(store: AppStore, player: PlayerModel, remote: TvRemoteHost?, notices: TvNotices, onUpdatePage: Boolean) {
     val current by store.notices.current.collectAsStateWithLifecycle()
     val context = androidx.compose.ui.platform.LocalContext.current
+    val resources = LocalResources.current
     LaunchedEffect(current?.id) {
         val item = current ?: return@LaunchedEffect
         val failure = (store.updates.state.value as? UpdateState.Failed)?.failure?.text(context)
@@ -199,7 +201,7 @@ private fun BoxScope.Notices(store: AppStore, player: PlayerModel, remote: TvRem
     LaunchedEffect(saving) {
         if (!saving) return@LaunchedEffect
         kotlinx.coroutines.delay(1_000)
-        if (store.crashes.pendingNotice() != null) notices.say(context.getString(app.kaeri.i18n.R.string.crash_notice_tv))
+        if (store.crashes.pendingNotice() != null) notices.say(resources.getString(app.kaeri.i18n.R.string.crash_notice_tv))
     }
     // In a party the column on the video says the player's alerts, chat lines among them.
     val inParty = store.party.view.collectAsStateWithLifecycle().value != null

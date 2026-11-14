@@ -8,6 +8,9 @@ plugins {
 
 android {
     namespace = "app.kaeri.i18n"
-    // Shared with the TV app.
-    defaultConfig { minSdk = KaeriSdk.TV_MIN }
+    lint {
+        // A language ships only the messages that are reviewed or drafted, and shows the rest in
+        // English, per string (docs/translations.md); i18n-tool's draft lists what is missing.
+        disable += "MissingTranslation"
+    }
 }

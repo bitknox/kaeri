@@ -819,13 +819,13 @@ impl Page {
             button.add_css_class("pill");
             button.add_css_class("suggested-action");
             button.add_css_class("first-focus");
-            button.set_action_name(Some("win.licensed-open"));
             button.set_action_target_value(Some(&licensed::target(
                 self.id,
                 &main.service,
                 &main.url,
                 None,
             )));
+            button.set_action_name(Some("win.licensed-open"));
             button.set_hexpand(narrow);
             actions.append(&button);
         }
@@ -843,10 +843,10 @@ impl Page {
                 button.add_css_class("pill");
                 button.add_css_class("suggested-action");
                 button.add_css_class("first-focus");
-                button.set_action_name(Some("win.play"));
                 button.set_action_target_value(Some(
                     &(id, item.episode.to_string()).to_variant(),
                 ));
+                button.set_action_name(Some("win.play"));
                 button.set_hexpand(narrow);
                 actions.append(&button);
                 // A controller opened the page: the main action takes focus once it exists.
@@ -1180,8 +1180,8 @@ impl Page {
             button.add_css_class("flat");
             button.add_css_class("related");
             button.set_tooltip_text(Some(&linked.title));
-            button.set_action_name(Some("win.open-title"));
             button.set_action_target_value(Some(&id.to_variant()));
+            button.set_action_name(Some("win.open-title"));
             let relation = linked.relation.map(say::relation);
             button.update_property(&[gtk::accessible::Property::Label(&match relation {
                 Some(relation) => format!("{}, {relation}", linked.title), // i18n-skip
@@ -1579,7 +1579,7 @@ impl Page {
             let adjustment = page.scroll.vadjustment();
             let near = (to - adjustment.value()).abs() < adjustment.page_size();
             if nearby && near && !motion::reduced() {
-                let fade = adw::TimedAnimation::new(
+                let fade = motion::timed(
                     &page.scroll,
                     adjustment.value(),
                     to,
@@ -1784,8 +1784,8 @@ impl Page {
             discuss.add_css_class("caption");
             discuss.set_halign(gtk::Align::Start);
             discuss.set_visible(false);
-            discuss.set_action_name(Some("win.open-discussion"));
             discuss.set_action_target_value(Some(&(id, row.number.clone()).to_variant()));
+            discuss.set_action_name(Some("win.open-discussion"));
             text.append(&discuss);
 
             // Two lines of synopsis beside the still, three under it, in a box of fixed height. Beside the still the box is
@@ -1878,8 +1878,8 @@ impl Page {
                 .build();
             match &outside {
                 Some(target) => {
-                    list_row.set_action_name(Some("win.licensed-open"));
                     list_row.set_action_target_value(Some(target));
+                    list_row.set_action_name(Some("win.licensed-open"));
                 }
                 None => {
                     list_row.set_action_name(Some("win.play"));

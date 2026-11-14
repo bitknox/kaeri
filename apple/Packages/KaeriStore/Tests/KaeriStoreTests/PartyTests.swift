@@ -58,7 +58,7 @@ struct PartyTests {
     @Test func theSuggestedServerSaysWhoRunsIt() {
         #expect(PartyWords.serverHint("", form: form) == "No server of your own? syncplay.pl:8995 is a public one, run by the Syncplay project.")
         #expect(PartyWords.serverHint(" syncplay.pl:8995 ", form: form) == "A public server run by the Syncplay project, not by Kaeri.")
-        #expect(PartyWords.inviteServerHint("party.example:8999", form: form) == "A server the person who invited you chose. Kaeri doesn't run it.")
+        #expect(PartyWords.inviteServerHint("party.example:8999", form: form) == "The person who invited you chose this server. Kaeri doesn't run it.")
         #expect(PartyWords.inviteServerHint("syncplay.pl:8995", form: form) == "A public server run by the Syncplay project, not by Kaeri.")
     }
 
@@ -77,7 +77,7 @@ struct PartyTests {
         let what = "Episode 7 of Stardust Wayfarer"
         let found = PartyWords.noSource(why: .notFound, reason: .noticeSourceSearchEmpty(query: "sample"), episode: "7", what: what)
         #expect(found.title == "None of your sources has this episode")
-        #expect(found.body == "Nothing found for “sample”. Try a different search. Episode 7 of Stardust Wayfarer plays with the room once you choose a source that has it.")
+        #expect(found.body == "Nothing found for \"sample\". Try a different search. Episode 7 of Stardust Wayfarer plays with the room once you choose a source that has it.")
         let none = PartyWords.noSource(why: .noSources, reason: .noticeNoSourceCouldList(reason: ""), episode: "7", what: what)
         #expect(none.title == "You have no sources yet")
         let soon = PartyWords.noSource(why: .notAired, reason: .noticeNotAired(episode: 6, when: .airsTomorrow(time: "18:30")), episode: "6", what: what)

@@ -7,8 +7,8 @@ notice-sign-in-failed = Impossible de vous connecter à { $tracker }. Réessayez
 notice-sign-in-stopped = La connexion à { $tracker } s'est arrêtée avant la fin. Réessayez. { $reason }
 notice-token-exchange-failed = Impossible d'obtenir un jeton de { $tracker }. Essayez de vous reconnecter. { $reason }
 notice-browser-not-opened = Impossible d'ouvrir un navigateur pour la connexion. Vérifiez qu'un navigateur est installé, puis réessayez. { $reason }
-notice-sign-in-not-waiting = Aucune connexion à { $tracker } n'attend cette réponse. Recommencez la connexion.
-notice-sign-in-wrong-request = La connexion à { $tracker } ne correspond pas à la demande faite. Recommencez la connexion.
+notice-sign-in-not-waiting = Une réponse de connexion de { $tracker } est arrivée, mais aucune connexion ne l'attendait. Recommencez la connexion.
+notice-sign-in-wrong-request = La réponse de connexion de { $tracker } ne correspond pas à la demande. Recommencez la connexion.
 notice-sign-in-no-token = La connexion à { $tracker } est revenue sans jeton. Réessayez.
 notice-mal-client-missing-build = Impossible de finir la connexion à MyAnimeList : cette version n'a pas de client pour elle.
 notice-kitsu-signs-in-on-accounts = Kitsu se connecte depuis l'écran Comptes.
@@ -23,7 +23,7 @@ notice-mal-no-refresh-token = MyAnimeList n'a pas fourni de jeton de renouvellem
 notice-client-id-missing = Réglez d'abord { $setting } dans le fichier de configuration.
 notice-signed-out = Déconnecté de { $tracker }.
 notice-signed-out-queue = { $count ->
-    [one] Déconnecté de { $tracker }. Une modification en attente est conservée pour la prochaine connexion.
+    [one] Déconnecté de { $tracker }. { $count } modification en attente est conservée pour la prochaine connexion.
     [many] Déconnecté de { $tracker }. { $count } modifications en attente sont conservées pour la prochaine connexion.
    *[other] Déconnecté de { $tracker }. { $count } modifications en attente sont conservées pour la prochaine connexion.
  }
@@ -40,11 +40,11 @@ notice-mapping-data-refreshed = Données de correspondance actualisées.
 notice-mapping-data-failed = Impossible d'actualiser les données de correspondance ({ $datasets }). Nouvelle tentative dans { $wait }. { $cause }
 notice-episode-aired = { $title }, épisode { $episode }, a été diffusé pendant votre absence.
 notice-episodes-aired = { $count ->
-    [one] Un nouvel épisode d'une série que vous suivez a été diffusé. Le calendrier l'affiche.
+    [one] { $count } nouvel épisode d'une série que vous suivez a été diffusé. Le calendrier l'affiche.
     [many] { $count } nouveaux épisodes de séries que vous suivez ont été diffusés. Le calendrier les affiche.
    *[other] { $count } nouveaux épisodes de séries que vous suivez ont été diffusés. Le calendrier les affiche.
  }
 notice-update-available = La version { $tag } est disponible. Lancez kaeri --update pour l'installer.
 cause-proxy-needs-address = Un proxy a besoin d'un hôte et d'un port.
-cause-proxy-address-unusable = L'adresse du proxy ne peut pas être utilisée pour une vérification.
+cause-proxy-address-unusable = La vérification du proxy ne peut pas utiliser cette adresse.
 cause-server-unreachable = Le serveur est injoignable.

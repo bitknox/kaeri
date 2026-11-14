@@ -41,6 +41,7 @@ use tokio::{
 
 use crate::fixtures::{self, FIXTURE_NOW};
 
+mod books;
 pub mod kitsu;
 mod threads;
 pub use threads::comment;
@@ -109,6 +110,8 @@ pub enum Operation {
     Tenrai,
     /// A request to the fake Kitsu: see [`kitsu`].
     Kitsu,
+    /// Any request for AniList's `MANGA` type: a book page, books by id or a series page.
+    Books,
     /// Anything else. Answered with an error, and recorded, so a test can catch a query the
     /// fake was never taught rather than reading its failure as the app's.
     Unknown,
@@ -123,7 +126,9 @@ impl Operation {
     pub fn of(document: &str) -> Self {
         let document = document.split_whitespace().collect::<Vec<_>>().join(" ");
         let has = |needle: &str| document.contains(needle);
-        if has("DeleteMediaListEntry") {
+        if has("type: MANGA") {
+            Self::Books
+        } else if has("DeleteMediaListEntry") {
             Self::DeleteEntry
         } else if has("DeleteThreadComment") {
             Self::DeleteThreadComment
@@ -236,6 +241,9 @@ struct State {
     always: Option<Failure>,
     /// Failures for one operation each, until healed: see [`FakeAniList::fail_operation`].
     failing: HashMap<Operation, Failure>,
+    /// Titles whose list saves are refused for good, as AniList answers a save for a title it
+    /// removed: see [`FakeAniList::refuse_saves_for`].
+    refused_saves: Vec<u64>,
     now: i64,
     /// How far the clock has moved on past `now` without the broadcasts moving with it: see
     /// [`FakeAniList::advance`].
@@ -274,6 +282,8 @@ struct State {
     threads: Vec<threads::FakeThread>,
     /// How many comments have been posted to them, for the new comments' ids.
     posted: u64,
+    /// The books: see [`FakeAniList::add_books`].
+    books: Vec<Value>,
 }
 
 /// Art served badly, as a busy CDN serves it.
@@ -311,12 +321,14 @@ impl FakeAniList {
             slow: HashMap::new(),
             said: VecDeque::new(),
             failing: HashMap::new(),
+            refused_saves: Vec::new(),
             art: None,
             art_trouble: ArtTrouble::default(),
             art_asked: HashMap::new(),
             following: HashMap::new(),
             threads: Vec::new(),
             posted: 0,
+            books: fixtures::books(),
         }));
         let accept = tokio::spawn({
             let state = Arc::clone(&state);
@@ -402,6 +414,12 @@ impl FakeAniList {
     /// [`Self::fail_next`] failures still come first.
     pub fn fail_always(&self, failure: Failure) {
         lock(&self.state).always = Some(failure);
+    }
+
+    /// Refuse every list save for title `id`, anime or manga, with AniList's `404` and "Not
+    /// Found.", as for a title it removed. Not lifted by [`Self::heal`].
+    pub fn refuse_saves_for(&self, id: u64) {
+        lock(&self.state).refused_saves.push(id);
     }
 
     /// Answer every request for `operation` with `failure` until [`Self::heal`], and every
@@ -529,6 +547,16 @@ impl FakeAniList {
         for title in titles {
             let id = title["id"].as_u64().expect("a title has an id");
             state.extra.insert(id, title);
+        }
+    }
+
+    /// Books beside [`fixtures::books`], each in that shape, or in place of one with its id:
+    /// every book page, id list and series page has them.
+    pub fn add_books(&self, books: impl IntoIterator<Item = Value>) {
+        let mut state = lock(&self.state);
+        for book in books {
+            state.books.retain(|b| b["id"] != book["id"]);
+            state.books.push(book);
         }
     }
 
@@ -1057,7 +1085,12 @@ fn answer(state: &Mutex<State>, head: &Head, body: &[u8]) -> Reply {
         let failure = limited
             .or_else(|| state.next.pop_front())
             .or_else(|| state.always.clone())
-            .or_else(|| state.failing.get(&operation).cloned());
+            .or_else(|| state.failing.get(&operation).cloned())
+            .or_else(|| {
+                let id = variables["mediaId"].as_u64()?;
+                (operation == Operation::SaveEntry && state.refused_saves.contains(&id))
+                    .then_some(Failure::Status(404))
+            });
         let clock = (state.now, state.ahead);
         let extra = state.extra.clone();
         let pool = state.catalogue.clone();
@@ -1096,6 +1129,9 @@ fn answer(state: &Mutex<State>, head: &Head, body: &[u8]) -> Reply {
             );
             let thread = if writes && !authorized {
                 Some(Reply::errors(401, "Invalid token", Value::Null))
+            } else if operation == Operation::Books {
+                let books = lock(state).books.clone();
+                Some(books::respond(&books, &query, &variables, clock.shift))
             } else {
                 threads::respond(&mut lock(state), operation, &variables, clock.now)
             };
@@ -1562,6 +1598,8 @@ fn respond(
         | Operation::Tenrai
         // Kitsu's requests are answered before the GraphQL ones are read.
         | Operation::Kitsu
+        // Books are answered before the rest, from their own records.
+        | Operation::Books
         | Operation::Unknown => {
             Reply::errors(400, "the fake AniList was never taught this query", Value::Null)
         }
@@ -1726,12 +1764,11 @@ fn search(vars: &Value, catalogue: Catalogue<'_>) -> Vec<AnilistId> {
     found
 }
 
-/// The season the real clock is in, in AniList's words, and its year.
+/// The season the real clock is in, in AniList's words, and its year: the clock as the store
+/// reads it, so a scene recording that stopped it ([`kaeri_store::stopped`]) asks for the
+/// season it stopped in.
 fn real_season() -> (&'static str, u64) {
-    let days = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map_or(0, |d| d.as_secs() as i64)
-        / 86_400;
+    let days = kaeri_store::now() / 86_400;
     // Civil from days.
     let z = days + 719_468;
     let era = z.div_euclid(146_097);

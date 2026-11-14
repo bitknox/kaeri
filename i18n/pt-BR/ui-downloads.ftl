@@ -11,6 +11,8 @@ downloads-in-downloads = { $size } em downloads
 downloads-space-label = Espaço usado pelos downloads
 downloads-empty-title = Nenhum download
 downloads-empty-detail = Episódios baixados são reproduzidos sem conexão.
+read-downloads-empty-detail = Capítulos baixados abrem sem conexão.
+read-downloads-empty-both = Episódios e capítulos baixados abrem sem conexão.
 downloads-load-failed = Não foi possível carregar os downloads
 downloads-folder-failed = Não foi possível abrir a pasta. Confira se ela ainda existe.
 downloads-episode-name = Episódio { $episode }
@@ -38,11 +40,11 @@ downloads-play-episode = Reproduzir episódio { $episode }
 downloads-delete-title = Excluir { $name }?
 downloads-delete-detail = O arquivo é removido deste { -device }.
 downloads-delete-one-title = Excluir download
-downloads-delete-one-detail = Ele só volta a ser reproduzido com conexão, ou quando você baixar de novo.
+downloads-delete-one-detail = Depois disso, o episódio precisa de conexão para ser reproduzido, a menos que você o baixe de novo.
 downloads-delete-watched = Excluir downloads assistidos
 downloads-seeding-title = Semeadura
 downloads-seeding-after-watching = Semeadura depois de assistir
-downloads-seeding-note = Episódios assistidos são compartilhados de volta enquanto { -app-name } estiver aberto, até o limite de proporção ou de tempo definido em Configurações, em { -source-cap-pl }, ser atingido.
+downloads-seeding-note = Os episódios assistidos são compartilhados de volta enquanto o { -app-name } estiver aberto. O compartilhamento para no limite de proporção ou de tempo definido em Configurações, em { -source-cap-pl }.
 downloads-seeding-open-only = A semeadura só funciona enquanto { -app-name } estiver aberto.
 downloads-background-title = Quando a janela fechar com downloads em andamento
 downloads-background-keep = Continuar baixando
@@ -58,7 +60,7 @@ downloads-quality = Qualidade do download
 downloads-notice-done = Episódio { $episode } baixado
 downloads-notice-done-detail = { $title } · pronto para assistir offline
 downloads-notice-running = { $count ->
-    [one] Baixando um episódio
+    [one] Baixando { $count } episódio
     [many] Baixando { $count } episódios
    *[other] Baixando { $count } episódios
  }

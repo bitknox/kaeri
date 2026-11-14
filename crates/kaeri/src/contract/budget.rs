@@ -101,7 +101,8 @@ async fn launch_paced(
 
 /// The most requests a journey may cost, by the start of its label.
 const BOUNDS: &[(&str, usize)] = &[
-    ("cold launch: launch pull", 1),
+    // One for the watching list and one for the reading list.
+    ("cold launch: launch pull", 2),
     ("cold launch: LoadHome", 6),
     ("cold launch: WidgetSnapshot", 2),
     ("cold launch: Continue stills", 0),
@@ -118,7 +119,8 @@ const BOUNDS: &[(&str, usize)] = &[
     ("hover 10 covers", 1),
     ("sync tick", 0),
     ("warm launch: airing digest", 2),
-    ("warm launch: launch pull", 0),
+    // The reading list is asked for on its own; the watching list is still reused.
+    ("warm launch: launch pull", 1),
     ("warm launch: LoadHome", 1),
     ("warm launch: WidgetSnapshot", 2),
     ("warm launch: Continue stills", 0),

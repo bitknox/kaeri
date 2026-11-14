@@ -6,5 +6,5 @@ notice-hidden-preview = Новый эпизод
 notice-summary = Ещё новых: %u
 notice-dismiss = Закрыть
 accounts-code-expired-detail = Срок действия кода истёк. Получите новый код, чтобы войти в { $tracker }.
-list-refresh-failed = Не удалось обновить. Показано то, что уже загружено.
+list-refresh-failed = Не удалось обновить. Показано то, что загрузилось в прошлый раз.
 sign-in-failed = Не удалось войти в { $tracker }. Попробуйте снова.

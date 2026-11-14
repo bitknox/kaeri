@@ -51,6 +51,9 @@ pub struct EngineOptions {
     /// The engine runs on a phone or a tablet, for the defaults that depend on the device:
     /// torrents while casting is off there. `false` for a computer and the terminal.
     pub handheld: bool,
+    /// The engine runs on a phone, not a tablet, for the defaults that depend on the screen's
+    /// size: novel text left-aligned there. `false` for a tablet, a computer and the terminal.
+    pub phone: bool,
     /// What kind of device this is, for the other devices' lists in sync. `None` leaves it
     /// unsaid (the terminal).
     pub device_kind: Option<kaeri_model::group::SyncDeviceKind>,
@@ -75,6 +78,12 @@ pub struct EngineOptions {
     /// so the viewer knows why their history starts over and where the old file is. See
     /// `Store::open_or_set_aside`.
     pub set_aside: Option<std::path::PathBuf>,
+    /// Whether reading is on. Every app turns it on; off is the engine with reading switched
+    /// off, for a test or a still frame written without it, and every reading command is then
+    /// refused.
+    pub reading: bool,
+    /// Which build this is: the full app, the e-reader build, or a TV, which only watches.
+    pub edition: kaeri_model::medium::AppEdition,
     #[cfg(feature = "testing")]
     pub parts: Option<Parts>,
     /// Where the cloud drives' sign-in and folders are, and how fast the device code is polled,
@@ -85,6 +94,9 @@ pub struct EngineOptions {
     /// for a test, whose answer should not depend on the machine it runs on.
     #[cfg(feature = "testing")]
     pub free_space: Option<u64>,
+    /// A book source put in the registry beside the built-in ones: a test's fake.
+    #[cfg(feature = "testing")]
+    pub book_source: Option<std::sync::Arc<dyn kaeri_core::traits::BookSource>>,
 }
 
 impl EngineOptions {
@@ -110,17 +122,22 @@ impl EngineOptions {
             app_clients: AppClients::default(),
             device_label: kaeri_model::stores::COMPUTER.to_owned(),
             handheld: false,
+            phone: false,
             device_kind: None,
             language: None,
             sources: None,
             background: Background::default(),
             set_aside: None,
+            reading: false,
+            edition: kaeri_model::medium::AppEdition::Full,
             #[cfg(feature = "testing")]
             parts: None,
             #[cfg(feature = "testing")]
             cloud_test: None,
             #[cfg(feature = "testing")]
             free_space: None,
+            #[cfg(feature = "testing")]
+            book_source: None,
         }
     }
 }

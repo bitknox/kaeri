@@ -22,7 +22,7 @@ sources-status-working = Gotowe
 sources-version-ready = Wersja { $version } jest gotowa
 sources-use-this = Włącz { -source }
 sources-use-name = { $name } włączone
-sources-remove-detail = Przestaje być używana przy szukaniu odcinków. Można ją ponownie zainstalować z { -store }u z wtyczkami.
+sources-remove-detail = { -app-name } nie będzie już jej używać przy odcinkach. Możesz zainstalować ją ponownie tam, skąd pochodzi: { -plugin-store }.
 stores-updates-count = { $count ->
     [one] Jedna aktualizacja
     [few] { $count } aktualizacje

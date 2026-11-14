@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Asked for the first time a notice is posted as a notification, never at launch. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Downloads run as a user-initiated data transfer job, which Android 15's six-hour cap on
-         dataSync foreground services does not reach. -->
+         dataSync foreground services does not reach. Android 13 and below have no such jobs and
+         run them as a dataSync foreground service, which those versions do not cap; the
+         FOREGROUND_SERVICE_DATA_SYNC permission is Android 14's and so is not needed for it. -->
     <uses-permission android:name="android.permission.RUN_USER_INITIATED_JOBS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <!-- Android 16's Live Updates: the download notification promoted to the top of the shade and
          the lock screen, with its chip in the status bar. -->
     <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
@@ -16,6 +20,9 @@
     <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
     <!-- A cast's stream goes out through this device: the Wi-Fi and the processor stay awake for it. -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- The TV remote's and the cast's media sessions run as foreground services of the media
+         playback type, which API 34 and up asks its own permission for. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
 
     <!-- No backup: the tokens are sealed with a key that never leaves this device's keystore, so a
          restored copy could not open them, and everything else comes back from AniList and the stores. -->
@@ -39,6 +46,7 @@
              plays takes the activity into Picture in Picture, the same SurfaceView playing on. -->
         <activity
             android:name=".MainActivity"
+            android:theme="@style/Theme.Kaeri.Launch"
             android:supportsPictureInPicture="true"
             android:resizeableActivity="true"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|density|keyboardHidden|uiMode"
@@ -169,6 +177,14 @@
             android:name=".DownloadJob"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
+        <!-- The same below Android 14, as a foreground service: enabled only there, so the
+             FOREGROUND_SERVICE_DATA_SYNC permission lint asks for, Android 14's, never applies. -->
+        <service
+            android:name=".DownloadService"
+            android:enabled="@bool/foreground_fallback"
+            android:exported="false"
+            android:foregroundServiceType="dataSync"
+            tools:ignore="ForegroundServicePermission" />
         <!-- The app's own update: its download, a user-initiated job as the episodes' is, and what
              the installer says of the session it was handed in, with the notification's Cancel.
              Only the app flavour asks to install packages (src/app/AndroidManifest.xml). -->
@@ -176,8 +192,25 @@
             android:name=".UpdateJob"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
+        <!-- Below Android 14 only, as DownloadService, so its data sync permission never applies. -->
+        <service
+            android:name=".UpdateService"
+            android:enabled="@bool/foreground_fallback"
+            android:exported="false"
+            android:foregroundServiceType="dataSync"
+            tools:ignore="ForegroundServicePermission" />
         <receiver
             android:name=".UpdateReceiver"
             android:exported="false" />
+        <!-- Send to e-reader: the prepared files, handed to the share sheet. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.exports"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/export_paths" />
+        </provider>
     </application>
 </manifest>

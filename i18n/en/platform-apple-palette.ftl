@@ -14,7 +14,7 @@ palette-recent = Recent
 
 # Line of the command palette when nothing matches. Return runs the search.
 # @arg query: text
-palette-search-for = Return searches for “{ $query }”
+palette-search-for = Return searches for "{ $query }"
 
 # Hint at the foot of the command palette: what Return does.
 palette-hint-open = Open

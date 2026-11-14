@@ -38,6 +38,25 @@ pub fn category(tag: &str, n: u64) -> Result<&'static str> {
     Ok(name(rules(tag)?.category_for(n)))
 }
 
+/// The categories that stand for more than one whole number in a language: "one" is 0 and 1 in
+/// French and Portuguese, and 1, 21, 31 and on in Russian, so a form for it has to show the number.
+pub fn shared(tag: &str) -> Result<Vec<String>> {
+    let rules = rules(tag)?;
+    let mut seen: Vec<(&'static str, u32)> = Vec::new();
+    for n in (0..TABLE).chain((1..4).map(|k| k * 1_000_000)) {
+        let cat = name(rules.category_for(n));
+        match seen.iter_mut().find(|(c, _)| *c == cat) {
+            Some((_, count)) => *count += 1,
+            None => seen.push((cat, 1)),
+        }
+    }
+    Ok(ORDER
+        .iter()
+        .filter(|c| seen.iter().any(|(s, count)| s == *c && *count > 1))
+        .map(|c| c.to_string())
+        .collect())
+}
+
 /// How many whole numbers are tabulated outright. Past this, a language's category repeats with
 /// n modulo 100, except for the round millions some languages give their own form.
 pub const TABLE: u64 = 200;
@@ -89,6 +108,16 @@ impl Table {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn shared_categories_are_those_of_more_than_one_number() {
+        assert_eq!(shared("en").unwrap(), ["other"]);
+        assert_eq!(shared("fr").unwrap(), ["one", "many", "other"]);
+        assert_eq!(shared("pt-BR").unwrap(), ["one", "many", "other"]);
+        // Their "other" is for fractions only.
+        assert_eq!(shared("ru").unwrap(), ["one", "few", "many"]);
+        assert_eq!(shared("pl").unwrap(), ["few", "many"]);
+    }
 
     #[test]
     fn languages_have_the_categories_cldr_gives_them() {

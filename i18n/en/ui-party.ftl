@@ -28,7 +28,7 @@ party-leaving = Leaving…
 
 # Label of the button that marks you as ready.
 # @max 24
-party-ready-action = I'm ready
+party-ready-action = Ready to watch
 
 # Button that copies the link to invite someone.
 # @max 28
@@ -45,7 +45,7 @@ party-leave-and-close = Leave and close
 party-not-now = Not now
 
 # Line while the form fetches its suggestions.
-party-getting-ready = Getting things ready…
+party-getting-ready = Loading suggestions…
 
 ## Form
 
@@ -84,7 +84,7 @@ party-server-public = A public server run by { $operator }, not by { -app-name }
 party-server-suggest = No server of your own? { $server } is a public one, run by { $operator }.
 
 # Line under an invite's room when the server is not the public one.
-party-server-invited = A server the person who invited you chose. { -app-name } doesn't run it.
+party-server-invited = The person who invited you chose this server. { -app-name } doesn't run it.
 
 # Line when the server was typed in a shape that cannot be used.
 party-server-shape = Write the server as a host and a port, like party.example:8999.
@@ -112,12 +112,12 @@ party-form-nothing = What's playing now plays with the room.
 party-form-pick-later = Once you're in, press Play on any episode to watch it with the room.
 
 # Line naming the episode of the form.
-# @arg episode: int
+# @arg episode: plain
 # @arg title: text
 party-form-episode-of = Episode { $episode } of { $title }
 
 # Line naming the episode of the form when the show has no name.
-# @arg episode: int
+# @arg episode: plain
 party-form-episode = Episode { $episode }
 
 # Line on the form when the party could not begin.
@@ -254,7 +254,7 @@ party-nosource-missing-title = None of your { -source-pl } has this episode
 party-nosource-missing-detail = { $why }. { $what } plays with the room once you choose a { -source } that has it.
 
 # Line under a title that says the episode has not aired.
-# @arg episode: int
+# @arg episode: plain
 party-nosource-unaired = Your { -source-pl } won't have episode { $episode } before it's out.
 
 # Line under a title that says the episode has not aired and no date is known.
@@ -343,7 +343,7 @@ together-recent = Recent rooms
 together-recent-row = Episode { $episode } · with { $names } · { $when }
 
 # Line shown when no recent rooms are kept yet.
-together-recent-empty = Rooms you join show here, the last ten.
+together-recent-empty = The last ten rooms you join show here.
 
 # Button on a recent room that goes straight to its lobby with the next episode.
 # @max 16
@@ -441,7 +441,7 @@ party-member-finding = Finding a { -source }
 # @arg time: text
 party-member-watching-from = Watching from { $time }
 
-# Label of the I'm ready button once you are ready.
+# Label of the Ready to watch button once you are ready.
 # @max 16
 party-ready-on = Ready
 
@@ -721,7 +721,7 @@ party-chat-show = Show chat
 settings-hide-chat = Hide chat in { -watch-party-pl }
 
 # Line under that switch.
-settings-hide-chat-line = Lines, reactions and their ticks on the seek bar stay off the video, and the field is gone. The people list still shows who is in the room.
+settings-hide-chat-line = Chat lines, reactions and their ticks on the seek bar stay off the video, and the chat field is gone. The people list still shows who is in the room.
 
 # Member menu item and accessibility action that hides a member's lines and reactions for this party.
 # @arg name: text

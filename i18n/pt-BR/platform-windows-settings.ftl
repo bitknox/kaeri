@@ -3,10 +3,12 @@ settings-group-mpv = mpv
 settings-card-state = { $title }, { $state }
 settings-card-check = { $title }, { $word }, { $note }
 settings-closing-detail = Continuar baixando deixa o { -app-name } na área de notificações até os downloads terminarem.
-settings-presence-rich-detail = A capa, uma barra de progresso e um link para a série no { $tracker }. Precisa que o título esteja exibido.
+settings-presence-rich-detail = A capa, uma barra de progresso e um link para a série em { $tracker }. Só funciona enquanto o título estiver visível.
 settings-another-tv = Outra TV
 settings-theme = Tema
 settings-motion = Animações
+settings-smooth-scrolling = Rolagem suave
+settings-smooth-scrolling-detail = Cada giro da roda do mouse desliza a página até o lugar. Touchpads e telas sensíveis ao toque rolam como antes.
 settings-start-fullscreen = Iniciar em tela cheia
 settings-player-interface = Interface do player
 settings-token-storage = Armazenamento de tokens
@@ -27,7 +29,7 @@ settings-trackers = { -tracker-cap-pl }
 settings-sync = Sincronização
 settings-sync-detail = Envia o que mudou aqui e busca o que mudou em outros lugares.
 settings-signed-in-waiting = { $count ->
-    [one] Conectado · uma mudança aguardando
+    [one] Conectado · { $count } mudança aguardando
     [many] Conectado · { $count } mudanças aguardando
    *[other] Conectado · { $count } mudanças aguardando
  }
@@ -44,4 +46,18 @@ settings-download-higher = Alta
 torrents-dialog-edit-proxy = Editar proxy
 settings-note-trailers-windows = Os trailers tocam sem som, do YouTube, que vê seu endereço IP. Não tocam em conexão medida, com animações desligadas, no modo de economia de energia ou com o Narrador ativo.
 settings-note-cast-tvs-pc = Elas aparecem em Chromecast, em Reproduzir na TV. Este PC envia o episódio a elas.
-settings-note-torrents-while-casting-pc = Permite que uma TV com Chromecast integrado reproduza torrents. Este PC envia o episódio enquanto ele estiver sendo reproduzido.
+settings-note-torrents-while-casting-pc = Assim, uma TV com Chromecast integrado pode reproduzir torrents. Este PC envia o episódio enquanto ele estiver sendo reproduzido.
+settings-language-restart = Reiniciar
+settings-differences = { $count ->
+    [one] { $count } título difere de { $tracker }
+    [many] { $count } de títulos diferem de { $tracker }
+   *[other] { $count } títulos diferem de { $tracker }
+ }
+settings-differences-review = Revisar
+settings-search = Buscar nos ajustes
+settings-quality-detail-windows = Mais alta escolhe a melhor qualidade que uma { -source } oferece. Ocupa mais espaço.
+settings-merge-subtitles-detail-windows = As legendas ficam com o episódio para onde quer que o arquivo vá.
+settings-keep-seeding-detail-windows = Um download que continua semeando fica no cache do { -app-name }, não na pasta de downloads.
+settings-discussions-note-windows = Os comentários vêm do tópico do fórum do AniList, depois que você assiste ao episódio.
+settings-comment-images-note-windows = Cada imagem carrega do site que a hospeda, que vê seu endereço IP.
+settings-folder-browse = Procurar…

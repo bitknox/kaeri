@@ -11,6 +11,7 @@
 use std::sync::{Arc, OnceLock, RwLock};
 
 use fluent_bundle::concurrent::FluentBundle;
+use fluent_bundle::types::{FluentNumber, FluentNumberOptions};
 use fluent_bundle::{FluentArgs, FluentResource, FluentValue};
 use unic_langid::LanguageIdentifier;
 
@@ -42,7 +43,11 @@ pub const PSEUDO_TAG: &str = "en-XA";
 #[derive(Debug, Clone, Copy)]
 pub enum Arg<'a> {
     Text(&'a str),
+    /// A count, with the language's thousands separator: "1,920" in English, "1.920" in German.
     Int(i64),
+    /// A number that names something, shown as it is: a year, an episode, chapter or page
+    /// number, a port, an id. "Chapter 1024", never "Chapter 1,024".
+    Plain(i64),
     Float(f64),
 }
 
@@ -166,6 +171,11 @@ impl Localizer {
             match arg {
                 Arg::Text(t) => fluent_args.set(*name, FluentValue::from(*t)),
                 Arg::Int(n) => fluent_args.set(*name, FluentValue::from(*n)),
+                Arg::Plain(n) => {
+                    let options =
+                        FluentNumberOptions { use_grouping: false, ..Default::default() };
+                    fluent_args.set(*name, FluentNumber::new(*n as f64, options));
+                }
                 Arg::Float(f) => fluent_args.set(*name, FluentValue::from(*f)),
             }
         }
@@ -188,10 +198,55 @@ fn bundle(locale: Locale) -> FluentBundle<FluentResource> {
     // The isolation marks keep right-to-left text apart from its neighbours, and show as stray
     // characters in a terminal and in GTK labels.
     bundle.set_use_isolating(false);
+    bundle.set_formatter(Some(grouping(locale.tag)));
     let resource =
         FluentResource::try_new(locale.ftl.to_owned()).expect("the generated catalogue parses");
     bundle.add_resource(resource).expect("the generated catalogue has no duplicate ids");
     bundle
+}
+
+/// What writes a whole number in a language, by CLDR's grouping for it: the separator, and the
+/// digits a number needs before it is grouped at all (Polish and Italian leave 1920 alone and
+/// group 19 200). Every language in the catalogue is named; English's way is the fallback.
+fn grouping<M>(tag: &str) -> fn(&FluentValue<'_>, &M) -> Option<String> {
+    match tag.split('-').next().unwrap_or(tag) {
+        "de" | "id" | "pt" | "tr" | "vi" | "da" => grouped::<'.', 4, M>,
+        "it" => grouped::<'.', 5, M>,
+        "fr" => grouped::<'\u{202f}', 4, M>,
+        "ru" | "sv" => grouped::<'\u{a0}', 4, M>,
+        "pl" => grouped::<'\u{a0}', 5, M>,
+        _ => grouped::<',', 4, M>,
+    }
+}
+
+/// A whole number with `SEP` between each three digits, once it has `FROM` digits. Anything
+/// else (a fraction, an argument given as [`Arg::Plain`]) is left to Fluent, which writes it
+/// as it is.
+fn grouped<const SEP: char, const FROM: usize, M>(
+    value: &FluentValue<'_>,
+    _: &M,
+) -> Option<String> {
+    let FluentValue::Number(number) = value else { return None };
+    if !number.options.use_grouping || number.value.fract() != 0.0 || number.value.abs() >= 1e15
+    {
+        return None;
+    }
+    let whole = number.value as i64;
+    let digits = whole.unsigned_abs().to_string();
+    if digits.len() < FROM {
+        return None;
+    }
+    let mut out = String::with_capacity(digits.len() * 2);
+    if whole < 0 {
+        out.push('-');
+    }
+    for (at, digit) in digits.chars().enumerate() {
+        if at > 0 && (digits.len() - at).is_multiple_of(3) {
+            out.push(SEP);
+        }
+        out.push(digit);
+    }
+    Some(out)
 }
 
 fn current() -> &'static RwLock<Arc<Localizer>> {
@@ -257,12 +312,55 @@ mod tests {
         assert_eq!(en.text("sources-title", &[]), "Sources");
         assert_eq!(
             en.text("legal-hosts-no-content", &[]),
-            "Kaeri doesn't host any shows. You add your own sources."
+            "Kaeri doesn't host any shows or books. You add your own sources."
         );
         assert_eq!(
             en.text("plugin-risk-warning", &[]),
             "Plugins are written by other people and run on your device. Install only plugins you trust, for sources you're entitled to use."
         );
+    }
+
+    #[test]
+    fn counts_take_the_languages_thousands_separator_and_plain_numbers_none() {
+        // CLDR's grouping for 1920 and 19200, as ICU writes them, for every language built in.
+        let expected: &[(&str, &str, &str)] = &[
+            ("en", "1,920", "19,200"),
+            ("de", "1.920", "19.200"),
+            ("es-419", "1,920", "19,200"),
+            ("fr", "1\u{202f}920", "19\u{202f}200"),
+            ("id", "1.920", "19.200"),
+            ("it", "1920", "19.200"),
+            ("ja", "1,920", "19,200"),
+            ("pl", "1920", "19\u{a0}200"),
+            ("pt-BR", "1.920", "19.200"),
+            ("ru", "1\u{a0}920", "19\u{a0}200"),
+            ("sv", "1\u{a0}920", "19\u{a0}200"),
+            ("tr", "1.920", "19.200"),
+            ("vi", "1.920", "19.200"),
+        ];
+        for l in LOCALES {
+            let Some((_, small, large)) = expected.iter().find(|(tag, ..)| *tag == l.tag)
+            else {
+                panic!("{}: add its grouping to `grouping` and to this test", l.tag);
+            };
+            let loc = Localizer::new(l.tag);
+            let count = |n| loc.text("reading-row-pages", &[("n", Arg::Int(n))]);
+            assert!(count(1920).contains(small), "{}: {}", l.tag, count(1920));
+            assert!(count(19200).contains(large), "{}: {}", l.tag, count(19200));
+            let page = loc.text("reading-row-page", &[("page", Arg::Plain(1920))]);
+            assert!(page.contains("1920"), "{}: {page}", l.tag);
+        }
+        let en = Localizer::new("en");
+        assert_eq!(en.text("read-search-shown-some", &[("shown", Arg::Int(999))]), "999 shown");
+        assert_eq!(
+            en.text("read-search-shown-some", &[("shown", Arg::Int(1_234_567))]),
+            "1,234,567 shown"
+        );
+        assert_eq!(
+            en.text("read-search-shown-some", &[("shown", Arg::Int(-1920))]),
+            "-1,920 shown"
+        );
+        assert_eq!(en.text("reading-row-page", &[("page", Arg::Plain(2026))]), "Page 2026");
     }
 
     #[test]

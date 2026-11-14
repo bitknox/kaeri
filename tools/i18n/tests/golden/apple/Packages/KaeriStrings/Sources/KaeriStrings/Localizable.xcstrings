@@ -49,6 +49,18 @@
         }
       }
     },
+    "episode-seen" : {
+      "comment" : "A number that names something beside a count. Argument 1: episode (Plain). Argument 2: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Episode %1$@, seen %2$lld times"
+          }
+        }
+      }
+    },
     "match-remembered" : {
       "comment" : "The reasons a match was made. Argument 1: percent (Percent).",
       "extractionState" : "manual",

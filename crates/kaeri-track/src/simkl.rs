@@ -26,7 +26,7 @@ use std::sync::Arc;
 
 use kaeri_core::{
     ids::AnilistId,
-    traits::{TrackOp, TrackedEntry, Tracker, WatchStatus},
+    traits::{Pushed, TrackOp, TrackedEntry, Tracker, WatchStatus},
 };
 
 use crate::{
@@ -126,7 +126,7 @@ impl SimklTracker {
 }
 
 impl Renews for SimklTracker {
-    async fn renew(&self, refresh: &str, now: i64) -> Result<TokenPair, String> {
+    async fn renew(&self, refresh: &str, now: i64) -> Result<TokenPair, kaeri_core::Error> {
         device::refresh_token(
             &self.http,
             &self.endpoints,
@@ -136,7 +136,7 @@ impl Renews for SimklTracker {
             now,
         )
         .await
-        .map_err(|e| e.to_string())
+        .map_err(|e| e.renewal("simkl"))
     }
 }
 
@@ -231,14 +231,17 @@ impl Tracker for SimklTracker {
     }
 
     async fn push(&self, ops: &[TrackOp]) -> Result<(), kaeri_core::Error> {
-        self.push_checked(ops).await.map(drop)
+        self.push_checked(ops).await?.into_result("simkl")
     }
 
     /// Simkl answers a write with `200` whatever it made of it, and lists what it could not
     /// match under `not_found`. Read as success, every unmatched title looked synced, the
     /// next pull still saw it behind, and the merge queued it again — a push every pull, for
     /// as long as the app ran.
-    async fn push_checked(&self, ops: &[TrackOp]) -> Result<Vec<AnilistId>, kaeri_core::Error> {
+    ///
+    /// Each endpoint takes the whole batch in one request, so a refusal is the batch's: the
+    /// drain then asks again title by title, and only the refused title's change fails.
+    async fn push_checked(&self, ops: &[TrackOp]) -> Result<Pushed, kaeri_core::Error> {
         if !self.is_authenticated() {
             return Err(kaeri_core::Error::Auth("signed out".into()));
         }
@@ -251,6 +254,10 @@ impl Tracker for SimklTracker {
         let mut sent: Vec<(u32, AnilistId)> = Vec::new();
 
         for op in ops {
+            // Reading waits in its own outbox and is never in a watching batch.
+            if op.is_reading() {
+                continue;
+            }
             let (anilist_id, mal_id) = match op {
                 TrackOp::SetProgress { anilist_id, .. }
                 | TrackOp::SetStatus { anilist_id, .. }
@@ -266,6 +273,9 @@ impl Tracker for SimklTracker {
                     };
                     (*anilist_id, mal_id)
                 }
+                TrackOp::SetReadProgress { .. }
+                | TrackOp::SetReadStatus { .. }
+                | TrackOp::SetReadScore { .. } => continue,
             };
             sent.push((mal_id, anilist_id));
 
@@ -293,6 +303,9 @@ impl Tracker for SimklTracker {
                         "rating": score.round() as u32,
                     }));
                 }
+                TrackOp::SetReadProgress { .. }
+                | TrackOp::SetReadStatus { .. }
+                | TrackOp::SetReadScore { .. } => {}
             }
         }
 
@@ -307,16 +320,8 @@ impl Tracker for SimklTracker {
                 .send(&mut token, |t| self.request(reqwest::Method::POST, path, t).json(&body))
                 .await?;
 
-            let status = response.status();
-            if status.as_u16() == 401 {
-                return Err(kaeri_core::Error::Auth("simkl rejected the token".into()));
-            }
-            if !status.is_success() {
-                let body = response.text().await.unwrap_or_default();
-                return Err(kaeri_core::Error::Tracker {
-                    tracker: "simkl".into(),
-                    message: format!("{path}: {}", crate::said(status, &body)),
-                });
+            if !response.status().is_success() {
+                return Err(crate::failed_answer(response, "simkl", "simkl").await);
             }
             // An unreadable body is not a failure: the status said the write was accepted, and
             // treating it as one would retry a write that may well have landed.
@@ -329,7 +334,7 @@ impl Tracker for SimklTracker {
                 }
             }
         }
-        Ok(ignored)
+        Ok(Pushed { ignored, failed: Vec::new() })
     }
 }
 
@@ -356,7 +361,7 @@ fn not_found(body: &serde_json::Value) -> Vec<u32> {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
 
     const HOSHIKUZU: AnilistId = AnilistId::new(154_587);
@@ -384,8 +389,8 @@ mod tests {
         serve_with(answers.into_iter().map(|answer| (200, answer)).collect()).await
     }
 
-    /// [`serve`], each answer with its own status.
-    async fn serve_with(
+    /// [`serve`], each answer with its own status. Trakt's tests serve from it too.
+    pub(crate) async fn serve_with(
         answers: Vec<(u16, &'static str)>,
     ) -> (String, tokio::task::JoinHandle<Vec<String>>) {
         use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -633,7 +638,8 @@ mod tests {
                 TrackOp::SetProgress { anilist_id: UNKNOWN_TO_SIMKL, episode: 3 },
             ])
             .await
-            .unwrap();
+            .unwrap()
+            .ignored;
         assert_eq!(ignored, vec![UNKNOWN_TO_SIMKL]);
 
         let requests = server.await.unwrap();
@@ -651,7 +657,8 @@ mod tests {
         let ignored = tracker_at(base)
             .push_checked(&[TrackOp::SetProgress { anilist_id: HOSHIKUZU, episode: 12 }])
             .await
-            .unwrap();
+            .unwrap()
+            .ignored;
         assert!(ignored.is_empty());
         server.await.unwrap();
     }

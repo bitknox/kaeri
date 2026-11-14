@@ -3,6 +3,13 @@ accounts-other-trackers = Outros { -tracker-pl }
 accounts-other-trackers-note = Outros { -tracker-pl } ficam em Contas.
 accounts-welcome-detail = Entre em { $tracker } para sincronizar sua lista e o ponto em que você parou.
 accounts-brings-lists = Traz suas listas e preenche { -continue-cap } com o que você está assistindo.
+accounts-brings-lists-read = Traz suas listas e preenche { -continue-reading-cap } com o que você está lendo.
+accounts-brings-lists-both = Traz suas listas e preenche { -continue-cap } com o que você está assistindo e lendo.
+accounts-tracker-lists = Listas e progresso
+accounts-tracker-reading-lists = Listas de leitura e progresso
+accounts-tracker-serves-both = Séries e leitura
+accounts-tracker-serves-reading = Leitura
+accounts-tracker-serves-shows = Séries
 accounts-library-needs = A { -library-cap } e a sincronização precisam da sua conta de { $tracker }
 accounts-library-from = A { -library-cap } mostra suas listas de { $tracker }.
 accounts-lists-come-from = Suas listas vêm de { $tracker }.
@@ -11,7 +18,7 @@ accounts-list-empty = Títulos que você adicionar em { $tracker } aparecem aqui
 accounts-state-signed-out = Não conectado
 accounts-state-signed-in = Conectado em { $tracker } como { $name }
 accounts-state-signed-in-waiting = { $count ->
-    [one] Conectado em { $tracker } como { $name } · uma alteração pendente
+    [one] Conectado em { $tracker } como { $name } · { $count } alteração pendente
     [many] Conectado em { $tracker } como { $name } · { $count } alterações pendentes
    *[other] Conectado em { $tracker } como { $name } · { $count } alterações pendentes
  }
@@ -42,7 +49,7 @@ accounts-tokens-keychain = Os tokens de login ficam no chaveiro deste { -device 
 accounts-tokens-file = Os tokens de login ficam em um arquivo deste { -device }, que só você pode ler.
 accounts-tokens-keystore = Os tokens de login ficam neste { -device }, protegidos por uma chave do armazenamento de chaves.
 accounts-form-title = Entrar em { $tracker }
-accounts-form-detail = Sua senha vai para { $tracker } uma única vez, para gerar um token guardado neste { -device }.
+accounts-form-detail = Sua senha vai para { $tracker } uma única vez, em troca de um token que fica neste { -device }.
 accounts-user-or-email = E-mail ou nome de usuário
 accounts-password = Senha
 accounts-signing-in-action = Entrando
@@ -66,7 +73,7 @@ accounts-keep-mine = Manter o deste { -device }
 accounts-keep-theirs = Manter o de { $tracker }
 accounts-open-on = Abrir em { $tracker }
 accounts-listed-by = Listado em { $tracker }
-accounts-did-not-answer = { $tracker } não respondeu.
+accounts-did-not-answer = { $tracker } não respondeu. Tente de novo daqui a pouco.
 accounts-no-extras = { $tracker } ainda não tem elenco, equipe nem recomendações para esta série.
 accounts-episodes-from = Episódios de { $tracker }. Adicione uma { -source } para reproduzi-los.
 accounts-adds-season = { $tracker } adiciona os títulos de uma temporada conforme são anunciados.

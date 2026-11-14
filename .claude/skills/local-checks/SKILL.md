@@ -35,11 +35,17 @@ commit **outside** it (the temporary HOME hides `~/.gitconfig`, so commits come 
   `-p kaeri-engine --no-default-features` and `-p kaeri-model --features ffi`;
   `cargo fmt --check`; `tools/check-boundaries.sh`; `tools/check-plugins.sh`. Store crates: `deploy/sync.sh --check`.
   Dependencies: `cargo audit`. Goldens: look at the diff before re-blessing.
+- **Linux app:** `desktop/linux` is its own crate outside the workspace, so the workspace checks
+  skip it. From there run `cargo fmt --check` always, and `cargo clippy --locked --all-targets
+  -- -D warnings` when GTK is available. GTK is not on the Mac, so locally only fmt and
+  `cargo metadata --offline --locked` run; CI does the rest.
 - **FFI:** `cargo test -p kaeri-ffi --features testing,cli`.
 - **Android:** `android/scripts/engine.sh testing`, then from `android/`:
   `./gradlew --max-workers=3 :store:testFixturesDebugUnitTest :ui:testFixturesDebugUnitTest :app:assembleFixturesDebug`
   (add `:player`, `:widgets`, `:app` tests and `:app:minifyFixturesReleaseWithR8` when touched).
   Re-record scenes with `android/scripts/scenes.sh` after engine record changes.
+  Export `KAERI_ANDROID_ABIS=arm64-v8a` for local testing builds: the 32-bit engine is only for
+  the TV, and CI builds both.
 - **Apple:** `apple/scripts/engine.sh testing`, then per touched package `swift test` and
   `swift build -c release` (Release catches concurrency errors). iPhone-only code: build the
   Fixtures app for the iOS Simulator. Mac Release app: build with signing off, then

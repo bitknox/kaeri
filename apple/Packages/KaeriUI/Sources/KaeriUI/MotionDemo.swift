@@ -4,6 +4,11 @@
 import KaeriKit
 import KaeriStore
 import SwiftUI
+#if os(iOS)
+import UIKit
+#else
+import AppKit
+#endif
 
 /// A transition from motion.md the app can be asked to run, with `-KaeriMotion <name>`.
 public enum MotionDemo: String, CaseIterable, Sendable {
@@ -29,6 +34,9 @@ public enum MotionDemo: String, CaseIterable, Sendable {
     /// Home asked for again as on its first visit, with nothing kept: its placeholders, then its
     /// sections arriving.
     case homeFirst
+    /// `homeFirst` with no episode table and no wide art wait kept either: the spotlight's and
+    /// Continue's wide art as they first come, with `--episodes-delay` holding the tables back.
+    case homeArt
     /// M2: Continue's selection moves to the next title, the preview crossfading.
     case m2
     /// M3: the preview's banner grows into the title page.
@@ -58,6 +66,8 @@ public enum MotionDemo: String, CaseIterable, Sendable {
     case clear
     /// Search: the iPhone's pinned row scrolled sideways to its end.
     case rowEnd
+    /// Search: Shows switched to Reading, or back, as a click on the scope control does.
+    case scope
     /// The Mac's hover card: a pointer path rests on a cover, hands the card to the next cover
     /// and leaves it (the hover card board's Motion studies).
     case hover
@@ -90,6 +100,29 @@ public enum MotionDemo: String, CaseIterable, Sendable {
     /// Digits typed into the Mac's focused episode list, a key every 150 ms: `-KaeriType`'s,
     /// else 237 (loop E).
     case typed
+    /// The reader's credit line on page 1 tapped, as its button does: the credit page fades in
+    /// over page 1. With `-KaeriReader creditline -KaeriCredits start`.
+    case creditShow
+    /// Not a credit page on the credit page shown, a turn on 1.6 s later, and Undo 1.6 s after
+    /// that: Undo outlasts the turn. With `-KaeriReader creditshown -KaeriCredits start`.
+    case creditKeep
+    /// A long strip's credit line tapped: Show grows the image in place under its caption. With
+    /// a strip scene and `-KaeriReader creditline -KaeriCredits start`.
+    case stripShow
+    /// The series page's Group row: another group picked, as the picker's row does, the value
+    /// crossfading. With `-KaeriGroups`.
+    case groupPick
+    /// The cut synopsis on screen opened, as its More does: a show's page or a series' page.
+    case synopsisMore
+
+    /// Reduce Motion, as the views read it: the strip grows its credit row at once with it on.
+    @MainActor private static var reduceMotion: Bool {
+        #if os(iOS)
+        UIAccessibility.isReduceMotionEnabled
+        #else
+        NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        #endif
+    }
 
     /// What `-KaeriType` gives, for the demos that type.
     private var typed: String? {
@@ -128,6 +161,19 @@ public enum MotionDemo: String, CaseIterable, Sendable {
             for _ in 0..<200 {
                 if let id = navigator.titleOnMac ?? navigator.paths[navigator.section]?.last?.id,
                    store.titles[id]?.detail?.seasons != nil, store.titles.episodes[id] != nil { break }
+                try? await Task.sleep(for: .milliseconds(50))
+            }
+        case .creditShow, .creditKeep, .stripShow:
+            // The reader open and staged: the line up, or the credit page shown.
+            for _ in 0..<200 {
+                let reader = store.reader
+                if self == .creditKeep ? reader.onCredit != nil : reader.phase == .open && !reader.startSkipped.isEmpty
+                    && (self == .stripShow || reader.creditLine) { break }
+                try? await Task.sleep(for: .milliseconds(50))
+            }
+        case .groupPick:
+            for _ in 0..<200 {
+                if store.reading.series.values.contains(where: { ($0.edition?.groups.count ?? 0) > 1 }) { break }
                 try? await Task.sleep(for: .milliseconds(50))
             }
         default:
@@ -190,6 +236,10 @@ public enum MotionDemo: String, CaseIterable, Sendable {
         case .homeFirst:
             store.discovery.forgetForDemo()
             store.loadHome(force: true)
+        case .homeArt:
+            store.discovery.forgetForDemo()
+            store.forgetArtForDemo()
+            store.loadHome(force: true)
         case .m2:
             if queue.count > 1 { navigator.continueSelection = queue[1] }
         case .m3:
@@ -239,6 +289,8 @@ public enum MotionDemo: String, CaseIterable, Sendable {
             store.searchLive(store.search.query.cleared())
         case .rowEnd:
             navigator.searchRowToEnd += 1
+        case .scope:
+            ReadSearchScope.choose(!navigator.searchReading, store: store, navigator: navigator)
         case .hover:
             #if os(macOS)
             HoverCardScript.requested = true
@@ -317,6 +369,32 @@ public enum MotionDemo: String, CaseIterable, Sendable {
                     try? await Task.sleep(for: .milliseconds(150))
                 }
             }
+        case .creditShow:
+            // The credit line's own action (ReaderChrome).
+            withAnimation(.fadeIn) { store.reader.showStartCredits() }
+        case .creditKeep:
+            // The notice's button, then a turn and Undo, as the person would.
+            let reader = store.reader
+            reader.act(.keepCredit)
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(1600))
+                reader.requestTurn(forward: true)
+                try? await Task.sleep(for: .milliseconds(1600))
+                reader.act(.undoKeep)
+            }
+        case .stripShow:
+            // The strip line's own action (StripCredits).
+            let reader = store.reader
+            guard let chapter = reader.view?.chapter.id else { return }
+            withAnimation(Self.reduceMotion ? nil : .standard) { reader.reveal(reader.startSkipped, chapter: chapter) }
+        case .groupPick:
+            // The picker row's pick (GroupPicker), on the series with groups.
+            guard let view = store.reading.series.values.first(where: { ($0.edition?.groups.count ?? 0) > 1 }),
+                  let other = view.edition?.groups.first(where: { !$0.inUse })
+            else { return }
+            store.reading.chooseGroup(view.work, group: other.label)
+        case .synopsisMore:
+            navigator.synopsisMoreAsked += 1
         }
     }
 }

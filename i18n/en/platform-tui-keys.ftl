@@ -514,28 +514,28 @@ keys-where-surprise = on Search's browse and on Planning
 
 # Names a command that has no key, inside a sentence such as "Press … to confirm". The action is its label in lower case.
 # @arg action: text
-keys-unbound = “{ $action }” in the palette
+keys-unbound = "{ $action }" in the palette
 
 # Config problem shown at start-up: a [keys] entry names an action that does not exist. The action is the name as typed.
 # @arg action: text
-keys-error-unknown-action = Unknown action “{ $action }”.
+keys-error-unknown-action = Unknown action "{ $action }".
 
 # Config problem shown at start-up: a [keys] entry has a key that can't be parsed.
 # @arg key: text
 # @arg action: text
-keys-error-bad-key = Can't read the key “{ $key }” for { $action }.
+keys-error-bad-key = Can't read the key "{ $key }" for { $action }.
 
 # Config problem shown at start-up: two [keys] entries ask for the same key. Both names are action names as typed.
 # @arg key: text
 # @arg first: text
 # @arg second: text
-keys-error-key-twice = “{ $key }” is given to both { $first } and { $second }.
+keys-error-key-twice = "{ $key }" is given to both { $first } and { $second }.
 
 # Config problem shown at start-up: a [keys] entry asks for a key another action keeps.
 # @arg key: text
 # @arg action: text
 # @arg holder: text
-keys-error-key-taken = “{ $key }” for { $action } is already bound to { $holder }.
+keys-error-key-taken = "{ $key }" for { $action } is already bound to { $holder }.
 
 # Label of the one help row that stands for every section jump key.
 keys-help-jump-section = Go to section

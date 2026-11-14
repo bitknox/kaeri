@@ -349,6 +349,10 @@ A client compares `key` with the one in the invite and stops if they differ. A s
 owns yet and that was deployed with a setup code adds `"claimable": true`, which is how its admin
 page knows to ask for the code.
 
+A store that lists book sources says `"books": true`. Kaeri publishes a book source only to a
+store that says so. A store from before book sources reads the manifest section and ignores the
+kind in it, so it would list a book source as a show source.
+
 `GET /v1/admin/overview` includes what the store runs, for its owners:
 
 ```json
@@ -525,6 +529,15 @@ To work out what a plugin is, the reference server loads it with no capabilities
 describe itself. A store that cannot run WebAssembly components, which is any store on Workers,
 Vercel or Netlify, reads the plugin's manifest section instead, and refuses a plugin without one.
 
+A plugin is a source of shows (a `kaeri:provider` component) or of books (a `kaeri:books`
+component). A store takes both and refuses any other kind. An id keeps its kind from version to
+version: a new version of a show source that turns out to be a book source is refused, and the
+reverse. Publish a source of the other kind under another id. A store updated from before book
+sources keeps every plugin it had, each a show source.
+
+The ids `torrent`, `remote`, `plugins`, `folders` and `servers` are refused for either kind. They
+are the names of Kaeri's own sources.
+
 ### The manifest section
 
 A plugin can carry what it says about itself as a custom section named `kaeri:manifest` at the
@@ -533,6 +546,15 @@ top level of the component, holding JSON:
 ```json
 { "id": "example", "name": "Example", "version": "1.4.0",
   "allowed_hosts": ["api.example"], "translations": ["sub", "dub"] }
+```
+
+A book source's section adds its kind and the media it serves. A show source's leaves both out,
+so it holds the same bytes it did before book sources:
+
+```json
+{ "id": "example-books", "name": "Example (books)", "version": "1.0.0",
+  "allowed_hosts": ["books.example", "pages.example"], "translations": [],
+  "kind": "books", "media": ["manga", "novel"] }
 ```
 
 `kaeri plugin stamp plugin.wasm` writes it by loading the plugin and asking, and the app stamps
@@ -580,6 +602,13 @@ The document inside:
 }
 ```
 
+A book source's entry adds `"kind": "books"` and its `"media"`, as its manifest section does. A
+show source's entry leaves both out, so a store signs the same bytes for it that it did before
+book sources, and a missing kind means shows. A client keeps the entries of the kinds it knows and
+leaves out the rest, so a store can list a kind a client cannot use yet without that client
+offering it. Kaeri from 0.3.1 leaves book sources out this way. Earlier versions list them, and
+refuse to install them, since loading one says it needs a newer Kaeri.
+
 `sequence` goes up by at least one every time the plugin list changes. A client remembers the highest it
 has accepted, including after leaving a store, and refuses a lower one, so a server cannot quietly
 hand back an older list to keep someone on an old version.
@@ -617,8 +646,9 @@ names.
 
 Before installing, Kaeri verifies the index signature against the key from the invite, checks
 the download's size and SHA-256 against the index, then loads the plugin with no network access
-and compares what it declares about itself with the index: the same id, the same version and the
-same allowed hosts. Any difference stops the install, as does a plugin named after one of Kaeri's own sources
-(`torrent`, `remote`, `plugins`) or another file in the plugin directory that already declares the
-same id. The file is written to the plugin directory as
+and compares what it declares about itself with the index: the same kind, the same id, the same
+version and the same allowed hosts. Any difference stops the install, as does a plugin named after
+one of Kaeri's own sources (`torrent`, `remote`, `plugins`, `folders`, `servers`) or another file
+in the plugin directory that already declares the same id. Book sources are shown and installed
+only on a device where reading is available. The file is written to the plugin directory as
 `{id}.wasm`, so `[providers.plugins.settings.{id}]` applies to it as it would to one added by hand.

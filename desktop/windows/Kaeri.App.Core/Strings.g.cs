@@ -58,31 +58,31 @@ public static partial class T
     public static string CastPhaseStarting(string name) => Fill(Get("CastPhaseStarting"), ("name", name));
 
     /// <summary>The casting card's line while a cast starts, past its first 4 seconds, counting the seconds since the tap.</summary>
-    public static string CastPhaseStartingFor(string name, long seconds) => Fill(Get("CastPhaseStartingFor"), ("name", name), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CastPhaseStartingFor(string name, long seconds) => Fill(Get("CastPhaseStartingFor"), ("name", name), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The casting card's line while the TV opens its player or loads the stream, past the first 4 seconds of the start.</summary>
-    public static string CastPhaseWaiting(string name, long seconds) => Fill(Get("CastPhaseWaiting"), ("name", name), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CastPhaseWaiting(string name, long seconds) => Fill(Get("CastPhaseWaiting"), ("name", name), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The casting card's line while this device reads the stream and makes it ready for the TV, past the first 4 seconds of the start.</summary>
-    public static string CastPhasePreparing(long seconds) => Fill(Get("CastPhasePreparing"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CastPhasePreparing(long seconds) => Fill(Get("CastPhasePreparing"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A comment's age, beside its author, when it was written under a minute ago.</summary>
     public static string DiscussionAgeNow => Get("DiscussionAgeNow");
 
     /// <summary>A comment's age, beside its author, in minutes. Abbreviated, as a timeline shows it.</summary>
-    public static string DiscussionAgeMinutes(long minutes) => Fill(Get("DiscussionAgeMinutes"), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DiscussionAgeMinutes(long minutes) => Fill(Get("DiscussionAgeMinutes"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A comment's age, beside its author, in hours. Abbreviated, as a timeline shows it.</summary>
-    public static string DiscussionAgeHours(long hours) => Fill(Get("DiscussionAgeHours"), ("hours", hours.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DiscussionAgeHours(long hours) => Fill(Get("DiscussionAgeHours"), ("hours", hours.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A comment's age, beside its author, in days. Abbreviated, as a timeline shows it.</summary>
-    public static string DiscussionAgeDays(long days) => Fill(Get("DiscussionAgeDays"), ("days", days.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DiscussionAgeDays(long days) => Fill(Get("DiscussionAgeDays"), ("days", days.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A comment's age, beside its author, in weeks. Abbreviated, as a timeline shows it.</summary>
-    public static string DiscussionAgeWeeks(long weeks) => Fill(Get("DiscussionAgeWeeks"), ("weeks", weeks.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DiscussionAgeWeeks(long weeks) => Fill(Get("DiscussionAgeWeeks"), ("weeks", weeks.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A comment's age, beside its author, in years. Abbreviated, as a timeline shows it.</summary>
-    public static string DiscussionAgeYears(long years) => Fill(Get("DiscussionAgeYears"), ("years", years.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DiscussionAgeYears(long years) => Fill(Get("DiscussionAgeYears"), ("years", years.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Toast when a like on a comment did not reach AniList. The like is taken back.</summary>
     public static string NoticeCommentLikeFailed => Get("NoticeCommentLikeFailed");
@@ -112,7 +112,7 @@ public static partial class T
     public static string HomeSpotlightPopular => Get("HomeSpotlightPopular");
 
     /// <summary>Line under the spotlight's title, and under a { -continue-cap } card, for an episode part way through: the episode and the minutes left in it.</summary>
-    public static string HomeTimeLeft(long episode, long minutes) => Fill(Get("HomeTimeLeft"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string HomeTimeLeft(long episode, long minutes) => Fill(Get("HomeTimeLeft"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line under the spotlight's title, and under a { -continue-cap } card, for a show still airing whose next episode is its newest one out.</summary>
     public static string HomeEpisodeOut(long episode) => Fill(Get("HomeEpisodeOut"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
@@ -171,8 +171,62 @@ public static partial class T
     /// <summary>Heading over recommendations from one show the person finished and rated well. The title is that show.</summary>
     public static string HomeBecause(string title) => Fill(Get("HomeBecause"), ("title", title));
 
-    /// <summary>Heading over popular titles of the genre the person finished most of. The genre is lower case, such as "mecha".</summary>
+    /// <summary>Heading over popular titles of the genre the person finished most of, for a genre that has no heading of its own below. The genre is AniList's name as it writes it.</summary>
     public static string HomeMoreGenre(string genre) => Fill(Get("HomeMoreGenre"), ("genre", genre));
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreAction => Get("HomeMoreGenreAction");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreAdventure => Get("HomeMoreGenreAdventure");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreComedy => Get("HomeMoreGenreComedy");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreDrama => Get("HomeMoreGenreDrama");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreEcchi => Get("HomeMoreGenreEcchi");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreFantasy => Get("HomeMoreGenreFantasy");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreHorror => Get("HomeMoreGenreHorror");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreMahouShoujo => Get("HomeMoreGenreMahouShoujo");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreMecha => Get("HomeMoreGenreMecha");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreMusic => Get("HomeMoreGenreMusic");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreMystery => Get("HomeMoreGenreMystery");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenrePsychological => Get("HomeMoreGenrePsychological");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreRomance => Get("HomeMoreGenreRomance");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreSciFi => Get("HomeMoreGenreSciFi");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreSliceOfLife => Get("HomeMoreGenreSliceOfLife");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreSports => Get("HomeMoreGenreSports");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreSupernatural => Get("HomeMoreGenreSupernatural");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreThriller => Get("HomeMoreGenreThriller");
 
     /// <summary>Line over the spotlight's title when it is the built-in demo.</summary>
     public static string HomeSpotlightDemo => Get("HomeSpotlightDemo");
@@ -205,7 +259,7 @@ public static partial class T
     public static string CauseAirsTomorrow(string time) => Fill(Get("CauseAirsTomorrow"), ("time", time));
 
     /// <summary>Part of an air time: the broadcast is within the next week.</summary>
-    public static string CauseAirsInDays(long days, string time) => Fill(GetPlural("CauseAirsInDays", days), ("days", days.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("time", time));
+    public static string CauseAirsInDays(long days, string time) => Fill(GetPlural("CauseAirsInDays", days), ("days", days.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("time", time));
 
     /// <summary>Part of an air time: the broadcast is more than a week away. The date is year-month-day.</summary>
     public static string CauseAirsOnDate(string date, string time) => Fill(Get("CauseAirsOnDate"), ("date", date), ("time", time));
@@ -235,13 +289,13 @@ public static partial class T
     public static string CauseNoSourceCouldListShow => Get("CauseNoSourceCouldListShow");
 
     /// <summary>Part of a finished download's toast: subtitle files were merged into the video.</summary>
-    public static string CauseSubtitlesMerged(long tracks) => Fill(GetPlural("CauseSubtitlesMerged", tracks), ("tracks", tracks.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CauseSubtitlesMerged(long tracks) => Fill(GetPlural("CauseSubtitlesMerged", tracks), ("tracks", tracks.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Part of a finished download's toast: merging failed, so the subtitles stay as files beside it.</summary>
     public static string CauseSubtitlesLeftApart(string reason) => Fill(Get("CauseSubtitlesLeftApart"), ("reason", reason));
 
     /// <summary>Part of a download toast: how many episodes of the range were in the queue already.</summary>
-    public static string CauseAlreadyInDownloads(long count) => Fill(GetPlural("CauseAlreadyInDownloads", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CauseAlreadyInDownloads(long count) => Fill(GetPlural("CauseAlreadyInDownloads", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Job note while a play looks the title up.</summary>
     public static string StatusLookingUpTitle => Get("StatusLookingUpTitle");
@@ -277,7 +331,7 @@ public static partial class T
     public static string NoticePlayerFailedToStart(string reason) => Fill(Get("NoticePlayerFailedToStart"), ("reason", reason));
 
     /// <summary>Toast when a stream never showed a frame and the next one is tried.</summary>
-    public static string NoticeStreamNoVideo(long next, long total) => Fill(Get("NoticeStreamNoVideo"), ("next", next.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string NoticeStreamNoVideo(long next, long total) => Fill(Get("NoticeStreamNoVideo"), ("next", next.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Toast when mpv gave up on a file. The reason is mpv's own line.</summary>
     public static string NoticePlayerCouldNotPlay(string reason) => Fill(Get("NoticePlayerCouldNotPlay"), ("reason", reason));
@@ -286,7 +340,7 @@ public static partial class T
     public static string NoticePlayerExitedSilently => Get("NoticePlayerExitedSilently");
 
     /// <summary>Toast when no picture has appeared a while after the player opened.</summary>
-    public static string NoticePlayerNotPlaying(long seconds) => Fill(Get("NoticePlayerNotPlaying"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string NoticePlayerNotPlaying(long seconds) => Fill(Get("NoticePlayerNotPlaying"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Toast when a play is asked for in a build with no player.</summary>
     public static string NoticeNoPlayer => Get("NoticeNoPlayer");
@@ -409,10 +463,10 @@ public static partial class T
     public static string NoticeDownloadRemoved => Get("NoticeDownloadRemoved");
 
     /// <summary>Toast after finished downloads were cleared from the list.</summary>
-    public static string NoticeDownloadsCleared(long count) => Fill(GetPlural("NoticeDownloadsCleared", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string NoticeDownloadsCleared(long count) => Fill(GetPlural("NoticeDownloadsCleared", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Toast after the skip times the viewer marked were cleared, from Settings.</summary>
-    public static string NoticeSkipMarksCleared(long count) => Fill(GetPlural("NoticeSkipMarksCleared", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string NoticeSkipMarksCleared(long count) => Fill(GetPlural("NoticeSkipMarksCleared", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Toast after clearing skip times from Settings when none were marked.</summary>
     public static string NoticeSkipMarksNone => Get("NoticeSkipMarksNone");
@@ -442,13 +496,13 @@ public static partial class T
     public static string NoticeDownloadsNoneNewStopped(string existing, string reason) => Fill(Get("NoticeDownloadsNoneNewStopped"), ("existing", existing), ("reason", reason));
 
     /// <summary>Toast after a range was asked for, some episodes were queued and some were there already. `existing` is the sentence of `cause-already-in-downloads`.</summary>
-    public static string NoticeEpisodesQueuedExisting(long count, string existing) => Fill(GetPlural("NoticeEpisodesQueuedExisting", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("existing", existing));
+    public static string NoticeEpisodesQueuedExisting(long count, string existing) => Fill(GetPlural("NoticeEpisodesQueuedExisting", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("existing", existing));
 
     /// <summary>Toast as above, with the reason the range stopped.</summary>
-    public static string NoticeEpisodesQueuedStopped(long count, string reason) => Fill(GetPlural("NoticeEpisodesQueuedStopped", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("reason", reason));
+    public static string NoticeEpisodesQueuedStopped(long count, string reason) => Fill(GetPlural("NoticeEpisodesQueuedStopped", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("reason", reason));
 
     /// <summary>Toast as above, with some episodes in the queue already and the reason the range stopped. `existing` is the sentence of `cause-already-in-downloads`; `reason` is a sentence saying why the range stopped.</summary>
-    public static string NoticeEpisodesQueuedExistingStopped(long count, string existing, string reason) => Fill(GetPlural("NoticeEpisodesQueuedExistingStopped", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("existing", existing), ("reason", reason));
+    public static string NoticeEpisodesQueuedExistingStopped(long count, string existing, string reason) => Fill(GetPlural("NoticeEpisodesQueuedExistingStopped", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("existing", existing), ("reason", reason));
 
     /// <summary>Toast when keep next found no room for another episode.</summary>
     public static string NoticeKeepNextFull => Get("NoticeKeepNextFull");
@@ -477,6 +531,636 @@ public static partial class T
     /// <summary>Message when a watch party's server could not be reached, in the lobby or when looking in.</summary>
     public static string PartyServerUnreachable(string server) => Fill(Get("PartyServerUnreachable"), ("server", server));
 
+    /// <summary>Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.</summary>
+    public static string ReadingNextChapter(string chapter) => Fill(Get("ReadingNextChapter"), ("chapter", chapter));
+
+    /// <summary>Under a cover or on a series page: when new chapters usually come out.</summary>
+    public static string ReadingUsuallyMondays => Get("ReadingUsuallyMondays");
+
+    /// <summary>Under a cover or on a series page: when new chapters usually come out.</summary>
+    public static string ReadingUsuallyTuesdays => Get("ReadingUsuallyTuesdays");
+
+    /// <summary>Under a cover or on a series page: when new chapters usually come out.</summary>
+    public static string ReadingUsuallyWednesdays => Get("ReadingUsuallyWednesdays");
+
+    /// <summary>Under a cover or on a series page: when new chapters usually come out.</summary>
+    public static string ReadingUsuallyThursdays => Get("ReadingUsuallyThursdays");
+
+    /// <summary>Under a cover or on a series page: when new chapters usually come out.</summary>
+    public static string ReadingUsuallyFridays => Get("ReadingUsuallyFridays");
+
+    /// <summary>Under a cover or on a series page: when new chapters usually come out.</summary>
+    public static string ReadingUsuallySaturdays => Get("ReadingUsuallySaturdays");
+
+    /// <summary>Under a cover or on a series page: when new chapters usually come out.</summary>
+    public static string ReadingUsuallySundays => Get("ReadingUsuallySundays");
+
+    /// <summary>Under a cover or on a series page: how often new chapters come out, in weeks.</summary>
+    public static string ReadingAboutEveryWeeks(long weeks) => Fill(GetPlural("ReadingAboutEveryWeeks", weeks), ("weeks", weeks.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>On a book's series page, when the same story is also a show. Shown only to someone who both watches and reads.</summary>
+    public static string ReadingAlsoAShow => Get("ReadingAlsoAShow");
+
+    /// <summary>On a show's page, when the same story is also a manga or a novel. Shown only to someone who both watches and reads.</summary>
+    public static string ReadingAlsoABook => Get("ReadingAlsoABook");
+
+    /// <summary>Under a tracker on a series page, when the furthest chapter read is a half chapter. Trackers count whole chapters only. The chapter is its number, such as 10.5; whole is the number the tracker gets, such as 10.</summary>
+    public static string ReadingSplitChapter(string chapter, string whole) => Fill(Get("ReadingSplitChapter"), ("chapter", chapter), ("whole", whole));
+
+    /// <summary>A notice over the page when a chapter opens where it was left. It offers Start over.</summary>
+    public static string ReaderResumed(long page) => Fill(Get("ReaderResumed"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The same notice in a webtoon strip, which counts images rather than pages.</summary>
+    public static string ReaderResumedImage(long image) => Fill(Get("ReaderResumedImage"), ("image", image.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.</summary>
+    public static string ReaderBackToPage(long page) => Fill(Get("ReaderBackToPage"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The chapter is its whole label, such as The Long Night or Episode 63, and the device is its name, such as Living room tablet. A chapter with only a number uses the next message.</summary>
+    public static string ReaderMoved(string chapter, long page, string device) => Fill(Get("ReaderMoved"), ("chapter", chapter), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("device", device));
+
+    /// <summary>The same notice for a chapter known only by its number, such as 14 or 14.5.</summary>
+    public static string ReaderMovedNumber(string chapter, long page, string device) => Fill(Get("ReaderMovedNumber"), ("chapter", chapter), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("device", device));
+
+    /// <summary>The notice when another device read further and its name is not known: a device removed from sync, or this one before a reinstall.</summary>
+    public static string ReaderMovedElsewhere(string chapter, long page) => Fill(Get("ReaderMovedElsewhere"), ("chapter", chapter), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The same notice for a chapter known only by its number, such as 14 or 14.5.</summary>
+    public static string ReaderMovedNumberElsewhere(string chapter, long page) => Fill(Get("ReaderMovedNumberElsewhere"), ("chapter", chapter), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its whole label, such as The Long Night.</summary>
+    public static string ReaderMovedImage(string chapter, long image, string device) => Fill(Get("ReaderMovedImage"), ("chapter", chapter), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("device", device));
+
+    /// <summary>The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.</summary>
+    public static string ReaderMovedNumberImage(string chapter, long image, string device) => Fill(Get("ReaderMovedNumberImage"), ("chapter", chapter), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("device", device));
+
+    /// <summary>The notice in a strip when another device read further and its name is not known.</summary>
+    public static string ReaderMovedElsewhereImage(string chapter, long image) => Fill(Get("ReaderMovedElsewhereImage"), ("chapter", chapter), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.</summary>
+    public static string ReaderMovedNumberElsewhereImage(string chapter, long image) => Fill(Get("ReaderMovedNumberElsewhereImage"), ("chapter", chapter), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A notice the first time a series opens with its reading direction guessed. It offers Change.</summary>
+    public static string ReaderDetectedRightToLeft => Get("ReaderDetectedRightToLeft");
+
+    /// <summary>A notice the first time a series opens with its reading direction guessed. It offers Change.</summary>
+    public static string ReaderDetectedLeftToRight => Get("ReaderDetectedLeftToRight");
+
+    /// <summary>A notice the first time a series opens as one long strip, guessed from its pages. It offers Change.</summary>
+    public static string ReaderDetectedStrip => Get("ReaderDetectedStrip");
+
+    /// <summary>Why a chapter or a list could not load: there is no connection.</summary>
+    public static string ReadingFailedOffline => Get("ReadingFailedOffline");
+
+    /// <summary>Why a chapter or a list could not load: the source did not answer. The source is its name.</summary>
+    public static string ReadingFailedSourceDown(string source) => Fill(Get("ReadingFailedSourceDown"), ("source", source));
+
+    /// <summary>Why something could not load: the source the series reads from is switched off in Your sources.</summary>
+    public static string ReadingFailedSourceOff(string source) => Fill(Get("ReadingFailedSourceOff"), ("source", source));
+
+    /// <summary>Why a chapter could not load: the source no longer has it.</summary>
+    public static string ReadingFailedNotFound => Get("ReadingFailedNotFound");
+
+    /// <summary>Why a series has no chapters: none of the person's sources holds it, and none was ever picked.</summary>
+    public static string ReadingFailedNoSource => Get("ReadingFailedNoSource");
+
+    /// <summary>Why a chapter or a list could not load: the source refused. The reason comes from the source.</summary>
+    public static string ReadingFailedBlocked(string source, string reason) => Fill(Get("ReadingFailedBlocked"), ("source", source), ("reason", reason));
+
+    /// <summary>Why a chapter or a list could not load: the source's plugin asked for a host its manifest doesn't list, so the request never left the device and the source refused nothing. An update to the plugin usually fixes it.</summary>
+    public static string ReadingFailedHostNotAllowed(string source) => Fill(Get("ReadingFailedHostNotAllowed"), ("source", source));
+
+    /// <summary>Why a chapter or a list could not load: the source answered with something Kaeri could not read.</summary>
+    public static string ReadingFailedParse(string source) => Fill(Get("ReadingFailedParse"), ("source", source));
+
+    /// <summary>Why one page did not load. The status is the server's HTTP status code, such as 404.</summary>
+    public static string ReadingFailedPage(long status) => Fill(Get("ReadingFailedPage"), ("status", status.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>In the reader, in a novel's text, in the box where a picture from the source did not load. Try again sits under it.</summary>
+    public static string ReadingPictureFailed => Get("ReadingPictureFailed");
+
+    /// <summary>Why something could not load: a sign-in is needed. What is a server's or a tracker's name.</summary>
+    public static string ReadingFailedSignIn(string what) => Fill(Get("ReadingFailedSignIn"), ("what", what));
+
+    /// <summary>Why a book could not open: its file or folder is gone, perhaps on a drive that is not connected. The path is the file's.</summary>
+    public static string ReadingFailedFileMissing(string path) => Fill(Get("ReadingFailedFileMissing"), ("path", path));
+
+    /// <summary>Why a book could not open: the file is damaged or not what its name says. The format is a short name such as CBZ or EPUB.</summary>
+    public static string ReadingFailedUnreadable(string path, string format) => Fill(Get("ReadingFailedUnreadable"), ("path", path), ("format", format));
+
+    /// <summary>Why a file was not added: Kaeri does not read its kind. The kind is a file extension such as .djvu.</summary>
+    public static string ReadingFailedUnsupported(string kind) => Fill(Get("ReadingFailedUnsupported"), ("kind", kind));
+
+    /// <summary>Why a book could not open: it is copy-protected or encrypted.</summary>
+    public static string ReadingFailedProtected => Get("ReadingFailedProtected");
+
+    /// <summary>Why a chapter could not be saved: the disk is full.</summary>
+    public static string ReadingFailedDiskFull => Get("ReadingFailedDiskFull");
+
+    /// <summary>Why a chapter or a file for an e-reader could not be saved: the storage refused the name, because it is too long or has characters the storage doesn't allow. The path is the file's or the folder's.</summary>
+    public static string ReadingFailedWriteName(string path) => Fill(Get("ReadingFailedWriteName"), ("path", path));
+
+    /// <summary>Why a chapter or a file for an e-reader could not be saved: the storage is read-only, or Kaeri isn't allowed to write there. The path is the file's or the folder's.</summary>
+    public static string ReadingFailedWriteDenied(string path) => Fill(Get("ReadingFailedWriteDenied"), ("path", path));
+
+    /// <summary>Why a chapter or a file for an e-reader could not be saved, for another reason the system gave. The path is the file's or the folder's.</summary>
+    public static string ReadingFailedWrite(string path) => Fill(Get("ReadingFailedWrite"), ("path", path));
+
+    /// <summary>Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.</summary>
+    public static string ReadingFailedWebview(long version) => Fill(Get("ReadingFailedWebview"), ("version", version.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Why a book plugin could not be used: it was built for a newer Kaeri. The world is the plugin interface's name and version.</summary>
+    public static string ReadingFailedNeedsNewer(string world) => Fill(Get("ReadingFailedNeedsNewer"), ("world", world));
+
+    /// <summary>Why a reading request was refused: reading is not available in this build.</summary>
+    public static string ReadingFailedOff => Get("ReadingFailedOff");
+
+    /// <summary>Why something about reading failed, for any other reason. The reason is as it came.</summary>
+    public static string ReadingFailedOther(string reason) => Fill(Get("ReadingFailedOther"), ("reason", reason));
+
+    /// <summary>Why Send to e-reader stopped before sending: the file it made is bigger than the e-reader or its service takes. File is the file's name, target the e-reader's name such as Kindle. Shown with Try again.</summary>
+    public static string ReadingFailedSendTooLarge(string file, string target, string size, string limit) => Fill(Get("ReadingFailedSendTooLarge"), ("file", file), ("target", target), ("size", size), ("limit", limit));
+
+    /// <summary>Why Send to e-reader stopped before sending: a part the book needs is not in the file Kaeri made. Part is a path inside the file, such as OEBPS/content.opf. Shown with Try again.</summary>
+    public static string ReadingFailedSendMissing(string file, string part) => Fill(Get("ReadingFailedSendMissing"), ("file", file), ("part", part));
+
+    /// <summary>Why Send to e-reader stopped before sending: a part of the file Kaeri made does not declare or use the UTF-8 text encoding. Part is a path inside the file. Shown with Try again.</summary>
+    public static string ReadingFailedSendEncoding(string file, string part) => Fill(Get("ReadingFailedSendEncoding"), ("file", file), ("part", part));
+
+    /// <summary>Why Send to e-reader stopped before sending: a part of the file Kaeri made is not laid out as the book format requires. Part is a path inside the file. Shown with Try again.</summary>
+    public static string ReadingFailedSendMalformed(string file, string part) => Fill(Get("ReadingFailedSendMalformed"), ("file", file), ("part", part));
+
+    /// <summary>Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.</summary>
+    public static string ReadingKindManga => Get("ReadingKindManga");
+
+    /// <summary>Under a cover or on a series page: what kind of book it is. Manhwa is drawn in Korea.</summary>
+    public static string ReadingKindManhwa => Get("ReadingKindManhwa");
+
+    /// <summary>Under a cover or on a series page: what kind of book it is. Manhua is drawn in China or Taiwan.</summary>
+    public static string ReadingKindManhua => Get("ReadingKindManhua");
+
+    /// <summary>Under a cover or on a series page: what kind of book it is. A webtoon is drawn as one long strip that scrolls down.</summary>
+    public static string ReadingKindWebtoon => Get("ReadingKindWebtoon");
+
+    /// <summary>Under a cover or on a series page: what kind of book it is. A one-shot is a story told in a single chapter.</summary>
+    public static string ReadingKindOneShot => Get("ReadingKindOneShot");
+
+    /// <summary>Under a cover or on a series page: what kind of book it is. A light novel is a novel from Japan.</summary>
+    public static string ReadingKindLightNovel => Get("ReadingKindLightNovel");
+
+    /// <summary>Under a cover or on a series page: what kind of book it is, for a novel from anywhere else.</summary>
+    public static string ReadingKindNovel => Get("ReadingKindNovel");
+
+    /// <summary>Under a cover or on a series page: new chapters are still coming out.</summary>
+    public static string ReadingStatusReleasing => Get("ReadingStatusReleasing");
+
+    /// <summary>Under a cover or on a series page: the story is complete.</summary>
+    public static string ReadingStatusFinished => Get("ReadingStatusFinished");
+
+    /// <summary>Under a cover or on a series page: new chapters have stopped for a while.</summary>
+    public static string ReadingStatusHiatus => Get("ReadingStatusHiatus");
+
+    /// <summary>Under a cover or on a series page: the story was stopped before it ended.</summary>
+    public static string ReadingStatusCancelled => Get("ReadingStatusCancelled");
+
+    /// <summary>Under a cover or on a series page: the first chapter is not out yet.</summary>
+    public static string ReadingStatusNotYet => Get("ReadingStatusNotYet");
+
+    /// <summary>Under a cover or on a series page: how many chapters the series has.</summary>
+    public static string ReadingChapters(long count) => Fill(GetPlural("ReadingChapters", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a cover or on a series page: how many volumes the series has.</summary>
+    public static string ReadingVolumes(long count) => Fill(GetPlural("ReadingVolumes", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a cover: the series is on the person's Planning list.</summary>
+    public static string ReadingOnPlanning => Get("ReadingOnPlanning");
+
+    /// <summary>Above the big picture at the top of reading's Home, saying why this series is there: a new chapter came out in a series the person reads.</summary>
+    public static string ReadingSpotlightNewChapter => Get("ReadingSpotlightNewChapter");
+
+    /// <summary>Above the big picture at the top of reading's Home: the series the person was reading last.</summary>
+    public static string ReadingSpotlightContinue => Get("ReadingSpotlightContinue");
+
+    /// <summary>Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.</summary>
+    public static string ReadingSpotlightUpNext => Get("ReadingSpotlightUpNext");
+
+    /// <summary>Above the big picture at the top of reading's Home: a popular series that is still coming out, shown when the person has nothing of their own yet. It is not a pick for them.</summary>
+    public static string ReadingSpotlightPopular => Get("ReadingSpotlightPopular");
+
+    /// <summary>Under the big picture on reading's Home: a chapter that came out today. The chapter is its number, such as 88.</summary>
+    public static string ReadingOutToday(string chapter) => Fill(Get("ReadingOutToday"), ("chapter", chapter));
+
+    /// <summary>Under the big picture on reading's Home: a chapter that came out today, with its title.</summary>
+    public static string ReadingOutTodayTitled(string chapter, string title) => Fill(Get("ReadingOutTodayTitled"), ("chapter", chapter), ("title", title));
+
+    /// <summary>Under a cover or the big picture: the page the person stopped on in a chapter.</summary>
+    public static string ReadingChapterPage(string chapter, long page) => Fill(Get("ReadingChapterPage"), ("chapter", chapter), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a cover or the big picture: how far into a novel's chapter the person is.</summary>
+    public static string ReadingChapterPercent(string chapter, long percent) => Fill(Get("ReadingChapterPercent"), ("chapter", chapter), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a cover: a chapter came out that the person has not read. The chapter is its number.</summary>
+    public static string ReadingChapterNew(string chapter) => Fill(Get("ReadingChapterNew"), ("chapter", chapter));
+
+    /// <summary>Under a cover: a light novel's part, next to read or in progress. Light novels read in parts.</summary>
+    public static string ReadingNextPart(string part) => Fill(Get("ReadingNextPart"), ("part", part));
+
+    /// <summary>Under a cover or the big picture: how far into a light novel's part the person is.</summary>
+    public static string ReadingPartPercent(string part, long percent) => Fill(Get("ReadingPartPercent"), ("part", part), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a cover: a light novel's part came out that the person has not read.</summary>
+    public static string ReadingPartNew(string part) => Fill(Get("ReadingPartNew"), ("part", part));
+
+    /// <summary>Under a cover or the big picture: how far into a light novel's part the person is, the part named in the source's own words ("Part 3", "Chapter 3"), as its row on the series page names it.</summary>
+    public static string ReadingLabelPercent(string label, long percent) => Fill(Get("ReadingLabelPercent"), ("label", label), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a cover: a light novel's part came out that the person has not read, named in the source's own words ("Part 4", "Chapter 4").</summary>
+    public static string ReadingLabelNew(string label) => Fill(Get("ReadingLabelNew"), ("label", label));
+
+    /// <summary>Under a This week cell: a light novel's part that came out that day, with its own title.</summary>
+    public static string ReadingPartTitled(string part, string title) => Fill(Get("ReadingPartTitled"), ("part", part), ("title", title));
+
+    /// <summary>Under a This week cell: a light novel's part that came out that day, with its own title, the part named in the source's own words ("Part 4", "Chapter 4").</summary>
+    public static string ReadingLabelTitled(string label, string title) => Fill(Get("ReadingLabelTitled"), ("label", label), ("title", title));
+
+    /// <summary>Under the big picture on reading's Home: a light novel's part that came out today.</summary>
+    public static string ReadingPartOutToday(string part) => Fill(Get("ReadingPartOutToday"), ("part", part));
+
+    /// <summary>Under the big picture on reading's Home: a light novel's part that came out today, named in the source's own words ("Part 4", "Chapter 4").</summary>
+    public static string ReadingLabelOutToday(string label) => Fill(Get("ReadingLabelOutToday"), ("label", label));
+
+    /// <summary>Under the big picture on reading's Home: a light novel's part that came out today, with its title.</summary>
+    public static string ReadingPartOutTodayTitled(string part, string title) => Fill(Get("ReadingPartOutTodayTitled"), ("part", part), ("title", title));
+
+    /// <summary>Under the big picture on reading's Home: a light novel's part that came out today, with its title, the part named in the source's own words ("Part 4", "Chapter 4").</summary>
+    public static string ReadingLabelOutTodayTitled(string label, string title) => Fill(Get("ReadingLabelOutTodayTitled"), ("label", label), ("title", title));
+
+    /// <summary>Under a Library cover: the chapter the person is at, and the newest chapter there is.</summary>
+    public static string ReadingChapterOf(string chapter, string of) => Fill(Get("ReadingChapterOf"), ("chapter", chapter), ("of", of));
+
+    /// <summary>Under a Library cover: the volume and part of a light novel the person is at.</summary>
+    public static string ReadingVolumePart(string volume, string part) => Fill(Get("ReadingVolumePart"), ("volume", volume), ("part", part));
+
+    /// <summary>Under a Library cover: the volume of a light novel the person is at, and the part in the source's own words ("Part 5", "Chapter 5").</summary>
+    public static string ReadingVolumeLabel(string volume, string label) => Fill(Get("ReadingVolumeLabel"), ("volume", volume), ("label", label));
+
+    /// <summary>A search filter: books from Japan.</summary>
+    public static string ReadingOriginJapan => Get("ReadingOriginJapan");
+
+    /// <summary>A search filter: books from Korea.</summary>
+    public static string ReadingOriginKorea => Get("ReadingOriginKorea");
+
+    /// <summary>A search filter: books from China.</summary>
+    public static string ReadingOriginChina => Get("ReadingOriginChina");
+
+    /// <summary>A search filter: books from Taiwan.</summary>
+    public static string ReadingOriginTaiwan => Get("ReadingOriginTaiwan");
+
+    /// <summary>Send to e-reader: a device class with no brand, for e-readers not listed by name. Opens CBZ and EPUB.</summary>
+    public static string ExportDeviceOther => Get("ExportDeviceOther");
+
+    /// <summary>Send to e-reader: a device class, a grey e-ink screen of about 6 inches.</summary>
+    public static string ExportDeviceEink6 => Get("ExportDeviceEink6");
+
+    /// <summary>Send to e-reader: a device class, a grey e-ink screen of about 7 or 8 inches.</summary>
+    public static string ExportDeviceEink7 => Get("ExportDeviceEink7");
+
+    /// <summary>Send to e-reader: a device class, a colour e-ink screen of about 7 inches.</summary>
+    public static string ExportDeviceColourEink => Get("ExportDeviceColourEink");
+
+    /// <summary>Send to e-reader: a device class, a colour tablet.</summary>
+    public static string ExportDeviceTablet => Get("ExportDeviceTablet");
+
+    /// <summary>A table of contents entry in a file sent to an e-reader. The chapter is its number, such as 44 or 10.5.</summary>
+    public static string ExportChapter(string chapter) => Fill(Get("ExportChapter"), ("chapter", chapter));
+
+    /// <summary>Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch.</summary>
+    public static string ExportWaitsForWifi(long n) => Fill(GetPlural("ExportWaitsForWifi", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Send to e-reader, under the ready files: pages of one chapter that couldn't be read, as the reader shows them broken, so the files go without them. The chapter is its name as the series shows it, such as Chapter 12 or Volume 1. n is how many pages were left out.</summary>
+    public static string ExportPagesLeftOut(long n, string chapter) => Fill(GetPlural("ExportPagesLeftOut", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("chapter", chapter));
+
+    /// <summary>Under a This week cell: the chapter that came out that day, with its own title.</summary>
+    public static string ReadingChapterTitled(string chapter, string title) => Fill(Get("ReadingChapterTitled"), ("chapter", chapter), ("title", title));
+
+    /// <summary>A chapter row's state: the person read it.</summary>
+    public static string ReadingRowRead => Get("ReadingRowRead");
+
+    /// <summary>A chapter row's state: it came out since the person last read and is not read.</summary>
+    public static string ReadingRowNew => Get("ReadingRowNew");
+
+    /// <summary>A chapter row's state: it is kept on this device to read offline.</summary>
+    public static string ReadingRowDownloaded => Get("ReadingRowDownloaded");
+
+    /// <summary>A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.</summary>
+    public static string ReadingRowGoneFromSource => Get("ReadingRowGoneFromSource");
+
+    /// <summary>A chapter row's state: it is read from the source and nothing of it is on this device.</summary>
+    public static string ReadingRowNotDownloaded => Get("ReadingRowNotDownloaded");
+
+    /// <summary>A chapter row's state: a file in one of the person's folders, or one already on the device.</summary>
+    public static string ReadingRowOnDevice => Get("ReadingRowOnDevice");
+
+    /// <summary>A chapter row's state: it waits its turn to download.</summary>
+    public static string ReadingRowQueued => Get("ReadingRowQueued");
+
+    /// <summary>A chapter row's state: it waits to download until the device is on Wi-Fi.</summary>
+    public static string ReadingRowWaitsWifi => Get("ReadingRowWaitsWifi");
+
+    /// <summary>A chapter row's state while it downloads.</summary>
+    public static string ReadingRowDownloading(long done, long total) => Fill(Get("ReadingRowDownloading"), ("done", done.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count.</summary>
+    public static string ReadingRowDownloadingPlain => Get("ReadingRowDownloadingPlain");
+
+    /// <summary>A chapter row's state: the download failed. The reason follows as the next part.</summary>
+    public static string ReadingRowFailed => Get("ReadingRowFailed");
+
+    /// <summary>A chapter row's state: the page the person stopped on, of how many.</summary>
+    public static string ReadingRowPageOf(long page, long of) => Fill(Get("ReadingRowPageOf"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("of", of.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row's state: the page the person stopped on, when the length isn't known.</summary>
+    public static string ReadingRowPage(long page) => Fill(Get("ReadingRowPage"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A novel's chapter row: how far into it the person is.</summary>
+    public static string ReadingRowPercent(long percent) => Fill(Get("ReadingRowPercent"), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A novel's chapter row: the person opened it, and how far in is too little to say as a percent.</summary>
+    public static string ReadingRowOpened => Get("ReadingRowOpened");
+
+    /// <summary>A chapter row's state: the person bookmarked it. Bookmarked chapters are kept when read downloads are cleared.</summary>
+    public static string ReadingRowBookmarked => Get("ReadingRowBookmarked");
+
+    /// <summary>A chapter row: how long its pages are, for a file on the device.</summary>
+    public static string ReadingRowPages(long n) => Fill(GetPlural("ReadingRowPages", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row: how many versions the person's sources have of it. The row's menu lists them.</summary>
+    public static string ReadingRowVersions(long n) => Fill(GetPlural("ReadingRowVersions", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row: the source lists this chapter in parts, and the reader runs through them as one chapter. Shown beside the chapter's name: "Chapter 1, 2 parts".</summary>
+    public static string ReadingRowParts(long n) => Fill(GetPlural("ReadingRowParts", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it. Lower case, as the line's other words; an app that starts a line with it capitalises the first letter.</summary>
+    public static string ReadingRowFromGroup(string group) => Fill(Get("ReadingRowFromGroup"), ("group", group));
+
+    /// <summary>A chapter row: the same, for a group in another language than the app's, named after the group. "from Saltmarsh Team, Spanish".</summary>
+    public static string ReadingRowFromGroupIn(string group, string language) => Fill(Get("ReadingRowFromGroupIn"), ("group", group), ("language", language));
+
+    /// <summary>A chapter row: a chapter in parts that is missing some, as no group has released them. The reader runs through the parts there are. Followed by the missing part: "2 of 3 parts".</summary>
+    public static string ReadingRowPartsOf(long have, long n) => Fill(Get("ReadingRowPartsOf"), ("have", have.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row, after the parts count: the part no group has released. With several, how many.</summary>
+    public static string ReadingRowPartMissing(long count, long part) => Fill(GetPlural("ReadingRowPartMissing", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("part", part.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row: one part of a chapter in parts comes from another group, as the group the series is read from lacks it. "part 2 from Saltmarsh Team".</summary>
+    public static string ReadingRowPartFromGroup(long part, string group) => Fill(Get("ReadingRowPartFromGroup"), ("part", part.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("group", group));
+
+    /// <summary>The same, for a group in another language than the app's. "part 2 from Saltmarsh Team, Spanish".</summary>
+    public static string ReadingRowPartFromGroupIn(long part, string group, string language) => Fill(Get("ReadingRowPartFromGroupIn"), ("part", part.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("group", group), ("language", language));
+
+    /// <summary>A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there. Lower case, as the line's other words.</summary>
+    public static string ReadingRowFromSource(string source) => Fill(Get("ReadingRowFromSource"), ("source", source));
+
+    /// <summary>A quiet line in the reader: pages a series repeats at the start or end of its chapters (a group's credits or notices) were left out of this chapter. Tapping it shows them.</summary>
+    public static string ReaderCreditPagesSkipped(long count) => Fill(GetPlural("ReaderCreditPagesSkipped", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row: when it was read or came out, under a minute ago.</summary>
+    public static string ReadingAgoNow => Get("ReadingAgoNow");
+
+    /// <summary>A chapter row: when it was read or came out, in minutes.</summary>
+    public static string ReadingAgoMinutes(long minutes) => Fill(Get("ReadingAgoMinutes"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row: when it was read or came out, earlier today.</summary>
+    public static string ReadingAgoToday => Get("ReadingAgoToday");
+
+    /// <summary>A chapter row: when it was read or came out, the day before today.</summary>
+    public static string ReadingAgoYesterday => Get("ReadingAgoYesterday");
+
+    /// <summary>A chapter row: when it was read or came out, in days, under a week.</summary>
+    public static string ReadingAgoDays(long days) => Fill(GetPlural("ReadingAgoDays", days), ("days", days.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row: when it was read or came out, in weeks, under two months.</summary>
+    public static string ReadingAgoWeeks(long weeks) => Fill(GetPlural("ReadingAgoWeeks", weeks), ("weeks", weeks.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row: when it was read or came out, in months, under a year.</summary>
+    public static string ReadingAgoMonths(long months) => Fill(GetPlural("ReadingAgoMonths", months), ("months", months.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row: when it was read or came out, in years.</summary>
+    public static string ReadingAgoYears(long years) => Fill(GetPlural("ReadingAgoYears", years), ("years", years.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The tracker took the series off its list.</summary>
+    public static string ReadingRemovedFrom(string tracker) => Fill(Get("ReadingRemovedFrom"), ("tracker", tracker));
+
+    /// <summary>The tracker's list did not hold the series, so there was nothing to remove.</summary>
+    public static string ReadingRemovedNotThere(string tracker) => Fill(Get("ReadingRemovedNotThere"), ("tracker", tracker));
+
+    /// <summary>The app never learned which of the tracker's entries this series is, so it asked nothing.</summary>
+    public static string ReadingRemovedUnmatched(string tracker) => Fill(Get("ReadingRemovedUnmatched"), ("tracker", tracker));
+
+    /// <summary>The tracker could not take the series off. The reason follows.</summary>
+    public static string ReadingRemovedFailed(string tracker) => Fill(Get("ReadingRemovedFailed"), ("tracker", tracker));
+
+    /// <summary>Why a removal failed: the tracker turned the sign-in away.</summary>
+    public static string ReadingRemovedSignIn(string tracker) => Fill(Get("ReadingRemovedSignIn"), ("tracker", tracker));
+
+    /// <summary>The source answered the search and has no series by the series' names.</summary>
+    public static string ReadingMissNoSeries => Get("ReadingMissNoSeries");
+
+    /// <summary>The source has failed every ask since this time of day, in the person's zone.</summary>
+    public static string ReadingMissDownSince(string time) => Fill(Get("ReadingMissDownSince"), ("time", time));
+
+    /// <summary>The source has failed every ask, since a time on another day or not known.</summary>
+    public static string ReadingMissDown => Get("ReadingMissDown");
+
+    /// <summary>The source has no series by the series' names, but has one that may be it in another edition, as a full-colour release. That series is shown under this line, and choosing it confirms it.</summary>
+    public static string ReadingMissPossible => Get("ReadingMissPossible");
+
+    /// <summary>How many parts of a light novel are downloaded.</summary>
+    public static string ReadingDlParts(long count) => Fill(GetPlural("ReadingDlParts", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>What the downloads take up on this device.</summary>
+    public static string ReadingDlSize(string size) => Fill(Get("ReadingDlSize"), ("size", size));
+
+    /// <summary>How many of the downloaded chapters are read, which Delete read clears.</summary>
+    public static string ReadingDlRead(long count) => Fill(Get("ReadingDlRead"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The chapter downloading now.</summary>
+    public static string ReadingDlChapter(string chapter) => Fill(Get("ReadingDlChapter"), ("chapter", chapter));
+
+    /// <summary>How far the chapter downloading now has come.</summary>
+    public static string ReadingDlPages(long done, long total) => Fill(Get("ReadingDlPages"), ("done", done.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Chapters waiting their turn after the one downloading.</summary>
+    public static string ReadingDlMoreQueued(long count) => Fill(Get("ReadingDlMoreQueued"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Chapters waiting their turn, none downloaded yet.</summary>
+    public static string ReadingDlQueued(long count) => Fill(Get("ReadingDlQueued"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Chapters that wait for Wi-Fi to download.</summary>
+    public static string ReadingDlWaitsWifi => Get("ReadingDlWaitsWifi");
+
+    /// <summary>A chapter that failed. The reason follows as the next part.</summary>
+    public static string ReadingDlFailed(string chapter) => Fill(Get("ReadingDlFailed"), ("chapter", chapter));
+
+    /// <summary>After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.</summary>
+    public static string ReadingDlOffline => Get("ReadingDlOffline");
+
+    /// <summary>How much the chosen chapters will take, from their pages and the size of pages downloaded before.</summary>
+    public static string ReadingEstimateSize(string size) => Fill(Get("ReadingEstimateSize"), ("size", size));
+
+    /// <summary>The chapters download only on Wi-Fi, as the settings say.</summary>
+    public static string ReadingEstimateWifi => Get("ReadingEstimateWifi");
+
+    /// <summary>The device is on mobile data, and the settings let chapters download on it.</summary>
+    public static string ReadingEstimateMobile => Get("ReadingEstimateMobile");
+
+    /// <summary>The device is on mobile data and the chapters wait until it's on Wi-Fi.</summary>
+    public static string ReadingEstimateWaitsWifi => Get("ReadingEstimateWaitsWifi");
+
+    /// <summary>Notice after Download on chapters that are files in the person's own folders: they open from where they are, so nothing is downloaded.</summary>
+    public static string ReadingDownloadOnDevice => Get("ReadingDownloadOnDevice");
+
+    /// <summary>A series' name where neither the catalogue nor its source gave one: on Downloads, in a sent file's name and in the e-reader's library.</summary>
+    public static string ReadingUntitledSeries => Get("ReadingUntitledSeries");
+
+    /// <summary>The notification's title.</summary>
+    public static string ReadingDownloadsDoneTitle => Get("ReadingDownloadsDoneTitle");
+
+    /// <summary>The notification's text: one series' chapters are downloaded.</summary>
+    public static string ReadingDownloadsDoneChapters(string title, long count) => Fill(GetPlural("ReadingDownloadsDoneChapters", count), ("title", title), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The notification's text: one light novel's parts are downloaded.</summary>
+    public static string ReadingDownloadsDoneParts(string title, long count) => Fill(GetPlural("ReadingDownloadsDoneParts", count), ("title", title), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The notification's text: chapters of several series are downloaded.</summary>
+    public static string ReadingDownloadsDoneSeries(long count) => Fill(Get("ReadingDownloadsDoneSeries"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Row heading on reading's Home: manga that are trending on AniList now.</summary>
+    public static string ReadHomeTrendingManga => Get("ReadHomeTrendingManga");
+
+    /// <summary>Row heading on reading's Home: webtoons that are trending on AniList now.</summary>
+    public static string ReadHomeTrendingWebtoons => Get("ReadHomeTrendingWebtoons");
+
+    /// <summary>Row heading on reading's Home: light novels that are trending on AniList now.</summary>
+    public static string ReadHomeTrendingNovels => Get("ReadHomeTrendingNovels");
+
+    /// <summary>Row heading on reading's Home: the most popular manga that started in the last 12 months.</summary>
+    public static string ReadHomeNewManga => Get("ReadHomeNewManga");
+
+    /// <summary>Row heading on reading's Home: the most popular webtoons that started in the last 12 months.</summary>
+    public static string ReadHomeNewWebtoons => Get("ReadHomeNewWebtoons");
+
+    /// <summary>Row heading on reading's Home: the most popular light novels that started in the last 12 months.</summary>
+    public static string ReadHomeNewNovels => Get("ReadHomeNewNovels");
+
+    /// <summary>Side text beside a New row's heading, in a quieter style: what the row covers.</summary>
+    public static string ReadHomeNewSide => Get("ReadHomeNewSide");
+
+    /// <summary>Row heading on reading's Home: the most popular manga that have finished.</summary>
+    public static string ReadHomeFinishedManga => Get("ReadHomeFinishedManga");
+
+    /// <summary>Row heading on reading's Home: the most popular webtoons that have finished.</summary>
+    public static string ReadHomeFinishedWebtoons => Get("ReadHomeFinishedWebtoons");
+
+    /// <summary>Row heading on reading's Home: the most popular light novels that have finished.</summary>
+    public static string ReadHomeFinishedNovels => Get("ReadHomeFinishedNovels");
+
+    /// <summary>Side text beside a Finished row's heading, in a quieter style: how the row is sorted.</summary>
+    public static string ReadHomeFinishedSide => Get("ReadHomeFinishedSide");
+
+    /// <summary>A choice of reading Search's Started filter: series that started at any time.</summary>
+    public static string ReadSearchStartedAny => Get("ReadSearchStartedAny");
+
+    /// <summary>A choice of reading Search's Started filter: series that started in the last 12 months.</summary>
+    public static string ReadSearchStartedYear => Get("ReadSearchStartedYear");
+
+    /// <summary>A choice of reading Search's Started filter: series that started in the last 3 years.</summary>
+    public static string ReadSearchStarted3Years => Get("ReadSearchStarted3Years");
+
+    /// <summary>Under a source's hit in Search: the chapters it holds, from the first.</summary>
+    public static string ReadHitChapters(long last) => Fill(Get("ReadHitChapters"), ("last", last.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a source's hit in Search: a web novel's episodes it holds, from the first.</summary>
+    public static string ReadHitEpisodes(long last) => Fill(Get("ReadHitEpisodes"), ("last", last.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a source's hit in Search: a light novel's parts it holds.</summary>
+    public static string ReadHitParts(long count) => Fill(GetPlural("ReadHitParts", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a source's hit in Search: the book files it holds.</summary>
+    public static string ReadHitFiles(long count) => Fill(GetPlural("ReadHitFiles", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a source's hit in Search: the book files it holds, all in one format ("CBZ").</summary>
+    public static string ReadHitFilesFormat(long count, string format) => Fill(GetPlural("ReadHitFilesFormat", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("format", format));
+
+    /// <summary>The name of the folders on this device, which read as one source: a Search group's heading, the source a series reads from, "In Folders" on a search result. It stands alone, with no word for its kind beside it.</summary>
+    public static string ReadSourceFolders => Get("ReadSourceFolders");
+
+    /// <summary>A section of the feed that e-readers fetch from: the chapters downloaded on this device.</summary>
+    public static string ReadFeedDownloads => Get("ReadFeedDownloads");
+
+    /// <summary>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since January".</summary>
+    public static string ReadingSinceJanuary => Get("ReadingSinceJanuary");
+
+    /// <summary>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since February".</summary>
+    public static string ReadingSinceFebruary => Get("ReadingSinceFebruary");
+
+    /// <summary>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since March".</summary>
+    public static string ReadingSinceMarch => Get("ReadingSinceMarch");
+
+    /// <summary>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since April".</summary>
+    public static string ReadingSinceApril => Get("ReadingSinceApril");
+
+    /// <summary>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since May".</summary>
+    public static string ReadingSinceMay => Get("ReadingSinceMay");
+
+    /// <summary>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since June".</summary>
+    public static string ReadingSinceJune => Get("ReadingSinceJune");
+
+    /// <summary>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since July".</summary>
+    public static string ReadingSinceJuly => Get("ReadingSinceJuly");
+
+    /// <summary>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since August".</summary>
+    public static string ReadingSinceAugust => Get("ReadingSinceAugust");
+
+    /// <summary>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since September".</summary>
+    public static string ReadingSinceSeptember => Get("ReadingSinceSeptember");
+
+    /// <summary>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since October".</summary>
+    public static string ReadingSinceOctober => Get("ReadingSinceOctober");
+
+    /// <summary>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since November".</summary>
+    public static string ReadingSinceNovember => Get("ReadingSinceNovember");
+
+    /// <summary>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since December".</summary>
+    public static string ReadingSinceDecember => Get("ReadingSinceDecember");
+
+    /// <summary>The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Manga, trending · 1,920 series from AniList".</summary>
+    public static string ReadViewAllTrendingManga => Get("ReadViewAllTrendingManga");
+
+    /// <summary>The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Webtoons, trending · 1,920 series from AniList".</summary>
+    public static string ReadViewAllTrendingWebtoons => Get("ReadViewAllTrendingWebtoons");
+
+    /// <summary>The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Light novels, trending · 1,920 series from AniList".</summary>
+    public static string ReadViewAllTrendingNovels => Get("ReadViewAllTrendingNovels");
+
+    /// <summary>The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Manga started in the last 12 months · 1,920 series from AniList".</summary>
+    public static string ReadViewAllNewManga => Get("ReadViewAllNewManga");
+
+    /// <summary>The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Webtoons started in the last 12 months · 1,920 series from AniList".</summary>
+    public static string ReadViewAllNewWebtoons => Get("ReadViewAllNewWebtoons");
+
+    /// <summary>The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Light novels started in the last 12 months · 1,920 series from AniList".</summary>
+    public static string ReadViewAllNewNovels => Get("ReadViewAllNewNovels");
+
+    /// <summary>The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished manga, most popular · 1,920 series from AniList".</summary>
+    public static string ReadViewAllFinishedManga => Get("ReadViewAllFinishedManga");
+
+    /// <summary>The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished webtoons, most popular · 1,920 series from AniList".</summary>
+    public static string ReadViewAllFinishedWebtoons => Get("ReadViewAllFinishedWebtoons");
+
+    /// <summary>The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished light novels, most popular · 1,920 series from AniList".</summary>
+    public static string ReadViewAllFinishedNovels => Get("ReadViewAllFinishedNovels");
+
     /// <summary>Toast after joining a plugin store with an invite that names this device's owner.</summary>
     public static string StoreJoined(string store, string member) => Fill(Get("StoreJoined"), ("store", store), ("member", member));
 
@@ -496,7 +1180,7 @@ public static partial class T
     public static string StoreInviteCancelled => Get("StoreInviteCancelled");
 
     /// <summary>Toast after cancelling an invite that people joined with.</summary>
-    public static string StoreInviteCancelledKept(long count) => Fill(GetPlural("StoreInviteCancelledKept", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string StoreInviteCancelledKept(long count) => Fill(GetPlural("StoreInviteCancelledKept", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Toast after a store owner lets anyone with the store's link join.</summary>
     public static string StoreOpenJoinOn => Get("StoreOpenJoinOn");
@@ -505,7 +1189,7 @@ public static partial class T
     public static string StoreOpenJoinOff => Get("StoreOpenJoinOff");
 
     /// <summary>Toast after a store owner turns off joining with the link, when some devices joined that way.</summary>
-    public static string StoreOpenJoinOffDevices(long devices) => Fill(GetPlural("StoreOpenJoinOffDevices", devices), ("devices", devices.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string StoreOpenJoinOffDevices(long devices) => Fill(GetPlural("StoreOpenJoinOffDevices", devices), ("devices", devices.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Toast after one device that joined with the store's link is removed.</summary>
     public static string StoreDeviceRemoved => Get("StoreDeviceRemoved");
@@ -541,10 +1225,10 @@ public static partial class T
     public static string PluginInstalledOutdated(string plugin) => Fill(Get("PluginInstalledOutdated"), ("plugin", plugin));
 
     /// <summary>Note on the sources screen when plugins were skipped because they were built for an older plugin interface.</summary>
-    public static string PluginsOutdated(long count, string names) => Fill(GetPlural("PluginsOutdated", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("names", names));
+    public static string PluginsOutdated(long count, string names) => Fill(GetPlural("PluginsOutdated", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("names", names));
 
     /// <summary>Toast at launch when joined plugin stores offer newer versions of installed plugins.</summary>
-    public static string PluginUpdatesReady(long count, string names) => Fill(GetPlural("PluginUpdatesReady", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("names", names));
+    public static string PluginUpdatesReady(long count, string names) => Fill(GetPlural("PluginUpdatesReady", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("names", names));
 
     /// <summary>Note on the sources screen when the plugins could not be loaded. The reason comes from the plugin host.</summary>
     public static string PluginsLoadFailed(string reason) => Fill(Get("PluginsLoadFailed"), ("reason", reason));
@@ -617,6 +1301,9 @@ public static partial class T
 
     /// <summary>Error: a plugin to publish is no longer in the plugin folder.</summary>
     public static string PluginMissingLocally(string plugin) => Fill(Get("PluginMissingLocally"), ("plugin", plugin));
+
+    /// <summary>Error: a book source cannot be published to a store whose server is too old to list book sources.</summary>
+    public static string StoreTakesNoBooks(string store) => Fill(Get("StoreTakesNoBooks"), ("store", store));
 
     /// <summary>Error: an invite for another device cannot be made from a device that joined with the open link.</summary>
     public static string StoreInviteNeedsLink(string store) => Fill(Get("StoreInviteNeedsLink"), ("store", store));
@@ -784,7 +1471,16 @@ public static partial class T
     public static string NoticeSignedOut(string tracker) => Fill(Get("NoticeSignedOut"), ("tracker", tracker));
 
     /// <summary>Toast after signing out of a tracker. The changes were not discarded: they are sent after the next sign-in.</summary>
-    public static string NoticeSignedOutQueue(string tracker, long count) => Fill(GetPlural("NoticeSignedOutQueue", count), ("tracker", tracker), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string NoticeSignedOutQueue(string tracker, long count) => Fill(GetPlural("NoticeSignedOutQueue", count), ("tracker", tracker), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name.</summary>
+    public static string NoticeTrackerChangeRefused(string tracker, string title) => Fill(Get("NoticeTrackerChangeRefused"), ("tracker", tracker), ("title", title));
+
+    /// <summary>The same toast when changes to several titles stopped being sent to one tracker at once. The title is the first of them; others is how many more titles there are.</summary>
+    public static string NoticeTrackerChangesRefused(string tracker, string title, long others) => Fill(GetPlural("NoticeTrackerChangesRefused", others), ("tracker", tracker), ("title", title), ("others", others.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The same toast when the app has no name for the titles. Count is how many titles.</summary>
+    public static string NoticeTrackerChangeRefusedUntitled(string tracker, long count) => Fill(GetPlural("NoticeTrackerChangeRefusedUntitled", count), ("tracker", tracker), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Toast when signing out of a tracker failed. The reason comes from the system.</summary>
     public static string NoticeSignOutFailed(string tracker, string reason) => Fill(Get("NoticeSignOutFailed"), ("tracker", tracker), ("reason", reason));
@@ -823,7 +1519,7 @@ public static partial class T
     public static string NoticeEpisodeAired(string title, long episode) => Fill(Get("NoticeEpisodeAired"), ("title", title), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Toast, and desktop notification, for several episodes that aired while the app was closed.</summary>
-    public static string NoticeEpisodesAired(long count) => Fill(GetPlural("NoticeEpisodesAired", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string NoticeEpisodesAired(long count) => Fill(GetPlural("NoticeEpisodesAired", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Toast when a new release of Kaeri is out, on the terminal app. The command is not translated. Terminal only: the engine never sends it to the apps.</summary>
     public static string NoticeUpdateAvailable(string tag) => Fill(Get("NoticeUpdateAvailable"), ("tag", tag));
@@ -845,6 +1541,9 @@ public static partial class T
 
     /// <summary>Toast when a setting could not be stored. The reason comes from the system.</summary>
     public static string NoticeNotSaved(string reason) => Fill(Get("NoticeNotSaved"), ("reason", reason));
+
+    /// <summary>Toast when something the person did, such as a chapter marked read, a place in a book, a watched episode or a list change, could not be stored. The reason comes from the system.</summary>
+    public static string NoticeChangeNotKept(string reason) => Fill(Get("NoticeChangeNotKept"), ("reason", reason));
 
     /// <summary>Toast when a title's details did not load.</summary>
     public static string NoticeTitleLoadFailed => Get("NoticeTitleLoadFailed");
@@ -883,7 +1582,7 @@ public static partial class T
     public static string StartFailedPlayer(string reason) => Fill(Get("StartFailedPlayer"), ("reason", reason));
 
     /// <summary>Toast after episodes are added to the download queue.</summary>
-    public static string NoticeEpisodesQueued(long count) => Fill(GetPlural("NoticeEpisodesQueued", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string NoticeEpisodesQueued(long count) => Fill(GetPlural("NoticeEpisodesQueued", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Notice after the subtitle style is reset. It offers Undo.</summary>
     public static string SettingsSubsResetDone => Get("SettingsSubsResetDone");
@@ -910,7 +1609,7 @@ public static partial class T
     public static string ContinueMenuResume => Get("ContinueMenuResume");
 
     /// <summary>Line under Continue's heading: changes made offline that AniList has not had yet.</summary>
-    public static string ContinueSyncWaiting(long count) => Fill(GetPlural("ContinueSyncWaiting", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ContinueSyncWaiting(long count) => Fill(GetPlural("ContinueSyncWaiting", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Calendar: a day column of the week view with nothing airing that day.</summary>
     public static string CalendarDayEmpty => Get("CalendarDayEmpty");
@@ -946,7 +1645,7 @@ public static partial class T
     public static string CalendarCellInDubbed(long episode, string span) => Fill(Get("CalendarCellInDubbed"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("span", span));
 
     /// <summary>Library: a list's tab with how many titles are on it, such as "Watching 12".</summary>
-    public static string LibraryListCount(string list, long count) => Fill(Get("LibraryListCount"), ("list", list), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibraryListCount(string list, long count) => Fill(Get("LibraryListCount"), ("list", list), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Search: the Sort drop-down's name before a sort is picked.</summary>
     public static string SearchSortName => Get("SearchSortName");
@@ -955,13 +1654,13 @@ public static partial class T
     public static string FilterPickedTwo(string first, string second) => Fill(Get("FilterPickedTwo"), ("first", first), ("second", second));
 
     /// <summary>Search: a filter drop-down with three or more values picked: the first, then how many more.</summary>
-    public static string FilterPickedMore(string first, long more) => Fill(Get("FilterPickedMore"), ("first", first), ("more", more.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string FilterPickedMore(string first, long more) => Fill(Get("FilterPickedMore"), ("first", first), ("more", more.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Search: a genre left out of the results, as the Genre drop-down and its chip say it.</summary>
     public static string SearchGenreLeftOut(string genre) => Fill(Get("SearchGenreLeftOut"), ("genre", genre));
 
     /// <summary>Search: the screen reader's name for the Filters button while some of the panel's filters are set.</summary>
-    public static string SearchFiltersButtonSet(long count) => Fill(Get("SearchFiltersButtonSet"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SearchFiltersButtonSet(long count) => Fill(Get("SearchFiltersButtonSet"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Search: the shortcut list's line for opening and closing the filters panel.</summary>
     public static string ShortcutsSearchFilters => Get("ShortcutsSearchFilters");
@@ -1069,7 +1768,7 @@ public static partial class T
     public static string SearchResultOnService(string service) => Fill(Get("SearchResultOnService"), ("service", service));
 
     /// <summary>Fix this match: the line under a result. The parts are the format, year and episode count, already joined.</summary>
-    public static string MatchChoiceLine(string parts, long percent) => Fill(Get("MatchChoiceLine"), ("parts", parts), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string MatchChoiceLine(string parts, long percent) => Fill(Get("MatchChoiceLine"), ("parts", parts), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Search: line while searching as you type waits for AniList's rate limit to recover. Enter runs the search at once.</summary>
     public static string SearchRateLimitEnter => Get("SearchRateLimitEnter");
@@ -1123,16 +1822,16 @@ public static partial class T
     public static string PlayerStatsRow(string label, string value) => Fill(Get("PlayerStatsRow"), ("label", label), ("value", value));
 
     /// <summary>A length of time said for a screen reader, in hours. It is joined with minutes and seconds.</summary>
-    public static string PlayerSpokenHours(long count) => Fill(GetPlural("PlayerSpokenHours", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PlayerSpokenHours(long count) => Fill(GetPlural("PlayerSpokenHours", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A length of time said for a screen reader, in minutes. It is joined with hours and seconds.</summary>
-    public static string PlayerSpokenMinutes(long count) => Fill(GetPlural("PlayerSpokenMinutes", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PlayerSpokenMinutes(long count) => Fill(GetPlural("PlayerSpokenMinutes", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A length of time said for a screen reader, in seconds. It is joined with hours and minutes.</summary>
-    public static string PlayerSpokenSeconds(long count) => Fill(GetPlural("PlayerSpokenSeconds", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PlayerSpokenSeconds(long count) => Fill(GetPlural("PlayerSpokenSeconds", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>What a screen reader says for the volume slider. The number is 0 to 100.</summary>
-    public static string PlayerVolumeSpoken(long percent) => Fill(Get("PlayerVolumeSpoken"), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PlayerVolumeSpoken(long percent) => Fill(Get("PlayerVolumeSpoken"), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Name of the volume button while the sound is off. The button opens the volume slider.</summary>
     public static string PlayerVolumeMuted => Get("PlayerVolumeMuted");
@@ -1142,6 +1841,285 @@ public static partial class T
 
     /// <summary>Name of the account entry in the navigation pane, followed by its state.</summary>
     public static string AccountsPaneName(string state) => Fill(Get("AccountsPaneName"), ("state", state));
+
+    /// <summary>Name and tooltip of the Aa button in the reader's group, which opens the reader's settings.</summary>
+    public static string WindowsReaderSettingsOpen => Get("WindowsReaderSettingsOpen");
+
+    /// <summary>The opening screen's line, under the cover, after the first moment. The chapter label comes from the source.</summary>
+    public static string WindowsReaderOpening(string chapter) => Fill(Get("WindowsReaderOpening"), ("chapter", chapter));
+
+    /// <summary>The opening screen's line after a few seconds of waiting for a source to answer.</summary>
+    public static string WindowsReaderOpeningSlow(long seconds) => Fill(Get("WindowsReaderOpeningSlow"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Heading of the error when a chapter would not open.</summary>
+    public static string WindowsReaderChapterFailed(string chapter) => Fill(Get("WindowsReaderChapterFailed"), ("chapter", chapter));
+
+    /// <summary>Button of the error when a chapter would not open: back to the series page, where the source is chosen.</summary>
+    public static string WindowsReaderChooseSource => Get("WindowsReaderChooseSource");
+
+    /// <summary>Hint under a page's error: the next page still opens.</summary>
+    public static string WindowsReaderPageFailedHint => Get("WindowsReaderPageFailedHint");
+
+    /// <summary>Top line of the page between chapters: what just ended. The chapter label comes from the source.</summary>
+    public static string WindowsReaderEndOfChapter(string chapter) => Fill(Get("WindowsReaderEndOfChapter"), ("chapter", chapter));
+
+    /// <summary>Line under it when the chapter has not counted as read yet.</summary>
+    public static string WindowsReaderEndNotRead => Get("WindowsReaderEndNotRead");
+
+    /// <summary>Line under the top line once the chapter counted as read and the trackers were updated. The trackers are names joined by the app: "AniList and Kitsu".</summary>
+    public static string WindowsReaderEndTracker(string trackers) => Fill(Get("WindowsReaderEndTracker"), ("trackers", trackers));
+
+    /// <summary>Two tracker names joined, for the line above.</summary>
+    public static string WindowsReaderEndTrackersTwo(string first, string second) => Fill(Get("WindowsReaderEndTrackersTwo"), ("first", first), ("second", second));
+
+    /// <summary>The one amber button of the page between chapters: opens the next chapter.</summary>
+    public static string WindowsReaderContinue => Get("WindowsReaderContinue");
+
+    /// <summary>Button on the page between chapters that closes the reader and goes back to the series page.</summary>
+    public static string WindowsReaderBackToSeries => Get("WindowsReaderBackToSeries");
+
+    /// <summary>End page heading when the next chapter is not out yet.</summary>
+    public static string WindowsReaderEndNotOut(string chapter) => Fill(Get("WindowsReaderEndNotOut"), ("chapter", chapter));
+
+    /// <summary>End page text when the next chapter is not out yet.</summary>
+    public static string WindowsReaderEndNotOutBody => Get("WindowsReaderEndNotOutBody");
+
+    /// <summary>End page text when the reader has caught up with the series.</summary>
+    public static string WindowsReaderEndCaughtUpBody => Get("WindowsReaderEndCaughtUpBody");
+
+    /// <summary>End page heading at the end of a finished series.</summary>
+    public static string WindowsReaderEndFinished => Get("WindowsReaderEndFinished");
+
+    /// <summary>End page text at the end of a finished series.</summary>
+    public static string WindowsReaderEndFinishedBody => Get("WindowsReaderEndFinishedBody");
+
+    /// <summary>End page heading when no source has the next chapter.</summary>
+    public static string WindowsReaderEndNoSource(string chapter) => Fill(Get("WindowsReaderEndNoSource"), ("chapter", chapter));
+
+    /// <summary>End page heading when the next chapter is not downloaded and the PC is offline.</summary>
+    public static string WindowsReaderEndOffline(string chapter) => Fill(Get("WindowsReaderEndOffline"), ("chapter", chapter));
+
+    /// <summary>End page text when the next chapter is not downloaded and the PC is offline.</summary>
+    public static string WindowsReaderEndOfflineBody => Get("WindowsReaderEndOfflineBody");
+
+    /// <summary>The group's line under the series title. The chapter label comes from the source.</summary>
+    public static string WindowsReaderGroupLine(string chapter, long page, long total) => Fill(Get("WindowsReaderGroupLine"), ("chapter", chapter), ("page", page.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The group's line when a spread shows two pages.</summary>
+    public static string WindowsReaderGroupLineSpread(string chapter, long first, long second) => Fill(Get("WindowsReaderGroupLineSpread"), ("chapter", chapter), ("first", first.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("second", second.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The group's line for a strip of images.</summary>
+    public static string WindowsReaderGroupLineStrip(string chapter, long image, long total) => Fill(Get("WindowsReaderGroupLineStrip"), ("chapter", chapter), ("image", image.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The group's line for a novel in one long scroll.</summary>
+    public static string WindowsReaderGroupLineScroll(string chapter, long percent) => Fill(Get("WindowsReaderGroupLineScroll"), ("chapter", chapter), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>What a screen reader says when the page turns.</summary>
+    public static string WindowsReaderPageLabel(long page, long total) => Fill(Get("WindowsReaderPageLabel"), ("page", page.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>What a screen reader says when a spread turns.</summary>
+    public static string WindowsReaderPagesLabel(long first, long second, long total) => Fill(Get("WindowsReaderPagesLabel"), ("first", first.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("second", second.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Name of the scrubber, spoken.</summary>
+    public static string WindowsReaderScrubber => Get("WindowsReaderScrubber");
+
+    /// <summary>Button on the Resumed notice.</summary>
+    public static string WindowsReaderStartOver => Get("WindowsReaderStartOver");
+
+    /// <summary>Button on the Moved notice.</summary>
+    public static string WindowsReaderGoBack => Get("WindowsReaderGoBack");
+
+    /// <summary>Button on the reading mode notice, which opens the reader's settings.</summary>
+    public static string WindowsReaderChange => Get("WindowsReaderChange");
+
+    /// <summary>Heading of the settings that belong to one series.</summary>
+    public static string WindowsReaderThisSeries => Get("WindowsReaderThisSeries");
+
+    /// <summary>Heading of the manga settings that stay on this PC.</summary>
+    public static string WindowsReaderAllMangaPc => Get("WindowsReaderAllMangaPc");
+
+    /// <summary>Heading of the webtoon settings that stay on this PC.</summary>
+    public static string WindowsReaderAllStripsPc => Get("WindowsReaderAllStripsPc");
+
+    /// <summary>Heading of the novel settings.</summary>
+    public static string WindowsReaderAllNovels => Get("WindowsReaderAllNovels");
+
+    /// <summary>Row: how the series reads.</summary>
+    public static string WindowsReaderReadingMode => Get("WindowsReaderReadingMode");
+
+    /// <summary>The reading mode's value when it was guessed. The mode is "right to left", "left to right" or "strip".</summary>
+    public static string WindowsReaderModeAuto(string mode) => Fill(Get("WindowsReaderModeAuto"), ("mode", mode));
+
+    /// <summary>Option of the reading mode picker that lets Kaeri guess again.</summary>
+    public static string WindowsReaderModeAutoOption => Get("WindowsReaderModeAutoOption");
+
+    /// <summary>A guessed reading mode, inside "Auto · right to left".</summary>
+    public static string WindowsReaderModeRtlLower => Get("WindowsReaderModeRtlLower");
+
+    /// <summary>A guessed reading mode, inside "Auto · left to right".</summary>
+    public static string WindowsReaderModeLtrLower => Get("WindowsReaderModeLtrLower");
+
+    /// <summary>A guessed reading mode, inside "Auto · strip".</summary>
+    public static string WindowsReaderModeStripLower => Get("WindowsReaderModeStripLower");
+
+    /// <summary>Under the reading mode for a guessed mode.</summary>
+    public static string WindowsReaderModeDetectedNote => Get("WindowsReaderModeDetectedNote");
+
+    /// <summary>Under the reading mode for the series' own choice.</summary>
+    public static string WindowsReaderModeChoiceNote => Get("WindowsReaderModeChoiceNote");
+
+    /// <summary>Button that drops the series' own reading mode.</summary>
+    public static string WindowsReaderUseDefault => Get("WindowsReaderUseDefault");
+
+    /// <summary>A novel's reading mode: pages.</summary>
+    public static string WindowsReaderModePaged => Get("WindowsReaderModePaged");
+
+    /// <summary>A novel's reading mode: one long scroll.</summary>
+    public static string WindowsReaderModeScrolled => Get("WindowsReaderModeScrolled");
+
+    /// <summary>Row of the manga settings: one page or two.</summary>
+    public static string WindowsReaderPageLayout => Get("WindowsReaderPageLayout");
+
+    /// <summary>Row of the manga settings: how a page is fitted.</summary>
+    public static string WindowsReaderFit => Get("WindowsReaderFit");
+
+    /// <summary>A choice for how a page is fitted: to the window's height.</summary>
+    public static string WindowsReaderFitHeight => Get("WindowsReaderFitHeight");
+
+    /// <summary>Row of the manga settings.</summary>
+    public static string WindowsReaderCropBorders => Get("WindowsReaderCropBorders");
+
+    /// <summary>Row of the webtoon settings: the space between a strip's images.</summary>
+    public static string WindowsReaderGap => Get("WindowsReaderGap");
+
+    /// <summary>Row of the manga settings: what shows round the page.</summary>
+    public static string WindowsReaderBackground => Get("WindowsReaderBackground");
+
+    /// <summary>Row that opens Settings on its Reading pane.</summary>
+    public static string WindowsReaderMoreSettings => Get("WindowsReaderMoreSettings");
+
+    /// <summary>Row: the e-reader-like look.</summary>
+    public static string WindowsReaderPaperMode => Get("WindowsReaderPaperMode");
+
+    /// <summary>Under the Paper mode switch.</summary>
+    public static string WindowsReaderPaperModeNote => Get("WindowsReaderPaperModeNote");
+
+    /// <summary>Rows of the novel settings.</summary>
+    public static string WindowsReaderFont => Get("WindowsReaderFont");
+
+    public static string WindowsReaderTextSize => Get("WindowsReaderTextSize");
+
+    public static string WindowsReaderLineSpacing => Get("WindowsReaderLineSpacing");
+
+    /// <summary>A choice of line spacing.</summary>
+    public static string WindowsReaderLineTight => Get("WindowsReaderLineTight");
+
+    /// <summary>A choice of line spacing, and of margins.</summary>
+    public static string WindowsReaderLineNormal => Get("WindowsReaderLineNormal");
+
+    /// <summary>A choice of line spacing.</summary>
+    public static string WindowsReaderLineLoose => Get("WindowsReaderLineLoose");
+
+    public static string WindowsReaderMargins => Get("WindowsReaderMargins");
+
+    public static string WindowsReaderJustify => Get("WindowsReaderJustify");
+
+    /// <summary>Row of the novel settings: the page's colours.</summary>
+    public static string WindowsReaderLook => Get("WindowsReaderLook");
+
+    /// <summary>The text size's value.</summary>
+    public static string WindowsReaderPercent(long percent) => Fill(Get("WindowsReaderPercent"), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Button names of the text size row.</summary>
+    public static string WindowsReaderSmaller => Get("WindowsReaderSmaller");
+
+    public static string WindowsReaderLarger => Get("WindowsReaderLarger");
+
+    /// <summary>Tabs of the Chapters flyout.</summary>
+    public static string WindowsReaderPagesTab => Get("WindowsReaderPagesTab");
+
+    public static string WindowsReaderChaptersTab => Get("WindowsReaderChaptersTab");
+
+    /// <summary>A volume's heading in the chapter list.</summary>
+    public static string WindowsReaderVolume(string volume) => Fill(Get("WindowsReaderVolume"), ("volume", volume));
+
+    /// <summary>A chapter's length in the chapter list.</summary>
+    public static string WindowsReaderChapterPages(long pages) => Fill(GetPlural("WindowsReaderChapterPages", pages), ("pages", pages.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Name of a page in the page grid, spoken.</summary>
+    public static string WindowsReaderGridPage(long page) => Fill(Get("WindowsReaderGridPage"), ("page", page.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Name of an image in a strip, spoken when the strip settles on it and read by Narrator.</summary>
+    public static string WindowsReaderImageLabel(long image, long count) => Fill(Get("WindowsReaderImageLabel"), ("image", image.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Name and tooltip of the button that closes a novel's footnote.</summary>
+    public static string WindowsReaderNoteClose => Get("WindowsReaderNoteClose");
+
+    /// <summary>Name of the Back button at the top of the reading mode picker inside the reader settings.</summary>
+    public static string WindowsReaderBack => Get("WindowsReaderBack");
+
+    /// <summary>Option of the reading mode picker: pages one under another.</summary>
+    public static string WindowsReaderModeVertical => Get("WindowsReaderModeVertical");
+
+    /// <summary>A guessed reading mode, inside "Auto · vertical pages".</summary>
+    public static string WindowsReaderModeVerticalLower => Get("WindowsReaderModeVerticalLower");
+
+    /// <summary>Hint under Auto in the reading mode picker. The way is "Right to left", "Left to right", "Strip" or "Vertical pages".</summary>
+    public static string WindowsReaderModeAutoLine(string way) => Fill(Get("WindowsReaderModeAutoLine"), ("way", way));
+
+    /// <summary>Hint under Vertical pages in the reading mode picker.</summary>
+    public static string WindowsReaderModeVerticalLine => Get("WindowsReaderModeVerticalLine");
+
+    /// <summary>Hint under Strip in the reading mode picker.</summary>
+    public static string WindowsReaderModeStripLine => Get("WindowsReaderModeStripLine");
+
+    /// <summary>Line under the title of the Downloads page for reading when no chapter is kept on this PC.</summary>
+    public static string WindowsReadDownloadsEmptyDetail => Get("WindowsReadDownloadsEmptyDetail");
+
+    /// <summary>Said once by Narrator when a search with words has heard from AniList and every source. Failed sources follow as their own sentences.</summary>
+    public static string WindowsReadSearchFinished(long anilist, long sources) => Fill(Get("WindowsReadSearchFinished"), ("anilist", anilist.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("sources", sources.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Said once by Narrator when a search with Your sources only on has heard from every source.</summary>
+    public static string WindowsReadSearchFinishedSources(long sources) => Fill(Get("WindowsReadSearchFinishedSources"), ("sources", sources.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Said once by Narrator when Your sources only is turned on in Search.</summary>
+    public static string WindowsReadSearchAnilistHidden => Get("WindowsReadSearchAnilistHidden");
+
+    /// <summary>Narrator's words for a source that ran out of time in Search, read with its Try again.</summary>
+    public static string WindowsReadSearchSourceTimeoutSaid(long seconds) => Fill(GetPlural("WindowsReadSearchSourceTimeoutSaid", seconds), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Narrator's help on Search's filters while Your sources only is on.</summary>
+    public static string WindowsReadSearchFiltersDimmed => Get("WindowsReadSearchFiltersDimmed");
+
+    /// <summary>Name of the switch that turns a book plugin on or off in the book sources.</summary>
+    public static string WindowsReadSourcesUsePlugin => Get("WindowsReadSourcesUsePlugin");
+
+    /// <summary>Notice after Read again from the start, with an Undo button beside it. The title is the series' name.</summary>
+    public static string SeriesReadAgainDoneWindows(string title) => Fill(Get("SeriesReadAgainDoneWindows"), ("title", title));
+
+    /// <summary>Button in Send to e-reader, once the files are ready: saves them where the person picks instead of sharing them.</summary>
+    public static string SendSaveFilesWindows => Get("SendSaveFilesWindows");
+
+    /// <summary>Notice after the files for an e-reader were saved.</summary>
+    public static string SendSavedWindows(long n) => Fill(GetPlural("SendSavedWindows", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Notice when the files for an e-reader could not be saved where the person picked.</summary>
+    public static string SendSaveFailedWindows => Get("SendSaveFailedWindows");
+
+    /// <summary>Shown in place of the feed's address while the feed is on but this computer has no local network.</summary>
+    public static string OpdsPausedNoneWindows => Get("OpdsPausedNoneWindows");
+
+    /// <summary>Shown in place of the feed's address while the feed is on but the only connection goes through a VPN.</summary>
+    public static string OpdsPausedVpnWindows => Get("OpdsPausedVpnWindows");
+
+    /// <summary>Title of the dialog shown once, the first time the OPDS feed is switched on, before Windows asks whether Kaeri may use the network.</summary>
+    public static string FeedFirewallTitleWindows => Get("FeedFirewallTitleWindows");
+
+    /// <summary>Body of that dialog. "Private networks" and "public networks" are the names Windows' own question uses.</summary>
+    public static string FeedFirewallBodyWindows => Get("FeedFirewallBodyWindows");
+
+    /// <summary>Header of the group picker that opens from the Group row's Change on a series page. The source is a site or server name, such as "books.home.example".</summary>
+    public static string WindowsGroupPickerIn(string source) => Fill(Get("WindowsGroupPickerIn"), ("source", source));
 
     /// <summary>Busy line while Settings waits for the engine's values.</summary>
     public static string SettingsLoading => Get("SettingsLoading");
@@ -1234,7 +2212,7 @@ public static partial class T
     public static string SettingsSyncDetail => Get("SettingsSyncDetail");
 
     /// <summary>Under a tracker that is signed in, when its user name is unknown and changes wait to sync.</summary>
-    public static string SettingsSignedInWaiting(long count) => Fill(GetPlural("SettingsSignedInWaiting", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SettingsSignedInWaiting(long count) => Fill(GetPlural("SettingsSignedInWaiting", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Under a tracker that signs in with a code typed on its website.</summary>
     public static string SettingsSignedOutCode => Get("SettingsSignedOutCode");
@@ -1282,7 +2260,7 @@ public static partial class T
     public static string SettingsLanguageRestart => Get("SettingsLanguageRestart");
 
     /// <summary>Row title in Accounts: titles that differ between this device and the tracker since the last sync.</summary>
-    public static string SettingsDifferences(long count, string tracker) => Fill(GetPlural("SettingsDifferences", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("tracker", tracker));
+    public static string SettingsDifferences(long count, string tracker) => Fill(GetPlural("SettingsDifferences", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("tracker", tracker));
 
     /// <summary>Button in Accounts that opens the list of differences.</summary>
     public static string SettingsDifferencesReview => Get("SettingsDifferencesReview");
@@ -1324,10 +2302,10 @@ public static partial class T
     public static string CloseTitle => Get("CloseTitle");
 
     /// <summary>The close dialog's line: how many episodes are downloading. A sentence of its own.</summary>
-    public static string CloseDownloading(long count) => Fill(GetPlural("CloseDownloading", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CloseDownloading(long count) => Fill(GetPlural("CloseDownloading", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The close dialog's line: how many episodes are seeding. A sentence of its own.</summary>
-    public static string CloseSeeding(long count) => Fill(GetPlural("CloseSeeding", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CloseSeeding(long count) => Fill(GetPlural("CloseSeeding", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The close dialog's question, after the counts.</summary>
     public static string CloseAsk => Get("CloseAsk");
@@ -1363,7 +2341,7 @@ public static partial class T
     public static string NotifyDownloadedOne(string episode) => Fill(Get("NotifyDownloadedOne"), ("episode", episode));
 
     /// <summary>Notification body: several episodes of a show finished downloading.</summary>
-    public static string NotifyDownloaded(long count) => Fill(GetPlural("NotifyDownloaded", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string NotifyDownloaded(long count) => Fill(GetPlural("NotifyDownloaded", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Screen reader name of the update's progress bar in About.</summary>
     public static string UpdatesProgressName => Get("UpdatesProgressName");
@@ -1540,7 +2518,7 @@ public static partial class T
     public static string SourcesRemoveDetail => Get("SourcesRemoveDetail");
 
     /// <summary>Beside a { -plugin-store } in the list: how many of its installed { -plugin-pl } have an update.</summary>
-    public static string StoresUpdatesCount(long count) => Fill(GetPlural("StoresUpdatesCount", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string StoresUpdatesCount(long count) => Fill(GetPlural("StoresUpdatesCount", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>In the banner when a { -plugin-store } does not answer, under its title "Not answering".</summary>
     public static string StoresOfflineKeepWorking => Get("StoresOfflineKeepWorking");
@@ -1606,7 +2584,7 @@ public static partial class T
     public static string DevicesOpenName(string device) => Fill(Get("DevicesOpenName"), ("device", device));
 
     /// <summary>Under a release in the source picker: how many people share it right now.</summary>
-    public static string SourcePickerSeeders(long count) => Fill(GetPlural("SourcePickerSeeders", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SourcePickerSeeders(long count) => Fill(GetPlural("SourcePickerSeeders", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A transfer rate. The size is already formatted, such as "1.2 MB".</summary>
     public static string RatePerSecond(string size) => Fill(Get("RatePerSecond"), ("size", size));
@@ -1897,7 +2875,7 @@ public static partial class T
     public static string CastTorrentsNoteIpad => Get("CastTorrentsNoteIpad");
 
     /// <summary>Line on the casting card while the next episode counts down. The seconds are whole.</summary>
-    public static string CastUpNextPlaysIn(long seconds) => Fill(Get("CastUpNextPlaysIn"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CastUpNextPlaysIn(long seconds) => Fill(Get("CastUpNextPlaysIn"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The card's line when a cast never started. The name is the TV's.</summary>
     public static string CastCouldntStart(string name) => Fill(Get("CastCouldntStart"), ("name", name));
@@ -1927,22 +2905,22 @@ public static partial class T
     public static string ActionNotNow => Get("ActionNotNow");
 
     /// <summary>A span of time in whole days. The unit letter belongs to the language.</summary>
-    public static string DurationDays(long days) => Fill(Get("DurationDays"), ("days", days.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DurationDays(long days) => Fill(Get("DurationDays"), ("days", days.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A span of time in hours and minutes.</summary>
-    public static string DurationHoursMinutes(long hours, long minutes) => Fill(Get("DurationHoursMinutes"), ("hours", hours.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DurationHoursMinutes(long hours, long minutes) => Fill(Get("DurationHoursMinutes"), ("hours", hours.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A span of time in whole hours.</summary>
-    public static string DurationHours(long hours) => Fill(Get("DurationHours"), ("hours", hours.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DurationHours(long hours) => Fill(Get("DurationHours"), ("hours", hours.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A span of time in minutes.</summary>
-    public static string DurationMinutes(long minutes) => Fill(Get("DurationMinutes"), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DurationMinutes(long minutes) => Fill(Get("DurationMinutes"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A short wait in minutes and seconds. The seconds come with a leading zero.</summary>
-    public static string DurationMinutesSeconds(long minutes, string seconds) => Fill(Get("DurationMinutesSeconds"), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("seconds", seconds));
+    public static string DurationMinutesSeconds(long minutes, string seconds) => Fill(Get("DurationMinutesSeconds"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("seconds", seconds));
 
     /// <summary>A short wait in seconds.</summary>
-    public static string DurationSeconds(long seconds) => Fill(Get("DurationSeconds"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DurationSeconds(long seconds) => Fill(Get("DurationSeconds"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A file size in bytes. The number is already formatted.</summary>
     public static string SizeByte(string value) => Fill(Get("SizeByte"), ("value", value));
@@ -2122,10 +3100,10 @@ public static partial class T
     public static string TimeIn(string span) => Fill(Get("TimeIn"), ("span", span));
 
     /// <summary>Under a title or in a row: minutes left in an episode.</summary>
-    public static string TimeMinutesLeft(long minutes) => Fill(Get("TimeMinutesLeft"), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string TimeMinutesLeft(long minutes) => Fill(Get("TimeMinutesLeft"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A length in minutes, for an episode.</summary>
-    public static string TimeMinutes(long minutes) => Fill(Get("TimeMinutes"), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string TimeMinutes(long minutes) => Fill(Get("TimeMinutes"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A countdown that has run out: the thing is happening now. Lower case, as it stands inside a line.</summary>
     public static string TimeNowInline => Get("TimeNowInline");
@@ -2224,10 +3202,10 @@ public static partial class T
     public static string PadHelpPageDown => Get("PadHelpPageDown");
 
     /// <summary>Controller help: seeks back in the player.</summary>
-    public static string PadHelpSeekBack(long seconds) => Fill(GetPlural("PadHelpSeekBack", seconds), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PadHelpSeekBack(long seconds) => Fill(GetPlural("PadHelpSeekBack", seconds), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Controller help: seeks forward in the player.</summary>
-    public static string PadHelpSeekForward(long seconds) => Fill(GetPlural("PadHelpSeekForward", seconds), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PadHelpSeekForward(long seconds) => Fill(GetPlural("PadHelpSeekForward", seconds), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Controller help: skips the opening or ending while its offer shows.</summary>
     public static string PadHelpSkip => Get("PadHelpSkip");
@@ -2301,6 +3279,27 @@ public static partial class T
     /// <summary>Name of the controller's right stick, in the controller help.</summary>
     public static string PadButtonRightStick => Get("PadButtonRightStick");
 
+    /// <summary>Controller help: the D-pad in the reader turns the page, the way the book reads.</summary>
+    public static string PadHelpTurnPage => Get("PadHelpTurnPage");
+
+    /// <summary>Controller help: the left shoulder button in the reader.</summary>
+    public static string PadHelpPreviousChapter => Get("PadHelpPreviousChapter");
+
+    /// <summary>Controller help: the right shoulder button in the reader.</summary>
+    public static string PadHelpNextChapter => Get("PadHelpNextChapter");
+
+    /// <summary>Controller help: the A button in the reader shows or hides the bar with the title and settings.</summary>
+    public static string PadHelpReaderBar => Get("PadHelpReaderBar");
+
+    /// <summary>Controller help: the menu button in the reader.</summary>
+    public static string PadHelpReaderSettings => Get("PadHelpReaderSettings");
+
+    /// <summary>Controller help: the B button in the reader.</summary>
+    public static string PadHelpCloseReader => Get("PadHelpCloseReader");
+
+    /// <summary>Heading in the controller help for the buttons in the reader.</summary>
+    public static string PadHelpReader => Get("PadHelpReader");
+
     /// <summary>Checkbox of the close question.</summary>
     public static string CloseDontAsk => Get("CloseDontAsk");
 
@@ -2368,7 +3367,7 @@ public static partial class T
     public static string TvVolumeDown => Get("TvVolumeDown");
 
     /// <summary>The TV's volume as a value of 100.</summary>
-    public static string TvVolumeOf(long volume) => Fill(Get("TvVolumeOf"), ("volume", volume.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string TvVolumeOf(long volume) => Fill(Get("TvVolumeOf"), ("volume", volume.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Accessible label of the button that turns the TV up.</summary>
     public static string TvVolumeUp => Get("TvVolumeUp");
@@ -2401,10 +3400,10 @@ public static partial class T
     public static string DiscussionTitleEpisode(long episode) => Fill(Get("DiscussionTitleEpisode"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Quiet line under an episode that opens its discussion.</summary>
-    public static string DiscussionRow(long count) => Fill(GetPlural("DiscussionRow", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DiscussionRow(long count) => Fill(GetPlural("DiscussionRow", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Count of comments in the header of the discussion.</summary>
-    public static string DiscussionCount(long count) => Fill(GetPlural("DiscussionCount", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DiscussionCount(long count) => Fill(GetPlural("DiscussionCount", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Button that likes a comment, with its count after it. Also its accessible name.</summary>
     public static string DiscussionLike => Get("DiscussionLike");
@@ -2413,7 +3412,7 @@ public static partial class T
     public static string DiscussionReply => Get("DiscussionReply");
 
     /// <summary>Line under a reply that has more replies folded in it. The line opens them.</summary>
-    public static string DiscussionMoreReplies(long count) => Fill(GetPlural("DiscussionMoreReplies", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DiscussionMoreReplies(long count) => Fill(GetPlural("DiscussionMoreReplies", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Muted bar in place of a spoiler in a comment, until it is opened.</summary>
     public static string DiscussionSpoiler => Get("DiscussionSpoiler");
@@ -2525,6 +3524,12 @@ public static partial class T
 
     /// <summary>Line under the empty title.</summary>
     public static string DownloadsEmptyDetail => Get("DownloadsEmptyDetail");
+
+    /// <summary>Downloads' empty line for a person who only reads, under "No downloads".</summary>
+    public static string ReadDownloadsEmptyDetail => Get("ReadDownloadsEmptyDetail");
+
+    /// <summary>Downloads' empty line for a person who watches and reads, under "No downloads".</summary>
+    public static string ReadDownloadsEmptyBoth => Get("ReadDownloadsEmptyBoth");
 
     /// <summary>Title when the list could not be read.</summary>
     public static string DownloadsLoadFailed => Get("DownloadsLoadFailed");
@@ -2662,7 +3667,7 @@ public static partial class T
     public static string DownloadsNoticeDoneDetail(string title) => Fill(Get("DownloadsNoticeDoneDetail"), ("title", title));
 
     /// <summary>Notification text while several episodes download.</summary>
-    public static string DownloadsNoticeRunning(long count) => Fill(GetPlural("DownloadsNoticeRunning", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DownloadsNoticeRunning(long count) => Fill(GetPlural("DownloadsNoticeRunning", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Notification text: first line of one running download.</summary>
     public static string DownloadsNoticeEpisodeLeft(long episode, string left) => Fill(Get("DownloadsNoticeEpisodeLeft"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("left", left));
@@ -2690,6 +3695,63 @@ public static partial class T
 
     /// <summary>Line under that button after a failure.</summary>
     public static string EpisodeDownloadFailed(long episode) => Fill(Get("EpisodeDownloadFailed"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>First run, page 2 of 5.</summary>
+    public static string FirstOtherTitle => Get("FirstOtherTitle");
+
+    /// <summary>Under the title.</summary>
+    public static string FirstOtherLine => Get("FirstOtherLine");
+
+    /// <summary>Line under the pair row.</summary>
+    public static string FirstOtherPairLine => Get("FirstOtherPairLine");
+
+    /// <summary>Row that restores from a sync folder.</summary>
+    public static string FirstOtherRestore => Get("FirstOtherRestore");
+
+    /// <summary>Line under it.</summary>
+    public static string FirstOtherRestoreLine => Get("FirstOtherRestoreLine");
+
+    /// <summary>Primary action: go on with the first run on this device alone.</summary>
+    public static string FirstOtherNo => Get("FirstOtherNo");
+
+    /// <summary>Beside a spinner, after 600 ms.</summary>
+    public static string PairWaiting => Get("PairWaiting");
+
+    /// <summary>After 30 seconds with nothing.</summary>
+    public static string PairNothingYet => Get("PairNothingYet");
+
+    /// <summary>Group header for what the other device brings.</summary>
+    public static string FirstJoinGroup(string device) => Fill(Get("FirstJoinGroup"), ("device", device));
+
+    /// <summary>Row while the rest arrives.</summary>
+    public static string FirstJoinLooking(string device) => Fill(Get("FirstJoinLooking"), ("device", device));
+
+    /// <summary>Row with a pop-up of Watch, Read and Both.</summary>
+    public static string FirstJoinMedium => Get("FirstJoinMedium");
+
+    /// <summary>Line under it when the other device reads.</summary>
+    public static string FirstJoinMediumLine(string device) => Fill(Get("FirstJoinMediumLine"), ("device", device));
+
+    /// <summary>Line under the sign-ins switch: the trackers the other device is signed in to, already joined.</summary>
+    public static string FirstJoinSigninsLine(string trackers) => Fill(Get("FirstJoinSigninsLine"), ("trackers", trackers));
+
+    /// <summary>Switch, one per book server.</summary>
+    public static string FirstJoinServer(string host) => Fill(Get("FirstJoinServer"), ("host", host));
+
+    /// <summary>Line under a server's switch. The kind is Komga, Kavita or OPDS; the store is Keychain or Android Keystore.</summary>
+    public static string FirstJoinServerLine(string kind, string device, string store) => Fill(Get("FirstJoinServerLine"), ("kind", kind), ("device", device), ("store", store));
+
+    /// <summary>Note under the list.</summary>
+    public static string FirstJoinFolders(string device) => Fill(Get("FirstJoinFolders"), ("device", device));
+
+    /// <summary>Note when the setup answered the remaining pages.</summary>
+    public static string FirstJoinStepsDone => Get("FirstJoinStepsDone");
+
+    /// <summary>Row error when a plugin store refused this device.</summary>
+    public static string FirstJoinStoreRefused(string store, string owner) => Fill(Get("FirstJoinStoreRefused"), ("store", store), ("owner", owner));
+
+    /// <summary>Notice on Home, for 4 seconds.</summary>
+    public static string FirstJoinSyncing(string device) => Fill(Get("FirstJoinSyncing"), ("device", device));
 
     /// <summary>Name of the Home section in the sidebar, the tab bar and the window title.</summary>
     public static string HomeTitle => Get("HomeTitle");
@@ -2719,7 +3781,7 @@ public static partial class T
     public static string HomeRemoveContinue => Get("HomeRemoveContinue");
 
     /// <summary>Count beside the { -continue-cap } heading when there are more than twelve shows.</summary>
-    public static string HomeContinueCount(long count) => Fill(GetPlural("HomeContinueCount", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string HomeContinueCount(long count) => Fill(GetPlural("HomeContinueCount", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Link beside a heading that opens the full list.</summary>
     public static string HomeViewAll => Get("HomeViewAll");
@@ -2734,7 +3796,7 @@ public static partial class T
     public static string HomeNothingAiring => Get("HomeNothingAiring");
 
     /// <summary>A day of This week with more titles than fit.</summary>
-    public static string HomeDayMore(long count) => Fill(Get("HomeDayMore"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string HomeDayMore(long count) => Fill(Get("HomeDayMore"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Link beside This season and Starting in that opens Seasonal.</summary>
     public static string HomeSeasonal => Get("HomeSeasonal");
@@ -2806,16 +3868,16 @@ public static partial class T
     public static string HomeSynced => Get("HomeSynced");
 
     /// <summary>Continue row subtitle. The show's title is cut first when the row is short.</summary>
-    public static string QueueEpisodesLeft(long count, string title) => Fill(GetPlural("QueueEpisodesLeft", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("title", title));
+    public static string QueueEpisodesLeft(long count, string title) => Fill(GetPlural("QueueEpisodesLeft", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("title", title));
 
     /// <summary>A number of episodes, alone: a badge or a count under a title.</summary>
-    public static string EpisodesCount(long count) => Fill(GetPlural("EpisodesCount", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string EpisodesCount(long count) => Fill(GetPlural("EpisodesCount", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>How far through a show a person is. The plural follows the total.</summary>
-    public static string ProgressEpisodes(long watched, long total) => Fill(GetPlural("ProgressEpisodes", total), ("watched", watched.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ProgressEpisodes(long watched, long total) => Fill(GetPlural("ProgressEpisodes", total), ("watched", watched.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A span of time to the next episode, in days and hours. The unit letters belong to the language.</summary>
-    public static string DurationDaysHours(long days, long hours) => Fill(Get("DurationDaysHours"), ("days", days.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("hours", hours.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DurationDaysHours(long days, long hours) => Fill(Get("DurationDaysHours"), ("days", days.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("hours", hours.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Group header on the library and continue screens.</summary>
     public static string GroupInProgress => Get("GroupInProgress");
@@ -2998,25 +4060,25 @@ public static partial class T
     public static string UpNextOut(string ago) => Fill(Get("UpNextOut"), ("ago", ago));
 
     /// <summary>Line of a folder's row while it is scanned.</summary>
-    public static string LibraryRowScanning(long files) => Fill(GetPlural("LibraryRowScanning", files), ("files", files.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibraryRowScanning(long files) => Fill(GetPlural("LibraryRowScanning", files), ("files", files.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line of a folder's row while its series are matched to AniList.</summary>
-    public static string LibraryRowMatching(long done, long total) => Fill(Get("LibraryRowMatching"), ("done", done.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibraryRowMatching(long done, long total) => Fill(Get("LibraryRowMatching"), ("done", done.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Added to the matching line while the limiter holds requests back.</summary>
-    public static string LibraryRowWaiting(long seconds) => Fill(Get("LibraryRowWaiting"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibraryRowWaiting(long seconds) => Fill(Get("LibraryRowWaiting"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line of a folder row when it is done, such as "214 episodes of 18 series". Both parts are worded already by library-episodes and library-series.</summary>
     public static string LibraryRowSummary(string episodes, string series) => Fill(Get("LibraryRowSummary"), ("episodes", episodes), ("series", series));
 
     /// <summary>The episodes part of a folder's summary line.</summary>
-    public static string LibraryEpisodes(long count) => Fill(GetPlural("LibraryEpisodes", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibraryEpisodes(long count) => Fill(GetPlural("LibraryEpisodes", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The series part of a folder's summary line.</summary>
-    public static string LibrarySeries(long count) => Fill(GetPlural("LibrarySeries", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibrarySeries(long count) => Fill(GetPlural("LibrarySeries", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Ends the summary line when some series need a look.</summary>
-    public static string LibraryRowNeedsLook(long count) => Fill(Get("LibraryRowNeedsLook"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibraryRowNeedsLook(long count) => Fill(Get("LibraryRowNeedsLook"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line of a folder on a drive that is not connected.</summary>
     public static string LibraryRowDriveOffline => Get("LibraryRowDriveOffline");
@@ -3055,10 +4117,10 @@ public static partial class T
     public static string LibraryNotMatched => Get("LibraryNotMatched");
 
     /// <summary>Row that opens the list of matched series.</summary>
-    public static string LibraryMatched(long count) => Fill(Get("LibraryMatched"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibraryMatched(long count) => Fill(Get("LibraryMatched"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line under a row in Needs a look.</summary>
-    public static string LibraryBestGuess(string title, long percent) => Fill(Get("LibraryBestGuess"), ("title", title), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibraryBestGuess(string title, long percent) => Fill(Get("LibraryBestGuess"), ("title", title), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Prompt of the folder chooser.</summary>
     public static string LibraryPickerPrompt => Get("LibraryPickerPrompt");
@@ -3067,19 +4129,19 @@ public static partial class T
     public static string LibraryPickerMessage => Get("LibraryPickerMessage");
 
     /// <summary>What a title in the match list says about how well it fits the files.</summary>
-    public static string LibraryFixConfidence(long percent) => Fill(Get("LibraryFixConfidence"), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibraryFixConfidence(long percent) => Fill(Get("LibraryFixConfidence"), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Button that shows a folder in the file manager.</summary>
     public static string LibraryOpenFolder => Get("LibraryOpenFolder");
 
     /// <summary>Row line: how many series are matched.</summary>
-    public static string LibraryMatchedCount(long count) => Fill(Get("LibraryMatchedCount"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibraryMatchedCount(long count) => Fill(Get("LibraryMatchedCount"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The series count of that line.</summary>
-    public static string LibraryRowSeries(long count) => Fill(GetPlural("LibraryRowSeries", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibraryRowSeries(long count) => Fill(GetPlural("LibraryRowSeries", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line of a folder's row once scanned.</summary>
-    public static string LibraryRowFiles(long files) => Fill(GetPlural("LibraryRowFiles", files), ("files", files.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibraryRowFiles(long files) => Fill(GetPlural("LibraryRowFiles", files), ("files", files.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Button that shows a folder in Finder.</summary>
     public static string LibraryShowFinder => Get("LibraryShowFinder");
@@ -3088,7 +4150,7 @@ public static partial class T
     public static string LibraryRemoveLine => Get("LibraryRemoveLine");
 
     /// <summary>Line of a file group: how many files it holds.</summary>
-    public static string LibraryFiles(long count) => Fill(GetPlural("LibraryFiles", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibraryFiles(long count) => Fill(GetPlural("LibraryFiles", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Why a file group is not matched.</summary>
     public static string LibraryReasonNoEpisode => Get("LibraryReasonNoEpisode");
@@ -3124,7 +4186,7 @@ public static partial class T
     public static string LibraryConnectDrive => Get("LibraryConnectDrive");
 
     /// <summary>Line under a title in the match sheet when its episode count does not fit the folder.</summary>
-    public static string LibraryFixCountMismatch(long titleEpisodes, long files) => Fill(Get("LibraryFixCountMismatch"), ("titleEpisodes", titleEpisodes.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("files", files.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibraryFixCountMismatch(long titleEpisodes, long files) => Fill(Get("LibraryFixCountMismatch"), ("titleEpisodes", titleEpisodes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("files", files.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Text button under the results of the match dialog.</summary>
     public static string LibraryLeaveUnmatched => Get("LibraryLeaveUnmatched");
@@ -3175,7 +4237,7 @@ public static partial class T
     public static string LibraryRemoved(string name) => Fill(Get("LibraryRemoved"), ("name", name));
 
     /// <summary>How well a title fits a group of files, in the match sheet.</summary>
-    public static string LibraryMatchPercent(long percent) => Fill(Get("LibraryMatchPercent"), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibraryMatchPercent(long percent) => Fill(Get("LibraryMatchPercent"), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Title of the page.</summary>
     public static string LicensedTitle => Get("LicensedTitle");
@@ -3193,7 +4255,7 @@ public static partial class T
     public static string LicensedYours => Get("LicensedYours");
 
     /// <summary>Row that shows the rest of the services.</summary>
-    public static string LicensedShowAll(long count) => Fill(Get("LicensedShowAll"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LicensedShowAll(long count) => Fill(Get("LicensedShowAll"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Choice in the Region picker that follows the device's own country.</summary>
     public static string LicensedRegionSystem => Get("LicensedRegionSystem");
@@ -3361,13 +4423,13 @@ public static partial class T
     public static string MediaLinkLanguage(string language) => Fill(Get("MediaLinkLanguage"), ("language", language));
 
     /// <summary>Length of a film or a single episode, in its metadata line: hours and the minutes past them, such as "1 h 52 min".</summary>
-    public static string FilmLengthHoursMinutes(long hours, long minutes) => Fill(Get("FilmLengthHoursMinutes"), ("hours", hours.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string FilmLengthHoursMinutes(long hours, long minutes) => Fill(Get("FilmLengthHoursMinutes"), ("hours", hours.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Length of a film or a single episode that is a whole number of hours, such as "2 h".</summary>
-    public static string FilmLengthHours(long hours) => Fill(Get("FilmLengthHours"), ("hours", hours.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string FilmLengthHours(long hours) => Fill(Get("FilmLengthHours"), ("hours", hours.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Length of a film or a single episode under an hour, such as "46 min".</summary>
-    public static string FilmLengthMinutes(long minutes) => Fill(Get("FilmLengthMinutes"), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string FilmLengthMinutes(long minutes) => Fill(Get("FilmLengthMinutes"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Country name: the origin filter and, after "Made in", the title facts.</summary>
     public static string CountryJapan => Get("CountryJapan");
@@ -3799,10 +4861,10 @@ public static partial class T
     public static string PartyWaitTwo(string first, string second) => Fill(Get("PartyWaitTwo"), ("first", first), ("second", second));
 
     /// <summary>Line when more than two members are still to be ready.</summary>
-    public static string PartyWaitMany(long count) => Fill(Get("PartyWaitMany"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartyWaitMany(long count) => Fill(Get("PartyWaitMany"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Connection line while the party reconnects.</summary>
-    public static string PartyConnectionLost(long attempt, long of) => Fill(Get("PartyConnectionLost"), ("attempt", attempt.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("of", of.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartyConnectionLost(long attempt, long of) => Fill(Get("PartyConnectionLost"), ("attempt", attempt.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("of", of.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Connection line: encrypted.</summary>
     public static string PartyConnectedEncrypted => Get("PartyConnectedEncrypted");
@@ -3811,7 +4873,7 @@ public static partial class T
     public static string PartyConnectedPlain => Get("PartyConnectedPlain");
 
     /// <summary>Connection line with the round trip time.</summary>
-    public static string PartyConnectedLatency(string line, long ms) => Fill(Get("PartyConnectedLatency"), ("line", line), ("ms", ms.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartyConnectedLatency(string line, long ms) => Fill(Get("PartyConnectedLatency"), ("line", line), ("ms", ms.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line under the invite link button before any episode plays.</summary>
     public static string PartyInviteAfterPlay => Get("PartyInviteAfterPlay");
@@ -3865,13 +4927,13 @@ public static partial class T
     public static string PartyNosourceUnairedPlain => Get("PartyNosourceUnairedPlain");
 
     /// <summary>Line over the list of sources that list the episode.</summary>
-    public static string PartySourcesFound(long count) => Fill(GetPlural("PartySourcesFound", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartySourcesFound(long count) => Fill(GetPlural("PartySourcesFound", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Accessibility label of the list of sources for the episode.</summary>
     public static string PartySourcesLabel => Get("PartySourcesLabel");
 
     /// <summary>Line of a source: its quality and size already formatted, and the number of seeders.</summary>
-    public static string PartySourceSeeders(long seeders) => Fill(Get("PartySourceSeeders"), ("seeders", seeders.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartySourceSeeders(long seeders) => Fill(Get("PartySourceSeeders"), ("seeders", seeders.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line when no source lists the episode.</summary>
     public static string PartyNoSourceLists(string episode) => Fill(Get("PartyNoSourceLists"), ("episode", episode));
@@ -3913,7 +4975,7 @@ public static partial class T
     public static string TogetherInParty => Get("TogetherInParty");
 
     /// <summary>Line of the In a party block. The episode is a number or label.</summary>
-    public static string TogetherInPartyLine(string episode, long count, long ready) => Fill(Get("TogetherInPartyLine"), ("episode", episode), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("ready", ready.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string TogetherInPartyLine(string episode, long count, long ready) => Fill(Get("TogetherInPartyLine"), ("episode", episode), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("ready", ready.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Button that opens the lobby of the watch party you are in.</summary>
     public static string TogetherOpenLobby => Get("TogetherOpenLobby");
@@ -3937,7 +4999,7 @@ public static partial class T
     public static string TogetherForgetRoom => Get("TogetherForgetRoom");
 
     /// <summary>Line that says who is in a recent room now, after looking in. The names are already joined.</summary>
-    public static string TogetherSomeoneHere(string names, long count) => Fill(GetPlural("TogetherSomeoneHere", count), ("names", names), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string TogetherSomeoneHere(string names, long count) => Fill(GetPlural("TogetherSomeoneHere", count), ("names", names), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line that says a recent room has nobody in it now.</summary>
     public static string TogetherNobodyHere => Get("TogetherNobodyHere");
@@ -3949,7 +5011,7 @@ public static partial class T
     public static string TogetherServerSuggested(string @operator) => Fill(Get("TogetherServerSuggested"), ("operator", @operator));
 
     /// <summary>Line under a server that parties were held on.</summary>
-    public static string TogetherServerUsed(long count) => Fill(GetPlural("TogetherServerUsed", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string TogetherServerUsed(long count) => Fill(GetPlural("TogetherServerUsed", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Button that adds a server to the list.</summary>
     public static string TogetherAddServer => Get("TogetherAddServer");
@@ -3985,7 +5047,7 @@ public static partial class T
     public static string PartyStillInRoom => Get("PartyStillInRoom");
 
     /// <summary>Line in the lobby that counts the room.</summary>
-    public static string PartyLobbyCount(long ready, long count) => Fill(Get("PartyLobbyCount"), ("ready", ready.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartyLobbyCount(long ready, long count) => Fill(Get("PartyLobbyCount"), ("ready", ready.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line in the lobby of an invite: who invited.</summary>
     public static string PartyInvitedBy(string name) => Fill(Get("PartyInvitedBy"), ("name", name));
@@ -4005,7 +5067,7 @@ public static partial class T
     /// <summary>State of a member who is watching. The time is already formatted, such as 2:14.</summary>
     public static string PartyMemberWatchingFrom(string time) => Fill(Get("PartyMemberWatchingFrom"), ("time", time));
 
-    /// <summary>Label of the I'm ready button once you are ready.</summary>
+    /// <summary>Label of the Ready to watch button once you are ready.</summary>
     public static string PartyReadyOn => Get("PartyReadyOn");
 
     /// <summary>Heading of the invite block in the lobby.</summary>
@@ -4030,7 +5092,7 @@ public static partial class T
     public static string PartyStartAnyway => Get("PartyStartAnyway");
 
     /// <summary>Line during the three second count before play.</summary>
-    public static string PartyStarting(long seconds) => Fill(Get("PartyStarting"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartyStarting(long seconds) => Fill(Get("PartyStarting"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Button in the lobby that changes the room's episode.</summary>
     public static string PartyChangeEpisode => Get("PartyChangeEpisode");
@@ -4090,7 +5152,7 @@ public static partial class T
     public static string PartyBarTitle(string title, string episode) => Fill(Get("PartyBarTitle"), ("title", title), ("episode", episode));
 
     /// <summary>Second line of the bar above the tabs.</summary>
-    public static string PartyBarLine(long count, long ready) => Fill(Get("PartyBarLine"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("ready", ready.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartyBarLine(long count, long ready) => Fill(Get("PartyBarLine"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("ready", ready.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Second line of the bar when nothing plays for you.</summary>
     public static string PartyBarIdle => Get("PartyBarIdle");
@@ -4108,10 +5170,10 @@ public static partial class T
     public static string PartySeekedBy(string name, string time) => Fill(Get("PartySeekedBy"), ("name", name), ("time", time));
 
     /// <summary>Line on the Up Next card in a party.</summary>
-    public static string PartyNextLine(long seconds) => Fill(Get("PartyNextLine"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartyNextLine(long seconds) => Fill(Get("PartyNextLine"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line on the starting screen while the room waits for a member.</summary>
-    public static string PartyNextWaiting(string name, long seconds) => Fill(Get("PartyNextWaiting"), ("name", name), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartyNextWaiting(string name, long seconds) => Fill(Get("PartyNextWaiting"), ("name", name), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Notice when a member who was behind joins. The time is already formatted.</summary>
     public static string PartyNextJoinedAt(string name, string time) => Fill(Get("PartyNextJoinedAt"), ("name", name), ("time", time));
@@ -4174,7 +5236,7 @@ public static partial class T
     public static string PartyInTheRoom => Get("PartyInTheRoom");
 
     /// <summary>Beside that heading while looking into a room before joining it: how many are there.</summary>
-    public static string PartyHereCount(long count) => Fill(Get("PartyHereCount"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartyHereCount(long count) => Fill(Get("PartyHereCount"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Beside the Recent rooms heading.</summary>
     public static string TogetherRecentNote => Get("TogetherRecentNote");
@@ -4192,13 +5254,13 @@ public static partial class T
     public static string PartyChatTitle => Get("PartyChatTitle");
 
     /// <summary>End of the chat field while sending waits, after three messages in five seconds.</summary>
-    public static string PartyChatWait(long seconds) => Fill(Get("PartyChatWait"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartyChatWait(long seconds) => Fill(Get("PartyChatWait"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Spoken once when sending waits, for screen readers.</summary>
-    public static string PartyChatWaitSpoken(long seconds) => Fill(GetPlural("PartyChatWaitSpoken", seconds), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartyChatWaitSpoken(long seconds) => Fill(GetPlural("PartyChatWaitSpoken", seconds), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line after the three newest chat lines on the video, which opens the conversation.</summary>
-    public static string PartyChatMore(long count) => Fill(Get("PartyChatMore"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartyChatMore(long count) => Fill(Get("PartyChatMore"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Notice when the room's server has chat turned off, and the line that replaces the field.</summary>
     public static string PartyChatOff => Get("PartyChatOff");
@@ -4279,7 +5341,7 @@ public static partial class T
     public static string PartyNamesThree(string first, string second, string third) => Fill(Get("PartyNamesThree"), ("first", first), ("second", second), ("third", third));
 
     /// <summary>More than three members named together: two names and how many others.</summary>
-    public static string PartyNamesOthers(string first, string second, long count) => Fill(Get("PartyNamesOthers"), ("first", first), ("second", second), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartyNamesOthers(string first, string second, long count) => Fill(Get("PartyNamesOthers"), ("first", first), ("second", second), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Name of this device's own member in the conversation and on its reactions.</summary>
     public static string PartyChatYou => Get("PartyChatYou");
@@ -4294,7 +5356,7 @@ public static partial class T
     public static string PartyChatAnnounce(string name, string message) => Fill(Get("PartyChatAnnounce"), ("name", name), ("message", message));
 
     /// <summary>Spoken by a screen reader once, when 20 characters are left in the chat field.</summary>
-    public static string PartyChatLeft(long count) => Fill(GetPlural("PartyChatLeft", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartyChatLeft(long count) => Fill(GetPlural("PartyChatLeft", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Label on the card for the episode that plays after this one.</summary>
     public static string PlayerUpNext => Get("PlayerUpNext");
@@ -4306,7 +5368,7 @@ public static partial class T
     public static string PlayerStarting(long episode) => Fill(Get("PlayerStarting"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line on the starting screen after a few seconds: the app is looking for a stream.</summary>
-    public static string PlayerFindingSource(long seconds) => Fill(Get("PlayerFindingSource"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PlayerFindingSource(long seconds) => Fill(Get("PlayerFindingSource"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Same line before the wait is counted.</summary>
     public static string PlayerFindingSourcePlain => Get("PlayerFindingSourcePlain");
@@ -4333,7 +5395,7 @@ public static partial class T
     public static string PlayerBuffering => Get("PlayerBuffering");
 
     /// <summary>Detail line while a source is asked and more than one is in the viewer's order.</summary>
-    public static string PlayerStartPlace(long place, long total) => Fill(Get("PlayerStartPlace"), ("place", place.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PlayerStartPlace(long place, long total) => Fill(Get("PlayerStartPlace"), ("place", place.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Detail line while the source asked is the one the show is pinned to.</summary>
     public static string PlayerStartPinned => Get("PlayerStartPinned");
@@ -4343,6 +5405,9 @@ public static partial class T
 
     /// <summary>Detail line when a source has the show and not the episode. The episode is its label.</summary>
     public static string PlayerStartMissNoEpisode(string name, string episode) => Fill(Get("PlayerStartMissNoEpisode"), ("name", name), ("episode", episode));
+
+    /// <summary>Detail line when the show is pinned to a source that does not have the episode yet, and the next source plays it.</summary>
+    public static string PlayerStartPinMissed(string name, string episode) => Fill(Get("PlayerStartPinMissed"), ("name", name), ("episode", episode));
 
     /// <summary>Detail line when a source failed and the next is asked.</summary>
     public static string PlayerStartMissFailed(string name) => Fill(Get("PlayerStartMissFailed"), ("name", name));
@@ -4363,10 +5428,10 @@ public static partial class T
     public static string PlayerStartNoVideo => Get("PlayerStartNoVideo");
 
     /// <summary>Detail line with the place of the stream being opened.</summary>
-    public static string PlayerStartStreamPlace(long next, long total) => Fill(Get("PlayerStartStreamPlace"), ("next", next.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PlayerStartStreamPlace(long next, long total) => Fill(Get("PlayerStartStreamPlace"), ("next", next.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Detail line while a torrent has peers.</summary>
-    public static string PlayerStartPeers(long count) => Fill(GetPlural("PlayerStartPeers", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PlayerStartPeers(long count) => Fill(GetPlural("PlayerStartPeers", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Detail line with the speed data arrives at, already sized with one decimal, such as "3.4 MB".</summary>
     public static string PlayerStartSpeed(string speed) => Fill(Get("PlayerStartSpeed"), ("speed", speed));
@@ -4408,7 +5473,7 @@ public static partial class T
     public static string PlayerStartLookedUp => Get("PlayerStartLookedUp");
 
     /// <summary>Seconds on the starting screen's detail line and Details rows.</summary>
-    public static string PlayerStartSeconds(long seconds) => Fill(Get("PlayerStartSeconds"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PlayerStartSeconds(long seconds) => Fill(Get("PlayerStartSeconds"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Spoken once, when a start has taken more than a few seconds.</summary>
     public static string PlayerStartStillStarting => Get("PlayerStartStillStarting");
@@ -4450,7 +5515,7 @@ public static partial class T
     public static string PlayerStartSubtitled => Get("PlayerStartSubtitled");
 
     /// <summary>Title of the stall card. The seconds count up.</summary>
-    public static string PlayerStallTitle(long seconds) => Fill(Get("PlayerStallTitle"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PlayerStallTitle(long seconds) => Fill(Get("PlayerStallTitle"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line under the stall title.</summary>
     public static string PlayerStallDetail => Get("PlayerStallDetail");
@@ -4462,7 +5527,7 @@ public static partial class T
     public static string PlayerKeepWaiting => Get("PlayerKeepWaiting");
 
     /// <summary>Line on the Up next card: the episode starts when the count ends.</summary>
-    public static string PlayerPlaysIn(long seconds) => Fill(Get("PlayerPlaysIn"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PlayerPlaysIn(long seconds) => Fill(Get("PlayerPlaysIn"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Button that skips the opening.</summary>
     public static string PlayerSkipOpening => Get("PlayerSkipOpening");
@@ -4676,7 +5741,7 @@ public static partial class T
     public static string PlayerStillWatching => Get("PlayerStillWatching");
 
     /// <summary>Line under the still-watching title.</summary>
-    public static string PlayerStillWatchingDetail(long count) => Fill(GetPlural("PlayerStillWatchingDetail", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PlayerStillWatchingDetail(long count) => Fill(GetPlural("PlayerStillWatchingDetail", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Button on the still-watching card that goes on.</summary>
     public static string PlayerStillWatchingContinue => Get("PlayerStillWatchingContinue");
@@ -4850,7 +5915,7 @@ public static partial class T
     public static string PlayerTrackN(long id) => Fill(Get("PlayerTrackN"), ("id", id.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line while an episode starts after a few seconds: what the wait is on, and for how long.</summary>
-    public static string PlayerWaitNote(string what, long seconds) => Fill(Get("PlayerWaitNote"), ("what", what), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PlayerWaitNote(string what, long seconds) => Fill(Get("PlayerWaitNote"), ("what", what), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Message on the video when the player could not make a change the viewer asked for, such as a speed or a track.</summary>
     public static string PlayerCommandFailed => Get("PlayerCommandFailed");
@@ -4881,6 +5946,1897 @@ public static partial class T
 
     /// <summary>Button in the subtitles panel that opens Settings.</summary>
     public static string PlayerSubsMore => Get("PlayerSubsMore");
+
+    /// <summary>Under a page that is still loading after four seconds.</summary>
+    public static string ReaderPageLoading(long page) => Fill(Get("ReaderPageLoading"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>On the plate of a page that is still loading.</summary>
+    public static string ReaderPagePlate(long page) => Fill(Get("ReaderPagePlate"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>On the plate of a strip image that is still loading.</summary>
+    public static string ReaderImagePlate(long image) => Fill(Get("ReaderImagePlate"), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a strip image's number after four seconds.</summary>
+    public static string ReaderImageLoading(long image) => Fill(Get("ReaderImageLoading"), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a strip image's number (Image 4) when it couldn't be loaded, above Try again.</summary>
+    public static string ReaderImageFailed => Get("ReaderImageFailed");
+
+    /// <summary>Heading where a page could not be loaded.</summary>
+    public static string ReaderPageFailed(long page) => Fill(Get("ReaderPageFailed"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Button that loads a failed page again.</summary>
+    public static string ReaderTryAgain => Get("ReaderTryAgain");
+
+    /// <summary>Closes the reader and goes back to the series.</summary>
+    public static string ReaderClose => Get("ReaderClose");
+
+    /// <summary>Under the top line of the page between chapters, once the chapter counts as read.</summary>
+    public static string ReaderEndRead => Get("ReaderEndRead");
+
+    /// <summary>Under the end of chapter line, naming the trackers the read went to.</summary>
+    public static string ReaderEndTracker(string trackers) => Fill(Get("ReaderEndTracker"), ("trackers", trackers));
+
+    /// <summary>Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online.</summary>
+    public static string ReaderEndTrackerOffline(string tracker) => Fill(Get("ReaderEndTrackerOffline"), ("tracker", tracker));
+
+    /// <summary>Small heading above the next chapter on the page between chapters.</summary>
+    public static string ReaderEndNext => Get("ReaderEndNext");
+
+    /// <summary>A reading mode, and a reading direction.</summary>
+    public static string ReaderModeRtl => Get("ReaderModeRtl");
+
+    /// <summary>A reading mode, and a reading direction.</summary>
+    public static string ReaderModeLtr => Get("ReaderModeLtr");
+
+    /// <summary>A reading mode: one long scroll of images.</summary>
+    public static string ReaderModeStrip => Get("ReaderModeStrip");
+
+    /// <summary>A choice for how a page is fitted.</summary>
+    public static string ReaderFitScreen => Get("ReaderFitScreen");
+
+    /// <summary>A choice for how a page is fitted.</summary>
+    public static string ReaderFitWidth => Get("ReaderFitWidth");
+
+    /// <summary>A choice of typeface.</summary>
+    public static string ReaderFontSerif => Get("ReaderFontSerif");
+
+    /// <summary>A choice of typeface.</summary>
+    public static string ReaderFontSans => Get("ReaderFontSans");
+
+    /// <summary>A look for reading: warm paper.</summary>
+    public static string ReaderLookPaper => Get("ReaderLookPaper");
+
+    /// <summary>A look for reading: a light page.</summary>
+    public static string ReaderLookLight => Get("ReaderLookLight");
+
+    /// <summary>A look for reading: a brown page.</summary>
+    public static string ReaderLookSepia => Get("ReaderLookSepia");
+
+    /// <summary>A look for reading: a dark page.</summary>
+    public static string ReaderLookDark => Get("ReaderLookDark");
+
+    /// <summary>A choice of margins.</summary>
+    public static string ReaderMarginsNarrow => Get("ReaderMarginsNarrow");
+
+    /// <summary>A choice of margins.</summary>
+    public static string ReaderMarginsWide => Get("ReaderMarginsWide");
+
+    /// <summary>A choice for page layout.</summary>
+    public static string ReaderLayoutAuto => Get("ReaderLayoutAuto");
+
+    /// <summary>A choice for page layout.</summary>
+    public static string ReaderLayoutSingle => Get("ReaderLayoutSingle");
+
+    /// <summary>A choice for page layout.</summary>
+    public static string ReaderLayoutDouble => Get("ReaderLayoutDouble");
+
+    /// <summary>A choice for wide pages: cut in two.</summary>
+    public static string ReaderSpreadsSplit => Get("ReaderSpreadsSplit");
+
+    /// <summary>A choice for wide pages: turned to fill the screen.</summary>
+    public static string ReaderSpreadsRotate => Get("ReaderSpreadsRotate");
+
+    /// <summary>A choice for wide pages: shown whole.</summary>
+    public static string ReaderSpreadsWhole => Get("ReaderSpreadsWhole");
+
+    /// <summary>A choice for the reader's tap zones: taps near the left and right edges turn the page. Replaced by Sides; kept until every app has the new tap zones page.</summary>
+    public static string ReaderTapEdges => Get("ReaderTapEdges");
+
+    /// <summary>Tap zone layout: Sides when pages turn sideways, L shape when they move downwards. The name under its tile.</summary>
+    public static string ReaderTapAuto => Get("ReaderTapAuto");
+
+    /// <summary>Tap zone layout: previous page on one side, next page on the other, controls in the middle.</summary>
+    public static string ReaderTapSides => Get("ReaderTapSides");
+
+    /// <summary>Tap zone layout: previous page along the top and down one side, next page along the bottom and down the other side, in the shape of the letter L.</summary>
+    public static string ReaderTapLShape => Get("ReaderTapLShape");
+
+    /// <summary>Tap zone layout: controls along the top, a narrow column for previous page, and the rest of the page for next page.</summary>
+    public static string ReaderTapWideNext => Get("ReaderTapWideNext");
+
+    /// <summary>Tap zone layout: previous page across the top, next page across the bottom.</summary>
+    public static string ReaderTapTopBottom => Get("ReaderTapTopBottom");
+
+    /// <summary>Tap zone layout: next page down both the left and the right side, previous page in the bottom middle.</summary>
+    public static string ReaderTapBothNext => Get("ReaderTapBothNext");
+
+    /// <summary>Tap zone layout: taps only show and hide the controls, and never turn the page.</summary>
+    public static string ReaderTapOff => Get("ReaderTapOff");
+
+    /// <summary>Tap zones page: the choice for paged reading (pages that turn), one of two at the top.</summary>
+    public static string ReaderTapPaged => Get("ReaderTapPaged");
+
+    /// <summary>Tap zones page: the choice for strips and scrolled novels, one of two at the top.</summary>
+    public static string ReaderTapScrolling => Get("ReaderTapScrolling");
+
+    /// <summary>Tap zones page: row that sets how wide the zones at the edges are.</summary>
+    public static string ReaderTapSize => Get("ReaderTapSize");
+
+    /// <summary>Choice of Zone size: the edge zones are a third of the screen.</summary>
+    public static string ReaderTapStandard => Get("ReaderTapStandard");
+
+    /// <summary>Choice of Zone size: the edge zones are a quarter of the screen.</summary>
+    public static string ReaderTapSmall => Get("ReaderTapSmall");
+
+    /// <summary>Tap zones page: switch that swaps the left and right zones, for the left hand.</summary>
+    public static string ReaderTapFlipSides => Get("ReaderTapFlipSides");
+
+    /// <summary>Tap zones page: switch that swaps the top and bottom zones.</summary>
+    public static string ReaderTapFlipEnds => Get("ReaderTapFlipEnds");
+
+    /// <summary>Tap zones page: button that shows the zones over the page.</summary>
+    public static string ReaderTapShow => Get("ReaderTapShow");
+
+    /// <summary>Tap zones page, beside Show zones: the setting is not synced. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.</summary>
+    public static string ReaderTapHere(string kind) => Fill(Get("ReaderTapHere"), ("kind", kind));
+
+    /// <summary>The reader's settings on a Mac, Windows or Linux: the row that opens the tap zones page, which is about clicks there.</summary>
+    public static string ReaderClickZones => Get("ReaderClickZones");
+
+    /// <summary>Name of the tap zone that turns to the next page, in the guide over the page and as a screen reader action.</summary>
+    public static string ReaderZoneNext => Get("ReaderZoneNext");
+
+    /// <summary>Name of the tap zone that turns to the previous page, in the guide and as a screen reader action.</summary>
+    public static string ReaderZonePrevious => Get("ReaderZonePrevious");
+
+    /// <summary>Name of the tap zone that shows and hides the reader's controls, in the guide.</summary>
+    public static string ReaderZoneControls => Get("ReaderZoneControls");
+
+    /// <summary>Screen reader action on the page that shows the reader's controls.</summary>
+    public static string ReaderZoneShowControls => Get("ReaderZoneShowControls");
+
+    /// <summary>Name of the tap zone that scrolls a strip or a scrolled novel down, in the guide.</summary>
+    public static string ReaderZoneScrollDown => Get("ReaderZoneScrollDown");
+
+    /// <summary>Name of the tap zone that scrolls a strip or a scrolled novel up, in the guide.</summary>
+    public static string ReaderZoneScrollUp => Get("ReaderZoneScrollUp");
+
+    /// <summary>Under Controls in the tap zone guide: where the zones are changed.</summary>
+    public static string ReaderZoneChange => Get("ReaderZoneChange");
+
+    /// <summary>Tap zone layout Off in words, the accessibility value of its tile.</summary>
+    public static string ReaderTapOffAbout => Get("ReaderTapOffAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: Sides, next page on the right.</summary>
+    public static string ReaderTapSidesRightAbout => Get("ReaderTapSidesRightAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: Sides, next page on the left.</summary>
+    public static string ReaderTapSidesLeftAbout => Get("ReaderTapSidesLeftAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the right.</summary>
+    public static string ReaderTapLShapeBottomRightAbout => Get("ReaderTapLShapeBottomRightAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the left.</summary>
+    public static string ReaderTapLShapeBottomLeftAbout => Get("ReaderTapLShapeBottomLeftAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right.</summary>
+    public static string ReaderTapLShapeTopRightAbout => Get("ReaderTapLShapeTopRightAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left.</summary>
+    public static string ReaderTapLShapeTopLeftAbout => Get("ReaderTapLShapeTopLeftAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the left.</summary>
+    public static string ReaderTapWideNextTopLeftAbout => Get("ReaderTapWideNextTopLeftAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the right.</summary>
+    public static string ReaderTapWideNextTopRightAbout => Get("ReaderTapWideNextTopRightAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left.</summary>
+    public static string ReaderTapWideNextBottomLeftAbout => Get("ReaderTapWideNextBottomLeftAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right.</summary>
+    public static string ReaderTapWideNextBottomRightAbout => Get("ReaderTapWideNextBottomRightAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: Top and bottom.</summary>
+    public static string ReaderTapTopBottomAbout => Get("ReaderTapTopBottomAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: Top and bottom flipped.</summary>
+    public static string ReaderTapTopBottomFlippedAbout => Get("ReaderTapTopBottomFlippedAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: Next on both sides.</summary>
+    public static string ReaderTapBothNextAbout => Get("ReaderTapBothNextAbout");
+
+    /// <summary>Tap zone layout in words, the accessibility value of its tile: Next on both sides flipped top and bottom.</summary>
+    public static string ReaderTapBothNextFlippedAbout => Get("ReaderTapBothNextFlippedAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the right.</summary>
+    public static string ReaderTapSidesRightScrollAbout => Get("ReaderTapSidesRightScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the left.</summary>
+    public static string ReaderTapSidesLeftScrollAbout => Get("ReaderTapSidesLeftScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the right.</summary>
+    public static string ReaderTapLShapeBottomRightScrollAbout => Get("ReaderTapLShapeBottomRightScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the left.</summary>
+    public static string ReaderTapLShapeBottomLeftScrollAbout => Get("ReaderTapLShapeBottomLeftScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right.</summary>
+    public static string ReaderTapLShapeTopRightScrollAbout => Get("ReaderTapLShapeTopRightScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left.</summary>
+    public static string ReaderTapLShapeTopLeftScrollAbout => Get("ReaderTapLShapeTopLeftScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the left.</summary>
+    public static string ReaderTapWideNextTopLeftScrollAbout => Get("ReaderTapWideNextTopLeftScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the right.</summary>
+    public static string ReaderTapWideNextTopRightScrollAbout => Get("ReaderTapWideNextTopRightScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left.</summary>
+    public static string ReaderTapWideNextBottomLeftScrollAbout => Get("ReaderTapWideNextBottomLeftScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right.</summary>
+    public static string ReaderTapWideNextBottomRightScrollAbout => Get("ReaderTapWideNextBottomRightScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom.</summary>
+    public static string ReaderTapTopBottomScrollAbout => Get("ReaderTapTopBottomScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom flipped.</summary>
+    public static string ReaderTapTopBottomFlippedScrollAbout => Get("ReaderTapTopBottomFlippedScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides.</summary>
+    public static string ReaderTapBothNextScrollAbout => Get("ReaderTapBothNextScrollAbout");
+
+    /// <summary>Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides flipped top and bottom.</summary>
+    public static string ReaderTapBothNextFlippedScrollAbout => Get("ReaderTapBothNextFlippedScrollAbout");
+
+    /// <summary>Button in the reader's controls that opens the chapters and the page grid.</summary>
+    public static string ReaderChapters => Get("ReaderChapters");
+
+    /// <summary>Line in the margin of a novel's page.</summary>
+    public static string ReaderPagesLeft(long count) => Fill(GetPlural("ReaderPagesLeft", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Chapters sheet and the chapter list: the list is on its way.</summary>
+    public static string ReaderChaptersLoading => Get("ReaderChaptersLoading");
+
+    /// <summary>Background choice.</summary>
+    public static string ReaderBackgroundTheme => Get("ReaderBackgroundTheme");
+
+    /// <summary>Background choice.</summary>
+    public static string ReaderBackgroundBlack => Get("ReaderBackgroundBlack");
+
+    /// <summary>Background choice.</summary>
+    public static string ReaderBackgroundWhite => Get("ReaderBackgroundWhite");
+
+    /// <summary>Title of the end page when the series has no newer chapter.</summary>
+    public static string ReaderEndCaughtUp => Get("ReaderEndCaughtUp");
+
+    /// <summary>A choice for the gap between a strip's images: none at all.</summary>
+    public static string ReaderGapNone => Get("ReaderGapNone");
+
+    /// <summary>A choice for the gap between a strip's images: a small one.</summary>
+    public static string ReaderGapSmall => Get("ReaderGapSmall");
+
+    /// <summary>Look choice that follows the system's light or dark.</summary>
+    public static string ReaderLookSystem => Get("ReaderLookSystem");
+
+    /// <summary>Top line of the page between chapters. The chapter is its number, such as 12.</summary>
+    public static string ReaderEndOfChapterNumber(string chapter) => Fill(Get("ReaderEndOfChapterNumber"), ("chapter", chapter));
+
+    /// <summary>Top line of the page between chapters when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own, such as Rooftop Lantern.</summary>
+    public static string ReaderEndOfNamed(string name) => Fill(Get("ReaderEndOfNamed"), ("name", name));
+
+    /// <summary>The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.</summary>
+    public static string ReaderEndFacts(string chapter, string facts) => Fill(Get("ReaderEndFacts"), ("chapter", chapter), ("facts", facts));
+
+    /// <summary>The next chapter's length on the page between chapters.</summary>
+    public static string ReaderEndPages(long count) => Fill(GetPlural("ReaderEndPages", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from.</summary>
+    public static string ReaderEndFrom(string source) => Fill(Get("ReaderEndFrom"), ("source", source));
+
+    /// <summary>Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.</summary>
+    public static string ReaderChapterLine(string chapter) => Fill(Get("ReaderChapterLine"), ("chapter", chapter));
+
+    /// <summary>The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters.</summary>
+    public static string ReaderDividerFactsSource(string facts, string source) => Fill(Get("ReaderDividerFactsSource"), ("facts", facts), ("source", source));
+
+    /// <summary>Line on the page between chapters, near its buttons: one more swipe opens the next chapter.</summary>
+    public static string ReaderEndSwipe => Get("ReaderEndSwipe");
+
+    /// <summary>Button beside Continue on the page between chapters, shown only when the next chapter is an extra (such as 16.5 between 16 and 17). It opens the chapter named, passing over the extras before it. The chapter is its number, such as 17.</summary>
+    public static string ReaderEndSkipTo(string chapter) => Fill(Get("ReaderEndSkipTo"), ("chapter", chapter));
+
+    /// <summary>What a screen reader adds after "Skip to chapter 17": the extra it passes over stays unread in the chapter list. The chapter is the extra's number, such as 16.5.</summary>
+    public static string ReaderEndSkipHint(string chapter) => Fill(Get("ReaderEndSkipHint"), ("chapter", chapter));
+
+    /// <summary>What a screen reader adds after "Skip to chapter 17" when it passes over more than one extra, or an extra with no number (such as an omake): those chapters stay unread in the chapter list.</summary>
+    public static string ReaderEndSkipHintExtras => Get("ReaderEndSkipHintExtras");
+
+    /// <summary>The next episode's length on the divider inside a strip.</summary>
+    public static string ReaderDividerImages(long count) => Fill(GetPlural("ReaderDividerImages", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.</summary>
+    public static string ReaderChapterLineTitled(string chapter, string title) => Fill(Get("ReaderChapterLineTitled"), ("chapter", chapter), ("title", title));
+
+    /// <summary>The reader's opening line while the series' source sends its chapter list.</summary>
+    public static string ReaderWaitChapterList(string source) => Fill(Get("ReaderWaitChapterList"), ("source", source));
+
+    /// <summary>The reader's opening line while the source sends the chapter's pages or text.</summary>
+    public static string ReaderWaitChapterPages(string chapter, string source) => Fill(Get("ReaderWaitChapterPages"), ("chapter", chapter), ("source", source));
+
+    /// <summary>The opening line after a few seconds, with how long it has waited so far.</summary>
+    public static string ReaderWaitSeconds(string line, long seconds) => Fill(Get("ReaderWaitSeconds"), ("line", line), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under the opening line once the wait has gone on for a long time, above Read from another source and Go back.</summary>
+    public static string ReaderWaitLong => Get("ReaderWaitLong");
+
+    /// <summary>Beside the line that says how many credit pages were skipped, on the end page and in a long strip. Tapping it shows them.</summary>
+    public static string ReaderCreditShow => Get("ReaderCreditShow");
+
+    /// <summary>Spoken hint of the line that says how many credit pages were skipped.</summary>
+    public static string ReaderCreditShowHint => Get("ReaderCreditShowHint");
+
+    /// <summary>Notice over a credit page shown again, and the caption above it in a long strip.</summary>
+    public static string ReaderCreditShown => Get("ReaderCreditShown");
+
+    /// <summary>The notice's action on a shown credit page: show this page from now on.</summary>
+    public static string ReaderCreditNot => Get("ReaderCreditNot");
+
+    /// <summary>Notice after Not a credit page, with Undo.</summary>
+    public static string ReaderCreditKept => Get("ReaderCreditKept");
+
+    /// <summary>In the reader's line in place of a page number, while a credit page shows: "Chapter 87 · credit page".</summary>
+    public static string ReaderCreditPage => Get("ReaderCreditPage");
+
+    /// <summary>The same, when more than one credit page is shown: "credit page 1 of 2".</summary>
+    public static string ReaderCreditPageOf(long n, long total) => Fill(Get("ReaderCreditPageOf"), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The reader's line under the title while a credit page shows: the chapter, then "credit page" or "credit page 1 of 2".</summary>
+    public static string ReaderGroupLinePlace(string chapter, string place) => Fill(Get("ReaderGroupLinePlace"), ("chapter", chapter), ("place", place));
+
+    /// <summary>Spoken name of a credit page shown again.</summary>
+    public static string ReaderCreditPageLabel => Get("ReaderCreditPageLabel");
+
+    /// <summary>Notice when a skipped credit page's picture can't be read, so it can't be shown.</summary>
+    public static string ReaderCreditFailed => Get("ReaderCreditFailed");
+
+    /// <summary>The scrubber's preview on the first page of a chapter's later part.</summary>
+    public static string ReaderPartPreview(long page, long part) => Fill(Get("ReaderPartPreview"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("part", part.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The same, when the part before it is missing from every group: "Page 14 · part 4 · part 3 missing".</summary>
+    public static string ReaderPartPreviewMissing(long page, long part, long missing) => Fill(Get("ReaderPartPreviewMissing"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("part", part.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("missing", missing.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Spoken value of the scrubber on the first page of a chapter's later part.</summary>
+    public static string ReaderPartStarts(long part, long page) => Fill(Get("ReaderPartStarts"), ("part", part.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Button in the first run that opens the reading demo.</summary>
+    public static string OnboardingReadDemo => Get("OnboardingReadDemo");
+
+    /// <summary>Under the first run's demo heading when the device is for reading.</summary>
+    public static string OnboardingDemoBooksDetail => Get("OnboardingDemoBooksDetail");
+
+    /// <summary>Under the first run's demo heading when the device is for both.</summary>
+    public static string OnboardingDemoBothDetail => Get("OnboardingDemoBothDetail");
+
+    /// <summary>Home, under the spotlight, when the demo is the only thing to read.</summary>
+    public static string HomeDemoOnlyBooks => Get("HomeDemoOnlyBooks");
+
+    /// <summary>Primary action on Home's spotlight for a book.</summary>
+    public static string HomeSpotlightRead => Get("HomeSpotlightRead");
+
+    /// <summary>The demo comic's facts line on its series page.</summary>
+    public static string DemoSeriesFacts(long pages) => Fill(GetPlural("DemoSeriesFacts", pages), ("pages", pages.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The comic's credit on its series page and in About the demo. The licence is "CC BY 4.0".</summary>
+    public static string DemoCreditBook(string title, string author, string licence) => Fill(Get("DemoCreditBook"), ("title", title), ("author", author), ("licence", licence));
+
+    /// <summary>The story's credit in About the demo.</summary>
+    public static string DemoCreditStory(string title, string author) => Fill(Get("DemoCreditStory"), ("title", title), ("author", author));
+
+    /// <summary>The story's cover credit in About the demo, under the story's own credit. The title is the art's caption in English, "Blowing her breath upon him", and the year is 1904.</summary>
+    public static string DemoCreditCover(string title, string artist, string year) => Fill(Get("DemoCreditCover"), ("title", title), ("artist", artist), ("year", year));
+
+    /// <summary>Credit capsule in the reader's top bar on page 1.</summary>
+    public static string ReaderDemoCredit(string title, string author, string licence) => Fill(Get("ReaderDemoCredit"), ("title", title), ("author", author), ("licence", licence));
+
+    /// <summary>A demo result's line in Search.</summary>
+    public static string SearchDemoReads => Get("SearchDemoReads");
+
+    /// <summary>Search, under the demo results, when only the demo is on.</summary>
+    public static string SearchDemoOnlyBooks => Get("SearchDemoOnlyBooks");
+
+    /// <summary>Title of the card after the demo's last page.</summary>
+    public static string ReaderDemoEnd => Get("ReaderDemoEnd");
+
+    /// <summary>Line under it.</summary>
+    public static string ReaderDemoEndLine => Get("ReaderDemoEndLine");
+
+    /// <summary>The card's primary action.</summary>
+    public static string ReaderDemoAddSource => Get("ReaderDemoAddSource");
+
+    /// <summary>The card's secondary action, back to the first page.</summary>
+    public static string ReaderDemoAgain => Get("ReaderDemoAgain");
+
+    /// <summary>The demo row's line in Your sources when reading is on.</summary>
+    public static string SourcesDemoBooksLine => Get("SourcesDemoBooksLine");
+
+    /// <summary>About the demo, first line, when reading is on.</summary>
+    public static string SourcesDemoBooksWhat => Get("SourcesDemoBooksWhat");
+
+    /// <summary>About the demo, in place of sources-demo-private when reading is on.</summary>
+    public static string SourcesDemoBooksPrivate => Get("SourcesDemoBooksPrivate");
+
+    /// <summary>Group on the demo's series page.</summary>
+    public static string DemoChapters => Get("DemoChapters");
+
+    /// <summary>Group on the demo's series page: the other demo work.</summary>
+    public static string DemoAlso => Get("DemoAlso");
+
+    /// <summary>Group in About the demo.</summary>
+    public static string DemoCredits => Get("DemoCredits");
+
+    /// <summary>A chapter row's line on the demo's series page.</summary>
+    public static string DemoPages(long pages) => Fill(GetPlural("DemoPages", pages), ("pages", pages.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The story's row on the demo's series page. The licence is "Public domain" as the engine says it.</summary>
+    public static string DemoStoryRow(string author, string licence) => Fill(Get("DemoStoryRow"), ("author", author), ("licence", licence));
+
+    /// <summary>Primary action on the demo's series page.</summary>
+    public static string DemoReadChapter(string number) => Fill(Get("DemoReadChapter"), ("number", number));
+
+    /// <summary>Page between chapters, under the tracker line: the server has the progress.</summary>
+    public static string ProgressServerSaved(string server) => Fill(Get("ProgressServerSaved"), ("server", server));
+
+    /// <summary>Same place, only after 600 ms without an answer.</summary>
+    public static string ProgressServerSending(string server) => Fill(Get("ProgressServerSending"), ("server", server));
+
+    /// <summary>Same place, offline: the send waits in the queue.</summary>
+    public static string ProgressServerOffline(string server) => Fill(Get("ProgressServerOffline"), ("server", server));
+
+    /// <summary>Same place, the send failed for a reason that can pass.</summary>
+    public static string ProgressServerRetrying(string server) => Fill(Get("ProgressServerRetrying"), ("server", server));
+
+    /// <summary>Same place, the server said no. Try again follows it.</summary>
+    public static string ProgressServerFailed(string server, string reason) => Fill(Get("ProgressServerFailed"), ("server", server), ("reason", reason));
+
+    /// <summary>Reason: a Kavita key.</summary>
+    public static string ProgressWhyKey => Get("ProgressWhyKey");
+
+    /// <summary>Reason: a Komga or OPDS password.</summary>
+    public static string ProgressWhyPassword => Get("ProgressWhyPassword");
+
+    /// <summary>Reason.</summary>
+    public static string ProgressWhyGone => Get("ProgressWhyGone");
+
+    /// <summary>Reason, after a day of retries.</summary>
+    public static string ProgressWhyGaveUp => Get("ProgressWhyGaveUp");
+
+    /// <summary>Your sources, the server's row, second line.</summary>
+    public static string ProgressRowSaved(string ago) => Fill(Get("ProgressRowSaved"), ("ago", ago));
+
+    /// <summary>The server's row, after 600 ms without an answer.</summary>
+    public static string ProgressRowSending(long count) => Fill(GetPlural("ProgressRowSending", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The server's row, offline.</summary>
+    public static string ProgressRowOffline(long count) => Fill(GetPlural("ProgressRowOffline", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The server's row, the last try failed for a reason that can pass.</summary>
+    public static string ProgressRowRetrying(long count) => Fill(GetPlural("ProgressRowRetrying", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The server's row, the server said no. Try again sits beside it.</summary>
+    public static string ProgressRowFailed(long count, string reason) => Fill(GetPlural("ProgressRowFailed", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("reason", reason));
+
+    /// <summary>The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.</summary>
+    public static string ProgressRowOff(string kind) => Fill(Get("ProgressRowOff"), ("kind", kind));
+
+    /// <summary>Sidebar and tab label: the shows' Home when both media are on.</summary>
+    public static string NavWatch => Get("NavWatch");
+
+    /// <summary>Sidebar and tab label: reading's Home.</summary>
+    public static string NavRead => Get("NavRead");
+
+    /// <summary>Sidebar and tab label: new chapters from followed series.</summary>
+    public static string NavUpdates => Get("NavUpdates");
+
+    /// <summary>Shelf heading on Read: the series being read, each at its place.</summary>
+    public static string HomeReadContinue => Get("HomeReadContinue");
+
+    /// <summary>Shelf heading on Read: series releasing now.</summary>
+    public static string HomeReadReleasing => Get("HomeReadReleasing");
+
+    /// <summary>Line under the spotlight of a popular series, when the engine gives no line of its own.</summary>
+    public static string HomeReadCheckedOnOpen => Get("HomeReadCheckedOnOpen");
+
+    /// <summary>Line at the end of Read, under the last shelf.</summary>
+    public static string HomeReadEnd => Get("HomeReadEnd");
+
+    /// <summary>Line at the end of Read with no book sources yet. A button to add one follows it.</summary>
+    public static string HomeReadNoSources => Get("HomeReadNoSources");
+
+    /// <summary>In place of Read's discovery rows on a first run with no connection: nothing was kept yet.</summary>
+    public static string ReadHomeOfflineRows => Get("ReadHomeOfflineRows");
+
+    /// <summary>E-ink: the one row on Read's Home that opens the list of discovery rows, and that page's title.</summary>
+    public static string ReadHomeBrowse => Get("ReadHomeBrowse");
+
+    /// <summary>E-ink: the line under Browse on Read's Home.</summary>
+    public static string ReadHomeBrowseLine => Get("ReadHomeBrowseLine");
+
+    /// <summary>E-ink: a discovery row in the Browse list, naming its first two series and how many follow.</summary>
+    public static string ReadHomeBrowseRow(string first, string second, long more) => Fill(Get("ReadHomeBrowseRow"), ("first", first), ("second", second), ("more", more.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>E-ink: the note on the Browse page. The rows are AniList's catalogue; sources are asked only when a series is opened.</summary>
+    public static string ReadHomeBrowseNote => Get("ReadHomeBrowseNote");
+
+    /// <summary>E-ink: on the Browse page when AniList didn't answer. The time is when the lists were kept.</summary>
+    public static string ReadHomeBrowseKept(string time) => Fill(Get("ReadHomeBrowseKept"), ("time", time));
+
+    /// <summary>Under a day in Read's week: what usually comes out that day, when the time isn't known.</summary>
+    public static string WeekUsually => Get("WeekUsually");
+
+    /// <summary>Under a day in Read's week with nothing due.</summary>
+    public static string WeekNothingUsually => Get("WeekNothingUsually");
+
+    /// <summary>Line under Updates' title on iPhone and iPad.</summary>
+    public static string UpdatesChecked(string ago) => Fill(Get("UpdatesChecked"), ("ago", ago));
+
+    /// <summary>Line above Updates on the Mac: when it checked, and which series it checks.</summary>
+    public static string ChapterUpdatesCheckedCaughtUp(string ago) => Fill(Get("ChapterUpdatesCheckedCaughtUp"), ("ago", ago));
+
+    /// <summary>Line while Updates asks every followed series now.</summary>
+    public static string ChapterUpdatesChecking => Get("ChapterUpdatesChecking");
+
+    /// <summary>Toolbar button: queue every unread chapter in Updates.</summary>
+    public static string UpdatesDownloadNew => Get("UpdatesDownloadNew");
+
+    /// <summary>Updates with nothing in it.</summary>
+    public static string UpdatesEmptyTitle => Get("UpdatesEmptyTitle");
+
+    /// <summary>Line under Updates' empty title.</summary>
+    public static string ChapterUpdatesEmptyLine => Get("ChapterUpdatesEmptyLine");
+
+    /// <summary>Day heading in Updates.</summary>
+    public static string ChapterUpdatesToday => Get("ChapterUpdatesToday");
+
+    /// <summary>Day heading in Updates.</summary>
+    public static string ChapterUpdatesYesterday => Get("ChapterUpdatesYesterday");
+
+    /// <summary>After a chapter on an Updates row, when several groups put it out.</summary>
+    public static string ChapterUpdatesVersions(long n) => Fill(GetPlural("ChapterUpdatesVersions", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Accessibility label on an Updates row's cover, which opens the series.</summary>
+    public static string ChapterUpdatesOpenSeries(string title) => Fill(Get("ChapterUpdatesOpenSeries"), ("title", title));
+
+    /// <summary>Accessibility hint on an Updates row.</summary>
+    public static string ChapterUpdatesOpenChapterHint => Get("ChapterUpdatesOpenChapterHint");
+
+    /// <summary>Context menu item on an Updates row.</summary>
+    public static string ChapterUpdatesOpenSeriesMenu => Get("ChapterUpdatesOpenSeriesMenu");
+
+    /// <summary>The series page's main action, and the spotlight's.</summary>
+    public static string ActionReadChapter(string n) => Fill(Get("ActionReadChapter"), ("n", n));
+
+    /// <summary>The main action when a chapter is part read.</summary>
+    public static string ActionContinueChapter(string n, long page) => Fill(Get("ActionContinueChapter"), ("n", n), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The main action for a light novel part, part read.</summary>
+    public static string ActionContinuePart(string n, long percent) => Fill(Get("ActionContinuePart"), ("n", n), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The main action for a light novel part, part read, when how far is not known.</summary>
+    public static string ActionContinuePartPlain(string n) => Fill(Get("ActionContinuePartPlain"), ("n", n));
+
+    /// <summary>The main action for a light novel part the source calls a chapter, part read.</summary>
+    public static string ActionContinueChapterPercent(string n, long percent) => Fill(Get("ActionContinueChapterPercent"), ("n", n), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The main action for a light novel part the source calls a chapter, part read, when how far is not known.</summary>
+    public static string ActionContinueChapterPlain(string n) => Fill(Get("ActionContinueChapterPlain"), ("n", n));
+
+    /// <summary>The main action for a light novel part not opened yet.</summary>
+    public static string ActionReadPart(string n) => Fill(Get("ActionReadPart"), ("n", n));
+
+    /// <summary>The main action for a light novel part, part read, named in the source's own words ("Part 3", "Chapter 3") as its row is.</summary>
+    public static string ActionContinueNamed(string label, long percent) => Fill(Get("ActionContinueNamed"), ("label", label), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The main action for a light novel part, part read, named in the source's own words, when how far is not known.</summary>
+    public static string ActionContinueNamedPlain(string label) => Fill(Get("ActionContinueNamedPlain"), ("label", label));
+
+    /// <summary>The main action for a chapter part read that has no number, named by its own title ("Oneshot", "Extra").</summary>
+    public static string ActionContinueNamedPage(string label, long page) => Fill(Get("ActionContinueNamedPage"), ("label", label), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The main action for a light novel part not opened yet, named in the source's own words, and for a chapter with no number, named by its own title ("Read Oneshot").</summary>
+    public static string ActionReadNamed(string label) => Fill(Get("ActionReadNamed"), ("label", label));
+
+    /// <summary>The main action when every chapter is read.</summary>
+    public static string ActionReadAgain => Get("ActionReadAgain");
+
+    /// <summary>Label of the source row on the series page.</summary>
+    public static string SeriesReadingFrom => Get("SeriesReadingFrom");
+
+    /// <summary>Button beside a row on the series page that opens its sheet.</summary>
+    public static string SeriesChange => Get("SeriesChange");
+
+    /// <summary>After the source's name: how many other sources have the series.</summary>
+    public static string SeriesSourcesMore(long n) => Fill(GetPlural("SeriesSourcesMore", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Value of the trackers row while a tracker asks which series this is.</summary>
+    public static string SeriesTrackerAsk => Get("SeriesTrackerAsk");
+
+    /// <summary>Value of the group row: the chosen group is used for this series.</summary>
+    public static string SeriesPreferredGroup => Get("SeriesPreferredGroup");
+
+    /// <summary>Label of the series page's row for the group whose version of each chapter the series lists, inside the source in use. Its value is the group's name.</summary>
+    public static string SeriesGroup => Get("SeriesGroup");
+
+    /// <summary>After the group's name on the Group row: it is in use because it has the most chapters.</summary>
+    public static string SeriesGroupMost => Get("SeriesGroupMost");
+
+    /// <summary>After the group's name on the Group row: the person picked it.</summary>
+    public static string SeriesGroupPicked => Get("SeriesGroupPicked");
+
+    /// <summary>Spoken hint of the Group row's Change button.</summary>
+    public static string SeriesGroupHint => Get("SeriesGroupHint");
+
+    /// <summary>Under the group picker's title: the source the groups are in.</summary>
+    public static string GroupPickerIn(string source) => Fill(Get("GroupPickerIn"), ("source", source));
+
+    /// <summary>The group picker's first choice: the group with the most chapters, whichever that is.</summary>
+    public static string GroupPickerMost => Get("GroupPickerMost");
+
+    /// <summary>Under Most chapters: the group that means today.</summary>
+    public static string GroupPickerMostNow(string group) => Fill(Get("GroupPickerMostNow"), ("group", group));
+
+    /// <summary>A group in the picker: how many of the series' chapters it has released. Its language follows, after a middle dot.</summary>
+    public static string GroupPickerCount(long have, long total) => Fill(GetPlural("GroupPickerCount", total), ("have", have.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under the group picker's choices.</summary>
+    public static string GroupPickerFallback => Get("GroupPickerFallback");
+
+    /// <summary>A tracker's progress in chapters, with the total.</summary>
+    public static string SeriesTrackerChaptersOf(long n, long total) => Fill(GetPlural("SeriesTrackerChaptersOf", total), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A tracker's progress in chapters, total unknown.</summary>
+    public static string SeriesTrackerChapters(long n) => Fill(GetPlural("SeriesTrackerChapters", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A tracker's progress when the person has read none of the series yet, in place of "0 chapters".</summary>
+    public static string SeriesTrackerNotStarted => Get("SeriesTrackerNotStarted");
+
+    /// <summary>A tracker's progress in chapters, then the volume.</summary>
+    public static string SeriesTrackerWithVolume(string chapters, long volume) => Fill(Get("SeriesTrackerWithVolume"), ("chapters", chapters), ("volume", volume.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A light novel tracker's progress in volumes.</summary>
+    public static string SeriesTrackerVolumes(long volume, long total) => Fill(Get("SeriesTrackerVolumes"), ("volume", volume.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Main place when the source can't be read from.</summary>
+    public static string SeriesReadFromAnother => Get("SeriesReadFromAnother");
+
+    /// <summary>Status menu item: a score submenu.</summary>
+    public static string SeriesScore => Get("SeriesScore");
+
+    /// <summary>Status menu's label before the series is on a list.</summary>
+    public static string SeriesAddToList => Get("SeriesAddToList");
+
+    /// <summary>Last item of a series' list menu: take the series off every tracker's list. Asks first.</summary>
+    public static string SeriesRemoveFromLists => Get("SeriesRemoveFromLists");
+
+    /// <summary>Title of the question before a series is taken off the lists.</summary>
+    public static string SeriesRemoveFromListsTitle(string title) => Fill(Get("SeriesRemoveFromListsTitle"), ("title", title));
+
+    /// <summary>Line in that question.</summary>
+    public static string SeriesRemoveFromListsLine => Get("SeriesRemoveFromListsLine");
+
+    /// <summary>Heading over what the removal came to, one line per tracker.</summary>
+    public static string SeriesRemovedTitle => Get("SeriesRemovedTitle");
+
+    /// <summary>Title while choosing chapters on a phone: how many are chosen.</summary>
+    public static string SeriesChosen(long n) => Fill(GetPlural("SeriesChosen", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Button while choosing chapters on a phone: choose every unread chapter.</summary>
+    public static string SeriesChooseAllUnread => Get("SeriesChooseAllUnread");
+
+    /// <summary>Heading in Read from over the sources searched without finding the series.</summary>
+    public static string ReadFromNotFound => Get("ReadFromNotFound");
+
+    /// <summary>Button beside such a source: look for the series there by other words.</summary>
+    public static string ReadFromSearchThere => Get("ReadFromSearchThere");
+
+    /// <summary>Placeholder of the field that looks for the series in one source.</summary>
+    public static string ReadFromSearchPlaceholder(string source) => Fill(Get("ReadFromSearchPlaceholder"), ("source", source));
+
+    /// <summary>Button that runs that search.</summary>
+    public static string ReadFromSearch => Get("ReadFromSearch");
+
+    /// <summary>Under the field when the source found nothing by those words.</summary>
+    public static string ReadFromSearchNone => Get("ReadFromSearchNone");
+
+    /// <summary>The More menu: the Tracking sheet.</summary>
+    public static string SeriesTracking => Get("SeriesTracking");
+
+    /// <summary>The More menu: the Read from sheet.</summary>
+    public static string SeriesReadFromMenu => Get("SeriesReadFromMenu");
+
+    /// <summary>The More menu: start again from chapter 1.</summary>
+    public static string SeriesReadAgainMenu => Get("SeriesReadAgainMenu");
+
+    /// <summary>Heading of the chapter list when the series has volumes.</summary>
+    public static string SeriesVolumes => Get("SeriesVolumes");
+
+    /// <summary>Heading of the chapter list.</summary>
+    public static string SeriesChapters => Get("SeriesChapters");
+
+    /// <summary>Accessibility label of the chapter order menu.</summary>
+    public static string SeriesOrder => Get("SeriesOrder");
+
+    /// <summary>Chapter order.</summary>
+    public static string SeriesNewestFirst => Get("SeriesNewestFirst");
+
+    /// <summary>Chapter order.</summary>
+    public static string SeriesOldestFirst => Get("SeriesOldestFirst");
+
+    /// <summary>A volume's heading in the chapter list.</summary>
+    public static string SeriesVolume(string n) => Fill(Get("SeriesVolume"), ("n", n));
+
+    /// <summary>The heading for chapters that are in no volume yet.</summary>
+    public static string SeriesNoVolume => Get("SeriesNoVolume");
+
+    /// <summary>After a volume's heading: which chapters it holds.</summary>
+    public static string SeriesChapterRange(string from, string to) => Fill(Get("SeriesChapterRange"), ("from", from), ("to", to));
+
+    /// <summary>After a volume's heading when every chapter in it is read.</summary>
+    public static string SeriesVolumeRead => Get("SeriesVolumeRead");
+
+    /// <summary>Accessibility value of a volume heading.</summary>
+    public static string SeriesExpanded => Get("SeriesExpanded");
+
+    /// <summary>Accessibility value of a volume heading.</summary>
+    public static string SeriesCollapsed => Get("SeriesCollapsed");
+
+    /// <summary>The chapter list when the source has none.</summary>
+    public static string SeriesNoChaptersTitle => Get("SeriesNoChaptersTitle");
+
+    /// <summary>Line under it.</summary>
+    public static string SeriesNoChaptersLine => Get("SeriesNoChaptersLine");
+
+    /// <summary>The chapter list when none of the person's sources holds the series and none was picked: an empty state, not a failure. Its button opens Read from.</summary>
+    public static string SeriesNoSourceTitle => Get("SeriesNoSourceTitle");
+
+    /// <summary>Line under it.</summary>
+    public static string SeriesNoSourceLine => Get("SeriesNoSourceLine");
+
+    /// <summary>Its button: opens Read from, where each source can be searched by another name.</summary>
+    public static string SeriesNoSourceSearch => Get("SeriesNoSourceSearch");
+
+    /// <summary>The chapter list when the source failed. Downloaded chapters are listed under it.</summary>
+    public static string SeriesChaptersFailed(string source) => Fill(Get("SeriesChaptersFailed"), ("source", source));
+
+    /// <summary>A chapter row's title.</summary>
+    public static string SeriesChapterNumber(string n) => Fill(Get("SeriesChapterNumber"), ("n", n));
+
+    /// <summary>Accessibility label of the bookmark mark on a chapter row.</summary>
+    public static string SeriesBookmarked => Get("SeriesBookmarked");
+
+    /// <summary>Chapter menu and swipe action.</summary>
+    public static string SeriesMarkRead => Get("SeriesMarkRead");
+
+    /// <summary>Chapter menu and swipe action.</summary>
+    public static string SeriesMarkUnread => Get("SeriesMarkUnread");
+
+    /// <summary>Chapter menu item: every chapter before this one is read too.</summary>
+    public static string SeriesMarkReadUpTo => Get("SeriesMarkReadUpTo");
+
+    /// <summary>Chapter menu and swipe action.</summary>
+    public static string SeriesDownload => Get("SeriesDownload");
+
+    /// <summary>Chapter menu item: open the chapter in the reader.</summary>
+    public static string SeriesReadChapterMenu => Get("SeriesReadChapterMenu");
+
+    /// <summary>Chapter menu item.</summary>
+    public static string SeriesBookmark => Get("SeriesBookmark");
+
+    /// <summary>Chapter menu item.</summary>
+    public static string SeriesRemoveBookmark => Get("SeriesRemoveBookmark");
+
+    /// <summary>Menu of a chapter that several groups put out.</summary>
+    public static string SeriesVersions(long n) => Fill(GetPlural("SeriesVersions", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>In that menu while the versions load.</summary>
+    public static string SeriesVersionsLoading => Get("SeriesVersionsLoading");
+
+    /// <summary>The version in use, in that menu.</summary>
+    public static string SeriesVersionInUse(string name) => Fill(Get("SeriesVersionInUse"), ("name", name));
+
+    /// <summary>Make another group the one used for this series.</summary>
+    public static string SeriesPreferVersion(string name) => Fill(Get("SeriesPreferVersion"), ("name", name));
+
+    /// <summary>A downloaded chapter, after its state.</summary>
+    public static string ChapterStateDownloaded => Get("ChapterStateDownloaded");
+
+    /// <summary>A chapter waiting to download.</summary>
+    public static string ChapterStateQueued => Get("ChapterStateQueued");
+
+    /// <summary>A chapter waiting for Wi-Fi to download.</summary>
+    public static string ChapterStateWifi => Get("ChapterStateWifi");
+
+    /// <summary>A chapter downloading.</summary>
+    public static string ChapterStateDownloading(long done, long total) => Fill(Get("ChapterStateDownloading"), ("done", done.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter downloading before its page count is known, and throughout for a novel's chapter.</summary>
+    public static string ChapterStateDownloadingPlain => Get("ChapterStateDownloadingPlain");
+
+    /// <summary>A chapter that failed to download, with the reason.</summary>
+    public static string ChapterStateFailed(string reason) => Fill(Get("ChapterStateFailed"), ("reason", reason));
+
+    /// <summary>A part-read chapter.</summary>
+    public static string ChapterStatePageOf(long page, long of) => Fill(Get("ChapterStatePageOf"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("of", of.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A part-read chapter whose length isn't known.</summary>
+    public static string ChapterStatePage(long page) => Fill(Get("ChapterStatePage"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A read chapter.</summary>
+    public static string ChapterStateRead => Get("ChapterStateRead");
+
+    /// <summary>A chapter that came out since you last looked.</summary>
+    public static string ChapterStateNew => Get("ChapterStateNew");
+
+    /// <summary>Button: stop a chapter's download.</summary>
+    public static string ChapterDownloadStop => Get("ChapterDownloadStop");
+
+    /// <summary>Button: try a failed chapter's download again.</summary>
+    public static string ChapterRetry => Get("ChapterRetry");
+
+    /// <summary>Chapter menu item.</summary>
+    public static string ChapterDownloadDelete => Get("ChapterDownloadDelete");
+
+    /// <summary>Download menu item.</summary>
+    public static string DownloadNext(long n) => Fill(Get("DownloadNext"), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Download menu item.</summary>
+    public static string DownloadUnread => Get("DownloadUnread");
+
+    /// <summary>Download menu item: a volume's chapters not yet downloaded.</summary>
+    public static string DownloadVolumeCount(string volume, long n) => Fill(GetPlural("DownloadVolumeCount", n), ("volume", volume), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Download menu item: turns on choosing chapters in the list.</summary>
+    public static string DownloadChoose => Get("DownloadChoose");
+
+    /// <summary>Download menu item.</summary>
+    public static string DownloadDeleteSeries => Get("DownloadDeleteSeries");
+
+    /// <summary>The amber button in the Choose chapters bar.</summary>
+    public static string DownloadChapters(long n) => Fill(GetPlural("DownloadChapters", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Line above that button.</summary>
+    public static string DownloadOverWifi => Get("DownloadOverWifi");
+
+    /// <summary>Title of the question before reading a series again.</summary>
+    public static string ReadAgainTitle(string title) => Fill(Get("ReadAgainTitle"), ("title", title));
+
+    /// <summary>What happens on each side.</summary>
+    public static string ReadAgainLine => Get("ReadAgainLine");
+
+    /// <summary>The confirming button.</summary>
+    public static string ReadAgainConfirm => Get("ReadAgainConfirm");
+
+    /// <summary>Title of the sheet that changes where a series' chapters come from.</summary>
+    public static string SeriesReadFromTitle => Get("SeriesReadFromTitle");
+
+    /// <summary>While the sheet asks every source.</summary>
+    public static string SeriesReadFromAsking => Get("SeriesReadFromAsking");
+
+    /// <summary>The sheet with no source that has the series.</summary>
+    public static string SeriesReadFromNoneTitle => Get("SeriesReadFromNoneTitle");
+
+    /// <summary>Line under it.</summary>
+    public static string SeriesReadFromNoneLine => Get("SeriesReadFromNoneLine");
+
+    /// <summary>A source's chapters, first on its line.</summary>
+    public static string SeriesReadFromChapters(string latest) => Fill(Get("SeriesReadFromChapters"), ("latest", latest));
+
+    /// <summary>A source's chapters, after its kind on the line.</summary>
+    public static string SeriesReadFromChaptersLater(string latest) => Fill(Get("SeriesReadFromChaptersLater"), ("latest", latest));
+
+    /// <summary>A source's line while it is asked for its chapter list, first on its line.</summary>
+    public static string SeriesReadFromChecking => Get("SeriesReadFromChecking");
+
+    /// <summary>The same, after its kind on the line.</summary>
+    public static string SeriesReadFromCheckingLater => Get("SeriesReadFromCheckingLater");
+
+    /// <summary>A source that answered with no chapters for this series, first on its line.</summary>
+    public static string SeriesReadFromEmpty => Get("SeriesReadFromEmpty");
+
+    /// <summary>The same, after its kind on the line.</summary>
+    public static string SeriesReadFromEmptyLater => Get("SeriesReadFromEmptyLater");
+
+    /// <summary>After a folder's chapters.</summary>
+    public static string SeriesReadFromOnDevice(string device) => Fill(Get("SeriesReadFromOnDevice"), ("device", device));
+
+    /// <summary>Footnote of the Read from sheet.</summary>
+    public static string SeriesReadFromNote => Get("SeriesReadFromNote");
+
+    /// <summary>Heading for trackers that don't track this series.</summary>
+    public static string SeriesNotTracked => Get("SeriesNotTracked");
+
+    /// <summary>A tracker that isn't connected.</summary>
+    public static string SeriesTrackerConnect => Get("SeriesTrackerConnect");
+
+    /// <summary>A tracker that has no such series.</summary>
+    public static string SeriesTrackerNotThere => Get("SeriesTrackerNotThere");
+
+    /// <summary>A tracker looking for the series.</summary>
+    public static string SeriesTrackerLooking => Get("SeriesTrackerLooking");
+
+    /// <summary>A tracker that is behind, and catches up on the next sync.</summary>
+    public static string SeriesTrackerBehind(long has, long gets) => Fill(Get("SeriesTrackerBehind"), ("has", has.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("gets", gets.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A tracker ahead of Kaeri.</summary>
+    public static string SeriesTrackerAhead(long has) => Fill(Get("SeriesTrackerAhead"), ("has", has.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A tracker's score out of ten.</summary>
+    public static string SeriesTrackerScore(string score) => Fill(Get("SeriesTrackerScore"), ("score", score));
+
+    /// <summary>Menu item on a tracker that differs.</summary>
+    public static string SeriesTrackerKeepKaeri => Get("SeriesTrackerKeepKaeri");
+
+    /// <summary>Menu item on a tracker that differs.</summary>
+    public static string SeriesTrackerTakeTheirs(string tracker) => Fill(Get("SeriesTrackerTakeTheirs"), ("tracker", tracker));
+
+    /// <summary>Under a tracker's guesses for the series.</summary>
+    public static string SeriesTrackerNoneOfThese => Get("SeriesTrackerNoneOfThese");
+
+    /// <summary>AniList's list.</summary>
+    public static string ReadListReading => Get("ReadListReading");
+
+    /// <summary>AniList's list.</summary>
+    public static string ReadListPlanning => Get("ReadListPlanning");
+
+    /// <summary>AniList's list.</summary>
+    public static string ReadListCompleted => Get("ReadListCompleted");
+
+    /// <summary>AniList's list.</summary>
+    public static string ReadListPaused => Get("ReadListPaused");
+
+    /// <summary>AniList's list.</summary>
+    public static string ReadListDropped => Get("ReadListDropped");
+
+    /// <summary>AniList's list.</summary>
+    public static string ReadListRereading => Get("ReadListRereading");
+
+    /// <summary>Series in folders and servers that are on no list.</summary>
+    public static string ReadListYourFiles => Get("ReadListYourFiles");
+
+    /// <summary>A choice.</summary>
+    public static string MediumWatch => Get("MediumWatch");
+
+    /// <summary>A choice.</summary>
+    public static string MediumRead => Get("MediumRead");
+
+    /// <summary>A choice.</summary>
+    public static string MediumBoth => Get("MediumBoth");
+
+    /// <summary>Line under the Watch choice.</summary>
+    public static string MediumWatchLine => Get("MediumWatchLine");
+
+    /// <summary>Line under the Read choice.</summary>
+    public static string MediumReadLine => Get("MediumReadLine");
+
+    /// <summary>Line under the Both choice.</summary>
+    public static string MediumBothLine => Get("MediumBothLine");
+
+    /// <summary>The answer, as the Settings row says it.</summary>
+    public static string MediumAnswerWatch => Get("MediumAnswerWatch");
+
+    /// <summary>The answer, as the Settings row says it.</summary>
+    public static string MediumAnswerRead => Get("MediumAnswerRead");
+
+    /// <summary>The answer, as the Settings row says it.</summary>
+    public static string MediumAnswerBoth => Get("MediumAnswerBoth");
+
+    /// <summary>Title of the sheet and the toolbar button.</summary>
+    public static string SourcesAddTitle => Get("SourcesAddTitle");
+
+    /// <summary>Line in the Add a source sheet.</summary>
+    public static string BookAddLine => Get("BookAddLine");
+
+    /// <summary>A kind in the Add a source sheet.</summary>
+    public static string BookAddFolder => Get("BookAddFolder");
+
+    /// <summary>Line under it.</summary>
+    public static string BookAddFolderLine(string device) => Fill(Get("BookAddFolderLine"), ("device", device));
+
+    /// <summary>A kind in the Add a source sheet.</summary>
+    public static string BookAddServer => Get("BookAddServer");
+
+    /// <summary>Line under it.</summary>
+    public static string BookAddServerLine => Get("BookAddServerLine");
+
+    /// <summary>A kind in the Add a source sheet.</summary>
+    public static string BookAddStore => Get("BookAddStore");
+
+    /// <summary>Line under it.</summary>
+    public static string BookAddStoreLine => Get("BookAddStoreLine");
+
+    /// <summary>Title of the Add a server sheet.</summary>
+    public static string BookAddServerTitle => Get("BookAddServerTitle");
+
+    /// <summary>The sheet's amber button.</summary>
+    public static string BookAddServerButton => Get("BookAddServerButton");
+
+    /// <summary>What the address answered, before the sign-in.</summary>
+    public static string SourcesFoundServer(string kind) => Fill(Get("SourcesFoundServer"), ("kind", kind));
+
+    /// <summary>What the server held once signed in, when it said how many series it lists.</summary>
+    public static string SourcesFoundServerSeries(string kind, long n) => Fill(GetPlural("SourcesFoundServerSeries", n), ("kind", kind), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>While the address is tried.</summary>
+    public static string BookServerLooking => Get("BookServerLooking");
+
+    /// <summary>Line under the password.</summary>
+    public static string BookServerNote => Get("BookServerNote");
+
+    /// <summary>Heading in Your sources.</summary>
+    public static string BookSourcesFolders => Get("BookSourcesFolders");
+
+    /// <summary>Heading in Your sources.</summary>
+    public static string BookSourcesServers => Get("BookSourcesServers");
+
+    /// <summary>Heading in Your sources.</summary>
+    public static string BookSourcesPlugins => Get("BookSourcesPlugins");
+
+    /// <summary>Under the plugins, before a link to the plugin stores.</summary>
+    public static string BookSourcesPluginsFooter => Get("BookSourcesPluginsFooter");
+
+    /// <summary>How many series a folder or server holds.</summary>
+    public static string BookSourcesSeries(long n) => Fill(GetPlural("BookSourcesSeries", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A folder being looked through.</summary>
+    public static string BookSourcesScanning(long n) => Fill(Get("BookSourcesScanning"), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A folder that can't be found, such as a drive that isn't plugged in.</summary>
+    public static string BookSourcesMissing => Get("BookSourcesMissing");
+
+    /// <summary>A source that is turned off.</summary>
+    public static string BookSourcesOff => Get("BookSourcesOff");
+
+    /// <summary>On a server's line.</summary>
+    public static string BookSourcesProgressBack => Get("BookSourcesProgressBack");
+
+    /// <summary>A server's kind.</summary>
+    public static string BookSourcesOpds => Get("BookSourcesOpds");
+
+    /// <summary>A plugin's store.</summary>
+    public static string BookSourcesFromStore(string store) => Fill(Get("BookSourcesFromStore"), ("store", store));
+
+    /// <summary>A plugin's version.</summary>
+    public static string BookSourcesVersion(string version) => Fill(Get("BookSourcesVersion"), ("version", version));
+
+    /// <summary>Button on a folder: series whose match needs a look.</summary>
+    public static string BookSourcesCheckMatches(long n) => Fill(Get("BookSourcesCheckMatches"), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Title of the Check matches sheet.</summary>
+    public static string BookSourcesCheckMatchesTitle => Get("BookSourcesCheckMatchesTitle");
+
+    /// <summary>A folder menu item: look through the folders again.</summary>
+    public static string BookSourcesScan => Get("BookSourcesScan");
+
+    /// <summary>A server menu switch.</summary>
+    public static string BookSourcesReportProgress => Get("BookSourcesReportProgress");
+
+    /// <summary>A server menu switch.</summary>
+    public static string BookSourcesUse => Get("BookSourcesUse");
+
+    /// <summary>An address that answered but serves no books.</summary>
+    public static string BookSourcesNotABookServer => Get("BookSourcesNotABookServer");
+
+    /// <summary>A folder name with no match.</summary>
+    public static string BookSourcesNoMatch => Get("BookSourcesNoMatch");
+
+    /// <summary>Button: keep the series as Your files, unmatched.</summary>
+    public static string BookSourcesKeep => Get("BookSourcesKeep");
+
+    /// <summary>Button: search for the match by hand.</summary>
+    public static string BookSourcesFind => Get("BookSourcesFind");
+
+    /// <summary>Footnote of the Check matches sheet.</summary>
+    public static string BookSourcesUnmatchedNote => Get("BookSourcesUnmatchedNote");
+
+    /// <summary>Accessibility label of the control that sets Shows or Reading in the Library and Search.</summary>
+    public static string LibraryScopeLabel => Get("LibraryScopeLabel");
+
+    /// <summary>A side of that control.</summary>
+    public static string LibraryScopeShows => Get("LibraryScopeShows");
+
+    /// <summary>A side of that control.</summary>
+    public static string LibraryScopeReading => Get("LibraryScopeReading");
+
+    /// <summary>The reading library's order: as the engine sends it, most recently read first.</summary>
+    public static string ReadSortLastRead => Get("ReadSortLastRead");
+
+    /// <summary>Accessibility value of the list menu: the list and how many series are on it.</summary>
+    public static string ReadLibraryListValue(string list, long n) => Fill(GetPlural("ReadLibraryListValue", n), ("list", list), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A reading list with nothing on it. A Search button follows.</summary>
+    public static string ReadLibraryEmpty(string list) => Fill(Get("ReadLibraryEmpty"), ("list", list));
+
+    /// <summary>Line under it.</summary>
+    public static string ReadLibraryEmptyLine => Get("ReadLibraryEmptyLine");
+
+    /// <summary>Your files with nothing in it.</summary>
+    public static string ReadLibraryFilesEmptyTitle => Get("ReadLibraryFilesEmptyTitle");
+
+    /// <summary>Line under it.</summary>
+    public static string ReadLibraryFilesEmptyLine => Get("ReadLibraryFilesEmptyLine");
+
+    /// <summary>The button under it.</summary>
+    public static string ReadLibraryFilesAdd => Get("ReadLibraryFilesAdd");
+
+    /// <summary>The search field's prompt while Search looks for reading.</summary>
+    public static string ReadSearchPlaceholder => Get("ReadSearchPlaceholder");
+
+    /// <summary>The last row of reading's results with both media on: matches in the other scope.</summary>
+    public static string SearchOtherScope(long n, string scope) => Fill(GetPlural("SearchOtherScope", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("scope", scope));
+
+    /// <summary>The button on that row, which switches the scope.</summary>
+    public static string SearchShowThem => Get("SearchShowThem");
+
+    /// <summary>The line over browsing: what is shown, and where the list comes from.</summary>
+    public static string ReadSearchBrowseLine(string what) => Fill(Get("ReadSearchBrowseLine"), ("what", what));
+
+    /// <summary>Over reading's results once every result is listed: how many series AniList found.</summary>
+    public static string ReadSearchTotal(long n) => Fill(GetPlural("ReadSearchTotal", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Search couldn't ask AniList.</summary>
+    public static string ReadSearchFailed => Get("ReadSearchFailed");
+
+    /// <summary>No results for what was typed.</summary>
+    public static string ReadSearchNothing(string query) => Fill(Get("ReadSearchNothing"), ("query", query));
+
+    /// <summary>No results while browsing with filters.</summary>
+    public static string ReadSearchNothingBrowse => Get("ReadSearchNothingBrowse");
+
+    /// <summary>Line under no results.</summary>
+    public static string ReadSearchNothingLine => Get("ReadSearchNothingLine");
+
+    /// <summary>Line under no results with filters set. A Clear filters button follows.</summary>
+    public static string ReadSearchNothingFiltersLine => Get("ReadSearchNothingFiltersLine");
+
+    /// <summary>The button under it.</summary>
+    public static string ReadSearchClearFilters => Get("ReadSearchClearFilters");
+
+    /// <summary>A sort of reading's Search, AniList's.</summary>
+    public static string ReadSortTrending => Get("ReadSortTrending");
+
+    /// <summary>A sort of reading's Search, AniList's.</summary>
+    public static string ReadSortScore => Get("ReadSortScore");
+
+    /// <summary>A sort of reading's Search, AniList's.</summary>
+    public static string ReadSortNewest => Get("ReadSortNewest");
+
+    /// <summary>A filter.</summary>
+    public static string ReadFilterFormat => Get("ReadFilterFormat");
+
+    /// <summary>A filter.</summary>
+    public static string ReadFilterOrigin => Get("ReadFilterOrigin");
+
+    /// <summary>The first choice of the Origin filter's menu in reading's Search once an origin is set: it takes them all off.</summary>
+    public static string ReadFilterAnyOrigin => Get("ReadFilterAnyOrigin");
+
+    /// <summary>A filter.</summary>
+    public static string ReadFilterStatus => Get("ReadFilterStatus");
+
+    /// <summary>A filter.</summary>
+    public static string ReadFilterGenres => Get("ReadFilterGenres");
+
+    /// <summary>Title of the iPhone's filters sheet.</summary>
+    public static string ReadFilterTitle => Get("ReadFilterTitle");
+
+    /// <summary>Button in that sheet that clears every filter.</summary>
+    public static string ReadFilterReset => Get("ReadFilterReset");
+
+    /// <summary>Accessibility value of a filter with nothing chosen.</summary>
+    public static string ReadFilterAny => Get("ReadFilterAny");
+
+    /// <summary>A filter's name before its value, once set: "Origin: Korea".</summary>
+    public static string ReadFilterSet(string name) => Fill(Get("ReadFilterSet"), ("name", name));
+
+    /// <summary>A filter with several values: the first, then how many more.</summary>
+    public static string ReadFilterMany(string first, long more) => Fill(Get("ReadFilterMany"), ("first", first), ("more", more.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A genre left out.</summary>
+    public static string ReadFilterNotGenre(string genre) => Fill(Get("ReadFilterNotGenre"), ("genre", genre));
+
+    /// <summary>How many genres are set.</summary>
+    public static string ReadFilterGenresCount(long n) => Fill(GetPlural("ReadFilterGenresCount", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A genre's state: only series with it.</summary>
+    public static string ReadFilterIncluded => Get("ReadFilterIncluded");
+
+    /// <summary>A genre's state: no series with it.</summary>
+    public static string ReadFilterLeftOut => Get("ReadFilterLeftOut");
+
+    /// <summary>The last entry of the Genres menu, which holds the genres the menu has no room for.</summary>
+    public static string ReadFilterMoreGenres => Get("ReadFilterMoreGenres");
+
+    /// <summary>A filter of reading's Search: when a series started.</summary>
+    public static string ReadSearchStarted => Get("ReadSearchStarted");
+
+    /// <summary>The filter bar's chip that searches only the person's own sources, leaving AniList out.</summary>
+    public static string ReadSearchSourcesOnly => Get("ReadSearchSourcesOnly");
+
+    /// <summary>Search's section heading under AniList's results: one group per source of the person's.</summary>
+    public static string ReadSearchFromSources => Get("ReadSearchFromSources");
+
+    /// <summary>E-ink and the terminal: a source group still waiting for its answer. Also its screen reader label. The source is its name.</summary>
+    public static string ReadSearchAsking(string source) => Fill(Get("ReadSearchAsking"), ("source", source));
+
+    /// <summary>A source group whose source failed to answer. The reason and Try again follow.</summary>
+    public static string ReadSearchSourceFailed(string source) => Fill(Get("ReadSearchSourceFailed"), ("source", source));
+
+    /// <summary>The reason under it when the source gave no answer in time.</summary>
+    public static string ReadSearchSourceTimeout(long seconds) => Fill(Get("ReadSearchSourceTimeout"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>One line at the end of the sources' groups for every source that found nothing. The sources are their names, joined as a list.</summary>
+    public static string ReadSearchSourceNothing(string sources) => Fill(Get("ReadSearchSourceNothing"), ("sources", sources));
+
+    /// <summary>On an AniList result that one of the person's sources has. The source is its name.</summary>
+    public static string ReadSearchInSource(string source) => Fill(Get("ReadSearchInSource"), ("source", source));
+
+    /// <summary>On an AniList result that the person's folders have. All their folders search as one source, so the line says they are the person's own, not a place called Folders.</summary>
+    public static string ReadSearchInFolders => Get("ReadSearchInFolders");
+
+    /// <summary>On an AniList result that more than one of the person's sources has. Always 2 or more.</summary>
+    public static string ReadSearchInSources(long n) => Fill(GetPlural("ReadSearchInSources", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Search, when AniList found nothing but the person's sources did.</summary>
+    public static string ReadSearchAnilistNothing => Get("ReadSearchAnilistNothing");
+
+    /// <summary>Search, when AniList could not be reached.</summary>
+    public static string ReadSearchAnilistFailed => Get("ReadSearchAnilistFailed");
+
+    /// <summary>The line under it.</summary>
+    public static string ReadSearchAnilistFailedLine => Get("ReadSearchAnilistFailedLine");
+
+    /// <summary>Search, when nothing was found anywhere: under the line saying AniList found nothing.</summary>
+    public static string ReadSearchSourcesNothing => Get("ReadSearchSourcesNothing");
+
+    /// <summary>Search with Your sources only on, when no source found anything. The line to try other words follows.</summary>
+    public static string ReadSearchSourcesOnlyNothing => Get("ReadSearchSourcesOnlyNothing");
+
+    /// <summary>Line under a reading page's title when the device has no connection.</summary>
+    public static string ReadStateOfflineLine => Get("ReadStateOfflineLine");
+
+    /// <summary>Over reading's results while more pages are to come, so AniList's count is not known yet.</summary>
+    public static string ReadSearchTotalUnknown => Get("ReadSearchTotalUnknown");
+
+    /// <summary>The link under From your sources that shows the rest of AniList's results.</summary>
+    public static string ReadSearchMoreAnilist => Get("ReadSearchMoreAnilist");
+
+    /// <summary>Beside More from AniList: how many of AniList's results show.</summary>
+    public static string ReadSearchShown(long shown, long total) => Fill(Get("ReadSearchShown"), ("shown", shown.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Beside More from AniList while AniList's count is not known yet: how many results show.</summary>
+    public static string ReadSearchShownSome(long shown) => Fill(Get("ReadSearchShownSome"), ("shown", shown.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Beside a source's name in Search: the kind of source it is.</summary>
+    public static string ReadSearchSourceKindServer => Get("ReadSearchSourceKindServer");
+
+    public static string ReadSearchSourceKindFolder => Get("ReadSearchSourceKindFolder");
+
+    public static string ReadSearchSourceKindPlugin => Get("ReadSearchSourceKindPlugin");
+
+    /// <summary>The button of a source group with more than five hits.</summary>
+    public static string ReadSearchSourceMore(long n) => Fill(Get("ReadSearchSourceMore"), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The line over browsing once every result is listed: the browse line, then the total. As in "Manga, trending · 1,204 series from AniList".</summary>
+    public static string ReadSearchLineTotal(string line, string total) => Fill(Get("ReadSearchLineTotal"), ("line", line), ("total", total));
+
+    /// <summary>Joins the parts of the browse line, one more at a time. As in "Manga, Japan, Popular".</summary>
+    public static string ReadSearchBrowseParts(string list, string next) => Fill(Get("ReadSearchBrowseParts"), ("list", list), ("next", next));
+
+    /// <summary>A tile's caption under its cover: two facts. As in "Manga · Japan" or "Manga · Releasing".</summary>
+    public static string ReadCaptionTwo(string first, string second) => Fill(Get("ReadCaptionTwo"), ("first", first), ("second", second));
+
+    /// <summary>A filter's button once set, as shown: its name, then the value. As in "Format: Manga".</summary>
+    public static string ReadFilterShown(string name, string value) => Fill(Get("ReadFilterShown"), ("name", name), ("value", value));
+
+    /// <summary>A cover tile: its title, then its caption. As in "Paper Lantern, Manga, Japan".</summary>
+    public static string ReadNameTile(string title, string line) => Fill(Get("ReadNameTile"), ("title", title), ("line", line));
+
+    /// <summary>A cover tile a source already has: title, caption, then the source. As in "Paper Lantern, Manga, In Folders".</summary>
+    public static string ReadNameTilePlaced(string title, string line, string placed) => Fill(Get("ReadNameTilePlaced"), ("title", title), ("line", line), ("placed", placed));
+
+    /// <summary>A tile with only its title and the source that has it. As in "Paper Lantern, In Folders".</summary>
+    public static string ReadNameTileOnlyPlaced(string title, string placed) => Fill(Get("ReadNameTileOnlyPlaced"), ("title", title), ("placed", placed));
+
+    /// <summary>An Up next or This week tile: title, when, and the chapter. As in "Paper Lantern, Tuesday, Chapter 42".</summary>
+    public static string ReadNameWeekTile(string title, string time, string chapter) => Fill(Get("ReadNameWeekTile"), ("title", title), ("time", time), ("chapter", chapter));
+
+    /// <summary>An Up next or This week tile without a chapter. As in "Paper Lantern, Tuesday".</summary>
+    public static string ReadNameWeekTileTime(string title, string time) => Fill(Get("ReadNameWeekTileTime"), ("title", title), ("time", time));
+
+    /// <summary>The cover art of Home's spotlight, which opens the series. As in "Paper Lantern, Details".</summary>
+    public static string ReadNameSpotlightArt(string title) => Fill(Get("ReadNameSpotlightArt"), ("title", title));
+
+    /// <summary>A row heading with its side words. As in "New manga, Last 12 months".</summary>
+    public static string ReadNameHeading(string heading, string side) => Fill(Get("ReadNameHeading"), ("heading", heading), ("side", side));
+
+    /// <summary>A row or its heading while its covers load. As in "Trending manga, loading".</summary>
+    public static string ReadNameLoading(string name) => Fill(Get("ReadNameLoading"), ("name", name));
+
+    /// <summary>A row heading with side words while its covers load. As in "New manga, Last 12 months, loading".</summary>
+    public static string ReadNameHeadingLoading(string heading, string side) => Fill(Get("ReadNameHeadingLoading"), ("heading", heading), ("side", side));
+
+    /// <summary>A row's View all link. As in "View all, Trending manga".</summary>
+    public static string ReadNameViewAll(string row) => Fill(Get("ReadNameViewAll"), ("row", row));
+
+    /// <summary>A filter button once set. As in "Format, Manga".</summary>
+    public static string ReadNameFilter(string name, string value) => Fill(Get("ReadNameFilter"), ("name", name), ("value", value));
+
+    /// <summary>A failure block: what failed, then why. As in "Folders didn't answer, No answer in 15 seconds".</summary>
+    public static string ReadNameFailure(string line, string reason) => Fill(Get("ReadNameFailure"), ("line", line), ("reason", reason));
+
+    /// <summary>A source row's heading: the source's name, then what kind of source it is. As in "Home shelf, Folder".</summary>
+    public static string ReadNameSource(string source, string kind) => Fill(Get("ReadNameSource"), ("source", source), ("kind", kind));
+
+    /// <summary>A source row's button for its other hits. As in "Show 12 more from Folders".</summary>
+    public static string ReadNameSourceMore(long n, string source) => Fill(GetPlural("ReadNameSourceMore", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("source", source));
+
+    /// <summary>Under the Your sources only switch in the iPhone and iPad Filters sheet.</summary>
+    public static string ReadSearchSourcesOnlyLine => Get("ReadSearchSourcesOnlyLine");
+
+    /// <summary>What a screen reader hears once, when AniList and every source have answered or run out of time. Sources that didn't answer follow it, each as its own sentence.</summary>
+    public static string ReadSearchDone(long anilist, long sources) => Fill(Get("ReadSearchDone"), ("anilist", anilist.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("sources", sources.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A screen reader's label for a discovery row's heading on reading's Home while its covers are on their way. The row is its heading, such as "Trending manga".</summary>
+    public static string ReadHomeRowLoading(string row) => Fill(Get("ReadHomeRowLoading"), ("row", row));
+
+    /// <summary>Screen readers: the custom action on a discovery cover that puts the series on Planning.</summary>
+    public static string ReadTileAddPlanning => Get("ReadTileAddPlanning");
+
+    /// <summary>Said once by screen readers when Your sources only turns on.</summary>
+    public static string ReadSearchAnilistHidden => Get("ReadSearchAnilistHidden");
+
+    /// <summary>Said once by screen readers when every part of a search has answered: how many series AniList found. The sources' count and any source that didn't answer follow.</summary>
+    public static string ReadSearchSaidAnilist(long n) => Fill(GetPlural("ReadSearchSaidAnilist", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Said once by screen readers when every part of a search has answered: how many series the person's sources found that AniList did not list.</summary>
+    public static string ReadSearchSaidSources(long n) => Fill(GetPlural("ReadSearchSaidSources", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Over a first-run page's title: which page of how many.</summary>
+    public static string OnboardingStep(long step, long total) => Fill(Get("OnboardingStep"), ("step", step.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Line under "Welcome to Kaeri" on the first page, naming both media.</summary>
+    public static string OnboardingWelcomeLine => Get("OnboardingWelcomeLine");
+
+    /// <summary>Note under the welcome line.</summary>
+    public static string OnboardingWelcomeNote => Get("OnboardingWelcomeNote");
+
+    /// <summary>Title of the page that asks what Kaeri is for, and of the sheet after the update.</summary>
+    public static string OnboardingMediumTitle => Get("OnboardingMediumTitle");
+
+    /// <summary>Line under the title of the medium page.</summary>
+    public static string OnboardingMediumLine => Get("OnboardingMediumLine");
+
+    /// <summary>Accessibility hint on Continue while nothing is chosen on the medium page.</summary>
+    public static string OnboardingMediumHint => Get("OnboardingMediumHint");
+
+    /// <summary>Title of the first-run page that offers AniList.</summary>
+    public static string OnboardingListsTitle => Get("OnboardingListsTitle");
+
+    /// <summary>Line on the AniList page after Watch.</summary>
+    public static string OnboardingListsLineWatch(string tracker) => Fill(Get("OnboardingListsLineWatch"), ("tracker", tracker));
+
+    /// <summary>Line on the AniList page after Read.</summary>
+    public static string OnboardingListsLineRead(string tracker) => Fill(Get("OnboardingListsLineRead"), ("tracker", tracker));
+
+    /// <summary>Line on the AniList page after Both.</summary>
+    public static string OnboardingListsLineBoth(string tracker) => Fill(Get("OnboardingListsLineBoth"), ("tracker", tracker));
+
+    /// <summary>Line under AniList's name on the first-run page.</summary>
+    public static string OnboardingListsAnilistLine => Get("OnboardingListsAnilistLine");
+
+    /// <summary>Under AniList on the first-run page after Watch: the other trackers, for later.</summary>
+    public static string OnboardingListsLaterWatch => Get("OnboardingListsLaterWatch");
+
+    /// <summary>Under AniList on the first-run page after Read: the other trackers, for later.</summary>
+    public static string OnboardingListsLaterRead => Get("OnboardingListsLaterRead");
+
+    /// <summary>Under AniList on the first-run page after Both: the other trackers, for later.</summary>
+    public static string OnboardingListsLaterBoth => Get("OnboardingListsLaterBoth");
+
+    /// <summary>The first-run page's main button: sign in to the tracker.</summary>
+    public static string OnboardingConnect(string tracker) => Fill(Get("OnboardingConnect"), ("tracker", tracker));
+
+    /// <summary>Title of the last first-run page after Read or Both.</summary>
+    public static string OnboardingBooksTitle => Get("OnboardingBooksTitle");
+
+    /// <summary>Line under the title of the books page.</summary>
+    public static string OnboardingBooksLine => Get("OnboardingBooksLine");
+
+    /// <summary>Row on the books page: add a folder of books.</summary>
+    public static string OnboardingBooksFolder => Get("OnboardingBooksFolder");
+
+    /// <summary>Line under Add a folder on the books page.</summary>
+    public static string OnboardingBooksFolderLine => Get("OnboardingBooksFolderLine");
+
+    /// <summary>Row on the books page: add a book server.</summary>
+    public static string OnboardingBooksServer => Get("OnboardingBooksServer");
+
+    /// <summary>Line under Add a server on the books page.</summary>
+    public static string OnboardingBooksServerLine => Get("OnboardingBooksServerLine");
+
+    /// <summary>Heading over the invite field on the books page.</summary>
+    public static string OnboardingBooksInviteHeading => Get("OnboardingBooksInviteHeading");
+
+    /// <summary>Placeholder of the invite field on the books page.</summary>
+    public static string OnboardingBooksInvitePlaceholder => Get("OnboardingBooksInvitePlaceholder");
+
+    /// <summary>Line under the invite field: whose code a plugin is.</summary>
+    public static string OnboardingBooksPluginLine => Get("OnboardingBooksPluginLine");
+
+    /// <summary>Title of the last first-run page after Both: where shows and books come from.</summary>
+    public static string OnboardingBothTitle => Get("OnboardingBothTitle");
+
+    /// <summary>Line under the title of that page.</summary>
+    public static string OnboardingBothLine => Get("OnboardingBothLine");
+
+    /// <summary>Heading over the shows' rows on that page.</summary>
+    public static string OnboardingBothShows => Get("OnboardingBothShows");
+
+    /// <summary>Heading over the books' rows on that page.</summary>
+    public static string OnboardingBothBooks => Get("OnboardingBothBooks");
+
+    /// <summary>Line under Add a folder in the shows' part, on a computer.</summary>
+    public static string OnboardingBothShowsFolderLine(string device) => Fill(Get("OnboardingBothShowsFolderLine"), ("device", device));
+
+    /// <summary>Line under Add a server in the shows' part.</summary>
+    public static string OnboardingBothShowsServerLine => Get("OnboardingBothShowsServerLine");
+
+    /// <summary>Accessibility value of a choice row: its place among the three.</summary>
+    public static string MediumChoicePosition(long n, long total) => Fill(Get("MediumChoicePosition"), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under the choices in the sheet.</summary>
+    public static string MediumChangeLater => Get("MediumChangeLater");
+
+    /// <summary>Line of the sheet over Home after the update that brought reading.</summary>
+    public static string MediumUpdateLine(string device) => Fill(Get("MediumUpdateLine"), ("device", device));
+
+    /// <summary>Title of the sheet when the other devices answer Watch. The devices are their names, joined; n is how many there are.</summary>
+    public static string MediumJoinTitleWatch(string devices, long n) => Fill(GetPlural("MediumJoinTitleWatch", n), ("devices", devices), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Title of the sheet when the other devices answer Read.</summary>
+    public static string MediumJoinTitleRead(string devices, long n) => Fill(GetPlural("MediumJoinTitleRead", n), ("devices", devices), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Title of the sheet when the other devices answer Both.</summary>
+    public static string MediumJoinTitleBoth(string devices, long n) => Fill(GetPlural("MediumJoinTitleBoth", n), ("devices", devices), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Line of the sheet on joining.</summary>
+    public static string MediumJoinLine(string device) => Fill(Get("MediumJoinLine"), ("device", device));
+
+    /// <summary>Title of the confirmation before watching is turned off.</summary>
+    public static string MediumOffTitleWatch => Get("MediumOffTitleWatch");
+
+    /// <summary>Title of the confirmation before reading is turned off.</summary>
+    public static string MediumOffTitleRead => Get("MediumOffTitleRead");
+
+    /// <summary>What turning watching off does.</summary>
+    public static string MediumOffWatchBody(string device) => Fill(Get("MediumOffWatchBody"), ("device", device));
+
+    /// <summary>What turning reading off does.</summary>
+    public static string MediumOffReadBody(string device) => Fill(Get("MediumOffReadBody"), ("device", device));
+
+    /// <summary>Switch in the confirmation, off by default.</summary>
+    public static string MediumOffDeleteWatch => Get("MediumOffDeleteWatch");
+
+    /// <summary>Switch in the confirmation, off by default.</summary>
+    public static string MediumOffDeleteRead => Get("MediumOffDeleteRead");
+
+    /// <summary>Under the switch: how much the downloads take.</summary>
+    public static string MediumOffDeleteSize(string size, string device) => Fill(Get("MediumOffDeleteSize"), ("size", size), ("device", device));
+
+    /// <summary>The confirmation's main button.</summary>
+    public static string MediumOffConfirmWatch => Get("MediumOffConfirmWatch");
+
+    /// <summary>The confirmation's main button.</summary>
+    public static string MediumOffConfirmRead => Get("MediumOffConfirmRead");
+
+    /// <summary>Settings row and page: what Kaeri is for on this device.</summary>
+    public static string SettingsKaeriIsFor => Get("SettingsKaeriIsFor");
+
+    /// <summary>Line under Kaeri is for on the Mac and iPad.</summary>
+    public static string SettingsMediumNote => Get("SettingsMediumNote");
+
+    /// <summary>Under the choices on the iPhone's page.</summary>
+    public static string SettingsMediumFooter => Get("SettingsMediumFooter");
+
+    /// <summary>Line under Open at.</summary>
+    public static string SettingsOpenAtNote => Get("SettingsOpenAtNote");
+
+    /// <summary>Settings pane and group: reading.</summary>
+    public static string SettingsGroupReading => Get("SettingsGroupReading");
+
+    /// <summary>Downloads group with both media on: shows.</summary>
+    public static string SettingsGroupShows => Get("SettingsGroupShows");
+
+    /// <summary>The Reading pane's column beside it.</summary>
+    public static string SettingsAsideReading => Get("SettingsAsideReading");
+
+    /// <summary>Group: how the reader opens each kind of book.</summary>
+    public static string SettingsReaderDefaults => Get("SettingsReaderDefaults");
+
+    /// <summary>Under the reader defaults.</summary>
+    public static string SettingsReaderDefaultsFooter => Get("SettingsReaderDefaultsFooter");
+
+    /// <summary>Row: manga's reader default.</summary>
+    public static string SettingsReaderManga => Get("SettingsReaderManga");
+
+    /// <summary>Row: webtoons' reader default.</summary>
+    public static string SettingsReaderWebtoons => Get("SettingsReaderWebtoons");
+
+    /// <summary>Line under Webtoons.</summary>
+    public static string SettingsReaderWebtoonsNote => Get("SettingsReaderWebtoonsNote");
+
+    /// <summary>Row: light novels' reader default.</summary>
+    public static string SettingsReaderNovels => Get("SettingsReaderNovels");
+
+    /// <summary>A reader default: pages turned right to left.</summary>
+    public static string SettingsReaderRtl => Get("SettingsReaderRtl");
+
+    /// <summary>A reader default: pages turned left to right.</summary>
+    public static string SettingsReaderLtr => Get("SettingsReaderLtr");
+
+    /// <summary>A reader default: one long strip.</summary>
+    public static string SettingsReaderStrip => Get("SettingsReaderStrip");
+
+    /// <summary>A reader default for novels: pages.</summary>
+    public static string SettingsReaderPages => Get("SettingsReaderPages");
+
+    /// <summary>A reader default for novels: one scrolling column.</summary>
+    public static string SettingsReaderScrolled => Get("SettingsReaderScrolled");
+
+    /// <summary>Row: when a chapter counts as read.</summary>
+    public static string SettingsCountsRead => Get("SettingsCountsRead");
+
+    /// <summary>Line under Counts as read.</summary>
+    public static string SettingsCountsReadNote => Get("SettingsCountsReadNote");
+
+    /// <summary>Value of Counts as read: a short stay on the last page, or moving on past it.</summary>
+    public static string SettingsCountsReadValue => Get("SettingsCountsReadValue");
+
+    /// <summary>Value of Counts as read: only moving on past the last page, to the end or the next chapter.</summary>
+    public static string SettingsCountsReadMovingOn => Get("SettingsCountsReadMovingOn");
+
+    /// <summary>Line under Counts as read when it is Moving on from it.</summary>
+    public static string SettingsCountsReadMovingOnNote => Get("SettingsCountsReadMovingOnNote");
+
+    /// <summary>Value of Counts as read: only the person's own marks; the reader marks nothing.</summary>
+    public static string SettingsCountsReadMarked => Get("SettingsCountsReadMarked");
+
+    /// <summary>Reader default for manga: pages a group repeats at the start or end of its chapters are left out.</summary>
+    public static string SettingsSkipCredits => Get("SettingsSkipCredits");
+
+    /// <summary>Line under Skip credit pages.</summary>
+    public static string SettingsSkipCreditsNote => Get("SettingsSkipCreditsNote");
+
+    /// <summary>Line under Counts as read when it is When you mark it.</summary>
+    public static string SettingsCountsReadMarkedNote => Get("SettingsCountsReadMarkedNote");
+
+    /// <summary>Group: series settings that follow you to your other devices.</summary>
+    public static string SettingsFollowGroup => Get("SettingsFollowGroup");
+
+    /// <summary>Row in that group.</summary>
+    public static string SettingsFollowMode => Get("SettingsFollowMode");
+
+    /// <summary>Line under that row.</summary>
+    public static string SettingsFollowModeNote => Get("SettingsFollowModeNote");
+
+    /// <summary>Under the group: what stays on this device.</summary>
+    public static string SettingsFollowFooter(string device) => Fill(Get("SettingsFollowFooter"), ("device", device));
+
+    /// <summary>Line under Look in Series settings that follow you.</summary>
+    public static string SettingsLookFollowsNote => Get("SettingsLookFollowsNote");
+
+    /// <summary>Value of New chapters in Downloads: the series on the Reading list.</summary>
+    public static string SettingsNewChaptersReading => Get("SettingsNewChaptersReading");
+
+    /// <summary>Line under New chapters in Downloads.</summary>
+    public static string SettingsNewChaptersNote => Get("SettingsNewChaptersNote");
+
+    /// <summary>Group in Accounts: how reading progress goes to the trackers.</summary>
+    public static string SettingsProgressGroup => Get("SettingsProgressGroup");
+
+    /// <summary>Value of Send progress after: as each chapter counts as read.</summary>
+    public static string SettingsProgressChapter => Get("SettingsProgressChapter");
+
+    /// <summary>Value of Send progress after: once, when the reader closes.</summary>
+    public static string SettingsProgressClose => Get("SettingsProgressClose");
+
+    /// <summary>Value of When trackers disagree: the higher chapter wins.</summary>
+    public static string SettingsDisagreeFurthest => Get("SettingsDisagreeFurthest");
+
+    /// <summary>Value of When trackers disagree: the newest change wins, even a lower chapter.</summary>
+    public static string SettingsDisagreeLatest => Get("SettingsDisagreeLatest");
+
+    /// <summary>Line under When trackers disagree.</summary>
+    public static string SettingsDisagreeNote => Get("SettingsDisagreeNote");
+
+    /// <summary>Line under Keep next chapters ready.</summary>
+    public static string SettingsKeepChaptersReadyNote => Get("SettingsKeepChaptersReadyNote");
+
+    /// <summary>Line under Delete chapters after reading.</summary>
+    public static string SettingsDeleteAfterReadingNote => Get("SettingsDeleteAfterReadingNote");
+
+    /// <summary>Line under Show volumes: the list is grouped only when most chapters have a volume.</summary>
+    public static string SettingsShowVolumesNote => Get("SettingsShowVolumesNote");
+
+    /// <summary>Line under New chapters.</summary>
+    public static string SettingsChapterNotificationsNote => Get("SettingsChapterNotificationsNote");
+
+    /// <summary>Line under Downloads finished.</summary>
+    public static string SettingsDownloadsFinishedNote => Get("SettingsDownloadsFinishedNote");
+
+    /// <summary>Under New chapters.</summary>
+    public static string SettingsChapterNotificationsFooter => Get("SettingsChapterNotificationsFooter");
+
+    /// <summary>Credit under the trackers with reading on.</summary>
+    public static string AccountsMangaupdatesCredit => Get("AccountsMangaupdatesCredit");
+
+    /// <summary>Placeholder of the user name field when signing in to MangaUpdates.</summary>
+    public static string AccountsUsername => Get("AccountsUsername");
+
+    /// <summary>Beside the Reading heading in Downloads: how many chapters are kept and their size.</summary>
+    public static string ReadDownloadsTotal(long n, string size) => Fill(GetPlural("ReadDownloadsTotal", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("size", size));
+
+    /// <summary>A series' line in Downloads while a chapter downloads.</summary>
+    public static string ReadDownloadsActive(string chapter, long done, long total) => Fill(Get("ReadDownloadsActive"), ("chapter", chapter), ("done", done.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>After the chapter downloading: how many more wait.</summary>
+    public static string ReadDownloadsMoreQueued(long n) => Fill(Get("ReadDownloadsMoreQueued"), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A series' line in Downloads when its chapters wait to start.</summary>
+    public static string ReadDownloadsQueued(long n) => Fill(GetPlural("ReadDownloadsQueued", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A series' line in Downloads when a chapter failed, with the reason.</summary>
+    public static string ReadDownloadsFailed(string chapter, string reason) => Fill(Get("ReadDownloadsFailed"), ("chapter", chapter), ("reason", reason));
+
+    /// <summary>Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows.</summary>
+    public static string ReadDownloadNotStarted(string reason) => Fill(Get("ReadDownloadNotStarted"), ("reason", reason));
+
+    /// <summary>A series' line in Downloads: how many chapters are kept.</summary>
+    public static string ReadDownloadsKept(long n) => Fill(GetPlural("ReadDownloadsKept", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>After the kept count: how many of them are read.</summary>
+    public static string ReadDownloadsRead(long n) => Fill(Get("ReadDownloadsRead"), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Button on a series in Downloads: delete its read chapters, keeping bookmarked ones.</summary>
+    public static string ReadDownloadsDeleteRead => Get("ReadDownloadsDeleteRead");
+
+    /// <summary>Title of the Send to e-reader sheet, the chapter menu's item and the Settings row.</summary>
+    public static string SendTitle => Get("SendTitle");
+
+    /// <summary>Heading over the e-readers to choose from in the Send to e-reader sheet.</summary>
+    public static string SendFor => Get("SendFor");
+
+    /// <summary>Heading over what is being sent in the Send to e-reader sheet.</summary>
+    public static string SendWhat => Get("SendWhat");
+
+    /// <summary>Row in the Send to e-reader sheet: the chapters being sent.</summary>
+    public static string SendChapters => Get("SendChapters");
+
+    /// <summary>The chapters being sent when there is one: its number or label.</summary>
+    public static string SendChaptersOne(string chapter) => Fill(Get("SendChaptersOne"), ("chapter", chapter));
+
+    /// <summary>The chapters being sent when there are several, from the first to the last.</summary>
+    public static string SendChaptersRange(string first, string last) => Fill(Get("SendChaptersRange"), ("first", first), ("last", last));
+
+    /// <summary>Row in the Send to e-reader sheet: how big the files will be.</summary>
+    public static string SendSize => Get("SendSize");
+
+    /// <summary>The size of what is being sent, already sized (such as "64 MB"). It is a guess until the files are made.</summary>
+    public static string SendSizeAbout(string size) => Fill(Get("SendSizeAbout"), ("size", size));
+
+    /// <summary>Under the e-readers in the Send to e-reader sheet: what Kaeri cannot know after the files are sent.</summary>
+    public static string SendNoPlace => Get("SendNoPlace");
+
+    /// <summary>The one main button of the Send to e-reader sheet. It makes the files and then opens the share sheet.</summary>
+    public static string SendPrepare => Get("SendPrepare");
+
+    /// <summary>While the files are made: which chapter of how many. The ring beside it shows how far along.</summary>
+    public static string SendPreparing(long done, long total) => Fill(GetPlural("SendPreparing", total), ("done", done.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under the progress of a send to a device: what the pages are made for.</summary>
+    public static string SendSizedFor(string device) => Fill(Get("SendSizedFor"), ("device", device));
+
+    /// <summary>Under the size in the Send sheet when the files are over what the e-reader takes in one file.</summary>
+    public static string SendInParts(string size) => Fill(Get("SendInParts"), ("size", size));
+
+    /// <summary>A send that failed on one chapter. The cause is the sentence that says why.</summary>
+    public static string SendFailedChapter(string chapter, string cause) => Fill(Get("SendFailedChapter"), ("chapter", chapter), ("cause", cause));
+
+    /// <summary>A send that failed before or after its chapters. The cause is the sentence that says why.</summary>
+    public static string SendFailed(string cause) => Fill(Get("SendFailed"), ("cause", cause));
+
+    /// <summary>Text of the Send sheet's Size row while the size is still being worked out.</summary>
+    public static string SendSizeWorking => Get("SendSizeWorking");
+
+    /// <summary>Spoken value of the Chapters row in the Send sheet while its list is open.</summary>
+    public static string SendChaptersOpen => Get("SendChaptersOpen");
+
+    /// <summary>Spoken value of the Chapters row in the Send sheet while its list is closed.</summary>
+    public static string SendChaptersClosed => Get("SendChaptersClosed");
+
+    /// <summary>Spoken value of the ring in a send under way. Already a number from 0 to 100.</summary>
+    public static string SendProgressSpoken(long percent) => Fill(Get("SendProgressSpoken"), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Spoken action on a chapter row of a series: sends that chapter to an e-reader.</summary>
+    public static string SendChapterAction => Get("SendChapterAction");
+
+    /// <summary>Under an e-reader in the sheet when it takes files in parts: the size where a file is split.</summary>
+    public static string SendPartsOver(string size) => Fill(Get("SendPartsOver"), ("size", size));
+
+    /// <summary>While a send waits for the network and the person can stop it. The engine's own line comes first.</summary>
+    public static string SendWaitingCancel => Get("SendWaitingCancel");
+
+    /// <summary>When the files are ready, over the button that opens the share sheet. The count is how many files.</summary>
+    public static string SendReady(long n) => Fill(GetPlural("SendReady", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.</summary>
+    public static string SendShareAgain => Get("SendShareAgain");
+
+    /// <summary>A ready send whose files were cleared before they were shared or saved, in the Send to e-reader sheet and in the send's row. Prepared files are kept for a day.</summary>
+    public static string SendFilesGone => Get("SendFilesGone");
+
+    /// <summary>Button on a send whose files are gone: prepares the same chapters for the same e-reader again.</summary>
+    public static string SendAgain => Get("SendAgain");
+
+    /// <summary>A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.</summary>
+    public static string SendBanner(string device) => Fill(Get("SendBanner"), ("device", device));
+
+    /// <summary>The chapters a send holds, on its row under Sending to, when there are several: the first to the last, by their numbers or labels, such as 21 to 23.</summary>
+    public static string SendRowChapters(string first, string last) => Fill(Get("SendRowChapters"), ("first", first), ("last", last));
+
+    /// <summary>A send's row under Sending to: the series' title, then the chapters the send holds, such as "Chapter 23" or "Chapters 21 to 23". Shown on one line.</summary>
+    public static string SendRowLine(string title, string chapters) => Fill(Get("SendRowLine"), ("title", title), ("chapters", chapters));
+
+    /// <summary>The format of the files an e-reader is sent: a manga as a fixed-layout EPUB.</summary>
+    public static string SendFormatFixedEpub => Get("SendFormatFixedEpub");
+
+    /// <summary>The format of the files an e-reader is sent: the Kobo form of EPUB.</summary>
+    public static string SendFormatKepub => Get("SendFormatKepub");
+
+    /// <summary>The format of the files an e-reader is sent: a plain EPUB.</summary>
+    public static string SendFormatEpub => Get("SendFormatEpub");
+
+    /// <summary>The format of the files an e-reader is sent: a comic book archive.</summary>
+    public static string SendFormatCbz => Get("SendFormatCbz");
+
+    /// <summary>Line under an e-reader in the picker: the format the files will have, and the screen they are made for in pixels.</summary>
+    public static string SendTargetLine(string format, string width, string height) => Fill(Get("SendTargetLine"), ("format", format), ("width", width), ("height", height));
+
+    /// <summary>Title of the sheet that asks where you stopped reading on the e-reader.</summary>
+    public static string StopTitle => Get("StopTitle");
+
+    /// <summary>Note on a series page after chapters were sent: opens the question.</summary>
+    public static string StopNote(string device) => Fill(Get("StopNote"), ("device", device));
+
+    /// <summary>Button in that note.</summary>
+    public static string StopNoteAction => Get("StopNoteAction");
+
+    /// <summary>First line of the sheet when one chapter was sent. The date is already written out (such as "2 November").</summary>
+    public static string StopSentOne(string chapter, string device, string date) => Fill(Get("StopSentOne"), ("chapter", chapter), ("device", device), ("date", date));
+
+    /// <summary>First line of the sheet when several chapters were sent, from the first to the last.</summary>
+    public static string StopSentRange(string first, string last, string device, string date) => Fill(Get("StopSentRange"), ("first", first), ("last", last), ("device", device), ("date", date));
+
+    /// <summary>Switch in the sheet: the last chapter sent was read to its end.</summary>
+    public static string StopFinished(string chapter) => Fill(Get("StopFinished"), ("chapter", chapter));
+
+    /// <summary>The main button of the sheet: keeps the chapter chosen as the place.</summary>
+    public static string StopSet => Get("StopSet");
+
+    /// <summary>The other button of the sheet: leaves the place as it is, with the place named.</summary>
+    public static string StopKeep(string chapter, long page) => Fill(Get("StopKeep"), ("chapter", chapter), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The other button of the sheet when the place is not a page.</summary>
+    public static string StopKeepPlain => Get("StopKeepPlain");
+
+    /// <summary>Heading of the E-readers group in the Reading settings.</summary>
+    public static string EreadersGroup => Get("EreadersGroup");
+
+    /// <summary>Row in the E-readers group: the e-reader Send to e-reader offers first. The value is the e-reader's name.</summary>
+    public static string EreadersSendRow => Get("EreadersSendRow");
+
+    /// <summary>Row in the E-readers group that opens the feed settings. The value is On or Off.</summary>
+    public static string EreadersFeedRow => Get("EreadersFeedRow");
+
+    /// <summary>Line under the Share on this network switch.</summary>
+    public static string OpdsShareNote => Get("OpdsShareNote");
+
+    /// <summary>Footnote under the feed settings.</summary>
+    public static string OpdsFooter(string device) => Fill(Get("OpdsFooter"), ("device", device));
+
+    /// <summary>Row in the feed settings: the web address e-readers are given, with a button that copies it.</summary>
+    public static string OpdsAddress => Get("OpdsAddress");
+
+    /// <summary>Shown in place of the address while the feed is off or has no password.</summary>
+    public static string OpdsAddressOff => Get("OpdsAddressOff");
+
+    /// <summary>Row in the feed settings: the password e-readers ask for.</summary>
+    public static string OpdsPassword => Get("OpdsPassword");
+
+    /// <summary>Line under the password row.</summary>
+    public static string OpdsPasswordNote => Get("OpdsPasswordNote");
+
+    /// <summary>Button in the feed settings that makes a new password. The e-readers ask for the new one.</summary>
+    public static string OpdsNewPassword => Get("OpdsNewPassword");
+
+    /// <summary>Row in the feed settings: the port the feed listens on.</summary>
+    public static string OpdsPort => Get("OpdsPort");
+
+    /// <summary>Line under the port row when it is empty.</summary>
+    public static string OpdsPortNote => Get("OpdsPortNote");
+
+    /// <summary>Line under the port row when the port asked for was taken and another is used.</summary>
+    public static string OpdsPortMoved(long wanted, long port) => Fill(Get("OpdsPortMoved"), ("wanted", wanted.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("port", port.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Heading of the group that picks what the feed shares.</summary>
+    public static string OpdsShares => Get("OpdsShares");
+
+    /// <summary>Row in What it shares: the chapters downloaded on this device.</summary>
+    public static string OpdsShareDownloads => Get("OpdsShareDownloads");
+
+    /// <summary>Line under that row.</summary>
+    public static string OpdsShareDownloadsCount(long n) => Fill(GetPlural("OpdsShareDownloadsCount", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Row in What it shares: the series in the manga and comic folders.</summary>
+    public static string OpdsShareManga => Get("OpdsShareManga");
+
+    /// <summary>Row in What it shares: the series in the novel folders.</summary>
+    public static string OpdsShareNovels => Get("OpdsShareNovels");
+
+    /// <summary>Line under a folder row.</summary>
+    public static string OpdsShareSeriesCount(long n) => Fill(GetPlural("OpdsShareSeriesCount", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Heading of the list of e-readers that fetched files from the feed.</summary>
+    public static string OpdsFetchedBy => Get("OpdsFetchedBy");
+
+    /// <summary>Line when no e-reader has fetched anything since the feed started.</summary>
+    public static string OpdsFetchedNone => Get("OpdsFetchedNone");
+
+    /// <summary>Shown in place of the address while the feed is switched on and starting to listen.</summary>
+    public static string OpdsStarting => Get("OpdsStarting");
+
+    /// <summary>Shown in place of the address while the feed is on but the Mac is on no local network.</summary>
+    public static string OpdsPausedNone => Get("OpdsPausedNone");
+
+    /// <summary>Shown in place of the address while the feed is on but the only connection goes through a VPN.</summary>
+    public static string OpdsPausedVpn => Get("OpdsPausedVpn");
+
+    /// <summary>Title of the question before a new feed password is made.</summary>
+    public static string OpdsNewPasswordTitle => Get("OpdsNewPasswordTitle");
+
+    /// <summary>Text of that question.</summary>
+    public static string OpdsNewPasswordWarning => Get("OpdsNewPasswordWarning");
+
+    /// <summary>Spoken value of the Fetched by list's rows when an e-reader's last request is given. The time is already written out.</summary>
+    public static string OpdsFetchedTime(string time) => Fill(Get("OpdsFetchedTime"), ("time", time));
+
+    /// <summary>Line under an e-reader in that list: how many files it took.</summary>
+    public static string OpdsFetchedFiles(long n) => Fill(GetPlural("OpdsFetchedFiles", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Name for an e-reader that did not give one.</summary>
+    public static string OpdsReaderUnnamed(string address) => Fill(Get("OpdsReaderUnnamed"), ("address", address));
 
     /// <summary>Button that shows the season before.</summary>
     public static string SeasonalPrevious => Get("SeasonalPrevious");
@@ -4994,7 +7950,7 @@ public static partial class T
     public static string FiltersClose => Get("FiltersClose");
 
     /// <summary>Button that opens the filters, with how many are on.</summary>
-    public static string FiltersButtonCount(long count) => Fill(Get("FiltersButtonCount"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string FiltersButtonCount(long count) => Fill(Get("FiltersButtonCount"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Button that opens the filters when none is on.</summary>
     public static string FiltersButton => Get("FiltersButton");
@@ -5159,22 +8115,22 @@ public static partial class T
     public static string SearchLineService(string service) => Fill(Get("SearchLineService"), ("service", service));
 
     /// <summary>The count line under a title in a list or on a card: how many episodes a finished show has.</summary>
-    public static string CountEpisodes(long count) => Fill(GetPlural("CountEpisodes", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CountEpisodes(long count) => Fill(GetPlural("CountEpisodes", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The same, short, for a cell too narrow for the long form.</summary>
-    public static string CountEpisodesShort(long count) => Fill(Get("CountEpisodesShort"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CountEpisodesShort(long count) => Fill(Get("CountEpisodesShort"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The count line of a show that is airing and has a known total: episodes out so far, then the total.</summary>
-    public static string CountOutOf(long @out, long total) => Fill(Get("CountOutOf"), ("out", @out.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CountOutOf(long @out, long total) => Fill(Get("CountOutOf"), ("out", @out.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The same, short.</summary>
-    public static string CountOutOfShort(long @out, long total) => Fill(Get("CountOutOfShort"), ("out", @out.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CountOutOfShort(long @out, long total) => Fill(Get("CountOutOfShort"), ("out", @out.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The count line of a show that is airing and has no known total: episodes out so far.</summary>
-    public static string CountOut(long count) => Fill(GetPlural("CountOut", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CountOut(long count) => Fill(GetPlural("CountOut", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The same, short.</summary>
-    public static string CountOutShort(long count) => Fill(Get("CountOutShort"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CountOutShort(long count) => Fill(Get("CountOutShort"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below.</summary>
     public static string CountStarts(string date) => Fill(Get("CountStarts"), ("date", date));
@@ -5192,13 +8148,13 @@ public static partial class T
     public static string CountDubThrough(long through) => Fill(Get("CountDubThrough"), ("through", through.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>What a screen reader says for a count line: the long form of a finished show.</summary>
-    public static string CountSpokenEpisodes(long count) => Fill(GetPlural("CountSpokenEpisodes", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CountSpokenEpisodes(long count) => Fill(GetPlural("CountSpokenEpisodes", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>What a screen reader says for a show that is airing, with a known total.</summary>
-    public static string CountSpokenOutOf(long @out, long total) => Fill(Get("CountSpokenOutOf"), ("out", @out.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CountSpokenOutOf(long @out, long total) => Fill(Get("CountSpokenOutOf"), ("out", @out.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>What a screen reader says for a show that is airing with no known total.</summary>
-    public static string CountSpokenOut(long count) => Fill(GetPlural("CountSpokenOut", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CountSpokenOut(long count) => Fill(GetPlural("CountSpokenOut", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>What a screen reader says for a show not out yet, with a date. The date is the day and the full month name.</summary>
     public static string CountSpokenStarts(string date) => Fill(Get("CountSpokenStarts"), ("date", date));
@@ -5405,7 +8361,7 @@ public static partial class T
     public static string ServersLibrariesBody => Get("ServersLibrariesBody");
 
     /// <summary>A library's line: what it holds, and how many series.</summary>
-    public static string ServersLibraryLine(string kind, long count) => Fill(Get("ServersLibraryLine"), ("kind", kind), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ServersLibraryLine(string kind, long count) => Fill(Get("ServersLibraryLine"), ("kind", kind), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Switch on the libraries step and the server's page.</summary>
     public static string ServersReport => Get("ServersReport");
@@ -5417,19 +8373,19 @@ public static partial class T
     public static string ServersAdd => Get("ServersAdd");
 
     /// <summary>Line of a server's row while it is matched to AniList.</summary>
-    public static string ServersRowMatching(long done, long total) => Fill(Get("ServersRowMatching"), ("done", done.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ServersRowMatching(long done, long total) => Fill(Get("ServersRowMatching"), ("done", done.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A server's line once it is read.</summary>
-    public static string ServersRowSummary(long libraries, long series) => Fill(GetPlural("ServersRowSummary", libraries), ("libraries", libraries.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("series", series.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ServersRowSummary(long libraries, long series) => Fill(GetPlural("ServersRowSummary", libraries), ("libraries", libraries.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("series", series.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>First part of a server's row line: how many libraries it has.</summary>
-    public static string ServersRowLibraries(long count) => Fill(GetPlural("ServersRowLibraries", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ServersRowLibraries(long count) => Fill(GetPlural("ServersRowLibraries", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Second part of a server's row line: how many series it holds.</summary>
-    public static string ServersRowSeries(long count) => Fill(GetPlural("ServersRowSeries", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ServersRowSeries(long count) => Fill(GetPlural("ServersRowSeries", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line of a server's row after the summary: series that need a look.</summary>
-    public static string ServersRowNeedsLook(long count) => Fill(Get("ServersRowNeedsLook"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ServersRowNeedsLook(long count) => Fill(Get("ServersRowNeedsLook"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line at the top of a server's page.</summary>
     public static string ServersPageLine(string address, string version, string user) => Fill(Get("ServersPageLine"), ("address", address), ("version", version), ("user", user));
@@ -5513,7 +8469,7 @@ public static partial class T
     public static string ServersRefresh => Get("ServersRefresh");
 
     /// <summary>Line on a server's page: how many of its series are not matched for sure.</summary>
-    public static string ServersNeedsLook(long count) => Fill(Get("ServersNeedsLook"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ServersNeedsLook(long count) => Fill(Get("ServersNeedsLook"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>What a Jellyfin library of films is called in a library's line.</summary>
     public static string ServersKindFilms => Get("ServersKindFilms");
@@ -5635,6 +8591,9 @@ public static partial class T
     /// <summary>Line under it. The tracker is a name.</summary>
     public static string SettingsAdultDetail(string tracker) => Fill(Get("SettingsAdultDetail"), ("tracker", tracker));
 
+    /// <summary>Line under it when the app is for reading alone.</summary>
+    public static string SettingsAdultDetailRead(string tracker) => Fill(Get("SettingsAdultDetailRead"), ("tracker", tracker));
+
     /// <summary>Row: quality.</summary>
     public static string SettingsQuality => Get("SettingsQuality");
 
@@ -5714,7 +8673,7 @@ public static partial class T
     public static string SettingsSystemCaptionsDetail => Get("SettingsSystemCaptionsDetail");
 
     /// <summary>Line: how many shows override a setting.</summary>
-    public static string SettingsOverridden(long count) => Fill(GetPlural("SettingsOverridden", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SettingsOverridden(long count) => Fill(GetPlural("SettingsOverridden", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Row: new downloads.</summary>
     public static string SettingsNewDownloads => Get("SettingsNewDownloads");
@@ -5739,6 +8698,45 @@ public static partial class T
 
     /// <summary>Row: torrents on a mobile connection.</summary>
     public static string SettingsTorrentsCellular => Get("SettingsTorrentsCellular");
+
+    /// <summary>Row: whether chapter downloads run on a mobile connection.</summary>
+    public static string SettingsChapterDownloadsCellular => Get("SettingsChapterDownloadsCellular");
+
+    /// <summary>Row: keep the next chapters of what you read downloaded.</summary>
+    public static string SettingsKeepChaptersReady => Get("SettingsKeepChaptersReady");
+
+    /// <summary>Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.</summary>
+    public static string SettingsDeleteAfterReading => Get("SettingsDeleteAfterReading");
+
+    /// <summary>Row: group a series' chapters under volume headings. Off by default.</summary>
+    public static string SettingsShowVolumes => Get("SettingsShowVolumes");
+
+    /// <summary>Row: whether a series' reader mode, direction and colour follow you to your other devices.</summary>
+    public static string SettingsSeriesChoicesFollow => Get("SettingsSeriesChoicesFollow");
+
+    /// <summary>Row in Downloads: which series' new chapters download by themselves.</summary>
+    public static string SettingsNewChaptersDownload => Get("SettingsNewChaptersDownload");
+
+    /// <summary>Row: whether a series' own reader mode and direction follow you to your other devices.</summary>
+    public static string SettingsModeFollows => Get("SettingsModeFollows");
+
+    /// <summary>Row: whether a series' own look (colour or greys) follows you to your other devices.</summary>
+    public static string SettingsLookFollows => Get("SettingsLookFollows");
+
+    /// <summary>Row: when chapter progress goes to the reading trackers.</summary>
+    public static string SettingsSendProgressAfter => Get("SettingsSendProgressAfter");
+
+    /// <summary>Row: which chapter progress wins when a tracker and this device disagree.</summary>
+    public static string SettingsWhenTrackersDisagree => Get("SettingsWhenTrackersDisagree");
+
+    /// <summary>Row: whether a new chapter of a series on your Reading list sends a notification.</summary>
+    public static string SettingsChapterNotifications => Get("SettingsChapterNotifications");
+
+    /// <summary>Row: whether the app sends a notification when the chapters it was downloading are all done.</summary>
+    public static string SettingsDownloadsFinished => Get("SettingsDownloadsFinished");
+
+    /// <summary>Row: which Home the app opens at while it is for watching and reading.</summary>
+    public static string SettingsOpenAt => Get("SettingsOpenAt");
 
     /// <summary>Row: seeding after watching.</summary>
     public static string SettingsSeedAfter => Get("SettingsSeedAfter");
@@ -5921,7 +8919,10 @@ public static partial class T
     public static string WidgetResumeDubbedLabel(long episode, string title) => Fill(Get("WidgetResumeDubbedLabel"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("title", title));
 
     /// <summary>Line under a signed-in account while changes wait to be sent.</summary>
-    public static string AccountsChangesWaiting(long count) => Fill(GetPlural("AccountsChangesWaiting", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string AccountsChangesWaiting(long count) => Fill(GetPlural("AccountsChangesWaiting", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Line under a signed-in account when nothing else waits but some changes can't go out yet: the { -tracker } has no match for those titles. They go out by themselves once it has one.</summary>
+    public static string AccountsChangesHeld(long count) => Fill(GetPlural("AccountsChangesHeld", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Choice for the download quality: larger files with more detail.</summary>
     public static string SettingsQualityHigher => Get("SettingsQualityHigher");
@@ -5970,6 +8971,12 @@ public static partial class T
 
     /// <summary>Side note in Accounts.</summary>
     public static string SettingsAsideAccounts => Get("SettingsAsideAccounts");
+
+    /// <summary>Side note in Accounts when the app is for reading.</summary>
+    public static string SettingsAsideAccountsRead => Get("SettingsAsideAccountsRead");
+
+    /// <summary>Side note in Accounts when the app is for watching and reading.</summary>
+    public static string SettingsAsideAccountsBoth => Get("SettingsAsideAccountsBoth");
 
     /// <summary>Today, inside a line such as "Thursday 16:30".</summary>
     public static string WidgetDayToday => Get("WidgetDayToday");
@@ -6029,7 +9036,7 @@ public static partial class T
     public static string SettingsSubsSize => Get("SettingsSubsSize");
 
     /// <summary>Value of the size slider. The percent is a whole number from 50 to 200.</summary>
-    public static string SettingsSubsSizeValue(long percent) => Fill(Get("SettingsSubsSizeValue"), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SettingsSubsSizeValue(long percent) => Fill(Get("SettingsSubsSizeValue"), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Label of the subtitle font row.</summary>
     public static string SettingsSubsFont => Get("SettingsSubsFont");
@@ -6101,7 +9108,7 @@ public static partial class T
     public static string SettingsSubsRaise => Get("SettingsSubsRaise");
 
     /// <summary>Value of the raise slider. The percent is a whole number from 0 to 20.</summary>
-    public static string SettingsSubsRaiseValue(long percent) => Fill(Get("SettingsSubsRaiseValue"), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SettingsSubsRaiseValue(long percent) => Fill(Get("SettingsSubsRaiseValue"), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Label of the picker that says what happens to styled subtitles.</summary>
     public static string SettingsSubsStyled => Get("SettingsSubsStyled");
@@ -6127,6 +9134,213 @@ public static partial class T
     /// <summary>Button that restores the default subtitle style.</summary>
     public static string SettingsSubsReset => Get("SettingsSubsReset");
 
+    /// <summary>Row: whether this computer shares its downloads and folders as a catalogue that e-readers on the home network can browse.</summary>
+    public static string SettingsOpdsFeed => Get("SettingsOpdsFeed");
+
+    /// <summary>Row: the password e-readers ask for before they browse the shared catalogue.</summary>
+    public static string SettingsOpdsPassword => Get("SettingsOpdsPassword");
+
+    /// <summary>Row: the port the shared catalogue listens on. Empty picks a free one.</summary>
+    public static string SettingsOpdsPort => Get("SettingsOpdsPort");
+
+    /// <summary>Label of the address field in the Add a server sheet.</summary>
+    public static string BookServerAddress => Get("BookServerAddress");
+
+    /// <summary>Note under the empty address field.</summary>
+    public static string BookServerAddressHint => Get("BookServerAddressHint");
+
+    /// <summary>Note under the address field once a Kavita OPDS link is pasted.</summary>
+    public static string BookServerKavitaKey => Get("BookServerKavitaKey");
+
+    /// <summary>Under the key chip. The store is where the system keeps secrets: Keychain, or Android Keystore.</summary>
+    public static string BookServerKeyKept(string store) => Fill(Get("BookServerKeyKept"), ("store", store));
+
+    /// <summary>Chip inside the address field, showing the key's last four characters after four dots.</summary>
+    public static string BookServerKey(string last) => Fill(Get("BookServerKey"), ("last", last));
+
+    /// <summary>Result title once the server signed in.</summary>
+    public static string BookServerFoundTitle(long series, long libraries) => Fill(GetPlural("BookServerFoundTitle", libraries), ("series", series.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("libraries", libraries.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Line under the result title. The kind is Komga, Kavita or OPDS.</summary>
+    public static string BookServerFoundLine(string kind, string host) => Fill(Get("BookServerFoundLine"), ("kind", kind), ("host", host));
+
+    /// <summary>A library row's line in the result.</summary>
+    public static string BookServerLibraryLine(long series) => Fill(Get("BookServerLibraryLine"), ("series", series.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Switch in the result, on to start with.</summary>
+    public static string BookServerSyncProgress => Get("BookServerSyncProgress");
+
+    /// <summary>Line under the switch.</summary>
+    public static string BookServerSyncProgressLine(string host) => Fill(Get("BookServerSyncProgressLine"), ("host", host));
+
+    /// <summary>Field label.</summary>
+    public static string BookServerUsername => Get("BookServerUsername");
+
+    /// <summary>Field label.</summary>
+    public static string BookServerPassword => Get("BookServerPassword");
+
+    /// <summary>Error title when the server could not be reached.</summary>
+    public static string BookServerErrUnreachable(string host) => Fill(Get("BookServerErrUnreachable"), ("host", host));
+
+    /// <summary>Line under it.</summary>
+    public static string BookServerErrUnreachableLine => Get("BookServerErrUnreachableLine");
+
+    /// <summary>Error title when the server turned the password down.</summary>
+    public static string BookServerErrPassword(string host) => Fill(Get("BookServerErrPassword"), ("host", host));
+
+    /// <summary>Line under it. The kind is Komga, Kavita or OPDS.</summary>
+    public static string BookServerErrPasswordLine(string kind) => Fill(Get("BookServerErrPasswordLine"), ("kind", kind));
+
+    /// <summary>Error title when Kavita turned the key in an OPDS link down.</summary>
+    public static string BookServerErrKey(string host) => Fill(Get("BookServerErrKey"), ("host", host));
+
+    /// <summary>Line under it.</summary>
+    public static string BookServerErrKeyLine => Get("BookServerErrKeyLine");
+
+    /// <summary>Title when the server lets the account in and shows it no series.</summary>
+    public static string BookServerEmpty(string host) => Fill(Get("BookServerEmpty"), ("host", host));
+
+    /// <summary>Line under it.</summary>
+    public static string BookServerEmptyLine => Get("BookServerEmptyLine");
+
+    /// <summary>Note under it.</summary>
+    public static string BookServerEmptyRecheck => Get("BookServerEmptyRecheck");
+
+    /// <summary>Line under an error when the address is not a book server.</summary>
+    public static string BookServerNotBooksLine => Get("BookServerNotBooksLine");
+
+    /// <summary>Folder result title.</summary>
+    public static string BookFolderFound(long series, long files) => Fill(GetPlural("BookFolderFound", files), ("series", series.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("files", files.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Line under it: the folder's path, then how many series were matched by their own details.</summary>
+    public static string BookFolderFoundLine(string path, long matched) => Fill(Get("BookFolderFoundLine"), ("path", path), ("matched", matched.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Row in the folder result: files that are books in formats Kaeri can't open.</summary>
+    public static string BookFolderUnsupported(long count) => Fill(GetPlural("BookFolderUnsupported", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Line under it: the formats, already counted and joined, such as "14 MOBI, 6 AZW3".</summary>
+    public static string BookFolderUnsupportedLine(string kinds) => Fill(Get("BookFolderUnsupportedLine"), ("kinds", kinds));
+
+    /// <summary>One item of that list: EPUB files locked with DRM or a password.</summary>
+    public static string BookFolderDrm(long count) => Fill(Get("BookFolderDrm"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Note under the folder result.</summary>
+    public static string BookFolderOpens => Get("BookFolderOpens");
+
+    /// <summary>Row action that lists the files skipped.</summary>
+    public static string BookFolderShowFiles => Get("BookFolderShowFiles");
+
+    /// <summary>Primary action in the Add a folder sheet.</summary>
+    public static string BookFolderAdd => Get("BookFolderAdd");
+
+    /// <summary>Folder row action that picks another folder.</summary>
+    public static string BookFolderChange => Get("BookFolderChange");
+
+    /// <summary>Title when a folder holds nothing Kaeri can open.</summary>
+    public static string BookFolderEmpty(string folder) => Fill(Get("BookFolderEmpty"), ("folder", folder));
+
+    /// <summary>Line under it.</summary>
+    public static string BookFolderEmptyLine(long files) => Fill(GetPlural("BookFolderEmptyLine", files), ("files", files.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Primary action after an empty folder.</summary>
+    public static string BookFolderChooseOther => Get("BookFolderChooseOther");
+
+    /// <summary>Folder result title when the picked folder is already a source. It was scanned again.</summary>
+    public static string BookFolderAlready(string folder) => Fill(Get("BookFolderAlready"), ("folder", folder));
+
+    /// <summary>Line under it: what the new scan found. Closing the sheet keeps the folder.</summary>
+    public static string BookFolderAlreadyLine(long series) => Fill(GetPlural("BookFolderAlreadyLine", series), ("series", series.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Title when a folder could not be read: the look through it could not start, or stopped.</summary>
+    public static string BookFolderUnreadable(string folder) => Fill(Get("BookFolderUnreadable"), ("folder", folder));
+
+    /// <summary>Line under it.</summary>
+    public static string BookFolderUnreadableLine => Get("BookFolderUnreadableLine");
+
+    /// <summary>Title of the Join a plugin store sheet.</summary>
+    public static string StoreJoinTitle => Get("StoreJoinTitle");
+
+    /// <summary>Label of the invite field.</summary>
+    public static string StoreInviteField => Get("StoreInviteField");
+
+    /// <summary>Result title once a plugin store is joined.</summary>
+    public static string StoreJoinedTitle(string store) => Fill(Get("StoreJoinedTitle"), ("store", store));
+
+    /// <summary>Line under it. The owner is who runs the store.</summary>
+    public static string StoreJoinedLine(string owner, long count) => Fill(GetPlural("StoreJoinedLine", count), ("owner", owner), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Group header in the joined store's list.</summary>
+    public static string StoreGroupReading => Get("StoreGroupReading");
+
+    /// <summary>Group header in the joined store's list.</summary>
+    public static string StoreGroupWatching => Get("StoreGroupWatching");
+
+    /// <summary>Row action.</summary>
+    public static string StoreInstall => Get("StoreInstall");
+
+    /// <summary>Row state once installed.</summary>
+    public static string StoreInstalledRow => Get("StoreInstalledRow");
+
+    /// <summary>Primary action when two or more plugins are for reading.</summary>
+    public static string StoreInstallAllReading => Get("StoreInstallAllReading");
+
+    /// <summary>Result after installing.</summary>
+    public static string StoreInstalled(long count) => Fill(GetPlural("StoreInstalled", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Info title when every plugin in a store is for watching, and watching is off here.</summary>
+    public static string StoreOtherMedium(string store) => Fill(Get("StoreOtherMedium"), ("store", store));
+
+    /// <summary>Line under it.</summary>
+    public static string StoreOtherMediumLine => Get("StoreOtherMediumLine");
+
+    /// <summary>Secondary action under it.</summary>
+    public static string StoreTurnOnWatching => Get("StoreTurnOnWatching");
+
+    /// <summary>Info title when a store has no plugins.</summary>
+    public static string StoreEmpty(string store) => Fill(Get("StoreEmpty"), ("store", store));
+
+    /// <summary>Line under it.</summary>
+    public static string StoreEmptyLine(string owner) => Fill(Get("StoreEmptyLine"), ("owner", owner));
+
+    /// <summary>Error title when the store doesn't answer.</summary>
+    public static string StoreErrUnreachable(string host) => Fill(Get("StoreErrUnreachable"), ("host", host));
+
+    /// <summary>Line under it.</summary>
+    public static string StoreErrUnreachableLine(string owner) => Fill(Get("StoreErrUnreachableLine"), ("owner", owner));
+
+    /// <summary>Under the reading group: plugins for watching while watching is off here.</summary>
+    public static string StoreOtherMediumMore(long count) => Fill(GetPlural("StoreOtherMediumMore", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>On a TV, under the list: plugins for reading, which a TV doesn't do.</summary>
+    public static string StoreTvReadingOnly(long count) => Fill(GetPlural("StoreTvReadingOnly", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>On a TV, info title when every plugin in a store is for reading.</summary>
+    public static string StoreTvAllReading(string store) => Fill(Get("StoreTvAllReading"), ("store", store));
+
+    /// <summary>Plugin row in an invite's result.</summary>
+    public static string StorePluginRow(string version, string hosts) => Fill(Get("StorePluginRow"), ("version", version), ("hosts", hosts));
+
+    /// <summary>Notice after a server or folder is added, for 4 seconds.</summary>
+    public static string SourceAdded(string name, long series) => Fill(Get("SourceAdded"), ("name", name), ("series", series.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Notice after Install all, for 4 seconds.</summary>
+    public static string SourceAddedPlugins(long count, string store) => Fill(GetPlural("SourceAddedPlugins", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("store", store));
+
+    /// <summary>A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.</summary>
+    public static string SourceRowServer(string kind, long series, long libraries) => Fill(GetPlural("SourceRowServer", libraries), ("kind", kind), ("series", series.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("libraries", libraries.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.</summary>
+    public static string SourceRowServerSeries(string kind, long series, long libraries) => Fill(GetPlural("SourceRowServerSeries", libraries), ("kind", kind), ("series", series.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("libraries", libraries.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A server's row in Your sources while it shows no series.</summary>
+    public static string SourceRowServerEmpty(string kind) => Fill(Get("SourceRowServerEmpty"), ("kind", kind));
+
+    /// <summary>A folder's row in Your sources.</summary>
+    public static string SourceRowFolder(string path, long series, long skipped) => Fill(GetPlural("SourceRowFolder", skipped), ("path", path), ("series", series.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("skipped", skipped.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A plugin's row in Your sources. The medium is "Reading" or "Watching".</summary>
+    public static string SourceRowPlugin(string store, string medium, string version) => Fill(Get("SourceRowPlugin"), ("store", store), ("medium", medium), ("version", version));
+
     /// <summary>Title of the screen or section that lists sources.</summary>
     public static string SourcesTitle => Get("SourcesTitle");
 
@@ -6146,7 +9360,7 @@ public static partial class T
     public static string SourcePickerAutomaticDetail => Get("SourcePickerAutomaticDetail");
 
     /// <summary>Under a source: how many of the title's released episodes it lists.</summary>
-    public static string SourcePickerCoverage(long covered, long of) => Fill(GetPlural("SourcePickerCoverage", of), ("covered", covered.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("of", of.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SourcePickerCoverage(long covered, long of) => Fill(GetPlural("SourcePickerCoverage", of), ("covered", covered.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("of", of.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Under a source that is switched off in Settings.</summary>
     public static string SourceNoteOff => Get("SourceNoteOff");
@@ -6284,7 +9498,7 @@ public static partial class T
     public static string SourcesContactsOne(string first) => Fill(Get("SourcesContactsOne"), ("first", first));
 
     /// <summary>Line: the plugin contacts several hosts. The count is the hosts after the first.</summary>
-    public static string SourcesContactsLine(string first, long more) => Fill(GetPlural("SourcesContactsLine", more), ("first", first), ("more", more.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SourcesContactsLine(string first, long more) => Fill(GetPlural("SourcesContactsLine", more), ("first", first), ("more", more.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line: the plugin contacts no host.</summary>
     public static string SourcesContactsNone => Get("SourcesContactsNone");
@@ -6296,7 +9510,7 @@ public static partial class T
     public static string SourcesUpdateContactsOne(string first) => Fill(Get("SourcesUpdateContactsOne"), ("first", first));
 
     /// <summary>Line: an update adds several hosts. The count is the hosts after the first.</summary>
-    public static string SourcesUpdateContacts(string first, long more) => Fill(GetPlural("SourcesUpdateContacts", more), ("first", first), ("more", more.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SourcesUpdateContacts(string first, long more) => Fill(GetPlural("SourcesUpdateContacts", more), ("first", first), ("more", more.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Title of the update question.</summary>
     public static string SourcesUpdateTitle(string name) => Fill(Get("SourcesUpdateTitle"), ("name", name));
@@ -6326,7 +9540,7 @@ public static partial class T
     public static string SourcesRebuilding => Get("SourcesRebuilding");
 
     /// <summary>Value of a plugin's response time, in milliseconds.</summary>
-    public static string SourcesResponseMs(long ms) => Fill(Get("SourcesResponseMs"), ("ms", ms.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SourcesResponseMs(long ms) => Fill(Get("SourcesResponseMs"), ("ms", ms.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Menu, palette and source picker entry that opens the sheet.</summary>
     public static string MatchFix => Get("MatchFix");
@@ -6335,7 +9549,7 @@ public static partial class T
     public static string MatchChoose => Get("MatchChoose");
 
     /// <summary>The line on the title page while the match is open, under its main action. The count leaves out titles that were ruled out.</summary>
-    public static string MatchUncertain(long count, string source) => Fill(GetPlural("MatchUncertain", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("source", source));
+    public static string MatchUncertain(long count, string source) => Fill(GetPlural("MatchUncertain", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("source", source));
 
     /// <summary>The line on a title page when the source listed no title that fits, so the person searches.</summary>
     public static string MatchUncertainNone(string source) => Fill(Get("MatchUncertainNone"), ("source", source));
@@ -6806,7 +10020,7 @@ public static partial class T
     public static string StoresOwnerDevices(string devices) => Fill(Get("StoresOwnerDevices"), ("devices", devices));
 
     /// <summary>Line of a member: the number of devices.</summary>
-    public static string StoresMemberDevices(long count) => Fill(GetPlural("StoresMemberDevices", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string StoresMemberDevices(long count) => Fill(GetPlural("StoresMemberDevices", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Label of the field for the name of the person invited.</summary>
     public static string StoresInviteFor => Get("StoresInviteFor");
@@ -6879,10 +10093,10 @@ public static partial class T
     public static string StoresInviteGroupDetail => Get("StoresInviteGroupDetail");
 
     /// <summary>Line under an invite that works a set number of times.</summary>
-    public static string StoresInviteWorksTimes(long count, string until) => Fill(Get("StoresInviteWorksTimes"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("until", until));
+    public static string StoresInviteWorksTimes(long count, string until) => Fill(Get("StoresInviteWorksTimes"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("until", until));
 
     /// <summary>The same with no end date.</summary>
-    public static string StoresInviteWorksTimesForever(long count) => Fill(Get("StoresInviteWorksTimesForever"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string StoresInviteWorksTimesForever(long count) => Fill(Get("StoresInviteWorksTimesForever"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line under an invite that works any number of times.</summary>
     public static string StoresInviteWorksAny(string until) => Fill(Get("StoresInviteWorksAny"), ("until", until));
@@ -6909,10 +10123,10 @@ public static partial class T
     public static string StoresInviteNotUsed => Get("StoresInviteNotUsed");
 
     /// <summary>Uses of an invite that works any number of times.</summary>
-    public static string StoresInviteUsed(long used) => Fill(GetPlural("StoresInviteUsed", used), ("used", used.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string StoresInviteUsed(long used) => Fill(GetPlural("StoresInviteUsed", used), ("used", used.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Uses of an invite that works a set number of times.</summary>
-    public static string StoresInviteUsedOf(long used, long max) => Fill(Get("StoresInviteUsedOf"), ("used", used.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("max", max.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string StoresInviteUsedOf(long used, long max) => Fill(Get("StoresInviteUsedOf"), ("used", used.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("max", max.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Heading over invites that ended.</summary>
     public static string StoresInvitesEnded => Get("StoresInvitesEnded");
@@ -6933,7 +10147,7 @@ public static partial class T
     public static string StoresInviteJoined(string name, string when) => Fill(Get("StoresInviteJoined"), ("name", name), ("when", when));
 
     /// <summary>Detail of the confirmation that cancels an invite that was used.</summary>
-    public static string StoresCancelInviteDetail(long count) => Fill(GetPlural("StoresCancelInviteDetail", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string StoresCancelInviteDetail(long count) => Fill(GetPlural("StoresCancelInviteDetail", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Join sheet: name field when the invite works more than once.</summary>
     public static string StoresJoinYourName => Get("StoresJoinYourName");
@@ -6963,13 +10177,13 @@ public static partial class T
     public static string StoresOnlyInvited => Get("StoresOnlyInvited");
 
     /// <summary>Line over the list of devices that joined with the link.</summary>
-    public static string StoresDevicesJoined(long count) => Fill(GetPlural("StoresDevicesJoined", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string StoresDevicesJoined(long count) => Fill(GetPlural("StoresDevicesJoined", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line of a device that joined.</summary>
     public static string StoresDeviceJoinedAt(string when) => Fill(Get("StoresDeviceJoinedAt"), ("when", when));
 
     /// <summary>Line under the list when it is cut off.</summary>
-    public static string StoresNewestListed(long count) => Fill(Get("StoresNewestListed"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string StoresNewestListed(long count) => Fill(Get("StoresNewestListed"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line when the store's server cannot offer the choice.</summary>
     public static string StoresServerOlder => Get("StoresServerOlder");
@@ -6996,7 +10210,7 @@ public static partial class T
     public static string StoresCopyLink => Get("StoresCopyLink");
 
     /// <summary>Heading over the { -plugin-pl } a { -plugin-store } offers, in the join dialog.</summary>
-    public static string StoresOffersPlugins(long count) => Fill(GetPlural("StoresOffersPlugins", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string StoresOffersPlugins(long count) => Fill(GetPlural("StoresOffersPlugins", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Button of a notice that opens the plugin stores page.</summary>
     public static string NoticeOpenStores => Get("NoticeOpenStores");
@@ -7158,7 +10372,7 @@ public static partial class T
     public static string DevicesAdd => Get("DevicesAdd");
 
     /// <summary>Device row line past 30 days.</summary>
-    public static string DevicesNotSeen(long days) => Fill(Get("DevicesNotSeen"), ("days", days.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DevicesNotSeen(long days) => Fill(Get("DevicesNotSeen"), ("days", days.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A device paired only for Play on TV.</summary>
     public static string DevicesRemoteOnly => Get("DevicesRemoteOnly");
@@ -7386,7 +10600,7 @@ public static partial class T
     public static string RkeyEnterTitle => Get("RkeyEnterTitle");
 
     /// <summary>Restore.</summary>
-    public static string RkeyEnterLine(string service, long count) => Fill(GetPlural("RkeyEnterLine", count), ("service", service), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string RkeyEnterLine(string service, long count) => Fill(GetPlural("RkeyEnterLine", count), ("service", service), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Field note.</summary>
     public static string RkeyEnterNote => Get("RkeyEnterNote");
@@ -7572,7 +10786,7 @@ public static partial class T
     public static string CloudAppPasswordNote(string kind) => Fill(Get("CloudAppPasswordNote"), ("kind", kind));
 
     /// <summary>Devices row value while sync is off and TVs are paired for Play on TV. The row says "Sync off", then this.</summary>
-    public static string DevicesTvsForPlay(long count) => Fill(GetPlural("DevicesTvsForPlay", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DevicesTvsForPlay(long count) => Fill(GetPlural("DevicesTvsForPlay", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line under a TV paired for Play on TV today.</summary>
     public static string DevicesPairedToday => Get("DevicesPairedToday");
@@ -7615,6 +10829,8 @@ public static partial class T
     public static string DeviceKindTablet => Get("DeviceKindTablet");
 
     public static string DeviceKindTv => Get("DeviceKindTv");
+
+    public static string DeviceKindOther => Get("DeviceKindOther");
 
     /// <summary>TV welcome, text button.</summary>
     public static string FirstSetupPhone => Get("FirstSetupPhone");
@@ -7736,8 +10952,8 @@ public static partial class T
     /// <summary>Button that opens the full page of facts about a show.</summary>
     public static string TitleMoreAbout => Get("TitleMoreAbout");
 
-    /// <summary>Accessibility hint of the button that expands a synopsis.</summary>
-    public static string TitleSynopsisHint => Get("TitleSynopsisHint");
+    /// <summary>Accessible name of the More at the end of a cut synopsis, which shows the rest of it. The page's menu of extra actions is called More too, so this one says what it does.</summary>
+    public static string TitleSynopsisMore => Get("TitleSynopsisMore");
 
     /// <summary>Label under a season: which episodes are dubbed so far.</summary>
     public static string TitleDubbedTo(long episode) => Fill(Get("TitleDubbedTo"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
@@ -7803,13 +11019,13 @@ public static partial class T
     public static string EpisodeSynopsisShowHint => Get("EpisodeSynopsisShowHint");
 
     /// <summary>Facts line of an episode with a length and an air date. The date is already formatted.</summary>
-    public static string EpisodeFacts(long minutes, string date) => Fill(Get("EpisodeFacts"), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("date", date));
+    public static string EpisodeFacts(long minutes, string date) => Fill(Get("EpisodeFacts"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("date", date));
 
     /// <summary>Facts line of an episode with a length only.</summary>
-    public static string EpisodeFactsLength(long minutes) => Fill(Get("EpisodeFactsLength"), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string EpisodeFactsLength(long minutes) => Fill(Get("EpisodeFactsLength"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Facts line of an episode that is part-watched.</summary>
-    public static string EpisodeFactsLeft(long minutes) => Fill(Get("EpisodeFactsLeft"), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string EpisodeFactsLeft(long minutes) => Fill(Get("EpisodeFactsLeft"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden.</summary>
     public static string EpisodeProtectionLine(long episode) => Fill(Get("EpisodeProtectionLine"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
@@ -7824,7 +11040,7 @@ public static partial class T
     public static string EpisodeRangeLabel => Get("EpisodeRangeLabel");
 
     /// <summary>One line that stands for the watched episodes at the top of a range. Opening it shows them.</summary>
-    public static string EpisodeFold(long count) => Fill(GetPlural("EpisodeFold", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string EpisodeFold(long count) => Fill(GetPlural("EpisodeFold", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>An episode's number in a facts line on phones and in narrow desktop windows.</summary>
     public static string EpisodeShort(long episode) => Fill(Get("EpisodeShort"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
@@ -7917,7 +11133,7 @@ public static partial class T
     public static string MoreFollowingNote => Get("MoreFollowingNote");
 
     /// <summary>What a followed person gave the show, out of ten. The score is a whole number.</summary>
-    public static string MoreFollowedScore(long score) => Fill(Get("MoreFollowedScore"), ("score", score.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string MoreFollowedScore(long score) => Fill(Get("MoreFollowedScore"), ("score", score.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Heading of the list of titles people who liked this one also liked.</summary>
     public static string MoreLikeThis => Get("MoreLikeThis");
@@ -7935,7 +11151,7 @@ public static partial class T
     public static string MoreHideSpoilerTags => Get("MoreHideSpoilerTags");
 
     /// <summary>Button that shows the spoiler tags.</summary>
-    public static string MoreShowSpoilerTags(long count) => Fill(GetPlural("MoreShowSpoilerTags", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string MoreShowSpoilerTags(long count) => Fill(GetPlural("MoreShowSpoilerTags", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>An episode's line with the audio it was watched in marked, as Continue and the title page word it.</summary>
     public static string EpisodeLineDubbed(string line) => Fill(Get("EpisodeLineDubbed"), ("line", line));
@@ -7968,7 +11184,7 @@ public static partial class T
     public static string TitleFactTba => Get("TitleFactTba");
 
     /// <summary>A followed person's status and score, such as "Completed · 9/10". The status is already worded.</summary>
-    public static string MoreFollowingLine(string status, long score) => Fill(Get("MoreFollowingLine"), ("status", status), ("score", score.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string MoreFollowingLine(string status, long score) => Fill(Get("MoreFollowingLine"), ("status", status), ("score", score.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.</summary>
     public static string EpisodeGoTo => Get("EpisodeGoTo");
@@ -8180,6 +11396,27 @@ public static partial class T
     /// <summary>Line under a tracker that brings in lists.</summary>
     public static string AccountsBringsLists => Get("AccountsBringsLists");
 
+    /// <summary>Line under AniList when Kaeri is for reading: what signing in brings.</summary>
+    public static string AccountsBringsListsRead => Get("AccountsBringsListsRead");
+
+    /// <summary>Line under AniList when Kaeri is for watching and reading.</summary>
+    public static string AccountsBringsListsBoth => Get("AccountsBringsListsBoth");
+
+    /// <summary>Line under a tracker that is not signed in: what it keeps in step.</summary>
+    public static string AccountsTrackerLists => Get("AccountsTrackerLists");
+
+    /// <summary>Line under MangaUpdates when it is not signed in.</summary>
+    public static string AccountsTrackerReadingLists => Get("AccountsTrackerReadingLists");
+
+    /// <summary>Line under a tracker with both media on: it serves shows and reading.</summary>
+    public static string AccountsTrackerServesBoth => Get("AccountsTrackerServesBoth");
+
+    /// <summary>Line under a tracker with both media on: it serves reading only.</summary>
+    public static string AccountsTrackerServesReading => Get("AccountsTrackerServesReading");
+
+    /// <summary>Line under a tracker with both media on: it serves shows only.</summary>
+    public static string AccountsTrackerServesShows => Get("AccountsTrackerServesShows");
+
     /// <summary>Line under the accounts screen when the library needs a tracker.</summary>
     public static string AccountsLibraryNeeds(string tracker) => Fill(Get("AccountsLibraryNeeds"), ("tracker", tracker));
 
@@ -8202,7 +11439,7 @@ public static partial class T
     public static string AccountsStateSignedIn(string tracker, string name) => Fill(Get("AccountsStateSignedIn"), ("tracker", tracker), ("name", name));
 
     /// <summary>Status: signed in, with changes waiting to be sent.</summary>
-    public static string AccountsStateSignedInWaiting(string tracker, string name, long count) => Fill(GetPlural("AccountsStateSignedInWaiting", count), ("tracker", tracker), ("name", name), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string AccountsStateSignedInWaiting(string tracker, string name, long count) => Fill(GetPlural("AccountsStateSignedInWaiting", count), ("tracker", tracker), ("name", name), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Status: the sign-in ran out.</summary>
     public static string AccountsStateExpired(string tracker) => Fill(Get("AccountsStateExpired"), ("tracker", tracker));
@@ -8565,7 +11802,7 @@ public static partial class T
     public static string TvCastNoneFound => Get("TvCastNoneFound");
 
     /// <summary>Status line of the casting card while a cast takes a while to start: the line, then the seconds since the TV was picked.</summary>
-    public static string TvCastCounting(string line, long seconds) => Fill(Get("TvCastCounting"), ("line", line), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string TvCastCounting(string line, long seconds) => Fill(Get("TvCastCounting"), ("line", line), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Status line of the casting card when the cast didn't start. The reason shows under the episode.</summary>
     public static string TvCastCouldntStart(string name) => Fill(Get("TvCastCouldntStart"), ("name", name));
@@ -8589,7 +11826,7 @@ public static partial class T
     public static string TvCastVolumeOnTv => Get("TvCastVolumeOnTv");
 
     /// <summary>Line over the next episode on the casting card while its count runs. At 0 the TV plays it.</summary>
-    public static string TvCastUpNextIn(long seconds) => Fill(Get("TvCastUpNextIn"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string TvCastUpNextIn(long seconds) => Fill(Get("TvCastUpNextIn"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line under the paired TVs.</summary>
     public static string TvForgetNote => Get("TvForgetNote");
@@ -8827,7 +12064,7 @@ public static partial class T
         ["NoticeCastNeverFetches"] = "{name} didn't start reading the stream. A VPN or a firewall on this device may be in the way.",
         ["NoticeCastRefused"] = "{name} couldn't play this stream. Try another source.",
         ["NoticeCastTakenOver"] = "Another device started something on {name}, so casting stopped.",
-        ["NoticeCastNotSameNetwork"] = "This device isn't on the network {name} is on, or reaches it through a VPN. Casting needs both on the same network.",
+        ["NoticeCastNotSameNetwork"] = "This device isn't on the network {name} is on, or reaches it through a VPN. Connect both to the same network to cast.",
         ["NoticeCastLost"] = "Lost {name}, so casting stopped.",
         ["NoticeCastNoDevice"] = "That TV is no longer on the network.",
         ["NoticeCastUnavailable"] = "This version of Kaeri can't cast to TVs.",
@@ -8871,6 +12108,24 @@ public static partial class T
         ["HomeTrending"] = "Trending now",
         ["HomeBecause"] = "Because you finished {title}",
         ["HomeMoreGenre"] = "More {genre}",
+        ["HomeMoreGenreAction"] = "More action",
+        ["HomeMoreGenreAdventure"] = "More adventure",
+        ["HomeMoreGenreComedy"] = "More comedy",
+        ["HomeMoreGenreDrama"] = "More drama",
+        ["HomeMoreGenreEcchi"] = "More ecchi",
+        ["HomeMoreGenreFantasy"] = "More fantasy",
+        ["HomeMoreGenreHorror"] = "More horror",
+        ["HomeMoreGenreMahouShoujo"] = "More mahou shoujo",
+        ["HomeMoreGenreMecha"] = "More mecha",
+        ["HomeMoreGenreMusic"] = "More music",
+        ["HomeMoreGenreMystery"] = "More mystery",
+        ["HomeMoreGenrePsychological"] = "More psychological",
+        ["HomeMoreGenreRomance"] = "More romance",
+        ["HomeMoreGenreSciFi"] = "More sci-fi",
+        ["HomeMoreGenreSliceOfLife"] = "More slice of life",
+        ["HomeMoreGenreSports"] = "More sports",
+        ["HomeMoreGenreSupernatural"] = "More supernatural",
+        ["HomeMoreGenreThriller"] = "More thriller",
         ["HomeSpotlightDemo"] = "Demo, free to share",
         ["LicensedReturn"] = "Watched episode {episode} on {service}?",
         ["LicensedMarked"] = "Episode {episode} marked as watched.",
@@ -8931,13 +12186,13 @@ public static partial class T
         ["NoticeMatchResetFailed"] = "Couldn't reset the match. {reason}",
         ["NoticeMatchSaveFailed"] = "Couldn't save that match. {reason}",
         ["NoticeMatchDidNotStick"] = "That match didn't stick. The source may have changed. Try choosing it again.",
-        ["NoticeSourceSearchEmpty"] = "Nothing found for “{query}”. Try a different search.",
+        ["NoticeSourceSearchEmpty"] = "Nothing found for \"{query}\". Try a different search.",
         ["MatchRuledOutFormat"] = "Different format",
         ["MatchRuledOutEpisodes"] = "More episodes than this title",
         ["MatchRuledOutYear"] = "Different year",
         ["MatchSearchTimedOut"] = "It didn't answer in time.",
         ["MatchSearchSourceOff"] = "It isn't switched on.",
-        ["NoticeSourcePinned"] = "{source} will be used for this title.",
+        ["NoticeSourcePinned"] = "This title now plays from {source}.",
         ["NoticeSourceAutomatic"] = "Back to automatic source selection.",
         ["NoticeSourceChoiceFailed"] = "Couldn't save that choice. {reason}",
         ["NoticeNoSourceCouldList"] = "No source could list this show: {reason}",
@@ -8980,6 +12235,236 @@ public static partial class T
         ["PartyRejoined"] = "Back in the watch party.",
         ["PartyLeft"] = "Left the watch party.",
         ["PartyServerUnreachable"] = "Couldn't reach {server}. Check the server, or try again.",
+        ["ReadingNextChapter"] = "Chapter {chapter}",
+        ["ReadingUsuallyMondays"] = "Usually Mondays",
+        ["ReadingUsuallyTuesdays"] = "Usually Tuesdays",
+        ["ReadingUsuallyWednesdays"] = "Usually Wednesdays",
+        ["ReadingUsuallyThursdays"] = "Usually Thursdays",
+        ["ReadingUsuallyFridays"] = "Usually Fridays",
+        ["ReadingUsuallySaturdays"] = "Usually Saturdays",
+        ["ReadingUsuallySundays"] = "Usually Sundays",
+        ["ReadingAboutEveryWeeks_one"] = "About every week",
+        ["ReadingAboutEveryWeeks_other"] = "About every {weeks} weeks",
+        ["ReadingAlsoAShow"] = "Also a show",
+        ["ReadingAlsoABook"] = "Also a book",
+        ["ReadingSplitChapter"] = "Chapter {chapter} goes to trackers as {whole}.",
+        ["ReaderResumed"] = "Resumed at page {page}",
+        ["ReaderResumedImage"] = "Resumed at image {image}",
+        ["ReaderBackToPage"] = "Back to page {page}",
+        ["ReaderMoved"] = "Moved to {chapter}, page {page}, where {device} stopped",
+        ["ReaderMovedNumber"] = "Moved to chapter {chapter}, page {page}, where {device} stopped",
+        ["ReaderMovedElsewhere"] = "Moved to {chapter}, page {page}, where another device stopped",
+        ["ReaderMovedNumberElsewhere"] = "Moved to chapter {chapter}, page {page}, where another device stopped",
+        ["ReaderMovedImage"] = "Moved to {chapter}, image {image}, where {device} stopped",
+        ["ReaderMovedNumberImage"] = "Moved to chapter {chapter}, image {image}, where {device} stopped",
+        ["ReaderMovedElsewhereImage"] = "Moved to {chapter}, image {image}, where another device stopped",
+        ["ReaderMovedNumberElsewhereImage"] = "Moved to chapter {chapter}, image {image}, where another device stopped",
+        ["ReaderDetectedRightToLeft"] = "Looks like right to left",
+        ["ReaderDetectedLeftToRight"] = "Looks like left to right",
+        ["ReaderDetectedStrip"] = "Looks like a long strip",
+        ["ReadingFailedOffline"] = "You're offline. Downloaded chapters still open.",
+        ["ReadingFailedSourceDown"] = "{source} isn't answering. Try again later.",
+        ["ReadingFailedSourceOff"] = "{source} is switched off. Switch it on in Your sources, or read from another source.",
+        ["ReadingFailedNotFound"] = "This source doesn't have it anymore. Try another source.",
+        ["ReadingFailedNoSource"] = "None of your sources has this series yet. Search for it by another name in Read from, or add a source in Your sources.",
+        ["ReadingFailedBlocked"] = "{source} refused the request. {reason}",
+        ["ReadingFailedHostNotAllowed"] = "The plugin for {source} asked for a host it isn't allowed to reach. An update to the plugin may fix it.",
+        ["ReadingFailedParse"] = "Kaeri couldn't read what {source} sent. Its plugin may need an update.",
+        ["ReadingFailedPage"] = "This page didn't load (error {status}). Try again.",
+        ["ReadingPictureFailed"] = "Couldn't load picture",
+        ["ReadingFailedSignIn"] = "Sign in to {what} again to keep reading.",
+        ["ReadingFailedFileMissing"] = "{path} isn't there anymore. If it's on a drive, connect it and try again.",
+        ["ReadingFailedUnreadable"] = "{path} couldn't be read as {format}. The file may be damaged.",
+        ["ReadingFailedUnsupported"] = "Kaeri can't read {kind} files.",
+        ["ReadingFailedProtected"] = "This book is copy-protected, so Kaeri can't open it.",
+        ["ReadingFailedDiskFull"] = "There's no room left on this device. Free some space and try again.",
+        ["ReadingFailedWriteName"] = "The storage doesn't take the name {path}. It may be too long.",
+        ["ReadingFailedWriteDenied"] = "Kaeri isn't allowed to write {path}. Check that the storage isn't read-only, then try again.",
+        ["ReadingFailedWrite"] = "Kaeri couldn't write {path}. Try again.",
+        ["ReadingFailedWebview"] = "Novels need a newer system WebView than version {version}. Update Android System WebView and try again.",
+        ["ReadingFailedNeedsNewer"] = "This plugin needs a newer Kaeri ({world}). Update Kaeri to use it.",
+        ["ReadingFailedOff"] = "Reading isn't available in this version of Kaeri.",
+        ["ReadingFailedOther"] = "Something went wrong. {reason}",
+        ["ReadingFailedSendTooLarge"] = "{file} is {size}, and {target} takes files up to {limit}. Send fewer chapters at a time and try again.",
+        ["ReadingFailedSendMissing"] = "{file} is missing {part}, so it wasn't sent. Try again.",
+        ["ReadingFailedSendEncoding"] = "{part} in {file} has the wrong text encoding, so it wasn't sent. Try again.",
+        ["ReadingFailedSendMalformed"] = "{part} in {file} isn't valid, so it wasn't sent. Try again.",
+        ["ReadingKindManga"] = "Manga",
+        ["ReadingKindManhwa"] = "Manhwa",
+        ["ReadingKindManhua"] = "Manhua",
+        ["ReadingKindWebtoon"] = "Webtoon",
+        ["ReadingKindOneShot"] = "One-shot",
+        ["ReadingKindLightNovel"] = "Light novel",
+        ["ReadingKindNovel"] = "Novel",
+        ["ReadingStatusReleasing"] = "Releasing",
+        ["ReadingStatusFinished"] = "Finished",
+        ["ReadingStatusHiatus"] = "On hiatus",
+        ["ReadingStatusCancelled"] = "Cancelled",
+        ["ReadingStatusNotYet"] = "Not out yet",
+        ["ReadingChapters_one"] = "1 chapter",
+        ["ReadingChapters_other"] = "{count} chapters",
+        ["ReadingVolumes_one"] = "1 volume",
+        ["ReadingVolumes_other"] = "{count} volumes",
+        ["ReadingOnPlanning"] = "On your Planning list",
+        ["ReadingSpotlightNewChapter"] = "New chapter in a series you follow",
+        ["ReadingSpotlightContinue"] = "Continue reading",
+        ["ReadingSpotlightUpNext"] = "Up next for you",
+        ["ReadingSpotlightPopular"] = "Popular, releasing now",
+        ["ReadingOutToday"] = "Chapter {chapter} is out today",
+        ["ReadingOutTodayTitled"] = "Chapter {chapter}, {title}, out today",
+        ["ReadingChapterPage"] = "Chapter {chapter} · page {page}",
+        ["ReadingChapterPercent"] = "Chapter {chapter} · {percent}%",
+        ["ReadingChapterNew"] = "Chapter {chapter} is new",
+        ["ReadingNextPart"] = "Part {part}",
+        ["ReadingPartPercent"] = "Part {part} · {percent}%",
+        ["ReadingPartNew"] = "Part {part} is new",
+        ["ReadingLabelPercent"] = "{label} · {percent}%",
+        ["ReadingLabelNew"] = "{label} is new",
+        ["ReadingPartTitled"] = "Part {part} · {title}",
+        ["ReadingLabelTitled"] = "{label} · {title}",
+        ["ReadingPartOutToday"] = "Part {part} is out today",
+        ["ReadingLabelOutToday"] = "{label} is out today",
+        ["ReadingPartOutTodayTitled"] = "Part {part}, {title}, out today",
+        ["ReadingLabelOutTodayTitled"] = "{label}, {title}, out today",
+        ["ReadingChapterOf"] = "Chapter {chapter} of {of}",
+        ["ReadingVolumePart"] = "Volume {volume}, part {part}",
+        ["ReadingVolumeLabel"] = "Volume {volume}, {label}",
+        ["ReadingOriginJapan"] = "Japan",
+        ["ReadingOriginKorea"] = "Korea",
+        ["ReadingOriginChina"] = "China",
+        ["ReadingOriginTaiwan"] = "Taiwan",
+        ["ExportDeviceOther"] = "Other e-reader",
+        ["ExportDeviceEink6"] = "E-ink, 6 inch",
+        ["ExportDeviceEink7"] = "E-ink, 7 inch",
+        ["ExportDeviceColourEink"] = "Colour e-ink, 7 inch",
+        ["ExportDeviceTablet"] = "Tablet",
+        ["ExportChapter"] = "Chapter {chapter}",
+        ["ExportWaitsForWifi_one"] = "One chapter isn't downloaded yet, so this send waits for Wi-Fi and goes on by itself.",
+        ["ExportWaitsForWifi_other"] = "{n} chapters aren't downloaded yet, so this send waits for Wi-Fi and goes on by itself.",
+        ["ExportPagesLeftOut_one"] = "One page of {chapter} couldn't be read and isn't in the files.",
+        ["ExportPagesLeftOut_other"] = "{n} pages of {chapter} couldn't be read and aren't in the files.",
+        ["ReadingChapterTitled"] = "Chapter {chapter} · {title}",
+        ["ReadingRowRead"] = "Read",
+        ["ReadingRowNew"] = "New",
+        ["ReadingRowDownloaded"] = "Downloaded",
+        ["ReadingRowGoneFromSource"] = "Gone from the source",
+        ["ReadingRowNotDownloaded"] = "Not downloaded",
+        ["ReadingRowOnDevice"] = "On this device",
+        ["ReadingRowQueued"] = "Queued",
+        ["ReadingRowWaitsWifi"] = "Queued · waits for Wi-Fi",
+        ["ReadingRowDownloading"] = "Downloading · {done} of {total} pages",
+        ["ReadingRowDownloadingPlain"] = "Downloading",
+        ["ReadingRowFailed"] = "Couldn't download",
+        ["ReadingRowPageOf"] = "Page {page} of {of}",
+        ["ReadingRowPage"] = "Page {page}",
+        ["ReadingRowPercent"] = "{percent}%",
+        ["ReadingRowOpened"] = "Opened",
+        ["ReadingRowBookmarked"] = "Bookmarked",
+        ["ReadingRowPages_one"] = "1 page",
+        ["ReadingRowPages_other"] = "{n} pages",
+        ["ReadingRowVersions_one"] = "1 version",
+        ["ReadingRowVersions_other"] = "{n} versions",
+        ["ReadingRowParts_one"] = "1 part",
+        ["ReadingRowParts_other"] = "{n} parts",
+        ["ReadingRowFromGroup"] = "from {group}",
+        ["ReadingRowFromGroupIn"] = "from {group}, {language}",
+        ["ReadingRowPartsOf"] = "{have} of {n} parts",
+        ["ReadingRowPartMissing_one"] = "part {part} missing",
+        ["ReadingRowPartMissing_other"] = "{count} parts missing",
+        ["ReadingRowPartFromGroup"] = "part {part} from {group}",
+        ["ReadingRowPartFromGroupIn"] = "part {part} from {group}, {language}",
+        ["ReadingRowFromSource"] = "from {source}",
+        ["ReaderCreditPagesSkipped_one"] = "{count} credit page skipped",
+        ["ReaderCreditPagesSkipped_other"] = "{count} credit pages skipped",
+        ["ReadingAgoNow"] = "just now",
+        ["ReadingAgoMinutes"] = "{minutes} min ago",
+        ["ReadingAgoToday"] = "today",
+        ["ReadingAgoYesterday"] = "yesterday",
+        ["ReadingAgoDays_one"] = "1 day ago",
+        ["ReadingAgoDays_other"] = "{days} days ago",
+        ["ReadingAgoWeeks_one"] = "1 week ago",
+        ["ReadingAgoWeeks_other"] = "{weeks} weeks ago",
+        ["ReadingAgoMonths_one"] = "1 month ago",
+        ["ReadingAgoMonths_other"] = "{months} months ago",
+        ["ReadingAgoYears_one"] = "1 year ago",
+        ["ReadingAgoYears_other"] = "{years} years ago",
+        ["ReadingRemovedFrom"] = "Removed from {tracker}",
+        ["ReadingRemovedNotThere"] = "Wasn't on your {tracker} list",
+        ["ReadingRemovedUnmatched"] = "Not matched on {tracker}, so nothing changed there",
+        ["ReadingRemovedFailed"] = "Still on your {tracker} list",
+        ["ReadingRemovedSignIn"] = "Sign in to {tracker} again, then try once more.",
+        ["ReadingMissNoSeries"] = "No series with this name",
+        ["ReadingMissDownSince"] = "Not answering since {time}",
+        ["ReadingMissDown"] = "Not answering",
+        ["ReadingMissPossible"] = "Possible match",
+        ["ReadingDlParts_one"] = "1 part",
+        ["ReadingDlParts_other"] = "{count} parts",
+        ["ReadingDlSize"] = "{size}",
+        ["ReadingDlRead"] = "{count} read",
+        ["ReadingDlChapter"] = "Chapter {chapter}",
+        ["ReadingDlPages"] = "{done} of {total} pages",
+        ["ReadingDlMoreQueued"] = "{count} more queued",
+        ["ReadingDlQueued"] = "{count} queued",
+        ["ReadingDlWaitsWifi"] = "waits for Wi-Fi",
+        ["ReadingDlFailed"] = "Chapter {chapter} couldn't download",
+        ["ReadingDlOffline"] = "Offline",
+        ["ReadingEstimateSize"] = "About {size}",
+        ["ReadingEstimateWifi"] = "over Wi-Fi",
+        ["ReadingEstimateMobile"] = "over mobile data",
+        ["ReadingEstimateWaitsWifi"] = "waits for Wi-Fi",
+        ["ReadingDownloadOnDevice"] = "These are files on this device already. They read offline without a download.",
+        ["ReadingUntitledSeries"] = "Untitled series",
+        ["ReadingDownloadsDoneTitle"] = "Downloads finished",
+        ["ReadingDownloadsDoneChapters_one"] = "A chapter of {title} is ready to read offline.",
+        ["ReadingDownloadsDoneChapters_other"] = "{count} chapters of {title} are ready to read offline.",
+        ["ReadingDownloadsDoneParts_one"] = "A part of {title} is ready to read offline.",
+        ["ReadingDownloadsDoneParts_other"] = "{count} parts of {title} are ready to read offline.",
+        ["ReadingDownloadsDoneSeries"] = "Chapters of {count} series are ready to read offline.",
+        ["ReadHomeTrendingManga"] = "Trending manga",
+        ["ReadHomeTrendingWebtoons"] = "Trending webtoons",
+        ["ReadHomeTrendingNovels"] = "Trending light novels",
+        ["ReadHomeNewManga"] = "New manga",
+        ["ReadHomeNewWebtoons"] = "New webtoons",
+        ["ReadHomeNewNovels"] = "New light novels",
+        ["ReadHomeNewSide"] = "Last 12 months",
+        ["ReadHomeFinishedManga"] = "Finished manga",
+        ["ReadHomeFinishedWebtoons"] = "Finished webtoons",
+        ["ReadHomeFinishedNovels"] = "Finished light novels",
+        ["ReadHomeFinishedSide"] = "Most popular",
+        ["ReadSearchStartedAny"] = "Any time",
+        ["ReadSearchStartedYear"] = "Last 12 months",
+        ["ReadSearchStarted3Years"] = "Last 3 years",
+        ["ReadHitChapters"] = "Chapters 1 to {last}",
+        ["ReadHitEpisodes"] = "Episodes 1 to {last}",
+        ["ReadHitParts_one"] = "1 part",
+        ["ReadHitParts_other"] = "{count} parts",
+        ["ReadHitFiles_one"] = "1 file",
+        ["ReadHitFiles_other"] = "{count} files",
+        ["ReadHitFilesFormat_one"] = "1 file · {format}",
+        ["ReadHitFilesFormat_other"] = "{count} files · {format}",
+        ["ReadSourceFolders"] = "Folders",
+        ["ReadFeedDownloads"] = "Downloads",
+        ["ReadingSinceJanuary"] = "since January",
+        ["ReadingSinceFebruary"] = "since February",
+        ["ReadingSinceMarch"] = "since March",
+        ["ReadingSinceApril"] = "since April",
+        ["ReadingSinceMay"] = "since May",
+        ["ReadingSinceJune"] = "since June",
+        ["ReadingSinceJuly"] = "since July",
+        ["ReadingSinceAugust"] = "since August",
+        ["ReadingSinceSeptember"] = "since September",
+        ["ReadingSinceOctober"] = "since October",
+        ["ReadingSinceNovember"] = "since November",
+        ["ReadingSinceDecember"] = "since December",
+        ["ReadViewAllTrendingManga"] = "Manga, trending",
+        ["ReadViewAllTrendingWebtoons"] = "Webtoons, trending",
+        ["ReadViewAllTrendingNovels"] = "Light novels, trending",
+        ["ReadViewAllNewManga"] = "Manga started in the last 12 months",
+        ["ReadViewAllNewWebtoons"] = "Webtoons started in the last 12 months",
+        ["ReadViewAllNewNovels"] = "Light novels started in the last 12 months",
+        ["ReadViewAllFinishedManga"] = "Finished manga, most popular",
+        ["ReadViewAllFinishedWebtoons"] = "Finished webtoons, most popular",
+        ["ReadViewAllFinishedNovels"] = "Finished light novels, most popular",
         ["StoreJoined"] = "Joined {store} as {member}.",
         ["StoreJoinedUnnamed"] = "Joined {store} without a name.",
         ["StoreLeft"] = "Left {store}. Its plugins stay installed.",
@@ -9016,7 +12501,7 @@ public static partial class T
         ["StoreMoved"] = "{store} is joined at {current}, but this link points to {target}. If the plugin store has moved, leave it first and join again.",
         ["StoreJoinWouldUnname"] = "You joined {store} as {member}. This link would join it again without your name, so nothing was changed.",
         ["StoreNotTheInvited"] = "{url} is not the plugin store in the invite ({reason}). Nothing was joined.",
-        ["StoreTokenNotKept"] = "Couldn't keep the token for this plugin store. {reason}",
+        ["StoreTokenNotKept"] = "Couldn't save the token for this plugin store. {reason}",
         ["StoreInviteUnusable"] = "That invite was already used, was cancelled or has expired. Ask for a new one.",
         ["StoreInviteUsedUp"] = "This invite has been used up. Ask {owners} for a new one.",
         ["StoreInviteEnded"] = "This invite ended {when}. Ask {owners} for a new one.",
@@ -9031,16 +12516,17 @@ public static partial class T
         ["PluginInstallFailed"] = "Couldn't install {plugin}. {reason}",
         ["PluginPublishFailed"] = "Couldn't publish {plugin}. {reason}",
         ["PluginMissingLocally"] = "{plugin} is no longer in the plugin folder.",
+        ["StoreTakesNoBooks"] = "{store} doesn't list book sources yet. Its owner can update the plugin store to add them.",
         ["StoreInviteNeedsLink"] = "This device joined {store} with its link. Paste the same link on the other device.",
         ["StoreLinkMalformed"] = "The plugin store sent a link that doesn't work. Ask its owner to check the plugin store. {reason}",
         ["StoreLinkWrongKey"] = "The plugin store made a link with a different key. Check the address it was started with.",
         ["StoreAdminMissing"] = "{store} has no admin page. Its server may be older.",
         ["StoreAdminLinkForeign"] = "{store} sent an admin link for another address.",
         ["StoreOpenJoinUnsupported"] = "{store}'s server is older and can't let anyone join with a link. Update it first.",
-        ["SourceSwitchedOff"] = "{name} is off. It is skipped when looking for episodes.",
+        ["SourceSwitchedOff"] = "{name} is off. Kaeri skips it when looking for episodes.",
         ["SourceSwitchedOn"] = "{name} is on.",
         ["PluginNotLoaded"] = "{id} isn't loaded. Check that it's installed under Sources.",
-        ["ReleasePinned"] = "{name} will be used for this title.",
+        ["ReleasePinned"] = "This title now uses {name}.",
         ["NoticeChoiceNotSaved"] = "Couldn't save that choice. {reason}",
         ["TorrentProxyWaiting"] = "The proxy check failed. Torrents start once it passes.",
         ["TorrentProxyUnchecked"] = "Torrents start once the proxy check passes.",
@@ -9071,8 +12557,8 @@ public static partial class T
         ["NoticeSignInStopped"] = "The sign-in to {tracker} stopped before it finished. Try again. {reason}",
         ["NoticeTokenExchangeFailed"] = "Couldn't get a token from {tracker}. Try signing in again. {reason}",
         ["NoticeBrowserNotOpened"] = "Couldn't open a browser for the sign-in. Check that one is installed and try again. {reason}",
-        ["NoticeSignInNotWaiting"] = "No sign-in to {tracker} is waiting for that. Start the sign-in again.",
-        ["NoticeSignInWrongRequest"] = "That sign-in to {tracker} didn't come back from this request. Start the sign-in again.",
+        ["NoticeSignInNotWaiting"] = "A sign-in reply from {tracker} arrived, but no sign-in was waiting for it. Start the sign-in again.",
+        ["NoticeSignInWrongRequest"] = "The sign-in reply from {tracker} doesn't match the request. Start the sign-in again.",
         ["NoticeSignInNoToken"] = "The sign-in to {tracker} came back without a token. Try again.",
         ["NoticeMalClientMissingBuild"] = "Couldn't finish signing in to MyAnimeList: this build has no client for it.",
         ["NoticeKitsuSignsInOnAccounts"] = "Kitsu signs in from the Accounts screen.",
@@ -9088,6 +12574,11 @@ public static partial class T
         ["NoticeSignedOut"] = "Signed out of {tracker}.",
         ["NoticeSignedOutQueue_one"] = "Signed out of {tracker}. One queued change is kept for the next sign-in.",
         ["NoticeSignedOutQueue_other"] = "Signed out of {tracker}. {count} queued changes are kept for the next sign-in.",
+        ["NoticeTrackerChangeRefused"] = "{tracker} kept refusing a change to {title}, so it stopped being sent. It's still saved in Kaeri.",
+        ["NoticeTrackerChangesRefused_one"] = "{tracker} kept refusing changes to {title} and one more title, so they stopped being sent. They're still saved in Kaeri.",
+        ["NoticeTrackerChangesRefused_other"] = "{tracker} kept refusing changes to {title} and {others} more titles, so they stopped being sent. They're still saved in Kaeri.",
+        ["NoticeTrackerChangeRefusedUntitled_one"] = "{tracker} kept refusing a change, so it stopped being sent. It's still saved in Kaeri.",
+        ["NoticeTrackerChangeRefusedUntitled_other"] = "{tracker} kept refusing changes to {count} titles, so they stopped being sent. They're still saved in Kaeri.",
         ["NoticeSignOutFailed"] = "Couldn't sign out of {tracker}. Try again. {reason}",
         ["NoticeNotSavedBecause"] = "Couldn't save that setting. {cause}",
         ["NoticeProxySaved"] = "Torrent traffic now goes through the proxy.",
@@ -9104,20 +12595,21 @@ public static partial class T
         ["NoticeEpisodesAired_other"] = "{count} new episodes of shows you watch aired. The calendar has them.",
         ["NoticeUpdateAvailable"] = "{tag} is out. Run kaeri --update to install it.",
         ["CauseProxyNeedsAddress"] = "A proxy needs a host and a port.",
-        ["CauseProxyAddressUnusable"] = "The proxy's address is not one a check can use.",
+        ["CauseProxyAddressUnusable"] = "The proxy check can't use this address.",
         ["CauseServerUnreachable"] = "The server couldn't be reached.",
-        ["LegalHostsNoContent"] = "Kaeri doesn't host any shows. You add your own sources.",
+        ["LegalHostsNoContent"] = "Kaeri doesn't host any shows or books. You add your own sources.",
         ["NoticeSaved"] = "Saved {label}.",
         ["NoticeNotSaved"] = "Couldn't save that setting. {reason}",
+        ["NoticeChangeNotKept"] = "Couldn't save that change. {reason}",
         ["NoticeTitleLoadFailed"] = "Couldn't load this title. Check your connection and try again.",
         ["NoticePlaybackFailed"] = "Playback failed. Try another source.",
         ["NoticeEngineFault"] = "Something went wrong inside Kaeri. It carried on, but if a screen looks stuck, quit and open it again.",
-        ["NoticeDatabaseSetAside"] = "The database was damaged, so Kaeri started a new one. The old file is kept at {path}. Your trackers bring back what they hold at the next sync.",
+        ["NoticeDatabaseSetAside"] = "The database was damaged, so Kaeri started a new one. The old file is kept at {path}. What your trackers hold comes back at the next sync.",
         ["StartFailedFolder"] = "Kaeri couldn't create the folder {path}. Check that the disk has room and the folder can be written to, then try again. {reason}",
         ["StartFailedConfig"] = "{path} has a setting Kaeri can't use: {problem}. Fix or remove it, then try again.",
         ["ConfigResetFailed"] = "Kaeri couldn't move {path} aside to reset the settings. {reason}",
         ["StartFailedDatabase"] = "Kaeri couldn't open its database at {path}. If another Kaeri app is open on this folder, quit it and try again. {reason}",
-        ["StartFailedNetwork"] = "Kaeri couldn't set up its network connection from the network settings in config.toml. {reason}",
+        ["StartFailedNetwork"] = "Kaeri couldn't connect with the network settings in config.toml. Check them, then try again. {reason}",
         ["StartFailed"] = "Kaeri couldn't start. Quit and open it again. {reason}",
         ["StartFailedRemote"] = "The remote couldn't start. {reason}",
         ["StartFailedPlayer"] = "The player couldn't start. {reason}",
@@ -9128,8 +12620,8 @@ public static partial class T
         ["CrashNoticeTv"] = "Kaeri closed after a problem. You can report it from Settings, About.",
         ["NoticeSurpriseEmptyFilters"] = "No titles match these filters.",
         ["NoticeSurpriseEmptyPlanning"] = "Planning is empty.",
-        ["NoticeSurpriseOffline"] = "Offline. Search picks need AniList.",
-        ["NoticeSurpriseFailed"] = "Couldn't pick a title right now. Try again in a moment.",
+        ["NoticeSurpriseOffline"] = "You're offline. Surprise me needs AniList to pick a title.",
+        ["NoticeSurpriseFailed"] = "Couldn't reach AniList to pick a title. Try again in a moment.",
         ["ContinueMenuResume"] = "Continue",
         ["ContinueSyncWaiting_one"] = "One change waiting to sync",
         ["ContinueSyncWaiting_other"] = "{count} changes waiting to sync",
@@ -9213,12 +12705,110 @@ public static partial class T
         ["PlayerVolumeMuted"] = "Volume, muted",
         ["PlayerExitFullscreen"] = "Exit full screen",
         ["AccountsPaneName"] = "Account, {state}",
+        ["WindowsReaderSettingsOpen"] = "Reader settings",
+        ["WindowsReaderOpening"] = "Opening {chapter}",
+        ["WindowsReaderOpeningSlow"] = "Finding a source · {seconds} s",
+        ["WindowsReaderChapterFailed"] = "Couldn't open {chapter}",
+        ["WindowsReaderChooseSource"] = "Choose source",
+        ["WindowsReaderPageFailedHint"] = "Turn the page to go on without it.",
+        ["WindowsReaderEndOfChapter"] = "End of {chapter}",
+        ["WindowsReaderEndNotRead"] = "Not marked read yet",
+        ["WindowsReaderEndTracker"] = "Read · {trackers} updated",
+        ["WindowsReaderEndTrackersTwo"] = "{first} and {second}",
+        ["WindowsReaderContinue"] = "Continue",
+        ["WindowsReaderBackToSeries"] = "Back to the series",
+        ["WindowsReaderEndNotOut"] = "{chapter} isn't out yet",
+        ["WindowsReaderEndNotOutBody"] = "Kaeri checks for new chapters in the background and adds them to Updates.",
+        ["WindowsReaderEndCaughtUpBody"] = "New chapters show in Updates when your sources have them.",
+        ["WindowsReaderEndFinished"] = "End of the series",
+        ["WindowsReaderEndFinishedBody"] = "There are no more chapters.",
+        ["WindowsReaderEndNoSource"] = "No {chapter} in your sources yet",
+        ["WindowsReaderEndOffline"] = "{chapter} isn't downloaded",
+        ["WindowsReaderEndOfflineBody"] = "You're offline. It opens here once you're connected.",
+        ["WindowsReaderGroupLine"] = "{chapter} · page {page} of {total}",
+        ["WindowsReaderGroupLineSpread"] = "{chapter} · pages {first} and {second}",
+        ["WindowsReaderGroupLineStrip"] = "{chapter} · image {image} of {total}",
+        ["WindowsReaderGroupLineScroll"] = "{chapter} · {percent}%",
+        ["WindowsReaderPageLabel"] = "Page {page} of {total}",
+        ["WindowsReaderPagesLabel"] = "Pages {first} and {second} of {total}",
+        ["WindowsReaderScrubber"] = "Page",
+        ["WindowsReaderStartOver"] = "Start over",
+        ["WindowsReaderGoBack"] = "Go back",
+        ["WindowsReaderChange"] = "Change",
+        ["WindowsReaderThisSeries"] = "This series",
+        ["WindowsReaderAllMangaPc"] = "All manga on this PC",
+        ["WindowsReaderAllStripsPc"] = "All webtoons on this PC",
+        ["WindowsReaderAllNovels"] = "All light novels",
+        ["WindowsReaderReadingMode"] = "Reading mode",
+        ["WindowsReaderModeAuto"] = "Auto · {mode}",
+        ["WindowsReaderModeAutoOption"] = "Auto",
+        ["WindowsReaderModeRtlLower"] = "right to left",
+        ["WindowsReaderModeLtrLower"] = "left to right",
+        ["WindowsReaderModeStripLower"] = "strip",
+        ["WindowsReaderModeDetectedNote"] = "Detected from the series details.",
+        ["WindowsReaderModeChoiceNote"] = "Your choice is saved for this series and follows it to your other devices.",
+        ["WindowsReaderUseDefault"] = "Use default",
+        ["WindowsReaderModePaged"] = "Paged",
+        ["WindowsReaderModeScrolled"] = "Scroll",
+        ["WindowsReaderPageLayout"] = "Page layout",
+        ["WindowsReaderFit"] = "Fit",
+        ["WindowsReaderFitHeight"] = "Height",
+        ["WindowsReaderCropBorders"] = "Crop borders",
+        ["WindowsReaderGap"] = "Space between images",
+        ["WindowsReaderBackground"] = "Background",
+        ["WindowsReaderMoreSettings"] = "More reader settings",
+        ["WindowsReaderPaperMode"] = "Paper mode",
+        ["WindowsReaderPaperModeNote"] = "Paper colours, and pages turn at once with nothing in the reader moving.",
+        ["WindowsReaderFont"] = "Font",
+        ["WindowsReaderTextSize"] = "Text size",
+        ["WindowsReaderLineSpacing"] = "Line spacing",
+        ["WindowsReaderLineTight"] = "Tight",
+        ["WindowsReaderLineNormal"] = "Normal",
+        ["WindowsReaderLineLoose"] = "Loose",
+        ["WindowsReaderMargins"] = "Margins",
+        ["WindowsReaderJustify"] = "Justify text",
+        ["WindowsReaderLook"] = "Look",
+        ["WindowsReaderPercent"] = "{percent}%",
+        ["WindowsReaderSmaller"] = "Smaller text",
+        ["WindowsReaderLarger"] = "Larger text",
+        ["WindowsReaderPagesTab"] = "Pages",
+        ["WindowsReaderChaptersTab"] = "Chapters",
+        ["WindowsReaderVolume"] = "Volume {volume}",
+        ["WindowsReaderChapterPages_one"] = "1 page",
+        ["WindowsReaderChapterPages_other"] = "{pages} pages",
+        ["WindowsReaderGridPage"] = "Page {page}",
+        ["WindowsReaderImageLabel"] = "Image {image} of {count}",
+        ["WindowsReaderNoteClose"] = "Close note",
+        ["WindowsReaderBack"] = "Back",
+        ["WindowsReaderModeVertical"] = "Vertical pages",
+        ["WindowsReaderModeVerticalLower"] = "vertical pages",
+        ["WindowsReaderModeAutoLine"] = "{way}, from the series details",
+        ["WindowsReaderModeVerticalLine"] = "Pages one under another",
+        ["WindowsReaderModeStripLine"] = "For webtoons and long images",
+        ["WindowsReadDownloadsEmptyDetail"] = "Downloaded chapters open without a connection.",
+        ["WindowsReadSearchFinished"] = "{anilist} from AniList, {sources} from your sources.",
+        ["WindowsReadSearchFinishedSources"] = "{sources} from your sources.",
+        ["WindowsReadSearchAnilistHidden"] = "AniList's results are hidden.",
+        ["WindowsReadSearchSourceTimeoutSaid_one"] = "No answer in {seconds} second.",
+        ["WindowsReadSearchSourceTimeoutSaid_other"] = "No answer in {seconds} seconds.",
+        ["WindowsReadSearchFiltersDimmed"] = "The filters apply to AniList's results only.",
+        ["WindowsReadSourcesUsePlugin"] = "Use this plugin",
+        ["SeriesReadAgainDoneWindows"] = "Reading {title} again from the start",
+        ["SendSaveFilesWindows"] = "Save files",
+        ["SendSavedWindows_one"] = "Saved the file",
+        ["SendSavedWindows_other"] = "Saved {n} files",
+        ["SendSaveFailedWindows"] = "Couldn't save the files there. Try another folder.",
+        ["OpdsPausedNoneWindows"] = "Paused. This PC isn't on a local network.",
+        ["OpdsPausedVpnWindows"] = "Paused. This PC is only connected through a VPN.",
+        ["FeedFirewallTitleWindows"] = "Windows will ask about the network",
+        ["FeedFirewallBodyWindows"] = "To let e-readers at home reach the feed, allow Kaeri on private networks only. Leave public networks unticked.",
+        ["WindowsGroupPickerIn"] = "Group in {source}",
         ["SettingsLoading"] = "Loading settings",
         ["SettingsGroupMpv"] = "mpv",
         ["SettingsCardState"] = "{title}, {state}",
         ["SettingsCardCheck"] = "{title}, {word}, {note}",
         ["SettingsClosingDetail"] = "Keep downloading leaves Kaeri in the notification area until they finish.",
-        ["SettingsPresenceRichDetail"] = "The cover, a progress bar and a link to the show on {tracker}. Needs the title shown.",
+        ["SettingsPresenceRichDetail"] = "The cover, a progress bar and a link to the show on {tracker}. It works only while the title is shown.",
         ["SettingsAnotherTv"] = "Another TV",
         ["SettingsTheme"] = "Theme",
         ["SettingsMotion"] = "Motion",
@@ -9258,16 +12848,16 @@ public static partial class T
         ["TorrentsDialogEditProxy"] = "Edit proxy",
         ["SettingsNoteTrailersWindows"] = "Trailers play muted from YouTube, which sees your IP address. They don't play on a metered connection, with animation effects off, in energy saver mode or with Narrator running.",
         ["SettingsNoteCastTvsPc"] = "They appear under Chromecast in Play on TV. This PC sends them the episode.",
-        ["SettingsNoteTorrentsWhileCastingPc"] = "Lets a TV with Chromecast built in play torrents. This PC sends the episode for as long as it plays.",
+        ["SettingsNoteTorrentsWhileCastingPc"] = "A TV with Chromecast built in can then play torrents. This PC sends the episode for as long as it plays.",
         ["SettingsLanguageRestart"] = "Restart",
         ["SettingsDifferences_one"] = "One title differs from {tracker}",
         ["SettingsDifferences_other"] = "{count} titles differ from {tracker}",
         ["SettingsDifferencesReview"] = "Review",
         ["SettingsSearch"] = "Search settings",
-        ["SettingsQualityDetailWindows"] = "Higher takes the best version a source offers, and more space.",
+        ["SettingsQualityDetailWindows"] = "Higher picks the best version a source has. It takes more space.",
         ["SettingsMergeSubtitlesDetailWindows"] = "Subtitles stay with the episode wherever the file goes.",
         ["SettingsKeepSeedingDetailWindows"] = "A download that keeps seeding stays in Kaeri's cache, not the download folder.",
-        ["SettingsDiscussionsNoteWindows"] = "Reads the comments on AniList's forum thread for episodes you have watched.",
+        ["SettingsDiscussionsNoteWindows"] = "Comments come from AniList's forum thread, once you've watched the episode.",
         ["SettingsCommentImagesNoteWindows"] = "Each image loads from the site that hosts it, which sees your IP address.",
         ["SettingsFolderBrowse"] = "Browse…",
         ["TrayStillDownloading"] = "Kaeri is still downloading",
@@ -9314,7 +12904,7 @@ public static partial class T
         ["StartFailedOpenFolder"] = "Open the folder",
         ["StartFailedQuit"] = "Quit",
         ["EngineStoppedTitle"] = "Kaeri stopped working",
-        ["EngineStoppedDetail"] = "The part of the app that does the work has stopped. Open Kaeri again to carry on.",
+        ["EngineStoppedDetail"] = "Downloads and sync stopped with it. Open Kaeri again to carry on.",
         ["EngineStoppedOpenAgain"] = "Open again",
         ["TitlebarSynced"] = "{tracker} synced",
         ["TitlebarNotSynced"] = "{tracker} not synced",
@@ -9349,7 +12939,7 @@ public static partial class T
         ["SourcesVersionReady"] = "Version {version} is ready",
         ["SourcesUseThis"] = "Use this source",
         ["SourcesUseName"] = "{name} on",
-        ["SourcesRemoveDetail"] = "It stops being tried for episodes. You can install it again from its plugin store.",
+        ["SourcesRemoveDetail"] = "Kaeri won't try it for episodes any more. You can install it again from its plugin store.",
         ["StoresUpdatesCount_one"] = "One to update",
         ["StoresUpdatesCount_other"] = "{count} to update",
         ["StoresOfflineKeepWorking"] = "It didn't answer when this device last asked. The plugins you installed keep working.",
@@ -9414,9 +13004,9 @@ public static partial class T
         ["ReportCrashSettings"] = "Crash report settings",
         ["SettingsGroupCrashes"] = "Crash reports",
         ["SettingsCrashSave"] = "Save crash reports on this device",
-        ["SettingsCrashSaveDetail"] = "When this is on, Kaeri keeps a short record of each crash on this device, with titles, addresses and names removed, so you can add it to Report a bug. Nothing is sent by itself.",
+        ["SettingsCrashSaveDetail"] = "Kaeri keeps a short record of each crash on this device for Report a bug, with titles, addresses and names removed. Nothing is sent by itself.",
         ["SettingsCrashAsk"] = "Ask after a crash",
-        ["SettingsCrashAskDetail"] = "Shows a notice at the next launch with Report…",
+        ["SettingsCrashAskDetail"] = "Kaeri shows a notice with Report… the next time it opens.",
         ["SettingsCrashOsHeading"] = "Kept by {system}",
         ["SettingsCrashOsDetail"] = "{system} kept these crashes from before you turned this on. Nothing from them is saved unless you add it.",
         ["SettingsCrashOsItem"] = "Crash · {when}",
@@ -9426,7 +13016,7 @@ public static partial class T
         ["SettingsCrashView"] = "View",
         ["SettingsCrashDelete"] = "Delete",
         ["SettingsCrashDeleteAll"] = "Delete all",
-        ["SettingsCrashFootnote"] = "Crash reports stay on this device. Kaeri sends nothing by itself. A report leaves only when you open it on GitHub from Report a bug. Reports are deleted after 30 days.",
+        ["SettingsCrashFootnote"] = "Crash reports stay on this device, and Kaeri sends nothing by itself. A report leaves only when you open it on GitHub from Report a bug. Reports are deleted after 30 days.",
         ["CalendarPreviousWeek"] = "Previous week",
         ["CalendarNextWeek"] = "Next week",
         ["CalendarThisWeek"] = "This week",
@@ -9468,9 +13058,9 @@ public static partial class T
         ["CastTvsNoteMac"] = "They appear under Chromecast in Play on TV. This Mac sends them the episode.",
         ["CastTvsNoteIphone"] = "They appear under Chromecast in Play on TV. This iPhone sends them the episode.",
         ["CastTvsNoteIpad"] = "They appear under Chromecast in Play on TV. This iPad sends them the episode.",
-        ["CastTorrentsNoteMac"] = "Lets a TV with Chromecast built in play torrents. This Mac sends the episode for as long as it plays.",
-        ["CastTorrentsNoteIphone"] = "Lets a TV with Chromecast built in play torrents. This iPhone sends the episode for as long as it plays.",
-        ["CastTorrentsNoteIpad"] = "Lets a TV with Chromecast built in play torrents. This iPad sends the episode for as long as it plays.",
+        ["CastTorrentsNoteMac"] = "A TV with Chromecast built in can then play torrents. This Mac sends the episode for as long as it plays.",
+        ["CastTorrentsNoteIphone"] = "A TV with Chromecast built in can then play torrents. This iPhone sends the episode for as long as it plays.",
+        ["CastTorrentsNoteIpad"] = "A TV with Chromecast built in can then play torrents. This iPad sends the episode for as long as it plays.",
         ["CastUpNextPlaysIn"] = "Up next · plays in {seconds} s",
         ["CastCouldntStart"] = "Couldn't start on {name}",
         ["CastStopped"] = "Casting stopped",
@@ -9608,6 +13198,13 @@ public static partial class T
         ["PadButtonView"] = "View",
         ["PadButtonLeftStick"] = "Left stick",
         ["PadButtonRightStick"] = "Right stick",
+        ["PadHelpTurnPage"] = "Turn the page",
+        ["PadHelpPreviousChapter"] = "Previous chapter",
+        ["PadHelpNextChapter"] = "Next chapter",
+        ["PadHelpReaderBar"] = "Show or hide the bar",
+        ["PadHelpReaderSettings"] = "Reader settings",
+        ["PadHelpCloseReader"] = "Close the reader",
+        ["PadHelpReader"] = "Reader",
         ["CloseDontAsk"] = "Don't ask again",
         ["CloseKeepGoing"] = "Keep going",
         ["PartyLookingSources"] = "Looking through your sources…",
@@ -9686,6 +13283,8 @@ public static partial class T
         ["DownloadsSpaceLabel"] = "Space used by downloads",
         ["DownloadsEmptyTitle"] = "No downloads",
         ["DownloadsEmptyDetail"] = "Downloaded episodes play without a connection.",
+        ["ReadDownloadsEmptyDetail"] = "Downloaded chapters open without a connection.",
+        ["ReadDownloadsEmptyBoth"] = "Downloaded episodes and chapters open without a connection.",
         ["DownloadsLoadFailed"] = "Couldn't load downloads",
         ["DownloadsFolderFailed"] = "Couldn't open the folder. Check that it still exists.",
         ["DownloadsEpisodeName"] = "Episode {episode}",
@@ -9713,11 +13312,11 @@ public static partial class T
         ["DownloadsDeleteTitle"] = "Delete {name}?",
         ["DownloadsDeleteDetail"] = "The file is removed from this device.",
         ["DownloadsDeleteOneTitle"] = "Delete download",
-        ["DownloadsDeleteOneDetail"] = "It plays again only with a connection, or once you download it again.",
+        ["DownloadsDeleteOneDetail"] = "After this, the episode needs a connection to play, unless you download it again.",
         ["DownloadsDeleteWatched"] = "Delete watched downloads",
         ["DownloadsSeedingTitle"] = "Seeding",
         ["DownloadsSeedingAfterWatching"] = "Seeding after watching",
-        ["DownloadsSeedingNote"] = "Watched episodes are shared back while Kaeri is open, until the ratio or the time limit set in Settings, under Sources, is reached.",
+        ["DownloadsSeedingNote"] = "Watched episodes are shared back while Kaeri is open. Sharing stops at the ratio or time limit you set in Settings, under Sources.",
         ["DownloadsBackgroundTitle"] = "When the window closes with downloads running",
         ["DownloadsBackgroundKeep"] = "Keep downloading",
         ["DownloadsBackgroundStop"] = "Stop downloading",
@@ -9742,6 +13341,25 @@ public static partial class T
         ["EpisodeDownloadPaused"] = "Download paused at {percent}",
         ["EpisodeDownloadDone"] = "Downloaded",
         ["EpisodeDownloadFailed"] = "Couldn't download episode {episode}. Try again.",
+        ["FirstOtherTitle"] = "Already use Kaeri on another device?",
+        ["FirstOtherLine"] = "Pair with it and this device gets your sources, trackers and history, and the rest of setup is done for you.",
+        ["FirstOtherPairLine"] = "You get a code to enter on that device. Both need the same Wi-Fi.",
+        ["FirstOtherRestore"] = "Restore from a cloud folder",
+        ["FirstOtherRestoreLine"] = "Uses the recovery key you saved",
+        ["FirstOtherNo"] = "No, start here",
+        ["PairWaiting"] = "Waiting for your other device",
+        ["PairNothingYet"] = "Nothing yet? Both devices need to be on the same Wi-Fi.",
+        ["FirstJoinGroup"] = "From {device}",
+        ["FirstJoinLooking"] = "Looking at what {device} has…",
+        ["FirstJoinMedium"] = "Kaeri is for",
+        ["FirstJoinMediumLine"] = "Reading, as on {device}",
+        ["FirstJoinSigninsLine"] = "{trackers}",
+        ["FirstJoinServer"] = "Add {host}",
+        ["FirstJoinServerLine"] = "{kind} · signs in with the key from {device}, kept in {store}",
+        ["FirstJoinFolders"] = "Folders stay on {device}. Add this device's own folders in Your sources.",
+        ["FirstJoinStepsDone"] = "Lists and sources are set up, so first run ends here. You can change them in Settings.",
+        ["FirstJoinStoreRefused"] = "{store} didn't let this device in. {owner} can send you an invite.",
+        ["FirstJoinSyncing"] = "Syncing with {device}",
         ["HomeTitle"] = "Home",
         ["HomeResumeEpisode"] = "Resume episode {episode}",
         ["HomePlayEpisode"] = "Play episode {episode}",
@@ -9763,7 +13381,7 @@ public static partial class T
         ["HomeEnd"] = "That's everything for now. Seasonal and Calendar have the full lists.",
         ["HomeEndSignedOut"] = "Sign in to AniList to bring in your list and Planning.",
         ["HomeSignIn"] = "Sign in to AniList",
-        ["HomeEndNoSources"] = "Add a source to play from Home. Plugin stores has some to choose from.",
+        ["HomeEndNoSources"] = "Add a source to play from Home. Plugins come from Plugin stores.",
         ["HomeNotFound"] = "Not found in your sources",
         ["HomeFailed"] = "Couldn't load suggestions",
         ["HomeTryAgain"] = "Try again",
@@ -9906,7 +13524,7 @@ public static partial class T
         ["TitleConnectDrive"] = "Connect the drive to play",
         ["LibraryPickerTitle"] = "Choose a folder with your episodes.",
         ["LibraryRemoveDetail"] = "Your files stay where they are.",
-        ["LibraryReasonOffline"] = "Couldn't ask AniList. It is tried again at the next scan.",
+        ["LibraryReasonOffline"] = "Couldn't reach AniList. The next scan tries again.",
         ["LibraryChooseMatch"] = "Choose the match",
         ["LibraryKeptLine"] = "Kept as its own title",
         ["LibraryFixMatch"] = "Fix this match",
@@ -9917,7 +13535,7 @@ public static partial class T
         ["LicensedTitle"] = "Licensed services",
         ["LicensedBody"] = "Kaeri can open titles in streaming services you pay for. It never plays them itself. Links come from AniList.",
         ["LicensedRegion"] = "Region",
-        ["LicensedRegionLine"] = "Hides links AniList marks for other countries. Most links name no country, so choose your services too.",
+        ["LicensedRegionLine"] = "Links AniList marks for other countries are hidden. Most links name no country, so choose your services too.",
         ["LicensedYours"] = "Your services",
         ["LicensedShowAll"] = "Show all {count}",
         ["LicensedRegionSystem"] = "Follow this device",
@@ -10065,7 +13683,7 @@ public static partial class T
         ["OnboardingWhereHosts"] = "Kaeri plays what you already have: files on this device, your Jellyfin server, and plugins from stores you join.",
         ["OnboardingOwnHeading"] = "Have your own media?",
         ["OnboardingInviteHeading"] = "Have an invite link?",
-        ["OnboardingWhereStores"] = "Plugins come from plugin stores. A plugin store is signed and gives each device its own token, so you join one with an invite link from its owner.",
+        ["OnboardingWhereStores"] = "Plugins come from plugin stores. Each one is signed and gives every device its own token, which is why you join with an invite link from its owner.",
         ["OnboardingDemoHeading"] = "Try it now",
         ["OnboardingDemoDetail"] = "The demo plays こうしす！, a series its makers share under CC BY 4.0, from Wikimedia Commons.",
         ["OnboardingPlayDemo"] = "Play the demo",
@@ -10079,12 +13697,12 @@ public static partial class T
         ["PartyJoin"] = "Join watch party",
         ["PartyLeave"] = "Leave watch party",
         ["PartyLeaving"] = "Leaving…",
-        ["PartyReadyAction"] = "I'm ready",
+        ["PartyReadyAction"] = "Ready to watch",
         ["PartyCopyInvite"] = "Copy invite link",
         ["PartyStay"] = "Stay",
         ["PartyLeaveAndClose"] = "Leave and close",
         ["PartyNotNow"] = "Not now",
-        ["PartyGettingReady"] = "Getting things ready…",
+        ["PartyGettingReady"] = "Loading suggestions…",
         ["PartyServer"] = "Server",
         ["PartyServerHint"] = "host:port",
         ["PartyRecentServers"] = "Recent servers",
@@ -10095,7 +13713,7 @@ public static partial class T
         ["PartyYourName"] = "Your name in the room",
         ["PartyServerPublic"] = "A public server run by {operator}, not by Kaeri.",
         ["PartyServerSuggest"] = "No server of your own? {server} is a public one, run by {operator}.",
-        ["PartyServerInvited"] = "A server the person who invited you chose. Kaeri doesn't run it.",
+        ["PartyServerInvited"] = "The person who invited you chose this server. Kaeri doesn't run it.",
         ["PartyServerShape"] = "Write the server as a host and a port, like party.example:8999.",
         ["PartyPrivacy"] = "The server sees your name, the room, and when anyone plays, pauses or seeks. Each of you plays the episode from your own sources.",
         ["PartyRoomHint"] = "Anyone who knows the room's name can join it. The invite link carries it, so nobody has to read it out.",
@@ -10165,7 +13783,7 @@ public static partial class T
         ["TogetherOpenPlayer"] = "Open player",
         ["TogetherRecent"] = "Recent rooms",
         ["TogetherRecentRow"] = "Episode {episode} · with {names} · {when}",
-        ["TogetherRecentEmpty"] = "Rooms you join show here, the last ten.",
+        ["TogetherRecentEmpty"] = "The last ten rooms you join show here.",
         ["TogetherRejoin"] = "Rejoin",
         ["TogetherForgetRoom"] = "Remove from recent rooms",
         ["TogetherSomeoneHere_one"] = "{names} is in the room",
@@ -10265,7 +13883,7 @@ public static partial class T
         ["PartyChatHiddenLine"] = "Hide chat is on in Settings, under Playback.",
         ["PartyChatShow"] = "Show chat",
         ["SettingsHideChat"] = "Hide chat in watch parties",
-        ["SettingsHideChatLine"] = "Lines, reactions and their ticks on the seek bar stay off the video, and the field is gone. The people list still shows who is in the room.",
+        ["SettingsHideChatLine"] = "Chat lines, reactions and their ticks on the seek bar stay off the video, and the chat field is gone. The people list still shows who is in the room.",
         ["PartyMute"] = "Mute {name}",
         ["PartyUnmute"] = "Unmute {name}",
         ["PartyUnmuteShort"] = "Unmute",
@@ -10308,6 +13926,7 @@ public static partial class T
         ["PlayerStartPinned"] = "Your pick for this show",
         ["PlayerStartMissNoMatch"] = "{name} doesn't have this show",
         ["PlayerStartMissNoEpisode"] = "{name} doesn't have episode {episode}",
+        ["PlayerStartPinMissed"] = "{name} doesn't have episode {episode} yet. Playing from the next source.",
         ["PlayerStartMissFailed"] = "{name} didn't answer",
         ["PlayerStartMissTimedOut"] = "{name} took too long",
         ["PlayerStartMissSkipped"] = "You skipped {name}",
@@ -10472,8 +14091,8 @@ public static partial class T
         ["PlayerLoadSubtitleFile"] = "Load subtitle file…",
         ["PlayerLoadAudioFile"] = "Load audio file…",
         ["PlayerFilePickerFailed"] = "Couldn't open the file chooser. Try again.",
-        ["PlayerSubtitleFileFailed"] = "Couldn't load that subtitle file. Check that it is a subtitle file.",
-        ["PlayerAudioFileFailed"] = "Couldn't load that audio file. Check that it is an audio file.",
+        ["PlayerSubtitleFileFailed"] = "Couldn't load that file as subtitles. Choose a subtitle file, such as .srt or .ass.",
+        ["PlayerAudioFileFailed"] = "Couldn't load that file as audio. Choose an audio file, such as .mka or .flac.",
         ["PlayerTrackUnnamed"] = "Unnamed track",
         ["PlayerAudioTrackN"] = "Audio {id}",
         ["PlayerSubtitleTrackN"] = "Subtitles {id}",
@@ -10497,6 +14116,676 @@ public static partial class T
         ["PlayerSubsBgShadow"] = "Shadow",
         ["PlayerSubsBgBox"] = "Box",
         ["PlayerSubsMore"] = "More in Settings…",
+        ["ReaderPageLoading"] = "Loading page {page}",
+        ["ReaderPagePlate"] = "Page {page}",
+        ["ReaderImagePlate"] = "Image {image}",
+        ["ReaderImageLoading"] = "Loading image {image}",
+        ["ReaderImageFailed"] = "Couldn't load",
+        ["ReaderPageFailed"] = "Couldn't load page {page}",
+        ["ReaderTryAgain"] = "Try again",
+        ["ReaderClose"] = "Close",
+        ["ReaderEndRead"] = "Counted as read",
+        ["ReaderEndTracker"] = "Counted as read · {trackers} updated",
+        ["ReaderEndTrackerOffline"] = "Counted as read · {tracker} updates when you're back online",
+        ["ReaderEndNext"] = "Next",
+        ["ReaderModeRtl"] = "Right to left",
+        ["ReaderModeLtr"] = "Left to right",
+        ["ReaderModeStrip"] = "Strip",
+        ["ReaderFitScreen"] = "Screen",
+        ["ReaderFitWidth"] = "Width",
+        ["ReaderFontSerif"] = "Serif",
+        ["ReaderFontSans"] = "Sans",
+        ["ReaderLookPaper"] = "Paper",
+        ["ReaderLookLight"] = "Light",
+        ["ReaderLookSepia"] = "Sepia",
+        ["ReaderLookDark"] = "Dark",
+        ["ReaderMarginsNarrow"] = "Narrow",
+        ["ReaderMarginsWide"] = "Wide",
+        ["ReaderLayoutAuto"] = "Auto",
+        ["ReaderLayoutSingle"] = "One",
+        ["ReaderLayoutDouble"] = "Two",
+        ["ReaderSpreadsSplit"] = "Split",
+        ["ReaderSpreadsRotate"] = "Turn",
+        ["ReaderSpreadsWhole"] = "Whole",
+        ["ReaderTapEdges"] = "Edges",
+        ["ReaderTapAuto"] = "Auto",
+        ["ReaderTapSides"] = "Sides",
+        ["ReaderTapLShape"] = "L shape",
+        ["ReaderTapWideNext"] = "Wide next",
+        ["ReaderTapTopBottom"] = "Top and bottom",
+        ["ReaderTapBothNext"] = "Next on both sides",
+        ["ReaderTapOff"] = "Off",
+        ["ReaderTapPaged"] = "Paged",
+        ["ReaderTapScrolling"] = "Scrolling",
+        ["ReaderTapSize"] = "Zone size",
+        ["ReaderTapStandard"] = "Standard",
+        ["ReaderTapSmall"] = "Small",
+        ["ReaderTapFlipSides"] = "Flip left and right",
+        ["ReaderTapFlipEnds"] = "Flip top and bottom",
+        ["ReaderTapShow"] = "Show zones",
+        ["ReaderTapHere"] = "Stays on this {kind}",
+        ["ReaderClickZones"] = "Click zones",
+        ["ReaderZoneNext"] = "Next page",
+        ["ReaderZonePrevious"] = "Previous page",
+        ["ReaderZoneControls"] = "Controls",
+        ["ReaderZoneShowControls"] = "Show controls",
+        ["ReaderZoneScrollDown"] = "Scroll down",
+        ["ReaderZoneScrollUp"] = "Scroll up",
+        ["ReaderZoneChange"] = "Change in Reader settings",
+        ["ReaderTapOffAbout"] = "Taps show and hide the controls",
+        ["ReaderTapSidesRightAbout"] = "Next page on the right side, previous page on the left side, controls in the middle",
+        ["ReaderTapSidesLeftAbout"] = "Next page on the left side, previous page on the right side, controls in the middle",
+        ["ReaderTapLShapeBottomRightAbout"] = "Next page along the bottom and on the right, previous page along the top and on the left, controls in the middle",
+        ["ReaderTapLShapeBottomLeftAbout"] = "Next page along the bottom and on the left, previous page along the top and on the right, controls in the middle",
+        ["ReaderTapLShapeTopRightAbout"] = "Next page along the top and on the right, previous page along the bottom and on the left, controls in the middle",
+        ["ReaderTapLShapeTopLeftAbout"] = "Next page along the top and on the left, previous page along the bottom and on the right, controls in the middle",
+        ["ReaderTapWideNextTopLeftAbout"] = "Controls along the top, previous page in a narrow column on the left, next page everywhere else",
+        ["ReaderTapWideNextTopRightAbout"] = "Controls along the top, previous page in a narrow column on the right, next page everywhere else",
+        ["ReaderTapWideNextBottomLeftAbout"] = "Controls along the bottom, previous page in a narrow column on the left, next page everywhere else",
+        ["ReaderTapWideNextBottomRightAbout"] = "Controls along the bottom, previous page in a narrow column on the right, next page everywhere else",
+        ["ReaderTapTopBottomAbout"] = "Next page across the bottom, previous page across the top, controls in the middle",
+        ["ReaderTapTopBottomFlippedAbout"] = "Next page across the top, previous page across the bottom, controls in the middle",
+        ["ReaderTapBothNextAbout"] = "Next page down both sides, previous page at the bottom in the middle, controls above it",
+        ["ReaderTapBothNextFlippedAbout"] = "Next page down both sides, previous page at the top in the middle, controls below it",
+        ["ReaderTapSidesRightScrollAbout"] = "Scroll down on the right side, scroll up on the left side, controls in the middle",
+        ["ReaderTapSidesLeftScrollAbout"] = "Scroll down on the left side, scroll up on the right side, controls in the middle",
+        ["ReaderTapLShapeBottomRightScrollAbout"] = "Scroll down along the bottom and on the right, scroll up along the top and on the left, controls in the middle",
+        ["ReaderTapLShapeBottomLeftScrollAbout"] = "Scroll down along the bottom and on the left, scroll up along the top and on the right, controls in the middle",
+        ["ReaderTapLShapeTopRightScrollAbout"] = "Scroll down along the top and on the right, scroll up along the bottom and on the left, controls in the middle",
+        ["ReaderTapLShapeTopLeftScrollAbout"] = "Scroll down along the top and on the left, scroll up along the bottom and on the right, controls in the middle",
+        ["ReaderTapWideNextTopLeftScrollAbout"] = "Controls along the top, scroll up in a narrow column on the left, scroll down everywhere else",
+        ["ReaderTapWideNextTopRightScrollAbout"] = "Controls along the top, scroll up in a narrow column on the right, scroll down everywhere else",
+        ["ReaderTapWideNextBottomLeftScrollAbout"] = "Controls along the bottom, scroll up in a narrow column on the left, scroll down everywhere else",
+        ["ReaderTapWideNextBottomRightScrollAbout"] = "Controls along the bottom, scroll up in a narrow column on the right, scroll down everywhere else",
+        ["ReaderTapTopBottomScrollAbout"] = "Scroll down across the bottom, scroll up across the top, controls in the middle",
+        ["ReaderTapTopBottomFlippedScrollAbout"] = "Scroll down across the top, scroll up across the bottom, controls in the middle",
+        ["ReaderTapBothNextScrollAbout"] = "Scroll down on both sides, scroll up at the bottom in the middle, controls above it",
+        ["ReaderTapBothNextFlippedScrollAbout"] = "Scroll down on both sides, scroll up at the top in the middle, controls below it",
+        ["ReaderChapters"] = "Chapters",
+        ["ReaderPagesLeft_one"] = "One page left in this chapter",
+        ["ReaderPagesLeft_other"] = "{count} pages left in this chapter",
+        ["ReaderChaptersLoading"] = "Loading chapters",
+        ["ReaderBackgroundTheme"] = "Theme",
+        ["ReaderBackgroundBlack"] = "Black",
+        ["ReaderBackgroundWhite"] = "White",
+        ["ReaderEndCaughtUp"] = "You're caught up",
+        ["ReaderGapNone"] = "None",
+        ["ReaderGapSmall"] = "Small",
+        ["ReaderLookSystem"] = "System",
+        ["ReaderEndOfChapterNumber"] = "End of chapter {chapter}",
+        ["ReaderEndOfNamed"] = "End of {name}",
+        ["ReaderEndFacts"] = "Chapter {chapter} · {facts}",
+        ["ReaderEndPages_one"] = "One page",
+        ["ReaderEndPages_other"] = "{count} pages",
+        ["ReaderEndFrom"] = "From {source}",
+        ["ReaderChapterLine"] = "Chapter {chapter}",
+        ["ReaderDividerFactsSource"] = "{facts} · from {source}",
+        ["ReaderEndSwipe"] = "Swipe to keep reading",
+        ["ReaderEndSkipTo"] = "Skip to chapter {chapter}",
+        ["ReaderEndSkipHint"] = "Chapter {chapter} stays unread.",
+        ["ReaderEndSkipHintExtras"] = "The extras before it stay unread.",
+        ["ReaderDividerImages_one"] = "One image",
+        ["ReaderDividerImages_other"] = "{count} images",
+        ["ReaderChapterLineTitled"] = "Chapter {chapter} · {title}",
+        ["ReaderWaitChapterList"] = "Getting the chapter list from {source}",
+        ["ReaderWaitChapterPages"] = "Getting chapter {chapter} from {source}",
+        ["ReaderWaitSeconds"] = "{line} · {seconds} s",
+        ["ReaderWaitLong"] = "This is taking a while.",
+        ["ReaderCreditShow"] = "Show",
+        ["ReaderCreditShowHint"] = "Shows the page",
+        ["ReaderCreditShown"] = "Skipped as a credit page",
+        ["ReaderCreditNot"] = "Not a credit page",
+        ["ReaderCreditKept"] = "This page will show from now on",
+        ["ReaderCreditPage"] = "credit page",
+        ["ReaderCreditPageOf"] = "credit page {n} of {total}",
+        ["ReaderGroupLinePlace"] = "{chapter} · {place}",
+        ["ReaderCreditPageLabel"] = "Credit page",
+        ["ReaderCreditFailed"] = "Couldn't load this credit page",
+        ["ReaderPartPreview"] = "Page {page} · part {part}",
+        ["ReaderPartPreviewMissing"] = "Page {page} · part {part} · part {missing} missing",
+        ["ReaderPartStarts"] = "Part {part} starts at page {page}",
+        ["OnboardingReadDemo"] = "Read the demo",
+        ["OnboardingDemoBooksDetail"] = "One short comic and one short story, shared by their makers under Creative Commons.",
+        ["OnboardingDemoBothDetail"] = "One short episode and one short comic, shared by their makers under Creative Commons.",
+        ["HomeDemoOnlyBooks"] = "Only the demo is on. Add a folder, a server or a plugin store to read your own books.",
+        ["HomeSpotlightRead"] = "Read",
+        ["DemoSeriesFacts_one"] = "Demo · Comic · one page",
+        ["DemoSeriesFacts_other"] = "Demo · Comic · {pages} pages",
+        ["DemoCreditBook"] = "{title} by {author}. Licensed {licence}. Read from Wikimedia Commons.",
+        ["DemoCreditStory"] = "{title} by {author}. Public domain. It comes with the app.",
+        ["DemoCreditCover"] = "Cover: \"{title}\" by {artist}, {year}. Public domain. It comes with the app.",
+        ["ReaderDemoCredit"] = "{title} · {author} · {licence}",
+        ["SearchDemoReads"] = "Demo · Reads now",
+        ["SearchDemoOnlyBooks"] = "Only the demo is on. Other titles appear once you add a source.",
+        ["ReaderDemoEnd"] = "That's the end of the demo",
+        ["ReaderDemoEndLine"] = "To read your own books, add a folder, a server or a plugin store.",
+        ["ReaderDemoAddSource"] = "Add a source",
+        ["ReaderDemoAgain"] = "Back to page 1",
+        ["SourcesDemoBooksLine"] = "A comic and a story · CC BY 4.0 and public domain",
+        ["SourcesDemoBooksWhat"] = "Works their makers share under Creative Commons, so you can try Kaeri before adding a source. It isn't a source to keep.",
+        ["SourcesDemoBooksPrivate"] = "The demo never signs in anywhere and never writes to a tracker.",
+        ["DemoChapters"] = "Chapters",
+        ["DemoAlso"] = "Also in the demo",
+        ["DemoCredits"] = "Credits",
+        ["DemoPages_one"] = "One page",
+        ["DemoPages_other"] = "{pages} pages",
+        ["DemoStoryRow"] = "Story · {author} · {licence}",
+        ["DemoReadChapter"] = "Read chapter {number}",
+        ["ProgressServerSaved"] = "Saved to {server}",
+        ["ProgressServerSending"] = "Sending to {server}…",
+        ["ProgressServerOffline"] = "Will send to {server} when you’re back online",
+        ["ProgressServerRetrying"] = "{server} didn’t answer. Kaeri will try again.",
+        ["ProgressServerFailed"] = "Not saved to {server}: {reason}.",
+        ["ProgressWhyKey"] = "the server refused the key",
+        ["ProgressWhyPassword"] = "the server refused the password",
+        ["ProgressWhyGone"] = "this series isn’t on the server any more",
+        ["ProgressWhyGaveUp"] = "no answer for a day",
+        ["ProgressRowSaved"] = "Progress saved {ago}",
+        ["ProgressRowSending_one"] = "Sending 1 chapter…",
+        ["ProgressRowSending_other"] = "Sending {count} chapters…",
+        ["ProgressRowOffline_one"] = "1 chapter will send when you’re back online",
+        ["ProgressRowOffline_other"] = "{count} chapters will send when you’re back online",
+        ["ProgressRowRetrying_one"] = "1 chapter waiting. Kaeri will try again.",
+        ["ProgressRowRetrying_other"] = "{count} chapters waiting. Kaeri will try again.",
+        ["ProgressRowFailed_one"] = "1 chapter not saved: {reason}",
+        ["ProgressRowFailed_other"] = "{count} chapters not saved: {reason}",
+        ["ProgressRowOff"] = "Progress stays on this {kind}",
+        ["NavWatch"] = "Watch",
+        ["NavRead"] = "Read",
+        ["NavUpdates"] = "Updates",
+        ["HomeReadContinue"] = "Continue",
+        ["HomeReadReleasing"] = "Releasing now",
+        ["HomeReadCheckedOnOpen"] = "Checked when you open Kaeri",
+        ["HomeReadEnd"] = "That's everything for now. Updates and Search have the full lists.",
+        ["HomeReadNoSources"] = "Add a folder, a server or a plugin store to read from Home.",
+        ["ReadHomeOfflineRows"] = "Trending and new series show once you're online.",
+        ["ReadHomeBrowse"] = "Browse",
+        ["ReadHomeBrowseLine"] = "Trending, new and finished, by format",
+        ["ReadHomeBrowseRow"] = "{first}, {second} and {more} more",
+        ["ReadHomeBrowseNote"] = "From AniList. Your sources are asked when you open a series.",
+        ["ReadHomeBrowseKept"] = "Lists kept from {time} still open.",
+        ["WeekUsually"] = "Usually",
+        ["WeekNothingUsually"] = "Nothing usually",
+        ["UpdatesChecked"] = "Checked {ago}",
+        ["ChapterUpdatesCheckedCaughtUp"] = "Checked {ago} · series you are caught up on",
+        ["ChapterUpdatesChecking"] = "Checking for new chapters…",
+        ["UpdatesDownloadNew"] = "Download new",
+        ["UpdatesEmptyTitle"] = "No new chapters",
+        ["ChapterUpdatesEmptyLine"] = "Kaeri checks series on your Reading list that you are caught up on, a few times a day.",
+        ["ChapterUpdatesToday"] = "Today",
+        ["ChapterUpdatesYesterday"] = "Yesterday",
+        ["ChapterUpdatesVersions_one"] = "1 version",
+        ["ChapterUpdatesVersions_other"] = "{n} versions",
+        ["ChapterUpdatesOpenSeries"] = "Open {title}",
+        ["ChapterUpdatesOpenChapterHint"] = "Opens the chapter",
+        ["ChapterUpdatesOpenSeriesMenu"] = "Open series",
+        ["ActionReadChapter"] = "Read chapter {n}",
+        ["ActionContinueChapter"] = "Continue chapter {n} · page {page}",
+        ["ActionContinuePart"] = "Continue part {n} · {percent}%",
+        ["ActionContinuePartPlain"] = "Continue part {n}",
+        ["ActionContinueChapterPercent"] = "Continue chapter {n} · {percent}%",
+        ["ActionContinueChapterPlain"] = "Continue chapter {n}",
+        ["ActionReadPart"] = "Read part {n}",
+        ["ActionContinueNamed"] = "Continue {label} · {percent}%",
+        ["ActionContinueNamedPlain"] = "Continue {label}",
+        ["ActionContinueNamedPage"] = "Continue {label} · page {page}",
+        ["ActionReadNamed"] = "Read {label}",
+        ["ActionReadAgain"] = "Read again",
+        ["SeriesReadingFrom"] = "Reading from",
+        ["SeriesChange"] = "Change",
+        ["SeriesSourcesMore_one"] = "1 more",
+        ["SeriesSourcesMore_other"] = "{n} more",
+        ["SeriesTrackerAsk"] = "Which series is this? Choose",
+        ["SeriesPreferredGroup"] = "Your preferred group here",
+        ["SeriesGroup"] = "Group",
+        ["SeriesGroupMost"] = "most chapters",
+        ["SeriesGroupPicked"] = "your pick",
+        ["SeriesGroupHint"] = "Picks the group",
+        ["GroupPickerIn"] = "In {source}",
+        ["GroupPickerMost"] = "Most chapters",
+        ["GroupPickerMostNow"] = "Now {group}",
+        ["GroupPickerCount_one"] = "{have} of {total} chapter",
+        ["GroupPickerCount_other"] = "{have} of {total} chapters",
+        ["GroupPickerFallback"] = "Chapters a group doesn't have come from another group, and their rows say which.",
+        ["SeriesTrackerChaptersOf_one"] = "{n} of {total} chapter",
+        ["SeriesTrackerChaptersOf_other"] = "{n} of {total} chapters",
+        ["SeriesTrackerChapters_one"] = "1 chapter",
+        ["SeriesTrackerChapters_other"] = "{n} chapters",
+        ["SeriesTrackerNotStarted"] = "Not started",
+        ["SeriesTrackerWithVolume"] = "{chapters} · volume {volume}",
+        ["SeriesTrackerVolumes"] = "Volume {volume} of {total}",
+        ["SeriesReadFromAnother"] = "Read from another source",
+        ["SeriesScore"] = "Score…",
+        ["SeriesAddToList"] = "Add to list",
+        ["SeriesRemoveFromLists"] = "Remove from lists…",
+        ["SeriesRemoveFromListsTitle"] = "Remove {title} from your lists?",
+        ["SeriesRemoveFromListsLine"] = "It comes off your list on each tracker you have connected. Your place and read chapters stay in Kaeri.",
+        ["SeriesRemovedTitle"] = "Your lists",
+        ["SeriesChosen_one"] = "1 chapter",
+        ["SeriesChosen_other"] = "{n} chapters",
+        ["SeriesChooseAllUnread"] = "All unread",
+        ["ReadFromNotFound"] = "Not found in",
+        ["ReadFromSearchThere"] = "Search there",
+        ["ReadFromSearchPlaceholder"] = "Search {source}",
+        ["ReadFromSearch"] = "Search",
+        ["ReadFromSearchNone"] = "Nothing found by these words",
+        ["SeriesTracking"] = "Tracking",
+        ["SeriesReadFromMenu"] = "Change source…",
+        ["SeriesReadAgainMenu"] = "Read again from the start…",
+        ["SeriesVolumes"] = "Volumes",
+        ["SeriesChapters"] = "Chapters",
+        ["SeriesOrder"] = "Order",
+        ["SeriesNewestFirst"] = "Newest first",
+        ["SeriesOldestFirst"] = "Oldest first",
+        ["SeriesVolume"] = "Volume {n}",
+        ["SeriesNoVolume"] = "Not in a volume yet",
+        ["SeriesChapterRange"] = "chapters {from} to {to}",
+        ["SeriesVolumeRead"] = "read",
+        ["SeriesExpanded"] = "Expanded",
+        ["SeriesCollapsed"] = "Collapsed",
+        ["SeriesNoChaptersTitle"] = "No chapters in this source yet",
+        ["SeriesNoChaptersLine"] = "Another source may have them.",
+        ["SeriesNoSourceTitle"] = "None of your sources has this series yet",
+        ["SeriesNoSourceLine"] = "Search for it by another name, or add a source in Your sources.",
+        ["SeriesNoSourceSearch"] = "Search by another name",
+        ["SeriesChaptersFailed"] = "Couldn't load chapters from {source}.",
+        ["SeriesChapterNumber"] = "Chapter {n}",
+        ["SeriesBookmarked"] = "Bookmarked",
+        ["SeriesMarkRead"] = "Mark read",
+        ["SeriesMarkUnread"] = "Mark unread",
+        ["SeriesMarkReadUpTo"] = "Mark read up to here",
+        ["SeriesDownload"] = "Download",
+        ["SeriesReadChapterMenu"] = "Read",
+        ["SeriesBookmark"] = "Bookmark",
+        ["SeriesRemoveBookmark"] = "Remove bookmark",
+        ["SeriesVersions_one"] = "1 version",
+        ["SeriesVersions_other"] = "{n} versions",
+        ["SeriesVersionsLoading"] = "Looking for versions…",
+        ["SeriesVersionInUse"] = "{name} in use",
+        ["SeriesPreferVersion"] = "Prefer {name} for this series",
+        ["ChapterStateDownloaded"] = "Downloaded",
+        ["ChapterStateQueued"] = "Queued",
+        ["ChapterStateWifi"] = "Queued · waits for Wi-Fi",
+        ["ChapterStateDownloading"] = "Downloading · {done} of {total} pages",
+        ["ChapterStateDownloadingPlain"] = "Downloading",
+        ["ChapterStateFailed"] = "Couldn't download. {reason}",
+        ["ChapterStatePageOf"] = "Page {page} of {of}",
+        ["ChapterStatePage"] = "Page {page}",
+        ["ChapterStateRead"] = "Read",
+        ["ChapterStateNew"] = "New",
+        ["ChapterDownloadStop"] = "Stop download",
+        ["ChapterRetry"] = "Retry",
+        ["ChapterDownloadDelete"] = "Delete download",
+        ["DownloadNext"] = "Next {n} unread",
+        ["DownloadUnread"] = "Every unread chapter",
+        ["DownloadVolumeCount_one"] = "{volume} · 1 chapter",
+        ["DownloadVolumeCount_other"] = "{volume} · {n} chapters",
+        ["DownloadChoose"] = "Choose chapters…",
+        ["DownloadDeleteSeries"] = "Delete downloads of this series",
+        ["DownloadChapters_one"] = "Download 1 chapter",
+        ["DownloadChapters_other"] = "Download {n} chapters",
+        ["DownloadOverWifi"] = "Over Wi-Fi",
+        ["ReadAgainTitle"] = "Read {title} again from the start?",
+        ["ReadAgainLine"] = "Your place goes back to chapter 1 on all your devices. Chapters stay marked read on your trackers, and AniList counts a reread.",
+        ["ReadAgainConfirm"] = "Read again",
+        ["SeriesReadFromTitle"] = "Read from",
+        ["SeriesReadFromAsking"] = "Asking your sources…",
+        ["SeriesReadFromNoneTitle"] = "No source has this series",
+        ["SeriesReadFromNoneLine"] = "Add a folder, a server or a plugin store in Your sources.",
+        ["SeriesReadFromChapters"] = "Chapters 1 to {latest}",
+        ["SeriesReadFromChaptersLater"] = "chapters 1 to {latest}",
+        ["SeriesReadFromChecking"] = "Checking chapters",
+        ["SeriesReadFromCheckingLater"] = "checking chapters",
+        ["SeriesReadFromEmpty"] = "No chapters here yet",
+        ["SeriesReadFromEmptyLater"] = "no chapters here yet",
+        ["SeriesReadFromOnDevice"] = "on this {device}",
+        ["SeriesReadFromNote"] = "Read marks belong to the series, so they carry over when you change. Downloads from the old source stay until you delete them.",
+        ["SeriesNotTracked"] = "Not tracked here",
+        ["SeriesTrackerConnect"] = "Connect in Settings to track this series",
+        ["SeriesTrackerNotThere"] = "No match on this tracker",
+        ["SeriesTrackerLooking"] = "Looking for this series…",
+        ["SeriesTrackerBehind"] = "Has chapter {has}. Gets {gets} on the next sync.",
+        ["SeriesTrackerAhead"] = "Has chapter {has}, further than Kaeri.",
+        ["SeriesTrackerScore"] = "{score} / 10",
+        ["SeriesTrackerKeepKaeri"] = "Keep Kaeri's place",
+        ["SeriesTrackerTakeTheirs"] = "Use {tracker}'s place",
+        ["SeriesTrackerNoneOfThese"] = "None of these",
+        ["ReadListReading"] = "Reading",
+        ["ReadListPlanning"] = "Planning",
+        ["ReadListCompleted"] = "Completed",
+        ["ReadListPaused"] = "Paused",
+        ["ReadListDropped"] = "Dropped",
+        ["ReadListRereading"] = "Rereading",
+        ["ReadListYourFiles"] = "Your files",
+        ["MediumWatch"] = "Watch",
+        ["MediumRead"] = "Read",
+        ["MediumBoth"] = "Both",
+        ["MediumWatchLine"] = "Shows and films from your sources",
+        ["MediumReadLine"] = "Manga, webtoons and light novels from your sources",
+        ["MediumBothLine"] = "Watching and reading, each in its own place",
+        ["MediumAnswerWatch"] = "Watching",
+        ["MediumAnswerRead"] = "Reading",
+        ["MediumAnswerBoth"] = "Watching and reading",
+        ["SourcesAddTitle"] = "Add a source",
+        ["BookAddLine"] = "Books you already have, or plugins from a store whose owner invited you.",
+        ["BookAddFolder"] = "A folder",
+        ["BookAddFolderLine"] = "CBZ, EPUB, PDF and folders of images on this {device} or a drive",
+        ["BookAddServer"] = "A server",
+        ["BookAddServerLine"] = "Komga, Kavita or an OPDS catalogue you can sign in to",
+        ["BookAddStore"] = "A plugin store",
+        ["BookAddStoreLine"] = "Paste an invite from the store's owner",
+        ["BookAddServerTitle"] = "Add a server",
+        ["BookAddServerButton"] = "Add server",
+        ["SourcesFoundServer"] = "Found a {kind} server",
+        ["SourcesFoundServerSeries_one"] = "Found a {kind} server with 1 series",
+        ["SourcesFoundServerSeries_other"] = "Found a {kind} server with {n} series",
+        ["BookServerLooking"] = "Looking at this address…",
+        ["BookServerNote"] = "Kaeri sends your reading progress back to this server. The password stays in the Keychain.",
+        ["BookSourcesFolders"] = "Folders",
+        ["BookSourcesServers"] = "Servers",
+        ["BookSourcesPlugins"] = "Plugins",
+        ["BookSourcesPluginsFooter"] = "Plugins come from plugin stores you join.",
+        ["BookSourcesSeries_one"] = "1 series",
+        ["BookSourcesSeries_other"] = "{n} series",
+        ["BookSourcesScanning"] = "Looking through · {n} found",
+        ["BookSourcesMissing"] = "Not found. Is the drive connected?",
+        ["BookSourcesOff"] = "Off",
+        ["BookSourcesProgressBack"] = "progress goes back to the server",
+        ["BookSourcesOpds"] = "OPDS catalogue",
+        ["BookSourcesFromStore"] = "From {store}",
+        ["BookSourcesVersion"] = "version {version}",
+        ["BookSourcesCheckMatches"] = "Check matches · {n}",
+        ["BookSourcesCheckMatchesTitle"] = "Check matches",
+        ["BookSourcesScan"] = "Look again",
+        ["BookSourcesReportProgress"] = "Send progress to the server",
+        ["BookSourcesUse"] = "Use this server",
+        ["BookSourcesNotABookServer"] = "This address answers, but not as a book server.",
+        ["BookSourcesNoMatch"] = "No match",
+        ["BookSourcesKeep"] = "Keep unmatched",
+        ["BookSourcesFind"] = "Find",
+        ["BookSourcesUnmatchedNote"] = "You can still read unmatched series from the folder. They get no tracker progress until they're matched.",
+        ["LibraryScopeLabel"] = "Shows or Reading",
+        ["LibraryScopeShows"] = "Shows",
+        ["LibraryScopeReading"] = "Reading",
+        ["ReadSortLastRead"] = "Last read",
+        ["ReadLibraryListValue_one"] = "{list}, 1 series",
+        ["ReadLibraryListValue_other"] = "{list}, {n} series",
+        ["ReadLibraryEmpty"] = "Nothing on {list} yet",
+        ["ReadLibraryEmptyLine"] = "Series you add from Search or a series page show here.",
+        ["ReadLibraryFilesEmptyTitle"] = "Nothing in your files yet",
+        ["ReadLibraryFilesEmptyLine"] = "Series in your folders and servers that are on no list show here.",
+        ["ReadLibraryFilesAdd"] = "Add a folder or server",
+        ["ReadSearchPlaceholder"] = "Search reading",
+        ["SearchOtherScope_one"] = "1 match in {scope}",
+        ["SearchOtherScope_other"] = "{n} matches in {scope}",
+        ["SearchShowThem"] = "Show them",
+        ["ReadSearchBrowseLine"] = "{what} · from AniList",
+        ["ReadSearchTotal_one"] = "1 series from AniList",
+        ["ReadSearchTotal_other"] = "{n} series from AniList",
+        ["ReadSearchFailed"] = "Couldn't search",
+        ["ReadSearchNothing"] = "Nothing found for {query}",
+        ["ReadSearchNothingBrowse"] = "Nothing matches these filters",
+        ["ReadSearchNothingLine"] = "Try other words, or a title in another language.",
+        ["ReadSearchNothingFiltersLine"] = "Fewer filters may find more.",
+        ["ReadSearchClearFilters"] = "Clear filters",
+        ["ReadSortTrending"] = "Trending",
+        ["ReadSortScore"] = "Score",
+        ["ReadSortNewest"] = "Newest",
+        ["ReadFilterFormat"] = "Format",
+        ["ReadFilterOrigin"] = "Origin",
+        ["ReadFilterAnyOrigin"] = "Any origin",
+        ["ReadFilterStatus"] = "Status",
+        ["ReadFilterGenres"] = "Genres",
+        ["ReadFilterTitle"] = "Filters",
+        ["ReadFilterReset"] = "Reset",
+        ["ReadFilterAny"] = "Any",
+        ["ReadFilterSet"] = "{name}:",
+        ["ReadFilterMany"] = "{first} and {more} more",
+        ["ReadFilterNotGenre"] = "Not {genre}",
+        ["ReadFilterGenresCount_one"] = "1 genre",
+        ["ReadFilterGenresCount_other"] = "{n} genres",
+        ["ReadFilterIncluded"] = "Included",
+        ["ReadFilterLeftOut"] = "Left out",
+        ["ReadFilterMoreGenres"] = "More genres",
+        ["ReadSearchStarted"] = "Started",
+        ["ReadSearchSourcesOnly"] = "Your sources only",
+        ["ReadSearchFromSources"] = "From your sources",
+        ["ReadSearchAsking"] = "Asking {source}…",
+        ["ReadSearchSourceFailed"] = "{source} didn't answer.",
+        ["ReadSearchSourceTimeout"] = "No answer in {seconds} s.",
+        ["ReadSearchSourceNothing"] = "Nothing found in {sources}.",
+        ["ReadSearchInSource"] = "In {source}",
+        ["ReadSearchInFolders"] = "In your folders",
+        ["ReadSearchInSources_one"] = "In {n} of your sources",
+        ["ReadSearchInSources_other"] = "In {n} of your sources",
+        ["ReadSearchAnilistNothing"] = "AniList found nothing for these words.",
+        ["ReadSearchAnilistFailed"] = "AniList didn't answer.",
+        ["ReadSearchAnilistFailedLine"] = "Your sources were still asked.",
+        ["ReadSearchSourcesNothing"] = "Nothing in your sources either.",
+        ["ReadSearchSourcesOnlyNothing"] = "Nothing found in your sources",
+        ["ReadStateOfflineLine"] = "Offline. Downloaded chapters still open.",
+        ["ReadSearchTotalUnknown"] = "Series from AniList",
+        ["ReadSearchMoreAnilist"] = "More from AniList",
+        ["ReadSearchShown"] = "{shown} of {total} shown",
+        ["ReadSearchShownSome"] = "{shown} shown",
+        ["ReadSearchSourceKindServer"] = "Server",
+        ["ReadSearchSourceKindFolder"] = "Folder",
+        ["ReadSearchSourceKindPlugin"] = "Plugin",
+        ["ReadSearchSourceMore"] = "Show {n} more",
+        ["ReadSearchLineTotal"] = "{line} · {total}",
+        ["ReadSearchBrowseParts"] = "{list}, {next}",
+        ["ReadCaptionTwo"] = "{first} · {second}",
+        ["ReadFilterShown"] = "{name}: {value}",
+        ["ReadNameTile"] = "{title}, {line}",
+        ["ReadNameTilePlaced"] = "{title}, {line}, {placed}",
+        ["ReadNameTileOnlyPlaced"] = "{title}, {placed}",
+        ["ReadNameWeekTile"] = "{title}, {time}, {chapter}",
+        ["ReadNameWeekTileTime"] = "{title}, {time}",
+        ["ReadNameSpotlightArt"] = "{title}, Details",
+        ["ReadNameHeading"] = "{heading}, {side}",
+        ["ReadNameLoading"] = "{name}, loading",
+        ["ReadNameHeadingLoading"] = "{heading}, {side}, loading",
+        ["ReadNameViewAll"] = "View all, {row}",
+        ["ReadNameFilter"] = "{name}, {value}",
+        ["ReadNameFailure"] = "{line}, {reason}",
+        ["ReadNameSource"] = "{source}, {kind}",
+        ["ReadNameSourceMore_one"] = "Show 1 more from {source}",
+        ["ReadNameSourceMore_other"] = "Show {n} more from {source}",
+        ["ReadSearchSourcesOnlyLine"] = "AniList's results are hidden. The filters below apply to AniList's results only.",
+        ["ReadSearchDone"] = "{anilist} from AniList, {sources} from your sources.",
+        ["ReadHomeRowLoading"] = "{row}, loading",
+        ["ReadTileAddPlanning"] = "Add to Planning",
+        ["ReadSearchAnilistHidden"] = "AniList's results are hidden.",
+        ["ReadSearchSaidAnilist_one"] = "1 from AniList",
+        ["ReadSearchSaidAnilist_other"] = "{n} from AniList",
+        ["ReadSearchSaidSources_one"] = "1 from your sources",
+        ["ReadSearchSaidSources_other"] = "{n} from your sources",
+        ["OnboardingStep"] = "{step} of {total}",
+        ["OnboardingWelcomeLine"] = "Keep track of what you watch and read, from your own sources.",
+        ["OnboardingWelcomeNote"] = "Your lists and progress stay on your devices. Trackers and sources are yours to add.",
+        ["OnboardingMediumTitle"] = "Watch, read, or both?",
+        ["OnboardingMediumLine"] = "Kaeri shows only what you pick. You can change it in Settings.",
+        ["OnboardingMediumHint"] = "Choose one of the three first",
+        ["OnboardingListsTitle"] = "Bring in your lists",
+        ["OnboardingListsLineWatch"] = "Kaeri keeps your watching in step with {tracker}.",
+        ["OnboardingListsLineRead"] = "Kaeri keeps your reading in step with {tracker}.",
+        ["OnboardingListsLineBoth"] = "Kaeri keeps your reading and watching in step with {tracker}.",
+        ["OnboardingListsAnilistLine"] = "Lists, progress and suggestions",
+        ["OnboardingListsLaterWatch"] = "You can add MyAnimeList, Kitsu, Simkl and Trakt later in Settings, under Accounts.",
+        ["OnboardingListsLaterRead"] = "You can add MyAnimeList, Kitsu and MangaUpdates later in Settings, under Accounts.",
+        ["OnboardingListsLaterBoth"] = "You can add MyAnimeList, Kitsu, MangaUpdates, Simkl and Trakt later in Settings, under Accounts.",
+        ["OnboardingConnect"] = "Connect {tracker}",
+        ["OnboardingBooksTitle"] = "Where your books come from",
+        ["OnboardingBooksLine"] = "Kaeri comes with no books. Add what you already have, or join a plugin store with an invite from its owner.",
+        ["OnboardingBooksFolder"] = "Add a folder",
+        ["OnboardingBooksFolderLine"] = "CBZ, EPUB, PDF and folders of images",
+        ["OnboardingBooksServer"] = "Add a server",
+        ["OnboardingBooksServerLine"] = "Komga, Kavita or an OPDS catalogue",
+        ["OnboardingBooksInviteHeading"] = "Plugin store invite",
+        ["OnboardingBooksInvitePlaceholder"] = "Paste an invite",
+        ["OnboardingBooksPluginLine"] = "Plugins run code from people you trust. Only join plugin stores whose owner you know.",
+        ["OnboardingBothTitle"] = "Where your shows and books come from",
+        ["OnboardingBothLine"] = "Kaeri comes with no shows or books. Add what you already have, or join a plugin store with an invite from its owner.",
+        ["OnboardingBothShows"] = "Shows",
+        ["OnboardingBothBooks"] = "Books",
+        ["OnboardingBothShowsFolderLine"] = "Video files on this {device}",
+        ["OnboardingBothShowsServerLine"] = "Your Jellyfin server",
+        ["MediumChoicePosition"] = "{n} of {total}",
+        ["MediumChangeLater"] = "You can change it in Settings.",
+        ["MediumUpdateLine"] = "Kaeri can now read manga, webtoons and light novels from your sources. Pick what Kaeri is for on this {device}.",
+        ["MediumJoinTitleWatch_one"] = "{devices} is set to watching",
+        ["MediumJoinTitleWatch_other"] = "{devices} are set to watching",
+        ["MediumJoinTitleRead_one"] = "{devices} is set to reading",
+        ["MediumJoinTitleRead_other"] = "{devices} are set to reading",
+        ["MediumJoinTitleBoth_one"] = "{devices} is set to watching and reading",
+        ["MediumJoinTitleBoth_other"] = "{devices} are set to watching and reading",
+        ["MediumJoinLine"] = "Pick what Kaeri is for on this {device}. Each device keeps its own answer.",
+        ["MediumOffTitleWatch"] = "Turn off watching?",
+        ["MediumOffTitleRead"] = "Turn off reading?",
+        ["MediumOffWatchBody"] = "Calendar, Seasonal, Watch together and your shows leave Kaeri on this {device}. Your list, progress and downloads stay, and come back if you turn watching on again.",
+        ["MediumOffReadBody"] = "Updates and your reading leave Kaeri on this {device}. Your list, progress and downloads stay, and come back if you turn reading on again.",
+        ["MediumOffDeleteWatch"] = "Delete downloaded episodes",
+        ["MediumOffDeleteRead"] = "Delete downloaded chapters",
+        ["MediumOffDeleteSize"] = "{size} on this {device}",
+        ["MediumOffConfirmWatch"] = "Turn off watching",
+        ["MediumOffConfirmRead"] = "Turn off reading",
+        ["SettingsKaeriIsFor"] = "Kaeri is for",
+        ["SettingsMediumNote"] = "Each device keeps its own answer",
+        ["SettingsMediumFooter"] = "Each device keeps its own answer. Turning one off keeps its list, progress and downloads.",
+        ["SettingsOpenAtNote"] = "Which Home Kaeri starts on",
+        ["SettingsGroupReading"] = "Reading",
+        ["SettingsGroupShows"] = "Shows",
+        ["SettingsAsideReading"] = "Reader defaults are where every series starts. A series you change in the reader keeps its own choices.",
+        ["SettingsReaderDefaults"] = "Reader defaults",
+        ["SettingsReaderDefaultsFooter"] = "A series you change keeps its own mode, direction and look.",
+        ["SettingsReaderManga"] = "Manga",
+        ["SettingsReaderWebtoons"] = "Webtoons",
+        ["SettingsReaderWebtoonsNote"] = "Webtoons always open as a long strip",
+        ["SettingsReaderNovels"] = "Light novels",
+        ["SettingsReaderRtl"] = "Pages, right to left",
+        ["SettingsReaderLtr"] = "Pages, left to right",
+        ["SettingsReaderStrip"] = "Long strip",
+        ["SettingsReaderPages"] = "Pages",
+        ["SettingsReaderScrolled"] = "Scrolling",
+        ["SettingsCountsRead"] = "Counts as read",
+        ["SettingsCountsReadNote"] = "A short stay on the last page, or moving on to the next chapter",
+        ["SettingsCountsReadValue"] = "After the last page",
+        ["SettingsCountsReadMovingOn"] = "Moving on from it",
+        ["SettingsCountsReadMovingOnNote"] = "Turning past the last page, or opening the next chapter",
+        ["SettingsCountsReadMarked"] = "When you mark it",
+        ["SettingsSkipCredits"] = "Skip credit pages",
+        ["SettingsSkipCreditsNote"] = "Pages a group repeats at the start or end of its chapters",
+        ["SettingsCountsReadMarkedNote"] = "Continue and your trackers follow your marks",
+        ["SettingsFollowGroup"] = "Series settings that follow you",
+        ["SettingsFollowMode"] = "Mode, direction and colour",
+        ["SettingsFollowModeNote"] = "A series you change reads the same on your other devices",
+        ["SettingsFollowFooter"] = "Text size, margins, tap zones and refresh stay on this {device}.",
+        ["SettingsLookFollowsNote"] = "Colour pages or greys for e-ink",
+        ["SettingsNewChaptersReading"] = "Series on Reading",
+        ["SettingsNewChaptersNote"] = "A series being read also keeps its next chapters ready",
+        ["SettingsProgressGroup"] = "Progress",
+        ["SettingsProgressChapter"] = "A chapter is read",
+        ["SettingsProgressClose"] = "Closing the reader",
+        ["SettingsDisagreeFurthest"] = "Keep the furthest",
+        ["SettingsDisagreeLatest"] = "The latest change",
+        ["SettingsDisagreeNote"] = "Status and score follow the latest change",
+        ["SettingsKeepChaptersReadyNote"] = "The next chapters of series on your Reading list",
+        ["SettingsDeleteAfterReadingNote"] = "Bookmarked chapters are kept",
+        ["SettingsShowVolumesNote"] = "Grouped when most chapters have a volume",
+        ["SettingsChapterNotificationsNote"] = "Series on your Reading list",
+        ["SettingsDownloadsFinishedNote"] = "When the chapters downloading are all done",
+        ["SettingsChapterNotificationsFooter"] = "Chapters have their own system channel, so you can silence them and keep the rest.",
+        ["AccountsMangaupdatesCredit"] = "Kaeri talks to MangaUpdates through its public API.",
+        ["AccountsUsername"] = "User name",
+        ["ReadDownloadsTotal_one"] = "{n} chapter · {size}",
+        ["ReadDownloadsTotal_other"] = "{n} chapters · {size}",
+        ["ReadDownloadsActive"] = "{chapter} · {done} of {total} pages",
+        ["ReadDownloadsMoreQueued"] = "{n} more queued",
+        ["ReadDownloadsQueued_one"] = "{n} chapter queued",
+        ["ReadDownloadsQueued_other"] = "{n} chapters queued",
+        ["ReadDownloadsFailed"] = "{chapter} couldn't download. {reason}",
+        ["ReadDownloadNotStarted"] = "The download didn't start. {reason}",
+        ["ReadDownloadsKept_one"] = "{n} chapter",
+        ["ReadDownloadsKept_other"] = "{n} chapters",
+        ["ReadDownloadsRead"] = "{n} read",
+        ["ReadDownloadsDeleteRead"] = "Delete read",
+        ["SendTitle"] = "Send to e-reader",
+        ["SendFor"] = "For",
+        ["SendWhat"] = "What",
+        ["SendChapters"] = "Chapters",
+        ["SendChaptersOne"] = "{chapter}",
+        ["SendChaptersRange"] = "{first} to {last}",
+        ["SendSize"] = "Size",
+        ["SendSizeAbout"] = "About {size}",
+        ["SendNoPlace"] = "Kaeri can't see your place on this e-reader. When you come back, the series page asks where you stopped.",
+        ["SendPrepare"] = "Prepare and share",
+        ["SendPreparing_one"] = "Preparing the chapter",
+        ["SendPreparing_other"] = "Preparing {done} of {total} chapters",
+        ["SendSizedFor"] = "Pages are sized for {device}",
+        ["SendInParts"] = "Over {size}, so the files go in parts.",
+        ["SendFailedChapter"] = "Couldn't prepare chapter {chapter}. {cause}",
+        ["SendFailed"] = "Couldn't prepare the files. {cause}",
+        ["SendSizeWorking"] = "Working it out",
+        ["SendChaptersOpen"] = "Open",
+        ["SendChaptersClosed"] = "Closed",
+        ["SendProgressSpoken"] = "{percent} percent",
+        ["SendChapterAction"] = "Send to e-reader",
+        ["SendPartsOver"] = "in parts over {size}",
+        ["SendWaitingCancel"] = "Cancel send",
+        ["SendReady_one"] = "One file is ready.",
+        ["SendReady_other"] = "{n} files are ready.",
+        ["SendShareAgain"] = "Share again",
+        ["SendFilesGone"] = "These files are gone. Prepared files are kept for a day.",
+        ["SendAgain"] = "Send again",
+        ["SendBanner"] = "Sending to {device}",
+        ["SendRowChapters"] = "Chapters {first} to {last}",
+        ["SendRowLine"] = "{title} · {chapters}",
+        ["SendFormatFixedEpub"] = "Fixed-layout EPUB",
+        ["SendFormatKepub"] = "KEPUB",
+        ["SendFormatEpub"] = "EPUB",
+        ["SendFormatCbz"] = "CBZ",
+        ["SendTargetLine"] = "{format} · {width} × {height}",
+        ["StopTitle"] = "Where did you stop?",
+        ["StopNote"] = "You sent chapters to {device}. Where did you stop?",
+        ["StopNoteAction"] = "Set your place",
+        ["StopSentOne"] = "Chapter {chapter} went to {device} on {date}.",
+        ["StopSentRange"] = "Chapters {first} to {last} went to {device} on {date}.",
+        ["StopFinished"] = "Finished chapter {chapter}",
+        ["StopSet"] = "Set your place",
+        ["StopKeep"] = "Keep chapter {chapter} · page {page}",
+        ["StopKeepPlain"] = "Keep current place",
+        ["EreadersGroup"] = "E-readers",
+        ["EreadersSendRow"] = "Send to e-reader",
+        ["EreadersFeedRow"] = "OPDS feed",
+        ["OpdsShareNote"] = "An OPDS catalogue e-readers at home can browse",
+        ["OpdsFooter"] = "The feed runs only while Kaeri is open on this {device}. Progress on those e-readers stays there.",
+        ["OpdsAddress"] = "Address",
+        ["OpdsAddressOff"] = "Turn the feed on to get its address.",
+        ["OpdsPassword"] = "Password",
+        ["OpdsPasswordNote"] = "E-readers ask for it once",
+        ["OpdsNewPassword"] = "New password",
+        ["OpdsPort"] = "Port",
+        ["OpdsPortNote"] = "Leave it empty for any free port, or pick one from 1024 to 65535",
+        ["OpdsPortMoved"] = "Port {wanted} was busy, so the feed uses {port}.",
+        ["OpdsShares"] = "What it shares",
+        ["OpdsShareDownloads"] = "Downloads",
+        ["OpdsShareDownloadsCount_one"] = "One chapter",
+        ["OpdsShareDownloadsCount_other"] = "{n} chapters",
+        ["OpdsShareManga"] = "Manga folder",
+        ["OpdsShareNovels"] = "Novel folder",
+        ["OpdsShareSeriesCount_one"] = "One series",
+        ["OpdsShareSeriesCount_other"] = "{n} series",
+        ["OpdsFetchedBy"] = "Fetched by",
+        ["OpdsFetchedNone"] = "No e-reader has fetched anything yet.",
+        ["OpdsStarting"] = "Starting…",
+        ["OpdsPausedNone"] = "Paused. This Mac isn't on a local network.",
+        ["OpdsPausedVpn"] = "Paused. This Mac is only connected through a VPN.",
+        ["OpdsNewPasswordTitle"] = "Make a new password?",
+        ["OpdsNewPasswordWarning"] = "E-readers that already use the feed stop working until you type the new password into each one.",
+        ["OpdsFetchedTime"] = "Last asked {time}",
+        ["OpdsFetchedFiles_one"] = "One file",
+        ["OpdsFetchedFiles_other"] = "{n} files",
+        ["OpdsReaderUnnamed"] = "E-reader at {address}",
         ["SeasonalPrevious"] = "Previous season",
         ["SeasonalNext"] = "Next season",
         ["SeasonalLoading"] = "Loading this season",
@@ -10506,7 +14795,7 @@ public static partial class T
         ["SeasonalEmptyFormat"] = "No titles in this format",
         ["SeasonalEmptyFormatDetail"] = "Try all formats.",
         ["SeasonalFilterInSearch"] = "Filter in Search",
-        ["SeasonalFilterHelp"] = "This season in Search, where every filter narrows it",
+        ["SeasonalFilterHelp"] = "Opens this season in Search, where every filter works",
         ["SortPopularity"] = "Popularity",
         ["SortScore"] = "Score",
         ["SortAirDay"] = "Air day",
@@ -10515,13 +14804,13 @@ public static partial class T
         ["SortLabel"] = "Sort by {sort}",
         ["SearchPlaceholder"] = "Search titles",
         ["SearchClear"] = "Clear search",
-        ["SearchSearching"] = "Searching for “{query}”",
-        ["SearchResultsFor"] = "Results for “{query}”",
+        ["SearchSearching"] = "Searching for \"{query}\"",
+        ["SearchResultsFor"] = "Results for \"{query}\"",
         ["SearchBrowse"] = "Browse",
-        ["SearchNothingFound"] = "Nothing found for “{query}”",
+        ["SearchNothingFound"] = "Nothing found for \"{query}\"",
         ["SearchNothingFoundDetail"] = "Check the spelling, or try the English or Japanese title.",
         ["SearchNothingWithFilters"] = "Nothing found with these filters",
-        ["SearchNothingFoundWithFilters"] = "Nothing found for “{query}” with these filters",
+        ["SearchNothingFoundWithFilters"] = "Nothing found for \"{query}\" with these filters",
         ["SearchTryFewerFilters"] = "Try fewer filters.",
         ["SearchClearFilters"] = "Clear filters",
         ["SearchFailed"] = "Couldn't search",
@@ -10553,7 +14842,7 @@ public static partial class T
         ["FilterReleased"] = "Released",
         ["FilterWhereToWatch"] = "Where to watch",
         ["FilterLicensedOnly"] = "Licensed only",
-        ["FilterMyList"] = "Titles on my list",
+        ["FilterMyList"] = "Titles on your list",
         ["FilterShow"] = "Show",
         ["FilterHide"] = "Hide",
         ["FilterOnly"] = "Only",
@@ -10718,7 +15007,7 @@ public static partial class T
         ["ServersKindFilms"] = "Films",
         ["ServersErrorCertificate"] = "{host} uses a certificate this device doesn't trust. Use an https:// address with a certificate it trusts.",
         ["ServersRowSignedOutHere"] = "Signed out",
-        ["ServersSignOutLine"] = "Ends this device's sign-in on the server. The server and your downloads stay as they are.",
+        ["ServersSignOutLine"] = "Signing out ends this device's session on the server. The server and your downloads stay as they are.",
         ["SettingsLanguage"] = "Language",
         ["SettingsLanguageApp"] = "App language",
         ["LanguageFollowSystem"] = "Follow system language",
@@ -10755,6 +15044,7 @@ public static partial class T
         ["SettingsTitleNative"] = "Native",
         ["SettingsAdult"] = "Show adult titles",
         ["SettingsAdultDetail"] = "Titles {tracker} marks adult, in Search and Seasonal",
+        ["SettingsAdultDetailRead"] = "Titles {tracker} marks adult, in Search and Browse",
         ["SettingsQuality"] = "Quality",
         ["SettingsAutoPlay"] = "Auto-play next",
         ["SettingsUpNextCountdown"] = "Up next countdown",
@@ -10791,6 +15081,19 @@ public static partial class T
         ["SettingsWifiOnly"] = "Wi-Fi only",
         ["SettingsWifiOnlyDetail"] = "Downloads wait for Wi-Fi",
         ["SettingsTorrentsCellular"] = "Torrents on mobile data",
+        ["SettingsChapterDownloadsCellular"] = "Chapter downloads on mobile data",
+        ["SettingsKeepChaptersReady"] = "Keep next chapters ready",
+        ["SettingsDeleteAfterReading"] = "Delete chapters after reading",
+        ["SettingsShowVolumes"] = "Show volumes",
+        ["SettingsSeriesChoicesFollow"] = "Series settings follow you",
+        ["SettingsNewChaptersDownload"] = "New chapters",
+        ["SettingsModeFollows"] = "Mode and direction",
+        ["SettingsLookFollows"] = "Look",
+        ["SettingsSendProgressAfter"] = "Send progress after",
+        ["SettingsWhenTrackersDisagree"] = "When trackers disagree",
+        ["SettingsChapterNotifications"] = "New chapters",
+        ["SettingsDownloadsFinished"] = "Downloads finished",
+        ["SettingsOpenAt"] = "Open at",
         ["SettingsSeedAfter"] = "Seed after watching",
         ["SettingsSeedFor"] = "Seed for at most",
         ["SettingsUploadLimit"] = "Upload limit",
@@ -10811,12 +15114,12 @@ public static partial class T
         ["SettingsArtwork"] = "Artwork under CC BY-NC",
         ["SettingsArtworkDetail"] = "Attribution in the app's notices",
         ["SettingsNewEpisodes"] = "New episodes",
-        ["SettingsNewEpisodesDetail"] = "For shows in your Watching list",
-        ["SettingsNotifyDetail"] = "One notification when an episode of a show you follow comes out: the show and the episode's number, never its name. A show can turn its own off in its settings.",
+        ["SettingsNewEpisodesDetail"] = "Shows on your Watching list",
+        ["SettingsNotifyDetail"] = "You get one notification when an episode of a show you follow comes out. It names the show and the episode's number, never the episode's title. A show can turn its own off in its settings.",
         ["SettingsComingUp"] = "Coming up · next 7 days",
         ["SettingsSystemNotifications"] = "Notification settings",
         ["SettingsSystemNotificationsDetail"] = "Sound, vibration and the lock screen",
-        ["SettingsSystemNotificationsApple"] = "Opens System Settings, where the banner style, sound and badges are set.",
+        ["SettingsSystemNotificationsApple"] = "Opens System Settings, where you set the banner style, sound and badges.",
         ["SettingsNotificationsBlocked"] = "Off: the system isn't allowing notifications for Kaeri",
         ["SettingsNotificationsShowOn"] = "On in this show's settings",
         ["SettingsNotifyShow"] = "When an episode of this show comes out",
@@ -10830,7 +15133,7 @@ public static partial class T
         ["ShowSettingsAlways"] = "Always",
         ["ShowSettingsNever"] = "Never",
         ["ShowSettingsSubsRemembered"] = "Remembered from your last episode.",
-        ["ShowSettingsSubsFollow"] = "Chosen in the player. Following Settings › Playback.",
+        ["ShowSettingsSubsFollow"] = "Chosen in the player. Until then, Settings › Playback applies.",
         ["ShowSettingsSource"] = "Source",
         ["ShowSettingsSourceDetail"] = "Automatic tries your sources in order.",
         ["ShowSettingsReset"] = "Reset to defaults",
@@ -10853,12 +15156,14 @@ public static partial class T
         ["WidgetResumeDubbedLabel"] = "Resume episode {episode}, dubbed, of {title}",
         ["AccountsChangesWaiting_one"] = "One change waiting to sync",
         ["AccountsChangesWaiting_other"] = "{count} changes waiting to sync",
+        ["AccountsChangesHeld_one"] = "One change can't sync yet",
+        ["AccountsChangesHeld_other"] = "{count} changes can't sync yet",
         ["SettingsQualityHigher"] = "Higher",
         ["SettingsQualityStandard"] = "Standard",
         ["SettingsUploadUnlimited"] = "Unlimited",
         ["SettingsUpscalingNatural"] = "Natural · ArtCNN",
         ["SettingsLabelHoverCards"] = "Expand covers on hover",
-        ["SettingsHoverCardsNote"] = "Shows a larger card with the trailer when you rest the pointer on a cover.",
+        ["SettingsHoverCardsNote"] = "Resting the pointer on a cover opens a larger card with its trailer.",
         ["SettingsUpscalingNoteNatural"] = "Faithful line work and texture, nothing restyled.",
         ["SettingsUpscalingNoteSharp"] = "Crisper lines and stronger edges, at some cost to texture.",
         ["SettingsAfterDownload"] = "After each download",
@@ -10869,6 +15174,8 @@ public static partial class T
         ["SettingsSignedIn"] = "Signed in",
         ["SettingsUpscalingSharp"] = "Sharp · Anime4K",
         ["SettingsAsideAccounts"] = "Kaeri works without an account. Your watch history stays on this device when you sign out.",
+        ["SettingsAsideAccountsRead"] = "Kaeri works without an account. Your reading history stays on this device when you sign out.",
+        ["SettingsAsideAccountsBoth"] = "Kaeri works without an account. Your watch and reading history stays on this device when you sign out.",
         ["WidgetDayToday"] = "today",
         ["WidgetDayYesterday"] = "yesterday",
         ["WidgetLineStart"] = "Play {episode}",
@@ -10921,6 +15228,88 @@ public static partial class T
         ["SettingsSubsStyledStrip"] = "Remove all styling",
         ["SettingsSubsStyledStripDetail"] = "Every line shows as plain dialogue at the bottom, in your style. Signs lose their place, and karaoke and effects are gone.",
         ["SettingsSubsReset"] = "Reset subtitle style",
+        ["SettingsOpdsFeed"] = "Share on this network",
+        ["SettingsOpdsPassword"] = "Feed password",
+        ["SettingsOpdsPort"] = "Feed port",
+        ["BookServerAddress"] = "Address",
+        ["BookServerAddressHint"] = "An address, or the whole OPDS link from Kavita.",
+        ["BookServerKavitaKey"] = "This is a Kavita OPDS link. Its key signs you in, so no password is needed.",
+        ["BookServerKeyKept"] = "Kaeri keeps the key in {store} and shows only its last four characters.",
+        ["BookServerKey"] = "Key ••••{last}",
+        ["BookServerFoundTitle_one"] = "Found {series} series",
+        ["BookServerFoundTitle_other"] = "Found {series} series in {libraries} libraries",
+        ["BookServerFoundLine"] = "{kind} at {host}. Pick the libraries to add.",
+        ["BookServerLibraryLine"] = "{series} series",
+        ["BookServerSyncProgress"] = "Send progress to the server",
+        ["BookServerSyncProgressLine"] = "Pages you read here go back to {host}, and its progress comes here.",
+        ["BookServerUsername"] = "Username",
+        ["BookServerPassword"] = "Password",
+        ["BookServerErrUnreachable"] = "Couldn't reach {host}",
+        ["BookServerErrUnreachableLine"] = "Check the address, and that the server is on and on this network.",
+        ["BookServerErrPassword"] = "{host} didn't accept that password",
+        ["BookServerErrPasswordLine"] = "Use the username and password you use for {kind} in a browser.",
+        ["BookServerErrKey"] = "{host} didn't accept that key",
+        ["BookServerErrKeyLine"] = "The key changes when it's reset in Kavita. Copy the OPDS link again from your account settings there.",
+        ["BookServerEmpty"] = "{host} shows this account no series",
+        ["BookServerEmptyLine"] = "It lets you in, but the server may still be scanning, or this account may not have access to its books.",
+        ["BookServerEmptyRecheck"] = "You can add it now. Kaeri looks again every 30 minutes.",
+        ["BookServerNotBooksLine"] = "Kaeri reads from Komga, Kavita and OPDS catalogues.",
+        ["BookFolderFound_one"] = "Found {series} series in one file",
+        ["BookFolderFound_other"] = "Found {series} series in {files} files",
+        ["BookFolderFoundLine"] = "{path}. Kaeri matched {matched} of them by their details.",
+        ["BookFolderUnsupported_one"] = "One file Kaeri can't open",
+        ["BookFolderUnsupported_other"] = "{count} files Kaeri can't open",
+        ["BookFolderUnsupportedLine"] = "{kinds}. They stay in the folder as they are.",
+        ["BookFolderDrm"] = "{count} EPUB locked with DRM",
+        ["BookFolderOpens"] = "Kaeri opens CBZ, CBR, EPUB and PDF files, and folders of images.",
+        ["BookFolderShowFiles"] = "Show files",
+        ["BookFolderAdd"] = "Add folder",
+        ["BookFolderChange"] = "Change",
+        ["BookFolderEmpty"] = "Nothing in {folder} that Kaeri can open",
+        ["BookFolderEmptyLine_one"] = "It holds one file, which isn't CBZ, CBR, EPUB, PDF or an image.",
+        ["BookFolderEmptyLine_other"] = "It holds {files} files, none of them CBZ, CBR, EPUB, PDF or images.",
+        ["BookFolderChooseOther"] = "Choose another folder",
+        ["BookFolderAlready"] = "{folder} is already in your sources",
+        ["BookFolderAlreadyLine_one"] = "Kaeri looked through it again and found one series. It stays as it is.",
+        ["BookFolderAlreadyLine_other"] = "Kaeri looked through it again and found {series} series. It stays as it is.",
+        ["BookFolderUnreadable"] = "Couldn't read {folder}",
+        ["BookFolderUnreadableLine"] = "It may have moved, or Kaeri no longer has access to it.",
+        ["StoreJoinTitle"] = "Join a plugin store",
+        ["StoreInviteField"] = "Invite",
+        ["StoreJoinedTitle"] = "Joined {store}",
+        ["StoreJoinedLine_one"] = "{owner} offers one plugin. Joining installs nothing; install it here or later.",
+        ["StoreJoinedLine_other"] = "{owner} offers {count} plugins. Joining installs nothing; pick the ones you want here or later.",
+        ["StoreGroupReading"] = "For reading",
+        ["StoreGroupWatching"] = "For watching",
+        ["StoreInstall"] = "Install",
+        ["StoreInstalledRow"] = "Installed",
+        ["StoreInstallAllReading"] = "Install all for reading",
+        ["StoreInstalled_one"] = "One plugin installed. It's in Your sources.",
+        ["StoreInstalled_other"] = "{count} plugins installed. They're in Your sources.",
+        ["StoreOtherMedium"] = "Every plugin in {store} is for watching",
+        ["StoreOtherMediumLine"] = "Watching is off on this device, so none of them show in Your sources.",
+        ["StoreTurnOnWatching"] = "Turn on watching",
+        ["StoreEmpty"] = "{store} has no plugins yet",
+        ["StoreEmptyLine"] = "You're a member, so new plugins show in Plugin stores when {owner} adds them.",
+        ["StoreErrUnreachable"] = "Couldn't reach {host}",
+        ["StoreErrUnreachableLine"] = "The invite looks right, but the store isn't answering. Try again later, or ask {owner} if it's running.",
+        ["StoreOtherMediumMore_one"] = "One more is for watching, which is off on this device.",
+        ["StoreOtherMediumMore_other"] = "{count} more are for watching, which is off on this device.",
+        ["StoreTvReadingOnly_one"] = "One more is for reading, which this TV doesn't do.",
+        ["StoreTvReadingOnly_other"] = "{count} more are for reading, which this TV doesn't do.",
+        ["StoreTvAllReading"] = "Every plugin in {store} is for reading, which this TV doesn't do.",
+        ["StorePluginRow"] = "Version {version} · may contact {hosts}",
+        ["SourceAdded"] = "Added {name} · {series} series",
+        ["SourceAddedPlugins_one"] = "Installed one plugin from {store}",
+        ["SourceAddedPlugins_other"] = "Installed {count} plugins from {store}",
+        ["SourceRowServer_one"] = "{kind} · {series} series in {libraries} library · added just now",
+        ["SourceRowServer_other"] = "{kind} · {series} series in {libraries} libraries · added just now",
+        ["SourceRowServerSeries_one"] = "{kind} · {series} series in {libraries} library",
+        ["SourceRowServerSeries_other"] = "{kind} · {series} series in {libraries} libraries",
+        ["SourceRowServerEmpty"] = "{kind} · no series yet · looks again in 30 minutes",
+        ["SourceRowFolder_one"] = "{path} · {series} series · one file skipped",
+        ["SourceRowFolder_other"] = "{path} · {series} series · {skipped} files skipped",
+        ["SourceRowPlugin"] = "From {store} · {medium} · version {version}",
         ["SourcesTitle"] = "Sources",
         ["SourcesEmpty"] = "No sources yet. Join a plugin store to add some.",
         ["PluginRiskWarning"] = "Plugins are written by other people and run on your device. Install only plugins you trust, for sources you're entitled to use.",
@@ -10989,7 +15378,7 @@ public static partial class T
         ["SourcesTorrentSource"] = "Torrent playback",
         ["SourcesSourceOrderRow"] = "Source order",
         ["SourcesTorrentsNote"] = "Torrents are part of Kaeri, not a plugin. The proxy and seeding are set in Settings, under Sources.",
-        ["SourcesRebuilding"] = "Sources are being set up again",
+        ["SourcesRebuilding"] = "Setting up sources again",
         ["SourcesResponseMs"] = "{ms} ms",
         ["MatchFix"] = "Fix this match",
         ["MatchChoose"] = "Choose the match",
@@ -11004,8 +15393,8 @@ public static partial class T
         ["MatchChosenAutomatically"] = "Chosen automatically",
         ["MatchSimilarity"] = "{similarity} match",
         ["MatchSearchField"] = "Search {source}",
-        ["MatchSearching"] = "Searching {source} for “{query}”",
-        ["MatchSearchEmpty"] = "Nothing on {source} for “{query}”.",
+        ["MatchSearching"] = "Searching {source} for \"{query}\"",
+        ["MatchSearchEmpty"] = "Nothing on {source} for \"{query}\".",
         ["MatchSearchEmptyHint"] = "Try fewer words, or the title in another language.",
         ["MatchSearchFailed"] = "Couldn't search {source}.",
         ["MatchPicking"] = "Matching",
@@ -11025,7 +15414,7 @@ public static partial class T
         ["SourcesAddFolder"] = "Folder…",
         ["SourcesAddServer"] = "Media server…",
         ["SourcesAddStore"] = "Join a plugin store…",
-        ["SourcesEmptyBody"] = "Sources are where episodes come from: folders on this device, your media server, and plugins from stores you join.",
+        ["SourcesEmptyBody"] = "Sources are where episodes come from: folders on this device, your media server, and plugins from plugin stores you join.",
         ["SourcesEmptyMore"] = "Or {join}.",
         ["SourcesEmptyJoinLink"] = "join a plugin store",
         ["SourcesAddFolderButton"] = "Add a folder",
@@ -11039,7 +15428,7 @@ public static partial class T
         ["SourcesDemoLinkLicence"] = "Licence",
         ["SourcesDemoLinkCommons"] = "Wikimedia Commons",
         ["SourcesDemoLinkMaker"] = "OPAP-JP",
-        ["SourcesDemoHosts"] = "Reaches Wikimedia Commons only: upload.wikimedia.org and commons.wikimedia.org.",
+        ["SourcesDemoHosts"] = "The demo reaches only Wikimedia Commons: upload.wikimedia.org and commons.wikimedia.org.",
         ["SourcesDemoPrivate"] = "The demo never signs in anywhere and never writes to AniList.",
         ["SourcesDemoRemove"] = "Remove demo",
         ["SourcesDemoAdd"] = "Add the demo",
@@ -11062,7 +15451,7 @@ public static partial class T
         ["StoresIntro"] = "Plugins add sources. Each one lists the hosts it contacts before you install it.",
         ["StoresNotFromApp"] = "Plugins come from the plugin store's owner, not from Kaeri. You can leave a plugin store at any time.",
         ["StoresJoinOwnerResponsible"] = "{owner} runs this plugin store and chose its plugins. Kaeri did not make, review or approve them.",
-        ["StoresNoPlugins"] = "This plugin store offers no plugins yet.",
+        ["StoresNoPlugins"] = "This plugin store has no plugins yet.",
         ["StoresPlugins"] = "Plugins",
         ["StoresPluginLimits"] = "Each plugin can contact only the hosts listed with it and cannot read your files.",
         ["StoresPluginLimitsShort"] = "Plugins cannot read your files or contact a host that is not listed.",
@@ -11074,7 +15463,7 @@ public static partial class T
         ["StoresAccessEndedDetail"] = "This plugin store's owner ended your access. Installed plugins keep working, and none will update.",
         ["StoresAccessEndedPage"] = "This plugin store no longer lets this device in. Its plugins stay installed until you remove them.",
         ["StoresNoLongerJoined"] = "This plugin store is no longer joined.",
-        ["StoresOfflineLastList"] = "Offline: {reason}. The plugins below are the last list that was checked.",
+        ["StoresOfflineLastList"] = "Offline: {reason}. Showing the last list it sent.",
         ["StoresOfflineLastListPlain"] = "Offline. Showing the last list it sent.",
         ["StoresKeyLine"] = "Store key {key} · {joined}",
         ["StoresDeviceJoinedAs"] = "Joined as {name}",
@@ -11109,14 +15498,14 @@ public static partial class T
         ["StoresInstallLabel"] = "Install {name}",
         ["StoresReplaceLabel"] = "Replace the copy of {name} added by hand",
         ["StoresRemovePluginTitle"] = "Remove {name}?",
-        ["StoresRemovePluginDetail"] = "It is deleted from this device. The plugin store can install it again.",
+        ["StoresRemovePluginDetail"] = "It's deleted from this device. You can install it again from the plugin store.",
         ["StoresNewlyContacts"] = "Newly contacts",
         ["StoresUpdateContacts"] = "This update also contacts {hosts}.",
         ["StoresNewIn"] = "New in {version}",
         ["StoresJoinTitle"] = "Join a plugin store",
         ["StoresAddTitle"] = "Add a plugin store",
         ["StoresJoinDetail"] = "Paste the link the plugin store's owner sent you.",
-        ["StoresJoinDetailDesktop"] = "Paste the invite link a plugin store's owner sent you. You see what the plugin store offers before anything is joined or installed.",
+        ["StoresJoinDetailDesktop"] = "Paste the invite link a plugin store's owner sent you. You see what the plugin store has before you join or install anything.",
         ["StoresJoinDetailOpened"] = "Paste the link the plugin store's owner sent you. A Kaeri:// invite link opened from Messages fills this sheet in directly.",
         ["StoresInviteLink"] = "Invite link",
         ["StoresInviteLinkHint"] = "https://…/join/…",
@@ -11130,7 +15519,7 @@ public static partial class T
         ["StoresJoinConfirmTitle"] = "Join {name}?",
         ["StoresJoinInstallsNothing"] = "Joining installs nothing. You choose which plugins to install, and each one asks for the hosts it contacts.",
         ["StoresKeyMatches"] = "Key {key} matches the plugin store.",
-        ["StoresAnyoneNote"] = "You join without a name. Another device joins with the same link.",
+        ["StoresAnyoneNote"] = "You join without a name. Another device can join with the same link.",
         ["StoresAlreadyJoinedNote"] = "This device has joined this plugin store already.",
         ["StoresDeviceName"] = "Device name",
         ["StoresDeviceNameDetail"] = "The plugin store's owner sees this device by this name.",
@@ -11182,7 +15571,7 @@ public static partial class T
         ["StoresInviteWorksTimesForever"] = "Works {count} times, until you cancel it.",
         ["StoresInviteWorksAny"] = "Anyone who has this link can join, until {until}.",
         ["StoresInviteWorksAnyForever"] = "Anyone who has this link can join until you cancel it.",
-        ["StoresInviteOnceUntil"] = "Works once, for the person you send it to. Until {until}.",
+        ["StoresInviteOnceUntil"] = "Works once, for the person you send it to, until {until}.",
         ["StoresInviteOnceForever"] = "Works once, for the person you send it to, until you cancel it.",
         ["StoresInviteContactNeeded"] = "Add a contact for this store first. A link that works any number of times can be passed on, like the store's own link.",
         ["StoresInviteOwnerOnce"] = "Owner invites work once.",
@@ -11223,16 +15612,16 @@ public static partial class T
         ["StoresOffersPlugins_one"] = "One plugin",
         ["StoresOffersPlugins_other"] = "{count} plugins",
         ["NoticeOpenStores"] = "Open plugin stores",
-        ["StoresWhatIs"] = "A plugin store is a small server that holds signed plugins and gives each device its own token. It offers sources as plugins. Kaeri runs no plugin stores and lists none, so you join one with an invite link from its owner.",
+        ["StoresWhatIs"] = "A plugin store is a small server that holds signed plugins and gives each device its own token. Its plugins add sources. Kaeri runs no plugin stores and lists none, so you join one with an invite link from its owner.",
         ["StoresWhatIsLink"] = "What is a plugin store?",
         ["StoresInviteRules"] = "An invite link works once, for one person, and lasts seven days. Ask the plugin store's owner for a new one if yours has expired.",
         ["StoresQrLabel"] = "QR code for the invite link",
         ["StoresQrWarning"] = "Anyone who scans this code can use the invite. It works once and lasts seven days.",
         ["StoresQrWarningDevice"] = "Scan this with the device you want to link. It works once and lasts seven days.",
         ["StoresShare"] = "Share…",
-        ["CloudBrowserLine"] = "Your browser opened {service}’s page. Allow access there, and Kaeri carries on by itself.",
+        ["CloudBrowserLine"] = "Your browser opened {service}'s page. Allow access there, and Kaeri carries on by itself.",
         ["CloudBrowserTitle"] = "Sign in to {service} in your browser",
-        ["CloudCloseCarriesOn"] = "You can close this. Kaeri carries on, and opens the next step by itself when it’s ready.",
+        ["CloudCloseCarriesOn"] = "You can close this. Kaeri carries on, and opens the next step by itself when it's ready.",
         ["DeviceKindComputer"] = "computer",
         ["DevicesEnterCode"] = "Enter a code",
         ["DevicesShowKey"] = "Show",
@@ -11269,7 +15658,7 @@ public static partial class T
         ["SyncRoadNearby"] = "With a device nearby",
         ["SyncRoadNearbyLine"] = "Pair with another device on the same Wi-Fi. Nothing is stored anywhere else.",
         ["SyncRoadCloud"] = "Through a cloud folder",
-        ["SyncRoadCloudLine"] = "A cloud drive you already use, or your own server. Works while your devices are apart, and keeps a backup.",
+        ["SyncRoadCloudLine"] = "A cloud drive you already use, or your own server. It works while your devices are apart and keeps a backup.",
         ["SyncRoadLater"] = "You can add the other way later. Most people use both.",
         ["DevicesYours"] = "Your devices",
         ["DevicesOnlyThis"] = "Only this device",
@@ -11289,7 +15678,7 @@ public static partial class T
         ["SyncTurnOffAlert"] = "Turn off sync on {device}?",
         ["SyncTurnOffAlertLine"] = "This {kind} stops sharing with your other devices. Everything it has stays here.",
         ["CloudGroup"] = "Cloud folder",
-        ["CloudFoot"] = "Fills in while your devices are apart, and keeps a sealed backup. Only your devices can read it.",
+        ["CloudFoot"] = "The folder keeps your devices in step while they are apart, and holds a sealed backup. Only your devices can read it.",
         ["CloudAdd"] = "Add a cloud folder",
         ["CloudPickTitle"] = "Choose a cloud folder",
         ["CloudGoogleLine"] = "A hidden Kaeri folder in your Drive",
@@ -11403,7 +15792,7 @@ public static partial class T
         ["ProfilesDeleteAlertLine"] = "{name}’s history and sign-ins on this device are removed. Devices that sync with {name} keep theirs.",
         ["ProfilesPicker"] = "Who’s watching?",
         ["ProfilesAskAtLaunch"] = "Ask who’s watching at launch",
-        ["ProfilesAskFoot"] = "Off by default. For an iPad the household shares. The account row switches profiles at any time.",
+        ["ProfilesAskFoot"] = "Off by default. Turn it on for an iPad the whole household shares. You can switch profiles from the account row at any time.",
         ["ProfilesSwitch"] = "Switch profile",
         ["ProfilesManage"] = "Manage profiles",
         ["FirstSetupOther"] = "Set up from another device",
@@ -11431,6 +15820,7 @@ public static partial class T
         ["DeviceKindPhone"] = "phone",
         ["DeviceKindTablet"] = "tablet",
         ["DeviceKindTv"] = "TV",
+        ["DeviceKindOther"] = "device",
         ["FirstSetupPhone"] = "Set up from your phone",
         ["DevicesOtherDevice"] = "the other device",
         ["CloudSheetLine"] = "{service}’s page is open. Allow access there, and Kaeri carries on by itself.",
@@ -11471,7 +15861,7 @@ public static partial class T
         ["TitleStudio"] = "Studio",
         ["TitleTags"] = "Tags",
         ["TitleMoreAbout"] = "More about this show",
-        ["TitleSynopsisHint"] = "Shows the whole synopsis",
+        ["TitleSynopsisMore"] = "Show the whole synopsis",
         ["TitleDubbedTo"] = "Dubbed to episode {episode}",
         ["TitleNoEpisodes"] = "No episodes yet",
         ["TitleEpisodesLoadFailed"] = "Couldn't list episodes",
@@ -11621,6 +16011,13 @@ public static partial class T
         ["AccountsOtherTrackersNote"] = "Other trackers are in Accounts.",
         ["AccountsWelcomeDetail"] = "Sign in to {tracker} to sync your list and where you stopped.",
         ["AccountsBringsLists"] = "Brings in your lists and fills Continue with what you are watching.",
+        ["AccountsBringsListsRead"] = "Brings in your lists and fills Continue with what you are reading.",
+        ["AccountsBringsListsBoth"] = "Brings in your lists and fills Continue with what you are watching and reading.",
+        ["AccountsTrackerLists"] = "Lists and progress",
+        ["AccountsTrackerReadingLists"] = "Reading lists and progress",
+        ["AccountsTrackerServesBoth"] = "Shows and reading",
+        ["AccountsTrackerServesReading"] = "Reading",
+        ["AccountsTrackerServesShows"] = "Shows",
         ["AccountsLibraryNeeds"] = "Library and sync need your {tracker} account",
         ["AccountsLibraryFrom"] = "Library shows your lists from {tracker}.",
         ["AccountsListsComeFrom"] = "Your lists come from {tracker}.",
@@ -11657,7 +16054,7 @@ public static partial class T
         ["AccountsTokensFile"] = "Sign-in tokens are kept in a file on this device, readable only by you.",
         ["AccountsTokensKeystore"] = "Sign-in tokens are kept on this device, sealed with a key in its keystore.",
         ["AccountsFormTitle"] = "Sign in to {tracker}",
-        ["AccountsFormDetail"] = "Your password goes to {tracker} once, for a token kept on this device.",
+        ["AccountsFormDetail"] = "Your password goes to {tracker} once, in exchange for a token that stays on this device.",
         ["AccountsUserOrEmail"] = "Email or user name",
         ["AccountsPassword"] = "Password",
         ["AccountsSigningInAction"] = "Signing in",
@@ -11681,7 +16078,7 @@ public static partial class T
         ["AccountsKeepTheirs"] = "Keep {tracker}'s",
         ["AccountsOpenOn"] = "Open on {tracker}",
         ["AccountsListedBy"] = "Listed by {tracker}",
-        ["AccountsDidNotAnswer"] = "{tracker} didn't answer.",
+        ["AccountsDidNotAnswer"] = "{tracker} didn't answer. Try again in a moment.",
         ["AccountsNoExtras"] = "{tracker} has no cast, staff or recommendations for this show yet.",
         ["AccountsEpisodesFrom"] = "Episodes from {tracker}. Add a source to play them.",
         ["AccountsAddsSeason"] = "{tracker} adds a season's titles as they're announced.",
@@ -11702,7 +16099,7 @@ public static partial class T
         ["TvChooseAnother"] = "Choose another TV…",
         ["TvPairingCode"] = "Pairing code",
         ["TvOpenOnTv"] = "Open Kaeri on the TV. It needs to be on the same Wi-Fi as this device.",
-        ["TvTypeCode"] = "Type the six digits {name} shows. After this, this device connects by itself.",
+        ["TvTypeCode"] = "Type the six digits {name} shows. From then on, this device connects by itself.",
         ["TvPairingMoment"] = "This takes a moment.",
         ["TvLooking"] = "Looking for TVs on this network",
         ["TvNoneFound"] = "No TVs found",
@@ -11802,7 +16199,7 @@ public static partial class T
         ["UpdatesSavedReplace"] = "Version {version} saved to Downloads. Replace the old file, {file}, with it to update.",
         ["UpdatesSavedReplacePlain"] = "Version {version} saved to Downloads. Replace the old file with it to update.",
         ["UpdatesWhyServer"] = "The download stopped: the server refused it ({code}). Try again later.",
-        ["UpdatesWhyConnection"] = "The download stopped: the connection was lost.",
+        ["UpdatesWhyConnection"] = "The download stopped: the connection was lost. Try again.",
         ["UpdatesWhySave"] = "The download couldn't be saved: {reason}",
         ["UpdatesWhySize"] = "The download is {got}, not the {expected} listed for this version.",
         ["UpdatesWhyChecksum"] = "The download doesn't match the checksum listed for this version.",

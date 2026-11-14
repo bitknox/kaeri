@@ -1,13 +1,13 @@
 discussion-open = Обсуждение
 discussion-title-episode = Обсуждение эпизода { $episode }
 discussion-row = { $count ->
-    [one] Обсуждение · один комментарий
+    [one] Обсуждение · { $count } комментарий
     [few] Обсуждение · { $count } комментария
     [many] Обсуждение · { $count } комментариев
    *[other] Обсуждение · { $count } комментария
  }
 discussion-count = { $count ->
-    [one] Один комментарий
+    [one] { $count } комментарий
     [few] { $count } комментария
     [many] { $count } комментариев
    *[other] { $count } комментария
@@ -15,7 +15,7 @@ discussion-count = { $count ->
 discussion-like = Нравится
 discussion-reply = Ответить
 discussion-more-replies = { $count ->
-    [one] Ещё один ответ
+    [one] Ещё { $count } ответ
     [few] Ещё { $count } ответа
     [many] Ещё { $count } ответов
    *[other] Ещё { $count } ответа

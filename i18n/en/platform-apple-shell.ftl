@@ -130,6 +130,21 @@ shell-sync-not-connected = { $tracker } not connected
 # Line in the list of what the engine is doing, when it is doing nothing.
 shell-nothing-running = Nothing is running.
 
+# Line in the sync status's popover: changes a { -tracker } can't take yet, because it has no
+# match for those titles. They go out by themselves once it has one.
+# @only apple
+# @arg count: int
+# @arg tracker: text
+shell-sync-held = { $count ->
+    [one] One change can't sync to { $tracker } yet
+   *[other] { $count } changes can't sync to { $tracker } yet
+ }
+
+# Under the lines above in the sync status's popover: why those changes wait, and that nothing
+# needs doing.
+# @only apple
+shell-sync-held-detail = No match for these titles yet. They sync once there is one.
+
 # Placeholder of the search field while Settings is open.
 shell-search-settings = Search settings
 
@@ -151,10 +166,10 @@ shell-library-order-label = Order
 shell-library-segment = { $name } { $count }
 
 # Error when a link that was pasted or opened is not a plugin store's invite.
-shell-not-a-store = This link doesn't lead to a { -plugin-store }. Ask the { -plugin-store }'s owner for a new invite.
+shell-not-a-store = This link doesn't lead to a { -plugin-store }. Ask the person who sent it for a new invite.
 
 # Context menu item that carries on with an episode that was left part-way.
-# @arg episode: int
+# @arg episode: plain
 # @allow proceed
 shell-resume-episode = Resume episode { $episode }
 
@@ -188,7 +203,7 @@ shell-engine-stopped = { -app-name } stopped working
 
 # Plain line under the title of the page shown when the engine stopped while the app was open.
 # @allow proceed
-shell-engine-stopped-body = The part of the app that does the work has stopped. Start it again to carry on.
+shell-engine-stopped-body = Downloads and sync stopped with it. Start { -app-name } again to carry on.
 
 # Title menu item that queues every unwatched episode that is not downloaded yet.
 shell-download-unwatched = Download unwatched

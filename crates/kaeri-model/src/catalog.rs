@@ -50,6 +50,13 @@ pub struct Entry {
     pub cover_color: Option<String>,
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub banner_url: Option<String>,
+    /// For a title with no banner, the episode still that stands in for one, as far as the
+    /// metadata the engine holds has stills: the latest episode watched that has one, else
+    /// episode 1's, never one further on. Asks nothing of its own, so a front end can draw the
+    /// wide art from the first frame, before the title's episode table is here. `None` with a
+    /// banner, and where no still is known.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub seen_still: Option<String>,
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub genres: Vec<String>,
     /// Services carrying this title, from AniList's external links.
@@ -444,6 +451,10 @@ pub struct TitleDetail {
     /// [`Event::Detail`]: crate::event::Event::Detail
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub partial: bool,
+    /// "Also a book": the manga or novel the show was told from, or that tells it, only to
+    /// someone who both watches and reads.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub other_medium: Option<crate::reading::CrossMediumRow>,
 }
 
 /// How a title's run reads, decided by the engine. The wording is the catalogue's, so every app
@@ -761,6 +772,7 @@ impl Entry {
             cover_url: None,
             cover_color: None,
             banner_url: None,
+            seen_still: None,
             genres: Vec::new(),
             available_on: Vec::new(),
             available_at: None,

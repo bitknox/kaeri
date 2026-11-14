@@ -75,8 +75,10 @@ const { t, locale, alternates } = useSite(Astro);
 		text-decoration: none;
 	}
 
-	.l-lang li a:hover {
-		background: var(--ani-raised);
+	@media (hover: hover) and (pointer: fine) {
+		.l-lang li a:hover {
+			background: var(--ani-raised);
+		}
 	}
 
 	.l-lang li a[aria-current='true'] {

@@ -33,6 +33,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -42,6 +43,10 @@ import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
@@ -69,6 +74,8 @@ internal fun SettingsAside(pane: SettingsPane, focus: String?) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         when (pane) {
+            SettingsPane.Medium -> Aside(stringResource(R.string.settings_kaeri_is_for), stringResource(R.string.settings_medium_footer))
+            SettingsPane.Reading -> Aside(stringResource(R.string.settings_reader_defaults), stringResource(R.string.settings_reader_defaults_footer))
             SettingsPane.General -> TitleLanguagePreview()
             SettingsPane.Playback -> UpscalingPreview()
             SettingsPane.Notifications -> Aside(
@@ -140,7 +147,14 @@ private fun UpscalingPreview() {
 private fun Drawing(mode: String, modifier: Modifier) {
     val painter = painterResource(app.kaeri.design.R.drawable.upscaling_preview)
     when (mode) {
-        "off" -> Image(painter, null, modifier.blur(1.6.dp), contentScale = ContentScale.Crop, colorFilter = ColorFilter.colorMatrix(tone(0.85f, 0.92f)))
+        "off" -> if (canBlur) {
+            Image(painter, null, modifier.blur(1.6.dp), contentScale = ContentScale.Crop, colorFilter = ColorFilter.colorMatrix(tone(0.85f, 0.92f)))
+        } else {
+            // Below Android 12, which cannot blur: the drawing at a third of its pixels, spread.
+            val drawing = ImageBitmap.imageResource(app.kaeri.design.R.drawable.upscaling_preview)
+            val soft = remember(drawing) { drawing.asAndroidBitmap().let { it.softened(it.width / 3) }.asImageBitmap() }
+            Image(soft, null, modifier, contentScale = ContentScale.Crop, colorFilter = ColorFilter.colorMatrix(tone(0.85f, 0.92f)))
+        }
         "sharp · Anime4K" -> Image(painter, null, modifier, contentScale = ContentScale.Crop, colorFilter = ColorFilter.colorMatrix(tone(1.08f, 1.12f)))
         else -> Image(painter, null, modifier, contentScale = ContentScale.Crop)
     }

@@ -14,6 +14,7 @@ struct PhoneCalendar: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
     @Namespace private var rotor
     @State private var position = ScrollPosition(idType: Date.self)
     /// The day at the top of the agenda, and the days on screen.
@@ -23,8 +24,28 @@ struct PhoneCalendar: View {
     @State private var stripWeek: Date? = Self.monday(of: .now)
     /// A day asked for that is not loaded yet, to scroll to once it is.
     @State private var pending: Date?
-    /// The day at the top when earlier days were asked for, to stay on once they arrive.
+    /// The day at the top when earlier days were asked for, or the day the calendar opened on,
+    /// to stay on whatever loads until it is back at the top or the person moves.
     @State private var holding: Date?
+    /// The first day drawn: the day the calendar opens on, until the person scrolls or picks an
+    /// earlier day. With nothing above it the day opens at the top with no jump to make, so it
+    /// stays there whatever loads. `nil` draws every day loaded; VoiceOver, which moves the agenda
+    /// with no scroll by hand, has every day from the start and jumps to the day instead.
+    @State private var shownFrom: Date? = Calendar.current.startOfDay(for: .now)
+    /// The day at the top when the earlier days were drawn, to stay on once they are.
+    @State private var revealAt: Date?
+    /// Draws the earlier days once the scroll by hand under way comes to rest.
+    @State private var earlierAtRest = false
+    /// The day scrolled to as the earlier days were drawn, until it has been on screen a moment.
+    /// The first frames after they come in can still report the agenda's first day, and a scroll
+    /// among days whose height the agenda guessed can be lost, so meanwhile the agenda asks for no
+    /// more past, the strip stays on its week, and the agenda never stays on its first day.
+    @State private var revealing: Date?
+    /// Whether that day has shown: after that, the agenda goes wherever the person takes it.
+    @State private var revealSeen = false
+    @State private var revealer: Task<Void, Never>?
+    /// Scrolls to the day held again while it is short of the top.
+    @State private var keeper: Task<Void, Never>?
     @State private var opened = false
 
     private static func monday(of day: Date) -> Date {
@@ -35,6 +56,8 @@ struct PhoneCalendar: View {
         TimelineView(.everyMinute) { context in
             agenda(now: context.date)
         }
+        // The title stays in the bar: the strip sits under it, and the agenda opens at its top.
+        .toolbarTitleDisplayMode(.inline)
         .pullToRefresh(store, .calendar)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
@@ -53,6 +76,7 @@ struct PhoneCalendar: View {
             }
         }
         .task {
+            if !opened, voiceOver { shownFrom = nil }
             if navigator.launchCalendarMine {
                 navigator.launchCalendarMine = false
                 store.setSwitch(.calendarMine, on: true)
@@ -82,7 +106,9 @@ struct PhoneCalendar: View {
         // My list with nothing from today on, once every day ahead is loaded: one line.
         let mineBare = store.calendarMine && !model.moreAhead
             && !broadcasts.contains { $0.airs >= today }
-        let days = Self.days(from: max(first, bounds.floor), to: mineBare ? today : min(last, bounds.ceiling))
+        let start = max(first, bounds.floor)
+        let end = mineBare ? today : min(last, bounds.ceiling)
+        let days = Self.days(from: shownFrom.map { min(max($0, start), end) } ?? start, to: end)
         let key = Need(count: days.count, first: days.first, last: days.last, mine: store.calendarMine, pages: model.pages + model.aheadPages)
 
         return ScrollView {
@@ -101,6 +127,19 @@ struct PhoneCalendar: View {
             .padding(.bottom, 24)
         }
         .scrollPosition($position, anchor: .top)
+        // A scroll by hand lets go of a day held, and once it comes to rest draws the days before
+        // the one opened on: drawn under a moving finger, the scroll back to the day at the top
+        // can land days off it, among days whose height the agenda guessed, with no way to
+        // correct it without fighting the finger.
+        .onScrollPhaseChange { _, phase in
+            if phase == .interacting {
+                holding = nil
+                if shownFrom != nil { earlierAtRest = true }
+            } else if phase == .idle, earlierAtRest {
+                earlierAtRest = false
+                showEarlier()
+            }
+        }
         .onScrollTargetVisibilityChange(idType: Date.self, threshold: 0.1) { ids in
             let wasShown = todayShown
             // Today's button fades in (0.2 s) once today has left, and out (0.3 s) as it returns.
@@ -108,6 +147,8 @@ struct PhoneCalendar: View {
                 visible = Set(ids)
             }
             topDay = ids.min()
+            checkReveal(ids: ids, days: days)
+            hold(ids: ids, days: days)
             prefetch(ids: ids, days: days, bounds: bounds)
         }
         .safeAreaInset(edge: .top, spacing: 0) {
@@ -115,13 +156,14 @@ struct PhoneCalendar: View {
         }
         .daysRotor(days, broadcasts: broadcasts, in: rotor)
         .task(id: model.list.state == .loading) { await open(today: today) }
+        .onDisappear {
+            keeper?.cancel()
+            revealer?.cancel()
+        }
         .onChange(of: key) { _, _ in settle(days: days, today: today) }
         .onChange(of: navigator.calendarToToday) { _, _ in returnToToday() }
-        .onChange(of: topDay) { _, day in
-            guard let day else { return }
-            let week = Self.monday(of: day)
-            if week != stripWeek { withAnimation(reduceMotion ? nil : .standard) { stripWeek = week } }
-        }
+        .onChange(of: voiceOver) { _, on in if on { showEarlier() } }
+        .onChange(of: topDay) { _, _ in followTop() }
         .accessibilityElement(children: .contain)
     }
 
@@ -337,32 +379,147 @@ struct PhoneCalendar: View {
 
     // MARK: Moving
 
-    /// Opens on today, or the day the launch route names: with no animation.
+    /// Opens on today, or the day the launch route names: as the first day drawn, or with
+    /// VoiceOver by a jump with no animation.
     private func open(today: Date) async {
         guard !opened, store.calendar.list.state != .loading, store.calendar.list.state != .idle else { return }
-        try? await Task.sleep(for: .milliseconds(80))
         var target = today
         if navigator.calendarOpensOn != 0 {
             target = Calendar.current.date(byAdding: .day, value: navigator.calendarOpensOn, to: today) ?? today
             navigator.calendarOpensOn = 0
         }
+        if shownFrom != nil {
+            shownFrom = target
+            topDay = target
+            opened = true
+            return
+        }
+        try? await Task.sleep(for: .milliseconds(80))
         position.scrollTo(id: target, anchor: .top)
+        // Held like a day that earlier days came in above: the agenda guesses the height of the
+        // days it has not drawn, so the first jump can land days short of the target.
+        holding = target
         // A jump without animation can land before the visibility callback reports the new days,
         // which leaves the strip on the agenda's first week; the strip follows the target now.
         topDay = target
         opened = true
-        if target != today { return }
+        keepHolding()
+    }
+
+    /// Scrolls to the day held again every quarter second until it is at the top. The visibility
+    /// callback runs only when the days on screen change, and a scroll that lands short, among
+    /// days whose height the agenda guessed, can stay put there. After 8 s it stops scrolling
+    /// but still holds the day, so no day short of it is held instead.
+    private func keepHolding() {
+        guard keeper == nil else { return }
+        keeper = Task { @MainActor in
+            defer { keeper = nil }
+            for _ in 0..<32 {
+                try? await Task.sleep(for: .milliseconds(250))
+                guard !Task.isCancelled, let day = holding else { return }
+                if visible.min() == day {
+                    holding = nil
+                    return
+                }
+                if !store.calendar.loadingPast { position.scrollTo(id: day, anchor: .top) }
+            }
+        }
     }
 
     /// Scrolls to a day that arrived after it was asked for, and stays where the person was when
     /// earlier days come in above.
     private func settle(days: [Date], today: Date) {
-        if let pending, days.contains(pending) {
+        if let revealAt, days.contains(revealAt) {
+            // The earlier days drawn above the day at the top: back to it, held there until it is
+            // at the top, or on to a day picked.
+            self.revealAt = nil
+            position.scrollTo(id: revealAt, anchor: .top)
+            if let pending, days.contains(pending) {
+                self.pending = nil
+                watchReveal(pending, days: days)
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(30))
+                    withAnimation(reduceMotion ? nil : .standard) { position.scrollTo(id: pending, anchor: .top) }
+                }
+            } else {
+                watchReveal(revealAt, days: days)
+                holding = revealAt
+                keepHolding()
+            }
+        } else if let pending, days.contains(pending) {
             self.pending = nil
             withAnimation(reduceMotion ? nil : .standard) { position.scrollTo(id: pending, anchor: .top) }
         } else if let holding, days.contains(holding) {
-            self.holding = nil
             position.scrollTo(id: holding, anchor: .top)
+            keepHolding()
+        }
+    }
+
+    /// Lets go of the day held once it is back at the top, or as high as it can go: on screen with
+    /// the last day, and nothing later to load. A scroll to it, on opening or right after days
+    /// came in above, can land short of it, among days whose height the agenda guessed, and on a
+    /// first open the rows still loading move it again and again. Letting go there would leave
+    /// those days asking for more past and one of them held instead, so it scrolls to the day
+    /// again, here and from `keepHolding`, until it is at the top or the person scrolls or picks
+    /// a day.
+    private func hold(ids: [Date], days: [Date]) {
+        guard let holding, days.contains(holding), !store.calendar.loadingPast else { return }
+        let highest = ids.contains(holding) && !store.calendar.moreAhead && days.last.map(ids.contains) == true
+        if ids.min() == holding || highest {
+            self.holding = nil
+        } else {
+            position.scrollTo(id: holding, anchor: .top)
+            keepHolding()
+        }
+    }
+
+    /// Draws the days before the one the calendar opened on, staying on the day at the top.
+    private func showEarlier() {
+        guard let shownFrom else { return }
+        revealAt = topDay ?? shownFrom
+        self.shownFrom = nil
+    }
+
+    /// Watches the day scrolled to as the earlier days come in, at least 0.6 s and until it has
+    /// shown, 2 s at most, then lets the strip follow the agenda again. A scroll by hand meanwhile
+    /// goes on as usual: a programmatic scroll during a drag can start the drag's phase over, so
+    /// that is no sign the reports have settled.
+    private func watchReveal(_ day: Date, days: [Date]) {
+        revealing = day
+        revealSeen = false
+        revealer?.cancel()
+        revealer = Task { @MainActor in
+            for step in 1...10 {
+                try? await Task.sleep(for: .milliseconds(200))
+                guard !Task.isCancelled, revealing == day else { return }
+                checkReveal(ids: Array(visible), days: days)
+                if step >= 3, revealSeen { break }
+            }
+            if revealing == day {
+                revealing = nil
+                followTop()
+                prefetch(ids: Array(visible), days: days, bounds: store.calendarBounds)
+            }
+        }
+    }
+
+    /// Moves the strip to the week of the day at the top. Not while earlier days come in above
+    /// it: their first frames can report the agenda's first day for a moment, and the strip
+    /// paging there and straight back can stop on the wrong week.
+    private func followTop() {
+        guard let topDay, revealAt == nil, revealing == nil else { return }
+        let week = Self.monday(of: topDay)
+        if week != stripWeek { withAnimation(reduceMotion ? nil : .standard) { stripWeek = week } }
+    }
+
+    /// Scrolls back to the day when the agenda sits on its first day without it having shown: a
+    /// scroll that was lost. Anywhere else the agenda is on its way.
+    private func checkReveal(ids: [Date], days: [Date]) {
+        guard let revealing, !revealSeen else { return }
+        if ids.contains(revealing) {
+            revealSeen = true
+        } else if let first = days.first, ids.contains(first) {
+            position.scrollTo(id: revealing, anchor: .top)
         }
     }
 
@@ -372,7 +529,9 @@ struct PhoneCalendar: View {
         guard opened, !days.isEmpty else { return }
         let near = Set(days.prefix(3))
         let far = Set(days.suffix(3))
-        if model.morePast, !model.pastFailed, !model.loadingPast, !near.isDisjoint(with: ids) {
+        // While the day held is not back at the top, the earlier days that just came in sit on
+        // screen above it: they ask for nothing more, and the day held stays the one held.
+        if holding == nil, shownFrom == nil, revealing == nil, model.morePast, !model.pastFailed, !model.loadingPast, !near.isDisjoint(with: ids) {
             holding = ids.min()
             store.loadCalendarPast()
         }
@@ -383,6 +542,7 @@ struct PhoneCalendar: View {
 
     /// A tap in the strip: scrolls to the day, asking for it first when it is not loaded.
     private func go(to day: Date) {
+        holding = nil
         let model = store.calendar
         let calendar = Calendar.current
         let anchor = TimeInterval(model.anchor ?? 0)
@@ -390,6 +550,12 @@ struct PhoneCalendar: View {
         let last = airs.last.map { calendar.startOfDay(for: $0) } ?? calendar.startOfDay(for: .now)
         let first = airs.first.map { calendar.startOfDay(for: $0) } ?? calendar.startOfDay(for: .now)
         let end = calendar.date(byAdding: .day, value: 1, to: day)!
+        if let shownFrom, day < shownFrom {
+            showEarlier()
+            pending = day
+            if day < first, model.morePast { store.loadCalendarPast(through: day) }
+            return
+        }
         if day > last, model.moreAhead {
             pending = day
             store.loadCalendarAhead(through: end)
@@ -403,8 +569,14 @@ struct PhoneCalendar: View {
 
     /// Today, from wherever: a jump to a screen short of it, then the last screen scrolled.
     private func returnToToday() {
+        holding = nil
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: .now)
+        if let shownFrom, today < shownFrom {
+            showEarlier()
+            pending = today
+            return
+        }
         guard !reduceMotion else {
             withAnimation(.standard) { position.scrollTo(id: today, anchor: .top) }
             return
@@ -415,7 +587,7 @@ struct PhoneCalendar: View {
         let bounds = store.calendarBounds
         let anchor = TimeInterval(model.anchor ?? 0)
         let airs = model.rows.compactMap { $0.airingIn.map { Date(timeIntervalSince1970: anchor + TimeInterval($0)) } }
-        let first = max(min(airs.first.map { calendar.startOfDay(for: $0) } ?? today, today), bounds.floor)
+        let first = max(min(airs.first.map { calendar.startOfDay(for: $0) } ?? today, today), bounds.floor, shownFrom ?? .distantPast)
         let last = min(max(airs.last.map { calendar.startOfDay(for: $0) } ?? today, today), bounds.ceiling)
         let short = min(max(calendar.date(byAdding: .day, value: above ? 2 : -2, to: today)!, first), last)
         if short != today { position.scrollTo(id: short, anchor: .top) }

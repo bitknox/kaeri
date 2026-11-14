@@ -1,0 +1,203 @@
+/* Kaeri's novel stylesheet. The paginator puts it in <head> and sets the custom properties
+   on <html> from the reader's settings; hosts that inject styles themselves can use
+   novel_assets().stylesheet instead. Nothing here targets <body>'s children by position, so
+   element paths mean the same thing in every engine.
+
+   The look sets colours and at most the font, never spacing. */
+
+/* The serif for Japanese, Chinese and Korean text, from the system's own faces. Literata has no
+   kana or kanji, and the generic serif falls back to a sans CJK face on Android when the text's
+   language is unknown, so the serif stacks name this before it. */
+@font-face {
+  font-family: "Kaeri Serif CJK";
+  font-weight: 100 599;
+  src: local("NotoSerifCJKjp-Regular"), local("Noto Serif CJK JP"), local("NotoSerifJP-Regular"),
+    local("HiraMinProN-W3"), local("Hiragino Mincho ProN"), local("YuMincho-Regular"),
+    local("Yu Mincho Regular"), local("SourceHanSerif-Regular");
+  unicode-range: U+2E80-2FDF, U+3000-30FF, U+3100-31FF, U+3400-4DBF, U+4E00-9FFF, U+AC00-D7AF,
+    U+F900-FAFF, U+FE30-FE4F, U+FF00-FFEF, U+20000-2FA1F;
+}
+@font-face {
+  font-family: "Kaeri Serif CJK";
+  font-weight: 600 900;
+  src: local("NotoSerifCJKjp-Bold"), local("Noto Serif CJK JP Bold"), local("NotoSerifJP-Bold"),
+    local("HiraMinProN-W6"), local("Hiragino Mincho ProN W6"), local("YuMincho-Demibold"),
+    local("SourceHanSerif-Bold");
+  unicode-range: U+2E80-2FDF, U+3000-30FF, U+3100-31FF, U+3400-4DBF, U+4E00-9FFF, U+AC00-D7AF,
+    U+F900-FAFF, U+FE30-FE4F, U+FF00-FFEF, U+20000-2FA1F;
+}
+
+html.kaeri {
+  --k-bg: #F7F5F0;
+  --k-fg: #1E2033;
+  --k-link: #1E2033;
+  --k-font: "Literata", "Iowan Old Style", Charter, Georgia, "Kaeri Serif CJK", serif;
+  --k-size: 19px;
+  --k-line: 1.5;
+  --k-margin: 28px;
+  --k-top: 40px;
+  --k-bottom: 48px;
+  --k-cols: 1;
+  --k-column: 720px;
+  --k-outer: 0px;
+  --k-page: 100vw;
+  margin: 0 !important;
+  background: var(--k-bg) !important;
+  color: var(--k-fg) !important;
+  font-size: var(--k-size) !important;
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+}
+
+html.kaeri body {
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  color: inherit;
+  font-family: var(--k-font);
+  line-height: var(--k-line) !important;
+  widows: 2;
+  orphans: 2;
+  overflow-wrap: break-word;
+  line-break: strict;
+  -webkit-hyphens: manual;
+  hyphens: manual;
+}
+
+html.kaeri.k-justify body { text-align: justify; }
+html.kaeri.k-hyphens body { -webkit-hyphens: auto; hyphens: auto; }
+/* A CJK book keeps its own faces; where it names none, the serif setting reads in a Mincho. */
+html.kaeri.k-book-font { font-family: "Kaeri Serif CJK", serif; }
+html.kaeri.k-book-font body { font-family: inherit; }
+
+/* Paged: columns on <html>. The gap is twice the margin and the side padding equals it, so
+   one page is exactly the page width and page n starts at n times it (or the height, for
+   vertical text, whose columns stack downward). The page is the viewport, or narrower where
+   the columns are capped: then it sits between two outer margins, which cover the
+   neighbouring pages' columns. A 1px column width beside the count changes nothing where the
+   count is set (the count wins, and the columns share the width), but makes one column a
+   multicol container in every engine: WebKit before 300787@main (September 2025, so
+   WebKitGTK up to 2.50) built none for column-count: 1, and the text ran on below the view. */
+html.kaeri.k-paged {
+  width: var(--k-page) !important;
+  height: 100vh !important;
+  max-width: none !important;
+  max-height: none !important;
+  min-height: 0 !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  column-fill: auto !important;
+  column-gap: calc(2 * var(--k-margin)) !important;
+}
+html.kaeri.k-paged.k-h {
+  padding: var(--k-top) var(--k-margin) var(--k-bottom) var(--k-margin) !important;
+  column-count: var(--k-cols) !important;
+  column-width: 1px !important;
+}
+html.kaeri.k-paged.k-h.k-capped {
+  position: relative !important;
+  margin: 0 var(--k-outer) !important;
+}
+html.kaeri.k-paged.k-h.k-capped body { position: static !important; }
+/* Room past the last page, so it scrolls into place as the others do. */
+html.kaeri.k-paged.k-h.k-capped body::after {
+  content: "" !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: var(--k-reach) !important;
+  width: 1px !important;
+  height: 1px !important;
+}
+html.kaeri.k-paged.k-h.k-capped.k-rtl body::after { left: auto !important; right: var(--k-reach) !important; }
+html.kaeri.k-paged.k-h.k-capped::before,
+html.kaeri.k-paged.k-h.k-capped::after {
+  content: "" !important;
+  position: fixed !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  width: var(--k-outer) !important;
+  background: var(--k-bg) !important;
+  z-index: 2147483647 !important;
+}
+html.kaeri.k-paged.k-h.k-capped::before { left: 0 !important; }
+html.kaeri.k-paged.k-h.k-capped::after { right: 0 !important; }
+html.kaeri.k-paged.k-v {
+  padding: var(--k-margin) var(--k-top) var(--k-margin) var(--k-top) !important;
+  column-count: 1 !important;
+  column-width: 1px !important;
+}
+html.kaeri.k-paged img,
+html.kaeri.k-paged svg,
+html.kaeri.k-paged video {
+  max-width: 100%;
+  max-height: calc(100vh - var(--k-top) - var(--k-bottom));
+  object-fit: contain;
+  break-inside: avoid;
+}
+html.kaeri.k-paged.k-v img,
+html.kaeri.k-paged.k-v svg {
+  max-height: calc(100vh - 2 * var(--k-margin));
+  max-width: calc(100vw - 2 * var(--k-top));
+}
+
+/* The first branch of the text starts flush, so every column begins at the same height. */
+html.kaeri.k-paged .k-first { margin-block-start: 0 !important; }
+
+/* Scrolled: one column down the page, as wide as a column may be. */
+html.kaeri.k-scrolled {
+  padding: var(--k-top) var(--k-margin) var(--k-bottom) var(--k-margin) !important;
+  overflow-x: hidden !important;
+}
+html.kaeri.k-scrolled body { max-width: var(--k-column); margin: 0 auto !important; }
+html.kaeri.k-scrolled img,
+html.kaeri.k-scrolled svg { max-width: 100%; height: auto; }
+
+/* A text chapter's picture that is still coming, or did not come: a box of a fixed size, so the
+   picture filling it later moves nothing on the page. */
+html.kaeri img[data-k-picture] {
+  display: block !important;
+  box-sizing: border-box !important;
+  width: min(100%, 22em) !important;
+  height: auto !important;
+  aspect-ratio: 4 / 3 !important;
+  margin: 1em auto !important;
+  object-fit: contain !important;
+  border-radius: 8px;
+  background: rgba(128, 128, 128, 0.12);
+}
+html.kaeri img[data-k-picture="in"] { background: none; }
+
+html.kaeri figure,
+html.kaeri h1, html.kaeri h2, html.kaeri h3, html.kaeri h4 { break-inside: avoid; }
+html.kaeri h1, html.kaeri h2, html.kaeri h3, html.kaeri h4 { break-after: avoid; }
+html.kaeri ruby { ruby-position: over; }
+html.kaeri a { color: var(--k-link); }
+
+/* Dark looks and e-ink: the book's own colours give way, pictures keep theirs. */
+html.kaeri.k-ink body,
+html.kaeri.k-ink body *:not(img):not(svg):not(video) {
+  color: var(--k-fg) !important;
+  background-color: transparent !important;
+  border-color: currentColor !important;
+}
+html.kaeri.k-ink a { color: var(--k-link) !important; }
+
+/* E-ink: nothing moves, nothing is shaded, so a page draws once. Old web views lose the
+   shadows too. */
+html.kaeri.k-eink *,
+html.kaeri.k-eink *::before,
+html.kaeri.k-eink *::after {
+  transition: none !important;
+  animation: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+html.kaeri.k-legacy * { box-shadow: none !important; text-shadow: none !important; }
+
+/* Fixed layout: the page at its own size, scaled to the window by the paginator. */
+html.kaeri.k-fixed { overflow: hidden !important; }
+html.kaeri.k-fixed body { overflow: hidden !important; }
+
+/* Nothing the sanitiser missed shows. */
+html.kaeri script, html.kaeri iframe, html.kaeri object, html.kaeri embed,
+html.kaeri frame, html.kaeri frameset { display: none !important; }

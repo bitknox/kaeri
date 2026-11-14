@@ -12,7 +12,7 @@ title-episodes-short = { $count ->
    *[other] { $count } tập
  }
 title-episode-row-unaired = { $title }. { $when }, chưa chiếu
-title-all-watched = Đã xem hết các tập
+title-all-watched = Bạn đã xem hết các tập
 title-no-answer-short = AniList không phản hồi.
 title-episodes-all = Tất cả
 title-episodes-unwatched = Chưa xem

@@ -22,7 +22,9 @@
 
 use kaeri_core::{
     ids::AnilistId,
-    traits::{TrackOp, TrackedEntry, Tracker, WatchStatus},
+    traits::{
+        Pushed, ReadRemoval, TrackOp, TrackedEntry, TrackedReadEntry, Tracker, WatchStatus,
+    },
 };
 
 use crate::{
@@ -176,6 +178,8 @@ pub struct KitsuTracker {
     http: reqwest::Client,
     site: Site,
     mapping: std::sync::Arc<dyn IdMapping>,
+    /// Manga ids, when reading is kept: without them the manga list is not.
+    read_mapping: Option<std::sync::Arc<dyn crate::read::ReadMapping>>,
     /// The pair, renewed before it runs out and kept in step with other processes: see
     /// [`crate::held`].
     held: Held,
@@ -184,8 +188,14 @@ pub struct KitsuTracker {
 }
 
 impl Renews for KitsuTracker {
-    async fn renew(&self, refresh_token: &str, now: i64) -> Result<TokenPair, String> {
-        refresh(&self.http, &self.site, refresh_token, now).await.map_err(|e| e.to_string())
+    async fn renew(
+        &self,
+        refresh_token: &str,
+        now: i64,
+    ) -> Result<TokenPair, kaeri_core::Error> {
+        refresh(&self.http, &self.site, refresh_token, now)
+            .await
+            .map_err(|e| kaeri_core::Error::Auth(e.to_string()))
     }
 }
 
@@ -199,9 +209,20 @@ impl KitsuTracker {
             http,
             site: Site::default(),
             mapping,
+            read_mapping: None,
             held: Held::new("kitsu", "kitsu", tokens),
             user_id: tokio::sync::RwLock::new(None),
         }
+    }
+
+    /// Keep the manga and novel list too, with the ids `mapping` knows.
+    #[must_use]
+    pub fn with_read_mapping(
+        mut self,
+        mapping: std::sync::Arc<dyn crate::read::ReadMapping>,
+    ) -> Self {
+        self.read_mapping = Some(mapping);
+        self
     }
 
     /// On `site` rather than Kitsu itself.
@@ -239,13 +260,14 @@ impl KitsuTracker {
             .held
             .send(self, token, |t| self.request(reqwest::Method::GET, &url, t))
             .await?;
-        if payload.status() == reqwest::StatusCode::UNAUTHORIZED {
-            return Err(kaeri_core::Error::Auth("kitsu rejected the token".into()));
-        }
-        let body: serde_json::Value =
-            payload.json().await.map_err(|e| tracker_error(e.to_string()))?;
+        let body = crate::page_json(payload, "kitsu", "kitsu").await?;
+        // Not a refusal of any change: whatever the reason, the queue waits for an answer that
+        // names the account.
         let Some(id) = body["data"][0]["id"].as_str().map(str::to_owned) else {
-            return Err(tracker_error("kitsu returned no user for this token".into()));
+            return Err(kaeri_core::Error::Unavailable {
+                tracker: "kitsu".into(),
+                message: "kitsu returned no user for this token".into(),
+            });
         };
         *self.user_id.write().await = Some(id.clone());
         Ok(id)
@@ -264,26 +286,84 @@ impl KitsuTracker {
             .header("Content-Type", JSON_API)
     }
 
-    /// The existing library entry for one anime, if the user has one.
-    async fn entry_id_for(
+    /// The existing library entry for one `kind` (`anime` or `manga`), if the user has one.
+    /// Kitsu's anime and manga ids are separate number spaces, so the kind is part of the ask.
+    async fn entry_id_of(
         &self,
         token: &mut String,
         user_id: &str,
+        kind: &str,
         kitsu_id: u32,
     ) -> Result<Option<String>, kaeri_core::Error> {
         let url = format!(
-            "{}/library-entries?filter[userId]={user_id}&filter[animeId]={kitsu_id}\
+            "{}/library-entries?filter[userId]={user_id}&filter[{kind}Id]={kitsu_id}\
              &fields[libraryEntries]=status&page[limit]=1",
             self.site.api()
         );
-        let body: serde_json::Value = self
+        let response = self
             .held
             .send(self, token, |t| self.request(reqwest::Method::GET, &url, t))
-            .await?
-            .json()
-            .await
-            .map_err(|e| tracker_error(e.to_string()))?;
+            .await?;
+        let body = crate::page_json(response, "kitsu", "kitsu").await?;
         Ok(body["data"][0]["id"].as_str().map(str::to_owned))
+    }
+
+    /// Create or change one library entry of `kind`, the write an anime or a manga push is.
+    async fn write_entry(
+        &self,
+        token: &mut String,
+        user_id: &str,
+        kind: &str,
+        kitsu_id: u32,
+        attributes: &serde_json::Map<String, serde_json::Value>,
+    ) -> Result<(), kaeri_core::Error> {
+        // Kitsu has no upsert, so ask which write this is. An entry appearing between the
+        // check and the POST fails as a validation error and retries through the outbox, by
+        // which time this check answers PATCH.
+        let existing = self.entry_id_of(token, user_id, kind, kitsu_id).await?;
+        let response = match &existing {
+            Some(entry_id) => {
+                let body = serde_json::json!({ "data": {
+                    "id": entry_id,
+                    "type": "libraryEntries",
+                    "attributes": attributes,
+                }});
+                let url = format!("{}/library-entries/{entry_id}", self.site.api());
+                self.held
+                    .send(self, token, |t| {
+                        self.request(reqwest::Method::PATCH, &url, t).json(&body)
+                    })
+                    .await
+            }
+            None => {
+                // Creation demands a status: Kitsu answers 422 "status can't be blank" without
+                // one, and a bare progress push for a never-listed title would sit in the
+                // outbox retrying forever. Current is the only honest default for an entry
+                // that exists because of a watch or a read; an op that carries its own wins.
+                let mut attributes = attributes.clone();
+                attributes
+                    .entry("status")
+                    .or_insert_with(|| status_to_kitsu(WatchStatus::Current).into());
+                let body = serde_json::json!({ "data": {
+                    "type": "libraryEntries",
+                    "attributes": attributes,
+                    "relationships": {
+                        kind: { "data": { "type": kind, "id": kitsu_id.to_string() } },
+                        "user": { "data": { "type": "users", "id": user_id } },
+                    },
+                }});
+                let url = format!("{}/library-entries", self.site.api());
+                self.held
+                    .send(self, token, |t| {
+                        self.request(reqwest::Method::POST, &url, t).json(&body)
+                    })
+                    .await
+            }
+        }?;
+        if response.status().is_success() {
+            return Ok(());
+        }
+        Err(crate::failed_answer(response, "kitsu", "kitsu").await)
     }
 }
 
@@ -292,6 +372,10 @@ impl KitsuTracker {
 fn coalesce(ops: &[TrackOp]) -> Vec<(AnilistId, serde_json::Map<String, serde_json::Value>)> {
     let mut batched: Vec<(AnilistId, serde_json::Map<String, serde_json::Value>)> = Vec::new();
     for op in ops {
+        // Reading waits in its own outbox and is never in a watching batch.
+        if op.is_reading() {
+            continue;
+        }
         let id = op.anilist_id();
         let slot = match batched.iter_mut().find(|(existing, _)| *existing == id) {
             Some((_, attributes)) => attributes,
@@ -312,6 +396,44 @@ fn coalesce(ops: &[TrackOp]) -> Vec<(AnilistId, serde_json::Map<String, serde_js
             TrackOp::SetScore { score, .. } => {
                 slot.insert("ratingTwenty".into(), rating_twenty(*score).into());
             }
+            TrackOp::SetReadProgress { .. }
+            | TrackOp::SetReadStatus { .. }
+            | TrackOp::SetReadScore { .. } => {}
+        }
+    }
+    batched
+}
+
+/// A batch of reading ops as one write per work. Chapters only: Kitsu's `volumesOwned` counts
+/// owned copies, so a volume is never sent. A reread is the `reconsuming` flag.
+fn coalesce_read(
+    ops: &[TrackOp],
+) -> Vec<(AnilistId, serde_json::Map<String, serde_json::Value>)> {
+    let mut batched: Vec<(AnilistId, serde_json::Map<String, serde_json::Value>)> = Vec::new();
+    for op in ops.iter().filter(|op| op.is_reading()) {
+        let id = op.anilist_id();
+        let at = match batched.iter().position(|(existing, _)| *existing == id) {
+            Some(at) => at,
+            None => {
+                batched.push((id, serde_json::Map::new()));
+                batched.len() - 1
+            }
+        };
+        let slot = &mut batched[at].1;
+        match op {
+            TrackOp::SetReadProgress { chapter, .. } => {
+                let held =
+                    slot.get("progress").and_then(serde_json::Value::as_u64).unwrap_or(0);
+                slot.insert("progress".into(), u64::from(*chapter).max(held).into());
+            }
+            TrackOp::SetReadStatus { status, rereading, .. } => {
+                slot.insert("status".into(), status_to_kitsu(*status).into());
+                slot.insert("reconsuming".into(), (*rereading).into());
+            }
+            TrackOp::SetReadScore { score, .. } => {
+                slot.insert("ratingTwenty".into(), rating_twenty(*score).into());
+            }
+            _ => {}
         }
     }
     batched
@@ -328,7 +450,149 @@ impl Tracker for KitsuTracker {
     }
 
     fn can_address(&self, op: &TrackOp) -> bool {
+        if op.is_reading() {
+            return self
+                .read_mapping
+                .as_ref()
+                .is_some_and(|m| m.kitsu_id(op.anilist_id()).is_some());
+        }
         self.mapping.kitsu_id(op.anilist_id()).is_some()
+    }
+
+    fn serves_reading(&self) -> bool {
+        self.read_mapping.is_some()
+    }
+
+    async fn pull_read_library(&self) -> Result<Vec<TrackedReadEntry>, kaeri_core::Error> {
+        let Some(mapping) = self.read_mapping.clone() else { return Ok(Vec::new()) };
+        let mut token = self.held.access(self, crate::now_epoch()).await?;
+        let user_id = self.user_id(&mut token).await?;
+        let mut entries = Vec::new();
+        // `include=manga` carries the relationship's id, and `subtype` tells a novel.
+        let mut next = Some(format!(
+            "{}/library-entries?filter[userId]={user_id}&filter[kind]=manga\
+             &fields[libraryEntries]=progress,status,ratingTwenty,reconsuming,manga\
+             &include=manga&fields[manga]=subtype&page[limit]=500",
+            self.site.api()
+        ));
+        let mut pages = 0_u32;
+        while let Some(url) = next.take() {
+            pages += 1;
+            if pages > MAX_LIBRARY_PAGES {
+                tracing::warn!(pages, "kitsu pagination did not terminate; stopping");
+                break;
+            }
+            if !url.starts_with(self.site.api()) {
+                tracing::warn!(url = %url, "kitsu paged us off its own api; stopping");
+                break;
+            }
+            let response = self
+                .held
+                .send(self, &mut token, |t| self.request(reqwest::Method::GET, &url, t))
+                .await?;
+            let payload = crate::page_json(response, "kitsu", "kitsu").await?;
+            let subtype_of = |id: &str| {
+                payload["included"].as_array().into_iter().flatten().find_map(|item| {
+                    (item["type"] == "manga" && item["id"] == id)
+                        .then(|| item["attributes"]["subtype"].as_str().map(str::to_owned))
+                        .flatten()
+                })
+            };
+            for node in payload["data"].as_array().into_iter().flatten() {
+                let Some(manga_id) = node["relationships"]["manga"]["data"]["id"].as_str()
+                else {
+                    continue;
+                };
+                let Some(anilist_id) =
+                    manga_id.parse::<u32>().ok().and_then(|id| mapping.anilist_for_kitsu(id))
+                else {
+                    continue;
+                };
+                let attributes = &node["attributes"];
+                let rereading = attributes["reconsuming"].as_bool().unwrap_or(false);
+                entries.push(TrackedReadEntry {
+                    anilist_id,
+                    medium: if subtype_of(manga_id).as_deref() == Some("novel") {
+                        kaeri_core::media::Medium::Novel
+                    } else {
+                        kaeri_core::media::Medium::Manga
+                    },
+                    chapters: attributes["progress"].as_u64().unwrap_or(0) as u32,
+                    // Kitsu has no volumes-read field; `volumesOwned` counts copies.
+                    volumes: None,
+                    status: status_from_kitsu(
+                        attributes["status"].as_str().unwrap_or("current"),
+                    ),
+                    rereading,
+                    score: attributes["ratingTwenty"]
+                        .as_f64()
+                        .filter(|r| *r > 0.0)
+                        .map(|r| (r / 2.0) as f32),
+                });
+            }
+            next = payload["links"]["next"].as_str().map(str::to_owned);
+        }
+        tracing::info!(count = entries.len(), "kitsu manga list pulled");
+        Ok(entries)
+    }
+
+    async fn push_read(&self, ops: &[TrackOp]) -> Result<Pushed, kaeri_core::Error> {
+        let Some(mapping) = self.read_mapping.clone() else { return Ok(Pushed::default()) };
+        let mut token = self.held.access(self, crate::now_epoch()).await?;
+        let user_id = self.user_id(&mut token).await?;
+        let mut titles = crate::Titles::default();
+        for (anilist_id, attributes) in coalesce_read(ops) {
+            if attributes.is_empty() {
+                continue;
+            }
+            let Some(kitsu_id) = mapping.kitsu_id(anilist_id) else {
+                tracing::warn!(
+                    anilist_id = anilist_id.get(),
+                    "no kitsu manga id for this work"
+                );
+                titles.ignore(anilist_id);
+                continue;
+            };
+            let result = if titles.go() {
+                self.write_entry(&mut token, &user_id, "manga", kitsu_id, &attributes).await
+            } else {
+                Ok(())
+            };
+            titles.record(anilist_id, result);
+        }
+        Ok(titles.finish())
+    }
+
+    async fn remove_read(
+        &self,
+        anilist_id: AnilistId,
+    ) -> Result<ReadRemoval, kaeri_core::Error> {
+        let Some(kitsu_id) = self.read_mapping.as_ref().and_then(|m| m.kitsu_id(anilist_id))
+        else {
+            return Ok(ReadRemoval::Unmatched);
+        };
+        let mut token = self.held.access(self, crate::now_epoch()).await?;
+        let user_id = self.user_id(&mut token).await?;
+        let Some(entry_id) = self.entry_id_of(&mut token, &user_id, "manga", kitsu_id).await?
+        else {
+            return Ok(ReadRemoval::NotOnList);
+        };
+        let url = format!("{}/library-entries/{entry_id}", self.site.api());
+        let response = self
+            .held
+            .send(self, &mut token, |t| self.request(reqwest::Method::DELETE, &url, t))
+            .await?;
+        match response.status() {
+            reqwest::StatusCode::UNAUTHORIZED => {
+                Err(kaeri_core::Error::Auth("kitsu rejected the token".into()))
+            }
+            reqwest::StatusCode::NOT_FOUND => Ok(ReadRemoval::NotOnList),
+            status if status.is_success() => Ok(ReadRemoval::Removed),
+            status => {
+                let body = response.text().await.unwrap_or_default();
+                Err(tracker_error(format!("kitsu answered {}", crate::said(status, &body))))
+            }
+        }
     }
 
     async fn accept_credentials(
@@ -421,16 +685,22 @@ impl Tracker for KitsuTracker {
     }
 
     async fn push(&self, ops: &[TrackOp]) -> Result<(), kaeri_core::Error> {
+        self.push_checked(ops).await?.into_result("kitsu")
+    }
+
+    /// One library entry write per title, each with its own outcome: a title Kitsu refuses
+    /// fails alone, and the titles after it still go.
+    async fn push_checked(&self, ops: &[TrackOp]) -> Result<Pushed, kaeri_core::Error> {
         let mut token = self.held.access(self, crate::now_epoch()).await?;
         let user_id = self.user_id(&mut token).await?;
 
+        let mut titles = crate::Titles::default();
         for (anilist_id, attributes) in coalesce(ops) {
             if attributes.is_empty() {
                 continue;
             }
             // The drain holds an unmapped title's ops until the mappings change (see
-            // `can_address`). One that arrives anyway is skipped and said out loud, never
-            // raised: failing the batch would hold every other title's progress behind it.
+            // `can_address`). One that arrives anyway is skipped and said out loud.
             let Some(kitsu_id) = self.mapping.kitsu_id(anilist_id) else {
                 tracing::warn!(
                     anilist_id = anilist_id.get(),
@@ -438,65 +708,14 @@ impl Tracker for KitsuTracker {
                 );
                 continue;
             };
-
-            // Kitsu has no upsert, so ask which write this is. An entry appearing
-            // between the check and the POST fails as a validation error and retries
-            // through the outbox — by which time this check answers PATCH.
-            let existing = self.entry_id_for(&mut token, &user_id, kitsu_id).await?;
-            let response = match &existing {
-                Some(entry_id) => {
-                    let body = serde_json::json!({ "data": {
-                        "id": entry_id,
-                        "type": "libraryEntries",
-                        "attributes": attributes,
-                    }});
-                    let url = format!("{}/library-entries/{entry_id}", self.site.api());
-                    self.held
-                        .send(self, &mut token, |t| {
-                            self.request(reqwest::Method::PATCH, &url, t).json(&body)
-                        })
-                        .await
-                }
-                None => {
-                    // Creation demands a status — Kitsu answers 422 "status can't be
-                    // blank" without one, and a bare progress push for a never-listed
-                    // title would sit in the outbox retrying forever. Watching is the
-                    // only honest default for an entry that exists because of a watch;
-                    // an op that carries its own status still wins.
-                    let mut attributes = attributes.clone();
-                    attributes
-                        .entry("status")
-                        .or_insert_with(|| status_to_kitsu(WatchStatus::Current).into());
-                    let body = serde_json::json!({ "data": {
-                        "type": "libraryEntries",
-                        "attributes": attributes,
-                        "relationships": {
-                            "anime": { "data": { "type": "anime", "id": kitsu_id.to_string() } },
-                            "user": { "data": { "type": "users", "id": user_id } },
-                        },
-                    }});
-                    let url = format!("{}/library-entries", self.site.api());
-                    self.held
-                        .send(self, &mut token, |t| {
-                            self.request(reqwest::Method::POST, &url, t).json(&body)
-                        })
-                        .await
-                }
-            }?;
-
-            if response.status() == reqwest::StatusCode::UNAUTHORIZED {
-                return Err(kaeri_core::Error::Auth("kitsu rejected the token".into()));
-            }
-            if !response.status().is_success() {
-                let status = response.status();
-                let body = response.text().await.unwrap_or_default();
-                return Err(tracker_error(format!(
-                    "kitsu answered {}",
-                    crate::said(status, &body)
-                )));
-            }
+            let result = if titles.go() {
+                self.write_entry(&mut token, &user_id, "anime", kitsu_id, &attributes).await
+            } else {
+                Ok(())
+            };
+            titles.record(anilist_id, result);
         }
-        Ok(())
+        Ok(titles.finish())
     }
 }
 
@@ -560,5 +779,35 @@ mod tests {
             TrackOp::SetProgress { anilist_id: other, episode: 1 },
         ]);
         assert_eq!(batched.len(), 2);
+    }
+
+    #[test]
+    fn reading_ops_make_chapter_writes_and_never_a_volume() {
+        let batched = coalesce_read(&[
+            TrackOp::SetReadProgress { anilist_id: HOSHIKUZU, chapter: 4, volume: Some(2) },
+            TrackOp::SetReadProgress { anilist_id: HOSHIKUZU, chapter: 9, volume: None },
+            TrackOp::SetReadStatus {
+                anilist_id: HOSHIKUZU,
+                status: WatchStatus::Current,
+                rereading: true,
+                at: 1,
+            },
+            TrackOp::SetProgress { anilist_id: HOSHIKUZU, episode: 50 },
+        ]);
+        assert_eq!(batched.len(), 1);
+        let attributes = &batched[0].1;
+        assert_eq!(attributes["progress"], 9);
+        assert_eq!(attributes["reconsuming"], true);
+        assert!(
+            attributes.get("volumesOwned").is_none() && attributes.get("volumes").is_none()
+        );
+        assert!(
+            coalesce(&[TrackOp::SetReadProgress {
+                anilist_id: HOSHIKUZU,
+                chapter: 1,
+                volume: None
+            }])
+            .is_empty()
+        );
     }
 }

@@ -44,6 +44,7 @@ async fn main() {
         config.clone(),
         http.clone(),
         paths.clone(),
+        None,
     )
     .await
     .ok()

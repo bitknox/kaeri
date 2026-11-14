@@ -5,7 +5,7 @@ Kaeri                                                  plugins ●  ·  anilist 
 ────────────────────────────────────────────────────────────────────────────────
 ▌ Finish signing in on cloud.example
 ────────────────────────────────────────────────────────────────────────────────
-  Your browser opened Nextcloud’s page. Allow access there, and Kaeri
+  Your browser opened Nextcloud's page. Allow access there, and Kaeri
   carries on by itself.
 
   Open the page again                                                      ↵

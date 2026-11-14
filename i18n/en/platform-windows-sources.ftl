@@ -125,7 +125,7 @@ sources-use-name = { $name } on
 
 # Under the title of the dialog that asks before a { -plugin } is removed from the { -source-cap-pl } page.
 # @only windows
-sources-remove-detail = It stops being tried for episodes. You can install it again from its { -plugin-store }.
+sources-remove-detail = { -app-name } won't try it for episodes any more. You can install it again from its { -plugin-store }.
 
 ## Plugin stores page
 

@@ -3,6 +3,13 @@ accounts-other-trackers = Autres { -tracker-pl }
 accounts-other-trackers-note = Les autres { -tracker-pl } se trouvent dans Comptes.
 accounts-welcome-detail = Connectez-vous à { $tracker } pour synchroniser votre liste et retrouver là où vous en êtes.
 accounts-brings-lists = Importe vos listes et remplit { -continue-cap } avec ce que vous regardez.
+accounts-brings-lists-read = Importe vos listes et remplit « { -continue-reading-cap } » avec ce que vous lisez.
+accounts-brings-lists-both = Importe vos listes et remplit « { -continue-cap } » avec ce que vous regardez et lisez.
+accounts-tracker-lists = Listes et progression
+accounts-tracker-reading-lists = Listes de lecture et progression
+accounts-tracker-serves-both = Séries et lecture
+accounts-tracker-serves-reading = Lecture
+accounts-tracker-serves-shows = Séries
 accounts-library-needs = { -library-cap } et la synchronisation ont besoin de votre compte { $tracker }
 accounts-library-from = { -library-cap } affiche vos listes de { $tracker }.
 accounts-lists-come-from = Vos listes viennent de { $tracker }.
@@ -11,7 +18,7 @@ accounts-list-empty = Les titres que vous ajoutez sur { $tracker } s'affichent i
 accounts-state-signed-out = Non connecté
 accounts-state-signed-in = Connecté à { $tracker } en tant que { $name }
 accounts-state-signed-in-waiting = { $count ->
-    [one] Connecté à { $tracker } en tant que { $name } · une modification en attente
+    [one] Connecté à { $tracker } en tant que { $name } · { $count } modification en attente
     [many] Connecté à { $tracker } en tant que { $name } · { $count } modifications en attente
    *[other] Connecté à { $tracker } en tant que { $name } · { $count } modifications en attente
  }
@@ -42,7 +49,7 @@ accounts-tokens-keychain = Les jetons de connexion sont conservés dans le trous
 accounts-tokens-file = Les jetons de connexion sont conservés dans un fichier sur cet { -device }, lisible par vous seul.
 accounts-tokens-keystore = Les jetons de connexion sont conservés sur cet { -device }, scellés avec une clé de son magasin de clés.
 accounts-form-title = Connexion à { $tracker }
-accounts-form-detail = Votre mot de passe est envoyé à { $tracker } une seule fois, pour obtenir un jeton conservé sur cet { -device }.
+accounts-form-detail = Votre mot de passe est envoyé une seule fois à { $tracker }, en échange d'un jeton qui reste sur cet { -device }.
 accounts-user-or-email = Adresse e-mail ou nom d'utilisateur
 accounts-password = Mot de passe
 accounts-signing-in-action = Connexion en cours
@@ -66,7 +73,7 @@ accounts-keep-mine = Garder celui de cet { -device }
 accounts-keep-theirs = Garder celui de { $tracker }
 accounts-open-on = Ouvrir sur { $tracker }
 accounts-listed-by = Référencé par { $tracker }
-accounts-did-not-answer = { $tracker } n'a pas répondu.
+accounts-did-not-answer = { $tracker } n'a pas répondu. Réessayez dans un instant.
 accounts-no-extras = { $tracker } n'a pas encore de distribution, d'équipe ni de recommandations pour cette série.
 accounts-episodes-from = Épisodes de { $tracker }. Ajoutez une { -source } pour les lire.
 accounts-adds-season = { $tracker } ajoute les titres d'une saison au fur et à mesure de leur annonce.

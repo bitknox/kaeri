@@ -55,7 +55,7 @@ sources-contacts-label = Endereços contatados
 sources-listed-by-store = Listado pela { -plugin-store }
 sources-contacts-one = Contata { $first }
 sources-contacts-line = { $more ->
-    [one] Contata { $first } e mais um
+    [one] Contata { $first } e mais { $more }
     [many] Contata { $first } e mais { $more }
    *[other] Contata { $first } e mais { $more }
  }
@@ -63,7 +63,7 @@ sources-contacts-none = Não lista nenhum endereço para contatar
 sources-no-hosts = Nenhum endereço
 sources-update-contacts-one = Esta atualização também contata { $first }.
 sources-update-contacts = { $more ->
-    [one] Esta atualização também contata { $first } e mais um.
+    [one] Esta atualização também contata { $first } e mais { $more }.
     [many] Esta atualização também contata { $first } e mais { $more }.
    *[other] Esta atualização também contata { $first } e mais { $more }.
  }
@@ -75,12 +75,12 @@ sources-open-settings = Abrir configurações de { -source-pl }
 sources-torrent-source = Reprodução de torrents
 sources-source-order-row = Ordem da { -source }
 sources-torrents-note = Os torrents fazem parte do { -app-name }, não de um { -plugin }. O proxy e o compartilhamento são definidos em Configurações, em { -source-cap-pl }.
-sources-rebuilding = { -source-cap-pl } estão sendo configuradas de novo
+sources-rebuilding = Configurando as { -source-pl } de novo
 sources-response-ms = { $ms } ms
 match-fix = Corrigir correspondência
 match-choose = Escolher correspondência
 match-uncertain = { $count ->
-    [one] { $source } lista um título que pode ser este. Escolha-o para reproduzir os episódios.
+    [one] { $source } lista { $count } título que pode ser este. Escolha-o para reproduzir os episódios.
     [many] { $source } lista { $count } de títulos que podem ser este. Escolha um para reproduzir os episódios.
    *[other] { $source } lista { $count } títulos que podem ser este. Escolha um para reproduzir os episódios.
  }
@@ -115,7 +115,7 @@ sources-add = Adicionar
 sources-add-folder = Pasta…
 sources-add-server = Servidor de mídia…
 sources-add-store = Entrar numa { -plugin-store }…
-sources-empty-body = { -source-cap-pl } são de onde vêm os episódios: pastas neste { -device }, seu servidor de mídia e { -plugin-pl } de lojas em que você entrar.
+sources-empty-body = { -source-cap-pl } são de onde vêm os episódios: pastas neste { -device }, seu servidor de mídia e { -plugin-pl } de { -plugin-store-pl } em que você entrar.
 sources-empty-more = Ou { $join }.
 sources-empty-join-link = entre numa { -plugin-store }
 sources-add-folder-button = Adicionar uma pasta
@@ -129,7 +129,7 @@ sources-demo-credit = こうしす！ por colaboradores do OPAP-JP. Licenciado s
 sources-demo-link-licence = Licença
 sources-demo-link-commons = Wikimedia Commons
 sources-demo-link-maker = OPAP-JP
-sources-demo-hosts = Acessa apenas o Wikimedia Commons: upload.wikimedia.org e commons.wikimedia.org.
+sources-demo-hosts = A demo acessa apenas o Wikimedia Commons: upload.wikimedia.org e commons.wikimedia.org.
 sources-demo-private = A demo nunca entra em nenhuma conta e nunca grava no AniList.
 sources-demo-remove = Remover demo
 sources-demo-add = Adicionar a demo

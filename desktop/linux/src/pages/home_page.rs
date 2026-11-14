@@ -140,8 +140,8 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
 
     let open = gtk::Button::with_label(&t::home_open_downloads());
     open.add_css_class("pill");
-    open.set_action_name(Some("win.go"));
     open.set_action_target_value(Some(&"downloads".to_variant()));
+    open.set_action_name(Some("win.go"));
     let offline_empty = nagare::status_page(
         &t::home_offline_empty_title(),
         &t::home_offline_empty_body(),
@@ -785,8 +785,8 @@ impl Page {
             let b = gtk::Button::with_label(&text);
             b.add_css_class("suggested-action");
             b.add_css_class("home-main");
-            b.set_action_name(Some(&action));
             b.set_action_target_value(Some(&target));
+            b.set_action_name(Some(&action));
             actions.append(&b);
         }
         let details = gtk::Button::with_label(&t::home_details());
@@ -799,8 +799,8 @@ impl Page {
         if demo {
             details.set_action_name(Some("win.about-demo"));
         } else {
-            details.set_action_name(Some("win.open-title"));
             details.set_action_target_value(Some(&id.to_variant()));
+            details.set_action_name(Some("win.open-title"));
         }
         actions.append(&details);
         let more = gtk::MenuButton::new();
@@ -908,8 +908,8 @@ impl Page {
                 more.add_css_class("flat");
                 more.add_css_class("home-day-more");
                 more.set_halign(gtk::Align::Start);
-                more.set_action_name(Some("win.go"));
                 more.set_action_target_value(Some(&"calendar".to_variant()));
+                more.set_action_name(Some("win.go"));
                 column.append(&more);
             }
             grid.attach(&column, day as i32, 0, 1, 1);
@@ -973,8 +973,8 @@ impl Page {
         button.set_child(Some(&row));
         button.add_css_class("flat");
         button.add_css_class("home-card");
-        button.set_action_name(Some("win.open-title"));
         button.set_action_target_value(Some(&item.entry.id.get().to_variant()));
+        button.set_action_name(Some("win.open-title"));
         button.update_property(&[gtk::accessible::Property::Label(&format!(
             "{}, {}",
             item.entry.title,
@@ -1064,8 +1064,8 @@ impl Page {
         button.set_halign(gtk::Align::Start);
         button.set_valign(gtk::Align::Start);
         button.set_hexpand(false);
-        button.set_action_name(Some("win.open-title"));
         button.set_action_target_value(Some(&item.entry.id.get().to_variant()));
+        button.set_action_name(Some("win.open-title"));
         button.update_property(&[gtk::accessible::Property::Label(&format!(
             "{}, {}",
             item.entry.title, text
@@ -1123,7 +1123,7 @@ impl Page {
         };
         let row = gtk::Box::new(gtk::Orientation::Horizontal, 16);
         let l = gtk::Label::new(None);
-        l.set_markup(&linked(&text, &links));
+        crate::widgets::set_link_markup(&l, &linked(&text, &links));
         l.add_css_class("haze");
         l.add_css_class("home-end");
         l.set_xalign(0.0);
@@ -1139,8 +1139,8 @@ impl Page {
             b.add_css_class("home-sec");
             b.add_css_class("home-small");
             b.set_valign(gtk::Align::Center);
-            b.set_action_name(Some(action));
             b.set_action_target_value(Some(&target.to_variant()));
+            b.set_action_name(Some(action));
             row.append(&b);
         }
         column.append(&row);
@@ -1631,6 +1631,8 @@ fn view_all_button() -> (gtk::Button, gtk::Label) {
     button.add_css_class("flat");
     button.add_css_class("home-all");
     button.set_valign(gtk::Align::Center);
+    // Nowhere until the caller names the place: GTK warns at an action with no target.
+    button.set_action_target_value(Some(&"".to_variant()));
     button.set_action_name(Some("win.go"));
     (button, label)
 }

@@ -18,6 +18,27 @@ accounts-welcome-detail = Sign in to { $tracker } to sync your list and where yo
 # Line under a tracker that brings in lists.
 accounts-brings-lists = Brings in your lists and fills { -continue-cap } with what you are watching.
 
+# Line under AniList when Kaeri is for reading: what signing in brings.
+accounts-brings-lists-read = Brings in your lists and fills { -continue-reading-cap } with what you are reading.
+
+# Line under AniList when Kaeri is for watching and reading.
+accounts-brings-lists-both = Brings in your lists and fills { -continue-cap } with what you are watching and reading.
+
+# Line under a tracker that is not signed in: what it keeps in step.
+accounts-tracker-lists = Lists and progress
+
+# Line under MangaUpdates when it is not signed in.
+accounts-tracker-reading-lists = Reading lists and progress
+
+# Line under a tracker with both media on: it serves shows and reading.
+accounts-tracker-serves-both = Shows and reading
+
+# Line under a tracker with both media on: it serves reading only.
+accounts-tracker-serves-reading = Reading
+
+# Line under a tracker with both media on: it serves shows only.
+accounts-tracker-serves-shows = Shows
+
 # Line under the accounts screen when the library needs a tracker.
 # @arg tracker: text
 accounts-library-needs = { -library-cap } and sync need your { $tracker } account
@@ -154,7 +175,7 @@ accounts-form-title = Sign in to { $tracker }
 
 # Line under the title: where the password goes.
 # @arg tracker: text
-accounts-form-detail = Your password goes to { $tracker } once, for a token kept on this { -device }.
+accounts-form-detail = Your password goes to { $tracker } once, in exchange for a token that stays on this { -device }.
 
 # Label of the name field.
 accounts-user-or-email = Email or user name
@@ -251,7 +272,7 @@ accounts-listed-by = Listed by { $tracker }
 
 # Line when the tracker did not answer.
 # @arg tracker: text
-accounts-did-not-answer = { $tracker } didn't answer.
+accounts-did-not-answer = { $tracker } didn't answer. Try again in a moment.
 
 # Line when the tracker has nothing for the show.
 # @arg tracker: text

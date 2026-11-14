@@ -112,6 +112,7 @@ data class StartProgress(
     private val asking: Told? get() = trail.lastOrNull { it.step is StartStep.AskingSource }
     private val found: Told? get() = trail.lastOrNull { it.step is StartStep.Found }
     private val opening: Told? get() = trail.lastOrNull { it.step is StartStep.OpeningStream || it.step is StartStep.TryingAnotherStream }
+    private val pinMissed: String? get() = (trail.lastOrNull { it.step is StartStep.PinMissed }?.step as? StartStep.PinMissed)?.name
     private val peers: Told? get() = trail.lastOrNull { it.step is StartStep.FindingPeers }
     private val swarm: StartStep.Swarm? get() = trail.lastOrNull { it.step is StartStep.Swarm }?.step as? StartStep.Swarm
     private val speed: ULong? get() = (trail.lastOrNull { it.step is StartStep.Speed }?.step as? StartStep.Speed)?.bytesPerSecond
@@ -164,6 +165,7 @@ data class StartProgress(
         else if (resume != null) parts += Strings.playerStartResuming(context, clock(resume))
         val found = found?.step as? StartStep.Found
         if (found != null) {
+            pinMissed?.let { parts += Strings.playerStartPinMissed(context, it, episode) }
             val swarm = swarm
             another?.let {
                 parts += Strings.playerStartNoVideo(context)

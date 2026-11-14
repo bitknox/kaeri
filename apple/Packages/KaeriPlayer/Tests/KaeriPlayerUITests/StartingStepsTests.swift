@@ -207,6 +207,15 @@ struct StartingStepsTests {
         #expect(rig.model.failure?.view.reason == "No connection.")
     }
 
+    @Test func aPassedOverPinIsOnTheDetailLineOnceTheStreamsAreFound() {
+        let now = ContinuousClock.now
+        var walk = StartingWalk(id: 1, episode: "7", resume: nil, at: now)
+        walk.take(.askingSource(name: "Alpha", place: 1, total: 3, pinned: true), line: nil, at: now)
+        walk.take(.pinMissed(name: "Alpha"), line: nil, at: now + .seconds(2))
+        walk.take(.found(count: 1, source: "Gamma", quality: 1080, translation: .sub), line: .startOpeningStream, at: now + .seconds(2))
+        #expect(walk.detail(at: now + .seconds(2)).contains("Alpha doesn't have episode 7 yet. Playing from the next source."))
+    }
+
     @Test func theSlowWordingAppliesInAnyStepHeldPastTwentySeconds() {
         let now = ContinuousClock.now
         var walk = StartingWalk(id: 1, episode: "7", resume: nil, at: now)

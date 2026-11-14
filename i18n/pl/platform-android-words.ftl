@@ -25,7 +25,7 @@ settings-coming-up-switched-off = { $count ->
     [many] { $names } mają wyłączone powiadomienia we własnych ustawieniach.
    *[other] { $names } mają wyłączone powiadomienia we własnych ustawieniach.
  }
-settings-coming-up-opens = Tytuł otwiera swoje ustawienia.
+settings-coming-up-opens = Dotknij tytułu, aby otworzyć jego ustawienia.
 torrents-proxy-as = jako { $user }
 title-facts-aired = Wyemitowano { $dates }
 title-facts-airing = Emitowany od { $date }
@@ -157,7 +157,7 @@ settings-titles-note-english-missing = { $title } nie ma tytułu angielskiego w 
 settings-titles-note-english = Tytuły angielskie tak, jak je podaje AniList, a tam, gdzie ich nie ma, romaji.
 settings-titles-note-romaji = Tytuły japońskie w alfabecie łacińskim, tak jak podaje AniList.
 settings-stores-with-updates = { $stores } · { $updates }
-settings-seeding-best-effort = Działa w miarę możliwości: seedowanie trwa tylko wtedy, gdy aplikacja { -app-name } jest otwarta.
+settings-seeding-best-effort = To { -device } seeduje tylko wtedy, gdy aplikacja { -app-name } jest otwarta.
 settings-downloads-count = { $count ->
     [one] Jeden odcinek
     [few] { $count } odcinki
@@ -178,7 +178,7 @@ settings-typefaces-value = Roboto Flex i Zen Kaku Gothic New, na licencji SIL Op
 settings-libraries-value = JNA i AndroidX, na licencji Apache License 2.0
 settings-report-bug-value = Otwiera GitHub w przeglądarce
 downloads-storage-share-description = Pobrane odcinki zajmują { $size }
-settings-aside-notifications = Jedno powiadomienie, gdy wychodzi odcinek obserwowanego tytułu: tytuł i numer odcinka, nigdy jego nazwa. Tytuł może mieć własne powiadomienia wyłączone w swoich ustawieniach.
+settings-aside-notifications = Jedno powiadomienie, gdy wychodzi odcinek obserwowanego tytułu: tytuł i numer odcinka, nigdy jego nazwa. Powiadomienia tytułu możesz wyłączyć w jego ustawieniach.
 settings-aside-downloads = Pobrane odcinki są w osobnym miejscu aplikacji { -app-name }, do którego inne aplikacje nie mają dostępu. Usunięcie aplikacji usuwa też pobrane odcinki.
 settings-aside-sources = { -source-cap-pl } są sprawdzane po kolei, od góry do dołu. Tytuł może mieć własne { -source }, wybierane na jego stronie.
 settings-upscaling-description = Ta sama klatka: lewa połowa to oryginał 480p, prawa po zastosowaniu: { $mode }

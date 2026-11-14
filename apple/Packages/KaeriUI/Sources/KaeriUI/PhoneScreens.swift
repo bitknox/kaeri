@@ -160,9 +160,21 @@ struct PhoneLibrary: View {
     var body: some View {
         @Bindable var navigator = navigator
         Group {
-            if store.accounts.summary.state == .signedOut {
+            if ReadLibraryScope.reading(store: store, navigator: navigator) {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 16) {
+                        if store.medium.both { LibraryScopePicker().padding(.top, 4) }
+                        if store.medium.answer == .read { DownloadsRow() }
+                        ReadLibraryView()
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 24)
+                }
+                .transition(.opacity)
+            } else if store.accounts.summary.state == .signedOut {
                 ScrollView {
                     VStack(spacing: 0) {
+                        if store.medium.both { LibraryScopePicker().padding(.vertical, 4) }
                         DownloadsRow().padding(.top, 8)
                         SignedOutLibrary()
                             .frame(minHeight: 560)
@@ -172,7 +184,8 @@ struct PhoneLibrary: View {
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
-                        DownloadsRow().padding(.top, 8)
+                        if store.medium.both { LibraryScopePicker().padding(.top, 4) }
+                        DownloadsRow().padding(.top, store.medium.both ? 0 : 8)
                         chips
                             .padding(.horizontal, -16)
                         LibraryScreen(embedded: true)
@@ -184,8 +197,11 @@ struct PhoneLibrary: View {
         }
         .pullToRefresh(store, .library(navigator.librarySegment))
         .screenSubtitle(sizeClass == .compact ? store.syncSubtitle() : "")
+        .animation(.standard, value: ReadLibraryScope.reading(store: store, navigator: navigator))
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) { SurpriseButton() }
+            if !ReadLibraryScope.reading(store: store, navigator: navigator) {
+                ToolbarItem(placement: .topBarTrailing) { SurpriseButton() }
+            }
             if sizeClass == .compact { AccountButton() }
         }
         .task {
@@ -267,8 +283,12 @@ struct DownloadsRow: View {
 /// typed, the titles found after, with the search field the tab bar gives it.
 struct PhoneSearch: View {
     var body: some View {
+        // One screen for both scopes: reading's Search is drawn inside it, and Surprise me
+        // picks from the scope shown.
         SearchScreen(compact: true)
-            .toolbar { ToolbarItem(placement: .topBarTrailing) { SurpriseButton() } }
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) { SurpriseButton() }
+            }
     }
 }
 #endif

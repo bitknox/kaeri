@@ -1,0 +1,101 @@
+Kaeri                                                sources ● 3  ·  anilist ⇅ 2
+────────────────────────────────────────────────────────────────────────────────
+▌▸ │    Continue  ───────────────────────────────────────────────────────────
+ / │    Harbor Light Recipes                                     ● Chapter 14
+ ▥ │    Glasswing Courier                                           Chapter 3
+ ↓ │
+ ◇ │    Up next for you  ────────────────────────────────────────────────────
+ ◎ │    Orchard of Small Hours                              Manga · Releasing
+ ≡ │
+   │    Trending manga  ─────────────────────────────────────────────────────
+   │    Iron Kite Brigade                                   Japan · Releasing
+   │  ▌ Saltwind Diary                              Not found in your sources
+   │    Moss and Iron                                       Japan · Releasing
+   │    Foxfire Ledger                                      Japan · Releasing
+   │    Second Floor Swordsmith                             Japan · Releasing
+   │    View all
+   │
+   │    Because you finished Harbor Light Recipes  ──────────────────────────
+   │    Lamplight Bakery                                    Manga · Releasing
+   │    Quiet Ferry Days                                    Manga · Releasing
+   │
+   │    New manga · Last 12 months  ─────────────────────────────────────────
+────────────────────────────────────────────────────────────────────────────────
+Reading                                            ↵ open   tab section   ? keys
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r00 c53-63 fg=state
+r00 c64-65 fg=text-dim
+r00 c66-66 fg=rule
+r00 c67-68 fg=text-dim
+r00 c69-79 fg=state
+r01 c00-79 fg=rule
+r02 c00-00 fg=text-dim
+r02 c01-01 fg=text mod=BOLD
+r02 c03-03 fg=rule
+r02 c08-15 fg=text-dim
+r02 c18-76 fg=rule
+r03 c01-01 fg=text-dim
+r03 c03-03 fg=rule
+r03 c08-27 fg=text-dim
+r03 c65-76 fg=state
+r04 c01-01 fg=text-dim
+r04 c03-03 fg=rule
+r04 c08-24 fg=text-dim
+r04 c68-76 fg=text-dim
+r05 c01-01 fg=text-dim
+r05 c03-03 fg=rule
+r06 c01-01 fg=text-dim
+r06 c03-03 fg=rule
+r06 c08-22 fg=text-dim
+r06 c25-76 fg=rule
+r07 c01-01 fg=text-dim
+r07 c03-03 fg=rule
+r07 c08-29 fg=text-dim
+r07 c60-76 fg=text-dim
+r08 c01-01 fg=text-dim
+r08 c03-03 fg=rule
+r09 c03-03 fg=rule
+r09 c08-21 fg=text-dim
+r09 c24-76 fg=rule
+r10 c03-03 fg=rule
+r10 c08-24 fg=text-dim
+r10 c60-76 fg=text-dim
+r11 c03-03 fg=rule
+r11 c06-06 fg=obi
+r11 c08-21 fg=text mod=BOLD
+r11 c52-76 fg=text-dim
+r12 c03-03 fg=rule
+r12 c08-20 fg=text-dim
+r12 c60-76 fg=text-dim
+r13 c03-03 fg=rule
+r13 c08-21 fg=text-dim
+r13 c60-76 fg=text-dim
+r14 c03-03 fg=rule
+r14 c08-30 fg=text-dim
+r14 c60-76 fg=text-dim
+r15 c03-03 fg=rule
+r15 c08-15 fg=text-dim
+r16 c03-03 fg=rule
+r17 c03-03 fg=rule
+r17 c08-48 fg=text-dim
+r17 c51-76 fg=rule
+r18 c03-03 fg=rule
+r18 c08-23 fg=text-dim
+r18 c60-76 fg=text-dim
+r19 c03-03 fg=rule
+r19 c08-23 fg=text-dim
+r19 c60-76 fg=text-dim
+r20 c03-03 fg=rule
+r21 c03-03 fg=rule
+r21 c08-33 fg=text-dim
+r21 c36-76 fg=rule
+r22 c00-79 fg=rule
+r23 c00-06 fg=text-dim
+r23 c51-51 fg=text
+r23 c52-59 fg=text-dim
+r23 c60-62 fg=text
+r23 c63-73 fg=text-dim
+r23 c74-74 fg=text
+r23 c75-79 fg=text-dim

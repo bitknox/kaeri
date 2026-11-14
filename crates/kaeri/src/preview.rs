@@ -62,6 +62,8 @@ pub async fn preview(
         config.clone(),
         http.clone(),
         paths.clone(),
+        // A still frame of the show screens: no book sources.
+        None,
     );
     let plugin_note = plugins.await.ok().flatten();
     // As the file's too: a still frame shows a `--theme` as the saved choice, as it always has.
@@ -143,7 +145,7 @@ pub async fn preview(
                 run.dispatch(task);
                 run.settle(&mut app).await?;
             } else {
-                eprintln!("[title: nothing on Home to open — watch something first]");
+                eprintln!("[title: nothing on Home to open; watch something first]");
             }
             if screen == PreviewScreen::Episodes {
                 run.press(&mut app, Action::ShowEpisodes).await;

@@ -52,7 +52,7 @@ tv-open-on-tv = Open { -app-name } on the TV. It needs to be on the same Wi-Fi a
 
 # Line telling what to type.
 # @arg name: text
-tv-type-code = Type the six digits { $name } shows. After this, this { -device } connects by itself.
+tv-type-code = Type the six digits { $name } shows. From then on, this { -device } connects by itself.
 
 # Line while pairing is under way.
 tv-pairing-moment = This takes a moment.
@@ -158,7 +158,7 @@ tv-search-on-tv = Search on the TV
 tv-type-search = Type a search
 
 # Name of a track that has no name.
-# @arg id: int
+# @arg id: plain
 tv-track-n = Track { $id }
 
 ## The TV's own pairing screens

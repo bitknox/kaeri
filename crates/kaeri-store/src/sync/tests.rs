@@ -754,6 +754,163 @@ fn a_held_op_applies_once_this_version_knows_its_kind() {
     assert_eq!(b.store.sync_meta_get("held_unknown").unwrap(), None);
 }
 
+fn read_on(d: &Dev, work: &str, chapter: &str, page: u32, completed: bool) {
+    d.advance(1);
+    let mut e = crate::reading::ReadEvent::new(work, chapter, d.secs());
+    e.page = Some(page);
+    e.of_pages = Some(20);
+    e.completed = completed;
+    d.store.record_read(&e, Vec::new()).unwrap();
+}
+
+#[test]
+fn reading_travels_and_read_again_with_its_undo_reaches_every_device() {
+    let a = dev("a", 1_000);
+    let b = dev("b", 1_000);
+    let work = "a:900201";
+    read_on(&a, work, "1", 20, true);
+    read_on(&a, work, "2", 9, false);
+    a.advance(1);
+    a.store.adopt_read(work, "1", None, a.secs()).unwrap();
+    let applied = send(&a, &b);
+    assert_eq!(applied.works, [work]);
+    let chapters = b.store.read_chapters(work).unwrap();
+    assert_eq!(chapters.len(), 2);
+    assert_eq!(chapters[1].last_page, Some(9));
+    assert_eq!(chapters[1].device.as_deref(), Some("a"));
+
+    b.advance(5);
+    let reset = b.store.reset_read(work, b.secs()).unwrap();
+    send(&b, &a);
+    assert!(!a.store.chapter_is_read(work, "1").unwrap());
+    a.advance(10);
+    a.store.undo_read_reset(work, &reset, a.secs()).unwrap();
+    send(&a, &b);
+    assert!(b.store.chapter_is_read(work, "1").unwrap());
+
+    b.advance(1);
+    b.store.unread(work, &["2".into()]).unwrap();
+    exchange(&a, &b);
+    assert_eq!(a.store.read_chapters(work).unwrap().len(), 1);
+    assert_eq!(dump(&a.store), dump(&b.store));
+}
+
+#[test]
+fn an_unread_never_takes_back_a_read_it_did_not_see_and_each_device_keeps_a_note() {
+    let a = dev("aaaa", 10_000);
+    let b = dev("bbbb", 10_000);
+    let work = "a:900204";
+    read_on(&a, work, "3", 20, true);
+    exchange(&a, &b);
+    // Offline: the tablet takes chapter 3 back while the phone reads it to the end again.
+    a.advance(60);
+    a.store.unread(work, &["3".into()]).unwrap();
+    b.advance(120);
+    read_on(&b, work, "3", 20, true);
+    let to_a = send(&b, &a);
+    let to_b = send(&a, &b);
+    for d in [&a, &b] {
+        assert!(d.store.chapter_is_read(work, "3").unwrap(), "{}", d.id);
+    }
+    assert_eq!((to_a.read_notes.len(), to_b.read_notes.len()), (1, 1));
+    for n in to_a.read_notes.iter().chain(&to_b.read_notes) {
+        assert_eq!((n.unread_device.as_str(), n.read_device.as_str()), ("aaaa", "bbbb"));
+        assert_eq!((n.work.as_str(), n.chapter.as_str()), (work, "3"));
+    }
+    exchange(&a, &b);
+    assert_eq!(a.store.read_notes(0).unwrap().len(), 1);
+    let id = b.store.read_notes(0).unwrap()[0].id;
+    b.store.dismiss_read_note(id).unwrap();
+    assert!(b.store.read_notes(0).unwrap().is_empty());
+
+    // A read made after seeing the unread is no surprise.
+    a.advance(10);
+    a.store.unread(work, &["3".into()]).unwrap();
+    exchange(&a, &b);
+    assert!(!b.store.chapter_is_read(work, "3").unwrap());
+    b.advance(10);
+    read_on(&b, work, "3", 20, true);
+    let to_a = send(&b, &a);
+    assert!(to_a.read_notes.is_empty());
+}
+
+#[test]
+fn an_unread_under_a_watermark_travels_and_a_newer_watermark_counts_the_chapter_again() {
+    let a = dev("aaaa", 10_000);
+    let b = dev("bbbb", 10_000);
+    let work = "a:900205";
+    a.store.adopt_read(work, "10", None, a.secs()).unwrap();
+    exchange(&a, &b);
+    b.advance(5);
+    b.store.unread(work, &["4".into()]).unwrap();
+    assert!(!b.store.chapter_is_read(work, "4").unwrap());
+    exchange(&a, &b);
+    let marks = a.store.read_marks(work).unwrap();
+    assert!(!marks.is_read("4"));
+    assert!(marks.is_read("5"));
+    a.advance(5);
+    a.store.adopt_read(work, "8", None, a.secs()).unwrap();
+    exchange(&a, &b);
+    assert!(b.store.chapter_is_read(work, "4").unwrap());
+}
+
+#[test]
+fn reading_choices_travel_as_registers_and_local_works_stay_home() {
+    let a = dev("a", 1_000);
+    let b = dev("b", 1_000);
+    let work = "a:900202";
+    let local = "l:00112233445566778899aabbccddeeff";
+    a.store.set_series_setting(work, "direction", Some("rtl"), true, 10).unwrap();
+    a.store.set_series_setting(work, "zoom", Some("fit"), true, 10).unwrap();
+    a.store.set_read_status(work, Some("reading"), 10).unwrap();
+    a.store.set_bookmark(work, "v1/3", true, 10).unwrap();
+    a.store.set_track_map(work, "mal", None, "hand", 10).unwrap();
+    a.store.set_read_hidden(work, true).unwrap();
+    a.store.keep_credit_page(work, 0xf00d_0000_0000_0001, 10).unwrap();
+    let before = a.store.sync_op_count().unwrap();
+    read_on(&a, local, "1", 2, false);
+    a.store.set_bookmark(local, "1", true, 11).unwrap();
+    a.store.keep_credit_page(local, 7, 11).unwrap();
+    assert_eq!(a.store.sync_op_count().unwrap(), before);
+
+    send(&a, &b);
+    let settings = b.store.series_settings(work).unwrap();
+    assert_eq!(settings.len(), 1);
+    assert_eq!(
+        (settings[0].setting.as_str(), settings[0].value.as_str()),
+        ("direction", "rtl")
+    );
+    assert_eq!(b.store.read_status(work).unwrap().0.as_deref(), Some("reading"));
+    assert_eq!(b.store.bookmarks(work).unwrap(), ["v1/3"]);
+    let map = b.store.track_map(work).unwrap();
+    assert_eq!((map[0].tracker_id.as_deref(), map[0].origin.as_str()), (None, "hand"));
+    assert!(b.store.read_chapters(local).unwrap().is_empty());
+    assert_eq!(b.store.kept_credit_pages(work).unwrap(), [0xf00d_0000_0000_0001]);
+    assert!(b.store.kept_credit_pages(local).unwrap().is_empty());
+}
+
+#[test]
+fn reading_done_before_sync_becomes_the_first_ops() {
+    let store = Store::open_in_memory().unwrap();
+    let work = "a:900203";
+    let mut e = crate::reading::ReadEvent::new(work, "4", 100);
+    e.completed = true;
+    store.record_read(&e, Vec::new()).unwrap();
+    store.adopt_read(work, "3", None, 101).unwrap();
+    store.set_series_setting(work, "mode", Some("strip"), true, 102).unwrap();
+    store.keep_credit_page(work, u64::MAX, 102).unwrap();
+    store.record_read(&crate::reading::ReadEvent::new("l:ff", "1", 103), Vec::new()).unwrap();
+    store.sync_enable("a").unwrap();
+    assert_eq!(store.sync_op_count().unwrap(), 4);
+    let other = dev("b", 1_000);
+    let ops = store.ops_after(&other.store.version_vector().unwrap(), usize::MAX).unwrap();
+    other.store.apply_ops(ops).unwrap();
+    assert!(other.store.chapter_is_read(work, "2").unwrap());
+    assert!(other.store.chapter_is_read(work, "4").unwrap());
+    assert_eq!(other.store.series_settings(work).unwrap()[0].value, "strip");
+    assert_eq!(other.store.kept_credit_pages(work).unwrap(), [u64::MAX]);
+}
+
 #[test]
 fn a_removed_device_starts_over_under_a_new_id_and_the_group_takes_it() {
     let a = dev("aaaa", 10_000);
@@ -786,3 +943,5 @@ fn a_removed_device_starts_over_under_a_new_id_and_the_group_takes_it() {
     // What it held stays.
     assert_eq!(b.store.events_for(SHOW, 10).unwrap().len(), 2);
 }
+
+mod reading_order;

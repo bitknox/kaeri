@@ -33,8 +33,21 @@ pub enum Error {
     #[error("player: {0}")]
     Player(String),
 
+    /// The tracker answered and refused: a removed or merged entry, a value it does not take.
+    /// Asking again with the same request gets the same answer.
     #[error("tracker {tracker}: {message}")]
     Tracker { tracker: String, message: String },
+
+    /// The tracker asked for a pause (`429`). Says nothing about the request, which goes again
+    /// once the pause is over.
+    #[error("tracker {tracker}: {message}")]
+    RateLimited { tracker: String, message: String, retry_in_secs: Option<u64> },
+
+    /// The tracker's side failed: a `5xx`, a maintenance page, an answer that could not be
+    /// read. Like [`Self::Network`], a reason to wait and ask again, never a verdict on the
+    /// request.
+    #[error("tracker {tracker}: {message}")]
+    Unavailable { tracker: String, message: String },
 
     /// Credentials are absent, expired or rejected.
     ///
@@ -83,7 +96,9 @@ pub enum ProviderError {
     #[error("could not parse response: {0}")]
     Parse(String),
 
-    /// Transport-level failure: DNS, TLS, timeout, connection reset.
+    /// Transport-level failure: DNS, TLS, timeout, connection reset. One that says the device
+    /// has no network, rather than that the source did not answer, starts with
+    /// [`NO_NETWORK`]: see [`Self::no_network`].
     #[error("transport: {0}")]
     Transport(String),
 
@@ -97,7 +112,23 @@ pub enum ProviderError {
     Other(String),
 }
 
+/// How a [`ProviderError::Transport`] starts when the device has no network: no route past it,
+/// or no name server answering. Only the host writes it; a plugin's vocabulary has no transport
+/// failure.
+pub const NO_NETWORK: &str = "no network";
+
 impl ProviderError {
+    /// The device has no network: no request could leave it, whichever source asked.
+    pub fn no_network(detail: impl std::fmt::Display) -> Self {
+        Self::Transport(format!("{NO_NETWORK}: {detail}"))
+    }
+
+    /// Whether the failure says the device has no network, rather than that the source did not
+    /// answer.
+    pub fn is_no_network(&self) -> bool {
+        matches!(self, Self::Transport(detail) if detail.starts_with(NO_NETWORK))
+    }
+
     /// Whether this is a fault that the next provider might not have.
     ///
     /// `NotFound` is not one: the source answered correctly. The registry moves on past it all
@@ -125,6 +156,16 @@ impl ProviderError {
             Self::Other(_) => "error",
         }
     }
+}
+
+/// How the reason of a [`ProviderError::Blocked`] starts when the host held the request back
+/// for a host outside the plugin's `allowed-hosts`. Only the host writes it.
+pub const HOST_NOT_ALLOWED: &str = "host not allowed";
+
+/// Whether a blocked request's reason says the host held it back for a host the plugin may not
+/// reach, rather than that the source refused it.
+pub fn says_host_not_allowed(reason: &str) -> bool {
+    reason.starts_with(HOST_NOT_ALLOWED)
 }
 
 /// Health of a single provider, as shown on the Providers screen.
@@ -174,6 +215,13 @@ mod tests {
         assert!(ProviderError::Blocked("cf challenge".into()).should_failover());
         assert!(ProviderError::Parse("no sourceUrl".into()).should_failover());
         assert!(ProviderError::Transport("timeout".into()).should_failover());
+    }
+
+    #[test]
+    fn only_a_failure_the_host_says_is_no_network_is_one() {
+        assert!(ProviderError::no_network("no route").is_no_network());
+        assert!(!ProviderError::Transport("timeout".into()).is_no_network());
+        assert!(!ProviderError::Other("no network: a plugin's words".into()).is_no_network());
     }
 
     #[test]

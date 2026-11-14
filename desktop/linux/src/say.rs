@@ -270,6 +270,7 @@ pub fn tracker_name(id: &str) -> &str {
     match id {
         "anilist" => "AniList",                 // i18n-skip
         "kitsu" => "Kitsu",                     // i18n-skip
+        "mangaupdates" => "MangaUpdates",       // i18n-skip
         "mal" | "myanimelist" => "MyAnimeList", // i18n-skip
         "simkl" => "Simkl",                     // i18n-skip
         "trakt" => "Trakt",                     // i18n-skip
@@ -440,6 +441,13 @@ pub fn spoken_duration(seconds: f64) -> String {
         (_, 0) => hours(h),
         _ => format!("{} {}", hours(h), minutes(m)),
     }
+}
+
+/// Engine words that lead a line or a sentence, with their first letter in capitals: "from
+/// Group B" becomes "From Group B".
+pub fn capitalized(text: &str) -> String {
+    let mut chars = text.chars();
+    chars.next().map(|c| c.to_uppercase().chain(chars).collect()).unwrap_or_default()
 }
 
 /// How long a notice stays, in seconds: 4 for information, 8 for an alert, and a second more for

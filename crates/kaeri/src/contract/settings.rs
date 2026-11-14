@@ -253,7 +253,7 @@ async fn a_plugin_switched_off_keeps_its_row_and_is_not_tried() {
     assert!(row.disabled && !row.usable);
     assert_eq!(
         toasts(&updates),
-        ["info: archive is off. It is skipped when looking for episodes."]
+        ["info: archive is off. Kaeri skips it when looking for episodes."]
     );
     assert_eq!(on_disk(&h).providers.disabled, ["archive"]);
     assert_eq!(h.registry().ids(), ["archive", "fixture"], "in its place");

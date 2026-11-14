@@ -8,6 +8,12 @@ package app.kaeri.ui
 import app.kaeri.store.plainReason
 import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.background
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -58,6 +64,9 @@ import app.kaeri.engine.model.StorePluginStatus
 import app.kaeri.engine.model.StoreRow
 import app.kaeri.engine.model.StoreState
 import app.kaeri.store.InviteLinks
+import app.kaeri.store.InviteChip
+import app.kaeri.store.CameInSteps
+import androidx.compose.ui.draw.alpha
 import app.kaeri.store.StoresModel
 import app.kaeri.store.Wording
 import app.kaeri.store.contactsLine
@@ -392,87 +401,273 @@ internal fun PluginScreen(storeId: String, pluginId: String) {
 }
 
 /**
- * The join sheet (AndroidJoinStore): the invite link, checked against the store it names a moment
- * after it is pasted or typed, what it leads to, and Join store, the one amber action.
+ * The store form (AndroidJoinStore): the invite, its host in the field with the code's last four
+ * on a chip; what the link leads to, checked a moment after it is pasted or typed; and Join. Once
+ * joined, what came in: the plugins for what this device does, each with Install, and Install all
+ * for reading when two or more fit; or why nothing did, with Try again when the store did not
+ * answer. [onClose] runs once it closes.
  */
 @Composable
-internal fun JoinStoreSheet(start: String, onDismiss: () -> Unit) {
+internal fun storeForm(state: app.kaeri.ui.reading.CameInState, onClose: () -> Unit): app.kaeri.ui.reading.CameInForm {
     val store = LocalAppStore.current
-    val navigator = LocalNavigator.current
+    val model = store.cameIn
+    val context = LocalContext.current
     val preview by store.stores.preview.collectAsStateWithLifecycle()
-    val joined by store.stores.joined.collectAsStateWithLifecycle()
+    val stores by store.stores.stores.collectAsStateWithLifecycle()
     val working by store.stores.working.collectAsStateWithLifecycle()
-    val deviceName by store.stores.deviceName.collectAsStateWithLifecycle()
-    var link by rememberSaveable(start) { mutableStateOf(start) }
-    val busy = store.stores.isWorking(working, StoresModel.Work.Join)
+    val report by model.report.collectAsStateWithLifecycle()
+    val installedHere by model.installedHere.collectAsStateWithLifecycle()
     val offline by store.offline.collectAsStateWithLifecycle()
-    LaunchedEffect(link) {
+    val link = state.address.trim()
+    val chip = InviteChip.parse(link)
+    val step = CameInSteps.store(state.outcome)
+    LaunchedEffect(link, state.open) {
+        if (state.open != app.kaeri.store.Adding.STORE || state.outcome != null || state.asking) return@LaunchedEffect
         delay(300)
         val checked = (store.stores.preview.value as? StoresModel.Preview.Store)?.store?.link
         when {
             !InviteLinks.looksLikeInvite(link) -> store.stores.clearPreview()
-            // Checked already, as the sheet opened again with the same link.
-            checked == link.trim() -> {}
+            // Checked already, as the form opened again with the same link.
+            checked == link -> {}
             else -> store.previewStore(link)
         }
     }
-    LaunchedEffect(joined) {
-        val id = joined ?: return@LaunchedEffect
-        store.stores.clearJoined()
-        onDismiss()
-        navigator.open(storeRoute(id))
-    }
     val invited = (preview as? StoresModel.Preview.Store)?.store
-    val clear: @Composable () -> Unit = { IconButton(onClick = { link = "" }) { Icon(Icons.Clear, contentDescription = stringResource(R.string.action_clear)) } }
-    SettingsSheet(onDismiss, tall = true, holdsInput = changedSinceOpened(link)) {
-        SheetTitle(stringResource(R.string.stores_join_title))
-        SheetField(
-            link,
-            { link = it },
-            stringResource(R.string.stores_invite_link),
-            keyboard = KeyboardOptions(keyboardType = KeyboardType.Uri, autoCorrectEnabled = false),
-            supporting = if (link.isEmpty()) stringResource(R.string.stores_join_detail) else null,
-            trailing = clear.takeIf { link.isNotEmpty() },
+    val join = {
+        model.joining()
+        store.joinStore(link)
+    }
+    val joinedStore = when (step) {
+        is CameInSteps.StoreStep.Joined -> step.report.store
+        is CameInSteps.StoreStep.Installed -> step.installed.store
+        is CameInSteps.StoreStep.OtherMedium -> step.report.store
+        is CameInSteps.StoreStep.Empty -> step.report.store
+        else -> null
+    }
+    val row = joinedStore?.let { id -> stores.firstOrNull { it.id == id } }
+    val primary = when (CameInSteps.storeAction(step)) {
+        CameInSteps.StoreAction.INSTALL_ALL -> app.kaeri.ui.reading.CameInAction(
+            stringResource(R.string.store_install_all_reading),
+            working = state.asking && state.looking,
+        ) { joinedStore?.let(model::installAll) }
+        CameInSteps.StoreAction.DONE -> app.kaeri.ui.reading.CameInAction(stringResource(R.string.action_done), onClick = onClose)
+        CameInSteps.StoreAction.TRY_AGAIN -> app.kaeri.ui.reading.CameInAction(stringResource(R.string.action_try_again), working = state.asking && state.looking, onClick = join)
+        null -> app.kaeri.ui.reading.CameInAction(
+            stringResource(R.string.onboarding_join),
+            enabled = chip != null && invited?.alreadyJoined != true && !state.asking,
+            working = state.asking && state.looking,
+            onClick = join,
         )
-        when (val shown = preview) {
-            is StoresModel.Preview.Checking -> Row(
-                Modifier.padding(top = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                WorkRing(true)
-                SheetText(stringResource(R.string.stores_checking_link))
+    }
+    val secondary = if (step is CameInSteps.StoreStep.OtherMedium) {
+        app.kaeri.ui.reading.CameInAction(stringResource(R.string.store_turn_on_watching)) { store.medium.choose(app.kaeri.engine.model.KaeriIsFor.BOTH) }
+    } else {
+        null
+    }
+    return app.kaeri.ui.reading.CameInForm(
+        title = stringResource(R.string.store_join_title),
+        primary = primary,
+        secondary = secondary,
+        close = onClose,
+    ) { inPage ->
+        app.kaeri.ui.reading.CameInField(
+            state.address,
+            model::typeAddress,
+            stringResource(R.string.store_invite_field),
+            chip = chip?.let { Strings.storeInviteChip(context, it.last4) },
+            shownAs = chip?.host,
+            supporting = if (link.isEmpty()) stringResource(R.string.stores_join_detail) else null,
+            keyboard = KeyboardOptions(keyboardType = KeyboardType.Uri, autoCorrectEnabled = false),
+        )
+        app.kaeri.ui.reading.CameInSwap(storeResultKey(step, state.asking && state.looking), Modifier.padding(top = 16.dp)) { shown ->
+            Column {
+                when (shown) {
+                    StoreShown.Looking -> app.kaeri.ui.reading.CameInWaiting(stringResource(R.string.stores_checking_link))
+                    is StoreShown.Step -> when (val at = shown.step) {
+                        CameInSteps.StoreStep.Preview -> JoinPreview(preview, offline)
+                        is CameInSteps.StoreStep.Joined -> {
+                            val offered = at.report.forReading.size + at.report.forWatching.size + at.report.otherMedium.toInt()
+                            app.kaeri.ui.reading.CameInNote(
+                                app.kaeri.ui.reading.NoteKind.FOUND,
+                                Strings.storeJoinedTitle(context, at.report.name),
+                                Strings.storeJoinedLine(context, at.report.owner ?: at.report.name, offered),
+                            )
+                            JoinedPlugins(at.report, row, installedHere, working, installing = state.asking)
+                        }
+                        is CameInSteps.StoreStep.Installed -> {
+                            app.kaeri.ui.reading.CameInNote(
+                                app.kaeri.ui.reading.NoteKind.FOUND,
+                                Strings.storeInstalled(context, at.installed.installed.toInt()),
+                            )
+                            report?.let { JoinedPlugins(it, row, installedHere + it.forReading, working, installing = false) }
+                        }
+                        is CameInSteps.StoreStep.OtherMedium -> {
+                            app.kaeri.ui.reading.CameInNote(
+                                app.kaeri.ui.reading.NoteKind.INFO,
+                                Strings.storeOtherMedium(context, at.report.name),
+                                stringResource(R.string.store_other_medium_line),
+                            )
+                            val others = row?.plugins.orEmpty()
+                            if (others.isNotEmpty()) {
+                                app.kaeri.ui.reading.CameInGroupHeading(
+                                    stringResource(if (at.report.otherIsReading) R.string.store_group_reading else R.string.store_group_watching),
+                                    Modifier.padding(top = 24.dp),
+                                )
+                                app.kaeri.ui.reading.CameInGroup(others.map { plugin -> @Composable { JoinedPluginRow(plugin, dim = true) } })
+                            }
+                            app.kaeri.ui.reading.SecondaryInBody(secondary, inPage)
+                        }
+                        is CameInSteps.StoreStep.Empty -> app.kaeri.ui.reading.CameInNote(
+                            app.kaeri.ui.reading.NoteKind.INFO,
+                            Strings.storeEmpty(context, at.report.name),
+                            Strings.storeEmptyLine(context, at.report.owner ?: at.report.name),
+                        )
+                        is CameInSteps.StoreStep.Unreachable -> app.kaeri.ui.reading.CameInNote(
+                            app.kaeri.ui.reading.NoteKind.FAILED,
+                            Strings.storeErrUnreachable(context, at.host),
+                            Strings.storeErrUnreachableLine(context, invited?.owners?.firstOrNull() ?: at.host),
+                        )
+                    }
+                }
             }
-            // The link was refused in place: the error glyph, the reason in silk, and Reject.
-            is StoresModel.Preview.Failed -> {
-                SheetProblem(
-                    if (offline) stringResource(R.string.state_offline_line) else plainReason(LocalContext.current, shown.reason),
-                )
-                shown.contact?.takeIf { !offline }?.let { SheetText(stringResource(R.string.store_invite_contact, it), Modifier.padding(top = 8.dp)) }
-            }
-            is StoresModel.Preview.Store -> InvitedStorePreview(shown.store)
-            null -> {}
         }
-        // What the store will call this device: its kind, never its own name, to change first.
-        if (invited != null && !invited.anonymous) {
-            SheetField(
-                deviceName,
-                store.stores::nameDevice,
-                stringResource(if (invited.namesJoiner) R.string.stores_join_your_name else R.string.stores_device_name),
-                modifier = Modifier.padding(top = 16.dp),
-                keyboard = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
-                supporting = stringResource(if (invited.namesJoiner) R.string.stores_join_your_name_detail else R.string.stores_device_name_detail),
+    }
+}
+
+/** What the store form's result area shows: the waiting line, or a step. */
+private sealed interface StoreShown {
+    data object Looking : StoreShown
+    data class Step(val step: CameInSteps.StoreStep) : StoreShown
+}
+
+private fun storeResultKey(step: CameInSteps.StoreStep, looking: Boolean): StoreShown =
+    if (looking) StoreShown.Looking else StoreShown.Step(step)
+
+/** Before joining: what the link leads to, or why it can't be read, and the name the store will use. */
+@Composable
+private fun JoinPreview(preview: StoresModel.Preview?, offline: Boolean) {
+    val store = LocalAppStore.current
+    val deviceName by store.stores.deviceName.collectAsStateWithLifecycle()
+    when (preview) {
+        is StoresModel.Preview.Checking -> app.kaeri.ui.reading.CameInWaiting(stringResource(R.string.stores_checking_link))
+        is StoresModel.Preview.Failed -> {
+            app.kaeri.ui.reading.CameInNote(
+                app.kaeri.ui.reading.NoteKind.FAILED,
+                if (offline) stringResource(R.string.state_offline_line) else plainReason(LocalContext.current, preview.reason),
+                preview.contact?.takeIf { !offline }?.let { stringResource(R.string.store_invite_contact, it) },
             )
         }
-        HorizontalDivider(Modifier.padding(top = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
-        SheetText(stringResource(R.string.stores_not_from_app), Modifier.padding(top = 16.dp))
-        SheetButtons {
-            QuietButton(stringResource(R.string.action_cancel), onClick = onDismiss)
-            Button(
-                onClick = { store.joinStore(link) },
-                enabled = invited != null && !invited.alreadyJoined && !busy,
-            ) { WorkLabel(stringResource(R.string.stores_join_button), busy) }
+        is StoresModel.Preview.Store -> {
+            val invited = preview.store
+            InvitedStorePreview(invited)
+            // What the store will call this device: its kind, never its own name, to change first.
+            if (!invited.anonymous && app.kaeri.ui.reading.largePaper) {
+                app.kaeri.ui.reading.CameInField(
+                    deviceName,
+                    store.stores::nameDevice,
+                    stringResource(if (invited.namesJoiner) R.string.stores_join_your_name else R.string.stores_device_name),
+                    modifier = Modifier.padding(top = 18.dp),
+                    keyboard = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+                    supporting = stringResource(if (invited.namesJoiner) R.string.stores_join_your_name_detail else R.string.stores_device_name_detail),
+                )
+            } else if (!invited.anonymous) {
+                SheetField(
+                    deviceName,
+                    store.stores::nameDevice,
+                    stringResource(if (invited.namesJoiner) R.string.stores_join_your_name else R.string.stores_device_name),
+                    modifier = Modifier.padding(top = 16.dp),
+                    keyboard = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+                    supporting = stringResource(if (invited.namesJoiner) R.string.stores_join_your_name_detail else R.string.stores_device_name_detail),
+                )
+            }
+            // What a plugin is, then whose plugins these are: the risk line comes first, as the
+            // first-run Join and the large panel board put it.
+            if (app.kaeri.ui.reading.largePaper) {
+                val notice = app.kaeri.eink.EinkType.Secondary.copy(lineHeight = app.kaeri.eink.EinkType.Secondary.fontSize * 1.4f)
+                Text(stringResource(R.string.plugin_risk_warning), style = notice, modifier = Modifier.padding(top = 16.dp))
+                Text(stringResource(R.string.stores_not_from_app), style = notice, modifier = Modifier.padding(top = 8.dp))
+            } else {
+                SheetText(stringResource(R.string.plugin_risk_warning), Modifier.padding(top = 16.dp))
+                SheetText(stringResource(R.string.stores_not_from_app), Modifier.padding(top = 8.dp))
+            }
         }
+        null -> {}
+    }
+}
+
+/**
+ * A joined store's plugins for what this device does, under For reading (and For watching where it
+ * watches too), each with Install, or Installed once it is; then how many more are for the other
+ * medium.
+ */
+@Composable
+private fun JoinedPlugins(
+    report: app.kaeri.engine.model.StoreReport,
+    row: StoreRow?,
+    installed: Set<String>,
+    working: Map<app.kaeri.engine.model.JobId, StoresModel.Work>,
+    installing: Boolean,
+) {
+    val store = LocalAppStore.current
+    val model = store.cameIn
+    val context = LocalContext.current
+    val plugins = row?.plugins.orEmpty().associateBy { it.id }
+    val groups = listOf(R.string.store_group_reading to report.forReading, R.string.store_group_watching to report.forWatching)
+    groups.forEach { (heading, ids) ->
+        val shown = ids.mapNotNull { plugins[it] }
+        if (shown.isEmpty()) return@forEach
+        app.kaeri.ui.reading.CameInGroupHeading(stringResource(heading), Modifier.padding(top = 24.dp))
+        app.kaeri.ui.reading.CameInGroup(
+            shown.map { plugin ->
+                @Composable {
+                    val done = plugin.id in installed || plugin.status == StorePluginStatus.Installed
+                    val busy = installing || store.stores.isWorking(working, StoresModel.Work.Install(report.store, plugin.id))
+                    JoinedPluginRow(plugin) {
+                        if (done) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Text(stringResource(R.string.store_installed_row), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Icon(Icons.Check, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(20.dp))
+                            }
+                        } else {
+                            FilledTonalButton(
+                                onClick = {
+                                    store.installPlugin(report.store, plugin.id)
+                                    model.installedOne(plugin.id)
+                                },
+                                enabled = !busy,
+                                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
+                            ) { WorkLabel(stringResource(R.string.store_install), busy) }
+                        }
+                    }
+                }
+            },
+        )
+    }
+    if (report.otherMedium > 0u && !report.otherIsReading) {
+        app.kaeri.ui.reading.CameInFootnote(Strings.storeOtherMediumMore(context, report.otherMedium.toInt()))
+    }
+}
+
+/** A plugin in the store form: its tile, name, version and the hosts it may contact; dimmed when it can't run here. */
+@Composable
+private fun JoinedPluginRow(plugin: StorePluginRow, dim: Boolean = false, trailing: @Composable () -> Unit = {}) {
+    val context = LocalContext.current
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 72.dp)
+            .alpha(if (dim) 0.6f else 1f)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        app.kaeri.ui.reading.CameInTile(app.kaeri.ui.reading.CameInGlyphs.Plug)
+        app.kaeri.ui.reading.CameInRowText(
+            plugin.name,
+            Strings.storePluginRow(context, plugin.version, Strings.storePluginHosts(context, plugin.hosts.size)),
+            Modifier.weight(1f),
+        )
+        trailing()
     }
 }
 
@@ -483,7 +678,8 @@ internal fun JoinStoreSheet(start: String, onDismiss: () -> Unit) {
  * that its open link joins without a name. A store from before the preview shows its name and key.
  */
 @Composable
-private fun InvitedStorePreview(invited: app.kaeri.engine.model.InvitedStore) {
+internal fun InvitedStorePreview(invited: app.kaeri.engine.model.InvitedStore) {
+    if (app.kaeri.ui.reading.largePaper) return PaperStorePreview(invited)
     val colors = MaterialTheme.colorScheme
     val tabular = MaterialTheme.typography.bodyMedium.tabular()
     HorizontalDivider(Modifier.padding(top = 16.dp), color = colors.outlineVariant)
@@ -515,6 +711,84 @@ private fun InvitedStorePreview(invited: app.kaeri.engine.model.InvitedStore) {
                 Text(plugin.version, style = tabular, color = colors.onSurfaceVariant)
             }
         }
+    }
+}
+
+/**
+ * What the link leads to, on a large e-ink panel: under a 2 dp rule the store, who runs it and how
+ * many plugins it offers; its key in words; another rule; then the plugins in two columns, each
+ * with the hosts it may contact and its version. Words only: no shield, no tiles.
+ */
+@Composable
+private fun PaperStorePreview(invited: app.kaeri.engine.model.InvitedStore) {
+    val context = LocalContext.current
+    val ink = app.kaeri.eink.EinkColours.Ink
+    val secondary = app.kaeri.eink.EinkType.Secondary
+    Box(Modifier.padding(top = 18.dp).fillMaxWidth().height(app.kaeri.eink.EinkSizes.Rule).background(ink))
+    PaperLine(invited.name, invited.runByLine(context), first = true) {
+        if (invited.plugins.isNotEmpty()) Text(pluralStringResource(R.plurals.stores_offers_plugins, invited.plugins.size, invited.plugins.size), style = secondary)
+    }
+    PaperLine(
+        stringResource(if (invited.anonymous) R.string.stores_preview_key_link else R.string.stores_preview_key_invite),
+        invited.fingerprint,
+        lineStyle = secondary.copy(fontFamily = FontFamily.Monospace),
+    ) {
+        Text(stringResource(R.string.stores_key_verified), style = secondary.copy(fontWeight = FontWeight.Bold))
+    }
+    if (invited.open) {
+        PaperLine(stringResource(R.string.stores_anyone_with_link), if (invited.anonymous) stringResource(R.string.stores_anyone_note) else null)
+    }
+    Box(Modifier.fillMaxWidth().height(app.kaeri.eink.EinkSizes.Rule).background(ink))
+    if (invited.alreadyJoined) Text(stringResource(R.string.stores_already_joined_note), style = secondary, modifier = Modifier.padding(top = 12.dp))
+    if (invited.plugins.isEmpty()) return
+    Row(Modifier.fillMaxWidth().padding(top = 14.dp, bottom = 4.dp).semantics(mergeDescendants = true) { heading() }, verticalAlignment = Alignment.CenterVertically) {
+        Text(stringResource(R.string.stores_preview_plugins), style = app.kaeri.eink.EinkType.RowTitle.copy(fontWeight = FontWeight.Bold), modifier = Modifier.weight(1f))
+        Text(invited.plugins.size.toString(), style = secondary) // i18n-skip
+    }
+    // The first half down the left column, the rest down the right, as a list reads.
+    val half = (invited.plugins.size + 1) / 2
+    Row(horizontalArrangement = Arrangement.spacedBy(32.dp)) {
+        listOf(invited.plugins.take(half), invited.plugins.drop(half)).forEach { column ->
+            Column(Modifier.weight(1f)) {
+                column.forEachIndexed { index, plugin ->
+                    val line = listOfNotNull(plugin.contactsLine(context), plugin.standing(context)).joinToString(" · ") // i18n-skip
+                    PaperLine(plugin.name, line, first = index == 0, height = 60.dp, titleStyle = app.kaeri.eink.EinkType.Label) {
+                        Text(plugin.version, style = secondary)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** A line of the preview on paper: a title over a line in #333, what sits at its end, and a hairline over it after the first. */
+@Composable
+private fun PaperLine(
+    title: String,
+    line: String?,
+    first: Boolean = false,
+    height: androidx.compose.ui.unit.Dp = 72.dp,
+    titleStyle: androidx.compose.ui.text.TextStyle = app.kaeri.eink.EinkType.RowTitle,
+    lineStyle: androidx.compose.ui.text.TextStyle = app.kaeri.eink.EinkType.Secondary,
+    trailing: @Composable () -> Unit = {},
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = height)
+            .then(if (first) Modifier else Modifier.drawBehind {
+                val y = app.kaeri.eink.EinkSizes.Hairline.toPx() / 2
+                drawLine(app.kaeri.eink.EinkColours.Tertiary, androidx.compose.ui.geometry.Offset(0f, y), androidx.compose.ui.geometry.Offset(size.width, y), app.kaeri.eink.EinkSizes.Hairline.toPx())
+            })
+            .padding(vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(title, style = titleStyle, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            line?.let { Text(it, style = lineStyle, maxLines = 2, overflow = TextOverflow.Ellipsis) }
+        }
+        trailing()
     }
 }
 
@@ -572,11 +846,28 @@ private fun InviteLinkSheetHost() {
     }
 }
 
-/** The join sheet over any screen, while the store has one open: empty, or with an invite link. */
+/**
+ * The store form over any screen, outside first run: opened empty from Plugin stores, or with an
+ * invite link the app was handed. A dialog on a phone and a tablet alike.
+ */
 @Composable
 internal fun JoinStoreSheetHost() {
     val store = LocalAppStore.current
     val joining by store.stores.joining.collectAsStateWithLifecycle()
-    val link = joining ?: return
-    JoinStoreSheet(link) { store.stores.closeJoin() }
+    val state = app.kaeri.ui.reading.rememberCameInState()
+    // A link to join opens the form with it, once.
+    LaunchedEffect(joining) {
+        val link = joining ?: return@LaunchedEffect
+        if (store.cameIn.open.value == null) store.cameIn.open(app.kaeri.store.Adding.STORE)
+        if (store.cameIn.open.value == app.kaeri.store.Adding.STORE && link.isNotEmpty()) store.cameIn.typeAddress(link)
+    }
+    // The store's own page is not opened on a join: the form says what came in.
+    val joined by store.stores.joined.collectAsStateWithLifecycle()
+    LaunchedEffect(joined) { if (joined != null) store.stores.clearJoined() }
+    app.kaeri.ui.reading.CameInDialog(open = state.open == app.kaeri.store.Adding.STORE && !state.inPage) {
+        storeForm(state) {
+            store.stores.closeJoin()
+            store.cameIn.close()
+        }
+    }
 }

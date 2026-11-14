@@ -341,6 +341,15 @@ impl CastHub {
         self.bump();
     }
 
+    /// The cast `player` closed, when the card is still for it: casting ends, so the card isn't
+    /// left starting a file that never comes. A cast begun since, on this TV or another, goes on.
+    pub(crate) fn end_for(&self, player: &Arc<CastPlayer>) {
+        let current = Weak::ptr_eq(&lock(&self.cast).player, &Arc::downgrade(player));
+        if current {
+            self.end();
+        }
+    }
+
     /// The cast couldn't reach the TV: the card says why, and casting ends, so the next play
     /// opens on this device.
     pub(crate) fn failed(&self, failure: CastFailure) {

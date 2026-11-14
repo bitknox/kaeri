@@ -1,5 +1,6 @@
 cloud-browser-line = Il browser ha aperto la pagina di { $service }. Consenti l'accesso lì e { -app-name } prosegue da solo.
 cloud-browser-title = Accedi a { $service } nel browser
+cloud-close-carries-on = Puoi chiuderla. { -app-name } prosegue da solo e apre il passaggio successivo quando è pronto.
 device-kind-computer = computer
 devices-enter-code = Inserisci un codice
 devices-show-key = Mostra

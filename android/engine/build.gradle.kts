@@ -7,8 +7,6 @@ plugins {
 
 android {
     namespace = "app.kaeri.engine"
-    // Shared with the TV app.
-    defaultConfig { minSdk = KaeriSdk.TV_MIN }
     sourceSets {
         KaeriSdk.engines.forEach { (flavour, engine) ->
             named(flavour) {

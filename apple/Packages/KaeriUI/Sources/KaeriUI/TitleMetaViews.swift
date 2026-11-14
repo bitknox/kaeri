@@ -36,13 +36,19 @@ struct OtherTitlesLine: View {
 }
 
 /// Text cut at `lines` with "More" at the end of its last line, which shows the rest in place.
-/// No "Less": the page goes on below it. The "More" takes a 44 pt target on touch.
+/// No "Less": the page goes on below it. The "More" takes a 44 pt target on touch. A screen
+/// reader reads the whole text either way.
 struct InlineMoreText: View {
+    @Environment(Navigator.self) private var navigator
     let text: String
     let lines: Int
     let font: Font
     /// The Mac's fixed line height; nil leaves the font's own.
     var lineHeight: CGFloat?
+    /// The text style the line height scales with.
+    var lineStyle: Font.TextStyle = .body
+    /// The line height on every device, where a Mac board's leaves the iPad the font's own.
+    var lineHeightEverywhere = false
     @State private var expanded = false
     @State private var full: CGFloat = 0
     @State private var shown: CGFloat = 0
@@ -50,14 +56,17 @@ struct InlineMoreText: View {
     var body: some View {
         Text(text)
             .font(font)
-            .fixedLineHeight(lineHeight)
+            .fixedLineHeight(lineHeight, style: lineStyle, everywhere: lineHeightEverywhere)
             .foregroundStyle(.haze)
             .lineLimit(expanded ? nil : lines)
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { shown = $0 }
+            .onChange(of: navigator.synopsisMoreAsked) {
+                if full > shown + 1 { withAnimation(.standard) { expanded = true } }
+            }
             .background(alignment: .topLeading) {
                 Text(text)
                     .font(font)
-                    .fixedLineHeight(lineHeight)
+                    .fixedLineHeight(lineHeight, style: lineStyle, everywhere: lineHeightEverywhere)
                     .fixedSize(horizontal: false, vertical: true)
                     .hidden()
                     .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { full = $0 }
@@ -69,20 +78,31 @@ struct InlineMoreText: View {
                         .font(font.weight(.semibold))
                         .foregroundStyle(.silk)
                         .padding(.leading, 28)
-                        .background(LinearGradient(
-                            stops: [.init(color: Palette.ground.opacity(0), location: 0),
-                                    .init(color: Palette.ground, location: 0.45)],
-                            startPoint: .leading, endPoint: .trailing))
+                        // The text fades out over the 28 pt before the word, which sits on the
+                        // ground alone at every text size.
+                        .background {
+                            HStack(spacing: 0) {
+                                LinearGradient(colors: [Palette.ground.opacity(0), Palette.ground],
+                                               startPoint: .leading, endPoint: .trailing)
+                                    .frame(width: 28)
+                                Palette.ground
+                            }
+                        }
                         .contentShape(.rect.inset(by: -12))
-                        .accessibilityHint(L.titleSynopsisHint)
+                        // The page's menu is More too: this one says what it does.
+                        .accessibilityLabel(L.titleSynopsisMore)
                 }
             }
     }
 }
 
 private extension View {
-    @ViewBuilder func fixedLineHeight(_ height: CGFloat?) -> some View {
-        if let height { macLineHeight(height) } else { self }
+    @ViewBuilder func fixedLineHeight(_ height: CGFloat?, style: Font.TextStyle, everywhere: Bool) -> some View {
+        if let height {
+            if everywhere { fixedLineHeight(height, relativeTo: style) } else { macLineHeight(height, relativeTo: style) }
+        } else {
+            self
+        }
     }
 }
 

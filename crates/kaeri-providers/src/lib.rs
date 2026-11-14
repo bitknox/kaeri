@@ -5,15 +5,18 @@
 //! order, every failure is carried rather than discarded, and the Providers screen can always say
 //! which source broke and why.
 
+pub mod books;
 pub mod demo;
 pub mod health;
 pub mod mock;
 pub mod proxy;
+pub mod reading_demo;
 pub mod registry;
 pub mod resolve;
 pub mod torrent;
 pub mod walk;
 
+pub use books::{BookRegistry, ChapterAt, Searched};
 pub use health::{HealthTracker, ProviderHealth};
 pub use mock::MockProvider;
 pub use proxy::{ProxyState, TorrentRoute};

@@ -151,6 +151,9 @@ public final class SeekPreview {
         for continuation in waiting { continuation.resume() }
     }
 
+    /// The previews' mpvs still shutting down, for a test.
+    var shuttingDown: Int { ending.count }
+
     /// Wait until every preview closed has shut down.
     func finished() async {
         let tasks = ending
@@ -162,7 +165,15 @@ public final class SeekPreview {
     func close() {
         listener?.cancel()
         listener = nil
-        if let backend { ending.append(Task.detached { await backend.end() }) }
+        if let backend {
+            // Kept for `finished()` only until mpv has shut down.
+            let task = Task.detached { await backend.end() }
+            ending.append(task)
+            Task { @MainActor [weak self] in
+                await task.value
+                self?.ending.removeAll { $0 == task }
+            }
+        }
         backend = nil
         layer = nil
         source = nil

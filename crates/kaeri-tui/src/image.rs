@@ -21,6 +21,17 @@ use std::{
 use ratatui::layout::Rect;
 use ratatui_image::{picker::Picker, protocol::StatefulProtocol};
 
+/// The cell size from the window's size in pixels, for a terminal that answers the graphics
+/// query but not the cell size one, as `ratatui-image` falls back to it.
+#[cfg(unix)]
+fn cell_from_window() -> Option<(u16, u16)> {
+    let size = rustix::termios::tcgetwinsize(std::io::stdout()).ok()?;
+    if size.ws_xpixel == 0 || size.ws_ypixel == 0 || size.ws_col == 0 || size.ws_row == 0 {
+        return None;
+    }
+    Some((size.ws_xpixel / size.ws_col, size.ws_ypixel / size.ws_row))
+}
+
 /// What the terminal can actually do.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Graphics {
@@ -65,6 +76,67 @@ impl ImageEngine {
         if !enabled {
             return Self::disabled();
         }
+        let answers =
+            crate::probe::ask(crate::probe::Ask { background: false, graphics: true });
+        Self::with_answers(enabled, &answers)
+    }
+
+    /// An engine for what the terminal answered when it was asked at start-up
+    /// ([`crate::probe::ask`]), so nothing is asked twice and no key typed meanwhile is lost.
+    pub fn with_answers(enabled: bool, answers: &crate::probe::Answers) -> Self {
+        if !enabled {
+            return Self::disabled();
+        }
+        #[cfg(unix)]
+        {
+            Self::from_graphics(answers.graphics)
+        }
+        #[cfg(not(unix))]
+        {
+            let _ = answers;
+            Self::queried()
+        }
+    }
+
+    /// The engine for a terminal's answer about graphics: Kitty before Sixel, as
+    /// `ratatui-image` picks, and otherwise what the environment says (tmux, iTerm2) once the
+    /// cell size is known. No answer is halfblocks.
+    #[cfg(unix)]
+    fn from_graphics(answer: Option<crate::probe::GraphicsAnswer>) -> Self {
+        use ratatui_image::picker::ProtocolType;
+        let Some(answer) = answer else {
+            tracing::info!("the terminal did not answer the graphics query; using halfblocks");
+            return Self::halfblocks_with_default_cells();
+        };
+        let Some((width, height)) = answer.cell.or_else(cell_from_window) else {
+            tracing::info!("the terminal did not say its cell size; using halfblocks");
+            return Self::halfblocks_with_default_cells();
+        };
+        // Deprecated for the query it leaves out, which has been asked here already.
+        #[allow(deprecated)]
+        let mut picker = Picker::from_fontsize(ratatui_image::FontSize::new(width, height));
+        if answer.kitty {
+            picker.set_protocol_type(ProtocolType::Kitty);
+        } else if answer.sixel {
+            picker.set_protocol_type(ProtocolType::Sixel);
+        }
+        let graphics = if picker.protocol_type() == ProtocolType::Halfblocks {
+            Graphics::Halfblocks
+        } else {
+            Graphics::Native
+        };
+        tracing::info!(?graphics, protocol = ?picker.protocol_type(), font_size = ?(width, height), "terminal graphics");
+        Self {
+            picker: Some(picker),
+            graphics,
+            cache_dir: PathBuf::new(),
+            font_size: (width, height),
+        }
+    }
+
+    /// `ratatui-image`'s own query, where the start-up reader does not run.
+    #[cfg(not(unix))]
+    fn queried() -> Self {
         match Picker::from_query_stdio() {
             Ok(picker) => {
                 let fs = picker.font_size();
@@ -79,15 +151,19 @@ impl ImageEngine {
             }
             Err(e) => {
                 tracing::info!(error = %e, "no graphics protocol; using halfblocks");
-                // A sensible default cell aspect for halfblocks, which pack two vertical
-                // pixels per cell.
-                Self {
-                    picker: Some(Picker::halfblocks()),
-                    graphics: Graphics::Halfblocks,
-                    cache_dir: PathBuf::new(),
-                    font_size: (8, 16),
-                }
+                Self::halfblocks_with_default_cells()
             }
+        }
+    }
+
+    /// Halfblocks with a sensible default cell aspect, as halfblocks pack two vertical pixels
+    /// per cell.
+    fn halfblocks_with_default_cells() -> Self {
+        Self {
+            picker: Some(Picker::halfblocks()),
+            graphics: Graphics::Halfblocks,
+            cache_dir: PathBuf::new(),
+            font_size: (8, 16),
         }
     }
 
@@ -455,6 +531,22 @@ mod tests {
         let engine = ImageEngine::detect(true);
         assert!(engine.graphics() != Graphics::Disabled);
         assert!(engine.is_enabled());
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn the_graphics_answer_picks_the_protocol() {
+        use crate::probe::GraphicsAnswer;
+        // No answer, or no cell size, is halfblocks.
+        assert_eq!(ImageEngine::from_graphics(None).graphics(), Graphics::Halfblocks);
+        let kitty = GraphicsAnswer { kitty: true, sixel: true, cell: Some((9, 18)) };
+        let engine = ImageEngine::from_graphics(Some(kitty));
+        assert_eq!(engine.graphics(), Graphics::Native);
+        assert_eq!(engine.font_size(), (9, 18));
+        let sixel = GraphicsAnswer { kitty: false, sixel: true, cell: Some((9, 18)) };
+        assert_eq!(ImageEngine::from_graphics(Some(sixel)).graphics(), Graphics::Native);
+        let off = ImageEngine::with_answers(false, &crate::probe::Answers::default());
+        assert_eq!(off.graphics(), Graphics::Disabled);
     }
 
     #[test]

@@ -334,7 +334,7 @@ fn time_left(secs: u64) -> String {
 }
 
 /// A byte count at human scale, in the units the catalogue names (`700 MB`, `1.4 GB`).
-fn bytes_text(bytes: u64) -> String {
+pub(super) fn bytes_text(bytes: u64) -> String {
     let size = Size::of(bytes);
     let number = format!("{:.*}", usize::from(size.decimals), size.value);
     match size.unit {
@@ -414,7 +414,7 @@ mod tests {
         app.go_to_section(Section::Downloads);
         let text = text_of(&render_to_buffer(&mut app, 120, 30));
         assert!(text.contains("Nothing queued"), "got {text:?}");
-        assert!(text.contains("to queue it for offline"), "an empty screen needs a way in");
+        assert!(text.contains("to download it"), "an empty screen needs a way in");
     }
 
     #[test]

@@ -4,7 +4,7 @@ downloads-column-title = Titolo
 downloads-column-state = Stato
 downloads-column-progress = Avanzamento
 downloads-empty-heading = Nessun download in coda
-downloads-empty-hint = Premi { $key } su un titolo o un episodio per metterlo in coda.
+downloads-empty-hint = Premi { $key } su un titolo o un episodio per scaricarlo.
 downloads-row-episode = E{ $episode }
 downloads-row-episode-ahead = E{ $episode } · in anticipo
 downloads-note-sizes = { $downloaded } / { $total }
@@ -70,10 +70,10 @@ accounts-row-queued = { $count ->
     [many] { $count } in coda
    *[other] { $count } in coda
  }
-accounts-row-queued-held = { $queued } in coda, { $held } in attesa di un abbinamento con l'ID del { -tracker }
-accounts-conflict-keep-mine = Tieni il mio
-accounts-conflict-keep-theirs = Tieni il suo
-accounts-conflict-row = { $title }  ·  { $field }: mio { $local } / { -tracker-cap }: { $remote }
+accounts-row-queued-held = { $queued } in coda, { $held } in attesa di un abbinamento
+accounts-conflict-keep-mine = Usa locale
+accounts-conflict-keep-theirs = Usa { -tracker }
+accounts-conflict-row = { $title }  ·  { $field }: locale { $local } / { -tracker } { $remote }
 lists-library-title = { -library-cap }
 lists-remove-wrong-list = Puoi nascondere i titoli solo nella lista { -continue-cap }.
 lists-continue-removed = { $title } è stato nascosto da { -continue-cap }. Guardandolo di nuovo, tornerà in lista.
@@ -84,7 +84,7 @@ lists-loading = Caricamento…
 lists-empty-press-enter = Premi ↵ per cercare
 lists-empty-type-to-search = Scrivi per cercare
 lists-empty-browse-filtered = Premi ↵ per sfogliare con questi filtri.
-lists-empty-browse-popular = Premi ↵ per sfogliare i più popolari.
+lists-empty-browse-popular = Premi ↵ per sfogliare i titoli più popolari.
 lists-empty-no-matches = Nessun risultato
 lists-empty-fewer-filters = Prova con meno filtri.
 lists-empty-shorter-query = Prova con una ricerca più breve o con il titolo romaji.

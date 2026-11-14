@@ -45,6 +45,9 @@ pub fn active() -> bool {
 /// The engine's runtime, for the scene's party server to run on.
 static RUNTIME: std::sync::OnceLock<tokio::runtime::Handle> = std::sync::OnceLock::new();
 
+/// Where the fake AniList serves its art, `http://…/art/`, for shots that draw covers of their own.
+pub static ART_BASE: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+
 /// Keep `handle`, the engine's runtime, for [`FakeParty::start`].
 pub fn keep_runtime(handle: tokio::runtime::Handle) {
     ACTIVE.store(true, std::sync::atomic::Ordering::Relaxed);
@@ -168,6 +171,12 @@ pub const HOME_WORLD_VAR: &str = "KAERI_FIXTURES_HOME_WORLD";
 pub static OFFLINE_SCENE: std::sync::atomic::AtomicBool =
     std::sync::atomic::AtomicBool::new(false);
 
+/// Set by the reading scene, so the network path says online and the chapters queued there
+/// download, from the scene's own sources. The other scenes leave the network unsaid: their
+/// seeded queues, the downloads scene's rows in every state among them, hold still for shots.
+pub static ONLINE_SCENE: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
+
 /// How long a slow scene holds each of Home's discovery answers: long enough for the shots to
 /// catch the placeholders and the activity line after four seconds, inside the wait the slow
 /// scene gives the client.
@@ -200,6 +209,13 @@ pub enum HomeScene {
     Failed,
     /// Nothing watched and no network.
     Offline,
+    /// Watching, with reading on and set to Both: a manga, a novel and a strip with a history.
+    Reading,
+    /// [`Self::Reading`] with keeping chapters ready on and the Downloads place filled.
+    ReadingDownloads,
+    /// [`Self::Reading`] with the manga a long series: 120 chapters listed, 1 to 59 read and
+    /// chapter 60 at page 9 of 20.
+    ReadingLong,
     /// Watching with no source installed.
     Sourceless,
 }
@@ -217,8 +233,16 @@ impl HomeScene {
             "failed" => Self::Failed,
             "offline" => Self::Offline,
             "sourceless" => Self::Sourceless,
+            "reading" => Self::Reading,
+            "reading-downloads" => Self::ReadingDownloads,
+            "reading-long" => Self::ReadingLong,
             _ => return None,
         })
+    }
+
+    /// Whether the scene has reading on, with its books and history.
+    fn reading(self) -> bool {
+        matches!(self, Self::Reading | Self::ReadingDownloads | Self::ReadingLong)
     }
 
     fn signed_in(self) -> bool {
@@ -261,14 +285,25 @@ pub async fn start(root: &Path, scene: &Scene, host: Arc<dyn Host>) -> Result<St
     let paths = paths_under(root);
     let signed_in = scene.home.signed_in();
     if signed_in {
-        write_config(&paths.config_file, scene.demo)?;
+        write_config(&paths.config_file, scene.demo, scene.home)?;
     }
     let (config, store, _) = open(&paths)?;
     let clock = Clock::default();
     let now = clock.now();
     let world = world_asked().then(|| HomeWorld::at(HomeClock::in_zone(now, &clock.zone())));
+    if seed::dropped_change_asked() {
+        seed::dropped_change(&store, FINISHED, "Stardust Wayfarer", now);
+    }
     if !scene.demo {
         seed_scene(&store, scene.home, now);
+        if scene.home.reading() {
+            crate::fixtures_reading::seed_books(
+                &store,
+                &paths.data_dir,
+                scene.home == HomeScene::ReadingLong,
+                now,
+            );
+        }
     }
     if let Some(world) = world.as_ref().filter(|_| scene.home.world_history()) {
         world.seed_history(&store, now);
@@ -296,6 +331,10 @@ pub async fn start(root: &Path, scene: &Scene, host: Arc<dyn Host>) -> Result<St
     server.set_now(now);
     server.add_titles(fixtures::long_franchise());
     server.serve_art();
+    let _ = ART_BASE.set(server.art_base());
+    if !scene.demo && scene.home.reading() {
+        crate::fixtures_reading::keep_books(&store, &server.art_base(), now);
+    }
     // Home's world: this season's titles, the rest in the browse, and their broadcasts.
     if let Some(world) = &world {
         let (season, rest): (Vec<_>, Vec<_>) = world
@@ -325,6 +364,9 @@ pub async fn start(root: &Path, scene: &Scene, host: Arc<dyn Host>) -> Result<St
             OFFLINE_SCENE.store(true, std::sync::atomic::Ordering::Relaxed);
             server.fail_always(Failure::Disconnect)
         }
+        HomeScene::Reading | HomeScene::ReadingLong if !scene.demo => {
+            ONLINE_SCENE.store(true, std::sync::atomic::Ordering::Relaxed);
+        }
         _ => {}
     }
     let http = HttpClient::offline(&NetworkConfig {
@@ -347,6 +389,7 @@ pub async fn start(root: &Path, scene: &Scene, host: Arc<dyn Host>) -> Result<St
     let mut options = EngineOptions::new(paths, config.clone(), http, store, theme());
     options.saved = Some(config);
     options.hosted_player = true;
+    options.reading = true;
     options.background = Background::none();
     let provided = world.as_ref().map(HomeWorld::provided).unwrap_or_default();
     let chain = match scene.home {
@@ -368,6 +411,11 @@ pub async fn start(root: &Path, scene: &Scene, host: Arc<dyn Host>) -> Result<St
         Some(Parts { meta, sync, stores, clock, fixture_route: true, windows: None });
     let (engine, events): (Engine, _) =
         Engine::start(options, host).await.map_err(|e| e.to_string())?;
+    if seed::dropped_change_asked() {
+        // The app's own drain runs at launch, and the scene's engine runs none of its loops, so
+        // the drain that says the given-up change is asked for, as Sync now asks.
+        engine.send(kaeri_model::command::Command::SyncNow);
+    }
     Ok(Started { engine, events, keep: Some(Box::new(server)), rebuilt: Some(rebuilt) })
 }
 
@@ -481,7 +529,7 @@ fn unsure_source(art: &str, clip: &Stream) -> MockProvider {
 }
 
 /// AniList on, as a signed-in user has it, tokens in files, and skips offered rather than taken.
-fn write_config(file: &Path, demo: bool) -> Result<(), String> {
+fn write_config(file: &Path, demo: bool, home: HomeScene) -> Result<(), String> {
     if file.exists() {
         return Ok(());
     }
@@ -493,8 +541,16 @@ fn write_config(file: &Path, demo: bool) -> Result<(), String> {
                 format!(
                     "[trackers]\nenabled = [\"anilist\"]\ntoken_storage = \"file\"\n\n\
                  [trackers.anilist]\nclient_id = \"fixture\"\nclient_secret = \"fixture\"\n\n\
-                 [playback]\nskip_opening = false\nupscaling = \"off\"\n{}",
-                    if demo { "\n[sources]\ndemo = true\n" } else { "" }
+                 [playback]\nskip_opening = false\nupscaling = \"off\"\n{}{}",
+                    if demo { "\n[sources]\ndemo = true\n" } else { "" },
+                    match home {
+                        HomeScene::Reading | HomeScene::ReadingLong =>
+                            "\n[reading]\nkaeri_is_for = \"both\"\n",
+                        HomeScene::ReadingDownloads => {
+                            "\n[reading]\nkaeri_is_for = \"both\"\nkeep_chapters_ready = true\n"
+                        }
+                        _ => "",
+                    }
                 ),
             )
         })
@@ -522,6 +578,15 @@ fn seed_scene(store: &Store, scene: HomeScene, now: i64) {
         }
         HomeScene::Watching | HomeScene::Slow | HomeScene::Failed | HomeScene::Sourceless => {
             seed_history(store, now)
+        }
+        HomeScene::Reading | HomeScene::ReadingDownloads | HomeScene::ReadingLong => {
+            seed_history(store, now);
+            crate::fixtures_reading::seed_reading(
+                store,
+                scene == HomeScene::ReadingDownloads,
+                scene == HomeScene::ReadingLong,
+                now,
+            );
         }
     }
 }

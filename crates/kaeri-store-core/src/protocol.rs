@@ -33,6 +33,10 @@ pub const ENDED_INVITES_KEPT_SECS: i64 = 30 * 24 * 60 * 60;
 /// The longest name a member is shown by, in characters.
 pub const MAX_NAME_CHARS: usize = 64;
 
+/// The name the store gives the owner its setup invite makes. Clients take it as no name: "Run
+/// by" names that owner by the store's contact, or not at all.
+pub const SETUP_OWNER_NAME: &str = "Owner";
+
 /// `GET /v1/store`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct StoreInfo {
@@ -51,6 +55,11 @@ pub struct StoreInfo {
     /// before the choices leaves it out, and its invites work once, for seven days.
     #[serde(default)]
     pub invite_choices: bool,
+    /// Whether the store takes book sources (`kaeri:books` plugins) as well as show sources. A
+    /// store from before them leaves it out, and Kaeri publishes no book source to it: a store
+    /// that reads manifests from their section would otherwise list one as a show source.
+    #[serde(default)]
+    pub books: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
@@ -578,6 +587,27 @@ pub struct IndexEntry {
     pub sha256: String,
     pub size: u64,
     pub published_at: i64,
+    /// What the plugin is a source of: `books` for a book source. Absent, or `shows`, is a
+    /// show source, so an entry for one is the same bytes it was before book sources. Kaeri
+    /// 0.3.1 and later leave out entries of a kind they cannot use before reading anything
+    /// else of them.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kind: Option<String>,
+    /// A book source's media, from its manifest: `manga`, `novel`. Absent for a show source.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub media: Vec<String>,
+}
+
+impl IndexEntry {
+    /// The kind of plugin it offers, `shows` when it names none.
+    pub fn kind(&self) -> &str {
+        crate::manifest::kind_name(self.kind.as_deref())
+    }
+
+    /// Whether it offers a book source.
+    pub fn is_books(&self) -> bool {
+        self.kind() == crate::manifest::KIND_BOOKS
+    }
 }
 
 /// `POST /v1/uploads`: start sending a plugin in parts.
@@ -678,8 +708,10 @@ pub fn is_valid_id(id: &str) -> bool {
 
 /// Ids Kaeri's own sources already use. A plugin by one of these names would take a built-in
 /// source's place in the chain, so a server will not publish one and a client will not install one.
-/// `demo` is the built-in demo source's id, which no store may register or repoint.
-pub const RESERVED_IDS: &[&str] = &["torrent", "remote", "plugins", "demo"];
+/// `demo` is the built-in demo source's id, which no store may register or repoint. `folders`
+/// and `servers` are the book sources' own.
+pub const RESERVED_IDS: &[&str] =
+    &["torrent", "remote", "plugins", "demo", "folders", "servers"];
 
 /// Whether a version string is safe to put in a path segment and a file name.
 pub fn is_valid_version(version: &str) -> bool {
@@ -833,6 +865,30 @@ mod tests {
         assert!(!serde_json::from_str::<Index>(&closed).unwrap().open);
         let open = serde_json::to_string(&Index { open: true, ..index }).unwrap();
         assert!(serde_json::from_str::<Index>(&open).unwrap().open);
+    }
+
+    #[test]
+    fn a_show_source_s_entry_is_the_bytes_it_was_before_kinds() {
+        let entry = IndexEntry {
+            id: "a".into(),
+            name: "A".into(),
+            version: "1".into(),
+            allowed_hosts: Vec::new(),
+            translations: Vec::new(),
+            sha256: String::new(),
+            size: 0,
+            published_at: 0,
+            kind: None,
+            media: Vec::new(),
+        };
+        let shows = serde_json::to_string(&entry).unwrap();
+        assert!(!shows.contains("kind") && !shows.contains("media"), "{shows}");
+        assert!(!entry.is_books());
+        let books =
+            IndexEntry { kind: Some("books".into()), media: vec!["novel".into()], ..entry };
+        let books = serde_json::to_string(&books).unwrap();
+        assert!(books.contains(r#""kind":"books""#) && books.contains(r#""media":["novel"]"#));
+        assert!(serde_json::from_str::<IndexEntry>(&books).unwrap().is_books());
     }
 
     #[test]

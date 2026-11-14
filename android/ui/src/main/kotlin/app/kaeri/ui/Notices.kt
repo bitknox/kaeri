@@ -26,6 +26,7 @@ import app.kaeri.design.recommendedNoticeMillis
 import app.kaeri.engine.model.NoticeHint
 import app.kaeri.i18n.R as I18nR
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import app.kaeri.i18n.Strings
 
 /**
@@ -107,6 +108,7 @@ internal fun EngineNotices(onHint: (NoticeHint) -> Unit) {
     val store = LocalAppStore.current
     val snackbars = LocalSnackbars.current
     val context = androidx.compose.ui.platform.LocalContext.current
+    val resources = LocalResources.current
     val current by store.notices.current.collectAsStateWithLifecycle()
     LaunchedEffect(current?.id) {
         val item = current ?: return@LaunchedEffect
@@ -114,7 +116,7 @@ internal fun EngineNotices(onHint: (NoticeHint) -> Unit) {
         // An alert's button is its hint when it has one, and Report when it has none.
         if (hint == null && item.isAlert) {
             val text = item.notice.text(context)
-            snackbars.show(text, context.getString(I18nR.string.action_report)) {
+            snackbars.show(text, resources.getString(I18nR.string.action_report)) {
                 openBugReport(context, store, app.kaeri.store.BugContext("message", text))
             }
         } else {

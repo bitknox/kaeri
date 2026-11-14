@@ -15,6 +15,7 @@ dependencies {
     api(project(":store"))
     api(project(":design"))
     implementation(project(":i18n"))
+    implementation(project(":eink"))
     implementation(libs.navigation.compose)
     implementation(libs.adaptive.layout)
     implementation(libs.adaptive.navigation)
@@ -23,6 +24,8 @@ dependencies {
 
     testImplementation(project(":testkit"))
     testImplementation(libs.junit)
+    // Virtual time for the e-ink pacing of Downloads.
+    testImplementation(libs.coroutines.test)
     testImplementation(libs.robolectric)
     testImplementation(libs.roborazzi)
     testImplementation(libs.roborazzi.compose)

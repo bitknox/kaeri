@@ -7,7 +7,9 @@
 
 use kaeri_core::{
     ids::AnilistId,
-    traits::{TrackOp, TrackedEntry, Tracker, WatchStatus},
+    traits::{
+        Pushed, ReadRemoval, TrackOp, TrackedEntry, TrackedReadEntry, Tracker, WatchStatus,
+    },
 };
 use std::{
     sync::atomic::{AtomicU64, Ordering},
@@ -398,28 +400,141 @@ impl Tracker for AniListTracker {
     }
 
     async fn push(&self, ops: &[TrackOp]) -> Result<(), kaeri_core::Error> {
+        self.push_checked(ops).await?.into_result("anilist")
+    }
+
+    /// One `SaveMediaListEntry` per title, each with its own outcome: a title AniList refuses
+    /// fails alone, and the titles after it still go.
+    async fn push_checked(&self, ops: &[TrackOp]) -> Result<Pushed, kaeri_core::Error> {
         // Checked per push, not just at startup: the outbox drains on a timer, and a queued op must
         // not reach an account the user has signed out of.
         if !self.is_authenticated() {
             return Err(kaeri_core::Error::Auth("signed out".into()));
         }
-        // The list as last fetched is out of date once one of these may have reached it, so
-        // the next ask is a new one even if a save fails partway.
-        let pushed = async {
-            for entry in coalesce(ops) {
+        let mut titles = crate::Titles::default();
+        for entry in coalesce(ops) {
+            let result = if titles.go() {
                 self.client
                     .save_entry(entry.anilist_id, entry.progress, entry.status, entry.score)
                     .await
-                    .map_err(to_core)?;
-            }
-            Ok(())
+                    .map(drop)
+                    .map_err(to_core)
+            } else {
+                Ok(())
+            };
+            titles.record(entry.anilist_id, result);
         }
-        .await;
+        // The list as last fetched is out of date once one of these may have reached it, so
+        // the next ask is a new one even if a save failed partway.
         if !ops.is_empty() {
             self.changed();
         }
-        pushed
+        Ok(titles.finish())
     }
+
+    fn serves_reading(&self) -> bool {
+        true
+    }
+
+    async fn pull_read_library(&self) -> Result<Vec<TrackedReadEntry>, kaeri_core::Error> {
+        let viewer = self.viewer().await.map_err(to_core)?;
+        let rows = self.asking(self.client.read_library(viewer.id)).await.map_err(to_core)?;
+        Ok(rows
+            .into_iter()
+            .map(|row| TrackedReadEntry {
+                anilist_id: row.anilist_id,
+                medium: row.medium,
+                chapters: row.chapters,
+                volumes: Some(row.volumes),
+                status: status_from_anilist(&row.status),
+                rereading: row.status == "REPEATING",
+                score: row.score,
+            })
+            .collect())
+    }
+
+    async fn remove_read(&self, id: AnilistId) -> Result<ReadRemoval, kaeri_core::Error> {
+        let removed = self.client.remove_read_entry(id).await.map_err(to_core);
+        self.changed();
+        Ok(if removed? { ReadRemoval::Removed } else { ReadRemoval::NotOnList })
+    }
+
+    async fn push_read(&self, ops: &[TrackOp]) -> Result<Pushed, kaeri_core::Error> {
+        if !self.is_authenticated() {
+            return Err(kaeri_core::Error::Auth("signed out".into()));
+        }
+        let mut titles = crate::Titles::default();
+        for entry in coalesce_read(ops) {
+            let result = if titles.go() {
+                self.client
+                    .save_read_entry(
+                        entry.anilist_id,
+                        entry.chapters,
+                        entry.volumes,
+                        entry.status,
+                        entry.score,
+                    )
+                    .await
+                    .map_err(to_core)
+            } else {
+                Ok(())
+            };
+            titles.record(entry.anilist_id, result);
+        }
+        if ops.iter().any(TrackOp::is_reading) {
+            self.changed();
+        }
+        Ok(titles.finish())
+    }
+}
+
+/// One manga's or novel's worth of changes, as a single mutation.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ReadMutation {
+    pub anilist_id: AnilistId,
+    pub chapters: Option<u32>,
+    pub volumes: Option<u32>,
+    pub status: Option<&'static str>,
+    pub score: Option<f32>,
+}
+
+/// Fold a batch of reading ops into one mutation per work. Chapters and volumes keep the
+/// highest, and a reread goes out as AniList's `REPEATING`.
+pub fn coalesce_read(ops: &[TrackOp]) -> Vec<ReadMutation> {
+    let mut batched: Vec<ReadMutation> = Vec::new();
+    for op in ops.iter().filter(|op| op.is_reading()) {
+        let id = op.anilist_id();
+        let at = match batched.iter().position(|m| m.anilist_id == id) {
+            Some(at) => at,
+            None => {
+                batched.push(ReadMutation {
+                    anilist_id: id,
+                    chapters: None,
+                    volumes: None,
+                    status: None,
+                    score: None,
+                });
+                batched.len() - 1
+            }
+        };
+        let slot = &mut batched[at];
+        match op {
+            TrackOp::SetReadProgress { chapter, volume, .. } => {
+                slot.chapters = slot.chapters.max(Some(*chapter));
+                slot.volumes = slot.volumes.max(*volume);
+            }
+            TrackOp::SetReadStatus { status, rereading, .. } => {
+                slot.status = Some(if *rereading {
+                    status_to_anilist(WatchStatus::Repeating)
+                } else {
+                    status_to_anilist(*status)
+                });
+            }
+            TrackOp::SetReadScore { score, .. } => slot.score = Some(*score),
+            _ => {}
+        }
+    }
+    batched
 }
 
 /// One title's worth of changes, as a single mutation.
@@ -442,6 +557,10 @@ pub fn coalesce(ops: &[TrackOp]) -> Vec<Mutation> {
     let mut batched: Vec<Mutation> = Vec::new();
 
     for op in ops {
+        // Reading waits in its own outbox and is never in a watching batch.
+        if op.is_reading() {
+            continue;
+        }
         let id = op.anilist_id();
         let slot = match batched.iter_mut().find(|m| m.anilist_id == id) {
             Some(slot) => slot,
@@ -463,6 +582,9 @@ pub fn coalesce(ops: &[TrackOp]) -> Vec<Mutation> {
             }
             TrackOp::SetStatus { status, .. } => slot.status = Some(status_to_anilist(*status)),
             TrackOp::SetScore { score, .. } => slot.score = Some(*score),
+            TrackOp::SetReadProgress { .. }
+            | TrackOp::SetReadStatus { .. }
+            | TrackOp::SetReadScore { .. } => {}
         }
     }
     batched
@@ -470,14 +592,28 @@ pub fn coalesce(ops: &[TrackOp]) -> Vec<Mutation> {
 
 /// Map an AniList failure onto the core error, preserving whether it is worth retrying.
 fn to_core(error: AniListError) -> kaeri_core::Error {
+    let tracker = || "anilist".to_owned();
     match error {
         // A bad or expired token will never succeed on retry, so it must not sit in the outbox
-        // burning backoff — the user has to re-authorise.
+        // burning backoff: the user has to re-authorise.
         AniListError::Unauthenticated => {
             kaeri_core::Error::Auth("anilist rejected the token".into())
         }
-        other => {
-            kaeri_core::Error::Tracker { tracker: "anilist".into(), message: other.to_string() }
+        // None of these is AniList's verdict on the change, so none may bring a queued change
+        // nearer its end: the network, a pause AniList asked for, its own trouble, and an
+        // answer that could not be read (a gateway's error page).
+        AniListError::Network(message) => kaeri_core::Error::Network(message),
+        AniListError::RateLimited { retry_in_secs } => kaeri_core::Error::RateLimited {
+            tracker: tracker(),
+            message: error.to_string(),
+            retry_in_secs: Some(retry_in_secs),
+        },
+        AniListError::Server { .. } | AniListError::Decode(_) => {
+            kaeri_core::Error::Unavailable { tracker: tracker(), message: error.to_string() }
+        }
+        // GraphQL's own refusal (a validation error, an entry that is not there).
+        other @ (AniListError::Api(_) | AniListError::NotFound) => {
+            kaeri_core::Error::Tracker { tracker: tracker(), message: other.to_string() }
         }
     }
 }
@@ -587,7 +723,51 @@ mod tests {
         assert!(matches!(to_core(AniListError::Unauthenticated), kaeri_core::Error::Auth(_)));
         assert!(matches!(
             to_core(AniListError::Network("timeout".into())),
-            kaeri_core::Error::Tracker { .. }
+            kaeri_core::Error::Network(_)
         ));
+    }
+
+    #[test]
+    fn only_graphqls_own_refusal_counts_as_a_refusal() {
+        use kaeri_core::traits::PushFailure;
+        let class = |error| PushFailure::of(&to_core(error));
+        assert!(matches!(
+            class(AniListError::Api("validation".into())),
+            PushFailure::Refused(_)
+        ));
+        assert!(matches!(class(AniListError::NotFound), PushFailure::Refused(_)));
+        for waits in [
+            AniListError::Network("dns".into()),
+            AniListError::Decode("expected value".into()),
+            AniListError::Server { status: 500, message: "Internal Server Error".into() },
+        ] {
+            assert!(matches!(class(waits), PushFailure::Unavailable(_)));
+        }
+        assert!(matches!(
+            class(AniListError::RateLimited { retry_in_secs: 60 }),
+            PushFailure::RateLimited { retry_in_secs: Some(60), .. }
+        ));
+    }
+
+    #[test]
+    fn reading_ops_fold_into_one_mutation_with_the_highest_numbers() {
+        let ops = [
+            TrackOp::SetReadProgress { anilist_id: HOSHIKUZU, chapter: 10, volume: Some(1) },
+            TrackOp::SetReadProgress { anilist_id: HOSHIKUZU, chapter: 14, volume: None },
+            TrackOp::SetReadStatus {
+                anilist_id: HOSHIKUZU,
+                status: WatchStatus::Current,
+                rereading: true,
+                at: 1,
+            },
+            TrackOp::SetProgress { anilist_id: HOSHIKUZU, episode: 99 },
+        ];
+        let folded = coalesce_read(&ops);
+        assert_eq!(folded.len(), 1);
+        assert_eq!(
+            (folded[0].chapters, folded[0].volumes, folded[0].status),
+            (Some(14), Some(1), Some("REPEATING"))
+        );
+        assert!(coalesce(&ops).iter().all(|m| m.status.is_none()), "watching ignores reading");
     }
 }

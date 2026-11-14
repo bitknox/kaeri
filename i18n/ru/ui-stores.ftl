@@ -4,7 +4,7 @@ stores-empty-detail = { -plugin-store-cap-pl } хранят подписанны
 stores-intro = { -plugin-cap-pl } добавляют { -source-pl }. Каждый показывает серверы, с которыми связывается, до установки.
 stores-not-from-app = { -plugin-cap-pl } приходят от владельца { -store }а, а не от { -app-name }. Выйти из { -store }а можно в любой момент.
 stores-join-owner-responsible = { $owner } ведёт этот { -plugin-store } и выбрал его { -plugin-pl }. { -app-name } не создавал, не проверял и не одобрял их.
-stores-no-plugins = Этот { -plugin-store } пока не предлагает { -plugin-pl }.
+stores-no-plugins = Этот { -plugin-store } пока пуст: { -plugin-pl } ещё не добавлены.
 stores-plugins = { -plugin-cap-pl }
 stores-plugin-limits = Каждый { -plugin } может обращаться только к серверам, указанным вместе с ним, и не может читать ваши файлы.
 stores-plugin-limits-short = { -plugin-cap-pl } не могут читать ваши файлы или обращаться к серверу, которого нет в списке.
@@ -16,7 +16,7 @@ stores-status-access-ended = Доступ завершён
 stores-access-ended-detail = Владелец { -store }а закрыл вам доступ. Установленные { -plugin-pl } продолжают работать, но обновляться больше не будут.
 stores-access-ended-page = Этот { -plugin-store } больше не пускает это { -device }. Его { -plugin-pl } остаются установленными, пока вы их не удалите.
 stores-no-longer-joined = Этот { -plugin-store } больше не подключён.
-stores-offline-last-list = Не в сети: { $reason }. { -plugin-cap-pl } ниже взяты из последнего проверенного списка.
+stores-offline-last-list = Нет сети: { $reason }. Показан последний список, который он прислал.
 stores-offline-last-list-plain = Не в сети. Показан последний полученный список.
 stores-key-line = Ключ { -store }а { $key } · { $joined }
 stores-device-joined-as = Подключено как { $name }
@@ -51,14 +51,14 @@ stores-update-label = Обновить { $name } до версии { $version }
 stores-install-label = Установить { $name }
 stores-replace-label = Заменить копию { $name }, добавленную вручную
 stores-remove-plugin-title = Удалить { $name }?
-stores-remove-plugin-detail = Он удаляется отсюда. { -plugin-store-cap } сможет установить его снова.
+stores-remove-plugin-detail = Он будет удалён отсюда. Установить его снова можно через { -plugin-store }.
 stores-newly-contacts = Новые серверы
 stores-update-contacts = Это обновление также обращается к серверам: { $hosts }.
 stores-new-in = Новое в { $version }
 stores-join-title = Подключить { -plugin-store }
 stores-add-title = Добавить { -plugin-store }
 stores-join-detail = Вставьте ссылку, которую прислал владелец { -store }а.
-stores-join-detail-desktop = Вставьте пригласительную ссылку, которую прислал владелец { -store }а. До подключения и установки вы увидите, что предлагает { -plugin-store }.
+stores-join-detail-desktop = Вставьте ссылку-приглашение, которую вам прислал владелец. До подключения и установки вы увидите, что предлагает { -plugin-store }.
 stores-join-detail-opened = Вставьте ссылку, которую прислал владелец { -store }а. Ссылка вида { -app-name }://, открытая из «Сообщений», сразу заполнит этот лист.
 stores-invite-link = Ссылка-приглашение
 stores-invite-link-hint = https://…/join/…
@@ -72,7 +72,7 @@ stores-try-another-link = Другая ссылка
 stores-join-confirm-title = Подключить { $name }?
 stores-join-installs-nothing = Подключение ничего не устанавливает. Вы сами выбираете, какие { -plugin-pl } установить, и каждый показывает серверы, с которыми связывается.
 stores-key-matches = Ключ { $key } совпадает с ключом { -store }а.
-stores-anyone-note = Вы подключаетесь без имени. Другое { -device } подключается по той же ссылке.
+stores-anyone-note = Вы подключаетесь без имени. Другое { -device } может подключиться по той же ссылке.
 stores-already-joined-note = Это { -device } уже подключено к этому { -store }у.
 stores-device-name = Имя
 stores-device-name-detail = Владелец { -store }а видит это { -device } под этим именем.
@@ -128,7 +128,7 @@ stores-invite-works-times = Использований: { $count }, до { $unti
 stores-invite-works-times-forever = Использований: { $count }, пока вы её не отмените.
 stores-invite-works-any = Присоединиться может любой, у кого есть эта ссылка, до { $until }.
 stores-invite-works-any-forever = Присоединиться может любой, у кого есть эта ссылка, пока вы её не отмените.
-stores-invite-once-until = Действует один раз, для того, кому вы её отправите. До { $until }.
+stores-invite-once-until = Действует один раз, для того, кому вы её отправите, до { $until }.
 stores-invite-once-forever = Действует один раз, для того, кому вы её отправите, пока вы её не отмените.
 stores-invite-contact-needed = Сначала добавьте контакт для этого магазина. Ссылку, которая работает сколько угодно раз, можно передать дальше, как и ссылку самого магазина.
 stores-invite-owner-once = Приглашения владельцев действуют один раз.
@@ -148,7 +148,7 @@ stores-invite-cancelled-on = Отменена { $when }
 stores-invite-show-uses = Кто вошёл
 stores-invite-joined = { $name } · присоединился { $when }
 stores-cancel-invite-detail = { $count ->
-    [one] Больше никто не сможет присоединиться. Присоединившийся остаётся участником.
+    [one] Больше никто не сможет присоединиться. { $count } присоединившийся остаётся участником.
     [few] Больше никто не сможет присоединиться. Присоединившиеся ({ $count }) остаются участниками.
     [many] Больше никто не сможет присоединиться. Присоединившиеся ({ $count }) остаются участниками.
    *[other] Больше никто не сможет присоединиться. Присоединившиеся ({ $count }) остаются участниками.
@@ -185,7 +185,7 @@ stores-offers-plugins = { $count ->
    *[other] { -plugin-cap-pl }: { $count }
  }
 notice-open-stores = Открыть { -plugin-store-pl }
-stores-what-is = { -plugin-store-cap } представляет собой небольшой сервер, который хранит подписанные { -plugin-pl } и выдаёт каждому устройству отдельный токен. Он предлагает { -source-pl } в виде { -plugin-pl }. { -app-name } не ведёт магазинов плагинов и не составляет их списков, поэтому присоединиться можно по ссылке-приглашению от владельца.
+stores-what-is = { -plugin-store-cap } представляет собой небольшой сервер, который хранит подписанные { -plugin-pl } и выдаёт каждому устройству свой токен. Его { -plugin-pl } добавляют { -source-pl }. { -app-name } не ведёт магазинов плагинов и не составляет их списков, поэтому подключиться к одному из них можно по ссылке-приглашению от владельца.
 stores-what-is-link = Что такое { -plugin-store }?
 stores-invite-rules = Ссылка-приглашение действует один раз, для одного человека, и семь дней. Если срок вашей истёк, попросите у владельца магазина плагинов новую.
 stores-qr-label = QR-код ссылки-приглашения

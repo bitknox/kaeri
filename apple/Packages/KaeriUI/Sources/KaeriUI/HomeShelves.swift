@@ -126,6 +126,7 @@ struct HomeSectionView: View {
 /// pointer is over the shelf and only on the sides that have more.
 struct HomeShelf<Content: View>: View {
     @Environment(\.homeWide) private var wide
+    @Environment(\.homeLayout) private var layout
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let spacing: CGFloat
     @ViewBuilder let content: () -> Content
@@ -148,6 +149,11 @@ struct HomeShelf<Content: View>: View {
             .scrollTargetLayout()
         }
         .scrollIndicators(.never)
+        // On a phone the shelf runs to the screen's edges, its covers starting at the page's
+        // margin, so the cover past the last whole one is made and shows its start: the row
+        // says it scrolls.
+        .contentMargins(.horizontal, wide ? 0 : layout.margin, for: .scrollContent)
+        .padding(.horizontal, wide ? 0 : -layout.margin)
         .scrollPosition($position)
         .scrollClipDisabled()
         .onScrollGeometryChange(for: ShelfGeometry.self) { geometry in

@@ -21,6 +21,12 @@ struct PinnedFilterState: Equatable {
         filterCount = query.advancedCount()
     }
 
+    /// Reading's row, whose query the engine words differently: the same row and pill.
+    init(showsClearAll: Bool, filterCount: UInt32) {
+        self.showsClearAll = showsClearAll
+        self.filterCount = filterCount
+    }
+
     /// The filter pill's spoken label: its name, then how many are set.
     var filtersLabel: String {
         filterCount == 0 ? L.searchAllFilters : "\(L.searchAllFilters), \(L.searchFiltersSet(count: Int(filterCount)))"

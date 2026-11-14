@@ -13,7 +13,7 @@ settings-advanced-none = Không có tùy chọn thêm. Trình phát dùng tùy c
 settings-aside-check-title = Kiểm tra proxy
 settings-aside-sources-apple = { -source-cap-pl } được thử theo thứ tự từ trên xuống dưới. Một tựa có thể giữ { -source } riêng, chọn từ trang thông tin của tựa đó.
 settings-aside-advanced = Tùy chọn ở đây có thể ghi đè cài đặt trong mục Phát, như nâng tỉ lệ hình hoặc chế độ ban đêm. Hầu hết mọi người không cần đến mục này.
-settings-quality-detail = Cao hơn lấy bản tốt nhất mà { -source } cung cấp, và tốn thêm dung lượng.
+settings-quality-detail = Mức cao hơn chọn bản tốt nhất mà { -source } có. Bản này tốn nhiều dung lượng hơn.
 settings-merge-subtitles-detail = Phụ đề luôn đi kèm tập, dù tệp được chuyển đến đâu.
 settings-keep-seeding-detail-mac = Tệp đang chia sẻ vẫn nằm trong bộ nhớ đệm của { -app-name }, không nằm trong thư mục tải xuống.
 settings-keep-seeding-detail = Tệp đang chia sẻ nằm trong bộ nhớ đệm của { -app-name }.
@@ -26,12 +26,17 @@ settings-delete-watched-title = { $count ->
 settings-delete-watched-detail = Các tệp sẽ bị xóa khỏi { -device } này. Các tập chưa xem vẫn được giữ lại.
 settings-folder-default = Lưu cùng bộ nhớ đệm torrent
 settings-storage-unwatched = Chưa xem
+settings-storage-unread = Chưa đọc
+settings-storage-read = Đã đọc
+settings-storage-unseen-both = Chưa xem hoặc chưa đọc
+settings-storage-seen-both = Đã xem hoặc đã đọc
 settings-storage-used = { $size } cho tải xuống.
 settings-storage-used-free = { $size } cho tải xuống. Còn trống { $free } trên { -device } này.
 settings-source-count = { $count ->
    *[other] { $count } { -source }
  }
 settings-accounts-sync-note = Tiến độ và thay đổi danh sách được đồng bộ với { $tracker }. { -library-cap } và Danh sách của tôi trong Lịch hiển thị danh sách { $tracker } của bạn.
+settings-accounts-sync-note-read = Tiến độ và thay đổi danh sách được đồng bộ với { $tracker }. { -library-cap } hiện các danh sách { $tracker } của bạn.
 settings-conflicts = { $count ->
    *[other] { $count } tựa khác với { $tracker }
  }
@@ -43,7 +48,7 @@ settings-synced-just-now = Vừa đồng bộ xong
 settings-synced-ago = Đã đồng bộ { $ago }
 settings-privacy-note = Những gì { -app-name } gửi đi và những gì ở lại trên { -device } này
 settings-read-online = Đọc trực tuyến
-settings-presence-note = Hoạt động chi tiết hiển thị ảnh bìa, thanh tiến độ và liên kết tới tựa trên { $tracker }. Discord tự tải ảnh bìa từ { $tracker }. Cần bật hiển thị tên tựa.
+settings-presence-note = Hoạt động chi tiết hiển thị ảnh bìa, thanh tiến độ và liên kết tới tựa trên { $tracker }. Tính năng này chỉ hoạt động khi tên tựa được hiển thị. Discord tự tải ảnh bìa từ { $tracker }.
 settings-presence-cover = Ảnh bìa
 settings-presence-button = Xem trên { $tracker }
 settings-presence-nothing = Đang xem anime
@@ -67,7 +72,7 @@ settings-when-tomorrow = Ngày mai { $time }
 settings-when-day = { $day } { $time }
 settings-week-row-label = { $title }, tập { $episode }, { $when }
 settings-week-row-hint = Mở cài đặt của tựa này
-settings-notify-explain-on = Một thông báo khi một tập của tựa trong danh sách Đang xem của bạn ra, vào giờ { $tracker } đưa ra. Cài đặt riêng của tựa được ưu tiên trước.
+settings-notify-explain-on = Bạn nhận một thông báo khi một tập của tựa trong danh sách Đang xem ra mắt, vào giờ { $tracker } ghi. Cài đặt riêng của tựa được ưu tiên.
 settings-notify-explain-off = Tắt. Chỉ các tựa được bật trong cài đặt riêng mới gửi thông báo.
 settings-preview-show = Một tựa bạn xem
 settings-preview-words = Tập 9 đã ra.

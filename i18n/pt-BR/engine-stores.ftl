@@ -5,14 +5,14 @@ plugin-removed = { $plugin } removido.
 store-member-removed = Removido. Os { -device-pl } desse membro deixaram de funcionar com esta { -plugin-store }.
 store-invite-cancelled = Convite cancelado. O link não funciona mais.
 store-invite-cancelled-kept = { $count ->
-    [one] Convite cancelado. A pessoa que entrou continua como membro.
+    [one] Convite cancelado. { $count } pessoa que entrou continua como membro.
     [many] Convite cancelado. As { $count } de pessoas que entraram continuam como membros.
    *[other] Convite cancelado. As { $count } pessoas que entraram continuam como membros.
  }
 store-open-join-on = Quem tiver o link da { -plugin-store } pode entrar agora. Copie o link na tela de membros.
 store-open-join-off = Agora só entra quem você convidar.
 store-open-join-off-devices = { $devices ->
-    [one] Agora só entra quem você convidar. O { -device } que entrou pelo link continua funcionando até você removê-lo.
+    [one] Agora só entra quem você convidar. { $devices } { -device } que entrou pelo link continua funcionando até você removê-lo.
     [many] Agora só entra quem você convidar. Os { $devices } { -device-pl } que entraram pelo link continuam funcionando até você removê-los.
    *[other] Agora só entra quem você convidar. Os { $devices } { -device-pl } que entraram pelo link continuam funcionando até você removê-los.
  }
@@ -28,7 +28,7 @@ plugin-installed = { $plugin } { $version } instalado. Pronto para usar.
 plugin-installed-not-loaded = { $plugin } instalado, mas não carregou. { $reason }
 plugin-installed-outdated = { $plugin } foi instalado, mas foi criado para uma versão mais antiga do { -app-name } e precisa ser atualizado. Peça uma atualização ao autor.
 plugins-outdated = { $count ->
-    [one] Um { -plugin } foi criado para uma versão mais antiga do { -app-name } e precisa ser atualizado: { $names }.
+    [one] { $count } { -plugin } foi criado para uma versão mais antiga do { -app-name } e precisa ser atualizado: { $names }.
     [many] { $count } de { -plugin-pl } foram criados para uma versão mais antiga do { -app-name } e precisam ser atualizados: { $names }.
    *[other] { $count } { -plugin-pl } foram criados para uma versão mais antiga do { -app-name } e precisam ser atualizados: { $names }.
  }
@@ -46,7 +46,7 @@ store-unreachable = Não foi possível acessar { $store }. { $reason }
 store-moved = { $store } está salva em { $current }, mas este link aponta para { $target }. Se a { -plugin-store } mudou, saia dela antes e entre de novo.
 store-join-would-unname = Você entrou em { $store } como { $member }. Este link faria você entrar de novo sem o seu nome, então nada foi alterado.
 store-not-the-invited = { $url } não é a { -plugin-store } do convite ({ $reason }). Você não entrou.
-store-token-not-kept = Não foi possível guardar o token desta { -plugin-store }. { $reason }
+store-token-not-kept = Não foi possível salvar o token desta { -plugin-store }. { $reason }
 store-invite-unusable = Este convite já foi usado, foi cancelado ou expirou. Peça um novo.
 store-invite-used-up = Este convite já foi usado o máximo de vezes. Peça um novo a { $owners }.
 store-invite-ended = Este convite expirou { $when }. Peça um novo a { $owners }.
@@ -61,16 +61,17 @@ plugin-duplicate-file = { $path } já declara { $plugin }. Remova esse arquivo p
 plugin-install-failed = Não foi possível instalar { $plugin }. { $reason }
 plugin-publish-failed = Não foi possível publicar { $plugin }. { $reason }
 plugin-missing-locally = { $plugin } não está mais na pasta de { -plugin }.
+store-takes-no-books = { $store } ainda não lista { -source-pl } de livros. O dono pode atualizar a { -plugin-store } para incluí-las.
 store-invite-needs-link = Este { -device } entrou em { $store } pelo link. Cole o mesmo link no outro { -device }.
 store-link-malformed = A { -plugin-store } enviou um link que não funciona. Peça ao dono para conferir a { -plugin-store }. { $reason }
 store-link-wrong-key = A { -plugin-store } gerou um link com outra chave. Confira o endereço usado para iniciá-la.
 store-admin-missing = { $store } não tem página de administração. O servidor pode ser mais antigo.
 store-admin-link-foreign = { $store } enviou um link de administração para outro endereço.
 store-open-join-unsupported = O servidor de { $store } é mais antigo e não deixa ninguém entrar com link. Atualize-o primeiro.
-source-switched-off = { -source-cap } { $name } está desligada. Ela é ignorada ao buscar episódios.
+source-switched-off = A { -source } { $name } está desligada. O { -app-name } a ignora ao buscar episódios.
 source-switched-on = { -source-cap } { $name } está ligada.
 plugin-not-loaded = { $id } não está carregado. Confira se ele está instalado em { -source-cap-pl }.
-release-pinned = { $name } será usado neste título.
+release-pinned = Este título agora usa { $name }.
 notice-choice-not-saved = Não foi possível salvar essa escolha. { $reason }
 torrent-proxy-waiting = A verificação do proxy falhou. Os torrents começam quando ela passar.
 torrent-proxy-unchecked = Os torrents começam quando o proxy passar na verificação.

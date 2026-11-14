@@ -13,6 +13,11 @@
 
 pub mod airing_times;
 pub mod aniskip_outbox;
+pub mod book_catalog;
+pub mod book_credits;
+pub mod book_downloads;
+pub mod book_progress;
+pub mod book_sources;
 pub mod cache;
 pub mod dataset;
 pub mod download;
@@ -25,8 +30,10 @@ pub mod outbox;
 pub mod party_room;
 pub mod preference;
 pub mod profile;
+pub mod reading;
 pub mod schema;
 pub mod server_health;
+pub mod shelf;
 pub mod show_setting;
 pub mod skip_found;
 pub mod skip_mark;
@@ -110,6 +117,13 @@ pub struct Store {
     active: Arc<Mutex<Option<String>>>,
     /// The sync log's clock; the log itself is in the database.
     sync: Arc<sync::SyncCtx>,
+    /// The data folder the database is in: downloaded files are kept by their path within it,
+    /// so a folder the system moves (an iOS restore, a new device) keeps them. `None` for a
+    /// database in memory.
+    files: Option<Arc<PathBuf>>,
+    /// This engine's name for the work it claims, such as a chapter it downloads: another
+    /// engine on the same database leaves that work alone while this one says it still does it.
+    owner: Arc<str>,
 }
 
 impl std::fmt::Debug for Store {
@@ -186,7 +200,9 @@ impl Store {
         }
         let conn = Connection::open(path)?;
         schema::migrate(&conn)?;
-        Ok(Self::from_conn(conn))
+        let mut store = Self::from_conn(conn);
+        store.files = path.parent().map(|p| Arc::new(p.to_path_buf()));
+        Ok(store)
     }
 
     /// [`Self::open`], with a database too damaged to open moved aside and a new one started in
@@ -256,6 +272,34 @@ impl Store {
             active: Arc::default(),
             conn,
             sync: Arc::new(sync::SyncCtx::new()),
+            files: None,
+            owner: new_owner(),
+        }
+    }
+
+    /// This engine's name for the work it claims: see [`book_downloads`].
+    pub(crate) fn owner(&self) -> &str {
+        &self.owner
+    }
+
+    /// A downloaded file's path as kept: within the data folder when it is there.
+    pub(crate) fn kept_path(&self, path: &str) -> String {
+        let Some(base) = &self.files else { return path.to_owned() };
+        match Path::new(path).strip_prefix(base.as_path()) {
+            Ok(within) if !within.as_os_str().is_empty() => {
+                within.to_string_lossy().into_owned()
+            }
+            _ => path.to_owned(),
+        }
+    }
+
+    /// A kept path as a whole one, in the data folder as it is now.
+    pub(crate) fn full_path(&self, kept: String) -> String {
+        match &self.files {
+            Some(base) if Path::new(&kept).is_relative() => {
+                base.join(&kept).to_string_lossy().into_owned()
+            }
+            _ => kept,
         }
     }
 
@@ -282,7 +326,7 @@ impl Store {
     ) -> Result<T> {
         let conn = self.personal_conn();
         let mut guard = conn.lock().map_err(|_| StoreError::Poisoned)?;
-        let tx = guard.transaction()?;
+        let tx = write_tx(&mut guard)?;
         let out = f(&tx)?;
         tx.commit()?;
         Ok(out)
@@ -300,15 +344,80 @@ impl Store {
         f: impl FnOnce(&rusqlite::Transaction<'_>) -> Result<T>,
     ) -> Result<T> {
         let mut guard = self.conn.lock().map_err(|_| StoreError::Poisoned)?;
-        let tx = guard.transaction()?;
+        let tx = write_tx(&mut guard)?;
         let out = f(&tx)?;
         tx.commit()?;
         Ok(out)
     }
 }
 
-/// Seconds since the Unix epoch.
+/// A name for an engine that no other engine on the same database has: its process, and a count
+/// and the time within it.
+fn new_owner() -> Arc<str> {
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static N: AtomicU64 = AtomicU64::new(0);
+    let nanos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_nanos());
+    format!("{}-{}-{nanos}", std::process::id(), N.fetch_add(1, Ordering::Relaxed)).into()
+}
+
+/// A transaction that takes the write lock as it begins, waiting [`schema::BUSY_WAIT`] for it.
+///
+/// A deferred one that reads first and writes after cannot wait: when another process wrote in
+/// between, SQLite fails the write at once rather than let it act on what it read before.
+pub(crate) fn write_tx(conn: &mut Connection) -> rusqlite::Result<rusqlite::Transaction<'_>> {
+    conn.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)
+}
+
+/// The moment a scene recording stopped the clock at, in seconds since the Unix epoch: nought
+/// while it runs. Only a build with the `testing` feature can stop it.
+static STOPPED: std::sync::atomic::AtomicI64 = std::sync::atomic::AtomicI64::new(0);
+
+/// Stop the clock at `at`, in seconds since the Unix epoch, for the rest of the process: [`now`],
+/// the engine's own now and every age the metadata cache counts read that moment, so that the
+/// apps' scenes are recorded the same on every run. Nought starts it again.
+#[cfg(feature = "testing")]
+pub fn stop_clock_at(at: i64) {
+    STOPPED.store(at, std::sync::atomic::Ordering::Relaxed);
+}
+
+/// The moment a scene recording stopped the clock at ([`stop_clock_at`]), if one did.
+pub fn stopped() -> Option<i64> {
+    let at = STOPPED.load(std::sync::atomic::Ordering::Relaxed);
+    (at != 0).then_some(at)
+}
+
+/// Now on the monotonic clock: one moment for the rest of the process once a scene recording has
+/// stopped the clock ([`stop_clock_at`]), so that the ages and waits counted from it stay what they
+/// were and every run comes out the same.
+pub fn instant_now() -> std::time::Instant {
+    static AT: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
+    if stopped().is_some() {
+        *AT.get_or_init(std::time::Instant::now)
+    } else {
+        std::time::Instant::now()
+    }
+}
+
+/// How long it has been since `since`, taken from [`instant_now`]: nothing once a scene recording
+/// has stopped the clock, so the latencies a recording shows are the same on every run.
+pub fn elapsed(since: std::time::Instant) -> std::time::Duration {
+    instant_now().saturating_duration_since(since)
+}
+
+/// The system's clock, or the moment a scene recording stopped it at.
+pub fn system_now() -> std::time::SystemTime {
+    stopped().map_or_else(std::time::SystemTime::now, |at| {
+        std::time::UNIX_EPOCH + std::time::Duration::from_secs(at.unsigned_abs())
+    })
+}
+
+/// Seconds since the Unix epoch, or the moment the clock was stopped at.
 pub fn now() -> i64 {
+    if let Some(at) = stopped() {
+        return at;
+    }
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_secs() as i64)

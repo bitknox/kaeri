@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -71,9 +72,15 @@ internal fun cloudName(kind: SyncFolderKind): String = when (kind) {
     SyncFolderKind.DIRECTORY -> "" // the caller says a folder in its own words
 }
 
-/** "this phone", "this tablet": the device word a sentence uses. */
+/** "this phone", "this tablet", or "this device" on an e-reader: the device word a sentence uses. */
 @Composable
-internal fun kindWord(): String = stringResource(if (wideWindow()) R.string.device_kind_tablet else R.string.device_kind_phone)
+internal fun kindWord(): String = stringResource(
+    when {
+        app.kaeri.ui.reading.LocalEinkLayout.current != null && einkReaderShape() -> R.string.device_kind_other
+        wideWindow() -> R.string.device_kind_tablet
+        else -> R.string.device_kind_phone
+    },
+)
 
 /** The icon a device wears, from what its name says it is. */
 internal fun deviceIcon(name: String): ImageVector {
@@ -346,7 +353,8 @@ private fun RecoveryKeyRow(status: SyncStatus) {
     val store = LocalAppStore.current
     val context = LocalContext.current
     val unlock = rememberDeviceUnlock { store.showRecoveryKey() }
-    val made = status.recoveryKeyMade?.let { java.text.SimpleDateFormat(android.text.format.DateFormat.getBestDateTimePattern(java.util.Locale.getDefault(), "dMMM"), java.util.Locale.getDefault()).format(java.util.Date(it * 1000)) }
+    val locale = LocalConfiguration.current.locales[0]
+    val made = status.recoveryKeyMade?.let { java.text.SimpleDateFormat(android.text.format.DateFormat.getBestDateTimePattern(locale, "dMMM"), locale).format(java.util.Date(it * 1000)) }
     SettingsGroup(
         rows = listOf { place ->
             LinkRow(place, stringResource(R.string.rkey_row), made?.let { Strings.rkeyMade(context, it) }, SyncIcons.Key) { unlock() }
@@ -354,9 +362,12 @@ private fun RecoveryKeyRow(status: SyncStatus) {
     )
 }
 
-/** What the sheet over the Devices page is, when one is open. */
+/**
+ * What the sheet over the Devices page is, when one is open. First run's join page uses them for
+ * a restore; [paired] says whether a pairing's success sheet shows, which the join page draws itself.
+ */
 @Composable
-private fun DevicesSheets() {
+internal fun DevicesSheets(paired: Boolean = true) {
     val store = LocalAppStore.current
     val sheet by store.sync.sheet.collectAsStateWithLifecycle()
     val key by store.sync.recoveryKey.collectAsStateWithLifecycle()
@@ -387,7 +398,7 @@ private fun DevicesSheets() {
     // The key of a set-up shows in that set-up's sheet; any other shows full screen.
     if (!(keyInSheet && setUpSheets)) key?.let { RecoveryKeyDialog(it) }
     val copied by store.sync.copied.collectAsStateWithLifecycle()
-    copied?.let { PairOkSheet(it) }
+    if (paired) copied?.let { PairOkSheet(it) }
 }
 
 /** The Settings row's value: Sync off, Synced 2 min ago, or Couldn't sync. */

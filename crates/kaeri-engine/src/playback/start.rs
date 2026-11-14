@@ -128,7 +128,7 @@ pub fn cast_to(
         Some(at) if at >= CARRY_FROM => {
             let event = kaeri_store::WatchEvent::new(id, episode.clone(), at);
             if let Err(e) = services.store.record_event(&event) {
-                tracing::warn!(error = %e, "couldn't carry the position over to the cast");
+                tx.not_kept("the position carried over to the cast", &e);
             }
             false
         }
@@ -800,6 +800,8 @@ fn spawn_playback(
             // The episode it was to take over stops with it: what the viewer stopped.
             Err(Overtaken::Stopped) => {
                 handoff.stop();
+                // Its controls closed before its ending is said: see `Handoff::live`.
+                drop(commands);
                 stopped_unopened(&slot, &tx);
                 return;
             }
@@ -857,6 +859,9 @@ fn spawn_playback(
                 }
                 // A window left open for this episode would wait for nothing.
                 slot.release();
+                // Its controls closed before its ending is said: a play asked for on hearing
+                // the ending takes this one for over only once they are (`Handoff::live`).
+                drop(commands);
                 let _ = tx.send(Event::playback_failed(failure));
                 return;
             }

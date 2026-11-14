@@ -44,11 +44,11 @@ notice-browser-not-opened = Couldn't open a browser for the sign-in. Check that 
 
 # Toast when a sign-in redirect arrives and no sign-in is waiting for it.
 # @arg tracker: text
-notice-sign-in-not-waiting = No sign-in to { $tracker } is waiting for that. Start the sign-in again.
+notice-sign-in-not-waiting = A sign-in reply from { $tracker } arrived, but no sign-in was waiting for it. Start the sign-in again.
 
 # Toast when a sign-in redirect does not match the request that was made.
 # @arg tracker: text
-notice-sign-in-wrong-request = That sign-in to { $tracker } didn't come back from this request. Start the sign-in again.
+notice-sign-in-wrong-request = The sign-in reply from { $tracker } doesn't match the request. Start the sign-in again.
 
 # Toast when a tracker sent the person back without a token.
 # @arg tracker: text
@@ -116,6 +116,31 @@ notice-signed-out-queue = { $count ->
    *[other] Signed out of { $tracker }. { $count } queued changes are kept for the next sign-in.
  }
 
+# Toast, shown once, when a tracker kept refusing a change to a title for about two days and the
+# change stopped being sent. The change itself is still saved in the app. The tracker is its
+# name, such as AniList; the title is a show's or a series' name.
+# @arg tracker: text
+# @arg title: text
+notice-tracker-change-refused = { $tracker } kept refusing a change to { $title }, so it stopped being sent. It's still saved in { -app-name }.
+
+# The same toast when changes to several titles stopped being sent to one tracker at once. The
+# title is the first of them; others is how many more titles there are.
+# @arg tracker: text
+# @arg title: text
+# @arg others: int
+notice-tracker-changes-refused = { $others ->
+    [one] { $tracker } kept refusing changes to { $title } and one more title, so they stopped being sent. They're still saved in { -app-name }.
+   *[other] { $tracker } kept refusing changes to { $title } and { $others } more titles, so they stopped being sent. They're still saved in { -app-name }.
+ }
+
+# The same toast when the app has no name for the titles. Count is how many titles.
+# @arg tracker: text
+# @arg count: int
+notice-tracker-change-refused-untitled = { $count ->
+    [one] { $tracker } kept refusing a change, so it stopped being sent. It's still saved in { -app-name }.
+   *[other] { $tracker } kept refusing changes to { $count } titles, so they stopped being sent. They're still saved in { -app-name }.
+ }
+
 # Toast when signing out of a tracker failed. The reason comes from the system.
 # @arg tracker: text
 # @arg reason: text
@@ -162,7 +187,7 @@ notice-mapping-data-failed = Couldn't refresh the mapping data ({ $datasets }). 
 
 # Toast, and desktop notification, for one episode that aired while the app was closed.
 # @arg title: text
-# @arg episode: int
+# @arg episode: plain
 notice-episode-aired = { $title }, episode { $episode }, aired while you were away.
 
 # Toast, and desktop notification, for several episodes that aired while the app was closed.
@@ -182,7 +207,7 @@ notice-update-available = { $tag } is out. Run kaeri --update to install it.
 cause-proxy-needs-address = A proxy needs a host and a port.
 
 # The reason a proxy could not be checked: its address is not one the check can use.
-cause-proxy-address-unusable = The proxy's address is not one a check can use.
+cause-proxy-address-unusable = The proxy check can't use this address.
 
 # The reason a request failed: it never reached the server.
 cause-server-unreachable = The server couldn't be reached.

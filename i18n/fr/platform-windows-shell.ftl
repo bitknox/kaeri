@@ -4,16 +4,16 @@ tray-open = Ouvrir { -app-name }
 tray-quit = Quitter
 close-title = Des téléchargements sont encore en cours
 close-downloading = { $count ->
-    [one] Un épisode est en cours de téléchargement.
+    [one] { $count } épisode est en cours de téléchargement.
     [many] { $count } épisodes sont en cours de téléchargement.
    *[other] { $count } épisodes sont en cours de téléchargement.
  }
 close-seeding = { $count ->
-    [one] Un épisode est en cours de partage.
+    [one] { $count } épisode est en cours de partage.
     [many] { $count } épisodes sont en cours de partage.
    *[other] { $count } épisodes sont en cours de partage.
  }
-close-ask = Les laisser se poursuivre après la fermeture de la fenêtre, ou les arrêter ?
+close-ask = Les laisser continuer après la fermeture de la fenêtre, ou les arrêter ?
 close-stop = Arrêter et fermer
 toast-open-stores = Ouvrir les { -plugin-store-pl }
 toast-titled = { $title } : { $body }
@@ -25,7 +25,7 @@ notify-episode-out-dubbed = L'épisode { $episode } est sorti, { -dubbed }.
 notify-next-for-you = Prochain pour vous : épisode { $episode }.
 notify-downloaded-one = L'épisode { $episode } a été téléchargé.
 notify-downloaded = { $count ->
-    [one] Un épisode a été téléchargé.
+    [one] { $count } épisode a été téléchargé.
     [many] { $count } épisodes ont été téléchargés.
    *[other] { $count } épisodes ont été téléchargés.
  }
@@ -50,3 +50,15 @@ clipboard-busy = Copie impossible : une autre application utilise le presse-papi
 start-failed-title = { -app-name } n’a pas pu démarrer
 start-failed-open-folder = Ouvrir le dossier
 start-failed-quit = Quitter
+engine-stopped-title = { -app-name } a cessé de fonctionner
+engine-stopped-detail = Les téléchargements et la synchronisation se sont arrêtés aussi. Rouvrez { -app-name } pour continuer.
+engine-stopped-open-again = Rouvrir
+titlebar-synced = { $tracker } synchronisé
+titlebar-not-synced = { $tracker } non synchronisé
+titlebar-sign-in-again = Reconnectez-vous à { $tracker }
+titlebar-status-hint = Affiche ce qui est en cours
+titlebar-nothing-running = Rien n'est en cours.
+titlebar-open-devices = Ouvrir les { -device-cap-pl }
+messages-title = Messages
+messages-none = Aucun message pour l'instant
+messages-alert = Problème

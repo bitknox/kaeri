@@ -1,7 +1,8 @@
 /* Kaeri's site: tokens, type, the top bar, the footer and the parts every page shares. The two themes
-   are `:root`, light, which every visitor gets until they pick dark (and before a theme is known, and
-   without a script), and `[data-theme='dark']`. The docs' own variables are mapped onto these in
-   docs.css, so Starlight and the custom pages read one setting. */
+   are `:root`, light, for a system in light mode (and before a theme is known, and without a
+   script), and `[data-theme='dark']`, for a system in dark mode or a visitor who picked dark. The
+   docs' own variables are mapped onto these in docs.css, so Starlight and the custom pages read one
+   setting. */
 
 /* Only the headings use Zen, at 500 and in Latin and Cyrillic; the Japanese subsets would add
    240 font faces to every page's stylesheet. */
@@ -18,18 +19,14 @@
 	--ani-rule-faint: #d7d4cf;
 	--ani-raised: #e9e6de;
 	--ani-well: #e3e1d9;
-	/* In light the bands and rules are paper tones with a faint hue, so the page reads as one
-	   surface and the type carries the hierarchy. Dark keeps its colours for contrast. */
+	/* The page is one surface: sections are parted by hairlines and space, and the type carries
+	   the hierarchy. --ani-band is for small wells, such as code and the search tags. */
 	--ani-band: #e3e1d9;
-	--ani-band-green: #e1e3d8;
-	--ani-band-red: #e8e0d9;
-	--ani-band-plum: #e6e0de;
-	--ani-band-blue: #dfe1e2;
-	--ani-rule-violet: #adadbf;
-	--ani-rule-sky: #a9b6bc;
 	--ani-bezel: #1e2033;
 	--ani-bezel-edge: #1e2033;
 	--ani-crop-a: #10131f;
+	/* The one dark room on a page, where the player is shown: night in light, deeper in dark. */
+	--ani-theatre: #10131f;
 	--ani-crop-b: #161a2e;
 	--ani-obi: #f2a64b;
 	--ani-obi-hover: #f5b467;
@@ -45,8 +42,28 @@
 	--ani-font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
 	--ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+	--ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 	--t-fast: 120ms;
 	--t-base: 200ms;
+
+	/* One type scale for every page. The display sizes grow with the window between a phone (390)
+	   and a laptop (1440); the text sizes stay put. Bigger type gets tighter tracking and leading. */
+	--fs-hero: clamp(2.75rem, 1.6rem + 4.6vw, 5.5rem);
+	--fs-h1: clamp(2.5rem, 1.6rem + 3.2vw, 4.25rem);
+	--fs-h2: clamp(2rem, 1.35rem + 2.3vw, 3.25rem);
+	--fs-h2s: clamp(1.5rem, 1.3rem + 0.6vw, 1.75rem);
+	--fs-h3: 1.25rem;
+	--fs-lede: clamp(1.125rem, 1rem + 0.35vw, 1.3125rem);
+	--fs-body: 1.0625rem;
+	--fs-small: 0.9375rem;
+	--fs-caption: 0.875rem;
+
+	/* One spacing rhythm: the gap between sections, between a heading block and its picture, and
+	   the page's side gutter. */
+	--space-section: clamp(4.5rem, 2.5rem + 7vw, 8.5rem);
+	--space-head: clamp(2rem, 1.3rem + 2.4vw, 3.5rem);
+	--gutter: clamp(1rem, 0.25rem + 3.2vw, 2rem);
+	--measure: 66ch;
 }
 
 :root[data-theme='dark'] {
@@ -59,12 +76,6 @@
 	--ani-raised: #161a2e;
 	--ani-well: #161a2e;
 	--ani-band: #222638;
-	--ani-band-green: #1a2421;
-	--ani-band-red: #411e22;
-	--ani-band-plum: #2c1f26;
-	--ani-band-blue: #1b2045;
-	--ani-rule-violet: #7781c5;
-	--ani-rule-sky: #a9c7d6;
 	--ani-bezel: #161a2e;
 	--ani-bezel-edge: #434653;
 	--ani-on-obi: #161a2e;
@@ -73,6 +84,7 @@
 	--ani-foot: #161a2e;
 	--ani-foot-text: #e4e0d6;
 	--ani-foot-dim: #9298b5;
+	--ani-theatre: #090b14;
 }
 
 *,
@@ -84,17 +96,28 @@
 html {
 	background: var(--ani-ground);
 	-webkit-text-size-adjust: 100%;
+	/* No grey flash on a tap: links and buttons show their own pressed state instead. */
+	-webkit-tap-highlight-color: transparent;
+}
+
+/* A tap fires at once, without waiting to see whether it is a double tap. */
+a,
+button,
+summary,
+[role='slider'] {
+	touch-action: manipulation;
 }
 
 body.k-body {
 	margin: 0;
-	min-height: 100vh;
+	/* The small viewport, so a short page fits with the phone's address bar showing. */
+	min-height: 100svh;
 	display: flex;
 	flex-direction: column;
 	background: var(--ani-ground);
 	color: var(--ani-text);
 	font-family: var(--ani-font-ui);
-	font-size: 17px;
+	font-size: var(--fs-body);
 	line-height: 1.5;
 	-webkit-font-smoothing: antialiased;
 }
@@ -117,7 +140,14 @@ body.k-body {
 	transition: color var(--t-fast) var(--ease), text-decoration-color var(--t-fast) var(--ease);
 }
 
-.k-body a:hover {
+@media (hover: hover) and (pointer: fine) {
+	.k-body a:hover {
+		color: var(--ani-link-hover);
+		text-decoration-color: currentColor;
+	}
+}
+
+.k-body a:active {
 	color: var(--ani-link-hover);
 	text-decoration-color: currentColor;
 }
@@ -161,32 +191,41 @@ body.k-body {
 	margin: 0;
 	font-family: var(--ani-font-display);
 	font-weight: 500;
-	letter-spacing: -0.015em;
 	text-wrap: balance;
 }
 
 .k-body h1 {
-	font-size: clamp(40px, 5vw + 12px, 64px);
-	line-height: 1.06;
+	font-size: var(--fs-h1);
+	line-height: 1.04;
+	letter-spacing: -0.025em;
 }
 
 .k-body h2 {
-	font-size: clamp(32px, 3vw + 14px, 52px);
+	font-size: var(--fs-h2);
 	line-height: 1.08;
+	letter-spacing: -0.02em;
 }
 
 .k-body h3 {
 	margin: 0;
-	font-size: 20px;
+	font-size: var(--fs-h3);
+	line-height: 1.3;
 	font-weight: 600;
 }
 
+/* Running text breaks its lines evenly, so a paragraph never ends on one short word. */
+.k-body p,
+.k-body li,
+.k-body dd,
+.k-body figcaption {
+	text-wrap: pretty;
+}
+
 .k-lede {
-	margin: 18px 0 0;
-	font-size: clamp(17px, 1vw + 12px, 20px);
+	margin: 20px 0 0;
+	font-size: var(--fs-lede);
 	line-height: 1.45;
 	color: var(--ani-dim);
-	text-wrap: pretty;
 }
 
 .k-dim {
@@ -199,6 +238,11 @@ body.k-body {
 	padding: 1px 5px;
 	border-radius: 4px;
 	background: var(--ani-band);
+}
+
+/* A long address in running text breaks rather than widening the page on a phone. */
+.k-body :not(pre) > code {
+	overflow-wrap: anywhere;
 }
 
 .k-body pre {
@@ -225,17 +269,21 @@ body.k-body {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	height: 44px;
-	padding: 0 22px;
+	min-height: 44px;
+	padding: 10px 22px;
 	border: 1px solid var(--ani-dim);
 	border-radius: 999px;
+	line-height: 1.25;
+	text-align: center;
 	background: none;
 	color: var(--ani-text);
 	font: inherit;
-	font-size: 15px;
+	font-size: var(--fs-small);
 	font-weight: 600;
 	text-decoration: none;
 	cursor: pointer;
+	-webkit-user-select: none;
+	user-select: none;
 	transition: color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
 }
 
@@ -243,7 +291,14 @@ body.k-body {
 	text-decoration: none;
 }
 
-.k-body a.k-btn:hover {
+@media (hover: hover) and (pointer: fine) {
+	.k-body a.k-btn:hover {
+		border-color: var(--ani-link-hover);
+	}
+}
+
+.k-body a.k-btn:active {
+	color: var(--ani-text);
 	border-color: var(--ani-link-hover);
 }
 
@@ -254,16 +309,39 @@ body.k-body {
 	color: var(--ani-on-obi);
 }
 
-.k-body a.k-btn-primary:hover {
+@media (hover: hover) and (pointer: fine) {
+	.k-body a.k-btn-primary:hover {
+		background: var(--ani-obi-hover);
+		border-color: var(--ani-obi-hover);
+		color: var(--ani-on-obi);
+	}
+}
+
+.k-body a.k-btn-primary:active {
 	background: var(--ani-obi-hover);
 	border-color: var(--ani-obi-hover);
 	color: var(--ani-on-obi);
 }
 
+/* A button gives a little under the finger or the pointer as it is pressed. */
+@media (prefers-reduced-motion: no-preference) {
+	.k-btn {
+		transition:
+			color var(--t-fast) var(--ease),
+			background-color var(--t-fast) var(--ease),
+			border-color var(--t-fast) var(--ease),
+			transform 160ms var(--ease-out);
+	}
+
+	.k-btn:active {
+		transform: scale(0.97);
+	}
+}
+
 .k-btn-lg {
-	height: 48px;
-	padding: 0 26px;
-	font-size: 17px;
+	min-height: 48px;
+	padding: 10px 26px;
+	font-size: var(--fs-body);
 }
 
 .k-arrow {
@@ -324,7 +402,7 @@ body.k-body {
 .bar-nav {
 	display: flex;
 	gap: 28px;
-	font-size: 15px;
+	font-size: var(--fs-small);
 }
 
 .bar-nav a {
@@ -357,14 +435,16 @@ body.k-body {
 	background: var(--ani-raised);
 	color: var(--ani-dim);
 	font: inherit;
-	font-size: 14px;
+	font-size: var(--fs-caption);
 	cursor: pointer;
 	transition: border-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
 }
 
-.site-header site-search button[data-open-modal]:hover {
-	border-color: var(--ani-dim);
-	color: var(--ani-text);
+@media (hover: hover) and (pointer: fine) {
+	.site-header site-search button[data-open-modal]:hover {
+		border-color: var(--ani-dim);
+		color: var(--ani-text);
+	}
 }
 
 .site-header site-search button[data-open-modal] > span {
@@ -410,7 +490,13 @@ body.k-body {
 	transition: color var(--t-fast) var(--ease);
 }
 
-.bar-icon:hover {
+@media (hover: hover) and (pointer: fine) {
+	.bar-icon:hover {
+		color: var(--ani-text);
+	}
+}
+
+.bar-icon:active {
 	color: var(--ani-text);
 }
 
@@ -478,7 +564,7 @@ body.k-body {
 		padding: 8px 16px 16px;
 		background: var(--ani-ground);
 		border-bottom: 1px solid var(--ani-rule-faint);
-		font-size: 17px;
+		font-size: var(--fs-body);
 	}
 
 	.bar-nav a {
@@ -487,6 +573,47 @@ body.k-body {
 
 	.bar-nav.open {
 		display: flex;
+	}
+
+	/* The menu drops in from under the bar and fades, and shuts a little faster than it opens. */
+	@media (prefers-reduced-motion: no-preference) {
+		.bar-nav {
+			opacity: 0;
+			transform: translateY(-6px);
+			transition:
+				opacity 140ms var(--ease-out),
+				transform 140ms var(--ease-out),
+				display 140ms allow-discrete;
+		}
+
+		.bar-nav.open {
+			opacity: 1;
+			transform: none;
+			transition-duration: 200ms;
+
+			@starting-style {
+				opacity: 0;
+				transform: translateY(-6px);
+			}
+		}
+	}
+
+	/* With Reduce Motion the menu still fades, so it doesn't snap over the page, but it doesn't move. */
+	@media (prefers-reduced-motion: reduce) {
+		.bar-nav {
+			opacity: 0;
+			transition:
+				opacity 120ms var(--ease-out),
+				display 120ms allow-discrete;
+		}
+
+		.bar-nav.open {
+			opacity: 1;
+
+			@starting-style {
+				opacity: 0;
+			}
+		}
 	}
 
 	.bar-menu-docs .bar-menu {
@@ -499,7 +626,7 @@ body.k-body {
 .site-footer {
 	background: var(--ani-foot);
 	color: var(--ani-foot-dim);
-	padding: 32px 32px 56px;
+	padding: 32px var(--gutter) 56px;
 	font-family: var(--ani-font-ui);
 }
 
@@ -518,7 +645,7 @@ body.k-body {
 	flex-direction: column;
 	gap: 6px;
 	max-width: 640px;
-	font-size: 14px;
+	font-size: var(--fs-caption);
 	line-height: 1.5;
 }
 
@@ -534,7 +661,7 @@ body.k-body {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 10px 24px;
-	font-size: 14px;
+	font-size: var(--fs-caption);
 }
 
 .site-footer a,
@@ -544,10 +671,12 @@ body.k-body {
 	transition: color var(--t-fast) var(--ease);
 }
 
-.site-footer a:hover,
-.k-body .site-footer a:hover {
-	color: var(--ani-foot-text);
-	text-decoration: underline;
+@media (hover: hover) and (pointer: fine) {
+	.site-footer a:hover,
+	.k-body .site-footer a:hover {
+		color: var(--ani-foot-text);
+		text-decoration: underline;
+	}
 }
 
 .site-footer .site-footer-text a {
@@ -576,9 +705,15 @@ body.k-body {
 	align-items: center;
 	justify-content: space-between;
 	gap: 16px;
-	font-size: 19px;
+	font-size: var(--fs-h3);
 	font-weight: 600;
 	list-style: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.faq summary:hover {
+		color: var(--ani-link-hover);
+	}
 }
 
 .faq summary::-webkit-details-marker {
@@ -607,7 +742,7 @@ body.k-body {
 
 .faq details p {
 	margin: 12px 0 0;
-	font-size: 17px;
+	font-size: var(--fs-body);
 	line-height: 1.55;
 	color: var(--ani-dim);
 }
@@ -687,10 +822,16 @@ body.k-body {
 }
 
 /* ── Search dialog ─────────────────────────────────────────────────────── */
+/* It opens at once, without a fade: it comes from ⌘K as often as from a click. */
 site-search dialog {
 	border: 1px solid var(--ani-rule-faint);
 	background-color: var(--ani-ground);
 	box-shadow: none;
+}
+
+/* The results are links, but read as a list, as they do in the docs. */
+.k-body site-search dialog a {
+	text-decoration: none;
 }
 
 site-search dialog::backdrop {
@@ -704,17 +845,6 @@ site-search dialog::backdrop {
 	}
 }
 
-site-search dialog[open],
-site-search dialog[open]::backdrop {
-	animation: ani-fade-in 200ms ease-out;
-}
-
-@keyframes ani-fade-in {
-	from {
-		opacity: 0;
-	}
-}
-
 #starlight__search {
 	--pagefind-ui-primary: var(--ani-text);
 	--pagefind-ui-text: var(--ani-text);
@@ -723,9 +853,3 @@ site-search dialog[open]::backdrop {
 	--pagefind-ui-tag: var(--ani-band);
 }
 
-@media (prefers-reduced-motion: reduce) {
-	site-search dialog[open],
-	site-search dialog[open]::backdrop {
-		animation: none;
-	}
-}

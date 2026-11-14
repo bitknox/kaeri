@@ -289,6 +289,35 @@ async fn a_finished_show_part_way_through_that_no_source_has_offers_its_page() {
 }
 
 #[tokio::test]
+async fn a_miss_found_after_home_was_asked_for_stays_marked_as_its_parts_land() {
+    let now = autumn();
+    let (registry, _) = source(Vec::new(), Duration::ZERO);
+    let mut h = at(now, Some(registry)).await;
+    season(&h, []);
+    watch(&h, WATCHING, 1..=4, now, 600);
+    // The season lands well after the check of the spotlight has answered.
+    h.server().answer_slowly(Operation::Browse, Duration::from_millis(500));
+
+    let job = h.send(Command::LoadHome { refresh: false });
+    // Home goes out at once from what is local, before the spotlight is known.
+    let mut updates = h.settle_until(|u| matches!(u, Event::Home(_))).await;
+    // The check comes a few seconds after Home was asked for, as it does on a device.
+    h.advance_engine_clock(5);
+    updates.extend(h.settle().await);
+    home_ends(&updates, job);
+
+    assert_eq!(probed(&updates, WATCHING), Some(Playable::NotFound));
+    let home = homes(&updates).pop().expect("Home sent again as the season landed");
+    assert!(!shelf(&home, SectionKind::ThisSeason).is_empty(), "the season is in");
+    let spotlight = home.spotlight.as_ref().expect("a spotlight");
+    assert_eq!(spotlit(&home), Some((WATCHING, SpotlightCase::Continuing)));
+    assert_eq!(
+        (spotlight.action, spotlight.playable),
+        (HomeAction::Details, Playable::NotFound)
+    );
+}
+
+#[tokio::test]
 async fn a_viewer_who_follows_the_seasons_hits_still_gets_a_full_this_season() {
     let now = autumn();
     let mut h = at(now, None).await;

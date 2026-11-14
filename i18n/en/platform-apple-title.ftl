@@ -50,7 +50,7 @@ title-episodes-short = { $count ->
 title-episode-row-unaired = { $title }. { $when }, not out yet
 
 # Line in the episode list of a title when the list is filtered to unwatched episodes and there are none.
-title-all-watched = Every episode is watched
+title-all-watched = You've watched every episode
 
 # Line on the title page when the detail did not arrive in time. A Try again button follows.
 title-no-answer-short = AniList didn't answer.

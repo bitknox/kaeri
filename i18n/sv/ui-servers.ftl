@@ -73,4 +73,4 @@ servers-needs-look = { $count } inte matchade mot AniList
 servers-kind-films = Filmer
 servers-error-certificate = { $host } använder ett certifikat som den här { -device }en inte litar på. Använd en https://-adress med ett certifikat den litar på.
 servers-row-signed-out-here = Utloggad
-servers-sign-out-line = Avslutar den här { -device }ens inloggning på servern. Servern och dina nedladdningar förblir som de är.
+servers-sign-out-line = Utloggning avslutar den här { -device }ens session på servern. Servern och dina nedladdningar förblir som de är.

@@ -73,6 +73,8 @@ case "$arch:$machine" in
   *) fail "kaeri_ffi.dll is for machine 0x$machine, not $arch" ;;
 esac
 cmp -s "$app/libmpv-2.dll" "$windows/.libmpv/$arch/libmpv-2.dll" || fail "libmpv-2.dll is not libmpv.ps1's"
+# Nothing needs the Visual C++ runtime: the build machines have it, a clean Windows does not.
+"$windows/scripts/vc-runtime-check.sh" "$app" || fail "the published app needs the Visual C++ runtime"
 
 # --- The notices -----------------------------------------------------------------------------------
 
@@ -96,7 +98,7 @@ https://github.com/bitknox/kaeri/releases/tag/deps-libmpv
 LICENSE.LGPL is mpv's licence as the build ships it. BUILD.txt names each source and the
 configuration it was built with.
 EOF
-cp "$root"/assets/mpv/licenses/* "$root/assets/shaders/THIRD-PARTY.md" "$root"/assets/shaders/LICENSE-* "$root/assets/flags/LICENSE-flag-icons" "$notices/"
+cp "$root"/assets/mpv/licenses/* "$root/assets/shaders/THIRD-PARTY.md" "$root"/assets/shaders/LICENSE-* "$root/assets/flags/LICENSE-flag-icons" "$root/assets/hyphenation/LICENSE-hyphenation-patterns.txt" "$notices/"
 # The Windows App SDK's licence, from the package the app was built with.
 sdk="$(sed -n 's/.*"Microsoft.WindowsAppSDK" Version="\([^"]*\)".*/\1/p' "$windows/Kaeri.Windows/Kaeri.Windows.csproj")"
 nuget="${NUGET_PACKAGES:-$HOME/.nuget/packages}"

@@ -37,6 +37,34 @@ pub enum Internal {
     /// A pass through the sync folder brought settings and the like from other devices: carry
     /// out what [`crate::syncing::SyncHub::take_effects`] holds.
     SyncEffects,
+    /// Something for the open reader session: the page worker laid a chapter out, or one of its
+    /// timers ran out.
+    Reader { session: u64, wake: ReaderWake },
+    /// Reading arrived from another device: the open reader may move on.
+    ReadingSynced,
+    /// A book source joined, was updated, left, or was switched on, off or moved, or a folder's
+    /// or a server's series came in: what reading shows is brought up to date, as
+    /// [`crate::read_catalog::changed`] says.
+    BookSourcesChanged,
+}
+
+/// What woke the reader session.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ReaderWake {
+    /// The page worker laid the chapter out: the leaves are in the session's shared layout.
+    Laid,
+    /// The read rule's timer, by its number; an older timer's wake is ignored.
+    ReadRule(u64),
+    /// The place's write, held back to one a second, by its number.
+    Flush(u64),
+    /// A novel or a source's chapter was opened off the actor, for the session's layout of this
+    /// generation.
+    Prepared(u64),
+    /// A source listed the work's chapters for an open waiting on them.
+    Listed,
+    /// Every page of a source's chapter landed, and they lay out otherwise than the layout of
+    /// this generation guessed before they had.
+    Relay(u64),
 }
 
 /// One item of the engine side's inbox, in the order it was sent.
@@ -104,6 +132,19 @@ impl Outbox {
             Route::Played(_, played) => Some(played.serial),
             Route::Events(_) | Route::Inbox(_) => None,
         }
+    }
+
+    /// A change the person made that the store could not keep, even after waiting out a lock
+    /// another engine on the same library held: logged, and said to the person as an alert, so
+    /// it is never lost without a word.
+    pub fn not_kept(&self, what: &str, error: &dyn std::fmt::Display) {
+        tracing::warn!(%error, what, "a change was not kept");
+        let reason = error.to_string();
+        let notice =
+            kaeri_model::notice::Notice::alert(kaeri_model::Msg::NoticeChangeNotKept {
+                reason,
+            });
+        let _ = self.send(Event::Toast(notice));
     }
 
     /// Say what happened. As `UnboundedSender::send`: the event comes back when nobody reads
@@ -190,6 +231,21 @@ impl WeakOutbox {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_change_not_kept_is_said_as_an_alert_with_the_reason() {
+        let (events, mut said) = mpsc::unbounded_channel();
+        let outbox = Outbox::from(events);
+        outbox.not_kept("a reading mark", &"storage: database is locked");
+        let Ok(Event::Toast(notice)) = said.try_recv() else { panic!("nothing was said") };
+        assert_eq!(notice.kind, kaeri_model::notice::NoticeKind::Alert);
+        assert_eq!(
+            notice.msg,
+            Some(kaeri_model::Msg::NoticeChangeNotKept {
+                reason: "storage: database is locked".into()
+            })
+        );
+    }
 
     #[test]
     fn events_and_messages_come_out_in_the_order_they_went_in() {

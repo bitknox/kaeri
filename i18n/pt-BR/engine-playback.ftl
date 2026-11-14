@@ -6,7 +6,7 @@ notice-not-aired-yet = O episódio { $episode } ainda não foi ao ar. O episódi
 cause-airs-today = hoje às { $time }
 cause-airs-tomorrow = amanhã às { $time }
 cause-airs-in-days = { $days ->
-    [one] em um dia às { $time }
+    [one] em { $days } dia às { $time }
     [many] em { $days } dias às { $time }
    *[other] em { $days } dias às { $time }
  }
@@ -20,13 +20,13 @@ cause-no-source-has-episode = Nenhuma { -source } tem o episódio { $episode }: 
 cause-source-cannot-download = Esta { -source } transmite episódios, mas não é possível baixá-los.
 cause-no-source-could-list-show = Nenhuma { -source } conseguiu listar esta série, então ela não pode ser baixada.
 cause-subtitles-merged = { $tracks ->
-    [one] Uma faixa de legenda foi incorporada ao vídeo.
+    [one] { $tracks } faixa de legenda foi incorporada ao vídeo.
     [many] { $tracks } faixas de legenda foram incorporadas ao vídeo.
    *[other] { $tracks } faixas de legenda foram incorporadas ao vídeo.
  }
 cause-subtitles-left-apart = As legendas ficam como arquivos separados. { $reason }
 cause-already-in-downloads = { $count ->
-    [one] Um episódio já está nos downloads.
+    [one] { $count } episódio já está nos downloads.
     [many] { $count } episódios já estão nos downloads.
    *[other] { $count } episódios já estão nos downloads.
  }
@@ -70,7 +70,7 @@ match-ruled-out-episodes = Mais episódios que este título
 match-ruled-out-year = Ano diferente
 match-search-timed-out = Não respondeu a tempo.
 match-search-source-off = Não está ativada.
-notice-source-pinned = A { -source } { $source } será usada para este título.
+notice-source-pinned = Agora este título é reproduzido de { $source }.
 notice-source-automatic = Voltou à seleção automática de { -source } para este título.
 notice-source-choice-failed = Não foi possível salvar essa escolha. { $reason }
 notice-no-source-could-list = Nenhuma { -source } conseguiu listar esta série: { $reason }
@@ -86,12 +86,12 @@ notice-download-removed-file-gone = Download removido. O arquivo já não existi
 notice-download-removed-file-kept = Download removido, mas não foi possível excluir o arquivo. { $reason }
 notice-download-removed = Download removido.
 notice-downloads-cleared = { $count ->
-    [one] Um download concluído foi removido da lista.
+    [one] { $count } download concluído foi removido da lista.
     [many] { $count } downloads concluídos foram removidos da lista.
    *[other] { $count } downloads concluídos foram removidos da lista.
  }
 notice-skip-marks-cleared = { $count ->
-    [one] O tempo de pulo que você marcou foi apagado.
+    [one] { $count } tempo de pulo que você marcou foi apagado.
     [many] { $count } de tempos de pulo que você marcou foram apagados.
    *[other] { $count } tempos de pulo que você marcou foram apagados.
  }
@@ -105,17 +105,17 @@ notice-downloads-none-queued-stopped = Nada foi adicionado à fila. { $reason }
 notice-downloads-none-new = Nada novo foi adicionado à fila. { $existing }
 notice-downloads-none-new-stopped = Nada novo foi adicionado à fila. { $existing } { $reason }
 notice-episodes-queued-existing = { $count ->
-    [one] Um episódio foi adicionado à fila. { $existing }
+    [one] { $count } episódio foi adicionado à fila. { $existing }
     [many] { $count } episódios foram adicionados à fila. { $existing }
    *[other] { $count } episódios foram adicionados à fila. { $existing }
  }
 notice-episodes-queued-stopped = { $count ->
-    [one] Um episódio foi adicionado à fila, e então a busca parou. { $reason }
+    [one] { $count } episódio foi adicionado à fila, e então a busca parou. { $reason }
     [many] { $count } episódios foram adicionados à fila, e então a busca parou. { $reason }
    *[other] { $count } episódios foram adicionados à fila, e então a busca parou. { $reason }
  }
 notice-episodes-queued-existing-stopped = { $count ->
-    [one] Um episódio foi adicionado à fila, e então a busca parou. { $existing } { $reason }
+    [one] { $count } episódio foi adicionado à fila, e então a busca parou. { $existing } { $reason }
     [many] { $count } episódios foram adicionados à fila, e então a busca parou. { $existing } { $reason }
    *[other] { $count } episódios foram adicionados à fila, e então a busca parou. { $existing } { $reason }
  }

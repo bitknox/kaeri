@@ -2,6 +2,7 @@
 // The top bar every page shares: the icon and name, Features, Download and Docs, search and the
 // theme switch, and the language picker once there is more than one language. On a docs page the
 // menu button is Starlight's own, which opens the sidebar.
+import '../../styles/starlight-tokens.css';
 import Search from '@astrojs/starlight/components/Search.astro';
 import iconUrl from '../../assets/icon-32.svg?url';
 import { DOWNLOAD, FEATURES } from '../../data/site';
@@ -42,14 +43,28 @@ const here = (path: string) => (path === '/docs/' ? pagePath.startsWith('/docs/'
 </div>
 
 <script>
+	// The phone menu: the button opens and shuts it; Escape, a tap outside it and a link inside it
+	// shut it too. Escape puts the focus back on the button.
 	for (const button of document.querySelectorAll<HTMLButtonElement>('[data-bar-menu]')) {
 		const nav = document.getElementById(button.getAttribute('aria-controls')!);
-		button.addEventListener('click', () => {
-			const open = nav!.classList.toggle('open');
+		if (!nav) continue;
+		const set = (open: boolean) => {
+			nav.classList.toggle('open', open);
 			button.setAttribute('aria-expanded', String(open));
+		};
+		const isOpen = () => nav.classList.contains('open');
+		button.addEventListener('click', () => set(!isOpen()));
+		nav.addEventListener('click', (e) => {
+			if ((e.target as HTMLElement).closest('a')) set(false);
 		});
-		nav?.addEventListener('click', (e) => {
-			if ((e.target as HTMLElement).closest('a')) nav.classList.remove('open');
+		document.addEventListener('keydown', (e) => {
+			if (e.key !== 'Escape' || !isOpen()) return;
+			set(false);
+			button.focus();
+		});
+		document.addEventListener('pointerdown', (e) => {
+			const target = e.target as Node;
+			if (isOpen() && !nav.contains(target) && !button.contains(target)) set(false);
 		});
 	}
 </script>

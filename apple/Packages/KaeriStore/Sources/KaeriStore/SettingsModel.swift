@@ -223,14 +223,19 @@ public final class AccountsModel {
         guard let main = signedIn.first(where: { $0.tracker == "anilist" }) ?? signedIn.first
         else { return SyncSummary(text: L.shellSyncNone, state: .signedOut, tracker: nil) }
         let name = Self.name(main.tracker)
-        let pending = Int(signedIn.reduce(0) { $0 + $1.outbox }) + queued
+        // What is on its way. The engine leaves the changes held for a match out of `outbox`
+        // (they are `held`, in the popover), and a tracker that rejected its credential sends
+        // nothing until it is signed in again, so its queue is not waiting either.
+        let pending = Int(signedIn.filter { !$0.needsReauth }.reduce(0) { $0 + $1.outbox }) + queued
         if offline {
             // Quiet, as the brief has it: what waits, or only that AniList is out of reach.
             let text = pending > 0 ? L.settingsChangesWaiting(count: pending) : L.storesStatusOffline
             return SyncSummary(text: text, state: .waiting, tracker: main.tracker)
         }
-        if main.needsReauth {
-            return SyncSummary(text: L.shellSyncSignInAgain(tracker: name), state: .problem, tracker: main.tracker)
+        // AniList's first, then any other signed in: each is a sign-in only the person can do.
+        if let expired = main.needsReauth ? main : signedIn.first(where: \.needsReauth) {
+            let text = L.shellSyncSignInAgain(tracker: Self.name(expired.tracker))
+            return SyncSummary(text: text, state: .problem, tracker: expired.tracker)
         }
         if pending > 0 {
             return SyncSummary(text: L.settingsChangesWaiting(count: pending), state: .waiting, tracker: main.tracker)
@@ -241,16 +246,36 @@ public final class AccountsModel {
         return SyncSummary(text: L.shellSyncSynced(tracker: name), state: .synced, tracker: main.tracker)
     }
 
+    /// Changes each signed-in tracker can't take yet, for want of a match for their titles: the
+    /// sync popover's quiet lines. They go out by themselves once a mapping names the titles.
+    public var held: [HeldChanges] {
+        trackers
+            .filter { $0.connected && !$0.needsReauth && $0.deferred > 0 }
+            .map { HeldChanges(tracker: $0.tracker, count: Int($0.deferred)) }
+    }
+
     /// A tracker's name as a person writes it.
     public nonisolated static func name(_ tracker: String) -> String {
         switch tracker {
         case "anilist": "AniList"
         case "mal", "myanimelist": "MyAnimeList"
         case "kitsu": "Kitsu"
+        case "mangaupdates": "MangaUpdates"
         case "simkl": "Simkl"
         case "trakt": "Trakt"
         default: tracker.capitalized
         }
+    }
+}
+
+/// Changes a tracker can't take yet, and how many.
+public struct HeldChanges: Equatable, Sendable {
+    public let tracker: String
+    public let count: Int
+
+    public init(tracker: String, count: Int) {
+        self.tracker = tracker
+        self.count = count
     }
 }
 

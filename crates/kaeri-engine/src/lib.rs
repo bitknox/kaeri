@@ -96,6 +96,7 @@ pub mod aniskip;
 pub mod artwork;
 pub mod autoplay;
 pub mod background;
+pub mod book_plugins;
 pub mod cache;
 #[cfg(feature = "cast")]
 pub mod cast;
@@ -112,6 +113,7 @@ pub(crate) mod dispatch;
 pub mod downloads;
 pub mod engine;
 pub mod error;
+pub mod export;
 pub mod handoff;
 pub mod host;
 pub mod jobs;
@@ -133,11 +135,16 @@ pub mod playback;
 pub mod plugin_stores;
 pub mod profile;
 pub mod proxy;
+pub mod read_catalog;
+pub mod read_sources;
+mod read_tracking;
+pub mod reading;
 #[cfg(feature = "remote")]
 pub mod remote;
 pub mod servers;
 pub mod services;
 pub mod settings;
+pub mod setup_from;
 pub mod show_settings;
 pub mod skip_find;
 pub mod skip_marks;
@@ -154,10 +161,14 @@ pub mod tracking;
 pub mod upcoming;
 pub mod updates;
 pub mod widgets;
+pub mod write_back;
 
 /// Now, in seconds since the Unix epoch, by the system clock: what the work dates and ages
-/// things by.
+/// things by. A scene recording can stop it ([`clock::stop_at`]).
 pub fn now_epoch() -> i64 {
+    if let Some(at) = clock::stopped() {
+        return at;
+    }
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_secs() as i64)

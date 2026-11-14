@@ -47,10 +47,12 @@ mod fixtures;
 mod home;
 mod input;
 mod lists;
+pub mod medium;
 mod notices;
 mod overlays;
 mod playback;
 mod providers;
+mod reading;
 mod settings;
 mod stores;
 mod text;
@@ -74,6 +76,10 @@ pub use self::{
     overlays::{FrameReport, PALETTE_ROWS},
     playback::NowPlaying,
     providers::proxy_badge,
+    reading::{
+        AnilistState, GROUP_HITS, Part, ReadLine, Reading, read_filter_labels,
+        read_filter_summary, read_filter_value, read_query_blank,
+    },
     settings::SettingLine,
     stores::{MemberLine, PluginChoice, StoreConfirm, StoreLine},
     text::{Field, TextField},
@@ -182,6 +188,16 @@ pub struct App {
     pub demo: kaeri_model::sources::DemoState,
     /// Whether the first-run question has been asked this session.
     first_run_shown: bool,
+    /// What Kaeri is for on this computer, as the engine last said. `None` until it has.
+    pub medium: Option<kaeri_model::medium::MediumView>,
+    /// The question the engine asked that is open, `None` when the choice is a plain change.
+    medium_ask: Option<kaeri_model::medium::MediumAsk>,
+    /// The medium being turned off, while its confirmation is open.
+    medium_off: Option<medium::MediumOff>,
+    /// What the chapter downloads take, as the engine last said.
+    book_bytes: u64,
+    /// The last question put to the person, so one is not asked again once closed.
+    medium_asked: Option<kaeri_model::medium::MediumAsk>,
     /// The crash reports saved on this device, newest first, for Report a bug. The host fills it.
     pub crashes: Vec<kaeri_model::crash::CrashRecord>,
     /// Crash reports the person deleted in Report a bug, for the host to remove from disk.
@@ -375,6 +391,8 @@ pub struct App {
     /// Plugins that could be published, and the store they would go to.
     pub local_plugins: Vec<LocalPluginRow>,
     pub publish_for: Option<String>,
+    /// Reading's Home and Search, while this computer is set to reading alone.
+    pub reading: Reading,
 }
 
 impl App {
@@ -457,6 +475,11 @@ impl App {
             providers: Vec::new(),
             demo: kaeri_model::sources::DemoState::default(),
             first_run_shown: false,
+            medium: None,
+            medium_ask: None,
+            medium_off: None,
+            book_bytes: 0,
+            medium_asked: None,
             crashes: Vec::new(),
             deleted_crashes: Vec::new(),
             meta_status: Vec::new(),
@@ -503,6 +526,7 @@ impl App {
             plugin_options: Vec::new(),
             local_plugins: Vec::new(),
             publish_for: None,
+            reading: Reading::default(),
         }
     }
 
@@ -563,6 +587,19 @@ impl App {
             | Event::LicensedReturn(_)
             | Event::Server(_)
             | Event::Local(_) => {}
+            // The terminal has no reader, and what Kaeri is for is drawn. The download meter says
+            // what turning reading off would delete.
+            Event::Reading(kaeri_model::reading::ReadingEvent::Downloads(view)) => {
+                self.take_book_downloads(view.meter.used)
+            }
+            // Reading's Home and Search are drawn as text while reading is all this computer is
+            // for; the Sources view names each source's kind there.
+            Event::Reading(event) => self.apply_reading(event),
+            Event::BookSources(kaeri_model::book_sources::BookSourceEvent::View(view)) => {
+                self.apply_book_sources(&view)
+            }
+            Event::Reader(_) | Event::BookSources(_) => {}
+            Event::Medium(view) => self.apply_medium(view),
             Event::Content { view, content } => self.apply_content(view, content),
             // Up next for you is a section of Home now; it is not asked for on its own.
             Event::UpNext(_) => {}
@@ -788,6 +825,8 @@ impl App {
             }
             // Joining a store through a paired device is the apps' first launch.
             Event::SyncStoreJoined { .. } | Event::SyncStoreJoinFailed { .. } => {}
+            // The first run's setup sheets and the add-source reports are the apps'.
+            Event::SetupFrom(_) | Event::CameIn(_) => {}
         }
     }
 

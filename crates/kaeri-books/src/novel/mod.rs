@@ -1,0 +1,135 @@
+//! Novels in a web view: the book's documents cleaned for serving, soft hyphens for the
+//! engines that need them, and the one paginator script and stylesheet every platform injects.
+//!
+//! The engine serves a book's files to the platform web view through a custom scheme
+//! (`kaeri-book://s<session>/<path>`, or `https://appassets.androidplatform.net/book/...` on
+//! Android). Every document goes through [`document`] (or [`text_chapter`] for a source's text
+//! chapter), every stylesheet through [`stylesheet`], every SVG through [`svg`], and every
+//! response carries [`csp`]. A source's chapter opening with its title twice says it once
+//! ([`heading_once`]). The paginator ([`script`]) lays the pages out and reports positions; its
+//! messages and calls are described at the top of `web/paginator.js`.
+
+mod css;
+mod headings;
+mod hyphen;
+mod images;
+mod sanitize;
+
+pub use headings::heading_once;
+pub use hyphen::{BUILT_IN as HYPHENATES, SHY};
+pub use images::{MOST_WEB_IMAGES, web_images, with_local_images};
+pub use sanitize::{Clean, Document, Failed, document, stylesheet, svg, text_chapter};
+
+/// The paginator as written, with a placeholder where [`script`] puts the stylesheet.
+const PAGINATOR: &str = include_str!("../../web/paginator.js");
+
+/// Kaeri's novel stylesheet. The paginator carries it and puts it in every document, a text
+/// chapter's and a book's alike, so no document links it.
+pub const STYLESHEET: &str = include_str!("../../web/reader.css");
+
+/// The book origins every platform serves from, for the content security policy.
+pub const ORIGINS: &str = "kaeri-book: https://appassets.androidplatform.net";
+
+/// The paginator script with the stylesheet inside, ready to inject as one user script.
+pub fn script() -> String {
+    PAGINATOR.replacen("\"__KAERI_CSS__\"", &js_string(STYLESHEET), 1)
+}
+
+/// The content security policy every book response carries (S3): no scripts at all, and
+/// styles, images, fonts and media only from the book (or inline images and fonts).
+pub fn csp() -> String {
+    let book = ORIGINS;
+    format!(
+        "default-src 'none'; script-src 'none'; style-src {book} 'unsafe-inline'; \
+         img-src {book} data:; font-src {book} data:; media-src {book}; object-src 'none'; \
+         frame-src 'none'; child-src 'none'; worker-src 'none'; connect-src 'none'; \
+         manifest-src 'none'; base-uri 'none'; form-action 'none'"
+    )
+}
+
+/// The direction lines run in.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Flow {
+    Horizontal,
+    VerticalRl,
+    VerticalLr,
+}
+
+/// The vertical writing mode a stylesheet sets anywhere, if any.
+pub fn vertical_flow(css: &str) -> Option<Flow> {
+    css::vertical_mode(css)
+}
+
+/// A string as a JavaScript (and JSON) string literal.
+pub fn js_string(s: &str) -> String {
+    let mut out = String::with_capacity(s.len() + 2);
+    out.push('"');
+    for c in s.chars() {
+        match c {
+            '"' => out.push_str("\\\""),
+            '\\' => out.push_str("\\\\"),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\t' => out.push_str("\\t"),
+            // Line and paragraph separators end a line in older JavaScript; `<` keeps a
+            // `</script>` from closing an inline script.
+            '\u{2028}' | '\u{2029}' | '<' => out.push_str(&format!("\\u{:04x}", c as u32)),
+            c if (c as u32) < 0x20 => out.push_str(&format!("\\u{:04x}", c as u32)),
+            c => out.push(c),
+        }
+    }
+    out.push('"');
+    out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_script_carries_the_stylesheet() {
+        let s = script();
+        assert!(!s.contains("__KAERI_CSS__"));
+        assert!(s.contains("html.kaeri.k-paged"));
+        assert!(s.contains("window.kaeriReader"));
+    }
+
+    /// WebKit before September 2025 (WebKitGTK up to 2.50) makes no columns for a count of 1
+    /// with an auto width, so a one-column page never breaks: every rule that counts columns
+    /// also sets a width.
+    #[test]
+    fn every_column_count_comes_with_a_column_width() {
+        let mut rules = 0;
+        for rule in STYLESHEET.split('}') {
+            let Some((selector, body)) = rule.split_once('{') else { continue };
+            if !body.contains("column-count") {
+                continue;
+            }
+            rules += 1;
+            let width = body
+                .split(';')
+                .filter_map(|d| d.split_once(':'))
+                .find(|(name, _)| name.trim() == "column-width")
+                .map(|(_, value)| value.trim().to_owned());
+            assert!(
+                width.as_deref().is_some_and(|w| w.starts_with("1px")),
+                "{} sets column-count without a 1px column-width: {width:?}",
+                selector.trim()
+            );
+        }
+        assert!(rules >= 2, "the horizontal and vertical paged rules count columns");
+    }
+
+    #[test]
+    fn the_policy_blocks_scripts_and_names_both_origins() {
+        let p = csp();
+        assert!(p.contains("script-src 'none'"));
+        assert!(p.contains("img-src kaeri-book: https://appassets.androidplatform.net data:"));
+        assert!(!p.contains("  "));
+    }
+
+    #[test]
+    fn strings_escape_for_javascript() {
+        assert_eq!(js_string("a\"b\\c\n</s>\u{2028}"), "\"a\\\"b\\\\c\\n\\u003c/s>\\u2028\"");
+    }
+}

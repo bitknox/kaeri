@@ -1,5 +1,5 @@
 queue-episodes-left = { $count ->
-    [one] Un épisode restant dans { $title }
+    [one] { $count } épisode restant dans { $title }
     [many] { $count } épisodes restants dans { $title }
    *[other] { $count } épisodes restants dans { $title }
  }
@@ -75,7 +75,7 @@ up-next-hidden-until-airs = { $title } est masquée jusqu’à sa diffusion.
 up-next-broadcast = Épisode { $episode } · { $when }
 up-next-out = sorti { $ago }
 library-row-scanning = { $files ->
-    [one] Analyse · 1 fichier trouvé
+    [one] Analyse · { $files } fichier trouvé
     [many] Analyse · { $files } fichiers trouvés
    *[other] Analyse · { $files } fichiers trouvés
  }
@@ -83,12 +83,12 @@ library-row-matching = Association · { $done } sur { $total } séries
 library-row-waiting = En attente d’AniList · { $seconds } s
 library-row-summary = { $episodes } sur { $series }
 library-episodes = { $count ->
-    [one] 1 épisode
+    [one] { $count } épisode
     [many] { $count } épisodes
    *[other] { $count } épisodes
  }
 library-series = { $count ->
-    [one] 1 série
+    [one] { $count } série
     [many] { $count } séries
    *[other] { $count } séries
  }
@@ -113,19 +113,19 @@ library-fix-confidence = { $percent } % de correspondance
 library-open-folder = Ouvrir le dossier
 library-matched-count = { $count } séries associées
 library-row-series = { $count ->
-    [one] 1 série
+    [one] { $count } série
     [many] { $count } séries
    *[other] { $count } séries
  }
 library-row-files = { $files ->
-    [one] 1 fichier
+    [one] { $files } fichier
     [many] { $files } fichiers
    *[other] { $files } fichiers
  }
 library-show-finder = Afficher dans le Finder
 library-remove-line = Vos fichiers restent où ils sont.
 library-files = { $count ->
-    [one] 1 fichier
+    [one] { $count } fichier
     [many] { $count } fichiers
    *[other] { $count } fichiers
  }
@@ -150,7 +150,7 @@ library-from-files = Depuis vos fichiers
 title-connect-drive = Connectez le disque pour lire
 library-picker-title = Choisissez un dossier contenant vos épisodes.
 library-remove-detail = Vos fichiers restent où ils sont.
-library-reason-offline = Impossible d’interroger AniList. Nouvel essai à la prochaine analyse.
+library-reason-offline = Impossible de joindre AniList. La prochaine analyse réessaiera.
 library-choose-match = Choisir l’association
 library-kept-line = Gardé comme titre à part
 library-fix-match = Corriger l’association

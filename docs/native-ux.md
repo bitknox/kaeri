@@ -7,7 +7,7 @@ The apps behave like Apple's own apps and look like Kaeri. Navigation, controls,
 Later decisions win where they disagree with this text:
 
 - The design review settled: Settings sits inside the Mac and iPad main window, a ⌘K palette is built, torrents run on every device, and Up next counts down 10 s and fades through the ground colour.
-- Copy, 1 November 2026: the legal line is "Kaeri doesn't host any shows. You add your own sources." In the apps it appears only in About, beside Legal and contact. Three notices stay where a choice is made: the plugin warning (`plugin-risk-warning`), the store owner line (`stores-join-owner-responsible`) and the torrent playback sharing note. No other screen carries a legal line.
+- Copy, 1 November 2026, with books added on 7 November: the legal line is "Kaeri doesn't host any shows or books. You add your own sources." In the apps it appears only in About, beside Legal and contact. Three notices stay where a choice is made: the plugin warning (`plugin-risk-warning`), the store owner line (`stores-join-owner-responsible`) and the torrent playback sharing note. No other screen carries a legal line.
 - Home, 31 October 2026: Home replaces Continue as the first section, as the Home section below sets out. Patterns F1 and A1 on the canvas now read: only the viewer's own next thing sits above their queue, or a plainly labelled popular pick when they have none.
 - Android TV, Windows and Linux follow the same principles, states, motion tokens and copy rules through their own platform's controls. Their own notes are `docs/desktop-*.md`.
 - Desktop apps, 6 November 2026: Windows and Linux are good apps on their own system, not copies of the Mac app. They share this spec's behaviour, states and copy, and Kaeri's identity: the palette, show titles in Zen Kaku Gothic New, cover art, Nagare and the spacing. Their controls, window chrome, menus, flyouts, dialogs, focus visuals, keyboard conventions and scrollbars are the platform's own. The Mac sets the bar for polish, not the look: nothing jumps, a click answers at once, what changes moves, and one element looks the same everywhere. Where Windows or Linux has a convention and the Mac does it differently, the app follows its own platform. Motion is the exception: Kaeri's own motion follows the Mac's tokens, as the Motion section says.
@@ -31,27 +31,30 @@ One SwiftUI app with three shapes: a split view on Mac, the same split view on i
 - The main window is a `NavigationSplitView`. Home is one scrolling page beside the sidebar, with no preview column, and a title pushes onto it. Library shows the same poster grid for every list, Watching included, with the hover preview on a cover. Seasonal, Calendar and Search use two columns, and a title pushes onto the content column. Section changes are instant (M1).
 - The window's minimum size is 960 × 600 pt, and it restores its frame, sidebar width, section and scroll position (`SceneStorage`). The toolbar holds the search field (`searchable(placement: .toolbar)`) and the sync status, which opens a popover of running jobs.
 - The player has its own single-instance `Window` (M4), so browsing goes on during playback. It remembers its size and position, opening the first time at the video's size capped at 70% of the screen, and resizes at the video's aspect ratio. The title bar is transparent and hides with the controls, and dragging the video moves the window.
+- A book opens in the main window, not a window of its own. The sidebar and toolbar give way to the page, the traffic lights stay, and the window keeps its size, position and full screen. It crossfades in and out, and with Reduce Motion it swaps at once. Esc and the Back button in its bar return to exactly where the book was opened, scroll position included. Opening a second book replaces the first, and the player window goes on beside it.
+- The reader takes the keys as soon as it shows, with no click, and takes them back when a sheet or the page prompt closes. The Go menu and the reader share one key table. On pages, Left and Right follow the page, so in right to left Left goes forward; Up and Down, Space and Shift-Space, Page Down and Page Up turn pages; Home and End go to the first and last page; ] and [ change chapter. In a strip, Down and Up scroll a short step, Space, Shift-Space, Page Down and Page Up scroll a screen less a little overlap, Home and End go to the top and bottom, and Left and Right do nothing. Scrolling by key is smooth, and instant with Reduce Motion. A turn past a chapter's last page, or a scrolled chapter's foot, shows the end page, in a novel as on a comic's pages, and the next turn forward opens the next chapter, by key, click zone or swipe alike; a turn back returns to the last page.
 - As in the companion, a click on the video pauses after the double-click interval, a double-click toggles full screen, and a drag of more than 8 pt never pauses. ⌘W stops playback with the position saved.
 - Rows highlight on press and selection only, with no hover highlight and no scale. A truncated title shows whole in a `help(_:)` tooltip.
 - Every cover and row has a `contextMenu` with the same items as the iPhone's long-press menu.
 - In the Home, Seasonal, Search and Library grids, and on Library's Airing today cards, a cover the pointer rests on grows into a 384 pt card: a 16:9 band with the title over a scrim, then the format, episodes and season, two lines of synopsis and the main action. It opens after 450 ms with the pointer slowed, and a click opens the title. The trailer plays muted in the band once the card has grown, with a sound toggle in its corner. On the Mac and Windows it starts loading, silent and unseen, once the pointer has rested on the cover 150 ms, and the player is loaded once a run ahead of the first hover and played a moment with the first cover's trailer, so the video can show as soon as the card has grown. Resting 150 ms over a neighbour's column hands the card across. Leaving it, a scroll, a key press or the window losing focus closes it. After a scroll the wait starts again from the last scroll, so the cover that comes to rest under a still pointer opens 450 ms after the page stops; after a key press nothing opens until the pointer moves. The wait counts from the pointer arriving on the cover, and moves inside it do not restart it. With Reduce Motion the card crossfades in place. Expand covers on hover (`HoverCards`, on by default) turns the card off, leaving the hover highlight and the click; Play trailers stays separate, so with trailers off the card shows its art only. On Home the card also says the full reason above the synopsis, or “Not found in your sources” with Add to Planning in place of Play, and a More button holds Not interested for a suggestion.
-- Wide art never stretches a cover. Where a banner belongs (the hover band, calendar tiles, the title page header), a title with none shows the still of an episode already watched, then its cover cropped around what Vision finds salient, then, when the cover is too small to crop sharply, a blurred enlargement of it.
+- Wide art never stretches a cover. Where a banner belongs (the hover band, calendar tiles, the title page header), a title with none shows the still of an episode already watched, then its cover cropped around what Vision finds salient, then, when the cover is too small to crop sharply, a blurred enlargement of it. The engine sends the seen still with each title, so it shows from the first frame. Where no still is known yet, the cover's colour holds the frame for 600 ms at most while the episodes load; a still that lands after the cover fades in over it.
 - Settings is the system Settings window (⌘,). See Decisions for you.
 
 ### iPad
 
 - The root is a `TabView` with `.tabViewStyle(.sidebarAdaptable)`: the Mac's sidebar on iPad and the tab bar on iPhone, from one definition. In Library, every list is the same poster grid on Mac, iPad and iPhone. Home scrolls as one page at every width.
+- A window made narrow keeps the section on screen. A section the bar has no tab for is pushed onto the tab that leads to it, with a Back button: Downloads onto Library, Calendar, Seasonal and Updates onto Home or Read, and Sources, Plugin stores and Settings onto the first tab. A resize never opens or closes a sheet. Made wide again while the section is still pushed, the window selects it in the sidebar; after Back or another tab, the selection stays.
 - Touch works as on iPhone. The pointer gets the system's button effects, rows highlight on press and selection only, and secondary click opens context menus.
 - The keyboard has the same `.commands` as Mac, shown in iPadOS 26's menu bar and by holding ⌘.
 - The player is a full-screen cover zoomed from the banner (T2), and it follows the window in Stage Manager.
 
 ### iPhone
 
-- Five tabs: Home, Calendar, Seasonal, Library and Search (`Tab(role: .search)`, with its field at the bottom). Downloads is Library's first row. Accounts, Sources, Plugin stores and Settings open as a sheet from the account button on Home and Library. Watch together is a people button in Home's toolbar, before the account button, and not a sixth tab; while the phone is in a party a bar above the tabs shows it. On iPad it is a sidebar item that the floating tab bar leaves out, so it keeps five tabs.
+- Five tabs: Home, Calendar, Seasonal, Library and Search (`Tab(role: .search)`, with its field at the bottom). Downloads is Library's first row. Accounts, Sources, Plugin stores and Settings open as a sheet from the account button on Home, Read, Updates and Library. Watch together is a people button in Home's toolbar, before the account button, and not a sixth tab; while the phone is in a party a bar above the tabs shows it. On iPad it is a sidebar item that the floating tab bar leaves out, so it keeps five tabs.
 - The tab bar minimises on scroll and the large title collapses, both the system's (T6).
 - The main action sits low. When a title page's Resume button scrolls away, a Resume capsule fades into the bottom toolbar. Sheets open at the medium detent with their action at the bottom.
 - Long press opens `contextMenu(menuItems:preview:)` with the banner as the preview. Pull to refresh (`refreshable`) works on Home, Calendar, Seasonal, Library (where it also syncs) and Downloads, and its spinner lasts until the engine's job ends, at most 15 s.
-- The app runs in portrait. The player rotates to landscape when it opens (T2).
+- The app runs in portrait. The player rotates to landscape when it opens (T2). The reader follows the phone's sensor in portrait and landscape while it is open, and keeps the current orientation while the system's rotation lock is on. The rest of the app stays portrait, and closing the reader returns it to portrait.
 
 Swipe actions on iPhone and iPad:
 
@@ -376,6 +379,49 @@ What is typed and every filter are one `SearchQuery`. The engine owns the rules:
 - A genre or tag typed in the field is offered as a filter. Choosing it adds the filter and clears the words it was found by.
 - The Trending rail scrolls sideways with no scrollbar, as Home's shelves do.
 
+## Reading
+
+### Chapter lists open on the current chapter
+
+Decided 10 November 2026. A chapter list that opens on its own opens with the current chapter in the middle. That covers the reader's chapter list in every form (the Mac and Linux popover, the iPhone and Android sheets, iPad, tablet and e-ink) and Choose chapters, the download picker on the series page. The series page itself still opens at its header.
+
+- In the reader, the current chapter is the one open. Outside it, it is the chapter in progress, or else the one after the last chapter read: the same place Choose chapters starts its picks from. With nothing read, or everything read, the list opens at its top.
+- The row sits as near the middle as the list allows. Near either end it stops at that end, and a list short enough to fit does not move.
+- Nothing scrolls into place. The list is positioned before its first frame is drawn, or under a crossfade of the window, never by a fade through an empty screen.
+- On e-ink, Contents opens on the page that holds the current chapter, with no scrolling.
+- VoiceOver, TalkBack and the keyboard on Mac, Windows and Linux start on the current chapter's row.
+- Mark read up to is an action on a chapter's row, and a volume on the series page opens in place, so neither opens a list of its own.
+
+### Look on e-ink
+
+Manga and webtoons on e-ink are drawn on paper only, as the e-ink board draws them, so their reader settings offer no Look. Novels on e-ink offer Paper and an opt-in Dark.
+
+### Tap zones
+
+Decided 10 November 2026, with the Android review on 11 November. Where a tap lands on the page decides whether it turns forward, turns back or shows the controls. The engine owns the zones and the hit test (`tap_action` and `tap_map` in `kaeri-model`), and every front end asks it rather than keeping fractions of its own.
+
+- Paged reading offers Auto, Sides, L shape, Wide next, Top and bottom, Next on both sides and Off. Auto is Sides, or L shape for vertical pages. Scrolling reading, the strip and the scrolled novel, offers the same six without Auto. Paged starts on Auto on phones and tablets and on Sides on e-ink and desktop. Scrolling starts on Off, where a tap shows the controls.
+- Zone size is Standard (thirds) or Small (quarters), and two switches flip the zones left and right or top and bottom. The zones mirror with the reading direction. Flips never change which way the page moves.
+- The settings belong to the device, whatever the series or medium, and are not synced.
+- The Tap zones row (Click zones on Mac, Windows and Linux) opens a page of its own inside the reader's settings, on the kind of reading that is open. It has Paged and Scrolling segments, a tile for each layout as a radio group, Zone size, the two flips, Show zones and a line such as "Stays on this phone". Every change applies at once. Show zones is off for Off and hidden under a screen reader.
+- On pages a tap acts at once. On a zoomed page every tap shows or hides the controls. A spread takes its zones from the whole screen, not from each page.
+- In a strip a tap waits out the double tap time. Next and Previous scroll 90% of the visible height over 300 ms, at once with Reduce Motion or in Paper mode, and a second tap during a step adds its own step. A touch on a strip that is moving by itself only stops it. A tap up to 120 ms after the strip came to rest by itself counts as a normal tap.
+- The guide draws the zones over the page the first time each kind of reading opens on a device, and again when the layout, size, flips, flow or sideways direction differ from what was last seen. It also shows when the settings close after a tap zone change, and from Show zones. It never shows for Off, on a zoomed page or under a screen reader.
+- The guide paints Next in the zone blue at 86%, Previous in pale blue and Controls in cream at 82%, with a hairline only where two kinds meet. One cell of each kind carries its name and arrow, and "Change in Reader settings" sits under Controls. On desktop the key for each arrow replaces that line.
+- The guide fades in over 200 ms and stays with no timer. The first touch clears it with a 300 ms fade out and also does what it touched, as a crossfade, never through an empty page. The guide counts as seen once that finger lifts. In Paper mode it comes and goes at once. A guide that comes back takes the controls away.
+- On desktop a click in Next or Previous turns the page whether the controls are up or not, and only the Controls zone shows or hides them. While the controls are up, an arrow button sits at each edge. They are real buttons, reachable with Tab, and fade with the controls. A drag over 8 pt is not a click, and on the Mac a two-finger sideways swipe turns.
+- Screen readers get no zones and no guide. The page is one element with the actions Next page, Previous page and Show controls, or Scroll down and Scroll up in a strip.
+
+On e-ink:
+
+- One choice covers all reading, strips included. The page lists the layouts as radio rows, each with a small diagram and a line saying where its zones are. The line follows the size and the flips. Sides at Standard gives Next 40% of the width on the reading side, Controls the middle 30% and Previous the other 30%.
+- Swipes turn pages is on at first. Off, swipes stop turning while taps and page buttons still turn, and a drag is neither a turn nor a tap.
+- Off with Swipes turn pages off is allowed, with a warning in place of a block: the line under Off reads "Only page buttons turn pages". On a device without page buttons, that says nothing will turn the page.
+- The Tap zones page covers the whole screen and fits without a scroll. It has no rule over it, and a 2 dp ink rule runs under its header from edge to edge, as on the other full e-ink pages.
+- The guide is opaque black, grey and white with 2 dp rules. It notes at its foot that page buttons also turn pages, and on sideways pages Next says "Tap, or swipe" with the direction.
+- The guide comes in one refresh. The first touch clears it in that touch's own refresh, and the device decides the kind: a full refresh only when full refreshes on image pages are on.
+- E-ink never glides. Turns, strip steps and the guide all jump in one refresh.
+
 ## States
 
 Every screen has loading, content, empty, offline and failed states. All of them follow the TUI's rule: nothing for the first 600 ms, then the state shows where it applies.
@@ -395,7 +441,7 @@ Nagare (cell 5, 100 × 160 pt) stands above a title, one line and at most one bu
 | --- | --- | --- | --- |
 | Library, signed out | Your AniList list shows here | Sign in to sync what you watch and where you stopped. | Sign in to AniList |
 | Downloads | No downloads | Downloaded episodes play without a connection. | none |
-| Sources, no sources | No sources yet | Sources are where episodes come from: folders on this device, your media server, and plugins from stores you join. | Join a plugin store |
+| Sources, no sources | No sources yet | Sources are where episodes come from: folders on this device, your media server, and plugins from plugin stores you join. | Join a plugin store |
 | Search, no results | `ContentUnavailableView.search(text:)` |  |  |
 
 Home has no empty state. Its empty sections are left out, and with nothing watched it still has the popular pick, This season, This week and Trending now. Nagare stays for Home offline with nothing saved (see Offline).
@@ -515,6 +561,7 @@ On the ground (`#161A2E`): silk 13.0:1, water 9.1:1, amber 8.5:1 (and ground on 
 
 - Android uses the system's own rule: the times above, or `getRecommendedTimeoutMillis` when the user's time to take action is longer. A notice with a button stays until it is dismissed, acted on or replaced. In the player the Undo and Resume notes also stay past their playback seconds while TalkBack or Switch Access runs.
 - Windows and Linux use the times above, doubled while a screen reader runs. A notice with a button stays until it is dismissed or acted on. The player's Undo note stays twice as long while a screen reader runs.
+- One exception on every platform: the reader's Undo after Not a credit page lasts 8 s, 16 s while a screen reader runs, and then goes by itself. The keep is held until then, and the engine hears of it when the notice times out, at a second keep, or as the chapter closes or another opens.
 - Apple keeps its own rule above, which pauses under VoiceOver focus.
 
 ### Reduce Motion, Reduce Transparency, captions
@@ -528,6 +575,17 @@ On the ground (`#161A2E`): silk 13.0:1, water 9.1:1, amber 8.5:1 (and ground on 
 - With Full Keyboard Access every control is reachable, custom cover cells included (`focusable()`). The focus ring is the system's in the accent colour, never hidden.
 - Tab moves between sidebar, list and title page; arrows move inside them; Return opens; Space plays. In the player any key shows the controls, Tab walks them, and they do not hide while one has focus.
 - Every sheet has a default button on Return and a cancel button on Esc (`keyboardShortcut(.defaultAction)`, `.cancelAction`).
+
+### Keyboard and D-pad on e-ink
+
+- While keys move the focus, the focused control shows a 3 dp ink ring along its own shape with a 2 dp paper line inside it, so the mark shows on paper, on grey, on the ink button and on a cover. A control with its own 2 dp border keeps 2 dp of paper between that border and the ring.
+- The mark is one still paint with no motion, drawn in the panel's fast update. It never shows on touch, and the first touch after keys takes it away.
+- Enter acts on the focused control, which inverts as it does under a finger. A row whose cover or words start at its very edge, such as a library row or a chapter line, gets the ring just outside it.
+- In the reader, while the bars show, the D-pad's arrows move the focus between the bar controls: Up and Down between the top and bottom bars and the bottom bar's rows, Left and Right along a row. The focus never leaves the bars that way, and Space and the page keys still turn the page. Enter acts on the focused control. In a novel, Tab from the page also goes to the bars.
+- Bars shown with a key (Enter, the D-pad centre, Menu or G) put the focus on Contents in the top bar, the first control that does not leave the reader. Bars shown by touch take no focus and show no ring; the first arrow then goes to Contents.
+- Back, Escape or a middle tap hides the bars, and the D-pad turns the page again. Back goes one step at a time: a sheet to the one it came from, Settings and Contents opened from the bars back to the bars, the bars off the page, and only then out of the reader.
+- A sheet keeps the D-pad and Tab inside it. A sheet opened with keys takes the focus to its first control, and Contents to the chapter being read. When it closes, the focus goes back to the control that opened it: Settings or Contents in the bars, More reader settings, or Tap zones. Done closes the sheet and the bars together. In Contents the page keys turn the list's pages, and a turn puts the focus on the page's first chapter.
+- Whenever no control can take the focus, as after a touch, when the bars close or when the control that had it goes, such as Try again once the chapter opens, it goes back to the reader, so Escape and the page keys always work and Enter shows the controls again.
 
 ### Game controllers
 
@@ -568,7 +626,7 @@ Labels are short and concrete, in the words the platform uses for the same thing
 3. Name the thing and its number: “Episode 7 · 14 min left”, “Plays in 8 s”. Numbers, durations and dates go through the system formatters (`Duration.formatted`, `Date.FormatStyle`), so they follow the locale and its clock.
 4. A middle dot joins facts. No dashes, exclamation marks, emoji, “please”, “oops” or “simply”, and no marketing words such as free, unlimited, powerful or seamless.
 5. An error says what failed and what to do next. Raw error chains never reach the screen; they go to Messages.
-6. Legal-first: “sources you choose”, “doesn't host any shows”, “you add your own sources”. Copy stays neutral, never suggests that Kaeri supplies or recommends what to watch, and never puts torrents in a headline.
+6. Legal-first: “sources you choose”, “doesn't host any shows or books”, “you add your own sources”. Copy stays neutral, never suggests that Kaeri supplies or recommends what to watch, and never puts torrents in a headline.
 7. Keys appear only where keys exist. Mac menus show their shortcuts; nothing on iPhone says “press S”. A `NoticeHint` is a button, never a sentence about a key.
 8. Engine text arrives in the terminal's lower case. The app capitalises the first letter and changes nothing else (see Decisions for you).
 
@@ -609,6 +667,7 @@ The Compose app keeps every rule above and changes only the means: Material 3 wi
 | Torrents | The same rules as iPhone: foreground only, Torrents on mobile data off by default |
 | Text size, TalkBack, keyboard | Font scale in `sp` with the same caps; `semantics` with `contentDescription`, `stateDescription`, `customActions` and `heading()`; `onPreviewKeyEvent` with the same keys, and `onProvideKeyboardShortcuts` for Meta + / |
 | Glass chrome | No glass. Bars and capsules are solid Raised, with tonal elevation off |
+| Orientation on phones | Under 600 dp at its smallest the app holds `SCREEN_ORIENTATION_PORTRAIT`. The player asks for `SENSOR_LANDSCAPE`. The reader asks for `FULL_USER`, which follows the sensor and honours the rotation lock, and asks for portrait again as it closes. Its pages lay out again for the new size: spreads, the strip and novels each fit landscape |
 
 ## Decisions for you
 

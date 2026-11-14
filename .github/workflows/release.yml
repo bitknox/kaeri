@@ -397,7 +397,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path "dist/$name/third-party" | Out-Null
           Copy-Item assets/THIRD-PARTY.md "dist/$name/third-party/"
           Copy-Item assets/shaders/THIRD-PARTY.md "dist/$name/third-party/THIRD-PARTY-shaders.md"
-          Copy-Item assets/mpv/licenses/*,assets/shaders/LICENSE-* "dist/$name/third-party/"
+          Copy-Item assets/mpv/licenses/*,assets/shaders/LICENSE-*,assets/hyphenation/LICENSE-hyphenation-patterns.txt "dist/$name/third-party/"
           Copy-Item target/THIRD-PARTY-rust.txt "dist/$name/third-party/"
           Compress-Archive -Path "dist/$name" -DestinationPath "dist/$name.zip"
           (Get-FileHash "dist/$name.zip" -Algorithm SHA256).Hash.ToLower() +
@@ -501,7 +501,7 @@ jobs:
            Browse, track and watch anime from the terminal. Real image rendering,
            mpv for playback, pluggable sources.
            .
-           kaeri doesn't host any shows. You add your own sources.
+           kaeri doesn't host any shows or books. You add your own sources.
           EOF
 
           deb="dist/kaeri-${version}-amd64.deb"

@@ -59,6 +59,8 @@ pub struct Cursors {
     pub settings: Cursor,
     /// Together: the Join line, then the recent rooms.
     pub together: Cursor,
+    /// Reading's Home in the rail while Kaeri is for both.
+    pub read: Cursor,
     /// The episode table, kept apart from the list it was opened from so stepping back out of
     /// Episodes does not disturb where you were in the list. Its window is the frame's to place,
     /// as the overlay's is, so the rows stay put while the highlight moves within them.
@@ -95,6 +97,7 @@ impl Cursors {
             Section::Accounts => &self.accounts,
             Section::Settings => &self.settings,
             Section::Together => &self.together,
+            Section::Read => &self.read,
         }
     }
 
@@ -110,6 +113,7 @@ impl Cursors {
             Section::Accounts => &mut self.accounts,
             Section::Settings => &mut self.settings,
             Section::Together => &mut self.together,
+            Section::Read => &mut self.read,
         }
     }
 }
@@ -220,7 +224,7 @@ impl App {
         // it while `g` and `G` scrolled the list behind it. The rail is shorter than any page,
         // so a page or an end goes to the first or last section.
         if self.nav.focus() == Focus::Rail {
-            let all = Section::ALL.len() as isize;
+            let all = self.rail_sections().len() as isize;
             return self.step_section(match action {
                 Action::Down => 1,
                 Action::Up => -1,

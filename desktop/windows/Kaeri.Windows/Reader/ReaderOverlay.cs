@@ -1,0 +1,1384 @@
+using Medium = Kaeri.Engine.Core.Medium;
+using System.Runtime.InteropServices;
+using Kaeri.App;
+using Kaeri.Engine.Model;
+using Microsoft.UI.Dispatching;
+using Microsoft.UI.Input;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
+using Microsoft.UI.Xaml.Automation.Peers;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
+using Windows.Foundation;
+using Windows.System;
+using DispatcherQueueTimer = Microsoft.UI.Dispatching.DispatcherQueueTimer;
+using DispatcherQueuePriority = Microsoft.UI.Dispatching.DispatcherQueuePriority;
+
+namespace Kaeri.Windows.Pages;
+
+/// <summary>
+/// The reader, over the whole window: manga and webtoons as pages or a strip, light novels in a
+/// web view, with the chrome that comes and goes and the screens for opening, failing and the
+/// end of a chapter. It drives <see cref="ReaderSession"/> and draws what it says; the window
+/// places it (<c>ReaderLayer</c>) and calls <see cref="Open"/> and <see cref="Close"/>.
+/// </summary>
+public sealed partial class ReaderOverlay : UserControl
+{
+    enum Kind { None, Paged, Strip, Novel }
+
+    readonly Grid root = new();
+    readonly Grid stage = new();
+    readonly Grid states = new();
+    readonly TextBlock announcer = new() { Opacity = 0, IsHitTestVisible = false, Width = 1, Height = 1, HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top };
+    readonly ReaderChrome chrome;
+    readonly Flyout settingsFlyout = new() { Placement = FlyoutPlacementMode.Top };
+    readonly Flyout chaptersFlyout = new() { Placement = FlyoutPlacementMode.Top };
+    readonly DispatcherQueueTimer idle;
+
+    Kind kind;
+    PagedView? paged;
+    StripView? strip;
+    NovelView? novel;
+    FrameworkElement? stateView;
+    string? stateKey;
+    bool showing;
+    bool chromeShown = true;
+    bool pointerHidden;
+    bool overChrome;
+    bool flyoutOpen;
+    /// <summary>The last input was a key, not the pointer.</summary>
+    bool keyed;
+    Point lastPointer = new(-1, -1);
+    long lastNovelWheel;
+    string? lastFit, lastBackground;
+    bool lastPaper, lastContrast;
+    string? work;
+
+    public ReaderOverlay()
+    {
+        chrome = new ReaderChrome(this);
+        root.Children.Add(stage);
+        root.Children.Add(states);
+        root.Children.Add(chrome.Notice);
+        root.Children.Add(chrome.Group);
+        root.Children.Add(chrome.PreviewLayer);
+        root.Children.Add(chrome.Top);
+        root.Children.Add(chrome.CreditPill);
+        root.Children.Add(announcer);
+        AutomationProperties.SetLiveSetting(announcer, AutomationLiveSetting.Polite);
+        Content = root;
+        IsTabStop = true;
+        UseSystemFocusVisuals = false;
+        RequestedTheme = ElementTheme.Dark;
+
+        chrome.Settings.Flyout = settingsFlyout;
+        chrome.Chapters.Flyout = chaptersFlyout;
+        settingsFlyout.Opening += (_, _) =>
+        {
+            settingsFlyout.Content = SettingsFlyout.Build(this, settingsFlyout);
+            FlyoutTheme(settingsFlyout);
+        };
+        chaptersFlyout.Opening += (_, _) =>
+        {
+            chaptersFlyout.Content = ChaptersFlyout.Build(this, chaptersFlyout);
+            FlyoutTheme(chaptersFlyout);
+        };
+        foreach (var (flyout, button) in new[] { (settingsFlyout, chrome.Settings), (chaptersFlyout, chrome.Chapters) })
+        {
+            flyout.Opened += (_, _) => flyoutOpen = true;
+            flyout.Closed += (_, _) =>
+            {
+                flyoutOpen = false;
+                SettingsFlyout.ModePicked = false;
+                // Opened from the keyboard, focus goes back to its button, which keeps the chrome
+                // up; otherwise the keys go back to the page.
+                if (showing && keyed && chromeShown && button.Visibility == Visibility.Visible)
+                    button.Focus(FocusState.Keyboard);
+                else if (showing)
+                    Focus(FocusState.Programmatic);
+                Idle();
+            };
+        }
+
+        idle = Timers.Weak(this, TimeSpan.FromSeconds(2), false, o => o.IdleTick());
+        stage.Tapped += OnTapped;
+        AddHandler(PointerMovedEvent, new PointerEventHandler(OnPointerMoved), true);
+        AddHandler(PointerPressedEvent, new PointerEventHandler((_, e) =>
+        {
+            keyed = false;
+            TouchInput = e.Pointer.PointerDeviceType != Microsoft.UI.Input.PointerDeviceType.Mouse;
+            // The mouse's back button leaves, as everywhere in the app.
+            if (e.GetCurrentPoint(this).Properties.IsXButton1Pressed)
+            {
+                Close();
+                e.Handled = true;
+            }
+        }), true);
+        PreviewKeyDown += (s, e) =>
+        {
+            TouchInput = false;
+            keyed = true;
+            OnKey(s, e);
+        };
+        SizeChanged += (_, _) =>
+        {
+            chrome.Fit(ActualWidth);
+            ReportSurface();
+        };
+        Loaded += (_, _) =>
+        {
+            if (XamlRoot is { } xr)
+                xr.Changed += (_, _) => ReportSurface();
+        };
+    }
+
+    Ctx Ctx => Ctx.Current;
+
+    internal ReaderSession Reader => Ctx.Known.Reader;
+
+    /// <summary>The reader is up over the window.</summary>
+    public bool Showing => showing;
+
+    /// <summary>The top row's title, which drags the window while the reader is up.</summary>
+    public UIElement DragArea => chrome.DragArea;
+
+    // Opening and closing
+
+    /// <summary>Opens <paramref name="work"/> at <paramref name="chapter"/>, or where the person stopped.</summary>
+    public void Open(string work, string? chapter, OpenAt? at)
+    {
+        this.work = work;
+        if (!showing)
+        {
+            showing = true;
+            Reader.Changed += OnChanged;
+            Dialogs.Opening += DialogOpening;
+            Visibility = Visibility.Visible;
+            Ctx.Window.ReaderShowing(true);
+            if (Motion.Enabled)
+                Motion.FadeIn(this);
+        }
+        Clear();
+        Reader.ScreenReader ??= DeviceWatch.ScreenReaderRunning;
+        // The end page's server line needs Your sources to know a send is under way.
+        if (Ctx.Known.Books.View is null)
+            Ctx.Known.Books.Load();
+        Reader.Open(work, chapter, at);
+        Repaint(force: true);
+        chrome.FullscreenShown(Ctx.Window.ReaderFullscreen);
+        ShowChrome(stay: true);
+        Render();
+        ReportSurface();
+        DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () => Focus(FocusState.Programmatic));
+    }
+
+#if KAERI_TESTING
+    /// <summary>
+    /// Shots with no keys pressed: <c>reader-aa</c> opens the Aa flyout, <c>reader-chapters</c>
+    /// the chapter list, <c>reader-scrub</c> the scrub preview two thirds in, and
+    /// <c>reader-end</c> the end page.
+    /// </summary>
+    internal void Shot(string what)
+    {
+        ShowChrome(stay: true);
+        switch (what)
+        {
+            case "reader-aa":
+                settingsFlyout.ShowAt(chrome.Settings);
+                break;
+            case "reader-chapters":
+                chaptersFlyout.ShowAt(chrome.Chapters);
+                break;
+            case "reader-scrub":
+                var count = kind == Kind.Novel ? novel?.Pages ?? 1 : Math.Max(Reader.ReadingLeaves, 1);
+                chrome.ShotPreview(Math.Max(1, count * 2 / 3));
+                break;
+            case "reader-end":
+                if (paged is not null)
+                    paged.Jump(Math.Max(0, Reader.Leaves.Length - 1));
+                strip?.Ends(true);
+                novel?.ShotEnd();
+                break;
+            case "reader-credit-pill" or "reader-credit-line" or "reader-credit" or "reader-credit-two" or "reader-credit-two-line" or "reader-credit-failed"
+                or "reader-credit-chrome" or "reader-credit-kept" or "reader-parts" or "reader-parts-missing" or "reader-credit-end"
+                or "reader-strip-row" or "reader-strip-credits" or "reader-strip-end":
+                ShotCredits(what);
+                break;
+        }
+    }
+#endif
+
+    /// <summary>Closes the reader and gives the window back.</summary>
+    public void Close()
+    {
+        if (!showing)
+            return;
+        showing = false;
+        Reader.Changed -= OnChanged;
+        Dialogs.Opening -= DialogOpening;
+        settingsFlyout.Hide();
+        chaptersFlyout.Hide();
+        Reader.Close();
+        idle.Stop();
+        ShowPointer();
+        Clear();
+        chrome.ShowNotice(null);
+        chrome.ShowBackTo(null);
+        pillHold?.Stop();
+        pillSaidFor = null;
+        Motion.Set(chrome.CreditPill, false);
+        Visibility = Visibility.Collapsed;
+        Ctx.Window.ReaderShowing(false);
+    }
+
+    void Clear()
+    {
+        novel?.Close();
+        stage.Children.Clear();
+        paged = null;
+        strip = null;
+        novel = null;
+        kind = Kind.None;
+        ClearState();
+        lastFit = null;
+    }
+
+    // What the session says
+
+    void OnChanged(ReaderChange change)
+    {
+        if (!DispatcherQueue.HasThreadAccess)
+        {
+            DispatcherQueue.TryEnqueue(() => OnChanged(change));
+            return;
+        }
+        if (!showing)
+            return;
+        // A mode picked in the flyout: once the engine has it, the settings page shows the
+        // choice and its note, with focus back on the mode row.
+        if (change is ReaderChange.Settings or ReaderChange.Leaves && SettingsFlyout.ModePicked && settingsFlyout.IsOpen)
+        {
+            settingsFlyout.Content = SettingsFlyout.Build(this, settingsFlyout);
+            FlyoutTheme(settingsFlyout);
+        }
+        switch (change)
+        {
+            case ReaderChange.Phase:
+            case ReaderChange.Opening:
+                Render();
+                break;
+            case ReaderChange.Leaves:
+                Render();
+                if (kind == Kind.Paged)
+                    paged?.Rebuild();
+                else if (kind == Kind.Strip)
+                    strip?.Rebuild();
+                PositionChanged();
+                break;
+            case ReaderChange.Page:
+                paged?.RefreshPages();
+                strip?.RefreshPages();
+                chrome.RefreshPreview();
+                break;
+            case ReaderChange.Novel:
+                // Try again after the web view failed to start: a new one, not the dead one.
+                if (novel is { Broken: true })
+                    DropNovel();
+                Render();
+                if (Reader.Novel is { } book && novel is not null)
+                {
+                    novel.Ground(NovelGround);
+                    novel.Open(book);
+                }
+                PositionChanged();
+                break;
+            case ReaderChange.NovelStyle:
+                novel?.ApplyStyle(Reader.NovelStyle);
+                Repaint();
+                break;
+            case ReaderChange.End:
+            case ReaderChange.Read:
+            case ReaderChange.Sent:
+            case ReaderChange.Preview:
+                paged?.RefreshEnd();
+                strip?.RefreshFoot();
+                novel?.RefreshEnd();
+                break;
+            case ReaderChange.Settings:
+                Repaint();
+                ReportSurface();
+                novel?.SyncInput();
+                break;
+            case ReaderChange.Notice:
+                // The opening and failed screens speak for themselves; the notice waits under them.
+                if (!StateShown)
+                    chrome.ShowNotice(Reader.Notice);
+                break;
+            case ReaderChange.BackTo:
+                if (!StateShown)
+                    chrome.ShowBackTo(Reader.BackTo);
+                break;
+            case ReaderChange.GoTo:
+                if (Reader.GoTo is { } go)
+                {
+                    if (kind == Kind.Paged)
+                        paged?.GoTo(go.Leaf);
+                    else if (kind == Kind.Strip)
+                        strip?.Restored();
+                }
+                break;
+            case ReaderChange.NovelGoTo:
+                if (Reader.NovelGoTo is { } place)
+                    novel?.GoTo(place.Pos);
+                break;
+            case ReaderChange.Credits:
+            case ReaderChange.Parts:
+                CreditsChanged();
+                break;
+            case ReaderChange.Chapters:
+                break;
+        }
+    }
+
+    /// <summary>The view for what is open, and the opening or failed screen over it.</summary>
+    void Render()
+    {
+        var view = Reader.View;
+        var want = view is null ? Kind.None
+            : view.Medium == Medium.Novel ? Kind.Novel
+            : view.Mode is ReaderMode.Strip or ReaderMode.Vertical ? Kind.Strip
+            : Kind.Paged;
+        if (want != kind)
+        {
+            novel?.Close();
+            stage.Children.Clear();
+            paged = null;
+            strip = null;
+            novel = null;
+            kind = want;
+            FrameworkElement? made = want switch
+            {
+                Kind.Paged => paged = new PagedView(this),
+                Kind.Strip => strip = new StripView(this),
+                Kind.Novel => novel = new NovelView(this),
+                _ => null,
+            };
+            if (made is not null)
+                stage.Children.Add(made);
+            if (want == Kind.Novel && Reader.Novel is { } book)
+                novel!.Open(book, reopenAt);
+            reopenAt = null;
+            paged?.Rebuild();
+            strip?.Rebuild();
+            Repaint(force: true);
+        }
+        if (view is not null)
+            chrome.Titles(view.Title, view.DemoCredit is { } demo ? T.ReaderDemoCredit(demo.Series, demo.Author, demo.Licence ?? "") : null);
+        AutomationProperties.SetName(this, view?.Title ?? "");
+
+        var hasContent = Reader.Leaves.Length > 0 || (Reader.Novel is not null && Reader.NovelPainted);
+        if (Reader.Phase == ReaderPhase.Failed)
+            ShowState("failed", () => new ChapterFailedView(this, ChapterLabel(), Reader.Failure));
+        else if (Reader.Flowing && kind == Kind.Strip)
+            // The next chapter opens under the strip's marker: the scroll stays as it is.
+            ClearState();
+        else if (Reader.Phase == ReaderPhase.Opening || (Reader.Phase == ReaderPhase.Open && !hasContent))
+            ShowState("opening:" + ChapterLabel(), () => new OpeningView(this, PagePalette, ChapterLabel()));
+        else
+            ClearState();
+    }
+
+    string ChapterLabel()
+    {
+        if (Reader.Opening?.Chapter is { } opening)
+            return opening.Label;
+        if (Reader.Phase == ReaderPhase.Opening && Reader.Asked?.Chapter is { } id)
+            foreach (var group in Reader.Chapters)
+                foreach (var row in group.Chapters)
+                    if (row.Id == id)
+                        return row.Label;
+        return Reader.View?.Chapter.Label ?? "";
+    }
+
+    void ShowState(string key, Func<FrameworkElement> make)
+    {
+        if (stateKey == key && stateView is not null)
+            return;
+        stateKey = key;
+        states.Children.Clear();
+        stateView = make();
+        states.Children.Add(stateView);
+        states.Visibility = Visibility.Visible;
+        // Nothing floats over a screen with buttons: the notice and Back to wait for the page.
+        chrome.ShowNotice(null);
+        chrome.ShowBackTo(null);
+        // Over a screen with buttons the chrome's Back stays and the group waits.
+        idle.Stop();
+        ShowPointer();
+        Motion.Set(chrome.Top, true);
+        chromeShown = true;
+        Motion.Set(chrome.Group, false);
+        Ctx.Window.ReaderChrome(true);
+        Pill();
+    }
+
+    /// <summary>
+    /// The state screen goes. The opening plate fades away over the page's own plate, which shows
+    /// at once in its place (<see cref="TakeCarry"/>), so the page fades in on a plate and never
+    /// on bare ground; the other states cut. Paper mode cuts every one.
+    /// </summary>
+    void ClearState()
+    {
+        if (stateView is null)
+            return;
+        var leaving = stateView;
+        carryPlate = leaving is OpeningView;
+        stateKey = null;
+        stateView = null;
+        if (leaving is OpeningView && !PaperMode && showing)
+        {
+            leaving.IsHitTestVisible = false;
+            Motion.FadeOutThen(leaving, () =>
+            {
+                states.Children.Remove(leaving);
+                if (states.Children.Count == 0)
+                    states.Visibility = Visibility.Collapsed;
+            });
+        }
+        else
+        {
+            states.Children.Clear();
+            states.Visibility = Visibility.Collapsed;
+        }
+        if (showing)
+        {
+            ShowChrome();
+            chrome.ShowNotice(Reader.Notice);
+            chrome.ShowBackTo(Reader.BackTo);
+        }
+    }
+
+    bool carryPlate;
+
+    /// <summary>Whether the pages built now take over from the opening plate, once: their plates show at once.</summary>
+    internal bool TakeCarry()
+    {
+        var carry = carryPlate;
+        carryPlate = false;
+        return carry;
+    }
+
+    bool StateShown => stateView is not null;
+
+    /// <summary>The last input was a finger or a pen: the end page offers one more swipe.</summary>
+    internal bool TouchInput { get; private set; }
+
+    /// <summary>The strip is what shows: its end comes by scrolling, not a swipe.</summary>
+    internal bool StripShown => kind == Kind.Strip;
+
+    /// <summary>
+    /// The novel's web view could not start (no WebView2 runtime) or lost its page: the failed
+    /// screen. A view the reader already let go of says nothing.
+    /// </summary>
+    internal void NovelFailed(NovelView from)
+    {
+        if (!showing || from != novel)
+            return;
+        ShowState("failed", () => new ChapterFailedView(this, ChapterLabel(), null));
+    }
+
+    DateTimeOffset novelLostAt = DateTimeOffset.MinValue;
+    /// <summary>Where the lost novel view was, for the one made in its place.</summary>
+    NovelPos? reopenAt;
+
+    /// <summary>
+    /// The novel's web view process crashed or was killed: the view goes, and a new one opens
+    /// the chapter where it was. A second loss soon after shows the failed screen instead.
+    /// </summary>
+    internal void NovelLost(NovelView from)
+    {
+        if (!showing || from != novel)
+            return;
+        var now = DateTimeOffset.UtcNow;
+        var again = now - novelLostAt > TimeSpan.FromSeconds(30);
+        novelLostAt = now;
+        DropNovel();
+        if (again && Reader.Novel is not null)
+        {
+            reopenAt = Reader.NovelShown;
+            Render();
+        }
+        else
+            ShowState("failed", () => new ChapterFailedView(this, ChapterLabel(), null));
+    }
+
+    /// <summary>The novel's view goes; the next <see cref="Render"/> makes a new one.</summary>
+    void DropNovel()
+    {
+        if (novel is null)
+            return;
+        novel.Close();
+        stage.Children.Remove(novel);
+        novel = null;
+        kind = Kind.None;
+    }
+
+    /// <summary>
+    /// The window was minimised or came back: a hidden novel rests, and a notice's time waits.
+    /// Coming back, the window's activation starts it again.
+    /// </summary>
+    internal void WindowHidden(bool hidden)
+    {
+        novel?.Rest(hidden);
+        if (hidden)
+            Reader.WindowActive(false);
+    }
+
+    internal void NovelPaintedNow(NovelView from)
+    {
+        if (from == novel && stateView is OpeningView)
+            ClearState();
+    }
+
+    /// <summary>The paginator turned to a page: a screen reader hears it.</summary>
+    internal void NovelTurned(NovelView from)
+    {
+        if (from == novel)
+            Announce();
+    }
+
+    // The surface
+
+    /// <summary>The reader's size in pixels, for the engine's layout of leaves and novels.</summary>
+    void ReportSurface()
+    {
+        if (!showing || ActualWidth <= 0 || ActualHeight <= 0)
+            return;
+        var scale = XamlRoot?.RasterizationScale ?? 1;
+        var two = ActualWidth > ActualHeight && ActualWidth >= 700;
+        Reader.SurfaceChanged(new ReaderSurface(
+            (uint)Math.Round(ActualWidth * scale), (uint)Math.Round(ActualHeight * scale), (float)scale,
+            false, two, !PaperMode));
+    }
+
+    internal double Scale => XamlRoot?.RasterizationScale ?? 1;
+
+    // Looks
+
+    internal ReaderPalette Palette { get; private set; } = ReaderPalette.Dark;
+
+    internal bool Rtl => kind == Kind.Novel ? novel?.Rtl ?? false : Reader.View?.Direction == ReadDirection.RightToLeft;
+
+    internal string Fit => Reader.Choice(ReaderSettingKey.Fit) ?? "screen";
+
+    /// <summary>
+    /// Paper mode, the engine's setting: it is offered only on the screens the engine names
+    /// (handhelds), and stays on the device as the engine keeps it. Elsewhere it is off, and the
+    /// Paper look is the reader's paper.
+    /// </summary>
+    internal bool PaperMode => Reader.Row(ReaderSettingKey.PaperMode) is not null && Reader.IsOn(ReaderSettingKey.PaperMode);
+
+    internal void SetPaperMode(bool on)
+    {
+        if (Reader.Row(ReaderSettingKey.PaperMode) is not null)
+            Reader.Set(ReaderSettingKey.PaperMode, new ReaderValue.Toggle(on));
+    }
+
+    internal global::Windows.UI.Color NovelGround => ReaderPalette.NovelGround(Reader.Choice(ReaderSettingKey.Look), PaperMode);
+
+    /// <summary>
+    /// The colours on the page's own ground, for what stands in the page's place (the end page,
+    /// the opening plate, the demo's end card): a novel's look, or the manga background, black
+    /// or white; the theme background keeps the reader's set.
+    /// </summary>
+    internal ReaderPalette PagePalette
+    {
+        get
+        {
+            if (ReaderPalette.Contrast() is { } contrast)
+                return contrast;
+            var medium = Reader.View?.Medium ?? Reader.Medium;
+            if (medium == Medium.Novel)
+                return ReaderPalette.OnGround(NovelGround, PaperMode);
+            return Reader.Choice(ReaderSettingKey.Background) is "black" or "white"
+                ? ReaderPalette.OnGround(Palette.Backdrop(Reader.Choice(ReaderSettingKey.Background)), PaperMode)
+                : Palette;
+        }
+    }
+
+    /// <summary>The colours, the backdrop and the fit, after a setting changed: what changed is built again.</summary>
+    void Repaint(bool force = false)
+    {
+        var paper = PaperMode;
+        var fit = Fit;
+        var background = Reader.Choice(ReaderSettingKey.Background);
+        var contrast = ReaderPalette.Contrast();
+        var paletteChanged = paper != lastPaper || (contrast is not null) != lastContrast || force;
+        lastContrast = contrast is not null;
+        Palette = contrast ?? (paper ? ReaderPalette.PaperSet : ReaderPalette.Dark);
+        root.Background = new SolidColorBrush(kind == Kind.Novel ? NovelGround : Palette.Backdrop(background));
+        if (paletteChanged)
+        {
+            chrome.Paint(Palette);
+            // Paper's flyouts and controls are light; the reader is dark otherwise. A contrast
+            // theme brings its own.
+            RequestedTheme = contrast is not null ? ElementTheme.Default : paper ? ElementTheme.Light : ElementTheme.Dark;
+        }
+        novel?.Ground(NovelGround);
+        chrome.NoticeAtFoot(kind == Kind.Novel);
+        if (!force && (paletteChanged || fit != lastFit || background != lastBackground))
+        {
+            paged?.Rebuild();
+            strip?.Rebuild();
+            novel?.RefreshEnd();
+        }
+        else if (!force && strip is not null)
+            strip.RefreshPages();
+        lastPaper = paper;
+        lastFit = fit;
+        lastBackground = background;
+        PositionChanged();
+    }
+
+    void FlyoutTheme(Flyout flyout)
+    {
+        var style = new Style(typeof(FlyoutPresenter));
+        style.Setters.Add(new Setter(Control.BackgroundProperty, new SolidColorBrush(ReaderPalette.WithAlpha(Palette.Raised, 0.98))));
+        style.Setters.Add(new Setter(Control.CornerRadiusProperty, new CornerRadius(8)));
+        style.Setters.Add(new Setter(Control.PaddingProperty, new Thickness(12)));
+        // The content sizes itself from the text size and the window (SettingsFlyout.Size): the
+        // presenter's own cap would cut it at large text sizes.
+        style.Setters.Add(new Setter(FrameworkElement.MaxWidthProperty, Math.Max(420.0, ActualWidth - 24)));
+        style.Setters.Add(new Setter(FrameworkElement.MaxHeightProperty, Math.Max(620.0, ActualHeight - 24)));
+        style.Setters.Add(new Setter(FrameworkElement.RequestedThemeProperty, PaperMode ? ElementTheme.Light : ElementTheme.Dark));
+        flyout.FlyoutPresenterStyle = style;
+    }
+
+    // The chrome
+
+    internal bool ChromeShown => chromeShown;
+
+    /// <summary>The group and the title bar come up; after 2 s without use they go again.</summary>
+    void ShowChrome(bool stay = false)
+    {
+        ShowPointer();
+        if (!chromeShown)
+        {
+            chromeShown = true;
+            Appear(chrome.Top, true);
+            Ctx.Window.ReaderChrome(true);
+            novel?.SyncInput();
+        }
+        if (!StateShown)
+            Appear(chrome.Group, true);
+        if (!stay)
+            Idle();
+        else
+            idle.Stop();
+        Pill();
+    }
+
+    /// <summary>Reading: the chrome and the pointer go.</summary>
+    internal void HideChrome()
+    {
+        idle.Stop();
+        if (StateShown || flyoutOpen || chrome.Holds(XamlRoot) || DeviceWatch.ScreenReaderRunning())
+            return;
+        if (chromeShown)
+        {
+            chromeShown = false;
+            Appear(chrome.Top, false);
+            Appear(chrome.Group, false);
+            Ctx.Window.ReaderChrome(false);
+            novel?.SyncInput();
+        }
+        HidePointer();
+        Pill();
+    }
+
+    internal void ToggleChrome()
+    {
+        if (chromeShown && !StateShown)
+            HideChrome();
+        else
+            ShowChrome();
+    }
+
+    /// <summary>
+    /// Chrome comes and goes on the fade tokens, which stay with reduced motion (they don't
+    /// move anything); Paper mode cuts.
+    /// </summary>
+    void Appear(UIElement element, bool shown)
+    {
+        if (element == chrome.Group)
+            chrome.GroupUp(shown);
+        if (!PaperMode)
+        {
+            if (shown)
+                Motion.Show(element);
+            else
+                Motion.Hide(element);
+        }
+        else
+            Motion.Set(element, shown);
+    }
+
+    void Idle()
+    {
+        idle.Stop();
+        if (chromeShown && !StateShown)
+            idle.Start();
+    }
+
+    void IdleTick()
+    {
+        if (overChrome || flyoutOpen || chrome.Holds(XamlRoot))
+        {
+            Idle();
+            return;
+        }
+        HideChrome();
+    }
+
+    void OnPointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        var at = e.GetCurrentPoint(this).Position;
+        if (Math.Abs(at.X - lastPointer.X) < 2 && Math.Abs(at.Y - lastPointer.Y) < 2)
+            return;
+        lastPointer = at;
+        overChrome = Within(chrome.Group, e) || Within(chrome.Top, e);
+        PointerActive();
+    }
+
+    static bool Within(FrameworkElement element, PointerRoutedEventArgs e)
+    {
+        if (element.Visibility != Visibility.Visible)
+            return false;
+        var p = e.GetCurrentPoint(element).Position;
+        return p.X >= 0 && p.Y >= 0 && p.X <= element.ActualWidth && p.Y <= element.ActualHeight;
+    }
+
+    /// <summary>The pointer moved, here or inside the novel's page.</summary>
+    internal void PointerActive()
+    {
+        if (!showing)
+            return;
+        ShowChrome();
+    }
+
+    [LibraryImport("user32.dll")]
+    private static partial int ShowCursor([MarshalAs(UnmanagedType.Bool)] bool show);
+
+    /// <summary>The pointer goes with the chrome, but never over a screen with buttons to reach.</summary>
+    void HidePointer()
+    {
+        if (pointerHidden || !showing || StateShown || OnEndPage || Dialogs.Open)
+            return;
+        pointerHidden = true;
+        while (ShowCursor(false) >= 0)
+        {
+            // The count falls below zero and the pointer is gone.
+        }
+    }
+
+    /// <summary>A dialog opens over the reader: the pointer comes back to reach its buttons.</summary>
+    void DialogOpening() => ShowPointer();
+
+    void ShowPointer()
+    {
+        if (!pointerHidden)
+            return;
+        pointerHidden = false;
+        while (ShowCursor(true) < 0)
+        {
+            // Back to zero or above: the pointer is shown again.
+        }
+    }
+
+    bool OnEndPage => kind switch
+    {
+        Kind.Paged => paged is { Current: >= 0 } p && p.Current < Reader.Leaves.Length && Reader.Leaves[p.Current].EndPage,
+        Kind.Novel => novel?.EndShown ?? false,
+        _ => false,
+    };
+
+    /// <summary>
+    /// A turn or a jump happened: the chrome goes and a screen reader hears the page. A novel's
+    /// page is said when the paginator reports it (<see cref="NovelTurned"/>), a strip's when it
+    /// settles.
+    /// </summary>
+    internal void Turned()
+    {
+        HideChrome();
+        Pill();
+        PositionChanged();
+        if (kind == Kind.Paged)
+            Announce();
+    }
+
+    /// <summary>
+    /// A screen reader hears where the reader is now: the page or pages, a novel's page as the
+    /// paginator counts it, a strip's image once it settles, or the end of the chapter. Each says
+    /// once and a newer one replaces one not yet read, so a run of turns ends on the page reached.
+    /// </summary>
+    void Announce()
+    {
+        if (!DeviceWatch.ScreenReaderRunning())
+            return;
+        var label = Reader.View?.Chapter.Label ?? "";
+        string? text = null;
+        switch (kind)
+        {
+            case Kind.Paged when paged is not null:
+            {
+                var leaf = paged.Current;
+                if (leaf < 0 || leaf >= Reader.Leaves.Length)
+                    return;
+                if (CreditSaid(out var credit))
+                {
+                    text = credit;
+                    break;
+                }
+                var pages = Reader.Leaves[leaf].Parts.Select(p => (int)p.Page + 1).Distinct().Order().ToList();
+                var total = Reader.PageCount;
+                text = Reader.Leaves[leaf].EndPage ? T.WindowsReaderEndOfChapter(label)
+                    : pages.Count >= 2 ? T.WindowsReaderPagesLabel(pages[0], pages[1], total)
+                    : T.WindowsReaderPageLabel(pages.FirstOrDefault(1), total);
+                break;
+            }
+            case Kind.Novel when novel is not null:
+                text = novel.EndShown ? T.WindowsReaderEndOfChapter(label)
+                    : Reader.Choice(ReaderSettingKey.Mode) == "scrolled" ? null
+                    : T.WindowsReaderPageLabel(novel.Page + 1, Math.Max(novel.Pages, 1));
+                break;
+            case Kind.Strip when strip is not null:
+            {
+                var (image, count) = strip.Position;
+                text = count > 0 ? T.WindowsReaderImageLabel(Math.Min(image + 1, count), count) : null;
+                break;
+            }
+        }
+        if (text is not null)
+            ReaderSpeech.Say(this, text);
+    }
+
+    /// <summary>A strip settled on another image: a screen reader hears it.</summary>
+    internal void StripSettled() => Announce();
+
+    /// <summary>The place changed: the group's line and the scrubber follow.</summary>
+    internal void PositionChanged()
+    {
+        var label = Reader.View?.Chapter.Label ?? "";
+        switch (kind)
+        {
+            case Kind.Paged when paged is not null:
+            {
+                var leaf = paged.Current;
+                var total = Reader.PageCount;
+                PartTicks(total);
+                if (leaf < 0 || leaf >= Reader.Leaves.Length)
+                {
+                    chrome.Line(label);
+                    chrome.Scrub(1, total, Rtl, null);
+                    break;
+                }
+                if (CreditPlace(label, total))
+                    break;
+                var pages = Reader.Leaves[leaf].Parts.Select(p => (int)p.Page + 1).Distinct().Order().ToList();
+                // A page kept with Undo still offered counts already: 37 pages become 38.
+                var (page, all) = Reader.HeldPages(pages.FirstOrDefault(1), total);
+                var shift = page - pages.FirstOrDefault(1);
+                if (Reader.Leaves[leaf].EndPage)
+                    chrome.Line(T.WindowsReaderEndOfChapter(label));
+                else if (pages.Count >= 2)
+                    chrome.Line(T.WindowsReaderGroupLineSpread(label, pages[0] + shift, pages[1] + shift));
+                else
+                    chrome.Line(T.WindowsReaderGroupLine(label, page, Math.Max(all, 1)));
+                var at = Reader.Leaves[leaf].EndPage ? all : Reader.PageNumber(leaf) + shift;
+                int? ringAt = Reader.Ring is { } r && r >= 0 && r < Reader.Leaves.Length ? Reader.PageNumber(r) : null;
+                chrome.Scrub(at, all, Rtl, ringAt, null, PartStatus(Reader.PageNumber(leaf), total));
+                break;
+            }
+            case Kind.Strip when strip is not null:
+            {
+                // The line follows the chapter under the window's middle, the one before too.
+                var (image, count) = strip.Position;
+                label = strip.ChapterLabel ?? label;
+                chrome.Line(T.WindowsReaderGroupLineStrip(label, Math.Min(image + 1, Math.Max(count, 1)), Math.Max(count, 1)));
+                if (strip.ChapterLabel is null)
+                    PartTicks(count);
+                else
+                    chrome.Ticks([]);
+                chrome.Scrub(image + 1, count, false, null, null, strip.ChapterLabel is null ? PartStatus(image + 1, count) : null);
+                break;
+            }
+            case Kind.Novel when novel is not null:
+            {
+                var scrolled = Reader.Choice(ReaderSettingKey.Mode) == "scrolled";
+                if (novel.EndShown)
+                    chrome.Line(T.WindowsReaderEndOfChapter(label));
+                else if (scrolled)
+                    chrome.Line(T.WindowsReaderGroupLineScroll(label, novel.Pages > 1 ? novel.Page * 100 / (novel.Pages - 1) : 0));
+                else
+                    chrome.Line(T.WindowsReaderGroupLine(label, novel.Page + 1, novel.Pages));
+                chrome.Ticks([]);
+                chrome.Scrub(novel.Page + 1, novel.Pages, Rtl, null);
+                break;
+            }
+            default:
+                chrome.Line(label);
+                chrome.Scrub(1, 1, false, null);
+                break;
+        }
+    }
+
+    internal void ScrubTo(int value)
+    {
+        switch (kind)
+        {
+            case Kind.Paged:
+                JumpToLeaf(Reader.LeafOfPage(value));
+                break;
+            case Kind.Strip:
+                strip?.JumpTo(value - 1);
+                break;
+            case Kind.Novel:
+                novel?.JumpTo(value - 1);
+                break;
+        }
+    }
+
+    internal int ShownLeaf => paged?.Current ?? Reader.Current;
+
+    (string Chapter, uint Page)? askedForPreview;
+
+    /// <summary>
+    /// The scrub preview's page for a scrubber value: the file once it has landed, and whether
+    /// there is a page to picture at all (a novel's preview is its number alone). A page not
+    /// asked for yet is asked for, as the Mac's preview does.
+    /// </summary>
+    internal (PageFile? File, bool Pictured) PreviewOf(int value)
+    {
+        var chapter = Reader.View?.Chapter.Id ?? "";
+        LeafPart? part = null;
+        switch (kind)
+        {
+            case Kind.Paged:
+            {
+                var leaf = Reader.LeafOfPage(value);
+                if (leaf >= 0 && leaf < Reader.Leaves.Length && !Reader.Leaves[leaf].EndPage)
+                {
+                    var parts = Reader.Leaves[leaf].Parts;
+                    part = parts.FirstOrDefault(p => p.Page == (uint)Math.Max(value - 1, 0)) ?? parts.FirstOrDefault();
+                }
+                break;
+            }
+            case Kind.Strip:
+            {
+                var index = value - 1;
+                foreach (var leaf in Reader.Leaves)
+                {
+                    if (leaf.EndPage)
+                        continue;
+                    if (index < leaf.Parts.Length)
+                    {
+                        part = leaf.Parts[index];
+                        break;
+                    }
+                    index -= leaf.Parts.Length;
+                }
+                break;
+            }
+            default:
+                return (null, false);
+        }
+        if (part is null)
+            return (null, true);
+        var file = Reader.FileOf(part, chapter);
+        if (file is null && Reader.FailureOf(part, chapter) is null && askedForPreview != (chapter, part.Page))
+        {
+            askedForPreview = (chapter, part.Page);
+            Reader.NeedPage(part.Page);
+        }
+        return (file, true);
+    }
+
+    internal void JumpToLeaf(int leaf) => paged?.Jump(leaf);
+
+    internal NovelTocEntry[] NovelContents => novel?.Contents ?? [];
+
+    internal void NovelGoToUrl(string url) => novel?.GoToUrl(url);
+
+    internal void OpenSettings()
+    {
+        ShowChrome(stay: true);
+        settingsFlyout.ShowAt(chrome.Settings);
+    }
+
+    internal void ToggleFullscreen()
+    {
+        Ctx.Window.ReaderSetFullscreen(null);
+        chrome.FullscreenShown(Ctx.Window.ReaderFullscreen);
+    }
+
+    // Ways out
+
+    /// <summary>Back to the series page, where another source can be chosen.</summary>
+    internal void ToSeries()
+    {
+        var at = work ?? Reader.View?.Work;
+        Close();
+        if (at is not null)
+            Ctx.Window.OpenSeries(at);
+    }
+
+    /// <summary>
+    /// Choose source on a chapter that would not open: the reader goes and the series' source
+    /// picker comes up over its page.
+    /// </summary>
+    internal void ChooseSource()
+    {
+        var at = work ?? Reader.View?.Work;
+        Close();
+        if (at is null)
+            return;
+        Ctx.Window.OpenSeries(at);
+        var root = XamlRoot;
+        DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
+        {
+            if (root is not null)
+                _ = SeriesDialogs.ReadFrom(Ctx, root, at);
+        });
+    }
+
+    /// <summary>The reading demo's way on: the place sources are added.</summary>
+    internal void AddSource()
+    {
+        Close();
+        Ctx.Window.Go("providers");
+    }
+
+    /// <summary>The reading demo's Back to page 1.</summary>
+    internal void FromStart()
+    {
+        switch (kind)
+        {
+            case Kind.Paged:
+                paged?.Jump(0);
+                break;
+            case Kind.Strip:
+                strip?.JumpTo(0);
+                break;
+            case Kind.Novel when Reader.Novel is { Spine.Length: > 0 } book:
+                novel?.GoToUrl(book.Spine[0].Url);
+                break;
+        }
+    }
+
+    internal void MoreSettings()
+    {
+        Close();
+        Ctx.Window.ShowSettings("reading");
+    }
+
+    internal void RetryProgress(string server) => Ctx.Known.Books.RetryProgress(server);
+
+    internal FrameworkElement BuildEndPage() => new EndPageView(this, ActualWidth);
+
+    ServerLineView? serverLine;
+
+    /// <summary>The book server's line, one for the reader, which each end page built takes.</summary>
+    internal ServerLineView ServerLine => serverLine ??= new ServerLineView(this);
+
+    // Input
+
+    void OnTapped(object sender, TappedRoutedEventArgs e)
+    {
+        for (var at = e.OriginalSource as DependencyObject; at is not null && at != stage; at = VisualTreeHelper.GetParent(at))
+            if (at is ButtonBase or ToggleSwitch or Slider)
+                return;
+        var width = stage.ActualWidth;
+        if (width <= 0)
+            return;
+        var x = e.GetPosition(stage).X / width;
+        switch (kind)
+        {
+            case Kind.Paged:
+                paged?.Tap(x);
+                break;
+            case Kind.Strip:
+                strip?.Tap(x);
+                break;
+            default:
+                ToggleChrome();
+                break;
+        }
+        Focus(FocusState.Programmatic);
+    }
+
+    void OnKey(object sender, KeyRoutedEventArgs e)
+    {
+        // A flyout keeps its own keys: its arrows move between choices, and Esc closes it.
+        if (!showing || flyoutOpen)
+            return;
+        var ctrl = (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control) & global::Windows.UI.Core.CoreVirtualKeyStates.Down) != 0;
+        var shift = (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift) & global::Windows.UI.Core.CoreVirtualKeyStates.Down) != 0;
+        var alt = (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Menu) & global::Windows.UI.Core.CoreVirtualKeyStates.Down) != 0;
+        var focused = XamlRoot is { } xr ? FocusManager.GetFocusedElement(xr) : null;
+        var key = e.Key;
+        // A control in the chrome keeps its own keys: the scrubber its arrows, a button Space and Enter.
+        if (focused is Slider && key is VirtualKey.Left or VirtualKey.Right or VirtualKey.Up or VirtualKey.Down or VirtualKey.Home or VirtualKey.End or VirtualKey.PageUp or VirtualKey.PageDown)
+            return;
+        if (focused is ButtonBase or ToggleSwitch && key is VirtualKey.Space or VirtualKey.Enter)
+            return;
+        e.Handled = Key(key, ctrl, shift, alt);
+    }
+
+    /// <summary>A key from the window or from inside the novel's page. True when the reader used it.</summary>
+    bool Key(VirtualKey key, bool ctrl, bool shift, bool alt)
+    {
+        switch (key)
+        {
+            case VirtualKey.Escape:
+                Escape();
+                return true;
+            case VirtualKey.Left when alt:
+                Close();
+                return true;
+            case VirtualKey.F11:
+                ToggleFullscreen();
+                return true;
+            case VirtualKey.Tab when !ctrl && !alt:
+                return IntoChrome(last: shift);
+        }
+        if (alt)
+            return false;
+        if (ctrl)
+            return CtrlKey(key);
+        if (StateShown)
+            return false;
+        switch (kind)
+        {
+            case Kind.Paged when paged is not null:
+                if (paged.TakesArrows && key is VirtualKey.Left or VirtualKey.Right or VirtualKey.Up or VirtualKey.Down)
+                    return false;
+                switch (key)
+                {
+                    case VirtualKey.Right:
+                        paged.Turn(!Rtl, TurnHow.Key);
+                        return true;
+                    case VirtualKey.Left:
+                        paged.Turn(Rtl, TurnHow.Key);
+                        return true;
+                    case VirtualKey.Down or VirtualKey.PageDown:
+                        paged.Turn(true, TurnHow.Key);
+                        return true;
+                    case VirtualKey.Space:
+                        paged.Turn(!shift, TurnHow.Key);
+                        return true;
+                    case VirtualKey.Up or VirtualKey.PageUp:
+                        paged.Turn(false, TurnHow.Key);
+                        return true;
+                    case VirtualKey.Home:
+                        paged.Ends(false);
+                        return true;
+                    case VirtualKey.End:
+                        paged.Ends(true);
+                        return true;
+                }
+                return false;
+            case Kind.Strip when strip is not null:
+                switch (key)
+                {
+                    case VirtualKey.Down:
+                        strip.Step(true, line: true);
+                        break;
+                    case VirtualKey.Up:
+                        strip.Step(false, line: true);
+                        break;
+                    case VirtualKey.PageDown or VirtualKey.Right:
+                        strip.Step(true, line: false);
+                        break;
+                    case VirtualKey.PageUp or VirtualKey.Left:
+                        strip.Step(false, line: false);
+                        break;
+                    case VirtualKey.Space:
+                        strip.Step(!shift, line: false);
+                        break;
+                    case VirtualKey.Home:
+                        strip.Ends(false);
+                        break;
+                    case VirtualKey.End:
+                        strip.Ends(true);
+                        break;
+                    default:
+                        return false;
+                }
+                HideChrome();
+                return true;
+            case Kind.Novel when novel is not null:
+                return NovelKey(key switch
+                {
+                    VirtualKey.Left => "ArrowLeft",
+                    VirtualKey.Right => "ArrowRight",
+                    VirtualKey.Up => "ArrowUp",
+                    VirtualKey.Down => "ArrowDown",
+                    VirtualKey.PageUp => "PageUp",
+                    VirtualKey.PageDown => "PageDown",
+                    VirtualKey.Space => shift ? "PageUp" : " ",
+                    VirtualKey.Home => "Home",
+                    VirtualKey.End => "End",
+                    _ => "",
+                });
+        }
+        return false;
+    }
+
+    /// <summary>Ctrl in place of the Mac's Command: zoom for pages, text size for novels.</summary>
+    bool CtrlKey(VirtualKey key)
+    {
+        // Ctrl+Z takes back Not a credit page while Undo is offered.
+        if (key == VirtualKey.Z)
+            return Reader.UndoKeep();
+        var plus = key is VirtualKey.Add || (int)key == 187;
+        var minus = key is VirtualKey.Subtract || (int)key == 189;
+        var zero = key is VirtualKey.Number0 or VirtualKey.NumberPad0;
+        if (!plus && !minus && !zero)
+            return false;
+        if (kind == Kind.Paged && paged is not null)
+        {
+            if (zero)
+                paged.ResetZoom();
+            else
+                paged.ZoomBy(plus ? 1.25 : 0.8);
+            return true;
+        }
+        if (kind == Kind.Novel)
+        {
+            var now = Reader.Amount(ReaderSettingKey.TextSize) ?? 1.0;
+            var next = zero ? 1.0 : Math.Clamp(Math.Round((now + (plus ? 0.05 : -0.05)) * 20) / 20, 0.7, 2.0);
+            Reader.Set(ReaderSettingKey.TextSize, new ReaderValue.Amount((float)next));
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Tab with the keys on the page: the chrome comes up and focus goes to its first control,
+    /// or its last with Shift. Inside the chrome, or over a screen with buttons, Tab moves as it
+    /// does anywhere.
+    /// </summary>
+    bool IntoChrome(bool last)
+    {
+        if (StateShown || InChrome())
+            return false;
+        ShowChrome();
+        if (chrome.FocusEdge(last))
+            return true;
+        // The chrome was collapsed a moment ago: focus once it is laid out.
+        DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
+        {
+            if (showing && chromeShown)
+                chrome.FocusEdge(last);
+        });
+        return true;
+    }
+
+    /// <summary>Keyboard focus is on a control of the chrome.</summary>
+    bool InChrome()
+    {
+        if (XamlRoot is not { } root || FocusManager.GetFocusedElement(root) is not DependencyObject focused)
+            return false;
+        for (var at = focused; at is not null; at = VisualTreeHelper.GetParent(at))
+            if (at == chrome.Top || at == chrome.Group || at == chrome.Notice || at == chrome.BackTo)
+                return true;
+        return false;
+    }
+
+    /// <summary>
+    /// Esc steps out: from the chrome back to the page when the keys are in it, then out of full
+    /// screen, then out of the reader. The chrome that comes up by itself takes no Esc.
+    /// </summary>
+    void Escape()
+    {
+        if (novel?.CloseNote() == true)
+            return;
+        if (chromeShown && !StateShown && InChrome())
+        {
+            // The keys go back to the page, and the chrome with them.
+            Focus(FocusState.Programmatic);
+            HideChrome();
+            return;
+        }
+        if (Ctx.Window.ReaderFullscreen)
+        {
+            ToggleFullscreen();
+            return;
+        }
+        Close();
+    }
+
+    /// <summary>A turning key the novel's page received.</summary>
+    internal void PageKey(string key) => NovelKey(key);
+
+    bool NovelKey(string key)
+    {
+        if (novel is null)
+            return false;
+        var rtl = novel.Rtl;
+        switch (key)
+        {
+            case "ArrowRight":
+                novel.Turn(!rtl, "key");
+                return true;
+            case "ArrowLeft":
+                novel.Turn(rtl, "key");
+                return true;
+            case "ArrowDown" or "PageDown" or " ":
+                novel.Turn(true, "key");
+                return true;
+            case "ArrowUp" or "PageUp":
+                novel.Turn(false, "key");
+                return true;
+            case "Home":
+                novel.Ends(false);
+                return true;
+            case "End":
+                novel.Ends(true);
+                return true;
+        }
+        return false;
+    }
+
+    /// <summary>A key the novel's page passed on: Esc, F11, Alt+Left, Ctrl and the zoom keys.</summary>
+    internal void HostKey(string key, bool alt, bool ctrl, bool shift)
+    {
+        var mapped = key switch
+        {
+            "Escape" => VirtualKey.Escape,
+            "F11" => VirtualKey.F11,
+            "Tab" => VirtualKey.Tab,
+            "ArrowLeft" => VirtualKey.Left,
+            "+" or "=" => VirtualKey.Add,
+            "-" => VirtualKey.Subtract,
+            "0" => VirtualKey.Number0,
+            _ => VirtualKey.None,
+        };
+        if (mapped != VirtualKey.None)
+            Key(mapped, ctrl, shift, alt);
+    }
+
+    /// <summary>The wheel inside a paged novel turns a page a notch at a time; a scrolled one scrolls.</summary>
+    internal void NovelWheel(double dy)
+    {
+        if (novel is null || Reader.Choice(ReaderSettingKey.Mode) == "scrolled" || Math.Abs(dy) < 1)
+            return;
+        var now = Environment.TickCount64;
+        if (now - lastNovelWheel < 280)
+            return;
+        lastNovelWheel = now;
+        novel.Turn(dy > 0, "scroll");
+    }
+}

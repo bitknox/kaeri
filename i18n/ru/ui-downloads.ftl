@@ -11,6 +11,8 @@ downloads-in-downloads = { $size } в загрузках
 downloads-space-label = Место, занятое загрузками
 downloads-empty-title = Нет загрузок
 downloads-empty-detail = Скачанные эпизоды воспроизводятся без подключения к сети.
+read-downloads-empty-detail = Скачанные главы открываются без подключения к сети.
+read-downloads-empty-both = Скачанные эпизоды и главы открываются без подключения к сети.
 downloads-load-failed = Не удалось открыть загрузки
 downloads-folder-failed = Не удалось открыть папку. Проверьте, что она ещё существует.
 downloads-episode-name = Эпизод { $episode }
@@ -38,11 +40,11 @@ downloads-play-episode = Воспроизвести эпизод { $episode }
 downloads-delete-title = Удалить { $name }?
 downloads-delete-detail = Файл будет удалён. Это { -device } больше его не хранит.
 downloads-delete-one-title = Удалить загрузку
-downloads-delete-one-detail = Воспроизвести снова получится только с подключением к сети или после новой загрузки.
+downloads-delete-one-detail = После этого для воспроизведения эпизода понадобится подключение к сети, если не загрузить его снова.
 downloads-delete-watched = Удалить просмотренные загрузки
 downloads-seeding-title = Раздача
 downloads-seeding-after-watching = Раздача после просмотра
-downloads-seeding-note = Просмотренные эпизоды раздаются обратно, пока открыт { -app-name }, до достижения коэффициента или лимита времени, заданных в разделе «{ -source-cap-pl }» настроек.
+downloads-seeding-note = Просмотренные эпизоды раздаются обратно, пока открыт { -app-name }. Раздача останавливается при достижении коэффициента или лимита времени, заданных в настройках, в разделе «{ -source-cap-pl }».
 downloads-seeding-open-only = Раздача работает, только пока открыт { -app-name }.
 downloads-background-title = Когда окно закрывается во время загрузок
 downloads-background-keep = Продолжать загрузку
@@ -58,7 +60,7 @@ downloads-quality = Качество загрузки
 downloads-notice-done = Эпизод { $episode } загружен
 downloads-notice-done-detail = { $title } · можно смотреть без подключения
 downloads-notice-running = { $count ->
-    [one] Загружается один эпизод
+    [one] Загружается { $count } эпизод
     [few] Загружаются { $count } эпизода
     [many] Загружаются { $count } эпизодов
    *[other] Загружаются { $count } эпизодов

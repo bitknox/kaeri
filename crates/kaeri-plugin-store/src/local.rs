@@ -303,6 +303,8 @@ mod tests {
             sha256: "00".into(),
             size: 1,
             published_at: 0,
+            kind: None,
+            media: Vec::new(),
         }
     }
 

@@ -86,3 +86,23 @@ modified file is shipped in source form, as MPL-2.0 requires.
 | Source | https://github.com/lipis/flag-icons, version `7.6.0` at `ac7e0eb3259eb62aa6100c435607e2fe03896a97` |
 | Licence | MIT, `assets/flags/LICENSE-flag-icons` |
 | Changes | Only the flags the apps use are included, and the PNGs are renders of the SVGs. The apps draw them at 20 by 15 with rounded corners and a hairline edge. |
+
+## Hyphenation patterns
+
+| | |
+|---|---|
+| What | the soft hyphens the engine adds to novels on Windows and Linux, whose web views do not hyphenate: TeX hyphenation patterns for English, German, French, Dutch, Spanish, Portuguese, Italian and Russian, built into the binary as compiled tries by the `hypher` crate (version `0.1.8`, MIT OR Apache-2.0). About 360 KB. |
+| Source | https://github.com/typst/hypher, from the patterns of the hyph-utf8 project (https://github.com/hyphenation/tex-hyphen) |
+| Licence | English: Knuth and Liang's US English patterns with Kuiken's additions, free to use and copy. German, French and Dutch: MIT. Spanish: MIT/X11. Portuguese: BSD 3-clause. Italian: LPPL 1.3 or MIT, used under MIT. Russian: LPPL 1.2 or later, distributed unmodified. |
+| Notices | The licence header of each pattern file, in `assets/hyphenation/LICENSE-hyphenation-patterns.txt`. Release packages carry it beside the other licence texts. The crate's own MIT and Apache-2.0 texts are in the Rust crate notices (`packaging/rust-licences`). |
+| Changes | None. Only these eight languages are compiled in (`hypher` features in the workspace `Cargo.toml`); the Apple and Android builds carry none of them. |
+
+## Reading demo
+
+| | |
+|---|---|
+| What | the two works the reading demo opens with: `assets/demo/kwaidan-yuki-onna.txt` and its cover `assets/demo/kwaidan-yuki-onna-cover.jpg`, built into the engine, and three comic pages the engine reads from Wikimedia Commons and never bundles |
+| Source | "Yuki-Onna" from *Kwaidan* by Lafcadio Hearn (1904), from Project Gutenberg ebook 1210. The book's frontispiece, "Blowing her breath upon him" by Keishū Takénouchi (1904), from Wikimedia Commons. *Pepper&Carrot*, episode 1, by David Revoy, English pages 1 to 3 on Wikimedia Commons |
+| Licence | Kwaidan and its frontispiece: public domain. Pepper&Carrot: CC BY 4.0, credited in the reader as "Pepper&Carrot by David Revoy. Licensed CC BY 4.0." |
+| Notices | `assets/demo/NOTICE.md` |
+| Changes | The story file has the Project Gutenberg header, footer, illustration line and footnote markers removed. The frontispiece is scaled to 900 pixels tall as a JPEG, pinned by SHA-1 at build time. The comic pages are shown as Commons holds them, pinned by SHA-1. |

@@ -7,9 +7,11 @@ use std::sync::Arc;
 use kaeri_core::config::{Config, Paths};
 use kaeri_model::{
     Msg,
+    came_in::{CameIn, NothingCameIn, PluginsInstalled, StoreReport},
     event::Event,
+    medium::KaeriIsFor,
     notice::Notice,
-    stores::{InviteLasts, InvitePreview, InviteUses, Secret},
+    stores::{InviteLasts, InvitePreview, InviteUses, Secret, StorePluginStatus, StoreRow},
 };
 use kaeri_net::HttpClient;
 use kaeri_providers::ProviderRegistry;
@@ -29,6 +31,11 @@ pub struct StoreTaskContext {
     host: Arc<dyn Host>,
     /// The local database, for telling the sync log which stores were joined and left.
     store: kaeri_store::Store,
+    /// Where an installed book source goes, while reading is available.
+    books: Option<crate::book_plugins::BookPlugins>,
+    book_sources: crate::read_sources::BookSources,
+    /// What this device is for, which decides the plugins a store's report counts as fitting.
+    medium: kaeri_model::medium::KaeriIsFor,
     tx: Outbox,
 }
 
@@ -109,6 +116,14 @@ impl StoreTaskContext {
                 );
                 self.rows();
                 self.send(Event::StoreJoined { store: joined.id.clone() });
+                let row = self
+                    .stores
+                    .rows()
+                    .ok()
+                    .and_then(|rows| rows.into_iter().find(|r| r.id == joined.id));
+                if let Some(row) = row {
+                    self.send(Event::CameIn(store_report(&row, self.medium)));
+                }
                 self.toast(Notice::info(if joined.anonymous {
                     Msg::Store(StoreMsg::StoreJoinedUnnamed { store: joined.name })
                 } else {
@@ -119,6 +134,14 @@ impl StoreTaskContext {
                 }));
             }
             Err(refused) => {
+                if refused.offline {
+                    let host = kaeri_plugin_store::Invite::parse(&link.0)
+                        .map(|invite| kaeri_model::stores::host(&invite.base))
+                        .unwrap_or_default();
+                    self.send(Event::CameIn(CameIn::Empty(NothingCameIn::StoreUnreachable {
+                        host,
+                    })));
+                }
                 // Stopped working since the preview: the confirmation says so in its place, with
                 // the store's contact, as the preview would have.
                 if refused.contact.is_some() {
@@ -130,6 +153,48 @@ impl StoreTaskContext {
                 self.toast(Notice::alert(*refused.msg));
             }
         }
+    }
+
+    /// Install every reading plugin a store offers that is not installed yet, and say how many
+    /// came in. Each that fails is said in a toast of its own too.
+    pub async fn install_all_for_reading(self, store: String) {
+        let Some(row) =
+            self.stores.rows().ok().and_then(|rows| rows.into_iter().find(|r| r.id == store))
+        else {
+            return self.rows();
+        };
+        let wanted: Vec<String> = row
+            .plugins
+            .iter()
+            .filter(|p| p.books && p.status == StorePluginStatus::Available)
+            .map(|p| p.id.clone())
+            .collect();
+        let before = self.registry.ids();
+        let (mut installed, mut failed) = (0u32, Vec::new());
+        for plugin in wanted {
+            match self.stores.install(&store, &plugin).await {
+                Ok((entry, path)) => {
+                    self.load_installed(&entry.name, &entry.version, &path).await;
+                    installed += 1;
+                }
+                Err(e) => {
+                    self.toast(Notice::alert(e));
+                    failed.push(plugin);
+                }
+            }
+        }
+        self.rows();
+        if let Some(notice) =
+            demo_stays(self.config.sources.demo, &before, &self.registry.ids(), &store)
+        {
+            self.toast(notice);
+        }
+        self.send(Event::CameIn(CameIn::Installed(PluginsInstalled {
+            store: row.id,
+            name: row.name,
+            installed,
+            failed,
+        })));
     }
 
     /// Leave a store; what was installed from it stays.
@@ -179,8 +244,16 @@ impl StoreTaskContext {
         match self.stores.remove(&plugin).await {
             Ok(()) => {
                 self.registry.remove(&plugin);
+                // A book plugin stops being asked at once, with no restart.
+                if let Some(books) = &self.books {
+                    books.remove(&plugin);
+                }
+                self.book_sources.unload(&plugin);
                 // Titles on screen were listed with it: the engine lists them again.
                 let _ = self.tx.internal(crate::outbox::Internal::SourcesReordered);
+                if self.books.is_some() {
+                    let _ = self.tx.internal(crate::outbox::Internal::BookSourcesChanged);
+                }
                 self.send(Event::Providers(data::provider_rows(&self.registry, &self.stores)));
                 self.rows();
                 self.toast(Notice::info(Msg::Store(StoreMsg::PluginRemoved { plugin })));
@@ -340,15 +413,38 @@ impl StoreTaskContext {
 
     /// Bring a just-installed plugin into the running chain, so it is usable without a restart.
     async fn load_installed(&self, name: &str, version: &str, path: &std::path::Path) {
-        if !sources::plugins_enabled(&self.config) {
+        let shows = sources::plugins_enabled(&self.config);
+        let unused = || {
             self.toast(Notice::info(Msg::Store(StoreMsg::PluginInstalledUnused {
                 plugin: name.to_owned(),
                 version: version.to_owned(),
-            })));
-            return;
+            })))
+        };
+        if !shows && self.books.is_none() {
+            return unused();
         }
-        match sources::load_plugin(&self.config, &self.http, &self.paths, path).await {
-            Ok(provider) => {
+        let loaded = sources::load_plugin(
+            &self.config,
+            &self.http,
+            &self.paths,
+            path,
+            self.books.is_some(),
+        )
+        .await;
+        match loaded {
+            Ok(sources::LoadedPlugin::Books(source)) => {
+                if let Some(books) = &self.books {
+                    books.put(source);
+                    // Series looked for without it are looked for again.
+                    let _ = self.tx.internal(crate::outbox::Internal::BookSourcesChanged);
+                }
+                self.toast(Notice::info(Msg::Store(StoreMsg::PluginInstalled {
+                    plugin: name.to_owned(),
+                    version: version.to_owned(),
+                })));
+            }
+            Ok(sources::LoadedPlugin::Shows(_)) if !shows => unused(),
+            Ok(sources::LoadedPlugin::Shows(provider)) => {
                 // Only ever swaps a plugin for a plugin. Whatever the id, a store's download does
                 // not get to take a built-in source's place in the chain.
                 let id = provider.manifest().id.clone();
@@ -406,6 +502,9 @@ pub fn store_task<W, F>(
         paths: services.paths.clone(),
         host: services.host.clone(),
         store: services.store.clone(),
+        books: engine.reading.available.then(|| services.book_plugins.clone()),
+        book_sources: services.book_sources.clone(),
+        medium: engine.reading.answer(),
         tx: tx.clone(),
     };
     tokio::spawn(async move {
@@ -457,5 +556,117 @@ mod tests {
             demo_stays(true, &ids(&["a", "demo"]), &ids(&["a", "b", "demo"]), "s").is_none()
         );
         assert!(demo_stays(true, &ids(&["demo"]), &ids(&["demo"]), "s").is_none());
+    }
+}
+
+/// What a store just joined holds for this device, or why nothing in it fits: plugins for what
+/// the device is for, and a count of those for the other medium.
+pub(crate) fn store_report(row: &StoreRow, medium: KaeriIsFor) -> CameIn {
+    let ids = |books: bool| -> Vec<String> {
+        row.plugins.iter().filter(|p| p.books == books).map(|p| p.id.clone()).collect()
+    };
+    let (reading, watching) = (ids(true), ids(false));
+    let count = |v: &Vec<String>| u32::try_from(v.len()).unwrap_or(u32::MAX);
+    let (other_medium, other_is_reading) = match medium {
+        KaeriIsFor::Read => (count(&watching), false),
+        KaeriIsFor::Watch => (count(&reading), true),
+        KaeriIsFor::Both => (0, false),
+    };
+    let to_install = row
+        .plugins
+        .iter()
+        .filter(|p| p.books && p.status == StorePluginStatus::Available)
+        .count();
+    let report = StoreReport {
+        store: row.id.clone(),
+        name: row.name.clone(),
+        owner: row.owners.first().cloned(),
+        install_all: medium.reads() && to_install >= 2,
+        for_reading: if medium.reads() { reading } else { Vec::new() },
+        for_watching: if medium.watches() { watching } else { Vec::new() },
+        other_medium,
+        other_is_reading,
+    };
+    if row.plugins.is_empty() {
+        CameIn::Empty(NothingCameIn::EmptyStore { store: report })
+    } else if report.for_reading.is_empty() && report.for_watching.is_empty() {
+        CameIn::Empty(NothingCameIn::OtherMedium { store: report })
+    } else {
+        CameIn::Store(report)
+    }
+}
+
+#[cfg(test)]
+mod report_tests {
+    use kaeri_model::stores::{StorePluginRow, StoreState};
+
+    use super::*;
+
+    fn plugin(id: &str, books: bool, status: StorePluginStatus) -> StorePluginRow {
+        StorePluginRow {
+            id: id.into(),
+            name: id.into(),
+            version: "1.0.0".into(),
+            hosts: vec!["books.example".into()],
+            status,
+            books,
+            media: Vec::new(),
+        }
+    }
+
+    fn row(plugins: Vec<StorePluginRow>) -> StoreRow {
+        StoreRow {
+            id: "s1".into(),
+            name: "Shelf".into(),
+            url: "https://plugins.example".into(),
+            host: "plugins.example".into(),
+            fingerprint: String::new(),
+            member: "kim".into(),
+            owner: false,
+            state: StoreState::Ready,
+            checked_at: None,
+            plugins,
+            owners: vec!["Robin".into()],
+            open: false,
+            anonymous: false,
+        }
+    }
+
+    #[test]
+    fn a_store_counts_its_plugins_by_medium() {
+        let row = row(vec![
+            plugin("r1", true, StorePluginStatus::Available),
+            plugin("r2", true, StorePluginStatus::Available),
+            plugin("w1", false, StorePluginStatus::Available),
+        ]);
+        let CameIn::Store(report) = store_report(&row, KaeriIsFor::Read) else { panic!() };
+        assert_eq!(report.for_reading, ["r1", "r2"]);
+        assert!(report.for_watching.is_empty());
+        assert_eq!((report.other_medium, report.other_is_reading), (1, false));
+        assert!(report.install_all);
+        assert_eq!(report.owner.as_deref(), Some("Robin"));
+    }
+
+    #[test]
+    fn install_all_needs_two_plugins_to_install() {
+        let row = row(vec![
+            plugin("r1", true, StorePluginStatus::Installed),
+            plugin("r2", true, StorePluginStatus::Available),
+        ]);
+        let CameIn::Store(report) = store_report(&row, KaeriIsFor::Both) else { panic!() };
+        assert!(!report.install_all);
+    }
+
+    #[test]
+    fn a_store_with_nothing_that_fits_says_why() {
+        let watching = row(vec![plugin("w1", false, StorePluginStatus::Available)]);
+        assert!(matches!(
+            store_report(&watching, KaeriIsFor::Read),
+            CameIn::Empty(NothingCameIn::OtherMedium { .. })
+        ));
+        assert!(matches!(
+            store_report(&row(Vec::new()), KaeriIsFor::Both),
+            CameIn::Empty(NothingCameIn::EmptyStore { .. })
+        ));
     }
 }

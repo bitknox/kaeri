@@ -6,8 +6,8 @@ settings-preview-source = { -source-cap } 480p
 settings-upscaling-note-off = A { -source } 480p, redimensionada para caber sem processamento.
 settings-caption-sample = A estrada da lanterna segue além da última cidade.
 settings-caption-note = Legendas simples aparecem assim, em { $language } quando o episódio as tiver. Legendas estilizadas mantêm o próprio visual.
-settings-notify-note-on = Uma notificação quando um episódio de uma série na sua lista Assistindo sair, no horário que { $tracker } informa. A configuração própria de cada série vem primeiro.
-settings-notify-note-off = Desligado. Só notificam as séries ligadas nas próprias configurações.
+settings-notify-note-on = Você recebe uma notificação quando sai um episódio de uma série da sua lista Assistindo, no horário informado por { $tracker }. A configuração própria de cada série tem prioridade sobre esta.
+settings-notify-note-off = Desligado. Só enviam notificações as séries que você ligou nas próprias configurações.
 settings-accounts-note = O { -app-name } funciona sem conta. Seu histórico continua neste computador quando você sai da conta.
 settings-presence-note-on = Seu perfil no Discord mostra o que você assiste enquanto um episódio está tocando.
 settings-presence-note-off = Desligado. Quando ligado, seu perfil no Discord mostra o que você assiste enquanto um episódio está tocando.
@@ -16,7 +16,7 @@ updates-view-version = Ver a { -release }
 updates-progress-label = Progresso da atualização
 accounts-sync-detail = O progresso e as mudanças de lista são sincronizados com { $tracker }. A { -library-cap } e a Minha lista do Calendário mostram suas listas de { $tracker }.
 accounts-changes-waiting-offline = { $count ->
-    [one] Uma mudança aguardando você ficar online
+    [one] { $count } mudança aguardando você ficar online
     [many] { $count } mudanças aguardando você ficar online
    *[other] { $count } mudanças aguardando você ficar online
  }
@@ -35,4 +35,4 @@ controller-disconnected = Controle desconectado
 controller-help-title = Controle
 controller-help-buttons = Botões do controle
 settings-note-cast-tvs-computer = Elas aparecem em Chromecast, em Reproduzir na TV. Este computador envia o episódio a elas.
-settings-note-torrents-while-casting-computer = Permite que uma TV com Chromecast integrado reproduza torrents. Este computador envia o episódio enquanto ele estiver sendo reproduzido.
+settings-note-torrents-while-casting-computer = Com isto ligado, uma TV com Chromecast integrado pode reproduzir torrents. Este computador envia o episódio enquanto ele estiver sendo reproduzido.

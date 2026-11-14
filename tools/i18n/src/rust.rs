@@ -5,7 +5,7 @@
 
 use anyhow::Result;
 
-use crate::catalogue::{Arg, Body, Catalogue, Part, Platform};
+use crate::catalogue::{Arg, ArgType, Body, Catalogue, Part, Platform};
 use crate::pseudo;
 use crate::ship::{Mode, Shipped, ShippedEntry, select};
 use crate::util::{Files, one_line, rust_escape, snake};
@@ -117,7 +117,11 @@ fn rust_args(args: &[Arg]) -> (String, String) {
             format!(
                 "(\"{}\", {}({}))",
                 a.name,
-                if a.ty.is_int() { "Arg::Int" } else { "Arg::Text" },
+                match a.ty {
+                    ArgType::Int => "Arg::Int",
+                    ArgType::Plain => "Arg::Plain",
+                    _ => "Arg::Text",
+                },
                 crate::msg::field(&a.name)
             )
         })

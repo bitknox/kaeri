@@ -2,9 +2,11 @@
 <!-- Airing today, offered in the picker at 4 × 2: one widget that changes layout as it is
      resized, from 2 × 2 to as large as the launcher's grid allows. No resize maximum: a launcher
      works a maximum in dp out to cells of its own size, and one of 400 dp held the 4 × 2 to three
-     cells on a phone. The picker's preview is the one the app generates. -->
+     cells on a phone. From Android 15 the picker's preview is the one the app generates; before
+     it, previewImage, the same widget drawn from made-up titles (WidgetShots writes it). -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/widget_airing_description"
+    android:previewImage="@drawable/widget_preview_airing_wide"
     android:initialLayout="@layout/glance_default_loading_layout"
     android:minWidth="250dp"
     android:minHeight="110dp"

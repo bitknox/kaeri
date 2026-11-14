@@ -63,6 +63,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -98,6 +99,12 @@ import app.kaeri.store.pairJoin
 import app.kaeri.store.pairStop
 import app.kaeri.store.startSync
 import kotlinx.coroutines.delay
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.ui.draw.alpha
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.safeDrawing
 
 /** A confirmation as a dialog: a question, what follows, and the one action named for what it does. */
 @Composable
@@ -390,35 +397,80 @@ internal fun QrCode(text: String, modifier: Modifier = Modifier, size: androidx.
     }
 }
 
-/** Add a device: the code the other device shows, or a code of this one to show there. */
+/**
+ * Add a device, full screen: the code the other device shows, typed in, and Pair at the top's end.
+ * Pair's ring shows inside it only past 600 ms, and stays at least 300 ms. A code of this device
+ * to show there instead is under the field.
+ */
 @Composable
 internal fun AddDeviceDialog() {
     val store = LocalAppStore.current
     val context = LocalContext.current
+    val colors = MaterialTheme.colorScheme
     val problem by store.sync.problem.collectAsStateWithLifecycle()
+    val pairing by store.sync.pairing.collectAsStateWithLifecycle()
     val name = deviceName()
-    var code by remember { mutableStateOf("") }
+    var code by remember { mutableStateOf(store.sync.join.typed.orEmpty()) }
     val digits = code.filter { it.isDigit() }
-    SettingsSheet(onDismiss = { store.pairStop(); store.sync.show(null) }, holdsInput = code.isNotEmpty()) {
-        SheetTitle(stringResource(R.string.devices_add))
-        SheetText(stringResource(R.string.pair_enter_line))
-        SheetField(
-            if (digits.length > 3) digits.take(3) + " " + digits.drop(3).take(3) else digits,
-            { code = it.filter(Char::isDigit).take(6) },
-            stringResource(R.string.pair_code_field),
-            modifier = Modifier.padding(top = 16.dp),
-            keyboard = KeyboardOptions(keyboardType = KeyboardType.NumberPassword, imeAction = ImeAction.Go),
-            supporting = stringResource(R.string.pair_same_wifi),
-            error = problem != null,
-        )
-        val failed by store.sync.pairFailed.collectAsStateWithLifecycle()
-        val pairWords = failed?.let { (why, device) ->
-            if (why == app.kaeri.engine.model.SyncPairProblem.WRONG_CODE) Strings.pairErrCode(context, device ?: stringResource(R.string.devices_other_device)) else Strings.pairErrNotFound(context)
+    val close = { store.pairStop(); store.sync.show(null) }
+    // The ring: nothing for 600 ms, then at least 300 ms once it shows.
+    var ring by remember { mutableStateOf(false) }
+    LaunchedEffect(pairing) {
+        if (pairing != null) {
+            delay(app.kaeri.store.Waiting.WAIT_MILLIS)
+            ring = true
+        } else if (ring) {
+            delay(app.kaeri.store.Waiting.HOLD_MILLIS)
+            ring = false
         }
-        (pairWords ?: problemWords(context, problem))?.let { SheetProblem(it) }
-        SheetButtons {
-            QuietButton(stringResource(R.string.pair_show_instead)) { store.pairInvite(name); store.sync.show(SyncSheet.CODE) }
-            Button(enabled = digits.length == 6, onClick = { store.pairWithCode(name, digits) }) { Text(stringResource(R.string.pair_button)) }
+    }
+    val busy = pairing != null || ring
+    val pair = { if (digits.length == 6 && !busy) store.pairWithCode(name, digits) }
+    Dialog(onDismissRequest = close, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+        Box(Modifier.fillMaxSize().background(colors.surface).windowInsetsPadding(WindowInsets.safeDrawing)) {
+            Column(Modifier.fillMaxSize()) {
+                Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(start = 4.dp, end = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = close) { Icon(Icons.Clear, contentDescription = stringResource(R.string.action_close)) }
+                    Text(
+                        stringResource(R.string.devices_add),
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.weight(1f).padding(start = 12.dp).semantics { heading() },
+                    )
+                    TextButton(onClick = pair, enabled = digits.length == 6) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(stringResource(R.string.pair_button), modifier = Modifier.alpha(if (ring) 0f else 1f))
+                            if (ring) CircularProgressIndicator(Modifier.size(18.dp), color = colors.primary, strokeWidth = 2.dp)
+                        }
+                    }
+                }
+                Column(Modifier.padding(horizontal = 16.dp).padding(top = 8.dp)) {
+                    OutlinedTextField(
+                        value = if (digits.length > 3) digits.take(3) + " " + digits.drop(3).take(3) else digits,
+                        onValueChange = { code = it.filter(Char::isDigit).take(6) },
+                        label = { Text(stringResource(R.string.pair_code_field)) },
+                        singleLine = true,
+                        isError = problem != null,
+                        enabled = !busy,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword, imeAction = ImeAction.Go),
+                        keyboardActions = KeyboardActions(onGo = { pair() }),
+                        supportingText = { Text(stringResource(R.string.pair_same_wifi)) },
+                        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = colors.secondary,
+                            focusedLabelColor = colors.secondary,
+                            cursorColor = colors.secondary,
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    val failed by store.sync.pairFailed.collectAsStateWithLifecycle()
+                    val pairWords = failed?.let { (why, device) ->
+                        if (why == app.kaeri.engine.model.SyncPairProblem.WRONG_CODE) Strings.pairErrCode(context, device ?: stringResource(R.string.devices_other_device)) else Strings.pairErrNotFound(context)
+                    }
+                    (pairWords ?: problemWords(context, problem))?.let { SheetProblem(it, Modifier.padding(top = 8.dp)) }
+                    Box(Modifier.padding(top = 8.dp)) {
+                        QuietButton(stringResource(R.string.pair_show_instead)) { store.pairInvite(name); store.sync.show(SyncSheet.CODE) }
+                    }
+                }
+            }
         }
     }
 }
@@ -560,6 +612,7 @@ internal fun RecoveryKeyDialog(key: String) {
 @Composable
 internal fun DevicePage(device: app.kaeri.engine.model.SyncDeviceView, onRemove: () -> Unit, onDismiss: () -> Unit) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val store = LocalAppStore.current
     SettingsSheet(onDismiss = onDismiss) {
         SheetTitle(device.name)
@@ -569,7 +622,7 @@ internal fun DevicePage(device: app.kaeri.engine.model.SyncDeviceView, onRemove:
             SwitchRow(if (remote) Place.First else Place.Only, stringResource(R.string.devices_sync_switch), !device.paused) { store.setDeviceSync(device.name, device.paused) }
             if (remote) SwitchRow(Place.Last, stringResource(R.string.devices_remote_switch), !device.remoteOff) { store.setDeviceRemote(device.name, device.remoteOff) }
         }
-        SheetText(Strings.devicesSwitchesFoot(context, context.getString(R.string.device_kind_phone), device.name), Modifier.padding(top = 8.dp))
+        SheetText(Strings.devicesSwitchesFoot(context, resources.getString(R.string.device_kind_phone), device.name), Modifier.padding(top = 8.dp))
         SheetButtons {
             QuietButton(stringResource(R.string.action_cancel), onClick = onDismiss)
             TextButton(onClick = onRemove) { Text(stringResource(R.string.devices_remove), color = MaterialTheme.colorScheme.error) }

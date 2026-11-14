@@ -117,7 +117,7 @@ struct NoSources: View {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 10) {
                     if devicePicksFolders {
-                        Button(L.sourcesAddFolderButton) { FolderPicker.choose { store.addFolder($0) } }
+                        Button(L.sourcesAddFolderButton) { FolderPicker.choose(message: L.libraryPickerMessage) { store.addFolder($0) } }
                             .buttonStyle(PrimaryCapsuleStyle(height: ScreenFailed.buttonHeight, fontSize: ScreenFailed.buttonFont))
                         Button(L.sourcesAddServerButton) { navigator.addServerShown = true }
                             .buttonStyle(SecondaryCapsuleStyle(height: ScreenFailed.buttonHeight, fontSize: ScreenFailed.buttonFont))

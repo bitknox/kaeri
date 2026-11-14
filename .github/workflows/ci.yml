@@ -67,7 +67,9 @@ jobs:
               - 'wit/**'
               - 'plugins/example-rust/**'
               - 'plugins/example-ts/**'
+              - 'plugins/example-books/**'
               - 'plugins/test-hostile/**'
+              - 'plugins/test-hostile-books/**'
               - 'plugins/test-torrent-source/**'
               - 'assets/**'
               - 'deploy/**'
@@ -293,25 +295,27 @@ jobs:
       # Formatting is checked first: it needs no build, so a stray space fails in seconds.
       - name: Format
         run: cargo fmt --all --check
-      # The two plugins are their own workspaces, so their targets are cached with the rest.
+      # The Rust plugins are their own workspaces, so their targets are cached with the rest.
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: |
             .
             plugins/example-rust
+            plugins/example-books
             plugins/test-hostile
+            plugins/test-hostile-books
             plugins/test-torrent-source
           save-if: ${{ github.ref == 'refs/heads/main' }}
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-nextest
-      # The components the sandbox tests load: the Rust reference plugin, the two fixtures and
+      # The components the sandbox tests load: the Rust reference plugins, the three fixtures and
       # the JavaScript reference plugin. Without them those tests skip, so the Test step below
       # sets KAERI_REQUIRE_PLUGINS and a missing one fails it. Built on main as well, for the
       # cache.
       - name: Build the plugins the sandbox tests load
         run: |
-          for plugin in example-rust test-hostile test-torrent-source; do
+          for plugin in example-rust example-books test-hostile test-hostile-books test-torrent-source; do
             cargo build --locked --release --target wasm32-wasip2 --manifest-path "plugins/$plugin/Cargo.toml"
           done
           npm ci --prefix plugins/example-ts
@@ -605,7 +609,7 @@ jobs:
       # What the engines are built from, as engine.sh hashes it: only the crates it compiles.
       - name: The engines' sources
         id: sources
-        run: echo "hash=$(apple/scripts/engine.sh --sources-hash)" >> "$GITHUB_OUTPUT"
+        run: hash="$(apple/scripts/engine.sh --sources-hash)" && echo "hash=$hash" >> "$GITHUB_OUTPUT"
       # engine.sh's own cache of each slice it built (~/.cache/kaeri-engine), by that hash.
       # Saved below, from main only, which only looks.
       - name: Restore the engines
@@ -847,7 +851,7 @@ jobs:
       # What the engine is built from, as engine.sh hashes it: only the crates it compiles.
       - name: The engine's sources
         id: sources
-        run: echo "hash=$(android/scripts/engine.sh --sources-hash)" >> "$GITHUB_OUTPUT"
+        run: hash="$(android/scripts/engine.sh --sources-hash)" && echo "hash=$hash" >> "$GITHUB_OUTPUT"
       # engine.sh's own cache of the testing engine (~/.cache/kaeri-engine), by that hash and
       # the NDK that built it. Saved below, from main only.
       - name: Restore the app's engine
@@ -925,6 +929,14 @@ jobs:
         if: github.event_name == 'pull_request' || steps.robolectric.outputs.cache-hit != 'true'
         working-directory: android
         run: ./gradlew --console=plain assembleFixturesDebug testFixturesDebugUnitTest -Proborazzi.test.record=true
+        env:
+          KAERI_PLAYER_NATIVE: "off"
+      # Android lint's errors in every module, such as a call the oldest supported Android lacks
+      # (NewApi), which the JVM tests cannot see: their JDK has every method.
+      - name: Lint
+        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
+        working-directory: android
+        run: ./gradlew --console=plain --continue lintFixturesDebug :i18n:lintDebug :design:lintDebug
         env:
           KAERI_PLAYER_NATIVE: "off"
       # What the shot tests' semantics check (testkit's A11yShots) found: reported here, and it

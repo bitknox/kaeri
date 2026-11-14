@@ -678,7 +678,482 @@ const MIGRATIONS: &[(&str, &str)] = &[
     );
     "#,
     ),
+    (
+        "0024_read_progress",
+        r#"
+    -- Reading, like watching: an append-only log of what was read (`read_event`, the source of
+    -- truth), and projections of it per chapter and per work. `work` and `chapter` are the
+    -- engine's WorkId and ChapterId strings: `a:<anilist id>` or `l:<hex>` for a work, a chapter
+    -- key such as `12`, `10.5`, `v2/3` or `x/-/Extra` for a chapter. `uid` is `device:seq` of
+    -- the op that carried the event, null while sync is off or for a work only this device has.
+    CREATE TABLE read_event (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        uid           TEXT,
+        stamp         INTEGER,
+        work          TEXT    NOT NULL,
+        chapter       TEXT    NOT NULL,
+        page          INTEGER,
+        of_pages      INTEGER,
+        strip_image   INTEGER,
+        strip_offset  REAL,
+        novel_pos     TEXT,
+        completed     INTEGER NOT NULL DEFAULT 0,
+        source_id     TEXT,
+        version_label TEXT,
+        at            INTEGER NOT NULL
+    );
+    CREATE INDEX idx_read_event_work ON read_event (work, at DESC);
+    CREATE UNIQUE INDEX idx_read_event_uid ON read_event (uid) WHERE uid IS NOT NULL;
+
+    -- Every chapter at or below a watermark counts as read: a tracker's count adopted, or
+    -- Mark as read up to here. Not written per chapter, as numbers can be decimals and a source
+    -- can list more chapters later.
+    CREATE TABLE read_adopt (
+        uid          TEXT    PRIMARY KEY,
+        work         TEXT    NOT NULL,
+        upto_chapter TEXT    NOT NULL,
+        upto_milli   INTEGER NOT NULL,
+        upto_volume  TEXT,
+        stamp        INTEGER NOT NULL,
+        at           INTEGER NOT NULL
+    );
+    CREATE INDEX idx_read_adopt_work ON read_adopt (work);
+
+    -- Read again from the start: events and watermarks older than a reset are set aside, and
+    -- come back when it is undone (`undone` is the stamp of the undo).
+    CREATE TABLE read_reset (
+        uid    TEXT    PRIMARY KEY,
+        work   TEXT    NOT NULL,
+        stamp  INTEGER NOT NULL,
+        at     INTEGER NOT NULL,
+        undone INTEGER
+    );
+    CREATE INDEX idx_read_reset_work ON read_reset (work);
+
+    -- Per chapter, from the events since the newest reset: whether it was read, and the newest
+    -- place in it with the stamp and device that wrote it.
+    CREATE TABLE read_chapter (
+        work         TEXT    NOT NULL,
+        chapter      TEXT    NOT NULL,
+        read         INTEGER NOT NULL DEFAULT 0,
+        read_at      INTEGER,
+        last_page    INTEGER,
+        of_pages     INTEGER,
+        strip_image  INTEGER,
+        strip_offset REAL,
+        novel_pos    TEXT,
+        stamp        INTEGER NOT NULL,
+        device       TEXT,
+        PRIMARY KEY (work, chapter)
+    ) WITHOUT ROWID;
+
+    -- Per work, for Continue: the newest chapter, the reset and the watermark in force, and
+    -- whether it is hidden from Continue.
+    CREATE TABLE read_work (
+        work         TEXT    PRIMARY KEY,
+        last_chapter TEXT,
+        stamp        INTEGER NOT NULL DEFAULT 0,
+        reset_stamp  INTEGER NOT NULL DEFAULT 0,
+        adopt_milli  INTEGER,
+        adopt_volume TEXT,
+        hidden       INTEGER NOT NULL DEFAULT 0,
+        updated_at   INTEGER NOT NULL
+    ) WITHOUT ROWID;
+    CREATE INDEX idx_read_work_recent ON read_work (stamp DESC);
+
+    -- A series' own reader choices, as `show_setting` keeps a show's. `scope` is `series` for a
+    -- choice that follows the person (mode, direction, colour) or `here` for one that stays on
+    -- this device (crop). Names this version does not know are passed over.
+    CREATE TABLE read_series_setting (
+        work       TEXT    NOT NULL,
+        setting    TEXT    NOT NULL,
+        value      TEXT    NOT NULL,
+        scope      TEXT    NOT NULL,
+        updated_at INTEGER NOT NULL,
+        PRIMARY KEY (work, setting)
+    ) WITHOUT ROWID;
+
+    CREATE TABLE read_status (
+        work       TEXT    PRIMARY KEY,
+        status     TEXT,
+        score      REAL,
+        updated_at INTEGER NOT NULL
+    ) WITHOUT ROWID;
+
+    CREATE TABLE read_bookmark (
+        work    TEXT    NOT NULL,
+        chapter TEXT    NOT NULL,
+        at      INTEGER NOT NULL,
+        PRIMARY KEY (work, chapter)
+    ) WITHOUT ROWID;
+
+    -- What was sent to an e-reader, so the series page can ask where the person stopped.
+    -- `chapters` is a JSON list of chapter ids.
+    CREATE TABLE read_sent (
+        id       INTEGER PRIMARY KEY AUTOINCREMENT,
+        work     TEXT    NOT NULL,
+        chapters TEXT    NOT NULL,
+        target   TEXT    NOT NULL,
+        at       INTEGER NOT NULL,
+        answered INTEGER NOT NULL DEFAULT 0
+    );
+    "#,
+    ),
+    (
+        "0025_read_trackers",
+        r#"
+    -- Reading's tracker writes, with the columns of `sync_outbox`, kept apart so a version that
+    -- drains only watching never sees them.
+    CREATE TABLE read_outbox (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        tracker_id  TEXT    NOT NULL,
+        op          TEXT    NOT NULL,
+        anilist_id  INTEGER NOT NULL,
+        created_at  INTEGER NOT NULL,
+        attempts    INTEGER NOT NULL DEFAULT 0,
+        next_retry  INTEGER NOT NULL DEFAULT 0,
+        last_error  TEXT
+    );
+    CREATE INDEX idx_read_outbox_ready ON read_outbox (tracker_id, next_retry);
+
+    -- Which entry a work is on each tracker. `tracker_id` is text so a 64-bit id fits.
+    -- `origin` is where it came from (anilist, kitsu, mangabaka, search, hand); a choice made
+    -- by hand is never replaced by a lookup. A null `tracker_id` is "not on this tracker".
+    CREATE TABLE read_track_map (
+        work       TEXT    NOT NULL,
+        tracker    TEXT    NOT NULL,
+        tracker_id TEXT,
+        origin     TEXT    NOT NULL,
+        checked_at INTEGER NOT NULL,
+        PRIMARY KEY (work, tracker)
+    ) WITHOUT ROWID;
+
+    -- The newest chapter a notification was sent for, per work.
+    CREATE TABLE read_notice (
+        work        TEXT    NOT NULL,
+        chapter     TEXT    NOT NULL,
+        notified_at INTEGER NOT NULL,
+        PRIMARY KEY (work, chapter)
+    ) WITHOUT ROWID;
+
+    -- The highest chapter and volume a tracker is known to hold for a work: a max register.
+    CREATE TABLE read_mark (
+        tracker    TEXT    NOT NULL,
+        anilist_id INTEGER NOT NULL,
+        chapter    INTEGER NOT NULL,
+        volume     INTEGER,
+        PRIMARY KEY (tracker, anilist_id)
+    ) WITHOUT ROWID;
+    "#,
+    ),
+    (
+        "0026_book_catalog",
+        r#"
+    -- What this device knows of a work, as AniList or a source described it. `titles` and
+    -- `meta` are JSON.
+    CREATE TABLE book_work (
+        work           TEXT    PRIMARY KEY,
+        anilist_id     INTEGER,
+        medium         TEXT    NOT NULL,
+        format         TEXT,
+        origin         TEXT,
+        titles         TEXT    NOT NULL,
+        cover          TEXT,
+        status         TEXT,
+        chapters_total INTEGER,
+        volumes_total  INTEGER,
+        meta           TEXT,
+        fetched_at     INTEGER NOT NULL
+    ) WITHOUT ROWID;
+
+    -- When a work's chapters usually come out, learnt from the chapters seen.
+    CREATE TABLE book_rhythm (
+        work           TEXT    PRIMARY KEY,
+        weekday        INTEGER,
+        every_days     INTEGER,
+        last_published INTEGER,
+        checked_at     INTEGER NOT NULL
+    ) WITHOUT ROWID;
+
+    -- A source's chapter list for a series, as it last answered. `chapters` is JSON.
+    CREATE TABLE book_chapter_cache (
+        source_id  TEXT    NOT NULL,
+        series_ref TEXT    NOT NULL,
+        chapters   TEXT    NOT NULL,
+        fetched_at INTEGER NOT NULL,
+        PRIMARY KEY (source_id, series_ref)
+    ) WITHOUT ROWID;
+
+    -- Which work a source's series is, as `mapping_override` keeps a show's match.
+    CREATE TABLE book_source_match (
+        source_id  TEXT    NOT NULL,
+        series_ref TEXT    NOT NULL,
+        work       TEXT    NOT NULL,
+        confidence INTEGER NOT NULL DEFAULT 0,
+        confirmed  INTEGER NOT NULL DEFAULT 0,
+        updated_at INTEGER NOT NULL,
+        PRIMARY KEY (source_id, series_ref)
+    ) WITHOUT ROWID;
+
+    -- The edition a work is read from, as `provider_preference` keeps a show's source.
+    CREATE TABLE book_edition_pref (
+        work          TEXT    PRIMARY KEY,
+        source_id     TEXT    NOT NULL,
+        version_label TEXT,
+        language      TEXT
+    ) WITHOUT ROWID;
+    "#,
+    ),
+    (
+        "0027_book_sources",
+        r#"
+    -- Book folders. A folder is a path, an Android document tree or an Apple bookmark.
+    CREATE TABLE book_folder (
+        id        TEXT    PRIMARY KEY,
+        path      TEXT,
+        tree_uri  TEXT,
+        bookmark  BLOB,
+        name      TEXT,
+        added_at  INTEGER NOT NULL,
+        last_scan INTEGER,
+        available INTEGER NOT NULL DEFAULT 1
+    ) WITHOUT ROWID;
+
+    -- A folder's books grouped as series, and what each was matched to.
+    CREATE TABLE book_local_series (
+        id         TEXT    PRIMARY KEY,
+        folder     TEXT    NOT NULL,
+        name       TEXT    NOT NULL,
+        medium     TEXT    NOT NULL,
+        work       TEXT,
+        state      TEXT    NOT NULL,
+        confidence INTEGER NOT NULL DEFAULT 0,
+        reason     TEXT
+    ) WITHOUT ROWID;
+
+    -- One book file. `number_milli` is the chapter number in thousandths; `comicinfo` is JSON.
+    CREATE TABLE book_local_file (
+        path         TEXT    PRIMARY KEY,
+        series       TEXT    NOT NULL,
+        volume       TEXT,
+        label        TEXT    NOT NULL,
+        number_milli INTEGER,
+        format       TEXT    NOT NULL,
+        pages        INTEGER,
+        size         INTEGER NOT NULL,
+        mtime        INTEGER NOT NULL,
+        comicinfo    TEXT
+    ) WITHOUT ROWID;
+    CREATE INDEX idx_book_local_file_series ON book_local_file (series);
+
+    -- Book servers. The token is in the secure store under `book-server/<id>`, never here.
+    CREATE TABLE book_server (
+        id              TEXT    PRIMARY KEY,
+        kind            TEXT    NOT NULL,
+        name            TEXT    NOT NULL,
+        address         TEXT    NOT NULL,
+        user            TEXT,
+        report_progress INTEGER NOT NULL DEFAULT 1,
+        signed_out      INTEGER NOT NULL DEFAULT 0,
+        last_seen       INTEGER
+    ) WITHOUT ROWID;
+    "#,
+    ),
+    (
+        "0028_book_downloads",
+        r#"
+    -- Chapters downloaded or queued. `keep_ready` marks one fetched ahead on its own, which
+    -- reading past it lets go.
+    CREATE TABLE book_download (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        work          TEXT    NOT NULL,
+        chapter       TEXT    NOT NULL,
+        source_id     TEXT    NOT NULL,
+        version_label TEXT,
+        state         TEXT    NOT NULL,
+        path          TEXT,
+        pages_done    INTEGER NOT NULL DEFAULT 0,
+        pages_total   INTEGER,
+        bytes         INTEGER NOT NULL DEFAULT 0,
+        error         TEXT,
+        keep_ready    INTEGER NOT NULL DEFAULT 0,
+        created_at    INTEGER NOT NULL,
+        updated_at    INTEGER NOT NULL,
+        UNIQUE (work, chapter)
+    );
+    "#,
+    ),
+    (
+        "0029_read_unread",
+        r#"
+    -- The newest unread of a chapter and the device that wrote it ('' with sync off), as
+    -- `sync_unwatch` keeps an episode's. It tells a read that arrives later from one that saw
+    -- the unread, and keeps a chapter a watermark covers unread until it is read again.
+    CREATE TABLE read_unread (
+        work    TEXT    NOT NULL,
+        chapter TEXT    NOT NULL,
+        stamp   INTEGER NOT NULL,
+        device  TEXT    NOT NULL DEFAULT '',
+        PRIMARY KEY (work, chapter)
+    ) WITHOUT ROWID;
+
+    -- A finished chapter kept against an unread its reading device had not seen, as `sync_note`
+    -- keeps a watch: surfaced for seven days.
+    CREATE TABLE read_note (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        work          TEXT    NOT NULL,
+        chapter       TEXT    NOT NULL,
+        unread_device TEXT    NOT NULL,
+        read_device   TEXT    NOT NULL,
+        at            INTEGER NOT NULL,
+        UNIQUE (work, chapter, unread_device, read_device)
+    );
+    "#,
+    ),
+    (
+        "0030_book_progress_outbox",
+        r#"
+    -- Reading progress waiting to be told to a book server: made offline, or tried and not
+    -- taken yet. One row per chapter of a series on a server, holding the newest mark; a mark
+    -- the server took is deleted. `due_at` is when to try next. `held` names why a row waits
+    -- for Try again instead (a refused key, the series gone, no answer for a day), and
+    -- `problem` why the last try failed. `first_failed_at` starts the day of retries.
+    CREATE TABLE book_progress_outbox (
+        server          TEXT    NOT NULL,
+        series          TEXT    NOT NULL,
+        chapter         TEXT    NOT NULL,
+        read            INTEGER NOT NULL,
+        at              INTEGER NOT NULL,
+        attempts        INTEGER NOT NULL DEFAULT 0,
+        due_at          INTEGER NOT NULL,
+        first_failed_at INTEGER,
+        problem         TEXT,
+        held            TEXT,
+        PRIMARY KEY (server, series, chapter)
+    ) WITHOUT ROWID;
+    CREATE INDEX book_progress_outbox_due ON book_progress_outbox (held, due_at);
+
+    -- How writing progress back to each server last went: when it last took a mark, and why
+    -- the last try failed while none has been taken since.
+    CREATE TABLE book_progress_state (
+        server     TEXT PRIMARY KEY,
+        sent_at    INTEGER,
+        problem    TEXT,
+        problem_at INTEGER
+    ) WITHOUT ROWID;
+    "#,
+    ),
+    (
+        "0031_book_series_hint",
+        r#"
+    -- How a source says a series' pages read (`rtl`, `ltr`, `vertical`, `strip`), as it last
+    -- answered; `hint` is NULL when it said nothing. The reader takes it after the person's own
+    -- choice for the series. Stays on the device, as the chapter lists do.
+    CREATE TABLE book_series_hint (
+        source_id  TEXT    NOT NULL,
+        series_ref TEXT    NOT NULL,
+        hint       TEXT,
+        fetched_at INTEGER NOT NULL,
+        PRIMARY KEY (source_id, series_ref)
+    ) WITHOUT ROWID;
+    "#,
+    ),
+    (
+        "0032_book_credit_pages",
+        r#"
+    -- Fingerprints of the pages at either edge of a chapter (the first two and last two of
+    -- each part), taken from pages the reader or a download fetched anyway: a 64-bit dHash per
+    -- page. A fingerprint at the edge of three chapters of one work is a credit page. `page`
+    -- counts from 0 through the chapter as read, parts and all; `edge` is 0 at a part's start
+    -- and 1 at its end; `group_label` is the version label the chapter was read in, when the
+    -- source gave one. Stays on the device, as the chapter lists do.
+    CREATE TABLE book_page_print (
+        work        TEXT    NOT NULL,
+        chapter     TEXT    NOT NULL,
+        page        INTEGER NOT NULL,
+        edge        INTEGER NOT NULL,
+        print       INTEGER NOT NULL,
+        group_label TEXT,
+        at          INTEGER NOT NULL,
+        PRIMARY KEY (work, chapter, page)
+    ) WITHOUT ROWID;
+
+    -- Pages the person said are not credit pages, by fingerprint: never skipped again in the
+    -- work.
+    CREATE TABLE book_credit_keep (
+        work  TEXT    NOT NULL,
+        print INTEGER NOT NULL,
+        at    INTEGER NOT NULL,
+        PRIMARY KEY (work, print)
+    ) WITHOUT ROWID;
+    "#,
+    ),
+    (
+        "0033_read_status_auto",
+        r#"
+    -- `auto` is 1 for a Reading that a read put there, not the person or a tracker. A tracker's
+    -- own status replaces it, and it is never sent to one. Series read before this release with
+    -- no status of their own go on Reading the same way, dated by their last read.
+    ALTER TABLE read_status ADD COLUMN auto INTEGER NOT NULL DEFAULT 0;
+    INSERT INTO read_status (work, status, score, updated_at, auto)
+        SELECT work, 'reading', NULL, updated_at, 1 FROM read_work
+         WHERE last_chapter IS NOT NULL
+        ON CONFLICT(work) DO UPDATE SET status = 'reading', auto = 1
+         WHERE read_status.status IS NULL;
+    "#,
+    ),
+    (
+        "0034_book_download_relative",
+        r#"
+    -- A downloaded chapter's path is kept within the data folder, so the files are found again
+    -- when the system moves the folder. Whole paths written before are cut back to it.
+    UPDATE book_download
+       SET path = substr(path, instr(path, '/book-downloads/') + 1)
+     WHERE path LIKE '/%' AND instr(path, '/book-downloads/') > 0;
+    UPDATE book_download
+       SET path = substr(path, instr(path, '\book-downloads\') + 1)
+     WHERE path LIKE '_:\%' AND instr(path, '\book-downloads\') > 0;
+    "#,
+    ),
+    (
+        "0035_local_work_names",
+        r#"
+    -- A work of its own on this device (`l:`) is named in book_work, where every screen, download
+    -- and send reads a work's name. Folder series carry their own name, so the ones kept before
+    -- this release are named from it; a book server's are named again from the server.
+    INSERT OR IGNORE INTO book_work (work, medium, titles, fetched_at)
+        SELECT work, MIN(medium), json_array(MIN(name)), 0 FROM book_local_series
+         WHERE work LIKE 'l:%' GROUP BY work;
+    "#,
+    ),
+    (
+        "0036_book_download_owner",
+        r#"
+    -- Which engine fetches a chapter, and until when it has last said it still does. Two engines
+    -- on one data folder (an app and the terminal) never fetch the same chapter, and one that
+    -- starts leaves a fetch another still makes alone. Rows from before have no owner and a lease
+    -- long over.
+    ALTER TABLE book_download ADD COLUMN owner TEXT;
+    ALTER TABLE book_download ADD COLUMN lease_until INTEGER NOT NULL DEFAULT 0;
+    "#,
+    ),
+    (
+        "0037_download_owner",
+        r#"
+    -- Which engine runs an episode's download, and until when it has last said it still does,
+    -- as for chapters. An engine that starts leaves a download another one still runs alone.
+    -- Rows from before have no owner and a lease long over.
+    ALTER TABLE download ADD COLUMN owner TEXT;
+    ALTER TABLE download ADD COLUMN lease_until INTEGER NOT NULL DEFAULT 0;
+    "#,
+    ),
 ];
+
+/// How long a statement waits for a lock another connection or process holds before it fails.
+///
+/// WAL lets readers go on beside a writer, but two writers still take turns. Long enough for any
+/// write the app makes to finish; a write that still fails is said to the person.
+pub const BUSY_WAIT: std::time::Duration = std::time::Duration::from_secs(5);
 
 /// Apply any migrations the database has not yet seen.
 pub fn migrate(conn: &Connection) -> rusqlite::Result<u32> {
@@ -688,6 +1163,10 @@ pub fn migrate(conn: &Connection) -> rusqlite::Result<u32> {
 /// [`migrate`], stopping before the migration called `stop`: a database as an older release left
 /// it, for the tests of what a migration does to existing data.
 pub fn migrate_until(conn: &Connection, stop: Option<&str>) -> rusqlite::Result<u32> {
+    // Every connection comes through here. Two engines can have the database open at once (the
+    // Mac app and the terminal share a data folder), and without a wait a write that meets the
+    // other's lock fails at once and the change is lost.
+    conn.busy_timeout(BUSY_WAIT)?;
     conn.pragma_update(None, "journal_mode", "WAL")?;
     conn.pragma_update(None, "foreign_keys", "ON")?;
     conn.pragma_update(None, "synchronous", "NORMAL")?;
@@ -704,12 +1183,22 @@ pub fn migrate_until(conn: &Connection, stop: Option<&str>) -> rusqlite::Result<
         if Some(*name) == stop {
             break;
         }
-        let already: bool = conn.query_row(
-            "SELECT EXISTS(SELECT 1 FROM schema_migration WHERE name = ?1)",
-            [name],
-            |r| r.get(0),
-        )?;
-        if already {
+        let already = |conn: &Connection| -> rusqlite::Result<bool> {
+            conn.query_row(
+                "SELECT EXISTS(SELECT 1 FROM schema_migration WHERE name = ?1)",
+                [name],
+                |r| r.get(0),
+            )
+        };
+        if already(conn)? {
+            continue;
+        }
+        // Another engine opening the same database at the same moment may be applying it: the
+        // write lock is taken first, waiting for that engine's, and the record asked again
+        // under it, so the migration is never run twice.
+        conn.execute_batch("BEGIN IMMEDIATE;")?;
+        if already(conn)? {
+            conn.execute_batch("COMMIT;")?;
             continue;
         }
         // Each migration is one transaction, **and the record of it is inside that
@@ -719,12 +1208,16 @@ pub fn migrate_until(conn: &Connection, stop: Option<&str>) -> rusqlite::Result<
         // `table … already exists`, and `Store::open` returns an error every time from then on.
         // There is no repair path for that short of deleting the database, so the two facts
         // have to become durable together.
-        conn.execute_batch(&format!(
-            "BEGIN;\n\
-             {sql}\n\
+        let applied_now = conn.execute_batch(&format!(
+            "{sql}\n\
              INSERT INTO schema_migration (name, applied_at) VALUES ('{name}', unixepoch());\n\
              COMMIT;"
-        ))?;
+        ));
+        if let Err(e) = applied_now {
+            // Nothing of it is kept: the next open tries it again.
+            let _ = conn.execute_batch("ROLLBACK;");
+            return Err(e);
+        }
         tracing::info!(migration = name, "applied migration");
         applied += 1;
     }
@@ -809,6 +1302,34 @@ mod tests {
             "skip_votes",
             "aniskip_outbox",
             "party_room",
+            "read_event",
+            "read_adopt",
+            "read_reset",
+            "read_chapter",
+            "read_work",
+            "read_series_setting",
+            "read_status",
+            "read_bookmark",
+            "read_sent",
+            "read_outbox",
+            "read_track_map",
+            "read_notice",
+            "read_mark",
+            "book_work",
+            "book_rhythm",
+            "book_chapter_cache",
+            "book_series_hint",
+            "book_source_match",
+            "book_edition_pref",
+            "book_folder",
+            "book_local_series",
+            "book_local_file",
+            "book_server",
+            "book_download",
+            "read_unread",
+            "read_note",
+            "book_progress_outbox",
+            "book_progress_state",
         ] {
             let found: bool = conn
                 .query_row(
@@ -819,6 +1340,70 @@ mod tests {
                 .unwrap();
             assert!(found, "table {table} missing");
         }
+    }
+
+    #[test]
+    fn download_paths_written_whole_are_cut_back_to_the_data_folder() {
+        let conn = Connection::open_in_memory().unwrap();
+        migrate_until(&conn, Some("0034_book_download_relative")).unwrap();
+        for (chapter, path) in [
+            ("1", Some("/home/someone/.local/share/kaeri/book-downloads/w/1.cbz")),
+            ("2", Some(r"C:\Users\someone\AppData\kaeri\book-downloads\w\2.cbz")),
+            ("3", Some("/elsewhere/3.cbz")),
+            ("4", None),
+        ] {
+            conn.execute(
+                "INSERT INTO book_download (work, chapter, source_id, state, path, created_at,
+                    updated_at) VALUES ('w', ?1, 's', 'done', ?2, 1, 1)",
+                rusqlite::params![chapter, path],
+            )
+            .unwrap();
+        }
+        migrate(&conn).unwrap();
+        let mut stmt = conn.prepare("SELECT path FROM book_download ORDER BY chapter").unwrap();
+        let paths: Vec<Option<String>> =
+            stmt.query_map([], |r| r.get(0)).unwrap().map(Result::unwrap).collect();
+        assert_eq!(
+            paths,
+            [
+                Some("book-downloads/w/1.cbz".to_owned()),
+                Some(r"book-downloads\w\2.cbz".to_owned()),
+                Some("/elsewhere/3.cbz".to_owned()),
+                None,
+            ]
+        );
+    }
+
+    /// R7E-4. Folder series kept before names were kept for local works are named by their
+    /// folder's name; a work the catalogue already describes is left as it is.
+    #[test]
+    fn folder_works_kept_before_are_named_by_their_folder() {
+        let conn = Connection::open_in_memory().unwrap();
+        migrate_until(&conn, Some("0035_local_work_names")).unwrap();
+        for (id, name, work) in [
+            ("f:1", "The Long Ferry", Some("l:m:the long ferry")),
+            ("f:2", "Rooftop Paper Club", Some("a:900301")),
+            ("f:3", "Unmatched", None),
+        ] {
+            conn.execute(
+                "INSERT INTO book_local_series (id, folder, name, medium, work, state)
+                 VALUES (?1, 'f', ?2, 'manga', ?3, 'unmatched')",
+                rusqlite::params![id, name, work],
+            )
+            .unwrap();
+        }
+        migrate(&conn).unwrap();
+        let mut stmt =
+            conn.prepare("SELECT work, titles FROM book_work ORDER BY work").unwrap();
+        let rows: Vec<(String, String)> = stmt
+            .query_map([], |r| Ok((r.get(0)?, r.get(1)?)))
+            .unwrap()
+            .map(Result::unwrap)
+            .collect();
+        assert_eq!(
+            rows,
+            [("l:m:the long ferry".to_owned(), r#"["The Long Ferry"]"#.to_owned())]
+        );
     }
 
     #[test]

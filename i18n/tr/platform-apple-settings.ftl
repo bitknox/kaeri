@@ -13,7 +13,7 @@ settings-advanced-none = Ek seçenek yok. Oynatıcı { -app-name }'in kendi ayar
 settings-aside-check-title = Proxy denetimi
 settings-aside-sources-apple = { -source-cap-pl } yukarıdan aşağıya, sırayla denenir. Bir gösteri, başlık sayfasından seçilen kendi { -source } ile gelebilir.
 settings-aside-advanced = Burada bir seçenek, büyütme ya da gece modu gibi Oynatma ayarlarını geri alabilir. Çoğu kişinin bu bölüme hiç ihtiyacı olmaz.
-settings-quality-detail = Daha yüksek, bir { -source } sunan en iyi sürümü alır ve daha fazla yer kullanır.
+settings-quality-detail = Daha yüksek, bir { -source } içindeki en iyi seçeneği alır. Daha fazla yer kaplar.
 settings-merge-subtitles-detail = Altyazılar, dosya nereye taşınırsa taşınsın bölümle birlikte kalır.
 settings-keep-seeding-detail-mac = Paylaşılmaya devam eden bir indirme, indirme klasörüne değil, { -app-name }'in önbelleğinde kalır.
 settings-keep-seeding-detail = Paylaşılmaya devam eden bir indirme, { -app-name }'in önbelleğinde kalır.
@@ -27,6 +27,10 @@ settings-delete-watched-title = { $count ->
 settings-delete-watched-detail = Dosyalar bu { -device }dan silinir. Henüz izlenmemiş bölümler kalır.
 settings-folder-default = Torrent önbelleğiyle birlikte tutulur
 settings-storage-unwatched = Henüz izlenmedi
+settings-storage-unread = Henüz okunmadı
+settings-storage-read = Okundu
+settings-storage-unseen-both = Henüz izlenmedi veya okunmadı
+settings-storage-seen-both = İzlendi veya okundu
 settings-storage-used = İndirmeler { $size } yer kaplıyor.
 settings-storage-used-free = İndirmeler { $size } yer kaplıyor. Bu { -device } üzerinde { $free } boş.
 settings-source-count = { $count ->
@@ -34,6 +38,7 @@ settings-source-count = { $count ->
    *[other] { $count } { -source-pl }
  }
 settings-accounts-sync-note = İlerleme ve liste değişiklikleri { $tracker } ile eşitlenir. { -library-cap } ve Takvimdeki Listem, { $tracker } listelerinizi gösterir.
+settings-accounts-sync-note-read = İlerleme ve liste değişiklikleri { $tracker } ile eşitlenir. { -library-cap }, { $tracker } listelerinizi gösterir.
 settings-conflicts = { $count ->
     [one] Bir başlık { $tracker } ile farklı
    *[other] { $count } başlık { $tracker } ile farklı
@@ -47,7 +52,7 @@ settings-synced-just-now = Az önce eşitlendi
 settings-synced-ago = Eşitlendi, { $ago }
 settings-privacy-note = { -app-name } neler gönderir, neler bu { -device } üzerinde kalır
 settings-read-online = Çevrimiçi oku
-settings-presence-note = Zengin durum, kapağı, bir ilerleme çubuğunu ve { $tracker } üzerindeki gösteri bağlantısını gösterir. Discord kapağı { $tracker } üzerinden kendisi alır. Başlığın gösterilmesi gerekir.
+settings-presence-note = Zengin durum; kapağı, bir ilerleme çubuğunu ve { $tracker } üzerindeki dizi bağlantısını gösterir. Yalnızca başlık gösterilirken çalışır. Discord kapağı { $tracker } üzerinden kendisi yükler.
 settings-presence-cover = Kapak
 settings-presence-button = { $tracker } üzerinde görüntüle
 settings-presence-nothing = Anime izliyor
@@ -71,7 +76,7 @@ settings-when-tomorrow = Yarın { $time }
 settings-when-day = { $day } { $time }
 settings-week-row-label = { $title }, bölüm { $episode }, { $when }
 settings-week-row-hint = Bu gösterinin ayarlarını açar
-settings-notify-explain-on = İzlediklerim listenizdeki bir gösterinin yeni bölümü yayınlandığında, { $tracker }'in verdiği saatte tek bildirim gelir. Gösterinin kendi ayarı önceliklidir.
+settings-notify-explain-on = İzleniyor listenizdeki bir dizinin bölümü çıktığında, { $tracker } üzerinde verilen saatte tek bildirim alırsınız. Dizinin kendi ayarı önce gelir.
 settings-notify-explain-off = Kapalı. Yalnızca kendi ayarlarında açılmış gösteriler bildirim gönderir.
 settings-preview-show = İzlediğiniz bir gösteri
 settings-preview-words = Bölüm 9 yayında.

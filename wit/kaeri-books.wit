@@ -1,0 +1,255 @@
+// The book source plugin ABI: a plugin that finds manga, comics or novels for Kaeri to read.
+//
+// A separate package from `kaeri:provider`, so a book plugin needs this one file and nothing
+// else, and the two contracts move on their own majors: a breaking change to book sources never
+// makes anyone rebuild a show source, and the reverse.
+//
+// The rules are the show sources' rules. The sandbox has no sockets and the host lends `fetch`:
+// the host makes each request, enforces `allowed-hosts`, rate-limits and keeps the cookie jar,
+// so a plugin is a parser that says what to ask for and reads the bytes that come back. Page
+// images are fetched by the host too, with the headers each page carries, so a download can
+// fetch them again later through the same allowlist.
+//
+// A plugin may also make some pages itself, for a page the host cannot fetch as one plain
+// request: one that sits inside a chapter archive, say, or one that needs a signed request.
+// That is opt-in. Such a plugin is built for `book-plugin-with-pages`, which adds the `pages`
+// interface, and the host asks it for those pages one at a time. A plugin built for
+// `book-plugin` never sees `pages`, and the host fetches all of its pages.
+//
+// Versioning. Major 1. The host tells this world from `kaeri:provider` by the names a component
+// imports and exports, so the kind of a plugin comes from the plugin itself. Kaeri loads any
+// `kaeri:books@1.x` component as a book source and says a `kaeri:books@2` one needs a newer
+// Kaeri.
+//
+// What changes the world. The component model checks an export's types field by field when a
+// plugin is instantiated: a record is matched by its exact list of fields and a variant by its
+// exact list of cases. So adding a field to a record in `source`, even an `option` one, or a case
+// to a variant, or a function, makes every plugin built before it fail to load. The conformance
+// suite proves this (`a_record_that_grows_a_field_is_a_different_world`). Every change to
+// `source`'s records, variants or functions is therefore a new major. The contract grows
+// without one in three ways: a plugin declares new behaviour as a capability string, a value
+// a plugin needs from the person comes through `config-get`, and a plugin opts in to an
+// interface of its own beside `source`, as `pages` is, which plugins without it never export. Open sets (`media`, `format`,
+// `status`, `reading-hint`, `capabilities`) are strings rather than enums for the same reason:
+// a value this host does not know is ignored rather than refused.
+
+package kaeri:books@1.0.0;
+
+interface host {
+    record http-request {
+        method: string,
+        url: string,
+        headers: list<tuple<string, string>>,
+        body: option<list<u8>>,
+    }
+
+    record http-response {
+        status: u16,
+        headers: list<tuple<string, string>>,
+        body: list<u8>,
+    }
+
+    variant host-error {
+        /// The URL's host is not in this plugin's `allowed-hosts`. Enforced on the host's side,
+        /// so a plugin cannot widen its own reach.
+        denied(string),
+        timeout,
+        transport(string),
+    }
+
+    /// Make an HTTP request through the host's client. The host enforces `allowed-hosts`,
+    /// rate-limits and keeps the cookie jar. Plugins get no sockets at all.
+    fetch: func(req: http-request) -> result<http-response, host-error>;
+
+    /// Several requests in one call, made at the same time. Results come back in request order.
+    /// Each request is checked on its own and counts against the same per-call budget as
+    /// `fetch`.
+    fetch-many: func(reqs: list<http-request>) -> list<result<http-response, host-error>>;
+
+    /// Write to the host's log, the only output a plugin has.
+    log: func(level: string, msg: string);
+
+    /// Capture groups for every match. Group 0 is the whole match.
+    regex-captures: func(pattern: string, haystack: string) -> list<list<string>>;
+
+    /// A value from this plugin's own section of the person's settings:
+    /// `[providers.plugins.settings.<plugin-id>]` in config.toml. `none` for anything unset,
+    /// which a plugin must be able to work without.
+    config-get: func(key: string) -> option<string>;
+}
+
+interface source {
+    record manifest {
+        id: string,
+        display-name: string,
+        version: string,
+        /// Hostnames this plugin may fetch, page image hosts included: the host fetches pages
+        /// through the same allowlist. Declaring more than you need is asking for permissions
+        /// you do not use.
+        allowed-hosts: list<string>,
+        /// What it has: `manga` (comics, manhwa, webtoons) and `novel`. Names the host does not
+        /// know are ignored.
+        media: list<string>,
+        /// BCP 47 tags of the languages it has, such as `en` or `pt-BR`.
+        languages: list<string>,
+        /// Optional behaviour this plugin opts into, as open strings. A later host gates new
+        /// treatment on a declared capability instead of a new record shape or a new function.
+        /// Unknown values are ignored, so declaring one never breaks on an older host. An empty
+        /// list is the normal case.
+        capabilities: list<string>,
+    }
+
+    /// What the host knows about the work being asked for, passed with `search`, `series` and
+    /// `list-chapters`. Every field is optional, and a plugin may ignore all of it.
+    record title-hints {
+        /// The AniList id, when the host has matched one.
+        anilist-id: option<u32>,
+        /// A MyAnimeList manga id. MyAnimeList numbers manga apart from anime.
+        mal-id: option<u32>,
+        romaji: option<string>,
+        english: option<string>,
+        native: option<string>,
+        /// Other known names for the same work.
+        synonyms: list<string>,
+        /// `manga` or `novel`, when the host knows which it wants.
+        medium: option<string>,
+    }
+
+    record series-hit {
+        /// The plugin's own id for the series, opaque to the host and handed back to `series`
+        /// and `list-chapters`.
+        id: string,
+        title: string,
+        /// Other titles for the same series. The host's matcher scores against every name it is
+        /// given.
+        synonyms: list<string>,
+        /// `manga`, `webtoon`, `novel` or `one-shot`, when the source says.
+        format: option<string>,
+        /// Country of origin as ISO 3166, such as `JP` or `KR`.
+        origin: option<string>,
+        year: option<u32>,
+        /// A cover image URL. The host fetches it through `allowed-hosts`.
+        cover: option<string>,
+        /// The BCP 47 language of this listing, when the source lists one per language.
+        language: option<string>,
+    }
+
+    record series-detail {
+        id: string,
+        title: string,
+        synonyms: list<string>,
+        /// Plain text.
+        description: option<string>,
+        cover: option<string>,
+        /// `releasing`, `finished`, `hiatus` or `cancelled`.
+        status: option<string>,
+        authors: list<string>,
+        genres: list<string>,
+        format: option<string>,
+        origin: option<string>,
+        /// How the pages read: `rtl`, `ltr`, `vertical` (pages one under another) or `strip`
+        /// (one long strip, a webtoon). The reader takes it after the person's own choice for
+        /// the series and before its own guess from the book.
+        reading-hint: option<string>,
+        /// BCP 47 tags of the languages this series has here.
+        languages: list<string>,
+    }
+
+    record chapter {
+        /// The plugin's own id for the chapter, handed back to `chapter-content`.
+        id: string,
+        /// The source's own label, kept as written: `10`, `10.5`, `12-13`, `Extra`. The host
+        /// reads a number from it where there is one.
+        number: string,
+        volume: option<string>,
+        title: option<string>,
+        /// A group or translation name, when the source lists more than one version.
+        version-label: option<string>,
+        /// BCP 47.
+        language: option<string>,
+        /// RFC 3339, a date (`2026-01-02`) or a date and time.
+        published: option<string>,
+        page-count: option<u32>,
+    }
+
+    /// One page image. The host fetches it, never the plugin, sending `headers` with it.
+    record page {
+        url: string,
+        headers: list<tuple<string, string>>,
+        width: option<u32>,
+        height: option<u32>,
+    }
+
+    variant content {
+        /// Page images, in reading order.
+        images(list<page>),
+        /// A novel chapter: an XHTML body fragment, UTF-8. The host sanitises it before
+        /// showing it, so scripts and remote loads in it never run.
+        ///
+        /// Pictures stay as `<img src="https://…">` on a host in `allowed-hosts`. The host
+        /// fetches each one as it fetches a page, with no headers, keeps it inside the book and
+        /// points the chapter at that copy, so it shows offline too. A picture on any other host,
+        /// or over `http`, is never fetched and is dropped. At most 64 a chapter, each under the
+        /// limits `page-bytes` states for a page.
+        text(string),
+    }
+
+    /// The same vocabulary as `kaeri:provider`'s errors, so the host's failover rules apply
+    /// the same way to both.
+    variant source-error {
+        /// Works, but has no such series or chapter. Not a reason to try another source.
+        not-found,
+        /// The site refused the request or asked to slow down.
+        blocked(string),
+        /// The response arrived but did not have the expected shape.
+        parse(string),
+        other(string),
+    }
+
+    describe: func() -> manifest;
+
+    /// `query` is the host's first choice of words. `hints` carries the rest of what is known,
+    /// so a plugin can try another name when the first finds nothing.
+    search: func(query: string, hints: title-hints) -> result<list<series-hit>, source-error>;
+
+    series: func(id: string, hints: title-hints) -> result<series-detail, source-error>;
+
+    /// Every chapter the source lists for a series, in any order: every version and language.
+    list-chapters: func(id: string, hints: title-hints) -> result<list<chapter>, source-error>;
+
+    /// What chapter `chapter` of series `series` is made of. A page URL that answers 403 or 410
+    /// later makes the host ask again, once, for fresh URLs.
+    chapter-content: func(series: string, chapter: string) -> result<content, source-error>;
+}
+
+world book-plugin {
+    import host;
+    export source;
+}
+
+/// Pages a plugin makes itself. Optional: only a plugin built for `book-plugin-with-pages`
+/// exports it, and the host asks only those plugins.
+interface pages {
+    use source.{source-error};
+
+    /// The bytes of one page of chapter `chapter` of series `series`: the page whose `url` this
+    /// plugin gave in `chapter-content`. The url is the plugin's own name for the page and may
+    /// carry whatever the plugin needs to find it again, such as an archive's address and an
+    /// entry in it. `none` asks the host to fetch the url itself, with the page's headers, as it
+    /// does for a plugin without `pages`.
+    ///
+    /// A JPEG, PNG, WebP, GIF or AVIF file, whole. The host asks for one page at a time, when it
+    /// needs that page, under the same limits as every other call, and checks what comes back:
+    /// a page over 16 MiB, one that is no image it knows by its first bytes, or one whose header
+    /// claims more than 40 million pixels is refused before decoding, as this plugin's `parse`
+    /// error. A page made here has no address to expire, so the 403 and 410 rule of
+    /// `chapter-content` does not apply to it.
+    page-bytes: func(series: string, chapter: string, url: string)
+        -> result<option<list<u8>>, source-error>;
+}
+
+/// A book plugin that can also make pages itself.
+world book-plugin-with-pages {
+    include book-plugin;
+    export pages;
+}

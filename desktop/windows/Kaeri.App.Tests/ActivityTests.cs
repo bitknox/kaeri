@@ -71,6 +71,22 @@ public class ActivityTests
     }
 
     [Fact]
+    public void HeldChangesAndARejectedCredentialAreNotWaiting()
+    {
+        // Seventeen changes "waiting to sync" for days: three Kitsu has no match for, and
+        // fourteen behind a credential Trakt rejected.
+        Dictionary<string, SyncState> trackers = [];
+        trackers["anilist"] = new SyncState("anilist", true, 0, 0, User: "mika", Last: "pulled");
+        trackers["kitsu"] = new SyncState("kitsu", true, 0, 3);
+        trackers["trakt"] = new SyncState("trakt", true, 14, 0, NeedsReauth: true);
+        var summary = Summary.Of(trackers, false);
+        Assert.Equal(SyncDot.Problem, summary.Dot);
+        Assert.Equal("trakt", summary.Tracker);
+        trackers["trakt"] = new SyncState("trakt", true, 0, 7);
+        Assert.Equal(SyncDot.Synced, Summary.Of(trackers, false).Dot);
+    }
+
+    [Fact]
     public void SettlingADifferenceTakesItsRowAwayAtOnce()
     {
         var known = new Known();

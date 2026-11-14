@@ -73,4 +73,4 @@ servers-needs-look = { $count } tanesi AniList ile eşleşmedi
 servers-kind-films = Filmler
 servers-error-certificate = { $host }, bu { -device }ın güvenmediği bir sertifika kullanıyor. Güvendiği bir sertifikaya sahip, https:// ile başlayan bir adres kullanın.
 servers-row-signed-out-here = Oturum kapalı
-servers-sign-out-line = Bu { -device }ın sunucudaki oturumunu sonlandırır. Sunucu ve indirmeleriniz olduğu gibi kalır.
+servers-sign-out-line = Oturumu kapatmak, bu { -device }ın sunucudaki oturumunu sonlandırır. Sunucu ve indirmeleriniz olduğu gibi kalır.

@@ -1,5 +1,6 @@
-cloud-browser-line = Din webbläsare öppnade sidan för { $service }. Tillåt åtkomst där, så sköter { -app-name } resten själv.
+cloud-browser-line = Din webbläsare öppnade sidan för { $service }. Tillåt åtkomst där, så fortsätter { -app-name } av sig själv.
 cloud-browser-title = Logga in på { $service } i webbläsaren
+cloud-close-carries-on = Du kan stänga det här. { -app-name } fortsätter och öppnar följande steg av sig själv när det är klart.
 device-kind-computer = datorn
 devices-enter-code = Ange en kod
 devices-show-key = Visa

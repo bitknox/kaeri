@@ -71,17 +71,17 @@ state-load-failed = Couldn't load this page
 
 # Notification body: a new episode is out.
 # @only windows
-# @arg episode: int
+# @arg episode: plain
 notify-episode-out = Episode { $episode } is out.
 
 # Notification body: a new dubbed episode is out.
 # @only windows
-# @arg episode: int
+# @arg episode: plain
 notify-episode-out-dubbed = Episode { $episode } is out, { -dubbed }.
 
 # Follows the line above when the viewer is behind: the episode Play starts.
 # @only windows
-# @arg episode: int
+# @arg episode: plain
 notify-next-for-you = Next for you: episode { $episode }.
 
 # Notification body: one episode of a show finished downloading. The episode is a number such as 3 or 12.5.
@@ -194,7 +194,7 @@ engine-stopped-title = { -app-name } stopped working
 # Line under that title: what happened and what to do.
 # @only windows
 # @allow proceed
-engine-stopped-detail = The part of the app that does the work has stopped. Open { -app-name } again to carry on.
+engine-stopped-detail = Downloads and sync stopped with it. Open { -app-name } again to carry on.
 
 # Button in that window: opens the app again.
 # @only windows

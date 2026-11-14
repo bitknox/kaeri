@@ -12,6 +12,7 @@ use serde::{Serialize, de::DeserializeOwned};
 use crate::{
     crypto::{self, PublicKey},
     invite::{self, Invite},
+    manifest,
     protocol::{
         AdminLink, EndReason, ErrorBody, Index, IndexEntry, InviteCreated, InviteFacts,
         InviteRequest, MAX_PLUGIN_BYTES, Me, MemberList, OpenJoinRequest, OpenSetting,
@@ -606,8 +607,10 @@ pub fn verify_index(
     Ok(index)
 }
 
-/// The kind of plugin an index entry offers when it names none: a source of shows.
-const SHOWS: &str = "shows";
+/// The kinds of plugin this version can use: show sources, the kind of an entry that names
+/// none, and book sources. Whether book sources are shown is the app's to decide, by its Read
+/// switch.
+const KINDS: &[&str] = &[manifest::KIND_SHOWS, manifest::KIND_BOOKS];
 
 /// Read an index document, leaving out the entries of a kind this version cannot use, as a store
 /// lists for a newer Kaeri. They are left out before anything else is read of them, so an entry
@@ -619,7 +622,7 @@ fn read_index(document: &str) -> Result<Index, ClientError> {
         let listed = plugins.len();
         plugins.retain(|entry| match entry.get("kind") {
             None | Some(serde_json::Value::Null) => true,
-            Some(kind) => kind.as_str() == Some(SHOWS),
+            Some(kind) => kind.as_str().is_some_and(|kind| KINDS.contains(&kind)),
         });
         if plugins.len() < listed {
             tracing::debug!(
@@ -776,6 +779,8 @@ mod tests {
                     sha256: String::new(),
                     size: 0,
                     published_at: 0,
+                    kind: None,
+                    media: Vec::new(),
                 })
                 .collect(),
             owners: Vec::new(),
@@ -793,18 +798,32 @@ mod tests {
             serde_json::from_str(&signed(&key, 3, &["plain", "named"]).index).unwrap();
         let plugins = index["plugins"].as_array_mut().unwrap();
         plugins[1]["kind"] = "shows".into();
-        // A newer store's book plugin, shaped as this version would not read an entry.
+        // A book source, which this version reads.
         plugins.push(serde_json::json!({
-            "id": "pages",
+            "id": "lanterns",
+            "name": "Lanterns",
+            "version": "1.0.0",
+            "allowed_hosts": ["books.example"],
             "kind": "books",
             "media": ["manga"],
+            "sha256": "",
+            "size": 0,
+            "published_at": 0,
+        }));
+        // A newer store's plugin of a kind this version has never heard of, shaped as this
+        // version would not read an entry.
+        plugins.push(serde_json::json!({
+            "id": "pages",
+            "kind": "podcasts",
             "sha256": "",
         }));
         let index = index.to_string();
         let signed = SignedIndex { signature: key.sign_index(&index), index };
         let index = verify_index(&signed, &key.public(), 0).unwrap();
         let ids: Vec<_> = index.plugins.iter().map(|p| p.id.as_str()).collect();
-        assert_eq!(ids, ["plain", "named"]);
+        assert_eq!(ids, ["plain", "named", "lanterns"]);
+        assert!(index.plugins[2].is_books());
+        assert_eq!(index.plugins[2].media, ["manga"]);
     }
 
     #[test]

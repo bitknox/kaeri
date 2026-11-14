@@ -1,5 +1,5 @@
 source-picker-seeders-linux = { $count ->
-    [one] Um semeador
+    [one] { $count } semeador
     [many] { $count } semeadores
    *[other] { $count } semeadores
  }
@@ -53,16 +53,16 @@ poster-grid-name = Títulos
 onboarding-where-hosts-linux = O { -app-name } reproduz o que você já tem: arquivos neste { -device }, seu servidor Jellyfin e { -plugin-pl } de { -plugin-store-pl } em que você entrar.
 sources-empty-or = Ou
 library-row-summary-linux = { $episodes ->
-    [one] 1 episódio de { $series } séries
+    [one] { $episodes } episódio de { $series } séries
     [many] { $episodes } de episódios de { $series } séries
    *[other] { $episodes } episódios de { $series } séries
  }
 library-page-watching-linux = Alterações são acompanhadas
-library-page-no-watch-linux = Verificada de novo quando o { -app-name } inicia
+library-page-no-watch-linux = Mudanças verificadas quando o { -app-name } inicia
 library-matched-linux = Identificadas
 library-best-guess-linux = Melhor palpite: { $title }
 library-fix-count-mismatch-linux = { $episodes ->
-    [one] Tem 1 episódio, esta pasta tem { $files }
+    [one] Tem { $episodes } episódio, esta pasta tem { $files }
     [many] Tem { $episodes } de episódios, esta pasta tem { $files }
    *[other] Tem { $episodes } episódios, esta pasta tem { $files }
  }
