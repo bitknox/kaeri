@@ -23,7 +23,7 @@ Kaeri   Harbor Light Recipes · Chapter 14 · Tide Tables                       
 
 
                                                   First page of chapter 15
-                              ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+
 
 
 
@@ -69,7 +69,7 @@ r22 c30-46 fg=#2db95f bg=#2db95f
 r23 c30-46 fg=#2db95f bg=#2db95f
 r24 c30-46 fg=#2db95f bg=#2db95f
 r24 c50-73 fg=text-dim
-r25 c30-46 fg=#2db95f bg=#1a6a36
+r25 c30-46 fg=#2db95f bg=#2db95f
 r32 c00-119 fg=rule
 r33 c00-15 fg=text
 r33 c16-34 fg=text-dim

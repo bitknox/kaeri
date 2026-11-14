@@ -21,34 +21,20 @@ colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 ale
 r00 c00-04 fg=text mod=BOLD
 r00 c08-40 fg=text-dim
 r01 c00-59 fg=rule
-r02 c20-37 fg=#68ceec bg=#68ceec
-r02 c38-38 fg=#51a0b7 bg=#51a0b7
-r03 c20-37 fg=#68ceec bg=#68ceec
-r03 c38-38 fg=#51a0b7 bg=#51a0b7
-r04 c20-37 fg=#68ceec bg=#68ceec
-r04 c38-38 fg=#51a0b7 bg=#51a0b7
-r05 c20-37 fg=#68ceec bg=#68ceec
-r05 c38-38 fg=#51a0b7 bg=#51a0b7
-r06 c20-37 fg=#68ceec bg=#68ceec
-r06 c38-38 fg=#51a0b7 bg=#51a0b7
-r07 c20-37 fg=#68ceec bg=#68ceec
-r07 c38-38 fg=#51a0b7 bg=#51a0b7
-r08 c20-37 fg=#68ceec bg=#68ceec
-r08 c38-38 fg=#51a0b7 bg=#51a0b7
-r09 c20-37 fg=#68ceec bg=#68ceec
-r09 c38-38 fg=#51a0b7 bg=#51a0b7
-r10 c20-37 fg=#68ceec bg=#68ceec
-r10 c38-38 fg=#51a0b7 bg=#51a0b7
-r11 c20-37 fg=#68ceec bg=#68ceec
-r11 c38-38 fg=#51a0b7 bg=#51a0b7
-r12 c20-37 fg=#68ceec bg=#68ceec
-r12 c38-38 fg=#51a0b7 bg=#51a0b7
-r13 c20-37 fg=#68ceec bg=#68ceec
-r13 c38-38 fg=#51a0b7 bg=#51a0b7
-r14 c20-37 fg=#68ceec bg=#68ceec
-r14 c38-38 fg=#51a0b7 bg=#51a0b7
-r15 c20-37 fg=#68ceec bg=#68ceec
-r15 c38-38 fg=#51a0b7 bg=#51a0b7
+r02 c20-38 fg=#68ceec bg=#68ceec
+r03 c20-38 fg=#68ceec bg=#68ceec
+r04 c20-38 fg=#68ceec bg=#68ceec
+r05 c20-38 fg=#68ceec bg=#68ceec
+r06 c20-38 fg=#68ceec bg=#68ceec
+r07 c20-38 fg=#68ceec bg=#68ceec
+r08 c20-38 fg=#68ceec bg=#68ceec
+r09 c20-38 fg=#68ceec bg=#68ceec
+r10 c20-38 fg=#68ceec bg=#68ceec
+r11 c20-38 fg=#68ceec bg=#68ceec
+r12 c20-38 fg=#68ceec bg=#68ceec
+r13 c20-38 fg=#68ceec bg=#68ceec
+r14 c20-38 fg=#68ceec bg=#68ceec
+r15 c20-38 fg=#68ceec bg=#68ceec
 r16 c00-59 fg=rule
 r17 c00-11 fg=text-dim
 r17 c45-45 fg=text

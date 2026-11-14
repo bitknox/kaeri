@@ -12,7 +12,10 @@
 
 use image::{DynamicImage, GrayImage, ImageReader, RgbaImage, imageops::FilterType};
 use kaeri_model::reader::{PageEncoding, PageFile, PageHalf, PixelFormat};
-use kaeri_tui::{App, PageJob};
+use kaeri_tui::{
+    App, PageJob,
+    image::{EncodeJob, Encoded},
+};
 use tokio::sync::mpsc;
 
 /// One page, as a picture or as the news that its file was not one.
@@ -37,6 +40,15 @@ pub fn now(job: PageJob) -> Decoded {
         tracing::debug!(path = %job.file.path, "could not decode a page");
     }
     Decoded { key: job.key, image }
+}
+
+/// Resize and encode a page for its box on the blocking pool, and send it to `tx` for
+/// [`kaeri_tui::image::ImageStore::encoded`].
+pub fn encode(job: EncodeJob, tx: &mpsc::UnboundedSender<Encoded>) {
+    let tx = tx.clone();
+    tokio::task::spawn_blocking(move || {
+        let _ = tx.send(job.run());
+    });
 }
 
 /// Give the app what came of one page.

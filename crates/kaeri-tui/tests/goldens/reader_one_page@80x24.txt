@@ -33,46 +33,26 @@ r00 c66-66 fg=rule
 r00 c67-68 fg=text-dim
 r00 c69-79 fg=state
 r01 c00-79 fg=rule
-r02 c26-51 fg=#68ceec bg=#68ceec
-r02 c52-52 fg=#51a0b7 bg=#51a0b7
-r03 c26-51 fg=#68ceec bg=#68ceec
-r03 c52-52 fg=#51a0b7 bg=#51a0b7
-r04 c26-51 fg=#68ceec bg=#68ceec
-r04 c52-52 fg=#51a0b7 bg=#51a0b7
-r05 c26-51 fg=#68ceec bg=#68ceec
-r05 c52-52 fg=#51a0b7 bg=#51a0b7
-r06 c26-51 fg=#68ceec bg=#68ceec
-r06 c52-52 fg=#51a0b7 bg=#51a0b7
-r07 c26-51 fg=#68ceec bg=#68ceec
-r07 c52-52 fg=#51a0b7 bg=#51a0b7
-r08 c26-51 fg=#68ceec bg=#68ceec
-r08 c52-52 fg=#51a0b7 bg=#51a0b7
-r09 c26-51 fg=#68ceec bg=#68ceec
-r09 c52-52 fg=#51a0b7 bg=#51a0b7
-r10 c26-51 fg=#68ceec bg=#68ceec
-r10 c52-52 fg=#51a0b7 bg=#51a0b7
-r11 c26-51 fg=#68ceec bg=#68ceec
-r11 c52-52 fg=#51a0b7 bg=#51a0b7
-r12 c26-51 fg=#68ceec bg=#68ceec
-r12 c52-52 fg=#51a0b7 bg=#51a0b7
-r13 c26-51 fg=#68ceec bg=#68ceec
-r13 c52-52 fg=#51a0b7 bg=#51a0b7
-r14 c26-51 fg=#68ceec bg=#68ceec
-r14 c52-52 fg=#51a0b7 bg=#51a0b7
-r15 c26-51 fg=#68ceec bg=#68ceec
-r15 c52-52 fg=#51a0b7 bg=#51a0b7
-r16 c26-51 fg=#68ceec bg=#68ceec
-r16 c52-52 fg=#51a0b7 bg=#51a0b7
-r17 c26-51 fg=#68ceec bg=#68ceec
-r17 c52-52 fg=#51a0b7 bg=#51a0b7
-r18 c26-51 fg=#68ceec bg=#68ceec
-r18 c52-52 fg=#51a0b7 bg=#51a0b7
-r19 c26-51 fg=#68ceec bg=#68ceec
-r19 c52-52 fg=#51a0b7 bg=#51a0b7
-r20 c26-51 fg=#68ceec bg=#68ceec
-r20 c52-52 fg=#51a0b7 bg=#51a0b7
-r21 c26-51 fg=#68ceec bg=#68ceec
-r21 c52-52 fg=#51a0b7 bg=#51a0b7
+r02 c26-52 fg=#68ceec bg=#68ceec
+r03 c26-52 fg=#68ceec bg=#68ceec
+r04 c26-52 fg=#68ceec bg=#68ceec
+r05 c26-52 fg=#68ceec bg=#68ceec
+r06 c26-52 fg=#68ceec bg=#68ceec
+r07 c26-52 fg=#68ceec bg=#68ceec
+r08 c26-52 fg=#68ceec bg=#68ceec
+r09 c26-52 fg=#68ceec bg=#68ceec
+r10 c26-52 fg=#68ceec bg=#68ceec
+r11 c26-52 fg=#68ceec bg=#68ceec
+r12 c26-52 fg=#68ceec bg=#68ceec
+r13 c26-52 fg=#68ceec bg=#68ceec
+r14 c26-52 fg=#68ceec bg=#68ceec
+r15 c26-52 fg=#68ceec bg=#68ceec
+r16 c26-52 fg=#68ceec bg=#68ceec
+r17 c26-52 fg=#68ceec bg=#68ceec
+r18 c26-52 fg=#68ceec bg=#68ceec
+r19 c26-52 fg=#68ceec bg=#68ceec
+r20 c26-52 fg=#68ceec bg=#68ceec
+r21 c26-52 fg=#68ceec bg=#68ceec
 r22 c00-79 fg=rule
 r23 c00-09 fg=text
 r23 c10-23 fg=text-dim

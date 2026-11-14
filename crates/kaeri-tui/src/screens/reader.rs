@@ -15,8 +15,7 @@ use crate::{
         Reader, ReaderScreen, SECONDS_AFTER, Viewport, ZOOM_PANEL, chapter_name, reader_hints,
         say, stage_of,
     },
-    image::Graphics,
-    image::PixelCrop,
+    image::{Cut, Graphics},
     keymap::{Action, said},
     layout,
     nav::{Overlay, RailWidth},
@@ -447,9 +446,7 @@ fn pages(buf: &mut Buffer, app: &App, reader: &Reader, stage: Rect, now: Instant
     for (part, rect) in leaf_boxes(app, reader, leaf, stage) {
         let key = PartKey { page: part.page, half: part.half };
         // A picture from an older file shows until the new one is decoded.
-        if app.images.has(&reader.picture_key(key))
-            && app.images.render_scaled(&reader.picture_key(key), rect, buf)
-        {
+        if app.images.render_page(&reader.picture_key(key), rect, buf) {
             continue;
         }
         plate(buf, app, rect);
@@ -499,8 +496,8 @@ fn leaf_boxes<'a>(
         .collect()
 }
 
-/// A box on a canvas drawn where the view shows it, from the same part of its picture, or a
-/// plate that says the page is loading or why it failed.
+/// A box on a canvas drawn where the view shows it, the rows in view of its picture, or a plate
+/// that says the page is loading or why it failed.
 fn canvas_box(
     buf: &mut Buffer,
     app: &App,
@@ -509,8 +506,11 @@ fn canvas_box(
     view: &Viewport,
     now: Instant,
 ) {
-    let Some((rect, crop)) = box_in_view(app, item, view) else { return };
-    if crop.is_some() && app.images.render_part(&item.key, crop, rect, buf) {
+    let Some(shown) = box_in_view(app, item, view) else { return };
+    let rect = shown.rect;
+    if let Some((cut, top, columns)) = shown.picture
+        && app.images.render_slice(&item.key, cut, top, columns, buf)
+    {
         return;
     }
     plate(buf, app, rect);
@@ -522,12 +522,18 @@ fn canvas_box(
     }
 }
 
-/// Where a box shows in the view, and the part of its picture there, once the picture is kept.
-fn box_in_view(
-    app: &App,
-    item: &CanvasBox,
-    view: &Viewport,
-) -> Option<(Rect, Option<PixelCrop>)> {
+/// Where a box shows in a view.
+struct InView {
+    /// The part of the box on screen.
+    rect: Rect,
+    /// Once its page is kept: what the page is made for, the box's top from the view's, and
+    /// the screen the box's columns in view take, top to bottom of the view.
+    picture: Option<(Cut, i32, Rect)>,
+}
+
+/// Where a box shows in the view. The page is made for the whole box, in rows, so a scroll draws
+/// other rows of the same picture; a box wider than the view is made for the columns in view.
+fn box_in_view(app: &App, item: &CanvasBox, view: &Viewport) -> Option<InView> {
     let area = view.area;
     let (vx0, vy0) = (view.x, view.y);
     let (vx1, vy1) = (vx0 + i32::from(area.width), vy0 + i32::from(area.height));
@@ -543,23 +549,17 @@ fn box_in_view(
         width: (x1 - x0) as u16,
         height: (y1 - y0) as u16,
     };
-    let crop = app.images.page_size(&item.key).map(|(pw, ph)| {
+    let picture = app.images.page_size(&item.key).map(|(pw, _)| {
         let across = |c: i32| {
             (f64::from(c - item.x) / f64::from(item.width.max(1)) * f64::from(pw)).round()
                 as u32
         };
-        let down = |r: i32| {
-            (f64::from(r - item.y) / f64::from(item.height.max(1)) * f64::from(ph)).round()
-                as u32
-        };
-        PixelCrop {
-            x: across(x0),
-            y: down(y0),
-            width: across(x1).saturating_sub(across(x0)).max(1),
-            height: down(y1).saturating_sub(down(y0)).max(1),
-        }
+        let part = (x0 > item.x || x1 < bx1).then(|| (across(x0), across(x1)));
+        let rows = u16::try_from(item.height).unwrap_or(u16::MAX);
+        let cut = Cut::sliced(rect.width, rows, part);
+        (cut, item.y - vy0, Rect { y: area.y, height: area.height, ..rect })
     });
-    Some((rect, crop))
+    Some(InView { rect, picture })
 }
 
 /// The part of a canvas in view: a page at fit width, or zoomed in.
@@ -949,7 +949,7 @@ fn next_wide(
     let picture = Rect { x, y: top, width: cols, height: rows };
     let key = reader.preview_key(&next.id);
     let drawn = reader.end.preview.as_ref().is_some_and(|(id, _)| *id == next.id)
-        && app.images.render_scaled(&key, picture, buf);
+        && app.images.render_page(&key, picture, buf);
     if !drawn {
         plate(buf, app, picture);
     }

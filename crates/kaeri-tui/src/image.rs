@@ -12,11 +12,15 @@
 //!   plate; it must never fail a screen, because cover art is decoration and the title
 //!   underneath it is not.
 
+mod pictures;
+
 use std::{
     collections::HashMap,
     path::PathBuf,
     sync::{Arc, Mutex},
 };
+
+pub use pictures::{Cut, EncodeJob, Encoded};
 
 use ratatui::layout::Rect;
 use ratatui_image::{picker::Picker, protocol::StatefulProtocol};
@@ -275,21 +279,12 @@ pub struct ImageStore {
     protocols: std::cell::RefCell<HashMap<String, StatefulProtocol>>,
     /// Reader pages, kept whole so a part of one can be drawn: a page scrolled at fit width,
     /// zoomed, or cut by the edge of the window in a strip.
-    pages: std::cell::RefCell<HashMap<String, Arc<image::DynamicImage>>>,
-    /// The part of each page drawn last, made into a protocol once for that part.
-    parts: std::cell::RefCell<HashMap<String, (PixelCrop, StatefulProtocol)>>,
+    pages: std::cell::RefCell<HashMap<String, pictures::Kept>>,
+    /// The pages made for the boxes they are drawn in: see [`pictures`].
+    pictures: pictures::Pictures,
     /// Small copies of pages for the zoom's map, by key and size in cells.
     thumbs: std::cell::RefCell<HashMap<String, Thumbnail>>,
     requests: ImageRequests,
-}
-
-/// A rectangle of a picture, in its pixels.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct PixelCrop {
-    pub x: u32,
-    pub y: u32,
-    pub width: u32,
-    pub height: u32,
 }
 
 impl std::fmt::Debug for ImageStore {
@@ -307,7 +302,7 @@ impl ImageStore {
             engine,
             protocols: std::cell::RefCell::new(HashMap::new()),
             pages: std::cell::RefCell::new(HashMap::new()),
-            parts: std::cell::RefCell::new(HashMap::new()),
+            pictures: pictures::Pictures::default(),
             thumbs: std::cell::RefCell::new(HashMap::new()),
             requests: ImageRequests::new(),
         }
@@ -350,37 +345,38 @@ impl ImageStore {
     }
 
     /// Keep a reader page whole, in place of any picture under its key, for drawing it or any
-    /// part of it.
+    /// part of it. What was made of the page before goes on showing until the new one is made.
     pub fn insert_page(&self, key: &str, image: image::DynamicImage) {
         if !self.engine.is_enabled() {
             return;
         }
         self.protocols.borrow_mut().remove(key);
-        self.parts.borrow_mut().remove(key);
         self.thumbs.borrow_mut().remove(key);
-        self.pages.borrow_mut().insert(key.to_owned(), Arc::new(image));
+        let kept = self.pictures.keep(image);
+        self.pages.borrow_mut().insert(key.to_owned(), kept);
     }
 
     /// A page's size in pixels, once it is kept.
     pub fn page_size(&self, key: &str) -> Option<(u32, u32)> {
-        self.pages.borrow().get(key).map(|image| (image.width(), image.height()))
+        self.pages.borrow().get(key).map(|kept| (kept.image.width(), kept.image.height()))
     }
 
     /// Let go of one picture.
     pub fn forget(&self, key: &str) {
-        self.protocols.borrow_mut().remove(key);
-        self.pages.borrow_mut().remove(key);
-        self.parts.borrow_mut().remove(key);
-        self.thumbs.borrow_mut().remove(key);
+        self.forget_where(|k| k == key);
     }
 
     /// Let go of every picture whose key starts with `prefix`: a chapter's pages once it is
     /// left, which are never drawn again under the same key.
     pub fn forget_prefix(&self, prefix: &str) {
-        self.protocols.borrow_mut().retain(|key, _| !key.starts_with(prefix));
-        self.pages.borrow_mut().retain(|key, _| !key.starts_with(prefix));
-        self.parts.borrow_mut().retain(|key, _| !key.starts_with(prefix));
-        self.thumbs.borrow_mut().retain(|key, _| !key.starts_with(prefix));
+        self.forget_where(|k| k.starts_with(prefix));
+    }
+
+    fn forget_where(&self, gone: impl Fn(&str) -> bool) {
+        self.protocols.borrow_mut().retain(|key, _| !gone(key));
+        self.pages.borrow_mut().retain(|key, _| !gone(key));
+        self.thumbs.borrow_mut().retain(|key, _| !gone(key));
+        self.pictures.forget_where(&gone);
     }
 
     pub fn len(&self) -> usize {
@@ -422,64 +418,6 @@ impl ImageStore {
         true
     }
 
-    /// Draw a cached picture filling `area`, scaled up as well as down: a page, whose box the
-    /// reader has already sized to the page's shape.
-    pub fn render_scaled(
-        &self,
-        key: &str,
-        area: ratatui::layout::Rect,
-        buf: &mut ratatui::buffer::Buffer,
-    ) -> bool {
-        if area.width == 0 || area.height == 0 {
-            return false;
-        }
-        let Ok(mut protocols) = self.protocols.try_borrow_mut() else { return false };
-        let Some(protocol) = protocols.get_mut(key) else {
-            drop(protocols);
-            return self.render_part(key, None, area, buf);
-        };
-        let image =
-            ratatui_image::StatefulImage::default().resize(ratatui_image::Resize::Scale(None));
-        ratatui::widgets::StatefulWidget::render(image, area, buf, protocol);
-        true
-    }
-
-    /// Draw `crop` of a kept page filling `area`, or the whole page with no crop. The part is
-    /// made into a protocol once and kept until another part of the page is drawn.
-    pub fn render_part(
-        &self,
-        key: &str,
-        crop: Option<PixelCrop>,
-        area: ratatui::layout::Rect,
-        buf: &mut ratatui::buffer::Buffer,
-    ) -> bool {
-        if area.width == 0 || area.height == 0 {
-            return false;
-        }
-        let Some(page) = self.pages.borrow().get(key).cloned() else { return false };
-        let whole = PixelCrop { x: 0, y: 0, width: page.width(), height: page.height() };
-        let crop = clamp_crop(crop.unwrap_or(whole), whole);
-        if crop.width == 0 || crop.height == 0 {
-            return false;
-        }
-        let Ok(mut parts) = self.parts.try_borrow_mut() else { return false };
-        let stale = parts.get(key).is_none_or(|(made, _)| *made != crop);
-        if stale {
-            let picture = if crop == whole {
-                (*page).clone()
-            } else {
-                page.crop_imm(crop.x, crop.y, crop.width, crop.height)
-            };
-            let Some(protocol) = self.engine.protocol_for(picture) else { return false };
-            parts.insert(key.to_owned(), (crop, protocol));
-        }
-        let Some((_, protocol)) = parts.get_mut(key) else { return false };
-        let image =
-            ratatui_image::StatefulImage::default().resize(ratatui_image::Resize::Scale(None));
-        ratatui::widgets::StatefulWidget::render(image, area, buf, protocol);
-        true
-    }
-
     /// A kept page shrunk to `cols` by `rows` cells of halfblocks: two pixels a cell, one over
     /// the other. Made once for each size.
     pub fn thumbnail(&self, key: &str, (cols, rows): (u16, u16)) -> Option<image::RgbImage> {
@@ -488,7 +426,7 @@ impl ImageStore {
         {
             return Some(thumb.clone());
         }
-        let page = self.pages.borrow().get(key).cloned()?;
+        let page = self.pages.borrow().get(key).map(|kept| kept.image.clone())?;
         let (w, h) = (u32::from(cols.max(1)), u32::from(rows.max(1)) * 2);
         let thumb = page.resize_exact(w, h, image::imageops::FilterType::Triangle).into_rgb8();
         self.thumbs.borrow_mut().insert(key.to_owned(), ((cols, rows), thumb.clone()));
@@ -498,18 +436,6 @@ impl ImageStore {
 
 /// A page's map for the zoom: the cells it was made for, and its pixels.
 type Thumbnail = ((u16, u16), image::RgbImage);
-
-/// `crop` kept inside `whole`.
-fn clamp_crop(crop: PixelCrop, whole: PixelCrop) -> PixelCrop {
-    let x = crop.x.min(whole.width.saturating_sub(1));
-    let y = crop.y.min(whole.height.saturating_sub(1));
-    PixelCrop {
-        x,
-        y,
-        width: crop.width.min(whole.width - x),
-        height: crop.height.min(whole.height - y),
-    }
-}
 
 /// Shrink an image before it is handed to a protocol.
 ///

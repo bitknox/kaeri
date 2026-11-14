@@ -97,6 +97,8 @@ pub async fn run(
     // The settings as the engine starts on them, which it says again at launch.
     let settings = kaeri_model::settings::view(&config, &saved);
     let mut app = App::with_images(settings, palette, keymap, image_engine);
+    // Reader pictures are resized and encoded on the blocking pool, not in the draw.
+    app.images.encode_off_loop();
     // What sync names this computer when it starts without a name in the group.
     app.set_device_name(computer_name());
     // The crash reports saved here, for Report a bug to offer. Saving is off unless asked for,
@@ -157,6 +159,7 @@ pub async fn run(
     // Covers come back from the blocking pool on this, decoded, to be handed to the app.
     let (covers_tx, mut covers_rx) = mpsc::unbounded_channel();
     let (pages_tx, mut pages_rx) = mpsc::unbounded_channel();
+    let (made_tx, mut made_rx) = mpsc::unbounded_channel();
 
     // Painting on change rather than on every tick: see `Repaint`. `idle_tick` is whether
     // nothing but the ticker woke this pass, the one case that may skip it.
@@ -221,6 +224,11 @@ pub async fn run(
         for job in app.take_page_jobs() {
             tui::pages::spawn(job, &pages_tx);
         }
+        // Pages the last frame wanted made for its boxes, off the loop too; the frame drew
+        // what it had meanwhile, and each comes back on the arm below.
+        for job in app.images.take_encode_jobs() {
+            tui::pages::encode(job, &made_tx);
+        }
 
         tokio::select! {
             // One at a time, each in the order the engine applied it, with the loop's own
@@ -270,6 +278,7 @@ pub async fn run(
             }
             Some(decoded) = covers_rx.recv() => covers::hand_over(&mut app, decoded),
             Some(decoded) = pages_rx.recv() => tui::pages::hand_over(&mut app, decoded),
+            Some(made) = made_rx.recv() => app.images.encoded(made),
             // Asked to end from outside — a kill, the terminal closing — which leaves the way
             // Q does, so the player is closed rather than orphaned and playing on.
             signal = signals.recv() => {
