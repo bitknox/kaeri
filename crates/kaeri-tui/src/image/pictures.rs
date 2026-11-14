@@ -13,6 +13,10 @@
 //! what was made before where that still fits, and the loop runs the job on the blocking pool
 //! and gives back its [`Encoded`] through [`ImageStore::encoded`]. Tests, the preview and the
 //! harness make pictures inline, so one draw settles.
+//!
+//! The store also notes where pictures were drawn in each frame, so a terminal that leaves
+//! pixels behind can be cleared when a picture goes from a place the next frame does not
+//! cover: see [`ImageStore::left_behind`].
 
 use std::{
     cell::{Cell, RefCell},
@@ -127,6 +131,8 @@ pub(super) struct Pictures {
     jobs: RefCell<Vec<EncodeJob>>,
     off_loop: Cell<bool>,
     generation: Cell<u64>,
+    /// Where pictures were drawn in the frame before, and so far in this one.
+    drawn: RefCell<(Vec<Rect>, Vec<Rect>)>,
 }
 
 impl Pictures {
@@ -187,6 +193,11 @@ fn make(picker: &Picker, page: &DynamicImage, cut: Cut) -> Option<Picture> {
     }
 }
 
+/// Whether a cell of `before` is in none of `now`.
+fn uncovered(before: &[Rect], now: &[Rect]) -> bool {
+    before.iter().any(|rect| rect.positions().any(|cell| !now.iter().any(|r| r.contains(cell))))
+}
+
 impl ImageStore {
     /// Make pages off the loop from now on: draws queue [`EncodeJob`]s for
     /// [`Self::take_encode_jobs`].
@@ -217,10 +228,10 @@ impl ImageStore {
             return false;
         }
         self.draw_made(key, Cut::whole(area.width, area.height), |picture, _| {
-            let Picture::Whole(protocol) = picture else { return false };
+            let Picture::Whole(protocol) = picture else { return None };
             let size = protocol.size();
             if size.width > area.width || size.height > area.height {
-                return false;
+                return None;
             }
             let at = Rect {
                 x: area.x + (area.width - size.width) / 2,
@@ -229,7 +240,7 @@ impl ImageStore {
                 height: size.height,
             };
             Image::new(protocol).render(at, buf);
-            true
+            Some(Some(at))
         })
     }
 
@@ -237,6 +248,9 @@ impl ImageStore {
     /// columns show in, and the box's top is `top` rows below `area`'s top, or above it when
     /// negative. While the page is made again for another part of its width, what was made
     /// before shows.
+    ///
+    /// Where it was drawn is not noted: a scroll moves it every step. The view it is drawn in
+    /// is noted with [`Self::note_pictures`].
     pub fn render_slice(
         &self,
         key: &str,
@@ -250,19 +264,53 @@ impl ImageStore {
         }
         let top = top.clamp(i32::from(i16::MIN), i32::from(i16::MAX)) as i16;
         self.draw_made(key, cut, |picture, made| {
-            let Picture::Sliced(sliced) = picture else { return false };
+            let Picture::Sliced(sliced) = picture else { return None };
             if (made.cols, made.rows) != (cut.cols, cut.rows) {
-                return false;
+                return None;
             }
             SlicedImage::new(sliced, SignedPosition { x: 0, y: top }).render(area, buf);
-            true
+            Some(None)
         })
+    }
+
+    /// Note that pictures show in `area` this frame, for [`Self::left_behind`].
+    pub fn note_pictures(&self, area: Rect) {
+        if let Ok(mut drawn) = self.pictures.drawn.try_borrow_mut()
+            && !area.is_empty()
+        {
+            drawn.1.push(area);
+        }
+    }
+
+    /// A new frame starts: where pictures showed so far was the frame before.
+    pub fn start_frame(&self) {
+        if let Ok(mut drawn) = self.pictures.drawn.try_borrow_mut() {
+            drawn.0 = std::mem::take(&mut drawn.1);
+        }
+    }
+
+    /// Whether the frame just drawn left a picture's pixels on screen: a terminal that keeps
+    /// them ([`ImageEngine::leaves_pixels`](super::ImageEngine::leaves_pixels)), and a cell
+    /// that showed a picture in the frame before and shows none now. One page after two, a
+    /// spread after its halves, a page after zooming out. The screen wants clearing then.
+    pub fn left_behind(&self) -> bool {
+        if !self.engine.leaves_pixels() {
+            return false;
+        }
+        let drawn = self.pictures.drawn.borrow();
+        uncovered(&drawn.0, &drawn.1)
     }
 
     /// Draw what is made of `key` for `cut`, asking for it to be made first when it is not:
     /// `draw` gets the picture and the box it was made for, which is another while it is made
-    /// again, and says whether it drew. Says whether anything was drawn.
-    fn draw_made(&self, key: &str, cut: Cut, draw: impl FnOnce(&Picture, Cut) -> bool) -> bool {
+    /// again, and says whether it drew and where, if it drew whole. Says whether anything was
+    /// drawn.
+    fn draw_made(
+        &self,
+        key: &str,
+        cut: Cut,
+        draw: impl FnOnce(&Picture, Cut) -> Option<Option<Rect>>,
+    ) -> bool {
         let Some(generation) = self.pages.borrow().get(key).map(|kept| kept.generation) else {
             return false;
         };
@@ -274,7 +322,15 @@ impl ImageStore {
         let Ok(made) = self.pictures.made.try_borrow() else { return false };
         let Some(made) = made.get(key) else { return false };
         let Some(picture) = made.picture.as_ref() else { return false };
-        draw(picture, made.cut)
+        match draw(picture, made.cut) {
+            Some(at) => {
+                if let Some(at) = at {
+                    self.note_pictures(at);
+                }
+                true
+            }
+            None => false,
+        }
     }
 
     /// Make `key`'s page for `cut`: now, or off the loop once.
@@ -449,5 +505,43 @@ mod tests {
         }
         assert!(!store.has("reader/1/c14/0"));
         assert!(!store.render_page("reader/1/c14/0", buf.area, &mut buf));
+    }
+
+    #[test]
+    fn a_cell_a_picture_leaves_is_uncovered() {
+        let one = [Rect::new(40, 2, 40, 30)];
+        let two = [Rect::new(20, 2, 40, 30), Rect::new(60, 2, 40, 30)];
+        assert!(!uncovered(&one, &two), "two pages cover the one before");
+        assert!(uncovered(&two, &one), "one page leaves the sides of two");
+        assert!(!uncovered(&[], &one));
+        assert!(uncovered(&one, &[]));
+    }
+
+    #[test]
+    fn only_a_terminal_that_keeps_pixels_is_cleared() {
+        let draw_then = |store: &ImageStore, first: Rect, then: Rect| {
+            store.insert_page("p", page(60, 100));
+            let mut buf = Buffer::empty(Rect::new(0, 0, 40, 20));
+            store.start_frame();
+            store.render_page("p", first, &mut buf);
+            store.start_frame();
+            store.render_page("p", then, &mut buf);
+            store.left_behind()
+        };
+        let wide = Rect::new(0, 0, 30, 20);
+        let narrow = Rect::new(10, 0, 12, 20);
+        #[allow(deprecated)]
+        let mut sixel = Picker::from_fontsize(ratatui_image::FontSize::new(10, 20));
+        sixel.set_protocol_type(ProtocolType::Sixel);
+        let sixel = ImageStore::new(ImageEngine::with_picker(sixel));
+        assert!(draw_then(&sixel, wide, narrow), "the sides of the wide picture stay");
+        assert!(!draw_then(&sixel, narrow, wide));
+        #[allow(deprecated)]
+        let mut kitty = Picker::from_fontsize(ratatui_image::FontSize::new(10, 20));
+        kitty.set_protocol_type(ProtocolType::Kitty);
+        let kitty = ImageStore::new(ImageEngine::with_picker(kitty));
+        assert!(!draw_then(&kitty, wide, narrow), "kitty deletes its own placements");
+        let blocks = ImageStore::new(ImageEngine::drawn_as_blocks());
+        assert!(!draw_then(&blocks, wide, narrow));
     }
 }

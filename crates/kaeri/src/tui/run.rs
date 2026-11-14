@@ -194,6 +194,17 @@ pub async fn run(
             if let Err(e) = terminal.draw(|frame| report = screens::render(frame, &app)) {
                 break Err(e.into());
             }
+            // Sixel and iTerm2 keep a picture's pixels where the frame drew no picture over
+            // them: one page after two, a page after a spread or after zooming out. The screen
+            // is cleared and drawn again at once, so what was left shows for a frame at most.
+            if app.images.left_behind() {
+                let again = terminal.clear().and_then(|()| {
+                    terminal.draw(|frame| report = screens::render(frame, &app))
+                });
+                if let Err(e) = again {
+                    break Err(e.into());
+                }
+            }
             // How the frame laid the overlay out, for the next key to page and scroll by.
             app.took_frame(report);
             repaint.painted(terminal.backend_mut().take_wrote(), now);

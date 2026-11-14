@@ -105,6 +105,7 @@ pub fn render(frame: &mut TFrame<'_>, app: &App) -> FrameReport {
     let geometry = layout::compute(area, app.nav.rail_width());
     let buf = frame.buffer_mut();
     let reading = matches!(app.nav.current(), StageView::Reader(_));
+    app.images.start_frame();
 
     // Immersive mode paints its own ground; adaptive inherits the terminal's, which is what
     // lets Kaeri sit alongside the user's other tools.

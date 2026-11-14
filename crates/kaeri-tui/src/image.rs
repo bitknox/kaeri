@@ -210,6 +210,18 @@ impl ImageEngine {
         }
     }
 
+    /// An engine for a picker made by hand, for tests of what a protocol does.
+    #[cfg(test)]
+    pub(crate) fn with_picker(picker: Picker) -> Self {
+        let font = picker.font_size();
+        Self {
+            graphics: Graphics::Native,
+            font_size: (font.width, font.height),
+            picker: Some(picker),
+            cache_dir: PathBuf::new(),
+        }
+    }
+
     pub fn with_cache_dir(mut self, dir: impl Into<PathBuf>) -> Self {
         self.cache_dir = dir.into();
         self
@@ -225,6 +237,17 @@ impl ImageEngine {
 
     pub fn is_enabled(&self) -> bool {
         self.picker.is_some()
+    }
+
+    /// Whether a picture's pixels can stay on screen after the cells under it are drawn again:
+    /// sixel and iTerm2 draw over the cells, and only clearing the screen takes them all
+    /// away. Kitty deletes its own placements, and halfblocks are only text.
+    pub fn leaves_pixels(&self) -> bool {
+        use ratatui_image::picker::ProtocolType;
+        self.graphics == Graphics::Native
+            && self.picker.as_ref().is_some_and(|p| {
+                matches!(p.protocol_type(), ProtocolType::Sixel | ProtocolType::Iterm2)
+            })
     }
 
     /// Cell dimensions that preserve an image's aspect ratio inside `available`.

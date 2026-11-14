@@ -497,7 +497,7 @@ fn leaf_boxes<'a>(
 }
 
 /// A box on a canvas drawn where the view shows it, the rows in view of its picture, or a plate
-/// that says the page is loading or why it failed.
+/// that says the page is loading or why it failed. Says where the picture shows, if it does.
 fn canvas_box(
     buf: &mut Buffer,
     app: &App,
@@ -505,21 +505,22 @@ fn canvas_box(
     item: &CanvasBox,
     view: &Viewport,
     now: Instant,
-) {
-    let Some(shown) = box_in_view(app, item, view) else { return };
+) -> Option<Rect> {
+    let shown = box_in_view(app, item, view)?;
     let rect = shown.rect;
     if let Some((cut, top, columns)) = shown.picture
         && app.images.render_slice(&item.key, cut, top, columns, buf)
     {
-        return;
+        return Some(rect);
     }
     plate(buf, app, rect);
-    let Some(part) = item.part else { return };
+    let part = item.part?;
     if let Some(failure) = reader.failures.get(&part.page) {
         page_failed(buf, app, rect, part.page, failure);
     } else if now.saturating_duration_since(reader.shown_at) >= PLATE_AFTER {
         page_loading(buf, app, rect, part.page);
     }
+    None
 }
 
 /// Where a box shows in a view.
@@ -565,7 +566,9 @@ fn box_in_view(app: &App, item: &CanvasBox, view: &Viewport) -> Option<InView> {
 /// The part of a canvas in view: a page at fit width, or zoomed in.
 fn viewport(buf: &mut Buffer, app: &App, reader: &Reader, view: &Viewport, now: Instant) {
     for item in &view.boxes {
-        canvas_box(buf, app, reader, item, view, now);
+        if let Some(shown) = canvas_box(buf, app, reader, item, view, now) {
+            app.images.note_pictures(shown);
+        }
     }
 }
 
@@ -673,6 +676,8 @@ fn strip(buf: &mut Buffer, app: &App, reader: &Reader, stage: Rect, now: Instant
         y: top as i32,
         area: Rect { x, width: cols, ..stage },
     };
+    // The column, however the strip scrolls: images move up it a few rows at a time.
+    app.images.note_pictures(view.area);
     let p = &app.palette;
     let width = cols as usize;
     for item in &layout.items {
