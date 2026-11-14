@@ -3068,6 +3068,15 @@ unsafe extern "C" fn a11y_realize(ctx: *mut std::ffi::c_void) {
                 a11y_type_of(ctx),
                 a11y_where(ctx)
             );
+            let bt = std::backtrace::Backtrace::force_capture();
+            for line in
+                format!("{bt}").lines().filter(|l| !l.trim_start().starts_with("at ")).take(90)
+            {
+                eprintln!("HUNT rbt {}", line.trim());
+            }
+            let mut frames = [std::ptr::null_mut(); 90];
+            let n = backtrace(frames.as_mut_ptr(), 90);
+            backtrace_symbols_fd(frames.as_ptr(), n, 2);
         }
         if let Some(f) = A11Y_REALIZE.get() {
             f(ctx);
