@@ -415,11 +415,16 @@ impl NovelView {
         self.call(&format!("window.kaeriReader && window.kaeriReader.goTo({page}, 'jump')")); // i18n-skip
     }
 
-    /// Show the document's last page, from End.
-    pub fn go_to_end(&self) {
-        self.call(
-            "window.kaeriReader && window.kaeriReader.goTo(window.kaeriReader.count() - 1, 'jump')", // i18n-skip
-        );
+    /// Home and End: the chapter's first or last page, which may sit in another document of
+    /// the spine than the one showing.
+    pub fn go_to_edge(&self, last: bool) {
+        match edge_move(&self.spine, self.current(), last) {
+            EdgeMove::Here(script) => self.call(script),
+            EdgeMove::Load(url) => {
+                self.ready_how.set(Some(TurnHow::Jump));
+                self.load(&url);
+            }
+        }
     }
 
     /// Show a place the engine moved to: a resume, Back to page, another device's place. It
@@ -502,8 +507,8 @@ impl NovelView {
                 Some("ArrowLeft") => self.turn(rtl),   // i18n-skip
                 Some("ArrowDown" | "PageDown" | " ") => self.turn(true),
                 Some("ArrowUp" | "PageUp") => self.turn(false),
-                Some("Home") => self.go_to(0),   // i18n-skip
-                Some("End") => self.go_to_end(), // i18n-skip
+                Some("Home") => self.go_to_edge(false), // i18n-skip
+                Some("End") => self.go_to_edge(true),   // i18n-skip
                 _ => {}
             },
             Some("tap") => {
@@ -644,6 +649,34 @@ fn is_navigation(kind: i32) -> bool {
     matches!(kind, NAVIGATION_ACTION | NEW_WINDOW_ACTION)
 }
 
+/// Where Home or End goes: a page of the document showing, or another document to load.
+#[derive(Debug, PartialEq, Eq)]
+enum EdgeMove {
+    Here(&'static str),
+    Load(String),
+}
+
+/// Home goes to the first page of the chapter's first linear document, End to the last page of
+/// its last one. With the place unknown, or in a document out of the flow, the edge document
+/// is loaded afresh; a spine with nothing linear has its first and last documents as edges.
+fn edge_move(spine: &[(String, bool)], current: Option<usize>, last: bool) -> EdgeMove {
+    let edge = if last {
+        spine.iter().rposition(|(_, linear)| *linear).or(spine.len().checked_sub(1))
+    } else {
+        spine.iter().position(|(_, linear)| *linear).or((!spine.is_empty()).then_some(0))
+    };
+    match edge {
+        Some(at) if current != Some(at) => {
+            let url = &spine[at].0;
+            EdgeMove::Load(if last { format!("{url}#kaeri:end") } else { url.clone() })
+        }
+        _ if last => EdgeMove::Here(
+            "window.kaeriReader && window.kaeriReader.goTo(window.kaeriReader.count() - 1, 'jump')", // i18n-skip
+        ),
+        _ => EdgeMove::Here("window.kaeriReader && window.kaeriReader.goTo(0, 'jump')"), // i18n-skip
+    }
+}
+
 /// The end page as the engine hears it: the last place the page reported, at the page after
 /// its last. The engine reads the chapter at once there, as "After the last page" asks. None
 /// before the page has reported a place.
@@ -686,6 +719,67 @@ mod tests {
         assert_eq!((session, at, place), (3, chapter, pos));
         // The engine reads the chapter at once at page == pages.
         assert_eq!((page, pages, how), (12, 12, TurnHow::Turn));
+    }
+
+    fn spine(items: &[bool]) -> Vec<(String, bool)> {
+        items
+            .iter()
+            .enumerate()
+            .map(|(i, &linear)| (format!("kaeri-book://s1/text/part{i}.xhtml"), linear))
+            .collect()
+    }
+
+    #[test]
+    fn home_and_end_reach_the_chapters_edges_from_a_middle_document() {
+        // A cover out of the flow, three parts, then notes out of the flow.
+        let book = spine(&[false, true, true, true, false]);
+        assert_eq!(
+            edge_move(&book, Some(2), false),
+            EdgeMove::Load("kaeri-book://s1/text/part1.xhtml".into())
+        );
+        assert_eq!(
+            edge_move(&book, Some(2), true),
+            EdgeMove::Load("kaeri-book://s1/text/part3.xhtml#kaeri:end".into())
+        );
+    }
+
+    #[test]
+    fn home_and_end_stay_in_the_document_that_holds_the_edge() {
+        let book = spine(&[true, true, true]);
+        let EdgeMove::Here(first) = edge_move(&book, Some(0), false) else {
+            panic!("the first page is in this document");
+        };
+        assert!(first.contains("goTo(0, 'jump')"), "{first}");
+        let EdgeMove::Here(last) = edge_move(&book, Some(2), true) else {
+            panic!("the last page is in this document");
+        };
+        assert!(last.contains("count() - 1"), "{last}");
+        // One document, as a source's text chapter is: both edges are its own.
+        let one = spine(&[true]);
+        assert!(matches!(edge_move(&one, Some(0), false), EdgeMove::Here(_)));
+        assert!(matches!(edge_move(&one, Some(0), true), EdgeMove::Here(_)));
+    }
+
+    #[test]
+    fn home_and_end_load_the_edge_when_the_place_is_unknown_or_out_of_the_flow() {
+        let book = spine(&[true, true, false]);
+        // Reading a note reached by a link: End goes to the last part in the flow.
+        assert_eq!(
+            edge_move(&book, Some(2), true),
+            EdgeMove::Load("kaeri-book://s1/text/part1.xhtml#kaeri:end".into())
+        );
+        assert_eq!(
+            edge_move(&book, None, false),
+            EdgeMove::Load("kaeri-book://s1/text/part0.xhtml".into())
+        );
+        // Nothing in the flow: the spine's own ends.
+        let odd = spine(&[false, false]);
+        assert_eq!(
+            edge_move(&odd, Some(1), false),
+            EdgeMove::Load("kaeri-book://s1/text/part0.xhtml".into())
+        );
+        assert!(matches!(edge_move(&odd, Some(1), true), EdgeMove::Here(_)));
+        assert!(matches!(edge_move(&[], None, true), EdgeMove::Here(_)));
     }
 
     #[test]
