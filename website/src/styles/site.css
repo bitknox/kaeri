@@ -803,6 +803,7 @@ body.k-body {
 }
 
 /* ── Search dialog ─────────────────────────────────────────────────────── */
+/* It opens at once, without a fade: it comes from ⌘K as often as from a click. */
 site-search dialog {
 	border: 1px solid var(--ani-rule-faint);
 	background-color: var(--ani-ground);
@@ -825,17 +826,6 @@ site-search dialog::backdrop {
 	}
 }
 
-site-search dialog[open],
-site-search dialog[open]::backdrop {
-	animation: ani-fade-in 200ms ease-out;
-}
-
-@keyframes ani-fade-in {
-	from {
-		opacity: 0;
-	}
-}
-
 #starlight__search {
 	--pagefind-ui-primary: var(--ani-text);
 	--pagefind-ui-text: var(--ani-text);
@@ -844,9 +834,3 @@ site-search dialog[open]::backdrop {
 	--pagefind-ui-tag: var(--ani-band);
 }
 
-@media (prefers-reduced-motion: reduce) {
-	site-search dialog[open],
-	site-search dialog[open]::backdrop {
-		animation: none;
-	}
-}
