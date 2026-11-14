@@ -281,6 +281,8 @@ pub struct BookSources {
     pub demo: kaeri_providers::reading_demo::ReadingDemo,
     /// The series whose sources are being asked how they read, by source and series.
     hint_lookups: Arc<Mutex<HashMap<(String, String), HintLookup>>>,
+    /// The sources lately not reached: when several fail that way at once, it is the network.
+    unreached: Unreached,
     /// The series whose chapter list came back empty lately, by source and series, with the
     /// [`BookSources::source_mark`] of the source that said so: an empty answer is not kept, so
     /// this is what keeps a work from being read from it meanwhile.
@@ -335,6 +337,7 @@ impl BookSources {
             undo: Arc::default(),
             pending: Arc::default(),
             hint_lookups: Arc::default(),
+            unreached: Unreached::default(),
             empty: Arc::default(),
             language: Arc::default(),
             show_volumes: Arc::default(),
@@ -1641,6 +1644,26 @@ fn source_row(
     row
 }
 
+/// How close together sources must fail to be reached for it to be the network's doing.
+const AT_ONCE: std::time::Duration = std::time::Duration::from_secs(5);
+
+/// The sources not reached lately, each with when. Several different sources failing that way
+/// within [`AT_ONCE`] of each other is the network, whatever each failure said: every request
+/// left the device and none came back, though the platform still says there is a network.
+#[derive(Debug, Clone, Default)]
+struct Unreached(Arc<Mutex<Vec<(String, std::time::Instant)>>>);
+
+impl Unreached {
+    /// Note `source` not reached now, and say whether another source was too, just before.
+    fn many_at_once(&self, source: &str) -> bool {
+        let now = std::time::Instant::now();
+        let mut lately = self.0.lock().unwrap_or_else(|e| e.into_inner());
+        lately.retain(|(other, at)| other != source && now.duration_since(*at) < AT_ONCE);
+        lately.push((source.to_owned(), now));
+        lately.len() > 1
+    }
+}
+
 /// Why asking a source failed. `source` is the name the person knows it by, as the words
 /// show it: [`BookSources::failure`] looks it up from an id.
 pub(crate) fn failure(source: &str, error: &ProviderError) -> ReadingFailure {
@@ -1649,8 +1672,12 @@ pub(crate) fn failure(source: &str, error: &ProviderError) -> ReadingFailure {
         ProviderError::Unavailable(_) => {
             ReadingFailure::SignInNeeded { what: source.to_owned() }
         }
-        // A source not reached is not answering: the device is offline only when the network
-        // says so, which [`BookSources::failure`] knows.
+        // A request that could not leave the device is the device's: no route past it, or no
+        // name server answering.
+        error if error.is_no_network() => ReadingFailure::Offline,
+        // Any other source not reached is not answering: the device is offline only when the
+        // network says so, or other sources fail the same way, which [`BookSources::failure`]
+        // knows.
         ProviderError::Transport(_) => ReadingFailure::SourceDown { source: source.to_owned() },
         ProviderError::Blocked(reason) => {
             ReadingFailure::Blocked { source: source.to_owned(), reason: reason.clone() }
@@ -1818,7 +1845,15 @@ impl BookSources {
         if matches!(error, ProviderError::Unavailable(_)) && self.registry.is_off(source) {
             return ReadingFailure::SourceOff { source: name };
         }
+        if matches!(error, ProviderError::Transport(_)) && self.unreached.many_at_once(source) {
+            return ReadingFailure::Offline;
+        }
         self.offline_or(failure(&name, error))
+    }
+
+    /// Whether the device has no network, as its front end last said, followed as it moves.
+    pub(crate) fn connection(&self) -> tokio::sync::watch::Receiver<bool> {
+        self.write_back.connection()
     }
 
     /// A source that could not be reached while the network says there is none is offline,
@@ -2860,7 +2895,10 @@ async fn plain_fetch(
                 request = request.header(name, value);
             }
         }
-        let response = request.send().await.map_err(|_| failed())?;
+        let response = request
+            .send()
+            .await
+            .map_err(|e| PageError::Failed(kaeri_net::reach::transport(&e)))?;
         let next = response.status().is_redirection().then(|| {
             let to = response.headers().get(reqwest::header::LOCATION)?.to_str().ok()?;
             let to = reqwest::Url::parse(&at).ok()?.join(to).ok()?;
@@ -2957,5 +2995,57 @@ mod filled_tests {
         assert_eq!(filled(&mut here), ["x/-/oneshot", "1", "7"]);
         let mut none = vec![row("x/-/prologue", "Prologue", None, None)];
         assert_eq!(filled(&mut none), ["x/-/prologue", "0", "1", "7"]);
+    }
+}
+
+#[cfg(test)]
+mod reach_tests {
+    use super::*;
+
+    fn sources(dir: &std::path::Path) -> BookSources {
+        let paths = kaeri_core::config::Paths {
+            config_file: dir.join("config.toml"),
+            data_dir: dir.join("data"),
+            cache_dir: dir.join("cache"),
+        };
+        BookSources::new(
+            Store::open_in_memory().unwrap(),
+            TokenStore::new(dir.join("tokens")),
+            &kaeri_net::HttpClient::offline(&Default::default()).unwrap(),
+            &paths,
+        )
+    }
+
+    /// A request that could not leave the device reads as offline, though the platform still
+    /// says there is a network; a source that did not answer reads as down.
+    #[test]
+    fn no_network_is_offline_and_a_silent_source_is_down() {
+        let dir = tempfile::tempdir().unwrap();
+        let sources = sources(dir.path());
+        assert_eq!(
+            sources.failure("attic", &ProviderError::no_network("no route")),
+            ReadingFailure::Offline
+        );
+        let down = sources.failure("attic", &ProviderError::Transport("timed out".into()));
+        assert!(matches!(down, ReadingFailure::SourceDown { .. }), "{down:?}");
+        let down = failure("Attic", &ProviderError::Transport("connection refused".into()));
+        assert_eq!(down, ReadingFailure::SourceDown { source: "Attic".into() });
+    }
+
+    /// One source not answering, again and again, is that source. Two different sources not
+    /// reached at once is the network.
+    #[test]
+    fn several_sources_not_reached_at_once_is_offline() {
+        let dir = tempfile::tempdir().unwrap();
+        let sources = sources(dir.path());
+        let unreached = || ProviderError::Transport("connection reset".into());
+        for _ in 0..3 {
+            let down = sources.failure("attic", &unreached());
+            assert!(matches!(down, ReadingFailure::SourceDown { .. }), "{down:?}");
+        }
+        assert_eq!(sources.failure("cellar", &unreached()), ReadingFailure::Offline);
+        // A source that answered with a refusal is no sign of the network.
+        let other = sources.failure("loft", &ProviderError::NotFound);
+        assert_eq!(other, ReadingFailure::NotFound);
     }
 }

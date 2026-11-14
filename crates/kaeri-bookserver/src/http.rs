@@ -314,6 +314,15 @@ pub async fn read_json<T: DeserializeOwned>(response: reqwest::Response) -> Resu
 
 /// A transport error without the address in it: it may carry a credential in a query.
 fn describe(error: &reqwest::Error) -> String {
+    let words = words(error);
+    if kaeri_net::reach::no_network(error) {
+        format!("{}: {words}", kaeri_core::error::NO_NETWORK)
+    } else {
+        words
+    }
+}
+
+fn words(error: &reqwest::Error) -> String {
     if error.is_timeout() {
         "the request timed out".into()
     } else if error.is_connect() {

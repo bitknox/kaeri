@@ -12,6 +12,7 @@ doctest = false
 [dependencies]
 kaeri-core.workspace = true
 kaeri-books.workspace = true
+kaeri-net.workspace = true
 async-trait.workspace = true
 futures.workspace = true
 reqwest.workspace = true

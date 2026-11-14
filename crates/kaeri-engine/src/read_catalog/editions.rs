@@ -285,7 +285,9 @@ async fn ask_one(kit: &Kit, source: &str, id: &WorkId, work: &fit::Work, now: i6
         let hits = match asked.await {
             Ok(hits) => hits,
             Err(ProviderError::NotFound) => Vec::new(),
-            Err(ProviderError::Transport(_)) => return down(),
+            Err(error @ ProviderError::Transport(_)) if !error.is_no_network() => {
+                return down();
+            }
             Err(error) => {
                 let reason = kit.sources.failure(source, &error).msg();
                 return Answer::Missed { reason, query: None };

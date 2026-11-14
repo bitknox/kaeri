@@ -2469,6 +2469,8 @@ mod tests {
         /// The device goes off line or comes back, as `NetworkPath` tells the reader.
         fn network(&mut self, offline: bool) {
             let was = self.services.offline.swap(offline, std::sync::atomic::Ordering::Relaxed);
+            self.services.connection.send_replace(offline);
+            self.services.book_sources.write_back_network(offline, 0);
             let mut cx = self.reader.cx(&mut self.config, &self.services, &self.tx);
             self.reader.network_moved(&mut cx, was);
         }

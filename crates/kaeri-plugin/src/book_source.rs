@@ -160,6 +160,11 @@ impl BookSource for WasmBookSource {
                 host::HostError::Denied(reason) => {
                     PageError::Failed(ProviderError::Blocked(reason))
                 }
+                // Kept as the network's, so a page cut off on the way is tried again and one
+                // fetched with no network reads as offline.
+                host::HostError::Transport(said) => {
+                    PageError::Failed(ProviderError::Transport(said))
+                }
                 other => PageError::Failed(ProviderError::Other(other.to_string())),
             })?;
         match response.status {
@@ -187,6 +192,9 @@ fn flatten<T>(
 ) -> Result<T, ProviderError> {
     match result {
         Ok(Ok(value)) => Ok(value),
+        Ok(Err(_)) if reach.no_network() => {
+            Err(ProviderError::no_network("no request left the device"))
+        }
         Ok(Err(_)) if reach.never_reached() => {
             Err(ProviderError::Transport("no request reached the source".into()))
         }

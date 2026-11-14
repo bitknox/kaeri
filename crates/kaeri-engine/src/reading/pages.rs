@@ -1150,6 +1150,22 @@ impl Chapter {
                         fed.feed.want(part.page as usize);
                         continue;
                     }
+                    // Failed for want of a network: fetched again once it is back, and made
+                    // then. Offline it waits for the network; otherwise it says so once.
+                    Some(FeedPage::Failed(failure @ ReadingFailure::Offline)) => {
+                        fed.waiting.insert(leaf);
+                        if fed.feed.offline() {
+                            self.sent.remove(&(part.page, half));
+                        } else {
+                            events.push(ReaderEvent::PageFailed {
+                                session: self.session,
+                                chapter: self.chapter.clone(),
+                                page: part.page,
+                                failure,
+                            });
+                        }
+                        continue;
+                    }
                     // Said once: a retry asks for it again.
                     Some(FeedPage::Failed(failure)) => {
                         events.push(ReaderEvent::PageFailed {
@@ -1197,6 +1213,11 @@ impl Chapter {
     /// other page is on its way and the pages lay out otherwise than guessed before they had.
     fn landed(&mut self, page: u32) -> bool {
         let Some(fed) = self.feed.as_mut() else { return false };
+        // What was said of the page before, its failure, is said again as it is now. A strip's
+        // cuts are counted apart from its pages.
+        if self.strip.is_none() {
+            self.sent.retain(|(p, _)| *p != page);
+        }
         let leaves = &self.leaves;
         let ready: Vec<u32> = fed
             .waiting
