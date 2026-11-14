@@ -1937,7 +1937,7 @@ object Strings {
     fun noticeSignedOutQueue(context: Context, tracker: String, count: Int): String =
         context.resources.getQuantityString(R.plurals.notice_signed_out_queue, count, tracker, count)
 
-    /** Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name. */
+    /** Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name. The notice capsule holds two lines on a phone, so keep it about as short as the English. */
     fun noticeTrackerChangeRefused(context: Context, tracker: String, title: String): String =
         context.getString(R.string.notice_tracker_change_refused, tracker, title)
 

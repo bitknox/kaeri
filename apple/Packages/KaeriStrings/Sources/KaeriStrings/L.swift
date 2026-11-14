@@ -1967,19 +1967,19 @@ public enum L {
         Self.format("notice-signed-out-queue", fallback: "Signed out of %1$@. %2$lld queued changes are kept for the next sign-in.", tracker, count)
     }
 
-    /// Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name.
+    /// Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name. The notice capsule holds two lines on a phone, so keep it about as short as the English.
     public static func noticeTrackerChangeRefused(tracker: String, title: String) -> String {
-        Self.format("notice-tracker-change-refused", fallback: "%1$@ kept refusing a change to %2$@, so it stopped being sent. It's still saved in Kaeri.", tracker, title)
+        Self.format("notice-tracker-change-refused", fallback: "%1$@ kept refusing a change to %2$@, so it stays in Kaeri only.", tracker, title)
     }
 
     /// The same toast when changes to several titles stopped being sent to one tracker at once. The title is the first of them; others is how many more titles there are.
     public static func noticeTrackerChangesRefused(tracker: String, title: String, others: Int) -> String {
-        Self.format("notice-tracker-changes-refused", fallback: "%1$@ kept refusing changes to %2$@ and %3$lld more titles, so they stopped being sent. They're still saved in Kaeri.", tracker, title, others)
+        Self.format("notice-tracker-changes-refused", fallback: "%1$@ kept refusing changes to %2$@ and %3$lld more titles, so they stay in Kaeri only.", tracker, title, others)
     }
 
     /// The same toast when the app has no name for the titles. Count is how many titles.
     public static func noticeTrackerChangeRefusedUntitled(tracker: String, count: Int) -> String {
-        Self.format("notice-tracker-change-refused-untitled", fallback: "%1$@ kept refusing changes to %2$lld titles, so they stopped being sent. They're still saved in Kaeri.", tracker, count)
+        Self.format("notice-tracker-change-refused-untitled", fallback: "%1$@ kept refusing changes to %2$lld titles, so they stay in Kaeri only.", tracker, count)
     }
 
     /// Toast when signing out of a tracker failed. The reason comes from the system.

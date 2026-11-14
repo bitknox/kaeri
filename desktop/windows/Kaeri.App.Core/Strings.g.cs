@@ -1461,7 +1461,7 @@ public static partial class T
     /// <summary>Toast after signing out of a tracker. The changes were not discarded: they are sent after the next sign-in.</summary>
     public static string NoticeSignedOutQueue(string tracker, long count) => Fill(GetPlural("NoticeSignedOutQueue", count), ("tracker", tracker), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
-    /// <summary>Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name.</summary>
+    /// <summary>Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name. The notice capsule holds two lines on a phone, so keep it about as short as the English.</summary>
     public static string NoticeTrackerChangeRefused(string tracker, string title) => Fill(Get("NoticeTrackerChangeRefused"), ("tracker", tracker), ("title", title));
 
     /// <summary>The same toast when changes to several titles stopped being sent to one tracker at once. The title is the first of them; others is how many more titles there are.</summary>
@@ -12542,11 +12542,11 @@ public static partial class T
         ["NoticeSignedOut"] = "Signed out of {tracker}.",
         ["NoticeSignedOutQueue_one"] = "Signed out of {tracker}. One queued change is kept for the next sign-in.",
         ["NoticeSignedOutQueue_other"] = "Signed out of {tracker}. {count} queued changes are kept for the next sign-in.",
-        ["NoticeTrackerChangeRefused"] = "{tracker} kept refusing a change to {title}, so it stopped being sent. It's still saved in Kaeri.",
-        ["NoticeTrackerChangesRefused_one"] = "{tracker} kept refusing changes to {title} and one more title, so they stopped being sent. They're still saved in Kaeri.",
-        ["NoticeTrackerChangesRefused_other"] = "{tracker} kept refusing changes to {title} and {others} more titles, so they stopped being sent. They're still saved in Kaeri.",
-        ["NoticeTrackerChangeRefusedUntitled_one"] = "{tracker} kept refusing a change, so it stopped being sent. It's still saved in Kaeri.",
-        ["NoticeTrackerChangeRefusedUntitled_other"] = "{tracker} kept refusing changes to {count} titles, so they stopped being sent. They're still saved in Kaeri.",
+        ["NoticeTrackerChangeRefused"] = "{tracker} kept refusing a change to {title}, so it stays in Kaeri only.",
+        ["NoticeTrackerChangesRefused_one"] = "{tracker} kept refusing changes to {title} and one more title, so they stay in Kaeri only.",
+        ["NoticeTrackerChangesRefused_other"] = "{tracker} kept refusing changes to {title} and {others} more titles, so they stay in Kaeri only.",
+        ["NoticeTrackerChangeRefusedUntitled_one"] = "{tracker} kept refusing a change, so it stays in Kaeri only.",
+        ["NoticeTrackerChangeRefusedUntitled_other"] = "{tracker} kept refusing changes to {count} titles, so they stay in Kaeri only.",
         ["NoticeSignOutFailed"] = "Couldn't sign out of {tracker}. Try again. {reason}",
         ["NoticeNotSavedBecause"] = "Couldn't save that setting. {cause}",
         ["NoticeProxySaved"] = "Torrent traffic now goes through the proxy.",

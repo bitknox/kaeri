@@ -1062,17 +1062,17 @@
         <item quantity="one">Signed out of %1$s. One queued change is kept for the next sign-in.</item>
         <item quantity="other">Signed out of %1$s. %2$,d queued changes are kept for the next sign-in.</item>
     </plurals>
-    <!-- Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name. -->
-    <string name="notice_tracker_change_refused">%1$s kept refusing a change to %2$s, so it stopped being sent. It\'s still saved in Kaeri.</string>
+    <!-- Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name. The notice capsule holds two lines on a phone, so keep it about as short as the English. -->
+    <string name="notice_tracker_change_refused">%1$s kept refusing a change to %2$s, so it stays in Kaeri only.</string>
     <!-- The same toast when changes to several titles stopped being sent to one tracker at once. The title is the first of them; others is how many more titles there are. -->
     <plurals name="notice_tracker_changes_refused">
-        <item quantity="one">%1$s kept refusing changes to %2$s and one more title, so they stopped being sent. They\'re still saved in Kaeri.</item>
-        <item quantity="other">%1$s kept refusing changes to %2$s and %3$,d more titles, so they stopped being sent. They\'re still saved in Kaeri.</item>
+        <item quantity="one">%1$s kept refusing changes to %2$s and one more title, so they stay in Kaeri only.</item>
+        <item quantity="other">%1$s kept refusing changes to %2$s and %3$,d more titles, so they stay in Kaeri only.</item>
     </plurals>
     <!-- The same toast when the app has no name for the titles. Count is how many titles. -->
     <plurals name="notice_tracker_change_refused_untitled">
-        <item quantity="one">%1$s kept refusing a change, so it stopped being sent. It\'s still saved in Kaeri.</item>
-        <item quantity="other">%1$s kept refusing changes to %2$,d titles, so they stopped being sent. They\'re still saved in Kaeri.</item>
+        <item quantity="one">%1$s kept refusing a change, so it stays in Kaeri only.</item>
+        <item quantity="other">%1$s kept refusing changes to %2$,d titles, so they stay in Kaeri only.</item>
     </plurals>
     <!-- Toast when signing out of a tracker failed. The reason comes from the system. -->
     <string name="notice_sign_out_failed">Couldn\'t sign out of %1$s. Try again. %2$s</string>

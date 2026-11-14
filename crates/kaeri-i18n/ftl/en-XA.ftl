@@ -1574,21 +1574,21 @@ notice-signed-out-queue =
        *[other] [Šîĝñéð öüţ öƒ { $tracker }. { $count } ƣüéüéð çĥàñĝéš àŕé ķéþţ ƒöŕ ţĥé ñéẋţ šîĝñ-îñ.~~~~~~~~~~~~~~~~~~~~~]
     }
 
-# Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name.
-notice-tracker-change-refused = [{ $tracker } ķéþţ ŕéƒüšîñĝ à çĥàñĝé ţö { $title }, šö îţ šţöþþéð ƀéîñĝ šéñţ. Îţ'š šţîļļ šàṽéð îñ Ķàéŕî.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+# Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name. The notice capsule holds two lines on a phone, so keep it about as short as the English.
+notice-tracker-change-refused = [{ $tracker } ķéþţ ŕéƒüšîñĝ à çĥàñĝé ţö { $title }, šö îţ šţàýš îñ Ķàéŕî öñļý.~~~~~~~~~~~~~~~~~~~]
 
 # The same toast when changes to several titles stopped being sent to one tracker at once. The title is the first of them; others is how many more titles there are.
 notice-tracker-changes-refused =
     { $others ->
-        [one] [{ $tracker } ķéþţ ŕéƒüšîñĝ çĥàñĝéš ţö { $title } àñð öñé ɱöŕé ţîţļé, šö ţĥéý šţöþþéð ƀéîñĝ šéñţ. Ţĥéý'ŕé šţîļļ šàṽéð îñ Ķàéŕî.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
-       *[other] [{ $tracker } ķéþţ ŕéƒüšîñĝ çĥàñĝéš ţö { $title } àñð { $others } ɱöŕé ţîţļéš, šö ţĥéý šţöþþéð ƀéîñĝ šéñţ. Ţĥéý'ŕé šţîļļ šàṽéð îñ Ķàéŕî.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+        [one] [{ $tracker } ķéþţ ŕéƒüšîñĝ çĥàñĝéš ţö { $title } àñð öñé ɱöŕé ţîţļé, šö ţĥéý šţàý îñ Ķàéŕî öñļý.~~~~~~~~~~~~~~~~~~~~~~~~]
+       *[other] [{ $tracker } ķéþţ ŕéƒüšîñĝ çĥàñĝéš ţö { $title } àñð { $others } ɱöŕé ţîţļéš, šö ţĥéý šţàý îñ Ķàéŕî öñļý.~~~~~~~~~~~~~~~~~~~~~~~~~]
     }
 
 # The same toast when the app has no name for the titles. Count is how many titles.
 notice-tracker-change-refused-untitled =
     { $count ->
-        [one] [{ $tracker } ķéþţ ŕéƒüšîñĝ à çĥàñĝé, šö îţ šţöþþéð ƀéîñĝ šéñţ. Îţ'š šţîļļ šàṽéð îñ Ķàéŕî.~~~~~~~~~~~~~~~~~~~~~~~~]
-       *[other] [{ $tracker } ķéþţ ŕéƒüšîñĝ çĥàñĝéš ţö { $count } ţîţļéš, šö ţĥéý šţöþþéð ƀéîñĝ šéñţ. Ţĥéý'ŕé šţîļļ šàṽéð îñ Ķàéŕî.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+        [one] [{ $tracker } ķéþţ ŕéƒüšîñĝ à çĥàñĝé, šö îţ šţàýš îñ Ķàéŕî öñļý.~~~~~~~~~~~~~~~~~]
+       *[other] [{ $tracker } ķéþţ ŕéƒüšîñĝ çĥàñĝéš ţö { $count } ţîţļéš, šö ţĥéý šţàý îñ Ķàéŕî öñļý.~~~~~~~~~~~~~~~~~~~~~]
     }
 
 # Toast when signing out of a tracker failed. The reason comes from the system.

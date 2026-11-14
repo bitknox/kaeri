@@ -375,7 +375,7 @@ pub enum Msg {
     NoticeSignedOut { tracker: String },
     /// Toast after signing out of a tracker. The changes were not discarded: they are sent after the next sign-in.
     NoticeSignedOutQueue { tracker: String, count: i64 },
-    /// Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name.
+    /// Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name. The notice capsule holds two lines on a phone, so keep it about as short as the English.
     NoticeTrackerChangeRefused { tracker: String, title: String },
     /// The same toast when changes to several titles stopped being sent to one tracker at once. The title is the first of them; others is how many more titles there are.
     NoticeTrackerChangesRefused { tracker: String, title: String, others: i64 },

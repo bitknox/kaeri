@@ -2415,7 +2415,7 @@ pub fn notice_signed_out_queue(tracker: &str, count: i64) -> String {
     text("notice-signed-out-queue", &[("tracker", Arg::Text(tracker)), ("count", Arg::Int(count))])
 }
 
-/// Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name.
+/// Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name. The notice capsule holds two lines on a phone, so keep it about as short as the English.
 pub fn notice_tracker_change_refused(tracker: &str, title: &str) -> String {
     text("notice-tracker-change-refused", &[("tracker", Arg::Text(tracker)), ("title", Arg::Text(title))])
 }
