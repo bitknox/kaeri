@@ -785,7 +785,9 @@ fn help(buf: &mut Buffer, app: &App, reader: &Reader, area: Rect) {
                 Some(label) => {
                     let keys_at = x + col.saturating_sub(4);
                     let room = col.saturating_sub(8) as usize;
-                    let keys = truncate(text, room / 2);
+                    // The keys keep what the label leaves them, and at least half the row.
+                    let keys_room = room.saturating_sub(label.cells() + 1).max(room / 2);
+                    let keys = truncate(text, keys_room);
                     let label_room = room.saturating_sub(keys.cells() + 1);
                     line(buf, x + 2, y, truncate(label, label_room), p.style(Role::Text));
                     let kx = keys_at.saturating_sub(keys.cells() as u16);

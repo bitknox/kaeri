@@ -408,8 +408,10 @@ pub struct App {
     pub reader: Option<Reader>,
     /// Page files waiting to be decoded: see [`App::take_page_jobs`].
     page_jobs: Vec<PageJob>,
-    /// The blocks notice has shown in this run.
+    /// The blocks notice has been given in this run.
     blocks_said: bool,
+    /// The blocks notice waits for the status rule to be free.
+    blocks_owed: bool,
     /// The window's size, as the last frame was drawn.
     pub window: Option<(u16, u16)>,
     /// The engine says the computer is offline.
@@ -551,6 +553,7 @@ impl App {
             reader: None,
             page_jobs: Vec::new(),
             blocks_said: false,
+            blocks_owed: false,
             window: None,
             offline: false,
         }

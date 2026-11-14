@@ -657,8 +657,13 @@ impl App {
                 self.page_jobs.push(PageJob { key, file, rotate: false, half: None });
             }
             ReaderEvent::Notice(notice) if reader.session != 0 || reader.opening.is_some() => {
-                let shown = shown_notice(&notice, now);
-                reader.notice = shown;
+                // The blocks notice gives way, and comes back once this one has gone.
+                let blocks = t::tui_reader_blocks_notice();
+                let live = reader.notice.as_ref().filter(|n| n.until.is_none_or(|u| u > now));
+                if live.is_some_and(|n| n.text == blocks) {
+                    self.blocks_owed = true;
+                }
+                reader.notice = shown_notice(&notice, now);
             }
             ReaderEvent::BackToPage { session, page } if mine(session) => {
                 reader.back_to = page;
@@ -707,22 +712,31 @@ impl App {
     }
 
     /// The first chapter opened in a run without an image protocol says once that pages show
-    /// as blocks.
+    /// as blocks: at once, or once the notice up has gone.
     fn say_blocks_once(&mut self) {
         if self.blocks_said || self.images.engine().graphics() != Graphics::Halfblocks {
             return;
         }
-        let Some(reader) = self.reader.as_mut() else { return };
-        if reader.medium() == Some(Medium::Novel) {
+        if self.reader.as_ref().is_none_or(|r| r.medium() == Some(Medium::Novel)) {
             return;
         }
         self.blocks_said = true;
-        let now = self.clock.now_instant();
-        // The resumed notice says where the chapter opened, which matters more; this waits.
-        if reader.notice.as_ref().is_some_and(|n| n.until.is_none_or(|u| u > now)) {
-            self.blocks_said = false;
+        self.blocks_owed = true;
+        self.pay_blocks();
+    }
+
+    /// The blocks notice, when it is owed and the status rule is free. The resumed notice says
+    /// where the chapter opened, which matters more, so the blocks notice waits for it.
+    pub(super) fn pay_blocks(&mut self) {
+        if !self.blocks_owed {
             return;
         }
+        let now = self.clock.now_instant();
+        let Some(reader) = self.reader.as_mut() else { return };
+        if reader.notice.as_ref().is_some_and(|n| n.until.is_none_or(|u| u > now)) {
+            return;
+        }
+        self.blocks_owed = false;
         reader.notice = Some(ShownNotice {
             text: t::tui_reader_blocks_notice(),
             action: None,
