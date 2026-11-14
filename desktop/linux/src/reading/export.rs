@@ -559,15 +559,19 @@ async fn save_files(
     target: String,
 ) {
     let mut saved = 0;
+    let mut failed = None;
     for file in &files {
         let from = gio::File::for_path(&file.path);
         match save_one(&from, &folder.child(&file.name)).await {
             Ok(()) => saved += 1,
-            Err(error) => tracing::warn!(%error, "a prepared file was not saved"),
+            Err(error) => {
+                tracing::warn!(%error, "a prepared file was not saved");
+                failed.get_or_insert(error);
+            }
         }
     }
     if saved < files.len() {
-        ctx.alert(&t::linux_send_save_failed());
+        ctx.alert(&save_failed(failed.as_ref()));
         return;
     }
     send(&ctx.hub, ReadingCommand::Shared { work, chapters, target });
@@ -585,11 +589,53 @@ async fn save_files(
     }
 }
 
-/// Copy one prepared file to `to`, over a file already there.
+/// Copy one prepared file to `to`, over a file already there. It is written under a hidden
+/// name beside `to`, synced, and only then renamed, so a copy cut off (a full disk) never leaves
+/// part of a book under the book's name, which an e-reader would list as the whole book. What
+/// was written is removed when the copy fails.
 async fn save_one(from: &gio::File, to: &gio::File) -> Result<(), glib::Error> {
+    let name = to.basename().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+    let Some(folder) = to.parent() else {
+        return Err(glib::Error::new(gio::IOErrorEnum::InvalidFilename, &name));
+    };
+    let temp = folder.child(format!(".{name}.part"));
     let (copied, _progress) =
-        from.copy_future(to, gio::FileCopyFlags::OVERWRITE, glib::Priority::DEFAULT);
-    copied.await
+        from.copy_future(&temp, gio::FileCopyFlags::OVERWRITE, glib::Priority::DEFAULT);
+    let mut done = copied.await;
+    if done.is_ok()
+        && let Some(path) = temp.path()
+    {
+        done = std::fs::OpenOptions::new()
+            .write(true)
+            .open(&path)
+            .and_then(|file| file.sync_all())
+            .map_err(|e| glib::Error::new(io_kind(&e), &e.to_string()));
+    }
+    if done.is_ok() {
+        // A rename within the folder: it takes no time to wait on.
+        done = temp.move_(to, gio::FileCopyFlags::OVERWRITE, gio::Cancellable::NONE, None);
+    }
+    if done.is_err() {
+        let _ = temp.delete_future(glib::Priority::DEFAULT).await;
+    }
+    done
+}
+
+/// The GIO error for a failed sync, so a full disk still reads as one.
+fn io_kind(e: &std::io::Error) -> gio::IOErrorEnum {
+    match e.raw_os_error() {
+        Some(libc::ENOSPC | libc::EDQUOT | libc::EFBIG) => gio::IOErrorEnum::NoSpace,
+        _ => gio::IOErrorEnum::Failed,
+    }
+}
+
+/// Words for a save that failed: a full disk says so.
+fn save_failed(error: Option<&glib::Error>) -> String {
+    if error.is_some_and(|e| e.matches(gio::IOErrorEnum::NoSpace)) {
+        t::reading_failed_disk_full()
+    } else {
+        t::linux_send_save_failed()
+    }
 }
 
 #[cfg(test)]
@@ -603,6 +649,47 @@ mod tests {
             bytes: 2,
             part: None,
         }
+    }
+
+    /// R8L-5. A save that ran out of space left part of the book under the book's name, which
+    /// an e-reader lists as the whole book. The full disk here is a cap on how much the process
+    /// may write to one file, so the test runs again as a child process with the cap set.
+    #[test]
+    fn a_save_cut_off_by_a_full_disk_leaves_nothing_under_the_books_name() {
+        const CHILD: &str = "KAERI_TEST_CAPPED_SAVE";
+        const NAME: &str = "a_save_cut_off_by_a_full_disk_leaves_nothing_under_the_books_name";
+        let Some(dir) = std::env::var_os(CHILD) else {
+            let dir = tempfile::tempdir().unwrap();
+            std::fs::write(dir.path().join("prepared.cbz"), vec![7_u8; 512 * 1024]).unwrap();
+            std::fs::create_dir(dir.path().join("folder")).unwrap();
+            let module = module_path!().split_once("::").map_or("", |(_, rest)| rest);
+            let status = std::process::Command::new(std::env::current_exe().unwrap())
+                .args(["--exact", &format!("{module}::{NAME}"), "--test-threads=1"])
+                .env(CHILD, dir.path())
+                .status()
+                .unwrap();
+            assert!(status.success(), "the capped save left something behind");
+            return;
+        };
+        // In the child: at most 64 KiB to any one file, with the signal that would end the
+        // process ignored, so a write past it fails as a full disk does.
+        // SAFETY: plain libc calls on this process, before anything else runs in it.
+        unsafe {
+            libc::signal(libc::SIGXFSZ, libc::SIG_IGN);
+            let mut cap = libc::rlimit { rlim_cur: 0, rlim_max: 0 };
+            assert_eq!(libc::getrlimit(libc::RLIMIT_FSIZE, &mut cap), 0);
+            cap.rlim_cur = 64 * 1024;
+            assert_eq!(libc::setrlimit(libc::RLIMIT_FSIZE, &cap), 0);
+        }
+        let dir = std::path::PathBuf::from(dir);
+        let from = gio::File::for_path(dir.join("prepared.cbz"));
+        let folder = dir.join("folder");
+        let to = gio::File::for_path(folder.join("The Lantern Ferry 13-15.cbz"));
+        let saved = glib::MainContext::default().block_on(save_one(&from, &to));
+        assert!(saved.is_err(), "the copy went past the cap");
+        let left: Vec<_> =
+            std::fs::read_dir(&folder).unwrap().map(|e| e.unwrap().file_name()).collect();
+        assert!(left.is_empty(), "left in the folder: {left:?}");
     }
 
     /// R5A-6. The engine keeps a ready send's files for a day; saving after they went says so,

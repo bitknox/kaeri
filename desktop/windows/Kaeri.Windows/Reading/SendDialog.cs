@@ -681,25 +681,62 @@ static class SendFiles
                 if (await picker.PickSaveFileAsync() is not { } target)
                     return false;
                 var source = await global::Windows.Storage.StorageFile.GetFileFromPathAsync(only.Path);
-                await source.CopyAndReplaceAsync(target);
+                try
+                {
+                    await source.CopyAndReplaceAsync(target);
+                }
+                catch (Exception)
+                {
+                    // A copy cut off (a full disk) must not leave part of a book under its name.
+                    try { await target.DeleteAsync(); } catch (Exception) { }
+                    throw;
+                }
             }
             else
             {
                 if (await ctx.Window.PickFolder() is not { Length: > 0 } folder)
                     return false;
                 foreach (var file in send.Files)
-                    File.Copy(file.Path, Free(Path.Combine(folder, file.Name)));
+                    CopyWhole(file.Path, Free(Path.Combine(folder, file.Name)));
             }
             ctx.Known.Reading.Sending.Shared(send.Id);
             ctx.Window.Say(T.SendSavedWindows(send.Files.Length));
             return true;
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            ctx.Window.Say(T.SendSaveFailedWindows);
+            ctx.Window.Say(IsDiskFull(e) ? T.ReadingFailedDiskFull : T.SendSaveFailedWindows);
             return false;
         }
     }
+
+    /// <summary>
+    /// Copy through a hidden name beside <paramref name="to"/>, flushed to the disk and only then
+    /// renamed, so a copy cut off by a full disk never leaves part of a book under the book's name,
+    /// which an e-reader would list as the whole book. What was written goes when the copy fails.
+    /// </summary>
+    static void CopyWhole(string from, string to)
+    {
+        var temp = Path.Combine(Path.GetDirectoryName(to) ?? "", $".{Path.GetFileName(to)}.part");
+        try
+        {
+            using (var source = File.OpenRead(from))
+            using (var target = new FileStream(temp, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                source.CopyTo(target);
+                target.Flush(flushToDisk: true);
+            }
+            File.Move(temp, to);
+        }
+        catch (Exception)
+        {
+            SmallFiles.Delete(temp);
+            throw;
+        }
+    }
+
+    /// <summary>A disk or quota that is full: ERROR_DISK_FULL and ERROR_HANDLE_DISK_FULL.</summary>
+    static bool IsDiskFull(Exception e) => e.HResult is unchecked((int)0x80070070) or unchecked((int)0x80070027);
 
     /// <summary>The path, or "name (2).ext" and on when a file is already there.</summary>
     static string Free(string path)
