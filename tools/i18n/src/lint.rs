@@ -555,18 +555,30 @@ mod tests {
             ],
         );
         let cat = Catalogue::load(dir.path()).unwrap();
-        let found: Vec<String> = run(&cat).unwrap().into_iter().map(|f| f.to_string()).collect();
-        let shared: Vec<&String> = found.iter().filter(|f| f.contains("more than one number")).collect();
+        let found: Vec<String> =
+            run(&cat).unwrap().into_iter().map(|f| f.to_string()).collect();
+        let shared: Vec<&String> =
+            found.iter().filter(|f| f.contains("more than one number")).collect();
         // Only the messages whose English shows the count; a count kept to grammar stays free.
         assert_eq!(shared.len(), 2, "{found:#?}");
-        assert!(shared.iter().any(|f| f.contains("fr") && f.contains("left") && f.contains("[one]")));
-        assert!(shared.iter().any(|f| f.contains("ru") && f.contains("left") && f.contains("[one]")));
+        assert!(
+            shared
+                .iter()
+                .any(|f| f.contains("fr") && f.contains("left") && f.contains("[one]"))
+        );
+        assert!(
+            shared
+                .iter()
+                .any(|f| f.contains("ru") && f.contains("left") && f.contains("[one]"))
+        );
 
         let fr_count = fr_words.replace("[one] Un épisode", "[one] { $count } épisode");
-        let ru_count = ru_words.replace("[one] Осталась одна серия", "[one] Осталась { $count } серия");
+        let ru_count =
+            ru_words.replace("[one] Осталась одна серия", "[one] Осталась { $count } серия");
         write(dir.path(), &[("fr/ui.ftl", &fr_count), ("ru/ui.ftl", &ru_count)]);
         let cat = Catalogue::load(dir.path()).unwrap();
-        let found: Vec<String> = run(&cat).unwrap().into_iter().map(|f| f.to_string()).collect();
+        let found: Vec<String> =
+            run(&cat).unwrap().into_iter().map(|f| f.to_string()).collect();
         assert!(!found.iter().any(|f| f.contains("more than one number")), "{found:#?}");
     }
 
