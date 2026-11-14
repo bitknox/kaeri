@@ -1060,7 +1060,9 @@ pub(crate) fn failure_of(
         K::Unsupported => {
             ReadingFailure::Unsupported { extension: format.to_ascii_lowercase() }
         }
-        K::Unreadable => ReadingFailure::Unreadable { path: book_name(Path::new(&path)), format },
+        K::Unreadable => {
+            ReadingFailure::Unreadable { path: book_name(Path::new(&path)), format }
+        }
     }
 }
 
@@ -2267,7 +2269,10 @@ mod tests {
         let failure = open_book(&book, &Arc::new(AtomicBool::new(false))).err().unwrap();
         assert_eq!(
             failure,
-            ReadingFailure::Unreadable { path: "Broken Bell.epub".into(), format: "EPUB".into() }
+            ReadingFailure::Unreadable {
+                path: "Broken Bell.epub".into(),
+                format: "EPUB".into()
+            }
         );
         let opening = crate::reading::novel::Opening {
             session: 0,

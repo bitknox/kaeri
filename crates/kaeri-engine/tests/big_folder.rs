@@ -108,14 +108,16 @@ async fn scanned(
         let Event::BookSources(BookSourceEvent::View(view)) = event else { continue };
         views += 1;
         let kept = store.book_folders().unwrap().first().and_then(|f| f.last_scan);
-        if kept == Some(at) && view.folders.first().is_some_and(|f| f.scan == BookFolderScan::Done)
+        if kept == Some(at)
+            && view.folders.first().is_some_and(|f| f.scan == BookFolderScan::Done)
         {
             let took = started.elapsed();
             // Whatever comes after it counts too.
             while let Ok(Some(event)) =
                 tokio::time::timeout(Duration::from_millis(600), rx.recv()).await
             {
-                views += usize::from(matches!(event, Event::BookSources(BookSourceEvent::View(_))));
+                views +=
+                    usize::from(matches!(event, Event::BookSources(BookSourceEvent::View(_))));
             }
             return (views, took);
         }
@@ -145,7 +147,8 @@ async fn a_big_folder_is_scanned_again_as_quickly_with_a_few_updates_a_second() 
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn a_folder_removed_while_it_is_scanned_stops_and_says_nothing_until_it_is_brought_back() {
+async fn a_folder_removed_while_it_is_scanned_stops_and_says_nothing_until_it_is_brought_back()
+{
     let (_dir, store, sources, add) = shelf();
     let mut adding = send(&sources, add, 1);
     let id = loop {
@@ -157,7 +160,9 @@ async fn a_folder_removed_while_it_is_scanned_stops_and_says_nothing_until_it_is
                     break folder.id.clone();
                 }
             }
-            Event::CameIn(came) => panic!("the scan ended before it could be removed: {came:?}"),
+            Event::CameIn(came) => {
+                panic!("the scan ended before it could be removed: {came:?}")
+            }
             _ => {}
         }
     };

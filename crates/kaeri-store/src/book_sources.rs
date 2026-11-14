@@ -234,7 +234,8 @@ impl Store {
         self.with_conn(|c| {
             let mut stmt =
                 c.prepare("SELECT series, COUNT(*) FROM book_local_file GROUP BY series")?;
-            let rows = stmt.query_map([], |r| Ok((r.get::<_, String>(0)?, r.get::<_, u32>(1)?)))?;
+            let rows =
+                stmt.query_map([], |r| Ok((r.get::<_, String>(0)?, r.get::<_, u32>(1)?)))?;
             Ok(rows.collect::<std::result::Result<_, _>>()?)
         })
     }

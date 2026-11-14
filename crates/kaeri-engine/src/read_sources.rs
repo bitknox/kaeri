@@ -1269,7 +1269,8 @@ fn rescan(
                     ScanEnd::Read(report) => break Some(Some(report)),
                     ScanEnd::Unread => break Some(None),
                     ScanEnd::Stopped => {
-                        let mut stopped = this.stopped.lock().unwrap_or_else(|e| e.into_inner());
+                        let mut stopped =
+                            this.stopped.lock().unwrap_or_else(|e| e.into_inner());
                         if this.is_removed(&folder.id) {
                             // Nothing is said of a folder that was removed; an undo scans it.
                             stopped.insert(folder.id.clone(), answer);

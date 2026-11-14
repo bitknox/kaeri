@@ -480,9 +480,9 @@ impl KavitaSource {
                 if is_pdf { "book.pdf" } else { "book.epub" },
             );
             let path = &format!("api/Download/chapter?chapterId={}", encode(chapter));
-            let to = &to;
+            let dest = &to;
             self.signed(|http| async move {
-                http.download(path, to, 8 * 1024 * 1024 * 1024).await
+                http.download(path, dest, 8 * 1024 * 1024 * 1024).await
             })
             .await?;
             return Ok(Some(ChapterContent::Book(BookFile { path: to, temporary: true })));
