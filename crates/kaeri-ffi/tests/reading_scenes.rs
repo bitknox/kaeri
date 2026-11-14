@@ -489,3 +489,61 @@ fn the_e_ink_layout_switch_takes_at_once_off_and_on_again() {
     assert_eq!(eink_after(&engine, answer(false)).eink, EinkMatch::No);
     engine.shutdown();
 }
+
+/// The series scene's send, as the Android sheet starts it on a phone network: its downloaded
+/// chapters, or else its last three, wait for Wi-Fi when one of them is to fetch.
+#[test]
+fn the_series_scene_send_on_a_phone_network_waits_for_wifi() {
+    use kaeri_core::books::WorkId;
+    use kaeri_model::reading::{ChapterDownloadState, DownloadPick, ExportFormat};
+    let (_root, engine) = start(FfiScene::ReadingSeries);
+    let work = WorkId::new("a:900301");
+    engine.send(Command::Reading(ReadingCommand::LoadChapters {
+        work: work.clone(),
+        edition: None,
+    }));
+    let read = read_until(&engine, |event| {
+        matches!(event, Event::Reading(ReadingEvent::Chapters { .. }))
+    });
+    let volumes = read
+        .into_iter()
+        .find_map(|event| match event {
+            Event::Reading(ReadingEvent::Chapters { volumes, .. }) => Some(volumes),
+            _ => None,
+        })
+        .expect("the chapters");
+    let rows: Vec<_> = volumes.iter().flat_map(|v| v.chapters.iter()).collect();
+    let done: Vec<_> = rows
+        .iter()
+        .filter(|r| matches!(r.download, Some(ChapterDownloadState::Done)))
+        .map(|r| r.id.clone())
+        .collect();
+    let pick = if done.is_empty() {
+        rows.iter().rev().take(3).rev().map(|r| r.id.clone()).collect()
+    } else {
+        done
+    };
+    let rows: Vec<_> = rows.iter().map(|r| (r.id.as_str(), r.download.clone())).collect();
+    engine.send(Command::NetworkPath { cellular: true, constrained: false, offline: false });
+    engine.send(Command::Reading(ReadingCommand::Prepare {
+        work,
+        pick: DownloadPick::Chapters { ids: pick.clone() },
+        target: "kobo".into(),
+        format: ExportFormat::Cbz,
+    }));
+    let read = read_until(&engine, |event| {
+        matches!(
+            event,
+            Event::Reading(
+                ReadingEvent::ExportWaiting { .. }
+                    | ReadingEvent::ExportReady { .. }
+                    | ReadingEvent::ExportFailed { .. }
+                    | ReadingEvent::Failed { .. }
+            )
+        )
+    });
+    let waits =
+        read.iter().any(|e| matches!(e, Event::Reading(ReadingEvent::ExportWaiting { .. })));
+    assert!(waits, "the send of {pick:?} did not wait (rows {rows:?}): {read:?}");
+    engine.shutdown();
+}
