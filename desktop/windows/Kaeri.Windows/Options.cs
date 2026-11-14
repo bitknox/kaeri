@@ -84,6 +84,9 @@ public sealed record Options(
                 case "--read": read = value; break;
                 case "--send": send = value; break;
                 case "--feed": feed = value; break;
+                // A change AniList kept refusing until it stopped being sent, which the scene
+                // reads from the environment, for the one-time notice's shots.
+                case "--dropped": Environment.SetEnvironmentVariable("KAERI_FIXTURES_DROPPED", "1"); break;
 #endif
                 case "--size":
                     if (value.Split('x') is [var w, var h] && int.TryParse(w, out var wi) && int.TryParse(h, out var hi))
