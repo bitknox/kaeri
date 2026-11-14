@@ -410,8 +410,6 @@ impl PlayerLink for CastLink {
             )
         }) {
             self.hub.end();
-        } else {
-            self.hub.end_for(&self.player);
         }
     }
 }
