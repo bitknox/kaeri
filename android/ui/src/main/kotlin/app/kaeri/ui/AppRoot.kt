@@ -444,6 +444,7 @@ private fun AppRootFrame(
         StoreJoinNotices()
         LicensedReturnNotice()
         app.kaeri.ui.reading.DownloadNotStartedNotice()
+        app.kaeri.ui.reading.FolderRemovedNotice()
         CrashNoticeAndReport()
         UpdatePrompts()
         AccountSheets()

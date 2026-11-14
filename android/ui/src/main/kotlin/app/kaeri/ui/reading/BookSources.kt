@@ -433,6 +433,22 @@ private fun ServerRow(place: Place, server: BookServerRow, justAdded: Boolean) {
     )
 }
 
+/** The folder whose removal can still be taken back: the engine keeps it, marked, for 8 s. */
+internal fun BookSourcesView?.folderRemoving(): BookFolderRow? = this?.folders?.lastOrNull { it.removed }
+
+/** Where the notice for a removed folder goes, with what Undo calls. */
+@Composable
+internal fun FolderRemovedNotice() {
+    val store = LocalAppStore.current
+    val view by store.bookSources.view.collectAsStateWithLifecycle()
+    FolderRemovedNotice(view.folderRemoving(), store.bookSources::restoreFolder)
+}
+
+@Composable
+internal fun FolderRemovedNotice(folder: BookFolderRow?, restore: (String) -> Unit) {
+    // Not shown yet.
+}
+
 /** More, at a row's end: its menu on surfaceContainerHigh. */
 @Composable
 private fun MoreMenu(items: @Composable (close: () -> Unit) -> Unit) {
