@@ -681,6 +681,7 @@ impl Session {
                 .eink
                 .then_some(EinkImages { target: plan.target, look: plan.look }),
             limits: Limits::default(),
+            text: self.surface.text,
         }
     }
 
@@ -908,7 +909,7 @@ impl Session {
         )
     }
 
-    fn novel_opened(&mut self, cx: &mut Cx<'_>, book: NovelBook) {
+    fn novel_opened(&mut self, cx: &mut Cx<'_>, mut book: NovelBook) {
         let support = self.support(cx);
         if support == NovelSupport::Refused {
             let version = cx.webview.unwrap_or(0);
@@ -977,6 +978,7 @@ impl Session {
             counted: counted.clone(),
             render_dir: render_dir.as_ref().map(|d| d.display().to_string()),
             words_per_minute: pace(&cx.services.store),
+            text: std::mem::take(&mut book.text),
         };
         self.mode = if self.layers.word(Key::Mode) == "scrolled" && !self.surface.eink {
             ReaderMode::Scrolled

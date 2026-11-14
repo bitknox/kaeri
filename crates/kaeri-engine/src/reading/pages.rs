@@ -2300,6 +2300,7 @@ mod tests {
             dir: dir.path().join("cache"),
             eink: None,
             limits: Limits::default(),
+            text: false,
         };
         let opened = crate::reading::novel::open_epub(&book, opening);
         assert!(
