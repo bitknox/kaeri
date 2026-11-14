@@ -146,22 +146,6 @@
 	border-radius: clamp(14px, 2.4vw, 27px) clamp(14px, 2.4vw, 27px) 0 0;
 }
 
-.rise-mac {
-	aspect-ratio: 1200 / 390;
-}
-
-.rise-window {
-	overflow: hidden;
-	border-radius: 12px 12px 0 0;
-	border: 1px solid var(--ani-bezel-edge);
-	border-bottom: 0;
-}
-
-.rise-window img {
-	display: block;
-	width: 100%;
-}
-
 .band .player-fig {
 	max-width: 1040px;
 	margin-inline: auto;
@@ -702,18 +686,6 @@
 
 	.rise-ipad {
 		aspect-ratio: 358 / 190;
-	}
-
-	/* The calendar keeps a readable size and runs off the right edge of the screen. */
-	.rise-mac {
-		aspect-ratio: auto;
-		height: 220px;
-		margin-right: calc(var(--gutter) * -1);
-	}
-
-	.rise-window {
-		width: 640px;
-		border-right: 0;
 	}
 
 	/* The other platforms sit side by side and scroll sideways, a little of the next one showing. */
