@@ -632,6 +632,8 @@ pub fn open_field(bar: &gtk::SearchBar, entry: &gtk::SearchEntry) {
 /// closes it.
 pub fn field(placeholder: &str) -> (gtk::SearchBar, gtk::SearchEntry, gtk::ToggleButton) {
     let entry = gtk::SearchEntry::builder().placeholder_text(placeholder).hexpand(true).build();
+    // Screen readers name the field by its prompt, which a placeholder alone does not give it.
+    entry.update_property(&[gtk::accessible::Property::Label(placeholder)]);
     let clamp = adw::Clamp::builder().maximum_size(480).child(&entry).build();
     let bar = gtk::SearchBar::builder().child(&clamp).show_close_button(false).build();
     bar.connect_entry(&entry);
@@ -735,6 +737,15 @@ mod field_tests {
                 focus.type_().name()
             );
             window.destroy();
+        });
+    }
+
+    /// The field has a name for screen readers, its prompt, not only a placeholder.
+    #[test]
+    fn the_search_field_is_named() {
+        run(|| {
+            let (_, entry, _) = field("Made-up placeholder");
+            assert!(gtk::test_accessible_has_property(&entry, gtk::AccessibleProperty::Label));
         });
     }
 }
