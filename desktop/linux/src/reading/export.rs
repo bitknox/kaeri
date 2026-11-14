@@ -101,6 +101,33 @@ fn format_name(format: ExportFormat) -> String {
     }
 }
 
+/// Whether the keyboard is in `area`.
+fn focus_within(area: &gtk::Widget) -> bool {
+    area.root()
+        .and_then(|root| root.focus())
+        .is_some_and(|focus| &focus == area || focus.is_ancestor(area))
+}
+
+/// Keep the keyboard in `area`: when what had it was hidden or greyed, the first of `next`
+/// that shows takes it, or `area` itself.
+fn keep_focus(area: &gtk::Widget, next: &[&gtk::Button]) {
+    let Some(root) = area.root() else { return };
+    let held = root.focus().is_some_and(|focus| {
+        (&focus == area || focus.is_ancestor(area)) && focus.is_mapped() && focus.is_sensitive()
+    });
+    if held {
+        return;
+    }
+    match next.iter().find(|b| b.is_visible() && b.is_sensitive()) {
+        Some(button) => {
+            button.grab_focus();
+        }
+        None => {
+            area.grab_focus();
+        }
+    }
+}
+
 fn heading(text: &str) -> gtk::Label {
     let label = gtk::Label::new(Some(text));
     label.add_css_class("heading");
@@ -148,6 +175,17 @@ impl Parts {
 
     /// Show what the state says.
     fn draw(&self) {
+        let dialog = self.state_line.ancestor(adw::Dialog::static_type());
+        let had_keys = dialog.as_ref().is_some_and(focus_within);
+        self.draw_state();
+        // The keyboard stays in the dialog when what had it goes or greys, so Esc still closes
+        // it and Cancel send, Save to a folder or Try again is the next key's.
+        if had_keys && let Some(dialog) = dialog {
+            keep_focus(&dialog, &[&self.cancel, &self.save, &self.again, &self.prepare]);
+        }
+    }
+
+    fn draw_state(&self) {
         let s = self.send.borrow();
         let chapters = s.chapters();
         self.scope.set_subtitle(&match (chapters.first(), chapters.last()) {
@@ -252,6 +290,26 @@ impl Parts {
     }
 }
 
+/// The dialog's body under its header: the choices scroll, and the foot with the state and the
+/// buttons stays at the bottom, so Prepare files and Save to a folder show in any window.
+fn frame(column: &gtk::Box, foot: &gtk::Box) -> adw::ToolbarView {
+    let scroll = gtk::ScrolledWindow::builder()
+        .hscrollbar_policy(gtk::PolicyType::Never)
+        .propagate_natural_height(true)
+        .max_content_height(620)
+        .child(column)
+        .build();
+    foot.set_margin_top(10);
+    foot.set_margin_bottom(18);
+    foot.set_margin_start(18);
+    foot.set_margin_end(18);
+    let toolbar = adw::ToolbarView::new();
+    toolbar.add_top_bar(&adw::HeaderBar::new());
+    toolbar.set_content(Some(&scroll));
+    toolbar.add_bottom_bar(foot);
+    toolbar
+}
+
 pub fn open(ctx: &Rc<Ctx>, work: &WorkId) {
     let dialog = adw::Dialog::new();
     dialog.set_title(&t::send_title());
@@ -303,7 +361,6 @@ pub fn open(ctx: &Rc<Ctx>, work: &WorkId) {
         buttons.append(button);
     }
     let foot = gtk::Box::new(gtk::Orientation::Vertical, 8);
-    foot.set_margin_top(10);
     foot.append(&state_line);
     foot.append(&under);
     foot.append(&buttons);
@@ -311,7 +368,7 @@ pub fn open(ctx: &Rc<Ctx>, work: &WorkId) {
     let column = gtk::Box::new(gtk::Orientation::Vertical, 10);
     column.set_width_request(460 - 2 * 18);
     column.set_margin_top(6);
-    column.set_margin_bottom(18);
+    column.set_margin_bottom(8);
     column.set_margin_start(18);
     column.set_margin_end(18);
     column.append(&heading(&t::send_for()));
@@ -319,17 +376,7 @@ pub fn open(ctx: &Rc<Ctx>, work: &WorkId) {
     column.append(&heading(&t::send_what()));
     column.append(&what);
     column.append(&note);
-    column.append(&foot);
-    let scroll = gtk::ScrolledWindow::builder()
-        .hscrollbar_policy(gtk::PolicyType::Never)
-        .propagate_natural_height(true)
-        .max_content_height(620)
-        .child(&column)
-        .build();
-    let toolbar = adw::ToolbarView::new();
-    toolbar.add_top_bar(&adw::HeaderBar::new());
-    toolbar.set_content(Some(&scroll));
-    dialog.set_child(Some(&toolbar));
+    dialog.set_child(Some(&frame(&column, &foot)));
 
     let parts = Rc::new(Parts {
         targets,
@@ -580,6 +627,116 @@ async fn save_files(
             );
         }
         None => ctx.toast(&words),
+    }
+}
+
+#[cfg(test)]
+mod focus_tests {
+    use adw::prelude::*;
+
+    use super::{focus_within, keep_focus};
+    use crate::gtk_test::{pump, run};
+
+    /// R7L-6. Prepare files had the keyboard and goes as the files are prepared: Cancel send
+    /// takes it, and once the send ends Save to a folder or Try again does, so the keyboard never
+    /// leaves the dialog and Esc still closes it.
+    #[test]
+    fn the_keyboard_stays_in_the_dialog_as_its_buttons_change() {
+        run(|| {
+            let rows = gtk::ListBox::new();
+            rows.append(&gtk::Label::new(Some("Made-up Reader")));
+            let prepare = gtk::Button::with_label("Prepare files");
+            let cancel = gtk::Button::with_label("Cancel send");
+            let save = gtk::Button::with_label("Save to a folder");
+            let again = gtk::Button::with_label("Try again");
+            let area = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            area.append(&rows);
+            for button in [&prepare, &cancel, &save, &again] {
+                area.append(button);
+            }
+            let outside = gtk::Button::with_label("Behind");
+            let page = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            page.append(&outside);
+            page.append(&area);
+            let window = gtk::Window::new();
+            window.set_child(Some(&page));
+            window.present();
+            cancel.set_visible(false);
+            save.set_visible(false);
+            again.set_visible(false);
+            prepare.grab_focus();
+            pump(100);
+            let area_w: gtk::Widget = area.clone().upcast();
+            let next = [&cancel, &save, &again, &prepare];
+            let focus = || gtk::prelude::GtkWindowExt::focus(&window);
+
+            // Preparing: Prepare files goes, the choices grey, Cancel send shows.
+            assert!(focus_within(&area_w));
+            prepare.set_visible(false);
+            rows.set_sensitive(false);
+            cancel.set_visible(true);
+            keep_focus(&area_w, &next);
+            assert_eq!(focus(), Some(cancel.clone().upcast()));
+
+            // Ready: Cancel send goes, Save to a folder shows.
+            cancel.set_visible(false);
+            save.set_visible(true);
+            keep_focus(&area_w, &next);
+            assert_eq!(focus(), Some(save.clone().upcast()));
+
+            // A shown button that has the keyboard keeps it.
+            save.set_visible(false);
+            again.set_visible(true);
+            rows.set_sensitive(true);
+            again.grab_focus();
+            keep_focus(&area_w, &next);
+            assert_eq!(focus(), Some(again.clone().upcast()));
+
+            // Focus outside the dialog is not the dialog's to move.
+            outside.grab_focus();
+            assert!(!focus_within(&area_w));
+            window.destroy();
+        });
+    }
+}
+
+#[cfg(test)]
+mod frame_tests {
+    use adw::prelude::*;
+
+    use super::frame;
+    use crate::gtk_test::{pump, run};
+
+    /// R7L-2. Seven targets in a short window: the choices scroll and the buttons stay in it.
+    #[test]
+    fn the_buttons_show_however_short_the_window() {
+        run(|| {
+            let column = gtk::Box::new(gtk::Orientation::Vertical, 10);
+            for n in 0..7 {
+                let row = gtk::Label::new(Some(&format!("Made-up Reader {n}")));
+                row.set_height_request(64);
+                column.append(&row);
+            }
+            let save = gtk::Button::with_label("Save to a folder");
+            let foot = gtk::Box::new(gtk::Orientation::Vertical, 8);
+            foot.append(&gtk::Label::new(Some("One file is ready.")));
+            foot.append(&save);
+            let window = gtk::Window::new();
+            window.set_default_size(460, 360);
+            window.set_child(Some(&frame(&column, &foot)));
+            window.present();
+            pump(300);
+            let height = window.height() as f32;
+            let bounds = save.compute_bounds(&window).expect("the button is laid out");
+            assert!(save.is_child_visible() && bounds.height() > 0.0);
+            assert!(
+                bounds.y() + bounds.height() <= height,
+                "Save to a folder ends at {} in a window {height} high",
+                bounds.y() + bounds.height()
+            );
+            assert!(save.ancestor(gtk::ScrolledWindow::static_type()).is_none());
+            window.destroy();
+        });
     }
 }
 

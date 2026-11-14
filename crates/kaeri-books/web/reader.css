@@ -74,7 +74,10 @@ html.kaeri.k-book-font body { font-family: inherit; }
    one page is exactly the page width and page n starts at n times it (or the height, for
    vertical text, whose columns stack downward). The page is the viewport, or narrower where
    the columns are capped: then it sits between two outer margins, which cover the
-   neighbouring pages' columns. */
+   neighbouring pages' columns. A 1px column width beside the count changes nothing where the
+   count is set (the count wins, and the columns share the width), but makes one column a
+   multicol container in every engine: WebKit before 300787@main (September 2025, so
+   WebKitGTK up to 2.50) built none for column-count: 1, and the text ran on below the view. */
 html.kaeri.k-paged {
   width: var(--k-page) !important;
   height: 100vh !important;
@@ -89,6 +92,7 @@ html.kaeri.k-paged {
 html.kaeri.k-paged.k-h {
   padding: var(--k-top) var(--k-margin) var(--k-bottom) var(--k-margin) !important;
   column-count: var(--k-cols) !important;
+  column-width: 1px !important;
 }
 html.kaeri.k-paged.k-h.k-capped {
   position: relative !important;
@@ -120,6 +124,7 @@ html.kaeri.k-paged.k-h.k-capped::after { right: 0 !important; }
 html.kaeri.k-paged.k-v {
   padding: var(--k-margin) var(--k-top) var(--k-margin) var(--k-top) !important;
   column-count: 1 !important;
+  column-width: 1px !important;
 }
 html.kaeri.k-paged img,
 html.kaeri.k-paged svg,

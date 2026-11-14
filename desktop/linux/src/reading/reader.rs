@@ -273,6 +273,8 @@ pub struct Reader {
     /// From `open` until `close`. A closed reader takes no more of the engine's events, and lets
     /// go of its pages and its novel view once it is off screen.
     showing: Cell<bool>,
+    /// The window's full screen before the reader first changed it, given back on close.
+    full_before: FullBefore,
 }
 
 impl Reader {
@@ -720,6 +722,7 @@ impl Reader {
                 strip_timer: RefCell::default(),
                 novel: RefCell::default(),
                 showing: Cell::new(false),
+                full_before: FullBefore::default(),
             }
         });
         close.connect_clicked({
@@ -803,13 +806,12 @@ impl Reader {
                 glib::Propagation::Proceed
             }
         });
-        this.go_to_field.connect_activate({
+        go_on_return(&this.go_to_field, {
             let this = Rc::downgrade(&this);
-            move |field| {
+            move |page| {
                 if let Some(this) = this.upgrade() {
-                    field.update();
                     this.go_to.popdown();
-                    this.jump_to_page(field.value().round() as usize);
+                    this.jump_to_page(page);
                     this.widget.grab_focus();
                 }
             }
@@ -937,7 +939,9 @@ impl Reader {
     fn toggle_fullscreen(&self) {
         if let Some(ctx) = self.ctx.upgrade() {
             let window = &ctx.window;
-            window.set_fullscreened(!window.is_fullscreen());
+            let now = window.is_fullscreen();
+            self.full_before.toggled(now);
+            window.set_fullscreened(!now);
         }
     }
 
@@ -1312,6 +1316,12 @@ impl Reader {
         self.quiet_credits();
         self.widget.set_cursor(None);
         let was_showing = self.showing.get();
+        // Full screen is the reader's alone: the rest of the window has no way out of it.
+        if let Some(ctx) = self.ctx.upgrade()
+            && let Some(full) = self.full_before.give_back(ctx.window.is_fullscreen())
+        {
+            ctx.window.set_fullscreened(full);
+        }
         (self.show)(false);
         if was_showing && let Some(ctx) = self.ctx.upgrade() {
             self.opener.give_back(&ctx.window, &self.widget);
@@ -3243,21 +3253,25 @@ impl Reader {
             && self.focus_in_chrome()
     }
 
-    /// Tab brings the chrome. From the page it goes to the chrome's first control, or its last
-    /// with Shift; inside the chrome the window moves the focus as usual. False when the
-    /// window should move it.
+    /// Tab brings the chrome and walks it: the head's controls, the page, then the group's,
+    /// and round again, Shift+Tab the other way. The reader walks it itself, as GTK's own
+    /// chain from the head runs back into the page behind it and never reaches the group.
+    /// False when the window should move the focus: inside a popover, which walks its own.
     fn tab_into_chrome(self: &Rc<Self>, back: bool) -> bool {
         self.reveal_chrome();
-        if self.focus_in_chrome() {
+        let Some(window) = self.widget.root().and_downcast::<gtk::Window>() else {
+            return false;
+        };
+        let focus = gtk::prelude::GtkWindowExt::focus(&window);
+        if focus.as_ref().is_some_and(|f| f.ancestor(gtk::Popover::static_type()).is_some()) {
             return false;
         }
-        let (head, group) = (self.head.upcast_ref::<gtk::Widget>(), self.group.upcast_ref());
-        let (direction, order) = if back {
-            (gtk::DirectionType::TabBackward, [group, head])
-        } else {
-            (gtk::DirectionType::TabForward, [head, group])
-        };
-        order.iter().any(|part| part.child_focus(direction))
+        let page = self.widget.upcast_ref::<gtk::Widget>();
+        let stops = tab_stops(self.head.upcast_ref(), page, self.group.upcast_ref());
+        let Some(next) = next_stop(&stops, page, focus.as_ref(), back) else { return false };
+        window.set_focus_visible(true);
+        next.grab_focus();
+        true
     }
 
     /// Keep the chrome up for a shot, as the board draws it.
@@ -3491,6 +3505,10 @@ impl Reader {
     }
 
     fn controls(self: &Rc<Self>) {
+        self.widget.add_controller(tab_keys({
+            let this = Rc::downgrade(self);
+            move |back| this.upgrade().is_some_and(|this| this.tab_into_chrome(back))
+        }));
         let keys = gtk::EventControllerKey::new();
         keys.connect_key_pressed({
             let this = Rc::downgrade(self);
@@ -3733,15 +3751,18 @@ impl Reader {
             K::Left => self.turn(rtl, TurnHow::Key),
             K::space | K::Page_Down | K::Down => self.turn(true, TurnHow::Key),
             K::Page_Up | K::Up => self.turn(false, TurnHow::Key),
-            // A novel's first and last page are its paginator's, as Go to page has them.
+            // A novel's first and last page are the chapter's, across its spine's documents.
             K::Home | K::End if self.state.borrow().medium == Some(Medium::Novel) => {
                 let novel = self.novel.borrow().clone();
                 if let Some(novel) = novel {
-                    if key == K::Home {
-                        novel.go_to(0);
-                    } else {
-                        novel.go_to_end();
+                    // From the end page, back to the text, which then moves.
+                    if self.stack.visible_child_name().as_deref() == Some("end") {
+                        self.state.borrow_mut().novel_end = false;
+                        motion::turn(&self.veil, &self.stack, || {
+                            self.stack.set_visible_child(&novel.widget);
+                        });
                     }
+                    novel.go_to_edge(key == K::End);
                 }
             }
             K::Home => self.jump_to(0),
@@ -4280,6 +4301,111 @@ fn followed(
     ((mode, direction) != now).then_some((mode, direction))
 }
 
+/// The stops Tab walks in the reader, in order: the head's controls, the page, the group's.
+/// Hidden, insensitive and unfocusable controls are passed over, and popovers walk their own.
+fn tab_stops(head: &gtk::Widget, page: &gtk::Widget, group: &gtk::Widget) -> Vec<gtk::Widget> {
+    fn walk(widget: &gtk::Widget, out: &mut Vec<gtk::Widget>) {
+        if !widget.is_visible()
+            || !widget.is_sensitive()
+            || !widget.can_focus()
+            || widget.is::<gtk::Popover>()
+        {
+            return;
+        }
+        if widget.is_focusable() {
+            out.push(widget.clone());
+            return;
+        }
+        let mut child = widget.first_child();
+        while let Some(c) = child {
+            walk(&c, out);
+            child = c.next_sibling();
+        }
+    }
+    let mut stops = Vec::new();
+    walk(head, &mut stops);
+    stops.push(page.clone());
+    walk(group, &mut stops);
+    stops
+}
+
+/// Where Tab, or Shift+Tab with `back`, goes from `focus`: the stop after (or before) the one
+/// that holds it, round the ends. Focus on none of the controls is on the page.
+fn next_stop(
+    stops: &[gtk::Widget],
+    page: &gtk::Widget,
+    focus: Option<&gtk::Widget>,
+    back: bool,
+) -> Option<gtk::Widget> {
+    let held = |stop: &gtk::Widget| {
+        stop != page && focus.is_some_and(|f| f == stop || f.is_ancestor(stop))
+    };
+    let at = stops.iter().position(held).or_else(|| stops.iter().position(|s| s == page))?;
+    let n = stops.len();
+    let next = if back { (at + n - 1) % n } else { (at + 1) % n };
+    stops.get(next).cloned()
+}
+
+/// Tab and Shift+Tab, without Ctrl or Alt, for the reader's own walk: `walk` gets whether the
+/// walk goes back and says whether it moved the focus. They are heard before the page's content,
+/// as a novel's web view would keep them, walking its own document and the text view inside it.
+fn tab_keys(walk: impl Fn(bool) -> bool + 'static) -> gtk::EventControllerKey {
+    let tabs = gtk::EventControllerKey::new();
+    tabs.set_propagation_phase(gtk::PropagationPhase::Capture);
+    tabs.connect_key_pressed(move |_, key, _, modifiers| {
+        use gdk::Key as K;
+        let tab = matches!(key, K::Tab | K::KP_Tab | K::ISO_Left_Tab);
+        let other = gdk::ModifierType::CONTROL_MASK | gdk::ModifierType::ALT_MASK;
+        if !tab || modifiers.intersects(other) {
+            return glib::Propagation::Proceed;
+        }
+        let back = key == K::ISO_Left_Tab || modifiers.contains(gdk::ModifierType::SHIFT_MASK);
+        if walk(back) { glib::Propagation::Stop } else { glib::Propagation::Proceed }
+    });
+    tabs
+}
+
+/// Go to page's field: Return commits what was typed and `go` gets the page, from 1. The spin
+/// button emits its own activate only when Return finds the value already committed, so a
+/// typed number would need a second Return; its text's activate comes with every Return.
+fn go_on_return(field: &gtk::SpinButton, go: impl Fn(usize) + 'static) {
+    let go = move |field: &gtk::SpinButton| {
+        field.update();
+        go(field.value().round() as usize);
+    };
+    match field.delegate().and_downcast::<gtk::Text>() {
+        Some(text) => {
+            let field = field.downgrade();
+            text.connect_activate(move |_| {
+                if let Some(field) = field.upgrade() {
+                    go(&field);
+                }
+            });
+        }
+        None => {
+            field.connect_activate(go);
+        }
+    }
+}
+
+/// The window's full screen from before the reader first changed it, until the reader closes.
+#[derive(Default)]
+struct FullBefore(Cell<Option<bool>>);
+
+impl FullBefore {
+    /// The reader is about to change full screen, which is `now`.
+    fn toggled(&self, now: bool) {
+        if self.0.get().is_none() {
+            self.0.set(Some(now));
+        }
+    }
+
+    /// The reader closes with the window's full screen at `now`: what to set it to, if anything.
+    fn give_back(&self, now: bool) -> Option<bool> {
+        self.0.take().filter(|&before| before != now)
+    }
+}
+
 #[cfg(test)]
 mod layout_tests {
     use kaeri_core::{books::WorkId, media::Medium};
@@ -4447,6 +4573,223 @@ mod strip_tests {
         let (image, offset) = strip_place_of(&heights, 8, target);
         assert_eq!(image, 1);
         assert!((offset - 0.25).abs() < 1e-3);
+    }
+}
+
+#[cfg(test)]
+mod tab_tests {
+    use adw::prelude::*;
+
+    use super::{next_stop, tab_keys, tab_stops};
+    use crate::gtk_test::{pump, run};
+
+    /// The reader's shape: a page with the head and the group over it, the group's last row
+    /// holding Chapters, the names, Aa and Full screen, and Go to page in a popover.
+    #[test]
+    fn tab_walks_the_head_the_page_and_the_whole_group_both_ways() {
+        run(|| {
+            let close = gtk::Button::with_label("Close");
+            let head = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+            head.append(&close);
+            head.append(&gtk::Label::new(Some("Chapter 3")));
+            let scrub = gtk::Scale::with_range(gtk::Orientation::Horizontal, 1.0, 9.0, 1.0);
+            let field = gtk::SpinButton::with_range(1.0, 9.0, 1.0);
+            let go_to = gtk::Popover::new();
+            go_to.set_child(Some(&field));
+            go_to.set_parent(&scrub);
+            let back_to = gtk::Button::with_label("Back to page 4");
+            back_to.set_visible(false);
+            let chapters = gtk::MenuButton::new();
+            // A menu button is only sensitive with something to open, as the reader's is.
+            chapters.set_popover(Some(&gtk::Popover::new()));
+            let aa = gtk::Button::with_label("Aa");
+            let full = gtk::Button::with_label("Full screen");
+            let off = gtk::Button::with_label("Off");
+            off.set_sensitive(false);
+            let ends = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+            ends.append(&aa);
+            ends.append(&full);
+            ends.append(&off);
+            let row = gtk::CenterBox::new();
+            row.set_start_widget(Some(&chapters));
+            row.set_center_widget(Some(&gtk::Label::new(Some("A Made-up Title"))));
+            row.set_end_widget(Some(&ends));
+            let group = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            group.append(&back_to);
+            group.append(&scrub);
+            group.append(&row);
+            group.set_valign(gtk::Align::End);
+            head.set_valign(gtk::Align::Start);
+            let page = gtk::Overlay::new();
+            page.set_child(Some(&gtk::Label::new(Some("page 1"))));
+            page.add_overlay(&head);
+            page.add_overlay(&group);
+            page.set_focusable(true);
+            let window = gtk::Window::builder().default_width(600).default_height(400).build();
+            window.set_child(Some(&page));
+            window.present();
+            pump(100);
+
+            let page_w = page.upcast_ref::<gtk::Widget>();
+            let stops = tab_stops(head.upcast_ref(), page_w, group.upcast_ref());
+            let known: [(&gtk::Widget, &str); 6] = [
+                (close.upcast_ref(), "Close"),
+                (page_w, "page"),
+                (scrub.upcast_ref(), "scrubber"),
+                (chapters.upcast_ref(), "Chapters"),
+                (aa.upcast_ref(), "Aa"),
+                (full.upcast_ref(), "Full screen"),
+            ];
+            let names: Vec<&str> = stops
+                .iter()
+                .map(|w| {
+                    known
+                        .iter()
+                        .find(|(k, _)| w == *k || (*k != page_w && w.is_ancestor(*k)))
+                        .map_or("other", |(_, name)| *name)
+                })
+                .collect();
+            assert_eq!(
+                names,
+                ["Close", "page", "scrubber", "Chapters", "Aa", "Full screen"],
+                "the hidden, the insensitive and the popover's field are passed over"
+            );
+
+            // Forward from the page, all the way round.
+            let mut at: Option<gtk::Widget> = Some(page_w.clone());
+            let mut seen = Vec::new();
+            for _ in 0..stops.len() {
+                let next = next_stop(&stops, page_w, at.as_ref(), false).expect("a stop");
+                next.grab_focus();
+                pump(10);
+                at = gtk::prelude::GtkWindowExt::focus(&window);
+                let focus = at.as_ref().expect("the focus");
+                seen.push(
+                    stops
+                        .iter()
+                        .position(|s| focus == s || (s != page_w && focus.is_ancestor(s))),
+                );
+            }
+            assert_eq!(seen, [Some(2), Some(3), Some(4), Some(5), Some(0), Some(1)]);
+
+            // Back from Close: round past the start to Full screen.
+            let back = next_stop(&stops, page_w, Some(close.upcast_ref()), true);
+            assert_eq!(back.as_ref(), Some(full.upcast_ref()));
+            // From Full screen on: Close, never stuck between Chapters and Aa.
+            let on = next_stop(&stops, page_w, Some(full.upcast_ref()), false);
+            assert_eq!(on.as_ref(), Some(close.upcast_ref()));
+            // From the head to the page, from the page to the group.
+            let after_close = next_stop(&stops, page_w, Some(close.upcast_ref()), false);
+            assert_eq!(after_close.as_ref(), Some(page_w));
+            // Focus nowhere counts as on the page.
+            assert_eq!(
+                next_stop(&stops, page_w, None, false).as_ref(),
+                Some(scrub.upcast_ref())
+            );
+            // Focus inside the page's content, as in a novel's web view and the text view inside
+            // it, counts as on the page: Tab leaves it for the group, Shift+Tab for the head.
+            let inner = gtk::TextView::new();
+            page.add_overlay(&inner);
+            let inner_w = inner.upcast_ref::<gtk::Widget>();
+            assert_eq!(
+                next_stop(&stops, page_w, Some(inner_w), false).as_ref(),
+                Some(scrub.upcast_ref())
+            );
+            assert_eq!(
+                next_stop(&stops, page_w, Some(inner_w), true).as_ref(),
+                Some(close.upcast_ref())
+            );
+            go_to.unparent();
+            window.destroy();
+        });
+    }
+
+    /// A novel's web view keeps every key that reaches it, so the reader hears Tab on its way
+    /// down to the page's content, before the view does.
+    #[test]
+    fn tab_is_heard_before_the_pages_content() {
+        run(|| {
+            let tabs = tab_keys(|_| true);
+            assert_eq!(tabs.propagation_phase(), gtk::PropagationPhase::Capture);
+        });
+    }
+}
+
+#[cfg(test)]
+mod go_to_tests {
+    use std::{cell::Cell, rc::Rc};
+
+    use adw::prelude::*;
+
+    use super::go_on_return;
+    use crate::gtk_test::{pump, run};
+
+    /// Go to page with a number typed over the page it shows: one Return goes there, and a number
+    /// past the end goes to the last page.
+    #[test]
+    fn one_return_goes_to_the_typed_page() {
+        run(|| {
+            let field = gtk::SpinButton::with_range(1.0, 20.0, 1.0);
+            field.set_numeric(true);
+            field.set_value(10.0);
+            let went = Rc::new(Cell::new(None));
+            go_on_return(&field, {
+                let went = Rc::clone(&went);
+                move |page| went.set(Some(page))
+            });
+            let window = gtk::Window::new();
+            window.set_child(Some(&field));
+            window.present();
+            field.grab_focus();
+            pump(50);
+            let text = field.delegate().and_downcast::<gtk::Text>().expect("the field's text");
+
+            field.set_text("5");
+            text.emit_activate();
+            pump(20);
+            assert_eq!(went.take(), Some(5));
+            field.set_text("999");
+            text.emit_activate();
+            pump(20);
+            assert_eq!(went.take(), Some(20));
+            // Return on the page already committed goes there too.
+            text.emit_activate();
+            pump(20);
+            assert_eq!(went.take(), Some(20));
+            window.destroy();
+        });
+    }
+}
+
+#[cfg(test)]
+mod full_tests {
+    use super::FullBefore;
+
+    #[test]
+    fn closing_leaves_the_full_screen_the_reader_entered() {
+        let full = FullBefore::default();
+        full.toggled(false);
+        assert_eq!(full.give_back(true), Some(false));
+        // Closed once, the next close changes nothing.
+        assert_eq!(full.give_back(true), None);
+    }
+
+    #[test]
+    fn closing_keeps_the_window_as_it_was_when_the_reader_did_not_change_it() {
+        let full = FullBefore::default();
+        assert_eq!(full.give_back(false), None);
+        assert_eq!(full.give_back(true), None);
+        // Into full screen and out again: nothing to undo.
+        full.toggled(false);
+        full.toggled(true);
+        assert_eq!(full.give_back(false), None);
+    }
+
+    #[test]
+    fn a_window_full_screen_before_the_reader_gets_it_back() {
+        let full = FullBefore::default();
+        full.toggled(true);
+        assert_eq!(full.give_back(false), Some(true));
     }
 }
 
