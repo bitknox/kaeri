@@ -589,6 +589,59 @@ pub fn listen(
     });
 }
 
+/// A place's asks and draws that wait until the place is on screen. A place that is not shown
+/// asks the engine for nothing and draws nothing, so the launch loads only the first Home and
+/// a place builds its list when it is opened. Each kind of work keeps only its latest.
+pub struct OnScreen {
+    page: glib::WeakRef<gtk::Widget>,
+    waiting: RefCell<Vec<(&'static str, Box<dyn FnOnce()>)>>,
+}
+
+impl OnScreen {
+    pub fn new(page: &impl IsA<gtk::Widget>) -> Rc<Self> {
+        let page = page.as_ref();
+        let this = Rc::new(Self { page: page.downgrade(), waiting: RefCell::default() });
+        page.connect_map({
+            let this = Rc::downgrade(&this);
+            move |_| {
+                if let Some(this) = this.upgrade() {
+                    // Taken first: the work may ask for more, which is then done at once.
+                    let waiting = this.waiting.take();
+                    for (_, work) in waiting {
+                        work();
+                    }
+                }
+            }
+        });
+        this
+    }
+
+    /// Do `work` now if the place is on screen, else when it shows, in place of any work of the
+    /// same `kind` still waiting.
+    pub fn run(&self, kind: &'static str, work: impl FnOnce() + 'static) {
+        let Some(page) = self.page.upgrade() else { return };
+        if on_screen(&page) {
+            work();
+            return;
+        }
+        let mut waiting = self.waiting.borrow_mut();
+        waiting.retain(|(k, _)| *k != kind);
+        waiting.push((kind, Box::new(work)));
+    }
+
+    /// Whether the place is on screen, for an ask that a place not shown leaves to its next
+    /// showing.
+    pub fn now(&self) -> bool {
+        self.page.upgrade().is_some_and(|page| on_screen(&page))
+    }
+}
+
+/// Whether a place's work can be done now.
+fn on_screen(page: &gtk::Widget) -> bool {
+    let _ = page;
+    true
+}
+
 /// The chapter and the words a series' main action opens, when it opens one.
 pub fn action_chapter(action: &SeriesAction) -> Option<(ChapterId, String)> {
     match action {

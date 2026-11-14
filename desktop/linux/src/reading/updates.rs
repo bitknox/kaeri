@@ -11,7 +11,7 @@ use kaeri_model::{
     reading::{ReadingCommand, ReadingEvent, UpdatesView},
 };
 
-use super::{Place, day_label, listen, place, send};
+use super::{OnScreen, Place, day_label, listen, place, send};
 use crate::{
     say,
     states::Shape,
@@ -66,39 +66,60 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
             }
         }
     });
+    let shown = OnScreen::new(&page);
+    let ask = {
+        let (hub, shown) = (Rc::downgrade(&ctx.hub), Rc::downgrade(&shown));
+        move || {
+            let Some(shown) = shown.upgrade() else { return };
+            let hub = hub.clone();
+            shown.run("ask", move || {
+                if let Some(hub) = hub.upgrade()
+                    && super::reads(&hub)
+                {
+                    send(&hub, ReadingCommand::LoadUpdates);
+                }
+            });
+        }
+    };
     listen(ctx, &page, {
         let (ctx, states, column, download) =
             (Rc::downgrade(ctx), states.clone(), column.clone(), download.clone());
+        let (shown, ask) = (Rc::clone(&shown), ask.clone());
         move |event| {
             let Some(ctx) = ctx.upgrade() else { return };
             match event {
                 Event::Reading(ReadingEvent::Updates(view)) => {
-                    super::clear(&column);
-                    draw(&ctx, &column, view);
-                    let new =
-                        view.days.iter().flat_map(|d| &d.rows).any(|r| r.chapter.new_chapter);
-                    download.set_sensitive(new);
-                    // Sources that failed stay in sight even with no chapters to list.
-                    if view.days.is_empty() && view.failures.is_empty() {
-                        states.empty();
-                    } else {
-                        states.content();
-                    }
+                    let (ctx, states, column, download) =
+                        (Rc::downgrade(&ctx), states.clone(), column.clone(), download.clone());
+                    let view = view.clone();
+                    shown.run("draw", move || {
+                        let Some(ctx) = ctx.upgrade() else { return };
+                        super::clear(&column);
+                        draw(&ctx, &column, &view);
+                        let new = view
+                            .days
+                            .iter()
+                            .flat_map(|d| &d.rows)
+                            .any(|r| r.chapter.new_chapter);
+                        download.set_sensitive(new);
+                        // Sources that failed stay in sight even with no chapters to list.
+                        if view.days.is_empty() && view.failures.is_empty() {
+                            states.empty();
+                        } else {
+                            states.content();
+                        }
+                    });
                 }
                 Event::Reading(ReadingEvent::Failed {
                     about: kaeri_model::reading::ReadingAbout::Updates,
                     failure,
                 }) => states.failed(&super::failure(failure)),
-                Event::Medium(_) if super::reads(&ctx.hub) => {
-                    send(&ctx.hub, ReadingCommand::LoadUpdates)
-                }
+                Event::Medium(_) if super::reads(&ctx.hub) => ask(),
                 _ => {}
             }
         }
     });
-    if super::reads(&ctx.hub) {
-        send(&ctx.hub, ReadingCommand::LoadUpdates);
-    }
+    ask();
     page
 }
 

@@ -31,7 +31,7 @@ use kaeri_model::{
 };
 
 use super::{
-    Dest,
+    Dest, OnScreen,
     discovery::{self, Caption, Landing, Part},
     listen, scope, send,
 };
@@ -831,6 +831,8 @@ struct Search {
     rows: RefCell<Vec<Rc<StartRow>>>,
     /// Home's rows have been asked for, or have come.
     home_asked: Cell<bool>,
+    /// The start's rows wait for the place to show.
+    shown: Rc<OnScreen>,
 
     /// The query asked and the last page of it in, from 0.
     at: RefCell<(ReadSearchQuery, u32)>,
@@ -1063,6 +1065,7 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
         start_rows,
         rows: RefCell::default(),
         home_asked: Cell::new(false),
+        shown: OnScreen::new(&page),
         at: RefCell::new((ReadSearchQuery::default(), 0)),
         titled: RefCell::default(),
         asked: Cell::new(false),
@@ -1181,8 +1184,9 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
             }
         }
     })));
-    // Shown with nothing asked yet, as when reading was turned on after the window opened.
-    page.connect_shown({
+    // Shown with nothing asked yet: at its first showing, or when reading was turned on after
+    // the window opened.
+    page.connect_map({
         let search = Rc::downgrade(&search);
         move |_| {
             if let Some(search) = search.upgrade()
@@ -1193,7 +1197,7 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
             }
         }
     });
-    if super::reads(&ctx.hub) {
+    if search.shown.now() && super::reads(&ctx.hub) {
         search.ask(false);
     }
     page.set_tag(Some("read-search"));
@@ -1486,9 +1490,16 @@ impl Search {
             }
             Event::Reading(ReadingEvent::Home(view)) => {
                 self.home_asked.set(true);
-                self.draw_start(view);
+                let (this, view) = (Rc::downgrade(self), view.clone());
+                self.shown.run("start", move || {
+                    if let Some(this) = this.upgrade() {
+                        this.draw_start(&view);
+                    }
+                });
             }
-            Event::Medium(_) if self.hub.upgrade().is_some_and(|h| super::reads(&h)) => {
+            Event::Medium(_)
+                if self.shown.now() && self.hub.upgrade().is_some_and(|h| super::reads(&h)) =>
+            {
                 self.ask(true);
             }
             _ => {}

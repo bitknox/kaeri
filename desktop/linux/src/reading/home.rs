@@ -25,7 +25,7 @@ use kaeri_model::{
 };
 
 use super::{
-    Place, action_chapter, cover,
+    OnScreen, Place, action_chapter, cover,
     discovery::{self, Caption, Landing, Part},
     listen, place, read_button, send,
 };
@@ -181,25 +181,47 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
             }
         }
     });
+    // Read's Home behind Watch's at launch asks for nothing until it is opened.
+    let shown = OnScreen::new(&page);
+    let ask = {
+        let (hub, shown) = (Rc::downgrade(&ctx.hub), Rc::downgrade(&shown));
+        move || {
+            let Some(shown) = shown.upgrade() else { return };
+            let hub = hub.clone();
+            shown.run("ask", move || {
+                if let Some(hub) = hub.upgrade()
+                    && super::reads(&hub)
+                {
+                    send(&hub, ReadingCommand::LoadHome { refresh: false });
+                }
+            });
+        }
+    };
     listen(ctx, &page, {
         let (ctx, states) = (Rc::downgrade(ctx), states.clone());
         let page = page.downgrade();
         let home = Rc::clone(&home);
+        let (shown, ask) = (Rc::clone(&shown), ask.clone());
         move |event| {
             let Some(ctx) = ctx.upgrade() else { return };
             match event {
                 Event::Reading(ReadingEvent::Home(view)) => {
-                    if view.failed && super::is_blank(view) {
-                        home.loading_capsule(view);
-                        states.failed("");
-                        return;
-                    }
-                    home.draw(&ctx, view);
-                    if super::is_blank(view) {
-                        states.empty();
-                    } else {
-                        states.content();
-                    }
+                    let (ctx, states, home, view) =
+                        (Rc::downgrade(&ctx), states.clone(), Rc::clone(&home), view.clone());
+                    shown.run("draw", move || {
+                        let Some(ctx) = ctx.upgrade() else { return };
+                        if view.failed && super::is_blank(&view) {
+                            home.loading_capsule(&view);
+                            states.failed("");
+                            return;
+                        }
+                        home.draw(&ctx, &view);
+                        if super::is_blank(&view) {
+                            states.empty();
+                        } else {
+                            states.content();
+                        }
+                    });
                 }
                 Event::Medium(_) if super::reads(&ctx.hub) => {
                     // Read beside Home when both are on, Home when reading is all there is.
@@ -210,15 +232,13 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
                             t::home_title()
                         });
                     }
-                    send(&ctx.hub, ReadingCommand::LoadHome { refresh: false });
+                    ask();
                 }
                 _ => {}
             }
         }
     });
-    if super::reads(&ctx.hub) {
-        send(&ctx.hub, ReadingCommand::LoadHome { refresh: false });
-    }
+    ask();
     page.set_tag(Some("read"));
     page
 }

@@ -15,7 +15,7 @@ use kaeri_model::{
     reading::{LibrarySegmentRead as Segment, ReadingCommand, ReadingEvent, WorkTile},
 };
 
-use super::{Dest, WorkGrid, listen, scope, send};
+use super::{Dest, OnScreen, WorkGrid, listen, scope, send};
 use crate::{
     states::{Shape, States},
     widgets,
@@ -298,24 +298,32 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
         move || ask_all()
     });
 
+    // Not on screen, the lists wait: the place asks for them each time it shows.
+    let shown = OnScreen::new(&page);
     listen(ctx, &page, {
         let (kept, current, show, list_menu) =
             (Rc::clone(&kept), Rc::clone(&current), Rc::clone(&show), Rc::clone(&list_menu));
         let ask_all = ask_all.clone();
         let hub = Rc::downgrade(&ctx.hub);
+        let shown = Rc::clone(&shown);
         move |event| match event {
             Event::Reading(ReadingEvent::Library { segment, tiles }) => {
                 kept.borrow_mut().insert(*segment, tiles.clone());
                 list_menu.show(current.get(), &counts());
                 if *segment == current.get() {
-                    show();
+                    let show = Rc::clone(&show);
+                    shown.run("draw", move || show());
                 }
             }
-            Event::Medium(_) if hub.upgrade().is_some_and(|h| super::reads(&h)) => ask_all(),
+            Event::Medium(_)
+                if shown.now() && hub.upgrade().is_some_and(|h| super::reads(&h)) =>
+            {
+                ask_all()
+            }
             _ => {}
         }
     });
-    page.connect_shown({
+    page.connect_map({
         let (ask_all, hub) = (ask_all.clone(), Rc::downgrade(&ctx.hub));
         move |_| {
             if hub.upgrade().is_some_and(|h| super::reads(&h)) {
@@ -323,7 +331,7 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
             }
         }
     });
-    if super::reads(&ctx.hub) {
+    if shown.now() && super::reads(&ctx.hub) {
         ask_all();
     }
     page
