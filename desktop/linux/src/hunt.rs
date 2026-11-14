@@ -2891,6 +2891,12 @@ fn a11y_hooks() {
             (*class).realize = Some(a11y_realize);
             (*class).unrealize = Some(a11y_unrealize);
             tracing::info!("HUNT a11y hooks on, path at {path}");
+            for sig in [libc::SIGSEGV, libc::SIGABRT] {
+                let mut act: libc::sigaction = std::mem::zeroed();
+                act.sa_sigaction = hunt_fatal as usize;
+                act.sa_flags = libc::SA_RESETHAND;
+                libc::sigaction(sig, &act, std::ptr::null_mut());
+            }
             gtk::glib::log_set_handler(
                 Some("Gtk"),
                 gtk::glib::LogLevels::LEVEL_CRITICAL,
@@ -2976,5 +2982,34 @@ unsafe extern "C" fn a11y_finalize(obj: *mut gtk::glib::gobject_ffi::GObject) {
         if let Some(f) = A11Y_FINALIZE.get() {
             f(obj);
         }
+    }
+}
+
+unsafe extern "C" {
+    fn backtrace(buffer: *mut *mut std::ffi::c_void, size: std::ffi::c_int) -> std::ffi::c_int;
+    fn backtrace_symbols_fd(
+        buffer: *const *mut std::ffi::c_void,
+        size: std::ffi::c_int,
+        fd: std::ffi::c_int,
+    );
+}
+
+/// QA: frames of a fatal signal, as glibc names them and as Rust's backtrace does, then the
+/// default action.
+extern "C" fn hunt_fatal(sig: std::ffi::c_int) {
+    // SAFETY: QA only; the process is going down either way.
+    unsafe {
+        let mut frames = [std::ptr::null_mut(); 64];
+        let n = backtrace(frames.as_mut_ptr(), 64);
+        let head = b"HUNT fatal frames\n";
+        libc::write(2, head.as_ptr().cast(), head.len());
+        backtrace_symbols_fd(frames.as_ptr(), n, 2);
+        let bt = std::backtrace::Backtrace::force_capture();
+        for line in
+            format!("{bt}").lines().filter(|l| !l.trim_start().starts_with("at ")).take(64)
+        {
+            eprintln!("HUNT rbt {}", line.trim());
+        }
+        libc::raise(sig);
     }
 }
