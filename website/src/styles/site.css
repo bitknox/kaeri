@@ -693,6 +693,11 @@ site-search dialog {
 	box-shadow: none;
 }
 
+/* The results are links, but read as a list, as they do in the docs. */
+.k-body site-search dialog a {
+	text-decoration: none;
+}
+
 site-search dialog::backdrop {
 	-webkit-backdrop-filter: none;
 	backdrop-filter: none;
