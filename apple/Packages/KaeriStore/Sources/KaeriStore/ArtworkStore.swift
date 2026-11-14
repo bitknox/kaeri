@@ -102,14 +102,18 @@ public final class ArtworkStore {
     ///   - costLimit: how many bytes of decoded pixels to keep.
     ///   - backoff: the waits after each failure in a row (`ArtworkStore.backoff`).
     ///   - sleep: how a retry waits out its part of the backoff.
+    ///   - cache: where decodes are kept off screen, limited to `costLimit`. A plain `NSCache`,
+    ///     which lets go of everything when the system wants memory; tests that read back art no
+    ///     screen shows pass one that lets go only past its limit.
     public init(
         costLimit: Int = ArtworkStore.costLimit,
         backoff: [Duration] = ArtworkStore.backoff,
         now: @escaping @Sendable () -> ContinuousClock.Instant = { ContinuousClock.now },
         sleep: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) },
+        cache: NSCache<NSString, Artwork> = NSCache(),
         fetch: @escaping @MainActor (String) -> Bool
     ) {
-        cache = NSCache()
+        self.cache = cache
         cache.totalCostLimit = costLimit
         self.fetch = fetch
         self.now = now

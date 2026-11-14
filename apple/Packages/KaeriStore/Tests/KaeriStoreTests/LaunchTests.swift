@@ -155,7 +155,7 @@ struct SettleTests {
     @Test func aStoreSettlesOnceContinueHasLoadedAndTheArtHasArrived() async throws {
         let root = temporaryRoot()
         defer { try? FileManager.default.removeItem(at: root) }
-        let store = AppStore()
+        let store = AppStore(artworkCache: KeptCache())
         await store.start(
             EngineLaunch(engine: .fixtures(.watching), home: .override(root: root), platform: .macOs, secrets: .host),
             host: quietHost()
