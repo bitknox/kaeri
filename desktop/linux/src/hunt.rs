@@ -697,7 +697,9 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
         "hunt-close" => 120.0,
         "hunt-rsearch" => 200.0,
         "hunt-p11" => 600.0,
-        "hunt-do" => std::env::var("HUNT_SECS").ok().and_then(|s| s.parse().ok()).unwrap_or(600.0),
+        "hunt-do" => {
+            std::env::var("HUNT_SECS").ok().and_then(|s| s.parse().ok()).unwrap_or(600.0)
+        }
         _ => return None,
     };
     let shell = Rc::clone(shell);
@@ -1804,8 +1806,9 @@ async fn drive(shell: &Rc<Shell>, name: &str) {
                 list.scroll_to(0, gtk::ListScrollFlags::NONE, None);
             }
             wait_ms(1200).await;
-            let fold = find::<adw::ExpanderRow>(&pop, &|_| true)
-                .or_else(|| find::<adw::ExpanderRow>(shell.reader.widget.upcast_ref(), &|_| true));
+            let fold = find::<adw::ExpanderRow>(&pop, &|_| true).or_else(|| {
+                find::<adw::ExpanderRow>(shell.reader.widget.upcast_ref(), &|_| true)
+            });
             let lists = find::<gtk::ListView>(&pop, &|_| true)
                 .and_then(|l| l.model())
                 .map(|m| m.n_items());
@@ -2007,15 +2010,16 @@ async fn drive(shell: &Rc<Shell>, name: &str) {
             let (work, chapter) = plan.rsplit_once(':').unwrap_or((STRIP, "1"));
             let (work, chapter) = (work.to_owned(), chapter.to_owned());
             let _ = shell.ctx.hub.listen(|event| {
-                if let kaeri_model::event::Event::Reading(kaeri_model::reading::ReadingEvent::Chapters {
-                    volumes, ..
-                }) = event
+                if let kaeri_model::event::Event::Reading(
+                    kaeri_model::reading::ReadingEvent::Chapters { volumes, .. },
+                ) = event
                 {
                     let marked: Vec<String> = volumes
                         .iter()
                         .flat_map(|v| v.chapters.iter())
                         .filter(|r| {
-                            !matches!(r.state, kaeri_model::reading::ChapterReadState::Unread) || r.download.is_some()
+                            !matches!(r.state, kaeri_model::reading::ChapterReadState::Unread)
+                                || r.download.is_some()
                         })
                         .take(40)
                         .map(|r| format!("{}:{:?}:{:?}", r.id, r.state, r.download))
@@ -2102,7 +2106,6 @@ async fn drive(shell: &Rc<Shell>, name: &str) {
         _ => {}
     }
 }
-
 
 // ---------------------------------------------------------------------------------------------
 // Round 6: a drive read from HUNT_DO, steps split by ';', words by spaces.
@@ -2329,9 +2332,15 @@ async fn run_plan(shell: &Rc<Shell>, plan: &str) {
                 // QA r9: ask the page what it holds, or turn it, and say any error.
                 let post = "window.webkit.messageHandlers.kaeri.postMessage(JSON.stringify(m))";
                 let body = match arg(1) {
-                    "next" => "var r = window.kaeriReader.next('key'); m = {type: 'jsnext', why: r === null ? 'null' : 'page ' + (r && r.page)};",
-                    "goto" => "var r = window.kaeriReader.goTo(2, 'jump'); m = {type: 'jsgoto', why: 'page ' + (r && r.page)};",
-                    _ => "m = window.kaeriReader ? window.kaeriReader.state() : {why: 'no kaeriReader'}; m.type = 'jsstate'; m.why = (m.why || '') + ' href=' + location.protocol + ' sw=' + document.scrollingElement.scrollWidth + ' cw=' + document.documentElement.clientWidth + ' sx=' + window.scrollX + ' ov=' + getComputedStyle(document.documentElement).overflow + '/' + getComputedStyle(document.body).overflow;",
+                    "next" => {
+                        "var r = window.kaeriReader.next('key'); m = {type: 'jsnext', why: r === null ? 'null' : 'page ' + (r && r.page)};"
+                    }
+                    "goto" => {
+                        "var r = window.kaeriReader.goTo(2, 'jump'); m = {type: 'jsgoto', why: 'page ' + (r && r.page)};"
+                    }
+                    _ => {
+                        "m = window.kaeriReader ? window.kaeriReader.state() : {why: 'no kaeriReader'}; m.type = 'jsstate'; m.why = (m.why || '') + ' href=' + location.protocol + ' sw=' + document.scrollingElement.scrollWidth + ' cw=' + document.documentElement.clientWidth + ' sx=' + window.scrollX + ' ov=' + getComputedStyle(document.documentElement).overflow + '/' + getComputedStyle(document.body).overflow;"
+                    }
                 };
                 let script = format!(
                     "(function () {{ var m; try {{ {body} }} catch (e) {{ m = {{type: 'jserr', why: String(e).slice(0, 150)}}; }} try {{ {post}; }} catch (e) {{}} }})()"
@@ -2363,7 +2372,9 @@ async fn run_plan(shell: &Rc<Shell>, plan: &str) {
                 shell,
                 kaeri_model::reading::ReadingCommand::Download {
                     work: kaeri_core::books::WorkId::new(arg(1)),
-                    pick: kaeri_model::reading::DownloadPick::NextUnread { n: num(2, 1) as u32 },
+                    pick: kaeri_model::reading::DownloadPick::NextUnread {
+                        n: num(2, 1) as u32,
+                    },
                 },
             ),
             "dlch" => send(
@@ -2371,11 +2382,16 @@ async fn run_plan(shell: &Rc<Shell>, plan: &str) {
                 kaeri_model::reading::ReadingCommand::Download {
                     work: kaeri_core::books::WorkId::new(arg(1)),
                     pick: kaeri_model::reading::DownloadPick::Chapters {
-                        ids: w[2..].iter().map(|c| kaeri_core::books::ChapterId::new(*c)).collect(),
+                        ids: w[2..]
+                            .iter()
+                            .map(|c| kaeri_core::books::ChapterId::new(*c))
+                            .collect(),
                     },
                 },
             ),
-            "addfolder" => crate::reading::came_in::hunt_add_folder(&shell.ctx, &w[1..].join(" ")),
+            "addfolder" => {
+                crate::reading::came_in::hunt_add_folder(&shell.ctx, &w[1..].join(" "))
+            }
             "folder" => tracing::info!(
                 "HUNT do folder: {}",
                 crate::reading::came_in::hunt_folder(arg(1) == "keep")
@@ -2411,7 +2427,10 @@ async fn run_plan(shell: &Rc<Shell>, plan: &str) {
             "netrule" => {
                 if let Ok(path) = std::env::var("KAERI_QA_NET") {
                     let rule = w[1..].join(" ");
-                    let _ = std::fs::write(&path, if rule == "none" { String::new() } else { rule });
+                    let _ = std::fs::write(
+                        &path,
+                        if rule == "none" { String::new() } else { rule },
+                    );
                     tracing::info!("HUNT do netrule {:?}", w[1..].join(" "));
                 }
             }
@@ -2458,7 +2477,9 @@ async fn run_plan(shell: &Rc<Shell>, plan: &str) {
             }
             "chapters" => shell.reader.hunt_chapters(),
             "chapterstab" => shell.reader.hunt_chapters_tab(),
-            "tryagain" => tracing::info!("HUNT do try again: {}", shell.reader.hunt_try_again()),
+            "tryagain" => {
+                tracing::info!("HUNT do try again: {}", shell.reader.hunt_try_again())
+            }
             "files" => files_line(),
             "size" => {
                 let (a, b) = (num(1, 1280) as i32, num(2, 800) as i32);
@@ -2519,11 +2540,16 @@ async fn run_plan(shell: &Rc<Shell>, plan: &str) {
                 };
                 send(
                     shell,
-                    kaeri_model::reading::ReadingCommand::SetFeedShare { shelf, on: arg(2) != "off" },
+                    kaeri_model::reading::ReadingCommand::SetFeedShare {
+                        shelf,
+                        on: arg(2) != "off",
+                    },
                 );
             }
             // r8: point an open GTK folder chooser at a folder (in-process, no typing).
-            "choosefolder" => tracing::info!("HUNT do choosefolder: {}", choose_folder(&w[1..].join(" "))),
+            "choosefolder" => {
+                tracing::info!("HUNT do choosefolder: {}", choose_folder(&w[1..].join(" ")))
+            }
             // r8: the window's widgets: all, mapped, and mapped of a few kinds.
             "widgets" => widget_count(shell, arg(1)),
             "focus" => tracing::info!("HUNT focus {}: {}", arg(1), focus_line(shell)),
@@ -2564,7 +2590,11 @@ async fn run_plan(shell: &Rc<Shell>, plan: &str) {
                 } else {
                     match arg(0) {
                         "readlast" => {
-                            let i = if arg(1) == "end" { ids.len() - 1 } else { num(1, 0) as usize };
+                            let i = if arg(1) == "end" {
+                                ids.len() - 1
+                            } else {
+                                num(1, 0) as usize
+                            };
                             let ch = ids.get(i.min(ids.len() - 1)).cloned().unwrap_or_default();
                             tracing::info!("HUNT do readlast {work} {ch}");
                             read(shell, &work, &ch);
@@ -2598,7 +2628,9 @@ async fn run_plan(shell: &Rc<Shell>, plan: &str) {
                     if !w.is_mapped() {
                         return;
                     }
-                    if (!row && w.is::<gtk::FlowBoxChild>()) || (row && w.is::<gtk::ListBoxRow>()) {
+                    if (!row && w.is::<gtk::FlowBoxChild>())
+                        || (row && w.is::<gtk::ListBoxRow>())
+                    {
                         out.push(w.clone());
                     }
                     let mut c = w.first_child();
@@ -2637,7 +2669,6 @@ async fn run_plan(shell: &Rc<Shell>, plan: &str) {
     }
 }
 
-
 // ---------------------------------------------------------------------------------------------
 // Round 8 additions.
 
@@ -2671,7 +2702,12 @@ fn keylog(shell: &Rc<Shell>) {
         gtk::micro_version()
     );
     window.connect_fullscreened_notify(|w| {
-        tracing::info!("HUNT fullscreen-> {} size={}x{}", w.is_fullscreen(), w.width(), w.height())
+        tracing::info!(
+            "HUNT fullscreen-> {} size={}x{}",
+            w.is_fullscreen(),
+            w.width(),
+            w.height()
+        )
     });
     tracing::info!("HUNT keylog on");
 }
@@ -2791,7 +2827,11 @@ pub fn biglib(store: &kaeri_store::Store, art: &str, now: i64) {
             tracing::warn!("HUNT biglib status {i}: {e}");
         }
         if i % 7 == 0 {
-            let mut ev = kaeri_store::reading::ReadEvent::new(&work, format!("{}", 1 + i % 40), now - i64::from(i) * 60);
+            let mut ev = kaeri_store::reading::ReadEvent::new(
+                &work,
+                format!("{}", 1 + i % 40),
+                now - i64::from(i) * 60,
+            );
             ev.page = Some(3);
             ev.of_pages = Some(20);
             if let Err(e) = store.record_read(&ev, Vec::new()) {

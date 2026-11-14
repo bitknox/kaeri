@@ -1032,6 +1032,16 @@ impl Reader {
     /// Drop everything the last open held: its pages and textures, the strip, the trail, the
     /// end page's preview and the novel's web view, which takes its WebKit processes with it.
     fn reset(&self) {
+        #[cfg(feature = "fixtures")]
+        {
+            let snap = std::rc::Rc::new(hunt_snapshot(self.widget.upcast_ref()));
+            tracing::info!("HUNT ctx snapshot at reset: {} accessibles", snap.len());
+            let s2 = snap.clone();
+            glib::idle_add_local_once(move || hunt_check("idle", &s2));
+            glib::timeout_add_local_once(std::time::Duration::from_millis(900), move || {
+                hunt_check("900ms", &snap)
+            });
+        }
         self.forget_credits();
         let old = self.state.replace(State::default());
         // The demo's credit capsule leaves with the work, or the next open adds a second one.
@@ -1062,9 +1072,9 @@ impl Reader {
                     s.as_ref().and_then(|w| w.upgrade()).map(|o| {
                         // SAFETY: a live object's count, read only.
                         let n = unsafe { (*o.as_ptr()).ref_count as i64 - 1 };
-                        let parent = o
-                            .downcast_ref::<gtk::Accessible>()
-                            .map(|a| a.accessible_parent().map(|p| p.type_().name().to_owned()));
+                        let parent = o.downcast_ref::<gtk::Accessible>().map(|a| {
+                            a.accessible_parent().map(|p| p.type_().name().to_owned())
+                        });
                         format!("alive refs={n} parent={parent:?}")
                     })
                 };
@@ -1075,7 +1085,11 @@ impl Reader {
                 let refs = |w: &gtk::glib::WeakRef<gtk::Widget>| {
                     w.upgrade().map(|v| {
                         // SAFETY: a live object's count, read only.
-                        unsafe { (*v.as_ptr().cast::<gtk::glib::gobject_ffi::GObject>()).ref_count as i64 - 1 }
+                        unsafe {
+                            (*v.as_ptr().cast::<gtk::glib::gobject_ffi::GObject>()).ref_count
+                                as i64
+                                - 1
+                        }
                     })
                 };
                 tracing::info!(
@@ -1083,13 +1097,16 @@ impl Reader {
                     refs(&weak),
                     socket_now(&socket)
                 );
-                gtk::glib::timeout_add_local_once(std::time::Duration::from_secs(2), move || {
-                    tracing::info!(
-                        "HUNT novel 2 s after: view refs={:?} socket={:?}",
-                        refs(&weak),
-                        socket_now(&socket)
-                    );
-                });
+                gtk::glib::timeout_add_local_once(
+                    std::time::Duration::from_secs(2),
+                    move || {
+                        tracing::info!(
+                            "HUNT novel 2 s after: view refs={:?} socket={:?}",
+                            refs(&weak),
+                            socket_now(&socket)
+                        );
+                    },
+                );
             }
         }
         self.end.forget();
@@ -4442,6 +4459,62 @@ fn go_on_return(field: &gtk::SpinButton, go: impl Fn(usize) + 'static) {
             field.connect_activate(go);
         }
     }
+}
+
+#[cfg(feature = "fixtures")]
+type HuntSnap = Vec<(String, glib::WeakRef<glib::Object>, glib::WeakRef<gtk::ATContext>)>;
+
+/// QA: every accessible under `root` with its AT context, held weakly.
+#[cfg(feature = "fixtures")]
+fn hunt_snapshot(root: &gtk::Accessible) -> HuntSnap {
+    use gtk::glib::translate::{FromGlibPtrFull, ToGlibPtr};
+    fn walk(a: &gtk::Accessible, out: &mut HuntSnap, depth: usize) {
+        if depth > 80 {
+            return;
+        }
+        // SAFETY: a live accessible; the call returns a full ref or NULL.
+        let ctx = unsafe {
+            let p = gtk::ffi::gtk_accessible_get_at_context(a.to_glib_none().0);
+            (!p.is_null()).then(|| gtk::ATContext::from_glib_full(p))
+        };
+        if let Some(ctx) = ctx {
+            out.push((
+                a.type_().name().to_owned(),
+                a.upcast_ref::<glib::Object>().downgrade(),
+                ctx.downgrade(),
+            ));
+        }
+        let mut child = a.first_accessible_child();
+        while let Some(c) = child {
+            walk(&c, out, depth + 1);
+            child = c.next_accessible_sibling();
+        }
+    }
+    let mut out = Vec::new();
+    walk(root, &mut out, 0);
+    out
+}
+
+/// QA: logs each AT context that outlived its accessible, and how many of each kind went.
+#[cfg(feature = "fixtures")]
+fn hunt_check(when: &str, snap: &HuntSnap) {
+    let mut gone = std::collections::BTreeMap::<String, u32>::new();
+    for (name, acc, ctx) in snap {
+        match (acc.upgrade(), ctx.upgrade()) {
+            (None, Some(c)) => {
+                // SAFETY: a live object's count, read only.
+                let n = unsafe { (*c.as_ptr().cast::<glib::gobject_ffi::GObject>()).ref_count };
+                tracing::info!("HUNT ctx {when}: context outlived its {name}, refs={n}");
+            }
+            (None, None) => *gone.entry(name.clone()).or_default() += 1,
+            (Some(a), None) => tracing::info!(
+                "HUNT ctx {when}: {name} alive, its context gone, now {:?}",
+                a.type_().name()
+            ),
+            (Some(_), Some(_)) => {}
+        }
+    }
+    tracing::info!("HUNT ctx {when}: gone cleanly {gone:?}");
 }
 
 /// The reader stack's page for novels, made on the first open and kept from then on. GTK
