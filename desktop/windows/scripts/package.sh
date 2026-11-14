@@ -73,6 +73,8 @@ case "$arch:$machine" in
   *) fail "kaeri_ffi.dll is for machine 0x$machine, not $arch" ;;
 esac
 cmp -s "$app/libmpv-2.dll" "$windows/.libmpv/$arch/libmpv-2.dll" || fail "libmpv-2.dll is not libmpv.ps1's"
+# Nothing needs the Visual C++ runtime: the build machines have it, a clean Windows does not.
+"$windows/scripts/vc-runtime-check.sh" "$app" || fail "the published app needs the Visual C++ runtime"
 
 # --- The notices -----------------------------------------------------------------------------------
 

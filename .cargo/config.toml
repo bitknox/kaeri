@@ -10,3 +10,13 @@
 CC_aarch64_pc_windows_msvc = "clang-cl"
 CXX_aarch64_pc_windows_msvc = "clang-cl"
 CMAKE_GENERATOR_aarch64_pc_windows_msvc = "Ninja"
+
+# Windows builds link the MSVC runtime into each binary (/MT), so the terminal app's kaeri.exe and
+# the Windows app's kaeri_ffi.dll start on a Windows without the Visual C++ Redistributable, which
+# a clean install lacks. The cc and cmake crates build the C and C++ dependencies to match. A
+# RUSTFLAGS in the environment replaces these flags, so builds of what ships set none.
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]
+
+[target.aarch64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]
