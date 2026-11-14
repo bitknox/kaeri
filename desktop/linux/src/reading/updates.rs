@@ -12,7 +12,12 @@ use kaeri_model::{
 };
 
 use super::{Place, day_label, listen, place, send};
-use crate::{say, states::Shape, widgets, window::Ctx};
+use crate::{
+    say,
+    states::Shape,
+    widgets,
+    window::{Ctx, Size},
+};
 
 pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     let empty =
@@ -25,7 +30,11 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
         &t::error_generic(),
         false,
     );
-    let download = gtk::Button::with_label(&t::updates_download_new());
+    let download = gtk::Button::new();
+    ctx.on_size({
+        let download = download.clone();
+        move |size| lay_download(&download, size)
+    });
     download.connect_clicked({
         let hub = Rc::downgrade(&ctx.hub);
         move |_| {
@@ -148,4 +157,10 @@ fn draw(ctx: &Rc<Ctx>, column: &gtk::Box, view: &UpdatesView) {
         column.append(&widgets::haze(&format!("{} \u{b7} {line}", failure.title), "caption")); // i18n-skip
     }
     let _ = say::msg;
+}
+
+/// Download new as the header has room for it at `size`.
+fn lay_download(download: &gtk::Button, size: Size) {
+    let _ = size;
+    download.set_label(&t::updates_download_new());
 }

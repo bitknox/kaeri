@@ -806,13 +806,12 @@ impl Reader {
                 glib::Propagation::Proceed
             }
         });
-        this.go_to_field.connect_activate({
+        go_on_return(&this.go_to_field, {
             let this = Rc::downgrade(&this);
-            move |field| {
+            move |page| {
                 if let Some(this) = this.upgrade() {
-                    field.update();
                     this.go_to.popdown();
-                    this.jump_to_page(field.value().round() as usize);
+                    this.jump_to_page(page);
                     this.widget.grab_focus();
                 }
             }
@@ -4274,6 +4273,14 @@ fn tab_keys(walk: impl Fn(bool) -> bool + 'static) -> gtk::EventControllerKey {
         if walk(back) { glib::Propagation::Stop } else { glib::Propagation::Proceed }
     });
     tabs
+}
+
+/// Go to page's field: Return commits what was typed and `go` gets the page, from 1.
+fn go_on_return(field: &gtk::SpinButton, go: impl Fn(usize) + 'static) {
+    field.connect_activate(move |field| {
+        field.update();
+        go(field.value().round() as usize);
+    });
 }
 
 /// The window's full screen from before the reader first changed it, until the reader closes.

@@ -23,7 +23,10 @@ pub mod server_progress;
 pub mod sources;
 pub mod updates;
 
-use std::{cell::Cell, rc::Rc};
+use std::{
+    cell::{Cell, RefCell},
+    rc::Rc,
+};
 
 use adw::prelude::*;
 use gtk::{gio, glib};
@@ -331,6 +334,9 @@ const GRID_GAP: i32 = 16;
 pub struct WorkGrid {
     pub widget: gtk::Box,
     hub: Rc<Hub>,
+    /// The list on screen, and how many of its cards are built.
+    tiles: RefCell<Vec<WorkTile>>,
+    built: Cell<usize>,
 }
 
 impl WorkGrid {
@@ -342,19 +348,44 @@ impl WorkGrid {
         widget.set_valign(gtk::Align::Start);
         widget.set_accessible_role(gtk::AccessibleRole::List);
         widget.update_property(&[gtk::accessible::Property::Label(&t::poster_grid_name())]);
-        Self { widget, hub: Rc::clone(hub) }
+        Self { widget, hub: Rc::clone(hub), tiles: RefCell::default(), built: Cell::new(0) }
     }
 
     pub fn set(&self, tiles: &[WorkTile]) {
         while let Some(child) = self.widget.first_child() {
             self.widget.remove(&child);
         }
-        for tile in tiles {
+        *self.tiles.borrow_mut() = tiles.to_vec();
+        self.built.set(0);
+        self.build(None);
+    }
+
+    /// Builds the cards the view at `view` wants next, as `cards_to_build` counts them.
+    fn build(&self, view: Option<View>) {
+        let tiles = self.tiles.borrow();
+        let from = self.built.get();
+        let more = cards_to_build(from, tiles.len(), view);
+        for tile in &tiles[from..from + more] {
             let card = work_card(&self.hub, tile, COVER_WIDTH);
             card.set_accessible_role(gtk::AccessibleRole::ListItem);
             self.widget.append(&card);
         }
+        self.built.set(from + more);
     }
+}
+
+/// Where a scrolled view stands: its top, its height and the height of what it holds.
+#[derive(Clone, Copy)]
+struct View {
+    top: f64,
+    height: f64,
+    whole: f64,
+}
+
+/// How many cards a grid builds next, with `built` of `total` built and the view at `view`.
+fn cards_to_build(built: usize, total: usize, view: Option<View>) -> usize {
+    let _ = view;
+    total.saturating_sub(built)
 }
 
 /// A day as the updates and the week say it: Today, Yesterday, or the day's name and date.

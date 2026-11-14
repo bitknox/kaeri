@@ -188,7 +188,7 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     next.set_tooltip_text(Some(&t::calendar_next_week()));
     // Today stays between the arrows, so repeated clicks never move them, and is off on this
     // week, which also says where you are.
-    let today = gtk::Button::with_label(&t::calendar_today());
+    let today = gtk::Button::new();
     today.set_sensitive(false);
     today.add_css_class("calendar-today");
     let steps = gtk::Box::new(gtk::Orientation::Horizontal, 0);
@@ -339,8 +339,9 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     });
     ctx.on_size({
         let weak = Rc::downgrade(&page);
-        move |_| {
+        move |size| {
             if let Some(page) = weak.upgrade() {
+                lay_steps(&page.title, &page.today, size);
                 page.show();
             }
         }
@@ -1332,6 +1333,12 @@ fn week_name(days: &[glib::DateTime], month_first: bool) -> (String, String) {
         format!("{} to {}", first.year(), last.year())
     };
     (title, year)
+}
+
+/// The header's title and Today as the window's width at `size` has room for them.
+fn lay_steps(title: &adw::WindowTitle, today: &gtk::Button, size: Size) {
+    let _ = (title, size);
+    today.set_label(&t::calendar_today());
 }
 
 #[cfg(test)]
