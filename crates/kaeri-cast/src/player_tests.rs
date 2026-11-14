@@ -715,6 +715,117 @@ async fn the_speed_asked_for_before_a_load_is_set_once_it_plays() {
     player.quit().await.unwrap();
 }
 
+/// A cast of a short file to a fake that plays at four times real time, playing.
+async fn playing(
+    receiver: &FakeReceiver,
+) -> (CastPlayer, mpsc::UnboundedReceiver<PlaybackEvent>) {
+    let file = matroska(&Fixture::default());
+    let base = serve(HashMap::from([("/episode.mkv".to_owned(), file)])).await;
+    let (player, mut events) = CastPlayer::connect(setup(
+        receiver,
+        Arc::new(CastMemory::memory()),
+        Arc::new(FakeEncoder::default()),
+    ))
+    .await
+    .unwrap();
+    player.load(torrent(format!("{base}/episode.mkv")));
+    next(&mut events, |e| *e == PlaybackEvent::Loaded).await;
+    (player, events)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_rate_of_0_while_the_tv_buffers_is_no_speed() {
+    let receiver = FakeReceiver::start(FakeOptions { speed: 4.0, ..FakeOptions::default() })
+        .await
+        .unwrap();
+    let (player, mut events) = playing(&receiver).await;
+    next(&mut events, |e| *e == PlaybackEvent::Speed(1.0)).await;
+    let no_speed = |e: &PlaybackEvent| {
+        assert!(
+            !matches!(e, PlaybackEvent::Speed(_)),
+            "the TV waiting for data was taken for a speed: {e:?}"
+        );
+    };
+    receiver.buffer(true);
+    next(&mut events, |e| {
+        no_speed(e);
+        *e == PlaybackEvent::Buffering(true)
+    })
+    .await;
+    // A step up from here is a step up from normal speed, never from 0.
+    assert_eq!(player.rate(), 1.0);
+    receiver.buffer(false);
+    next(&mut events, |e| {
+        no_speed(e);
+        matches!(e, PlaybackEvent::Progress { position, .. } if *position >= 2.0)
+    })
+    .await;
+    assert_eq!(player.rate(), 1.0);
+    player.quit().await.unwrap();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_speed_of_0_asks_the_tv_for_nothing() {
+    let receiver = FakeReceiver::start(FakeOptions { speed: 4.0, ..FakeOptions::default() })
+        .await
+        .unwrap();
+    let file = matroska(&Fixture::default());
+    let base = serve(HashMap::from([("/episode.mkv".to_owned(), file)])).await;
+    let (player, mut events) = CastPlayer::connect(setup(
+        &receiver,
+        Arc::new(CastMemory::memory()),
+        Arc::new(FakeEncoder::default()),
+    ))
+    .await
+    .unwrap();
+    // A session carrying a speed of 0 into the cast.
+    player.set_rate(f64::NAN).await.unwrap();
+    player.set_rate(0.0).await.unwrap();
+    player.load(torrent(format!("{base}/episode.mkv")));
+    next(&mut events, |e| *e == PlaybackEvent::Loaded).await;
+    next(
+        &mut events,
+        |e| matches!(e, PlaybackEvent::Progress { position, .. } if *position >= 2.0),
+    )
+    .await;
+    assert!(
+        receiver.heard("SET_PLAYBACK_RATE").is_empty(),
+        "{:?}",
+        receiver.heard("SET_PLAYBACK_RATE")
+    );
+    assert_eq!(player.rate(), 1.0);
+    player.quit().await.unwrap();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_late_subtitle_keeps_the_speed_asked_for() {
+    let receiver = FakeReceiver::start(FakeOptions { speed: 4.0, ..FakeOptions::default() })
+        .await
+        .unwrap();
+    let (player, mut events) = playing(&receiver).await;
+    player.set_rate(1.5).await.unwrap();
+    next(&mut events, |e| *e == PlaybackEvent::Speed(1.5)).await;
+
+    // The subtitle loads the file again where it is, and a load starts at normal speed.
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("late.srt");
+    std::fs::write(&path, "1\n00:00:01,000 --> 00:00:02,000\nHello\n").unwrap();
+    player.add_subtitle(&path, None, Some("en".into())).await.unwrap();
+    assert_eq!(receiver.heard("LOAD").len(), 2);
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(15);
+    while receiver.heard("SET_PLAYBACK_RATE").len() < 2 {
+        assert!(
+            tokio::time::Instant::now() < deadline,
+            "the speed asked for was not set again after the reload"
+        );
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
+    assert_eq!(receiver.heard("SET_PLAYBACK_RATE")[1]["playbackRate"], 1.5);
+    next(&mut events, |e| *e == PlaybackEvent::Speed(1.5)).await;
+    assert_eq!(player.rate(), 1.5);
+    player.quit().await.unwrap();
+}
+
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn a_tv_that_goes_silent_ends_the_cast_and_never_holds_a_control_up() {
     let file = matroska(&Fixture { audio: Some(FixtureAudio::aac()), ..Fixture::default() });

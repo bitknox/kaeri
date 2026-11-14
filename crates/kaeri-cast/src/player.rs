@@ -671,8 +671,13 @@ impl CastPlayer {
                 let inner = Arc::downgrade(&self.inner);
                 answered(async move {
                     media.load(&load).await?;
-                    if let Some(inner) = inner.upgrade() {
-                        *lock(&inner.media) = Some(media);
+                    // A load starts at normal speed: the one asked for is set again.
+                    let rate = inner.upgrade().and_then(|inner| {
+                        *lock(&inner.media) = Some(media.clone());
+                        lock(&inner.state).asked_rate.filter(|r| (r - 1.0).abs() > f64::EPSILON)
+                    });
+                    if let Some(rate) = rate {
+                        media.set_rate(rate).await?;
                     }
                     Ok(())
                 })
@@ -712,6 +717,11 @@ impl CastPlayer {
     }
 
     pub async fn set_rate(&self, rate: f64) -> Result<(), CastError> {
+        // 0 or less is no speed to play at, and clamped it would play at half speed.
+        if !is_rate(rate) {
+            tracing::debug!(rate, "no speed to cast at");
+            return Ok(());
+        }
         let rate = rate.clamp(0.5, 2.0);
         lock(&self.inner.state).asked_rate = Some(rate);
         // Before a load there is nothing to set: the load applies it once it plays.
@@ -1399,6 +1409,11 @@ async fn try_plan(inner: &Arc<Inner>, relayed: bool, cast: Load) -> Result<Tried
     }
 }
 
+/// Whether `rate` is a speed to play at: a receiver's rate of 0 while it buffers is not.
+fn is_rate(rate: f64) -> bool {
+    rate.is_finite() && rate > 0.0
+}
+
 /// Apply a status the session may hear: `Loaded` for a new media session, then what changed.
 fn apply(inner: &Inner, state: &mut State, status: &MediaStatus) {
     let new_session = state.loaded != Some(status.media_session_id);
@@ -1448,7 +1463,9 @@ fn apply(inner: &Inner, state: &mut State, status: &MediaStatus) {
         state.buffering = buffering;
         inner.say_locked(state, PlaybackEvent::Buffering(buffering));
     }
-    if state.rate != Some(status.rate) {
+    // A receiver whose player waits for data reports a rate of 0 (Shaka holds the video
+    // element there while it buffers): the speed it plays at is unchanged.
+    if is_rate(status.rate) && state.rate != Some(status.rate) {
         state.rate = Some(status.rate);
         inner.say_locked(state, PlaybackEvent::Speed(status.rate));
     }
