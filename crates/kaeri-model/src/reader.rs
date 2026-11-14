@@ -311,6 +311,8 @@ pub enum ReaderSettingKey {
     TapFlipEnds,
     /// E-ink only: swipes turn pages. On by default.
     SwipeTurns,
+    /// The terminal only: how many columns a novel's lines run to. 66 at first.
+    TextWidth,
 }
 
 /// Where a setting's value is kept.
@@ -380,6 +382,7 @@ impl ReaderSettingKey {
         Self::PaperDim,
         Self::PaperVolume,
         Self::SkipCreditPages,
+        Self::TextWidth,
     ];
 
     /// The setting's name in the store, the config and the `read_series` register.
@@ -426,6 +429,7 @@ impl ReaderSettingKey {
             Self::TapFlipSides => "tap_flip_sides",
             Self::TapFlipEnds => "tap_flip_ends",
             Self::SwipeTurns => "swipe_turns",
+            Self::TextWidth => "text_width",
         }
     }
 
@@ -451,9 +455,12 @@ impl ReaderSettingKey {
             | Self::StripWidth
             | Self::StripGap
             | Self::SkipCreditPages => matches!(medium, Medium::Manga),
-            Self::Font | Self::TextSize | Self::Margins | Self::LineSpacing | Self::Justify => {
-                matches!(medium, Medium::Novel)
-            }
+            Self::Font
+            | Self::TextSize
+            | Self::Margins
+            | Self::LineSpacing
+            | Self::Justify
+            | Self::TextWidth => matches!(medium, Medium::Novel),
             // E-ink, colour e-ink and phone settings serve both media; the app shows them only
             // where the screen has them.
             _ => !matches!(medium, Medium::Anime),
@@ -631,6 +638,57 @@ pub struct ReaderSurface {
     /// The look is dark: on e-ink a text refresh the person turned on comes sooner.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub dark: bool,
+    /// The page formats the front end decodes itself. A page in any other format comes as raw
+    /// pixels ([`PageEncoding::Raw`]) rather than as its original file. `None`, the default, is
+    /// a platform that decodes every format the engine hands over, as the apps do.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub decodes: Option<PageFormats>,
+    /// Pages are made this many times larger than the surface, for a zoom that stays sharp. The
+    /// layout is the surface's own, so the leaves keep their places. 0 or 1, the default, is the
+    /// surface's size.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub zoom: f32,
+    /// The front end has no web view: a novel's [`NovelOpenView`] carries the chapter as text
+    /// blocks ([`NovelOpenView::text`]) for it to lay out itself, as the terminal does.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub text: bool,
+}
+
+impl ReaderSurface {
+    /// How many times larger than the surface pages are made: at least 1.
+    pub fn zoom_factor(&self) -> f32 {
+        if self.zoom.is_finite() && self.zoom > 1.0 { self.zoom } else { 1.0 }
+    }
+}
+
+/// Which page formats a front end decodes, by the formats the engine hands over as originals.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct PageFormats {
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub jpeg: bool,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub png: bool,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub webp: bool,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub gif: bool,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub avif: bool,
+}
+
+impl PageFormats {
+    /// Whether a file of this MIME type is one the front end decodes.
+    pub fn decodes_mime(&self, mime: &str) -> bool {
+        match mime {
+            "image/jpeg" => self.jpeg,
+            "image/png" => self.png,
+            "image/webp" => self.webp,
+            "image/gif" => self.gif,
+            "image/avif" => self.avif,
+            _ => false,
+        }
+    }
 }
 
 /// What a session opened on.
@@ -713,6 +771,128 @@ pub struct NovelOpenView {
     /// The person's reading pace, learnt from their page turns: see [`novel_minutes_left`].
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub words_per_minute: u32,
+    /// For a surface with no web view ([`ReaderSurface::text`]): the book's text, one entry per
+    /// spine document in the reading flow, in spine order. Empty for a web view, and for a fixed
+    /// layout book, which has no text to reflow.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub text: Vec<NovelTextDoc>,
+}
+
+/// One spine document of a novel as text blocks, for a front end that lays text out itself.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct NovelTextDoc {
+    /// Its index in the spine, as [`NovelPos::spine`] counts.
+    pub spine: u32,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub blocks: Vec<TextBlock>,
+}
+
+/// A block of a novel's text: a heading, a paragraph, a scene break or a picture's line.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct TextBlock {
+    pub kind: TextBlockKind,
+    /// Where the block starts, as the web view's paginator names places: the block element's
+    /// path and, for text with no element of its own, the offset it starts at. A place inside
+    /// the block is this path with `at.offset` plus the characters before it.
+    pub at: NovelPos,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub runs: Vec<TextRun>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum TextBlockKind {
+    Paragraph,
+    /// A heading, 1 the highest.
+    Heading {
+        level: u8,
+    },
+    Quote,
+    ListItem,
+    /// Text whose spaces and lines are kept as they are.
+    Preformatted,
+    /// A break between scenes: a rule, or a line of only ornaments.
+    SceneBreak,
+    /// A picture, with its description when the book gives one.
+    Picture {
+        alt: Option<String>,
+    },
+}
+
+/// A run of a block's text in one style. Every character of the block's text is in a run,
+/// spaces and line breaks as the book has them, so offsets count as the paginator counts them.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct TextRun {
+    pub text: String,
+    /// Where the run starts in the block's text, in UTF-16 units as the paginator counts:
+    /// `block.at.offset + offset` is its place under `block.at.path`.
+    pub offset: u32,
+    /// The path of the element the text is in, from `<body>`: a place another device kept
+    /// inside an `<em>` names that element.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub path: Vec<u32>,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub emphasis: bool,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub strong: bool,
+    /// A ruby reading over the text before it.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub ruby: bool,
+}
+
+/// Where a place falls in a novel's text blocks: the document, the block and the offset in the
+/// block's text, in UTF-16 units. A place before every block is the first one; a place past a
+/// document's text is its last block's end. `None` when no document is that place's spine.
+pub fn novel_text_place(docs: &[NovelTextDoc], pos: &NovelPos) -> Option<(usize, usize, u32)> {
+    let d = docs.iter().position(|doc| doc.spine == pos.spine)?;
+    let blocks = &docs[d].blocks;
+    if blocks.is_empty() {
+        return Some((d, 0, 0));
+    }
+    // A block whose path is the place's, or holds it.
+    let holds = |b: &TextBlock| pos.path.starts_with(&b.at.path) && !b.at.path.is_empty();
+    let mut found = None;
+    for (i, block) in blocks.iter().enumerate() {
+        if block.at.path == pos.path {
+            // Text with no element of its own shares its parent's path: the last block that
+            // starts at or before the offset.
+            if block.at.offset <= pos.offset || found.is_none() {
+                found = Some(i);
+            }
+        } else if found.is_none() && holds(block) {
+            found = Some(i);
+        }
+    }
+    if let Some(i) = found {
+        let block = &blocks[i];
+        let offset = if block.at.path == pos.path {
+            pos.offset.saturating_sub(block.at.offset)
+        } else {
+            // Inside an element of the block: from where that element's text starts.
+            let start = block
+                .runs
+                .iter()
+                .find(|r| r.path.starts_with(&pos.path))
+                .map_or(0, |r| r.offset);
+            start + pos.offset
+        };
+        return Some((d, i, offset.min(block_len(block))));
+    }
+    // A place in an element that holds blocks (a section): its first block from there on.
+    let first =
+        blocks.iter().position(|b| b.at.path.starts_with(&pos.path) || b.at.path > pos.path);
+    Some(match first {
+        Some(i) => (d, i, 0),
+        None => (d, blocks.len() - 1, block_len(&blocks[blocks.len() - 1])),
+    })
+}
+
+/// The length of a block's text, in UTF-16 units.
+pub fn block_len(block: &TextBlock) -> u32 {
+    block.runs.last().map_or(0, |r| r.offset + r.text.encode_utf16().count() as u32)
 }
 
 /// One document of a novel's spine.
