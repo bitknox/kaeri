@@ -3,12 +3,14 @@
 //! The engine makes each page as a file: the original, in a format the terminal said it
 //! decodes, or raw pixels for anything else. Reading and decoding one takes long enough to
 //! stall a turn, so the loop hands the file to the blocking pool, and the picture comes back on
-//! a channel of its own, cropped and turned as the leaf says, for the app to draw.
+//! a channel of its own, cropped and turned as the leaf says, and shrunk to the most the screen
+//! draws it at, for the app to draw. An original is often several times the size of the screen;
+//! kept whole, every draw would scale it down again and the store would hold it all.
 //!
 //! A page that does not decode comes back as `None`; the app asks the engine for it once more,
 //! then says the page could not load.
 
-use image::{DynamicImage, GrayImage, ImageReader, RgbaImage};
+use image::{DynamicImage, GrayImage, ImageReader, RgbaImage, imageops::FilterType};
 use kaeri_model::reader::{PageEncoding, PageFile, PageHalf, PixelFormat};
 use kaeri_tui::{App, PageJob};
 use tokio::sync::mpsc;
@@ -84,7 +86,8 @@ fn raw(
 }
 
 /// The part of the picture the leaf shows: its crop, or the half of a whole spread when no
-/// crop says where, then turned a quarter clockwise for a spread on its side.
+/// crop says where, shrunk to fit the job's box, then turned a quarter clockwise for a spread
+/// on its side.
 fn shape(image: DynamicImage, job: &PageJob) -> DynamicImage {
     let (w, h) = (image.width(), image.height());
     let image = match (job.file.crop, job.half) {
@@ -106,7 +109,23 @@ fn shape(image: DynamicImage, job: &PageJob) -> DynamicImage {
         }
         _ => image,
     };
+    // The box is for the picture as it is drawn: across and down swap for one to be turned.
+    let (across, down) = if job.rotate { (job.within.1, job.within.0) } else { job.within };
+    let image = shrink(image, across, down);
     if job.rotate { image.rotate90() } else { image }
+}
+
+/// The picture at the most that fits `across` by `down` pixels, its shape kept: Lanczos keeps
+/// lettering and screentone clean as a page several times the screen's size comes down. A
+/// picture that fits already is left as it is.
+fn shrink(image: DynamicImage, across: u32, down: u32) -> DynamicImage {
+    let (w, h) = (image.width(), image.height());
+    if w <= across && h <= down {
+        return image;
+    }
+    let scale = (f64::from(across) / f64::from(w)).min(f64::from(down) / f64::from(h));
+    let size = |px: u32| ((f64::from(px) * scale).round() as u32).max(1);
+    image.resize_exact(size(w), size(h), FilterType::Lanczos3)
 }
 
 #[cfg(test)]
@@ -129,7 +148,7 @@ mod tests {
     }
 
     fn job(file: PageFile, rotate: bool, half: Option<PageHalf>) -> PageJob {
-        PageJob { key: "reader/1/c/0".into(), file, rotate, half }
+        PageJob { key: "reader/1/c/0".into(), file, rotate, half, within: (u32::MAX, u32::MAX) }
     }
 
     /// Four pixels across and two down, each with its own grey: 0, 10, 20, ... by position.
@@ -187,6 +206,29 @@ mod tests {
         assert_eq!(cropped.to_luma8().get_pixel(0, 0).0, [50]);
         page.path = "/nonexistent/kaeri/page.png".into();
         assert!(now(job(page, false, None)).image.is_none());
+    }
+
+    #[test]
+    fn a_page_larger_than_its_box_is_shrunk_to_fit_and_a_smaller_one_is_kept() {
+        let page = file(PageEncoding::Original { mime: "image/png".into() }, 400, 600);
+        let original = DynamicImage::ImageLuma8(GrayImage::new(400, 600));
+        let mut fitted = job(page, false, None);
+        fitted.within = (200, 200);
+        assert_eq!(shape(original.clone(), &fitted).dimensions(), (133, 200));
+        // At fit width or in a strip only the width bounds it.
+        fitted.within = (100, u32::MAX);
+        assert_eq!(shape(original.clone(), &fitted).dimensions(), (100, 150));
+        fitted.within = (1000, 1000);
+        assert_eq!(shape(original, &fitted).dimensions(), (400, 600), "never grown");
+    }
+
+    #[test]
+    fn a_page_turned_on_its_side_fits_its_box_once_turned() {
+        let page = file(PageEncoding::Original { mime: "image/png".into() }, 600, 400);
+        let mut turned = job(page, true, None);
+        turned.within = (100, 300);
+        let image = shape(DynamicImage::ImageLuma8(GrayImage::new(600, 400)), &turned);
+        assert_eq!(image.dimensions(), (100, 150));
     }
 
     #[test]

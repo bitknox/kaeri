@@ -60,8 +60,21 @@ const NOTICE_MS: u32 = 5_000;
 /// The width of a page before its picture is known, over its height.
 const PAGE_RATIO: f32 = 2.0 / 3.0;
 
-/// A decode handed out: the part, and the file's path and crop it was made from.
-type Decoding = (PartKey, String, Option<PixelRect>);
+/// A decode handed out: the part, the file's path and crop it was made from, and the box in
+/// pixels the picture was shrunk to fit.
+type Decoding = (PartKey, String, Option<PixelRect>, (u32, u32));
+
+/// No bound on a page's size, across or down.
+pub const UNBOUNDED: (u32, u32) = (u32::MAX, u32::MAX);
+
+/// Whether a picture `size` big, shrunk to fit `had`, comes out sharper decoded again to fit
+/// `now`: it was held back by its box, and its shape fits the new box more than a pixel wider.
+fn sharper(size: (u32, u32), had: (u32, u32), now: (u32, u32)) -> bool {
+    let held = size.0.saturating_add(1) >= had.0 || size.1.saturating_add(1) >= had.1;
+    let shape = f64::from(size.0) / f64::from(size.1.max(1));
+    let fits = f64::from(now.0).min(f64::from(now.1) * shape);
+    held && fits > f64::from(size.0) + 1.0
+}
 
 /// One part of a leaf, as its file is kept: a page, or one half of a split spread.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -79,6 +92,9 @@ pub struct PageJob {
     pub rotate: bool,
     /// Cut to this half when the file holds the whole spread and no crop says where.
     pub half: Option<PageHalf>,
+    /// The most pixels across and down the picture is drawn at, once cropped and turned: it is
+    /// shrunk to fit, never grown.
+    pub within: (u32, u32),
 }
 
 /// A notice on the status rule: the engine's, or the terminal's own.
@@ -134,9 +150,11 @@ pub struct Reader {
     files: HashMap<PartKey, PageFile>,
     /// Decoded pictures in the image store, with their size once cropped and turned.
     pub pictures: HashMap<PartKey, (u32, u32)>,
+    /// The box each picture was shrunk to fit, to decode it again sharper when the box grows.
+    within: HashMap<PartKey, (u32, u32)>,
     /// Keys handed out for decoding, with the part and the file each is for; `None` is the
     /// next preview.
-    decoding: HashMap<String, Option<Decoding>>,
+    pub(super) decoding: HashMap<String, Option<Decoding>>,
     asked_pages: HashSet<u32>,
     /// Files that failed to decode and were asked for once more.
     asked_again: HashSet<String>,
@@ -192,6 +210,7 @@ impl Reader {
             shown_at: now,
             files: HashMap::new(),
             pictures: HashMap::new(),
+            within: HashMap::new(),
             decoding: HashMap::new(),
             asked_pages: HashSet::new(),
             asked_again: HashSet::new(),
@@ -509,6 +528,28 @@ impl App {
             .unwrap_or_default()
     }
 
+    /// The most pixels across and down a page is drawn at in the window the last frame was
+    /// drawn in: the stage, times the zoom when zoomed in; at fit width the stage's width and a
+    /// strip's column, however long the page. A page is shrunk to fit before it is kept.
+    pub(super) fn page_within(&self, reader: &Reader) -> (u32, u32) {
+        let Some((w, h)) = self.window else { return UNBOUNDED };
+        let surface = self.surface_in(reader, (w, h));
+        if reader.strips() {
+            let per_column = surface.width_px / u32::from(w.max(1));
+            let cols = crate::app::strip_cols(reader, w);
+            return (u32::from(cols) * per_column, u32::MAX);
+        }
+        if let Some(zoom) = reader.zoom {
+            let level = zoom.level.max(1.0);
+            let grown = |px: u32| (px as f32 * level).ceil() as u32;
+            return (grown(surface.width_px), grown(surface.height_px));
+        }
+        if reader.fits_width() {
+            return (surface.width_px, u32::MAX);
+        }
+        (surface.width_px, surface.height_px)
+    }
+
     /// The surface for the window the last frame was drawn in, `None` while it is too small.
     fn surface_for(&self, reader: &Reader) -> Option<ReaderSurface> {
         let (w, h) = self.window?;
@@ -564,6 +605,8 @@ impl App {
     /// Send the surface again when it changed: a resize, the chrome hidden or shown, one page
     /// or two. Nothing goes while the window is too small; the place is kept for when it grows.
     pub(super) fn send_surface(&mut self) {
+        // A larger box, at fit width or zoomed in, wants its pages decoded sharper.
+        self.decode_in_view();
         let Some(reader) = self.reader_here() else { return };
         let Some(surface) = self.surface_for(reader) else { return };
         if reader.surface.as_ref() == Some(&surface) {
@@ -591,6 +634,8 @@ impl App {
                 return;
             }
         }
+        // The box a page is drawn in, for a next chapter's first page.
+        let within = self.reader_here().map_or(UNBOUNDED, |r| self.page_within(r));
         let images = &self.images;
         let Some(reader) = self.reader.as_mut() else { return };
         let mine = |session: u64| session != 0 && session == reader.session;
@@ -614,6 +659,7 @@ impl App {
                     reader.leaves.clear();
                     reader.files.clear();
                     reader.pictures.clear();
+                    reader.within.clear();
                     if !flowed {
                         reader.decoding.clear();
                     }
@@ -719,7 +765,7 @@ impl App {
                 let key = reader.preview_key(&chapter);
                 reader.decoding.insert(key.clone(), None);
                 reader.end.preview = None;
-                self.page_jobs.push(PageJob { key, file, rotate: false, half: None });
+                self.page_jobs.push(PageJob { key, file, rotate: false, half: None, within });
             }
             ReaderEvent::Notice(notice) if reader.session != 0 || reader.opening.is_some() => {
                 // The blocks notice gives way, and comes back once this one has gone.
@@ -926,6 +972,7 @@ impl App {
         if !self.images.engine().is_enabled() {
             return;
         }
+        let Some(within) = self.reader_here().map(|r| self.page_within(r)) else { return };
         let Some(reader) = self.reader.as_mut() else { return };
         let wanted = reader.wanted(reader.at);
         let parts: Vec<(PartKey, bool)> = wanted
@@ -935,7 +982,8 @@ impl App {
             .map(|p| (PartKey { page: p.page, half: p.half }, p.rotate))
             .collect();
         for (key, rotate) in parts {
-            if reader.pictures.contains_key(&key) {
+            let had = reader.within.get(&key).copied().unwrap_or(UNBOUNDED);
+            if reader.pictures.get(&key).is_some_and(|size| !sharper(*size, had, within)) {
                 continue;
             }
             let Some(file) = reader.files.get(&key).cloned() else { continue };
@@ -946,8 +994,9 @@ impl App {
             }
             reader
                 .decoding
-                .insert(image_key.clone(), Some((key, file.path.clone(), file.crop)));
-            self.page_jobs.push(PageJob { key: image_key, file, rotate, half: key.half });
+                .insert(image_key.clone(), Some((key, file.path.clone(), file.crop, within)));
+            let half = key.half;
+            self.page_jobs.push(PageJob { key: image_key, file, rotate, half, within });
         }
     }
 
@@ -962,7 +1011,7 @@ impl App {
         let Some(reader) = self.reader.as_mut() else { return };
         let Some(part) = reader.decoding.remove(key) else { return };
         // A picture of a chapter the strip ran on from goes on showing in the trail.
-        if let Some((part, _, _)) = part
+        if let Some((part, _, _, _)) = part
             && reader.picture_key(part) != key
         {
             if let Some(image) = image {
@@ -980,7 +1029,7 @@ impl App {
                 }
             }
             (None, None) => {}
-            (Some((part, path, crop)), Some(image)) => {
+            (Some((part, path, crop, within)), Some(image)) => {
                 let size = (image.width(), image.height());
                 self.images.insert_page(key, image);
                 // Decoded from a file since replaced, at another zoom: shown until the new one is.
@@ -990,9 +1039,10 @@ impl App {
                     self.decode_in_view();
                 } else {
                     reader.pictures.insert(part, size);
+                    reader.within.insert(part, within);
                 }
             }
-            (Some((part, _, _)), None) => {
+            (Some((part, _, _, _)), None) => {
                 let path = reader.files.get(&part).map(|f| f.path.clone()).unwrap_or_default();
                 let session = reader.session;
                 let chapter = reader.view.as_ref().map(|v| v.chapter.id.clone());
@@ -1850,6 +1900,50 @@ pub(super) mod tests {
         let reader = a.reader_here().expect("reading");
         assert_eq!(reader.pictures.get(&PartKey { page: 1, half: None }), Some(&(4, 6)));
         assert!(a.images.has(&jobs[0].key));
+    }
+
+    #[test]
+    fn a_page_is_decoded_to_fit_the_stage_and_again_sharper_at_fit_width() {
+        let mut a = reading(ReadDirection::RightToLeft, 120, 34);
+        let file = PageFile {
+            path: "/pages/1.png".into(),
+            encoding: PageEncoding::Original { mime: "image/png".into() },
+            width: 1200,
+            height: 1800,
+            crop: None,
+            colour: true,
+            bytes: 10,
+        };
+        a.apply(Event::Reader(ReaderEvent::PageReady {
+            session: SESSION,
+            chapter: ChapterId("c14".into()),
+            page: 1,
+            half: None,
+            file,
+        }));
+        let jobs = a.take_page_jobs();
+        // Halfblocks: a pixel a column and two a row, on a stage of 30 rows.
+        assert_eq!(jobs.iter().map(|j| j.within).collect::<Vec<_>>(), vec![(120, 60)]);
+        a.page_decoded(&jobs[0].key, Some(image::DynamicImage::new_rgb8(40, 60)));
+        a.send_surface();
+        assert!(a.take_page_jobs().is_empty(), "the picture fits the stage it was made for");
+        a.press(key(KeyCode::Char('f')), 30);
+        let again = a.take_page_jobs();
+        assert_eq!(again.iter().map(|j| j.within).collect::<Vec<_>>(), vec![(120, u32::MAX)]);
+        a.page_decoded(&again[0].key, Some(image::DynamicImage::new_rgb8(120, 180)));
+        a.press(key(KeyCode::Char('f')), 30);
+        assert!(a.take_page_jobs().is_empty(), "a smaller box keeps the sharper picture");
+    }
+
+    #[test]
+    fn a_picture_is_decoded_again_only_when_a_new_box_shows_it_larger() {
+        // Held back by its height, then a box as tall again.
+        assert!(sharper((40, 60), (120, 60), (120, 120)));
+        // Taller only, where its width held it back.
+        assert!(!sharper((120, 40), (120, 60), (120, 600)));
+        // Smaller than its box: the file is no larger than the picture.
+        assert!(!sharper((30, 45), (120, 60), (1000, 1000)));
+        assert!(!sharper((40, 60), (120, 60), (120, 60)));
     }
 
     #[test]
