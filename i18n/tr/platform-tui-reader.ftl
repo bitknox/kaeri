@@ -131,3 +131,6 @@ tui-reader-value-columns = { $columns ->
     [one] { $columns } sütun
    *[other] { $columns } sütun
  }
+tui-reader-marked-read = Bölüm { $chapter } okundu olarak işaretlendi
+tui-reader-marked-unread = Bölüm { $chapter } okunmadı olarak işaretlendi
+tui-reader-downloading = Bölüm { $chapter } indiriliyor

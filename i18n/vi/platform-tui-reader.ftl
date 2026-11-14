@@ -129,3 +129,6 @@ tui-reader-value-tight = Sát
 tui-reader-value-columns = { $columns ->
    *[other] { $columns } cột
  }
+tui-reader-marked-read = Đã đánh dấu chương { $chapter } là đã đọc
+tui-reader-marked-unread = Đã đánh dấu chương { $chapter } là chưa đọc
+tui-reader-downloading = Đang tải chương { $chapter }

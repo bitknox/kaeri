@@ -4917,6 +4917,15 @@ tui-reader-value-columns =
        *[other] { $columns } sütun
     }
 
+# A short notice on the reader's status rule after the key that marks the open chapter read. The chapter is its number, such as 12.
+tui-reader-marked-read = Bölüm { $chapter } okundu olarak işaretlendi
+
+# A short notice on the reader's status rule after the key that marks the open chapter unread. The chapter is its number, such as 12.
+tui-reader-marked-unread = Bölüm { $chapter } okunmadı olarak işaretlendi
+
+# A short notice on the reader's status rule after the key that downloads the open chapter. The download runs in the background. The chapter is its number, such as 12.
+tui-reader-downloading = Bölüm { $chapter } indiriliyor
+
 # Heading of the { -plugin-store } screens when the terminal is too small to draw them.
 stores-needs-larger-terminal = Daha büyük bir terminal gerekiyor
 

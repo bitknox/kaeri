@@ -129,3 +129,6 @@ tui-reader-value-tight = Rapat
 tui-reader-value-columns = { $columns ->
    *[other] { $columns } kolom
  }
+tui-reader-marked-read = Bab { $chapter } ditandai dibaca
+tui-reader-marked-unread = Bab { $chapter } ditandai belum dibaca
+tui-reader-downloading = Mengunduh bab { $chapter }

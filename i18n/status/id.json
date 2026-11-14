@@ -33985,6 +33985,12 @@
     "by": "agent",
     "at": "2026-11-14"
   },
+  "tui-reader-downloading": {
+    "source": "9bfe2b25e663",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
   "tui-reader-end-caught-up-line": {
     "source": "b02ee8d84175",
     "state": "draft",
@@ -34227,6 +34233,18 @@
   },
   "tui-reader-keys-view": {
     "source": "b818d5fb2ed7",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-marked-read": {
+    "source": "326c1122c93f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-marked-unread": {
+    "source": "e3a54d2f6839",
     "state": "draft",
     "by": "agent",
     "at": "2026-11-14"

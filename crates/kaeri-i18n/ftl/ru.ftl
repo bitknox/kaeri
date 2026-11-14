@@ -5041,6 +5041,15 @@ tui-reader-value-columns =
        *[other] { $columns } столбца
     }
 
+# A short notice on the reader's status rule after the key that marks the open chapter read. The chapter is its number, such as 12.
+tui-reader-marked-read = Глава { $chapter } отмечена прочитанной
+
+# A short notice on the reader's status rule after the key that marks the open chapter unread. The chapter is its number, such as 12.
+tui-reader-marked-unread = Глава { $chapter } отмечена непрочитанной
+
+# A short notice on the reader's status rule after the key that downloads the open chapter. The download runs in the background. The chapter is its number, such as 12.
+tui-reader-downloading = Скачивается глава { $chapter }
+
 # Heading of the { -plugin-store } screens when the terminal is too small to draw them.
 stores-needs-larger-terminal = Нужен терминал большего размера
 

@@ -135,3 +135,6 @@ tui-reader-value-columns = { $columns ->
     [many] { $columns } kolumn
    *[other] { $columns } kolumny
  }
+tui-reader-marked-read = Rozdział { $chapter } jako przeczytany
+tui-reader-marked-unread = Rozdział { $chapter } jako nieprzeczytany
+tui-reader-downloading = Pobieranie rozdziału { $chapter }

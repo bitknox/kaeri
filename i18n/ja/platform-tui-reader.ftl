@@ -129,3 +129,6 @@ tui-reader-value-tight = 狭い
 tui-reader-value-columns = { $columns ->
    *[other] { $columns }列
  }
+tui-reader-marked-read = 第{ $chapter }話を既読にしました
+tui-reader-marked-unread = 第{ $chapter }話を未読にしました
+tui-reader-downloading = 第{ $chapter }話をダウンロード中

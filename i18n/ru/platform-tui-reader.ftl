@@ -135,3 +135,6 @@ tui-reader-value-columns = { $columns ->
     [many] { $columns } столбцов
    *[other] { $columns } столбца
  }
+tui-reader-marked-read = Глава { $chapter } отмечена прочитанной
+tui-reader-marked-unread = Глава { $chapter } отмечена непрочитанной
+tui-reader-downloading = Скачивается глава { $chapter }
