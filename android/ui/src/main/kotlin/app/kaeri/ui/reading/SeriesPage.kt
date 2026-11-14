@@ -202,6 +202,8 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
             "tracking" -> sheet = SeriesSheet.Tracking
             "read-again" -> sheet = SeriesSheet.ReadAgain
             "send" -> sheet = SeriesSheet.Send(volumes.downloaded().map { it.id }.ifEmpty { rows.takeLast(3).map { it.id } })
+            // Chapters to fetch, not files on this device, so a send of them waits on a phone network.
+            "send-fetch" -> sheet = SeriesSheet.Send(rows.filterNot { it.onDevice }.take(3).map { it.id })
             "where-stop" -> sheet = SeriesSheet.WhereStop
             "choose" -> startChoosing()
             "status" -> statusOpen = true
