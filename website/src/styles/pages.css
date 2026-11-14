@@ -164,31 +164,36 @@
 	padding: clamp(28px, 4vw, 72px) var(--gutter) var(--space-section);
 }
 
+/* The headline on the left at display size, what Kaeri is and the download on the right, both on
+   the page's left edge; the apps below. */
 .hero-copy {
-	max-width: 760px;
+	max-width: 1120px;
 	margin: 0 auto;
-	text-align: center;
+	display: grid;
+	grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+	gap: 28px 64px;
+	align-items: end;
 }
 
 .k-body .hero h1 {
 	font-size: var(--fs-hero);
-	line-height: 1;
+	line-height: 0.98;
 	letter-spacing: -0.03em;
+	text-wrap: balance;
 }
 
-.hero-copy .k-lede {
-	max-width: 620px;
-	margin-inline: auto;
+.hero-side .k-lede {
+	margin: 0;
+	max-width: 30em;
 }
 
 .hero-actions {
-	margin-top: 30px;
+	margin-top: 28px;
 	display: flex;
-	justify-content: center;
 	align-items: center;
 	gap: 16px 28px;
 	flex-wrap: wrap;
-	font-size: 17px;
+	font-size: var(--fs-body);
 }
 
 .hero-note {
@@ -198,8 +203,9 @@
 }
 
 .devices {
+	position: relative;
 	max-width: 1280px;
-	margin: 64px auto 0;
+	margin: var(--space-head) auto 0;
 }
 
 .devices-stage {
@@ -250,8 +256,12 @@
 }
 
 .devices figcaption {
-	margin-top: 28px;
-	text-align: center;
+	max-width: 1120px;
+	margin: 28px auto 0;
+}
+
+.cap-narrow {
+	display: none;
 }
 
 /* ── Download cards ───────────────────────────────────────────────────── */
@@ -450,25 +460,28 @@
 
 /* ── Phones ───────────────────────────────────────────────────────────── */
 
+@media (max-width: 900px) {
+	.hero-copy {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
 @media (max-width: 700px) {
 
 	.hero-actions {
-		flex-direction: column;
 		margin-top: 24px;
 	}
 
-	.devices {
-		margin-top: 32px;
-	}
-
+	/* The Mac runs off the right edge behind the iPhone; the iPad would be too small to read. */
 	.devices-stage {
 		aspect-ratio: auto;
-		height: 400px;
+		height: 392px;
+		margin-inline: calc(var(--gutter) * -1);
 		overflow: hidden;
 	}
 
 	.dev-mac {
-		left: 20px;
+		left: var(--gutter);
 		width: 560px;
 	}
 
@@ -477,9 +490,10 @@
 	}
 
 	.dev-phone {
-		left: 216px;
-		top: 96px;
-		width: 154px;
+		left: auto;
+		right: var(--gutter);
+		top: 44px;
+		width: 156px;
 		padding: 5px;
 		border-radius: 30px;
 	}
@@ -489,15 +503,15 @@
 	}
 
 	.devices figcaption {
-		text-align: left;
-		margin-top: 8px;
-		position: absolute;
-		left: 16px;
-		width: 180px;
+		margin-top: 12px;
 	}
 
-	.devices {
-		position: relative;
+	.cap-wide {
+		display: none;
+	}
+
+	.cap-narrow {
+		display: inline;
 	}
 
 	.player-bezel {

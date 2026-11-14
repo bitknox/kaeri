@@ -24,15 +24,17 @@ const bands = ['f1', 'f2', 'f3', 'f4'] as const;
 	<section class="hero" aria-labelledby="hero-h">
 		<div class="hero-copy">
 			<h1 id="hero-h">{t('home.hero.title')}</h1>
-			<p class="k-lede">{t('home.hero.sub')}</p>
-			<div class="hero-actions">
-				<a class="k-btn k-btn-primary k-btn-lg" href="#download" data-hero-download>{t('dl.hero.any.label')}</a>
-				<a class="k-arrow" href="#download">
-					{t('home.hero.platforms')}
-					<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-				</a>
+			<div class="hero-side">
+				<p class="k-lede">{t('home.hero.sub')}</p>
+				<div class="hero-actions">
+					<a class="k-btn k-btn-primary k-btn-lg" href="#download" data-hero-download>{t('dl.hero.any.label')}</a>
+					<a class="k-arrow" href="#download">
+						{t('home.hero.platforms')}
+						<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+					</a>
+				</div>
+				<p class="hero-note" data-hero-note>{t('dl.hero.any.note', { version: VERSION })}</p>
 			</div>
-			<p class="hero-note" data-hero-note>{t('dl.hero.any.note', { version: VERSION })}</p>
 		</div>
 
 		<figure class="devices">
@@ -47,7 +49,7 @@ const bands = ['f1', 'f2', 'f3', 'f4'] as const;
 					<Pic name="iphone-title" sizes="(min-width: 1280px) 190px, 154px" alt={t('home.hero.phoneAlt')} />
 				</div>
 			</div>
-			<figcaption>{t('home.hero.caption')}</figcaption>
+			<figcaption><span class="cap-wide">{t('home.hero.caption')}</span><span class="cap-narrow">{t('home.hero.captionNarrow')}</span></figcaption>
 		</figure>
 	</section>
 
