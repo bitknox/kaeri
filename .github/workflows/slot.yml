@@ -1,0 +1,236 @@
+name: Slot
+
+# The GitHub lane of slot, the job runner the maintainer's machines share: a Rust or Android build
+# and test job that would wait too long on those machines runs here instead. Only a push to a
+# slot/ branch starts it. slot pushes one commit on top of the job's commit, which GitHub already
+# has, holding the job in .slot/ (job.sh, job.env, artifacts, in/), and names the kind in the
+# commit message ("Slot-Kind: rust" or "Slot-Kind: android"). This workflow runs the job on that
+# commit's parent and uploads its log and any files it names; slot fetches them and deletes the
+# branch.
+#
+# Everything here is public: the commit, the job and its log. The job gets no secrets and no
+# token beyond the read-only default, and it saves no cache, so it cannot change what main's runs
+# restore. The setup is ci.yml's linux and android jobs', under the same job ids, so the caches
+# main saves for those are the ones restored here.
+on:
+  push:
+    branches: ['slot/**']
+
+# One run per job branch. slot never pushes to a branch twice, so nothing waits on this.
+concurrency:
+  group: slot-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+# As ci.yml sets them: the Rust cache's key hashes these, so main's caches match only with the
+# same values. The job's own step sets CARGO_TERM_COLOR=never, so its log is plain text.
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_PROFILE_DEV_DEBUG: line-tables-only
+  CARGO_INCREMENTAL: "0"
+
+jobs:
+  # A rust job, set up as ci.yml's linux job: the toolchain with the plugins' target, nextest,
+  # and the Rust cache of the workspace and the plugins.
+  linux:
+    if: "contains(github.event.head_commit.message, 'Slot-Kind: rust')"
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - name: Free disk
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      # The job goes to the runner's temporary folder, and the worktree back to the job's own
+      # commit, as on slot's other lanes: HEAD is that commit and git status is clean.
+      - name: The job's commit
+        run: |
+          case "$GITHUB_REF_NAME" in slot/[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9]-[0-9a-z]*) ;; *) echo "not a slot job branch: $GITHUB_REF_NAME"; exit 1 ;; esac
+          mkdir -p "$RUNNER_TEMP/slot"
+          cp -R .slot "$RUNNER_TEMP/slot/job"
+          git checkout -q --detach HEAD^1
+          git log -1 --format='The job runs %H'
+      - run: tools/ci-toolchain.sh wasm32-wasip2
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            .
+            plugins/example-rust
+            plugins/test-hostile
+            plugins/test-torrent-source
+          save-if: false
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest
+      # The same in both jobs. HOME is a fresh folder under homes/<job>.*, as the other lanes'
+      # guard, with the toolchains and caches where setup put them. The log gets the lines slot's
+      # other lanes start with, then everything the job prints. The exit code goes beside it.
+      - name: The job
+        id: job
+        run: |
+          set +e -u
+          s=$RUNNER_TEMP/slot j=$RUNNER_TEMP/slot/job
+          mkdir -p "$s/log" "$s/out" "$s/homes"
+          log=$s/log/job.log job=${GITHUB_REF_NAME#slot/} real=$HOME
+          echo "artifacts=0" >> "$GITHUB_OUTPUT"
+          export CARGO_HOME=${CARGO_HOME:-$real/.cargo} RUSTUP_HOME=${RUSTUP_HOME:-$real/.rustup}
+          export GRADLE_USER_HOME=${GRADLE_USER_HOME:-$real/.gradle} KAERI_ENGINE_CACHE=$real/.cache/kaeri-engine
+          guard=$(mktemp -d "$s/homes/$job.XXXXXX")
+          export XDG_CONFIG_HOME=$guard/.config XDG_DATA_HOME=$guard/.local/share
+          export XDG_CACHE_HOME=$guard/.cache XDG_STATE_HOME=$guard/.local/state
+          export CARGO_TARGET_DIR=$GITHUB_WORKSPACE/target CARGO_TERM_COLOR=never
+          export HOME=$guard KAERI_TOKEN_STORAGE=file KAERI_PLAYER_NATIVE=off SLOT_JOB=$job SLOT_HOST=gh
+          if [ -d "$j/in" ]; then mkdir -p slot-in && cp -p "$j"/in/* slot-in/ && cp -p "$j"/in/.slot-inputs.sha256 slot-in/ 2>/dev/null || true; fi
+          while IFS= read -r line; do
+            case "${line%%=*}" in "" | *[!A-Za-z0-9_]* | [0-9]*) continue ;; esac
+            case "$line" in *=*) export "$line" ;; esac
+          done < "$j/job.env"
+          mins=${SLOT_TIMEOUT_MIN:-105}
+          case "$mins" in off) mins=140 ;; "" | *[!0-9]*) mins=105 ;; esac
+          { echo "slot: job $job, commit $(git rev-parse HEAD), started $(date '+%F %T') on gh"
+            if [ -f slot-in/.slot-inputs.sha256 ]; then sed 's/^/slot: input sha256 /' slot-in/.slot-inputs.sha256; fi
+          } > "$log"
+          timeout -k 30 "${mins}m" bash "$j/job.sh" < /dev/null 2>&1 | tee -a "$log"
+          rc=${PIPESTATUS[0]}
+          if [ "$rc" = 124 ]; then echo "slot: timed out after $mins min; stopping job $job" | tee -a "$log"; rc=125; fi
+          echo "$rc" > "$s/log/rc"
+          n=0
+          while IFS= read -r g; do
+            [ -n "$g" ] || continue
+            case "$g" in @target/*) g="$CARGO_TARGET_DIR/${g#@target/}" ;; esac
+            for f in $g; do if [ -f "$f" ]; then cp "$f" "$s/out/" && n=$((n + 1)); fi; done
+          done < "$j/artifacts"
+          echo "artifacts=$n" >> "$GITHUB_OUTPUT"
+          exit "$rc"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: slot-log
+          path: ${{ runner.temp }}/slot/log/
+          if-no-files-found: warn
+          retention-days: 2
+      - uses: actions/upload-artifact@v7
+        if: always() && steps.job.outputs.artifacts != '0'
+        with:
+          name: slot-artifacts
+          path: ${{ runner.temp }}/slot/out/
+          if-no-files-found: ignore
+          retention-days: 2
+
+  # An android job, set up as ci.yml's android job: the two ABIs' targets, the newest NDK,
+  # cargo-ndk, Java 21, Gradle read-only from main's cache, the SDK platform, and the caches of
+  # the testing engine and Robolectric's Android builds.
+  android:
+    if: "contains(github.event.head_commit.message, 'Slot-Kind: android')"
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - name: The job's commit
+        run: |
+          case "$GITHUB_REF_NAME" in slot/[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9]-[0-9a-z]*) ;; *) echo "not a slot job branch: $GITHUB_REF_NAME"; exit 1 ;; esac
+          mkdir -p "$RUNNER_TEMP/slot"
+          cp -R .slot "$RUNNER_TEMP/slot/job"
+          git checkout -q --detach HEAD^1
+          git log -1 --format='The job runs %H'
+      - run: tools/ci-toolchain.sh aarch64-linux-android armv7-linux-androideabi
+      - name: The NDK
+        run: |
+          ndk="${ANDROID_NDK_LATEST_HOME:-$ANDROID_NDK_HOME}"
+          {
+            echo "ANDROID_NDK_HOME=$ndk"
+            echo "NDK_VERSION=$(basename "$ndk")"
+          } >> "$GITHUB_ENV"
+      - name: The engine's sources
+        id: sources
+        run: echo "hash=$(android/scripts/engine.sh --sources-hash)" >> "$GITHUB_OUTPUT"
+      - name: Restore the app's engine
+        id: engine
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/.cache/kaeri-engine/android
+          key: ci-android-engine-ndk${{ env.NDK_VERSION }}-${{ steps.sources.outputs.hash }}
+      - uses: Swatinem/rust-cache@v2
+        if: steps.engine.outputs.cache-hit != 'true'
+        with:
+          key: android
+          save-if: false
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-ndk
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v5
+        with:
+          cache-read-only: true
+      - name: The SDK platform and NDK the app builds with
+        run: |
+          sdkmanager="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$sdkmanager" --licenses >/dev/null
+          "$sdkmanager" --install "platforms;android-37.0" "build-tools;36.0.0" "ndk;30.0.16248370" >/dev/null
+      - name: Restore Robolectric's Android builds
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/.m2/repository/org/robolectric
+          key: robolectric-${{ hashFiles('android/gradle/libs.versions.toml') }}
+      # The same as the linux job's step.
+      - name: The job
+        id: job
+        run: |
+          set +e -u
+          s=$RUNNER_TEMP/slot j=$RUNNER_TEMP/slot/job
+          mkdir -p "$s/log" "$s/out" "$s/homes"
+          log=$s/log/job.log job=${GITHUB_REF_NAME#slot/} real=$HOME
+          echo "artifacts=0" >> "$GITHUB_OUTPUT"
+          export CARGO_HOME=${CARGO_HOME:-$real/.cargo} RUSTUP_HOME=${RUSTUP_HOME:-$real/.rustup}
+          export GRADLE_USER_HOME=${GRADLE_USER_HOME:-$real/.gradle} KAERI_ENGINE_CACHE=$real/.cache/kaeri-engine
+          guard=$(mktemp -d "$s/homes/$job.XXXXXX")
+          export XDG_CONFIG_HOME=$guard/.config XDG_DATA_HOME=$guard/.local/share
+          export XDG_CACHE_HOME=$guard/.cache XDG_STATE_HOME=$guard/.local/state
+          export CARGO_TARGET_DIR=$GITHUB_WORKSPACE/target CARGO_TERM_COLOR=never
+          export HOME=$guard KAERI_TOKEN_STORAGE=file KAERI_PLAYER_NATIVE=off SLOT_JOB=$job SLOT_HOST=gh
+          if [ -d "$j/in" ]; then mkdir -p slot-in && cp -p "$j"/in/* slot-in/ && cp -p "$j"/in/.slot-inputs.sha256 slot-in/ 2>/dev/null || true; fi
+          while IFS= read -r line; do
+            case "${line%%=*}" in "" | *[!A-Za-z0-9_]* | [0-9]*) continue ;; esac
+            case "$line" in *=*) export "$line" ;; esac
+          done < "$j/job.env"
+          mins=${SLOT_TIMEOUT_MIN:-105}
+          case "$mins" in off) mins=140 ;; "" | *[!0-9]*) mins=105 ;; esac
+          { echo "slot: job $job, commit $(git rev-parse HEAD), started $(date '+%F %T') on gh"
+            if [ -f slot-in/.slot-inputs.sha256 ]; then sed 's/^/slot: input sha256 /' slot-in/.slot-inputs.sha256; fi
+          } > "$log"
+          timeout -k 30 "${mins}m" bash "$j/job.sh" < /dev/null 2>&1 | tee -a "$log"
+          rc=${PIPESTATUS[0]}
+          if [ "$rc" = 124 ]; then echo "slot: timed out after $mins min; stopping job $job" | tee -a "$log"; rc=125; fi
+          echo "$rc" > "$s/log/rc"
+          n=0
+          while IFS= read -r g; do
+            [ -n "$g" ] || continue
+            case "$g" in @target/*) g="$CARGO_TARGET_DIR/${g#@target/}" ;; esac
+            for f in $g; do if [ -f "$f" ]; then cp "$f" "$s/out/" && n=$((n + 1)); fi; done
+          done < "$j/artifacts"
+          echo "artifacts=$n" >> "$GITHUB_OUTPUT"
+          exit "$rc"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: slot-log
+          path: ${{ runner.temp }}/slot/log/
+          if-no-files-found: warn
+          retention-days: 2
+      - uses: actions/upload-artifact@v7
+        if: always() && steps.job.outputs.artifacts != '0'
+        with:
+          name: slot-artifacts
+          path: ${{ runner.temp }}/slot/out/
+          if-no-files-found: ignore
+          retention-days: 2
