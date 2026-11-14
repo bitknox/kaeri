@@ -451,6 +451,52 @@ mod tests {
         assert!(store.local_book_files("a").unwrap().is_empty());
     }
 
+    /// R7K-12. A removed folder's series stayed in Continue for good. They leave it with the
+    /// folder, also when the folder went before this was fixed (its matches are left the same
+    /// way), keep their places, and come back when the folder is added again. A series read on
+    /// another device, which no folder held, stays.
+    #[test]
+    fn a_removed_folders_series_leave_continue_and_come_back_with_the_folder() {
+        use crate::reading::ReadEvent;
+        const WORK: &str = "l:7e57f01de7";
+        const ELSEWHERE: &str = "a:900777";
+        let store = Store::open_in_memory().unwrap();
+        let folder = Folder {
+            id: "f".into(),
+            path: Some("/books".into()),
+            available: true,
+            ..Folder::default()
+        };
+        let add = |store: &Store| {
+            store.put_book_folder(&folder).unwrap();
+            store.replace_book_scan("f", &[series("a", "unmatched")], 10).unwrap();
+            store.set_local_series_match("a", Some(WORK), "unmatched", 0, None).unwrap();
+            store.set_book_match("folders", "a", WORK, 0, false, false, 10).unwrap();
+        };
+        add(&store);
+        for (work, at) in [(WORK, 100), (ELSEWHERE, 50)] {
+            let mut event = ReadEvent::new(work, "1", at);
+            event.page = Some(3);
+            event.of_pages = Some(12);
+            store.record_read(&event, Vec::new()).unwrap();
+        }
+        // Continue's order is the stamps', not the test's: compare what it holds.
+        let continuing = |store: &Store| -> Vec<String> {
+            let mut works: Vec<String> =
+                store.continue_reading(12).unwrap().into_iter().map(|w| w.work).collect();
+            works.sort();
+            works
+        };
+        assert_eq!(continuing(&store), [ELSEWHERE, WORK]);
+
+        store.remove_book_folder("f").unwrap();
+        assert_eq!(continuing(&store), [ELSEWHERE]);
+        assert!(store.read_work(WORK).unwrap().is_some(), "its place is kept");
+
+        add(&store);
+        assert_eq!(continuing(&store), [ELSEWHERE, WORK]);
+    }
+
     #[test]
     fn servers_round_trip_and_removing_one_takes_its_matches() {
         let store = Store::open_in_memory().unwrap();

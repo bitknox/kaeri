@@ -10,6 +10,8 @@
 //! lists (`a:<id>`) are written to the sync log, ops and registers alike; a local work stays on
 //! the device.
 
+use std::collections::HashSet;
+
 use kaeri_core::books::ChapterId;
 use rusqlite::{OptionalExtension, Transaction, params};
 
@@ -17,6 +19,9 @@ use crate::{
     Result, Store,
     sync::{Op, OpBody, ReadNote, Stamp, kinds, tick},
 };
+
+/// The source id a folder's series are matched under, as the engine names its folders.
+pub const FOLDERS_SOURCE: &str = "folders";
 
 /// The settings a series' own choice syncs for: the rest stay on the device.
 pub const SYNCED_SERIES_SETTINGS: &[&str] = &["mode", "direction", "colour"];
@@ -1076,15 +1081,54 @@ impl Store {
         })
     }
 
-    /// The works for Continue, newest first: read here or elsewhere, and not hidden.
+    /// The works for Continue, newest first: read here or elsewhere, not hidden, and not
+    /// [gone](Self::book_works_gone).
     pub fn continue_reading(&self, limit: usize) -> Result<Vec<ReadWork>> {
-        self.with_personal(|c| {
+        let gone = self.book_works_gone()?;
+        let works: Vec<ReadWork> = self.with_personal(|c| {
             let mut stmt = c.prepare(&format!(
                 "SELECT {WORK_COLUMNS} FROM read_work
                   WHERE hidden = 0 AND last_chapter IS NOT NULL
                   ORDER BY stamp DESC LIMIT ?1"
             ))?;
-            Ok(stmt.query_map([limit as i64], row_to_work)?.collect::<rusqlite::Result<_>>()?)
+            let asked = (limit + gone.len()) as i64;
+            Ok(stmt.query_map([asked], row_to_work)?.collect::<rusqlite::Result<_>>()?)
+        })?;
+        Ok(works.into_iter().filter(|w| !gone.contains(&w.work)).take(limit).collect())
+    }
+
+    /// The works that were a folder's and have nowhere left to be read from: the folder was
+    /// removed or its series went in a rescan, no other source is matched to them, and no
+    /// chapter of them is downloaded. Their reading history stays, so adding the folder again
+    /// brings their places back. A work no folder held, as one read on another device, is
+    /// never gone.
+    pub fn book_works_gone(&self) -> Result<HashSet<String>> {
+        // The works only folders were matched to. The matches are the person's; the folders'
+        // series and the downloads are the device's.
+        let only_folders: Vec<String> = self.with_personal(|c| {
+            let mut stmt = c.prepare(
+                "SELECT work FROM book_source_match GROUP BY work
+                 HAVING MIN(source_id = ?1) = 1",
+            )?;
+            Ok(stmt
+                .query_map([FOLDERS_SOURCE], |r| r.get(0))?
+                .collect::<rusqlite::Result<_>>()?)
+        })?;
+        if only_folders.is_empty() {
+            return Ok(HashSet::new());
+        }
+        self.with_conn(|c| {
+            let mut held = c.prepare(
+                "SELECT EXISTS (SELECT 1 FROM book_local_series WHERE work = ?1)
+                     OR EXISTS (SELECT 1 FROM book_download WHERE work = ?1 AND state = 'done')",
+            )?;
+            let mut gone = HashSet::new();
+            for work in only_folders {
+                if !held.query_row([&work], |r| r.get::<_, bool>(0))? {
+                    gone.insert(work);
+                }
+            }
+            Ok(gone)
         })
     }
 

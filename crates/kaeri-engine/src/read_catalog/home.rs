@@ -460,8 +460,14 @@ impl Home {
     /// The series followed: Continue's, and those on Reading or Rereading.
     fn following(&self) -> Vec<String> {
         let mut out = self.continuing();
+        // A removed folder's series stay on Reading for when the folder comes back, but there is
+        // nothing to follow until then.
+        let gone = self.store.book_works_gone().unwrap_or_default();
         for (work, status) in self.store.read_statuses().unwrap_or_default() {
-            if matches!(status.as_str(), "reading" | "rereading") && !out.contains(&work) {
+            if matches!(status.as_str(), "reading" | "rereading")
+                && !out.contains(&work)
+                && !gone.contains(&work)
+            {
                 out.push(work);
             }
         }
