@@ -172,6 +172,18 @@ pub fn haze(text: &str, class: &str) -> gtk::Label {
     label
 }
 
+/// Sets markup with `<a>` links on a label and makes the links' accessibles at once.
+///
+/// GTK makes a label's link accessibles on first use. When a screen reader's walk is that first
+/// use, they are made while GTK registers the label, and each link registers the label a second
+/// time under a new path. The first path stays in GTK's cache after the label goes, and the next
+/// walk reads the freed label and aborts. Made here, before the label is registered, the links
+/// register it once.
+pub fn set_link_markup(label: &gtk::Label, markup: &str) {
+    label.set_markup(markup);
+    let _ = label.first_accessible_child();
+}
+
 /// A heading over a section of a page, in sentence case: "New this week".
 pub fn heading(text: &str) -> gtk::Label {
     let label = gtk::Label::new(Some(text));
@@ -820,5 +832,67 @@ mod tests {
             set_offline(false);
             assert!(!shows.is_revealed() && !read.is_revealed());
         });
+    }
+}
+
+#[cfg(test)]
+mod link_markup_tests {
+    use std::path::Path;
+
+    /// Every `.rs` file under `dir`, with its text.
+    fn sources(dir: &Path, out: &mut Vec<(String, String)>) {
+        for entry in std::fs::read_dir(dir).unwrap().flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                sources(&path, out);
+            } else if path.extension().is_some_and(|e| e == "rs") {
+                out.push((path.display().to_string(), std::fs::read_to_string(&path).unwrap()));
+            }
+        }
+    }
+
+    /// The names that call `method` in `text`: `label` for `label.method(`.
+    fn callers(text: &str, method: &str) -> Vec<String> {
+        text.match_indices(method)
+            .map(|(at, _)| {
+                let before = &text[..at];
+                let start = before
+                    .rfind(|c: char| !(c.is_alphanumeric() || c == '_'))
+                    .map_or(0, |i| i + 1);
+                before[start..].to_string()
+            })
+            .filter(|name| !name.is_empty())
+            .collect()
+    }
+
+    /// A label whose links a screen reader can reach gets its markup through `set_link_markup`,
+    /// so a walk never makes the links while GTK registers the label (R9L-1).
+    #[test]
+    fn link_labels_set_their_markup_through_the_helper() {
+        let (link, markup) =
+            ([".connect", "_activate_link("].concat(), [".set", "_markup("].concat());
+        let mut files = Vec::new();
+        sources(&Path::new(env!("CARGO_MANIFEST_DIR")).join("src"), &mut files);
+        let mut direct = Vec::new();
+        for (path, text) in &files {
+            let mut function = String::new();
+            for line in text.lines().chain(["fn end"]) {
+                let head = line
+                    .trim_start()
+                    .trim_start_matches("pub(crate) ")
+                    .trim_start_matches("pub ");
+                if head.starts_with("fn ") {
+                    for name in callers(&function, &link) {
+                        if function.contains(&format!("{name}{markup}")) {
+                            direct.push(format!("{path}: {name}"));
+                        }
+                    }
+                    function.clear();
+                }
+                function.push_str(line);
+                function.push('\n');
+            }
+        }
+        assert!(direct.is_empty(), "link labels set without set_link_markup: {direct:?}");
     }
 }
