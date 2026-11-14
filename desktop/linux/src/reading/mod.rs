@@ -636,10 +636,9 @@ impl OnScreen {
     }
 }
 
-/// Whether a place's work can be done now.
+/// Whether a place's work can be done now: while it is mapped, on screen or on its way.
 fn on_screen(page: &gtk::Widget) -> bool {
-    let _ = page;
-    true
+    page.is_mapped()
 }
 
 /// The chapter and the words a series' main action opens, when it opens one.
@@ -772,5 +771,56 @@ mod build_tests {
         // A view not laid out yet asks for nothing.
         let unlaid = Some(View { top: 0.0, height: 0.0, whole: 0.0 });
         assert_eq!(cards_to_build(first, 2000, unlaid), 0);
+    }
+}
+
+#[cfg(test)]
+mod on_screen_tests {
+    use std::{cell::Cell, rc::Rc};
+
+    use adw::prelude::*;
+
+    use super::OnScreen;
+    use crate::gtk_test::{pump, run};
+
+    /// A place not on screen does nothing until it shows, then only the latest work of each
+    /// kind, once; on screen, work is done at once.
+    #[test]
+    fn work_waits_for_the_place_to_show() {
+        run(|| {
+            let window = gtk::Window::new();
+            let stack = gtk::Stack::new();
+            let front = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            let place = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            stack.add_named(&front, Some("front"));
+            stack.add_named(&place, Some("place"));
+            window.set_child(Some(&stack));
+            window.present();
+            pump(20);
+            let shown = OnScreen::new(&place);
+            let done = Rc::new(Cell::new(0));
+            for n in [1, 2] {
+                let done = Rc::clone(&done);
+                shown.run("draw", move || done.set(done.get() * 10 + n));
+            }
+            let asked = Rc::new(Cell::new(0));
+            {
+                let asked = Rc::clone(&asked);
+                shown.run("ask", move || asked.set(asked.get() + 1));
+            }
+            assert_eq!((done.get(), asked.get()), (0, 0), "nothing is done out of sight");
+            assert!(!shown.now());
+
+            stack.set_visible_child(&place);
+            pump(20);
+            assert_eq!(done.get(), 2, "the latest draw, once, as the place shows");
+            assert_eq!(asked.get(), 1);
+            assert!(shown.now());
+
+            let again = Rc::clone(&done);
+            shown.run("draw", move || again.set(3));
+            assert_eq!(done.get(), 3, "on screen, at once");
+            window.destroy();
+        });
     }
 }
