@@ -661,6 +661,7 @@ fn files_line() {
 
 /// The stage for `shot`, when it is a hunt drive: how long the run should wait for it.
 pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
+    a11y_hooks();
     let secs = match shot {
         "hunt-cycle-manga" | "hunt-cycle-strip" | "hunt-cycle-manga-noturn" => 180.0,
         "hunt-cycle-novel" => 300.0,
@@ -2840,4 +2841,121 @@ pub fn biglib(store: &kaeri_store::Store, art: &str, now: i64) {
         }
     }
     tracing::info!("HUNT biglib kept {n} series in {}ms", t0.elapsed().as_millis());
+}
+
+// QA: hooks on GTK's AT-SPI contexts that log any context freed while still registered
+// on the bus (and so still in GTK's cache), with the accessible type it was realized for.
+#[repr(C)]
+struct AtCtxClass {
+    parent: gtk::glib::gobject_ffi::GObjectClass,
+    state_change: usize,
+    platform_change: usize,
+    bounds_change: usize,
+    child_change: usize,
+    realize: Option<unsafe extern "C" fn(*mut std::ffi::c_void)>,
+    unrealize: Option<unsafe extern "C" fn(*mut std::ffi::c_void)>,
+}
+
+static A11Y_FINALIZE: std::sync::OnceLock<
+    unsafe extern "C" fn(*mut gtk::glib::gobject_ffi::GObject),
+> = std::sync::OnceLock::new();
+static A11Y_REALIZE: std::sync::OnceLock<unsafe extern "C" fn(*mut std::ffi::c_void)> =
+    std::sync::OnceLock::new();
+static A11Y_UNREALIZE: std::sync::OnceLock<unsafe extern "C" fn(*mut std::ffi::c_void)> =
+    std::sync::OnceLock::new();
+static A11Y_PATH: std::sync::OnceLock<usize> = std::sync::OnceLock::new();
+static A11Y_TYPES: std::sync::Mutex<Vec<(usize, String)>> = std::sync::Mutex::new(Vec::new());
+
+fn a11y_hooks() {
+    use gtk::glib::gobject_ffi as g;
+    static ONCE: std::sync::Once = std::sync::Once::new();
+    // SAFETY: QA only; the layouts are GTK 4.22's (gtkatcontextprivate.h, gtkatspicontext.c).
+    ONCE.call_once(|| unsafe {
+        let t = g::g_type_from_name(c"GtkAtSpiContext".as_ptr());
+        if t == 0 {
+            tracing::info!("HUNT a11y: no GtkAtSpiContext type");
+            return;
+        }
+        let mut q: g::GTypeQuery = std::mem::zeroed();
+        g::g_type_query(g::g_type_parent(t), &mut q);
+        let path = ((q.instance_size as usize + 7) & !7) + 8;
+        let _ = A11Y_PATH.set(path);
+        let class = g::g_type_class_ref(t).cast::<AtCtxClass>();
+        if let (Some(f), Some(r), Some(u)) =
+            ((*class).parent.finalize, (*class).realize, (*class).unrealize)
+        {
+            let _ = A11Y_FINALIZE.set(f);
+            let _ = A11Y_REALIZE.set(r);
+            let _ = A11Y_UNREALIZE.set(u);
+            (*class).parent.finalize = Some(a11y_finalize);
+            (*class).realize = Some(a11y_realize);
+            (*class).unrealize = Some(a11y_unrealize);
+            tracing::info!("HUNT a11y hooks on, path at {path}");
+        }
+    });
+}
+
+unsafe fn a11y_type_of(ctx: *mut std::ffi::c_void) -> String {
+    // SAFETY: called on a live context while its accessible is alive.
+    unsafe {
+        let acc = gtk::ffi::gtk_at_context_get_accessible(ctx.cast());
+        if acc.is_null() {
+            return "null".into();
+        }
+        let n = gtk::glib::gobject_ffi::g_type_name_from_instance(acc.cast());
+        if n.is_null() {
+            "?".into()
+        } else {
+            std::ffi::CStr::from_ptr(n).to_string_lossy().into_owned()
+        }
+    }
+}
+
+unsafe extern "C" fn a11y_realize(ctx: *mut std::ffi::c_void) {
+    // SAFETY: GTK calls this with a live context.
+    unsafe {
+        if let Some(f) = A11Y_REALIZE.get() {
+            f(ctx);
+        }
+        let name = a11y_type_of(ctx);
+        if let Ok(mut v) = A11Y_TYPES.lock() {
+            v.retain(|(p, _)| *p != ctx as usize);
+            v.push((ctx as usize, name));
+        }
+    }
+}
+
+unsafe extern "C" fn a11y_unrealize(ctx: *mut std::ffi::c_void) {
+    // SAFETY: GTK calls this with a live context.
+    unsafe {
+        if let Some(f) = A11Y_UNREALIZE.get() {
+            f(ctx);
+        }
+        if let Ok(mut v) = A11Y_TYPES.lock() {
+            v.retain(|(p, _)| *p != ctx as usize);
+        }
+    }
+}
+
+unsafe extern "C" fn a11y_finalize(obj: *mut gtk::glib::gobject_ffi::GObject) {
+    // SAFETY: GTK calls this once with a context about to be freed.
+    unsafe {
+        if let Some(off) = A11Y_PATH.get() {
+            let path = *obj.cast::<u8>().add(*off).cast::<*const std::ffi::c_char>();
+            if !path.is_null() {
+                let name = A11Y_TYPES.lock().ok().and_then(|mut v| {
+                    let i = v.iter().position(|(p, _)| *p == obj as usize)?;
+                    Some(v.remove(i).1)
+                });
+                tracing::warn!(
+                    "HUNT a11y context freed while registered: {} at {}",
+                    name.as_deref().unwrap_or("realized before the hooks"),
+                    std::ffi::CStr::from_ptr(path).to_string_lossy()
+                );
+            }
+        }
+        if let Some(f) = A11Y_FINALIZE.get() {
+            f(obj);
+        }
+    }
 }
