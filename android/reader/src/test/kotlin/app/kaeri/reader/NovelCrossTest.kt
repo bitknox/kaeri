@@ -5,6 +5,7 @@
 
 package app.kaeri.reader
 
+import android.app.Activity
 import android.net.Uri
 import android.os.Looper
 import android.webkit.WebResourceRequest
@@ -20,7 +21,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
+import org.robolectric.Robolectric
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowWebView
@@ -67,11 +68,21 @@ class NovelCrossTest {
         }
     }
 
-    /** The host, with the web view's part played here: each load is asked of the host's own client, and what came is laid out. */
+    /**
+     * The host, with the web view's part played here: each load is asked of the host's own client,
+     * and what came is laid out. The view sits in an activity's window, as on the screen, so what
+     * the host posts to it runs.
+     */
     private class Reader(val book: Book) {
         val forwarded = mutableListOf<NovelMessage>()
-        val host = NovelWebHost(RuntimeEnvironment.getApplication(), NovelAssets("", "", ""), { book.resource(it) }) { forwarded += it }
+        val activity: Activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val host = NovelWebHost(activity, NovelAssets("", "", ""), { book.resource(it) }) { forwarded += it }
         val web: ShadowWebView = shadowOf(host.view)
+
+        init {
+            activity.setContentView(host.view)
+            idle()
+        }
         val loads = mutableListOf<String>()
 
         /** The places kept: what the screen sends the engine as NovelAt. */
