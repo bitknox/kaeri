@@ -4,6 +4,8 @@
 // and the D-pad centre act on that control; the arrows, Space and the page keys still turn. A
 // reader whose controls take the D-pad while they show (e-ink) passes [ReaderControlKeys]: then
 // the arrows move the focus among the controls instead, and the page keys still turn.
+// A focused control that goes away, such as a bar button as the bars hide, hands the focus back to
+// the reader rather than to nothing, so the next key still reaches it.
 
 package app.kaeri.reader
 
@@ -12,6 +14,8 @@ import androidx.compose.foundation.focusable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
@@ -23,6 +27,7 @@ import androidx.compose.ui.input.key.nativeKeyCode
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalFocusManager
+import kotlinx.coroutines.launch
 
 /** The keys a focused control answers itself, where the reader would show or hide its controls. */
 private val controlKeys = setOf(KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER, KeyEvent.KEYCODE_DPAD_CENTER)
@@ -71,9 +76,10 @@ fun keyRoute(keyCode: Int, readerHolds: Boolean, controlsTakeArrows: Boolean): K
  */
 class ReaderControlKeys(val shown: Boolean, val enter: () -> Unit)
 
-/** Where the reader itself holds the focus, as against a control inside it. */
+/** Where the reader itself holds the focus, as against a control inside it, and whether either does. */
 private class OwnFocus {
     var held = false
+    var within = false
 }
 
 /**
@@ -90,9 +96,22 @@ fun Modifier.readerKeys(
 ): Modifier {
     val own = remember { OwnFocus() }
     val focusManager = LocalFocusManager.current
+    val scope = rememberCoroutineScope()
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
     return this
-        .onFocusChanged { own.held = it.isFocused }
+        .onFocusChanged {
+            val lost = own.within && !it.hasFocus
+            own.held = it.isFocused
+            own.within = it.hasFocus
+            // The focused control left with its bars or page and the focus went nowhere: back to the
+            // reader, a frame on, unless something took it meanwhile. Leaving the reader cancels this.
+            if (lost) {
+                scope.launch {
+                    withFrameNanos {}
+                    if (!own.within) runCatching { focus.requestFocus() }
+                }
+            }
+        }
         .focusRequester(focus)
         .onPreviewKeyEvent { event ->
             val native = event.nativeKeyEvent

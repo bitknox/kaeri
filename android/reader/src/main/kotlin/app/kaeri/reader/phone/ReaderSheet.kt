@@ -5,6 +5,14 @@ package app.kaeri.reader.phone
 
 import app.kaeri.reader.ReaderBackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusable
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -87,6 +95,7 @@ internal fun ReaderSheet(
             if (sheet.currentValue != SheetValue.Expanded) sheet.expand()
         }
         if (pageBack == null) {
+            val scope = rememberCoroutineScope()
             ModalBottomSheet(
                 onDismissRequest = onDismiss,
                 sheetState = sheet,
@@ -94,8 +103,15 @@ internal fun ReaderSheet(
                 contentColor = Chrome.text,
                 // The page behind stays undimmed.
                 scrimColor = Color.Transparent,
-                content = content,
-            )
+            ) {
+                // Escape slides the sheet away as Back does.
+                Column(
+                    Modifier.fillMaxWidth().escapeKey {
+                        scope.launch { sheet.hide() }.invokeOnCompletion { if (!sheet.isVisible) onDismiss() }
+                    },
+                    content = content,
+                )
+            }
         } else {
             PagedSheet(sheet, firstPage, pageBack, onDismiss, content)
         }
@@ -192,6 +208,10 @@ private fun PagedSheet(
         }
         Column(
             Modifier.fillMaxWidth()
+                // Escape does what Back does: the page it came from, or away from the first page.
+                .escapeKey {
+                    if (!first) back() else scope.launch { sheet.hide() }.invokeOnCompletion { if (!sheet.isVisible) dismiss() }
+                }
                 .onPlaced {
                     column.width = it.size.width.toFloat()
                     column.top = it.positionInParent().y
@@ -201,6 +221,27 @@ private fun PagedSheet(
             content = content,
         )
     }
+}
+
+/**
+ * Escape for a sheet in a window of its own, where the reader's keys never see it: the sheet takes
+ * the focus as it opens, so its keys come here first. A control in it that takes the focus after,
+ * such as the chapter being read, keeps it, and Escape still comes here from there.
+ */
+@Composable
+private fun Modifier.escapeKey(onEscape: () -> Unit): Modifier {
+    val focus = remember { FocusRequester() }
+    val escape by rememberUpdatedState(onEscape)
+    LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+    return this
+        .onPreviewKeyEvent { event ->
+            if (event.key != Key.Escape) return@onPreviewKeyEvent false
+            if (event.type == KeyEventType.KeyDown && event.nativeKeyEvent.repeatCount == 0) escape()
+            // Both halves of the press, so the window under the sheet never sees the other.
+            true
+        }
+        .focusRequester(focus)
+        .focusable()
 }
 
 // Material's predictive Back on its sheet (BottomSheet.kt and internal/BackHandler.kt in

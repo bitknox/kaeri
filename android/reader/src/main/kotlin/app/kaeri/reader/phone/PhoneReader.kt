@@ -184,6 +184,10 @@ import app.kaeri.reader.ReaderState
 import app.kaeri.reader.ShownNotice
 import app.kaeri.reader.StripReader
 import app.kaeri.reader.StripStep
+import app.kaeri.reader.StripKeys
+import app.kaeri.reader.StripMove
+import app.kaeri.reader.StripKeyLine
+import app.kaeri.reader.stripKeys
 import app.kaeri.reader.TapGuide
 import app.kaeri.reader.TapGuideLayer
 import app.kaeri.reader.ShowTapGuideWhenDue
@@ -259,6 +263,7 @@ fun PhoneReader(
     stripList: LazyListState = rememberLazyListState(),
 ) {
     val stripStep = remember { StripStep() }
+    val stripKeys = remember { StripKeys() }
     val context = LocalContext.current
     val view = state.view
     val density = LocalDensity.current
@@ -490,6 +495,14 @@ fun PhoneReader(
         animationSpec = if (!fades) snap() else if (shown) Motion.fadeIn() else Motion.fadeOut(),
         label = "end page lift",
     )
+    // A strip scrolls by key where pages turn, as smooth as a tap's step and at once without motion.
+    val stripOpen = !novelOpen && (view?.mode == ReaderMode.STRIP || view?.mode == ReaderMode.VERTICAL)
+    val keyScope = rememberCoroutineScope()
+    val motionRemoved = rememberAnimationsRemoved()
+    fun stripMove(move: StripMove) {
+        guide.clear()?.let(::guideSeen)
+        stripKeys.go(move, keyScope, stripList, stripStep, line = with(density) { StripKeyLine.toPx() }, smooth = fades && !motionRemoved, spec = Motion.standard())
+    }
 
     CompositionLocalProvider(LocalChrome provides colours, LocalPageTone provides tone) {
       Box(modifier.fillMaxSize().then(if (enabled) Modifier else Modifier.pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent(PointerEventPass.Initial).changes.forEach { it.consume() } } })) {
@@ -506,6 +519,7 @@ fun PhoneReader(
                     if (state.view == null && !state.opening) return@readerSurface
                     session.surface(surface)
                 }
+                .stripKeys(keyRules, on = stripOpen, onMove = ::stripMove)
                 .readerKeys(keyRules, ::act)
                 // The guide's first touch clears it, and still turns, scrolls or opens the controls.
                 .clearsTapGuide(guide, ::guideSeen),
@@ -645,6 +659,7 @@ fun PhoneReader(
                         room = { StripRoomWaiting(state) },
                         list = stripList,
                         stepping = stripStep::catch,
+                        keys = stripKeys,
                         gap = gap,
                     )
                 }

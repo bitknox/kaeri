@@ -1,7 +1,8 @@
 // The reader's sheets go when what they were opened for is done: a chapter picked from the
 // Chapters sheet opens with the sheet gone, as a page picked from it does. Back from a page of the
 // settings sheet goes to its main page, and the next Back closes it. A Back gesture on the main page
-// shrinks the sheet as Material's own does, and one on another page leaves it as it is.
+// shrinks the sheet as Material's own does, and one on another page leaves it as it is. Escape,
+// which the sheet's window takes and the reader's keys never see, does what Back does.
 
 package app.kaeri.reader.phone
 
@@ -12,6 +13,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
@@ -175,5 +179,41 @@ class ReaderSheetsTest {
         assertEquals(page, back.getBoundsInRoot())
         letGo()
         more.assertDoesNotExist()
+    }
+
+    /** Escape pressed in the sheet's own window, through [node], a node in it. */
+    private fun escape(node: androidx.compose.ui.test.SemanticsNodeInteraction) {
+        node.performKeyInput { pressKey(Key.Escape) }
+        compose.waitForIdle()
+    }
+
+    @Test
+    fun escape_closes_the_chapters_sheet() {
+        reader()
+        compose.onNode(hasContentDescription("Chapters") and hasClickAction()).performClick()
+        compose.waitForIdle()
+        compose.onNode(hasText("Chapters") and hasClickAction()).performClick()
+        compose.waitForIdle()
+        row(12).assertExists()
+        escape(row(12))
+        row(12).assertDoesNotExist()
+        compose.onNode(hasText("Pages") and hasClickAction()).assertDoesNotExist()
+    }
+
+    @Test
+    fun escape_from_more_settings_goes_to_the_main_page_and_the_next_escape_closes_the_sheet() {
+        reader()
+        compose.onNode(hasContentDescription("Reader settings") and hasClickAction()).performClick()
+        compose.waitForIdle()
+        val more = compose.onNode(hasText("More reader settings") and hasClickAction())
+        more.performClick()
+        compose.waitForIdle()
+        more.assertDoesNotExist()
+
+        escape(compose.onNode(hasContentDescription("Back, More reader settings", substring = true), useUnmergedTree = true))
+        more.assertExists()
+
+        escape(more)
+        compose.onNode(hasText("More reader settings")).assertDoesNotExist()
     }
 }
