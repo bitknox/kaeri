@@ -58,6 +58,17 @@
 	color: var(--ani-dim);
 }
 
+/* The terminal app: Home across the top, then watching and reading two by two. */
+.f-term {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 24px;
+}
+
+.f-term > .term-shot:first-child {
+	grid-column: 1 / -1;
+}
+
 .f-pair {
 	position: relative;
 	aspect-ratio: 1200 / 700;
@@ -315,6 +326,28 @@
 	.f-remote-tv {
 		width: 100%;
 		flex: none;
+	}
+
+	/* The screens scroll sideways, a little of the next one showing. */
+	.f-term {
+		display: flex;
+		gap: 12px;
+		margin-inline: calc(var(--gutter) * -1);
+		padding-inline: var(--gutter);
+		overflow-x: auto;
+		scroll-snap-type: x mandatory;
+		scroll-padding-inline: var(--gutter);
+		overscroll-behavior-x: contain;
+		scrollbar-width: none;
+	}
+
+	.f-term::-webkit-scrollbar {
+		display: none;
+	}
+
+	.f-term > .term-shot {
+		flex: 0 0 86%;
+		scroll-snap-align: start;
 	}
 
 	.matrix-scroll {

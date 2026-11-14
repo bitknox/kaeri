@@ -5,6 +5,7 @@ import CompareSlider from '../../components/CompareSlider.astro';
 import Flow from '../../components/Flow.astro';
 import HeroVideo from '../../components/HeroVideo.astro';
 import Pic from '../../components/Pic.astro';
+import TermShot from '../../components/TermShot.astro';
 import matrix from '../../data/matrix.json';
 import small from '../../data/small.json';
 import Page from '../../layouts/Page.astro';
@@ -148,6 +149,25 @@ const state = { y: 'available', d: 'development', n: 'none' } as const;
 					</div>
 				</div>
 				<figcaption>{t('features.tv.caption')}</figcaption>
+			</figure>
+		</div>
+	</section>
+
+	<section class="f-sect" aria-labelledby="term-h">
+		<div class="f-in">
+			<div class="band-head">
+				<h2 id="term-h">{t('features.term.title')}</h2>
+				<p><span class="lead">{t('features.term.lead')}</span> {t('features.term.text')}</p>
+			</div>
+			<figure class="f-fig">
+				<div class="f-term">
+					<TermShot name="home" alt={t('features.term.homeAlt')} />
+					<TermShot name="episodes" alt={t('features.term.episodesAlt')} />
+					<TermShot name="player" alt={t('features.term.playerAlt')} />
+					<TermShot name="reading" alt={t('features.term.readingAlt')} />
+					<TermShot name="read-search" alt={t('features.term.readSearchAlt')} />
+				</div>
+				<figcaption>{t('features.term.caption')}</figcaption>
 			</figure>
 		</div>
 	</section>

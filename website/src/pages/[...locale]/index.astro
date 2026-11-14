@@ -5,6 +5,7 @@ import Faq from '../../components/Faq.astro';
 import HeroVideo from '../../components/HeroVideo.astro';
 import NagareStrip from '../../components/NagareStrip.astro';
 import Pic from '../../components/Pic.astro';
+import TermShot from '../../components/TermShot.astro';
 import Page from '../../layouts/Page.astro';
 import { CC, DEMO_PART_1, DOWNLOAD, FEATURES, GITHUB, RELEASES } from '../../data/site';
 import { VERSION } from '../../data/version';
@@ -129,6 +130,10 @@ const bands = ['f1', 'f2', 'f3', 'f4'] as const;
 					<figcaption>{t('home.fx.linux')}</figcaption>
 				</figure>
 			</div>
+			<figure class="fx-term">
+				<TermShot name="home" alt={t('home.fx.terminalAlt')} />
+				<figcaption>{t('home.fx.terminal')}</figcaption>
+			</figure>
 			<p class="more"><a class="k-arrow" href={href(FEATURES)}>
 				{t('home.more')}
 				<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>

@@ -215,7 +215,12 @@
 	background: var(--ani-crop-a);
 }
 
-.fx-grid figcaption {
+.fx-term {
+	margin: 24px 0 0;
+}
+
+.fx-grid figcaption,
+.fx-term figcaption {
 	margin-top: 12px;
 	font-size: var(--fs-small);
 	color: var(--ani-text);
