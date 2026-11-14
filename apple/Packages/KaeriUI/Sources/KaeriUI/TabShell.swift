@@ -14,15 +14,24 @@ struct TabShell: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
-        // The sidebar on iPad, which turns into the bar in a narrow window; on iPhone the system's
-        // own tab bar, with Search apart. On iPad the style goes by the device, never the width:
-        // one tab view through every resize, so the pages in it keep what they hold (picks, a
-        // scroll). No customization: the bar's set is fixed, and the rest live in the sidebar
-        // only, so the sidebar has no Edit button.
-        if Self.pad || sizeClass == .regular {
-            tabs.tabViewStyle(.sidebarAdaptable)
-        } else {
-            tabs
+        // The sidebar on a wide iPad; the system's own tab bar on iPhone and in a narrow iPad
+        // window, with Search apart. The style goes by the width, so a resize makes the tab view
+        // again: UIKit throws while it rebuilds the bar of one sidebar-adaptable tab view made
+        // narrow or wide (NSRangeException in _tabs_rebuildTabBarItemsAnimated, iOS 27). No
+        // customization: the bar's set is fixed, and the rest live in the sidebar only, so the
+        // sidebar has no Edit button.
+        Group {
+            if sizeClass == .regular {
+                tabs.tabViewStyle(.sidebarAdaptable)
+            } else {
+                tabs
+            }
+        }
+        // Here, outside the tab view a resize makes again: a window made narrow keeps the place
+        // the person was on, pushed onto its tab; made wide again, that place is its own section
+        // again.
+        .onChange(of: sizeClass) { _, now in
+            if now == .compact { narrowed() } else { widened() }
         }
     }
 
@@ -98,11 +107,6 @@ struct TabShell: View {
         // A place with no tab here goes onto the tab that leads to it, as the headings on each
         // Home do.
         .onChange(of: navigator.section, initial: true) { _, _ in narrowed() }
-        // A window made narrow keeps the place the person was on, pushed onto its tab; made wide
-        // again, that place is its own section again.
-        .onChange(of: sizeClass) { _, now in
-            if now == .compact { narrowed() } else { widened() }
-        }
         // Watch together has no tab on iPhone and in a narrow window: Home's people button
         // pushes it there.
         .onChange(of: navigator.section == .together && sizeClass == .compact, initial: true) { _, narrow in
