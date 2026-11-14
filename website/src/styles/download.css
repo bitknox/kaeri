@@ -95,9 +95,11 @@
 	color: var(--ani-dim);
 }
 
-.ds-files a:hover {
-	color: var(--ani-text);
-	text-decoration-thickness: 2px;
+@media (hover: hover) and (pointer: fine) {
+	.ds-files a:hover {
+		color: var(--ani-text);
+		text-decoration-thickness: 2px;
+	}
 }
 
 .ds-arch,

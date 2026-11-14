@@ -84,6 +84,16 @@
 html {
 	background: var(--ani-ground);
 	-webkit-text-size-adjust: 100%;
+	/* No grey flash on a tap: links and buttons show their own pressed state instead. */
+	-webkit-tap-highlight-color: transparent;
+}
+
+/* A tap fires at once, without waiting to see whether it is a double tap. */
+a,
+button,
+summary,
+[role='slider'] {
+	touch-action: manipulation;
 }
 
 body.k-body {
@@ -117,7 +127,14 @@ body.k-body {
 	transition: color var(--t-fast) var(--ease), text-decoration-color var(--t-fast) var(--ease);
 }
 
-.k-body a:hover {
+@media (hover: hover) and (pointer: fine) {
+	.k-body a:hover {
+		color: var(--ani-link-hover);
+		text-decoration-color: currentColor;
+	}
+}
+
+.k-body a:active {
 	color: var(--ani-link-hover);
 	text-decoration-color: currentColor;
 }
@@ -241,6 +258,8 @@ body.k-body {
 	font-weight: 600;
 	text-decoration: none;
 	cursor: pointer;
+	-webkit-user-select: none;
+	user-select: none;
 	transition: color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
 }
 
@@ -248,7 +267,14 @@ body.k-body {
 	text-decoration: none;
 }
 
-.k-body a.k-btn:hover {
+@media (hover: hover) and (pointer: fine) {
+	.k-body a.k-btn:hover {
+		border-color: var(--ani-link-hover);
+	}
+}
+
+.k-body a.k-btn:active {
+	color: var(--ani-text);
 	border-color: var(--ani-link-hover);
 }
 
@@ -259,7 +285,15 @@ body.k-body {
 	color: var(--ani-on-obi);
 }
 
-.k-body a.k-btn-primary:hover {
+@media (hover: hover) and (pointer: fine) {
+	.k-body a.k-btn-primary:hover {
+		background: var(--ani-obi-hover);
+		border-color: var(--ani-obi-hover);
+		color: var(--ani-on-obi);
+	}
+}
+
+.k-body a.k-btn-primary:active {
 	background: var(--ani-obi-hover);
 	border-color: var(--ani-obi-hover);
 	color: var(--ani-on-obi);
@@ -367,9 +401,11 @@ body.k-body {
 	transition: border-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
 }
 
-.site-header site-search button[data-open-modal]:hover {
-	border-color: var(--ani-dim);
-	color: var(--ani-text);
+@media (hover: hover) and (pointer: fine) {
+	.site-header site-search button[data-open-modal]:hover {
+		border-color: var(--ani-dim);
+		color: var(--ani-text);
+	}
 }
 
 .site-header site-search button[data-open-modal] > span {
@@ -415,7 +451,13 @@ body.k-body {
 	transition: color var(--t-fast) var(--ease);
 }
 
-.bar-icon:hover {
+@media (hover: hover) and (pointer: fine) {
+	.bar-icon:hover {
+		color: var(--ani-text);
+	}
+}
+
+.bar-icon:active {
 	color: var(--ani-text);
 }
 
@@ -549,10 +591,12 @@ body.k-body {
 	transition: color var(--t-fast) var(--ease);
 }
 
-.site-footer a:hover,
-.k-body .site-footer a:hover {
-	color: var(--ani-foot-text);
-	text-decoration: underline;
+@media (hover: hover) and (pointer: fine) {
+	.site-footer a:hover,
+	.k-body .site-footer a:hover {
+		color: var(--ani-foot-text);
+		text-decoration: underline;
+	}
 }
 
 .site-footer .site-footer-text a {

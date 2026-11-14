@@ -50,9 +50,15 @@
   .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 1.5rem; border-radius: 999px; font-weight: 600;
          text-decoration: none; color: var(--text); border: 1px solid var(--rule); background: transparent;
          transition: color 120ms cubic-bezier(.2,.8,.2,1), background-color 120ms cubic-bezier(.2,.8,.2,1), border-color 120ms cubic-bezier(.2,.8,.2,1); }
-  .btn:hover { border-color: var(--text); }
   .btn-primary { background: var(--amber); border-color: var(--amber); color: var(--on-amber); }
-  .btn-primary:hover { background: var(--amber-hover); border-color: var(--amber-hover); }
+  html { -webkit-tap-highlight-color: transparent; }
+  .btn { -webkit-user-select: none; user-select: none; touch-action: manipulation; }
+  .btn:active { border-color: var(--text); }
+  .btn-primary:active { background: var(--amber-hover); border-color: var(--amber-hover); }
+  @media (hover: hover) and (pointer: fine) {
+    .btn:hover { border-color: var(--text); }
+    .btn-primary:hover { background: var(--amber-hover); border-color: var(--amber-hover); }
+  }
   :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; transition: none; }
   .box { margin: 0 0 1.5rem; padding: 1.25rem 1rem; border-radius: 12px; background: var(--band); }
   .box > :last-child { margin-bottom: 0; }

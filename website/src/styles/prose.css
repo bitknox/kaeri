@@ -65,8 +65,10 @@
 	color: var(--ani-dim);
 }
 
-.k-body .prose-aside a:hover {
-	color: var(--ani-text);
+@media (hover: hover) and (pointer: fine) {
+	.k-body .prose-aside a:hover {
+		color: var(--ani-text);
+	}
 }
 
 .prose-contact {

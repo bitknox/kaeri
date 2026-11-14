@@ -157,8 +157,10 @@ const looks = [
 		color: var(--ani-dim);
 	}
 
-	.compare-looks button:hover {
-		border-color: var(--ani-link-hover);
+	@media (hover: hover) and (pointer: fine) {
+		.compare-looks button:hover {
+			border-color: var(--ani-link-hover);
+		}
 	}
 
 	.compare-looks button[aria-pressed='true'] {
