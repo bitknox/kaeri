@@ -112,7 +112,11 @@ pub fn default_for(key: Key, medium: Medium, screen: Screen) -> ReaderValue {
         Key::LineSpacing => {
             amount(if medium == Medium::Novel && screen.phone { 1.6 } else { 1.4 })
         }
-        Key::Justify => on(medium == Medium::Novel && (screen.eink.is_some() || !screen.phone)),
+        // A terminal justifies by widening the spaces a whole cell at a time, which leaves
+        // rivers through the text, so it starts ragged.
+        Key::Justify => on(medium == Medium::Novel
+            && !screen.terminal
+            && (screen.eink.is_some() || !screen.phone)),
         Key::TapLayout => choice("edges"),
         // E-ink and the desktop start on Sides; a phone or a tablet on Auto, so vertical paging
         // gets zones that point down.
@@ -941,5 +945,7 @@ mod tests {
         assert!(justified(Medium::Novel, Screen::default()));
         assert!(justified(Medium::Novel, eink_phone));
         assert!(!justified(Medium::Manga, tablet));
+        let terminal = Screen::default().with_terminal(true);
+        assert!(!justified(Medium::Novel, terminal), "a terminal starts ragged");
     }
 }
