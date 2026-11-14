@@ -583,8 +583,10 @@ async fn a_kept_list_keeps_downloads_and_bookmarks_when_the_source_fails() {
     crate::reading::chapters_of(kit.clone(), ask(), work.clone(), None, &tx);
     let listed = all(&mut rx, Duration::from_millis(200)).await;
 
+    // Asked again once the kept list is no longer fresh, so the source is asked and fails.
     shelf.down.store(true, Ordering::SeqCst);
-    crate::reading::chapters_of(kit.clone(), ask(), work, None, &tx);
+    let later = Ask { now: NOW + crate::read_sources::LIST_FRESH + 1, ..ask() };
+    crate::reading::chapters_of(kit.clone(), later, work, None, &tx);
     let failed = all(&mut rx, Duration::from_millis(300)).await;
 
     let lists = |events: &[Event]| -> Vec<(bool, Vec<ChapterRow>)> {

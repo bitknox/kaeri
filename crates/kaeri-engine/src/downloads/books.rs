@@ -81,6 +81,12 @@ pub const KEEP_FREE: u64 = 512 * 1_000_000;
 /// Progress is told at most this often; a chapter starting, finishing or failing is told at once.
 const PROGRESS_EVERY: Duration =
     if cfg!(test) { Duration::ZERO } else { Duration::from_secs(2) };
+/// A chapter kept ready whose download failed is queued again by itself only after a wait that
+/// doubles with each failure, from this many seconds up to [`RETRY_LONGEST`], and at most
+/// [`RETRIES`] times while the app runs. The person asking for it queues it at once.
+const RETRY_FIRST: i64 = 60;
+const RETRY_LONGEST: i64 = 3600;
+const RETRIES: u32 = 5;
 /// The rest between chapters.
 const PACE: Duration =
     if cfg!(test) { Duration::from_millis(2) } else { Duration::from_millis(400) };
@@ -251,6 +257,8 @@ struct Inner {
     /// Fetches went back in the queue as their source was signed in again, and the queue has
     /// not been started for them yet.
     requeued: std::sync::atomic::AtomicBool,
+    /// Downloads that failed in a row, by work and chapter: how many times, and when last.
+    failed: Mutex<HashMap<(String, String), (u32, i64)>>,
 }
 
 impl std::fmt::Debug for BookDownloads {
@@ -300,6 +308,7 @@ impl BookDownloads {
             titles: std::sync::OnceLock::new(),
             shares: shared::Shares::default(),
             requeued: std::sync::atomic::AtomicBool::new(false),
+            failed: Mutex::default(),
         }))
     }
 
@@ -523,6 +532,9 @@ impl BookDownloads {
     ) -> usize {
         let mut added = 0;
         for want in wanted {
+            if keep_ready && !self.retry_due(store, work.as_str(), want.chapter.as_str(), now) {
+                continue;
+            }
             let ask = BookDownloadAsk {
                 work: work.as_str(),
                 chapter: want.chapter.as_str(),
@@ -537,6 +549,37 @@ impl BookDownloads {
             }
         }
         added
+    }
+
+    /// Whether keeping chapters ready may queue `chapter` now: always, unless its download
+    /// failed and the wait after that failure is not over, or it failed [`RETRIES`] times.
+    fn retry_due(&self, store: &Store, work: &str, chapter: &str, now: i64) -> bool {
+        let failed = store
+            .book_download(work, chapter)
+            .ok()
+            .flatten()
+            .is_some_and(|row| row.state == BookDownloadState::Failed);
+        let key = (work.to_owned(), chapter.to_owned());
+        let times = self.0.failed.lock().unwrap_or_else(|e| e.into_inner()).get(&key).copied();
+        match times {
+            Some((n, at)) if failed => {
+                let wait = (RETRY_FIRST << (n.saturating_sub(1)).min(16)).min(RETRY_LONGEST);
+                n < RETRIES && now >= at.saturating_add(wait)
+            }
+            _ => true,
+        }
+    }
+
+    /// Count a download's failure in a row, or clear the count once it is done.
+    fn note_outcome(&self, row: &BookDownload, failed: bool, now: i64) {
+        let key = (row.work.clone(), row.chapter.clone());
+        let mut times = self.0.failed.lock().unwrap_or_else(|e| e.into_inner());
+        if failed {
+            let (n, _) = times.get(&key).copied().unwrap_or((0, now));
+            times.insert(key, (n.saturating_add(1), now));
+        } else {
+            times.remove(&key);
+        }
     }
 
     /// The chapters `pick` names, in reading order, out of a work's list.
@@ -580,13 +623,23 @@ impl BookDownloads {
             .collect()
     }
 
-    /// Ask for the chapters `pick` names. Lists the work's chapters first, so this answers
-    /// after the source does; a source that cannot be asked ends in `Failed` for the screen
+    /// Ask for the chapters `pick` names, out of the work's list as [`listed_rows`] gives it. A
+    /// work with no list kept and a source that cannot be asked ends in `Failed` for the screen
     /// that asked.
     pub async fn download(&self, lent: &Lent, work: WorkId, pick: DownloadPick) {
         let now = lent.clock.now();
         lent.sources.plugins_in(&lent.plugins, None).await;
-        let listed = ordered_chapters(&lent.sources, &work, now).await;
+        // A chapter or volume named that the kept list lacks is a reason to ask for a new one.
+        let covers = |rows: &[ChapterRow]| match &pick {
+            DownloadPick::Chapters { ids } => {
+                ids.iter().all(|id| rows.iter().any(|r| r.id == *id))
+            }
+            DownloadPick::Volume { volume } => {
+                rows.iter().any(|r| r.volume.as_deref() == Some(volume.as_str()))
+            }
+            _ => true,
+        };
+        let listed = listed_rows(&lent.sources, &work, now, covers).await;
         let (source, rows) = match listed {
             Ok(found) => found,
             Err(failure) => {
@@ -858,16 +911,9 @@ impl BookDownloads {
         lent.sources.adopt_plugins(&lent.plugins);
         // The list the reader opened from serves while it is fresh: a chapter read is no reason
         // to ask the source for the whole list again.
-        let listed = match lent.sources.kept_listing(work, now, crate::read_sources::LIST_FRESH)
-        {
-            Some((edition, groups)) => edition
-                .map(|e| e.source_id)
-                .or_else(|| lent.sources.edition_of(work, None).map(|(source, _)| source))
-                .map(|source| (source, flatten(groups)))
-                .ok_or(ReadingFailure::NotFound),
-            None => ordered_chapters(&lent.sources, work, now).await,
+        let Ok((source, rows)) = listed_rows(&lent.sources, work, now, |_| true).await else {
+            return;
         };
-        let Ok((source, rows)) = listed else { return };
         let Some(at) = rows.iter().position(|r| r.id == *after) else { return };
         let ahead = Self::picked(
             &DownloadPick::NextUnread { n: u32::try_from(KEEP_AHEAD).unwrap_or(3) },
@@ -1050,6 +1096,7 @@ impl BookDownloads {
                     // goes with the row, and a row kept as removed stays removed.
                     let _ = std::fs::remove_file(&done.path);
                 }
+                self.note_outcome(row, false, now);
                 self.publish(store, &lent.tx);
                 (true, kept)
             }
@@ -1070,6 +1117,7 @@ impl BookDownloads {
                 if let Err(e) = store.book_download_failed(row.id, &encode(&failure), now) {
                     tracing::warn!(error = %e, "a failed download was not kept");
                 }
+                self.note_outcome(row, true, lent.clock.now());
                 self.publish(store, &lent.tx);
                 (!full, false)
             }
@@ -1665,6 +1713,42 @@ pub(crate) async fn ordered_chapters(
         .ok_or(ReadingFailure::NotFound)?;
     // A chapter listed from another source is downloaded from there: see [`Listers`].
     Ok((source, flatten(groups)))
+}
+
+/// A work's chapters for downloads to pick from, as [`ordered_chapters`] gives them: the list
+/// as kept while it is [`LIST_FRESH`](crate::read_sources::LIST_FRESH), as the series page
+/// showed it, so asking for downloads does not ask the source for a list it gave just now,
+/// unless that list lacks what `covers` looks for. Otherwise the source is asked, and one that does not answer leaves the list as kept, however
+/// old, to pick from: the chapters wait in the queue for the source.
+pub(crate) async fn listed_rows(
+    sources: &BookSources,
+    work: &WorkId,
+    now: i64,
+    covers: impl Fn(&[ChapterRow]) -> bool,
+) -> Result<(String, Vec<ChapterRow>), ReadingFailure> {
+    if let Some(kept) = kept_rows(sources, work, now, crate::read_sources::LIST_FRESH)
+        && covers(&kept.1)
+    {
+        return Ok(kept);
+    }
+    match ordered_chapters(sources, work, now).await {
+        Ok(listed) => Ok(listed),
+        Err(failure) => kept_rows(sources, work, now, i64::MAX).ok_or(failure),
+    }
+}
+
+/// [`listed_rows`] from the list as kept alone, when it was asked within `max_age` seconds.
+fn kept_rows(
+    sources: &BookSources,
+    work: &WorkId,
+    now: i64,
+    max_age: i64,
+) -> Option<(String, Vec<ChapterRow>)> {
+    let (edition, groups) = sources.kept_listing(work, now, max_age)?;
+    let source = edition
+        .map(|e| e.source_id)
+        .or_else(|| sources.edition_of(work, None).map(|(source, _)| source))?;
+    Some((source, flatten(groups)))
 }
 
 /// Where each chapter of a work is downloaded from: the edition's source, or for a chapter the
