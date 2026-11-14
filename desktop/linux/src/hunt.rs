@@ -2365,6 +2365,7 @@ async fn do_steps(shell: &Rc<Shell>) {
                 "downloads" => Dest::ReadDownloads,
                 "sources" => Dest::ReadSources,
                 "search" => Dest::ReadSearch,
+                "shows-search" => Dest::Search,
                 "updates" => Dest::Updates,
                 "calendar" => Dest::Calendar,
                 "settings" => Dest::Settings,
