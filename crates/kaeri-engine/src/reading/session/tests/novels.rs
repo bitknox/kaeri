@@ -420,6 +420,39 @@ async fn a_setting_restyles_the_open_book_and_counts_are_kept_per_key() {
 }
 
 #[tokio::test(start_paused = true)]
+async fn the_terminals_text_width_is_kept_without_restyling_the_book() {
+    use kaeri_model::reader::{ReaderValue, SettingScope};
+    let mut h = novel_harness();
+    h.config.set_terminal(true);
+    h.open_novel(OpenAt::Resume).await;
+    let session = h.session();
+    h.drain();
+    let width = ReaderValue::Amount { value: 80.0 };
+    h.send(ReaderCommand::SetSetting {
+        session: Some(session),
+        medium: Medium::Novel,
+        work: None,
+        key: Key::TextWidth,
+        scope: SettingScope::Device,
+        value: width.clone(),
+    });
+    let row = h
+        .until(|e| match e {
+            ReaderEvent::Settings(view) => {
+                view.rows.iter().find(|r| r.key == Key::TextWidth).cloned()
+            }
+            _ => None,
+        })
+        .await;
+    assert_eq!((row.value, row.scope), (width, SettingScope::Device));
+    let events = h.drain();
+    assert!(
+        !events.iter().any(|e| matches!(e, ReaderEvent::NovelStyle { .. })),
+        "the web view's style does not read the text width: {events:?}"
+    );
+}
+
+#[tokio::test(start_paused = true)]
 async fn an_epub_of_pictures_reads_as_pages() {
     let mut h = harness_of(Store::open_in_memory().unwrap(), "manga", |books| {
         let path = books.join("Volume 1.epub");

@@ -961,6 +961,9 @@ mod tests {
             eink: false,
             two_pages: false,
             dark: true,
+            decodes: None,
+            zoom: 0.0,
+            text: false,
         };
         let foot = |handheld: bool| {
             let screen = super::super::settings::Screen { handheld, ..Default::default() };
@@ -977,6 +980,31 @@ mod tests {
     }
 
     #[test]
+    fn the_terminals_text_width_leaves_the_web_view_style_alone() {
+        let store = kaeri_store::Store::open_in_memory().unwrap();
+        let surface = ReaderSurface {
+            width_px: 1280,
+            height_px: 800,
+            scale: 1.0,
+            eink: false,
+            two_pages: false,
+            dark: true,
+            decodes: None,
+            zoom: 0.0,
+            text: false,
+        };
+        let style_with = |config: &kaeri_core::config::ReadingConfig| {
+            let screen = super::super::settings::Screen::default().with_terminal(true);
+            let layers =
+                Layers::read(&store, config, kaeri_core::media::Medium::Novel, None, screen);
+            style(&layers, &surface, false, NovelSupport::Full, false, false)
+        };
+        let mut narrow = kaeri_core::config::ReadingConfig::default();
+        narrow.novel.insert("text_width".into(), toml::Value::Float(40.0));
+        assert_eq!(style_with(&narrow), style_with(&Default::default()));
+    }
+
+    #[test]
     fn a_line_holds_65_to_75_characters_on_every_screen_but_e_ink() {
         let store = kaeri_store::Store::open_in_memory().unwrap();
         let config = kaeri_core::config::ReadingConfig::default();
@@ -988,6 +1016,9 @@ mod tests {
                 eink,
                 two_pages: true,
                 dark: false,
+                decodes: None,
+                zoom: 0.0,
+                text: false,
             };
             let screen = super::super::settings::Screen::default();
             let layers =
