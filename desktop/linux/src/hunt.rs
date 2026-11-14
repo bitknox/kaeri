@@ -2891,6 +2891,25 @@ fn a11y_hooks() {
             (*class).realize = Some(a11y_realize);
             (*class).unrealize = Some(a11y_unrealize);
             tracing::info!("HUNT a11y hooks on, path at {path}");
+            gtk::glib::log_set_handler(
+                Some("Gtk"),
+                gtk::glib::LogLevels::LEVEL_CRITICAL,
+                false,
+                false,
+                |_, _, message| {
+                    let bt = std::backtrace::Backtrace::force_capture();
+                    let frames: Vec<String> = format!("{bt}")
+                        .lines()
+                        .filter(|l| !l.trim_start().starts_with("at "))
+                        .take(70)
+                        .map(|l| l.trim().to_owned())
+                        .collect();
+                    eprintln!(
+                        "HUNT a11y critical: {message}\nHUNT bt {}",
+                        frames.join("\nHUNT bt ")
+                    );
+                },
+            );
         }
     });
 }
