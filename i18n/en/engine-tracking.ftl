@@ -116,6 +116,31 @@ notice-signed-out-queue = { $count ->
    *[other] Signed out of { $tracker }. { $count } queued changes are kept for the next sign-in.
  }
 
+# Toast, shown once, when a tracker kept refusing a change to a title for about two days and the
+# change stopped being sent. The change itself is still saved in the app. The tracker is its
+# name, such as AniList; the title is a show's or a series' name.
+# @arg tracker: text
+# @arg title: text
+notice-tracker-change-refused = { $tracker } kept refusing a change to { $title }, so it stopped being sent. It's still saved in { -app-name }.
+
+# The same toast when changes to several titles stopped being sent to one tracker at once. The
+# title is the first of them; others is how many more titles there are.
+# @arg tracker: text
+# @arg title: text
+# @arg others: int
+notice-tracker-changes-refused = { $others ->
+    [one] { $tracker } kept refusing changes to { $title } and one more title, so they stopped being sent. They're still saved in { -app-name }.
+   *[other] { $tracker } kept refusing changes to { $title } and { $others } more titles, so they stopped being sent. They're still saved in { -app-name }.
+ }
+
+# The same toast when the app has no name for the titles. Count is how many titles.
+# @arg tracker: text
+# @arg count: int
+notice-tracker-change-refused-untitled = { $count ->
+    [one] { $tracker } kept refusing a change, so it stopped being sent. It's still saved in { -app-name }.
+   *[other] { $tracker } kept refusing changes to { $count } titles, so they stopped being sent. They're still saved in { -app-name }.
+ }
+
 # Toast when signing out of a tracker failed. The reason comes from the system.
 # @arg tracker: text
 # @arg reason: text

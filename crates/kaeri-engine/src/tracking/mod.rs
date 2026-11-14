@@ -1047,6 +1047,68 @@ pub async fn drain_once(sync: &Sync, tx: &Outbox) {
         }
     });
     futures::future::join_all(drains).await;
+    tell_dropped(sync, tx);
+}
+
+/// Say, once, which changes a tracker kept refusing until the outbox stopped sending them: one
+/// notice for each tracker, naming the title. Each is taken from the store as it is said, so it
+/// is never said again; one given up while no app was open is said by the first drain after
+/// launch.
+fn tell_dropped(sync: &Sync, tx: &Outbox) {
+    let dropped = match sync.store.take_untold_dropped_track_ops() {
+        Ok(dropped) => dropped,
+        Err(e) => {
+            tracing::warn!(error = %e, "could not read the changes the outbox gave up");
+            return;
+        }
+    };
+    let mut by_tracker: Vec<(String, Vec<&TrackOp>)> = Vec::new();
+    for d in &dropped {
+        let at = match by_tracker.iter().position(|(t, _)| *t == d.tracker_id) {
+            Some(at) => at,
+            None => {
+                by_tracker.push((d.tracker_id.clone(), Vec::new()));
+                by_tracker.len() - 1
+            }
+        };
+        let ops = &mut by_tracker[at].1;
+        if !ops.iter().any(|o| o.anilist_id() == d.op.anilist_id()) {
+            ops.push(&d.op);
+        }
+    }
+    for (tracker, ops) in by_tracker {
+        let tracker = tracker_name(&tracker);
+        let count = i64::try_from(ops.len()).unwrap_or(i64::MAX);
+        let msg = match ops.iter().find_map(|op| dropped_title(sync, op)) {
+            Some(title) if count == 1 => Msg::NoticeTrackerChangeRefused { tracker, title },
+            Some(title) => {
+                Msg::NoticeTrackerChangesRefused { tracker, title, others: count - 1 }
+            }
+            None => Msg::NoticeTrackerChangeRefusedUntitled { tracker, count },
+        };
+        let _ = tx.send(Event::Toast(Notice::alert(msg)));
+    }
+}
+
+/// The name of the title a given-up change was for, as the app names it: a reading series from
+/// the catalogue it was read from, anything else from the titles the trackers named.
+fn dropped_title(sync: &Sync, op: &TrackOp) -> Option<String> {
+    let id = op.anilist_id();
+    let reading = matches!(
+        op,
+        TrackOp::SetReadProgress { .. }
+            | TrackOp::SetReadStatus { .. }
+            | TrackOp::SetReadScore { .. }
+    );
+    let from_catalog = || {
+        let work = sync.store.book_work(&format!("a:{}", id.get())).ok().flatten()?;
+        let form = sync
+            .titles
+            .as_ref()
+            .map_or(kaeri_store::shelf::TitleForm::English, crate::data::title_form);
+        kaeri_store::shelf::BookTitles::parse(&work.titles).pick(form).map(str::to_owned)
+    };
+    reading.then(from_catalog).flatten().or_else(|| sync.store.cached_title(id).ok().flatten())
 }
 
 /// A tracker's reading outbox, drained to its manga and novel list.
@@ -1746,8 +1808,15 @@ pub fn disconnect(sync: &Sync, tracker_id: &str, tx: &Outbox) {
 /// account that may never exist would grow a badge nobody can act on. A tracker signed
 /// in but offline still queues — its credentials are present — which is the case the
 /// outbox exists for.
-pub fn set_status(sync: &Sync, id: AnilistId, status: LibrarySegment) {
+///
+/// The first change that could not be queued comes back, for the person to be told.
+pub fn set_status(
+    sync: &Sync,
+    id: AnilistId,
+    status: LibrarySegment,
+) -> Result<(), kaeri_store::StoreError> {
     let now = kaeri_store::now();
+    let mut failed = Ok(());
     let watch = segment_to_status(status);
     let op = TrackOp::SetStatus { anilist_id: id, status: watch, at: now };
     let library = sync.trackers.first().map(|t| t.id());
@@ -1764,25 +1833,38 @@ pub fn set_status(sync: &Sync, id: AnilistId, status: LibrarySegment) {
                 }
             }
             Ok(_) => {}
-            Err(e) => tracing::warn!(error = %e, "could not queue a status change"),
+            Err(e) => {
+                if failed.is_ok() {
+                    failed = Err(e);
+                }
+            }
         }
     }
+    failed
 }
 
 /// Queue a score for every tracker.
 ///
 /// Out of ten, because it is the one scale every connected service understands; each
 /// tracker converts on push if it stores something else.
-pub fn set_score(sync: &Sync, id: AnilistId, score: f32) {
+pub fn set_score(
+    sync: &Sync,
+    id: AnilistId,
+    score: f32,
+) -> Result<(), kaeri_store::StoreError> {
     let now = kaeri_store::now();
     let op = TrackOp::SetScore { anilist_id: id, score, at: now };
+    let mut failed = Ok(());
     // Signed-in only, for the same reason as `set_status`.
     for tracker in sync.trackers.iter().filter(|t| t.is_authenticated() && t.serves_watching())
     {
-        if let Err(e) = sync.store.enqueue(tracker.id(), &op, now) {
-            tracing::warn!(error = %e, "could not queue a score");
+        if let Err(e) = sync.store.enqueue(tracker.id(), &op, now)
+            && failed.is_ok()
+        {
+            failed = Err(e);
         }
     }
+    failed
 }
 
 /// Settle a divergence.
@@ -1991,8 +2073,8 @@ mod tests {
         let tokens = files_in(dir.path());
         let sync = Sync::with_tokens(&config, &store, &http, tokens);
 
-        set_status(&sync, AnilistId::new(1), LibrarySegment::Completed);
-        set_score(&sync, AnilistId::new(1), 8.0);
+        set_status(&sync, AnilistId::new(1), LibrarySegment::Completed).unwrap();
+        set_score(&sync, AnilistId::new(1), 8.0).unwrap();
         assert_eq!(store.outbox_depth(Some("kitsu")).unwrap(), 0);
     }
 
@@ -2327,5 +2409,56 @@ mod tests {
         let tx = Outbox::from(tx);
         disconnect(&sync, "anilist", &tx);
         assert_eq!(store.outbox_depth(Some("anilist")).unwrap(), 1);
+    }
+
+    /// The notices a drain sent, as their English text.
+    fn toasts(rx: &mut tokio::sync::mpsc::UnboundedReceiver<Event>) -> Vec<String> {
+        std::iter::from_fn(|| rx.try_recv().ok())
+            .filter_map(|event| match event {
+                Event::Toast(notice) => Some(notice.text),
+                _ => None,
+            })
+            .collect()
+    }
+
+    #[tokio::test]
+    async fn a_change_a_tracker_kept_refusing_is_said_once_even_across_a_restart() {
+        // The outbox gave up on a change after two days of refusals and said nothing: the
+        // tracker kept the old value while every app read as if it had the new one.
+        let mut config = Config::default();
+        config.trackers.enabled.clear();
+        let store = Store::open_in_memory().unwrap();
+        let http = kaeri_net::HttpClient::new(&config.network).unwrap();
+        let dir = tempfile::tempdir().unwrap();
+        let launch = || Sync {
+            trackers: Vec::new(),
+            ..Sync::with_tokens(&config, &store, &http, files_in(dir.path()))
+        };
+
+        // Given up by an engine that closed before it drained again: only the store has it.
+        store.remember_title(AnilistId::new(990_411), "Lanterns Over the Quiet Bay").unwrap();
+        let id = store.enqueue("anilist", &progress(990_411), 0).unwrap().unwrap();
+        let gave_up =
+            (1..=60).any(|attempt| store.fail(id, "Not Found.", attempt * 10_000).unwrap());
+        assert!(gave_up, "the outbox gives the change up");
+
+        let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
+        let tx = Outbox::from(tx);
+        let sync = launch();
+        drain_once(&sync, &tx).await;
+        let said = toasts(&mut rx);
+        assert_eq!(said.len(), 1, "said once at launch: {said:?}");
+        assert!(
+            said[0].contains("AniList") && said[0].contains("Lanterns Over the Quiet Bay"),
+            "naming the tracker and the title: {}",
+            said[0]
+        );
+
+        drain_once(&sync, &tx).await;
+        assert_eq!(toasts(&mut rx), Vec::<String>::new(), "never again in this run");
+        drop(sync);
+        drain_once(&launch(), &tx).await;
+        assert_eq!(toasts(&mut rx), Vec::<String>::new(), "nor after a restart");
+        assert_eq!(store.dropped_track_ops().unwrap().len(), 1, "the record keeps it");
     }
 }

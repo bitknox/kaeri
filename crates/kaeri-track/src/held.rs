@@ -131,10 +131,8 @@ impl Held {
         token: &mut String,
         build: impl Fn(&str) -> reqwest::RequestBuilder,
     ) -> Result<reqwest::Response, kaeri_core::Error> {
-        let failed = |e: reqwest::Error| kaeri_core::Error::Tracker {
-            tracker: self.id.into(),
-            message: e.to_string(),
-        };
+        // No answer at all is the network, never the tracker refusing anything.
+        let failed = |e: reqwest::Error| crate::unreachable(self.id, &e);
         let response = build(token).send().await.map_err(failed)?;
         if !is_rejection(&response) {
             return Ok(response);

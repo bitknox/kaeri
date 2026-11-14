@@ -354,7 +354,7 @@ impl Reader {
                     &value,
                     now,
                 ) {
-                    tracing::warn!(error = %e, "a reader setting was not kept");
+                    cx.tx.not_kept("a reader setting", &e);
                 }
                 self.settings_changed(cx, session, medium, work, key);
             }
@@ -1827,7 +1827,7 @@ impl Session {
             _ => Vec::new(),
         };
         if let Err(e) = cx.services.store.record_read(&event, told) {
-            tracing::warn!(error = %e, "a read chapter was not kept");
+            cx.tx.not_kept("a read chapter", &e);
         }
         let queued_for = if send_now {
             queue_trackers(cx, &self.work, &chapter, at)
@@ -1936,7 +1936,7 @@ impl Session {
         event.novel_pos = here.novel.as_ref().map(NovelPos::encode);
         event.source_id = Some("local".into());
         if let Err(e) = cx.services.store.record_read(&event, Vec::new()) {
-            tracing::warn!(error = %e, "the reading place was not kept");
+            cx.tx.not_kept("the reading place", &e);
         }
     }
 

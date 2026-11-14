@@ -121,6 +121,9 @@ pub struct Store {
     /// so a folder the system moves (an iOS restore, a new device) keeps them. `None` for a
     /// database in memory.
     files: Option<Arc<PathBuf>>,
+    /// This engine's name for the work it claims, such as a chapter it downloads: another
+    /// engine on the same database leaves that work alone while this one says it still does it.
+    owner: Arc<str>,
 }
 
 impl std::fmt::Debug for Store {
@@ -270,7 +273,13 @@ impl Store {
             conn,
             sync: Arc::new(sync::SyncCtx::new()),
             files: None,
+            owner: new_owner(),
         }
+    }
+
+    /// This engine's name for the work it claims: see [`book_downloads`].
+    pub(crate) fn owner(&self) -> &str {
+        &self.owner
     }
 
     /// A downloaded file's path as kept: within the data folder when it is there.
@@ -317,7 +326,7 @@ impl Store {
     ) -> Result<T> {
         let conn = self.personal_conn();
         let mut guard = conn.lock().map_err(|_| StoreError::Poisoned)?;
-        let tx = guard.transaction()?;
+        let tx = write_tx(&mut guard)?;
         let out = f(&tx)?;
         tx.commit()?;
         Ok(out)
@@ -335,11 +344,30 @@ impl Store {
         f: impl FnOnce(&rusqlite::Transaction<'_>) -> Result<T>,
     ) -> Result<T> {
         let mut guard = self.conn.lock().map_err(|_| StoreError::Poisoned)?;
-        let tx = guard.transaction()?;
+        let tx = write_tx(&mut guard)?;
         let out = f(&tx)?;
         tx.commit()?;
         Ok(out)
     }
+}
+
+/// A name for an engine that no other engine on the same database has: its process, and a count
+/// and the time within it.
+fn new_owner() -> Arc<str> {
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static N: AtomicU64 = AtomicU64::new(0);
+    let nanos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_nanos());
+    format!("{}-{}-{nanos}", std::process::id(), N.fetch_add(1, Ordering::Relaxed)).into()
+}
+
+/// A transaction that takes the write lock as it begins, waiting [`schema::BUSY_WAIT`] for it.
+///
+/// A deferred one that reads first and writes after cannot wait: when another process wrote in
+/// between, SQLite fails the write at once rather than let it act on what it read before.
+pub(crate) fn write_tx(conn: &mut Connection) -> rusqlite::Result<rusqlite::Transaction<'_>> {
+    conn.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)
 }
 
 /// The moment a scene recording stopped the clock at, in seconds since the Unix epoch: nought

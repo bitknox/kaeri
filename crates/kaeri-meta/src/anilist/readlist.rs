@@ -75,7 +75,7 @@ impl AniList {
             variables.insert("scoreRaw".into(), ((score * 10.0).round() as u32).into());
         }
         let _: serde_json::Value = self
-            .execute(query::SAVE_READ_PROGRESS, serde_json::Value::Object(variables))
+            .execute_write(query::SAVE_READ_PROGRESS, serde_json::Value::Object(variables))
             .await?;
         Ok(())
     }

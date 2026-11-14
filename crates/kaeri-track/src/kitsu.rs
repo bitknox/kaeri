@@ -22,7 +22,9 @@
 
 use kaeri_core::{
     ids::AnilistId,
-    traits::{ReadRemoval, TrackOp, TrackedEntry, TrackedReadEntry, Tracker, WatchStatus},
+    traits::{
+        Pushed, ReadRemoval, TrackOp, TrackedEntry, TrackedReadEntry, Tracker, WatchStatus,
+    },
 };
 
 use crate::{
@@ -258,13 +260,14 @@ impl KitsuTracker {
             .held
             .send(self, token, |t| self.request(reqwest::Method::GET, &url, t))
             .await?;
-        if payload.status() == reqwest::StatusCode::UNAUTHORIZED {
-            return Err(kaeri_core::Error::Auth("kitsu rejected the token".into()));
-        }
-        let body: serde_json::Value =
-            payload.json().await.map_err(|e| tracker_error(e.to_string()))?;
+        let body = crate::page_json(payload, "kitsu", "kitsu").await?;
+        // Not a refusal of any change: whatever the reason, the queue waits for an answer that
+        // names the account.
         let Some(id) = body["data"][0]["id"].as_str().map(str::to_owned) else {
-            return Err(tracker_error("kitsu returned no user for this token".into()));
+            return Err(kaeri_core::Error::Unavailable {
+                tracker: "kitsu".into(),
+                message: "kitsu returned no user for this token".into(),
+            });
         };
         *self.user_id.write().await = Some(id.clone());
         Ok(id)
@@ -297,13 +300,11 @@ impl KitsuTracker {
              &fields[libraryEntries]=status&page[limit]=1",
             self.site.api()
         );
-        let body: serde_json::Value = self
+        let response = self
             .held
             .send(self, token, |t| self.request(reqwest::Method::GET, &url, t))
-            .await?
-            .json()
-            .await
-            .map_err(|e| tracker_error(e.to_string()))?;
+            .await?;
+        let body = crate::page_json(response, "kitsu", "kitsu").await?;
         Ok(body["data"][0]["id"].as_str().map(str::to_owned))
     }
 
@@ -359,18 +360,10 @@ impl KitsuTracker {
                     .await
             }
         }?;
-        if response.status() == reqwest::StatusCode::UNAUTHORIZED {
-            return Err(kaeri_core::Error::Auth("kitsu rejected the token".into()));
+        if response.status().is_success() {
+            return Ok(());
         }
-        if !response.status().is_success() {
-            let status = response.status();
-            let body = response.text().await.unwrap_or_default();
-            return Err(tracker_error(format!(
-                "kitsu answered {}",
-                crate::said(status, &body)
-            )));
-        }
-        Ok(())
+        Err(crate::failed_answer(response, "kitsu", "kitsu").await)
     }
 }
 
@@ -543,11 +536,11 @@ impl Tracker for KitsuTracker {
         Ok(entries)
     }
 
-    async fn push_read(&self, ops: &[TrackOp]) -> Result<Vec<AnilistId>, kaeri_core::Error> {
-        let Some(mapping) = self.read_mapping.clone() else { return Ok(Vec::new()) };
+    async fn push_read(&self, ops: &[TrackOp]) -> Result<Pushed, kaeri_core::Error> {
+        let Some(mapping) = self.read_mapping.clone() else { return Ok(Pushed::default()) };
         let mut token = self.held.access(self, crate::now_epoch()).await?;
         let user_id = self.user_id(&mut token).await?;
-        let mut ignored = Vec::new();
+        let mut titles = crate::Titles::default();
         for (anilist_id, attributes) in coalesce_read(ops) {
             if attributes.is_empty() {
                 continue;
@@ -557,12 +550,17 @@ impl Tracker for KitsuTracker {
                     anilist_id = anilist_id.get(),
                     "no kitsu manga id for this work"
                 );
-                ignored.push(anilist_id);
+                titles.ignore(anilist_id);
                 continue;
             };
-            self.write_entry(&mut token, &user_id, "manga", kitsu_id, &attributes).await?;
+            let result = if titles.go() {
+                self.write_entry(&mut token, &user_id, "manga", kitsu_id, &attributes).await
+            } else {
+                Ok(())
+            };
+            titles.record(anilist_id, result);
         }
-        Ok(ignored)
+        Ok(titles.finish())
     }
 
     async fn remove_read(
@@ -687,16 +685,22 @@ impl Tracker for KitsuTracker {
     }
 
     async fn push(&self, ops: &[TrackOp]) -> Result<(), kaeri_core::Error> {
+        self.push_checked(ops).await?.into_result("kitsu")
+    }
+
+    /// One library entry write per title, each with its own outcome: a title Kitsu refuses
+    /// fails alone, and the titles after it still go.
+    async fn push_checked(&self, ops: &[TrackOp]) -> Result<Pushed, kaeri_core::Error> {
         let mut token = self.held.access(self, crate::now_epoch()).await?;
         let user_id = self.user_id(&mut token).await?;
 
+        let mut titles = crate::Titles::default();
         for (anilist_id, attributes) in coalesce(ops) {
             if attributes.is_empty() {
                 continue;
             }
             // The drain holds an unmapped title's ops until the mappings change (see
-            // `can_address`). One that arrives anyway is skipped and said out loud, never
-            // raised: failing the batch would hold every other title's progress behind it.
+            // `can_address`). One that arrives anyway is skipped and said out loud.
             let Some(kitsu_id) = self.mapping.kitsu_id(anilist_id) else {
                 tracing::warn!(
                     anilist_id = anilist_id.get(),
@@ -704,10 +708,14 @@ impl Tracker for KitsuTracker {
                 );
                 continue;
             };
-
-            self.write_entry(&mut token, &user_id, "anime", kitsu_id, &attributes).await?;
+            let result = if titles.go() {
+                self.write_entry(&mut token, &user_id, "anime", kitsu_id, &attributes).await
+            } else {
+                Ok(())
+            };
+            titles.record(anilist_id, result);
         }
-        Ok(())
+        Ok(titles.finish())
     }
 }
 

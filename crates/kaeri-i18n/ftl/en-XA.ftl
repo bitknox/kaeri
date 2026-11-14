@@ -1587,6 +1587,23 @@ notice-signed-out-queue =
        *[other] [Šîĝñéð öüţ öƒ { $tracker }. { $count } ƣüéüéð çĥàñĝéš àŕé ķéþţ ƒöŕ ţĥé ñéẋţ šîĝñ-îñ.~~~~~~~~~~~~~~~~~~~~~]
     }
 
+# Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name.
+notice-tracker-change-refused = [{ $tracker } ķéþţ ŕéƒüšîñĝ à çĥàñĝé ţö { $title }, šö îţ šţöþþéð ƀéîñĝ šéñţ. Îţ'š šţîļļ šàṽéð îñ Ķàéŕî.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# The same toast when changes to several titles stopped being sent to one tracker at once. The title is the first of them; others is how many more titles there are.
+notice-tracker-changes-refused =
+    { $others ->
+        [one] [{ $tracker } ķéþţ ŕéƒüšîñĝ çĥàñĝéš ţö { $title } àñð öñé ɱöŕé ţîţļé, šö ţĥéý šţöþþéð ƀéîñĝ šéñţ. Ţĥéý'ŕé šţîļļ šàṽéð îñ Ķàéŕî.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+       *[other] [{ $tracker } ķéþţ ŕéƒüšîñĝ çĥàñĝéš ţö { $title } àñð { $others } ɱöŕé ţîţļéš, šö ţĥéý šţöþþéð ƀéîñĝ šéñţ. Ţĥéý'ŕé šţîļļ šàṽéð îñ Ķàéŕî.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+    }
+
+# The same toast when the app has no name for the titles. Count is how many titles.
+notice-tracker-change-refused-untitled =
+    { $count ->
+        [one] [{ $tracker } ķéþţ ŕéƒüšîñĝ à çĥàñĝé, šö îţ šţöþþéð ƀéîñĝ šéñţ. Îţ'š šţîļļ šàṽéð îñ Ķàéŕî.~~~~~~~~~~~~~~~~~~~~~~~~]
+       *[other] [{ $tracker } ķéþţ ŕéƒüšîñĝ çĥàñĝéš ţö { $count } ţîţļéš, šö ţĥéý šţöþþéð ƀéîñĝ šéñţ. Ţĥéý'ŕé šţîļļ šàṽéð îñ Ķàéŕî.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+    }
+
 # Toast when signing out of a tracker failed. The reason comes from the system.
 notice-sign-out-failed = [Çöüļðñ'ţ šîĝñ öüţ öƒ { $tracker }. Ţŕý àĝàîñ. { $reason }~~~~~~~~~~~~]
 
@@ -1650,6 +1667,9 @@ notice-saved = [Šàṽéð { $label }.~~~]
 
 # Toast when a setting could not be stored. The reason comes from the system.
 notice-not-saved = [Çöüļðñ'ţ šàṽé ţĥàţ šéţţîñĝ. { $reason }~~~~~~~~~~]
+
+# Toast when something the person did, such as a chapter marked read, a place in a book, a watched episode or a list change, could not be stored. The reason comes from the system.
+notice-change-not-kept = [Çöüļðñ'ţ šàṽé ţĥàţ çĥàñĝé. { $reason }~~~~~~~~~]
 
 # Toast when a title's details did not load.
 notice-title-load-failed = [Çöüļðñ'ţ ļöàð ţĥîš ţîţļé. Çĥéçķ ýöüŕ çöññéçţîöñ àñð ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~]

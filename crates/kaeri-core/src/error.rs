@@ -33,8 +33,21 @@ pub enum Error {
     #[error("player: {0}")]
     Player(String),
 
+    /// The tracker answered and refused: a removed or merged entry, a value it does not take.
+    /// Asking again with the same request gets the same answer.
     #[error("tracker {tracker}: {message}")]
     Tracker { tracker: String, message: String },
+
+    /// The tracker asked for a pause (`429`). Says nothing about the request, which goes again
+    /// once the pause is over.
+    #[error("tracker {tracker}: {message}")]
+    RateLimited { tracker: String, message: String, retry_in_secs: Option<u64> },
+
+    /// The tracker's side failed: a `5xx`, a maintenance page, an answer that could not be
+    /// read. Like [`Self::Network`], a reason to wait and ask again, never a verdict on the
+    /// request.
+    #[error("tracker {tracker}: {message}")]
+    Unavailable { tracker: String, message: String },
 
     /// Credentials are absent, expired or rejected.
     ///

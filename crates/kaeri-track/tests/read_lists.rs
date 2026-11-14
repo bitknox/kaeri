@@ -117,7 +117,7 @@ async fn the_mal_push_writes_chapters_volumes_status_and_read_again() {
         progress(8, 4, None),
         progress(99, 1, None),
     ];
-    let ignored = t.push_read(&ops).await.unwrap();
+    let ignored = t.push_read(&ops).await.unwrap().ignored;
     assert_eq!(ignored, [AnilistId::new(99)]);
     let a = server.mal(70).unwrap();
     assert_eq!((a.chapters, a.volumes, a.rereading), (15, 3, true));
@@ -164,7 +164,7 @@ async fn the_kitsu_push_changes_creates_and_never_writes_a_volume() {
         progress(8, 4, Some(1)),
         progress(99, 1, None),
     ];
-    let ignored = t.push_read(&ops).await.unwrap();
+    let ignored = t.push_read(&ops).await.unwrap().ignored;
     assert_eq!(ignored, [AnilistId::new(99)]);
     let a = server.kitsu(700).unwrap();
     assert_eq!((a.progress, a.reconsuming), (15, true));

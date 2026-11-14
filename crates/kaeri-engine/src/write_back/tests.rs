@@ -300,7 +300,7 @@ async fn a_server_that_does_not_answer_is_tried_on_the_backoff_and_then_waits_fo
     let mut at = t0;
     let mut waits = Vec::new();
     loop {
-        let next = kit.store().next_book_progress_due().unwrap();
+        let next = kit.store().next_book_progress_due(at).unwrap();
         let Some(next) = next else { break };
         waits.push(next - at);
         at = next;
