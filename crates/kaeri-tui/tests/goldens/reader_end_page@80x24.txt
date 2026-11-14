@@ -1,0 +1,54 @@
+Kaeri   Harbor Light Recipes · Chapter 14            sources ● 3  ·  anilist ⇅ 2
+────────────────────────────────────────────────────────────────────────────────
+
+    End of chapter 14
+
+    ● Counted as read · AniList updated
+    ● Saved to books.home.example
+
+  ▌ Chapter 15 · The Night Market
+    22 pages · From Home library · Downloaded
+
+
+
+
+
+
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────
+██████████  En…  ↵ continue   n next chapter   e chapters   q back to the series
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r00 c08-27 fg=text
+r00 c28-40 fg=text-dim
+r00 c53-63 fg=state
+r00 c64-65 fg=text-dim
+r00 c66-66 fg=rule
+r00 c67-68 fg=text-dim
+r00 c69-79 fg=state
+r01 c00-79 fg=rule
+r03 c04-20 fg=text mod=BOLD
+r05 c04-04 fg=state
+r05 c06-38 fg=text
+r06 c04-04 fg=state
+r06 c06-32 fg=text
+r08 c02-02 fg=obi
+r08 c04-32 fg=text mod=BOLD
+r09 c04-44 fg=text-dim
+r22 c00-79 fg=rule
+r23 c00-09 fg=text
+r23 c10-14 fg=text-dim
+r23 c17-17 fg=text
+r23 c18-29 fg=text-dim
+r23 c30-30 fg=text
+r23 c31-46 fg=text-dim
+r23 c47-47 fg=text
+r23 c48-59 fg=text-dim
+r23 c60-60 fg=text
+r23 c61-79 fg=text-dim

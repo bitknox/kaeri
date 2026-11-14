@@ -1,0 +1,46 @@
+Kaeri   Harbor Light Recipes · Chapter 15            sources ● 3  ·  anilist ⇅ 2
+────────────────────────────────────────────────────────────────────────────────
+
+    End of chapter 15
+
+    Chapter 16 isn't downloaded
+    You're offline. It opens here once
+    you're connected.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────
+██████████  End of chapter 15                  e chapters   q back to the series
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r00 c08-27 fg=text
+r00 c28-40 fg=text-dim
+r00 c53-63 fg=state
+r00 c64-65 fg=text-dim
+r00 c66-66 fg=rule
+r00 c67-68 fg=text-dim
+r00 c69-79 fg=state
+r01 c00-79 fg=rule
+r03 c04-20 fg=text mod=BOLD
+r05 c04-30 fg=text mod=BOLD
+r06 c04-37 fg=text-dim
+r07 c04-20 fg=text-dim
+r22 c00-79 fg=rule
+r23 c00-09 fg=text
+r23 c10-28 fg=text-dim
+r23 c47-47 fg=text
+r23 c48-59 fg=text-dim
+r23 c60-60 fg=text
+r23 c61-79 fg=text-dim

@@ -1,0 +1,47 @@
+Kaeri   Harbor Light Recipes · Chapter 16            sources ● 3  ·  anilist ⇅ 2
+────────────────────────────────────────────────────────────────────────────────
+
+    End of chapter 16
+
+  ▌ Chapter 16.5 · Side story
+    9 pages · From Home library
+
+    Chapter 17 stays unread if skipped.
+
+
+
+
+
+
+
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────
+██████████  End of chapter 16                  ↵ continue   s skip to chapter 17
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r00 c08-27 fg=text
+r00 c28-40 fg=text-dim
+r00 c53-63 fg=state
+r00 c64-65 fg=text-dim
+r00 c66-66 fg=rule
+r00 c67-68 fg=text-dim
+r00 c69-79 fg=state
+r01 c00-79 fg=rule
+r03 c04-20 fg=text mod=BOLD
+r05 c02-02 fg=obi
+r05 c04-28 fg=text mod=BOLD
+r06 c04-30 fg=text-dim
+r08 c04-38 fg=text-dim
+r22 c00-79 fg=rule
+r23 c00-09 fg=text
+r23 c10-28 fg=text-dim
+r23 c47-47 fg=text
+r23 c48-59 fg=text-dim
+r23 c60-60 fg=text
+r23 c61-79 fg=text-dim

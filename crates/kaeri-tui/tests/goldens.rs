@@ -448,6 +448,14 @@ fn modifiers(set: Modifier) -> String {
 #[path = "golden_scenes/series.rs"]
 mod series_scenes;
 use series_scenes::{series_chapters_loading, series_failed, series_offline, series_page};
+#[path = "golden_scenes/reader.rs"]
+mod reader_scenes;
+use reader_scenes::{
+    reader_blocks_after_resumed, reader_chapter_failed, reader_end_caught_up,
+    reader_end_extras, reader_end_finished, reader_end_not_out, reader_end_offline,
+    reader_end_page, reader_help, reader_images_off, reader_one_page, reader_opening,
+    reader_page_failed, reader_page_loading, reader_two_pages, reader_two_pages_blocks,
+};
 
 macro_rules! scenarios {
     ($($name:ident),+ $(,)?) => {
@@ -607,6 +615,32 @@ scenarios! {
     turn_off_confirm,
     profiles_two,
     add_profile,
+    reader_opening,
+    reader_two_pages,
+    reader_two_pages_blocks,
+    reader_blocks_after_resumed,
+    reader_one_page,
+    reader_images_off,
+    reader_page_loading,
+    reader_page_failed,
+    reader_chapter_failed,
+    reader_end_page,
+    reader_end_caught_up,
+    reader_end_not_out,
+    reader_end_offline,
+    reader_end_extras,
+    reader_end_finished,
+    reader_help,
+}
+
+/// The reader's scenes at the size the board draws them, where that is neither of the two.
+#[test]
+fn reader_scenes_at_the_board_s_sizes() {
+    for (name, scenario, (width, height)) in reader_scenes::BOARD {
+        let mut screen = Screen::new(*width, *height);
+        scenario(&mut screen);
+        golden(name, &screen.draw());
+    }
 }
 
 /// A golden left behind by a renamed or removed scenario is a file nothing checks, and reads as
@@ -616,6 +650,9 @@ fn every_golden_belongs_to_a_scenario() {
     let wanted: Vec<String> = SCENARIOS
         .iter()
         .flat_map(|name| SIZES.iter().map(move |(w, h)| format!("{name}@{w}x{h}.txt")))
+        .chain(
+            reader_scenes::BOARD.iter().map(|(name, _, (w, h))| format!("{name}@{w}x{h}.txt")),
+        )
         .collect();
     let Ok(dir) = std::fs::read_dir(goldens_dir()) else { return };
     let mut stale = Vec::new();

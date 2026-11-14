@@ -1,0 +1,30 @@
+Kaeri   Harbor Light Recipes · Chapter 16
+────────────────────────────────────────────────────────────────
+
+    End of chapter 16
+
+  ▌ Chapter 16.5 · Side story
+    9 pages · From Home library
+
+    Chapter 17 stays unread if skipped.
+
+
+
+
+────────────────────────────────────────────────────────────────
+                               ↵ continue   s skip to chapter 17
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r00 c08-40 fg=text-dim
+r01 c00-63 fg=rule
+r03 c04-20 fg=text mod=BOLD
+r05 c02-02 fg=obi
+r05 c04-28 fg=text mod=BOLD
+r06 c04-30 fg=text-dim
+r08 c04-38 fg=text-dim
+r13 c00-63 fg=rule
+r14 c31-31 fg=text
+r14 c32-43 fg=text-dim
+r14 c44-44 fg=text
+r14 c45-63 fg=text-dim
