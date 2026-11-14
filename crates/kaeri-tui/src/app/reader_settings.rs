@@ -281,6 +281,9 @@ impl App {
                     .or(reader.view.as_ref().and_then(|v| v.settings.as_ref()))?;
                 let row = settings.rows.iter().find(|r| r.key == key)?;
                 let names = choice_names(row, medium);
+                if names.is_empty() {
+                    return None;
+                }
                 let now = choices.iter().position(|(_, current)| *current).unwrap_or(0);
                 let next = if on {
                     (now + 1) % names.len()

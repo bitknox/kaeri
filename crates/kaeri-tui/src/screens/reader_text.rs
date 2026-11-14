@@ -232,8 +232,13 @@ fn preview_text(buf: &mut Buffer, app: &App, reader: &Reader, area: Rect) {
     }
     let room = area.right().saturating_sub(x + 2);
     let width = frame.shape.width.min(room).max(1);
-    let layout = lay_out(&novel.open.text, Shape { width, ..frame.shape });
-    let mut first = layout.line_of(&novel.open.text, &novel.place).unwrap_or(0);
+    // Only the place's document and the one after: the preview shows one screen of text, and
+    // laying out the whole book on every draw of the overlay is wasted work.
+    let docs = &novel.open.text;
+    let at = docs.iter().position(|d| d.spine == novel.place.spine).unwrap_or(0);
+    let near = &docs[at.min(docs.len())..(at + 2).min(docs.len())];
+    let layout = lay_out(near, Shape { width, ..frame.shape });
+    let mut first = layout.line_of(near, &novel.place).unwrap_or(0);
     // The preview starts with words, not the blank line over a heading.
     while layout.lines.get(first).is_some_and(|l| l.is_blank()) {
         first += 1;
