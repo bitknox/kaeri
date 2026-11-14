@@ -142,6 +142,8 @@ fn main() -> glib::ExitCode {
         )
         .with_writer(std::io::stderr)
         .init();
+    #[cfg(feature = "fixtures")]
+    hunt::launch_mark("main");
     let args = args();
     // The language chosen in Settings (the config's own key, the one the terminal app reads),
     // else the system's. `KAERI_LANG` still wins over both.
@@ -179,6 +181,8 @@ fn main() -> glib::ExitCode {
             return glib::ExitCode::FAILURE;
         }
     };
+    #[cfg(feature = "fixtures")]
+    hunt::launch_mark("engine-started");
     let cache_dir = paths.cache_dir.clone();
     let engine::Started { engine, mut events, keep, rebuilt } = started;
     let engine = Arc::new(engine);
@@ -420,11 +424,17 @@ fn build(
         style::app_icon(&display, APP_ID, &files.cache);
         style::action_icons(&display, &files.cache);
     }
+    #[cfg(feature = "fixtures")]
+    hunt::launch_mark("build");
+    #[cfg(feature = "fixtures")]
+    hunt::watch_stalls();
     let hub = Hub::new(engine);
     let prefs = Rc::new(Prefs::open(files.prefs.clone()).with_config(files.paths.clone()));
     let updater = updater::Updater::new(&files.cache, args.fixtures);
     let tv = play_on_tv(args, files);
     let shell = Shell::build(app, Rc::clone(&hub), prefs, player, updater, tv, args.fixtures);
+    #[cfg(feature = "fixtures")]
+    hunt::launch_mark("shell-built");
     // A scene's media controls sit beside the user's own copy's, as MPRIS has instances do.
     let media_name = if args.fixtures {
         format!("{}.instance{}", mpris::NAME, std::process::id())
@@ -461,6 +471,8 @@ fn build(
     });
 
     shell.ctx.window.present();
+    #[cfg(feature = "fixtures")]
+    hunt::launch_mark("presented");
     if let Some(dir) = &args.shots {
         let shots = shots::named(args.shot.as_deref());
         shots::run(Rc::clone(&shell), dir.clone(), args.prefix.clone(), shots);

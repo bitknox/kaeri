@@ -575,6 +575,7 @@ pub fn clear(column: &gtk::Box) {
 }
 
 /// Listen to the engine until `widget` is gone.
+#[track_caller]
 pub fn listen(
     ctx: &Rc<Ctx>,
     widget: &impl IsA<gtk::Widget>,

@@ -667,8 +667,11 @@ impl Hub {
     }
 
     /// Hear every event from now on, until [`Hub::forget`] with the number this returns.
+    #[track_caller]
     pub fn listen(&self, listener: impl Fn(&Event) + 'static) -> u64 {
         let id = self.next.get();
+        #[cfg(feature = "fixtures")]
+        crate::hunt::listener_at(id, std::panic::Location::caller());
         self.next.set(id + 1);
         self.listeners.borrow_mut().push((id, Rc::new(listener)));
         id
@@ -681,6 +684,8 @@ impl Hub {
     /// A batch of the engine's events, in order.
     pub fn take(self: &Rc<Self>, batch: Vec<Event>) {
         for event in batch {
+            #[cfg(feature = "fixtures")]
+            let started = std::time::Instant::now();
             #[cfg(feature = "fixtures")]
             let event = {
                 let mut event = self.unsourced_in(event);
@@ -711,10 +716,16 @@ impl Hub {
             }
             // Cloned out, so a listener may listen or forget as it hears.
             let listeners: Vec<_> =
-                self.listeners.borrow().iter().map(|(_, l)| l.clone()).collect();
-            for listener in listeners {
+                self.listeners.borrow().iter().map(|(id, l)| (*id, l.clone())).collect();
+            for (_id, listener) in listeners {
+                #[cfg(feature = "fixtures")]
+                let one = std::time::Instant::now();
                 guarded("a page listener", || listener(&event)); // i18n-skip
+                #[cfg(feature = "fixtures")]
+                crate::hunt::listener_took(_id, one.elapsed(), &event);
             }
+            #[cfg(feature = "fixtures")]
+            crate::hunt::event_took(started.elapsed(), &event);
         }
     }
 

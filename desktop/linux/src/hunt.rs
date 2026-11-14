@@ -415,8 +415,85 @@ thread_local! {
         const { std::cell::Cell::new((None, 0)) };
 }
 
-/// The longest the main loop went without running a 10 ms tick, since the last probe.
-fn watch_stalls() {
+/// When the process started, as the first mark saw it.
+static LAUNCH: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
+
+fn since_launch() -> u128 {
+    LAUNCH.get_or_init(std::time::Instant::now).elapsed().as_millis()
+}
+
+/// A step of the launch, with the time since `main` began.
+pub fn launch_mark(what: &str) {
+    tracing::info!("HUNT launch {what} at {} ms", since_launch());
+}
+
+thread_local! {
+    static LISTENERS: std::cell::RefCell<std::collections::HashMap<u64, &'static std::panic::Location<'static>>> =
+        std::cell::RefCell::default();
+    static FIRSTS: std::cell::RefCell<std::collections::HashSet<String>> = std::cell::RefCell::default();
+    static WATCHING: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
+
+/// Where in the code a listener was added.
+pub fn listener_at(id: u64, at: &'static std::panic::Location<'static>) {
+    LISTENERS.with(|l| l.borrow_mut().insert(id, at));
+}
+
+/// An event's kind: the start of its debug text, cut short before it costs anything.
+fn kind(event: &kaeri_model::event::Event) -> String {
+    struct Cut(String);
+    impl std::fmt::Write for Cut {
+        fn write_str(&mut self, s: &str) -> std::fmt::Result {
+            for c in s.chars() {
+                if self.0.len() >= 48 || c == ' ' || c == '{' {
+                    return Err(std::fmt::Error);
+                }
+                self.0.push(c);
+            }
+            Ok(())
+        }
+    }
+    let mut cut = Cut(String::new());
+    let _ = std::fmt::Write::write_fmt(&mut cut, format_args!("{event:?}"));
+    cut.0
+}
+
+/// A listener that took more than 20 ms over one event.
+pub fn listener_took(id: u64, took: Duration, event: &kaeri_model::event::Event) {
+    if took.as_millis() > 20 {
+        let at = LISTENERS
+            .with(|l| l.borrow().get(&id).map(|l| format!("{}:{}", l.file(), l.line())));
+        tracing::info!(
+            "HUNT slow listener {} ms at {} ms: {} on {}",
+            took.as_millis(),
+            since_launch(),
+            at.unwrap_or_default(),
+            kind(event)
+        );
+    }
+}
+
+/// Each event kind the first time it comes, and any event whose handling took over 20 ms.
+pub fn event_took(took: Duration, event: &kaeri_model::event::Event) {
+    let kind = kind(event);
+    if FIRSTS.with(|f| f.borrow_mut().insert(kind.clone())) {
+        tracing::info!("HUNT launch first {kind} at {} ms", since_launch());
+    }
+    if took.as_millis() > 20 {
+        tracing::info!(
+            "HUNT slow event {} ms at {} ms: {kind}",
+            took.as_millis(),
+            since_launch()
+        );
+    }
+}
+
+/// The longest the main loop went without running a 10 ms tick, since the last probe; every
+/// gap over 100 ms is logged with when it ended.
+pub fn watch_stalls() {
+    if WATCHING.with(|w| w.replace(true)) {
+        return;
+    }
     glib::timeout_add_local(Duration::from_millis(10), || {
         let now = std::time::Instant::now();
         GAP.with(|g| {
@@ -425,6 +502,9 @@ fn watch_stalls() {
             g.set((Some(now), max.max(gap)));
             if gap > 50 {
                 LONG.with(|l| l.borrow_mut().push(gap));
+            }
+            if gap > 100 {
+                tracing::info!("HUNT stall {gap} ms ending at {} ms", since_launch());
             }
         });
         glib::ControlFlow::Continue
@@ -483,7 +563,8 @@ fn frames(shell: &Rc<Shell>, what: &str) {
         clock.disconnect(before);
     }
     work.sort_unstable();
-    let wq = |q: f64| work.get(((work.len() as f64 - 1.0) * q).round() as usize).map(|u| u / 1000);
+    let wq =
+        |q: f64| work.get(((work.len() as f64 - 1.0) * q).round() as usize).map(|u| u / 1000);
     let long = LONG.with(|l| std::mem::take(&mut *l.borrow_mut()));
     tracing::info!(
         "HUNT frames {what} work: frames={} work_p50_ms={:?} work_p95_ms={:?} work_max_ms={:?} \
@@ -517,6 +598,16 @@ fn frames(shell: &Rc<Shell>, what: &str) {
         }
     }
     walk(window.upcast_ref(), &mut widgets, &mut pictures);
+    fn all(w: &gtk::Widget) -> u32 {
+        let mut n = 1;
+        let mut c = w.first_child();
+        while let Some(x) = c {
+            n += all(&x);
+            c = x.next_sibling();
+        }
+        n
+    }
+    tracing::info!("HUNT frames {what} widgets: in_window={}", all(window.upcast_ref()));
     tracing::info!(
         "HUNT frames {what}: frames={} p50_ms={:?} p95_ms={:?} max_ms={:?} over50={} \
          max_stall_ms={} mapped_widgets={widgets} mapped_pictures={pictures}",
@@ -745,7 +836,9 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
         "hunt-close" => 120.0,
         "hunt-rsearch" => 200.0,
         "hunt-p11" => 600.0,
-        "hunt-do" => std::env::var("HUNT_SECS").ok().and_then(|s| s.parse().ok()).unwrap_or(600.0),
+        "hunt-do" => {
+            std::env::var("HUNT_SECS").ok().and_then(|s| s.parse().ok()).unwrap_or(600.0)
+        }
         _ => return None,
     };
     let shell = Rc::clone(shell);
@@ -1848,8 +1941,9 @@ async fn drive(shell: &Rc<Shell>, name: &str) {
                 list.scroll_to(0, gtk::ListScrollFlags::NONE, None);
             }
             wait_ms(1200).await;
-            let fold = find::<adw::ExpanderRow>(&pop, &|_| true)
-                .or_else(|| find::<adw::ExpanderRow>(shell.reader.widget.upcast_ref(), &|_| true));
+            let fold = find::<adw::ExpanderRow>(&pop, &|_| true).or_else(|| {
+                find::<adw::ExpanderRow>(shell.reader.widget.upcast_ref(), &|_| true)
+            });
             let lists = find::<gtk::ListView>(&pop, &|_| true)
                 .and_then(|l| l.model())
                 .map(|m| m.n_items());
@@ -2051,15 +2145,16 @@ async fn drive(shell: &Rc<Shell>, name: &str) {
             let (work, chapter) = plan.rsplit_once(':').unwrap_or((STRIP, "1"));
             let (work, chapter) = (work.to_owned(), chapter.to_owned());
             let _ = shell.ctx.hub.listen(|event| {
-                if let kaeri_model::event::Event::Reading(kaeri_model::reading::ReadingEvent::Chapters {
-                    volumes, ..
-                }) = event
+                if let kaeri_model::event::Event::Reading(
+                    kaeri_model::reading::ReadingEvent::Chapters { volumes, .. },
+                ) = event
                 {
                     let marked: Vec<String> = volumes
                         .iter()
                         .flat_map(|v| v.chapters.iter())
                         .filter(|r| {
-                            !matches!(r.state, kaeri_model::reading::ChapterReadState::Unread) || r.download.is_some()
+                            !matches!(r.state, kaeri_model::reading::ChapterReadState::Unread)
+                                || r.download.is_some()
                         })
                         .take(40)
                         .map(|r| format!("{}:{:?}:{:?}", r.id, r.state, r.download))
@@ -2147,7 +2242,6 @@ async fn drive(shell: &Rc<Shell>, name: &str) {
     }
 }
 
-
 // ---------------------------------------------------------------------------------------------
 // Round 6: a drive read from HUNT_DO, steps split by ';', words by spaces.
 
@@ -2234,7 +2328,10 @@ fn listen_all(shell: &Rc<Shell>) {
             Event::CameIn(e) => format!("{e:?}"),
             Event::Reading(e) => {
                 let s = format!("{e:?}");
-                if s.starts_with("Failed") || s.starts_with("Download") || s.starts_with("Notice") {
+                if s.starts_with("Failed")
+                    || s.starts_with("Download")
+                    || s.starts_with("Notice")
+                {
                     s
                 } else {
                     return;
@@ -2316,7 +2413,9 @@ async fn do_steps(shell: &Rc<Shell>) {
                 shell,
                 kaeri_model::reading::ReadingCommand::Download {
                     work: kaeri_core::books::WorkId::new(arg(1)),
-                    pick: kaeri_model::reading::DownloadPick::NextUnread { n: num(2, 1) as u32 },
+                    pick: kaeri_model::reading::DownloadPick::NextUnread {
+                        n: num(2, 1) as u32,
+                    },
                 },
             ),
             "dlch" => send(
@@ -2324,11 +2423,16 @@ async fn do_steps(shell: &Rc<Shell>) {
                 kaeri_model::reading::ReadingCommand::Download {
                     work: kaeri_core::books::WorkId::new(arg(1)),
                     pick: kaeri_model::reading::DownloadPick::Chapters {
-                        ids: w[2..].iter().map(|c| kaeri_core::books::ChapterId::new(*c)).collect(),
+                        ids: w[2..]
+                            .iter()
+                            .map(|c| kaeri_core::books::ChapterId::new(*c))
+                            .collect(),
                     },
                 },
             ),
-            "addfolder" => crate::reading::came_in::hunt_add_folder(&shell.ctx, &w[1..].join(" ")),
+            "addfolder" => {
+                crate::reading::came_in::hunt_add_folder(&shell.ctx, &w[1..].join(" "))
+            }
             "folder" => tracing::info!(
                 "HUNT do folder: {}",
                 crate::reading::came_in::hunt_folder(arg(1) == "keep")
@@ -2347,10 +2451,15 @@ async fn do_steps(shell: &Rc<Shell>) {
                 let text = if nth.is_some() { w[2..].join(" ") } else { w[1..].join(" ") };
                 tracing::info!("HUNT do focus: {}", focus_text(shell, &text, nth.unwrap_or(0)));
             }
-            "send" => crate::reading::export::open(&shell.ctx, &kaeri_core::books::WorkId::new(arg(1))),
+            "send" => crate::reading::export::open(
+                &shell.ctx,
+                &kaeri_core::books::WorkId::new(arg(1)),
+            ),
             "chapters" => shell.reader.hunt_chapters(),
             "chapterstab" => shell.reader.hunt_chapters_tab(),
-            "tryagain" => tracing::info!("HUNT do try again: {}", shell.reader.hunt_try_again()),
+            "tryagain" => {
+                tracing::info!("HUNT do try again: {}", shell.reader.hunt_try_again())
+            }
             "files" => files_line(),
             "size" => {
                 let (a, b) = (num(1, 1280) as i32, num(2, 800) as i32);
@@ -2447,7 +2556,11 @@ pub fn biglib(store: &kaeri_store::Store, art: &str, now: i64) {
             tracing::warn!("HUNT biglib status {i}: {e}");
         }
         if i % 7 == 0 {
-            let mut ev = kaeri_store::reading::ReadEvent::new(&work, format!("{}", 1 + i % 40), now - i64::from(i) * 60);
+            let mut ev = kaeri_store::reading::ReadEvent::new(
+                &work,
+                format!("{}", 1 + i % 40),
+                now - i64::from(i) * 60,
+            );
             ev.page = Some(3);
             ev.of_pages = Some(20);
             if let Err(e) = store.record_read(&ev, Vec::new()) {
