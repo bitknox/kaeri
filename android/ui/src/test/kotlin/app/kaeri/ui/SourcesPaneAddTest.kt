@@ -4,7 +4,10 @@
 package app.kaeri.ui
 
 import androidx.activity.ComponentActivity
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -46,8 +49,11 @@ class SourcesPaneAddTest {
         compose.runOnUiThread { store.apply(listOf(Event.Medium(reading), Event.BookSources(BookSourceEvent.View(view)))) }
         compose.setContent {
             KaeriTheme {
+                val snackbarScope = rememberCoroutineScope()
+                val snackbars = remember { Snackbars(SnackbarHostState(), snackbarScope) }
                 CompositionLocalProvider(
                     LocalAppStore provides store,
+                    LocalSnackbars provides snackbars,
                     LocalNavigator provides Navigator(rememberNavController(), Destination.Home),
                 ) { SourcesPane(AppActions()) }
             }
