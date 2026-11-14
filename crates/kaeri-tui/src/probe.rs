@@ -201,6 +201,7 @@ fn classify(seq: &[u8]) -> Seq {
 
 /// What the answers say, through `ratatui-image`'s parser of them. Whether the status report
 /// was among them.
+#[cfg(any(unix, test))]
 fn read_answers(
     answers: &[Vec<u8>],
     into: &mut Answers,
