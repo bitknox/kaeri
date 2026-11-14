@@ -188,11 +188,12 @@ final class ReaderLayoutTests: XCTestCase {
         let narrowWindow = windowFrame(app)
         // Every page of the grid's first row is inside the window.
         let below = pagesSegment(app).frame.maxY
-        // The grid's first row: the numbers nearest under the switch. The reader's bar has
-        // numbers of its own under the panel.
+        // The grid's first row, the one with page 1. The reader's bar under the panel has
+        // numbers of its own, such as the page count.
         let numbers = try texts(app).filter { Int($0.label) != nil && $0.frame.minY > below }
-        let row = numbers.map(\.frame.minY).min() ?? 0
-        let thumbs = numbers.filter { abs($0.frame.minY - row) < 4 }
+        let first = try XCTUnwrap(numbers.first { $0.label == "1" }, "no page 1 in the grid")
+        let thumbs = numbers.filter { abs($0.frame.minY - first.frame.minY) < 4 }
+        XCTAssertGreaterThanOrEqual(thumbs.count, 3, "the grid's first row has \(thumbs.count) pages")
         for thumb in thumbs {
             XCTAssertTrue(narrowWindow.contains(CGPoint(x: thumb.frame.midX, y: thumb.frame.midY)), "page \(thumb.label) is outside the window")
         }
