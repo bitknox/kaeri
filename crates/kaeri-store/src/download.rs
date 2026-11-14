@@ -344,6 +344,22 @@ impl Store {
         })
     }
 
+    /// Claim a waiting download for this engine before it starts it, or renew the claim while
+    /// its torrent is being added: false when another engine on the database has claimed it and
+    /// still says so, and that engine starts it.
+    pub fn claim_download(&self, id: i64) -> Result<bool> {
+        self.with_conn(|c| {
+            let claimed = c.execute(
+                "UPDATE download SET owner = ?2, lease_until = ?3 + ?4
+                  WHERE id = ?1 AND state = 'queued'
+                    AND NOT (owner IS NOT NULL AND owner <> ?2
+                             AND lease_until >= ?3 AND lease_until <= ?3 + ?4)",
+                rusqlite::params![id, self.owner(), now(), crate::book_downloads::LEASE_SECS],
+            )?;
+            Ok(claimed > 0)
+        })
+    }
+
     /// Set a download's state. A download another engine on the database runs, and still says
     /// so, is not put back in the queue: that engine's launch found it running, not cut short.
     pub fn set_download_state(&self, id: i64, state: DownloadState) -> Result<()> {
@@ -827,5 +843,28 @@ mod tests {
         lapse(now() + 31_536_000);
         second.set_download_state(row.id, DownloadState::Queued).unwrap();
         assert_eq!(second.download_for(ID, "1").unwrap().unwrap().state, DownloadState::Queued);
+    }
+
+    #[test]
+    fn a_waiting_download_is_started_by_the_engine_that_claims_it_first() {
+        let (_dir, first, second) = two_engines();
+        let row = first.enqueue_download(ID, "1", "Hoshikuzu", "magnet:?xt=a").unwrap();
+        assert!(first.claim_download(row.id).unwrap());
+        assert!(!second.claim_download(row.id).unwrap(), "the first engine starts it");
+        assert!(first.claim_download(row.id).unwrap(), "renewed while its torrent is added");
+        // The first engine stopped before it started: once the claim runs out, the other takes it.
+        second
+            .with_conn(|c| {
+                c.execute(
+                    "UPDATE download SET lease_until = ?2 WHERE id = ?1",
+                    [row.id, now() - 1],
+                )?;
+                Ok(())
+            })
+            .unwrap();
+        assert!(second.claim_download(row.id).unwrap());
+        // A download already running is not claimed again.
+        second.update_download_progress(row.id, 1, 100, None).unwrap();
+        assert!(!second.claim_download(row.id).unwrap());
     }
 }
