@@ -143,15 +143,13 @@ class NovelCrossTest {
                 override fun getMethod() = "GET"
                 override fun getRequestHeaders(): Map<String, String> = emptyMap()
             }
-            return web.webViewClient.shouldInterceptRequest(host.view, request)
+            return web.webViewClient.shouldInterceptRequest(host.view, request) ?: error("the host answered nothing for $url")
         }
 
         companion object {
             val lastUrl = ShadowWebView::class.java.getDeclaredField("lastUrl").apply { isAccessible = true }
         }
     }
-
-    private fun idle() = shadowOf(Looper.getMainLooper()).idle()
 
     /** Part 2 does not come: part 1 stays with its keys, no place is kept from the empty answer, and the next key asks for part 2 again rather than a part further on. */
     @Test
@@ -255,3 +253,6 @@ class NovelCrossTest {
         reader.host.destroy()
     }
 }
+
+/** Runs what the main looper holds: the host's posts, as the web view's thread would. */
+private fun idle() = shadowOf(Looper.getMainLooper()).idle()
