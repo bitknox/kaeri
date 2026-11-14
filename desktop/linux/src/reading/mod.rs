@@ -684,10 +684,10 @@ mod grid_tests {
             assert_eq!(cards.len(), 2);
             assert!(window.child_focus(gtk::DirectionType::TabForward));
             pump(20);
-            assert!(cards[0].has_focus(), "Tab lands on the first card");
+            assert!(cards[0].is_focus(), "Tab lands on the first card");
             assert!(window.child_focus(gtk::DirectionType::Right));
             pump(20);
-            assert!(cards[1].has_focus(), "Right moves to the next card");
+            assert!(cards[1].is_focus(), "Right moves to the next card");
             assert!(cards[1].activate(), "Return activates the card");
             pump(20);
             assert_eq!(*opened.borrow(), vec!["a:2".to_owned()]);
