@@ -7930,6 +7930,181 @@ pub fn tui_reader_strip_read_offline(chapter: &str, trackers: &str) -> String {
     text("tui-reader-strip-read-offline", &[("chapter", Arg::Text(chapter)), ("trackers", Arg::Text(trackers))])
 }
 
+/// A row of the key reference: make a light novel's text column narrower.
+pub fn tui_reader_action_narrower() -> String {
+    text("tui-reader-action-narrower", &[])
+}
+
+/// A row of the key reference: make a light novel's text column wider.
+pub fn tui_reader_action_wider() -> String {
+    text("tui-reader-action-wider", &[])
+}
+
+/// A row of the key reference in a light novel: switch between turning screens and scrolling lines.
+pub fn tui_reader_action_mode_novel() -> String {
+    text("tui-reader-action-mode-novel", &[])
+}
+
+/// Hint in the reader's status line in a light novel: the keys that change the text's width. Shown in lower case.
+pub fn tui_reader_hint_width() -> String {
+    text("tui-reader-hint-width", &[])
+}
+
+/// Hint in the settings over the reader: the keys that change the setting in the row. Shown in lower case.
+pub fn tui_reader_hint_change() -> String {
+    text("tui-reader-hint-change", &[])
+}
+
+/// A light novel's picture, on a line of its own in the text: the picture's description.
+pub fn tui_reader_novel_picture(alt: &str) -> String {
+    text("tui-reader-novel-picture", &[("alt", Arg::Text(alt))])
+}
+
+/// A light novel's picture with no description, on a line of its own in the text.
+pub fn tui_reader_novel_picture_plain() -> String {
+    text("tui-reader-novel-picture-plain", &[])
+}
+
+/// In the reader's status line in a light novel, after the part's name: how far through the part the text in view reaches, such as "34%".
+pub fn tui_reader_novel_through(percent: i64) -> String {
+    text("tui-reader-novel-through", &[("percent", Arg::Plain(percent))])
+}
+
+/// Heading in the reader settings over what this series keeps for itself.
+pub fn tui_reader_settings_series() -> String {
+    text("tui-reader-settings-series", &[])
+}
+
+/// Heading in the reader settings over what applies to every light novel on this computer.
+pub fn tui_reader_settings_novels_here() -> String {
+    text("tui-reader-settings-novels-here", &[])
+}
+
+/// Heading in the reader settings over what applies to every light novel, on every device.
+pub fn tui_reader_settings_novels_all() -> String {
+    text("tui-reader-settings-novels-all", &[])
+}
+
+/// Heading in the reader settings over what applies to every manga and webtoon on this computer.
+pub fn tui_reader_settings_manga_here() -> String {
+    text("tui-reader-settings-manga-here", &[])
+}
+
+/// Heading in the reader settings over what applies to every manga and webtoon, on every device.
+pub fn tui_reader_settings_manga_all() -> String {
+    text("tui-reader-settings-manga-all", &[])
+}
+
+/// Heading in the reader settings over the settings the apps have and the terminal leaves to itself.
+pub fn tui_reader_settings_not_here() -> String {
+    text("tui-reader-settings-not-here", &[])
+}
+
+/// Under that heading in a light novel's reader settings.
+pub fn tui_reader_settings_novel_note() -> String {
+    text("tui-reader-settings-novel-note", &[])
+}
+
+/// Under that heading in a manga's reader settings.
+pub fn tui_reader_settings_manga_note() -> String {
+    text("tui-reader-settings-manga-note", &[])
+}
+
+/// Heading over the sample of the text at the width being set, beside a light novel's reader settings.
+pub fn tui_reader_settings_preview() -> String {
+    text("tui-reader-settings-preview", &[])
+}
+
+/// At the foot of a light novel's reader settings.
+pub fn tui_reader_settings_novel_foot() -> String {
+    text("tui-reader-settings-novel-foot", &[])
+}
+
+/// At the foot of a manga's reader settings.
+pub fn tui_reader_settings_manga_foot() -> String {
+    text("tui-reader-settings-manga-foot", &[])
+}
+
+/// A row of the reader settings: paged or scrolled, or paged or a strip.
+pub fn tui_reader_setting_mode() -> String {
+    text("tui-reader-setting-mode", &[])
+}
+
+/// A row of the reader settings: right to left or left to right.
+pub fn tui_reader_setting_direction() -> String {
+    text("tui-reader-setting-direction", &[])
+}
+
+/// A row of the reader settings: a page fitted to the screen or to its width.
+pub fn tui_reader_setting_fit() -> String {
+    text("tui-reader-setting-fit", &[])
+}
+
+/// A row of the reader settings: one page at a time, two, or as the window allows.
+pub fn tui_reader_setting_page_layout() -> String {
+    text("tui-reader-setting-page-layout", &[])
+}
+
+/// A row of the reader settings: what a page printed across two pages does on a one-page screen.
+pub fn tui_reader_setting_spreads() -> String {
+    text("tui-reader-setting-spreads", &[])
+}
+
+/// A row of the reader settings: white borders cut from the pages.
+pub fn tui_reader_setting_crop() -> String {
+    text("tui-reader-setting-crop", &[])
+}
+
+/// A row of the reader settings: how wide a webtoon strip runs.
+pub fn tui_reader_setting_strip_width() -> String {
+    text("tui-reader-setting-strip-width", &[])
+}
+
+/// A row of the reader settings: how many columns a light novel's lines run to.
+pub fn tui_reader_setting_text_width() -> String {
+    text("tui-reader-setting-text-width", &[])
+}
+
+/// A row of the reader settings: a blank line between paragraphs or none.
+pub fn tui_reader_setting_line_spacing() -> String {
+    text("tui-reader-setting-line-spacing", &[])
+}
+
+/// A row of the reader settings: lines spaced out to end together at the text width.
+pub fn tui_reader_setting_justify() -> String {
+    text("tui-reader-setting-justify", &[])
+}
+
+/// A reading mode: a screen of text or pages at a time.
+pub fn tui_reader_value_paged() -> String {
+    text("tui-reader-value-paged", &[])
+}
+
+/// A reading mode for light novels: the text scrolls a line at a time.
+pub fn tui_reader_value_scrolled() -> String {
+    text("tui-reader-value-scrolled", &[])
+}
+
+/// A reading mode for manga: whole pages one under another.
+pub fn tui_reader_value_vertical() -> String {
+    text("tui-reader-value-vertical", &[])
+}
+
+/// A line spacing in the terminal: a blank line between paragraphs.
+pub fn tui_reader_value_open() -> String {
+    text("tui-reader-value-open", &[])
+}
+
+/// A line spacing in the terminal: no line between paragraphs.
+pub fn tui_reader_value_tight() -> String {
+    text("tui-reader-value-tight", &[])
+}
+
+/// A width in the reader settings, in the terminal's columns, such as "66 columns".
+pub fn tui_reader_value_columns(columns: i64) -> String {
+    text("tui-reader-value-columns", &[("columns", Arg::Int(columns))])
+}
+
 /// AniList's name, in the line that says it is still being asked.
 pub fn tui_read_anilist() -> String {
     text("tui-read-anilist", &[])

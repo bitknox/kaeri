@@ -495,3 +495,189 @@ tui-reader-strip-read-tracker = Chapter { $chapter } counted as read · { $track
 # @max 90
 # @only tui
 tui-reader-strip-read-offline = Chapter { $chapter } counted as read · { $trackers } updates when you're back online
+
+## Light novels
+
+# A row of the key reference: make a light novel's text column narrower.
+# @only tui
+tui-reader-action-narrower = Text narrower
+
+# A row of the key reference: make a light novel's text column wider.
+# @only tui
+tui-reader-action-wider = Text wider
+
+# A row of the key reference in a light novel: switch between turning screens and scrolling
+# lines.
+# @only tui
+tui-reader-action-mode-novel = Paged or scrolled
+
+# Hint in the reader's status line in a light novel: the keys that change the text's width.
+# Shown in lower case.
+# @max 12
+# @only tui
+tui-reader-hint-width = Width
+
+# Hint in the settings over the reader: the keys that change the setting in the row. Shown in
+# lower case.
+# @max 12
+# @only tui
+tui-reader-hint-change = Change
+
+# A light novel's picture, on a line of its own in the text: the picture's description.
+# @arg alt: text
+# @max 200
+# @only tui
+tui-reader-novel-picture = Picture: { $alt }
+
+# A light novel's picture with no description, on a line of its own in the text.
+# @max 20
+# @only tui
+tui-reader-novel-picture-plain = Picture
+
+# In the reader's status line in a light novel, after the part's name: how far through the part
+# the text in view reaches, such as "34%".
+# @arg percent: plain
+# @max 8
+# @only tui
+tui-reader-novel-through = { $percent }%
+
+## Reader settings
+
+# Heading in the reader settings over what this series keeps for itself.
+# @max 40
+# @only tui
+tui-reader-settings-series = This series
+
+# Heading in the reader settings over what applies to every light novel on this computer.
+# @max 40
+# @only tui
+tui-reader-settings-novels-here = Light novels on this computer
+
+# Heading in the reader settings over what applies to every light novel, on every device.
+# @max 40
+# @only tui
+tui-reader-settings-novels-all = All light novels
+
+# Heading in the reader settings over what applies to every manga and webtoon on this computer.
+# @max 40
+# @only tui
+tui-reader-settings-manga-here = Manga on this computer
+
+# Heading in the reader settings over what applies to every manga and webtoon, on every device.
+# @max 40
+# @only tui
+tui-reader-settings-manga-all = All manga
+
+# Heading in the reader settings over the settings the apps have and the terminal leaves to
+# itself.
+# @max 40
+# @only tui
+tui-reader-settings-not-here = Not in the terminal
+
+# Under that heading in a light novel's reader settings.
+# @only tui
+tui-reader-settings-novel-note = Font, text size and look follow the terminal's own settings. Margins come from the text width.
+
+# Under that heading in a manga's reader settings.
+# @only tui
+tui-reader-settings-manga-note = Look, colour and background follow the terminal's own settings. Tap zones are for touch screens.
+
+# Heading over the sample of the text at the width being set, beside a light novel's reader
+# settings.
+# @max 20
+# @only tui
+tui-reader-settings-preview = Preview
+
+# At the foot of a light novel's reader settings.
+# @max 70
+# @only tui
+tui-reader-settings-novel-foot = Changes apply at once. The place in the text stays.
+
+# At the foot of a manga's reader settings.
+# @max 70
+# @only tui
+tui-reader-settings-manga-foot = Changes apply at once. The page in view stays.
+
+# A row of the reader settings: paged or scrolled, or paged or a strip.
+# @max 20
+# @only tui
+tui-reader-setting-mode = Mode
+
+# A row of the reader settings: right to left or left to right.
+# @max 20
+# @only tui
+tui-reader-setting-direction = Direction
+
+# A row of the reader settings: a page fitted to the screen or to its width.
+# @max 20
+# @only tui
+tui-reader-setting-fit = Fit
+
+# A row of the reader settings: one page at a time, two, or as the window allows.
+# @max 20
+# @only tui
+tui-reader-setting-page-layout = Page layout
+
+# A row of the reader settings: what a page printed across two pages does on a one-page screen.
+# @max 20
+# @only tui
+tui-reader-setting-spreads = Spreads
+
+# A row of the reader settings: white borders cut from the pages.
+# @max 20
+# @only tui
+tui-reader-setting-crop = Crop borders
+
+# A row of the reader settings: how wide a webtoon strip runs.
+# @max 20
+# @only tui
+tui-reader-setting-strip-width = Strip width
+
+# A row of the reader settings: how many columns a light novel's lines run to.
+# @max 20
+# @only tui
+tui-reader-setting-text-width = Text width
+
+# A row of the reader settings: a blank line between paragraphs or none.
+# @max 20
+# @only tui
+tui-reader-setting-line-spacing = Line spacing
+
+# A row of the reader settings: lines spaced out to end together at the text width.
+# @max 20
+# @only tui
+tui-reader-setting-justify = Justify
+
+# A reading mode: a screen of text or pages at a time.
+# @max 12
+# @only tui
+tui-reader-value-paged = Paged
+
+# A reading mode for light novels: the text scrolls a line at a time.
+# @max 12
+# @only tui
+tui-reader-value-scrolled = Scrolled
+
+# A reading mode for manga: whole pages one under another.
+# @max 12
+# @only tui
+tui-reader-value-vertical = Vertical
+
+# A line spacing in the terminal: a blank line between paragraphs.
+# @max 12
+# @only tui
+tui-reader-value-open = Open
+
+# A line spacing in the terminal: no line between paragraphs.
+# @max 12
+# @only tui
+tui-reader-value-tight = Tight
+
+# A width in the reader settings, in the terminal's columns, such as "66 columns".
+# @arg columns: int
+# @max 20
+# @only tui
+tui-reader-value-columns = { $columns ->
+    [one] 1 column
+   *[other] { $columns } columns
+}

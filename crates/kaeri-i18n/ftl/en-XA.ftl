@@ -5015,6 +5015,115 @@ tui-reader-strip-read-tracker = [Çĥàþţéŕ { $chapter } çöüñţéð àš
 # On the reader's status rule in a strip, once the chapter counted as read while the computer is offline: the trackers are told once it is back online.
 tui-reader-strip-read-offline = [Çĥàþţéŕ { $chapter } çöüñţéð àš ŕéàð · { $trackers } üþðàţéš ŵĥéñ ýöü'ŕé ƀàçķ öñļîñé~~~~~~~~~~~~~~~~~~~~]
 
+# A row of the key reference: make a light novel's text column narrower.
+tui-reader-action-narrower = [Ţéẋţ ñàŕŕöŵéŕ~~~~]
+
+# A row of the key reference: make a light novel's text column wider.
+tui-reader-action-wider = [Ţéẋţ ŵîðéŕ~~~]
+
+# A row of the key reference in a light novel: switch between turning screens and scrolling lines.
+tui-reader-action-mode-novel = [Þàĝéð öŕ šçŕöļļéð~~~~~~]
+
+# Hint in the reader's status line in a light novel: the keys that change the text's width. Shown in lower case.
+tui-reader-hint-width = [Ŵîðţĥ~~]
+
+# Hint in the settings over the reader: the keys that change the setting in the row. Shown in lower case.
+tui-reader-hint-change = [Çĥàñĝé~~]
+
+# A light novel's picture, on a line of its own in the text: the picture's description.
+tui-reader-novel-picture = [Þîçţüŕé: { $alt }~~~~]
+
+# A light novel's picture with no description, on a line of its own in the text.
+tui-reader-novel-picture-plain = [Þîçţüŕé~~~]
+
+# In the reader's status line in a light novel, after the part's name: how far through the part the text in view reaches, such as "34%".
+tui-reader-novel-through = [{ $percent }%~~]
+
+# Heading in the reader settings over what this series keeps for itself.
+tui-reader-settings-series = [Ţĥîš šéŕîéš~~~~]
+
+# Heading in the reader settings over what applies to every light novel on this computer.
+tui-reader-settings-novels-here = [Ļîĝĥţ ñöṽéļš öñ ţĥîš çöɱþüţéŕ~~~~~~~~~]
+
+# Heading in the reader settings over what applies to every light novel, on every device.
+tui-reader-settings-novels-all = [Åļļ ļîĝĥţ ñöṽéļš~~~~~]
+
+# Heading in the reader settings over what applies to every manga and webtoon on this computer.
+tui-reader-settings-manga-here = [Ṁàñĝà öñ ţĥîš çöɱþüţéŕ~~~~~~~]
+
+# Heading in the reader settings over what applies to every manga and webtoon, on every device.
+tui-reader-settings-manga-all = [Åļļ ɱàñĝà~~~]
+
+# Heading in the reader settings over the settings the apps have and the terminal leaves to itself.
+tui-reader-settings-not-here = [Ñöţ îñ ţĥé ţéŕɱîñàļ~~~~~~]
+
+# Under that heading in a light novel's reader settings.
+tui-reader-settings-novel-note = [Ƒöñţ, ţéẋţ šîžé àñð ļööķ ƒöļļöŵ ţĥé ţéŕɱîñàļ'š öŵñ šéţţîñĝš. Ṁàŕĝîñš çöɱé ƒŕöɱ ţĥé ţéẋţ ŵîðţĥ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Under that heading in a manga's reader settings.
+tui-reader-settings-manga-note = [Ļööķ, çöļöüŕ àñð ƀàçķĝŕöüñð ƒöļļöŵ ţĥé ţéŕɱîñàļ'š öŵñ šéţţîñĝš. Ţàþ žöñéš àŕé ƒöŕ ţöüçĥ šçŕééñš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Heading over the sample of the text at the width being set, beside a light novel's reader settings.
+tui-reader-settings-preview = [Þŕéṽîéŵ~~~]
+
+# At the foot of a light novel's reader settings.
+tui-reader-settings-novel-foot = [Çĥàñĝéš àþþļý àţ öñçé. Ţĥé þļàçé îñ ţĥé ţéẋţ šţàýš.~~~~~~~~~~~~~~~~]
+
+# At the foot of a manga's reader settings.
+tui-reader-settings-manga-foot = [Çĥàñĝéš àþþļý àţ öñçé. Ţĥé þàĝé îñ ṽîéŵ šţàýš.~~~~~~~~~~~~~~]
+
+# A row of the reader settings: paged or scrolled, or paged or a strip.
+tui-reader-setting-mode = [Ṁöðé~~]
+
+# A row of the reader settings: right to left or left to right.
+tui-reader-setting-direction = [Ðîŕéçţîöñ~~~]
+
+# A row of the reader settings: a page fitted to the screen or to its width.
+tui-reader-setting-fit = [Ƒîţ~]
+
+# A row of the reader settings: one page at a time, two, or as the window allows.
+tui-reader-setting-page-layout = [Þàĝé ļàýöüţ~~~~]
+
+# A row of the reader settings: what a page printed across two pages does on a one-page screen.
+tui-reader-setting-spreads = [Šþŕéàðš~~~]
+
+# A row of the reader settings: white borders cut from the pages.
+tui-reader-setting-crop = [Çŕöþ ƀöŕðéŕš~~~~]
+
+# A row of the reader settings: how wide a webtoon strip runs.
+tui-reader-setting-strip-width = [Šţŕîþ ŵîðţĥ~~~~]
+
+# A row of the reader settings: how many columns a light novel's lines run to.
+tui-reader-setting-text-width = [Ţéẋţ ŵîðţĥ~~~]
+
+# A row of the reader settings: a blank line between paragraphs or none.
+tui-reader-setting-line-spacing = [Ļîñé šþàçîñĝ~~~~]
+
+# A row of the reader settings: lines spaced out to end together at the text width.
+tui-reader-setting-justify = [Ĵüšţîƒý~~~]
+
+# A reading mode: a screen of text or pages at a time.
+tui-reader-value-paged = [Þàĝéð~~]
+
+# A reading mode for light novels: the text scrolls a line at a time.
+tui-reader-value-scrolled = [Šçŕöļļéð~~~]
+
+# A reading mode for manga: whole pages one under another.
+tui-reader-value-vertical = [Ṽéŕţîçàļ~~~]
+
+# A line spacing in the terminal: a blank line between paragraphs.
+tui-reader-value-open = [Öþéñ~~]
+
+# A line spacing in the terminal: no line between paragraphs.
+tui-reader-value-tight = [Ţîĝĥţ~~]
+
+# A width in the reader settings, in the terminal's columns, such as "66 columns".
+tui-reader-value-columns =
+    { $columns ->
+        [one] [1 çöļüɱñ~~~]
+       *[other] [{ $columns } çöļüɱñš~~~~]
+    }
+
 # AniList's name, in the line that says it is still being asked.
 tui-read-anilist = [ÅñîĻîšţ~~~]
 
