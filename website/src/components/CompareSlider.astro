@@ -99,13 +99,15 @@ const looks = [
 		right: 16px;
 	}
 
+	/* The handle moves with a transform the script sets, so a drag never lays the page out again. */
 	.compare-handle {
 		position: absolute;
 		top: 0;
 		bottom: 0;
-		left: var(--pos);
+		left: 50%;
 		width: 44px;
 		margin-left: -22px;
+		transform: translateX(var(--dx, 0px));
 		display: flex;
 		justify-content: center;
 		align-items: center;
@@ -139,17 +141,35 @@ const looks = [
 	}
 
 	.compare-looks button {
-		height: 40px;
-		padding: 0 16px;
+		min-height: 40px;
+		padding: 8px 16px;
+		line-height: 1.25;
 		border: 1px solid var(--ani-dim);
 		border-radius: 20px;
 		background: none;
 		color: var(--ani-text);
 		font: inherit;
-		font-size: 15px;
+		font-size: var(--fs-small);
 		font-weight: 600;
 		cursor: pointer;
+		touch-action: manipulation;
+		-webkit-user-select: none;
+		user-select: none;
 		transition: color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.compare-looks button {
+			transition:
+				color var(--t-fast) var(--ease),
+				background-color var(--t-fast) var(--ease),
+				border-color var(--t-fast) var(--ease),
+				transform 160ms var(--ease-out);
+		}
+
+		.compare-looks button:active {
+			transform: scale(0.97);
+		}
 	}
 
 	.compare-looks button span {
@@ -194,14 +214,21 @@ const looks = [
 		const frame = root.querySelector<HTMLElement>('[data-frame]')!;
 		const handle = root.querySelector<HTMLElement>('[data-handle]')!;
 		const look = root.querySelector<HTMLImageElement>('.compare-look')!;
+		const off = root.querySelector<HTMLImageElement>('.compare-off')!;
 		const tag = root.querySelector<HTMLElement>('[data-look-tag]')!;
 		const text = handle.dataset.valuetext!;
 		let pos = 50;
+		let finger: number | null = null;
 
-		// No easing: the divider is wherever the pointer is.
+		// No easing: the divider is wherever the pointer is. The clip reads --pos; the handle gets its
+		// own transform in pixels, so only the handle and the one picture change on each move.
+		const place = () => {
+			handle.style.setProperty('--dx', `${(frame.clientWidth * (pos - 50)) / 100}px`);
+		};
 		const set = (value: number) => {
 			pos = Math.max(0, Math.min(100, value));
-			frame.style.setProperty('--pos', `${pos}%`);
+			off.style.setProperty('--pos', `${pos}%`);
+			place();
 			handle.setAttribute('aria-valuenow', String(Math.round(pos)));
 			handle.setAttribute('aria-valuetext', text.replace('{{percent}}', String(Math.round(pos))));
 		};
@@ -210,13 +237,22 @@ const looks = [
 			set(((e.clientX - box.left) / box.width) * 100);
 		};
 
+		// One finger drives the divider; a second one landing mid-drag is ignored.
 		frame.addEventListener('pointerdown', (e) => {
+			if (finger !== null) return;
+			finger = e.pointerId;
 			frame.setPointerCapture(e.pointerId);
 			fromPointer(e);
 		});
 		frame.addEventListener('pointermove', (e) => {
-			if (frame.hasPointerCapture(e.pointerId)) fromPointer(e);
+			if (e.pointerId === finger) fromPointer(e);
 		});
+		const release = (e: PointerEvent) => {
+			if (e.pointerId === finger) finger = null;
+		};
+		frame.addEventListener('pointerup', release);
+		frame.addEventListener('pointercancel', release);
+		new ResizeObserver(place).observe(frame);
 		// A mouse moves the divider without a press, as the apps' own comparison does.
 		frame.addEventListener('mousemove', (e) => {
 			if (e.buttons === 0 && matchMedia('(hover: hover)').matches) fromPointer(e as unknown as PointerEvent);
