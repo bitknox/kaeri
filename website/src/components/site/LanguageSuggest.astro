@@ -54,6 +54,21 @@ const offers = alternates
 		display: none;
 	}
 
+	/* It shows a moment after the page, so it rises a little from the edge it sits on rather than
+	   appearing over the text at once. Dismissing it is instant. */
+	@media (prefers-reduced-motion: no-preference) {
+		body.k-body > .lang-suggest {
+			transition:
+				opacity 240ms var(--ease-out),
+				transform 240ms var(--ease-out);
+
+			@starting-style {
+				opacity: 0;
+				transform: translateY(8px);
+			}
+		}
+	}
+
 	.lang-suggest p {
 		flex: 1 1 200px;
 		margin: 0;
