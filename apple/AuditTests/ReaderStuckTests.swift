@@ -1,8 +1,8 @@
 // The reader's stuck states from the round 5 hunt, driven as a person drives them in the Fixtures
-// app: the hardware keys on iPad, Go to page from the keyboard, a novel's end page, a strip
-// scrolled to its top by the system rather than a finger, and a pinch cut off by the app going
-// to the background. Run with the Audit scheme on an iPad Simulator (the keys) or any Simulator
-// (the rest).
+// app: the hardware keys on iPad, Go to page from the keyboard and by touch, a novel's end page,
+// a strip scrolled to its top by the system rather than a finger, and a pinch cut off by the app
+// going to the background. Run with the Audit scheme on an iPad Simulator (the keys) or any
+// Simulator (the rest).
 //
 // The keys here are the ones XCUITest delivers on iPadOS: arrows, Space, letters and Return.
 // Home, End, Page Up, Page Down and Esc from a hardware keyboard do not come through it, so those
@@ -50,7 +50,21 @@ final class ReaderStuckTests: XCTestCase {
     private func opened(_ app: XCUIApplication) -> Bool {
         let line = app.buttons.matching(NSPredicate(format: "label CONTAINS ' · page '")).firstMatch
         let counted = NSPredicate(format: "exists == true AND NOT (label ENDSWITH ' of 1')")
-        return XCTWaiter().wait(for: [XCTNSPredicateExpectation(predicate: counted, object: line)], timeout: 30) == .completed
+        let laidOut = XCTNSPredicateExpectation(predicate: counted, object: line)
+        return XCTWaiter().wait(for: [laidOut], timeout: 30) == .completed
+    }
+
+    /// Whether `field` takes the keys within a while. It asks for them as it reaches its window,
+    /// a moment after the prompt shows.
+    private func focused(_ field: XCUIElement) -> Bool {
+        let keys = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hasKeyboardFocus == true"), object: field)
+        return XCTWaiter().wait(for: [keys], timeout: 5) == .completed
+    }
+
+    /// Whether `field` reads `text` within a while.
+    private func reads(_ field: XCUIElement, _ text: String) -> Bool {
+        let value = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", text), object: field)
+        return XCTWaiter().wait(for: [value], timeout: 5) == .completed
     }
 
     /// The line under the series title, read with the controls up and put away again.
@@ -106,9 +120,14 @@ final class ReaderStuckTests: XCTestCase {
         key(app, .leftArrow); XCTAssertEqual(page(app), start + 5, "Left again after a tap")
     }
 
+    // Go to page is checked twice: from the keyboard, submitted with Return, and by touch, with
+    // the number pad's keys and Go. Keep key presses and taps in separate tests. On the Simulator
+    // a key press in the field swaps the number pad on screen for the hardware keyboard's bar, and
+    // the keyboard keeps the pad's area for a while after: Go never reads as hittable and the next
+    // tap never reaches the app. A test that presses keys and then taps Go fails most runs.
+
     /// G opens Go to page with its field taking the keys, the reader's own keys wait while it is
-    /// up, and closing it gives the keys back. XCUITest types into the number pad on screen, so
-    /// Esc and Return from a keyboard are checked with real key presses on the Simulator instead.
+    /// up, Return goes to the page typed, and closing it gives the keys back.
     func testGoToPageFromTheKeyboard() throws {
         try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "hardware keys are an iPad check")
         let app = launch("readermangartl")
@@ -116,23 +135,46 @@ final class ReaderStuckTests: XCTestCase {
         key(app, "g")
         let field = app.textFields.firstMatch
         XCTAssertTrue(field.waitForExistence(timeout: 5), "Go to page did not open")
-        Thread.sleep(forTimeInterval: 0.8)
-        XCTAssertEqual(field.value(forKey: "hasKeyboardFocus") as? Bool, true, "the field does not have the keyboard")
+        XCTAssertTrue(focused(field), "the field does not have the keyboard")
         // A reader key with the prompt up goes to the field, not the book.
         key(app, "]")
         key(app, .space)
         XCTAssertTrue(field.exists, "a reader key closed the prompt")
-        // What those keys typed goes, and the page goes in its place.
-        let typed = (field.value as? String) ?? ""
-        field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: typed.count) + "5")
-        app.buttons["Go"].tap()
-        XCTAssertTrue(field.waitForNonExistence(timeout: 3), "Go did not close Go to page")
+        XCTAssertTrue(((field.value as? String) ?? "").contains("]"), "a reader key did not go to the field")
+        // What those keys typed is selected and the page typed in its place.
+        key(app, "a", .command)
+        key(app, "5")
+        XCTAssertTrue(reads(field, "5"), "the field does not read 5")
+        key(app, .return)
+        XCTAssertTrue(field.waitForNonExistence(timeout: 3), "Return did not close Go to page")
         XCTAssertEqual(page(app), 5, "Go to page did not go")
         // Closing it gave the keys back: the arrows turn again.
         key(app, .leftArrow)
         XCTAssertEqual(page(app), 6, "Left after Go to page")
         key(app, "g")
         XCTAssertTrue(field.waitForExistence(timeout: 5), "Go to page did not open a second time")
+    }
+
+    /// Go to page by touch alone: the line under the title opens it, the number pad's keys type the
+    /// page and Go goes there.
+    func testGoToPageByTouch() throws {
+        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "the Go to page checks run on iPad")
+        let app = launch("readermangartl")
+        _ = try XCTUnwrap(page(app), "no page on screen")
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        let line = app.buttons.matching(NSPredicate(format: "label CONTAINS ' · page '")).firstMatch
+        XCTAssertTrue(line.waitForExistence(timeout: 5), "no line under the title")
+        line.tap()
+        let field = app.textFields.firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 5), "Go to page did not open")
+        XCTAssertTrue(focused(field), "the field does not have the keyboard")
+        let five = app.keyboards.keys["5"]
+        XCTAssertTrue(five.waitForExistence(timeout: 5), "the number pad did not show")
+        five.tap()
+        XCTAssertTrue(reads(field, "5"), "the field does not read 5")
+        app.buttons["Go"].tap()
+        XCTAssertTrue(field.waitForNonExistence(timeout: 3), "Go did not close Go to page")
+        XCTAssertEqual(page(app), 5, "Go to page did not go")
     }
 
     /// A novel turns by its keys as the comic does, press after press.
