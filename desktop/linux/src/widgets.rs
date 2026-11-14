@@ -172,16 +172,34 @@ pub fn haze(text: &str, class: &str) -> gtk::Label {
     label
 }
 
-/// Sets markup with `<a>` links on a label and makes the links' accessibles at once.
+/// Sets markup with `<a>` links on a label and makes the links' accessibles as soon as the label
+/// is in a window.
 ///
 /// GTK makes a label's link accessibles on first use. When a screen reader's walk is that first
 /// use, they are made while GTK registers the label, and each link registers the label a second
 /// time under a new path. The first path stays in GTK's cache after the label goes, and the next
 /// walk reads the freed label and aborts. Made here, before the label is registered, the links
-/// register it once.
+/// register it once. Not before the label is in a window: making them registers the label, and a
+/// registered label must not be given its role, which GTK does when it joins a window.
 pub fn set_link_markup(label: &gtk::Label, markup: &str) {
     label.set_markup(markup);
-    let _ = label.first_accessible_child();
+    if label.root().is_some() {
+        let _ = label.first_accessible_child();
+        return;
+    }
+    let handler = Rc::new(Cell::new(None));
+    let id = label.connect_notify_local(Some("root"), {
+        let handler = Rc::clone(&handler);
+        move |label, _| {
+            if label.root().is_some() {
+                let _ = label.first_accessible_child();
+                if let Some(id) = handler.take() {
+                    label.disconnect(id);
+                }
+            }
+        }
+    });
+    handler.set(Some(id));
 }
 
 /// A heading over a section of a page, in sentence case: "New this week".
