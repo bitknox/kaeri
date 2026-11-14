@@ -1,5 +1,5 @@
-# Reading's Home and Search in the terminal, drawn as text. The terminal has no reader: a
-# series found here opens in the apps.
+# Reading's Home and Search in the terminal, drawn as text. A series found here opens on its
+# page, and its chapters in the terminal's reader.
 
 ## Search
 
