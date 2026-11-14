@@ -254,6 +254,9 @@ impl LoadedBookPlugin {
             .await
             .map_err(|e| PluginError::Load { path: display.clone(), message: e.to_string() })?;
         host.check_id(path, &manifest.id, refuse_reserved)?;
+        // QA ONLY, never merged: the QA gate learns this source's hosts before any call.
+        #[cfg(feature = "fetch")]
+        crate::host::qa_register(&manifest.id, &manifest.allowed_hosts);
         tracing::info!(
             id = %manifest.id,
             version = %manifest.version,
@@ -492,7 +495,7 @@ impl LoadedBookPlugin {
             self.http.clone(),
         );
         capabilities
-            .fetch(host::Request {
+            .qa_fetch_page(host::Request {
                 method: "GET".into(),
                 url: url.to_owned(),
                 headers: headers.to_vec(),

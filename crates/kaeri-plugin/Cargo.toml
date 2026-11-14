@@ -64,6 +64,8 @@ wasmtime = { version = "49.0", default-features = false, features = ["pulley"] }
 # A fetch response built in a test, for the size ceiling.
 http = "1"
 tempfile = "3"
+# QA ONLY, never merged: paused time for the QA gate's tests.
+tokio = { workspace = true, features = ["test-util"] }
 # A component built in a test, to stand in for a plugin from an older ABI major.
 wasm-encoder = { version = "0.258", features = ["component-model"] }
 
