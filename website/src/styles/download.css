@@ -12,14 +12,12 @@
 }
 
 .ds {
-	padding: var(--space-section) 0 0;
+	padding: var(--space-section) var(--gutter) 0;
 }
 
 .ds-in {
 	max-width: 1200px;
 	margin: 0 auto;
-	padding: 0 var(--gutter);
-	box-sizing: content-box;
 }
 
 .ds-lede {
@@ -37,16 +35,20 @@
 	gap: 40px 64px;
 }
 
-/* One band per system, with ground showing between them. */
+/* One section per system on the page's one surface, each opening on a hairline. */
 .ds-item {
-	margin-top: 64px;
-	padding: 96px 0;
-	background: var(--ani-band);
-	scroll-margin-top: 64px;
+	margin-top: var(--space-head);
+	scroll-margin-top: 24px;
+}
+
+.ds-item > .ds-in,
+.ds-pair > .ds-in {
+	padding-top: clamp(28px, 2vw + 16px, 44px);
+	border-top: 1px solid var(--ani-rule);
 }
 
 .ds-item + .ds-item {
-	margin-top: 56px;
+	margin-top: var(--space-section);
 }
 
 .k-body .ds-item h3 {
@@ -133,7 +135,7 @@
 	padding: 14px 16px;
 	overflow-x: auto;
 	border-radius: 8px;
-	background: var(--ani-ground);
+	background: var(--ani-raised);
 	font-size: 14px;
 	line-height: 1.6;
 }
@@ -205,15 +207,6 @@
 }
 
 @media (max-width: 700px) {
-	.ds-item {
-		margin-top: 40px;
-		padding: 56px 0;
-	}
-
-	.ds-item + .ds-item {
-		margin-top: 32px;
-	}
-
 	.ds-phone img {
 		width: 220px;
 	}
