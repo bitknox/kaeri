@@ -66,6 +66,9 @@ async fn serve_slowly(
                 };
                 let kind = if path.ends_with(".m3u8") {
                     "application/vnd.apple.mpegurl"
+                } else if path.ends_with(".jpg") {
+                    // A segment host that names its MPEG-TS as images.
+                    "image/jpeg"
                 } else {
                     "video/x-matroska"
                 };
@@ -515,6 +518,81 @@ async fn a_slow_first_segment_is_waited_for_and_teaches_nothing() {
     assert!(caps.played("hls-ts"));
 }
 
+/// An HLS stream of 1080-line H.264 whose two segments are `seg0.jpg` and `seg1.jpg` with
+/// `segment`'s bytes, behind a referer, and the load for it.
+async fn hls_with_jpg_segments(segment: Vec<u8>) -> CastLoad {
+    let master = "#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=900000,RESOLUTION=1920x1080,CODECS=\"avc1.640028,mp4a.40.2\"\nv/index.m3u8\n";
+    let media = "#EXTM3U\n#EXT-X-TARGETDURATION:4\n#EXTINF:4.0,\nseg0.jpg\n#EXTINF:4.0,\nseg1.jpg\n#EXT-X-ENDLIST\n";
+    let base = serve(HashMap::from([
+        ("/a/master.m3u8".to_owned(), master.as_bytes().to_vec()),
+        ("/a/v/index.m3u8".to_owned(), media.as_bytes().to_vec()),
+        ("/a/v/seg0.jpg".to_owned(), segment.clone()),
+        ("/a/v/seg1.jpg".to_owned(), segment),
+    ]))
+    .await;
+    let url = format!("{base}/a/master.m3u8");
+    CastLoad {
+        source: CastSource {
+            url: url.clone(),
+            kind: SourceKind::Hls,
+            headers: vec![("Referer".into(), "https://player.example/".into())],
+        },
+        ..torrent(url)
+    }
+}
+
+fn ts_segment() -> Vec<u8> {
+    let mut segment = vec![0xFFu8; 188 * 8];
+    for packet in segment.chunks_mut(188) {
+        packet[0] = 0x47;
+    }
+    segment
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn segments_named_as_images_reach_the_tv_as_the_media_they_are() {
+    let receiver = FakeReceiver::start(FakeOptions { speed: 4.0, ..FakeOptions::default() })
+        .await
+        .unwrap();
+    let memory = Arc::new(CastMemory::memory());
+    let (player, mut events) =
+        CastPlayer::connect(setup(&receiver, Arc::clone(&memory), Arc::new(NoEncoder)))
+            .await
+            .unwrap();
+    player.load(hls_with_jpg_segments(ts_segment()).await);
+    next(&mut events, |e| *e == PlaybackEvent::Loaded).await;
+    assert_eq!(receiver.heard("LOAD").len(), 1);
+    let caps = memory.caps("tv-1");
+    assert!(caps.played("h264/1080/hls"), "{:?}", caps.formats);
+    assert!(caps.formats.values().all(|answer| answer.played), "{:?}", caps.formats);
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_refusal_after_bytes_no_receiver_plays_blames_no_codec() {
+    // Each segment has an image's header before its MPEG-TS, which the TV can't read.
+    let mut segment = b"\x89PNG\r\n\x1a\n".to_vec();
+    segment.extend(ts_segment());
+    let receiver = FakeReceiver::start(FakeOptions {
+        refuse: Refuse {
+            bytes: vec![b"\x89PNG".to_vec()],
+            how: Some(Refusal::LoadFailed),
+            ..Refuse::default()
+        },
+        ..FakeOptions::default()
+    })
+    .await
+    .unwrap();
+    let memory = Arc::new(CastMemory::memory());
+    let (player, mut events) =
+        CastPlayer::connect(setup(&receiver, Arc::clone(&memory), Arc::new(NoEncoder)))
+            .await
+            .unwrap();
+    player.load(hls_with_jpg_segments(segment).await);
+    next(&mut events, |e| matches!(e, PlaybackEvent::Ended { complete: false })).await;
+    assert_eq!(player.failure(), Some(CastFailure::Refused), "not a codec the TV lacks");
+    assert!(memory.caps("tv-1").formats.is_empty(), "{:?}", memory.caps("tv-1").formats);
+}
+
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn an_uncastable_stream_never_takes_the_tv_over() {
     let base =
@@ -777,6 +855,80 @@ async fn another_audio_track_loads_the_file_again_where_it_was_without_a_new_sta
     player.set_audio(1);
     tokio::time::sleep(Duration::from_millis(200)).await;
     assert_eq!(receiver.heard("LOAD").len(), 2);
+}
+
+/// Cast a 60 s Matroska file with a dub to a fake, play a little, and pause it.
+async fn paused_with_a_dub()
+-> (CastPlayer, mpsc::UnboundedReceiver<PlaybackEvent>, FakeReceiver) {
+    let dub = FixtureAudio { language: "eng", ..FixtureAudio::aac() };
+    let file = Fixture {
+        seconds: 60,
+        audio: Some(FixtureAudio::aac()),
+        more_audio: vec![dub],
+        ..Fixture::default()
+    };
+    let base = serve(HashMap::from([("/episode.mkv".to_owned(), matroska(&file))])).await;
+    let receiver = FakeReceiver::start(FakeOptions::default()).await.unwrap();
+    let (player, mut events) = CastPlayer::connect(setup(
+        &receiver,
+        Arc::new(CastMemory::memory()),
+        Arc::new(NoEncoder),
+    ))
+    .await
+    .unwrap();
+    player.load(torrent(format!("{base}/episode.mkv")));
+    next(&mut events, |e| *e == PlaybackEvent::Loaded).await;
+    next(
+        &mut events,
+        |e| matches!(e, PlaybackEvent::Progress { position, .. } if *position >= 2.0),
+    )
+    .await;
+    player.set_paused(true).await.unwrap();
+    next(&mut events, |e| *e == PlaybackEvent::Paused(true)).await;
+    (player, events, receiver)
+}
+
+/// Whether the cast stays paused for a while, saying nothing of playing again.
+async fn stays_paused(
+    player: &CastPlayer,
+    events: &mut mpsc::UnboundedReceiver<PlaybackEvent>,
+) {
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(2);
+    while let Ok(Some(event)) = tokio::time::timeout_at(deadline, events.recv()).await {
+        assert_ne!(event, PlaybackEvent::Paused(false), "the TV started playing by itself");
+    }
+    assert_eq!(player.status().borrow().state, CastState::Paused);
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn another_audio_track_picked_while_paused_loads_paused() {
+    let (player, mut events, receiver) = paused_with_a_dub().await;
+    player.set_audio(1);
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(15);
+    while receiver.heard("LOAD").len() < 2
+        || !player.status().borrow().audio.iter().any(|a| a.index == 1 && a.selected)
+        || player.status().borrow().step.is_some()
+    {
+        assert!(tokio::time::Instant::now() < deadline, "the dub loaded");
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
+    let loads = receiver.heard("LOAD");
+    assert_eq!(loads[1]["autoplay"], false, "{:?}", loads[1]);
+    assert!(loads[1]["currentTime"].as_f64().unwrap_or(0.0) >= 2.0, "{:?}", loads[1]);
+    stays_paused(&player, &mut events).await;
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_late_subtitle_while_paused_loads_paused() {
+    let (player, mut events, receiver) = paused_with_a_dub().await;
+    let dir = tempfile::tempdir().unwrap();
+    let late = dir.path().join("late.vtt");
+    std::fs::write(&late, "WEBVTT\n\n00:00:01.000 --> 00:00:02.000\nHello\n").unwrap();
+    player.add_subtitle(&late, None, Some("en".into())).await.unwrap();
+    let loads = receiver.heard("LOAD");
+    assert_eq!(loads.len(), 2);
+    assert_eq!(loads[1]["autoplay"], false, "{:?}", loads[1]);
+    stays_paused(&player, &mut events).await;
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
