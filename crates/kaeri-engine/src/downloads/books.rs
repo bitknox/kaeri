@@ -1584,7 +1584,15 @@ pub(crate) fn kept_parts(
     serde_json::from_str(&text).ok()
 }
 
+/// The written `part` synced to the disk, then given the chapter's name: a chapter cut off on
+/// the way (a full disk, the app closed) is never found under that name. The part is removed by
+/// whoever sees the failure.
 fn finish(part: &Path, to: &Path, pages: Option<u32>) -> Result<Fetched, Stop> {
+    std::fs::OpenOptions::new()
+        .write(true)
+        .open(part)
+        .and_then(|file| file.sync_all())
+        .map_err(|e| Stop::Failed(io_failure(&e, to)))?;
     std::fs::rename(part, to).map_err(|e| Stop::Failed(io_failure(&e, to)))?;
     let bytes = std::fs::metadata(to).map(|m| m.len()).unwrap_or(0);
     Ok(Fetched { path: to.to_path_buf(), pages, bytes })
