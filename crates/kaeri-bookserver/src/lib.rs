@@ -76,8 +76,8 @@ impl Kind {
     }
 }
 
-/// A server that accepted a sign-in.
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// A server that accepted a sign-in. Its `Debug` leaves the credential out.
+#[derive(Clone, PartialEq, Eq)]
 pub struct SignedIn {
     pub kind: Kind,
     pub name: String,
@@ -86,6 +86,17 @@ pub struct SignedIn {
     pub series: Option<u32>,
     /// What to keep in the secure store.
     pub credential: String,
+}
+
+impl std::fmt::Debug for SignedIn {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("SignedIn")
+            .field("kind", &self.kind)
+            .field("name", &self.name)
+            .field("version", &self.version)
+            .field("series", &self.series)
+            .finish_non_exhaustive()
+    }
 }
 
 /// What an address turned out to be.
@@ -267,9 +278,9 @@ pub async fn count_series(
     .await
 }
 
-/// [`count_series`] for a server whose sign-in `gate` keeps: a Kavita JWT the server refuses
-/// is renewed as its source renews it, and the new tokens go to the keeper; a refusal that
-/// cannot be got past signs the server out.
+/// [`count_series`] for a server whose sign-in `gate` keeps: a Kavita JWT or a Komga session
+/// the server refuses is renewed as its source renews it, and the new sign-in goes to the
+/// keeper; a refusal that cannot be got past signs the server out.
 pub async fn count_series_kept(
     client: &reqwest::Client,
     address: &str,
@@ -293,9 +304,16 @@ async fn count_once(
 ) -> Result<Option<u32>> {
     match kind {
         Kind::Komga => {
-            let credential = komga::Credential::parse(credential)
+            let held = komga::Credential::parse(credential)
                 .ok_or_else(|| ServerError::Parse("the kept sign-in".into()))?;
-            komga::count_series(&Http::new(client, root_of(address), credential.auth())).await
+            let base = Http::new(client, root_of(address), Auth::None);
+            match komga::count_series(&base.with_auth(held.auth())).await {
+                Err(ServerError::Unauthorized) => {
+                    let fresh = komga::renew_kept(&base, &held, gate).await?;
+                    komga::count_series(&base.with_auth(fresh.auth())).await
+                }
+                counted => counted,
+            }
         }
         Kind::Kavita => {
             let tokens = kavita::Tokens::parse(credential)
@@ -353,8 +371,8 @@ pub fn source_with(
     match kind {
         Kind::Komga => {
             let credential = komga::Credential::parse(credential)?;
-            let http = Http::new(client, root_of(address), credential.auth());
-            let source = komga::KomgaSource::new(id, name, http, keep, gate)
+            let http = Http::new(client, root_of(address), Auth::None);
+            let source = komga::KomgaSource::new(id, name, http, credential, keep, gate)
                 .in_libraries(libraries.to_vec());
             Some(Arc::new(source))
         }

@@ -385,3 +385,358 @@ async fn a_lapsed_komga_session_signs_the_source_out_once() {
     assert!(kept.renewed.lock().unwrap().is_empty(), "a Komga session has no way to renew");
     assert_eq!(fake.count("/api/Account/refresh-token"), 0);
 }
+
+/// How the fake Komga answers its remember-me cookie.
+#[derive(Clone)]
+enum Renewal {
+    /// A new session, and a cookie in place of the old one when it rotates it.
+    Session(&'static str, Option<&'static str>),
+    /// The cookie turned down: a 401 that cancels it.
+    Refused,
+    /// A status the server answers instead, as a server that cannot answer now.
+    Status(u16),
+}
+
+#[derive(Clone)]
+struct KomgaPlan {
+    /// Whether a sign-in that asks to be remembered gets the cookie.
+    remember: bool,
+    renewal: Renewal,
+    /// How long the renewal takes.
+    renewal_wait: Duration,
+}
+
+impl KomgaPlan {
+    fn rotating() -> Self {
+        Self {
+            remember: true,
+            renewal: Renewal::Session("sess.two", Some("cookie.two")),
+            renewal_wait: Duration::ZERO,
+        }
+    }
+}
+
+/// One request to the fake Komga: method, path and the header lines as sent.
+type Asked = (String, String, String);
+
+struct KomgaFake {
+    address: String,
+    seen: Arc<Mutex<Vec<Asked>>>,
+}
+
+impl KomgaFake {
+    fn asked(&self, path: &str) -> Vec<Asked> {
+        self.seen.lock().unwrap().iter().filter(|r| r.1.starts_with(path)).cloned().collect()
+    }
+
+    /// The renewals asked: `users/me` with the cookie and no session.
+    fn renewals(&self) -> usize {
+        self.asked("/api/v2/users/me")
+            .iter()
+            .filter(|r| r.2.to_ascii_lowercase().contains("cookie: komga-remember-me="))
+            .count()
+    }
+}
+
+fn header<'a>(head: &'a str, name: &str) -> Option<&'a str> {
+    head.lines().find_map(|line| {
+        let (key, value) = line.split_once(':')?;
+        key.trim().eq_ignore_ascii_case(name).then(|| value.trim())
+    })
+}
+
+const BOOKS: &str = r#"{"content":[{"id":"b1","name":"Lantern Keeper 001","sizeBytes":1000,"media":{"status":"READY","mediaType":"application/zip","pagesCount":2},"metadata":{"title":"","number":"1"}},{"id":"b2","name":"Lantern Keeper 002","sizeBytes":1000,"media":{"status":"READY","mediaType":"application/zip","pagesCount":2},"metadata":{"title":"","number":"2"}}],"totalElements":2}"#;
+const BOOK: &str = r#"{"id":"b1","name":"Lantern Keeper 001","sizeBytes":1000,"media":{"status":"READY","mediaType":"application/zip","pagesCount":2},"metadata":{"title":"","number":"1"}}"#;
+const USER: &str = r#"{"id":"u1","email":"reader@books.example","roles":["USER"]}"#;
+
+/// A Komga of the current API: `users/me` on `api/v2` only. A sign-in hands out `sess.one` and,
+/// asked to remember it, the cookie `cookie.one`. The session it takes starts as none the
+/// source kept, so the kept one has lapsed; the cookie renews it as `plan` says.
+async fn komga(plan: KomgaPlan) -> KomgaFake {
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let address = format!("http://{}", listener.local_addr().unwrap());
+    let seen: Arc<Mutex<Vec<Asked>>> = Arc::default();
+    let session = Arc::new(Mutex::new("sess.current".to_owned()));
+    let cookie = Arc::new(Mutex::new("cookie.one".to_owned()));
+    let log = seen.clone();
+    tokio::spawn(async move {
+        loop {
+            let Ok((mut stream, _)) = listener.accept().await else { return };
+            let (log, session, cookie, plan) =
+                (log.clone(), session.clone(), cookie.clone(), plan.clone());
+            tokio::spawn(async move {
+                let Some(text) = read_request(&mut stream).await else { return };
+                let head = text.split_once("\r\n\r\n").map_or(text.as_str(), |(h, _)| h);
+                let mut first = head.lines().next().unwrap_or_default().split(' ');
+                let (method, path) = (
+                    first.next().unwrap_or("").to_owned(),
+                    first.next().unwrap_or("").to_owned(),
+                );
+                log.lock().unwrap().push((method, path.clone(), head.to_owned()));
+                let token = header(head, "x-auth-token");
+                let sent_cookie = header(head, "cookie")
+                    .and_then(|c| c.strip_prefix("komga-remember-me="))
+                    .map(str::to_owned);
+                let signed = token.is_some_and(|t| t == *session.lock().unwrap());
+                let ok = |headers: String, body: &str| (200u16, headers, body.to_owned());
+                let (status, headers, answer) = if path.starts_with("/api/v2/users/me") {
+                    if header(head, "authorization").is_some() {
+                        *session.lock().unwrap() = "sess.one".into();
+                        let mut headers = "X-Auth-Token: sess.one\r\n".to_owned();
+                        if plan.remember && path.contains("remember-me=true") {
+                            headers.push_str(
+                                "Set-Cookie: komga-remember-me=cookie.one; Max-Age=1209600; Path=/; HttpOnly\r\n",
+                            );
+                        }
+                        ok(headers, USER)
+                    } else if token == Some("")
+                        && sent_cookie.as_deref() == Some(cookie.lock().unwrap().as_str())
+                    {
+                        tokio::time::sleep(plan.renewal_wait).await;
+                        match plan.renewal {
+                            Renewal::Session(fresh, rotated) => {
+                                *session.lock().unwrap() = fresh.into();
+                                let mut headers = format!("X-Auth-Token: {fresh}\r\n");
+                                if let Some(rotated) = rotated {
+                                    *cookie.lock().unwrap() = rotated.into();
+                                    headers.push_str(&format!(
+                                        "Set-Cookie: komga-remember-me={rotated}; Max-Age=1209600; Path=/\r\n"
+                                    ));
+                                }
+                                ok(headers, USER)
+                            }
+                            Renewal::Refused => (
+                                401,
+                                "Set-Cookie: komga-remember-me=; Max-Age=0; Path=/\r\n".into(),
+                                String::new(),
+                            ),
+                            Renewal::Status(status) => (status, String::new(), String::new()),
+                        }
+                    } else if signed {
+                        ok(String::new(), USER)
+                    } else {
+                        (401, String::new(), String::new())
+                    }
+                } else if path.starts_with("/actuator/info") {
+                    ok(String::new(), r#"{"build":{"version":"1.23.0"}}"#)
+                } else if !signed {
+                    (401, String::new(), String::new())
+                } else if path.starts_with("/api/v1/series/s1/books") {
+                    ok(String::new(), BOOKS)
+                } else if path.starts_with("/api/v1/series") {
+                    ok(String::new(), r#"{"content":[],"totalElements":2}"#)
+                } else if path.starts_with("/api/v1/books/b1/pages/") {
+                    ok(String::new(), "image")
+                } else if path.starts_with("/api/v1/books/b1/pages") {
+                    ok(String::new(), r#"[{"number":1},{"number":2}]"#)
+                } else if path.starts_with("/api/v1/books/b1") {
+                    ok(String::new(), BOOK)
+                } else {
+                    (404, String::new(), String::new())
+                };
+                let response = format!(
+                    "HTTP/1.1 {status} X\r\nContent-Type: application/json\r\n{headers}Content-Length: {}\r\nConnection: close\r\n\r\n{answer}",
+                    answer.len()
+                );
+                let _ = stream.write_all(response.as_bytes()).await;
+            });
+        }
+    });
+    KomgaFake { address, seen }
+}
+
+/// A Komga sign-in kept with the remember-me cookie, as a sign-in that asked keeps it.
+const KEPT_KOMGA: &str = r#"komga:{"token":"sess.one","rememberMe":"cookie.one"}"#;
+
+/// The session token and the cookie in a kept Komga sign-in; no cookie for one kept without.
+fn komga_kept(kept: &str) -> (String, Option<String>) {
+    if let Some(token) = kept.strip_prefix("token:") {
+        return (token.to_owned(), None);
+    }
+    let json: serde_json::Value =
+        serde_json::from_str(kept.strip_prefix("komga:").expect("a Komga sign-in")).unwrap();
+    (json["token"].as_str().unwrap().to_owned(), json["rememberMe"].as_str().map(str::to_owned))
+}
+
+struct KomgaKit {
+    fake: KomgaFake,
+    kept: Arc<Kept>,
+    flag: Arc<AtomicBool>,
+    source: Arc<dyn kaeri_core::traits::BookSource>,
+}
+
+async fn komga_kit(plan: KomgaPlan) -> KomgaKit {
+    let fake = komga(plan).await;
+    let kept = Arc::new(Kept::default());
+    let flag = Arc::new(AtomicBool::new(false));
+    let source = source(
+        &reqwest::Client::new(),
+        &Server {
+            id: "m",
+            name: "Komga",
+            kind: Kind::Komga,
+            address: &fake.address,
+            credential: KEPT_KOMGA,
+        },
+        std::env::temp_dir().join("kaeri-renewal-test"),
+        Gate::new(flag.clone(), kept.clone()),
+    )
+    .expect("a Komga source for a remembered sign-in");
+    KomgaKit { fake, kept, flag, source }
+}
+
+fn komga_renewed(kit: &KomgaKit) -> Vec<(String, Option<String>)> {
+    kit.kept.renewed.lock().unwrap().iter().map(|k| komga_kept(k)).collect()
+}
+
+#[tokio::test]
+async fn a_komga_sign_in_asks_to_be_remembered_and_keeps_the_cookie_with_the_session() {
+    let fake = komga(KomgaPlan::rotating()).await;
+    let client = reqwest::Client::new();
+    let done =
+        kaeri_bookserver::sign_in(&client, &fake.address, Some(Kind::Komga), "reader", "pw")
+            .await
+            .unwrap();
+    assert_eq!(komga_kept(&done.credential), ("sess.one".into(), Some("cookie.one".into())));
+    let asked = fake.asked("/api/v2/users/me");
+    assert!(asked[0].1.contains("remember-me=true"), "{:?}", asked[0].1);
+    for secret in ["sess.one", "cookie.one", "pw", &kaeri_bookserver::basic("reader", "pw")] {
+        assert!(!format!("{done:?}").contains(secret), "{done:?} shows {secret}");
+    }
+
+    // A Komga that hands out no cookie is signed in as before, with no error.
+    let fake = komga(KomgaPlan { remember: false, ..KomgaPlan::rotating() }).await;
+    let done =
+        kaeri_bookserver::sign_in(&client, &fake.address, Some(Kind::Komga), "reader", "pw")
+            .await
+            .unwrap();
+    assert_eq!(done.credential, "token:sess.one");
+}
+
+#[tokio::test]
+async fn a_lapsed_komga_session_is_renewed_from_the_remember_me_cookie() {
+    let kit = komga_kit(KomgaPlan::rotating()).await;
+    let hints = BookHints::default();
+    let chapters = kit.source.chapters("s1", &hints).await.unwrap();
+    assert_eq!(chapters.len(), 2);
+    assert_eq!(kit.fake.renewals(), 1);
+    let renewal = &kit.fake.asked("/api/v2/users/me")[0].2;
+    assert_eq!(header(renewal, "x-auth-token"), Some(""), "renewed with no lapsed session");
+    // The refused call went again with the new session.
+    let sessions: Vec<String> = kit
+        .fake
+        .asked("/api/v1/series/s1/books")
+        .iter()
+        .map(|r| header(&r.2, "x-auth-token").unwrap_or_default().to_owned())
+        .collect();
+    assert_eq!(sessions, ["sess.one", "sess.two"]);
+    // The rotated cookie is what is kept, next to the new session.
+    assert_eq!(komga_renewed(&kit), [("sess.two".into(), Some("cookie.two".into()))]);
+    assert!(!kit.flag.load(Ordering::SeqCst));
+    assert_eq!(kit.kept.refused.load(Ordering::SeqCst), 0);
+
+    // A chapter and a page after it go with the new session and renew nothing.
+    let ChapterContent::Images(pages) = kit.source.content("s1", "b1").await.unwrap() else {
+        panic!("images");
+    };
+    assert_eq!(kit.source.fetch_page(&pages[0]).await.unwrap(), b"image");
+    assert_eq!(kit.fake.renewals(), 1);
+    assert!(kit.source.is_available().is_ok());
+}
+
+#[tokio::test]
+async fn a_komga_cookie_turned_down_signs_the_source_out_once_and_is_forgotten() {
+    let kit = komga_kit(KomgaPlan { renewal: Renewal::Refused, ..KomgaPlan::rotating() }).await;
+    let hints = BookHints::default();
+    let error = kit.source.chapters("s1", &hints).await.unwrap_err();
+    assert!(matches!(error, ProviderError::Unavailable(_)), "{error:?}");
+    assert!(kit.flag.load(Ordering::SeqCst));
+    assert!(matches!(kit.source.is_available(), Err(ProviderError::Unavailable(_))));
+    assert_eq!(kit.kept.refused.load(Ordering::SeqCst), 1);
+    // What is kept now has no cookie: the one turned down is gone from the secure store.
+    assert_eq!(komga_renewed(&kit), [("sess.one".into(), None)]);
+
+    // A chapter asked after it asks for no second renewal, and the keeper is told once.
+    let error = kit.source.content("s1", "b1").await.unwrap_err();
+    assert!(matches!(error, ProviderError::Unavailable(_)), "{error:?}");
+    assert_eq!(kit.fake.renewals(), 1);
+    assert_eq!(kit.kept.refused.load(Ordering::SeqCst), 1, "the keeper is told once");
+}
+
+#[tokio::test]
+async fn komga_calls_refused_at_once_share_one_renewal() {
+    let kit = komga_kit(KomgaPlan {
+        renewal_wait: Duration::from_millis(300),
+        ..KomgaPlan::rotating()
+    })
+    .await;
+    let hints = BookHints::default();
+    let mut page = kaeri_core::books::PageRef::new(format!(
+        "{}/api/v1/books/b1/pages/1",
+        kit.fake.address
+    ));
+    page.headers = vec![("X-Auth-Token".into(), "sess.one".into())];
+    let lists = (0..4).map(|_| kit.source.chapters("s1", &hints));
+    let pages = (0..4).map(|_| kit.source.fetch_page(&page));
+    let (lists, pages) =
+        tokio::join!(futures::future::join_all(lists), futures::future::join_all(pages));
+    assert!(lists.iter().all(Result::is_ok), "{lists:?}");
+    assert!(pages.iter().all(|p| p.as_deref() == Ok(b"image".as_slice())), "{pages:?}");
+    assert_eq!(kit.fake.renewals(), 1);
+    assert_eq!(komga_renewed(&kit).len(), 1);
+    assert!(!kit.flag.load(Ordering::SeqCst));
+}
+
+#[tokio::test]
+async fn a_komga_server_that_cannot_answer_the_renewal_keeps_the_sign_in() {
+    let kit =
+        komga_kit(KomgaPlan { renewal: Renewal::Status(503), ..KomgaPlan::rotating() }).await;
+    let error = kit.source.chapters("s1", &BookHints::default()).await.unwrap_err();
+    assert!(!matches!(error, ProviderError::Unavailable(_)), "{error:?}");
+    assert_eq!(kit.fake.renewals(), 1);
+    assert!(!kit.flag.load(Ordering::SeqCst));
+    assert_eq!(kit.kept.refused.load(Ordering::SeqCst), 0);
+    assert!(komga_renewed(&kit).is_empty(), "the session and the cookie are kept as they were");
+    assert!(kit.source.is_available().is_ok());
+}
+
+#[tokio::test]
+async fn the_recheck_of_an_empty_komga_renews_from_the_cookie_too() {
+    let fake = komga(KomgaPlan::rotating()).await;
+    let kept = Arc::new(Kept::default());
+    let flag = Arc::new(AtomicBool::new(false));
+    let gate = Gate::new(flag.clone(), kept.clone());
+    let client = reqwest::Client::new();
+    let counted =
+        count_series_kept(&client, &fake.address, Kind::Komga, KEPT_KOMGA, &gate).await;
+    assert_eq!(counted, Ok(Some(2)));
+    let renewed: Vec<_> = kept.renewed.lock().unwrap().iter().map(|k| komga_kept(k)).collect();
+    assert_eq!(renewed, [("sess.two".into(), Some("cookie.two".into()))]);
+    assert!(!flag.load(Ordering::SeqCst));
+}
+
+#[test]
+fn nothing_secret_shows_in_a_debug_print() {
+    use kaeri_bookserver::{Auth, Http, basic, komga::Credential};
+    let secret = basic("reader", "pw");
+    let shown = [
+        format!("{:?}", Credential::parse(KEPT_KOMGA)),
+        format!("{:?}", Credential::parse(&format!("basic:{secret}"))),
+        format!("{:?}", Auth::Header("X-Auth-Token", "sess.one".into())),
+        format!("{:?}", Auth::Basic(secret.clone())),
+        format!("{:?}", Auth::Bearer("jwt.one".into())),
+        format!(
+            "{:?}",
+            Http::new(
+                &reqwest::Client::new(),
+                "http://books.example",
+                Auth::Basic(secret.clone())
+            )
+        ),
+    ];
+    for line in &shown {
+        for word in ["sess.one", "cookie.one", "jwt.one", secret.as_str()] {
+            assert!(!line.contains(word), "{line} shows {word}");
+        }
+    }
+}
