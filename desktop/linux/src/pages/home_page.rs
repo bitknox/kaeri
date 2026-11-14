@@ -1123,7 +1123,7 @@ impl Page {
         };
         let row = gtk::Box::new(gtk::Orientation::Horizontal, 16);
         let l = gtk::Label::new(None);
-        l.set_markup(&linked(&text, &links));
+        crate::widgets::set_link_markup(&l, &linked(&text, &links));
         l.add_css_class("haze");
         l.add_css_class("home-end");
         l.set_xalign(0.0);
