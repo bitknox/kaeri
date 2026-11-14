@@ -85,6 +85,8 @@ on:
       - desktop/windows/scripts/libmpv-build.sh
       - desktop/windows/libmpv/**
       - desktop/windows/scripts/bindings.sh
+      - desktop/windows/scripts/vc-runtime-check.sh
+      - .cargo/config.toml
       - desktop/windows/Kaeri.Windows/Kaeri.Windows.csproj
       - packaging/windows/kaeri-app.iss
       - packaging/windows/check-installer.ps1
