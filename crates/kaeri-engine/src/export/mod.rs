@@ -583,7 +583,7 @@ fn prepare_files(
     let out = exports.folder(id, services.clock.now());
     let clock = services.clock.clone();
     let send = OneSend {
-        key: id.get().to_string(),
+        key: held::key_of(&exports.mark, id.get()),
         target: target.to_owned(),
         lent: Lent::of(services, tx),
         downloads: services.book_sources.downloads.clone(),
@@ -1108,7 +1108,7 @@ pub(crate) fn held_sends(
     }
     let exports = &services.book_sources.exports;
     let mut again = Vec::new();
-    for send in held::take(services.book_sources.store()) {
+    for send in held::take(services.book_sources.store(), &exports.mark) {
         let command = send.command();
         if !send.running {
             again.push(command);
