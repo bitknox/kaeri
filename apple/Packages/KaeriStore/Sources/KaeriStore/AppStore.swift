@@ -168,7 +168,7 @@ public final class AppStore {
         playbackActivity: PlaybackActivityFeed = PlaybackActivityFeed(),
         airingActivity: AiringActivityFeed = AiringActivityFeed(),
         artworkCostLimit: Int = ArtworkStore.costLimit,
-        artworkCache: NSCache<NSString, Artwork> = NSCache()
+        artworkCache: any ArtworkCache = SystemArtworkCache()
     ) {
         self.jobs = jobs
         self.notices = notices

@@ -397,15 +397,16 @@ struct ArtworkTests {
 /// and never because the system wants memory. A plain NSCache lets go of everything when it does,
 /// and a test reading back art no screen shows then finds nothing: on a machine short of memory
 /// eleven tests failed that way at once. Only the store reaches it, on the main actor.
-final class KeptCache: NSCache<NSString, Artwork>, @unchecked Sendable {
+final class KeptCache: ArtworkCache, @unchecked Sendable {
+    var totalCostLimit = 0
     private var kept: [NSString: (art: Artwork, cost: Int)] = [:]
     private var order: [NSString] = []
 
-    override func object(forKey key: NSString) -> Artwork? {
+    func object(forKey key: NSString) -> Artwork? {
         kept[key]?.art
     }
 
-    override func setObject(_ art: Artwork, forKey key: NSString, cost: Int) {
+    func setObject(_ art: Artwork, forKey key: NSString, cost: Int) {
         removeObject(forKey: key)
         kept[key] = (art, cost)
         order.append(key)
@@ -414,7 +415,7 @@ final class KeptCache: NSCache<NSString, Artwork>, @unchecked Sendable {
         }
     }
 
-    override func removeObject(forKey key: NSString) {
+    func removeObject(forKey key: NSString) {
         kept[key] = nil
         order.removeAll { $0 == key }
     }
