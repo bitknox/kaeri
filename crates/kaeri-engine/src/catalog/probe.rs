@@ -415,17 +415,17 @@ mod tests {
         assert_eq!(kept(&store, title(), &usable, asked), Some(Playable::NotFound));
         assert_eq!(lapsed(&store, title(), &usable, asked), None, "the miss still holds");
 
-        // A find likewise.
-        let find = Probed { at: asked + AHEAD, found: true, sources: Some(usable.mark) };
+        // A find likewise, a minute on.
+        let find = Probed { at: asked + 60, found: true, sources: Some(usable.mark) };
         keep(&store, title(), &find);
         assert_eq!(kept(&store, title(), &usable, asked), Some(Playable::Found));
 
-        // Dated further ahead than that, it was kept before the clock was set back.
-        let miss = Probed { at: asked + AHEAD + 1, found: false, sources: Some(usable.mark) };
+        // An hour ahead, it was kept before the clock was set back.
+        let miss = Probed { at: asked + 3_600, found: false, sources: Some(usable.mark) };
         keep(&store, title(), &miss);
         assert_eq!(kept(&store, title(), &usable, asked), None, "Home shows it unknown");
         assert_eq!(lapsed(&store, title(), &usable, asked), None);
-        assert_eq!(kept(&store, title(), &usable, asked + 1), Some(Playable::NotFound));
+        assert_eq!(kept(&store, title(), &usable, asked + 3_600), Some(Playable::NotFound));
     }
 
     #[tokio::test]
