@@ -1,8 +1,8 @@
 // The iPad layout bugs of the round 5 hunt, checked in the Fixtures app: the Chapters popover in
 // landscape and in a narrow window, the opening screen's chapter, the series header at the
 // largest text size, a failed strip image's words, Choose chapters' Download in a narrow window,
-// and Downloads and Sources keeping their place when the window is made narrow. Run with the
-// Audit scheme on an iPad Simulator.
+// Downloads and Sources keeping their place when the window is made narrow, and the app running on
+// through narrow and wide. Run with the Audit scheme on an iPad Simulator.
 //
 // With TEST_RUNNER_KAERI_TEST_MARKS set to a folder, each test leaves a screenshot there and a
 // line of the frames it measured, for before and after shots.
@@ -90,6 +90,19 @@ final class ReaderLayoutTests: XCTestCase {
         }
     }
 
+    /// Every text on screen with its frame, read from one snapshot of the app. Reading the texts
+    /// one index at a time asks the app again for each, and a strip still placing its images
+    /// can have fewer by the time the last index is asked for.
+    private func texts(_ app: XCUIApplication) throws -> [(label: String, frame: CGRect)] {
+        var found: [(String, CGRect)] = []
+        func walk(_ node: XCUIElementSnapshot) {
+            if node.elementType == .staticText { found.append((node.label, node.frame)) }
+            node.children.forEach(walk)
+        }
+        walk(try app.snapshot())
+        return found
+    }
+
     private func requirePad() throws {
         try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "an iPad check")
     }
@@ -146,6 +159,13 @@ final class ReaderLayoutTests: XCTestCase {
         // The keyboard's way in, as the hunt opened it.
         app.typeKey("l", modifierFlags: .command)
         assertSwitchInside(app, "p5-landscape-cmd-l")
+        app.terminate()
+        // Cmd-L with the reader's bar hidden, where the Chapters button has slid away.
+        let hidden = launch(["-KaeriScene", "readermangartl"])
+        XCTAssertTrue(hidden.wait(for: .runningForeground, timeout: 20))
+        Thread.sleep(forTimeInterval: 6)
+        hidden.typeKey("l", modifierFlags: .command)
+        assertSwitchInside(hidden, "p5-landscape-cmd-l-hidden")
     }
 
     // MARK: P6, Chapters in a narrow window
@@ -167,13 +187,52 @@ final class ReaderLayoutTests: XCTestCase {
         assertSwitchInside(app, "p6-narrow")
         let narrowWindow = windowFrame(app)
         // Every page of the grid's first row is inside the window.
-        let thumbs = app.staticTexts.allElementsBoundByIndex.filter { Int($0.label) != nil && $0.frame.minY > pagesSegment(app).frame.maxY }
-        for thumb in thumbs.prefix(5) {
+        let below = pagesSegment(app).frame.maxY
+        // The grid's first row: the numbers nearest under the switch. The reader's bar has
+        // numbers of its own under the panel.
+        let numbers = try texts(app).filter { Int($0.label) != nil && $0.frame.minY > below }
+        let row = numbers.map(\.frame.minY).min() ?? 0
+        let thumbs = numbers.filter { abs($0.frame.minY - row) < 4 }
+        for thumb in thumbs {
             XCTAssertTrue(narrowWindow.contains(CGPoint(x: thumb.frame.midX, y: thumb.frame.midY)), "page \(thumb.label) is outside the window")
         }
     }
 
-    /// Drags the app window's lower right corner left until the window is `width` wide.
+    // MARK: A narrow window keeps the app running
+
+    /// Narrowed and widened twice, on Watch, on Read and with the reader open: Read's bar has
+    /// fewer tabs than its sidebar, Watch's has as many.
+    func testTheAppKeepsRunningThroughNarrowAndWide() throws {
+        try requirePad()
+        let scenes: [(String, [String])] = [
+            ("watching", ["-KaeriScene", "watching"]),
+            ("reading", ["-KaeriScene", "readinghome"]),
+            ("reader", ["-KaeriScene", "readermangartl", "-KaeriReader", "chrome"]),
+        ]
+        for (name, arguments) in scenes {
+            let app = launch(arguments)
+            XCTAssertTrue(app.wait(for: .runningForeground, timeout: 20), "\(name): the app did not start")
+            Thread.sleep(forTimeInterval: 3)
+            for turn in 1...2 {
+                narrow(app, to: 375)
+                let window = windowFrame(app)
+                guard window.width <= 500 else {
+                    app.terminate()
+                    throw XCTSkip("the window did not get narrow: \(window)")
+                }
+                Thread.sleep(forTimeInterval: 2)
+                mark("narrow-\(name)-\(turn)", "window \(window) state \(app.state.rawValue)")
+                XCTAssertEqual(app.state, .runningForeground, "\(name): the app ended when the window was made narrow (turn \(turn))")
+                guard app.state == .runningForeground else { break }
+                widen(app)
+                Thread.sleep(forTimeInterval: 2)
+                XCTAssertEqual(app.state, .runningForeground, "\(name): the app ended when the window was made wide (turn \(turn))")
+                guard app.state == .runningForeground else { break }
+            }
+            app.terminate()
+        }
+    }
+
     /// The window's corner dragged back out to the screen's edge.
     private func widen(_ app: XCUIApplication) {
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
@@ -185,6 +244,7 @@ final class ReaderLayoutTests: XCTestCase {
         start.press(forDuration: 0.6, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.4)
     }
 
+    /// Drags the app window's lower right corner left until the window is `width` wide.
     private func narrow(_ app: XCUIApplication, to width: CGFloat) {
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         let frame = windowFrame(app)
@@ -258,19 +318,20 @@ final class ReaderLayoutTests: XCTestCase {
         let app = launch(["-KaeriScene", "readerstrip", "-KaeriReader", "pagefailed"])
         let retry = app.buttons["Try again"].firstMatch
         XCTAssertTrue(retry.waitForExistence(timeout: 20), "no failed image")
-        let texts = app.staticTexts.allElementsBoundByIndex.map(\.label)
-        mark("p9-strip-failed", "texts \(texts)")
-        XCTAssertTrue(texts.contains("Couldn't load"), "no Couldn't load under the image's number")
-        XCTAssertFalse(texts.contains { $0.contains("Swipe") }, "a swipe hint on a strip")
-        XCTAssertFalse(texts.contains { $0.hasPrefix("Couldn't load page") }, "a strip image called a page")
+        let shown = try texts(app).map(\.label)
+        mark("p9-strip-failed", "texts \(shown)")
+        XCTAssertTrue(shown.contains("Couldn't load"), "no Couldn't load under the image's number")
+        XCTAssertFalse(shown.contains { $0.contains("Swipe") }, "a swipe hint on a strip")
+        XCTAssertFalse(shown.contains { $0.hasPrefix("Couldn't load page") }, "a strip image called a page")
     }
 
     func testChooseChaptersDownloadFitsANarrowWindow() throws {
         let app = launch(["-KaeriScene", "readingseries", "-KaeriWork", "a:900301", "-KaeriSheet", "choose-chapters"])
         XCTAssertTrue(app.buttons["Mark read"].firstMatch.waitForExistence(timeout: 20), "no Choose chapters bar")
         if UIDevice.current.userInterfaceIdiom == .pad {
-            let bar = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Download '")).firstMatch
-            mark("p17-choose-wide", "window \(windowFrame(app)) download \(bar.label) \(bar.frame)")
+            // A windowed app opens at the size it was left at, which can be narrow already.
+            let bar = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Download'")).firstMatch
+            mark("p17-choose-wide", "window \(windowFrame(app)) download \(bar.exists ? "\(bar.label) \(bar.frame)" : "none")")
             narrow(app, to: 375)
         }
         let window = windowFrame(app)
