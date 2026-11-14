@@ -4,6 +4,7 @@
 
 package app.kaeri.reader
 
+import android.os.SystemClock
 import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
@@ -13,16 +14,17 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEvent as ComposeKeyEvent
 import androidx.compose.ui.test.KeyInjectionScope
 import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.performKeyPress
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.withKeyDown
 import androidx.compose.ui.unit.dp
 import app.kaeri.design.ObiSilk
 import app.kaeri.engine.model.Leaf
-import app.kaeri.engine.model.ReadDirection
 import app.kaeri.engine.model.ReaderMode
 import app.kaeri.engine.model.tapScrollStep
 import app.kaeri.reader.phone.PhoneReader
@@ -124,17 +126,28 @@ class StripKeysTest {
         assertEquals(line, scrolled(), 2f)
     }
 
+    /** One key down with [repeat] as its repeat count, as a held key sends them, then idle. */
+    private fun down(code: Int, repeat: Int) {
+        val now = SystemClock.uptimeMillis()
+        compose.onNode(isFocused()).performKeyPress(ComposeKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_DOWN, code, repeat)))
+        compose.waitForIdle()
+    }
+
+    private fun up(code: Int) {
+        val now = SystemClock.uptimeMillis()
+        compose.onNode(isFocused()).performKeyPress(ComposeKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_UP, code, 0)))
+        compose.waitForIdle()
+    }
+
     @Test
     fun a_held_arrow_keeps_scrolling_and_a_held_page_key_moves_once() {
-        val rules = ReaderKeyRules(ReadDirection.RIGHT_TO_LEFT, volumeDownForward = true)
-        assertEquals(StripMove.LINE_DOWN, rules.stripMove(KeyEvent.KEYCODE_DPAD_DOWN, repeat = 3))
-        assertEquals(StripMove.NONE, rules.stripMove(KeyEvent.KEYCODE_PAGE_DOWN, repeat = 1))
-        assertEquals(StripMove.SCREEN_DOWN, rules.stripMove(KeyEvent.KEYCODE_VOLUME_DOWN))
-        assertEquals(StripMove.SCREEN_UP, rules.stripMove(KeyEvent.KEYCODE_VOLUME_UP))
-        assertEquals(null, ReaderKeyRules(ReadDirection.RIGHT_TO_LEFT, volumeTurns = false).stripMove(KeyEvent.KEYCODE_VOLUME_DOWN))
-        // Enter, Escape and G stay the reader's.
-        assertEquals(null, rules.stripMove(KeyEvent.KEYCODE_ENTER))
-        assertEquals(null, rules.stripMove(KeyEvent.KEYCODE_ESCAPE))
-        assertEquals(null, rules.stripMove(KeyEvent.KEYCODE_G))
+        strip()
+        repeat(3) { down(KeyEvent.KEYCODE_DPAD_DOWN, it) }
+        up(KeyEvent.KEYCODE_DPAD_DOWN)
+        assertEquals(3 * line, scrolled(), 2f)
+        val held = scrolled()
+        repeat(3) { down(KeyEvent.KEYCODE_PAGE_DOWN, it) }
+        up(KeyEvent.KEYCODE_PAGE_DOWN)
+        assertEquals(held + screen, scrolled(), 2f)
     }
 }
