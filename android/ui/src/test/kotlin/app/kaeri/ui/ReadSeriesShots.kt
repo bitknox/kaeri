@@ -9,6 +9,7 @@ import app.kaeri.store.ExportJob
 import app.kaeri.store.FixtureScene
 import app.kaeri.store.GroupsStage
 import app.kaeri.store.ReadFromStage
+import app.kaeri.store.SendHoldStage
 import app.kaeri.ui.reading.SeriesShots
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -120,8 +121,7 @@ class ReadSeriesShots : ReadingShotHarness() {
 
     /**
      * On a phone network with chapters kept to Wi-Fi, a send of chapters to fetch holds until
-     * Wi-Fi. The manga's folder has files for its last chapters, which would go at once, so the
-     * sheet starts on its first chapters, which it has no files for.
+     * Wi-Fi. The scene's chapters are files in a folder, which go at once, so the hold is staged.
      */
     @Test
     @Config(qualifiers = ReadingShotHarness.PHONE)
@@ -133,7 +133,8 @@ class ReadSeriesShots : ReadingShotHarness() {
         screen = true,
         then = {
             it.networkPath(cellular = true, constrained = false)
-            SeriesShots.open = "send-fetch"
+            SendHoldStage.stage(it)
+            SeriesShots.open = "send"
         },
         act = { compose.onNodeWithText(Strings.sendPrepare(compose.activity)).performClick() },
         acted = { store -> store.export.jobs.value.values.any { it is ExportJob.Waiting } },
@@ -155,7 +156,8 @@ class ReadSeriesShots : ReadingShotHarness() {
             screen = true,
             then = {
                 it.networkPath(cellular = true, constrained = false)
-                SeriesShots.open = "send-fetch"
+                SendHoldStage.stage(it)
+                SeriesShots.open = "send"
             },
             act = {
                 compose.onNodeWithText(Strings.sendPrepare(compose.activity)).performClick()

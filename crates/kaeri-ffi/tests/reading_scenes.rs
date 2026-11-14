@@ -490,10 +490,11 @@ fn the_e_ink_layout_switch_takes_at_once_off_and_on_again() {
     engine.shutdown();
 }
 
-/// The series scene on a phone network, as the Android shots send from it: chapters in the
-/// manga's folder are on the device and go at once, while chapters to fetch wait for Wi-Fi.
+/// The series scene on a phone network: chapters in the manga's folder are on the device and go
+/// at once, and chapters it lists without a file, which no source can fetch, fail rather than
+/// wait. So no send in the scene waits for Wi-Fi, and the shots of a held send stage it.
 #[test]
-fn the_series_scene_sends_its_folder_chapters_at_once_and_waits_to_fetch_the_rest() {
+fn the_series_scene_sends_its_folder_chapters_at_once_and_fails_the_rest() {
     use kaeri_core::books::{ChapterId, WorkId};
     use kaeri_model::reading::{DownloadPick, ExportFormat};
     let (_root, engine) = start(FfiScene::ReadingSeries);
@@ -519,7 +520,7 @@ fn the_series_scene_sends_its_folder_chapters_at_once_and_waits_to_fetch_the_res
     assert!(listed.ends_with(&["13", "14", "15"]), "{listed:?}");
     let ids =
         |list: &[&str]| -> Vec<ChapterId> { list.iter().map(|c| ChapterId::new(*c)).collect() };
-    let (here, to_fetch) = (ids(&["13", "14", "15"]), ids(&["1", "2", "3"]));
+    let (here, missing) = (ids(&["13", "14", "15"]), ids(&["1", "2", "3"]));
     engine.send(Command::NetworkPath { cellular: true, constrained: false, offline: false });
     let send = |ids: Vec<_>| {
         engine.send(Command::Reading(ReadingCommand::Prepare {
@@ -548,7 +549,9 @@ fn the_series_scene_sends_its_folder_chapters_at_once_and_waits_to_fetch_the_res
     };
     let read = send(here.clone());
     assert!(ready(&read) && !waits(&read), "{here:?} go at once: {read:?}");
-    let read = send(to_fetch.clone());
-    assert!(waits(&read), "{to_fetch:?} wait for Wi-Fi: {read:?}");
+    let read = send(missing.clone());
+    let failed =
+        read.iter().any(|e| matches!(e, Event::Reading(ReadingEvent::ExportFailed { .. })));
+    assert!(failed && !waits(&read), "{missing:?} fail: {read:?}");
     engine.shutdown();
 }

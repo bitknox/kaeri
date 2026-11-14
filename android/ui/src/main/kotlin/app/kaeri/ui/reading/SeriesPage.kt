@@ -201,9 +201,6 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
             "tracking" -> sheet = SeriesSheet.Tracking
             "read-again" -> sheet = SeriesSheet.ReadAgain
             "send" -> sheet = SeriesSheet.Send(volumes.downloaded().map { it.id }.ifEmpty { rows.takeLast(3).map { it.id } })
-            // The first chapters, which the fixture manga's folder has no files for, so a send of them
-            // has chapters to fetch and waits on a phone network.
-            "send-fetch" -> sheet = SeriesSheet.Send(rows.take(3).map { it.id })
             "where-stop" -> sheet = SeriesSheet.WhereStop
             "choose" -> startChoosing()
             "status" -> statusOpen = true
