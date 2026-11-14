@@ -196,6 +196,8 @@ fun StripReader(
      * sat before, and after the last image once those at the end are shown.
      */
     credits: (@Composable (chapter: ChapterId, pages: List<CreditPage>) -> Unit)? = null,
+    /** In the room under a divider while that chapter is on its way: the wait it is on, as a first open says it. */
+    room: @Composable () -> Unit = {},
 ) {
     val story = state.leaves.filter { !it.endPage }
     val end = state.leaves.lastOrNull()?.takeIf { it.endPage }
@@ -233,6 +235,33 @@ fun StripReader(
         val into = ((jump.strip?.offset ?: 0f) * size).toInt()
         if (into > 0) list.scrollToItem(index, into)
         onJumped(jump.id)
+    }
+    // The image at the top changes only by a scroll or a jump. The list keeps its top row and the
+    // pixels into it, so a new width (a fold, a smaller window) would leave the strip higher or
+    // lower in that image, or run on past it once it is shorter than those pixels; a layout that
+    // makes it shorter does the same. The image and the spot in it come back instead, and are
+    // kept again from there.
+    LaunchedEffect(list, first, state.chapter) {
+        var kept: StripKept? = null
+        snapshotFlow { StripSeen(list.stripPos(first, placed.first.size), list.layoutInfo.viewportSize.width, list.isScrollInProgress || now.jump != null) }
+            .collect { seen ->
+                val images = placed.first
+                val at = seen.at
+                val image = at?.let { images.getOrNull(it.image.toInt())?.parts?.firstOrNull()?.page }
+                val held = kept
+                val row = held?.let { images.indexOfFirst { leaf -> leaf.parts.any { it.page == held.page } } } ?: -1
+                when {
+                    at == null || image == null || seen.moving -> kept = null
+                    held == null || row < 0 || held.page == image && held.width == seen.width -> kept = StripKept(image, at.offset, seen.width)
+                    else -> {
+                        kept = null
+                        list.scrollToItem(first + row)
+                        val size = list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == first + row }?.size ?: 0
+                        val into = (held.offset * size).toInt()
+                        if (into > 0) list.scrollToItem(first + row, into)
+                    }
+                }
+            }
     }
     // The place, each time a scroll comes to rest once the jump to the start place is done, short
     // scrolls included; again with each layout, which a chapter opened again from above it gets
@@ -282,9 +311,15 @@ fun StripReader(
     }
 
     // A screen reader rests on the strip as on a paged page, by its page: the moves are its actions.
+    // The image at the top of the screen, in the chapter kept above or the open one; on the divider
+    // or the room under it, none, and the divider's own words are read.
     val context = LocalContext.current
-    val shown by remember(list, first, story.size) { derivedStateOf { list.stripPos(first, story.size)?.image?.toInt() ?: 0 } }
-    val words = story.getOrNull(shown)?.let { describe(context, it, state) }.orEmpty()
+    val shown by remember(list, first, story.size, above.size) {
+        derivedStateOf { list.layoutInfo.visibleItemsInfo.firstNotNullOfOrNull { stripImageAt(it.index, above.size, first, story.size) } }
+    }
+    val words = shown?.let { (inAbove, image) ->
+        if (inAbove) previous?.let { above.getOrNull(image)?.let { leaf -> describe(context, leaf, it) } } else story.getOrNull(image)?.let { describe(context, it, state) }
+    }.orEmpty()
     val tapped by rememberUpdatedState(onTap)
     val stepped by rememberUpdatedState(stepping)
     BoxWithConstraints(
@@ -340,7 +375,7 @@ fun StripReader(
                 // It is keyed by the chapter it waits for, as the room under that chapter's divider
                 // was before the flow, so once the images come they take its place: under one key
                 // with the room after them, a scroll resting in it would follow it to the end.
-                if (story.isEmpty()) item(key = roomKey(into)) { Box(Modifier.fillMaxWidth().height(screen)) }
+                if (story.isEmpty()) item(key = roomKey(into)) { Box(Modifier.fillMaxWidth().height(screen)) { room() } }
             }
             images(state, story, images, onMissing, onRetry, maxWidth, waiting, failed, state, credits)
             when {
@@ -349,7 +384,9 @@ fun StripReader(
                     item(key = dividerKey(next)) {
                         Box(Modifier.widthIn(max = maxWidth).fillMaxWidth().height(StripDividerHeight)) { divider(next) }
                     }
-                    item(key = roomKey(next)) { Box(Modifier.fillMaxWidth().height(screen)) }
+                    item(key = roomKey(next)) {
+                        Box(Modifier.fillMaxWidth().height(screen)) { if (state.asking?.chapter == next.id) room() }
+                    }
                 }
                 end != null -> item(key = "end") {
                     Box(Modifier.widthIn(max = maxWidth).fillMaxWidth().height(screen)) { footer(end) }
@@ -357,6 +394,23 @@ fun StripReader(
             }
         }
     }
+}
+
+/** What the strip shows at a layout: its place, its width, and whether a scroll or a jump moves it. */
+private data class StripSeen(val at: StripPos?, val width: Int, val moving: Boolean)
+
+/** The page at the top of a strip standing still, how far into it, and at what width. */
+private data class StripKept(val page: UInt, val offset: Float, val width: Int)
+
+/**
+ * The strip item at [index] as an image: whether it is in the chapter kept above ([aboveCount]
+ * images from the top) and its image there, or in the open chapter's [count] from [first]. Null
+ * for a divider or the room under one.
+ */
+internal fun stripImageAt(index: Int, aboveCount: Int, first: Int, count: Int): Pair<Boolean, Int>? = when {
+    first > 0 && index < aboveCount -> true to index
+    index >= first && index - first < count -> false to index - first
+    else -> null
 }
 
 /** The room under the divider into [chapter]. */

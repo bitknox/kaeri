@@ -17,6 +17,8 @@ import androidx.compose.ui.semantics.customActions
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.expandVertically
@@ -92,6 +94,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.IconButton
@@ -143,6 +146,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
@@ -479,6 +483,13 @@ fun PhoneReader(
         if (dim > 0f) ColorFilter.colorMatrix(ColorMatrix().apply { setToScale(scale, scale, scale - 0.02f, 1f) }) else null
     }
     val fades = !instant
+    // While the controls show, the end page's buttons sit above their group, moving with its fade;
+    // with the controls away they go back to the foot.
+    val endLift by animateDpAsState(
+        targetValue = if (shown) with(density) { scrub.groupHeight.toDp() } else 0.dp,
+        animationSpec = if (!fades) snap() else if (shown) Motion.fadeIn() else Motion.fadeOut(),
+        label = "end page lift",
+    )
 
     CompositionLocalProvider(LocalChrome provides colours, LocalPageTone provides tone) {
       Box(modifier.fillMaxSize().then(if (enabled) Modifier else Modifier.pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent(PointerEventPass.Initial).changes.forEach { it.consume() } } })) {
@@ -540,9 +551,8 @@ fun PhoneReader(
             }
             when {
                 failure != null && state.leaves.isEmpty() && state.novel == null -> {
-                    val row = state.openingChapter ?: view?.chapter
                     ChapterFailed(
-                        title = Strings.readerFailedChapter(context, row?.let(::chapterNumber) ?: ""),
+                        title = failedChapterTitle(context, state.openingChapter ?: view?.chapter),
                         line = failure.text(context),
                         state = state,
                         session = session,
@@ -583,7 +593,7 @@ fun PhoneReader(
                                 instant = instant,
                             )
                         }
-                        place.ended -> NovelEndPage(state, session, actions, images, direction, zones, reading, onControls = { chrome = !chrome }, onBack = { place.ended = false }, cover = cover, onFirstPage = {
+                        place.ended -> NovelEndPage(state, session, actions, images, direction, zones, reading, onControls = { chrome = !chrome }, onBack = { place.ended = false }, cover = cover, controls = endLift, onFirstPage = {
                             place.ended = false
                             place.go(0)
                         })
@@ -626,12 +636,13 @@ fun PhoneReader(
                         onMissingAbove = session::needPageAbove,
                         onRetryAbove = { session.retryAbove(it.toUInt()) },
                         onJumped = session::jumped,
-                        footer = { PhoneEndPage(state, session, actions, images, onFirstPage = { session.startOver() }, cover = cover, pageGround = background, onShowCredits = { session.showEndCredits() }) },
+                        footer = { PhoneEndPage(state, session, actions, images, onFirstPage = { session.startOver() }, cover = cover, pageGround = background, onShowCredits = { session.showEndCredits() }, controls = endLift) },
                         divider = { next -> StripDivider(state, next, onShowCredits = { session.showEndCredits(it) }) },
                         credits = { chapter, pages -> StripCredits(state, session, images, chapter, pages, background) },
                         onFlow = { next -> session.flowInto(next.id) },
                         onShowing = { showingAbove = it },
                         onBack = session::flowBack,
+                        room = { StripRoomWaiting(state) },
                         list = stripList,
                         stepping = stripStep::catch,
                         gap = gap,
@@ -678,6 +689,7 @@ fun PhoneReader(
                             cover = cover,
                             pageGround = background,
                             onShowCredits = { session.showEndCredits()?.let { pager.show(it, TurnHow.TURN, session::showCredit, state.shownCredit) } },
+                            controls = endLift,
                         )
                     },
                     onPastEnd = session::crossOn,
@@ -935,6 +947,13 @@ private fun SystemBars(context: Context, shown: Boolean, light: Boolean) {
 
 /** The chapter's number as the strings name it. */
 internal fun chapterNumber(row: ChapterRow): String = row.number ?: row.label
+
+/**
+ * The heading of a chapter that would not open: "Couldn't open chapter 12", or without a number
+ * when the reader never learned which chapter it was.
+ */
+fun failedChapterTitle(context: Context, row: ChapterRow?): String =
+    row?.let { Strings.readerFailedChapter(context, chapterNumber(it)) } ?: Strings.readerFailedChapterPlain(context)
 
 /** "Chapter 12", or a chapter with no number by its own name: a book in one file is its title, never "Chapter <title>". */
 internal fun chapterName(context: Context, row: ChapterRow): String =
@@ -1326,6 +1345,7 @@ private fun NovelEndPage(
     onControls: () -> Unit,
     onBack: () -> Unit,
     cover: (@Composable (Modifier) -> Unit)?,
+    controls: Dp,
     onFirstPage: () -> Unit,
 ) {
     val density = LocalDensity.current
@@ -1362,7 +1382,7 @@ private fun NovelEndPage(
             )
         },
     ) {
-        PhoneEndPage(state, session, actions, images, onFirstPage = onFirstPage, cover = cover)
+        PhoneEndPage(state, session, actions, images, onFirstPage = onFirstPage, cover = cover, controls = controls)
     }
 }
 
@@ -1469,6 +1489,7 @@ internal const val OPENING_LONG_MS = 15_000
  * another source and Go back. Try again counts the wait from the start. Once the first page is
  * [done] and drawn over it, the plate fades out.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Opening(
     state: ReaderState,
@@ -1513,26 +1534,11 @@ private fun Opening(
     LaunchedEffect(long) { if (long) session.loadSources() }
     var choosing by remember { mutableStateOf(false) }
     BoxWithConstraints(Modifier.fillMaxSize().graphicsLayer { alpha = shown.value * faded.value }, contentAlignment = Alignment.Center) {
-        // The page's place: a page's shape, as wide as it fits.
-        val width = minOf(maxWidth, maxHeight * 0.703f)
-        Box(Modifier.width(width).aspectRatio(0.703f).background(Chrome.plate)) {
-            if (line != null && !done) {
-                Text(
-                    line,
-                    color = Chrome.faint,
-                    fontSize = 15.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(horizontal = 24.dp)
-                        .semantics { liveRegion = LiveRegionMode.Polite },
-                )
-            }
-        }
+        OpeningPlate(line.takeIf { !done }, maxWidth, maxHeight)
         if (long) {
             // A stage that goes on offers the way on, as a failed open does.
             Column(
-                Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 28.dp).padding(bottom = 30.dp),
+                Modifier.align(Alignment.BottomCenter).widthIn(max = BottomSheetDefaults.SheetMaxWidth).fillMaxWidth().padding(horizontal = 28.dp).padding(bottom = 30.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(Strings.readerWaitLong(context), color = Chrome.faint, fontSize = 15.sp, modifier = Modifier.padding(bottom = 12.dp))
@@ -1567,11 +1573,60 @@ private fun Opening(
     }
 }
 
+/** The page's place while a chapter opens: a page's shape, as wide as it fits, with what the wait is on. */
+@Composable
+private fun OpeningPlate(line: String?, maxWidth: Dp, maxHeight: Dp) {
+    val width = minOf(maxWidth, maxHeight * 0.703f)
+    Box(Modifier.width(width).aspectRatio(0.703f).background(Chrome.plate)) {
+        if (line != null) {
+            Text(
+                line,
+                color = Chrome.faint,
+                fontSize = 15.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(horizontal = 24.dp)
+                    .semantics { liveRegion = LiveRegionMode.Polite },
+            )
+        }
+    }
+}
+
+/**
+ * The room under a strip's divider while the chapter under it is on its way: the opening's plate
+ * and line, from 600 ms after the ask and with how long from 3 s, as a first open shows them. The
+ * ways on stay with the divider's own chapter, which Try again on the end page offers if it fails.
+ */
+@Composable
+internal fun StripRoomWaiting(state: ReaderState) {
+    val context = LocalContext.current
+    val since = state.openingSince.takeIf { it > 0 } ?: remember { openingClock() }
+    var waited by remember(since) { mutableIntStateOf((openingClock() - since).toInt()) }
+    LaunchedEffect(since) {
+        while (true) {
+            waited = (openingClock() - since).toInt()
+            delay(200)
+        }
+    }
+    if (waited < PageWaits.PLATE_MS) return
+    val faded = rememberFadedIn()
+    // The chapter on its way: the one asked for, or once it opened, the open one. What the first
+    // open waited on is that chapter's, so the line names the chapter alone.
+    val number = (state.asking?.row ?: state.view?.chapter.takeIf { state.asking == null })?.let(::chapterNumber)
+    val stage = openingStage(context, null, number)
+    val line = if (waited < 3000) stage else stage?.let { Strings.readerWaitSeconds(context, it, waited / 1000) }
+    BoxWithConstraints(Modifier.fillMaxSize().graphicsLayer { alpha = faded.value }, contentAlignment = Alignment.Center) {
+        OpeningPlate(line, maxWidth, maxHeight)
+    }
+}
+
 /**
  * A chapter that would not open: left aligned, the glyph beside the title at 22, the reason in
  * haze. Choose source is the amber pill when another source has the chapter, with the sources in a
  * sheet; otherwise Try again is. Close is text below.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ChapterFailed(
     title: String,
@@ -1587,42 +1642,45 @@ private fun ChapterFailed(
     val sources = state.sources.orEmpty()
     var choosing by remember { mutableStateOf(false) }
     Box(Modifier.fillMaxSize()) {
-        Box(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
-            Column(Modifier.align(Alignment.CenterStart).padding(horizontal = 28.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    GlyphIcon(Glyph.Warning, Chrome.error)
-                    Text(title, color = Chrome.text, fontFamily = robotoFlex(FontWeight.SemiBold, 22.sp), fontSize = 22.sp, lineHeight = 28.sp)
-                }
-                Spacer(Modifier.height(8.dp))
-                Text(line, color = Chrome.faint, fontSize = 15.sp, lineHeight = 21.sp)
-            }
-            Column(
-                Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 28.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                val choose = sources.isNotEmpty()
-                Button(
-                    onClick = { if (choose) choosing = true else onRetry() },
-                    shape = RoundedCornerShape(25.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Chrome.accent, contentColor = Chrome.onAccent),
-                    modifier = Modifier.fillMaxWidth().height(50.dp),
-                ) {
-                    Text(
-                        if (choose) Strings.readerFailedChoose(context) else Strings.readerTryAgain(context),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
-                Spacer(Modifier.height(4.dp))
-                if (choose) {
-                    TextButton(onClick = onRetry, modifier = Modifier.heightIn(min = 38.dp)) {
-                        Text(Strings.readerTryAgain(context), color = Chrome.text, fontSize = 15.sp)
+        // On a wide screen the page is a column as wide as the reader's sheets, centred.
+        Box(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing), contentAlignment = Alignment.Center) {
+            Box(Modifier.widthIn(max = BottomSheetDefaults.SheetMaxWidth).fillMaxSize()) {
+                Column(Modifier.align(Alignment.CenterStart).padding(horizontal = 28.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        GlyphIcon(Glyph.Warning, Chrome.error)
+                        Text(title, color = Chrome.text, fontFamily = robotoFlex(FontWeight.SemiBold, 22.sp), fontSize = 22.sp, lineHeight = 28.sp)
                     }
+                    Spacer(Modifier.height(8.dp))
+                    Text(line, color = Chrome.faint, fontSize = 15.sp, lineHeight = 21.sp)
                 }
-                TextButton(onClick = onClose, modifier = Modifier.heightIn(min = 38.dp)) {
-                    Text(Strings.readerClose(context), color = Chrome.text, fontSize = 15.sp)
+                Column(
+                    Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 28.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    val choose = sources.isNotEmpty()
+                    Button(
+                        onClick = { if (choose) choosing = true else onRetry() },
+                        shape = RoundedCornerShape(25.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Chrome.accent, contentColor = Chrome.onAccent),
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
+                    ) {
+                        Text(
+                            if (choose) Strings.readerFailedChoose(context) else Strings.readerTryAgain(context),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                    Spacer(Modifier.height(4.dp))
+                    if (choose) {
+                        TextButton(onClick = onRetry, modifier = Modifier.heightIn(min = 38.dp)) {
+                            Text(Strings.readerTryAgain(context), color = Chrome.text, fontSize = 15.sp)
+                        }
+                    }
+                    TextButton(onClick = onClose, modifier = Modifier.heightIn(min = 38.dp)) {
+                        Text(Strings.readerClose(context), color = Chrome.text, fontSize = 15.sp)
+                    }
+                    Spacer(Modifier.height(30.dp))
                 }
-                Spacer(Modifier.height(30.dp))
             }
         }
         if (choosing) {

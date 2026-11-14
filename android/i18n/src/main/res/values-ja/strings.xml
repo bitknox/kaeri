@@ -296,6 +296,7 @@
     <string name="reading_row_on_device">このデバイス内</string>
     <string name="reading_row_queued">待機中</string>
     <string name="reading_row_waits_wifi">待機中 · Wi-Fi待ち</string>
+    <string name="reading_row_waits_room">待機中 · 空き容量待ち</string>
     <string name="reading_row_downloading">ダウンロード中 · %1$,d/%2$,dページ</string>
     <string name="reading_row_failed">ダウンロード失敗</string>
     <string name="reading_row_page_of">%1$d/%2$dページ</string>
@@ -345,6 +346,9 @@
     <string name="reading_dl_waits_wifi">Wi-Fi待ち</string>
     <string name="reading_dl_failed">第%1$s話をダウンロードできませんでした</string>
     <string name="reading_dl_offline">オフライン</string>
+    <plurals name="reading_dl_no_room">
+        <item quantity="other">空き容量がありません。容量が空くとダウンロードされます。</item>
+    </plurals>
     <string name="reading_estimate_size">約%1$s</string>
     <string name="reading_estimate_wifi">Wi-Fi経由</string>
     <string name="reading_estimate_mobile">モバイルデータ経由</string>
@@ -697,6 +701,7 @@
     <string name="reader_end_again">最初から読み直す</string>
     <string name="reader_opening_chapter">第%1$s話を開いています</string>
     <string name="reader_failed_chapter">第%1$s話を開けませんでした</string>
+    <string name="reader_failed_chapter_plain">この話を開けませんでした</string>
     <string name="reader_sheet_series">この作品</string>
     <string name="reader_sheet_all_manga">すべてのマンガ</string>
     <string name="reader_sheet_all_webtoons">すべてのウェブトゥーン</string>

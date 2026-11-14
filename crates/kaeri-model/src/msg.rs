@@ -1479,6 +1479,8 @@ pub enum ReadingMsg {
     ReadingRowQueued,
     /// A chapter row's state: it waits to download until the device is on Wi-Fi.
     ReadingRowWaitsWifi,
+    /// A chapter row's state: it waits to download until the device has free space again. A full device paused the downloads; they go on by themselves once there is room.
+    ReadingRowWaitsRoom,
     /// A chapter row's state while it downloads.
     ReadingRowDownloading { done: i64, total: i64 },
     /// A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count.
@@ -1571,6 +1573,8 @@ pub enum ReadingMsg {
     ReadingDlFailed { chapter: String },
     /// After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
     ReadingDlOffline,
+    /// After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on by themselves once some space is free; the count is the queued chapters.
+    ReadingDlNoRoom { count: i64 },
     /// How much the chosen chapters will take, from their pages and the size of pages downloaded before.
     ReadingEstimateSize { size: Size },
     /// The chapters download only on Wi-Fi, as the settings say.
@@ -1791,6 +1795,7 @@ impl ReadingMsg {
             Self::ReadingRowOnDevice => "reading-row-on-device",
             Self::ReadingRowQueued => "reading-row-queued",
             Self::ReadingRowWaitsWifi => "reading-row-waits-wifi",
+            Self::ReadingRowWaitsRoom => "reading-row-waits-room",
             Self::ReadingRowDownloading { .. } => "reading-row-downloading",
             Self::ReadingRowDownloadingPlain => "reading-row-downloading-plain",
             Self::ReadingRowFailed => "reading-row-failed",
@@ -1837,6 +1842,7 @@ impl ReadingMsg {
             Self::ReadingDlWaitsWifi => "reading-dl-waits-wifi",
             Self::ReadingDlFailed { .. } => "reading-dl-failed",
             Self::ReadingDlOffline => "reading-dl-offline",
+            Self::ReadingDlNoRoom { .. } => "reading-dl-no-room",
             Self::ReadingEstimateSize { .. } => "reading-estimate-size",
             Self::ReadingEstimateWifi => "reading-estimate-wifi",
             Self::ReadingEstimateMobile => "reading-estimate-mobile",
@@ -2005,6 +2011,7 @@ impl ReadingMsg {
             Self::ReadingRowOnDevice => Vec::new(),
             Self::ReadingRowQueued => Vec::new(),
             Self::ReadingRowWaitsWifi => Vec::new(),
+            Self::ReadingRowWaitsRoom => Vec::new(),
             Self::ReadingRowDownloading { done, total } => vec![("done", Value::Int(*done)), ("total", Value::Int(*total))],
             Self::ReadingRowDownloadingPlain => Vec::new(),
             Self::ReadingRowFailed => Vec::new(),
@@ -2051,6 +2058,7 @@ impl ReadingMsg {
             Self::ReadingDlWaitsWifi => Vec::new(),
             Self::ReadingDlFailed { chapter } => vec![("chapter", Value::Text(chapter.clone()))],
             Self::ReadingDlOffline => Vec::new(),
+            Self::ReadingDlNoRoom { count } => vec![("count", Value::Int(*count))],
             Self::ReadingEstimateSize { size } => vec![("size", Value::Size(*size))],
             Self::ReadingEstimateWifi => Vec::new(),
             Self::ReadingEstimateMobile => Vec::new(),

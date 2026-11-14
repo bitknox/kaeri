@@ -316,8 +316,7 @@ private fun ReadHomeColumn(home: ReadingHomeView, actions: AppActions, gone: Mut
             item(key = "up-next", contentType = "shelf") {
                 Box(itemMotion()) {
                     TileShelf(Strings.homeUpNext(context), home.upNext, "read-up-next", Strings.homeViewAll(context)) {
-                        ReadPlaces.showList(LibrarySegmentRead.PLANNING)
-                        navigator.go(Destination.Library)
+                        ReadPlaces.openList(navigator, LibrarySegmentRead.PLANNING)
                     }
                 }
             }

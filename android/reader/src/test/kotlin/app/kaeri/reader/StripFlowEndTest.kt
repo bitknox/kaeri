@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.core.app.ApplicationProvider
 import app.kaeri.design.ObiSilk
@@ -23,6 +24,7 @@ import app.kaeri.reader.phone.PhoneReader
 import app.kaeri.reader.phone.PhoneReaderActions
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -62,6 +64,27 @@ class StripFlowEndTest {
         val list = strip(base().copy(end = EndPageView(next = null, whyNone = NoNext.OFFLINE)))
         assertEquals("end", list.layoutInfo.visibleItemsInfo.last().key)
         compose.onNodeWithText(next.title!!).assertDoesNotExist()
+    }
+
+    @Test
+    fun offline_before_the_engines_end_page_the_strip_shows_no_divider_into_the_chapter_after() {
+        val list = strip(base().copy(offline = true))
+        assertEquals("end", list.layoutInfo.visibleItemsInfo.last().key)
+        compose.onNodeWithText(next.title!!).assertDoesNotExist()
+    }
+
+    @Test
+    fun the_room_under_the_divider_says_the_chapter_on_its_way_as_a_first_open_does() {
+        strip(base().copy(asking = ChapterAsk(next.id, next), openingSince = openingClock() - 5_000))
+        // Counted from the ask, five seconds ago.
+        val stage = Strings.readerOpeningChapter(context, "13")
+        assertTrue((5..9).any { compose.onAllNodesWithText(Strings.readerWaitSeconds(context, stage, it)).fetchSemanticsNodes().isNotEmpty() })
+    }
+
+    @Test
+    fun the_room_under_the_divider_stays_plain_until_the_chapter_is_asked_for() {
+        strip(base().copy(openingSince = openingClock() - 5_000))
+        compose.onNodeWithText(Strings.readerOpeningChapter(context, "13"), substring = true).assertDoesNotExist()
     }
 
     private fun failedFlow(failure: ReadingFailure) {

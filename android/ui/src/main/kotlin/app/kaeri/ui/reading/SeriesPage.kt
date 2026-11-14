@@ -6,6 +6,7 @@
 
 package app.kaeri.ui.reading
 
+import android.content.Context
 import androidx.activity.compose.BackHandler
 import app.kaeri.ui.synopsisCut
 import app.kaeri.ui.SynopsisCuts
@@ -1117,14 +1118,22 @@ private fun ChaptersFailed(series: SeriesView, failure: ReadingFailure, download
         Icon(Icons.Problem, contentDescription = null, tint = ObiSilk.Vermilion, modifier = Modifier.padding(top = 2.dp).size(20.dp))
         Column(Modifier.weight(1f)) {
             Text(Strings.seriesChaptersFailed(context, source), style = MaterialTheme.typography.bodyLarge)
-            val line = listOfNotNull(
-                failureWords(context, failure),
-                if (downloaded > 0) Strings.readSeriesDownloadedOpen(context, downloaded) else null,
-            ).joinToString(" ") // i18n-skip
-            Text(line, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
+            Text(chaptersFailedLine(context, failure, downloaded), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
             FilledTonalButton(onClick = onRetry, modifier = Modifier.padding(top = 12.dp)) { Text(Strings.actionTryAgain(context)) }
         }
     }
+}
+
+/**
+ * The line under a failed source's heading: why, and how many downloaded chapters still open.
+ * Offline it is one sentence, since the offline words already say downloaded chapters open.
+ */
+internal fun chaptersFailedLine(context: Context, failure: ReadingFailure, downloaded: Int): String = when {
+    failure is ReadingFailure.Offline && downloaded > 0 -> Strings.readSeriesOfflineDownloadedOpen(context, downloaded)
+    else -> listOfNotNull(
+        failureWords(context, failure),
+        if (downloaded > 0) Strings.readSeriesDownloadedOpen(context, downloaded) else null,
+    ).joinToString(" ") // i18n-skip
 }
 
 /** More like this: the engine's recommendations as covers to open. */

@@ -894,6 +894,9 @@ reading-row-queued = [Ǫüéüéð~~]
 # A chapter row's state: it waits to download until the device is on Wi-Fi.
 reading-row-waits-wifi = [Ǫüéüéð · ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~~~~]
 
+# A chapter row's state: it waits to download until the device has free space again. A full device paused the downloads; they go on by themselves once there is room.
+reading-row-waits-room = [Ǫüéüéð · ŵàîţš ƒöŕ ŕööɱ~~~~~~~]
+
 # A chapter row's state while it downloads.
 reading-row-downloading = [Ðöŵñļöàðîñĝ · { $done } öƒ { $total } þàĝéš~~~~~~~~~]
 
@@ -1071,6 +1074,13 @@ reading-dl-failed = [Çĥàþţéŕ { $chapter } çöüļðñ'ţ ðöŵñļöà�
 
 # After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
 reading-dl-offline = [Öƒƒļîñé~~~]
+
+# After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on by themselves once some space is free; the count is the queued chapters.
+reading-dl-no-room =
+    { $count ->
+        [one] [Ñö ŕööɱ ļéƒţ. Îţ ðöŵñļöàðš öñçé šöɱé šþàçé îš ƒŕéé.~~~~~~~~~~~~~~~~]
+       *[other] [Ñö ŕööɱ ļéƒţ. Ţĥéý ðöŵñļöàð öñçé šöɱé šþàçé îš ƒŕéé.~~~~~~~~~~~~~~~~]
+    }
 
 # How much the chosen chapters will take, from their pages and the size of pages downloaded before.
 reading-estimate-size = [Åƀöüţ { $size }~~~]

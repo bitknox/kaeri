@@ -72,8 +72,10 @@ import app.kaeri.store.ReadingModel
 import app.kaeri.store.Wording
 import app.kaeri.store.text
 import app.kaeri.ui.ArtworkImage
+import app.kaeri.ui.Destination
 import app.kaeri.ui.Icons
 import app.kaeri.ui.LocalNavigator
+import app.kaeri.ui.Navigator
 import app.kaeri.ui.Shared
 import app.kaeri.ui.SilkMeter
 import app.kaeri.ui.WaterDot
@@ -606,6 +608,15 @@ internal object ReadPlaces {
     fun showList(segment: LibrarySegmentRead) {
         list = segment
         libraryReading = true
+    }
+
+    /**
+     * Switch to Library at [segment], at its start: a series page left open on Library last time
+     * is closed, so the list shows.
+     */
+    fun openList(navigator: Navigator, segment: LibrarySegmentRead) {
+        showList(segment)
+        navigator.goToStart(Destination.Library)
     }
 
     /** Search on reading's side, running [query]. */

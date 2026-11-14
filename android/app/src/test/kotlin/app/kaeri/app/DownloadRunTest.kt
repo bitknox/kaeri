@@ -7,6 +7,7 @@ import app.kaeri.engine.model.BookDownloadsView
 import app.kaeri.engine.model.ChapterDownloadState
 import app.kaeri.engine.model.ChapterReadState
 import app.kaeri.engine.model.ChapterRow
+import app.kaeri.engine.model.ReadingFailure
 import app.kaeri.engine.model.StorageMeter
 import app.kaeri.store.LiveDownloads
 import app.kaeri.store.chaptersBusy
@@ -44,6 +45,25 @@ class DownloadRunTest {
         assertEquals(RunStep.End, RunStep.of(null, chaptersBusy(books(ChapterDownloadState.Done)), chaptersLoaded = true))
         // Reading off answers the ask with a failure and no view.
         assertEquals(RunStep.End, RunStep.of(null, chaptersBusy(null), chaptersLoaded = true))
+    }
+
+    @Test
+    fun a_queue_stopped_by_a_full_device_ends_it_with_the_no_room_notice() {
+        val full = ChapterDownloadState.Failed(ReadingFailure.DiskFull)
+        val stopped = books(full, ChapterDownloadState.Queued, ChapterDownloadState.Queued).copy(stoppedFull = true)
+        assertEquals(0, chaptersBusy(stopped))
+        assertEquals(RunStep.Full, RunStep.of(null, chaptersBusy(stopped), chaptersLoaded = true, full = stopped.stoppedFull))
+        // Episodes still downloading keep it until they are done.
+        assertEquals(RunStep.Episodes(running, grace = false), RunStep.of(running, chaptersBusy(stopped), chaptersLoaded = true, full = true))
+        // Retry starts the queue again: the chapters keep it once more.
+        val again = books(ChapterDownloadState.Downloading(0u, 0u), ChapterDownloadState.Queued, ChapterDownloadState.Queued)
+        assertEquals(RunStep.Chapters(3), RunStep.of(null, chaptersBusy(again), chaptersLoaded = true, full = again.stoppedFull))
+    }
+
+    @Test
+    fun a_failure_that_did_not_stop_the_queue_leaves_the_rest_busy() {
+        val failed = books(ChapterDownloadState.Failed(ReadingFailure.Offline), ChapterDownloadState.Queued)
+        assertEquals(RunStep.Chapters(1), RunStep.of(null, chaptersBusy(failed), chaptersLoaded = true, full = failed.stoppedFull))
     }
 
     @Test

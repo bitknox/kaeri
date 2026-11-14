@@ -108,6 +108,7 @@ reading-row-not-downloaded = Nicht geladen
 reading-row-on-device = Auf diesem { -device }
 reading-row-queued = Eingereiht
 reading-row-waits-wifi = Eingereiht · wartet auf Wi-Fi
+reading-row-waits-room = Eingereiht · wartet auf Speicher
 reading-row-downloading = Lädt · { $done } von { $total } Seiten
 reading-row-failed = Download fehlgeschlagen
 reading-row-page-of = Seite { $page } von { $of }
@@ -164,6 +165,10 @@ reading-dl-queued = { $count } eingereiht
 reading-dl-waits-wifi = wartet auf Wi-Fi
 reading-dl-failed = Download von Kapitel { $chapter } fehlgeschlagen
 reading-dl-offline = Offline
+reading-dl-no-room = { $count ->
+    [one] Kein Platz mehr. Es lädt, sobald Speicher frei ist.
+   *[other] Kein Platz mehr. Sie laden, sobald Speicher frei ist.
+ }
 reading-estimate-size = Etwa { $size }
 reading-estimate-wifi = über Wi-Fi
 reading-estimate-mobile = über Mobilfunk

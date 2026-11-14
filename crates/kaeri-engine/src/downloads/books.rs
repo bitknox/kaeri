@@ -81,6 +81,15 @@ pub const KEEP_FREE: u64 = 512 * 1_000_000;
 /// Progress is told at most this often; a chapter starting, finishing or failing is told at once.
 const PROGRESS_EVERY: Duration =
     if cfg!(test) { Duration::ZERO } else { Duration::from_secs(2) };
+/// How often a queue a full device stopped looks for room again.
+const ROOM_CHECK: Duration =
+    if cfg!(test) { Duration::from_millis(5) } else { Duration::from_secs(10) };
+/// How much more than when the queue paused has to be free before it goes on by itself, so a
+/// write the device refused with room still free is not tried again for every byte freed.
+const ROOM_MORE: u64 = 64 * 1_000_000;
+/// While the queue waits for room, a change in free space this big is told, so the Downloads
+/// meter follows what the person frees.
+const FREE_STEP: u64 = 10 * 1_000_000;
 /// The rest between chapters.
 const PACE: Duration =
     if cfg!(test) { Duration::from_millis(2) } else { Duration::from_millis(400) };
@@ -238,6 +247,14 @@ struct Inner {
     dir: PathBuf,
     pace: Duration,
     running: Mutex<bool>,
+    /// The queue paused for a full device: every chapter it holds, the one that met the full
+    /// device too, stays queued and waits for room, and the queue goes on by itself once there
+    /// is some.
+    full: Mutex<bool>,
+    /// What was free when the queue stopped for a full device, when that could be told.
+    full_free: Mutex<Option<u64>>,
+    /// Something looks for room every [`ROOM_CHECK`] while the queue is stopped for it.
+    watching: Mutex<bool>,
     setup: Mutex<Setup>,
     /// Told each time the setup changes, for a send that waits on it.
     changed: tokio::sync::watch::Sender<Setup>,
@@ -290,6 +307,9 @@ impl BookDownloads {
             dir,
             pace,
             running: Mutex::new(false),
+            full: Mutex::new(false),
+            full_free: Mutex::new(None),
+            watching: Mutex::new(false),
             setup: Mutex::new(Setup::UNSAID),
             changed: tokio::sync::watch::channel(Setup::UNSAID).0,
             free: Mutex::new(None),
@@ -422,6 +442,7 @@ impl BookDownloads {
     /// Every download with how it stands, and what they take up.
     pub fn view(&self, store: &Store) -> BookDownloadsView {
         let wifi = self.setup().wifi;
+        let room = self.waits_room();
         let rows = store.book_downloads(None).unwrap_or_default();
         let mut marks: HashMap<String, kaeri_store::reading::ReadMarks> = HashMap::new();
         let mut shown = Vec::with_capacity(rows.len());
@@ -449,6 +470,9 @@ impl BookDownloads {
                 0,
                 &jiff::tz::TimeZone::UTC,
             );
+            if room {
+                crate::read_catalog::rows::waits_room(&mut chapter.line);
+            }
             shown.push(BookDownloadRow {
                 work: WorkId::new(d.work.clone()),
                 title,
@@ -458,12 +482,13 @@ impl BookDownloads {
         }
         let (used, chapters) = store.book_download_totals().unwrap_or((0, 0));
         let free = self.free().unwrap_or(0);
-        let (series, read_bytes, kept) = sizes::series(store, &rows, wifi, form);
+        let (series, read_bytes, kept) = sizes::series(store, &rows, (wifi, room), form);
         BookDownloadsView {
             rows: shown,
             meter: StorageMeter { used, free, chapters, read_bytes },
             series,
             total: sizes::total(kept, used),
+            stopped_full: room,
         }
     }
 
@@ -898,10 +923,13 @@ impl BookDownloads {
     // The queue
 
     /// Run the queue if it is not running and may. A queue that is held stays as it is until
-    /// [`Self::configure`] and this are called again.
+    /// [`Self::configure`] and this are called again. With chapters queued and the device short
+    /// of room, as after a relaunch with the disk still full, the queue pauses for room without
+    /// asking a source, and goes on by itself once there is some.
     pub fn start(&self, lent: &Lent) {
+        let store = lent.sources.store();
         if self.setup().hold {
-            self.publish(lent.sources.store(), &lent.tx);
+            self.publish(store, &lent.tx);
             return;
         }
         {
@@ -909,10 +937,88 @@ impl BookDownloads {
             if *running {
                 return;
             }
+            let queued = || store.next_book_download().ok().flatten().is_some();
+            if self.short_of_room() && queued() {
+                drop(running);
+                self.pause_full();
+                self.publish(store, &lent.tx);
+                self.watch_room(lent);
+                return;
+            }
             *running = true;
         }
+        *self.0.full.lock().unwrap_or_else(|e| e.into_inner()) = false;
         let (this, lent) = (self.clone(), lent.clone());
         tokio::spawn(async move { this.run(lent).await });
+    }
+
+    /// The queue pauses for room: what is free now is kept, to tell when room came back.
+    fn pause_full(&self) {
+        *self.0.full_free.lock().unwrap_or_else(|e| e.into_inner()) = self.free();
+        *self.0.full.lock().unwrap_or_else(|e| e.into_inner()) = true;
+    }
+
+    /// The queue paused for a full device and has not started again.
+    pub(crate) fn waits_room(&self) -> bool {
+        *self.0.full.lock().unwrap_or_else(|e| e.into_inner())
+    }
+
+    fn short_of_room(&self) -> bool {
+        self.free().is_some_and(|free| free < KEEP_FREE)
+    }
+
+    /// Room came back since the queue paused for a full device: what is free now is known, is
+    /// at least [`KEEP_FREE`], and is [`ROOM_MORE`] more than when it paused.
+    fn room_back(&self) -> bool {
+        let then = *self.0.full_free.lock().unwrap_or_else(|e| e.into_inner());
+        self.free().is_some_and(|now| {
+            now >= KEEP_FREE && then.is_none_or(|then| now >= then.saturating_add(ROOM_MORE))
+        })
+    }
+
+    /// Look for room every [`ROOM_CHECK`] while the queue is paused for it, and start it once
+    /// there is some. Meanwhile a change in free space is told, for the Downloads meter. One
+    /// looks at a time; it ends when the queue starts by other means.
+    fn watch_room(&self, lent: &Lent) {
+        {
+            let mut watching = self.0.watching.lock().unwrap_or_else(|e| e.into_inner());
+            if *watching {
+                return;
+            }
+            *watching = true;
+        }
+        // The figure the view had as the look began, read now: the task may first run after the
+        // person already freed some.
+        let mut told = self.free();
+        let (this, lent) = (self.clone(), lent.clone());
+        tokio::spawn(async move {
+            loop {
+                tokio::time::sleep(ROOM_CHECK).await;
+                let free = this.free();
+                if free.unwrap_or(0).abs_diff(told.unwrap_or(0)) >= FREE_STEP {
+                    told = free;
+                    this.publish(lent.sources.store(), &lent.tx);
+                }
+                // Decided under the lock a stop takes to ask for a look, so a stop just after
+                // this one ends gets its own.
+                let roomy = {
+                    let mut watching =
+                        this.0.watching.lock().unwrap_or_else(|e| e.into_inner());
+                    let roomy = this.room_back();
+                    if !this.waits_room() || roomy {
+                        *watching = false;
+                    }
+                    if !this.waits_room() {
+                        return;
+                    }
+                    roomy
+                };
+                if roomy {
+                    this.start(&lent);
+                    return;
+                }
+            }
+        });
     }
 
     async fn run(&self, lent: Lent) {
@@ -953,7 +1059,10 @@ impl BookDownloads {
                 }
             }
             if !go_on {
+                // Full first: a start that finds the queue no longer running clears it.
+                self.pause_full();
                 *self.0.running.lock().unwrap_or_else(|e| e.into_inner()) = false;
+                self.watch_room(&lent);
                 stopped = true;
                 break;
             }
@@ -1041,14 +1150,22 @@ impl BookDownloads {
                 self.publish(store, &lent.tx);
                 (true, false)
             }
+            // A full device pauses the queue: the chapter goes back in it, its pages kept for
+            // when there is room, and waits with the rest.
+            Err(Stop::Failed(ReadingFailure::DiskFull)) => {
+                let _ = std::fs::remove_file(part_of(&self.file_stem(row)));
+                if let Err(e) = store.book_download_requeue(row.id, now) {
+                    tracing::warn!(error = %e, "a download paused for room was not queued again");
+                }
+                (false, false)
+            }
             Err(Stop::Failed(failure)) => {
                 let _ = std::fs::remove_file(part_of(&self.file_stem(row)));
-                let full = failure == ReadingFailure::DiskFull;
                 if let Err(e) = store.book_download_failed(row.id, &encode(&failure), now) {
                     tracing::warn!(error = %e, "a failed download was not kept");
                 }
                 self.publish(store, &lent.tx);
-                (!full, false)
+                (true, false)
             }
         }
     }

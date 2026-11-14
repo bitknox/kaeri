@@ -953,6 +953,9 @@
   <data name="ReadingRowWaitsWifi" xml:space="preserve">
     <value>В очереди · ждёт Wi-Fi</value>
   </data>
+  <data name="ReadingRowWaitsRoom" xml:space="preserve">
+    <value>В очереди · ждёт места</value>
+  </data>
   <data name="ReadingRowDownloading" xml:space="preserve">
     <value>Скачивание · {done} из {total} стр.</value>
   </data>
@@ -1120,6 +1123,18 @@
   </data>
   <data name="ReadingDlOffline" xml:space="preserve">
     <value>Нет сети</value>
+  </data>
+  <data name="ReadingDlNoRoom_one" xml:space="preserve">
+    <value>Нет места. Загрузка начнётся, когда освободится место.</value>
+  </data>
+  <data name="ReadingDlNoRoom_few" xml:space="preserve">
+    <value>Нет места. Загрузка начнётся, когда освободится место.</value>
+  </data>
+  <data name="ReadingDlNoRoom_many" xml:space="preserve">
+    <value>Нет места. Загрузка начнётся, когда освободится место.</value>
+  </data>
+  <data name="ReadingDlNoRoom_other" xml:space="preserve">
+    <value>Нет места. Загрузка начнётся, когда освободится место.</value>
   </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>Около {size}</value>

@@ -341,6 +341,9 @@ pub(crate) fn finish(
     // The person's folders list files already on this device: nothing to download there.
     let kept = super::rows::kept_by(edition.map(|e| e.source_id.as_str()));
     super::rows::fill(volumes, kept, medium, now, &kit.clock.zone());
+    if kit.sources.downloads.waits_room() {
+        super::rows::fill_waits_room(volumes);
+    }
 }
 
 /// How many versions each chapter has across the person's editions.

@@ -104,6 +104,7 @@ reading-row-not-downloaded = Belum diunduh
 reading-row-on-device = Di { -device } ini
 reading-row-queued = Antre
 reading-row-waits-wifi = Antre · tunggu Wi-Fi
+reading-row-waits-room = Antre · tunggu ruang kosong
 reading-row-downloading = Mengunduh · { $done } dari { $total } hal.
 reading-row-failed = Gagal diunduh
 reading-row-page-of = Hal. { $page } dari { $of }
@@ -153,6 +154,9 @@ reading-dl-queued = { $count } antre
 reading-dl-waits-wifi = menunggu Wi-Fi
 reading-dl-failed = Bab { $chapter } gagal diunduh
 reading-dl-offline = Offline
+reading-dl-no-room = { $count ->
+   *[other] Ruang penuh. Diunduh begitu ada ruang kosong.
+ }
 reading-estimate-size = Sekitar { $size }
 reading-estimate-wifi = lewat Wi-Fi
 reading-estimate-mobile = lewat data seluler

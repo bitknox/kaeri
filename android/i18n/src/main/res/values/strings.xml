@@ -602,6 +602,8 @@
     <string name="reading_row_queued">Queued</string>
     <!-- A chapter row's state: it waits to download until the device is on Wi-Fi. -->
     <string name="reading_row_waits_wifi">Queued · waits for Wi-Fi</string>
+    <!-- A chapter row's state: it waits to download until the device has free space again. A full device paused the downloads; they go on by themselves once there is room. -->
+    <string name="reading_row_waits_room">Queued · waits for room</string>
     <!-- A chapter row's state while it downloads. -->
     <string name="reading_row_downloading">Downloading · %1$,d of %2$,d pages</string>
     <!-- A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count. -->
@@ -724,6 +726,11 @@
     <string name="reading_dl_failed">Chapter %1$s couldn\'t download</string>
     <!-- After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest. -->
     <string name="reading_dl_offline">Offline</string>
+    <!-- After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on by themselves once some space is free; the count is the queued chapters. -->
+    <plurals name="reading_dl_no_room">
+        <item quantity="one">No room left. It downloads once some space is free.</item>
+        <item quantity="other">No room left. They download once some space is free.</item>
+    </plurals>
     <!-- How much the chosen chapters will take, from their pages and the size of pages downloaded before. -->
     <string name="reading_estimate_size">About %1$s</string>
     <!-- The chapters download only on Wi-Fi, as the settings say. -->
@@ -1476,6 +1483,8 @@
     <string name="reader_opening_chapter">Opening chapter %1$s</string>
     <!-- Heading when a chapter could not open. The chapter is its number, such as 13. -->
     <string name="reader_failed_chapter">Couldn\'t open chapter %1$s</string>
+    <!-- Heading when a chapter could not open before the reader learned which chapter it was, as when Continue asked for the next chapter and the source did not answer. -->
+    <string name="reader_failed_chapter_plain">Couldn\'t open this chapter</string>
     <!-- Heading in the reader's settings above the choices that belong to this series only. -->
     <string name="reader_sheet_series">This series</string>
     <!-- Heading in the reader's settings above the choices every manga shares. -->
@@ -1873,6 +1882,11 @@
     <plurals name="read_series_downloaded_open">
         <item quantity="one">One downloaded chapter still opens.</item>
         <item quantity="other">%1$,d downloaded chapters still open.</item>
+    </plurals>
+    <!-- On a series page whose source failed because the device is offline, under the cause: one sentence that says so and how many chapters downloaded before still open. -->
+    <plurals name="read_series_offline_downloaded_open">
+        <item quantity="one">You\'re offline. One downloaded chapter still opens.</item>
+        <item quantity="other">You\'re offline. %1$,d downloaded chapters still open.</item>
     </plurals>
     <!-- Downloads' empty line for a person who only reads, under "No downloads". -->
     <string name="read_downloads_empty_detail">Downloaded chapters open without a connection.</string>

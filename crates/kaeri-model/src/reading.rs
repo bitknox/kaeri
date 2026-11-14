@@ -1055,6 +1055,11 @@ pub struct BookDownloadsView {
     /// The Reading section's total: "38 chapters · 1.1 GB". Empty with nothing downloaded.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub total: Vec<Msg>,
+    /// The queue stopped because the device is full: the chapters still queued wait for Retry
+    /// or another download, and nothing fetches them until then. An app that keeps itself
+    /// running for downloads lets go.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub stopped_full: bool,
 }
 
 /// What downloading a choice of chapters will take: "About 62 MB · over Wi-Fi".

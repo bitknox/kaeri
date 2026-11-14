@@ -1135,6 +1135,9 @@ public enum L {
     /// A chapter row's state: it waits to download until the device is on Wi-Fi.
     public static var readingRowWaitsWifi: String { string("reading-row-waits-wifi", fallback: "Queued · waits for Wi-Fi") }
 
+    /// A chapter row's state: it waits to download until the device has free space again. A full device paused the downloads; they go on by themselves once there is room.
+    public static var readingRowWaitsRoom: String { string("reading-row-waits-room", fallback: "Queued · waits for room") }
+
     /// A chapter row's state while it downloads.
     public static func readingRowDownloading(done: Int, total: Int) -> String {
         Self.format("reading-row-downloading", fallback: "Downloading · %1$lld of %2$lld pages", done, total)
@@ -1340,6 +1343,11 @@ public enum L {
 
     /// After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
     public static var readingDlOffline: String { string("reading-dl-offline", fallback: "Offline") }
+
+    /// After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on by themselves once some space is free; the count is the queued chapters.
+    public static func readingDlNoRoom(count: Int) -> String {
+        Self.format("reading-dl-no-room", fallback: "No room left. They download once some space is free.", count)
+    }
 
     /// How much the chosen chapters will take, from their pages and the size of pages downloaded before.
     public static func readingEstimateSize(size: String) -> String {

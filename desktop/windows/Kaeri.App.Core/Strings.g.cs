@@ -861,6 +861,9 @@ public static partial class T
     /// <summary>A chapter row's state: it waits to download until the device is on Wi-Fi.</summary>
     public static string ReadingRowWaitsWifi => Get("ReadingRowWaitsWifi");
 
+    /// <summary>A chapter row's state: it waits to download until the device has free space again. A full device paused the downloads; they go on by themselves once there is room.</summary>
+    public static string ReadingRowWaitsRoom => Get("ReadingRowWaitsRoom");
+
     /// <summary>A chapter row's state while it downloads.</summary>
     public static string ReadingRowDownloading(long done, long total) => Fill(Get("ReadingRowDownloading"), ("done", done.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -998,6 +1001,9 @@ public static partial class T
 
     /// <summary>After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.</summary>
     public static string ReadingDlOffline => Get("ReadingDlOffline");
+
+    /// <summary>After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on by themselves once some space is free; the count is the queued chapters.</summary>
+    public static string ReadingDlNoRoom(long count) => Fill(GetPlural("ReadingDlNoRoom", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>How much the chosen chapters will take, from their pages and the size of pages downloaded before.</summary>
     public static string ReadingEstimateSize(string size) => Fill(Get("ReadingEstimateSize"), ("size", size));
@@ -12322,6 +12328,7 @@ public static partial class T
         ["ReadingRowOnDevice"] = "On this device",
         ["ReadingRowQueued"] = "Queued",
         ["ReadingRowWaitsWifi"] = "Queued · waits for Wi-Fi",
+        ["ReadingRowWaitsRoom"] = "Queued · waits for room",
         ["ReadingRowDownloading"] = "Downloading · {done} of {total} pages",
         ["ReadingRowDownloadingPlain"] = "Downloading",
         ["ReadingRowFailed"] = "Couldn't download",
@@ -12378,6 +12385,8 @@ public static partial class T
         ["ReadingDlWaitsWifi"] = "waits for Wi-Fi",
         ["ReadingDlFailed"] = "Chapter {chapter} couldn't download",
         ["ReadingDlOffline"] = "Offline",
+        ["ReadingDlNoRoom_one"] = "No room left. It downloads once some space is free.",
+        ["ReadingDlNoRoom_other"] = "No room left. They download once some space is free.",
         ["ReadingEstimateSize"] = "About {size}",
         ["ReadingEstimateWifi"] = "over Wi-Fi",
         ["ReadingEstimateMobile"] = "over mobile data",

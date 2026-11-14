@@ -116,6 +116,7 @@ reading-row-not-downloaded = Не скачана
 reading-row-on-device = Хранится здесь
 reading-row-queued = В очереди
 reading-row-waits-wifi = В очереди · ждёт Wi-Fi
+reading-row-waits-room = В очереди · ждёт места
 reading-row-downloading = Скачивание · { $done } из { $total } стр.
 reading-row-failed = Не удалось скачать
 reading-row-page-of = Стр. { $page } из { $of }
@@ -186,6 +187,12 @@ reading-dl-queued = В очереди: { $count }
 reading-dl-waits-wifi = ждёт Wi-Fi
 reading-dl-failed = Не удалось скачать главу { $chapter }
 reading-dl-offline = Нет сети
+reading-dl-no-room = { $count ->
+    [one] Нет места. Загрузка начнётся, когда освободится место.
+    [few] Нет места. Загрузка начнётся, когда освободится место.
+    [many] Нет места. Загрузка начнётся, когда освободится место.
+   *[other] Нет места. Загрузка начнётся, когда освободится место.
+ }
 reading-estimate-size = Около { $size }
 reading-estimate-wifi = по Wi-Fi
 reading-estimate-mobile = по мобильной сети

@@ -320,6 +320,7 @@
     <string name="reading_row_on_device">Sul dispositivo</string>
     <string name="reading_row_queued">In coda</string>
     <string name="reading_row_waits_wifi">In coda · attende il Wi-Fi</string>
+    <string name="reading_row_waits_room">In coda · attende spazio libero</string>
     <string name="reading_row_downloading">Download · %1$,d di %2$,d pagine</string>
     <string name="reading_row_failed">Download non riuscito</string>
     <string name="reading_row_page_of">Pagina %1$d di %2$d</string>
@@ -383,6 +384,11 @@
     <string name="reading_dl_waits_wifi">attende il Wi-Fi</string>
     <string name="reading_dl_failed">Download del capitolo %1$s non riuscito</string>
     <string name="reading_dl_offline">Offline</string>
+    <plurals name="reading_dl_no_room">
+        <item quantity="one">Spazio esaurito. Si scarica appena c\'è spazio libero.</item>
+        <item quantity="many">Spazio esaurito. Si scaricano appena c\'è spazio libero.</item>
+        <item quantity="other">Spazio esaurito. Si scaricano appena c\'è spazio libero.</item>
+    </plurals>
     <string name="reading_estimate_size">Circa %1$s</string>
     <string name="reading_estimate_wifi">via Wi-Fi</string>
     <string name="reading_estimate_mobile">con dati mobili</string>
@@ -767,6 +773,7 @@
     <string name="reader_end_again">Rileggi dall\'inizio</string>
     <string name="reader_opening_chapter">Apertura del capitolo %1$s</string>
     <string name="reader_failed_chapter">Impossibile aprire il capitolo %1$s</string>
+    <string name="reader_failed_chapter_plain">Impossibile aprire questo capitolo</string>
     <string name="reader_sheet_series">Questa serie</string>
     <string name="reader_sheet_all_manga">Tutti i manga</string>
     <string name="reader_sheet_all_webtoons">Tutti i webtoon</string>

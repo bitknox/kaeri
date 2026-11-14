@@ -1211,6 +1211,10 @@
     <value>Queued · waits for Wi-Fi</value>
     <comment>A chapter row's state: it waits to download until the device is on Wi-Fi.</comment>
   </data>
+  <data name="ReadingRowWaitsRoom" xml:space="preserve">
+    <value>Queued · waits for room</value>
+    <comment>A chapter row's state: it waits to download until the device has free space again. A full device paused the downloads; they go on by themselves once there is room.</comment>
+  </data>
   <data name="ReadingRowDownloading" xml:space="preserve">
     <value>Downloading · {done} of {total} pages</value>
     <comment>A chapter row's state while it downloads.</comment>
@@ -1434,6 +1438,14 @@
   <data name="ReadingDlOffline" xml:space="preserve">
     <value>Offline</value>
     <comment>After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.</comment>
+  </data>
+  <data name="ReadingDlNoRoom_one" xml:space="preserve">
+    <value>No room left. It downloads once some space is free.</value>
+    <comment>After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on by themselves once some space is free; the count is the queued chapters.</comment>
+  </data>
+  <data name="ReadingDlNoRoom_other" xml:space="preserve">
+    <value>No room left. They download once some space is free.</value>
+    <comment>After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on by themselves once some space is free; the count is the queued chapters.</comment>
   </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>About {size}</value>

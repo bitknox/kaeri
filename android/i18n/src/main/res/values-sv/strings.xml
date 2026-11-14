@@ -308,6 +308,7 @@
     <string name="reading_row_on_device">På den här enheten</string>
     <string name="reading_row_queued">I kö</string>
     <string name="reading_row_waits_wifi">I kö · väntar på Wi-Fi</string>
+    <string name="reading_row_waits_room">I kö · väntar på ledigt utrymme</string>
     <string name="reading_row_downloading">Laddar ner · %1$,d av %2$,d sidor</string>
     <string name="reading_row_failed">Kunde inte laddas ner</string>
     <string name="reading_row_page_of">Sida %1$d av %2$d</string>
@@ -364,6 +365,10 @@
     <string name="reading_dl_waits_wifi">väntar på Wi-Fi</string>
     <string name="reading_dl_failed">Kapitel %1$s kunde inte laddas ner</string>
     <string name="reading_dl_offline">Offline</string>
+    <plurals name="reading_dl_no_room">
+        <item quantity="one">Inget utrymme kvar. Den laddas ner när det finns ledigt utrymme.</item>
+        <item quantity="other">Inget utrymme kvar. De laddas ner när det finns ledigt utrymme.</item>
+    </plurals>
     <string name="reading_estimate_size">Cirka %1$s</string>
     <string name="reading_estimate_wifi">via Wi-Fi</string>
     <string name="reading_estimate_mobile">via mobildata</string>
@@ -732,6 +737,7 @@
     <string name="reader_end_again">Läs igen från början</string>
     <string name="reader_opening_chapter">Öppnar kapitel %1$s</string>
     <string name="reader_failed_chapter">Kunde inte öppna kapitel %1$s</string>
+    <string name="reader_failed_chapter_plain">Kunde inte öppna kapitlet</string>
     <string name="reader_sheet_series">Den här serien</string>
     <string name="reader_sheet_all_manga">All manga</string>
     <string name="reader_sheet_all_webtoons">Alla webtoons</string>

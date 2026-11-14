@@ -322,10 +322,11 @@ private fun OpenReader(
                 if (!opened[0]) {
                     opened[0] = true
                     val title = store.reading.series.value[request.work]?.titles?.display
+                    // The chapter as the screen that asked lists it, named while it opens and if it fails.
                     if (back != null) {
-                        session.open(request.work, surface, back.chapter, OpenAt.Place(back), title)
+                        session.open(request.work, surface, back.chapter, OpenAt.Place(back), title, store.reading.chapterRow(request.work, back.chapter))
                     } else {
-                        session.open(request.work, surface, request.chapter, title = title)
+                        session.open(request.work, surface, request.chapter, title = title, row = store.reading.chapterRow(request.work, request.chapter))
                     }
                 } else {
                     session.surface(surface)

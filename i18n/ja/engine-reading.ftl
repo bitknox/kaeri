@@ -104,6 +104,7 @@ reading-row-not-downloaded = 未ダウンロード
 reading-row-on-device = この{ -device }内
 reading-row-queued = 待機中
 reading-row-waits-wifi = 待機中 · Wi-Fi待ち
+reading-row-waits-room = 待機中 · 空き容量待ち
 reading-row-downloading = ダウンロード中 · { $done }/{ $total }ページ
 reading-row-failed = ダウンロード失敗
 reading-row-page-of = { $page }/{ $of }ページ
@@ -153,6 +154,9 @@ reading-dl-queued = { $count }件が待機中
 reading-dl-waits-wifi = Wi-Fi待ち
 reading-dl-failed = 第{ $chapter }話をダウンロードできませんでした
 reading-dl-offline = オフライン
+reading-dl-no-room = { $count ->
+   *[other] 空き容量がありません。容量が空くとダウンロードされます。
+ }
 reading-estimate-size = 約{ $size }
 reading-estimate-wifi = Wi-Fi経由
 reading-estimate-mobile = モバイルデータ経由

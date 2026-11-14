@@ -108,6 +108,7 @@ reading-row-not-downloaded = Inte nedladdad
 reading-row-on-device = På den här { -device }en
 reading-row-queued = I kö
 reading-row-waits-wifi = I kö · väntar på Wi-Fi
+reading-row-waits-room = I kö · väntar på ledigt utrymme
 reading-row-downloading = Laddar ner · { $done } av { $total } sidor
 reading-row-failed = Kunde inte laddas ner
 reading-row-page-of = Sida { $page } av { $of }
@@ -164,6 +165,10 @@ reading-dl-queued = { $count } i kö
 reading-dl-waits-wifi = väntar på Wi-Fi
 reading-dl-failed = Kapitel { $chapter } kunde inte laddas ner
 reading-dl-offline = Offline
+reading-dl-no-room = { $count ->
+    [one] Inget utrymme kvar. Den laddas ner när det finns ledigt utrymme.
+   *[other] Inget utrymme kvar. De laddas ner när det finns ledigt utrymme.
+ }
 reading-estimate-size = Cirka { $size }
 reading-estimate-wifi = via Wi-Fi
 reading-estimate-mobile = via mobildata

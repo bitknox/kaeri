@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -120,6 +121,8 @@ fun PhoneEndPage(
     pageGround: Color? = null,
     /** Show on the line naming the pages skipped at the chapter's end. */
     onShowCredits: () -> Unit = {},
+    /** How tall the reader's controls stand at the foot while they show, 0 while they are away: the buttons keep above them. */
+    controls: Dp = 0.dp,
 ) {
     val view = state.view ?: return
     val demo = view.demoCredit
@@ -159,6 +162,9 @@ fun PhoneEndPage(
         // A tablet's page is the phone's column, centred, 500 wide, with the buttons under it, as
         // on the iPad; a phone's buttons stay at the foot.
         val wide = maxWidth >= 600.dp
+        // The controls' group reaches down over the system bars this page already keeps clear of.
+        val under = WindowInsets.safeDrawing.asPaddingValues().calculateBottomPadding()
+        val lift = (controls - under + 16.dp).coerceAtLeast(0.dp)
         val buttons: @Composable () -> Unit = {
             if (next != null && !retryFlow) {
                 Text(
@@ -347,7 +353,7 @@ fun PhoneEndPage(
         }
         if (wide) {
             Column(
-                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = 150.dp, bottom = 40.dp),
+                Modifier.fillMaxSize().padding(bottom = lift).verticalScroll(rememberScrollState()).padding(top = 150.dp, bottom = 40.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Column(Modifier.width(500.dp)) { body() }
@@ -362,7 +368,7 @@ fun PhoneEndPage(
             Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .padding(start = sides, end = sides, bottom = 40.dp)
+                .padding(start = sides, end = sides, bottom = maxOf(40.dp, lift))
                 .onSizeChanged { foot = it.height },
             horizontalAlignment = Alignment.CenterHorizontally,
         ) { buttons() }
@@ -370,7 +376,7 @@ fun PhoneEndPage(
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(bottom = with(LocalDensity.current) { foot.toDp() } + if (narrow) 24.dp else 64.dp)
+                .padding(bottom = with(LocalDensity.current) { foot.toDp() } + (lift - 40.dp).coerceAtLeast(0.dp) + if (narrow) 24.dp else 64.dp)
                 .verticalScroll(rememberScrollState())
                 .padding(start = sides, end = sides, top = if (narrow) 84.dp else 100.dp),
         ) { body() }

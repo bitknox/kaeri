@@ -881,6 +881,9 @@
   <data name="ReadingRowWaitsWifi" xml:space="preserve">
     <value>I kö · väntar på Wi-Fi</value>
   </data>
+  <data name="ReadingRowWaitsRoom" xml:space="preserve">
+    <value>I kö · väntar på ledigt utrymme</value>
+  </data>
   <data name="ReadingRowDownloading" xml:space="preserve">
     <value>Laddar ner · {done} av {total} sidor</value>
   </data>
@@ -1006,6 +1009,12 @@
   </data>
   <data name="ReadingDlOffline" xml:space="preserve">
     <value>Offline</value>
+  </data>
+  <data name="ReadingDlNoRoom_one" xml:space="preserve">
+    <value>Inget utrymme kvar. Den laddas ner när det finns ledigt utrymme.</value>
+  </data>
+  <data name="ReadingDlNoRoom_other" xml:space="preserve">
+    <value>Inget utrymme kvar. De laddas ner när det finns ledigt utrymme.</value>
   </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>Cirka {size}</value>

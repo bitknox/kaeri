@@ -24,6 +24,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.plus
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -227,6 +228,13 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
                 if (!readingNotifier.canPost(ReadingNotifier.CHAPTERS)) return@collect notifier.wantPermission()
                 val art = store.covers(found.flatMap { listOfNotNull(it.cover, it.banner) }.distinct(), EngineEpisodeCheck.COVER_SIZE, EngineEpisodeCheck.COVERS_MILLIS)
                 readingNotifier.chapters(found.map { NewChapterNote.of(it, art) })
+            }
+        }
+        // The no room notice goes once the chapters move again, which the engine does by itself
+        // when space is freed, with or without the download job.
+        scope.launch {
+            store.reading.downloads.map { it?.stoppedFull }.distinctUntilChanged().filter { it == false }.collect {
+                DownloadNotifier(this@KaeriApp).clearFull()
             }
         }
         scope.launch {

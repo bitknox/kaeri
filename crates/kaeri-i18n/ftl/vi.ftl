@@ -846,6 +846,9 @@ reading-row-queued = Đang chờ
 # A chapter row's state: it waits to download until the device is on Wi-Fi.
 reading-row-waits-wifi = Đang chờ · cần Wi-Fi
 
+# A chapter row's state: it waits to download until the device has free space again. A full device paused the downloads; they go on by themselves once there is room.
+reading-row-waits-room = Đang chờ · cần dung lượng trống
+
 # A chapter row's state while it downloads.
 reading-row-downloading = Đang tải · { $done }/{ $total } trang
 
@@ -971,6 +974,12 @@ reading-dl-failed = Chương { $chapter } không tải được
 
 # After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
 reading-dl-offline = Ngoại tuyến
+
+# After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on by themselves once some space is free; the count is the queued chapters.
+reading-dl-no-room =
+    { $count ->
+       *[other] Hết dung lượng. Sẽ tải khi có dung lượng trống.
+    }
 
 # How much the chosen chapters will take, from their pages and the size of pages downloaded before.
 reading-estimate-size = Khoảng { $size }

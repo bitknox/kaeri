@@ -238,7 +238,7 @@ internal fun BookSourcesScreen(title: String) {
         }
     }
     // With nothing added, the empty state's own button is the one Add.
-    val empty = view?.let { v -> v.folders.none { !it.removed } && v.servers.isEmpty() && v.plugins.isEmpty() } ?: true
+    val empty = bookSourcesEmpty(view)
     ScreenFrame(
         title = title,
         onBack = navigator::back,
@@ -267,6 +267,10 @@ internal fun BookSourcesScreen(title: String) {
     }
     if (adding) AddSourceSheet { adding = false }
 }
+
+/** Whether nothing is added yet, or the engine has not said: the list's empty state then holds the one Add a source. */
+internal fun bookSourcesEmpty(view: app.kaeri.engine.model.BookSourcesView?): Boolean =
+    view?.let { v -> v.folders.none { !it.removed } && v.servers.isEmpty() && v.plugins.isEmpty() } ?: true
 
 /**
  * Pulling [content] down looks again at the servers that showed no series, as the 30-minute check

@@ -9,6 +9,15 @@ read-series-downloaded-open = { $n ->
    *[other] { $n } downloaded chapters still open.
 }
 
+# On a series page whose source failed because the device is offline, under the cause: one
+# sentence that says so and how many chapters downloaded before still open.
+# @only android
+# @arg n: int
+read-series-offline-downloaded-open = { $n ->
+    [one] You're offline. One downloaded chapter still opens.
+   *[other] You're offline. { $n } downloaded chapters still open.
+}
+
 # Downloads' empty line for a person who only reads, under "No downloads".
 # @only android
 read-downloads-empty-detail = Downloaded chapters open without a connection.

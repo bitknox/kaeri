@@ -296,6 +296,7 @@
     <string name="reading_row_on_device">Di perangkat ini</string>
     <string name="reading_row_queued">Antre</string>
     <string name="reading_row_waits_wifi">Antre · tunggu Wi-Fi</string>
+    <string name="reading_row_waits_room">Antre · tunggu ruang kosong</string>
     <string name="reading_row_downloading">Mengunduh · %1$,d dari %2$,d hal.</string>
     <string name="reading_row_failed">Gagal diunduh</string>
     <string name="reading_row_page_of">Hal. %1$d dari %2$d</string>
@@ -345,6 +346,9 @@
     <string name="reading_dl_waits_wifi">menunggu Wi-Fi</string>
     <string name="reading_dl_failed">Bab %1$s gagal diunduh</string>
     <string name="reading_dl_offline">Offline</string>
+    <plurals name="reading_dl_no_room">
+        <item quantity="other">Ruang penuh. Diunduh begitu ada ruang kosong.</item>
+    </plurals>
     <string name="reading_estimate_size">Sekitar %1$s</string>
     <string name="reading_estimate_wifi">lewat Wi-Fi</string>
     <string name="reading_estimate_mobile">lewat data seluler</string>
@@ -697,6 +701,7 @@
     <string name="reader_end_again">Baca ulang dari awal</string>
     <string name="reader_opening_chapter">Membuka bab %1$s</string>
     <string name="reader_failed_chapter">Bab %1$s tidak bisa dibuka</string>
+    <string name="reader_failed_chapter_plain">Bab ini tidak bisa dibuka</string>
     <string name="reader_sheet_series">Seri ini</string>
     <string name="reader_sheet_all_manga">Semua manga</string>
     <string name="reader_sheet_all_webtoons">Semua webtoon</string>

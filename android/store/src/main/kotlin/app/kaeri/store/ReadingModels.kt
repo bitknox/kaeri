@@ -15,6 +15,7 @@ import app.kaeri.engine.model.BookServerRow
 import app.kaeri.engine.model.BookSourceCommand
 import app.kaeri.engine.model.BookSourceEvent
 import app.kaeri.engine.model.BookSourcesView
+import app.kaeri.engine.model.ChapterRow
 import app.kaeri.engine.model.ChapterVersion
 import app.kaeri.engine.model.Command
 import app.kaeri.engine.model.DownloadEstimate
@@ -187,12 +188,17 @@ data class ReadSearchState(
     val words: Boolean get() = query.text.isNotBlank()
 }
 
-/** [this] with a page of AniList's answer in: the first page replaces, a later one adds. */
+/**
+ * [this] with a page of AniList's answer in: the first page replaces, a later one adds. AniList's
+ * pages can overlap when a work moves down a place between two asks, and the grids key by work,
+ * so each work is kept once, where it first came.
+ */
 private fun ReadSearchState.answered(event: ReadingEvent.Search): ReadSearchState {
     val first = event.page == 0u
+    val pageOne = if (first) event.tiles.distinctBy { it.work } else null
     return copy(
-        tiles = if (first) event.tiles else tiles + event.tiles,
-        firstPage = if (first) event.tiles.size else firstPage,
+        tiles = pageOne ?: (tiles + event.tiles).distinctBy { it.work },
+        firstPage = pageOne?.size ?: firstPage,
         page = event.page,
         hasMore = event.hasMore,
         otherScope = event.otherScope,
@@ -546,6 +552,17 @@ class ReadingModel(private val send: (Command) -> Unit) {
 
     /** The reader closed on [work]: its page and lists show where reading got to. */
     fun readerClosed(work: WorkId) = refreshSeries(work)
+
+    /**
+     * [chapter] of [work] as a screen already lists it: its series' chapters, Updates or
+     * Downloads. The reader names it while it opens, and if it fails to, before the engine does.
+     */
+    fun chapterRow(work: WorkId, chapter: ChapterId?): ChapterRow? {
+        if (chapter == null) return null
+        _chapters.value[work]?.volumes?.firstNotNullOfOrNull { group -> group.chapters.firstOrNull { it.id == chapter } }?.let { return it }
+        _updates.value?.days?.firstNotNullOfOrNull { day -> day.rows.firstOrNull { it.tile.work == work && it.chapter.id == chapter } }?.let { return it.chapter }
+        return _downloads.value?.rows?.firstOrNull { it.work == work && it.chapter.id == chapter }?.chapter
+    }
 
     private fun refreshSeries(work: WorkId) {
         if (_series.value[work] != null || _chapters.value[work] != null) {

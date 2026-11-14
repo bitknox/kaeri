@@ -881,6 +881,9 @@
   <data name="ReadingRowWaitsWifi" xml:space="preserve">
     <value>Eingereiht · wartet auf Wi-Fi</value>
   </data>
+  <data name="ReadingRowWaitsRoom" xml:space="preserve">
+    <value>Eingereiht · wartet auf Speicher</value>
+  </data>
   <data name="ReadingRowDownloading" xml:space="preserve">
     <value>Lädt · {done} von {total} Seiten</value>
   </data>
@@ -1006,6 +1009,12 @@
   </data>
   <data name="ReadingDlOffline" xml:space="preserve">
     <value>Offline</value>
+  </data>
+  <data name="ReadingDlNoRoom_one" xml:space="preserve">
+    <value>Kein Platz mehr. Es lädt, sobald Speicher frei ist.</value>
+  </data>
+  <data name="ReadingDlNoRoom_other" xml:space="preserve">
+    <value>Kein Platz mehr. Sie laden, sobald Speicher frei ist.</value>
   </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>Etwa {size}</value>

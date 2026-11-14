@@ -1137,6 +1137,10 @@ object Strings {
     fun readingRowWaitsWifi(context: Context): String =
         context.getString(R.string.reading_row_waits_wifi)
 
+    /** A chapter row's state: it waits to download until the device has free space again. A full device paused the downloads; they go on by themselves once there is room. */
+    fun readingRowWaitsRoom(context: Context): String =
+        context.getString(R.string.reading_row_waits_room)
+
     /** A chapter row's state while it downloads. */
     fun readingRowDownloading(context: Context, done: Int, total: Int): String =
         context.getString(R.string.reading_row_downloading, done, total)
@@ -1320,6 +1324,10 @@ object Strings {
     /** After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest. */
     fun readingDlOffline(context: Context): String =
         context.getString(R.string.reading_dl_offline)
+
+    /** After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on by themselves once some space is free; the count is the queued chapters. */
+    fun readingDlNoRoom(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_dl_no_room, count, count)
 
     /** How much the chosen chapters will take, from their pages and the size of pages downloaded before. */
     fun readingEstimateSize(context: Context, size: String): String =
@@ -2729,6 +2737,10 @@ object Strings {
     fun readerFailedChapter(context: Context, chapter: String): String =
         context.getString(R.string.reader_failed_chapter, chapter)
 
+    /** Heading when a chapter could not open before the reader learned which chapter it was, as when Continue asked for the next chapter and the source did not answer. */
+    fun readerFailedChapterPlain(context: Context): String =
+        context.getString(R.string.reader_failed_chapter_plain)
+
     /** Heading in the reader's settings above the choices that belong to this series only. */
     fun readerSheetSeries(context: Context): String =
         context.getString(R.string.reader_sheet_series)
@@ -3476,6 +3488,10 @@ object Strings {
     /** On a series page whose source failed, under the cause: the chapters downloaded before still open. */
     fun readSeriesDownloadedOpen(context: Context, n: Int): String =
         context.resources.getQuantityString(R.plurals.read_series_downloaded_open, n, n)
+
+    /** On a series page whose source failed because the device is offline, under the cause: one sentence that says so and how many chapters downloaded before still open. */
+    fun readSeriesOfflineDownloadedOpen(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.read_series_offline_downloaded_open, n, n)
 
     /** Downloads' empty line for a person who only reads, under "No downloads". */
     fun readDownloadsEmptyDetail(context: Context): String =

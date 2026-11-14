@@ -23,6 +23,16 @@ class ReaderRoutingTest {
         assertEquals(2, heard.size)
     }
 
+    @Test
+    fun a_reader_session_hears_when_the_engine_goes_offline_and_back() = runTest {
+        val store = AppStore(this)
+        val heard = mutableListOf<Event>()
+        store.listenToReading { heard += it }
+        store.apply(Event.Connectivity(offline = true))
+        store.apply(Event.Connectivity(offline = false))
+        assertEquals(listOf(Event.Connectivity(offline = true), Event.Connectivity(offline = false)), heard)
+    }
+
     private companion object {
         const val WORK = "a:900301"
     }

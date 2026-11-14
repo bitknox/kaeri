@@ -551,6 +551,11 @@ reading-row-queued = Queued
 # @max 32
 reading-row-waits-wifi = Queued · waits for Wi-Fi
 
+# A chapter row's state: it waits to download until the device has free space again. A full
+# device paused the downloads; they go on by themselves once there is room.
+# @max 32
+reading-row-waits-room = Queued · waits for room
+
 # A chapter row's state while it downloads.
 # @arg done: int
 # @arg total: int
@@ -813,6 +818,14 @@ reading-dl-failed = Chapter { $chapter } couldn't download
 # After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
 # @max 20
 reading-dl-offline = Offline
+
+# After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on
+# by themselves once some space is free; the count is the queued chapters.
+# @arg count: int
+reading-dl-no-room = { $count ->
+    [one] No room left. It downloads once some space is free.
+   *[other] No room left. They download once some space is free.
+ }
 
 ## Download estimate
 ## Above the Download button when choosing chapters: "About 62 MB · over Wi-Fi".

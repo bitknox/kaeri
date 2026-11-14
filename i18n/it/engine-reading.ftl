@@ -112,6 +112,7 @@ reading-row-not-downloaded = Non scaricato
 reading-row-on-device = Sul { -device }
 reading-row-queued = In coda
 reading-row-waits-wifi = In coda · attende il Wi-Fi
+reading-row-waits-room = In coda · attende spazio libero
 reading-row-downloading = Download · { $done } di { $total } pagine
 reading-row-failed = Download non riuscito
 reading-row-page-of = Pagina { $page } di { $of }
@@ -175,6 +176,11 @@ reading-dl-queued = { $count } in coda
 reading-dl-waits-wifi = attende il Wi-Fi
 reading-dl-failed = Download del capitolo { $chapter } non riuscito
 reading-dl-offline = Offline
+reading-dl-no-room = { $count ->
+    [one] Spazio esaurito. Si scarica appena c'è spazio libero.
+    [many] Spazio esaurito. Si scaricano appena c'è spazio libero.
+   *[other] Spazio esaurito. Si scaricano appena c'è spazio libero.
+ }
 reading-estimate-size = Circa { $size }
 reading-estimate-wifi = via Wi-Fi
 reading-estimate-mobile = con dati mobili
