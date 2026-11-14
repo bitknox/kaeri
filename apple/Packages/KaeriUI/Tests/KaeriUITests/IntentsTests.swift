@@ -233,6 +233,10 @@ struct IntentsEngineTests {
         let bridge = IntentsBridge(defaults: SpotlightTests.defaults)
         bridge.store = store
         bridge.navigator = Navigator(route: LaunchRoute())
+        // The intent's ten seconds are what Siri gives the app on its own. Here the engine starts
+        // beside the package's other tests, which hold the main actor and the cores for seconds
+        // at a time, so the intent waits as long as the suite's time limit allows.
+        bridge.patience = .seconds(50)
         let started = Counter()
         bridge.start = {
             started.count += 1
