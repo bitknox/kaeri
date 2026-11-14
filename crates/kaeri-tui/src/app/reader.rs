@@ -1346,3 +1346,386 @@ fn server_line(result: &WriteBackResult, host: &str) -> Option<String> {
         }
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use kaeri_model::{
+        reader::{LeafPart, PageKind, ReadPlace, ReaderMode, UnitRect},
+        reading::ChapterRow,
+    };
+
+    use super::*;
+    use crate::app::fixtures::*;
+
+    const SESSION: u64 = 7;
+
+    fn row(n: u32) -> ChapterRow {
+        ChapterRow {
+            id: ChapterId(format!("c{n}")),
+            label: format!("Chapter {n}"),
+            state: ChapterReadState::InProgress { page: 2, of: Some(4) },
+            number: Some(n.to_string()),
+            title: None,
+            volume: None,
+            published: None,
+            pages: Some(4),
+            new_chapter: false,
+            download: None,
+            versions: 1,
+            bookmarked: false,
+            version_label: None,
+            read_at: None,
+            line: Vec::new(),
+            gone_from_source: false,
+            parts: 0,
+            missing_parts: Vec::new(),
+            part_groups: Vec::new(),
+            other_group: false,
+            group_language: None,
+            other_source: None,
+            on_device: false,
+        }
+    }
+
+    fn view(direction: ReadDirection) -> ReaderView {
+        let work = WorkId::new("a:1");
+        ReaderView {
+            session: SESSION,
+            work: work.clone(),
+            title: "Harbor Light Recipes".into(),
+            medium: Medium::Manga,
+            chapter: row(14),
+            mode: ReaderMode::Paged,
+            direction,
+            start: ReadPlace {
+                work,
+                chapter: ChapterId("c14".into()),
+                page: Some(1),
+                strip: None,
+                novel: None,
+            },
+            next: Some(row(15)),
+            previous: None,
+            settings: None,
+            demo_credit: None,
+            progress_host: None,
+        }
+    }
+
+    /// Four pages, one to a leaf, then the end page.
+    fn leaves() -> Vec<Leaf> {
+        let mut leaves: Vec<Leaf> = (0..4)
+            .map(|page| Leaf {
+                index: page,
+                parts: vec![LeafPart {
+                    page,
+                    kind: PageKind::Story,
+                    file: None,
+                    place: UnitRect::WHOLE,
+                    rotate: false,
+                    half: None,
+                    ratio: Some(2.0 / 3.0),
+                    strip: None,
+                }],
+                end_page: false,
+            })
+            .collect();
+        leaves.push(Leaf { index: 4, parts: Vec::new(), end_page: true });
+        leaves
+    }
+
+    /// The reader open on chapter 14 at its second page, in a window `w` by `h` drawn with
+    /// halfblocks.
+    fn reading(direction: ReadDirection, w: u16, h: u16) -> App {
+        kaeri_i18n::set_language("en");
+        let engine = crate::image::ImageEngine::halfblocks();
+        let mut a =
+            App::with_images(SettingsView::default(), Palette::dark(), Keymap::new(), engine);
+        a.took_frame(FrameReport { window: Some((w, h)), ..FrameReport::default() });
+        let open = a.open_reader(WorkId::new("a:1"), Some(ChapterId("c14".into())));
+        assert!(matches!(open, Some(Command::Reader(ReaderCommand::Open { .. }))), "{open:?}");
+        a.apply(Event::Reader(ReaderEvent::Opened(Box::new(view(direction)))));
+        a.apply(Event::Reader(ReaderEvent::Leaves {
+            session: SESSION,
+            chapter: ChapterId("c14".into()),
+            leaves: leaves(),
+        }));
+        a
+    }
+
+    fn shown(leaf: u32, how: TurnHow) -> Option<Command> {
+        Some(Command::Reader(ReaderCommand::Shown {
+            session: SESSION,
+            chapter: ChapterId("c14".into()),
+            leaf,
+            how,
+        }))
+    }
+
+    fn key(code: KeyCode) -> KeyEvent {
+        KeyEvent::new(code, KeyModifiers::NONE)
+    }
+
+    #[test]
+    fn the_open_starts_at_the_kept_page_and_asks_for_the_pages_around_it() {
+        let mut a = reading(ReadDirection::RightToLeft, 120, 34);
+        let commands = a.take_commands();
+        assert!(commands.contains(&shown(1, TurnHow::Placed).unwrap()), "{commands:?}");
+        let asked: Vec<u32> = commands
+            .iter()
+            .filter_map(|c| match c {
+                Command::Reader(ReaderCommand::NeedPage { page, .. }) => Some(*page),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(asked, vec![1, 2, 3, 0], "the page, two on and one back");
+        assert!(commands.contains(&Command::Reading(ReadingCommand::LoadChapters {
+            work: WorkId::new("a:1"),
+            edition: None,
+        })));
+        assert_eq!(a.screen_context(), Context::Reading);
+    }
+
+    #[test]
+    fn in_right_to_left_manga_left_turns_forward_and_right_back() {
+        let mut a = reading(ReadDirection::RightToLeft, 120, 34);
+        a.take_commands();
+        assert_eq!(a.press(key(KeyCode::Left), 20), shown(2, TurnHow::Key));
+        assert_eq!(a.press(key(KeyCode::Right), 20), shown(1, TurnHow::Key));
+        assert_eq!(a.press(key(KeyCode::Char(' ')), 20), shown(2, TurnHow::Key));
+    }
+
+    #[test]
+    fn left_to_right_the_arrows_go_the_other_way_and_space_still_turns_forward() {
+        let mut a = reading(ReadDirection::LeftToRight, 120, 34);
+        a.take_commands();
+        assert_eq!(a.press(key(KeyCode::Right), 20), shown(2, TurnHow::Key));
+        assert_eq!(a.press(key(KeyCode::Left), 20), shown(1, TurnHow::Key));
+        assert_eq!(a.press(key(KeyCode::Char(' ')), 20), shown(2, TurnHow::Key));
+        // Back from the first page is the engine's to decide.
+        a.press(key(KeyCode::Left), 20);
+        a.press(key(KeyCode::Left), 20);
+        assert_eq!(
+            a.press(key(KeyCode::Left), 20),
+            Some(Command::Reader(ReaderCommand::GoBack { session: SESSION }))
+        );
+    }
+
+    #[test]
+    fn section_digits_and_tab_do_nothing_in_the_reader() {
+        let mut a = reading(ReadDirection::RightToLeft, 120, 34);
+        a.take_commands();
+        assert_eq!(a.press(key(KeyCode::Char('3')), 20), None);
+        assert_eq!(a.press(key(KeyCode::Tab), 20), None);
+        assert!(matches!(a.nav.current(), StageView::Reader(_)));
+    }
+
+    #[test]
+    fn enter_hides_the_chrome_and_shows_it_again_with_the_stage_sent_each_time() {
+        let mut a = reading(ReadDirection::RightToLeft, 120, 34);
+        a.take_commands();
+        a.press(key(KeyCode::Enter), 20);
+        assert!(a.reader_here().is_some_and(|r| r.bare));
+        let surface = |a: &mut App| {
+            a.take_commands().into_iter().find_map(|c| match c {
+                Command::Reader(ReaderCommand::Surface { surface, .. }) => Some(surface),
+                _ => None,
+            })
+        };
+        assert_eq!(surface(&mut a).map(|s| s.height_px), Some(68), "34 rows of two pixels");
+        a.press(key(KeyCode::Enter), 20);
+        assert!(a.reader_here().is_some_and(|r| !r.bare));
+        assert_eq!(surface(&mut a).map(|s| s.height_px), Some(60));
+    }
+
+    #[test]
+    fn a_resize_sends_the_new_stage_and_a_window_too_small_sends_none() {
+        let mut a = reading(ReadDirection::RightToLeft, 120, 34);
+        let first = a.reader_here().and_then(|r| r.surface).expect("a surface");
+        assert!(first.two_pages, "30 rows of stage with room for two");
+        assert_eq!((first.width_px, first.height_px), (120, 60));
+        a.take_commands();
+        a.took_frame(FrameReport { window: Some((80, 24)), ..FrameReport::default() });
+        let sent = a.take_commands();
+        let Some(Command::Reader(ReaderCommand::Surface { session, surface })) = sent.first()
+        else {
+            panic!("{sent:?}")
+        };
+        assert_eq!(*session, SESSION);
+        assert_eq!((surface.width_px, surface.height_px, surface.two_pages), (80, 40, false));
+        assert_eq!(surface.decodes.map(|d| (d.jpeg, d.gif, d.avif)), Some((true, true, false)));
+        assert!(surface.text && surface.zoom == 1.0);
+        a.took_frame(FrameReport { window: Some((36, 10)), ..FrameReport::default() });
+        assert_eq!(a.take_commands(), Vec::new());
+        assert_eq!(a.reader_screen(), Some(ReaderScreen::TooSmall));
+        // The same frame again says nothing new.
+        a.took_frame(FrameReport { window: Some((80, 24)), ..FrameReport::default() });
+        assert_eq!(a.take_commands(), Vec::new());
+    }
+
+    #[test]
+    fn q_closes_the_session_and_leaves_the_reader() {
+        let mut a = reading(ReadDirection::RightToLeft, 120, 34);
+        a.take_commands();
+        let task = a.press(key(KeyCode::Char('q')), 20);
+        assert_eq!(task, Some(Command::Reader(ReaderCommand::Close { session: SESSION })));
+        assert!(a.reader.is_none());
+        assert!(!matches!(a.nav.current(), StageView::Reader(_)));
+    }
+
+    #[test]
+    fn a_page_file_is_decoded_once_and_drawn_from_its_picture() {
+        let mut a = reading(ReadDirection::RightToLeft, 120, 34);
+        let file = PageFile {
+            path: "/pages/1.png".into(),
+            encoding: PageEncoding::Original { mime: "image/png".into() },
+            width: 400,
+            height: 600,
+            crop: None,
+            colour: true,
+            bytes: 10,
+        };
+        let ready = |a: &mut App| {
+            a.apply(Event::Reader(ReaderEvent::PageReady {
+                session: SESSION,
+                chapter: ChapterId("c14".into()),
+                page: 1,
+                half: None,
+                file: file.clone(),
+            }));
+        };
+        ready(&mut a);
+        let jobs = a.take_page_jobs();
+        assert_eq!(jobs.len(), 1);
+        ready(&mut a);
+        assert!(a.take_page_jobs().is_empty(), "already on its way");
+        let picture = image::DynamicImage::new_rgb8(4, 6);
+        a.page_decoded(&jobs[0].key, Some(picture));
+        let reader = a.reader_here().expect("reading");
+        assert_eq!(reader.pictures.get(&PartKey { page: 1, half: None }), Some(&(4, 6)));
+        assert!(a.images.has(&jobs[0].key));
+    }
+
+    #[test]
+    fn a_file_that_will_not_decode_is_asked_for_once_more_then_fails() {
+        let mut a = reading(ReadDirection::RightToLeft, 120, 34);
+        a.take_commands();
+        let file = PageFile {
+            path: "/pages/2.png".into(),
+            encoding: PageEncoding::Original { mime: "image/png".into() },
+            width: 400,
+            height: 600,
+            crop: None,
+            colour: true,
+            bytes: 10,
+        };
+        for round in 0..2 {
+            a.apply(Event::Reader(ReaderEvent::PageReady {
+                session: SESSION,
+                chapter: ChapterId("c14".into()),
+                page: 2,
+                half: None,
+                file: file.clone(),
+            }));
+            let job = a.take_page_jobs().pop().expect("a job");
+            a.page_decoded(&job.key, None);
+            let asked = a.take_commands();
+            if round == 0 {
+                assert!(
+                    matches!(
+                        asked.as_slice(),
+                        [Command::Reader(ReaderCommand::NeedPage { page: 2, .. })]
+                    ),
+                    "{asked:?}"
+                );
+            } else {
+                assert!(asked.is_empty());
+            }
+        }
+        assert!(a.reader_here().is_some_and(|r| r.failures.contains_key(&2)));
+    }
+
+    #[test]
+    fn v_keeps_one_page_on_this_computer_through_the_page_layout_setting() {
+        let mut a = reading(ReadDirection::RightToLeft, 120, 34);
+        a.take_commands();
+        let task = a.press(key(KeyCode::Char('v')), 20);
+        assert_eq!(
+            task,
+            Some(Command::Reader(ReaderCommand::SetSetting {
+                session: Some(SESSION),
+                medium: Medium::Manga,
+                work: None,
+                key: ReaderSettingKey::PageLayout,
+                scope: SettingScope::Device,
+                value: ReaderValue::Choice { name: "single".into() },
+            }))
+        );
+    }
+
+    #[test]
+    fn the_resumed_notice_offers_g_to_start_over() {
+        let mut a = reading(ReadDirection::RightToLeft, 120, 34);
+        a.take_commands();
+        a.apply(Event::Reader(ReaderEvent::Notice(ReaderNotice {
+            msg: kaeri_model::Msg::verbatim("Resumed at page 2"),
+            action: Some(ReaderAction::StartOver),
+            lasts_ms: 6_000,
+        })));
+        assert!(a.reader_notice().is_some());
+        assert_eq!(
+            a.press(key(KeyCode::Char('g')), 20),
+            Some(Command::Reader(ReaderCommand::StartOver { session: SESSION }))
+        );
+        // Without the notice, g is the chapter's first page.
+        assert_eq!(a.press(key(KeyCode::Char('g')), 20), shown(0, TurnHow::Jump));
+    }
+
+    #[test]
+    fn forward_on_the_end_page_opens_the_next_chapter() {
+        let mut a = reading(ReadDirection::RightToLeft, 120, 34);
+        a.press(key(KeyCode::Char('G')), 20);
+        a.press(key(KeyCode::Char(' ')), 20);
+        assert_eq!(a.reader_screen(), Some(ReaderScreen::End));
+        assert_eq!(
+            a.press(key(KeyCode::Enter), 20),
+            Some(Command::Reader(ReaderCommand::OpenChapter {
+                session: SESSION,
+                chapter: ChapterId("c15".into()),
+            }))
+        );
+        assert_eq!(a.reader_screen(), Some(ReaderScreen::Opening));
+    }
+
+    #[test]
+    fn a_chapter_that_cannot_open_says_so_and_r_tries_again() {
+        let mut a = reading(ReadDirection::RightToLeft, 120, 34);
+        a.take_commands();
+        a.apply(Event::Reading(kaeri_model::reading::ReadingEvent::Failed {
+            about: kaeri_model::reading::ReadingAbout::Reader,
+            failure: ReadingFailure::Offline,
+        }));
+        assert_eq!(a.reader_screen(), Some(ReaderScreen::ChapterFailed));
+        assert!(!a.logs.is_empty(), "the whole error is in Recent messages");
+        assert_eq!(
+            a.press(key(KeyCode::Char('r')), 20),
+            Some(Command::Reader(ReaderCommand::Retry {
+                session: SESSION,
+                chapter: ChapterId("c14".into()),
+                page: None,
+            }))
+        );
+    }
+
+    #[test]
+    fn an_open_that_lands_after_leaving_is_closed() {
+        let mut a = reading(ReadDirection::RightToLeft, 120, 34);
+        a.press(key(KeyCode::Char('q')), 20);
+        a.take_commands();
+        a.apply(Event::Reader(ReaderEvent::Opened(Box::new(view(ReadDirection::RightToLeft)))));
+        assert_eq!(
+            a.take_commands(),
+            vec![Command::Reader(ReaderCommand::Close { session: SESSION })]
+        );
+    }
+}

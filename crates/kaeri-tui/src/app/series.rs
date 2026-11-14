@@ -756,6 +756,42 @@ mod tests {
     }
 
     #[test]
+    fn q_in_the_reader_returns_to_the_series_page_with_the_cursor_where_it_was() {
+        use kaeri_model::reader::ReaderCommand;
+        let mut a = home();
+        a.handle(Action::Down, 10);
+        a.handle(Action::Open, 10);
+        answer(&mut a, "a:2");
+        a.handle(Action::Down, 10);
+        assert_eq!(a.series_selected().map(|r| r.id.0.as_str()), Some("c1"));
+        a.handle(Action::Open, 10);
+        assert_eq!(a.nav.current(), &StageView::Reader(WorkId::new("a:2")));
+        // The reader asks for the chapter list too; it must not move the page's cursor.
+        answer(&mut a, "a:2");
+        let task = a.handle(Action::ReaderLeave, 10);
+        assert_eq!(task, Some(Command::Reader(ReaderCommand::Close { session: 0 })));
+        assert_eq!(a.nav.current(), &StageView::Series(WorkId::new("a:2")));
+        assert_eq!(a.series_selected().map(|r| r.id.0.as_str()), Some("c1"));
+    }
+
+    #[test]
+    fn offline_a_chapter_that_isnt_downloaded_says_so_and_stays() {
+        let mut a = home();
+        a.handle(Action::Down, 10);
+        a.handle(Action::Open, 10);
+        answer(&mut a, "a:2");
+        a.apply(Event::Reading(ReadingEvent::Failed {
+            about: kaeri_model::reading::ReadingAbout::Chapters,
+            failure: ReadingFailure::Offline,
+        }));
+        a.toasts.clear();
+        assert_eq!(a.handle(Action::Open, 10), None);
+        assert_eq!(a.nav.current(), &StageView::Series(WorkId::new("a:2")));
+        let said: Vec<&str> = a.toasts.iter().map(|t| t.notice.text.as_str()).collect();
+        assert_eq!(said, vec!["Chapter 2 isn't downloaded"]);
+    }
+
+    #[test]
     fn a_failure_before_the_header_is_the_pages_and_r_asks_again() {
         let mut a = home();
         a.handle(Action::Down, 10);
