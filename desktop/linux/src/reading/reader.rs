@@ -1044,7 +1044,7 @@ impl Reader {
         self.trail.clear();
         self.picture.set_paintable(gdk::Paintable::NONE);
         if let Some(novel) = self.novel.take() {
-            self.stack.remove(&novel.widget);
+            drop_novel(&self.stack, &novel.widget);
         }
         self.end.forget();
         self.title.set_label("");
@@ -2403,10 +2403,10 @@ impl Reader {
                 // Forward from the end page goes on; back returns to the text.
                 if forward {
                     self.continue_on();
-                } else if let Some(novel) = novel {
+                } else if novel.is_some() {
                     self.state.borrow_mut().novel_end = false;
                     motion::turn(&self.veil, &self.stack, || {
-                        self.stack.set_visible_child(&novel.widget);
+                        self.stack.set_visible_child_name("novel");
                     });
                 }
             } else if let Some(novel) = novel {
@@ -2871,7 +2871,7 @@ impl Reader {
         let Some(ctx) = self.ctx.upgrade() else { return };
         self.stop_wait();
         if let Some(old) = self.novel.take() {
-            self.stack.remove(&old.widget);
+            drop_novel(&self.stack, &old.widget);
         }
         let hub = Rc::downgrade(&ctx.hub);
         let sender: Rc<dyn Fn(ReaderCommand)> = Rc::new(move |command| {
@@ -2898,7 +2898,7 @@ impl Reader {
         };
         match NovelView::new(&ctx, open, sender, tell) {
             Ok(novel) => {
-                self.stack.add_named(&novel.widget, Some("novel"));
+                show_novel(&self.stack, &novel.widget);
                 motion::turn(&self.veil, &self.stack, || {
                     self.stack.set_visible_child_name("novel");
                 });
@@ -3669,7 +3669,7 @@ impl Reader {
                     if self.stack.visible_child_name().as_deref() == Some("end") {
                         self.state.borrow_mut().novel_end = false;
                         motion::turn(&self.veil, &self.stack, || {
-                            self.stack.set_visible_child(&novel.widget);
+                            self.stack.set_visible_child_name("novel");
                         });
                     }
                     novel.go_to_edge(key == K::End);
@@ -4296,6 +4296,16 @@ fn go_on_return(field: &gtk::SpinButton, go: impl Fn(usize) + 'static) {
             field.connect_activate(go);
         }
     }
+}
+
+/// Shows a novel's web view in the reader's stack, as the page named "novel".
+fn show_novel(stack: &gtk::Stack, view: &gtk::Widget) {
+    stack.add_named(view, Some("novel"));
+}
+
+/// Takes a closed novel's web view out of the reader's stack.
+fn drop_novel(stack: &gtk::Stack, view: &gtk::Widget) {
+    stack.remove(view);
 }
 
 /// The window's full screen from before the reader first changed it, until the reader closes.
