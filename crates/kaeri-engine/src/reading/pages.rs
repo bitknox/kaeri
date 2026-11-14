@@ -2368,10 +2368,12 @@ mod tests {
 
     #[test]
     fn a_zoom_stays_within_the_page_budget() {
-        let target = Target { panel: kaeri_pages::Panel::Lcd, width: 2000, height: 3000 };
+        let target = Target { panel: kaeri_pages::Panel::Lcd, width: 1000, height: 1500 };
         let big = zoomed(target, 8.0);
         assert!(u64::from(big.width) * u64::from(big.height) * 4 <= PAGE_BYTES, "{big:?}");
-        assert!(big.width > target.width * 2);
+        // As large as the budget lets it be, about 3.3 times, its shape kept.
+        assert!(big.width > target.width * 3 && big.width < target.width * 8, "{big:?}");
+        assert!(big.height.abs_diff(big.width * 3 / 2) <= 2, "{big:?}");
         assert_eq!(zoomed(target, 0.0), target);
         assert_eq!(zoomed(target, f32::NAN), target);
     }
