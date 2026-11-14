@@ -90,8 +90,17 @@ fn keep(store: &Store, id: AnilistId, probed: &Probed) {
     }
 }
 
+/// How far after `now` a kept answer may be dated and still hold, as if just given. Home is
+/// composed with the moment it was asked for, so a check that ended while it was composed is
+/// dated a little after that moment, and it is the newest answer there is. One dated further
+/// ahead was kept before the clock was set back, and is asked again.
+const AHEAD: i64 = 5 * 60;
+
 fn within_day(probed: &Probed, now: i64) -> bool {
-    now - probed.at < DAY && now >= probed.at
+    if probed.at > now {
+        return probed.at - now <= AHEAD;
+    }
+    now - probed.at < DAY
 }
 
 /// Whether a mapping is kept for `id` with any of the sources `ids`.
@@ -393,6 +402,30 @@ mod tests {
         assert_eq!(kept(&store, title(), &usable, at), None);
         assert_eq!(lapsed(&store, title(), &usable, at), Some(Playable::Unknown));
         assert_eq!(ask(&meta, &store, &registry, at).await, Playable::Found);
+    }
+
+    #[tokio::test]
+    async fn a_miss_dated_after_the_home_asked_still_holds() {
+        let (meta, store) = cached();
+        let registry = ProviderRegistry::new(vec![MockProvider::new("alpha").arc()]);
+        let usable = Usable::of(&registry);
+        let asked = now();
+        // The check ends a second after Home was asked for, while Home is still composed.
+        assert_eq!(ask(&meta, &store, &registry, asked + 1).await, Playable::NotFound);
+        assert_eq!(kept(&store, title(), &usable, asked), Some(Playable::NotFound));
+        assert_eq!(lapsed(&store, title(), &usable, asked), None, "the miss still holds");
+
+        // A find likewise.
+        let find = Probed { at: asked + AHEAD, found: true, sources: Some(usable.mark) };
+        keep(&store, title(), &find);
+        assert_eq!(kept(&store, title(), &usable, asked), Some(Playable::Found));
+
+        // Dated further ahead than that, it was kept before the clock was set back.
+        let miss = Probed { at: asked + AHEAD + 1, found: false, sources: Some(usable.mark) };
+        keep(&store, title(), &miss);
+        assert_eq!(kept(&store, title(), &usable, asked), None, "Home shows it unknown");
+        assert_eq!(lapsed(&store, title(), &usable, asked), None);
+        assert_eq!(kept(&store, title(), &usable, asked + 1), Some(Playable::NotFound));
     }
 
     #[tokio::test]
