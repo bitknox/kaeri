@@ -44,6 +44,15 @@ final class ReaderStuckTests: XCTestCase {
         return Int(label.dropFirst("Page ".count).prefix { $0.isNumber })
     }
 
+    /// Whether the novel's chapter was laid out within a while. Until its page says it is ready
+    /// the line under the title counts one page, and a key pressed then turns nothing. The test's
+    /// chapter has more than one page.
+    private func opened(_ app: XCUIApplication) -> Bool {
+        let line = app.buttons.matching(NSPredicate(format: "label CONTAINS ' · page '")).firstMatch
+        let counted = NSPredicate(format: "exists == true AND NOT (label ENDSWITH ' of 1')")
+        return XCTWaiter().wait(for: [XCTNSPredicateExpectation(predicate: counted, object: line)], timeout: 30) == .completed
+    }
+
     /// The line under the series title, read with the controls up and put away again.
     private func line(_ app: XCUIApplication, containing words: String) -> String {
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
@@ -130,7 +139,7 @@ final class ReaderStuckTests: XCTestCase {
     func testANovelTurnsByKeyRepeatedly() throws {
         try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "hardware keys are an iPad check")
         let app = launch("readernovel")
-        Thread.sleep(forTimeInterval: 3)
+        XCTAssertTrue(opened(app), "the chapter did not open")
         let first = number(after: "page ", in: line(app, containing: " · page "))
         let start = try XCTUnwrap(first, "no novel line")
         for _ in 0..<3 { key(app, .downArrow); Thread.sleep(forTimeInterval: 0.8) }
