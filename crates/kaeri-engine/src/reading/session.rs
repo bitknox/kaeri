@@ -28,9 +28,9 @@ use kaeri_model::{
     eink::{EinkProfile, ScreenFacts},
     event::Event,
     reader::{
-        Leaf, NoNext, NovelPos, OpenAt, ReadDirection, ReadPlace, ReaderAction, ReaderCommand,
-        ReaderEvent, ReaderMode, ReaderNotice, ReaderSettingKey as Key, ReaderSettingsView,
-        ReaderSurface, ReaderView, ReaderWait, StripPos, TurnHow,
+        Leaf, NoNext, NovelPos, OpenAt, PageFormats, ReadDirection, ReadPlace, ReaderAction,
+        ReaderCommand, ReaderEvent, ReaderMode, ReaderNotice, ReaderSettingKey as Key,
+        ReaderSettingsView, ReaderSurface, ReaderView, ReaderWait, StripPos, TurnHow,
     },
     reading::{ReadingAbout, ReadingEvent, ReadingFailure},
 };
@@ -1133,6 +1133,8 @@ impl Session {
             guess_mode: !l.series_has(Key::Mode) && !l.sourced(Key::Mode),
             guess_direction: !l.series_has(Key::Direction) && !l.sourced(Key::Direction),
             fit_width: l.word(Key::Fit) == "width",
+            decodes: self.surface.decodes,
+            zoom: self.surface.zoom_factor(),
         }
     }
 
@@ -1579,7 +1581,7 @@ impl Session {
             (self.id, learning),
             &self.work,
             (index, next),
-            &gone,
+            (&gone, self.peek_screen(cx)),
         );
         self.ahead = Some(ahead);
     }
@@ -1684,7 +1686,7 @@ impl Session {
                     self.id,
                     &self.work,
                     (index, next),
-                    &self.gone,
+                    (&self.gone, self.peek_screen(cx)),
                 );
                 self.first_page = Some(first);
             } else {
@@ -1699,12 +1701,21 @@ impl Session {
         if next.path.as_os_str().is_empty() {
             return;
         }
+        let (target, decodes) = self.peek_screen(cx);
         pages.peek(PeekJob {
             session: self.id,
             chapter: next.id.clone(),
             path: next.path.clone(),
             out: cx.tx.clone(),
+            target,
+            decodes,
         });
+    }
+
+    /// The screen the next chapter's first page is drawn for, and the formats the front end
+    /// decodes: a page in another format is drawn for it.
+    fn peek_screen(&self, cx: &Cx<'_>) -> (Target, Option<PageFormats>) {
+        (self.plan(cx).target, self.surface.decodes)
     }
 
     /// Say the chapter opened, with its end page: what follows the chapter, or why nothing
@@ -2574,7 +2585,17 @@ mod tests {
             work: WorkId,
             at: OpenAt,
         ) -> (ReaderView, Vec<Leaf>, Vec<ReaderEvent>) {
-            self.send(ReaderCommand::Open { work, chapter: None, at, surface: surface() });
+            self.open_on(work, at, surface()).await
+        }
+
+        /// As [`Self::open_work`], on a surface of its own.
+        async fn open_on(
+            &mut self,
+            work: WorkId,
+            at: OpenAt,
+            surface: ReaderSurface,
+        ) -> (ReaderView, Vec<Leaf>, Vec<ReaderEvent>) {
+            self.send(ReaderCommand::Open { work, chapter: None, at, surface });
             let view = self
                 .until(|e| match e {
                     ReaderEvent::Opened(view) => Some(view.as_ref().clone()),
@@ -3854,5 +3875,37 @@ mod tests {
         h.shown(2, TurnHow::Turn).await;
         let again = h.drain().iter().any(|e| matches!(e, ReaderEvent::NextPreview { .. }));
         assert!(!again, "made once per chapter");
+    }
+
+    /// A front end that decodes JPEG alone gets the PNG pages, and the next chapter's first,
+    /// as pixels drawn for its screen.
+    #[tokio::test(start_paused = true)]
+    async fn pages_a_front_end_cannot_decode_come_as_pixels() {
+        use kaeri_model::reader::{PageEncoding, PageFormats, PixelFormat};
+        let mut h = harness(Store::open_in_memory().unwrap());
+        let decodes = Some(PageFormats { jpeg: true, ..PageFormats::default() });
+        let surface = ReaderSurface { decodes, ..surface() };
+        h.open_on(WorkId::new(WORK), OpenAt::Resume, surface).await;
+        let page = h
+            .until(|e| match e {
+                ReaderEvent::PageReady { file, .. } => Some(file.clone()),
+                _ => None,
+            })
+            .await;
+        let raw = PageEncoding::Raw { format: PixelFormat::Rgba8, stride: 600 * 4 };
+        assert_eq!((&page.encoding, page.width, page.height), (&raw, 600, 900), "{page:?}");
+        h.shown(1, TurnHow::Turn).await;
+        let preview = h
+            .until(|e| match e {
+                ReaderEvent::NextPreview { file, .. } => Some(file.clone()),
+                _ => None,
+            })
+            .await;
+        assert_eq!(
+            (&preview.encoding, preview.width, preview.height),
+            (&raw, 600, 900),
+            "{preview:?}"
+        );
+        assert!(Path::new(&preview.path).exists());
     }
 }
