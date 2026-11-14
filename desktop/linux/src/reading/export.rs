@@ -561,10 +561,7 @@ async fn save_files(
     let mut saved = 0;
     for file in &files {
         let from = gio::File::for_path(&file.path);
-        let to = folder.child(&file.name);
-        let (copied, _progress) =
-            from.copy_future(&to, gio::FileCopyFlags::OVERWRITE, glib::Priority::DEFAULT);
-        match copied.await {
+        match save_one(&from, &folder.child(&file.name)).await {
             Ok(()) => saved += 1,
             Err(error) => tracing::warn!(%error, "a prepared file was not saved"),
         }
@@ -586,6 +583,13 @@ async fn save_files(
         }
         None => ctx.toast(&words),
     }
+}
+
+/// Copy one prepared file to `to`, over a file already there.
+async fn save_one(from: &gio::File, to: &gio::File) -> Result<(), glib::Error> {
+    let (copied, _progress) =
+        from.copy_future(to, gio::FileCopyFlags::OVERWRITE, glib::Priority::DEFAULT);
+    copied.await
 }
 
 #[cfg(test)]
