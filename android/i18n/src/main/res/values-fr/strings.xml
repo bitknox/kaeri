@@ -312,7 +312,7 @@
         <item quantity="other">%1$,d chapitres ne sont pas encore téléchargés : l\'envoi attend le Wi-Fi et reprendra tout seul.</item>
     </plurals>
     <plurals name="export_pages_left_out">
-        <item quantity="one">Une page de %2$s n\'a pas pu être lue et ne figure pas dans les fichiers.</item>
+        <item quantity="one">%1$,d page de %2$s n\'a pas pu être lue et ne figure pas dans les fichiers.</item>
         <item quantity="many">%1$,d de pages de %2$s n\'ont pas pu être lues et ne figurent pas dans les fichiers.</item>
         <item quantity="other">%1$,d pages de %2$s n\'ont pas pu être lues et ne figurent pas dans les fichiers.</item>
     </plurals>

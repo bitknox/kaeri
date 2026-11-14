@@ -312,7 +312,7 @@
         <item quantity="other">%1$,d capítulos ainda não foram baixados, então este envio espera o Wi-Fi e continua sozinho.</item>
     </plurals>
     <plurals name="export_pages_left_out">
-        <item quantity="one">Uma página de %2$s não pôde ser lida e não está nos arquivos.</item>
+        <item quantity="one">%1$,d página de %2$s não pôde ser lida e não está nos arquivos.</item>
         <item quantity="many">%1$,d de páginas de %2$s não puderam ser lidas e não estão nos arquivos.</item>
         <item quantity="other">%1$,d páginas de %2$s não puderam ser lidas e não estão nos arquivos.</item>
     </plurals>

@@ -846,7 +846,7 @@ export-waits-for-wifi =
 # Send to e-reader, under the ready files: pages of one chapter that couldn't be read, as the reader shows them broken, so the files go without them. The chapter is its name as the series shows it, such as Chapter 12 or Volume 1. n is how many pages were left out.
 export-pages-left-out =
     { $n ->
-        [one] Une page de { $chapter } n'a pas pu être lue et ne figure pas dans les fichiers.
+        [one] { $n } page de { $chapter } n'a pas pu être lue et ne figure pas dans les fichiers.
         [many] { $n } de pages de { $chapter } n'ont pas pu être lues et ne figurent pas dans les fichiers.
        *[other] { $n } pages de { $chapter } n'ont pas pu être lues et ne figurent pas dans les fichiers.
     }

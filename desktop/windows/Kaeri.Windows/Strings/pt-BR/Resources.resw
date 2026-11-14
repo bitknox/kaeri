@@ -891,7 +891,7 @@
     <value>{n} capítulos ainda não foram baixados, então este envio espera o Wi-Fi e continua sozinho.</value>
   </data>
   <data name="ExportPagesLeftOut_one" xml:space="preserve">
-    <value>Uma página de {chapter} não pôde ser lida e não está nos arquivos.</value>
+    <value>{n} página de {chapter} não pôde ser lida e não está nos arquivos.</value>
   </data>
   <data name="ExportPagesLeftOut_many" xml:space="preserve">
     <value>{n} de páginas de {chapter} não puderam ser lidas e não estão nos arquivos.</value>

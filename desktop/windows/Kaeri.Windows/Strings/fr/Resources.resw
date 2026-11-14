@@ -891,7 +891,7 @@
     <value>{n} chapitres ne sont pas encore téléchargés : l'envoi attend le Wi-Fi et reprendra tout seul.</value>
   </data>
   <data name="ExportPagesLeftOut_one" xml:space="preserve">
-    <value>Une page de {chapter} n'a pas pu être lue et ne figure pas dans les fichiers.</value>
+    <value>{n} page de {chapter} n'a pas pu être lue et ne figure pas dans les fichiers.</value>
   </data>
   <data name="ExportPagesLeftOut_many" xml:space="preserve">
     <value>{n} de pages de {chapter} n'ont pas pu être lues et ne figurent pas dans les fichiers.</value>

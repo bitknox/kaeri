@@ -74079,7 +74079,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Une page de %2$@ n'a pas pu être lue et ne figure pas dans les fichiers."
+                      "value" : "%1$lld page de %2$@ n'a pas pu être lue et ne figure pas dans les fichiers."
                     }
                   },
                   "other" : {
@@ -74231,7 +74231,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Uma página de %2$@ não pôde ser lida e não está nos arquivos."
+                      "value" : "%1$lld página de %2$@ não pôde ser lida e não está nos arquivos."
                     }
                   },
                   "other" : {
