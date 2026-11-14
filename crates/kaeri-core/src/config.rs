@@ -1031,6 +1031,15 @@ pub struct PlaybackConfig {
     pub mpv_args: Vec<String>,
 }
 
+impl PlaybackConfig {
+    /// The speed a play starts at: the one last chosen, while speeds are carried. A stored
+    /// speed of 0 or less is none.
+    pub fn carried_speed(&self) -> Option<f64> {
+        self.persisted_speed
+            .filter(|speed| self.persist_speed && speed.is_finite() && *speed > 0.0)
+    }
+}
+
 impl Default for PlaybackConfig {
     fn default() -> Self {
         Self {
@@ -1922,5 +1931,18 @@ background = \"no-background\"
         assert!(Config::default().playback.ask_was_opening);
         let off = Config::parse("[playback]\nask_was_opening = false\n").unwrap();
         assert!(!off.playback.ask_was_opening);
+    }
+
+    #[test]
+    fn a_stored_speed_of_0_carries_no_speed() {
+        let mut playback = PlaybackConfig { persisted_speed: Some(1.25), ..Default::default() };
+        assert_eq!(playback.carried_speed(), Some(1.25));
+        for stored in [0.0, -1.0, f64::NAN] {
+            playback.persisted_speed = Some(stored);
+            assert_eq!(playback.carried_speed(), None, "{stored}");
+        }
+        playback.persisted_speed = Some(1.25);
+        playback.persist_speed = false;
+        assert_eq!(playback.carried_speed(), None);
     }
 }
