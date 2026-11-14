@@ -456,7 +456,7 @@ pub async fn resolve_for_playback(
         translation: playback.translation,
         resume_at,
         runtime_secs: media.duration.map(|minutes| minutes * 60),
-        speed: playback.persist_speed.then_some(playback.persisted_speed).flatten(),
+        speed: playback.carried_speed(),
         volume: playback.persist_volume.then_some(playback.persisted_volume).flatten(),
         // Filled in by the caller, which has the episode table; headless play has none.
         next: None,
@@ -483,7 +483,7 @@ fn untracked_context(
         translation: playback.translation,
         resume_at: None,
         runtime_secs: None,
-        speed: playback.persist_speed.then_some(playback.persisted_speed).flatten(),
+        speed: playback.carried_speed(),
         volume: playback.persist_volume.then_some(playback.persisted_volume).flatten(),
         next: None,
         episodes: Vec::new(),
