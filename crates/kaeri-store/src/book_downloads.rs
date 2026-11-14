@@ -690,6 +690,8 @@ mod tests {
         assert_eq!((mine.chapter.as_str(), mine.state), ("1", BookDownloadState::Downloading));
         let theirs = b.claim_book_download(100).unwrap().unwrap();
         assert_eq!(theirs.chapter, "2", "the other engine takes the next one");
+        // It fetches that one at once, so its own claim does not lapse below.
+        assert!(b.book_download_fetched(theirs.id, "/dl/2.cbz", Some(9), 1, 100).unwrap());
         assert!(b.claim_book_download(100).unwrap().is_none());
         assert_eq!(
             b.book_downloads_held_elsewhere(100).unwrap(),
