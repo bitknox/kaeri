@@ -95,10 +95,12 @@ final class ReaderLayoutTests: XCTestCase {
     /// one index at a time asks the app again for each, and a strip still placing its images
     /// can have fewer by the time the last index is asked for.
     /// `any` takes every element with a label, such as a button whose text is its label.
-    private func texts(_ app: XCUIApplication, any: Bool = false) throws -> [(label: String, frame: CGRect)] {
-        var found: [(String, CGRect)] = []
+    private func texts(_ app: XCUIApplication, any: Bool = false) throws -> [(label: String, frame: CGRect, type: UInt)] {
+        var found: [(String, CGRect, UInt)] = []
         func walk(_ node: XCUIElementSnapshot) {
-            if node.elementType == .staticText || (any && !node.label.isEmpty) { found.append((node.label, node.frame)) }
+            if node.elementType == .staticText || (any && !node.label.isEmpty) {
+                found.append((node.label, node.frame, node.elementType.rawValue))
+            }
             node.children.forEach(walk)
         }
         walk(try app.snapshot())
@@ -192,8 +194,9 @@ final class ReaderLayoutTests: XCTestCase {
         let below = pagesSegment(app).frame.maxY
         // The grid's first row, the one with page 1. A page's number can be its button's label,
         // and the reader's bar under the panel has numbers of its own, such as the page count.
-        let numbers = try texts(app, any: true).filter { Int($0.label) != nil && $0.frame.minY > below }
-        mark("p6-numbers", "\(numbers.map { "\($0.label) \($0.frame.origin)" })")
+        let labelled = try texts(app, any: true).filter { $0.frame.minY > below }
+        mark("p6-numbers", "\(labelled.prefix(40).map { "\($0.type) \($0.label) \($0.frame.origin)" })")
+        let numbers = labelled.filter { Int($0.label) != nil }
         let first = try XCTUnwrap(numbers.first { $0.label == "1" }, "no page 1 in the grid")
         let thumbs = numbers.filter { abs($0.frame.minY - first.frame.minY) < 4 }
         XCTAssertGreaterThanOrEqual(thumbs.count, 3, "the grid's first row has \(thumbs.count) pages")
@@ -210,15 +213,20 @@ final class ReaderLayoutTests: XCTestCase {
         try requirePad()
         let app = launch(["-KaeriScene", "readingseries", "-KaeriWork", "a:900301", "-KaeriSheet", "choose-chapters"])
         XCTAssertTrue(app.buttons["Mark read"].firstMatch.waitForExistence(timeout: 20), "no Choose chapters bar")
+        // A windowed app opens at the size it was left at; the check starts wide.
+        if windowFrame(app).width < 600 {
+            widen(app)
+            Thread.sleep(forTimeInterval: 2)
+        }
         let count = NSPredicate(format: "label MATCHES '^[0-9]+ chapters?$'")
-        let start = app.navigationBars.staticTexts.matching(count).firstMatch
+        let start = app.staticTexts.matching(count).firstMatch
         XCTAssertTrue(start.waitForExistence(timeout: 5), "no count of chosen chapters")
         let before = start.label
         let unread = app.buttons["All unread"].firstMatch
         XCTAssertTrue(unread.waitForExistence(timeout: 5), "no All unread")
         tap(unread, in: app)
         Thread.sleep(forTimeInterval: 1)
-        let chosen = app.navigationBars.staticTexts.matching(count).firstMatch.label
+        let chosen = app.staticTexts.matching(count).firstMatch.label
         mark("picks-start", "window \(windowFrame(app)) \(before), after All unread \(chosen)")
         XCTAssertNotEqual(chosen, before, "All unread chose the same chapters as the start, so the check proves nothing")
         let steps: [(String, (XCUIApplication) -> Void)] = [
@@ -230,7 +238,7 @@ final class ReaderLayoutTests: XCTestCase {
             step(app)
             Thread.sleep(forTimeInterval: 2)
             let window = windowFrame(app)
-            let now = app.navigationBars.staticTexts.matching(count).firstMatch
+            let now = app.staticTexts.matching(count).firstMatch
             let bar = app.buttons["Mark read"].firstMatch
             mark("picks-\(name.replacingOccurrences(of: " ", with: "-"))",
                  "window \(window) state \(app.state.rawValue) count \(now.exists ? now.label : "none") bar \(bar.exists)")
