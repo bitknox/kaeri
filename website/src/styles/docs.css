@@ -63,10 +63,10 @@
 	background-color: var(--ani-ground);
 }
 
+/* The title sits on the page's own surface, as on Home and Features, and a hairline closes it. */
 .docs-band {
 	margin-top: calc(var(--sl-nav-height) + var(--sl-mobile-toc-height));
-	padding: 28px 16px 32px;
-	background: var(--ani-band);
+	padding: 28px 16px 0;
 	color: var(--ani-text);
 }
 
@@ -74,6 +74,8 @@
 	width: 100%;
 	max-width: 1280px;
 	margin: 0 auto;
+	padding-bottom: 32px;
+	border-bottom: 1px solid var(--ani-rule);
 }
 
 .docs-crumb {
@@ -96,7 +98,7 @@
 .docs-band h1 {
 	margin: 0;
 	font-family: var(--ani-font-display);
-	font-size: 32px;
+	font-size: var(--fs-h2);
 	font-weight: 500;
 	line-height: 1.12;
 	letter-spacing: -0.015em;
@@ -106,8 +108,8 @@
 
 .docs-lede {
 	margin: 12px 0 0;
-	max-width: 720px;
-	font-size: 17px;
+	max-width: var(--measure);
+	font-size: var(--fs-lede);
 	line-height: 1.5;
 	color: var(--ani-dim);
 	text-wrap: pretty;
@@ -162,11 +164,12 @@ mobile-starlight-toc nav {
 
 @media (min-width: 50em) {
 	.docs-band {
-		padding: 56px 32px 48px;
+		padding: 56px 32px 0;
 	}
 
 	.docs-band-in {
 		padding-inline-start: 292px;
+		padding-bottom: 48px;
 	}
 
 	.docs-crumb {
@@ -174,13 +177,11 @@ mobile-starlight-toc nav {
 	}
 
 	.docs-band h1 {
-		font-size: 48px;
 		line-height: 1.08;
 	}
 
 	.docs-lede {
 		margin-top: 16px;
-		font-size: 19px;
 	}
 
 	.docs-body {
@@ -482,6 +483,7 @@ mobile-starlight-toc .isMobile a[aria-current='true']::after {
 /* ── Prose ─────────────────────────────────────────────────────────────── */
 .sl-markdown-content {
 	color: var(--ani-text);
+	font-size: var(--fs-body);
 }
 
 .sl-markdown-content :is(h2, h3, h4) {
@@ -538,7 +540,7 @@ mobile-starlight-toc .isMobile a[aria-current='true']::after {
 }
 
 .sl-markdown-content .docs-links strong {
-	font-size: 19px;
+	font-size: var(--fs-h3);
 }
 
 .sl-markdown-content .docs-links span {
@@ -562,6 +564,10 @@ mobile-starlight-toc .isMobile a[aria-current='true']::after {
 
 .sl-markdown-content :is(h3, h4) {
 	line-height: 1.375;
+}
+
+.sl-markdown-content h3 {
+	font-size: var(--fs-h3);
 }
 
 /* Links in prose are text coloured with a soft underline that turns solid under the pointer. */
