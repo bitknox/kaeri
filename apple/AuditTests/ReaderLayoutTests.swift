@@ -1,8 +1,9 @@
 // The iPad layout bugs of the round 5 hunt, checked in the Fixtures app: the Chapters popover in
 // landscape and in a narrow window, the opening screen's chapter, the series header at the
 // largest text size, a failed strip image's words, Choose chapters' Download in a narrow window,
-// Downloads and Sources keeping their place when the window is made narrow, and the app running on
-// through narrow and wide. Run with the Audit scheme on an iPad Simulator.
+// Downloads and Sources keeping their place when the window is made narrow, the app running on
+// through narrow and wide, and Choose chapters' picks kept through them. Run with the Audit scheme
+// on an iPad Simulator.
 //
 // With TEST_RUNNER_KAERI_TEST_MARKS set to a folder, each test leaves a screenshot there and a
 // line of the frames it measured, for before and after shots.
@@ -198,6 +199,45 @@ final class ReaderLayoutTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(thumbs.count, 3, "the grid's first row has \(thumbs.count) pages")
         for thumb in thumbs {
             XCTAssertTrue(narrowWindow.contains(CGPoint(x: thumb.frame.midX, y: thumb.frame.midY)), "page \(thumb.label) is outside the window")
+        }
+    }
+
+    // MARK: A resize keeps the page and what it holds
+
+    /// Choose chapters with every unread chapter chosen, then narrow, wide and narrow again: the
+    /// series page stays open, still choosing, with the same chapters chosen.
+    func testChosenChaptersSurviveNarrowAndWide() throws {
+        try requirePad()
+        let app = launch(["-KaeriScene", "readingseries", "-KaeriWork", "a:900301", "-KaeriSheet", "choose-chapters"])
+        XCTAssertTrue(app.buttons["Mark read"].firstMatch.waitForExistence(timeout: 20), "no Choose chapters bar")
+        let count = NSPredicate(format: "label MATCHES '^[0-9]+ chapters?$'")
+        let start = app.navigationBars.staticTexts.matching(count).firstMatch
+        XCTAssertTrue(start.waitForExistence(timeout: 5), "no count of chosen chapters")
+        let before = start.label
+        let unread = app.buttons["All unread"].firstMatch
+        XCTAssertTrue(unread.waitForExistence(timeout: 5), "no All unread")
+        tap(unread, in: app)
+        Thread.sleep(forTimeInterval: 1)
+        let chosen = app.navigationBars.staticTexts.matching(count).firstMatch.label
+        mark("picks-start", "window \(windowFrame(app)) \(before), after All unread \(chosen)")
+        XCTAssertNotEqual(chosen, before, "All unread chose the same chapters as the start, so the check proves nothing")
+        let steps: [(String, (XCUIApplication) -> Void)] = [
+            ("narrow", { self.narrow($0, to: 375) }),
+            ("wide", { self.widen($0) }),
+            ("narrow again", { self.narrow($0, to: 375) }),
+        ]
+        for (name, step) in steps {
+            step(app)
+            Thread.sleep(forTimeInterval: 2)
+            let window = windowFrame(app)
+            let now = app.navigationBars.staticTexts.matching(count).firstMatch
+            let bar = app.buttons["Mark read"].firstMatch
+            mark("picks-\(name.replacingOccurrences(of: " ", with: "-"))",
+                 "window \(window) state \(app.state.rawValue) count \(now.exists ? now.label : "none") bar \(bar.exists)")
+            XCTAssertEqual(app.state, .runningForeground, "\(name): the app ended")
+            guard app.state == .runningForeground else { return }
+            XCTAssertTrue(bar.exists, "\(name): Choose chapters is gone, the page or its picks were lost")
+            XCTAssertEqual(now.exists ? now.label : "none", chosen, "\(name): the chosen chapters changed")
         }
     }
 
