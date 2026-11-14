@@ -3407,6 +3407,12 @@
   <data name="DownloadsEmptyDetail" xml:space="preserve">
     <value>Episode yang diunduh dapat diputar tanpa koneksi.</value>
   </data>
+  <data name="ReadDownloadsEmptyDetail" xml:space="preserve">
+    <value>Bab yang diunduh bisa dibuka tanpa koneksi.</value>
+  </data>
+  <data name="ReadDownloadsEmptyBoth" xml:space="preserve">
+    <value>Episode dan bab yang diunduh bisa dibuka tanpa koneksi.</value>
+  </data>
   <data name="DownloadsLoadFailed" xml:space="preserve">
     <value>Unduhan tidak dapat dimuat</value>
   </data>

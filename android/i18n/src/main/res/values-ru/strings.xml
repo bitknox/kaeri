@@ -914,8 +914,6 @@
         <item quantity="many">%1$,d скачанных глав по-прежнему открываются.</item>
         <item quantity="other">%1$,d скачанной главы по-прежнему открываются.</item>
     </plurals>
-    <string name="read_downloads_empty_detail">Скачанные главы открываются без подключения к сети.</string>
-    <string name="read_downloads_empty_both">Скачанные эпизоды и главы открываются без подключения к сети.</string>
     <string name="settings_summary_chapters_on">Новые главы включены</string>
     <string name="settings_summary_chapters_off">Новые главы выключены</string>
     <plurals name="settings_summary_book_folders">
@@ -1691,6 +1689,8 @@
     <string name="downloads_space_label">Место, занятое загрузками</string>
     <string name="downloads_empty_title">Нет загрузок</string>
     <string name="downloads_empty_detail">Скачанные эпизоды воспроизводятся без подключения к сети.</string>
+    <string name="read_downloads_empty_detail">Скачанные главы открываются без подключения к сети.</string>
+    <string name="read_downloads_empty_both">Скачанные эпизоды и главы открываются без подключения к сети.</string>
     <string name="downloads_load_failed">Не удалось открыть загрузки</string>
     <string name="downloads_folder_failed">Не удалось открыть папку. Проверьте, что она ещё существует.</string>
     <string name="downloads_episode_name">Эпизод %1$d</string>

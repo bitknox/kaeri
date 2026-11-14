@@ -63,17 +63,28 @@ struct ReadLibraryView: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
     @AppStorage("kaeri.readLibrarySort") private var sort: ReadLibrarySort = .lastRead
+    @Environment(\.dynamicTypeSize) private var typeSize
     /// Before the list menu: Shows or Reading, with both media on.
     var scope = false
 
     var body: some View {
         let segment = navigator.readingSegment
         VStack(alignment: .leading, spacing: Device.isMac ? 16 : 12) {
-            HStack(spacing: 12) {
-                if scope, Device.isMac { LibraryScopePicker() }
-                ReadListMenu()
-                Spacer(minLength: 8)
-                sortMenu
+            if typeSize.isAccessibilitySize {
+                // At the largest text sizes the order goes under the list, so the row is never
+                // wider than the screen.
+                VStack(alignment: .leading, spacing: 8) {
+                    if scope, Device.isMac { LibraryScopePicker() }
+                    ReadListMenu()
+                    sortMenu
+                }
+            } else {
+                HStack(spacing: 12) {
+                    if scope, Device.isMac { LibraryScopePicker() }
+                    ReadListMenu()
+                    Spacer(minLength: 8)
+                    sortMenu
+                }
             }
             grid(segment)
                 .id(segment)
@@ -106,7 +117,7 @@ struct ReadLibraryView: View {
         .menuStyle(.button)
         .buttonStyle(.plain)
         .menuIndicator(.hidden)
-        .fixedSize()
+        .fixedSize(horizontal: !typeSize.isAccessibilitySize, vertical: true)
         .pointerHover()
         .accessibilityLabel(L.shellLibraryOrderLabel)
         .accessibilityValue(sort.shown)
@@ -153,6 +164,7 @@ struct ReadLibraryView: View {
 private struct ReadListMenu: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         let segment = navigator.readingSegment
@@ -188,7 +200,7 @@ private struct ReadListMenu: View {
         .menuStyle(.button)
         .buttonStyle(.plain)
         .menuIndicator(.hidden)
-        .fixedSize()
+        .fixedSize(horizontal: !typeSize.isAccessibilitySize, vertical: true)
         .pointerHover()
         .accessibilityLabel(L.shellLibraryListLabel)
         .accessibilityValue(L.readLibraryListValue(list: ReadWords.list(segment), n: count(segment)))

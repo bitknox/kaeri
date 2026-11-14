@@ -3554,6 +3554,12 @@
   <data name="DownloadsEmptyDetail" xml:space="preserve">
     <value>Nedladdade avsnitt spelas upp utan anslutning.</value>
   </data>
+  <data name="ReadDownloadsEmptyDetail" xml:space="preserve">
+    <value>Nedladdade kapitel öppnas utan anslutning.</value>
+  </data>
+  <data name="ReadDownloadsEmptyBoth" xml:space="preserve">
+    <value>Nedladdade avsnitt och kapitel öppnas utan anslutning.</value>
+  </data>
   <data name="DownloadsLoadFailed" xml:space="preserve">
     <value>Det gick inte att läsa nedladdningarna</value>
   </data>

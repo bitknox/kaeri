@@ -5456,6 +5456,12 @@ public enum L {
     /// Line under the empty title.
     public static var downloadsEmptyDetail: String { string("downloads-empty-detail", fallback: "Downloaded episodes play without a connection.") }
 
+    /// Downloads' empty line for a person who only reads, under "No downloads".
+    public static var readDownloadsEmptyDetail: String { string("read-downloads-empty-detail", fallback: "Downloaded chapters open without a connection.") }
+
+    /// Downloads' empty line for a person who watches and reads, under "No downloads".
+    public static var readDownloadsEmptyBoth: String { string("read-downloads-empty-both", fallback: "Downloaded episodes and chapters open without a connection.") }
+
     /// Title when the list could not be read.
     public static var downloadsLoadFailed: String { string("downloads-load-failed", fallback: "Couldn't load downloads") }
 

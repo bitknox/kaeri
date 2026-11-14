@@ -223,13 +223,14 @@ struct IPadProvidersToolbar: ToolbarContent {
 
     var body: some ToolbarContent {
         // As on the Mac: the stores' check with shows, Add a source with reading on, so a
-        // second book source can be added once the list has one.
+        // second book source can be added once the list has one. With none, the empty state's
+        // button is the one Add a source.
         if store.medium.answer != .read {
             ToolbarItem(placement: .topBarTrailing) {
                 Button(L.settingsCheckUpdates) { store.loadStores() }
             }
         }
-        if store.medium.answer != .watch {
+        if BookSourcesToolbar.shows(store) {
             ToolbarItem(placement: .topBarTrailing) { BookSourcesToolbar() }
         }
     }

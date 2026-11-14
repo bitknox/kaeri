@@ -4901,6 +4901,14 @@
     <value>[Ðöŵñļöàðéð éþîšöðéš þļàý ŵîţĥöüţ à çöññéçţîöñ.~~~~~~~~~~~~~~]</value>
     <comment>Line under the empty title.</comment>
   </data>
+  <data name="ReadDownloadsEmptyDetail" xml:space="preserve">
+    <value>[Ðöŵñļöàðéð çĥàþţéŕš öþéñ ŵîţĥöüţ à çöññéçţîöñ.~~~~~~~~~~~~~~]</value>
+    <comment>Downloads' empty line for a person who only reads, under "No downloads".</comment>
+  </data>
+  <data name="ReadDownloadsEmptyBoth" xml:space="preserve">
+    <value>[Ðöŵñļöàðéð éþîšöðéš àñð çĥàþţéŕš öþéñ ŵîţĥöüţ à çöññéçţîöñ.~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Downloads' empty line for a person who watches and reads, under "No downloads".</comment>
+  </data>
   <data name="DownloadsLoadFailed" xml:space="preserve">
     <value>[Çöüļðñ'ţ ļöàð ðöŵñļöàðš~~~~~~~]</value>
     <comment>Title when the list could not be read.</comment>

@@ -202,6 +202,13 @@ private struct BookHealthLabel: LabelStyle {
 struct BookSourcesToolbar: View {
     @Environment(Navigator.self) private var navigator
 
+    /// Whether the toolbar offers Add a source: once a source is listed. With none, the empty
+    /// state's own button is the one Add a source, and while the list is on its way there is
+    /// nothing to add to yet.
+    @MainActor static func shows(_ store: AppStore) -> Bool {
+        store.medium.answer != .watch && !store.bookSources.isEmpty
+    }
+
     var body: some View {
         Button {
             navigator.addBookSource = .choose
@@ -494,7 +501,19 @@ struct SourcesScreen: View {
     }
 }
 
-private struct SourcesScopePicker: View {
+/// Settings' Sources row: what it says beside its name, for what Kaeri is for. Shows say whether
+/// torrents are on; reading counts its sources; both count every source.
+enum SourcesRowWords {
+    @MainActor static func value(_ store: AppStore) -> String {
+        switch store.medium.answer {
+        case .watch: store.settings.isOn(.torrents) ? L.settingsTorrentsValueOn : L.settingsTorrentsValueOff
+        case .read: L.settingsSourceCount(count: store.bookSources.count)
+        case .both: L.settingsSourceCount(count: store.providers.rows.count + store.bookSources.count)
+        }
+    }
+}
+
+struct SourcesScopePicker: View {
     @Binding var reading: Bool
 
     var body: some View {
@@ -513,18 +532,17 @@ private struct SourcesScopePicker: View {
 /// Your sources in the iPhone's Settings sheet. Add a source opens over the sheet from here.
 struct PhoneYourSourcesPage: View {
     @Environment(AppStore.self) private var store
-    @Environment(Navigator.self) private var navigator
     @State private var reading = false
 
     var body: some View {
         Group {
             switch store.medium.answer {
             case .watch: PhoneProvidersPage()
-            case .read: books
+            case .read: PhoneBookSources()
             case .both:
                 VStack(spacing: 0) {
                     SourcesScopePicker(reading: $reading).padding(.horizontal, 16).padding(.vertical, 8)
-                    if reading { books } else { PhoneProvidersPage() }
+                    if reading { PhoneBookSources() } else { PhoneProvidersPage() }
                 }
                 .background(.ground)
             }
@@ -533,17 +551,26 @@ struct PhoneYourSourcesPage: View {
         // the board's large Your sources.
         .navigationTitle(store.medium.answer == .read ? L.sourcesYour : L.sourcesTitle)
         .navigationBarTitleDisplayMode(store.medium.answer == .read ? .large : .inline)
-        .sheet(item: Binding(get: { navigator.addBookSource }, set: { navigator.addBookSource = $0 })) { step in
-            AddBookSourceSheet(start: step)
-        }
     }
+}
 
-    private var books: some View {
+/// The book sources on iPhone, with Add a source in the bar once one is listed, opening over the
+/// Settings sheet.
+struct PhoneBookSources: View {
+    @Environment(AppStore.self) private var store
+    @Environment(Navigator.self) private var navigator
+
+    var body: some View {
         BookSourcesScreen()
             .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button(L.sourcesAddTitle, systemImage: "plus") { navigator.addBookSource = .choose }
+                if BookSourcesToolbar.shows(store) {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button(L.sourcesAddTitle, systemImage: "plus") { navigator.addBookSource = .choose }
+                    }
                 }
+            }
+            .sheet(item: Binding(get: { navigator.addBookSource }, set: { navigator.addBookSource = $0 })) { step in
+                AddBookSourceSheet(start: step)
             }
     }
 }

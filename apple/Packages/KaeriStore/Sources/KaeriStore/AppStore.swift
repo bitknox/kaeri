@@ -120,6 +120,11 @@ public final class AppStore {
     @ObservationIgnored var lastApplied = ContinuousClock.now
     /// What the screens asked for before the engine was there, sent once it is.
     @ObservationIgnored private var early: [Command] = []
+    /// What the app last said of itself and the device, one command of each kind (`Standing`):
+    /// told first to every engine that attaches, so one started again after a failed start or a
+    /// stop knows where the app is, its network, what the device holds back and whether the
+    /// windows are on screen. Their tellers say them only when they change.
+    @ObservationIgnored private var standing: [Standing: Command] = [:]
     /// The titles whose episodes were asked for their stills.
     @ObservationIgnored private var stillsAsked: Set<AnilistId> = []
     /// The spotlight's titles whose episodes were asked for its wide art (`loadSpotlightEpisodes`).
@@ -203,6 +208,9 @@ public final class AppStore {
 
     /// Start the engine `launch` describes with `host`, off the main thread, and read its events.
     public func start(_ launch: EngineLaunch, host: any FfiHost) async {
+        // An engine that stopped hears nothing more: what is asked while this one starts waits
+        // for it.
+        client = nil
         phase = .starting
         settingsUnusable = false
         launched = (launch, host)
@@ -336,6 +344,11 @@ public final class AppStore {
         attachTV(engine)
         // Typed-code pairing finds the device showing the code by DNS-SD.
         engine.setSyncNetwork(network: BonjourSyncNetwork())
+        // The app and the device as they stand, before anything asked waits on them: the book
+        // downloads hold until the network is said.
+        for kind in Standing.allCases {
+            if let command = standing[kind] { client?.send(command) }
+        }
         for command in early {
             client?.send(command)
         }
@@ -437,8 +450,11 @@ public final class AppStore {
         default:
             break
         }
+        let kind = Standing(command)
+        if let kind { standing[kind] = command }
         guard let client else {
-            if phase == .starting { early.append(command) }
+            // What stands is told to the engine as it attaches, whenever that is.
+            if phase == .starting, kind == nil { early.append(command) }
             return nil
         }
         let job = client.send(command)
@@ -447,6 +463,22 @@ public final class AppStore {
             send(then)
         }
         return job
+    }
+
+    /// The commands that say how the app and the device stand rather than ask for something:
+    /// the latest of each is told to every engine that attaches, in this order.
+    enum Standing: CaseIterable {
+        case networkPath, deviceState, appPhase, syncVisible
+
+        init?(_ command: Command) {
+            switch command {
+            case .networkPath: self = .networkPath
+            case .deviceState: self = .deviceState
+            case .appPhase: self = .appPhase
+            case .syncVisible: self = .syncVisible
+            default: return nil
+            }
+        }
     }
 
     /// Play `episode` of `id` from `position`, as a Handoff from another device asks: played as
@@ -979,6 +1011,10 @@ public final class AppStore {
         notifications.observe(event)
         reader.observe(event)
         reading.observe(event)
+        // A download that fails before it starts has no row to say so on: a notice says why.
+        if case .reading(.failed(.downloads, let failure)) = event {
+            notices.post(Notice(kind: .alert, text: L.readDownloadNotStarted(reason: failure.words), hint: nil))
+        }
         bookSources.observe(event)
         cameIn.apply(event)
         serverProgress.apply(event)

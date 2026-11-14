@@ -6131,6 +6131,12 @@ downloads-empty-title = Keine Downloads
 # Line under the empty title.
 downloads-empty-detail = Heruntergeladene Folgen laufen ohne Verbindung.
 
+# Downloads' empty line for a person who only reads, under "No downloads".
+read-downloads-empty-detail = Heruntergeladene Kapitel öffnen sich ohne Verbindung.
+
+# Downloads' empty line for a person who watches and reads, under "No downloads".
+read-downloads-empty-both = Heruntergeladene Folgen und Kapitel öffnen sich ohne Verbindung.
+
 # Title when the list could not be read.
 downloads-load-failed = Downloads konnten nicht geladen werden
 

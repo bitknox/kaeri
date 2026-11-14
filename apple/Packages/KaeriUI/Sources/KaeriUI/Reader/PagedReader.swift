@@ -25,6 +25,9 @@ struct PagedReader: View {
     @State private var zoom = PageZoom()
     /// The pinch gesture is live. It goes back to false however the gesture stops, cancelled too.
     @GestureState private var magnifying = false
+    /// The swipe is live. It goes back to false however the swipe stops: a touch the system takes,
+    /// as when the window is resized by its corner, cancels the swipe with no `onEnded`.
+    @GestureState private var swiping = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var rtl: Bool { model.view?.direction == .rightToLeft }
@@ -49,11 +52,13 @@ struct PagedReader: View {
         .clipped()
         .contentShape(.rect)
         .gesture(swipe)
+        .onChange(of: swiping) { _, live in if !live { swipeGone() } }
         #if os(iOS)
-        // A double tap zooms, so a single tap waits for it not to be one.
-        .simultaneousGesture(
-            SpatialTapGesture(count: 2).onEnded { zoom.doubleTap(at: $0.location, in: size, motion: !reduceMotion && !paper) }
-                .exclusively(before: SpatialTapGesture().onEnded { tap($0.location.x / max(size.width, 1)) }))
+        // A double tap zooms, so a single tap waits for it not to be one. A tap on a control in
+        // the page, a failed page's Try again, is the control's alone.
+        .readerTaps(double: { zoom.doubleTap(at: $0, in: size, motion: !reduceMotion && !paper) }) {
+            tap($0.x / max(size.width, 1))
+        }
         .simultaneousGesture(
             MagnifyGesture()
                 .updating($magnifying) { _, live, _ in live = true }
@@ -63,7 +68,7 @@ struct PagedReader: View {
             if !live { zoom.pinchGone(in: size, motion: !reduceMotion && !paper) }
         }
         #else
-        .simultaneousGesture(SpatialTapGesture().onEnded { tap($0.location.x / max(size.width, 1)) })
+        .readerTaps { tap($0.x / max(size.width, 1)) }
         #endif
         .onAppear { model.position = (current, max(model.leaves.count, 1)) }
         .onChange(of: model.current) { _, _ in
@@ -242,8 +247,18 @@ struct PagedReader: View {
         }
     }
 
+    /// The swipe stopped. Every `onEnded` leaves the pages at rest or settling; one cancelled
+    /// left them where the finger had them, a slice of the next page showing, and a pan's start
+    /// kept for the next pan. They spring back as a swipe let go short does.
+    private func swipeGone() {
+        zoom.dragEnded()
+        guard !settling, drag != 0 else { return }
+        withAnimation(paper ? nil : .standard) { drag = 0 }
+    }
+
     private var swipe: some Gesture {
         DragGesture(minimumDistance: 14)
+            .updating($swiping) { _, live, _ in live = true }
             .onChanged { value in
                 guard !settling else { return }
                 // A zoomed page pans and never turns; a pinch's fingers do neither.
@@ -414,6 +429,7 @@ struct ReaderEndPage: View {
                     .foregroundStyle(theme.silk)
                     .frame(minHeight: 44)
                     .buttonStyle(.plain)
+                    .takesItsOwnTaps()
                     .padding(.top, 4)
             }
         }
@@ -493,6 +509,7 @@ struct ReaderEndPage: View {
                     .frame(maxWidth: .infinity, minHeight: 44)
                     .contentShape(.rect)
                     .buttonStyle(.plain)
+                    .takesItsOwnTaps()
                     .padding(.top, 5)
             } else {
                 Button(L.readerBackToSeries) { closeReader() }
@@ -743,6 +760,8 @@ struct ReaderServerLine: View {
                 .foregroundStyle(Self.failed(line) ? theme.silk : theme.haze)
                 .fixedSize(horizontal: false, vertical: true)
         }
+        // Its Try again link is a control: a tap on the line is not a turn or the bar's.
+        .background { if line.canRetry { Color.clear.takesItsOwnTaps() } }
         .accessibilityElement(children: .combine)
         .accessibilityAction(named: L.readerTryAgain) { if line.canRetry { retry() } }
     }
@@ -845,7 +864,7 @@ struct ReaderSkippedLine: View {
                 .underline()
                 .buttonStyle(.plain)
                 // A 44 point target that keeps the line's own height.
-                .padding(.vertical, 12).contentShape(.rect).padding(.vertical, -12)
+                .padding(.vertical, 12).contentShape(.rect).takesItsOwnTaps().padding(.vertical, -12)
                 .pointerHover()
                 .accessibilityHint(L.readerCreditShowHint)
         }

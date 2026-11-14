@@ -6131,6 +6131,12 @@ downloads-empty-title = Henüz indirme yok
 # Line under the empty title.
 downloads-empty-detail = İndirilen bölümler bağlantı olmadan oynatılır.
 
+# Downloads' empty line for a person who only reads, under "No downloads".
+read-downloads-empty-detail = İndirilen bölümler bağlantı olmadan açılır.
+
+# Downloads' empty line for a person who watches and reads, under "No downloads".
+read-downloads-empty-both = İzlemek ve okumak için indirilen bölümler bağlantı olmadan açılır.
+
 # Title when the list could not be read.
 downloads-load-failed = İndirmeler yüklenemedi
 

@@ -838,8 +838,6 @@
         <item quantity="one">Ein heruntergeladenes Kapitel öffnet sich trotzdem.</item>
         <item quantity="other">%1$,d heruntergeladene Kapitel öffnen sich trotzdem.</item>
     </plurals>
-    <string name="read_downloads_empty_detail">Heruntergeladene Kapitel öffnen sich ohne Verbindung.</string>
-    <string name="read_downloads_empty_both">Heruntergeladene Folgen und Kapitel öffnen sich ohne Verbindung.</string>
     <string name="settings_summary_chapters_on">Neue Kapitel an</string>
     <string name="settings_summary_chapters_off">Neue Kapitel aus</string>
     <plurals name="settings_summary_book_folders">
@@ -1559,6 +1557,8 @@
     <string name="downloads_space_label">Speicherplatz der Downloads</string>
     <string name="downloads_empty_title">Keine Downloads</string>
     <string name="downloads_empty_detail">Heruntergeladene Folgen laufen ohne Verbindung.</string>
+    <string name="read_downloads_empty_detail">Heruntergeladene Kapitel öffnen sich ohne Verbindung.</string>
+    <string name="read_downloads_empty_both">Heruntergeladene Folgen und Kapitel öffnen sich ohne Verbindung.</string>
     <string name="downloads_load_failed">Downloads konnten nicht geladen werden</string>
     <string name="downloads_folder_failed">Der Ordner konnte nicht geöffnet werden. Prüfe, ob er noch vorhanden ist.</string>
     <string name="downloads_episode_name">Folge %1$d</string>

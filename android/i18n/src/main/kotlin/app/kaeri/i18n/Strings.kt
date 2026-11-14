@@ -3477,14 +3477,6 @@ object Strings {
     fun readSeriesDownloadedOpen(context: Context, n: Int): String =
         context.resources.getQuantityString(R.plurals.read_series_downloaded_open, n, n)
 
-    /** Downloads' empty line for a person who only reads, under "No downloads". */
-    fun readDownloadsEmptyDetail(context: Context): String =
-        context.getString(R.string.read_downloads_empty_detail)
-
-    /** Downloads' empty line for a person who watches and reads, under "No downloads". */
-    fun readDownloadsEmptyBoth(context: Context): String =
-        context.getString(R.string.read_downloads_empty_both)
-
     /** The head of the group menu on a large screen, over its choices: the source the groups are in. */
     fun groupMenuIn(context: Context, source: String): String =
         context.getString(R.string.group_menu_in, source)
@@ -6056,6 +6048,14 @@ object Strings {
     /** Line under the empty title. */
     fun downloadsEmptyDetail(context: Context): String =
         context.getString(R.string.downloads_empty_detail)
+
+    /** Downloads' empty line for a person who only reads, under "No downloads". */
+    fun readDownloadsEmptyDetail(context: Context): String =
+        context.getString(R.string.read_downloads_empty_detail)
+
+    /** Downloads' empty line for a person who watches and reads, under "No downloads". */
+    fun readDownloadsEmptyBoth(context: Context): String =
+        context.getString(R.string.read_downloads_empty_both)
 
     /** Title when the list could not be read. */
     fun downloadsLoadFailed(context: Context): String =

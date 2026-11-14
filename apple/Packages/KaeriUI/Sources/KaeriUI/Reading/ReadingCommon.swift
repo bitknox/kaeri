@@ -392,49 +392,75 @@ struct ReadShelfHeader: View {
     var spoken: String?
     var action: (() -> Void)?
 
+    /// At the largest text sizes the link goes under the heading and the side line under the
+    /// title, so nothing in the row is wider than the screen.
+    private var stacked: Bool { typeSize.isAccessibilitySize }
+
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 10) {
-            HStack(alignment: .firstTextBaseline, spacing: 12) {
-                Text(title)
-                    .font(.ui(layout.heading.size, weight: layout.heading.weight))
-                    .fixedLineHeight(layout.heading.line, relativeTo: .title3)
-                    .foregroundStyle(.silk)
-                    // A long heading ("Because you finished …") wraps rather than lose the title
-                    // that explains the row; View all stays on its first line.
-                    .lineLimit(typeSize.isAccessibilitySize ? 3 : 2)
-                    .fixedSize(horizontal: false, vertical: true)
-                if let side {
-                    Text(side)
-                        .font(.ui(13))
-                        .foregroundStyle(.haze)
-                        .lineLimit(1)
-                        .fixedSize()
-                }
+        if stacked {
+            VStack(alignment: .leading, spacing: 4) {
+                heading
+                linkButton
             }
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel(spoken.map { Text($0) } ?? Text([title, side].compactMap { $0 }.joined(separator: ", "))) // i18n-skip
-            .accessibilityAddTraits(.isHeader)
-            Spacer(minLength: 8)
-            if let link, let action {
-                Button(action: action) {
-                    HStack(spacing: 4) {
-                        Text(link)
-                        Image(systemName: "chevron.right")
-                            .font(.ui(layout.secondary - 2, weight: .semibold))
-                            .accessibilityHidden(true)
-                    }
-                    .font(.ui(layout.secondary, weight: .semibold))
-                    .foregroundStyle(.silk)
-                    .frame(minHeight: layout.surface == .mac ? 24 : 44)
-                    .contentShape(.rect)
-                }
-                .buttonStyle(.plain)
-                .fixedSize()
-                .pointerHover()
-                // "View all, Trending manga".
-                .accessibilityLabel(link)
-                .accessibilityValue(title)
+        } else {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                heading
+                Spacer(minLength: 8)
+                linkButton
             }
+        }
+    }
+
+    private var heading: some View {
+        let words = Group {
+            Text(title)
+                .font(.ui(layout.heading.size, weight: layout.heading.weight))
+                .fixedLineHeight(layout.heading.line, relativeTo: .title3)
+                .foregroundStyle(.silk)
+                // A long heading ("Because you finished …") wraps rather than lose the title
+                // that explains the row; View all stays on its first line.
+                .lineLimit(stacked ? 3 : 2)
+                .fixedSize(horizontal: false, vertical: true)
+            if let side {
+                Text(side)
+                    .font(.ui(13))
+                    .foregroundStyle(.haze)
+                    .lineLimit(stacked ? 2 : 1)
+                    .fixedSize(horizontal: !stacked, vertical: true)
+            }
+        }
+        return Group {
+            if stacked {
+                VStack(alignment: .leading, spacing: 2) { words }
+            } else {
+                HStack(alignment: .firstTextBaseline, spacing: 12) { words }
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(spoken.map { Text($0) } ?? Text([title, side].compactMap { $0 }.joined(separator: ", "))) // i18n-skip
+        .accessibilityAddTraits(.isHeader)
+    }
+
+    @ViewBuilder private var linkButton: some View {
+        if let link, let action {
+            Button(action: action) {
+                HStack(spacing: 4) {
+                    Text(link)
+                    Image(systemName: "chevron.right")
+                        .font(.ui(layout.secondary - 2, weight: .semibold))
+                        .accessibilityHidden(true)
+                }
+                .font(.ui(layout.secondary, weight: .semibold))
+                .foregroundStyle(.silk)
+                .frame(minHeight: layout.surface == .mac ? 24 : 44)
+                .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .fixedSize(horizontal: !stacked, vertical: true)
+            .pointerHover()
+            // "View all, Trending manga".
+            .accessibilityLabel(link)
+            .accessibilityValue(title)
         }
     }
 }

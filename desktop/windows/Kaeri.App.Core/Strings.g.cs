@@ -3504,6 +3504,12 @@ public static partial class T
     /// <summary>Line under the empty title.</summary>
     public static string DownloadsEmptyDetail => Get("DownloadsEmptyDetail");
 
+    /// <summary>Downloads' empty line for a person who only reads, under "No downloads".</summary>
+    public static string ReadDownloadsEmptyDetail => Get("ReadDownloadsEmptyDetail");
+
+    /// <summary>Downloads' empty line for a person who watches and reads, under "No downloads".</summary>
+    public static string ReadDownloadsEmptyBoth => Get("ReadDownloadsEmptyBoth");
+
     /// <summary>Title when the list could not be read.</summary>
     public static string DownloadsLoadFailed => Get("DownloadsLoadFailed");
 
@@ -13246,6 +13252,8 @@ public static partial class T
         ["DownloadsSpaceLabel"] = "Space used by downloads",
         ["DownloadsEmptyTitle"] = "No downloads",
         ["DownloadsEmptyDetail"] = "Downloaded episodes play without a connection.",
+        ["ReadDownloadsEmptyDetail"] = "Downloaded chapters open without a connection.",
+        ["ReadDownloadsEmptyBoth"] = "Downloaded episodes and chapters open without a connection.",
         ["DownloadsLoadFailed"] = "Couldn't load downloads",
         ["DownloadsFolderFailed"] = "Couldn't open the folder. Check that it still exists.",
         ["DownloadsEpisodeName"] = "Episode {episode}",

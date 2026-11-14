@@ -44,14 +44,14 @@ struct ReaderOpeningChapterTests {
         model.openChapter(ChapterId("3"))
         #expect(model.phase == .opening)
         #expect(model.view?.chapter.id == ChapterId("2"), "the chapter left stays the view until the next opens")
-        #expect(model.openingChapter?.id == ChapterId("3"))
-        #expect(model.openingChapter?.number == "3")
+        #expect(model.chapterHere?.id == ChapterId("3"))
+        #expect(model.chapterHere?.number == "3")
     }
 
     @Test func theChapterBeforeIsNamedGoingBack() {
         let model = reading("2", next: "3", previous: "1")
         model.openChapter(ChapterId("1"), atEnd: true)
-        #expect(model.openingChapter?.id == ChapterId("1"))
+        #expect(model.chapterHere?.id == ChapterId("1"))
     }
 
     /// A chapter picked from the whole list, far from the one on screen.
@@ -61,15 +61,15 @@ struct ReaderOpeningChapterTests {
             work: WorkId("a:900301"), edition: nil,
             volumes: [VolumeGroup(chapters: [row("21.5"), row("22"), row("67")])], failure: nil)))
         model.openChapter(ChapterId("67"))
-        #expect(model.openingChapter?.id == ChapterId("67"))
+        #expect(model.chapterHere?.id == ChapterId("67"))
     }
 
     /// Once it opens, and before anything is asked, the chapter on screen is the one named.
     @Test func theOpenChapterIsNamedOnceItOpens() {
         let model = reading("2", next: "3")
-        #expect(model.openingChapter?.id == ChapterId("2"))
+        #expect(model.chapterHere?.id == ChapterId("2"))
         model.openChapter(ChapterId("3"))
         model.apply(.opened(view("3", next: "4")))
-        #expect(model.openingChapter?.id == ChapterId("3"))
+        #expect(model.chapterHere?.id == ChapterId("3"))
     }
 }

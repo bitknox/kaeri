@@ -6277,6 +6277,12 @@ downloads-empty-title = Brak pobrań
 # Line under the empty title.
 downloads-empty-detail = Pobrane odcinki odtwarzają się bez połączenia.
 
+# Downloads' empty line for a person who only reads, under "No downloads".
+read-downloads-empty-detail = Pobrane rozdziały otwierają się bez połączenia.
+
+# Downloads' empty line for a person who watches and reads, under "No downloads".
+read-downloads-empty-both = Pobrane odcinki i rozdziały otwierają się bez połączenia.
+
 # Title when the list could not be read.
 downloads-load-failed = Nie udało się wczytać pobrań
 

@@ -302,7 +302,9 @@ struct ReadFromSheet: View {
 
     private func row(_ edition: BookEditionRow) -> some View {
         Button {
-            if !edition.inUse { store.reading.chooseEdition(work, edition) }
+            // The one in use is chosen again too: the series page may still name the source it
+            // read from before a new match, and a choice puts it right.
+            store.reading.chooseEdition(work, edition)
             dismiss()
         } label: {
             HStack(spacing: 12) {

@@ -274,10 +274,8 @@ struct StripReader: View {
         #endif
         #if os(iOS)
         .scaleEffect(pinch, anchor: UnitPoint(x: pinchAt.x / max(size.width, 1), y: pinchAt.y / max(size.height, 1)))
-        .simultaneousGesture(
-            SpatialTapGesture(count: 2).onEnded { tap in zoomByTap(at: tap.location) }
-                .exclusively(before: SpatialTapGesture().onEnded { _ in onTap() })
-        )
+        // A tap on a control in the strip, a failed page's Try again, is the control's alone.
+        .readerTaps(double: { zoomByTap(at: $0) }) { _ in onTap() }
         .simultaneousGesture(
             MagnifyGesture()
                 .updating($magnifying) { _, live, _ in live = true }
@@ -301,7 +299,7 @@ struct StripReader: View {
             settle(to: zoom * pinch, at: pinchAt)
         }
         #else
-        .simultaneousGesture(SpatialTapGesture().onEnded { _ in onTap() })
+        .readerTaps { _ in onTap() }
         #endif
         .frame(width: size.width, height: size.height)
         .onAppear {

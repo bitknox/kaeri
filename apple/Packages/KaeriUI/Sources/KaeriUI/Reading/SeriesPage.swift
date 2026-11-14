@@ -1098,9 +1098,11 @@ private struct SeriesChapters: View {
         }
     }
 
+    /// Lazy, so a series of thousands of chapters builds only the rows in view, for the screen
+    /// and for VoiceOver alike.
     @ViewBuilder
     private func list(_ chapters: ReadChapters) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
+        LazyVStack(alignment: .leading, spacing: 0) {
                 if chapters.failure == .noSource {
                     // Nothing was ever read from a source, so nothing failed: an empty state that
                     // leads to Read from.
@@ -1221,6 +1223,15 @@ private struct SeriesChapters: View {
     }
 }
 
+#if DEBUG
+/// How many chapter rows have appeared, for the test that a long series builds only the rows in
+/// view. Debug builds only.
+@MainActor
+enum ChapterRowsShown {
+    static var count = 0
+}
+#endif
+
 /// One chapter: "Chapter 88" in silk with its title in haze, and its state in words under it.
 /// The ring shows only while bytes move, and stops the download when pressed.
 private struct ChapterRowView: View {
@@ -1313,6 +1324,9 @@ private struct ChapterRowView: View {
         .buttonStyle(.plain)
         .pointerHover()
         .contextMenu { ChapterMenu(series: series, row: row) }
+        #if DEBUG
+        .onAppear { ChapterRowsShown.count += 1 }
+        #endif
         #if os(iOS)
         .swipeActions(edge: .trailing) {
             Button(row.state == .read ? L.seriesMarkUnread : L.seriesMarkRead) {
