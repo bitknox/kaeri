@@ -971,7 +971,9 @@ impl App {
     }
 
     /// The divider crossed the middle: the chapter's foot was read, it goes above, and the next
-    /// chapter opens under the divider in the same scroll, with no opening screen.
+    /// chapter opens under the divider in the same scroll, with no opening screen. Only that
+    /// chapter stays above: the ones before it go with their pictures, and the strip's place
+    /// moves up by the rows they took, so the view does not move.
     fn flow_on(&mut self) -> Option<Command> {
         let reader = self.reader_here()?;
         if reader.session == 0 || reader.flowing.is_some() {
@@ -1001,6 +1003,7 @@ impl App {
                 (next.id.clone(), reader.preview_key(&next.id), *w as f32 / (*h).max(1) as f32)
             });
         let session = reader.session;
+        let (cols, cell) = (self.strip_now()?.0.cols, self.cell());
         self.commands.push(Command::Reader(ReaderCommand::StripAt {
             session,
             chapter: chapter.id.clone(),
@@ -1008,6 +1011,30 @@ impl App {
             foot_visible: true,
         }));
         let reader = self.reader_mut()?;
+        let older = std::mem::take(&mut reader.strip.trail);
+        let taken: u32 = older
+            .iter()
+            .map(|gone| {
+                let images: u32 =
+                    gone.images.iter().map(|(_, ratio)| image_rows(cols, *ratio, cell)).sum();
+                images + DIVIDER_ROWS
+            })
+            .sum();
+        reader.strip.top = reader.strip.top.saturating_sub(taken);
+        let mut gone_keys: Vec<String> =
+            older.into_iter().flat_map(|gone| gone.images).map(|(key, _)| key).collect();
+        // The first image this chapter showed from the preview before its own came.
+        gone_keys.extend(
+            reader
+                .strip
+                .lead
+                .take()
+                .map(|(_, key, _)| key)
+                .filter(|key| lead.as_ref().is_none_or(|(_, new, _)| new != key)),
+        );
+        for key in &gone_keys {
+            reader.decoding.remove(key);
+        }
         reader.strip.trail.push(Gone {
             chapter,
             images,
@@ -1021,6 +1048,9 @@ impl App {
         reader.asked = Some(next.id.clone());
         reader.asked_number = Some(Reader::number_of(&next));
         reader.forget_pages();
+        for key in &gone_keys {
+            self.images.forget(key);
+        }
         Some(Command::Reader(ReaderCommand::OpenChapter { session, chapter: next.id }))
     }
 
@@ -1426,6 +1456,43 @@ mod tests {
         assert_eq!(r.strip.top, top);
         assert_eq!(r.strip.trail.len(), 1);
         assert_eq!(r.at, 0, "chapter 15's first image");
+    }
+
+    #[test]
+    fn a_strip_keeps_only_the_chapter_before_above_and_lets_go_of_older_pictures() {
+        let mut a = strip();
+        let keep = |a: &mut App, chapter: &str| {
+            for page in 0..4 {
+                let key = format!("reader/{SESSION}/{chapter}/{page}");
+                a.images.insert_page(&key, image::DynamicImage::new_rgb8(6, 10));
+            }
+        };
+        keep(&mut a, "c14");
+        press(&mut a, KeyCode::Char('n'));
+        let mut next = view(ReadDirection::TopToBottom);
+        next.mode = ReaderMode::Strip;
+        next.chapter = row(15);
+        next.next = Some(row(16));
+        a.apply(Event::Reader(ReaderEvent::Opened(Box::new(next))));
+        a.apply(Event::Reader(ReaderEvent::Leaves {
+            session: SESSION,
+            chapter: ChapterId("c15".into()),
+            leaves: leaves(),
+        }));
+        keep(&mut a, "c15");
+        let (layout, _) = a.strip_now().expect("a strip");
+        // Chapter 14 and its divider take the rows above chapter 15's first image.
+        let above = layout.open().next().map(|(item, _, _)| item.top).expect("an image");
+        let divider = layout.next_divider().expect("a divider into 16").top;
+        assert!(above > 0);
+        assert!(a.images.has(&format!("reader/{SESSION}/c14/0")), "14 above 15 still");
+        press(&mut a, KeyCode::Char('n'));
+        let r = reader(&a);
+        let trail: Vec<&str> = r.strip.trail.iter().map(|g| g.chapter.id.0.as_str()).collect();
+        assert_eq!(trail, vec!["c15"], "only the chapter before stays above");
+        assert_eq!(r.strip.top, divider - above, "the view stays on the divider into 16");
+        assert!(!a.images.has(&format!("reader/{SESSION}/c14/0")), "14's pictures went");
+        assert!(a.images.has(&format!("reader/{SESSION}/c15/3")), "15's stay for the trail");
     }
 
     #[test]
