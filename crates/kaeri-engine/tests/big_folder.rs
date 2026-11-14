@@ -58,7 +58,7 @@ fn shelf() -> (tempfile::TempDir, Store, BookSources, BookSourceCommand) {
     let sources = BookSources::new(
         store.clone(),
         TokenStore::new(dir.path().join("tokens")),
-        reqwest::Client::new(),
+        &kaeri_net::HttpClient::new(&Default::default()).unwrap(),
         &paths,
     );
     let shelf = dir.path().join("shelf").to_string_lossy().into_owned();
