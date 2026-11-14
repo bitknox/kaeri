@@ -320,6 +320,21 @@ body.k-body {
 	color: var(--ani-on-obi);
 }
 
+/* A button gives a little under the finger or the pointer as it is pressed. */
+@media (prefers-reduced-motion: no-preference) {
+	.k-btn {
+		transition:
+			color var(--t-fast) var(--ease),
+			background-color var(--t-fast) var(--ease),
+			border-color var(--t-fast) var(--ease),
+			transform 160ms var(--ease-out);
+	}
+
+	.k-btn:active {
+		transform: scale(0.97);
+	}
+}
+
 .k-btn-lg {
 	height: 48px;
 	padding: 0 26px;
@@ -557,6 +572,29 @@ body.k-body {
 		display: flex;
 	}
 
+	/* The menu drops in from under the bar and fades, and shuts a little faster than it opens. */
+	@media (prefers-reduced-motion: no-preference) {
+		.bar-nav {
+			opacity: 0;
+			transform: translateY(-6px);
+			transition:
+				opacity 140ms var(--ease-out),
+				transform 140ms var(--ease-out),
+				display 140ms allow-discrete;
+		}
+
+		.bar-nav.open {
+			opacity: 1;
+			transform: none;
+			transition-duration: 200ms;
+
+			@starting-style {
+				opacity: 0;
+				transform: translateY(-6px);
+			}
+		}
+	}
+
 	.bar-menu-docs .bar-menu {
 		display: none;
 	}
@@ -649,6 +687,12 @@ body.k-body {
 	font-size: var(--fs-h3);
 	font-weight: 600;
 	list-style: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.faq summary:hover {
+		color: var(--ani-link-hover);
+	}
 }
 
 .faq summary::-webkit-details-marker {
