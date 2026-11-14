@@ -2878,6 +2878,74 @@ fn a11y_mark(ctx: usize, name: Option<String>, state: &'static str) {
     }
 }
 
+unsafe fn a11y_path(ctx: *mut std::ffi::c_void) -> Option<String> {
+    // SAFETY: a live context; the offset is GTK 4.22's.
+    unsafe {
+        let off = *A11Y_PATH.get()?;
+        let p = *ctx.cast::<u8>().add(off).cast::<*const std::ffi::c_char>();
+        (!p.is_null()).then(|| std::ffi::CStr::from_ptr(p).to_string_lossy().into_owned())
+    }
+}
+
+/// QA: the cache key that holds `ctx`, if any.
+unsafe fn a11y_cached_at(ctx: *mut std::ffi::c_void) -> Option<String> {
+    use gtk::glib::{ffi as gf, gobject_ffi as g, translate::ToGlibPtr};
+    let display = gtk::gdk::Display::default()?;
+    // SAFETY: as in a11y_cache_check.
+    unsafe {
+        let d: *mut gtk::gdk::ffi::GdkDisplay = display.to_glib_none().0;
+        let root = g::g_object_get_data(d.cast(), c"-gtk-atspi-root".as_ptr()).cast::<u8>();
+        if root.is_null() {
+            return None;
+        }
+        let cache = *root.add(112).cast::<*const u8>();
+        if cache.is_null() {
+            return None;
+        }
+        let table = *cache.add(40).cast::<*mut gf::GHashTable>();
+        let mut iter: gf::GHashTableIter = std::mem::zeroed();
+        gf::g_hash_table_iter_init(&mut iter, table);
+        let (mut k, mut v) = (std::ptr::null_mut(), std::ptr::null_mut());
+        while gf::g_hash_table_iter_next(&mut iter, &mut k, &mut v) != 0 {
+            if v == ctx {
+                return Some(std::ffi::CStr::from_ptr(k.cast()).to_string_lossy().into_owned());
+            }
+        }
+        None
+    }
+}
+
+/// QA: the accessible's widget ancestry, by type.
+unsafe fn a11y_where(ctx: *mut std::ffi::c_void) -> String {
+    use gtk::glib::translate::FromGlibPtrNone;
+    // SAFETY: a live context whose accessible is alive.
+    unsafe {
+        let acc = gtk::ffi::gtk_at_context_get_accessible(ctx.cast());
+        if acc.is_null() {
+            return "-".into();
+        }
+        let a = gtk::Accessible::from_glib_none(acc);
+        let mut out = Vec::new();
+        let mut w = a.downcast_ref::<gtk::Widget>().and_then(|w| w.parent());
+        while let Some(x) = w {
+            out.push(format!(
+                "{}{}",
+                x.type_().name(),
+                if x.widget_name().starts_with("Gtk") || x.widget_name().starts_with("Adw") {
+                    String::new()
+                } else {
+                    format!("#{}", x.widget_name())
+                }
+            ));
+            if out.len() >= 8 {
+                break;
+            }
+            w = x.parent();
+        }
+        out.join(" < ")
+    }
+}
+
 /// QA: every entry in GTK's AT-SPI cache whose context is not realized and alive, by the
 /// type it was realized or unrealized for. Offsets are GTK 4.22's private structs.
 pub fn a11y_cache_check(when: &str) {
@@ -2994,6 +3062,13 @@ unsafe fn a11y_type_of(ctx: *mut std::ffi::c_void) -> String {
 unsafe extern "C" fn a11y_realize(ctx: *mut std::ffi::c_void) {
     // SAFETY: GTK calls this with a live context.
     unsafe {
+        if let Some(before) = a11y_path(ctx) {
+            tracing::warn!(
+                "HUNT a11y realize over a live path {before}: {} in {}",
+                a11y_type_of(ctx),
+                a11y_where(ctx)
+            );
+        }
         if let Some(f) = A11Y_REALIZE.get() {
             f(ctx);
         }
@@ -3004,9 +3079,17 @@ unsafe extern "C" fn a11y_realize(ctx: *mut std::ffi::c_void) {
 unsafe extern "C" fn a11y_unrealize(ctx: *mut std::ffi::c_void) {
     // SAFETY: GTK calls this with a live context.
     unsafe {
-        a11y_mark(ctx as usize, Some(a11y_type_of(ctx)), "unrealized");
+        let name = a11y_type_of(ctx);
+        let path = a11y_path(ctx);
+        let place = a11y_where(ctx);
+        a11y_mark(ctx as usize, Some(name.clone()), "unrealized");
         if let Some(f) = A11Y_UNREALIZE.get() {
             f(ctx);
+        }
+        if let Some(key) = a11y_cached_at(ctx) {
+            tracing::warn!(
+                "HUNT a11y unrealize left {name} in the cache at {key} (its path was {path:?}) in {place}"
+            );
         }
     }
 }
