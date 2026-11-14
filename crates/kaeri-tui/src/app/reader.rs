@@ -1119,15 +1119,15 @@ impl App {
                 let previous = self.reader_here()?.view.as_ref()?.previous.clone();
                 previous.and_then(|p| self.open_chapter(p.id))
             }
-            (_, Action::ReaderBackToPage) => {
-                let reader = self.reader_mut()?;
-                reader.back_to.take()?;
-                Some(Command::Reader(ReaderCommand::BackTo { session: reader.session }))
-            }
+            (_, Action::ReaderBackToPage) => self.back_to_page(),
             (_, Action::ReaderMarkRead) => self.reader_mark_read(),
             (_, Action::ReaderDownload) => {
-                let reader = self.reader_here()?;
+                let now = self.clock.now_instant();
+                let reader = self.reader_mut()?;
                 let id = reader.chapter()?.id.clone();
+                if let Some(number) = reader.chapter_number() {
+                    reader.notice = own_notice(t::tui_reader_downloading(&number), now);
+                }
                 Some(Command::Reading(ReadingCommand::Download {
                     work: reader.work.clone(),
                     pick: DownloadPick::Chapters { ids: vec![id] },
@@ -1164,13 +1164,13 @@ impl App {
     }
 
     /// One leaf on or back. Forward from the end page goes on to the next chapter; back from
-    /// the first page goes to the chapter before, as the engine decides.
+    /// the first page does nothing.
     pub(super) fn turn(&mut self, forward: bool) -> Option<Command> {
         let reader = self.reader_here()?;
         if reader.leaves.is_empty() {
             return None;
         }
-        let (at, count, session) = (reader.at, reader.leaves.len(), reader.session);
+        let (at, count) = (reader.at, reader.leaves.len());
         if reader.on_end() && forward {
             let next = reader.end.next.clone()?;
             return self.open_chapter(next.id);
@@ -1180,8 +1180,26 @@ impl App {
         } else if at > 0 {
             self.show_leaf(at - 1, TurnHow::Key)
         } else {
-            Some(Command::Reader(ReaderCommand::GoBack { session }))
+            // The first page has nothing before it, as in novels. `GoBack` is the undo of a
+            // "Moved to chapter X" notice, not a step back, so it is never sent from here.
+            None
         }
+    }
+
+    /// `b`: back to where the reading was before the engine moved it, while its notice offers
+    /// that, else back to the page a jump left.
+    fn back_to_page(&mut self) -> Option<Command> {
+        let now = self.clock.now_instant();
+        let reader = self.reader_mut()?;
+        let offered = reader.notice.as_ref().is_some_and(|n| {
+            n.action == Some(ReaderAction::GoBack) && n.until.is_none_or(|u| u > now)
+        });
+        if offered {
+            reader.notice = None;
+            return Some(Command::Reader(ReaderCommand::GoBack { session: reader.session }));
+        }
+        reader.back_to.take()?;
+        Some(Command::Reader(ReaderCommand::BackTo { session: reader.session }))
     }
 
     /// `g`: the chapter from its start, as the resumed notice offers, else its first page.
@@ -1282,8 +1300,17 @@ impl App {
 
     /// `u`: the open chapter read, or unread again.
     fn reader_mark_read(&mut self) -> Option<Command> {
+        let now = self.clock.now_instant();
         let reader = self.reader_mut()?;
         let read = !reader.is_read();
+        if let Some(number) = reader.chapter_number() {
+            let words = if read {
+                t::tui_reader_marked_read(&number)
+            } else {
+                t::tui_reader_marked_unread(&number)
+            };
+            reader.notice = own_notice(words, now);
+        }
         let view = reader.view.as_mut()?;
         view.chapter.state =
             if read { ChapterReadState::Read } else { ChapterReadState::Unread };
@@ -1798,13 +1825,44 @@ pub(super) mod tests {
         assert_eq!(a.press(key(KeyCode::Right), 20), shown(2, TurnHow::Key));
         assert_eq!(a.press(key(KeyCode::Left), 20), shown(1, TurnHow::Key));
         assert_eq!(a.press(key(KeyCode::Char(' ')), 20), shown(2, TurnHow::Key));
-        // Back from the first page is the engine's to decide.
+        // The first page has nothing before it.
         a.press(key(KeyCode::Left), 20);
         a.press(key(KeyCode::Left), 20);
+        assert_eq!(a.press(key(KeyCode::Left), 20), None);
+    }
+
+    #[test]
+    fn marking_read_and_downloading_say_so_on_the_status_rule() {
+        let mut a = reading(ReadDirection::RightToLeft, 120, 34);
+        a.take_commands();
+        assert!(matches!(
+            a.press(key(KeyCode::Char('u')), 20),
+            Some(Command::Reading(ReadingCommand::MarkRead { read: true, .. }))
+        ));
+        assert_eq!(a.reader_notice().map(|n| n.text.as_str()), Some("Chapter 14 marked read"));
+        assert!(matches!(
+            a.press(key(KeyCode::Char('d')), 20),
+            Some(Command::Reading(ReadingCommand::Download { .. }))
+        ));
+        assert_eq!(a.reader_notice().map(|n| n.text.as_str()), Some("Downloading chapter 14"));
+    }
+
+    #[test]
+    fn b_goes_back_while_a_moved_notice_offers_it_and_does_nothing_otherwise() {
+        let mut a = reading(ReadDirection::RightToLeft, 120, 34);
+        a.take_commands();
+        assert_eq!(a.press(key(KeyCode::Char('b')), 20), None);
+        a.apply(Event::Reader(ReaderEvent::Notice(ReaderNotice {
+            msg: kaeri_model::Msg::verbatim("Moved to chapter 15"),
+            action: Some(ReaderAction::GoBack),
+            lasts_ms: 6_000,
+        })));
         assert_eq!(
-            a.press(key(KeyCode::Left), 20),
+            a.press(key(KeyCode::Char('b')), 20),
             Some(Command::Reader(ReaderCommand::GoBack { session: SESSION }))
         );
+        // The notice goes with it, so a second `b` does nothing.
+        assert_eq!(a.press(key(KeyCode::Char('b')), 20), None);
     }
 
     #[test]

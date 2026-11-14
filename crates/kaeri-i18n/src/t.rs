@@ -8105,6 +8105,21 @@ pub fn tui_reader_value_columns(columns: i64) -> String {
     text("tui-reader-value-columns", &[("columns", Arg::Int(columns))])
 }
 
+/// A short notice on the reader's status rule after the key that marks the open chapter read. The chapter is its number, such as 12.
+pub fn tui_reader_marked_read(chapter: &str) -> String {
+    text("tui-reader-marked-read", &[("chapter", Arg::Text(chapter))])
+}
+
+/// A short notice on the reader's status rule after the key that marks the open chapter unread. The chapter is its number, such as 12.
+pub fn tui_reader_marked_unread(chapter: &str) -> String {
+    text("tui-reader-marked-unread", &[("chapter", Arg::Text(chapter))])
+}
+
+/// A short notice on the reader's status rule after the key that downloads the open chapter. The download runs in the background. The chapter is its number, such as 12.
+pub fn tui_reader_downloading(chapter: &str) -> String {
+    text("tui-reader-downloading", &[("chapter", Arg::Text(chapter))])
+}
+
 /// AniList's name, in the line that says it is still being asked.
 pub fn tui_read_anilist() -> String {
     text("tui-read-anilist", &[])

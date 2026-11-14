@@ -5124,6 +5124,15 @@ tui-reader-value-columns =
        *[other] { $columns } columns
     }
 
+# A short notice on the reader's status rule after the key that marks the open chapter read. The chapter is its number, such as 12.
+tui-reader-marked-read = Chapter { $chapter } marked read
+
+# A short notice on the reader's status rule after the key that marks the open chapter unread. The chapter is its number, such as 12.
+tui-reader-marked-unread = Chapter { $chapter } marked unread
+
+# A short notice on the reader's status rule after the key that downloads the open chapter. The download runs in the background. The chapter is its number, such as 12.
+tui-reader-downloading = Downloading chapter { $chapter }
+
 # AniList's name, in the line that says it is still being asked.
 tui-read-anilist = AniList
 
