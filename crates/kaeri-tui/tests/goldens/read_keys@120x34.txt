@@ -27,7 +27,7 @@ Kaeri                                                                           
   Movement                              Remove or add the demo         Y
     Move up                    k / ↑
 
-                            │    Press I to change what Kaeri is for.
+                            │
                             │
                             │
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────

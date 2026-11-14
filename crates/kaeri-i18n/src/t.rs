@@ -7545,6 +7545,271 @@ pub fn tui_read_keys_chapters() -> String {
     text("tui-read-keys-chapters", &[])
 }
 
+/// Left of the status line while a chapter opens in the terminal's reader. The chapter is its number, such as 14.
+pub fn tui_reader_opening(chapter: &str) -> String {
+    text("tui-reader-opening", &[("chapter", Arg::Text(chapter))])
+}
+
+/// The reader's opening line while no source has been picked for the series yet.
+pub fn tui_reader_finding() -> String {
+    text("tui-reader-finding", &[])
+}
+
+/// Left of the reader's status line: the page in view and how many the chapter has.
+pub fn tui_reader_page_of(page: i64, pages: i64) -> String {
+    text("tui-reader-page-of", &[("page", Arg::Plain(page)), ("pages", Arg::Plain(pages))])
+}
+
+/// Left of the reader's status line while two pages show side by side.
+pub fn tui_reader_pages_of(first: i64, second: i64, pages: i64) -> String {
+    text("tui-reader-pages-of", &[("first", Arg::Plain(first)), ("second", Arg::Plain(second)), ("pages", Arg::Plain(pages))])
+}
+
+/// After the page count in the reader's status line, when the terminal draws pages as coloured blocks because it has no image protocol.
+pub fn tui_reader_blocks() -> String {
+    text("tui-reader-blocks", &[])
+}
+
+/// Said once a run on the reader's status rule, the first time a chapter opens in a terminal with no image protocol: the pages show as coloured blocks.
+pub fn tui_reader_blocks_notice() -> String {
+    text("tui-reader-blocks-notice", &[])
+}
+
+/// Hint after "Resumed at page 8" on the reader's status rule: the key that starts the chapter from its first page. Shown in lower case.
+pub fn tui_reader_start_over() -> String {
+    text("tui-reader-start-over", &[])
+}
+
+/// Middle of the reader when the terminal was started with images turned off, and a chapter of manga or webtoon pages opens. The option is typed as it is on the command line.
+pub fn tui_reader_images_off() -> String {
+    text("tui-reader-images-off", &[])
+}
+
+/// Under that line.
+pub fn tui_reader_images_off_how() -> String {
+    text("tui-reader-images-off-how", &[])
+}
+
+/// Under that line.
+pub fn tui_reader_images_off_novels() -> String {
+    text("tui-reader-images-off-novels", &[])
+}
+
+/// Heading in the reader when a chapter couldn't open. The chapter is its number, such as 16.
+pub fn tui_reader_chapter_failed(chapter: &str) -> String {
+    text("tui-reader-chapter-failed", &[("chapter", Arg::Text(chapter))])
+}
+
+/// Top line of the page after the last chapter of a finished series.
+pub fn tui_reader_end_series() -> String {
+    text("tui-reader-end-series", &[])
+}
+
+/// Under that line.
+pub fn tui_reader_end_no_more() -> String {
+    text("tui-reader-end-no-more", &[])
+}
+
+/// Under "You're caught up" on the page after the last chapter there is.
+pub fn tui_reader_end_caught_up_line() -> String {
+    text("tui-reader-end-caught-up-line", &[])
+}
+
+/// On the page after the last chapter there is, when the series goes on. The chapter is the next one's number, such as 18.
+pub fn tui_reader_end_not_out(chapter: &str) -> String {
+    text("tui-reader-end-not-out", &[("chapter", Arg::Text(chapter))])
+}
+
+/// The same, when the next chapter's number isn't known.
+pub fn tui_reader_end_not_out_next() -> String {
+    text("tui-reader-end-not-out-next", &[])
+}
+
+/// Under either of those lines.
+pub fn tui_reader_end_not_out_line() -> String {
+    text("tui-reader-end-not-out-line", &[])
+}
+
+/// On the page between chapters when no source has the next chapter. The chapter is its number, such as 18.
+pub fn tui_reader_end_no_source(chapter: &str) -> String {
+    text("tui-reader-end-no-source", &[("chapter", Arg::Text(chapter))])
+}
+
+/// The same, when the next chapter's number isn't known.
+pub fn tui_reader_end_no_source_next() -> String {
+    text("tui-reader-end-no-source-next", &[])
+}
+
+/// On the page between chapters while offline, and as a toast when a chapter that isn't on this computer is opened offline. The chapter is its number, such as 16.
+pub fn tui_reader_end_offline(chapter: &str) -> String {
+    text("tui-reader-end-offline", &[("chapter", Arg::Text(chapter))])
+}
+
+/// The same, when the chapter's number isn't known.
+pub fn tui_reader_end_offline_next() -> String {
+    text("tui-reader-end-offline-next", &[])
+}
+
+/// Under that line on the page between chapters.
+pub fn tui_reader_end_offline_line() -> String {
+    text("tui-reader-end-offline-line", &[])
+}
+
+/// Under the next chapter on the page between chapters when it is an extra, such as 16.5 between 16 and 17: skipping to the next numbered chapter leaves the extra unread. The chapter is the extra's number.
+pub fn tui_reader_end_skip_unread(chapter: &str) -> String {
+    text("tui-reader-end-skip-unread", &[("chapter", Arg::Text(chapter))])
+}
+
+/// Under the next chapter's first page on the page between chapters. The chapter is its number.
+pub fn tui_reader_end_first_page(chapter: &str) -> String {
+    text("tui-reader-end-first-page", &[("chapter", Arg::Text(chapter))])
+}
+
+/// The reader's heading when the terminal is too small to show a page.
+pub fn tui_reader_too_small() -> String {
+    text("tui-reader-too-small", &[])
+}
+
+/// Under that heading: the smallest size the reader shows pages at, in columns and rows.
+pub fn tui_reader_too_small_line(columns: i64, rows: i64) -> String {
+    text("tui-reader-too-small-line", &[("columns", Arg::Plain(columns)), ("rows", Arg::Plain(rows))])
+}
+
+/// Hint in the reader's status line: the key that turns to the next page. Shown in lower case.
+pub fn tui_reader_hint_next() -> String {
+    text("tui-reader-hint-next", &[])
+}
+
+/// Hint in the reader's status line: the key that turns back a page. Shown in lower case.
+pub fn tui_reader_hint_back() -> String {
+    text("tui-reader-hint-back", &[])
+}
+
+/// Hint in the reader's status line while a chapter opens: the key that stops it and goes back. Shown in lower case.
+pub fn tui_reader_hint_stop() -> String {
+    text("tui-reader-hint-stop", &[])
+}
+
+/// Hint in the reader's status line: the key that opens the reader settings. Shown in lower case.
+pub fn tui_reader_hint_settings() -> String {
+    text("tui-reader-hint-settings", &[])
+}
+
+/// Hint in the reader's status line on a page that couldn't load: the turn key goes on to the next page without it. Shown in lower case.
+pub fn tui_reader_hint_without() -> String {
+    text("tui-reader-hint-without", &[])
+}
+
+/// Hint in the reader's status line on the page between chapters. Shown in lower case.
+pub fn tui_reader_hint_next_chapter() -> String {
+    text("tui-reader-hint-next-chapter", &[])
+}
+
+/// Hint in the reader's status line: the key that leaves the reader for the series page it was opened from. Shown in lower case.
+pub fn tui_reader_hint_series() -> String {
+    text("tui-reader-hint-series", &[])
+}
+
+/// Hint in the reader's status line after the last chapter of a finished series: the key that opens its first chapter. Shown in lower case.
+pub fn tui_reader_hint_again() -> String {
+    text("tui-reader-hint-again", &[])
+}
+
+/// Heading of the reader's keys in the key reference.
+pub fn tui_reader_keys_reader() -> String {
+    text("tui-reader-keys-reader", &[])
+}
+
+/// Heading of the keys that change how the reader shows pages, in the key reference.
+pub fn tui_reader_keys_view() -> String {
+    text("tui-reader-keys-view", &[])
+}
+
+/// Beside the reader's keys in the key reference.
+pub fn tui_reader_keys_rtl() -> String {
+    text("tui-reader-keys-rtl", &[])
+}
+
+/// Beside the reader's keys in the key reference, under that.
+pub fn tui_reader_keys_left_out() -> String {
+    text("tui-reader-keys-left-out", &[])
+}
+
+/// Ends the toast that says a command does nothing on this screen, as "on the Downloads screen" does: the command works in the reader.
+pub fn tui_reader_where() -> String {
+    text("tui-reader-where", &[])
+}
+
+/// A row of the key reference and the command palette: turn to the next page.
+pub fn tui_reader_action_next() -> String {
+    text("tui-reader-action-next", &[])
+}
+
+/// A row of the key reference and the command palette: turn back a page.
+pub fn tui_reader_action_previous() -> String {
+    text("tui-reader-action-previous", &[])
+}
+
+/// A row of the key reference: turn to the page on the left, which is the next one in right-to-left manga.
+pub fn tui_reader_action_left() -> String {
+    text("tui-reader-action-left", &[])
+}
+
+/// A row of the key reference: turn to the page on the right.
+pub fn tui_reader_action_right() -> String {
+    text("tui-reader-action-right", &[])
+}
+
+/// A row of the key reference: go to the chapter's first page.
+pub fn tui_reader_action_first() -> String {
+    text("tui-reader-action-first", &[])
+}
+
+/// A row of the key reference: go to the chapter's last page.
+pub fn tui_reader_action_last() -> String {
+    text("tui-reader-action-last", &[])
+}
+
+/// A row of the key reference: open the next chapter.
+pub fn tui_reader_action_next_chapter() -> String {
+    text("tui-reader-action-next-chapter", &[])
+}
+
+/// A row of the key reference: open the chapter before this one.
+pub fn tui_reader_action_previous_chapter() -> String {
+    text("tui-reader-action-previous-chapter", &[])
+}
+
+/// A row of the key reference: go back to the page read before a jump.
+pub fn tui_reader_action_back_to_page() -> String {
+    text("tui-reader-action-back-to-page", &[])
+}
+
+/// A row of the key reference: hide the header and status line for a bare page, or show them.
+pub fn tui_reader_action_bare() -> String {
+    text("tui-reader-action-bare", &[])
+}
+
+/// A row of the key reference: show one page or two side by side.
+pub fn tui_reader_action_pages() -> String {
+    text("tui-reader-action-pages", &[])
+}
+
+/// A row of the key reference: open the reader settings.
+pub fn tui_reader_action_settings() -> String {
+    text("tui-reader-action-settings", &[])
+}
+
+/// A row of the key reference: leave the reader for the screen it was opened from.
+pub fn tui_reader_action_leave() -> String {
+    text("tui-reader-action-leave", &[])
+}
+
+/// A row of the key reference: on the page between chapters, open the next numbered chapter past the extras.
+pub fn tui_reader_action_skip() -> String {
+    text("tui-reader-action-skip", &[])
+}
+
 /// AniList's name, in the line that says it is still being asked.
 pub fn tui_read_anilist() -> String {
     text("tui-read-anilist", &[])
@@ -7598,11 +7863,6 @@ pub fn tui_read_source_offline(source: &str) -> String {
 /// Names in a sentence, the last joined with "and": "Home library and Northwind", "A, B and C". The names before the last are already joined with commas. Used in "Nothing found in …".
 pub fn tui_read_names_and(names: &str, last: &str) -> String {
     text("tui-read-names-and", &[("names", Arg::Text(names)), ("last", Arg::Text(last))])
-}
-
-/// Toast after Enter on a series in reading's Home or Search. The terminal has no reader.
-pub fn tui_read_opens_in_apps() -> String {
-    text("tui-read-opens-in-apps", &[])
 }
 
 /// On reading's Home when no book source is set up. The terminal cannot add one; the apps can.
@@ -8730,12 +8990,7 @@ pub fn tui_together_recent_alone(episode: &str, when: &str) -> String {
     text("tui-together-recent-alone", &[("episode", Arg::Text(episode)), ("when", Arg::Text(when))])
 }
 
-/// Line under the title of that page.
-pub fn tui_medium_read_line() -> String {
-    text("tui-medium-read-line", &[])
-}
-
-/// Line under that page: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
+/// Last line of reading's Home: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
 pub fn tui_medium_read_change(key: &str) -> String {
     text("tui-medium-read-change", &[("key", Arg::Text(key))])
 }

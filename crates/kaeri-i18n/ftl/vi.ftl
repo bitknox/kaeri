@@ -5104,10 +5104,7 @@ tui-together-not-a-link = Đây không phải liên kết hay mã xem chung.
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = Tập { $episode } · { $when }
 
-# Line under the title of that page.
-tui-medium-read-line = Terminal không có trình đọc. Manga, webtoon và light novel mở trong các ứng dụng Kaeri, và đồng bộ giữ tiến độ của bạn khớp nhau.
-
-# Line under that page: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
+# Last line of reading's Home: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
 tui-medium-read-change = Nhấn { $key } để đổi cách dùng Kaeri.
 
 # Hint beside the Kaeri is for line on the Settings screen. The key is the one bound to it, as the key map draws it.

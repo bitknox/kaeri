@@ -4784,6 +4784,165 @@ tui-read-keys-status = Set the list status
 # A row of the key reference on reading's Home: open a series' page with its chapters, from a series in Continue, where Enter opens the chapter itself.
 tui-read-keys-chapters = Open the series page
 
+# Left of the status line while a chapter opens in the terminal's reader. The chapter is its number, such as 14.
+tui-reader-opening = Opening chapter { $chapter }
+
+# The reader's opening line while no source has been picked for the series yet.
+tui-reader-finding = Finding a source
+
+# Left of the reader's status line: the page in view and how many the chapter has.
+tui-reader-page-of = Page { $page } of { $pages }
+
+# Left of the reader's status line while two pages show side by side.
+tui-reader-pages-of = Pages { $first } and { $second } of { $pages }
+
+# After the page count in the reader's status line, when the terminal draws pages as coloured blocks because it has no image protocol.
+tui-reader-blocks = Blocks
+
+# Said once a run on the reader's status rule, the first time a chapter opens in a terminal with no image protocol: the pages show as coloured blocks.
+tui-reader-blocks-notice = No image protocol here. Pages show as blocks.
+
+# Hint after "Resumed at page 8" on the reader's status rule: the key that starts the chapter from its first page. Shown in lower case.
+tui-reader-start-over = Start over
+
+# Middle of the reader when the terminal was started with images turned off, and a chapter of manga or webtoon pages opens. The option is typed as it is on the command line.
+tui-reader-images-off = Pages are pictures, and Kaeri started with --no-images.
+
+# Under that line.
+tui-reader-images-off-how = Start it without that option to read manga and webtoons here.
+
+# Under that line.
+tui-reader-images-off-novels = Light novels open as text either way.
+
+# Heading in the reader when a chapter couldn't open. The chapter is its number, such as 16.
+tui-reader-chapter-failed = Couldn't open chapter { $chapter }
+
+# Top line of the page after the last chapter of a finished series.
+tui-reader-end-series = End of the series
+
+# Under that line.
+tui-reader-end-no-more = There are no more chapters.
+
+# Under "You're caught up" on the page after the last chapter there is.
+tui-reader-end-caught-up-line = New chapters show on Home when your sources have them.
+
+# On the page after the last chapter there is, when the series goes on. The chapter is the next one's number, such as 18.
+tui-reader-end-not-out = Chapter { $chapter } isn't out yet
+
+# The same, when the next chapter's number isn't known.
+tui-reader-end-not-out-next = The next chapter isn't out yet
+
+# Under either of those lines.
+tui-reader-end-not-out-line = Kaeri checks for new chapters in the background. New ones show on Home.
+
+# On the page between chapters when no source has the next chapter. The chapter is its number, such as 18.
+tui-reader-end-no-source = No chapter { $chapter } in your sources yet
+
+# The same, when the next chapter's number isn't known.
+tui-reader-end-no-source-next = No next chapter in your sources yet
+
+# On the page between chapters while offline, and as a toast when a chapter that isn't on this computer is opened offline. The chapter is its number, such as 16.
+tui-reader-end-offline = Chapter { $chapter } isn't downloaded
+
+# The same, when the chapter's number isn't known.
+tui-reader-end-offline-next = The next chapter isn't downloaded
+
+# Under that line on the page between chapters.
+tui-reader-end-offline-line = You're offline. It opens here once you're connected.
+
+# Under the next chapter on the page between chapters when it is an extra, such as 16.5 between 16 and 17: skipping to the next numbered chapter leaves the extra unread. The chapter is the extra's number.
+tui-reader-end-skip-unread = Chapter { $chapter } stays unread if skipped.
+
+# Under the next chapter's first page on the page between chapters. The chapter is its number.
+tui-reader-end-first-page = First page of chapter { $chapter }
+
+# The reader's heading when the terminal is too small to show a page.
+tui-reader-too-small = Needs a larger terminal
+
+# Under that heading: the smallest size the reader shows pages at, in columns and rows.
+tui-reader-too-small-line = At least { $columns } by { $rows }
+
+# Hint in the reader's status line: the key that turns to the next page. Shown in lower case.
+tui-reader-hint-next = Next
+
+# Hint in the reader's status line: the key that turns back a page. Shown in lower case.
+tui-reader-hint-back = Back
+
+# Hint in the reader's status line while a chapter opens: the key that stops it and goes back. Shown in lower case.
+tui-reader-hint-stop = Stop
+
+# Hint in the reader's status line: the key that opens the reader settings. Shown in lower case.
+tui-reader-hint-settings = Settings
+
+# Hint in the reader's status line on a page that couldn't load: the turn key goes on to the next page without it. Shown in lower case.
+tui-reader-hint-without = Go on without it
+
+# Hint in the reader's status line on the page between chapters. Shown in lower case.
+tui-reader-hint-next-chapter = Next chapter
+
+# Hint in the reader's status line: the key that leaves the reader for the series page it was opened from. Shown in lower case.
+tui-reader-hint-series = Back to the series
+
+# Hint in the reader's status line after the last chapter of a finished series: the key that opens its first chapter. Shown in lower case.
+tui-reader-hint-again = Read again from the start
+
+# Heading of the reader's keys in the key reference.
+tui-reader-keys-reader = Reader
+
+# Heading of the keys that change how the reader shows pages, in the key reference.
+tui-reader-keys-view = Reader view
+
+# Beside the reader's keys in the key reference.
+tui-reader-keys-rtl = In right-to-left manga, ← turns forward and → turns back, as the page moves. Space always turns forward.
+
+# Beside the reader's keys in the key reference, under that.
+tui-reader-keys-left-out = Keys that do nothing in the open chapter are left out: no zoom in a novel, no width in manga.
+
+# Ends the toast that says a command does nothing on this screen, as "on the Downloads screen" does: the command works in the reader.
+tui-reader-where = in the reader
+
+# A row of the key reference and the command palette: turn to the next page.
+tui-reader-action-next = Next page
+
+# A row of the key reference and the command palette: turn back a page.
+tui-reader-action-previous = Previous page
+
+# A row of the key reference: turn to the page on the left, which is the next one in right-to-left manga.
+tui-reader-action-left = Page to the left
+
+# A row of the key reference: turn to the page on the right.
+tui-reader-action-right = Page to the right
+
+# A row of the key reference: go to the chapter's first page.
+tui-reader-action-first = First page
+
+# A row of the key reference: go to the chapter's last page.
+tui-reader-action-last = Last page
+
+# A row of the key reference: open the next chapter.
+tui-reader-action-next-chapter = Next chapter
+
+# A row of the key reference: open the chapter before this one.
+tui-reader-action-previous-chapter = Previous chapter
+
+# A row of the key reference: go back to the page read before a jump.
+tui-reader-action-back-to-page = Back to page
+
+# A row of the key reference: hide the header and status line for a bare page, or show them.
+tui-reader-action-bare = Bare page
+
+# A row of the key reference: show one page or two side by side.
+tui-reader-action-pages = One or two pages
+
+# A row of the key reference: open the reader settings.
+tui-reader-action-settings = Reader settings
+
+# A row of the key reference: leave the reader for the screen it was opened from.
+tui-reader-action-leave = Leave the reader
+
+# A row of the key reference: on the page between chapters, open the next numbered chapter past the extras.
+tui-reader-action-skip = Skip the extras
+
 # AniList's name, in the line that says it is still being asked.
 tui-read-anilist = AniList
 
@@ -4816,9 +4975,6 @@ tui-read-source-offline = { $source } needs a connection.
 
 # Names in a sentence, the last joined with "and": "Home library and Northwind", "A, B and C". The names before the last are already joined with commas. Used in "Nothing found in …".
 tui-read-names-and = { $names } and { $last }
-
-# Toast after Enter on a series in reading's Home or Search. The terminal has no reader.
-tui-read-opens-in-apps = Opens in the Kaeri apps.
 
 # On reading's Home when no book source is set up. The terminal cannot add one; the apps can.
 tui-read-sources-in-apps = Folders, servers and plugin stores are added in the Kaeri apps.
@@ -5535,10 +5691,7 @@ tui-together-not-a-link = That is not a party link or code.
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = Episode { $episode } · { $when }
 
-# Line under the title of that page.
-tui-medium-read-line = The terminal has no reader. Manga, webtoons and light novels open in the Kaeri apps, and sync keeps your progress in step.
-
-# Line under that page: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
+# Last line of reading's Home: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
 tui-medium-read-change = Press { $key } to change what Kaeri is for.
 
 # Hint beside the Kaeri is for line on the Settings screen. The key is the one bound to it, as the key map draws it.

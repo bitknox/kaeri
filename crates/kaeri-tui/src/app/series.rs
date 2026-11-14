@@ -301,7 +301,6 @@ impl App {
         chapter: Option<ChapterId>,
     ) -> Option<Command> {
         let _ = (work, chapter);
-        self.push_toast(info(t::tui_read_opens_in_apps()));
         None
     }
 
@@ -748,7 +747,6 @@ mod tests {
         answer(&mut a, "a:2");
         a.toasts.clear();
         assert_eq!(a.handle(Action::Open, 10), None);
-        assert!(!a.toasts.is_empty(), "the hook says where it opens for now");
         assert_eq!(a.nav.current(), &StageView::Series(WorkId::new("a:2")));
     }
 

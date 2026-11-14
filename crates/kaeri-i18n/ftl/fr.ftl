@@ -5242,10 +5242,7 @@ tui-together-not-a-link = Ce n’est ni un lien ni un code de groupe.
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = Épisode { $episode } · { $when }
 
-# Line under the title of that page.
-tui-medium-read-line = Le terminal n’a pas de lecteur. Les mangas, webtoons et light novels s’ouvrent dans les applications Kaeri, et la synchronisation garde votre progression à jour.
-
-# Line under that page: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
+# Last line of reading's Home: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
 tui-medium-read-change = Appuyez sur { $key } pour changer ce à quoi sert Kaeri.
 
 # Hint beside the Kaeri is for line on the Settings screen. The key is the one bound to it, as the key map draws it.
