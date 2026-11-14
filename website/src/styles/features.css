@@ -31,18 +31,14 @@
 	padding: 0 var(--gutter) var(--space-section);
 }
 
-.band + .f-sect {
-	padding-top: var(--space-section);
+/* Every section opens on a hairline, as on Home. */
+.f-sect > .f-in {
+	padding-top: clamp(28px, 2vw + 16px, 44px);
+	border-top: 1px solid var(--ani-rule);
 }
 
 .f-sect .band-head {
 	padding-top: 0;
-}
-
-/* A hairline between the hero and the first section, as on the board. */
-.f-hero + .f-sect > .f-in {
-	padding-top: var(--space-head);
-	border-top: 1px solid var(--ani-rule);
 }
 
 .f-fig {

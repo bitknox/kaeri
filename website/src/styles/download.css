@@ -6,6 +6,11 @@
 	padding-top: clamp(28px, 4vw, 72px);
 }
 
+.dl-top > .dl-in {
+	padding-top: 0;
+	border-top: 0;
+}
+
 .ds {
 	padding: var(--space-section) 0 0;
 }

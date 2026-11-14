@@ -53,7 +53,7 @@ const bands = ['f1', 'f2', 'f3', 'f4'] as const;
 		</figure>
 	</section>
 
-	<section class="band band-green" aria-labelledby="f1-h">
+	<section class="band" aria-labelledby="f1-h">
 		<div class="band-in">
 			<div class="band-head">
 				<h2 id="f1-h">{t('home.f1.title')}</h2>
@@ -69,7 +69,7 @@ const bands = ['f1', 'f2', 'f3', 'f4'] as const;
 	</section>
 
 	<section class="band" aria-labelledby="f2-h">
-		<div class="band-in band-rule band-rule-violet">
+		<div class="band-in">
 			<div class="band-head">
 				<h2 id="f2-h">{t('home.f2.title')}</h2>
 				<p><span class="lead">{t('home.f2.lead')}</span> {t('home.f2.text')}</p>
@@ -83,7 +83,7 @@ const bands = ['f1', 'f2', 'f3', 'f4'] as const;
 		</div>
 	</section>
 
-	<section class="band band-red" aria-labelledby="f3-h">
+	<section class="band theatre" aria-labelledby="f3-h">
 		<div class="band-in">
 			<div class="band-head">
 				<h2 id="f3-h">{t('home.f3.title')}</h2>
@@ -99,7 +99,7 @@ const bands = ['f1', 'f2', 'f3', 'f4'] as const;
 	</section>
 
 	<section class="band" aria-labelledby="f4-h">
-		<div class="band-in band-rule band-rule-sky">
+		<div class="band-in">
 			<div class="band-head">
 				<h2 id="f4-h">{t('home.f4.title')}</h2>
 				<p><span class="lead">{t('home.f4.lead')}</span> {t('home.f4.text')}</p>
@@ -113,7 +113,7 @@ const bands = ['f1', 'f2', 'f3', 'f4'] as const;
 		</div>
 	</section>
 
-	<section class="band band-plain" aria-labelledby="fx-h">
+	<section class="band" aria-labelledby="fx-h">
 		<div class="band-in">
 			<div class="band-head">
 				<h2 id="fx-h">{t('home.fx.title')}</h2>
@@ -161,15 +161,16 @@ const bands = ['f1', 'f2', 'f3', 'f4'] as const;
 
 	<section class="oss" aria-labelledby="oss-h">
 		<div class="oss-in">
-			<img src="/favicon.svg" alt="" width="60" height="60" />
-			<h2 id="oss-h">{t('home.oss.title')}</h2>
-			<p>{t('home.oss.text')}</p>
-			<div class="oss-actions">
-				<a class="k-btn" href={GITHUB}>{t('home.oss.source')}</a>
-				<a class="k-btn" href={href('/docs/plugins/authoring/')}>{t('home.oss.plugin')}</a>
-				<a class="k-btn" href={`${GITHUB}/blob/main/docs/translations.md`}>{t('home.oss.translate')}</a>
-				<a class="k-btn" href={`${GITHUB}/issues`}>{t('home.oss.issue')}</a>
+			<div>
+				<h2 id="oss-h">{t('home.oss.title')}</h2>
+				<p>{t('home.oss.text')}</p>
 			</div>
+			<ul class="oss-links">
+				<li><a href={GITHUB}>{t('home.oss.source')}<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></a></li>
+				<li><a href={href('/docs/plugins/authoring/')}>{t('home.oss.plugin')}<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></a></li>
+				<li><a href={`${GITHUB}/blob/main/docs/translations.md`}>{t('home.oss.translate')}<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></a></li>
+				<li><a href={`${GITHUB}/issues`}>{t('home.oss.issue')}<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></a></li>
+			</ul>
 		</div>
 	</section>
 

@@ -19,18 +19,14 @@
 	--ani-rule-faint: #d7d4cf;
 	--ani-raised: #e9e6de;
 	--ani-well: #e3e1d9;
-	/* In light the bands and rules are paper tones with a faint hue, so the page reads as one
-	   surface and the type carries the hierarchy. Dark keeps its colours for contrast. */
+	/* The page is one surface: sections are parted by hairlines and space, and the type carries
+	   the hierarchy. --ani-band is for small wells, such as code and the search tags. */
 	--ani-band: #e3e1d9;
-	--ani-band-green: #e1e3d8;
-	--ani-band-red: #e8e0d9;
-	--ani-band-plum: #e6e0de;
-	--ani-band-blue: #dfe1e2;
-	--ani-rule-violet: #adadbf;
-	--ani-rule-sky: #a9b6bc;
 	--ani-bezel: #1e2033;
 	--ani-bezel-edge: #1e2033;
 	--ani-crop-a: #10131f;
+	/* The one dark room on a page, where the player is shown: night in light, deeper in dark. */
+	--ani-theatre: #10131f;
 	--ani-crop-b: #161a2e;
 	--ani-obi: #f2a64b;
 	--ani-obi-hover: #f5b467;
@@ -80,12 +76,6 @@
 	--ani-raised: #161a2e;
 	--ani-well: #161a2e;
 	--ani-band: #222638;
-	--ani-band-green: #1a2421;
-	--ani-band-red: #411e22;
-	--ani-band-plum: #2c1f26;
-	--ani-band-blue: #1b2045;
-	--ani-rule-violet: #7781c5;
-	--ani-rule-sky: #a9c7d6;
 	--ani-bezel: #161a2e;
 	--ani-bezel-edge: #434653;
 	--ani-on-obi: #161a2e;
@@ -94,6 +84,7 @@
 	--ani-foot: #161a2e;
 	--ani-foot-text: #e4e0d6;
 	--ani-foot-dim: #9298b5;
+	--ani-theatre: #090b14;
 }
 
 *,

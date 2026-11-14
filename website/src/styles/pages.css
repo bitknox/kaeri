@@ -4,27 +4,7 @@
 /* ── Bands ────────────────────────────────────────────────────────────── */
 
 .band {
-	padding: var(--space-section) var(--gutter);
-}
-
-.band-green {
-	background: var(--ani-band-green);
-}
-
-.band-red {
-	background: var(--ani-band-red);
-}
-
-.band-plum {
-	background: var(--ani-band-plum);
-}
-
-.band-blue {
-	background: var(--ani-band-blue);
-}
-
-.band-plain {
-	background: var(--ani-band);
+	padding: 0 var(--gutter) var(--space-section);
 }
 
 .band-in {
@@ -32,17 +12,38 @@
 	margin: 0 auto;
 }
 
-.band-rule {
+/* Every section opens on a hairline, then the heading. */
+.band > .band-in {
 	border-top: 1px solid var(--ani-rule);
 	padding-top: clamp(28px, 2vw + 16px, 44px);
 }
 
-.band-rule-violet {
-	border-top-color: var(--ani-rule-violet);
+/* The theatre: the player's section is a dark room in either theme, set off by its own ground
+   rather than a hairline. */
+.theatre {
+	--ani-text: #e4e0d6;
+	--ani-dim: #9298b5;
+	--ani-rule: #434653;
+	--ani-link-hover: #f5b467;
+	--ani-focus: #f5b467;
+	--ani-bezel: #161a2e;
+	--ani-bezel-edge: #434653;
+	color-scheme: dark;
+	padding-top: var(--space-section);
+	background: var(--ani-theatre);
+	color: var(--ani-text);
 }
 
-.band-rule-sky {
-	border-top-color: var(--ani-rule-sky);
+.band.theatre > .band-in,
+.theatre + .band > .band-in,
+.theatre + .f-sect > .f-in {
+	border-top: 0;
+	padding-top: 0;
+}
+
+.theatre + .band,
+.theatre + .f-sect {
+	padding-top: var(--space-section);
 }
 
 .band-head {
@@ -267,12 +268,14 @@
 /* ── Download cards ───────────────────────────────────────────────────── */
 
 .dl-sect {
-	padding: var(--space-section) var(--gutter) 0;
+	padding: 0 var(--gutter) var(--space-section);
 }
 
 .dl-in {
 	max-width: 1200px;
 	margin: 0 auto;
+	padding-top: clamp(28px, 2vw + 16px, 44px);
+	border-top: 1px solid var(--ani-rule);
 }
 
 .k-body .dl-title {
@@ -403,66 +406,96 @@
 
 /* ── The FAQ ──────────────────────────────────────────────────────────── */
 
+/* The question on the left, the answers on the right, on the same hairline as every section. */
 .faq-sect {
-	padding: var(--space-section) var(--gutter);
+	padding: 0 var(--gutter) var(--space-section);
 }
 
 .faq {
-	max-width: 800px;
+	max-width: 1200px;
 	margin: 0 auto;
+	padding-top: clamp(28px, 2vw + 16px, 44px);
+	border-top: 1px solid var(--ani-rule);
+	display: grid;
+	grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+	gap: 24px 64px;
+	align-items: start;
 }
 
-.faq-list {
-	margin-top: 32px;
-	border-top: 1px solid var(--ani-rule);
+.faq details:first-child {
+	padding-top: 6px;
 }
 
 /* ── Open source ──────────────────────────────────────────────────────── */
 
 .oss {
-	background: var(--ani-band);
-	padding: var(--space-section) var(--gutter);
+	padding: 0 var(--gutter) var(--space-section);
 }
 
 .oss-in {
-	max-width: 720px;
+	max-width: 1200px;
 	margin: 0 auto;
-	text-align: center;
-}
-
-.oss-in img {
-	display: block;
-	margin: 0 auto;
-	width: 60px;
-	height: 60px;
-	border-radius: 14px;
-	image-rendering: pixelated;
-}
-
-.k-body .oss-in h2 {
-	margin-top: 28px;
+	padding-top: clamp(28px, 2vw + 16px, 44px);
+	border-top: 1px solid var(--ani-rule);
+	display: grid;
+	grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+	gap: 24px 64px;
+	align-items: start;
 }
 
 .oss-in p {
-	margin: 18px 0 0;
+	margin: 20px 0 0;
+	max-width: 30em;
 	font-size: var(--fs-lede);
 	line-height: 1.55;
 	color: var(--ani-dim);
 }
 
-.oss-actions {
-	margin-top: 32px;
+/* The ways in, as a list of rows like the questions above. */
+.oss-links {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.k-body .oss-links a {
 	display: flex;
-	justify-content: center;
-	gap: 12px;
-	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 18px 0;
+	border-bottom: 1px solid var(--ani-rule);
+	font-size: var(--fs-h3);
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.oss-links li:first-child a {
+	padding-top: 6px;
+}
+
+.oss-links svg {
+	flex: none;
+	color: var(--ani-dim);
 }
 
 /* ── Phones ───────────────────────────────────────────────────────────── */
 
 @media (max-width: 900px) {
-	.hero-copy {
+	.hero-copy,
+	.faq,
+	.oss-in {
 		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.faq-list,
+	.oss-links {
+		border-top: 1px solid var(--ani-rule);
+	}
+
+	.faq details:first-child,
+	.oss-links li:first-child a {
+		padding-top: 18px;
 	}
 }
 
