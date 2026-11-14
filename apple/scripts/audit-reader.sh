@@ -84,7 +84,7 @@ fresh() {
 settle() {
   local udid=$1 console start=$SECONDS
   echo "audit-reader.sh: settling $udid"
-  xcrun simctl install "$udid" "$dd/Build/Products/Debug-iphonesimulator/Kaeri Fixtures.app"
+  xcrun simctl install "$udid" "$dd/Build/Products/Debug-fixtures-iphonesimulator/Kaeri Fixtures.app"
   xcrun simctl launch --console-pty --terminate-running-process "$udid" app.kaeri.fixtures \
     -KaeriScene "$scene" >"$work/settle-$udid.log" 2>&1 &
   console=$!
