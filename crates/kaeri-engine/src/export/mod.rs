@@ -34,7 +34,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use kaeri_core::books::WorkId;
+use kaeri_core::books::{ChapterId, WorkId};
 use kaeri_model::{
     Msg, ReadingMsg,
     event::Event,
@@ -95,7 +95,13 @@ struct Joined {
     jobs: Mutex<Vec<(JobId, Option<JobGuard>)>>,
     /// Its own job was put away; set only with `jobs` locked.
     lead_gone: AtomicBool,
+    /// What the send said while it waits for Wi-Fi, for a send that joins it then to be told
+    /// as well; set and read only with `jobs` locked.
+    waiting: Mutex<Option<Waits>>,
 }
+
+/// The line a send waiting for Wi-Fi shows, and the chapters it holds.
+type Waits = (Msg, Vec<ChapterId>);
 
 impl std::fmt::Debug for Joined {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -115,6 +121,10 @@ impl Joined {
 
     fn jobs(&self) -> Vec<JobId> {
         self.lock().iter().map(|(job, _)| *job).collect()
+    }
+
+    fn waiting(&self) -> std::sync::MutexGuard<'_, Option<Waits>> {
+        self.waiting.lock().unwrap_or_else(|e| e.into_inner())
     }
 }
 
@@ -296,16 +306,23 @@ impl Exports {
     }
 
     /// Join the running send identical to the one `job` asks for, when there is one: `job` is
-    /// then told what that send is told and ends with it, and `Ok` says so. Otherwise the guard
+    /// then told what that send is told and ends with it, and `Ok` says so, with what the send
+    /// said when it waits for Wi-Fi already, which `job` is to be told too. Otherwise the guard
     /// comes back for a send of its own.
-    fn join(&self, identity: &str, job: Option<JobGuard>) -> Result<(), Option<JobGuard>> {
+    fn join(
+        &self,
+        identity: &str,
+        job: Option<JobGuard>,
+    ) -> Result<Option<Waits>, Option<JobGuard>> {
         let joins = self.joins.lock().unwrap_or_else(|e| e.into_inner());
         let (Some((_, joined)), Some(id)) = (joins.get(identity), job.as_ref().map(|j| j.id))
         else {
             return Err(job);
         };
-        joined.lock().push((id, job));
-        Ok(())
+        let mut jobs = joined.lock();
+        jobs.push((id, job));
+        let waits = joined.waiting().clone();
+        Ok(waits)
     }
 
     /// `job` runs the send `identity` names, which identical ones join while it runs.
@@ -538,7 +555,16 @@ fn prepare_files(
     // An identical send already running is joined, so its chapters are fetched once.
     let identity = identity(&work, &pick, target, format);
     let job = match exports.join(&identity, job) {
-        Ok(()) => return,
+        Ok(waits) => {
+            // It waits for Wi-Fi already, and said so before this send joined it.
+            if let Some((line, chapters)) = waits {
+                let target = target.to_owned();
+                let waiting =
+                    ReadingEvent::ExportWaiting { job: id, work, target, line, chapters };
+                let _ = tx.send(Event::Reading(waiting));
+            }
+            return;
+        }
         Err(job) => job,
     };
     let joined = exports.lead(&identity, id);
@@ -662,6 +688,15 @@ impl Told {
     fn jobs(&self) -> Vec<JobId> {
         let own = (!self.joined.lead_gone()).then_some(self.job);
         own.into_iter().chain(self.joined.jobs()).collect()
+    }
+
+    /// The send waits for Wi-Fi, having said `waits`, or no longer does with `None`: a send
+    /// that joins it while it waits is told the same. Gives the jobs to tell now.
+    fn waits(&self, waits: Option<Waits>) -> Vec<JobId> {
+        let jobs = self.joined.lock();
+        *self.joined.waiting() = waits;
+        let own = (!self.joined.lead_gone()).then_some(self.job);
+        own.into_iter().chain(jobs.iter().map(|(job, _)| *job)).collect()
     }
 
     fn chapter(&self, label: Option<String>) {
@@ -936,19 +971,24 @@ impl OneSend {
                 said = true;
                 let line =
                     Msg::Reading(ReadingMsg::ExportWaitsForWifi { n: i64::from(missing) });
-                for job in self.told.jobs() {
+                let chapters: Vec<ChapterId> =
+                    wanted.iter().map(|w| w.chapter.clone()).collect();
+                for job in self.told.waits(Some((line.clone(), chapters.clone()))) {
                     let _ = self.lent.tx.send(Event::Reading(ReadingEvent::ExportWaiting {
                         job,
                         work: self.work.clone(),
                         target: self.target.clone(),
                         line: line.clone(),
-                        chapters: wanted.iter().map(|w| w.chapter.clone()).collect(),
+                        chapters: chapters.clone(),
                     }));
                 }
             }
             // A change to the network or the setting, or a look at whether it was cancelled.
             let _ = tokio::time::timeout(LOOK_AGAIN, changes.changed()).await;
         };
+        if said {
+            self.told.waits(None);
+        }
         if kept {
             held::forget(store, &self.key);
         }
