@@ -66,9 +66,9 @@ pub fn spawn(
         // the database and there is no torrent for it in this process, so without this it would sit
         // at "downloading" forever with nothing behind it.
         //
-        // This assumes one app at a time on a data folder. The Mac app and the terminal app
-        // share one, as do the Linux app and the terminal, and nothing locks it: a second app
-        // opened while the first downloads takes those rows back and starts them again.
+        // Another app on the same data folder (the Mac or Linux app beside the terminal) may be
+        // running some of them: the store leaves a download alone while the engine that records
+        // its progress still does, and puts it back only once that engine has stopped.
         if let Ok(pending) = store.pending_downloads() {
             for row in pending.iter().filter(|d| d.state == DownloadState::Active) {
                 let _ = store.set_download_state(row.id, DownloadState::Queued);

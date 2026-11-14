@@ -1126,6 +1126,16 @@ const MIGRATIONS: &[(&str, &str)] = &[
     ALTER TABLE book_download ADD COLUMN lease_until INTEGER NOT NULL DEFAULT 0;
     "#,
     ),
+    (
+        "0037_download_owner",
+        r#"
+    -- Which engine runs an episode's download, and until when it has last said it still does,
+    -- as for chapters. An engine that starts leaves a download another one still runs alone.
+    -- Rows from before have no owner and a lease long over.
+    ALTER TABLE download ADD COLUMN owner TEXT;
+    ALTER TABLE download ADD COLUMN lease_until INTEGER NOT NULL DEFAULT 0;
+    "#,
+    ),
 ];
 
 /// How long a statement waits for a lock another connection or process holds before it fails.
