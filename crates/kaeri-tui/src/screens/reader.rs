@@ -1163,7 +1163,13 @@ fn help(buf: &mut Buffer, app: &App, reader: &Reader, area: Rect) {
         let ax = area.x + aside_at;
         let room = area.right().saturating_sub(ax + 1) as usize;
         let mut y = area.y + 5;
-        for note in [t::tui_reader_keys_rtl(), t::tui_reader_keys_left_out()] {
+        // The turn keys' note is about manga's pages; text always reads on to the right.
+        let notes = if reader.novel.is_some() {
+            vec![t::tui_reader_keys_left_out()]
+        } else {
+            vec![t::tui_reader_keys_rtl(), t::tui_reader_keys_left_out()]
+        };
+        for note in notes {
             for text in wrap(&note, room, 6) {
                 if y >= bottom {
                     break;
@@ -1175,7 +1181,9 @@ fn help(buf: &mut Buffer, app: &App, reader: &Reader, area: Rect) {
         }
     }
     Hairline::new(p).render(Rect { y: area.bottom() - 2, height: 1, ..area }, buf);
-    let left = page_count(reader).map(|c| vec![(c, Role::TextDim)]).unwrap_or_default();
+    let count =
+        if reader.novel.is_some() { app.novel_status_words(false) } else { page_count(reader) };
+    let left = count.map(|c| vec![(c, Role::TextDim)]).unwrap_or_default();
     status(buf, app, Rect { y: area.bottom() - 1, height: 1, ..area }, &left);
     let _ = h;
 }

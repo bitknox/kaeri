@@ -117,20 +117,20 @@ fn label(key: Key) -> String {
 fn choice_words(key: Key, name: &str) -> String {
     // The engine's names for the choices.
     match (key, name) {
-        (Key::Mode, "paged") => t::tui_reader_value_paged(),
-        (Key::Mode, "scrolled") => t::tui_reader_value_scrolled(),
-        (Key::Mode, "vertical") => t::tui_reader_value_vertical(),
-        (Key::Mode, "strip") => t::reader_mode_strip(),
-        (Key::Direction, "rtl") => t::reader_mode_rtl(),
-        (Key::Direction, "ltr") => t::reader_mode_ltr(),
-        (Key::Fit, "screen") => t::reader_fit_screen(),
-        (Key::Fit, "width") => t::reader_fit_width(),
-        (Key::PageLayout, "auto") => t::reader_layout_auto(),
-        (Key::PageLayout, "single") => t::reader_layout_single(),
-        (Key::PageLayout, "double") => t::reader_layout_double(),
-        (Key::Spreads, "split") => t::reader_spreads_split(),
-        (Key::Spreads, "rotate") => t::reader_spreads_rotate(),
-        (Key::Spreads, "whole") => t::reader_spreads_whole(),
+        (Key::Mode, "paged") => t::tui_reader_value_paged(), // i18n-skip: a value
+        (Key::Mode, "scrolled") => t::tui_reader_value_scrolled(), // i18n-skip: a value
+        (Key::Mode, "vertical") => t::tui_reader_value_vertical(), // i18n-skip: a value
+        (Key::Mode, "strip") => t::reader_mode_strip(),      // i18n-skip: a value
+        (Key::Direction, "rtl") => t::reader_mode_rtl(),     // i18n-skip: a value
+        (Key::Direction, "ltr") => t::reader_mode_ltr(),     // i18n-skip: a value
+        (Key::Fit, "screen") => t::reader_fit_screen(),      // i18n-skip: a value
+        (Key::Fit, "width") => t::reader_fit_width(),        // i18n-skip: a value
+        (Key::PageLayout, "auto") => t::reader_layout_auto(), // i18n-skip: a value
+        (Key::PageLayout, "single") => t::reader_layout_single(), // i18n-skip: a value
+        (Key::PageLayout, "double") => t::reader_layout_double(), // i18n-skip: a value
+        (Key::Spreads, "split") => t::reader_spreads_split(), // i18n-skip: a value
+        (Key::Spreads, "rotate") => t::reader_spreads_rotate(), // i18n-skip: a value
+        (Key::Spreads, "whole") => t::reader_spreads_whole(), // i18n-skip: a value
         _ => name.to_owned(),
     }
 }

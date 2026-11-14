@@ -85,16 +85,30 @@ pub(super) fn settings_overlay(buf: &mut Buffer, app: &App, reader: &Reader, are
     let novel = medium == Medium::Novel;
     let preview = novel && w >= PREVIEW_FROM;
     let x = area.x + 2;
-    let right = if preview { area.x + SETTINGS_RIGHT } else { area.right().saturating_sub(2) };
+    let right = if w >= PREVIEW_FROM {
+        area.x + SETTINGS_RIGHT
+    } else {
+        area.right().saturating_sub(2)
+    };
     let bottom = area.bottom().saturating_sub(2);
     let items = app.reader_setting_items();
+    let note = if novel {
+        t::tui_reader_settings_novel_note()
+    } else {
+        t::tui_reader_settings_manga_note()
+    };
+    let note = wrap(&note, usize::from(right.saturating_sub(x + 6)).max(10), 6);
+    // A blank line between the sections while they all fit with one; else none.
+    let sections = 1 + items.windows(2).filter(|w| w[0].place != w[1].place).count();
+    let rows = items.len() + 2 * sections + 1 + note.len();
+    let gap = u16::from(area.y + 6 + rows as u16 <= bottom);
     let selected = app.cursors.overlay.selected.min(items.len().saturating_sub(1));
     let mut y = area.y + 6;
     let mut place: Option<SettingPlace> = None;
     for (i, item) in items.iter().enumerate() {
         if place != Some(item.place) {
             if place.is_some() {
-                y += 1;
+                y += gap;
             }
             place = Some(item.place);
             heading(buf, app, x, y, &item.place.heading(medium), right, bottom);
@@ -118,16 +132,10 @@ pub(super) fn settings_overlay(buf: &mut Buffer, app: &App, reader: &Reader, are
         value(buf, app, x + VALUE_AT, y, item, right);
         y += 1;
     }
-    y += 1;
+    y += gap;
     heading(buf, app, x, y, &t::tui_reader_settings_not_here(), right, bottom);
     y += 1;
-    let note = if novel {
-        t::tui_reader_settings_novel_note()
-    } else {
-        t::tui_reader_settings_manga_note()
-    };
-    let room = usize::from(right.saturating_sub(x + 6)).max(10);
-    for text in wrap(&note, room, 6) {
+    for text in note {
         if y >= bottom {
             break;
         }
@@ -224,7 +232,11 @@ fn preview_text(buf: &mut Buffer, app: &App, reader: &Reader, area: Rect) {
     let room = area.right().saturating_sub(x + 2);
     let width = frame.shape.width.min(room).max(1);
     let layout = lay_out(&novel.open.text, Shape { width, ..frame.shape });
-    let first = layout.line_of(&novel.open.text, &novel.place).unwrap_or(0);
+    let mut first = layout.line_of(&novel.open.text, &novel.place).unwrap_or(0);
+    // The preview starts with words, not the blank line over a heading.
+    while layout.lines.get(first).is_some_and(|l| l.is_blank()) {
+        first += 1;
+    }
     let column = Rect::new(x, top + 2, width, bottom.saturating_sub(top + 2));
     text_lines(buf, app, &layout, first..layout.lines.len(), column);
 }

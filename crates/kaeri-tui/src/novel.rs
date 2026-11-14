@@ -359,10 +359,10 @@ fn plain_pieces(text: &str, look: Look) -> Vec<Piece> {
 
 /// Closing punctuation a line never starts with.
 fn closes(text: &str) -> bool {
-    text.chars().next().is_some_and(|c| {
-        "。、，．！？：；」』）〉》】〕］｝ー…‥・ぁぃぅぇぉっゃゅょァィゥェォッャュョ,.!?:;)]}"
-            .contains(c)
-    })
+    // Punctuation, and the small kana a line never starts with either.
+    const CLOSING: &str =
+        "。、，．！？：；」』）〉》】〕］｝ー…‥・ぁぃぅぇぉっゃゅょァィゥェォッャュョ,.!?:;)]}"; // i18n-skip
+    text.chars().next().is_some_and(|c| CLOSING.contains(c))
 }
 
 /// Opening punctuation a line never ends with.
