@@ -129,9 +129,24 @@ impl TextLayout {
             .rev()
             .filter(text)
             .find(|i| self.lines[*i].block == block && self.lines[*i].at <= offset);
-        held.or_else(|| range.clone().filter(text).find(|i| self.lines[*i].block >= block))
+        let line = held
+            .or_else(|| range.clone().filter(text).find(|i| self.lines[*i].block >= block))
             .or_else(|| range.clone().rev().find(text))
-            .or_else(|| (!range.is_empty()).then_some(range.start))
+            .or_else(|| (!range.is_empty()).then_some(range.start))?;
+        // A heading keeps the blank line that opens it: that blank line's place is the
+        // heading's start too, so the two map to each other.
+        let heading = |b: usize| {
+            docs[doc]
+                .blocks
+                .get(b)
+                .is_some_and(|b| matches!(b.kind, TextBlockKind::Heading { .. }))
+        };
+        let opens = line > range.start
+            && self.lines[line - 1].is_blank()
+            && self.lines[line - 1].block == self.lines[line].block
+            && self.lines[line].at == 0
+            && heading(self.lines[line].block);
+        Some(if opens { line - 1 } else { line })
     }
 }
 
@@ -729,10 +744,17 @@ mod tests {
             para(1, "alpha beta gamma delta epsilon zeta eta theta"),
         ]);
         let layout = lay_out(&docs, shape(16));
-        for (i, line) in layout.lines.iter().enumerate().filter(|(_, l)| !l.is_blank()) {
+        for (i, line) in layout.lines.iter().enumerate() {
             let pos = layout.pos_of(&docs, i).unwrap();
             assert_eq!(pos.path, vec![line.block as u32]);
-            assert_eq!(layout.line_of(&docs, &pos), Some(i), "line {i} round trips");
+            // The heading's line and the blank line over it are one place: its start. The
+            // blank line before the paragraph is the paragraph's start, which is its first line.
+            let back = match i {
+                1 => 0,
+                2 => 3,
+                i => i,
+            };
+            assert_eq!(layout.line_of(&docs, &pos), Some(back), "line {i} round trips");
         }
         // A place in the middle of a line falls on that line.
         let third = layout.lines.iter().position(|l| l.text().starts_with("epsilon")).unwrap();

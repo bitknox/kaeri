@@ -164,6 +164,9 @@ pub enum Action {
     ReaderZoomOut,
     /// One page or two side by side, kept on this computer.
     ReaderPages,
+    /// A light novel's text column 4 narrower or wider.
+    ReaderNarrower,
+    ReaderWider,
     ReaderSettings,
     ReaderLeave,
     /// Try again after a failure, or read a finished series again from the start.
@@ -290,6 +293,8 @@ impl Action {
         Self::ReaderZoomIn,
         Self::ReaderZoomOut,
         Self::ReaderPages,
+        Self::ReaderNarrower,
+        Self::ReaderWider,
         Self::ReaderSettings,
         Self::ReaderLeave,
         Self::ReaderAgain,
@@ -411,6 +416,8 @@ impl Action {
             Self::ReaderZoomIn => t::tui_reader_action_zoom_in(),
             Self::ReaderZoomOut => t::tui_reader_action_zoom_out(),
             Self::ReaderPages => t::tui_reader_action_pages(),
+            Self::ReaderNarrower => t::tui_reader_action_narrower(),
+            Self::ReaderWider => t::tui_reader_action_wider(),
             Self::ReaderSettings => t::tui_reader_action_settings(),
             Self::ReaderLeave => t::tui_reader_action_leave(),
             Self::ReaderAgain => t::reader_try_again(),
@@ -447,6 +454,7 @@ impl Action {
             Self::ReaderNext | Self::ReaderLeft => said(t::tui_reader_hint_next()),
             Self::ReaderPrevious | Self::ReaderRight => said(t::tui_reader_hint_back()),
             Self::ReaderSettings => said(t::tui_reader_hint_settings()),
+            Self::ReaderNarrower | Self::ReaderWider => said(t::tui_reader_hint_width()),
             Self::ReaderLeave => said(t::keys_hint_back()),
             Self::ReaderAgain => said(t::reader_try_again()),
             other => other.label(),
@@ -526,6 +534,8 @@ impl Action {
             | Self::ReaderZoomIn
             | Self::ReaderZoomOut
             | Self::ReaderPages
+            | Self::ReaderNarrower
+            | Self::ReaderWider
             | Self::ReaderSettings => Scope::ReaderView,
             Self::ReaderNext
             | Self::ReaderPrevious

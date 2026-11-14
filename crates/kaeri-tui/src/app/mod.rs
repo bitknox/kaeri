@@ -53,6 +53,8 @@ mod overlays;
 mod playback;
 mod providers;
 mod reader;
+mod reader_novel;
+mod reader_settings;
 mod reader_view;
 mod reading;
 mod series;
@@ -83,6 +85,11 @@ pub use self::{
         CHROME_ROWS, EndFacts, MIN_COLUMNS, MIN_ROWS, PLATE_AFTER, PageJob, PartKey, Reader,
         ReaderScreen, SECONDS_AFTER, ShownNotice, TWO_PAGE_ROWS,
     },
+    reader_novel::{
+        NovelFrame, NovelProgress, NovelReading, OPEN_AMOUNT, OPEN_SPACING, TEXT_MARGIN,
+        TEXT_WIDTH, TEXT_WIDTH_MIN, TEXT_WIDTH_STEP, TIGHT_AMOUNT,
+    },
+    reader_settings::{SettingItem, SettingPlace, SettingShown},
     reader_view::{
         CanvasBox, DIVIDER_ROWS, FIT_MARGIN, Piece, StripItem, StripLayout, Viewport,
         ZOOM_PANEL, Zoom, stage_of, strip_cols,

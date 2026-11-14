@@ -53,6 +53,10 @@ pub(super) fn render_reader(buf: &mut Buffer, app: &App, area: Rect) -> FrameRep
         help(buf, app, reader, area);
         return report;
     }
+    if app.nav.overlay() == Some(&Overlay::ReaderSettings) {
+        super::reader_text::settings_overlay(buf, app, reader, area);
+        return report;
+    }
     let now = app.clock.now_instant();
     let bare = reader.bare && matches!(screen, ReaderScreen::Pages);
     let stage = stage_of(area, bare);
@@ -60,6 +64,9 @@ pub(super) fn render_reader(buf: &mut Buffer, app: &App, area: Rect) -> FrameRep
         ReaderScreen::Opening => opening(buf, app, reader, stage, now),
         ReaderScreen::ChapterFailed => chapter_failed(buf, app, reader, stage),
         ReaderScreen::ImagesOff => images_off(buf, app, stage),
+        ReaderScreen::Pages if reader.novel.is_some() => {
+            super::reader_text::novel_page(buf, app, reader, area);
+        }
         ReaderScreen::Pages => pages(buf, app, reader, stage, now),
         ReaderScreen::End => end_page(buf, app, reader, stage),
         ReaderScreen::TooSmall => {}
@@ -92,7 +99,13 @@ fn chrome(buf: &mut Buffer, app: &App, reader: &Reader, screen: ReaderScreen, ar
 }
 
 /// "Kaeri", the series and the chapter, and the chips on the right while there is room.
-fn header(buf: &mut Buffer, app: &App, reader: &Reader, screen: ReaderScreen, area: Rect) {
+pub(super) fn header(
+    buf: &mut Buffer,
+    app: &App,
+    reader: &Reader,
+    screen: ReaderScreen,
+    area: Rect,
+) {
     let p = &app.palette;
     let w = area.width;
     line(buf, area.x, area.y, "Kaeri", p.style(Role::Text).add_modifier(Modifier::BOLD)); // i18n-skip
@@ -110,7 +123,14 @@ fn header(buf: &mut Buffer, app: &App, reader: &Reader, screen: ReaderScreen, ar
     let room = w.saturating_sub(TITLE_X + if chips_width > 0 { chips_width + 2 } else { 0 });
     let series = reader.series_title().to_owned();
     let chapter = reader.chapter();
+    let novel = app.novel_progress().filter(|_| reader.novel.is_some());
     let chapter_words = match (chapter, w >= WIDE) {
+        // A novel's part from its contents, with the chapter's title where there is room.
+        _ if let Some(progress) = novel => match (w >= WIDE, progress.title) {
+            (true, Some(title)) => format!("{} · {title}", progress.part), // i18n-skip: layout
+            _ if w >= ROOMY => progress.part,
+            _ => String::new(),
+        },
         (Some(row), true) => chapter_name(row),
         (Some(row), false) => {
             t::reader_chapter_line(&row.number.clone().unwrap_or_else(|| row.label.clone()))
@@ -217,6 +237,17 @@ fn status_left(
             ));
             runs
         }
+        ReaderScreen::Pages if reader.novel.is_some() => {
+            let roomy = w >= ROOMY;
+            let words = app.novel_status_words(roomy).unwrap_or_default();
+            if !roomy {
+                return vec![(words, Role::TextDim)];
+            }
+            let fraction = app.novel_progress().map_or(0.0, |p| p.fraction);
+            let mut runs = meter(reader, fraction, w);
+            runs.push((format!("  {words}"), Role::TextDim)); // i18n-skip: layout
+            runs
+        }
         ReaderScreen::Pages if reader.strips() => strip_status(app, reader, w),
         ReaderScreen::Pages if reader.zoom.is_some() => {
             let level = reader.zoom.map_or(1.0, |z| z.level);
@@ -288,14 +319,15 @@ fn meter(reader: &Reader, fraction: f64, w: u16) -> Vec<(String, Role)> {
     };
     let full = ((fraction.clamp(0.0, 1.0)) * f64::from(width as u32)) as usize;
     let mut cells = "█".repeat(full) + &"░".repeat(width - full); // i18n-skip: the meter
-    if reader.rtl() {
+    // Text reads left to right here, whichever way the book's pages turn.
+    if reader.rtl() && reader.novel.is_none() {
         cells = cells.chars().rev().collect();
     }
     vec![(cells, Role::Text)]
 }
 
 /// The status line: the left side as runs, cut to fit, and the hints on the right.
-fn status(buf: &mut Buffer, app: &App, area: Rect, left: &[(String, Role)]) {
+pub(super) fn status(buf: &mut Buffer, app: &App, area: Rect, left: &[(String, Role)]) {
     let hints = reader_hints(app, area.width as usize);
     StatusLine::new(&app.palette, "").hints(&hints).render(area, buf);
     let hints_width: usize =
@@ -1086,7 +1118,7 @@ fn help(buf: &mut Buffer, app: &App, reader: &Reader, area: Rect) {
     let aside_at = 2 + 2 * 44 + 2;
     let aside = w >= aside_at + 24;
     let col = if aside { 44 } else { ((w.saturating_sub(4)) / 2).min(44) };
-    let groups = app.keymap.reader_help();
+    let groups = app.keymap.reader_help(app.reads_novel());
     let bottom = area.bottom().saturating_sub(3);
     // The reader's own keys fill the first column, the rest the second.
     let mut columns: [Vec<(Option<&str>, String)>; 2] = [Vec::new(), Vec::new()];

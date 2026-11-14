@@ -100,6 +100,8 @@ const READER_VIEW_ROWS: &[Action] = &[
     Action::ReaderZoomIn,
     Action::ReaderZoomOut,
     Action::ReaderPages,
+    Action::ReaderNarrower,
+    Action::ReaderWider,
     Action::ReaderSettings,
 ];
 
@@ -115,10 +117,32 @@ impl Keymap {
     /// The reader's key reference: its own keys first, then how it shows pages, then the global
     /// keys it keeps, each with the keys that reach it in the reader. Read off the live tables,
     /// so a rebind shows; an action with no key is left out.
-    pub fn reader_help(&self) -> Vec<(&'static str, Vec<(String, &'static str)>)> {
+    ///
+    /// Keys that do nothing in the open chapter are left out: no fit, zoom or two pages in a
+    /// light novel (`novel`), and no text width in manga.
+    pub fn reader_help(&self, novel: bool) -> Vec<(&'static str, Vec<(String, &'static str)>)> {
+        let here = |action: &Action| {
+            if novel {
+                !matches!(
+                    action,
+                    Action::ReaderFit
+                        | Action::ReaderZoom
+                        | Action::ReaderZoomIn
+                        | Action::ReaderZoomOut
+                        | Action::ReaderPages
+                )
+            } else {
+                !matches!(action, Action::ReaderNarrower | Action::ReaderWider)
+            }
+        };
+        let label = |action: Action| match action {
+            Action::ReaderMode if novel => said(kaeri_i18n::t::tui_reader_action_mode_novel()),
+            _ => action.label(),
+        };
         let rows = |actions: &[Action]| -> Vec<(String, &'static str)> {
             actions
                 .iter()
+                .filter(|action| here(action))
                 .filter_map(|action| {
                     let mut keys = self.keys_in(*action, super::Context::Reading);
                     if keys.is_empty() {
@@ -143,7 +167,7 @@ impl Keymap {
                     }
                     let rendered =
                         keys.iter().map(Binding::render).collect::<Vec<_>>().join(" / ");
-                    Some((rendered, action.label()))
+                    Some((rendered, label(*action)))
                 })
                 .collect()
         };
@@ -246,7 +270,7 @@ mod tests {
 
     #[test]
     fn the_reader_s_reference_lists_its_keys_then_the_global_ones() {
-        let help = Keymap::new().reader_help();
+        let help = Keymap::new().reader_help(false);
         let headings: Vec<&str> = help.iter().map(|(h, _)| *h).collect();
         assert_eq!(
             headings,
@@ -261,5 +285,20 @@ mod tests {
         assert!(global.contains(&("Q / ctrl+c".to_string(), Action::Quit.label())));
         // Section digits and Tab do nothing in the reader, so its reference leaves them out.
         assert!(!help.iter().flat_map(|(_, rows)| rows).any(|(k, _)| k == "tab"));
+        let view = &help[1].1;
+        assert!(!view.iter().any(|(k, _)| k == "[" || k == "]"), "no width in manga");
+        assert!(view.contains(&("z".to_string(), Action::ReaderZoom.label())));
+    }
+
+    #[test]
+    fn a_novel_s_reference_has_the_width_keys_and_no_zoom() {
+        let help = Keymap::new().reader_help(true);
+        let view = &help[1].1;
+        assert!(view.contains(&("[".to_string(), Action::ReaderNarrower.label())));
+        assert!(view.contains(&("]".to_string(), Action::ReaderWider.label())));
+        assert!(view.contains(&("m".to_string(), "Paged or scrolled")));
+        for gone in [Action::ReaderFit, Action::ReaderZoom, Action::ReaderPages] {
+            assert!(!view.iter().any(|(_, label)| *label == gone.label()), "{gone:?} left out");
+        }
     }
 }

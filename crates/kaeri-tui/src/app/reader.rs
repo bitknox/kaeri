@@ -170,6 +170,8 @@ pub struct Reader {
     pub flowing: Option<ChapterId>,
     /// The page to keep in view when the mode changed, for the engine's next layout.
     pub switched: Option<u32>,
+    /// A light novel's text, once the engine sent it.
+    pub novel: Option<super::NovelReading>,
 }
 
 impl Reader {
@@ -210,6 +212,7 @@ impl Reader {
             strip: Strip::default(),
             flowing: None,
             switched: None,
+            novel: None,
         }
     }
 
@@ -250,11 +253,14 @@ impl Reader {
     pub fn is_opening(&self) -> bool {
         self.chapter_failure.is_none()
             && self.flowing.is_none()
-            && (self.view.is_none() || self.leaves.is_empty())
+            && (self.view.is_none() || (self.leaves.is_empty() && self.novel.is_none()))
     }
 
     /// The leaf in view is the page between chapters.
     pub fn on_end(&self) -> bool {
+        if let Some(novel) = &self.novel {
+            return novel.end;
+        }
         self.leaves.get(self.at).is_some_and(|l| l.end_page)
     }
 
@@ -552,6 +558,7 @@ impl App {
         self.keep_strip_place(window);
         self.window = Some(window);
         self.send_surface();
+        self.novel_fit();
     }
 
     /// Send the surface again when it changed: a resize, the chrome hidden or shown, one page
@@ -617,6 +624,7 @@ impl App {
                     reader.back_to = None;
                     reader.at = 0;
                     reader.held_page = None;
+                    reader.novel = None;
                 }
                 reader.session = view.session;
                 reader.opening = None;
@@ -725,6 +733,13 @@ impl App {
             ReaderEvent::BackToPage { session, page } if mine(session) => {
                 reader.back_to = page;
             }
+            ReaderEvent::NovelOpen(open) if mine(open.session) => self.novel_open(open),
+            ReaderEvent::GoTo { session, place } if mine(session) && reader.novel.is_some() => {
+                if let (Some(pos), Some(novel)) = (place.novel, reader.novel.as_mut()) {
+                    novel.go_to(pos);
+                    self.novel_fit();
+                }
+            }
             ReaderEvent::GoTo { session, place } if mine(session) => {
                 if let Some(at) = place.page.and_then(|page| reader.leaf_of(page))
                     && let Some(task) = self.show_leaf(at, TurnHow::Placed)
@@ -735,6 +750,7 @@ impl App {
             ReaderEvent::Settings(view) if reader.medium().is_none_or(|m| m == view.medium) => {
                 reader.settings = Some(view);
                 self.follow_settings();
+                self.novel_fit();
             }
             _ => {}
         }
@@ -1022,6 +1038,9 @@ impl App {
         if Action::IN_READER.contains(&action) {
             return None;
         }
+        if let Some(task) = self.novel_key(screen, action) {
+            return Some(task);
+        }
         if let Some(task) = self.mode_key(screen, action) {
             return Some(task);
         }
@@ -1074,6 +1093,7 @@ impl App {
                 let reader = self.reader_mut()?;
                 reader.bare = !reader.bare;
                 self.send_surface();
+                self.novel_fit();
                 None
             }
             (_, Action::ReaderPages) => self.switch_pages(),
@@ -1129,7 +1149,7 @@ impl App {
     }
 
     /// Another chapter in the open session.
-    fn open_chapter(&mut self, chapter: ChapterId) -> Option<Command> {
+    pub(super) fn open_chapter(&mut self, chapter: ChapterId) -> Option<Command> {
         let now = self.clock.now_instant();
         let reader = self.reader_mut()?;
         let session = reader.session;
@@ -1146,6 +1166,7 @@ impl App {
         reader.notice = None;
         reader.leaves.clear();
         reader.view = None;
+        reader.novel = None;
         reader.asked = Some(chapter.clone());
         Some(Command::Reader(ReaderCommand::OpenChapter { session, chapter }))
     }
@@ -1272,23 +1293,13 @@ impl App {
         }))
     }
 
-    /// `,`: the reader settings. They are asked for here, and the settings overlay opens on
-    /// them once it is built; [`Reader::settings_asked`] says it was asked.
-    fn open_reader_settings(&mut self) -> Option<Command> {
-        let reader = self.reader_mut()?;
-        reader.settings_asked = true;
-        Some(Command::Reader(ReaderCommand::LoadSettings {
-            medium: reader.medium().unwrap_or(Medium::Manga),
-            work: Some(reader.work.clone()),
-        }))
-    }
-
     /// Whether the reader has something on a clock: an open or a plate waiting, a notice up.
     pub(super) fn reader_ticking(&self) -> bool {
         let Some(reader) = self.reader_here() else { return false };
         let now = self.clock.now_instant();
         reader.opening.is_some()
             || reader.strip.report.is_some()
+            || reader.novel.as_ref().is_some_and(|n| n.report.is_some())
             || reader.notice.as_ref().is_some_and(|n| n.until.is_none_or(|u| u > now))
             || (self.images.engine().is_enabled()
                 && reader.leaf().is_some_and(|l| {
@@ -1333,6 +1344,12 @@ pub(crate) fn reader_hints(app: &App, width: usize) -> Vec<(String, &'static str
     let Some(reader) = app.reader_here() else { return Vec::new() };
     if app.nav.overlay() == Some(&crate::nav::Overlay::Help) {
         return vec![("esc".to_owned(), said(t::keys_hint_close()))]; // i18n-skip: a key
+    }
+    if app.nav.overlay() == Some(&crate::nav::Overlay::ReaderSettings) {
+        return app.reader_settings_hints();
+    }
+    if screen == ReaderScreen::Pages && reader.novel.is_some() {
+        return app.novel_hints(width);
     }
     let (forward, back) = if reader.rtl() {
         (Action::ReaderLeft, Action::ReaderRight)

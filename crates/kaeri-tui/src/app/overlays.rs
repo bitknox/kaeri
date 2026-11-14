@@ -76,6 +76,10 @@ impl App {
             _ => {}
         }
 
+        if *overlay == Overlay::ReaderSettings {
+            return self.reader_settings_key(action);
+        }
+
         let reference = matches!(overlay, Overlay::Help | Overlay::Logs);
         if reference {
             match action {

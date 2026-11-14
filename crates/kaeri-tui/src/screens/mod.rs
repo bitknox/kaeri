@@ -23,6 +23,7 @@ mod overlays;
 mod playback;
 mod providers;
 mod reader;
+mod reader_text;
 mod reading;
 mod series;
 mod settings;

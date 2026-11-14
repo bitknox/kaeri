@@ -290,16 +290,32 @@ impl Reader {
         }
     }
 
-    fn amount(&self, key: ReaderSettingKey) -> Option<f64> {
+    pub(super) fn amount(&self, key: ReaderSettingKey) -> Option<f64> {
         match self.setting(key)? {
             ReaderValue::Amount { value } => Some(*value),
             _ => None,
         }
     }
 
+    pub(super) fn toggle(&self, key: ReaderSettingKey) -> Option<bool> {
+        match self.setting(key)? {
+            ReaderValue::Toggle { on } => Some(*on),
+            _ => None,
+        }
+    }
+
     /// Set a choice here at once, for the screen to follow before the engine's settings come.
     fn set_choice(&mut self, key: ReaderSettingKey, name: &str, scope: SettingScope) {
-        let value = ReaderValue::Choice { name: name.to_owned() };
+        self.set_value(key, ReaderValue::Choice { name: name.to_owned() }, scope);
+    }
+
+    /// Set a value here at once, for the screen to follow before the engine's settings come.
+    pub(super) fn set_value(
+        &mut self,
+        key: ReaderSettingKey,
+        value: ReaderValue,
+        scope: SettingScope,
+    ) {
         if self.settings.is_none() {
             let from_view = self.view.as_ref().and_then(|v| v.settings.clone());
             self.settings = from_view.or_else(|| {

@@ -191,6 +191,8 @@ impl Keymap {
             bind(Binding::plain(Char('+')), A::ReaderZoomIn);
             bind(Binding::plain(Char('-')), A::ReaderZoomOut);
             bind(Binding::plain(Char('v')), A::ReaderPages);
+            bind(Binding::plain(Char('[')), A::ReaderNarrower);
+            bind(Binding::plain(Char(']')), A::ReaderWider);
             bind(Binding::plain(Char(',')), A::ReaderSettings);
             bind(Binding::plain(Char('q')), A::ReaderLeave);
             bind(Binding::plain(Esc), A::ReaderLeave);

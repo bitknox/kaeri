@@ -171,6 +171,8 @@ impl StageView {
 pub enum Overlay {
     CommandPalette,
     Help,
+    /// The reader's settings, `,` in the reader.
+    ReaderSettings,
     Sources,
     SourceProvider,
     /// Which release of the pinned source to use, for a source that offers several.
@@ -260,6 +262,7 @@ impl Overlay {
         crate::keymap::said(match self {
             Self::CommandPalette => t::nav_overlay_palette(),
             Self::Help => t::nav_overlay_help(),
+            Self::ReaderSettings => t::tui_reader_action_settings(),
             Self::Sources => t::sources_title(),
             Self::SourceProvider => t::source_picker_title(),
             Self::SourceRelease => t::nav_overlay_release_for_title(),
