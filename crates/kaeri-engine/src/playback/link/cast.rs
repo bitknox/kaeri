@@ -590,7 +590,7 @@ mod tests {
             group: false,
         };
         let hub = Arc::new(CastHub::with(None, Arc::new(PlainHttp), Timings::default()));
-        let link = |hub: &Arc<CastHub>| {
+        let link = |hub: &Arc<CastHub>, device: &CastDevice| {
             let hub = Arc::clone(hub);
             let device = device.clone();
             async move {
@@ -618,15 +618,20 @@ mod tests {
         // The last episode ended: the session closes the player, and the card isn't left
         // starting.
         hub.begin(device.clone());
-        link(&hub).await.shutdown().await;
+        link(&hub, &device).await.shutdown().await;
         assert!(!hub.casting(), "the casting ended with the player");
         assert!(hub.view().over);
 
-        // One closed after the viewer cast again leaves the new cast alone.
+        // One closed after the viewer cast to another TV leaves the new cast alone. The new
+        // cast needs a fake of its own: a fake serves one sender at a time and drops the first
+        // connection, so the old player would end as lost, which ends the casting by design.
+        let other = FakeReceiver::start(FakeOptions::default()).await.unwrap();
+        let second = CastDevice { id: "tv-2".into(), address: other.address, ..device.clone() };
         hub.begin(device.clone());
-        let old = link(&hub).await;
-        hub.begin(device.clone());
-        let _new = link(&hub).await;
+        let old = link(&hub, &device).await;
+        hub.begin(second.clone());
+        let _new = link(&hub, &second).await;
+        assert!(old.player.is_alive(), "the first TV still holds the old cast");
         old.shutdown().await;
         assert!(hub.casting(), "the new cast goes on");
     }
