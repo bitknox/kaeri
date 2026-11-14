@@ -201,6 +201,11 @@ body.k-body {
 	background: var(--ani-band);
 }
 
+/* A long address in running text breaks rather than widening the page on a phone. */
+.k-body :not(pre) > code {
+	overflow-wrap: anywhere;
+}
+
 .k-body pre {
 	margin: 18px 0 0;
 	padding: 12px 14px;
